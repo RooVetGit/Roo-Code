@@ -174,16 +174,15 @@ Follow these steps for coding and submitting your work.
 1.  **Fork & Clone**:
     - Fork the repository on GitHub.
     - Clone your fork locally: `git clone https://github.com/YOUR_USERNAME/Roo-Code.git`
-2.  **Install Dependencies**: `npm run install:all`
-3.  **Run Webview (Dev Mode)**: `npm run dev` (for Vite/React app with HMR)
-4.  **Debug Extension**: Press `F5` in VS Code (or **Run** → **Start Debugging**) to open a new Extension Development Host window with Roo Code loaded.
+2.  **Install Dependencies**: `pnpm install`
+3.  **Debug Extension**: Press `F5` in VS Code (or **Run** → **Start Debugging**) to open a new Extension Development Host window with Roo Code loaded.
 
 Webview changes (in `webview-ui`) will appear immediately with Hot Module Replacement. Changes to the core extension (in `src`) will require a restart of the Extension Development Host.
 
 Alternatively, to build and install a `.vsix` package:
 
 ```sh
-npm run build
+pnpm build
 code --install-extension bin/roo-cline-<version>.vsix
 ```
 
@@ -194,20 +193,20 @@ code --install-extension bin/roo-cline-<version>.vsix
 - **Focused PRs**: One feature/bug fix per PR.
 - **Code Quality**:
     - Pass CI checks (linting, formatting).
-    - Address ESLint warnings or errors (`npm run lint`).
+    - Address ESLint warnings or errors (`pnpm lint`).
     - Respond to feedback from automated code review tools (e.g., Ellipsis, if configured).
     - Follow TypeScript best practices and maintain type safety.
 - **Testing**:
     - Add tests for new features.
-    - Run `npm test` to ensure all tests pass.
+    - Run `pnpm test` to ensure all tests pass.
     - Update existing tests if your changes affect them.
 - **Commit Messages**:
     - Write clear, descriptive commit messages.
     - Reference relevant issues in commits using `#issue-number` (e.g., `Fixes #123`).
 - **Pre-Submission Checklist (before creating a PR)**:
     - Rebase your branch on the latest `main` from the upstream repository.
-    - Ensure your code builds successfully (`npm run build`).
-    - Double-check all tests are passing (`npm test`).
+    - Ensure your code builds successfully (`pnpm build`).
+    - Double-check all tests are passing (`pnpm test`).
     - Remove any debugging code or `console.log` statements.
 
 ### 3. Submitting Code: Pull Request (PR) Process

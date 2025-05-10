@@ -1,6 +1,6 @@
 // Updates to this file will automatically propgate to src/exports/types.ts
 // via a pre-commit hook. If you want to update the types before committing you
-// can run `npm run generate-types`.
+// can run `pnpm generate-types`.
 
 import { z } from "zod"
 
@@ -520,32 +520,31 @@ export const providerSettingsSchemaDiscriminated = z
 	])
 	.and(genericProviderSettingsSchema)
 
-export const providerSettingsSchema = z
-	.object({
-		apiProvider: providerNamesSchema.optional(),
-	})
-	.merge(anthropicSchema)
-	.merge(glamaSchema)
-	.merge(openRouterSchema)
-	.merge(bedrockSchema)
-	.merge(vertexSchema)
-	.merge(openAiSchema)
-	.merge(ollamaSchema)
-	.merge(vsCodeLmSchema)
-	.merge(lmStudioSchema)
-	.merge(geminiSchema)
-	.merge(openAiNativeSchema)
-	.merge(mistralSchema)
-	.merge(deepSeekSchema)
-	.merge(unboundSchema)
-	.merge(requestySchema)
-	.merge(humanRelaySchema)
-	.merge(fakeAiSchema)
-	.merge(xaiSchema)
-	.merge(groqSchema)
-	.merge(chutesSchema)
-	.merge(litellmSchema)
-	.merge(genericProviderSettingsSchema)
+export const providerSettingsSchema = z.object({
+	apiProvider: providerNamesSchema.optional(),
+	...anthropicSchema.shape,
+	...glamaSchema.shape,
+	...openRouterSchema.shape,
+	...bedrockSchema.shape,
+	...vertexSchema.shape,
+	...openAiSchema.shape,
+	...ollamaSchema.shape,
+	...vsCodeLmSchema.shape,
+	...lmStudioSchema.shape,
+	...geminiSchema.shape,
+	...openAiNativeSchema.shape,
+	...mistralSchema.shape,
+	...deepSeekSchema.shape,
+	...unboundSchema.shape,
+	...requestySchema.shape,
+	...humanRelaySchema.shape,
+	...fakeAiSchema.shape,
+	...xaiSchema.shape,
+	...groqSchema.shape,
+	...chutesSchema.shape,
+	...litellmSchema.shape,
+	...genericProviderSettingsSchema.shape,
+})
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
 

@@ -1,0 +1,27 @@
+# Exclude everything
+**
+
+# Include package.json
+!package.json
+!package.nls.*
+
+# Include the built extension
+!dist
+
+# Include the built webview
+!webview-ui
+
+# Include the license file
+!LICENSE
+
+# Include default themes JSON files used in getTheme
+!integrations/theme/default-themes/**
+
+# Include icons and images
+!assets/codicons/**
+!assets/vscode-material-icons/**
+!assets/icons/**
+!assets/images/**
+
+# Include .env file for telemetry
+!.env
