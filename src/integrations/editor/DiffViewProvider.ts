@@ -17,6 +17,7 @@ export class DiffViewProvider {
 	originalContent: string | undefined
 	private createdDirs: string[] = []
 	private documentWasOpen = false
+	private originalViewColumn?: vscode.ViewColumn // Store the original view column
 	private relPath?: string
 	private newContent?: string
 	private activeDiffEditor?: vscode.TextEditor
@@ -65,11 +66,22 @@ export class DiffViewProvider {
 			.filter(
 				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
 			)
+		// Check if the document is already open and store its state
+		// DO NOT close the original tab to preserve pin status
 		for (const tab of tabs) {
-			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+			if (tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath)) {
+				this.originalViewColumn = tab.group.viewColumn
+				this.documentWasOpen = true
+				// Ensure the tab is not dirty before proceeding, but don't close it
+				if (tab.isDirty) {
+					// Find the document associated with the tab and save it
+					const doc = vscode.workspace.textDocuments.find((d) => arePathsEqual(d.uri.fsPath, absolutePath))
+					if (doc) {
+						await doc.save()
+					}
+				}
+				break // Found the relevant tab, no need to check others
 			}
-			this.documentWasOpen = true
 		}
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
@@ -159,6 +171,10 @@ export class DiffViewProvider {
 		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
 		await this.closeAllDiffViews()
 
+		// If the original document was open, try to focus it.
+		// VS Code should handle showing the updated content automatically since the file was saved.
+		await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
+
 		/*
 		Getting diagnostics before and after the file edit is a better approach than
 		automatically tracking problems in real-time. This method ensures we only
@@ -237,14 +253,14 @@ export class DiffViewProvider {
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
 			console.log(`File ${absolutePath} has been reverted to its original content.`)
-			if (this.documentWasOpen) {
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-					preview: false,
-				})
-			}
-			await this.closeAllDiffViews()
-		}
 
+			// Close the diff view first
+			await this.closeAllDiffViews()
+
+			// If the document was originally open, ensure it's focused.
+			// The revert logic already applied the original content and saved.
+			await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
+		}
 		// edit is done
 		await this.reset()
 	}
@@ -351,6 +367,29 @@ export class DiffViewProvider {
 		return result
 	}
 
+	private async _focusOriginalDocument(
+		absolutePath: string,
+		viewColumn: vscode.ViewColumn | undefined,
+	): Promise<void> {
+		if (this.documentWasOpen && viewColumn) {
+			// Find the editor for the original document and reveal it
+			const originalEditor = vscode.window.visibleTextEditors.find(
+				(editor) => arePathsEqual(editor.document.uri.fsPath, absolutePath) && editor.viewColumn === viewColumn,
+			)
+			if (originalEditor) {
+				// Reveal a range (e.g., the start) to ensure focus
+				const position = new vscode.Position(0, 0)
+				originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
+			} else {
+				// Fallback if editor not found
+				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+					preview: false,
+					viewColumn: viewColumn,
+				})
+			}
+		}
+	}
+
 	// close editor if open?
 	async reset() {
 		this.editType = undefined
@@ -358,6 +397,7 @@ export class DiffViewProvider {
 		this.originalContent = undefined
 		this.createdDirs = []
 		this.documentWasOpen = false
+		this.originalViewColumn = undefined // Reset stored view column
 		this.activeDiffEditor = undefined
 		this.fadedOverlayController = undefined
 		this.activeLineController = undefined
