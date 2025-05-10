@@ -395,7 +395,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		}
 		case "openMcpSettings": {
-			const mcpSettingsFilePath = await provider.getMcpHub()?.getMcpSettingsFilePath()
+			const mcpSettingsFilePath = await provider.getMcpHub()?.getGlobalMcpSettingsFilePath()
 
 			if (mcpSettingsFilePath) {
 				openFile(mcpSettingsFilePath)
