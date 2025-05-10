@@ -6,6 +6,7 @@ import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
+const PROXIMITY_BOOST = 0.02 // small bonus for matches extremely close to preferred line
 
 function getSimilarity(original: string, search: string): number {
 	// Empty searches are no longer supported
@@ -51,81 +52,87 @@ function fuzzySearch(
 	preferredStartIndex?: number,
 	prioritizePreferredStart: boolean = false
 ) {
+	// Pre-compute values outside the tight loop for efficiency
+	const searchLinesArr = searchChunk.split(/\r?\n/)
+	const searchLen = searchLinesArr.length
+
+	// Guard against impossible searches
+	if (searchLen === 0 || endIndex - startIndex < searchLen) {
+		return { bestScore: 0, bestMatchIndex: -1, bestMatchContent: "" }
+	}
+
+	// Cache the normalised search text once
+	const normalizedSearchChunk = normalizeString(searchChunk)
+	const computeSimilarity = (originalChunk: string): number => {
+		const normalizedOriginal = normalizeString(originalChunk)
+		if (normalizedOriginal === normalizedSearchChunk) return 1
+		const dist = distance(normalizedOriginal, normalizedSearchChunk)
+		const maxLength = Math.max(normalizedOriginal.length, normalizedSearchChunk.length)
+		return 1 - dist / maxLength
+	}
+
 	let bestScore = 0
 	let bestMatchIndex = -1
 	let bestMatchContent = ""
-	// Track the smallest distance from preferred start index for similarly scored matches
-	let bestMatchDistance = Number.MAX_SAFE_INTEGER
-	const searchLen = searchChunk.split(/\r?\n/).length
+	let bestMatchDistance = Number.MAX_SAFE_INTEGER // distance from reference line for tie-breaking
 
-	// Calculate the starting point for search
+	// Calculate the starting point for search (middle-out or preferred)
 	const midPoint = Math.floor((startIndex + endIndex) / 2)
-	
-	// Determine the reference point for calculating distance
-	// This is the point we want matches to be close to
-	const referencePoint = (prioritizePreferredStart && preferredStartIndex !== undefined)
-		? preferredStartIndex
-		: midPoint
-	
-	// Determine the search starting position
+	const referencePoint = prioritizePreferredStart && preferredStartIndex !== undefined ? preferredStartIndex : midPoint
 	let searchStartPosition: number
 	if (prioritizePreferredStart && preferredStartIndex !== undefined) {
-		// Constrain preferredStartIndex to be within valid bounds
-		searchStartPosition = Math.min(
-			Math.max(preferredStartIndex, startIndex),
-			endIndex - searchLen
-		)
+		searchStartPosition = Math.min(Math.max(preferredStartIndex, startIndex), endIndex - searchLen)
 	} else {
-		// Use middle-out approach (original behavior)
 		searchStartPosition = midPoint
 	}
-	
+
 	let leftIndex = searchStartPosition
 	let rightIndex = searchStartPosition + 1
 
 	while (leftIndex >= startIndex || rightIndex <= endIndex - searchLen) {
 		if (leftIndex >= startIndex) {
 			const originalChunk = lines.slice(leftIndex, leftIndex + searchLen).join("\n")
-			const similarity = getSimilarity(originalChunk, searchChunk)
-			
+			const similarity = computeSimilarity(originalChunk)
 			const distanceFromReference = Math.abs(leftIndex - referencePoint)
-			
-			// Small boost for matches very close to preferred position when prioritizing by location
-			const proximityBoost = (prioritizePreferredStart && distanceFromReference <= 2) ? 0.02 : 0
+			const proximityBoost = prioritizePreferredStart && distanceFromReference <= 2 ? PROXIMITY_BOOST : 0
 			const effectiveScore = similarity + proximityBoost
-			
-			// Update best match if:
-			// 1. This match has a better effective score, or
-			// 2. This match has the same effective score but is closer to the reference point
-			if (effectiveScore > bestScore ||
-				(effectiveScore === bestScore && distanceFromReference < bestMatchDistance)) {
+
+			if (
+				effectiveScore > bestScore ||
+				(effectiveScore === bestScore && distanceFromReference < bestMatchDistance)
+			) {
 				bestScore = effectiveScore
 				bestMatchIndex = leftIndex
 				bestMatchContent = originalChunk
 				bestMatchDistance = distanceFromReference
+
+				// Early-exit: perfect match at ideal line – cannot improve further
+				if (bestScore === 1 && bestMatchDistance === 0) {
+					return { bestScore, bestMatchIndex, bestMatchContent }
+				}
 			}
 			leftIndex--
 		}
 
 		if (rightIndex <= endIndex - searchLen) {
 			const originalChunk = lines.slice(rightIndex, rightIndex + searchLen).join("\n")
-			const similarity = getSimilarity(originalChunk, searchChunk)
-			
+			const similarity = computeSimilarity(originalChunk)
 			const distanceFromReference = Math.abs(rightIndex - referencePoint)
-			
-			// Small boost for matches very close to preferred position when prioritizing by location
-			const proximityBoost = (prioritizePreferredStart && distanceFromReference <= 2) ? 0.02 : 0
+			const proximityBoost = prioritizePreferredStart && distanceFromReference <= 2 ? PROXIMITY_BOOST : 0
 			const effectiveScore = similarity + proximityBoost
-			
-			// Update best match if:
-			// 1. This match has a better effective score, or
-			// 2. This match has the same effective score but is closer to the reference point
-			if (effectiveScore > bestScore ||
-				(effectiveScore === bestScore && distanceFromReference < bestMatchDistance)) {
+
+			if (
+				effectiveScore > bestScore ||
+				(effectiveScore === bestScore && distanceFromReference < bestMatchDistance)
+			) {
 				bestScore = effectiveScore
 				bestMatchIndex = rightIndex
 				bestMatchContent = originalChunk
 				bestMatchDistance = distanceFromReference
+
+				if (bestScore === 1 && bestMatchDistance === 0) {
+					return { bestScore, bestMatchIndex, bestMatchContent }
+				}
 			}
 			rightIndex++
 		}
@@ -380,28 +387,28 @@ Only use a single line of '=======' between search and replacement content, beca
 			  Ensures the first marker starts at the beginning of the file or right after a newline.
 
 			2. (?<!\\)<<<<<<< SEARCH\s*\n  
-			  Matches the line “<<<<<<< SEARCH” (ignoring any trailing spaces) – the negative lookbehind makes sure it isn’t escaped.
+			  Matches the line "<<<<<<< SEARCH" (ignoring any trailing spaces) – the negative lookbehind makes sure it isn't escaped.
 
 			3. ((?:\:start_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
+			  Optionally matches a ":start_line:" line. The outer capturing group is group 1 and the inner (\d+) is group 2.
 
 			4. ((?:\:end_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
+			  Optionally matches a ":end_line:" line. Group 3 is the whole match and group 4 is the digits.
 
 			5. ((?<!\\)-------\s*\n)?  
-			  Optionally matches the “-------” marker line (group 5).
+			  Optionally matches the "-------" marker line (group 5).
 
 			6. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “search content” (group 6) up to the next marker.
+			  Non‐greedy match for the "search content" (group 6) up to the next marker.
 
 			7. (?:(?<=\n)(?<!\\)=======\s*\n)  
-			  Matches the “=======” marker on its own line.
+			  Matches the "=======" marker on its own line.
 
 			8. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “replace content” (group 7).
+			  Non‐greedy match for the "replace content" (group 7).
 
 			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
-			  Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
+			  Matches the final ">>>>>>> REPLACE" marker on its own line (and requires a following newline or the end of file).
 		*/
 
 		let matches = [
