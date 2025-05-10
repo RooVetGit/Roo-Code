@@ -12,7 +12,6 @@
 	},
 	"editGlobalMCP": "編輯全域 MCP",
 	"editProjectMCP": "編輯專案 MCP",
-	"editSettings": "編輯 MCP 設定",
 	"tool": {
 		"alwaysAllow": "總是允許",
 		"parameters": "參數",
