@@ -37,7 +37,7 @@ export const UISettings = ({ markdownBlockLineheight, setCachedStateField, class
 							step={0.01}
 							value={[markdownBlockLineheight ?? 1.25]}
 							onValueChange={([value]) => setCachedStateField("markdownBlockLineheight", value)}
-							data-testid="open-tabs-limit-slider"
+							data-testid="markdown-lineheight-slider"
 						/>
 						<span className="w-10">{markdownBlockLineheight ?? 1.25}</span>
 					</div>
