@@ -5,8 +5,9 @@ import { languages as schemaLanguages } from "../../src/schemas/index"
 let logBuffer: string[] = []
 const bufferLog = (msg: string) => logBuffer.push(msg)
 const printLogs = () => {
-	console.log(logBuffer.join("\n"))
+	const output = logBuffer.join("\n")
 	logBuffer = []
+	return output
 }
 
 const languages = schemaLanguages
@@ -71,7 +72,7 @@ const PATH_MAPPINGS: PathMapping[] = [
 		name: "Package NLS",
 		area: "package-nls",
 		source: "package.nls.json",
-		targetTemplate: "./",
+		targetTemplate: "package.nls.<lang>.json",
 	},
 ]
 
@@ -216,59 +217,17 @@ function checkExtraTranslations(sourceContent: any, targetContent: any): Transla
 	return extraKeys
 }
 
-function getAllLocalesForMapping(mapping: PathMapping): Language[] {
-	let discoveredLocales: string[] = []
-
-	if (mapping.area === "package-nls") {
-		discoveredLocales = fs
-			.readdirSync("./")
-			.filter(
-				(file: string) =>
-					file.startsWith("package.nls.") && file.endsWith(".json") && file !== "package.nls.json",
-			)
-			.map((file: string) => file.replace("package.nls.", "").replace(".json", ""))
-	} else if (mapping.area === "docs") {
-		const localesDir = path.join("./", "locales")
-		if (fs.existsSync(localesDir)) {
-			discoveredLocales = fs
-				.readdirSync(localesDir)
-				.filter((item: string) => fs.statSync(path.join(localesDir, item)).isDirectory())
-		}
-	} else {
-		const basePath =
-			typeof mapping.source === "string" && mapping.source.endsWith("/en")
-				? mapping.source.slice(0, -3)
-				: typeof mapping.source === "string"
-					? path.dirname(mapping.source)
-					: ""
-
-		if (basePath) {
-			const baseDir = path.join("./", basePath)
-			if (fs.existsSync(baseDir)) {
-				discoveredLocales = fs.readdirSync(baseDir).filter((item: string) => {
-					const itemPath = path.join(baseDir, item)
-					return fs.statSync(itemPath).isDirectory() && item !== "en"
-				})
-			}
-		}
-	}
-
-	return discoveredLocales.filter((locale) => languages.includes(locale as Language)) as Language[]
-}
-
-function getFilteredLocales(mapping: PathMapping, localeArgs?: string[]): Language[] {
-	const allLocales = getAllLocalesForMapping(mapping)
-
+function getFilteredLocales(localeArgs?: string[]): Language[] {
 	if (!localeArgs || localeArgs.includes("all")) {
-		return allLocales
+		return [...languages]
 	}
 
 	const invalidLocales = localeArgs.filter((locale) => !languages.includes(locale as Language))
 	if (invalidLocales.length > 0) {
-		console.warn(`Warning: The following locales are not officially supported: ${invalidLocales.join(", ")}`)
+		throw new Error(`Error: The following locales are not officially supported: ${invalidLocales.join(", ")}`)
 	}
 
-	return allLocales.filter((locale) => localeArgs.includes(locale))
+	return languages.filter((locale) => localeArgs.includes(locale))
 }
 
 function filterMappingsByArea(mappings: PathMapping[], areaArgs?: string[]): PathMapping[] {
@@ -345,7 +304,7 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 
 	for (const [area, areaResults] of Object.entries(results)) {
 		let areaHasIssues = false
-		let areaBuffer: string[] = []
+		const extraByLocale = new Map<string, Map<string, TranslationIssue[]>>()
 		let missingCount = 0
 
 		for (const [locale, localeResults] of Object.entries(areaResults)) {
@@ -380,11 +339,13 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 
 				if (checkTypes.includes("extra") && fileResults.extra.length > 0) {
 					localeExtraCount += fileResults.extra.length
-					areaBuffer.push(`  ⚠️ ${locale} - ${file}: ${fileResults.extra.length} extra translations`)
 
-					for (const { key, localeValue } of fileResults.extra) {
-						areaBuffer.push(`      ${key}: "${localeValue}"`)
+					// Group extra translations by locale
+					if (!extraByLocale.has(locale)) {
+						extraByLocale.set(locale, new Map())
 					}
+					extraByLocale.get(locale)?.set(file, fileResults.extra)
+
 					areaHasIssues = true
 				}
 			}
@@ -453,12 +414,27 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 			}
 
 			// Show extra translations if any
-			if (areaBuffer.length > 0) {
+			if (extraByLocale.size > 0) {
 				bufferLog(`  ⚠️ Extra translations:`)
-				areaBuffer.forEach((line) => {
-					const indentedLine = "  " + line
-					bufferLog(indentedLine)
-				})
+				let isFirstLocale = true
+				for (const [locale, fileMap] of extraByLocale) {
+					if (!isFirstLocale) {
+						bufferLog("") // Add blank line between locales
+					}
+					isFirstLocale = false
+					bufferLog(`    ${locale}:`)
+					let isFirstFile = true
+					for (const [file, extras] of fileMap) {
+						if (!isFirstFile) {
+							bufferLog("") // Add blank line between files
+						}
+						isFirstFile = false
+						bufferLog(`      ${file}: ${extras.length} extra translations`)
+						for (const { key, localeValue } of extras) {
+							bufferLog(`        ${key}: "${localeValue}"`)
+						}
+					}
+				}
 			}
 
 			if (!areaHasIssues) {
@@ -552,11 +528,10 @@ function parseArgs(): LintOptions {
 				options.file = values
 				break
 			case "area": {
-				const validAreas = ["core", "webview", "docs", "package-nls", "all"]
+				const validAreas = [...PATH_MAPPINGS.map((m) => m.area), "all"]
 				for (const area of values) {
 					if (!validAreas.includes(area)) {
-						bufferLog(`Error: Invalid area '${area}'. Must be one of: ${validAreas.join(", ")}`)
-						process.exit(1)
+						throw new Error(`Error: Invalid area '${area}'. Must be one of: ${validAreas.join(", ")}`)
 					}
 				}
 				options.area = values
@@ -579,7 +554,7 @@ function parseArgs(): LintOptions {
 	return options
 }
 
-function lintTranslations(args?: LintOptions): number {
+function lintTranslations(args?: LintOptions): { exitCode: number; output: string } {
 	logBuffer = [] // Clear the buffer at the start
 	const options = args || parseArgs() || { area: ["all"], check: ["all"] }
 	const checksToRun = options.check?.includes("all") ? ["missing", "extra"] : options.check || ["all"]
@@ -592,21 +567,23 @@ function lintTranslations(args?: LintOptions): number {
 		sourceFiles = filterSourceFiles(sourceFiles, options.file)
 
 		if (sourceFiles.length === 0) {
-			console.log(`No matching files found for area ${mapping.name}`)
+			bufferLog(`No matching files found for area ${mapping.name}`)
 			continue
 		}
 
-		const locales = getFilteredLocales(mapping, options.locale)
+		const locales = getFilteredLocales(options.locale)
 
 		if (locales.length === 0) {
-			console.log(`No matching locales found for area ${mapping.name}`)
+			bufferLog(`No matching locales found for area ${mapping.name}`)
 			continue
 		}
 
 		for (const sourceFile of sourceFiles) {
-			let sourceContent = null
+			let sourceContent: any = null
 			if (sourceFile.endsWith(".json")) {
-				sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+				const content = loadFileContent(sourceFile)
+				if (!content) continue
+				sourceContent = parseJsonContent(content, sourceFile)
 				if (!sourceContent) continue
 			} else {
 				sourceContent = loadFileContent(sourceFile)
@@ -619,11 +596,11 @@ function lintTranslations(args?: LintOptions): number {
 		}
 	}
 
-	const hasIssues = formatResults(results, checksToRun, options, filteredMappings)
+	formatResults(results, checksToRun, options, filteredMappings)
 	formatSummary(results)
-	printLogs() // Print accumulated logs
+	const output = printLogs()
 
-	return hasIssues ? 1 : 0
+	return { exitCode: 0, output }
 }
 
 // Export functions for use in other modules
@@ -638,7 +615,6 @@ module.exports = {
 	getValueAtPath,
 	checkMissingTranslations,
 	checkExtraTranslations,
-	getAllLocalesForMapping,
 	getFilteredLocales,
 	filterMappingsByArea,
 	filterSourceFiles,
@@ -648,12 +624,13 @@ module.exports = {
 describe("Translation Linting", () => {
 	test("Run translation linting", () => {
 		// Run with default options to check all areas and all checks
-		const exitCode = lintTranslations({
+		const result = lintTranslations({
 			area: ["all"],
 			check: ["all"],
 			verbose: process.argv.includes("--verbose"),
 		})
-		expect(exitCode).toBe(0)
+		expect(result.exitCode).toBe(0)
+		expect(result.output).toContain("All translations are complete")
 	})
 
 	test("Filters mappings by area correctly", () => {
