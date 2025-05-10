@@ -22,7 +22,7 @@ export function clearLogs(): void {
 }
 
 export function fileExists(filePath: string): boolean {
-	return fs.existsSync(filePath)
+	return fs.existsSync(path.join("./", filePath))
 }
 
 export function loadFileContent(filePath: string): string | null {
@@ -33,26 +33,39 @@ export function loadFileContent(filePath: string): string | null {
 	}
 }
 
+// Track unique errors to avoid duplication
+const seenErrors = new Set<string>()
+
 export function parseJsonContent(content: string | null, filePath: string): any | null {
-	if (!content) {
-		return null
-	}
+	if (!content) return null
+
 	try {
 		return JSON.parse(content)
 	} catch (error) {
-		bufferLog(`Error parsing JSON in ${filePath}: ${error}`)
+		// Only log first occurrence of each unique error
+		const errorKey = `${filePath}:${(error as Error).message}`
+		if (!seenErrors.has(errorKey)) {
+			seenErrors.add(errorKey)
+			bufferLog(`Error parsing ${path.basename(filePath)}: ${(error as Error).message}`)
+		}
 		return null
 	}
 }
 
 export function getValueAtPath(obj: any, path: string): any {
+	if (obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, path)) {
+		return obj[path]
+	}
+
 	const parts = path.split(".")
 	let current = obj
+
 	for (const part of parts) {
-		if (current === null || current === undefined) {
+		if (current === undefined || current === null) {
 			return undefined
 		}
 		current = current[part]
 	}
+
 	return current
 }
