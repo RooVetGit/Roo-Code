@@ -14,29 +14,19 @@ module.exports = {
 }
 
 function splitPath(keyPath) {
-	// Split on unescaped dots, preserving escaped dots
-	const parts = []
-	let current = ""
-	let escaped = false
+	// First replace double dots with a placeholder
+	const placeholder = "\u0000"
+	const escaped = keyPath.replace(/\.\./g, placeholder)
 
-	for (let i = 0; i < keyPath.length; i++) {
-		if (keyPath[i] === "\\" && !escaped) {
-			escaped = true
-		} else if (keyPath[i] === "." && !escaped) {
-			parts.push(current)
-			current = ""
-			escaped = false
-		} else {
-			current += keyPath[i]
-			escaped = false
-		}
-	}
-	parts.push(current)
-	return parts
+	// Split on single dots
+	const parts = escaped.split(".")
+
+	// Restore dots in each part
+	return parts.map((part) => part.replace(new RegExp(placeholder, "g"), "."))
 }
 
 function unescapeKey(key) {
-	return key.replace(/\\\./g, ".")
+	return key.replace(/\.\./g, ".")
 }
 
 function getNestedValue(obj, keyPath) {
@@ -91,73 +81,59 @@ function deleteNestedValue(obj, keyPath) {
 	return false
 }
 
-async function processStdin() {
+async function collectStdin() {
 	return new Promise((resolve, reject) => {
-		const pairs = []
 		let buffer = ""
-
 		process.stdin.setEncoding("utf8")
 
 		process.stdin.on("data", (chunk) => {
 			buffer += chunk
-			const lines = buffer.split("\n")
-			buffer = lines.pop() || "" // Keep incomplete line in buffer
-
-			for (const line of lines) {
-				const trimmed = line.trim()
-				if (!trimmed) continue
-
-				try {
-					const data = JSON.parse(trimmed)
-					if (Array.isArray(data)) {
-						// In delete mode, allow multiple elements in array
-						data.forEach((key) => pairs.push([key]))
-					} else if (typeof data === "object" && data !== null) {
-						const entries = Object.entries(data)
-						if (entries.length !== 1) {
-							reject(new Error("Each line must contain a single key-value pair"))
-							return
-						}
-						pairs.push(entries[0])
-					} else {
-						reject(new Error("Each line must be a JSON object or array"))
-						return
-					}
-				} catch (err) {
-					reject(new Error(`Invalid JSON on line: ${trimmed}`))
-					return
-				}
-			}
 		})
 
 		process.stdin.on("end", () => {
-			if (buffer.trim()) {
-				try {
-					const data = JSON.parse(buffer.trim())
-					if (Array.isArray(data)) {
-						// In delete mode, allow multiple elements in array
-						data.forEach((key) => pairs.push([key]))
-					} else if (typeof data === "object" && data !== null) {
-						const entries = Object.entries(data)
-						if (entries.length !== 1) {
-							reject(new Error("Each line must contain a single key-value pair"))
-							return
-						}
-						pairs.push(entries[0])
-					} else {
-						reject(new Error("Each line must be a JSON object or array"))
-						return
-					}
-				} catch (err) {
-					reject(new Error(`Invalid JSON on line: ${buffer.trim()}`))
-					return
-				}
-			}
-			resolve(pairs)
+			resolve(buffer)
 		})
 
 		process.stdin.on("error", reject)
 	})
+}
+
+function parseInputLines(inputText) {
+	const pairs = []
+	const lines = inputText.split("\n")
+
+	for (const line of lines) {
+		const trimmed = line.trim()
+		if (!trimmed) continue
+
+		try {
+			const data = JSON.parse(trimmed)
+			if (Array.isArray(data)) {
+				// In delete mode, allow multiple elements in array
+				data.forEach((key) => pairs.push([key]))
+			} else if (typeof data === "object" && data !== null) {
+				const entries = Object.entries(data)
+				if (entries.length !== 1) {
+					throw new Error("Each line must contain a single key-value pair")
+				}
+				pairs.push(entries[0])
+			} else {
+				throw new Error("Each line must be a JSON object or array")
+			}
+		} catch (err) {
+			if (err.message.startsWith("Each line must")) {
+				throw err
+			}
+			throw new Error(`Invalid JSON on line: ${trimmed}`)
+		}
+	}
+
+	return pairs
+}
+
+async function processStdin() {
+	const inputText = await collectStdin()
+	return parseInputLines(inputText)
 }
 
 async function addTranslations(data, pairs, filePath, verbose = false) {
@@ -219,20 +195,19 @@ async function main() {
 		console.log("  Add/update translations:")
 		console.log("    node scripts/manage-translations.js [-v] TRANSLATION_FILE KEY_PATH VALUE [KEY_PATH VALUE...]")
 		console.log("  Delete translations:")
-		console.log("    node scripts/manage-translations.js [-v] -d TRANSLATION_FILE KEY_PATH [KEY_PATH...]")
+		console.log(
+			"    node scripts/manage-translations.js [-v] -d TRANSLATION_FILE1 [TRANSLATION_FILE2 ...] [ -- KEY1 ...]",
+		)
 		console.log("")
 		console.log("Key Path Format:")
-		console.log("  - Use dots (.) to specify nested paths: 'command.newTask.title'")
-		console.log("  - To include a literal dot in a key name, escape it with backslash: '\\'")
-		console.log("    'settings\\.customStoragePath\\.description'")
-		console.log("  - To include a literal backslash, escape it with another backslash: '\\\\'")
-		console.log("    'settings\\\\path\\\\description'")
+		console.log("  - Use single dot (.) for nested paths: 'command.newTask.title'")
+		console.log("  - Use double dots (..) to include a literal dot in key names (like SMTP byte stuffing):")
+		console.log("    'settings..path' -> { 'settings.path': 'value' }")
+		console.log("")
 		console.log("  Examples:")
-		console.log("    'command.newTask.title'         -> { command: { newTask: { title: 'value' } } }")
-		console.log(
-			"    'settings\\.customStoragePath\\.description' -> { 'settings.customStoragePath.description': 'value' }",
-		)
-		console.log("    'path\\\\to\\\\file'           -> { 'path\\to\\file': 'value' }")
+		console.log("    'command.newTask.title'     -> { command: { newTask: { title: 'value' } } }")
+		console.log("    'settings..path'            -> { 'settings.path': 'value' }")
+		console.log("    'nested.key..with..dots'    -> { nested: { 'key.with.dots': 'value' } }")
 		console.log("")
 		console.log("Line-by-Line JSON Mode (--stdin):")
 		console.log("  Each line must be a complete, single JSON object/array")
@@ -242,15 +217,15 @@ async function main() {
 		console.log("    node scripts/manage-translations.js [-v] --stdin TRANSLATION_FILE")
 		console.log("    Format: One object per line with exactly one key-value pair:")
 		console.log('      {"command.newTask.title": "New Task"}')
-		console.log('      {"settings\\.customStoragePath\\.description": "Custom storage path"}')
-		console.log('      {"path\\\\to\\\\file": "File path with backslashes"}')
+		console.log('      {"settings..path": "Custom Path"}')
+		console.log('      {"nested.key..with..dots": "Value with dots in key"}')
 		console.log("")
 		console.log("  Delete translations:")
 		console.log("    node scripts/manage-translations.js [-v] -d --stdin TRANSLATION_FILE")
 		console.log("    Format: One array per line with exactly one key:")
 		console.log('      ["command.newTask.title"]')
-		console.log('      ["settings\\.customStoragePath\\.description"]')
-		console.log('      ["path\\\\to\\\\file"]')
+		console.log('      ["settings..path"]')
+		console.log('      ["nested.key..with..dots"]')
 		console.log("")
 		console.log("Options:")
 		console.log("  -v        Enable verbose output (shows operations)")
@@ -260,44 +235,96 @@ async function main() {
 		console.log("Examples:")
 		console.log("  # Add via command line:")
 		console.log('  node scripts/manage-translations.js package.nls.json command.newTask.title "New Task"')
-		console.log(
-			'  node scripts/manage-translations.js package.nls.json settings\\.vsCodeLmModelSelector\\.vendor\\.description "The vendor of the language model"',
-		)
+		console.log('  node scripts/manage-translations.js package.nls.json settings..path "Custom Path"')
+		console.log('  node scripts/manage-translations.js package.nls.json nested.key..with..dots "Value with dots"')
 		console.log("")
 		console.log("  # Add multiple translations (one JSON object per line):")
 		console.log("  translations.txt:")
 		console.log('    {"command.newTask.title": "New Task"}')
-		console.log(
-			'    {"settings\\.vsCodeLmModelSelector\\.vendor\\.description": "The vendor of the language model"}',
-		)
+		console.log('    {"settings..path": "Custom Path"}')
 		console.log("    node scripts/manage-translations.js --stdin package.nls.json < translations.txt")
 		console.log("")
 		console.log("  # Delete multiple keys (one JSON array per line):")
 		console.log("  delete_keys.txt:")
 		console.log('    ["command.newTask.title"]')
-		console.log('    ["settings\\.vsCodeLmModelSelector\\.vendor\\.description"]')
+		console.log('    ["settings..path"]')
+		console.log('    ["nested.key..with..dots"]')
 		console.log("    node scripts/manage-translations.js -d --stdin package.nls.json < delete_keys.txt")
 		console.log("")
 		console.log("  # Using here document for batching:")
 		console.log("  node scripts/manage-translations.js --stdin package.nls.json << EOF")
 		console.log('    {"command.newTask.title": "New Task"}')
-		console.log(
-			'    {"settings\\.vsCodeLmModelSelector\\.vendor\\.description": "The vendor of the language model"}',
-		)
+		console.log('    {"settings..path": "Custom Path"}')
 		console.log("  EOF")
 		console.log("")
 		console.log("  # Delete using here document:")
 		console.log("  node scripts/manage-translations.js -d --stdin package.nls.json << EOF")
 		console.log('    ["command.newTask.title"]')
-		console.log('    ["settings\\.vsCodeLmModelSelector\\.vendor\\.description"]')
+		console.log('    ["settings..path"]')
+		console.log('    ["nested.key..with..dots"]')
 		console.log("  EOF")
 		process.exit(1)
 	}
 
-	const filePath = args[0]
 	let modified = false
 
 	try {
+		if (stdinMode && deleteMode) {
+			const files = args
+			// Check if all files exist first
+			for (const filePath of files) {
+				try {
+					await fs.promises.access(filePath)
+				} catch (err) {
+					if (err.code === "ENOENT") {
+						throw new Error(`File not found: ${filePath}`)
+					}
+					throw err
+				}
+			}
+
+			const input = await processStdin()
+			const keys = input.map(([key]) => key)
+
+			// Process each file
+			for (const filePath of files) {
+				const data = JSON.parse(await fs.promises.readFile(filePath, "utf8"))
+				if (await deleteTranslations(data, keys, filePath, verbose)) {
+					await fs.promises.writeFile(filePath, JSON.stringify(data, null, "\t") + "\n")
+					modified = true
+				}
+			}
+			return
+		} else if (deleteMode) {
+			const separatorIndex = args.indexOf("--")
+			const files = separatorIndex === -1 ? args : args.slice(0, separatorIndex)
+			const keys = separatorIndex === -1 ? [] : args.slice(separatorIndex + 1)
+
+			// Check if all files exist first
+			for (const filePath of files) {
+				try {
+					await fs.promises.access(filePath)
+				} catch (err) {
+					if (err.code === "ENOENT") {
+						throw new Error(`File not found: ${filePath}`)
+					}
+					throw err
+				}
+			}
+
+			// Process each file
+			for (const filePath of files) {
+				const data = JSON.parse(await fs.promises.readFile(filePath, "utf8"))
+				if (await deleteTranslations(data, keys, filePath, verbose)) {
+					await fs.promises.writeFile(filePath, JSON.stringify(data, null, "\t") + "\n")
+					modified = true
+				}
+			}
+			return
+		}
+
+		// Original non-delete mode code
+		const filePath = args[0]
 		let data = {}
 		try {
 			data = JSON.parse(await fs.promises.readFile(filePath, "utf8"))
@@ -307,7 +334,6 @@ async function main() {
 					console.log(`File not found: ${filePath}`)
 					console.log("Creating new file")
 				}
-				// Create parent directories if they don't exist
 				const directory = path.dirname(filePath)
 				await fs.promises.mkdir(directory, { recursive: true })
 			} else {
@@ -315,17 +341,9 @@ async function main() {
 			}
 		}
 
-		if (stdinMode && deleteMode) {
-			const input = await processStdin()
-			const keys = input.map(([key]) => key)
-			modified = await deleteTranslations(data, keys, filePath, verbose)
-		} else if (stdinMode) {
+		if (stdinMode) {
 			const pairs = await processStdin()
 			modified = await addTranslations(data, pairs, filePath, verbose)
-		} else if (deleteMode) {
-			// Process keys to delete from command line
-			const keys = args.slice(1)
-			modified = await deleteTranslations(data, keys, filePath, verbose)
 		} else if (args.length >= 3 && args.length % 2 === 1) {
 			// Process key-value pairs from command line
 			const pairs = []
@@ -368,6 +386,8 @@ module.exports = {
 	getNestedValue,
 	setNestedValue,
 	deleteNestedValue,
+	parseInputLines,
+	collectStdin,
 	processStdin,
 	addTranslations,
 	deleteTranslations,

@@ -1,14 +1,38 @@
 import * as fs from "fs"
 import * as path from "path"
 import * as os from "os"
-import {
-	getNestedValue,
-	setNestedValue,
-	deleteNestedValue,
-	addTranslations,
-	deleteTranslations,
-	main,
-} from "../manage-translations"
+// Mock the module
+jest.mock("../manage-translations", () => {
+	const actualModule = jest.requireActual("../manage-translations")
+	return {
+		...actualModule,
+		collectStdin: jest.fn(),
+	}
+})
+
+// Import after mocking
+const manageTrans = require("../manage-translations")
+const { getNestedValue, setNestedValue, deleteNestedValue, addTranslations, deleteTranslations, main } = manageTrans
+
+// Helper function to mock stdin with input data
+function mockStdinWithData(inputData: string) {
+	const mockStdin: {
+		setEncoding: jest.Mock
+		on: jest.Mock<any>
+	} = {
+		setEncoding: jest.fn(),
+		on: jest.fn().mockImplementation((event: string, callback: any) => {
+			if (event === "data") {
+				callback(inputData)
+			}
+			if (event === "end") {
+				callback()
+			}
+			return mockStdin
+		}),
+	}
+	Object.defineProperty(process, "stdin", { value: mockStdin })
+}
 
 describe("Translation Management", () => {
 	let testDir: string
@@ -37,8 +61,8 @@ describe("Translation Management", () => {
 			expect(getNestedValue(obj, "settings.nested.key")).toBe("normal nested")
 
 			// Paths with dots
-			expect(getNestedValue(obj, "settings.customStoragePath\\.description")).toBe("Storage path setting")
-			expect(getNestedValue(obj, "settings.vsCodeLmModelSelector\\.vendor\\.description")).toBe("Vendor setting")
+			expect(getNestedValue(obj, "settings.customStoragePath..description")).toBe("Storage path setting")
+			expect(getNestedValue(obj, "settings.vsCodeLmModelSelector..vendor..description")).toBe("Vendor setting")
 		})
 
 		test("setNestedValue handles escaped dots", () => {
@@ -48,8 +72,8 @@ describe("Translation Management", () => {
 			setNestedValue(obj, "settings.nested.key", "normal nested")
 
 			// Paths with dots
-			setNestedValue(obj, "settings.customStoragePath\\.description", "Storage path setting")
-			setNestedValue(obj, "settings.vsCodeLmModelSelector\\.vendor\\.description", "Vendor setting")
+			setNestedValue(obj, "settings.customStoragePath..description", "Storage path setting")
+			setNestedValue(obj, "settings.vsCodeLmModelSelector..vendor..description", "Vendor setting")
 
 			expect(obj).toEqual({
 				settings: {
@@ -77,8 +101,8 @@ describe("Translation Management", () => {
 			expect(deleteNestedValue(obj, "settings.nested.key")).toBe(true)
 
 			// Delete paths with dots
-			expect(deleteNestedValue(obj, "settings.customStoragePath\\.description")).toBe(true)
-			expect(deleteNestedValue(obj, "settings.vsCodeLmModelSelector\\.vendor\\.description")).toBe(true)
+			expect(deleteNestedValue(obj, "settings.customStoragePath..description")).toBe(true)
+			expect(deleteNestedValue(obj, "settings.vsCodeLmModelSelector..vendor..description")).toBe(true)
 
 			expect(obj).toEqual({
 				settings: {
@@ -172,6 +196,106 @@ describe("Translation Management", () => {
 	})
 
 	describe("Main Function", () => {
+		beforeEach(() => {
+			// Reset process.argv before each test
+			process.argv = ["node", "script"]
+		})
+
+		describe("Stdin Operations", () => {
+			test("adds nested key paths via stdin", async () => {
+				const testFile = path.join(testDir, "test.json")
+				process.argv = ["node", "script", "--stdin", testFile] as any
+				mockStdinWithData('{"key.nested.path": "value1"}\n{"other.nested": "value2"}')
+
+				await main()
+
+				const data = JSON.parse(await fs.promises.readFile(testFile, "utf8"))
+				expect(data).toEqual({
+					key: {
+						nested: {
+							path: "value1",
+						},
+					},
+					other: {
+						nested: "value2",
+					},
+				})
+			})
+
+			test("adds keys with dots using double-dot escaping via stdin", async () => {
+				const testFile = path.join(testDir, "test.json")
+				process.argv = ["node", "script", "--stdin", testFile] as any
+				mockStdinWithData('{"settings..path": "value1"}\n{"key..with..dots": "value2"}')
+
+				await main()
+
+				const data = JSON.parse(await fs.promises.readFile(testFile, "utf8"))
+				expect(data).toEqual({
+					"settings.path": "value1",
+					"key.with.dots": "value2",
+				})
+			})
+
+			test("deletes keys with dots using double-dot escaping via stdin", async () => {
+				const testFile = path.join(testDir, "test.json")
+				await fs.promises.writeFile(
+					testFile,
+					JSON.stringify({
+						"settings.path": "value1",
+						"key.with.dots": "value2",
+					}),
+				)
+
+				process.argv = ["node", "script", "-d", "--stdin", testFile] as any
+				mockStdinWithData('["settings..path"]\n["key..with..dots"]')
+
+				await main()
+
+				const data = JSON.parse(await fs.promises.readFile(testFile, "utf8"))
+				expect(data).toEqual({})
+			})
+
+			test("handles mixed nested paths and escaped dots via stdin", async () => {
+				const testFile = path.join(testDir, "test.json")
+				process.argv = ["node", "script", "--stdin", testFile] as any
+				mockStdinWithData('{"nested.key..with..dots": "value1"}\n' + '{"settings..path.sub.key": "value2"}')
+
+				await main()
+
+				const data = JSON.parse(await fs.promises.readFile(testFile, "utf8"))
+				expect(data).toEqual({
+					nested: {
+						"key.with.dots": "value1",
+					},
+					"settings.path": {
+						sub: {
+							key: "value2",
+						},
+					},
+				})
+			})
+
+			test("deletes translations from multiple files via stdin", async () => {
+				mockStdinWithData('["key1"]\n["key2"]')
+				const testFile1 = path.join(testDir, "test1.json")
+				const testFile2 = path.join(testDir, "test2.json")
+
+				// Create test files with initial content
+				await fs.promises.writeFile(testFile1, JSON.stringify({ key1: "value1", key2: "value2" }))
+				await fs.promises.writeFile(testFile2, JSON.stringify({ key1: "value1", key2: "value2" }))
+
+				process.argv = ["node", "script", "-d", "--stdin", testFile1, testFile2] as any
+
+				await main()
+
+				const data1 = JSON.parse(await fs.promises.readFile(testFile1, "utf8"))
+				const data2 = JSON.parse(await fs.promises.readFile(testFile2, "utf8"))
+
+				expect(data1).toEqual({})
+				expect(data2).toEqual({})
+			})
+		})
+
 		test("main throws error for invalid JSON file", async () => {
 			const invalidJson = path.join(testDir, "invalid.json")
 			await fs.promises.writeFile(invalidJson, "invalid json content")
@@ -204,7 +328,7 @@ describe("Translation Management", () => {
 			const testFile = path.join(testDir, "test.json")
 			await fs.promises.writeFile(testFile, JSON.stringify({ key1: "value1", key2: "value2" }))
 
-			process.argv = ["node", "script", "-d", testFile, "key1"]
+			process.argv = ["node", "script", "-d", testFile, "--", "key1"]
 			await main()
 
 			const fileContent = await fs.promises.readFile(testFile, "utf8")
