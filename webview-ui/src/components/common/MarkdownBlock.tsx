@@ -55,7 +55,7 @@ const remarkUrlToLink = () => {
 	}
 }
 
-const StyledMarkdown = styled.div`
+const StyledMarkdown = styled.div<{ lineheight: number | string }>`
 	code:not(pre > code) {
 		font-family: var(--vscode-editor-font-family, monospace);
 		filter: saturation(110%) brightness(95%);
@@ -95,7 +95,7 @@ const StyledMarkdown = styled.div`
 	li,
 	ol,
 	ul {
-		line-height: 1.25;
+		line-height: ${(props) => props.lineheight};
 	}
 
 	ol,
@@ -122,7 +122,7 @@ const StyledMarkdown = styled.div`
 `
 
 const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
-	const { theme } = useExtensionState()
+	const { theme, markdownBlockLineheight } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
 		remarkPlugins: [
 			remarkUrlToLink,
@@ -229,7 +229,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 
 	return (
 		<div style={{}}>
-			<StyledMarkdown>{reactContent}</StyledMarkdown>
+			<StyledMarkdown lineheight={markdownBlockLineheight || 1.25}>{reactContent}</StyledMarkdown>
 		</div>
 	)
 })
