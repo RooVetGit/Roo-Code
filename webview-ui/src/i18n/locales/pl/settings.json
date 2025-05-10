@@ -4,7 +4,9 @@
 		"done": "Gotowe",
 		"cancel": "Anuluj",
 		"reset": "Resetuj",
-		"select": "Wybierz"
+		"select": "Wybierz",
+		"add": "Dodaj nagłówek",
+		"remove": "Usuń"
 	},
 	"header": {
 		"title": "Ustawienia",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "Dostawcy",
-		"autoApprove": "Automatyczne zatwierdzanie",
-		"browser": "Przeglądarka / Użycie komputera",
+		"autoApprove": "Auto-zatwierdzanie",
+		"browser": "Dostęp komputera",
 		"checkpoints": "Punkty kontrolne",
 		"notifications": "Powiadomienia",
-		"contextManagement": "Zarządzanie kontekstem",
+		"contextManagement": "Kontekst",
 		"terminal": "Terminal",
-		"advanced": "Zaawansowane",
-		"experimental": "Funkcje eksperymentalne",
+		"experimental": "Eksperymentalne",
 		"language": "Język",
-		"about": "O Roo Code",
-		"interface": "Interfejs"
+		"about": "O Roo Code"
 	},
 	"autoApprove": {
 		"description": "Pozwól Roo na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "Użyj niestandardowego URL bazowego",
 		"useHostHeader": "Użyj niestandardowego nagłówka Host",
 		"useLegacyFormat": "Użyj starszego formatu API OpenAI",
+		"customHeaders": "Niestandardowe nagłówki",
+		"headerName": "Nazwa nagłówka",
+		"headerValue": "Wartość nagłówka",
+		"noCustomHeaders": "Brak zdefiniowanych niestandardowych nagłówków. Kliknij przycisk +, aby dodać.",
 		"requestyApiKey": "Klucz API Requesty",
 		"getRequestyApiKey": "Uzyskaj klucz API Requesty",
+		"refreshModels": {
+			"label": "Odśwież modele",
+			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele."
+		},
 		"openRouterTransformsText": "Kompresuj podpowiedzi i łańcuchy wiadomości do rozmiaru kontekstu (<a>Transformacje OpenRouter</a>)",
 		"anthropicApiKey": "Klucz API Anthropic",
 		"getAnthropicApiKey": "Uzyskaj klucz API Anthropic",
 		"anthropicUseAuthToken": "Przekaż klucz API Anthropic jako nagłówek Authorization zamiast X-Api-Key",
+		"chutesApiKey": "Klucz API Chutes",
+		"getChutesApiKey": "Uzyskaj klucz API Chutes",
 		"deepSeekApiKey": "Klucz API DeepSeek",
 		"getDeepSeekApiKey": "Uzyskaj klucz API DeepSeek",
 		"geminiApiKey": "Klucz API Gemini",
+		"getGroqApiKey": "Uzyskaj klucz API Groq",
+		"groqApiKey": "Klucz API Groq",
 		"getGeminiApiKey": "Uzyskaj klucz API Gemini",
 		"openAiApiKey": "Klucz API OpenAI",
 		"openAiBaseUrl": "URL bazowy",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Ustaw opcjonalny URL dla modeli Codestral.",
 		"xaiApiKey": "Klucz API xAI",
 		"getXaiApiKey": "Uzyskaj klucz API xAI",
+		"litellmApiKey": "Klucz API LiteLLM",
+		"litellmBaseUrl": "URL bazowy LiteLLM",
 		"awsCredentials": "Poświadczenia AWS",
 		"awsProfile": "Profil AWS",
 		"awsProfileName": "Nazwa profilu AWS",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Ustawienia terminala: Podstawowe",
+			"description": "Podstawowe ustawienia terminala"
+		},
+		"advanced": {
+			"label": "Ustawienia terminala: Zaawansowane",
+			"description": "Poniższe opcje mogą wymagać ponownego uruchomienia terminala, aby zastosować ustawienie."
+		},
 		"outputLineLimit": {
 			"label": "Limit wyjścia terminala",
 			"description": "Maksymalna liczba linii do uwzględnienia w wyjściu terminala podczas wykonywania poleceń. Po przekroczeniu linie będą usuwane ze środka, oszczędzając token."
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Włącz integrację Oh My Zsh",
-			"description": "Po włączeniu ustawia ITERM_SHELL_INTEGRATION_INSTALLED=Yes, aby włączyć funkcje integracji powłoki Oh My Zsh. (eksperymentalne)"
+			"description": "Po włączeniu ustawia ITERM_SHELL_INTEGRATION_INSTALLED=Yes, aby włączyć funkcje integracji powłoki Oh My Zsh. Zastosowanie tego ustawienia może wymagać ponownego uruchomienia IDE. (eksperymentalne)"
 		},
 		"zshP10k": {
 			"label": "Włącz integrację Powerlevel10k",
 			"description": "Po włączeniu ustawia POWERLEVEL9K_TERM_SHELL_INTEGRATION=true, aby włączyć funkcje integracji powłoki Powerlevel10k. (eksperymentalne)"
+		},
+		"inheritEnv": {
+			"label": "Dziedzicz zmienne środowiskowe",
+			"description": "Po włączeniu terminal dziedziczy zmienne środowiskowe z procesu nadrzędnego VSCode, takie jak ustawienia integracji powłoki zdefiniowane w profilu użytkownika. Przełącza to bezpośrednio globalne ustawienie VSCode `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "Włącz buforowanie podpowiedzi",
-		"description": "Po włączeniu, Roo będzie używać tego modelu z włączonym buforowaniem promptów w celu zmniejszenia kosztów."
+		"label": "Wyłącz buforowanie promptów",
+		"description": "Po zaznaczeniu, Roo nie będzie używać buforowania promptów dla tego modelu."
 	},
 	"temperature": {
 		"useCustom": "Użyj niestandardowej temperatury",

@@ -4,7 +4,9 @@
 		"done": "Concluído",
 		"cancel": "Cancelar",
 		"reset": "Redefinir",
-		"select": "Selecionar"
+		"select": "Selecionar",
+		"add": "Adicionar cabeçalho",
+		"remove": "Remover"
 	},
 	"header": {
 		"title": "Configurações",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "Provedores",
-		"autoApprove": "Aprovação automática",
-		"browser": "Navegador / Uso do computador",
-		"checkpoints": "Pontos de verificação",
+		"autoApprove": "Aprovação",
+		"browser": "Navegador",
+		"checkpoints": "Checkpoints",
 		"notifications": "Notificações",
-		"contextManagement": "Gestão de contexto",
+		"contextManagement": "Contexto",
 		"terminal": "Terminal",
-		"advanced": "Avançado",
-		"experimental": "Recursos experimentais",
+		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre o Roo Code",
-		"interface": "Interface"
+		"about": "Sobre"
 	},
 	"autoApprove": {
 		"description": "Permitir que o Roo realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "Usar URL base personalizado",
 		"useHostHeader": "Usar cabeçalho Host personalizado",
 		"useLegacyFormat": "Usar formato de API OpenAI legado",
+		"customHeaders": "Cabeçalhos personalizados",
+		"headerName": "Nome do cabeçalho",
+		"headerValue": "Valor do cabeçalho",
+		"noCustomHeaders": "Nenhum cabeçalho personalizado definido. Clique no botão + para adicionar um.",
 		"requestyApiKey": "Chave de API Requesty",
 		"getRequestyApiKey": "Obter chave de API Requesty",
+		"refreshModels": {
+			"label": "Atualizar modelos",
+			"hint": "Por favor, reabra as configurações para ver os modelos mais recentes."
+		},
 		"openRouterTransformsText": "Comprimir prompts e cadeias de mensagens para o tamanho do contexto (<a>Transformações OpenRouter</a>)",
 		"anthropicApiKey": "Chave de API Anthropic",
 		"getAnthropicApiKey": "Obter chave de API Anthropic",
 		"anthropicUseAuthToken": "Passar a chave de API Anthropic como cabeçalho Authorization em vez de X-Api-Key",
+		"chutesApiKey": "Chave de API Chutes",
+		"getChutesApiKey": "Obter chave de API Chutes",
 		"deepSeekApiKey": "Chave de API DeepSeek",
 		"getDeepSeekApiKey": "Obter chave de API DeepSeek",
 		"geminiApiKey": "Chave de API Gemini",
+		"getGroqApiKey": "Obter chave de API Groq",
+		"groqApiKey": "Chave de API Groq",
 		"getGeminiApiKey": "Obter chave de API Gemini",
 		"openAiApiKey": "Chave de API OpenAI",
 		"openAiBaseUrl": "URL Base",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Defina uma URL alternativa para o modelo Codestral.",
 		"xaiApiKey": "Chave de API xAI",
 		"getXaiApiKey": "Obter chave de API xAI",
+		"litellmApiKey": "Chave API LiteLLM",
+		"litellmBaseUrl": "URL base LiteLLM",
 		"awsCredentials": "Credenciais AWS",
 		"awsProfile": "Perfil AWS",
 		"awsProfileName": "Nome do Perfil AWS",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Configurações do terminal: Básicas",
+			"description": "Configurações básicas do terminal"
+		},
+		"advanced": {
+			"label": "Configurações do terminal: Avançadas",
+			"description": "As seguintes opções podem exigir reiniciar o terminal para aplicar a configuração."
+		},
 		"outputLineLimit": {
 			"label": "Limite de saída do terminal",
 			"description": "Número máximo de linhas a incluir na saída do terminal ao executar comandos. Quando excedido, as linhas serão removidas do meio, economizando token."
@@ -322,7 +344,7 @@
 		},
 		"zdotdir": {
 			"label": "Ativar gerenciamento do ZDOTDIR",
-			"description": "Quando ativado, cria um diretório temporário para o ZDOTDIR para lidar corretamente com a integração do shell zsh. Isso garante que a integração do shell do VSCode funcione corretamente com o zsh enquanto preserva sua configuração do zsh. (experimental)"
+			"description": "Quando ativado, cria um diretório temporário para o ZDOTDIR para lidar corretamente com a integração do shell zsh. Isso garante que a integração do shell do VSCode funcione corretamente com o zsh enquanto preserva sua configuração do zsh."
 		},
 		"commandDelay": {
 			"label": "Atraso de comando do terminal",
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Ativar integração Oh My Zsh",
-			"description": "Quando ativado, define ITERM_SHELL_INTEGRATION_INSTALLED=Yes para habilitar os recursos de integração do shell Oh My Zsh. (experimental)"
+			"description": "Quando ativado, define ITERM_SHELL_INTEGRATION_INSTALLED=Yes para habilitar os recursos de integração do shell Oh My Zsh. A aplicação desta configuração pode exigir a reinicialização do IDE."
 		},
 		"zshP10k": {
 			"label": "Ativar integração Powerlevel10k",
-			"description": "Quando ativado, define POWERLEVEL9K_TERM_SHELL_INTEGRATION=true para habilitar os recursos de integração do shell Powerlevel10k. (experimental)"
+			"description": "Quando ativado, define POWERLEVEL9K_TERM_SHELL_INTEGRATION=true para habilitar os recursos de integração do shell Powerlevel10k."
+		},
+		"inheritEnv": {
+			"label": "Herdar variáveis de ambiente",
+			"description": "Quando ativado, o terminal herda variáveis de ambiente do processo pai do VSCode, como configurações de integração do shell definidas no perfil do usuário. Isso alterna diretamente a configuração global do VSCode `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "Ativar cache de prompts",
-		"description": "Quando ativado, o Roo usará este modelo com o cache de prompts ativado para reduzir custos."
+		"label": "Desativar cache de prompts",
+		"description": "Quando marcado, o Roo não usará o cache de prompts para este modelo."
 	},
 	"temperature": {
 		"useCustom": "Usar temperatura personalizada",

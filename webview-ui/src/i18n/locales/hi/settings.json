@@ -4,7 +4,9 @@
 		"done": "पूर्ण",
 		"cancel": "रद्द करें",
 		"reset": "रीसेट करें",
-		"select": "चुनें"
+		"select": "चुनें",
+		"add": "हेडर जोड़ें",
+		"remove": "हटाएं"
 	},
 	"header": {
 		"title": "सेटिंग्स",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "प्रदाता",
-		"autoApprove": "स्वतः अनुमोदन",
-		"browser": "ब्राउज़र / कंप्यूटर उपयोग",
+		"autoApprove": "अनुमोदन",
+		"browser": "ब्राउज़र",
 		"checkpoints": "चेकपॉइंट",
 		"notifications": "सूचनाएँ",
-		"contextManagement": "संदर्भ प्रबंधन",
+		"contextManagement": "संदर्भ",
 		"terminal": "टर्मिनल",
-		"advanced": "उन्नत",
-		"experimental": "प्रायोगिक सुविधाएँ",
+		"experimental": "प्रायोगिक",
 		"language": "भाषा",
-		"about": "Roo Code के बारे में",
-		"interface": "इंटरफ़ेस"
+		"about": "परिचय"
 	},
 	"autoApprove": {
 		"description": "Roo को अनुमोदन की आवश्यकता के बिना स्वचालित रूप से ऑपरेशन करने की अनुमति दें। इन सेटिंग्स को केवल तभी सक्षम करें जब आप AI पर पूरी तरह से भरोसा करते हों और संबंधित सुरक्षा जोखिमों को समझते हों।",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "कस्टम बेस URL का उपयोग करें",
 		"useHostHeader": "कस्टम होस्ट हेडर का उपयोग करें",
 		"useLegacyFormat": "पुराने OpenAI API प्रारूप का उपयोग करें",
+		"customHeaders": "कस्टम हेडर्स",
+		"headerName": "हेडर नाम",
+		"headerValue": "हेडर मूल्य",
+		"noCustomHeaders": "कोई कस्टम हेडर परिभाषित नहीं है। एक जोड़ने के लिए + बटन पर क्लिक करें।",
 		"requestyApiKey": "Requesty API कुंजी",
 		"getRequestyApiKey": "Requesty API कुंजी प्राप्त करें",
+		"refreshModels": {
+			"label": "मॉडल रिफ्रेश करें",
+			"hint": "नवीनतम मॉडल देखने के लिए कृपया सेटिंग्स को फिर से खोलें।"
+		},
 		"openRouterTransformsText": "संदर्भ आकार के लिए प्रॉम्प्ट और संदेश श्रृंखलाओं को संपीड़ित करें (<a>OpenRouter ट्रांसफॉर्म</a>)",
 		"anthropicApiKey": "Anthropic API कुंजी",
 		"getAnthropicApiKey": "Anthropic API कुंजी प्राप्त करें",
 		"anthropicUseAuthToken": "X-Api-Key के बजाय Anthropic API कुंजी को Authorization हेडर के रूप में पास करें",
+		"chutesApiKey": "Chutes API कुंजी",
+		"getChutesApiKey": "Chutes API कुंजी प्राप्त करें",
 		"deepSeekApiKey": "DeepSeek API कुंजी",
 		"getDeepSeekApiKey": "DeepSeek API कुंजी प्राप्त करें",
 		"geminiApiKey": "Gemini API कुंजी",
+		"getGroqApiKey": "Groq API कुंजी प्राप्त करें",
+		"groqApiKey": "Groq API कुंजी",
 		"getGeminiApiKey": "Gemini API कुंजी प्राप्त करें",
 		"openAiApiKey": "OpenAI API कुंजी",
 		"openAiBaseUrl": "बेस URL",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Codestral मॉडल के लिए वैकल्पिक URL सेट करें।",
 		"xaiApiKey": "xAI API कुंजी",
 		"getXaiApiKey": "xAI API कुंजी प्राप्त करें",
+		"litellmApiKey": "LiteLLM API कुंजी",
+		"litellmBaseUrl": "LiteLLM आधार URL",
 		"awsCredentials": "AWS क्रेडेंशियल्स",
 		"awsProfile": "AWS प्रोफाइल",
 		"awsProfileName": "AWS प्रोफाइल नाम",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "टर्मिनल सेटिंग्स: मूल",
+			"description": "मूल टर्मिनल सेटिंग्स"
+		},
+		"advanced": {
+			"label": "टर्मिनल सेटिंग्स: उन्नत",
+			"description": "निम्नलिखित विकल्पों को लागू करने के लिए टर्मिनल को पुनरारंभ करने की आवश्यकता हो सकती है"
+		},
 		"outputLineLimit": {
 			"label": "टर्मिनल आउटपुट सीमा",
 			"description": "कमांड निष्पादित करते समय टर्मिनल आउटपुट में शामिल करने के लिए पंक्तियों की अधिकतम संख्या। पार होने पर पंक्तियाँ मध्य से हटा दी जाएंगी, token बचाते हुए।"
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh एकीकरण सक्षम करें",
-			"description": "सक्षम होने पर, Oh My Zsh शेल एकीकरण सुविधाओं को सक्षम करने के लिए ITERM_SHELL_INTEGRATION_INSTALLED=Yes सेट करता है। (प्रयोगात्मक)"
+			"description": "सक्षम होने पर, Oh My Zsh शेल एकीकरण सुविधाओं को सक्षम करने के लिए ITERM_SHELL_INTEGRATION_INSTALLED=Yes सेट करता है। इस सेटिंग को लागू करने के लिए IDE को पुनरारंभ करने की आवश्यकता हो सकती है। (प्रयोगात्मक)"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k एकीकरण सक्षम करें",
 			"description": "सक्षम होने पर, Powerlevel10k शेल एकीकरण सुविधाओं को सक्षम करने के लिए POWERLEVEL9K_TERM_SHELL_INTEGRATION=true सेट करता है। (प्रयोगात्मक)"
+		},
+		"inheritEnv": {
+			"label": "पर्यावरण चर विरासत में लें",
+			"description": "सक्षम होने पर, टर्मिनल VSCode के मूल प्रक्रिया से पर्यावरण चर विरासत में लेता है, जैसे उपयोगकर्ता प्रोफ़ाइल में परिभाषित शेल एकीकरण सेटिंग्स। यह VSCode की वैश्विक सेटिंग `terminal.integrated.inheritEnv` को सीधे टॉगल करता है"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "प्रॉम्प्ट कैशिंग सक्षम करें",
-		"description": "जब सक्षम किया जाता है, तो Roo लागत को कम करने के लिए प्रॉम्प्ट कैशिंग चालू के साथ इस मॉडल का उपयोग करेगा।"
+		"label": "प्रॉम्प्ट कैशिंग अक्षम करें",
+		"description": "जब चेक किया जाता है, तो Roo इस मॉडल के लिए प्रॉम्प्ट कैशिंग का उपयोग नहीं करेगा।"
 	},
 	"temperature": {
 		"useCustom": "कस्टम तापमान का उपयोग करें",

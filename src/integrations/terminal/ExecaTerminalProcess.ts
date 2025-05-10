@@ -1,11 +1,14 @@
 import { execa, ExecaError } from "execa"
+import psTree from "ps-tree"
+import process from "process"
 
 import type { RooTerminal } from "./types"
 import { BaseTerminalProcess } from "./BaseTerminalProcess"
 
 export class ExecaTerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<RooTerminal>
-	private controller?: AbortController
+	private aborted = false
+	private pid?: number
 
 	constructor(terminal: RooTerminal) {
 		super()
@@ -29,7 +32,6 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 
 	public override async run(command: string) {
 		this.command = command
-		this.controller = new AbortController()
 
 		try {
 			this.isHot = true
@@ -37,18 +39,23 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 			const subprocess = execa({
 				shell: true,
 				cwd: this.terminal.getCurrentWorkingDirectory(),
-				cancelSignal: this.controller.signal,
+				all: true,
 			})`${command}`
 
-			this.terminal.setActiveStream(subprocess)
-			this.emit("line", "")
+			this.pid = subprocess.pid
+			const stream = subprocess.iterable({ from: "all", preserveNewlines: true })
+			this.terminal.setActiveStream(stream, subprocess.pid)
 
-			for await (const line of subprocess) {
-				this.fullOutput += `${line}\n`
+			for await (const line of stream) {
+				if (this.aborted) {
+					break
+				}
+
+				this.fullOutput += line
 
 				const now = Date.now()
 
-				if (this.isListening && (now - this.lastEmitTime_ms > 250 || this.lastEmitTime_ms === 0)) {
+				if (this.isListening && (now - this.lastEmitTime_ms > 500 || this.lastEmitTime_ms === 0)) {
 					this.emitRemainingBufferIfListening()
 					this.lastEmitTime_ms = now
 				}
@@ -56,15 +63,41 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				this.startHotTimer(line)
 			}
 
+			if (this.aborted) {
+				let timeoutId: NodeJS.Timeout | undefined
+
+				const kill = new Promise<void>((resolve) => {
+					timeoutId = setTimeout(() => {
+						try {
+							subprocess.kill("SIGKILL")
+						} catch (e) {}
+
+						resolve()
+					}, 5_000)
+				})
+
+				try {
+					await Promise.race([subprocess, kill])
+				} catch (error) {
+					console.log(
+						`[ExecaTerminalProcess] subprocess termination error: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+
+				if (timeoutId) {
+					clearTimeout(timeoutId)
+				}
+			}
+
 			this.emit("shell_execution_complete", { exitCode: 0 })
 		} catch (error) {
 			if (error instanceof ExecaError) {
 				console.error(`[ExecaTerminalProcess] shell execution error: ${error.message}`)
-				this.emit("shell_execution_complete", {
-					exitCode: error.exitCode ?? 1,
-					signalName: error.signal,
-				})
+				this.emit("shell_execution_complete", { exitCode: error.exitCode ?? 0, signalName: error.signal })
 			} else {
+				console.error(
+					`[ExecaTerminalProcess] shell execution error: ${error instanceof Error ? error.message : String(error)}`,
+				)
 				this.emit("shell_execution_complete", { exitCode: 1 })
 			}
 		}
@@ -83,7 +116,38 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 	}
 
 	public override abort() {
-		this.controller?.abort()
+		this.aborted = true
+
+		if (this.pid) {
+			psTree(this.pid, async (err, children) => {
+				if (!err) {
+					const pids = children.map((p) => parseInt(p.PID))
+
+					for (const pid of pids) {
+						try {
+							process.kill(pid, "SIGINT")
+						} catch (e) {
+							console.warn(
+								`[ExecaTerminalProcess] Failed to send SIGINT to child PID ${pid}: ${e instanceof Error ? e.message : String(e)}`,
+							)
+							// Optionally try SIGTERM or SIGKILL on failure, depending on desired behavior.
+						}
+					}
+				} else {
+					console.error(
+						`[ExecaTerminalProcess] Failed to get process tree for PID ${this.pid}: ${err.message}`,
+					)
+				}
+			})
+
+			try {
+				process.kill(this.pid, "SIGINT")
+			} catch (e) {
+				console.warn(
+					`[ExecaTerminalProcess] Failed to send SIGINT to main PID ${this.pid}: ${e instanceof Error ? e.message : String(e)}`,
+				)
+			}
+		}
 	}
 
 	public override hasUnretrievedOutput() {

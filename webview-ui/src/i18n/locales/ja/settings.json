@@ -4,7 +4,9 @@
 		"done": "完了",
 		"cancel": "キャンセル",
 		"reset": "リセット",
-		"select": "選択"
+		"select": "選択",
+		"add": "ヘッダーを追加",
+		"remove": "削除"
 	},
 	"header": {
 		"title": "設定",
@@ -21,16 +23,14 @@
 	"sections": {
 		"providers": "プロバイダー",
 		"autoApprove": "自動承認",
-		"browser": "ブラウザ / コンピューター使用",
+		"browser": "コンピューターアクセス",
 		"checkpoints": "チェックポイント",
 		"notifications": "通知",
-		"contextManagement": "コンテキスト管理",
+		"contextManagement": "コンテキスト",
 		"terminal": "ターミナル",
-		"advanced": "詳細設定",
-		"experimental": "実験的機能",
+		"experimental": "実験的",
 		"language": "言語",
-		"about": "Roo Codeについて",
-		"interface": "インターフェース"
+		"about": "Roo Codeについて"
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "カスタムベースURLを使用",
 		"useHostHeader": "カスタムHostヘッダーを使用",
 		"useLegacyFormat": "レガシーOpenAI API形式を使用",
+		"customHeaders": "カスタムヘッダー",
+		"headerName": "ヘッダー名",
+		"headerValue": "ヘッダー値",
+		"noCustomHeaders": "カスタムヘッダーが定義されていません。+ ボタンをクリックして追加してください。",
 		"requestyApiKey": "Requesty APIキー",
 		"getRequestyApiKey": "Requesty APIキーを取得",
+		"refreshModels": {
+			"label": "モデルを更新",
+			"hint": "最新のモデルを表示するには設定を再度開いてください。"
+		},
 		"openRouterTransformsText": "プロンプトとメッセージチェーンをコンテキストサイズに圧縮 (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic APIキー",
 		"getAnthropicApiKey": "Anthropic APIキーを取得",
 		"anthropicUseAuthToken": "Anthropic APIキーをX-Api-Keyの代わりにAuthorizationヘッダーとして渡す",
+		"chutesApiKey": "Chutes APIキー",
+		"getChutesApiKey": "Chutes APIキーを取得",
 		"deepSeekApiKey": "DeepSeek APIキー",
 		"getDeepSeekApiKey": "DeepSeek APIキーを取得",
 		"geminiApiKey": "Gemini APIキー",
+		"getGroqApiKey": "Groq APIキーを取得",
+		"groqApiKey": "Groq APIキー",
 		"getGeminiApiKey": "Gemini APIキーを取得",
 		"openAiApiKey": "OpenAI APIキー",
 		"openAiBaseUrl": "ベースURL",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Codestralモデルの代替URLを設定します。",
 		"xaiApiKey": "xAI APIキー",
 		"getXaiApiKey": "xAI APIキーを取得",
+		"litellmApiKey": "LiteLLM APIキー",
+		"litellmBaseUrl": "LiteLLM ベースURL",
 		"awsCredentials": "AWS認証情報",
 		"awsProfile": "AWSプロファイル",
 		"awsProfileName": "AWSプロファイル名",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "ターミナル設定：基本",
+			"description": "基本的なターミナル設定"
+		},
+		"advanced": {
+			"label": "ターミナル設定：詳細",
+			"description": "以下のオプションは設定を適用するためにターミナルの再起動が必要な場合があります"
+		},
 		"outputLineLimit": {
 			"label": "ターミナル出力制限",
 			"description": "コマンド実行時にターミナル出力に含める最大行数。超過すると中央から行が削除され、tokenを節約します。"
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh 統合を有効化",
-			"description": "有効にすると、ITERM_SHELL_INTEGRATION_INSTALLED=Yes を設定して Oh My Zsh シェル統合機能を有効にします。（実験的）"
+			"description": "有効にすると、ITERM_SHELL_INTEGRATION_INSTALLED=Yes を設定して Oh My Zsh シェル統合機能を有効にします。この設定を適用するには、IDEの再起動が必要な場合があります。（実験的）"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k 統合を有効化",
 			"description": "有効にすると、POWERLEVEL9K_TERM_SHELL_INTEGRATION=true を設定して Powerlevel10k シェル統合機能を有効にします。（実験的）"
+		},
+		"inheritEnv": {
+			"label": "環境変数を継承",
+			"description": "有効にすると、ターミナルは VSCode の親プロセスから環境変数を継承します。ユーザープロファイルで定義されたシェル統合設定などが含まれます。これは VSCode のグローバル設定 `terminal.integrated.inheritEnv` を直接切り替えます"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "プロンプトキャッシングを有効化",
-		"description": "有効にすると、Rooはコスト削減のためにプロンプトキャッシングを有効にしてこのモデルを使用します。"
+		"label": "プロンプトキャッシュを無効化",
+		"description": "チェックすると、Rooはこのモデルに対してプロンプトキャッシュを使用しません。"
 	},
 	"temperature": {
 		"useCustom": "カスタム温度を使用",

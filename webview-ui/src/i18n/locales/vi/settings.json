@@ -4,7 +4,9 @@
 		"done": "Hoàn thành",
 		"cancel": "Hủy",
 		"reset": "Đặt lại",
-		"select": "Chọn"
+		"select": "Chọn",
+		"add": "Thêm tiêu đề",
+		"remove": "Xóa"
 	},
 	"header": {
 		"title": "Cài đặt",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "Nhà cung cấp",
-		"autoApprove": "Tự động phê duyệt",
-		"browser": "Trình duyệt / Sử dụng máy tính",
+		"autoApprove": "Phê duyệt",
+		"browser": "Trình duyệt",
 		"checkpoints": "Điểm kiểm tra",
 		"notifications": "Thông báo",
-		"contextManagement": "Quản lý ngữ cảnh",
+		"contextManagement": "Ngữ cảnh",
 		"terminal": "Terminal",
-		"advanced": "Nâng cao",
-		"experimental": "Tính năng thử nghiệm",
+		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
-		"about": "Về Roo Code",
-		"interface": "Giao diện"
+		"about": "Giới thiệu"
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
@@ -111,14 +111,22 @@
 		"useCustomBaseUrl": "Sử dụng URL cơ sở tùy chỉnh",
 		"useHostHeader": "Sử dụng tiêu đề Host tùy chỉnh",
 		"useLegacyFormat": "Sử dụng định dạng API OpenAI cũ",
+		"customHeaders": "Tiêu đề tùy chỉnh",
+		"headerName": "Tên tiêu đề",
+		"headerValue": "Giá trị tiêu đề",
+		"noCustomHeaders": "Chưa có tiêu đề tùy chỉnh nào được định nghĩa. Nhấp vào nút + để thêm.",
 		"requestyApiKey": "Khóa API Requesty",
 		"getRequestyApiKey": "Lấy khóa API Requesty",
 		"anthropicApiKey": "Khóa API Anthropic",
 		"getAnthropicApiKey": "Lấy khóa API Anthropic",
 		"anthropicUseAuthToken": "Truyền khóa API Anthropic dưới dạng tiêu đề Authorization thay vì X-Api-Key",
+		"chutesApiKey": "Khóa API Chutes",
+		"getChutesApiKey": "Lấy khóa API Chutes",
 		"deepSeekApiKey": "Khóa API DeepSeek",
 		"getDeepSeekApiKey": "Lấy khóa API DeepSeek",
 		"geminiApiKey": "Khóa API Gemini",
+		"getGroqApiKey": "Lấy khóa API Groq",
+		"groqApiKey": "Khóa API Groq",
 		"getGeminiApiKey": "Lấy khóa API Gemini",
 		"openAiApiKey": "Khóa API OpenAI",
 		"openAiBaseUrl": "URL cơ sở",
@@ -129,6 +137,8 @@
 		"codestralBaseUrlDesc": "Đặt URL thay thế cho mô hình Codestral.",
 		"xaiApiKey": "Khóa API xAI",
 		"getXaiApiKey": "Lấy khóa API xAI",
+		"litellmApiKey": "Khóa API LiteLLM",
+		"litellmBaseUrl": "URL cơ sở LiteLLM",
 		"awsCredentials": "Thông tin xác thực AWS",
 		"awsProfile": "Hồ sơ AWS",
 		"awsProfileName": "Tên hồ sơ AWS",
@@ -169,6 +179,10 @@
 			"warning": "Lưu ý: Roo Code sử dụng các lời nhắc phức tạp và hoạt động tốt nhất với các mô hình Claude. Các mô hình kém mạnh hơn có thể không hoạt động như mong đợi."
 		},
 		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
+		"refreshModels": {
+			"label": "Làm mới mô hình",
+			"hint": "Vui lòng mở lại cài đặt để xem các mô hình mới nhất."
+		},
 		"unboundApiKey": "Khóa API Unbound",
 		"getUnboundApiKey": "Lấy khóa API Unbound",
 		"humanRelay": {
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Cài đặt Terminal: Cơ bản",
+			"description": "Cài đặt cơ bản cho terminal"
+		},
+		"advanced": {
+			"label": "Cài đặt Terminal: Nâng cao",
+			"description": "Các tùy chọn sau có thể yêu cầu khởi động lại terminal để áp dụng cài đặt."
+		},
 		"outputLineLimit": {
 			"label": "Giới hạn đầu ra terminal",
 			"description": "Số dòng tối đa để đưa vào đầu ra terminal khi thực hiện lệnh. Khi vượt quá, các dòng sẽ bị xóa khỏi phần giữa, tiết kiệm token."
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Bật tích hợp Oh My Zsh",
-			"description": "Khi được bật, đặt ITERM_SHELL_INTEGRATION_INSTALLED=Yes để kích hoạt các tính năng tích hợp shell của Oh My Zsh. (thử nghiệm)"
+			"description": "Khi được bật, đặt ITERM_SHELL_INTEGRATION_INSTALLED=Yes để kích hoạt các tính năng tích hợp shell của Oh My Zsh. Việc áp dụng cài đặt này có thể yêu cầu khởi động lại IDE. (thử nghiệm)"
 		},
 		"zshP10k": {
 			"label": "Bật tích hợp Powerlevel10k",
 			"description": "Khi được bật, đặt POWERLEVEL9K_TERM_SHELL_INTEGRATION=true để kích hoạt các tính năng tích hợp shell của Powerlevel10k. (thử nghiệm)"
+		},
+		"inheritEnv": {
+			"label": "Kế thừa biến môi trường",
+			"description": "Khi được bật, terminal sẽ kế thừa các biến môi trường từ tiến trình cha của VSCode, như các cài đặt tích hợp shell được định nghĩa trong hồ sơ người dùng. Điều này trực tiếp chuyển đổi cài đặt toàn cục của VSCode `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "Bật bộ nhớ đệm prompt",
-		"description": "Khi được bật, Roo sẽ sử dụng mô hình này với bộ nhớ đệm prompt được bật để giảm chi phí."
+		"label": "Tắt bộ nhớ đệm prompt",
+		"description": "Khi được chọn, Roo sẽ không sử dụng bộ nhớ đệm prompt cho mô hình này."
 	},
 	"temperature": {
 		"useCustom": "Sử dụng nhiệt độ tùy chỉnh",

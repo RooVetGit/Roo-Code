@@ -4,7 +4,9 @@
 		"done": "Terminé",
 		"cancel": "Annuler",
 		"reset": "Réinitialiser",
-		"select": "Sélectionner"
+		"select": "Sélectionner",
+		"add": "Ajouter un en-tête",
+		"remove": "Supprimer"
 	},
 	"header": {
 		"title": "Paramètres",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "Fournisseurs",
-		"autoApprove": "Approbation automatique",
-		"browser": "Navigateur / Utilisation de l'ordinateur",
+		"autoApprove": "Auto-approbation",
+		"browser": "Accès ordinateur",
 		"checkpoints": "Points de contrôle",
 		"notifications": "Notifications",
-		"contextManagement": "Gestion du contexte",
+		"contextManagement": "Contexte",
 		"terminal": "Terminal",
-		"advanced": "Avancé",
-		"experimental": "Fonctionnalités expérimentales",
+		"experimental": "Expérimental",
 		"language": "Langue",
-		"about": "À propos de Roo Code",
-		"interface": "Interface"
+		"about": "À propos de Roo Code"
 	},
 	"autoApprove": {
 		"description": "Permettre à Roo d'effectuer automatiquement des opérations sans requérir d'approbation. Activez ces paramètres uniquement si vous faites entièrement confiance à l'IA et que vous comprenez les risques de sécurité associés.",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "Utiliser une URL de base personnalisée",
 		"useHostHeader": "Utiliser un en-tête Host personnalisé",
 		"useLegacyFormat": "Utiliser le format API OpenAI hérité",
+		"customHeaders": "En-têtes personnalisés",
+		"headerName": "Nom de l'en-tête",
+		"headerValue": "Valeur de l'en-tête",
+		"noCustomHeaders": "Aucun en-tête personnalisé défini. Cliquez sur le bouton + pour en ajouter un.",
 		"requestyApiKey": "Clé API Requesty",
 		"getRequestyApiKey": "Obtenir la clé API Requesty",
+		"refreshModels": {
+			"label": "Actualiser les modèles",
+			"hint": "Veuillez rouvrir les paramètres pour voir les modèles les plus récents."
+		},
 		"openRouterTransformsText": "Compresser les prompts et chaînes de messages à la taille du contexte (<a>Transformations OpenRouter</a>)",
 		"anthropicApiKey": "Clé API Anthropic",
 		"getAnthropicApiKey": "Obtenir la clé API Anthropic",
 		"anthropicUseAuthToken": "Passer la clé API Anthropic comme en-tête d'autorisation au lieu de X-Api-Key",
+		"chutesApiKey": "Clé API Chutes",
+		"getChutesApiKey": "Obtenir la clé API Chutes",
 		"deepSeekApiKey": "Clé API DeepSeek",
 		"getDeepSeekApiKey": "Obtenir la clé API DeepSeek",
 		"geminiApiKey": "Clé API Gemini",
+		"getGroqApiKey": "Obtenir la clé API Groq",
+		"groqApiKey": "Clé API Groq",
 		"getGeminiApiKey": "Obtenir la clé API Gemini",
 		"openAiApiKey": "Clé API OpenAI",
 		"openAiBaseUrl": "URL de base",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Définir une URL alternative pour le modèle Codestral.",
 		"xaiApiKey": "Clé API xAI",
 		"getXaiApiKey": "Obtenir la clé API xAI",
+		"litellmApiKey": "Clé API LiteLLM",
+		"litellmBaseUrl": "URL de base LiteLLM",
 		"awsCredentials": "Identifiants AWS",
 		"awsProfile": "Profil AWS",
 		"awsProfileName": "Nom du profil AWS",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Paramètres du terminal : Base",
+			"description": "Paramètres de base du terminal"
+		},
+		"advanced": {
+			"label": "Paramètres du terminal : Avancé",
+			"description": "Les options suivantes peuvent nécessiter un redémarrage du terminal pour appliquer le paramètre."
+		},
 		"outputLineLimit": {
 			"label": "Limite de sortie du terminal",
 			"description": "Nombre maximum de lignes à inclure dans la sortie du terminal lors de l'exécution de commandes. Lorsque ce nombre est dépassé, les lignes seront supprimées du milieu, économisant des token."
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Activer l'intégration Oh My Zsh",
-			"description": "Lorsqu'activé, définit ITERM_SHELL_INTEGRATION_INSTALLED=Yes pour activer les fonctionnalités d'intégration du shell Oh My Zsh. (expérimental)"
+			"description": "Lorsqu'activé, définit ITERM_SHELL_INTEGRATION_INSTALLED=Yes pour activer les fonctionnalités d'intégration du shell Oh My Zsh. L'application de ce paramètre peut nécessiter le redémarrage de l'IDE. (expérimental)"
 		},
 		"zshP10k": {
 			"label": "Activer l'intégration Powerlevel10k",
 			"description": "Lorsqu'activé, définit POWERLEVEL9K_TERM_SHELL_INTEGRATION=true pour activer les fonctionnalités d'intégration du shell Powerlevel10k. (expérimental)"
+		},
+		"inheritEnv": {
+			"label": "Hériter des variables d'environnement",
+			"description": "Lorsqu'activé, le terminal hérite des variables d'environnement du processus parent VSCode, comme les paramètres d'intégration du shell définis dans le profil utilisateur. Cela bascule directement le paramètre global VSCode `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "Activer la mise en cache des prompts",
-		"description": "Lorsque cette option est activée, Roo utilisera ce modèle avec la mise en cache des prompts activée afin de réduire les coûts."
+		"label": "Désactiver la mise en cache des prompts",
+		"description": "Lorsque cette option est cochée, Roo n'utilisera pas la mise en cache des prompts pour ce modèle."
 	},
 	"temperature": {
 		"useCustom": "Utiliser une température personnalisée",

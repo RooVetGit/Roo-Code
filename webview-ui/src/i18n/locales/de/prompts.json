@@ -7,7 +7,8 @@
 		"editModesConfig": "Moduskonfiguration bearbeiten",
 		"editGlobalModes": "Globale Modi bearbeiten",
 		"editProjectModes": "Projektmodi bearbeiten (.roomodes)",
-		"createModeHelpText": "Klicke auf +, um einen neuen benutzerdefinierten Modus zu erstellen, oder bitte Roo einfach im Chat, einen für dich zu erstellen!"
+		"createModeHelpText": "Klicke auf +, um einen neuen benutzerdefinierten Modus zu erstellen, oder bitte Roo einfach im Chat, einen für dich zu erstellen!",
+		"selectMode": "Modi suchen"
 	},
 	"apiConfiguration": {
 		"title": "API-Konfiguration",
@@ -25,7 +26,8 @@
 			"browser": "Browser verwenden",
 			"command": "Befehle ausführen",
 			"mcp": "MCP verwenden"
-		}
+		},
+		"noTools": "Keine"
 	},
 	"roleDefinition": {
 		"title": "Rollendefinition",

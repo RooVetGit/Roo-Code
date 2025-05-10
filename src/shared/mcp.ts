@@ -1,8 +1,15 @@
+export type McpErrorEntry = {
+	message: string
+	timestamp: number
+	level: "error" | "warn" | "info"
+}
+
 export type McpServer = {
 	name: string
 	config: string
 	status: "connected" | "connecting" | "disconnected"
 	error?: string
+	errorHistory?: McpErrorEntry[]
 	tools?: McpTool[]
 	resources?: McpResource[]
 	resourceTemplates?: McpResourceTemplate[]

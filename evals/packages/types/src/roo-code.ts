@@ -18,13 +18,13 @@ export const providerNames = [
 	"lmstudio",
 	"gemini",
 	"openai-native",
-	"xai",
 	"mistral",
 	"deepseek",
 	"unbound",
 	"requesty",
 	"human-relay",
 	"fake-ai",
+	"xai",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -42,19 +42,6 @@ export const toolGroupsSchema = z.enum(toolGroups)
 export type ToolGroup = z.infer<typeof toolGroupsSchema>
 
 /**
- * CheckpointStorage
- */
-
-export const checkpointStorages = ["task", "workspace"] as const
-
-export const checkpointStoragesSchema = z.enum(checkpointStorages)
-
-export type CheckpointStorage = z.infer<typeof checkpointStoragesSchema>
-
-export const isCheckpointStorage = (value: string): value is CheckpointStorage =>
-	checkpointStorages.includes(value as CheckpointStorage)
-
-/**
  * Language
  */
 
@@ -68,6 +55,7 @@ export const languages = [
 	"it",
 	"ja",
 	"ko",
+	"nl",
 	"pl",
 	"pt-BR",
 	"ru",
@@ -94,37 +82,51 @@ export const telemetrySettingsSchema = z.enum(telemetrySettings)
 export type TelemetrySetting = z.infer<typeof telemetrySettingsSchema>
 
 /**
+ * ReasoningEffort
+ */
+
+export const reasoningEfforts = ["low", "medium", "high"] as const
+
+export const reasoningEffortsSchema = z.enum(reasoningEfforts)
+
+export type ReasoningEffort = z.infer<typeof reasoningEffortsSchema>
+
+/**
  * ModelInfo
  */
 
 export const modelInfoSchema = z.object({
 	maxTokens: z.number().nullish(),
+	maxThinkingTokens: z.number().nullish(),
 	contextWindow: z.number(),
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	isPromptCacheOptional: z.boolean().optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
 	cacheReadsPrice: z.number().optional(),
 	description: z.string().optional(),
-	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
 	thinking: z.boolean().optional(),
+	minTokensPerCachePoint: z.number().optional(),
+	maxCachePoints: z.number().optional(),
+	cachableFields: z.array(z.string()).optional(),
+	tiers: z
+		.array(
+			z.object({
+				contextWindow: z.number(),
+				inputPrice: z.number().optional(),
+				outputPrice: z.number().optional(),
+				cacheWritesPrice: z.number().optional(),
+				cacheReadsPrice: z.number().optional(),
+			}),
+		)
+		.optional(),
 })
 
 export type ModelInfo = z.infer<typeof modelInfoSchema>
-
-/**
- * ApiConfigMeta
- */
-
-export const apiConfigMetaSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	apiProvider: providerNamesSchema.optional(),
-})
-
-export type ApiConfigMeta = z.infer<typeof apiConfigMetaSchema>
 
 /**
  * HistoryItem
@@ -141,6 +143,7 @@ export const historyItemSchema = z.object({
 	cacheReads: z.number().optional(),
 	totalCost: z.number(),
 	size: z.number().optional(),
+	workspace: z.string().optional(),
 })
 
 export type HistoryItem = z.infer<typeof historyItemSchema>
@@ -269,6 +272,29 @@ export const customSupportPromptsSchema = z.record(z.string(), z.string().option
 export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
 
 /**
+ * CommandExecutionStatus
+ */
+
+export const commandExecutionStatusSchema = z.discriminatedUnion("status", [
+	z.object({
+		executionId: z.string(),
+		status: z.literal("running"),
+		pid: z.number().optional(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("exited"),
+		exitCode: z.number().optional(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("fallback"),
+	}),
+])
+
+export type CommandExecutionStatus = z.infer<typeof commandExecutionStatusSchema>
+
+/**
  * ExperimentId
  */
 
@@ -292,54 +318,94 @@ export type Experiments = z.infer<typeof experimentsSchema>
 type _AssertExperiments = AssertEqual<Equals<ExperimentId, Keys<Experiments>>>
 
 /**
+ * ProviderSettingsEntry
+ */
+
+export const providerSettingsEntrySchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	apiProvider: providerNamesSchema.optional(),
+})
+
+export type ProviderSettingsEntry = z.infer<typeof providerSettingsEntrySchema>
+
+/**
  * ProviderSettings
  */
 
-export const providerSettingsSchema = z.object({
-	apiProvider: providerNamesSchema.optional(),
-	// Anthropic
+const genericProviderSettingsSchema = z.object({
+	includeMaxTokens: z.boolean().optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
+	promptCachingDisabled: z.boolean().optional(),
+	diffEnabled: z.boolean().optional(),
+	fuzzyMatchThreshold: z.number().optional(),
+	modelTemperature: z.number().nullish(),
+	rateLimitSeconds: z.number().optional(),
+	// Claude 3.7 Sonnet Thinking
+	modelMaxTokens: z.number().optional(),
+	modelMaxThinkingTokens: z.number().optional(),
+})
+
+const anthropicSchema = z.object({
 	apiModelId: z.string().optional(),
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
 	anthropicUseAuthToken: z.boolean().optional(),
-	// Glama
+})
+
+const glamaSchema = z.object({
 	glamaModelId: z.string().optional(),
 	glamaApiKey: z.string().optional(),
-	// OpenRouter
+})
+
+const openRouterSchema = z.object({
 	openRouterApiKey: z.string().optional(),
 	openRouterModelId: z.string().optional(),
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
-	// Amazon Bedrock
+})
+
+const bedrockSchema = z.object({
 	awsAccessKey: z.string().optional(),
 	awsSecretKey: z.string().optional(),
 	awsSessionToken: z.string().optional(),
 	awsRegion: z.string().optional(),
 	awsUseCrossRegionInference: z.boolean().optional(),
 	awsUsePromptCache: z.boolean().optional(),
-	awspromptCacheId: z.string().optional(),
 	awsProfile: z.string().optional(),
 	awsUseProfile: z.boolean().optional(),
 	awsCustomArn: z.string().optional(),
-	// Google Vertex
+})
+
+const vertexSchema = z.object({
 	vertexKeyFile: z.string().optional(),
 	vertexJsonCredentials: z.string().optional(),
 	vertexProjectId: z.string().optional(),
 	vertexRegion: z.string().optional(),
-	// OpenAI
+})
+
+const openAiSchema = z.object({
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
+	openAiLegacyFormat: z.boolean().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
-	openAiCustomModelInfo: modelInfoSchema.optional(),
+	openAiCustomModelInfo: modelInfoSchema.nullish(),
 	openAiUseAzure: z.boolean().optional(),
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
-	// Ollama
+	enableReasoningEffort: z.boolean().optional(),
+	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
+	openAiHeaders: z.record(z.string(), z.string()).optional(),
+})
+
+const ollamaSchema = z.object({
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
-	// VS Code LM
+})
+
+const vsCodeLmSchema = z.object({
 	vsCodeLmModelSelector: z
 		.object({
 			vendor: z.string().optional(),
@@ -348,40 +414,208 @@ export const providerSettingsSchema = z.object({
 			id: z.string().optional(),
 		})
 		.optional(),
-	// LM Studio
+})
+
+const lmStudioSchema = z.object({
 	lmStudioModelId: z.string().optional(),
 	lmStudioBaseUrl: z.string().optional(),
 	lmStudioDraftModelId: z.string().optional(),
 	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
-	// Gemini
+})
+
+const geminiSchema = z.object({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
-	// OpenAI Native
+})
+
+const openAiNativeSchema = z.object({
 	openAiNativeApiKey: z.string().optional(),
-	// XAI
-	xaiApiKey: z.string().optional(),
-	// Mistral
+	openAiNativeBaseUrl: z.string().optional(),
+})
+
+const mistralSchema = z.object({
 	mistralApiKey: z.string().optional(),
 	mistralCodestralUrl: z.string().optional(),
-	// DeepSeek
+})
+
+const deepSeekSchema = z.object({
 	deepSeekBaseUrl: z.string().optional(),
 	deepSeekApiKey: z.string().optional(),
-	// Unbound
+})
+
+const unboundSchema = z.object({
 	unboundApiKey: z.string().optional(),
 	unboundModelId: z.string().optional(),
-	// Requesty
+})
+
+const requestySchema = z.object({
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
-	// Claude 3.7 Sonnet Thinking
-	modelMaxTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
-	modelMaxThinkingTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
-	// Generic
-	includeMaxTokens: z.boolean().optional(),
-	modelTemperature: z.number().nullish(),
-	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
-	rateLimitSeconds: z.number().optional(),
-	// Fake AI
+})
+
+const humanRelaySchema = z.object({})
+
+const fakeAiSchema = z.object({
 	fakeAi: z.unknown().optional(),
+})
+
+const xaiSchema = z.object({
+	xaiApiKey: z.string().optional(),
+})
+
+const groqSchema = z.object({
+	groqApiKey: z.string().optional(),
+})
+
+const chutesSchema = z.object({
+	chutesApiKey: z.string().optional(),
+})
+
+const litellmSchema = z.object({
+	litellmBaseUrl: z.string().optional(),
+	litellmApiKey: z.string().optional(),
+	litellmModelId: z.string().optional(),
+})
+
+const defaultSchema = z.object({
+	apiProvider: z.undefined(),
+})
+
+export const providerSettingsSchemaDiscriminated = z
+	.discriminatedUnion("apiProvider", [
+		anthropicSchema.merge(
+			z.object({
+				apiProvider: z.literal("anthropic"),
+			}),
+		),
+		glamaSchema.merge(
+			z.object({
+				apiProvider: z.literal("glama"),
+			}),
+		),
+		openRouterSchema.merge(
+			z.object({
+				apiProvider: z.literal("openrouter"),
+			}),
+		),
+		bedrockSchema.merge(
+			z.object({
+				apiProvider: z.literal("bedrock"),
+			}),
+		),
+		vertexSchema.merge(
+			z.object({
+				apiProvider: z.literal("vertex"),
+			}),
+		),
+		openAiSchema.merge(
+			z.object({
+				apiProvider: z.literal("openai"),
+			}),
+		),
+		ollamaSchema.merge(
+			z.object({
+				apiProvider: z.literal("ollama"),
+			}),
+		),
+		vsCodeLmSchema.merge(
+			z.object({
+				apiProvider: z.literal("vscode-lm"),
+			}),
+		),
+		lmStudioSchema.merge(
+			z.object({
+				apiProvider: z.literal("lmstudio"),
+			}),
+		),
+		geminiSchema.merge(
+			z.object({
+				apiProvider: z.literal("gemini"),
+			}),
+		),
+		openAiNativeSchema.merge(
+			z.object({
+				apiProvider: z.literal("openai-native"),
+			}),
+		),
+		mistralSchema.merge(
+			z.object({
+				apiProvider: z.literal("mistral"),
+			}),
+		),
+		deepSeekSchema.merge(
+			z.object({
+				apiProvider: z.literal("deepseek"),
+			}),
+		),
+		unboundSchema.merge(
+			z.object({
+				apiProvider: z.literal("unbound"),
+			}),
+		),
+		requestySchema.merge(
+			z.object({
+				apiProvider: z.literal("requesty"),
+			}),
+		),
+		humanRelaySchema.merge(
+			z.object({
+				apiProvider: z.literal("human-relay"),
+			}),
+		),
+		fakeAiSchema.merge(
+			z.object({
+				apiProvider: z.literal("fake-ai"),
+			}),
+		),
+		xaiSchema.merge(
+			z.object({
+				apiProvider: z.literal("xai"),
+			}),
+		),
+		groqSchema.merge(
+			z.object({
+				apiProvider: z.literal("groq"),
+			}),
+		),
+		chutesSchema.merge(
+			z.object({
+				apiProvider: z.literal("chutes"),
+			}),
+		),
+		litellmSchema.merge(
+			z.object({
+				apiProvider: z.literal("litellm"),
+			}),
+		),
+		defaultSchema,
+	])
+	.and(genericProviderSettingsSchema)
+
+export const providerSettingsSchema = z.object({
+	apiProvider: providerNamesSchema.optional(),
+	...anthropicSchema.shape,
+	...glamaSchema.shape,
+	...openRouterSchema.shape,
+	...bedrockSchema.shape,
+	...vertexSchema.shape,
+	...openAiSchema.shape,
+	...ollamaSchema.shape,
+	...vsCodeLmSchema.shape,
+	...lmStudioSchema.shape,
+	...geminiSchema.shape,
+	...openAiNativeSchema.shape,
+	...mistralSchema.shape,
+	...deepSeekSchema.shape,
+	...unboundSchema.shape,
+	...requestySchema.shape,
+	...humanRelaySchema.shape,
+	...fakeAiSchema.shape,
+	...xaiSchema.shape,
+	...groqSchema.shape,
+	...chutesSchema.shape,
+	...litellmSchema.shape,
+	...genericProviderSettingsSchema.shape,
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
@@ -411,7 +645,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	awsRegion: undefined,
 	awsUseCrossRegionInference: undefined,
 	awsUsePromptCache: undefined,
-	awspromptCacheId: undefined,
 	awsProfile: undefined,
 	awsUseProfile: undefined,
 	awsCustomArn: undefined,
@@ -423,14 +656,16 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// OpenAI
 	openAiBaseUrl: undefined,
 	openAiApiKey: undefined,
+	openAiLegacyFormat: undefined,
 	openAiR1FormatEnabled: undefined,
 	openAiModelId: undefined,
 	openAiCustomModelInfo: undefined,
 	openAiUseAzure: undefined,
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
-	// xAI
-	xaiApiKey: undefined,
+	enableReasoningEffort: undefined,
+	openAiHostHeader: undefined, // Keep temporarily for backward compatibility during migration
+	openAiHeaders: undefined,
 	// Ollama
 	ollamaModelId: undefined,
 	ollamaBaseUrl: undefined,
@@ -445,6 +680,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	googleGeminiBaseUrl: undefined,
 	// OpenAI Native
 	openAiNativeApiKey: undefined,
+	openAiNativeBaseUrl: undefined,
 	// Mistral
 	mistralApiKey: undefined,
 	mistralCodestralUrl: undefined,
@@ -462,11 +698,24 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
-	modelTemperature: undefined,
 	reasoningEffort: undefined,
+	promptCachingDisabled: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
+	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
+	// X.AI (Grok)
+	xaiApiKey: undefined,
+	// Groq
+	groqApiKey: undefined,
+	// Chutes AI
+	chutesApiKey: undefined,
+	// LiteLLM
+	litellmBaseUrl: undefined,
+	litellmApiKey: undefined,
+	litellmModelId: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -477,7 +726,7 @@ export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Key
 
 export const globalSettingsSchema = z.object({
 	currentApiConfigName: z.string().optional(),
-	listApiConfigMeta: z.array(apiConfigMetaSchema).optional(),
+	listApiConfigMeta: z.array(providerSettingsEntrySchema).optional(),
 	pinnedApiConfigs: z.record(z.string(), z.boolean()).optional(),
 
 	lastShownAnnouncementId: z.string().optional(),
@@ -504,9 +753,9 @@ export const globalSettingsSchema = z.object({
 	screenshotQuality: z.number().optional(),
 	remoteBrowserEnabled: z.boolean().optional(),
 	remoteBrowserHost: z.string().optional(),
+	cachedChromeHostUrl: z.string().optional(),
 
 	enableCheckpoints: z.boolean().optional(),
-	checkpointStorage: checkpointStoragesSchema.optional(),
 
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
@@ -520,13 +769,16 @@ export const globalSettingsSchema = z.object({
 
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
+	terminalShellIntegrationDisabled: z.boolean().optional(),
 	terminalCommandDelay: z.number().optional(),
 	terminalPowershellCounter: z.boolean().optional(),
 	terminalZshClearEolMark: z.boolean().optional(),
 	terminalZshOhMy: z.boolean().optional(),
 	terminalZshP10k: z.boolean().optional(),
 	terminalZdotdir: z.boolean().optional(),
+	terminalCompressProgressBar: z.boolean().optional(),
 
+	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
@@ -544,6 +796,7 @@ export const globalSettingsSchema = z.object({
 	customModePrompts: customModePromptsSchema.optional(),
 	customSupportPrompts: customSupportPromptsSchema.optional(),
 	enhancementApiConfigId: z.string().optional(),
+	historyPreviewCollapsed: z.boolean().optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>
@@ -581,7 +834,6 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	remoteBrowserHost: undefined,
 
 	enableCheckpoints: undefined,
-	checkpointStorage: undefined,
 
 	ttsEnabled: undefined,
 	ttsSpeed: undefined,
@@ -595,13 +847,16 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	terminalOutputLineLimit: undefined,
 	terminalShellIntegrationTimeout: undefined,
+	terminalShellIntegrationDisabled: undefined,
 	terminalCommandDelay: undefined,
 	terminalPowershellCounter: undefined,
 	terminalZshClearEolMark: undefined,
 	terminalZshOhMy: undefined,
 	terminalZshP10k: undefined,
 	terminalZdotdir: undefined,
+	terminalCompressProgressBar: undefined,
 
+	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
@@ -619,6 +874,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customModePrompts: undefined,
 	customSupportPrompts: undefined,
 	enhancementApiConfigId: undefined,
+	cachedChromeHostUrl: undefined,
+	historyPreviewCollapsed: undefined,
 }
 
 export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]
@@ -652,6 +909,7 @@ export type SecretState = Pick<
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "xaiApiKey"
 >
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
@@ -670,6 +928,7 @@ const secretStateRecord: SecretStateRecord = {
 	mistralApiKey: undefined,
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
+	xaiApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]
@@ -747,6 +1006,7 @@ export type ClineSay = z.infer<typeof clineSaySchema>
  */
 
 export const toolProgressStatusSchema = z.object({
+	id: z.string().optional(),
 	icon: z.string().optional(),
 	text: z.string().optional(),
 })
@@ -796,7 +1056,6 @@ export const toolNames = [
 	"execute_command",
 	"read_file",
 	"write_to_file",
-	"append_to_file",
 	"apply_diff",
 	"insert_content",
 	"search_and_replace",

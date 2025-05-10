@@ -4,7 +4,9 @@
 		"done": "완료",
 		"cancel": "취소",
 		"reset": "초기화",
-		"select": "선택"
+		"select": "선택",
+		"add": "헤더 추가",
+		"remove": "삭제"
 	},
 	"header": {
 		"title": "설정",
@@ -21,16 +23,14 @@
 	"sections": {
 		"providers": "공급자",
 		"autoApprove": "자동 승인",
-		"browser": "브라우저 / 컴퓨터 사용",
+		"browser": "컴퓨터 접근",
 		"checkpoints": "체크포인트",
 		"notifications": "알림",
-		"contextManagement": "컨텍스트 관리",
+		"contextManagement": "컨텍스트",
 		"terminal": "터미널",
-		"advanced": "고급",
-		"experimental": "실험적 기능",
+		"experimental": "실험적",
 		"language": "언어",
-		"about": "Roo Code 정보",
-		"interface": "인터페이스"
+		"about": "Roo Code 정보"
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "사용자 정의 기본 URL 사용",
 		"useHostHeader": "사용자 정의 Host 헤더 사용",
 		"useLegacyFormat": "레거시 OpenAI API 형식 사용",
+		"customHeaders": "사용자 정의 헤더",
+		"headerName": "헤더 이름",
+		"headerValue": "헤더 값",
+		"noCustomHeaders": "정의된 사용자 정의 헤더가 없습니다. + 버튼을 클릭하여 추가하세요.",
 		"requestyApiKey": "Requesty API 키",
 		"getRequestyApiKey": "Requesty API 키 받기",
+		"refreshModels": {
+			"label": "모델 새로고침",
+			"hint": "최신 모델을 보려면 설정을 다시 열어주세요."
+		},
 		"openRouterTransformsText": "프롬프트와 메시지 체인을 컨텍스트 크기로 압축 (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
 		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
+		"chutesApiKey": "Chutes API 키",
+		"getChutesApiKey": "Chutes API 키 받기",
 		"deepSeekApiKey": "DeepSeek API 키",
 		"getDeepSeekApiKey": "DeepSeek API 키 받기",
 		"geminiApiKey": "Gemini API 키",
+		"getGroqApiKey": "Groq API 키 받기",
+		"groqApiKey": "Groq API 키",
 		"getGeminiApiKey": "Gemini API 키 받기",
 		"openAiApiKey": "OpenAI API 키",
 		"openAiBaseUrl": "기본 URL",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Codestral 모델의 대체 URL을 설정합니다.",
 		"xaiApiKey": "xAI API 키",
 		"getXaiApiKey": "xAI API 키 받기",
+		"litellmApiKey": "LiteLLM API 키",
+		"litellmBaseUrl": "LiteLLM 기본 URL",
 		"awsCredentials": "AWS 자격 증명",
 		"awsProfile": "AWS 프로필",
 		"awsProfileName": "AWS 프로필 이름",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "터미널 설정: 기본",
+			"description": "기본 터미널 설정"
+		},
+		"advanced": {
+			"label": "터미널 설정: 고급",
+			"description": "다음 옵션들은 설정을 적용하기 위해 터미널 재시작이 필요할 수 있습니다"
+		},
 		"outputLineLimit": {
 			"label": "터미널 출력 제한",
 			"description": "명령 실행 시 터미널 출력에 포함할 최대 라인 수. 초과 시 중간에서 라인이 제거되어 token이 절약됩니다."
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh 통합 활성화",
-			"description": "활성화하면 ITERM_SHELL_INTEGRATION_INSTALLED=Yes를 설정하여 Oh My Zsh 셸 통합 기능을 활성화합니다. (실험적)"
+			"description": "활성화하면 ITERM_SHELL_INTEGRATION_INSTALLED=Yes를 설정하여 Oh My Zsh 셸 통합 기능을 활성화합니다. 이 설정을 적용하려면 IDE를 다시 시작해야 할 수 있습니다. (실험적)"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k 통합 활성화",
 			"description": "활성화하면 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true를 설정하여 Powerlevel10k 셸 통합 기능을 활성화합니다. (실험적)"
+		},
+		"inheritEnv": {
+			"label": "환경 변수 상속",
+			"description": "활성화하면 터미널이 VSCode 부모 프로세스로부터 환경 변수를 상속받습니다. 사용자 프로필에 정의된 셸 통합 설정 등이 포함됩니다. 이는 VSCode 전역 설정 `terminal.integrated.inheritEnv`를 직접 전환합니다"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "프롬프트 캐싱 활성화",
-		"description": "활성화하면 Roo는 비용 절감을 위해 프롬프트 캐싱을 켠 상태로 이 모델을 사용합니다."
+		"label": "프롬프트 캐싱 비활성화",
+		"description": "체크하면 Roo가 이 모델에 대해 프롬프트 캐싱을 사용하지 않습니다."
 	},
 	"temperature": {
 		"useCustom": "사용자 정의 온도 사용",

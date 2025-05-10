@@ -11,9 +11,12 @@ import {
 	OPTIONAL_PROMPT_CACHING_MODELS,
 	REASONING_MODELS,
 } from "../../shared/api"
+
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
+import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic"
+import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
 
 import { getModelParams, SingleCompletionHandler } from "../index"
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
@@ -91,50 +94,19 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
 		}
 
-		const isCacheAvailable = promptCache.supported && (!promptCache.optional || this.options.promptCachingEnabled)
+		const isCacheAvailable = promptCache.supported && (!promptCache.optional || !this.options.promptCachingDisabled)
 
-		// Prompt caching: https://openrouter.ai/docs/prompt-caching
-		// Now with Gemini support: https://openrouter.ai/docs/features/prompt-caching
-		// Note that we don't check the `ModelInfo` object because it is cached
-		// in the settings for OpenRouter and the value could be stale.
+		// https://openrouter.ai/docs/features/prompt-caching
 		if (isCacheAvailable) {
-			openAiMessages[0] = {
-				role: "system",
-				// @ts-ignore-next-line
-				content: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-			}
-
-			// Add cache_control to the last two user messages
-			// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
-			const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
-
-			lastTwoUserMessages.forEach((msg) => {
-				if (typeof msg.content === "string") {
-					msg.content = [{ type: "text", text: msg.content }]
-				}
-
-				if (Array.isArray(msg.content)) {
-					// NOTE: This is fine since env details will always be added
-					// at the end. But if it wasn't there, and the user added a
-					// image_url type message, it would pop a text part before
-					// it and then move it after to the end.
-					let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-					if (!lastTextPart) {
-						lastTextPart = { type: "text", text: "..." }
-						msg.content.push(lastTextPart)
-					}
-
-					// @ts-ignore-next-line
-					lastTextPart["cache_control"] = { type: "ephemeral" }
-				}
-			})
+			modelId.startsWith("google")
+				? addGeminiCacheBreakpoints(systemPrompt, openAiMessages)
+				: addAnthropicCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 
 		// https://openrouter.ai/docs/transforms
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
-			max_tokens: maxTokens,
+			...(maxTokens && maxTokens > 0 && { max_tokens: maxTokens }),
 			temperature,
 			thinking, // OpenRouter is temporarily supporting this.
 			top_p: topP,
@@ -144,7 +116,11 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
-					provider: { order: [this.options.openRouterSpecificProvider] },
+					provider: {
+						order: [this.options.openRouterSpecificProvider],
+						only: [this.options.openRouterSpecificProvider],
+						allow_fallbacks: false,
+					},
 				}),
 			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
 			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
@@ -230,6 +206,15 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			temperature,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
+			// Only include provider if openRouterSpecificProvider is not "[default]".
+			...(this.options.openRouterSpecificProvider &&
+				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
+					provider: {
+						order: [this.options.openRouterSpecificProvider],
+						only: [this.options.openRouterSpecificProvider],
+						allow_fallbacks: false,
+					},
+				}),
 		}
 
 		const response = await this.client.chat.completions.create(completionParams)

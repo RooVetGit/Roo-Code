@@ -4,7 +4,9 @@
 		"done": "Tamamlandı",
 		"cancel": "İptal",
 		"reset": "Sıfırla",
-		"select": "Seç"
+		"select": "Seç",
+		"add": "Başlık Ekle",
+		"remove": "Kaldır"
 	},
 	"header": {
 		"title": "Ayarlar",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "Sağlayıcılar",
-		"autoApprove": "Otomatik Onay",
-		"browser": "Tarayıcı / Bilgisayar Kullanımı",
+		"autoApprove": "Oto-Onay",
+		"browser": "Bilgisayar Erişimi",
 		"checkpoints": "Kontrol Noktaları",
 		"notifications": "Bildirimler",
-		"contextManagement": "Bağlam Yönetimi",
+		"contextManagement": "Bağlam",
 		"terminal": "Terminal",
-		"advanced": "Gelişmiş",
-		"experimental": "Deneysel Özellikler",
+		"experimental": "Deneysel",
 		"language": "Dil",
-		"about": "Roo Code Hakkında",
-		"interface": "Arayüz"
+		"about": "Roo Code Hakkında"
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "Özel temel URL kullan",
 		"useHostHeader": "Özel Host başlığı kullan",
 		"useLegacyFormat": "Eski OpenAI API formatını kullan",
+		"customHeaders": "Özel Başlıklar",
+		"headerName": "Başlık adı",
+		"headerValue": "Başlık değeri",
+		"noCustomHeaders": "Tanımlanmış özel başlık yok. Eklemek için + düğmesine tıklayın.",
 		"requestyApiKey": "Requesty API Anahtarı",
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
+		"refreshModels": {
+			"label": "Modelleri Yenile",
+			"hint": "En son modelleri görmek için lütfen ayarları yeniden açın."
+		},
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
 		"anthropicApiKey": "Anthropic API Anahtarı",
 		"getAnthropicApiKey": "Anthropic API Anahtarı Al",
 		"anthropicUseAuthToken": "Anthropic API Anahtarını X-Api-Key yerine Authorization başlığı olarak geçir",
+		"chutesApiKey": "Chutes API Anahtarı",
+		"getChutesApiKey": "Chutes API Anahtarı Al",
 		"deepSeekApiKey": "DeepSeek API Anahtarı",
 		"getDeepSeekApiKey": "DeepSeek API Anahtarı Al",
 		"geminiApiKey": "Gemini API Anahtarı",
+		"getGroqApiKey": "Groq API Anahtarı Al",
+		"groqApiKey": "Groq API Anahtarı",
 		"getGeminiApiKey": "Gemini API Anahtarı Al",
 		"openAiApiKey": "OpenAI API Anahtarı",
 		"openAiBaseUrl": "Temel URL",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Codestral modeli için alternatif URL ayarlayın.",
 		"xaiApiKey": "xAI API Anahtarı",
 		"getXaiApiKey": "xAI API Anahtarı Al",
+		"litellmApiKey": "LiteLLM API Anahtarı",
+		"litellmBaseUrl": "LiteLLM Temel URL",
 		"awsCredentials": "AWS Kimlik Bilgileri",
 		"awsProfile": "AWS Profili",
 		"awsProfileName": "AWS Profil Adı",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Terminal Ayarları: Temel",
+			"description": "Temel terminal ayarları"
+		},
+		"advanced": {
+			"label": "Terminal Ayarları: Gelişmiş",
+			"description": "Aşağıdaki seçeneklerin uygulanması için terminalin yeniden başlatılması gerekebilir."
+		},
 		"outputLineLimit": {
 			"label": "Terminal çıktısı sınırı",
 			"description": "Komutları yürütürken terminal çıktısına dahil edilecek maksimum satır sayısı. Aşıldığında, token tasarrufu sağlayarak satırlar ortadan kaldırılacaktır."
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh entegrasyonunu etkinleştir",
-			"description": "Etkinleştirildiğinde, Oh My Zsh kabuk entegrasyon özelliklerini etkinleştirmek için ITERM_SHELL_INTEGRATION_INSTALLED=Yes ayarlar. (deneysel)"
+			"description": "Etkinleştirildiğinde, Oh My Zsh kabuk entegrasyon özelliklerini etkinleştirmek için ITERM_SHELL_INTEGRATION_INSTALLED=Yes ayarlar. Bu ayarın uygulanması IDE'nin yeniden başlatılmasını gerektirebilir. (deneysel)"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k entegrasyonunu etkinleştir",
 			"description": "Etkinleştirildiğinde, Powerlevel10k kabuk entegrasyon özelliklerini etkinleştirmek için POWERLEVEL9K_TERM_SHELL_INTEGRATION=true ayarlar. (deneysel)"
+		},
+		"inheritEnv": {
+			"label": "Ortam değişkenlerini devral",
+			"description": "Etkinleştirildiğinde, terminal VSCode üst işleminden ortam değişkenlerini devralır, örneğin kullanıcı profilinde tanımlanan kabuk entegrasyon ayarları gibi. Bu, VSCode'un global ayarı olan `terminal.integrated.inheritEnv` değerini doğrudan değiştirir"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "Prompt önbelleğini etkinleştir",
-		"description": "Etkinleştirildiğinde, Roo maliyetleri azaltmak için prompt önbelleği açık olan bu modeli kullanacaktır."
+		"label": "Prompt önbelleğini devre dışı bırak",
+		"description": "İşaretlendiğinde, Roo bu model için prompt önbelleğini kullanmayacaktır."
 	},
 	"temperature": {
 		"useCustom": "Özel sıcaklık kullan",

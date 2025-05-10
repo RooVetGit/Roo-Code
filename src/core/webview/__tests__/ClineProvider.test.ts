@@ -1,52 +1,41 @@
 // npx jest src/core/webview/__tests__/ClineProvider.test.ts
 
+import Anthropic from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 import axios from "axios"
 
 import { ClineProvider } from "../ClineProvider"
-import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
+import { ProviderSettingsEntry, ClineMessage, ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
 import { ContextProxy } from "../../config/ContextProxy"
+import { Task, TaskOptions } from "../../task/Task"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
 
-// Mock dependencies
 jest.mock("vscode")
+
 jest.mock("delay")
 
-// Mock BrowserSession
-jest.mock("../../../services/browser/BrowserSession", () => ({
-	BrowserSession: jest.fn().mockImplementation(() => ({
-		testConnection: jest.fn().mockImplementation(async (url) => {
-			if (url === "http://localhost:9222") {
-				return {
-					success: true,
-					message: "Successfully connected to Chrome",
-					endpoint: "ws://localhost:9222/devtools/browser/123",
-				}
-			} else {
-				return {
-					success: false,
-					message: "Failed to connect to Chrome",
-					endpoint: undefined,
-				}
-			}
-		}),
-	})),
+jest.mock("p-wait-for", () => ({
+	__esModule: true,
+	default: jest.fn().mockResolvedValue(undefined),
 }))
 
-// Mock browserDiscovery
-jest.mock("../../../services/browser/browserDiscovery", () => ({
-	discoverChromeHostUrl: jest.fn().mockImplementation(async () => {
-		return "http://localhost:9222"
-	}),
-	tryChromeHostUrl: jest.fn().mockImplementation(async (url) => {
-		return url === "http://localhost:9222"
-	}),
+jest.mock("fs/promises", () => ({
+	mkdir: jest.fn(),
+	writeFile: jest.fn(),
+	readFile: jest.fn(),
+	unlink: jest.fn(),
+	rmdir: jest.fn(),
+}))
+
+jest.mock("axios", () => ({
+	get: jest.fn().mockResolvedValue({ data: { data: [] } }),
+	post: jest.fn(),
 }))
 
 jest.mock(
@@ -73,6 +62,35 @@ jest.mock(
 	}),
 	{ virtual: true },
 )
+
+jest.mock("../../../services/browser/BrowserSession", () => ({
+	BrowserSession: jest.fn().mockImplementation(() => ({
+		testConnection: jest.fn().mockImplementation(async (url) => {
+			if (url === "http://localhost:9222") {
+				return {
+					success: true,
+					message: "Successfully connected to Chrome",
+					endpoint: "ws://localhost:9222/devtools/browser/123",
+				}
+			} else {
+				return {
+					success: false,
+					message: "Failed to connect to Chrome",
+					endpoint: undefined,
+				}
+			}
+		}),
+	})),
+}))
+
+jest.mock("../../../services/browser/browserDiscovery", () => ({
+	discoverChromeHostUrl: jest.fn().mockImplementation(async () => {
+		return "http://localhost:9222"
+	}),
+	tryChromeHostUrl: jest.fn().mockImplementation(async (url) => {
+		return url === "http://localhost:9222"
+	}),
+}))
 
 // Initialize mocks
 const mockAddCustomInstructions = jest.fn().mockResolvedValue("Combined instructions")
@@ -115,7 +133,6 @@ jest.mock(
 	{ virtual: true },
 )
 
-// Mock dependencies
 jest.mock("vscode", () => ({
 	ExtensionContext: jest.fn(),
 	OutputChannel: jest.fn(),
@@ -156,50 +173,24 @@ jest.mock("vscode", () => ({
 	},
 }))
 
-// Mock sound utility
 jest.mock("../../../utils/sound", () => ({
 	setSoundEnabled: jest.fn(),
 }))
 
-// Mock tts utility
 jest.mock("../../../utils/tts", () => ({
 	setTtsEnabled: jest.fn(),
 	setTtsSpeed: jest.fn(),
 }))
 
-// Mock ESM modules
-jest.mock("p-wait-for", () => ({
-	__esModule: true,
-	default: jest.fn().mockResolvedValue(undefined),
-}))
-
-// Mock fs/promises
-jest.mock("fs/promises", () => ({
-	mkdir: jest.fn(),
-	writeFile: jest.fn(),
-	readFile: jest.fn(),
-	unlink: jest.fn(),
-	rmdir: jest.fn(),
-}))
-
-// Mock axios
-jest.mock("axios", () => ({
-	get: jest.fn().mockResolvedValue({ data: { data: [] } }),
-	post: jest.fn(),
-}))
-
-// Mock buildApiHandler
 jest.mock("../../../api", () => ({
 	buildApiHandler: jest.fn(),
 }))
 
-// Mock system prompt
 jest.mock("../../prompts/system", () => ({
 	SYSTEM_PROMPT: jest.fn().mockImplementation(async () => "mocked system prompt"),
 	codeMode: "code",
 }))
 
-// Mock WorkspaceTracker
 jest.mock("../../../integrations/workspace/WorkspaceTracker", () => {
 	return jest.fn().mockImplementation(() => ({
 		initializeFilePaths: jest.fn(),
@@ -207,9 +198,8 @@ jest.mock("../../../integrations/workspace/WorkspaceTracker", () => {
 	}))
 })
 
-// Mock Cline
-jest.mock("../../Cline", () => ({
-	Cline: jest
+jest.mock("../../task/Task", () => ({
+	Task: jest
 		.fn()
 		.mockImplementation(
 			(_provider, _apiConfiguration, _customInstructions, _diffEnabled, _fuzzyMatchThreshold, _task, taskId) => ({
@@ -229,7 +219,6 @@ jest.mock("../../Cline", () => ({
 		),
 }))
 
-// Mock extract-text
 jest.mock("../../../integrations/misc/extract-text", () => ({
 	extractTextFromFile: jest.fn().mockImplementation(async (_filePath: string) => {
 		const content = "const x = 1;\nconst y = 2;\nconst z = 3;"
@@ -238,17 +227,13 @@ jest.mock("../../../integrations/misc/extract-text", () => ({
 	}),
 }))
 
-// Spy on console.error and console.log to suppress expected messages
-beforeAll(() => {
-	jest.spyOn(console, "error").mockImplementation(() => {})
-	jest.spyOn(console, "log").mockImplementation(() => {})
-})
-
 afterAll(() => {
 	jest.restoreAllMocks()
 })
 
 describe("ClineProvider", () => {
+	let defaultTaskOptions: TaskOptions
+
 	let provider: ClineProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
@@ -326,6 +311,13 @@ describe("ClineProvider", () => {
 		} as unknown as vscode.WebviewView
 
 		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+
+		defaultTaskOptions = {
+			provider,
+			apiConfiguration: {
+				apiProvider: "openrouter",
+			},
+		}
 
 		// @ts-ignore - Access private property for testing
 		updateGlobalStateSpy = jest.spyOn(provider.contextProxy, "setValue")
@@ -451,8 +443,7 @@ describe("ClineProvider", () => {
 
 	test("clearTask aborts current task", async () => {
 		// Setup Cline instance with auto-mock from the top of the file
-		const { Cline } = require("../../Cline") // Get the mocked class
-		const mockCline = new Cline() // Create a new mocked instance
+		const mockCline = new Task(defaultTaskOptions) // Create a new mocked instance
 
 		// add the mock object to the stack
 		await provider.addClineToStack(mockCline)
@@ -475,9 +466,8 @@ describe("ClineProvider", () => {
 
 	test("addClineToStack adds multiple Cline instances to the stack", async () => {
 		// Setup Cline instance with auto-mock from the top of the file
-		const { Cline } = require("../../Cline") // Get the mocked class
-		const mockCline1 = new Cline() // Create a new mocked instance
-		const mockCline2 = new Cline() // Create a new mocked instance
+		const mockCline1 = new Task(defaultTaskOptions) // Create a new mocked instance
+		const mockCline2 = new Task(defaultTaskOptions) // Create a new mocked instance
 		Object.defineProperty(mockCline1, "taskId", { value: "test-task-id-1", writable: true })
 		Object.defineProperty(mockCline2, "taskId", { value: "test-task-id-2", writable: true })
 
@@ -600,14 +590,16 @@ describe("ClineProvider", () => {
 		expect(state.alwaysApproveResubmit).toBe(false)
 	})
 
-	test("loads saved API config when switching modes", async () => {
+	it("loads saved API config when switching modes", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
+		const profile: ProviderSettingsEntry = { name: "test-config", id: "test-id", apiProvider: "anthropic" }
+
 		;(provider as any).providerSettingsManager = {
 			getModeConfigId: jest.fn().mockResolvedValue("test-id"),
-			listConfig: jest.fn().mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
-			loadConfig: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
+			listConfig: jest.fn().mockResolvedValue([profile]),
+			activateProfile: jest.fn().mockResolvedValue(profile),
 			setModeConfig: jest.fn(),
 		} as any
 
@@ -616,11 +608,11 @@ describe("ClineProvider", () => {
 
 		// Should load the saved config for architect mode
 		expect(provider.providerSettingsManager.getModeConfigId).toHaveBeenCalledWith("architect")
-		expect(provider.providerSettingsManager.loadConfig).toHaveBeenCalledWith("test-config")
+		expect(provider.providerSettingsManager.activateProfile).toHaveBeenCalledWith({ name: "test-config" })
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", "test-config")
 	})
 
-	test("saves current config when switching to mode without config", async () => {
+	it("saves current config when switching to mode without config", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
@@ -641,16 +633,15 @@ describe("ClineProvider", () => {
 		expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "current-id")
 	})
 
-	test("saves config as default for current mode when loading config", async () => {
+	it("saves config as default for current mode when loading config", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
+		const profile: ProviderSettingsEntry = { apiProvider: "anthropic", id: "new-id", name: "new-config" }
+
 		;(provider as any).providerSettingsManager = {
-			loadConfig: jest.fn().mockResolvedValue({ apiProvider: "anthropic", id: "new-id" }),
-			loadConfigById: jest
-				.fn()
-				.mockResolvedValue({ config: { apiProvider: "anthropic", id: "new-id" }, name: "new-config" }),
-			listConfig: jest.fn().mockResolvedValue([{ name: "new-config", id: "new-id", apiProvider: "anthropic" }]),
+			activateProfile: jest.fn().mockResolvedValue(profile),
+			listConfig: jest.fn().mockResolvedValue([profile]),
 			setModeConfig: jest.fn(),
 			getModeConfigId: jest.fn().mockResolvedValue(undefined),
 		} as any
@@ -665,18 +656,19 @@ describe("ClineProvider", () => {
 		expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "new-id")
 	})
 
-	test("load API configuration by ID works and updates mode config", async () => {
+	it("load API configuration by ID works and updates mode config", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
+		const profile: ProviderSettingsEntry = {
+			name: "config-by-id",
+			id: "config-id-123",
+			apiProvider: "anthropic",
+		}
+
 		;(provider as any).providerSettingsManager = {
-			loadConfigById: jest.fn().mockResolvedValue({
-				config: { apiProvider: "anthropic", id: "config-id-123" },
-				name: "config-by-id",
-			}),
-			listConfig: jest
-				.fn()
-				.mockResolvedValue([{ name: "config-by-id", id: "config-id-123", apiProvider: "anthropic" }]),
+			activateProfile: jest.fn().mockResolvedValue(profile),
+			listConfig: jest.fn().mockResolvedValue([profile]),
 			setModeConfig: jest.fn(),
 			getModeConfigId: jest.fn().mockResolvedValue(undefined),
 		} as any
@@ -690,8 +682,8 @@ describe("ClineProvider", () => {
 		// Should save new config as default for architect mode
 		expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "config-id-123")
 
-		// Ensure the loadConfigById method was called with the correct ID
-		expect(provider.providerSettingsManager.loadConfigById).toHaveBeenCalledWith("config-id-123")
+		// Ensure the `activateProfile` method was called with the correct ID
+		expect(provider.providerSettingsManager.activateProfile).toHaveBeenCalledWith({ id: "config-id-123" })
 	})
 
 	test("handles browserToolEnabled setting", async () => {
@@ -833,15 +825,11 @@ describe("ClineProvider", () => {
 			experiments: experimentDefault,
 		} as any)
 
-		// Reset Cline mock
-		const { Cline } = require("../../Cline")
-		;(Cline as jest.Mock).mockClear()
-
 		// Initialize Cline with a task
 		await provider.initClineWithTask("Test task")
 
 		// Verify Cline was initialized with mode-specific instructions
-		expect(Cline).toHaveBeenCalledWith({
+		expect(Task).toHaveBeenCalledWith({
 			provider,
 			apiConfiguration: mockApiConfig,
 			customInstructions: modeCustomInstructions,
@@ -894,7 +882,7 @@ describe("ClineProvider", () => {
 		})
 	})
 
-	test("saves mode config when updating API configuration", async () => {
+	it("saves mode config when updating API configuration", async () => {
 		// Setup mock context with mode and config name
 		mockContext = {
 			...mockContext,
@@ -920,12 +908,14 @@ describe("ClineProvider", () => {
 
 		;(provider as any).providerSettingsManager = {
 			listConfig: jest.fn().mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
+			saveConfig: jest.fn().mockResolvedValue("test-id"),
 			setModeConfig: jest.fn(),
 		} as any
 
 		// Update API configuration
 		await messageHandler({
-			type: "apiConfiguration",
+			type: "upsertApiConfiguration",
+			text: "test-config",
 			apiConfiguration: { apiProvider: "anthropic" },
 		})
 
@@ -958,13 +948,19 @@ describe("ClineProvider", () => {
 				{ ts: 4000, type: "say", say: "browser_action" }, // Response to delete
 				{ ts: 5000, type: "say", say: "user_feedback" }, // Next user message
 				{ ts: 6000, type: "say", say: "user_feedback" }, // Final message
-			]
+			] as ClineMessage[]
 
-			const mockApiHistory = [{ ts: 1000 }, { ts: 2000 }, { ts: 3000 }, { ts: 4000 }, { ts: 5000 }, { ts: 6000 }]
+			const mockApiHistory = [
+				{ ts: 1000 },
+				{ ts: 2000 },
+				{ ts: 3000 },
+				{ ts: 4000 },
+				{ ts: 5000 },
+				{ ts: 6000 },
+			] as (Anthropic.MessageParam & { ts?: number })[]
 
-			// Setup Cline instance with auto-mock from the top of the file
-			const { Cline } = require("../../Cline") // Get the mocked class
-			const mockCline = new Cline() // Create a new mocked instance
+			// Setup Task instance with auto-mock from the top of the file
+			const mockCline = new Task(defaultTaskOptions) // Create a new mocked instance
 			mockCline.clineMessages = mockMessages // Set test-specific messages
 			mockCline.apiConversationHistory = mockApiHistory // Set API history
 			await provider.addClineToStack(mockCline) // Add the mocked instance to the stack
@@ -1005,13 +1001,19 @@ describe("ClineProvider", () => {
 				{ ts: 2000, type: "say", say: "text", value: 3000 }, // Message to delete
 				{ ts: 3000, type: "say", say: "user_feedback" },
 				{ ts: 4000, type: "say", say: "user_feedback" },
-			]
+			] as ClineMessage[]
 
-			const mockApiHistory = [{ ts: 1000 }, { ts: 2000 }, { ts: 3000 }, { ts: 4000 }]
+			const mockApiHistory = [
+				{ ts: 1000 },
+				{ ts: 2000 },
+				{ ts: 3000 },
+				{ ts: 4000 },
+			] as (Anthropic.MessageParam & {
+				ts?: number
+			})[]
 
 			// Setup Cline instance with auto-mock from the top of the file
-			const { Cline } = require("../../Cline") // Get the mocked class
-			const mockCline = new Cline() // Create a new mocked instance
+			const mockCline = new Task(defaultTaskOptions) // Create a new mocked instance
 			mockCline.clineMessages = mockMessages
 			mockCline.apiConversationHistory = mockApiHistory
 			await provider.addClineToStack(mockCline)
@@ -1037,10 +1039,11 @@ describe("ClineProvider", () => {
 			;(vscode.window.showInformationMessage as jest.Mock).mockResolvedValue("Cancel")
 
 			// Setup Cline instance with auto-mock from the top of the file
-			const { Cline } = require("../../Cline") // Get the mocked class
-			const mockCline = new Cline() // Create a new mocked instance
-			mockCline.clineMessages = [{ ts: 1000 }, { ts: 2000 }]
-			mockCline.apiConversationHistory = [{ ts: 1000 }, { ts: 2000 }]
+			const mockCline = new Task(defaultTaskOptions) // Create a new mocked instance
+			mockCline.clineMessages = [{ ts: 1000 }, { ts: 2000 }] as ClineMessage[]
+			mockCline.apiConversationHistory = [{ ts: 1000 }, { ts: 2000 }] as (Anthropic.MessageParam & {
+				ts?: number
+			})[]
 			await provider.addClineToStack(mockCline)
 
 			// Trigger message deletion
@@ -1212,15 +1215,16 @@ describe("ClineProvider", () => {
 		})
 
 		test("passes diffEnabled: false to SYSTEM_PROMPT when diff is disabled", async () => {
-			// Setup Cline instance with mocked api.getModel()
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
+			// Setup Task instance with mocked api.getModel()
+			const mockCline = new Task(defaultTaskOptions)
+
 			mockCline.api = {
 				getModel: jest.fn().mockReturnValue({
 					id: "claude-3-sonnet",
 					info: { supportsComputerUse: true },
 				}),
-			}
+			} as any
+
 			await provider.addClineToStack(mockCline)
 
 			// Mock getState to return diffEnabled: false
@@ -1536,13 +1540,17 @@ describe("ClineProvider", () => {
 			await provider.resolveWebviewView(mockWebviewView)
 		})
 
-		test("loads saved API config when switching modes", async () => {
+		it("loads saved API config when switching modes", async () => {
+			const profile: ProviderSettingsEntry = {
+				name: "saved-config",
+				id: "saved-config-id",
+				apiProvider: "anthropic",
+			}
+
 			;(provider as any).providerSettingsManager = {
 				getModeConfigId: jest.fn().mockResolvedValue("saved-config-id"),
-				listConfig: jest
-					.fn()
-					.mockResolvedValue([{ name: "saved-config", id: "saved-config-id", apiProvider: "anthropic" }]),
-				loadConfig: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
+				listConfig: jest.fn().mockResolvedValue([profile]),
+				activateProfile: jest.fn().mockResolvedValue(profile),
 				setModeConfig: jest.fn(),
 			} as any
 
@@ -1554,7 +1562,7 @@ describe("ClineProvider", () => {
 
 			// Verify saved config was loaded
 			expect(provider.providerSettingsManager.getModeConfigId).toHaveBeenCalledWith("architect")
-			expect(provider.providerSettingsManager.loadConfig).toHaveBeenCalledWith("saved-config")
+			expect(provider.providerSettingsManager.activateProfile).toHaveBeenCalledWith({ name: "saved-config" })
 			expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", "saved-config")
 
 			// Verify state was posted to webview
@@ -1670,14 +1678,11 @@ describe("ClineProvider", () => {
 				currentApiConfigName: "test-config",
 			} as any)
 
-			// Trigger updateApiConfiguration
+			// Trigger upsertApiConfiguration
 			await messageHandler({
 				type: "upsertApiConfiguration",
 				text: "test-config",
-				apiConfiguration: {
-					apiProvider: "anthropic",
-					apiKey: "test-key",
-				},
+				apiConfiguration: { apiProvider: "anthropic", apiKey: "test-key" },
 			})
 
 			// Verify error was logged and user was notified
@@ -1742,9 +1747,8 @@ describe("ClineProvider", () => {
 					.mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
 			} as any
 
-			// Setup Cline instance with auto-mock from the top of the file
-			const { Cline } = require("../../Cline") // Get the mocked class
-			const mockCline = new Cline() // Create a new mocked instance
+			// Setup Task instance with auto-mock from the top of the file
+			const mockCline = new Task(defaultTaskOptions) // Create a new mocked instance
 			await provider.addClineToStack(mockCline)
 
 			const testApiConfig = {
@@ -2084,6 +2088,7 @@ describe.skip("ContextProxy integration", () => {
 })
 
 describe("getTelemetryProperties", () => {
+	let defaultTaskOptions: TaskOptions
 	let provider: ClineProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
@@ -2113,9 +2118,15 @@ describe("getTelemetryProperties", () => {
 		mockOutputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel
 		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
-		// Setup Cline instance with mocked getModel method
-		const { Cline } = require("../../Cline")
-		mockCline = new Cline()
+		defaultTaskOptions = {
+			provider,
+			apiConfiguration: {
+				apiProvider: "openrouter",
+			},
+		}
+
+		// Setup Task instance with mocked getModel method
+		mockCline = new Task(defaultTaskOptions)
 		mockCline.api = {
 			getModel: jest.fn().mockReturnValue({
 				id: "claude-3-7-sonnet-20250219",

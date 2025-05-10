@@ -1,7 +1,7 @@
 import path from "path"
 import { isBinaryFile } from "isbinaryfile"
 
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
@@ -15,7 +15,7 @@ import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/ext
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 
 export async function readFileTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -164,7 +164,21 @@ export async function readFileTool(
 
 				const res = await Promise.all([
 					maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-					parseSourceCodeDefinitionsForFile(absolutePath, cline.rooIgnoreController),
+					(async () => {
+						try {
+							return await parseSourceCodeDefinitionsForFile(absolutePath, cline.rooIgnoreController)
+						} catch (error) {
+							if (error instanceof Error && error.message.startsWith("Unsupported language:")) {
+								console.warn(`[read_file] Warning: ${error.message}`)
+								return undefined
+							} else {
+								console.error(
+									`[read_file] Unhandled error: ${error instanceof Error ? error.message : String(error)}`,
+								)
+								return undefined
+							}
+						}
+					})(),
 				])
 
 				content = res[0].length > 0 ? addLineNumbers(res[0]) : ""

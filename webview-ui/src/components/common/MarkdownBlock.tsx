@@ -3,6 +3,7 @@ import { useRemark } from "react-remark"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 
+import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 
 import CodeBlock from "./CodeBlock"
@@ -57,11 +58,10 @@ const remarkUrlToLink = () => {
 const StyledMarkdown = styled.div`
 	code:not(pre > code) {
 		font-family: var(--vscode-editor-font-family, monospace);
-		color: var(--vscode-textPreformat-foreground, #f78383);
-		background-color: var(--vscode-textCodeBlock-background, #1e1e1e);
+		filter: saturation(110%) brightness(95%);
+		color: var(--vscode-textPreformat-foreground) !important;
+		background-color: var(--vscode-textPreformat-background) !important;
 		padding: 0px 2px;
-		border-radius: 3px;
-		border: 1px solid var(--vscode-textSeparator-foreground, #424242);
 		white-space: pre-line;
 		word-break: break-word;
 		overflow-wrap: anywhere;
@@ -109,11 +109,14 @@ const StyledMarkdown = styled.div`
 	}
 
 	a {
-		text-decoration: none;
-	}
-	a {
+		color: var(--vscode-textLink-foreground);
+		text-decoration-line: underline;
+		text-decoration-style: dotted;
+		text-decoration-color: var(--vscode-textLink-foreground);
 		&:hover {
-			text-decoration: underline;
+			color: var(--vscode-textLink-activeForeground);
+			text-decoration-style: solid;
+			text-decoration-color: var(--vscode-textLink-activeForeground);
 		}
 	}
 `
@@ -138,6 +141,48 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 		rehypePlugins: [],
 		rehypeReactOptions: {
 			components: {
+				a: ({ href, children }: any) => {
+					return (
+						<a
+							href={href}
+							title={href}
+							onClick={(e) => {
+								// Only process file:// protocol or local file paths
+								const isLocalPath =
+									href.startsWith("file://") || href.startsWith("/") || !href.includes("://")
+
+								if (!isLocalPath) {
+									return
+								}
+
+								e.preventDefault()
+
+								// Handle absolute vs project-relative paths
+								let filePath = href.replace("file://", "")
+
+								// Extract line number if present
+								const match = filePath.match(/(.*):(\d+)(-\d+)?$/)
+								let values = undefined
+								if (match) {
+									filePath = match[1]
+									values = { line: parseInt(match[2]) }
+								}
+
+								// Add ./ prefix if needed
+								if (!filePath.startsWith("/") && !filePath.startsWith("./")) {
+									filePath = "./" + filePath
+								}
+
+								vscode.postMessage({
+									type: "openFile",
+									text: filePath,
+									values,
+								})
+							}}>
+							{children}
+						</a>
+					)
+				},
 				pre: ({ node: _, children }: any) => {
 					// Check for Mermaid diagrams first
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {

@@ -4,7 +4,9 @@
 		"done": "Fatto",
 		"cancel": "Annulla",
 		"reset": "Ripristina",
-		"select": "Seleziona"
+		"select": "Seleziona",
+		"add": "Aggiungi intestazione",
+		"remove": "Rimuovi"
 	},
 	"header": {
 		"title": "Impostazioni",
@@ -20,17 +22,15 @@
 	},
 	"sections": {
 		"providers": "Fornitori",
-		"autoApprove": "Approvazione automatica",
-		"browser": "Browser / Uso del computer",
+		"autoApprove": "Auto-approvazione",
+		"browser": "Accesso computer",
 		"checkpoints": "Punti di controllo",
 		"notifications": "Notifiche",
-		"contextManagement": "Gestione del contesto",
+		"contextManagement": "Contesto",
 		"terminal": "Terminal",
-		"advanced": "Avanzate",
-		"experimental": "Funzionalità sperimentali",
+		"experimental": "Sperimentale",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code",
-		"interface": "Interfaccia"
+		"about": "Informazioni su Roo Code"
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
@@ -111,15 +111,27 @@
 		"useCustomBaseUrl": "Usa URL base personalizzato",
 		"useHostHeader": "Usa intestazione Host personalizzata",
 		"useLegacyFormat": "Usa formato API OpenAI legacy",
+		"customHeaders": "Intestazioni personalizzate",
+		"headerName": "Nome intestazione",
+		"headerValue": "Valore intestazione",
+		"noCustomHeaders": "Nessuna intestazione personalizzata definita. Fai clic sul pulsante + per aggiungerne una.",
 		"requestyApiKey": "Chiave API Requesty",
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
+		"refreshModels": {
+			"label": "Aggiorna modelli",
+			"hint": "Riapri le impostazioni per vedere i modelli più recenti."
+		},
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
 		"anthropicApiKey": "Chiave API Anthropic",
 		"getAnthropicApiKey": "Ottieni chiave API Anthropic",
 		"anthropicUseAuthToken": "Passa la chiave API Anthropic come header di autorizzazione invece di X-Api-Key",
+		"chutesApiKey": "Chiave API Chutes",
+		"getChutesApiKey": "Ottieni chiave API Chutes",
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
 		"geminiApiKey": "Chiave API Gemini",
+		"getGroqApiKey": "Ottieni chiave API Groq",
+		"groqApiKey": "Chiave API Groq",
 		"getGeminiApiKey": "Ottieni chiave API Gemini",
 		"openAiApiKey": "Chiave API OpenAI",
 		"openAiBaseUrl": "URL base",
@@ -130,6 +142,8 @@
 		"codestralBaseUrlDesc": "Imposta un URL opzionale per i modelli Codestral.",
 		"xaiApiKey": "Chiave API xAI",
 		"getXaiApiKey": "Ottieni chiave API xAI",
+		"litellmApiKey": "Chiave API LiteLLM",
+		"litellmBaseUrl": "URL base LiteLLM",
 		"awsCredentials": "Credenziali AWS",
 		"awsProfile": "Profilo AWS",
 		"awsProfileName": "Nome profilo AWS",
@@ -304,6 +318,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Impostazioni terminale: Base",
+			"description": "Impostazioni base del terminale"
+		},
+		"advanced": {
+			"label": "Impostazioni terminale: Avanzate",
+			"description": "Le seguenti opzioni potrebbero richiedere il riavvio del terminale per applicare l'impostazione."
+		},
 		"outputLineLimit": {
 			"label": "Limite output terminale",
 			"description": "Numero massimo di righe da includere nell'output del terminale durante l'esecuzione dei comandi. Quando superato, le righe verranno rimosse dal centro, risparmiando token."
@@ -338,11 +360,15 @@
 		},
 		"zshOhMy": {
 			"label": "Abilita integrazione Oh My Zsh",
-			"description": "Quando abilitato, imposta ITERM_SHELL_INTEGRATION_INSTALLED=Yes per abilitare le funzionalità di integrazione della shell Oh My Zsh. (sperimentale)"
+			"description": "Quando abilitato, imposta ITERM_SHELL_INTEGRATION_INSTALLED=Yes per abilitare le funzionalità di integrazione della shell Oh My Zsh. L'applicazione di questa impostazione potrebbe richiedere il riavvio dell'IDE. (sperimentale)"
 		},
 		"zshP10k": {
 			"label": "Abilita integrazione Powerlevel10k",
 			"description": "Quando abilitato, imposta POWERLEVEL9K_TERM_SHELL_INTEGRATION=true per abilitare le funzionalità di integrazione della shell Powerlevel10k. (sperimentale)"
+		},
+		"inheritEnv": {
+			"label": "Eredita variabili d'ambiente",
+			"description": "Quando abilitato, il terminale eredita le variabili d'ambiente dal processo padre di VSCode, come le impostazioni di integrazione della shell definite nel profilo utente. Questo attiva direttamente l'impostazione globale di VSCode `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {
@@ -392,8 +418,8 @@
 		}
 	},
 	"promptCaching": {
-		"label": "Abilita cache dei prompt",
-		"description": "Quando abilitato, Roo utilizzerà questo modello con la cache dei prompt attivata per ridurre i costi."
+		"label": "Disattiva la cache dei prompt",
+		"description": "Quando selezionato, Roo non utilizzerà la cache dei prompt per questo modello."
 	},
 	"temperature": {
 		"useCustom": "Usa temperatura personalizzata",
