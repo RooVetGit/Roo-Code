@@ -22,7 +22,7 @@
 	},
 	"sections": {
 		"providers": "공급자",
-		"uiSettings": "界面设置",
+		"uiSettings": "UI 설정",
 		"autoApprove": "자동 승인",
 		"browser": "컴퓨터 접근",
 		"checkpoints": "체크포인트",
