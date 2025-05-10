@@ -22,7 +22,7 @@
 	},
 	"sections": {
 		"providers": "Proveedores",
-		"uiSettings": "界面设置",
+		"uiSettings": "Configuración de la interfaz de usuario",
 		"autoApprove": "Auto-aprobación",
 		"browser": "Acceso al ordenador",
 		"checkpoints": "Puntos de control",
