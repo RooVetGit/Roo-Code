@@ -1433,24 +1433,13 @@ const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMes
 }
 
 
-import { getCodebaseSupport } from "../prompts/constant_prompt"
+import { getCodebaseSupport } from "../prompts/codebase"
 
 const generateCodebaseSupportPrompt = async (provider: ClineProvider, message: WebviewMessage) => {
 	const {
-		apiConfiguration,
-		customModePrompts,
-		customInstructions,
-		browserViewportSize,
-		diffEnabled,
 		mcpEnabled,
-		fuzzyMatchThreshold,
-		experiments,
-		enableMcpServerCreation,
-		browserToolEnabled,
-		language,
 	} = await provider.getState()
 
-	
 	return await getCodebaseSupport(mcpEnabled ? provider.getMcpHub() : undefined)
 }
 

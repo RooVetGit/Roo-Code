@@ -80,7 +80,7 @@ import { newTaskTool } from "./tools/newTaskTool"
 // prompts
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
-import { addCodebaseInToConversation } from "./prompts/constant_prompt"
+import { addCodebaseInToConversation } from "./prompts/codebase"
 
 // ... everything else
 import { parseMentions } from "./mentions"

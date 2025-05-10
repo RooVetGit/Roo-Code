@@ -12,7 +12,6 @@ import { getLatestTerminalOutput } from "../../integrations/terminal/get-latest-
 import { getWorkspacePath } from "../../utils/path"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
-import { generateConstMcpPrompt } from "../prompts/constant_prompt"
 import { Cline } from "../Cline"
 
 export async function openMention(mention?: string): Promise<void> {
