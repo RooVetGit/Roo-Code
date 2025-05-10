@@ -29,5 +29,23 @@ Example for appending to the end of file:
 // This is the end of the file
 </content>
 </insert_content>
+
+Example for creating very large files that exceed output limits:
+<write_to_file>
+<path>src/large_file.txt</path>
+<content>
+// This is the beginning of a very large file but you must terminate prematurely in order for line_count to be produced:
+</content>
+<line_count>100</line_count>
+</write_to_file>
+
+Then use insert_content to append the rest of the content starting immediately where you left off; repeat as many times as necessary:
+<insert_content>
+<path>src/large_file.txt</path>
+<line>0</line>
+<content>
+// This is a continuation of very large file
+</content>
+</insert_content>
 `
 }
