@@ -53,6 +53,7 @@ import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
+import { buildDocLink } from "@src/utils/docLinks"
 
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -254,8 +255,9 @@ const ApiOptions = ({
 			openai: "openai-compatible",
 		}
 
+		const slug = slugs[selectedProvider] || selectedProvider
 		return {
-			url: `https://docs.roocode.com/providers/${slugs[selectedProvider] || selectedProvider}`,
+			url: buildDocLink(`providers/${slug}`, "provider_docs"),
 			name,
 		}
 	}, [selectedProvider])
