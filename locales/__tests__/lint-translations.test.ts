@@ -665,7 +665,7 @@ function lintTranslations(args?: LintOptions): { output: string } {
 }
 
 // Export functions for use in other modules
-module.exports = {
+export {
 	enumerateSourceFiles,
 	resolveTargetPath,
 	loadFileContent,
