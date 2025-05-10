@@ -217,24 +217,21 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return id
 	}
 
-	private getProfilesMeta() {
-		return this.getConfiguration().listApiConfigMeta || []
-	}
-
 	public getProfiles() {
-		return this.getProfilesMeta().map((profile) => profile.name)
-	}
-
-	public hasProfile(name: string): boolean {
-		return !!(this.getConfiguration().listApiConfigMeta || []).find((profile) => profile.name === name)
+		return (this.getConfiguration().listApiConfigMeta || []).map((profile) => profile.name)
 	}
 
 	public async setActiveProfile(name: string) {
-		if (!this.hasProfile(name)) {
+		const currentSettings = this.getConfiguration()
+		const profiles = currentSettings.listApiConfigMeta || []
+
+		const profile = profiles.find((p) => p.name === name)
+
+		if (!profile) {
 			throw new Error(`Profile with name "${name}" does not exist`)
 		}
 
-		await this.sidebarProvider.activateProviderProfile({ name })
+		await this.setConfiguration({ ...currentSettings, currentApiConfigName: profile.name })
 	}
 
 	public getActiveProfile() {
@@ -243,23 +240,27 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	public async deleteProfile(name: string) {
 		const currentSettings = this.getConfiguration()
-		const listApiConfigMeta = this.getProfilesMeta()
-		const targetIndex = listApiConfigMeta.findIndex((p) => p.name === name)
+		const profiles = currentSettings.listApiConfigMeta || []
+		const targetIndex = profiles.findIndex((p) => p.name === name)
 
 		if (targetIndex === -1) {
 			throw new Error(`Profile with name "${name}" does not exist`)
 		}
 
-		const profileToDelete = listApiConfigMeta[targetIndex]
-		listApiConfigMeta.splice(targetIndex, 1)
+		const profileToDelete = profiles[targetIndex]
+		profiles.splice(targetIndex, 1)
 
 		// If we're deleting the active profile, clear the currentApiConfigName.
-		const currentApiConfigName =
-			currentSettings.currentApiConfigName === profileToDelete.name
-				? undefined
-				: currentSettings.currentApiConfigName
+		const newSettings: RooCodeSettings = {
+			...currentSettings,
+			listApiConfigMeta: profiles,
+			currentApiConfigName:
+				currentSettings.currentApiConfigName === profileToDelete.name
+					? undefined
+					: currentSettings.currentApiConfigName,
+		}
 
-		await this.setConfiguration({ ...currentSettings, listApiConfigMeta, currentApiConfigName })
+		await this.setConfiguration(newSettings)
 	}
 
 	public isReady() {

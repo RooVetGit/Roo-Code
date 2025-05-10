@@ -762,6 +762,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
+		// Capture mode switch telemetry event
 		const cline = this.getCurrentCline()
 
 		if (cline) {
@@ -778,19 +779,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Update listApiConfigMeta first to ensure UI has latest data
 		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 
-		// If this mode has a saved config, use it.
+		// If this mode has a saved config, use it
 		if (savedConfigId) {
-			const profile = listApiConfig.find(({ id }) => id === savedConfigId)
+			const config = listApiConfig?.find((c) => c.id === savedConfigId)
 
-			if (profile?.name) {
-				await this.activateProviderProfile({ name: profile.name })
+			if (config?.name) {
+				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
+
+				await Promise.all([
+					this.updateGlobalState("currentApiConfigName", config.name),
+					this.updateApiConfiguration(apiConfig),
+				])
 			}
 		} else {
-			// If no saved config for this mode, save current config as default.
+			// If no saved config for this mode, save current config as default
 			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
 
 			if (currentApiConfigName) {
-				const config = listApiConfig.find((c) => c.name === currentApiConfigName)
+				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 
 				if (config?.id) {
 					await this.providerSettingsManager.setModeConfig(newMode, config.id)
@@ -798,18 +804,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}
 		}
 
-		await this.postStateToWebview()
-	}
-
-	async activateProviderProfile(args: { name: string } | { id: string }) {
-		const { name, ...providerSettings } = await this.providerSettingsManager.activateProfile(args)
-
-		await Promise.all([
-			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
-			this.contextProxy.setValue("currentApiConfigName", name),
-		])
-
-		await this.updateApiConfiguration(providerSettings)
 		await this.postStateToWebview()
 	}
 
