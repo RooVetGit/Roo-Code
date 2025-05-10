@@ -277,21 +277,16 @@ function processFileLocale(
 	}
 
 	if (!fileExists(targetFile)) {
-		results[mapping.area][locale][targetFile].error = `Target file does not exist: ${targetFile}`
+		results[mapping.area][locale][targetFile].missing = [
+			{
+				key: sourceFile,
+				englishValue: "File missing",
+			},
+		]
 		return
 	}
 
-	// For non-JSON files, only check existence
 	if (!sourceFile.endsWith(".json")) {
-		// For markdown files, we still want to track which ones are missing
-		if (sourceFile.endsWith(".md")) {
-			results[mapping.area][locale][targetFile].missing = [
-				{
-					key: sourceFile,
-					englishValue: "File missing",
-				},
-			]
-		}
 		return
 	}
 
@@ -515,7 +510,13 @@ function formatSummary(results: Results): void {
 		bufferLog("\n⚠️ Some translation issues were found.")
 
 		if (totalMissing > 0) {
-			bufferLog("- For .md files: Create the missing translation files in the appropriate locale directory")
+			bufferLog("- For .md files: ")
+			bufferLog(
+				"    Create the missing translation files in the appropriate locale directory from the English sources in the root of the repository",
+			)
+			bufferLog(
+				"    Use <new_task> for each single file translation to keep translation context absolutely clear",
+			)
 			bufferLog(
 				"- For .json files: Add the missing translations that exist in English but are missing in other locales",
 			)
@@ -538,7 +539,8 @@ function formatSummary(results: Results): void {
 		}
 
 		if (totalErrors > 0) {
-			bufferLog("- Fix the errors reported above")
+			bufferLog("- Always translate from the original English source documents")
+			bufferLog("- Fix the errors based on the instructions above without reading this test script.")
 		}
 	}
 }
