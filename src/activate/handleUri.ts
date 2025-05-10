@@ -5,8 +5,8 @@ import { ClineProvider } from "../core/webview/ClineProvider"
 export const handleUri = async (uri: vscode.Uri) => {
 	const path = uri.path
 	const query = new URLSearchParams(uri.query.replace(/\+/g, "%2B"))
-	const visibleProvider = ClineProvider.getVisibleInstance()
-	if (!visibleProvider) {
+	const activeProvider = ClineProvider.getActiveProvider()
+	if (!activeProvider) {
 		return
 	}
 
@@ -14,21 +14,21 @@ export const handleUri = async (uri: vscode.Uri) => {
 		case "/glama": {
 			const code = query.get("code")
 			if (code) {
-				await visibleProvider.handleGlamaCallback(code)
+				await activeProvider.handleGlamaCallback(code)
 			}
 			break
 		}
 		case "/openrouter": {
 			const code = query.get("code")
 			if (code) {
-				await visibleProvider.handleOpenRouterCallback(code)
+				await activeProvider.handleOpenRouterCallback(code)
 			}
 			break
 		}
 		case "/requesty": {
 			const code = query.get("code")
 			if (code) {
-				await visibleProvider.handleRequestyCallback(code)
+				await activeProvider.handleRequestyCallback(code)
 			}
 			break
 		}
