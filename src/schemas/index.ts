@@ -361,6 +361,7 @@ const genericProviderSettingsSchema = z.object({
 const anthropicSchema = z.object({
 	apiModelId: z.string().optional(),
 	apiKey: z.string().optional(),
+	apiKeyEnvVar: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
 	anthropicUseAuthToken: z.boolean().optional(),
 })
@@ -368,10 +369,12 @@ const anthropicSchema = z.object({
 const glamaSchema = z.object({
 	glamaModelId: z.string().optional(),
 	glamaApiKey: z.string().optional(),
+	glamaApiKeyEnvVar: z.string().optional(),
 })
 
 const openRouterSchema = z.object({
 	openRouterApiKey: z.string().optional(),
+	openRouterApiKeyEnvVar: z.string().optional(),
 	openRouterModelId: z.string().optional(),
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
@@ -400,6 +403,7 @@ const vertexSchema = z.object({
 const openAiSchema = z.object({
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
+	openAiApiKeyEnvVar: z.string().optional(),
 	openAiLegacyFormat: z.boolean().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
@@ -437,31 +441,37 @@ const lmStudioSchema = z.object({
 
 const geminiSchema = z.object({
 	geminiApiKey: z.string().optional(),
+	geminiApiKeyEnvVar: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
 })
 
 const openAiNativeSchema = z.object({
 	openAiNativeApiKey: z.string().optional(),
+	openAiNativeApiKeyEnvVar: z.string().optional(),
 	openAiNativeBaseUrl: z.string().optional(),
 })
 
 const mistralSchema = z.object({
 	mistralApiKey: z.string().optional(),
+	mistralApiKeyEnvVar: z.string().optional(),
 	mistralCodestralUrl: z.string().optional(),
 })
 
 const deepSeekSchema = z.object({
 	deepSeekBaseUrl: z.string().optional(),
 	deepSeekApiKey: z.string().optional(),
+	deepSeekApiKeyEnvVar: z.string().optional(),
 })
 
 const unboundSchema = z.object({
 	unboundApiKey: z.string().optional(),
+	unboundApiKeyEnvVar: z.string().optional(),
 	unboundModelId: z.string().optional(),
 })
 
 const requestySchema = z.object({
 	requestyApiKey: z.string().optional(),
+	requestyApiKeyEnvVar: z.string().optional(),
 	requestyModelId: z.string().optional(),
 })
 
@@ -473,19 +483,23 @@ const fakeAiSchema = z.object({
 
 const xaiSchema = z.object({
 	xaiApiKey: z.string().optional(),
+	xaiApiKeyEnvVar: z.string().optional(),
 })
 
 const groqSchema = z.object({
 	groqApiKey: z.string().optional(),
+	groqApiKeyEnvVar: z.string().optional(),
 })
 
 const chutesSchema = z.object({
 	chutesApiKey: z.string().optional(),
+	chutesApiKeyEnvVar: z.string().optional(),
 })
 
 const litellmSchema = z.object({
 	litellmBaseUrl: z.string().optional(),
 	litellmApiKey: z.string().optional(),
+	litellmApiKeyEnvVar: z.string().optional(),
 	litellmModelId: z.string().optional(),
 })
 
@@ -556,13 +570,16 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Anthropic
 	apiModelId: undefined,
 	apiKey: undefined,
+	apiKeyEnvVar: undefined,
 	anthropicBaseUrl: undefined,
 	anthropicUseAuthToken: undefined,
 	// Glama
 	glamaModelId: undefined,
 	glamaApiKey: undefined,
+	glamaApiKeyEnvVar: undefined,
 	// OpenRouter
 	openRouterApiKey: undefined,
+	openRouterApiKeyEnvVar: undefined,
 	openRouterModelId: undefined,
 	openRouterBaseUrl: undefined,
 	openRouterSpecificProvider: undefined,
@@ -585,6 +602,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// OpenAI
 	openAiBaseUrl: undefined,
 	openAiApiKey: undefined,
+	openAiApiKeyEnvVar: undefined,
 	openAiLegacyFormat: undefined,
 	openAiR1FormatEnabled: undefined,
 	openAiModelId: undefined,
@@ -606,21 +624,27 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	lmStudioSpeculativeDecodingEnabled: undefined,
 	// Gemini
 	geminiApiKey: undefined,
+	geminiApiKeyEnvVar: undefined,
 	googleGeminiBaseUrl: undefined,
 	// OpenAI Native
 	openAiNativeApiKey: undefined,
+	openAiNativeApiKeyEnvVar: undefined,
 	openAiNativeBaseUrl: undefined,
 	// Mistral
 	mistralApiKey: undefined,
+	mistralApiKeyEnvVar: undefined,
 	mistralCodestralUrl: undefined,
 	// DeepSeek
 	deepSeekBaseUrl: undefined,
 	deepSeekApiKey: undefined,
+	deepSeekApiKeyEnvVar: undefined,
 	// Unbound
 	unboundApiKey: undefined,
+	unboundApiKeyEnvVar: undefined,
 	unboundModelId: undefined,
 	// Requesty
 	requestyApiKey: undefined,
+	requestyApiKeyEnvVar: undefined,
 	requestyModelId: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: undefined,
@@ -637,13 +661,17 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	fakeAi: undefined,
 	// X.AI (Grok)
 	xaiApiKey: undefined,
+	xaiApiKeyEnvVar: undefined,
 	// Groq
 	groqApiKey: undefined,
+	groqApiKeyEnvVar: undefined,
 	// Chutes AI
 	chutesApiKey: undefined,
+	chutesApiKeyEnvVar: undefined,
 	// LiteLLM
 	litellmBaseUrl: undefined,
 	litellmApiKey: undefined,
+	litellmApiKeyEnvVar: undefined,
 	litellmModelId: undefined,
 }
 

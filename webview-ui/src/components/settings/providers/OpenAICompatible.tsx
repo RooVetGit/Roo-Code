@@ -123,6 +123,14 @@ export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }:
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.openAiApiKey")}</label>
 			</VSCodeTextField>
+			<VSCodeTextField
+				value={apiConfiguration?.openAiApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("openAiApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.openAiApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.openAiApiKeyEnvVar")}</label>
+			</VSCodeTextField>
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
 				setApiConfigurationField={setApiConfigurationField}

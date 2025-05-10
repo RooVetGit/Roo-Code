@@ -58,7 +58,18 @@ export const Requesty = ({
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.requestyApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.requestyApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("requestyApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.requestyApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.requestyApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.requestyApiKey || apiConfiguration?.requestyApiKeyEnvVar)) && (
 				<VSCodeButtonLink
 					href="https://app.requesty.ai/api-keys"
 					style={{ width: "100%" }}

@@ -41,7 +41,18 @@ export const Mistral = ({ apiConfiguration, setApiConfigurationField }: MistralP
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.mistralApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.mistralApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("mistralApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.mistralApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.mistralApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.mistralApiKey || apiConfiguration?.mistralApiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://console.mistral.ai/" appearance="secondary">
 					{t("settings:providers.getMistralApiKey")}
 				</VSCodeButtonLink>

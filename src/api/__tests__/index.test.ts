@@ -255,3 +255,24 @@ describe("getModelParams", () => {
 		})
 	})
 })
+
+import { getEnvVar } from "../index"
+describe("getEnvVar", () => {
+    it("should return the value of an existing environment variable", () => {
+        process.env.TEST_ENV_VAR = "test-value";
+
+        const result = getEnvVar("TEST_ENV_VAR");
+
+        expect(result).toBe("test-value");
+    });
+
+    it("should return the default value if the environment variable is not set", () => {
+        const result = getEnvVar("NON_EXISTENT_ENV_VAR", "default-value");
+
+        expect(result).toBe("default-value");
+    });
+
+    it("should return undefined if the environment variable is not set and no default is provided", () => {
+        expect(getEnvVar("NON_EXISTENT_ENV_VAR", undefined)).toBeUndefined();
+    });
+});

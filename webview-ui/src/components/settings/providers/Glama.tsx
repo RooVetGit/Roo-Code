@@ -44,7 +44,18 @@ export const Glama = ({ apiConfiguration, setApiConfigurationField, routerModels
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.glamaApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.glamaApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("glamaApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.glamaApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.glamaApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.glamaApiKey || apiConfiguration?.glamaApiKeyEnvVar)) && (
 				<VSCodeButtonLink href={getGlamaAuthUrl(uriScheme)} style={{ width: "100%" }} appearance="primary">
 					{t("settings:providers.getGlamaApiKey")}
 				</VSCodeButtonLink>

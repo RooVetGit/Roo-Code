@@ -45,7 +45,18 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.geminiApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.geminiApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("geminiApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.geminiApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.geminiApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.geminiApiKey || apiConfiguration?.geminiApiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://ai.google.dev/" appearance="secondary">
 					{t("settings:providers.getGeminiApiKey")}
 				</VSCodeButtonLink>

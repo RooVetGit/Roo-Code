@@ -50,6 +50,17 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField, routerMode
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
+			<VSCodeTextField
+				value={apiConfiguration?.litellmApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("litellmApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.litellmApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.litellmApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
 
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
