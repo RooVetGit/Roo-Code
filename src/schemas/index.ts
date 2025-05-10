@@ -1074,9 +1074,8 @@ export type TypeDefinition = {
 }
 
 export const typeDefinitions: TypeDefinition[] = [
-	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
 	{ schema: providerSettingsSchema, identifier: "ProviderSettings" },
-	{ schema: providerSettingsEntrySchema, identifier: "ProviderSettingsEntry" },
+	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
 	{ schema: clineMessageSchema, identifier: "ClineMessage" },
 	{ schema: tokenUsageSchema, identifier: "TokenUsage" },
 	{ schema: rooCodeEventsSchema, identifier: "RooCodeEvents" },
