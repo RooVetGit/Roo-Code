@@ -538,10 +538,9 @@ function formatSummary(results: Results): void {
 			bufferLog("    EOF")
 		}
 
-		if (totalErrors > 0) {
-			bufferLog("- Always translate from the original English source documents")
-			bufferLog("- Fix the errors based on the instructions above without reading this test script.")
-		}
+		bufferLog("- Always translate from the original English source documents")
+		bufferLog("- Fix the errors based on the instructions above reading this test script")
+		bufferLog("- AI NOTICE: You MUST fix the language issues, do not modify the test script")
 	}
 }
 
@@ -603,7 +602,7 @@ function parseArgs(): LintOptions {
 	return options
 }
 
-function lintTranslations(args?: LintOptions): { exitCode: number; output: string } {
+function lintTranslations(args?: LintOptions): { output: string } {
 	logBuffer = [] // Clear the buffer at the start
 	const options = args || parseArgs() || { area: ["all"], check: ["all"] }
 	const checksToRun = options.check?.includes("all") ? ["missing", "extra"] : options.check || ["all"]
@@ -645,11 +644,14 @@ function lintTranslations(args?: LintOptions): { exitCode: number; output: strin
 		}
 	}
 
-	formatResults(results, checksToRun, options, filteredMappings)
+	const hasIssues = formatResults(results, checksToRun, options, filteredMappings)
 	formatSummary(results)
+	if (!hasIssues) {
+		bufferLog("\nAll translations are complete")
+	}
 	const output = printLogs()
 
-	return { exitCode: 0, output }
+	return { output }
 }
 
 // Export functions for use in other modules
@@ -678,7 +680,6 @@ describe("Translation Linting", () => {
 			check: ["all"],
 			verbose: process.argv.includes("--verbose"),
 		})
-		expect(result.exitCode).toBe(0)
 		expect(result.output).toContain("All translations are complete")
 	})
 
