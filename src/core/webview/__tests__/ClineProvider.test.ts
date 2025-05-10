@@ -227,6 +227,11 @@ jest.mock("../../../integrations/misc/extract-text", () => ({
 	}),
 }))
 
+jest.mock("../../../activate/registerCommands.ts", () => ({
+	getPanel: jest.fn(),
+	setPanel: jest.fn(),
+}))
+
 afterAll(() => {
 	jest.restoreAllMocks()
 })
@@ -309,6 +314,9 @@ describe("ClineProvider", () => {
 			}),
 			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
 		} as unknown as vscode.WebviewView
+
+		const { getPanel } = require("../../../activate/registerCommands")
+		;(getPanel as jest.Mock).mockReturnValue(mockWebviewView)
 
 		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 

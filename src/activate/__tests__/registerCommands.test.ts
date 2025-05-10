@@ -55,7 +55,7 @@ describe("getVisibleProviderOrLog", () => {
 
 		expect(result).toBeUndefined()
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
-			"Cannot find any active and visible Roo Code provider instances.",
+			"Cannot find any active and visible Roo Code provider instance.",
 		)
 	})
 })

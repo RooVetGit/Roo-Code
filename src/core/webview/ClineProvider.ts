@@ -446,7 +446,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					}
 					// For tab panels, their onDidDispose is handled where they are created
 					// (see: openClineInNewTab, which calls setPanel(undefined, "tab"))
-					this.view = undefined
+					if ("dispose" in this.view) {
+						this.view.dispose()
+					}
 					this.log("Cleared this.view reference due to webview disposal.")
 				}
 				// Do NOT call this.dispose() for the provider instance here.
@@ -454,7 +456,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				// This should only handle the disposal of the webview view itself.
 			},
 			null,
-			this.context.subscriptions,
+			this.disposables,
 		)
 
 		// Listen for when color changes
@@ -581,13 +583,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
-		if (this.view && this.view.webview) {
-			await this.view.webview.postMessage(message)
-		} else {
-			this.outputChannel.appendLine(
-				`Cannot post message to webview (${this.viewType}): Webview is not available. Message type: ${message.type}`,
-			)
-		}
+		await this.view?.webview.postMessage(message)
 	}
 
 	private async getHMRHtmlContent(webview: vscode.Webview): Promise<string> {
