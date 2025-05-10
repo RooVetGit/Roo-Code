@@ -156,11 +156,10 @@ function findKeys(obj: any, parentKey: string = ""): string[] {
 
 	for (const [key, value] of Object.entries(obj)) {
 		const currentKey = parentKey ? `${parentKey}.${key}` : key
+		keys.push(currentKey)
 
 		if (typeof value === "object" && value !== null) {
 			keys = [...keys, ...findKeys(value, currentKey)]
-		} else {
-			keys.push(currentKey)
 		}
 	}
 
