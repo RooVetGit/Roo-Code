@@ -192,6 +192,7 @@ type GlobalSettings = {
 				totalCost: number
 				size?: number | undefined
 				workspace?: string | undefined
+				lastActiveModeSlug?: string | undefined
 		  }[]
 		| undefined
 	autoApprovalEnabled?: boolean | undefined
