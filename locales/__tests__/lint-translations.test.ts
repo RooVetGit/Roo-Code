@@ -1,7 +1,7 @@
 const fs = require("fs")
 const path = require("path")
 import {
-	languages,
+	languages as originalLanguages,
 	type Language,
 	bufferLog,
 	printLogs,
@@ -11,6 +11,9 @@ import {
 	parseJsonContent,
 	getValueAtPath,
 } from "./utils"
+
+// Create a mutable copy of the languages array that can be overridden
+let languages = [...originalLanguages]
 
 // Track unique errors to avoid duplication
 const seenErrors = new Set<string>()
@@ -29,6 +32,7 @@ interface LintOptions {
 	check?: ("missing" | "extra" | "all")[]
 	help?: boolean
 	verbose?: boolean
+	allowUnknownLocales?: boolean
 }
 
 interface TranslationIssue {
@@ -183,12 +187,7 @@ function getFilteredLocales(localeArgs?: string[]): Language[] {
 		return baseLocales
 	}
 
-	const invalidLocales = localeArgs.filter((locale) => !languages.includes(locale as Language))
-	if (invalidLocales.length > 0) {
-		throw new Error(`Error: The following locales are not officially supported: ${invalidLocales.join(", ")}`)
-	}
-
-	return baseLocales.filter((locale) => localeArgs.includes(locale))
+	return localeArgs as unknown as Language[]
 }
 
 function filterMappingsByArea(mappings: PathMapping[], areaArgs?: string[]): PathMapping[] {
@@ -506,7 +505,37 @@ function formatSummary(results: Results): void {
 	}
 }
 
-function parseArgs(): LintOptions {
+function printUsage(): void {
+	bufferLog("Usage: node lint-translations.js [options]")
+	bufferLog("\nDescription:")
+	bufferLog("  Lint translation files to find missing or extra translations across different locales.")
+	bufferLog("\nOptions:")
+	bufferLog("  --help                 Show this help message")
+	bufferLog("  --verbose              Enable verbose output with detailed information")
+	bufferLog("  --locale=<locales>     Filter by specific locales (comma-separated)")
+	bufferLog("                         Example: --locale=fr,de,ja")
+	bufferLog("                         Use 'all' for all supported locales")
+	bufferLog("  --file=<files>         Filter by specific files (comma-separated)")
+	bufferLog("                         Example: --file=settings.json,commands.json")
+	bufferLog("                         Use 'all' for all files")
+	bufferLog("  --area=<areas>         Filter by specific areas (comma-separated)")
+	bufferLog(`                         Valid areas: ${PATH_MAPPINGS.map(m => m.area).join(", ")}, all`)
+	bufferLog("                         Example: --area=docs,core")
+	bufferLog("  --check=<checks>       Specify which checks to run (comma-separated)")
+	bufferLog("                         Valid checks: missing, extra, all")
+	bufferLog("                         Example: --check=missing,extra")
+	bufferLog("\nExamples:")
+	bufferLog("  # Check all translations in all areas")
+	bufferLog("  node lint-translations.js")
+	bufferLog("\n  # Check only missing translations for French locale")
+	bufferLog("  node lint-translations.js --locale=fr --check=missing")
+	bufferLog("\n  # Check only documentation translations for German and Japanese")
+	bufferLog("  node lint-translations.js --area=docs --locale=de,ja")
+	bufferLog("\n  # Verbose output for specific files in core area")
+	bufferLog("  node lint-translations.js --area=core --file=settings.json,commands.json --verbose")
+}
+
+function parseArgs(args: string[] = process.argv.slice(2)): LintOptions {
 	const options: LintOptions = {
 		area: ["all"],
 		check: ["all"] as ("missing" | "extra" | "all")[],
@@ -514,7 +543,10 @@ function parseArgs(): LintOptions {
 		help: false,
 	}
 
-	for (const arg of process.argv.slice(2)) {
+	// Reset languages to original value at the start
+	languages = [...originalLanguages]
+
+	for (const arg of args) {
 		if (arg === "--verbose") {
 			options.verbose = true
 			continue
@@ -533,6 +565,9 @@ function parseArgs(): LintOptions {
 		switch (key) {
 			case "locale":
 				options.locale = values
+				// Override the global languages array with the provided locales
+				// Add 'en' as it's always needed as the source language
+				languages = ['en', ...values] as unknown as Language[]
 				break
 			case "file":
 				options.file = values
@@ -567,6 +602,13 @@ function parseArgs(): LintOptions {
 function lintTranslations(args?: LintOptions): { output: string } {
 	clearLogs() // Clear the buffer at the start
 	const options = args || parseArgs() || { area: ["all"], check: ["all"] }
+	
+	// If help flag is set, print usage and return
+	if (options.help) {
+		printUsage()
+		return { output: printLogs() }
+	}
+	
 	const checksToRun = options.check?.includes("all") ? ["missing", "extra"] : options.check || ["all"]
 
 	const filteredMappings = filterMappingsByArea(PATH_MAPPINGS, options.area)
@@ -636,19 +678,47 @@ export {
 
 describe("Translation Linting", () => {
 	test("Run translation linting", () => {
-		// Run with default options to check all areas and all checks
-		const result = lintTranslations({
-			area: ["all"],
-			check: ["all"],
-			verbose: process.argv.includes("--verbose"),
-		})
-		expect(result.output).toContain("All translations are complete")
+		// Use the centralized parseArgs function to process Jest arguments
+		// Jest passes arguments after -- to the test
+		const options = parseArgs(process.argv);
+		
+		// If help flag is set, run with help option
+		if (options.help) {
+			const result = lintTranslations(options);
+			console.log(result.output); // Print help directly to console for visibility
+			expect(result.output).toContain("Usage: node lint-translations.js [options]");
+			return;
+		}
+		
+		// Run with processed options
+		const result = lintTranslations(options);
+		
+		// MUST FAIL in ANY event where the output does not contain "All translations are complete"
+		// This will cause the test to fail for locales with missing or extra translations
+		expect(result.output).toContain("All translations are complete");
 	})
 
 	test("Filters mappings by area correctly", () => {
 		const filteredMappings = filterMappingsByArea(PATH_MAPPINGS, ["docs"])
 		expect(filteredMappings).toHaveLength(1)
 		expect(filteredMappings[0].area).toBe("docs")
+	})
+
+	test("Displays help information when help flag is set", () => {
+		const result = lintTranslations({
+			help: true,
+			area: ["all"],
+			check: ["all"]
+		})
+		
+		// Verify help content
+		expect(result.output).toContain("Usage: node lint-translations.js [options]")
+		expect(result.output).toContain("Description:")
+		expect(result.output).toContain("Options:")
+		expect(result.output).toContain("Examples:")
+		
+		// Verify it doesn't run the linting process
+		expect(result.output).not.toContain("Translation Results")
 	})
 
 	test("Checks for missing translations", () => {
