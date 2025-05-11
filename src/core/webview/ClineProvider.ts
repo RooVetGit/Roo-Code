@@ -1476,7 +1476,7 @@ export class ClineProvider
 			terminalZshP10k: terminalZshP10k ?? false,
 			terminalZdotdir: terminalZdotdir ?? false,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
-			commandRiskLevel: (this.contextProxy.getGlobalState("commandRiskLevel") ?? "none") as CommandRiskLevel,
+			commandRiskLevel: commandRiskLevel ?? "none",
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
