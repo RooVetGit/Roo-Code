@@ -250,6 +250,12 @@ export class DiffViewProvider {
 	}
 
 	private async closeAllDiffViews() {
+		// Guard for test environments where `tabGroups.close` might be missing from the mocked API
+		const closeFn = (vscode.window.tabGroups as unknown as { close?: (tab: vscode.Tab) => Thenable<void> | void }).close
+		if (typeof closeFn !== "function") {
+			return
+		}
+
 		const tabs = vscode.window.tabGroups.all
 			.flatMap((tg) => tg.tabs)
 			.filter(
@@ -260,7 +266,7 @@ export class DiffViewProvider {
 		for (const tab of tabs) {
 			// trying to close dirty views results in save popup
 			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+				await closeFn.call(vscode.window.tabGroups, tab)
 			}
 		}
 	}
