@@ -417,18 +417,40 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 						bufferLog(`      ${file}`)
 
 						// Show missing keys for missing files too
-						const sourceFile = file.replace(`/${lang}/`, "/en/")
-						const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+						let sourceFile = file
 
-						if (sourceContent) {
-							bufferLog(`        Missing keys:`)
-							const sourceKeys = findKeys(sourceContent)
-							sourceKeys.sort().forEach((key) => {
-								const englishValue = getValueAtPath(sourceContent, key)
-								if (typeof englishValue === "string") {
-									bufferLog(`          - ${key} - '${englishValue}' [en]`)
+						// Handle different file patterns
+						if (file.includes(`/${lang}/`)) {
+							sourceFile = file.replace(`/${lang}/`, "/en/")
+						} else if (file.endsWith(`.${lang}.json`)) {
+							sourceFile = file.replace(`.${lang}.json`, ".json")
+						}
+
+						// For JSON files, we can show the actual keys
+						if (sourceFile.endsWith(".json")) {
+							const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+							if (sourceContent) {
+								// For missing files, show all keys from source as missing
+								const sourceKeys = findKeys(sourceContent)
+								if (sourceKeys.length > 0) {
+									bufferLog(`        Missing keys: ALL KEYS (${sourceKeys.length} total)`)
+									if (options?.verbose) {
+										sourceKeys.sort().forEach((key) => {
+											const englishValue = getValueAtPath(sourceContent, key)
+											if (typeof englishValue === "string") {
+												bufferLog(`          - ${key} - '${englishValue}' [en]`)
+											}
+										})
+									}
+								} else {
+									bufferLog(`        Missing keys: No keys found in source file`)
 								}
-							})
+							} else {
+								bufferLog(`        Missing keys: Unable to load corresponding source file`)
+							}
+						} else {
+							// For non-JSON files (like Markdown), just indicate all content is missing
+							bufferLog(`        Missing file: ALL CONTENT (entire file)`)
 						}
 					})
 				})
@@ -442,23 +464,67 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 							bufferLog(`      ${file}`)
 							const keys = fileMap.get(file)
 							if (keys && keys.size > 0) {
-								bufferLog(`        Missing keys:`)
-								// Get the source file to extract English values
-								const sourceFile = file.replace(`/${lang}/`, "/en/")
-								const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+								// Check if this file is actually missing
+								const isMissingFile = Array.from(keys).some((key) => {
+									// Check if any key has englishValue "File missing"
+									const issue = Array.from(keys).find((k) => k === key)
+									return issue && keys.has(issue) && Array.from(keys)[0] === key && !fileExists(file)
+								})
 
-								Array.from(keys)
-									.sort()
-									.forEach((key) => {
-										const englishValue = sourceContent
-											? getValueAtPath(sourceContent, key)
-											: undefined
+								if (isMissingFile) {
+									// This is actually a missing file
+									// Get the source file based on mapping patterns
+									let sourceFile = file
 
-										// Skip displaying complex objects
-										if (typeof englishValue === "string") {
-											bufferLog(`          - ${key} - '${englishValue}' [en]`)
+									// Handle different file patterns
+									if (file.includes(`/${lang}/`)) {
+										sourceFile = file.replace(`/${lang}/`, "/en/")
+									} else if (file.endsWith(`.${lang}.json`)) {
+										sourceFile = file.replace(`.${lang}.json`, ".json")
+									}
+
+									// For JSON files, show all keys
+									if (file.endsWith(".json")) {
+										// For package.nls files, use the source from PATH_MAPPINGS
+										if (file.includes("package.nls")) {
+											sourceFile = "package.nls.json"
 										}
-									})
+
+										const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+										if (sourceContent) {
+											const sourceKeys = findKeys(sourceContent)
+											if (sourceKeys.length > 0) {
+												bufferLog(`        Missing keys: ALL KEYS (${sourceKeys.length} total)`)
+											} else {
+												bufferLog(`        Missing keys: No keys found in source file`)
+											}
+										} else {
+											bufferLog(`        Missing keys: Unable to load source file`)
+										}
+									} else {
+										// For non-JSON files (like Markdown), just indicate all content is missing
+										bufferLog(`        Missing file: ALL CONTENT (entire file)`)
+									}
+								} else {
+									// Normal case - file exists but has missing keys
+									bufferLog(`        Missing keys:`)
+									// Get the source file to extract English values
+									const sourceFile = file.replace(`/${lang}/`, "/en/")
+									const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+
+									Array.from(keys)
+										.sort()
+										.forEach((key) => {
+											const englishValue = sourceContent
+												? getValueAtPath(sourceContent, key)
+												: undefined
+
+											// Skip displaying complex objects
+											if (typeof englishValue === "string") {
+												bufferLog(`          - ${key} - '${englishValue}' [en]`)
+											}
+										})
+								}
 							}
 						})
 					}
