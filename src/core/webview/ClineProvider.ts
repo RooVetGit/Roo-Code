@@ -785,15 +785,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 */
 	public async handleModeSwitch(newMode: Mode) {
 		// Capture mode switch telemetry event
-		const cline = this.getCurrentCline()
+		// Telemetry for mode switch (provider level)
+		const activeCline = this.getCurrentCline() // Get current cline for task ID if available
+		telemetryService.captureModeSwitch(activeCline?.taskId || "global", newMode)
 
-		if (cline) {
-			telemetryService.captureModeSwitch(cline.taskId, newMode)
-			// Update the Cline instance's current mode *before* emitting the event
-			// and *before* updating global state, to ensure consistency if event handlers
-			// or global state watchers try to access the cline's mode.
-			await cline.updateCurrentModeSlug(newMode)
-			cline.emit("taskModeSwitched", cline.taskId, newMode)
+		// Emit an event that the provider's mode is switching.
+		// The active Cline instance itself should only update its internal currentModeSlug
+		// if the switch_mode tool is used within its context.
+		// A global mode switch should not change an active task's inherent mode.
+		if (activeCline) {
+			activeCline.emit("taskModeSwitched", activeCline.taskId, newMode) // Task is now running in a provider with a new mode
 		}
 
 		await this.updateGlobalState("mode", newMode)
