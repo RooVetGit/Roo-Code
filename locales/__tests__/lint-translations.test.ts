@@ -264,12 +264,12 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 
 	// Group errors by type for summary
 	const errorsByType = new Map<string, string[]>()
-	const missingByFile = new Map<string, Set<string>>()
 
 	for (const [area, areaResults] of Object.entries(results)) {
 		let areaHasIssues = false
 		const extraByLocale = new Map<string, Map<string, TranslationIssue[]>>()
 		let missingCount = 0
+		const missingByFile = new Map<string, Set<string>>()
 
 		for (const [locale, localeResults] of Object.entries(areaResults)) {
 			let localeMissingCount = 0
