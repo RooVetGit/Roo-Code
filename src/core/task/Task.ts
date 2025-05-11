@@ -541,7 +541,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		} else {
 			// this is a new non-partial message, so add it like normal
 			const sayTs = Date.now()
-			this.lastMessageTs = sayTs
+			if (type !== "checkpoint_saved") {
+				this.lastMessageTs = sayTs
+			}
 			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, checkpoint })
 		}
 	}
