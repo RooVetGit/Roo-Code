@@ -76,6 +76,7 @@ export async function diagnosticsToProblemsString(
 	cwd: string,
 ): Promise<string> {
 	const documents = new Map<vscode.Uri, vscode.TextDocument>()
+	const fileStats = new Map<vscode.Uri, vscode.FileStat>()
 	let result = ""
 	for (const [uri, fileDiagnostics] of diagnostics) {
 		const problems = fileDiagnostics
@@ -104,7 +105,11 @@ export async function diagnosticsToProblemsString(
 				const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
 				const source = diagnostic.source ? `${diagnostic.source} ` : ""
 				try {
-					const fileStat = await vscode.workspace.fs.stat(uri)
+					let fileStat = fileStats.get(uri)
+					if (!fileStat) {
+						fileStat = await vscode.workspace.fs.stat(uri)
+						fileStats.set(uri, fileStat)
+					}
 					if (fileStat.type === vscode.FileType.File) {
 						const document = documents.get(uri) || (await vscode.workspace.openTextDocument(uri))
 						documents.set(uri, document)
