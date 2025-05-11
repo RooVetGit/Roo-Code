@@ -6,7 +6,7 @@ Description: Request to execute a CLI command on the system. Use this when you n
 Parameters:
 - command: (required) The CLI command to execute. This should be valid for the current operating system. Ensure the command is properly formatted and does not contain any harmful instructions; the chosen command should be of the lowest risk level that accomplishes the goal and must assert R ⊆ Tm
 - cwd: (optional) The working directory to execute the command in (default: ${args.cwd})
-- risk_analysis: (required) Write one plain-verbiage terse concise sentence without mention of predicate logic, analyzing: why R ⊆ Tm=true and R ⊃ Tm=false in terms of s₀, why you chose r(C), any possible c⁻¹(R); this sentence must not mention any risk level itself.
+- risk_analysis: (required) Write one plain-verbiage terse concise sentence, prove: R ⊆ Tm, readOnly ⟺ Tm=∅, prove why you chose r(C); this sentence must not mention neither the risk level and must be plain lay language.
 - risk: (required) The risk level of the command. You must analyze each command to determine the appropriate risk level using the formal definitions below. Always select the most conservative applicable level.
 
 ### Risk Level Definitions:
@@ -53,10 +53,15 @@ c⁻¹(R): inverse operations known to be possible with only knowledge of S′ (
     - knowledge assumed to be within the user's mind
 
 r(C)=readOnly ⟺
-    Tm = ∅ ∧
-    R = ∅ ∧
+    ¬reversibleChanges ∧
+    ¬complexChanges ∧
+    ¬serviceInterruptingChanges ∧
+    ¬destructiveChanges ∧
+    (Tm = ∅ ∧ |Tm| = 0) ∧
+    (R = ∅ ∧ |R| = 0) ∧
     (Tr ≠ ∅ ∨ Tr = ∅) ∧
     S′ = S ∧
+    Dom(C) = ∅ ∧
     (∀x ∈ S: content(x,s₀) = content(x,s′))
 
 r(C)=reversibleChanges ⟺ [
