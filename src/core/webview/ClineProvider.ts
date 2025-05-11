@@ -1139,6 +1139,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const {
 			apiConfiguration,
 			lastShownAnnouncementId,
+			commandRiskLevel,
 			customInstructions,
 			alwaysAllowReadOnly,
 			alwaysAllowReadOnlyOutsideWorkspace,
@@ -1252,6 +1253,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			terminalZshP10k: terminalZshP10k ?? false,
 			terminalZdotdir: terminalZdotdir ?? false,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
+			commandRiskLevel: commandRiskLevel ?? "none",
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
@@ -1372,6 +1374,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
+			commandRiskLevel: stateValues.commandRiskLevel ?? "none",
 		}
 	}
 

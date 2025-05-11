@@ -64,6 +64,7 @@ export interface ExtensionMessage {
 		| "ttsStop"
 		| "maxReadFileLine"
 		| "fileSearchResults"
+		| "commandRiskLevel"
 		| "toggleApiConfigPin"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
@@ -126,6 +127,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowBrowser"
 	| "alwaysApproveResubmit"
 	// | "requestDelaySeconds" // Optional in GlobalSettings, required here.
+	| "commandRiskLevel"
 	| "alwaysAllowMcp"
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
