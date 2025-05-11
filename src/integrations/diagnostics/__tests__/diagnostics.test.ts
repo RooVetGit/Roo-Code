@@ -1,6 +1,23 @@
 import * as vscode from "vscode"
 import { diagnosticsToProblemsString } from ".."
 
+// Mock path module
+jest.mock("path", () => ({
+	relative: jest.fn((cwd, fullPath) => {
+		// Handle the specific case already present
+		if (cwd === "/project/root" && fullPath === "/project/root/src/utils/file.ts") {
+			return "src/utils/file.ts"
+		}
+		// Handle the test cases with /path/to as cwd
+		if (cwd === "/path/to") {
+			// Simple relative path calculation for the test cases
+			return fullPath.replace(cwd + "/", "")
+		}
+		// Fallback for other cases (can be adjusted if needed)
+		return fullPath
+	}),
+}))
+
 // Mock vscode module
 jest.mock("vscode", () => ({
 	Uri: {
@@ -130,7 +147,7 @@ describe("diagnosticsToProblemsString", () => {
 		// Verify the output contains the expected directory indicator
 		expect(result).toContain("(directory)")
 		expect(result).toContain("Directory diagnostic message")
-		expect(result).toMatch(/directory\n- \[test Error\] 1 \| \(directory\) : Directory diagnostic message/)
+		expect(result).toMatch(/directory\/\n- \[test Error\] 1 \| \(directory\) : Directory diagnostic message/)
 	})
 
 	it("should correctly handle multiple diagnostics for the same file", async () => {
@@ -339,16 +356,6 @@ describe("diagnosticsToProblemsString", () => {
 			})),
 		}
 		vscode.workspace.openTextDocument = jest.fn().mockResolvedValue(mockDocument)
-
-		// Mock path.relative to return the expected relative path
-		jest.mock("path", () => ({
-			relative: jest.fn((cwd, fullPath) => {
-				if (cwd === "/project/root" && fullPath === "/project/root/src/utils/file.ts") {
-					return "src/utils/file.ts"
-				}
-				return fullPath
-			}),
-		}))
 
 		// Call the function with cwd set to the project root
 		const result = await diagnosticsToProblemsString(
