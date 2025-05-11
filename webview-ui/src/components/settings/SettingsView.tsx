@@ -563,6 +563,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowSubtasks={alwaysAllowSubtasks}
 							alwaysAllowExecute={alwaysAllowExecute}
 							allowedCommands={allowedCommands}
+							commandRiskLevel={commandRiskLevel}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}
