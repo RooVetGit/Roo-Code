@@ -367,24 +367,101 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 				})
 
 				// Group by locale first
-				const byLocale = new Map<string, string[]>()
+				const missingFilesByLocale = new Map<string, string[]>()
+				const missingKeysByLocale = new Map<string, Map<string, Set<string>>>()
+
 				missingByFile.forEach((keys, fileAndLang) => {
 					const [file, lang] = fileAndLang.split(":")
-					if (!byLocale.has(lang)) {
-						byLocale.set(lang, [])
-					}
 					const mapping = mappings.find((m) => m.area === area)
-					if (mapping) {
-						const targetPath = resolveTargetPath(file, mapping.targetTemplate, lang)
-						byLocale.get(lang)?.push(targetPath)
+					if (!mapping) return
+
+					const targetPath = resolveTargetPath(file, mapping.targetTemplate, lang)
+
+					// Check if this is a missing file or missing keys
+					let isMissingFile = false
+
+					// Check for the special "File missing" case
+					if (keys.size === 1) {
+						const key = Array.from(keys)[0]
+						// Either the key equals the source file or it's a file path
+						isMissingFile = key === file || key.includes("/")
+					}
+
+					if (isMissingFile) {
+						// This is a missing file
+						if (!missingFilesByLocale.has(lang)) {
+							missingFilesByLocale.set(lang, [])
+						}
+						missingFilesByLocale.get(lang)?.push(targetPath)
+					} else {
+						// These are missing keys
+						if (!missingKeysByLocale.has(lang)) {
+							missingKeysByLocale.set(lang, new Map())
+						}
+						if (!missingKeysByLocale.get(lang)?.has(targetPath)) {
+							missingKeysByLocale.get(lang)?.set(targetPath, new Set())
+						}
+						keys.forEach((key) => {
+							// Skip keys that look like file paths
+							if (!key.includes("/")) {
+								missingKeysByLocale.get(lang)?.get(targetPath)?.add(key)
+							}
+						})
 					}
 				})
 
-				byLocale.forEach((files, lang) => {
+				// Report missing files
+				missingFilesByLocale.forEach((files, lang) => {
 					bufferLog(`    ${lang}: missing ${files.length} files`)
 					files.sort().forEach((file) => {
 						bufferLog(`      ${file}`)
+
+						// Show missing keys for missing files too
+						const sourceFile = file.replace(`/${lang}/`, "/en/")
+						const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+
+						if (sourceContent) {
+							bufferLog(`        Missing keys:`)
+							const sourceKeys = findKeys(sourceContent)
+							sourceKeys.sort().forEach((key) => {
+								const englishValue = getValueAtPath(sourceContent, key)
+								if (typeof englishValue === "string") {
+									bufferLog(`          - ${key} - '${englishValue}' [en]`)
+								}
+							})
+						}
 					})
+				})
+
+				// Report files with missing keys
+				missingKeysByLocale.forEach((fileMap, lang) => {
+					const filesWithMissingKeys = Array.from(fileMap.keys())
+					if (filesWithMissingKeys.length > 0) {
+						bufferLog(`    ${lang}: ${filesWithMissingKeys.length} files with missing translations`)
+						filesWithMissingKeys.sort().forEach((file) => {
+							bufferLog(`      ${file}`)
+							const keys = fileMap.get(file)
+							if (keys && keys.size > 0) {
+								bufferLog(`        Missing keys:`)
+								// Get the source file to extract English values
+								const sourceFile = file.replace(`/${lang}/`, "/en/")
+								const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+
+								Array.from(keys)
+									.sort()
+									.forEach((key) => {
+										const englishValue = sourceContent
+											? getValueAtPath(sourceContent, key)
+											: undefined
+
+										// Skip displaying complex objects
+										if (typeof englishValue === "string") {
+											bufferLog(`          - ${key} - '${englishValue}' [en]`)
+										}
+									})
+							}
+						})
+					}
 				})
 			}
 
@@ -519,7 +596,7 @@ function printUsage(): void {
 	bufferLog("                         Example: --file=settings.json,commands.json")
 	bufferLog("                         Use 'all' for all files")
 	bufferLog("  --area=<areas>         Filter by specific areas (comma-separated)")
-	bufferLog(`                         Valid areas: ${PATH_MAPPINGS.map(m => m.area).join(", ")}, all`)
+	bufferLog(`                         Valid areas: ${PATH_MAPPINGS.map((m) => m.area).join(", ")}, all`)
 	bufferLog("                         Example: --area=docs,core")
 	bufferLog("  --check=<checks>       Specify which checks to run (comma-separated)")
 	bufferLog("                         Valid checks: missing, extra, all")
@@ -567,7 +644,7 @@ function parseArgs(args: string[] = process.argv.slice(2)): LintOptions {
 				options.locale = values
 				// Override the global languages array with the provided locales
 				// Add 'en' as it's always needed as the source language
-				languages = ['en', ...values] as unknown as Language[]
+				languages = ["en", ...values] as unknown as Language[]
 				break
 			case "file":
 				options.file = values
@@ -602,13 +679,13 @@ function parseArgs(args: string[] = process.argv.slice(2)): LintOptions {
 function lintTranslations(args?: LintOptions): { output: string } {
 	clearLogs() // Clear the buffer at the start
 	const options = args || parseArgs() || { area: ["all"], check: ["all"] }
-	
+
 	// If help flag is set, print usage and return
 	if (options.help) {
 		printUsage()
 		return { output: printLogs() }
 	}
-	
+
 	const checksToRun = options.check?.includes("all") ? ["missing", "extra"] : options.check || ["all"]
 
 	const filteredMappings = filterMappingsByArea(PATH_MAPPINGS, options.area)
@@ -680,22 +757,22 @@ describe("Translation Linting", () => {
 	test("Run translation linting", () => {
 		// Use the centralized parseArgs function to process Jest arguments
 		// Jest passes arguments after -- to the test
-		const options = parseArgs(process.argv);
-		
+		const options = parseArgs(process.argv)
+
 		// If help flag is set, run with help option
 		if (options.help) {
-			const result = lintTranslations(options);
-			console.log(result.output); // Print help directly to console for visibility
-			expect(result.output).toContain("Usage: node lint-translations.js [options]");
-			return;
+			const result = lintTranslations(options)
+			console.log(result.output) // Print help directly to console for visibility
+			expect(result.output).toContain("Usage: node lint-translations.js [options]")
+			return
 		}
-		
+
 		// Run with processed options
-		const result = lintTranslations(options);
-		
+		const result = lintTranslations(options)
+
 		// MUST FAIL in ANY event where the output does not contain "All translations are complete"
 		// This will cause the test to fail for locales with missing or extra translations
-		expect(result.output).toContain("All translations are complete");
+		expect(result.output).toContain("All translations are complete")
 	})
 
 	test("Filters mappings by area correctly", () => {
@@ -708,15 +785,15 @@ describe("Translation Linting", () => {
 		const result = lintTranslations({
 			help: true,
 			area: ["all"],
-			check: ["all"]
+			check: ["all"],
 		})
-		
+
 		// Verify help content
 		expect(result.output).toContain("Usage: node lint-translations.js [options]")
 		expect(result.output).toContain("Description:")
 		expect(result.output).toContain("Options:")
 		expect(result.output).toContain("Examples:")
-		
+
 		// Verify it doesn't run the linting process
 		expect(result.output).not.toContain("Translation Results")
 	})
