@@ -2,17 +2,24 @@
 
 import * as vscode from "vscode"
 import { ContextProxy } from "../ContextProxy"
-
+import type { HistoryItem } from "../../../schemas"
 import { GLOBAL_STATE_KEYS, SECRET_STATE_KEYS } from "../../../schemas"
 
 jest.mock("vscode", () => ({
 	Uri: {
 		file: jest.fn((path) => ({ path })),
+		joinPath: jest.fn((base, ...paths) => ({ path: `${base.path}/${paths.join("/")}` })),
 	},
 	ExtensionMode: {
 		Development: 1,
 		Production: 2,
 		Test: 3,
+	},
+	FileSystemError: class extends Error {
+		code = "FileNotFound"
+	},
+	window: {
+		showInformationMessage: jest.fn(),
 	},
 }))
 
@@ -54,6 +61,18 @@ describe("ContextProxy", () => {
 		// Create proxy instance
 		proxy = new ContextProxy(mockContext)
 		await proxy.initialize()
+
+		// Ensure fs mock is properly initialized
+		const mockFs = jest.requireMock("fs/promises")
+		mockFs._setInitialMockData()
+
+		// Use it for vscode.workspace.fs operations
+		jest.mock("vscode", () => ({
+			...jest.requireMock("vscode"),
+			workspace: {
+				fs: mockFs,
+			},
+		}))
 	})
 
 	describe("read-only pass-through properties", () => {
@@ -102,39 +121,34 @@ describe("ContextProxy", () => {
 			expect(result).toBe("deepseek")
 		})
 
-		it("should bypass cache for pass-through state keys", async () => {
-			// Setup mock return value
-			mockGlobalState.get.mockReturnValue("pass-through-value")
-
-			// Use a pass-through key (taskHistory)
-			const result = proxy.getGlobalState("taskHistory")
-
-			// Should get value directly from original context
-			expect(result).toBe("pass-through-value")
-			expect(mockGlobalState.get).toHaveBeenCalledWith("taskHistory")
-		})
-
-		it("should respect default values for pass-through state keys", async () => {
-			// Setup mock to return undefined
-			mockGlobalState.get.mockReturnValue(undefined)
-
-			// Use a pass-through key with default value
-			const historyItems = [
+		it("should read task history from file", async () => {
+			const mockTasks: HistoryItem[] = [
 				{
 					id: "1",
 					number: 1,
-					ts: 1,
+					ts: Date.now(),
 					task: "test",
-					tokensIn: 1,
-					tokensOut: 1,
-					totalCost: 1,
+					tokensIn: 100,
+					tokensOut: 50,
+					totalCost: 0.001,
+					cacheWrites: 0,
+					cacheReads: 0,
 				},
 			]
 
-			const result = proxy.getGlobalState("taskHistory", historyItems)
+			const result = proxy.getGlobalState("taskHistory")
+			expect(result).toEqual(mockTasks)
+			expect(vscode.workspace.fs.readFile).toHaveBeenCalled()
+		})
 
-			// Should return default value when original context returns undefined
-			expect(result).toBe(historyItems)
+		it("should return empty array when task history file doesn't exist", async () => {
+			const vscode = jest.requireMock("vscode")
+
+			const error = new vscode.FileSystemError("File not found")
+			vscode.workspace.fs.readFile.mockRejectedValue(error)
+
+			const result = proxy.getGlobalState("taskHistory")
+			expect(result).toEqual([])
 		})
 	})
 
@@ -150,31 +164,37 @@ describe("ContextProxy", () => {
 			expect(storedValue).toBe("deepseek")
 		})
 
-		it("should bypass cache for pass-through state keys", async () => {
-			const historyItems = [
+		it("should write task history to file", async () => {
+			const historyItems: HistoryItem[] = [
 				{
 					id: "1",
 					number: 1,
-					ts: 1,
+					ts: Date.now(),
 					task: "test",
-					tokensIn: 1,
-					tokensOut: 1,
-					totalCost: 1,
+					tokensIn: 100,
+					tokensOut: 50,
+					totalCost: 0.001,
+					cacheWrites: 0,
+					cacheReads: 0,
 				},
 			]
 
 			await proxy.updateGlobalState("taskHistory", historyItems)
 
-			// Should update original context
-			expect(mockGlobalState.update).toHaveBeenCalledWith("taskHistory", historyItems)
+			// Should write to file
+			const expectedContent = JSON.stringify(historyItems[0]) + "\n"
+			expect(vscode.workspace.fs.writeFile).toHaveBeenCalledWith(
+				expect.objectContaining({ path: expect.stringContaining("taskHistory.jsonl") }),
+				Buffer.from(expectedContent),
+			)
 
-			// Setup mock for subsequent get
-			mockGlobalState.get.mockReturnValue(historyItems)
+			// Should update cache
+			expect(proxy.getGlobalState("taskHistory")).toEqual(historyItems)
+		})
 
-			// Should get fresh value from original context
-			const storedValue = proxy.getGlobalState("taskHistory")
-			expect(storedValue).toBe(historyItems)
-			expect(mockGlobalState.get).toHaveBeenCalledWith("taskHistory")
+		it("should handle undefined task history", async () => {
+			await proxy.updateGlobalState("taskHistory", undefined)
+			expect(vscode.workspace.fs.writeFile).not.toHaveBeenCalled()
 		})
 	})
 
@@ -388,6 +408,13 @@ describe("ContextProxy", () => {
 			// Total calls should include initial setup + reset operations
 			const expectedUpdateCalls = 2 + GLOBAL_STATE_KEYS.length
 			expect(mockGlobalState.update).toHaveBeenCalledTimes(expectedUpdateCalls)
+		})
+
+		it("should delete task history file when resetting state", async () => {
+			await proxy.resetAllState()
+			expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(
+				expect.objectContaining({ path: expect.stringContaining("taskHistory.jsonl") }),
+			)
 		})
 
 		it("should delete all secrets", async () => {

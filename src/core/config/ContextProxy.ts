@@ -22,7 +22,7 @@ type GlobalStateKey = keyof GlobalState
 type SecretStateKey = keyof SecretState
 type RooCodeSettingsKey = keyof RooCodeSettings
 
-const PASS_THROUGH_STATE_KEYS = ["taskHistory"]
+const PASS_THROUGH_STATE_KEYS: string[] = []
 
 export const isPassThroughStateKey = (key: string) => PASS_THROUGH_STATE_KEYS.includes(key)
 
@@ -50,6 +50,31 @@ export class ContextProxy {
 		return this._isInitialized
 	}
 
+	private async readTaskHistoryFile(): Promise<any[]> {
+		try {
+			const taskHistoryUri = vscode.Uri.joinPath(this.globalStorageUri, "taskHistory.jsonl")
+			const fileContent = await vscode.workspace.fs.readFile(taskHistoryUri)
+			const lines = fileContent.toString().split("\n").filter(Boolean)
+			return lines.map((line) => JSON.parse(line))
+		} catch (error) {
+			if (error instanceof vscode.FileSystemError && error.code === "FileNotFound") {
+				return []
+			}
+			logger.error(`Error reading task history file: ${error instanceof Error ? error.message : String(error)}`)
+			return []
+		}
+	}
+
+	private async writeTaskHistoryFile(tasks: any[]): Promise<void> {
+		try {
+			const taskHistoryUri = vscode.Uri.joinPath(this.globalStorageUri, "taskHistory.jsonl")
+			const content = tasks.map((task) => JSON.stringify(task)).join("\n") + "\n"
+			await vscode.workspace.fs.writeFile(taskHistoryUri, Buffer.from(content))
+		} catch (error) {
+			logger.error(`Error writing task history file: ${error instanceof Error ? error.message : String(error)}`)
+		}
+	}
+
 	public async initialize() {
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
@@ -57,6 +82,31 @@ export class ContextProxy {
 				this.stateCache[key] = this.originalContext.globalState.get(key)
 			} catch (error) {
 				logger.error(`Error loading global ${key}: ${error instanceof Error ? error.message : String(error)}`)
+			}
+		}
+
+		// Load task history from file
+		if (GLOBAL_STATE_KEYS.includes("taskHistory")) {
+			const tasks = await this.readTaskHistoryFile()
+			this.stateCache.taskHistory = tasks
+
+			// Migrate task history from global state if global state has data
+			const globalStateTasks = this.originalContext.globalState.get("taskHistory")
+			if (Array.isArray(globalStateTasks) && globalStateTasks.length > 0) {
+				try {
+					// Append global state tasks to existing file content
+					const combinedTasks = [...tasks, ...globalStateTasks]
+					await this.writeTaskHistoryFile(combinedTasks)
+					this.stateCache.taskHistory = combinedTasks
+					await this.originalContext.globalState.update("taskHistory", undefined)
+					vscode.window.showInformationMessage(
+						"Task history has been migrated using an append strategy to preserve existing entries.",
+					)
+				} catch (error) {
+					logger.error(
+						`Error migrating task history: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
 			}
 		}
 
@@ -105,18 +155,17 @@ export class ContextProxy {
 	getGlobalState<K extends GlobalStateKey>(key: K): GlobalState[K]
 	getGlobalState<K extends GlobalStateKey>(key: K, defaultValue: GlobalState[K]): GlobalState[K]
 	getGlobalState<K extends GlobalStateKey>(key: K, defaultValue?: GlobalState[K]): GlobalState[K] {
-		if (isPassThroughStateKey(key)) {
-			const value = this.originalContext.globalState.get<GlobalState[K]>(key)
-			return value === undefined || value === null ? defaultValue : value
-		}
-
 		const value = this.stateCache[key]
 		return value !== undefined ? value : defaultValue
 	}
 
-	updateGlobalState<K extends GlobalStateKey>(key: K, value: GlobalState[K]) {
-		if (isPassThroughStateKey(key)) {
-			return this.originalContext.globalState.update(key, value)
+	async updateGlobalState<K extends GlobalStateKey>(key: K, value: GlobalState[K]) {
+		if (key === "taskHistory") {
+			this.stateCache[key] = value
+			if (Array.isArray(value)) {
+				await this.writeTaskHistoryFile(value)
+			}
+			return
 		}
 
 		this.stateCache[key] = value
@@ -263,6 +312,18 @@ export class ContextProxy {
 		// Clear in-memory caches
 		this.stateCache = {}
 		this.secretCache = {}
+
+		// Delete task history file
+		try {
+			const taskHistoryUri = vscode.Uri.joinPath(this.globalStorageUri, "taskHistory.jsonl")
+			await vscode.workspace.fs.delete(taskHistoryUri)
+		} catch (error) {
+			if (!(error instanceof vscode.FileSystemError && error.code === "FileNotFound")) {
+				logger.error(
+					`Error deleting task history file: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+		}
 
 		await Promise.all([
 			...GLOBAL_STATE_KEYS.map((key) => this.originalContext.globalState.update(key, undefined)),

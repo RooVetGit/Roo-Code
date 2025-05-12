@@ -1,3 +1,5 @@
+import * as vscode from "vscode"
+
 // Mock file system data
 const mockFiles = new Map()
 const mockDirectories = new Set()
@@ -44,7 +46,18 @@ const ensureDirectoryExists = (path: string) => {
 	}
 }
 
-const mockFs = {
+// Mock types for vscode workspace fs
+type MockFileSystem = {
+	readFile: jest.Mock<Promise<Uint8Array>, [vscode.Uri]>
+	writeFile: jest.Mock<Promise<void>, [vscode.Uri, Uint8Array]>
+	mkdir: jest.Mock<Promise<void>, [vscode.Uri, { recursive?: boolean }]>
+	access: jest.Mock<Promise<void>, [vscode.Uri]>
+	rename: jest.Mock<Promise<void>, [vscode.Uri, vscode.Uri]>
+	delete: jest.Mock<Promise<void>, [vscode.Uri]>
+	[key: string]: any // Allow additional properties to match vscode API
+}
+
+const mockFs: MockFileSystem = {
 	readFile: jest.fn().mockImplementation(async (filePath: string, _encoding?: string) => {
 		// Return stored content if it exists
 		if (mockFiles.has(filePath)) {
@@ -148,6 +161,12 @@ const mockFs = {
 		throw error
 	}),
 
+	delete: jest.fn().mockImplementation(async (path: string) => {
+		// Delete file
+		mockFiles.delete(path)
+		return Promise.resolve()
+	}),
+
 	constants: jest.requireActual("fs").constants,
 
 	// Expose mock data for test assertions
@@ -181,6 +200,22 @@ const mockFs = {
 				mockDirectories.add(currentPath)
 			}
 		})
+
+		// Set up taskHistory file
+		const tasks = [
+			{
+				id: "1",
+				number: 1,
+				ts: Date.now(),
+				task: "test",
+				tokensIn: 100,
+				tokensOut: 50,
+				totalCost: 0.001,
+				cacheWrites: 0,
+				cacheReads: 0,
+			},
+		]
+		mockFiles.set("/mock/storage/path/taskHistory.jsonl", tasks.map((t) => JSON.stringify(t)).join("\n") + "\n")
 	},
 }
 
