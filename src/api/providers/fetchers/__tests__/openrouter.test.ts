@@ -9,11 +9,11 @@ import { PROMPT_CACHING_MODELS } from "../../../../shared/api"
 import { getOpenRouterModels } from "../openrouter"
 
 nockBack.fixtures = path.join(__dirname, "fixtures")
-nockBack.setMode("lockdown")
+nockBack.setMode("record")
 
 describe("OpenRouter API", () => {
 	describe("getOpenRouterModels", () => {
-		it.skip("fetches models and validates schema", async () => {
+		it("fetches models and validates schema", async () => {
 			const { nockDone } = await nockBack("openrouter-models.json")
 
 			const models = await getOpenRouterModels()
@@ -66,12 +66,12 @@ describe("OpenRouter API", () => {
 				supportsComputerUse: true,
 			})
 
-			expect(
-				Object.entries(models)
-					.filter(([id, _]) => id.startsWith("anthropic/claude-3"))
-					.map(([id, model]) => ({ id, maxTokens: model.maxTokens }))
-					.sort(({ id: a }, { id: b }) => a.localeCompare(b)),
-			).toEqual([
+			const anthropicModels = Object.entries(models)
+				.filter(([id, _]) => id.startsWith("anthropic/claude-3"))
+				.map(([id, model]) => ({ id, maxTokens: model.maxTokens }))
+				.sort(({ id: a }, { id: b }) => a.localeCompare(b))
+
+			expect(anthropicModels).toEqual([
 				{ id: "anthropic/claude-3-haiku", maxTokens: 4096 },
 				{ id: "anthropic/claude-3-haiku:beta", maxTokens: 4096 },
 				{ id: "anthropic/claude-3-opus", maxTokens: 4096 },
