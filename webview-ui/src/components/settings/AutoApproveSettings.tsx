@@ -21,6 +21,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysApproveResubmit?: boolean
 	requestDelaySeconds: number
 	alwaysAllowMcp?: boolean
+	alwaysAllowExtTools?: boolean
 	alwaysAllowModeSwitch?: boolean
 	alwaysAllowSubtasks?: boolean
 	alwaysAllowExecute?: boolean
@@ -35,6 +36,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "alwaysAllowMcp"
+		| "alwaysAllowExtTools"
 		| "alwaysAllowModeSwitch"
 		| "alwaysAllowSubtasks"
 		| "alwaysAllowExecute"
@@ -52,6 +54,7 @@ export const AutoApproveSettings = ({
 	alwaysApproveResubmit,
 	requestDelaySeconds,
 	alwaysAllowMcp,
+	alwaysAllowExtTools,
 	alwaysAllowModeSwitch,
 	alwaysAllowSubtasks,
 	alwaysAllowExecute,
@@ -89,6 +92,7 @@ export const AutoApproveSettings = ({
 					alwaysAllowBrowser={alwaysAllowBrowser}
 					alwaysApproveResubmit={alwaysApproveResubmit}
 					alwaysAllowMcp={alwaysAllowMcp}
+					alwaysAllowExtTools={alwaysAllowExtTools}
 					alwaysAllowModeSwitch={alwaysAllowModeSwitch}
 					alwaysAllowSubtasks={alwaysAllowSubtasks}
 					alwaysAllowExecute={alwaysAllowExecute}

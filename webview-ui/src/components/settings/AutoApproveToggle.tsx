@@ -11,6 +11,7 @@ type AutoApproveToggles = Pick<
 	| "alwaysAllowBrowser"
 	| "alwaysApproveResubmit"
 	| "alwaysAllowMcp"
+	| "alwaysAllowExtTools"
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
@@ -62,6 +63,13 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		icon: "plug",
 		testId: "always-allow-mcp-toggle",
 	},
+	alwaysAllowExtTools: {
+		key: "alwaysAllowExtTools",
+		labelKey: "settings:autoApprove.ext.label",
+		descriptionKey: "settings:autoApprove.ext.description",
+		icon: "extensions",
+		testId: "always-allow-ext-tools-toggle",
+	},
 	alwaysAllowModeSwitch: {
 		key: "alwaysAllowModeSwitch",
 		labelKey: "settings:autoApprove.modeSwitch.label",
@@ -95,9 +103,10 @@ export const AutoApproveToggle = ({ onToggle, ...props }: AutoApproveToggleProps
 	return (
 		<div
 			className={cn(
-				"flex flex-row flex-wrap justify-center gap-2 max-w-[400px] mx-auto my-2 ",
-				"[@media(min-width:600px)]:gap-4",
-				"[@media(min-width:800px)]:max-w-[800px]",
+				"grid grid-cols-3 gap-3 w-full mx-auto my-2",
+				"[@media(min-width:600px)]:grid-cols-4 [@media(min-width:600px)]:gap-4",
+				"[@media(min-width:800px)]:grid-cols-5",
+				"[@media(min-width:1200px)]:grid-cols-5",
 			)}>
 			{Object.values(autoApproveSettingsConfig).map(({ key, descriptionKey, labelKey, icon, testId }) => (
 				<Button
