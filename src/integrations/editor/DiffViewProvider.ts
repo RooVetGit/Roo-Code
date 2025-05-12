@@ -250,7 +250,6 @@ export class DiffViewProvider {
 	}
 
 	private async closeAllDiffViews() {
-
 		const tabs = vscode.window.tabGroups.all
 			.flatMap((tg) => tg.tabs)
 			.filter(
@@ -353,7 +352,7 @@ export class DiffViewProvider {
 	}
 
 	// close editor if open?
-		async reset() {
+	async reset() {
 		// Ensure any diff views opened by this provider are closed to release memory
 		await this.closeAllDiffViews();
 		this.editType = undefined
