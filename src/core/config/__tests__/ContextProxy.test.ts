@@ -5,10 +5,8 @@ import { ContextProxy } from "../ContextProxy"
 import type { HistoryItem } from "../../../schemas"
 import { GLOBAL_STATE_KEYS, SECRET_STATE_KEYS } from "../../../schemas"
 
-// This will use the mock file at src/__mocks__/vscode.js
 jest.mock("vscode")
 
-// Import historyItems from the mocked vscode module
 const { historyItems } = jest.requireMock("vscode")
 
 describe("ContextProxy", () => {

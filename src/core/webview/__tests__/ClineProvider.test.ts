@@ -171,6 +171,11 @@ jest.mock("vscode", () => ({
 		Development: 2,
 		Test: 3,
 	},
+	FileSystemError: class extends Error {
+		constructor(message: string) {
+			super(message)
+		}
+	},
 }))
 
 jest.mock("../../../utils/sound", () => ({
