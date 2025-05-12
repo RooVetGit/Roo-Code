@@ -217,35 +217,6 @@ type ProviderSettings = {
 	openRouterModelId?: string | undefined
 	openRouterBaseUrl?: string | undefined
 	openRouterSpecificProvider?: string | undefined
-	openRouterSelectedProviderInfo?:
-		| {
-				maxTokens?: (number | null) | undefined
-				maxThinkingTokens?: (number | null) | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-				minTokensPerCachePoint?: number | undefined
-				maxCachePoints?: number | undefined
-				cachableFields?: string[] | undefined
-				tiers?:
-					| {
-							contextWindow: number
-							inputPrice?: number | undefined
-							outputPrice?: number | undefined
-							cacheWritesPrice?: number | undefined
-							cacheReadsPrice?: number | undefined
-					  }[]
-					| undefined
-		  }
-		| undefined
 	openRouterUseMiddleOutTransform?: boolean | undefined
 	awsAccessKey?: string | undefined
 	awsSecretKey?: string | undefined

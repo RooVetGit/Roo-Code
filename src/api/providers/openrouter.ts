@@ -173,46 +173,23 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	override getModel() {
-		const modelId = this.options.openRouterModelId ?? openRouterDefaultModelId
+		const id = this.options.openRouterModelId ?? openRouterDefaultModelId
+		const info = this.models[id] ?? openRouterDefaultModelInfo
 
-		let baseModelInfo = this.models[modelId] ?? openRouterDefaultModelInfo
-		let finalModelInfo = baseModelInfo
-
-		if (
-			this.options.openRouterSelectedProviderInfo &&
-			this.options.openRouterSpecificProvider &&
-			this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME &&
-			baseModelInfo
-		) {
-			finalModelInfo = {
-				...baseModelInfo,
-				contextWindow: this.options.openRouterSelectedProviderInfo.contextWindow,
-				maxTokens: this.options.openRouterSelectedProviderInfo.maxTokens ?? baseModelInfo.maxTokens,
-				inputPrice: this.options.openRouterSelectedProviderInfo.inputPrice ?? baseModelInfo.inputPrice,
-				outputPrice: this.options.openRouterSelectedProviderInfo.outputPrice ?? baseModelInfo.outputPrice,
-				supportsImages:
-					this.options.openRouterSelectedProviderInfo.supportsImages ?? baseModelInfo.supportsImages,
-				supportsPromptCache:
-					this.options.openRouterSelectedProviderInfo.supportsPromptCache ??
-					baseModelInfo.supportsPromptCache,
-			}
-		} else if (!baseModelInfo) {
-			finalModelInfo = openRouterDefaultModelInfo
-		}
-
-		const isDeepSeekR1 = modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning"
+		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
 
 		return {
-			id: modelId,
-			info: finalModelInfo,
+			id,
+			info,
+			// maxTokens, thinking, temperature, reasoningEffort
 			...getModelParams({
 				options: this.options,
-				model: finalModelInfo,
+				model: info,
 				defaultTemperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0,
 			}),
 			topP: isDeepSeekR1 ? 0.95 : undefined,
 			promptCache: {
-				supported: finalModelInfo.supportsPromptCache && PROMPT_CACHING_MODELS.has(modelId),
+				supported: PROMPT_CACHING_MODELS.has(id),
 			},
 		}
 	}

@@ -377,7 +377,6 @@ const openRouterSchema = baseProviderSettingsSchema.extend({
 	openRouterModelId: z.string().optional(),
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
-	openRouterSelectedProviderInfo: modelInfoSchema.optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
 })
 
@@ -566,7 +565,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openRouterModelId: undefined,
 	openRouterBaseUrl: undefined,
 	openRouterSpecificProvider: undefined,
-	openRouterSelectedProviderInfo: undefined,
 	openRouterUseMiddleOutTransform: undefined,
 	// Amazon Bedrock
 	awsAccessKey: undefined,
