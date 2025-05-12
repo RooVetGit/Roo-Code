@@ -5,7 +5,6 @@ import { Slider } from "@/components/ui"
 
 import { ApiConfiguration, ModelInfo } from "@roo/shared/api"
 
-const DEFAULT_MAX_OUTPUT_TOKENS = 16_384
 const DEFAULT_MAX_THINKING_TOKENS = 8_192
 
 interface ThinkingBudgetProps {
@@ -19,14 +18,15 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 
 	const isThinkingModel = !!modelInfo && !!modelInfo.thinking && !!modelInfo.maxTokens
 
-	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_MAX_OUTPUT_TOKENS
 	const customMaxThinkingTokens = apiConfiguration.modelMaxThinkingTokens || DEFAULT_MAX_THINKING_TOKENS
 
 	// Dynamically expand or shrink the max thinking budget based on the custom
 	// max output tokens so that there's always a 20% buffer.
-	const modelMaxThinkingTokens = modelInfo?.maxThinkingTokens
-		? Math.min(modelInfo.maxThinkingTokens, Math.floor(0.8 * customMaxOutputTokens))
-		: Math.floor(0.8 * customMaxOutputTokens)
+	const modelMaxThinkingTokens = modelInfo
+		? modelInfo.maxThinkingTokens
+			? Math.min(modelInfo.maxThinkingTokens, Math.floor(0.8 * modelInfo.maxTokens!))
+			: Math.floor(0.8 * modelInfo.maxTokens!)
+		: DEFAULT_MAX_THINKING_TOKENS // Fallback if modelInfo is undefined
 
 	// If the custom max thinking tokens are going to exceed it's limit due
 	// to the custom max output tokens being reduced then we need to shrink it
@@ -39,19 +39,6 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 
 	return isThinkingModel ? (
 		<>
-			<div className="flex flex-col gap-1">
-				<div className="font-medium">{t("settings:thinkingBudget.maxTokens")}</div>
-				<div className="flex items-center gap-1">
-					<Slider
-						min={8192}
-						max={modelInfo.maxTokens!}
-						step={1024}
-						value={[customMaxOutputTokens]}
-						onValueChange={([value]) => setApiConfigurationField("modelMaxTokens", value)}
-					/>
-					<div className="w-12 text-sm text-center">{customMaxOutputTokens}</div>
-				</div>
-			</div>
 			<div className="flex flex-col gap-1">
 				<div className="font-medium">{t("settings:thinkingBudget.maxThinkingTokens")}</div>
 				<div className="flex items-center gap-1" data-testid="thinking-budget">
