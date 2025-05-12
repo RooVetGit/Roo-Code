@@ -34,7 +34,7 @@ const openRouterEndpointsSchema = z.object({
 	}),
 })
 
-export type OpenRouterModelProvider = ModelInfo & {
+type OpenRouterModelProvider = ModelInfo & {
 	label: string
 }
 
