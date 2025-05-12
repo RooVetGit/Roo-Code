@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, memo } from "react"
+import { useCallback, useState, memo } from "react"
 import { useEvent } from "react-use"
 import { ChevronDown, Skull } from "lucide-react"
 
@@ -18,6 +18,17 @@ interface CommandExecutionProps {
 	text?: string
 }
 
+const parseCommandAndOutput = (text: string) => {
+	const index = text.indexOf(COMMAND_OUTPUT_STRING)
+	if (index === -1) {
+		return { command: text, output: "" }
+	}
+	return {
+		command: text.slice(0, index),
+		output: text.slice(index + COMMAND_OUTPUT_STRING.length),
+	}
+}
+
 export const CommandExecution = ({ executionId, text }: CommandExecutionProps) => {
 	const { terminalShellIntegrationDisabled = false } = useExtensionState()
 
@@ -26,8 +37,11 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 	const [isExpanded, setIsExpanded] = useState(terminalShellIntegrationDisabled)
 
 	const [status, setStatus] = useState<CommandExecutionStatus | null>(null)
-	const [output, setOutput] = useState("")
-	const [command, setCommand] = useState(text)
+	const { command: initialCommand, output: initialOutput } = text
+		? parseCommandAndOutput(text)
+		: { command: "", output: "" }
+	const [output, setOutput] = useState(initialOutput)
+	const [command, setCommand] = useState(initialCommand)
 
 	const onMessage = useCallback(
 		(event: MessageEvent) => {
@@ -66,22 +80,9 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 
 	useEvent("message", onMessage)
 
-	useEffect(() => {
-		if (!status && text) {
-			const index = text.indexOf(COMMAND_OUTPUT_STRING)
-
-			if (index === -1) {
-				setCommand(text)
-			} else {
-				setCommand(text.slice(0, index))
-				setOutput(text.slice(index + COMMAND_OUTPUT_STRING.length))
-			}
-		}
-	}, [status, text])
-
 	return (
 		<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs p-2">
-			<CodeBlock source={command} language="shell" />
+			<CodeBlock source={text ? parseCommandAndOutput(text).command : command} language="shell" />
 			<div className="flex flex-row items-center justify-between gap-2 px-1">
 				<div className="flex flex-row items-center gap-1">
 					{status?.status === "started" && (
