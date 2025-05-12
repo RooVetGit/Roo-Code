@@ -82,11 +82,6 @@ function getSelectedModel({
 			const specificProvider = apiConfiguration.openRouterSpecificProvider
 
 			if (specificProvider && openRouterModelProviders[specificProvider]) {
-				console.log(
-					`openRouterSpecificProvider: ${specificProvider} ->`,
-					openRouterModelProviders[specificProvider],
-				)
-
 				info = openRouterModelProviders[specificProvider]
 			}
 
