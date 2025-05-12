@@ -192,7 +192,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// If a specific provider is requested, use the endpoint for that provider.
 		if (this.options.openRouterSpecificProvider && this.endpoints[this.options.openRouterSpecificProvider]) {
 			info = this.endpoints[this.options.openRouterSpecificProvider]
-			console.log(`[OpenRouterHandler] Using specific provider: ${this.options.openRouterSpecificProvider}`, info)
 		}
 
 		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
