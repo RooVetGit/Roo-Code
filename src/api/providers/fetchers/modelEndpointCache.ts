@@ -29,10 +29,18 @@ async function readModelEndpoints(key: string): Promise<ModelRecord | undefined>
 	return exists ? JSON.parse(await fs.readFile(filePath, "utf8")) : undefined
 }
 
-export const getModelEndpoints = async (router: RouterName, modelId?: string): Promise<ModelRecord> => {
+export const getModelEndpoints = async ({
+	router,
+	modelId,
+	endpoint,
+}: {
+	router: RouterName
+	modelId?: string
+	endpoint?: string
+}): Promise<ModelRecord> => {
 	// OpenRouter is the only provider that supports model endpoints, but you
 	// can see how we'd extend this to other providers in the future.
-	if (router !== "openrouter" || !modelId) {
+	if (router !== "openrouter" || !modelId || !endpoint) {
 		return {}
 	}
 
