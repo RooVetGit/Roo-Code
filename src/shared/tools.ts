@@ -42,6 +42,7 @@ export const toolParamNames = [
 	"tool_name",
 	"arguments",
 	"uri",
+	"extension_id",
 	"question",
 	"result",
 	"diff",
@@ -132,6 +133,11 @@ export interface UseMcpToolToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "server_name" | "tool_name" | "arguments">>
 }
 
+export interface UseExtToolToolUse extends ToolUse {
+	name: "use_ext_tool"
+	params: Partial<Pick<Record<ToolParamName, string>, "extension_id" | "tool_name" | "arguments">>
+}
+
 export interface AccessMcpResourceToolUse extends ToolUse {
 	name: "access_mcp_resource"
 	params: Partial<Pick<Record<ToolParamName, string>, "server_name" | "uri">>
@@ -180,6 +186,7 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	list_code_definition_names: "list definitions",
 	browser_action: "use a browser",
 	use_mcp_tool: "use mcp tools",
+	use_ext_tool: "use extension tool",
 	access_mcp_resource: "access mcp resources",
 	ask_followup_question: "ask questions",
 	attempt_completion: "complete tasks",
@@ -215,6 +222,9 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	},
 	mcp: {
 		tools: ["use_mcp_tool", "access_mcp_resource"],
+	},
+	ext: {
+		tools: ["use_ext_tool"],
 	},
 	modes: {
 		tools: ["switch_mode", "new_task"],

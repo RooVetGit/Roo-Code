@@ -26,6 +26,7 @@ import { askFollowupQuestionTool } from "../tools/askFollowupQuestionTool"
 import { switchModeTool } from "../tools/switchModeTool"
 import { attemptCompletionTool } from "../tools/attemptCompletionTool"
 import { newTaskTool } from "../tools/newTaskTool"
+import { useExtToolTool } from "../tools/useExtToolTool"
 
 import { checkpointSave } from "../checkpoints"
 
@@ -180,6 +181,8 @@ export async function presentAssistantMessage(cline: Task) {
 						return `[${block.name} for '${block.params.server_name}']`
 					case "access_mcp_resource":
 						return `[${block.name} for '${block.params.server_name}']`
+					case "use_ext_tool":
+						return `[${block.name} for '${block.params.extension_id}']`
 					case "ask_followup_question":
 						return `[${block.name} for '${block.params.question}']`
 					case "attempt_completion":
@@ -439,6 +442,9 @@ export async function presentAssistantMessage(cline: Task) {
 						pushToolResult,
 						removeClosingTag,
 					)
+					break
+				case "use_ext_tool":
+					await useExtToolTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "ask_followup_question":
 					await askFollowupQuestionTool(

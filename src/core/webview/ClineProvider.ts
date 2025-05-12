@@ -38,6 +38,7 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { ExtensionToolManager } from "../../services/extensions/ExtensionToolManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import type { IndexProgressUpdate } from "../../services/code-index/interfaces/manager"
@@ -82,6 +83,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
+	protected extensionToolManager?: ExtensionToolManager // Manage extension tools similar to mcpHub
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -127,6 +129,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			})
 			.catch((error) => {
 				this.log(`Failed to initialize MCP Hub: ${error}`)
+			})
+
+		// Initialize ExtensionToolManager from the singleton
+		ExtensionToolManager.getInstance(this.context, this)
+			.then((manager) => {
+				this.extensionToolManager = manager
+			})
+			.catch((error) => {
+				this.log(`Failed to initialize ExtensionToolManager: ${error}`)
 			})
 	}
 
@@ -1211,6 +1222,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowExecute,
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
+			alwaysAllowExtTools,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			allowedMaxRequests,
@@ -1287,6 +1299,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
+			alwaysAllowExtTools: alwaysAllowExtTools ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			allowedMaxRequests,
@@ -1401,6 +1414,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
+			alwaysAllowExtTools: stateValues.alwaysAllowExtTools ?? false,
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
 			allowedMaxRequests: stateValues.allowedMaxRequests,
@@ -1558,6 +1572,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+
+	// Get the extension tool manager instance
+	public getExtensionToolManager(): ExtensionToolManager {
+		// If we already have an instance, return it
+		if (this.extensionToolManager) {
+			return this.extensionToolManager
+		}
+
+		// This is not ideal, but needed for backwards compatibility until all code is updated to use async
+		throw new Error("ExtensionToolManager not initialized yet. Wait for initialization to complete.")
+	}
+
+	// Async version of getExtensionToolManager that waits for initialization if needed
+	public async getExtensionToolManagerAsync(): Promise<ExtensionToolManager> {
+		if (this.extensionToolManager) {
+			return this.extensionToolManager
+		}
+
+		// If not initialized yet, initialize it
+		this.extensionToolManager = await ExtensionToolManager.getInstance(this.context, this)
+		return this.extensionToolManager
 	}
 
 	/**

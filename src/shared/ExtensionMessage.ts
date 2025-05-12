@@ -132,6 +132,7 @@ export type ExtensionState = Pick<
 	| "alwaysApproveResubmit"
 	// | "requestDelaySeconds" // Optional in GlobalSettings, required here.
 	| "alwaysAllowMcp"
+	| "alwaysAllowExtTools"
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
@@ -288,6 +289,13 @@ export interface ClineAskUseMcpServer {
 	toolName?: string
 	arguments?: string
 	uri?: string
+}
+
+export type ClineAskUseExtTool = {
+	type: "use_ext_tool"
+	extensionId: string
+	toolName: string
+	arguments?: string
 }
 
 export interface ClineApiReqInfo {

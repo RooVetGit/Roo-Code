@@ -156,6 +156,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("alwaysAllowMcp", message.bool)
 			await provider.postStateToWebview()
 			break
+		case "alwaysAllowExtTools":
+			await updateGlobalState("alwaysAllowExtTools", message.bool)
+			await provider.postStateToWebview()
+			break
 		case "alwaysAllowModeSwitch":
 			await updateGlobalState("alwaysAllowModeSwitch", message.bool)
 			await provider.postStateToWebview()
@@ -519,6 +523,24 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			} catch (error) {
 				provider.log(
 					`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+				)
+			}
+			break
+		}
+		case "toggleExtToolAlwaysAllow": {
+			try {
+				// Toggle the global alwaysAllowExtTools setting
+				const currentValue = getGlobalState("alwaysAllowExtTools") ?? false
+				await updateGlobalState("alwaysAllowExtTools", !currentValue)
+
+				// Log the action for debugging
+				provider.log(`Extension tools auto-approval toggled to ${!currentValue}`)
+
+				// Update the UI state
+				await provider.postStateToWebview()
+			} catch (error) {
+				provider.log(
+					`Failed to toggle auto-approve for extension tools: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 				)
 			}
 			break

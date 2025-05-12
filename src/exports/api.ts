@@ -24,7 +24,18 @@ import { RooCodeAPI } from "./interface"
 import { IpcServer } from "./ipc"
 import { outputChannelLog } from "./log"
 
+import { ExtensionToolManager } from "./extensionToolApi"
+
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
+	private _extensionTools?: ExtensionToolManager
+
+	public get extensionTools(): ExtensionToolManager {
+		if (!this._extensionTools) {
+			throw new Error("ExtensionToolManager not initialized yet")
+		}
+		return this._extensionTools
+	}
+
 	private readonly outputChannel: vscode.OutputChannel
 	private readonly sidebarProvider: ClineProvider
 	private readonly context: vscode.ExtensionContext
@@ -40,6 +51,16 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		enableLogging = false,
 	) {
 		super()
+
+		// Get the extension tools from the provider instead of initializing directly
+		provider
+			.getExtensionToolManagerAsync()
+			.then((manager) => {
+				this._extensionTools = manager
+			})
+			.catch((error) => {
+				console.error("Failed to get ExtensionToolManager from provider:", error)
+			})
 
 		this.outputChannel = outputChannel
 		this.sidebarProvider = provider

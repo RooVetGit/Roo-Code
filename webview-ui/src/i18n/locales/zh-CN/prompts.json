@@ -25,7 +25,8 @@
 			"edit": "编辑文件",
 			"browser": "浏览器",
 			"command": "运行命令",
-			"mcp": "MCP服务"
+			"mcp": "MCP服务",
+			"ext": "扩展工具"
 		},
 		"noTools": "无"
 	},

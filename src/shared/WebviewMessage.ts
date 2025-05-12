@@ -56,6 +56,7 @@ export interface WebviewMessage {
 		| "vsCodeSetting"
 		| "alwaysAllowBrowser"
 		| "alwaysAllowMcp"
+		| "alwaysAllowExtTools"
 		| "alwaysAllowModeSwitch"
 		| "allowedMaxRequests"
 		| "alwaysAllowSubtasks"
@@ -78,6 +79,7 @@ export interface WebviewMessage {
 		| "openProjectMcpSettings"
 		| "restartMcpServer"
 		| "toggleToolAlwaysAllow"
+		| "toggleExtToolAlwaysAllow"
 		| "toggleMcpServer"
 		| "updateMcpTimeout"
 		| "fuzzyMatchThreshold"
@@ -151,6 +153,7 @@ export interface WebviewMessage {
 	commands?: string[]
 	audioType?: AudioType
 	serverName?: string
+	extensionId?: string
 	toolName?: string
 	alwaysAllow?: boolean
 	mode?: Mode

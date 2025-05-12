@@ -173,6 +173,9 @@
 		"wantsToUseTool": "Roo wants to use a tool on the {{serverName}} MCP server:",
 		"wantsToAccessResource": "Roo wants to access a resource on the {{serverName}} MCP server:"
 	},
+	"extTools": {
+		"wantsToUse": "Roo wants to use an extension tool:"
+	},
 	"modes": {
 		"wantsToSwitch": "Roo wants to switch to {{mode}} mode",
 		"wantsToSwitchWithReason": "Roo wants to switch to {{mode}} mode because: {{reason}}",

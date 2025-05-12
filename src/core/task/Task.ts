@@ -1476,6 +1476,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				this.cwd,
 				(this.api.getModel().info.supportsComputerUse ?? false) && (browserToolEnabled ?? true),
 				mcpHub,
+				provider.getExtensionToolManager(),
 				this.diffStrategy,
 				browserViewportSize,
 				mode,

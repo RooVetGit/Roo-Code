@@ -88,6 +88,10 @@
 			"label": "MCP",
 			"description": "Enable auto-approval of individual MCP tools in the MCP Servers view (requires both this setting and the tool's individual \"Always allow\" checkbox)"
 		},
+		"ext": {
+			"label": "Ext Tools",
+			"description": "Automatically allow Roo to use extension tools without asking for permission"
+		},
 		"modeSwitch": {
 			"label": "Mode",
 			"description": "Automatically switch between different modes without requiring approval"

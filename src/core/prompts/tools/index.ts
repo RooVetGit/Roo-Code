@@ -1,6 +1,7 @@
 import { ToolName } from "../../../schemas"
 import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS, DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
+import { ExtensionToolManager } from "../../../services/extensions/ExtensionToolManager"
 import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
 
 import { ToolArgs } from "./types"
@@ -17,6 +18,7 @@ import { getBrowserActionDescription } from "./browser-action"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
 import { getUseMcpToolDescription } from "./use-mcp-tool"
+import { getUseExtToolDescription } from "./use-ext-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
@@ -36,6 +38,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	ask_followup_question: () => getAskFollowupQuestionDescription(),
 	attempt_completion: () => getAttemptCompletionDescription(),
 	use_mcp_tool: (args) => getUseMcpToolDescription(args),
+	use_ext_tool: (args) => getUseExtToolDescription(args),
 	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
 	codebase_search: () => getCodebaseSearchDescription(),
 	switch_mode: () => getSwitchModeDescription(),
@@ -54,6 +57,7 @@ export function getToolDescriptionsForMode(
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
 	mcpHub?: McpHub,
+	extensionToolManager?: ExtensionToolManager,
 	customModes?: ModeConfig[],
 	experiments?: Record<string, boolean>,
 ): string {
@@ -64,6 +68,7 @@ export function getToolDescriptionsForMode(
 		diffStrategy,
 		browserViewportSize,
 		mcpHub,
+		extensionToolManager,
 	}
 
 	const tools = new Set<string>()
@@ -130,6 +135,7 @@ export {
 	getAskFollowupQuestionDescription,
 	getAttemptCompletionDescription,
 	getUseMcpToolDescription,
+	getUseExtToolDescription,
 	getAccessMcpResourceDescription,
 	getSwitchModeDescription,
 	getInsertContentDescription,
