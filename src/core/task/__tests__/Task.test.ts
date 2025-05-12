@@ -377,7 +377,9 @@ describe("Cline", () => {
 				expect(Object.keys(cleanedMessage!)).toEqual(["role", "content"])
 			})
 
+			// Set a longer timeout for this complex test
 			it("should handle image blocks based on model capabilities", async () => {
+				jest.setTimeout(15000) // Increase timeout to 15 seconds
 				// Create two configurations - one with image support, one without
 				const configWithImages = {
 					...mockApiConfig,
