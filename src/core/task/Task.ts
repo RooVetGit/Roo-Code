@@ -355,6 +355,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
+	/* Condenses a task's message history to use fewer tokens. */
+	async condenseHistory() {
+		// TODO(canyon): Replace with LLM summarization a la https://github.com/cline/cline/pull/3086
+		const previousApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
+		await this.maybeTruncateConversationHistory(previousApiReqIndex)
+	}
+
 	// Note that `partial` has three valid states true (partial message),
 	// false (completion of partial message), undefined (individual complete
 	// message).
@@ -1419,49 +1426,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			)
 		})()
 
-		// If the previous API request's total token usage is close to the
-		// context window, truncate the conversation history to free up space
-		// for the new request.
-		if (previousApiReqIndex >= 0) {
-			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
-
-			if (!previousRequest) {
-				return
-			}
-
-			const {
-				tokensIn = 0,
-				tokensOut = 0,
-				cacheWrites = 0,
-				cacheReads = 0,
-			}: ClineApiReqInfo = JSON.parse(previousRequest)
-
-			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
-
-			// Default max tokens value for thinking models when no specific
-			// value is set.
-			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
-
-			const modelInfo = this.api.getModel().info
-
-			const maxTokens = modelInfo.thinking
-				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
-				: modelInfo.maxTokens
-
-			const contextWindow = modelInfo.contextWindow
-
-			const trimmedMessages = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
-				totalTokens,
-				maxTokens,
-				contextWindow,
-				apiHandler: this.api,
-			})
-
-			if (trimmedMessages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(trimmedMessages)
-			}
-		}
+		await this.maybeTruncateConversationHistory(previousApiReqIndex)
 
 		// Clean conversation history by:
 		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.
@@ -1583,6 +1548,52 @@ export class Task extends EventEmitter<ClineEvents> {
 		// effectively passes along all subsequent chunks from the original
 		// stream.
 		yield* iterator
+	}
+
+	private async maybeTruncateConversationHistory(previousApiReqIndex: number) {
+		// If the previous API request's total token usage is close to the
+		// context window, truncate the conversation history to free up space
+		// for the new request.
+		if (previousApiReqIndex >= 0) {
+			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
+
+			if (!previousRequest) {
+				return
+			}
+
+			const {
+				tokensIn = 0,
+				tokensOut = 0,
+				cacheWrites = 0,
+				cacheReads = 0,
+			}: ClineApiReqInfo = JSON.parse(previousRequest)
+
+			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
+
+			// Default max tokens value for thinking models when no specific
+			// value is set.
+			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
+
+			const modelInfo = this.api.getModel().info
+
+			const maxTokens = modelInfo.thinking
+				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
+				: modelInfo.maxTokens
+
+			const contextWindow = modelInfo.contextWindow
+
+			const trimmedMessages = await truncateConversationIfNeeded({
+				messages: this.apiConversationHistory,
+				totalTokens,
+				maxTokens,
+				contextWindow,
+				apiHandler: this.api,
+			})
+
+			if (trimmedMessages !== this.apiConversationHistory) {
+				await this.overwriteApiConversationHistory(trimmedMessages)
+			}
+		}
 	}
 
 	// Checkpoints

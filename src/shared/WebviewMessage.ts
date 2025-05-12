@@ -38,6 +38,7 @@ export interface WebviewMessage {
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
+		| "condenseTaskHistory"
 		| "importSettings"
 		| "exportSettings"
 		| "resetState"
