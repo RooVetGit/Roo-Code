@@ -71,6 +71,9 @@ Otherwise, if you have not completed the task and do not need additional informa
 	invalidMcpToolArgumentError: (serverName: string, toolName: string) =>
 		`Invalid JSON argument used with ${serverName} for ${toolName}. Please retry with a properly formatted JSON argument.`,
 
+	invalidExtToolArgumentError: (extensionId: string, toolName: string) =>
+		`Invalid JSON argument used with ${extensionId} for ${toolName}. Please retry with a properly formatted JSON argument.`,
+
 	toolResult: (
 		text: string,
 		images?: string[],
