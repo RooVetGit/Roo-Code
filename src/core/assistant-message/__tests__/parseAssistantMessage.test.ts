@@ -4,11 +4,12 @@ import { TextContent, ToolUse } from "../../../shared/tools"
 
 import { AssistantMessageContent, parseAssistantMessage as parseAssistantMessageV1 } from "../parseAssistantMessage"
 import { parseAssistantMessageV2 } from "../parseAssistantMessageV2"
+import { parseAssistantMessageV3 } from "../parseAssistantMessageV3"
 
 const isEmptyTextContent = (block: AssistantMessageContent) =>
 	block.type === "text" && (block as TextContent).content === ""
 
-;[parseAssistantMessageV1, parseAssistantMessageV2].forEach((parser, index) => {
+;[parseAssistantMessageV1, parseAssistantMessageV2, parseAssistantMessageV3].forEach((parser, index) => {
 	describe(`parseAssistantMessageV${index + 1}`, () => {
 		describe("text content parsing", () => {
 			it("should parse a simple text message", () => {
