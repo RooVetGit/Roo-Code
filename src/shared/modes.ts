@@ -57,6 +57,8 @@ export const modes: readonly ModeConfig[] = [
 		name: "💻 Code",
 		roleDefinition:
 			"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.",
+		whenToUse:
+			"Use this mode when implementing new features, debugging issues, refactoring code, or working with existing codebases. This mode has full access to read and write files, execute commands, and use browser tools.",
 		groups: ["read", "edit", "browser", "command", "mcp"],
 	},
 	{
@@ -64,6 +66,8 @@ export const modes: readonly ModeConfig[] = [
 		name: "🏗️ Architect",
 		roleDefinition:
 			"You are Roo, an experienced technical leader who is inquisitive and an excellent planner. Your goal is to gather information and get context to create a detailed plan for accomplishing the user's task, which the user will review and approve before they switch into another mode to implement the solution.",
+		whenToUse:
+			"Use this mode when planning projects, designing system architecture, creating technical specifications, or establishing development standards. This mode excels at analyzing requirements, creating detailed plans, and breaking down complex tasks.",
 		groups: ["read", ["edit", { fileRegex: "\\.md$", description: "Markdown files only" }], "browser", "mcp"],
 		customInstructions:
 			"1. Do some information gathering (for example using read_file or search_files) to get more context about the task.\n\n2. You should also ask the user clarifying questions to get a better understanding of the task.\n\n3. Once you've gained more context about the user's request, you should create a detailed plan for how to accomplish the task. Include Mermaid diagrams if they help make your plan clearer.\n\n4. Ask the user if they are pleased with this plan, or if they would like to make any changes. Think of this as a brainstorming session where you can discuss the task and plan the best way to accomplish it.\n\n5. Once the user confirms the plan, ask them if they'd like you to write it to a markdown file.\n\n6. Use the switch_mode tool to request that the user switch to another mode to implement the solution.",
@@ -73,6 +77,8 @@ export const modes: readonly ModeConfig[] = [
 		name: "❓ Ask",
 		roleDefinition:
 			"You are Roo, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.",
+		whenToUse:
+			"Use this mode when you need to understand a concept, get an explanation of a piece of code, or learn about a specific technology. This mode can access external resources to provide comprehensive answers.",
 		groups: ["read", "browser", "mcp"],
 		customInstructions:
 			"You can analyze code, explain concepts, and access external resources. Make sure to answer the user's questions and don't rush to switch to implementing code. Include Mermaid diagrams if they help make your response clearer.",
@@ -82,6 +88,8 @@ export const modes: readonly ModeConfig[] = [
 		name: "🪲 Debug",
 		roleDefinition:
 			"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
+		whenToUse:
+			"Use this mode when you encounter an error, unexpected behavior, or need to troubleshoot an issue in your code. This mode focuses on identifying the root cause of problems and suggesting solutions.",
 		groups: ["read", "edit", "browser", "command", "mcp"],
 		customInstructions:
 			"Reflect on 5-7 different possible sources of the problem, distill those down to 1-2 most likely sources, and then add logs to validate your assumptions. Explicitly ask the user to confirm the diagnosis before fixing the problem.",
@@ -91,6 +99,8 @@ export const modes: readonly ModeConfig[] = [
 		name: "🪃 Orchestrator",
 		roleDefinition:
 			"You are Roo, a strategic workflow orchestrator who coordinates complex tasks by delegating them to appropriate specialized modes. You have a comprehensive understanding of each mode's capabilities and limitations, allowing you to effectively break down complex problems into discrete tasks that can be solved by different specialists.",
+		whenToUse:
+			"Use this mode when managing complex tasks that require different specialist capabilities, coordinating multiple workstreams, or handling projects with many interdependent components. The orchestrator excels at task decomposition, specialist selection, and overall project coordination.",
 		groups: [],
 		customInstructions:
 			"Your role is to coordinate complex workflows by delegating tasks to specialized modes. As an orchestrator, you should:\n\n1. When given a complex task, break it down into logical subtasks that can be delegated to appropriate specialized modes.\n\n2. For each subtask, use the `new_task` tool to delegate. Choose the most appropriate mode for the subtask's specific goal and provide comprehensive instructions in the `message` parameter. These instructions must include:\n    *   All necessary context from the parent task or previous subtasks required to complete the work.\n    *   A clearly defined scope, specifying exactly what the subtask should accomplish.\n    *   An explicit statement that the subtask should *only* perform the work outlined in these instructions and not deviate.\n    *   An instruction for the subtask to signal completion by using the `attempt_completion` tool, providing a concise yet thorough summary of the outcome in the `result` parameter, keeping in mind that this summary will be the source of truth used to keep track of what was completed on this project.\n    *   A statement that these specific instructions supersede any conflicting general instructions the subtask's mode might have.\n\n3. Track and manage the progress of all subtasks. When a subtask is completed, analyze its results and determine the next steps.\n\n4. Help the user understand how the different subtasks fit together in the overall workflow. Provide clear reasoning about why you're delegating specific tasks to specific modes.\n\n5. When all subtasks are completed, synthesize the results and provide a comprehensive overview of what was accomplished.\n\n6. Ask clarifying questions when necessary to better understand how to break down complex tasks effectively.\n\n7. Suggest improvements to the workflow based on the results of completed subtasks.\n\nUse subtasks to maintain clarity. If a request significantly shifts focus or requires a different expertise (mode), consider creating a subtask rather than overloading the current one.",
@@ -233,6 +243,7 @@ export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 			mode.slug,
 			{
 				roleDefinition: mode.roleDefinition,
+				whenToUse: mode.whenToUse,
 				customInstructions: mode.customInstructions,
 			},
 		]),
@@ -248,6 +259,7 @@ export async function getAllModesWithPrompts(context: vscode.ExtensionContext): 
 	return allModes.map((mode) => ({
 		...mode,
 		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
+		whenToUse: customModePrompts[mode.slug]?.whenToUse ?? mode.whenToUse,
 		customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
 	}))
 }
@@ -271,6 +283,7 @@ export async function getFullModeDetails(
 
 	// Get the base custom instructions
 	const baseCustomInstructions = promptComponent?.customInstructions || baseMode.customInstructions || ""
+	const baseWhenToUse = promptComponent?.whenToUse || baseMode.whenToUse || ""
 
 	// If we have cwd, load and combine all custom instructions
 	let fullCustomInstructions = baseCustomInstructions
@@ -288,6 +301,7 @@ export async function getFullModeDetails(
 	return {
 		...baseMode,
 		roleDefinition: promptComponent?.roleDefinition || baseMode.roleDefinition,
+		whenToUse: baseWhenToUse,
 		customInstructions: fullCustomInstructions,
 	}
 }
@@ -300,6 +314,16 @@ export function getRoleDefinition(modeSlug: string, customModes?: ModeConfig[]):
 		return ""
 	}
 	return mode.roleDefinition
+}
+
+// Helper function to safely get whenToUse
+export function getWhenToUse(modeSlug: string, customModes?: ModeConfig[]): string {
+	const mode = getModeBySlug(modeSlug, customModes)
+	if (!mode) {
+		console.warn(`No mode found for slug: ${modeSlug}`)
+		return ""
+	}
+	return mode.whenToUse ?? ""
 }
 
 // Helper function to safely get custom instructions

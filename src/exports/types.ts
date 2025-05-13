@@ -138,6 +138,7 @@ type GlobalSettings = {
 				slug: string
 				name: string
 				roleDefinition: string
+				whenToUse?: string | undefined
 				customInstructions?: string | undefined
 				groups: (
 					| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
@@ -157,6 +158,7 @@ type GlobalSettings = {
 				[x: string]:
 					| {
 							roleDefinition?: string | undefined
+							whenToUse?: string | undefined
 							customInstructions?: string | undefined
 					  }
 					| undefined
