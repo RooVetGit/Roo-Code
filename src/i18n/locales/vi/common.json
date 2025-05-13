@@ -89,11 +89,5 @@
 	"input": {
 		"task_prompt": "Bạn muốn Roo làm gì?",
 		"task_placeholder": "Nhập nhiệm vụ của bạn ở đây"
-	},
-	"settings": {
-		"providers": {
-			"groqApiKey": "Khóa API Groq",
-			"getGroqApiKey": "Lấy khóa API Groq"
-		}
 	}
 }

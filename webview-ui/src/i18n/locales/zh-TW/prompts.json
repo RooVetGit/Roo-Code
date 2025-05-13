@@ -8,7 +8,8 @@
 		"editGlobalModes": "編輯全域模式",
 		"editProjectModes": "編輯專案模式 (.roomodes)",
 		"createModeHelpText": "點選 + 建立新的自訂模式，或者在聊天中直接請 Roo 為您建立！",
-		"selectMode": "搜尋模式"
+		"selectMode": "搜尋模式",
+		"noMatchFound": "未找到符合的模式"
 	},
 	"apiConfiguration": {
 		"title": "API 設定",

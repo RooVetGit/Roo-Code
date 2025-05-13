@@ -89,11 +89,5 @@
 	"input": {
 		"task_prompt": "¿Qué debe hacer Roo?",
 		"task_placeholder": "Escribe tu tarea aquí"
-	},
-	"settings": {
-		"providers": {
-			"groqApiKey": "Clave API de Groq",
-			"getGroqApiKey": "Obtener clave API de Groq"
-		}
 	}
 }

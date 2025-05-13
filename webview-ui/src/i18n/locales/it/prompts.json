@@ -8,7 +8,8 @@
 		"editGlobalModes": "Modifica modalità globali",
 		"editProjectModes": "Modifica modalità di progetto (.roomodes)",
 		"createModeHelpText": "Clicca sul + per creare una nuova modalità personalizzata, o chiedi semplicemente a Roo nella chat di crearne una per te!",
-		"selectMode": "Cerca modalità"
+		"selectMode": "Cerca modalità",
+		"noMatchFound": "Nessuna modalità corrispondente trovata"
 	},
 	"apiConfiguration": {
 		"title": "Configurazione API",

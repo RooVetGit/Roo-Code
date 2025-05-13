@@ -8,7 +8,8 @@
 		"editGlobalModes": "ग्लोबल मोड्स संपादित करें",
 		"editProjectModes": "प्रोजेक्ट मोड्स संपादित करें (.roomodes)",
 		"createModeHelpText": "नया कस्टम मोड बनाने के लिए + पर क्लिक करें, या बस चैट में Roo से आपके लिए एक बनाने को कहें!",
-		"selectMode": "मोड खोजें"
+		"selectMode": "मोड खोजें",
+		"noMatchFound": "कोई मिलान करने वाला मोड नहीं मिला"
 	},
 	"apiConfiguration": {
 		"title": "API कॉन्फ़िगरेशन",

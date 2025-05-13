@@ -8,7 +8,8 @@
 		"editGlobalModes": "Edit Global Modes",
 		"editProjectModes": "Edit Project Modes (.roomodes)",
 		"createModeHelpText": "Hit the + to create a new custom mode, or just ask Roo in chat to create one for you!",
-		"selectMode": "Search modes"
+		"selectMode": "Search modes",
+		"noMatchFound": "No matching modes found"
 	},
 	"apiConfiguration": {
 		"title": "API Configuration",

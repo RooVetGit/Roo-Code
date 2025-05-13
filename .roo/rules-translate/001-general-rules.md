@@ -88,11 +88,87 @@
 - Watch for placeholders and preserve them in translations
 - Be mindful of text length in UI elements when translating to languages that might require more characters
 - Use context-aware translations when the same string has different meanings
-- Always validate your translation work by running the missing translations script:
+- Always validate your translation work by running the translation tests:
     ```
-    node scripts/find-missing-translations.js
+    npx jest --verbose locales/__tests__/lint-translations.test.ts locales/__tests__/find-missing-i18n-keys.test.ts
     ```
-- Address any missing translations identified by the script to ensure complete coverage across all locales
+- Address any missing translations identified by the tests by using `node scripts/manage-translations.js` to ensure complete coverage across all locales:
+
+```sh
+./scripts/manage-translations.js
+Usage:
+Command Line Mode:
+  Add/update translations:
+    node scripts/manage-translations.js [-v] TRANSLATION_FILE KEY_PATH VALUE [KEY_PATH VALUE...]
+  Delete translations:
+    node scripts/manage-translations.js [-v] -d TRANSLATION_FILE1 [TRANSLATION_FILE2 ...] [ -- KEY1 ...]
+
+Key Path Format:
+  - Use single dot (.) for nested paths: 'command.newTask.title'
+  - Use double dots (..) to include a literal dot in key names (like SMTP byte stuffing):
+    'settings..path' -> { 'settings.path': 'value' }
+
+  Examples:
+    'command.newTask.title'     -> { command: { newTask: { title: 'value' } } }
+    'settings..path'            -> { 'settings.path': 'value' }
+    'nested.key..with..dots'    -> { nested: { 'key.with.dots': 'value' } }
+
+Line-by-Line JSON Mode (--stdin):
+  Each line must be a complete, single JSON object/array
+  Multi-line or combined JSON is not supported
+
+  Add/update translations:
+    node scripts/manage-translations.js [-v] --stdin TRANSLATION_FILE
+    Format: One object per line with exactly one key-value pair:
+      {"command.newTask.title": "New Task"}
+      {"settings..path": "Custom Path"}
+      {"nested.key..with..dots": "Value with dots in key"}
+
+  Delete translations:
+    node scripts/manage-translations.js [-v] -d --stdin TRANSLATION_FILE
+    Format: One array per line with exactly one key:
+      ["command.newTask.title"]
+      ["settings..path"]
+      ["nested.key..with..dots"]
+
+Options:
+  -v        Enable verbose output (shows operations)
+  -d        Delete mode - remove keys instead of setting them
+  --stdin   Read line-by-line JSON from stdin
+
+Examples:
+  # Add via command line, it is recommended to execute multiple translations simultaneously.
+  # The script expects a single file at a time with multiple key-value pairs, not multiple files.
+  node scripts/manage-translations.js package.nls.json command.newTask.title "New Task" [ key2 translation2 ... ] && \
+    node scripts/manage-translations.js package.nls.json settings..path "Custom Path" && \
+    node scripts/manage-translations.js package.nls.json nested.key..with..dots "Value with dots"
+
+  # Add multiple translations (one JSON object per line):
+  translations.txt:
+    {"command.newTask.title": "New Task"}
+    {"settings..path": "Custom Path"}
+    node scripts/manage-translations.js --stdin package.nls.json < translations.txt
+
+  # Delete multiple keys (one JSON array per line):
+  delete_keys.txt:
+    ["command.newTask.title"]
+    ["settings..path"]
+    ["nested.key..with..dots"]
+    node scripts/manage-translations.js -d --stdin package.nls.json < delete_keys.txt
+
+  # Using here document for batching:
+  node scripts/manage-translations.js --stdin package.nls.json << EOF
+    {"command.newTask.title": "New Task"}
+    {"settings..path": "Custom Path"}
+  EOF
+
+  # Delete using here document:
+  node scripts/manage-translations.js -d --stdin package.nls.json << EOF
+    ["command.newTask.title"]
+    ["settings..path"]
+    ["nested.key..with..dots"]
+  EOF
+```
 
 # 9. TRANSLATOR'S CHECKLIST
 
