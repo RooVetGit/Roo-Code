@@ -10,11 +10,11 @@
  */
 export const TOOL_USE_FORMAT = `Tool use is formatted using XML-style tags. Tool name and parameters are enclosed in their respective tags:
 
-<tool_name>
+<actual_tool_name>
 <parameter1_name>value1</parameter1_name>
 <parameter2_name>value2</parameter2_name>
 ...
-</tool_name>`
+</actual_tool_name>`
 
 /**
  * Standard description of workspace directory functionality
