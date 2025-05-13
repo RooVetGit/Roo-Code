@@ -955,13 +955,12 @@ export const ChatRowContent = ({
 					)
 				case "command":
 					return (
-						<>
-							<div style={headerStyle}>
-								{icon}
-								{title}
-							</div>
-							<CommandExecution executionId={message.ts.toString()} text={message.text} />
-						</>
+						<CommandExecution
+							executionId={message.ts.toString()}
+							text={message.text}
+							icon={icon}
+							title={title}
+						/>
 					)
 				case "use_mcp_server":
 					const useMcpServer = safeJsonParse<ClineAskUseMcpServer>(message.text)
@@ -1019,6 +1018,7 @@ export const ChatRowContent = ({
 														)?.alwaysAllow || false,
 												}}
 												serverName={useMcpServer.serverName}
+												serverSource={server?.source}
 												alwaysAllowMcp={alwaysAllowMcp}
 											/>
 										</div>

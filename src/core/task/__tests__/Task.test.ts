@@ -1,4 +1,4 @@
-// npx jest src/core/__tests__/Cline.test.ts
+// npx jest src/core/task/__tests__/Task.test.ts
 
 import * as os from "os"
 import * as path from "path"
@@ -6,50 +6,17 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import { GlobalState } from "../../schemas"
-import { Cline } from "../Cline"
-import { ClineProvider } from "../webview/ClineProvider"
-import { ApiConfiguration, ModelInfo } from "../../shared/api"
-import { ApiStreamChunk } from "../../api/transform/stream"
-import { ContextProxy } from "../config/ContextProxy"
-
-jest.mock("../environment/getEnvironmentDetails", () => ({
-	getEnvironmentDetails: jest.fn().mockResolvedValue(""),
-}))
+import { GlobalState } from "../../../schemas"
+import { Task } from "../Task"
+import { ClineProvider } from "../../webview/ClineProvider"
+import { ProviderSettings, ModelInfo } from "../../../shared/api"
+import { ApiStreamChunk } from "../../../api/transform/stream"
+import { ContextProxy } from "../../config/ContextProxy"
+import { processUserContentMentions } from "../../mentions/processUserContentMentions"
 
 jest.mock("execa", () => ({
 	execa: jest.fn(),
 }))
-
-// Mock RooIgnoreController
-jest.mock("../ignore/RooIgnoreController")
-
-// Mock storagePathManager to prevent dynamic import issues
-jest.mock("../../shared/storagePathManager", () => ({
-	getTaskDirectoryPath: jest
-		.fn()
-		.mockImplementation((globalStoragePath, taskId) => Promise.resolve(`${globalStoragePath}/tasks/${taskId}`)),
-	getSettingsDirectoryPath: jest
-		.fn()
-		.mockImplementation((globalStoragePath) => Promise.resolve(`${globalStoragePath}/settings`)),
-}))
-
-// Mock fileExistsAtPath
-jest.mock("../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation((filePath) => {
-		return filePath.includes("ui_messages.json") || filePath.includes("api_conversation_history.json")
-	}),
-}))
-
-// Mock fs/promises
-const mockMessages = [
-	{
-		ts: Date.now(),
-		type: "say",
-		say: "text",
-		text: "historical task",
-	},
-]
 
 jest.mock("fs/promises", () => ({
 	mkdir: jest.fn().mockResolvedValue(undefined),
@@ -80,37 +47,21 @@ jest.mock("fs/promises", () => ({
 	rmdir: jest.fn().mockResolvedValue(undefined),
 }))
 
-// Mock dependencies
+jest.mock("p-wait-for", () => ({
+	__esModule: true,
+	default: jest.fn().mockImplementation(async () => Promise.resolve()),
+}))
+
 jest.mock("vscode", () => {
 	const mockDisposable = { dispose: jest.fn() }
-	const mockEventEmitter = {
-		event: jest.fn(),
-		fire: jest.fn(),
-	}
-
-	const mockTextDocument = {
-		uri: {
-			fsPath: "/mock/workspace/path/file.ts",
-		},
-	}
-
-	const mockTextEditor = {
-		document: mockTextDocument,
-	}
-
-	const mockTab = {
-		input: {
-			uri: {
-				fsPath: "/mock/workspace/path/file.ts",
-			},
-		},
-	}
-
-	const mockTabGroup = {
-		tabs: [mockTab],
-	}
+	const mockEventEmitter = { event: jest.fn(), fire: jest.fn() }
+	const mockTextDocument = { uri: { fsPath: "/mock/workspace/path/file.ts" } }
+	const mockTextEditor = { document: mockTextDocument }
+	const mockTab = { input: { uri: { fsPath: "/mock/workspace/path/file.ts" } } }
+	const mockTabGroup = { tabs: [mockTab] }
 
 	return {
+		TabInputTextDiff: jest.fn(),
 		CodeActionKind: {
 			QuickFix: { value: "quickfix" },
 			RefactorRewrite: { value: "refactor.rewrite" },
@@ -122,6 +73,7 @@ jest.mock("vscode", () => {
 			visibleTextEditors: [mockTextEditor],
 			tabGroups: {
 				all: [mockTabGroup],
+				close: jest.fn(),
 				onDidChangeTabs: jest.fn(() => ({ dispose: jest.fn() })),
 			},
 			showErrorMessage: jest.fn(),
@@ -129,9 +81,7 @@ jest.mock("vscode", () => {
 		workspace: {
 			workspaceFolders: [
 				{
-					uri: {
-						fsPath: "/mock/workspace/path",
-					},
+					uri: { fsPath: "/mock/workspace/path" },
 					name: "mock-workspace",
 					index: 0,
 				},
@@ -160,15 +110,55 @@ jest.mock("vscode", () => {
 	}
 })
 
-// Mock p-wait-for to resolve immediately
-jest.mock("p-wait-for", () => ({
-	__esModule: true,
-	default: jest.fn().mockImplementation(async () => Promise.resolve()),
+jest.mock("../../mentions", () => ({
+	parseMentions: jest.fn().mockImplementation((text) => {
+		return Promise.resolve(`processed: ${text}`)
+	}),
+	openMention: jest.fn(),
+	getLatestTerminalOutput: jest.fn(),
 }))
+
+jest.mock("../../../integrations/misc/extract-text", () => ({
+	extractTextFromFile: jest.fn().mockResolvedValue("Mock file content"),
+}))
+
+jest.mock("../../environment/getEnvironmentDetails", () => ({
+	getEnvironmentDetails: jest.fn().mockResolvedValue(""),
+}))
+
+// Mock RooIgnoreController
+jest.mock("../../ignore/RooIgnoreController")
+
+// Mock storagePathManager to prevent dynamic import issues
+jest.mock("../../../shared/storagePathManager", () => ({
+	getTaskDirectoryPath: jest
+		.fn()
+		.mockImplementation((globalStoragePath, taskId) => Promise.resolve(`${globalStoragePath}/tasks/${taskId}`)),
+	getSettingsDirectoryPath: jest
+		.fn()
+		.mockImplementation((globalStoragePath) => Promise.resolve(`${globalStoragePath}/settings`)),
+}))
+
+// Mock fileExistsAtPath
+jest.mock("../../../utils/fs", () => ({
+	fileExistsAtPath: jest.fn().mockImplementation((filePath) => {
+		return filePath.includes("ui_messages.json") || filePath.includes("api_conversation_history.json")
+	}),
+}))
+
+// Mock fs/promises
+const mockMessages = [
+	{
+		ts: Date.now(),
+		type: "say",
+		say: "text",
+		text: "historical task",
+	},
+]
 
 describe("Cline", () => {
 	let mockProvider: jest.Mocked<ClineProvider>
-	let mockApiConfig: ApiConfiguration
+	let mockApiConfig: ProviderSettings
 	let mockOutputChannel: any
 	let mockExtensionContext: vscode.ExtensionContext
 
@@ -282,7 +272,7 @@ describe("Cline", () => {
 
 	describe("constructor", () => {
 		it("should respect provided settings", async () => {
-			const cline = new Cline({
+			const cline = new Task({
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				customInstructions: "custom instructions",
@@ -296,7 +286,7 @@ describe("Cline", () => {
 		})
 
 		it("should use default fuzzy match threshold when not provided", async () => {
-			const cline = new Cline({
+			const cline = new Task({
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				customInstructions: "custom instructions",
@@ -314,7 +304,7 @@ describe("Cline", () => {
 
 		it("should require either task or historyItem", () => {
 			expect(() => {
-				new Cline({ provider: mockProvider, apiConfiguration: mockApiConfig })
+				new Task({ provider: mockProvider, apiConfiguration: mockApiConfig })
 			}).toThrow("Either historyItem or task/images must be provided")
 		})
 	})
@@ -323,7 +313,7 @@ describe("Cline", () => {
 		describe("API conversation handling", () => {
 			it("should clean conversation history before sending to API", async () => {
 				// Cline.create will now use our mocked getEnvironmentDetails
-				const [cline, task] = Cline.create({
+				const [cline, task] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
@@ -431,7 +421,7 @@ describe("Cline", () => {
 				]
 
 				// Test with model that supports images
-				const [clineWithImages, taskWithImages] = Cline.create({
+				const [clineWithImages, taskWithImages] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: configWithImages,
 					task: "test task",
@@ -454,7 +444,7 @@ describe("Cline", () => {
 				clineWithImages.apiConversationHistory = conversationHistory
 
 				// Test with model that doesn't support images
-				const [clineWithoutImages, taskWithoutImages] = Cline.create({
+				const [clineWithoutImages, taskWithoutImages] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: configWithoutImages,
 					task: "test task",
@@ -545,7 +535,7 @@ describe("Cline", () => {
 			})
 
 			it.skip("should handle API retry with countdown", async () => {
-				const [cline, task] = Cline.create({
+				const [cline, task] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
@@ -669,7 +659,7 @@ describe("Cline", () => {
 			})
 
 			it.skip("should not apply retry delay twice", async () => {
-				const [cline, task] = Cline.create({
+				const [cline, task] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
@@ -791,17 +781,13 @@ describe("Cline", () => {
 				await task.catch(() => {})
 			})
 
-			describe("parseUserContent", () => {
+			describe("processUserContentMentions", () => {
 				it("should process mentions in task and feedback tags", async () => {
-					const [cline, task] = Cline.create({
+					const [cline, task] = Task.create({
 						provider: mockProvider,
 						apiConfiguration: mockApiConfig,
 						task: "test task",
 					})
-
-					// Mock parseMentions to track calls
-					const mockParseMentions = jest.fn().mockImplementation((text) => `processed: ${text}`)
-					jest.spyOn(require("../../core/mentions"), "parseMentions").mockImplementation(mockParseMentions)
 
 					const userContent = [
 						{
@@ -834,30 +820,28 @@ describe("Cline", () => {
 						} as Anthropic.ToolResultBlockParam,
 					]
 
-					// Process the content
-					const processedContent = await cline.parseUserContent(userContent)
+					const processedContent = await processUserContentMentions({
+						userContent,
+						cwd: cline.cwd,
+						urlContentFetcher: cline.urlContentFetcher,
+						fileContextTracker: cline.fileContextTracker,
+					})
 
 					// Regular text should not be processed
 					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe("Regular text with @/some/path")
 
 					// Text within task tags should be processed
 					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain("processed:")
-					expect(mockParseMentions).toHaveBeenCalledWith(
+					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain(
 						"<task>Text with @/some/path in task tags</task>",
-						expect.any(String),
-						expect.any(Object),
-						expect.any(Object),
 					)
 
 					// Feedback tag content should be processed
 					const toolResult1 = processedContent[2] as Anthropic.ToolResultBlockParam
 					const content1 = Array.isArray(toolResult1.content) ? toolResult1.content[0] : toolResult1.content
 					expect((content1 as Anthropic.TextBlockParam).text).toContain("processed:")
-					expect(mockParseMentions).toHaveBeenCalledWith(
+					expect((content1 as Anthropic.TextBlockParam).text).toContain(
 						"<feedback>Check @/some/path</feedback>",
-						expect.any(String),
-						expect.any(Object),
-						expect.any(Object),
 					)
 
 					// Regular tool result should not be processed

@@ -15,9 +15,9 @@ import { Terminal } from "../../integrations/terminal/Terminal"
 import { arePathsEqual } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 
-export async function getEnvironmentDetails(cline: Cline, includeFileDetails: boolean = false) {
+export async function getEnvironmentDetails(cline: Task, includeFileDetails: boolean = false) {
 	let details = ""
 
 	const clineProvider = cline.providerRef.deref()
@@ -190,7 +190,7 @@ export async function getEnvironmentDetails(cline: Cline, includeFileDetails: bo
 
 	// Add context tokens information.
 	const { contextTokens, totalCost } = getApiMetrics(cline.clineMessages)
-	const modelInfo = cline.api.getModel().info
+	const { id: modelId, info: modelInfo } = cline.api.getModel()
 	const contextWindow = modelInfo.contextWindow
 
 	const contextPercentage =
@@ -203,7 +203,6 @@ export async function getEnvironmentDetails(cline: Cline, includeFileDetails: bo
 	const {
 		mode,
 		customModes,
-		apiModelId,
 		customModePrompts,
 		experiments = {} as Record<ExperimentId, boolean>,
 		customInstructions: globalCustomInstructions,
@@ -221,7 +220,7 @@ export async function getEnvironmentDetails(cline: Cline, includeFileDetails: bo
 	details += `\n\n# Current Mode\n`
 	details += `<slug>${currentMode}</slug>\n`
 	details += `<name>${modeDetails.name}</name>\n`
-	details += `<model>${apiModelId}</model>\n`
+	details += `<model>${modelId}</model>\n`
 
 	if (Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.POWER_STEERING)) {
 		details += `<role>${modeDetails.roleDefinition}</role>\n`

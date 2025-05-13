@@ -1,5 +1,53 @@
 # Roo Code Changelog
 
+## [3.16.6] - 2025-05-12
+
+- Restore "Improve provider profile management in the external API"
+- Fix to subtask sequencing (thanks @wkordalski!)
+- Fix webview terminal output processing error (thanks @KJ7LNW!)
+- Fix textarea empty string fallback logic (thanks @elianiva!)
+
+## [3.16.5] - 2025-05-10
+
+- Revert "Improve provider profile management in the external API" until we track down a bug with defaults
+
+## [3.16.4] - 2025-05-09
+
+- Improve provider profile management in the external API
+- Enforce provider selection in OpenRouter by using 'only' parameter and disabling fallbacks (thanks @shariqriazz!)
+- Fix display issues with long profile names (thanks @cannuri!)
+- Prevent terminal focus theft on paste after command execution (thanks @MuriloFP!)
+- Save OpenAI compatible custom headers correctly
+- Fix race condition when updating prompts (thanks @elianiva!)
+- Fix display issues in high contrast themes (thanks @zhangtony239!)
+- Fix not being able to use specific providers on Openrouter (thanks @daniel-lxs!)
+- Show properly formatted multi-line commands in preview (thanks @KJ7LNW!)
+- Handle unsupported language errors gracefully in read_file tool (thanks @KJ7LNW!)
+- Enhance focus styles in select-dropdown and fix docs URL (thanks @zhangtony239!)
+- Properly handle mode name overflow in UI (thanks @elianiva!)
+- Fix project MCP always allow issue (thanks @aheizi!)
+
+## [3.16.3] - 2025-05-08
+
+- Revert Tailwind migration while we fix a few spots
+- Add Elixir file extension support in language parser (thanks @pfitz!)
+
+## [3.16.2] - 2025-05-07
+
+- Clarify XML tool use formatting instructions
+- Error handling code cleanup (thanks @monkeyDluffy6017!)
+
+## [3.16.1] - 2025-05-07
+
+- Add LiteLLM provider support
+- Improve stability by detecting and preventing tool loops
+- Add Dutch localization (thanks @Githubguy132010!)
+- Add editor name to telemetry for better analytics
+- Migrate to Tailwind CSS for improved UI consistency
+- Fix footer button wrapping in About section on narrow screens (thanks @ecmasx!)
+- Update evals defaults
+- Update dependencies to latest versions
+
 ## [3.16.0] - 2025-05-06
 
 - Add vertical tab navigation to the settings (thanks @dlab-anton)

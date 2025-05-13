@@ -1,10 +1,8 @@
 import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
-export type { ModelInfo, ProviderName }
+export type { ModelInfo, ProviderName, ProviderSettings }
 
 export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
-
-export type ApiConfiguration = ProviderSettings
 
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
@@ -498,7 +496,6 @@ export const vertexModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 2.5,
 		outputPrice: 15,
 	},
@@ -507,7 +504,6 @@ export const vertexModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 2.5,
 		outputPrice: 15,
 	},
@@ -532,7 +528,6 @@ export const vertexModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 	},
@@ -557,7 +552,6 @@ export const vertexModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 0.075,
 		outputPrice: 0.3,
 	},
@@ -692,7 +686,6 @@ export const geminiModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
 		outputPrice: 15,
 		cacheReadsPrice: 0.625,
@@ -717,7 +710,6 @@ export const geminiModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
 		outputPrice: 15,
 		cacheReadsPrice: 0.625,
@@ -742,7 +734,6 @@ export const geminiModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 0.1,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
@@ -793,7 +784,6 @@ export const geminiModels = {
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		isPromptCacheOptional: true,
 		inputPrice: 0.15, // This is the pricing for prompts above 128k tokens.
 		outputPrice: 0.6,
 		cacheReadsPrice: 0.0375,
@@ -1136,6 +1126,20 @@ export const unboundDefaultModelInfo: ModelInfo = {
 	cacheReadsPrice: 0.3,
 }
 
+// LiteLLM
+// https://docs.litellm.ai/
+export const litellmDefaultModelId = "anthropic/claude-3-7-sonnet-20250219"
+export const litellmDefaultModelInfo: ModelInfo = {
+	maxTokens: 8192,
+	contextWindow: 200_000,
+	supportsImages: true,
+	supportsComputerUse: true,
+	supportsPromptCache: true,
+	inputPrice: 3.0,
+	outputPrice: 15.0,
+	cacheWritesPrice: 3.75,
+	cacheReadsPrice: 0.3,
+}
 // xAI
 // https://docs.x.ai/docs/api-reference
 export type XAIModelId = keyof typeof xaiModels
@@ -1705,18 +1709,9 @@ export const PROMPT_CACHING_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet",
 	"anthropic/claude-3.7-sonnet:beta",
 	"anthropic/claude-3.7-sonnet:thinking",
-	"google/gemini-2.5-pro-preview-03-25",
-	"google/gemini-2.5-pro-preview-05-06",
-	"google/gemini-2.0-flash-001",
-	"google/gemini-flash-1.5",
-	"google/gemini-flash-1.5-8b",
-])
-
-// These models don't have prompt caching enabled by default (you can turn it on
-// in settings).
-export const OPTIONAL_PROMPT_CACHING_MODELS = new Set([
-	"google/gemini-2.5-pro-preview-03-25",
-	"google/gemini-2.5-pro-preview-05-06",
+	"google/gemini-2.5-pro-preview",
+	"google/gemini-2.5-flash-preview",
+	"google/gemini-2.5-flash-preview:thinking",
 	"google/gemini-2.0-flash-001",
 	"google/gemini-flash-1.5",
 	"google/gemini-flash-1.5-8b",
@@ -1731,7 +1726,7 @@ export const COMPUTER_USE_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet:thinking",
 ])
 
-const routerNames = ["openrouter", "requesty", "glama", "unbound"] as const
+const routerNames = ["openrouter", "requesty", "glama", "unbound", "litellm"] as const
 
 export type RouterName = (typeof routerNames)[number]
 

@@ -3,7 +3,7 @@ import fs from "fs/promises"
 
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ToolUse, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult } from "../../shared/tools"
@@ -14,7 +14,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 
 export async function applyDiffTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -167,7 +167,7 @@ export async function applyDiffTool(
 
 			// Track file edit operation
 			if (relPath) {
-				await cline.getFileContextTracker().trackFileContext(relPath, "roo_edited" as RecordSource)
+				await cline.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
 			}
 
 			// Used to determine if we should wait for busy terminal to update before sending api request
