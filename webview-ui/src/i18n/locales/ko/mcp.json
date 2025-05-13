@@ -15,7 +15,8 @@
 	"tool": {
 		"alwaysAllow": "항상 허용",
 		"parameters": "매개변수",
-		"noDescription": "설명 없음"
+		"noDescription": "설명 없음",
+		"togglePromptInclusion": "프롬프트 포함 여부 전환"
 	},
 	"tabs": {
 		"tools": "도구",
