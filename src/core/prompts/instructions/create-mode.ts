@@ -37,24 +37,31 @@ Workspace-specific modes override global modes with the same slug.
 - roleDefinition: Detailed description of the mode's capabilities
 - groups: Array of tool access groups
 
+## Optional Fields (Highly Recommended)
+
+- whenToUse: A clear description of when this mode should be selected and what types of tasks it's best suited for. This helps the Orchestrator mode make better decisions.
+- customInstructions: Additional instructions for how the mode should operate
+
 ## Example Structure
 
 \`\`\`json
 {
-  "customModes": [
-    {
-      "slug": "designer",
-      "name": "Designer",
-      "roleDefinition": "You are Roo, a UI/UX expert specializing in design systems and frontend development. Your expertise includes:\\n- Creating and maintaining design systems\\n- Implementing responsive and accessible web interfaces\\n- Working with CSS, HTML, and modern frontend frameworks",
-      "groups": [
-        "read",   // read_file, fetch_instructions, search_files, list_files, list_code_definition_names
-        "edit",   // apply_diff, write_to_file (all files)
-        // Restricted editing example:
-        // ["edit", { "fileRegex": "\\.md$", "description": "Markdown files only" }],
-        "browser", // browser_action
-        "command"  // execute_command
-      ],
-      "customInstructions": "Optional additional instructions for the mode"
+ "customModes": [
+   {
+     "slug": "designer", // Required: unique slug with lowercase letters, numbers, and hyphens
+     "name": "Designer", // Required: mode display name
+     "roleDefinition": "You are Roo, a UI/UX expert specializing in design systems and frontend development. Your expertise includes:\\n- Creating and maintaining design systems\\n- Implementing responsive and accessible web interfaces\\n- Working with CSS, HTML, and modern frontend frameworks\\n- Ensuring consistent user experiences across platforms", // Required: non-empty
+     "whenToUse": "Use this mode when creating or modifying UI components, implementing design systems, or ensuring responsive web interfaces. This mode is especially effective with CSS, HTML, and modern frontend frameworks.", // Optional but recommended
+     "groups": [ // Required: array of tool groups (can be empty)
+       "read",    // Read files group (read_file, fetch_instructions, search_files, list_files, list_code_definition_names)
+       "edit",    // Edit files group (apply_diff, write_to_file) - allows editing any file
+       // Or with file restrictions:
+       // ["edit", { fileRegex: "\\.md$", description: "Markdown files only" }],  // Edit group that only allows editing markdown files
+       "browser", // Browser group (browser_action)
+       "command", // Command group (execute_command)
+       "mcp"     // MCP group (use_mcp_tool, access_mcp_resource)
+     ],
+     "customInstructions": "Additional instructions for the Designer mode" // Optional
     }
   ]
 }
