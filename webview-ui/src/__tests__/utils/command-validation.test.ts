@@ -48,7 +48,7 @@ describe("command-validation", () => {
 			}).not.toThrow()
 		})
 
-		it("should throw an error when parsing commands with $RANDOM in array index", () => {
+		it("should not throw an error when parsing commands with $RANDOM in array index", () => {
 			// This test reproduces the specific bug reported in the error
 			const commandWithRandom = "level=${levels[$RANDOM % ${#levels[@]}]}"
 
@@ -75,7 +75,7 @@ describe("command-validation", () => {
 			}).not.toThrow()
 		})
 
-		it("should throw an error with complex array indexing using $RANDOM and arithmetic", () => {
+		it("should not throw an error with complex array indexing using $RANDOM and arithmetic", () => {
 			// This test reproduces the exact expression from the original error
 			const commandWithComplexRandom = "echo ${levels[$RANDOM % ${#levels[@]}]}"
 
@@ -84,7 +84,7 @@ describe("command-validation", () => {
 			}).not.toThrow("Bad substitution")
 		})
 
-		it("should throw an error when parsing the full log generator command", () => {
+		it("should not throw an error when parsing the full log generator command", () => {
 			// This is the exact command from the original error message
 			const logGeneratorCommand = `while true; do \\
   levels=(INFO WARN ERROR DEBUG); \\
@@ -101,7 +101,7 @@ done`
 			}).not.toThrow("Bad substitution: levels[$RANDOM")
 		})
 
-		it("should throw an error when parsing just the problematic part", () => {
+		it("should not throw an error when parsing just the problematic part", () => {
 			// This isolates just the part mentioned in the error message
 			const problematicPart = "level=${levels[$RANDOM"
 
