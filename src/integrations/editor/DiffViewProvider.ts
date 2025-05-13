@@ -209,7 +209,7 @@ export class DiffViewProvider {
 			)
 		for (const tab of tabs) {
 			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+				//await vscode.window.tabGroups.close(tab)
 			}
 			this.documentWasOpen = true
 		}
