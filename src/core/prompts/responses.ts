@@ -185,7 +185,7 @@ const toolUseInstructionsReminder = `# Reminder: Instructions for Tool Use
 
 ${TOOL_USE_FORMAT}
 
-For example:
+For example, to use the attempt_completion tool:
 
 <attempt_completion>
 <result>
@@ -193,4 +193,4 @@ I have completed the task...
 </result>
 </attempt_completion>
 
-Always adhere to this format for all tool uses to ensure proper parsing and execution.`
+Always use the actual tool name as the XML tag name for proper parsing and execution.`

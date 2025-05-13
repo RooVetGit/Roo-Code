@@ -11,11 +11,11 @@ You have access to a set of tools that are executed upon the user's approval. Yo
 
 ${TOOL_USE_FORMAT}
 
-For example:
+For example, to use the read_file tool:
 
 <read_file>
 <path>src/main.js</path>
 </read_file>
 
-Always adhere to this format for the tool use to ensure proper parsing and execution.`
+Always use the actual tool name as the XML tag name for proper parsing and execution.`
 }

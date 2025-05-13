@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"lint": "eslint src/**/*.ts",
+		"lint": "eslint src/**/*.ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
 		"test": "npm run build && npx dotenvx run -f .env.local -- node ./out/runTest.js",
 		"ci": "npm run vscode-test && npm run test",
@@ -16,6 +16,6 @@
 		"@vscode/test-cli": "^0.0.10",
 		"@vscode/test-electron": "^2.4.0",
 		"mocha": "^11.1.0",
-		"typescript": "^5.4.5"
+		"typescript": "5.8.3"
 	}
 }

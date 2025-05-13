@@ -4,7 +4,7 @@ import { Trans } from "react-i18next"
 import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { ApiConfiguration } from "@roo/shared/api"
+import { ProviderSettings } from "@roo/shared/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
@@ -12,8 +12,8 @@ import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 import { inputEventTransform } from "../transforms"
 
 type LMStudioProps = {
-	apiConfiguration: ApiConfiguration
-	setApiConfigurationField: (field: keyof ApiConfiguration, value: ApiConfiguration[keyof ApiConfiguration]) => void
+	apiConfiguration: ProviderSettings
+	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 }
 
 export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudioProps) => {
@@ -22,9 +22,9 @@ export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudi
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 
 	const handleInputChange = useCallback(
-		<K extends keyof ApiConfiguration, E>(
+		<K extends keyof ProviderSettings, E>(
 			field: K,
-			transform: (event: E) => ApiConfiguration[K] = inputEventTransform,
+			transform: (event: E) => ProviderSettings[K] = inputEventTransform,
 		) =>
 			(event: E | Event) => {
 				setApiConfigurationField(field, transform(event as E))
@@ -119,7 +119,13 @@ export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudi
 								))}
 							</VSCodeRadioGroup>
 							{lmStudioModels.length === 0 && (
-								<div className="text-sm rounded-xs p-2 bg-vscode-inputValidation-infoBackground border border-vscode-inputValidation-infoBorder text-vscode-inputValidation-infoForeground">
+								<div
+									className="text-sm rounded-xs p-2"
+									style={{
+										backgroundColor: "var(--vscode-inputValidation-infoBackground)",
+										border: "1px solid var(--vscode-inputValidation-infoBorder)",
+										color: "var(--vscode-inputValidation-infoForeground)",
+									}}>
 									{t("settings:providers.lmStudio.noModelsFound")}
 								</div>
 							)}
