@@ -185,7 +185,7 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
+		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })
 		await this.closeAllDiffViews()
 
 		// Getting diagnostics before and after the file edit is a better approach than
@@ -285,7 +285,10 @@ export class DiffViewProvider {
 			console.log(`File ${absolutePath} has been reverted to its original content.`)
 
 			if (this.documentWasOpen) {
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
+				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+					preview: false,
+					preserveFocus: true,
+				})
 			}
 
 			await this.closeAllDiffViews()
@@ -332,7 +335,7 @@ export class DiffViewProvider {
 			)
 
 		if (diffTab && diffTab.input instanceof vscode.TabInputTextDiff) {
-			const editor = await vscode.window.showTextDocument(diffTab.input.modified)
+			const editor = await vscode.window.showTextDocument(diffTab.input.modified, { preserveFocus: true })
 			return editor
 		}
 
@@ -340,6 +343,7 @@ export class DiffViewProvider {
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
 			const fileName = path.basename(uri.fsPath)
 			const fileExists = this.editType === "modify"
+
 			const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
 				if (editor && arePathsEqual(editor.document.uri.fsPath, uri.fsPath)) {
 					disposable.dispose()
@@ -354,6 +358,7 @@ export class DiffViewProvider {
 				}),
 				uri,
 				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+				{ preserveFocus: true },
 			)
 
 			// This may happen on very slow machines i.e. project idx.
@@ -387,7 +392,7 @@ export class DiffViewProvider {
 
 		for (const part of diffs) {
 			if (part.added || part.removed) {
-				// Found the first diff, scroll to it
+				// Found the first diff, scroll to it.
 				this.activeDiffEditor.revealRange(
 					new vscode.Range(lineCount, 0, lineCount, 0),
 					vscode.TextEditorRevealType.InCenter,

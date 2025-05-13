@@ -1,3 +1,6 @@
+/* eslint-disable no-useless-escape */
+/* eslint-disable no-template-curly-in-string */
+
 import { parseCommand, validateCommand } from "../../utils/command-validation"
 
 /**
