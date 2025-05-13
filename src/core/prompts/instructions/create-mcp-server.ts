@@ -50,7 +50,7 @@ Common configuration options for both types:
 - \`disabled\`: (optional) Set to true to temporarily disable the server
 - \`timeout\`: (optional) Maximum time in seconds to wait for server responses (default: 60)
 - \`alwaysAllow\`: (optional) Array of tool names that don't require user confirmation
-- \`disabledForPromptTools\`: (optional) Array of tool names that don't includes to system prompt and won't be used
+- `disabledForPromptTools`: (optional) Array of tool names that are not included in the system prompt and won't be used
 
 ### Example Local MCP Server
 
