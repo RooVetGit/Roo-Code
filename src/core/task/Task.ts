@@ -517,28 +517,41 @@ export class Task extends EventEmitter<ClineEvents> {
 				} else {
 					// This is a new partial message, so add it with partial state.
 					const sayTs = Date.now()
-					this.lastMessageTs = sayTs
+
+					if (!options.isNonInteractive) {
+						this.lastMessageTs = sayTs
+					}
+
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, partial })
 				}
 			} else {
 				// New now have a complete version of a previously partial message.
+				// This is the complete version of a previously partial
+				// message, so replace the partial with the complete version.
 				if (isUpdatingPreviousPartial) {
-					// This is the complete version of a previously partial
-					// message, so replace the partial with the complete version.
-					this.lastMessageTs = lastMessage.ts
+					if (!options.isNonInteractive) {
+						this.lastMessageTs = lastMessage.ts
+					}
+
 					lastMessage.text = text
 					lastMessage.images = images
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
+
 					// Instead of streaming partialMessage events, we do a save
 					// and post like normal to persist to disk.
 					await this.saveClineMessages()
+
 					// More performant than an entire `postStateToWebview`.
 					this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new and complete message, so add it like normal.
 					const sayTs = Date.now()
-					this.lastMessageTs = sayTs
+
+					if (!options.isNonInteractive) {
+						this.lastMessageTs = sayTs
+					}
+
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images })
 				}
 			}
