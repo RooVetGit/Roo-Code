@@ -39,7 +39,7 @@ importers:
         specifier: ^2.5.2
         version: 2.5.3
       typescript:
-        specifier: 5.8.3
+        specifier: ^5.8.3
         version: 5.8.3
       typescript-eslint:
         specifier: ^8.31.1

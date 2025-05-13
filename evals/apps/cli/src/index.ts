@@ -119,10 +119,23 @@ const run = async (toolbox: GluegunToolbox) => {
 
 	const runningPromises: TaskPromise[] = []
 
+	let systemPromptContent: string | undefined = undefined
+	for (let i = 0; i < process.argv.length; i++) {
+		if (process.argv[i] === "--systemPromptFile") {
+			const filePath = process.argv[i + 1]
+			if (!filePath) continue
+			try {
+				systemPromptContent = fs.readFileSync(filePath, "utf-8")
+			} catch (err) {
+				console.error(`Failed to read system prompt file: ${filePath}`)
+			}
+		}
+	}
+
 	const processTask = async (task: Task, delay = 0) => {
 		if (task.finishedAt === null) {
 			await new Promise((resolve) => setTimeout(resolve, delay))
-			await runExercise({ run, task, server })
+			await runExercise({ run, task, server, systemPromptContent })
 		}
 
 		if (task.passed === null) {
@@ -172,12 +185,32 @@ const run = async (toolbox: GluegunToolbox) => {
 	await execa({ cwd: exercisesPath })`git commit -m ${`Run #${run.id}`} --no-verify`
 }
 
-const runExercise = async ({ run, task, server }: { run: Run; task: Task; server: IpcServer }): TaskPromise => {
+const runExercise = async ({
+	run,
+	task,
+	server,
+	systemPromptContent,
+}: {
+	run: Run
+	task: Task
+	server: IpcServer
+	systemPromptContent?: string
+}): TaskPromise => {
 	const { language, exercise } = task
 	const prompt = fs.readFileSync(path.resolve(exercisesPath, `prompts/${language}.md`), "utf-8")
 	const dirname = path.dirname(run.socketPath)
 	const workspacePath = path.resolve(exercisesPath, language, exercise)
 	const taskSocketPath = path.resolve(dirname, `${dirname}/task-${task.id}.sock`)
+
+	// Inject system prompt if provided
+	if (systemPromptContent) {
+		const workspaceRooDir = path.resolve(workspacePath, ".roo")
+		const workspaceSystemPromptPath = path.resolve(workspaceRooDir, "system-prompt-code")
+		if (!fs.existsSync(workspaceRooDir)) {
+			fs.mkdirSync(workspaceRooDir, { recursive: true })
+		}
+		fs.writeFileSync(workspaceSystemPromptPath, systemPromptContent)
+	}
 
 	// If debugging:
 	// Use --wait --log trace or --verbose.
@@ -490,10 +523,11 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 }
 
 const runUnitTest = async ({ task }: { task: Task }) => {
-	const cmd = testCommands[task.language]
+	const language = task.language as ExerciseLanguage
+	const cmd = testCommands[language]
 	const exercisePath = path.resolve(exercisesPath, task.language, task.exercise)
 	const cwd = cmd.cwd ? path.resolve(exercisePath, cmd.cwd) : exercisePath
-	const commands = cmd.commands.map((cs) => parseCommandString(cs))
+	const commands = cmd.commands.map((cs: string) => parseCommandString(cs))
 
 	let passed = true
 

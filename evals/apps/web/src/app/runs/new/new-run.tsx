@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
 import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck, Save, ArrowLeft } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui"
 
 import { globalSettingsSchema, providerSettingsSchema, rooCodeDefaults } from "@evals/types"
 
@@ -103,6 +104,10 @@ export function NewRun() {
 
 	const [model, suite, settings, concurrency] = watch(["model", "suite", "settings", "concurrency"])
 
+	// System Prompt state
+	const [systemPrompt, setSystemPrompt] = useState("")
+	const [isSystemPromptDialogOpen, setIsSystemPromptDialogOpen] = useState(false)
+
 	const onSubmit = useCallback(
 		async (values: FormValues) => {
 			try {
@@ -141,13 +146,15 @@ export function NewRun() {
 					}
 				}
 
-				const { id } = await createRun(values)
+				// Add systemPrompt to payload if provided
+				const payload = { ...values, systemPrompt: systemPrompt || undefined }
+				const { id } = await createRun(payload)
 				router.push(`/runs/${id}`)
 			} catch (e) {
 				toast.error(e instanceof Error ? e.message : "An unknown error occurred.")
 			}
 		},
-		[mode, model, models.data, router],
+		[mode, model, models.data, router, systemPrompt],
 	)
 
 	const onFilterModels = useCallback(
@@ -426,6 +433,13 @@ export function NewRun() {
 									<HardDriveUpload className="mr-2 h-4 w-4" />
 									Import Settings
 								</Button>
+								<Button
+									type="button"
+									variant="secondary"
+									onClick={() => setIsSystemPromptDialogOpen(true)}>
+									<HardDriveUpload className="mr-2 h-4 w-4" />
+									Import System Prompt
+								</Button>
 
 								{savedProfilesExist && !settings && (
 									<div className="text-sm text-muted-foreground ml-2">
@@ -539,6 +553,31 @@ export function NewRun() {
 				onClick={() => router.push("/")}>
 				<X className="size-6" />
 			</Button>
+			<Dialog open={isSystemPromptDialogOpen} onOpenChange={setIsSystemPromptDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Import System Prompt</DialogTitle>
+						<DialogDescription>
+							Paste or type your custom system prompt below. This will be injected into each exercise
+							workspace when you run evals.
+						</DialogDescription>
+					</DialogHeader>
+					<textarea
+						className="w-full min-h-[120px] border rounded p-2 mt-2"
+						value={systemPrompt}
+						onChange={(e) => setSystemPrompt(e.target.value)}
+						placeholder="Paste your system prompt here..."
+					/>
+					<DialogFooter>
+						<Button type="button" variant="outline" onClick={() => setIsSystemPromptDialogOpen(false)}>
+							Cancel
+						</Button>
+						<Button type="button" onClick={() => setIsSystemPromptDialogOpen(false)}>
+							Save
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</>
 	)
 }
