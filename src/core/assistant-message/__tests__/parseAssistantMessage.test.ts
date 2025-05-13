@@ -361,8 +361,8 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
 				const invocation = ["<read_file>", "<path>demo.txt</path>", "</read_file>"].join("\n")
 				const result = parser(invocation)
 				expect(result).toHaveLength(1)
-				const tool = result[0]
-				if (tool.type !== "tool_use") throw new Error("Expected tool_use block")
+				const tool = result[0] as ToolUse
+				expect(tool.type).toBe("tool_use")
 				expect(tool.name).toBe("read_file")
 				expect(tool.params.path).toBe("demo.txt")
 			})
