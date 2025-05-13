@@ -26,9 +26,19 @@ export async function writeToFileTool(
 	let newContent: string | undefined = block.params.content
 	let predictedLineCount: number | undefined = parseInt(block.params.line_count ?? "0")
 
-	if (!relPath || !newContent) {
-		// checking for newContent ensure relPath is complete
-		// wait so we can determine if it's a new file or editing an existing file
+	if (!relPath) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("write_to_file")
+		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
+		// Consider if cline.diffViewProvider.reset() is needed here or if it's handled by the caller/overall flow
+		return
+	}
+
+	if (newContent === undefined) {
+		// Check for undefined specifically, as empty string might be valid content
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("write_to_file")
+		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
 		return
 	}
 
@@ -54,11 +64,11 @@ export async function writeToFileTool(
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
 	if (newContent.startsWith("```")) {
 		// cline handles cases where it includes language specifiers like ```python ```js
-		newContent = newContent.split("\n").slice(1).join("\n").trim()
+		newContent = newContent.split("\n").slice(1).join("\n")
 	}
 
 	if (newContent.endsWith("```")) {
-		newContent = newContent.split("\n").slice(0, -1).join("\n").trim()
+		newContent = newContent.split("\n").slice(0, -1).join("\n")
 	}
 
 	if (!cline.api.getModel().id.includes("claude")) {
@@ -95,21 +105,8 @@ export async function writeToFileTool(
 
 			return
 		} else {
-			if (!relPath) {
-				cline.consecutiveMistakeCount++
-				cline.recordToolError("write_to_file")
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
-				await cline.diffViewProvider.reset()
-				return
-			}
-
-			if (!newContent) {
-				cline.consecutiveMistakeCount++
-				cline.recordToolError("write_to_file")
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
-				await cline.diffViewProvider.reset()
-				return
-			}
+			// relPath and newContent are already validated at the beginning of the function.
+			// The checks here are now redundant.
 
 			if (!predictedLineCount) {
 				cline.consecutiveMistakeCount++
@@ -155,7 +152,7 @@ export async function writeToFileTool(
 
 			await cline.diffViewProvider.update(
 				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
-				true,
+				!fileExists, // Pass !fileExists as isNewFile argument
 			)
 
 			await delay(300) // wait for diff view to update
