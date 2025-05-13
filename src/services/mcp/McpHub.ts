@@ -45,6 +45,7 @@ const BaseConfigSchema = z.object({
 	timeout: z.number().min(1).max(3600).optional().default(60),
 	alwaysAllow: z.array(z.string()).default([]),
 	watchPaths: z.array(z.string()).optional(), // paths to watch for changes and restart server
+	disabledForPromptTools: z.array(z.string()).default([]),
 })
 
 // Custom error messages for better user feedback
@@ -835,34 +836,39 @@ export class McpHub {
 			const actualSource = connection.server.source || "global"
 			let configPath: string
 			let alwaysAllowConfig: string[] = []
+			let disabledForPromptToolsList: string[] = []
 
 			// Read from the appropriate config file based on the actual source
 			try {
+				let serverConfigData: any
 				if (actualSource === "project") {
 					// Get project MCP config path
 					const projectMcpPath = await this.getProjectMcpPath()
 					if (projectMcpPath) {
 						configPath = projectMcpPath
 						const content = await fs.readFile(configPath, "utf-8")
-						const config = JSON.parse(content)
-						alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
+						serverConfigData = JSON.parse(content)
 					}
 				} else {
 					// Get global MCP settings path
 					configPath = await this.getMcpSettingsFilePath()
 					const content = await fs.readFile(configPath, "utf-8")
-					const config = JSON.parse(content)
-					alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
+					serverConfigData = JSON.parse(content)
+				}
+				if (serverConfigData) {
+					alwaysAllowConfig = serverConfigData.mcpServers?.[serverName]?.alwaysAllow || []
+					disabledForPromptToolsList = serverConfigData.mcpServers?.[serverName]?.disabledForPromptTools || []
 				}
 			} catch (error) {
-				console.error(`Failed to read alwaysAllow config for ${serverName}:`, error)
-				// Continue with empty alwaysAllowConfig
+				console.error(`Failed to read tool configuration for ${serverName}:`, error)
+				// Continue with empty configs
 			}
 
-			// Mark tools as always allowed based on settings
+			// Mark tools as always allowed and enabled for prompt based on settings
 			const tools = (response?.tools || []).map((tool) => ({
 				...tool,
 				alwaysAllow: alwaysAllowConfig.includes(tool.name),
+				enabledForPrompt: !disabledForPromptToolsList.includes(tool.name),
 			}))
 
 			return tools
@@ -1563,6 +1569,74 @@ export class McpHub {
 			// Update the tools list to reflect the change
 			if (connection) {
 				// Explicitly pass the source to ensure we're updating the correct server's tools
+				connection.server.tools = await this.fetchToolsList(serverName, source)
+				await this.notifyWebviewOfServerChanges()
+			}
+		} catch (error) {
+			this.showErrorMessage(
+				`Failed to toggle always allow for tool "${toolName}" on server "${serverName}" with source "${source}"`,
+				error,
+			)
+			throw error
+		}
+	}
+
+	async toggleToolEnabledForPrompt(
+		serverName: string,
+		source: "global" | "project",
+		toolName: string,
+		isEnabled: boolean,
+	): Promise<void> {
+		try {
+			const connection = this.findConnection(serverName, source)
+			if (!connection) {
+				throw new Error(`Server ${serverName} with source ${source} not found`)
+			}
+
+			let configPath: string
+			if (source === "project") {
+				const projectMcpPath = await this.getProjectMcpPath()
+				if (!projectMcpPath) {
+					throw new Error("Project MCP configuration file not found")
+				}
+				configPath = projectMcpPath
+			} else {
+				configPath = await this.getMcpSettingsFilePath()
+			}
+
+			const normalizedPath = process.platform === "win32" ? configPath.replace(/\\/g, "/") : configPath
+			const content = await fs.readFile(normalizedPath, "utf-8")
+			const config = JSON.parse(content)
+
+			if (!config.mcpServers) {
+				config.mcpServers = {}
+			}
+			if (!config.mcpServers[serverName]) {
+				// Initialize with minimal valid config if server entry doesn't exist
+				config.mcpServers[serverName] = {
+					type: "stdio",
+					command: "echo",
+					args: ["MCP server not fully configured"],
+				}
+			}
+			if (!config.mcpServers[serverName].disabledForPromptTools) {
+				config.mcpServers[serverName].disabledForPromptTools = []
+			}
+
+			const disabledList = config.mcpServers[serverName].disabledForPromptTools
+			const toolIndex = disabledList.indexOf(toolName)
+
+			if (!isEnabled && toolIndex === -1) {
+				// If tool should be disabled (not included in prompt) and is not in disabled list
+				disabledList.push(toolName)
+			} else if (isEnabled && toolIndex !== -1) {
+				// If tool should be enabled (included in prompt) and is in disabled list
+				disabledList.splice(toolIndex, 1)
+			}
+
+			await fs.writeFile(normalizedPath, JSON.stringify(config, null, 2))
+
+			if (connection) {
 				connection.server.tools = await this.fetchToolsList(serverName, source)
 				await this.notifyWebviewOfServerChanges()
 			}

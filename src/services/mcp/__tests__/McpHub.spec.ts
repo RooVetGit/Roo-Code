@@ -111,6 +111,7 @@ describe("McpHub", () => {
 						command: "node",
 						args: ["test.js"],
 						alwaysAllow: ["allowed-tool"],
+						disabledForPromptTools: ["disabled-tool"],
 					},
 				},
 			}),
@@ -269,6 +270,107 @@ describe("McpHub", () => {
 			const writtenConfig = JSON.parse(callToUse[1] as string)
 			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toBeDefined()
 			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toContain("new-tool")
+		})
+	})
+
+	describe("toggleToolEnabledForPrompt", () => {
+		it("should add tool to disabledForPromptTools list when enabling", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabledForPromptTools: [],
+					},
+				},
+			}
+
+			// Mock reading initial config
+			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "new-tool", false)
+
+			// Verify the config was updated correctly
+			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
+			expect(writeCalls.length).toBeGreaterThan(0)
+
+			// Find the write call
+			const callToUse = writeCalls[writeCalls.length - 1]
+			expect(callToUse).toBeTruthy()
+
+			// The path might be normalized differently on different platforms,
+			// so we'll just check that we have a call with valid content
+			const writtenConfig = JSON.parse(callToUse[1])
+			expect(writtenConfig.mcpServers).toBeDefined()
+			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
+			expect(Array.isArray(writtenConfig.mcpServers["test-server"].enabledForPrompt)).toBe(false)
+			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).toContain("new-tool")
+		})
+
+		it("should remove tool from disabledForPromptTools list when disabling", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabledForPromptTools: ["existing-tool"],
+					},
+				},
+			}
+
+			// Mock reading initial config
+			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "existing-tool", true)
+
+			// Verify the config was updated correctly
+			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
+			expect(writeCalls.length).toBeGreaterThan(0)
+
+			// Find the write call
+			const callToUse = writeCalls[writeCalls.length - 1]
+			expect(callToUse).toBeTruthy()
+
+			// The path might be normalized differently on different platforms,
+			// so we'll just check that we have a call with valid content
+			const writtenConfig = JSON.parse(callToUse[1])
+			expect(writtenConfig.mcpServers).toBeDefined()
+			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
+			expect(Array.isArray(writtenConfig.mcpServers["test-server"].enabledForPrompt)).toBe(false)
+			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).not.toContain("existing-tool")
+		})
+
+		it("should initialize disabledForPromptTools if it does not exist", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+					},
+				},
+			}
+
+			// Mock reading initial config
+			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Call with false because of "true" is default value
+			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "new-tool", false)
+
+			// Verify the config was updated with initialized disabledForPromptTools
+			// Find the write call with the normalized path
+			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
+			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
+
+			// Find the write call with the normalized path
+			const writeCall = writeCalls.find((call) => call[0] === normalizedSettingsPath)
+			const callToUse = writeCall || writeCalls[0]
+
+			const writtenConfig = JSON.parse(callToUse[1])
+			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).toBeDefined()
+			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).toContain("new-tool")
 		})
 	})
 
