@@ -115,8 +115,10 @@
 		"failed": "API İsteği Başarısız",
 		"streaming": "API İsteği...",
 		"cancelled": "API İsteği İptal Edildi",
-		"streamingFailed": "API Akışı Başarısız"
+		"streamingFailed": "API Akışı Başarısız",
+		"viewDetailsTooltip": "API İstek Ayrıntılarını Görüntüle"
 	},
+	"viewDiff": "Farkları Görüntüle",
 	"checkpoint": {
 		"initial": "İlk Kontrol Noktası",
 		"regular": "Kontrol Noktası",
@@ -135,7 +137,8 @@
 		"current": "Mevcut"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo mevcut göreve yardımcı olmak için ayrıntılı talimatlar almak istiyor"
+		"wantsToFetch": "Roo mevcut göreve yardımcı olmak için ayrıntılı talimatlar almak istiyor",
+		"viewInstructions": "Talimatları Görüntüle"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo bu dosyayı okumak istiyor:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntülemek istiyor:",
 		"didViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntüledi:",
 		"wantsToSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yapmak istiyor:",
-		"didSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yaptı:"
+		"didSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yaptı:",
+		"viewDefinitions": "Tanımları Görüntüle",
+		"viewFileList": "Dosya Listesini Görüntüle",
+		"viewSearchResults": "Arama Sonuçlarını Görüntüle"
 	},
 	"commandOutput": "Komut Çıktısı",
 	"response": "Yanıt",

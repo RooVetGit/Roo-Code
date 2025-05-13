@@ -115,8 +115,10 @@
 		"failed": "Zapytanie API nie powiodło się",
 		"streaming": "Zapytanie API...",
 		"cancelled": "Zapytanie API anulowane",
-		"streamingFailed": "Strumieniowanie API nie powiodło się"
+		"streamingFailed": "Strumieniowanie API nie powiodło się",
+		"viewDetailsTooltip": "Wyświetl szczegóły zapytania API"
 	},
+	"viewDiff": "Zobacz różnice",
 	"checkpoint": {
 		"initial": "Początkowy punkt kontrolny",
 		"regular": "Punkt kontrolny",
@@ -135,7 +137,8 @@
 		"current": "Bieżący"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo chce pobrać szczegółowe instrukcje, aby pomóc w bieżącym zadaniu"
+		"wantsToFetch": "Roo chce pobrać szczegółowe instrukcje, aby pomóc w bieżącym zadaniu",
+		"viewInstructions": "Wyświetl instrukcje"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo chce przeczytać ten plik:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo chce zobaczyć nazwy definicji kodu źródłowego używane w tym katalogu:",
 		"didViewDefinitions": "Roo zobaczył nazwy definicji kodu źródłowego używane w tym katalogu:",
 		"wantsToSearch": "Roo chce przeszukać ten katalog w poszukiwaniu <code>{{regex}}</code>:",
-		"didSearch": "Roo przeszukał ten katalog w poszukiwaniu <code>{{regex}}</code>:"
+		"didSearch": "Roo przeszukał ten katalog w poszukiwaniu <code>{{regex}}</code>:",
+		"viewDefinitions": "Wyświetl definicje",
+		"viewFileList": "Wyświetl listę plików",
+		"viewSearchResults": "Wyświetl wyniki wyszukiwania"
 	},
 	"commandOutput": "Wyjście polecenia",
 	"response": "Odpowiedź",

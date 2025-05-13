@@ -115,8 +115,10 @@
 		"failed": "Yêu cầu API thất bại",
 		"streaming": "Yêu cầu API...",
 		"cancelled": "Yêu cầu API đã hủy",
-		"streamingFailed": "Streaming API thất bại"
+		"streamingFailed": "Streaming API thất bại",
+		"viewDetailsTooltip": "Xem chi tiết yêu cầu API"
 	},
+	"viewDiff": "Xem khác biệt",
 	"checkpoint": {
 		"initial": "Điểm kiểm tra ban đầu",
 		"regular": "Điểm kiểm tra",
@@ -135,7 +137,8 @@
 		"current": "Hiện tại"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại"
+		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại",
+		"viewInstructions": "Xem hướng dẫn"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo muốn đọc tệp này:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo muốn xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
 		"didViewDefinitions": "Roo đã xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
 		"wantsToSearch": "Roo muốn tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
-		"didSearch": "Roo đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:"
+		"didSearch": "Roo đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
+		"viewDefinitions": "Xem định nghĩa",
+		"viewFileList": "Xem danh sách tệp",
+		"viewSearchResults": "Xem kết quả tìm kiếm"
 	},
 	"commandOutput": "Kết quả lệnh",
 	"response": "Phản hồi",

@@ -39,6 +39,8 @@ import { generateSystemPrompt } from "./generateSystemPrompt"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
+import { VirtualContentProvider } from "../virtualContent/VirtualContentProvider"
+import { API_REQUEST_VIEW_URI_SCHEME, TOOL_OUTPUT_VIEW_URI_SCHEME } from "../../extension"
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
@@ -492,9 +494,54 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "soundEnabled":
 			const soundEnabled = message.bool ?? true
 			await updateGlobalState("soundEnabled", soundEnabled)
-			setSoundEnabled(soundEnabled) // Add this line to update the sound utility
+			setSoundEnabled(soundEnabled)
 			await provider.postStateToWebview()
 			break
+		case "showApiRequestDetails": {
+			const details = message.details
+			if (typeof details === "string") {
+				try {
+					// Use the content provider to get a custom URI
+					const customUri = VirtualContentProvider.addContent(API_REQUEST_VIEW_URI_SCHEME, details)
+					// Open the document using the custom URI
+					await vscode.window.showTextDocument(customUri, {
+						preview: true,
+						viewColumn: vscode.ViewColumn.Active,
+					})
+				} catch (error) {
+					vscode.window.showErrorMessage(`Failed to open API request details: ${error}`)
+					provider.log(`Error opening API request details via content provider: ${error}`)
+				}
+			} else {
+				vscode.window.showWarningMessage("Could not display API request details: Invalid format received.")
+				provider.log(`Received invalid format for showApiRequestDetails: ${typeof details}`)
+			}
+			break
+		}
+		case "showToolOutput": {
+			const content = message.content
+			const language = message.language || "plaintext"
+			if (typeof content === "string") {
+				try {
+					// Use the generic content provider
+					const customUri = VirtualContentProvider.addContent(TOOL_OUTPUT_VIEW_URI_SCHEME, content, language)
+					console.log(customUri)
+
+					// Open the document using the custom URI
+					await vscode.window.showTextDocument(customUri, {
+						preview: true,
+						viewColumn: vscode.ViewColumn.Active,
+					})
+				} catch (error) {
+					vscode.window.showErrorMessage(`Failed to open tool output: ${error}`)
+					provider.log(`Error opening tool output via content provider: ${error}`)
+				}
+			} else {
+				vscode.window.showWarningMessage("Could not display tool output: Invalid content received.")
+				provider.log(`Received invalid content for showToolOutput: ${typeof content}`)
+			}
+			break // Correct break for showToolOutput case
+		}
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
 			await updateGlobalState("soundVolume", soundVolume)

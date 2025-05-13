@@ -22,6 +22,15 @@
 		"just_this_message": "僅這則訊息",
 		"this_and_subsequent": "這則訊息及所有後續訊息"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "疑難排解指南"
+		},
+		"copyAsMarkdown": "複製為 Markdown",
+		"response": "回應",
+		"arguments": "引數",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "專案 MCP 設定格式無效",
 		"invalid_mcp_settings_format": "MCP 設定 JSON 格式無效。請確保您的設定遵循正確的 JSON 格式。",

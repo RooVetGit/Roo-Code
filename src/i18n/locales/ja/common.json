@@ -22,6 +22,15 @@
 		"just_this_message": "このメッセージのみ",
 		"this_and_subsequent": "これ以降のすべてのメッセージ"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "トラブルシューティングガイド"
+		},
+		"copyAsMarkdown": "Markdownとしてコピー",
+		"response": "応答",
+		"arguments": "引数",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "プロジェクトMCP設定フォーマットが無効です",
 		"invalid_mcp_settings_format": "MCP設定のJSONフォーマットが無効です。設定が正しいJSONフォーマットに従っていることを確認してください。",

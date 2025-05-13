@@ -115,8 +115,10 @@
 		"failed": "APIリクエスト失敗",
 		"streaming": "APIリクエスト...",
 		"cancelled": "APIリクエストキャンセル",
-		"streamingFailed": "APIストリーミング失敗"
+		"streamingFailed": "APIストリーミング失敗",
+		"viewDetailsTooltip": "APIリクエスト詳細を表示"
 	},
+	"viewDiff": "差分を表示",
 	"checkpoint": {
 		"initial": "初期チェックポイント",
 		"regular": "チェックポイント",
@@ -135,7 +137,8 @@
 		"current": "現在"
 	},
 	"instructions": {
-		"wantsToFetch": "Rooは現在のタスクを支援するための詳細な指示を取得したい"
+		"wantsToFetch": "Rooは現在のタスクを支援するための詳細な指示を取得したい",
+		"viewInstructions": "指示を表示"
 	},
 	"fileOperations": {
 		"wantsToRead": "Rooはこのファイルを読みたい:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示したい:",
 		"didViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示しました:",
 		"wantsToSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索したい:",
-		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:"
+		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:",
+		"viewDefinitions": "定義を表示",
+		"viewFileList": "ファイルリストを表示",
+		"viewSearchResults": "検索結果を表示"
 	},
 	"commandOutput": "コマンド出力",
 	"response": "応答",

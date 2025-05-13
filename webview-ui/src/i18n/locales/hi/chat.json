@@ -14,6 +14,7 @@
 	},
 	"unpin": "पिन करें",
 	"pin": "अवपिन करें",
+	"viewDiff": "अंतर देखें",
 	"tokenProgress": {
 		"availableSpace": "उपलब्ध स्थान: {{amount}} tokens",
 		"tokensUsed": "प्रयुक्त tokens: {{used}} / {{total}}",
@@ -115,7 +116,8 @@
 		"failed": "API अनुरोध विफल हुआ",
 		"streaming": "API अनुरोध...",
 		"cancelled": "API अनुरोध रद्द किया गया",
-		"streamingFailed": "API स्ट्रीमिंग विफल हुई"
+		"streamingFailed": "API स्ट्रीमिंग विफल हुई",
+		"viewDetailsTooltip": "API अनुरोध विवरण देखें"
 	},
 	"checkpoint": {
 		"initial": "प्रारंभिक चेकपॉइंट",
@@ -135,7 +137,8 @@
 		"current": "वर्तमान"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo को वर्तमान कार्य में सहायता के लिए विस्तृत निर्देश प्राप्त करना है"
+		"wantsToFetch": "Roo को वर्तमान कार्य में सहायता के लिए विस्तृत निर्देश प्राप्त करना है",
+		"viewInstructions": "निर्देश देखें"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo इस फ़ाइल को पढ़ना चाहता है:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo इस निर्देशिका में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखना चाहता है:",
 		"didViewDefinitions": "Roo ने इस निर्देशिका में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखा:",
 		"wantsToSearch": "Roo इस निर्देशिका में <code>{{regex}}</code> के लिए खोज करना चाहता है:",
-		"didSearch": "Roo ने इस निर्देशिका में <code>{{regex}}</code> के लिए खोज की:"
+		"didSearch": "Roo ने इस निर्देशिका में <code>{{regex}}</code> के लिए खोज की:",
+		"viewDefinitions": "परिभाषाएँ देखें",
+		"viewFileList": "फ़ाइल सूची देखें",
+		"viewSearchResults": "खोज परिणाम देखें"
 	},
 	"commandOutput": "कमांड आउटपुट",
 	"response": "प्रतिक्रिया",

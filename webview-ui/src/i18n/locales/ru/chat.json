@@ -110,8 +110,10 @@
 		"failed": "API-запрос не выполнен",
 		"streaming": "API-запрос...",
 		"cancelled": "API-запрос отменен",
-		"streamingFailed": "Ошибка потокового API-запроса"
+		"streamingFailed": "Ошибка потокового API-запроса",
+		"viewDetailsTooltip": "Просмотреть детали API-запроса"
 	},
+	"viewDiff": "Просмотреть различия",
 	"checkpoint": {
 		"initial": "Начальная точка сохранения",
 		"regular": "Точка сохранения",
@@ -130,7 +132,8 @@
 		"current": "Текущая"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo хочет получить подробные инструкции для помощи с текущей задачей"
+		"wantsToFetch": "Roo хочет получить подробные инструкции для помощи с текущей задачей",
+		"viewInstructions": "Просмотреть инструкции"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo хочет прочитать этот файл:",
@@ -153,7 +156,10 @@
 		"wantsToViewDefinitions": "Roo хочет просмотреть имена определений исходного кода в этой директории:",
 		"didViewDefinitions": "Roo просмотрел имена определений исходного кода в этой директории:",
 		"wantsToSearch": "Roo хочет выполнить поиск в этой директории по <code>{{regex}}</code>:",
-		"didSearch": "Roo выполнил поиск в этой директории по <code>{{regex}}</code>:"
+		"didSearch": "Roo выполнил поиск в этой директории по <code>{{regex}}</code>:",
+		"viewDefinitions": "Просмотреть определения",
+		"viewFileList": "Просмотреть список файлов",
+		"viewSearchResults": "Просмотреть результаты поиска"
 	},
 	"commandOutput": "Вывод команды",
 	"response": "Ответ",

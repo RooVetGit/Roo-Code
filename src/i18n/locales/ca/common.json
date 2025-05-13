@@ -26,6 +26,15 @@
 		"just_this_message": "Només aquest missatge",
 		"this_and_subsequent": "Aquest i tots els missatges posteriors"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "guia de resolució de problemes"
+		},
+		"copyAsMarkdown": "Copiar com a markdown",
+		"response": "Resposta",
+		"arguments": "Arguments",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "Format de configuració MCP del projecte no vàlid",
 		"invalid_mcp_settings_format": "Format JSON de configuració MCP no vàlid. Si us plau, assegura't que la teva configuració segueix el format JSON correcte.",

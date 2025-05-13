@@ -32,6 +32,11 @@ import {
 	CodeActionProvider,
 } from "./activate"
 import { initializeI18n } from "./i18n"
+import { VirtualContentProvider } from "./core/virtualContent/VirtualContentProvider"
+
+// Define the scheme for API request virtual documents
+export const API_REQUEST_VIEW_URI_SCHEME = "roo-api-request"
+export const TOOL_OUTPUT_VIEW_URI_SCHEME = "roo-fragment"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -100,14 +105,25 @@ export async function activate(context: vscode.ExtensionContext) {
 	 *
 	 * https://code.visualstudio.com/api/extension-guides/virtual-documents
 	 */
+
 	const diffContentProvider = new (class implements vscode.TextDocumentContentProvider {
 		provideTextDocumentContent(uri: vscode.Uri): string {
+			// Content is expected to be base64 encoded in the query parameter
 			return Buffer.from(uri.query, "base64").toString("utf-8")
 		}
 	})()
-
 	context.subscriptions.push(
 		vscode.workspace.registerTextDocumentContentProvider(DIFF_VIEW_URI_SCHEME, diffContentProvider),
+	)
+
+	// Register the content provider for generic virtual documents
+	const virtualContentProvider = new VirtualContentProvider()
+	context.subscriptions.push(
+		vscode.workspace.registerTextDocumentContentProvider(API_REQUEST_VIEW_URI_SCHEME, virtualContentProvider),
+	)
+
+	context.subscriptions.push(
+		vscode.workspace.registerTextDocumentContentProvider(TOOL_OUTPUT_VIEW_URI_SCHEME, virtualContentProvider),
 	)
 
 	context.subscriptions.push(vscode.window.registerUriHandler({ handleUri }))

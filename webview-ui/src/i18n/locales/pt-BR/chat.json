@@ -115,8 +115,10 @@
 		"failed": "Requisição API falhou",
 		"streaming": "Requisição API...",
 		"cancelled": "Requisição API cancelada",
-		"streamingFailed": "Streaming API falhou"
+		"streamingFailed": "Streaming API falhou",
+		"viewDetailsTooltip": "Ver detalhes da requisição API"
 	},
+	"viewDiff": "Ver diferenças",
 	"checkpoint": {
 		"initial": "Ponto de verificação inicial",
 		"regular": "Ponto de verificação",
@@ -135,7 +137,8 @@
 		"current": "Atual"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo quer buscar instruções detalhadas para ajudar com a tarefa atual"
+		"wantsToFetch": "Roo quer buscar instruções detalhadas para ajudar com a tarefa atual",
+		"viewInstructions": "Ver instruções"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo quer ler este arquivo:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo quer visualizar nomes de definição de código-fonte usados neste diretório:",
 		"didViewDefinitions": "Roo visualizou nomes de definição de código-fonte usados neste diretório:",
 		"wantsToSearch": "Roo quer pesquisar neste diretório por <code>{{regex}}</code>:",
-		"didSearch": "Roo pesquisou neste diretório por <code>{{regex}}</code>:"
+		"didSearch": "Roo pesquisou neste diretório por <code>{{regex}}</code>:",
+		"viewDefinitions": "Ver definições",
+		"viewFileList": "Ver lista de arquivos",
+		"viewSearchResults": "Ver resultados da pesquisa"
 	},
 	"commandOutput": "Saída do comando",
 	"response": "Resposta",

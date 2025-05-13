@@ -14,6 +14,7 @@
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
+	"viewDiff": "Veure diferències",
 	"tokenProgress": {
 		"availableSpace": "Espai disponible: {{amount}} tokens",
 		"tokensUsed": "Tokens utilitzats: {{used}} de {{total}}",
@@ -115,7 +116,8 @@
 		"failed": "Sol·licitud API ha fallat",
 		"streaming": "Sol·licitud API...",
 		"cancelled": "Sol·licitud API cancel·lada",
-		"streamingFailed": "Transmissió API ha fallat"
+		"streamingFailed": "Transmissió API ha fallat",
+		"viewDetailsTooltip": "Veure detalls de la sol·licitud API"
 	},
 	"checkpoint": {
 		"initial": "Punt de control inicial",
@@ -135,7 +137,8 @@
 		"current": "Actual"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo vol obtenir instruccions detallades per ajudar amb la tasca actual."
+		"wantsToFetch": "Roo vol obtenir instruccions detallades per ajudar amb la tasca actual.",
+		"viewInstructions": "Veure instruccions"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo vol llegir aquest fitxer:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo vol veure noms de definicions de codi font utilitzats en aquest directori:",
 		"didViewDefinitions": "Roo ha vist noms de definicions de codi font utilitzats en aquest directori:",
 		"wantsToSearch": "Roo vol cercar en aquest directori <code>{{regex}}</code>:",
-		"didSearch": "Roo ha cercat en aquest directori <code>{{regex}}</code>:"
+		"didSearch": "Roo ha cercat en aquest directori <code>{{regex}}</code>:",
+		"viewDefinitions": "Veure definicions",
+		"viewFileList": "Veure llista de fitxers",
+		"viewSearchResults": "Veure resultats de cerca"
 	},
 	"commandOutput": "Sortida de l'ordre",
 	"response": "Resposta",

@@ -14,6 +14,7 @@
 	},
 	"unpin": "Desfijar",
 	"pin": "Fijar",
+	"viewDiff": "Ver diferencias",
 	"retry": {
 		"title": "Reintentar",
 		"tooltip": "Intenta la operación de nuevo"
@@ -115,7 +116,8 @@
 		"failed": "Solicitud API falló",
 		"streaming": "Solicitud API...",
 		"cancelled": "Solicitud API cancelada",
-		"streamingFailed": "Transmisión API falló"
+		"streamingFailed": "Transmisión API falló",
+		"viewDetailsTooltip": "Ver detalles de la solicitud API"
 	},
 	"checkpoint": {
 		"initial": "Punto de control inicial",
@@ -135,7 +137,8 @@
 		"current": "Actual"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo quiere obtener instrucciones detalladas para ayudar con la tarea actual"
+		"wantsToFetch": "Roo quiere obtener instrucciones detalladas para ayudar con la tarea actual",
+		"viewInstructions": "Ver instrucciones"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo quiere leer este archivo:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo quiere ver nombres de definiciones de código fuente utilizados en este directorio:",
 		"didViewDefinitions": "Roo vio nombres de definiciones de código fuente utilizados en este directorio:",
 		"wantsToSearch": "Roo quiere buscar en este directorio <code>{{regex}}</code>:",
-		"didSearch": "Roo buscó en este directorio <code>{{regex}}</code>:"
+		"didSearch": "Roo buscó en este directorio <code>{{regex}}</code>:",
+		"viewDefinitions": "Ver definiciones",
+		"viewFileList": "Ver lista de archivos",
+		"viewSearchResults": "Ver resultados de búsqueda"
 	},
 	"commandOutput": "Salida del comando",
 	"response": "Respuesta",

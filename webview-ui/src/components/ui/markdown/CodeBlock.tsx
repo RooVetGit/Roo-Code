@@ -5,6 +5,7 @@ import { CopyIcon, CheckIcon } from "@radix-ui/react-icons"
 import { cn } from "@/lib/utils"
 import { useClipboard } from "@/components/ui/hooks"
 import { Button } from "@/components/ui"
+import ViewOutputBlock from "@/components/common/ViewOutputBlock" // Adjust path as needed
 
 interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
 	language: string
@@ -52,21 +53,37 @@ export const CodeBlock: FC<CodeBlockProps> = memo(({ language, value, className,
 		highlight()
 	}, [language, value, className])
 
-	return (
-		<div className="relative" {...props}>
-			<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-			<Button
-				variant="outline"
-				size="icon"
-				className="absolute top-1 right-1 cursor-pointer bg-black/10"
-				onClick={onCopy}>
-				{isCopied ? (
-					<CheckIcon style={{ width: 12, height: 12 }} />
-				) : (
-					<CopyIcon style={{ width: 12, height: 12 }} />
-				)}
-			</Button>
-		</div>
-	)
+	const CHARACTER_LIMIT = 200
+
+	if (value.length > CHARACTER_LIMIT) {
+		// Render ViewOutputBlock for long code
+		return (
+			<ViewOutputBlock
+				iconName="code"
+				title={`View Code Block (${language})`}
+				content={value} // Pass the raw code content
+				language={language}
+				tooltip={`View Code Block (${language})`}
+			/>
+		)
+	} else {
+		// Render inline highlighted code for short code
+		return (
+			<div className="relative" {...props}>
+				<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+				<Button
+					variant="outline"
+					size="icon"
+					className="absolute top-1 right-1 cursor-pointer bg-black/10"
+					onClick={onCopy}>
+					{isCopied ? (
+						<CheckIcon style={{ width: 12, height: 12 }} />
+					) : (
+						<CopyIcon style={{ width: 12, height: 12 }} />
+					)}
+				</Button>
+			</div>
+		)
+	}
 })
 CodeBlock.displayName = "CodeBlock"

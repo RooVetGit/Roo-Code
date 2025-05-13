@@ -14,6 +14,7 @@
 	},
 	"unpin": "Lösen von oben",
 	"pin": "Anheften",
+	"viewDiff": "Unterschiede anzeigen",
 	"tokenProgress": {
 		"availableSpace": "Verfügbarer Speicher: {{amount}} Tokens",
 		"tokensUsed": "Verwendete Tokens: {{used}} von {{total}}",
@@ -115,7 +116,8 @@
 		"failed": "API-Anfrage fehlgeschlagen",
 		"streaming": "API-Anfrage...",
 		"cancelled": "API-Anfrage abgebrochen",
-		"streamingFailed": "API-Streaming fehlgeschlagen"
+		"streamingFailed": "API-Streaming fehlgeschlagen",
+		"viewDetailsTooltip": "API-Anfragedetails anzeigen"
 	},
 	"checkpoint": {
 		"initial": "Initialer Checkpoint",
@@ -135,7 +137,8 @@
 		"current": "Aktuell"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo möchte detaillierte Anweisungen abrufen, um bei der aktuellen Aufgabe zu helfen"
+		"wantsToFetch": "Roo möchte detaillierte Anweisungen abrufen, um bei der aktuellen Aufgabe zu helfen",
+		"viewInstructions": "Anweisungen anzeigen"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo möchte diese Datei lesen:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo möchte Quellcode-Definitionsnamen in diesem Verzeichnis anzeigen:",
 		"didViewDefinitions": "Roo hat Quellcode-Definitionsnamen in diesem Verzeichnis angezeigt:",
 		"wantsToSearch": "Roo möchte dieses Verzeichnis nach <code>{{regex}}</code> durchsuchen:",
-		"didSearch": "Roo hat dieses Verzeichnis nach <code>{{regex}}</code> durchsucht:"
+		"didSearch": "Roo hat dieses Verzeichnis nach <code>{{regex}}</code> durchsucht:",
+		"viewDefinitions": "Definitionen anzeigen",
+		"viewFileList": "Dateiliste anzeigen",
+		"viewSearchResults": "Suchergebnisse anzeigen"
 	},
 	"commandOutput": "Befehlsausgabe",
 	"response": "Antwort",

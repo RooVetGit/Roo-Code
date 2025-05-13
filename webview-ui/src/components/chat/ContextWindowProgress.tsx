@@ -52,7 +52,7 @@ export const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens 
 								data-testid="context-tokens-used"
 							/>
 							{/* Current tokens used - darkest */}
-							<div className="h-full w-full bg-[var(--vscode-foreground)] transition-width duration-300 ease-out" />
+							<div className="h-full w-full bg-vscode-foreground transition-width duration-300 ease-out" />
 						</div>
 
 						{/* Container for reserved tokens */}

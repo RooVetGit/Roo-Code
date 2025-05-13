@@ -22,6 +22,15 @@
 		"just_this_message": "सिर्फ यह संदेश",
 		"this_and_subsequent": "यह और सभी बाद के संदेश"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "समस्या निवारण गाइड"
+		},
+		"copyAsMarkdown": "मार्कडाउन के रूप में कॉपी करें",
+		"response": "प्रतिक्रिया",
+		"arguments": "तर्क",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "अमान्य प्रोजेक्ट MCP कॉन्फ़िगरेशन फॉर्मेट",
 		"invalid_mcp_settings_format": "अमान्य MCP सेटिंग्स JSON फॉर्मेट। कृपया सुनिश्चित करें कि आपकी सेटिंग्स सही JSON फॉर्मेट का पालन करती हैं।",

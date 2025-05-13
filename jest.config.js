@@ -28,6 +28,7 @@ module.exports = {
 		"^vscode$": "<rootDir>/src/__mocks__/vscode.js",
 		"@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
 		"@modelcontextprotocol/sdk/(.*)": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/$1",
+		"^execa$": "<rootDir>/src/__mocks__/execa.js", // Add mapping for execa mock
 		"^delay$": "<rootDir>/src/__mocks__/delay.js",
 		"^p-wait-for$": "<rootDir>/src/__mocks__/p-wait-for.js",
 		"^serialize-error$": "<rootDir>/src/__mocks__/serialize-error.js",

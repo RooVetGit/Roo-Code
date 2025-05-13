@@ -22,6 +22,15 @@
 		"just_this_message": "Только это сообщение",
 		"this_and_subsequent": "Это и все последующие сообщения"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "руководство по устранению неполадок"
+		},
+		"copyAsMarkdown": "Копировать как markdown",
+		"response": "Ответ",
+		"arguments": "Аргументы",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "Неверный формат конфигурации проекта MCP",
 		"invalid_mcp_settings_format": "Неверный формат JSON настроек MCP. Пожалуйста, убедитесь, что ваши настройки соответствуют правильному формату JSON.",

@@ -50,7 +50,7 @@ export const CheckpointMenu = ({ ts, commitHash, currentHash, checkpoint }: Chec
 			{isDiffAvailable && (
 				<Button
 					variant="ghost"
-					size="icon"
+					className="p-0 size-[1rem]"
 					onClick={onCheckpointDiff}
 					title={t("chat:checkpoint.menu.viewDiff")}>
 					<span className="codicon codicon-diff-single" />
@@ -64,7 +64,7 @@ export const CheckpointMenu = ({ ts, commitHash, currentHash, checkpoint }: Chec
 						setIsConfirming(false)
 					}}>
 					<PopoverTrigger asChild>
-						<Button variant="ghost" size="icon" title={t("chat:checkpoint.menu.restore")}>
+						<Button variant="ghost" className="p-0 size-[1rem]" title={t("chat:checkpoint.menu.restore")}>
 							<span className="codicon codicon-history" />
 						</Button>
 					</PopoverTrigger>

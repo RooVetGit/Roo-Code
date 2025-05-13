@@ -115,8 +115,10 @@
 		"failed": "API请求失败",
 		"streaming": "API请求...",
 		"cancelled": "API请求已取消",
-		"streamingFailed": "API流式传输失败"
+		"streamingFailed": "API流式传输失败",
+		"viewDetailsTooltip": "查看 API 请求详情"
 	},
+	"viewDiff": "查看差异更新",
 	"checkpoint": {
 		"initial": "初始检查点",
 		"regular": "检查点",
@@ -135,7 +137,8 @@
 		"current": "当前"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务"
+		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务",
+		"viewInstructions": "查看指示"
 	},
 	"fileOperations": {
 		"wantsToRead": "需要读取文件:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo想查看此目录中使用的源代码定义名称:",
 		"didViewDefinitions": "Roo已查看此目录中使用的源代码定义名称:",
 		"wantsToSearch": "需要搜索内容: {{regex}}",
-		"didSearch": "已完成内容搜索: {{regex}}"
+		"didSearch": "已完成内容搜索: {{regex}}",
+		"viewDefinitions": "查看定义",
+		"viewFileList": "查看文件列表",
+		"viewSearchResults": "查看搜索结果"
 	},
 	"commandOutput": "命令输出",
 	"response": "响应",

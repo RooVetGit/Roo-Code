@@ -115,8 +115,10 @@
 		"failed": "API 요청 실패",
 		"streaming": "API 요청...",
 		"cancelled": "API 요청 취소됨",
-		"streamingFailed": "API 스트리밍 실패"
+		"streamingFailed": "API 스트리밍 실패",
+		"viewDetailsTooltip": "API 요청 상세 보기"
 	},
+	"viewDiff": "차이점 보기",
 	"checkpoint": {
 		"initial": "초기 체크포인트",
 		"regular": "체크포인트",
@@ -135,7 +137,8 @@
 		"current": "현재"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo는 현재 작업을 지원하기 위해 자세한 지침을 가져오려고 합니다"
+		"wantsToFetch": "Roo는 현재 작업을 지원하기 위해 자세한 지침을 가져오려고 합니다",
+		"viewInstructions": "지침 보기"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo가 이 파일을 읽고 싶어합니다:",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보고 싶어합니다:",
 		"didViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보았습니다:",
 		"wantsToSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색하고 싶어합니다:",
-		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:"
+		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:",
+		"viewDefinitions": "정의 보기",
+		"viewFileList": "파일 목록 보기",
+		"viewSearchResults": "검색 결과 보기"
 	},
 	"commandOutput": "명령 출력",
 	"response": "응답",

@@ -22,6 +22,15 @@
 		"just_this_message": "이 메시지만",
 		"this_and_subsequent": "이 메시지와 모든 후속 메시지"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "문제 해결 가이드"
+		},
+		"copyAsMarkdown": "마크다운으로 복사",
+		"response": "응답",
+		"arguments": "인수",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "잘못된 프로젝트 MCP 구성 형식",
 		"invalid_mcp_settings_format": "잘못된 MCP 설정 JSON 형식입니다. 설정이 올바른 JSON 형식을 따르는지 확인하세요.",

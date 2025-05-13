@@ -34,15 +34,15 @@ export const CheckpointSaved = ({ checkpoint, ...props }: CheckpointSavedProps) 
 	}
 
 	return (
-		<div className="flex items-center justify-between">
-			<div className="flex gap-2">
-				<span className="codicon codicon-git-commit text-blue-400" />
-				<span className="font-bold">
-					{metadata.isFirst ? t("chat:checkpoint.initial") : t("chat:checkpoint.regular")}
-				</span>
-				{isCurrent && <span className="text-muted text-sm">{t("chat:checkpoint.current")}</span>}
+		<div className="min-h-7 rounded py-2 px-3 items-center cursor-pointer select-none border bg-vscode-editor-background  border-blue-400/70">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center cursor-pointer select-none gap-4">
+					<span className="codicon codicon-git-commit text-blue-400" />
+					<span>{metadata.isFirst ? t("chat:checkpoint.initial") : t("chat:checkpoint.regular")}</span>
+					{isCurrent && <span className="text-muted text-sm">{t("chat:checkpoint.current")}</span>}
+				</div>
+				<CheckpointMenu {...props} checkpoint={metadata} />
 			</div>
-			<CheckpointMenu {...props} checkpoint={metadata} />
 		</div>
 	)
 }

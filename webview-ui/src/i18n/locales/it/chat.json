@@ -14,6 +14,7 @@
 	},
 	"unpin": "Rilascia",
 	"pin": "Fissa",
+	"viewDiff": "Visualizza differenze",
 	"tokenProgress": {
 		"availableSpace": "Spazio disponibile: {{amount}} tokens",
 		"tokensUsed": "Tokens utilizzati: {{used}} di {{total}}",
@@ -106,7 +107,8 @@
 	"edit": "Modifica...",
 	"forNextMode": "per la prossima modalità",
 	"instructions": {
-		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente"
+		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente",
+		"viewInstructions": "Visualizza istruzioni"
 	},
 	"error": "Errore",
 	"diffError": {
@@ -118,7 +120,8 @@
 		"failed": "Richiesta API fallita",
 		"streaming": "Richiesta API...",
 		"cancelled": "Richiesta API annullata",
-		"streamingFailed": "Streaming API fallito"
+		"streamingFailed": "Streaming API fallito",
+		"viewDetailsTooltip": "Visualizza dettagli richiesta API"
 	},
 	"checkpoint": {
 		"initial": "Checkpoint iniziale",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo vuole visualizzare i nomi delle definizioni di codice sorgente utilizzate in questa directory:",
 		"didViewDefinitions": "Roo ha visualizzato i nomi delle definizioni di codice sorgente utilizzate in questa directory:",
 		"wantsToSearch": "Roo vuole cercare in questa directory <code>{{regex}}</code>:",
-		"didSearch": "Roo ha cercato in questa directory <code>{{regex}}</code>:"
+		"didSearch": "Roo ha cercato in questa directory <code>{{regex}}</code>:",
+		"viewDefinitions": "Visualizza definizioni",
+		"viewFileList": "Visualizza elenco file",
+		"viewSearchResults": "Visualizza risultati ricerca"
 	},
 	"commandOutput": "Output del comando",
 	"response": "Risposta",

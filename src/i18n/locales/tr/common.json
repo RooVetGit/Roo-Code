@@ -22,6 +22,15 @@
 		"just_this_message": "Sadece bu mesajı",
 		"this_and_subsequent": "Bu ve sonraki tüm mesajları"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "sorun giderme kılavuzu"
+		},
+		"copyAsMarkdown": "Markdown olarak kopyala",
+		"response": "Yanıt",
+		"arguments": "Argümanlar",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "Geçersiz proje MCP yapılandırma formatı",
 		"invalid_mcp_settings_format": "Geçersiz MCP ayarları JSON formatı. Lütfen ayarlarınızın doğru JSON formatını takip ettiğinden emin olun.",

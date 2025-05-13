@@ -22,6 +22,15 @@
 		"just_this_message": "Chỉ tin nhắn này",
 		"this_and_subsequent": "Tin nhắn này và tất cả tin nhắn tiếp theo"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "hướng dẫn khắc phục sự cố"
+		},
+		"copyAsMarkdown": "Sao chép dưới dạng markdown",
+		"response": "Phản hồi",
+		"arguments": "Đối số",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "Định dạng cấu hình MCP dự án không hợp lệ",
 		"invalid_mcp_settings_format": "Định dạng JSON của cài đặt MCP không hợp lệ. Vui lòng đảm bảo cài đặt của bạn tuân theo định dạng JSON chính xác.",

@@ -26,6 +26,15 @@
 		"just_this_message": "Apenas esta mensagem",
 		"this_and_subsequent": "Esta e todas as mensagens subsequentes"
 	},
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "guia de solução de problemas"
+		},
+		"copyAsMarkdown": "Copiar como markdown",
+		"response": "Resposta",
+		"arguments": "Argumentos",
+		"filePathFormat": " ({{filePath}})"
+	},
 	"errors": {
 		"invalid_mcp_config": "Formato de configuração MCP do projeto inválido",
 		"invalid_mcp_settings_format": "Formato JSON das configurações MCP inválido. Por favor, verifique se suas configurações seguem o formato JSON correto.",

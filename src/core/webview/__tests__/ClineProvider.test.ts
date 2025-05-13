@@ -148,13 +148,14 @@ jest.mock("vscode", () => ({
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
+		createTextEditorDecorationType: jest.fn(), // Add mock for decoration type
 	},
 	workspace: {
 		getConfiguration: jest.fn().mockReturnValue({
 			get: jest.fn().mockReturnValue([]),
 			update: jest.fn(),
 		}),
-		onDidChangeConfiguration: jest.fn().mockImplementation(() => ({
+		onDidChangeConfiguration: jest.fn().mockImplementation((_callback) => ({
 			dispose: jest.fn(),
 		})),
 		onDidSaveTextDocument: jest.fn(() => ({ dispose: jest.fn() })),
@@ -307,7 +308,9 @@ describe("ClineProvider", () => {
 				callback()
 				return { dispose: jest.fn() }
 			}),
-			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
+			onDidChangeVisibility: jest.fn().mockImplementation((_callback) => {
+				return { dispose: jest.fn() }
+			}),
 		} as unknown as vscode.WebviewView
 
 		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
@@ -2037,6 +2040,7 @@ describe.skip("ContextProxy integration", () => {
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockContextProxy: any
+	let _mockGlobalStateUpdate: jest.Mock // Re-prefixed unused variable in skipped block
 
 	beforeEach(() => {
 		// Reset mocks
@@ -2058,6 +2062,8 @@ describe.skip("ContextProxy integration", () => {
 		mockOutputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel
 		mockContextProxy = new ContextProxy(mockContext)
 		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", mockContextProxy)
+
+		_mockGlobalStateUpdate = mockContext.globalState.update as jest.Mock // Prefix assignment as well
 	})
 
 	test("updateGlobalState uses contextProxy", async () => {

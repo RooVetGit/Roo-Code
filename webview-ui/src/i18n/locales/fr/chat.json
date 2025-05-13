@@ -14,6 +14,7 @@
 	},
 	"unpin": "Désépingler",
 	"pin": "Épingler",
+	"viewDiff": "Voir les différences",
 	"tokenProgress": {
 		"availableSpace": "Espace disponible : {{amount}} tokens",
 		"tokensUsed": "Tokens utilisés : {{used}} sur {{total}}",
@@ -115,7 +116,8 @@
 		"failed": "Échec de la requête API",
 		"streaming": "Requête API...",
 		"cancelled": "Requête API annulée",
-		"streamingFailed": "Échec du streaming API"
+		"streamingFailed": "Échec du streaming API",
+		"viewDetailsTooltip": "Voir les détails de la requête API"
 	},
 	"checkpoint": {
 		"initial": "Point de contrôle initial",
@@ -148,7 +150,8 @@
 		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"
+		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle",
+		"viewInstructions": "Voir les instructions"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo veut voir les fichiers de premier niveau dans ce répertoire :",
@@ -158,7 +161,10 @@
 		"wantsToViewDefinitions": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire :",
 		"didViewDefinitions": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire :",
 		"wantsToSearch": "Roo veut rechercher dans ce répertoire <code>{{regex}}</code> :",
-		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :"
+		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :",
+		"viewDefinitions": "Voir les définitions",
+		"viewFileList": "Voir la liste des fichiers",
+		"viewSearchResults": "Voir les résultats de la recherche"
 	},
 	"commandOutput": "Sortie de commande",
 	"response": "Réponse",
