@@ -65,7 +65,6 @@ import {
 	parseAssistantMessageV2 as parseAssistantMessage,
 	presentAssistantMessage,
 } from "../assistant-message"
-import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
@@ -79,6 +78,8 @@ import {
 	checkpointDiff,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
+import { ApiMessage } from "../task-persistence/apiMessages"
+import { summarizeConversationIfNeeded } from "../condense"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -155,7 +156,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	didEditFile: boolean = false
 
 	// LLM Messages & Chat Messages
-	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
+	apiConversationHistory: ApiMessage[] = []
 	clineMessages: ClineMessage[] = []
 
 	// Ask
@@ -284,7 +285,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// API Messages
 
-	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
+	private async getSavedApiConversationHistory(): Promise<ApiMessage[]> {
 		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
@@ -294,7 +295,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		await this.saveApiConversationHistory()
 	}
 
-	async overwriteApiConversationHistory(newHistory: Anthropic.MessageParam[]) {
+	async overwriteApiConversationHistory(newHistory: ApiMessage[]) {
 		this.apiConversationHistory = newHistory
 		await this.saveApiConversationHistory()
 	}
@@ -697,8 +698,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
-		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] =
-			await this.getSavedApiConversationHistory()
+		let existingApiConversationHistory: ApiMessage[] = await this.getSavedApiConversationHistory()
 
 		// v2.0 xml tags refactor caveat: since we don't use tools anymore, we need to replace all tool use blocks with a text block since the API disallows conversations with tool uses and no tool schema
 		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
@@ -742,7 +742,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
 
 		let modifiedOldUserContent: Anthropic.Messages.ContentBlockParam[] // either the last message if its user message, or the user message before the last (assistant) message
-		let modifiedApiConversationHistory: Anthropic.Messages.MessageParam[] // need to remove the last user message to replace with new modified user message
+		let modifiedApiConversationHistory: ApiMessage[] // need to remove the last user message to replace with new modified user message
 		if (existingApiConversationHistory.length > 0) {
 			const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
 
@@ -768,7 +768,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					modifiedOldUserContent = []
 				}
 			} else if (lastMessage.role === "user") {
-				const previousAssistantMessage: Anthropic.Messages.MessageParam | undefined =
+				const previousAssistantMessage: ApiMessage | undefined =
 					existingApiConversationHistory[existingApiConversationHistory.length - 2]
 
 				const existingUserContent: Anthropic.Messages.ContentBlockParam[] = Array.isArray(lastMessage.content)
@@ -1468,35 +1468,35 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
 
-			// Default max tokens value for thinking models when no specific
-			// value is set.
-			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
-
 			const modelInfo = this.api.getModel().info
-
-			const maxTokens = modelInfo.thinking
-				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
-				: modelInfo.maxTokens
-
 			const contextWindow = modelInfo.contextWindow
 
-			const trimmedMessages = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
+			const messagesWithSummary = await summarizeConversationIfNeeded(
+				this.apiConversationHistory,
 				totalTokens,
-				maxTokens,
 				contextWindow,
-				apiHandler: this.api,
-			})
+				this.api,
+			)
 
-			if (trimmedMessages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(trimmedMessages)
+			if (messagesWithSummary !== this.apiConversationHistory) {
+				await this.overwriteApiConversationHistory(messagesWithSummary)
 			}
+		}
+
+		// Only include messages since the last summary message.
+		let messagesSinceLastSummary = this.apiConversationHistory
+		let lastSummaryIndexReverse = [...this.apiConversationHistory]
+			.reverse()
+			.findIndex((message) => message.isSummary)
+		if (lastSummaryIndexReverse !== -1) {
+			const lastSummaryIndex = this.apiConversationHistory.length - lastSummaryIndexReverse - 1
+			messagesSinceLastSummary = this.apiConversationHistory.slice(lastSummaryIndex)
 		}
 
 		// Clean conversation history by:
 		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.
 		// 2. Converting image blocks to text descriptions if model doesn't support images.
-		const cleanConversationHistory = this.apiConversationHistory.map(({ role, content }) => {
+		const cleanConversationHistory = messagesSinceLastSummary.map(({ role, content }) => {
 			// Handle array content (could contain image blocks).
 			if (Array.isArray(content)) {
 				if (!this.api.getModel().info.supportsImages) {
