@@ -16,12 +16,14 @@ const SCAN_SOURCE_DIRS = {
 
 // i18n key patterns for findMissingI18nKeys
 const i18nScanPatterns = [
-	/{t\("([^"]+)"\)}/g,
+	/\bt\([\s\n]*"([^"]+)"/g,
+	/\bt\([\s\n]*'([^']+)'/g,
+	/\bt\([\s\n]*`([^`]+)`/g,
 	/i18nKey="([^"]+)"/g,
-	/t\("([a-zA-Z][a-zA-Z0-9_]*[:.][a-zA-Z0-9_.]+)"\)/g,
-	// Add pattern to match t() calls with parameters
-	/t\("([a-zA-Z][a-zA-Z0-9_]*[:.][a-zA-Z0-9_.]+)",/g,
 ]
+
+// Track line numbers for source code keys
+const lineMap = new Map<string, {file: string, line: number}>()
 
 // Check if the key exists in all official language files, return a list of missing language files
 
@@ -50,8 +52,14 @@ function accumulateSourceKeys(): Set<string> {
 				for (const pattern of i18nScanPatterns) {
 					let match
 					while ((match = pattern.exec(content)) !== null) {
-						matches.add(match[1])
-						sourceCodeKeys.add(match[1]) // Add to global set for unused key detection
+						const key = match[1]
+						const lineNumber = content.slice(0, match.index).split('\n').length
+						matches.add(key)
+						sourceCodeKeys.add(key)
+						lineMap.set(key, {
+							file: path.relative(process.cwd(), filePath),
+							line: lineNumber
+						})
 					}
 				}
 			}
@@ -138,17 +146,61 @@ function getKeysInTranslationNotInSource(sourceKeys: Set<string>, translationKey
 		.sort()
 }
 
-// Recursively traverse the directory
-export function findMissingI18nKeys(): { output: string } {
+// Function to find dynamic i18n keys (containing ${...})
+function findDynamicKeys(sourceKeys: Set<string>): string[] {
+	return Array.from(sourceKeys)
+		.filter(key => key.includes("${"))
+		.sort()
+}
+
+// Function to find non-namespaced t() calls
+export function findNonNamespacedI18nKeys(sourceKeys: Set<string>): string[] {
+	return Array.from(sourceKeys)
+		.filter(key => !key.includes(":"))
+		.sort()
+}
+
+export function findMissingI18nKeys(): { output: string; nonNamespacedKeys: string[] } {
 	clearLogs() // Clear buffer at start
+
+	// Helper function to extract all keys from a JSON object with their full paths
+	function extractKeysFromJson(obj: any, prefix: string): string[] {
+		const keys: string[] = []
+
+		function traverse(o: any, p: string) {
+			if (o && typeof o === "object") {
+				Object.keys(o).forEach((key) => {
+					const newPath = p ? `${p}.${key}` : key
+					if (o[key] && typeof o[key] === "object") {
+						traverse(o[key], newPath)
+					} else {
+						keys.push(`${prefix}:${newPath}`)
+					}
+				})
+			}
+		}
+
+		traverse(obj, "")
+		return keys
+	}
 
 	// Get source code keys and translation keys
 	const sourceCodeKeys = accumulateSourceKeys()
 	const translationFileKeys = accumulateTranslationKeys()
+	
+	// Find special keys
+	const dynamicKeys = findDynamicKeys(sourceCodeKeys)
+	const nonNamespacedKeys = findNonNamespacedI18nKeys(sourceCodeKeys)
+
+	// Create sets for set operations
+	const dynamicSet = new Set(dynamicKeys)
+	const nonNamespacedSet = new Set(nonNamespacedKeys)
+	const remainingSourceKeys = new Set(Array.from(sourceCodeKeys)
+		.filter(key => !dynamicSet.has(key) && !nonNamespacedSet.has(key)))
 
 	// Find keys in source not in translations and vice versa
-	const missingTranslationKeys = getKeysInSourceNotInTranslation(sourceCodeKeys, translationFileKeys)
-	const unusedTranslationKeys = getKeysInTranslationNotInSource(sourceCodeKeys, translationFileKeys)
+	const missingTranslationKeys = getKeysInSourceNotInTranslation(remainingSourceKeys, translationFileKeys)
+	const unusedTranslationKeys = getKeysInTranslationNotInSource(remainingSourceKeys, translationFileKeys)
 
 	// Track unused keys in English locale files
 	const unusedKeys: Array<{ key: string; file: string }> = []
@@ -190,9 +242,31 @@ export function findMissingI18nKeys(): { output: string } {
 	// Add summary counts
 	summaryOutput += `\nTotal source code keys: ${sourceCodeKeys.size}\n`
 	summaryOutput += `Total translation file keys: ${translationFileKeys.size}\n`
+	
+	// Dynamic keys
+	summaryOutput += `\n1. Dynamic i18n keys (${dynamicKeys.length}):\n`
+	if (dynamicKeys.length === 0) {
+		summaryOutput += "  None - all i18n keys are static\n"
+	} else {
+		dynamicKeys.forEach(key => {
+			const loc = lineMap.get(key)
+			summaryOutput += `  - ${loc?.file}:${loc?.line}: ${key}\n`
+		})
+	}
+
+	// Non-namespaced keys
+	summaryOutput += `\n2. Non-namespaced t() calls (${nonNamespacedKeys.length}):\n`
+	if (nonNamespacedKeys.length === 0) {
+		summaryOutput += "  None - all t() calls use namespaces\n"
+	} else {
+		nonNamespacedKeys.forEach(key => {
+			const loc = lineMap.get(key)
+			summaryOutput += `  - ${loc?.file}:${loc?.line}: ${key}\n`
+		})
+	}
 
 	// Keys in source code but not in translation files
-	summaryOutput += `\n1. Keys in source code but not in translation files (${missingTranslationKeys.length}):\n`
+	summaryOutput += `\n3. Keys in source code but not in translation files (${missingTranslationKeys.length}):\n`
 	if (missingTranslationKeys.length === 0) {
 		summaryOutput += "  None - all source code keys have translations\n"
 	} else {
@@ -202,7 +276,7 @@ export function findMissingI18nKeys(): { output: string } {
 	}
 
 	// Keys in translation files but not in source code
-	summaryOutput += `\n2. Keys in translation files but not in source code (${unusedTranslationKeys.length}):\n`
+	summaryOutput += `\n4. Keys in translation files but not in source code (${unusedTranslationKeys.length}):\n`
 	if (unusedTranslationKeys.length === 0) {
 		summaryOutput += "  None - all translation keys are used in source code\n"
 	} else {
@@ -272,28 +346,10 @@ export function findMissingI18nKeys(): { output: string } {
 	// Add to buffer as a single log entry
 	bufferLog(summaryOutput)
 
-	// Helper function to extract all keys from a JSON object with their full paths
-	function extractKeysFromJson(obj: any, prefix: string): string[] {
-		const keys: string[] = []
-
-		function traverse(o: any, p: string) {
-			if (o && typeof o === "object") {
-				Object.keys(o).forEach((key) => {
-					const newPath = p ? `${p}.${key}` : key
-					if (o[key] && typeof o[key] === "object") {
-						traverse(o[key], newPath)
-					} else {
-						keys.push(`${prefix}:${newPath}`)
-					}
-				})
-			}
-		}
-
-		traverse(obj, "")
-		return keys
+	return {
+		output: printLogs(),
+		nonNamespacedKeys
 	}
-
-	return { output: printLogs() }
 }
 
 describe("Find Missing i18n Keys", () => {
@@ -308,9 +364,19 @@ describe("Find Missing i18n Keys", () => {
 		sourceKeys = accumulateSourceKeys()
 		translationKeys = accumulateTranslationKeys()
 
+		// Find special keys
+		const dynamicKeys = findDynamicKeys(sourceKeys)
+		const nonNamespacedKeys = findNonNamespacedI18nKeys(sourceKeys)
+
+		// Create sets for set operations
+		const dynamicSet = new Set(dynamicKeys)
+		const nonNamespacedSet = new Set(nonNamespacedKeys)
+		const remainingSourceKeys = new Set(Array.from(sourceKeys)
+			.filter(key => !dynamicSet.has(key) && !nonNamespacedSet.has(key)))
+
 		// Find differences
-		keysInSourceNotInTranslation = getKeysInSourceNotInTranslation(sourceKeys, translationKeys)
-		keysInTranslationNotInSource = getKeysInTranslationNotInSource(sourceKeys, translationKeys)
+		keysInSourceNotInTranslation = getKeysInSourceNotInTranslation(remainingSourceKeys, translationKeys)
+		keysInTranslationNotInSource = getKeysInTranslationNotInSource(remainingSourceKeys, translationKeys)
 
 		// Clear logs at start
 		clearLogs()
