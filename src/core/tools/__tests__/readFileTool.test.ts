@@ -129,7 +129,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockCline.say = jest.fn().mockResolvedValue(undefined)
 		mockCline.ask = jest.fn().mockResolvedValue(true)
 		mockCline.presentAssistantMessage = jest.fn()
-		mockCline.getFileContextTracker = jest.fn().mockReturnValue({
+		mockCline.fileContextTracker = jest.fn().mockReturnValue({
 			trackFileContext: jest.fn().mockResolvedValue(undefined),
 		})
 		mockCline.recordToolUsage = jest.fn().mockReturnValue(undefined)
@@ -459,10 +459,11 @@ describe("read_file tool XML output structure", () => {
 		mockCline.ask = jest.fn().mockResolvedValue(true)
 		mockCline.presentAssistantMessage = jest.fn()
 		mockCline.sayAndCreateMissingParamError = jest.fn().mockResolvedValue("Missing required parameter")
-		// Add mock for getFileContextTracker method
-		mockCline.getFileContextTracker = jest.fn().mockReturnValue({
+
+		mockCline.fileContextTracker = jest.fn().mockReturnValue({
 			trackFileContext: jest.fn().mockResolvedValue(undefined),
 		})
+
 		mockCline.recordToolUsage = jest.fn().mockReturnValue(undefined)
 		mockCline.recordToolError = jest.fn().mockReturnValue(undefined)
 

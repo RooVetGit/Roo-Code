@@ -165,7 +165,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	consecutiveMistakeCount: number = 0
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
-	private toolUsage: ToolUsage = {}
+	toolUsage: ToolUsage = {}
 
 	// Checkpoints
 	enableCheckpoints: boolean
@@ -1659,17 +1659,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public getToolUsage() {
-		return this.toolUsage
-	}
-
 	// Getters
 
 	public get cwd() {
 		return this.workspacePath
-	}
-
-	public getFileContextTracker(): FileContextTracker {
-		return this.fileContextTracker
 	}
 }
