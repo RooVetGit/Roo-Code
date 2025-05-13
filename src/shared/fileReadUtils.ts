@@ -99,7 +99,7 @@ export async function processFileForReading(
 	requestedEndLine: number | undefined,
 	rooIgnoreController: RooIgnoreController | undefined,
 ): Promise<ProcessedFileReadResult> {
-	// 1. Initial checks & setup
+	// Initial checks & setup
 	if (rooIgnoreController && !rooIgnoreController.validateAccess(relativePath)) {
 		return {
 			relativePath,
@@ -111,7 +111,7 @@ export async function processFileForReading(
 		}
 	}
 
-	// 2. Validate range parameters
+	// Validate range parameters
 	const baseErrorResult = {
 		relativePath,
 		totalLinesInFile: 0,
@@ -134,7 +134,7 @@ export async function processFileForReading(
 		return { ...baseErrorResult, error: "start_line must be less than or equal to end_line" }
 	}
 
-	// 3. Count lines and check for binary (moved after range validation)
+	// Count lines and check for binary (moved after range validation)
 	let totalLinesInFile = 0
 	try {
 		totalLinesInFile = await countFileLines(absolutePath)
@@ -164,13 +164,13 @@ export async function processFileForReading(
 		wasRangeRead,
 	}
 
-	// 2. Handle binary files
+	// Handle binary files
 	if (isBinary) {
 		result.notice = "File is binary. Content display may be limited."
 		return result
 	}
 
-	// 3. Determine read strategy
+	// Determine read strategy
 	if (wasRangeRead) {
 		// Range read logic
 		const linesArray = await readLines(absolutePath, endLine0Based, startLine0Based)
