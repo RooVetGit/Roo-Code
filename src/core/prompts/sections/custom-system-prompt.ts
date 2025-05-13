@@ -11,6 +11,12 @@ export type PromptVariables = {
 	operatingSystem?: string
 }
 
+/**
+ * Replace variable placeholders in template strings with their values
+ * @param content - Template content with {{variable}} placeholders
+ * @param variables - Object containing variable values to insert
+ * @returns Interpolated content with variables replaced
+ */
 function interpolatePromptContent(content: string, variables: PromptVariables): string {
 	let interpolatedContent = content
 	for (const key in variables) {
@@ -27,6 +33,9 @@ function interpolatePromptContent(content: string, variables: PromptVariables): 
 
 /**
  * Safely reads a file, returning an empty string if the file doesn't exist
+ * @param filePath - Path to the file to read
+ * @returns Trimmed file content or empty string on file not found
+ * @throws Error if the file exists but there's an error reading it
  */
 async function safeReadFile(filePath: string): Promise<string> {
 	try {
@@ -44,14 +53,20 @@ async function safeReadFile(filePath: string): Promise<string> {
 
 /**
  * Get the path to a system prompt file for a specific mode
+ * @param cwd - Current working directory
+ * @param mode - Mode identifier
+ * @returns Full path to the mode-specific system prompt file
  */
 export function getSystemPromptFilePath(cwd: string, mode: Mode): string {
 	return path.join(cwd, ".roo", `system-prompt-${mode}`)
 }
 
 /**
- * Loads custom system prompt from a file at .roo/system-prompt-[mode slug]
- * If the file doesn't exist, returns an empty string
+ * Loads and processes custom system prompt from a file
+ * @param cwd - Current working directory
+ * @param mode - Mode identifier
+ * @param variables - Variables to interpolate into the prompt template
+ * @returns Processed system prompt or empty string if file doesn't exist
  */
 export async function loadSystemPromptFile(cwd: string, mode: Mode, variables: PromptVariables): Promise<string> {
 	const filePath = getSystemPromptFilePath(cwd, mode)
@@ -65,6 +80,8 @@ export async function loadSystemPromptFile(cwd: string, mode: Mode, variables: P
 
 /**
  * Ensures the .roo directory exists, creating it if necessary
+ * @param cwd - Current working directory where .roo directory should exist
+ * @throws Error if directory creation fails (except for race condition)
  */
 export async function ensureRooDirectory(cwd: string): Promise<void> {
 	const rooDir = path.join(cwd, ".roo")

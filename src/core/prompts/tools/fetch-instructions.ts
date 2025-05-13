@@ -1,13 +1,16 @@
+/**
+ * Generate the description for the fetch_instructions tool
+ * @returns Tool description with parameters and examples
+ */
 export function getFetchInstructionsDescription(): string {
 	return `## fetch_instructions
-Description: Request to fetch instructions to perform a task
+Description: Retrieve detailed instructions for specialized tasks
 Parameters:
-- task: (required) The task to get instructions for.  This can take the following values:
-  create_mcp_server
-  create_mode
+- task: (required) Task identifier to get instructions for. Available values:
+  • create_mcp_server - Instructions for creating an MCP server
+  • create_mode - Instructions for creating a custom mode
 
-Example: Requesting instructions to create an MCP Server
-
+Example:
 <fetch_instructions>
 <task>create_mcp_server</task>
 </fetch_instructions>`

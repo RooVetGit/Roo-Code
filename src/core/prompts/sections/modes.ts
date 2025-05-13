@@ -4,14 +4,20 @@ import { promises as fs } from "fs"
 
 import { ModeConfig, getAllModesWithPrompts } from "../../../shared/modes"
 
+/**
+ * Generate the MODES section of the system prompt
+ * @param context - VSCode extension context
+ * @returns Formatted MODES section content
+ */
 export async function getModesSection(context: vscode.ExtensionContext): Promise<string> {
+	// Ensure settings directory exists
 	const settingsDir = path.join(context.globalStorageUri.fsPath, "settings")
 	await fs.mkdir(settingsDir, { recursive: true })
 
 	// Get all modes with their overrides from extension state
 	const allModes = await getAllModesWithPrompts(context)
 
-	let modesContent = `====
+	return `====
 
 MODES
 
@@ -28,14 +34,11 @@ ${allModes
 		}
 		return `  * "${mode.name}" mode (${mode.slug}) - ${description}`
 	})
-	.join("\n")}`
+	.join("\n")}
 
-	modesContent += `
 If the user asks you to create or edit a new mode for this project, you should read the instructions by using the fetch_instructions tool, like this:
 <fetch_instructions>
 <task>create_mode</task>
 </fetch_instructions>
 `
-
-	return modesContent
 }

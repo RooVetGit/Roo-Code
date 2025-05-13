@@ -2,6 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import * as path from "path"
 import * as diff from "diff"
 import { RooIgnoreController, LOCK_TEXT_SYMBOL } from "../ignore/RooIgnoreController"
+import { TOOL_USE_FORMAT } from "./constants"
 
 export const formatResponse = {
 	toolDenied: () => `The user denied this operation.`,
@@ -15,7 +16,7 @@ export const formatResponse = {
 	toolError: (error?: string) => `The tool execution failed with the following error:\n<error>\n${error}\n</error>`,
 
 	rooIgnoreError: (path: string) =>
-		`Access to ${path} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.`,
+		`Access to ${path} is blocked by .rooignore settings. Continue without this file or ask the user to update .rooignore.`,
 
 	noToolsUsed: () =>
 		`[ERROR] You did not use a tool in your previous response! Please retry with a tool use.
@@ -36,27 +37,25 @@ Otherwise, if you have not completed the task and do not need additional informa
 		`Missing value for required parameter '${paramName}'. Please retry with complete response.\n\n${toolUseInstructionsReminder}`,
 
 	lineCountTruncationError: (actualLineCount: number, isNewFile: boolean, diffStrategyEnabled: boolean = false) => {
-		const truncationMessage = `Note: Your response may have been truncated because it exceeded your output limit. You wrote ${actualLineCount} lines of content, but the line_count parameter was either missing or not included in your response.`
+		const truncationMessage = `Your response was truncated (${actualLineCount} lines). The line_count parameter was missing or incorrect.`
 
 		const newFileGuidance =
 			`This appears to be a new file.\n` +
 			`${truncationMessage}\n\n` +
 			`RECOMMENDED APPROACH:\n` +
-			`1. Try again with the line_count parameter in your response if you forgot to include it\n` +
-			`2. Or break your content into smaller chunks - first use write_to_file with the initial chunk\n` +
-			`3. Then use insert_content to append additional chunks\n`
+			`1. Include the correct line_count parameter\n` +
+			`2. Break content into smaller chunks using write_to_file for the initial part\n` +
+			`3. Use insert_content to append additional chunks\n`
 
-		let existingFileApproaches = [
-			`1. Try again with the line_count parameter in your response if you forgot to include it`,
-		]
+		let existingFileApproaches = [`1. Include the correct line_count parameter`]
 
 		if (diffStrategyEnabled) {
-			existingFileApproaches.push(`2. Or try using apply_diff instead of write_to_file for targeted changes`)
+			existingFileApproaches.push(`2. Use apply_diff for targeted changes`)
 		}
 
 		existingFileApproaches.push(
-			`${diffStrategyEnabled ? "3" : "2"}. Or use search_and_replace for specific text replacements`,
-			`${diffStrategyEnabled ? "4" : "3"}. Or use insert_content to add specific content at particular lines`,
+			`${diffStrategyEnabled ? "3" : "2"}. Use search_and_replace for specific text replacements`,
+			`${diffStrategyEnabled ? "4" : "3"}. Use insert_content to add content at specific lines`,
 		)
 
 		const existingFileGuidance =
@@ -184,13 +183,7 @@ const formatImagesIntoBlocks = (images?: string[]): Anthropic.ImageBlockParam[] 
 
 const toolUseInstructionsReminder = `# Reminder: Instructions for Tool Use
 
-Tool uses are formatted using XML-style tags. The tool name itself becomes the XML tag name. Each parameter is enclosed within its own set of tags. Here's the structure:
-
-<actual_tool_name>
-<parameter1_name>value1</parameter1_name>
-<parameter2_name>value2</parameter2_name>
-...
-</actual_tool_name>
+${TOOL_USE_FORMAT}
 
 For example, to use the attempt_completion tool:
 
