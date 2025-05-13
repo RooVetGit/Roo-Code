@@ -9,7 +9,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { GlobalState } from "../../../schemas"
 import { Task } from "../Task"
 import { ClineProvider } from "../../webview/ClineProvider"
-import { ApiConfiguration, ModelInfo } from "../../../shared/api"
+import { ProviderSettings, ModelInfo } from "../../../shared/api"
 import { ApiStreamChunk } from "../../../api/transform/stream"
 import { ContextProxy } from "../../config/ContextProxy"
 import { processUserContentMentions } from "../../mentions/processUserContentMentions"
@@ -61,6 +61,7 @@ jest.mock("vscode", () => {
 	const mockTabGroup = { tabs: [mockTab] }
 
 	return {
+		TabInputTextDiff: jest.fn(),
 		CodeActionKind: {
 			QuickFix: { value: "quickfix" },
 			RefactorRewrite: { value: "refactor.rewrite" },
@@ -72,6 +73,7 @@ jest.mock("vscode", () => {
 			visibleTextEditors: [mockTextEditor],
 			tabGroups: {
 				all: [mockTabGroup],
+				close: jest.fn(),
 				onDidChangeTabs: jest.fn(() => ({ dispose: jest.fn() })),
 			},
 			showErrorMessage: jest.fn(),
@@ -156,7 +158,7 @@ const mockMessages = [
 
 describe("Cline", () => {
 	let mockProvider: jest.Mocked<ClineProvider>
-	let mockApiConfig: ApiConfiguration
+	let mockApiConfig: ProviderSettings
 	let mockOutputChannel: any
 	let mockExtensionContext: vscode.ExtensionContext
 

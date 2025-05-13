@@ -3,7 +3,7 @@ import { toolNames, ToolName } from "../../schemas"
 
 export type AssistantMessageContent = TextContent | ToolUse
 
-export function parseAssistantMessage(assistantMessage: string) {
+export function parseAssistantMessage(assistantMessage: string): AssistantMessageContent[] {
 	let contentBlocks: AssistantMessageContent[] = []
 	let currentTextContent: TextContent | undefined = undefined
 	let currentTextContentStartIndex = 0
@@ -24,13 +24,15 @@ export function parseAssistantMessage(assistantMessage: string) {
 	for (let i = 0; i < assistantMessage.length; i++) {
 		const char = assistantMessage[i]
 
-		// Detect fenced code block (```)
+		// Detect fenced code block (```).
 		if (!insideInlineCode && assistantMessage.slice(i, i + 3) === "```") {
 			insideCodeBlock = !insideCodeBlock
-			// Append the full trio of backticks to accumulator
+			// Append the full trio of backticks to accumulator.
 			accumulator += "```"
-			i += 2 // Skip the two extra backticks we just added
-			// When toggling code block state, continue to next iteration as these chars are text
+			i += 2 // Skip the two extra backticks we just added.
+
+			// When toggling code block state, continue to next iteration as
+			// these chars are text.
 			continue
 		}
 
@@ -41,67 +43,76 @@ export function parseAssistantMessage(assistantMessage: string) {
 
 		accumulator += char
 
-		// If we are in any kind of code context, treat everything as plain text
+		// If we are in any kind of code context, treat everything as plain text.
 		if (!shouldParseToolTags()) {
-			// Handle accumulating text content block
+			// Handle accumulating text content block.
 			if (currentTextContent === undefined) {
 				currentTextContentStartIndex = i
 			}
+
 			currentTextContent = {
 				type: "text",
 				content: accumulator.slice(currentTextContentStartIndex).trim(),
 				partial: true,
 			}
+
 			continue
 		}
 
-		// there should not be a param without a tool use
+		// There should not be a param without a tool use.
 		if (currentToolUse && currentParamName) {
 			const currentParamValue = accumulator.slice(currentParamValueStartIndex)
 			const paramClosingTag = `</${currentParamName}>`
 			if (currentParamValue.endsWith(paramClosingTag)) {
-				// end of param value
+				// End of param value.
 				currentToolUse.params[currentParamName] = currentParamValue.slice(0, -paramClosingTag.length).trim()
 				currentParamName = undefined
 				continue
 			} else {
-				// partial param value is accumulating
+				// Partial param value is accumulating.
 				continue
 			}
 		}
 
-		// no currentParamName
+		// No currentParamName.
 
 		if (currentToolUse) {
 			const currentToolValue = accumulator.slice(currentToolUseStartIndex)
 			const toolUseClosingTag = `</${currentToolUse.name}>`
 			if (currentToolValue.endsWith(toolUseClosingTag)) {
-				// end of a tool use
+				// End of a tool use.
 				currentToolUse.partial = false
 				contentBlocks.push(currentToolUse)
 				currentToolUse = undefined
 				continue
 			} else {
 				const possibleParamOpeningTags = toolParamNames.map((name) => `<${name}>`)
+
 				for (const paramOpeningTag of possibleParamOpeningTags) {
 					if (accumulator.endsWith(paramOpeningTag)) {
-						// start of a new parameter
+						// Start of a new parameter.
 						currentParamName = paramOpeningTag.slice(1, -1) as ToolParamName
 						currentParamValueStartIndex = accumulator.length
 						break
 					}
 				}
 
-				// there's no current param, and not starting a new param
+				// There's no current param, and not starting a new param.
 
-				// special case for write_to_file where file contents could contain the closing tag, in which case the param would have closed and we end up with the rest of the file contents here. To work around this, we get the string between the starting content tag and the LAST content tag.
+				// Special case for write_to_file where file contents could
+				// contain the closing tag, in which case the param would have
+				// closed and we end up with the rest of the file contents here.
+				// To work around this, we get the string between the starting
+				// ontent tag and the LAST content tag.
 				const contentParamName: ToolParamName = "content"
+
 				if (currentToolUse.name === "write_to_file" && accumulator.endsWith(`</${contentParamName}>`)) {
 					const toolContent = accumulator.slice(currentToolUseStartIndex)
 					const contentStartTag = `<${contentParamName}>`
 					const contentEndTag = `</${contentParamName}>`
 					const contentStartIndex = toolContent.indexOf(contentStartTag) + contentStartTag.length
 					const contentEndIndex = toolContent.lastIndexOf(contentEndTag)
+
 					if (contentStartIndex !== -1 && contentEndIndex !== -1 && contentEndIndex > contentStartIndex) {
 						currentToolUse.params[contentParamName] = toolContent
 							.slice(contentStartIndex, contentEndIndex)
@@ -109,45 +120,57 @@ export function parseAssistantMessage(assistantMessage: string) {
 					}
 				}
 
-				// partial tool value is accumulating
+				// Partial tool value is accumulating.
 				continue
 			}
 		}
 
-		// no currentToolUse
+		// No currentToolUse.
 
 		let didStartToolUse = false
 		const possibleToolUseOpeningTags = toolNames.map((name) => `<${name}>`)
+
 		for (const toolUseOpeningTag of possibleToolUseOpeningTags) {
 			if (accumulator.endsWith(toolUseOpeningTag)) {
-				// Check that this is likely an actual tool invocation and not an inline textual reference.
-				// We consider it an invocation only if the next non-whitespace character is a newline (\n or \r)
-				// or an opening angle bracket '<' (which would start the first parameter tag).
-				let j = i + 1 // position after the closing '>' of the opening tag
+				// Check that this is likely an actual tool invocation and not
+				// an inline textual reference.
+				// We consider it an invocation only if the next non-whitespace
+				// character is a newline (\n or \r) or an opening angle bracket
+				// '<' (which would start the first parameter tag).
+
+				let j = i + 1 // Position after the closing '>' of the opening tag.
+
 				while (j < assistantMessage.length && assistantMessage[j] === " ") {
 					j++
 				}
+
 				const nextChar = assistantMessage[j] ?? ""
+
 				if (nextChar && nextChar !== "<" && nextChar !== "\n" && nextChar !== "\r") {
 					// Treat as plain text, not a tool invocation.
 					continue
 				}
 
-				// start of a new tool use
+				// Start of a new tool use.
 				currentToolUse = {
 					type: "tool_use",
 					name: toolUseOpeningTag.slice(1, -1) as ToolName,
 					params: {},
 					partial: true,
 				}
+
 				currentToolUseStartIndex = accumulator.length
-				// this also indicates the end of the current text content
+
+				// This also indicates the end of the current text content.
 				if (currentTextContent) {
 					currentTextContent.partial = false
-					// remove the partially accumulated tool use tag from the end of text (<tool)
+
+					// Remove the partially accumulated tool use tag from the
+					// end of text (<tool).
 					currentTextContent.content = currentTextContent.content
 						.slice(0, -toolUseOpeningTag.slice(0, -1).length)
 						.trim()
+
 					contentBlocks.push(currentTextContent)
 					currentTextContent = undefined
 				}
@@ -158,10 +181,12 @@ export function parseAssistantMessage(assistantMessage: string) {
 		}
 
 		if (!didStartToolUse) {
-			// no tool use, so it must be text either at the beginning or between tools
+			// No tool use, so it must be text either at the beginning or
+			// between tools.
 			if (currentTextContent === undefined) {
 				currentTextContentStartIndex = i
 			}
+
 			currentTextContent = {
 				type: "text",
 				content: accumulator.slice(currentTextContentStartIndex).trim(),
@@ -171,22 +196,23 @@ export function parseAssistantMessage(assistantMessage: string) {
 	}
 
 	if (currentToolUse) {
-		// stream did not complete tool call, add it as partial
+		// Stream did not complete tool call, add it as partial.
 		if (currentParamName) {
-			// tool call has a parameter that was not completed
+			// Tool call has a parameter that was not completed.
 			currentToolUse.params[currentParamName] = accumulator.slice(currentParamValueStartIndex).trim()
 		}
+
 		contentBlocks.push(currentToolUse)
 	}
 
-	// Note: it doesnt matter if check for currentToolUse or currentTextContent, only one of them will be defined since only one can be partial at a time
+	// NOTE: It doesn't matter if check for currentToolUse or
+	// currentTextContent, only one of them will be defined since only one can
+	// be partial at a time.
 	if (currentTextContent) {
-		// stream did not complete text content, add it as partial
+		// Stream did not complete text content, add it as partial.
 		contentBlocks.push(currentTextContent)
 	}
 
 	// Remove any empty text blocks that may have been created by whitespace or newlines before/after tool calls
-	return contentBlocks.filter(
-		(block) => !(block.type === "text" && block.content.trim().length === 0),
-	)
+	return contentBlocks.filter((block) => !(block.type === "text" && block.content.trim().length === 0))
 }
