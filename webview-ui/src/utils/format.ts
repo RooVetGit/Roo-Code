@@ -8,7 +8,7 @@ export function formatLargeNumber(num: number): string {
 		return (num / 1e6).toFixed(1) + i18next.t("common:number_format.million_suffix")
 	}
 	if (num >= 1e3) {
-		return (num / 1e3).toFixed(1) + i18next.t("common:number_format.thousand_suffix")
+		return (num / 1e3).toFixed(0) + i18next.t("common:number_format.thousand_suffix")
 	}
 	return num.toString()
 }

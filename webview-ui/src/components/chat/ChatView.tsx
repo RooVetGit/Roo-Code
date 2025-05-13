@@ -83,7 +83,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
-		historyPreviewCollapsed, // Added historyPreviewCollapsed
+		historyPreviewCollapsed,
 	} = useExtensionState()
 
 	const { tasks } = useTaskSearch()

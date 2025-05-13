@@ -5,13 +5,28 @@ import { highlightFzfMatch } from "@/utils/highlight"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
+type WorkspaceFilterMode = "current" | "all" | "selected"
 
-export const useTaskSearch = () => {
+// Optional configuration for the hook
+type UseTaskSearchConfig = {
+	forceWorkspaceFilter?: WorkspaceFilterMode | null
+}
+
+export const useTaskSearch = (config?: UseTaskSearchConfig) => {
 	const { taskHistory, cwd } = useExtensionState()
-	const [searchQuery, setSearchQuery] = useState("")
+	const [searchQuery, setSearchQuery] = useState<string>("")
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
-	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false)
+	// New state for workspace filtering
+	const [workspaceFilterMode, setWorkspaceFilterMode] = useState<WorkspaceFilterMode>("current")
+	const [selectedWorkspaces, setSelectedWorkspaces] = useState<string[]>([])
+
+	useEffect(() => {
+		// Reset selected workspaces if mode changes away from 'selected'
+		if (workspaceFilterMode !== "selected" && selectedWorkspaces.length > 0) {
+			setSelectedWorkspaces([])
+		}
+	}, [workspaceFilterMode, selectedWorkspaces.length])
 
 	useEffect(() => {
 		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
@@ -23,13 +38,40 @@ export const useTaskSearch = () => {
 		}
 	}, [searchQuery, sortOption, lastNonRelevantSort])
 
+	// Calculate available workspaces from history
+	const availableWorkspaces = useMemo(() => {
+		const workspaces = taskHistory
+			.map((task) => task.workspace)
+			.filter((ws): ws is string => typeof ws === "string" && ws.length > 0) // Filter out non-strings/empty
+		// Use Array.from to handle potential Set iteration issues
+		return Array.from(new Set(workspaces)).sort()
+	}, [taskHistory])
+
 	const presentableTasks = useMemo(() => {
 		let tasks = taskHistory.filter((item) => item.ts && item.task)
-		if (!showAllWorkspaces) {
+
+		// Apply forced filter first if provided in config
+		if (config?.forceWorkspaceFilter === "current") {
 			tasks = tasks.filter((item) => item.workspace === cwd)
+		} else if (config?.forceWorkspaceFilter === "all") {
+			// No workspace filtering needed if forced to 'all'
+		} else if (!config?.forceWorkspaceFilter) {
+			// Apply workspace filter based on internal state if no force override
+			if (workspaceFilterMode === "current") {
+				tasks = tasks.filter((item) => item.workspace === cwd)
+			} else if (workspaceFilterMode === "selected") {
+				// Only filter if specific workspaces are selected
+				if (selectedWorkspaces.length > 0) {
+					tasks = tasks.filter((item) => item.workspace && selectedWorkspaces.includes(item.workspace))
+				} else {
+					// If mode is 'selected' but array is empty, show only current workspace tasks
+					// This handles the case where the user deselects all specific workspaces
+					tasks = tasks.filter((item) => item.workspace === cwd)
+				}
+			}
 		}
 		return tasks
-	}, [taskHistory, showAllWorkspaces, cwd])
+	}, [taskHistory, workspaceFilterMode, selectedWorkspaces, cwd, config?.forceWorkspaceFilter])
 
 	const fzf = useMemo(() => {
 		return new Fzf(presentableTasks, {
@@ -58,7 +100,8 @@ export const useTaskSearch = () => {
 		}
 
 		// Then sort the results
-		return [...results].sort((a, b) => {
+		// Use Array.from for sorting to avoid potential issues with direct mutation
+		return Array.from(results).sort((a, b) => {
 			switch (sortOption) {
 				case "oldest":
 					return (a.ts || 0) - (b.ts || 0)
@@ -86,7 +129,11 @@ export const useTaskSearch = () => {
 		setSortOption,
 		lastNonRelevantSort,
 		setLastNonRelevantSort,
-		showAllWorkspaces,
-		setShowAllWorkspaces,
+		// New workspace filter state and setters
+		availableWorkspaces,
+		workspaceFilterMode,
+		setWorkspaceFilterMode,
+		selectedWorkspaces,
+		setSelectedWorkspaces,
 	}
 }
