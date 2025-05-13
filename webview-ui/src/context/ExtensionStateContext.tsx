@@ -24,8 +24,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	currentCheckpoint?: string
 	filePaths: string[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
-	markdownBlockLineheight: number | undefined
-	setMarkdownBlockLineheight: (value: number) => void
+	markdownBlockLineHeight: number | undefined
+	setMarkdownBlockLineHeight: (value: number) => void
 	setApiConfiguration: (config: ProviderSettings) => void
 	setCustomInstructions: (value?: string) => void
 	setAlwaysAllowReadOnly: (value: boolean) => void
