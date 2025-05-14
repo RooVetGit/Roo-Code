@@ -226,7 +226,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 						<div className="space-y-2">
 							<VSCodeTextField
-								value={codebaseIndexConfig.codebaseIndexQdrantUrl}
+								value={codebaseIndexConfig.codebaseIndexQdrantUrl || "http://localhost:6333"}
 								onInput={(e: any) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
@@ -307,35 +307,36 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						)}
 
 						<div className="flex gap-2 mt-4">
-							<VSCodeButton
-								onClick={() => vscode.postMessage({ type: "startIndexing" })}
-								disabled={
-									indexingStatus.systemStatus === "Indexing" ||
-									!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
-								}>
-								Start Indexing
-							</VSCodeButton>
-							<AlertDialog>
-								<AlertDialogTrigger asChild>
-									<VSCodeButton appearance="secondary">Clear Index Data</VSCodeButton>
-								</AlertDialogTrigger>
-								<AlertDialogContent>
-									<AlertDialogHeader>
-										<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-										<AlertDialogDescription>
-											This action cannot be undone. This will permanently delete your codebase
-											index data.
-										</AlertDialogDescription>
-									</AlertDialogHeader>
-									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
-										<AlertDialogAction
-											onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
-											Clear Data
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
+							{(indexingStatus.systemStatus === "Error" || indexingStatus.systemStatus === "Standby") && (
+								<VSCodeButton
+									onClick={() => vscode.postMessage({ type: "startIndexing" })}
+									disabled={!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)}>
+									Start Indexing
+								</VSCodeButton>
+							)}
+							{(indexingStatus.systemStatus === "Indexed" || indexingStatus.systemStatus === "Error") && (
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<VSCodeButton appearance="secondary">Clear Index Data</VSCodeButton>
+									</AlertDialogTrigger>
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+											<AlertDialogDescription>
+												This action cannot be undone. This will permanently delete your codebase
+												index data.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogAction
+												onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
+												Clear Data
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							)}
 						</div>
 					</div>
 				)}
