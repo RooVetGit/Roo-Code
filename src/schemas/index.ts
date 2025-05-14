@@ -348,6 +348,8 @@ const baseProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
