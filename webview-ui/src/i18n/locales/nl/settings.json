@@ -253,7 +253,7 @@
 	"browser": {
 		"enable": {
 			"label": "Browserhulpmiddel inschakelen",
-			"description": "Indien ingeschakeld, kan Roo een browser gebruiken om te interageren met websites wanneer modellen computergebruik ondersteunen. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, kan Roo een browser gebruiken om te interageren met websites wanneer modellen computergebruik ondersteunen. <0>Meer informatie</0>"
 		},
 		"viewport": {
 			"label": "Viewport-grootte",
@@ -281,7 +281,7 @@
 	"checkpoints": {
 		"enable": {
 			"label": "Automatische checkpoints inschakelen",
-			"description": "Indien ingeschakeld, maakt Roo automatisch checkpoints tijdens het uitvoeren van taken, zodat je eenvoudig wijzigingen kunt bekijken of terugzetten. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, maakt Roo automatisch checkpoints tijdens het uitvoeren van taken, zodat je eenvoudig wijzigingen kunt bekijken of terugzetten. <0>Meer informatie</0>"
 		}
 	},
 	"notifications": {
@@ -328,47 +328,47 @@
 		},
 		"outputLineLimit": {
 			"label": "Terminaluitvoerlimiet",
-			"description": "Maximaal aantal regels dat wordt opgenomen in de terminaluitvoer bij het uitvoeren van commando's. Overtollige regels worden uit het midden verwijderd om tokens te besparen. <0>Learn more</0>"
+			"description": "Maximaal aantal regels dat wordt opgenomen in de terminaluitvoer bij het uitvoeren van commando's. Overtollige regels worden uit het midden verwijderd om tokens te besparen. <0>Meer informatie</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Terminal shell-integratie timeout",
-			"description": "Maximale wachttijd voor het initialiseren van shell-integratie voordat commando's worden uitgevoerd. Voor gebruikers met lange shell-opstarttijden moet deze waarde mogelijk worden verhoogd als je 'Shell Integration Unavailable'-fouten ziet in de terminal. <0>Learn more</0>"
+			"description": "Maximale wachttijd voor het initialiseren van shell-integratie voordat commando's worden uitgevoerd. Voor gebruikers met lange shell-opstarttijden moet deze waarde mogelijk worden verhoogd als je 'Shell Integration Unavailable'-fouten ziet in de terminal. <0>Meer informatie</0>"
 		},
 		"shellIntegrationDisabled": {
 			"label": "Terminal shell-integratie uitschakelen",
-			"description": "Schakel dit in als terminalcommando's niet correct werken of als je 'Shell Integration Unavailable'-fouten ziet. Dit gebruikt een eenvoudigere methode om commando's uit te voeren en omzeilt enkele geavanceerde terminalfuncties. <0>Learn more</0>"
+			"description": "Schakel dit in als terminalcommando's niet correct werken of als je 'Shell Integration Unavailable'-fouten ziet. Dit gebruikt een eenvoudigere methode om commando's uit te voeren en omzeilt enkele geavanceerde terminalfuncties. <0>Meer informatie</0>"
 		},
 		"commandDelay": {
 			"label": "Terminalcommando-vertraging",
-			"description": "Vertraging in milliseconden na het uitvoeren van een commando. De standaardinstelling van 0 schakelt de vertraging volledig uit. Dit kan helpen om te zorgen dat de uitvoer volledig wordt vastgelegd in terminals met timingproblemen. In de meeste terminals wordt dit geïmplementeerd door `PROMPT_COMMAND='sleep N'` te zetten en in Powershell wordt `start-sleep` toegevoegd aan het einde van elk commando. Oorspronkelijk was dit een workaround voor VSCode bug#237208 en is mogelijk niet meer nodig. <0>Learn more</0>"
+			"description": "Vertraging in milliseconden na het uitvoeren van een commando. De standaardinstelling van 0 schakelt de vertraging volledig uit. Dit kan helpen om te zorgen dat de uitvoer volledig wordt vastgelegd in terminals met timingproblemen. In de meeste terminals wordt dit geïmplementeerd door `PROMPT_COMMAND='sleep N'` te zetten en in Powershell wordt `start-sleep` toegevoegd aan het einde van elk commando. Oorspronkelijk was dit een workaround voor VSCode bug#237208 en is mogelijk niet meer nodig. <0>Meer informatie</0>"
 		},
 		"compressProgressBar": {
 			"label": "Voortgangsbalk-uitvoer comprimeren",
-			"description": "Indien ingeschakeld, verwerkt Roo terminaluitvoer met carriage returns (\r) om te simuleren hoe een echte terminal inhoud weergeeft. Dit verwijdert tussenliggende voortgangsbalken en behoudt alleen de eindstatus, waardoor er meer contextruimte overblijft. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, verwerkt Roo terminaluitvoer met carriage returns (\r) om te simuleren hoe een echte terminal inhoud weergeeft. Dit verwijdert tussenliggende voortgangsbalken en behoudt alleen de eindstatus, waardoor er meer contextruimte overblijft. <0>Meer informatie</0>"
 		},
 		"powershellCounter": {
 			"label": "PowerShell-teller workaround inschakelen",
-			"description": "Indien ingeschakeld, voegt Roo een teller toe aan PowerShell-commando's om correcte uitvoering te garanderen. Dit helpt bij PowerShell-terminals die problemen hebben met het vastleggen van uitvoer. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, voegt Roo een teller toe aan PowerShell-commando's om correcte uitvoering te garanderen. Dit helpt bij PowerShell-terminals die problemen hebben met het vastleggen van uitvoer. <0>Meer informatie</0>"
 		},
 		"zshClearEolMark": {
 			"label": "ZSH EOL-markering wissen",
-			"description": "Indien ingeschakeld, wist Roo de ZSH end-of-line markering door PROMPT_EOL_MARK='' te zetten. Dit voorkomt problemen met de interpretatie van uitvoer die eindigt met speciale tekens zoals '%'. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, wist Roo de ZSH end-of-line markering door PROMPT_EOL_MARK='' te zetten. Dit voorkomt problemen met de interpretatie van uitvoer die eindigt met speciale tekens zoals '%'. <0>Meer informatie</0>"
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh-integratie inschakelen",
-			"description": "Indien ingeschakeld, zet Roo ITERM_SHELL_INTEGRATION_INSTALLED=Yes om Oh My Zsh shell-integratiefuncties te activeren. Het toepassen van deze instelling kan een herstart van de IDE vereisen. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, zet Roo ITERM_SHELL_INTEGRATION_INSTALLED=Yes om Oh My Zsh shell-integratiefuncties te activeren. Het toepassen van deze instelling kan een herstart van de IDE vereisen. <0>Meer informatie</0>"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k-integratie inschakelen",
-			"description": "Indien ingeschakeld, zet Roo POWERLEVEL9K_TERM_SHELL_INTEGRATION=true om Powerlevel10k shell-integratiefuncties te activeren. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, zet Roo POWERLEVEL9K_TERM_SHELL_INTEGRATION=true om Powerlevel10k shell-integratiefuncties te activeren. <0>Meer informatie</0>"
 		},
 		"zdotdir": {
 			"label": "ZDOTDIR-afhandeling inschakelen",
-			"description": "Indien ingeschakeld, maakt Roo een tijdelijke map aan voor ZDOTDIR om zsh shell-integratie correct af te handelen. Dit zorgt ervoor dat VSCode shell-integratie goed werkt met zsh en je zsh-configuratie behouden blijft. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, maakt Roo een tijdelijke map aan voor ZDOTDIR om zsh shell-integratie correct af te handelen. Dit zorgt ervoor dat VSCode shell-integratie goed werkt met zsh en je zsh-configuratie behouden blijft. <0>Meer informatie</0>"
 		},
 		"inheritEnv": {
 			"label": "Omgevingsvariabelen overnemen",
-			"description": "Indien ingeschakeld, neemt de terminal omgevingsvariabelen over van het bovenliggende VSCode-proces, zoals shell-integratie-instellingen uit het gebruikersprofiel. Dit schakelt direct de VSCode-instelling `terminal.integrated.inheritEnv` om. <0>Learn more</0>"
+			"description": "Indien ingeschakeld, neemt de terminal omgevingsvariabelen over van het bovenliggende VSCode-proces, zoals shell-integratie-instellingen uit het gebruikersprofiel. Dit schakelt direct de VSCode-instelling `terminal.integrated.inheritEnv` om. <0>Meer informatie</0>"
 		}
 	},
 	"advanced": {
