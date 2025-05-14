@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk"
 import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
 
@@ -40,10 +41,7 @@ Example summary structure:
   - [Task 2 details & next steps]
   - [...]
 
-The conversation history which you should summarize is included below. Output only the summary, without any additional commentary or explanation.
-### BEGIN CONVERSATION HISTORY
-{messages}
-### END CONVERSATION HISTORY
+Output only the summary of the conversation so far, without any additional commentary or explanation.
 `
 
 /**
@@ -69,12 +67,19 @@ export async function summarizeConversationIfNeeded(
 }
 
 async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHandler): Promise<ApiMessage[]> {
-	if (messages.length < 2) {
+	if (messages.length <= 2) {
 		return messages
 	}
-	const messagesToSummarize = messages.slice(0, -1)
-	const summaryPrompt = getSummaryPrompt(messagesToSummarize)
-	const stream = apiHandler.createMessage(summaryPrompt, [])
+	if (messages[messages.length - 2].isSummary || messages[messages.length - 1].isSummary) {
+		return messages
+	}
+	const finalRequestMessage: Anthropic.MessageParam = {
+		role: "user",
+		content: "Summarize the conversation so far, as described in the prompt instructions.",
+	}
+	const messagesToSummarize = [...messages.slice(0, -1), finalRequestMessage]
+
+	const stream = apiHandler.createMessage(SUMMARY_PROMPT, messagesToSummarize)
 	let summary = ""
 	for await (const chunk of stream) {
 		if (chunk.type === "text") {
@@ -93,24 +98,5 @@ async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHand
 		isSummary: true,
 	}
 
-	return [...messagesToSummarize, summaryMessage, messages[messages.length - 1]]
-}
-
-function getSummaryPrompt(messages: ApiMessage[]): string {
-	return SUMMARY_PROMPT.replace("{messages}", getMessageStr(messages))
-}
-
-function getMessageStr(messages: ApiMessage[]): string {
-	let messageStr = ""
-	for (const message of messages) {
-		if (message.role === "user") {
-			messageStr += "# User:"
-		} else if (message.role === "assistant") {
-			messageStr += "# Assistant:"
-		} else {
-			continue
-		}
-		messageStr += `\n${message.content}\n\n`
-	}
-	return messageStr
+	return [...messages.slice(0, -1), summaryMessage, messages[messages.length - 1]]
 }
