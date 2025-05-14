@@ -23,6 +23,7 @@ import { telemetryService } from "./services/telemetry/TelemetryService"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
 import { formatLanguage } from "./shared/language"
+import { areArraysEqual } from "./core/settings/utils"
 
 import {
 	handleUri,
@@ -66,10 +67,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Get default commands from configuration.
 	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+	const currentCommands = context.globalState.get<string[]>("allowedCommands")
 
-	// Initialize global state if not already set.
-	if (!context.globalState.get("allowedCommands")) {
-		context.globalState.update("allowedCommands", defaultCommands)
+	// Only update if current commands differ from defaults
+	if (!areArraysEqual(currentCommands, defaultCommands)) {
+		await context.globalState.update("allowedCommands", defaultCommands)
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
