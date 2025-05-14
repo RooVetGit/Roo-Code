@@ -86,8 +86,10 @@ async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHand
 	const requestMessages = maybeRemoveImageBlocks([...messagesToSummarize, finalRequestMessage], apiHandler).map(
 		({ role, content }) => ({ role, content }),
 	)
+	// Note: this doesn't need to be a stream, consider using something like apiHandler.completePrompt
 	const stream = apiHandler.createMessage(SUMMARY_PROMPT, requestMessages)
 	let summary = ""
+	// TODO(canyon): compute usage and cost for this operation and update the global metrics.
 	for await (const chunk of stream) {
 		if (chunk.type === "text") {
 			summary += chunk.text
