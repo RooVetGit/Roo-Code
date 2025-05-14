@@ -1,7 +1,8 @@
-import { FC, memo } from "react"
+import React, { FC, memo, MouseEvent } from "react"
 import ReactMarkdown, { Options } from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { cn } from "@/lib/utils"
+import { vscode } from "@src/utils/vscode"
 
 import { Separator } from "@/components/ui"
 
@@ -117,9 +118,17 @@ export function Markdown({ content, isComplete }: { content: string; isComplete?
 						</td>
 					)
 				},
-				a({ href, children }) {
+				a: ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+					if (typeof href === "undefined") {
+						return <span>{children}</span>
+					}
+
 					return (
-						<a href={href} target="_blank" rel="noopener noreferrer">
+						<a
+							href={href}
+							title={href}
+							onClick={(e) => handleLinkClick(e, href)} // Call the helper function
+						>
 							{children}
 						</a>
 					)
@@ -128,4 +137,38 @@ export function Markdown({ content, isComplete }: { content: string; isComplete?
 			{content}
 		</MemoizedReactMarkdown>
 	)
+}
+
+const handleLinkClick = (event: MouseEvent<HTMLAnchorElement>, href: string | undefined) => {
+	if (!href) {
+		return
+	}
+
+	const isLocalPath = href.startsWith("file://") || href.startsWith("/") || !href.includes("://")
+
+	if (!isLocalPath) {
+		// For non-local links, allow default behavior
+		return
+	}
+
+	event.preventDefault() // Prevent default navigation for local links
+
+	let filePath = href.replace("file://", "")
+
+	const match = filePath.match(/(.*):(\d+)(-\d+)?$/)
+	let values = undefined
+	if (match) {
+		filePath = match[1]
+		values = { line: parseInt(match[2], 10) }
+	}
+
+	if (!filePath.startsWith("/") && !filePath.startsWith("./")) {
+		filePath = "./" + filePath
+	}
+
+	vscode.postMessage({
+		type: "openFile",
+		text: filePath,
+		values,
+	})
 }
