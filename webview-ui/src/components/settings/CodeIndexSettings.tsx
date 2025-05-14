@@ -172,6 +172,18 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 
 						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Model:</div>
+						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
+							<div className="space-y-2">
+								<VSCodeTextField
+									type="password"
+									value={apiConfiguration.codeIndexOpenAiKey || ""}
+									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
+									style={{ width: "100%" }}>
+									OpenAI Key:
+								</VSCodeTextField>
+							</div>
+						)}
+
 						<div className="flex items-center gap-2">
 							<Select
 								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
@@ -193,18 +205,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								</SelectContent>
 							</Select>
 						</div>
-
-						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
-							<div className="space-y-2">
-								<VSCodeTextField
-									type="password"
-									value={apiConfiguration.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
-									style={{ width: "100%" }}>
-									OpenAI Key:
-								</VSCodeTextField>
-							</div>
-						)}
 
 						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
 							<>
