@@ -129,7 +129,6 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
-		| "autoCondenseContext"
 		| "setHistoryPreviewCollapsed"
 	text?: string
 	disabled?: boolean
@@ -160,7 +159,6 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
-	autoCondenseContext?: boolean
 }
 
 export const checkoutDiffPayloadSchema = z.object({

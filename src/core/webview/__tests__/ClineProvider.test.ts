@@ -385,7 +385,6 @@ describe("ClineProvider", () => {
 			clineMessages: [],
 			taskHistory: [],
 			shouldShowAnnouncement: false,
-			autoCondenseContext: false,
 			apiConfiguration: {
 				apiProvider: "openrouter",
 			},
@@ -481,16 +480,6 @@ describe("ClineProvider", () => {
 
 		// verify current cline instance is the last one added
 		expect(provider.getCurrentCline()).toBe(mockCline2)
-	})
-
-	test("autoCondenseContext setting persists and updates state", async () => {
-		const initialState = await provider.getState()
-		expect(initialState).toHaveProperty("autoCondenseContext", false)
-
-		// Update the setting
-		await provider.contextProxy.updateGlobalState("autoCondenseContext", true)
-		const updatedState = await provider.getState()
-		expect(updatedState).toHaveProperty("autoCondenseContext", true)
 	})
 
 	test("getState returns correct initial state", async () => {

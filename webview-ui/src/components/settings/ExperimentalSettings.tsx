@@ -46,14 +46,6 @@ export const ExperimentalSettings = ({
 							}
 						/>
 					))}
-				<ExperimentalFeature
-					key="autoCondenseContext"
-					experimentKey="settings:autoCondenseContext"
-					enabled={experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false}
-					onChange={(enabled) =>
-						setExperimentEnabled(EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS], enabled)
-					}
-				/>
 			</Section>
 		</div>
 	)
