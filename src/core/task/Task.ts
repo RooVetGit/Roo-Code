@@ -32,7 +32,7 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
-import { DiffStrategy } from "../../shared/tools"
+import { DiffStrategy, AttachedFileSpec } from "../../shared/tools"
 
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
@@ -79,6 +79,7 @@ import {
 	checkpointDiff,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
+import { processFileForReading, formatProcessedFileResultToString } from "../../shared/fileReadUtils"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -104,6 +105,7 @@ export type TaskOptions = {
 	consecutiveMistakeLimit?: number
 	task?: string
 	images?: string[]
+	attachedFiles?: AttachedFileSpec[]
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
@@ -121,6 +123,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+	public readonly attachedFiles: AttachedFileSpec[] = []
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
@@ -198,6 +201,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		consecutiveMistakeLimit = 3,
 		task,
 		images,
+		attachedFiles,
 		historyItem,
 		startTask = true,
 		rootTask,
@@ -243,6 +247,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.rootTask = rootTask
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
+		this.attachedFiles = attachedFiles || []
 
 		if (historyItem) {
 			telemetryService.captureTaskRestarted(this.taskId)
@@ -583,6 +588,42 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Start / Abort / Resume
 
+	/**
+	 * Formats the content of attached files for inclusion in the task prompt
+	 * @param workspaceRoot The root directory of the workspace
+	 * @param maxReadFileLine Maximum number of lines to read from each file
+	 * @returns Formatted string containing all attached files content
+	 */
+	private async _formatAttachedFilesContent(workspaceRoot: string, maxReadFileLine: number): Promise<string> {
+		const attachedFilesStrings: string[] = []
+
+		for (const fileSpec of this.attachedFiles) {
+			// Handle both string and AttachedFileSpec types
+			const relativePath = typeof fileSpec === "string" ? fileSpec : fileSpec.path
+			if (!relativePath) continue // Skip empty paths
+
+			const requestedStartLine = typeof fileSpec === "string" ? undefined : fileSpec.startLine
+			const requestedEndLine = typeof fileSpec === "string" ? undefined : fileSpec.endLine
+			const absolutePath = path.join(workspaceRoot, relativePath)
+
+			// Process the file using shared utilities
+			const result = await processFileForReading(
+				absolutePath,
+				relativePath,
+				maxReadFileLine,
+				requestedStartLine,
+				requestedEndLine,
+				this.rooIgnoreController,
+			)
+
+			// Format the result to string
+			const fileString = formatProcessedFileResultToString(result)
+			attachedFilesStrings.push(fileString)
+		}
+
+		return attachedFilesStrings.join("\n")
+	}
+
 	private async startTask(task?: string, images?: string[]): Promise<void> {
 		// `conversationHistory` (for API) and `clineMessages` (for webview)
 		// need to be in sync.
@@ -594,6 +635,10 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.apiConversationHistory = []
 		await this.providerRef.deref()?.postStateToWebview()
 
+		const providerState = await this.providerRef.deref()?.getState()
+		const workspaceRoot = this.cwd
+		const maxReadFileLine = providerState?.maxReadFileLine ?? 500 // Default to 500
+
 		await this.say("text", task, images)
 		this.isInitialized = true
 
@@ -601,13 +646,20 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
-		await this.initiateTaskLoop([
-			{
-				type: "text",
-				text: `<task>\n${task}\n</task>`,
-			},
-			...imageBlocks,
-		])
+		const taskBlock = `<task>\n${task ?? ""}\n</task>`
+
+		const attachedFilesContent = await this._formatAttachedFilesContent(workspaceRoot, maxReadFileLine)
+
+		const attachedFilesBlock =
+			this.attachedFiles.length > 0 ? `<attached-files>\n${attachedFilesContent}</attached-files>` : ""
+
+		const blocks: Anthropic.ContentBlockParam[] = [{ type: "text", text: taskBlock }, ...imageBlocks]
+
+		if (attachedFilesBlock) {
+			blocks.push({ type: "text", text: attachedFilesBlock })
+		}
+
+		await this.initiateTaskLoop(blocks)
 	}
 
 	public async resumePausedTask(lastMessage: string) {

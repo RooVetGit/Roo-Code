@@ -540,6 +540,7 @@ export const ChatRowContent = ({
 					</>
 				)
 			case "newTask":
+				const files = tool.files
 				return (
 					<>
 						<div style={headerStyle}>
@@ -557,9 +558,8 @@ export const ChatRowContent = ({
 								marginTop: "4px",
 								backgroundColor: "var(--vscode-badge-background)",
 								border: "1px solid var(--vscode-badge-background)",
-								borderRadius: "4px 4px 0 0",
+								borderRadius: "4px",
 								overflow: "hidden",
-								marginBottom: "2px",
 							}}>
 							<div
 								style={{
@@ -578,6 +578,43 @@ export const ChatRowContent = ({
 							</div>
 							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
 								<MarkdownBlock markdown={tool.content} />
+
+								{files && files.length > 0 && (
+									<>
+										<div
+											style={{
+												marginTop: "16px",
+												display: "flex",
+												flexWrap: "wrap",
+												gap: "4px",
+											}}>
+											{files.map((file) => {
+												return (
+													<VSCodeBadge
+														key={file.path}
+														className="cursor-pointer transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--vscode-badge-background)_70%,var(--vscode-badge-foreground))] rounded-full overflow-hidden"
+														onClick={() => {
+															vscode.postMessage({
+																type: "openFile",
+																text: "./" + file.path,
+																values: {
+																	line: file.startLine,
+																},
+															})
+														}}>
+														@
+														{file.path.replace(/\\/g, "/").split("/").pop() +
+															(file.endLine
+																? `:${file.startLine}-${file.endLine}`
+																: file.startLine
+																	? `:${file.startLine}`
+																	: "")}
+													</VSCodeBadge>
+												)
+											})}
+										</div>
+									</>
+								)}
 							</div>
 						</div>
 					</>
