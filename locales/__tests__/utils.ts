@@ -69,3 +69,8 @@ export function getValueAtPath(obj: any, path: string): any {
 
 	return current
 }
+
+// Utility function to escape dots in keys for display purposes
+export function escapeDotsForDisplay(key: string): string {
+	return key.replace(/\./g, "..")
+}

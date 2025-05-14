@@ -10,6 +10,7 @@ import {
 	loadFileContent,
 	parseJsonContent,
 	getValueAtPath,
+	escapeDotsForDisplay,
 } from "./utils"
 
 // Create a mutable copy of the languages array that can be overridden
@@ -37,7 +38,7 @@ interface LintOptions {
 
 interface TranslationIssue {
 	key: string
-	englishValue?: any
+	sourceValue?: any
 	localeValue?: any
 }
 
@@ -153,7 +154,7 @@ function checkMissingTranslations(sourceContent: any, targetContent: any): Trans
 		if (targetValue === undefined) {
 			missingKeys.push({
 				key,
-				englishValue: sourceValue,
+				sourceValue: sourceValue,
 			})
 		}
 	}
@@ -230,7 +231,7 @@ function processFileLocale(
 		results[mapping.area][locale][targetFile].missing = [
 			{
 				key: sourceFile,
-				englishValue: "File missing",
+				sourceValue: undefined,
 			},
 		]
 		return
@@ -436,10 +437,10 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 									bufferLog(`        Missing keys: ALL KEYS (${sourceKeys.length} total)`)
 									if (options?.verbose) {
 										sourceKeys.sort().forEach((key) => {
-											const englishValue = getValueAtPath(sourceContent, key)
-											if (typeof englishValue === "string") {
-												bufferLog(`          - ${key} - '${englishValue}' [en]`)
-											}
+											const sourceValue = getValueAtPath(sourceContent, key)
+											bufferLog(
+												`          - ${escapeDotsForDisplay(key)} - ${JSON.stringify(sourceValue)} [en]`,
+											)
 										})
 									}
 								} else {
@@ -507,22 +508,22 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 									}
 								} else {
 									// Normal case - file exists but has missing keys
-									bufferLog(`        Missing keys:`)
-									// Get the source file to extract English values
-									const sourceFile = file.replace(`/${lang}/`, "/en/")
-									const sourceContent = parseJsonContent(loadFileContent(sourceFile), sourceFile)
+									bufferLog(`        Missing keys (${keys.size} total):`)
 
+									// Get the missing translations with their English values
+									const missingTranslations = results[area][lang][file].missing
+
+									// Display each missing key with its English value
 									Array.from(keys)
 										.sort()
 										.forEach((key) => {
-											const englishValue = sourceContent
-												? getValueAtPath(sourceContent, key)
-												: undefined
+											// Find the corresponding TranslationIssue for this key
+											const issue = missingTranslations.find((issue) => issue.key === key)
+											const englishValue = issue ? issue.sourceValue : undefined
 
-											// Skip displaying complex objects
-											if (typeof englishValue === "string") {
-												bufferLog(`          - ${key} - '${englishValue}' [en]`)
-											}
+											bufferLog(
+												`          - ${escapeDotsForDisplay(key)} - ${JSON.stringify(englishValue)} [en]`,
+											)
 										})
 								}
 							}
@@ -551,7 +552,7 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 						const targetPath = resolveTargetPath(file, mapping.targetTemplate, locale)
 						bufferLog(`    ${locale}: ${targetPath}: ${extras.length} extra translations`)
 						for (const { key, localeValue } of extras) {
-							bufferLog(`        ${key}: "${localeValue}"`)
+							bufferLog(`        ${escapeDotsForDisplay(key)}: "${localeValue}"`)
 						}
 					}
 				}
