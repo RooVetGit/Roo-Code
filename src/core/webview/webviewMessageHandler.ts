@@ -198,6 +198,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "deleteTaskWithId":
 			provider.deleteTaskWithId(message.text!)
 			break
+		case "condenseTaskHistory":
+			provider.condenseTaskHistory(message.text!)
+			break
 		case "deleteMultipleTasksWithIds": {
 			const ids = message.ids
 

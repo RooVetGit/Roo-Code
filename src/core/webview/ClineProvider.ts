@@ -1181,6 +1181,22 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 	}
 
+	/* Condenses a task's message history to use fewer tokens. */
+	async condenseTaskHistory(id: string) {
+		let task = undefined
+		for (let i = this.clineStack.length - 1; i >= 0; i--) {
+			if (this.clineStack[i].taskId === id) {
+				task = this.clineStack[i]
+				break
+			}
+		}
+		if (!task) {
+			const { historyItem } = await this.getTaskWithId(id)
+			task = await this.initClineWithHistoryItem(historyItem)
+		}
+		await task.condenseHistory()
+	}
+
 	async deleteTaskFromState(id: string) {
 		const taskHistory = this.getGlobalState("taskHistory") ?? []
 		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
