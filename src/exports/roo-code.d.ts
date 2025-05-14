@@ -70,6 +70,7 @@ type GlobalSettings = {
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
 	allowedCommands?: string[] | undefined
+	autoCondenseContext?: boolean | undefined
 	browserToolEnabled?: boolean | undefined
 	browserViewportSize?: string | undefined
 	screenshotQuality?: number | undefined
@@ -759,6 +760,7 @@ type IpcMessage =
 								alwaysAllowSubtasks?: boolean | undefined
 								alwaysAllowExecute?: boolean | undefined
 								allowedCommands?: string[] | undefined
+								autoCondenseContext?: boolean | undefined
 								browserToolEnabled?: boolean | undefined
 								browserViewportSize?: string | undefined
 								screenshotQuality?: number | undefined
@@ -1221,6 +1223,7 @@ type TaskCommand =
 					alwaysAllowSubtasks?: boolean | undefined
 					alwaysAllowExecute?: boolean | undefined
 					allowedCommands?: string[] | undefined
+					autoCondenseContext?: boolean | undefined
 					browserToolEnabled?: boolean | undefined
 					browserViewportSize?: string | undefined
 					screenshotQuality?: number | undefined
