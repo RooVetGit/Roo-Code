@@ -62,7 +62,7 @@ type TruncateOptions = {
 	contextWindow: number
 	maxTokens?: number | null
 	apiHandler: ApiHandler
-	autoCondenseContext: boolean
+	autoCondenseContext?: boolean
 }
 
 /**
