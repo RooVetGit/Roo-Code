@@ -80,6 +80,7 @@ import {
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversationIfNeeded } from "../condense"
+import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -1484,32 +1485,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		const messagesSinceLastSummary = getMessagesSinceLastSummary(this.apiConversationHistory)
-
-		// Clean conversation history by:
-		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.
-		// 2. Converting image blocks to text descriptions if model doesn't support images.
-		const cleanConversationHistory = messagesSinceLastSummary.map(({ role, content }) => {
-			// Handle array content (could contain image blocks).
-			if (Array.isArray(content)) {
-				if (!this.api.getModel().info.supportsImages) {
-					// Convert image blocks to text descriptions.
-					content = content.map((block) => {
-						if (block.type === "image") {
-							// Convert image blocks to text descriptions.
-							// Note: We can't access the actual image content/url due to API limitations,
-							// but we can indicate that an image was present in the conversation.
-							return {
-								type: "text",
-								text: "[Referenced image in conversation]",
-							}
-						}
-						return block
-					})
-				}
-			}
-
-			return { role, content }
-		})
+		const cleanConversationHistory = maybeRemoveImageBlocks(messagesSinceLastSummary, this.api).map(
+			({ role, content }) => ({ role, content }),
+		)
 
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
+import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 const CONTEXT_FRAC_FOR_SUMMARY = 0.5 // TODO(canyon): make this configurable
 const N_MESSAGES_TO_KEEP = 3
@@ -82,7 +83,10 @@ async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHand
 		role: "user",
 		content: "Summarize the conversation so far, as described in the prompt instructions.",
 	}
-	const stream = apiHandler.createMessage(SUMMARY_PROMPT, [...messagesToSummarize, finalRequestMessage])
+	const requestMessages = maybeRemoveImageBlocks([...messagesToSummarize, finalRequestMessage], apiHandler).map(
+		({ role, content }) => ({ role, content }),
+	)
+	const stream = apiHandler.createMessage(SUMMARY_PROMPT, requestMessages)
 	let summary = ""
 	for await (const chunk of stream) {
 		if (chunk.type === "text") {
