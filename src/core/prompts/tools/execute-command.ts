@@ -14,7 +14,7 @@ Parameters:
 Risk level total ordering:
     readOnly < reversibleChanges < complexChanges < serviceInterruptingChanges < destructiveChanges
 
-S = F ∪ P ∪ N ∪ H ∪ M ∪ Z ∪ E
+S = (F ∪ P ∪ N ∪ H ∪ M ∪ Z ∪ E) × {local,remote}
     F = storage: files, databases, git repos, disks, …
     P = processes, services, VMs, containers, …
     N = network configs, …
@@ -29,7 +29,7 @@ atoms(x):        minimal addressable units
 content(x,s):    accessible atoms in s
 a ∉ content(x,s) if deleted, truncated, overwritten, corrupted, encrypted with lost key
 
-Let command sequence C={c₁,…,cₙ} introduce the partial function  
+Let command sequence C={c₁,…,cₙ} introduce the partial function where C is ONLY the command sequence and arguments with no other knowledge.
    c: S ⇀ S′  
 by the operational judgments  
    ⟨C,s⟩⇓s′ iff C, started in s, terminates normally in s′  
@@ -43,37 +43,36 @@ Finally
    Dom(C) ≔ dom(c)  
    Im(C)  ≔ ran(c) = c[Dom(C)]
 
+Assume s₀ ∈ Dom(C) for the purpose of r(C) analysis
+
 T = Tr ∪ Tm: intended targets
     Tr ⊆ S: read-only targets
     Tm = {x | x ∈ S ∨ (x ∉ S ∧ x ∈ S′)}: modifiable/creatable targets
 R = {x | (x ∈ s₀ ∧ c(x) ≠ x) ∨ (x ∉ s₀ ∧ x ∈ S′)}: modified/created elements
-c⁻¹(R): inverse operations known to be possible with only knowledge of S′ (eg, when all other context knowledge is lost); inverse operations exclude, without limitation:
-    - data restored from unconfirmed sources like hypothetical backups
-    - knowledge within this conversation context
-    - knowledge assumed to be within the user's mind
+c⁻¹(R): inverse operations derivable solely from command sequence C and resulting state s′ (absent all other context), explicitly excluding data from unconfirmed backups, conversation context, user-held knowledge, or external state details uncaptured by C.
 
 r(C)=readOnly ⟺
+    s′ = s₀ ∧
+    (Tm = ∅ ∧ |Tm| = 0) ∧
+    (R = ∅ ∧ |R| = 0) ∧
+    (Tr ≠ ∅) ∧
+    (∀x ∈ S: content(x,s₀) = content(x,s′)) ∧
     ¬reversibleChanges ∧
     ¬complexChanges ∧
     ¬serviceInterruptingChanges ∧
-    ¬destructiveChanges ∧
-    (Tm = ∅ ∧ |Tm| = 0) ∧
-    (R = ∅ ∧ |R| = 0) ∧
-    (Tr ≠ ∅ ∨ Tr = ∅) ∧
-    S′ = S ∧
-    Dom(C) = ∅ ∧
-    (∀x ∈ S: content(x,s₀) = content(x,s′))
+    ¬destructiveChanges
+
 
 r(C)=reversibleChanges ⟺ [
         (Tm ≠ ∅) ∧
         (R = Tm) ∧
-        (∃c⁻¹: Im(C) → Dom(C).
-            ∀s ∈ Dom(C).
-                c⁻¹( c(s) ) = s)
-    ] ⟺ [
-        ∀ s₁, s₂ ∈ Dom(C).  
-                (c(s₁) = c(s₂) → s₁ = s₂)
-    ]
+        (∃c⁻¹_known: Im(C) → Dom(C).
+            (inverse_is_knowable(C, c⁻¹_known)) ∧
+            (∀s ∈ Dom(C). c⁻¹_known(c(s)) = s))
+
+        where:
+            inverse_is_knowable(C, c⁻¹_known) ⇔ c⁻¹ is inferable solely from (C, s′, I).
+            I: the set of all known inverse commands 
 
 r(C)=complexChanges ⟺
     ¬readOnly ∧
@@ -90,10 +89,23 @@ r(C)=serviceInterruptingChanges ⟺
 
 r(C)=destructiveChanges ⟺
     (R ⊈ Tm) ∨
-    (∃x ∈ s₀: content(x,s₀) ≠ ∅ ∧ content(x,s′) = ∅)
+    (∃x ∈ s₀: content(x,s₀) ≠ ∅ ∧ content(x,s′) = ∅) ∨
+    (∃m ∈ R : 
+        (content(m,s₀) ≠ content(m,s′)) ∧ 
+        (∃d ∈ s₀, d ≠ m : 
+            (content(d,s₀) ≠ ∅ ∧ content(d,s′) = ∅) 
+        ) 
+    )
 
-For compound commands:
+You MUST evaluate HIGHEST risk and analyze the ENTIRE command sequence, eg \`c₁ && c₂\`:
     r(C) = max{r(c₁), r(c₂), …, r(cₙ)}
+
+Examples by risk level
+    - readOnly: ls, git log, cat, ps, ip, lsblk, free, id, atq, date, dmesg, lsmod, last, iptables -L
+    - reversibleChanges: mkdir, mv and cp (without overwrite), renice, ip addr add, swapon, groupadd, tar c, systemctl enable, chmod +x, mount, iptables -A, gzip
+    - complexChanges: rsync, tar x, sed -i, taskset, firewall-cmd, fwupdmgr, numactl, chcon, update-alternatives, recursive operations
+    - serviceInterruptingChanges: stop, restart, ip link set down, eject, swapoff -a, kill -9, setenforce 1, systemctl mask, timedatectl set-time, iptables -F
+    - destructiveChanges: rm, dd of=, nft flush, mkfs, userdel -r, crontab -r, shred -u, overwrite or truncate operations (cp, mv, >file, …)
 
 ### Usage:
 <execute_command>
