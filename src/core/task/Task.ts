@@ -65,6 +65,7 @@ import {
 	parseAssistantMessageV2 as parseAssistantMessage,
 	presentAssistantMessage,
 } from "../assistant-message"
+import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
@@ -81,6 +82,8 @@ import { processUserContentMentions } from "../mentions/processUserContentMentio
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversationIfNeeded } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
+
+const enableSummaries = false // TODO(canyon): Replace with a config option
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -1469,18 +1472,38 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
 
+			// Default max tokens value for thinking models when no specific
+			// value is set.
+			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
+
 			const modelInfo = this.api.getModel().info
+
+			const maxTokens = modelInfo.thinking
+				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
+				: modelInfo.maxTokens
+
 			const contextWindow = modelInfo.contextWindow
 
-			const messagesWithSummary = await summarizeConversationIfNeeded(
-				this.apiConversationHistory,
-				totalTokens,
-				contextWindow,
-				this.api,
-			)
+			let condensedMessages
+			if (!enableSummaries) {
+				condensedMessages = await truncateConversationIfNeeded({
+					messages: this.apiConversationHistory,
+					totalTokens,
+					maxTokens,
+					contextWindow,
+					apiHandler: this.api,
+				})
+			} else {
+				condensedMessages = await summarizeConversationIfNeeded(
+					this.apiConversationHistory,
+					totalTokens,
+					contextWindow,
+					this.api,
+				)
+			}
 
-			if (messagesWithSummary !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(messagesWithSummary)
+			if (condensedMessages !== this.apiConversationHistory) {
+				await this.overwriteApiConversationHistory(condensedMessages)
 			}
 		}
 
