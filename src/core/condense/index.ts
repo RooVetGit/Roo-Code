@@ -101,7 +101,7 @@ async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHand
 	const summaryMessage: ApiMessage = {
 		role: "assistant",
 		content: summary,
-		ts: Date.now(),
+		ts: keepMessages[0].ts,
 		isSummary: true,
 	}
 
