@@ -101,11 +101,11 @@ You MUST evaluate HIGHEST risk and analyze the ENTIRE command sequence, eg \`c�
     r(C) = max{r(c₁), r(c₂), …, r(cₙ)}
 
 Examples by risk level
-    - readOnly: ls, git log, cat, ps, ip, lsblk, free, id, atq, date, dmesg, lsmod, last, iptables -L
-    - reversibleChanges: mkdir, mv and cp (without overwrite), renice, ip addr add, swapon, groupadd, tar c, systemctl enable, chmod +x, mount, iptables -A, gzip
-    - complexChanges: rsync, tar x, sed -i, taskset, firewall-cmd, fwupdmgr, numactl, chcon, update-alternatives, recursive operations
+    - readOnly: ls, git log, cat, ps, ip, lsblk, free, id, atq, date, dmesg, lsmod, last, iptables -L, SELECT
+    - reversibleChanges: mkdir, mv and cp (without overwrite), renice, ip addr add, swapon, groupadd, tar c, systemctl enable, chmod +x, mount, iptables -A, gzip, INSERT
+    - complexChanges: rsync, tar x, sed -i, taskset, firewall-cmd, fwupdmgr, numactl, chcon, update-alternatives, recursive operations, UPDATE
     - serviceInterruptingChanges: stop, restart, ip link set down, eject, swapoff -a, kill -9, setenforce 1, systemctl mask, timedatectl set-time, iptables -F
-    - destructiveChanges: rm, dd of=, nft flush, mkfs, userdel -r, crontab -r, shred -u, overwrite or truncate operations (cp, mv, >file, …)
+    - destructiveChanges: rm, dd of=, nft flush, mkfs, userdel -r, crontab -r, shred -u, overwrite or truncate operations (cp, mv, >file, …), DELETE
 
 ### Usage:
 <execute_command>
