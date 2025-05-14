@@ -317,6 +317,7 @@ describe("ClineProvider", () => {
 			apiConfiguration: {
 				apiProvider: "openrouter",
 			},
+			currentModeSlug: "code", // Added for test
 		}
 
 		// @ts-ignore - Access private property for testing
@@ -842,6 +843,8 @@ describe("ClineProvider", () => {
 			parentTask: undefined,
 			taskNumber: 1,
 			onCreated: expect.any(Function),
+			currentModeSlug: "code",
+			images: undefined,
 		})
 	})
 
@@ -2123,6 +2126,7 @@ describe("getTelemetryProperties", () => {
 			apiConfiguration: {
 				apiProvider: "openrouter",
 			},
+			currentModeSlug: "code", // Added for test
 		}
 
 		// Setup Task instance with mocked getModel method

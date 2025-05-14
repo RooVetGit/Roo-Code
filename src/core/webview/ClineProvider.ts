@@ -178,8 +178,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+
+		const parentCline = this.getCurrentCline()
+		if (parentCline) {
+			const parentLastActiveMode = parentCline.currentModeSlug
+			const currentActiveMode = (await this.getState()).mode
+
+			if (parentLastActiveMode && parentLastActiveMode !== currentActiveMode) {
+				await this.handleModeSwitch(parentLastActiveMode)
+			}
+			await parentCline.resumePausedTask(lastMessage)
+		}
 	}
 
 	/*
@@ -486,6 +495,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			currentModeSlug: mode, // Use the current active mode from getState()
 			...options,
 		})
 
@@ -501,18 +511,29 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
+		// Get current global mode first
+		let currentGlobalMode = (await this.getState()).mode
+
+		const targetModeSlug = historyItem.lastActiveModeSlug ?? currentGlobalMode
+
+		if (targetModeSlug !== currentGlobalMode) {
+			await this.handleModeSwitch(targetModeSlug)
+			// After switching, getState() will return the new active mode and its associated configs
+		}
+
+		// Re-fetch state after potential mode switch to get correct apiConfig, prompts, etc.
 		const {
 			apiConfiguration,
 			customModePrompts,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
-			mode,
+			mode, // This will now be targetModeSlug if a switch occurred
 			customInstructions: globalInstructions,
 			experiments,
 		} = await this.getState()
 
-		const modePrompt = customModePrompts?.[mode] as PromptComponent
+		const modePrompt = customModePrompts?.[mode] as PromptComponent // mode here is correctly the targetModeSlug
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
 		const cline = new Task({
@@ -527,6 +548,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
+			currentModeSlug: targetModeSlug, // Pass the determined target mode slug
 			onCreated: (cline) => this.emit("clineCreated", cline),
 		})
 
@@ -756,11 +778,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
-		const cline = this.getCurrentCline()
+		// Capture mode switch telemetry event
+		// Telemetry for mode switch (provider level)
+		const activeCline = this.getCurrentCline() // Get current cline for task ID if available
+		telemetryService.captureModeSwitch(activeCline?.taskId || "global", newMode)
 
-		if (cline) {
-			telemetryService.captureModeSwitch(cline.taskId, newMode)
-			cline.emit("taskModeSwitched", cline.taskId, newMode)
+		// Emit an event that the provider's mode is switching.
+		// The active Cline instance itself should only update its internal currentModeSlug
+		// if the switch_mode tool is used within its context.
+		// A global mode switch should not change an active task's inherent mode.
+		if (activeCline) {
+			activeCline.emit("taskModeSwitched", activeCline.taskId, newMode) // Task is now running in a provider with a new mode
 		}
 
 		await this.updateGlobalState("mode", newMode)
