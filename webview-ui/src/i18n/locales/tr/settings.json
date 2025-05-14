@@ -396,10 +396,6 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Bağlam penceresini otomatik olarak yoğunlaştır",
-			"description": "Görevin bağlam penceresinin yarısı kullanıldığında, geçmiş konuşmayı özetlemek için bir LLM çağrısı kullanır."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Deneysel birleştirilmiş diff stratejisini kullan",
 			"description": "Deneysel birleştirilmiş diff stratejisini etkinleştir. Bu strateji, model hatalarından kaynaklanan yeniden deneme sayısını azaltabilir, ancak beklenmeyen davranışlara veya hatalı düzenlemelere neden olabilir. Yalnızca riskleri anlıyorsanız ve tüm değişiklikleri dikkatlice incelemeye istekliyseniz etkinleştirin."

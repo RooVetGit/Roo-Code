@@ -396,10 +396,6 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Condensar automáticamente la ventana de contexto",
-			"description": "Utiliza una llamada LLM para resumir la conversación anterior cuando se utiliza la mitad de la ventana de contexto de la tarea."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usar estrategia de diff unificada experimental",
 			"description": "Habilitar la estrategia de diff unificada experimental. Esta estrategia podría reducir el número de reintentos causados por errores del modelo, pero puede causar comportamientos inesperados o ediciones incorrectas. Habilítela solo si comprende los riesgos y está dispuesto a revisar cuidadosamente todos los cambios."

@@ -396,10 +396,6 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "自动压缩上下文窗口",
-			"description": "当任务的上下文窗口使用了一半时，使用LLM调用来总结过去的对话。"
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "启用diff更新工具",
 			"description": "可减少因模型错误导致的重复尝试，但可能引发意外操作。启用前请确保理解风险并会仔细检查所有修改。"

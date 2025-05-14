@@ -396,10 +396,6 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "自動壓縮上下文窗口",
-			"description": "當任務的上下文窗口使用了一半時，使用LLM調用來總結過去的對話。"
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "使用實驗性統一差異比對策略",
 			"description": "啟用實驗性的統一差異比對策略。此策略可能減少因模型錯誤而導致的重試次數，但也可能導致意外行為或錯誤的編輯。請務必了解風險，並願意仔細檢查所有變更後再啟用。"
