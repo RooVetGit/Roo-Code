@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"lint": "eslint src --ext .ts,.tsx",
+		"lint": "eslint src --ext .ts,.tsx --max-warnings=0",
 		"check-types": "tsc",
 		"test": "jest -w=40%",
 		"dev": "vite",
@@ -43,7 +43,7 @@
 		"i18next": "^24.2.2",
 		"i18next-http-backend": "^3.0.2",
 		"knuth-shuffle-seeded": "^1.0.6",
-		"lucide-react": "^0.475.0",
+		"lucide-react": "^0.510.0",
 		"mermaid": "^11.4.1",
 		"posthog-js": "^1.227.2",
 		"react": "^18.3.1",

@@ -221,8 +221,9 @@ describe("ProviderSettingsManager", () => {
 			)
 
 			const newConfig: ProviderSettings = {
-				apiProvider: "anthropic",
-				apiKey: "test-key",
+				apiProvider: "vertex",
+				apiModelId: "gemini-2.5-flash-preview-04-17",
+				vertexKeyFile: "test-key-file",
 			}
 
 			await providerSettingsManager.saveConfig("test", newConfig)

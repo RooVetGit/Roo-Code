@@ -109,7 +109,6 @@ export const modelInfoSchema = z.object({
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
-	isPromptCacheOptional: z.boolean().optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
@@ -218,6 +217,7 @@ export const modeConfigSchema = z.object({
 	slug: z.string().regex(/^[a-zA-Z0-9-]+$/, "Slug must contain only letters numbers and dashes"),
 	name: z.string().min(1, "Name is required"),
 	roleDefinition: z.string().min(1, "Role definition is required"),
+	whenToUse: z.string().optional(),
 	customInstructions: z.string().optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
@@ -257,6 +257,7 @@ export type CustomModesSettings = z.infer<typeof customModesSettingsSchema>
 
 export const promptComponentSchema = z.object({
 	roleDefinition: z.string().optional(),
+	whenToUse: z.string().optional(),
 	customInstructions: z.string().optional(),
 })
 
@@ -345,10 +346,9 @@ export type ProviderSettingsEntry = z.infer<typeof providerSettingsEntrySchema>
  * ProviderSettings
  */
 
-const genericProviderSettingsSchema = z.object({
+const baseProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
-	promptCachingDisabled: z.boolean().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
@@ -358,19 +358,23 @@ const genericProviderSettingsSchema = z.object({
 	modelMaxThinkingTokens: z.number().optional(),
 })
 
-const anthropicSchema = z.object({
+// Several of the providers share common model config properties.
+const apiModelIdProviderModelSchema = baseProviderSettingsSchema.extend({
 	apiModelId: z.string().optional(),
+})
+
+const anthropicSchema = apiModelIdProviderModelSchema.extend({
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
 	anthropicUseAuthToken: z.boolean().optional(),
 })
 
-const glamaSchema = z.object({
+const glamaSchema = baseProviderSettingsSchema.extend({
 	glamaModelId: z.string().optional(),
 	glamaApiKey: z.string().optional(),
 })
 
-const openRouterSchema = z.object({
+const openRouterSchema = baseProviderSettingsSchema.extend({
 	openRouterApiKey: z.string().optional(),
 	openRouterModelId: z.string().optional(),
 	openRouterBaseUrl: z.string().optional(),
@@ -378,7 +382,7 @@ const openRouterSchema = z.object({
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
 })
 
-const bedrockSchema = z.object({
+const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsAccessKey: z.string().optional(),
 	awsSecretKey: z.string().optional(),
 	awsSessionToken: z.string().optional(),
@@ -390,14 +394,14 @@ const bedrockSchema = z.object({
 	awsCustomArn: z.string().optional(),
 })
 
-const vertexSchema = z.object({
+const vertexSchema = apiModelIdProviderModelSchema.extend({
 	vertexKeyFile: z.string().optional(),
 	vertexJsonCredentials: z.string().optional(),
 	vertexProjectId: z.string().optional(),
 	vertexRegion: z.string().optional(),
 })
 
-const openAiSchema = z.object({
+const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
 	openAiLegacyFormat: z.boolean().optional(),
@@ -412,12 +416,12 @@ const openAiSchema = z.object({
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
 })
 
-const ollamaSchema = z.object({
+const ollamaSchema = baseProviderSettingsSchema.extend({
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
 })
 
-const vsCodeLmSchema = z.object({
+const vsCodeLmSchema = baseProviderSettingsSchema.extend({
 	vsCodeLmModelSelector: z
 		.object({
 			vendor: z.string().optional(),
@@ -428,62 +432,62 @@ const vsCodeLmSchema = z.object({
 		.optional(),
 })
 
-const lmStudioSchema = z.object({
+const lmStudioSchema = baseProviderSettingsSchema.extend({
 	lmStudioModelId: z.string().optional(),
 	lmStudioBaseUrl: z.string().optional(),
 	lmStudioDraftModelId: z.string().optional(),
 	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
 })
 
-const geminiSchema = z.object({
+const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
 })
 
-const openAiNativeSchema = z.object({
+const openAiNativeSchema = apiModelIdProviderModelSchema.extend({
 	openAiNativeApiKey: z.string().optional(),
 	openAiNativeBaseUrl: z.string().optional(),
 })
 
-const mistralSchema = z.object({
+const mistralSchema = apiModelIdProviderModelSchema.extend({
 	mistralApiKey: z.string().optional(),
 	mistralCodestralUrl: z.string().optional(),
 })
 
-const deepSeekSchema = z.object({
+const deepSeekSchema = apiModelIdProviderModelSchema.extend({
 	deepSeekBaseUrl: z.string().optional(),
 	deepSeekApiKey: z.string().optional(),
 })
 
-const unboundSchema = z.object({
+const unboundSchema = baseProviderSettingsSchema.extend({
 	unboundApiKey: z.string().optional(),
 	unboundModelId: z.string().optional(),
 })
 
-const requestySchema = z.object({
+const requestySchema = baseProviderSettingsSchema.extend({
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
 })
 
-const humanRelaySchema = z.object({})
+const humanRelaySchema = baseProviderSettingsSchema
 
-const fakeAiSchema = z.object({
+const fakeAiSchema = baseProviderSettingsSchema.extend({
 	fakeAi: z.unknown().optional(),
 })
 
-const xaiSchema = z.object({
+const xaiSchema = apiModelIdProviderModelSchema.extend({
 	xaiApiKey: z.string().optional(),
 })
 
-const groqSchema = z.object({
+const groqSchema = apiModelIdProviderModelSchema.extend({
 	groqApiKey: z.string().optional(),
 })
 
-const chutesSchema = z.object({
+const chutesSchema = apiModelIdProviderModelSchema.extend({
 	chutesApiKey: z.string().optional(),
 })
 
-const litellmSchema = z.object({
+const litellmSchema = baseProviderSettingsSchema.extend({
 	litellmBaseUrl: z.string().optional(),
 	litellmApiKey: z.string().optional(),
 	litellmModelId: z.string().optional(),
@@ -493,32 +497,30 @@ const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
 
-export const providerSettingsSchemaDiscriminated = z
-	.discriminatedUnion("apiProvider", [
-		anthropicSchema.merge(z.object({ apiProvider: z.literal("anthropic") })),
-		glamaSchema.merge(z.object({ apiProvider: z.literal("glama") })),
-		openRouterSchema.merge(z.object({ apiProvider: z.literal("openrouter") })),
-		bedrockSchema.merge(z.object({ apiProvider: z.literal("bedrock") })),
-		vertexSchema.merge(z.object({ apiProvider: z.literal("vertex") })),
-		openAiSchema.merge(z.object({ apiProvider: z.literal("openai") })),
-		ollamaSchema.merge(z.object({ apiProvider: z.literal("ollama") })),
-		vsCodeLmSchema.merge(z.object({ apiProvider: z.literal("vscode-lm") })),
-		lmStudioSchema.merge(z.object({ apiProvider: z.literal("lmstudio") })),
-		geminiSchema.merge(z.object({ apiProvider: z.literal("gemini") })),
-		openAiNativeSchema.merge(z.object({ apiProvider: z.literal("openai-native") })),
-		mistralSchema.merge(z.object({ apiProvider: z.literal("mistral") })),
-		deepSeekSchema.merge(z.object({ apiProvider: z.literal("deepseek") })),
-		unboundSchema.merge(z.object({ apiProvider: z.literal("unbound") })),
-		requestySchema.merge(z.object({ apiProvider: z.literal("requesty") })),
-		humanRelaySchema.merge(z.object({ apiProvider: z.literal("human-relay") })),
-		fakeAiSchema.merge(z.object({ apiProvider: z.literal("fake-ai") })),
-		xaiSchema.merge(z.object({ apiProvider: z.literal("xai") })),
-		groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
-		chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
-		litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
-		defaultSchema,
-	])
-	.and(genericProviderSettingsSchema)
+export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProvider", [
+	anthropicSchema.merge(z.object({ apiProvider: z.literal("anthropic") })),
+	glamaSchema.merge(z.object({ apiProvider: z.literal("glama") })),
+	openRouterSchema.merge(z.object({ apiProvider: z.literal("openrouter") })),
+	bedrockSchema.merge(z.object({ apiProvider: z.literal("bedrock") })),
+	vertexSchema.merge(z.object({ apiProvider: z.literal("vertex") })),
+	openAiSchema.merge(z.object({ apiProvider: z.literal("openai") })),
+	ollamaSchema.merge(z.object({ apiProvider: z.literal("ollama") })),
+	vsCodeLmSchema.merge(z.object({ apiProvider: z.literal("vscode-lm") })),
+	lmStudioSchema.merge(z.object({ apiProvider: z.literal("lmstudio") })),
+	geminiSchema.merge(z.object({ apiProvider: z.literal("gemini") })),
+	openAiNativeSchema.merge(z.object({ apiProvider: z.literal("openai-native") })),
+	mistralSchema.merge(z.object({ apiProvider: z.literal("mistral") })),
+	deepSeekSchema.merge(z.object({ apiProvider: z.literal("deepseek") })),
+	unboundSchema.merge(z.object({ apiProvider: z.literal("unbound") })),
+	requestySchema.merge(z.object({ apiProvider: z.literal("requesty") })),
+	humanRelaySchema.merge(z.object({ apiProvider: z.literal("human-relay") })),
+	fakeAiSchema.merge(z.object({ apiProvider: z.literal("fake-ai") })),
+	xaiSchema.merge(z.object({ apiProvider: z.literal("xai") })),
+	groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
+	chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
+	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
+	defaultSchema,
+])
 
 export const providerSettingsSchema = z
 	.object({
@@ -545,7 +547,6 @@ export const providerSettingsSchema = z
 	.merge(groqSchema)
 	.merge(chutesSchema)
 	.merge(litellmSchema)
-	.merge(genericProviderSettingsSchema)
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
 
@@ -628,7 +629,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Generic
 	includeMaxTokens: undefined,
 	reasoningEffort: undefined,
-	promptCachingDisabled: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
@@ -1065,6 +1065,142 @@ export const rooCodeEventsSchema = z.object({
 export type RooCodeEvents = z.infer<typeof rooCodeEventsSchema>
 
 /**
+ * Ack
+ */
+
+export const ackSchema = z.object({
+	clientId: z.string(),
+	pid: z.number(),
+	ppid: z.number(),
+})
+
+export type Ack = z.infer<typeof ackSchema>
+
+/**
+ * TaskCommand
+ */
+
+export enum TaskCommandName {
+	StartNewTask = "StartNewTask",
+	CancelTask = "CancelTask",
+	CloseTask = "CloseTask",
+}
+
+export const taskCommandSchema = z.discriminatedUnion("commandName", [
+	z.object({
+		commandName: z.literal(TaskCommandName.StartNewTask),
+		data: z.object({
+			configuration: rooCodeSettingsSchema,
+			text: z.string(),
+			images: z.array(z.string()).optional(),
+			newTab: z.boolean().optional(),
+		}),
+	}),
+	z.object({
+		commandName: z.literal(TaskCommandName.CancelTask),
+		data: z.string(),
+	}),
+	z.object({
+		commandName: z.literal(TaskCommandName.CloseTask),
+		data: z.string(),
+	}),
+])
+
+export type TaskCommand = z.infer<typeof taskCommandSchema>
+
+/**
+ * TaskEvent
+ */
+
+export const taskEventSchema = z.discriminatedUnion("eventName", [
+	z.object({
+		eventName: z.literal(RooCodeEventName.Message),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.Message],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskCreated),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskCreated],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskStarted),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskStarted],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskModeSwitched),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskModeSwitched],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskPaused),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskPaused],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskUnpaused),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskUnpaused],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskAskResponded),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAskResponded],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskAborted),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAborted],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskSpawned),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskSpawned],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskCompleted),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskCompleted],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskTokenUsageUpdated),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskTokenUsageUpdated],
+	}),
+])
+
+export type TaskEvent = z.infer<typeof taskEventSchema>
+
+/**
+ * IpcMessage
+ */
+
+export enum IpcMessageType {
+	Connect = "Connect",
+	Disconnect = "Disconnect",
+	Ack = "Ack",
+	TaskCommand = "TaskCommand",
+	TaskEvent = "TaskEvent",
+}
+
+export enum IpcOrigin {
+	Client = "client",
+	Server = "server",
+}
+
+export const ipcMessageSchema = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal(IpcMessageType.Ack),
+		origin: z.literal(IpcOrigin.Server),
+		data: ackSchema,
+	}),
+	z.object({
+		type: z.literal(IpcMessageType.TaskCommand),
+		origin: z.literal(IpcOrigin.Client),
+		clientId: z.string(),
+		data: taskCommandSchema,
+	}),
+	z.object({
+		type: z.literal(IpcMessageType.TaskEvent),
+		origin: z.literal(IpcOrigin.Server),
+		relayClientId: z.string().optional(),
+		data: taskEventSchema,
+	}),
+])
+
+export type IpcMessage = z.infer<typeof ipcMessageSchema>
+
+/**
  * TypeDefinition
  */
 
@@ -1080,7 +1216,10 @@ export const typeDefinitions: TypeDefinition[] = [
 	{ schema: clineMessageSchema, identifier: "ClineMessage" },
 	{ schema: tokenUsageSchema, identifier: "TokenUsage" },
 	{ schema: rooCodeEventsSchema, identifier: "RooCodeEvents" },
+	{ schema: ipcMessageSchema, identifier: "IpcMessage" },
+	{ schema: taskCommandSchema, identifier: "TaskCommand" },
+	{ schema: taskEventSchema, identifier: "TaskEvent" },
 ]
 
-// Also export as default for ESM compatibility
+// Also export as default for ESM compatibility.
 export default { typeDefinitions }
