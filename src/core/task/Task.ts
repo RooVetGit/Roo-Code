@@ -80,7 +80,7 @@ import {
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
-import { getMessagesSinceLastSummary, summarizeConversationIfNeeded } from "../condense"
+import { getMessagesSinceLastSummary } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 export type ClineEvents = {
@@ -1482,26 +1482,17 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
-			let condensedMessages
-			if (experiments?.autoCondenseContext) {
-				condensedMessages = await summarizeConversationIfNeeded(
-					this.apiConversationHistory,
-					totalTokens,
-					contextWindow,
-					this.api,
-				)
-			} else {
-				condensedMessages = await truncateConversationIfNeeded({
-					messages: this.apiConversationHistory,
-					totalTokens,
-					maxTokens,
-					contextWindow,
-					apiHandler: this.api,
-				})
-			}
-
-			if (condensedMessages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(condensedMessages)
+			const autoCondenseContext = experiments?.autoCondenseContext ?? false
+			const trimmedMessages = await truncateConversationIfNeeded({
+				messages: this.apiConversationHistory,
+				totalTokens,
+				maxTokens,
+				contextWindow,
+				apiHandler: this.api,
+				autoCondenseContext,
+			})
+			if (trimmedMessages !== this.apiConversationHistory) {
+				await this.overwriteApiConversationHistory(trimmedMessages)
 			}
 		}
 

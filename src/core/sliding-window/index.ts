@@ -1,5 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandler } from "../../api"
+import { summarizeConversation } from "../condense"
 
 /**
  * Default percentage of the context window to use as a buffer when deciding when to truncate
@@ -53,6 +54,7 @@ export function truncateConversation(
  * @param {number} contextWindow - The context window size.
  * @param {number} maxTokens - The maximum number of tokens allowed.
  * @param {ApiHandler} apiHandler - The API handler to use for token counting.
+ * @param {boolean} autoCondenseContext - Whether to use LLM summarization or sliding window implementation
  * @returns {Anthropic.Messages.MessageParam[]} The original or truncated conversation messages.
  */
 
@@ -62,6 +64,7 @@ type TruncateOptions = {
 	contextWindow: number
 	maxTokens?: number | null
 	apiHandler: ApiHandler
+	autoCondenseContext: boolean
 }
 
 /**
@@ -77,6 +80,7 @@ export async function truncateConversationIfNeeded({
 	contextWindow,
 	maxTokens,
 	apiHandler,
+	autoCondenseContext,
 }: TruncateOptions): Promise<Anthropic.Messages.MessageParam[]> {
 	// Calculate the maximum tokens reserved for response
 	const reservedTokens = maxTokens || contextWindow * 0.2
@@ -96,5 +100,11 @@ export async function truncateConversationIfNeeded({
 	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
 	// Determine if truncation is needed and apply if necessary
-	return effectiveTokens > allowedTokens ? truncateConversation(messages, 0.5) : messages
+	if (effectiveTokens <= allowedTokens) {
+		return messages
+	} else if (autoCondenseContext) {
+		return summarizeConversation(messages, apiHandler)
+	} else {
+		return truncateConversation(messages, 0.5)
+	}
 }

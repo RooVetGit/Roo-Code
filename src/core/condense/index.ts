@@ -3,7 +3,6 @@ import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
-export const CONTEXT_FRAC_FOR_SUMMARY = 0.5
 export const N_MESSAGES_TO_KEEP = 3
 
 const SUMMARY_PROMPT = `\
@@ -47,8 +46,7 @@ Output only the summary of the conversation so far, without any additional comme
 `
 
 /**
- * Conditionally summarizes the conversation messages if the total token count
- * exceeds a set fraction of the context window.
+ * Summarizes the conversation messages using an LLM call
  *
  * @param {ApiMessage[]} messages - The conversation messages
  * @param {number} totalTokens - The total number of tokens in the conversation, excluding the last user message.
@@ -56,19 +54,7 @@ Output only the summary of the conversation so far, without any additional comme
  * @param {ApiHandler} apiHandler - The API handler to use for token counting.
  * @returns {ApiMessage[]} - The input messages, potentially including a new summary message before the last message.
  */
-export async function summarizeConversationIfNeeded(
-	messages: ApiMessage[],
-	totalTokens: number,
-	contextWindow: number,
-	apiHandler: ApiHandler,
-): Promise<ApiMessage[]> {
-	if (totalTokens < contextWindow * CONTEXT_FRAC_FOR_SUMMARY) {
-		return messages
-	}
-	return await summarizeConversation(messages, apiHandler)
-}
-
-async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHandler): Promise<ApiMessage[]> {
+export async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHandler): Promise<ApiMessage[]> {
 	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP))
 	if (messagesToSummarize.length <= 1) {
 		return messages // Not enough messages to warrant a summary
