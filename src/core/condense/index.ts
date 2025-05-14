@@ -3,8 +3,8 @@ import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
-const CONTEXT_FRAC_FOR_SUMMARY = 0.5 // TODO(canyon): make this configurable
-const N_MESSAGES_TO_KEEP = 3
+export const CONTEXT_FRAC_FOR_SUMMARY = 0.5
+export const N_MESSAGES_TO_KEEP = 3
 
 const SUMMARY_PROMPT = `\
 Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
