@@ -1421,7 +1421,6 @@ export class Task extends EventEmitter<ClineEvents> {
 			enableMcpServerCreation,
 			browserToolEnabled,
 			language,
-			enableAutoContextCondensing,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
 
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
@@ -1484,7 +1483,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			const contextWindow = modelInfo.contextWindow
 
 			let condensedMessages
-			if (enableAutoContextCondensing) {
+			if (experiments?.autoCondenseContext) {
 				condensedMessages = await summarizeConversationIfNeeded(
 					this.apiConversationHistory,
 					totalTokens,
