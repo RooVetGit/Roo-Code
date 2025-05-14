@@ -79,7 +79,7 @@ import {
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
-import { summarizeConversationIfNeeded } from "../condense"
+import { getMessagesSinceLastSummary, summarizeConversationIfNeeded } from "../condense"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -1483,15 +1483,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Only include messages since the last summary message.
-		let messagesSinceLastSummary = this.apiConversationHistory
-		let lastSummaryIndexReverse = [...this.apiConversationHistory]
-			.reverse()
-			.findIndex((message) => message.isSummary)
-		if (lastSummaryIndexReverse !== -1) {
-			const lastSummaryIndex = this.apiConversationHistory.length - lastSummaryIndexReverse - 1
-			messagesSinceLastSummary = this.apiConversationHistory.slice(lastSummaryIndex)
-		}
+		const messagesSinceLastSummary = getMessagesSinceLastSummary(this.apiConversationHistory)
 
 		// Clean conversation history by:
 		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.

@@ -3,6 +3,7 @@ import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
 
 const CONTEXT_FRAC_FOR_SUMMARY = 0.5 // TODO(canyon): make this configurable
+const N_MESSAGES_TO_KEEP = 3
 
 const SUMMARY_PROMPT = `\
 Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
@@ -67,19 +68,21 @@ export async function summarizeConversationIfNeeded(
 }
 
 async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHandler): Promise<ApiMessage[]> {
-	if (messages.length <= 2) {
-		return messages
+	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP))
+	if (messagesToSummarize.length <= 1) {
+		return messages // Not enough messages to warrant a summary
 	}
-	if (messages[messages.length - 2].isSummary || messages[messages.length - 1].isSummary) {
-		return messages
+	const keepMessages = messages.slice(-N_MESSAGES_TO_KEEP)
+	for (const message of keepMessages) {
+		if (message.isSummary) {
+			return messages // We recently summarized these messages; it's too soon to summarize again.
+		}
 	}
 	const finalRequestMessage: Anthropic.MessageParam = {
 		role: "user",
 		content: "Summarize the conversation so far, as described in the prompt instructions.",
 	}
-	const messagesToSummarize = [...messages.slice(0, -1), finalRequestMessage]
-
-	const stream = apiHandler.createMessage(SUMMARY_PROMPT, messagesToSummarize)
+	const stream = apiHandler.createMessage(SUMMARY_PROMPT, [...messagesToSummarize, finalRequestMessage])
 	let summary = ""
 	for await (const chunk of stream) {
 		if (chunk.type === "text") {
@@ -98,5 +101,15 @@ async function summarizeConversation(messages: ApiMessage[], apiHandler: ApiHand
 		isSummary: true,
 	}
 
-	return [...messages.slice(0, -1), summaryMessage, messages[messages.length - 1]]
+	return [...messages.slice(0, -N_MESSAGES_TO_KEEP), summaryMessage, ...keepMessages]
+}
+
+/* Returns the list of all messages since the last summary message, including the summary. Returns all messages if there is no summary. */
+export function getMessagesSinceLastSummary(messages: ApiMessage[]): ApiMessage[] {
+	let lastSummaryIndexReverse = [...messages].reverse().findIndex((message) => message.isSummary)
+	if (lastSummaryIndexReverse === -1) {
+		return messages
+	}
+	const lastSummaryIndex = messages.length - lastSummaryIndexReverse - 1
+	return messages.slice(lastSummaryIndex)
 }
