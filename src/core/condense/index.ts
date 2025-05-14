@@ -10,7 +10,7 @@ const SUMMARY_PROMPT = `\
 Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
 This summary should be thorough in capturing technical details, code patterns, and architectural decisions that would be essential for continuing with the conversation and supporting any continuing tasks.
 
-Your summary should be structure as follows:
+Your summary should be structured as follows:
 Context: The context to continue the conversation with. If applicable based on the current task, this should include:
   1. Previous Conversation: High level details about what was discussed throughout the entire conversation with the user. This should be written to allow someone to be able to follow the general overarching conversation flow.
   2. Current Work: Describe in detail what was being worked on prior to this request to summarize the conversation. Pay special attention to the more recent messages in the conversation.
