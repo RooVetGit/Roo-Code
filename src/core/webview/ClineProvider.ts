@@ -64,7 +64,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
-  private codeIndexStatusSubscription?: vscode.Disposable
+	private codeIndexStatusSubscription?: vscode.Disposable
 	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
 	public get workspaceTracker(): WorkspaceTracker | undefined {
 		return this._workspaceTracker
@@ -90,6 +90,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		ClineProvider.activeInstances.add(this)
 
 		this.codeIndexManager = codeIndexManager
+		this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
 
 		// Start configuration loading (which might trigger indexing) in the background.
 		// Don't await, allowing activation to continue immediately.
@@ -318,16 +319,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
-
-		if (
-			this.codeIndexManager &&
-			this.codeIndexManager.isFeatureEnabled &&
-			this.codeIndexManager.isFeatureConfigured
-		) {
-			this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
-
-			this.outputChannel.appendLine("CodeIndexManager configuration loaded")
-		}
 
 		this.view = webviewView
 
