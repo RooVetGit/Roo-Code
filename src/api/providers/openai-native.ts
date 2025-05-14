@@ -230,6 +230,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			model: model.id,
 			messages: [{ role: "user", content: prompt }],
 			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+			seed: this.options.modelSeed,
 		}
 	}
 }

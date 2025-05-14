@@ -426,6 +426,11 @@
 		"description": "Controla a aleatoriedade nas respostas do modelo.",
 		"rangeDescription": "Valores mais altos tornam a saída mais aleatória, valores mais baixos a tornam mais determinística."
 	},
+	"seed": {
+		"useCustom": "Usar semente personalizada",
+		"description": "Controla a natureza determinística das respostas do modelo. Deixe em branco para aleatório.",
+		"label": "Insira um valor de semente"
+	},
 	"modelInfo": {
 		"supportsImages": "Suporta imagens",
 		"noImages": "Não suporta imagens",

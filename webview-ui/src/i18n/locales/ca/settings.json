@@ -426,6 +426,11 @@
 		"description": "Controla l'aleatorietat en les respostes del model.",
 		"rangeDescription": "Valors més alts fan que la sortida sigui més aleatòria, valors més baixos la fan més determinista."
 	},
+	"seed": {
+		"useCustom": "Utilitzar llavor personalitzada",
+		"description": "Controla la naturalesa determinista de les respostes del model. Deixeu en blanc per a aleatori.",
+		"label": "Introduïu un valor de llavor"
+	},
 	"modelInfo": {
 		"supportsImages": "Suporta imatges",
 		"noImages": "No suporta imatges",

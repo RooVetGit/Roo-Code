@@ -206,6 +206,7 @@ type ProviderSettings = {
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	modelTemperature?: (number | null) | undefined
+	modelSeed?: (number | null) | undefined
 	rateLimitSeconds?: number | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
@@ -599,6 +600,7 @@ type IpcMessage =
 								diffEnabled?: boolean | undefined
 								fuzzyMatchThreshold?: number | undefined
 								modelTemperature?: (number | null) | undefined
+								modelSeed?: (number | null) | undefined
 								rateLimitSeconds?: number | undefined
 								modelMaxTokens?: number | undefined
 								modelMaxThinkingTokens?: number | undefined
@@ -1063,6 +1065,7 @@ type TaskCommand =
 					diffEnabled?: boolean | undefined
 					fuzzyMatchThreshold?: number | undefined
 					modelTemperature?: (number | null) | undefined
+					modelSeed?: (number | null) | undefined
 					rateLimitSeconds?: number | undefined
 					modelMaxTokens?: number | undefined
 					modelMaxThinkingTokens?: number | undefined

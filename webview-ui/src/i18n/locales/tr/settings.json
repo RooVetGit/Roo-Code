@@ -426,6 +426,11 @@
 		"description": "Model yanıtlarındaki rastgeleliği kontrol eder.",
 		"rangeDescription": "Daha yüksek değerler çıktıyı daha rastgele yapar, daha düşük değerler daha deterministik hale getirir."
 	},
+	"seed": {
+		"useCustom": "Özel tohum kullan",
+		"description": "Modelin yanıtlarının deterministik doğasını kontrol eder. Rastgele için boş bırakın.",
+		"label": "Bir tohum değeri girin"
+	},
 	"modelInfo": {
 		"supportsImages": "Görüntüleri destekler",
 		"noImages": "Görüntüleri desteklemez",

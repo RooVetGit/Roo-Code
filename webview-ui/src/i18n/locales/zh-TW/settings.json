@@ -426,6 +426,11 @@
 		"description": "控制模型回應的隨機性",
 		"rangeDescription": "較高值使輸出更隨機，較低值更確定"
 	},
+	"seed": {
+		"useCustom": "使用自訂種子",
+		"description": "控制模型回應的確定性。留空則隨機。",
+		"label": "輸入種子值"
+	},
 	"modelInfo": {
 		"supportsImages": "支援影像",
 		"noImages": "不支援影像",

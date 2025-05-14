@@ -426,6 +426,11 @@
 		"description": "Kontroluje losowość w odpowiedziach modelu.",
 		"rangeDescription": "Wyższe wartości sprawiają, że wyjście jest bardziej losowe, niższe wartości czynią je bardziej deterministycznym."
 	},
+	"seed": {
+		"useCustom": "Użyj niestandardowego ziarna",
+		"description": "Kontroluje deterministyczną naturę odpowiedzi modelu. Pozostaw puste dla losowości.",
+		"label": "Wprowadź wartość ziarna"
+	},
 	"modelInfo": {
 		"supportsImages": "Obsługuje obrazy",
 		"noImages": "Nie obsługuje obrazów",

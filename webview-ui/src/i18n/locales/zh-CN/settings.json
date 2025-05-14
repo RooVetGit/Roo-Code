@@ -426,6 +426,11 @@
 		"description": "控制模型响应的随机性",
 		"rangeDescription": "值越高回答越多样，值越低越保守"
 	},
+	"seed": {
+		"useCustom": "使用自定义种子",
+		"description": "控制模型响应的确定性。留空则随机。",
+		"label": "输入种子值"
+	},
 	"modelInfo": {
 		"supportsImages": "支持图像",
 		"noImages": "不支持图像",

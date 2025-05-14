@@ -426,6 +426,11 @@
 		"description": "모델 응답의 무작위성을 제어합니다.",
 		"rangeDescription": "높은 값은 출력을 더 무작위하게, 낮은 값은 더 결정적으로 만듭니다."
 	},
+	"seed": {
+		"useCustom": "사용자 지정 시드 사용",
+		"description": "모델 응답의 결정적 특성을 제어합니다. 무작위의 경우 비워 둡니다.",
+		"label": "시드 값 입력"
+	},
 	"modelInfo": {
 		"supportsImages": "이미지 지원",
 		"noImages": "이미지 지원 안 함",

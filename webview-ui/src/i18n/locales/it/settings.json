@@ -426,6 +426,11 @@
 		"description": "Controlla la casualità nelle risposte del modello.",
 		"rangeDescription": "Valori più alti rendono l'output più casuale, valori più bassi lo rendono più deterministico."
 	},
+	"seed": {
+		"useCustom": "Usa seed personalizzato",
+		"description": "Controlla la natura deterministica delle risposte del modello. Lasciare vuoto per casuale.",
+		"label": "Inserisci un valore di seed"
+	},
 	"modelInfo": {
 		"supportsImages": "Supporta immagini",
 		"noImages": "Non supporta immagini",

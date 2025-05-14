@@ -426,6 +426,11 @@
 		"description": "Bepaalt de willekeurigheid in de antwoorden van het model.",
 		"rangeDescription": "Hogere waarden maken de output willekeuriger, lagere waarden maken deze deterministischer."
 	},
+	"seed": {
+		"useCustom": "Aangepaste seed gebruiken",
+		"description": "Bepaalt de deterministische aard van de antwoorden van het model. Laat leeg voor willekeurig.",
+		"label": "Voer een seed-waarde in"
+	},
 	"modelInfo": {
 		"supportsImages": "Ondersteunt afbeeldingen",
 		"noImages": "Ondersteunt geen afbeeldingen",

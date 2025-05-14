@@ -352,6 +352,7 @@ const baseProviderSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
+	modelSeed: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
@@ -632,6 +633,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
+	modelSeed: undefined,
 	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
