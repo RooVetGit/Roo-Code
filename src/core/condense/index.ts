@@ -49,8 +49,6 @@ Output only the summary of the conversation so far, without any additional comme
  * Summarizes the conversation messages using an LLM call
  *
  * @param {ApiMessage[]} messages - The conversation messages
- * @param {number} totalTokens - The total number of tokens in the conversation, excluding the last user message.
- * @param {number} contextWindow - The context window size.
  * @param {ApiHandler} apiHandler - The API handler to use for token counting.
  * @returns {ApiMessage[]} - The input messages, potentially including a new summary message before the last message.
  */
