@@ -71,6 +71,7 @@ describe("FileWatcher", () => {
 		mockVectorStore = {
 			upsertPoints: jest.fn().mockResolvedValue(undefined),
 			deletePointsByFilePath: jest.fn().mockResolvedValue(undefined),
+			deletePointsByMultipleFilePaths: jest.fn().mockResolvedValue(undefined),
 		}
 		mockCacheManager = {
 			getHash: jest.fn(),
@@ -152,12 +153,25 @@ describe("FileWatcher", () => {
 	})
 
 	describe("handleFileDeleted", () => {
+		beforeEach(() => {
+			jest.useFakeTimers()
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
 		it("should delete from cache and vector store", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 
 			await fileWatcher.handleFileDeleted(mockUri)
 			expect(mockCacheManager.deleteHash).toHaveBeenCalledWith(mockUri.fsPath)
-			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledWith(mockUri.fsPath)
+
+			// Advance timers to trigger the batched deletion
+			await jest.advanceTimersByTime(500)
+
+			// Verify the batched deletion call
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith([mockUri.fsPath])
 		})
 	})
 

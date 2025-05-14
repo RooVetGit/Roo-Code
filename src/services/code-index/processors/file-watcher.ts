@@ -17,6 +17,11 @@ const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 export class FileWatcher implements IFileWatcher {
 	private fileWatcher?: vscode.FileSystemWatcher
 	private ignoreController: RooIgnoreController
+	private eventQueue: { uri: vscode.Uri; type: "create" | "change" | "delete" }[] = []
+	private processingMap: Map<string, Promise<void>> = new Map()
+	private isProcessing = false
+	private deletedFilesBuffer: string[] = []
+	private deleteTimer: NodeJS.Timeout | undefined
 
 	private readonly _onDidStartProcessing = new vscode.EventEmitter<string>()
 	private readonly _onDidFinishProcessing = new vscode.EventEmitter<FileProcessingResult>()
@@ -74,6 +79,9 @@ export class FileWatcher implements IFileWatcher {
 		this.fileWatcher?.dispose()
 		this._onDidStartProcessing.dispose()
 		this._onDidFinishProcessing.dispose()
+		this.processingMap.clear()
+		this.eventQueue = []
+		clearTimeout(this.deleteTimer)
 	}
 
 	/**
@@ -81,7 +89,8 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the created file
 	 */
 	private async handleFileCreated(uri: vscode.Uri): Promise<void> {
-		await this.processFile(uri.fsPath)
+		this.eventQueue.push({ uri, type: "create" })
+		this.startProcessing()
 	}
 
 	/**
@@ -89,7 +98,8 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the changed file
 	 */
 	private async handleFileChanged(uri: vscode.Uri): Promise<void> {
-		await this.processFile(uri.fsPath)
+		this.eventQueue.push({ uri, type: "change" })
+		this.startProcessing()
 	}
 
 	/**
@@ -97,18 +107,114 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the deleted file
 	 */
 	private async handleFileDeleted(uri: vscode.Uri): Promise<void> {
-		const filePath = uri.fsPath
+		this.eventQueue.push({ uri, type: "delete" })
+		this.startProcessing()
+	}
 
+	/**
+	 * Starts the processing loop if not already running
+	 */
+	private startProcessing(): void {
+		if (!this.isProcessing) {
+			this.isProcessing = true
+			this.processQueue()
+		}
+	}
+
+	/**
+	 * Processes events from the queue
+	 */
+	private async processQueue(): Promise<void> {
+		try {
+			while (this.eventQueue.length > 0) {
+				const event = this.eventQueue.shift()!
+				const filePath = event.uri.fsPath
+
+				// Ensure sequential processing for the same file path
+				const existingPromise = this.processingMap.get(filePath)
+				const newPromise = (existingPromise || Promise.resolve())
+					.then(() => this.processEvent(event))
+					.finally(() => this.processingMap.delete(filePath))
+
+				this.processingMap.set(filePath, newPromise)
+				await newPromise
+			}
+		} finally {
+			this.isProcessing = false
+		}
+	}
+
+	/**
+	 * Processes a single file system event
+	 * @param event The file system event to process
+	 */
+	private async processEvent(event: { uri: vscode.Uri; type: "create" | "change" | "delete" }): Promise<void> {
+		const filePath = event.uri.fsPath
+
+		// For delete operations, process immediately
+		if (event.type === "delete") {
+			await this.processFileDeletion(filePath)
+			return
+		}
+
+		// For create/change operations, check if the file is in the deletion buffer
+		const bufferIndex = this.deletedFilesBuffer.indexOf(filePath)
+		if (bufferIndex !== -1) {
+			// Remove from buffer and delete immediately before processing the new version
+			this.deletedFilesBuffer.splice(bufferIndex, 1)
+			if (this.vectorStore) {
+				await this.vectorStore.deletePointsByFilePath(filePath)
+			}
+		}
+
+		// Also check if there's a pending delete in the queue
+		const hasPendingDelete = this.eventQueue.some((e) => e.type === "delete" && e.uri.fsPath === filePath)
+
+		if (hasPendingDelete) {
+			// Wait for delete to be processed first
+			return
+		}
+
+		await this.processFile(filePath)
+	}
+
+	/**
+	 * Processes a file deletion
+	 * @param filePath Path of the file to delete
+	 */
+	private async processFileDeletion(filePath: string): Promise<void> {
 		// Delete from cache
 		this.cacheManager.deleteHash(filePath)
 
-		// Delete from vector store
-		if (this.vectorStore) {
+		// Add to deletion buffer instead of deleting immediately
+		this.deletedFilesBuffer.push(filePath)
+
+		// Clear any existing timer
+		if (this.deleteTimer) {
+			clearTimeout(this.deleteTimer)
+		}
+
+		// Set a new timer to flush the buffer after a delay
+		this.deleteTimer = setTimeout(() => {
+			this.flushDeletedFiles()
+		}, 500)
+	}
+
+	/**
+	 * Processes the batch deletion of files from the buffer
+	 */
+	private async flushDeletedFiles(): Promise<void> {
+		if (this.deletedFilesBuffer.length > 0 && this.vectorStore) {
+			const filesToDelete = [...this.deletedFilesBuffer]
+
 			try {
-				await this.vectorStore.deletePointsByFilePath(filePath)
-				console.log(`[FileWatcher] Deleted points for removed file: ${filePath}`)
+				await this.vectorStore.deletePointsByMultipleFilePaths(filesToDelete)
+				console.log(`[FileWatcher] Batch deleted points for ${filesToDelete.length} files`)
 			} catch (error) {
-				console.error(`[FileWatcher] Failed to delete points for ${filePath}:`, error)
+				console.error(`[FileWatcher] Failed to batch delete points:`, error)
+			} finally {
+				// Clear the buffer
+				this.deletedFilesBuffer = []
 			}
 		}
 	}
@@ -213,7 +319,6 @@ export class FileWatcher implements IFileWatcher {
 			this._onDidFinishProcessing.fire(result)
 			return result
 		} catch (error) {
-			console.error("[FileWatcher] processFile error in test:", error)
 			const result = {
 				path: filePath,
 				status: "error" as const,
