@@ -10,7 +10,7 @@ importers:
     devDependencies:
       '@dotenvx/dotenvx':
         specifier: ^1.41.0
-        version: 1.43.0
+        version: 1.44.0
       '@eslint/js':
         specifier: ^9.25.1
         version: 9.26.0
@@ -343,8 +343,8 @@ packages:
     resolution: {integrity: sha512-2WJMeRQPHKSPemqk/awGrAiuFfzBmOIPXKizAsVhWH9YJqLZ0H+HS4c8loHGgW6utJ3E/ejXQUsiGaQy2NZ9Fw==}
     engines: {node: '>=6.9.0'}
 
-  '@dotenvx/dotenvx@1.43.0':
-    resolution: {integrity: sha512-Z8XjM75aWZ/ekUzBjlr/OqQsLWtJY4nVtruxopAt+FlYHfY0/gKl85nD16aEqbTkU53kJcm5psID0L2/sQMmuw==}
+  '@dotenvx/dotenvx@1.44.0':
+    resolution: {integrity: sha512-18Aa+7KP/L2Kj9lxmT4EJZnsCq/xGIHgzU26rdzsKMhjpeT3YY+qin/dNAnIaVHPZnee7kXpZL55M9htd30r7Q==}
     hasBin: true
 
   '@drizzle-team/brocli@0.10.2':
@@ -2499,6 +2499,15 @@ packages:
       supports-color:
         optional: true
 
+  debug@4.4.1:
+    resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
   deep-eql@5.0.2:
     resolution: {integrity: sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==}
     engines: {node: '>=6'}
@@ -4639,7 +4648,7 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@dotenvx/dotenvx@1.43.0':
+  '@dotenvx/dotenvx@1.44.0':
     dependencies:
       commander: 11.1.0
       dotenv: 16.5.0
@@ -6589,6 +6598,11 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
+  debug@4.4.1:
+    dependencies:
+      ms: 2.1.3
+    optional: true
+
   deep-eql@5.0.2: {}
 
   deep-is@0.1.4: {}
@@ -7252,7 +7266,7 @@ snapshots:
   gel@2.0.1:
     dependencies:
       '@petamoriken/float16': 3.9.2
-      debug: 4.4.0
+      debug: 4.4.1
       env-paths: 3.0.0
       semver: 7.7.2
       shell-quote: 1.8.2
