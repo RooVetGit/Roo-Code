@@ -83,8 +83,6 @@ import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversationIfNeeded } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
-const enableSummaries = false // TODO(canyon): Replace with a config option
-
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: []
@@ -1423,6 +1421,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			enableMcpServerCreation,
 			browserToolEnabled,
 			language,
+			enableAutoContextCondensing,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
 
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
@@ -1485,7 +1484,14 @@ export class Task extends EventEmitter<ClineEvents> {
 			const contextWindow = modelInfo.contextWindow
 
 			let condensedMessages
-			if (!enableSummaries) {
+			if (enableAutoContextCondensing) {
+				condensedMessages = await summarizeConversationIfNeeded(
+					this.apiConversationHistory,
+					totalTokens,
+					contextWindow,
+					this.api,
+				)
+			} else {
 				condensedMessages = await truncateConversationIfNeeded({
 					messages: this.apiConversationHistory,
 					totalTokens,
@@ -1493,13 +1499,6 @@ export class Task extends EventEmitter<ClineEvents> {
 					contextWindow,
 					apiHandler: this.api,
 				})
-			} else {
-				condensedMessages = await summarizeConversationIfNeeded(
-					this.apiConversationHistory,
-					totalTokens,
-					contextWindow,
-					this.api,
-				)
 			}
 
 			if (condensedMessages !== this.apiConversationHistory) {
