@@ -22,6 +22,8 @@ import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
 import { ApiConfiguration } from "../../../../src/shared/api"
 import { CodebaseIndexConfig, CodebaseIndexModels } from "../../../../src/schemas"
 import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
+import { z } from "zod"
+
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
@@ -85,6 +87,40 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			window.removeEventListener("message", handleMessage)
 		}
 	}, [codebaseIndexConfig, codebaseIndexModels])
+
+	function validateIndexingConfig(config: CodebaseIndexConfig | undefined, apiConfig: ApiConfiguration): boolean {
+		if (!config) return false
+
+		const baseSchema = z.object({
+			codebaseIndexQdrantUrl: z.string().min(1, "Qdrant URL is required"),
+			codebaseIndexEmbedderModelId: z.string().min(1, "Model ID is required"),
+		})
+
+		const providerSchemas = {
+			openai: baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("openai"),
+				codeIndexOpenAiKey: z.string().min(1, "OpenAI key is required"),
+			}),
+			ollama: baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("ollama"),
+				codebaseIndexEmbedderBaseUrl: z.string().min(1, "Ollama URL is required"),
+			}),
+		}
+
+		try {
+			const schema =
+				config.codebaseIndexEmbedderProvider === "openai" ? providerSchemas.openai : providerSchemas.ollama
+
+			schema.parse({
+				...config,
+				codeIndexOpenAiKey: apiConfig.codeIndexOpenAiKey,
+			})
+			return true
+		} catch {
+			return false
+		}
+	}
+
 	return (
 		<>
 			<SectionHeader>
@@ -163,9 +199,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								<VSCodeTextField
 									type="password"
 									value={apiConfiguration.codeIndexOpenAiKey || ""}
-									onInput={(e: any) =>
-										setApiConfigurationField("codeIndexOpenAiKey", e.target.value)
-									}>
+									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
+									style={{ width: "100%" }}>
 									OpenAI Key:
 								</VSCodeTextField>
 							</div>
@@ -181,7 +216,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 												...codebaseIndexConfig,
 												codebaseIndexEmbedderBaseUrl: e.target.value,
 											})
-										}>
+										}
+										style={{ width: "100%" }}>
 										Ollama URL:
 									</VSCodeTextField>
 								</div>
@@ -196,7 +232,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										...codebaseIndexConfig,
 										codebaseIndexQdrantUrl: e.target.value,
 									})
-								}>
+								}
+								style={{ width: "100%" }}>
 								Qdrant URL
 							</VSCodeTextField>
 						</div>
@@ -205,7 +242,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<VSCodeTextField
 								type="password"
 								value={apiConfiguration.codeIndexQdrantApiKey}
-								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}>
+								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
+								style={{ width: "100%" }}>
 								Qdrant Key:
 							</VSCodeTextField>
 						</div>
@@ -270,15 +308,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 						<div className="flex gap-2 mt-4">
 							<VSCodeButton
-								onClick={() => vscode.postMessage({ type: "startIndexing" })} // Added onClick
+								onClick={() => vscode.postMessage({ type: "startIndexing" })}
 								disabled={
-									(codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" &&
-										!apiConfiguration.codeIndexOpenAiKey) ||
-									(codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" &&
-										(!codebaseIndexConfig.codebaseIndexEmbedderBaseUrl ||
-											!codebaseIndexConfig.codebaseIndexEmbedderModelId)) ||
-									!codebaseIndexConfig.codebaseIndexQdrantUrl ||
-									indexingStatus.systemStatus === "Indexing"
+									indexingStatus.systemStatus === "Indexing" ||
+									!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
 								}>
 								Start Indexing
 							</VSCodeButton>
@@ -297,9 +330,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									<AlertDialogFooter>
 										<AlertDialogCancel>Cancel</AlertDialogCancel>
 										<AlertDialogAction
-											// Removed variant="destructive"
-											onClick={() => vscode.postMessage({ type: "clearIndexData" })} // Added onClick
-										>
+											onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
 											Clear Data
 										</AlertDialogAction>
 									</AlertDialogFooter>
