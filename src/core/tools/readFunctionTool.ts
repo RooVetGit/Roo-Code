@@ -22,7 +22,7 @@ export async function readFunctionTool(
   
   // Create shared message properties for UI
   const sharedMessageProps: ClineSayTool = {
-    tool: "read_function",
+    tool: "readFunction",
     symbol: symbol,
     path: file_path,
   }
@@ -73,19 +73,8 @@ export async function readFunctionTool(
       content: undefined
     } satisfies ClineSayTool)
     
-    // Debug short circuit for askApproval (default to true in debug mode)
-    let didApprove = false;
-    
-    // Check if we're in debug mode
-    const isDebugMode = process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true';
-    
-    if (isDebugMode) {
-      console.log('[DEBUG] Bypassing approval for readFunction tool');
-      didApprove = true;
-    } else {
-      // Let askApproval handle auto-approval logic internally
-      didApprove = await askApproval("tool", completeMessage, progressStatus);
-    }
+    // Let askApproval handle auto-approval logic internally
+    const didApprove = await askApproval("tool", completeMessage, progressStatus)
     
     if (!didApprove) {
       pushToolResult("Operation cancelled by user")
@@ -101,7 +90,7 @@ export async function readFunctionTool(
     }
     
     // Format the result into the required XML structure similar to readFileTool
-    const xmlResult = `<file><path>${file_path}</path>\n<content>\n${functionText}</content>\n</file>`
+    const xmlResult = `<file><path>${file_path}</path>\n<functions>\n${functionText}</functions>\n</file>`
     pushToolResult(xmlResult)
   } catch (error) {
     pushToolResult(`Error reading function: ${error instanceof Error ? error.message : String(error)}`)

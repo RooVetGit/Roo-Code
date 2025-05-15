@@ -23,7 +23,7 @@ export async function findReferencesTool(
   
   // Create shared message properties for UI
   const sharedMessageProps: ClineSayTool = {
-    tool: "find_references",
+    tool: "findReferences",
     symbol: symbol,
     path: file_path,
   }
@@ -91,19 +91,8 @@ export async function findReferencesTool(
       content: undefined
     } satisfies ClineSayTool)
     
-    // Debug short circuit for askApproval (default to true in debug mode)
-    let didApprove = false;
-    
-    // Check if we're in debug mode
-    const isDebugMode = process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true';
-    
-    if (isDebugMode) {
-      console.log('[DEBUG] Bypassing approval for findReferences tool');
-      didApprove = true;
-    } else {
-      // Let askApproval handle auto-approval logic internally
-      didApprove = await askApproval("tool", completeMessage, progressStatus);
-    }
+    // Let askApproval handle auto-approval logic internally
+    const didApprove = await askApproval("tool", completeMessage, progressStatus)
     
     if (!didApprove) {
       pushToolResult("Operation cancelled by user")
@@ -126,22 +115,14 @@ export async function findReferencesTool(
         reason: "This is a large number and may consume significant context."
       } satisfies ClineSayTool)
       
-      // Debug short circuit for large refs approval
-      let largeRefsApproved = false;
-      
-      if (isDebugMode) {
-        console.log('[DEBUG] Bypassing large references approval');
-        largeRefsApproved = true;
-      } else {
-        largeRefsApproved = await askApproval(
-          "tool",
-          largeRefsMessage,
-          {
-            icon: "warning",
-            text: `Found ${count} references to '${symbol}'. This is a large number and may consume significant context.`
-          }
-        );
-      }
+      const largeRefsApproved = await askApproval(
+        "tool",
+        largeRefsMessage,
+        {
+          icon: "warning",
+          text: `Found ${count} references to '${symbol}'. This is a large number and may consume significant context.`
+        }
+      )
       
       if (!largeRefsApproved) {
         pushToolResult(`Operation cancelled: Found ${count} references to '${symbol}', which exceeds the threshold.`)
@@ -153,8 +134,9 @@ export async function findReferencesTool(
     const locations = await findReferences(document, symbol, lineNumber)
     const result = await formatReferences(locations, symbol)
     
-    // Push the formatted result directly without XML wrapping
-    pushToolResult(result)
+    // Wrap the result in XML tags for proper display in the UI
+    const xmlResult = `<file><path>${file_path}</path>\n<references>\n${result}</references>\n</file>`
+    pushToolResult(xmlResult)
   } catch (error) {
     pushToolResult(`Error finding references: ${error instanceof Error ? error.message : String(error)}`)
   }

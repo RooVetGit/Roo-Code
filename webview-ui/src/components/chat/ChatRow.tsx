@@ -619,10 +619,10 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
-			case "find_references":
+			case "findReferences":
 				// Parse XML content if available
 				const findReferencesContent = tool.content && typeof tool.content === 'string' && tool.content.includes('<file>')
-					? tool.content.match(/<content>([\s\S]*?)<\/content>/)?.[1]?.trim()
+					? tool.content.match(/<references>([\s\S]*?)<\/references>/)?.[1]?.trim()
 					: tool.content;
 				
 				return (
@@ -669,10 +669,10 @@ export const ChatRowContent = ({
 						)}
 					</>
 				)
-			case "read_function":
+			case "readFunction":
 				// Parse XML content if available
 				const readFunctionContent = tool.content && typeof tool.content === 'string' && tool.content.includes('<file>')
-					? tool.content.match(/<content>([\s\S]*?)<\/content>/)?.[1]?.trim()
+					? tool.content.match(/<functions>([\s\S]*?)<\/functions>/)?.[1]?.trim()
 					: tool.content;
 				
 				return (

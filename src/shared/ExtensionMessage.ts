@@ -224,8 +224,8 @@ export interface ClineSayTool {
 		| "finishTask"
 		| "searchAndReplace"
 		| "insertContent"
-		| "find_references"
-		| "read_function"
+		| "findReferences"
+		| "readFunction"
 	path?: string
 	diff?: string
 	content?: string
