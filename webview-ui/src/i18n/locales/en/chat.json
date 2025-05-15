@@ -155,6 +155,12 @@
 		"wantsToSearch": "Roo wants to search this directory for <code>{{regex}}</code>:",
 		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
 	},
+	"codeOperations": {
+		"wantsToFindReferences": "Roo wants to find references to <code>{{symbol}}</code>:",
+		"didFindReferences": "Roo found references to <code>{{symbol}}</code>:",
+		"wantsToReadFunction": "Roo wants to read the function <code>{{symbol}}</code>:",
+		"didReadFunction": "Roo read the function <code>{{symbol}}</code>:"
+	},
 	"commandOutput": "Command Output",
 	"response": "Response",
 	"arguments": "Arguments",
