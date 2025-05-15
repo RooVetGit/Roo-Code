@@ -55,6 +55,8 @@ async function extractTextFromIPYNB(filePath: string): Promise<string> {
 }
 
 export function addLineNumbers(content: string, startLine: number = 1): string {
+	return content
+
 	// If content is empty, return empty string - empty files should not have line numbers
 	// If content is empty but startLine > 1, return "startLine | " because we know the file is not empty
 	// but the content is empty at that line offset
