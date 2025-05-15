@@ -4,7 +4,7 @@ import { serializeError } from "serialize-error"
 import type { ToolName } from "../../schemas"
 
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
-import type { ToolParamName, ToolResponse } from "../../shared/tools"
+import type { ToolParamName, ToolResponse, FindReferencesToolUse, ReadFunctionToolUse } from "../../shared/tools"
 import type { ClineAsk, ToolProgressStatus } from "../../shared/ExtensionMessage"
 
 import { telemetryService } from "../../services/telemetry/TelemetryService"
@@ -26,6 +26,8 @@ import { askFollowupQuestionTool } from "../tools/askFollowupQuestionTool"
 import { switchModeTool } from "../tools/switchModeTool"
 import { attemptCompletionTool } from "../tools/attemptCompletionTool"
 import { newTaskTool } from "../tools/newTaskTool"
+import { findReferencesTool } from "../tools/findReferencesTool"
+import { readFunctionTool } from "../tools/readFunctionTool"
 
 import { checkpointSave } from "../checkpoints"
 
@@ -191,6 +193,10 @@ export async function presentAssistantMessage(cline: Task) {
 						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 						return `[${block.name} in ${modeName} mode: '${message}']`
 					}
+					case "find_references":
+						return `[${block.name} to '${block.params.symbol}' in ${block.params.file_path}]`
+					case "read_function":
+						return `[${block.name} for '${block.params.symbol}' in ${block.params.file_path}]`
 				}
 			}
 
@@ -394,7 +400,6 @@ export async function presentAssistantMessage(cline: Task) {
 					break
 				case "read_file":
 					await readFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-
 					break
 				case "fetch_instructions":
 					await fetchInstructionsTool(cline, block, askApproval, handleError, pushToolResult)
@@ -461,6 +466,12 @@ export async function presentAssistantMessage(cline: Task) {
 						toolDescription,
 						askFinishSubTaskApproval,
 					)
+					break
+				case "find_references":
+					await findReferencesTool(cline, block as FindReferencesToolUse, pushToolResult, askApproval)
+					break
+				case "read_function":
+					await readFunctionTool(cline, block as ReadFunctionToolUse, pushToolResult, askApproval)
 					break
 			}
 

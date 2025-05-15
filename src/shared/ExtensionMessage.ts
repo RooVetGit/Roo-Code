@@ -224,6 +224,8 @@ export interface ClineSayTool {
 		| "finishTask"
 		| "searchAndReplace"
 		| "insertContent"
+		| "find_references"
+		| "read_function"
 	path?: string
 	diff?: string
 	content?: string
@@ -239,6 +241,7 @@ export interface ClineSayTool {
 	startLine?: number
 	endLine?: number
 	lineNumber?: number
+	symbol?: string
 }
 
 // Must keep in sync with system prompt.

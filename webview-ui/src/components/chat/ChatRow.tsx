@@ -619,6 +619,105 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
+			case "find_references":
+				// Parse XML content if available
+				const findReferencesContent = tool.content && typeof tool.content === 'string' && tool.content.includes('<file>')
+					? tool.content.match(/<content>([\s\S]*?)<\/content>/)?.[1]?.trim()
+					: tool.content;
+				
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("references")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? (
+									<Trans
+										i18nKey="chat:codeOperations.wantsToFindReferences"
+										components={{ code: <code>{tool.symbol}</code> }}
+										values={{ symbol: tool.symbol }}
+									/>
+								) : (
+									<Trans
+										i18nKey="chat:codeOperations.didFindReferences"
+										components={{ code: <code>{tool.symbol}</code> }}
+										values={{ symbol: tool.symbol }}
+									/>
+								)}
+							</span>
+						</div>
+						<ToolUseBlock>
+							<ToolUseBlockHeader
+								onClick={() => vscode.postMessage({ type: "openFile", text: tool.path })}>
+								{tool.path?.startsWith(".") && <span>.</span>}
+								<span className="whitespace-nowrap overflow-hidden text-ellipsis text-left mr-2 rtl">
+									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+								</span>
+								<div style={{ flexGrow: 1 }}></div>
+								<span
+									className={`codicon codicon-link-external`}
+									style={{ fontSize: 13.5, margin: "1px 0" }}
+								/>
+							</ToolUseBlockHeader>
+						</ToolUseBlock>
+						{findReferencesContent && (
+							<CodeAccordian
+								code={findReferencesContent}
+								language="log"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						)}
+					</>
+				)
+			case "read_function":
+				// Parse XML content if available
+				const readFunctionContent = tool.content && typeof tool.content === 'string' && tool.content.includes('<file>')
+					? tool.content.match(/<content>([\s\S]*?)<\/content>/)?.[1]?.trim()
+					: tool.content;
+				
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("symbol-method")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? (
+									<Trans
+										i18nKey="chat:codeOperations.wantsToReadFunction"
+										components={{ code: <code>{tool.symbol}</code> }}
+										values={{ symbol: tool.symbol }}
+									/>
+								) : (
+									<Trans
+										i18nKey="chat:codeOperations.didReadFunction"
+										components={{ code: <code>{tool.symbol}</code> }}
+										values={{ symbol: tool.symbol }}
+									/>
+								)}
+							</span>
+						</div>
+						<ToolUseBlock>
+							<ToolUseBlockHeader
+								onClick={() => vscode.postMessage({ type: "openFile", text: tool.path })}>
+								{tool.path?.startsWith(".") && <span>.</span>}
+								<span className="whitespace-nowrap overflow-hidden text-ellipsis text-left mr-2 rtl">
+									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+								</span>
+								<div style={{ flexGrow: 1 }}></div>
+								<span
+									className={`codicon codicon-link-external`}
+									style={{ fontSize: 13.5, margin: "1px 0" }}
+								/>
+							</ToolUseBlockHeader>
+						</ToolUseBlock>
+						{readFunctionContent && (
+							<CodeAccordian
+								code={readFunctionContent}
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						)}
+					</>
+				)
 			default:
 				return null
 		}
