@@ -31,6 +31,7 @@ import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
+import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -1083,6 +1084,9 @@ export const ChatRowContent = ({
 							/>
 						</>
 					)
+				case "auto_approval_max_req_reached": {
+					return <AutoApprovedRequestLimitWarning message={message} />
+				}
 				default:
 					return null
 			}

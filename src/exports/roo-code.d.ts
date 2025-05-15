@@ -70,6 +70,7 @@ type GlobalSettings = {
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
 	allowedCommands?: string[] | undefined
+	allowedMaxRequests?: number | undefined
 	browserToolEnabled?: boolean | undefined
 	browserViewportSize?: string | undefined
 	screenshotQuality?: number | undefined
@@ -357,6 +358,7 @@ type ClineMessage = {
 				| "mistake_limit_reached"
 				| "browser_action_launch"
 				| "use_mcp_server"
+				| "auto_approval_max_req_reached"
 		  )
 		| undefined
 	say?:
@@ -432,6 +434,7 @@ type RooCodeEvents = {
 							| "mistake_limit_reached"
 							| "browser_action_launch"
 							| "use_mcp_server"
+							| "auto_approval_max_req_reached"
 					  )
 					| undefined
 				say?:
@@ -760,6 +763,7 @@ type IpcMessage =
 								alwaysAllowSubtasks?: boolean | undefined
 								alwaysAllowExecute?: boolean | undefined
 								allowedCommands?: string[] | undefined
+								allowedMaxRequests?: number | undefined
 								browserToolEnabled?: boolean | undefined
 								browserViewportSize?: string | undefined
 								screenshotQuality?: number | undefined
@@ -901,6 +905,7 @@ type IpcMessage =
 												| "mistake_limit_reached"
 												| "browser_action_launch"
 												| "use_mcp_server"
+												| "auto_approval_max_req_reached"
 										  )
 										| undefined
 									say?:
@@ -1223,6 +1228,7 @@ type TaskCommand =
 					alwaysAllowSubtasks?: boolean | undefined
 					alwaysAllowExecute?: boolean | undefined
 					allowedCommands?: string[] | undefined
+					allowedMaxRequests?: number | undefined
 					browserToolEnabled?: boolean | undefined
 					browserViewportSize?: string | undefined
 					screenshotQuality?: number | undefined
@@ -1360,6 +1366,7 @@ type TaskEvent =
 									| "mistake_limit_reached"
 									| "browser_action_launch"
 									| "use_mcp_server"
+									| "auto_approval_max_req_reached"
 							  )
 							| undefined
 						say?:

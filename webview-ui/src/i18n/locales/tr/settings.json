@@ -79,6 +79,9 @@
 			"allowedCommandsDescription": "\"Yürütme işlemlerini her zaman onayla\" etkinleştirildiğinde otomatik olarak yürütülebilen komut önekleri. Tüm komutlara izin vermek için * ekleyin (dikkatli kullanın).",
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
 			"addButton": "Ekle"
+		},
+		"apiRequestLimit": {
+			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap."
 		}
 	},
 	"providers": {
