@@ -181,7 +181,7 @@ export class CodeIndexManager {
 
 		if (shouldStartOrRestartIndexing) {
 			console.log("[CodeIndexManager] Starting/restarting indexing due to configuration changes")
-			await this._orchestrator?.startIndexing()
+			this._orchestrator?.startIndexing() // This method is async, but we don't await it here
 		}
 
 		return { requiresRestart }
