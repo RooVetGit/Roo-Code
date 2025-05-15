@@ -259,8 +259,6 @@ type ProviderSettings = {
 	vertexJsonCredentials?: string | undefined
 	vertexProjectId?: string | undefined
 	vertexRegion?: string | undefined
-  codeIndexOpenAiKey?: string | undefined
-	codeIndexQdrantApiKey?: string | undefined
 	openAiBaseUrl?: string | undefined
 	openAiApiKey?: string | undefined
 	openAiLegacyFormat?: boolean | undefined
@@ -338,6 +336,8 @@ type ProviderSettings = {
 	litellmBaseUrl?: string | undefined
 	litellmApiKey?: string | undefined
 	litellmModelId?: string | undefined
+	codeIndexOpenAiKey?: string | undefined
+	codeIndexQdrantApiKey?: string | undefined
 }
 
 type ProviderSettingsEntry = {
@@ -724,6 +724,8 @@ type IpcMessage =
 								litellmBaseUrl?: string | undefined
 								litellmApiKey?: string | undefined
 								litellmModelId?: string | undefined
+								codeIndexOpenAiKey?: string | undefined
+								codeIndexQdrantApiKey?: string | undefined
 								currentApiConfigName?: string | undefined
 								listApiConfigMeta?:
 									| {
@@ -781,6 +783,33 @@ type IpcMessage =
 								autoApprovalEnabled?: boolean | undefined
 								alwaysAllowReadOnly?: boolean | undefined
 								alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
+								codebaseIndexModels?:
+									| {
+											openai?:
+												| {
+														[x: string]: {
+															dimension: number
+														}
+												  }
+												| undefined
+											ollama?:
+												| {
+														[x: string]: {
+															dimension: number
+														}
+												  }
+												| undefined
+									  }
+									| undefined
+								codebaseIndexConfig?:
+									| {
+											codebaseIndexEnabled?: boolean | undefined
+											codebaseIndexQdrantUrl?: string | undefined
+											codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+											codebaseIndexEmbedderBaseUrl?: string | undefined
+											codebaseIndexEmbedderModelId?: string | undefined
+									  }
+									| undefined
 								alwaysAllowWrite?: boolean | undefined
 								alwaysAllowWriteOutsideWorkspace?: boolean | undefined
 								writeDelayMs?: number | undefined
@@ -958,6 +987,7 @@ type IpcMessage =
 												| "checkpoint_saved"
 												| "rooignore_error"
 												| "diff_error"
+												| "codebase_search_result"
 										  )
 										| undefined
 									text?: string | undefined
@@ -1187,6 +1217,8 @@ type TaskCommand =
 					litellmBaseUrl?: string | undefined
 					litellmApiKey?: string | undefined
 					litellmModelId?: string | undefined
+					codeIndexOpenAiKey?: string | undefined
+					codeIndexQdrantApiKey?: string | undefined
 					currentApiConfigName?: string | undefined
 					listApiConfigMeta?:
 						| {
@@ -1244,6 +1276,33 @@ type TaskCommand =
 					autoApprovalEnabled?: boolean | undefined
 					alwaysAllowReadOnly?: boolean | undefined
 					alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
+					codebaseIndexModels?:
+						| {
+								openai?:
+									| {
+											[x: string]: {
+												dimension: number
+											}
+									  }
+									| undefined
+								ollama?:
+									| {
+											[x: string]: {
+												dimension: number
+											}
+									  }
+									| undefined
+						  }
+						| undefined
+					codebaseIndexConfig?:
+						| {
+								codebaseIndexEnabled?: boolean | undefined
+								codebaseIndexQdrantUrl?: string | undefined
+								codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+								codebaseIndexEmbedderBaseUrl?: string | undefined
+								codebaseIndexEmbedderModelId?: string | undefined
+						  }
+						| undefined
 					alwaysAllowWrite?: boolean | undefined
 					alwaysAllowWriteOutsideWorkspace?: boolean | undefined
 					writeDelayMs?: number | undefined
@@ -1417,6 +1476,7 @@ type TaskEvent =
 									| "checkpoint_saved"
 									| "rooignore_error"
 									| "diff_error"
+									| "codebase_search_result"
 							  )
 							| undefined
 						text?: string | undefined
