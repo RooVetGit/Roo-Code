@@ -79,6 +79,9 @@
 			"allowedCommandsDescription": "Befehlspräfixe, die automatisch ausgeführt werden können, wenn 'Ausführungsoperationen immer genehmigen' aktiviert ist. Fügen Sie * hinzu, um alle Befehle zu erlauben (mit Vorsicht verwenden).",
 			"commandPlaceholder": "Befehlspräfix eingeben (z.B. 'git ')",
 			"addButton": "Hinzufügen"
+		},
+		"apiRequestLimit": {
+			"description": "Führe automatisch diese Anzahl an API-Anfragen aus, bevor du um Genehmigung zur Fortsetzung der Aufgabe bitten musst."
 		}
 	},
 	"providers": {

@@ -79,6 +79,9 @@
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"addButton": "追加"
+		},
+		"apiRequestLimit": {
+			"description": "タスクを続行するための承認を求める前に、この回数のAPIリクエストを自動的に実行します。"
 		}
 	},
 	"providers": {
