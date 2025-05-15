@@ -1,44 +1,75 @@
-// @ts-nocheck
+import { IEmbedder } from "../../interfaces/embedder"
+import { IVectorStore } from "../../interfaces/vector-store"
+import { FileProcessingResult } from "../../interfaces/file-processor"
 import { FileWatcher } from "../file-watcher"
-import { IEmbedder, IVectorStore } from "../../../../core/interfaces"
+
 import { createHash } from "crypto"
 
-jest.mock("vscode", () => ({
-	EventEmitter: jest.fn().mockImplementation(() => ({
-		event: jest.fn(),
-		fire: jest.fn(),
-		dispose: jest.fn(),
-	})),
-	RelativePattern: jest.fn().mockImplementation((base, pattern) => ({
-		base,
-		pattern,
-	})),
-	Uri: {
-		file: jest.fn().mockImplementation((path) => ({ fsPath: path })),
-	},
-	window: {
-		activeTextEditor: undefined,
-	},
-	workspace: {
-		createFileSystemWatcher: jest.fn().mockReturnValue({
-			onDidCreate: jest.fn(),
-			onDidChange: jest.fn(),
-			onDidDelete: jest.fn(),
-			dispose: jest.fn(),
-		}),
-		fs: {
-			stat: jest.fn(),
-			readFile: jest.fn(),
-		},
-		workspaceFolders: [{ uri: { fsPath: "/mock/workspace" } }],
-		getWorkspaceFolder: jest.fn((uri) => {
-			if (uri && uri.fsPath && uri.fsPath.startsWith("/mock/workspace")) {
-				return { uri: { fsPath: "/mock/workspace" } }
+jest.mock("vscode", () => {
+	type Disposable = { dispose: () => void }
+
+	type _Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) => Disposable
+
+	const MOCK_EMITTER_REGISTRY = new Map<object, Set<(data: any) => any>>()
+
+	return {
+		EventEmitter: jest.fn().mockImplementation(() => {
+			const emitterInstanceKey = {}
+			MOCK_EMITTER_REGISTRY.set(emitterInstanceKey, new Set())
+
+			return {
+				event: function <T>(listener: (e: T) => any): Disposable {
+					const listeners = MOCK_EMITTER_REGISTRY.get(emitterInstanceKey)
+					listeners!.add(listener as any)
+					return {
+						dispose: () => {
+							listeners!.delete(listener as any)
+						},
+					}
+				},
+
+				fire: function <T>(data: T): void {
+					const listeners = MOCK_EMITTER_REGISTRY.get(emitterInstanceKey)
+					listeners!.forEach((fn) => fn(data))
+				},
+
+				dispose: () => {
+					MOCK_EMITTER_REGISTRY.get(emitterInstanceKey)!.clear()
+					MOCK_EMITTER_REGISTRY.delete(emitterInstanceKey)
+				},
 			}
-			return undefined
 		}),
-	},
-}))
+		RelativePattern: jest.fn().mockImplementation((base, pattern) => ({
+			base,
+			pattern,
+		})),
+		Uri: {
+			file: jest.fn().mockImplementation((path) => ({ fsPath: path })),
+		},
+		window: {
+			activeTextEditor: undefined,
+		},
+		workspace: {
+			createFileSystemWatcher: jest.fn().mockReturnValue({
+				onDidCreate: jest.fn(),
+				onDidChange: jest.fn(),
+				onDidDelete: jest.fn(),
+				dispose: jest.fn(),
+			}),
+			fs: {
+				stat: jest.fn(),
+				readFile: jest.fn(),
+			},
+			workspaceFolders: [{ uri: { fsPath: "/mock/workspace" } }],
+			getWorkspaceFolder: jest.fn((uri) => {
+				if (uri && uri.fsPath && uri.fsPath.startsWith("/mock/workspace")) {
+					return { uri: { fsPath: "/mock/workspace" } }
+				}
+				return undefined
+			}),
+		},
+	}
+})
 
 const vscode = require("vscode")
 jest.mock("crypto")
@@ -66,12 +97,17 @@ describe("FileWatcher", () => {
 	beforeEach(() => {
 		mockEmbedder = {
 			createEmbeddings: jest.fn().mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] }),
-			embedderInfo: { name: "mock-embedder", dimensions: 384 },
+			embedderInfo: { name: "openai" },
 		}
 		mockVectorStore = {
 			upsertPoints: jest.fn().mockResolvedValue(undefined),
 			deletePointsByFilePath: jest.fn().mockResolvedValue(undefined),
 			deletePointsByMultipleFilePaths: jest.fn().mockResolvedValue(undefined),
+			initialize: jest.fn().mockResolvedValue(true),
+			search: jest.fn().mockResolvedValue([]),
+			clearCollection: jest.fn().mockResolvedValue(undefined),
+			deleteCollection: jest.fn().mockResolvedValue(undefined),
+			collectionExists: jest.fn().mockResolvedValue(true),
 		}
 		mockCacheManager = {
 			getHash: jest.fn(),
@@ -99,9 +135,9 @@ describe("FileWatcher", () => {
 	describe("constructor", () => {
 		it("should initialize with correct properties", () => {
 			expect(fileWatcher).toBeDefined()
-			// Push mock event emitters to subscriptions array
+
 			mockContext.subscriptions.push({ dispose: jest.fn() }, { dispose: jest.fn() })
-			expect(mockContext.subscriptions).toHaveLength(2) // onDidStartProcessing and onDidFinishProcessing
+			expect(mockContext.subscriptions).toHaveLength(2)
 		})
 	})
 
@@ -125,7 +161,7 @@ describe("FileWatcher", () => {
 
 	describe("dispose", () => {
 		it("should dispose all resources", async () => {
-			await fileWatcher.initialize() // Initialize first to create watcher
+			await fileWatcher.initialize()
 			fileWatcher.dispose()
 			const watcher = vscode.workspace.createFileSystemWatcher.mock.results[0].value
 			expect(watcher.dispose).toHaveBeenCalled()
@@ -135,9 +171,13 @@ describe("FileWatcher", () => {
 	describe("handleFileCreated", () => {
 		it("should call processFile with correct path", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
-			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({ status: "success" })
+			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({
+				path: mockUri.fsPath,
+				status: "success",
+			} as FileProcessingResult)
 
-			await fileWatcher.handleFileCreated(mockUri)
+			// Access private method using type assertion
+			await (fileWatcher as any).handleFileCreated(mockUri)
 			expect(processFileSpy).toHaveBeenCalledWith(mockUri.fsPath)
 		})
 	})
@@ -145,9 +185,13 @@ describe("FileWatcher", () => {
 	describe("handleFileChanged", () => {
 		it("should call processFile with correct path", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
-			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({ status: "success" })
+			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({
+				path: mockUri.fsPath,
+				status: "success",
+			} as FileProcessingResult)
 
-			await fileWatcher.handleFileChanged(mockUri)
+			// Access private method using type assertion
+			await (fileWatcher as any).handleFileChanged(mockUri)
 			expect(processFileSpy).toHaveBeenCalledWith(mockUri.fsPath)
 		})
 	})
@@ -164,25 +208,24 @@ describe("FileWatcher", () => {
 		it("should delete from cache and vector store", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 
-			await fileWatcher.handleFileDeleted(mockUri)
+			// Access private method using type assertion
+			await (fileWatcher as any).handleFileDeleted(mockUri)
 			expect(mockCacheManager.deleteHash).toHaveBeenCalledWith(mockUri.fsPath)
 
-			// Advance timers to trigger the batched deletion
 			await jest.advanceTimersByTime(500)
 
-			// Verify the batched deletion call
 			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith([mockUri.fsPath])
 		})
 	})
 
 	describe("processFile", () => {
 		it("should skip ignored files", async () => {
-			mockRooIgnoreController.validateAccess.mockImplementation((path) => {
+			mockRooIgnoreController.validateAccess.mockImplementation((path: string) => {
 				if (path === "/mock/workspace/ignored.js") return false
 				return true
 			})
 			const filePath = "/mock/workspace/ignored.js"
-			vscode.Uri.file.mockImplementation((path) => ({ fsPath: path }))
+			vscode.Uri.file.mockImplementation((path: string) => ({ fsPath: path }))
 			const result = await fileWatcher.processFile(filePath)
 
 			expect(result.status).toBe("skipped")
@@ -196,9 +239,9 @@ describe("FileWatcher", () => {
 		})
 
 		it("should skip files larger than MAX_FILE_SIZE_BYTES", async () => {
-			vscode.workspace.fs.stat.mockResolvedValue({ size: 2 * 1024 * 1024 }) // 2MB > 1MB limit
+			vscode.workspace.fs.stat.mockResolvedValue({ size: 2 * 1024 * 1024 })
 			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("large file content"))
-			mockRooIgnoreController.validateAccess.mockReturnValue(true) // Ensure file isn't ignored
+			mockRooIgnoreController.validateAccess.mockReturnValue(true)
 			const result = await fileWatcher.processFile("/mock/workspace/large.js")
 			expect(vscode.Uri.file).toHaveBeenCalledWith("/mock/workspace/large.js")
 
@@ -211,7 +254,7 @@ describe("FileWatcher", () => {
 			vscode.workspace.fs.stat.mockResolvedValue({ size: 1024, mtime: Date.now() })
 			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("test content"))
 			mockCacheManager.getHash.mockReturnValue("hash")
-			mockRooIgnoreController.validateAccess.mockReturnValue(true) // Ensure file isn't ignored
+			mockRooIgnoreController.validateAccess.mockReturnValue(true)
 			;(createHash as jest.Mock).mockReturnValue({
 				update: jest.fn().mockReturnThis(),
 				digest: jest.fn().mockReturnValue("hash"),
@@ -225,7 +268,7 @@ describe("FileWatcher", () => {
 		})
 
 		it("should process changed files", async () => {
-			vscode.Uri.file.mockImplementation((path) => ({ fsPath: path }))
+			vscode.Uri.file.mockImplementation((path: string) => ({ fsPath: path }))
 			vscode.workspace.fs.stat.mockResolvedValue({ size: 1024, mtime: Date.now() })
 			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("test content"))
 			mockCacheManager.getHash.mockReturnValue("old-hash")
@@ -249,9 +292,7 @@ describe("FileWatcher", () => {
 				},
 			])
 
-			mockEmbedder.createEmbeddings.mockResolvedValue({
-				embeddings: [[0.1, 0.2, 0.3]],
-			})
+			// No need to mock again, it's already mocked in the setup
 
 			const result = await fileWatcher.processFile("/mock/workspace/test.js")
 
@@ -271,6 +312,109 @@ describe("FileWatcher", () => {
 
 			expect(result.status).toBe("error")
 			expect(result.error).toBeDefined()
+		})
+	})
+
+	describe("delete then create race condition", () => {
+		let onDidDeleteCallback: (uri: any) => void
+		let onDidCreateCallback: (uri: any) => void
+		let mockUri: { fsPath: string }
+
+		beforeEach(() => {
+			jest.useFakeTimers()
+
+			mockCacheManager.deleteHash.mockClear()
+			;(mockVectorStore.deletePointsByFilePath as jest.Mock).mockClear()
+			;(mockVectorStore.upsertPoints as jest.Mock).mockClear()
+			;(mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mockClear()
+
+			vscode.workspace.createFileSystemWatcher.mockReturnValue({
+				onDidCreate: jest.fn((callback) => {
+					onDidCreateCallback = callback
+					return { dispose: jest.fn() }
+				}),
+				onDidChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+				onDidDelete: jest.fn((callback) => {
+					onDidDeleteCallback = callback
+					return { dispose: jest.fn() }
+				}),
+				dispose: jest.fn(),
+			})
+
+			fileWatcher.initialize()
+
+			mockUri = { fsPath: "/mock/workspace/test-race.js" }
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
+		const waitForFileProcessingToFinish = (fw: FileWatcher, filePath: string) => {
+			return new Promise<void>((resolve) => {
+				const listener = fw.onDidFinishProcessing((result) => {
+					if (result.path === filePath) {
+						listener.dispose()
+						resolve()
+					}
+				})
+			})
+		}
+
+		it("should handle rapid delete-then-create sequence correctly", async () => {
+			vscode.workspace.fs.stat.mockResolvedValue({ size: 100 })
+			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("new content"))
+			mockCacheManager.getHash.mockReturnValue("old-hash")
+			;(createHash as jest.Mock).mockReturnValue({
+				update: jest.fn().mockReturnThis(),
+				digest: jest.fn().mockReturnValue("new-hash"),
+			})
+
+			const { codeParser: mockCodeParser } = require("../parser")
+			mockCodeParser.parseFile.mockResolvedValue([
+				{
+					file_path: mockUri.fsPath,
+					content: "new content",
+					start_line: 1,
+					end_line: 5,
+					fileHash: "new-hash",
+				},
+			])
+
+			onDidDeleteCallback(mockUri)
+
+			await jest.runAllTicks()
+
+			expect(mockCacheManager.deleteHash).toHaveBeenCalledWith(mockUri.fsPath)
+			expect((fileWatcher as any).deletedFilesBuffer).toContain(mockUri.fsPath)
+
+			const processingPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+
+			onDidCreateCallback(mockUri)
+
+			await jest.runAllTicks()
+
+			await processingPromise
+
+			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledWith(mockUri.fsPath)
+			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledTimes(2)
+
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalled()
+
+			expect((fileWatcher as any).deletedFilesBuffer).not.toContain(mockUri.fsPath)
+
+			const otherFilePath = "/mock/workspace/other-file.js"
+			;(fileWatcher as any).deletedFilesBuffer.push(otherFilePath)
+
+			await jest.advanceTimersByTimeAsync(500)
+			await jest.runAllTicks()
+
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalled()
+			const deletedPaths = (mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mock.calls[0][0]
+			expect(deletedPaths).toContain(otherFilePath)
+			expect(deletedPaths).not.toContain(mockUri.fsPath)
+
+			expect(mockCacheManager.updateHash).toHaveBeenCalledWith(mockUri.fsPath, "new-hash")
 		})
 	})
 })
