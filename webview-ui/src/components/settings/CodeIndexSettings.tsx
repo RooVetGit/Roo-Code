@@ -19,17 +19,16 @@ import { Section } from "./Section"
 import { SectionHeader } from "./SectionHeader"
 import { SetCachedStateField } from "./types"
 import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
-import { ApiConfiguration } from "../../../../src/shared/api"
-import { CodebaseIndexConfig, CodebaseIndexModels } from "../../../../src/schemas"
+import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "../../../../src/schemas"
 import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
 import { z } from "zod"
 
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
-	apiConfiguration: ApiConfiguration
+	apiConfiguration: ProviderSettings
 	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
-	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
+	setProviderSettingsField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 }
 
 interface IndexingStatusUpdateMessage {
@@ -47,7 +46,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	codebaseIndexConfig,
 	apiConfiguration,
 	setCachedStateField,
-	setApiConfigurationField,
+	setProviderSettingsField,
 }) => {
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
@@ -88,7 +87,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		}
 	}, [codebaseIndexConfig, codebaseIndexModels])
 
-	function validateIndexingConfig(config: CodebaseIndexConfig | undefined, apiConfig: ApiConfiguration): boolean {
+	function validateIndexingConfig(config: CodebaseIndexConfig | undefined, apiConfig: ProviderSettings): boolean {
 		if (!config) return false
 
 		const baseSchema = z.object({
@@ -177,7 +176,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								<VSCodeTextField
 									type="password"
 									value={apiConfiguration.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
+									onInput={(e: any) => setProviderSettingsField("codeIndexOpenAiKey", e.target.value)}
 									style={{ width: "100%" }}>
 									OpenAI Key:
 								</VSCodeTextField>
@@ -242,7 +241,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<VSCodeTextField
 								type="password"
 								value={apiConfiguration.codeIndexQdrantApiKey}
-								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
+								onInput={(e: any) => setProviderSettingsField("codeIndexQdrantApiKey", e.target.value)}
 								style={{ width: "100%" }}>
 								Qdrant Key:
 							</VSCodeTextField>
