@@ -1,0 +1,84 @@
+name: Auto-Close Parent Issue
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  auto-close-parent:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check and Close Parent Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # Get the closed issue's number
+          issue_number=${{ github.event.issue.number }}
+          owner=${{ github.repository_owner }}
+          repo=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          # Retrieve the issue ID
+          issue_id=$(gh api graphql -H "GraphQL-Features: sub_issues" -f query='
+            query($owner: String!, $repo: String!, $number: Int!) {
+              repository(owner: $owner, name: $repo) {
+                issue(number: $number) {
+                  id
+                }
+              }
+            }' -F owner="$owner" -F repo="$repo" -F number="$issue_number" --jq '.data.repository.issue.id')
+
+          # Retrieve the parent issue
+          parent_data=$(gh api graphql -H "GraphQL-Features: sub_issues" -f query='
+            query($issueId: ID!) {
+              node(id: $issueId) {
+                ... on Issue {
+                  parent {
+                    id
+                    number
+                  }
+                }
+              }
+            }' -F issueId="$issue_id")
+
+          parent_id=$(echo "$parent_data" | jq -r '.data.node.parent.id')
+          parent_number=$(echo "$parent_data" | jq -r '.data.node.parent.number')
+
+          if [ "$parent_id" = "null" ]; then
+            echo "No parent issue found."
+            exit 0
+          fi
+
+          # Retrieve sub-issues of the parent
+          sub_issues=$(gh api graphql -H "GraphQL-Features: sub_issues" -f query='
+            query($parentId: ID!) {
+              node(id: $parentId) {
+                ... on Issue {
+                  subIssues(first: 100) {
+                    nodes {
+                      number
+                      state
+                    }
+                  }
+                }
+              }
+            }' -F parentId="$parent_id")
+
+          # Check if all sub-issues are closed
+          all_closed=true
+          echo "$sub_issues" | jq -c '.data.node.subIssues.nodes[]' | while read -r issue; do
+            state=$(echo "$issue" | jq -r '.state')
+            if [ "$state" != "CLOSED" ]; then
+              all_closed=false
+              break
+            fi
+          done
+
+          if [ "$all_closed" = true ]; then
+            # Close the parent issue
+            gh issue close "$parent_number" --repo "$owner/$repo" --comment "Auto-closing parent issue as all sub-issues are closed."
+          else
+            echo "Not all sub-issues are closed."
+          fi
