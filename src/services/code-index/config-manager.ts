@@ -3,6 +3,7 @@ import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { getModelDimension, getDefaultModelId } from "../../shared/embeddingModels"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
+import { CODEBASE_INDEX_SEARCH_MIN_SCORE } from "./constants"
 
 /**
  * Manages configuration state and validation for the code indexing feature.
@@ -16,6 +17,7 @@ export class CodeIndexConfigManager {
 	private ollamaOptions?: ApiHandlerOptions
 	private qdrantUrl?: string
 	private qdrantApiKey?: string
+	private searchMinScore?: number
 
 	constructor(private readonly contextProxy: ContextProxy) {}
 
@@ -33,6 +35,7 @@ export class CodeIndexConfigManager {
 			ollamaOptions?: ApiHandlerOptions
 			qdrantUrl?: string
 			qdrantApiKey?: string
+			searchMinScore?: number
 		}
 		requiresRestart: boolean
 		requiresClear: boolean
@@ -53,6 +56,7 @@ export class CodeIndexConfigManager {
 		let codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "",
+			codebaseIndexSearchMinScore: 0.4,
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -73,6 +77,7 @@ export class CodeIndexConfigManager {
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
+		this.searchMinScore = CODEBASE_INDEX_SEARCH_MIN_SCORE
 
 		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
 		this.modelId = codebaseIndexEmbedderModelId || undefined
@@ -105,6 +110,7 @@ export class CodeIndexConfigManager {
 				ollamaOptions: this.ollamaOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
+				searchMinScore: this.searchMinScore,
 			},
 			requiresRestart: this._didConfigChangeRequireRestart(previousConfigSnapshot),
 			requiresClear,
@@ -183,6 +189,7 @@ export class CodeIndexConfigManager {
 			ollamaOptions: this.ollamaOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
+			searchMinScore: this.searchMinScore,
 		}
 	}
 
@@ -222,5 +229,12 @@ export class CodeIndexConfigManager {
 	 */
 	public get currentModelId(): string | undefined {
 		return this.modelId
+	}
+
+	/**
+	 * Gets the configured minimum search score.
+	 */
+	public get currentSearchMinScore(): number | undefined {
+		return this.searchMinScore
 	}
 }

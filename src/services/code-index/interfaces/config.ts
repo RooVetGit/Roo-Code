@@ -13,6 +13,7 @@ export interface CodeIndexConfig {
 	ollamaOptions?: ApiHandlerOptions
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	searchMinScore?: number
 }
 
 /**

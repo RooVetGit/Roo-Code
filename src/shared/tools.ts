@@ -64,7 +64,6 @@ export const toolParamNames = [
 	"start_line",
 	"end_line",
 	"query",
-	"limit",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -105,7 +104,7 @@ export interface InsertCodeBlockToolUse extends ToolUse {
 
 export interface CodebaseSearchToolUse extends ToolUse {
 	name: "codebase_search"
-	params: Partial<Pick<Record<ToolParamName, string>, "query" | "limit">>
+	params: Partial<Pick<Record<ToolParamName, string>, "query" | "path">>
 }
 
 export interface SearchFilesToolUse extends ToolUse {
