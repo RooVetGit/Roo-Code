@@ -35,6 +35,8 @@ export async function readFileTool(
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
 		isOutsideWorkspace,
 	}
+
+	// wasAutoTruncated is now set directly in the completeMessage
 	try {
 		if (block.partial) {
 			const partialMessage = JSON.stringify({ ...sharedMessageProps, content: undefined } satisfies ClineSayTool)
@@ -57,8 +59,13 @@ export async function readFileTool(
 			let startLine: number | undefined = undefined
 			let endLine: number | undefined = undefined
 
-			// Check if we have either range parameter and we're not doing a full read
-			if (!isFullRead && (startLineStr || endLineStr)) {
+			// Track if range parameters are provided, regardless of maxReadFileLine setting
+			// This is used for displaying the line range notification
+			let hasRangeParams = startLineStr || endLineStr
+
+			// For actual range reading behavior, only consider it a range read
+			// if we're not doing a full read (maxReadFileLine != -1)
+			if (!isFullRead && hasRangeParams) {
 				isRangeRead = true
 			}
 
@@ -107,14 +114,15 @@ export async function readFileTool(
 			// Create line snippet description for approval message
 			let lineSnippet = ""
 
-			if (isFullRead) {
-				// No snippet for full read
-			} else if (startLine !== undefined && endLine !== undefined) {
+			// Always set line snippet for range parameters, regardless of maxReadFileLine setting
+			if (startLine !== undefined && endLine !== undefined) {
 				lineSnippet = t("tools:readFile.linesRange", { start: startLine + 1, end: endLine + 1 })
 			} else if (startLine !== undefined) {
 				lineSnippet = t("tools:readFile.linesFromToEnd", { start: startLine + 1 })
 			} else if (endLine !== undefined) {
 				lineSnippet = t("tools:readFile.linesFromStartTo", { end: endLine + 1 })
+			} else if (isFullRead) {
+				// No snippet for full read without range parameters
 			} else if (maxReadFileLine === 0) {
 				lineSnippet = t("tools:readFile.definitionsOnly")
 			} else if (maxReadFileLine > 0) {
@@ -124,18 +132,6 @@ export async function readFileTool(
 			cline.consecutiveMistakeCount = 0
 			const absolutePath = path.resolve(cline.cwd, relPath)
 
-			const completeMessage = JSON.stringify({
-				...sharedMessageProps,
-				content: absolutePath,
-				reason: lineSnippet,
-			} satisfies ClineSayTool)
-
-			const didApprove = await askApproval("tool", completeMessage)
-
-			if (!didApprove) {
-				return
-			}
-
 			// Count total lines in the file
 			let totalLines = 0
 
@@ -144,6 +140,36 @@ export async function readFileTool(
 			} catch (error) {
 				console.error(`Error counting lines in file ${absolutePath}:`, error)
 			}
+
+			const completeMessage = JSON.stringify({
+				...sharedMessageProps,
+				content: absolutePath,
+				// Only include reason (truncation message) if the file will actually be truncated
+				// or if it's a specific range read (not the default max lines message)
+				...// Only set wasAutoTruncated to true when:
+				// 1. It's not a full read
+				// 2. It's not a range read (no explicit start_line/end_line)
+				// 3. maxReadFileLine is greater than 0
+				// 4. The total lines in the file exceed maxReadFileLine
+				(!isFullRead && !isRangeRead && maxReadFileLine > 0 && totalLines > maxReadFileLine
+					? { reason: lineSnippet, wasAutoTruncated: true }
+					: lineSnippet &&
+						  // For range parameters, always include the reason without wasAutoTruncated
+						  // regardless of maxReadFileLine setting
+						  (hasRangeParams ||
+								// For other cases, include the reason if it's not the default max lines message
+								lineSnippet !== t("tools:readFile.maxLines", { max: maxReadFileLine }))
+						? { reason: lineSnippet }
+						: {}),
+			} satisfies ClineSayTool)
+
+			const didApprove = await askApproval("tool", completeMessage)
+
+			if (!didApprove) {
+				return
+			}
+
+			// totalLines is already counted above
 
 			// now execute the tool like normal
 			let content: string
@@ -161,6 +187,7 @@ export async function readFileTool(
 			} else if (!isBinary && maxReadFileLine >= 0 && totalLines > maxReadFileLine) {
 				// If file is too large, only read the first maxReadFileLine lines
 				isFileTruncated = true
+				// wasAutoTruncated is now set in the completeMessage
 
 				const res = await Promise.all([
 					maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",

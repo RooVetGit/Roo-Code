@@ -239,6 +239,7 @@ export interface ClineSayTool {
 	startLine?: number
 	endLine?: number
 	lineNumber?: number
+	wasAutoTruncated?: boolean
 }
 
 // Must keep in sync with system prompt.
