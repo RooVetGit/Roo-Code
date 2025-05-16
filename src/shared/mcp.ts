@@ -4,6 +4,8 @@ export type McpErrorEntry = {
 	level: "error" | "warn" | "info"
 }
 
+export type ConfigSource = "global" | "project"
+
 export type McpServer = {
 	name: string
 	config: string
@@ -15,7 +17,7 @@ export type McpServer = {
 	resourceTemplates?: McpResourceTemplate[]
 	disabled?: boolean
 	timeout?: number
-	source?: "global" | "project"
+	source?: ConfigSource
 	projectPath?: string
 }
 
@@ -38,44 +40,4 @@ export type McpResourceTemplate = {
 	name: string
 	description?: string
 	mimeType?: string
-}
-
-export type McpResourceResponse = {
-	_meta?: Record<string, any>
-	contents: Array<{
-		uri: string
-		mimeType?: string
-		text?: string
-		blob?: string
-	}>
-}
-
-export type McpToolCallResponse = {
-	_meta?: Record<string, any>
-	content: Array<
-		| {
-				type: "text"
-				text: string
-		  }
-		| {
-				type: "image"
-				data: string
-				mimeType: string
-		  }
-		| {
-				type: "audio"
-				data: string
-				mimeType: string
-		  }
-		| {
-				type: "resource"
-				resource: {
-					uri: string
-					mimeType?: string
-					text?: string
-					blob?: string
-				}
-		  }
-	>
-	isError?: boolean
 }
