@@ -248,7 +248,18 @@
 			"medium": "Orta",
 			"low": "Düşük"
 		},
-		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir"
+		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir",
+		"openRouterApiKeyEnvVar": "OpenRouter API Anahtarı (Ortam Değişkeni)",
+		"apiKeyEnvVarNotice": "API anahtarı bir ortam değişkeninden alınacaksa, değişken adını buraya girin.",
+		"glamaApiKeyEnvVar": "Glama API Anahtarı (Ortam Değişkeni)",
+		"requestyApiKeyEnvVar": "Requesty API Anahtarı (Ortam Değişkeni)",
+		"anthropicApiKeyEnvVar": "Anthropic API Anahtarı (Ortam Değişkeni)",
+		"deepSeekApiKeyEnvVar": "DeepSeek API Anahtarı (Ortam Değişkeni)",
+		"geminiApiKeyEnvVar": "Gemini API Anahtarı (Ortam Değişkeni)",
+		"openAiApiKeyEnvVar": "OpenAI API Anahtarı (Ortam Değişkeni)",
+		"mistralApiKeyEnvVar": "Mistral API Anahtarı (Ortam Değişkeni)",
+		"xaiApiKeyEnvVar": "xAI API Anahtarı (Ortam Değişkeni)",
+		"unboundApiKeyEnvVar": "Unbound API Anahtarı (Ortam Değişkeni)"
 	},
 	"browser": {
 		"enable": {
@@ -511,7 +522,8 @@
 			"inputPrice": "örn. 0.0001",
 			"outputPrice": "örn. 0.0002",
 			"cacheWritePrice": "örn. 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "API anahtarını içeren ortam değişkenini girin..."
 	},
 	"defaults": {
 		"ollamaUrl": "Varsayılan: http://localhost:11434",

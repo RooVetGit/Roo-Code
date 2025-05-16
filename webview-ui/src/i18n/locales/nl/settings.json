@@ -248,7 +248,18 @@
 			"medium": "Middel",
 			"low": "Laag"
 		},
-		"setReasoningLevel": "Redeneervermogen inschakelen"
+		"setReasoningLevel": "Redeneervermogen inschakelen",
+		"openRouterApiKeyEnvVar": "OpenRouter API-sleutel (Omgevingsvariabele)",
+		"apiKeyEnvVarNotice": "Als de API-sleutel uit een omgevingsvariabele moet worden gehaald, voer hier de variabelenaam in.",
+		"glamaApiKeyEnvVar": "Glama API-sleutel (Omgevingsvariabele)",
+		"requestyApiKeyEnvVar": "Requesty API-sleutel (Omgevingsvariabele)",
+		"anthropicApiKeyEnvVar": "Anthropic API-sleutel (Omgevingsvariabele)",
+		"deepSeekApiKeyEnvVar": "DeepSeek API-sleutel (Omgevingsvariabele)",
+		"geminiApiKeyEnvVar": "Gemini API-sleutel (Omgevingsvariabele)",
+		"openAiApiKeyEnvVar": "OpenAI API-sleutel (Omgevingsvariabele)",
+		"mistralApiKeyEnvVar": "Mistral API-sleutel (Omgevingsvariabele)",
+		"xaiApiKeyEnvVar": "xAI API-sleutel (Omgevingsvariabele)",
+		"unboundApiKeyEnvVar": "Unbound API-sleutel (Omgevingsvariabele)"
 	},
 	"browser": {
 		"enable": {
@@ -511,7 +522,8 @@
 			"inputPrice": "bijv. 0.0001",
 			"outputPrice": "bijv. 0.0002",
 			"cacheWritePrice": "bijv. 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "Voer omgevingsvariabele in die API-sleutel bevat..."
 	},
 	"defaults": {
 		"ollamaUrl": "Standaard: http://localhost:11434",

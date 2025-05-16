@@ -81,7 +81,18 @@ export const OpenRouter = ({
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.openRouterApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.openRouterApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("openRouterApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.openRouterApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.openRouterApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.openRouterApiKey || apiConfiguration?.openRouterApiKeyEnvVar)) && (
 				<VSCodeButtonLink href={getOpenRouterAuthUrl(uriScheme)} style={{ width: "100%" }} appearance="primary">
 					{t("settings:providers.getOpenRouterApiKey")}
 				</VSCodeButtonLink>

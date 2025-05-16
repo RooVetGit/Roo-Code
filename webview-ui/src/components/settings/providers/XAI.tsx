@@ -40,7 +40,18 @@ export const XAI = ({ apiConfiguration, setApiConfigurationField }: XAIProps) =>
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.xaiApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.xaiApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("xaiApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.xaiApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.xaiApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.xaiApiKey || apiConfiguration?.xaiApiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://api.x.ai/docs" appearance="secondary">
 					{t("settings:providers.getXaiApiKey")}
 				</VSCodeButtonLink>

@@ -67,7 +67,18 @@ export const OpenAI = ({ apiConfiguration, setApiConfigurationField }: OpenAIPro
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.openAiNativeApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.openAiNativeApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("openAiNativeApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.openAiNativeApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.openAiNativeApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.openAiNativeApiKey || apiConfiguration?.openAiNativeApiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://platform.openai.com/api-keys" appearance="secondary">
 					{t("settings:providers.getOpenAiApiKey")}
 				</VSCodeButtonLink>

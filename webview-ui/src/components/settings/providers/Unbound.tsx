@@ -42,7 +42,18 @@ export const Unbound = ({ apiConfiguration, setApiConfigurationField, routerMode
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.unboundApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.unboundApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("unboundApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.unboundApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.unboundApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.unboundApiKey || apiConfiguration?.unboundApiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://gateway.getunbound.ai" appearance="secondary">
 					{t("settings:providers.getUnboundApiKey")}
 				</VSCodeButtonLink>

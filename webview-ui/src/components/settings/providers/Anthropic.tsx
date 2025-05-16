@@ -43,7 +43,18 @@ export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: Anthro
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.apiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.apiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("apiKeyEnvVar")}
+				placeholder={t("settings:placeholders.apiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.anthropicApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.apiKey || apiConfiguration?.apiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://console.anthropic.com/settings/keys" appearance="secondary">
 					{t("settings:providers.getAnthropicApiKey")}
 				</VSCodeButtonLink>

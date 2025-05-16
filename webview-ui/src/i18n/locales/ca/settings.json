@@ -248,7 +248,18 @@
 			"medium": "Mitjà",
 			"low": "Baix"
 		},
-		"setReasoningLevel": "Activa l'esforç de raonament"
+		"setReasoningLevel": "Activa l'esforç de raonament",
+		"openRouterApiKeyEnvVar": "Clau API d'OpenRouter (Variable d'entorn)",
+		"apiKeyEnvVarNotice": "Si la clau API s'ha d'obtenir d'una variable d'entorn, introduïu el nom de la variable aquí.",
+		"glamaApiKeyEnvVar": "Clau API de Glama (Variable d'entorn)",
+		"requestyApiKeyEnvVar": "Clau API de Requesty (Variable d'entorn)",
+		"anthropicApiKeyEnvVar": "Clau API d'Anthropic (Variable d'entorn)",
+		"deepSeekApiKeyEnvVar": "Clau API de DeepSeek (Variable d'entorn)",
+		"geminiApiKeyEnvVar": "Clau API de Gemini (Variable d'entorn)",
+		"openAiApiKeyEnvVar": "Clau API d'OpenAI (Variable d'entorn)",
+		"mistralApiKeyEnvVar": "Clau API de Mistral (Variable d'entorn)",
+		"xaiApiKeyEnvVar": "Clau API de xAI (Variable d'entorn)",
+		"unboundApiKeyEnvVar": "Clau API d'Unbound (Variable d'entorn)"
 	},
 	"browser": {
 		"enable": {
@@ -511,7 +522,8 @@
 			"inputPrice": "p. ex. 0.0001",
 			"outputPrice": "p. ex. 0.0002",
 			"cacheWritePrice": "p. ex. 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "Introduïu la variable d'entorn que conté la clau API..."
 	},
 	"defaults": {
 		"ollamaUrl": "Per defecte: http://localhost:11434",

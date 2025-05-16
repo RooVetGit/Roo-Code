@@ -248,7 +248,18 @@
 			"medium": "Средние",
 			"low": "Низкие"
 		},
-		"setReasoningLevel": "Включить усилие рассуждения"
+		"setReasoningLevel": "Включить усилие рассуждения",
+		"openRouterApiKeyEnvVar": "API-ключ OpenRouter (Переменная среды)",
+		"apiKeyEnvVarNotice": "Если API-ключ должен быть получен из переменной среды, введите имя переменной здесь.",
+		"glamaApiKeyEnvVar": "API-ключ Glama (Переменная среды)",
+		"requestyApiKeyEnvVar": "API-ключ Requesty (Переменная среды)",
+		"anthropicApiKeyEnvVar": "API-ключ Anthropic (Переменная среды)",
+		"deepSeekApiKeyEnvVar": "API-ключ DeepSeek (Переменная среды)",
+		"geminiApiKeyEnvVar": "API-ключ Gemini (Переменная среды)",
+		"openAiApiKeyEnvVar": "API-ключ OpenAI (Переменная среды)",
+		"mistralApiKeyEnvVar": "API-ключ Mistral (Переменная среды)",
+		"xaiApiKeyEnvVar": "API-ключ xAI (Переменная среды)",
+		"unboundApiKeyEnvVar": "API-ключ Unbound (Переменная среды)"
 	},
 	"browser": {
 		"enable": {
@@ -511,7 +522,8 @@
 			"inputPrice": "например, 0.0001",
 			"outputPrice": "например, 0.0002",
 			"cacheWritePrice": "например, 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "Введите переменную среды, содержащую API-ключ..."
 	},
 	"defaults": {
 		"ollamaUrl": "По умолчанию: http://localhost:11434",

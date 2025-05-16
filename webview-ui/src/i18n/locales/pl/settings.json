@@ -248,7 +248,18 @@
 			"medium": "Średni",
 			"low": "Niski"
 		},
-		"setReasoningLevel": "Włącz wysiłek rozumowania"
+		"setReasoningLevel": "Włącz wysiłek rozumowania",
+		"openRouterApiKeyEnvVar": "Klucz API OpenRouter (Zmienna środowiskowa)",
+		"apiKeyEnvVarNotice": "Jeśli klucz API ma być pobierany ze zmiennej środowiskowej, wprowadź tutaj nazwę zmiennej.",
+		"glamaApiKeyEnvVar": "Klucz API Glama (Zmienna środowiskowa)",
+		"requestyApiKeyEnvVar": "Klucz API Requesty (Zmienna środowiskowa)",
+		"anthropicApiKeyEnvVar": "Klucz API Anthropic (Zmienna środowiskowa)",
+		"deepSeekApiKeyEnvVar": "Klucz API DeepSeek (Zmienna środowiskowa)",
+		"geminiApiKeyEnvVar": "Klucz API Gemini (Zmienna środowiskowa)",
+		"openAiApiKeyEnvVar": "Klucz API OpenAI (Zmienna środowiskowa)",
+		"mistralApiKeyEnvVar": "Klucz API Mistral (Zmienna środowiskowa)",
+		"xaiApiKeyEnvVar": "Klucz API xAI (Zmienna środowiskowa)",
+		"unboundApiKeyEnvVar": "Klucz API Unbound (Zmienna środowiskowa)"
 	},
 	"browser": {
 		"enable": {
@@ -511,7 +522,8 @@
 			"inputPrice": "np. 0.0001",
 			"outputPrice": "np. 0.0002",
 			"cacheWritePrice": "np. 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "Wprowadź zmienną środowiskową zawierającą klucz API..."
 	},
 	"defaults": {
 		"ollamaUrl": "Domyślnie: http://localhost:11434",

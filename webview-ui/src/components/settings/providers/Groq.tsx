@@ -40,7 +40,18 @@ export const Groq = ({ apiConfiguration, setApiConfigurationField }: GroqProps) 
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{!apiConfiguration?.groqApiKey && (
+			<VSCodeTextField
+				value={apiConfiguration?.groqApiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("groqApiKeyEnvVar")}
+				placeholder={t("settings:placeholders.groqApiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.groqApiKeyEnvVar")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.apiKeyEnvVarNotice")}
+			</div>
+			{(!(apiConfiguration?.groqApiKey || apiConfiguration?.groqApiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://console.groq.com/keys" appearance="secondary">
 					{t("settings:providers.getGroqApiKey")}
 				</VSCodeButtonLink>
