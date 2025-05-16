@@ -1,3 +1,18 @@
+// Define historyItems for test mock data
+const historyItems = [
+	{
+		id: "1",
+		number: 1,
+		ts: Date.now(),
+		task: "test",
+		tokensIn: 100,
+		tokensOut: 50,
+		totalCost: 0.001,
+		cacheWrites: 0,
+		cacheReads: 0,
+	},
+]
+
 const vscode = {
 	env: {
 		language: "en", // Default language for tests
@@ -23,6 +38,11 @@ const vscode = {
 			all: [],
 		},
 	},
+	FileSystemError: class {
+		constructor(message) {
+			this.message = message
+		}
+	},
 	workspace: {
 		onDidSaveTextDocument: jest.fn(),
 		createFileSystemWatcher: jest.fn().mockReturnValue({
@@ -32,6 +52,16 @@ const vscode = {
 		}),
 		fs: {
 			stat: jest.fn(),
+			readFile: jest.fn().mockImplementation((uri) => {
+				if (uri.path.includes("taskHistory.jsonl")) {
+					// Return stringified historyItems with each item on a new line
+					const content = historyItems.map((item) => JSON.stringify(item)).join("\n")
+					return Promise.resolve(Buffer.from(content))
+				}
+				return Promise.reject(new vscode.FileSystemError("File not found"))
+			}),
+			writeFile: jest.fn(),
+			delete: jest.fn(),
 		},
 	},
 	Disposable: class {
@@ -47,6 +77,19 @@ const vscode = {
 			fragment: "",
 			with: jest.fn(),
 			toJSON: jest.fn(),
+		}),
+		joinPath: jest.fn().mockImplementation((uri, ...pathSegments) => {
+			const path = [uri.path, ...pathSegments].join("/")
+			return {
+				fsPath: path,
+				scheme: "file",
+				authority: "",
+				path: path,
+				query: "",
+				fragment: "",
+				with: jest.fn(),
+				toJSON: jest.fn(),
+			}
 		}),
 	},
 	EventEmitter: class {
@@ -102,3 +145,5 @@ const vscode = {
 }
 
 module.exports = vscode
+// Export historyItems for use in tests
+module.exports.historyItems = historyItems
