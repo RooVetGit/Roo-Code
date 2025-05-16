@@ -78,7 +78,11 @@ export function combineApiRequests(messages: ClineMessage[]): ClineMessage[] {
 				}
 			} catch (e) {}
 
-			result[startIndex] = { ...startMessage, text: JSON.stringify({ ...startData, ...finishData }) }
+			result[startIndex] = {
+				...startMessage,
+				text: JSON.stringify({ ...startData, ...finishData }),
+				partial: message.partial ?? false,
+			} // Propagate partial status from the finish message
 		}
 	}
 
