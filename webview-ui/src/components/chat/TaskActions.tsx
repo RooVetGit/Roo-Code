@@ -27,6 +27,13 @@ export const TaskActions = ({ item }: { item: HistoryItem | undefined }) => {
 					<Button
 						variant="ghost"
 						size="sm"
+						title={t("chat:task.condenseContext")}
+						onClick={() => vscode.postMessage({ type: "condenseTaskContext", text: item?.id })}>
+						<span className="codicon codicon-file-zip" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
 						title={t("chat:task.delete")}
 						onClick={(e) => {
 							e.stopPropagation()
