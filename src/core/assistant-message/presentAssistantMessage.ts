@@ -4,7 +4,7 @@ import { serializeError } from "serialize-error"
 import type { ToolName } from "../../schemas"
 
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
-import type { ToolParamName, ToolResponse, FindReferencesToolUse, ReadFunctionToolUse } from "../../shared/tools"
+import type { ToolParamName, ToolResponse, FindReferencesToolUse } from "../../shared/tools"
 import type { ClineAsk, ToolProgressStatus } from "../../shared/ExtensionMessage"
 
 import { telemetryService } from "../../services/telemetry/TelemetryService"
@@ -27,7 +27,6 @@ import { switchModeTool } from "../tools/switchModeTool"
 import { attemptCompletionTool } from "../tools/attemptCompletionTool"
 import { newTaskTool } from "../tools/newTaskTool"
 import { findReferencesTool } from "../tools/findReferencesTool"
-import { readFunctionTool } from "../tools/readFunctionTool"
 
 import { checkpointSave } from "../checkpoints"
 
@@ -195,8 +194,6 @@ export async function presentAssistantMessage(cline: Task) {
 					}
 					case "find_references":
 						return `[${block.name} to '${block.params.symbol}' in ${block.params.file_path}]`
-					case "read_function":
-						return `[${block.name} for '${block.params.symbol}' in ${block.params.file_path}]`
 				}
 			}
 
@@ -469,9 +466,6 @@ export async function presentAssistantMessage(cline: Task) {
 					break
 				case "find_references":
 					await findReferencesTool(cline, block as FindReferencesToolUse, pushToolResult, askApproval)
-					break
-				case "read_function":
-					await readFunctionTool(cline, block as ReadFunctionToolUse, pushToolResult, askApproval)
 					break
 			}
 

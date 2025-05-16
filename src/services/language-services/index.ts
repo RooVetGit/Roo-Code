@@ -297,3 +297,121 @@ export async function findFunctionsByName(
     return undefined
   }
 }
+
+/**
+ * Find a symbol by name in a document
+ * @param document The document to search
+ * @param symbolName The name of the symbol to find
+ * @returns The symbol or undefined if not found
+ */
+export async function findSymbolsByName(
+  document: vscode.TextDocument,
+  symbolName: string
+): Promise<vscode.DocumentSymbol[] | undefined> {
+  debugLog(`Finding symbol '${symbolName}' in ${document.uri.fsPath}`)
+  
+  try {
+    const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+      "vscode.executeDocumentSymbolProvider",
+      document.uri
+    )
+
+    if (!symbols || symbols.length === 0) {
+      return undefined
+    }
+
+    // Recursively search for all matching symbols
+    const matchingSymbols: vscode.DocumentSymbol[] = []
+    
+    const findSymbols = (symbols: vscode.DocumentSymbol[]): void => {
+      for (const symbol of symbols) {
+        // Match only by exact name
+        const isMatch = symbol.name === symbolName
+                      
+        if (isMatch) {
+          matchingSymbols.push(symbol)
+        }
+
+        // Continue searching in children even if we found a match
+        if (symbol.children.length > 0) {
+          findSymbols(symbol.children)
+        }
+      }
+    }
+
+    findSymbols(symbols)
+    
+    // Log the number of matching symbols found
+    if (matchingSymbols.length > 0) {
+      debugLog(`Found ${matchingSymbols.length} matching symbol(s) named '${symbolName}'`)
+      
+      // Log details of each matching symbol
+      matchingSymbols.forEach((sym, index) => {
+        debugLog(`Match #${index + 1}: ${vscode.SymbolKind[sym.kind]}, line ${sym.range.start.line}, character ${sym.range.start.character}`)
+      })
+      
+      return matchingSymbols
+    }
+    
+    return undefined
+  } catch (error) {
+    return undefined
+  }
+}
+
+/**
+ * Get the containing symbol for a position in a document
+ * @param document The document to search
+ * @param position The position to find the containing symbol for
+ * @param symbolKinds The kinds of symbols to look for (defaults to all kinds)
+ * @returns The symbol or undefined if not found
+ */
+export async function getContainingSymbol(
+  document: vscode.TextDocument,
+  position: vscode.Position,
+  symbolKinds?: vscode.SymbolKind[]
+): Promise<vscode.DocumentSymbol | undefined> {
+  try {
+    const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+      "vscode.executeDocumentSymbolProvider",
+      document.uri
+    )
+
+    if (!symbols || symbols.length === 0) {
+      return undefined
+    }
+
+    // Recursively search for a symbol that contains the position
+    const findContainingSymbol = (symbols: vscode.DocumentSymbol[]): vscode.DocumentSymbol | undefined => {
+      for (const symbol of symbols) {
+        // Check if this symbol contains the position and matches the requested kinds
+        if (
+          symbol.range.contains(position) &&
+          (!symbolKinds || symbolKinds.includes(symbol.kind))
+        ) {
+          // Create a modified symbol with the selectionRange as the range
+          // This focuses on the symbol name rather than the entire block
+          const adjustedSymbol = {
+            ...symbol,
+            range: symbol.selectionRange
+          };
+          return adjustedSymbol;
+        }
+
+        // Check children
+        if (symbol.children.length > 0) {
+          const childResult = findContainingSymbol(symbol.children)
+          if (childResult) {
+            return childResult
+          }
+        }
+      }
+      return undefined
+    }
+
+    const foundSymbol = findContainingSymbol(symbols)
+    return foundSymbol
+  } catch (error) {
+    return undefined
+  }
+}

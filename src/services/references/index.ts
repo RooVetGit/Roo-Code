@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import * as path from "path"
-import { getContainingFunction, findSymbolPosition } from "../language-services"
+import { getContainingFunction, findSymbolPosition, getContainingSymbol } from "../language-services"
 
 // Create a dedicated output channel for debugging C# references
 const debugChannel = vscode.window.createOutputChannel("C# References Debug");
@@ -113,7 +113,15 @@ export async function findReferences(
       if (symbol.name === symbolName &&
           (symbol.kind === vscode.SymbolKind.Function ||
            symbol.kind === vscode.SymbolKind.Method ||
-           symbol.kind === vscode.SymbolKind.Constructor)) {
+           symbol.kind === vscode.SymbolKind.Constructor ||
+           symbol.kind === vscode.SymbolKind.Property ||
+           symbol.kind === vscode.SymbolKind.Field ||
+           symbol.kind === vscode.SymbolKind.Variable ||
+           symbol.kind === vscode.SymbolKind.Constant ||
+           symbol.kind === vscode.SymbolKind.Class ||
+           symbol.kind === vscode.SymbolKind.Interface ||
+           symbol.kind === vscode.SymbolKind.Enum ||
+           symbol.kind === vscode.SymbolKind.EnumMember)) {
         matchingSymbols.push(symbol)
       }
       
@@ -263,16 +271,18 @@ async function formatReferences(
       // Process each location
       const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath))
       
-      // Group references by containing function
+      // Group references by containing function or class
       const functionGroups = new Map<number, { header: string, references: Array<{ line: number, text: string }> }>()
+      const classGroups = new Map<number, { header: string, references: Array<{ line: number, text: string }> }>()
       const standaloneReferences: Array<{ line: number, text: string }> = []
       
       for (const location of locations) {
         const line = location.range.start.line
         const lineText = document.lineAt(line).text.trim()
         
-        // Get the containing function
+        // Try to get the containing function or class
         try {
+          // First try to get containing function
           const functionSymbol = await getContainingFunction(document, location.range.start)
       
           if (functionSymbol) {
@@ -303,11 +313,52 @@ async function formatReferences(
               }
             }
           } else {
-            // No containing function, add to standalone references
-            standaloneReferences.push({
-              line: line,
-              text: lineText
-            })
+            // Try to get containing class or other symbol
+            const classSymbol = await getContainingSymbol(
+              document,
+              location.range.start,
+              [
+                vscode.SymbolKind.Class,
+                vscode.SymbolKind.Interface,
+                vscode.SymbolKind.Enum,
+                vscode.SymbolKind.Struct
+              ]
+            )
+            
+            if (classSymbol) {
+              // Group by class
+              const classHeaderLine = classSymbol.range.start.line
+              const classHeader = document.lineAt(classHeaderLine).text
+              
+              if (!classGroups.has(classHeaderLine)) {
+                classGroups.set(classHeaderLine, {
+                  header: classHeader,
+                  references: []
+                })
+              }
+              
+              // Only add if it's not the class declaration itself
+              if (classHeaderLine !== line) {
+                classGroups.get(classHeaderLine)!.references.push({
+                  line: line,
+                  text: lineText
+                })
+              } else {
+                // It's the class declaration itself
+                if (!classGroups.has(classHeaderLine)) {
+                  classGroups.set(classHeaderLine, {
+                    header: classHeader,
+                    references: []
+                  })
+                }
+              }
+            } else {
+              // No containing function or class, add to standalone references
+              standaloneReferences.push({
+                line: line,
+                text: lineText
+              })
+            }
           }
         } catch (error) {
           // Add to standalone references if we can't get the containing function
@@ -320,7 +371,12 @@ async function formatReferences(
       
       // Output function groups
       for (const [functionLine, group] of functionGroups.entries()) {
-        result += `### ${group.header.trim()} (line ${functionLine + 1})\n`
+        // Get the full function range
+        const functionSymbol = await getContainingFunction(document, new vscode.Position(functionLine, 0))
+        const functionStartLine = functionSymbol ? functionSymbol.range.start.line + 1 : functionLine + 1
+        const functionEndLine = functionSymbol ? functionSymbol.range.end.line + 1 : functionLine + 1
+        
+        result += `### ${group.header.trim()} (lines ${functionStartLine}-${functionEndLine})\n`
         
         // Add references within this function
         if (group.references.length > 0) {
@@ -332,7 +388,40 @@ async function formatReferences(
           result += `*Function declaration*\n`
         }
         
-        result += "\n"
+        // Add a note about how to read the full function
+        result += `\n*To read this function:* Use \`read_file\` with \`<start_line>${functionStartLine}</start_line>\` and \`<end_line>${functionEndLine}</end_line>\`\n\n`
+      }
+      
+      // Output class groups
+      for (const [classLine, group] of classGroups.entries()) {
+        // Get the full class range
+        const classSymbol = await getContainingSymbol(
+          document,
+          new vscode.Position(classLine, 0),
+          [
+            vscode.SymbolKind.Class,
+            vscode.SymbolKind.Interface,
+            vscode.SymbolKind.Enum,
+            vscode.SymbolKind.Struct
+          ]
+        )
+        const classStartLine = classSymbol ? classSymbol.range.start.line + 1 : classLine + 1
+        const classEndLine = classSymbol ? classSymbol.range.end.line + 1 : classLine + 1
+        
+        result += `### ${group.header.trim()} (lines ${classStartLine}-${classEndLine})\n`
+        
+        // Add references within this class
+        if (group.references.length > 0) {
+          for (const ref of group.references) {
+            result += `Line ${ref.line + 1}: \`${ref.text}\`\n`
+          }
+        } else {
+          // This is a direct reference to the class itself
+          result += `*Class declaration*\n`
+        }
+        
+        // Add a note about how to read the full class
+        result += `\n*To read this class:* Use \`read_file\` with \`<start_line>${classStartLine}</start_line>\` and \`<end_line>${classEndLine}</end_line>\`\n\n`
       }
       
       // Output standalone references

@@ -124,11 +124,6 @@ export interface FindReferencesToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "symbol" | "file_path" | "line_number">>
 }
 
-export interface ReadFunctionToolUse extends ToolUse {
-	name: "read_function"
-	params: Partial<Pick<Record<ToolParamName, string>, "symbol" | "file_path">>
-}
-
 export interface BrowserActionToolUse extends ToolUse {
 	name: "browser_action"
 	params: Partial<Pick<Record<ToolParamName, string>, "action" | "url" | "coordinate" | "text" | "size">>
@@ -195,7 +190,6 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
 	find_references: "find references",
-	read_function: "read functions",
 } as const
 
 export type { ToolGroup }
@@ -203,7 +197,7 @@ export type { ToolGroup }
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names", "find_references", "read_function"],
+		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names", "find_references"],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],

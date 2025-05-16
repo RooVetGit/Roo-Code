@@ -21,7 +21,6 @@ import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
 import { getFindReferencesDescription } from "./find-references"
-import { getReadFunctionDescription } from "./read-function"
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -42,7 +41,6 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	find_references: (args) => getFindReferencesDescription(args),
-	read_function: (args) => getReadFunctionDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -127,5 +125,4 @@ export {
 	getInsertContentDescription,
 	getSearchAndReplaceDescription,
 	getFindReferencesDescription,
-	getReadFunctionDescription,
 }

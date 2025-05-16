@@ -9,6 +9,13 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 /**
  * Implementation of the Find References Tool
  * This tool finds all references to a specific symbol across the workspace
+ *
+ * Supported symbol types:
+ * - Functions and methods
+ * - Properties and fields
+ * - Variables and constants
+ * - Classes and interfaces
+ * - Enums and enum members
  */
 export async function findReferencesTool(
   task: Task,
@@ -91,7 +98,8 @@ export async function findReferencesTool(
       content: undefined
     } satisfies ClineSayTool)
     
-    // Let askApproval handle auto-approval logic internally
+    // Always show approval UI for findReferences, bypassing auto-approval
+    // This ensures users can cancel the operation if needed
     const didApprove = await askApproval("tool", completeMessage, progressStatus)
     
     if (!didApprove) {
