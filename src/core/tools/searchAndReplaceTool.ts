@@ -1,6 +1,6 @@
 // Core Node.js imports
 import path from "path"
-import fs from "fs/promises"
+import { readFileSmart } from "../../integrations/misc/readFileWithEncoding"
 import delay from "delay"
 
 // Internal imports
@@ -135,7 +135,7 @@ export async function searchAndReplaceTool(
 		// Read and process file content
 		let fileContent: string
 		try {
-			fileContent = await fs.readFile(absolutePath, "utf-8")
+			fileContent = await readFileSmart(absolutePath)
 		} catch (error) {
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("search_and_replace")

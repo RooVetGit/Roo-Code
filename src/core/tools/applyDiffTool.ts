@@ -1,5 +1,5 @@
 import path from "path"
-import fs from "fs/promises"
+import { readFileSmart } from "../../integrations/misc/readFileWithEncoding"
 
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
@@ -87,7 +87,7 @@ export async function applyDiffTool(
 				return
 			}
 
-			const originalContent = await fs.readFile(absolutePath, "utf-8")
+			const originalContent = await readFileSmart(absolutePath)
 
 			// Apply the diff to the original content
 			const diffResult = (await cline.diffStrategy?.applyDiff(
