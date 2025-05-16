@@ -11,18 +11,18 @@ import { v5 as uuidv5 } from "uuid"
 import pLimit from "p-limit"
 import { Mutex } from "async-mutex"
 import { CacheManager } from "../cache-manager"
+import {
+	QDRANT_CODE_BLOCK_NAMESPACE,
+	MAX_FILE_SIZE_BYTES,
+	MAX_LIST_FILES_LIMIT,
+	BATCH_SEGMENT_THRESHOLD,
+	MAX_BATCH_RETRIES,
+	INITIAL_RETRY_DELAY_MS,
+	PARSING_CONCURRENCY,
+	BATCH_PROCESSING_CONCURRENCY,
+} from "../constants"
 
 export class DirectoryScanner implements IDirectoryScanner {
-	// Constants moved inside the class
-	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
-	private static readonly MAX_LIST_FILES_LIMIT = 3_000
-	private static readonly BATCH_SEGMENT_THRESHOLD = 60 // Number of code segments to batch for embeddings/upserts
-	private static readonly MAX_BATCH_RETRIES = 3
-	private static readonly INITIAL_RETRY_DELAY_MS = 500
-	private static readonly PARSING_CONCURRENCY = 10
-	private static readonly BATCH_PROCESSING_CONCURRENCY = 10
-
 	constructor(
 		private readonly embedder: IEmbedder,
 		private readonly qdrantClient: IVectorStore,
@@ -46,7 +46,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 	): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number }; totalBlockCount: number }> {
 		const directoryPath = directory
 		// Get all files recursively (handles .gitignore automatically)
-		const [allPaths, _] = await listFiles(directoryPath, true, DirectoryScanner.MAX_LIST_FILES_LIMIT)
+		const [allPaths, _] = await listFiles(directoryPath, true, MAX_LIST_FILES_LIMIT)
 
 		// Filter out directories (marked with trailing '/')
 		const filePaths = allPaths.filter((p) => !p.endsWith("/"))
@@ -72,8 +72,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 		let skippedCount = 0
 
 		// Initialize parallel processing tools
-		const parseLimiter = pLimit(DirectoryScanner.PARSING_CONCURRENCY) // Concurrency for file parsing
-		const batchLimiter = pLimit(DirectoryScanner.BATCH_PROCESSING_CONCURRENCY) // Concurrency for batch processing
+		const parseLimiter = pLimit(PARSING_CONCURRENCY) // Concurrency for file parsing
+		const batchLimiter = pLimit(BATCH_PROCESSING_CONCURRENCY) // Concurrency for batch processing
 		const mutex = new Mutex()
 
 		// Shared batch accumulators (protected by mutex)
@@ -91,7 +91,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 				try {
 					// Check file size
 					const stats = await stat(filePath)
-					if (stats.size > DirectoryScanner.MAX_FILE_SIZE_BYTES) {
+					if (stats.size > MAX_FILE_SIZE_BYTES) {
 						skippedCount++ // Skip large files
 						return
 					}
@@ -144,7 +144,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 									// Check if batch threshold is met and not for Ollama
 									if (
-										currentBatchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD &&
+										currentBatchBlocks.length >= BATCH_SEGMENT_THRESHOLD &&
 										this.embedder.embedderInfo.name !== "ollama"
 									) {
 										// Copy current batch data and clear accumulators
@@ -261,7 +261,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		let success = false
 		let lastError: Error | null = null
 
-		while (attempts < DirectoryScanner.MAX_BATCH_RETRIES && !success) {
+		while (attempts < MAX_BATCH_RETRIES && !success) {
 			attempts++
 			try {
 				// --- Deletion Step ---
@@ -297,7 +297,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path)
 
 					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
-					const pointId = uuidv5(stableName, DirectoryScanner.QDRANT_CODE_BLOCK_NAMESPACE)
+					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
 
 					return {
 						id: pointId,
@@ -325,8 +325,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 				lastError = error as Error
 				console.error(`[DirectoryScanner] Error processing batch (attempt ${attempts}):`, error)
 
-				if (attempts < DirectoryScanner.MAX_BATCH_RETRIES) {
-					const delay = DirectoryScanner.INITIAL_RETRY_DELAY_MS * Math.pow(2, attempts - 1)
+				if (attempts < MAX_BATCH_RETRIES) {
+					const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempts - 1)
 					console.log(`[DirectoryScanner] Retrying batch in ${delay}ms...`)
 					await new Promise((resolve) => setTimeout(resolve, delay))
 				}
@@ -334,15 +334,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 		}
 
 		if (!success && lastError) {
-			console.error(
-				`[DirectoryScanner] Failed to process batch after ${DirectoryScanner.MAX_BATCH_RETRIES} attempts`,
-			)
+			console.error(`[DirectoryScanner] Failed to process batch after ${MAX_BATCH_RETRIES} attempts`)
 			if (onError) {
-				onError(
-					new Error(
-						`Failed to process batch after ${DirectoryScanner.MAX_BATCH_RETRIES} attempts: ${lastError.message}`,
-					),
-				)
+				onError(new Error(`Failed to process batch after ${MAX_BATCH_RETRIES} attempts: ${lastError.message}`))
 			}
 		}
 	}
