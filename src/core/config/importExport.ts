@@ -82,7 +82,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 		let error = "Unknown error"
 
 		if (e instanceof ZodError) {
-			error = e.message
+			error = e.issues.map((issue) => `[${issue.path.join(".")}]: ${issue.message}`).join("\n")
 			telemetryService.captureSchemaValidationError({ schemaName: "ImportExport", error: e })
 		} else if (e instanceof Error) {
 			error = e.message
