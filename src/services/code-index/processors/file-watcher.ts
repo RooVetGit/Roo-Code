@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import { QDRANT_CODE_BLOCK_NAMESPACE, MAX_FILE_SIZE_BYTES } from "../constants"
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { v5 as uuidv5 } from "uuid"
@@ -7,9 +8,6 @@ import { IFileWatcher, FileProcessingResult, IEmbedder, IVectorStore, PointStruc
 import { codeParser } from "./parser"
 import { CacheManager } from "../cache-manager"
 import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../shared/get-relative-path"
-
-const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 
 /**
  * Implementation of the file watcher interface

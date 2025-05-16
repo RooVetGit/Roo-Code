@@ -5,11 +5,7 @@ import * as treeSitter from "web-tree-sitter"
 import { LanguageParser, loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
 import { ICodeParser, CodeBlock } from "../interfaces"
 import { scannerExtensions } from "../shared/supported-extensions"
-
-const MAX_BLOCK_CHARS = 1000
-const MIN_BLOCK_CHARS = 100
-const MIN_CHUNK_REMAINDER_CHARS = 200 // Minimum characters for the *next* chunk after a split
-const MAX_CHARS_TOLERANCE_FACTOR = 1.15 // 15% tolerance for max chars
+import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_TOLERANCE_FACTOR } from "../constants"
 
 /**
  * Implementation of the code parser interface

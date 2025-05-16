@@ -2,6 +2,12 @@ import { OpenAI } from "openai"
 import { OpenAiNativeHandler } from "../../../api/providers/openai-native"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { IEmbedder, EmbeddingResponse, EmbedderInfo } from "../interfaces"
+import {
+	MAX_BATCH_TOKENS,
+	MAX_ITEM_TOKENS,
+	MAX_BATCH_RETRIES as MAX_RETRIES,
+	INITIAL_RETRY_DELAY_MS as INITIAL_DELAY_MS,
+} from "../constants"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -9,12 +15,6 @@ import { IEmbedder, EmbeddingResponse, EmbedderInfo } from "../interfaces"
 export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
-
-	// Batching and retry constants
-	private static readonly MAX_BATCH_TOKENS = 100000
-	private static readonly MAX_ITEM_TOKENS = 8191
-	private static readonly MAX_RETRIES = 3
-	private static readonly INITIAL_DELAY_MS = 500
 
 	/**
 	 * Creates a new OpenAI embedder
@@ -48,15 +48,15 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				const text = remainingTexts[i]
 				const itemTokens = Math.ceil(text.length / 4)
 
-				if (itemTokens > OpenAiEmbedder.MAX_ITEM_TOKENS) {
+				if (itemTokens > MAX_ITEM_TOKENS) {
 					console.warn(
-						`Text at index ${i} exceeds maximum token limit (${itemTokens} > ${OpenAiEmbedder.MAX_ITEM_TOKENS}). Skipping.`,
+						`Text at index ${i} exceeds maximum token limit (${itemTokens} > ${MAX_ITEM_TOKENS}). Skipping.`,
 					)
 					processedIndices.push(i)
 					continue
 				}
 
-				if (currentBatchTokens + itemTokens <= OpenAiEmbedder.MAX_BATCH_TOKENS) {
+				if (currentBatchTokens + itemTokens <= MAX_BATCH_TOKENS) {
 					currentBatch.push(text)
 					currentBatchTokens += itemTokens
 					processedIndices.push(i)
@@ -96,7 +96,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 		batchTexts: string[],
 		model: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
-		for (let attempts = 0; attempts < OpenAiEmbedder.MAX_RETRIES; attempts++) {
+		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
 				const response = await this.embeddingsClient.embeddings.create({
 					input: batchTexts,
@@ -112,10 +112,10 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				}
 			} catch (error: any) {
 				const isRateLimitError = error?.status === 429
-				const hasMoreAttempts = attempts < OpenAiEmbedder.MAX_RETRIES - 1
+				const hasMoreAttempts = attempts < MAX_RETRIES - 1
 
 				if (isRateLimitError && hasMoreAttempts) {
-					const delayMs = OpenAiEmbedder.INITIAL_DELAY_MS * Math.pow(2, attempts)
+					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
 				}
@@ -124,7 +124,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 			}
 		}
 
-		throw new Error(`Failed to create embeddings after ${OpenAiEmbedder.MAX_RETRIES} attempts`)
+		throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts`)
 	}
 
 	get embedderInfo(): EmbedderInfo {
