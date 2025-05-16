@@ -79,6 +79,9 @@ import {
 	checkpointDiff,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
+import { ApiMessage } from "../task-persistence/apiMessages"
+import { getMessagesSinceLastSummary } from "../condense"
+import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -97,7 +100,6 @@ export type ClineEvents = {
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
-	customInstructions?: string
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
 	fuzzyMatchThreshold?: number
@@ -131,7 +133,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
-	customInstructions?: string
 
 	// API
 	readonly apiConfiguration: ProviderSettings
@@ -155,7 +156,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	didEditFile: boolean = false
 
 	// LLM Messages & Chat Messages
-	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
+	apiConversationHistory: ApiMessage[] = []
 	clineMessages: ClineMessage[] = []
 
 	// Ask
@@ -191,7 +192,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	constructor({
 		provider,
 		apiConfiguration,
-		customInstructions,
 		enableDiff = false,
 		enableCheckpoints = true,
 		fuzzyMatchThreshold = 1.0,
@@ -231,7 +231,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
-		this.customInstructions = customInstructions
 		this.diffEnabled = enableDiff
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
@@ -284,7 +283,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// API Messages
 
-	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
+	private async getSavedApiConversationHistory(): Promise<ApiMessage[]> {
 		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
@@ -294,7 +293,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		await this.saveApiConversationHistory()
 	}
 
-	async overwriteApiConversationHistory(newHistory: Anthropic.MessageParam[]) {
+	async overwriteApiConversationHistory(newHistory: ApiMessage[]) {
 		this.apiConversationHistory = newHistory
 		await this.saveApiConversationHistory()
 	}
@@ -697,8 +696,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
-		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] =
-			await this.getSavedApiConversationHistory()
+		let existingApiConversationHistory: ApiMessage[] = await this.getSavedApiConversationHistory()
 
 		// v2.0 xml tags refactor caveat: since we don't use tools anymore, we need to replace all tool use blocks with a text block since the API disallows conversations with tool uses and no tool schema
 		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
@@ -742,7 +740,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
 
 		let modifiedOldUserContent: Anthropic.Messages.ContentBlockParam[] // either the last message if its user message, or the user message before the last (assistant) message
-		let modifiedApiConversationHistory: Anthropic.Messages.MessageParam[] // need to remove the last user message to replace with new modified user message
+		let modifiedApiConversationHistory: ApiMessage[] // need to remove the last user message to replace with new modified user message
 		if (existingApiConversationHistory.length > 0) {
 			const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
 
@@ -768,7 +766,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					modifiedOldUserContent = []
 				}
 			} else if (lastMessage.role === "user") {
-				const previousAssistantMessage: Anthropic.Messages.MessageParam | undefined =
+				const previousAssistantMessage: ApiMessage | undefined =
 					existingApiConversationHistory[existingApiConversationHistory.length - 2]
 
 				const existingUserContent: Anthropic.Messages.ContentBlockParam[] = Array.isArray(lastMessage.content)
@@ -1415,6 +1413,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			browserViewportSize,
 			mode,
 			customModePrompts,
+			customInstructions,
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
@@ -1440,7 +1439,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				mode,
 				customModePrompts,
 				customModes,
-				this.customInstructions,
+				customInstructions,
 				this.diffEnabled,
 				experiments,
 				enableMcpServerCreation,
@@ -1480,44 +1479,24 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
+			const autoCondenseContext = experiments?.autoCondenseContext ?? false
 			const trimmedMessages = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens,
 				maxTokens,
 				contextWindow,
 				apiHandler: this.api,
+				autoCondenseContext,
 			})
-
 			if (trimmedMessages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(trimmedMessages)
 			}
 		}
 
-		// Clean conversation history by:
-		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.
-		// 2. Converting image blocks to text descriptions if model doesn't support images.
-		const cleanConversationHistory = this.apiConversationHistory.map(({ role, content }) => {
-			// Handle array content (could contain image blocks).
-			if (Array.isArray(content)) {
-				if (!this.api.getModel().info.supportsImages) {
-					// Convert image blocks to text descriptions.
-					content = content.map((block) => {
-						if (block.type === "image") {
-							// Convert image blocks to text descriptions.
-							// Note: We can't access the actual image content/url due to API limitations,
-							// but we can indicate that an image was present in the conversation.
-							return {
-								type: "text",
-								text: "[Referenced image in conversation]",
-							}
-						}
-						return block
-					})
-				}
-			}
-
-			return { role, content }
-		})
+		const messagesSinceLastSummary = getMessagesSinceLastSummary(this.apiConversationHistory)
+		const cleanConversationHistory = maybeRemoveImageBlocks(messagesSinceLastSummary, this.api).map(
+			({ role, content }) => ({ role, content }),
+		)
 
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()
