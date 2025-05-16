@@ -3,7 +3,7 @@ import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { getModelDimension, getDefaultModelId } from "../../shared/embeddingModels"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
-import { CODEBASE_INDEX_SEARCH_MIN_SCORE } from "./constants"
+import { SEARCH_MIN_SCORE } from "./constants"
 
 /**
  * Manages configuration state and validation for the code indexing feature.
@@ -77,7 +77,7 @@ export class CodeIndexConfigManager {
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
-		this.searchMinScore = CODEBASE_INDEX_SEARCH_MIN_SCORE
+		this.searchMinScore = SEARCH_MIN_SCORE
 
 		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
 		this.modelId = codebaseIndexEmbedderModelId || undefined
