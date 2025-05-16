@@ -9,7 +9,6 @@ import { CodeIndexServiceFactory } from "./service-factory"
 import { CodeIndexSearchService } from "./search-service"
 import { CodeIndexOrchestrator } from "./orchestrator"
 import { CacheManager } from "./cache-manager"
-import { codeParser } from "./processors"
 
 export class CodeIndexManager {
 	// --- Singleton Implementation ---
@@ -129,14 +128,8 @@ export class CodeIndexManager {
 			)
 
 			// (Re)Create shared service instances
-			const embedder = this._serviceFactory.createEmbedder()
-			const vectorStore = this._serviceFactory.createVectorStore()
-			const parser = codeParser
-			const scanner = this._serviceFactory.createDirectoryScanner(embedder, vectorStore, parser)
-			const fileWatcher = this._serviceFactory.createFileWatcher(
+			const { embedder, vectorStore, scanner, fileWatcher } = this._serviceFactory.createServices(
 				this.context,
-				embedder,
-				vectorStore,
 				this._cacheManager,
 			)
 
