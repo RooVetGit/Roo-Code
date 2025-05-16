@@ -4,7 +4,7 @@ import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
 import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
-import { CODEBASE_INDEX_SEARCH_MIN_SCORE } from "../constants"
+import { MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../constants"
 
 /**
  * Qdrant implementation of the vector store interface
@@ -58,6 +58,25 @@ export class QdrantVectorStore implements IVectorStore {
 				})
 				created = true
 			}
+
+			// Create payload indexes for pathSegments up to depth 5
+			for (let i = 0; i <= 4; i++) {
+				try {
+					await this.client.createPayloadIndex(this.collectionName, {
+						field_name: `pathSegments.${i}`,
+						field_schema: "keyword",
+					})
+					console.log(
+						`[QdrantVectorStore] Ensured payload index for pathSegments.${i} on ${this.collectionName}`,
+					)
+				} catch (indexError) {
+					console.warn(
+						`[QdrantVectorStore] Could not create payload index for pathSegments.${i} on ${this.collectionName}. It might already exist or there was an issue.`,
+						indexError,
+					)
+				}
+			}
+
 			return created
 		} catch (error) {
 			console.error("Failed to initialize Qdrant collection:", error)
@@ -143,19 +162,27 @@ export class QdrantVectorStore implements IVectorStore {
 			}
 
 			const searchRequest = {
-				vector: queryVector,
+				query: queryVector,
 				filter,
-				score_threshold: CODEBASE_INDEX_SEARCH_MIN_SCORE,
+				score_threshold: SEARCH_MIN_SCORE,
+				limit: MAX_SEARCH_RESULTS,
+				params: {
+					hnsw_ef: 128,
+					exact: false,
+				},
+				with_payload: {
+					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
+				},
 			}
 
 			if (minScore !== undefined) {
 				searchRequest.score_threshold = minScore
 			}
 
-			const result = await this.client.search(this.collectionName, searchRequest)
-			result.filter((r) => this.isPayloadValid(r.payload!))
+			const operationResult = await this.client.query(this.collectionName, searchRequest)
+			const filteredPoints = operationResult.points.filter((p) => this.isPayloadValid(p.payload!))
 
-			return result as VectorStoreSearchResult[]
+			return filteredPoints as VectorStoreSearchResult[]
 		} catch (error) {
 			console.error("Failed to search points:", error)
 			throw error
