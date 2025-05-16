@@ -80,73 +80,68 @@ const ChatRow = memo(
 export default ChatRow
 
 // Define the new wrapper component with copy functionality
-const MarkdownWithCopy = memo(
-	({ content, partial, isComplete }: { content: string; partial?: boolean; isComplete: boolean }) => {
-		// Added isComplete prop
-		const [isHovering, setIsHovering] = useState(false)
-		// Assuming useCopyToClipboard is imported correctly (it is, line 5)
-		const { copyWithFeedback } = useCopyToClipboard(200) // Use shorter feedback duration like original
+const MarkdownWithCopy = memo(({ content, partial }: { content: string; partial?: boolean }) => {
+	const [isHovering, setIsHovering] = useState(false)
+	// Assuming useCopyToClipboard is imported correctly (it is, line 5)
+	const { copyWithFeedback } = useCopyToClipboard(200) // Use shorter feedback duration like original
 
-		return (
-			<div
-				onMouseEnter={() => setIsHovering(true)}
-				onMouseLeave={() => setIsHovering(false)}
-				style={{ position: "relative" }}>
-				{/* Apply negative margins and text wrap styles */}
-				<div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
-					{/* Use the imported shared Markdown component */}
-					{/* Pass isComplete down to Markdown */}
-					<Markdown content={content} isComplete={isComplete} />
-				</div>
-				{/* Conditional Copy Button */}
-				{content && !partial && isHovering && (
-					<div
-						style={{
-							position: "absolute",
-							bottom: "-4px",
-							right: "8px",
-							opacity: 0,
-							animation: "fadeIn 0.2s ease-in-out forwards",
-							borderRadius: "4px",
-						}}>
-						<style>
-							{`
+	return (
+		<div
+			onMouseEnter={() => setIsHovering(true)}
+			onMouseLeave={() => setIsHovering(false)}
+			style={{ position: "relative" }}>
+			{/* Apply negative margins and text wrap styles */}
+			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+				<Markdown content={content} isComplete={!partial} />
+			</div>
+			{/* Conditional Copy Button */}
+			{content && !partial && isHovering && (
+				<div
+					style={{
+						position: "absolute",
+						bottom: "-4px",
+						right: "8px",
+						opacity: 0,
+						animation: "fadeIn 0.2s ease-in-out forwards",
+						borderRadius: "4px",
+					}}>
+					<style>
+						{`
               @keyframes fadeIn {
                 from { opacity: 0; }
                 to { opacity: 1.0; }
               }
             `}
-						</style>
-						<VSCodeButton
-							className="copy-button"
-							appearance="icon"
-							style={{
-								height: "24px",
-								border: "none",
-								background: "var(--vscode-editor-background)",
-								transition: "background 0.2s ease-in-out",
-							}}
-							onClick={async () => {
-								const success = await copyWithFeedback(content) // Use content prop
-								if (success) {
-									const button = document.activeElement as HTMLElement
-									if (button) {
-										button.style.background = "var(--vscode-button-background)"
-										setTimeout(() => {
-											button.style.background = ""
-										}, 200)
-									}
+					</style>
+					<VSCodeButton
+						className="copy-button"
+						appearance="icon"
+						style={{
+							height: "24px",
+							border: "none",
+							background: "var(--vscode-editor-background)",
+							transition: "background 0.2s ease-in-out",
+						}}
+						onClick={async () => {
+							const success = await copyWithFeedback(content) // Use content prop
+							if (success) {
+								const button = document.activeElement as HTMLElement
+								if (button) {
+									button.style.background = "var(--vscode-button-background)"
+									setTimeout(() => {
+										button.style.background = ""
+									}, 200)
 								}
-							}}
-							title="Copy as markdown">
-							<span className="codicon codicon-copy"></span>
-						</VSCodeButton>
-					</div>
-				)}
-			</div>
-		)
-	},
-)
+							}
+						}}
+						title="Copy as markdown">
+						<span className="codicon codicon-copy"></span>
+					</VSCodeButton>
+				</div>
+			)}
+		</div>
+	)
+})
 
 export const ChatRowContent = ({
 	message,
@@ -898,11 +893,7 @@ export const ChatRowContent = ({
 				case "text":
 					return (
 						<div>
-							<MarkdownWithCopy
-								content={message.text || ""}
-								partial={message.partial}
-								isComplete={!message.partial}
-							/>
+							<MarkdownWithCopy content={message.text || ""} partial={message.partial} />
 						</div>
 					)
 				case "user_feedback":
@@ -961,11 +952,7 @@ export const ChatRowContent = ({
 								{title}
 							</div>
 							<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
-								<MarkdownWithCopy
-									content={message.text || ""}
-									partial={message.partial}
-									isComplete={!message.partial}
-								/>
+								<MarkdownWithCopy content={message.text || ""} partial={message.partial} />
 							</div>
 						</>
 					)
@@ -1012,11 +999,7 @@ export const ChatRowContent = ({
 								</div>
 							)}
 							<div style={{ paddingTop: 10 }}>
-								<MarkdownWithCopy
-									content={message.text || ""}
-									partial={message.partial}
-									isComplete={!message.partial}
-								/>
+								<MarkdownWithCopy content={message.text || ""} partial={message.partial} />
 							</div>
 						</>
 					)
