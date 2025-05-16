@@ -2,6 +2,7 @@ import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
+import { McpExecutionStatus } from "../../schemas"
 
 export async function useMcpToolTool(
 	cline: Task,
@@ -67,6 +68,7 @@ export async function useMcpToolTool(
 				arguments: mcp_arguments,
 			} satisfies ClineAskUseMcpServer)
 
+			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 			const didApprove = await askApproval("use_mcp_server", completeMessage)
 
 			if (!didApprove) {
@@ -76,15 +78,31 @@ export async function useMcpToolTool(
 			// Now execute the tool
 			await cline.say("mcp_server_request_started") // same as browser_action_result
 
+			// Send started status
+			const clineProvider = await cline.providerRef.deref()
+			const startedStatus: McpExecutionStatus = {
+				executionId,
+				status: "started",
+				serverName: server_name,
+				toolName: tool_name,
+			}
+			clineProvider?.postMessageToWebview({
+				type: "mcpExecutionStatus",
+				text: JSON.stringify(startedStatus),
+			})
+
 			const toolResult = await cline.providerRef
 				.deref()
 				?.getMcpHub()
 				?.callTool(server_name, tool_name, parsedArguments)
 
-			// TODO: add progress indicator and ability to parse images and non-text responses
-			const toolResultPretty =
-				(toolResult?.isError ? "Error:\n" : "") +
-					toolResult?.content
+			// Process the result
+			let toolResultPretty = "(No response)"
+
+			if (toolResult) {
+				// Send output status if there's content
+				if (toolResult.content && toolResult.content.length > 0) {
+					const outputText = toolResult.content
 						.map((item) => {
 							if (item.type === "text") {
 								return item.text
@@ -96,7 +114,48 @@ export async function useMcpToolTool(
 							return ""
 						})
 						.filter(Boolean)
-						.join("\n\n") || "(No response)"
+						.join("\n\n")
+
+					if (outputText) {
+						const outputStatus: McpExecutionStatus = {
+							executionId,
+							status: "output",
+							response: outputText,
+						}
+						clineProvider?.postMessageToWebview({
+							type: "mcpExecutionStatus",
+							text: JSON.stringify(outputStatus),
+						})
+
+						toolResultPretty = (toolResult.isError ? "Error:\n" : "") + outputText
+					}
+				}
+
+				// Send completed or error status
+				const completedStatus: McpExecutionStatus = {
+					executionId,
+					status: toolResult.isError ? "error" : "completed",
+					response: toolResultPretty,
+					error: toolResult.isError ? "Error executing MCP tool" : undefined,
+				}
+				clineProvider?.postMessageToWebview({
+					type: "mcpExecutionStatus",
+					text: JSON.stringify(completedStatus),
+				})
+			} else {
+				// Send error status if no result
+				const errorStatus: McpExecutionStatus = {
+					executionId,
+					status: "error",
+					error: "No response from MCP server",
+				}
+				clineProvider?.postMessageToWebview({
+					type: "mcpExecutionStatus",
+					text: JSON.stringify(errorStatus),
+				})
+
+				toolResultPretty = "(No response)"
+			}
 
 			await cline.say("mcp_server_response", toolResultPretty)
 			pushToolResult(formatResponse.toolResult(toolResultPretty))
