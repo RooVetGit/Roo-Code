@@ -19,14 +19,17 @@ const HistoryPreview = () => {
 						{tasks.slice(0, 3).map((item) => (
 							<div
 								key={item.id}
-								className="bg-vscode-editor-background rounded relative overflow-hidden cursor-pointer border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60"
+								className="group bg-vscode-editor-background rounded relative overflow-hidden cursor-pointer border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60"
 								onClick={() => vscode.postMessage({ type: "showTaskWithId", text: item.id })}>
 								<div className="flex flex-col gap-2 p-3 pt-1">
 									<div className="flex justify-between items-center">
 										<span className="text-xs font-medium text-vscode-descriptionForeground uppercase">
 											{formatDate(item.ts)}
 										</span>
-										<CopyButton itemTask={item.task} />
+										<CopyButton
+											itemTask={item.task}
+											className="opacity-20 group-hover:opacity-50"
+										/>
 									</div>
 									<div
 										className="text-vscode-foreground overflow-hidden whitespace-pre-wrap"
