@@ -466,7 +466,7 @@
 		"zod-to-ts": "^1.2.0"
 	},
 	"lint-staged": {
-		"*.{js,jsx,ts,tsx,json,css,md}": [
+		"*.{js,jsx,ts,tsx,json,css}": [
 			"prettier --write"
 		],
 		"src/**/*.{ts,tsx}": [

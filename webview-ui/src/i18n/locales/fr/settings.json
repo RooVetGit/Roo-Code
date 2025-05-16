@@ -108,6 +108,7 @@
 		"apiKeyStorageNotice": "Les clés API sont stockées en toute sécurité dans le stockage sécurisé de VSCode",
 		"glamaApiKey": "Clé API Glama",
 		"getGlamaApiKey": "Obtenir la clé API Glama",
+		"getShengSuanYunApiKey": "Obtenir la clé API Sheng Suan Yun",
 		"useCustomBaseUrl": "Utiliser une URL de base personnalisée",
 		"useHostHeader": "Utiliser un en-tête Host personnalisé",
 		"useLegacyFormat": "Utiliser le format API OpenAI hérité",

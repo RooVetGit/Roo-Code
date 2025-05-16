@@ -120,6 +120,7 @@
 			"label": "Modelle aktualisieren",
 			"hint": "Bitte öffne die Einstellungen erneut, um die neuesten Modelle zu sehen."
 		},
+		"getShengSuanYunApiKey": "Sheng Suan Yun API-Schlüssel erhalten",
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
 		"anthropicApiKey": "Anthropic API-Schlüssel",

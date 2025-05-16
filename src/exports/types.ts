@@ -30,6 +30,7 @@ type GlobalSettings = {
 							| "groq"
 							| "chutes"
 							| "litellm"
+							| "shengsuanyun"
 					  )
 					| undefined
 		  }[]
@@ -225,6 +226,7 @@ type ProviderSettings = {
 				| "groq"
 				| "chutes"
 				| "litellm"
+				| "shengsuanyun"
 		  )
 		| undefined
 	includeMaxTokens?: boolean | undefined
@@ -336,6 +338,8 @@ type ProviderSettings = {
 	litellmBaseUrl?: string | undefined
 	litellmApiKey?: string | undefined
 	litellmModelId?: string | undefined
+	shengSuanYunApiKey?: string | undefined
+	shengSuanYunModelId?: string | undefined
 }
 
 export type { ProviderSettings }
@@ -366,6 +370,7 @@ type ProviderSettingsEntry = {
 				| "groq"
 				| "chutes"
 				| "litellm"
+				| "shengsuanyun"
 		  )
 		| undefined
 }
@@ -618,6 +623,7 @@ type IpcMessage =
 											| "groq"
 											| "chutes"
 											| "litellm"
+											| "shengsuanyun"
 									  )
 									| undefined
 								includeMaxTokens?: boolean | undefined
@@ -729,6 +735,8 @@ type IpcMessage =
 								litellmBaseUrl?: string | undefined
 								litellmApiKey?: string | undefined
 								litellmModelId?: string | undefined
+								shengSuanYunApiKey?: string | undefined
+								shengSuanYunModelId?: string | undefined
 								currentApiConfigName?: string | undefined
 								listApiConfigMeta?:
 									| {
@@ -757,6 +765,7 @@ type IpcMessage =
 														| "groq"
 														| "chutes"
 														| "litellm"
+														| "shengsuanyun"
 												  )
 												| undefined
 									  }[]
@@ -1083,6 +1092,7 @@ type TaskCommand =
 								| "groq"
 								| "chutes"
 								| "litellm"
+								| "shengsuanyun"
 						  )
 						| undefined
 					includeMaxTokens?: boolean | undefined
@@ -1194,6 +1204,8 @@ type TaskCommand =
 					litellmBaseUrl?: string | undefined
 					litellmApiKey?: string | undefined
 					litellmModelId?: string | undefined
+					shengSuanYunApiKey?: string | undefined
+					shengSuanYunModelId?: string | undefined
 					currentApiConfigName?: string | undefined
 					listApiConfigMeta?:
 						| {
@@ -1222,6 +1234,7 @@ type TaskCommand =
 											| "groq"
 											| "chutes"
 											| "litellm"
+											| "shengsuanyun"
 									  )
 									| undefined
 						  }[]

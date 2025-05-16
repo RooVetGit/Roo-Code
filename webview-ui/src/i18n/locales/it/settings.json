@@ -120,6 +120,7 @@
 			"label": "Aggiorna modelli",
 			"hint": "Riapri le impostazioni per vedere i modelli più recenti."
 		},
+		"getShengSuanYunApiKey": "Ottieni chiave API Sheng Suan Yun",
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
 		"anthropicApiKey": "Chiave API Anthropic",

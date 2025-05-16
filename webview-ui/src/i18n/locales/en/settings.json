@@ -121,6 +121,7 @@
 			"hint": "Please reopen the settings to see the latest models."
 		},
 		"getRequestyApiKey": "Get Requesty API Key",
+		"getShengSuanYunApiKey": "Get Sheng Suan Yun API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",

@@ -25,6 +25,7 @@ export const providerNames = [
 	"human-relay",
 	"fake-ai",
 	"xai",
+	"shengsuanyun",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -456,6 +457,9 @@ const humanRelaySchema = z.object({})
 
 const fakeAiSchema = z.object({
 	fakeAi: z.unknown().optional(),
+	// Sheng Suan Yun
+	shengSuanYunApiKey: z.string().optional(),
+	shengSuanYunModelId: z.string().optional(),
 })
 
 const xaiSchema = z.object({
@@ -704,7 +708,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
-	// X.AI (Grok)
+	// ShengSuanYun
+	shengSuanYunApiKey: undefined,
+	shengSuanYunModelId: undefined,
 	xaiApiKey: undefined,
 	// Groq
 	groqApiKey: undefined,
@@ -907,6 +913,7 @@ export type SecretState = Pick<
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "shengSuanYunApiKey"
 	| "xaiApiKey"
 >
 
@@ -926,6 +933,7 @@ const secretStateRecord: SecretStateRecord = {
 	mistralApiKey: undefined,
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
+	shengSuanYunApiKey: undefined,
 	xaiApiKey: undefined,
 }
 

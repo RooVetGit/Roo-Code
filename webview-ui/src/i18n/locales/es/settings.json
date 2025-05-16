@@ -136,6 +136,7 @@
 		"openAiApiKey": "Clave API de OpenAI",
 		"openAiBaseUrl": "URL base",
 		"getOpenAiApiKey": "Obtener clave API de OpenAI",
+		"getShengSuanYunApiKey": "Obtener clave API de Sheng Suan Yun",
 		"mistralApiKey": "Clave API de Mistral",
 		"getMistralApiKey": "Obtener clave API de Mistral / Codestral",
 		"codestralBaseUrl": "URL base de Codestral (Opcional)",
