@@ -290,9 +290,13 @@ export class DiffViewProvider {
 				problems: this.newProblemsMessage || undefined,
 				notice: {
 					i: [
-						"You do not need to re-read the file, as you have seen all changes in the diff above.",
+						"You do not need to re-read the file, as you have seen all changes",
 						"Proceed with the task using these changes as the new baseline.",
-						"If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.",
+						...(this.userEdits
+							? [
+									"If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.",
+								]
+							: []),
 					],
 				},
 			},
