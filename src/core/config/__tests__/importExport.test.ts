@@ -200,6 +200,58 @@ describe("importExport", () => {
 			expect(mockContextProxy.setValues).not.toHaveBeenCalled()
 		})
 
+		it("should import settings successfully when globalSettings key is missing", async () => {
+			;(vscode.window.showOpenDialog as jest.Mock).mockResolvedValue([{ fsPath: "/mock/path/settings.json" }])
+
+			const mockFileContent = JSON.stringify({
+				providerProfiles: {
+					currentApiConfigName: "test",
+					apiConfigs: { test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" } },
+				},
+			})
+
+			;(fs.readFile as jest.Mock).mockResolvedValue(mockFileContent)
+
+			const previousProviderProfiles = {
+				currentApiConfigName: "default",
+				apiConfigs: { default: { apiProvider: "anthropic" as ProviderName, id: "default-id" } },
+			}
+
+			mockProviderSettingsManager.export.mockResolvedValue(previousProviderProfiles)
+
+			mockProviderSettingsManager.listConfig.mockResolvedValue([
+				{ name: "test", id: "test-id", apiProvider: "openai" as ProviderName },
+				{ name: "default", id: "default-id", apiProvider: "anthropic" as ProviderName },
+			])
+
+			mockContextProxy.export.mockResolvedValue({ mode: "code" })
+
+			const result = await importSettings({
+				providerSettingsManager: mockProviderSettingsManager,
+				contextProxy: mockContextProxy,
+				customModesManager: mockCustomModesManager,
+			})
+
+			expect(result.success).toBe(true)
+			expect(fs.readFile).toHaveBeenCalledWith("/mock/path/settings.json", "utf-8")
+			expect(mockProviderSettingsManager.export).toHaveBeenCalled()
+			expect(mockProviderSettingsManager.import).toHaveBeenCalledWith({
+				...previousProviderProfiles,
+				currentApiConfigName: "test",
+				apiConfigs: {
+					test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" },
+				},
+			})
+
+			// Should call setValues with an empty object since globalSettings is missing.
+			expect(mockContextProxy.setValues).toHaveBeenCalledWith({})
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("currentApiConfigName", "test")
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("listApiConfigMeta", [
+				{ name: "test", id: "test-id", apiProvider: "openai" as ProviderName },
+				{ name: "default", id: "default-id", apiProvider: "anthropic" as ProviderName },
+			])
+		})
+
 		it("should return success: false when file content is not valid JSON", async () => {
 			// Mock successful file selection
 			;(vscode.window.showOpenDialog as jest.Mock).mockResolvedValue([{ fsPath: "/mock/path/settings.json" }])
