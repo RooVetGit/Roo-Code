@@ -64,7 +64,7 @@ cd ${await mcpHub.getMcpServersPath()}
 npx @modelcontextprotocol/create-server weather-server
 cd weather-server
 # Install dependencies
-npm install axios zod
+npm install axios zod @modelcontextprotocol/sdk
 \`\`\`
 
 This will create a new project with the following structure:
