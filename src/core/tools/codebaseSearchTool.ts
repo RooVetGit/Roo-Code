@@ -9,7 +9,7 @@ import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } f
 import path from "path"
 
 export async function codebaseSearchTool(
-  cline: Task,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -27,8 +27,6 @@ export async function codebaseSearchTool(
 
 	// --- Parameter Extraction and Validation ---
 	let query: string | undefined = block.params.query
-	let limitStr: string | undefined = block.params.limit
-	let limit: number = 5 // Default limit
 	let directoryPrefix: string | undefined = block.params.path
 
 	if (!query) {
@@ -37,16 +35,6 @@ export async function codebaseSearchTool(
 		return
 	}
 	query = removeClosingTag("query", query)
-
-	if (limitStr) {
-		limitStr = removeClosingTag("limit", limitStr)
-		limit = parseInt(limitStr, 10)
-		if (isNaN(limit) || limit <= 0) {
-			cline.consecutiveMistakeCount++
-			await cline.say("text", `Invalid limit value: "${limitStr}". Using default ${10}.`)
-			limit = 10
-		}
-	}
 
 	if (directoryPrefix) {
 		directoryPrefix = removeClosingTag("path", directoryPrefix)
@@ -58,7 +46,6 @@ export async function codebaseSearchTool(
 	const approvalPayload = {
 		tool: "codebaseSearch",
 		query: query,
-		limit: limit,
 		path: directoryPrefix,
 		isOutsideWorkspace: false,
 	}
@@ -91,7 +78,7 @@ export async function codebaseSearchTool(
 			throw new Error("Code Indexing is not configured (Missing OpenAI Key or Qdrant URL).")
 		}
 
-		const searchResults: VectorStoreSearchResult[] = await manager.searchIndex(query, limit, directoryPrefix)
+		const searchResults: VectorStoreSearchResult[] = await manager.searchIndex(query, directoryPrefix)
 
 		// 3. Format and push results
 		if (!searchResults || searchResults.length === 0) {

@@ -24,14 +24,12 @@ export class CodeIndexSearchService {
 	 * @returns Array of search results
 	 * @throws Error if the service is not properly configured or ready
 	 */
-	public async searchIndex(
-		query: string,
-		limit: number,
-		directoryPrefix?: string,
-	): Promise<VectorStoreSearchResult[]> {
+	public async searchIndex(query: string, directoryPrefix?: string): Promise<VectorStoreSearchResult[]> {
 		if (!this.configManager.isFeatureEnabled || !this.configManager.isFeatureConfigured) {
 			throw new Error("Code index feature is disabled or not configured.")
 		}
+
+		const minScore = this.configManager.currentSearchMinScore
 
 		const currentState = this.stateManager.getCurrentStatus().systemStatus
 		if (currentState !== "Indexed" && currentState !== "Indexing") {
@@ -54,7 +52,7 @@ export class CodeIndexSearchService {
 			}
 
 			// Perform search
-			const results = await this.vectorStore.search(vector, limit, normalizedPrefix)
+			const results = await this.vectorStore.search(vector, normalizedPrefix, minScore)
 			return results
 		} catch (error) {
 			console.error("[CodeIndexSearchService] Error during search:", error)

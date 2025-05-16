@@ -4,6 +4,7 @@ import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
 import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
+import { CODEBASE_INDEX_SEARCH_MIN_SCORE } from "../constants"
 
 /**
  * Qdrant implementation of the vector store interface
@@ -124,11 +125,11 @@ export class QdrantVectorStore implements IVectorStore {
 	 */
 	async search(
 		queryVector: number[],
-		limit: number = 10,
 		directoryPrefix?: string,
+		minScore?: number,
 	): Promise<VectorStoreSearchResult[]> {
 		try {
-			let filter: any = undefined
+			let filter = undefined
 
 			if (directoryPrefix) {
 				const segments = directoryPrefix.split(path.sep).filter(Boolean)
@@ -141,11 +142,17 @@ export class QdrantVectorStore implements IVectorStore {
 				}
 			}
 
-			const result = await this.client.search(this.collectionName, {
+			const searchRequest = {
 				vector: queryVector,
-				limit,
 				filter,
-			})
+				score_threshold: CODEBASE_INDEX_SEARCH_MIN_SCORE,
+			}
+
+			if (minScore !== undefined) {
+				searchRequest.score_threshold = minScore
+			}
+
+			const result = await this.client.search(this.collectionName, searchRequest)
 			result.filter((r) => this.isPayloadValid(r.payload!))
 
 			return result as VectorStoreSearchResult[]
