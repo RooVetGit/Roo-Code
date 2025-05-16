@@ -65,11 +65,13 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "fontAliasing"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
 	text?: string
+	value?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"

@@ -77,6 +77,15 @@ const App = () => {
 				setHumanRelayDialogState({ isOpen: true, requestId, promptText })
 			}
 
+			if (message.type === "fontAliasing") {
+				const value = message.value as string | undefined
+				let smoothingValue = "unset"
+
+				if (value === "antialiased" || value === "subpixel-antialiased" || value === "none") {
+					smoothingValue = value
+				}
+				;(document.documentElement.style as any)["webkitFontSmoothing"] = smoothingValue
+			}
 			if (message.type === "acceptInput") {
 				chatViewRef.current?.acceptInput()
 			}
