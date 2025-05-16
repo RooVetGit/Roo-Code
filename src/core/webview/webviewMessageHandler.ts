@@ -1329,7 +1329,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				codebaseIndexEmbedderModelId: "",
 			}
 			await updateGlobalState("codebaseIndexConfig", codebaseIndexConfig)
-			await provider.codeIndexManager?.initialize(provider.contextProxy)
+
+			try {
+				await provider.codeIndexManager?.initialize(provider.contextProxy)
+			} catch (error) {
+				provider.log(
+					`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
+				)
+			}
+
 			await provider.postStateToWebview()
 			break
 		}
