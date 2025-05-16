@@ -90,5 +90,12 @@
 	"input": {
 		"task_prompt": "Wat moet Roo doen?",
 		"task_placeholder": "Typ hier je taak"
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"button": "Reset en Doorgaan",
+			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-aanvragen bereikt. Wilt u het aantal resetten en doorgaan met de taak?",
+			"title": "Limiet voor Automatisch Goedgekeurde Aanvragen Bereikt"
+		}
 	}
 }

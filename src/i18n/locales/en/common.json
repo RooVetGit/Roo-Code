@@ -90,5 +90,12 @@
 	"input": {
 		"task_prompt": "What should Roo do?",
 		"task_placeholder": "Type your task here"
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Auto-Approved Request Limit Reached",
+			"description": "Roo has reached the auto-approved limit of {{count}} API requests. Would you like to reset the count and proceed with the task?",
+			"button": "Reset and Continue"
+		}
 	}
 }

@@ -96,5 +96,12 @@
 			"groqApiKey": "Ключ API Groq",
 			"getGroqApiKey": "Получить ключ API Groq"
 		}
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"button": "Сбросить и продолжить",
+			"title": "Достигнут лимит автоматически одобренных запросов",
+			"description": "Roo достиг автоматически одобренного лимита в {{count}} API запросов. Хотите сбросить счетчик и продолжить задачу?"
+		}
 	}
 }
