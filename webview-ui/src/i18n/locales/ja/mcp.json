@@ -17,7 +17,8 @@
 	"tool": {
 		"alwaysAllow": "常に許可",
 		"parameters": "パラメーター",
-		"noDescription": "説明なし"
+		"noDescription": "説明なし",
+		"togglePromptInclusion": "プロンプトへの含有を切り替える"
 	},
 	"tabs": {
 		"tools": "ツール",

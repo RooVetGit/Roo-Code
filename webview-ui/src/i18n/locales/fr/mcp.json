@@ -17,7 +17,8 @@
 	"tool": {
 		"alwaysAllow": "Toujours autoriser",
 		"parameters": "Paramètres",
-		"noDescription": "Aucune description"
+		"noDescription": "Aucune description",
+		"togglePromptInclusion": "Basculer l'inclusion dans le prompt"
 	},
 	"tabs": {
 		"tools": "Outils",
