@@ -1,3 +1,5 @@
+import * as fs from "fs"
+import * as path from "path"
 import {
 	Mode,
 	modes,
@@ -14,20 +16,72 @@ import { McpHub } from "../../services/mcp/McpHub"
 import { getToolDescriptionsForMode } from "./tools"
 import * as vscode from "vscode"
 import * as os from "os"
+import { renderEjs } from "./utils/renderEjs"
+
 import {
-	getRulesSection,
 	getSystemInfoSection,
-	getObjectiveSection,
 	getSharedToolUseSection,
 	getMcpServersSection,
 	getToolUseGuidelinesSection,
-	getCapabilitiesSection,
 	getModesSection,
 	addCustomInstructions,
 	markdownFormattingSection,
 } from "./sections"
 import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { formatLanguage } from "../../shared/language"
+
+// Helper to render section content with common variables
+type SectionName = keyof Pick<
+	PromptComponent,
+	"objectiveSectionOverride" | "rulesSectionOverride" | "capabilitiesSectionOverride"
+>
+type Templates = { objectiveTemplate: string; rulesTemplate: string; capabilitiesTemplate: string }
+type RenderVars = { cwd: string; supportsComputerUse: boolean; diffStrategy?: DiffStrategy; mcpHub?: McpHub }
+
+const renderSection = (
+	section: SectionName,
+	config: ModeConfig,
+	pc: PromptComponent | undefined,
+	template: string,
+	vars: RenderVars,
+) =>
+	renderEjs(pc?.[section] ?? config[section] ?? template, {
+		...vars,
+		mcpHub: !!vars.mcpHub,
+	})
+
+function renderSectionContent(
+	config: ModeConfig,
+	pc: PromptComponent | undefined,
+	templates: Templates,
+	vars: RenderVars,
+) {
+	try {
+		return {
+			objectiveContent: renderSection("objectiveSectionOverride", config, pc, templates.objectiveTemplate, vars),
+			rulesContent: renderSection("rulesSectionOverride", config, pc, templates.rulesTemplate, vars),
+			capabilitiesContent: renderSection(
+				"capabilitiesSectionOverride",
+				config,
+				pc,
+				templates.capabilitiesTemplate,
+				vars,
+			),
+		}
+	} catch (error) {
+		throw new Error(`Failed to render section content: ${error.message}`)
+	}
+}
+
+// Load default Pug templates
+function loadTemplates(context: vscode.ExtensionContext) {
+	const templatesPath = path.join(context.extensionPath, "dist", "templates")
+	return {
+		objectiveTemplate: fs.readFileSync(path.join(templatesPath, "objective.ejs"), "utf8"),
+		rulesTemplate: fs.readFileSync(path.join(templatesPath, "rules.ejs"), "utf8"),
+		capabilitiesTemplate: fs.readFileSync(path.join(templatesPath, "capabilities.ejs"), "utf8"),
+	}
+}
 
 async function generatePrompt(
 	context: vscode.ExtensionContext,
@@ -57,6 +111,20 @@ async function generatePrompt(
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
 	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
 
+	// Load templates and render sections
+	const templates = loadTemplates(context)
+	const { objectiveContent, rulesContent, capabilitiesContent } = renderSectionContent(
+		modeConfig,
+		promptComponent,
+		templates,
+		{
+			cwd,
+			supportsComputerUse,
+			diffStrategy: effectiveDiffStrategy,
+			mcpHub,
+		},
+	)
+
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
 		modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "mcp")
@@ -85,15 +153,15 @@ ${getToolUseGuidelinesSection()}
 
 ${mcpServersSection}
 
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy)}
+${capabilitiesContent}
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)}
+${rulesContent}
 
 ${getSystemInfoSection(cwd)}
 
-${getObjectiveSection()}
+${objectiveContent}
 
 ${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
 
@@ -146,7 +214,24 @@ export const SYSTEM_PROMPT = async (
 
 	// If a file-based custom system prompt exists, use it
 	if (fileCustomSystemPrompt) {
+		// If diff is disabled, don't pass the diffStrategy
+		const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 		const roleDefinition = promptComponent?.roleDefinition || currentMode.roleDefinition
+
+		// Load templates and render sections
+		const templates = loadTemplates(context)
+		const { objectiveContent, rulesContent, capabilitiesContent } = renderSectionContent(
+			currentMode,
+			promptComponent,
+			templates,
+			{
+				cwd,
+				supportsComputerUse,
+				diffStrategy: effectiveDiffStrategy,
+				mcpHub,
+			},
+		)
+
 		const customInstructions = await addCustomInstructions(
 			promptComponent?.customInstructions || currentMode.customInstructions || "",
 			globalCustomInstructions || "",
@@ -155,10 +240,16 @@ export const SYSTEM_PROMPT = async (
 			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
 		)
 
-		// For file-based prompts, don't include the tool sections
+		// For file-based prompts, include the overrideable sections after the custom prompt
 		return `${roleDefinition}
 
 ${fileCustomSystemPrompt}
+
+${objectiveContent}
+
+${capabilitiesContent}
+
+${rulesContent}
 
 ${customInstructions}`
 	}

@@ -141,6 +141,9 @@ type GlobalSettings = {
 				roleDefinition: string
 				whenToUse?: string | undefined
 				customInstructions?: string | undefined
+				objectiveSectionOverride?: string | undefined
+				rulesSectionOverride?: string | undefined
+				capabilitiesSectionOverride?: string | undefined
 				groups: (
 					| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
 					| [
@@ -161,6 +164,9 @@ type GlobalSettings = {
 							roleDefinition?: string | undefined
 							whenToUse?: string | undefined
 							customInstructions?: string | undefined
+							objectiveSectionOverride?: string | undefined
+							rulesSectionOverride?: string | undefined
+							capabilitiesSectionOverride?: string | undefined
 					  }
 					| undefined
 		  }

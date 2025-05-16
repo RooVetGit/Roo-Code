@@ -219,6 +219,9 @@ export const modeConfigSchema = z.object({
 	roleDefinition: z.string().min(1, "Role definition is required"),
 	whenToUse: z.string().optional(),
 	customInstructions: z.string().optional(),
+	objectiveSectionOverride: z.string().optional(),
+	rulesSectionOverride: z.string().optional(),
+	capabilitiesSectionOverride: z.string().optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
 })
@@ -259,6 +262,9 @@ export const promptComponentSchema = z.object({
 	roleDefinition: z.string().optional(),
 	whenToUse: z.string().optional(),
 	customInstructions: z.string().optional(),
+	objectiveSectionOverride: z.string().optional(),
+	rulesSectionOverride: z.string().optional(),
+	capabilitiesSectionOverride: z.string().optional(),
 })
 
 export type PromptComponent = z.infer<typeof promptComponentSchema>
