@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import { PointStruct } from "./vector-store"
 
 /**
  * Interface for code file parser
@@ -80,9 +81,11 @@ export interface IFileWatcher {
 
 export interface FileProcessingResult {
 	path: string
-	status: "success" | "skipped" | "error"
+	status: "success" | "skipped" | "error" | "processed_for_batching" | "local_error"
 	error?: Error
 	reason?: string
+	newHash?: string
+	pointsToUpsert?: PointStruct[]
 }
 
 /**

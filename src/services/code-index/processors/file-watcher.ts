@@ -3,7 +3,7 @@ import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { v5 as uuidv5 } from "uuid"
 import { scannerExtensions } from "../shared/supported-extensions"
-import { IFileWatcher, FileProcessingResult, IEmbedder, IVectorStore } from "../interfaces"
+import { IFileWatcher, FileProcessingResult, IEmbedder, IVectorStore, PointStruct } from "../interfaces"
 import { codeParser } from "./parser"
 import { CacheManager } from "../cache-manager"
 import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../shared/get-relative-path"
@@ -18,7 +18,7 @@ export class FileWatcher implements IFileWatcher {
 	private fileWatcher?: vscode.FileSystemWatcher
 	private ignoreController: RooIgnoreController
 	private eventQueue: { uri: vscode.Uri; type: "create" | "change" | "delete" }[] = []
-	private processingMap: Map<string, Promise<void>> = new Map()
+	private processingMap: Map<string, Promise<FileProcessingResult | undefined>> = new Map()
 	private isProcessing = false
 	private deletedFilesBuffer: string[] = []
 	private deleteTimer: NodeJS.Timeout | undefined
@@ -126,6 +126,8 @@ export class FileWatcher implements IFileWatcher {
 	 */
 	private async processQueue(): Promise<void> {
 		try {
+			const filesToBatchProcess: FileProcessingResult[] = []
+
 			while (this.eventQueue.length > 0) {
 				const event = this.eventQueue.shift()!
 				const filePath = event.uri.fsPath
@@ -133,11 +135,66 @@ export class FileWatcher implements IFileWatcher {
 				// Ensure sequential processing for the same file path
 				const existingPromise = this.processingMap.get(filePath)
 				const newPromise = (existingPromise || Promise.resolve())
-					.then(() => this.processEvent(event))
+					.then(async () => {
+						const result = await this.processEvent(event)
+						if (result) {
+							if (result.status === "processed_for_batching") {
+								filesToBatchProcess.push(result)
+							} else if (
+								result.status === "skipped" ||
+								result.status === "local_error" ||
+								result.status === "error" ||
+								result.status === "success"
+							) {
+								this._onDidFinishProcessing.fire(result)
+							}
+						}
+						return result
+					})
 					.finally(() => this.processingMap.delete(filePath))
 
 				this.processingMap.set(filePath, newPromise)
 				await newPromise
+			}
+
+			// Process batch operations if we have files to process
+			if (filesToBatchProcess.length > 0 && this.vectorStore) {
+				// Extract unique file paths that need deletion
+				const pathsToDelete = [...new Set(filesToBatchProcess.map((f) => f.path))]
+				// Extract all points to upsert
+				const allPointsToUpsert = filesToBatchProcess.flatMap((f) => f.pointsToUpsert || [])
+
+				try {
+					// Batch delete old points
+					if (pathsToDelete.length > 0) {
+						await this.vectorStore.deletePointsByMultipleFilePaths(pathsToDelete)
+					}
+
+					// Batch upsert new points
+					if (allPointsToUpsert.length > 0) {
+						await this.vectorStore.upsertPoints(allPointsToUpsert)
+					}
+
+					// Update cache and fire success events
+					for (const fileData of filesToBatchProcess) {
+						if (fileData.newHash) {
+							this.cacheManager.updateHash(fileData.path, fileData.newHash)
+						}
+						this._onDidFinishProcessing.fire({
+							path: fileData.path,
+							status: "success",
+						})
+					}
+				} catch (error) {
+					// Handle batch operation failures
+					for (const fileData of filesToBatchProcess) {
+						this._onDidFinishProcessing.fire({
+							path: fileData.path,
+							status: "error",
+							error: error as Error,
+						})
+					}
+				}
 			}
 		} finally {
 			this.isProcessing = false
@@ -148,7 +205,10 @@ export class FileWatcher implements IFileWatcher {
 	 * Processes a single file system event
 	 * @param event The file system event to process
 	 */
-	private async processEvent(event: { uri: vscode.Uri; type: "create" | "change" | "delete" }): Promise<void> {
+	private async processEvent(event: {
+		uri: vscode.Uri
+		type: "create" | "change" | "delete"
+	}): Promise<FileProcessingResult | undefined> {
 		const filePath = event.uri.fsPath
 
 		// For delete operations, process immediately
@@ -172,10 +232,10 @@ export class FileWatcher implements IFileWatcher {
 
 		if (hasPendingDelete) {
 			// Wait for delete to be processed first
-			return
+			return undefined
 		}
 
-		await this.processFile(filePath)
+		return await this.processFile(filePath)
 	}
 
 	/**
@@ -230,25 +290,21 @@ export class FileWatcher implements IFileWatcher {
 		try {
 			// Check if file should be ignored
 			if (!this.ignoreController.validateAccess(filePath)) {
-				const result = {
+				return {
 					path: filePath,
 					status: "skipped" as const,
 					reason: "File is ignored by .rooignore",
 				}
-				this._onDidFinishProcessing.fire(result)
-				return result
 			}
 
 			// Check file size
 			const fileStat = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
 			if (fileStat.size > MAX_FILE_SIZE_BYTES) {
-				const result = {
+				return {
 					path: filePath,
 					status: "skipped" as const,
 					reason: "File is too large",
 				}
-				this._onDidFinishProcessing.fire(result)
-				return result
 			}
 
 			// Read file content
@@ -260,37 +316,24 @@ export class FileWatcher implements IFileWatcher {
 
 			// Check if file has changed
 			if (this.cacheManager.getHash(filePath) === newHash) {
-				const result = {
+				return {
 					path: filePath,
 					status: "skipped" as const,
 					reason: "File has not changed",
-				}
-				this._onDidFinishProcessing.fire(result)
-				return result
-			}
-
-			// Delete old points
-			if (this.vectorStore) {
-				try {
-					await this.vectorStore.deletePointsByFilePath(filePath)
-					console.log(`[FileWatcher] Deleted existing points for changed file: ${filePath}`)
-				} catch (error) {
-					console.error(`[FileWatcher] Failed to delete points for ${filePath}:`, error)
-					throw error
 				}
 			}
 
 			// Parse file
 			const blocks = await codeParser.parseFile(filePath, { content, fileHash: newHash })
 
-			// Create embeddings and upsert points
+			// Prepare points for batch processing
+			let pointsToUpsert: PointStruct[] = []
 			if (this.embedder && this.vectorStore && blocks.length > 0) {
 				const texts = blocks.map((block) => block.content)
 				const { embeddings } = await this.embedder.createEmbeddings(texts)
 
-				const points = blocks.map((block, index) => {
+				pointsToUpsert = blocks.map((block, index) => {
 					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path)
-
 					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
 					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
 
@@ -305,27 +348,20 @@ export class FileWatcher implements IFileWatcher {
 						},
 					}
 				})
-
-				await this.vectorStore.upsertPoints(points)
 			}
 
-			// Update cache
-			this.cacheManager.updateHash(filePath, newHash)
-
-			const result = {
+			return {
 				path: filePath,
-				status: "success" as const,
+				status: "processed_for_batching" as const,
+				newHash,
+				pointsToUpsert,
 			}
-			this._onDidFinishProcessing.fire(result)
-			return result
 		} catch (error) {
-			const result = {
+			return {
 				path: filePath,
-				status: "error" as const,
+				status: "local_error" as const,
 				error: error as Error,
 			}
-			this._onDidFinishProcessing.fire(result)
-			return result
 		}
 	}
 }

@@ -1,6 +1,12 @@
 /**
  * Interface for vector database clients
  */
+export type PointStruct = {
+	id: string
+	vector: number[]
+	payload: Record<string, any>
+}
+
 export interface IVectorStore {
 	/**
 	 * Initializes the vector store
@@ -12,13 +18,7 @@ export interface IVectorStore {
 	 * Upserts points into the vector store
 	 * @param points Array of points to upsert
 	 */
-	upsertPoints(
-		points: Array<{
-			id: string
-			vector: number[]
-			payload: Record<string, any>
-		}>,
-	): Promise<void>
+	upsertPoints(points: PointStruct[]): Promise<void>
 
 	/**
 	 * Searches for similar vectors
