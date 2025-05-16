@@ -1,5 +1,4 @@
 import * as vscode from "vscode"
-import * as path from "path"
 import { getContainingFunction, findSymbolPosition, getContainingSymbol } from "../language-services"
 
 // Create a dedicated output channel for debugging C# references
