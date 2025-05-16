@@ -12,12 +12,12 @@ import { handleNewTask } from "./handleTask"
  * Helper to get the visible ClineProvider instance or log if not found.
  */
 export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
-	const visibleProvider = ClineProvider.getVisibleInstance()
-	if (!visibleProvider) {
-		outputChannel.appendLine("Cannot find any visible Roo Code instances.")
+	const activeProvider = ClineProvider.getActiveProvider()
+	if (!activeProvider) {
+		outputChannel.appendLine("Cannot find any active and visible Roo Code provider instance.")
 		return undefined
 	}
-	return visibleProvider
+	return activeProvider
 }
 
 // Store panel references in both modes
@@ -62,7 +62,7 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 	}
 }
 
-const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
+const getCommandsMap = ({ context, outputChannel }: RegisterCommandOptions) => {
 	return {
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
@@ -151,15 +151,30 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		},
 		"roo-cline.focusInput": async () => {
 			try {
-				const panel = getPanel()
+				let currentPanel = getPanel()
 
-				if (!panel) {
+				if (!currentPanel || !currentPanel.visible) {
 					await vscode.commands.executeCommand("workbench.view.extension.roo-cline-ActivityBar")
-				} else if (panel === tabPanel) {
-					panel.reveal(vscode.ViewColumn.Active, false)
-				} else if (panel === sidebarPanel) {
+					await delay(200)
+					currentPanel = getPanel()
+					if (!currentPanel) {
+						outputChannel.appendLine("Could not activate Roo Code panel for focusInput.")
+						return
+					}
+				}
+
+				if ("viewColumn" in currentPanel && currentPanel.viewColumn) {
+					;(currentPanel as vscode.WebviewPanel).reveal(currentPanel.viewColumn, false)
+				} else {
 					await vscode.commands.executeCommand(`${ClineProvider.sideBarId}.focus`)
-					provider.postMessageToWebview({ type: "action", action: "focusInput" })
+				}
+
+				const targetProvider = ClineProvider.getActiveProvider()
+
+				if (targetProvider) {
+					targetProvider.postMessageToWebview({ type: "action", action: "focusInput" })
+				} else {
+					outputChannel.appendLine(`Error focusing input: Could not find provider for the active panel.`)
 				}
 			} catch (error) {
 				outputChannel.appendLine(`Error focusing input: ${error}`)

@@ -227,6 +227,11 @@ jest.mock("../../../integrations/misc/extract-text", () => ({
 	}),
 }))
 
+jest.mock("../../../activate/registerCommands.ts", () => ({
+	getPanel: jest.fn(),
+	setPanel: jest.fn(),
+}))
+
 afterAll(() => {
 	jest.restoreAllMocks()
 })
@@ -310,6 +315,9 @@ describe("ClineProvider", () => {
 			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
 		} as unknown as vscode.WebviewView
 
+		const { getPanel } = require("../../../activate/registerCommands")
+		;(getPanel as jest.Mock).mockReturnValue(mockWebviewView)
+
 		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		defaultTaskOptions = {
@@ -328,10 +336,9 @@ describe("ClineProvider", () => {
 
 	test("constructor initializes correctly", () => {
 		expect(provider).toBeInstanceOf(ClineProvider)
-		// Since getVisibleInstance returns the last instance where view.visible is true
 		// @ts-ignore - accessing private property for testing
 		provider.view = mockWebviewView
-		expect(ClineProvider.getVisibleInstance()).toBe(provider)
+		expect(ClineProvider.getActiveProvider()).toBe(provider)
 	})
 
 	test("resolveWebviewView sets up webview correctly", async () => {
