@@ -240,4 +240,211 @@ describe("AwsBedrockHandler", () => {
 			expect(secondImage.image).toHaveProperty("format", "png")
 		})
 	})
+
+	describe("prompt caching", () => {
+		// Access the private convertToBedrockConverseMessages method for testing
+		const getPrivateMethod = (handler: AwsBedrockHandler) => {
+			return (handler as any).convertToBedrockConverseMessages.bind(handler)
+		}
+
+		it("should not add cache points when prompt caching is disabled", () => {
+			const convertToBedrockConverseMessages = getPrivateMethod(handler)
+
+			const messages = [
+				{ role: "user", content: "Hello" },
+				{ role: "assistant", content: "Hi there" },
+				{ role: "user", content: "How are you?" },
+			]
+
+			const systemPrompt = "You are a helpful assistant."
+			const result = convertToBedrockConverseMessages(messages, systemPrompt, false)
+
+			// Verify no cache points were added
+			expect(result.system[0]).not.toHaveProperty("cachePoint")
+			result.messages.forEach((msg: any) => {
+				expect(msg.content).not.toContainEqual(expect.objectContaining({ cachePoint: expect.anything() }))
+			})
+		})
+
+		it("should add cache point to first message when system prompt is present", () => {
+			const convertToBedrockConverseMessages = getPrivateMethod(handler)
+
+			const messages = [
+				{ role: "user", content: "Hello" },
+				{ role: "assistant", content: "Hi there" },
+				{ role: "user", content: "How are you?" },
+			]
+
+			const systemPrompt = "You are a helpful assistant."
+			const result = convertToBedrockConverseMessages(messages, systemPrompt, true)
+
+			// Verify cache point was added to first message
+			const firstMessage = result.messages[0]
+			const hasCachePoint = firstMessage.content.some(
+				(item: any) => item.cachePoint && item.cachePoint.type === "default",
+			)
+			expect(hasCachePoint).toBe(true)
+		})
+
+		it("should add cache points to last and second-to-last user messages", () => {
+			const convertToBedrockConverseMessages = getPrivateMethod(handler)
+
+			const messages = [
+				{ role: "user", content: "First user message" },
+				{ role: "assistant", content: "First assistant response" },
+				{ role: "user", content: "Second user message" },
+				{ role: "assistant", content: "Second assistant response" },
+				{ role: "user", content: "Third user message" },
+			]
+
+			const result = convertToBedrockConverseMessages(messages, undefined, true)
+
+			// Find indices of user messages
+			const userMessageIndices = messages
+				.map((msg, idx) => (msg.role === "user" ? idx : -1))
+				.filter((idx) => idx !== -1)
+
+			const lastUserIndex = userMessageIndices[userMessageIndices.length - 1]
+			const secondLastUserIndex = userMessageIndices[userMessageIndices.length - 2]
+
+			// Verify cache points were added to last and second-to-last user messages
+			const lastUserMessage = result.messages[lastUserIndex]
+			const secondLastUserMessage = result.messages[secondLastUserIndex]
+
+			const lastUserHasCachePoint = lastUserMessage.content.some(
+				(item: any) => item.cachePoint && item.cachePoint.type === "default",
+			)
+			const secondLastUserHasCachePoint = secondLastUserMessage.content.some(
+				(item: any) => item.cachePoint && item.cachePoint.type === "default",
+			)
+
+			expect(lastUserHasCachePoint).toBe(true)
+			expect(secondLastUserHasCachePoint).toBe(true)
+
+			// Verify other messages don't have cache points
+			const otherMessages = result.messages.filter(
+				(_: any, idx: number) => idx !== lastUserIndex && idx !== secondLastUserIndex && idx !== 0,
+			)
+
+			otherMessages.forEach((msg: any) => {
+				const hasCachePoint = msg.content.some((item: any) => item.cachePoint)
+				expect(hasCachePoint).toBe(false)
+			})
+		})
+
+		it("should handle conversation with only one user message", () => {
+			const convertToBedrockConverseMessages = getPrivateMethod(handler)
+
+			const messages = [{ role: "user", content: "Single user message" }]
+
+			const result = convertToBedrockConverseMessages(messages, undefined, true)
+
+			// Verify cache point was added to the only user message
+			const userMessage = result.messages[0]
+			const hasCachePoint = userMessage.content.some(
+				(item: any) => item.cachePoint && item.cachePoint.type === "default",
+			)
+
+			expect(hasCachePoint).toBe(true)
+		})
+
+		it("should handle empty messages array", () => {
+			const convertToBedrockConverseMessages = getPrivateMethod(handler)
+
+			const messages: Anthropic.Messages.MessageParam[] = []
+
+			const result = convertToBedrockConverseMessages(messages, undefined, true)
+
+			// Verify no errors and empty messages array
+			expect(result.messages).toEqual([])
+		})
+	})
+
+	describe("cache token reporting", () => {
+		it("should handle all cache token field naming conventions", async () => {
+			// Mock the stream to include various cache token field names
+			mockSend.mockResolvedValue({
+				stream: [
+					{
+						metadata: {
+							usage: {
+								inputTokens: 100,
+								outputTokens: 50,
+								cacheReadInputTokens: 30,
+							},
+						},
+					},
+					{
+						metadata: {
+							usage: {
+								inputTokens: 0,
+								outputTokens: 10,
+								cacheWriteInputTokenCount: 20,
+							},
+						},
+					},
+					{
+						metadata: {
+							usage: {
+								inputTokens: 0,
+								outputTokens: 5,
+								cacheReadTokens: 15,
+							},
+						},
+					},
+					{
+						metadata: {
+							usage: {
+								inputTokens: 0,
+								outputTokens: 5,
+								cacheWriteTokens: 25,
+							},
+						},
+					},
+				],
+			})
+
+			const messages: Anthropic.Messages.MessageParam[] = [{ role: "user", content: "Test message" }]
+			const generator = handler.createMessage("Test system prompt", messages)
+
+			// Collect all yielded values
+			const results: any[] = []
+			for await (const result of generator) {
+				results.push(result)
+			}
+
+			// Verify all cache token field naming conventions were handled
+			expect(results).toContainEqual({
+				type: "usage",
+				inputTokens: 100,
+				outputTokens: 50,
+				cacheReadTokens: 30,
+				cacheWriteTokens: 0,
+			})
+
+			expect(results).toContainEqual({
+				type: "usage",
+				inputTokens: 0,
+				outputTokens: 10,
+				cacheReadTokens: 0,
+				cacheWriteTokens: 20,
+			})
+
+			expect(results).toContainEqual({
+				type: "usage",
+				inputTokens: 0,
+				outputTokens: 5,
+				cacheReadTokens: 15,
+				cacheWriteTokens: 0,
+			})
+
+			expect(results).toContainEqual({
+				type: "usage",
+				inputTokens: 0,
+				outputTokens: 5,
+				cacheReadTokens: 0,
+				cacheWriteTokens: 25,
+			})
+		})
+	})
 })

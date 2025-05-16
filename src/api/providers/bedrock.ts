@@ -21,8 +21,6 @@ import { BaseProvider } from "./base-provider"
 import { logger } from "../../utils/logging"
 import { Message, SystemContentBlock } from "@aws-sdk/client-bedrock-runtime"
 // New cache-related imports
-import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-strategy"
-import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
 import { AMAZON_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
 import { convertToBedrockConverseMessages as sharedConverter } from "../transform/bedrock-converse-format"
 
@@ -104,6 +102,8 @@ export type UsageType = {
 	cacheWriteInputTokens?: number
 	cacheReadInputTokenCount?: number
 	cacheWriteInputTokenCount?: number
+	cacheReadTokens?: number
+	cacheWriteTokens?: number
 }
 
 /************************************************************************************
@@ -190,15 +190,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		// Handle cross-region inference
 		const usePromptCache = Boolean(this.options.awsUsePromptCache && this.supportsAwsPromptCache(modelConfig))
 
-		// Generate a conversation ID based on the first few messages to maintain cache consistency
-		const conversationId =
-			messages.length > 0
-				? `conv_${messages[0].role}_${
-						typeof messages[0].content === "string"
-							? messages[0].content.substring(0, 20)
-							: "complex_content"
-					}`
-				: "default_conversation"
+		// Generate a more stable conversation ID that doesn't change with every new message
+		// Use a fixed ID or derive it from the system prompt which tends to be more stable
+		const conversationId = systemPrompt
+			? `conv_system_${systemPrompt.substring(0, 20).replace(/\s+/g, "_")}`
+			: "default_conversation"
 
 		// Convert messages to Bedrock format, passing the model info and conversation ID
 		const formatted = this.convertToBedrockConverseMessages(
@@ -225,7 +221,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		// Create AbortController with 10 minute timeout
 		const controller = new AbortController()
-		let timeoutId: NodeJS.Timeout | undefined
+		let timeoutId: ReturnType<typeof setTimeout> | undefined
 
 		try {
 			timeoutId = setTimeout(
@@ -263,9 +259,12 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				if (streamEvent.metadata?.usage) {
 					const usage = (streamEvent.metadata?.usage || {}) as UsageType
 
-					// Check both field naming conventions for cache tokens
-					const cacheReadTokens = usage.cacheReadInputTokens || usage.cacheReadInputTokenCount || 0
-					const cacheWriteTokens = usage.cacheWriteInputTokens || usage.cacheWriteInputTokenCount || 0
+					// Check all possible field naming conventions for cache tokens
+					const cacheReadTokens =
+						usage.cacheReadInputTokens || usage.cacheReadInputTokenCount || usage.cacheReadTokens || 0
+
+					const cacheWriteTokens =
+						usage.cacheWriteInputTokens || usage.cacheWriteInputTokenCount || usage.cacheWriteTokens || 0
 
 					// Always include all available token information
 					yield {
@@ -433,8 +432,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		anthropicMessages: Anthropic.Messages.MessageParam[] | { role: string; content: string }[],
 		systemMessage?: string,
 		usePromptCache: boolean = false,
-		modelInfo?: any,
-		conversationId?: string, // Optional conversation ID to track cache points across messages
+		_modelInfo?: any,
+		_conversationId?: string, // Optional conversation ID to track cache points across messages
 	): { system: SystemContentBlock[]; messages: Message[] } {
 		// First convert messages using shared converter for proper image handling
 		const convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
@@ -447,44 +446,21 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			}
 		}
 
-		// Convert model info to expected format for cache strategy
-		const cacheModelInfo: CacheModelInfo = {
-			maxTokens: modelInfo?.maxTokens || 8192,
-			contextWindow: modelInfo?.contextWindow || 200_000,
-			supportsPromptCache: modelInfo?.supportsPromptCache || false,
-			maxCachePoints: modelInfo?.maxCachePoints || 0,
-			minTokensPerCachePoint: modelInfo?.minTokensPerCachePoint || 50,
-			cachableFields: modelInfo?.cachableFields || [],
-		}
+		// System message (without cache point as SystemContentBlock doesn't support it)
+		const systemBlocks = systemMessage ? [{ text: systemMessage } as SystemContentBlock] : []
 
-		// Get previous cache point placements for this conversation if available
-		const previousPlacements =
-			conversationId && this.previousCachePointPlacements[conversationId]
-				? this.previousCachePointPlacements[conversationId]
-				: undefined
+		// Find indices of user messages
+		const userMsgIndices = convertedMessages.reduce(
+			(acc, msg, index) => (msg.role === "user" ? [...acc, index] : acc),
+			[] as number[],
+		)
+		const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
+		const secondLastUserMsgIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
 
-		// Create config for cache strategy
-		const config = {
-			modelInfo: cacheModelInfo,
-			systemPrompt: systemMessage,
-			messages: anthropicMessages as Anthropic.Messages.MessageParam[],
-			usePromptCache,
-			previousCachePointPlacements: previousPlacements,
-		}
-
-		// Get cache point placements
-		let strategy = new MultiPointStrategy(config)
-		const cacheResult = strategy.determineOptimalCachePoints()
-
-		// Store cache point placements for future use if conversation ID is provided
-		if (conversationId && cacheResult.messageCachePointPlacements) {
-			this.previousCachePointPlacements[conversationId] = cacheResult.messageCachePointPlacements
-		}
-
-		// Apply cache points to the properly converted messages
+		// Apply cache points to messages based on position
 		const messagesWithCache = convertedMessages.map((msg, index) => {
-			const placement = cacheResult.messageCachePointPlacements?.find((p) => p.index === index)
-			if (placement) {
+			// Always cache the last and second-to-last user messages
+			if (index === lastUserMsgIndex || index === secondLastUserMsgIndex) {
 				return {
 					...msg,
 					content: [...(msg.content || []), { cachePoint: { type: "default" } } as ContentBlock],
@@ -493,8 +469,17 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			return msg
 		})
 
+		// Add a cache point to the first message instead of the system message
+		if (messagesWithCache.length > 0 && systemMessage) {
+			// If we have messages and a system message, add a cache point to the first message
+			messagesWithCache[0] = {
+				...messagesWithCache[0],
+				content: [...(messagesWithCache[0].content || []), { cachePoint: { type: "default" } } as ContentBlock],
+			}
+		}
+
 		return {
-			system: systemMessage ? [{ text: systemMessage } as SystemContentBlock] : [],
+			system: systemBlocks,
 			messages: messagesWithCache,
 		}
 	}
