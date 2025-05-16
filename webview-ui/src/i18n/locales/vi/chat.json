@@ -202,12 +202,12 @@
 		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.15 Đã phát hành",
-		"description": "Roo Code 3.15 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
+		"title": "🎉 Roo Code 3.17 Đã phát hành",
+		"description": "Roo Code 3.17 mang đến các tính năng mạnh mẽ và cải tiến mới dựa trên phản hồi của bạn.",
 		"whatsNew": "Có gì mới",
-		"feature1": "<bold>Bộ nhớ đệm lời nhắc cho Vertex</bold>: Đã thêm hỗ trợ bộ nhớ đệm lời nhắc cho Vertex AI, cải thiện thời gian phản hồi và giảm chi phí API",
-		"feature2": "<bold>Cơ chế dự phòng cho Terminal</bold>: Đã triển khai cơ chế dự phòng khi tích hợp shell terminal VSCode gặp sự cố",
-		"feature3": "<bold>Cải thiện đoạn mã</bold>: Nâng cao hiển thị và tương tác với đoạn mã trong giao diện trò chuyện",
+		"feature1": "<bold>Bộ nhớ đệm ngầm cho Gemini</bold>: Các lệnh gọi API Gemini hiện được tự động lưu vào bộ nhớ đệm, giảm chi phí API",
+		"feature2": "<bold>Lựa chọn chế độ thông minh hơn</bold>: Định nghĩa chế độ giờ đây có thể bao gồm hướng dẫn về thời điểm nên sử dụng mỗi chế độ, cho phép điều phối tốt hơn",
+		"feature3": "<bold>Ngắn gọn hóa bối cảnh thông minh</bold>: Tóm tắt thông minh lịch sử cuộc trò chuyện khi bối cảnh đầy thay vì cắt bỏ (bật trong Cài đặt -> Thử nghiệm)",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -231,6 +231,15 @@
 			"scrollDown": "Cuộn xuống",
 			"scrollUp": "Cuộn lên",
 			"close": "Đóng trình duyệt"
+		}
+	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "Mở rộng khối mã",
+			"collapse": "Thu gọn khối mã",
+			"enable_wrap": "Bật tự động xuống dòng",
+			"disable_wrap": "Tắt tự động xuống dòng",
+			"copy_code": "Sao chép mã"
 		}
 	},
 	"systemPromptWarning": "CẢNH BÁO: Đã kích hoạt ghi đè lệnh nhắc hệ thống tùy chỉnh. Điều này có thể phá vỡ nghiêm trọng chức năng và gây ra hành vi không thể dự đoán.",

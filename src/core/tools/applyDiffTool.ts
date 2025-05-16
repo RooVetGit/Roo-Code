@@ -3,7 +3,7 @@ import fs from "fs/promises"
 
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ToolUse, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult } from "../../shared/tools"
@@ -14,7 +14,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 
 export async function applyDiffTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -31,6 +31,7 @@ export async function applyDiffTool(
 	const sharedMessageProps: ClineSayTool = {
 		tool: "appliedDiff",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		diff: diffContent,
 	}
 
 	try {
@@ -46,8 +47,10 @@ export async function applyDiffTool(
 				return
 			}
 
-			const partialMessage = JSON.stringify(sharedMessageProps)
-			await cline.ask("tool", partialMessage, block.partial, toolProgressStatus).catch(() => {})
+			await cline
+				.ask("tool", JSON.stringify(sharedMessageProps), block.partial, toolProgressStatus)
+				.catch(() => {})
+
 			return
 		} else {
 			if (!relPath) {
@@ -164,7 +167,7 @@ export async function applyDiffTool(
 
 			// Track file edit operation
 			if (relPath) {
-				await cline.getFileContextTracker().trackFileContext(relPath, "roo_edited" as RecordSource)
+				await cline.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
 			}
 
 			// Used to determine if we should wait for busy terminal to update before sending api request
