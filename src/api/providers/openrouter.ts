@@ -18,7 +18,7 @@ import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transfor
 import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
 
 import { getModelParams, SingleCompletionHandler } from "../index"
-import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
+import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TOP_P, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { BaseProvider } from "./base-provider"
 import { getModels } from "./fetchers/modelCache"
 import { getModelEndpoints } from "./fetchers/modelEndpointCache"
@@ -194,22 +194,26 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			info = this.endpoints[this.options.openRouterSpecificProvider]
 		}
 
-		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
+		let topP: number | undefined = undefined
+		let defaultTemperature = 0
 
-		return {
-			id,
-			info,
-			// maxTokens, thinking, temperature, reasoningEffort
-			...getModelParams({
-				options: this.options,
-				model: info,
-				defaultTemperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0,
-			}),
-			topP: isDeepSeekR1 ? 0.95 : undefined,
-			promptCache: {
-				supported: PROMPT_CACHING_MODELS.has(id),
-			},
+		// TODO: Add `defaultTopP`, `defaultTemperature` to `ModelInfo`.
+		if (id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning") {
+			topP = DEEP_SEEK_DEFAULT_TOP_P
+			defaultTemperature = DEEP_SEEK_DEFAULT_TEMPERATURE
 		}
+
+		const modelParams = getModelParams({ options: this.options, model: info, defaultTemperature })
+		const { maxTokens, thinking, reasoningEffort } = modelParams
+		let temperature: number | undefined = modelParams.temperature
+
+		// TODO: Add `isTemperatureSupported` to `ModelInfo`.
+		if (id.startsWith("openai/codex")) {
+			temperature = undefined
+		}
+
+		const promptCache = { supported: PROMPT_CACHING_MODELS.has(id) }
+		return { id, info, maxTokens, thinking, temperature, reasoningEffort, topP, promptCache }
 	}
 
 	async completePrompt(prompt: string) {

@@ -850,6 +850,17 @@ export const geminiModels = {
 export type OpenAiNativeModelId = keyof typeof openAiNativeModels
 export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4.1"
 export const openAiNativeModels = {
+	// Fails with:
+	// 404 This model is only supported in v1/responses and not in v1/chat/completions.
+	// "codex-mini-latest": {
+	// 	maxTokens: 100_000,
+	// 	contextWindow: 200_000,
+	// 	supportsImages: true,
+	// 	supportsPromptCache: true,
+	// 	inputPrice: 1.5,
+	// 	outputPrice: 6.0,
+	// 	cacheReadsPrice: 0.375,
+	// },
 	"gpt-4.1": {
 		maxTokens: 32_768,
 		contextWindow: 1_047_576,
