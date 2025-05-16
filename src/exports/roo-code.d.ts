@@ -66,6 +66,7 @@ type GlobalSettings = {
 	alwaysApproveResubmit?: boolean | undefined
 	requestDelaySeconds?: number | undefined
 	alwaysAllowMcp?: boolean | undefined
+	alwaysAllowExtTools?: boolean | undefined
 	alwaysAllowModeSwitch?: boolean | undefined
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
@@ -142,9 +143,9 @@ type GlobalSettings = {
 				whenToUse?: string | undefined
 				customInstructions?: string | undefined
 				groups: (
-					| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
+					| ("read" | "edit" | "browser" | "command" | "mcp" | "ext" | "modes")
 					| [
-							"read" | "edit" | "browser" | "command" | "mcp" | "modes",
+							"read" | "edit" | "browser" | "command" | "mcp" | "ext" | "modes",
 							{
 								fileRegex?: string | undefined
 								description?: string | undefined
@@ -380,6 +381,7 @@ type ClineMessage = {
 				| "mistake_limit_reached"
 				| "browser_action_launch"
 				| "use_mcp_server"
+				| "use_ext_tool"
 		  )
 		| undefined
 	say?:
@@ -401,6 +403,8 @@ type ClineMessage = {
 				| "browser_action_result"
 				| "mcp_server_request_started"
 				| "mcp_server_response"
+				| "extension_tool_request_started"
+				| "extension_tool_response"
 				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
@@ -455,6 +459,7 @@ type RooCodeEvents = {
 							| "mistake_limit_reached"
 							| "browser_action_launch"
 							| "use_mcp_server"
+							| "use_ext_tool"
 					  )
 					| undefined
 				say?:
@@ -476,6 +481,8 @@ type RooCodeEvents = {
 							| "browser_action_result"
 							| "mcp_server_request_started"
 							| "mcp_server_response"
+							| "extension_tool_request_started"
+							| "extension_tool_response"
 							| "subtask_result"
 							| "checkpoint_saved"
 							| "rooignore_error"
@@ -551,6 +558,7 @@ type RooCodeEvents = {
 			| "list_code_definition_names"
 			| "browser_action"
 			| "use_mcp_tool"
+			| "use_ext_tool"
 			| "access_mcp_resource"
 			| "ask_followup_question"
 			| "attempt_completion"
@@ -779,6 +787,7 @@ type IpcMessage =
 								alwaysApproveResubmit?: boolean | undefined
 								requestDelaySeconds?: number | undefined
 								alwaysAllowMcp?: boolean | undefined
+								alwaysAllowExtTools?: boolean | undefined
 								alwaysAllowModeSwitch?: boolean | undefined
 								alwaysAllowSubtasks?: boolean | undefined
 								alwaysAllowExecute?: boolean | undefined
@@ -852,9 +861,17 @@ type IpcMessage =
 											whenToUse?: string | undefined
 											customInstructions?: string | undefined
 											groups: (
-												| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
+												| ("read" | "edit" | "browser" | "command" | "mcp" | "ext" | "modes")
 												| [
-														"read" | "edit" | "browser" | "command" | "mcp" | "modes",
+														(
+															| "read"
+															| "edit"
+															| "browser"
+															| "command"
+															| "mcp"
+															| "ext"
+															| "modes"
+														),
 														{
 															fileRegex?: string | undefined
 															description?: string | undefined
@@ -924,6 +941,7 @@ type IpcMessage =
 												| "mistake_limit_reached"
 												| "browser_action_launch"
 												| "use_mcp_server"
+												| "use_ext_tool"
 										  )
 										| undefined
 									say?:
@@ -945,6 +963,8 @@ type IpcMessage =
 												| "browser_action_result"
 												| "mcp_server_request_started"
 												| "mcp_server_response"
+												| "extension_tool_request_started"
+												| "extension_tool_response"
 												| "subtask_result"
 												| "checkpoint_saved"
 												| "rooignore_error"
@@ -1242,6 +1262,7 @@ type TaskCommand =
 					alwaysApproveResubmit?: boolean | undefined
 					requestDelaySeconds?: number | undefined
 					alwaysAllowMcp?: boolean | undefined
+					alwaysAllowExtTools?: boolean | undefined
 					alwaysAllowModeSwitch?: boolean | undefined
 					alwaysAllowSubtasks?: boolean | undefined
 					alwaysAllowExecute?: boolean | undefined
@@ -1315,9 +1336,9 @@ type TaskCommand =
 								whenToUse?: string | undefined
 								customInstructions?: string | undefined
 								groups: (
-									| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
+									| ("read" | "edit" | "browser" | "command" | "mcp" | "ext" | "modes")
 									| [
-											"read" | "edit" | "browser" | "command" | "mcp" | "modes",
+											"read" | "edit" | "browser" | "command" | "mcp" | "ext" | "modes",
 											{
 												fileRegex?: string | undefined
 												description?: string | undefined
@@ -1383,6 +1404,7 @@ type TaskEvent =
 									| "mistake_limit_reached"
 									| "browser_action_launch"
 									| "use_mcp_server"
+									| "use_ext_tool"
 							  )
 							| undefined
 						say?:
@@ -1404,6 +1426,8 @@ type TaskEvent =
 									| "browser_action_result"
 									| "mcp_server_request_started"
 									| "mcp_server_response"
+									| "extension_tool_request_started"
+									| "extension_tool_response"
 									| "subtask_result"
 									| "checkpoint_saved"
 									| "rooignore_error"

@@ -67,6 +67,7 @@ describe("File-Based Custom System Prompt", () => {
 			"test/path", // Using a relative path without leading slash
 			false, // supportsComputerUse
 			undefined, // mcpHub
+			undefined, // extensionToolManager
 			undefined, // diffStrategy
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
@@ -101,6 +102,7 @@ describe("File-Based Custom System Prompt", () => {
 			"test/path", // Using a relative path without leading slash
 			false, // supportsComputerUse
 			undefined, // mcpHub
+			undefined, // extensionToolManager
 			undefined, // diffStrategy
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
@@ -144,6 +146,7 @@ describe("File-Based Custom System Prompt", () => {
 			"test/path", // Using a relative path without leading slash
 			false, // supportsComputerUse
 			undefined, // mcpHub
+			undefined, // extensionToolManager
 			undefined, // diffStrategy
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
