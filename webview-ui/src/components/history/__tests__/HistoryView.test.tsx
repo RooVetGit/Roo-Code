@@ -103,13 +103,12 @@ describe("HistoryView", () => {
 		const updatedRadio = within(radioGroup).getByTestId("radio-most-relevant")
 		expect(updatedRadio).toBeInTheDocument()
 
-		// Verify copy the plain text content of the task when the copy button is clicked
-		const taskContainer = screen.getByTestId("virtuoso-item-1")
-		fireEvent.mouseEnter(taskContainer)
-		const copyButton = within(taskContainer).getByTestId("copy-prompt-button")
-		fireEvent.click(copyButton)
-		const taskContent = within(taskContainer).getByTestId("task-content")
-		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(taskContent.textContent)
+               // Verify clipboard receives the item's task when the copy button is clicked
+               const taskContainer = screen.getByTestId("virtuoso-item-1")
+               fireEvent.mouseEnter(taskContainer)
+               const copyButton = within(taskContainer).getByTestId("copy-prompt-button")
+               fireEvent.click(copyButton)
+               expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockTaskHistory[0].task)
 	})
 
 	it("handles sort options correctly", async () => {
@@ -241,8 +240,8 @@ describe("HistoryView", () => {
 			await Promise.resolve()
 		})
 
-		// Verify clipboard was called
-		expect(navigator.clipboard.writeText).toHaveBeenCalledWith("Test task 1")
+               // Verify clipboard was called with the item's task
+               expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockTaskHistory[0].task)
 
 		// Advance timer to trigger the setTimeout for modal disappearance
 		act(() => {

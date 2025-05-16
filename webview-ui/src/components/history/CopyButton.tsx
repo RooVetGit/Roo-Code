@@ -13,16 +13,13 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 	const { isCopied, copy } = useClipboard()
 	const { t } = useAppTranslation()
 
-	const onCopy = useCallback(
-		(e: React.MouseEvent) => {
-			e.stopPropagation()
-			const tempDiv = document.createElement("div")
-			tempDiv.innerHTML = itemTask
-			const text = tempDiv.textContent || tempDiv.innerText || ""
-			!isCopied && copy(text)
-		},
-		[isCopied, copy, itemTask],
-	)
+       const onCopy = useCallback(
+               (e: React.MouseEvent) => {
+                       e.stopPropagation()
+                       if (!isCopied) copy(itemTask)
+               },
+               [isCopied, copy, itemTask],
+       )
 
 	return (
 		<Button
