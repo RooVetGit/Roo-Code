@@ -173,7 +173,11 @@ describe("FileWatcher", () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({
 				path: mockUri.fsPath,
-				status: "success",
+				status: "processed_for_batching",
+				newHash: "mock-hash",
+				pointsToUpsert: [],
+				reason: undefined,
+				error: undefined,
 			} as FileProcessingResult)
 
 			// Access private method using type assertion
@@ -187,7 +191,11 @@ describe("FileWatcher", () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({
 				path: mockUri.fsPath,
-				status: "success",
+				status: "processed_for_batching",
+				newHash: "mock-hash",
+				pointsToUpsert: [],
+				reason: undefined,
+				error: undefined,
 			} as FileProcessingResult)
 
 			// Access private method using type assertion
@@ -296,12 +304,22 @@ describe("FileWatcher", () => {
 
 			const result = await fileWatcher.processFile("/mock/workspace/test.js")
 
-			expect(result.status).toBe("success")
-			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalled()
+			expect(result.status).toBe("processed_for_batching")
+			expect(result.newHash).toBe("new-hash")
+			expect(result.pointsToUpsert).toEqual([
+				expect.objectContaining({
+					id: "mocked-uuid-v5-for-testing",
+					vector: [0.1, 0.2, 0.3],
+					payload: {
+						filePath: "test.js",
+						codeChunk: "test content",
+						startLine: 1,
+						endLine: 5,
+					},
+				}),
+			])
 			expect(mockCodeParser.parseFile).toHaveBeenCalled()
 			expect(mockEmbedder.createEmbeddings).toHaveBeenCalled()
-			expect(mockVectorStore.upsertPoints).toHaveBeenCalled()
-			expect(mockCacheManager.updateHash).toHaveBeenCalledWith("/mock/workspace/test.js", "new-hash")
 		})
 
 		it("should handle processing errors", async () => {
@@ -310,7 +328,7 @@ describe("FileWatcher", () => {
 
 			const result = await fileWatcher.processFile("/mock/workspace/error.js")
 
-			expect(result.status).toBe("error")
+			expect(result.status).toBe("local_error")
 			expect(result.error).toBeDefined()
 		})
 	})
@@ -397,9 +415,10 @@ describe("FileWatcher", () => {
 			await processingPromise
 
 			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledWith(mockUri.fsPath)
-			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledTimes(2)
-
-			expect(mockVectorStore.upsertPoints).toHaveBeenCalled()
+			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledTimes(1)
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith(
+				expect.arrayContaining([mockUri.fsPath]),
+			)
 
 			expect((fileWatcher as any).deletedFilesBuffer).not.toContain(mockUri.fsPath)
 
@@ -409,10 +428,15 @@ describe("FileWatcher", () => {
 			await jest.advanceTimersByTimeAsync(500)
 			await jest.runAllTicks()
 
-			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalled()
-			const deletedPaths = (mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mock.calls[0][0]
-			expect(deletedPaths).toContain(otherFilePath)
-			expect(deletedPaths).not.toContain(mockUri.fsPath)
+			expect((mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mock.calls[0][0]).toEqual(
+				expect.arrayContaining([mockUri.fsPath]),
+			)
+
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledTimes(2)
+
+			const flushedDeletedPaths = (mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mock.calls[1][0]
+			expect(flushedDeletedPaths).toContain(otherFilePath)
+			expect(flushedDeletedPaths).not.toContain(mockUri.fsPath)
 
 			expect(mockCacheManager.updateHash).toHaveBeenCalledWith(mockUri.fsPath, "new-hash")
 		})
