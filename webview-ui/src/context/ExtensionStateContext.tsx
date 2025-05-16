@@ -24,6 +24,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	currentCheckpoint?: string
 	filePaths: string[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
+	markdownBlockLineHeight: number | undefined
+	setMarkdownBlockLineHeight: (value: number) => void
 	setApiConfiguration: (config: ProviderSettings) => void
 	setCustomInstructions: (value?: string) => void
 	setAlwaysAllowReadOnly: (value: boolean) => void
@@ -157,6 +159,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		customSupportPrompts: {},
 		experiments: experimentDefault,
 		enhancementApiConfigId: "",
+		markdownBlockLineHeight: 1.25,
 		autoApprovalEnabled: false,
 		customModes: [],
 		maxOpenTabsContext: 20,
@@ -264,6 +267,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,
 		writeDelayMs: state.writeDelayMs,
 		screenshotQuality: state.screenshotQuality,
+		markdownBlockLineHeight: state.markdownBlockLineHeight,
+		setMarkdownBlockLineHeight: (value) =>
+			setState((prevState) => ({ ...prevState, markdownBlockLineHeight: value })),
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration: (value) =>
