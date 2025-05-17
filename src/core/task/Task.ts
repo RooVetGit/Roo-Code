@@ -165,6 +165,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	consecutiveMistakeCount: number = 0
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
+	consecutiveMistakeCountForInsertContent: Map<string, number> = new Map()
 	toolUsage: ToolUsage = {}
 
 	// Checkpoints
