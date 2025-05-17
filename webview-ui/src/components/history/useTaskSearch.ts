@@ -149,21 +149,47 @@ export const useTaskSearch = () => {
 			let newExpanded = { ...prevExpanded }
 			let changed = false
 
-			const checkAndExpandChildrenRecursive = (currentTasks: HierarchicalHistoryItem[]) => {
-				for (const item of currentTasks) {
-					if (item.parent_task_id && bulkExpandedRootItems[item.parent_task_id]) {
-						if (!newExpanded[item.id]) {
-							newExpanded[item.id] = true
-							changed = true
-						}
+			// Helper to create a flat map of all tasks for efficient lookup by ID
+			const allTasksMap = new Map<string, HierarchicalHistoryItem>()
+			const populateTaskMapRecursive = (currentTaskList: HierarchicalHistoryItem[]) => {
+				for (const item of currentTaskList) {
+					allTasksMap.set(item.id, item)
+					if (item.children) {
+						populateTaskMapRecursive(item.children)
+					}
+				}
+			}
+			populateTaskMapRecursive(tasks) // `tasks` is the hierarchical list from useMemo
+
+			const isAncestorBulkExpanded = (
+				itemId: string | undefined,
+				currentBulkExpandedItems: Record<string, boolean>,
+			): boolean => {
+				if (!itemId) return false
+				const item = allTasksMap.get(itemId)
+				if (!item) return false
+
+				if (currentBulkExpandedItems[item.id]) {
+					return true
+				}
+				// Recursively check the parent
+				return isAncestorBulkExpanded(item.parent_task_id, currentBulkExpandedItems)
+			}
+
+			const applyRecursiveExpansion = (currentTaskList: HierarchicalHistoryItem[]) => {
+				for (const item of currentTaskList) {
+					// If the item itself or any of its ancestors are bulk-expanded, and it's not already expanded
+					if (!newExpanded[item.id] && isAncestorBulkExpanded(item.id, bulkExpandedRootItems)) {
+						newExpanded[item.id] = true
+						changed = true
 					}
 					if (item.children && item.children.length > 0) {
-						checkAndExpandChildrenRecursive(item.children)
+						applyRecursiveExpansion(item.children)
 					}
 				}
 			}
 
-			checkAndExpandChildrenRecursive(tasks) // `tasks` is the hierarchical list
+			applyRecursiveExpansion(tasks)
 
 			return changed ? newExpanded : prevExpanded
 		})
