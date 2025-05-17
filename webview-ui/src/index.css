@@ -422,7 +422,9 @@ a:focus {
 	outline: 1px solid var(--vscode-focusBorder);
 }
 
-/* Attempt to style VSCodeTextArea's internal textarea part if it exists */
+/* 
+ * Attempt to style VSCodeTextArea's internal textarea part if it exists
+ */
 vscode-text-area::part(control) {
 	resize: vertical;
 }
