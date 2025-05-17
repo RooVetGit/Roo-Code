@@ -98,7 +98,7 @@ export async function getOllamaModels(baseUrl = "http://localhost:11434") {
 		const response = await axios.get(`${baseUrl}/api/tags`)
 		const modelsArray = response.data?.models?.map((model: any) => model.name) || []
 		return [...new Set<string>(modelsArray)]
-	} catch (error) {
+	} catch {
 		return []
 	}
 }

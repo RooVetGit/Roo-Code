@@ -47,7 +47,7 @@ export async function tryChromeHostUrl(chromeHostUrl: string): Promise<boolean> 
 		console.log(`Trying to connect to Chrome at: ${chromeHostUrl}/json/version`)
 		await axios.get(`${chromeHostUrl}/json/version`, { timeout: 1000 })
 		return true
-	} catch (error) {
+	} catch {
 		return false
 	}
 }

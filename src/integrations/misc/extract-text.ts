@@ -8,7 +8,7 @@ import { isBinaryFile } from "isbinaryfile"
 export async function extractTextFromFile(filePath: string): Promise<string> {
 	try {
 		await fs.access(filePath)
-	} catch (error) {
+	} catch {
 		throw new Error(`File not found: ${filePath}`)
 	}
 	const fileExtension = path.extname(filePath).toLowerCase()

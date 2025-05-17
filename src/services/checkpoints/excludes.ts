@@ -193,7 +193,7 @@ const getLfsPatterns = async (workspacePath: string) => {
 				.filter((line) => line.includes("filter=lfs"))
 				.map((line) => line.split(" ")[0].trim())
 		}
-	} catch (error) {}
+	} catch {}
 
 	return []
 }

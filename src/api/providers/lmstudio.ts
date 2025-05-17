@@ -56,7 +56,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 					}
 				}
 			}
-		} catch (error) {
+		} catch {
 			// LM Studio doesn't return an error code/body for now
 			throw new Error(
 				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Roo Code's prompts.",
@@ -88,7 +88,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 
 			const response = await this.client.chat.completions.create(params)
 			return response.choices[0]?.message.content || ""
-		} catch (error) {
+		} catch {
 			throw new Error(
 				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Roo Code's prompts.",
 			)
@@ -105,7 +105,7 @@ export async function getLmStudioModels(baseUrl = "http://localhost:1234") {
 		const response = await axios.get(`${baseUrl}/v1/models`)
 		const modelsArray = response.data?.data?.map((model: any) => model.id) || []
 		return [...new Set<string>(modelsArray)]
-	} catch (error) {
+	} catch {
 		return []
 	}
 }

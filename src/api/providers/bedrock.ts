@@ -901,7 +901,7 @@ Suggestions:
 								}
 								return v
 							})
-						} catch (e) {
+						} catch {
 							valueStr = "[Complex Object]"
 						}
 					} else {

@@ -1343,7 +1343,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 
 			return didEndLoop // Will always be false for now.
-		} catch (error) {
+		} catch {
 			// This should never happen since the only thing that can throw an
 			// error is the attemptApiRequest, which is wrapped in a try catch
 			// that sends an ask where if noButtonClicked, will clear current

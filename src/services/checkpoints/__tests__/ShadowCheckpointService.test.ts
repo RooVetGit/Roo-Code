@@ -574,7 +574,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				// Try to restore an invalid checkpoint.
 				try {
 					await service.restoreCheckpoint(invalidCommitHash)
-				} catch (error) {
+				} catch {
 					// Expected to throw, we're testing the event emission.
 				}
 

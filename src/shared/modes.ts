@@ -145,7 +145,7 @@ export function getAllModes(customModes?: ModeConfig[]): ModeConfig[] {
 
 // Check if a mode is custom or an override
 export function isCustomMode(slug: string, customModes?: ModeConfig[]): boolean {
-	return !!customModes?.some((mode) => mode.slug === slug)
+	return customModes?.some((mode) => mode.slug === slug) === true
 }
 
 // Custom error class for file restrictions

@@ -548,7 +548,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Check if local dev server is running.
 		try {
 			await axios.get(`http://${localServerUrl}`)
-		} catch (error) {
+		} catch {
 			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
 
 			return this.getHtmlContent(webview)
@@ -787,7 +787,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	public hasProviderProfileEntry(name: string): boolean {
-		return !!this.getProviderProfileEntry(name)
+		return this.getProviderProfileEntry(name) !== undefined
 	}
 
 	async upsertProviderProfile(
@@ -964,7 +964,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		try {
 			await fs.mkdir(mcpServersDir, { recursive: true })
-		} catch (error) {
+		} catch {
 			// Fallback to a relative path if directory creation fails
 			return path.join(os.homedir(), ".roo-code", "mcp")
 		}
@@ -1563,7 +1563,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Add isSubtask property that indicates whether this task is a subtask
 		if (currentCline) {
-			properties.isSubtask = !!currentCline.parentTask
+			properties.isSubtask = currentCline.parentTask !== undefined
 		}
 
 		return properties

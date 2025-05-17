@@ -12,7 +12,7 @@ export async function countFileLines(filePath: string): Promise<number> {
 	// Check if file exists
 	try {
 		await fs.promises.access(filePath, fs.constants.F_OK)
-	} catch (error) {
+	} catch {
 		throw new Error(`File not found: ${filePath}`)
 	}
 

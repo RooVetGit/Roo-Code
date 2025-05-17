@@ -309,7 +309,7 @@ export class BrowserSession {
 			const urlObj = new URL(url)
 			// Remove www. prefix if present
 			return urlObj.host.replace(/^www\./, "")
-		} catch (error) {
+		} catch {
 			// If URL parsing fails, return the original URL
 			return url
 		}

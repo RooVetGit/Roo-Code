@@ -38,7 +38,7 @@ export async function taskMetadata({
 		try {
 			taskDirSize = await getFolderSize.loose(taskDir)
 			taskSizeCache.set<number>(taskDir, taskDirSize)
-		} catch (error) {
+		} catch {
 			taskDirSize = 0
 		}
 	}
