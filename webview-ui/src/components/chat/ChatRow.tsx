@@ -371,7 +371,11 @@ export const ChatRowContent = ({
 								{message.type === "ask"
 									? tool.isOutsideWorkspace
 										? t("chat:fileOperations.wantsToReadOutsideWorkspace")
-										: t("chat:fileOperations.wantsToRead")
+										: tool.additionalFileCount && tool.additionalFileCount > 0
+											? t("chat:fileOperations.wantsToReadAndXMore", {
+													count: tool.additionalFileCount,
+												})
+											: t("chat:fileOperations.wantsToRead")
 									: t("chat:fileOperations.didRead")}
 							</span>
 						</div>

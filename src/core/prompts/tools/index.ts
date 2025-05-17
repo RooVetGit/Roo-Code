@@ -52,6 +52,7 @@ export function getToolDescriptionsForMode(
 	mcpHub?: McpHub,
 	customModes?: ModeConfig[],
 	experiments?: Record<string, boolean>,
+	settings?: Record<string, any>,
 ): string {
 	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
@@ -60,6 +61,7 @@ export function getToolDescriptionsForMode(
 		diffStrategy,
 		browserViewportSize,
 		mcpHub,
+		settings,
 	}
 
 	const tools = new Set<string>()
