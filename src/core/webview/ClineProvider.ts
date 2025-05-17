@@ -1112,8 +1112,29 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
 		try {
-			// get the task directory full path
-			const { taskDirPath } = await this.getTaskWithId(id)
+			// Get the task to be deleted to access its parent_task_id
+			const { historyItem: deletedTaskHistoryItem, taskDirPath } = await this.getTaskWithId(id)
+			const grandparentTaskId = deletedTaskHistoryItem.parent_task_id
+
+			let currentTaskHistory = (this.getGlobalState("taskHistory") as HistoryItem[] | undefined) || []
+
+			// Create a new array with reparented children
+			const reparentedTaskHistory = currentTaskHistory.map((task) => {
+				if (task.parent_task_id === id) {
+					this.log(`Reparenting task ${task.id} from ${id} to ${grandparentTaskId ?? "undefined (root)"}`)
+					return { ...task, parent_task_id: grandparentTaskId }
+				}
+				return task
+			})
+
+			// Filter out the deleted task: this is in lieu of `deleteTaskFromState(id)`
+			const finalTaskHistory = reparentedTaskHistory.filter((task) => task.id !== id)
+
+			// Update global state with the final list
+			await this.updateGlobalState("taskHistory", finalTaskHistory)
+
+			// Post the final state to the webview, ensuring UI reflects all changes at once
+			await this.postStateToWebview()
 
 			// remove task from stack if it's the current task
 			if (id === this.getCurrentCline()?.taskId) {
@@ -1121,9 +1142,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
 				await this.finishSubTask(t("common:tasks.deleted"))
 			}
-
-			// delete task from the task history state
-			await this.deleteTaskFromState(id)
 
 			// Delete associated shadow repository or branch.
 			// TODO: Store `workspaceDir` in the `HistoryItem` object.
