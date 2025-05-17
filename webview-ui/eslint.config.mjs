@@ -18,6 +18,8 @@ export default [
 			"@typescript-eslint/no-explicit-any": "off",
 			"react/prop-types": "off",
 			"react/display-name": "off",
+			"no-empty": "error",
+			"no-implicit-coercion": "error",
 		},
 	},
 	{
