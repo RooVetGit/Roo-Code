@@ -176,6 +176,29 @@ type GlobalSettings = {
 	historyPreviewCollapsed?: boolean | undefined
 }
 
+type ProviderName =
+	| "anthropic"
+	| "glama"
+	| "openrouter"
+	| "bedrock"
+	| "vertex"
+	| "openai"
+	| "ollama"
+	| "vscode-lm"
+	| "lmstudio"
+	| "gemini"
+	| "openai-native"
+	| "mistral"
+	| "deepseek"
+	| "unbound"
+	| "requesty"
+	| "human-relay"
+	| "fake-ai"
+	| "xai"
+	| "groq"
+	| "chutes"
+	| "litellm"
+
 type ProviderSettings = {
 	apiProvider?:
 		| (
@@ -1486,6 +1509,32 @@ type TaskEvent =
 	  }
 
 /**
+ * ProviderName
+ */
+declare const providerNames: readonly [
+	"anthropic",
+	"glama",
+	"openrouter",
+	"bedrock",
+	"vertex",
+	"openai",
+	"ollama",
+	"vscode-lm",
+	"lmstudio",
+	"gemini",
+	"openai-native",
+	"mistral",
+	"deepseek",
+	"unbound",
+	"requesty",
+	"human-relay",
+	"fake-ai",
+	"xai",
+	"groq",
+	"chutes",
+	"litellm",
+]
+/**
  * RooCodeEvent
  */
 declare enum RooCodeEventName {
@@ -1671,6 +1720,7 @@ export {
 	IpcMessageType,
 	IpcOrigin,
 	type IpcServerEvents,
+	type ProviderName,
 	type ProviderSettings,
 	type ProviderSettingsEntry,
 	type RooCodeAPI,
@@ -1681,4 +1731,5 @@ export {
 	type TaskCommand,
 	type TaskEvent,
 	type TokenUsage,
+	providerNames,
 }

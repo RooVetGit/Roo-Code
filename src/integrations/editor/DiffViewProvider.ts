@@ -211,22 +211,14 @@ export class DiffViewProvider {
 
 		// If the file was already open, close it (must happen after showing the
 		// diff view since if it's the only tab the column will close).
-		this.documentWasOpen = false
-
-		// Close the tab if it's open (it's already saved above).
-		const tabs = vscode.window.tabGroups.all
-			.map((tg) => tg.tabs)
-			.flat()
-			.filter(
-				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
-			)
-
-		for (const tab of tabs) {
-			if (!tab.isDirty) {
-				//await vscode.window.tabGroups.close(tab)
-			}
-			this.documentWasOpen = true
-		}
+		this.documentWasOpen =
+			vscode.window.tabGroups.all
+				.map((tg) => tg.tabs)
+				.flat()
+				.filter(
+					(tab) =>
+						tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
+				).length > 0
 
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
