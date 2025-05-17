@@ -39,6 +39,13 @@ import { generateSystemPrompt } from "./generateSystemPrompt"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
+// Define a type for the payload of requestProviderModels for clarity
+interface RequestProviderModelsPayload {
+	provider: RouterName // Should be 'litellm' or 'requesty' here
+	apiKey?: string
+	baseUrl?: string
+}
+
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
@@ -273,9 +280,41 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.resetState()
 			break
 		case "flushRouterModels":
-			const routerName: RouterName = toRouterName(message.text)
-			await flushModels(routerName)
+			const routerNameFlush: RouterName = toRouterName(message.text)
+			await flushModels(routerNameFlush)
 			break
+		case "requestProviderModels": {
+			const payload = message.payload as RequestProviderModelsPayload | undefined
+			if (!payload || !payload.provider) {
+				provider.postMessageToWebview({
+					type: "providerModelsResponse",
+					payload: {
+						provider: payload?.provider || ("unknown" as RouterName),
+						error: "Invalid payload for requestProviderModels",
+					},
+				})
+				break
+			}
+
+			const targetProvider = payload.provider as RouterName
+			let models = {}
+			let error: string | undefined
+
+			try {
+				await flushModels(targetProvider)
+
+				models = await getModels(targetProvider, payload.apiKey, payload.baseUrl)
+			} catch (e: any) {
+				error = e.message || `Failed to fetch models for ${targetProvider}. Check console for details.`
+				models = {}
+			}
+
+			provider.postMessageToWebview({
+				type: "providerModelsResponse",
+				payload: { provider: targetProvider, models, error },
+			})
+			break
+		}
 		case "requestRouterModels":
 			const { apiConfiguration } = await provider.getState()
 

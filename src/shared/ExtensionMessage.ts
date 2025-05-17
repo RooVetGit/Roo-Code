@@ -15,7 +15,7 @@ import {
 } from "../schemas"
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
-import { RouterModels } from "./api"
+import { RouterModels, ModelRecord, RouterName } from "./api"
 
 export type { ProviderSettingsEntry, ToolProgressStatus }
 
@@ -69,6 +69,7 @@ export interface ExtensionMessage {
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
+		| "providerModelsResponse"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -107,6 +108,7 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	payload?: ProviderModelsResponsePayload
 }
 
 export type ExtensionState = Pick<
@@ -289,3 +291,10 @@ export interface ClineApiReqInfo {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
+
+// Payload for providerModelsResponse
+export interface ProviderModelsResponsePayload {
+	provider: RouterName
+	models?: ModelRecord
+	error?: string
+}

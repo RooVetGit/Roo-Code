@@ -118,7 +118,10 @@
 		"requestyApiKey": "Requesty APIキー",
 		"refreshModels": {
 			"label": "モデルを更新",
-			"hint": "最新のモデルを表示するには設定を再度開いてください。"
+			"hint": "最新のモデルを表示するには設定を再度開いてください。",
+			"loading": "モデルを更新中...",
+			"success": "モデルが正常に更新されました。",
+			"error": "モデルの更新に失敗しました。設定を確認して再試行してください。"
 		},
 		"getRequestyApiKey": "Requesty APIキーを取得",
 		"openRouterTransformsText": "プロンプトとメッセージチェーンをコンテキストサイズに圧縮 (<a>OpenRouter Transforms</a>)",

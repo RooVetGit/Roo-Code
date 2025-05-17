@@ -1128,7 +1128,7 @@ export const unboundDefaultModelInfo: ModelInfo = {
 
 // LiteLLM
 // https://docs.litellm.ai/
-export const litellmDefaultModelId = "anthropic/claude-3-7-sonnet-20250219"
+export const litellmDefaultModelId = "claude-3-7-sonnet-20250219"
 export const litellmDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,

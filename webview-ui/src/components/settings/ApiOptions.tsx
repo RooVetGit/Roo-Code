@@ -11,6 +11,8 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	RouterModels,
+	ModelRecord,
 } from "@roo/shared/api"
 
 import { vscode } from "@src/utils/vscode"
@@ -62,6 +64,8 @@ export interface ApiOptionsProps {
 	errorMessage: string | undefined
 	setErrorMessage: React.Dispatch<React.SetStateAction<string | undefined>>
 }
+
+const emptyModelRecord: ModelRecord = {}
 
 const ApiOptions = ({
 	uriScheme,
@@ -123,7 +127,52 @@ const ApiOptions = ({
 		info: selectedModelInfo,
 	} = useSelectedModel(apiConfiguration)
 
-	const { data: routerModels, refetch: refetchRouterModels } = useRouterModels()
+	const { data: initialRouterModels } = useRouterModels()
+
+	const defaultRouterModels: RouterModels = useMemo(
+		() => ({
+			openrouter: emptyModelRecord,
+			requesty: emptyModelRecord,
+			glama: emptyModelRecord,
+			unbound: emptyModelRecord,
+			litellm: emptyModelRecord,
+		}),
+		[],
+	)
+
+	const [currentRouterModels, setCurrentRouterModels] = useState<RouterModels>(
+		initialRouterModels || defaultRouterModels,
+	)
+
+	useEffect(() => {
+		if (initialRouterModels) {
+			setCurrentRouterModels(initialRouterModels)
+		} else {
+			setCurrentRouterModels(defaultRouterModels)
+		}
+	}, [initialRouterModels, defaultRouterModels])
+
+	// Listen for specific provider model updates
+	useEffect(() => {
+		const handler = (event: MessageEvent<any>) => {
+			const message = event.data
+			if (message.type === "providerModelsResponse" && message.payload) {
+				const { provider, models, error } = message.payload as {
+					provider: keyof RouterModels
+					models?: ModelRecord
+					error?: string
+				}
+				if (provider && models && !error) {
+					setCurrentRouterModels((prevModels) => ({
+						...prevModels, // prevModels is now guaranteed to be RouterModels
+						[provider]: models,
+					}))
+				}
+			}
+		}
+		window.addEventListener("message", handler)
+		return () => window.removeEventListener("message", handler)
+	}, [])
 
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
@@ -175,10 +224,10 @@ const ApiOptions = ({
 
 	useEffect(() => {
 		const apiValidationResult =
-			validateApiConfiguration(apiConfiguration) || validateModelId(apiConfiguration, routerModels)
+			validateApiConfiguration(apiConfiguration) || validateModelId(apiConfiguration, currentRouterModels)
 
 		setErrorMessage(apiValidationResult)
-	}, [apiConfiguration, routerModels, setErrorMessage])
+	}, [apiConfiguration, currentRouterModels, setErrorMessage])
 
 	const selectedProviderModels = useMemo(
 		() =>
@@ -294,7 +343,7 @@ const ApiOptions = ({
 				<OpenRouter
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
+					routerModels={currentRouterModels}
 					selectedModelId={selectedModelId}
 					uriScheme={uriScheme}
 					fromWelcomeView={fromWelcomeView}
@@ -305,8 +354,7 @@ const ApiOptions = ({
 				<Requesty
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
-					refetchRouterModels={refetchRouterModels}
+					routerModels={currentRouterModels}
 				/>
 			)}
 
@@ -314,7 +362,7 @@ const ApiOptions = ({
 				<Glama
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
+					routerModels={currentRouterModels}
 					uriScheme={uriScheme}
 				/>
 			)}
@@ -323,7 +371,7 @@ const ApiOptions = ({
 				<Unbound
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
+					routerModels={currentRouterModels}
 				/>
 			)}
 
@@ -394,7 +442,7 @@ const ApiOptions = ({
 				<LiteLLM
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
+					routerModels={currentRouterModels}
 				/>
 			)}
 
