@@ -10,7 +10,16 @@
 		"contextWindow": "컨텍스트 창:",
 		"closeAndStart": "작업 닫고 새 작업 시작",
 		"export": "작업 기록 내보내기",
-		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)"
+		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)",
+		"requestCostChartTitle": "요청 비용",
+		"totalCostChartTitle": "총 비용",
+		"tokensInChartTitle": "입력 토큰",
+		"tokensOutChartTitle": "출력 토큰",
+		"tokensUnit": "토큰",
+		"costOverviewTitle": "비용 개요",
+		"requestShort": "요청 {{index}}",
+		"clickToEnlarge": "클릭하여 확대",
+		"clickToGoBack": "클릭하여 그리드 보기로 돌아가기"
 	},
 	"unpin": "고정 해제하기",
 	"pin": "고정하기",
