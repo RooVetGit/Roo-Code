@@ -68,9 +68,9 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 		<div className="flex justify-between items-center pb-0">
 			{" "}
 			{/* Added pb-0 */}
-			<div className="flex items-center flex-wrap gap-x-1 text-xs">
+			<div className="flex items-center flex-wrap gap-x-2 text-xs">
 				{" "}
-				{/* Reduced gap-x-1.5 to gap-x-1 */}
+				{/* Increased gap-x-1 to gap-x-2 */} {/* Reduced gap-x-1.5 to gap-x-1 */}
 				{item.children && item.children.length > 0 && (
 					<>
 						<span
@@ -125,6 +125,7 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 						<Button
 							variant="ghost"
 							size="icon"
+							className="opacity-50 hover:opacity-100"
 							title={
 								isBulkExpanding
 									? t("history:collapseAllChildren", "Collapse all")
@@ -141,11 +142,12 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 							/>
 						</Button>
 					)}
-					<CopyButton itemTask={item.task} />
-					<ExportButton itemId={item.id} />
+					<CopyButton itemTask={item.task} className="opacity-50 hover:opacity-100" />
+					<ExportButton itemId={item.id} className="opacity-50 hover:opacity-100" />
 					<Button
 						variant="ghost"
 						size="icon" // Changed from sm to icon
+						className="opacity-50 hover:opacity-100"
 						title={t("history:deleteTaskTitle")}
 						data-testid="delete-task-button"
 						onClick={(e) => {

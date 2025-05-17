@@ -7,9 +7,10 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 
 type CopyButtonProps = {
 	itemTask: string
+	className?: string
 }
 
-export const CopyButton = ({ itemTask }: CopyButtonProps) => {
+export const CopyButton = ({ itemTask, className }: CopyButtonProps) => {
 	const { isCopied, copy } = useClipboard()
 	const { t } = useAppTranslation()
 
@@ -28,6 +29,7 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 		<Button
 			variant="ghost"
 			size="icon"
+			className={className}
 			title={t("history:copyPrompt")}
 			onClick={onCopy}
 			data-testid="copy-prompt-button">

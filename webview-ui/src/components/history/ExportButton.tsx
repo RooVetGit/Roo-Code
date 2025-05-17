@@ -2,7 +2,7 @@ import { vscode } from "@/utils/vscode"
 import { Button } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
-export const ExportButton = ({ itemId }: { itemId: string }) => {
+export const ExportButton = ({ itemId, className }: { itemId: string; className?: string }) => {
 	const { t } = useAppTranslation()
 
 	return (
@@ -10,6 +10,7 @@ export const ExportButton = ({ itemId }: { itemId: string }) => {
 			data-testid="export"
 			variant="ghost"
 			size="icon"
+			className={className}
 			title={t("history:exportTask")}
 			onClick={(e) => {
 				e.stopPropagation()
