@@ -1,5 +1,11 @@
 import * as vscode from "vscode"
-import { QDRANT_CODE_BLOCK_NAMESPACE, MAX_FILE_SIZE_BYTES } from "../constants"
+import {
+	QDRANT_CODE_BLOCK_NAMESPACE,
+	MAX_FILE_SIZE_BYTES,
+	BATCH_SEGMENT_THRESHOLD,
+	MAX_BATCH_RETRIES,
+	INITIAL_RETRY_DELAY_MS,
+} from "../constants"
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { v5 as uuidv5 } from "uuid"
@@ -168,9 +174,36 @@ export class FileWatcher implements IFileWatcher {
 						await this.vectorStore.deletePointsByMultipleFilePaths(pathsToDelete)
 					}
 
-					// Batch upsert new points
+					// Batch upsert new points in chunks
 					if (allPointsToUpsert.length > 0) {
-						await this.vectorStore.upsertPoints(allPointsToUpsert)
+						// Split points into batches
+						for (let i = 0; i < allPointsToUpsert.length; i += BATCH_SEGMENT_THRESHOLD) {
+							const batch = allPointsToUpsert.slice(i, i + BATCH_SEGMENT_THRESHOLD)
+							let retryCount = 0
+							let lastError: Error | undefined
+
+							// Retry logic for each batch
+							while (retryCount < MAX_BATCH_RETRIES) {
+								try {
+									await this.vectorStore.upsertPoints(batch)
+									break // Success, exit retry loop
+								} catch (error) {
+									lastError = error as Error
+									retryCount++
+
+									if (retryCount === MAX_BATCH_RETRIES) {
+										throw new Error(
+											`Failed to upsert batch after ${MAX_BATCH_RETRIES} retries: ${lastError.message}`,
+										)
+									}
+
+									// Exponential backoff
+									await new Promise((resolve) =>
+										setTimeout(resolve, INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount - 1)),
+									)
+								}
+							}
+						}
 					}
 
 					// Update cache and fire success events
