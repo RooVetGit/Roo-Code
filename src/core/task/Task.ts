@@ -124,6 +124,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
+	private isCompleted: boolean = false
 	didFinishAbortingStream = false
 	abandoned = false
 	isInitialized = false
@@ -209,6 +210,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
+		this.isCompleted = historyItem?.completed ?? false
 		// normal use-case is usually retry similar history task with new workspace
 		this.workspacePath = parentTask
 			? parentTask.workspacePath
@@ -342,14 +344,22 @@ export class Task extends EventEmitter<ClineEvents> {
 				globalStoragePath: this.globalStoragePath,
 			})
 
-			const { historyItem, tokenUsage } = await taskMetadata({
+			const metadataOptions: Parameters<typeof taskMetadata>[0] = {
 				messages: this.clineMessages,
 				taskId: this.taskId,
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
 				parentTaskId: this.parentTaskId,
-			})
+			}
+
+			if (this.isCompleted) {
+				metadataOptions.setCompleted = true
+			} else {
+				metadataOptions.unsetCompleted = true
+			}
+
+			const { historyItem, tokenUsage } = await taskMetadata(metadataOptions)
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
 
@@ -454,6 +464,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
 		}
 
+		// If the AI is asking for a completion_result, it means it has attempted completion.
+		// Mark as completed now. It will be persisted by saveClineMessages called within addToClineMessages or by the save below.
+		if (type === "completion_result") {
+			this.isCompleted = true
+		}
+
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
 
 		if (this.lastMessageTs !== askTs) {
@@ -464,6 +480,16 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
+
+		// If the task was marked as completed due to a "completion_result" ask,
+		// but the user did not confirm with "yesButtonClicked" (e.g., they clicked "No" or provided new input),
+		// then the task is no longer considered completed.
+		if (type === "completion_result" && result.response !== "yesButtonClicked") {
+			this.isCompleted = false
+			// This change will be persisted by the next call to saveClineMessages,
+			// for example, when user feedback is added as a new message.
+		}
+
 		this.askResponse = undefined
 		this.askResponseText = undefined
 		this.askResponseImages = undefined
@@ -472,6 +498,13 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+		const lastAskMessage = this.clineMessages
+			.slice()
+			.reverse()
+			.find((m) => m.type === "ask")
+		if (this.isCompleted && askResponse === "messageResponse" && lastAskMessage?.ask !== "completion_result") {
+			this.isCompleted = false
+		}
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
@@ -501,8 +534,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		if (partial !== undefined) {
+			// Handles partial messages
 			const lastMessage = this.clineMessages.at(-1)
-
 			const isUpdatingPreviousPartial =
 				lastMessage && lastMessage.partial && lastMessage.type === "say" && lastMessage.say === type
 
@@ -521,7 +554,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					if (!options.isNonInteractive) {
 						this.lastMessageTs = sayTs
 					}
-
+					// For a new partial message, completion is set only when it's finalized.
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, partial })
 				}
 			} else {
@@ -531,6 +564,10 @@ export class Task extends EventEmitter<ClineEvents> {
 				if (isUpdatingPreviousPartial) {
 					if (!options.isNonInteractive) {
 						this.lastMessageTs = lastMessage.ts
+					}
+					// If this is the final part of a "completion_result" message, mark as completed.
+					if (type === "completion_result") {
+						this.isCompleted = true
 					}
 
 					lastMessage.text = text
@@ -551,7 +588,11 @@ export class Task extends EventEmitter<ClineEvents> {
 					if (!options.isNonInteractive) {
 						this.lastMessageTs = sayTs
 					}
-
+					// If this is a new, complete "completion_result" message (being added as partial initially but immediately finalized), mark as completed.
+					// This case might be rare if "completion_result" is always non-partial or ask.
+					if (type === "completion_result") {
+						this.isCompleted = true
+					}
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images })
 				}
 			}
@@ -566,7 +607,10 @@ export class Task extends EventEmitter<ClineEvents> {
 			if (!options.isNonInteractive) {
 				this.lastMessageTs = sayTs
 			}
-
+			// If this is a new, non-partial "completion_result" message, mark as completed.
+			if (type === "completion_result") {
+				this.isCompleted = true
+			}
 			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, checkpoint })
 		}
 	}
@@ -584,6 +628,9 @@ export class Task extends EventEmitter<ClineEvents> {
 	// Start / Abort / Resume
 
 	private async startTask(task?: string, images?: string[]): Promise<void> {
+		if (this.isCompleted && (task || (images && images.length > 0))) {
+			this.isCompleted = false
+		}
 		// `conversationHistory` (for API) and `clineMessages` (for webview)
 		// need to be in sync.
 		// If the extension process were killed, then on restart the
@@ -691,6 +738,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		let responseImages: string[] | undefined
 		if (response === "messageResponse") {
 			await this.say("user_feedback", text, images)
+			if (this.isCompleted) {
+				this.isCompleted = false
+			}
 			responseText = text
 			responseImages = images
 		}

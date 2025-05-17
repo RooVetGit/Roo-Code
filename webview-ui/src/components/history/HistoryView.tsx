@@ -55,22 +55,14 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 		currentTaskId,
 	}) => {
 		const [isOpen, setIsOpen] = useState(false)
-		let isCompleted = false
-		// Completion status is only checked if the item is the currently active task
-		if (item.id === currentTaskId && currentTaskMessages) {
-			isCompleted = currentTaskMessages.some(
-				(
-					msg: ClineMessage, // Explicitly type msg
-				) =>
-					(msg.type === "ask" && msg.ask === "completion_result") ||
-					(msg.type === "say" && msg.say === "completion_result"),
-			)
-		}
+		// Use the completed flag directly from the item
+		const isTaskMarkedCompleted = item.completed ?? false
 
 		const content = (
 			<div
-				className={cn("flex items-start p-3 gap-2", {
-					"bg-green-100 dark:bg-green-900/30": isCompleted,
+				className={cn("flex items-start gap-2", {
+					"p-3": level === 0,
+					"py-1 px-3": level > 0, // Reduced padding for child tasks
 				})}
 				style={{ marginLeft: level * 20 }}>
 				{isSelectionMode && (
@@ -130,7 +122,9 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 					<div
 						style={{
 							fontSize: "var(--vscode-font-size)",
-							color: "var(--vscode-foreground)",
+							color: isTaskMarkedCompleted
+								? "var(--vscode-testing-iconPassed)"
+								: "var(--vscode-foreground)",
 							display: "-webkit-box",
 							WebkitLineClamp: 3,
 							WebkitBoxOrient: "vertical",
@@ -143,73 +137,75 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 						dangerouslySetInnerHTML={{ __html: item.task }}
 					/>
 					<div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-						<div
-							data-testid="tokens-container"
-							style={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-							}}>
+						{level === 0 && ( // Only show tokens info for parent tasks
 							<div
+								data-testid="tokens-container"
 								style={{
 									display: "flex",
+									justifyContent: "space-between",
 									alignItems: "center",
-									gap: "4px",
-									flexWrap: "wrap",
 								}}>
-								<span
-									style={{
-										fontWeight: 500,
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									{t("history:tokensLabel")}
-								</span>
-								<span
-									data-testid="tokens-in"
+								<div
 									style={{
 										display: "flex",
 										alignItems: "center",
-										gap: "3px",
-										color: "var(--vscode-descriptionForeground)",
+										gap: "4px",
+										flexWrap: "wrap",
 									}}>
-									<i
-										className="codicon codicon-arrow-up"
+									<span
 										style={{
-											fontSize: "12px",
-											fontWeight: "bold",
-											marginBottom: "-2px",
-										}}
-									/>
-									{formatLargeNumber(item.tokensIn || 0)}
-								</span>
-								<span
-									data-testid="tokens-out"
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: "3px",
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									<i
-										className="codicon codicon-arrow-down"
+											fontWeight: 500,
+											color: "var(--vscode-descriptionForeground)",
+										}}>
+										{t("history:tokensLabel")}
+									</span>
+									<span
+										data-testid="tokens-in"
 										style={{
-											fontSize: "12px",
-											fontWeight: "bold",
-											marginBottom: "-2px",
-										}}
-									/>
-									{formatLargeNumber(item.tokensOut || 0)}
-								</span>
-							</div>
-							{!item.totalCost && !isSelectionMode && (
-								<div className="flex flex-row gap-1">
-									<CopyButton itemTask={item.task} />
-									<ExportButton itemId={item.id} />
+											display: "flex",
+											alignItems: "center",
+											gap: "3px",
+											color: "var(--vscode-descriptionForeground)",
+										}}>
+										<i
+											className="codicon codicon-arrow-up"
+											style={{
+												fontSize: "12px",
+												fontWeight: "bold",
+												marginBottom: "-2px",
+											}}
+										/>
+										{formatLargeNumber(item.tokensIn || 0)}
+									</span>
+									<span
+										data-testid="tokens-out"
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: "3px",
+											color: "var(--vscode-descriptionForeground)",
+										}}>
+										<i
+											className="codicon codicon-arrow-down"
+											style={{
+												fontSize: "12px",
+												fontWeight: "bold",
+												marginBottom: "-2px",
+											}}
+										/>
+										{formatLargeNumber(item.tokensOut || 0)}
+									</span>
 								</div>
-							)}
-						</div>
+								{!item.totalCost && !isSelectionMode && (
+									<div className="flex flex-row gap-1">
+										<CopyButton itemTask={item.task} />
+										<ExportButton itemId={item.id} />
+									</div>
+								)}
+							</div>
+						)}
 
-						{!!item.cacheWrites && (
+						{level === 0 && !!item.cacheWrites && (
 							<div
 								data-testid="cache-container"
 								style={{
@@ -264,7 +260,7 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 							</div>
 						)}
 
-						{!!item.totalCost && (
+						{level === 0 && !!item.totalCost && (
 							<div
 								style={{
 									display: "flex",

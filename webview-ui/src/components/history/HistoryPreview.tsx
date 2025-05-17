@@ -2,9 +2,7 @@ import { memo } from "react"
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
-import { cn } from "@/lib/utils" // Added for cn utility
-import { useExtensionState } from "@/context/ExtensionStateContext" // Added for completion status
-import { ClineMessage } from "@roo/shared/ExtensionMessage" // Added for ClineMessage type
+import { useExtensionState } from "@/context/ExtensionStateContext"
 
 import { CopyButton } from "./CopyButton"
 import { useTaskSearch, HierarchicalHistoryItem } from "./useTaskSearch" // Updated import
@@ -13,7 +11,7 @@ import { Coins, ChevronRight } from "lucide-react" // Added ChevronRight for chi
 
 const HistoryPreview = () => {
 	const { tasks, showAllWorkspaces } = useTaskSearch()
-	const { clineMessages, currentTaskItem } = useExtensionState()
+	useExtensionState()
 
 	return (
 		<>
@@ -21,21 +19,12 @@ const HistoryPreview = () => {
 				{tasks.length !== 0 && (
 					<>
 						{tasks.slice(0, 3).map((item: HierarchicalHistoryItem) => {
-							let isCompleted = false
-							if (item.id === currentTaskItem?.id && clineMessages) {
-								isCompleted = clineMessages.some(
-									(msg: ClineMessage) =>
-										(msg.type === "ask" && msg.ask === "completion_result") ||
-										(msg.type === "say" && msg.say === "completion_result"),
-								)
-							}
+							// Use the completed flag directly from the item
+							const isTaskMarkedCompleted = item.completed ?? false
 							return (
 								<div
 									key={item.id}
-									className={cn(
-										"bg-vscode-editor-background rounded relative overflow-hidden cursor-pointer border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60",
-										{ "bg-green-100/10 dark:bg-green-900/20": isCompleted }, // Adjusted green styling for preview
-									)}
+									className="bg-vscode-editor-background rounded relative overflow-hidden cursor-pointer border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60"
 									onClick={() => vscode.postMessage({ type: "showTaskWithId", text: item.id })}>
 									<div className="flex flex-col gap-2 p-3 pt-1">
 										<div className="flex justify-between items-center">
@@ -50,8 +39,11 @@ const HistoryPreview = () => {
 											<CopyButton itemTask={item.task} />
 										</div>
 										<div
-											className="text-vscode-foreground overflow-hidden whitespace-pre-wrap"
+											className="overflow-hidden whitespace-pre-wrap"
 											style={{
+												color: isTaskMarkedCompleted
+													? "var(--vscode-testing-iconPassed)"
+													: "var(--vscode-foreground)",
 												display: "-webkit-box",
 												WebkitLineClamp: 2,
 												WebkitBoxOrient: "vertical",

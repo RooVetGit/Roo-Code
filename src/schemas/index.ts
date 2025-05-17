@@ -151,6 +151,7 @@ export const historyItemSchema = z.object({
 	size: z.number().optional(),
 	workspace: z.string().optional(),
 	parent_task_id: z.string().optional(),
+	completed: z.boolean().optional(),
 })
 
 export type HistoryItem = z.infer<typeof historyItemSchema>

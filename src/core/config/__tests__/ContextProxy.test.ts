@@ -128,6 +128,7 @@ describe("ContextProxy", () => {
 					tokensIn: 1,
 					tokensOut: 1,
 					totalCost: 1,
+					completed: false,
 				},
 			]
 
@@ -160,6 +161,7 @@ describe("ContextProxy", () => {
 					tokensIn: 1,
 					tokensOut: 1,
 					totalCost: 1,
+					completed: false,
 				},
 			]
 
