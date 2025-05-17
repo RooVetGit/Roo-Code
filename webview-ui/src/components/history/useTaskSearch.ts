@@ -143,6 +143,32 @@ export const useTaskSearch = () => {
 		return sortTasksRecursive(rootTasks)
 	}, [presentableTasks, searchQuery, fzf, sortOption])
 
+	useEffect(() => {
+		// This effect ensures that newly added children of bulk-expanded parents are also expanded.
+		setExpandedItems((prevExpanded) => {
+			let newExpanded = { ...prevExpanded }
+			let changed = false
+
+			const checkAndExpandChildrenRecursive = (currentTasks: HierarchicalHistoryItem[]) => {
+				for (const item of currentTasks) {
+					if (item.parent_task_id && bulkExpandedRootItems[item.parent_task_id]) {
+						if (!newExpanded[item.id]) {
+							newExpanded[item.id] = true
+							changed = true
+						}
+					}
+					if (item.children && item.children.length > 0) {
+						checkAndExpandChildrenRecursive(item.children)
+					}
+				}
+			}
+
+			checkAndExpandChildrenRecursive(tasks) // `tasks` is the hierarchical list
+
+			return changed ? newExpanded : prevExpanded
+		})
+	}, [tasks, bulkExpandedRootItems, setExpandedItems])
+
 	const toggleItemExpansion = useCallback(
 		(taskId: string) => {
 			setExpandedItems((prev) => ({
