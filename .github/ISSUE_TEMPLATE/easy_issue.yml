@@ -1,0 +1,14 @@
+name: Fork Issue
+description: Create a simple issue to track changes when working inside the fork, before going to main.
+title: "[Fork] "
+labels: []
+assignees: []
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the purpose of this fork and any planned changes
+      placeholder: Type your description here...
+    validations:
+      required: true
