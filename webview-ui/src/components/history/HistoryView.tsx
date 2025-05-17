@@ -25,6 +25,122 @@ type HistoryViewProps = {
 
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
+// Props for the new TaskItemHeader component
+interface TaskItemHeaderProps {
+	item: HierarchicalHistoryItem
+	isSelectionMode: boolean
+	t: (key: string, options?: any) => string
+	setDeleteTaskId: (taskId: string | null) => void
+	isOpen?: boolean // For chevron icon state
+	onToggleOpen?: () => void // For chevron click
+	onExpandAllChildren?: () => void // Renamed for clarity
+}
+
+// New TaskItemHeader component
+const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
+	item,
+	isSelectionMode,
+	t,
+	setDeleteTaskId,
+	isOpen,
+	onToggleOpen,
+	onExpandAllChildren, // Renamed
+}) => {
+	const iconStyle: React.CSSProperties = {
+		fontSize: "11px",
+		fontWeight: "bold",
+		color: "var(--vscode-descriptionForeground)",
+	}
+	const iconStyleWithMargin: React.CSSProperties = { ...iconStyle, marginBottom: "-1.5px" } // Adjusted margin for better alignment
+
+	return (
+		<div className="flex justify-between items-center">
+			<div className="flex items-center flex-wrap gap-x-1.5 text-xs">
+				{" "}
+				{/* Reduced gap-x-2 to gap-x-1.5 */}
+				{item.children && item.children.length > 0 && (
+					<>
+						<span
+							className={cn(
+								"codicon",
+								isOpen ? "codicon-chevron-down" : "codicon-chevron-right",
+								"cursor-pointer",
+							)}
+							style={iconStyle}
+							onClick={(e) => {
+								e.stopPropagation()
+								onToggleOpen?.()
+							}}
+						/>
+						<span
+							className="codicon codicon-fold-down cursor-pointer"
+							style={iconStyle}
+							title={t("history:expandAllChildren")} // Updated title
+							onClick={(e) => {
+								e.stopPropagation()
+								onExpandAllChildren?.() // Renamed
+							}}
+						/>
+					</>
+				)}
+				<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
+					{formatDate(item.ts)}
+				</span>
+				{/* Tokens Info */}
+				{(item.tokensIn || item.tokensOut) && (
+					<span className="text-vscode-descriptionForeground flex items-center gap-px">
+						<i className="codicon codicon-arrow-up" style={iconStyleWithMargin} />
+						{formatLargeNumber(item.tokensIn || 0)}
+						<i className="codicon codicon-arrow-down ml-0.5" style={iconStyleWithMargin} />{" "}
+						{/* Reduced ml-1 to ml-0.5 */}
+						{formatLargeNumber(item.tokensOut || 0)}
+					</span>
+				)}
+				{/* Cost Info */}
+				{!!item.totalCost && (
+					<span className="text-vscode-descriptionForeground">${item.totalCost.toFixed(4)}</span>
+				)}
+				{/* Cache Info */}
+				{!!item.cacheWrites && (
+					<span className="text-vscode-descriptionForeground flex items-center gap-px">
+						<i className="codicon codicon-database" style={iconStyleWithMargin} />
+						{formatLargeNumber(item.cacheWrites || 0)}
+						<i className="codicon codicon-arrow-right ml-0.5" style={iconStyleWithMargin} />{" "}
+						{/* Reduced ml-1 to ml-0.5 */}
+						{formatLargeNumber(item.cacheReads || 0)}
+					</span>
+				)}
+				{/* Size Info */}
+				{item.size && <span className="text-vscode-descriptionForeground">{prettyBytes(item.size)}</span>}
+			</div>
+			{/* Action Buttons */}
+			{!isSelectionMode && (
+				<div className="flex flex-row gap-0 items-center">
+					{" "}
+					{/* Reduced gap-1 to gap-0 */}
+					<CopyButton itemTask={item.task} />
+					<ExportButton itemId={item.id} />
+					<Button
+						variant="ghost"
+						size="sm"
+						title={t("history:deleteTaskTitle")}
+						data-testid="delete-task-button"
+						onClick={(e) => {
+							e.stopPropagation()
+							if (e.shiftKey) {
+								vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
+							} else {
+								setDeleteTaskId(item.id)
+							}
+						}}>
+						<span className="codicon codicon-trash" style={iconStyle} />
+					</Button>
+				</div>
+			)}
+		</div>
+	)
+}
+
 // Define TaskDisplayItem component
 interface TaskDisplayItemProps {
 	item: HierarchicalHistoryItem
@@ -38,6 +154,7 @@ interface TaskDisplayItemProps {
 	t: (key: string, options?: any) => string
 	currentTaskMessages: ClineMessage[] | undefined
 	currentTaskId: string | undefined
+	expandAllTrigger?: number // New prop for cascading open state (e.g., a timestamp)
 }
 
 const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
@@ -53,16 +170,30 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 		t,
 		currentTaskMessages,
 		currentTaskId,
+		expandAllTrigger, // This is the trigger received from the parent for IT to open and propagate
 	}) => {
-		const [isOpen, setIsOpen] = useState(false)
+		const [isOpen, setIsOpen] = useState(false) // Individual open state for this item
+		const [expandAllSignalForChildren, setExpandAllSignalForChildren] = useState<number | undefined>()
+
+		React.useEffect(() => {
+			if (expandAllTrigger) {
+				setIsOpen(true)
+				// Propagate the exact same trigger to children.
+				// This ensures all descendants opened by a single "expand all" click share the same signal.
+				setExpandAllSignalForChildren(expandAllTrigger)
+			}
+		}, [expandAllTrigger]) // Only re-run if the trigger from parent changes
+
 		// Use the completed flag directly from the item
 		const isTaskMarkedCompleted = item.completed ?? false
 
-		const content = (
+		// taskMeta is no longer needed.
+
+		const taskPrimaryContent = (
 			<div
 				className={cn("flex items-start gap-2", {
 					"p-3": level === 0,
-					"py-1 px-3": level > 0, // Reduced padding for child tasks
+					"py-1 px-3": level > 0,
 				})}
 				style={{ marginLeft: level * 20 }}>
 				{isSelectionMode && (
@@ -79,47 +210,25 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 					</div>
 				)}
 				<div className="flex-1">
-					<div className="flex justify-between items-center">
-						<div className="flex items-center">
-							{item.children && item.children.length > 0 && (
-								<span
-									className={cn(
-										"codicon",
-										isOpen ? "codicon-chevron-down" : "codicon-chevron-right",
-										"mr-1 cursor-pointer",
-									)}
-									onClick={(e) => {
-										e.stopPropagation() // Prevent task click when toggling collapse
-										setIsOpen(!isOpen)
-									}}
-								/>
-							)}
-							<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
-								{formatDate(item.ts)}
-							</span>
-						</div>
-						<div className="flex flex-row">
-							{!isSelectionMode && (
-								<Button
-									variant="ghost"
-									size="sm"
-									title={t("history:deleteTaskTitle")}
-									data-testid="delete-task-button"
-									onClick={(e) => {
-										e.stopPropagation()
-										if (e.shiftKey) {
-											vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
-										} else {
-											setDeleteTaskId(item.id)
-										}
-									}}>
-									<span className="codicon codicon-trash" />
-									{item.size && prettyBytes(item.size)}
-								</Button>
-							)}
-						</div>
-					</div>
+					<TaskItemHeader
+						item={item}
+						isSelectionMode={isSelectionMode}
+						t={t}
+						setDeleteTaskId={setDeleteTaskId}
+						isOpen={isOpen} // Controlled by single chevron or expandAllTrigger effect
+						onToggleOpen={() => {
+							setIsOpen(!isOpen)
+							// If user manually closes, we might want to stop an ongoing expandAll propagation for THIS branch.
+							// However, for simplicity, manual toggle only affects this item directly.
+							// Future: could set expandAllSignalForChildren to undefined here if closing.
+						}}
+						onExpandAllChildren={() => {
+							setIsOpen(true) // Open current item
+							setExpandAllSignalForChildren(Date.now()) // Send new signal to children
+						}}
+					/>
 					<div
+						className="mt-1" // Add some margin top for separation from header
 						style={{
 							fontSize: "var(--vscode-font-size)",
 							color: isTaskMarkedCompleted
@@ -136,213 +245,66 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 						data-testid="task-content"
 						dangerouslySetInnerHTML={{ __html: item.task }}
 					/>
-					<div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-						{level === 0 && ( // Only show tokens info for parent tasks
-							<div
-								data-testid="tokens-container"
-								style={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-								}}>
-								<div
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: "4px",
-										flexWrap: "wrap",
-									}}>
-									<span
-										style={{
-											fontWeight: 500,
-											color: "var(--vscode-descriptionForeground)",
-										}}>
-										{t("history:tokensLabel")}
-									</span>
-									<span
-										data-testid="tokens-in"
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: "3px",
-											color: "var(--vscode-descriptionForeground)",
-										}}>
-										<i
-											className="codicon codicon-arrow-up"
-											style={{
-												fontSize: "12px",
-												fontWeight: "bold",
-												marginBottom: "-2px",
-											}}
-										/>
-										{formatLargeNumber(item.tokensIn || 0)}
-									</span>
-									<span
-										data-testid="tokens-out"
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: "3px",
-											color: "var(--vscode-descriptionForeground)",
-										}}>
-										<i
-											className="codicon codicon-arrow-down"
-											style={{
-												fontSize: "12px",
-												fontWeight: "bold",
-												marginBottom: "-2px",
-											}}
-										/>
-										{formatLargeNumber(item.tokensOut || 0)}
-									</span>
-								</div>
-								{!item.totalCost && !isSelectionMode && (
-									<div className="flex flex-row gap-1">
-										<CopyButton itemTask={item.task} />
-										<ExportButton itemId={item.id} />
-									</div>
-								)}
-							</div>
-						)}
-
-						{level === 0 && !!item.cacheWrites && (
-							<div
-								data-testid="cache-container"
-								style={{
-									display: "flex",
-									alignItems: "center",
-									gap: "4px",
-									flexWrap: "wrap",
-								}}>
-								<span
-									style={{
-										fontWeight: 500,
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									{t("history:cacheLabel")}
-								</span>
-								<span
-									data-testid="cache-writes"
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: "3px",
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									<i
-										className="codicon codicon-database"
-										style={{
-											fontSize: "12px",
-											fontWeight: "bold",
-											marginBottom: "-1px",
-										}}
-									/>
-									+{formatLargeNumber(item.cacheWrites || 0)}
-								</span>
-								<span
-									data-testid="cache-reads"
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: "3px",
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									<i
-										className="codicon codicon-arrow-right"
-										style={{
-											fontSize: "12px",
-											fontWeight: "bold",
-											marginBottom: 0,
-										}}
-									/>
-									{formatLargeNumber(item.cacheReads || 0)}
-								</span>
-							</div>
-						)}
-
-						{level === 0 && !!item.totalCost && (
-							<div
-								style={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									marginTop: -2,
-								}}>
-								<div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-									<span
-										style={{
-											fontWeight: 500,
-											color: "var(--vscode-descriptionForeground)",
-										}}>
-										{t("history:apiCostLabel")}
-									</span>
-									<span style={{ color: "var(--vscode-descriptionForeground)" }}>
-										${item.totalCost?.toFixed(4)}
-									</span>
-								</div>
-								{!isSelectionMode && (
-									<div className="flex flex-row gap-1">
-										<CopyButton itemTask={item.task} />
-										<ExportButton itemId={item.id} />
-									</div>
-								)}
-							</div>
-						)}
-
-						{showAllWorkspaces && item.workspace && (
-							<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs">
-								<span className="codicon codicon-folder scale-80" />
-								<span>{item.workspace}</span>
-							</div>
-						)}
-					</div>
+					{showAllWorkspaces && item.workspace && (
+						<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
+							<span className="codicon codicon-folder scale-80" />
+							<span>{item.workspace}</span>
+						</div>
+					)}
 				</div>
 			</div>
 		)
 
 		if (item.children && item.children.length > 0) {
 			return (
-				<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-					<CollapsibleTrigger
-						asChild
-						onClick={() => {
-							if (!isSelectionMode) onTaskClick(item.id)
-						}}>
-						<div>{content}</div>
-					</CollapsibleTrigger>
-					<CollapsibleContent>
-						{item.children.map((child) => (
-							<TaskDisplayItem
-								key={child.id}
-								item={child}
-								level={level + 1}
-								isSelectionMode={isSelectionMode}
-								selectedTaskIds={selectedTaskIds}
-								toggleTaskSelection={toggleTaskSelection}
-								onTaskClick={onTaskClick}
-								setDeleteTaskId={setDeleteTaskId}
-								showAllWorkspaces={showAllWorkspaces}
-								t={t}
-								currentTaskMessages={currentTaskMessages}
-								currentTaskId={currentTaskId}
-							/>
-						))}
-					</CollapsibleContent>
-				</Collapsible>
+				<>
+					<Collapsible open={isOpen} onOpenChange={setIsOpen}>
+						<CollapsibleTrigger
+							asChild
+							onClick={() => {
+								if (!isSelectionMode) onTaskClick(item.id)
+							}}>
+							<div>{taskPrimaryContent}</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							{item.children.map((child) => (
+								<TaskDisplayItem
+									key={child.id} // Key can remain simple if props handle re-render logic
+									item={child}
+									level={level + 1}
+									isSelectionMode={isSelectionMode}
+									selectedTaskIds={selectedTaskIds}
+									toggleTaskSelection={toggleTaskSelection}
+									onTaskClick={onTaskClick}
+									setDeleteTaskId={setDeleteTaskId}
+									showAllWorkspaces={showAllWorkspaces}
+									t={t}
+									currentTaskMessages={currentTaskMessages}
+									currentTaskId={currentTaskId}
+									expandAllTrigger={expandAllSignalForChildren} // Pass down the signal
+								/>
+							))}
+						</CollapsibleContent>
+					</Collapsible>
+					{/* {taskMeta} no longer exists */}
+				</>
 			)
 		}
 
 		return (
-			<div
-				onClick={() => {
-					if (isSelectionMode) {
-						toggleTaskSelection(item.id, !selectedTaskIds.includes(item.id))
-					} else {
-						onTaskClick(item.id)
-					}
-				}}>
-				{content}
-			</div>
+			<>
+				<div
+					onClick={() => {
+						if (isSelectionMode) {
+							toggleTaskSelection(item.id, !selectedTaskIds.includes(item.id))
+						} else {
+							onTaskClick(item.id)
+						}
+					}}>
+					{taskPrimaryContent}
+				</div>
+				{/* {!item.children?.length && taskMeta} no longer exists */}
+			</>
 		)
 	},
 )
