@@ -3,7 +3,9 @@
 	"ignorePatterns": ["!.storybook"],
 	"rules": {
 		"no-unused-vars": "off",
-		"@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }]
+		"@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
+		"no-implicit-coercion": "error",
+		"no-empty": "error"
 	},
 	"overrides": [
 		{
