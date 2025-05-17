@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react" // Added useCallback
 import { Fzf } from "fzf"
 
 import { highlightFzfMatch } from "@/utils/highlight"
@@ -11,12 +11,44 @@ export interface HierarchicalHistoryItem extends HistoryItem {
 	children?: HierarchicalHistoryItem[]
 }
 
+// Helper functions defined outside the hook for stability
+const getAllDescendantIdsRecursive = (item: HierarchicalHistoryItem): string[] => {
+	let ids: string[] = []
+	if (item.children && item.children.length > 0) {
+		item.children.forEach((child: HierarchicalHistoryItem) => {
+			ids.push(child.id)
+			ids = ids.concat(getAllDescendantIdsRecursive(child))
+		})
+	}
+	return ids
+}
+
+const findItemByIdRecursive = (
+	currentItems: HierarchicalHistoryItem[],
+	idToFind: string,
+): HierarchicalHistoryItem | null => {
+	for (const item of currentItems) {
+		if (item.id === idToFind) {
+			return item
+		}
+		if (item.children) {
+			const foundInChildren = findItemByIdRecursive(item.children, idToFind)
+			if (foundInChildren) {
+				return foundInChildren
+			}
+		}
+	}
+	return null
+}
+
 export const useTaskSearch = () => {
 	const { taskHistory, cwd } = useExtensionState()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
 	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false)
+	const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({})
+	const [bulkExpandedRootItems, setBulkExpandedRootItems] = useState<Record<string, boolean>>({})
 
 	useEffect(() => {
 		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
@@ -111,6 +143,58 @@ export const useTaskSearch = () => {
 		return sortTasksRecursive(rootTasks)
 	}, [presentableTasks, searchQuery, fzf, sortOption])
 
+	const toggleItemExpansion = useCallback(
+		(taskId: string) => {
+			setExpandedItems((prev) => ({
+				...prev,
+				[taskId]: !prev[taskId],
+			}))
+			setBulkExpandedRootItems((prev) => ({
+				...prev,
+				[taskId]: false,
+			}))
+		},
+		[setExpandedItems, setBulkExpandedRootItems], // Correct: only depends on setters
+	)
+
+	const toggleBulkItemExpansion = useCallback(
+		(taskId: string) => {
+			// `tasks` is from useMemo, `expandedItems` is from useState.
+			// Both are correctly captured here due to being in the dependency array.
+			const targetItem = findItemByIdRecursive(tasks, taskId)
+
+			if (!targetItem) {
+				console.warn(`Task item with ID ${taskId} not found for bulk expansion.`)
+				return
+			}
+
+			// It's important that setBulkExpandedRootItems and setExpandedItems are called
+			// in a way that uses the latest state if there are rapid calls.
+			// Using the functional update form for both setters ensures this.
+
+			setBulkExpandedRootItems((prevBulkExpanded) => {
+				const isNowBulkExpanding = !prevBulkExpanded[taskId]
+
+				setExpandedItems((currentExpandedItems) => {
+					const newExpandedItemsState = { ...currentExpandedItems }
+					newExpandedItemsState[taskId] = isNowBulkExpanding
+
+					const descendants = getAllDescendantIdsRecursive(targetItem)
+					descendants.forEach((id) => {
+						newExpandedItemsState[id] = isNowBulkExpanding
+					})
+					return newExpandedItemsState
+				})
+
+				return {
+					...prevBulkExpanded,
+					[taskId]: isNowBulkExpanding,
+				}
+			})
+		},
+		[tasks, setExpandedItems, setBulkExpandedRootItems], // Removed expandedItems
+	)
+
 	return {
 		tasks,
 		searchQuery,
@@ -121,5 +205,9 @@ export const useTaskSearch = () => {
 		setLastNonRelevantSort,
 		showAllWorkspaces,
 		setShowAllWorkspaces,
+		expandedItems,
+		bulkExpandedRootItems,
+		toggleItemExpansion,
+		toggleBulkItemExpansion,
 	}
 }

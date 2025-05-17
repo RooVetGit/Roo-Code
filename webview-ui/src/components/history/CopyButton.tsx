@@ -30,9 +30,12 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 			size="icon"
 			title={t("history:copyPrompt")}
 			onClick={onCopy}
-			data-testid="copy-prompt-button"
-			className="opacity-50 hover:opacity-100">
-			<span className={cn("codicon scale-80", { "codicon-check": isCopied, "codicon-copy": !isCopied })} />
+			data-testid="copy-prompt-button">
+			{/* Removed opacity classes, removed scale-80. Icon size will be default or controlled by Button's "icon" size. */}
+			<span
+				className={cn("codicon", { "codicon-check": isCopied, "codicon-copy": !isCopied })}
+				style={{ fontSize: "16px", verticalAlign: "middle" }}
+			/>
 		</Button>
 	)
 }

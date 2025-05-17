@@ -33,7 +33,8 @@ interface TaskItemHeaderProps {
 	setDeleteTaskId: (taskId: string | null) => void
 	isOpen?: boolean // For chevron icon state
 	onToggleOpen?: () => void // For chevron click
-	onExpandAllChildren?: () => void // Renamed for clarity
+	onToggleBulkExpand?: () => void // Changed from onExpandAllChildren
+	isBulkExpanding?: boolean // To control the toggle button's state
 }
 
 // New TaskItemHeader component
@@ -44,20 +45,30 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 	setDeleteTaskId,
 	isOpen,
 	onToggleOpen,
-	onExpandAllChildren, // Renamed
+	onToggleBulkExpand, // Changed
+	isBulkExpanding, // Added
 }) => {
-	const iconStyle: React.CSSProperties = {
-		fontSize: "11px",
-		fontWeight: "bold",
+	// Standardized icon style
+	const metadataIconStyle: React.CSSProperties = {
+		// Renamed for clarity
+		fontSize: "12px", // Reverted for metadata icons
 		color: "var(--vscode-descriptionForeground)",
+		verticalAlign: "middle",
 	}
-	const iconStyleWithMargin: React.CSSProperties = { ...iconStyle, marginBottom: "-1.5px" } // Adjusted margin for better alignment
+	const metadataIconWithTextAdjustStyle: React.CSSProperties = { ...metadataIconStyle, marginBottom: "-2px" }
+
+	const actionIconStyle: React.CSSProperties = {
+		// For action buttons like trash
+		fontSize: "16px", // To match Copy/Export button icon sizes
+		color: "var(--vscode-descriptionForeground)",
+		verticalAlign: "middle",
+	}
 
 	return (
 		<div className="flex justify-between items-center">
-			<div className="flex items-center flex-wrap gap-x-1.5 text-xs">
+			<div className="flex items-center flex-wrap gap-x-1 text-xs">
 				{" "}
-				{/* Reduced gap-x-2 to gap-x-1.5 */}
+				{/* Reduced gap-x-1.5 to gap-x-1 */}
 				{item.children && item.children.length > 0 && (
 					<>
 						<span
@@ -66,21 +77,13 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 								isOpen ? "codicon-chevron-down" : "codicon-chevron-right",
 								"cursor-pointer",
 							)}
-							style={iconStyle}
+							style={metadataIconStyle} // Use metadataIconStyle
 							onClick={(e) => {
 								e.stopPropagation()
 								onToggleOpen?.()
 							}}
 						/>
-						<span
-							className="codicon codicon-fold-down cursor-pointer"
-							style={iconStyle}
-							title={t("history:expandAllChildren")} // Updated title
-							onClick={(e) => {
-								e.stopPropagation()
-								onExpandAllChildren?.() // Renamed
-							}}
-						/>
+						{/* Expand all children icon is moved to the right action button group */}
 					</>
 				)}
 				<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
@@ -89,10 +92,9 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 				{/* Tokens Info */}
 				{(item.tokensIn || item.tokensOut) && (
 					<span className="text-vscode-descriptionForeground flex items-center gap-px">
-						<i className="codicon codicon-arrow-up" style={iconStyleWithMargin} />
+						<i className="codicon codicon-arrow-up" style={metadataIconWithTextAdjustStyle} />
 						{formatLargeNumber(item.tokensIn || 0)}
-						<i className="codicon codicon-arrow-down ml-0.5" style={iconStyleWithMargin} />{" "}
-						{/* Reduced ml-1 to ml-0.5 */}
+						<i className="codicon codicon-arrow-down" style={metadataIconWithTextAdjustStyle} />
 						{formatLargeNumber(item.tokensOut || 0)}
 					</span>
 				)}
@@ -103,10 +105,9 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 				{/* Cache Info */}
 				{!!item.cacheWrites && (
 					<span className="text-vscode-descriptionForeground flex items-center gap-px">
-						<i className="codicon codicon-database" style={iconStyleWithMargin} />
+						<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
 						{formatLargeNumber(item.cacheWrites || 0)}
-						<i className="codicon codicon-arrow-right ml-0.5" style={iconStyleWithMargin} />{" "}
-						{/* Reduced ml-1 to ml-0.5 */}
+						<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
 						{formatLargeNumber(item.cacheReads || 0)}
 					</span>
 				)}
@@ -118,11 +119,31 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 				<div className="flex flex-row gap-0 items-center">
 					{" "}
 					{/* Reduced gap-1 to gap-0 */}
+					{item.children && item.children.length > 0 && (
+						<Button
+							variant="ghost"
+							size="icon"
+							title={
+								isBulkExpanding
+									? t("history:collapseAllChildren", "Collapse all")
+									: t("history:expandAllChildren", "Expand all")
+							}
+							onClick={(e) => {
+								e.stopPropagation()
+								onToggleBulkExpand?.()
+							}}
+							data-testid="toggle-bulk-expand-button">
+							<span
+								className="codicon codicon-list-tree" // Always use codicon-list-tree
+								style={actionIconStyle}
+							/>
+						</Button>
+					)}
 					<CopyButton itemTask={item.task} />
 					<ExportButton itemId={item.id} />
 					<Button
 						variant="ghost"
-						size="sm"
+						size="icon" // Changed from sm to icon
 						title={t("history:deleteTaskTitle")}
 						data-testid="delete-task-button"
 						onClick={(e) => {
@@ -133,7 +154,7 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 								setDeleteTaskId(item.id)
 							}
 						}}>
-						<span className="codicon codicon-trash" style={iconStyle} />
+						<span className="codicon codicon-trash" style={actionIconStyle} /> {/* Use actionIconStyle */}
 					</Button>
 				</div>
 			)}
@@ -154,8 +175,18 @@ interface TaskDisplayItemProps {
 	t: (key: string, options?: any) => string
 	currentTaskMessages: ClineMessage[] | undefined
 	currentTaskId: string | undefined
-	expandAllTrigger?: number // New prop for cascading open state (e.g., a timestamp)
+	// Props for hoisted state
+	isExpanded: boolean
+	isBulkExpanded: boolean
+	onToggleExpansion: (taskId: string) => void
+	onToggleBulkExpansion: (taskId: string) => void
+	// Pass down the maps for children to use
+	expandedItems: Record<string, boolean>
+	bulkExpandedRootItems: Record<string, boolean>
 }
+
+// explicit signals BULK_EXPAND_SIGNAL and BULK_COLLAPSE_SIGNAL are no longer needed here
+// as the logic is handled by the hoisted state and callbacks.
 
 const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 	({
@@ -170,19 +201,17 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 		t,
 		currentTaskMessages,
 		currentTaskId,
-		expandAllTrigger, // This is the trigger received from the parent for IT to open and propagate
+		// Hoisted state props
+		isExpanded,
+		isBulkExpanded,
+		onToggleExpansion,
+		onToggleBulkExpansion,
+		// Destructure the maps
+		expandedItems,
+		bulkExpandedRootItems,
 	}) => {
-		const [isOpen, setIsOpen] = useState(false) // Individual open state for this item
-		const [expandAllSignalForChildren, setExpandAllSignalForChildren] = useState<number | undefined>()
-
-		React.useEffect(() => {
-			if (expandAllTrigger) {
-				setIsOpen(true)
-				// Propagate the exact same trigger to children.
-				// This ensures all descendants opened by a single "expand all" click share the same signal.
-				setExpandAllSignalForChildren(expandAllTrigger)
-			}
-		}, [expandAllTrigger]) // Only re-run if the trigger from parent changes
+		// Local state for isOpen, expandAllSignalForChildren, isBulkExpandingChildrenState, and useEffect are removed.
+		// Expansion state is now controlled by `isExpanded` and `isBulkExpanded` props.
 
 		// Use the completed flag directly from the item
 		const isTaskMarkedCompleted = item.completed ?? false
@@ -195,7 +224,8 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 					"p-3": level === 0,
 					"py-1 px-3": level > 0,
 				})}
-				style={{ marginLeft: level * 20 }}>
+				style={{ marginLeft: level * 20 }} // Reverted to inline style for reliable indentation
+			>
 				{isSelectionMode && (
 					<div
 						className="task-checkbox mt-1"
@@ -215,17 +245,10 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 						isSelectionMode={isSelectionMode}
 						t={t}
 						setDeleteTaskId={setDeleteTaskId}
-						isOpen={isOpen} // Controlled by single chevron or expandAllTrigger effect
-						onToggleOpen={() => {
-							setIsOpen(!isOpen)
-							// If user manually closes, we might want to stop an ongoing expandAll propagation for THIS branch.
-							// However, for simplicity, manual toggle only affects this item directly.
-							// Future: could set expandAllSignalForChildren to undefined here if closing.
-						}}
-						onExpandAllChildren={() => {
-							setIsOpen(true) // Open current item
-							setExpandAllSignalForChildren(Date.now()) // Send new signal to children
-						}}
+						isOpen={isExpanded} // Use hoisted state
+						onToggleOpen={() => onToggleExpansion(item.id)} // Call hoisted function
+						onToggleBulkExpand={() => onToggleBulkExpansion(item.id)} // Call hoisted function
+						isBulkExpanding={isBulkExpanded} // Use hoisted state
 					/>
 					<div
 						className="mt-1" // Add some margin top for separation from header
@@ -258,7 +281,8 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 		if (item.children && item.children.length > 0) {
 			return (
 				<>
-					<Collapsible open={isOpen} onOpenChange={setIsOpen}>
+					{/* Use isExpanded for open state; onOpenChange calls the hoisted toggle function */}
+					<Collapsible open={isExpanded} onOpenChange={() => onToggleExpansion(item.id)}>
 						<CollapsibleTrigger
 							asChild
 							onClick={() => {
@@ -281,7 +305,14 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 									t={t}
 									currentTaskMessages={currentTaskMessages}
 									currentTaskId={currentTaskId}
-									expandAllTrigger={expandAllSignalForChildren} // Pass down the signal
+									// Pass down hoisted state and handlers
+									isExpanded={expandedItems[child.id] ?? false} // Use the passed down map
+									isBulkExpanded={bulkExpandedRootItems[child.id] ?? false} // Use the passed down map
+									onToggleExpansion={onToggleExpansion}
+									onToggleBulkExpansion={onToggleBulkExpansion}
+									// Crucially, pass the maps themselves down for further nesting
+									expandedItems={expandedItems}
+									bulkExpandedRootItems={bulkExpandedRootItems}
 								/>
 							))}
 						</CollapsibleContent>
@@ -319,6 +350,10 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		setLastNonRelevantSort,
 		showAllWorkspaces,
 		setShowAllWorkspaces,
+		expandedItems, // Destructured from useTaskSearch
+		bulkExpandedRootItems, // Destructured from useTaskSearch
+		toggleItemExpansion, // Destructured from useTaskSearch
+		toggleBulkItemExpansion, // Destructured from useTaskSearch
 	} = useTaskSearch()
 	const { t } = useAppTranslation()
 	// Destructure clineMessages and currentTaskItem (which contains the active task's ID)
@@ -516,8 +551,16 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 								setDeleteTaskId={setDeleteTaskId}
 								showAllWorkspaces={showAllWorkspaces}
 								t={t}
-								currentTaskMessages={clineMessages} // Pass active task's messages
-								currentTaskId={currentTaskItem?.id} // Pass active task's ID from currentTaskItem
+								currentTaskMessages={clineMessages}
+								currentTaskId={currentTaskItem?.id}
+								// Pass hoisted state and handlers
+								isExpanded={expandedItems[item.id] ?? false}
+								isBulkExpanded={bulkExpandedRootItems[item.id] ?? false}
+								onToggleExpansion={toggleItemExpansion}
+								onToggleBulkExpansion={toggleBulkItemExpansion}
+								// Pass the maps to the top-level TaskDisplayItems
+								expandedItems={expandedItems}
+								bulkExpandedRootItems={bulkExpandedRootItems}
 							/>
 						</div>
 					)}
@@ -525,21 +568,23 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 			</TabContent>
 
 			{/* Fixed action bar at bottom - only shown in selection mode with selected items */}
-			{isSelectionMode && selectedTaskIds.length > 0 && (
-				<div className="fixed bottom-0 left-0 right-0 bg-vscode-editor-background border-t border-vscode-panel-border p-2 flex justify-between items-center">
-					<div className="text-vscode-foreground">
-						{t("history:selectedItems", { selected: selectedTaskIds.length, total: tasks.length })}
+			{isSelectionMode &&
+				selectedTaskIds.length > 0 &&
+				!currentTaskItem && ( // Hide if preview is open
+					<div className="fixed bottom-0 left-0 right-0 bg-vscode-editor-background border-t border-vscode-panel-border p-2 flex justify-between items-center">
+						<div className="text-vscode-foreground">
+							{t("history:selectedItems", { selected: selectedTaskIds.length, total: tasks.length })}
+						</div>
+						<div className="flex gap-2">
+							<Button variant="secondary" onClick={() => setSelectedTaskIds([])}>
+								{t("history:clearSelection")}
+							</Button>
+							<Button variant="default" onClick={handleBatchDelete}>
+								{t("history:deleteSelected")}
+							</Button>
+						</div>
 					</div>
-					<div className="flex gap-2">
-						<Button variant="secondary" onClick={() => setSelectedTaskIds([])}>
-							{t("history:clearSelection")}
-						</Button>
-						<Button variant="default" onClick={handleBatchDelete}>
-							{t("history:deleteSelected")}
-						</Button>
-					</div>
-				</div>
-			)}
+				)}
 
 			{/* Delete dialog */}
 			{deleteTaskId && (
