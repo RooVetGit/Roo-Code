@@ -65,7 +65,9 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({
 	}
 
 	return (
-		<div className="flex justify-between items-center">
+		<div className="flex justify-between items-center pb-0">
+			{" "}
+			{/* Added pb-0 */}
 			<div className="flex items-center flex-wrap gap-x-1 text-xs">
 				{" "}
 				{/* Reduced gap-x-1.5 to gap-x-1 */}
@@ -221,8 +223,7 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 		const taskPrimaryContent = (
 			<div
 				className={cn("flex items-start gap-2", {
-					"p-3": level === 0,
-					"py-1 px-3": level > 0,
+					"pt-0.5 pb-0.5 px-3": true, // Reduced top/bottom padding to 0.125rem for all levels
 				})}
 				style={{ marginLeft: level * 20 }} // Reverted to inline style for reliable indentation
 			>
@@ -239,7 +240,9 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 						/>
 					</div>
 				)}
-				<div className="flex-1">
+				<div className="flex flex-col flex-1 gap-0">
+					{" "}
+					{/* Ensure no gap between header and content */}
 					<TaskItemHeader
 						item={item}
 						isSelectionMode={isSelectionMode}
@@ -251,7 +254,7 @@ const TaskDisplayItem: React.FC<TaskDisplayItemProps> = memo(
 						isBulkExpanding={isBulkExpanded} // Use hoisted state
 					/>
 					<div
-						className="mt-1" // Add some margin top for separation from header
+						className="mt-0" // Removed margin top for separation from header
 						style={{
 							fontSize: "var(--vscode-font-size)",
 							color: isTaskMarkedCompleted
