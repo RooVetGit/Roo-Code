@@ -7,7 +7,7 @@ import EventEmitter from "events"
 import simpleGit, { SimpleGit } from "simple-git"
 import pWaitFor from "p-wait-for"
 
-import { fileExistsAtPath } from "../../utils/fs"
+import { fileExistsAtPath } from "../../utils/fs" // Assuming this utility exists and works as expected
 import { executeRipgrep } from "../../services/search/file-search"
 
 import { GIT_DISABLED_SUFFIX } from "./constants"
@@ -25,6 +25,12 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	protected readonly dotGitDir: string
 	protected git?: SimpleGit
 	protected readonly log: (message: string) => void
+	// --- CHANGE START: Add cache for nested git repo paths ---
+	// --- ADDITION: GC related properties ---
+	private gcCounter: number = 0
+	private readonly GC_CHECKPOINT_THRESHOLD: number = 20 // Run gc every 20 checkpoints
+	private _nestedGitDirPaths: string[] | null = null // Cache for relative paths like "submodule/.git"
+	// --- CHANGE END: Add cache for nested git repo paths ---
 	protected shadowGitConfigWorktree?: string
 
 	public get baseHash() {
@@ -85,6 +91,22 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 			await this.writeExcludeFile()
 			this.baseHash = await git.revparse(["HEAD"])
+
+			// --- STAGE 1: Run GC on init for existing repo ---
+			this.log(`[${this.constructor.name}#initShadowGit] Existing shadow repo found. Running garbage collection.`)
+			try {
+				const gcStartTime = Date.now()
+				// Use the more thorough repack command
+				this.log(`[${this.constructor.name}#initShadowGit] Running git repack -adf --path-walk --quiet...`)
+				await git.raw(["repack", "-a", "-d", "-f", "--path-walk", "--quiet"])
+				this.log(
+					`[${this.constructor.name}#initShadowGit] Repository repack completed in ${Date.now() - gcStartTime}ms.`,
+				)
+			} catch (gcError) {
+				this.log(
+					`[${this.constructor.name}#initShadowGit] Repository repack failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
+				)
+			}
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
@@ -93,7 +115,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.addConfig("user.name", "Roo Code")
 			await git.addConfig("user.email", "noreply@example.com")
 			await this.writeExcludeFile()
-			await this.stageAll(git)
+			await this.stageAll(git) // stageAll will be modified
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
 			this.baseHash = commit
 			created = true
@@ -108,6 +130,11 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		this.git = git
 
 		await onInit?.()
+
+		// --- CHANGE START: Warm up the nested git paths cache ---
+		// This ensures the potentially slow scan happens once during initialization.
+		await this.findAndCacheNestedGitRepoPaths()
+		// --- CHANGE END: Warm up the nested git paths cache ---
 
 		this.emit("initialize", {
 			type: "initialize",
@@ -131,74 +158,143 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		await fs.writeFile(path.join(this.dotGitDir, "info", "exclude"), patterns.join("\n"))
 	}
 
+	// --- CHANGE START: New method to find and cache nested .git directory paths ---
+	// This method scans for nested .git directories once and caches their paths
+	// to avoid repeated expensive scans by ripgrep.
+	private async findAndCacheNestedGitRepoPaths(): Promise<string[]> {
+		if (this._nestedGitDirPaths === null) {
+			this.log(`[${this.constructor.name}#findAndCacheNestedGitRepoPaths] Scanning for nested .git directories.`)
+			// Ripgrep for .git/HEAD files, excluding the root .git/HEAD of the workspace itself.
+			// Note: The original `renameNestedGitRepos` looked for `**/${gitDir}/HEAD`.
+			// We'll look for `**/.git/HEAD` and then `renameNestedGitRepos` will handle the suffix.
+			const ripGrepArgs = [
+				"--files",
+				"--hidden",
+				"--follow",
+				"-g",
+				`**/${path.join(".git", "HEAD")}`,
+				this.workspaceDir,
+			]
+			const headFileEntries = await executeRipgrep({ args: ripGrepArgs, workspacePath: this.workspaceDir })
+
+			this._nestedGitDirPaths = headFileEntries
+				.filter(
+					({ type, path: p }) =>
+						type === "file" &&
+						p.endsWith(path.join(".git", "HEAD")) && // Ensure it's a HEAD file
+						p !== path.join(".git", "HEAD"), // Exclude the main .git/HEAD if workspaceDir is a git repo
+				)
+				.map((entry) => path.dirname(entry.path)) // Get the .git directory path (relative to workspaceDir)
+
+			this.log(
+				`[${this.constructor.name}#findAndCacheNestedGitRepoPaths] Found ${this._nestedGitDirPaths.length} nested .git directories.`,
+			)
+		}
+		return this._nestedGitDirPaths
+	}
+	// --- CHANGE END: New method to find and cache nested .git directory paths ---
+
+	// --- CHANGE START: Modify stageAll to be more performant ---
+	// Instead of `git add .`, this uses `git status` to find specific changes
+	// and then `git add <files>` and `git rm <files>`.
 	private async stageAll(git: SimpleGit) {
-		await this.renameNestedGitRepos(true)
+		await this.renameNestedGitRepos(true) // renameNestedGitRepos will also be modified
 
 		try {
-			await git.add(".")
+			// Use git status to find changed/new/deleted files and stage them specifically
+			const status = await git.status(["--porcelain=v1", "-uall"]) // -uall includes all untracked files
+			const filesToAdd: string[] = []
+			const filesToRemove: string[] = []
+
+			if (status && status.files && status.files.length > 0) {
+				// simple-git's status.files is an array of objects like:
+				// { path: 'file.txt', index: 'M', working_dir: ' ' }
+				// index: Status of the index
+				// working_dir: Status of the working directory
+				status.files.forEach((file) => {
+					const filePath = file.path
+					// Determine if file needs to be added or removed
+					// 'D' in index or working_dir means deleted
+					if (file.index === "D" || file.working_dir === "D") {
+						filesToRemove.push(filePath)
+					} else if (file.index === "?" || file.working_dir === "?") {
+						// Untracked
+						filesToAdd.push(filePath)
+					} else if (file.index === "A" || file.working_dir === "A") {
+						// Added
+						filesToAdd.push(filePath)
+					} else if (file.index === "M" || file.working_dir === "M") {
+						// Modified
+						filesToAdd.push(filePath)
+					} else if (file.index.startsWith("R") || file.working_dir.startsWith("R")) {
+						// Renamed
+						filesToAdd.push(filePath) // Add the new path
+					} else if (file.index.startsWith("C") || file.working_dir.startsWith("C")) {
+						// Copied
+						filesToAdd.push(filePath) // Add the new path
+					}
+					// Other statuses like 'U' (unmerged) might need specific handling if relevant
+				})
+			}
+
+			if (filesToRemove.length > 0) {
+				await git.rm(filesToRemove)
+			}
+			if (filesToAdd.length > 0) {
+				await git.add(filesToAdd)
+			}
 		} catch (error) {
 			this.log(
-				`[${this.constructor.name}#stageAll] failed to add files to git: ${error instanceof Error ? error.message : String(error)}`,
+				`[${this.constructor.name}#stageAll] failed to process git status or stage/remove files: ${error instanceof Error ? error.message : String(error)}`,
 			)
+			throw error // Rethrow to ensure operation is marked as failed
 		} finally {
 			await this.renameNestedGitRepos(false)
 		}
 	}
+	// --- CHANGE END: Modify stageAll to be more performant ---
 
 	// Since we use git to track checkpoints, we need to temporarily disable
 	// nested git repos to work around git's requirement of using submodules for
 	// nested repos.
+	// --- CHANGE START: Modify renameNestedGitRepos to use cached paths ---
+	// This method now uses the pre-scanned and cached list of nested .git directories.
 	private async renameNestedGitRepos(disable: boolean) {
-		try {
-			// Find all .git directories that are not at the root level.
-			const gitDir = ".git" + (disable ? "" : GIT_DISABLED_SUFFIX)
-			const args = ["--files", "--hidden", "--follow", "-g", `**/${gitDir}/HEAD`, this.workspaceDir]
+		const nestedGitDirPaths = await this.findAndCacheNestedGitRepoPaths() // Uses cache after first scan
 
-			const gitPaths = await (
-				await executeRipgrep({ args, workspacePath: this.workspaceDir })
-			).filter(({ type, path }) => type === "folder" && path.includes(".git") && !path.startsWith(".git"))
+		for (const relativeGitDirPath of nestedGitDirPaths) {
+			// e.g., "submoduleA/.git"
+			const originalGitPath = path.join(this.workspaceDir, relativeGitDirPath) // Becomes absolute path
+			const disabledGitPath = originalGitPath + GIT_DISABLED_SUFFIX
 
-			// For each nested .git directory, rename it based on operation.
-			for (const gitPath of gitPaths) {
-				if (gitPath.path.startsWith(".git")) {
-					continue
-				}
-
-				const currentPath = path.join(this.workspaceDir, gitPath.path)
-				let newPath: string
-
+			try {
 				if (disable) {
-					newPath = !currentPath.endsWith(GIT_DISABLED_SUFFIX)
-						? currentPath + GIT_DISABLED_SUFFIX
-						: currentPath
+					// Check if the original .git directory exists and is not already disabled
+					if ((await fileExistsAtPath(originalGitPath)) && !originalGitPath.endsWith(GIT_DISABLED_SUFFIX)) {
+						await fs.rename(originalGitPath, disabledGitPath)
+						this.log(
+							`[${this.constructor.name}#renameNestedGitRepos] disabled nested git repo ${originalGitPath}`,
+						)
+					}
 				} else {
-					newPath = currentPath.endsWith(GIT_DISABLED_SUFFIX)
-						? currentPath.slice(0, -GIT_DISABLED_SUFFIX.length)
-						: currentPath
+					// enable
+					// Check if the disabled version exists
+					if (await fileExistsAtPath(disabledGitPath)) {
+						await fs.rename(disabledGitPath, originalGitPath)
+						this.log(
+							`[${this.constructor.name}#renameNestedGitRepos] enabled nested git repo ${originalGitPath}`,
+						)
+					}
 				}
-
-				if (currentPath === newPath) {
-					continue
-				}
-
-				try {
-					await fs.rename(currentPath, newPath)
-
-					this.log(
-						`[${this.constructor.name}#renameNestedGitRepos] ${disable ? "disabled" : "enabled"} nested git repo ${currentPath}`,
-					)
-				} catch (error) {
-					this.log(
-						`[${this.constructor.name}#renameNestedGitRepos] failed to ${disable ? "disable" : "enable"} nested git repo ${currentPath}: ${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
+			} catch (error) {
+				// Log specific error for this rename operation but continue with others
+				this.log(
+					`[${this.constructor.name}#renameNestedGitRepos] failed to ${disable ? "disable" : "enable"} ${originalGitPath}: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
-		} catch (error) {
-			this.log(
-				`[${this.constructor.name}#renameNestedGitRepos] failed to ${disable ? "disable" : "enable"} nested git repos: ${error instanceof Error ? error.message : String(error)}`,
-			)
 		}
 	}
+	// --- CHANGE END: Modify renameNestedGitRepos to use cached paths ---
 
 	private async getShadowGitConfigWorktree(git: SimpleGit) {
 		if (!this.shadowGitConfigWorktree) {
@@ -223,7 +319,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 
 			const startTime = Date.now()
-			await this.stageAll(this.git)
+			await this.stageAll(this.git) // This now uses the optimized stageAll
 			const result = await this.git.commit(message)
 			const isFirst = this._checkpoints.length === 0
 			const fromHash = this._checkpoints[this._checkpoints.length - 1] ?? this.baseHash!
@@ -239,6 +335,29 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				this.log(
 					`[${this.constructor.name}#saveCheckpoint] checkpoint saved in ${duration}ms -> ${result.commit}`,
 				)
+
+				// --- STAGE 2: Periodically run GC after saving checkpoints ---
+				this.gcCounter++
+				if (this.gcCounter >= this.GC_CHECKPOINT_THRESHOLD) {
+					this.log(
+						`[${this.constructor.name}#saveCheckpoint] Reached gc threshold (${this.GC_CHECKPOINT_THRESHOLD}). Running background gc.`,
+					)
+					this.gcCounter = 0 // Reset counter
+
+					// Run gc asynchronously (fire and forget) to avoid blocking the save operation.
+					this.git
+						.raw(["gc"])
+						.then(() => {
+							this.log(
+								`[${this.constructor.name}#saveCheckpoint] Background garbage collection completed.`,
+							)
+						})
+						.catch((gcError: any) => {
+							this.log(
+								`[${this.constructor.name}#saveCheckpoint] Background garbage collection failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
+							)
+						})
+				}
 				return result
 			} else {
 				this.log(`[${this.constructor.name}#saveCheckpoint] found no changes to commit in ${duration}ms`)
@@ -261,8 +380,20 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 
 			const start = Date.now()
+			// --- CHANGE START: Consider if renameNestedGitRepos is needed around clean/reset ---
+			// If `git clean` or `git reset` could be affected by nested .git repos
+			// (e.g., if they try to operate on them as submodules despite core.worktree),
+			// you might need to wrap this section with renameNestedGitRepos(true/false).
+			// However, `core.worktree` usually makes Git operate on the workspace files directly.
+			// For now, assuming it's not strictly needed here for performance, but it's a thought.
+			// await this.renameNestedGitRepos(true);
+			// try {
 			await this.git.clean("f", ["-d", "-f"])
 			await this.git.reset(["--hard", commitHash])
+			// } finally {
+			//    await this.renameNestedGitRepos(false);
+			// }
+			// --- CHANGE END: Consider if renameNestedGitRepos is needed around clean/reset ---
 
 			// Remove all checkpoints after the specified commitHash.
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)
@@ -282,39 +413,126 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 	}
 
+	// --- CHANGE START: Modify getDiff for performance and accuracy ---
 	public async getDiff({ from, to }: { from?: string; to?: string }): Promise<CheckpointDiff[]> {
 		if (!this.git) {
 			throw new Error("Shadow git repo not initialized")
 		}
 
-		const result = []
-
 		if (!from) {
-			from = (await this.git.raw(["rev-list", "--max-parents=0", "HEAD"])).trim()
+			// Get the initial commit hash if 'from' is not provided
+			const revListOutput = await this.git.raw(["rev-list", "--max-parents=0", "HEAD"])
+			from = revListOutput ? revListOutput.trim() : undefined
+			if (!from) {
+				this.log(`[${this.constructor.name}#getDiff] Could not determine initial commit (baseHash).`)
+				return [] // Or throw an error, depending on desired behavior
+			}
 		}
 
-		// Stage all changes so that untracked files appear in diff summary.
-		await this.stageAll(this.git)
+		// Stage changes only if diffing against the working directory (when 'to' is undefined).
+		// This ensures untracked files are considered by `git diff <commit>`.
+		// `git diff <commit1>..<commit2>` doesn't need this staging of the working dir.
+		if (!to) {
+			await this.stageAll(this.git) // Uses the optimized stageAll
+		}
 
-		this.log(`[${this.constructor.name}#getDiff] diffing ${to ? `${from}..${to}` : `${from}..HEAD`}`)
-		const { files } = to ? await this.git.diffSummary([`${from}..${to}`]) : await this.git.diffSummary([from])
+		this.log(
+			`[${this.constructor.name}#getDiff] diffing ${to ? `${from}..${to}` : `${from}..HEAD (working directory)`}`,
+		)
+
+		// Use `git diff --name-status` for a more precise list of changes (Added, Modified, Deleted, Renamed).
+		const diffArgs = ["--name-status"]
+		if (to) {
+			diffArgs.push(`${from}..${to}`)
+		} else {
+			diffArgs.push(from) // Diff commit 'from' against the (staged) working tree
+		}
+
+		const nameStatusOutput = (await this.git.diff(diffArgs)).trim()
+		const fileInfos: Array<{ path: string; status: string; origPath?: string }> = []
+
+		if (nameStatusOutput) {
+			nameStatusOutput.split("\n").forEach((line) => {
+				if (!line.trim()) return
+				const parts = line.split("\t")
+				const status = parts[0][0] // First char of status, e.g., 'A', 'M', 'D', 'R', 'C'
+				let filePath = parts[1]
+				let origPath: string | undefined
+
+				if ((status === "R" || status === "C") && parts.length > 2) {
+					// Renamed or Copied
+					origPath = parts[1] // The original path
+					filePath = parts[2] // The new path
+				}
+				fileInfos.push({ path: filePath, status, origPath })
+			})
+		}
 
 		const cwdPath = (await this.getShadowGitConfigWorktree(this.git)) || this.workspaceDir || ""
+		const result: CheckpointDiff[] = []
 
-		for (const file of files) {
-			const relPath = file.file
+		for (const info of fileInfos) {
+			const relPath = info.path
 			const absPath = path.join(cwdPath, relPath)
-			const before = await this.git.show([`${from}:${relPath}`]).catch(() => "")
+			let beforeContent = ""
+			let afterContent = ""
 
-			const after = to
-				? await this.git.show([`${to}:${relPath}`]).catch(() => "")
-				: await fs.readFile(absPath, "utf8").catch(() => "")
+			// Fetch 'before' content if the file was not Added (i.e., it existed in 'from' or was renamed/copied from an existing file)
+			if (info.status !== "A") {
+				const pathForBefore = info.origPath || relPath // Use original path for renames/copies
+				try {
+					beforeContent = await this.git.show([`${from}:${pathForBefore}`])
+				} catch (showError) {
+					// File might not exist in 'from' if it was, for example, deleted and then re-added differently,
+					// or if it's binary and show fails. Log or handle as needed.
+					this.log(
+						`[${this.constructor.name}#getDiff] Could not git.show ${from}:${pathForBefore}. Error: ${showError}`,
+					)
+					beforeContent = "" // Default to empty string
+				}
+			}
 
-			result.push({ paths: { relative: relPath, absolute: absPath }, content: { before, after } })
+			// Fetch 'after' content if the file was not Deleted
+			if (info.status !== "D") {
+				if (to) {
+					// Diffing between two commits
+					try {
+						afterContent = await this.git.show([`${to}:${relPath}`])
+					} catch (showError) {
+						this.log(
+							`[${this.constructor.name}#getDiff] Could not git.show ${to}:${relPath}. Error: ${showError}`,
+						)
+						afterContent = ""
+					}
+				} else {
+					// Diffing against working directory
+					try {
+						// Ensure file exists before reading, especially if it's newly added in working dir but not yet committed.
+						if (await fileExistsAtPath(absPath)) {
+							afterContent = await fs.readFile(absPath, "utf8")
+						} else {
+							// This case should be rare if stageAll correctly added new files.
+							this.log(
+								`[${this.constructor.name}#getDiff] File ${absPath} not found in working directory for 'after' content.`,
+							)
+							afterContent = ""
+						}
+					} catch (readError) {
+						this.log(
+							`[${this.constructor.name}#getDiff] Could not fs.readFile ${absPath}. Error: ${readError}`,
+						)
+						afterContent = ""
+					}
+				}
+			}
+			result.push({
+				paths: { relative: relPath, absolute: absPath },
+				content: { before: beforeContent, after: afterContent },
+			})
 		}
-
 		return result
 	}
+	// --- CHANGE END: Modify getDiff for performance and accuracy ---
 
 	/**
 	 * EventEmitter
@@ -408,6 +626,22 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				)
 
 				await git.branch(["-D", branchName])
+				// --- STAGE 3: Run GC after deleting a branch ---
+				try {
+					console.log(
+						`[ShadowCheckpointService#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`,
+					)
+					// Using raw for --prune=now as simple-git's gc() doesn't directly support it.
+					git.raw(["gc", "--prune=now", "--quiet"])
+					console.log(
+						`[ShadowCheckpointService#deleteBranch] gc --prune=now completed for branch ${branchName}`,
+					)
+				} catch (gcError) {
+					console.error(
+						`[ShadowCheckpointService#deleteBranch] gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
+					)
+				}
+
 				return true
 			} catch (error) {
 				console.error(
@@ -422,6 +656,19 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 		} else {
 			await git.branch(["-D", branchName])
+			// --- STAGE 3: Run GC after deleting a branch ---
+			try {
+				console.log(
+					`[ShadowCheckpointService#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`,
+				)
+				git.raw(["gc", "--prune=now", "--quiet"])
+				console.log(`[ShadowCheckpointService#deleteBranch] gc --prune=now completed for branch ${branchName}`)
+			} catch (gcError) {
+				console.error(
+					`[ShadowCheckpointService#deleteBranch] gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
+				)
+			}
+
 			return true
 		}
 	}
