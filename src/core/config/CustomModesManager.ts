@@ -288,7 +288,7 @@ export class CustomModesManager {
 
 		try {
 			content = await fs.readFile(filePath, "utf-8")
-		} catch (error) {
+		} catch {
 			// File might not exist yet.
 			content = JSON.stringify({ customModes: [] })
 		}

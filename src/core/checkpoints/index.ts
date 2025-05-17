@@ -34,7 +34,7 @@ export function getCheckpointService(cline: Task) {
 
 		try {
 			provider?.log(message)
-		} catch (err) {
+		} catch {
 			// NO-OP
 		}
 	}
@@ -83,7 +83,7 @@ export function getCheckpointService(cline: Task) {
 					log("[Cline#getCheckpointService] no checkpoints found, saving initial checkpoint")
 					checkpointSave(cline)
 				}
-			} catch (err) {
+			} catch {
 				log("[Cline#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
 				cline.enableCheckpoints = false
 			}
@@ -120,7 +120,7 @@ export function getCheckpointService(cline: Task) {
 		})
 
 		return service
-	} catch (err) {
+	} catch {
 		log("[Cline#getCheckpointService] caught unexpected error, disabling checkpoints")
 		cline.enableCheckpoints = false
 		return undefined
@@ -147,7 +147,7 @@ async function getInitializedCheckpointService(
 		)
 
 		return service
-	} catch (err) {
+	} catch {
 		return undefined
 	}
 }
@@ -236,7 +236,7 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 		// task flow and the communication between the webview and the
 		// Cline instance.
 		provider?.cancelTask()
-	} catch (err) {
+	} catch {
 		provider?.log("[checkpointRestore] disabling checkpoints for this task")
 		cline.enableCheckpoints = false
 	}
@@ -288,7 +288,7 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 				}),
 			]),
 		)
-	} catch (err) {
+	} catch {
 		const provider = cline.providerRef.deref()
 		provider?.log("[checkpointDiff] disabling checkpoints for this task")
 		cline.enableCheckpoints = false

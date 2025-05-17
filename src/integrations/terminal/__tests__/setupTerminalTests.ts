@@ -10,7 +10,7 @@ function isPowerShellCoreAvailable() {
 			stdio: "pipe",
 		})
 		return true
-	} catch (error) {
+	} catch {
 		return false
 	}
 }

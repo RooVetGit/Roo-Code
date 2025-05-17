@@ -246,7 +246,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 		try {
 			await fs.appendFile(this.logfile, message, "utf8")
-		} catch (_) {
+		} catch {
 			this.logfile = undefined
 		}
 	}

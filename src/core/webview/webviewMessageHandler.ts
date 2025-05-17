@@ -350,13 +350,13 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 				try {
 					await pWaitFor(() => provider.getCurrentCline()?.isInitialized === true, { timeout: 3_000 })
-				} catch (error) {
+				} catch {
 					vscode.window.showErrorMessage(t("common:errors.checkpoint_timeout"))
 				}
 
 				try {
 					await provider.getCurrentCline()?.checkpointRestore(result.data)
-				} catch (error) {
+				} catch {
 					vscode.window.showErrorMessage(t("common:errors.checkpoint_failed"))
 				}
 			}
@@ -566,7 +566,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					// Send the result back to the webview
 					await provider.postMessageToWebview({
 						type: "browserConnectionResult",
-						success: !!chromeHostUrl,
+						success: typeof chromeHostUrl === "string" && chromeHostUrl !== "",
 						text: `Auto-discovered and tested connection to Chrome: ${chromeHostUrl}`,
 						values: { endpoint: chromeHostUrl },
 					})
@@ -932,7 +932,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					// Try to get enhancement config first, fall back to current config.
 					let configToUse: ProviderSettings = apiConfiguration
 
-					if (enhancementApiConfigId && !!listApiConfigMeta.find(({ id }) => id === enhancementApiConfigId)) {
+					if (
+						enhancementApiConfigId &&
+						listApiConfigMeta.find(({ id }) => id === enhancementApiConfigId) !== undefined
+					) {
 						const { name: _, ...providerSettings } = await provider.providerSettingsManager.getProfile({
 							id: enhancementApiConfigId,
 						})

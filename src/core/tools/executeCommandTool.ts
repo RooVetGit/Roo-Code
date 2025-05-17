@@ -135,7 +135,7 @@ export async function executeCommand(
 
 	try {
 		await fs.access(workingDir)
-	} catch (error) {
+	} catch {
 		return [false, `Working directory '${workingDir}' does not exist.`]
 	}
 
@@ -169,7 +169,7 @@ export async function executeCommand(
 					message = { text, images }
 					process.continue()
 				}
-			} catch (_error) {}
+			} catch {}
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
@@ -195,7 +195,12 @@ export async function executeCommand(
 		}
 	}
 
-	const terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId, terminalProvider)
+	const terminal = await TerminalRegistry.getOrCreateTerminal(
+		workingDir,
+		customCwd !== undefined && customCwd !== "",
+		cline.taskId,
+		terminalProvider,
+	)
 
 	if (terminal instanceof Terminal) {
 		terminal.terminal.show(true)

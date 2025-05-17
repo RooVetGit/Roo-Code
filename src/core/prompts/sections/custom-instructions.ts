@@ -27,7 +27,7 @@ async function directoryExists(dirPath: string): Promise<boolean> {
 	try {
 		const stats = await fs.stat(dirPath)
 		return stats.isDirectory()
-	} catch (err) {
+	} catch {
 		return false
 	}
 }
@@ -89,7 +89,7 @@ async function resolveSymLink(fullPath: string, filePaths: string[], depth: numb
 			// Handle nested symlinks by awaiting the recursive call
 			await resolveSymLink(resolvedTarget, filePaths, depth + 1)
 		}
-	} catch (err) {
+	} catch {
 		// Skip invalid symlinks
 	}
 }
@@ -123,7 +123,7 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 						return { filename: file, content }
 					}
 					return null
-				} catch (err) {
+				} catch {
 					return null
 				}
 			}),
@@ -131,7 +131,7 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 
 		// Filter out null values (directories or failed reads)
 		return fileContents.filter((item): item is { filename: string; content: string } => item !== null)
-	} catch (err) {
+	} catch {
 		return []
 	}
 }

@@ -70,7 +70,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 					timeoutId = setTimeout(() => {
 						try {
 							subprocess.kill("SIGKILL")
-						} catch (e) {}
+						} catch {}
 
 						resolve()
 					}, 5_000)

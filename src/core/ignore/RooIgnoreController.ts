@@ -96,7 +96,7 @@ export class RooIgnoreController {
 
 			// Ignore expects paths to be path.relative()'d
 			return !this.ignoreInstance.ignores(relativePath)
-		} catch (error) {
+		} catch {
 			// console.error(`Error validating access for ${filePath}:`, error)
 			// Ignore is designed to work with relative file paths, so will throw error for paths outside cwd. We are allowing access to all files outside cwd.
 			return true
