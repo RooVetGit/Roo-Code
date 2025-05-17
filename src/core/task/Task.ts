@@ -920,6 +920,9 @@ export class Task extends EventEmitter<ClineEvents> {
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
 		// Kicks off the checkpoints initialization process in the background.
 		getCheckpointService(this)
+		// Lets track if the user is interacting with the editor after we start our task loop.
+		this.diffViewProvider.initialize()
+		this.diffViewProvider.disableAutoFocusAfterUserInteraction()
 
 		let nextUserContent = userContent
 		let includeFileDetails = true

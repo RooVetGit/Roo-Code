@@ -351,6 +351,8 @@ const baseProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
@@ -631,6 +633,8 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	includeMaxTokens: undefined,
 	reasoningEffort: undefined,
 	diffEnabled: undefined,
+	diffViewAutoFocus: undefined,
+	autoCloseRooTabs: undefined,
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
@@ -710,6 +714,8 @@ export const globalSettingsSchema = z.object({
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -788,6 +794,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
+	diffViewAutoFocus: undefined,
+	autoCloseRooTabs: undefined,
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
 

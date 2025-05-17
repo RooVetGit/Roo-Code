@@ -36,3 +36,6 @@ logs
 
 # Vite development
 .vite-port
+
+# JetBrains IDEs
+.idea
