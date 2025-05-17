@@ -9,7 +9,7 @@ import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
 // schemas
-import { TokenUsage, ToolUsage, ToolName } from "../../schemas"
+import { TokenUsage, ToolUsage, ToolName, HistoryItem } from "../../schemas"
 
 // api
 import { ApiHandler, buildApiHandler } from "../../api"
@@ -29,7 +29,7 @@ import {
 	ToolProgressStatus,
 } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
-import { HistoryItem } from "../../shared/HistoryItem"
+// Removed duplicate HistoryItem import, using the one from ../../schemas
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
@@ -117,12 +117,14 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	readonly rootTask: Task | undefined = undefined
 	readonly parentTask: Task | undefined = undefined
+	readonly parentTaskId?: string
 	readonly taskNumber: number
 	readonly workspacePath: string
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
+	private isCompleted: boolean = false
 	didFinishAbortingStream = false
 	abandoned = false
 	isInitialized = false
@@ -208,6 +210,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
+		this.isCompleted = historyItem?.completed ?? false
 		// normal use-case is usually retry similar history task with new workspace
 		this.workspacePath = parentTask
 			? parentTask.workspacePath
@@ -237,6 +240,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
+		if (parentTask) {
+			this.parentTaskId = parentTask.taskId
+		}
 		this.taskNumber = taskNumber
 
 		if (historyItem) {
@@ -315,7 +321,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	private async addToClineMessages(message: ClineMessage) {
 		this.clineMessages.push(message)
-		await this.providerRef.deref()?.postStateToWebview()
+		// Removed direct call to postStateToWebview(), ClineProvider.updateTaskHistory will handle it
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
 	}
@@ -338,13 +344,47 @@ export class Task extends EventEmitter<ClineEvents> {
 				globalStoragePath: this.globalStoragePath,
 			})
 
-			const { historyItem, tokenUsage } = await taskMetadata({
+			let effectiveParentTaskId = this.parentTaskId // Default to instance's parentTaskId
+
+			// Check existing history for parent_task_id
+			const provider = this.providerRef.deref()
+			if (provider) {
+				try {
+					const taskData = await provider.getTaskWithId(this.taskId)
+					const existingHistoryItem = taskData?.historyItem
+					if (existingHistoryItem && existingHistoryItem.parent_task_id) {
+						effectiveParentTaskId = existingHistoryItem.parent_task_id
+					}
+				} catch (error: any) {
+					// If task is not found, it's a new task. We'll proceed with `this.parentTaskId` as `effectiveParentTaskId`.
+					// Log other errors, but don't let them block the task saving process if it's just "Task not found".
+					if (error.message !== "Task not found") {
+						console.warn(
+							`Error fetching task ${this.taskId} during parent_task_id check (this may be a new task):`,
+							error,
+						)
+						// Optionally, re-throw if it's a critical error not related to "Task not found"
+						// For now, we'll allow proceeding to ensure new tasks are saved.
+					}
+				}
+			}
+
+			const metadataOptions: Parameters<typeof taskMetadata>[0] = {
 				messages: this.clineMessages,
 				taskId: this.taskId,
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
-			})
+				parentTaskId: effectiveParentTaskId, // Use the determined parentTaskId
+			}
+
+			if (this.isCompleted) {
+				metadataOptions.setCompleted = true
+			} else {
+				metadataOptions.unsetCompleted = true
+			}
+
+			const { historyItem, tokenUsage } = await taskMetadata(metadataOptions)
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
 
@@ -449,6 +489,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
 		}
 
+		// If the AI is asking for a completion_result, it means it has attempted completion.
+		// Mark as completed now. It will be persisted by saveClineMessages called within addToClineMessages or by the save below.
+		if (type === "completion_result") {
+			this.isCompleted = true
+		}
+
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
 
 		if (this.lastMessageTs !== askTs) {
@@ -459,6 +505,16 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
+
+		// If the task was marked as completed due to a "completion_result" ask,
+		// but the user did not confirm with "yesButtonClicked" (e.g., they clicked "No" or provided new input),
+		// then the task is no longer considered completed.
+		if (type === "completion_result" && result.response !== "yesButtonClicked") {
+			this.isCompleted = false
+			// This change will be persisted by the next call to saveClineMessages,
+			// for example, when user feedback is added as a new message.
+		}
+
 		this.askResponse = undefined
 		this.askResponseText = undefined
 		this.askResponseImages = undefined
@@ -467,6 +523,13 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+		const lastAskMessage = this.clineMessages
+			.slice()
+			.reverse()
+			.find((m) => m.type === "ask")
+		if (this.isCompleted && askResponse === "messageResponse" && lastAskMessage?.ask !== "completion_result") {
+			this.isCompleted = false
+		}
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
@@ -496,8 +559,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		if (partial !== undefined) {
+			// Handles partial messages
 			const lastMessage = this.clineMessages.at(-1)
-
 			const isUpdatingPreviousPartial =
 				lastMessage && lastMessage.partial && lastMessage.type === "say" && lastMessage.say === type
 
@@ -516,7 +579,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					if (!options.isNonInteractive) {
 						this.lastMessageTs = sayTs
 					}
-
+					// For a new partial message, completion is set only when it's finalized.
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, partial })
 				}
 			} else {
@@ -526,6 +589,10 @@ export class Task extends EventEmitter<ClineEvents> {
 				if (isUpdatingPreviousPartial) {
 					if (!options.isNonInteractive) {
 						this.lastMessageTs = lastMessage.ts
+					}
+					// If this is the final part of a "completion_result" message, mark as completed.
+					if (type === "completion_result") {
+						this.isCompleted = true
 					}
 
 					lastMessage.text = text
@@ -546,7 +613,11 @@ export class Task extends EventEmitter<ClineEvents> {
 					if (!options.isNonInteractive) {
 						this.lastMessageTs = sayTs
 					}
-
+					// If this is a new, complete "completion_result" message (being added as partial initially but immediately finalized), mark as completed.
+					// This case might be rare if "completion_result" is always non-partial or ask.
+					if (type === "completion_result") {
+						this.isCompleted = true
+					}
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images })
 				}
 			}
@@ -561,7 +632,10 @@ export class Task extends EventEmitter<ClineEvents> {
 			if (!options.isNonInteractive) {
 				this.lastMessageTs = sayTs
 			}
-
+			// If this is a new, non-partial "completion_result" message, mark as completed.
+			if (type === "completion_result") {
+				this.isCompleted = true
+			}
 			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, checkpoint })
 		}
 	}
@@ -579,6 +653,9 @@ export class Task extends EventEmitter<ClineEvents> {
 	// Start / Abort / Resume
 
 	private async startTask(task?: string, images?: string[]): Promise<void> {
+		if (this.isCompleted && (task || (images && images.length > 0))) {
+			this.isCompleted = false
+		}
 		// `conversationHistory` (for API) and `clineMessages` (for webview)
 		// need to be in sync.
 		// If the extension process were killed, then on restart the
@@ -686,6 +763,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		let responseImages: string[] | undefined
 		if (response === "messageResponse") {
 			await this.say("user_feedback", text, images)
+			if (this.isCompleted) {
+				this.isCompleted = false
+			}
 			responseText = text
 			responseImages = images
 		}

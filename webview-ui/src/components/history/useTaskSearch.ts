@@ -1,10 +1,45 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react" // Added useCallback
 import { Fzf } from "fzf"
 
 import { highlightFzfMatch } from "@/utils/highlight"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { HistoryItem } from "../../../../src/shared/HistoryItem"
 
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
+
+export interface HierarchicalHistoryItem extends HistoryItem {
+	children?: HierarchicalHistoryItem[]
+}
+
+// Helper functions defined outside the hook for stability
+const getAllDescendantIdsRecursive = (item: HierarchicalHistoryItem): string[] => {
+	let ids: string[] = []
+	if (item.children && item.children.length > 0) {
+		item.children.forEach((child: HierarchicalHistoryItem) => {
+			ids.push(child.id)
+			ids = ids.concat(getAllDescendantIdsRecursive(child))
+		})
+	}
+	return ids
+}
+
+const findItemByIdRecursive = (
+	currentItems: HierarchicalHistoryItem[],
+	idToFind: string,
+): HierarchicalHistoryItem | null => {
+	for (const item of currentItems) {
+		if (item.id === idToFind) {
+			return item
+		}
+		if (item.children) {
+			const foundInChildren = findItemByIdRecursive(item.children, idToFind)
+			if (foundInChildren) {
+				return foundInChildren
+			}
+		}
+	}
+	return null
+}
 
 export const useTaskSearch = () => {
 	const { taskHistory, cwd } = useExtensionState()
@@ -12,6 +47,8 @@ export const useTaskSearch = () => {
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
 	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false)
+	const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({})
+	const [bulkExpandedRootItems, setBulkExpandedRootItems] = useState<Record<string, boolean>>({})
 
 	useEffect(() => {
 		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
@@ -38,7 +75,7 @@ export const useTaskSearch = () => {
 	}, [presentableTasks])
 
 	const tasks = useMemo(() => {
-		let results = presentableTasks
+		let results: HierarchicalHistoryItem[] = [...presentableTasks]
 
 		if (searchQuery) {
 			const searchResults = fzf.find(searchQuery)
@@ -57,26 +94,158 @@ export const useTaskSearch = () => {
 			})
 		}
 
-		// Then sort the results
-		return [...results].sort((a, b) => {
-			switch (sortOption) {
-				case "oldest":
-					return (a.ts || 0) - (b.ts || 0)
-				case "mostExpensive":
-					return (b.totalCost || 0) - (a.totalCost || 0)
-				case "mostTokens":
-					const aTokens = (a.tokensIn || 0) + (a.tokensOut || 0) + (a.cacheWrites || 0) + (a.cacheReads || 0)
-					const bTokens = (b.tokensIn || 0) + (b.tokensOut || 0) + (b.cacheWrites || 0) + (b.cacheReads || 0)
-					return bTokens - aTokens
-				case "mostRelevant":
-					// Keep fuse order if searching, otherwise sort by newest
-					return searchQuery ? 0 : (b.ts || 0) - (a.ts || 0)
-				case "newest":
-				default:
-					return (b.ts || 0) - (a.ts || 0)
+		// Build hierarchy
+		const taskMap = new Map<string, HierarchicalHistoryItem>()
+		results.forEach((task) => taskMap.set(task.id, { ...task, children: [] }))
+
+		const rootTasks: HierarchicalHistoryItem[] = []
+		results.forEach((task) => {
+			if (task.parent_task_id && taskMap.has(task.parent_task_id)) {
+				const parent = taskMap.get(task.parent_task_id)
+				if (parent) {
+					parent.children = parent.children || []
+					parent.children.push(taskMap.get(task.id)!)
+				}
+			} else {
+				rootTasks.push(taskMap.get(task.id)!)
 			}
 		})
+
+		// Sort children within each parent and root tasks
+		const sortTasksRecursive = (tasksToSort: HierarchicalHistoryItem[]): HierarchicalHistoryItem[] => {
+			tasksToSort.sort((a, b) => {
+				switch (sortOption) {
+					case "oldest":
+						return (a.ts || 0) - (b.ts || 0)
+					case "mostExpensive":
+						return (b.totalCost || 0) - (a.totalCost || 0)
+					case "mostTokens":
+						const aTokens =
+							(a.tokensIn || 0) + (a.tokensOut || 0) + (a.cacheWrites || 0) + (a.cacheReads || 0)
+						const bTokens =
+							(b.tokensIn || 0) + (b.tokensOut || 0) + (b.cacheWrites || 0) + (b.cacheReads || 0)
+						return bTokens - aTokens
+					case "mostRelevant":
+						return searchQuery ? 0 : (b.ts || 0) - (a.ts || 0) // FZF order for root, timestamp for children
+					case "newest":
+					default:
+						return (b.ts || 0) - (a.ts || 0)
+				}
+			})
+			tasksToSort.forEach((task) => {
+				if (task.children && task.children.length > 0) {
+					task.children = sortTasksRecursive(task.children)
+				}
+			})
+			return tasksToSort
+		}
+
+		return sortTasksRecursive(rootTasks)
 	}, [presentableTasks, searchQuery, fzf, sortOption])
+
+	useEffect(() => {
+		// This effect ensures that newly added children of bulk-expanded parents are also expanded.
+		setExpandedItems((prevExpanded) => {
+			let newExpanded = { ...prevExpanded }
+			let changed = false
+
+			// Helper to create a flat map of all tasks for efficient lookup by ID
+			const allTasksMap = new Map<string, HierarchicalHistoryItem>()
+			const populateTaskMapRecursive = (currentTaskList: HierarchicalHistoryItem[]) => {
+				for (const item of currentTaskList) {
+					allTasksMap.set(item.id, item)
+					if (item.children) {
+						populateTaskMapRecursive(item.children)
+					}
+				}
+			}
+			populateTaskMapRecursive(tasks) // `tasks` is the hierarchical list from useMemo
+
+			const isAncestorBulkExpanded = (
+				itemId: string | undefined,
+				currentBulkExpandedItems: Record<string, boolean>,
+			): boolean => {
+				if (!itemId) return false
+				const item = allTasksMap.get(itemId)
+				if (!item) return false
+
+				if (currentBulkExpandedItems[item.id]) {
+					return true
+				}
+				// Recursively check the parent
+				return isAncestorBulkExpanded(item.parent_task_id, currentBulkExpandedItems)
+			}
+
+			const applyRecursiveExpansion = (currentTaskList: HierarchicalHistoryItem[]) => {
+				for (const item of currentTaskList) {
+					// If the item itself or any of its ancestors are bulk-expanded, and it's not already expanded
+					if (!newExpanded[item.id] && isAncestorBulkExpanded(item.id, bulkExpandedRootItems)) {
+						newExpanded[item.id] = true
+						changed = true
+					}
+					if (item.children && item.children.length > 0) {
+						applyRecursiveExpansion(item.children)
+					}
+				}
+			}
+
+			applyRecursiveExpansion(tasks)
+
+			return changed ? newExpanded : prevExpanded
+		})
+	}, [tasks, bulkExpandedRootItems, setExpandedItems])
+
+	const toggleItemExpansion = useCallback(
+		(taskId: string) => {
+			setExpandedItems((prev) => ({
+				...prev,
+				[taskId]: !prev[taskId],
+			}))
+			setBulkExpandedRootItems((prev) => ({
+				...prev,
+				[taskId]: false,
+			}))
+		},
+		[setExpandedItems, setBulkExpandedRootItems], // Correct: only depends on setters
+	)
+
+	const toggleBulkItemExpansion = useCallback(
+		(taskId: string) => {
+			// `tasks` is from useMemo, `expandedItems` is from useState.
+			// Both are correctly captured here due to being in the dependency array.
+			const targetItem = findItemByIdRecursive(tasks, taskId)
+
+			if (!targetItem) {
+				console.warn(`Task item with ID ${taskId} not found for bulk expansion.`)
+				return
+			}
+
+			// It's important that setBulkExpandedRootItems and setExpandedItems are called
+			// in a way that uses the latest state if there are rapid calls.
+			// Using the functional update form for both setters ensures this.
+
+			setBulkExpandedRootItems((prevBulkExpanded) => {
+				const isNowBulkExpanding = !prevBulkExpanded[taskId]
+
+				setExpandedItems((currentExpandedItems) => {
+					const newExpandedItemsState = { ...currentExpandedItems }
+					newExpandedItemsState[taskId] = isNowBulkExpanding
+
+					const descendants = getAllDescendantIdsRecursive(targetItem)
+					descendants.forEach((id) => {
+						newExpandedItemsState[id] = isNowBulkExpanding
+					})
+					return newExpandedItemsState
+				})
+
+				return {
+					...prevBulkExpanded,
+					[taskId]: isNowBulkExpanding,
+				}
+			})
+		},
+		[tasks, setExpandedItems, setBulkExpandedRootItems], // Removed expandedItems
+	)
 
 	return {
 		tasks,
@@ -88,5 +257,9 @@ export const useTaskSearch = () => {
 		setLastNonRelevantSort,
 		showAllWorkspaces,
 		setShowAllWorkspaces,
+		expandedItems,
+		bulkExpandedRootItems,
+		toggleItemExpansion,
+		toggleBulkItemExpansion,
 	}
 }

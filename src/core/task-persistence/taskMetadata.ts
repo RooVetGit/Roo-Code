@@ -17,6 +17,9 @@ export type TaskMetadataOptions = {
 	taskNumber: number
 	globalStoragePath: string
 	workspace: string
+	parentTaskId?: string
+	setCompleted?: boolean
+	unsetCompleted?: boolean
 }
 
 export async function taskMetadata({
@@ -25,6 +28,9 @@ export async function taskMetadata({
 	taskNumber,
 	globalStoragePath,
 	workspace,
+	parentTaskId,
+	setCompleted,
+	unsetCompleted,
 }: TaskMetadataOptions) {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 	const taskMessage = messages[0] // First message is always the task say.
@@ -45,6 +51,13 @@ export async function taskMetadata({
 
 	const tokenUsage = getApiMetrics(combineApiRequests(combineCommandSequences(messages.slice(1))))
 
+	let completedValue = false // Default to schema's default
+	if (setCompleted === true) {
+		completedValue = true
+	} else if (unsetCompleted === true) {
+		completedValue = false
+	}
+
 	const historyItem: HistoryItem = {
 		id: taskId,
 		number: taskNumber,
@@ -57,6 +70,8 @@ export async function taskMetadata({
 		totalCost: tokenUsage.totalCost,
 		size: taskDirSize,
 		workspace,
+		parent_task_id: parentTaskId,
+		completed: completedValue,
 	}
 
 	return { historyItem, tokenUsage }
