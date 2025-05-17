@@ -102,6 +102,7 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
+				autoCondenseContext: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -794,6 +795,7 @@ type IpcMessage =
 								terminalCompressProgressBar?: boolean | undefined
 								experiments?:
 									| {
+											autoCondenseContext: boolean
 											powerSteering: boolean
 									  }
 									| undefined
@@ -1259,6 +1261,7 @@ type TaskCommand =
 					terminalCompressProgressBar?: boolean | undefined
 					experiments?:
 						| {
+								autoCondenseContext: boolean
 								powerSteering: boolean
 						  }
 						| undefined
