@@ -2,62 +2,84 @@ import { memo } from "react"
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
+import { cn } from "@/lib/utils" // Added for cn utility
+import { useExtensionState } from "@/context/ExtensionStateContext" // Added for completion status
+import { ClineMessage } from "@roo/shared/ExtensionMessage" // Added for ClineMessage type
 
 import { CopyButton } from "./CopyButton"
-import { useTaskSearch } from "./useTaskSearch"
+import { useTaskSearch, HierarchicalHistoryItem } from "./useTaskSearch" // Updated import
 
-import { Coins } from "lucide-react"
+import { Coins, ChevronRight } from "lucide-react" // Added ChevronRight for children indicator
 
 const HistoryPreview = () => {
 	const { tasks, showAllWorkspaces } = useTaskSearch()
+	const { clineMessages, currentTaskItem } = useExtensionState()
 
 	return (
 		<>
 			<div className="flex flex-col gap-3">
 				{tasks.length !== 0 && (
 					<>
-						{tasks.slice(0, 3).map((item) => (
-							<div
-								key={item.id}
-								className="bg-vscode-editor-background rounded relative overflow-hidden cursor-pointer border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60"
-								onClick={() => vscode.postMessage({ type: "showTaskWithId", text: item.id })}>
-								<div className="flex flex-col gap-2 p-3 pt-1">
-									<div className="flex justify-between items-center">
-										<span className="text-xs font-medium text-vscode-descriptionForeground uppercase">
-											{formatDate(item.ts)}
-										</span>
-										<CopyButton itemTask={item.task} />
-									</div>
-									<div
-										className="text-vscode-foreground overflow-hidden whitespace-pre-wrap"
-										style={{
-											display: "-webkit-box",
-											WebkitLineClamp: 2,
-											WebkitBoxOrient: "vertical",
-											wordBreak: "break-word",
-											overflowWrap: "anywhere",
-										}}>
-										{item.task}
-									</div>
-									<div className="flex flex-row gap-2 text-xs text-vscode-descriptionForeground">
-										<span>↑ {formatLargeNumber(item.tokensIn || 0)}</span>
-										<span>↓ {formatLargeNumber(item.tokensOut || 0)}</span>
-										{!!item.totalCost && (
-											<span>
-												<Coins className="inline-block size-[1em]" />{" "}
-												{"$" + item.totalCost?.toFixed(2)}
-											</span>
+						{tasks.slice(0, 3).map((item: HierarchicalHistoryItem) => {
+							let isCompleted = false
+							if (item.id === currentTaskItem?.id && clineMessages) {
+								isCompleted = clineMessages.some(
+									(msg: ClineMessage) =>
+										(msg.type === "ask" && msg.ask === "completion_result") ||
+										(msg.type === "say" && msg.say === "completion_result"),
+								)
+							}
+							return (
+								<div
+									key={item.id}
+									className={cn(
+										"bg-vscode-editor-background rounded relative overflow-hidden cursor-pointer border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60",
+										{ "bg-green-100/10 dark:bg-green-900/20": isCompleted }, // Adjusted green styling for preview
+									)}
+									onClick={() => vscode.postMessage({ type: "showTaskWithId", text: item.id })}>
+									<div className="flex flex-col gap-2 p-3 pt-1">
+										<div className="flex justify-between items-center">
+											<div className="flex items-center">
+												{item.children && item.children.length > 0 && (
+													<ChevronRight className="inline-block size-3 mr-1 text-vscode-descriptionForeground" />
+												)}
+												<span className="text-xs font-medium text-vscode-descriptionForeground uppercase">
+													{formatDate(item.ts)}
+												</span>
+											</div>
+											<CopyButton itemTask={item.task} />
+										</div>
+										<div
+											className="text-vscode-foreground overflow-hidden whitespace-pre-wrap"
+											style={{
+												display: "-webkit-box",
+												WebkitLineClamp: 2,
+												WebkitBoxOrient: "vertical",
+												wordBreak: "break-word",
+												overflowWrap: "anywhere",
+											}}
+											dangerouslySetInnerHTML={{ __html: item.task }} // Use dangerouslySetInnerHTML if task contains HTML
+										/>
+										<div className="flex flex-row gap-2 text-xs text-vscode-descriptionForeground">
+											<span>↑ {formatLargeNumber(item.tokensIn || 0)}</span>
+											<span>↓ {formatLargeNumber(item.tokensOut || 0)}</span>
+											{!!item.totalCost && (
+												<span>
+													<Coins className="inline-block size-[1em]" />{" "}
+													{"$" + item.totalCost?.toFixed(2)}
+												</span>
+											)}
+										</div>
+										{showAllWorkspaces && item.workspace && (
+											<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
+												<span className="codicon codicon-folder scale-80" />
+												<span>{item.workspace}</span>
+											</div>
 										)}
 									</div>
-									{showAllWorkspaces && item.workspace && (
-										<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
-											<span className="codicon codicon-folder scale-80" />
-											<span>{item.workspace}</span>
-										</div>
-									)}
 								</div>
-							</div>
-						))}
+							)
+						})}
 					</>
 				)}
 			</div>

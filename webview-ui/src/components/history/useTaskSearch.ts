@@ -3,8 +3,13 @@ import { Fzf } from "fzf"
 
 import { highlightFzfMatch } from "@/utils/highlight"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { HistoryItem } from "../../../../src/shared/HistoryItem"
 
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
+
+export interface HierarchicalHistoryItem extends HistoryItem {
+	children?: HierarchicalHistoryItem[]
+}
 
 export const useTaskSearch = () => {
 	const { taskHistory, cwd } = useExtensionState()
@@ -38,7 +43,7 @@ export const useTaskSearch = () => {
 	}, [presentableTasks])
 
 	const tasks = useMemo(() => {
-		let results = presentableTasks
+		let results: HierarchicalHistoryItem[] = [...presentableTasks]
 
 		if (searchQuery) {
 			const searchResults = fzf.find(searchQuery)
@@ -57,25 +62,53 @@ export const useTaskSearch = () => {
 			})
 		}
 
-		// Then sort the results
-		return [...results].sort((a, b) => {
-			switch (sortOption) {
-				case "oldest":
-					return (a.ts || 0) - (b.ts || 0)
-				case "mostExpensive":
-					return (b.totalCost || 0) - (a.totalCost || 0)
-				case "mostTokens":
-					const aTokens = (a.tokensIn || 0) + (a.tokensOut || 0) + (a.cacheWrites || 0) + (a.cacheReads || 0)
-					const bTokens = (b.tokensIn || 0) + (b.tokensOut || 0) + (b.cacheWrites || 0) + (b.cacheReads || 0)
-					return bTokens - aTokens
-				case "mostRelevant":
-					// Keep fuse order if searching, otherwise sort by newest
-					return searchQuery ? 0 : (b.ts || 0) - (a.ts || 0)
-				case "newest":
-				default:
-					return (b.ts || 0) - (a.ts || 0)
+		// Build hierarchy
+		const taskMap = new Map<string, HierarchicalHistoryItem>()
+		results.forEach((task) => taskMap.set(task.id, { ...task, children: [] }))
+
+		const rootTasks: HierarchicalHistoryItem[] = []
+		results.forEach((task) => {
+			if (task.parent_task_id && taskMap.has(task.parent_task_id)) {
+				const parent = taskMap.get(task.parent_task_id)
+				if (parent) {
+					parent.children = parent.children || []
+					parent.children.push(taskMap.get(task.id)!)
+				}
+			} else {
+				rootTasks.push(taskMap.get(task.id)!)
 			}
 		})
+
+		// Sort children within each parent and root tasks
+		const sortTasksRecursive = (tasksToSort: HierarchicalHistoryItem[]): HierarchicalHistoryItem[] => {
+			tasksToSort.sort((a, b) => {
+				switch (sortOption) {
+					case "oldest":
+						return (a.ts || 0) - (b.ts || 0)
+					case "mostExpensive":
+						return (b.totalCost || 0) - (a.totalCost || 0)
+					case "mostTokens":
+						const aTokens =
+							(a.tokensIn || 0) + (a.tokensOut || 0) + (a.cacheWrites || 0) + (a.cacheReads || 0)
+						const bTokens =
+							(b.tokensIn || 0) + (b.tokensOut || 0) + (b.cacheWrites || 0) + (b.cacheReads || 0)
+						return bTokens - aTokens
+					case "mostRelevant":
+						return searchQuery ? 0 : (b.ts || 0) - (a.ts || 0) // FZF order for root, timestamp for children
+					case "newest":
+					default:
+						return (b.ts || 0) - (a.ts || 0)
+				}
+			})
+			tasksToSort.forEach((task) => {
+				if (task.children && task.children.length > 0) {
+					task.children = sortTasksRecursive(task.children)
+				}
+			})
+			return tasksToSort
+		}
+
+		return sortTasksRecursive(rootTasks)
 	}, [presentableTasks, searchQuery, fzf, sortOption])
 
 	return {

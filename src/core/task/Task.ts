@@ -117,6 +117,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	readonly rootTask: Task | undefined = undefined
 	readonly parentTask: Task | undefined = undefined
+	readonly parentTaskId?: string
 	readonly taskNumber: number
 	readonly workspacePath: string
 
@@ -237,6 +238,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
+		if (parentTask) {
+			this.parentTaskId = parentTask.taskId
+		}
 		this.taskNumber = taskNumber
 
 		if (historyItem) {
@@ -344,6 +348,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
+				parentTaskId: this.parentTaskId,
 			})
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)

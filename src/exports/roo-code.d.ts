@@ -54,6 +54,7 @@ type GlobalSettings = {
 				totalCost: number
 				size?: number | undefined
 				workspace?: string | undefined
+				parent_task_id?: string | undefined
 		  }[]
 		| undefined
 	autoApprovalEnabled?: boolean | undefined
@@ -767,6 +768,7 @@ type IpcMessage =
 											totalCost: number
 											size?: number | undefined
 											workspace?: string | undefined
+											parent_task_id?: string | undefined
 									  }[]
 									| undefined
 								autoApprovalEnabled?: boolean | undefined
@@ -1230,6 +1232,7 @@ type TaskCommand =
 								totalCost: number
 								size?: number | undefined
 								workspace?: string | undefined
+								parent_task_id?: string | undefined
 						  }[]
 						| undefined
 					autoApprovalEnabled?: boolean | undefined
