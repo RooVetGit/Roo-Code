@@ -1253,7 +1253,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			// Need to call here in case the stream was aborted.
 			if (this.abort || this.abandoned) {
-				throw new Error(`[Roo#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
+				throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 			}
 
 			this.didCompleteReadingStream = true
