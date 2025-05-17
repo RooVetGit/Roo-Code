@@ -60,11 +60,7 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
-import {
-	type AssistantMessageContent,
-	parseAssistantMessageV2 as parseAssistantMessage,
-	presentAssistantMessage,
-} from "../assistant-message"
+import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
@@ -100,7 +96,6 @@ export type ClineEvents = {
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
-	customInstructions?: string
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
 	fuzzyMatchThreshold?: number
@@ -134,7 +129,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
-	customInstructions?: string
 
 	// API
 	readonly apiConfiguration: ProviderSettings
@@ -194,7 +188,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	constructor({
 		provider,
 		apiConfiguration,
-		customInstructions,
 		enableDiff = false,
 		enableCheckpoints = true,
 		fuzzyMatchThreshold = 1.0,
@@ -234,7 +227,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
-		this.customInstructions = customInstructions
 		this.diffEnabled = enableDiff
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
@@ -1417,6 +1409,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			browserViewportSize,
 			mode,
 			customModePrompts,
+			customInstructions,
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
@@ -1442,7 +1435,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				mode,
 				customModePrompts,
 				customModes,
-				this.customInstructions,
+				customInstructions,
 				this.diffEnabled,
 				experiments,
 				enableMcpServerCreation,
