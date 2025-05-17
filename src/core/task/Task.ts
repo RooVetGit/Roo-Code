@@ -9,7 +9,7 @@ import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
 // schemas
-import { TokenUsage, ToolUsage, ToolName } from "../../schemas"
+import { TokenUsage, ToolUsage, ToolName, HistoryItem } from "../../schemas"
 
 // api
 import { ApiHandler, buildApiHandler } from "../../api"
@@ -29,7 +29,7 @@ import {
 	ToolProgressStatus,
 } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
-import { HistoryItem } from "../../shared/HistoryItem"
+// Removed duplicate HistoryItem import, using the one from ../../schemas
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
@@ -344,13 +344,38 @@ export class Task extends EventEmitter<ClineEvents> {
 				globalStoragePath: this.globalStoragePath,
 			})
 
+			let effectiveParentTaskId = this.parentTaskId // Default to instance's parentTaskId
+
+			// Check existing history for parent_task_id
+			const provider = this.providerRef.deref()
+			if (provider) {
+				try {
+					const taskData = await provider.getTaskWithId(this.taskId)
+					const existingHistoryItem = taskData?.historyItem
+					if (existingHistoryItem && existingHistoryItem.parent_task_id) {
+						effectiveParentTaskId = existingHistoryItem.parent_task_id
+					}
+				} catch (error: any) {
+					// If task is not found, it's a new task. We'll proceed with `this.parentTaskId` as `effectiveParentTaskId`.
+					// Log other errors, but don't let them block the task saving process if it's just "Task not found".
+					if (error.message !== "Task not found") {
+						console.warn(
+							`Error fetching task ${this.taskId} during parent_task_id check (this may be a new task):`,
+							error,
+						)
+						// Optionally, re-throw if it's a critical error not related to "Task not found"
+						// For now, we'll allow proceeding to ensure new tasks are saved.
+					}
+				}
+			}
+
 			const metadataOptions: Parameters<typeof taskMetadata>[0] = {
 				messages: this.clineMessages,
 				taskId: this.taskId,
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
-				parentTaskId: this.parentTaskId,
+				parentTaskId: effectiveParentTaskId, // Use the determined parentTaskId
 			}
 
 			if (this.isCompleted) {
