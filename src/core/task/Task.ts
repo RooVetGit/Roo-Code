@@ -60,11 +60,7 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
-import {
-	type AssistantMessageContent,
-	parseAssistantMessageV2 as parseAssistantMessage,
-	presentAssistantMessage,
-} from "../assistant-message"
+import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
@@ -100,7 +96,6 @@ export type ClineEvents = {
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
-	customInstructions?: string
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
 	fuzzyMatchThreshold?: number
@@ -134,7 +129,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
-	customInstructions?: string
 
 	// API
 	readonly apiConfiguration: ProviderSettings
@@ -194,7 +188,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	constructor({
 		provider,
 		apiConfiguration,
-		customInstructions,
 		enableDiff = false,
 		enableCheckpoints = true,
 		fuzzyMatchThreshold = 1.0,
@@ -234,7 +227,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
-		this.customInstructions = customInstructions
 		this.diffEnabled = enableDiff
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
@@ -358,7 +350,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			await this.providerRef.deref()?.updateTaskHistory(historyItem)
 		} catch (error) {
-			console.error("Failed to save cline messages:", error)
+			console.error("Failed to save Roo messages:", error)
 		}
 	}
 
@@ -380,7 +372,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		// simply removes the reference to this instance, but the instance is
 		// still alive until this promise resolves or rejects.)
 		if (this.abort) {
-			throw new Error(`[Cline#ask] task ${this.taskId}.${this.instanceId} aborted`)
+			throw new Error(`[RooCode#ask] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
 		let askTs: number
@@ -500,7 +492,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		} = {},
 	): Promise<undefined> {
 		if (this.abort) {
-			throw new Error(`[Cline#say] task ${this.taskId}.${this.instanceId} aborted`)
+			throw new Error(`[RooCode#say] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
 		if (partial !== undefined) {
@@ -631,7 +623,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			this.providerRef
 				.deref()
-				?.log(`Error failed to add reply from subtast into conversation of parent task, error: ${error}`)
+				?.log(`Error failed to add reply from subtask into conversation of parent task, error: ${error}`)
 
 			throw error
 		}
@@ -965,7 +957,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		includeFileDetails: boolean = false,
 	): Promise<boolean> {
 		if (this.abort) {
-			throw new Error(`[Cline#recursivelyMakeClineRequests] task ${this.taskId}.${this.instanceId} aborted`)
+			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
 		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
@@ -1261,7 +1253,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			// Need to call here in case the stream was aborted.
 			if (this.abort || this.abandoned) {
-				throw new Error(`[Cline#recursivelyMakeClineRequests] task ${this.taskId}.${this.instanceId} aborted`)
+				throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 			}
 
 			this.didCompleteReadingStream = true
@@ -1417,6 +1409,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			browserViewportSize,
 			mode,
 			customModePrompts,
+			customInstructions,
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
@@ -1442,7 +1435,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				mode,
 				customModePrompts,
 				customModes,
-				this.customInstructions,
+				customInstructions,
 				this.diffEnabled,
 				experiments,
 				enableMcpServerCreation,
