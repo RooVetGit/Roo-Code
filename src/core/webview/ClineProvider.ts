@@ -1446,6 +1446,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		await this.updateGlobalState("taskHistory", history)
+
+		// Post the updated state to all active webview instances
+		for (const instance of ClineProvider.activeInstances) {
+			await instance.postStateToWebview()
+		}
+
 		return history
 	}
 

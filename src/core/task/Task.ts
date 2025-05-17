@@ -321,7 +321,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	private async addToClineMessages(message: ClineMessage) {
 		this.clineMessages.push(message)
-		await this.providerRef.deref()?.postStateToWebview()
+		// Removed direct call to postStateToWebview(), ClineProvider.updateTaskHistory will handle it
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
 	}
