@@ -40,7 +40,7 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
+import { PatchCheckpointService } from "../../services/checkpoints/PatchCheckpointService"
 
 // integrations
 import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
@@ -169,7 +169,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Checkpoints
 	enableCheckpoints: boolean
-	checkpointService?: RepoPerTaskCheckpointService
+	checkpointService?: PatchCheckpointService
 	checkpointServiceInitializing = false
 
 	// Streaming
