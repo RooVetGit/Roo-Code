@@ -11,6 +11,8 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 
 export interface WebviewMessage {
 	type:
+		| "action"
+		| "apiConfiguration"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
@@ -131,6 +133,7 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
 	text?: string
+	action?: "settingsButtonClicked" | "historyButtonClicked"
 	disabled?: boolean
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ProviderSettings
