@@ -100,6 +100,7 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
+				autoCondenseContext: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -174,6 +175,31 @@ type GlobalSettings = {
 }
 
 export type { GlobalSettings }
+
+type ProviderName =
+	| "anthropic"
+	| "glama"
+	| "openrouter"
+	| "bedrock"
+	| "vertex"
+	| "openai"
+	| "ollama"
+	| "vscode-lm"
+	| "lmstudio"
+	| "gemini"
+	| "openai-native"
+	| "mistral"
+	| "deepseek"
+	| "unbound"
+	| "requesty"
+	| "human-relay"
+	| "fake-ai"
+	| "xai"
+	| "groq"
+	| "chutes"
+	| "litellm"
+
+export type { ProviderName }
 
 type ProviderSettings = {
 	apiProvider?:
@@ -798,6 +824,7 @@ type IpcMessage =
 								terminalCompressProgressBar?: boolean | undefined
 								experiments?:
 									| {
+											autoCondenseContext: boolean
 											powerSteering: boolean
 									  }
 									| undefined
@@ -1262,6 +1289,7 @@ type TaskCommand =
 					terminalCompressProgressBar?: boolean | undefined
 					experiments?:
 						| {
+								autoCondenseContext: boolean
 								powerSteering: boolean
 						  }
 						| undefined

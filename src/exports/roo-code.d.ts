@@ -100,6 +100,7 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
+				autoCondenseContext: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -138,6 +139,7 @@ type GlobalSettings = {
 				slug: string
 				name: string
 				roleDefinition: string
+				whenToUse?: string | undefined
 				customInstructions?: string | undefined
 				groups: (
 					| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
@@ -157,6 +159,7 @@ type GlobalSettings = {
 				[x: string]:
 					| {
 							roleDefinition?: string | undefined
+							whenToUse?: string | undefined
 							customInstructions?: string | undefined
 					  }
 					| undefined
@@ -170,6 +173,29 @@ type GlobalSettings = {
 	enhancementApiConfigId?: string | undefined
 	historyPreviewCollapsed?: boolean | undefined
 }
+
+type ProviderName =
+	| "anthropic"
+	| "glama"
+	| "openrouter"
+	| "bedrock"
+	| "vertex"
+	| "openai"
+	| "ollama"
+	| "vscode-lm"
+	| "lmstudio"
+	| "gemini"
+	| "openai-native"
+	| "mistral"
+	| "deepseek"
+	| "unbound"
+	| "requesty"
+	| "human-relay"
+	| "fake-ai"
+	| "xai"
+	| "groq"
+	| "chutes"
+	| "litellm"
 
 type ProviderSettings = {
 	apiProvider?:
@@ -784,6 +810,7 @@ type IpcMessage =
 								terminalCompressProgressBar?: boolean | undefined
 								experiments?:
 									| {
+											autoCondenseContext: boolean
 											powerSteering: boolean
 									  }
 									| undefined
@@ -822,6 +849,7 @@ type IpcMessage =
 											slug: string
 											name: string
 											roleDefinition: string
+											whenToUse?: string | undefined
 											customInstructions?: string | undefined
 											groups: (
 												| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
@@ -841,6 +869,7 @@ type IpcMessage =
 											[x: string]:
 												| {
 														roleDefinition?: string | undefined
+														whenToUse?: string | undefined
 														customInstructions?: string | undefined
 												  }
 												| undefined
@@ -1244,6 +1273,7 @@ type TaskCommand =
 					terminalCompressProgressBar?: boolean | undefined
 					experiments?:
 						| {
+								autoCondenseContext: boolean
 								powerSteering: boolean
 						  }
 						| undefined
@@ -1282,6 +1312,7 @@ type TaskCommand =
 								slug: string
 								name: string
 								roleDefinition: string
+								whenToUse?: string | undefined
 								customInstructions?: string | undefined
 								groups: (
 									| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
@@ -1301,6 +1332,7 @@ type TaskCommand =
 								[x: string]:
 									| {
 											roleDefinition?: string | undefined
+											whenToUse?: string | undefined
 											customInstructions?: string | undefined
 									  }
 									| undefined
@@ -1465,6 +1497,32 @@ type TaskEvent =
 			]
 	  }
 
+/**
+ * ProviderName
+ */
+declare const providerNames: readonly [
+	"anthropic",
+	"glama",
+	"openrouter",
+	"bedrock",
+	"vertex",
+	"openai",
+	"ollama",
+	"vscode-lm",
+	"lmstudio",
+	"gemini",
+	"openai-native",
+	"mistral",
+	"deepseek",
+	"unbound",
+	"requesty",
+	"human-relay",
+	"fake-ai",
+	"xai",
+	"groq",
+	"chutes",
+	"litellm",
+]
 /**
  * RooCodeEvent
  */
@@ -1651,6 +1709,7 @@ export {
 	IpcMessageType,
 	IpcOrigin,
 	type IpcServerEvents,
+	type ProviderName,
 	type ProviderSettings,
 	type ProviderSettingsEntry,
 	type RooCodeAPI,
@@ -1661,4 +1720,5 @@ export {
 	type TaskCommand,
 	type TaskEvent,
 	type TokenUsage,
+	providerNames,
 }
