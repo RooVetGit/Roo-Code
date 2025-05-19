@@ -14,7 +14,12 @@ import * as db from "@evals/db"
 import { CreateRun } from "@/lib/schemas"
 import { getExercisesForLanguage } from "./exercises"
 
-export async function createRun({ suite, exercises = [], ...values }: CreateRun) {
+export async function createRun({
+	suite,
+	exercises = [],
+	systemPrompt,
+	...values
+}: CreateRun & { systemPrompt?: string }) {
 	const run = await db.createRun({
 		...values,
 		socketPath: path.join(os.tmpdir(), `roo-code-evals-${crypto.randomUUID()}.sock`),
@@ -45,10 +50,21 @@ export async function createRun({ suite, exercises = [], ...values }: CreateRun)
 	try {
 		const logFile = fs.openSync(`/tmp/roo-code-evals-${run.id}.log`, "a")
 
-		const process = spawn("pnpm", ["--filter", "@evals/cli", "dev", "run", "all", "--runId", run.id.toString()], {
-			detached: true,
-			stdio: ["ignore", logFile, logFile],
-		})
+		let systemPromptFileArg: string[] = []
+		if (systemPrompt) {
+			const systemPromptFilePath = `/tmp/roo-code-system-prompt-${run.id}.txt`
+			fs.writeFileSync(systemPromptFilePath, systemPrompt, "utf-8")
+			systemPromptFileArg = ["--systemPromptFile", systemPromptFilePath]
+		}
+
+		const process = spawn(
+			"pnpm",
+			["--filter", "@evals/cli", "dev", "run", "all", "--runId", run.id.toString(), ...systemPromptFileArg],
+			{
+				detached: true,
+				stdio: ["ignore", logFile, logFile],
+			},
+		)
 
 		process.unref()
 		await db.updateRun(run.id, { pid: process.pid })
