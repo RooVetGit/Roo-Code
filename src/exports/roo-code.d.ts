@@ -99,6 +99,7 @@ type GlobalSettings = {
 	diffEnabled?: boolean | undefined
 	diffViewAutoFocus?: boolean | undefined
 	autoCloseRooTabs?: boolean | undefined
+	autoCloseAllRooTabs?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
@@ -230,6 +231,7 @@ type ProviderSettings = {
 	diffEnabled?: boolean | undefined
 	diffViewAutoFocus?: boolean | undefined
 	autoCloseRooTabs?: boolean | undefined
+	autoCloseAllRooTabs?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	modelTemperature?: (number | null) | undefined
 	rateLimitSeconds?: number | undefined
@@ -616,6 +618,7 @@ type IpcMessage =
 								diffEnabled?: boolean | undefined
 								diffViewAutoFocus?: boolean | undefined
 								autoCloseRooTabs?: boolean | undefined
+								autoCloseAllRooTabs?: boolean | undefined
 								fuzzyMatchThreshold?: number | undefined
 								modelTemperature?: (number | null) | undefined
 								rateLimitSeconds?: number | undefined
@@ -1082,6 +1085,7 @@ type TaskCommand =
 					diffEnabled?: boolean | undefined
 					diffViewAutoFocus?: boolean | undefined
 					autoCloseRooTabs?: boolean | undefined
+					autoCloseAllRooTabs?: boolean | undefined
 					fuzzyMatchThreshold?: number | undefined
 					modelTemperature?: (number | null) | undefined
 					rateLimitSeconds?: number | undefined

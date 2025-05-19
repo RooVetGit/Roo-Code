@@ -396,11 +396,15 @@
 			},
 			"autoFocus": {
 				"label": "Automatically focus the diff tab when showing file changes",
-				"description": "If disabled, the diff tab will open in the background instead of stealing focus. This only applies if 'autoApprovalEnabled' and 'autoApprovalEnabled'"
+				"description": "If enabled, the diff tab will automatically receive focus when opened. If disabled, it will open in the background. Auto-focus is disabled if you interact with other editors or if automatic approval is not enabled."
 			},
 			"autoClose": {
-				"label": "Automatically close Roo tabs",
-				"description": "When enabled, Roo will automatically close any tabs it has opened itself (like diff views, opened files) when a task involving file modification is completed or reverted."
+				"label": "Automatically close newly created or previously unopened Roo tabs",
+				"description": "When enabled, Roo will automatically close tabs for files that were newly created or were not already open before Roo modified them. Tabs for files that were already open will remain open."
+			},
+			"autoCloseAll": {
+				"label": "Automatically close all Roo-touched tabs",
+				"description": "When enabled (and the above setting is also enabled), Roo will close all tabs it interacted with during a file modification task, including those that were already open before the task started."
 			}
 		}
 	},

@@ -353,6 +353,7 @@ const baseProviderSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	diffViewAutoFocus: z.boolean().optional(),
 	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(), // Added new setting
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
@@ -637,6 +638,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	diffEnabled: undefined,
 	diffViewAutoFocus: undefined,
 	autoCloseRooTabs: undefined,
+	autoCloseAllRooTabs: undefined, // Added new setting
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
@@ -719,6 +721,7 @@ export const globalSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	diffViewAutoFocus: z.boolean().optional(),
 	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(), // Added new setting
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -799,6 +802,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	diffEnabled: undefined,
 	diffViewAutoFocus: undefined,
 	autoCloseRooTabs: undefined,
+	autoCloseAllRooTabs: undefined, // Added new setting
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
 

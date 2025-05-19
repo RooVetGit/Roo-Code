@@ -34,6 +34,7 @@ export class DiffViewProvider {
 	private autoApproval: boolean | undefined = undefined
 	private autoFocus: boolean | undefined = undefined
 	private autoCloseTabs: boolean = false
+	private autoCloseAllRooTabs: boolean = false // Added new setting
 	// have to set the default view column to -1 since we need to set it in the initialize method and during initialization the enum ViewColumn is undefined
 	private viewColumn: ViewColumn = -1 // ViewColumn.Active
 	private userInteractionListeners: vscode.Disposable[] = []
@@ -57,6 +58,9 @@ export class DiffViewProvider {
 		}
 		this.preserveFocus = this.autoApproval && !this.autoFocus
 		this.autoCloseTabs = vscode.workspace.getConfiguration("roo-cline").get<boolean>("autoCloseRooTabs", false)
+		this.autoCloseAllRooTabs = vscode.workspace
+			.getConfiguration("roo-cline")
+			.get<boolean>("autoCloseAllRooTabs", false) // Read new setting
 		// Track currently visible editors and active editor for focus restoration and tab cleanup
 		this.rooOpenedTabs.clear()
 	}
@@ -178,6 +182,13 @@ export class DiffViewProvider {
 		const absolutePath = path.resolve(this.cwd, relPath)
 		this.isEditing = true
 
+		// Track the URI of the actual file that will be part of the diff.
+		// This ensures that if VS Code opens a tab for it during vscode.diff,
+		// we can identify it as a "Roo-opened" tab for cleanup.
+		const fileUriForDiff = vscode.Uri.file(absolutePath)
+		this.rooOpenedTabs.add(fileUriForDiff.toString())
+		console.log(`Roo Debug: Added to rooOpenedTabs in open(): ${fileUriForDiff.toString()}`)
+
 		// If the file is already open, ensure it's not dirty before getting its
 		// contents.
 		if (fileExists) {
@@ -234,9 +245,9 @@ export class DiffViewProvider {
 	 */
 	private async showAndTrackEditor(uri: vscode.Uri, options: vscode.TextDocumentShowOptions = {}) {
 		const editor = await this.showTextDocumentSafe({ uri, options })
-		if (this.autoCloseTabs && !this.documentWasOpen) {
-			this.rooOpenedTabs.add(uri.toString())
-		}
+		// Always track tabs opened by Roo, regardless of autoCloseTabs setting or if the document was already open.
+		// The decision to close will be made in closeAllRooOpenedViews based on settings.
+		this.rooOpenedTabs.add(uri.toString())
 		return editor
 	}
 
@@ -328,7 +339,58 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
+		// Add a small delay to allow the isDirty status to update after saving.
+		await new Promise((resolve) => setTimeout(resolve, 100))
+
+		// Explicitly save the document in VS Code's model if it's open and dirty,
+		// especially for newly created files, to ensure VS Code's internal state is synchronized
+		// before attempting to close tabs.
+		if (this.editType === "create" && this.relPath) {
+			try {
+				const absolutePath = path.resolve(this.cwd, this.relPath)
+				for (const doc of vscode.workspace.textDocuments) {
+					if (doc.uri.scheme === "file" && arePathsEqual(doc.uri.fsPath, absolutePath) && doc.isDirty) {
+						await doc.save()
+						// Add another small delay after explicit save for newly created file
+						await new Promise((resolve) => setTimeout(resolve, 100))
+					}
+				}
+			} catch (saveError) {
+				console.error("Roo Debug: Error during explicit doc.save() for new file in saveChanges:", saveError)
+				// Continue execution even if explicit save fails.
+			}
+		}
+
 		await this.closeAllRooOpenedViews()
+
+		// If no auto-close settings are enabled and the document was not open before,
+		// open the file after the diff is complete.
+
+		// Directly read the current configuration settings to ensure up-to-date values
+		const currentAutoCloseTabs = vscode.workspace
+			.getConfiguration("roo-cline")
+			.get<boolean>("autoCloseRooTabs", false)
+		const currentAutoCloseAllRooTabs = vscode.workspace
+			.getConfiguration("roo-cline")
+			.get<boolean>("autoCloseAllRooTabs", false)
+
+		console.log(`Roo Debug: Checking condition to showAndTrackEditor in saveChanges:`)
+		console.log(
+			`Roo Debug:   !currentAutoCloseTabs (${!currentAutoCloseTabs}) [config value: ${currentAutoCloseTabs}] (this.autoCloseTabs was: ${this.autoCloseTabs})`,
+		)
+		console.log(
+			`Roo Debug:   !currentAutoCloseAllRooTabs (${!currentAutoCloseAllRooTabs}) [config value: ${currentAutoCloseAllRooTabs}] (this.autoCloseAllRooTabs was: ${this.autoCloseAllRooTabs})`,
+		)
+		console.log(`Roo Debug:   !this.documentWasOpen (${!this.documentWasOpen}) [raw: ${this.documentWasOpen}]`)
+		console.log(`Roo Debug:   this.editType: ${this.editType}`)
+
+		if (!currentAutoCloseTabs && !currentAutoCloseAllRooTabs && !this.documentWasOpen) {
+			console.log(`Roo Debug: Condition MET. Calling showAndTrackEditor.`)
+			const absolutePath = path.resolve(this.cwd, this.relPath!)
+			await this.showAndTrackEditor(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })
+		} else {
+			console.log(`Roo Debug: Condition NOT MET. Skipping showAndTrackEditor.`)
+		}
 
 		// Getting diagnostics before and after the file edit is a better approach than
 		// automatically tracking problems in real-time. This method ensures we only
@@ -440,20 +502,166 @@ export class DiffViewProvider {
 	private async closeAllRooOpenedViews() {
 		const tabs = vscode.window.tabGroups.all
 			.flatMap((tg) => tg.tabs)
-			.filter(
-				(tab) =>
-					(tab.input instanceof vscode.TabInputTextDiff &&
-						tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME) ||
-					// close if in rooOpenedTabs and autoCloseTabs is enabled
-					(this.autoCloseTabs &&
-						tab.input instanceof vscode.TabInputText &&
-						this.rooOpenedTabs.has(tab.input.uri.toString())),
-			)
+			.filter((tab) => {
+				// Always close DiffView tabs opened by Roo
+				if (
+					tab.input instanceof vscode.TabInputTextDiff &&
+					tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME
+				) {
+					return true
+				}
+
+				let isRooOpenedTextTab = false
+				if (tab.input instanceof vscode.TabInputText) {
+					const currentTabUri = (tab.input as vscode.TabInputText).uri
+					for (const openedUriString of this.rooOpenedTabs) {
+						try {
+							const previouslyOpenedUri = vscode.Uri.parse(openedUriString, true) // true for strict parsing
+							if (currentTabUri.scheme === "file" && previouslyOpenedUri.scheme === "file") {
+								if (arePathsEqual(currentTabUri.fsPath, previouslyOpenedUri.fsPath)) {
+									isRooOpenedTextTab = true
+									break
+								}
+							} else {
+								if (currentTabUri.toString() === previouslyOpenedUri.toString()) {
+									isRooOpenedTextTab = true
+									break
+								}
+							}
+						} catch (e) {
+							// Log parsing error if necessary, or ignore if a URI in rooOpenedTabs is malformed
+							console.error(`Roo Debug: Error parsing URI from rooOpenedTabs: ${openedUriString}`, e)
+						}
+					}
+				}
+
+				if (!isRooOpenedTextTab) {
+					return false // Not a text tab or not identified as opened by Roo
+				}
+
+				// Directly read the current configuration settings to ensure up-to-date values
+				// for the filter logic.
+				const currentConfigAutoCloseTabs = vscode.workspace
+					.getConfiguration("roo-cline")
+					.get<boolean>("autoCloseRooTabs", false)
+				const currentConfigAutoCloseAllRooTabs = vscode.workspace
+					.getConfiguration("roo-cline")
+					.get<boolean>("autoCloseAllRooTabs", false)
+
+				// Debugging logs for the filter
+				if (isRooOpenedTextTab && tab.input instanceof vscode.TabInputText) {
+					// Log only for relevant tabs
+					console.log(
+						`Roo Debug Filter: Tab "${tab.label}" (${(tab.input as vscode.TabInputText).uri.fsPath})`,
+					)
+					console.log(`Roo Debug Filter:   isRooOpenedTextTab: ${isRooOpenedTextTab}`)
+					console.log(
+						`Roo Debug Filter:   currentConfigAutoCloseAllRooTabs: ${currentConfigAutoCloseAllRooTabs} (this.autoCloseAllRooTabs was: ${this.autoCloseAllRooTabs})`,
+					)
+					console.log(
+						`Roo Debug Filter:   currentConfigAutoCloseTabs: ${currentConfigAutoCloseTabs} (this.autoCloseTabs was: ${this.autoCloseTabs})`,
+					)
+					console.log(
+						`Roo Debug Filter:   editType: ${this.editType}, documentWasOpen: ${this.documentWasOpen}`,
+					)
+				}
+
+				// Haken 2 (currentConfigAutoCloseAllRooTabs) - takes precedence
+				if (currentConfigAutoCloseAllRooTabs) {
+					// This implies Haken 1 is also effectively on
+					console.log(`Roo Debug Filter: Tab "${tab.label}" closing due to currentConfigAutoCloseAllRooTabs.`)
+					return true // Close all Roo-opened text tabs
+				}
+
+				// Only Haken 1 (currentConfigAutoCloseTabs) is on, Haken 2 is off
+				if (currentConfigAutoCloseTabs) {
+					const tabUriFsPath = (tab.input as vscode.TabInputText).uri.fsPath
+					const absolutePathDiffedFile = this.relPath ? path.resolve(this.cwd, this.relPath) : null
+
+					// Guard against null absolutePathDiffedFile if relPath is somehow not set
+					if (!absolutePathDiffedFile) {
+						// If we don't know the main diffed file, but Haken 1 is on,
+						// it's safer to close any tab Roo opened to avoid leaving extras.
+						console.log(
+							`Roo Debug Filter: Tab "${tab.label}" closing due to Haken 1 & no absolutePathDiffedFile.`,
+						)
+						return true
+					}
+
+					const isMainDiffedFileTab = arePathsEqual(tabUriFsPath, absolutePathDiffedFile)
+
+					if (this.editType === "create" && isMainDiffedFileTab) {
+						console.log(
+							`Roo Debug Filter: Tab "${tab.label}" closing due to Haken 1 & create & isMainDiffedFileTab.`,
+						)
+						return true // Case: New file, Haken 1 is on -> Close its tab.
+					}
+
+					if (this.editType === "modify" && isMainDiffedFileTab) {
+						if (!this.documentWasOpen) {
+							console.log(
+								`Roo Debug Filter: Tab "${tab.label}" closing due to Haken 1 & modify & !documentWasOpen & isMainDiffedFileTab.`,
+							)
+							return true // Case: Modified existing file, was not open before, Haken 1 is on -> Close its tab.
+						} else {
+							console.log(
+								`Roo Debug Filter: Tab "${tab.label}" NOT closing (Haken 1, modify, documentWasOpen, isMainDiffedFileTab).`,
+							)
+							return false // Case: Modified existing file, WAS open before, Haken 1 alone does not close it.
+						}
+					}
+
+					// If the tab is for a file OTHER than the main diffedFile, but was opened by Roo
+					if (!isMainDiffedFileTab) {
+						// This covers scenarios where Roo might open auxiliary files (though less common for single diff).
+						// If Haken 1 is on, these should also be closed.
+						console.log(
+							`Roo Debug Filter: Tab "${tab.label}" closing due to Haken 1 & !isMainDiffedFileTab (auxiliary Roo tab).`,
+						)
+						return true
+					}
+				}
+				console.log(`Roo Debug Filter: Tab "${tab.label}" NOT closing (default fallthrough).`)
+				return false // Default: do not close if no above condition met
+			})
 
 		for (const tab of tabs) {
-			// Trying to close dirty views results in save popup.
-			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab, true)
+			// If a tab has made it through the filter, it means one of the auto-close settings
+			// (autoCloseTabs or autoCloseAllRooTabs) is active and the conditions for closing
+			// this specific tab are met. Therefore, we should always bypass the dirty check.
+			// const bypassDirtyCheck = true; // This is implicitly true now.
+
+			// Attempt to find the freshest reference to the tab before closing,
+			// as the original 'tab' object from the initial flatMap might be stale.
+			const tabInputToClose = tab.input
+			const freshTabToClose = vscode.window.tabGroups.all
+				.flatMap((group) => group.tabs)
+				.find((t) => t.input === tabInputToClose)
+
+			if (freshTabToClose) {
+				try {
+					console.log(`Roo Debug CloseLoop: Attempting to close fresh tab "${freshTabToClose.label}"`)
+					await vscode.window.tabGroups.close(freshTabToClose, true) // true to bypass dirty check implicitly
+				} catch (closeError) {
+					console.error(`Roo Debug CloseLoop: Error closing tab "${freshTabToClose.label}":`, closeError)
+				}
+			} else {
+				// This case should ideally not happen if the tab was in the filtered list.
+				// It might indicate the tab was closed by another means or its input changed.
+				console.warn(
+					`Roo Debug CloseLoop: Tab "${tab.label}" (input: ${JSON.stringify(tab.input)}) intended for closure was not found in the current tab list.`,
+				)
+				// Fallback: Try to close the original tab reference if the fresh one isn't found,
+				// though this is less likely to succeed if it's genuinely stale.
+				try {
+					console.log(`Roo Debug CloseLoop: Attempting to close original (stale?) tab "${tab.label}"`)
+					await vscode.window.tabGroups.close(tab, true)
+				} catch (fallbackCloseError) {
+					console.error(
+						`Roo Debug CloseLoop: Error closing original tab reference for "${tab.label}":`,
+						fallbackCloseError,
+					)
+				}
 			}
 		}
 	}
@@ -474,11 +682,12 @@ export class DiffViewProvider {
 		if (!(diffTab && diffTab.input instanceof vscode.TabInputTextDiff)) {
 			return null
 		}
-		// Only focus if autoFocus is true
-		if (this.autoFocus) {
-			const editor = await this.showAndTrackEditor(diffTab.input.modified)
+		// Only open/focus the tab if autoCloseTabs is false, regardless of autoFocus.
+		if (!this.autoCloseTabs && !this.autoCloseAllRooTabs && !this.documentWasOpen) {
+			const editor = await this.showAndTrackEditor(diffTab.input.modified, { preserveFocus: !this.autoFocus })
 			return editor
 		}
+		// If autoFocus is false, try to find the editor without focusing
 		// Try to find the editor without focusing
 		const editor = vscode.window.visibleTextEditors.find((ed) => arePathsEqual(ed.document.uri.fsPath, uri.fsPath))
 		if (editor) return editor
@@ -504,10 +713,6 @@ export class DiffViewProvider {
 		}
 		// right uri = the file path
 		const rightUri = vscode.Uri.file(path.resolve(this.cwd, this.relPath))
-		const editor = await this.getEditorFromDiffTab(rightUri)
-		if (editor) {
-			return editor
-		}
 
 		// Open new diff editor.
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
@@ -528,13 +733,14 @@ export class DiffViewProvider {
 			this.suppressInteractionFlag = true
 			vscode.commands
 				.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
-				.then(() => {
+				.then(async () => {
+					// Add async here
 					// set interaction flag to false to allow autoFocus to be triggered
 					this.suppressInteractionFlag = false
-					if (this.autoCloseTabs && !this.documentWasOpen) {
-						// If the diff tab is not already open, add it to the set
-						this.rooOpenedTabs.add(rightUri.toString())
-					}
+					// Explicitly open and track the editor for the right side of the diff (the actual file)
+					// to ensure it's in rooOpenedTabs before closeAllRooOpenedViews is called.
+					await this.showAndTrackEditor(rightUri, { preview: false, preserveFocus: true })
+					// this.rooOpenedTabs.add(rightUri.toString()) // showAndTrackEditor already adds it
 					// If autoFocus is true, we don't need to do anything
 					if (this.autoFocus) {
 						return
@@ -642,7 +848,6 @@ export class DiffViewProvider {
 		this.streamedLines = []
 		this.preDiagnostics = []
 		this.rooOpenedTabs.clear()
-		this.autoCloseTabs = false
 	}
 
 	resetWithListeners() {

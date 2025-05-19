@@ -3,12 +3,18 @@ import { Slider } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 
-type DiffSettingsControlField = "diffEnabled" | "fuzzyMatchThreshold" | "diffViewAutoFocus" | "autoCloseRooTabs"
+type DiffSettingsControlField =
+	| "diffEnabled"
+	| "fuzzyMatchThreshold"
+	| "diffViewAutoFocus"
+	| "autoCloseRooTabs"
+	| "autoCloseAllRooTabs"
 
 interface DiffSettingsControlProps {
 	diffEnabled?: boolean
 	diffViewAutoFocus?: boolean
 	autoCloseRooTabs?: boolean
+	autoCloseAllRooTabs?: boolean // Added new setting
 	fuzzyMatchThreshold?: number
 	onChange: (field: DiffSettingsControlField, value: any) => void
 }
@@ -20,6 +26,13 @@ interface DiffCheckAutoFocusControlProps {
 
 interface DiffCheckAutoCloseControlProps {
 	autoCloseRooTabs: boolean
+	onChange: (e: any) => void
+}
+
+interface DiffCheckAutoCloseAllControlProps {
+	// Added new component interface
+	autoCloseAllRooTabs: boolean
+	disabled: boolean // Added disabled prop
 	onChange: (e: any) => void
 }
 
@@ -56,6 +69,25 @@ const DiffViewAutoCloseControl: React.FC<DiffCheckAutoCloseControlProps> = ({ au
 	)
 }
 
+const DiffViewAutoCloseAllControl: React.FC<DiffCheckAutoCloseAllControlProps> = ({
+	autoCloseAllRooTabs,
+	disabled,
+	onChange,
+}) => {
+	// Added new component
+	const { t } = useAppTranslation()
+	return (
+		<div>
+			<VSCodeCheckbox checked={autoCloseAllRooTabs} disabled={disabled} onChange={onChange}>
+				<span className="font-medium">{t("settings:advanced.diff.autoCloseAll.label")}</span>
+			</VSCodeCheckbox>
+			<div className="text-vscode-descriptionForeground text-sm">
+				{t("settings:advanced.diff.autoCloseAll.description")}
+			</div>
+		</div>
+	)
+}
+
 const DiffPrecisionMatchControl: React.FC<DiffPrecisionMatchControlProps> = ({
 	fuzzyMatchThreshold,
 	onValueChange,
@@ -87,6 +119,7 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 	diffEnabled = true,
 	diffViewAutoFocus = true,
 	autoCloseRooTabs = false,
+	autoCloseAllRooTabs = false, // Added new setting
 	fuzzyMatchThreshold = 1.0,
 	onChange,
 }) => {
@@ -116,6 +149,18 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 	const handleAutoCloseRooTabsChange = useCallback(
 		(e: any) => {
 			onChange("autoCloseRooTabs", e.target.checked)
+			// If autoCloseRooTabs is unchecked, also uncheck autoCloseAllRooTabs
+			if (!e.target.checked) {
+				onChange("autoCloseAllRooTabs", false)
+			}
+		},
+		[onChange],
+	)
+
+	const handleAutoCloseAllRooTabsChange = useCallback(
+		// Added new handler
+		(e: any) => {
+			onChange("autoCloseAllRooTabs", e.target.checked)
 		},
 		[onChange],
 	)
@@ -144,6 +189,11 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 					<DiffViewAutoCloseControl
 						autoCloseRooTabs={autoCloseRooTabs}
 						onChange={handleAutoCloseRooTabsChange}
+					/>
+					<DiffViewAutoCloseAllControl // Added new component
+						autoCloseAllRooTabs={autoCloseAllRooTabs}
+						disabled={!autoCloseRooTabs} // Disabled if autoCloseRooTabs is false
+						onChange={handleAutoCloseAllRooTabsChange}
 					/>
 				</>
 			)}
