@@ -1,6 +1,5 @@
 export function getCallbackUrl(provider: string, uriScheme?: string) {
-	const callbackUrl = `${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/${provider}`
-	return encodeURIComponent(callbackUrl)
+	return encodeURIComponent(`${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/${provider}`)
 }
 
 export function getGlamaAuthUrl(uriScheme?: string) {

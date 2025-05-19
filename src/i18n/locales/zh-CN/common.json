@@ -67,7 +67,8 @@
 		"mcp_server_not_found": "在配置中未找到服务器\"{{serverName}}\"",
 		"custom_storage_path_set": "自定义存储路径已设置：{{path}}",
 		"default_storage_path": "已恢复使用默认存储路径",
-		"settings_imported": "设置已成功导入。"
+		"settings_imported": "设置已成功导入。",
+		"settings_import_failed": "设置导入失败：{{error}}。"
 	},
 	"answers": {
 		"yes": "是",
@@ -89,5 +90,11 @@
 	"input": {
 		"task_prompt": "让Roo做什么？",
 		"task_placeholder": "在这里输入任务"
+	},
+	"settings": {
+		"providers": {
+			"groqApiKey": "Groq API 密钥",
+			"getGroqApiKey": "获取 Groq API 密钥"
+		}
 	}
 }

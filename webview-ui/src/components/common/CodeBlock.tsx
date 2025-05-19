@@ -4,8 +4,12 @@ import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage, ExtendedLanguage } from "@src/utils/highlighter"
 import { bundledLanguages } from "shiki"
 import type { ShikiTransformer } from "shiki"
+import { ChevronDown, ChevronUp, WrapText, AlignJustify, Copy, Check } from "lucide-react"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 export const WRAPPER_ALPHA = "cc" // 80% opacity
+
 // Configuration constants
 export const WINDOW_SHADE_SETTINGS = {
 	transitionDelayS: 0.2,
@@ -34,13 +38,6 @@ interface CodeBlockProps {
 	onLanguageChange?: (language: string) => void
 }
 
-const ButtonIcon = styled.span`
-	display: inline-block;
-	width: 1.2em;
-	text-align: center;
-	vertical-align: middle;
-`
-
 const CodeBlockButton = styled.button`
 	background: transparent;
 	border: none;
@@ -50,15 +47,22 @@ const CodeBlockButton = styled.button`
 	margin: 0 0px;
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	opacity: 0.4;
 	border-radius: 3px;
 	pointer-events: var(--copy-button-events, none);
 	margin-left: 4px;
 	height: 24px;
+	width: 24px;
 
 	&:hover {
 		background: var(--vscode-toolbar-hoverBackground);
 		opacity: 1;
+	}
+
+	/* Style for Lucide icons to ensure consistent sizing and positioning */
+	svg {
+		display: block;
 	}
 `
 
@@ -93,7 +97,6 @@ const CodeBlockButtonWrapper = styled.div`
 const CodeBlockContainer = styled.div`
 	position: relative;
 	overflow: hidden;
-	border-bottom: 4px solid var(--vscode-sideBar-background);
 	background-color: ${CODE_BLOCK_BG_COLOR};
 
 	${CodeBlockButtonWrapper} {
@@ -120,7 +123,6 @@ export const StyledPre = styled.div<{
 		windowshade === "true" ? `${collapsedHeight || WINDOW_SHADE_SETTINGS.collapsedHeight}px` : "none"};
 	overflow-y: auto;
 	padding: 10px;
-	// transition: max-height ${WINDOW_SHADE_SETTINGS.transitionDelayS} ease-out;
 	border-radius: 5px;
 	${({ preStyle }) => preStyle && { ...preStyle }}
 
@@ -135,7 +137,7 @@ export const StyledPre = styled.div<{
 
 	pre,
 	code {
-		/* Undefined wordwrap defaults to true (pre-wrap) behavior */
+		/* Undefined wordwrap defaults to true (pre-wrap) behavior. */
 		white-space: ${({ wordwrap }) => (wordwrap === "false" ? "pre" : "pre-wrap")};
 		word-break: ${({ wordwrap }) => (wordwrap === "false" ? "normal" : "normal")};
 		overflow-wrap: ${({ wordwrap }) => (wordwrap === "false" ? "normal" : "break-word")};
@@ -229,25 +231,30 @@ const CodeBlock = memo(
 		const preRef = useRef<HTMLDivElement>(null)
 		const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 		const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
+		const { t } = useAppTranslation()
 
-		// Update current language when prop changes, but only if user hasn't made a selection
+		// Update current language when prop changes, but only if user hasn't
+		// made a selection.
 		useEffect(() => {
 			const normalizedLang = normalizeLanguage(language)
+
 			if (normalizedLang !== currentLanguage && !userChangedLanguageRef.current) {
 				setCurrentLanguage(normalizedLang)
 			}
 		}, [language, currentLanguage])
 
-		// Syntax highlighting with cached Shiki instance
+		// Syntax highlighting with cached Shiki instance.
 		useEffect(() => {
 			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${currentLanguage || "txt"}">${source || ""}</code></pre>`
+
 			const highlight = async () => {
-				// Show plain text if language needs to be loaded
+				// Show plain text if language needs to be loaded.
 				if (currentLanguage && !isLanguageLoaded(currentLanguage)) {
 					setHighlightedCode(fallback)
 				}
 
 				const highlighter = await getHighlighter(currentLanguage)
+
 				const html = await highlighter.codeToHtml(source || "", {
 					lang: currentLanguage || "txt",
 					theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
@@ -270,6 +277,7 @@ const CodeBlock = memo(
 						},
 					] as ShikiTransformer[],
 				})
+
 				setHighlightedCode(html)
 			}
 
@@ -282,13 +290,15 @@ const CodeBlock = memo(
 		// Check if content height exceeds collapsed height whenever content changes
 		useEffect(() => {
 			const codeBlock = codeBlockRef.current
+
 			if (codeBlock) {
 				const actualHeight = codeBlock.scrollHeight
 				setShowCollapseButton(actualHeight >= WINDOW_SHADE_SETTINGS.collapsedHeight)
 			}
 		}, [highlightedCode])
 
-		// Ref to track if user was scrolled up *before* the source update potentially changes scrollHeight
+		// Ref to track if user was scrolled up *before* the source update
+		// potentially changes scrollHeight
 		const wasScrolledUpRef = useRef(false)
 
 		// Ref to track if outer container was near bottom
@@ -328,13 +338,14 @@ const CodeBlock = memo(
 			}
 
 			scrollContainer.addEventListener("scroll", handleOuterScroll, { passive: true })
+
 			// Initial check
 			handleOuterScroll()
 
 			return () => {
 				scrollContainer.removeEventListener("scroll", handleOuterScroll)
 			}
-		}, []) // Empty dependency array: runs once on mount
+		}, [])
 
 		// Store whether we should scroll after highlighting completes
 		const shouldScrollAfterHighlightRef = useRef(false)
@@ -352,16 +363,24 @@ const CodeBlock = memo(
 		const updateCodeBlockButtonPosition = useCallback((forceHide = false) => {
 			const codeBlock = codeBlockRef.current
 			const copyWrapper = copyButtonWrapperRef.current
-			if (!codeBlock) return
+
+			if (!codeBlock) {
+				return
+			}
 
 			const rectCodeBlock = codeBlock.getBoundingClientRect()
 			const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-			if (!scrollContainer) return
+
+			if (!scrollContainer) {
+				return
+			}
 
 			// Get wrapper height dynamically
 			let wrapperHeight
+
 			if (copyWrapper) {
 				const copyRect = copyWrapper.getBoundingClientRect()
+
 				// If height is 0 due to styling, estimate from children
 				if (copyRect.height > 0) {
 					wrapperHeight = copyRect.height
@@ -604,16 +623,15 @@ const CodeBlock = memo(
 
 		return (
 			<CodeBlockContainer ref={codeBlockRef}>
-				<StyledPre
-					ref={preRef}
+				<MemoizedStyledPre
+					preRef={preRef}
 					preStyle={preStyle}
-					wordwrap={wordWrap ? "true" : "false"}
-					windowshade={windowShade ? "true" : "false"}
+					wordWrap={wordWrap}
+					windowShade={windowShade}
 					collapsedHeight={collapsedHeight}
-					onMouseDown={() => updateCodeBlockButtonPosition(true)}
-					onMouseUp={() => updateCodeBlockButtonPosition(false)}>
-					<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-				</StyledPre>
+					highlightedCode={highlightedCode}
+					updateCodeBlockButtonPosition={updateCodeBlockButtonPosition}
+				/>
 				{!isSelecting && (
 					<CodeBlockButtonWrapper
 						ref={copyButtonWrapperRef}
@@ -623,10 +641,7 @@ const CodeBlock = memo(
 							<LanguageSelect
 								value={currentLanguage}
 								style={{
-									alignContent: "middle",
-									width: `${Math.max(3, (currentLanguage?.length || 5) + 1)}ch`,
-									textAlign: "right",
-									marginRight: 0,
+									width: `calc(${currentLanguage?.length || 0}ch + 9px)`,
 								}}
 								onClick={(e) => {
 									e.currentTarget.focus()
@@ -697,25 +712,58 @@ const CodeBlock = memo(
 										WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
 									)
 								}}
-								title={`${windowShade ? "Expand" : "Collapse"} code block`}>
-								<ButtonIcon style={{ fontSize: "16px" }}>{windowShade ? "⌄" : "⌃"}</ButtonIcon>
+								title={t(`chat:codeblock.tooltips.${windowShade ? "expand" : "collapse"}`)}>
+								{windowShade ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
 							</CodeBlockButton>
 						)}
 						<CodeBlockButton
 							onClick={() => setWordWrap(!wordWrap)}
-							title={`${wordWrap ? "Disable" : "Enable"} word wrap`}>
-							<ButtonIcon style={{ fontSize: "16px", fontWeight: 900 }}>
-								{wordWrap ? "⟼" : "⤸"}
-							</ButtonIcon>
+							title={t(`chat:codeblock.tooltips.${wordWrap ? "disable_wrap" : "enable_wrap"}`)}>
+							{wordWrap ? <AlignJustify size={16} /> : <WrapText size={16} />}
 						</CodeBlockButton>
-						<CodeBlockButton onClick={handleCopy} title="Copy code">
-							<ButtonIcon className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
+						<CodeBlockButton onClick={handleCopy} title={t("chat:codeblock.tooltips.copy_code")}>
+							{showCopyFeedback ? <Check size={16} /> : <Copy size={16} />}
 						</CodeBlockButton>
 					</CodeBlockButtonWrapper>
 				)}
 			</CodeBlockContainer>
 		)
 	},
+)
+
+// Memoized content component to prevent unnecessary re-renders of highlighted code
+const MemoizedCodeContent = memo(({ html }: { html: string }) => <div dangerouslySetInnerHTML={{ __html: html }} />)
+
+// Memoized StyledPre component
+const MemoizedStyledPre = memo(
+	({
+		preRef,
+		preStyle,
+		wordWrap,
+		windowShade,
+		collapsedHeight,
+		highlightedCode,
+		updateCodeBlockButtonPosition,
+	}: {
+		preRef: React.RefObject<HTMLDivElement>
+		preStyle?: React.CSSProperties
+		wordWrap: boolean
+		windowShade: boolean
+		collapsedHeight?: number
+		highlightedCode: string
+		updateCodeBlockButtonPosition: (forceHide?: boolean) => void
+	}) => (
+		<StyledPre
+			ref={preRef}
+			preStyle={preStyle}
+			wordwrap={wordWrap ? "true" : "false"}
+			windowshade={windowShade ? "true" : "false"}
+			collapsedHeight={collapsedHeight}
+			onMouseDown={() => updateCodeBlockButtonPosition(true)}
+			onMouseUp={() => updateCodeBlockButtonPosition(false)}>
+			<MemoizedCodeContent html={highlightedCode} />
+		</StyledPre>
+	),
 )
 
 export default CodeBlock

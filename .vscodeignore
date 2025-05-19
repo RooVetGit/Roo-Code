@@ -30,7 +30,7 @@ jest.*
 .rooignore
 .roo/**
 benchmark/**
-cline_docs/**
+docs/**
 e2e/**
 evals/**
 locales/**
@@ -68,3 +68,7 @@ assets/docs/**
 
 # Include .env file for telemetry
 !.env
+
+# Ignore IntelliJ and Qodo plugin folders
+.idea/**
+.qodo/**

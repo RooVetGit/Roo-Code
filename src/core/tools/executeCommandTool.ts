@@ -3,7 +3,7 @@ import * as path from "path"
 
 import delay from "delay"
 
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { CommandExecutionStatus } from "../../schemas"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolResponse } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
@@ -16,7 +16,7 @@ import { Terminal } from "../../integrations/terminal/Terminal"
 class ShellIntegrationError extends Error {}
 
 export async function executeCommandTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -48,14 +48,14 @@ export async function executeCommandTool(
 
 			cline.consecutiveMistakeCount = 0
 
-			const executionId = Date.now().toString()
 			command = unescapeHtmlEntities(command) // Unescape HTML entities.
-			const didApprove = await askApproval("command", command, { id: executionId })
+			const didApprove = await askApproval("command", command)
 
 			if (!didApprove) {
 				return
 			}
 
+			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 			const clineProvider = await cline.providerRef.deref()
 			const clineProviderState = await clineProvider?.getState()
 			const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
@@ -79,7 +79,6 @@ export async function executeCommandTool(
 			} catch (error: unknown) {
 				const status: CommandExecutionStatus = { executionId, status: "fallback" }
 				clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
-				clineProvider?.setValue("terminalShellIntegrationDisabled", true)
 				await cline.say("shell_integration_warning")
 
 				if (error instanceof ShellIntegrationError) {
@@ -115,7 +114,7 @@ export type ExecuteCommandOptions = {
 }
 
 export async function executeCommand(
-	cline: Cline,
+	cline: Task,
 	{
 		executionId,
 		command,
@@ -150,17 +149,20 @@ export async function executeCommand(
 	const terminalProvider = terminalShellIntegrationDisabled ? "execa" : "vscode"
 	const clineProvider = await cline.providerRef.deref()
 
+	let accumulatedOutput = ""
 	const callbacks: RooTerminalCallbacks = {
-		onLine: async (output: string, process: RooTerminalProcess) => {
-			const compressed = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
-			cline.say("command_output", compressed)
+		onLine: async (lines: string, process: RooTerminalProcess) => {
+			accumulatedOutput += lines
+			const compressedOutput = Terminal.compressTerminalOutput(accumulatedOutput, terminalOutputLineLimit)
+			const status: CommandExecutionStatus = { executionId, status: "output", output: compressedOutput }
+			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 
 			if (runInBackground) {
 				return
 			}
 
 			try {
-				const { response, text, images } = await cline.ask("command_output", compressed)
+				const { response, text, images } = await cline.ask("command_output", "")
 				runInBackground = true
 
 				if (response === "messageResponse") {
@@ -171,10 +173,12 @@ export async function executeCommand(
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
+			cline.say("command_output", result)
 			completed = true
 		},
 		onShellExecutionStarted: (pid: number | undefined) => {
-			const status: CommandExecutionStatus = { executionId, status: "running", pid }
+			console.log(`[executeCommand] onShellExecutionStarted: ${pid}`)
+			const status: CommandExecutionStatus = { executionId, status: "started", pid, command }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 		},
 		onShellExecutionComplete: (details: ExitCodeDetails) => {
@@ -194,7 +198,7 @@ export async function executeCommand(
 	const terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId, terminalProvider)
 
 	if (terminal instanceof Terminal) {
-		terminal.terminal.show()
+		terminal.terminal.show(true)
 
 		// Update the working directory in case the terminal we asked for has
 		// a different working directory so that the model will know where the
