@@ -384,7 +384,13 @@ export class DiffViewProvider {
 		console.log(`Roo Debug:   !this.documentWasOpen (${!this.documentWasOpen}) [raw: ${this.documentWasOpen}]`)
 		console.log(`Roo Debug:   this.editType: ${this.editType}`)
 
-		if (!currentAutoCloseTabs && !currentAutoCloseAllRooTabs && !this.documentWasOpen) {
+		// If no auto-close settings are enabled and the document was not open before OR it's a new file,
+		// open the file after the diff is complete.
+		if (
+			!currentAutoCloseTabs &&
+			!currentAutoCloseAllRooTabs &&
+			(this.editType === "create" || !this.documentWasOpen)
+		) {
 			console.log(`Roo Debug: Condition MET. Calling showAndTrackEditor.`)
 			const absolutePath = path.resolve(this.cwd, this.relPath!)
 			await this.showAndTrackEditor(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })
@@ -682,25 +688,14 @@ export class DiffViewProvider {
 		if (!(diffTab && diffTab.input instanceof vscode.TabInputTextDiff)) {
 			return null
 		}
-		// Only open/focus the tab if autoCloseTabs is false, regardless of autoFocus.
-		if (!this.autoCloseTabs && !this.autoCloseAllRooTabs && !this.documentWasOpen) {
-			const editor = await this.showAndTrackEditor(diffTab.input.modified, { preserveFocus: !this.autoFocus })
-			return editor
-		}
-		// If autoFocus is false, try to find the editor without focusing
-		// Try to find the editor without focusing
+		// Removed logic that explicitly opens/focuses the standalone file tab immediately after diff opens.
+		// The standalone tab should only be opened in saveChanges after approval for new/unopened files.
 		const editor = vscode.window.visibleTextEditors.find((ed) => arePathsEqual(ed.document.uri.fsPath, uri.fsPath))
 		if (editor) return editor
-		// Otherwise, open without focusing
-		await this.showAndTrackEditor(diffTab.input.modified, {
-			preview: false,
-			preserveFocus: this.preserveFocus,
-			viewColumn: this.viewColumn,
-		})
-		const newEditor = vscode.window.visibleTextEditors.find((ed) =>
-			arePathsEqual(ed.document.uri.fsPath, uri.fsPath),
-		)
-		if (newEditor) return newEditor
+
+		// If the editor is not found among visible editors, it means it's not currently open.
+		// We should not open it here, as it should only be opened in saveChanges after approval.
+		// Return null to indicate that the editor for the standalone file tab is not available/should not be focused immediately.
 		return null
 	}
 
@@ -726,7 +721,7 @@ export class DiffViewProvider {
 			const previousEditor = vscode.window.activeTextEditor
 			const textDocumentShowOptions: TextDocumentShowOptions = {
 				preview: false,
-				preserveFocus: this.preserveFocus,
+				preserveFocus: false,
 				viewColumn: this.viewColumn,
 			}
 			// set interaction flag to true to prevent autoFocus from being triggered
@@ -739,8 +734,14 @@ export class DiffViewProvider {
 					this.suppressInteractionFlag = false
 					// Explicitly open and track the editor for the right side of the diff (the actual file)
 					// to ensure it's in rooOpenedTabs before closeAllRooOpenedViews is called.
-					await this.showAndTrackEditor(rightUri, { preview: false, preserveFocus: true })
-					// this.rooOpenedTabs.add(rightUri.toString()) // showAndTrackEditor already adds it
+					// Removed the explicit showAndTrackEditor call for rightUri as vscode.diff should handle opening.
+					// This might fix the focus issue with new files.
+					this.rooOpenedTabs.add(rightUri.toString()) // Ensure rightUri is tracked even if not explicitly shown again
+
+					// Explicitly show the right side of the diff (the actual file) to ensure it gains focus,
+					// especially for newly created files where VS Code might open a standalone tab.
+					// Use preserveFocus: false to force focus to this editor.
+
 					// If autoFocus is true, we don't need to do anything
 					if (this.autoFocus) {
 						return
@@ -750,17 +751,6 @@ export class DiffViewProvider {
 						return
 					}
 					// if this happens in a window different from the active one, we need to show the document
-					if (this.viewColumn !== ViewColumn.Active) {
-						this.showTextDocumentSafe({
-							textDocument: previousEditor.document,
-							options: {
-								preview: false,
-								preserveFocus: false,
-								selection: previousEditor.selection,
-								viewColumn: previousEditor.viewColumn,
-							},
-						})
-					}
 				})
 				.then(() => {
 					this.getEditorFromDiffTab(rightUri).then((editor) => {
