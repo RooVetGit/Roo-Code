@@ -10,7 +10,16 @@
 		"contextWindow": "Okno kontekstu:",
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
-		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
+		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
+		"requestCostChartTitle": "Koszt Żądania",
+		"totalCostChartTitle": "Koszt Całkowity",
+		"tokensInChartTitle": "Tokeny Wejściowe",
+		"tokensOutChartTitle": "Tokeny Wyjściowe",
+		"tokensUnit": "tokeny",
+		"costOverviewTitle": "Przegląd Kosztów",
+		"requestShort": "Żądanie {{index}}",
+		"clickToEnlarge": "Kliknij, aby powiększyć",
+		"clickToGoBack": "Kliknij, aby wrócić do widoku siatki"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",

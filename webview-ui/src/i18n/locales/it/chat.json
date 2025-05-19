@@ -10,7 +10,16 @@
 		"contextWindow": "Lunghezza del contesto:",
 		"closeAndStart": "Chiudi attività e iniziane una nuova",
 		"export": "Esporta cronologia attività",
-		"delete": "Elimina attività (Shift + Clic per saltare la conferma)"
+		"delete": "Elimina attività (Shift + Clic per saltare la conferma)",
+		"requestCostChartTitle": "Costo Richiesta",
+		"totalCostChartTitle": "Costo Totale",
+		"tokensInChartTitle": "Token di Input",
+		"tokensOutChartTitle": "Token di Output",
+		"tokensUnit": "token",
+		"costOverviewTitle": "Panoramica Costi",
+		"requestShort": "Richiesta {{index}}",
+		"clickToEnlarge": "Clicca per ingrandire",
+		"clickToGoBack": "Clicca per tornare alla vista griglia"
 	},
 	"unpin": "Rilascia",
 	"pin": "Fissa",

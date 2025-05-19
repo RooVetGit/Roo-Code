@@ -10,7 +10,16 @@
 		"contextWindow": "संदर्भ लंबाई:",
 		"closeAndStart": "कार्य बंद करें और नया शुरू करें",
 		"export": "कार्य इतिहास निर्यात करें",
-		"delete": "कार्य हटाएं (पुष्टि को छोड़ने के लिए Shift + क्लिक)"
+		"delete": "कार्य हटाएं (पुष्टि को छोड़ने के लिए Shift + क्लिक)",
+		"requestCostChartTitle": "अनुरोध लागत",
+		"totalCostChartTitle": "कुल लागत",
+		"tokensInChartTitle": "इनपुट टोकन",
+		"tokensOutChartTitle": "आउटपुट टोकन",
+		"tokensUnit": "टोकन",
+		"costOverviewTitle": "लागत अवलोकन",
+		"requestShort": "अनुरोध {{index}}",
+		"clickToEnlarge": "बड़ा करने के लिए क्लिक करें",
+		"clickToGoBack": "ग्रिड व्यू पर वापस जाने के लिए क्लिक करें"
 	},
 	"unpin": "पिन करें",
 	"pin": "अवपिन करें",

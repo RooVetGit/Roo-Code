@@ -10,7 +10,16 @@
 		"contextWindow": "上下文长度：",
 		"closeAndStart": "关闭任务并开始新任务",
 		"export": "导出任务历史",
-		"delete": "删除任务（Shift + 点击跳过确认）"
+		"delete": "删除任务（Shift + 点击跳过确认）",
+		"requestCostChartTitle": "请求成本",
+		"totalCostChartTitle": "总成本",
+		"tokensInChartTitle": "输入令牌",
+		"tokensOutChartTitle": "输出令牌",
+		"tokensUnit": "令牌",
+		"costOverviewTitle": "成本概览",
+		"requestShort": "请求 {{index}}",
+		"clickToEnlarge": "点击放大",
+		"clickToGoBack": "点击返回网格视图"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",
