@@ -1,4 +1,4 @@
-# Roo Code Changelog
+# Apex Changelog
 
 ## [3.17.2] - 2025-05-15
 
@@ -91,7 +91,7 @@
 - Fix display issue of the programming language dropdown in the code block component (thanks @zhangtony239)
 - MCP server errors are now captured and shown in a new "Errors" tab (thanks @robertheadley)
 - Error logging will no longer break MCP functionality if the server is properly connected (thanks @ksze)
-- You can now toggle the `terminal.integrated.inheritEnv` VSCode setting directly for the Roo Code settings (thanks @KJ7LNW)
+- You can now toggle the `terminal.integrated.inheritEnv` VSCode setting directly for the Apex settings (thanks @KJ7LNW)
 - Add `gemini-2.5-pro-preview-05-06` to the Vertex and Gemini providers (thanks @zetaloop)
 - Ensure evals exercises are up-to-date before running evals (thanks @shariqriazz)
 - Lots of general UI improvements (thanks @elianiva)
@@ -108,7 +108,7 @@
 
 ## [3.15.4] - 2025-05-04
 
-- Fix a nasty bug that would cause Roo Code to hang, particularly in orchestrator mode
+- Fix a nasty bug that would cause Apex to hang, particularly in orchestrator mode
 - Improve Gemini caching efficiency
 
 ## [3.15.3] - 2025-05-02
@@ -147,8 +147,8 @@
 - Improve the auto-approve toggle buttons for some high-contrast VSCode themes
 - Offload expensive count token operations to a web worker (thanks @samhvw8)
 - Improve support for mult-root workspaces (thanks @snoyiatk)
-- Simplify and streamline Roo Code's quick actions
-- Allow Roo Code settings to be imported from the welcome screen (thanks @julionav)
+- Simplify and streamline Apex's quick actions
+- Allow Apex settings to be imported from the welcome screen (thanks @julionav)
 - Remove unused types (thanks @wkordalski)
 - Improve the performance of mode switching (thanks @dlab-anton)
 - Fix importing & exporting of custom modes (thanks @julionav)
@@ -312,7 +312,7 @@
 - Improve readFileTool XML output format (thanks @KJ7LNW!)
 - Add o1-pro support (thanks @arthurauffray!)
 - Follow symlinked rules files/directories to allow for more flexible rule setups
-- Focus Roo Code in the sidebar when running tasks in the sidebar via the API
+- Focus Apex in the sidebar when running tasks in the sidebar via the API
 - Improve subtasks UI
 
 ## [3.11.10] - 2025-04-08
@@ -334,7 +334,7 @@
 - Enhance Rust tree-sitter parser with advanced language structures (thanks @KJ7LNW!)
 - Persist settings on api.setConfiguration (thanks @gtaylor!)
 - Add deep links to settings sections
-- Add command to focus Roo Code input field (thanks @axkirillov!)
+- Add command to focus Apex input field (thanks @axkirillov!)
 - Add resize and hover actions to the browser (thanks @SplittyDev!)
 - Add resumeTask and isTaskInHistory to the API (thanks @franekp!)
 - Fix bug displaying boolean/numeric suggested answers
@@ -383,7 +383,7 @@
 - Fix issue where prompts and settings tabs were not scrollable when accessed from dropdown menus
 - Update AWS region dropdown menu to the most recent data (thanks @Smartsheet-JB-Brown!)
 - Fix prompt enhancement for Bedrock (thanks @Smartsheet-JB-Brown!)
-- Allow processes to access the Roo Code API via a unix socket
+- Allow processes to access the Apex API via a unix socket
 - Improve zh-TW Traditional Chinese translations (thanks @PeterDaveHello!)
 - Add support for Azure AI Inference Service with DeepSeek-V3 model (thanks @thomasjeung!)
 - Fix off-by-one error in tree-sitter line numbers
@@ -420,7 +420,7 @@
 - Fix list_code_definition_names to support files (thanks @KJ7LNW!)
 - Refactor tool-calling logic to make the code a lot easier to work with (thanks @diarmidmackenzie, @bramburn, @KJ7LNW, and everyone else who helped!)
 - Prioritize “Add to Context” in the code actions and include line numbers (thanks @samhvw8!)
-- Add an activation command that other extensions can use to interface with Roo Code (thanks @gtaylor!)
+- Add an activation command that other extensions can use to interface with Apex (thanks @gtaylor!)
 - Preserve language characters in file @-mentions (thanks @aheizi!)
 - Browser tool improvements (thanks @afshawnlotfi!)
 - Display info about partial reads in the chat row
@@ -512,7 +512,7 @@
 
 ## [3.9.0] - 2025-03-18
 
-- Internationalize Roo Code into Catalan, German, Spanish, French, Hindi, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Vietnamese, Simplified Chinese, and Traditional Chinese (thanks @feifei325!)
+- Internationalize Apex into Catalan, German, Spanish, French, Hindi, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Vietnamese, Simplified Chinese, and Traditional Chinese (thanks @feifei325!)
 - Bring back support for MCP over SSE (thanks @aheizi!)
 - Add a text-to-speech option to have Roo talk to you as it works (thanks @heyseth!)
 - Choose a specific provider when using OpenRouter (thanks PhunkyBob!)
@@ -592,17 +592,17 @@
 
 ## [3.8.0] - 2025-03-07
 
-- Add opt-in telemetry to help us improve Roo Code faster (thanks Cline!)
+- Add opt-in telemetry to help us improve Apex faster (thanks Cline!)
 - Fix terminal overload / gray screen of death, and other terminal issues
 - Add a new experimental diff editing strategy that applies multiple diff edits at once (thanks @qdaxb!)
-- Add support for a .rooignore to prevent Roo Code from read/writing certain files, with a setting to also exclude them from search/lists (thanks Cline!)
+- Add support for a .rooignore to prevent Apex from read/writing certain files, with a setting to also exclude them from search/lists (thanks Cline!)
 - Update the new_task tool to return results to the parent task on completion, supporting better orchestration (thanks @shaybc!)
 - Support running Roo in multiple editor windows simultaneously (thanks @samhvw8!)
 - Make checkpoints asynchronous and exclude more files to speed them up
 - Redesign the settings page to make it easier to navigate
 - Add credential-based authentication for Vertex AI, enabling users to easily switch between Google Cloud accounts (thanks @eonghk!)
 - Update the DeepSeek provider with the correct baseUrl and track caching correctly (thanks @olweraltuve!)
-- Add a new “Human Relay” provider that allows you to manually copy information to a Web AI when needed, and then paste the AI's response back into Roo Code (thanks @NyxJae)!
+- Add a new “Human Relay” provider that allows you to manually copy information to a Web AI when needed, and then paste the AI's response back into Apex (thanks @NyxJae)!
 - Add observability for OpenAI providers (thanks @refactorthis!)
 - Support speculative decoding for LM Studio local models (thanks @adamwlarson!)
 - Improve UI for mode/provider selectors in chat
@@ -691,7 +691,7 @@
 
 ## [3.7.0] - 2025-02-24
 
-- Introducing Roo Code 3.7, with support for the new Claude Sonnet 3.7. Because who cares about skipping version numbers anymore? Thanks @lupuletic and @cte for the PRs!
+- Introducing Apex 3.7, with support for the new Claude Sonnet 3.7. Because who cares about skipping version numbers anymore? Thanks @lupuletic and @cte for the PRs!
 
 ## [3.3.26] - 2025-02-27
 
@@ -880,7 +880,7 @@
 - Ask and Architect modes can now edit markdown files
 - Custom modes can now be restricted to specific file patterns (for example, a technical writer who can only edit markdown files 👋)
 - Support for configuring the Bedrock provider with AWS Profiles
-- New Roo Code community Discord at https://roocode.com/discord!
+- New Apex community Discord at https://roocode.com/discord!
 
 ## [3.2.8]
 
@@ -912,9 +912,9 @@
 
 ## [3.2.0 - 3.2.2]
 
-- **Name Change From Roo Cline to Roo Code:** We're excited to announce our new name! After growing beyond 50,000 installations, we've rebranded from Roo Cline to Roo Code to better reflect our identity as we chart our own course.
+- **Name Change From Roo Cline to Apex:** We're excited to announce our new name! After growing beyond 50,000 installations, we've rebranded from Roo Cline to Apex to better reflect our identity as we chart our own course.
 
-- **Custom Modes:** Create your own personas for Roo Code! While our built-in modes (Code, Architect, Ask) are still here, you can now shape entirely new ones:
+- **Custom Modes:** Create your own personas for Apex! While our built-in modes (Code, Architect, Ask) are still here, you can now shape entirely new ones:
     - Define custom prompts
     - Choose which tools each mode can access
     - Create specialized assistants for any workflow
@@ -973,7 +973,7 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 
 ## [3.0.0]
 
-- This release adds chat modes! Now you can ask Roo Code questions about system architecture or the codebase without immediately jumping into writing code. You can even assign different API configuration profiles to each mode if you prefer to use different models for thinking vs coding. Would love feedback in the new Roo Code Reddit! https://www.reddit.com/r/RooCode
+- This release adds chat modes! Now you can ask Apex questions about system architecture or the codebase without immediately jumping into writing code. You can even assign different API configuration profiles to each mode if you prefer to use different models for thinking vs coding. Would love feedback in the new Apex Reddit! https://www.reddit.com/r/RooCode
 
 ## [2.2.46]
 

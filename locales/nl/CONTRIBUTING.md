@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Bijdragen aan Roo Code
+# Bijdragen aan Apex
 
-Roo Code is een door de community gedreven project en we waarderen elke bijdrage enorm. Om de samenwerking te stroomlijnen, werken we volgens een [Issue-First](#issue-first-aanpak) principe, wat betekent dat alle [Pull Requests (PR's)](#een-pull-request-indienen) eerst gekoppeld moeten worden aan een GitHub Issue. Lees deze gids zorgvuldig door.
+Apex is een door de community gedreven project en we waarderen elke bijdrage enorm. Om de samenwerking te stroomlijnen, werken we volgens een [Issue-First](#issue-first-aanpak) principe, wat betekent dat alle [Pull Requests (PR's)](#een-pull-request-indienen) eerst gekoppeld moeten worden aan een GitHub Issue. Lees deze gids zorgvuldig door.
 
 ## Inhoudsopgave
 
@@ -43,7 +43,7 @@ Onze roadmap bepaalt de richting van het project. Stem je bijdragen af op deze k
 
 Vermeld de afstemming met deze gebieden in je PR's.
 
-### 3. Word lid van de Roo Code-community
+### 3. Word lid van de Apex-community
 
 - **Hoofdmethode:** Word lid van onze [Discord](https://discord.gg/roocode) en stuur een DM naar **Hannes Rudolph (`hrudolph`)**.
 - **Alternatief:** Ervaren bijdragers kunnen direct meedoen via [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1).
@@ -71,7 +71,7 @@ Elke bijdrage moet beginnen met een GitHub Issue.
 ### Bepalen waar je aan werkt
 
 - Bekijk het [GitHub Project](https://github.com/orgs/RooVetGit/projects/1) voor niet-toegewezen "Good First Issues".
-- Voor documentatie, bezoek [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs).
+- Voor documentatie, bezoek [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs).
 
 ### Bugs of problemen melden
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Juridisch
 
-Door een pull request in te dienen, ga je ermee akkoord dat je bijdragen worden gelicenseerd onder de Apache 2.0-licentie, in overeenstemming met de licentie van Roo Code.
+Door een pull request in te dienen, ga je ermee akkoord dat je bijdragen worden gelicenseerd onder de Apache 2.0-licentie, in overeenstemming met de licentie van Apex.

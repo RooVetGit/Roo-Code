@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • <b>Polski</b> • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Współtworzenie Roo Code
+# Współtworzenie Apex
 
-Roo Code to projekt napędzany przez społeczność i bardzo cenimy każdy wkład. Aby usprawnić współpracę, działamy według zasady [Issue-First](#podejście-issue-first), co oznacza, że wszystkie [Pull Requesty (PR)](#zgłaszanie-pull-requesta) muszą najpierw być powiązane z GitHub Issue. Prosimy o uważne zapoznanie się z tym przewodnikiem.
+Apex to projekt napędzany przez społeczność i bardzo cenimy każdy wkład. Aby usprawnić współpracę, działamy według zasady [Issue-First](#podejście-issue-first), co oznacza, że wszystkie [Pull Requesty (PR)](#zgłaszanie-pull-requesta) muszą najpierw być powiązane z GitHub Issue. Prosimy o uważne zapoznanie się z tym przewodnikiem.
 
 ## Spis treści
 
@@ -43,7 +43,7 @@ Nasza roadmapa wyznacza kierunek projektu. Dostosuj swój wkład do tych kluczow
 
 Wspomnij o powiązaniu z tymi obszarami w swoich PR.
 
-### 3. Dołącz do społeczności Roo Code
+### 3. Dołącz do społeczności Apex
 
 - **Główna metoda:** Dołącz do naszego [Discorda](https://discord.gg/roocode) i wyślij wiadomość prywatną do **Hannes Rudolph (`hrudolph`)**.
 - **Alternatywa:** Doświadczeni współtwórcy mogą angażować się bezpośrednio przez [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1).
@@ -71,7 +71,7 @@ Każdy wkład musi zaczynać się od GitHub Issue.
 ### Decydowanie, nad czym pracować
 
 - Sprawdź [Projekt GitHub](https://github.com/orgs/RooVetGit/projects/1) w poszukiwaniu nieprzypisanych "Good First Issues".
-- W kwestii dokumentacji odwiedź [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs).
+- W kwestii dokumentacji odwiedź [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs).
 
 ### Zgłaszanie błędów
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Prawne
 
-Zgłaszając pull request, zgadzasz się, że twój wkład będzie licencjonowany na licencji Apache 2.0, zgodnie z licencją Roo Code.
+Zgłaszając pull request, zgadzasz się, że twój wkład będzie licencjonowany na licencji Apache 2.0, zgodnie z licencją Apex.

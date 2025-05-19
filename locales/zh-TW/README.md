@@ -13,7 +13,7 @@
 <br>
 
 <div align="center">
-  <h2>加入 Roo Code 社群</h2>
+  <h2>加入 Apex 社群</h2>
   <p>與開發者連結，貢獻想法，並了解最新的 AI 驅動的程式設計工具。</p>
   
   <a href="https://discord.gg/roocode" target="_blank"><img src="https://img.shields.io/badge/加入%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="加入 Discord"></a>
@@ -24,7 +24,7 @@
 <br>
 
 <div align="center">
-<h1>Roo Code（前身為 Roo Cline）</h1>
+<h1>Apex（前身為 Roo Cline）</h1>
 
 <a href="https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline" target="_blank"><img src="https://img.shields.io/badge/從%20VS%20Marketplace%20下載-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="從 VS Marketplace 下載"></a>
 <a href="https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/功能請求-yellow?style=for-the-badge" alt="功能請求"></a>
@@ -33,7 +33,7 @@
 
 </div>
 
-**Roo Code** 是一個存在於您編輯器中的 AI 驅動**自主程式開發助手**。它能夠：
+**Apex** 是一個存在於您編輯器中的 AI 驅動**自主程式開發助手**。它能夠：
 
 - 使用自然語言與您溝通
 - 直接讀寫您工作區中的檔案
@@ -42,15 +42,15 @@
 - 整合任何與 OpenAI 相容或自訂的 API/模型
 - 透過**自訂模式**調整其「個性」與功能
 
-無論您需要的是一位靈活的程式設計夥伴、系統架構師，或是 QA 工程師、產品經理等特定角色，Roo Code 都能協助您更有效率地開發軟體。
+無論您需要的是一位靈活的程式設計夥伴、系統架構師，或是 QA 工程師、產品經理等特定角色，Apex 都能協助您更有效率地開發軟體。
 
 請檢視 [CHANGELOG](../../CHANGELOG.md) 了解詳細的更新與修正內容。
 
 ---
 
-## 🎉 Roo Code 3.17 已發布
+## 🎉 Apex 3.17 已發布
 
-Roo Code 3.17 根據您的回饋帶來強大的新功能和改進！
+Apex 3.17 根據您的回饋帶來強大的新功能和改進！
 
 - **Gemini 的隱式快取** - Gemini API 呼叫現在會自動快取，降低 API 成本。
 - **更智慧的模式選擇** - 模式定義現在可以包含何時應使用各模式的指引，實現更好的協調運作。
@@ -58,7 +58,7 @@ Roo Code 3.17 根據您的回饋帶來強大的新功能和改進！
 
 ---
 
-## Roo Code 可以做什麼？
+## Apex 可以做什麼？
 
 - 🚀 從自然語言描述**產生程式碼**
 - 🔧 **重構與除錯**現有程式碼
@@ -69,7 +69,7 @@ Roo Code 3.17 根據您的回饋帶來強大的新功能和改進！
 
 ## 快速開始
 
-1. [安裝 Roo Code](https://docs.roocode.com/getting-started/installing)
+1. [安裝 Apex](https://docs.roocode.com/getting-started/installing)
 2. [連接您的 AI 提供者](https://docs.roocode.com/getting-started/connecting-api-provider)
 3. [嘗試您的第一個任務](https://docs.roocode.com/getting-started/your-first-task)
 
@@ -77,7 +77,7 @@ Roo Code 3.17 根據您的回饋帶來強大的新功能和改進！
 
 ### 多種模式
 
-Roo Code 提供專業化的[模式](https://docs.roocode.com/basic-usage/using-modes)，能滿足您的各種需求：
+Apex 提供專業化的[模式](https://docs.roocode.com/basic-usage/using-modes)，能滿足您的各種需求：
 
 - **程式碼模式：** 處理一般程式設計工作
 - **架構師模式：** 規劃架構與技術領導
@@ -87,20 +87,20 @@ Roo Code 提供專業化的[模式](https://docs.roocode.com/basic-usage/using-m
 
 ### 智慧工具
 
-Roo Code 內建強大的[工具](https://docs.roocode.com/basic-usage/how-tools-work)，能夠：
+Apex 內建強大的[工具](https://docs.roocode.com/basic-usage/how-tools-work)，能夠：
 
 - 讀寫您專案中的檔案
 - 在您的 VS Code 終端機中執行命令
 - 控制網頁瀏覽器
 - 透過 [MCP (Model Context Protocol)](https://docs.roocode.com/advanced-usage/mcp) 使用外部工具
 
-透過 MCP，您可以無限制地新增自訂工具，進一步擴充 Roo Code 的功能。無論是整合外部 API、連接資料庫，或建立專屬的開發工具，MCP 都提供完整的框架，讓您依據自身需求靈活擴充 Roo Code。
+透過 MCP，您可以無限制地新增自訂工具，進一步擴充 Apex 的功能。無論是整合外部 API、連接資料庫，或建立專屬的開發工具，MCP 都提供完整的框架，讓您依據自身需求靈活擴充 Apex。
 
 ### 客製化
 
-Roo Code 可以配合您的需求進行調整：
+Apex 可以配合您的需求進行調整：
 
-- [自訂指令](https://docs.roocode.com/advanced-usage/custom-instructions)：個人化 Roo Code 的行為
+- [自訂指令](https://docs.roocode.com/advanced-usage/custom-instructions)：個人化 Apex 的行為
 - [自訂模式](https://docs.roocode.com/advanced-usage/custom-modes)：處理特定專業任務
 - [本機模型](https://docs.roocode.com/advanced-usage/local-models)：支援離線使用
 - [自動核准設定](https://docs.roocode.com/advanced-usage/auto-approving-actions)：加快工作流程
@@ -142,7 +142,7 @@ npm run dev
 ```
 
 4. **除錯**：
-   在 VSCode 中按下 `F5`（或選擇**執行** → **開始除錯**）以開啟載入 Roo Code 的新工作階段。
+   在 VSCode 中按下 `F5`（或選擇**執行** → **開始除錯**）以開啟載入 Apex 的新工作階段。
 
 網頁檢視的變更會立即顯示。核心擴充功能的變更則需要重新啟動擴充主機。
 
@@ -164,7 +164,7 @@ code --install-extension bin/roo-cline-<version>.vsix
 
 ## 免責聲明
 
-**請注意**，Roo Code, Inc. **不**對與 Roo Code 相關的任何程式碼、模型或其他工具、任何相關的第三方工具，或任何產生的輸出提供任何陳述或保證。您使用這些工具或輸出時，需自行承擔**所有相關風險**；這些工具係以**「現況」**及**「現有」**基礎提供。上述風險包括但不限於智慧財產權侵害、網路安全漏洞或攻擊、偏見、不準確性、錯誤、缺陷、病毒、停機時間、財產損失或損害，以及／或人身傷害。您須自行負責使用這些工具或輸出所產生的任何結果（包括但不限於其合法性、適當性及後果）。
+**請注意**，Apex, Inc. **不**對與 Apex 相關的任何程式碼、模型或其他工具、任何相關的第三方工具，或任何產生的輸出提供任何陳述或保證。您使用這些工具或輸出時，需自行承擔**所有相關風險**；這些工具係以**「現況」**及**「現有」**基礎提供。上述風險包括但不限於智慧財產權侵害、網路安全漏洞或攻擊、偏見、不準確性、錯誤、缺陷、病毒、停機時間、財產損失或損害，以及／或人身傷害。您須自行負責使用這些工具或輸出所產生的任何結果（包括但不限於其合法性、適當性及後果）。
 
 ---
 
@@ -176,7 +176,7 @@ code --install-extension bin/roo-cline-<version>.vsix
 
 ## 貢獻者
 
-感謝所有幫助改進 Roo Code 的貢獻者！
+感謝所有幫助改進 Apex 的貢獻者！
 
 <!-- START CONTRIBUTORS SECTION - AUTO-GENERATED, DO NOT EDIT MANUALLY -->
 
@@ -213,8 +213,8 @@ code --install-extension bin/roo-cline-<version>.vsix
 
 ## 授權
 
-[Apache 2.0 © 2025 Roo Code, Inc.](../LICENSE)
+[Apache 2.0 © 2025 Apex, Inc.](../LICENSE)
 
 ---
 
-**享受 Roo Code！** 無論您是將它拴在短繩上還是讓它自主漫遊，我們迫不及待地想看看您會建構什麼。如果您有問題或功能想法，請造訪我們的 [Reddit 社群](https://www.reddit.com/r/RooCode/)或 [Discord](https://discord.gg/roocode)。祝您開發愉快！
+**享受 Apex！** 無論您是將它拴在短繩上還是讓它自主漫遊，我們迫不及待地想看看您會建構什麼。如果您有問題或功能想法，請造訪我們的 [Reddit 社群](https://www.reddit.com/r/RooCode/)或 [Discord](https://discord.gg/roocode)。祝您開發愉快！

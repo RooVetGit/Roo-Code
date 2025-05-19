@@ -30,16 +30,16 @@
 		"terminal": "Terminal",
 		"experimental": "Experimental",
 		"language": "Language",
-		"about": "About Roo Code"
+		"about": "About Apex"
 	},
 	"autoApprove": {
-		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"description": "Allow Apex to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
 		"readOnly": {
 			"label": "Read",
-			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
+			"description": "When enabled, Apex will automatically view directory contents and read files without requiring you to click the Approve button.",
 			"outsideWorkspace": {
 				"label": "Include files outside workspace",
-				"description": "Allow Roo to read files outside the current workspace without requiring approval."
+				"description": "Allow Apex to read files outside the current workspace without requiring approval."
 			}
 		},
 		"write": {
@@ -48,7 +48,7 @@
 			"delayLabel": "Delay after writes to allow diagnostics to detect potential problems",
 			"outsideWorkspace": {
 				"label": "Include files outside workspace",
-				"description": "Allow Roo to create and edit files outside the current workspace without requiring approval."
+				"description": "Allow Apex to create and edit files outside the current workspace without requiring approval."
 			}
 		},
 		"browser": {
@@ -175,13 +175,13 @@
 			"draftModelDesc": "Draft model must be from the same model family for speculative decoding to work correctly.",
 			"selectDraftModel": "Select Draft Model",
 			"noModelsFound": "No draft models found. Please ensure LM Studio is running with Server Mode enabled.",
-			"description": "LM Studio allows you to run models locally on your computer. For instructions on how to get started, see their <a>quickstart guide</a>. You will also need to start LM Studio's <b>local server</b> feature to use it with this extension. <span>Note:</span> Roo Code uses complex prompts and works best with Claude models. Less capable models may not work as expected."
+			"description": "LM Studio allows you to run models locally on your computer. For instructions on how to get started, see their <a>quickstart guide</a>. You will also need to start LM Studio's <b>local server</b> feature to use it with this extension. <span>Note:</span> Apex uses complex prompts and works best with Claude models. Less capable models may not work as expected."
 		},
 		"ollama": {
 			"baseUrl": "Base URL (optional)",
 			"modelId": "Model ID",
 			"description": "Ollama allows you to run models locally on your computer. For instructions on how to get started, see their quickstart guide.",
-			"warning": "Note: Roo Code uses complex prompts and works best with Claude models. Less capable models may not work as expected."
+			"warning": "Note: Apex uses complex prompts and works best with Claude models. Less capable models may not work as expected."
 		},
 		"unboundApiKey": "Unbound API Key",
 		"getUnboundApiKey": "Get Unbound API Key",
@@ -197,7 +197,7 @@
 			}
 		},
 		"customModel": {
-			"capabilities": "Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful when specifying the model capabilities, as they can affect how Roo Code performs.",
+			"capabilities": "Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful when specifying the model capabilities, as they can affect how Apex performs.",
 			"maxTokens": {
 				"label": "Max Output Tokens",
 				"description": "Maximum number of tokens the model can generate in a response. (Specify -1 to allow the server to set the max tokens.)"
@@ -253,7 +253,7 @@
 	"browser": {
 		"enable": {
 			"label": "Enable browser tool",
-			"description": "When enabled, Roo can use a browser to interact with websites when using models that support computer use. <0>Learn more</0>"
+			"description": "When enabled, Apex can use a browser to interact with websites when using models that support computer use. <0>Learn more</0>"
 		},
 		"viewport": {
 			"label": "Viewport size",
@@ -281,18 +281,18 @@
 	"checkpoints": {
 		"enable": {
 			"label": "Enable automatic checkpoints",
-			"description": "When enabled, Roo will automatically create checkpoints during task execution, making it easy to review changes or revert to earlier states. <0>Learn more</0>"
+			"description": "When enabled, Apex will automatically create checkpoints during task execution, making it easy to review changes or revert to earlier states. <0>Learn more</0>"
 		}
 	},
 	"notifications": {
 		"sound": {
 			"label": "Enable sound effects",
-			"description": "When enabled, Roo will play sound effects for notifications and events.",
+			"description": "When enabled, Apex will play sound effects for notifications and events.",
 			"volumeLabel": "Volume"
 		},
 		"tts": {
 			"label": "Enable text-to-speech",
-			"description": "When enabled, Roo will read aloud its responses using text-to-speech.",
+			"description": "When enabled, Apex will read aloud its responses using text-to-speech.",
 			"speedLabel": "Speed"
 		}
 	},
@@ -312,7 +312,7 @@
 		},
 		"maxReadFile": {
 			"label": "File read auto-truncate threshold",
-			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
+			"description": "Apex reads this number of lines when the model omits start/end values. If this number is less than the file's total, Apex generates a line number index of code definitions. Special cases: -1 instructs Apex to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
 		}
@@ -374,7 +374,7 @@
 	"advanced": {
 		"diff": {
 			"label": "Enable editing through diffs",
-			"description": "When enabled, Roo will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.",
+			"description": "When enabled, Apex will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.",
 			"strategy": {
 				"label": "Diff strategy",
 				"options": {
@@ -406,24 +406,24 @@
 		},
 		"SEARCH_AND_REPLACE": {
 			"name": "Use experimental search and replace tool",
-			"description": "Enable the experimental search and replace tool, allowing Roo to replace multiple instances of a search term in one request."
+			"description": "Enable the experimental search and replace tool, allowing Apex to replace multiple instances of a search term in one request."
 		},
 		"INSERT_BLOCK": {
 			"name": "Use experimental insert content tool",
-			"description": "Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff."
+			"description": "Enable the experimental insert content tool, allowing Apex to insert content at specific line numbers without needing to create a diff."
 		},
 		"POWER_STEERING": {
 			"name": "Use experimental \"power steering\" mode",
-			"description": "When enabled, Roo will remind the model about the details of its current mode definition more frequently. This will lead to stronger adherence to role definitions and custom instructions, but will use more tokens per message."
+			"description": "When enabled, Apex will remind the model about the details of its current mode definition more frequently. This will lead to stronger adherence to role definitions and custom instructions, but will use more tokens per message."
 		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Use experimental multi block diff tool",
-			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
+			"description": "When enabled, Apex will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
 		}
 	},
 	"promptCaching": {
 		"label": "Disable prompt caching",
-		"description": "When checked, Roo will not use prompt caching for this model."
+		"description": "When checked, Apex will not use prompt caching for this model."
 	},
 	"temperature": {
 		"useCustom": "Use custom temperature",
@@ -454,17 +454,17 @@
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "The extension automatically fetches the latest list of models available on <serviceLink>{{serviceName}}</serviceLink>. If you're unsure which model to choose, Roo Code works best with <defaultModelLink>{{defaultModelId}}</defaultModelLink>. You can also try searching \"free\" for no-cost options currently available.",
+		"automaticFetch": "The extension automatically fetches the latest list of models available on <serviceLink>{{serviceName}}</serviceLink>. If you're unsure which model to choose, Apex works best with <defaultModelLink>{{defaultModelId}}</defaultModelLink>. You can also try searching \"free\" for no-cost options currently available.",
 		"label": "Model",
 		"searchPlaceholder": "Search",
 		"noMatchFound": "No match found",
 		"useCustomModel": "Use custom: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "If you have any questions or feedback, feel free to open an issue at <githubLink>github.com/RooVetGit/Roo-Code</githubLink> or join <redditLink>reddit.com/r/RooCode</redditLink> or <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "If you have any questions or feedback, feel free to reach out at support@opensourceful.com",
 		"telemetry": {
 			"label": "Allow anonymous error and usage reporting",
-			"description": "Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent. See our privacy policy for more details."
+			"description": "Help improve Apex by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent. See our privacy policy for more details."
 		},
 		"settings": {
 			"import": "Import",

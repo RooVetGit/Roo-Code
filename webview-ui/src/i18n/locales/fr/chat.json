@@ -1,5 +1,5 @@
 {
-	"greeting": "Bienvenue sur Roo Code",
+	"greeting": "Bienvenue sur Apex",
 	"task": {
 		"title": "Tâche",
 		"seeMore": "Voir plus",
@@ -192,7 +192,7 @@
 	"autoApprove": {
 		"title": "Auto-approbation :",
 		"none": "Aucune",
-		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>."
+		"description": "L'auto-approbation permet à Apex d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Réflexion",
@@ -202,8 +202,8 @@
 		"copyToInput": "Copier vers l'entrée (ou Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 est sortie",
-		"description": "Roo Code 3.17 apporte de puissantes nouvelles fonctionnalités et améliorations basées sur vos retours.",
+		"title": "🎉 Apex 3.17 est sortie",
+		"description": "Apex 3.17 apporte de puissantes nouvelles fonctionnalités et améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
 		"feature1": "<bold>Mise en cache implicite pour Gemini</bold> : Les appels à l'API Gemini sont désormais automatiquement mis en cache, réduisant les coûts d'API",
 		"feature2": "<bold>Sélection de mode plus intelligente</bold> : Les définitions de mode peuvent maintenant inclure des indications sur quand chaque mode doit être utilisé, permettant une meilleure orchestration",
@@ -245,7 +245,7 @@
 	"systemPromptWarning": "AVERTISSEMENT : Remplacement d'instructions système personnalisées actif. Cela peut gravement perturber la fonctionnalité et provoquer un comportement imprévisible.",
 	"shellIntegration": {
 		"title": "Avertissement d'exécution de commande",
-		"description": "Votre commande est exécutée sans l'intégration shell du terminal VSCode. Pour supprimer cet avertissement, vous pouvez désactiver l'intégration shell dans la section <strong>Terminal</strong> des <settingsLink>paramètres de Roo Code</settingsLink> ou résoudre les problèmes d'intégration du terminal VSCode en utilisant le lien ci-dessous.",
+		"description": "Votre commande est exécutée sans l'intégration shell du terminal VSCode. Pour supprimer cet avertissement, vous pouvez désactiver l'intégration shell dans la section <strong>Terminal</strong> des <settingsLink>paramètres de Apex</settingsLink> ou résoudre les problèmes d'intégration du terminal VSCode en utilisant le lien ci-dessous.",
 		"troubleshooting": "Cliquez ici pour la documentation d'intégration shell."
 	}
 }

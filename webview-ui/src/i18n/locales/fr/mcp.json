@@ -1,7 +1,7 @@
 {
 	"title": "Serveurs MCP",
 	"done": "Terminé",
-	"description": "Active le Model Context Protocol (MCP) pour permettre à Roo Code d'utiliser des outils et services supplémentaires depuis des serveurs externes. Cela élargit ce que Roo peut faire pour toi. <0>En savoir plus</0>",
+	"description": "Active le Model Context Protocol (MCP) pour permettre à Apex d'utiliser des outils et services supplémentaires depuis des serveurs externes. Cela élargit ce que Roo peut faire pour toi. <0>En savoir plus</0>",
 	"enableToggle": {
 		"title": "Activer les serveurs MCP",
 		"description": "Active cette option pour que Roo puisse utiliser des outils provenant de serveurs MCP connectés. Cela donne plus de capacités à Roo. Si tu ne comptes pas utiliser ces outils supplémentaires, désactive-la pour réduire les coûts de tokens API."

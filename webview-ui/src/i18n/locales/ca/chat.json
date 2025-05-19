@@ -1,5 +1,5 @@
 {
-	"greeting": "Benvingut a Roo Code",
+	"greeting": "Benvingut a Apex",
 	"task": {
 		"title": "Tasca",
 		"seeMore": "Veure més",
@@ -192,7 +192,7 @@
 	"autoApprove": {
 		"title": "Aprovació automàtica:",
 		"none": "Cap",
-		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament. Configuració més detallada disponible a la <settingsLink>Configuració</settingsLink>."
+		"description": "L'aprovació automàtica permet a Apex realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament. Configuració més detallada disponible a la <settingsLink>Configuració</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Pensant",
@@ -202,8 +202,8 @@
 		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 publicat",
-		"description": "Roo Code 3.17 porta noves funcionalitats potents i millores basades en els teus comentaris.",
+		"title": "🎉 Apex 3.17 publicat",
+		"description": "Apex 3.17 porta noves funcionalitats potents i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
 		"feature1": "<bold>Emmagatzematge en caché implícit per a Gemini</bold>: Les crides a l'API de Gemini ara s'emmagatzemen automàticament en caché, reduint els costos d'API",
 		"feature2": "<bold>Selecció de mode més intel·ligent</bold>: Les definicions de mode ara poden incloure orientació sobre quan s'ha d'utilitzar cada mode, permetent una millor orquestració",
@@ -245,7 +245,7 @@
 	"systemPromptWarning": "ADVERTÈNCIA: S'ha activat una substitució personalitzada d'instruccions del sistema. Això pot trencar greument la funcionalitat i causar un comportament impredictible.",
 	"shellIntegration": {
 		"title": "Advertència d'execució d'ordres",
-		"description": "La teva ordre s'està executant sense la integració de shell del terminal VSCode. Per suprimir aquest advertiment, pots desactivar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de Roo Code</settingsLink> o solucionar problemes d'integració del terminal VSCode utilitzant l'enllaç a continuació.",
+		"description": "La teva ordre s'està executant sense la integració de shell del terminal VSCode. Per suprimir aquest advertiment, pots desactivar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de Apex</settingsLink> o solucionar problemes d'integració del terminal VSCode utilitzant l'enllaç a continuació.",
 		"troubleshooting": "Fes clic aquí per a la documentació d'integració de shell."
 	}
 }

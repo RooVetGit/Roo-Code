@@ -1,6 +1,6 @@
 {
 	"greeting": "Hola, sóc Roo!",
-	"introduction": "<strong>Roo Code és el principal agent de codificació autònom.</strong> Prepara't per arquitectar, codificar, depurar i augmentar la teva productivitat com mai abans. Per continuar, Roo Code necessita una clau API.",
+	"introduction": "<strong>Apex és el principal agent de codificació autònom.</strong> Prepara't per arquitectar, codificar, depurar i augmentar la teva productivitat com mai abans. Per continuar, Apex necessita una clau API.",
 	"notice": "Per començar, aquesta extensió necessita un proveïdor d'API.",
 	"start": "Som-hi!",
 	"chooseProvider": "Tria un proveïdor d'API per començar:",
@@ -16,7 +16,7 @@
 	"startRouter": "Configuració ràpida a través d'un router",
 	"startCustom": "Utilitza la teva pròpia clau API",
 	"telemetry": {
-		"title": "Ajuda a millorar Roo Code",
+		"title": "Ajuda a millorar Apex",
 		"anonymousTelemetry": "Envia dades d'ús i errors anònims per ajudar-nos a corregir errors i millorar l'extensió. No s'envia mai cap codi, text o informació personal.",
 		"changeSettings": "Sempre pots canviar això a la part inferior de la <settingsLink>configuració</settingsLink>",
 		"settings": "configuració",

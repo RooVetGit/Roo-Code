@@ -2,9 +2,9 @@
 
 <b>日本語</b> • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Roo Code への貢献
+# Apex への貢献
 
-Roo Code はコミュニティ主導のプロジェクトであり、すべての貢献を大切にしています。協力をスムーズにするため、[Issue-First](#issue-first-アプローチ)方式を採用しています。これはすべての[Pull Request (PR)](#pull-request-の提出)がまずGitHub Issueに紐付けられる必要があることを意味します。このガイドをよく読んでください。
+Apex はコミュニティ主導のプロジェクトであり、すべての貢献を大切にしています。協力をスムーズにするため、[Issue-First](#issue-first-アプローチ)方式を採用しています。これはすべての[Pull Request (PR)](#pull-request-の提出)がまずGitHub Issueに紐付けられる必要があることを意味します。このガイドをよく読んでください。
 
 ## 目次
 
@@ -43,7 +43,7 @@ Roo Code はコミュニティ主導のプロジェクトであり、すべて�
 
 PRでこれらの領域との関連性に言及してください。
 
-### 3. Roo Code コミュニティに参加する
+### 3. Apex コミュニティに参加する
 
 - **主な方法：** [Discord](https://discord.gg/roocode)に参加し、**Hannes Rudolph (`hrudolph`)**にDMを送る。
 - **代替手段：** 経験豊富なコントリビューターは[GitHub Projects](https://github.com/orgs/RooVetGit/projects/1)を通じて直接参加できます。
@@ -71,7 +71,7 @@ PRでこれらの領域との関連性に言及してください。
 ### 何に取り組むか決める
 
 - 未割り当ての「Good First Issues」を[GitHub Project](https://github.com/orgs/RooVetGit/projects/1)でチェック。
-- ドキュメント関連は[Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs)を参照。
+- ドキュメント関連は[Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs)を参照。
 
 ### バグの報告
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## 法的事項
 
-Pull Requestを提出することで、あなたの貢献がRoo Codeと同じApache 2.0ライセンスの下で提供されることに同意したことになります。
+Pull Requestを提出することで、あなたの貢献がApexと同じApache 2.0ライセンスの下で提供されることに同意したことになります。

@@ -1,6 +1,6 @@
 {
 	"greeting": "Salut, je suis Roo !",
-	"introduction": "<strong>Roo Code est l'agent de codage autonome de premier plan.</strong> Prépare-toi à architecturer, coder, déboguer et à augmenter ta productivité comme jamais auparavant. Pour continuer, Roo Code nécessite une clé API.",
+	"introduction": "<strong>Apex est l'agent de codage autonome de premier plan.</strong> Prépare-toi à architecturer, coder, déboguer et à augmenter ta productivité comme jamais auparavant. Pour continuer, Apex nécessite une clé API.",
 	"notice": "Pour commencer, cette extension a besoin d'un fournisseur d'API.",
 	"start": "C'est parti !",
 	"chooseProvider": "Choisis un fournisseur d'API pour commencer :",
@@ -16,7 +16,7 @@
 	"startRouter": "Configuration rapide via un routeur",
 	"startCustom": "Utiliser ta propre clé API",
 	"telemetry": {
-		"title": "Aide à améliorer Roo Code",
+		"title": "Aide à améliorer Apex",
 		"anonymousTelemetry": "Envoie des données d'utilisation et d'erreurs anonymes pour nous aider à corriger les bugs et améliorer l'extension. Aucun code, texte ou information personnelle n'est jamais envoyé.",
 		"changeSettings": "Tu peux toujours modifier cela en bas des <settingsLink>paramètres</settingsLink>",
 		"settings": "paramètres",

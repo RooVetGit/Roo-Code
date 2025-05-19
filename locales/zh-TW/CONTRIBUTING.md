@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • <b>繁體中文</b>
 
-# 參與 Roo Code 貢獻
+# 參與 Apex 貢獻
 
-Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻。為了簡化協作流程，我們採用 [Issue-First](#issue-first-方式) 原則，這表示所有 [Pull Request (PR)](#提交-pull-request) 必須先關聯至 GitHub Issue。請仔細閱讀本指南。
+Apex 是一個由社群驅動的專案，我們深深重視每一份貢獻。為了簡化協作流程，我們採用 [Issue-First](#issue-first-方式) 原則，這表示所有 [Pull Request (PR)](#提交-pull-request) 必須先關聯至 GitHub Issue。請仔細閱讀本指南。
 
 ## 目錄
 
@@ -43,7 +43,7 @@ Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻�
 
 在 PR 中請提及與這些領域的關聯。
 
-### 3. 加入 Roo Code 社群
+### 3. 加入 Apex 社群
 
 - **主要方式：** 加入我們的 [Discord](https://discord.gg/roocode) 並私訊 **Hannes Rudolph (`hrudolph`)**。
 - **替代方式：** 有經驗的貢獻者可透過 [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1) 直接參與。
@@ -71,7 +71,7 @@ Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻�
 ### 決定要做什麼
 
 - 查看 [GitHub 專案](https://github.com/orgs/RooVetGit/projects/1) 中未分配的「Good First Issues」。
-- 文件相關，請訪問 [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs)。
+- 文件相關，請訪問 [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs)。
 
 ### 回報 Bug
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## 法律聲明
 
-提交貢獻即表示你同意你的貢獻將基於 Apache 2.0 授權條款，與 Roo Code 的授權一致。
+提交貢獻即表示你同意你的貢獻將基於 Apache 2.0 授權條款，與 Apex 的授權一致。

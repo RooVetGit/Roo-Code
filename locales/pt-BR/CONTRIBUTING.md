@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • <b>Português (BR)</b> • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Contribuindo para o Roo Code
+# Contribuindo para o Apex
 
-O Roo Code é um projeto impulsionado pela comunidade e valorizamos muito cada contribuição. Para simplificar a colaboração, operamos com uma abordagem [Issue-First](#abordagem-issue-first), o que significa que todos os [Pull Requests (PRs)](#enviando-um-pull-request) devem primeiro estar vinculados a uma Issue do GitHub. Por favor, leia este guia com atenção.
+O Apex é um projeto impulsionado pela comunidade e valorizamos muito cada contribuição. Para simplificar a colaboração, operamos com uma abordagem [Issue-First](#abordagem-issue-first), o que significa que todos os [Pull Requests (PRs)](#enviando-um-pull-request) devem primeiro estar vinculados a uma Issue do GitHub. Por favor, leia este guia com atenção.
 
 ## Índice
 
@@ -43,7 +43,7 @@ Nosso roadmap orienta a direção do projeto. Alinhe suas contribuições com es
 
 Mencione o alinhamento com estas áreas em seus PRs.
 
-### 3. Junte-se à Comunidade Roo Code
+### 3. Junte-se à Comunidade Apex
 
 - **Principal:** Junte-se ao nosso [Discord](https://discord.gg/roocode) e envie um DM para **Hannes Rudolph (`hrudolph`)**.
 - **Alternativa:** Colaboradores experientes podem participar diretamente via [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1).
@@ -71,7 +71,7 @@ Todas as contribuições devem começar com uma Issue do GitHub.
 ### Decidindo no que Trabalhar
 
 - Confira o [Projeto GitHub](https://github.com/orgs/RooVetGit/projects/1) para "Good First Issues" não atribuídas.
-- Para documentação, visite [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs).
+- Para documentação, visite [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs).
 
 ### Relatando Bugs
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Legal
 
-Ao enviar um pull request, você concorda que suas contribuições serão licenciadas sob a Licença Apache 2.0, consistente com o licenciamento do Roo Code.
+Ao enviar um pull request, você concorda que suas contribuições serão licenciadas sob a Licença Apache 2.0, consistente com o licenciamento do Apex.

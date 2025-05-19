@@ -1,6 +1,6 @@
 {
 	"greeting": "Hallo, ich bin Roo!",
-	"introduction": "<strong>Roo Code ist der führende autonome Coding-Agent.</strong> Mach dich bereit, zu architektieren, zu coden, zu debuggen und deine Produktivität wie nie zuvor zu steigern. Um fortzufahren, benötigt Roo Code einen API-Schlüssel.",
+	"introduction": "<strong>Apex ist der führende autonome Coding-Agent.</strong> Mach dich bereit, zu architektieren, zu coden, zu debuggen und deine Produktivität wie nie zuvor zu steigern. Um fortzufahren, benötigt Apex einen API-Schlüssel.",
 	"notice": "Um loszulegen, benötigt diese Erweiterung einen API-Anbieter.",
 	"start": "Los geht's!",
 	"chooseProvider": "Wähle einen API-Anbieter, um zu beginnen:",
@@ -16,7 +16,7 @@
 	"startRouter": "Express-Einrichtung über einen Router",
 	"startCustom": "Eigenen API-Schlüssel verwenden",
 	"telemetry": {
-		"title": "Hilf, Roo Code zu verbessern",
+		"title": "Hilf, Apex zu verbessern",
 		"anonymousTelemetry": "Sende anonyme Fehler- und Nutzungsdaten, um uns bei der Fehlerbehebung und Verbesserung der Erweiterung zu helfen. Es werden niemals Code, Texte oder persönliche Informationen gesendet.",
 		"changeSettings": "Du kannst dies jederzeit unten in den <settingsLink>Einstellungen</settingsLink> ändern",
 		"settings": "Einstellungen",

@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Contribuire a Roo Code
+# Contribuire a Apex
 
-Roo Code è un progetto guidato dalla community e apprezziamo molto ogni contributo. Per semplificare la collaborazione, operiamo secondo un approccio [Issue-First](#approccio-issue-first), il che significa che tutte le [Pull Request (PR)](#inviare-una-pull-request) devono prima essere collegate a una Issue GitHub. Ti preghiamo di leggere attentamente questa guida.
+Apex è un progetto guidato dalla community e apprezziamo molto ogni contributo. Per semplificare la collaborazione, operiamo secondo un approccio [Issue-First](#approccio-issue-first), il che significa che tutte le [Pull Request (PR)](#inviare-una-pull-request) devono prima essere collegate a una Issue GitHub. Ti preghiamo di leggere attentamente questa guida.
 
 ## Indice
 
@@ -43,7 +43,7 @@ La nostra roadmap guida la direzione del progetto. Allinea i tuoi contributi con
 
 Menziona l'allineamento con queste aree nelle tue PR.
 
-### 3. Unisciti alla community Roo Code
+### 3. Unisciti alla community Apex
 
 - **Principale:** Unisciti al nostro [Discord](https://discord.gg/roocode) e invia un DM a **Hannes Rudolph (`hrudolph`)**.
 - **Alternativa:** I collaboratori esperti possono partecipare direttamente tramite [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1).
@@ -71,7 +71,7 @@ Tutti i contributi devono iniziare con una Issue GitHub.
 ### Decidere su cosa lavorare
 
 - Controlla il [Progetto GitHub](https://github.com/orgs/RooVetGit/projects/1) per "Good First Issues" non assegnate.
-- Per la documentazione, visita [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs).
+- Per la documentazione, visita [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs).
 
 ### Segnalare bug
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Legale
 
-Inviando una pull request, accetti che i tuoi contributi siano concessi in licenza sotto la Licenza Apache 2.0, in linea con la licenza di Roo Code.
+Inviando una pull request, accetti che i tuoi contributi siano concessi in licenza sotto la Licenza Apache 2.0, in linea con la licenza di Apex.

@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • <b>Türkçe</b> • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Roo Code'a Katkıda Bulunma
+# Apex'a Katkıda Bulunma
 
-Roo Code, topluluk odaklı bir projedir ve her katkıyı çok önemsiyoruz. İşbirliğini kolaylaştırmak için [Issue-First](#issue-first-yaklaşımı) yaklaşımıyla çalışıyoruz; bu, tüm [Pull Request'lerin (PR'lar)](#pull-request-gönderme) önce bir GitHub Issue'ya bağlanması gerektiği anlamına gelir. Lütfen bu rehberi dikkatlice incele.
+Apex, topluluk odaklı bir projedir ve her katkıyı çok önemsiyoruz. İşbirliğini kolaylaştırmak için [Issue-First](#issue-first-yaklaşımı) yaklaşımıyla çalışıyoruz; bu, tüm [Pull Request'lerin (PR'lar)](#pull-request-gönderme) önce bir GitHub Issue'ya bağlanması gerektiği anlamına gelir. Lütfen bu rehberi dikkatlice incele.
 
 ## İçindekiler
 
@@ -43,7 +43,7 @@ Yol haritamız projenin yönünü belirler. Katkılarını bu temel hedeflerle u
 
 PR'larında bu alanlarla olan bağlantıyı belirt.
 
-### 3. Roo Code Topluluğuna Katıl
+### 3. Apex Topluluğuna Katıl
 
 - **Ana yöntem:** [Discord](https://discord.gg/roocode)'umuza katıl ve **Hannes Rudolph (`hrudolph`)**'a DM gönder.
 - **Alternatif:** Deneyimli katkı sağlayanlar [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1) üzerinden doğrudan katılabilir.
@@ -71,7 +71,7 @@ Tüm katkılar bir GitHub Issue ile başlamalıdır.
 ### Ne Üzerinde Çalışacağına Karar Verme
 
 - [GitHub Projesi](https://github.com/orgs/RooVetGit/projects/1)'nde atanmamış "Good First Issues" bak.
-- Dokümantasyon için [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs)'u ziyaret et.
+- Dokümantasyon için [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs)'u ziyaret et.
 
 ### Hata veya Sorun Bildirme
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Yasal
 
-Pull request göndererek, katkılarının Roo Code'un lisanslamasıyla tutarlı olarak Apache 2.0 Lisansı altında lisanslanacağını kabul etmiş olursun.
+Pull request göndererek, katkılarının Apex'un lisanslamasıyla tutarlı olarak Apache 2.0 Lisansı altında lisanslanacağını kabul etmiş olursun.

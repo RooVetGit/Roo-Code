@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • <b>Tiếng Việt</b> • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Đóng góp cho Roo Code
+# Đóng góp cho Apex
 
-Roo Code là một dự án do cộng đồng dẫn dắt và chúng mình rất trân trọng mọi đóng góp. Để đơn giản hóa quy trình hợp tác, chúng mình áp dụng cách tiếp cận [Issue-First](#cách-tiếp-cận-issue-first), nghĩa là tất cả [Pull Request (PR)](#gửi-pull-request) phải được liên kết với một GitHub Issue trước. Vui lòng đọc kỹ hướng dẫn này.
+Apex là một dự án do cộng đồng dẫn dắt và chúng mình rất trân trọng mọi đóng góp. Để đơn giản hóa quy trình hợp tác, chúng mình áp dụng cách tiếp cận [Issue-First](#cách-tiếp-cận-issue-first), nghĩa là tất cả [Pull Request (PR)](#gửi-pull-request) phải được liên kết với một GitHub Issue trước. Vui lòng đọc kỹ hướng dẫn này.
 
 ## Mục lục
 
@@ -43,7 +43,7 @@ Lộ trình của chúng mình định hướng dự án. Hãy điều chỉnh �
 
 Đề cập đến sự liên quan với các lĩnh vực này trong PR của bạn.
 
-### 3. Tham gia cộng đồng Roo Code
+### 3. Tham gia cộng đồng Apex
 
 - **Cách chính:** Tham gia [Discord](https://discord.gg/roocode) của chúng mình và nhắn tin trực tiếp cho **Hannes Rudolph (`hrudolph`)**.
 - **Cách thay thế:** Cộng tác viên có kinh nghiệm có thể tham gia trực tiếp qua [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1).
@@ -71,7 +71,7 @@ Mọi đóng góp đều phải bắt đầu bằng một GitHub Issue.
 ### Quyết định việc cần làm
 
 - Xem [Dự án GitHub](https://github.com/orgs/RooVetGit/projects/1) để tìm "Good First Issues" chưa được gán.
-- Về tài liệu, hãy xem [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs).
+- Về tài liệu, hãy xem [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs).
 
 ### Báo cáo lỗi
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Pháp lý
 
-Khi gửi pull request, bạn đồng ý rằng đóng góp của mình sẽ được cấp phép theo Giấy phép Apache 2.0, phù hợp với giấy phép của Roo Code.
+Khi gửi pull request, bạn đồng ý rằng đóng góp của mình sẽ được cấp phép theo Giấy phép Apache 2.0, phù hợp với giấy phép của Apex.

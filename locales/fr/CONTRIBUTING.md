@@ -2,9 +2,9 @@
 
 [日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-# Contribuer à Roo Code
+# Contribuer à Apex
 
-Roo Code est un projet porté par la communauté, et chaque contribution compte beaucoup pour nous. Pour fluidifier la collaboration, nous fonctionnons selon une [approche Issue-First](#approche-issue-first), ce qui signifie que toutes les [Pull Requests (PRs)](#soumettre-une-pull-request) doivent d'abord être liées à un ticket GitHub. Lis attentivement ce guide.
+Apex est un projet porté par la communauté, et chaque contribution compte beaucoup pour nous. Pour fluidifier la collaboration, nous fonctionnons selon une [approche Issue-First](#approche-issue-first), ce qui signifie que toutes les [Pull Requests (PRs)](#soumettre-une-pull-request) doivent d'abord être liées à un ticket GitHub. Lis attentivement ce guide.
 
 ## Table des matières
 
@@ -43,7 +43,7 @@ Notre feuille de route guide la direction du projet. Aligne tes contributions av
 
 Mentionne l'alignement avec ces domaines dans tes PRs.
 
-### 3. Rejoindre la communauté Roo Code
+### 3. Rejoindre la communauté Apex
 
 - **Principal :** Rejoins notre [Discord](https://discord.gg/roocode) et envoie un DM à **Hannes Rudolph (`hrudolph`)**.
 - **Alternative :** Les contributeurs expérimentés peuvent participer directement via [GitHub Projects](https://github.com/orgs/RooVetGit/projects/1).
@@ -71,7 +71,7 @@ Toutes les contributions doivent commencer par un ticket GitHub.
 ### Décider sur quoi travailler
 
 - Consulte le [Projet GitHub](https://github.com/orgs/RooVetGit/projects/1) pour les "Good First Issues" non assignés.
-- Pour la documentation, visite [Roo Code Docs](https://github.com/RooVetGit/Roo-Code-Docs).
+- Pour la documentation, visite [Apex Docs](https://github.com/RooVetGit/Roo-Code-Docs).
 
 ### Signaler des bugs
 
@@ -126,4 +126,4 @@ npm run install:all
 
 ## Légal
 
-En contribuant, tu acceptes que tes contributions soient sous licence Apache 2.0, conformément à la licence de Roo Code.
+En contribuant, tu acceptes que tes contributions soient sous licence Apache 2.0, conformément à la licence de Apex.
