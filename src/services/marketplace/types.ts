@@ -23,6 +23,7 @@ export type MarketplaceItemType = "mode" | "prompt" | "package" | "mcp"
  * Base metadata interface
  */
 export interface BaseMetadata {
+	id?: string
 	name: string
 	description: string
 	version: string
@@ -69,9 +70,10 @@ export interface SubcomponentMetadata extends ComponentMetadata {
 }
 
 /**
- * Represents an individual marketplace item
+ * Represents an individual parsed marketplace item
  */
 export interface MarketplaceItem {
+	id: string
 	name: string
 	description: string
 	type: MarketplaceItemType
@@ -81,7 +83,7 @@ export interface MarketplaceItem {
 	author?: string
 	authorUrl?: string
 	tags?: string[]
-	version?: string
+	version: string
 	binaryUrl?: string
 	binaryHash?: string
 	lastUpdated?: string
@@ -136,7 +138,7 @@ export interface LocalizationOptions {
 
 export interface InstallMarketplaceItemOptions {
 	/**
-	 * Specify the installation target
+	 * Specify the target scope
 	 *
 	 * @default 'project'
 	 */
@@ -145,4 +147,13 @@ export interface InstallMarketplaceItemOptions {
 	 * Parameters provided by the user for configurable marketplace items
 	 */
 	parameters?: Record<string, any>
+}
+
+export interface RemoveInstalledMarketplaceItemOptions {
+	/**
+	 * Specify the target scope
+	 *
+	 * @default 'project'
+	 */
+	target?: "global" | "project"
 }

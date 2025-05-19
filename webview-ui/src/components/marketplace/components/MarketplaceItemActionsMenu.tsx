@@ -1,17 +1,26 @@
 import React, { useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreVertical, ExternalLink, Download } from "lucide-react"
-import { InstallMarketplaceItemOptions, MarketplaceItem } from "../../../../../src/services/marketplace/types"
+import { MoreVertical, ExternalLink, Download, Trash } from "lucide-react"
+import {
+	InstallMarketplaceItemOptions,
+	MarketplaceItem,
+	RemoveInstalledMarketplaceItemOptions,
+} from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { isValidUrl } from "@roo/utils/url"
+import { ItemInstalledMetadata } from "@roo/services/marketplace/InstalledMetadataManager"
 
 interface MarketplaceItemActionsMenuProps {
 	item: MarketplaceItem
+	installed: {
+		project: ItemInstalledMetadata | undefined
+		global: ItemInstalledMetadata | undefined
+	}
 }
 
-export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProps> = ({ item }) => {
+export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProps> = ({ item, installed }) => {
 	const { t } = useAppTranslation()
 
 	const itemSourceUrl = useMemo(() => {
@@ -45,6 +54,14 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 		})
 	}
 
+	const handleRemove = (options?: RemoveInstalledMarketplaceItemOptions) => {
+		vscode.postMessage({
+			type: "removeInstalledMarketplaceItem",
+			mpItem: item,
+			mpInstallOptions: options,
+		})
+	}
+
 	const showInstallButton = true
 
 	return (
@@ -66,7 +83,7 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 
 				{/* Install (Project) */}
 				{showInstallButton && (
-					<DropdownMenuItem onClick={() => handleInstall({ target: "project" })}>
+					<DropdownMenuItem className="" onClick={() => handleInstall({ target: "project" })}>
 						<Download className="mr-2 h-4 w-4" />
 						<span>{t("marketplace:items.card.installProject")}</span>
 					</DropdownMenuItem>
@@ -77,6 +94,22 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 					<DropdownMenuItem onClick={() => handleInstall({ target: "global" })}>
 						<Download className="mr-2 h-4 w-4" />
 						<span>{t("marketplace:items.card.installGlobal")}</span>
+					</DropdownMenuItem>
+				)}
+
+				{/* Remove (Project) */}
+				{installed.project && (
+					<DropdownMenuItem onClick={() => handleRemove({ target: "project" })}>
+						<Trash className="mr-2 h-4 w-4" />
+						<span>{t("marketplace:items.card.removeProject")}</span>
+					</DropdownMenuItem>
+				)}
+
+				{/* Remove (Global) */}
+				{installed.global && (
+					<DropdownMenuItem onClick={() => handleRemove({ target: "global" })}>
+						<Trash className="mr-2 h-4 w-4" />
+						<span>{t("marketplace:items.card.removeGlobal")}</span>
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>

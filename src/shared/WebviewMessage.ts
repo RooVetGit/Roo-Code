@@ -125,18 +125,19 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "repositoryRefreshComplete"
+		| "setHistoryPreviewCollapsed"
+		| "openExternal"
 		| "marketplaceSources"
 		| "fetchMarketplaceItems"
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"
-		| "installMarketplaceItem"
 		| "refreshMarketplaceSource"
-		| "repositoryRefreshComplete"
-		| "openExternal"
-		| "setHistoryPreviewCollapsed"
+		| "installMarketplaceItem"
 		| "installMarketplaceItemWithParameters"
 		| "cancelMarketplaceInstall"
-		| "openMarketplaceInstallSidebarWithConfig" // New message type
+		| "removeInstalledMarketplaceItem"
+		| "openMarketplaceInstallSidebarWithConfig"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

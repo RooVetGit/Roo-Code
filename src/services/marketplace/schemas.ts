@@ -4,9 +4,10 @@ import { z } from "zod"
  * Base metadata schema with common fields
  */
 export const baseMetadataSchema = z.object({
+	id: z.string().optional(),
 	name: z.string().min(1, "Name is required"),
 	description: z.string(),
-	version: z.string().regex(/^\d+\.\d+\.\d+$/, "Version must be in semver format (e.g., 1.0.0)"),
+	version: z.string(),
 	binaryUrl: z.string().url("Binary URL must be a valid URL").optional(),
 	binaryHash: z.string().optional(),
 	tags: z.array(z.string()).optional(),
@@ -125,6 +126,7 @@ export const parameterSchema = z.record(z.string(), z.any())
  * Schema for a marketplace item
  */
 export const marketplaceItemSchema = baseMetadataSchema.extend({
+	id: z.string(),
 	type: marketplaceItemTypeSchema,
 	url: z.string(),
 	repoUrl: z.string(),
@@ -173,5 +175,4 @@ export const marketplaceItemSchema = baseMetadataSchema.extend({
 		})
 		.optional(),
 	parameters: z.record(z.string(), z.any()).optional(),
-	version: z.string().optional(), // Override version to make it optional
 })

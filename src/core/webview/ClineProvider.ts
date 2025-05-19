@@ -74,7 +74,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
-	private marketplaceManager?: MarketplaceManager
+	private marketplaceManager: MarketplaceManager
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -114,6 +114,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			.catch((error) => {
 				this.log(`Failed to initialize MCP Hub: ${error}`)
 			})
+
+		this.marketplaceManager = new MarketplaceManager(this.context)
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -218,6 +220,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this._workspaceTracker = undefined
 		await this.mcpHub?.unregisterClient()
 		this.mcpHub = undefined
+		this.marketplaceManager?.cleanup()
 		this.customModesManager?.dispose()
 		this.log("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
@@ -1226,7 +1229,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
-		const marketplaceItems = this.marketplaceManager?.getCurrentItems() || []
+		const marketplaceItems = this.marketplaceManager.getCurrentItems() || []
+		const marketplaceInstalledMetadata = this.marketplaceManager.IMM.fullMetadata
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
@@ -1235,6 +1239,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			version: this.context.extension?.packageJSON?.version ?? "",
 			marketplaceItems,
 			marketplaceSources: marketplaceSources ?? [],
+			marketplaceInstalledMetadata,
 			apiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,

@@ -17,6 +17,7 @@ import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
 import { RouterModels } from "./api"
+import { FullInstallatedMetadata } from "src/services/marketplace/InstalledMetadataManager"
 
 export type { ApiConfigMeta, ToolProgressStatus }
 
@@ -208,6 +209,7 @@ export type ExtensionState = Pick<
 	settingsImportedAt?: number
 	marketplaceSources?: MarketplaceSource[]
 	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: FullInstallatedMetadata
 	historyPreviewCollapsed?: boolean
 }
 

@@ -16,7 +16,8 @@ export function useStateManager(existingManager?: MarketplaceViewStateManager) {
 					prevState.displayItems !== newState.displayItems ||
 					prevState.filters !== newState.filters ||
 					prevState.sources !== newState.sources ||
-					prevState.refreshingUrls !== newState.refreshingUrls
+					prevState.refreshingUrls !== newState.refreshingUrls ||
+					prevState.installedMetadata !== newState.installedMetadata
 
 				return hasChanged ? newState : prevState
 			})

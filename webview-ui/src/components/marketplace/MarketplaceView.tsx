@@ -318,8 +318,12 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ stateManager }) => {
 										<div className="grid grid-cols-1 gap-4 pb-4">
 											{items.map((item) => (
 												<MarketplaceItemCard
-													key={`${item.repoUrl}-${item.name}`}
+													key={`${item.repoUrl}-${item.id}`}
 													item={item}
+													installed={{
+														project: state.installedMetadata.project[item.id],
+														global: state.installedMetadata.global[item.id],
+													}}
 													filters={state.filters}
 													setFilters={(filters) =>
 														manager.transition({

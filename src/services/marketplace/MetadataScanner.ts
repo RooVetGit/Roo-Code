@@ -241,14 +241,15 @@ export class MetadataScanner {
 		// Always use the original root directory for path calculations
 		const effectiveRootDir = this.originalRootDir || rootDir
 		// Always calculate path relative to the original root directory
-		const fullPath = path.relative(effectiveRootDir, componentDir).replace(/\\/g, "/")
+		const relativePath = path.relative(effectiveRootDir, componentDir).replace(/\\/g, "/")
 		// Don't encode spaces in URL to match test expectations
-		const urlPath = fullPath
+		const urlPath = relativePath
 			.split("/")
 			.map((part) => encodeURIComponent(part))
 			.join("/")
 		// Create the item with the correct path and URL
 		return {
+			id: metadata.id || `${metadata.type}#${relativePath || metadata.name}`,
 			name: metadata.name,
 			description: metadata.description,
 			type: metadata.type,
@@ -259,7 +260,7 @@ export class MetadataScanner {
 			url: `${repoUrl}/tree/main/${urlPath}`,
 			repoUrl,
 			sourceName,
-			path: fullPath,
+			path: relativePath,
 			lastUpdated: await this.getLastModifiedDate(componentDir),
 			items: [], // Initialize empty items array for all components
 			author: metadata.author,

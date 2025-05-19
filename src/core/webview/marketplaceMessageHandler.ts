@@ -24,10 +24,83 @@ export async function handleMarketplaceMessages(
 		await provider.contextProxy.setValue(key, value)
 
 	switch (message.type) {
-		case "webviewDidLaunch": {
-			// For webviewDidLaunch, we don't do anything - marketplace items will be loaded by explicit fetchMarketplaceItems
+		case "openExternal": {
+			if (message.url) {
+				try {
+					vscode.env.openExternal(vscode.Uri.parse(message.url))
+				} catch (error) {
+					console.error(
+						`Marketplace: Failed to open URL: ${error instanceof Error ? error.message : String(error)}`,
+					)
+					vscode.window.showErrorMessage(
+						`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			} else {
+				console.error("Marketplace: openExternal called without a URL")
+			}
 			return true
 		}
+
+		case "marketplaceSources": {
+			if (message.sources) {
+				// Enforce maximum of 10 sources
+				const MAX_SOURCES = 10
+				let updatedSources: MarketplaceSource[]
+
+				if (message.sources.length > MAX_SOURCES) {
+					// Truncate to maximum allowed and show warning
+					updatedSources = message.sources.slice(0, MAX_SOURCES)
+					vscode.window.showWarningMessage(
+						`Maximum of ${MAX_SOURCES} marketplace sources allowed. Additional sources have been removed.`,
+					)
+				} else {
+					updatedSources = message.sources
+				}
+
+				// Validate sources using the validation utility
+				const validationErrors = validateSources(updatedSources)
+
+				// Filter out invalid sources
+				if (validationErrors.length > 0) {
+					// Create a map of invalid indices
+					const invalidIndices = new Set<number>()
+					validationErrors.forEach((error: ValidationError) => {
+						// Extract index from error message (Source #X: ...)
+						const match = error.message.match(/Source #(\d+):/)
+						if (match && match[1]) {
+							const index = parseInt(match[1], 10) - 1 // Convert to 0-based index
+							if (index >= 0 && index < updatedSources.length) {
+								invalidIndices.add(index)
+							}
+						}
+					})
+
+					// Filter out invalid sources
+					updatedSources = updatedSources.filter((_, index) => !invalidIndices.has(index))
+
+					// Show validation errors
+					const errorMessage = `Marketplace sources validation failed:\n${validationErrors.map((e: ValidationError) => e.message).join("\n")}`
+					console.error(errorMessage)
+					vscode.window.showErrorMessage(errorMessage)
+				}
+
+				// Update the global state with the validated sources
+				await updateGlobalState("marketplaceSources", updatedSources)
+
+				// Clean up cache directories for repositories that are no longer in the sources list
+				try {
+					await marketplaceManager.cleanupCacheDirectories(updatedSources)
+				} catch (error) {
+					console.error("Marketplace: Error during cache cleanup:", error)
+				}
+
+				// Update the webview with the new state
+				await provider.postStateToWebview()
+			}
+			return true
+		}
+
 		case "fetchMarketplaceItems": {
 			// Prevent multiple simultaneous fetches
 			if (marketplaceManager.isFetching) {
@@ -116,81 +189,6 @@ export async function handleMarketplaceMessages(
 			}
 			return true
 		}
-		case "marketplaceSources": {
-			if (message.sources) {
-				// Enforce maximum of 10 sources
-				const MAX_SOURCES = 10
-				let updatedSources: MarketplaceSource[]
-
-				if (message.sources.length > MAX_SOURCES) {
-					// Truncate to maximum allowed and show warning
-					updatedSources = message.sources.slice(0, MAX_SOURCES)
-					vscode.window.showWarningMessage(
-						`Maximum of ${MAX_SOURCES} marketplace sources allowed. Additional sources have been removed.`,
-					)
-				} else {
-					updatedSources = message.sources
-				}
-
-				// Validate sources using the validation utility
-				const validationErrors = validateSources(updatedSources)
-
-				// Filter out invalid sources
-				if (validationErrors.length > 0) {
-					// Create a map of invalid indices
-					const invalidIndices = new Set<number>()
-					validationErrors.forEach((error: ValidationError) => {
-						// Extract index from error message (Source #X: ...)
-						const match = error.message.match(/Source #(\d+):/)
-						if (match && match[1]) {
-							const index = parseInt(match[1], 10) - 1 // Convert to 0-based index
-							if (index >= 0 && index < updatedSources.length) {
-								invalidIndices.add(index)
-							}
-						}
-					})
-
-					// Filter out invalid sources
-					updatedSources = updatedSources.filter((_, index) => !invalidIndices.has(index))
-
-					// Show validation errors
-					const errorMessage = `Marketplace sources validation failed:\n${validationErrors.map((e: ValidationError) => e.message).join("\n")}`
-					console.error(errorMessage)
-					vscode.window.showErrorMessage(errorMessage)
-				}
-
-				// Update the global state with the validated sources
-				await updateGlobalState("marketplaceSources", updatedSources)
-
-				// Clean up cache directories for repositories that are no longer in the sources list
-				try {
-					await marketplaceManager.cleanupCacheDirectories(updatedSources)
-				} catch (error) {
-					console.error("Marketplace: Error during cache cleanup:", error)
-				}
-
-				// Update the webview with the new state
-				await provider.postStateToWebview()
-			}
-			return true
-		}
-		case "openExternal": {
-			if (message.url) {
-				try {
-					vscode.env.openExternal(vscode.Uri.parse(message.url))
-				} catch (error) {
-					console.error(
-						`Marketplace: Failed to open URL: ${error instanceof Error ? error.message : String(error)}`,
-					)
-					vscode.window.showErrorMessage(
-						`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
-			} else {
-				console.error("Marketplace: openExternal called without a URL")
-			}
-			return true
-		}
 
 		case "filterMarketplaceItems": {
 			if (message.filters) {
@@ -209,47 +207,6 @@ export async function handleMarketplaceMessages(
 			}
 			return true
 		}
-
-		case "installMarketplaceItem": {
-			if (message.mpItem) {
-				try {
-					await marketplaceManager.installMarketplaceItem(message.mpItem, message.mpInstallOptions)
-				} catch (error) {
-					vscode.window.showErrorMessage(
-						`Failed to install item "${message.mpItem.name}":\n${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
-			} else {
-				console.error("Marketplace: installMarketplaceItem called without `mpItem`")
-			}
-			return true
-		}
-		case "installMarketplaceItemWithParameters":
-			if (message.payload) {
-				const result = installMarketplaceItemWithParametersPayloadSchema.safeParse(message.payload)
-
-				if (result.success) {
-					const { item, parameters } = result.data
-
-					try {
-						await marketplaceManager.installMarketplaceItem(item, { parameters })
-					} catch (error) {
-						console.error(`Error submitting marketplace parameters: ${error}`)
-						vscode.window.showErrorMessage(
-							`Failed to install item "${item.name}":\n${error instanceof Error ? error.message : String(error)}`,
-						)
-					}
-				} else {
-					console.error("Invalid payload for installMarketplaceItemWithParameters message:", message.payload)
-					vscode.window.showErrorMessage(
-						'Invalid "payload" received for installation: item or parameters missing.',
-					)
-				}
-			}
-			return true
-		case "cancelMarketplaceInstall":
-			vscode.window.showInformationMessage("Marketplace installation cancelled.")
-			return true
 
 		case "refreshMarketplaceSource": {
 			if (message.url) {
@@ -294,6 +251,68 @@ export async function handleMarketplaceMessages(
 						`Failed to refresh source: ${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
+			}
+			return true
+		}
+
+		case "installMarketplaceItem": {
+			if (message.mpItem) {
+				try {
+					await marketplaceManager
+						.installMarketplaceItem(message.mpItem, message.mpInstallOptions)
+						.then(async (r) => r === "$COMMIT" && (await provider.postStateToWebview()))
+				} catch (error) {
+					vscode.window.showErrorMessage(
+						`Failed to install item "${message.mpItem.name}":\n${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			} else {
+				console.error("Marketplace: installMarketplaceItem called without `mpItem`")
+			}
+			return true
+		}
+		case "installMarketplaceItemWithParameters":
+			if (message.payload) {
+				const result = installMarketplaceItemWithParametersPayloadSchema.safeParse(message.payload)
+
+				if (result.success) {
+					const { item, parameters } = result.data
+
+					try {
+						await marketplaceManager
+							.installMarketplaceItem(item, { parameters })
+							.then(async (r) => r === "$COMMIT" && (await provider.postStateToWebview()))
+					} catch (error) {
+						console.error(`Error submitting marketplace parameters: ${error}`)
+						vscode.window.showErrorMessage(
+							`Failed to install item "${item.name}":\n${error instanceof Error ? error.message : String(error)}`,
+						)
+					}
+				} else {
+					console.error("Invalid payload for installMarketplaceItemWithParameters message:", message.payload)
+					vscode.window.showErrorMessage(
+						'Invalid "payload" received for installation: item or parameters missing.',
+					)
+				}
+			}
+			return true
+		case "cancelMarketplaceInstall": {
+			vscode.window.showInformationMessage("Marketplace installation cancelled.")
+			return true
+		}
+		case "removeInstalledMarketplaceItem": {
+			if (message.mpItem) {
+				try {
+					await marketplaceManager
+						.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
+						.then(async (r) => r === "$COMMIT" && (await provider.postStateToWebview()))
+				} catch (error) {
+					vscode.window.showErrorMessage(
+						`Failed to remove item "${message.mpItem.name}":\n${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			} else {
+				console.error("Marketplace: removeInstalledMarketplaceItem called without `mpItem`")
 			}
 			return true
 		}

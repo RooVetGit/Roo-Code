@@ -41,15 +41,19 @@ describe("MarketplaceManager", () => {
 		it("should correctly filter items by search term", () => {
 			const items: MarketplaceItem[] = [
 				{
+					id: "test-item-1",
 					name: "Test Item 1",
 					description: "First test item",
+					version: "zxc",
 					type: "mode",
 					url: "test1",
 					repoUrl: "test1",
 				},
 				{
+					id: "another-item",
 					name: "Another Item",
 					description: "Second item",
+					version: "zxc",
 					type: "mode",
 					url: "test2",
 					repoUrl: "test2",
@@ -65,15 +69,19 @@ describe("MarketplaceManager", () => {
 		it("should correctly filter items by type", () => {
 			const items: MarketplaceItem[] = [
 				{
+					id: "mode-item",
 					name: "Mode Item",
 					description: "A mode",
+					version: "zxc",
 					type: "mode",
 					url: "test1",
 					repoUrl: "test1",
 				},
 				{
+					id: "server-item",
 					name: "Server Item",
 					description: "A server",
+					version: "zxc",
 					type: "mcp",
 					url: "test2",
 					repoUrl: "test2",
@@ -89,15 +97,19 @@ describe("MarketplaceManager", () => {
 		it("should preserve original items when filtering", () => {
 			const items: MarketplaceItem[] = [
 				{
+					id: "test-item-1",
 					name: "Test Item 1",
 					description: "First test item",
+					version: "zxc",
 					type: "mode",
 					url: "test1",
 					repoUrl: "test1",
 				},
 				{
+					id: "another-item",
 					name: "Another Item",
 					description: "Second item",
+					version: "zxc",
 					type: "mode",
 					url: "test2",
 					repoUrl: "test2",
@@ -125,8 +137,10 @@ describe("MarketplaceManager", () => {
 		test("should include package with MCP server subcomponent when filtering by type 'mcp'", () => {
 			const items: MarketplaceItem[] = [
 				{
+					id: "data-platform-package",
 					name: "Data Platform Package",
 					description: "A package containing MCP servers",
+					version: "zxc",
 					type: "package" as MarketplaceItemType,
 					url: "test/package",
 					repoUrl: "https://example.com",
@@ -144,8 +158,10 @@ describe("MarketplaceManager", () => {
 					],
 				},
 				{
+					id: "standalone-server",
 					name: "Standalone Server",
 					description: "A standalone MCP server",
+					version: "zxc",
 					type: "mcp" as MarketplaceItemType,
 					url: "test/server",
 					repoUrl: "https://example.com",
@@ -168,8 +184,10 @@ describe("MarketplaceManager", () => {
 		test("should include package when filtering by subcomponent type", () => {
 			const items: MarketplaceItem[] = [
 				{
+					id: "data-platform-package",
 					name: "Data Platform Package",
 					description: "A package containing MCP servers",
+					version: "zxc",
 					type: "package" as MarketplaceItemType,
 					url: "test/package",
 					repoUrl: "https://example.com",
@@ -200,8 +218,10 @@ describe("MarketplaceManager", () => {
 			// Create test items
 			typeFilterTestItems = [
 				{
+					id: "test-package",
 					name: "Test Package",
 					description: "A test package",
+					version: "zxc",
 					type: "package",
 					url: "test/package",
 					repoUrl: "https://example.com",
@@ -229,8 +249,10 @@ describe("MarketplaceManager", () => {
 					],
 				},
 				{
+					id: "test-mode",
 					name: "Test Mode",
 					description: "A standalone test mode",
+					version: "zxc",
 					type: "mode",
 					url: "test/standalone-mode",
 					repoUrl: "https://example.com",
@@ -257,8 +279,10 @@ describe("MarketplaceManager", () => {
 		test("should not include package when filtering by type with no matching subcomponents", () => {
 			// Create a package with no matching subcomponents
 			const noMatchPackage: MarketplaceItem = {
+				id: "no-match-package",
 				name: "No Match Package",
 				description: "A package with no matching subcomponents",
+				version: "zxc",
 				type: "package",
 				url: "test/no-match",
 				repoUrl: "https://example.com",
@@ -286,8 +310,10 @@ describe("MarketplaceManager", () => {
 		test("should handle package with no subcomponents", () => {
 			// Create a package with no subcomponents
 			const noSubcomponentsPackage: MarketplaceItem = {
+				id: "no-subcomponents-package",
 				name: "No Subcomponents Package",
 				description: "A package with no subcomponents",
+				version: "zxc",
 				type: "package",
 				url: "test/no-subcomponents",
 				repoUrl: "https://example.com",
@@ -307,8 +333,10 @@ describe("MarketplaceManager", () => {
 				// Create test items
 				consistencyTestItems = [
 					{
+						id: "test-package",
 						name: "Test Package",
 						description: "A test package",
+						version: "zxc",
 						type: "package",
 						url: "test/package",
 						repoUrl: "https://example.com",
@@ -369,6 +397,7 @@ describe("MarketplaceManager", () => {
 	describe("sortItems with subcomponents", () => {
 		const testItems: MarketplaceItem[] = [
 			{
+				id: "b-package",
 				name: "B Package",
 				description: "Package B",
 				type: "package",
@@ -401,6 +430,7 @@ describe("MarketplaceManager", () => {
 				],
 			},
 			{
+				id: "a-package",
 				name: "A Package",
 				description: "Package A",
 				type: "package",
@@ -447,6 +477,7 @@ describe("MarketplaceManager", () => {
 			const itemsWithEmpty = [
 				...testItems,
 				{
+					id: "c-package",
 					name: "C Package",
 					description: "Package C",
 					type: "package" as const,
@@ -466,6 +497,7 @@ describe("MarketplaceManager", () => {
 		it("should return all subcomponents with match info", () => {
 			const testItems: MarketplaceItem[] = [
 				{
+					id: "data-platform-package",
 					name: "Data Platform Package",
 					description: "A test platform",
 					type: "package",
@@ -561,6 +593,7 @@ describe("Source Attribution", () => {
 					metadata: { name: "test", description: "test", version: "1.0.0" },
 					items: [
 						{
+							id: "item-1",
 							name: "Item 1",
 							type: "mode",
 							description: "Test item",

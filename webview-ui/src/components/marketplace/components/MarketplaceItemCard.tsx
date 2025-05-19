@@ -8,9 +8,14 @@ import { ViewState } from "../MarketplaceViewStateManager"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { MarketplaceItemActionsMenu } from "./MarketplaceItemActionsMenu"
 import { isValidUrl } from "@roo/utils/url"
+import { ItemInstalledMetadata } from "@roo/services/marketplace/InstalledMetadataManager"
 
 interface MarketplaceItemCardProps {
 	item: MarketplaceItem
+	installed: {
+		project: ItemInstalledMetadata | undefined
+		global: ItemInstalledMetadata | undefined
+	}
 	filters: ViewState["filters"]
 	setFilters: (filters: Partial<ViewState["filters"]>) => void
 	activeTab: ViewState["activeTab"]
@@ -19,6 +24,7 @@ interface MarketplaceItemCardProps {
 
 export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 	item,
+	installed,
 	filters,
 	setFilters,
 	activeTab,
@@ -68,7 +74,14 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 		<div className="border border-vscode-panel-border rounded-md p-4 bg-vscode-panel-background">
 			<div className="flex justify-between items-start">
 				<div>
-					<h3 className="text-lg font-semibold text-vscode-foreground">{item.name}</h3>
+					<h3
+						className={
+							"text-lg font-semibold text-vscode-foreground" +
+							// Example currently highlights installed item
+							(installed.project || installed.global ? " bg-amber-300" : "")
+						}>
+						{item.name}
+					</h3>
 					{item.authorUrl && isValidUrl(item.authorUrl) ? (
 						<p className="text-sm text-vscode-descriptionForeground">
 							{item.author ? (
@@ -163,7 +176,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 					)}
 				</div>
 
-				<MarketplaceItemActionsMenu item={item} />
+				<MarketplaceItemActionsMenu item={item} installed={installed} />
 			</div>
 
 			{item.type === "package" && (

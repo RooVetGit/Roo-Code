@@ -57,6 +57,8 @@
 			"from": "from {{source}}",
 			"installProject": "Install (Project)",
 			"installGlobal": "Install (Global)",
+			"removeProject": "Remove (Project)",
+			"removeGlobal": "Remove (Global)",
 			"viewSource": "View",
 			"viewOnSource": "View on {{source}}"
 		}

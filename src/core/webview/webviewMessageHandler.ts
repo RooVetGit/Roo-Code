@@ -43,14 +43,15 @@ import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-
 import { getModels } from "../../api/providers/fetchers/cache"
 
 const marketplaceMessages = new Set([
-	"marketplaceSources",
 	"openExternal",
+	"marketplaceSources",
 	"fetchMarketplaceItems",
+	"filterMarketplaceItems",
+	"refreshMarketplaceSource",
 	"installMarketplaceItem",
 	"installMarketplaceItemWithParameters",
 	"cancelMarketplaceInstall",
-	"refreshMarketplaceSource",
-	"filterMarketplaceItems",
+	"removeInstalledMarketplaceItem",
 ])
 
 export const webviewMessageHandler = async (

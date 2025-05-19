@@ -15,6 +15,7 @@ import { MarketplaceItem, MarketplaceSource, MatchInfo } from "../../../../src/s
 import { vscode } from "../../utils/vscode"
 import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
 import { DEFAULT_MARKETPLACE_SOURCE } from "../../../../src/services/marketplace/constants"
+import { FullInstallatedMetadata } from "../../../../src/services/marketplace/InstalledMetadataManager"
 
 export interface ViewState {
 	allItems: MarketplaceItem[]
@@ -23,6 +24,7 @@ export interface ViewState {
 	activeTab: "browse" | "sources"
 	refreshingUrls: string[]
 	sources: MarketplaceSource[]
+	installedMetadata: FullInstallatedMetadata
 	filters: {
 		type: string
 		search: string
@@ -32,6 +34,12 @@ export interface ViewState {
 		by: "name" | "author" | "lastUpdated"
 		order: "asc" | "desc"
 	}
+}
+
+// Define a default empty metadata structure
+const defaultInstalledMetadata: FullInstallatedMetadata = {
+	project: {},
+	global: {},
 }
 
 type TransitionPayloads = {
@@ -79,6 +87,7 @@ export class MarketplaceViewStateManager {
 			activeTab: "browse",
 			refreshingUrls: [],
 			sources: [DEFAULT_MARKETPLACE_SOURCE],
+			installedMetadata: defaultInstalledMetadata,
 			filters: {
 				type: "",
 				search: "",
@@ -139,6 +148,7 @@ export class MarketplaceViewStateManager {
 		const displayItems = this.state.displayItems?.length ? [...this.state.displayItems] : this.state.displayItems
 		const refreshingUrls = this.state.refreshingUrls.length ? [...this.state.refreshingUrls] : []
 		const tags = this.state.filters.tags.length ? [...this.state.filters.tags] : []
+		const installedMetadata = this.state.installedMetadata
 
 		// Create minimal new state object
 		return {
@@ -147,6 +157,7 @@ export class MarketplaceViewStateManager {
 			displayItems,
 			refreshingUrls,
 			sources: this.state.sources.length ? [...this.state.sources] : [DEFAULT_MARKETPLACE_SOURCE],
+			installedMetadata,
 			filters: {
 				...this.state.filters,
 				tags,
@@ -166,13 +177,13 @@ export class MarketplaceViewStateManager {
 			// This is used during timeout handling to prevent disrupting the user
 			this.stateChangeHandlers.forEach((handler) => {
 				// Store the current active tab
-				const currentTab = newState.activeTab;
+				const currentTab = newState.activeTab
 
 				// Create a state update that won't change the active tab
 				const safeState = {
 					...newState,
 					// Don't change these properties to avoid UI disruption
-					activeTab: currentTab
+					activeTab: currentTab,
 				}
 				handler(safeState)
 			})
@@ -251,7 +262,7 @@ export class MarketplaceViewStateManager {
 							// Only update the isFetching status without affecting other UI elements
 							return {
 								...state,
-								isFetching: false
+								isFetching: false,
 							}
 						}
 
@@ -589,17 +600,28 @@ export class MarketplaceViewStateManager {
 			}
 
 			// Update sources if present
-			if (message.state.sources || message.state.marketplaceSources) {
-				const sources = message.state.marketplaceSources || message.state.sources
+			const sources = message.state.marketplaceSources || message.state.sources
+			if (sources) {
 				this.state = {
 					...this.state,
-					sources: sources?.length > 0 ? [...sources] : [DEFAULT_MARKETPLACE_SOURCE],
+					sources: sources.length > 0 ? [...sources] : [DEFAULT_MARKETPLACE_SOURCE],
 				}
-				this.notifyStateChange()
+				// Don't notify yet, combine with other state updates below
+			}
+
+			// Update installedMetadata if present
+			const installedMetadata = message.state.marketplaceInstalledMetadata
+			if (installedMetadata) {
+				this.state = {
+					...this.state,
+					installedMetadata,
+				}
+				// Don't notify yet
 			}
 
 			// Handle state updates for marketplace items
-			if (message.state.marketplaceItems !== undefined) {
+			const marketplaceItems = message.state.marketplaceItems
+			if (marketplaceItems !== undefined) {
 				const newItems = message.state.marketplaceItems
 				const currentItems = this.state.allItems || []
 				const hasNewItems = newItems.length > 0
@@ -618,16 +640,17 @@ export class MarketplaceViewStateManager {
 					allItems: sortedItems,
 					displayItems: newDisplayItems,
 				}
-
-				// Only notify with full state update if we're in the browse tab
-				// or if this is the first time we're getting items
-				if (isOnBrowseTab || !hasCurrentItems) {
-					this.notifyStateChange()
-				} else {
-					// If we're not in the browse tab, update state but don't force a tab switch
-					this.notifyStateChange(true) // preserve tab
-				}
+				// Notification is handled below after all state parts are processed
 			}
+
+			// Notify state change once after processing all parts (sources, metadata, items)
+			// This prevents multiple redraws for a single 'state' message
+			// Determine if notification should preserve tab based on item update logic
+			const isOnBrowseTab = this.state.activeTab === "browse"
+			const hasCurrentItems = (this.state.allItems || []).length > 0
+			const preserveTab = !isOnBrowseTab && hasCurrentItems && marketplaceItems !== undefined
+
+			this.notifyStateChange(preserveTab)
 		}
 
 		// Handle repository refresh completion
