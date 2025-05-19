@@ -1,15 +1,15 @@
 {
 	"title": "MCP Servers",
 	"done": "Done",
-	"description": "Enable the Model Context Protocol (MCP) to let Roo Code use extra tools and services from external servers. This expands what Roo can do for you. <0>Learn More</0>",
+	"description": "Enable the Model Context Protocol (MCP) to let Apex Code use extra tools and services from external servers. This expands what Apex can do for you. <0>Learn More</0>",
 	"enableToggle": {
 		"title": "Enable MCP Servers",
-		"description": "Turn this ON to let Roo use tools from connected MCP servers. This gives Roo more capabilities. If you don't plan to use these extra tools, turn it OFF to help reduce API token costs."
+		"description": "Turn this ON to let Apex use tools from connected MCP servers. This gives Apex more capabilities. If you don't plan to use these extra tools, turn it OFF to help reduce API token costs."
 	},
 	"enableServerCreation": {
 		"title": "Enable MCP Server Creation",
-		"description": "Enable this to have Roo help you build <1>new</1> custom MCP servers. <0>Learn about server creation</0>",
-		"hint": "Hint: To reduce API token costs, disable this setting when you are not actively asking Roo to create a new MCP server."
+		"description": "Enable this to have Apex help you build <1>new</1> custom MCP servers. <0>Learn about server creation</0>",
+		"hint": "Hint: To reduce API token costs, disable this setting when you are not actively asking Apex to create a new MCP server."
 	},
 	"editGlobalMCP": "Edit Global MCP",
 	"editProjectMCP": "Edit Project MCP",

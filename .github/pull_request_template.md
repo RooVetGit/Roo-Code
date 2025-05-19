@@ -1,5 +1,5 @@
 <!--
-Thank you for contributing to Roo Code!
+Thank you for contributing to Apex!
 
 Before submitting your PR, please ensure:
 - It's linked to an approved GitHub Issue.

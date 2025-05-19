@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "Apex Code",
 		"description": "A whole dev team of AI agents in your editor."
 	},
 	"number_format": {
@@ -88,7 +88,7 @@
 		"enter_valid_path": "Please enter a valid path"
 	},
 	"input": {
-		"task_prompt": "What should Roo do?",
+		"task_prompt": "What should Apex do?",
 		"task_placeholder": "Type your task here"
 	}
 }

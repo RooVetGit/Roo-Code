@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: App Version
-      description: What version of Roo Code are you using? (e.g., v3.3.1)
+      description: What version of Apex are you using? (e.g., v3.3.1)
     validations:
       required: true
 

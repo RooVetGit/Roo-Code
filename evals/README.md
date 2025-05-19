@@ -1,10 +1,10 @@
-# Run Roo Code Evals
+# Run Apex Evals
 
 ## Get Started
 
 NOTE: This is MacOS only for now!
 
-Clone the Roo Code repo:
+Clone the Apex repo:
 
 ```sh
 git clone https://github.com/RooVetGit/Roo-Code.git

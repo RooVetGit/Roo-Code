@@ -303,8 +303,7 @@ export function NewRun() {
 										<div className="flex items-center gap-1 p-2 border-b">
 											<CircleCheck className="size-4 text-ring" />
 											<div className="text-sm">
-												Imported valid Roo Code settings. Showing differences from default
-												settings.
+												Imported valid Apex settings. Showing differences from default settings.
 											</div>
 										</div>
 										<SettingsDiff defaultSettings={rooCodeDefaults} customSettings={settings} />
