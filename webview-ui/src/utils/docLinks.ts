@@ -9,6 +9,6 @@ export function buildDocLink(path: string, _campaign: string): string {
 	// Remove any leading slash from path
 	const cleanPath = path.replace(/^\//, "")
 	const [hash] = cleanPath.split("#")
-	const baseUrl = `opensourceful.com`
+	const baseUrl = `https://opensourceful.com`
 	return hash ? `${baseUrl}#${hash}` : baseUrl
 }
