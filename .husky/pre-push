@@ -5,6 +5,9 @@ if [ "$branch" = "main" ]; then
   exit 1
 fi
 
+# Ensure PATH includes directories for npm.cmd
+export PATH="/c/Users/ldomi/AppData/Local/fnm_multishells/15824_1747670337570:/c/Users/ldomi/AppData/Local/fnm_multishells/36800_1747670337418:$PATH"
+
 # Detect if running on Windows and use npm.cmd, otherwise use npm
 if [ "$OS" = "Windows_NT" ]; then
   npm_cmd="npm.cmd"
