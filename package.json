@@ -14,7 +14,7 @@
 		"node": "20.18.1"
 	},
 	"author": {
-		"name": "Roo Code"
+		"name": "Apex"
 	},
 	"repository": {
 		"type": "git",
@@ -42,8 +42,7 @@
 		"sonnet",
 		"ai",
 		"llama",
-		"roo code",
-		"roocode"
+		"Apex"
 	],
 	"activationEvents": [
 		"onLanguage",

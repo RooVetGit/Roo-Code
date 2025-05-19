@@ -130,47 +130,47 @@
 		"current": "Current"
 	},
 	"instructions": {
-		"wantsToFetch": "Seawolf wants to fetch detailed instructions to assist with the current task"
+		"wantsToFetch": "Apex wants to fetch detailed instructions to assist with the current task"
 	},
 	"fileOperations": {
-		"wantsToRead": "Seawolf wants to read this file:",
-		"wantsToReadOutsideWorkspace": "Seawolf wants to read this file outside of the workspace:",
-		"didRead": "Seawolf read this file:",
-		"wantsToEdit": "Seawolf wants to edit this file:",
-		"wantsToEditOutsideWorkspace": "Seawolf wants to edit this file outside of the workspace:",
-		"wantsToCreate": "Seawolf wants to create a new file:",
-		"wantsToSearchReplace": "Seawolf wants to search and replace in this file:",
-		"didSearchReplace": "Seawolf performed search and replace on this file:",
-		"wantsToInsert": "Seawolf wants to insert content into this file:",
-		"wantsToInsertWithLineNumber": "Seawolf wants to insert content into this file at line {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Seawolf wants to append content to the end of this file:"
+		"wantsToRead": "Apex wants to read this file:",
+		"wantsToReadOutsideWorkspace": "Apex wants to read this file outside of the workspace:",
+		"didRead": "Apex read this file:",
+		"wantsToEdit": "Apex wants to edit this file:",
+		"wantsToEditOutsideWorkspace": "Apex wants to edit this file outside of the workspace:",
+		"wantsToCreate": "Apex wants to create a new file:",
+		"wantsToSearchReplace": "Apex wants to search and replace in this file:",
+		"didSearchReplace": "Apex performed search and replace on this file:",
+		"wantsToInsert": "Apex wants to insert content into this file:",
+		"wantsToInsertWithLineNumber": "Apex wants to insert content into this file at line {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Apex wants to append content to the end of this file:"
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "Seawolf wants to view the top level files in this directory:",
-		"didViewTopLevel": "Seawolf viewed the top level files in this directory:",
-		"wantsToViewRecursive": "Seawolf wants to recursively view all files in this directory:",
-		"didViewRecursive": "Seawolf recursively viewed all files in this directory:",
-		"wantsToViewDefinitions": "Seawolf wants to view source code definition names used in this directory:",
-		"didViewDefinitions": "Seawolf viewed source code definition names used in this directory:",
-		"wantsToSearch": "Seawolf wants to search this directory for <code>{{regex}}</code>:",
-		"didSearch": "Seawolf searched this directory for <code>{{regex}}</code>:"
+		"wantsToViewTopLevel": "Apex wants to view the top level files in this directory:",
+		"didViewTopLevel": "Apex viewed the top level files in this directory:",
+		"wantsToViewRecursive": "Apex wants to recursively view all files in this directory:",
+		"didViewRecursive": "Apex recursively viewed all files in this directory:",
+		"wantsToViewDefinitions": "Apex wants to view source code definition names used in this directory:",
+		"didViewDefinitions": "Apex viewed source code definition names used in this directory:",
+		"wantsToSearch": "Apex wants to search this directory for <code>{{regex}}</code>:",
+		"didSearch": "Apex searched this directory for <code>{{regex}}</code>:"
 	},
 	"commandOutput": "Command Output",
 	"response": "Response",
 	"arguments": "Arguments",
 	"mcp": {
-		"wantsToUseTool": "Seawolf wants to use a tool on the {{serverName}} MCP server:",
-		"wantsToAccessResource": "Seawolf wants to access a resource on the {{serverName}} MCP server:"
+		"wantsToUseTool": "Apex wants to use a tool on the {{serverName}} MCP server:",
+		"wantsToAccessResource": "Apex wants to access a resource on the {{serverName}} MCP server:"
 	},
 	"modes": {
-		"wantsToSwitch": "Seawolf wants to switch to {{mode}} mode",
-		"wantsToSwitchWithReason": "Seawolf wants to switch to {{mode}} mode because: {{reason}}",
-		"didSwitch": "Seawolf switched to {{mode}} mode",
-		"didSwitchWithReason": "Seawolf switched to {{mode}} mode because: {{reason}}"
+		"wantsToSwitch": "Apex wants to switch to {{mode}} mode",
+		"wantsToSwitchWithReason": "Apex wants to switch to {{mode}} mode because: {{reason}}",
+		"didSwitch": "Apex switched to {{mode}} mode",
+		"didSwitchWithReason": "Apex switched to {{mode}} mode because: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Seawolf wants to create a new subtask in {{mode}} mode:",
-		"wantsToFinish": "Seawolf wants to finish this subtask",
+		"wantsToCreate": "Apex wants to create a new subtask in {{mode}} mode:",
+		"wantsToFinish": "Apex wants to finish this subtask",
 		"newTaskContent": "Subtask Instructions",
 		"completionContent": "Subtask Completed",
 		"resultContent": "Subtask Results",
@@ -178,25 +178,25 @@
 		"completionInstructions": "Subtask completed! You can review the results and suggest any corrections or next steps. If everything looks good, confirm to return the result to the parent task."
 	},
 	"questions": {
-		"hasQuestion": "Seawolf has a question:"
+		"hasQuestion": "Apex has a question:"
 	},
 	"taskCompleted": "Task Completed",
 	"error": "Error",
 	"diffError": {
 		"title": "Edit Unsuccessful"
 	},
-	"troubleMessage": "Seawolf is having trouble...",
+	"troubleMessage": "Apex is having trouble...",
 	"powershell": {
 		"issues": "It seems like you're having Windows PowerShell issues, please see this"
 	},
 	"autoApprove": {
 		"title": "Auto-approve:",
 		"none": "None",
-		"description": "Auto-approve allows Seawolf Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
+		"description": "Auto-approve allows Apex to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
 	},
 	"announcement": {
-		"title": "🎉 Seawolf Code 3.17 Released",
-		"description": "Seawolf Code 3.17 brings powerful new features and improvements based on your feedback.",
+		"title": "🎉 Apex 3.17 Released",
+		"description": "Apex 3.17 brings powerful new features and improvements based on your feedback.",
 		"whatsNew": "What's New",
 		"feature1": "<bold>Implicit Caching for Gemini</bold>: Gemini API calls are now automatically cached, reducing API costs",
 		"feature2": "<bold>Smarter Mode Selection</bold>: Mode definitions can now include guidance on when each mode should be used, enabling better orchestration",
@@ -212,7 +212,7 @@
 		"copyToInput": "Copy to input (same as shift + click)"
 	},
 	"browser": {
-		"rooWantsToUse": "Seawolf wants to use the browser:",
+		"rooWantsToUse": "Apex wants to use the browser:",
 		"consoleLogs": "Console Logs",
 		"noNewLogs": "(No new logs)",
 		"screenshot": "Browser screenshot",
@@ -245,7 +245,7 @@
 	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior.",
 	"shellIntegration": {
 		"title": "Command Execution Warning",
-		"description": "Your command is being executed without VSCode terminal shell integration. To suppress this warning you can disable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Seawolf settings</settingsLink> or troubleshoot VSCode terminal integration using the link below.",
+		"description": "Your command is being executed without VSCode terminal shell integration. To suppress this warning you can disable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Apex settings</settingsLink> or troubleshoot VSCode terminal integration using the link below.",
 		"troubleshooting": "Click here for shell integration documentation."
 	}
 }
