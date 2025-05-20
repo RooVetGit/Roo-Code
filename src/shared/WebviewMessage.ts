@@ -130,6 +130,7 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "condenseTaskContext"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
