@@ -64,8 +64,8 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
 	return {
-		"roo-cline.activationCompleted": () => {},
-		"roo-cline.plusButtonClicked": async () => {
+		"roo-otto.activationCompleted": () => {},
+		"roo-otto.plusButtonClicked": async () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
 			if (!visibleProvider) {
@@ -78,7 +78,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			await visibleProvider.postStateToWebview()
 			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
-		"roo-cline.mcpButtonClicked": () => {
+		"roo-otto.mcpButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
 			if (!visibleProvider) {
@@ -89,7 +89,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
-		"roo-cline.promptsButtonClicked": () => {
+		"roo-otto.promptsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
 			if (!visibleProvider) {
@@ -100,13 +100,13 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		"roo-cline.popoutButtonClicked": () => {
+		"roo-otto.popoutButtonClicked": () => {
 			telemetryService.captureTitleButtonClicked("popout")
 
 			return openClineInNewTab({ context, outputChannel })
 		},
-		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.settingsButtonClicked": () => {
+		"roo-otto.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
+		"roo-otto.settingsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
 			if (!visibleProvider) {
@@ -119,7 +119,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			// Also explicitly post the visibility message to trigger scroll reliably
 			visibleProvider.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 		},
-		"roo-cline.historyButtonClicked": () => {
+		"roo-otto.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
 			if (!visibleProvider) {
@@ -130,7 +130,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
-		"roo-cline.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
+		"roo-otto.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
 
 			if (panel) {
@@ -141,20 +141,20 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 				})
 			}
 		},
-		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
-		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
-		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
-		"roo-cline.newTask": handleNewTask,
-		"roo-cline.setCustomStoragePath": async () => {
+		"roo-otto.registerHumanRelayCallback": registerHumanRelayCallback,
+		"roo-otto.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
+		"roo-otto.handleHumanRelayResponse": handleHumanRelayResponse,
+		"roo-otto.newTask": handleNewTask,
+		"roo-otto.setCustomStoragePath": async () => {
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
 			await promptForCustomStoragePath()
 		},
-		"roo-cline.focusInput": async () => {
+		"roo-otto.focusInput": async () => {
 			try {
 				const panel = getPanel()
 
 				if (!panel) {
-					await vscode.commands.executeCommand("workbench.view.extension.roo-cline-ActivityBar")
+					await vscode.commands.executeCommand("workbench.view.extension.roo-otto-ActivityBar")
 				} else if (panel === tabPanel) {
 					panel.reveal(vscode.ViewColumn.Active, false)
 				} else if (panel === sidebarPanel) {

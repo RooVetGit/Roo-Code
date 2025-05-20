@@ -7,7 +7,7 @@ The Roo Code extension exposes an API that can be used by other extensions. To u
 3. Get access to the API with the following code:
 
 ```typescript
-const extension = vscode.extensions.getExtension<RooCodeAPI>("rooveterinaryinc.roo-cline")
+const extension = vscode.extensions.getExtension<RooCodeAPI>("idenworks.roo-otto")
 
 if (!extension?.isActive) {
 	throw new Error("Extension is not activated")
@@ -35,10 +35,10 @@ await api.pressPrimaryButton()
 await api.pressSecondaryButton()
 ```
 
-**NOTE:** To ensure that the `rooveterinaryinc.roo-cline` extension is activated before your extension, add it to the `extensionDependencies` in your `package.json`:
+**NOTE:** To ensure that the `idenworks.roo-otto` extension is activated before your extension, add it to the `extensionDependencies` in your `package.json`:
 
 ```json
-"extensionDependencies": ["rooveterinaryinc.roo-cline"]
+"extensionDependencies": ["idenworks.roo-otto"]
 ```
 
 For detailed information on the available methods and their usage, refer to the `roo-code.d.ts` file.
