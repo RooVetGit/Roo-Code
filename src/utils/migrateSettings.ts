@@ -98,15 +98,11 @@ async function migrateCustomModesToYaml(settingsDir: string, outputChannel: vsco
 			// Write YAML file
 			await fs.writeFile(newYamlPath, yamlContent, "utf-8")
 
-			try {
-				// Delete old JSON file - wrapped in try/catch to handle unlink errors
-				await fs.unlink(oldJsonPath)
-			} catch (unlinkError) {
-				// Just log the error but continue - file migration succeeded
-				outputChannel.appendLine(`Warning: Could not delete old JSON file: ${unlinkError}`)
-			}
-
-			outputChannel.appendLine("Successfully migrated custom_modes.json to YAML format")
+			// Keeping the old JSON file for backward compatibility
+			// This allows users to roll back if needed
+			outputChannel.appendLine(
+				"Successfully migrated custom_modes.json to YAML format (original JSON file preserved for rollback purposes)",
+			)
 		} catch (parseError) {
 			// Handle corrupt JSON file
 			outputChannel.appendLine(

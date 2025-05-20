@@ -167,7 +167,13 @@ describe("Settings Migration", () => {
 
 		// Verify file operations
 		expect(mockWrite).toHaveBeenCalledWith(newCustomModesYaml, expect.any(String), "utf-8")
-		expect(mockUnlink).toHaveBeenCalledWith(legacyCustomModesJson)
+		// We don't delete the original JSON file to allow for rollback
+		expect(mockUnlink).not.toHaveBeenCalled()
+
+		// Verify log message mentions preservation of original file
+		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+			expect.stringContaining("original JSON file preserved for rollback purposes"),
+		)
 	})
 
 	it("should handle corrupt JSON gracefully", async () => {
