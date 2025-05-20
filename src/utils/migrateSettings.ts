@@ -89,7 +89,7 @@ async function migrateCustomModesToYaml(settingsDir: string, outputChannel: vsco
 		const jsonContent = await fs.readFile(oldJsonPath, "utf-8")
 
 		try {
-			// Parse JSON to object
+			// Parse JSON to object (using the yaml library just to be safe/consistent)
 			const customModesData = yaml.parse(jsonContent)
 
 			// Convert to YAML

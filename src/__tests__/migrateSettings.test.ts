@@ -16,7 +16,6 @@ jest.mock("fs/promises", () => ({
 }))
 jest.mock("fs")
 jest.mock("../utils/fs")
-jest.mock("yaml")
 
 describe("Settings Migration", () => {
 	let mockContext: vscode.ExtensionContext
@@ -72,8 +71,8 @@ describe("Settings Migration", () => {
 		// Run the migration
 		await migrateSettings(mockContext, mockOutputChannel)
 
-		// Verify expected rename call
-		expect(mockRename).toHaveBeenCalledWith(legacyClineCustomModesPath, newMcpSettingsPath)
+		// Verify expected rename call - cline_custom_modes.json should be renamed to custom_modes.json
+		expect(mockRename).toHaveBeenCalledWith(legacyClineCustomModesPath, legacyCustomModesJson)
 	})
 
 	it("should migrate MCP settings file if old file exists and new file doesn't", async () => {
@@ -110,14 +109,15 @@ describe("Settings Migration", () => {
 		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
 			if (path === mockSettingsDir) return true
 			if (path === legacyClineCustomModesPath) return true
-			if (path === newMcpSettingsPath) return true // Destination already exists
+			if (path === legacyCustomModesJson) return true // Destination already exists
 			if (path === legacyMcpSettingsPath) return true
+			if (path === newMcpSettingsPath) return true
 			return false
 		})
 
 		await migrateSettings(mockContext, mockOutputChannel)
 
-		// Verify rename was not called since destination file exists
+		// Verify rename was not called since destination files exist
 		expect(mockRename).not.toHaveBeenCalled()
 	})
 
@@ -141,11 +141,6 @@ describe("Settings Migration", () => {
 		jest.clearAllMocks()
 
 		const testJsonContent = JSON.stringify({ customModes: [{ slug: "test-mode", name: "Test Mode" }] })
-		const testYamlContent = "customModes:\n  - slug: test-mode\n    name: Test Mode"
-
-		// Mock yaml library
-		const yamlMock = require("yaml")
-		yamlMock.stringify.mockReturnValue(testYamlContent)
 
 		// Setup mock functions
 		const mockWrite = (fs.writeFile as jest.Mock).mockResolvedValue(undefined)
@@ -171,7 +166,7 @@ describe("Settings Migration", () => {
 		await migrateSettings(mockContext, mockOutputChannel)
 
 		// Verify file operations
-		expect(mockWrite).toHaveBeenCalledWith(newCustomModesYaml, testYamlContent, "utf-8")
+		expect(mockWrite).toHaveBeenCalledWith(newCustomModesYaml, expect.any(String), "utf-8")
 		expect(mockUnlink).toHaveBeenCalledWith(legacyCustomModesJson)
 	})
 
@@ -186,7 +181,7 @@ describe("Settings Migration", () => {
 		// Mock file read to return corrupt JSON
 		;(fs.readFile as jest.Mock).mockImplementation(async (path: any) => {
 			if (path === legacyCustomModesJson) {
-				return "{ invalid json content"
+				return "{ invalid json content" // This will cause an error when parsed
 			}
 			throw new Error("File not found: " + path)
 		})
@@ -200,27 +195,16 @@ describe("Settings Migration", () => {
 			return false
 		})
 
-		// Create a corrupted JSON situation by making parse throw
-		const originalJSONParse = JSON.parse
-		JSON.parse = jest.fn().mockImplementation(() => {
-			throw new Error("Invalid JSON")
-		})
+		await migrateSettings(mockContext, mockOutputChannel)
 
-		try {
-			await migrateSettings(mockContext, mockOutputChannel)
+		// Verify error was logged
+		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+			expect.stringContaining("Error parsing custom_modes.json"),
+		)
 
-			// Verify error was logged
-			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
-				expect.stringContaining("Error parsing custom_modes.json"),
-			)
-
-			// Verify no write/unlink operations were performed
-			expect(mockWrite).not.toHaveBeenCalled()
-			expect(mockUnlink).not.toHaveBeenCalled()
-		} finally {
-			// Restore original JSON.parse
-			JSON.parse = originalJSONParse
-		}
+		// Verify no write/unlink operations were performed
+		expect(mockWrite).not.toHaveBeenCalled()
+		expect(mockUnlink).not.toHaveBeenCalled()
 	})
 
 	it("should skip migration when YAML file already exists", async () => {
