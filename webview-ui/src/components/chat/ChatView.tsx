@@ -585,13 +585,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 					break
 				case "condenseTaskContextResponse":
-					if (!message.text || message.text !== currentTaskItem?.id) {
-						break
+					if (message.text && message.text === currentTaskItem?.id) {
+						if (isCondensing && sendingDisabled) {
+							setSendingDisabled(false)
+						}
+						setIsCondensing(false)
 					}
-					if (isCondensing && sendingDisabled) {
-						setSendingDisabled(false)
-					}
-					setIsCondensing(false)
 					break
 			}
 			// textAreaRef.current is not explicitly required here since React
