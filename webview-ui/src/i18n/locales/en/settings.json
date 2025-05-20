@@ -80,6 +80,18 @@
 			"commandPlaceholder": "Enter command prefix (e.g., 'git ')",
 			"addButton": "Add"
 		},
+		"applyDiff": {
+			"label": "Apply Diff",
+			"description": "Allow automatically applying diffs to files."
+		},
+		"insertContent": {
+			"label": "Insert Content",
+			"description": "Allow automatically inserting content into files."
+		},
+		"searchReplace": {
+			"label": "Search & Replace",
+			"description": "Allow automatically searching and replacing content in files."
+		},
 		"apiRequestLimit": {
 			"title": "Max Requests",
 			"description": "Automatically make this many API requests before asking for approval to continue with the task.",

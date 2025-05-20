@@ -35,6 +35,12 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAlwaysAllowMcp: (value: boolean) => void
 	setAlwaysAllowModeSwitch: (value: boolean) => void
 	setAlwaysAllowSubtasks: (value: boolean) => void
+	alwaysAllowApplyDiff: boolean
+	setAlwaysAllowApplyDiff: (value: boolean) => void
+	alwaysAllowInsertContent: boolean
+	setAlwaysAllowInsertContent: (value: boolean) => void
+	alwaysAllowSearchAndReplace: boolean
+	setAlwaysAllowSearchAndReplace: (value: boolean) => void
 	setBrowserToolEnabled: (value: boolean) => void
 	setShowRooIgnoredFiles: (value: boolean) => void
 	setShowAnnouncement: (value: boolean) => void
@@ -160,6 +166,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		experiments: experimentDefault,
 		enhancementApiConfigId: "",
 		autoApprovalEnabled: false,
+		// alwaysAllowApplyDiff, alwaysAllowInsertContent, alwaysAllowSearchAndReplace
+		// will be handled by separate useState hooks below, not part of the main ExtensionState object directly
 		customModes: [],
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
@@ -184,6 +192,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [openedTabs, setOpenedTabs] = useState<Array<{ label: string; isActive: boolean; path?: string }>>([])
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
 	const [currentCheckpoint, setCurrentCheckpoint] = useState<string>()
+
+	// States for new auto-approval actions, managed separately until shared ExtensionState is updated
+	const [alwaysAllowApplyDiffState, setAlwaysAllowApplyDiff] = useState(false)
+	const [alwaysAllowInsertContentState, setAlwaysAllowInsertContent] = useState(false)
+	const [alwaysAllowSearchAndReplaceState, setAlwaysAllowSearchAndReplace] = useState(false)
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -261,6 +274,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		currentCheckpoint,
 		filePaths,
 		openedTabs,
+		alwaysAllowApplyDiff: alwaysAllowApplyDiffState, // Use the separate state
+		alwaysAllowInsertContent: alwaysAllowInsertContentState, // Use the separate state
+		alwaysAllowSearchAndReplace: alwaysAllowSearchAndReplaceState, // Use the separate state
 		soundVolume: state.soundVolume,
 		ttsSpeed: state.ttsSpeed,
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,
@@ -288,6 +304,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAlwaysAllowMcp: (value) => setState((prevState) => ({ ...prevState, alwaysAllowMcp: value })),
 		setAlwaysAllowModeSwitch: (value) => setState((prevState) => ({ ...prevState, alwaysAllowModeSwitch: value })),
 		setAlwaysAllowSubtasks: (value) => setState((prevState) => ({ ...prevState, alwaysAllowSubtasks: value })),
+		setAlwaysAllowApplyDiff, // Pass the setter from the separate useState
+		setAlwaysAllowInsertContent, // Pass the setter from the separate useState
+		setAlwaysAllowSearchAndReplace, // Pass the setter from the separate useState
 		setShowAnnouncement: (value) => setState((prevState) => ({ ...prevState, shouldShowAnnouncement: value })),
 		setAllowedCommands: (value) => setState((prevState) => ({ ...prevState, allowedCommands: value })),
 		setAllowedMaxRequests: (value) => setState((prevState) => ({ ...prevState, allowedMaxRequests: value })),

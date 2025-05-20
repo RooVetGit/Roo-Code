@@ -69,6 +69,9 @@ export interface ExtensionMessage {
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
+		| "alwaysAllowApplyDiff" // New
+		| "alwaysAllowInsertContent" // New
+		| "alwaysAllowSearchAndReplace" // New
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -132,6 +135,9 @@ export type ExtensionState = Pick<
 	| "alwaysAllowExecute"
 	| "allowedCommands"
 	| "allowedMaxRequests"
+	| "alwaysAllowApplyDiff"
+	| "alwaysAllowInsertContent"
+	| "alwaysAllowSearchAndReplace"
 	| "browserToolEnabled"
 	| "browserViewportSize"
 	| "screenshotQuality"

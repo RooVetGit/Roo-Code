@@ -160,6 +160,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		terminalCompressProgressBar,
+	// New auto-approve states
+	alwaysAllowApplyDiff,
+	alwaysAllowInsertContent,
+	alwaysAllowSearchAndReplace,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -282,6 +286,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
+		// Add postMessages for new auto-approve settings
+		vscode.postMessage({ type: "alwaysAllowApplyDiff", bool: alwaysAllowApplyDiff })
+		vscode.postMessage({ type: "alwaysAllowInsertContent", bool: alwaysAllowInsertContent })
+		vscode.postMessage({ type: "alwaysAllowSearchAndReplace", bool: alwaysAllowSearchAndReplace })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			setChangeDetected(false)
@@ -563,6 +571,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowSubtasks={alwaysAllowSubtasks}
 							alwaysAllowExecute={alwaysAllowExecute}
 							allowedCommands={allowedCommands}
+						alwaysAllowApplyDiff={alwaysAllowApplyDiff}
+						alwaysAllowInsertContent={alwaysAllowInsertContent}
+						alwaysAllowSearchAndReplace={alwaysAllowSearchAndReplace}
+						allowedMaxRequests={allowedMaxRequests} // Ensure this is passed if it's part of AutoApproveSettingsProps
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

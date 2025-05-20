@@ -677,6 +677,9 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
+alwaysAllowApplyDiff: z.boolean().optional(),
+alwaysAllowInsertContent: z.boolean().optional(),
+alwaysAllowSearchAndReplace: z.boolean().optional(),
 	allowedMaxRequests: z.number().optional(),
 
 	browserToolEnabled: z.boolean().optional(),
@@ -757,6 +760,9 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysAllowSubtasks: undefined,
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
+alwaysAllowApplyDiff: undefined,
+alwaysAllowInsertContent: undefined,
+alwaysAllowSearchAndReplace: undefined,
 	allowedMaxRequests: undefined,
 
 	browserToolEnabled: undefined,

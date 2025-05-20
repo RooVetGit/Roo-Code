@@ -14,6 +14,9 @@ type AutoApproveToggles = Pick<
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
+	| "alwaysAllowApplyDiff"
+	| "alwaysAllowInsertContent"
+	| "alwaysAllowSearchAndReplace"
 >
 
 export type AutoApproveSetting = keyof AutoApproveToggles
@@ -82,6 +85,27 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.execute.description",
 		icon: "terminal",
 		testId: "always-allow-execute-toggle",
+	},
+	alwaysAllowApplyDiff: {
+		key: "alwaysAllowApplyDiff",
+		labelKey: "settings:autoApprove.applyDiff.label",
+		descriptionKey: "settings:autoApprove.applyDiff.description",
+		icon: "files", // Example icon, consider changing
+		testId: "always-allow-apply-diff-toggle",
+	},
+	alwaysAllowInsertContent: {
+		key: "alwaysAllowInsertContent",
+		labelKey: "settings:autoApprove.insertContent.label",
+		descriptionKey: "settings:autoApprove.insertContent.description",
+		icon: "add", // Example icon, consider changing
+		testId: "always-allow-insert-content-toggle",
+	},
+	alwaysAllowSearchAndReplace: {
+		key: "alwaysAllowSearchAndReplace",
+		labelKey: "settings:autoApprove.searchReplace.label",
+		descriptionKey: "settings:autoApprove.searchReplace.description",
+		icon: "search", // Example icon, consider changing
+		testId: "always-allow-search-replace-toggle",
 	},
 }
 

@@ -25,6 +25,9 @@ describe("AutoApproveToggle", () => {
 		alwaysAllowModeSwitch: true,
 		alwaysAllowSubtasks: false,
 		alwaysAllowExecute: true,
+		alwaysAllowApplyDiff: false, // New prop
+		alwaysAllowInsertContent: true, // New prop
+		alwaysAllowSearchAndReplace: false, // New prop
 		onToggle: mockOnToggle,
 	}
 

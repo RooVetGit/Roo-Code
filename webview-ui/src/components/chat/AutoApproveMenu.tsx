@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Trans } from "react-i18next"
 import { VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
@@ -25,6 +25,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
 		alwaysApproveResubmit,
+		alwaysAllowApplyDiff,
+		alwaysAllowInsertContent,
+		alwaysAllowSearchAndReplace,
 		allowedMaxRequests,
 		setAlwaysAllowReadOnly,
 		setAlwaysAllowWrite,
@@ -34,6 +37,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAlwaysAllowModeSwitch,
 		setAlwaysAllowSubtasks,
 		setAlwaysApproveResubmit,
+		setAlwaysAllowApplyDiff,
+		setAlwaysAllowInsertContent,
+		setAlwaysAllowSearchAndReplace,
 		setAllowedMaxRequests,
 	} = useExtensionState()
 
@@ -41,7 +47,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 	const onAutoApproveToggle = useCallback(
 		(key: AutoApproveSetting, value: boolean) => {
-			vscode.postMessage({ type: key, bool: value })
+			// Cast key to any to bypass TypeScript error until shared types are updated
+			vscode.postMessage({ type: key as any, bool: value })
 
 			switch (key) {
 				case "alwaysAllowReadOnly":
@@ -68,6 +75,15 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				case "alwaysApproveResubmit":
 					setAlwaysApproveResubmit(value)
 					break
+				case "alwaysAllowApplyDiff":
+					setAlwaysAllowApplyDiff(value)
+					break
+				case "alwaysAllowInsertContent":
+					setAlwaysAllowInsertContent(value)
+					break
+				case "alwaysAllowSearchAndReplace":
+					setAlwaysAllowSearchAndReplace(value)
+					break
 			}
 		},
 		[
@@ -79,6 +95,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysAllowModeSwitch,
 			setAlwaysAllowSubtasks,
 			setAlwaysApproveResubmit,
+			setAlwaysAllowApplyDiff,
+			setAlwaysAllowInsertContent,
+			setAlwaysAllowSearchAndReplace,
 		],
 	)
 
@@ -94,6 +113,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch,
 			alwaysAllowSubtasks: alwaysAllowSubtasks,
 			alwaysApproveResubmit: alwaysApproveResubmit,
+			alwaysAllowApplyDiff: alwaysAllowApplyDiff,
+			alwaysAllowInsertContent: alwaysAllowInsertContent,
+			alwaysAllowSearchAndReplace: alwaysAllowSearchAndReplace,
 		}),
 		[
 			alwaysAllowReadOnly,
@@ -104,13 +126,57 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			alwaysApproveResubmit,
+			alwaysAllowApplyDiff,
+			alwaysAllowInsertContent,
+			alwaysAllowSearchAndReplace,
 		],
 	)
 
-	const enabledActionsList = Object.entries(toggles)
-		.filter(([_key, value]) => !!value)
-		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
-		.join(", ")
+	const numSelectedActions = useMemo(() => {
+		return Object.values(toggles).filter(Boolean).length
+	}, [toggles])
+
+	const enabledActionsText = useMemo(() => {
+		if (isExpanded) {
+			if (numSelectedActions === 0) return t("chat:autoApprove.none")
+			return Object.entries(toggles)
+				.filter(([, value]) => !!value)
+				.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
+				.join(", ")
+		} else {
+			if (!autoApprovalEnabled || numSelectedActions === 0) {
+				return t("chat:autoApprove.none")
+			}
+			return Object.entries(toggles)
+				.filter(([, value]) => !!value)
+				.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
+				.join(", ")
+		}
+	}, [toggles, autoApprovalEnabled, numSelectedActions, t, isExpanded])
+
+	const isCheckboxActuallyDisabled = useMemo(() => {
+		if (isExpanded) return true
+		return numSelectedActions === 0
+	}, [isExpanded, numSelectedActions])
+
+	const isCheckboxActuallyChecked = useMemo(() => {
+		if (isExpanded) return numSelectedActions > 0
+		return autoApprovalEnabled && numSelectedActions > 0
+	}, [isExpanded, autoApprovalEnabled, numSelectedActions])
+
+	const handleMainCheckboxChange = useCallback(() => {
+		if (isCheckboxActuallyDisabled) return
+		const newValue = !autoApprovalEnabled
+		setAutoApprovalEnabled(newValue)
+		vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+	}, [isCheckboxActuallyDisabled, autoApprovalEnabled, setAutoApprovalEnabled])
+
+	useEffect(() => {
+		if (numSelectedActions === 0 && autoApprovalEnabled) {
+			setAutoApprovalEnabled(false)
+			// vscode.postMessage({ type: "autoApprovalEnabled", bool: false }); // Optionally notify if needed
+		}
+	}, [numSelectedActions, autoApprovalEnabled, setAutoApprovalEnabled])
 
 	const handleOpenSettings = useCallback(
 		() =>
@@ -135,17 +201,24 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					alignItems: "center",
 					gap: "8px",
 					padding: isExpanded ? "8px 0" : "8px 0 0 0",
-					cursor: "pointer",
+					cursor: "pointer", // Always allow pointer cursor for the toggle area
 				}}
-				onClick={toggleExpanded}>
+				onClick={toggleExpanded} // Always allow toggleExpanded for this div
+				role={"button"} // Always a button for accessibility
+				tabIndex={0} // Always focusable for accessibility
+				onKeyDown={(e) => {
+					// Allow keyboard toggle always for this clickable area
+					if (e.key === "Enter" || e.key === " ") {
+						toggleExpanded()
+						e.preventDefault()
+					}
+				}}
+			>
 				<div onClick={(e) => e.stopPropagation()}>
 					<VSCodeCheckbox
-						checked={autoApprovalEnabled ?? false}
-						onChange={() => {
-							const newValue = !(autoApprovalEnabled ?? false)
-							setAutoApprovalEnabled(newValue)
-							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
-						}}
+						checked={isCheckboxActuallyChecked}
+						onChange={handleMainCheckboxChange}
+						disabled={isCheckboxActuallyDisabled}
 					/>
 				</div>
 				<div
@@ -171,8 +244,10 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							whiteSpace: "nowrap",
 							flex: 1,
 							minWidth: 0,
-						}}>
-						{enabledActionsList || t("chat:autoApprove.none")}
+						}}
+						title={enabledActionsText}
+            >
+						{enabledActionsText}
 					</span>
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
@@ -201,7 +276,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
 
-					{/* Auto-approve API request count limit input row inspired by Cline */}
 					<div
 						style={{
 							display: "flex",
@@ -219,7 +293,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							value={(allowedMaxRequests ?? Infinity) === Infinity ? "" : allowedMaxRequests?.toString()}
 							onInput={(e) => {
 								const input = e.target as HTMLInputElement
-								// Remove any non-numeric characters
 								input.value = input.value.replace(/[^0-9]/g, "")
 								const value = parseInt(input.value)
 								const parsedValue = !isNaN(value) && value > 0 ? value : undefined
