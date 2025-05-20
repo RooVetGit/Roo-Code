@@ -360,10 +360,9 @@ export const ChatRowContent = ({
 							{tool.path
 								? t("chat:codebaseSearch.wantsToSearchWithPath", {
 										query: tool.query,
-										limit: tool.limit || 0,
 										path: tool.path,
 									})
-								: t("chat:codebaseSearch.wantsToSearch", { query: tool.query, limit: tool.limit || 0 })}
+								: t("chat:codebaseSearch.wantsToSearch", { query: tool.query })}
 						</span>
 					</div>
 				)
