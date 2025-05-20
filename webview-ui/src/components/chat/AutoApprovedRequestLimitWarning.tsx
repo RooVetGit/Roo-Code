@@ -1,4 +1,4 @@
-import React, { memo } from "react"
+import React, { memo, useState } from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { ClineMessage } from "@roo/shared/ExtensionMessage"
 import { vscode } from "@src/utils/vscode"
@@ -9,7 +9,13 @@ type AutoApprovedRequestLimitWarningProps = {
 }
 
 export const AutoApprovedRequestLimitWarning = memo(({ message }: AutoApprovedRequestLimitWarningProps) => {
+	const [buttonClicked, setButtonClicked] = useState(false)
 	const { count } = JSON.parse(message.text ?? "{}")
+
+	if (buttonClicked) {
+		return null
+	}
+
 	return (
 		<>
 			<div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--vscode-foreground)" }}>
@@ -35,6 +41,7 @@ export const AutoApprovedRequestLimitWarning = memo(({ message }: AutoApprovedRe
 					style={{ width: "100%", padding: "6px", borderRadius: "4px" }}
 					onClick={(e) => {
 						e.preventDefault()
+						setButtonClicked(true)
 						vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
 					}}>
 					<Trans i18nKey="ask.autoApprovedRequestLimitReached.button" ns="chat" />
