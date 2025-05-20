@@ -34,21 +34,23 @@ export const TaskActions = ({ item, buttonsDisabled, handleCondenseContext }: Ta
 						disabled={buttonsDisabled}
 						onClick={() => handleCondenseContext(item.id)}
 					/>
-					<IconButton
-						iconClass="codicon-trash"
-						title={t("chat:task.delete")}
-						disabled={buttonsDisabled}
-						onClick={(e) => {
-							e.stopPropagation()
+					<div className="flex items-center">
+						<IconButton
+							iconClass="codicon-trash"
+							title={t("chat:task.delete")}
+							disabled={buttonsDisabled}
+							onClick={(e) => {
+								e.stopPropagation()
 
-							if (e.shiftKey) {
-								vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
-							} else {
-								setDeleteTaskId(item.id)
-							}
-						}}>
-						{prettyBytes(item.size)}
-					</IconButton>
+								if (e.shiftKey) {
+									vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
+								} else {
+									setDeleteTaskId(item.id)
+								}
+							}}
+						/>
+						<span className="ml-1 text-xs text-vscode-foreground opacity-85">{prettyBytes(item.size)}</span>
+					</div>
 					{deleteTaskId && (
 						<DeleteTaskDialog
 							taskId={deleteTaskId}
