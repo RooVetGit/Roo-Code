@@ -686,6 +686,7 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
+	allowedMaxRequests: z.number().optional(),
 
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
@@ -768,6 +769,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysAllowSubtasks: undefined,
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
+	allowedMaxRequests: undefined,
 
 	browserToolEnabled: undefined,
 	browserViewportSize: undefined,
@@ -914,6 +916,7 @@ export const clineAsks = [
 	"mistake_limit_reached",
 	"browser_action_launch",
 	"use_mcp_server",
+	"auto_approval_max_req_reached",
 ] as const
 
 export const clineAskSchema = z.enum(clineAsks)
@@ -944,6 +947,7 @@ export const clineSays = [
 	"checkpoint_saved",
 	"rooignore_error",
 	"diff_error",
+	"condense_context",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)
@@ -962,6 +966,19 @@ export const toolProgressStatusSchema = z.object({
 export type ToolProgressStatus = z.infer<typeof toolProgressStatusSchema>
 
 /**
+ * ContextCondense
+ */
+
+export const contextCondenseSchema = z.object({
+	cost: z.number(),
+	prevContextTokens: z.number(),
+	newContextTokens: z.number(),
+	summary: z.string(),
+})
+
+export type ContextCondense = z.infer<typeof contextCondenseSchema>
+
+/**
  * ClineMessage
  */
 
@@ -977,6 +994,7 @@ export const clineMessageSchema = z.object({
 	conversationHistoryIndex: z.number().optional(),
 	checkpoint: z.record(z.string(), z.unknown()).optional(),
 	progressStatus: toolProgressStatusSchema.optional(),
+	contextCondense: contextCondenseSchema.optional(),
 })
 
 export type ClineMessage = z.infer<typeof clineMessageSchema>
