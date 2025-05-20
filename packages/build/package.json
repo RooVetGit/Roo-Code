@@ -1,0 +1,13 @@
+{
+	"name": "@roo-code/build",
+	"description": "ESBuild utilities for Roo Code.",
+	"private": true,
+	"type": "module",
+	"exports": "./dist/index.js",
+	"scripts": {
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"@types/node": "^22.15.20"
+	}
+}

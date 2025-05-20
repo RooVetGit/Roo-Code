@@ -46,7 +46,7 @@ const writePortToFile = () => {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [react(), tailwindcss(), writePortToFile(), wasmPlugin()],
 	resolve: {
 		alias: {
@@ -56,7 +56,7 @@ export default defineConfig({
 		},
 	},
 	build: {
-		outDir: "../src/webview-ui/build",
+		outDir: mode === "nightly" ? "../apps/vscode-nightly/build/webview-ui/build" : "../src/webview-ui/build",
 		emptyOutDir: true,
 		reportCompressedSize: false,
 		sourcemap: true,
@@ -87,4 +87,4 @@ export default defineConfig({
 		exclude: ["@vscode/codicons", "vscode-oniguruma", "shiki"],
 	},
 	assetsInclude: ["**/*.wasm", "**/*.wav"],
-})
+}))

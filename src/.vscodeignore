@@ -9,7 +9,7 @@
 !dist
 
 # Include the built webview
-!webview-ui
+!webview-ui/build
 
 # Include the license file
 !LICENSE
