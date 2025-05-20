@@ -5,6 +5,8 @@ import { fileExistsAtPath } from "./fs"
 import { GlobalFileNames } from "../shared/globalFileNames"
 import * as yaml from "yaml"
 
+const deprecatedCustomModesJSONFilename = "custom_modes.json"
+
 /**
  * Migrates old settings files to new file names
  *
@@ -16,9 +18,9 @@ export async function migrateSettings(
 ): Promise<void> {
 	// Legacy file names that need to be migrated to the new names in GlobalFileNames
 	const fileMigrations = [
-		{ oldName: "cline_custom_modes.json", newName: GlobalFileNames.mcpSettings },
-		{ oldName: "cline_mcp_settings.json", newName: GlobalFileNames.mcpSettings },
 		// custom_modes.json to custom_modes.yaml is handled separately below
+		{ oldName: "cline_custom_modes.json", newName: deprecatedCustomModesJSONFilename },
+		{ oldName: "cline_mcp_settings.json", newName: GlobalFileNames.mcpSettings },
 	]
 
 	try {
@@ -65,7 +67,7 @@ export async function migrateSettings(
  * Special migration function to convert custom_modes.json to YAML format
  */
 async function migrateCustomModesToYaml(settingsDir: string, outputChannel: vscode.OutputChannel): Promise<void> {
-	const oldJsonPath = path.join(settingsDir, "custom_modes.json")
+	const oldJsonPath = path.join(settingsDir, deprecatedCustomModesJSONFilename)
 	const newYamlPath = path.join(settingsDir, GlobalFileNames.customModes)
 
 	// Only proceed if JSON exists and YAML doesn't
@@ -88,7 +90,7 @@ async function migrateCustomModesToYaml(settingsDir: string, outputChannel: vsco
 
 		try {
 			// Parse JSON to object
-			const customModesData = JSON.parse(jsonContent)
+			const customModesData = yaml.parse(jsonContent)
 
 			// Convert to YAML
 			const yamlContent = yaml.stringify(customModesData)
