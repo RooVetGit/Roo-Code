@@ -1119,8 +1119,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}
 		}
 		if (!task) {
-			const { historyItem } = await this.getTaskWithId(taskId)
-			task = await this.initClineWithHistoryItem(historyItem)
+			throw new Error(`Task with id ${taskId} not found in stack`)
 		}
 		await task.condenseContext()
 		await this.postMessageToWebview({ type: "condenseTaskContextResponse", text: taskId })
