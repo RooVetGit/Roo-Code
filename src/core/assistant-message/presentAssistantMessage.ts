@@ -80,7 +80,7 @@ export async function presentAssistantMessage(cline: Task) {
 
 	switch (block.type) {
 		case "text": {
-			if (cline.didRejectTool || cline.didAlreadyUseTool) {
+			if (cline.didRejectTool || cline.didAlreadyUseTool > 0) {
 				break
 			}
 
@@ -212,11 +212,18 @@ export async function presentAssistantMessage(cline: Task) {
 				break
 			}
 
-			if (cline.didAlreadyUseTool) {
+			if (cline.didAlreadyUseTool > 4) {
 				// Ignore any content after a tool has already been used.
 				cline.userMessageContent.push({
 					type: "text",
-					text: `Tool [${block.name}] was not executed because a tool has already been used in this message. Only one tool may be used per message. You must assess the first tool's result before proceeding to use the next tool.`,
+					text: `Tool [${block.name}] was not executed because too many tools have already been used in this message. Only five tools may be used per message. You must assess the first tool's result before proceeding to use the next tool.`,
+				})
+
+				break
+			} else if (cline.didAlreadyUseTool > 0 && block.name === "attempt_completion") {
+				cline.userMessageContent.push({
+					type: "text",
+					text: `Tool [attempt_completion] was not executed because attempt_completion cannot use with other tools.`,
 				})
 
 				break
@@ -234,7 +241,7 @@ export async function presentAssistantMessage(cline: Task) {
 				// Once a tool result has been collected, ignore all other tool
 				// uses since we should only ever present one tool result per
 				// message.
-				cline.didAlreadyUseTool = true
+				cline.didAlreadyUseTool++
 			}
 
 			const askApproval = async (
@@ -491,7 +498,7 @@ export async function presentAssistantMessage(cline: Task) {
 	// skip execution since `didRejectTool` and iterate until `contentIndex` is
 	// set to message length and it sets userMessageContentReady to true itself
 	// (instead of preemptively doing it in iterator).
-	if (!block.partial || cline.didRejectTool || cline.didAlreadyUseTool) {
+	if (!block.partial || cline.didRejectTool || cline.didAlreadyUseTool > 4) {
 		// Block is finished streaming and executing.
 		if (cline.currentStreamingContentIndex === cline.assistantMessageContent.length - 1) {
 			// It's okay that we increment if !didCompleteReadingStream, it'll

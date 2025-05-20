@@ -183,7 +183,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	userMessageContent: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
 	userMessageContentReady = false
 	didRejectTool = false
-	didAlreadyUseTool = false
+	didAlreadyUseTool = 0
 	didCompleteReadingStream = false
 
 	constructor({
@@ -1178,7 +1178,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.userMessageContent = []
 			this.userMessageContentReady = false
 			this.didRejectTool = false
-			this.didAlreadyUseTool = false
+			this.didAlreadyUseTool = 0
 			this.presentAssistantMessageLocked = false
 			this.presentAssistantMessageHasPendingUpdates = false
 
@@ -1260,9 +1260,9 @@ export class Task extends EventEmitter<ClineEvents> {
 					// get generation details.
 					// UPDATE: It's better UX to interrupt the request at the
 					// cost of the API cost not being retrieved.
-					if (this.didAlreadyUseTool) {
+					if (this.didAlreadyUseTool > 4) {
 						assistantMessage +=
-							"\n\n[Response interrupted by a tool use result. Only one tool may be used at a time and should be placed at the end of the message.]"
+							"\n\n[Response interrupted by a tool use result. Only five tools may be used at a time and should be placed at the end of the message.]"
 						break
 					}
 				}
