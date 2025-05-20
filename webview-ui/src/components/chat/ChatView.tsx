@@ -584,7 +584,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 					break
 				case "condenseTaskContextResponse":
-					if (isCondensing) {
+					if (isCondensing && sendingDisabled) {
 						setSendingDisabled(false)
 					}
 					setIsCondensing(false)
@@ -1213,6 +1213,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		},
 	}))
 
+	const handleCondenseContext = (taskId: string) => {
+		if (isCondensing || sendingDisabled) {
+			return
+		}
+		setIsCondensing(true)
+		setSendingDisabled(true)
+		vscode.postMessage({ type: "condenseTaskContextRequest", text: taskId })
+	}
+
 	return (
 		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
 			{showAnnouncement && <Announcement hideAnnouncement={hideAnnouncement} />}
@@ -1227,6 +1236,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						cacheReads={apiMetrics.totalCacheReads}
 						totalCost={apiMetrics.totalCost}
 						contextTokens={apiMetrics.contextTokens}
+						buttonsDisabled={sendingDisabled}
+						handleCondenseContext={handleCondenseContext}
 						onClose={handleTaskCloseButtonClick}
 					/>
 

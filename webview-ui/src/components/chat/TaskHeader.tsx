@@ -28,6 +28,8 @@ export interface TaskHeaderProps {
 	cacheReads?: number
 	totalCost: number
 	contextTokens: number
+	buttonsDisabled?: boolean
+	handleCondenseContext: (taskId: string) => void
 	onClose: () => void
 }
 
@@ -40,6 +42,8 @@ const TaskHeader = ({
 	cacheReads,
 	totalCost,
 	contextTokens,
+	buttonsDisabled,
+	handleCondenseContext,
 	onClose,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
@@ -152,7 +156,13 @@ const TaskHeader = ({
 										</span>
 									)}
 								</div>
-								{!totalCost && <TaskActions item={currentTaskItem} />}
+								{!totalCost && (
+									<TaskActions
+										item={currentTaskItem}
+										handleCondenseContext={handleCondenseContext}
+										buttonsDisabled={buttonsDisabled}
+									/>
+								)}
 							</div>
 
 							{doesModelSupportPromptCache &&

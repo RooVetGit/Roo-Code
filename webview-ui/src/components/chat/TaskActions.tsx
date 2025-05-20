@@ -9,7 +9,13 @@ import { HistoryItem } from "@roo/shared/HistoryItem"
 
 import { DeleteTaskDialog } from "../history/DeleteTaskDialog"
 
-export const TaskActions = ({ item }: { item: HistoryItem | undefined }) => {
+interface TaskActionsProps {
+	item?: HistoryItem
+	buttonsDisabled?: boolean
+	handleCondenseContext: (taskId: string) => void
+}
+
+export const TaskActions = ({ item, handleCondenseContext }: TaskActionsProps) => {
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 	const { t } = useTranslation()
 
@@ -28,7 +34,7 @@ export const TaskActions = ({ item }: { item: HistoryItem | undefined }) => {
 						variant="ghost"
 						size="sm"
 						title={t("chat:task.condenseContext")}
-						onClick={() => vscode.postMessage({ type: "condenseTaskContextRequest", text: item?.id })}>
+						onClick={() => handleCondenseContext(item.id)}>
 						<span className="codicon codicon-file-zip" />
 					</Button>
 					<Button
