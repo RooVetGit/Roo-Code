@@ -12,6 +12,7 @@
 		"test": "turbo test --log-order grouped --output-logs new-only",
 		"format": "turbo format --log-order grouped --output-logs new-only",
 		"build": "pnpm --filter roo-cline vsix",
+		"build:nightly": "pnpm --filter @roo-code/vscode-nightly vsix",
 		"changeset": "changeset",
 		"knip": "knip --include files",
 		"update-contributors": "node scripts/update-contributors.js"

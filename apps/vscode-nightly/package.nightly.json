@@ -1,6 +1,8 @@
 {
 	"name": "roo-code-nightly",
-	"publisher": "RooCodeInc",
+	"displayName": "Roo Code Nightly",
+	"publisher": "RooVeterinaryInc",
 	"version": "0.0.1",
+	"icon": "assets/icons/icon-nightly.png",
 	"scripts": {}
 }
