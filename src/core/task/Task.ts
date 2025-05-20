@@ -508,7 +508,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			false /* partial */,
 			undefined /* checkpoint */,
 			undefined /* progressStatus */,
-			undefined /* options */,
+			{ isNonInteractive: true } /* options */,
 			contextCondense,
 		)
 	}
@@ -1531,7 +1531,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					false /* partial */,
 					undefined /* checkpoint */,
 					undefined /* progressStatus */,
-					undefined /* options */,
+					{ isNonInteractive: true } /* options */,
 					contextCondense,
 				)
 			}
