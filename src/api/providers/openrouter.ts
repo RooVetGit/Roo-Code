@@ -8,7 +8,6 @@ import {
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
 	PROMPT_CACHING_MODELS,
-	OPTIONAL_PROMPT_CACHING_MODELS,
 	REASONING_MODELS,
 } from "../../shared/api"
 
@@ -21,7 +20,8 @@ import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/c
 import { getModelParams, SingleCompletionHandler } from "../index"
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { BaseProvider } from "./base-provider"
-import { getModels } from "./fetchers/cache"
+import { getModels } from "./fetchers/modelCache"
+import { getModelEndpoints } from "./fetchers/modelEndpointCache"
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -58,6 +58,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	protected options: ApiHandlerOptions
 	private client: OpenAI
 	protected models: ModelRecord = {}
+	protected endpoints: ModelRecord = {}
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -94,7 +95,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
 		}
 
-		const isCacheAvailable = promptCache.supported && (!promptCache.optional || !this.options.promptCachingDisabled)
+		const isCacheAvailable = promptCache.supported
 
 		// https://openrouter.ai/docs/features/prompt-caching
 		if (isCacheAvailable) {
@@ -106,7 +107,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// https://openrouter.ai/docs/transforms
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
-			max_tokens: maxTokens,
+			...(maxTokens && maxTokens > 0 && { max_tokens: maxTokens }),
 			temperature,
 			thinking, // OpenRouter is temporarily supporting this.
 			top_p: topP,
@@ -116,7 +117,11 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
-					provider: { order: [this.options.openRouterSpecificProvider] },
+					provider: {
+						order: [this.options.openRouterSpecificProvider],
+						only: [this.options.openRouterSpecificProvider],
+						allow_fallbacks: false,
+					},
 				}),
 			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
 			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
@@ -165,13 +170,29 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	public async fetchModel() {
-		this.models = await getModels("openrouter")
+		const [models, endpoints] = await Promise.all([
+			getModels("openrouter"),
+			getModelEndpoints({
+				router: "openrouter",
+				modelId: this.options.openRouterModelId,
+				endpoint: this.options.openRouterSpecificProvider,
+			}),
+		])
+
+		this.models = models
+		this.endpoints = endpoints
+
 		return this.getModel()
 	}
 
 	override getModel() {
 		const id = this.options.openRouterModelId ?? openRouterDefaultModelId
-		const info = this.models[id] ?? openRouterDefaultModelInfo
+		let info = this.models[id] ?? openRouterDefaultModelInfo
+
+		// If a specific provider is requested, use the endpoint for that provider.
+		if (this.options.openRouterSpecificProvider && this.endpoints[this.options.openRouterSpecificProvider]) {
+			info = this.endpoints[this.options.openRouterSpecificProvider]
+		}
 
 		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
 
@@ -187,7 +208,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			topP: isDeepSeekR1 ? 0.95 : undefined,
 			promptCache: {
 				supported: PROMPT_CACHING_MODELS.has(id),
-				optional: OPTIONAL_PROMPT_CACHING_MODELS.has(id),
 			},
 		}
 	}
@@ -202,6 +222,15 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			temperature,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
+			// Only include provider if openRouterSpecificProvider is not "[default]".
+			...(this.options.openRouterSpecificProvider &&
+				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
+					provider: {
+						order: [this.options.openRouterSpecificProvider],
+						only: [this.options.openRouterSpecificProvider],
+						allow_fallbacks: false,
+					},
+				}),
 		}
 
 		const response = await this.client.chat.completions.create(completionParams)

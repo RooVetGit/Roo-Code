@@ -1,11 +1,12 @@
-import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeCheckbox, VSCodeTextField, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { SquareMousePointer } from "lucide-react"
 import { HTMLAttributes, useEffect, useMemo, useState } from "react"
+import { Trans } from "react-i18next"
 
-import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue, Slider } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { vscode } from "@/utils/vscode"
+import { buildDocLink } from "@src/utils/docLinks"
 
 import { Section } from "./Section"
 import { SectionHeader } from "./SectionHeader"
@@ -113,7 +114,13 @@ export const BrowserSettings = ({
 						<span className="font-medium">{t("settings:browser.enable.label")}</span>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{t("settings:browser.enable.description")}
+						<Trans i18nKey="settings:browser.enable.description">
+							<VSCodeLink
+								href={buildDocLink("features/browser-use", "settings_browser_tool")}
+								style={{ display: "inline" }}>
+								{" "}
+							</VSCodeLink>
+						</Trans>
 					</div>
 				</div>
 
@@ -189,7 +196,7 @@ export const BrowserSettings = ({
 											setCachedStateField("remoteBrowserHost", e.target.value || undefined)
 										}
 										placeholder={t("settings:browser.remote.urlPlaceholder")}
-										className="grow"
+										style={{ flexGrow: 1 }}
 									/>
 									<VSCodeButton disabled={testingConnection} onClick={testConnection}>
 										{testingConnection || discovering
@@ -199,12 +206,11 @@ export const BrowserSettings = ({
 								</div>
 								{testResult && (
 									<div
-										className={cn(
-											"p-2 rounded-xs text-sm",
+										className={`p-2 rounded-xs text-sm ${
 											testResult.success
 												? "bg-green-800/20 text-green-400"
-												: "bg-red-800/20 text-red-400",
-										)}>
+												: "bg-red-800/20 text-red-400"
+										}`}>
 										{testResult.text}
 									</div>
 								)}

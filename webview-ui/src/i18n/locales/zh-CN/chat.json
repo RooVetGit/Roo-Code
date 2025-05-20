@@ -198,16 +198,21 @@
 		"thinking": "思考中",
 		"seconds": "{{count}}秒"
 	},
+	"contextCondense": {
+		"title": "上下文已压缩",
+		"conversationSummary": "对话摘要",
+		"tokens": "tokens"
+	},
 	"followUpSuggest": {
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.16 已发布",
-		"description": "Roo Code 3.16 带来基于您反馈的新功能和改进。",
+		"title": "🎉 Roo Code 3.17 已发布",
+		"description": "Roo Code 3.17 带来基于您反馈的强大新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>Groq 和 Chutes API 提供商</bold>: 添加对 Groq 和 Chutes API 提供商的支持（感谢 @shariqriazz！）",
-		"feature2": "<bold>可点击代码引用</bold>: 模型响应中的代码引用现在可直接导航到源代码行（感谢 @KJ7LNW！）",
-		"feature3": "<bold>MCP 稳定性改进</bold>: 修复多个 bug 以增强 MCP 集成的稳定性",
+		"feature1": "<bold>Gemini 的隐式缓存</bold>: Gemini API 调用现在会自动缓存，降低 API 费用",
+		"feature2": "<bold>更智能的模式选择</bold>: 模式定义现在可以包含何时使用每种模式的指导，实现更好的协调",
+		"feature3": "<bold>智能上下文压缩</bold>: 当上下文填满时，智能汇总对话历史而非截断（在设置 -> 实验性功能中启用）",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},

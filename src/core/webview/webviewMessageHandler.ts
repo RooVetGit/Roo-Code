@@ -4,9 +4,9 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
-import { Language, ApiConfigMeta } from "../../schemas"
+import { Language, ProviderSettings, GlobalState } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
-import { ApiConfiguration, RouterName, toRouterName } from "../../shared/api"
+import { RouterName, toRouterName } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -19,7 +19,6 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
-import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
@@ -33,8 +32,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
-import { GlobalState } from "../../schemas"
-import { getModels, flushModels } from "../../api/providers/fetchers/cache"
+import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
@@ -89,19 +87,12 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 					if (currentConfigName) {
 						if (!(await provider.providerSettingsManager.hasConfig(currentConfigName))) {
-							// current config name not valid, get first config in list
-							await updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
-							if (listApiConfig?.[0]?.name) {
-								const apiConfig = await provider.providerSettingsManager.loadConfig(
-									listApiConfig?.[0]?.name,
-								)
+							// Current config name not valid, get first config in list.
+							const name = listApiConfig[0]?.name
+							await updateGlobalState("currentApiConfigName", name)
 
-								await Promise.all([
-									updateGlobalState("listApiConfigMeta", listApiConfig),
-									provider.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
-									provider.updateApiConfiguration(apiConfig),
-								])
-								await provider.postStateToWebview()
+							if (name) {
+								await provider.activateProviderProfile({ name })
 								return
 							}
 						}
@@ -132,12 +123,6 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			// agentically running promises in old instance don't affect our new
 			// task. This essentially creates a fresh slate for the new task.
 			await provider.initClineWithTask(message.text, message.images)
-			break
-		case "apiConfiguration":
-			if (message.apiConfiguration) {
-				await provider.updateApiConfiguration(message.apiConfiguration)
-			}
-			await provider.postStateToWebview()
 			break
 		case "customInstructions":
 			await provider.updateCustomInstructions(message.text)
@@ -258,20 +243,23 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "exportTaskWithId":
 			provider.exportTaskWithId(message.text!)
 			break
-		case "importSettings":
-			const { success } = await importSettings({
+		case "importSettings": {
+			const result = await importSettings({
 				providerSettingsManager: provider.providerSettingsManager,
 				contextProxy: provider.contextProxy,
 				customModesManager: provider.customModesManager,
 			})
 
-			if (success) {
+			if (result.success) {
 				provider.settingsImportedAt = Date.now()
 				await provider.postStateToWebview()
 				await vscode.window.showInformationMessage(t("common:info.settings_imported"))
+			} else if (result.error) {
+				await vscode.window.showErrorMessage(t("common:errors.settings_import_failed", { error: result.error }))
 			}
 
 			break
+		}
 		case "exportSettings":
 			await exportSettings({
 				providerSettingsManager: provider.providerSettingsManager,
@@ -496,22 +484,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("enableMcpServerCreation", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
-		case "playSound":
-			if (message.audioType) {
-				const soundPath = path.join(provider.context.extensionPath, "audio", `${message.audioType}.wav`)
-				playSound(soundPath)
-			}
-			break
+		// playSound handler removed - now handled directly in the webview
 		case "soundEnabled":
 			const soundEnabled = message.bool ?? true
 			await updateGlobalState("soundEnabled", soundEnabled)
-			setSoundEnabled(soundEnabled) // Add this line to update the sound utility
 			await provider.postStateToWebview()
 			break
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
 			await updateGlobalState("soundVolume", soundVolume)
-			setSoundVolume(soundVolume)
 			await provider.postStateToWebview()
 			break
 		case "ttsEnabled":
@@ -939,45 +920,36 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } =
 						await provider.getState()
 
-					// Try to get enhancement config first, fall back to current config
-					let configToUse: ApiConfiguration = apiConfiguration
-					if (enhancementApiConfigId) {
-						const config = listApiConfigMeta?.find((c: ApiConfigMeta) => c.id === enhancementApiConfigId)
-						if (config?.name) {
-							const loadedConfig = await provider.providerSettingsManager.loadConfig(config.name)
-							if (loadedConfig.apiProvider) {
-								configToUse = loadedConfig
-							}
+					// Try to get enhancement config first, fall back to current config.
+					let configToUse: ProviderSettings = apiConfiguration
+
+					if (enhancementApiConfigId && !!listApiConfigMeta.find(({ id }) => id === enhancementApiConfigId)) {
+						const { name: _, ...providerSettings } = await provider.providerSettingsManager.getProfile({
+							id: enhancementApiConfigId,
+						})
+
+						if (providerSettings.apiProvider) {
+							configToUse = providerSettings
 						}
 					}
 
 					const enhancedPrompt = await singleCompletionHandler(
 						configToUse,
-						supportPrompt.create(
-							"ENHANCE",
-							{
-								userInput: message.text,
-							},
-							customSupportPrompts,
-						),
+						supportPrompt.create("ENHANCE", { userInput: message.text }, customSupportPrompts),
 					)
 
-					// Capture telemetry for prompt enhancement
+					// Capture telemetry for prompt enhancement.
 					const currentCline = provider.getCurrentCline()
 					telemetryService.capturePromptEnhanced(currentCline?.taskId)
 
-					await provider.postMessageToWebview({
-						type: "enhancedPrompt",
-						text: enhancedPrompt,
-					})
+					await provider.postMessageToWebview({ type: "enhancedPrompt", text: enhancedPrompt })
 				} catch (error) {
 					provider.log(
 						`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
+
 					vscode.window.showErrorMessage(t("common:errors.enhance_prompt"))
-					await provider.postMessageToWebview({
-						type: "enhancedPrompt",
-					})
+					await provider.postMessageToWebview({ type: "enhancedPrompt" })
 				}
 			}
 			break
@@ -1084,7 +1056,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "upsertApiConfiguration":
 			if (message.text && message.apiConfiguration) {
-				await provider.upsertApiConfiguration(message.text, message.apiConfiguration)
+				await provider.upsertProviderProfile(message.text, message.apiConfiguration)
 			}
 			break
 		case "renameApiConfiguration":
@@ -1096,30 +1068,23 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						break
 					}
 
-					// Load the old configuration to get its ID
-					const oldConfig = await provider.providerSettingsManager.loadConfig(oldName)
+					// Load the old configuration to get its ID.
+					const { id } = await provider.providerSettingsManager.getProfile({ name: oldName })
 
-					// Create a new configuration with the same ID
-					const newConfig = {
-						...message.apiConfiguration,
-						id: oldConfig.id, // Preserve the ID
-					}
+					// Create a new configuration with the new name and old ID.
+					await provider.providerSettingsManager.saveConfig(newName, { ...message.apiConfiguration, id })
 
-					// Save with the new name but same ID
-					await provider.providerSettingsManager.saveConfig(newName, newConfig)
+					// Delete the old configuration.
 					await provider.providerSettingsManager.deleteConfig(oldName)
 
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					// Update listApiConfigMeta first to ensure UI has latest data
-					await updateGlobalState("listApiConfigMeta", listApiConfig)
-					await updateGlobalState("currentApiConfigName", newName)
-
-					await provider.postStateToWebview()
+					// Re-activate to update the global settings related to the
+					// currently activated provider profile.
+					await provider.activateProviderProfile({ name: newName })
 				} catch (error) {
 					provider.log(
 						`Error rename api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
+
 					vscode.window.showErrorMessage(t("common:errors.rename_api_config"))
 				}
 			}
@@ -1127,16 +1092,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "loadApiConfiguration":
 			if (message.text) {
 				try {
-					const apiConfig = await provider.providerSettingsManager.loadConfig(message.text)
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					await Promise.all([
-						updateGlobalState("listApiConfigMeta", listApiConfig),
-						updateGlobalState("currentApiConfigName", message.text),
-						provider.updateApiConfiguration(apiConfig),
-					])
-
-					await provider.postStateToWebview()
+					await provider.activateProviderProfile({ name: message.text })
 				} catch (error) {
 					provider.log(
 						`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1148,18 +1104,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "loadApiConfigurationById":
 			if (message.text) {
 				try {
-					const { config: apiConfig, name } = await provider.providerSettingsManager.loadConfigById(
-						message.text,
-					)
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					await Promise.all([
-						updateGlobalState("listApiConfigMeta", listApiConfig),
-						updateGlobalState("currentApiConfigName", name),
-						provider.updateApiConfiguration(apiConfig),
-					])
-
-					await provider.postStateToWebview()
+					await provider.activateProviderProfile({ id: message.text })
 				} catch (error) {
 					provider.log(
 						`Error load api configuration by ID: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1180,29 +1125,25 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					break
 				}
 
+				const oldName = message.text
+
+				const newName = (await provider.providerSettingsManager.listConfig()).filter(
+					(c) => c.name !== oldName,
+				)[0]?.name
+
+				if (!newName) {
+					vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
+					return
+				}
+
 				try {
-					await provider.providerSettingsManager.deleteConfig(message.text)
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					// Update listApiConfigMeta first to ensure UI has latest data
-					await updateGlobalState("listApiConfigMeta", listApiConfig)
-
-					// If this was the current config, switch to first available
-					const currentApiConfigName = getGlobalState("currentApiConfigName")
-
-					if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-						const apiConfig = await provider.providerSettingsManager.loadConfig(listApiConfig[0].name)
-						await Promise.all([
-							updateGlobalState("currentApiConfigName", listApiConfig[0].name),
-							provider.updateApiConfiguration(apiConfig),
-						])
-					}
-
-					await provider.postStateToWebview()
+					await provider.providerSettingsManager.deleteConfig(oldName)
+					await provider.activateProviderProfile({ name: newName })
 				} catch (error) {
 					provider.log(
 						`Error delete api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
+
 					vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 				}
 			}

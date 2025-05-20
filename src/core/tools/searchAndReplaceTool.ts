@@ -4,7 +4,7 @@ import fs from "fs/promises"
 import delay from "delay"
 
 // Internal imports
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -21,7 +21,7 @@ import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
  * Validates required parameters for search and replace operation
  */
 async function validateParams(
-	cline: Cline,
+	cline: Task,
 	relPath: string | undefined,
 	search: string | undefined,
 	replace: string | undefined,
@@ -61,7 +61,7 @@ async function validateParams(
  * @param removeClosingTag - Function to remove closing tags
  */
 export async function searchAndReplaceTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -215,7 +215,7 @@ export async function searchAndReplaceTool(
 
 		// Track file edit operation
 		if (relPath) {
-			await cline.getFileContextTracker().trackFileContext(relPath, "roo_edited" as RecordSource)
+			await cline.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
 		}
 
 		cline.didEditFile = true
@@ -226,13 +226,14 @@ export async function searchAndReplaceTool(
 			return
 		}
 
-		const userFeedbackDiff = JSON.stringify({
-			tool: "appliedDiff",
-			path: getReadablePath(cline.cwd, relPath),
-			diff: userEdits,
-		} satisfies ClineSayTool)
-
-		await cline.say("user_feedback_diff", userFeedbackDiff)
+		await cline.say(
+			"user_feedback_diff",
+			JSON.stringify({
+				tool: "appliedDiff",
+				path: getReadablePath(cline.cwd, relPath),
+				diff: userEdits,
+			} satisfies ClineSayTool),
+		)
 
 		// Format and send response with user's updates
 		const resultMessage = [

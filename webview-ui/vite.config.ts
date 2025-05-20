@@ -58,6 +58,7 @@ export default defineConfig({
 	build: {
 		outDir: "build",
 		reportCompressedSize: false,
+		sourcemap: true,
 		rollupOptions: {
 			output: {
 				entryFileNames: `assets/[name].js`,
@@ -84,5 +85,5 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ["@vscode/codicons", "vscode-oniguruma", "shiki"],
 	},
-	assetsInclude: ["**/*.wasm"],
+	assetsInclude: ["**/*.wasm", "**/*.wav"],
 })
