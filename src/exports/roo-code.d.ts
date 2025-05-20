@@ -1540,6 +1540,10 @@ type TaskEvent =
 			]
 	  }
 
+declare const Package: {
+	readonly publisher: string
+	readonly name: string
+}
 /**
  * ProviderName
  */
@@ -1752,6 +1756,7 @@ export {
 	IpcMessageType,
 	IpcOrigin,
 	type IpcServerEvents,
+	Package,
 	type ProviderName,
 	type ProviderSettings,
 	type ProviderSettingsEntry,
