@@ -626,7 +626,7 @@ describe("McpHub", () => {
 
 				const spy = jest.spyOn(mcpHub as any, "initializeMcpServers").mockResolvedValue(undefined)
 
-				await mcpHub.toggleAllServersDisabled(false) // actiate global
+				await mcpHub.toggleAllServersDisabled(false) // activate global
 
 				expect(spy).toHaveBeenCalledWith("global")
 				spy.mockRestore()
