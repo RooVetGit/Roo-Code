@@ -64,6 +64,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
 	const {
 		clineMessages: messages,
+		currentTaskItem,
 		taskHistory,
 		apiConfiguration,
 		mcpServers,
@@ -584,6 +585,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 					break
 				case "condenseTaskContextResponse":
+					if (!message.text || message.text !== currentTaskItem?.id) {
+						return
+					}
 					if (isCondensing && sendingDisabled) {
 						setSendingDisabled(false)
 					}
@@ -599,6 +603,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isHidden,
 			sendingDisabled,
 			enableButtons,
+			currentTaskItem,
 			handleChatReset,
 			handleSendMessage,
 			handleSetChatBoxMessage,
