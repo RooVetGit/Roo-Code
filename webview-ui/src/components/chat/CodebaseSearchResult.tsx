@@ -10,15 +10,7 @@ interface CodebaseSearchResultProps {
 	language: string
 }
 
-const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({
-	filePath,
-	score,
-	startLine,
-	endLine,
-	// These props are required by the interface but not used in this implementation
-	snippet: _snippet,
-	language: _language,
-}) => {
+const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({ filePath, score, startLine, endLine }) => {
 	const handleClick = () => {
 		console.log(filePath)
 		vscode.postMessage({
