@@ -1325,7 +1325,7 @@ export class McpHub {
 		)
 		const serverNames = globalConnections.map((conn) => conn.server.name)
 
-		// Set the Disabled flag for all serversv
+		// Set the Disabled flag for all servers
 		for (const name of serverNames) {
 			await this.updateServerConfig(name, { disabled }, "global")
 			const conn = this.findConnection(name, "global")
