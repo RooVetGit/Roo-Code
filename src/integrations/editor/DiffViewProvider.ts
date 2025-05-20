@@ -301,10 +301,8 @@ export class DiffViewProvider {
 		// Update decorations.
 		this.activeLineController.setActiveLine(endLine)
 		this.fadedOverlayController.updateOverlayAfterLine(endLine, document.lineCount)
-		// Scroll to the current line only if autoFocus is enabled.
-		if (this.autoFocus) {
-			this.scrollEditorToLine(endLine)
-		}
+		// Scroll to the current line.
+		this.scrollEditorToLine(endLine)
 
 		// Update the streamedLines with the new accumulated content.
 		this.streamedLines = accumulatedLines
@@ -786,10 +784,7 @@ export class DiffViewProvider {
 	}
 
 	scrollToFirstDiff() {
-		// Only scroll to the first diff if autoFocus is enabled.
-		if (!this.autoFocus) {
-			return
-		}
+		// Scroll to the first diff.
 		if (!this.activeDiffEditor) {
 			return
 		}
