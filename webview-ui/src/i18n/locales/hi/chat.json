@@ -201,7 +201,6 @@
 	},
 	"contextCondense": {
 		"title": "संदर्भ संक्षिप्त किया गया",
-		"conversationSummary": "वार्तालाप का सारांश",
 		"tokens": "टोकन"
 	},
 	"followUpSuggest": {

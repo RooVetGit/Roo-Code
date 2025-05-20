@@ -200,7 +200,6 @@
 	},
 	"contextCondense": {
 		"title": "コンテキスト要約",
-		"conversationSummary": "会話の要約",
 		"tokens": "トークン"
 	},
 	"followUpSuggest": {

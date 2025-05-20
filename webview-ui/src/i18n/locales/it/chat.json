@@ -201,7 +201,6 @@
 	},
 	"contextCondense": {
 		"title": "Contesto condensato",
-		"conversationSummary": "Riepilogo della conversazione",
 		"tokens": "token"
 	},
 	"followUpSuggest": {

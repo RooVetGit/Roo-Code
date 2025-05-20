@@ -201,7 +201,6 @@
 	},
 	"contextCondense": {
 		"title": "Kontekst skondensowany",
-		"conversationSummary": "Podsumowanie rozmowy",
 		"tokens": "tokeny"
 	},
 	"followUpSuggest": {

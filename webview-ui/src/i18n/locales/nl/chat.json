@@ -211,7 +211,6 @@
 	},
 	"contextCondense": {
 		"title": "Context samengevat",
-		"conversationSummary": "Gespreksoverzicht",
 		"tokens": "tokens"
 	},
 	"followUpSuggest": {

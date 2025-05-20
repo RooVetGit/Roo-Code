@@ -201,7 +201,6 @@
 	},
 	"contextCondense": {
 		"title": "上下文已压缩",
-		"conversationSummary": "对话摘要",
 		"tokens": "tokens"
 	},
 	"followUpSuggest": {

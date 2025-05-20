@@ -132,7 +132,6 @@
 	},
 	"contextCondense": {
 		"title": "Context Condensed",
-		"conversationSummary": "Conversation Summary",
 		"tokens": "tokens"
 	},
 	"instructions": {

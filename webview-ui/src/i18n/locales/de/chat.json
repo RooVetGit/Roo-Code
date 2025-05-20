@@ -201,7 +201,6 @@
 	},
 	"contextCondense": {
 		"title": "Kontext komprimiert",
-		"conversationSummary": "Gesprächszusammenfassung",
 		"tokens": "Tokens"
 	},
 	"followUpSuggest": {
