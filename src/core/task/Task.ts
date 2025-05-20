@@ -481,12 +481,13 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	public async condenseContext(): Promise<void> {
+		const systemPrompt = await this.getSystemPrompt()
 		const {
 			messages,
 			summary,
 			cost,
 			newContextTokens = 0,
-		} = await summarizeConversation(this.apiConversationHistory, this.api)
+		} = await summarizeConversation(this.apiConversationHistory, this.api, systemPrompt)
 		if (!summary) {
 			return
 		}
@@ -1399,35 +1400,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+	private async getSystemPrompt(): Promise<string> {
+		const { mcpEnabled } = (await this.providerRef.deref()?.getState()) ?? {}
 		let mcpHub: McpHub | undefined
-
-		const { apiConfiguration, mcpEnabled, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds } =
-			(await this.providerRef.deref()?.getState()) ?? {}
-
-		let rateLimitDelay = 0
-
-		// Only apply rate limiting if this isn't the first request
-		if (this.lastApiRequestTime) {
-			const now = Date.now()
-			const timeSinceLastRequest = now - this.lastApiRequestTime
-			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
-			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
-		}
-
-		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
-		if (rateLimitDelay > 0 && retryAttempt === 0) {
-			// Show countdown timer
-			for (let i = rateLimitDelay; i > 0; i--) {
-				const delayMessage = `Rate limiting for ${i} seconds...`
-				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
-				await delay(1000)
-			}
-		}
-
-		// Update last request time before making the request
-		this.lastApiRequestTime = Date.now()
-
 		if (mcpEnabled ?? true) {
 			const provider = this.providerRef.deref()
 
@@ -1463,7 +1438,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 
-		const systemPrompt = await (async () => {
+		return await (async () => {
 			const provider = this.providerRef.deref()
 
 			if (!provider) {
@@ -1488,6 +1463,36 @@ export class Task extends EventEmitter<ClineEvents> {
 				rooIgnoreInstructions,
 			)
 		})()
+	}
+
+	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+		const { apiConfiguration, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds, experiments } =
+			(await this.providerRef.deref()?.getState()) ?? {}
+
+		let rateLimitDelay = 0
+
+		// Only apply rate limiting if this isn't the first request
+		if (this.lastApiRequestTime) {
+			const now = Date.now()
+			const timeSinceLastRequest = now - this.lastApiRequestTime
+			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
+			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
+		}
+
+		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
+		if (rateLimitDelay > 0 && retryAttempt === 0) {
+			// Show countdown timer
+			for (let i = rateLimitDelay; i > 0; i--) {
+				const delayMessage = `Rate limiting for ${i} seconds...`
+				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
+				await delay(1000)
+			}
+		}
+
+		// Update last request time before making the request
+		this.lastApiRequestTime = Date.now()
+
+		const systemPrompt = await this.getSystemPrompt()
 
 		const { contextTokens } = this.getTokenUsage()
 		if (contextTokens) {
