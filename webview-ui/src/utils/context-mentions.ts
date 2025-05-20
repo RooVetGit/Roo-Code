@@ -1,7 +1,7 @@
 import { mentionRegex } from "@roo/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "@roo/shared/modes"
-import * as path from "path"
+
 import { escapeSpaces } from "./path-mentions"
 
 export interface SearchResult {
@@ -9,6 +9,11 @@ export interface SearchResult {
 	type: "file" | "folder"
 	label?: string
 }
+
+function getBasename(filepath: string): string {
+	return filepath.split("/").pop() || filepath
+}
+
 export function insertMention(
 	text: string,
 	position: number,
@@ -130,13 +135,13 @@ export function getContextMenuOptions(
 					type: ContextMenuOptionType.Mode,
 					value: result.item.original.slug,
 					label: result.item.original.name,
-					description: result.item.original.roleDefinition.split("\n")[0],
+					description: (result.item.original.whenToUse || result.item.original.roleDefinition).split("\n")[0],
 				}))
 			: modes.map((mode) => ({
 					type: ContextMenuOptionType.Mode,
 					value: mode.slug,
 					label: mode.name,
-					description: mode.roleDefinition.split("\n")[0],
+					description: (mode.whenToUse || mode.roleDefinition).split("\n")[0],
 				}))
 
 		return matchingModes.length > 0 ? matchingModes : [{ type: ContextMenuOptionType.NoResults }]
@@ -254,7 +259,7 @@ export function getContextMenuOptions(
 
 		// For display purposes, we don't escape spaces in the label or description
 		const displayPath = formattedPath
-		const displayName = result.label || path.basename(result.path)
+		const displayName = result.label || getBasename(result.path)
 
 		// We don't need to escape spaces here because the insertMention function
 		// will handle that when the user selects a suggestion

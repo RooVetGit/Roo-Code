@@ -202,12 +202,12 @@
 		"copyToInput": "Copiar para entrada (ou Shift + clique)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.15 Lançado",
-		"description": "Roo Code 3.15 traz novos recursos e melhorias baseados no seu feedback.",
+		"title": "🎉 Roo Code 3.17 Lançado",
+		"description": "Roo Code 3.17 traz poderosos novos recursos e melhorias baseados no seu feedback.",
 		"whatsNew": "O que há de novo",
-		"feature1": "<bold>Cache de prompts para Vertex</bold>: Adicionado suporte de cache de prompts para Vertex AI, melhorando tempos de resposta e reduzindo custos de API",
-		"feature2": "<bold>Fallback de Terminal</bold>: Implementado um mecanismo de fallback quando a integração de shell do terminal VSCode falha",
-		"feature3": "<bold>Snippets de código aprimorados</bold>: Renderização e interação aprimoradas de snippets de código na interface de chat",
+		"feature1": "<bold>Cache implícito para Gemini</bold>: Chamadas de API Gemini agora são automaticamente armazenadas em cache, reduzindo custos de API",
+		"feature2": "<bold>Seleção de modo mais inteligente</bold>: Definições de modo podem agora incluir orientações sobre quando cada modo deve ser usado, permitindo melhor orquestração",
+		"feature3": "<bold>Condensação inteligente de contexto</bold>: Resume de forma inteligente o histórico de conversas quando o contexto fica cheio, em vez de truncar (ative em Configurações -> Experimental)",
 		"hideButton": "Ocultar anúncio",
 		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -231,6 +231,15 @@
 			"scrollDown": "Rolar para baixo",
 			"scrollUp": "Rolar para cima",
 			"close": "Fechar navegador"
+		}
+	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "Expandir bloco de código",
+			"collapse": "Recolher bloco de código",
+			"enable_wrap": "Ativar quebra de linha",
+			"disable_wrap": "Desativar quebra de linha",
+			"copy_code": "Copiar código"
 		}
 	},
 	"systemPromptWarning": "AVISO: Substituição personalizada de instrução do sistema ativa. Isso pode comprometer gravemente a funcionalidade e causar comportamento imprevisível.",

@@ -1,5 +1,106 @@
 # Roo Code Changelog
 
+## [3.17.2] - 2025-05-15
+
+- Revert "Switch to the new Roo message parser" (appears to cause a tool parsing bug)
+- Lock the versions of vsce and ovsx
+
+## [3.17.1] - 2025-05-15
+
+- Fix the display of the command to execute during approval
+- Fix incorrect reserved tokens calculation on OpenRouter (thanks @daniel-lxs!)
+
+## [3.17.0] - 2025-05-14
+
+- Enable Gemini implicit caching
+- Add "when to use" section to mode definitions to enable better orchestration
+- Add experimental feature to intelligently condense the task context instead of truncating it
+- Fix one of the causes of the gray screen issue (thanks @xyOz-dev!)
+- Focus improvements for better UI interactions (thanks Cline!)
+- Switch to the new Roo message parser for improved performance (thanks Cline!)
+- Enable source maps for improved debugging (thanks @KJ7LNW!)
+- Update OpenRouter provider to use provider-specific model info (thanks @daniel-lxs!)
+- Fix Requesty cost/token reporting (thanks @dtrugman!)
+- Improve command execution UI
+- Add more in-app links to relevant documentation
+- Update the new task tool description and the ask mode custom instructions in the system prompt
+- Add IPC types to roo-code.d.ts
+- Add build VSIX workflow to pull requests (thanks @SmartManoj!)
+- Improve apply_diff tool to intelligently deduce line numbers (thanks @samhvw8!)
+- Fix command validation for shell array indexing (thanks @KJ7LNW!)
+- Handle diagnostics that point at a directory URI (thanks @daniel-lxs!)
+- Fix "Current ask promise was ignored" error (thanks @zxdvd!)
+
+## [3.16.6] - 2025-05-12
+
+- Restore "Improve provider profile management in the external API"
+- Fix to subtask sequencing (thanks @wkordalski!)
+- Fix webview terminal output processing error (thanks @KJ7LNW!)
+- Fix textarea empty string fallback logic (thanks @elianiva!)
+
+## [3.16.5] - 2025-05-10
+
+- Revert "Improve provider profile management in the external API" until we track down a bug with defaults
+
+## [3.16.4] - 2025-05-09
+
+- Improve provider profile management in the external API
+- Enforce provider selection in OpenRouter by using 'only' parameter and disabling fallbacks (thanks @shariqriazz!)
+- Fix display issues with long profile names (thanks @cannuri!)
+- Prevent terminal focus theft on paste after command execution (thanks @MuriloFP!)
+- Save OpenAI compatible custom headers correctly
+- Fix race condition when updating prompts (thanks @elianiva!)
+- Fix display issues in high contrast themes (thanks @zhangtony239!)
+- Fix not being able to use specific providers on Openrouter (thanks @daniel-lxs!)
+- Show properly formatted multi-line commands in preview (thanks @KJ7LNW!)
+- Handle unsupported language errors gracefully in read_file tool (thanks @KJ7LNW!)
+- Enhance focus styles in select-dropdown and fix docs URL (thanks @zhangtony239!)
+- Properly handle mode name overflow in UI (thanks @elianiva!)
+- Fix project MCP always allow issue (thanks @aheizi!)
+
+## [3.16.3] - 2025-05-08
+
+- Revert Tailwind migration while we fix a few spots
+- Add Elixir file extension support in language parser (thanks @pfitz!)
+
+## [3.16.2] - 2025-05-07
+
+- Clarify XML tool use formatting instructions
+- Error handling code cleanup (thanks @monkeyDluffy6017!)
+
+## [3.16.1] - 2025-05-07
+
+- Add LiteLLM provider support
+- Improve stability by detecting and preventing tool loops
+- Add Dutch localization (thanks @Githubguy132010!)
+- Add editor name to telemetry for better analytics
+- Migrate to Tailwind CSS for improved UI consistency
+- Fix footer button wrapping in About section on narrow screens (thanks @ecmasx!)
+- Update evals defaults
+- Update dependencies to latest versions
+
+## [3.16.0] - 2025-05-06
+
+- Add vertical tab navigation to the settings (thanks @dlab-anton)
+- Add Groq and Chutes API providers (thanks @shariqriazz)
+- Clickable code references in code block (thanks @KJ7LNW)
+- Improve accessibility of ato-approve toggles (thanks @Deon588)
+- Requesty provider fixes (thanks @dtrugman)
+- Fix migration and persistence of per-mode API profiles (thanks @alasano)
+- Fix usage of `path.basename` in the extension webview (thanks @samhvw8)
+- Fix display issue of the programming language dropdown in the code block component (thanks @zhangtony239)
+- MCP server errors are now captured and shown in a new "Errors" tab (thanks @robertheadley)
+- Error logging will no longer break MCP functionality if the server is properly connected (thanks @ksze)
+- You can now toggle the `terminal.integrated.inheritEnv` VSCode setting directly for the Roo Code settings (thanks @KJ7LNW)
+- Add `gemini-2.5-pro-preview-05-06` to the Vertex and Gemini providers (thanks @zetaloop)
+- Ensure evals exercises are up-to-date before running evals (thanks @shariqriazz)
+- Lots of general UI improvements (thanks @elianiva)
+- Organize provider settings into separate components
+- Improved icons and translations for the code block component
+- Add support for tests that use ESM libraries
+- Move environment detail generation to a separate module
+- Enable prompt caching by default for supported Gemini models
+
 ## [3.15.5] - 2025-05-05
 
 - Update @google/genai to 0.12 (includes some streaming completion bug fixes)

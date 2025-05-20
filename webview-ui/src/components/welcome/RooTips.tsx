@@ -3,16 +3,18 @@ import { useTranslation } from "react-i18next"
 import { useState, useEffect } from "react"
 import clsx from "clsx"
 
+import { buildDocLink } from "@src/utils/docLinks"
+
 const tips = [
 	{
 		icon: "codicon-account",
-		href: "https://docs.roocode.com/basic-usage/using-modes",
+		href: buildDocLink("basic-usage/using-modes", "tips"),
 		titleKey: "rooTips.customizableModes.title",
 		descriptionKey: "rooTips.customizableModes.description",
 	},
 	{
 		icon: "codicon-list-tree",
-		href: "https://docs.roocode.com/features/boomerang-tasks",
+		href: buildDocLink("features/boomerang-tasks", "tips"),
 		titleKey: "rooTips.boomerangTasks.title",
 		descriptionKey: "rooTips.boomerangTasks.description",
 	},
@@ -74,7 +76,10 @@ const RooTips = ({ cycle = false }: RooTipsProps) => {
 						className="flex items-center gap-2 text-vscode-editor-foreground font-vscode max-w-[250px]">
 						<span className={`codicon ${tip.icon}`}></span>
 						<span>
-							<VSCodeLink href={tip.href}>{t(tip.titleKey)}</VSCodeLink>: {t(tip.descriptionKey)}
+							<VSCodeLink className="forced-color-adjust-none" href={tip.href}>
+								{t(tip.titleKey)}
+							</VSCodeLink>
+							: {t(tip.descriptionKey)}
 						</span>
 					</div>
 				))

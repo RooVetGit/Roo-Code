@@ -67,7 +67,8 @@
 		"mcp_server_not_found": "Сервер \"{{serverName}}\" не найден в конфигурации",
 		"custom_storage_path_set": "Установлен пользовательский путь хранения: {{path}}",
 		"default_storage_path": "Возвращено использование пути хранения по умолчанию",
-		"settings_imported": "Настройки успешно импортированы."
+		"settings_imported": "Настройки успешно импортированы.",
+		"settings_import_failed": "Не удалось импортировать настройки: {{error}}."
 	},
 	"answers": {
 		"yes": "Да",
@@ -89,5 +90,11 @@
 	"input": {
 		"task_prompt": "Что должен сделать Roo?",
 		"task_placeholder": "Введите вашу задачу здесь"
+	},
+	"settings": {
+		"providers": {
+			"groqApiKey": "Ключ API Groq",
+			"getGroqApiKey": "Получить ключ API Groq"
+		}
 	}
 }
