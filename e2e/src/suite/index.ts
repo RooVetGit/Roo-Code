@@ -3,7 +3,7 @@ import Mocha from "mocha"
 import { glob } from "glob"
 import * as vscode from "vscode"
 
-import { type RooCodeAPI, Package } from "../../../src/exports/roo-code"
+import { type RooCodeAPI, Package } from "@roo-code/types"
 
 import { waitFor } from "./utils"
 
@@ -26,7 +26,7 @@ export async function run() {
 		openRouterModelId: "google/gemini-2.0-flash-001",
 	})
 
-	await vscode.commands.executeCommand(`${Package.publisher}.SidebarProvider.focus`)
+	await vscode.commands.executeCommand(`${Package.name}.SidebarProvider.focus`)
 	await waitFor(() => api.isReady())
 
 	// Expose the API to the tests.
