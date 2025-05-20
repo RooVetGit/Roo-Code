@@ -81,7 +81,9 @@
 			"addButton": "Toevoegen"
 		},
 		"apiRequestLimit": {
-			"description": "Voer automatisch dit aantal API-verzoeken uit voordat je om goedkeuring vraagt om door te gaan met de taak."
+			"title": "Maximale verzoeken",
+			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
+			"unlimited": "Onbeperkt"
 		}
 	},
 	"providers": {

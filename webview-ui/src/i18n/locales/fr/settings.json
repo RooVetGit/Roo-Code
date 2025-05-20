@@ -81,7 +81,9 @@
 			"addButton": "Ajouter"
 		},
 		"apiRequestLimit": {
-			"description": "Effectuer automatiquement ce nombre de requêtes API avant de demander l'approbation pour continuer la tâche."
+			"title": "Requêtes maximales",
+			"description": "Effectuer automatiquement ce nombre de requêtes API avant de demander l'approbation pour continuer la tâche.",
+			"unlimited": "Illimité"
 		}
 	},
 	"providers": {

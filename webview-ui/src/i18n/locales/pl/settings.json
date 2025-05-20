@@ -81,7 +81,9 @@
 			"addButton": "Dodaj"
 		},
 		"apiRequestLimit": {
-			"description": "Automatycznie wykonaj tyle zapytań API, zanim poprosisz o zgodę na kontynuowanie zadania."
+			"title": "Maksymalna liczba żądań",
+			"description": "Automatycznie wykonaj tyle żądań API przed poproszeniem o zgodę na kontynuowanie zadania.",
+			"unlimited": "Bez limitu"
 		}
 	},
 	"providers": {

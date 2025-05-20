@@ -81,7 +81,9 @@
 			"addButton": "Thêm"
 		},
 		"apiRequestLimit": {
-			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ."
+			"title": "Số lượng yêu cầu tối đa",
+			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ.",
+			"unlimited": "Không giới hạn"
 		}
 	},
 	"providers": {

@@ -81,7 +81,9 @@
 			"addButton": "新增"
 		},
 		"apiRequestLimit": {
-			"description": "在要求核准繼續工作之前，自動發送這麼多 API 請求。"
+			"title": "最大請求數",
+			"description": "在請求批准以繼續執行工作之前，自動發出此數量的 API 請求。",
+			"unlimited": "無限制"
 		}
 	},
 	"providers": {

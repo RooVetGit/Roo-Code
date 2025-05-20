@@ -81,7 +81,9 @@
 			"addButton": "Ekle"
 		},
 		"apiRequestLimit": {
-			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap."
+			"title": "Maksimum İstek",
+			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
+			"unlimited": "Sınırsız"
 		}
 	},
 	"providers": {

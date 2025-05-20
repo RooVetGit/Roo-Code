@@ -81,7 +81,9 @@
 			"addButton": "Aggiungi"
 		},
 		"apiRequestLimit": {
-			"description": "Esegui automaticamente questo numero di richieste API prima di chiedere l'approvazione per continuare con l'attività."
+			"title": "Richieste massime",
+			"description": "Esegui automaticamente questo numero di richieste API prima di chiedere l'approvazione per continuare con l'attività.",
+			"unlimited": "Illimitato"
 		}
 	},
 	"providers": {

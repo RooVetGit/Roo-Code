@@ -81,7 +81,9 @@
 			"addButton": "Adicionar"
 		},
 		"apiRequestLimit": {
-			"description": "Fazer automaticamente este número de requisições à API antes de pedir aprovação para continuar com a tarefa."
+			"title": "Máximo de Solicitações",
+			"description": "Fazer automaticamente este número de requisições à API antes de pedir aprovação para continuar com a tarefa.",
+			"unlimited": "Ilimitado"
 		}
 	},
 	"providers": {

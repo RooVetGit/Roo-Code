@@ -81,7 +81,9 @@
 			"addButton": "追加"
 		},
 		"apiRequestLimit": {
-			"description": "タスクを続行するための承認を求める前に、この回数のAPIリクエストを自動的に実行します。"
+			"title": "最大リクエスト数",
+			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
+			"unlimited": "無制限"
 		}
 	},
 	"providers": {

@@ -81,7 +81,9 @@
 			"addButton": "Hinzufügen"
 		},
 		"apiRequestLimit": {
-			"description": "Führe automatisch diese Anzahl an API-Anfragen aus, bevor du um Genehmigung zur Fortsetzung der Aufgabe bitten musst."
+			"title": "Maximale Anfragen",
+			"description": "Automatisch so viele API-Anfragen stellen, bevor du um die Erlaubnis gebeten wirst, mit der Aufgabe fortzufahren.",
+			"unlimited": "Unbegrenzt"
 		}
 	},
 	"providers": {

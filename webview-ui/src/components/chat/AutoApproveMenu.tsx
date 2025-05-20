@@ -209,11 +209,13 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							marginBottom: "8px",
 							color: "var(--vscode-descriptionForeground)",
 						}}>
-						<span style={{ flexShrink: 1, minWidth: 0 }}>Max Requests:</span>
+						<span style={{ flexShrink: 1, minWidth: 0 }}>
+							<Trans i18nKey="settings:autoApprove.apiRequestLimit.title" />:
+						</span>
 						<VSCodeTextField
 							value={
 								(allowedMaxRequests ?? Infinity) === Infinity
-									? "Unlimited"
+									? t("settings:autoApprove.apiRequestLimit.unlimited")
 									: allowedMaxRequests?.toString()
 							}
 							onInput={(e) => {
