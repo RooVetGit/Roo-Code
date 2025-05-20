@@ -1,6 +1,26 @@
 import { DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
 
+/**
+ * Format tool information for MCP server documentation
+ * @param tool - Tool definition from MCP server
+ * @returns Formatted tool description with schema
+ */
+function formatToolInfo(tool: any): string {
+	const schemaStr = tool.inputSchema
+		? `    Input Schema:\n    ${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
+		: ""
+
+	return `- ${tool.name}: ${tool.description}\n${schemaStr}`
+}
+
+/**
+ * Generate MCP server section for the system prompt
+ * @param mcpHub - MCP Hub instance with server information
+ * @param diffStrategy - Diff strategy for file modifications
+ * @param enableMcpServerCreation - Whether to include server creation instructions
+ * @returns Formatted MCP servers section
+ */
 export async function getMcpServersSection(
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
@@ -10,22 +30,14 @@ export async function getMcpServersSection(
 		return ""
 	}
 
+	// Get connected servers info
 	const connectedServers =
 		mcpHub.getServers().length > 0
 			? `${mcpHub
 					.getServers()
 					.filter((server) => server.status === "connected")
 					.map((server) => {
-						const tools = server.tools
-							?.map((tool) => {
-								const schemaStr = tool.inputSchema
-									? `    Input Schema:
-		${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
-									: ""
-
-								return `- ${tool.name}: ${tool.description}\n${schemaStr}`
-							})
-							.join("\n\n")
+						const tools = server.tools?.map(formatToolInfo).join("\n\n")
 
 						const templates = server.resourceTemplates
 							?.map((template) => `- ${template.uriTemplate} (${template.name}): ${template.description}`)
@@ -36,9 +48,10 @@ export async function getMcpServersSection(
 							.join("\n")
 
 						const config = JSON.parse(server.config)
+						const commandString = `${config.command}${config.args && Array.isArray(config.args) ? ` ${config.args.join(" ")}` : ""}`
 
 						return (
-							`## ${server.name} (\`${config.command}${config.args && Array.isArray(config.args) ? ` ${config.args.join(" ")}` : ""}\`)` +
+							`## ${server.name} (\`${commandString}\`)` +
 							(tools ? `\n\n### Available Tools\n${tools}` : "") +
 							(templates ? `\n\n### Resource Templates\n${templates}` : "") +
 							(resources ? `\n\n### Direct Resources\n${resources}` : "")
@@ -49,14 +62,14 @@ export async function getMcpServersSection(
 
 	const baseSection = `MCP SERVERS
 
-The Model Context Protocol (MCP) enables communication between the system and MCP servers that provide additional tools and resources to extend your capabilities. MCP servers can be one of two types:
+The Model Context Protocol (MCP) enables communication with servers that provide additional tools and resources. Types:
 
-1. Local (Stdio-based) servers: These run locally on the user's machine and communicate via standard input/output
-2. Remote (SSE-based) servers: These run on remote machines and communicate via Server-Sent Events (SSE) over HTTP/HTTPS
+1. Local (Stdio-based): Run on user's machine via standard input/output
+2. Remote (SSE-based): Run on remote machines via HTTP/HTTPS
 
 # Connected MCP Servers
 
-When a server is connected, you can use the server's tools via the \`use_mcp_tool\` tool, and access the server's resources via the \`access_mcp_resource\` tool.
+Access server tools with \`use_mcp_tool\` and resources with \`access_mcp_resource\`.
 
 ${connectedServers}`
 
@@ -67,9 +80,10 @@ ${connectedServers}`
 	return (
 		baseSection +
 		`
+
 ## Creating an MCP Server
 
-The user may ask you something along the lines of "add a tool" that does some function, in other words to create an MCP server that provides tools and resources that may connect to external APIs for example. If they do, you should obtain detailed instructions on this topic using the fetch_instructions tool, like this:
+If asked to "add a tool" for specific functionality, get detailed instructions using:
 <fetch_instructions>
 <task>create_mcp_server</task>
 </fetch_instructions>`

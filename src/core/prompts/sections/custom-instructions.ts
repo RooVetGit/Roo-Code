@@ -6,6 +6,8 @@ import { Dirent } from "fs"
 
 /**
  * Safely read a file and return its trimmed content
+ * @param filePath - Path to the file to read
+ * @returns Trimmed file content or empty string if file doesn't exist
  */
 async function safeReadFile(filePath: string): Promise<string> {
 	try {
@@ -22,6 +24,8 @@ async function safeReadFile(filePath: string): Promise<string> {
 
 /**
  * Check if a directory exists
+ * @param dirPath - Path to check
+ * @returns Boolean indicating if path exists and is a directory
  */
 async function directoryExists(dirPath: string): Promise<boolean> {
 	try {
@@ -36,6 +40,10 @@ const MAX_DEPTH = 5
 
 /**
  * Recursively resolve directory entries and collect file paths
+ * @param entry - Directory entry to resolve
+ * @param dirPath - Base directory path
+ * @param filePaths - Array to collect file paths
+ * @param depth - Current recursion depth
  */
 async function resolveDirectoryEntry(
 	entry: Dirent,
@@ -60,6 +68,9 @@ async function resolveDirectoryEntry(
 
 /**
  * Recursively resolve a symbolic link and collect file paths
+ * @param fullPath - Path to the symbolic link
+ * @param filePaths - Array to collect file paths
+ * @param depth - Current recursion depth
  */
 async function resolveSymLink(fullPath: string, filePaths: string[], depth: number): Promise<void> {
 	// Avoid cyclic symlinks
@@ -95,7 +106,9 @@ async function resolveSymLink(fullPath: string, filePaths: string[], depth: numb
 }
 
 /**
- * Read all text files from a directory in alphabetical order
+ * Read all text files from a directory including symlinks
+ * @param dirPath - Directory to read files from
+ * @returns Array of objects containing filename and content
  */
 async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ filename: string; content: string }>> {
 	try {
@@ -138,6 +151,9 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 
 /**
  * Format content from multiple files with filenames as headers
+ * @param dirPath - Base directory path
+ * @param files - Array of file objects with filename and content
+ * @returns Formatted string with file contents
  */
 function formatDirectoryContent(dirPath: string, files: Array<{ filename: string; content: string }>): string {
 	if (files.length === 0) return ""
@@ -153,7 +169,9 @@ function formatDirectoryContent(dirPath: string, files: Array<{ filename: string
 }
 
 /**
- * Load rule files from the specified directory
+ * Load rule files from the specified directory or fallback files
+ * @param cwd - Current working directory
+ * @returns Formatted content from rule files
  */
 export async function loadRuleFiles(cwd: string): Promise<string> {
 	// Check for .roo/rules/ directory

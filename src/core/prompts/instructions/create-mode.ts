@@ -1,37 +1,50 @@
 import * as path from "path"
 import * as vscode from "vscode"
-
 import { GlobalFileNames } from "../../../shared/globalFileNames"
 
+/**
+ * Generate instructions for creating custom modes
+ * @param context - VSCode extension context
+ * @returns Formatted instructions for mode creation
+ * @throws Error if context is missing
+ */
 export async function createModeInstructions(context: vscode.ExtensionContext | undefined): Promise<string> {
 	if (!context) throw new Error("Missing VSCode Extension Context")
 
 	const settingsDir = path.join(context.globalStorageUri.fsPath, "settings")
 	const customModesPath = path.join(settingsDir, GlobalFileNames.customModes)
 
-	return `
+	return `# CUSTOM MODE CREATION
+
+## Configuration Locations
+
 Custom modes can be configured in two ways:
-  1. Globally via '${customModesPath}' (created automatically on startup)
-  2. Per-workspace via '.roomodes' in the workspace root directory
+  1. Globally via '${customModesPath}'
+  2. Per-workspace via '.roomodes' in the workspace root
 
-When modes with the same slug exist in both files, the workspace-specific .roomodes version takes precedence. This allows projects to override global modes or define project-specific modes.
+Workspace-specific modes override global modes with the same slug.
 
+## Guidelines
 
-If asked to create a project mode, create it in .roomodes in the workspace root. If asked to create a global mode, use the global custom modes file.
+- Create project-specific modes in .roomodes
+- Create global modes in the global custom modes file
+- Always test your custom mode after creation
 
-- The following fields are required and must not be empty:
-  * slug: A valid slug (lowercase letters, numbers, and hyphens). Must be unique, and shorter is better.
-  * name: The display name for the mode
-  * roleDefinition: A detailed description of the mode's role and capabilities
-  * groups: Array of allowed tool groups (can be empty). Each group can be specified either as a string (e.g., "edit" to allow editing any file) or with file restrictions (e.g., ["edit", { fileRegex: "\\.md$", description: "Markdown files only" }] to only allow editing markdown files)
+## Required Fields
 
-- The following fields are optional but highly recommended:
-  * whenToUse: A clear description of when this mode should be selected and what types of tasks it's best suited for. This helps the Orchestrator mode make better decisions.
-  * customInstructions: Additional instructions for how the mode should operate
+- slug: Unique identifier using lowercase letters, numbers, and hyphens
+- name: Display name for the mode
+- roleDefinition: Detailed description of the mode's capabilities
+- groups: Array of tool access groups
 
-- For multi-line text, include newline characters in the string like "This is the first line.\\nThis is the next line.\\n\\nThis is a double line break."
+## Optional Fields (Highly Recommended)
 
-Both files should follow this structure:
+- whenToUse: A clear description of when this mode should be selected and what types of tasks it's best suited for. This helps the Orchestrator mode make better decisions.
+- customInstructions: Additional instructions for how the mode should operate
+
+## Example Structure
+
+\`\`\`json
 {
  "customModes": [
    {
@@ -51,5 +64,8 @@ Both files should follow this structure:
      "customInstructions": "Additional instructions for the Designer mode" // Optional
     }
   ]
-}`
+}
+\`\`\`
+
+Remember to use \\n for line breaks in multi-line strings.`
 }
