@@ -191,7 +191,11 @@ const TaskHeader = ({
 										<span className="font-bold">{t("chat:task.apiCost")}</span>
 										<span>${totalCost?.toFixed(2)}</span>
 									</div>
-									<TaskActions item={currentTaskItem} />
+									<TaskActions
+										item={currentTaskItem}
+										buttonsDisabled={buttonsDisabled}
+										handleCondenseContext={handleCondenseContext}
+									/>
 								</div>
 							)}
 						</div>
