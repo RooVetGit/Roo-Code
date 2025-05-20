@@ -31,6 +31,8 @@ import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
+import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
+import { ContextCondenseRow } from "./ContextCondenseRow"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -926,6 +928,8 @@ export const ChatRowContent = ({
 							checkpoint={message.checkpoint}
 						/>
 					)
+				case "condense_context":
+					return message.contextCondense ? <ContextCondenseRow {...message.contextCondense} /> : null
 				default:
 					return (
 						<>
@@ -1083,6 +1087,9 @@ export const ChatRowContent = ({
 							/>
 						</>
 					)
+				case "auto_approval_max_req_reached": {
+					return <AutoApprovedRequestLimitWarning message={message} />
+				}
 				default:
 					return null
 			}

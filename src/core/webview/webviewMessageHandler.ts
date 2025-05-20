@@ -4,7 +4,7 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
-import { Language, ProviderSettings } from "../../schemas"
+import { Language, ProviderSettings, GlobalState } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { RouterName, toRouterName } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
@@ -19,7 +19,6 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
-import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
@@ -33,7 +32,6 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
-import { GlobalState } from "../../schemas"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 
@@ -159,6 +157,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "alwaysAllowModeSwitch":
 			await updateGlobalState("alwaysAllowModeSwitch", message.bool)
+			await provider.postStateToWebview()
+			break
+		case "allowedMaxRequests":
+			await updateGlobalState("allowedMaxRequests", message.value)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowSubtasks":
@@ -486,22 +488,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("enableMcpServerCreation", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
-		case "playSound":
-			if (message.audioType) {
-				const soundPath = path.join(provider.context.extensionPath, "audio", `${message.audioType}.wav`)
-				playSound(soundPath)
-			}
-			break
+		// playSound handler removed - now handled directly in the webview
 		case "soundEnabled":
 			const soundEnabled = message.bool ?? true
 			await updateGlobalState("soundEnabled", soundEnabled)
-			setSoundEnabled(soundEnabled) // Add this line to update the sound utility
 			await provider.postStateToWebview()
 			break
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
 			await updateGlobalState("soundVolume", soundVolume)
-			setSoundVolume(soundVolume)
 			await provider.postStateToWebview()
 			break
 		case "ttsEnabled":

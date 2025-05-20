@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"addButton": "追加"
+		},
+		"apiRequestLimit": {
+			"title": "最大リクエスト数",
+			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
+			"unlimited": "無制限"
 		}
 	},
 	"providers": {
@@ -185,6 +190,8 @@
 		},
 		"unboundApiKey": "Unbound APIキー",
 		"getUnboundApiKey": "Unbound APIキーを取得",
+		"unboundRefreshModelsSuccess": "モデルリストが更新されました！最新のモデルから選択できます。",
+		"unboundInvalidApiKey": "無効なAPIキーです。APIキーを確認して、もう一度お試しください。",
 		"humanRelay": {
 			"description": "APIキーは不要ですが、ユーザーはウェブチャットAIに情報をコピー＆ペーストする必要があります。",
 			"instructions": "使用中にダイアログボックスが表示され、現在のメッセージが自動的にクリップボードにコピーされます。これらをウェブ版のAI（ChatGPTやClaudeなど）に貼り付け、AIの返答をダイアログボックスにコピーして確認ボタンをクリックする必要があります。"

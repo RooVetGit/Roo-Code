@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "Tiền tố lệnh có thể được tự động thực thi khi \"Luôn phê duyệt các hoạt động thực thi\" được bật. Thêm * để cho phép tất cả các lệnh (sử dụng cẩn thận).",
 			"commandPlaceholder": "Nhập tiền tố lệnh (ví dụ: 'git ')",
 			"addButton": "Thêm"
+		},
+		"apiRequestLimit": {
+			"title": "Số lượng yêu cầu tối đa",
+			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ.",
+			"unlimited": "Không giới hạn"
 		}
 	},
 	"providers": {
@@ -185,6 +190,8 @@
 		},
 		"unboundApiKey": "Khóa API Unbound",
 		"getUnboundApiKey": "Lấy khóa API Unbound",
+		"unboundRefreshModelsSuccess": "Đã cập nhật danh sách mô hình! Bây giờ bạn có thể chọn từ các mô hình mới nhất.",
+		"unboundInvalidApiKey": "Khóa API không hợp lệ. Vui lòng kiểm tra khóa API của bạn và thử lại.",
 		"humanRelay": {
 			"description": "Không cần khóa API, nhưng người dùng cần giúp sao chép và dán thông tin vào AI trò chuyện web.",
 			"instructions": "Trong quá trình sử dụng, một hộp thoại sẽ xuất hiện và tin nhắn hiện tại sẽ được tự động sao chép vào clipboard. Bạn cần dán chúng vào các phiên bản web của AI (như ChatGPT hoặc Claude), sau đó sao chép phản hồi của AI trở lại hộp thoại và nhấp vào nút xác nhận."
