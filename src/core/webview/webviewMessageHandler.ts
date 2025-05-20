@@ -370,7 +370,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			// Also update workspace settings.
 			await vscode.workspace
-				.getConfiguration("roo-cline")
+				.getConfiguration("roo-otto")
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 
 			break
@@ -1223,24 +1223,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			}
 			break
 		case "humanRelayResponse":
-			if (message.requestId && message.text) {
-				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
-					requestId: message.requestId,
-					text: message.text,
-					cancelled: false,
-				})
-			}
+			vscode.commands.executeCommand("roo-otto.handleHumanRelayResponse", {
+				requestId: message.requestId,
+				response: message.text,
+			})
 			break
-
 		case "humanRelayCancel":
-			if (message.requestId) {
-				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
-					requestId: message.requestId,
-					cancelled: true,
-				})
-			}
+			vscode.commands.executeCommand("roo-otto.handleHumanRelayResponse", {
+				requestId: message.requestId,
+				response: undefined, // Indicate cancellation
+			})
 			break
-
 		case "telemetrySetting": {
 			const telemetrySetting = message.text as TelemetrySetting
 			await updateGlobalState("telemetrySetting", telemetrySetting)
