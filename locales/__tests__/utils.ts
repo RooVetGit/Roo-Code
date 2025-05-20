@@ -52,25 +52,26 @@ export function parseJsonContent(content: string | null, filePath: string): any 
 	}
 }
 
-export function getValueAtPath(obj: any, path: string): any {
-	if (obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, path)) {
-		return obj[path]
-	}
-
-	const parts = path.split(".")
+export function getValueAtPath(obj: any, pathArray: string[]): any {
 	let current = obj
-
-	for (const part of parts) {
-		if (current === undefined || current === null) {
+	for (const part of pathArray) {
+		if (
+			current === undefined ||
+			current === null ||
+			typeof current !== "object" ||
+			!Object.prototype.hasOwnProperty.call(current, part)
+		) {
 			return undefined
 		}
 		current = current[part]
 	}
-
 	return current
 }
 
 // Utility function to escape dots in keys for display purposes
-export function escapeDotsForDisplay(key: string): string {
-	return key.replace(/\./g, "..")
+export function escapeDotsForDisplay(pathArray: string[]): string {
+	if (!pathArray || pathArray.length === 0) {
+		return ""
+	}
+	return pathArray.map((segment) => segment.replace(/\./g, "..")).join(".")
 }
