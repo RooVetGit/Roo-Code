@@ -199,6 +199,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						/>
 					</div>
 
+					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
+
 					{/* Auto-approve API request count limit input row inspired by Cline */}
 					<div
 						style={{
@@ -213,11 +215,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							<Trans i18nKey="settings:autoApprove.apiRequestLimit.title" />:
 						</span>
 						<VSCodeTextField
-							value={
-								(allowedMaxRequests ?? Infinity) === Infinity
-									? t("settings:autoApprove.apiRequestLimit.unlimited")
-									: allowedMaxRequests?.toString()
-							}
+							placeholder={t("settings:autoApprove.apiRequestLimit.unlimited")}
+							value={(allowedMaxRequests ?? Infinity) === Infinity ? "" : allowedMaxRequests?.toString()}
 							onInput={(e) => {
 								const input = e.target as HTMLInputElement
 								// Remove any non-numeric characters
@@ -238,8 +237,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						}}>
 						<Trans i18nKey="settings:autoApprove.apiRequestLimit.description" />
 					</div>
-
-					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
 				</div>
 			)}
 		</div>
