@@ -409,6 +409,7 @@ type ClineMessage = {
 				| "checkpoint_saved"
 				| "rooignore_error"
 				| "diff_error"
+				| "condense_context"
 		  )
 		| undefined
 	text?: string | undefined
@@ -425,6 +426,14 @@ type ClineMessage = {
 		| {
 				icon?: string | undefined
 				text?: string | undefined
+		  }
+		| undefined
+	contextCondense?:
+		| {
+				cost: number
+				prevContextTokens: number
+				newContextTokens: number
+				summary: string
 		  }
 		| undefined
 }
@@ -484,6 +493,7 @@ type RooCodeEvents = {
 							| "checkpoint_saved"
 							| "rooignore_error"
 							| "diff_error"
+							| "condense_context"
 					  )
 					| undefined
 				text?: string | undefined
@@ -500,6 +510,14 @@ type RooCodeEvents = {
 					| {
 							icon?: string | undefined
 							text?: string | undefined
+					  }
+					| undefined
+				contextCondense?:
+					| {
+							cost: number
+							prevContextTokens: number
+							newContextTokens: number
+							summary: string
 					  }
 					| undefined
 			}
@@ -955,6 +973,7 @@ type IpcMessage =
 												| "checkpoint_saved"
 												| "rooignore_error"
 												| "diff_error"
+												| "condense_context"
 										  )
 										| undefined
 									text?: string | undefined
@@ -971,6 +990,14 @@ type IpcMessage =
 										| {
 												icon?: string | undefined
 												text?: string | undefined
+										  }
+										| undefined
+									contextCondense?:
+										| {
+												cost: number
+												prevContextTokens: number
+												newContextTokens: number
+												summary: string
 										  }
 										| undefined
 								}
@@ -1416,6 +1443,7 @@ type TaskEvent =
 									| "checkpoint_saved"
 									| "rooignore_error"
 									| "diff_error"
+									| "condense_context"
 							  )
 							| undefined
 						text?: string | undefined
@@ -1432,6 +1460,14 @@ type TaskEvent =
 							| {
 									icon?: string | undefined
 									text?: string | undefined
+							  }
+							| undefined
+						contextCondense?:
+							| {
+									cost: number
+									prevContextTokens: number
+									newContextTokens: number
+									summary: string
 							  }
 							| undefined
 					}

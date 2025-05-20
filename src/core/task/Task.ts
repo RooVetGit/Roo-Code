@@ -9,7 +9,7 @@ import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
 // schemas
-import { TokenUsage, ToolUsage, ToolName } from "../../schemas"
+import { TokenUsage, ToolUsage, ToolName, ContextCondense } from "../../schemas"
 
 // api
 import { ApiHandler, buildApiHandler } from "../../api"
@@ -350,7 +350,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			await this.providerRef.deref()?.updateTaskHistory(historyItem)
 		} catch (error) {
-			console.error("Failed to save cline messages:", error)
+			console.error("Failed to save Roo messages:", error)
 		}
 	}
 
@@ -372,7 +372,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		// simply removes the reference to this instance, but the instance is
 		// still alive until this promise resolves or rejects.)
 		if (this.abort) {
-			throw new Error(`[Cline#ask] task ${this.taskId}.${this.instanceId} aborted`)
+			throw new Error(`[RooCode#ask] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
 		let askTs: number
@@ -490,9 +490,10 @@ export class Task extends EventEmitter<ClineEvents> {
 		options: {
 			isNonInteractive?: boolean
 		} = {},
+		contextCondense?: ContextCondense,
 	): Promise<undefined> {
 		if (this.abort) {
-			throw new Error(`[Cline#say] task ${this.taskId}.${this.instanceId} aborted`)
+			throw new Error(`[RooCode#say] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
 		if (partial !== undefined) {
@@ -517,7 +518,15 @@ export class Task extends EventEmitter<ClineEvents> {
 						this.lastMessageTs = sayTs
 					}
 
-					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, partial })
+					await this.addToClineMessages({
+						ts: sayTs,
+						type: "say",
+						say: type,
+						text,
+						images,
+						partial,
+						contextCondense,
+					})
 				}
 			} else {
 				// New now have a complete version of a previously partial message.
@@ -547,7 +556,7 @@ export class Task extends EventEmitter<ClineEvents> {
 						this.lastMessageTs = sayTs
 					}
 
-					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images })
+					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, contextCondense })
 				}
 			}
 		} else {
@@ -562,7 +571,15 @@ export class Task extends EventEmitter<ClineEvents> {
 				this.lastMessageTs = sayTs
 			}
 
-			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, checkpoint })
+			await this.addToClineMessages({
+				ts: sayTs,
+				type: "say",
+				say: type,
+				text,
+				images,
+				checkpoint,
+				contextCondense,
+			})
 		}
 	}
 
@@ -623,7 +640,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			this.providerRef
 				.deref()
-				?.log(`Error failed to add reply from subtast into conversation of parent task, error: ${error}`)
+				?.log(`Error failed to add reply from subtask into conversation of parent task, error: ${error}`)
 
 			throw error
 		}
@@ -960,7 +977,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		includeFileDetails: boolean = false,
 	): Promise<boolean> {
 		if (this.abort) {
-			throw new Error(`[Cline#recursivelyMakeClineRequests] task ${this.taskId}.${this.instanceId} aborted`)
+			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
 		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
@@ -987,10 +1004,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			this.consecutiveMistakeCount = 0
 		}
-
-		// Get previous api req's index to check token usage and determine if we
-		// need to truncate conversation history.
-		const previousApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
 
 		// In this Cline request loop, we need to check if this task instance
 		// has been asked to wait for a subtask to finish before continuing.
@@ -1150,7 +1163,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			// Yields only if the first chunk is successful, otherwise will
 			// allow the user to retry the request (most likely due to rate
 			// limit error, which gets thrown on the first chunk).
-			const stream = this.attemptApiRequest(previousApiReqIndex)
+			const stream = this.attemptApiRequest()
 			let assistantMessage = ""
 			let reasoningMessage = ""
 			this.isStreaming = true
@@ -1256,7 +1269,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			// Need to call here in case the stream was aborted.
 			if (this.abort || this.abandoned) {
-				throw new Error(`[Cline#recursivelyMakeClineRequests] task ${this.taskId}.${this.instanceId} aborted`)
+				throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 			}
 
 			this.didCompleteReadingStream = true
@@ -1357,7 +1370,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
+	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
 		let mcpHub: McpHub | undefined
 
 		const { apiConfiguration, mcpEnabled, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds } =
@@ -1447,25 +1460,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			)
 		})()
 
-		// If the previous API request's total token usage is close to the
-		// context window, truncate the conversation history to free up space
-		// for the new request.
-		if (previousApiReqIndex >= 0) {
-			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
-
-			if (!previousRequest) {
-				return
-			}
-
-			const {
-				tokensIn = 0,
-				tokensOut = 0,
-				cacheWrites = 0,
-				cacheReads = 0,
-			}: ClineApiReqInfo = JSON.parse(previousRequest)
-
-			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
-
+		const { contextTokens } = this.getTokenUsage()
+		if (contextTokens) {
 			// Default max tokens value for thinking models when no specific
 			// value is set.
 			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
@@ -1479,16 +1475,31 @@ export class Task extends EventEmitter<ClineEvents> {
 			const contextWindow = modelInfo.contextWindow
 
 			const autoCondenseContext = experiments?.autoCondenseContext ?? false
-			const trimmedMessages = await truncateConversationIfNeeded({
+			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
-				totalTokens,
+				totalTokens: contextTokens,
 				maxTokens,
 				contextWindow,
 				apiHandler: this.api,
 				autoCondenseContext,
+				systemPrompt,
 			})
-			if (trimmedMessages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(trimmedMessages)
+			if (truncateResult.messages !== this.apiConversationHistory) {
+				await this.overwriteApiConversationHistory(truncateResult.messages)
+			}
+			if (truncateResult.summary) {
+				const { summary, cost, prevContextTokens, newContextTokens = 0 } = truncateResult
+				const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
+				await this.say(
+					"condense_context",
+					undefined /* text */,
+					undefined /* images */,
+					false /* partial */,
+					undefined /* checkpoint */,
+					undefined /* progressStatus */,
+					undefined /* options */,
+					contextCondense,
+				)
 			}
 		}
 
@@ -1559,7 +1570,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 				// Delegate generator output from the recursive call with
 				// incremented retry count.
-				yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
+				yield* this.attemptApiRequest(retryAttempt + 1)
 
 				return
 			} else {
@@ -1577,7 +1588,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				await this.say("api_req_retried")
 
 				// Delegate generator output from the recursive call.
-				yield* this.attemptApiRequest(previousApiReqIndex)
+				yield* this.attemptApiRequest()
 				return
 			}
 		}
@@ -1613,7 +1624,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		return combineApiRequests(combineCommandSequences(messages))
 	}
 
-	public getTokenUsage() {
+	public getTokenUsage(): TokenUsage {
 		return getApiMetrics(this.combineMessages(this.clineMessages.slice(1)))
 	}
 

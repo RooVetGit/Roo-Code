@@ -37,5 +37,6 @@ logs
 # Vite development
 .vite-port
 
-# JetBrains IDEs
-.idea
+# IntelliJ and Qodo plugin folders
+.idea/
+.qodo/

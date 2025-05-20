@@ -937,6 +937,7 @@ export const clineSays = [
 	"checkpoint_saved",
 	"rooignore_error",
 	"diff_error",
+	"condense_context",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)
@@ -955,6 +956,19 @@ export const toolProgressStatusSchema = z.object({
 export type ToolProgressStatus = z.infer<typeof toolProgressStatusSchema>
 
 /**
+ * ContextCondense
+ */
+
+export const contextCondenseSchema = z.object({
+	cost: z.number(),
+	prevContextTokens: z.number(),
+	newContextTokens: z.number(),
+	summary: z.string(),
+})
+
+export type ContextCondense = z.infer<typeof contextCondenseSchema>
+
+/**
  * ClineMessage
  */
 
@@ -970,6 +984,7 @@ export const clineMessageSchema = z.object({
 	conversationHistoryIndex: z.number().optional(),
 	checkpoint: z.record(z.string(), z.unknown()).optional(),
 	progressStatus: toolProgressStatusSchema.optional(),
+	contextCondense: contextCondenseSchema.optional(),
 })
 
 export type ClineMessage = z.infer<typeof clineMessageSchema>
