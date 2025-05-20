@@ -45,7 +45,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			}
 
 			const results = await this.client.chat.completions.create(params)
-			
+
 			const matcher = new XmlMatcher(
 				"think",
 				(chunk) =>
@@ -54,7 +54,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 						text: chunk.data,
 					}) as const,
 			)
-			
+
 			// Stream handling
 			// @ts-ignore
 			for await (const chunk of results) {
