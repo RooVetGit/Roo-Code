@@ -28,7 +28,7 @@ interface CodeIndexSettingsProps {
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
 	apiConfiguration: ProviderSettings
 	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
-	setProviderSettingsField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
+	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 }
 
 interface IndexingStatusUpdateMessage {
@@ -46,7 +46,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	codebaseIndexConfig,
 	apiConfiguration,
 	setCachedStateField,
-	setProviderSettingsField,
+	setApiConfigurationField,
 }) => {
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
@@ -170,19 +170,19 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</Select>
 						</div>
 
-						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Model:</div>
 						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
 							<div className="space-y-2">
 								<VSCodeTextField
 									type="password"
 									value={apiConfiguration.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => setProviderSettingsField("codeIndexOpenAiKey", e.target.value)}
+									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
 									style={{ width: "100%" }}>
 									OpenAI Key:
 								</VSCodeTextField>
 							</div>
 						)}
 
+						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Model</div>
 						<div className="flex items-center gap-2">
 							<Select
 								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
@@ -241,7 +241,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<VSCodeTextField
 								type="password"
 								value={apiConfiguration.codeIndexQdrantApiKey}
-								onInput={(e: any) => setProviderSettingsField("codeIndexQdrantApiKey", e.target.value)}
+								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
 								style={{ width: "100%" }}>
 								Qdrant Key:
 							</VSCodeTextField>
