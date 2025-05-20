@@ -1,90 +1,122 @@
-import React from "react"
-import { screen } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { TypeGroup } from "../TypeGroup"
-import { renderWithProviders } from "@/test/test-utils"
+
+// Mock translation hook
+jest.mock("@/i18n/TranslationContext", () => ({
+	useAppTranslation: () => ({
+		t: (key: string, params?: any) => {
+			if (key === "marketplace:type-group.generic-type") {
+				return params.type
+			}
+			const translations: Record<string, string> = {
+				"marketplace:type-group.modes": "Modes",
+				"marketplace:type-group.mcps": "MCPs",
+				"marketplace:type-group.prompts": "Prompts",
+				"marketplace:type-group.packages": "Packages",
+				"marketplace:type-group.match": "Match",
+			}
+			return translations[key] || key
+		},
+	}),
+}))
+
+// Mock icons
+jest.mock("lucide-react", () => ({
+	Rocket: () => <div data-testid="rocket-icon" />,
+	Server: () => <div data-testid="server-icon" />,
+	Package: () => <div data-testid="package-icon" />,
+	Sparkles: () => <div data-testid="sparkles-icon" />,
+}))
 
 describe("TypeGroup", () => {
-	const mockItems = [
+	const defaultItems = [
 		{
-			name: "Test Item 1",
-			description: "Description 1",
-			path: "test/path/1",
-		},
-		{
-			name: "Test Item 2",
-			description: "Description 2",
-			path: "test/path/2",
+			name: "Test Item",
+			description: "Test Description",
+			path: "test/path",
 		},
 	]
 
-	it("should render type header and items", () => {
-		renderWithProviders(<TypeGroup type="mcp" items={mockItems} />)
-
-		// Test using translation key with flexible text matching
-		expect(screen.getByText((content, element) => element?.textContent === "MCP Servers")).toBeInTheDocument()
-
-		// Check items using list roles and text content
-		const items = screen.getAllByRole("listitem")
-		expect(items[0]).toHaveTextContent("Test Item 1")
-		expect(items[0]).toHaveTextContent("Description 1")
-		expect(items[1]).toHaveTextContent("Test Item 2")
-		expect(items[1]).toHaveTextContent("Description 2")
+	it("renders nothing when items array is empty", () => {
+		const { container } = render(<TypeGroup type="mode" items={[]} />)
+		expect(container).toBeEmptyDOMElement()
 	})
 
-	it("should format different types correctly", () => {
-		const types = [
-			{ input: "mode", expected: "Modes" },
-			{ input: "mcp", expected: "MCP Servers" },
-			{ input: "prompt", expected: "Prompts" },
-			{ input: "package", expected: "Packages" },
-			{ input: "custom", expected: "Customs" }, // Uses generic-type with capitalization
+	it("renders mode type with horizontal layout", () => {
+		render(<TypeGroup type="mode" items={defaultItems} />)
+
+		expect(screen.getByText("Modes")).toBeInTheDocument()
+		expect(screen.getByTestId("rocket-icon")).toBeInTheDocument()
+
+		// Find the grid container
+		const gridContainer = screen.getByText("Test Item").closest(".grid")
+		expect(gridContainer).toHaveClass("grid-cols-[repeat(auto-fit,minmax(140px,1fr))]")
+	})
+
+	it("renders mcp type with vertical layout", () => {
+		render(<TypeGroup type="mcp" items={defaultItems} />)
+
+		expect(screen.getByText("MCPs")).toBeInTheDocument()
+		expect(screen.getByTestId("server-icon")).toBeInTheDocument()
+
+		// Find the grid container
+		const gridContainer = screen.getByText("Test Item").closest(".grid")
+		expect(gridContainer).toHaveClass("grid-cols-1")
+	})
+
+	it("renders prompt type correctly", () => {
+		render(<TypeGroup type="prompt" items={defaultItems} />)
+
+		expect(screen.getByText("Prompts")).toBeInTheDocument()
+		expect(screen.getByTestId("sparkles-icon")).toBeInTheDocument()
+	})
+
+	it("renders package type correctly", () => {
+		render(<TypeGroup type="package" items={defaultItems} />)
+
+		expect(screen.getByText("Packages")).toBeInTheDocument()
+		expect(screen.getByTestId("package-icon")).toBeInTheDocument()
+	})
+
+	it("renders custom type with generic label", () => {
+		render(<TypeGroup type="custom" items={defaultItems} />)
+
+		expect(screen.getByText("Custom")).toBeInTheDocument()
+		// Falls back to package icon
+		expect(screen.getByTestId("package-icon")).toBeInTheDocument()
+	})
+
+	it("renders matched items with special styling", () => {
+		const matchedItems = [
+			{
+				name: "Matched Item",
+				description: "Test Description",
+				path: "test/path",
+				matchInfo: {
+					matched: true,
+					matchReason: { name: true },
+				},
+			},
 		]
 
-		types.forEach(({ input, expected }) => {
-			const { unmount } = renderWithProviders(<TypeGroup type={input} items={mockItems} />)
-			expect(screen.getByText((content, element) => element?.textContent === expected)).toBeInTheDocument()
-			unmount()
-		})
+		render(<TypeGroup type="mode" items={matchedItems} />)
+
+		const matchedText = screen.getByText("Matched Item")
+		expect(matchedText).toHaveClass("text-vscode-textLink")
+		expect(screen.getByText("Match")).toBeInTheDocument()
 	})
 
-	it("should handle items without descriptions", () => {
-		const itemsWithoutDesc = [{ name: "Test Item", path: "test/path" }]
+	it("renders description when provided", () => {
+		render(<TypeGroup type="mcp" items={defaultItems} />)
 
-		renderWithProviders(<TypeGroup type="test" items={itemsWithoutDesc} />)
-		expect(screen.getByText("Test Item")).toBeInTheDocument()
+		expect(screen.getByText("Test Description")).toBeInTheDocument()
+		expect(screen.getByText("Test Description")).toHaveClass("text-vscode-descriptionForeground")
 	})
 
-	it("should not render when items array is empty", () => {
-		const { container } = renderWithProviders(<TypeGroup type="test" items={[]} />)
-		expect(container).toBeEmptyDOMElement()
-	})
+	it("applies custom className", () => {
+		render(<TypeGroup type="mode" items={defaultItems} className="custom-class" />)
 
-	it("should not render when items is undefined", () => {
-		const { container } = renderWithProviders(<TypeGroup type="test" items={undefined as any} />)
-		expect(container).toBeEmptyDOMElement()
-	})
-
-	it("should apply custom className", () => {
-		const customClass = "custom-test-class"
-		renderWithProviders(<TypeGroup type="test" items={mockItems} className={customClass} />)
-
-		const container = screen.getByRole("heading").parentElement
-		expect(container).toHaveClass(customClass)
-	})
-
-	it("should render items in a numbered list", () => {
-		renderWithProviders(<TypeGroup type="test" items={mockItems} />)
-
-		const list = screen.getByRole("list")
-		expect(list).toHaveClass("list-decimal")
-		expect(list.children).toHaveLength(2)
-	})
-
-	it("should show path as title attribute", () => {
-		renderWithProviders(<TypeGroup type="test" items={mockItems} />)
-
-		const items = screen.getAllByRole("listitem")
-		expect(items[0]).toHaveAttribute("title", "test/path/1")
-		expect(items[1]).toHaveAttribute("title", "test/path/2")
+		const container = screen.getByText("Modes").closest(".custom-class")
+		expect(container).toBeInTheDocument()
 	})
 })

@@ -1,5 +1,6 @@
-import React, { useState } from "react"
+import React from "react"
 import { cn } from "@/lib/utils"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@src/components/ui/accordion"
 
 interface ExpandableSectionProps {
 	title: string
@@ -16,44 +17,36 @@ export const ExpandableSection: React.FC<ExpandableSectionProps> = ({
 	defaultExpanded = false,
 	badge,
 }) => {
-	const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+	// Create a unique value for the accordion item
+	const accordionValue = React.useMemo(() => `section-${title.replace(/\s+/g, "-").toLowerCase()}`, [title])
 
 	return (
-		<div className={cn("border-t border-vscode-panel-border mt-4", className)}>
-			<button
-				className="w-full flex items-center justify-between py-2 text-sm text-vscode-foreground hover:text-vscode-textLink"
-				onClick={() => setIsExpanded(!isExpanded)}
-				aria-expanded={isExpanded}
-				aria-controls="details-content">
-				<span className="font-medium flex items-center">
-					<span className="codicon codicon-list-unordered mr-1"></span>
-					{title}
-				</span>
-				<div className="flex items-center">
-					{badge && (
-						<span className="mr-2 text-xs bg-vscode-badge-background text-vscode-badge-foreground px-1 py-0.5 rounded">
-							{badge}
+		<Accordion
+			type="single"
+			collapsible
+			defaultValue={defaultExpanded ? accordionValue : undefined}
+			className={cn("border-t-0", className)}>
+			<AccordionItem value={accordionValue}>
+				<AccordionTrigger
+					className="py-2 text-sm hover:no-underline hover:cursor-pointer"
+					aria-controls="details-content"
+					id="details-button">
+					<div className="flex items-center justify-between w-full">
+						<span className="font-medium flex items-center">
+							<span className="codicon codicon-list-unordered mr-1"></span>
+							{title}
 						</span>
-					)}
-					<span
-						className={cn(
-							"codicon",
-							isExpanded ? "codicon-chevron-down" : "codicon-chevron-right",
-							"transition-transform duration-200",
+						{badge && (
+							<span className="mr-2 text-xs bg-vscode-badge-background text-vscode-badge-foreground px-1 py-0.5 rounded">
+								{badge}
+							</span>
 						)}
-					/>
-				</div>
-			</button>
-			<div
-				id="details-content"
-				className={cn(
-					"overflow-hidden transition-[max-height,opacity] duration-200 ease-in-out",
-					isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0",
-				)}
-				role="region"
-				aria-labelledby="details-button">
-				<div className="py-2 px-1 bg-vscode-panel-background rounded-sm">{children}</div>
-			</div>
-		</div>
+					</div>
+				</AccordionTrigger>
+				<AccordionContent id="details-content" className="pt-0" role="region" aria-labelledby="details-button">
+					{children}
+				</AccordionContent>
+			</AccordionItem>
+		</Accordion>
 	)
 }

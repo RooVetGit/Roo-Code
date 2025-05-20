@@ -1,176 +1,218 @@
-import { screen, fireEvent } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { MarketplaceItemCard } from "../MarketplaceItemCard"
-import { MarketplaceItem } from "../../../../../../src/services/marketplace/types"
-import { renderWithProviders } from "@/test/test-utils"
+import { vscode } from "@/utils/vscode"
+import { MarketplaceItem } from "@roo/services/marketplace/types"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { AccordionTrigger } from "@/components/ui/accordion"
 
 // Mock vscode API
-const mockPostMessage = jest.fn()
 jest.mock("@/utils/vscode", () => ({
 	vscode: {
-		postMessage: (msg: any) => mockPostMessage(msg),
+		postMessage: jest.fn(),
 	},
 }))
 
+// Mock MarketplaceItemActionsMenu component
+jest.mock("../MarketplaceItemActionsMenu", () => ({
+	MarketplaceItemActionsMenu: () => <div data-testid="actions-menu" />,
+}))
+
+// Mock ChevronDownIcon for Accordion
+jest.mock("@/components/ui/accordion", () => {
+	const actual = jest.requireActual("@/components/ui/accordion")
+	return {
+		...actual,
+		AccordionTrigger: ({ children, ...props }: React.ComponentProps<typeof AccordionTrigger>) => (
+			<button {...props}>
+				{children}
+				<span data-testid="chevron-icon" />
+			</button>
+		),
+	}
+})
+
+// Mock translation hook
+jest.mock("@/i18n/TranslationContext", () => ({
+	useAppTranslation: () => ({
+		t: (key: string, params?: any) => {
+			if (key === "marketplace:items.card.by") {
+				return `by ${params.author}`
+			}
+			const translations: Record<string, string> = {
+				"marketplace:filters.type.mode": "Mode",
+				"marketplace:filters.type.mcp server": "MCP Server",
+				"marketplace:filters.type.prompt": "Prompt",
+				"marketplace:filters.type.package": "Package",
+				"marketplace:filters.tags.clear": "Remove filter",
+				"marketplace:filters.tags.clickToFilter": "Add filter",
+				"marketplace:items.components": "Components",
+			}
+			return translations[key] || key
+		},
+	}),
+}))
+
+// Mock icons
+jest.mock("lucide-react", () => ({
+	Rocket: () => <div data-testid="rocket-icon" />,
+	Server: () => <div data-testid="server-icon" />,
+	Package: () => <div data-testid="package-icon" />,
+	Sparkles: () => <div data-testid="sparkles-icon" />,
+	Download: () => <div data-testid="download-icon" />,
+}))
+
+const renderWithProviders = (ui: React.ReactElement) => {
+	return render(<TooltipProvider>{ui}</TooltipProvider>)
+}
+
 describe("MarketplaceItemCard", () => {
-	const mockItem: MarketplaceItem = {
-		name: "Test Package",
-		description: "A test package",
-		type: "package",
-		repoUrl: "test-url",
-		url: "test-url",
-		tags: ["test", "mock"],
-		items: [
-			{
-				type: "mcp",
-				path: "test/path",
-				metadata: {
-					name: "Test Server",
-					description: "A test server",
-					version: "1.0.0",
-					type: "mcp",
-				},
-			},
-			{
-				type: "mode",
-				path: "test/path2",
-				metadata: {
-					name: "Test Mode",
-					description: "A test mode",
-					version: "2.0.0",
-					type: "mode",
-				},
-			},
-		],
+	const defaultItem: MarketplaceItem = {
+		id: "test-item",
+		name: "Test Item",
+		description: "Test Description",
+		type: "mode",
 		version: "1.0.0",
 		author: "Test Author",
-		lastUpdated: "2025-04-13",
+		authorUrl: "https://example.com",
+		lastUpdated: "2024-01-01",
+		tags: ["test", "example"],
+		repoUrl: "https://github.com/test/repo",
+		url: "https://example.com/item",
 	}
 
 	const defaultProps = {
-		item: mockItem,
-		filters: { type: "", search: "", tags: [] },
+		item: defaultItem,
+		installed: {
+			project: undefined,
+			global: undefined,
+		},
+		filters: {
+			type: "",
+			search: "",
+			tags: [],
+		},
 		setFilters: jest.fn(),
 		activeTab: "browse" as const,
 		setActiveTab: jest.fn(),
 	}
 
 	beforeEach(() => {
-		mockPostMessage.mockClear()
+		jest.clearAllMocks()
 	})
 
-	it("should render basic item information", () => {
+	it("renders basic item information", () => {
 		renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
 
-		expect(screen.getByText("Test Package")).toBeInTheDocument()
-		expect(screen.getByText("A test package")).toBeInTheDocument()
-		expect(
-			screen.getByText((content, element) => {
-				// This will match the translated text "by Test Author" regardless of how it's structured
-				return element?.textContent === "by Test Author"
-			}),
-		).toBeInTheDocument()
-		// Check for the type label specifically
-		expect(
-			screen.getByText((content, element) => {
-				return Boolean(element?.className.includes("rounded-full") && content === "Package")
-			}),
-		).toBeInTheDocument()
-	})
-
-	it("should render tags", () => {
-		renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
-
-		expect(screen.getByText("test")).toBeInTheDocument()
-		expect(screen.getByText("mock")).toBeInTheDocument()
-	})
-
-	it("should handle tag clicks", () => {
-		const setFilters = jest.fn()
-		renderWithProviders(<MarketplaceItemCard {...defaultProps} setFilters={setFilters} />)
-
-		fireEvent.click(screen.getByText("test"))
-		expect(setFilters).toHaveBeenCalledWith(
-			expect.objectContaining({
-				tags: ["test"],
-			}),
-		)
-	})
-
-	it("should render version and date information", () => {
-		renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
-
+		expect(screen.getByText("Test Item")).toBeInTheDocument()
+		expect(screen.getByText("Test Description")).toBeInTheDocument()
+		expect(screen.getByText("by Test Author")).toBeInTheDocument()
 		expect(screen.getByText("1.0.0")).toBeInTheDocument()
-		// Use a regex to match the date since it depends on the timezone
-		expect(screen.getByText(/Apr \d{1,2}, 2025/)).toBeInTheDocument()
+		expect(screen.getByText("Jan 1, 2024")).toBeInTheDocument()
 	})
 
-	describe("Details section", () => {
-		it("should render expandable details section with correct count when item has no components", () => {
-			const itemWithNoItems = { ...mockItem, items: [] }
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={itemWithNoItems} />)
+	it("renders project installation badge", () => {
+		renderWithProviders(
+			<MarketplaceItemCard
+				{...defaultProps}
+				installed={{
+					project: { version: "1.0.0" },
+					global: undefined,
+				}}
+			/>,
+		)
 
-			// The component uses t("marketplace:items.components", { count: 0 })
-			expect(screen.getByText("0 components")).toBeInTheDocument()
+		expect(screen.getByText("Project")).toBeInTheDocument()
+		expect(screen.getByLabelText("Installed in project")).toBeInTheDocument()
+	})
+
+	it("renders global installation badge", () => {
+		renderWithProviders(
+			<MarketplaceItemCard
+				{...defaultProps}
+				installed={{
+					project: undefined,
+					global: { version: "1.0.0" },
+				}}
+			/>,
+		)
+
+		expect(screen.getByText("Global")).toBeInTheDocument()
+		expect(screen.getByLabelText("Installed globally")).toBeInTheDocument()
+	})
+
+	it("renders type with appropriate icon", () => {
+		renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
+
+		expect(screen.getByText("Mode")).toBeInTheDocument()
+		expect(screen.getByTestId("rocket-icon")).toBeInTheDocument()
+	})
+
+	it("renders tags and handles tag clicks", async () => {
+		const user = userEvent.setup()
+		const setFilters = jest.fn()
+		const setActiveTab = jest.fn()
+
+		renderWithProviders(
+			<MarketplaceItemCard {...defaultProps} setFilters={setFilters} setActiveTab={setActiveTab} />,
+		)
+
+		const tagButton = screen.getByText("test")
+		await user.click(tagButton)
+
+		expect(setFilters).toHaveBeenCalledWith({ tags: ["test"] })
+		expect(setActiveTab).not.toHaveBeenCalled() // Already on browse tab
+	})
+
+	it("handles author link click", async () => {
+		const user = userEvent.setup()
+		renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
+
+		const authorLink = screen.getByText("by Test Author")
+		await user.click(authorLink)
+
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "openExternal",
+			url: "https://example.com",
 		})
+	})
 
-		it("should render expandable details section with correct count when item has components", () => {
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
+	it("renders package components when available", () => {
+		const packageItem: MarketplaceItem = {
+			...defaultItem,
+			type: "package",
+			items: [
+				{
+					type: "mode",
+					path: "test/path",
+					matchInfo: { matched: true },
+					metadata: {
+						name: "Component 1",
+						description: "Test Component",
+						type: "mode",
+						version: "1.0.0",
+					},
+				},
+			],
+		}
 
-			// The component uses t("marketplace:items.components", { count: 2 })
-			expect(screen.getByText("2 components")).toBeInTheDocument()
-		})
+		renderWithProviders(<MarketplaceItemCard {...defaultProps} item={packageItem} />)
 
-		it("should not render details section when item has no subcomponents", () => {
-			const itemWithoutItems = { ...mockItem, items: [] }
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={itemWithoutItems} />)
+		// Find the section title by its parent button
+		const sectionTitle = screen.getByRole("button", { name: /Components/ })
+		expect(sectionTitle).toBeInTheDocument()
+		expect(screen.getByText("Component 1")).toBeInTheDocument()
+	})
 
-			expect(screen.queryByText("Component Details")).not.toBeInTheDocument()
-		})
+	it("does not render invalid author URLs", () => {
+		const itemWithInvalidUrl: MarketplaceItem = {
+			...defaultItem,
+			authorUrl: "invalid-url",
+		}
 
-		it("should show grouped items when expanded", () => {
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
-			fireEvent.click(screen.getByText("2 components"))
+		renderWithProviders(<MarketplaceItemCard {...defaultProps} item={itemWithInvalidUrl} />)
 
-			// These use the type-group translations
-			expect(screen.getByText((content, element) => element?.textContent === "MCP Servers")).toBeInTheDocument()
-			expect(screen.getByText((content, element) => element?.textContent === "Modes")).toBeInTheDocument()
-
-			// Check for items using getByRole and textContent
-			const items = screen.getAllByRole("listitem")
-			expect(items[0]).toHaveTextContent("Test Server")
-			expect(items[0]).toHaveTextContent("A test server")
-			expect(items[1]).toHaveTextContent("Test Mode")
-			expect(items[1]).toHaveTextContent("A test mode")
-		})
-
-		it("should maintain proper order of items within groups", () => {
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
-			fireEvent.click(screen.getByText("2 components"))
-
-			const items = screen.getAllByRole("listitem")
-			expect(items[0]).toHaveTextContent("Test Server")
-			expect(items[1]).toHaveTextContent("Test Mode")
-		})
-
-		it("should show expandable section for package type", () => {
-			const packageItem = { ...mockItem, type: "package" as const }
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={packageItem} />)
-
-			expect(screen.getByText("2 components")).toBeInTheDocument()
-		})
-
-		it("should not show expandable section for mode type", () => {
-			const modeItem = { ...mockItem, type: "mode" as const }
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={modeItem} />)
-
-			expect(screen.queryByText("2 components")).not.toBeInTheDocument()
-		})
-
-		it("should not show expandable section for mcp type", () => {
-			const mcpServerItem = { ...mockItem, type: "mcp" as const }
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={mcpServerItem} />)
-
-			expect(screen.queryByText("2 components")).not.toBeInTheDocument()
-		})
+		const authorText = screen.getByText("by Test Author")
+		expect(authorText.tagName).not.toBe("BUTTON")
 	})
 })

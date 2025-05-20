@@ -99,10 +99,8 @@ export class MarketplaceViewStateManager {
 			},
 		}
 	}
-	private fetchTimeoutId?: NodeJS.Timeout
-	private readonly FETCH_TIMEOUT = 30000 // 30 seconds
+	// Removed auto-polling timeout
 	private stateChangeHandlers: Set<StateChangeHandler> = new Set()
-	private sourcesModified = false // Track if sources have been modified
 
 	// Empty constructor is required for test initialization
 	// eslint-disable-next-line @typescript-eslint/no-useless-constructor
@@ -127,12 +125,6 @@ export class MarketplaceViewStateManager {
 	}
 
 	public cleanup(): void {
-		// Clear any pending timeouts
-		if (this.fetchTimeoutId) {
-			clearTimeout(this.fetchTimeoutId)
-			this.fetchTimeoutId = undefined
-		}
-
 		// Reset fetching state
 		if (this.state.isFetching) {
 			this.state.isFetching = false
@@ -145,18 +137,20 @@ export class MarketplaceViewStateManager {
 
 	public getState(): ViewState {
 		// Only create new arrays if they exist and have items
+		const allItems = this.state.allItems.length ? [...this.state.allItems] : []
 		const displayItems = this.state.displayItems?.length ? [...this.state.displayItems] : this.state.displayItems
 		const refreshingUrls = this.state.refreshingUrls.length ? [...this.state.refreshingUrls] : []
 		const tags = this.state.filters.tags.length ? [...this.state.filters.tags] : []
+		const sources = this.state.sources.length ? [...this.state.sources] : [DEFAULT_MARKETPLACE_SOURCE]
 		const installedMetadata = this.state.installedMetadata
 
 		// Create minimal new state object
 		return {
 			...this.state,
-			allItems: this.state.allItems.length ? [...this.state.allItems] : [],
+			allItems,
 			displayItems,
 			refreshingUrls,
-			sources: this.state.sources.length ? [...this.state.sources] : [DEFAULT_MARKETPLACE_SOURCE],
+			sources,
 			installedMetadata,
 			filters: {
 				...this.state.filters,
@@ -212,17 +206,13 @@ export class MarketplaceViewStateManager {
 					return
 				}
 
-				// Clear any existing timeout
-				this.clearFetchTimeout()
-
 				// Send fetch request
 				vscode.postMessage({
 					type: "fetchMarketplaceItems",
-					bool: true,
 				} as WebviewMessage)
 
 				// Store current items before updating state
-				const currentItems = [...(this.state.allItems || [])]
+				const currentItems = this.state.allItems.length ? [...this.state.allItems] : []
 
 				// Update state after sending request
 				this.state = {
@@ -233,59 +223,31 @@ export class MarketplaceViewStateManager {
 				}
 				this.notifyStateChange()
 
-				// Set timeout to reset state if fetch takes too long, but don't trigger a redraw if not needed
-				this.fetchTimeoutId = setTimeout(() => {
-					this.clearFetchTimeout()
-					// On timeout, preserve items if we have them
-					if (currentItems.length > 0) {
-						// Only update the isFetching flag without triggering a full redraw
-						this.state = {
-							...this.state,
-							isFetching: false,
-							allItems: currentItems,
-							displayItems: currentItems,
-						}
-					} else {
-						// Preserve the current tab and only update necessary state
-						const { activeTab, sources } = this.state
-						this.state = {
-							...this.getDefaultState(),
-							sources: [...sources],
-							activeTab, // Keep the current active tab
-						}
-					}
-
-					// Only notify if we're in the browse tab to avoid switching tabs
-					if (this.state.activeTab === "browse") {
-						// Use a minimal state update to avoid resetting scroll position
-						const handler = (state: ViewState) => {
-							// Only update the isFetching status without affecting other UI elements
-							return {
-								...state,
-								isFetching: false,
-							}
-						}
-
-						// Call handlers with the minimal update
-						this.stateChangeHandlers.forEach((stateHandler) => {
-							stateHandler(handler(this.getState()))
-						})
-					} else {
-						// If not in browse tab, just update the internal state without notifying
-						// This prevents tab switching
-					}
-				}, this.FETCH_TIMEOUT)
-
 				break
 			}
 
 			case "FETCH_COMPLETE": {
 				const { items } = transition.payload as TransitionPayloads["FETCH_COMPLETE"]
-				// Clear any existing timeout
-				this.clearFetchTimeout()
+				// No timeout to clear anymore
 
-				// Always update allItems as source of truth
+				// Sort incoming items
 				const sortedItems = this.sortItems([...items])
+
+				// Compare with current state to avoid unnecessary updates
+				const currentSortedItems = this.sortItems([...this.state.allItems])
+				if (JSON.stringify(sortedItems) === JSON.stringify(currentSortedItems)) {
+					// No changes: update only isFetching flag and send minimal update
+					this.state.isFetching = false
+					this.stateChangeHandlers.forEach((handler) => {
+						handler({
+							...this.getState(),
+							isFetching: false,
+						})
+					})
+					break
+				}
+
+				// Update allItems as source of truth
 				this.state = {
 					...this.state,
 					allItems: sortedItems,
@@ -299,8 +261,6 @@ export class MarketplaceViewStateManager {
 			}
 
 			case "FETCH_ERROR": {
-				this.clearFetchTimeout()
-
 				// Preserve current filters and sources
 				const { filters, sources, activeTab } = this.state
 
@@ -323,25 +283,15 @@ export class MarketplaceViewStateManager {
 				this.state = {
 					...this.state,
 					activeTab: tab,
-					allItems: this.state.allItems || [],
-					displayItems: this.state.displayItems || [],
 				}
 
-				// If switching to browse tab with no items or modified sources, trigger fetch
-				if (tab === "browse" && (this.state.allItems.length === 0 || this.sourcesModified)) {
+				// If switching to browse tab, trigger fetch
+				if (tab === "browse") {
 					this.state.isFetching = true
-					this.sourcesModified = false
 
 					vscode.postMessage({
 						type: "fetchMarketplaceItems",
-						bool: true,
 					} as WebviewMessage)
-				}
-				// Update display items if needed
-				else if (tab === "browse" && this.state.allItems.length > 0) {
-					this.state.displayItems = this.isFilterActive()
-						? this.filterItems(this.state.allItems)
-						: [...this.state.allItems]
 				}
 
 				this.notifyStateChange()
@@ -433,9 +383,6 @@ export class MarketplaceViewStateManager {
 				// If all sources are removed, add the default source
 				const updatedSources = sources.length === 0 ? [DEFAULT_MARKETPLACE_SOURCE] : [...sources]
 
-				// Mark sources as modified
-				this.sourcesModified = true
-
 				this.state = {
 					...this.state,
 					sources: updatedSources,
@@ -457,19 +404,10 @@ export class MarketplaceViewStateManager {
 
 					vscode.postMessage({
 						type: "fetchMarketplaceItems",
-						bool: true,
 					} as WebviewMessage)
 				}
 				break
 			}
-		}
-	}
-
-	private clearFetchTimeout(): void {
-		// Clear fetch timeout
-		if (this.fetchTimeoutId) {
-			clearTimeout(this.fetchTimeoutId)
-			this.fetchTimeoutId = undefined
 		}
 	}
 
@@ -620,16 +558,16 @@ export class MarketplaceViewStateManager {
 			}
 
 			// Handle state updates for marketplace items
+			// The state.marketplaceItems come from ClineProvider, see the file src/core/webview/ClineProvider.ts
 			const marketplaceItems = message.state.marketplaceItems
 			if (marketplaceItems !== undefined) {
-				const newItems = message.state.marketplaceItems
 				const currentItems = this.state.allItems || []
-				const hasNewItems = newItems.length > 0
+				const hasNewItems = marketplaceItems.length > 0
 				const hasCurrentItems = currentItems.length > 0
 				const isOnBrowseTab = this.state.activeTab === "browse"
 
 				// Determine which items to use
-				const itemsToUse = hasNewItems ? newItems : isOnBrowseTab && hasCurrentItems ? currentItems : []
+				const itemsToUse = hasNewItems ? marketplaceItems : isOnBrowseTab && hasCurrentItems ? currentItems : []
 				const sortedItems = this.sortItems([...itemsToUse])
 				const newDisplayItems = this.isFilterActive() ? this.filterItems(sortedItems) : sortedItems
 
@@ -648,7 +586,7 @@ export class MarketplaceViewStateManager {
 			// Determine if notification should preserve tab based on item update logic
 			const isOnBrowseTab = this.state.activeTab === "browse"
 			const hasCurrentItems = (this.state.allItems || []).length > 0
-			const preserveTab = !isOnBrowseTab && hasCurrentItems && marketplaceItems !== undefined
+			const preserveTab = !isOnBrowseTab && hasCurrentItems
 
 			this.notifyStateChange(preserveTab)
 		}

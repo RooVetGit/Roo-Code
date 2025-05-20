@@ -4,6 +4,7 @@ import { MarketplaceItemType, MarketplaceItem, MarketplaceSource } from "../../.
 import { DEFAULT_MARKETPLACE_SOURCE } from "../../../../../src/services/marketplace/constants"
 
 const createTestItem = (overrides = {}): MarketplaceItem => ({
+	id: "test",
 	name: "test",
 	type: "mode" as MarketplaceItemType,
 	description: "Test mode",

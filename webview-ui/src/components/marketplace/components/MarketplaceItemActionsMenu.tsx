@@ -62,16 +62,15 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 		})
 	}
 
-	const showInstallButton = true
-
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
+					className="px-2 w-4"
 					variant="ghost"
 					size="icon"
 					aria-label={t("marketplace:items.card.actionsMenuLabel") || "Actions"}>
-					<MoreVertical className="h-4 w-4" />
+					<MoreVertical className="size-4" />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start" side="bottom">
@@ -81,35 +80,29 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 					<span>{t("marketplace:items.card.viewSource")}</span>
 				</DropdownMenuItem>
 
-				{/* Install (Project) */}
-				{showInstallButton && (
+				{/* Remove (Project) */}
+				{installed.project ? (
+					<DropdownMenuItem onClick={() => handleRemove({ target: "project" })}>
+						<Trash className="mr-2 h-4 w-4" />
+						<span>{t("marketplace:items.card.removeProject")}</span>
+					</DropdownMenuItem>
+				) : (
 					<DropdownMenuItem className="" onClick={() => handleInstall({ target: "project" })}>
 						<Download className="mr-2 h-4 w-4" />
 						<span>{t("marketplace:items.card.installProject")}</span>
 					</DropdownMenuItem>
 				)}
 
-				{/* Install (Global) */}
-				{showInstallButton && (
-					<DropdownMenuItem onClick={() => handleInstall({ target: "global" })}>
-						<Download className="mr-2 h-4 w-4" />
-						<span>{t("marketplace:items.card.installGlobal")}</span>
-					</DropdownMenuItem>
-				)}
-
-				{/* Remove (Project) */}
-				{installed.project && (
-					<DropdownMenuItem onClick={() => handleRemove({ target: "project" })}>
-						<Trash className="mr-2 h-4 w-4" />
-						<span>{t("marketplace:items.card.removeProject")}</span>
-					</DropdownMenuItem>
-				)}
-
 				{/* Remove (Global) */}
-				{installed.global && (
+				{installed.global ? (
 					<DropdownMenuItem onClick={() => handleRemove({ target: "global" })}>
 						<Trash className="mr-2 h-4 w-4" />
 						<span>{t("marketplace:items.card.removeGlobal")}</span>
+					</DropdownMenuItem>
+				) : (
+					<DropdownMenuItem onClick={() => handleInstall({ target: "global" })}>
+						<Download className="mr-2 h-4 w-4" />
+						<span>{t("marketplace:items.card.installGlobal")}</span>
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>

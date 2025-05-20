@@ -34,7 +34,7 @@ const InstallSidebar: React.FC<MarketplaceInstallSidebarProps> = ({ item, config
 
 	return (
 		<div
-			className="fixed inset-0 flex justify-end bg-black/50 z-50"
+			className="fixed inset-0 flex justify-end"
 			onClick={onClose} // Close sidebar when clicking outside
 		>
 			<div

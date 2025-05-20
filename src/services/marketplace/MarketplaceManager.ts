@@ -25,6 +25,7 @@ import { InstalledMetadataManager, ItemInstalledMetadata } from "./InstalledMeta
  */
 export class MarketplaceManager {
 	private currentItems: MarketplaceItem[] = []
+	private originalItems: MarketplaceItem[] = []
 	private static readonly CACHE_EXPIRY_MS = 3600000 // 1 hour
 
 	IMM: InstalledMetadataManager
@@ -77,12 +78,11 @@ export class MarketplaceManager {
 		}
 	}
 
-	async getMarketplaceItems(sources: MarketplaceSource[]): Promise<{ items: MarketplaceItem[]; errors?: string[] }> {
+	async getMarketplaceItems(
+		enabledSources: MarketplaceSource[],
+	): Promise<{ items: MarketplaceItem[]; errors?: string[] }> {
 		const items: MarketplaceItem[] = []
 		const errors: string[] = []
-
-		// Filter enabled sources
-		const enabledSources = sources.filter((s) => s.enabled)
 
 		// Process sources sequentially with locking
 		for (const source of enabledSources) {
@@ -118,6 +118,8 @@ export class MarketplaceManager {
 
 		// Store the current items
 		this.currentItems = items
+		// Preserve original unfiltered items
+		this.originalItems = items
 
 		// Return both items and errors
 		const result = {
@@ -528,7 +530,13 @@ export class MarketplaceManager {
 		search?: string
 		tags?: string[]
 	}): MarketplaceItem[] {
-		const filteredItems = this.filterItems(this.currentItems, filters)
+		// If no filters, restore full list
+		if (!filters.type && !filters.search && (!filters.tags || filters.tags.length === 0)) {
+			this.currentItems = this.originalItems
+			return this.currentItems
+		}
+		// Filter based on original items
+		const filteredItems = this.filterItems(this.originalItems, filters)
 		this.currentItems = filteredItems
 		return filteredItems
 	}

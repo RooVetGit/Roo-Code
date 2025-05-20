@@ -117,11 +117,8 @@ export async function handleMarketplaceMessages(
 			try {
 				marketplaceManager.isFetching = true
 
-				// Wrap the entire initialization in a try-catch block
 				try {
-					// Initialize default sources if none exist
-					let sources =
-						((await provider.contextProxy.getValue("marketplaceSources")) as MarketplaceSource[]) || []
+					let sources = (provider.contextProxy.getValue("marketplaceSources") as MarketplaceSource[]) || []
 
 					if (!sources || sources.length === 0) {
 						sources = [DEFAULT_MARKETPLACE_SOURCE]
@@ -130,7 +127,6 @@ export async function handleMarketplaceMessages(
 						await provider.contextProxy.setValue("marketplaceSources", sources)
 					}
 
-					// Fetch items from all enabled sources
 					const enabledSources = sources.filter((s) => s.enabled)
 
 					if (enabledSources.length === 0) {
@@ -165,6 +161,8 @@ export async function handleMarketplaceMessages(
 
 					// Send state to webview
 					await provider.postStateToWebview()
+
+					return true
 				} catch (initError) {
 					const errorMessage = `Marketplace initialization failed: ${initError instanceof Error ? initError.message : String(initError)}`
 					console.error("Error in marketplace initialization:", initError)
@@ -176,6 +174,7 @@ export async function handleMarketplaceMessages(
 					// The state will already be updated with empty items by MarketplaceManager
 					await provider.postStateToWebview()
 					marketplaceManager.isFetching = false
+					return false
 				}
 			} catch (error) {
 				const errorMessage = `Failed to fetch marketplace items: ${error instanceof Error ? error.message : String(error)}`
@@ -186,8 +185,8 @@ export async function handleMarketplaceMessages(
 					text: errorMessage,
 				})
 				marketplaceManager.isFetching = false
+				return false
 			}
-			return true
 		}
 
 		case "filterMarketplaceItems": {
@@ -212,8 +211,7 @@ export async function handleMarketplaceMessages(
 			if (message.url) {
 				try {
 					// Get the current sources
-					const sources =
-						((await provider.contextProxy.getValue("marketplaceSources")) as MarketplaceSource[]) || []
+					const sources = (provider.contextProxy.getValue("marketplaceSources") as MarketplaceSource[]) || []
 
 					// Find the source with the matching URL
 					const source = sources.find((s) => s.url === message.url)

@@ -195,8 +195,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					const newState = message.state!
 					console.log("DEBUG: ExtensionStateContext received state message:", {
 						hasApiConfig: !!newState.apiConfiguration,
-						hasMarketplaceItems: !!newState.marketplaceItems,
-						marketplaceItemsCount: newState.marketplaceItems?.length || 0,
 					})
 
 					setState((prevState) => mergeExtensionState(prevState, newState))

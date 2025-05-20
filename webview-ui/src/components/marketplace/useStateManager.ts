@@ -12,12 +12,12 @@ export function useStateManager(existingManager?: MarketplaceViewStateManager) {
 				const hasChanged =
 					prevState.isFetching !== newState.isFetching ||
 					prevState.activeTab !== newState.activeTab ||
-					prevState.allItems !== newState.allItems ||
-					prevState.displayItems !== newState.displayItems ||
-					prevState.filters !== newState.filters ||
-					prevState.sources !== newState.sources ||
-					prevState.refreshingUrls !== newState.refreshingUrls ||
-					prevState.installedMetadata !== newState.installedMetadata
+					JSON.stringify(prevState.allItems) !== JSON.stringify(newState.allItems) ||
+					JSON.stringify(prevState.displayItems) !== JSON.stringify(newState.displayItems) ||
+					JSON.stringify(prevState.filters) !== JSON.stringify(newState.filters) ||
+					JSON.stringify(prevState.sources) !== JSON.stringify(newState.sources) ||
+					JSON.stringify(prevState.refreshingUrls) !== JSON.stringify(newState.refreshingUrls) ||
+					JSON.stringify(prevState.installedMetadata) !== JSON.stringify(newState.installedMetadata)
 
 				return hasChanged ? newState : prevState
 			})

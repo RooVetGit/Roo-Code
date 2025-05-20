@@ -12,7 +12,7 @@
 			"label": "Filter by type:",
 			"all": "All types",
 			"mode": "Mode",
-			"mcp": "MCP Server",
+			"mcp server": "MCP Server",
 			"prompt": "Prompt",
 			"package": "Package"
 		},
@@ -75,7 +75,6 @@
 		},
 		"current": {
 			"title": "Current Sources",
-			"count": "{{current}}/{{max}} max",
 			"empty": "No sources configured. Add a source to get started.",
 			"refresh": "Refresh this source",
 			"remove": "Remove source"

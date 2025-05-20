@@ -21,36 +21,24 @@ export interface GroupedItems {
  * @param items Array of items to group
  * @returns Object with items grouped by type
  */
-// Cache for group objects to avoid recreating them
-const groupCache = new Map<string, { type: string; items: any[] }>()
-
 export function groupItemsByType(items: MarketplaceItem["items"] = []): GroupedItems {
 	if (!items?.length) {
 		return {}
 	}
-
-	// Clear old items from groups but keep the group objects
-	groupCache.forEach((group) => (group.items.length = 0))
 
 	const groups: GroupedItems = {}
 
 	for (const item of items) {
 		if (!item.type) continue
 
-		let group = groupCache.get(item.type)
-		if (!group) {
-			group = {
+		if (!groups[item.type]) {
+			groups[item.type] = {
 				type: item.type,
 				items: [],
 			}
-			groupCache.set(item.type, group)
 		}
 
-		if (!groups[item.type]) {
-			groups[item.type] = group
-		}
-
-		group.items.push({
+		groups[item.type].items.push({
 			name: item.metadata?.name || "Unnamed item",
 			description: item.metadata?.description,
 			metadata: item.metadata,
@@ -67,26 +55,18 @@ export function groupItemsByType(items: MarketplaceItem["items"] = []): GroupedI
  * @param item The item to format
  * @returns Formatted string with name and description
  */
-// Reuse string buffer for formatting
-const formatBuffer = {
-	result: "",
-	maxLength: 100,
-}
-
 export function formatItemText(item: { name: string; description?: string }): string {
 	if (!item.description) {
 		return item.name
 	}
 
-	// Reuse the same string buffer
-	formatBuffer.result = item.name
-	formatBuffer.result += " - "
-	formatBuffer.result +=
-		item.description.length > formatBuffer.maxLength
-			? item.description.substring(0, formatBuffer.maxLength) + "..."
-			: item.description
+	const maxLength = 100
+	const result =
+		item.name +
+		" - " +
+		(item.description.length > maxLength ? item.description.substring(0, maxLength) + "..." : item.description)
 
-	return formatBuffer.result
+	return result
 }
 
 /**
@@ -94,12 +74,8 @@ export function formatItemText(item: { name: string; description?: string }): st
  * @param groups Grouped items object
  * @returns Total number of items
  */
-// Cache array of group values
-let groupValuesCache: Array<{ items: any[] }> = []
-
 export function getTotalItemCount(groups: GroupedItems): number {
-	groupValuesCache = Object.values(groups)
-	return groupValuesCache.reduce((total, group) => total + group.items.length, 0)
+	return Object.values(groups).reduce((total, group) => total + group.items.length, 0)
 }
 
 /**
@@ -107,11 +83,8 @@ export function getTotalItemCount(groups: GroupedItems): number {
  * @param groups Grouped items object
  * @returns Array of type strings
  */
-// Cache array of types
-let typesCache: string[] = []
-
 export function getUniqueTypes(groups: GroupedItems): string[] {
-	typesCache = Object.keys(groups)
-	typesCache.sort()
-	return typesCache
+	const types = Object.keys(groups)
+	types.sort()
+	return types
 }
