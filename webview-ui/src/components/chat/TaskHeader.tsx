@@ -28,7 +28,7 @@ export interface TaskHeaderProps {
 	cacheReads?: number
 	totalCost: number
 	contextTokens: number
-	buttonsDisabled?: boolean
+	buttonsDisabled: boolean
 	handleCondenseContext: (taskId: string) => void
 	onClose: () => void
 }
@@ -159,8 +159,8 @@ const TaskHeader = ({
 								{!totalCost && (
 									<TaskActions
 										item={currentTaskItem}
-										handleCondenseContext={handleCondenseContext}
 										buttonsDisabled={buttonsDisabled}
+										handleCondenseContext={handleCondenseContext}
 									/>
 								)}
 							</div>

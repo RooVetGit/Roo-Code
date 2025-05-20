@@ -10,7 +10,7 @@ import { IconButton } from "./IconButton"
 
 interface TaskActionsProps {
 	item?: HistoryItem
-	buttonsDisabled?: boolean
+	buttonsDisabled: boolean
 	handleCondenseContext: (taskId: string) => void
 }
 
