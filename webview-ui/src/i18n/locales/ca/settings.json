@@ -81,7 +81,9 @@
 			"addButton": "Afegir"
 		},
 		"apiRequestLimit": {
-			"description": "Fes aquesta quantitat de sol·licituds API automàticament abans de demanar aprovació per continuar amb la tasca."
+			"title": "Màximes Sol·licituds",
+			"description": "Fes aquesta quantitat de sol·licituds API automàticament abans de demanar aprovació per continuar amb la tasca.",
+			"unlimited": "Il·limitat"
 		}
 	},
 	"providers": {

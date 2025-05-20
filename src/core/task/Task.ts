@@ -78,7 +78,6 @@ import { processUserContentMentions } from "../mentions/processUserContentMentio
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
-import { t } from "../../i18n"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -1515,14 +1514,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.consecutiveAutoApprovedRequestsCount++
 
 		if (this.consecutiveAutoApprovedRequestsCount > maxRequests) {
-			const { response } = await this.ask(
-				"auto_approval_max_req_reached",
-				JSON.stringify({
-					title: t("common:ask.autoApprovedRequestLimitReached.title"),
-					description: t("common:ask.autoApprovedRequestLimitReached.description", { count: maxRequests }),
-					button: t("common:ask.autoApprovedRequestLimitReached.button"),
-				}),
-			)
+			const { response } = await this.ask("auto_approval_max_req_reached", JSON.stringify({ count: maxRequests }))
 			// If we get past the promise, it means the user approved and did not start a new task
 			if (response === "yesButtonClicked") {
 				this.consecutiveAutoApprovedRequestsCount = 0
