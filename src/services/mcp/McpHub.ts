@@ -941,20 +941,26 @@ export class McpHub {
 
 			// Update the connection object
 			if (connection) {
-				try {
-					connection.server.disabled = disabled
+				const wasDisabled = connection.server.disabled
+				connection.server.disabled = disabled
 
-					// Only refresh capabilities if connected
-					if (connection.server.status === "connected") {
+				// When the server is activated, reload the configuration
+				if (wasDisabled && !disabled) {
+					await this.initializeMcpServers(serverSource)
+				}
+
+				// Only refresh capabilities if connected
+				if (connection.server.status === "connected") {
+					try {
 						connection.server.tools = await this.fetchToolsList(serverName, serverSource)
 						connection.server.resources = await this.fetchResourcesList(serverName, serverSource)
 						connection.server.resourceTemplates = await this.fetchResourceTemplatesList(
 							serverName,
 							serverSource,
 						)
+					} catch (error) {
+						console.error(`Failed to refresh capabilities for ${serverName}:`, error)
 					}
-				} catch (error) {
-					console.error(`Failed to refresh capabilities for ${serverName}:`, error)
 				}
 			}
 
@@ -1286,5 +1292,34 @@ export class McpHub {
 			this.settingsWatcher.dispose()
 		}
 		this.disposables.forEach((d) => d.dispose())
+	}
+
+	/**
+	 * Enables or disables all global MCP servers at once.
+	 * When activated, the configuration is reloaded.
+	 * @param disabled true = disable all, false = enable all
+	 */
+	public async toggleAllServersDisabled(disabled: boolean): Promise<void> {
+		// Collect all global server names
+		const globalConnections = this.connections.filter(
+			(conn) => conn.server.source === "global" || !conn.server.source,
+		)
+		const serverNames = globalConnections.map((conn) => conn.server.name)
+
+		// Set the Disabled flag for all serversv
+		for (const name of serverNames) {
+			await this.updateServerConfig(name, { disabled }, "global")
+			const conn = this.findConnection(name, "global")
+			if (conn) {
+				conn.server.disabled = disabled
+			}
+		}
+
+		// If activated, reload configuration
+		if (!disabled) {
+			await this.initializeMcpServers("global")
+		}
+
+		await this.notifyWebviewOfServerChanges()
 	}
 }
