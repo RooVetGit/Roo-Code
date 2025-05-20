@@ -1123,6 +1123,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			task = await this.initClineWithHistoryItem(historyItem)
 		}
 		await task.condenseContext()
+		await this.postMessageToWebview({ type: "condenseTaskContextResponse" })
 	}
 
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder

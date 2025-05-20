@@ -28,7 +28,7 @@ export const TaskActions = ({ item }: { item: HistoryItem | undefined }) => {
 						variant="ghost"
 						size="sm"
 						title={t("chat:task.condenseContext")}
-						onClick={() => vscode.postMessage({ type: "condenseTaskContext", text: item?.id })}>
+						onClick={() => vscode.postMessage({ type: "condenseTaskContextRequest", text: item?.id })}>
 						<span className="codicon codicon-file-zip" />
 					</Button>
 					<Button

@@ -481,10 +481,35 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	public async condenseContext(): Promise<void> {
-		const { messages } = await summarizeConversation(this.apiConversationHistory, this.api)
-		if (messages !== this.apiConversationHistory) {
-			this.overwriteApiConversationHistory(messages)
+		const {
+			messages,
+			summary,
+			cost,
+			newContextTokens = 0,
+		} = await summarizeConversation(this.apiConversationHistory, this.api)
+		if (!summary) {
+			return
 		}
+		const lastMessageContent = this.apiConversationHistory.at(-1)?.content
+		await this.overwriteApiConversationHistory(messages)
+		const { contextTokens } = this.getTokenUsage()
+		const lastContent =
+			typeof lastMessageContent === "string"
+				? [{ type: "text" as const, text: lastMessageContent }]
+				: lastMessageContent
+		const lastMessageTokens = lastContent ? await this.api.countTokens(lastContent) : 0
+		const prevContextTokens = contextTokens + lastMessageTokens
+		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
+		await this.say(
+			"condense_context",
+			undefined /* text */,
+			undefined /* images */,
+			false /* partial */,
+			undefined /* checkpoint */,
+			undefined /* progressStatus */,
+			undefined /* options */,
+			contextCondense,
+		)
 	}
 
 	async say(
