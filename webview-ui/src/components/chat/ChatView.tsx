@@ -586,7 +586,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					break
 				case "condenseTaskContextResponse":
 					if (!message.text || message.text !== currentTaskItem?.id) {
-						return
+						break
 					}
 					if (isCondensing && sendingDisabled) {
 						setSendingDisabled(false)
