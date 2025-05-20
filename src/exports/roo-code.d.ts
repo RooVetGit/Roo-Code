@@ -1543,6 +1543,7 @@ type TaskEvent =
 declare const Package: {
 	readonly publisher: string
 	readonly name: string
+	readonly version: string
 }
 /**
  * ProviderName
