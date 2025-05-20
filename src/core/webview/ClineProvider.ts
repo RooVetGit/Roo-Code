@@ -1111,7 +1111,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	/* Condenses a task's message history to use fewer tokens. */
 	async condenseTaskContext(taskId: string) {
-		let task = undefined
+		let task: Task | undefined
 		for (let i = this.clineStack.length - 1; i >= 0; i--) {
 			if (this.clineStack[i].taskId === taskId) {
 				task = this.clineStack[i]
