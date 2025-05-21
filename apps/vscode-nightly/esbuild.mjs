@@ -3,7 +3,7 @@ import * as fs from "fs"
 import * as path from "path"
 import { fileURLToPath } from "url"
 
-import { copyPaths, copyLocales, copyWasms, generatePackageJson } from "@roo-code/build"
+import { getGitSha, copyPaths, copyLocales, copyWasms, generatePackageJson } from "@roo-code/build"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -12,6 +12,13 @@ async function main() {
 	const production = process.argv.includes("--production")
 	const minify = production
 	const sourcemap = !production
+
+	const overrideJson = JSON.parse(fs.readFileSync(path.join(__dirname, "package.nightly.json"), "utf8"))
+	console.log(`[main] name: ${overrideJson.name}`)
+	console.log(`[main] version: ${overrideJson.version}`)
+
+	const gitSha = getGitSha()
+	console.log(`[main] gitSha: ${gitSha}`)
 
 	/**
 	 * @type {import('esbuild').BuildOptions}
@@ -26,7 +33,9 @@ async function main() {
 		platform: "node",
 		define: {
 			"process.env.PKG_NAME": '"roo-code-nightly"',
+			"process.env.PKG_VERSION": `"${overrideJson.version}"`,
 			"process.env.PKG_OUTPUT_CHANNEL": '"Roo-Code-Nightly"',
+			...(gitSha ? { "process.env.PKG_SHA": `"${gitSha}"` } : {}),
 		},
 	}
 
@@ -71,10 +80,6 @@ async function main() {
 			setup(build) {
 				build.onEnd(() => {
 					const packageJson = JSON.parse(fs.readFileSync(path.join(srcDir, "package.json"), "utf8"))
-
-					const overrideJson = JSON.parse(
-						fs.readFileSync(path.join(__dirname, "package.nightly.json"), "utf8"),
-					)
 
 					const generatedPackageJson = generatePackageJson({
 						packageJson,

@@ -1,13 +1,22 @@
 import * as fs from "fs"
 import * as path from "path"
+import { execSync } from "child_process"
 
-import { ViewsContainer, Views, MenuItem, Menus, Configuration, contributesSchema } from "./types.js"
+import { ViewsContainer, Views, Menus, Configuration, contributesSchema } from "./types.js"
+
+export function getGitSha() {
+	let gitSha = undefined
+
+	try {
+		gitSha = execSync("git rev-parse HEAD").toString().trim()
+	} catch (e) {}
+
+	return gitSha
+}
 
 export function copyPaths(copyPaths: [string, string][], srcDir: string, dstDir: string) {
 	copyPaths.forEach(([srcRelPath, dstRelPath]) => {
 		const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
-
-		console.log(`[copyPaths] ${srcRelPath} -> ${dstRelPath}`)
 
 		if (stats.isDirectory()) {
 			if (fs.existsSync(path.join(dstDir, dstRelPath))) {
