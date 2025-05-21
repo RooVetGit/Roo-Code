@@ -13,16 +13,17 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 	const { isCopied, copy } = useClipboard()
 	const { t } = useAppTranslation()
 
-	const onCopy = useCallback(
-		(e: React.MouseEvent) => {
-			e.stopPropagation()
-			const tempDiv = document.createElement("div")
-			tempDiv.innerHTML = itemTask
-			const text = tempDiv.textContent || tempDiv.innerText || ""
-			!isCopied && copy(text)
-		},
-		[isCopied, copy, itemTask],
-	)
+        const onCopy = useCallback(
+                (e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        const withoutHighlights = itemTask.replace(
+                                /<span class="history-item-highlight">(.*?)<\/span>/g,
+                                "$1",
+                        )
+                        !isCopied && copy(withoutHighlights)
+                },
+                [isCopied, copy, itemTask],
+        )
 
 	return (
 		<Button
