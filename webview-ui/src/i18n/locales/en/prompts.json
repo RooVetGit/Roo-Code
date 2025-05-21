@@ -29,6 +29,21 @@
 		},
 		"noTools": "None"
 	},
+	"objectiveOverride": {
+		"title": "Objective Section Override",
+		"resetToDefault": "Reset to default",
+		"description": "Override the default OBJECTIVE section of the system prompt. This defines how Roo approaches and accomplishes tasks."
+	},
+	"rulesOverride": {
+		"title": "Rules Section Override",
+		"resetToDefault": "Reset to default",
+		"description": "Override the default RULES section of the system prompt. This defines the constraints and guidelines Roo must follow."
+	},
+	"capabilitiesOverride": {
+		"title": "Capabilities Section Override",
+		"resetToDefault": "Reset to default",
+		"description": "Override the default CAPABILITIES section of the system prompt. This defines what tools and abilities Roo can use."
+	},
 	"roleDefinition": {
 		"title": "Role Definition",
 		"resetToDefault": "Reset to default",
