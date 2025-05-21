@@ -94,7 +94,9 @@ ${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)}
 ${getSystemInfoSection(cwd)}
 
 ${getObjectiveSection()}
+
 ${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
+
 	return basePrompt
 }
 
