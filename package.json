@@ -18,9 +18,9 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/RooVetGit/Roo-Code"
+		"url": "https://github.com/RooCodeInc/Roo-Code"
 	},
-	"homepage": "https://github.com/RooVetGit/Roo-Code",
+	"homepage": "https://github.com/RooCodeInc/Roo-Code",
 	"categories": [
 		"AI",
 		"Chat",
@@ -51,16 +51,6 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
-		"submenus": [
-			{
-				"id": "roo-code.contextMenu",
-				"label": "%views.contextMenu.label%"
-			},
-			{
-				"id": "roo-code.terminalMenu",
-				"label": "%views.terminalMenu.label%"
-			}
-		],
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -166,7 +156,7 @@
 				"category": "%configuration.title%"
 			},
 			{
-				"command": "roo.acceptInput",
+				"command": "roo-cline.acceptInput",
 				"title": "%command.acceptInput.title%",
 				"category": "%configuration.title%"
 			}
@@ -174,11 +164,11 @@
 		"menus": {
 			"editor/context": [
 				{
-					"submenu": "roo-code.contextMenu",
+					"submenu": "roo-cline.contextMenu",
 					"group": "navigation"
 				}
 			],
-			"roo-code.contextMenu": [
+			"roo-cline.contextMenu": [
 				{
 					"command": "roo-cline.addToContext",
 					"group": "1_actions@1"
@@ -194,11 +184,11 @@
 			],
 			"terminal/context": [
 				{
-					"submenu": "roo-code.terminalMenu",
+					"submenu": "roo-cline.terminalMenu",
 					"group": "navigation"
 				}
 			],
-			"roo-code.terminalMenu": [
+			"roo-cline.terminalMenu": [
 				{
 					"command": "roo-cline.terminalAddToContext",
 					"group": "1_actions@1"
@@ -277,6 +267,16 @@
 				}
 			]
 		},
+		"submenus": [
+			{
+				"id": "roo-cline.contextMenu",
+				"label": "%views.contextMenu.label%"
+			},
+			{
+				"id": "roo-cline.terminalMenu",
+				"label": "%views.terminalMenu.label%"
+			}
+		],
 		"configuration": {
 			"title": "%configuration.title%",
 			"properties": {
@@ -431,6 +431,7 @@
 		"vscode-material-icons": "^0.1.1",
 		"web-tree-sitter": "^0.22.6",
 		"workerpool": "^9.2.0",
+		"yaml": "^2.8.0",
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {

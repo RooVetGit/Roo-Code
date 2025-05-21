@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"addButton": "追加"
+		},
+		"apiRequestLimit": {
+			"title": "最大リクエスト数",
+			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
+			"unlimited": "無制限"
 		}
 	},
 	"providers": {
@@ -406,9 +411,13 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"autoCondenseContextPercent": {
+			"label": "インテリジェントなコンテキスト圧縮をトリガーするしきい値",
+			"description": "コンテキストウィンドウがこのしきい値に達すると、Rooは自動的に圧縮します。"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "コンテキストウィンドウをインテリジェントに圧縮する",
-			"description": "タスクのコンテキストウィンドウがほぼいっぱいになったとき、古いメッセージを削除する代わりに、LLM呼び出しを使用して過去の会話を要約します。免責事項：要約のコストは現在UIに表示されるAPIコストには含まれていません。"
+			"name": "インテリジェントなコンテキスト圧縮を自動的にトリガーする",
+			"description": "インテリジェントなコンテキスト圧縮は、タスクのコンテキストウィンドウが事前設定されたしきい値に達したとき、コンテキストがいっぱいになって古いメッセージを削除する代わりに、LLM呼び出しを使用して過去の会話を要約します。"
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "実験的な統合diff戦略を使用する",
@@ -471,7 +480,7 @@
 		"useCustomModel": "カスタムを使用: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "質問やフィードバックがある場合は、<githubLink>github.com/RooVetGit/Roo-Code</githubLink>で問題を開くか、<redditLink>reddit.com/r/RooCode</redditLink>や<discordLink>discord.gg/roocode</discordLink>に参加してください",
+		"feedback": "質問やフィードバックがある場合は、<githubLink>github.com/RooCodeInc/Roo-Code</githubLink>で問題を開くか、<redditLink>reddit.com/r/RooCode</redditLink>や<discordLink>discord.gg/roocode</discordLink>に参加してください",
 		"telemetry": {
 			"label": "匿名のエラーと使用状況レポートを許可",
 			"description": "匿名の使用データとエラーレポートを送信してRoo Codeの改善にご協力ください。コード、プロンプト、個人情報が送信されることはありません。詳細については、プライバシーポリシーをご覧ください。"

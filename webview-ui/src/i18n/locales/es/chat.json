@@ -10,7 +10,8 @@
 		"contextWindow": "Longitud del contexto:",
 		"closeAndStart": "Cerrar tarea e iniciar una nueva",
 		"export": "Exportar historial de tareas",
-		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)"
+		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)",
+		"condenseContext": "Condensar contexto de forma inteligente"
 	},
 	"unpin": "Desfijar",
 	"pin": "Fijar",
@@ -200,15 +201,15 @@
 	},
 	"contextCondense": {
 		"title": "Contexto condensado",
-		"conversationSummary": "Resumen de la conversación",
+		"condensing": "Condensando contexto...",
 		"tokens": "tokens"
 	},
 	"followUpSuggest": {
 		"copyToInput": "Copiar a la entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 publicado",
-		"description": "Roo Code 3.17 trae potentes nuevas funcionalidades y mejoras basadas en tus comentarios.",
+		"title": "🎉 Roo Code {{version}} publicado",
+		"description": "Roo Code {{version}} trae potentes nuevas funcionalidades y mejoras basadas en tus comentarios.",
 		"whatsNew": "Novedades",
 		"feature1": "<bold>Caché implícito para Gemini</bold>: Las llamadas a la API de Gemini ahora se almacenan automáticamente en caché, reduciendo los costos de API",
 		"feature2": "<bold>Selección de modo más inteligente</bold>: Las definiciones de modo ahora pueden incluir orientación sobre cuándo debe usarse cada modo, permitiendo una mejor orquestación",
@@ -252,5 +253,12 @@
 		"title": "Advertencia de ejecución de comandos",
 		"description": "Tu comando se está ejecutando sin la integración de shell de terminal de VSCode. Para suprimir esta advertencia, puedes desactivar la integración de shell en la sección <strong>Terminal</strong> de la <settingsLink>configuración de Roo Code</settingsLink> o solucionar problemas de integración de terminal de VSCode usando el enlace de abajo.",
 		"troubleshooting": "Haz clic aquí para ver la documentación de integración de shell."
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Límite de Solicitudes Auto-aprobadas Alcanzado",
+			"description": "Roo ha alcanzado el límite auto-aprobado de {{count}} solicitud(es) API. ¿Deseas reiniciar el contador y continuar con la tarea?",
+			"button": "Reiniciar y Continuar"
+		}
 	}
 }

@@ -9,6 +9,8 @@ jest.mock("../../../api/transform/image-cleaning", () => ({
 	maybeRemoveImageBlocks: jest.fn((messages: ApiMessage[], _apiHandler: ApiHandler) => [...messages]),
 }))
 
+const taskId = "test-task-id"
+
 describe("getMessagesSinceLastSummary", () => {
 	it("should return all messages when there is no summary", () => {
 		const messages: ApiMessage[] = [
@@ -97,13 +99,16 @@ describe("summarizeConversation", () => {
 		} as unknown as ApiHandler
 	})
 
+	// Default system prompt for tests
+	const defaultSystemPrompt = "You are a helpful assistant."
+
 	it("should not summarize when there are not enough messages", async () => {
 		const messages: ApiMessage[] = [
 			{ role: "user", content: "Hello", ts: 1 },
 			{ role: "assistant", content: "Hi there", ts: 2 },
 		]
 
-		const result = await summarizeConversation(messages, mockApiHandler)
+		const result = await summarizeConversation(messages, mockApiHandler, defaultSystemPrompt, taskId)
 		expect(result.messages).toEqual(messages)
 		expect(result.cost).toBe(0)
 		expect(result.summary).toBe("")
@@ -122,7 +127,7 @@ describe("summarizeConversation", () => {
 			{ role: "user", content: "Tell me more", ts: 7 },
 		]
 
-		const result = await summarizeConversation(messages, mockApiHandler)
+		const result = await summarizeConversation(messages, mockApiHandler, defaultSystemPrompt, taskId)
 		expect(result.messages).toEqual(messages)
 		expect(result.cost).toBe(0)
 		expect(result.summary).toBe("")
@@ -141,7 +146,7 @@ describe("summarizeConversation", () => {
 			{ role: "user", content: "Tell me more", ts: 7 },
 		]
 
-		const result = await summarizeConversation(messages, mockApiHandler)
+		const result = await summarizeConversation(messages, mockApiHandler, defaultSystemPrompt, taskId)
 
 		// Check that the API was called correctly
 		expect(mockApiHandler.createMessage).toHaveBeenCalled()
@@ -199,7 +204,7 @@ describe("summarizeConversation", () => {
 			return messages.map(({ role, content }: { role: string; content: any }) => ({ role, content }))
 		})
 
-		const result = await summarizeConversation(messages, mockApiHandler)
+		const result = await summarizeConversation(messages, mockApiHandler, defaultSystemPrompt, taskId)
 
 		// Should return original messages when summary is empty
 		expect(result.messages).toEqual(messages)
@@ -222,7 +227,7 @@ describe("summarizeConversation", () => {
 			{ role: "user", content: "Tell me more", ts: 7 },
 		]
 
-		await summarizeConversation(messages, mockApiHandler)
+		await summarizeConversation(messages, mockApiHandler, defaultSystemPrompt, taskId)
 
 		// Verify the final request message
 		const expectedFinalMessage = {
@@ -263,7 +268,7 @@ describe("summarizeConversation", () => {
 		// Override the mock for this test
 		mockApiHandler.createMessage = jest.fn().mockReturnValue(streamWithUsage) as any
 
-		const result = await summarizeConversation(messages, mockApiHandler, systemPrompt)
+		const result = await summarizeConversation(messages, mockApiHandler, systemPrompt, taskId)
 
 		// Verify that countTokens was called with the correct messages including system prompt
 		expect(mockApiHandler.countTokens).toHaveBeenCalled()

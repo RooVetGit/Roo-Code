@@ -10,7 +10,8 @@
 		"contextWindow": "Okno kontekstu:",
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
-		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
+		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
+		"condenseContext": "Inteligentnie skondensuj kontekst"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",
@@ -200,15 +201,15 @@
 	},
 	"contextCondense": {
 		"title": "Kontekst skondensowany",
-		"conversationSummary": "Podsumowanie rozmowy",
+		"condensing": "Kondensowanie kontekstu...",
 		"tokens": "tokeny"
 	},
 	"followUpSuggest": {
 		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 wydany",
-		"description": "Roo Code 3.17 przynosi potężne nowe funkcje i ulepszenia na podstawie Twoich opinii.",
+		"title": "🎉 Roo Code {{version}} wydany",
+		"description": "Roo Code {{version}} przynosi potężne nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
 		"feature1": "<bold>Niejawne buforowanie dla Gemini</bold>: Wywołania API Gemini są teraz automatycznie buforowane, co zmniejsza koszty API",
 		"feature2": "<bold>Inteligentniejszy wybór trybu</bold>: Definicje trybów mogą teraz zawierać wskazówki dotyczące tego, kiedy każdy tryb powinien być używany, umożliwiając lepszą orkiestrację",
@@ -252,5 +253,12 @@
 		"title": "Ostrzeżenie wykonania polecenia",
 		"description": "Twoje polecenie jest wykonywane bez integracji powłoki terminala VSCode. Aby ukryć to ostrzeżenie, możesz wyłączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink> lub rozwiązać problemy z integracją terminala VSCode korzystając z poniższego linku.",
 		"troubleshooting": "Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki."
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Osiągnięto limit automatycznie zatwierdzonych żądań",
+			"description": "Roo osiągnął automatycznie zatwierdzony limit {{count}} żądania/żądań API. Czy chcesz zresetować licznik i kontynuować zadanie?",
+			"button": "Zresetuj i kontynuuj"
+		}
 	}
 }

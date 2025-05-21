@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "\"실행 작업 항상 승인\"이 활성화되었을 때 자동 실행될 수 있는 명령 접두사. 모든 명령을 허용하려면 * 추가(주의해서 사용)",
 			"commandPlaceholder": "명령 접두사 입력(예: 'git ')",
 			"addButton": "추가"
+		},
+		"apiRequestLimit": {
+			"title": "최대 요청 수",
+			"description": "작업을 계속하기 위한 승인을 요청하기 전에 자동으로 이 수의 API 요청을 수행합니다.",
+			"unlimited": "무제한"
 		}
 	},
 	"providers": {
@@ -406,9 +411,13 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"autoCondenseContextPercent": {
+			"label": "지능적 컨텍스트 압축을 트리거하는 임계값",
+			"description": "컨텍스트 창이 이 임계값에 도달하면 Roo가 자동으로 압축합니다."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "컨텍스트 창을 지능적으로 압축",
-			"description": "작업의 컨텍스트 창이 거의 가득 찼을 때 이전 메시지를 삭제하는 대신 LLM 호출을 사용하여 이전 대화를 요약합니다. 참고: 요약 비용은 현재 UI에 표시된 API 비용에 포함되지 않습니다."
+			"name": "지능적 컨텍스트 압축 자동 트리거",
+			"description": "지능적 컨텍스트 압축은 작업의 컨텍스트 창이 사전 설정된 임계값에 도달했을 때 컨텍스트가 가득 차서 이전 메시지를 삭제하는 대신 LLM 호출을 사용하여 이전 대화를 요약합니다."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "실험적 통합 diff 전략 사용",
@@ -471,7 +480,7 @@
 		"useCustomModel": "사용자 정의 사용: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "질문이나 피드백이 있으시면 <githubLink>github.com/RooVetGit/Roo-Code</githubLink>에서 이슈를 열거나 <redditLink>reddit.com/r/RooCode</redditLink> 또는 <discordLink>discord.gg/roocode</discordLink>에 가입하세요",
+		"feedback": "질문이나 피드백이 있으시면 <githubLink>github.com/RooCodeInc/Roo-Code</githubLink>에서 이슈를 열거나 <redditLink>reddit.com/r/RooCode</redditLink> 또는 <discordLink>discord.gg/roocode</discordLink>에 가입하세요",
 		"telemetry": {
 			"label": "익명 오류 및 사용 보고 허용",
 			"description": "익명 사용 데이터 및 오류 보고서를 보내 Roo Code 개선에 도움을 주세요. 코드, 프롬프트 또는 개인 정보는 절대 전송되지 않습니다. 자세한 내용은 개인정보 보호정책을 참조하세요."

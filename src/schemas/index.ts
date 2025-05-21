@@ -7,6 +7,78 @@ import { z } from "zod"
 import { Equals, Keys, AssertEqual } from "../utils/type-fu"
 
 /**
+ * Extension
+ */
+
+import { publisher, name, version } from "../../package.json"
+
+// These ENV variables can be defined by ESBuild when building the extension
+// in order to override the values in package.json. This allows us to build
+// different extension variants with the same package.json file.
+// The build process still needs to emit a modified package.json for consumption
+// by VSCode, but that build artifact is not used during the transpile step of
+// the build, so we still need this override mechanism.
+export const Package = {
+	publisher: process.env.PKG_PUBLISHER || publisher,
+	name: process.env.PKG_NAME || name,
+	version: process.env.PKG_VERSION || version,
+	outputChannel: process.env.PKG_OUTPUT_CHANNEL || "Roo-Code",
+} as const
+
+/**
+ * CodeAction
+ */
+
+export const codeActionIds = ["explainCode", "fixCode", "improveCode", "addToContext", "newTask"] as const
+
+export type CodeActionId = (typeof codeActionIds)[number]
+
+export type CodeActionName = "EXPLAIN" | "FIX" | "IMPROVE" | "ADD_TO_CONTEXT" | "NEW_TASK"
+
+/**
+ * TerminalAction
+ */
+
+export const terminalActionIds = ["terminalAddToContext", "terminalFixCommand", "terminalExplainCommand"] as const
+
+export type TerminalActionId = (typeof terminalActionIds)[number]
+
+export type TerminalActionName = "ADD_TO_CONTEXT" | "FIX" | "EXPLAIN"
+
+export type TerminalActionPromptType = `TERMINAL_${TerminalActionName}`
+
+/**
+ * Command
+ */
+
+export const commandIds = [
+	"activationCompleted",
+
+	"plusButtonClicked",
+	"promptsButtonClicked",
+	"mcpButtonClicked",
+	"historyButtonClicked",
+	"popoutButtonClicked",
+	"settingsButtonClicked",
+
+	"openInNewTab",
+
+	"showHumanRelayDialog",
+	"registerHumanRelayCallback",
+	"unregisterHumanRelayCallback",
+	"handleHumanRelayResponse",
+
+	"newTask",
+
+	"setCustomStoragePath",
+
+	"focusInput",
+	"acceptInput",
+] as const
+
+export type CommandId = (typeof commandIds)[number]
+
+/**
  * ProviderName
  */
 
@@ -681,6 +753,8 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
+	allowedMaxRequests: z.number().optional(),
+	autoCondenseContextPercent: z.number().optional(),
 
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
@@ -762,6 +836,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysAllowSubtasks: undefined,
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
+	allowedMaxRequests: undefined,
+	autoCondenseContextPercent: undefined,
 
 	browserToolEnabled: undefined,
 	browserViewportSize: undefined,
@@ -907,6 +983,7 @@ export const clineAsks = [
 	"mistake_limit_reached",
 	"browser_action_launch",
 	"use_mcp_server",
+	"auto_approval_max_req_reached",
 ] as const
 
 export const clineAskSchema = z.enum(clineAsks)

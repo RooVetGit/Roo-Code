@@ -76,7 +76,7 @@ import {
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
-import { getMessagesSinceLastSummary } from "../condense"
+import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 export type ClineEvents = {
@@ -134,6 +134,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly apiConfiguration: ProviderSettings
 	api: ApiHandler
 	private lastApiRequestTime?: number
+	private consecutiveAutoApprovedRequestsCount: number = 0
 
 	toolRepetitionDetector: ToolRepetitionDetector
 	rooIgnoreController?: RooIgnoreController
@@ -478,6 +479,32 @@ export class Task extends EventEmitter<ClineEvents> {
 		} else if (terminalOperation === "abort") {
 			this.terminalProcess?.abort()
 		}
+	}
+
+	public async condenseContext(): Promise<void> {
+		const systemPrompt = await this.getSystemPrompt()
+		const {
+			messages,
+			summary,
+			cost,
+			newContextTokens = 0,
+		} = await summarizeConversation(this.apiConversationHistory, this.api, systemPrompt, this.taskId)
+		if (!summary) {
+			return
+		}
+		await this.overwriteApiConversationHistory(messages)
+		const { contextTokens } = this.getTokenUsage()
+		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens: contextTokens }
+		await this.say(
+			"condense_context",
+			undefined /* text */,
+			undefined /* images */,
+			false /* partial */,
+			undefined /* checkpoint */,
+			undefined /* progressStatus */,
+			{ isNonInteractive: true } /* options */,
+			contextCondense,
+		)
 	}
 
 	async say(
@@ -1370,35 +1397,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+	private async getSystemPrompt(): Promise<string> {
+		const { mcpEnabled } = (await this.providerRef.deref()?.getState()) ?? {}
 		let mcpHub: McpHub | undefined
-
-		const { apiConfiguration, mcpEnabled, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds } =
-			(await this.providerRef.deref()?.getState()) ?? {}
-
-		let rateLimitDelay = 0
-
-		// Only apply rate limiting if this isn't the first request
-		if (this.lastApiRequestTime) {
-			const now = Date.now()
-			const timeSinceLastRequest = now - this.lastApiRequestTime
-			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
-			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
-		}
-
-		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
-		if (rateLimitDelay > 0 && retryAttempt === 0) {
-			// Show countdown timer
-			for (let i = rateLimitDelay; i > 0; i--) {
-				const delayMessage = `Rate limiting for ${i} seconds...`
-				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
-				await delay(1000)
-			}
-		}
-
-		// Update last request time before making the request
-		this.lastApiRequestTime = Date.now()
-
 		if (mcpEnabled ?? true) {
 			const provider = this.providerRef.deref()
 
@@ -1434,7 +1435,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 
-		const systemPrompt = await (async () => {
+		return await (async () => {
 			const provider = this.providerRef.deref()
 
 			if (!provider) {
@@ -1459,6 +1460,42 @@ export class Task extends EventEmitter<ClineEvents> {
 				rooIgnoreInstructions,
 			)
 		})()
+	}
+
+	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+		const {
+			apiConfiguration,
+			autoApprovalEnabled,
+			alwaysApproveResubmit,
+			requestDelaySeconds,
+			experiments,
+			autoCondenseContextPercent = 100,
+		} = (await this.providerRef.deref()?.getState()) ?? {}
+
+		let rateLimitDelay = 0
+
+		// Only apply rate limiting if this isn't the first request
+		if (this.lastApiRequestTime) {
+			const now = Date.now()
+			const timeSinceLastRequest = now - this.lastApiRequestTime
+			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
+			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
+		}
+
+		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
+		if (rateLimitDelay > 0 && retryAttempt === 0) {
+			// Show countdown timer
+			for (let i = rateLimitDelay; i > 0; i--) {
+				const delayMessage = `Rate limiting for ${i} seconds...`
+				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
+				await delay(1000)
+			}
+		}
+
+		// Update last request time before making the request
+		this.lastApiRequestTime = Date.now()
+
+		const systemPrompt = await this.getSystemPrompt()
 
 		const { contextTokens } = this.getTokenUsage()
 		if (contextTokens) {
@@ -1482,7 +1519,9 @@ export class Task extends EventEmitter<ClineEvents> {
 				contextWindow,
 				apiHandler: this.api,
 				autoCondenseContext,
+				autoCondenseContextPercent,
 				systemPrompt,
+				taskId: this.taskId,
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
@@ -1497,7 +1536,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					false /* partial */,
 					undefined /* checkpoint */,
 					undefined /* progressStatus */,
-					undefined /* options */,
+					{ isNonInteractive: true } /* options */,
 					contextCondense,
 				)
 			}
@@ -1507,6 +1546,21 @@ export class Task extends EventEmitter<ClineEvents> {
 		const cleanConversationHistory = maybeRemoveImageBlocks(messagesSinceLastSummary, this.api).map(
 			({ role, content }) => ({ role, content }),
 		)
+
+		// Check if we've reached the maximum number of auto-approved requests
+		const { allowedMaxRequests } = (await this.providerRef.deref()?.getState()) ?? {}
+		const maxRequests = allowedMaxRequests || Infinity
+
+		// Increment the counter for each new API request
+		this.consecutiveAutoApprovedRequestsCount++
+
+		if (this.consecutiveAutoApprovedRequestsCount > maxRequests) {
+			const { response } = await this.ask("auto_approval_max_req_reached", JSON.stringify({ count: maxRequests }))
+			// If we get past the promise, it means the user approved and did not start a new task
+			if (response === "yesButtonClicked") {
+				this.consecutiveAutoApprovedRequestsCount = 0
+			}
+		}
 
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()
