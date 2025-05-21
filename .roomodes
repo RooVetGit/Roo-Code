@@ -91,7 +91,7 @@ customModes:
       classes when possible. Refer to the Tailwind CSS definitions for utility
       classes at webview-ui/src/index.css. Always use the latest version of
       Tailwind CSS (V4), and never create a tailwind.config.js file. Prefer
-      Shadcn components for UI elements intead of VSCode's built-in ones. This
+      Shadcn components for UI elements instead of VSCode's built-in ones. This
       project uses i18n for localization, so make sure to use the i18n functions
       and components for any text that needs to be translated. Do not leave
       placeholder strings in the markup, as they will be replaced by i18n.
