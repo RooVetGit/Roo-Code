@@ -8,7 +8,7 @@ import {
 	getModeBySlug,
 	getGroupName,
 } from "../../shared/modes"
-import { PromptVariables } from "./sections/custom-system-prompt"
+import { PromptVariables, loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { DiffStrategy } from "../../shared/tools"
 import { McpHub } from "../../services/mcp/McpHub"
 import { getToolDescriptionsForMode } from "./tools"
@@ -24,8 +24,8 @@ import {
 	getCapabilitiesSection,
 	getModesSection,
 	addCustomInstructions,
+	markdownFormattingSection,
 } from "./sections"
-import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { formatLanguage } from "../../shared/language"
 
 async function generatePrompt(
@@ -64,6 +64,8 @@ async function generatePrompt(
 	])
 
 	const basePrompt = `${roleDefinition}
+
+${markdownFormattingSection()}
 
 ${getSharedToolUseSection()}
 

@@ -1,6 +1,7 @@
+import { Package } from "@roo/schemas"
+
 export function getCallbackUrl(provider: string, uriScheme?: string) {
-	const callbackUrl = `${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/${provider}`
-	return encodeURIComponent(callbackUrl)
+	return encodeURIComponent(`${uriScheme || "vscode"}://${Package.publisher}.${Package.name}/${provider}`)
 }
 
 export function getGlamaAuthUrl(uriScheme?: string) {

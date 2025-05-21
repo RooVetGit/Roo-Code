@@ -55,7 +55,8 @@
 		"failed_delete_repo": "Falha ao excluir o repositório ou ramificação associada: {{error}}",
 		"failed_remove_directory": "Falha ao remover o diretório de tarefas: {{error}}",
 		"custom_storage_path_unusable": "O caminho de armazenamento personalizado \"{{path}}\" não pode ser usado, será usado o caminho padrão",
-		"cannot_access_path": "Não é possível acessar o caminho {{path}}: {{error}}"
+		"cannot_access_path": "Não é possível acessar o caminho {{path}}: {{error}}",
+		"settings_import_failed": "Falha ao importar configurações: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "Nenhum conteúdo do terminal selecionado",
@@ -89,5 +90,11 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Por favor, digite um caminho absoluto (ex: D:\\RooCodeStorage ou /home/user/storage)",
 		"enter_valid_path": "Por favor, digite um caminho válido"
+	},
+	"settings": {
+		"providers": {
+			"groqApiKey": "Chave de API Groq",
+			"getGroqApiKey": "Obter chave de API Groq"
+		}
 	}
 }

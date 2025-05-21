@@ -1,173 +1,129 @@
-# 为 Roo Code 做贡献
+[English](../../CONTRIBUTING.md) • [Català](../ca/CONTRIBUTING.md) • [Deutsch](../de/CONTRIBUTING.md) • [Español](../es/CONTRIBUTING.md) • [Français](../fr/CONTRIBUTING.md) • [हिंदी](../hi/CONTRIBUTING.md) • [Italiano](../it/CONTRIBUTING.md) • [Nederlands](../nl/CONTRIBUTING.md) • [Русский](../ru/CONTRIBUTING.md)
 
-我们很高兴您有兴趣为 Roo Code 做贡献。无论您是修复错误、添加功能，还是改进我们的文档，每一个贡献都让 Roo Code 变得更智能！为了保持我们的社区充满活力和欢迎，所有成员必须遵守我们的[行为准则](CODE_OF_CONDUCT.md)。
+[日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • <b>简体中文</b> • [繁體中文](../zh-TW/CONTRIBUTING.md)
 
-## 加入我们的社区
+# 参与 Roo Code 贡献
 
-我们强烈鼓励所有贡献者加入我们的 [Discord 社区](https://discord.gg/roocode)！成为我们 Discord 服务器的一部分可以帮助您：
+Roo Code 是一个由社区驱动的项目，我们高度重视每一份贡献。为了简化协作流程，我们采用 [Issue-First](#issue-first-方式) 原则，这意味着所有 [Pull Request (PR)](#提交-pull-request) 必须首先关联到 GitHub Issue。请仔细阅读本指南。
 
-- 获得关于您贡献的实时帮助和指导
-- 与其他贡献者和核心团队成员建立联系
-- 了解项目发展和优先事项的最新信息
-- 参与塑造 Roo Code 未来的讨论
-- 寻找与其他开发者的合作机会
+## 目录
 
-## 报告错误或问题
+- [贡献前须知](#贡献前须知)
+- [寻找与规划你的贡献](#寻找与规划你的贡献)
+- [开发与提交流程](#开发与提交流程)
+- [法律声明](#法律声明)
 
-错误报告有助于使 Roo Code 对每个人都更好！在创建新问题之前，请[搜索现有问题](https://github.com/RooVetGit/Roo-Code/issues)以避免重复。当您准备报告错误时，前往我们的[问题页面](https://github.com/RooVetGit/Roo-Code/issues/new/choose)，那里有模板可以帮助您填写相关信息。
+## 贡献前须知
 
-<blockquote class='warning-note'>
-     🔐 <b>重要提示：</b>如果您发现安全漏洞，请使用 <a href="https://github.com/RooVetGit/Roo-Code/security/advisories/new">Github 安全工具私下报告它</a>。
-</blockquote>
+### 1. 行为准则
 
-## 决定做什么
+所有贡献者必须遵守我们的[行为准则](./CODE_OF_CONDUCT.md)。
 
-寻找一个好的首次贡献？查看我们 [Roo Code Issues](https://github.com/orgs/RooVetGit/projects/1) Github 项目中"Issue [Unassigned]"部分的问题。这些是专门为新贡献者精心挑选的，也是我们希望得到一些帮助的领域！
+### 2. 项目路线图
 
-我们也欢迎对我们的[文档](https://docs.roocode.com/)做贡献！无论是修复错别字、改进现有指南，还是创建新的教育内容 - 我们希望建立一个由社区驱动的资源库，帮助每个人充分利用 Roo Code。您可以点击任何页面上的"Edit this page"快速进入 Github 中编辑文件的正确位置，或者直接访问 https://github.com/RooVetGit/Roo-Code-Docs。
+我们的路线图指引项目方向。请将你的贡献与这些关键目标保持一致：
 
-如果您计划处理更大的功能，请先创建一个[功能请求](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)，以便我们讨论它是否符合 Roo Code 的愿景。您还可以查看下面的[项目路线图](#项目路线图)，看看您的想法是否符合我们的战略方向。
+### 可靠性优先
 
-## 项目路线图
+- 确保差异编辑和命令执行始终可靠
+- 减少阻碍常规使用的摩擦点
+- 确保在所有语言环境和平台上流畅运行
+- 扩展对各种 AI 提供商和模型的强大支持
 
-Roo Code 有一个明确的开发路线图，指导我们的优先事项和未来方向。了解我们的路线图可以帮助您：
+### 增强用户体验
 
-- 使您的贡献与项目目标保持一致
-- 确定您的专业知识最有价值的领域
-- 理解某些设计决策背后的背景
-- 为支持我们愿景的新功能找到灵感
+- 简化用户界面，提高清晰度和直观性
+- 持续改进工作流程，满足开发者对日常工具的高期望
 
-我们当前的路线图专注于六个关键支柱：
+### 引领代理性能
 
-### 提供商支持
+- 建立全面的评估基准（evals）衡量实际工作中的生产力
+- 让每个人都能轻松运行和解读这些评估
+- 提供明显提升评分的改进
 
-我们的目标是尽可能支持更多的提供商：
+在 PR 中请提及与这些领域的关联。
 
-- 更加多功能的 "OpenAI Compatible" 支持
-- xAI, Microsoft Azure AI, Alibaba Cloud Qwen, IBM Watsonx, Together AI, DeepInfra, Fireworks AI, Cohere, Perplexity AI, FriendliAI, Replicate
-- 增强对 Ollama 和 LM Studio 的支持
+### 3. 加入 Roo Code 社区
 
-### 模型支持
+- **主要方式：** 加入我们的 [Discord](https://discord.gg/roocode) 并私信 **Hannes Rudolph (`hrudolph`)**。
+- **替代方式：** 有经验的贡献者可通过 [GitHub Projects](https://github.com/orgs/RooCodeInc/projects/1) 直接参与。
 
-我们希望 Roo 在尽可能多的模型上运行良好，包括本地模型：
+## 寻找与规划你的贡献
 
-- 通过自定义系统提示和工作流程支持本地模型
-- 基准评估和测试案例
+### 贡献类型
 
-### 系统支持
+- **Bug 修复：** 解决代码问题。
+- **新功能：** 添加新功能。
+- **文档：** 完善指南和提高清晰度。
 
-我们希望 Roo 在每个人的计算机上都能良好运行：
+### Issue-First 方式
 
-- 跨平台终端集成
-- 对 Mac、Windows 和 Linux 的强大一致支持
+所有贡献必须从 GitHub Issue 开始。
 
-### 文档
+- **检查现有 issue：** 搜索 [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)。
+- **创建 issue：** 使用适当模板：
+    - **Bug：** "Bug Report" 模板。
+    - **功能：** "Detailed Feature Proposal" 模板。开始前需获得批准。
+- **认领 issue：** 评论并等待正式分配。
 
-我们希望为所有用户和贡献者提供全面、易于访问的文档：
+**未关联已批准 issue 的 PR 可能会被关闭。**
 
-- 扩展的用户指南和教程
-- 清晰的 API 文档
-- 更好的贡献者指导
-- 多语言文档资源
-- 交互式示例和代码示例
+### 决定要做什么
 
-### 稳定性
+- 查看 [GitHub 项目](https://github.com/orgs/RooCodeInc/projects/1) 中未分配的 "Good First Issues"。
+- 文档相关，请访问 [Roo Code Docs](https://github.com/RooCodeInc/Roo-Code-Docs)。
 
-我们希望显著减少错误数量并增加自动化测试：
+### 报告 Bug
 
-- 调试日志开关
-- 用于发送错误/支持请求的"机器/任务信息"复制按钮
+- 先检查是否已有相关报告。
+- 使用 ["Bug Report" 模板](https://github.com/RooCodeInc/Roo-Code/issues/new/choose) 创建新 bug 报告。
+- **安全问题：** 通过 [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new) 私下报告。
 
-### 国际化
+## 开发与提交流程
 
-我们希望 Roo 能说每个人的语言：
+### 开发环境配置
 
-- 我们希望 Roo Code 说每个人的语言
-- Queremos que Roo Code hable el idioma de todos
-- हम चाहते हैं कि Roo Code हर किसी की भाषा बोले
-- نريد أن يتحدث Roo Code لغة الجميع
+1. **Fork & Clone：**
 
-我们特别欢迎推进我们路线图目标的贡献。如果您正在处理符合这些支柱的内容，请在您的 PR 描述中提及。
-
-## 开发设置
-
-1. **克隆**仓库：
-
-```sh
-git clone https://github.com/RooVetGit/Roo-Code.git
+```
+git clone https://github.com/你的用户名/Roo-Code.git
 ```
 
-2. **安装依赖**：
+2. **安装依赖：**
 
-```sh
+```
 npm run install:all
 ```
 
-3. **启动 webview（Vite/React 应用，具有热模块替换）**：
+3. **调试：** 在 VS Code 中按 `F5` 打开。
 
-```sh
-npm run dev
-```
+### 编码规范
 
-4. **调试**：
-   在 VSCode 中按 `F5`（或**运行** → **开始调试**）打开一个加载了 Roo Code 的新会话。
+- 每个 PR 专注于一个功能或修复。
+- 遵循 ESLint 和 TypeScript 最佳实践。
+- 编写清晰的提交信息，引用相关 issue（如 `Fixes #123`）。
+- 提供完整测试（`npm test`）。
+- 提交前先在最新 `main` 分支上进行 rebase。
 
-对 webview 的更改将立即显示。对核心扩展的更改将需要重新启动扩展主机。
+### 提交 Pull Request
 
-或者，您可以构建一个 .vsix 文件并直接在 VSCode 中安装：
+- 如需早期反馈，可先提交**草稿 PR**。
+- 清晰描述你的更改，遵循 Pull Request 模板。
+- 为 UI 变更提供截图/视频。
+- 说明是否需要更新文档。
 
-```sh
-npm run build
-```
+### Pull Request 政策
 
-`bin/` 目录中将出现一个 `.vsix` 文件，可以用以下命令安装：
+- 必须引用已批准并分配的 issue。
+- 不遵守政策的 PR 可能会被关闭。
+- PR 应通过 CI 测试，符合路线图，并有清晰文档。
 
-```sh
-code --install-extension bin/roo-cline-<version>.vsix
-```
+### 审查流程
 
-## 编写和提交代码
+- **每日筛查：** 维护者快速检查。
+- **每周深入审查：** 全面评估。
+- **根据反馈快速迭代**。
 
-任何人都可以为 Roo Code 贡献代码，但我们要求您遵循这些指导方针，以确保您的贡献能够顺利集成：
+## 法律声明
 
-1. **保持 Pull Requests 聚焦**
-
-    - 将 PR 限制在单一功能或错误修复
-    - 将较大的更改分割成更小的相关 PR
-    - 将更改分解为可以独立审查的逻辑提交
-
-2. **代码质量**
-
-    - 所有 PR 必须通过包括 linting 和格式化的 CI 检查
-    - 在提交之前解决任何 ESLint 警告或错误
-    - 回应 Ellipsis（我们的自动代码审查工具）的所有反馈
-    - 遵循 TypeScript 最佳实践并保持类型安全
-
-3. **测试**
-
-    - 为新功能添加测试
-    - 运行 `npm test` 确保所有测试通过
-    - 如果您的更改影响现有测试，请更新它们
-    - 在适当的情况下包括单元测试和集成测试
-
-4. **提交指南**
-
-    - 编写清晰、描述性的提交消息
-    - 在提交中使用 #issue-number 引用相关问题
-
-5. **提交前**
-
-    - 在最新的 main 分支上变基您的分支
-    - 确保您的分支成功构建
-    - 再次检查所有测试是否通过
-    - 检查您的更改中是否有任何调试代码或控制台日志
-
-6. **Pull Request 描述**
-    - 清晰描述您的更改做了什么
-    - 包括测试更改的步骤
-    - 列出任何破坏性更改
-    - 为 UI 更改添加截图
-
-## 贡献协议
-
-通过提交 pull request，您同意您的贡献将在与项目相同的许可下获得许可（[Apache 2.0](../LICENSE)）。
+提交贡献即表示你同意你的贡献将基于 Apache 2.0 许可证，与 Roo Code 的许可一致。

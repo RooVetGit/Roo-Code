@@ -10,7 +10,8 @@
 		"contextWindow": "上下文长度：",
 		"closeAndStart": "关闭任务并开始新任务",
 		"export": "导出任务历史",
-		"delete": "删除任务（Shift + 点击跳过确认）"
+		"delete": "删除任务（Shift + 点击跳过确认）",
+		"condenseContext": "压缩任务上下文"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",
@@ -52,6 +53,10 @@
 		"title": "强制继续",
 		"tooltip": "忽略运行中的命令并继续"
 	},
+	"killCommand": {
+		"title": "终止命令",
+		"tooltip": "终止当前命令"
+	},
 	"resumeTask": {
 		"title": "恢复任务",
 		"tooltip": "继续当前任务"
@@ -86,6 +91,7 @@
 		}
 	},
 	"selectMode": "选择交互模式",
+	"selectApiConfig": "选择 API 配置",
 	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
@@ -181,13 +187,6 @@
 		"hasQuestion": "Roo有一个问题:"
 	},
 	"taskCompleted": "任务完成",
-	"shellIntegration": {
-		"unavailable": "Shell集成不可用",
-		"troubleshooting": "仍有问题吗？点击此处查看Shell集成文档。",
-		"checkSettings": "检查设置页面中的终端解决方案",
-		"updateVSCode": "更新VSCode",
-		"supportedShell": "确保使用受支持的shell：zsh、bash、fish或PowerShell"
-	},
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
 	},
@@ -200,16 +199,21 @@
 		"thinking": "思考中",
 		"seconds": "{{count}}秒"
 	},
+	"contextCondense": {
+		"title": "上下文已压缩",
+		"condensing": "正在压缩上下文...",
+		"tokens": "tokens"
+	},
 	"followUpSuggest": {
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 已发布",
-		"description": "Roo Code 3.14 带来基于您反馈的新功能和改进。",
+		"title": "🎉 Roo Code {{version}} 已发布",
+		"description": "Roo Code {{version}} 带来基于您反馈的强大新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>编辑工具增强</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已得到改进，并从实验性状态毕业",
-		"feature2": "<bold>差异更新修复</bold>: 我们持续改进 <code>apply_diff</code> 工具",
-		"feature3": "<bold>海量其他改进</bold>: 扩展中众多的修复和增强功能",
+		"feature1": "<bold>Gemini 的隐式缓存</bold>: Gemini API 调用现在会自动缓存，降低 API 费用",
+		"feature2": "<bold>更智能的模式选择</bold>: 模式定义现在可以包含何时使用每种模式的指导，实现更好的协调",
+		"feature3": "<bold>智能上下文压缩</bold>: 当上下文填满时，智能汇总对话历史而非截断（在设置 -> 实验性功能中启用）",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
@@ -235,6 +239,26 @@
 			"close": "关闭浏览器"
 		}
 	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "展开代码块",
+			"collapse": "收起代码块",
+			"enable_wrap": "启用自动换行",
+			"disable_wrap": "禁用自动换行",
+			"copy_code": "复制代码"
+		}
+	},
 	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
-	"selectApiConfig": "选择 API 配置"
+	"shellIntegration": {
+		"title": "命令执行警告",
+		"description": "您的命令正在没有 VSCode 终端 shell 集成的情况下执行。要隐藏此警告，您可以在 <settingsLink>Roo Code 设置</settingsLink>的 <strong>Terminal</strong> 部分禁用 shell 集成，或使用下方链接排查 VSCode 终端集成问题。",
+		"troubleshooting": "点击此处查看 shell 集成文档。"
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "已达自动批准请求限制",
+			"description": "Roo 已达到 {{count}} 次 API 请求的自动批准限制。您想重置计数并继续任务吗？",
+			"button": "重置并继续"
+		}
+	}
 }

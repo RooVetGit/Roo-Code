@@ -1,173 +1,129 @@
+[English](../../CONTRIBUTING.md) • [Català](../ca/CONTRIBUTING.md) • [Deutsch](../de/CONTRIBUTING.md) • [Español](../es/CONTRIBUTING.md) • [Français](../fr/CONTRIBUTING.md) • [हिंदी](../hi/CONTRIBUTING.md) • [Italiano](../it/CONTRIBUTING.md) • [Nederlands](../nl/CONTRIBUTING.md) • [Русский](../ru/CONTRIBUTING.md)
+
+[日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • <b>Português (BR)</b> • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
+
 # Contribuindo para o Roo Code
 
-Estamos entusiasmados por você estar interessado em contribuir para o Roo Code. Seja corrigindo um bug, adicionando um recurso ou melhorando nossa documentação, cada contribuição torna o Roo Code mais inteligente! Para manter nossa comunidade vibrante e acolhedora, todos os membros devem aderir ao nosso [Código de Conduta](CODE_OF_CONDUCT.md).
+O Roo Code é um projeto impulsionado pela comunidade e valorizamos muito cada contribuição. Para simplificar a colaboração, operamos com uma abordagem [Issue-First](#abordagem-issue-first), o que significa que todos os [Pull Requests (PRs)](#enviando-um-pull-request) devem primeiro estar vinculados a uma Issue do GitHub. Por favor, leia este guia com atenção.
 
-## Junte-se à Nossa Comunidade
+## Índice
 
-Incentivamos fortemente todos os colaboradores a se juntarem à nossa [comunidade no Discord](https://discord.gg/roocode)! Fazer parte do nosso servidor Discord ajuda você a:
+- [Antes de Contribuir](#antes-de-contribuir)
+- [Encontrando & Planejando sua Contribuição](#encontrando--planejando-sua-contribuição)
+- [Processo de Desenvolvimento & Submissão](#processo-de-desenvolvimento--submissão)
+- [Legal](#legal)
 
-- Obter ajuda e orientação em tempo real sobre suas contribuições
-- Conectar-se com outros colaboradores e membros da equipe principal
-- Manter-se atualizado sobre os desenvolvimentos e prioridades do projeto
-- Participar de discussões que moldam o futuro do Roo Code
-- Encontrar oportunidades de colaboração com outros desenvolvedores
+## Antes de Contribuir
 
-## Relatando Bugs ou Problemas
+### 1. Código de Conduta
 
-Relatórios de bugs ajudam a tornar o Roo Code melhor para todos! Antes de criar uma nova issue, por favor [pesquise as existentes](https://github.com/RooVetGit/Roo-Code/issues) para evitar duplicatas. Quando estiver pronto para relatar um bug, vá para nossa [página de issues](https://github.com/RooVetGit/Roo-Code/issues/new/choose) onde você encontrará um modelo para ajudá-lo a preencher as informações relevantes.
+Todos os colaboradores devem seguir nosso [Código de Conduta](./CODE_OF_CONDUCT.md).
 
-<blockquote class='warning-note'>
-     🔐 <b>Importante:</b> Se você descobrir uma vulnerabilidade de segurança, por favor use a <a href="https://github.com/RooVetGit/Roo-Code/security/advisories/new">ferramenta de segurança do Github para relatá-la de forma privada</a>.
-</blockquote>
+### 2. Roadmap do Projeto
 
-## Decidindo no que Trabalhar
+Nosso roadmap orienta a direção do projeto. Alinhe suas contribuições com estes objetivos principais:
 
-Procurando uma boa primeira contribuição? Verifique as issues na seção "Issue [Unassigned]" do nosso [Projeto Github Roo Code](https://github.com/orgs/RooVetGit/projects/1). Estas são especialmente selecionadas para novos colaboradores e áreas onde gostaríamos de ter alguma ajuda!
+### Confiabilidade em Primeiro Lugar
 
-Também damos as boas-vindas a contribuições para nossa [documentação](https://docs.roocode.com/)! Seja corrigindo erros de digitação, melhorando guias existentes ou criando novo conteúdo educacional - adoraríamos construir um repositório de recursos impulsionado pela comunidade que ajude todos a obter o máximo do Roo Code. Você pode clicar em "Edit this page" em qualquer página para ir rapidamente ao local certo no Github para editar o arquivo, ou pode mergulhar diretamente em https://github.com/RooVetGit/Roo-Code-Docs.
+- Garantir que a edição de diferenças e a execução de comandos sejam consistentemente confiáveis
+- Reduzir pontos de atrito que desencorajam o uso regular
+- Garantir operação suave em todos os idiomas e plataformas
+- Expandir o suporte robusto para uma ampla variedade de provedores e modelos de IA
 
-Se você está planejando trabalhar em um recurso maior, por favor crie primeiro uma [solicitação de recurso](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) para que possamos discutir se está alinhado com a visão do Roo Code. Você também pode verificar nosso [Roteiro do Projeto](#roteiro-do-projeto) abaixo para ver se sua ideia se encaixa em nossa direção estratégica.
+### Experiência de Usuário Aprimorada
 
-## Roteiro do Projeto
+- Simplificar a interface do usuário para maior clareza e intuitividade
+- Melhorar continuamente o fluxo de trabalho para atender às altas expectativas dos desenvolvedores
 
-O Roo Code possui um roteiro de desenvolvimento claro que orienta nossas prioridades e direção futura. Entender nosso roteiro pode ajudar você a:
+### Liderança em Desempenho de Agentes
 
-- Alinhar suas contribuições com os objetivos do projeto
-- Identificar áreas onde sua expertise seria mais valiosa
-- Entender o contexto por trás de certas decisões de design
-- Encontrar inspiração para novos recursos que apoiem nossa visão
+- Estabelecer benchmarks de avaliação abrangentes (evals) para medir a produtividade no mundo real
+- Facilitar para que todos possam executar e interpretar essas avaliações
+- Fornecer melhorias que demonstrem aumentos claros nas pontuações de avaliação
 
-Nosso roteiro atual se concentra em seis pilares principais:
+Mencione o alinhamento com estas áreas em seus PRs.
 
-### Suporte a Provedores
+### 3. Junte-se à Comunidade Roo Code
 
-Nosso objetivo é oferecer suporte a tantos provedores quanto possível:
+- **Principal:** Junte-se ao nosso [Discord](https://discord.gg/roocode) e envie um DM para **Hannes Rudolph (`hrudolph`)**.
+- **Alternativa:** Colaboradores experientes podem participar diretamente via [GitHub Projects](https://github.com/orgs/RooCodeInc/projects/1).
 
-- Suporte mais versátil para "OpenAI Compatible"
-- xAI, Microsoft Azure AI, Alibaba Cloud Qwen, IBM Watsonx, Together AI, DeepInfra, Fireworks AI, Cohere, Perplexity AI, FriendliAI, Replicate
-- Suporte aprimorado para Ollama e LM Studio
+## Encontrando & Planejando sua Contribuição
 
-### Suporte a Modelos
+### Tipos de Contribuição
 
-Queremos que o Roo funcione bem em tantos modelos quanto possível, incluindo modelos locais:
+- **Correção de bugs:** Corrigir problemas no código.
+- **Novos recursos:** Adicionar novas funcionalidades.
+- **Documentação:** Melhorar guias e clareza.
 
-- Suporte a modelos locais através de prompts de sistema personalizados e fluxos de trabalho
-- Avaliações de benchmark e casos de teste
+### Abordagem Issue-First
 
-### Suporte a Sistemas
+Todas as contribuições devem começar com uma Issue do GitHub.
 
-Queremos que o Roo funcione bem no computador de todos:
+- **Verificar issues existentes:** Procure em [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
+- **Criar uma issue:** Use os templates apropriados:
+    - **Bugs:** Template "Bug Report".
+    - **Recursos:** Template "Detailed Feature Proposal". Aprovação necessária antes de começar.
+- **Reivindicar issues:** Comente e aguarde atribuição oficial.
 
-- Integração de terminal multiplataforma
-- Suporte forte e consistente para Mac, Windows e Linux
+**PRs sem issues aprovadas podem ser fechados.**
 
-### Documentação
+### Decidindo no que Trabalhar
 
-Queremos documentação abrangente e acessível para todos os usuários e colaboradores:
+- Confira o [Projeto GitHub](https://github.com/orgs/RooCodeInc/projects/1) para "Good First Issues" não atribuídas.
+- Para documentação, visite [Roo Code Docs](https://github.com/RooCodeInc/Roo-Code-Docs).
 
-- Guias de usuário e tutoriais expandidos
-- Documentação clara da API
-- Melhor orientação para colaboradores
-- Recursos de documentação multilíngues
-- Exemplos interativos e amostras de código
+### Relatando Bugs
 
-### Estabilidade
+- Verifique primeiro se já existem relatórios.
+- Crie novos relatórios de bugs usando o [template "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
+- **Vulnerabilidades de segurança:** Relate de forma privada via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
 
-Queremos diminuir significativamente o número de bugs e aumentar os testes automatizados:
+## Processo de Desenvolvimento & Submissão
 
-- Interruptor de registro de depuração
-- Botão de cópia "Informações de Máquina/Tarefa" para enviar com solicitações de suporte/bug
+### Configuração de Desenvolvimento
 
-### Internacionalização
+1. **Fork & Clone:**
 
-Queremos que o Roo fale o idioma de todos:
-
-- 我们希望 Roo Code 说每个人的语言
-- Queremos que Roo Code hable el idioma de todos
-- हम चाहते हैं कि Roo Code हर किसी की भाषा बोले
-- نريد أن يتحدث Roo Code لغة الجميع
-
-Damos especialmente as boas-vindas a contribuições que avançam os objetivos do nosso roteiro. Se você estiver trabalhando em algo que se alinha com esses pilares, por favor mencione isso na descrição do seu PR.
-
-## Configuração de Desenvolvimento
-
-1. **Clone** o repositório:
-
-```sh
-git clone https://github.com/RooVetGit/Roo-Code.git
+```
+git clone https://github.com/SEU_USUÁRIO/Roo-Code.git
 ```
 
-2. **Instale as dependências**:
+2. **Instalar dependências:**
 
-```sh
+```
 npm run install:all
 ```
 
-3. **Inicie o webview (aplicativo Vite/React com HMR)**:
+3. **Depuração:** Abra com VS Code (`F5`).
 
-```sh
-npm run dev
-```
+### Diretrizes para Escrever Código
 
-4. **Depuração**:
-   Pressione `F5` (ou **Executar** → **Iniciar Depuração**) no VSCode para abrir uma nova sessão com o Roo Code carregado.
+- Um PR focado por recurso ou correção.
+- Siga as melhores práticas de ESLint e TypeScript.
+- Escreva commits claros e descritivos referenciando issues (ex: `Fixes #123`).
+- Forneça testes completos (`npm test`).
+- Rebase na branch `main` mais recente antes do envio.
 
-Alterações no webview aparecerão imediatamente. Alterações na extensão principal exigirão a reinicialização do host da extensão.
+### Enviando um Pull Request
 
-Alternativamente, você pode construir um .vsix e instalá-lo diretamente no VSCode:
+- Comece como **PR em rascunho** se buscar feedback antecipado.
+- Descreva claramente suas alterações seguindo o Template de Pull Request.
+- Forneça capturas de tela/vídeos para alterações de UI.
+- Indique se atualizações de documentação são necessárias.
 
-```sh
-npm run build
-```
+### Política de Pull Request
 
-Um arquivo `.vsix` aparecerá no diretório `bin/` que pode ser instalado com:
+- Deve referenciar issues pré-aprovadas e atribuídas.
+- PRs que não seguem a política podem ser fechados.
+- PRs devem passar nos testes de CI, alinhar-se ao roadmap e ter documentação clara.
 
-```sh
-code --install-extension bin/roo-cline-<version>.vsix
-```
+### Processo de Revisão
 
-## Escrevendo e Enviando Código
+- **Triagem diária:** Verificações rápidas pelos mantenedores.
+- **Revisão semanal detalhada:** Avaliação abrangente.
+- **Itere rapidamente** com base no feedback.
 
-Qualquer pessoa pode contribuir com código para o Roo Code, mas pedimos que você siga estas diretrizes para garantir que suas contribuições possam ser integradas sem problemas:
+## Legal
 
-1. **Mantenha os Pull Requests Focados**
-
-    - Limite os PRs a um único recurso ou correção de bug
-    - Divida mudanças maiores em PRs menores e relacionados
-    - Divida as mudanças em commits lógicos que possam ser revisados independentemente
-
-2. **Qualidade do Código**
-
-    - Todos os PRs devem passar nas verificações de CI que incluem tanto linting quanto formatação
-    - Resolva quaisquer avisos ou erros do ESLint antes de enviar
-    - Responda a todos os feedbacks do Ellipsis, nossa ferramenta automatizada de revisão de código
-    - Siga as melhores práticas de TypeScript e mantenha a segurança de tipos
-
-3. **Testes**
-
-    - Adicione testes para novos recursos
-    - Execute `npm test` para garantir que todos os testes passem
-    - Atualize os testes existentes se suas mudanças os afetarem
-    - Inclua tanto testes unitários quanto de integração quando apropriado
-
-4. **Diretrizes de Commit**
-
-    - Escreva mensagens de commit claras e descritivas
-    - Referencie issues relevantes nos commits usando #número-da-issue
-
-5. **Antes de Enviar**
-
-    - Faça rebase da sua branch na última main
-    - Certifique-se de que sua branch é construída com sucesso
-    - Verifique novamente se todos os testes estão passando
-    - Revise suas mudanças para qualquer código de depuração ou logs de console
-
-6. **Descrição do Pull Request**
-    - Descreva claramente o que suas mudanças fazem
-    - Inclua passos para testar as mudanças
-    - Liste quaisquer mudanças significativas
-    - Adicione capturas de tela para mudanças na UI
-
-## Acordo de Contribuição
-
-Ao enviar um pull request, você concorda que suas contribuições serão licenciadas sob a mesma licença do projeto ([Apache 2.0](../LICENSE)).
+Ao enviar um pull request, você concorda que suas contribuições serão licenciadas sob a Licença Apache 2.0, consistente com o licenciamento do Roo Code.

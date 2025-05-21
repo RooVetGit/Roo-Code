@@ -1,8 +1,8 @@
 import i18next from "i18next"
 
-import { ApiConfiguration, isRouterName, RouterModels } from "@roo/shared/api"
+import { ProviderSettings, isRouterName, RouterModels } from "@roo/shared/api"
 
-export function validateApiConfiguration(apiConfiguration: ApiConfiguration): string | undefined {
+export function validateApiConfiguration(apiConfiguration: ProviderSettings): string | undefined {
 	switch (apiConfiguration.apiProvider) {
 		case "openrouter":
 			if (!apiConfiguration.openRouterApiKey) {
@@ -21,6 +21,11 @@ export function validateApiConfiguration(apiConfiguration: ApiConfiguration): st
 			break
 		case "requesty":
 			if (!apiConfiguration.requestyApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			break
+		case "litellm":
+			if (!apiConfiguration.litellmApiKey) {
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
@@ -113,7 +118,7 @@ export function validateBedrockArn(arn: string, region?: string) {
 	return { isValid: true, arnRegion, errorMessage: undefined }
 }
 
-export function validateModelId(apiConfiguration: ApiConfiguration, routerModels?: RouterModels): string | undefined {
+export function validateModelId(apiConfiguration: ProviderSettings, routerModels?: RouterModels): string | undefined {
 	const provider = apiConfiguration.apiProvider ?? ""
 
 	if (!isRouterName(provider)) {
@@ -134,6 +139,9 @@ export function validateModelId(apiConfiguration: ApiConfiguration, routerModels
 			break
 		case "requesty":
 			modelId = apiConfiguration.requestyModelId
+			break
+		case "litellm":
+			modelId = apiConfiguration.litellmModelId
 			break
 	}
 

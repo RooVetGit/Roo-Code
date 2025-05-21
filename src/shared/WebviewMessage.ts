@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { ApiConfiguration } from "./api"
+import { ProviderSettings } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
 import { InstallMarketplaceItemOptions, MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
 
@@ -12,7 +12,6 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 
 export interface WebviewMessage {
 	type:
-		| "apiConfiguration"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
@@ -32,6 +31,7 @@ export interface WebviewMessage {
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
+		| "terminalOperation"
 		| "clearTask"
 		| "didShowAnnouncement"
 		| "selectImages"
@@ -42,6 +42,7 @@ export interface WebviewMessage {
 		| "importSettings"
 		| "exportSettings"
 		| "resetState"
+		| "flushRouterModels"
 		| "requestRouterModels"
 		| "requestOpenAiModels"
 		| "requestOllamaModels"
@@ -51,9 +52,13 @@ export interface WebviewMessage {
 		| "openFile"
 		| "openMention"
 		| "cancelTask"
+		| "updateVSCodeSetting"
+		| "getVSCodeSetting"
+		| "vsCodeSetting"
 		| "alwaysAllowBrowser"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
+		| "allowedMaxRequests"
 		| "alwaysAllowSubtasks"
 		| "playSound"
 		| "playTts"
@@ -81,6 +86,7 @@ export interface WebviewMessage {
 		| "deleteMessage"
 		| "terminalOutputLineLimit"
 		| "terminalShellIntegrationTimeout"
+		| "terminalShellIntegrationDisabled"
 		| "terminalCommandDelay"
 		| "terminalPowershellCounter"
 		| "terminalZshClearEolMark"
@@ -127,6 +133,7 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "repositoryRefreshComplete"
 		| "setHistoryPreviewCollapsed"
+		| "condenseTaskContextRequest"
 		| "openExternal"
 		| "marketplaceSources"
 		| "fetchMarketplaceItems"
@@ -141,7 +148,7 @@ export interface WebviewMessage {
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
-	apiConfiguration?: ApiConfiguration
+	apiConfiguration?: ProviderSettings
 	images?: string[]
 	bool?: boolean
 	value?: number
@@ -156,6 +163,7 @@ export interface WebviewMessage {
 	dataUrls?: string[]
 	values?: Record<string, any>
 	query?: string
+	setting?: string
 	slug?: string
 	modeConfig?: ModeConfig
 	timeout?: number
@@ -169,6 +177,7 @@ export interface WebviewMessage {
 	mpItem?: MarketplaceItem
 	mpInstallOptions?: InstallMarketplaceItemOptions
 	hasSystemPromptOverride?: boolean
+	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
 	config?: Record<string, any> // Add config to the payload
 }

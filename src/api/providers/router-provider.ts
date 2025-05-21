@@ -2,7 +2,7 @@ import OpenAI from "openai"
 
 import { ApiHandlerOptions, RouterName, ModelRecord, ModelInfo } from "../../shared/api"
 import { BaseProvider } from "./base-provider"
-import { getModels } from "./fetchers/cache"
+import { getModels } from "./fetchers/modelCache"
 
 type RouterProviderOptions = {
 	name: RouterName
@@ -44,7 +44,7 @@ export abstract class RouterProvider extends BaseProvider {
 	}
 
 	public async fetchModel() {
-		this.models = await getModels(this.name)
+		this.models = await getModels(this.name, this.client.apiKey, this.client.baseURL)
 		return this.getModel()
 	}
 

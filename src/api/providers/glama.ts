@@ -2,24 +2,29 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import axios from "axios"
 import OpenAI from "openai"
 
+import { Package } from "../../schemas"
 import { ApiHandlerOptions, glamaDefaultModelId, glamaDefaultModelInfo } from "../../shared/api"
+
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { addCacheControlDirectives } from "../transform/caching"
+import { addCacheBreakpoints } from "../transform/caching/anthropic"
+
 import { SingleCompletionHandler } from "../index"
 import { RouterProvider } from "./router-provider"
 
 const GLAMA_DEFAULT_TEMPERATURE = 0
 
 const DEFAULT_HEADERS = {
-	"X-Glama-Metadata": JSON.stringify({ labels: [{ key: "app", value: "vscode.rooveterinaryinc.roo-cline" }] }),
+	"X-Glama-Metadata": JSON.stringify({
+		labels: [{ key: "app", value: `vscode.${Package.publisher}.${Package.name}` }],
+	}),
 }
 
 export class GlamaHandler extends RouterProvider implements SingleCompletionHandler {
 	constructor(options: ApiHandlerOptions) {
 		super({
 			options,
-			name: "unbound",
+			name: "glama",
 			baseURL: "https://glama.ai/api/gateway/openai/v1",
 			apiKey: options.glamaApiKey,
 			modelId: options.glamaModelId,
@@ -37,7 +42,7 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 		]
 
 		if (modelId.startsWith("anthropic/claude-3")) {
-			addCacheControlDirectives(systemPrompt, openAiMessages)
+			addCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 
 		// Required by Anthropic; other providers default to max tokens allowed.

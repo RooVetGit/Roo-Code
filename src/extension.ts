@@ -14,19 +14,25 @@ try {
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
-import { initializeI18n } from "./i18n"
+import { Package } from "./schemas"
 import { ContextProxy } from "./core/config/ContextProxy"
 import { ClineProvider } from "./core/webview/ClineProvider"
-import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
-import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
-
-import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
+
+import {
+	handleUri,
+	registerCommands,
+	registerCodeActions,
+	registerTerminalActions,
+	CodeActionProvider,
+} from "./activate"
+import { initializeI18n } from "./i18n"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -60,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
-	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+	const defaultCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 
 	// Initialize global state if not already set.
 	if (!context.globalState.get("allowedCommands")) {
@@ -119,11 +125,26 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerTerminalActions(context)
 
 	// Allows other extensions to activate once Roo is ready.
-	vscode.commands.executeCommand("roo-cline.activationCompleted")
+	vscode.commands.executeCommand(`${Package.name}.activationCompleted`)
 
 	// Implements the `RooCodeAPI` interface.
 	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
 	const enableLogging = typeof socketPath === "string"
+
+	// Watch the core files and automatically reload the extension host
+	const enableCoreAutoReload = process.env?.NODE_ENV === "development"
+	if (enableCoreAutoReload) {
+		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED!`)
+		const watcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(context.extensionPath, "src/**/*.ts"),
+		)
+		watcher.onDidChange((uri) => {
+			console.log(`♻️ File changed: ${uri.fsPath}. Reloading host…`)
+			vscode.commands.executeCommand("workbench.action.reloadWindow")
+		})
+		context.subscriptions.push(watcher)
+	}
+
 	return new API(outputChannel, provider, socketPath, enableLogging)
 }
 

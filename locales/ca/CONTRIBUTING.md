@@ -1,173 +1,129 @@
+[English](../../CONTRIBUTING.md) • <b>Català</b> • [Deutsch](../de/CONTRIBUTING.md) • [Español](../es/CONTRIBUTING.md) • [Français](../fr/CONTRIBUTING.md) • [हिंदी](../hi/CONTRIBUTING.md) • [Italiano](../it/CONTRIBUTING.md) • [Nederlands](../nl/CONTRIBUTING.md) • [Русский](../ru/CONTRIBUTING.md)
+
+[日本語](../ja/CONTRIBUTING.md) • [한국어](../ko/CONTRIBUTING.md) • [Polski](../pl/CONTRIBUTING.md) • [Português (BR)](../pt-BR/CONTRIBUTING.md) • [Türkçe](../tr/CONTRIBUTING.md) • [Tiếng Việt](../vi/CONTRIBUTING.md) • [简体中文](../zh-CN/CONTRIBUTING.md) • [繁體中文](../zh-TW/CONTRIBUTING.md)
+
 # Contribuir a Roo Code
 
-Estem entusiasmats que estigueu interessats en contribuir a Roo Code. Ja sigui arreglant un error, afegint una funcionalitat o millorant la nostra documentació, cada contribució fa que Roo Code sigui més intel·ligent! Per mantenir la nostra comunitat vibrant i acollidora, tots els membres han de complir el nostre [Codi de Conducta](CODE_OF_CONDUCT.md).
+Roo Code és un projecte impulsat per la comunitat i valorem molt cada contribució. Per simplificar la col·laboració, treballem amb un enfoc [Issue-First](#enfoc-issue-first), que significa que tots els [Pull Requests (PRs)](#enviar-un-pull-request) han d'estar primer vinculats a una Issue de GitHub. Si us plau, llegeix aquesta guia amb atenció.
 
-## Uniu-vos a la nostra comunitat
+## Taula de continguts
 
-Encoratgem fortament a tots els col·laboradors a unir-se a la nostra [comunitat de Discord](https://discord.gg/roocode)! Formar part del nostre servidor de Discord us ajuda a:
+- [Abans de contribuir](#abans-de-contribuir)
+- [Trobar i planificar la teva contribució](#trobar-i-planificar-la-teva-contribució)
+- [Procés de desenvolupament i enviament](#procés-de-desenvolupament-i-enviament)
+- [Legal](#legal)
 
-- Obtenir ajuda i orientació en temps real sobre les vostres contribucions
-- Connectar amb altres col·laboradors i membres de l'equip principal
-- Mantenir-vos al dia sobre els desenvolupaments i prioritats del projecte
-- Participar en discussions que configuren el futur de Roo Code
-- Trobar oportunitats de col·laboració amb altres desenvolupadors
+## Abans de contribuir
 
-## Informar d'errors o problemes
+### 1. Codi de conducta
 
-Els informes d'errors ajuden a millorar Roo Code per a tothom! Abans de crear un nou informe, si us plau [cerqueu entre els existents](https://github.com/RooVetGit/Roo-Code/issues) per evitar duplicats. Quan estigueu a punt per informar d'un error, dirigiu-vos a la nostra [pàgina d'incidències](https://github.com/RooVetGit/Roo-Code/issues/new/choose) on trobareu una plantilla per ajudar-vos a completar la informació rellevant.
+Tots els col·laboradors han de complir el nostre [Codi de conducta](./CODE_OF_CONDUCT.md).
 
-<blockquote class='warning-note'>
-     🔐 <b>Important:</b> Si descobriu una vulnerabilitat de seguretat, utilitzeu l'<a href="https://github.com/RooVetGit/Roo-Code/security/advisories/new">eina de seguretat de Github per informar-ne privadament</a>.
-</blockquote>
+### 2. Fulla de ruta del projecte
 
-## Decidir en què treballar
+La nostra fulla de ruta orienta la direcció del projecte. Alinea les teves contribucions amb aquests objectius clau:
 
-Buscant una bona primera contribució? Consulteu les incidències a la secció "Issue [Unassigned]" del nostre [Projecte de Github de Roo Code](https://github.com/orgs/RooVetGit/projects/1). Aquestes estan específicament seleccionades per a nous col·laboradors i àrees on ens encantaria rebre ajuda!
+### Fiabilitat primer
 
-També donem la benvinguda a contribucions a la nostra [documentació](https://docs.roocode.com/)! Ja sigui corregint errors tipogràfics, millorant guies existents o creant nou contingut educatiu - ens encantaria construir un repositori de recursos impulsat per la comunitat que ajudi a tothom a aprofitar al màxim Roo Code. Podeu fer clic a "Editar aquesta pàgina" a qualsevol pàgina per arribar ràpidament al lloc correcte a Github per editar el fitxer, o podeu anar directament a https://github.com/RooVetGit/Roo-Code-Docs.
+- Garantir que l'edició de diferències i l'execució de comandes siguin consistentment fiables
+- Reduir els punts de fricció que desanimen l'ús regular
+- Garantir un funcionament fluid en tots els idiomes i plataformes
+- Ampliar el suport robust per a una àmplia varietat de proveïdors i models d'IA
 
-Si esteu planejant treballar en una funcionalitat més gran, si us plau creeu primer una [sol·licitud de funcionalitat](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) perquè puguem discutir si s'alinea amb la visió de Roo Code. També podeu consultar el nostre [Full de Ruta del Projecte](#full-de-ruta-del-projecte) a continuació per veure si la vostra idea s'ajusta a la nostra direcció estratègica.
+### Experiència d'usuari millorada
 
-## Full de Ruta del Projecte
+- Simplificar la interfície d'usuari per a més claredat i intuïció
+- Millorar contínuament el flux de treball per satisfer les altes expectatives dels desenvolupadors
 
-Roo Code té un full de ruta de desenvolupament clar que guia les nostres prioritats i direcció futura. Entendre el nostre full de ruta us pot ajudar a:
+### Lideratge en rendiment dels agents
 
-- Alinear les vostres contribucions amb els objectius del projecte
-- Identificar àrees on la vostra experiència seria més valuosa
-- Entendre el context darrere de certes decisions de disseny
-- Trobar inspiració per a noves funcionalitats que donin suport a la nostra visió
+- Establir punts de referència d'avaluació (evals) complets per mesurar la productivitat real
+- Facilitar que tothom pugui executar i interpretar aquestes avaluacions fàcilment
+- Proporcionar millores que demostrin increments clars en les puntuacions d'avaluació
 
-El nostre full de ruta actual se centra en sis pilars clau:
+Esmenta la relació amb aquestes àrees als teus PRs.
 
-### Suport de Proveïdors
+### 3. Uneix-te a la comunitat Roo Code
 
-Aspirem a donar suport a tants proveïdors com sigui possible:
+- **Principal:** Uneix-te al nostre [Discord](https://discord.gg/roocode) i envia un DM a **Hannes Rudolph (`hrudolph`)**.
+- **Alternativa:** Els col·laboradors experimentats poden participar directament via [GitHub Projects](https://github.com/orgs/RooCodeInc/projects/1).
 
-- Suport més versàtil per a "OpenAI Compatible"
-- xAI, Microsoft Azure AI, Alibaba Cloud Qwen, IBM Watsonx, Together AI, DeepInfra, Fireworks AI, Cohere, Perplexity AI, FriendliAI, Replicate
-- Suport millorat per a Ollama i LM Studio
+## Trobar i planificar la teva contribució
 
-### Suport de Models
+### Tipus de contribucions
 
-Volem que Roo funcioni tan bé com sigui possible amb tants models com sigui possible, inclosos els models locals:
+- **Correcció d'errors:** Solucionar problemes en el codi.
+- **Noves funcionalitats:** Afegir noves capacitats.
+- **Documentació:** Millorar guies i claredat.
 
-- Suport de models locals a través de prompts de sistema personalitzats i fluxos de treball
-- Avaluacions de rendiment i casos de prova
+### Enfoc Issue-First
 
-### Suport de Sistemes
+Totes les contribucions han de començar amb una Issue de GitHub.
 
-Volem que Roo funcioni bé a l'ordinador de tothom:
+- **Revisar issues existents:** Cerca a [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
+- **Crear una issue:** Utilitza les plantilles adequades:
+    - **Errors:** Plantilla "Bug Report".
+    - **Funcionalitats:** Plantilla "Detailed Feature Proposal". Es requereix aprovació abans de començar.
+- **Reclamar issues:** Comenta i espera l'assignació oficial.
 
-- Integració de terminal multiplataforma
-- Suport sòlid i consistent per a Mac, Windows i Linux
+**Els PRs sense issues aprovades poden ser tancats.**
 
-### Documentació
+### Decidir en què treballar
 
-Volem documentació completa i accessible per a tots els usuaris i col·laboradors:
+- Consulta el [Projecte GitHub](https://github.com/orgs/RooCodeInc/projects/1) per trobar "Good First Issues" no assignades.
+- Per a documentació, visita [Roo Code Docs](https://github.com/RooCodeInc/Roo-Code-Docs).
 
-- Guies d'usuari i tutorials ampliats
-- Documentació clara de l'API
-- Millor orientació per als col·laboradors
-- Recursos de documentació multilingües
-- Exemples interactius i mostres de codi
+### Informar d'errors
 
-### Estabilitat
+- Comprova primer els informes existents.
+- Crea nous informes d'errors utilitzant la [plantilla "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
+- **Vulnerabilitats de seguretat:** Informa de manera privada via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
 
-Volem reduir significativament el nombre d'errors i augmentar les proves automatitzades:
+## Procés de desenvolupament i enviament
 
-- Interruptor de registre de depuració
-- Botó de còpia "Informació de Màquina/Tasca" per enviar amb sol·licituds d'error/suport
+### Configuració de desenvolupament
 
-### Internacionalització
+1. **Fork & Clona:**
 
-Volem que Roo parli l'idioma de tothom:
-
-- 我们希望 Roo Code 说每个人的语言
-- Queremos que Roo Code hable el idioma de todos
-- हम चाहते हैं कि Roo Code हर किसी की भाषा बोले
-- نريد أن يتحدث Roo Code لغة الجميع
-
-Donem especialment la benvinguda a contribucions que avancin els nostres objectius del full de ruta. Si esteu treballant en alguna cosa que s'alinea amb aquests pilars, si us plau mencioneu-ho a la descripció del vostre PR.
-
-## Configuració de desenvolupament
-
-1. **Cloneu** el repositori:
-
-```sh
-git clone https://github.com/RooVetGit/Roo-Code.git
+```
+git clone https://github.com/EL_TEU_USUARI/Roo-Code.git
 ```
 
-2. **Instal·leu les dependències**:
+2. **Instal·la dependències:**
 
-```sh
+```
 npm run install:all
 ```
 
-3. **Inicieu la vista web (aplicació Vite/React amb HMR)**:
+3. **Depuració:** Obre amb VS Code (`F5`).
 
-```sh
-npm run dev
-```
+### Guia per escriure codi
 
-4. **Depuració**:
-   Premeu `F5` (o **Execució** → **Inicia la depuració**) a VSCode per obrir una nova sessió amb Roo Code carregat.
+- Un PR centrat per funcionalitat o correcció.
+- Segueix les millors pràctiques d'ESLint i TypeScript.
+- Escriu missatges de commit clars i descriptius que facin referència a issues (ex: `Fixes #123`).
+- Proporciona proves completes (`npm test`).
+- Rebaseja a la branca `main` més recent abans d'enviar.
 
-Els canvis a la vista web apareixeran immediatament. Els canvis a l'extensió principal requeriran reiniciar l'amfitrió de l'extensió.
+### Enviar un Pull Request
 
-Alternativament, podeu crear un .vsix i instal·lar-lo directament a VSCode:
+- Comença com a **PR en esborrany** si busques feedback primerenc.
+- Descriu clarament els teus canvis seguint la Plantilla de Pull Request.
+- Proporciona captures de pantalla/vídeos per a canvis d'UI.
+- Indica si es necessiten actualitzacions de documentació.
 
-```sh
-npm run build
-```
+### Política de Pull Request
 
-Apareixerà un fitxer `.vsix` al directori `bin/` que es pot instal·lar amb:
+- Ha de fer referència a issues preaprovades i assignades.
+- Els PRs que no segueixen la política poden ser tancats.
+- Els PRs han de passar els tests de CI, alinear-se amb la fulla de ruta i tenir documentació clara.
 
-```sh
-code --install-extension bin/roo-cline-<version>.vsix
-```
+### Procés de revisió
 
-## Escriure i enviar codi
+- **Triatge diari:** Comprovacions ràpides pels mantenidors.
+- **Revisió setmanal detallada:** Avaluació exhaustiva.
+- **Itera ràpidament** en base al feedback.
 
-Qualsevol persona pot contribuir amb codi a Roo Code, però us demanem que seguiu aquestes directrius per assegurar que les vostres contribucions puguin ser integrades sense problemes:
+## Legal
 
-1. **Mantingueu les Pull Requests enfocades**
-
-    - Limiteu les PR a una sola funcionalitat o correcció d'error
-    - Dividiu els canvis més grans en PR més petites i relacionades
-    - Dividiu els canvis en commits lògics que puguin ser revisats independentment
-
-2. **Qualitat del codi**
-
-    - Totes les PR han de passar les comprovacions de CI que inclouen tant anàlisi com formatació
-    - Solucioneu qualsevol advertència o error d'ESLint abans d'enviar
-    - Responeu a tots els comentaris d'Ellipsis, la nostra eina automatitzada de revisió de codi
-    - Seguiu les millors pràctiques de TypeScript i mantingueu la seguretat de tipus
-
-3. **Proves**
-
-    - Afegiu proves per a noves funcionalitats
-    - Executeu `npm test` per assegurar que totes les proves passin
-    - Actualitzeu les proves existents si els vostres canvis les afecten
-    - Incloeu tant proves unitàries com proves d'integració quan sigui apropiat
-
-4. **Directrius de commits**
-
-    - Escriviu missatges de commit clars i descriptius
-    - Feu referència a incidències rellevants als commits utilitzant #número-incidència
-
-5. **Abans d'enviar**
-
-    - Rebaseu la vostra branca sobre l'última main
-    - Assegureu-vos que la vostra branca es construeix amb èxit
-    - Comproveu doblement que totes les proves passen
-    - Reviseu els vostres canvis per qualsevol codi de depuració o registres de consola
-
-6. **Descripció de la Pull Request**
-    - Descriviu clarament què fan els vostres canvis
-    - Incloeu passos per provar els canvis
-    - Enumereu qualsevol canvi important
-    - Afegiu captures de pantalla per a canvis d'interfície d'usuari
-
-## Acord de contribució
-
-En enviar una pull request, accepteu que les vostres contribucions estaran sota la mateixa llicència que el projecte ([Apache 2.0](../LICENSE)).
+En enviar un pull request, acceptes que les teves contribucions es llicenciïn sota la Llicència Apache 2.0, d'acord amb la llicència de Roo Code.

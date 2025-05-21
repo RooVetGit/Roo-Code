@@ -51,23 +51,26 @@ export const About = ({ version, telemetrySetting, setTelemetrySetting, classNam
 					<Trans
 						i18nKey="settings:footer.feedback"
 						components={{
-							githubLink: <VSCodeLink href="https://github.com/RooVetGit/Roo-Code" />,
+							githubLink: <VSCodeLink href="https://github.com/RooCodeInc/Roo-Code" />,
 							redditLink: <VSCodeLink href="https://reddit.com/r/RooCode" />,
 							discordLink: <VSCodeLink href="https://discord.gg/roocode" />,
 						}}
 					/>
 				</div>
 
-				<div className="flex items-center gap-2 mt-2">
-					<Button onClick={() => vscode.postMessage({ type: "exportSettings" })}>
+				<div className="flex flex-wrap items-center gap-2 mt-2">
+					<Button onClick={() => vscode.postMessage({ type: "exportSettings" })} className="w-28">
 						<Upload className="p-0.5" />
 						{t("settings:footer.settings.export")}
 					</Button>
-					<Button onClick={() => vscode.postMessage({ type: "importSettings" })}>
+					<Button onClick={() => vscode.postMessage({ type: "importSettings" })} className="w-28">
 						<Download className="p-0.5" />
 						{t("settings:footer.settings.import")}
 					</Button>
-					<Button variant="destructive" onClick={() => vscode.postMessage({ type: "resetState" })}>
+					<Button
+						variant="destructive"
+						onClick={() => vscode.postMessage({ type: "resetState" })}
+						className="w-28">
 						<TriangleAlert className="p-0.5" />
 						{t("settings:footer.settings.reset")}
 					</Button>

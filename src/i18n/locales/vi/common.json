@@ -51,7 +51,8 @@
 		"failed_delete_repo": "Không thể xóa kho lưu trữ hoặc nhánh liên quan: {{error}}",
 		"failed_remove_directory": "Không thể xóa thư mục nhiệm vụ: {{error}}",
 		"custom_storage_path_unusable": "Đường dẫn lưu trữ tùy chỉnh \"{{path}}\" không thể sử dụng được, sẽ sử dụng đường dẫn mặc định",
-		"cannot_access_path": "Không thể truy cập đường dẫn {{path}}: {{error}}"
+		"cannot_access_path": "Không thể truy cập đường dẫn {{path}}: {{error}}",
+		"settings_import_failed": "Nhập cài đặt thất bại: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Không có nội dung terminal được chọn",
@@ -89,5 +90,11 @@
 	"input": {
 		"task_prompt": "Bạn muốn Roo làm gì?",
 		"task_placeholder": "Nhập nhiệm vụ của bạn ở đây"
+	},
+	"settings": {
+		"providers": {
+			"groqApiKey": "Khóa API Groq",
+			"getGroqApiKey": "Lấy khóa API Groq"
+		}
 	}
 }

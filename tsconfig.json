@@ -23,5 +23,5 @@
 		"paths": {}
 	},
 	"include": ["src/**/*", "scripts/**/*", ".changeset/**/*"],
-	"exclude": ["node_modules", ".vscode-test", "webview-ui"]
+	"exclude": ["node_modules", ".vscode-test", "webview-ui", ".idea", ".qodo"]
 }

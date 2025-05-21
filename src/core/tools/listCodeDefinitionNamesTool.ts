@@ -2,14 +2,14 @@ import path from "path"
 import fs from "fs/promises"
 
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { parseSourceCodeForDefinitionsTopLevel, parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 
 export async function listCodeDefinitionNamesTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -64,7 +64,7 @@ export async function listCodeDefinitionNamesTool(
 			}
 
 			if (relPath) {
-				await cline.getFileContextTracker().trackFileContext(relPath, "read_tool" as RecordSource)
+				await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 			}
 
 			pushToolResult(result)

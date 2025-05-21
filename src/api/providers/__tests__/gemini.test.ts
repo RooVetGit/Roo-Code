@@ -219,7 +219,7 @@ describe("GeminiHandler", () => {
 				mockInfo.cacheWritesPrice! * (cacheWriteTokens / 1_000_000) * (CACHE_TTL / 60)
 			const expectedCost = expectedInputCost + expectedOutputCost + expectedCacheWriteCost
 
-			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens, cacheWriteTokens })
+			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens })
 			expect(cost).toBeCloseTo(expectedCost)
 		})
 

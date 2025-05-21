@@ -9,6 +9,38 @@ import { ApiHandlerOptions } from "../../../shared/api"
 // Mock dependencies
 jest.mock("openai")
 jest.mock("delay", () => jest.fn(() => Promise.resolve()))
+jest.mock("../fetchers/modelCache", () => ({
+	getModels: jest.fn().mockImplementation(() => {
+		return Promise.resolve({
+			"anthropic/claude-3.7-sonnet": {
+				maxTokens: 8192,
+				contextWindow: 200000,
+				supportsImages: true,
+				supportsPromptCache: true,
+				inputPrice: 3,
+				outputPrice: 15,
+				cacheWritesPrice: 3.75,
+				cacheReadsPrice: 0.3,
+				description: "Claude 3.7 Sonnet",
+				thinking: false,
+				supportsComputerUse: true,
+			},
+			"anthropic/claude-3.7-sonnet:thinking": {
+				maxTokens: 128000,
+				contextWindow: 200000,
+				supportsImages: true,
+				supportsPromptCache: true,
+				inputPrice: 3,
+				outputPrice: 15,
+				cacheWritesPrice: 3.75,
+				cacheReadsPrice: 0.3,
+				description: "Claude 3.7 Sonnet with thinking",
+				thinking: true,
+				supportsComputerUse: true,
+			},
+		})
+	}),
+}))
 
 describe("OpenRouterHandler", () => {
 	const mockOptions: ApiHandlerOptions = {
@@ -26,7 +58,7 @@ describe("OpenRouterHandler", () => {
 			baseURL: "https://openrouter.ai/api/v1",
 			apiKey: mockOptions.openRouterApiKey,
 			defaultHeaders: {
-				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
+				"HTTP-Referer": "https://github.com/RooCodeInc/Roo-Cline",
 				"X-Title": "Roo Code",
 			},
 		})
@@ -46,7 +78,6 @@ describe("OpenRouterHandler", () => {
 				topP: undefined,
 				promptCache: {
 					supported: true,
-					optional: false,
 				},
 			})
 		})

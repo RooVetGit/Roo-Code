@@ -7,7 +7,8 @@
 		"editModesConfig": "Moduskonfiguration bearbeiten",
 		"editGlobalModes": "Globale Modi bearbeiten",
 		"editProjectModes": "Projektmodi bearbeiten (.roomodes)",
-		"createModeHelpText": "Klicke auf +, um einen neuen benutzerdefinierten Modus zu erstellen, oder bitte Roo einfach im Chat, einen für dich zu erstellen!"
+		"createModeHelpText": "Modi sind spezialisierte Personas, die Roos Verhalten anpassen. <0>Erfahre mehr über die Verwendung von Modi</0> oder <1>die Anpassung von Modi.</1>",
+		"selectMode": "Modi suchen"
 	},
 	"apiConfiguration": {
 		"title": "API-Konfiguration",
@@ -25,12 +26,18 @@
 			"browser": "Browser verwenden",
 			"command": "Befehle ausführen",
 			"mcp": "MCP verwenden"
-		}
+		},
+		"noTools": "Keine"
 	},
 	"roleDefinition": {
 		"title": "Rollendefinition",
 		"resetToDefault": "Auf Standardwerte zurücksetzen",
 		"description": "Definiere Roos Expertise und Persönlichkeit für diesen Modus. Diese Beschreibung prägt, wie Roo sich präsentiert und an Aufgaben herangeht."
+	},
+	"whenToUse": {
+		"title": "Wann zu verwenden (optional)",
+		"description": "Beschreibe, wann dieser Modus verwendet werden sollte. Dies hilft dem Orchestrator, den richtigen Modus für eine Aufgabe auszuwählen.",
+		"resetToDefault": "Beschreibung 'Wann zu verwenden' auf Standardwerte zurücksetzen"
 	},
 	"customInstructions": {
 		"title": "Modusspezifische benutzerdefinierte Anweisungen (optional)",
@@ -40,7 +47,7 @@
 	},
 	"globalCustomInstructions": {
 		"title": "Benutzerdefinierte Anweisungen für alle Modi",
-		"description": "Diese Anweisungen gelten für alle Modi. Sie bieten einen grundlegenden Satz von Verhaltensweisen, die durch modusspezifische Anweisungen unten erweitert werden können.\nWenn du möchtest, dass Roo in einer anderen Sprache als deiner Editor-Anzeigesprache ({{language}}) denkt und spricht, kannst du das hier angeben.",
+		"description": "Diese Anweisungen gelten für alle Modi. Sie bieten einen grundlegenden Satz von Verhaltensweisen, die durch modusspezifische Anweisungen unten erweitert werden können. <0>Mehr erfahren</0>",
 		"loadFromFile": "Anweisungen können auch aus dem Ordner <span>.roo/rules/</span> in deinem Arbeitsbereich geladen werden (.roorules und .clinerules sind veraltet und werden bald nicht mehr funktionieren)."
 	},
 	"systemPrompt": {
@@ -100,7 +107,7 @@
 	},
 	"advancedSystemPrompt": {
 		"title": "Erweitert: System-Prompt überschreiben",
-		"description": "Du kannst den System-Prompt für diesen Modus vollständig ersetzen (abgesehen von der Rollendefinition und benutzerdefinierten Anweisungen), indem du eine Datei unter <span>.roo/system-prompt-{{slug}}</span> in deinem Arbeitsbereich erstellst. Dies ist eine sehr fortgeschrittene Funktion, die eingebaute Schutzmaßnahmen und Konsistenzprüfungen umgeht (besonders bei der Werkzeugnutzung), also sei vorsichtig!"
+		"description": "<2>⚠️ Warnung:</2> Diese erweiterte Funktion umgeht Sicherheitsvorkehrungen. <1>LESEN SIE DIES VOR DER VERWENDUNG!</1>Überschreiben Sie den Standard-System-Prompt, indem Sie eine Datei unter <span>.roo/system-prompt-{{slug}}</span> erstellen."
 	},
 	"createModeDialog": {
 		"title": "Neuen Modus erstellen",
@@ -128,6 +135,10 @@
 		"roleDefinition": {
 			"label": "Rollendefinition",
 			"description": "Definiere Roos Expertise und Persönlichkeit für diesen Modus."
+		},
+		"whenToUse": {
+			"label": "Wann zu verwenden (optional)",
+			"description": "Gib eine klare Beschreibung, wann dieser Modus am effektivsten ist und für welche Arten von Aufgaben er sich besonders eignet."
 		},
 		"tools": {
 			"label": "Verfügbare Werkzeuge",

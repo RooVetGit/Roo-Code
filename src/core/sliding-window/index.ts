@@ -1,5 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandler } from "../../api"
+import { summarizeConversation, SummarizeResponse } from "../condense"
+import { ApiMessage } from "../task-persistence/apiMessages"
 
 /**
  * Default percentage of the context window to use as a buffer when deciding when to truncate
@@ -27,14 +29,11 @@ export async function estimateTokenCount(
  * The first message is always retained, and a specified fraction (rounded to an even number)
  * of messages from the beginning (excluding the first) is removed.
  *
- * @param {Anthropic.Messages.MessageParam[]} messages - The conversation messages.
+ * @param {ApiMessage[]} messages - The conversation messages.
  * @param {number} fracToRemove - The fraction (between 0 and 1) of messages (excluding the first) to remove.
- * @returns {Anthropic.Messages.MessageParam[]} The truncated conversation messages.
+ * @returns {ApiMessage[]} The truncated conversation messages.
  */
-export function truncateConversation(
-	messages: Anthropic.Messages.MessageParam[],
-	fracToRemove: number,
-): Anthropic.Messages.MessageParam[] {
+export function truncateConversation(messages: ApiMessage[], fracToRemove: number): ApiMessage[] {
 	const truncatedMessages = [messages[0]]
 	const rawMessagesToRemove = Math.floor((messages.length - 1) * fracToRemove)
 	const messagesToRemove = rawMessagesToRemove - (rawMessagesToRemove % 2)
@@ -48,28 +47,34 @@ export function truncateConversation(
  * Conditionally truncates the conversation messages if the total token count
  * exceeds the model's limit, considering the size of incoming content.
  *
- * @param {Anthropic.Messages.MessageParam[]} messages - The conversation messages.
+ * @param {ApiMessage[]} messages - The conversation messages.
  * @param {number} totalTokens - The total number of tokens in the conversation (excluding the last user message).
  * @param {number} contextWindow - The context window size.
  * @param {number} maxTokens - The maximum number of tokens allowed.
  * @param {ApiHandler} apiHandler - The API handler to use for token counting.
- * @returns {Anthropic.Messages.MessageParam[]} The original or truncated conversation messages.
+ * @param {boolean} autoCondenseContext - Whether to use LLM summarization or sliding window implementation
+ * @param {string} systemPrompt - The system prompt, used for estimating the new context size after summarizing.
+ * @returns {ApiMessage[]} The original or truncated conversation messages.
  */
 
 type TruncateOptions = {
-	messages: Anthropic.Messages.MessageParam[]
+	messages: ApiMessage[]
 	totalTokens: number
 	contextWindow: number
 	maxTokens?: number | null
 	apiHandler: ApiHandler
+	autoCondenseContext?: boolean
+	systemPrompt: string
 }
+
+type TruncateResponse = SummarizeResponse & { prevContextTokens: number }
 
 /**
  * Conditionally truncates the conversation messages if the total token count
  * exceeds the model's limit, considering the size of incoming content.
  *
  * @param {TruncateOptions} options - The options for truncation
- * @returns {Promise<Anthropic.Messages.MessageParam[]>} The original or truncated conversation messages.
+ * @returns {Promise<ApiMessage[]>} The original or truncated conversation messages.
  */
 export async function truncateConversationIfNeeded({
 	messages,
@@ -77,7 +82,9 @@ export async function truncateConversationIfNeeded({
 	contextWindow,
 	maxTokens,
 	apiHandler,
-}: TruncateOptions): Promise<Anthropic.Messages.MessageParam[]> {
+	autoCondenseContext,
+	systemPrompt,
+}: TruncateOptions): Promise<TruncateResponse> {
 	// Calculate the maximum tokens reserved for response
 	const reservedTokens = maxTokens || contextWindow * 0.2
 
@@ -96,5 +103,14 @@ export async function truncateConversationIfNeeded({
 	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
 	// Determine if truncation is needed and apply if necessary
-	return effectiveTokens > allowedTokens ? truncateConversation(messages, 0.5) : messages
+	if (effectiveTokens <= allowedTokens) {
+		return { messages, summary: "", cost: 0, prevContextTokens: effectiveTokens }
+	} else if (autoCondenseContext) {
+		const result = await summarizeConversation(messages, apiHandler, systemPrompt)
+		if (result.summary) {
+			return { ...result, prevContextTokens: effectiveTokens }
+		}
+	}
+	const truncatedMessages = truncateConversation(messages, 0.5)
+	return { messages: truncatedMessages, prevContextTokens: effectiveTokens, summary: "", cost: 0 }
 }

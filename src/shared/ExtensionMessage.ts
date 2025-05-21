@@ -2,8 +2,8 @@ import { GitCommit } from "../utils/git"
 
 import {
 	GlobalSettings,
-	ApiConfigMeta,
-	ProviderSettings as ApiConfiguration,
+	ProviderSettingsEntry,
+	ProviderSettings,
 	HistoryItem,
 	ModeConfig,
 	TelemetrySetting,
@@ -19,7 +19,7 @@ import { MarketplaceItem, MarketplaceSource } from "../services/marketplace/type
 import { RouterModels } from "./api"
 import { FullInstallatedMetadata } from "src/services/marketplace/InstalledMetadataManager"
 
-export type { ApiConfigMeta, ToolProgressStatus }
+export type { ProviderSettingsEntry, ToolProgressStatus }
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -70,6 +70,9 @@ export interface ExtensionMessage {
 		| "repositoryRefreshComplete"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
+		| "commandExecutionStatus"
+		| "vsCodeSetting"
+		| "condenseTaskContextResponse"
 		| "openMarketplaceInstallSidebarWithConfig"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
@@ -100,7 +103,7 @@ export interface ExtensionMessage {
 	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
-	listApiConfig?: ApiConfigMeta[]
+	listApiConfig?: ProviderSettingsEntry[]
 	mode?: Mode
 	customMode?: ModeConfig
 	slug?: string
@@ -110,6 +113,8 @@ export interface ExtensionMessage {
 	promptText?: string
 	results?: { path: string; type: "file" | "folder"; label?: string }[]
 	error?: string
+	setting?: string
+	value?: any
 	items?: MarketplaceItem[]
 	url?: string // For repositoryRefreshComplete
 }
@@ -136,6 +141,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
 	| "allowedCommands"
+	| "allowedMaxRequests"
 	| "browserToolEnabled"
 	| "browserViewportSize"
 	| "screenshotQuality"
@@ -152,6 +158,7 @@ export type ExtensionState = Pick<
 	// | "maxReadFileLine" // Optional in GlobalSettings, required here.
 	| "terminalOutputLineLimit"
 	| "terminalShellIntegrationTimeout"
+	| "terminalShellIntegrationDisabled"
 	| "terminalCommandDelay"
 	| "terminalPowershellCounter"
 	| "terminalZshClearEolMark"
@@ -176,7 +183,7 @@ export type ExtensionState = Pick<
 	version: string
 	clineMessages: ClineMessage[]
 	currentTaskItem?: HistoryItem
-	apiConfiguration?: ApiConfiguration
+	apiConfiguration?: ProviderSettings
 	uriScheme?: string
 	shouldShowAnnouncement: boolean
 
