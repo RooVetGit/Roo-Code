@@ -49,6 +49,8 @@ jobs:
             fs.writeFileSync('apps/vscode-nightly/package.json', JSON.stringify(pkg, null, 2));
             console.log(`🔖 Nightly version set to ${pkg.version}`);
           EOF
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Build VSIX
         run: |
           ls -al
