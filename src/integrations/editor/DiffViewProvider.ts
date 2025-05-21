@@ -15,6 +15,12 @@ import { ClineProvider } from "../../core/webview/ClineProvider"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 
+interface DiffSettings {
+	autoFocus: boolean
+	autoCloseRooTabs: boolean
+	autoCloseAllRooTabs: boolean
+}
+
 // TODO: https://github.com/cline/cline/pull/3354
 export class DiffViewProvider {
 	editType?: "create" | "modify"
@@ -62,7 +68,7 @@ export class DiffViewProvider {
 		this.rooOpenedTabs.clear()
 	}
 
-	private async _readDiffSettings() {
+	private async _readDiffSettings(): Promise<DiffSettings> {
 		const config = vscode.workspace.getConfiguration("roo-cline")
 		const autoFocus = config.get<boolean>("diffViewAutoFocus", true)
 		const autoCloseRooTabs = config.get<boolean>("autoCloseRooTabs", false)
@@ -500,151 +506,126 @@ export class DiffViewProvider {
 		this.resetWithListeners()
 	}
 
-	private async closeAllRooOpenedViews() {
-		const settings = await this._readDiffSettings() // Dynamically read settings
+	private filterTabsToClose(tab: vscode.Tab, settings: DiffSettings): boolean {
+		// Always close DiffView tabs opened by Roo
+		if (tab.input instanceof vscode.TabInputTextDiff && tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME) {
+			return true
+		}
 
-		const tabs = vscode.window.tabGroups.all
-			.flatMap((tg) => tg.tabs)
-			.filter((tab) => {
-				// Always close DiffView tabs opened by Roo
-				if (
-					tab.input instanceof vscode.TabInputTextDiff &&
-					tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME
-				) {
-					return true
-				}
-
-				let isRooOpenedTextTab = false
-				if (tab.input instanceof vscode.TabInputText) {
-					const currentTabUri = (tab.input as vscode.TabInputText).uri
-					for (const openedUriString of this.rooOpenedTabs) {
-						try {
-							const previouslyOpenedUri = vscode.Uri.parse(openedUriString, true) // true for strict parsing
-							if (currentTabUri.scheme === "file" && previouslyOpenedUri.scheme === "file") {
-								if (arePathsEqual(currentTabUri.fsPath, previouslyOpenedUri.fsPath)) {
-									isRooOpenedTextTab = true
-									break
-								}
-							} else {
-								if (currentTabUri.toString() === previouslyOpenedUri.toString()) {
-									isRooOpenedTextTab = true
-									break
-								}
-							}
-						} catch (e) {
-							// Log parsing error if necessary, or ignore if a URI in rooOpenedTabs is malformed
-							console.error(`Roo Debug: Error parsing URI from rooOpenedTabs: ${openedUriString}`, e)
+		let isRooOpenedTextTab = false
+		if (tab.input instanceof vscode.TabInputText) {
+			const currentTabUri = (tab.input as vscode.TabInputText).uri
+			for (const openedUriString of this.rooOpenedTabs) {
+				try {
+					const previouslyOpenedUri = vscode.Uri.parse(openedUriString, true) // true for strict parsing
+					if (currentTabUri.scheme === "file" && previouslyOpenedUri.scheme === "file") {
+						if (arePathsEqual(currentTabUri.fsPath, previouslyOpenedUri.fsPath)) {
+							isRooOpenedTextTab = true
+							break
+						}
+					} else {
+						if (currentTabUri.toString() === previouslyOpenedUri.toString()) {
+							isRooOpenedTextTab = true
+							break
 						}
 					}
+				} catch (e) {
+					// Log parsing error if necessary, or ignore if a URI in rooOpenedTabs is malformed
+					console.error(`Roo Debug: Error parsing URI from rooOpenedTabs: ${openedUriString}`, e)
 				}
+			}
+		}
 
-				if (!isRooOpenedTextTab) {
-					return false // Not a text tab or not identified as opened by Roo
-				}
+		if (!isRooOpenedTextTab) {
+			return false // Not a text tab or not identified as opened by Roo
+		}
 
-				// Haken 2 (settings.autoCloseAllRooTabs) - takes precedence
-				if (settings.autoCloseAllRooTabs) {
-					// This implies Haken 1 is also effectively on
-					return true // Close all Roo-opened text tabs
-				}
+		// Haken 2 (settings.autoCloseAllRooTabs) - takes precedence
+		if (settings.autoCloseAllRooTabs) {
+			// This implies Haken 1 is also effectively on
+			return true // Close all Roo-opened text tabs
+		}
 
-				// Only Haken 1 (settings.autoCloseRooTabs) is on, Haken 2 is off
-				if (settings.autoCloseRooTabs) {
-					const tabUriFsPath = (tab.input as vscode.TabInputText).uri.fsPath
-					const absolutePathDiffedFile = this.relPath ? path.resolve(this.cwd, this.relPath) : null
+		// Only Haken 1 (settings.autoCloseRooTabs) is on, Haken 2 is off
+		if (settings.autoCloseRooTabs) {
+			const tabUriFsPath = (tab.input as vscode.TabInputText).uri.fsPath
+			const absolutePathDiffedFile = this.relPath ? path.resolve(this.cwd, this.relPath) : null
 
-					// Guard against null absolutePathDiffedFile if relPath is somehow not set
-					if (!absolutePathDiffedFile) {
-						// If we don't know the main diffed file, but Haken 1 is on,
-						// it's safer to close any tab Roo opened to avoid leaving extras.
-						return true
-					}
+			// Guard against null absolutePathDiffedFile if relPath is somehow not set
+			if (!absolutePathDiffedFile) {
+				// If we don't know the main diffed file, but Haken 1 is on,
+				// it's safer to close any tab Roo opened to avoid leaving extras.
+				return true
+			}
 
-					const isMainDiffedFileTab = arePathsEqual(tabUriFsPath, absolutePathDiffedFile)
+			const isMainDiffedFileTab = arePathsEqual(tabUriFsPath, absolutePathDiffedFile)
 
-					if (this.editType === "create" && isMainDiffedFileTab) {
-						return true // Case: New file, Haken 1 is on -> Close its tab.
-					}
+			if (this.editType === "create" && isMainDiffedFileTab) {
+				return true // Case: New file, Haken 1 is on -> Close its tab.
+			}
 
-					if (this.editType === "modify" && isMainDiffedFileTab) {
-						return !this.documentWasOpen
-					}
+			if (this.editType === "modify" && isMainDiffedFileTab) {
+				return !this.documentWasOpen
+			}
 
-					// If the tab is for a file OTHER than the main diffedFile, but was opened by Roo
-					if (!isMainDiffedFileTab) {
-						// This covers scenarios where Roo might open auxiliary files (though less common for single diff).
-						// If Haken 1 is on, these should also be closed.
-						return true
-					}
-				}
-				return false // Default: do not close if no above condition met
-			})
+			// If the tab is for a file OTHER than the main diffedFile, but was opened by Roo
+			if (!isMainDiffedFileTab) {
+				// This covers scenarios where Roo might open auxiliary files (though less common for single diff).
+				// If Haken 1 is on, these should also be closed.
+				return true
+			}
+		}
+		return false // Default: do not close if no above condition met
+	}
 
-		for (const tab of tabs) {
-			// If a tab has made it through the filter, it means one of the auto-close settings
-			// (autoCloseTabs or autoCloseAllRooTabs) is active and the conditions for closing
-			// this specific tab are met. Therefore, we should always bypass the dirty check.
-			// const bypassDirtyCheck = true; // This is implicitly true now.
+	private async closeTab(tab: vscode.Tab) {
+		// If a tab has made it through the filter, it means one of the auto-close settings
+		// (autoCloseTabs or autoCloseAllRooTabs) is active and the conditions for closing
+		// this specific tab are met. Therefore, we should always bypass the dirty check.
+		// const bypassDirtyCheck = true; // This is implicitly true now.
 
-			// Attempt to find the freshest reference to the tab before closing,
-			// as the original 'tab' object from the initial flatMap might be stale.
-			const tabInputToClose = tab.input
-			const freshTabToClose = vscode.window.tabGroups.all
-				.flatMap((group) => group.tabs)
-				.find((t) => t.input === tabInputToClose)
+		// Attempt to find the freshest reference to the tab before closing,
+		// as the original 'tab' object from the initial flatMap might be stale.
+		const tabInputToClose = tab.input
+		const freshTabToClose = vscode.window.tabGroups.all
+			.flatMap((group) => group.tabs)
+			.find((t) => t.input === tabInputToClose)
 
-			if (freshTabToClose) {
-				try {
-					await vscode.window.tabGroups.close(freshTabToClose, true) // true to bypass dirty check implicitly
-				} catch (closeError) {
-					console.error(`Roo Debug CloseLoop: Error closing tab "${freshTabToClose.label}":`, closeError)
-				}
-			} else {
-				// This case should ideally not happen if the tab was in the filtered list.
-				// It might indicate the tab was closed by another means or its input changed.
-				console.warn(
-					`Roo Debug CloseLoop: Tab "${tab.label}" (input: ${JSON.stringify(tab.input)}) intended for closure was not found in the current tab list.`,
+		if (freshTabToClose) {
+			try {
+				await vscode.window.tabGroups.close(freshTabToClose, true) // true to bypass dirty check implicitly
+			} catch (closeError) {
+				console.error(`Roo Debug CloseLoop: Error closing tab "${freshTabToClose.label}":`, closeError)
+			}
+		} else {
+			// This case should ideally not happen if the tab was in the filtered list.
+			// It might indicate the tab was closed by another means or its input changed.
+			console.warn(
+				`Roo Debug CloseLoop: Tab "${tab.label}" (input: ${JSON.stringify(tab.input)}) intended for closure was not found in the current tab list.`,
+			)
+			// Fallback: Try to close the original tab reference if the fresh one isn't found,
+			// though this is less likely to succeed if it's genuinely stale.
+			try {
+				console.log(`Roo Debug CloseLoop: Attempting to close original (stale?) tab "${tab.label}"`)
+				await vscode.window.tabGroups.close(tab, true)
+			} catch (fallbackCloseError) {
+				console.error(
+					`Roo Debug CloseLoop: Error closing original tab reference for "${tab.label}":`,
+					fallbackCloseError,
 				)
-				// Fallback: Try to close the original tab reference if the fresh one isn't found,
-				// though this is less likely to succeed if it's genuinely stale.
-				try {
-					console.log(`Roo Debug CloseLoop: Attempting to close original (stale?) tab "${tab.label}"`)
-					await vscode.window.tabGroups.close(tab, true)
-				} catch (fallbackCloseError) {
-					console.error(
-						`Roo Debug CloseLoop: Error closing original tab reference for "${tab.label}":`,
-						fallbackCloseError,
-					)
-				}
 			}
 		}
 	}
 
-	private async getEditorFromDiffTab(uri: vscode.Uri): Promise<vscode.TextEditor | null> {
-		// If this diff editor is already open (ie if a previous write file was interrupted) then we should activate that instead of opening a new diff
-		const diffTab = vscode.window.tabGroups.all
-			.flatMap((group) => group.tabs)
-			.find(
-				(tab) =>
-					tab.input instanceof vscode.TabInputTextDiff &&
-					tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME &&
-					arePathsEqual(tab.input.modified.fsPath, uri.fsPath),
-			)
-		// If this diff editor is already open (ie if a previous write file was
-		// interrupted) then we should activate that instead of opening a new
-		// diff.
-		if (!(diffTab && diffTab.input instanceof vscode.TabInputTextDiff)) {
-			return null
-		}
-		// Removed logic that explicitly opens/focuses the standalone file tab immediately after diff opens.
-		// The standalone tab should only be opened in saveChanges after approval for new/unopened files.
-		const editor = vscode.window.visibleTextEditors.find((ed) => arePathsEqual(ed.document.uri.fsPath, uri.fsPath))
-		if (editor) return editor
+	private async closeAllRooOpenedViews() {
+		const settings = await this._readDiffSettings() // Dynamically read settings
 
-		// If the editor is not found among visible editors, it means it's not currently open.
-		// We should not open it here, as it should only be opened in saveChanges after approval.
-		// Return null to indicate that the editor for the standalone file tab is not available/should not be focused immediately.
-		return null
+		const closeOps = vscode.window.tabGroups.all
+			.flatMap((tg) => tg.tabs)
+			.filter((tab) => this.filterTabsToClose(tab, settings))
+			.map(this.closeTab)
+
+		await Promise.all(closeOps)
 	}
 
 	/**
@@ -671,7 +652,7 @@ export class DiffViewProvider {
 			const title = `${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`
 			const textDocumentShowOptions: TextDocumentShowOptions = {
 				preview: false,
-				preserveFocus: settings.autoFocus ? false : true, // Use dynamically read autoFocus
+				preserveFocus: !settings.autoFocus, // Use dynamically read autoFocus
 				viewColumn: this.viewColumn,
 			}
 			// set interaction flag to true to prevent autoFocus from being triggered
