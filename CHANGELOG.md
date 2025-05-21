@@ -1,24 +1,26 @@
 # Roo Code Changelog
 
-## 3.18.0
+## [3.18.0] - 2025-05-21
 
-### Minor Changes
-
-- Added an auto-approve API request limit setting similar to Cline
-- Adds refresh models button for Unbound provider
--   - Add support for Gemini 2.5 Flash preview models (thanks @shariqriazz and @daniel-lxs!)
-
-### Patch Changes
-
-- Add support for `gemini-2.5-flash-preview-05-20` on the Vertex provider
-- New models for the Chutes provider:
-- Shows in the UI when the context is intelligently condensed
-- Add a UI indicator while the context is condensing
-- Use YAML as default custom modes format
-- Fixed bug that prevented some file links from working in the Agent output
-- Adds a button to intelligently condense the context window
-- Adds a slider to configure threshold to trigger intelligent context condensing
-- Fix settings import when global settings are omitted
+- Add support for Gemini 2.5 Flash preview models (thanks @shariqriazz and @daniel-lxs!)
+- Add button to task header to intelligently condense content with visual feedback
+- Add YAML support for mode definitions (thanks @R-omk!)
+- Add allowedMaxRequests feature to cap consecutive auto-approved requests (inspired by Cline, thanks @hassoncs!)
+- Add Qwen3 model series to the Chutes provider (thanks @zeozeozeo!)
+- Fix more causes of grey screen issues (thanks @xyOz-dev!)
+- Add LM Studio reasoning support (thanks @avtc!)
+- Add refresh models button for Unbound provider (thanks @pugazhendhi-m!)
+- Add template variables for version numbers in announcement strings (thanks @ChuKhaLi!)
+- Make prompt input textareas resizable again
+- Fix diffview scroll display (thanks @qdaxb!)
+- Fix LM Studio and Ollama usage tracking (thanks @xyOz-dev!)
+- Fix links to filename:0 (thanks @RSO!)
+- Fix missing or inconsistent syntax highlighting across UI components (thanks @KJ7LNW!)
+- Fix packaging to include correct tiktoken.wasm (thanks @vagadiya!)
+- Fix import settings bugs and position error messages correctly (thanks @ChuKhaLi!)
+- Move audio playing to the webview to ensure cross-platform support (thanks @SmartManoj and @samhvw8!)
+- Simplify loop syntax in multiple components (thanks @noritaka1166!)
+- Auto reload extension core changes in dev mode (thanks @hassoncs!)
 
 ## [3.17.2] - 2025-05-15
 
