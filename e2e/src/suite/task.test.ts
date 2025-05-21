@@ -24,9 +24,9 @@ suite("Roo Code Task", () => {
 		await waitUntilCompleted({ api, taskId })
 
 		assert.ok(
-			!!messages.find(
+			messages.find(
 				({ say, text }) => (say === "completion_result" || say === "text") && text?.includes("My name is Roo"),
-			),
+			) !== undefined,
 			`Completion should include "My name is Roo"`,
 		)
 	})

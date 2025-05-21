@@ -62,7 +62,7 @@ const TaskHeader = ({
 			<div
 				className={cn(
 					"rounded-xs p-2.5 flex flex-col gap-1.5 relative z-1 border",
-					!!isTaskExpanded
+					isTaskExpanded === true
 						? "border-vscode-panel-border text-vscode-foreground"
 						: "border-vscode-panel-border/80 text-vscode-foreground/80",
 				)}>
@@ -102,7 +102,9 @@ const TaskHeader = ({
 							contextTokens={contextTokens || 0}
 							maxTokens={getMaxTokensForModel(model, apiConfiguration)}
 						/>
-						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
+						{typeof totalCost === "number" && totalCost > 0 && (
+							<VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>
+						)}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -185,7 +187,7 @@ const TaskHeader = ({
 									</div>
 								)}
 
-							{!!totalCost && (
+							{typeof totalCost === "number" && totalCost > 0 && (
 								<div className="flex justify-between items-center h-[20px]">
 									<div className="flex items-center gap-1">
 										<span className="font-bold">{t("chat:task.apiCost")}</span>

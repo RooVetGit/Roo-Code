@@ -39,7 +39,9 @@ export const OpenRouter = ({
 }: OpenRouterProps) => {
 	const { t } = useAppTranslation()
 
-	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
+	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(
+		typeof apiConfiguration?.openRouterBaseUrl === "string" && apiConfiguration.openRouterBaseUrl !== "",
+	)
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -54,8 +56,9 @@ export const OpenRouter = ({
 
 	const { data: openRouterModelProviders } = useOpenRouterModelProviders(apiConfiguration?.openRouterModelId, {
 		enabled:
-			!!apiConfiguration?.openRouterModelId &&
-			routerModels?.openrouter &&
+			typeof apiConfiguration?.openRouterModelId === "string" &&
+			apiConfiguration.openRouterModelId !== "" &&
+			routerModels?.openrouter !== undefined &&
 			Object.keys(routerModels.openrouter).length > 1 &&
 			apiConfiguration.openRouterModelId in routerModels.openrouter,
 	})

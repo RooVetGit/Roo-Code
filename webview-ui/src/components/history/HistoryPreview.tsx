@@ -42,7 +42,7 @@ const HistoryPreview = () => {
 									<div className="flex flex-row gap-2 text-xs text-vscode-descriptionForeground">
 										<span>↑ {formatLargeNumber(item.tokensIn || 0)}</span>
 										<span>↓ {formatLargeNumber(item.tokensOut || 0)}</span>
-										{!!item.totalCost && (
+										{typeof item.totalCost === "number" && item.totalCost > 0 && (
 											<span>
 												<Coins className="inline-block size-[1em]" />{" "}
 												{"$" + item.totalCost?.toFixed(2)}

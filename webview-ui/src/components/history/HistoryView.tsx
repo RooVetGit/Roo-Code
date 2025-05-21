@@ -355,7 +355,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											)}
 										</div>
 
-										{!!item.cacheWrites && (
+										{typeof item.cacheWrites === "number" && item.cacheWrites > 0 && (
 											<div
 												data-testid="cache-container"
 												style={{
@@ -410,7 +410,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											</div>
 										)}
 
-										{!!item.totalCost && (
+										{typeof item.totalCost === "number" && item.totalCost > 0 && (
 											<div
 												style={{
 													display: "flex",

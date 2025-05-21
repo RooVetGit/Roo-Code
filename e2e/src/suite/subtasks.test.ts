@@ -38,7 +38,7 @@ suite.skip("Roo Code Subtasks", () => {
 
 		// Wait for the subtask to be spawned and then cancel it.
 		api.on("taskSpawned", (_, childTaskId) => (spawnedTaskId = childTaskId))
-		await waitFor(() => !!spawnedTaskId)
+		await waitFor(() => spawnedTaskId !== null && spawnedTaskId !== undefined)
 		await sleep(1_000) // Give the task a chance to start and populate the history.
 		await api.cancelCurrentTask()
 

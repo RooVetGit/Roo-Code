@@ -193,7 +193,9 @@ const getLfsPatterns = async (workspacePath: string) => {
 				.filter((line) => line.includes("filter=lfs"))
 				.map((line) => line.split(" ")[0].trim())
 		}
-	} catch (error) {}
+	} catch (error) {
+		console.warn("Error getting LFS tracked files in excludes.ts:", error)
+	}
 
 	return []
 }

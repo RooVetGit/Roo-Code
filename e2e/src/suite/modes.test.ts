@@ -15,7 +15,7 @@ suite("Roo Code Modes", () => {
 		const switchModesPrompt =
 			"For each mode (Architect, Ask, Debug) respond with the mode name and what it specializes in after switching to that mode."
 
-		let messages: ClineMessage[] = []
+		const messages: ClineMessage[] = []
 
 		const modeSwitches: string[] = []
 

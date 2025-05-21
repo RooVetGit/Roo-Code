@@ -73,7 +73,10 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 					break
 				}
 			}
-		} catch {} // not essential, sometimes tab operations fail
+		} catch (e) {
+			// not essential, sometimes tab operations fail
+			console.debug("Error closing tab in open-file:", e)
+		}
 
 		const document = await vscode.workspace.openTextDocument(uri)
 		const selection =
