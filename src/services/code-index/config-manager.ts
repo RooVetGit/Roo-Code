@@ -55,7 +55,7 @@ export class CodeIndexConfigManager {
 
 		let codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
-			codebaseIndexQdrantUrl: "",
+			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexSearchMinScore: 0.4,
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",

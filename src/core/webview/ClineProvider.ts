@@ -1362,7 +1362,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			},
 			codebaseIndexConfig: codebaseIndexConfig ?? {
 				codebaseIndexEnabled: false,
-				codebaseIndexQdrantUrl: "",
+				codebaseIndexQdrantUrl: "http://localhost:6333",
 				codebaseIndexEmbedderProvider: "openai",
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",
@@ -1467,7 +1467,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			},
 			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
 				codebaseIndexEnabled: false,
-				codebaseIndexQdrantUrl: "",
+				codebaseIndexQdrantUrl: "http://localhost:6333",
 				codebaseIndexEmbedderProvider: "openai",
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",
