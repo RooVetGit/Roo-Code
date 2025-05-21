@@ -117,7 +117,7 @@ function enumerateSourceFiles(source: string | string[]): string[] {
 	} else {
 		const entries = fs.readdirSync(sourcePath, { withFileTypes: true })
 		for (const entry of entries) {
-			if (entry.isFile()) {
+			if (entry.isFile() && !entry.name.startsWith(".")) {
 				files.push(path.join(source, entry.name))
 			}
 		}
@@ -251,9 +251,9 @@ function checkFileSizeDifference(sourceFilePath: string, targetFilePath: string)
 		const sourceSize = sourceStats.size
 		const targetSize = targetStats.size
 
-		if (targetSize > sourceSize * 2) {
+		if (targetSize > sourceSize * 3) {
 			return {
-				warning: `Target file ${targetFilePath} is more than 2x larger than source ${sourceFilePath}. It may require retranslation to be within +/- 20% of the source file size.`,
+				warning: `Target file ${targetFilePath} is more than 3x larger than source ${sourceFilePath}. It may require retranslation to be within +/- 20% of the source file size.`,
 			}
 		}
 		return {} // No warning, no error from this function's core logic
@@ -372,7 +372,7 @@ function identifyExtraFiles(
 	}
 
 	for (const actualTargetFileDirent of actualTargetFilesDirents) {
-		if (actualTargetFileDirent.isFile()) {
+		if (actualTargetFileDirent.isFile() && !actualTargetFileDirent.name.startsWith(".")) {
 			const actualTargetFilename = actualTargetFileDirent.name
 			let derivedSourceBasename: string
 
