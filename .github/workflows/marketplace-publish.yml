@@ -41,6 +41,7 @@ jobs:
           echo "$package" | grep -q "extension/dist/package.json" || exit 1
           echo "$package" | grep -q "extension/dist/package.nls.json" || exit 1
           echo "$package" | grep -q "extension/dist/extension.js" || exit 1
+          echo "$package" | grep -q "extension/webview-ui/audio/celebration.wav" || exit 1
           echo "$package" | grep -q "extension/webview-ui/build/assets/index.js" || exit 1
           echo "$package" | grep -q "extension/assets/codicons/codicon.ttf" || exit 1
           echo "$package" | grep -q "extension/assets/vscode-material-icons/icons/3d.svg" || exit 1
