@@ -13,7 +13,7 @@ import { Equals, Keys, AssertEqual } from "../utils/type-fu"
 import { publisher, name, version } from "../package.json"
 
 // These ENV variables can be defined by ESBuild when building the extension
-// in order to override the values in package.json. This allows us built
+// in order to override the values in package.json. This allows us to build
 // different extension variants with the same package.json file.
 // The build process still needs to emit a modified package.json for consumption
 // by VSCode, but that build artifact is not used during the transpile step of
@@ -29,39 +29,49 @@ export const Package = {
  * CodeAction
  */
 
-export type CodeActionName = "EXPLAIN" | "FIX" | "IMPROVE" | "ADD_TO_CONTEXT" | "NEW_TASK"
+export const codeActionIds = ["explainCode", "fixCode", "improveCode", "addToContext", "newTask"] as const
 
-export type CodeActionId = "explainCode" | "fixCode" | "improveCode" | "addToContext" | "newTask"
+export type CodeActionId = (typeof codeActionIds)[number]
+
+export type CodeActionName = "EXPLAIN" | "FIX" | "IMPROVE" | "ADD_TO_CONTEXT" | "NEW_TASK"
 
 /**
  * TerminalAction
  */
 
+export const terminalActionIds = ["terminalAddToContext", "terminalFixCommand", "terminalExplainCommand"] as const
+
+export type TerminalActionId = (typeof terminalActionIds)[number]
+
 export type TerminalActionName = "ADD_TO_CONTEXT" | "FIX" | "EXPLAIN"
 
 export type TerminalActionPromptType = `TERMINAL_${TerminalActionName}`
-
-export type TerminalActionId = "terminalAddToContext" | "terminalFixCommand" | "terminalExplainCommand"
 
 /**
  * Command
  */
 
-const commandIds = [
+export const commandIds = [
 	"activationCompleted",
+
 	"plusButtonClicked",
-	"mcpButtonClicked",
 	"promptsButtonClicked",
-	"popoutButtonClicked",
-	"openInNewTab",
-	"settingsButtonClicked",
+	"mcpButtonClicked",
 	"historyButtonClicked",
+	"popoutButtonClicked",
+	"settingsButtonClicked",
+
+	"openInNewTab",
+
 	"showHumanRelayDialog",
 	"registerHumanRelayCallback",
 	"unregisterHumanRelayCallback",
 	"handleHumanRelayResponse",
+
 	"newTask",
+
 	"setCustomStoragePath",
+
 	"focusInput",
 	"acceptInput",
 ] as const
