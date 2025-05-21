@@ -5,9 +5,9 @@ export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 export class CodeIndexStateManager {
 	private _systemStatus: IndexingState = "Standby"
 	private _statusMessage: string = ""
-	private _fileStatuses: Record<string, string> = {}
-	private _processedBlockCount: number = 0
-	private _totalBlockCount: number = 0
+	private _processedItems: number = 0
+	private _totalItems: number = 0
+	private _currentItemUnit: string = "blocks"
 	private _progressEmitter = new vscode.EventEmitter<ReturnType<typeof this.getCurrentStatus>>()
 
 	// Webview provider reference for status updates
@@ -32,10 +32,10 @@ export class CodeIndexStateManager {
 	public getCurrentStatus() {
 		return {
 			systemStatus: this._systemStatus,
-			fileStatuses: this._fileStatuses,
 			message: this._statusMessage,
-			processedBlockCount: this._processedBlockCount,
-			totalBlockCount: this._totalBlockCount,
+			processedItems: this._processedItems,
+			totalItems: this._totalItems,
+			currentItemUnit: this._currentItemUnit,
 		}
 	}
 
@@ -53,8 +53,9 @@ export class CodeIndexStateManager {
 
 			// Reset progress counters if moving to a non-indexing state or starting fresh
 			if (newState !== "Indexing") {
-				this._processedBlockCount = 0
-				this._totalBlockCount = 0
+				this._processedItems = 0
+				this._totalItems = 0
+				this._currentItemUnit = "blocks" // Reset to default unit
 				// Optionally clear the message or set a default for non-indexing states
 				if (newState === "Standby" && message === undefined) this._statusMessage = "Ready."
 				if (newState === "Indexed" && message === undefined) this._statusMessage = "Index up-to-date."
@@ -71,45 +72,30 @@ export class CodeIndexStateManager {
 		}
 	}
 
-	public updateFileStatus(filePath: string, fileStatus: string, message?: string): void {
-		let stateChanged = false
-
-		if (this._fileStatuses[filePath] !== fileStatus) {
-			this._fileStatuses[filePath] = fileStatus
-			stateChanged = true
-		}
-
-		// Update overall message ONLY if indexing and message is provided
-		if (message && this._systemStatus === "Indexing" && message !== this._statusMessage) {
-			this._statusMessage = message
-			stateChanged = true
-			console.log(`[CodeIndexStateManager] Status message updated during indexing: ${this._statusMessage}`)
-		}
-
-		if (stateChanged) {
-			this.postStatusUpdate()
-			this._progressEmitter.fire(this.getCurrentStatus())
-		}
-	}
-
 	private postStatusUpdate() {
 		if (this.webviewProvider) {
 			this.webviewProvider.postMessage({
 				type: "indexingStatusUpdate",
-				values: this.getCurrentStatus(),
+				values: {
+					...this.getCurrentStatus(),
+					processedItems: this._processedItems,
+					totalItems: this._totalItems,
+					currentItemUnit: this._currentItemUnit,
+				},
 			})
 		}
 	}
 
-	public reportBlockIndexingProgress(processedBlocks: number, totalBlocks: number): void {
-		const progressChanged = processedBlocks !== this._processedBlockCount || totalBlocks !== this._totalBlockCount
+	public reportBlockIndexingProgress(processedItems: number, totalItems: number): void {
+		const progressChanged = processedItems !== this._processedItems || totalItems !== this._totalItems
 
 		// Update if progress changes OR if the system wasn't already in 'Indexing' state
 		if (progressChanged || this._systemStatus !== "Indexing") {
-			this._processedBlockCount = processedBlocks
-			this._totalBlockCount = totalBlocks
+			this._processedItems = processedItems
+			this._totalItems = totalItems
+			this._currentItemUnit = "blocks"
 
-			const message = `Indexed ${this._processedBlockCount} / ${this._totalBlockCount} blocks found`
+			const message = `Indexed ${this._processedItems} / ${this._totalItems} ${this._currentItemUnit} found`
 			const oldStatus = this._systemStatus
 			const oldMessage = this._statusMessage
 
@@ -121,7 +107,42 @@ export class CodeIndexStateManager {
 				this.postStatusUpdate()
 				this._progressEmitter.fire(this.getCurrentStatus())
 				console.log(
-					`[CodeIndexStateManager] Block Progress: ${message} (${this._processedBlockCount}/${this._totalBlockCount})`,
+					`[CodeIndexStateManager] Block Progress: ${message} (${this._processedItems}/${this._totalItems})`,
+				)
+			}
+		}
+	}
+
+	public reportFileQueueProgress(processedFiles: number, totalFiles: number, currentFileBasename?: string): void {
+		const progressChanged = processedFiles !== this._processedItems || totalFiles !== this._totalItems
+
+		if (progressChanged || this._systemStatus !== "Indexing") {
+			this._processedItems = processedFiles
+			this._totalItems = totalFiles
+			this._currentItemUnit = "files"
+			this._systemStatus = "Indexing"
+
+			let message: string
+			if (totalFiles > 0 && processedFiles < totalFiles) {
+				message = `Processing ${processedFiles} / ${totalFiles} ${this._currentItemUnit}. Current: ${
+					currentFileBasename || "..."
+				}`
+			} else if (totalFiles > 0 && processedFiles === totalFiles) {
+				message = `Finished processing ${totalFiles} ${this._currentItemUnit} from queue.`
+			} else {
+				message = `File queue processed.`
+			}
+
+			const oldStatus = this._systemStatus
+			const oldMessage = this._statusMessage
+
+			this._statusMessage = message
+
+			if (oldStatus !== this._systemStatus || oldMessage !== this._statusMessage || progressChanged) {
+				this.postStatusUpdate()
+				this._progressEmitter.fire(this.getCurrentStatus())
+				console.log(
+					`[CodeIndexStateManager] File Queue Progress: ${message} (${this._processedItems}/${this._totalItems})`,
 				)
 			}
 		}

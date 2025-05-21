@@ -36,8 +36,9 @@ interface IndexingStatusUpdateMessage {
 	values: {
 		systemStatus: string
 		message?: string
-		processedBlockCount: number
-		totalBlockCount: number
+		processedItems: number
+		totalItems: number
+		currentItemUnit?: string
 	}
 }
 
@@ -51,8 +52,9 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
 		message: "",
-		processedBlockCount: 0,
-		totalBlockCount: 0,
+		processedItems: 0,
+		totalItems: 0,
+		currentItemUnit: "items",
 	})
 
 	// Safely calculate available models for current provider
@@ -73,8 +75,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		const handleMessage = (event: MessageEvent<IndexingStatusUpdateMessage>) => {
 			if (event.data.type === "indexingStatusUpdate") {
 				setIndexingStatus({
-					...event.data.values,
+					systemStatus: event.data.values.systemStatus,
 					message: event.data.values.message || "",
+					processedItems: event.data.values.processedItems,
+					totalItems: event.data.values.totalItems,
+					currentItemUnit: event.data.values.currentItemUnit || "items",
 				})
 			}
 		}
@@ -264,24 +269,17 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									}
 								`}></span>
 							{indexingStatus.systemStatus}
-							{indexingStatus.systemStatus !== "Indexing" && indexingStatus.message
-								? ` - ${indexingStatus.message}`
-								: ""}
+							{indexingStatus.message ? ` - ${indexingStatus.message}` : ""}
 						</div>
 
 						{indexingStatus.systemStatus === "Indexing" && (
 							<div className="mt-4 space-y-1">
-								<p className="text-sm text-muted-foreground">
-									{indexingStatus.message || "Indexing in progress..."}
-								</p>
 								<ProgressPrimitive.Root
 									className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
 									value={
-										indexingStatus.totalBlockCount > 0
-											? (indexingStatus.processedBlockCount / indexingStatus.totalBlockCount) *
-												100
-											: indexingStatus.totalBlockCount === 0 &&
-												  indexingStatus.processedBlockCount === 0
+										indexingStatus.totalItems > 0
+											? (indexingStatus.processedItems / indexingStatus.totalItems) * 100
+											: indexingStatus.totalItems === 0 && indexingStatus.processedItems === 0
 												? 100
 												: 0
 									}>
@@ -290,12 +288,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										style={{
 											transform: `translateX(-${
 												100 -
-												(indexingStatus.totalBlockCount > 0
-													? (indexingStatus.processedBlockCount /
-															indexingStatus.totalBlockCount) *
-														100
-													: indexingStatus.totalBlockCount === 0 &&
-														  indexingStatus.processedBlockCount === 0
+												(indexingStatus.totalItems > 0
+													? (indexingStatus.processedItems / indexingStatus.totalItems) * 100
+													: indexingStatus.totalItems === 0 &&
+														  indexingStatus.processedItems === 0
 														? 100
 														: 0)
 											}%)`,

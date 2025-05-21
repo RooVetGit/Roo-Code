@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager, IndexingState } from "./state-manager"
-import { FileProcessingResult, IFileWatcher, IVectorStore } from "./interfaces"
+import { IFileWatcher, IVectorStore, BatchProcessingSummary } from "./interfaces"
 import { DirectoryScanner } from "./processors"
 import { CacheManager } from "./cache-manager"
 
@@ -37,23 +37,44 @@ export class CodeIndexOrchestrator {
 			await this.fileWatcher.initialize()
 
 			this._fileWatcherSubscriptions = [
-				this.fileWatcher.onDidStartProcessing((filePath: string) => {
-					this._updateFileStatus(filePath, "Processing", `Processing file: ${path.basename(filePath)}`)
+				this.fileWatcher.onDidStartBatchProcessing((filePaths: string[]) => {
+					console.log(`[CodeIndexOrchestrator] Batch processing started for ${filePaths.length} files`)
 				}),
-				this.fileWatcher.onDidFinishProcessing((event: FileProcessingResult) => {
-					if (event.error) {
-						this._updateFileStatus(event.path, "Error")
-						console.error(`[CodeIndexOrchestrator] Error processing file ${event.path}:`, event.error)
-					} else {
-						this._updateFileStatus(
-							event.path,
-							"Indexed",
-							`Finished processing ${path.basename(event.path)}. Index up-to-date.`,
-						)
+				this.fileWatcher.onBatchProgressUpdate(({ processedInBatch, totalInBatch, currentFile }) => {
+					if (totalInBatch > 0 && this.stateManager.state !== "Indexing") {
+						this.stateManager.setSystemState("Indexing", "Processing file changes...")
 					}
-
-					if (this.stateManager.state === "Indexing") {
-						this.stateManager.setSystemState("Indexed", "Index up-to-date.")
+					this.stateManager.reportFileQueueProgress(
+						processedInBatch,
+						totalInBatch,
+						currentFile ? path.basename(currentFile) : undefined,
+					)
+					if (processedInBatch === totalInBatch) {
+						// Covers (N/N) and (0/0)
+						if (totalInBatch > 0) {
+							// Batch with items completed
+							this.stateManager.setSystemState("Indexed", "File changes processed. Index up-to-date.")
+						} else {
+							if (this.stateManager.state === "Indexing") {
+								// Only transition if it was "Indexing"
+								this.stateManager.setSystemState("Indexed", "Index up-to-date. File queue empty.")
+							}
+						}
+					}
+				}),
+				this.fileWatcher.onDidFinishBatchProcessing((summary: BatchProcessingSummary) => {
+					if (summary.batchError) {
+						console.error(`[CodeIndexOrchestrator] Batch processing failed:`, summary.batchError)
+					} else {
+						const successCount = summary.processedFiles.filter(
+							(f: { status: string }) => f.status === "success",
+						).length
+						const errorCount = summary.processedFiles.filter(
+							(f: { status: string }) => f.status === "error" || f.status === "local_error",
+						).length
+						console.log(
+							`[CodeIndexOrchestrator] Batch completed: ${successCount} succeeded, ${errorCount} failed`,
+						)
 					}
 				}),
 			]
@@ -68,15 +89,6 @@ export class CodeIndexOrchestrator {
 	/**
 	 * Updates the status of a file in the state manager.
 	 */
-	private _updateFileStatus(filePath: string, fileStatus: string, message?: string): void {
-		if (!this.configManager.isFeatureConfigured) {
-			console.warn(
-				"[CodeIndexOrchestrator] Ignoring file status update because system is not properly configured.",
-			)
-			return
-		}
-		this.stateManager.updateFileStatus(filePath, fileStatus, message)
-	}
 
 	/**
 	 * Initiates the indexing process (initial scan and starts watcher).
