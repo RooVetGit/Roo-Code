@@ -50,26 +50,32 @@ export interface IDirectoryScanner {
 /**
  * Interface for file watcher
  */
-export interface IFileWatcher {
+export interface IFileWatcher extends vscode.Disposable {
 	/**
 	 * Initializes the file watcher
 	 */
 	initialize(): Promise<void>
 
 	/**
-	 * Disposes the file watcher
+	 * Event emitted when a batch of files begins processing.
+	 * The event payload is an array of file paths included in the batch.
 	 */
-	dispose(): void
+	readonly onDidStartBatchProcessing: vscode.Event<string[]>
 
 	/**
-	 * Event emitted when a file starts processing
+	 * Event emitted to report progress during batch processing.
 	 */
-	onDidStartProcessing: vscode.Event<string>
+	readonly onBatchProgressUpdate: vscode.Event<{
+		processedInBatch: number
+		totalInBatch: number
+		currentFile?: string
+	}>
 
 	/**
-	 * Event emitted when a file finishes processing
+	 * Event emitted when a batch of files has finished processing.
+	 * The event payload contains a summary of the batch operation.
 	 */
-	onDidFinishProcessing: vscode.Event<FileProcessingResult>
+	readonly onDidFinishBatchProcessing: vscode.Event<BatchProcessingSummary>
 
 	/**
 	 * Processes a file
@@ -77,6 +83,13 @@ export interface IFileWatcher {
 	 * @returns Promise resolving to processing result
 	 */
 	processFile(filePath: string): Promise<FileProcessingResult>
+}
+
+export interface BatchProcessingSummary {
+	/** All files attempted in the batch, including their final status. */
+	processedFiles: FileProcessingResult[]
+	/** Optional error if the entire batch operation failed (e.g., database connection issue). */
+	batchError?: Error
 }
 
 export interface FileProcessingResult {

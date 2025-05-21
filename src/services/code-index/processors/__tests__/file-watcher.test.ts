@@ -5,6 +5,30 @@ import { FileWatcher } from "../file-watcher"
 
 import { createHash } from "crypto"
 
+// Helper function to wait for file processing to complete
+async function waitForFileProcessingToFinish(fileWatcher: FileWatcher, filePath: string): Promise<void> {
+	return new Promise<void>((resolve) => {
+		const listener = fileWatcher.onDidFinishBatchProcessing((summary) => {
+			console.log(
+				`[DEBUG TestHelper] waitForFileProcessingToFinish received onDidFinishBatchProcessing with summary for paths:`,
+				summary.processedFiles.map((f) => f.path),
+			)
+			const matchingFile = summary.processedFiles.find((result) => result.path === filePath)
+			if (matchingFile) {
+				console.log(
+					`[DEBUG TestHelper] waitForFileProcessingToFinish found matching path "${filePath}" and will resolve.`,
+				)
+				listener.dispose()
+				resolve()
+			} else {
+				console.log(
+					`[DEBUG TestHelper] waitForFileProcessingToFinish: path "${filePath}" not found in this batch.`,
+				)
+			}
+		})
+	})
+}
+
 jest.mock("vscode", () => {
 	type Disposable = { dispose: () => void }
 
@@ -169,39 +193,69 @@ describe("FileWatcher", () => {
 	})
 
 	describe("handleFileCreated", () => {
+		beforeEach(() => {
+			jest.useFakeTimers()
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
 		it("should call processFile with correct path", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({
 				path: mockUri.fsPath,
 				status: "processed_for_batching",
 				newHash: "mock-hash",
-				pointsToUpsert: [],
+				pointsToUpsert: [{ id: "mock-point-id", vector: [0.1], payload: { filePath: mockUri.fsPath } }],
 				reason: undefined,
 				error: undefined,
 			} as FileProcessingResult)
 
-			// Access private method using type assertion
 			await (fileWatcher as any).handleFileCreated(mockUri)
+
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+
+			await jest.advanceTimersByTimeAsync(500 + 10)
+			await jest.runAllTicks()
+
+			await processingFinishedPromise
+
 			expect(processFileSpy).toHaveBeenCalledWith(mockUri.fsPath)
-		})
+		}, 15000)
 	})
 
 	describe("handleFileChanged", () => {
+		beforeEach(() => {
+			jest.useFakeTimers()
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
 		it("should call processFile with correct path", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 			const processFileSpy = jest.spyOn(fileWatcher, "processFile").mockResolvedValue({
 				path: mockUri.fsPath,
 				status: "processed_for_batching",
 				newHash: "mock-hash",
-				pointsToUpsert: [],
+				pointsToUpsert: [{ id: "mock-point-id", vector: [0.1], payload: { filePath: mockUri.fsPath } }],
 				reason: undefined,
 				error: undefined,
 			} as FileProcessingResult)
 
-			// Access private method using type assertion
 			await (fileWatcher as any).handleFileChanged(mockUri)
+
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+
+			await jest.advanceTimersByTimeAsync(500 + 10)
+			await jest.runAllTicks()
+
+			await processingFinishedPromise
+
 			expect(processFileSpy).toHaveBeenCalledWith(mockUri.fsPath)
-		})
+		}, 15000)
 	})
 
 	describe("handleFileDeleted", () => {
@@ -213,17 +267,65 @@ describe("FileWatcher", () => {
 			jest.useRealTimers()
 		})
 
-		it("should delete from cache and vector store", async () => {
+		it("should delete from cache and process deletion in batch", async () => {
 			const mockUri = { fsPath: "/mock/workspace/test.js" }
 
-			// Access private method using type assertion
 			await (fileWatcher as any).handleFileDeleted(mockUri)
+
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+
+			await jest.advanceTimersByTimeAsync(500 + 10)
+			await jest.runAllTicks()
+
+			await processingFinishedPromise
+
 			expect(mockCacheManager.deleteHash).toHaveBeenCalledWith(mockUri.fsPath)
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith(
+				expect.arrayContaining([mockUri.fsPath]),
+			)
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledTimes(1)
+		}, 15000)
 
-			await jest.advanceTimersByTime(500)
+		it("should handle errors during deletePointsByMultipleFilePaths", async () => {
+			// Setup mock error
+			const mockError = new Error("Failed to delete points from vector store") as Error
+			;(mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mockRejectedValueOnce(mockError)
 
-			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith([mockUri.fsPath])
-		})
+			// Create a spy for the _onDidFinishBatchProcessing event
+			let capturedBatchSummary: any = null
+			const batchFinishedSpy = jest.fn((summary) => {
+				capturedBatchSummary = summary
+			})
+			fileWatcher.onDidFinishBatchProcessing(batchFinishedSpy)
+
+			// Trigger delete event
+			const mockUri = { fsPath: "/mock/workspace/test-error.js" }
+			await (fileWatcher as any).handleFileDeleted(mockUri)
+
+			// Wait for processing to complete
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+			await jest.advanceTimersByTimeAsync(500 + 10)
+			await jest.runAllTicks()
+			await processingFinishedPromise
+
+			// Verify that deletePointsByMultipleFilePaths was called
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith(
+				expect.arrayContaining([mockUri.fsPath]),
+			)
+
+			// Verify that the batch summary has the correct error information
+			expect(capturedBatchSummary).not.toBeNull()
+			expect(capturedBatchSummary.batchError).toBe(mockError)
+
+			// Verify that the processedFiles array includes the file with error status
+			const errorFile = capturedBatchSummary.processedFiles.find((file: any) => file.path === mockUri.fsPath)
+			expect(errorFile).toBeDefined()
+			expect(errorFile.status).toBe("error")
+			expect(errorFile.error).toBe(mockError)
+
+			// Verify that cacheManager.deleteHash is not called when vectorStore.deletePointsByMultipleFilePaths fails
+			expect(mockCacheManager.deleteHash).not.toHaveBeenCalledWith(mockUri.fsPath)
+		}, 15000)
 	})
 
 	describe("processFile", () => {
@@ -238,9 +340,6 @@ describe("FileWatcher", () => {
 
 			expect(result.status).toBe("skipped")
 			expect(result.reason).toBe("File is ignored by .rooignore")
-			expect(mockCacheManager.updateHash).not.toHaveBeenCalled()
-			expect(vscode.workspace.fs.stat).not.toHaveBeenCalled()
-			expect(vscode.workspace.fs.readFile).not.toHaveBeenCalled()
 			expect(mockCacheManager.updateHash).not.toHaveBeenCalled()
 			expect(vscode.workspace.fs.stat).not.toHaveBeenCalled()
 			expect(vscode.workspace.fs.readFile).not.toHaveBeenCalled()
@@ -300,8 +399,6 @@ describe("FileWatcher", () => {
 				},
 			])
 
-			// No need to mock again, it's already mocked in the setup
-
 			const result = await fileWatcher.processFile("/mock/workspace/test.js")
 
 			expect(result.status).toBe("processed_for_batching")
@@ -333,7 +430,7 @@ describe("FileWatcher", () => {
 		})
 	})
 
-	describe("delete then create race condition", () => {
+	describe("Batch processing of rapid delete-then-create/change events", () => {
 		let onDidDeleteCallback: (uri: any) => void
 		let onDidCreateCallback: (uri: any) => void
 		let mockUri: { fsPath: string }
@@ -341,11 +438,15 @@ describe("FileWatcher", () => {
 		beforeEach(() => {
 			jest.useFakeTimers()
 
+			// Clear all relevant mocks
 			mockCacheManager.deleteHash.mockClear()
+			mockCacheManager.getHash.mockClear()
+			mockCacheManager.updateHash.mockClear()
 			;(mockVectorStore.deletePointsByFilePath as jest.Mock).mockClear()
 			;(mockVectorStore.upsertPoints as jest.Mock).mockClear()
 			;(mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mockClear()
 
+			// Setup file watcher mocks
 			vscode.workspace.createFileSystemWatcher.mockReturnValue({
 				onDidCreate: jest.fn((callback) => {
 					onDidCreateCallback = callback
@@ -360,34 +461,27 @@ describe("FileWatcher", () => {
 			})
 
 			fileWatcher.initialize()
-
 			mockUri = { fsPath: "/mock/workspace/test-race.js" }
+
+			// Ensure file access is allowed
+			mockRooIgnoreController.validateAccess.mockReturnValue(true)
 		})
 
 		afterEach(() => {
 			jest.useRealTimers()
 		})
 
-		const waitForFileProcessingToFinish = (fw: FileWatcher, filePath: string) => {
-			return new Promise<void>((resolve) => {
-				const listener = fw.onDidFinishProcessing((result) => {
-					if (result.path === filePath) {
-						listener.dispose()
-						resolve()
-					}
-				})
-			})
-		}
-
-		it("should handle rapid delete-then-create sequence correctly", async () => {
+		it("should correctly process a file that is deleted and then quickly re-created/changed", async () => {
+			// Setup initial file state mocks
 			vscode.workspace.fs.stat.mockResolvedValue({ size: 100 })
 			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("new content"))
 			mockCacheManager.getHash.mockReturnValue("old-hash")
 			;(createHash as jest.Mock).mockReturnValue({
 				update: jest.fn().mockReturnThis(),
-				digest: jest.fn().mockReturnValue("new-hash"),
+				digest: jest.fn().mockReturnValue("new-hash-for-recreated-file"),
 			})
 
+			// Setup code parser mock for the re-created file
 			const { codeParser: mockCodeParser } = require("../parser")
 			mockCodeParser.parseFile.mockResolvedValue([
 				{
@@ -395,50 +489,371 @@ describe("FileWatcher", () => {
 					content: "new content",
 					start_line: 1,
 					end_line: 5,
-					fileHash: "new-hash",
+					identifier: "test",
+					type: "function",
+					fileHash: "new-hash-for-recreated-file",
+					segmentHash: "segment-hash",
 				},
 			])
 
+			// Simulate delete event
 			onDidDeleteCallback(mockUri)
-
 			await jest.runAllTicks()
 
-			expect(mockCacheManager.deleteHash).toHaveBeenCalledWith(mockUri.fsPath)
-			expect((fileWatcher as any).deletedFilesBuffer).toContain(mockUri.fsPath)
+			// For a delete-then-create in same batch, deleteHash should not be called
+			expect(mockCacheManager.deleteHash).not.toHaveBeenCalledWith(mockUri.fsPath)
 
-			const processingPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
-
+			// Simulate quick re-creation
 			onDidCreateCallback(mockUri)
-
 			await jest.runAllTicks()
 
-			await processingPromise
+			// Advance timers to trigger batch processing
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
 
-			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledWith(mockUri.fsPath)
-			expect(mockVectorStore.deletePointsByFilePath).toHaveBeenCalledTimes(1)
-			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledWith(
+			await jest.advanceTimersByTimeAsync(500 + 10)
+			await jest.runAllTicks()
+
+			await processingFinishedPromise
+
+			// Verify the deletion operations
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).not.toHaveBeenCalledWith(
 				expect.arrayContaining([mockUri.fsPath]),
 			)
 
-			expect((fileWatcher as any).deletedFilesBuffer).not.toContain(mockUri.fsPath)
+			// Verify the re-creation operations
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({
+						id: "mocked-uuid-v5-for-testing",
+						payload: expect.objectContaining({
+							filePath: expect.stringContaining("test-race.js"),
+							codeChunk: "new content",
+							startLine: 1,
+							endLine: 5,
+						}),
+					}),
+				]),
+			)
 
-			const otherFilePath = "/mock/workspace/other-file.js"
-			;(fileWatcher as any).deletedFilesBuffer.push(otherFilePath)
+			// Verify final state
+			expect(mockCacheManager.updateHash).toHaveBeenCalledWith(mockUri.fsPath, "new-hash-for-recreated-file")
+		}, 15000)
+	})
 
+	describe("Batch upsert retry logic", () => {
+		beforeEach(() => {
+			jest.useFakeTimers()
+
+			// Clear all relevant mocks
+			mockCacheManager.deleteHash.mockClear()
+			mockCacheManager.getHash.mockClear()
+			mockCacheManager.updateHash.mockClear()
+			;(mockVectorStore.upsertPoints as jest.Mock).mockClear()
+			;(mockVectorStore.deletePointsByFilePath as jest.Mock).mockClear()
+			;(mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mockClear()
+
+			// Ensure file access is allowed
+			mockRooIgnoreController.validateAccess.mockReturnValue(true)
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
+		it("should retry upsert operation when it fails initially and succeed on retry", async () => {
+			// Setup file state mocks
+			vscode.workspace.fs.stat.mockResolvedValue({ size: 100 })
+			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("test content for retry"))
+			mockCacheManager.getHash.mockReturnValue("old-hash")
+			;(createHash as jest.Mock).mockReturnValue({
+				update: jest.fn().mockReturnThis(),
+				digest: jest.fn().mockReturnValue("new-hash-for-retry-test"),
+			})
+
+			// Setup code parser mock
+			const { codeParser: mockCodeParser } = require("../parser")
+			mockCodeParser.parseFile.mockResolvedValue([
+				{
+					file_path: "/mock/workspace/retry-test.js",
+					content: "test content for retry",
+					start_line: 1,
+					end_line: 5,
+					identifier: "test",
+					type: "function",
+					fileHash: "new-hash-for-retry-test",
+					segmentHash: "segment-hash",
+				},
+			])
+
+			// Setup a spy for the _onDidFinishBatchProcessing event
+			let capturedBatchSummary: any = null
+			const batchFinishedSpy = jest.fn((summary) => {
+				capturedBatchSummary = summary
+			})
+			fileWatcher.onDidFinishBatchProcessing(batchFinishedSpy)
+
+			// Mock vectorStore.upsertPoints to fail on first call and succeed on second call
+			const mockError = new Error("Failed to upsert points to vector store")
+			;(mockVectorStore.upsertPoints as jest.Mock)
+				.mockRejectedValueOnce(mockError) // First call fails
+				.mockResolvedValueOnce(undefined) // Second call succeeds
+
+			// Trigger file change event
+			const mockUri = { fsPath: "/mock/workspace/retry-test.js" }
+			await (fileWatcher as any).handleFileChanged(mockUri)
+
+			// Wait for processing to start
+			await jest.runAllTicks()
+
+			// Advance timers to trigger batch processing
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+			await jest.advanceTimersByTimeAsync(500 + 10) // Advance past debounce delay
+			await jest.runAllTicks()
+
+			// Advance timers to trigger retry after initial failure
+			// The retry delay is INITIAL_RETRY_DELAY_MS (500ms according to constants)
 			await jest.advanceTimersByTimeAsync(500)
 			await jest.runAllTicks()
 
-			expect((mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mock.calls[0][0]).toEqual(
-				expect.arrayContaining([mockUri.fsPath]),
+			// Wait for processing to complete
+			await processingFinishedPromise
+
+			// Verify that upsertPoints was called twice (initial failure + successful retry)
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalledTimes(2)
+
+			// Verify that the cache was updated after successful retry
+			expect(mockCacheManager.updateHash).toHaveBeenCalledWith(mockUri.fsPath, "new-hash-for-retry-test")
+
+			// Verify the batch summary
+			expect(capturedBatchSummary).not.toBeNull()
+			expect(capturedBatchSummary.batchError).toBeUndefined()
+
+			// Verify that the processedFiles array includes the file with success status
+			const processedFile = capturedBatchSummary.processedFiles.find((file: any) => file.path === mockUri.fsPath)
+			expect(processedFile).toBeDefined()
+			expect(processedFile.status).toBe("success")
+			expect(processedFile.error).toBeUndefined()
+		}, 15000)
+
+		it("should handle the case where upsert fails all retries", async () => {
+			// Import constants directly for test
+			const { MAX_BATCH_RETRIES, INITIAL_RETRY_DELAY_MS } = require("../../constants/index")
+
+			// Setup file state mocks
+			vscode.workspace.fs.stat.mockResolvedValue({ size: 100 })
+			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("test content for failed retries"))
+			mockCacheManager.getHash.mockReturnValue("old-hash")
+			;(createHash as jest.Mock).mockReturnValue({
+				update: jest.fn().mockReturnThis(),
+				digest: jest.fn().mockReturnValue("new-hash-for-failed-retries-test"),
+			})
+
+			// Setup code parser mock
+			const { codeParser: mockCodeParser } = require("../parser")
+			mockCodeParser.parseFile.mockResolvedValue([
+				{
+					file_path: "/mock/workspace/failed-retries-test.js",
+					content: "test content for failed retries",
+					start_line: 1,
+					end_line: 5,
+					identifier: "test",
+					type: "function",
+					fileHash: "new-hash-for-failed-retries-test",
+					segmentHash: "segment-hash",
+				},
+			])
+
+			// Setup a spy for the _onDidFinishBatchProcessing event
+			let capturedBatchSummary: any = null
+			const batchFinishedSpy = jest.fn((summary) => {
+				capturedBatchSummary = summary
+			})
+			fileWatcher.onDidFinishBatchProcessing(batchFinishedSpy)
+
+			// Mock vectorStore.upsertPoints to fail consistently for all retry attempts
+			const mockError = new Error("Persistent upsert failure")
+			;(mockVectorStore.upsertPoints as jest.Mock).mockRejectedValue(mockError)
+
+			// Trigger file change event
+			const mockUri = { fsPath: "/mock/workspace/failed-retries-test.js" }
+			await (fileWatcher as any).handleFileChanged(mockUri)
+
+			// Wait for processing to start
+			await jest.runAllTicks()
+
+			// Advance timers to trigger batch processing
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, mockUri.fsPath)
+			await jest.advanceTimersByTimeAsync(500 + 10) // Advance past debounce delay
+			await jest.runAllTicks()
+
+			// Advance timers for each retry attempt
+			for (let i = 0; i < MAX_BATCH_RETRIES; i++) {
+				const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, i)
+				await jest.advanceTimersByTimeAsync(delay)
+				await jest.runAllTicks()
+			}
+
+			// Wait for processing to complete
+			await processingFinishedPromise
+
+			// Verify that upsertPoints was called exactly MAX_BATCH_RETRIES times
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalledTimes(MAX_BATCH_RETRIES)
+
+			// Verify that the cache was NOT updated after failed retries
+			expect(mockCacheManager.updateHash).not.toHaveBeenCalledWith(
+				mockUri.fsPath,
+				"new-hash-for-failed-retries-test",
 			)
 
-			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalledTimes(2)
+			// Verify the batch summary
+			expect(capturedBatchSummary).not.toBeNull()
+			expect(capturedBatchSummary.batchError).toBeDefined()
+			expect(capturedBatchSummary.batchError.message).toContain(
+				`Failed to upsert batch after ${MAX_BATCH_RETRIES} retries`,
+			)
 
-			const flushedDeletedPaths = (mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mock.calls[1][0]
-			expect(flushedDeletedPaths).toContain(otherFilePath)
-			expect(flushedDeletedPaths).not.toContain(mockUri.fsPath)
+			// Verify that the processedFiles array includes the file with error status
+			const processedFile = capturedBatchSummary.processedFiles.find((file: any) => file.path === mockUri.fsPath)
+			expect(processedFile).toBeDefined()
+			expect(processedFile.status).toBe("error")
+			expect(processedFile.error).toBeDefined()
+			expect(processedFile.error.message).toContain(`Failed to upsert batch after ${MAX_BATCH_RETRIES} retries`)
+		}, 15000)
+	})
 
-			expect(mockCacheManager.updateHash).toHaveBeenCalledWith(mockUri.fsPath, "new-hash")
+	describe("Pre-existing batch error propagation", () => {
+		let onDidDeleteCallback: (uri: any) => void
+		let onDidCreateCallback: (uri: any) => void
+		let onDidChangeCallback: (uri: any) => void
+		let deleteUri: { fsPath: string }
+		let createUri: { fsPath: string }
+		let changeUri: { fsPath: string }
+
+		beforeEach(() => {
+			jest.useFakeTimers()
+
+			// Clear all relevant mocks
+			mockCacheManager.deleteHash.mockClear()
+			mockCacheManager.getHash.mockClear()
+			mockCacheManager.updateHash.mockClear()
+			;(mockVectorStore.upsertPoints as jest.Mock).mockClear()
+			;(mockVectorStore.deletePointsByFilePath as jest.Mock).mockClear()
+			;(mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mockClear()
+
+			// Setup file watcher mocks
+			vscode.workspace.createFileSystemWatcher.mockReturnValue({
+				onDidCreate: jest.fn((callback) => {
+					onDidCreateCallback = callback
+					return { dispose: jest.fn() }
+				}),
+				onDidChange: jest.fn((callback) => {
+					onDidChangeCallback = callback
+					return { dispose: jest.fn() }
+				}),
+				onDidDelete: jest.fn((callback) => {
+					onDidDeleteCallback = callback
+					return { dispose: jest.fn() }
+				}),
+				dispose: jest.fn(),
+			})
+
+			fileWatcher.initialize()
+			deleteUri = { fsPath: "/mock/workspace/to-be-deleted.js" }
+			createUri = { fsPath: "/mock/workspace/to-be-created.js" }
+			changeUri = { fsPath: "/mock/workspace/to-be-changed.js" }
+
+			// Ensure file access is allowed
+			mockRooIgnoreController.validateAccess.mockReturnValue(true)
 		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
+		it("should not execute upsert operations when an overallBatchError pre-exists from deletion phase", async () => {
+			// Setup file state mocks for the files to be processed
+			vscode.workspace.fs.stat.mockResolvedValue({ size: 100 })
+			vscode.workspace.fs.readFile.mockResolvedValue(Buffer.from("test content"))
+			mockCacheManager.getHash.mockReturnValue("old-hash")
+			;(createHash as jest.Mock).mockReturnValue({
+				update: jest.fn().mockReturnThis(),
+				digest: jest.fn().mockReturnValue("new-hash"),
+			})
+
+			// Setup code parser mock for the files to be processed
+			const { codeParser: mockCodeParser } = require("../parser")
+			mockCodeParser.parseFile.mockResolvedValue([
+				{
+					file_path: createUri.fsPath,
+					content: "test content",
+					start_line: 1,
+					end_line: 5,
+					identifier: "test",
+					type: "function",
+					fileHash: "new-hash",
+					segmentHash: "segment-hash",
+				},
+			])
+
+			// Setup a spy for the _onDidFinishBatchProcessing event
+			let capturedBatchSummary: any = null
+			const batchFinishedSpy = jest.fn((summary) => {
+				capturedBatchSummary = summary
+			})
+			fileWatcher.onDidFinishBatchProcessing(batchFinishedSpy)
+
+			// Mock deletePointsByMultipleFilePaths to throw an error
+			const mockDeletionError = new Error("Failed to delete points from vector store")
+			;(mockVectorStore.deletePointsByMultipleFilePaths as jest.Mock).mockRejectedValueOnce(mockDeletionError)
+
+			// Simulate delete event
+			onDidDeleteCallback(deleteUri)
+			await jest.runAllTicks()
+
+			// Simulate create event in the same batch
+			onDidCreateCallback(createUri)
+			await jest.runAllTicks()
+
+			// Simulate change event in the same batch
+			onDidChangeCallback(changeUri)
+			await jest.runAllTicks()
+
+			// Advance timers to trigger batch processing
+			const processingFinishedPromise = waitForFileProcessingToFinish(fileWatcher, deleteUri.fsPath)
+			await jest.advanceTimersByTimeAsync(500 + 10) // Advance past debounce delay
+			await jest.runAllTicks()
+			await processingFinishedPromise
+
+			// Verify that deletePointsByMultipleFilePaths was called
+			expect(mockVectorStore.deletePointsByMultipleFilePaths).toHaveBeenCalled()
+
+			// Verify that upsertPoints was NOT called due to pre-existing error
+			expect(mockVectorStore.upsertPoints).not.toHaveBeenCalled()
+
+			// Verify that the cache was NOT updated for the created/changed files
+			expect(mockCacheManager.updateHash).not.toHaveBeenCalledWith(createUri.fsPath, expect.any(String))
+			expect(mockCacheManager.updateHash).not.toHaveBeenCalledWith(changeUri.fsPath, expect.any(String))
+
+			// Verify the batch summary
+			expect(capturedBatchSummary).not.toBeNull()
+			expect(capturedBatchSummary.batchError).toBe(mockDeletionError)
+
+			// Verify that the processedFiles array includes all files with appropriate status
+			const deletedFile = capturedBatchSummary.processedFiles.find((file: any) => file.path === deleteUri.fsPath)
+			expect(deletedFile).toBeDefined()
+			expect(deletedFile.status).toBe("error")
+			expect(deletedFile.error).toBe(mockDeletionError)
+
+			// Verify that the create/change files also have error status with the same error
+			const createdFile = capturedBatchSummary.processedFiles.find((file: any) => file.path === createUri.fsPath)
+			expect(createdFile).toBeDefined()
+			expect(createdFile.status).toBe("error")
+			expect(createdFile.error).toBe(mockDeletionError)
+
+			const changedFile = capturedBatchSummary.processedFiles.find((file: any) => file.path === changeUri.fsPath)
+			expect(changedFile).toBeDefined()
+			expect(changedFile.status).toBe("error")
+			expect(changedFile.error).toBe(mockDeletionError)
+		}, 15000)
 	})
 })
