@@ -240,6 +240,28 @@ function filterSourceFiles(sourceFiles: string[], fileArgs?: string[]): string[]
 	})
 }
 
+function checkIfFileMissing(targetFilePath: string): boolean {
+	return !fileExists(targetFilePath)
+}
+
+function checkFileSizeDifference(sourceFilePath: string, targetFilePath: string): { warning?: string; error?: string } {
+	try {
+		const sourceStats = fs.statSync(sourceFilePath)
+		const targetStats = fs.statSync(targetFilePath)
+		const sourceSize = sourceStats.size
+		const targetSize = targetStats.size
+
+		if (targetSize > sourceSize * 2) {
+			return {
+				warning: `Target file ${targetFilePath} is more than 2x larger than source ${sourceFilePath}. It may require retranslation to be within +/- 20% of the source file size.`,
+			}
+		}
+		return {} // No warning, no error from this function's core logic
+	} catch (e: any) {
+		return { error: `Error getting file stats for size comparison: ${e.message}` }
+	}
+}
+
 function processFileLocale(
 	sourceFile: string,
 	sourceContent: any,
@@ -261,7 +283,7 @@ function processFileLocale(
 
 	if (reportFileLevelOnly) {
 		// Handle file-level checks (e.g., for "docs")
-		if (!fileExists(targetFile)) {
+		if (checkIfFileMissing(targetFile)) {
 			results[mapping.area][locale][targetFile].missing = [
 				{
 					key: [sourceFile], // Source filename as the key
@@ -272,25 +294,18 @@ function processFileLocale(
 		}
 
 		// Target file exists, perform size check
-		try {
-			const sourceStats = fs.statSync(sourceFile)
-			const targetStats = fs.statSync(targetFile)
-			const sourceSize = sourceStats.size
-			const targetSize = targetStats.size
-
-			if (targetSize > sourceSize * 2) {
-				results[mapping.area][locale][targetFile].sizeWarning =
-					`Target file ${targetFile} is more than 2x larger than source ${sourceFile}. It may require retranslation to be within +/- 20% of the source file size.`
-			}
-		} catch (e: any) {
-			results[mapping.area][locale][targetFile].error =
-				`Error getting file stats for size comparison: ${e.message}`
+		const sizeCheckResult = checkFileSizeDifference(sourceFile, targetFile)
+		if (sizeCheckResult.warning) {
+			results[mapping.area][locale][targetFile].sizeWarning = sizeCheckResult.warning
+		}
+		if (sizeCheckResult.error) {
+			results[mapping.area][locale][targetFile].error = sizeCheckResult.error
 		}
 		// Do NOT attempt to load/parse content as JSON or call key-based checks
 		return
 	} else {
 		// Handle key-based checks (e.g., for JSON files)
-		if (!fileExists(targetFile)) {
+		if (checkIfFileMissing(targetFile)) {
 			results[mapping.area][locale][targetFile].missing = [
 				{
 					key: [sourceFile], // File path as a single element array
@@ -329,16 +344,22 @@ function processFileLocale(
 	}
 }
 
-function checkExtraFiles(
+interface ExtraFileIssue {
+	extraFilePath: string
+	key: string[] // Typically ["EXTRA_FILE_MARKER"]
+	localeValue: string // The path of the extra file itself
+}
+
+function identifyExtraFiles(
 	mapping: PathMapping,
 	locale: Language,
-	results: Results,
 	allSourceFileBasenamesForMapping: Set<string>, // A Set of basenames like {"common.json", "tools.json"} or {"README.md"}
-): void {
+): ExtraFileIssue[] {
 	const targetDir = mapping.targetTemplate.replace("<lang>", locale)
+	const foundExtraFiles: ExtraFileIssue[] = []
 
 	if (!fs.existsSync(targetDir)) {
-		return // No target directory, so no extra files to check
+		return foundExtraFiles // No target directory, so no extra files to check
 	}
 
 	let actualTargetFilesDirents: fs.Dirent[]
@@ -346,11 +367,8 @@ function checkExtraFiles(
 		actualTargetFilesDirents = fs.readdirSync(targetDir, { withFileTypes: true })
 	} catch (e: any) {
 		// This case should be rare if existsSync passed, but good to handle
-		// We can't report this against a specific file in results, so perhaps log it
-		// Or, if we want to be very strict, create a dummy entry in results for the directory itself.
-		// For now, let's bufferLog it.
 		bufferLog(`Error reading target directory ${targetDir} for locale ${locale}: ${e.message}`)
-		return
+		return foundExtraFiles // Return empty or perhaps an issue indicating directory read error
 	}
 
 	for (const actualTargetFileDirent of actualTargetFilesDirents) {
@@ -360,61 +378,29 @@ function checkExtraFiles(
 
 			// Derive Corresponding Source Basename
 			if (mapping.targetTemplate.endsWith(".<lang>.json")) {
-				// Handles cases like package.nls.<lang>.json
 				derivedSourceBasename = actualTargetFilename.replace(`.${locale}.json`, ".json")
 			} else if (mapping.targetTemplate.endsWith("/")) {
-				// Handles cases like locales/<lang>/ or src/i18n/locales/<lang>/
-				// The actualTargetFilename is the basename we compare against source basenames
 				derivedSourceBasename = actualTargetFilename
 			} else {
-				// This case should ideally not be hit if targetTemplate is well-defined
-				// for extra file checking. If it's a direct file path without <lang>,
-				// it implies a 1:1 mapping, and extra files aren't typically checked this way.
-				// However, to be safe, let's assume the filename itself if no clear pattern.
-				// This might need refinement based on actual PathMapping structures.
-				// For now, if it's not a directory and not a <lang>.json pattern,
-				// we might not have a clear way to derive source basename.
-				// Let's log a warning and skip, or make a best guess.
-				// Best guess: if targetTemplate is `foo.<lang>.bar` and actual is `foo.ca.bar`, source is `foo.bar`
-				// This is complex. For now, let's stick to the defined cases.
-				// If targetTemplate is like `specific-file.<lang>.ext`
 				const langPattern = `.${locale}.`
 				if (actualTargetFilename.includes(langPattern)) {
 					derivedSourceBasename = actualTargetFilename.replace(langPattern, ".")
 				} else {
-					// If no <lang> in filename, and template is not a dir, it's ambiguous.
-					// Example: targetTemplate = "fixed_name.json" (no <lang>)
-					// In this scenario, extra file check might not make sense or needs different logic.
-					// For now, we assume such mappings won't be common for this check or
-					// that `allSourceFileBasenamesForMapping` would be very specific.
-					// Let's assume if it's not a directory and not a .<lang>.json pattern,
-					// the actualTargetFilename is what we'd look for in source (less common).
 					derivedSourceBasename = actualTargetFilename
 				}
 			}
 
 			if (!allSourceFileBasenamesForMapping.has(derivedSourceBasename)) {
 				const fullPathToActualTargetFile = path.join(targetDir, actualTargetFilename)
-
-				// Ensure the result structure exists
-				results[mapping.area] = results[mapping.area] || {}
-				results[mapping.area][locale] = results[mapping.area][locale] || {}
-				results[mapping.area][locale][fullPathToActualTargetFile] = results[mapping.area][locale][
-					fullPathToActualTargetFile
-				] || {
-					missing: [],
-					extra: [],
-					error: undefined,
-					sizeWarning: undefined,
-				}
-
-				results[mapping.area][locale][fullPathToActualTargetFile].extra.push({
+				foundExtraFiles.push({
+					extraFilePath: fullPathToActualTargetFile,
 					key: ["EXTRA_FILE_MARKER"], // Standardized marker
 					localeValue: fullPathToActualTargetFile, // The path of the extra file itself
 				})
 			}
 		}
 	}
+	return foundExtraFiles
 }
 
 function formatResults(results: Results, checkTypes: string[], options: LintOptions, mappings: PathMapping[]): boolean {
@@ -594,12 +580,10 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 								if (!missingKeysByLocaleDisplay.has(locale))
 									missingKeysByLocaleDisplay.set(locale, new Map())
 								if (!missingKeysByLocaleDisplay.get(locale)?.has(targetFilePath)) {
-									missingKeysByLocaleDisplay
-										.get(locale)
-										?.set(targetFilePath, {
-											keys: new Set(),
-											sourceFile: sourceFileAssociatedWithTarget,
-										})
+									missingKeysByLocaleDisplay.get(locale)?.set(targetFilePath, {
+										keys: new Set(),
+										sourceFile: sourceFileAssociatedWithTarget,
+									})
 								}
 								fileRes.missing.forEach((issue) => {
 									missingKeysByLocaleDisplay
@@ -1052,7 +1036,23 @@ function lintTranslations(args?: LintOptions): { output: string } {
 		// After processing all source files for a mapping, check for extra files in target directories
 		if (checksToRun.includes("extra") || checksToRun.includes("all")) {
 			for (const locale of locales) {
-				checkExtraFiles(mapping, locale, results, allSourceFileBasenamesForMapping)
+				const extraFileIssues = identifyExtraFiles(mapping, locale, allSourceFileBasenamesForMapping)
+				for (const issue of extraFileIssues) {
+					results[mapping.area] = results[mapping.area] || {}
+					results[mapping.area][locale] = results[mapping.area][locale] || {}
+					results[mapping.area][locale][issue.extraFilePath] = results[mapping.area][locale][
+						issue.extraFilePath
+					] || {
+						missing: [],
+						extra: [],
+						error: undefined,
+						sizeWarning: undefined,
+					}
+					results[mapping.area][locale][issue.extraFilePath].extra.push({
+						key: issue.key,
+						localeValue: issue.localeValue,
+					})
+				}
 			}
 		}
 	}
