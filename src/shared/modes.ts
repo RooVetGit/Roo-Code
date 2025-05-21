@@ -149,6 +149,23 @@ export function isCustomMode(slug: string, customModes?: ModeConfig[]): boolean 
 	return !!customModes?.some((mode) => mode.slug === slug)
 }
 
+export function getModeSelection(mode: string, promptComponent?: PromptComponent, customModes?: ModeConfig[]) {
+	const modeConfig = getModeBySlug(mode, customModes) || modes.find((m) => m.slug === mode) || modes[0]
+	const isCustom = isCustomMode(mode, customModes)
+	const roleDefinition = isCustom
+		? modeConfig?.roleDefinition || promptComponent?.roleDefinition || ""
+		: promptComponent?.roleDefinition || modeConfig.roleDefinition || ""
+
+	const baseInstructions = isCustom
+		? modeConfig?.customInstructions || promptComponent?.customInstructions || ""
+		: promptComponent?.customInstructions || modeConfig.customInstructions || ""
+
+	return {
+		roleDefinition,
+		baseInstructions,
+	}
+}
+
 // Custom error class for file restrictions
 export class FileRestrictionError extends Error {
 	constructor(mode: string, pattern: string, description: string | undefined, filePath: string) {
