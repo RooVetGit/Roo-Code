@@ -2,7 +2,7 @@ name: Nightly Publish
 
 on:
   push:
-    branches: [main, cte/nightly-ci]
+    branches: [main]
   workflow_dispatch: # Allows manual triggering.
 
 env:
@@ -51,11 +51,11 @@ jobs:
           EOF
       - name: Build VSIX
         run: pnpm build:nightly # Produces bin/roo-code-nightly-0.0.[count].vsix
-      - name: Publish to VS Code Marketplace (Nightly channel)
+      - name: Publish to VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: npx vsce publish --packagePath "bin/$(/bin/ls bin | head -n1)"
-      - name: Publish to Open VSX
+      - name: Publish to Open VSX Registry
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: npx ovsx publish "bin/$(ls bin | head -n1)"
