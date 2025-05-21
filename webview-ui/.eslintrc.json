@@ -5,7 +5,8 @@
 		"no-unused-vars": "off",
 		"@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
 		"no-implicit-coercion": "error",
-		"no-empty": "error"
+		"no-empty": "error",
+		"no-useless-catch": "error"
 	},
 	"overrides": [
 		{
