@@ -14,7 +14,12 @@ const activeLocks = new Set<string>()
  * @param {any} data - The data to serialize to JSON and write.
  * @returns {Promise<void>}
  */
-async function safeWriteJson(filePath: string, data: any): Promise<void> {
+async function safeWriteJson(
+	filePath: string,
+	data: any,
+	replacer?: (key: string, value: any) => any,
+	space: string | number = 2,
+): Promise<void> {
 	const absoluteFilePath = path.resolve(filePath)
 
 	if (activeLocks.has(absoluteFilePath)) {
@@ -33,7 +38,7 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 			path.dirname(absoluteFilePath),
 			`.${path.basename(absoluteFilePath)}.new_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`,
 		)
-		const jsonData = JSON.stringify(data, null, 2)
+		const jsonData = JSON.stringify(data, replacer, space)
 		await fs.writeFile(actualTempNewFilePath, jsonData, "utf8")
 
 		// Step 2: Check if the target file exists. If so, rename it to a backup path.
