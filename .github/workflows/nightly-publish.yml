@@ -54,8 +54,8 @@ jobs:
       - name: Publish to VS Code Marketplace (Nightly channel)
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT_NIGHTLY }}
-        run: npx vsce publish --pre-release --packagePath "bin/$(/bin/ls bin | head -n1)"
+        run: npx vsce publish --packagePath "bin/$(/bin/ls bin | head -n1)"
       - name: Publish to Open VSX
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: npx ovsx publish "bin/$(ls bin | head -n1)" --pre-release
+        run: npx ovsx publish "bin/$(ls bin | head -n1)"
