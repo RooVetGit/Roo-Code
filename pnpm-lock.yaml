@@ -14,6 +14,12 @@ importers:
       '@dotenvx/dotenvx':
         specifier: ^1.34.0
         version: 1.44.0
+      '@vscode/vsce':
+        specifier: 3.3.2
+        version: 3.3.2
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.4
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
@@ -26,12 +32,21 @@ importers:
       lint-staged:
         specifier: ^15.2.11
         version: 15.5.2
+      mkdirp:
+        specifier: ^3.0.1
+        version: 3.0.1
       only-allow:
         specifier: ^1.2.1
         version: 1.2.1
+      ovsx:
+        specifier: 0.10.2
+        version: 0.10.2
       prettier:
         specifier: ^3.4.2
         version: 3.5.3
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.0.1
       turbo:
         specifier: ^2.5.3
         version: 2.5.3
@@ -44,19 +59,6 @@ importers:
       '@roo-code/build':
         specifier: workspace:^
         version: link:../../packages/build
-    devDependencies:
-      '@vscode/vsce':
-        specifier: 3.3.2
-        version: 3.3.2
-      esbuild:
-        specifier: ^0.25.0
-        version: 0.25.4
-      mkdirp:
-        specifier: ^3.0.1
-        version: 3.0.1
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.0.1
 
   e2e:
     devDependencies:

@@ -5,6 +5,38 @@ const path = require("path")
 const production = process.argv.includes("--production")
 const watch = process.argv.includes("--watch")
 
+/**
+ * @param {[string, string][]} copyPaths
+ * @param {string} srcDir
+ * @param {string} dstDir
+ * @returns {void}
+ */
+function copyPaths(copyPaths, srcDir, dstDir) {
+	copyPaths.forEach(([srcRelPath, dstRelPath]) => {
+		const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
+
+		if (stats.isDirectory()) {
+			if (fs.existsSync(path.join(dstDir, dstRelPath))) {
+				fs.rmSync(path.join(dstDir, dstRelPath), { recursive: true })
+			}
+
+			fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
+
+			const count = copyDir(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath), 0)
+			console.log(`[copyPaths] Copied ${count} files from ${srcRelPath} to ${dstRelPath}`)
+		} else {
+			fs.copyFileSync(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath))
+			console.log(`[copyPaths] Copied ${srcRelPath} to ${dstRelPath}`)
+		}
+	})
+}
+
+/**
+ * @param {string} srcDir
+ * @param {string} dstDir
+ * @param {number} count
+ * @returns {number}
+ */
 function copyDir(srcDir, dstDir, count) {
 	const entries = fs.readdirSync(srcDir, { withFileTypes: true })
 
@@ -172,27 +204,17 @@ const copyAssets = {
 	name: "copy-assets",
 	setup(build) {
 		build.onEnd(() => {
-			const copyPaths = [
-				["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
-				["../webview-ui/audio", "webview-ui/audio"],
-			]
-
-			for (const [srcRelPath, dstRelPath] of copyPaths) {
-				const srcDir = path.join(__dirname, srcRelPath)
-				const dstDir = path.join(__dirname, dstRelPath)
-
-				if (!fs.existsSync(srcDir)) {
-					throw new Error(`Directory does not exist: ${srcDir}`)
-				}
-
-				if (fs.existsSync(dstDir)) {
-					fs.rmSync(dstDir, { recursive: true })
-				}
-
-				fs.mkdirSync(dstDir, { recursive: true })
-				const count = copyDir(srcDir, dstDir, 0)
-				console.log(`[copy-assets] Copied ${count} assets from ${srcDir} to ${dstDir}`)
-			}
+			copyPaths(
+				[
+					["../README.md", "README.md"],
+					["../CHANGELOG.md", "CHANGELOG.md"],
+					["../LICENSE", "LICENSE"],
+					["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
+					["../webview-ui/audio", "webview-ui/audio"],
+				],
+				__dirname,
+				__dirname,
+			)
 		})
 	},
 }

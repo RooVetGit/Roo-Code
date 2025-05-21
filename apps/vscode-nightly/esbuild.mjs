@@ -52,7 +52,9 @@ async function main() {
 			setup(build) {
 				build.onEnd(() => {
 					const paths = [
-						["LICENSE", "LICENSE"],
+						["../README.md", "README.md"],
+						["../CHANGELOG.md", "CHANGELOG.md"],
+						["../LICENSE", "LICENSE"],
 						[".vscodeignore", ".vscodeignore"],
 						["assets", "assets"],
 						["integrations", "integrations"],

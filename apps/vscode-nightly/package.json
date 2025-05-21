@@ -10,11 +10,5 @@
 	},
 	"dependencies": {
 		"@roo-code/build": "workspace:^"
-	},
-	"devDependencies": {
-		"@vscode/vsce": "3.3.2",
-		"esbuild": "^0.25.0",
-		"mkdirp": "^3.0.1",
-		"rimraf": "^6.0.1"
 	}
 }
