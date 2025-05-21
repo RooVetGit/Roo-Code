@@ -160,6 +160,7 @@ export type ExtensionState = Pick<
 	| "diffEnabled"
 	| "diffViewAutoFocus"
 	| "autoCloseRooTabs"
+	| "autoCloseAllRooTabs" // Added new setting
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.
 	| "language"

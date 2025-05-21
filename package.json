@@ -323,6 +323,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%roo-cline.autoCloseRooTabs.description%"
+				},
+				"roo-cline.autoCloseAllRooTabs": {
+					"type": "boolean",
+					"default": false,
+					"description": "%roo-cline.autoCloseAllRooTabs.description%"
 				}
 			}
 		}

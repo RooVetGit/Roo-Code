@@ -425,12 +425,15 @@ const baseProviderSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	diffViewAutoFocus: z.boolean().optional(),
 	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(), // Added new setting
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
+	// FelixFocusPR
+	promptCachingDisabled: z.boolean().optional(),
 })
 
 // Several of the providers share common model config properties.
@@ -707,6 +710,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	diffEnabled: undefined,
 	diffViewAutoFocus: undefined,
 	autoCloseRooTabs: undefined,
+	autoCloseAllRooTabs: undefined, // Added new setting
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
@@ -722,6 +726,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	litellmBaseUrl: undefined,
 	litellmApiKey: undefined,
 	litellmModelId: undefined,
+	promptCachingDisabled: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -790,6 +795,7 @@ export const globalSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	diffViewAutoFocus: z.boolean().optional(),
 	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(), // Added new setting
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -872,6 +878,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	diffEnabled: undefined,
 	diffViewAutoFocus: undefined,
 	autoCloseRooTabs: undefined,
+	autoCloseAllRooTabs: undefined, // Added new setting
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
 
