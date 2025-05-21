@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "Commando-prefixen die automatisch kunnen worden uitgevoerd als 'Altijd goedkeuren voor uitvoeren' is ingeschakeld. Voeg * toe om alle commando's toe te staan (gebruik met voorzichtigheid).",
 			"commandPlaceholder": "Voer commando-prefix in (bijv. 'git ')",
 			"addButton": "Toevoegen"
+		},
+		"apiRequestLimit": {
+			"title": "Maximale verzoeken",
+			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
+			"unlimited": "Onbeperkt"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "Aangepast gebruiken: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Heb je vragen of feedback? Open gerust een issue op <githubLink>github.com/RooVetGit/Roo-Code</githubLink> of sluit je aan bij <redditLink>reddit.com/r/RooCode</redditLink> of <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Heb je vragen of feedback? Open gerust een issue op <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> of sluit je aan bij <redditLink>reddit.com/r/RooCode</redditLink> of <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Anonieme fout- en gebruiksrapportage toestaan",
 			"description": "Help Roo Code te verbeteren door anonieme gebruiksgegevens en foutmeldingen te verzenden. Er worden nooit code, prompts of persoonlijke gegevens verzonden. Zie ons privacybeleid voor meer informatie."

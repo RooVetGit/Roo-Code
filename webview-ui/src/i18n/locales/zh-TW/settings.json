@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "當「始終核准執行操作」啟用時可以自動執行的命令前綴。新增 * 以允許所有命令（請謹慎使用）。",
 			"commandPlaceholder": "輸入命令前綴（例如 'git '）",
 			"addButton": "新增"
+		},
+		"apiRequestLimit": {
+			"title": "最大請求數",
+			"description": "在請求批准以繼續執行工作之前，自動發出此數量的 API 請求。",
+			"unlimited": "無限制"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "使用自訂模型：{{modelId}}"
 	},
 	"footer": {
-		"feedback": "若您有任何問題或建議，歡迎至 <githubLink>github.com/RooVetGit/Roo-Code</githubLink> 提出 issue，或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink> 討論。",
+		"feedback": "若您有任何問題或建議，歡迎至 <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> 提出 issue，或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink> 討論。",
 		"telemetry": {
 			"label": "允許匿名錯誤與使用情況回報",
 			"description": "透過傳送匿名的使用資料與錯誤回報，協助改善 Roo Code。我們絕不會傳送您的程式碼、提示或個人資訊。詳細資訊請參閱我們的隱私權政策。"

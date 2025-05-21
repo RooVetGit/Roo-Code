@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "当\"自动批准命令行操作\"启用时可以自动执行的命令前缀。添加 * 以允许所有命令（谨慎使用）。",
 			"commandPlaceholder": "输入命令前缀（例如 'git '）",
 			"addButton": "添加"
+		},
+		"apiRequestLimit": {
+			"title": "最大请求数",
+			"description": "在请求批准以继续执行任务之前，自动发出此数量的 API 请求。",
+			"unlimited": "无限制"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "使用自定义：{{modelId}}"
 	},
 	"footer": {
-		"feedback": "如果您有任何问题或反馈，请随时在 <githubLink>github.com/RooVetGit/Roo-Code</githubLink> 上提出问题或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "如果您有任何问题或反馈，请随时在 <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> 上提出问题或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "允许匿名数据收集",
 			"description": "匿名收集错误报告和使用数据（不含代码/提示/个人信息），详情见隐私政策"

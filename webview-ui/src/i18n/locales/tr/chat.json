@@ -10,7 +10,8 @@
 		"contextWindow": "Bağlam Uzunluğu:",
 		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
 		"export": "Görev geçmişini dışa aktar",
-		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
+		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
+		"condenseContext": "Görev bağlamını yoğunlaştır"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
@@ -198,12 +199,16 @@
 		"thinking": "Düşünüyor",
 		"seconds": "{{count}}sn"
 	},
+	"contextCondense": {
+		"title": "Bağlam Özetlendi",
+		"tokens": "token"
+	},
 	"followUpSuggest": {
 		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 Yayınlandı",
-		"description": "Roo Code 3.17 geri bildirimlerinize dayalı güçlü yeni özellikler ve iyileştirmeler getiriyor.",
+		"title": "🎉 Roo Code {{version}} Yayınlandı",
+		"description": "Roo Code {{version}} geri bildirimlerinize dayalı güçlü yeni özellikler ve iyileştirmeler getiriyor.",
 		"whatsNew": "Yenilikler",
 		"feature1": "<bold>Gemini için Örtük Önbelleğe Alma</bold>: Gemini API çağrıları artık otomatik olarak önbelleğe alınıyor, API maliyetlerini azaltıyor",
 		"feature2": "<bold>Daha Akıllı Mod Seçimi</bold>: Mod tanımları artık her modun ne zaman kullanılması gerektiğine dair rehberlik içerebiliyor, daha iyi orkestrasyon sağlıyor",
@@ -247,5 +252,12 @@
 		"title": "Komut Çalıştırma Uyarısı",
 		"description": "Komutunuz VSCode terminal kabuk entegrasyonu olmadan çalıştırılıyor. Bu uyarıyı gizlemek için <settingsLink>Roo Code ayarları</settingsLink>'nın <strong>Terminal</strong> bölümünden kabuk entegrasyonunu devre dışı bırakabilir veya aşağıdaki bağlantıyı kullanarak VSCode terminal entegrasyonu sorunlarını giderebilirsiniz.",
 		"troubleshooting": "Kabuk entegrasyonu belgelerini görmek için buraya tıklayın."
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Otomatik Onaylanan İstek Limiti Aşıldı",
+			"description": "Roo, {{count}} API isteği/istekleri için otomatik onaylanan limite ulaştı. Sayacı sıfırlamak ve göreve devam etmek istiyor musunuz?",
+			"button": "Sıfırla ve Devam Et"
+		}
 	}
 }

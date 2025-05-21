@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "Tiền tố lệnh có thể được tự động thực thi khi \"Luôn phê duyệt các hoạt động thực thi\" được bật. Thêm * để cho phép tất cả các lệnh (sử dụng cẩn thận).",
 			"commandPlaceholder": "Nhập tiền tố lệnh (ví dụ: 'git ')",
 			"addButton": "Thêm"
+		},
+		"apiRequestLimit": {
+			"title": "Số lượng yêu cầu tối đa",
+			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ.",
+			"unlimited": "Không giới hạn"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "Sử dụng tùy chỉnh: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Nếu bạn có bất kỳ câu hỏi hoặc phản hồi nào, vui lòng mở một vấn đề tại <githubLink>github.com/RooVetGit/Roo-Code</githubLink> hoặc tham gia <redditLink>reddit.com/r/RooCode</redditLink> hoặc <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Nếu bạn có bất kỳ câu hỏi hoặc phản hồi nào, vui lòng mở một vấn đề tại <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> hoặc tham gia <redditLink>reddit.com/r/RooCode</redditLink> hoặc <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Cho phép báo cáo lỗi và sử dụng ẩn danh",
 			"description": "Giúp cải thiện Roo Code bằng cách gửi dữ liệu sử dụng ẩn danh và báo cáo lỗi. Không bao giờ gửi mã, lời nhắc hoặc thông tin cá nhân. Xem chính sách bảo mật của chúng tôi để biết thêm chi tiết."

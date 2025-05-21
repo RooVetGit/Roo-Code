@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "Prefixos de comando que podem ser auto-executados quando \"Aprovar sempre operações de execução\" está ativado. Adicione * para permitir todos os comandos (use com cautela).",
 			"commandPlaceholder": "Digite o prefixo do comando (ex. 'git ')",
 			"addButton": "Adicionar"
+		},
+		"apiRequestLimit": {
+			"title": "Máximo de Solicitações",
+			"description": "Fazer automaticamente este número de requisições à API antes de pedir aprovação para continuar com a tarefa.",
+			"unlimited": "Ilimitado"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "Usar personalizado: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Se tiver alguma dúvida ou feedback, sinta-se à vontade para abrir um problema em <githubLink>github.com/RooVetGit/Roo-Code</githubLink> ou juntar-se a <redditLink>reddit.com/r/RooCode</redditLink> ou <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Se tiver alguma dúvida ou feedback, sinta-se à vontade para abrir um problema em <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> ou juntar-se a <redditLink>reddit.com/r/RooCode</redditLink> ou <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Permitir relatórios anônimos de erros e uso",
 			"description": "Ajude a melhorar o Roo Code enviando dados de uso anônimos e relatórios de erros. Nunca são enviados código, prompts ou informações pessoais. Consulte nossa política de privacidade para mais detalhes."

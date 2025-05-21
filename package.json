@@ -18,9 +18,9 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/RooVetGit/Roo-Code"
+		"url": "https://github.com/RooCodeInc/Roo-Code"
 	},
-	"homepage": "https://github.com/RooVetGit/Roo-Code",
+	"homepage": "https://github.com/RooCodeInc/Roo-Code",
 	"categories": [
 		"AI",
 		"Chat",
@@ -411,7 +411,6 @@
 		"say": "^0.16.0",
 		"serialize-error": "^11.0.3",
 		"simple-git": "^3.27.0",
-		"sound-play": "^1.1.0",
 		"string-similarity": "^4.0.4",
 		"strip-ansi": "^7.1.0",
 		"strip-bom": "^5.0.0",
@@ -422,6 +421,7 @@
 		"vscode-material-icons": "^0.1.1",
 		"web-tree-sitter": "^0.22.6",
 		"workerpool": "^9.2.0",
+		"yaml": "^2.8.0",
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {

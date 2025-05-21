@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "Befehlspräfixe, die automatisch ausgeführt werden können, wenn 'Ausführungsoperationen immer genehmigen' aktiviert ist. Fügen Sie * hinzu, um alle Befehle zu erlauben (mit Vorsicht verwenden).",
 			"commandPlaceholder": "Befehlspräfix eingeben (z.B. 'git ')",
 			"addButton": "Hinzufügen"
+		},
+		"apiRequestLimit": {
+			"title": "Maximale Anfragen",
+			"description": "Automatisch so viele API-Anfragen stellen, bevor du um die Erlaubnis gebeten wirst, mit der Aufgabe fortzufahren.",
+			"unlimited": "Unbegrenzt"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "Benutzerdefiniert verwenden: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Wenn du Fragen oder Feedback hast, kannst du gerne ein Issue auf <githubLink>github.com/RooVetGit/Roo-Code</githubLink> öffnen oder <redditLink>reddit.com/r/RooCode</redditLink> oder <discordLink>discord.gg/roocode</discordLink> beitreten",
+		"feedback": "Wenn du Fragen oder Feedback hast, kannst du gerne ein Issue auf <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> öffnen oder <redditLink>reddit.com/r/RooCode</redditLink> oder <discordLink>discord.gg/roocode</discordLink> beitreten",
 		"telemetry": {
 			"label": "Anonyme Fehler- und Nutzungsberichte zulassen",
 			"description": "Helfen Sie, Roo Code zu verbessern, indem Sie anonyme Nutzungsdaten und Fehlerberichte senden. Es werden niemals Code, Prompts oder persönliche Informationen gesendet. Weitere Details finden Sie in unserer Datenschutzrichtlinie."

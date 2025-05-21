@@ -79,6 +79,11 @@
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"addButton": "追加"
+		},
+		"apiRequestLimit": {
+			"title": "最大リクエスト数",
+			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
+			"unlimited": "無制限"
 		}
 	},
 	"providers": {
@@ -463,7 +468,7 @@
 		"useCustomModel": "カスタムを使用: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "質問やフィードバックがある場合は、<githubLink>github.com/RooVetGit/Roo-Code</githubLink>で問題を開くか、<redditLink>reddit.com/r/RooCode</redditLink>や<discordLink>discord.gg/roocode</discordLink>に参加してください",
+		"feedback": "質問やフィードバックがある場合は、<githubLink>github.com/RooCodeInc/Roo-Code</githubLink>で問題を開くか、<redditLink>reddit.com/r/RooCode</redditLink>や<discordLink>discord.gg/roocode</discordLink>に参加してください",
 		"telemetry": {
 			"label": "匿名のエラーと使用状況レポートを許可",
 			"description": "匿名の使用データとエラーレポートを送信してRoo Codeの改善にご協力ください。コード、プロンプト、個人情報が送信されることはありません。詳細については、プライバシーポリシーをご覧ください。"
