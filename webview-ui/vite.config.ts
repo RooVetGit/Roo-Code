@@ -7,6 +7,37 @@ import tailwindcss from "@tailwindcss/vite"
 
 import { getGitSha } from "@roo-code/build"
 
+const wasmPlugin = (): Plugin => ({
+	name: "wasm",
+	async load(id) {
+		if (id.endsWith(".wasm")) {
+			const wasmBinary = await import(id)
+
+			return `
+          			const wasmModule = new WebAssembly.Module(${wasmBinary.default});
+          			export default wasmModule;
+        		`
+		}
+	},
+})
+
+const persistPortPlugin = (): Plugin => ({
+	name: "write-port-to-file",
+	configureServer(viteDevServer) {
+		viteDevServer?.httpServer?.once("listening", () => {
+			const address = viteDevServer?.httpServer?.address()
+			const port = address && typeof address === "object" ? address.port : null
+
+			if (port) {
+				fs.writeFileSync(resolve(__dirname, "..", ".vite-port"), port.toString())
+				console.log(`[Vite Plugin] Server started on port ${port}`)
+			} else {
+				console.warn("[Vite Plugin] Could not determine server port")
+			}
+		})
+	},
+})
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	let outDir = "../src/webview-ui/build"
@@ -78,35 +109,4 @@ export default defineConfig(({ mode }) => {
 		},
 		assetsInclude: ["**/*.wasm", "**/*.wav"],
 	}
-})
-
-const wasmPlugin = (): Plugin => ({
-	name: "wasm",
-	async load(id) {
-		if (id.endsWith(".wasm")) {
-			const wasmBinary = await import(id)
-
-			return `
-          			const wasmModule = new WebAssembly.Module(${wasmBinary.default});
-          			export default wasmModule;
-        		`
-		}
-	},
-})
-
-const persistPortPlugin = (): Plugin => ({
-	name: "write-port-to-file",
-	configureServer(viteDevServer) {
-		viteDevServer?.httpServer?.once("listening", () => {
-			const address = viteDevServer?.httpServer?.address()
-			const port = address && typeof address === "object" ? address.port : null
-
-			if (port) {
-				fs.writeFileSync(resolve(__dirname, "..", ".vite-port"), port.toString())
-				console.log(`[Vite Plugin] Server started on port ${port}`)
-			} else {
-				console.warn("[Vite Plugin] Could not determine server port")
-			}
-		})
-	},
 })
