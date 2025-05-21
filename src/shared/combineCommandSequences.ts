@@ -56,7 +56,13 @@ export function combineCommandSequences(messages: ClineMessage[]): ClineMessage[
 				j++
 			}
 
-			combinedCommands.push({ ...messages[i], text: combinedText })
+			const lastIndex = j - 1
+			const lastMessageInSequence = messages[lastIndex]
+			combinedCommands.push({
+				...messages[i],
+				text: combinedText,
+				partial: lastMessageInSequence?.partial ?? false, // Propagate partial status from the last message
+			})
 
 			// Move to the index just before the next command or end of array.
 			i = j - 1

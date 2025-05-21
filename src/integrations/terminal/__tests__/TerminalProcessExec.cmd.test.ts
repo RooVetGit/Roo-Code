@@ -87,7 +87,7 @@ async function testCmdCommand(
 		processId: Promise.resolve(123),
 		creationOptions: {},
 		exitStatus: undefined,
-		state: { isInteractedWith: true },
+		state: { isInteractedWith: true, shell: "C:\\Windows\\System32\\cmd.exe" },
 		dispose: jest.fn(),
 		hide: jest.fn(),
 		show: jest.fn(),
