@@ -1,6 +1,7 @@
 import path from "path"
 import delay from "delay"
 import * as vscode from "vscode"
+import { countFileLines } from "../../integrations/misc/line-counter"
 
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -68,6 +69,21 @@ export async function writeToFileTool(
 	// Determine if the path is outside the workspace
 	const fullPath = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
 	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
+
+	if (fileExists) {
+		// Count the lines in the file
+		const absolutePath = path.resolve(cline.cwd, relPath)
+		const lineCount = await countFileLines(absolutePath)
+		// Only show error if file has more than 25 lines
+		if (lineCount > 25) {
+			pushToolResult(
+				formatResponse.toolError(
+					`File '${relPath}' already exists and is >25 lines long, write_to_file failed: You must use the '<apply_diff>' or '<search_and_replace>' tool to change an existing file.`,
+				),
+			)
+			return
+		}
+	}
 
 	const sharedMessageProps: ClineSayTool = {
 		tool: fileExists ? "editedExistingFile" : "newFileCreated",
