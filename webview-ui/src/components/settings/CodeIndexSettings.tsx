@@ -127,6 +127,16 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		}
 	}
 
+	const progressPercentage =
+		indexingStatus.totalItems > 0
+			? (indexingStatus.processedItems / indexingStatus.totalItems) * 100
+			: indexingStatus.totalItems === 0 && indexingStatus.processedItems === 0
+				? 100
+				: 0
+
+	const transformValue = 100 - progressPercentage
+	const transformStyleString = `translateX(-${transformValue}%)`
+
 	return (
 		<>
 			<SectionHeader>
@@ -278,25 +288,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<div className="mt-4 space-y-1">
 								<ProgressPrimitive.Root
 									className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
-									value={
-										indexingStatus.totalItems > 0
-											? (indexingStatus.processedItems / indexingStatus.totalItems) * 100
-											: indexingStatus.totalItems === 0 && indexingStatus.processedItems === 0
-												? 100
-												: 0
-									}>
+									value={progressPercentage}>
 									<ProgressPrimitive.Indicator
 										className="h-full w-full flex-1 bg-primary transition-transform duration-300 ease-in-out"
 										style={{
-											transform: `translateX(-${
-												100 -
-												(indexingStatus.totalItems > 0
-													? (indexingStatus.processedItems / indexingStatus.totalItems) * 100
-													: indexingStatus.totalItems === 0 &&
-														  indexingStatus.processedItems === 0
-														? 100
-														: 0)
-											}%)`,
+											transform: transformStyleString,
 										}}
 									/>
 								</ProgressPrimitive.Root>
