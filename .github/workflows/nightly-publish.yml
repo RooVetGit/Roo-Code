@@ -34,9 +34,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Count commits
         id: count
-        run: |
-          git rev-list --count HEAD
-          echo "total=$(git rev-list --count HEAD)" >> $GITHUB_OUTPUT
+        run: echo "total=$(git rev-list --count HEAD)" >> $GITHUB_OUTPUT
       - name: Patch package.json version
         env:
           COMMIT_COUNT: ${{ steps.count.outputs.total }}
@@ -51,17 +49,13 @@ jobs:
             fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
             console.log(`🔖 Nightly version set to ${pkg.version}`);
           EOF
-      # - name: Setup upterm session
-      #   uses: lhotari/action-upterm@v1
       - name: Build VSIX
-        run: |
-          ls -al
-          pnpm build:nightly # Produces bin/roo-code-nightly-0.0.[count].vsix
+        run: pnpm build:nightly # Produces bin/roo-code-nightly-0.0.[count].vsix
       - name: Publish to VS Code Marketplace (Nightly channel)
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT_NIGHTLY }}
-        run: echo npx vsce publish --pre-release --packagePath "bin/$(/bin/ls bin | head -n1)"
+        run: npx vsce publish --pre-release --packagePath "bin/$(/bin/ls bin | head -n1)"
       - name: Publish to Open VSX
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: echo npx ovsx publish "bin/$(ls bin | head -n1)" --pre-release
+        run: npx ovsx publish "bin/$(ls bin | head -n1)" --pre-release
