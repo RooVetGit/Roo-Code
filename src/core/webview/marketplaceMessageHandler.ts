@@ -104,11 +104,7 @@ export async function handleMarketplaceMessages(
 		case "fetchMarketplaceItems": {
 			// Prevent multiple simultaneous fetches
 			if (marketplaceManager.isFetching) {
-				await provider.postMessageToWebview({
-					type: "state",
-					text: "Fetch already in progress",
-				})
-				marketplaceManager.isFetching = false
+				console.warn("Fetch already in progress")
 				return true
 			}
 
@@ -149,41 +145,29 @@ export async function handleMarketplaceMessages(
 					else if (result.errors && result.items.length === 0) {
 						const errorMessage = `Failed to load marketplace sources:\n${result.errors.join("\n")}`
 						vscode.window.showErrorMessage(errorMessage)
-						await provider.postMessageToWebview({
-							type: "state",
-							text: errorMessage,
-						})
-						marketplaceManager.isFetching = false
 					}
 
 					// The items are already stored in MarketplaceManager's currentItems
 					// No need to store in global state
 
-					// Send state to webview
+					// Is done, send state to webview
+					marketplaceManager.isFetching = false
 					await provider.postStateToWebview()
 
 					return true
 				} catch (initError) {
 					const errorMessage = `Marketplace initialization failed: ${initError instanceof Error ? initError.message : String(initError)}`
 					console.error("Error in marketplace initialization:", initError)
-					vscode.window.showErrorMessage(errorMessage)
-					await provider.postMessageToWebview({
-						type: "state",
-						text: errorMessage,
-					})
 					// The state will already be updated with empty items by MarketplaceManager
-					await provider.postStateToWebview()
+					vscode.window.showErrorMessage(errorMessage)
 					marketplaceManager.isFetching = false
+					await provider.postStateToWebview()
 					return false
 				}
 			} catch (error) {
 				const errorMessage = `Failed to fetch marketplace items: ${error instanceof Error ? error.message : String(error)}`
 				console.error("Failed to fetch marketplace items:", error)
 				vscode.window.showErrorMessage(errorMessage)
-				await provider.postMessageToWebview({
-					type: "state",
-					text: errorMessage,
-				})
 				marketplaceManager.isFetching = false
 				return false
 			}
