@@ -3,7 +3,7 @@ import * as fs from "fs"
 import * as path from "path"
 import { fileURLToPath } from "url"
 
-import { copyPaths, copyLocales, copyWasms, copyAssets } from "@roo-code/build"
+import { copyPaths, copyLocales, copyWasms } from "@roo-code/build"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -38,7 +38,16 @@ async function main() {
 			name: "copy-src",
 			setup(build) {
 				build.onEnd(() => {
-					copyPaths(["assets", "LICENSE", ".vscodeignore"], srcDir, buildDir)
+					const paths = [
+						["LICENSE", "LICENSE"],
+						[".vscodeignore", ".vscodeignore"],
+						["assets", "assets"],
+						["integrations", "integrations"],
+						["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
+						["../webview-ui/audio", "webview-ui/audio"],
+					]
+
+					copyPaths(paths, srcDir, buildDir)
 
 					let count = 0
 
@@ -85,14 +94,6 @@ async function main() {
 			setup(build) {
 				build.onEnd(() => {
 					copyLocales(srcDir, distDir)
-				})
-			},
-		},
-		{
-			name: "copy-assets",
-			setup(build) {
-				build.onEnd(() => {
-					copyAssets(srcDir, buildDir)
 				})
 			},
 		},

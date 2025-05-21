@@ -7,18 +7,24 @@ import * as path from "path"
  * @param srcDir Source directory path
  * @param dstDir Destination directory path
  */
-export function copyPaths(paths: string[], srcDir: string, dstDir: string) {
-	paths.forEach((fileOrDirectory) => {
-		const stats = fs.lstatSync(path.join(srcDir, fileOrDirectory))
+export function copyPaths(copyPaths: [string, string][], srcDir: string, dstDir: string) {
+	copyPaths.forEach(([srcRelPath, dstRelPath]) => {
+		const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
+
+		console.log(`[copy-src] ${srcRelPath} -> ${dstRelPath}`)
 
 		if (stats.isDirectory()) {
-			const directory = fileOrDirectory
-			const count = copyDir(path.join(srcDir, directory), path.join(dstDir, directory), 0)
-			console.log(`[copy-src] Copied ${count} files from ${directory} to ${dstDir}`)
+			if (fs.existsSync(path.join(dstDir, dstRelPath))) {
+				fs.rmSync(path.join(dstDir, dstRelPath), { recursive: true })
+			}
+
+			fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
+
+			const count = copyDir(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath), 0)
+			console.log(`[copy-src] Copied ${count} files from ${srcRelPath} to ${dstRelPath}`)
 		} else {
-			const file = fileOrDirectory
-			fs.copyFileSync(path.join(srcDir, file), path.join(dstDir, file))
-			console.log(`[copy-src] Copied ${file} to ${dstDir}`)
+			fs.copyFileSync(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath))
+			console.log(`[copy-src] Copied ${srcRelPath} to ${dstRelPath}`)
 		}
 	})
 }
@@ -113,37 +119,4 @@ export function copyLocales(srcDir: string, distDir: string): void {
 	fs.mkdirSync(destDir, { recursive: true })
 	const count = copyDir(path.join(srcDir, "i18n", "locales"), destDir, 0)
 	console.log(`[copy-locales-files] Copied ${count} locale files to ${destDir}`)
-}
-
-/**
- * Copies asset files to the distribution directory
- * @param srcDir Source directory path
- * @param distDir Distribution directory path
- */
-export function copyAssets(srcDir: string, distDir: string) {
-	const copyPaths = [
-		["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
-		["../webview-ui/audio", "webview-ui/audio"],
-	]
-
-	for (const [srcRelPath, dstRelPath] of copyPaths) {
-		if (!srcRelPath || !dstRelPath) {
-			throw new Error("Invalid copy path")
-		}
-
-		const from = path.join(srcDir, srcRelPath)
-		const to = path.join(distDir, dstRelPath)
-
-		if (!fs.existsSync(from)) {
-			throw new Error(`Directory does not exist: ${from}`)
-		}
-
-		if (fs.existsSync(to)) {
-			fs.rmSync(to, { recursive: true })
-		}
-
-		fs.mkdirSync(to, { recursive: true })
-		const count = copyDir(from, to, 0)
-		console.log(`[copy-assets] Copied ${count} assets: ${from} -> ${to}`)
-	}
 }
