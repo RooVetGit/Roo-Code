@@ -57,6 +57,8 @@ const commandIds = [
 	"setCustomStoragePath",
 	"focusInput",
 	"acceptInput",
+	"extension.reloadAllMcpServers",
+	"extension.toggleAllMcpServersDisabled",
 ] as const
 
 export type CommandId = (typeof commandIds)[number]
