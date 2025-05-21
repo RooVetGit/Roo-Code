@@ -5,7 +5,7 @@
 	"packageManager": "pnpm@10.8.1",
 	"scripts": {
 		"build": "rimraf build && pnpm --filter @roo-code/build build && node esbuild.mjs --production && pnpm --filter @roo-code/vscode-webview build --mode nightly",
-		"vsix": "pnpm build && cd build && npx vsce package --no-dependencies --out ../../../bin",
+		"vsix": "pnpm build && cd build && mkdirp ../../../bin && npx vsce package --no-dependencies --out ../../../bin",
 		"clean": "rimraf build"
 	},
 	"dependencies": {

@@ -1,17 +1,13 @@
 import * as fs from "fs"
 import * as path from "path"
 
-/**
- * Copies all files or directories from source to destination
- * @param paths Array of file or directory paths to copy
- * @param srcDir Source directory path
- * @param dstDir Destination directory path
- */
+import { ViewsContainer, Views, MenuItem, Menus, Configuration, contributesSchema } from "./types.js"
+
 export function copyPaths(copyPaths: [string, string][], srcDir: string, dstDir: string) {
 	copyPaths.forEach(([srcRelPath, dstRelPath]) => {
 		const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
 
-		console.log(`[copy-src] ${srcRelPath} -> ${dstRelPath}`)
+		console.log(`[copyPaths] ${srcRelPath} -> ${dstRelPath}`)
 
 		if (stats.isDirectory()) {
 			if (fs.existsSync(path.join(dstDir, dstRelPath))) {
@@ -21,21 +17,14 @@ export function copyPaths(copyPaths: [string, string][], srcDir: string, dstDir:
 			fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
 
 			const count = copyDir(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath), 0)
-			console.log(`[copy-src] Copied ${count} files from ${srcRelPath} to ${dstRelPath}`)
+			console.log(`[copyPaths] Copied ${count} files from ${srcRelPath} to ${dstRelPath}`)
 		} else {
 			fs.copyFileSync(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath))
-			console.log(`[copy-src] Copied ${srcRelPath} to ${dstRelPath}`)
+			console.log(`[copyPaths] Copied ${srcRelPath} to ${dstRelPath}`)
 		}
 	})
 }
 
-/**
- * Recursively copies files from source directory to destination directory
- * @param srcDir Source directory path
- * @param dstDir Destination directory path
- * @param count Counter for number of files copied
- * @returns Updated count of files copied
- */
 export function copyDir(srcDir: string, dstDir: string, count: number): number {
 	const entries = fs.readdirSync(srcDir, { withFileTypes: true })
 
@@ -55,11 +44,6 @@ export function copyDir(srcDir: string, dstDir: string, count: number): number {
 	return count
 }
 
-/**
- * Copies WASM files from node_modules to the distribution directory
- * @param srcDir Source directory path
- * @param distDir Distribution directory path
- */
 export function copyWasms(srcDir: string, distDir: string): void {
 	const nodeModulesDir = path.join(srcDir, "node_modules")
 
@@ -71,7 +55,7 @@ export function copyWasms(srcDir: string, distDir: string): void {
 		path.join(distDir, "tiktoken_bg.wasm"),
 	)
 
-	console.log(`[copy-wasm-files] Copied tiktoken WASMs to ${distDir}`)
+	console.log(`[copyWasms] Copied tiktoken WASMs to ${distDir}`)
 
 	// Also copy Tiktoken WASMs to the workers directory.
 	const workersDir = path.join(distDir, "workers")
@@ -82,7 +66,7 @@ export function copyWasms(srcDir: string, distDir: string): void {
 		path.join(workersDir, "tiktoken_bg.wasm"),
 	)
 
-	console.log(`[copy-wasm-files] Copied tiktoken WASMs to ${workersDir}`)
+	console.log(`[copyWasms] Copied tiktoken WASMs to ${workersDir}`)
 
 	// Main tree-sitter WASM file.
 	fs.copyFileSync(
@@ -90,7 +74,7 @@ export function copyWasms(srcDir: string, distDir: string): void {
 		path.join(distDir, "tree-sitter.wasm"),
 	)
 
-	console.log(`[copy-wasm-files] Copied tree-sitter.wasm to ${distDir}`)
+	console.log(`[copyWasms] Copied tree-sitter.wasm to ${distDir}`)
 
 	// Copy language-specific WASM files.
 	const languageWasmDir = path.join(nodeModulesDir, "tree-sitter-wasms", "out")
@@ -106,17 +90,78 @@ export function copyWasms(srcDir: string, distDir: string): void {
 		fs.copyFileSync(path.join(languageWasmDir, filename), path.join(distDir, filename))
 	})
 
-	console.log(`[copy-wasm-files] Copied ${wasmFiles.length} tree-sitter language wasms to ${distDir}`)
+	console.log(`[copyWasms] Copied ${wasmFiles.length} tree-sitter language wasms to ${distDir}`)
 }
 
-/**
- * Copies locale files to the distribution directory
- * @param srcDir Source directory path
- * @param distDir Distribution directory path
- */
 export function copyLocales(srcDir: string, distDir: string): void {
 	const destDir = path.join(distDir, "i18n", "locales")
 	fs.mkdirSync(destDir, { recursive: true })
 	const count = copyDir(path.join(srcDir, "i18n", "locales"), destDir, 0)
-	console.log(`[copy-locales-files] Copied ${count} locale files to ${destDir}`)
+	console.log(`[copyLocales] Copied ${count} locale files to ${destDir}`)
+}
+
+export function generatePackageJson({
+	packageJson: { contributes, ...packageJson },
+	overrideJson,
+	substitution,
+}: {
+	packageJson: Record<string, any>
+	overrideJson: Record<string, any>
+	substitution: [string, string]
+}) {
+	const { viewsContainers, views, commands, menus, submenus, configuration } = contributesSchema.parse(contributes)
+	const [from, to] = substitution
+
+	return {
+		...packageJson,
+		...overrideJson,
+		contributes: {
+			viewsContainers: transformArrayRecord<ViewsContainer>(viewsContainers, from, to, ["id"]),
+			views: transformArrayRecord<Views>(views, from, to, ["id"]),
+			commands: transformArray(commands, from, to, "command"),
+			menus: transformArrayRecord<Menus>(menus, from, to, ["command", "submenu", "when"]),
+			submenus: transformArray(submenus, from, to, "id"),
+			configuration: {
+				title: configuration.title,
+				properties: transformRecord<Configuration["properties"]>(configuration.properties, from, to),
+			},
+		},
+	}
+}
+
+function transformArrayRecord<T>(obj: Record<string, any[]>, from: string, to: string, props: string[]): T {
+	return Object.entries(obj).reduce(
+		(acc, [key, ary]) => ({
+			...acc,
+			[key.replace(from, to)]: ary.map((item) => {
+				const transformedItem = { ...item }
+
+				for (const prop of props) {
+					if (prop in item && typeof item[prop] === "string") {
+						transformedItem[prop] = item[prop].replace(from, to)
+					}
+				}
+
+				return transformedItem
+			}),
+		}),
+		{} as T,
+	)
+}
+
+function transformArray<T>(arr: any[], from: string, to: string, idProp: string): T[] {
+	return arr.map(({ [idProp]: id, ...rest }) => ({
+		[idProp]: id.replace(from, to),
+		...rest,
+	}))
+}
+
+function transformRecord<T>(obj: Record<string, any>, from: string, to: string): T {
+	return Object.entries(obj).reduce(
+		(acc, [key, value]) => ({
+			...acc,
+			[key.replace(from, to)]: value,
+		}),
+		{} as T,
+	)
 }

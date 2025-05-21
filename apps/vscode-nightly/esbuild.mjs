@@ -3,7 +3,7 @@ import * as fs from "fs"
 import * as path from "path"
 import { fileURLToPath } from "url"
 
-import { copyPaths, copyLocales, copyWasms } from "@roo-code/build"
+import { copyPaths, copyLocales, copyWasms, generatePackageJson } from "@roo-code/build"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -24,6 +24,10 @@ async function main() {
 		format: "cjs",
 		sourcesContent: false,
 		platform: "node",
+		define: {
+			"process.env.PKG_NAME": '"roo-code-nightly"',
+			"process.env.PKG_OUTPUT_CHANNEL": '"Roo-Code-Nightly"',
+		},
 	}
 
 	const srcDir = path.join(__dirname, "..", "..", "src")
@@ -68,16 +72,18 @@ async function main() {
 				build.onEnd(() => {
 					const packageJson = JSON.parse(fs.readFileSync(path.join(srcDir, "package.json"), "utf8"))
 
-					const packageNightlyJson = JSON.parse(
+					const overrideJson = JSON.parse(
 						fs.readFileSync(path.join(__dirname, "package.nightly.json"), "utf8"),
 					)
 
-					fs.writeFileSync(
-						path.join(buildDir, "package.json"),
-						JSON.stringify({ ...packageJson, ...packageNightlyJson }, null, 2),
-					)
+					const generatedPackageJson = generatePackageJson({
+						packageJson,
+						overrideJson,
+						substitution: ["roo-cline", "roo-code-nightly"],
+					})
 
-					console.log(`[generate-package-json] Generated package.json from package.nightly.json`)
+					fs.writeFileSync(path.join(buildDir, "package.json"), JSON.stringify(generatedPackageJson, null, 2))
+					console.log(`[generate-package-json] Generated package.json`)
 				})
 			},
 		},
