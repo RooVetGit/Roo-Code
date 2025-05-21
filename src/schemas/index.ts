@@ -104,6 +104,7 @@ export const providerNames = [
 	"groq",
 	"chutes",
 	"litellm",
+	"shengsuanyun",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -566,6 +567,11 @@ const litellmSchema = baseProviderSettingsSchema.extend({
 	litellmModelId: z.string().optional(),
 })
 
+const shengSuanYunSchema = baseProviderSettingsSchema.extend({
+	shengSuanYunApiKey: z.string().optional(),
+	shengSuanYunModelId: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -592,6 +598,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
 	chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
+	shengSuanYunSchema.merge(z.object({ apiProvider: z.literal("shengsuanyun") })),
 	defaultSchema,
 ])
 
@@ -620,6 +627,7 @@ export const providerSettingsSchema = z
 	.merge(groqSchema)
 	.merge(chutesSchema)
 	.merge(litellmSchema)
+	.merge(shengSuanYunSchema)
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
 
@@ -718,6 +726,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	litellmBaseUrl: undefined,
 	litellmApiKey: undefined,
 	litellmModelId: undefined,
+	// Sheng Suan Yun
+	shengSuanYunApiKey: undefined,
+	shengSuanYunModelId: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -914,6 +925,7 @@ export type SecretState = Pick<
 	| "unboundApiKey"
 	| "requestyApiKey"
 	| "xaiApiKey"
+	| "shengSuanYunApiKey"
 	| "groqApiKey"
 	| "chutesApiKey"
 	| "litellmApiKey"
@@ -936,6 +948,7 @@ const secretStateRecord: SecretStateRecord = {
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
 	xaiApiKey: undefined,
+	shengSuanYunApiKey: undefined,
 	groqApiKey: undefined,
 	chutesApiKey: undefined,
 	litellmApiKey: undefined,

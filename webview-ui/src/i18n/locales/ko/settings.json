@@ -125,6 +125,7 @@
 			"label": "모델 새로고침",
 			"hint": "최신 모델을 보려면 설정을 다시 열어주세요."
 		},
+		"getShengSuanYunApiKey": "Sheng Suan Yun  API 키 받기",
 		"getRequestyApiKey": "Requesty API 키 받기",
 		"openRouterTransformsText": "프롬프트와 메시지 체인을 컨텍스트 크기로 압축 (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API 키",
