@@ -53,5 +53,7 @@
 	"serverStatus": {
 		"retrying": "Retrying...",
 		"retryConnection": "Retry Connection"
-	}
+	},
+	"reloadAllServers": "Reload All MCP Servers",
+	"toggleAllServers": "Toggle All MCP Servers Enabled/Disabled"
 }

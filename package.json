@@ -169,6 +169,16 @@
 				"command": "roo.acceptInput",
 				"title": "%command.acceptInput.title%",
 				"category": "%configuration.title%"
+			},
+			{
+				"command": "extension.reloadAllMcpServers",
+				"title": "Reload All MCP Servers",
+				"icon": "$(sync)"
+			},
+			{
+				"command": "extension.toggleAllMcpServersDisabled",
+				"title": "Toggle All MCP Servers Enabled/Disabled",
+				"icon": "$(power)"
 			}
 		],
 		"menus": {

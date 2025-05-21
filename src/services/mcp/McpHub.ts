@@ -1306,4 +1306,52 @@ export class McpHub {
 		}
 		this.disposables.forEach((d) => d.dispose())
 	}
+
+	/**
+	 * Enables or disables all global MCP servers at once.
+	 * When activated, the configuration is reloaded.
+	 * @param disabled true = disable all, false = enable all
+	 */
+	public async toggleAllServersDisabled(disabled: boolean): Promise<void> {
+		// Collect all global server names
+		const allServers = this.getAllServers()
+
+		// Set the Disabled flag for all servers
+		for (const server of allServers) {
+			await this.updateServerConfig(server.name, { disabled }, server.source)
+			const conn = this.findConnection(server.name, server.source)
+			if (conn) {
+				conn.server.disabled = disabled
+			}
+		}
+
+		// If activated, reload configuration
+		if (!disabled) {
+			// Re-initialize all servers, both global and project
+			await this.initializeMcpServers("global")
+			await this.initializeMcpServers("project")
+		}
+
+		await this.notifyWebviewOfServerChanges()
+	}
+
+	/**
+	 * Restarts all currently active MCP servers.
+	 * This will trigger a popup for each server being restarted.
+	 */
+	public async restartAllMcpServers(): Promise<void> {
+		const allServers = this.getAllServers() // Get all servers, regardless of disabled state
+		const restartPromises = allServers.map(async (server) => {
+			// Only restart if not disabled
+			if (!server.disabled) {
+				try {
+					await this.restartConnection(server.name, server.source)
+				} catch (error) {
+					this.showErrorMessage(`Failed to restart MCP server ${server.name}`, error)
+				}
+			}
+		})
+		await Promise.all(restartPromises)
+		await this.notifyWebviewOfServerChanges()
+	}
 }

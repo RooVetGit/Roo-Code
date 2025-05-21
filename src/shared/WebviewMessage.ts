@@ -132,6 +132,7 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
 		| "condenseTaskContextRequest"
+		| "executeVSCodeCommand"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -161,6 +162,7 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	command?: string
 }
 
 export const checkoutDiffPayloadSchema = z.object({

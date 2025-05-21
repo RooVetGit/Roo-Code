@@ -53,5 +53,7 @@
 	"serverStatus": {
 		"retrying": "Wiederhole...",
 		"retryConnection": "Verbindung wiederholen"
-	}
+	},
+	"reloadAllServers": "Alle MCP-Server neu laden",
+	"toggleAllServers": "Alle MCP-Server aktivieren/deaktivieren"
 }

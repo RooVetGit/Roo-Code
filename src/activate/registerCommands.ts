@@ -174,6 +174,35 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 			visibleProvider.postMessageToWebview({ type: "acceptInput" })
 		},
+		"extension.reloadAllMcpServers": async () => {
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) {
+				return
+			}
+			try {
+				await visibleProvider.getMcpHub()?.restartAllMcpServers()
+			} catch (error) {
+				outputChannel.appendLine(`Failed to reload all MCP servers: ${error}`)
+				vscode.window.showErrorMessage(`Failed to reload all MCP servers: ${error}`)
+			}
+		},
+		"extension.toggleAllMcpServersDisabled": async () => {
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) {
+				return
+			}
+			try {
+				const mcpHub = visibleProvider.getMcpHub()
+				if (mcpHub) {
+					const allServers = mcpHub.getAllServers()
+					const anyEnabled = allServers.some((server) => !server.disabled)
+					await mcpHub.toggleAllServersDisabled(anyEnabled)
+				}
+			} catch (error) {
+				outputChannel.appendLine(`Failed to toggle all MCP servers: ${error}`)
+				vscode.window.showErrorMessage(`Failed to toggle all MCP servers: ${error}`)
+			}
+		},
 	}
 }
 

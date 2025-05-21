@@ -1255,5 +1255,16 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
+		case "executeVSCodeCommand": {
+			if (message.command) {
+				try {
+					await vscode.commands.executeCommand(message.command)
+				} catch (error) {
+					provider.log(`Failed to execute VS Code command ${message.command}: ${error}`)
+					vscode.window.showErrorMessage(`Failed to execute command: ${message.command}`)
+				}
+			}
+			break
+		}
 	}
 }
