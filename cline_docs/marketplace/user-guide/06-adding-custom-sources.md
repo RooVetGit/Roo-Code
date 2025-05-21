@@ -60,7 +60,7 @@ Once you have a properly structured source repository, you can add it to your Ro
 
 Roo Code comes with a default package source:
 
-- URL: `https://github.com/RooVetGit/Roo-Code-Marketplace`
+- URL: `https://github.com/RooCodeInc/Roo-Code-Marketplace`
 - This source is enabled by default, and anytime all sources have been deleted.
 
 ### Adding a New Source

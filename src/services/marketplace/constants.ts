@@ -5,7 +5,7 @@
 /**
  * Default marketplace repository URL
  */
-export const DEFAULT_PACKAGE_MANAGER_REPO_URL = "https://github.com/RooVetGit/Roo-Code-Marketplace"
+export const DEFAULT_PACKAGE_MANAGER_REPO_URL = "https://github.com/RooCodeInc/Roo-Code-Marketplace"
 
 /**
  * Default marketplace repository name

@@ -37,7 +37,7 @@ The Marketplace provides the following key features:
 ## Default Marketplace Repository
 
 The default Marketplace repository is located at:
-[https://github.com/RooVetGit/Roo-Code-Marketplace](https://github.com/RooVetGit/Roo-Code-Marketplace)
+[https://github.com/RooCodeInc/Roo-Code-Marketplace](https://github.com/RooCodeInc/Roo-Code-Marketplace)
 
 ## Contributing
 

@@ -13,7 +13,7 @@ describe("MetadataScanner External References", () => {
 		const gitFetcher = new GitFetcher(mockContext)
 
 		// Fetch the marketplace repository
-		const repoUrl = "https://github.com/RooVetGit/Roo-Code-Marketplace"
+		const repoUrl = "https://github.com/RooCodeInc/Roo-Code-Marketplace"
 		const repo = await gitFetcher.fetchRepository(repoUrl)
 
 		// Find the Project Manager package

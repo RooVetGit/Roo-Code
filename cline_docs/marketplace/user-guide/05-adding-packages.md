@@ -97,7 +97,7 @@ To contribute your package to the official repository, follow these steps:
 
 ### 1. Fork the Repository
 
-1. Visit the official Roo Code Packages repository: [https://github.com/RooVetGit/Roo-Code-Marketplace](https://github.com/RooVetGit/Roo-Code-Marketplace)
+1. Visit the official Roo Code Packages repository: [https://github.com/RooCodeInc/Roo-Code-Marketplace](https://github.com/RooCodeInc/Roo-Code-Marketplace)
 2. Click the "Fork" button in the top-right corner
 3. This creates your own copy of the repository where you can make changes
 
@@ -149,7 +149,7 @@ git push origin main
 
 ### 6. Create a Pull Request
 
-1. Go to the original repository: [https://github.com/RooVetGit/Roo-Code-Marketplace](https://github.com/RooVetGit/Roo-Code-Marketplace)
+1. Go to the original repository: [https://github.com/RooCodeInc/Roo-Code-Marketplace](https://github.com/RooCodeInc/Roo-Code-Marketplace)
 2. Click "Pull Requests" and then "New Pull Request"
 3. Click "Compare across forks"
 4. Select your fork as the head repository

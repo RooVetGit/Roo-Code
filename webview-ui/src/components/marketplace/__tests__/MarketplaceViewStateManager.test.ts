@@ -82,7 +82,7 @@ describe("MarketplaceViewStateManager", () => {
 			const state = manager.getState()
 			expect(state.sources).toEqual([
 				{
-					url: "https://github.com/RooVetGit/Roo-Code-Marketplace",
+					url: "https://github.com/RooCodeInc/Roo-Code-Marketplace",
 					name: "Roo Code",
 					enabled: true,
 				},
@@ -93,7 +93,7 @@ describe("MarketplaceViewStateManager", () => {
 				type: "marketplaceSources",
 				sources: [
 					{
-						url: "https://github.com/RooVetGit/Roo-Code-Marketplace",
+						url: "https://github.com/RooCodeInc/Roo-Code-Marketplace",
 						name: "Roo Code",
 						enabled: true,
 					},
@@ -896,7 +896,7 @@ describe("MarketplaceViewStateManager", () => {
 				type: "marketplaceSources",
 				sources: [
 					{
-						url: "https://github.com/RooVetGit/Roo-Code-Marketplace",
+						url: "https://github.com/RooCodeInc/Roo-Code-Marketplace",
 						name: "Roo Code",
 						enabled: true,
 					},
@@ -1128,7 +1128,7 @@ describe("MarketplaceViewStateManager", () => {
 		it("should restore sources from marketplaceSources on webview launch", () => {
 			const savedSources = [
 				{
-					url: "https://github.com/RooVetGit/Roo-Code-Marketplace",
+					url: "https://github.com/RooCodeInc/Roo-Code-Marketplace",
 					name: "Roo Code",
 					enabled: true,
 				},
