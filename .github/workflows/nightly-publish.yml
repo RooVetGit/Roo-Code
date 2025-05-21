@@ -39,7 +39,7 @@ jobs:
         run: |
           node <<'EOF'
             const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('apps/vscode-nightly/package.json','utf8'));
+            const pkg = JSON.parse(fs.readFileSync('apps/vscode-nightly/package.nightly.json','utf8'));
             const [maj, min] = pkg.version.split('.');
             pkg.version = `${maj}.${min}.${process.env.COMMIT_COUNT}`;
             fs.writeFileSync('apps/vscode-nightly/package.json', JSON.stringify(pkg, null, 2));
