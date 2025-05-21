@@ -85,7 +85,7 @@ const sectionNames = [
 	"contextManagement",
 	"terminal",
 	"experimental",
-  "codeIndex",
+	"codeIndex",
 	"language",
 	"about",
 ] as const
@@ -372,7 +372,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "contextManagement", icon: Database },
 			{ id: "terminal", icon: SquareTerminal },
 			{ id: "experimental", icon: FlaskConical },
-      { id: "codeIndex", icon: Database },
+			{ id: "codeIndex", icon: Database },
 			{ id: "language", icon: Globe },
 			{ id: "about", icon: Info },
 		],
@@ -653,16 +653,17 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						/>
 					)}
           
-          {/* CodeIndex Section */}
-          {activeTab === "codeIndex" && (
-            <CodeIndexSettings
-              codebaseIndexModels={codebaseIndexModels}
-              codebaseIndexConfig={codebaseIndexConfig}
-              apiConfiguration={apiConfiguration}
-              setApiConfigurationField={setApiConfigurationField}
-              setCachedStateField={setCachedStateField}
-            />
-          )}
+					{/* CodeIndex Section */}
+					{activeTab === "codeIndex" && (
+						<CodeIndexSettings
+							codebaseIndexModels={codebaseIndexModels}
+							codebaseIndexConfig={codebaseIndexConfig}
+							apiConfiguration={apiConfiguration}
+							setApiConfigurationField={setApiConfigurationField}
+							setCachedStateField={setCachedStateField}
+							areSettingsCommitted={!isChangeDetected}
+						/>
+					)}
 
 					{/* Language Section */}
 					{activeTab === "language" && (

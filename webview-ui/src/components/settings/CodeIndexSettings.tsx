@@ -29,6 +29,7 @@ interface CodeIndexSettingsProps {
 	apiConfiguration: ProviderSettings
 	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
 	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
+	areSettingsCommitted: boolean
 }
 
 interface IndexingStatusUpdateMessage {
@@ -48,6 +49,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	apiConfiguration,
 	setCachedStateField,
 	setApiConfigurationField,
+	areSettingsCommitted,
 }) => {
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
@@ -96,7 +98,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		if (!config) return false
 
 		const baseSchema = z.object({
-			codebaseIndexQdrantUrl: z.string().min(1, "Qdrant URL is required"),
+			codebaseIndexQdrantUrl: z.string().url("Qdrant URL must be a valid URL"),
 			codebaseIndexEmbedderModelId: z.string().min(1, "Model ID is required"),
 		})
 
@@ -107,7 +109,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			}),
 			ollama: baseSchema.extend({
 				codebaseIndexEmbedderProvider: z.literal("ollama"),
-				codebaseIndexEmbedderBaseUrl: z.string().min(1, "Ollama URL is required"),
+				codebaseIndexEmbedderBaseUrl: z.string().url("Ollama URL must be a valid URL"),
 			}),
 		}
 
@@ -230,7 +232,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 						<div className="space-y-2">
 							<VSCodeTextField
-								value={codebaseIndexConfig.codebaseIndexQdrantUrl || "http://localhost:6333"}
+								value={codebaseIndexConfig.codebaseIndexQdrantUrl}
 								onInput={(e: any) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
@@ -305,7 +307,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							{(indexingStatus.systemStatus === "Error" || indexingStatus.systemStatus === "Standby") && (
 								<VSCodeButton
 									onClick={() => vscode.postMessage({ type: "startIndexing" })}
-									disabled={!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)}>
+									disabled={
+										!areSettingsCommitted ||
+										!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
+									}>
 									Start Indexing
 								</VSCodeButton>
 							)}
