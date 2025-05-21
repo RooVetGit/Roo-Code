@@ -632,16 +632,20 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 								sourceFileForMissing,
 							)
 							if (sourceContent) {
-								const issues = checkMissingTranslations(sourceContent, {}) // Get all keys
-								bufferLog(`        Missing keys: ALL KEYS (${issues.length} total)`)
-								if (options?.verbose && issues.length > 0) {
+								let issues = checkMissingTranslations(sourceContent, {}) // Get all keys
+								// Filter out issues where the source value is an object
+								const primitiveIssues = issues.filter(
+									(issue) => typeof issue.sourceValue !== "object" || issue.sourceValue === null,
+								)
+								bufferLog(`        Missing keys: ALL KEYS (${primitiveIssues.length} total)`)
+								if (options?.verbose && primitiveIssues.length > 0) {
 									let displayKeyPrefix = ""
 									if (mapping.displayNamespace) {
 										displayKeyPrefix = mapping.displayNamespace + ":"
 									} else if (mapping.useFilenameAsNamespace) {
 										displayKeyPrefix = path.basename(sourceFileForMissing, ".json") + ":"
 									}
-									issues
+									primitiveIssues
 										.sort((a, b) =>
 											escapeDotsForDisplay(a.key).localeCompare(escapeDotsForDisplay(b.key)),
 										)
