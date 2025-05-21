@@ -4,7 +4,9 @@ import type { ExtensionContext, Uri } from "vscode"
 import { ServerConfigSchema } from "../McpHub"
 
 const fs = require("fs/promises")
-const { McpHub } = require("../McpHub")
+const { McpHub } = jest.requireActual("../McpHub") // Use requireActual to get the real module
+
+let originalConsoleError: typeof console.error = console.error // Store original console methods globally
 
 jest.mock("vscode", () => ({
 	workspace: {
@@ -30,17 +32,39 @@ jest.mock("vscode", () => ({
 jest.mock("fs/promises")
 jest.mock("../../../core/webview/ClineProvider")
 
+// Mock the McpHub module itself
+jest.mock("../McpHub", () => {
+	const originalModule = jest.requireActual("../McpHub")
+	return {
+		__esModule: true,
+		...originalModule,
+		McpHub: jest.fn().mockImplementation((provider) => {
+			const instance = new originalModule.McpHub(provider)
+			// Spy on private methods
+			jest.spyOn(instance, "updateServerConfig" as any).mockResolvedValue(undefined)
+			jest.spyOn(instance, "findConnection" as any).mockReturnValue({ server: { disabled: false } } as any)
+			jest.spyOn(instance, "initializeMcpServers" as any).mockResolvedValue(undefined)
+			jest.spyOn(instance, "notifyWebviewOfServerChanges" as any).mockResolvedValue(undefined)
+			jest.spyOn(instance, "restartConnection" as any).mockResolvedValue(undefined)
+			jest.spyOn(instance, "showErrorMessage" as any).mockImplementation(jest.fn())
+			jest.spyOn(instance, "getAllServers" as any).mockReturnValue([
+				{ name: "server1", source: "global", disabled: false, config: "{}", status: "connected" },
+				{ name: "server2", source: "project", disabled: false, config: "{}", status: "connected" },
+			])
+			return instance
+		}),
+	}
+})
+
 describe("McpHub", () => {
 	let mcpHub: McpHubType
 	let mockProvider: Partial<ClineProvider>
-
-	// Store original console methods
-	const originalConsoleError = console.error
 
 	beforeEach(() => {
 		jest.clearAllMocks()
 
 		// Mock console.error to suppress error messages during tests
+		originalConsoleError = console.error // Store original before mocking
 		console.error = jest.fn()
 
 		const mockUri: Uri = {
@@ -317,6 +341,136 @@ describe("McpHub", () => {
 		})
 	})
 
+	describe("toggleAllServersDisabled", () => {
+		it("should disable all servers when passed true", async () => {
+			const mockConnections: McpConnection[] = [
+				{
+					server: {
+						name: "server1",
+						config: "{}",
+						status: "connected",
+						disabled: false,
+					},
+					client: {} as any,
+					transport: {} as any,
+				},
+				{
+					server: {
+						name: "server2",
+						config: "{}",
+						status: "connected",
+						disabled: false,
+					},
+					client: {} as any,
+					transport: {} as any,
+				},
+			]
+			mcpHub.connections = mockConnections
+
+			// Mock fs.readFile to return a config with both servers enabled
+			;(fs.readFile as jest.Mock).mockResolvedValueOnce(
+				JSON.stringify({
+					mcpServers: {
+						server1: { disabled: false },
+						server2: { disabled: false },
+					},
+				}),
+			)
+
+			await mcpHub.toggleAllServersDisabled(true)
+
+			// Verify that both servers are now disabled in the connections
+			expect(mcpHub.connections[0].server.disabled).toBe(true)
+			expect(mcpHub.connections[1].server.disabled).toBe(true)
+
+			// Mock fs.readFile and fs.writeFile to track config changes
+			let currentConfig = JSON.stringify({
+				mcpServers: {
+					server1: { disabled: false },
+					server2: { disabled: false },
+				},
+			})
+			;(fs.readFile as jest.Mock).mockImplementation(async () => currentConfig)
+			;(fs.writeFile as jest.Mock).mockImplementation(async (path, data) => {
+				currentConfig = data
+			})
+
+			await mcpHub.toggleAllServersDisabled(true)
+
+			// Verify that both servers are now disabled in the connections
+			expect(mcpHub.connections[0].server.disabled).toBe(true)
+			expect(mcpHub.connections[1].server.disabled).toBe(true)
+
+			// Verify that fs.writeFile was called to persist the changes
+			const writtenConfig = JSON.parse(currentConfig)
+			expect(writtenConfig.mcpServers.server1.disabled).toBe(true)
+			expect(writtenConfig.mcpServers.server2.disabled).toBe(true)
+
+			// Verify that postMessageToWebview was called
+			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "mcpServers",
+				}),
+			)
+		})
+
+		it("should enable all servers when passed false", async () => {
+			const mockConnections: McpConnection[] = [
+				{
+					server: {
+						name: "server1",
+						config: "{}",
+						status: "connected",
+						disabled: true,
+					},
+					client: {} as any,
+					transport: {} as any,
+				},
+				{
+					server: {
+						name: "server2",
+						config: "{}",
+						status: "connected",
+						disabled: true,
+					},
+					client: {} as any,
+					transport: {} as any,
+				},
+			]
+			mcpHub.connections = mockConnections
+
+			// Mock fs.readFile to return a config with both servers disabled
+			let currentConfig = JSON.stringify({
+				mcpServers: {
+					server1: { disabled: true },
+					server2: { disabled: true },
+				},
+			})
+			;(fs.readFile as jest.Mock).mockImplementation(async () => currentConfig)
+			;(fs.writeFile as jest.Mock).mockImplementation(async (path, data) => {
+				currentConfig = data
+			})
+
+			await mcpHub.toggleAllServersDisabled(false)
+
+			// Verify that both servers are now enabled in the connections
+			expect(mcpHub.connections[0].server.disabled).toBe(false)
+			expect(mcpHub.connections[1].server.disabled).toBe(false)
+
+			// Verify that fs.writeFile was called to persist the changes
+			const writtenConfig = JSON.parse(currentConfig)
+			expect(writtenConfig.mcpServers.server1.disabled).toBe(false)
+			expect(writtenConfig.mcpServers.server2.disabled).toBe(false)
+
+			// Verify that postMessageToWebview was called
+			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "mcpServers",
+				}),
+			)
+		})
+	})
+
 	describe("callTool", () => {
 		it("should execute tool successfully", async () => {
 			// Mock the connection with a minimal client implementation
@@ -558,6 +712,131 @@ describe("McpHub", () => {
 					}),
 				)
 			})
+		})
+	})
+
+	describe("restartAllMcpServers", () => {
+		let mcpHub: McpHubType
+		let mockProvider: Partial<ClineProvider>
+
+		beforeEach(() => {
+			jest.clearAllMocks()
+			// Mock console.error to suppress error messages during tests
+			originalConsoleError = console.error // Store original before mocking
+			console.error = jest.fn()
+
+			const mockUri: Uri = {
+				scheme: "file",
+				authority: "",
+				path: "/test/path",
+				query: "",
+				fragment: "",
+				fsPath: "/test/path",
+				with: jest.fn(),
+				toJSON: jest.fn(),
+			}
+
+			mockProvider = {
+				ensureSettingsDirectoryExists: jest.fn().mockResolvedValue("/mock/settings/path"),
+				ensureMcpServersDirectoryExists: jest.fn().mockResolvedValue("/mock/settings/path"),
+				postMessageToWebview: jest.fn(),
+				context: {
+					subscriptions: [],
+					workspaceState: {} as any,
+					globalState: {} as any,
+					secrets: {} as any,
+					extensionUri: mockUri,
+					extensionPath: "/test/path",
+					storagePath: "/test/storage",
+					globalStoragePath: "/test/global-storage",
+					environmentVariableCollection: {} as any,
+					extension: {
+						id: "test-extension",
+						extensionUri: mockUri,
+						extensionPath: "/test/path",
+						extensionKind: 1,
+						isActive: true,
+						packageJSON: {
+							version: "1.0.0",
+						},
+						activate: jest.fn(),
+						exports: undefined,
+					} as any,
+					asAbsolutePath: (path: string) => path,
+					storageUri: mockUri,
+					globalStorageUri: mockUri,
+					logUri: mockUri,
+					extensionMode: 1,
+					logPath: "/test/path",
+					languageModelAccessInformation: {} as any,
+				} as ExtensionContext,
+			}
+
+			// Mock fs.readFile for initial settings
+			;(fs.readFile as jest.Mock).mockResolvedValue(
+				JSON.stringify({
+					mcpServers: {
+						"test-server": {
+							type: "stdio",
+							command: "node",
+							args: ["test.js"],
+							alwaysAllow: ["allowed-tool"],
+						},
+					},
+				}),
+			)
+
+			mcpHub = new McpHub(mockProvider as ClineProvider)
+			jest.spyOn(mcpHub as any, "showErrorMessage").mockImplementation(jest.fn())
+
+			// Mock internal methods
+			jest.spyOn(mcpHub, "getAllServers" as any).mockReturnValue([
+				{ name: "server1", source: "global", disabled: false },
+				{ name: "server2", source: "project", disabled: true }, // Disabled server
+				{ name: "server3", source: "global", disabled: false },
+			])
+			jest.spyOn(mcpHub, "restartConnection" as any).mockResolvedValue(undefined)
+			jest.spyOn(mcpHub as any, "notifyWebviewOfServerChanges").mockResolvedValue(undefined)
+		})
+
+		afterEach(() => {
+			// Restore original console methods
+			console.error = originalConsoleError
+			jest.restoreAllMocks() // Clean up spies
+		})
+
+		it("should restart only active servers", async () => {
+			await mcpHub.restartAllMcpServers()
+
+			expect(mcpHub.getAllServers).toHaveBeenCalled()
+			expect(mcpHub.restartConnection).toHaveBeenCalledTimes(2) // Only server1 and server3 should be restarted
+			expect(mcpHub.restartConnection).toHaveBeenCalledWith("server1", "global")
+			expect(mcpHub.restartConnection).not.toHaveBeenCalledWith("server2", "project")
+			expect(mcpHub.restartConnection).toHaveBeenCalledWith("server3", "global")
+			expect((mcpHub as any).notifyWebviewOfServerChanges).toHaveBeenCalledTimes(1)
+		})
+
+		it("should call showErrorMessage if a restart fails", async () => {
+			jest.spyOn(mcpHub, "restartConnection" as any).mockRejectedValueOnce(new Error("Restart failed"))
+
+			await mcpHub.restartAllMcpServers()
+
+			expect(mcpHub.getAllServers).toHaveBeenCalled()
+			expect(mcpHub.restartConnection).toHaveBeenCalledTimes(2) // Only active servers are attempted to restart
+			expect((mcpHub as any).showErrorMessage).toHaveBeenCalledTimes(1)
+			expect((mcpHub as any).showErrorMessage).toHaveBeenCalledWith(
+				"Failed to restart MCP server server1",
+				expect.any(Error),
+			)
+			expect((mcpHub as any).notifyWebviewOfServerChanges).toHaveBeenCalledTimes(1)
+		})
+
+		it("should call notifyWebviewOfServerChanges even if some restarts fail", async () => {
+			jest.spyOn(mcpHub, "restartConnection").mockRejectedValue(new Error("Restart failed"))
+
+			await mcpHub.restartAllMcpServers()
+
+			expect((mcpHub as any).notifyWebviewOfServerChanges).toHaveBeenCalledTimes(1)
 		})
 	})
 })
