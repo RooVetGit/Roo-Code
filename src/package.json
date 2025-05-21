@@ -161,16 +161,6 @@
 				"category": "%configuration.title%"
 			}
 		],
-		"submenus": [
-			{
-				"id": "roo-cline.contextMenu",
-				"label": "%views.contextMenu.label%"
-			},
-			{
-				"id": "roo-cline.terminalMenu",
-				"label": "%views.terminalMenu.label%"
-			}
-		],
 		"menus": {
 			"editor/context": [
 				{
