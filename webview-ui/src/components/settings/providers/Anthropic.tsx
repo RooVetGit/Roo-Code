@@ -17,7 +17,9 @@ type AnthropicProps = {
 export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: AnthropicProps) => {
 	const { t } = useAppTranslation()
 
-	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
+	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(
+		typeof apiConfiguration?.anthropicBaseUrl === "string" && apiConfiguration.anthropicBaseUrl !== "",
+	)
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(

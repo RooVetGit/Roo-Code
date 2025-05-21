@@ -108,7 +108,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 	)
 
 	const enabledActionsList = Object.entries(toggles)
-		.filter(([_key, value]) => !!value)
+		.filter(([_key, value]) => value === true)
 		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
 		.join(", ")
 

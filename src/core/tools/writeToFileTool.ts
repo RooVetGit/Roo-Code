@@ -123,7 +123,7 @@ export async function writeToFileTool(
 				const isNewFile = !fileExists
 
 				// Check if diffStrategy is enabled
-				const diffStrategyEnabled = !!cline.diffStrategy
+				const diffStrategyEnabled = cline.diffStrategy !== undefined
 
 				// Use more specific error message for line_count that provides guidance based on the situation
 				await cline.say(

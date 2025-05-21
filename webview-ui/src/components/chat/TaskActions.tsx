@@ -26,7 +26,7 @@ export const TaskActions = ({ item, buttonsDisabled, handleCondenseContext }: Ta
 				disabled={buttonsDisabled}
 				onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
 			/>
-			{!!item?.size && item.size > 0 && (
+			{item?.size !== undefined && item.size > 0 && (
 				<>
 					<IconButton
 						iconClass="codicon-fold"

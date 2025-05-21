@@ -166,7 +166,9 @@ describe("OpenAiHandler", () => {
 			const reasoningHandler = new OpenAiHandler(reasoningOptions)
 			const stream = reasoningHandler.createMessage(systemPrompt, messages)
 			// Consume the stream to trigger the API call
-			for await (const _chunk of stream) {
+			for await (const chunk of stream) {
+				// Intentionally consuming stream
+				console.debug("Consuming stream chunk in openai.test.ts reasoningHandler", chunk)
 			}
 			// Assert the mockCreate was called with reasoning_effort
 			expect(mockCreate).toHaveBeenCalled()
@@ -183,7 +185,9 @@ describe("OpenAiHandler", () => {
 			const noReasoningHandler = new OpenAiHandler(noReasoningOptions)
 			const stream = noReasoningHandler.createMessage(systemPrompt, messages)
 			// Consume the stream to trigger the API call
-			for await (const _chunk of stream) {
+			for await (const chunk of stream) {
+				// Intentionally consuming stream
+				console.debug("Consuming stream chunk in openai.test.ts noReasoningHandler", chunk)
 			}
 			// Assert the mockCreate was called without reasoning_effort
 			expect(mockCreate).toHaveBeenCalled()

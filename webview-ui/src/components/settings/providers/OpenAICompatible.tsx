@@ -24,8 +24,12 @@ type OpenAICompatibleProps = {
 export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }: OpenAICompatibleProps) => {
 	const { t } = useAppTranslation()
 
-	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
-	const [openAiLegacyFormatSelected, setOpenAiLegacyFormatSelected] = useState(!!apiConfiguration?.openAiLegacyFormat)
+	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(
+		typeof apiConfiguration?.azureApiVersion === "string" && apiConfiguration.azureApiVersion !== "",
+	)
+	const [openAiLegacyFormatSelected, setOpenAiLegacyFormatSelected] = useState(
+		apiConfiguration?.openAiLegacyFormat === true,
+	)
 
 	const [openAiModels, setOpenAiModels] = useState<Record<string, ModelInfo> | null>(null)
 
@@ -231,7 +235,7 @@ export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }:
 					}}>
 					{t("settings:providers.setReasoningLevel")}
 				</Checkbox>
-				{!!apiConfiguration.enableReasoningEffort && (
+				{apiConfiguration.enableReasoningEffort === true && (
 					<ReasoningEffort
 						apiConfiguration={{
 							...apiConfiguration,

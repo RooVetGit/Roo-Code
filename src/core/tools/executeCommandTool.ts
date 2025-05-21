@@ -169,7 +169,9 @@ export async function executeCommand(
 					message = { text, images }
 					process.continue()
 				}
-			} catch (_error) {}
+			} catch (error) {
+				console.warn("Error processing data in executeCommandTool onData:", error)
+			}
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
@@ -195,7 +197,12 @@ export async function executeCommand(
 		}
 	}
 
-	const terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId, terminalProvider)
+	const terminal = await TerminalRegistry.getOrCreateTerminal(
+		workingDir,
+		typeof customCwd === "string" && customCwd !== "",
+		cline.taskId,
+		terminalProvider,
+	)
 
 	if (terminal instanceof Terminal) {
 		terminal.terminal.show(true)

@@ -801,7 +801,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	public hasProviderProfileEntry(name: string): boolean {
-		return !!this.getProviderProfileEntry(name)
+		return this.getProviderProfileEntry(name) !== undefined
 	}
 
 	async upsertProviderProfile(
@@ -1598,7 +1598,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Add isSubtask property that indicates whether this task is a subtask
 		if (currentCline) {
-			properties.isSubtask = !!currentCline.parentTask
+			properties.isSubtask = currentCline.parentTask !== undefined
 		}
 
 		return properties

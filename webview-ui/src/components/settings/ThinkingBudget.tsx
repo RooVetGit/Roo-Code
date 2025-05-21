@@ -17,7 +17,8 @@ interface ThinkingBudgetProps {
 export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, modelInfo }: ThinkingBudgetProps) => {
 	const { t } = useAppTranslation()
 
-	const isThinkingModel = !!modelInfo && !!modelInfo.thinking && !!modelInfo.maxTokens
+	const isThinkingModel =
+		modelInfo !== undefined && modelInfo.thinking === true && typeof modelInfo.maxTokens === "number"
 
 	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_MAX_OUTPUT_TOKENS
 	const customMaxThinkingTokens = apiConfiguration.modelMaxThinkingTokens || DEFAULT_MAX_THINKING_TOKENS

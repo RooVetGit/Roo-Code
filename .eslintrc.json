@@ -19,7 +19,10 @@
 		"@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
 		"eqeqeq": "warn",
 		"no-throw-literal": "warn",
-		"semi": "off"
+		"semi": "off",
+		"no-implicit-coercion": "error",
+		"no-empty": "error",
+		"no-useless-catch": "error"
 	},
 	"ignorePatterns": ["out", "dist", "**/*.d.ts", "!roo-code.d.ts"]
 }
