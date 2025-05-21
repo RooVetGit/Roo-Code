@@ -47,6 +47,9 @@
 		],
 		"e2e/**/*.{ts,tsx}": [
 			"npx eslint -c src/.eslintrc.json --max-warnings=0 --fix"
+		],
+		"{apps,packages}/**/*.{ts,tsx}": [
+			"npx eslint --max-warnings=0 --fix"
 		]
 	}
 }
