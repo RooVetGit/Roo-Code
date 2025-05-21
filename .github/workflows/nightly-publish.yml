@@ -43,14 +43,16 @@ jobs:
         run: |
           node <<'EOF'
             const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('apps/vscode-nightly/package.nightly.json','utf8'));
+            const path = require('path');
+            const pkgPath = path.join(__dirname, 'apps', 'vscode-nightly', 'package.nightly.json');
+            const pkg = JSON.parse(fs.readFileSync(pkgPath,'utf8'));
             const [maj, min] = pkg.version.split('.');
             pkg.version = `${maj}.${min}.${process.env.COMMIT_COUNT}`;
-            fs.writeFileSync('apps/vscode-nightly/package.json', JSON.stringify(pkg, null, 2));
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
             console.log(`🔖 Nightly version set to ${pkg.version}`);
           EOF
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
       - name: Build VSIX
         run: |
           ls -al
