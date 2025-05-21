@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Door Roo geopende tabbladen automatisch sluiten",
 				"description": "Indien ingeschakeld, sluit Roo automatisch alle tabbladen die het zelf heeft geopend (zoals diff-weergaven, geopende bestanden) wanneer een taak met bestandswijzigingen wordt voltooid of teruggedraaid."
+			},
+			"autoCloseAll": {
+				"label": "Sluit automatisch alle tabbladen die door Roo zijn aangeraakt",
+				"description": "Indien ingeschakeld (en de bovenstaande instelling is ook ingeschakeld), sluit Roo automatisch alle tabbladen waarmee het heeft geïnterageerd tijdens een taak voor bestandsaanpassing, inclusief de tabbladen die al open waren voordat de taak begon."
 			}
 		}
 	},

@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Tanca automàticament les pestanyes de Roo",
 				"description": "Quan està activat, Roo tancarà automàticament les pestanyes que hagi obert (com les vistes de diferències i els fitxers oberts) quan una tasca que impliqui modificació de fitxers es completi o es reverteixi."
+			},
+			"autoCloseAll": {
+				"label": "Tancar automàticament totes les pestanyes tocades per Roo",
+				"description": "Quan està activat (i la configuració anterior també està activada), Roo tancarà totes les pestanyes amb les quals va interactuar durant una tasca de modificació de fitxers, incloses aquelles que ja estaven obertes abans que comencés la tasca."
 			}
 		}
 	},

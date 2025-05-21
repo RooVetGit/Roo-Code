@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Chiudi automaticamente le schede Roo",
 				"description": "Quando abilitato, Roo chiuderà automaticamente le schede che ha aperto (come viste diff e file aperti) quando un'attività che coinvolge la modifica di file viene completata o annullata."
+			},
+			"autoCloseAll": {
+				"label": "Chiudi automaticamente tutte le schede toccate da Roo",
+				"description": "Quando abilitato (e anche l'impostazione precedente è abilitata), Roo chiuderà tutte le schede con cui ha interagito durante un'attività di modifica dei file, incluse quelle che erano già aperte prima dell'inizio dell'attività."
 			}
 		}
 	},

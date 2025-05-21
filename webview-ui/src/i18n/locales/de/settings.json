@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Roo-Tabs automatisch schließen",
 				"description": "Wenn aktiviert, schließt Roo automatisch alle Tabs, die es selbst geöffnet hat (wie Diff-Ansichten und geöffnete Dateien), wenn eine Aufgabe mit Dateiänderungen abgeschlossen oder zurückgesetzt wird."
+			},
+			"autoCloseAll": {
+				"label": "Alle von Roo berührten Tabs automatisch schließen",
+				"description": "Wenn aktiviert (und die obige Einstellung ebenfalls aktiviert ist), schließt Roo alle Tabs, mit denen es während einer Dateiänderungsaufgabe interagiert hat, einschließlich derjenigen, die bereits vor Beginn der Aufgabe geöffnet waren."
 			}
 		}
 	},

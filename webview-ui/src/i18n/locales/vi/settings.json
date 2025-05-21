@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Tự động đóng các tab Roo",
 				"description": "Khi bật, Roo sẽ tự động đóng các tab nó đã mở (như chế độ xem diff, các tệp đã mở) khi một tác vụ liên quan đến sửa đổi tệp hoàn thành hoặc được hoàn tác."
+			},
+			"autoCloseAll": {
+				"label": "Tự động đóng tất cả các tab mà Roo đã chạm vào",
+				"description": "Khi được bật (và cài đặt ở trên cũng được bật), Roo sẽ tự động đóng tất cả các tab mà nó đã tương tác trong quá trình sửa đổi tệp, bao gồm cả những tab đã mở trước khi tác vụ bắt đầu."
 			}
 		}
 	},

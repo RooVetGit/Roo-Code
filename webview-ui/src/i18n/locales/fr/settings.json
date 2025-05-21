@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Fermer automatiquement les onglets Roo",
 				"description": "Lorsqu'activé, Roo fermera automatiquement les onglets qu'il a ouverts (vues de différences, fichiers ouverts) lorsqu'une tâche impliquant une modification de fichiers est terminée ou annulée."
+			},
+			"autoCloseAll": {
+				"label": "Fermer automatiquement tous les onglets touchés par Roo",
+				"description": "Lorsqu'activé (et que le paramètre ci-dessus est également activé), Roo fermera tous les onglets avec lesquels il a interagi lors d'une tâche de modification de fichier, y compris ceux qui étaient déjà ouverts avant le début de la tâche."
 			}
 		}
 	},

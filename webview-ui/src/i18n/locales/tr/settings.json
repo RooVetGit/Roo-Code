@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Roo'nun açtığı sekmeleri otomatik kapat",
 				"description": "Etkinleştirildiğinde, Roo dosya değişikliği içeren bir görev tamamlandığında veya geri alındığında açtığı sekmeleri (ör. diff görünümleri, açılan dosyalar) otomatik olarak kapatacaktır."
+			},
+			"autoCloseAll": {
+				"label": "Roo'nun dokunduğu tüm sekmeleri otomatik kapat",
+				"description": "Etkinleştirildiğinde (ve yukarıdaki ayar da etkinleştirildiğinde), Roo bir dosya değiştirme görevi sırasında etkileşimde bulunduğu tüm sekmeleri (görev başlamadan önce zaten açık olanlar dahil) otomatik olarak kapatır."
 			}
 		}
 	},

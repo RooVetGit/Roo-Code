@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Fechar automaticamente as abas do Roo",
 				"description": "Quando ativado, o Roo fechará automaticamente as abas que abriu (como visualizações de diferenças e arquivos abertos) quando uma tarefa que envolve modificação de arquivos é concluída ou revertida."
+			},
+			"autoCloseAll": {
+				"label": "Fechar automaticamente todas as abas tocadas pelo Roo",
+				"description": "Quando ativado (e a configuração acima também está ativada), o Roo fechará automaticamente todas as abas com as quais interagiu durante uma tarefa de modificação de arquivo, incluindo aquelas que já estavam abertas antes do início da tarefa."
 			}
 		}
 	},

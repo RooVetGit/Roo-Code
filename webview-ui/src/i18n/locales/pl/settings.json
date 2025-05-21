@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Automatycznie zamykaj karty Roo",
 				"description": "Gdy włączone, Roo automatycznie zamknie karty, które otworzyło (takie jak widoki różnic i otwarte pliki), gdy zadanie obejmujące modyfikację plików zostanie zakończone lub cofnięte."
+			},
+			"autoCloseAll": {
+				"label": "Automatycznie zamykaj wszystkie karty dotknięte przez Roo",
+				"description": "Gdy włączone (i powyższe ustawienie jest również włączone), Roo automatycznie zamknie wszystkie karty, z którymi wchodził w interakcję podczas zadania modyfikacji plików, w tym te, które były już otwarte przed rozpoczęciem zadania."
 			}
 		}
 	},

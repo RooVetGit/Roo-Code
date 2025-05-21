@@ -406,6 +406,10 @@
 			"autoClose": {
 				"label": "Cerrar automáticamente las pestañas de Roo",
 				"description": "Cuando está habilitado, Roo cerrará automáticamente las pestañas que haya abierto (como vistas de diferencias y archivos abiertos) cuando una tarea que involucre modificación de archivos se complete o se revierta."
+			},
+			"autoCloseAll": {
+				"label": "Cerrar automáticamente todas las pestañas tocadas por Roo",
+				"description": "Cuando está habilitado (y la configuración anterior también está habilitada), Roo cerrará todas las pestañas con las que interactuó durante una tarea de modificación de archivos, incluidas aquellas que ya estaban abiertas antes de que comenzara la tarea."
 			}
 		}
 	},
