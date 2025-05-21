@@ -29,39 +29,49 @@ export const Package = {
  * CodeAction
  */
 
-export type CodeActionName = "EXPLAIN" | "FIX" | "IMPROVE" | "ADD_TO_CONTEXT" | "NEW_TASK"
+export const codeActionIds = ["explainCode", "fixCode", "improveCode", "addToContext", "newTask"] as const
 
-export type CodeActionId = "explainCode" | "fixCode" | "improveCode" | "addToContext" | "newTask"
+export type CodeActionId = (typeof codeActionIds)[number]
+
+export type CodeActionName = "EXPLAIN" | "FIX" | "IMPROVE" | "ADD_TO_CONTEXT" | "NEW_TASK"
 
 /**
  * TerminalAction
  */
 
+export const terminalActionIds = ["terminalAddToContext", "terminalFixCommand", "terminalExplainCommand"] as const
+
+export type TerminalActionId = (typeof terminalActionIds)[number]
+
 export type TerminalActionName = "ADD_TO_CONTEXT" | "FIX" | "EXPLAIN"
 
 export type TerminalActionPromptType = `TERMINAL_${TerminalActionName}`
-
-export type TerminalActionId = "terminalAddToContext" | "terminalFixCommand" | "terminalExplainCommand"
 
 /**
  * Command
  */
 
-const commandIds = [
+export const commandIds = [
 	"activationCompleted",
+
 	"plusButtonClicked",
-	"mcpButtonClicked",
 	"promptsButtonClicked",
-	"popoutButtonClicked",
-	"openInNewTab",
-	"settingsButtonClicked",
+	"mcpButtonClicked",
 	"historyButtonClicked",
+	"popoutButtonClicked",
+	"settingsButtonClicked",
+
+	"openInNewTab",
+
 	"showHumanRelayDialog",
 	"registerHumanRelayCallback",
 	"unregisterHumanRelayCallback",
 	"handleHumanRelayResponse",
+
 	"newTask",
+
 	"setCustomStoragePath",
+
 	"focusInput",
 	"acceptInput",
 ] as const
