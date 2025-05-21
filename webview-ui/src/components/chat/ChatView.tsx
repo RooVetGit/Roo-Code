@@ -69,7 +69,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
 	const {
 		clineMessages: messages,
-		taskHistory,
 		apiConfiguration,
 		mcpServers,
 		alwaysAllowBrowser,
@@ -1291,7 +1290,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						<RooHero />
 						{telemetrySetting === "unset" && <TelemetryBanner />}
 						{/* Show the task history preview if expanded and tasks exist */}
-						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
+						{tasks.length > 0 && isExpanded && <HistoryPreview />}
 						<p className="text-vscode-editor-foreground leading-tight font-vscode-font-family text-center">
 							<Trans
 								i18nKey="chat:about"

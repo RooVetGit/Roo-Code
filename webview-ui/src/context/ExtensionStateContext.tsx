@@ -131,7 +131,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [state, setState] = useState<ExtensionState>({
 		version: "",
 		clineMessages: [],
-		taskHistory: [],
 		shouldShowAnnouncement: false,
 		allowedCommands: [],
 		allowedMaxRequests: Infinity,
@@ -175,6 +174,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
 		terminalCompressProgressBar: true, // Default to compress progress bar output
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
+		availableHistoryMonths: [], // Initialize available history months
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)

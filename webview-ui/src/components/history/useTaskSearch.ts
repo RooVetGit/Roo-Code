@@ -1,15 +1,22 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Fzf } from "fzf"
+// Removed useEvent import
 
 import { highlightFzfMatch } from "@/utils/highlight"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { HistoryItem, ExtensionMessage } from "@roo/shared/ExtensionMessage"
+import { vscode } from "@/utils/vscode"
 
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
 export const useTaskSearch = () => {
-	const { taskHistory, cwd } = useExtensionState()
+	const { cwd, availableHistoryMonths } = useExtensionState()
+	const [localHistoryItems, setLocalHistoryItems] = useState<HistoryItem[]>([])
 	const [searchQuery, setSearchQuery] = useState("")
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
+	const [monthsToFetch, setMonthsToFetch] = useState<Array<{ year: number; month: number }>>([])
+	const [currentlyFetchingMonth, setCurrentlyFetchingMonth] = useState<{ year: number; month: number } | null>(null)
+	const [isLoadingHistoryChunks, setIsLoadingHistoryChunks] = useState<boolean>(false)
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
 	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false)
 
@@ -23,13 +30,90 @@ export const useTaskSearch = () => {
 		}
 	}, [searchQuery, sortOption, lastNonRelevantSort])
 
-	const presentableTasks = useMemo(() => {
-		let tasks = taskHistory.filter((item) => item.ts && item.task)
-		if (!showAllWorkspaces) {
-			tasks = tasks.filter((item) => item.workspace === cwd)
+	const handleHistoryMessage = useCallback((event: Event) => {
+		const messageEvent = event as MessageEvent<ExtensionMessage>
+		const message = messageEvent.data
+		if (message.type === "historyByMonthResults" || message.type === "historySearchResults") {
+			if (message.historyItems) {
+				setLocalHistoryItems((prevItems) => {
+					const newItems = message.historyItems || []
+					const uniqueNewItems = newItems.filter(
+						(newItem) => !prevItems.some((prevItem) => prevItem.id === newItem.id),
+					)
+					return [...prevItems, ...uniqueNewItems] // Items are already sorted by backend
+				})
+				if (message.type === "historyByMonthResults") {
+					setCurrentlyFetchingMonth(null)
+					console.log("[HistoryView] Received historyByMonthResults, cleared currentlyFetchingMonth.")
+				}
+			}
 		}
+	}, [])
+
+	// Replaced useEvent with useEffect for manual event listener management
+	useEffect(() => {
+		window.addEventListener("message", handleHistoryMessage)
+		return () => {
+			window.removeEventListener("message", handleHistoryMessage)
+		}
+	}, [handleHistoryMessage])
+
+	useEffect(() => {
+		if (
+			availableHistoryMonths &&
+			availableHistoryMonths.length > 0 &&
+			localHistoryItems.length === 0 &&
+			!isLoadingHistoryChunks &&
+			monthsToFetch.length === 0
+		) {
+			console.log("[HistoryView] Initializing history fetch from availableHistoryMonths:", availableHistoryMonths)
+			setIsLoadingHistoryChunks(true)
+			setMonthsToFetch([...availableHistoryMonths]) // Backend sends these sorted (newest first)
+		}
+	}, [availableHistoryMonths, localHistoryItems.length, isLoadingHistoryChunks, monthsToFetch.length])
+
+	useEffect(() => {
+		if (isLoadingHistoryChunks && monthsToFetch.length > 0 && !currentlyFetchingMonth) {
+			const nextMonthToFetch = monthsToFetch[0]
+			setCurrentlyFetchingMonth(nextMonthToFetch)
+			setMonthsToFetch((prev) => prev.slice(1))
+
+			console.log("[HistoryView] Fetching month:", nextMonthToFetch)
+			vscode.postMessage({
+				type: "getHistoryByMonth",
+				payload: { year: nextMonthToFetch.year, month: nextMonthToFetch.month },
+			})
+		} else if (isLoadingHistoryChunks && monthsToFetch.length === 0 && !currentlyFetchingMonth) {
+			console.log("[HistoryView] All available months fetched.")
+			setIsLoadingHistoryChunks(false)
+		}
+	}, [monthsToFetch, currentlyFetchingMonth, isLoadingHistoryChunks])
+
+	const presentableTasks = useMemo(() => {
+		let tasks = localHistoryItems.filter((item) => item.ts && item.task)
+		console.log(
+			"[HistoryDebug] All localHistoryItems:",
+			JSON.stringify(localHistoryItems.map((t) => ({ id: t.id, ws: t.workspace }))),
+		)
+		console.log("[HistoryDebug] Current CWD from useExtensionState:", cwd)
+		if (!showAllWorkspaces) {
+			tasks = tasks.filter((item) => {
+				const isMatch = item.workspace === cwd
+				if (localHistoryItems.length > 0 && !isMatch && item.workspace) {
+					// Log only if there are items and a mismatch for a defined workspace
+					console.log(
+						`[HistoryDebug] Mismatch: item.workspace="${item.workspace}" (type: ${typeof item.workspace}), cwd="${cwd}" (type: ${typeof cwd}) for item ID ${item.id}`,
+					)
+				}
+				return isMatch
+			})
+		}
+		console.log(
+			"[HistoryDebug] Filtered presentableTasks:",
+			JSON.stringify(tasks.map((t) => ({ id: t.id, ws: t.workspace }))),
+		)
 		return tasks
-	}, [taskHistory, showAllWorkspaces, cwd])
+	}, [localHistoryItems, showAllWorkspaces, cwd])
 
 	const fzf = useMemo(() => {
 		return new Fzf(presentableTasks, {
@@ -88,5 +172,6 @@ export const useTaskSearch = () => {
 		setLastNonRelevantSort,
 		showAllWorkspaces,
 		setShowAllWorkspaces,
+		isLoadingHistoryChunks,
 	}
 }

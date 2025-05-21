@@ -38,7 +38,7 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 
 		// Step 2: Check if the target file exists. If so, rename it to a backup path.
 		try {
-			await fs.access(absoluteFilePath) // Check for target file existence
+			await fs.access(absoluteFilePath)
 			// Target exists, create a backup path and rename.
 			actualTempBackupFilePath = path.join(
 				path.dirname(absoluteFilePath),
@@ -60,8 +60,8 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 
 		// If we reach here, the new file is successfully in place.
 		// The original actualTempNewFilePath is now the main file, so we shouldn't try to clean it up as "temp".
-		// const _successfullyMovedNewFile = actualTempNewFilePath; // This variable is unused
-		actualTempNewFilePath = null // Mark as "used" or "committed"
+		// const _successfullyMovedNewFile = actualTempNewFilePath;
+		actualTempNewFilePath = null
 
 		// Step 4: If a backup was created, attempt to delete it.
 		if (actualTempBackupFilePath) {
@@ -133,10 +133,10 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 				)
 			}
 		}
-		throw originalError // This MUST be the error that rejects the promise.
+		throw originalError
 	} finally {
 		activeLocks.delete(absoluteFilePath)
 	}
 }
 
-export { safeWriteJson, activeLocks } // Export activeLocks for testing lock contention
+export { safeWriteJson, activeLocks }

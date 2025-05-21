@@ -17,6 +17,7 @@ import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
+import { getTaskDirectoryPath } from "../../shared/storagePathManager"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
@@ -43,6 +44,12 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import {
+	getHistoryItem,
+	setHistoryItems,
+	deleteHistoryItem,
+	getAvailableHistoryMonths,
+} from "../task-persistence/taskHistory"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -1066,11 +1073,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		uiMessagesFilePath: string
 		apiConversationHistory: Anthropic.MessageParam[]
 	}> {
-		const history = this.getGlobalState("taskHistory") ?? []
-		const historyItem = history.find((item) => item.id === id)
+		const historyItem = await getHistoryItem(id)
 
 		if (historyItem) {
-			const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
 			const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
 			const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
 			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
@@ -1091,8 +1096,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
+		// No need to call deleteTaskFromState here as getHistoryItem handles not found.
 		throw new Error("Task not found")
 	}
 
@@ -1113,57 +1117,49 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
-		try {
-			// get the task directory full path
-			const { taskDirPath } = await this.getTaskWithId(id)
-
-			// remove task from stack if it's the current task
-			if (id === this.getCurrentCline()?.taskId) {
-				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
-				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
-				await this.finishSubTask(t("common:tasks.deleted"))
-			}
-
-			// delete task from the task history state
-			await this.deleteTaskFromState(id)
-
-			// Delete associated shadow repository or branch.
-			// TODO: Store `workspaceDir` in the `HistoryItem` object.
-			const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-			const workspaceDir = this.cwd
-
-			try {
-				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
-			} catch (error) {
-				console.error(
-					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
-
-			// delete the entire task directory including checkpoints and all content
-			try {
-				await fs.rm(taskDirPath, { recursive: true, force: true })
-				console.log(`[deleteTaskWithId${id}] removed task directory`)
-			} catch (error) {
-				console.error(
-					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
-		} catch (error) {
-			// If task is not found, just remove it from state
-			if (error instanceof Error && error.message === "Task not found") {
-				await this.deleteTaskFromState(id)
-				return
-			}
-			throw error
+		const itemToDelete = await getHistoryItem(id)
+		if (!itemToDelete) {
+			// If item doesn't exist, nothing to delete.
+			// Consider if we need to remove from old state if it was there.
+			// For now, assume taskHistory service is the source of truth.
+			console.warn(`[deleteTaskWithId] Task ${id} not found in history service.`)
+			return
 		}
-	}
+		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+		const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
 
-	async deleteTaskFromState(id: string) {
-		const taskHistory = this.getGlobalState("taskHistory") ?? []
-		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
-		await this.updateGlobalState("taskHistory", updatedTaskHistory)
-		await this.postStateToWebview()
+		// remove task from stack if it's the current task
+		if (id === this.getCurrentCline()?.taskId) {
+			// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
+			// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
+			await this.finishSubTask(t("common:tasks.deleted"))
+		}
+
+		// Call the new service to delete the item
+		await deleteHistoryItem(id)
+
+		// Delete associated shadow repository or branch.
+		// TODO: Store `workspaceDir` in the `HistoryItem` object.
+		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+		const workspaceDir = this.cwd
+
+		try {
+			await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+		} catch (error) {
+			console.error(
+				`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		// delete the entire task directory including checkpoints and all content
+		try {
+			await fs.rm(taskDirPath, { recursive: true, force: true })
+			console.log(`[deleteTaskWithId${id}] removed task directory`)
+		} catch (error) {
+			console.error(
+				`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
 	}
 
 	async postStateToWebview() {
@@ -1199,7 +1195,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
-			taskHistory,
 			soundVolume,
 			browserViewportSize,
 			screenshotQuality,
@@ -1266,13 +1261,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			allowedMaxRequests: allowedMaxRequests ?? Infinity,
 			uriScheme: vscode.env.uriScheme,
-			currentTaskItem: this.getCurrentCline()?.taskId
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
-				: undefined,
+			currentTaskItem: await (async () => {
+				const currentCline = this.getCurrentCline()
+				if (currentCline?.taskId) {
+					return await getHistoryItem(currentCline.taskId)
+				}
+				return undefined
+			})(),
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
-			taskHistory: (taskHistory || [])
-				.filter((item: HistoryItem) => item.ts && item.task)
-				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
@@ -1328,6 +1324,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
+			availableHistoryMonths: await getAvailableHistoryMonths(),
 		}
 	}
 
@@ -1368,7 +1365,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
 			allowedMaxRequests: stateValues.allowedMaxRequests ?? Infinity,
-			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
 			ttsEnabled: stateValues.ttsEnabled ?? false,
@@ -1421,18 +1417,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 	}
 
-	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = (this.getGlobalState("taskHistory") as HistoryItem[] | undefined) || []
-		const existingItemIndex = history.findIndex((h) => h.id === item.id)
-
-		if (existingItemIndex !== -1) {
-			history[existingItemIndex] = item
-		} else {
-			history.push(item)
-		}
-
-		await this.updateGlobalState("taskHistory", history)
-		return history
+	async updateTaskHistory(item: HistoryItem): Promise<void> {
+		await setHistoryItems([item])
 	}
 
 	// ContextProxy

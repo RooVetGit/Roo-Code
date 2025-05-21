@@ -17,7 +17,7 @@ import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
 
-export type { ProviderSettingsEntry, ToolProgressStatus }
+export type { ProviderSettingsEntry, ToolProgressStatus, HistoryItem }
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -69,6 +69,8 @@ export interface ExtensionMessage {
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
+		| "historyByMonthResults"
+		| "historySearchResults"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -96,6 +98,7 @@ export interface ExtensionMessage {
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
 	listApiConfig?: ProviderSettingsEntry[]
+	historyItems?: HistoryItem[]
 	mode?: Mode
 	customMode?: ModeConfig
 	slug?: string
@@ -116,7 +119,6 @@ export type ExtensionState = Pick<
 	| "pinnedApiConfigs"
 	// | "lastShownAnnouncementId"
 	| "customInstructions"
-	// | "taskHistory" // Optional in GlobalSettings, required here.
 	| "autoApprovalEnabled"
 	| "alwaysAllowReadOnly"
 	| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -177,8 +179,6 @@ export type ExtensionState = Pick<
 	uriScheme?: string
 	shouldShowAnnouncement: boolean
 
-	taskHistory: HistoryItem[]
-
 	writeDelayMs: number
 	requestDelaySeconds: number
 
@@ -205,6 +205,7 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
+	availableHistoryMonths?: Array<{ year: number; month: number }>
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

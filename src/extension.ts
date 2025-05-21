@@ -32,6 +32,7 @@ import {
 	CodeActionProvider,
 } from "./activate"
 import { initializeI18n } from "./i18n"
+import { migrateTaskHistoryStorage } from "./core/task-persistence/taskHistory"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -44,6 +45,17 @@ import { initializeI18n } from "./i18n"
 let outputChannel: vscode.OutputChannel
 let extensionContext: vscode.ExtensionContext
 
+/**
+ * Returns the extension context.
+ * Throws an error if the context has not been initialized (i.e., activate has not been called).
+ */
+export function getExtensionContext(): vscode.ExtensionContext {
+	if (!extensionContext) {
+		throw new Error("Extension context is not available. Activate function may not have been called.")
+	}
+	return extensionContext
+}
+
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
@@ -51,6 +63,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Roo-Code extension activated")
+
+	// Initialize and migrate task history storage
+	// (migrateTaskHistoryStorage also calls initializeTaskHistory internally)
+	outputChannel.appendLine("Starting task history data format check/migration...")
+	await migrateTaskHistoryStorage()
+	outputChannel.appendLine("Task history data format check/migration finished.")
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)

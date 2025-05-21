@@ -32,6 +32,8 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
+import { GetHistoryByMonthPayload } from "../../shared/WebviewMessage"
+import { getHistoryItemsForMonth, getHistoryItemsForSearch } from "../task-persistence/taskHistory"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 
@@ -891,7 +893,27 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
-		case "setHistoryPreviewCollapsed": // Add the new case handler
+		case "getHistoryByMonth": {
+			// Ensure payload is correctly typed if this new handler is used.
+			// The task description mentions `message.payload as GetHistoryByMonthPayload`
+			// or `message.values`. Current file uses `message.values`.
+			const payload = message.payload as GetHistoryByMonthPayload
+			if (payload && typeof payload.year === "number" && typeof payload.month === "number") {
+				const historyItems = await getHistoryItemsForMonth(payload.year, payload.month)
+				await provider.postMessageToWebview({ type: "historyByMonthResults", historyItems })
+			} else {
+				console.warn("getHistoryByMonth: Invalid payload", message.payload)
+				// Optionally send an error back to the webview
+			}
+			break
+		}
+		case "searchHistory": {
+			const query = message.text || ""
+			const historyItems = await getHistoryItemsForSearch(query)
+			await provider.postMessageToWebview({ type: "historySearchResults", historyItems })
+			break
+		}
+		case "setHistoryPreviewCollapsed":
 			await updateGlobalState("historyPreviewCollapsed", message.bool ?? false)
 			// No need to call postStateToWebview here as the UI already updated optimistically
 			break

@@ -131,6 +131,8 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "getHistoryByMonth"
+		| "searchHistory"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -162,6 +164,11 @@ export interface WebviewMessage {
 	historyPreviewCollapsed?: boolean
 }
 
+export interface GetHistoryByMonthPayload {
+	year: number
+	month: number
+}
+
 export const checkoutDiffPayloadSchema = z.object({
 	ts: z.number(),
 	previousCommitHash: z.string().optional(),
@@ -179,4 +186,4 @@ export const checkoutRestorePayloadSchema = z.object({
 
 export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSchema>
 
-export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload
+export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload | GetHistoryByMonthPayload
