@@ -6,7 +6,8 @@
 		"check-types": "tsc --noEmit",
 		"format": "prettier --write src",
 		"test:ci": "pnpm --filter roo-cline build:development && pnpm test:run",
-		"test:run": "rimraf out && tsc -p tsconfig.json && npx dotenvx run -f .env.local -- node ./out/runTest.js"
+		"test:run": "rimraf out && tsc -p tsconfig.json && npx dotenvx run -f .env.local -- node ./out/runTest.js",
+		"clean": "rimraf out .turbo"
 	},
 	"devDependencies": {
 		"@roo-code/types": "^1.12.0",

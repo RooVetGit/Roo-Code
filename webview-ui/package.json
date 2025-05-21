@@ -12,7 +12,7 @@
 		"preview": "vite preview",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
-		"clean": "rimraf tsconfig.tsbuildinfo .turbo"
+		"clean": "rimraf build tsconfig.tsbuildinfo .turbo"
 	},
 	"dependencies": {
 		"@radix-ui/react-alert-dialog": "^1.1.6",

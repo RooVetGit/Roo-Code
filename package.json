@@ -11,7 +11,7 @@
 		"check-types": "turbo check-types --log-order grouped --output-logs new-only",
 		"test": "turbo test --log-order grouped --output-logs new-only",
 		"format": "turbo format --log-order grouped --output-logs new-only",
-		"clean": "turbo clean --log-order grouped --output-logs new-only && rimraf bin .vite-port .turbo",
+		"clean": "turbo clean --log-order grouped --output-logs new-only && rimraf dist out bin .vite-port .turbo",
 		"build": "pnpm --filter roo-cline vsix",
 		"build:nightly": "pnpm --filter @roo-code/vscode-nightly vsix",
 		"changeset": "changeset",
