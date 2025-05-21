@@ -80,6 +80,15 @@ export class CodeIndexManager {
 		return this._configManager?.isFeatureConfigured ?? false
 	}
 
+	public get isInitialized(): boolean {
+		try {
+			this.assertInitialized()
+			return true
+		} catch (error) {
+			return false
+		}
+	}
+
 	/**
 	 * Initializes the manager with configuration and dependent services.
 	 * Must be called before using any other methods.

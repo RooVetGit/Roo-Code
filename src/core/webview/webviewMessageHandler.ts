@@ -1352,11 +1352,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "startIndexing": {
 			try {
 				const manager = provider.codeIndexManager!
-				await manager.startIndexing()
-				// Optionally send a confirmation or rely on indexingStatusUpdate
+				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
+					if (!manager.isInitialized) {
+						await manager.initialize(provider.contextProxy)
+					}
+
+					manager.startIndexing()
+				}
 			} catch (error) {
 				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
-				// Optionally send an error message back to the webview
 			}
 			break
 		}
