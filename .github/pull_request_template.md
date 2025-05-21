@@ -85,5 +85,5 @@ Does this PR necessitate updates to user-facing documentation?
 ### Get in Touch
 
 <!--
-Please provide your preferred contact method(s) for reviewers or maintainers to reach you if they have questions about your PR
+Please provide your Discord username for reviewers or maintainers to reach you if they have questions about your PR
 -->
