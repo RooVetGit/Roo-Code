@@ -54,8 +54,8 @@ export const ExperimentalSettings = ({
 				{experiments[EXPERIMENT_IDS.AUTO_CONDENSE_CONTEXT] && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
 						<div className="flex items-center gap-4 font-bold">
-							<span className="codicon codicon-refresh" />
-							<div>{t("settings:autoApprove.retry.label")}</div>
+							<span className="codicon codicon-fold" />
+							<div>{t("settings:experimental.autoCondenseContextPercent.label")}</div>
 						</div>
 						<div>
 							<div className="flex items-center gap-2">
@@ -67,12 +67,11 @@ export const ExperimentalSettings = ({
 									onValueChange={([value]) =>
 										setCachedStateField("autoCondenseContextPercent", value)
 									}
-									data-testid="request-delay-slider"
 								/>
 								<span className="w-20">{autoCondenseContextPercent}%</span>
 							</div>
 							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:autoApprove.retry.delayLabel")}
+								{t("settings:experimental.autoCondenseContextPercent.description")}
 							</div>
 						</div>
 					</div>
