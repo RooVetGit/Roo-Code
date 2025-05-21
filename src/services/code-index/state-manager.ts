@@ -10,23 +10,12 @@ export class CodeIndexStateManager {
 	private _currentItemUnit: string = "blocks"
 	private _progressEmitter = new vscode.EventEmitter<ReturnType<typeof this.getCurrentStatus>>()
 
-	// Webview provider reference for status updates
-	private webviewProvider?: { postMessage: (msg: any) => void }
-
-	constructor() {
-		// Initialize with default state
-	}
-
 	// --- Public API ---
 
 	public readonly onProgressUpdate = this._progressEmitter.event
 
 	public get state(): IndexingState {
 		return this._systemStatus
-	}
-
-	public setWebviewProvider(provider: { postMessage: (msg: any) => void }) {
-		this.webviewProvider = provider
 	}
 
 	public getCurrentStatus() {
@@ -62,27 +51,12 @@ export class CodeIndexStateManager {
 				if (newState === "Error" && message === undefined) this._statusMessage = "An error occurred."
 			}
 
-			this.postStatusUpdate()
 			this._progressEmitter.fire(this.getCurrentStatus())
 			console.log(
 				`[CodeIndexStateManager] System state changed to: ${this._systemStatus}${
 					message ? ` (${message})` : ""
 				}`,
 			)
-		}
-	}
-
-	private postStatusUpdate() {
-		if (this.webviewProvider) {
-			this.webviewProvider.postMessage({
-				type: "indexingStatusUpdate",
-				values: {
-					...this.getCurrentStatus(),
-					processedItems: this._processedItems,
-					totalItems: this._totalItems,
-					currentItemUnit: this._currentItemUnit,
-				},
-			})
 		}
 	}
 
@@ -104,7 +78,6 @@ export class CodeIndexStateManager {
 
 			// Only fire update if status, message or progress actually changed
 			if (oldStatus !== this._systemStatus || oldMessage !== this._statusMessage || progressChanged) {
-				this.postStatusUpdate()
 				this._progressEmitter.fire(this.getCurrentStatus())
 				console.log(
 					`[CodeIndexStateManager] Block Progress: ${message} (${this._processedItems}/${this._totalItems})`,
@@ -139,7 +112,6 @@ export class CodeIndexStateManager {
 			this._statusMessage = message
 
 			if (oldStatus !== this._systemStatus || oldMessage !== this._statusMessage || progressChanged) {
-				this.postStatusUpdate()
 				this._progressEmitter.fire(this.getCurrentStatus())
 				console.log(
 					`[CodeIndexStateManager] File Queue Progress: ${message} (${this._processedItems}/${this._totalItems})`,

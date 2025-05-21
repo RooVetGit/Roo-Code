@@ -246,10 +246,6 @@ export class CodeIndexManager {
 		return this._stateManager.getCurrentStatus()
 	}
 
-	public setWebviewProvider(provider: { postMessage: (msg: any) => void }) {
-		this._stateManager.setWebviewProvider(provider)
-	}
-
 	public async searchIndex(query: string, directoryPrefix?: string): Promise<VectorStoreSearchResult[]> {
 		if (!this.isFeatureEnabled) {
 			console.log("[CodeIndexManager] Feature disabled - returning empty search results")
