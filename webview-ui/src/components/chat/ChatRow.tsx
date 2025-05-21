@@ -13,6 +13,7 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
 import { vscode } from "@src/utils/vscode"
 import { removeLeadingNonAlphanumeric } from "@src/utils/removeLeadingNonAlphanumeric"
+import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import { Button } from "@src/components/ui"
 
 import { ToolUseBlock, ToolUseBlockHeader } from "../common/ToolUseBlock"
@@ -32,7 +33,7 @@ import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
 import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
-import { ContextCondenseRow } from "./ContextCondenseRow"
+import { CondensingContextRow, ContextCondenseRow } from "./ContextCondenseRow"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -293,7 +294,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content ?? tool.diff}
-							language={tool.tool === "appliedDiff" ? "diff" : undefined}
+							language="diff"
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
@@ -341,6 +342,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.diff}
+							language="diff"
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
@@ -358,6 +360,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content}
+							language={getLanguageFromPath(tool.path || "") || "log"}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
@@ -403,6 +406,7 @@ export const ChatRowContent = ({
 						</div>
 						<CodeAccordian
 							code={tool.content}
+							language="markdown"
 							isLoading={message.partial}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
@@ -443,7 +447,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content}
-							language="shell-session"
+							language="shellsession"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -463,6 +467,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content}
+							language="markdown"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -492,7 +497,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
 							code={tool.content}
-							language="log"
+							language="shellsession"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -712,7 +717,7 @@ export const ChatRowContent = ({
 											backgroundColor: "var(--vscode-editor-background)",
 											borderTop: "none",
 										}}>
-										<CodeBlock source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`} />
+										<CodeBlock source={message.text || ""} language="xml" />
 									</div>
 								)}
 							</div>
@@ -929,6 +934,9 @@ export const ChatRowContent = ({
 						/>
 					)
 				case "condense_context":
+					if (message.partial) {
+						return <CondensingContextRow />
+					}
 					return message.contextCondense ? <ContextCondenseRow {...message.contextCondense} /> : null
 				default:
 					return (
