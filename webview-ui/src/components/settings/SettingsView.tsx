@@ -129,6 +129,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		alwaysAllowWrite,
 		alwaysAllowWriteOutsideWorkspace,
 		alwaysApproveResubmit,
+		autoCondenseContextPercent,
 		browserToolEnabled,
 		browserViewportSize,
 		enableCheckpoints,
@@ -628,7 +629,12 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 					{/* Experimental Section */}
 					{activeTab === "experimental" && (
-						<ExperimentalSettings setExperimentEnabled={setExperimentEnabled} experiments={experiments} />
+						<ExperimentalSettings
+							setExperimentEnabled={setExperimentEnabled}
+							experiments={experiments}
+							autoCondenseContextPercent={autoCondenseContextPercent}
+							setCachedStateField={setCachedStateField}
+						/>
 					)}
 
 					{/* Language Section */}
