@@ -54,15 +54,15 @@ export class CacheManager implements ICacheManager {
 	}
 
 	/**
-	 * Clears the cache file by deleting it
+	 * Clears the cache file by writing an empty object to it
 	 */
 	async clearCacheFile(): Promise<void> {
 		try {
-			await vscode.workspace.fs.delete(this.cachePath)
+			await vscode.workspace.fs.writeFile(this.cachePath, Buffer.from("{}"))
 			this.fileHashes = {}
 			console.log("Cache file cleared successfully")
 		} catch (error) {
-			console.error("Failed to clear cache file:", error)
+			console.error("Failed to clear cache file:", error, this.cachePath)
 		}
 	}
 
