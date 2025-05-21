@@ -45,6 +45,9 @@ importers:
         specifier: workspace:^
         version: link:../../packages/build
     devDependencies:
+      '@vscode/vsce':
+        specifier: 3.3.2
+        version: 3.3.2
       esbuild:
         specifier: ^0.25.0
         version: 0.25.4
@@ -57,6 +60,9 @@ importers:
 
   e2e:
     devDependencies:
+      '@roo-code/types':
+        specifier: ^1.12.0
+        version: 1.12.0
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -2618,6 +2624,9 @@ packages:
     resolution: {integrity: sha512-bwspbWB04XJpeElvsp+DCylKfF4trJDa2Y9Go8O6A7YLX2LIKGcNK/CYImJN6ZP4DcuOHB4Utl3iCbnR62DudA==}
     cpu: [x64]
     os: [win32]
+
+  '@roo-code/types@1.12.0':
+    resolution: {integrity: sha512-djdZ4lzsiOc+umX357JvcSwRlAMm05P+8DU58IFyZERmEh8wkm4TglDuaaRVGtQSHw9YGFikqfruLtZSEb7zJQ==}
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -12118,6 +12127,10 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.40.2':
     optional: true
+
+  '@roo-code/types@1.12.0':
+    dependencies:
+      zod: 3.24.4
 
   '@rtsao/scc@1.1.0': {}
 

@@ -121,7 +121,10 @@ export function copyLocales(srcDir: string, distDir: string): void {
  * @param distDir Distribution directory path
  */
 export function copyAssets(srcDir: string, distDir: string) {
-	const copyPaths = [["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"]]
+	const copyPaths = [
+		["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
+		["../webview-ui/audio", "webview-ui/audio"],
+	]
 
 	for (const [srcRelPath, dstRelPath] of copyPaths) {
 		if (!srcRelPath || !dstRelPath) {

@@ -172,7 +172,10 @@ const copyAssets = {
 	name: "copy-assets",
 	setup(build) {
 		build.onEnd(() => {
-			const copyPaths = [["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"]]
+			const copyPaths = [
+				["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
+				["../webview-ui/audio", "webview-ui/audio"],
+			]
 
 			for (const [srcRelPath, dstRelPath] of copyPaths) {
 				const srcDir = path.join(__dirname, srcRelPath)
