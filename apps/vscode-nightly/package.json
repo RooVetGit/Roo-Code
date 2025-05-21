@@ -6,6 +6,7 @@
 	"scripts": {
 		"build": "rimraf build && pnpm --filter @roo-code/build build && node esbuild.mjs --production && pnpm --filter @roo-code/vscode-webview build --mode nightly",
 		"vsix": "pnpm build && cd build && mkdirp ../../../bin && npx vsce package --no-dependencies --out ../../../bin",
+		"publish:marketplace": "pnpm build && cd build && vsce publish --no-dependencies",
 		"clean": "rimraf build"
 	},
 	"dependencies": {
