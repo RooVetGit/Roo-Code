@@ -1,4 +1,5 @@
 import { listFiles } from "../../glob/list-files"
+import { Ignore } from "ignore"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { stat } from "fs/promises"
 import * as path from "path"
@@ -28,6 +29,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		private readonly qdrantClient: IVectorStore,
 		private readonly codeParser: ICodeParser,
 		private readonly cacheManager: CacheManager,
+		private readonly ignoreInstance: Ignore,
 	) {}
 
 	/**
@@ -59,10 +61,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Filter paths using .rooignore
 		const allowedPaths = ignoreController.filterPaths(filePaths)
 
-		// Filter by supported extensions
+		// Filter by supported extensions and ignore patterns
 		const supportedPaths = allowedPaths.filter((filePath) => {
 			const ext = path.extname(filePath).toLowerCase()
-			return scannerExtensions.includes(ext)
+			const relativeFilePath = generateRelativeFilePath(filePath)
+			return scannerExtensions.includes(ext) && !this.ignoreInstance.ignores(relativeFilePath)
 		})
 
 		// Initialize tracking variables

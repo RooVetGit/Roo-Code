@@ -152,6 +152,7 @@ describe("FileWatcher", () => {
 			mockCacheManager,
 			mockEmbedder,
 			mockVectorStore,
+			undefined,
 			mockRooIgnoreController,
 		)
 	})
@@ -339,7 +340,7 @@ describe("FileWatcher", () => {
 			const result = await fileWatcher.processFile(filePath)
 
 			expect(result.status).toBe("skipped")
-			expect(result.reason).toBe("File is ignored by .rooignore")
+			expect(result.reason).toBe("File is ignored by .rooignore or .gitignore")
 			expect(mockCacheManager.updateHash).not.toHaveBeenCalled()
 			expect(vscode.workspace.fs.stat).not.toHaveBeenCalled()
 			expect(vscode.workspace.fs.readFile).not.toHaveBeenCalled()

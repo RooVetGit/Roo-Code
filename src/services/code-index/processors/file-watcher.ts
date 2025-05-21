@@ -9,6 +9,7 @@ import {
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { v5 as uuidv5 } from "uuid"
+import { Ignore } from "ignore"
 import { scannerExtensions } from "../shared/supported-extensions"
 import {
 	IFileWatcher,
@@ -26,6 +27,7 @@ import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../sha
  * Implementation of the file watcher interface
  */
 export class FileWatcher implements IFileWatcher {
+	private ignoreInstance?: Ignore
 	private fileWatcher?: vscode.FileSystemWatcher
 	private ignoreController: RooIgnoreController
 	private accumulatedEvents: Map<string, { uri: vscode.Uri; type: "create" | "change" | "delete" }> = new Map()
@@ -70,9 +72,13 @@ export class FileWatcher implements IFileWatcher {
 		private readonly cacheManager: CacheManager,
 		private embedder?: IEmbedder,
 		private vectorStore?: IVectorStore,
+		ignoreInstance?: Ignore,
 		ignoreController?: RooIgnoreController,
 	) {
 		this.ignoreController = ignoreController || new RooIgnoreController(workspacePath)
+		if (ignoreInstance) {
+			this.ignoreInstance = ignoreInstance
+		}
 	}
 
 	/**
@@ -468,12 +474,16 @@ export class FileWatcher implements IFileWatcher {
 
 		try {
 			// Check if file should be ignored
-			if (!this.ignoreController.validateAccess(filePath)) {
-				console.log(`[FileWatcher] processFile: SKIPPED (ignored by .rooignore) - ${filePath}`)
+			const relativeFilePath = generateRelativeFilePath(filePath)
+			if (
+				!this.ignoreController.validateAccess(filePath) ||
+				(this.ignoreInstance && this.ignoreInstance.ignores(relativeFilePath))
+			) {
+				console.log(`[FileWatcher] processFile: SKIPPED (ignored by .rooignore or .gitignore) - ${filePath}`)
 				return {
 					path: filePath,
 					status: "skipped" as const,
-					reason: "File is ignored by .rooignore",
+					reason: "File is ignored by .rooignore or .gitignore",
 				}
 			}
 

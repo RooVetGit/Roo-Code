@@ -9,6 +9,9 @@ import { CodeIndexServiceFactory } from "./service-factory"
 import { CodeIndexSearchService } from "./search-service"
 import { CodeIndexOrchestrator } from "./orchestrator"
 import { CacheManager } from "./cache-manager"
+import fs from "fs/promises"
+import ignore from "ignore"
+import path from "path"
 
 export class CodeIndexManager {
 	// --- Singleton Implementation ---
@@ -136,10 +139,22 @@ export class CodeIndexManager {
 				this._cacheManager,
 			)
 
+			const ignoreInstance = ignore()
+			const ignorePath = path.join(getWorkspacePath(), ".gitignore")
+			try {
+				const content = await fs.readFile(ignorePath, "utf8")
+				ignoreInstance.add(content)
+				ignoreInstance.add(".gitignore")
+			} catch (error) {
+				// Should never happen: reading file failed even though it exists
+				console.error("Unexpected error loading .gitignore:", error)
+			}
+
 			// (Re)Create shared service instances
 			const { embedder, vectorStore, scanner, fileWatcher } = this._serviceFactory.createServices(
 				this.context,
 				this._cacheManager,
+				ignoreInstance,
 			)
 
 			// (Re)Initialize orchestrator

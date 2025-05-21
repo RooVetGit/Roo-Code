@@ -7,6 +7,7 @@ import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CacheManager } from "./cache-manager"
+import { Ignore } from "ignore"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -79,8 +80,9 @@ export class CodeIndexServiceFactory {
 		embedder: IEmbedder,
 		vectorStore: IVectorStore,
 		parser: ICodeParser,
+		ignoreInstance: Ignore,
 	): DirectoryScanner {
-		return new DirectoryScanner(embedder, vectorStore, parser, this.cacheManager)
+		return new DirectoryScanner(embedder, vectorStore, parser, this.cacheManager, ignoreInstance)
 	}
 
 	/**
@@ -91,8 +93,9 @@ export class CodeIndexServiceFactory {
 		embedder: IEmbedder,
 		vectorStore: IVectorStore,
 		cacheManager: CacheManager,
+		ignoreInstance: Ignore,
 	): IFileWatcher {
-		return new FileWatcher(this.workspacePath, context, cacheManager, embedder, vectorStore)
+		return new FileWatcher(this.workspacePath, context, cacheManager, embedder, vectorStore, ignoreInstance)
 	}
 
 	/**
@@ -102,6 +105,7 @@ export class CodeIndexServiceFactory {
 	public createServices(
 		context: vscode.ExtensionContext,
 		cacheManager: CacheManager,
+		ignoreInstance: Ignore,
 	): {
 		embedder: IEmbedder
 		vectorStore: IVectorStore
@@ -116,8 +120,8 @@ export class CodeIndexServiceFactory {
 		const embedder = this.createEmbedder()
 		const vectorStore = this.createVectorStore()
 		const parser = codeParser
-		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser)
-		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore, cacheManager)
+		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser, ignoreInstance)
+		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore, cacheManager, ignoreInstance)
 
 		return {
 			embedder,
