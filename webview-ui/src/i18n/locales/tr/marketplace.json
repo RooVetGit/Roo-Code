@@ -1,0 +1,91 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"browse": "Göz At",
+		"sources": "Kaynaklar"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Marketplace öğelerini ara..."
+		},
+		"type": {
+			"label": "Türe göre filtrele:",
+			"all": "Tüm türler",
+			"mode": "Mod",
+			"mcp": "MCP Sunucusu",
+			"prompt": "Prompt",
+			"package": "Paket"
+		},
+		"sort": {
+			"label": "Sırala:",
+			"name": "İsim",
+			"author": "Yazar",
+			"lastUpdated": "Son güncelleme"
+		},
+		"tags": {
+			"label": "Etiketlere göre filtrele:",
+			"available": "{{count}} mevcut",
+			"clear": "Etiketleri temizle ({{count}})",
+			"placeholder": "Etiket aramak ve seçmek için yazın...",
+			"noResults": "Eşleşen etiket bulunamadı",
+			"selected": "Seçili etiketlerden herhangi birine sahip öğeler gösteriliyor ({{count}} seçili)",
+			"clickToFilter": "Öğeleri filtrelemek için etiketlere tıklayın"
+		}
+	},
+	"type-group": {
+		"match": "Eşleşme",
+		"modes": "Modlar",
+		"mcps": "MCP Sunucuları",
+		"prompts": "Promptlar",
+		"packages": "Paketler",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Marketplace öğesi bulunamadı",
+			"withFilters": "Filtreleri ayarlamayı deneyin",
+			"noSources": "Kaynaklar sekmesinde bir kaynak eklemeyi deneyin"
+		},
+		"count": "{{count}} öğe bulundu",
+		"components": "{{count}} bileşen",
+		"refresh": {
+			"button": "Yenile",
+			"refreshing": "Yenileniyor..."
+		},
+		"card": {
+			"by": "yazar: {{author}}",
+			"from": "kaynak: {{source}}",
+			"viewSource": "Görüntüle",
+			"viewOnSource": "{{source}} üzerinde görüntüle"
+		}
+	},
+	"sources": {
+		"title": "Marketplace Kaynaklarını Yapılandır",
+		"description": "Marketplace öğeleri içeren Git depolarını ekleyin. Bu depolar marketplace'de gezinirken getirilecektir.",
+		"add": {
+			"title": "Yeni Kaynak Ekle",
+			"urlPlaceholder": "Git deposu URL'si (örn., https://github.com/username/repo)",
+			"urlFormats": "Desteklenen formatlar: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) veya Git protokolü (git://github.com/username/repo.git)",
+			"namePlaceholder": "Görünen ad (maks. 20 karakter)",
+			"button": "Kaynak Ekle"
+		},
+		"current": {
+			"title": "Mevcut Kaynaklar",
+			"count": "{{current}}/{{max}} maks.",
+			"empty": "Yapılandırılmış kaynak yok. Başlamak için bir kaynak ekleyin.",
+			"refresh": "Bu kaynağı yenile",
+			"remove": "Kaynağı kaldır"
+		},
+		"errors": {
+			"emptyUrl": "URL boş olamaz",
+			"invalidUrl": "Geçersiz URL formatı",
+			"nonVisibleChars": "URL boşluk dışında görünmeyen karakterler içeriyor",
+			"invalidGitUrl": "URL geçerli bir Git deposu URL'si olmalıdır (örn., https://github.com/username/repo)",
+			"duplicateUrl": "Bu URL zaten listede (büyük/küçük harf ve boşluk duyarsız eşleşme)",
+			"nameTooLong": "İsim 20 karakter veya daha az olmalıdır",
+			"nonVisibleCharsName": "İsim boşluk dışında görünmeyen karakterler içeriyor",
+			"duplicateName": "Bu isim zaten kullanımda (büyük/küçük harf ve boşluk duyarsız eşleşme)",
+			"maxSources": "Maksimum {{max}} kaynak izin veriliyor"
+		}
+	}
+}

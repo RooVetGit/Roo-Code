@@ -1,0 +1,100 @@
+{
+	"type-group": {
+		"modes": "Modos",
+		"mcps": "Servidores MCP",
+		"prompts": "Prompts",
+		"packages": "Paquetes",
+		"generic-type": "{{type}}s",
+		"match": "coincide"
+	},
+	"item-card": {
+		"type-mode": "Modo",
+		"type-mcp": "Servidor MCP",
+		"type-prompt": "Prompt",
+		"type-package": "Paquete",
+		"type-other": "Otro",
+		"by-author": "por {{author}}",
+		"authors-profile": "Perfil del Autor",
+		"remove-tag-filter": "Eliminar filtro de etiqueta: {{tag}}",
+		"filter-by-tag": "Filtrar por etiqueta: {{tag}}",
+		"component-details": "Detalles del Componente",
+		"match-count": "{{count}} coincidencia{{count !== 1 ? 's' : ''}}",
+		"view": "Ver",
+		"source": "Fuente"
+	},
+	"install-sidebar": {
+		"title": "Instalar {{itemName}}",
+		"installButton": "Instalar",
+		"cancelButton": "Cancelar"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Buscar en el mercado..."
+		},
+		"type": {
+			"label": "Tipo",
+			"all": "Todos los tipos",
+			"mode": "Modo",
+			"mcp server": "Servidor MCP",
+			"prompt": "Prompt",
+			"package": "Paquete"
+		},
+		"sort": {
+			"label": "Ordenar por",
+			"name": "Nombre",
+			"lastUpdated": "Última actualización"
+		},
+		"tags": {
+			"label": "Etiquetas",
+			"clear_one": "Borrar {{count}} etiqueta seleccionada",
+			"clear_other": "Borrar {{count}} etiquetas seleccionadas",
+			"placeholder": "Buscar etiquetas...",
+			"noResults": "No se encontraron etiquetas.",
+			"selected_one": "{{count}} etiqueta seleccionada",
+			"selected_other": "{{count}} etiquetas seleccionadas"
+		}
+	},
+	"sources": {
+		"title": "Fuentes del mercado",
+		"description": "Añade o gestiona fuentes para los elementos del mercado. Cada fuente es un repositorio Git que contiene definiciones de elementos del mercado.",
+		"errors": {
+			"maxSources": "Máximo de {{max}} fuentes permitidas.",
+			"emptyUrl": "La URL no puede estar vacía.",
+			"nonVisibleChars": "La URL contiene caracteres no visibles.",
+			"invalidGitUrl": "Formato de URL de Git no válido.",
+			"duplicateUrl": "Ya existe una fuente con esta URL.",
+			"nameTooLong": "El nombre no puede superar los 20 caracteres.",
+			"nonVisibleCharsName": "El nombre contiene caracteres no visibles.",
+			"duplicateName": "Ya existe una fuente con este nombre."
+		},
+		"add": {
+			"namePlaceholder": "Nombre opcional de la fuente (p. ej. 'Mi repositorio privado')",
+			"urlPlaceholder": "URL del repositorio Git (p. ej. 'https://github.com/user/repo.git')",
+			"urlFormats": "Formatos compatibles: HTTPS, SSH o ruta de archivo local.",
+			"button": "Añadir fuente"
+		},
+		"current": {
+			"title": "Fuentes actuales",
+			"empty": "Aún no se han añadido fuentes del mercado.",
+			"emptyHint": "Añade una fuente arriba para explorar los elementos del mercado.",
+			"refresh": "Actualizar fuente",
+			"remove": "Eliminar fuente"
+		}
+	},
+	"tabs": {
+		"browse": "Explorar",
+		"sources": "Fuentes"
+	},
+	"title": "Mercado",
+	"items": {
+		"refresh": {
+			"refreshing": "Actualizando elementos del mercado..."
+		},
+		"empty": {
+			"noItems": "No se encontraron elementos del mercado.",
+			"emptyHint": "Intenta ajustar tus filtros o términos de búsqueda"
+		},
+		"count_one": "{{count}} elemento",
+		"count_other": "{{count}} elementos"
+	}
+}

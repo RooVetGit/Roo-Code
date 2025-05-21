@@ -1,0 +1,91 @@
+{
+	"title": "市场",
+	"tabs": {
+		"browse": "浏览",
+		"sources": "来源"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "搜索市场项目..."
+		},
+		"type": {
+			"label": "按类型筛选：",
+			"all": "所有类型",
+			"mode": "模式",
+			"mcp": "MCP 服务器",
+			"prompt": "提示",
+			"package": "包"
+		},
+		"sort": {
+			"label": "排序方式：",
+			"name": "名称",
+			"author": "作者",
+			"lastUpdated": "最近更新"
+		},
+		"tags": {
+			"label": "按标签筛选：",
+			"available": "{{count}} 个可用",
+			"clear": "清除标签 ({{count}})",
+			"placeholder": "输入以搜索和选择标签...",
+			"noResults": "未找到匹配的标签",
+			"selected": "显示具有任何已选标签的项目（已选 {{count}} 个）",
+			"clickToFilter": "点击标签以筛选项目"
+		}
+	},
+	"type-group": {
+		"match": "匹配",
+		"modes": "模式",
+		"mcps": "MCP 服务器",
+		"prompts": "提示",
+		"packages": "包",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "未找到市场项目",
+			"withFilters": "尝试调整筛选条件",
+			"noSources": "尝试在来源标签页中添加来源"
+		},
+		"count": "找到 {{count}} 个项目",
+		"components": "{{count}} 个组件",
+		"refresh": {
+			"button": "刷新",
+			"refreshing": "正在刷新..."
+		},
+		"card": {
+			"by": "作者：{{author}}",
+			"from": "来自：{{source}}",
+			"viewSource": "查看",
+			"viewOnSource": "在 {{source}} 上查看"
+		}
+	},
+	"sources": {
+		"title": "配置市场来源",
+		"description": "添加包含市场项目的 Git 仓库。浏览市场时将获取这些仓库。",
+		"add": {
+			"title": "添加新来源",
+			"urlPlaceholder": "Git 仓库 URL（例如：https://github.com/username/repo）",
+			"urlFormats": "支持的格式：HTTPS (https://github.com/username/repo)、SSH (git@github.com:username/repo.git) 或 Git 协议 (git://github.com/username/repo.git)",
+			"namePlaceholder": "显示名称（最多 20 个字符）",
+			"button": "添加来源"
+		},
+		"current": {
+			"title": "当前来源",
+			"count": "{{current}}/{{max}} 个上限",
+			"empty": "未配置来源。添加一个来源以开始。",
+			"refresh": "刷新此来源",
+			"remove": "移除来源"
+		},
+		"errors": {
+			"emptyUrl": "URL 不能为空",
+			"invalidUrl": "无效的 URL 格式",
+			"nonVisibleChars": "URL 包含空格以外的不可见字符",
+			"invalidGitUrl": "URL 必须是有效的 Git 仓库 URL（例如：https://github.com/username/repo）",
+			"duplicateUrl": "此 URL 已在列表中（不区分大小写和空格的匹配）",
+			"nameTooLong": "名称必须不超过 20 个字符",
+			"nonVisibleCharsName": "名称包含空格以外的不可见字符",
+			"duplicateName": "此名称已被使用（不区分大小写和空格的匹配）",
+			"maxSources": "最多允许 {{max}} 个来源"
+		}
+	}
+}

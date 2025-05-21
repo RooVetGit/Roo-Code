@@ -1,0 +1,97 @@
+{
+	"type-group": {
+		"modes": "模式",
+		"mcps": "MCP伺服器",
+		"prompts": "提示",
+		"packages": "套件",
+		"generic-type": "{{type}}",
+		"match": "符合"
+	},
+	"item-card": {
+		"type-mode": "模式",
+		"type-mcp": "MCP伺服器",
+		"type-prompt": "提示",
+		"type-package": "套件",
+		"type-other": "其他",
+		"by-author": "作者：{{author}}",
+		"authors-profile": "作者個人檔案",
+		"remove-tag-filter": "移除標籤篩選：{{tag}}",
+		"filter-by-tag": "依標籤篩選：{{tag}}",
+		"component-details": "元件詳細資訊",
+		"match-count": "{{count}}個符合",
+		"view": "檢視",
+		"source": "原始碼"
+	},
+	"install-sidebar": {
+		"title": "安裝 {{itemName}}",
+		"installButton": "安裝",
+		"cancelButton": "取消"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "搜尋市集..."
+		},
+		"type": {
+			"label": "類型",
+			"all": "所有類型",
+			"mode": "模式",
+			"mcp server": "MCP 伺服器",
+			"prompt": "提示",
+			"package": "套件"
+		},
+		"sort": {
+			"label": "排序依據",
+			"name": "名稱",
+			"lastUpdated": "上次更新"
+		},
+		"tags": {
+			"label": "標籤",
+			"clear": "清除 {{count}} 個選取的標籤",
+			"placeholder": "搜尋標籤...",
+			"noResults": "找不到標籤。",
+			"selected": "已選取 {{count}} 個標籤"
+		}
+	},
+	"sources": {
+		"title": "市集來源",
+		"description": "新增或管理市集項目的來源。每個來源都是一個包含市集項目定義的 Git 儲存庫。",
+		"errors": {
+			"maxSources": "最多允許 {{max}} 個來源。",
+			"emptyUrl": "URL 不能為空。",
+			"nonVisibleChars": "URL 包含不可見字元。",
+			"invalidGitUrl": "無效的 Git URL 格式。",
+			"duplicateUrl": "具有此 URL 的來源已存在。",
+			"nameTooLong": "名稱不能超過 20 個字元。",
+			"nonVisibleCharsName": "名稱包含不可見字元。",
+			"duplicateName": "具有此名稱的來源已存在。"
+		},
+		"add": {
+			"namePlaceholder": "選用來源名稱（例如 '我的私人儲存庫'）",
+			"urlPlaceholder": "Git 儲存庫 URL（例如 'https://github.com/user/repo.git'）",
+			"urlFormats": "支援的格式：HTTPS、SSH 或本機檔案路徑。",
+			"button": "新增來源"
+		},
+		"current": {
+			"title": "目前來源",
+			"empty": "尚未新增市集來源。",
+			"emptyHint": "在上方新增來源以瀏覽市集項目。",
+			"refresh": "重新整理來源",
+			"remove": "移除來源"
+		}
+	},
+	"tabs": {
+		"browse": "瀏覽",
+		"sources": "來源"
+	},
+	"title": "市集",
+	"items": {
+		"refresh": {
+			"refreshing": "正在重新整理市集項目..."
+		},
+		"empty": {
+			"noItems": "找不到市集項目。",
+			"emptyHint": "嘗試調整您的篩選器或搜尋詞"
+		},
+		"count": "{{count}} 個項目"
+	}
+}

@@ -1,0 +1,91 @@
+{
+	"title": "마켓플레이스",
+	"tabs": {
+		"browse": "찾아보기",
+		"sources": "소스"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "마켓플레이스 항목 검색..."
+		},
+		"type": {
+			"label": "유형별 필터:",
+			"all": "모든 유형",
+			"mode": "모드",
+			"mcp": "MCP 서버",
+			"prompt": "프롬프트",
+			"package": "패키지"
+		},
+		"sort": {
+			"label": "정렬 기준:",
+			"name": "이름",
+			"author": "작성자",
+			"lastUpdated": "최근 업데이트"
+		},
+		"tags": {
+			"label": "태그별 필터:",
+			"available": "{{count}}개 사용 가능",
+			"clear": "태그 지우기 ({{count}})",
+			"placeholder": "태그 검색 및 선택...",
+			"noResults": "일치하는 태그가 없습니다",
+			"selected": "선택한 태그가 있는 항목 표시 중 ({{count}}개 선택됨)",
+			"clickToFilter": "태그를 클릭하여 항목 필터링"
+		}
+	},
+	"type-group": {
+		"match": "일치",
+		"modes": "모드",
+		"mcps": "MCP 서버",
+		"prompts": "프롬프트",
+		"packages": "패키지",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "마켓플레이스 항목을 찾을 수 없습니다",
+			"withFilters": "필터를 조정해 보세요",
+			"noSources": "소스 탭에서 소스를 추가해 보세요"
+		},
+		"count": "{{count}}개 항목 찾음",
+		"components": "{{count}}개 구성 요소",
+		"refresh": {
+			"button": "새로 고침",
+			"refreshing": "새로 고치는 중..."
+		},
+		"card": {
+			"by": "작성자: {{author}}",
+			"from": "출처: {{source}}",
+			"viewSource": "보기",
+			"viewOnSource": "{{source}}에서 보기"
+		}
+	},
+	"sources": {
+		"title": "마켓플레이스 소스 구성",
+		"description": "마켓플레이스 항목이 포함된 Git 저장소를 추가합니다. 마켓플레이스를 탐색할 때 이러한 저장소를 가져옵니다.",
+		"add": {
+			"title": "새 소스 추가",
+			"urlPlaceholder": "Git 저장소 URL (예: https://github.com/username/repo)",
+			"urlFormats": "지원되는 형식: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) 또는 Git 프로토콜 (git://github.com/username/repo.git)",
+			"namePlaceholder": "표시 이름 (최대 20자)",
+			"button": "소스 추가"
+		},
+		"current": {
+			"title": "현재 소스",
+			"count": "{{current}}/{{max}} 최대",
+			"empty": "구성된 소스가 없습니다. 소스를 추가하여 시작하세요.",
+			"refresh": "이 소스 새로 고침",
+			"remove": "소스 제거"
+		},
+		"errors": {
+			"emptyUrl": "URL을 입력해야 합니다",
+			"invalidUrl": "잘못된 URL 형식",
+			"nonVisibleChars": "URL에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
+			"invalidGitUrl": "URL은 유효한 Git 저장소 URL이어야 합니다 (예: https://github.com/username/repo)",
+			"duplicateUrl": "이 URL은 이미 목록에 있습니다 (대소문자 및 공백 구분 없이 일치)",
+			"nameTooLong": "이름은 20자 이하여야 합니다",
+			"nonVisibleCharsName": "이름에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
+			"duplicateName": "이 이름은 이미 사용 중입니다 (대소문자 및 공백 구분 없이 일치)",
+			"maxSources": "최대 {{max}}개의 소스만 허용됩니다"
+		}
+	}
+}

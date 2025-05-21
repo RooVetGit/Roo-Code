@@ -1,0 +1,105 @@
+{
+	"type-group": {
+		"modes": "Режимы",
+		"mcps": "MCP-серверы",
+		"prompts": "Промпты",
+		"packages": "Пакеты",
+		"generic-type": "{{type}}",
+		"match": "совпадение"
+	},
+	"item-card": {
+		"type-mode": "Режим",
+		"type-mcp": "MCP-сервер",
+		"type-prompt": "Промпт",
+		"type-package": "Пакет",
+		"type-other": "Другое",
+		"by-author": "от {{author}}",
+		"authors-profile": "Профиль автора",
+		"remove-tag-filter": "Удалить фильтр по тегу: {{tag}}",
+		"filter-by-tag": "Фильтровать по тегу: {{tag}}",
+		"component-details": "Детали компонента",
+		"match-count_one": "{{count}} совпадение",
+		"match-count_few": "{{count}} совпадения",
+		"match-count_many": "{{count}} совпадений",
+		"view": "Просмотр",
+		"source": "Источник"
+	},
+	"install-sidebar": {
+		"title": "Установить {{itemName}}",
+		"installButton": "Установить",
+		"cancelButton": "Отмена"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Поиск по маркетплейсу..."
+		},
+		"type": {
+			"label": "Тип",
+			"all": "Все типы",
+			"mode": "Режим",
+			"mcp server": "MCP-сервер",
+			"prompt": "Промпт",
+			"package": "Пакет"
+		},
+		"sort": {
+			"label": "Сортировать по",
+			"name": "Имя",
+			"lastUpdated": "Последнее обновление"
+		},
+		"tags": {
+			"label": "Теги",
+			"clear_one": "Очистить {{count}} выбранный тег",
+			"clear_few": "Очистить {{count}} выбранных тега",
+			"clear_many": "Очистить {{count}} выбранных тегов",
+			"placeholder": "Поиск тегов...",
+			"noResults": "Теги не найдены.",
+			"selected_one": "{{count}} выбранный тег",
+			"selected_few": "{{count}} выбранных тега",
+			"selected_many": "{{count}} выбранных тегов"
+		}
+	},
+	"sources": {
+		"title": "Источники маркетплейса",
+		"description": "Добавляйте или управляйте источниками элементов маркетплейса. Каждый источник — это репозиторий Git, содержащий определения элементов маркетплейса.",
+		"errors": {
+			"maxSources": "Разрешено не более {{max}} источников.",
+			"emptyUrl": "URL не может быть пустым.",
+			"nonVisibleChars": "URL содержит невидимые символы.",
+			"invalidGitUrl": "Неверный формат URL Git.",
+			"duplicateUrl": "Источник с таким URL уже существует.",
+			"nameTooLong": "Имя не может превышать 20 символов.",
+			"nonVisibleCharsName": "Имя содержит невидимые символы.",
+			"duplicateName": "Источник с таким именем уже существует."
+		},
+		"add": {
+			"namePlaceholder": "Необязательное имя источника (например, 'Мой приватный репозиторий')",
+			"urlPlaceholder": "URL репозитория Git (например, 'https://github.com/user/repo.git')",
+			"urlFormats": "Поддерживаемые форматы: HTTPS, SSH или локальный путь к файлу.",
+			"button": "Добавить источник"
+		},
+		"current": {
+			"title": "Текущие источники",
+			"empty": "Источники маркетплейса еще не добавлены.",
+			"emptyHint": "Добавьте источник выше, чтобы просмотреть элементы маркетплейса.",
+			"refresh": "Обновить источник",
+			"remove": "Удалить источник"
+		}
+	},
+	"tabs": {
+		"browse": "Обзор",
+		"sources": "Источники"
+	},
+	"title": "Маркетплейс",
+	"items": {
+		"refresh": {
+			"refreshing": "Обновление элементов маркетплейса..."
+		},
+		"empty": {
+			"noItems": "Элементы маркетплейса не найдены.",
+			"emptyHint": "Попробуйте изменить фильтры или условия поиска"
+		},
+		"count_one": "{{count}} элемент",
+		"count_few": "{{count}} элемента",
+		"count_many": "{{count}} элементов"
+	}
+}

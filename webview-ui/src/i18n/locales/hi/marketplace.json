@@ -1,0 +1,91 @@
+{
+	"title": "मार्केटप्लेस",
+	"tabs": {
+		"browse": "ब्राउज़ करें",
+		"sources": "स्रोत"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "मार्केटप्लेस आइटम खोजें..."
+		},
+		"type": {
+			"label": "प्रकार से फ़िल्टर करें:",
+			"all": "सभी प्रकार",
+			"mode": "मोड",
+			"mcp": "एमसीपी सर्वर",
+			"prompt": "प्रॉम्प्ट",
+			"package": "पैकेज"
+		},
+		"sort": {
+			"label": "इसके अनुसार क्रमबद्ध करें:",
+			"name": "नाम",
+			"author": "लेखक",
+			"lastUpdated": "अंतिम अपडेट"
+		},
+		"tags": {
+			"label": "टैग से फ़िल्टर करें:",
+			"available": "{{count}} उपलब्ध",
+			"clear": "टैग साफ़ करें ({{count}})",
+			"placeholder": "टैग खोजने और चुनने के लिए टाइप करें...",
+			"noResults": "कोई मिलान टैग नहीं मिला",
+			"selected": "चयनित टैग वाले आइटम दिखा रहे हैं ({{count}} चयनित)",
+			"clickToFilter": "आइटम फ़िल्टर करने के लिए टैग पर क्लिक करें"
+		}
+	},
+	"type-group": {
+		"match": "मिलान",
+		"modes": "मोड्स",
+		"mcps": "एमसीपी सर्वर",
+		"prompts": "प्रॉम्प्ट्स",
+		"packages": "पैकेज",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "कोई मार्केटप्लेस आइटम नहीं मिला",
+			"withFilters": "फ़िल्टर समायोजित करने का प्रयास करें",
+			"noSources": "स्रोत टैब में एक स्रोत जोड़ने का प्रयास करें"
+		},
+		"count": "{{count}} आइटम मिले",
+		"components": "{{count}} कंपोनेंट",
+		"refresh": {
+			"button": "रीफ्रेश करें",
+			"refreshing": "रीफ्रेश हो रहा है..."
+		},
+		"card": {
+			"by": "{{author}} द्वारा",
+			"from": "{{source}} से",
+			"viewSource": "देखें",
+			"viewOnSource": "{{source}} पर देखें"
+		}
+	},
+	"sources": {
+		"title": "मार्केटप्लेस स्रोत कॉन्फ़िगर करें",
+		"description": "मार्केटप्लेस आइटम वाले Git रिपॉजिटरी जोड़ें। मार्केटप्लेस ब्राउज़ करते समय इन रिपॉजिटरी को फ़ेच किया जाएगा।",
+		"add": {
+			"title": "नया स्रोत जोड़ें",
+			"urlPlaceholder": "Git रिपॉजिटरी URL (उदा., https://github.com/username/repo)",
+			"urlFormats": "समर्थित प्रारूप: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git), या Git प्रोटोकॉल (git://github.com/username/repo.git)",
+			"namePlaceholder": "प्रदर्शन नाम (अधिकतम 20 अक्षर)",
+			"button": "स्रोत जोड़ें"
+		},
+		"current": {
+			"title": "वर्तमान स्रोत",
+			"count": "{{current}}/{{max}} अधिकतम",
+			"empty": "कोई स्रोत कॉन्फ़िगर नहीं किया गया। शुरू करने के लिए एक स्रोत जोड़ें।",
+			"refresh": "इस स्रोत को रीफ्रेश करें",
+			"remove": "स्रोत हटाएं"
+		},
+		"errors": {
+			"emptyUrl": "URL खाली नहीं हो सकता",
+			"invalidUrl": "अमान्य URL प्रारूप",
+			"nonVisibleChars": "URL में स्पेस के अलावा अदृश्य वर्ण हैं",
+			"invalidGitUrl": "URL एक वैध Git रिपॉजिटरी URL होना चाहिए (उदा., https://github.com/username/repo)",
+			"duplicateUrl": "यह URL पहले से सूची में है (केस और व्हाइटस्पेस असंवेदनशील मिलान)",
+			"nameTooLong": "नाम 20 अक्षरों या उससे कम का होना चाहिए",
+			"nonVisibleCharsName": "नाम में स्पेस के अलावा अदृश्य वर्ण हैं",
+			"duplicateName": "यह नाम पहले से उपयोग में है (केस और व्हाइटस्पेस असंवेदनशील मिलान)",
+			"maxSources": "अधिकतम {{max}} स्रोत की अनुमति है"
+		}
+	}
+}

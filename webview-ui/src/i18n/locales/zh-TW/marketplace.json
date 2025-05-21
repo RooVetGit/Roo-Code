@@ -1,0 +1,91 @@
+{
+	"title": "市集",
+	"tabs": {
+		"browse": "瀏覽",
+		"sources": "來源"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "搜尋市集項目..."
+		},
+		"type": {
+			"label": "依類型篩選：",
+			"all": "所有類型",
+			"mode": "模式",
+			"mcp": "MCP 伺服器",
+			"prompt": "提示",
+			"package": "套件"
+		},
+		"sort": {
+			"label": "排序方式：",
+			"name": "名稱",
+			"author": "作者",
+			"lastUpdated": "最近更新"
+		},
+		"tags": {
+			"label": "依標籤篩選：",
+			"available": "{{count}} 個可用",
+			"clear": "清除標籤 ({{count}})",
+			"placeholder": "輸入以搜尋和選擇標籤...",
+			"noResults": "未找到符合的標籤",
+			"selected": "顯示具有任何已選標籤的項目（已選 {{count}} 個）",
+			"clickToFilter": "點擊標籤以篩選項目"
+		}
+	},
+	"type-group": {
+		"match": "符合",
+		"modes": "模式",
+		"mcps": "MCP 伺服器",
+		"prompts": "提示",
+		"packages": "套件",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "未找到市集項目",
+			"withFilters": "嘗試調整篩選條件",
+			"noSources": "嘗試在來源分頁中新增來源"
+		},
+		"count": "找到 {{count}} 個項目",
+		"components": "{{count}} 個元件",
+		"refresh": {
+			"button": "重新整理",
+			"refreshing": "重新整理中..."
+		},
+		"card": {
+			"by": "作者：{{author}}",
+			"from": "來自：{{source}}",
+			"viewSource": "檢視",
+			"viewOnSource": "在 {{source}} 上檢視"
+		}
+	},
+	"sources": {
+		"title": "設定市集來源",
+		"description": "新增包含市集項目的 Git 儲存庫。瀏覽市集時將擷取這些儲存庫。",
+		"add": {
+			"title": "新增來源",
+			"urlPlaceholder": "Git 儲存庫 URL（例如：https://github.com/username/repo）",
+			"urlFormats": "支援的格式：HTTPS (https://github.com/username/repo)、SSH (git@github.com:username/repo.git) 或 Git 協定 (git://github.com/username/repo.git)",
+			"namePlaceholder": "顯示名稱（最多 20 個字元）",
+			"button": "新增來源"
+		},
+		"current": {
+			"title": "目前來源",
+			"count": "{{current}}/{{max}} 個上限",
+			"empty": "未設定來源。新增一個來源以開始。",
+			"refresh": "重新整理此來源",
+			"remove": "移除來源"
+		},
+		"errors": {
+			"emptyUrl": "URL 不能為空",
+			"invalidUrl": "無效的 URL 格式",
+			"nonVisibleChars": "URL 包含空格以外的不可見字元",
+			"invalidGitUrl": "URL 必須是有效的 Git 儲存庫 URL（例如：https://github.com/username/repo）",
+			"duplicateUrl": "此 URL 已在清單中（不區分大小寫和空格的符合）",
+			"nameTooLong": "名稱必須不超過 20 個字元",
+			"nonVisibleCharsName": "名稱包含空格以外的不可見字元",
+			"duplicateName": "此名稱已被使用（不區分大小寫和空格的符合）",
+			"maxSources": "最多允許 {{max}} 個來源"
+		}
+	}
+}

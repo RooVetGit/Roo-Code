@@ -1,0 +1,91 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"browse": "Duyệt",
+		"sources": "Nguồn"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Tìm kiếm các mục marketplace..."
+		},
+		"type": {
+			"label": "Lọc theo loại:",
+			"all": "Tất cả các loại",
+			"mode": "Chế độ",
+			"mcp": "Máy chủ MCP",
+			"prompt": "Prompt",
+			"package": "Gói"
+		},
+		"sort": {
+			"label": "Sắp xếp theo:",
+			"name": "Tên",
+			"author": "Tác giả",
+			"lastUpdated": "Cập nhật lần cuối"
+		},
+		"tags": {
+			"label": "Lọc theo thẻ:",
+			"available": "{{count}} có sẵn",
+			"clear": "Xóa thẻ ({{count}})",
+			"placeholder": "Gõ để tìm kiếm và chọn thẻ...",
+			"noResults": "Không tìm thấy thẻ phù hợp",
+			"selected": "Hiển thị các mục có bất kỳ thẻ đã chọn nào (đã chọn {{count}})",
+			"clickToFilter": "Nhấp vào thẻ để lọc các mục"
+		}
+	},
+	"type-group": {
+		"match": "Khớp",
+		"modes": "Chế độ",
+		"mcps": "Máy chủ MCP",
+		"prompts": "Prompt",
+		"packages": "Gói",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Không tìm thấy mục marketplace nào",
+			"withFilters": "Thử điều chỉnh bộ lọc",
+			"noSources": "Thử thêm nguồn trong tab Nguồn"
+		},
+		"count": "Tìm thấy {{count}} mục",
+		"components": "{{count}} thành phần",
+		"refresh": {
+			"button": "Làm mới",
+			"refreshing": "Đang làm mới..."
+		},
+		"card": {
+			"by": "bởi {{author}}",
+			"from": "từ {{source}}",
+			"viewSource": "Xem",
+			"viewOnSource": "Xem trên {{source}}"
+		}
+	},
+	"sources": {
+		"title": "Cấu hình Nguồn Marketplace",
+		"description": "Thêm kho Git chứa các mục marketplace. Các kho này sẽ được tải khi duyệt marketplace.",
+		"add": {
+			"title": "Thêm Nguồn Mới",
+			"urlPlaceholder": "URL kho Git (ví dụ: https://github.com/username/repo)",
+			"urlFormats": "Định dạng được hỗ trợ: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) hoặc giao thức Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Tên hiển thị (tối đa 20 ký tự)",
+			"button": "Thêm Nguồn"
+		},
+		"current": {
+			"title": "Nguồn Hiện Tại",
+			"count": "{{current}}/{{max}} tối đa",
+			"empty": "Chưa có nguồn nào được cấu hình. Thêm một nguồn để bắt đầu.",
+			"refresh": "Làm mới nguồn này",
+			"remove": "Xóa nguồn"
+		},
+		"errors": {
+			"emptyUrl": "URL không được để trống",
+			"invalidUrl": "Định dạng URL không hợp lệ",
+			"nonVisibleChars": "URL chứa ký tự không nhìn thấy ngoài dấu cách",
+			"invalidGitUrl": "URL phải là URL kho Git hợp lệ (ví dụ: https://github.com/username/repo)",
+			"duplicateUrl": "URL này đã có trong danh sách (khớp không phân biệt chữ hoa/thường và dấu cách)",
+			"nameTooLong": "Tên phải có 20 ký tự trở xuống",
+			"nonVisibleCharsName": "Tên chứa ký tự không nhìn thấy ngoài dấu cách",
+			"duplicateName": "Tên này đã được sử dụng (khớp không phân biệt chữ hoa/thường và dấu cách)",
+			"maxSources": "Cho phép tối đa {{max}} nguồn"
+		}
+	}
+}

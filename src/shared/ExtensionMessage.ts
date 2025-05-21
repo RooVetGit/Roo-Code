@@ -16,6 +16,8 @@ import {
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
+import { MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
+import { FullInstallatedMetadata } from "../services/marketplace/InstalledMetadataManager"
 
 export type { ProviderSettingsEntry, ToolProgressStatus }
 
@@ -74,13 +76,18 @@ export interface ExtensionMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "codebaseIndexConfig"
+		| "openMarketplaceInstallSidebarWithConfig"
+		| "repositoryRefreshComplete"
 	text?: string
+	payload?: any // Add a generic payload for now, can refine later
+	// Expected payload for "openMarketplaceInstallSidebarWithConfig": { item: MarketplaceItem, config: RocketConfig | undefined }
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "marketplaceButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
@@ -112,6 +119,8 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	items?: MarketplaceItem[]
+	url?: string // For repositoryRefreshComplete
 }
 
 export type ExtensionState = Pick<
@@ -215,6 +224,9 @@ export type ExtensionState = Pick<
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
 	autoCondenseContextPercent: number
+	marketplaceSources?: MarketplaceSource[]
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: FullInstallatedMetadata
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

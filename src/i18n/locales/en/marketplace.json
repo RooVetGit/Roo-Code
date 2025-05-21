@@ -1,0 +1,104 @@
+{
+	"type-group": {
+		"modes": "Modes",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Packages",
+		"generic-type": "{{type}}s",
+		"match": "match"
+	},
+	"item-card": {
+		"type-mode": "Mode",
+		"type-mcp": "MCP Server",
+		"type-prompt": "Prompt",
+		"type-package": "Package",
+		"type-other": "Other",
+		"by-author": "by {{author}}",
+		"authors-profile": "Author's Profile",
+		"remove-tag-filter": "Remove tag filter: {{tag}}",
+		"filter-by-tag": "Filter by tag: {{tag}}",
+		"component-details": "Component Details",
+		"match-count": "{{count}} match{{count !== 1 ? 'es' : ''}}",
+		"view": "View",
+		"source": "Source"
+	},
+	"install-sidebar": {
+		"title": "Install {{itemName}}",
+		"installButton": "Install",
+		"cancelButton": "Cancel"
+	},
+	"install-sidebar": {
+		"title": "Install {{itemName}}",
+		"installButton": "Install",
+		"cancelButton": "Cancel"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Search marketplace..."
+		},
+		"type": {
+			"label": "Type",
+			"all": "All Types",
+			"mode": "Mode",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Package"
+		},
+		"sort": {
+			"label": "Sort By",
+			"name": "Name",
+			"lastUpdated": "Last Updated"
+		},
+		"tags": {
+			"label": "Tags",
+			"clear": "Clear {{count}} selected tag{{count !== 1 ? 's' : ''}}",
+			"placeholder": "Search tags...",
+			"noResults": "No tags found.",
+			"selected": "{{count}} tag{{count !== 1 ? 's' : ''}} selected"
+		},
+		"sources": {
+			"title": "Marketplace Sources",
+			"description": "Add or manage sources for marketplace items. Each source is a Git repository containing marketplace item definitions.",
+			"errors": {
+				"maxSources": "Maximum of {{max}} sources allowed.",
+				"emptyUrl": "URL cannot be empty.",
+				"nonVisibleChars": "URL contains non-visible characters.",
+				"invalidGitUrl": "Invalid Git URL format.",
+				"duplicateUrl": "Source with this URL already exists.",
+				"nameTooLong": "Name cannot exceed 20 characters.",
+				"nonVisibleCharsName": "Name contains non-visible characters.",
+				"duplicateName": "Source with this name already exists."
+			},
+			"add": {
+				"namePlaceholder": "Optional source name (e.g. 'My Private Repo')",
+				"urlPlaceholder": "Git repository URL (e.g. 'https://github.com/user/repo.git')",
+				"urlFormats": "Supported formats: HTTPS, SSH, or local file path.",
+				"button": "Add Source"
+			},
+			"current": {
+				"title": "Current Sources",
+				"empty": "No marketplace sources added yet.",
+				"emptyHint": "Add a source above to browse marketplace items."
+			},
+			"current": {
+				"refresh": "Refresh source",
+				"remove": "Remove source"
+			}
+		},
+		"tabs": {
+			"browse": "Browse",
+			"sources": "Sources"
+		},
+		"title": "Marketplace"
+	},
+	"items": {
+		"refresh": {
+			"refreshing": "Refreshing marketplace items..."
+		},
+		"empty": {
+			"noItems": "No marketplace items found.",
+			"emptyHint": "Try adjusting your filters or search terms"
+		},
+		"count": "{{count}} item{{count !== 1 ? 's' : ''}}"
+	}
+}

@@ -1,0 +1,100 @@
+{
+	"type-group": {
+		"modes": "Modi",
+		"mcps": "MCP-Server",
+		"prompts": "Prompts",
+		"packages": "Pakete",
+		"generic-type": "{{type}}",
+		"match": "Treffer"
+	},
+	"item-card": {
+		"type-mode": "Modus",
+		"type-mcp": "MCP-Server",
+		"type-prompt": "Prompt",
+		"type-package": "Paket",
+		"type-other": "Sonstiges",
+		"by-author": "von {{author}}",
+		"authors-profile": "Autorenprofil",
+		"remove-tag-filter": "Tag-Filter entfernen: {{tag}}",
+		"filter-by-tag": "Nach Tag filtern: {{tag}}",
+		"component-details": "Komponentendetails",
+		"match-count": "{{count}} Treffer",
+		"view": "Ansehen",
+		"source": "Quelle"
+	},
+	"install-sidebar": {
+		"title": "Installiere {{itemName}}",
+		"installButton": "Installieren",
+		"cancelButton": "Abbrechen"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Marktplatz durchsuchen..."
+		},
+		"type": {
+			"label": "Typ",
+			"all": "Alle Typen",
+			"mode": "Modus",
+			"mcp server": "MCP-Server",
+			"prompt": "Prompt",
+			"package": "Paket"
+		},
+		"sort": {
+			"label": "Sortieren nach",
+			"name": "Name",
+			"lastUpdated": "Zuletzt aktualisiert"
+		},
+		"tags": {
+			"label": "Tags",
+			"clear_one": "{{count}} ausgewählten Tag löschen",
+			"clear_other": "{{count}} ausgewählte Tags löschen",
+			"placeholder": "Tags durchsuchen...",
+			"noResults": "Keine Tags gefunden.",
+			"selected_one": "{{count}} Tag ausgewählt",
+			"selected_other": "{{count}} Tags ausgewählt"
+		}
+	},
+	"sources": {
+		"title": "Marktplatz-Quellen",
+		"description": "Füge Quellen für Marktplatz-Items hinzu oder verwalte sie. Jede Quelle ist ein Git-Repository, das Marktplatz-Item-Definitionen enthält.",
+		"errors": {
+			"maxSources": "Maximal {{max}} Quellen erlaubt.",
+			"emptyUrl": "URL darf nicht leer sein.",
+			"nonVisibleChars": "URL enthält nicht sichtbare Zeichen.",
+			"invalidGitUrl": "Ungültiges Git-URL-Format.",
+			"duplicateUrl": "Quelle mit dieser URL existiert bereits.",
+			"nameTooLong": "Name darf 20 Zeichen nicht überschreiten.",
+			"nonVisibleCharsName": "Name enthält nicht sichtbare Zeichen.",
+			"duplicateName": "Quelle mit diesem Namen existiert bereits."
+		},
+		"add": {
+			"namePlaceholder": "Optionaler Quellname (z.B. 'Mein privates Repo')",
+			"urlPlaceholder": "Git-Repository-URL (z.B. 'https://github.com/user/repo.git')",
+			"urlFormats": "Unterstützte Formate: HTTPS, SSH oder lokaler Dateipfad.",
+			"button": "Quelle hinzufügen"
+		},
+		"current": {
+			"title": "Aktuelle Quellen",
+			"empty": "Noch keine Marktplatz-Quellen hinzugefügt.",
+			"emptyHint": "Füge oben eine Quelle hinzu, um Marktplatz-Items zu durchsuchen.",
+			"refresh": "Quelle aktualisieren",
+			"remove": "Quelle entfernen"
+		}
+	},
+	"tabs": {
+		"browse": "Durchsuchen",
+		"sources": "Quellen"
+	},
+	"title": "Marktplatz",
+	"items": {
+		"refresh": {
+			"refreshing": "Marktplatz-Items werden aktualisiert..."
+		},
+		"empty": {
+			"noItems": "Keine Marktplatz-Items gefunden.",
+			"emptyHint": "Versuche, deine Filter oder Suchbegriffe anzupassen"
+		},
+		"count_one": "{{count}} Item",
+		"count_other": "{{count}} Items"
+	}
+}

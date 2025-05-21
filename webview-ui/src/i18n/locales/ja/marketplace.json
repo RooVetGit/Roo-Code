@@ -1,0 +1,91 @@
+{
+	"title": "マーケットプレイス",
+	"tabs": {
+		"browse": "ブラウズ",
+		"sources": "ソース"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "マーケットプレイスのアイテムを検索..."
+		},
+		"type": {
+			"label": "タイプでフィルター:",
+			"all": "すべてのタイプ",
+			"mode": "モード",
+			"mcp": "MCPサーバー",
+			"prompt": "プロンプト",
+			"package": "パッケージ"
+		},
+		"sort": {
+			"label": "並び替え:",
+			"name": "名前",
+			"author": "作者",
+			"lastUpdated": "最終更新"
+		},
+		"tags": {
+			"label": "タグでフィルター:",
+			"available": "{{count}}個利用可能",
+			"clear": "タグをクリア ({{count}})",
+			"placeholder": "タグを検索して選択...",
+			"noResults": "一致するタグが見つかりません",
+			"selected": "選択したタグのいずれかを含むアイテムを表示中 ({{count}}個選択)",
+			"clickToFilter": "タグをクリックしてアイテムをフィルター"
+		}
+	},
+	"type-group": {
+		"match": "一致",
+		"modes": "モード",
+		"mcps": "MCPサーバー",
+		"prompts": "プロンプト",
+		"packages": "パッケージ",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "マーケットプレイスのアイテムが見つかりません",
+			"withFilters": "フィルターを調整してみてください",
+			"noSources": "ソースタブでソースを追加してみてください"
+		},
+		"count": "{{count}}個のアイテムが見つかりました",
+		"components": "{{count}}個のコンポーネント",
+		"refresh": {
+			"button": "更新",
+			"refreshing": "更新中..."
+		},
+		"card": {
+			"by": "作者: {{author}}",
+			"from": "ソース: {{source}}",
+			"viewSource": "表示",
+			"viewOnSource": "{{source}}で表示"
+		}
+	},
+	"sources": {
+		"title": "マーケットプレイスのソースを設定",
+		"description": "マーケットプレイスのアイテムを含むGitリポジトリを追加します。これらのリポジトリはマーケットプレイスの閲覧時に取得されます。",
+		"add": {
+			"title": "新しいソースを追加",
+			"urlPlaceholder": "GitリポジトリのURL (例: https://github.com/username/repo)",
+			"urlFormats": "サポートされている形式: HTTPS (https://github.com/username/repo)、SSH (git@github.com:username/repo.git)、またはGitプロトコル (git://github.com/username/repo.git)",
+			"namePlaceholder": "表示名 (最大20文字)",
+			"button": "ソースを追加"
+		},
+		"current": {
+			"title": "現在のソース",
+			"count": "{{current}}/{{max}}個まで",
+			"empty": "ソースが設定されていません。ソースを追加して始めましょう。",
+			"refresh": "このソースを更新",
+			"remove": "ソースを削除"
+		},
+		"errors": {
+			"emptyUrl": "URLを入力してください",
+			"invalidUrl": "無効なURL形式です",
+			"nonVisibleChars": "URLにスペース以外の不可視文字が含まれています",
+			"invalidGitUrl": "URLは有効なGitリポジトリのURLである必要があります (例: https://github.com/username/repo)",
+			"duplicateUrl": "このURLは既にリストに存在します (大文字小文字とスペースを区別しない一致)",
+			"nameTooLong": "名前は20文字以内である必要があります",
+			"nonVisibleCharsName": "名前にスペース以外の不可視文字が含まれています",
+			"duplicateName": "この名前は既に使用されています (大文字小文字とスペースを区別しない一致)",
+			"maxSources": "最大{{max}}個のソースまで追加できます"
+		}
+	}
+}

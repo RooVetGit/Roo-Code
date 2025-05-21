@@ -1,0 +1,100 @@
+{
+	"type-group": {
+		"modes": "Modes",
+		"mcps": "Serveurs MCP",
+		"prompts": "Prompts",
+		"packages": "Paquets",
+		"generic-type": "{{type}}s",
+		"match": "correspondance"
+	},
+	"item-card": {
+		"type-mode": "Mode",
+		"type-mcp": "Serveur MCP",
+		"type-prompt": "Prompt",
+		"type-package": "Paquet",
+		"type-other": "Autre",
+		"by-author": "par {{author}}",
+		"authors-profile": "Profil de l'auteur",
+		"remove-tag-filter": "Supprimer le filtre de tag : {{tag}}",
+		"filter-by-tag": "Filtrer par tag : {{tag}}",
+		"component-details": "Détails du composant",
+		"match-count": "{{count}} correspondance{{count !== 1 ? 's' : ''}}",
+		"view": "Voir",
+		"source": "Source"
+	},
+	"install-sidebar": {
+		"title": "Installer {{itemName}}",
+		"installButton": "Installer",
+		"cancelButton": "Annuler"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Rechercher sur la place de marché..."
+		},
+		"type": {
+			"label": "Type",
+			"all": "Tous les types",
+			"mode": "Mode",
+			"mcp server": "Serveur MCP",
+			"prompt": "Prompt",
+			"package": "Paquet"
+		},
+		"sort": {
+			"label": "Trier par",
+			"name": "Nom",
+			"lastUpdated": "Dernière mise à jour"
+		},
+		"tags": {
+			"label": "Tags",
+			"clear_one": "Effacer {{count}} tag sélectionné",
+			"clear_other": "Effacer {{count}} tags sélectionnés",
+			"placeholder": "Rechercher des tags...",
+			"noResults": "Aucun tag trouvé.",
+			"selected_one": "{{count}} tag sélectionné",
+			"selected_other": "{{count}} tags sélectionnés"
+		}
+	},
+	"sources": {
+		"title": "Sources de la place de marché",
+		"description": "Ajoutez ou gérez les sources des éléments de la place de marché. Chaque source est un dépôt Git contenant des définitions d'éléments de la place de marché.",
+		"errors": {
+			"maxSources": "Maximum de {{max}} sources autorisées.",
+			"emptyUrl": "L'URL ne peut pas être vide.",
+			"nonVisibleChars": "L'URL contient des caractères non visibles.",
+			"invalidGitUrl": "Format d'URL Git invalide.",
+			"duplicateUrl": "Une source avec cette URL existe déjà.",
+			"nameTooLong": "Le nom ne peut pas dépasser 20 caractères.",
+			"nonVisibleCharsName": "Le nom contient des caractères non visibles.",
+			"duplicateName": "Une source avec ce nom existe déjà."
+		},
+		"add": {
+			"namePlaceholder": "Nom de source facultatif (par exemple, 'Mon dépôt privé')",
+			"urlPlaceholder": "URL du dépôt Git (par exemple, 'https://github.com/user/repo.git')",
+			"urlFormats": "Formats pris en charge : HTTPS, SSH ou chemin de fichier local.",
+			"button": "Ajouter une source"
+		},
+		"current": {
+			"title": "Sources actuelles",
+			"empty": "Aucune source de place de marché ajoutée pour l'instant.",
+			"emptyHint": "Ajoutez une source ci-dessus pour parcourir les éléments de la place de marché.",
+			"refresh": "Actualiser la source",
+			"remove": "Supprimer la source"
+		}
+	},
+	"tabs": {
+		"browse": "Parcourir",
+		"sources": "Sources"
+	},
+	"title": "Place de marché",
+	"items": {
+		"refresh": {
+			"refreshing": "Actualisation des éléments de la place de marché..."
+		},
+		"empty": {
+			"noItems": "Aucun élément de place de marché trouvé.",
+			"emptyHint": "Essayez d'ajuster vos filtres ou termes de recherche"
+		},
+		"count_one": "{{count}} élément",
+		"count_other": "{{count}} éléments"
+	}
+}

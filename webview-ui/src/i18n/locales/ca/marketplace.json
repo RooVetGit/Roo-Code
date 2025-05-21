@@ -1,0 +1,91 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"browse": "Explorar",
+		"sources": "Fonts"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Cercar elements del marketplace..."
+		},
+		"type": {
+			"label": "Filtrar per tipus:",
+			"all": "Tots els tipus",
+			"mode": "Mode",
+			"mcp": "Servidor MCP",
+			"prompt": "Prompt",
+			"package": "Paquet"
+		},
+		"sort": {
+			"label": "Ordenar per:",
+			"name": "Nom",
+			"author": "Autor",
+			"lastUpdated": "Última actualització"
+		},
+		"tags": {
+			"label": "Filtrar per etiquetes:",
+			"available": "{{count}} disponibles",
+			"clear": "Netejar etiquetes ({{count}})",
+			"placeholder": "Escriu per cercar i seleccionar etiquetes...",
+			"noResults": "No s'han trobat etiquetes coincidents",
+			"selected": "Mostrant elements amb qualsevol de les etiquetes seleccionades ({{count}} seleccionades)",
+			"clickToFilter": "Fes clic a les etiquetes per filtrar elements"
+		}
+	},
+	"type-group": {
+		"match": "Coincidència",
+		"modes": "Modes",
+		"mcps": "Servidors MCP",
+		"prompts": "Prompts",
+		"packages": "Paquets",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "No s'han trobat elements al marketplace",
+			"withFilters": "Prova d'ajustar els filtres",
+			"noSources": "Prova d'afegir una font a la pestanya Fonts"
+		},
+		"count": "S'han trobat {{count}} elements",
+		"components": "{{count}} components",
+		"refresh": {
+			"button": "Actualitzar",
+			"refreshing": "Actualitzant..."
+		},
+		"card": {
+			"by": "per {{author}}",
+			"from": "de {{source}}",
+			"viewSource": "Veure",
+			"viewOnSource": "Veure a {{source}}"
+		}
+	},
+	"sources": {
+		"title": "Configurar fonts del Marketplace",
+		"description": "Afegeix repositoris Git que continguin elements del marketplace. Aquests repositoris es descarregaran quan s'explori el marketplace.",
+		"add": {
+			"title": "Afegir nova font",
+			"urlPlaceholder": "URL del repositori Git (p. ex., https://github.com/username/repo)",
+			"urlFormats": "Formats admesos: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git), o protocol Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nom a mostrar (màx. 20 caràcters)",
+			"button": "Afegir font"
+		},
+		"current": {
+			"title": "Fonts actuals",
+			"count": "{{current}}/{{max}} màx.",
+			"empty": "No hi ha fonts configurades. Afegeix una font per començar.",
+			"refresh": "Actualitzar aquesta font",
+			"remove": "Eliminar font"
+		},
+		"errors": {
+			"emptyUrl": "L'URL no pot estar buida",
+			"invalidUrl": "Format d'URL no vàlid",
+			"nonVisibleChars": "L'URL conté caràcters no visibles diferents d'espais",
+			"invalidGitUrl": "L'URL ha de ser una URL vàlida de repositori Git (p. ex., https://github.com/username/repo)",
+			"duplicateUrl": "Aquesta URL ja és a la llista (coincidència insensible a majúscules i espais)",
+			"nameTooLong": "El nom ha de tenir 20 caràcters o menys",
+			"nonVisibleCharsName": "El nom conté caràcters no visibles diferents d'espais",
+			"duplicateName": "Aquest nom ja està en ús (coincidència insensible a majúscules i espais)",
+			"maxSources": "Màxim de {{max}} fonts permeses"
+		}
+	}
+}

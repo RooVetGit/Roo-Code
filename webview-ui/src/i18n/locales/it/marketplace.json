@@ -1,0 +1,91 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"browse": "Sfoglia",
+		"sources": "Fonti"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Cerca elementi del marketplace..."
+		},
+		"type": {
+			"label": "Filtra per tipo:",
+			"all": "Tutti i tipi",
+			"mode": "Modalità",
+			"mcp": "Server MCP",
+			"prompt": "Prompt",
+			"package": "Pacchetto"
+		},
+		"sort": {
+			"label": "Ordina per:",
+			"name": "Nome",
+			"author": "Autore",
+			"lastUpdated": "Ultimo aggiornamento"
+		},
+		"tags": {
+			"label": "Filtra per tag:",
+			"available": "{{count}} disponibili",
+			"clear": "Cancella tag ({{count}})",
+			"placeholder": "Digita per cercare e selezionare i tag...",
+			"noResults": "Nessun tag corrispondente trovato",
+			"selected": "Mostrando elementi con uno qualsiasi dei tag selezionati ({{count}} selezionati)",
+			"clickToFilter": "Clicca sui tag per filtrare gli elementi"
+		}
+	},
+	"type-group": {
+		"match": "Corrispondenza",
+		"modes": "Modalità",
+		"mcps": "Server MCP",
+		"prompts": "Prompt",
+		"packages": "Pacchetti",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Nessun elemento trovato nel marketplace",
+			"withFilters": "Prova a modificare i filtri",
+			"noSources": "Prova ad aggiungere una fonte nella scheda Fonti"
+		},
+		"count": "{{count}} elementi trovati",
+		"components": "{{count}} componenti",
+		"refresh": {
+			"button": "Aggiorna",
+			"refreshing": "Aggiornamento in corso..."
+		},
+		"card": {
+			"by": "di {{author}}",
+			"from": "da {{source}}",
+			"viewSource": "Visualizza",
+			"viewOnSource": "Visualizza su {{source}}"
+		}
+	},
+	"sources": {
+		"title": "Configura fonti del Marketplace",
+		"description": "Aggiungi repository Git che contengono elementi del marketplace. Questi repository verranno recuperati durante la navigazione nel marketplace.",
+		"add": {
+			"title": "Aggiungi nuova fonte",
+			"urlPlaceholder": "URL del repository Git (es., https://github.com/username/repo)",
+			"urlFormats": "Formati supportati: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) o protocollo Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nome visualizzato (max 20 caratteri)",
+			"button": "Aggiungi fonte"
+		},
+		"current": {
+			"title": "Fonti attuali",
+			"count": "{{current}}/{{max}} max",
+			"empty": "Nessuna fonte configurata. Aggiungi una fonte per iniziare.",
+			"refresh": "Aggiorna questa fonte",
+			"remove": "Rimuovi fonte"
+		},
+		"errors": {
+			"emptyUrl": "L'URL non può essere vuoto",
+			"invalidUrl": "Formato URL non valido",
+			"nonVisibleChars": "L'URL contiene caratteri non visibili diversi dagli spazi",
+			"invalidGitUrl": "L'URL deve essere un URL valido di un repository Git (es., https://github.com/username/repo)",
+			"duplicateUrl": "Questo URL è già presente nell'elenco (corrispondenza insensibile a maiuscole/minuscole e spazi)",
+			"nameTooLong": "Il nome deve essere di 20 caratteri o meno",
+			"nonVisibleCharsName": "Il nome contiene caratteri non visibili diversi dagli spazi",
+			"duplicateName": "Questo nome è già in uso (corrispondenza insensibile a maiuscole/minuscole e spazi)",
+			"maxSources": "Massimo {{max}} fonti consentite"
+		}
+	}
+}

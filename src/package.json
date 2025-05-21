@@ -91,6 +91,11 @@
 				"icon": "$(history)"
 			},
 			{
+				"command": "roo-cline.marketplaceButtonClicked",
+				"title": "Marketplace",
+				"icon": "$(extensions)"
+			},
+			{
 				"command": "roo-cline.popoutButtonClicked",
 				"title": "%command.openInEditor.title%",
 				"icon": "$(link-external)"
@@ -232,6 +237,11 @@
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
 					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.marketplaceButtonClicked",
+					"group": "navigation@7",
+					"when": "view == roo-cline.SidebarProvider"
 				}
 			],
 			"editor/title": [
@@ -263,6 +273,11 @@
 				{
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.marketplaceButtonClicked",
+					"group": "navigation@7",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				}
 			]

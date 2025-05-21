@@ -1,0 +1,97 @@
+{
+	"type-group": {
+		"modes": "Modlar",
+		"mcps": "MCP Sunucuları",
+		"prompts": "Komutlar",
+		"packages": "Paketler",
+		"generic-type": "{{type}}lar",
+		"match": "eşleşme"
+	},
+	"item-card": {
+		"type-mode": "Mod",
+		"type-mcp": "MCP Sunucusu",
+		"type-prompt": "Komut",
+		"type-package": "Paket",
+		"type-other": "Diğer",
+		"by-author": "yazar: {{author}}",
+		"authors-profile": "Yazar Profili",
+		"remove-tag-filter": "Etiket filtresini kaldır: {{tag}}",
+		"filter-by-tag": "Etikete göre filtrele: {{tag}}",
+		"component-details": "Bileşen Detayları",
+		"match-count": "{{count}} eşleşme",
+		"view": "Görüntüle",
+		"source": "Kaynak"
+	},
+	"install-sidebar": {
+		"title": "{{itemName}} Yükle",
+		"installButton": "Yükle",
+		"cancelButton": "İptal"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Marketplace ara..."
+		},
+		"type": {
+			"label": "Tip",
+			"all": "Tüm Tipler",
+			"mode": "Mod",
+			"mcp server": "MCP Sunucusu",
+			"prompt": "Komut",
+			"package": "Paket"
+		},
+		"sort": {
+			"label": "Sırala",
+			"name": "Ad",
+			"lastUpdated": "Son Güncelleme"
+		},
+		"tags": {
+			"label": "Etiketler",
+			"clear": "{{count}} seçili etiketi temizle",
+			"placeholder": "Etiket ara...",
+			"noResults": "Etiket bulunamadı.",
+			"selected": "{{count}} etiket seçili"
+		}
+	},
+	"sources": {
+		"title": "Marketplace Kaynakları",
+		"description": "Marketplace öğeleri için kaynak ekleyin veya yönetin. Her kaynak, marketplace öğe tanımlarını içeren bir Git deposudur.",
+		"errors": {
+			"maxSources": "Maksimum {{max}} kaynağa izin verilir.",
+			"emptyUrl": "URL boş olamaz.",
+			"nonVisibleChars": "URL görünmez karakterler içeriyor.",
+			"invalidGitUrl": "Geçersiz Git URL formatı.",
+			"duplicateUrl": "Bu URL'ye sahip bir kaynak zaten var.",
+			"nameTooLong": "Ad 20 karakteri geçemez.",
+			"nonVisibleCharsName": "Ad görünmez karakterler içeriyor.",
+			"duplicateName": "Bu ada sahip bir kaynak zaten var."
+		},
+		"add": {
+			"namePlaceholder": "İsteğe bağlı kaynak adı (örn. 'Özel Depom')",
+			"urlPlaceholder": "Git deposu URL'si (örn. 'https://github.com/user/repo.git')",
+			"urlFormats": "Desteklenen formatlar: HTTPS, SSH veya yerel dosya yolu.",
+			"button": "Kaynak Ekle"
+		},
+		"current": {
+			"title": "Mevcut Kaynaklar",
+			"empty": "Henüz marketplace kaynağı eklenmedi.",
+			"emptyHint": "Marketplace öğelerine göz atmak için yukarıdan bir kaynak ekleyin.",
+			"refresh": "Kaynağı yenile",
+			"remove": "Kaynağı kaldır"
+		}
+	},
+	"tabs": {
+		"browse": "Göz At",
+		"sources": "Kaynaklar"
+	},
+	"title": "Marketplace",
+	"items": {
+		"refresh": {
+			"refreshing": "Marketplace öğeleri yenileniyor..."
+		},
+		"empty": {
+			"noItems": "Marketplace öğesi bulunamadı.",
+			"emptyHint": "Filtrelerinizi veya arama terimlerinizi ayarlamayı deneyin"
+		},
+		"count": "{{count}} öğe"
+	}
+}

@@ -1,0 +1,103 @@
+{
+	"type-group": {
+		"modes": "Tryby",
+		"mcps": "Serwery MCP",
+		"prompts": "Podpowiedzi",
+		"packages": "Pakiety",
+		"generic-type": "{{type}}y",
+		"match": "dopasowanie"
+	},
+	"item-card": {
+		"type-mode": "Tryb",
+		"type-mcp": "Serwer MCP",
+		"type-prompt": "Podpowiedź",
+		"type-package": "Pakiet",
+		"type-other": "Inne",
+		"by-author": "autor: {{author}}",
+		"authors-profile": "Profil autora",
+		"remove-tag-filter": "Usuń filtr tagu: {{tag}}",
+		"filter-by-tag": "Filtruj po tagu: {{tag}}",
+		"component-details": "Szczegóły komponentu",
+		"match-count": "{{count}} dopasowani{{count === 1 ? 'e' : count < 5 ? 'a' : 'ń'}}",
+		"view": "Pokaż",
+		"source": "Źródło"
+	},
+	"install-sidebar": {
+		"title": "Zainstaluj {{itemName}}",
+		"installButton": "Zainstaluj",
+		"cancelButton": "Anuluj"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Przeszukaj marketplace..."
+		},
+		"type": {
+			"label": "Typ",
+			"all": "Wszystkie typy",
+			"mode": "Tryb",
+			"mcp server": "Serwer MCP",
+			"prompt": "Podpowiedź",
+			"package": "Pakiet"
+		},
+		"sort": {
+			"label": "Sortuj według",
+			"name": "Nazwa",
+			"lastUpdated": "Ostatnia aktualizacja"
+		},
+		"tags": {
+			"label": "Tagi",
+			"clear_one": "Wyczyść {{count}} wybrany tag",
+			"clear_few": "Wyczyść {{count}} wybrane tagi",
+			"clear_many": "Wyczyść {{count}} wybranych tagów",
+			"placeholder": "Szukaj tagów...",
+			"noResults": "Nie znaleziono tagów.",
+			"selected_one": "{{count}} wybrany tag",
+			"selected_few": "{{count}} wybrane tagi",
+			"selected_many": "{{count}} wybranych tagów"
+		}
+	},
+	"sources": {
+		"title": "Źródła marketplace",
+		"description": "Dodaj lub zarządzaj źródłami elementów marketplace. Każde źródło to repozytorium Git zawierające definicje elementów marketplace.",
+		"errors": {
+			"maxSources": "Maksymalnie {{max}} źródeł dozwolonych.",
+			"emptyUrl": "URL nie może być pusty.",
+			"nonVisibleChars": "URL zawiera niewidoczne znaki.",
+			"invalidGitUrl": "Nieprawidłowy format URL Git.",
+			"duplicateUrl": "Źródło z tym URL już istnieje.",
+			"nameTooLong": "Nazwa nie może przekraczać 20 znaków.",
+			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki.",
+			"duplicateName": "Źródło z tą nazwą już istnieje."
+		},
+		"add": {
+			"namePlaceholder": "Opcjonalna nazwa źródła (np. 'Moje prywatne repo')",
+			"urlPlaceholder": "URL repozytorium Git (np. 'https://github.com/user/repo.git')",
+			"urlFormats": "Obsługiwane formaty: HTTPS, SSH lub lokalna ścieżka pliku.",
+			"button": "Dodaj źródło"
+		},
+		"current": {
+			"title": "Aktualne źródła",
+			"empty": "Nie dodano jeszcze żadnych źródeł marketplace.",
+			"emptyHint": "Dodaj źródło powyżej, aby przeglądać elementy marketplace.",
+			"refresh": "Odśwież źródło",
+			"remove": "Usuń źródło"
+		}
+	},
+	"tabs": {
+		"browse": "Przeglądaj",
+		"sources": "Źródła"
+	},
+	"title": "Marketplace",
+	"items": {
+		"refresh": {
+			"refreshing": "Odświeżanie elementów marketplace..."
+		},
+		"empty": {
+			"noItems": "Nie znaleziono elementów marketplace.",
+			"emptyHint": "Spróbuj dostosować filtry lub wyszukiwane hasła"
+		},
+		"count_one": "{{count}} element",
+		"count_few": "{{count}} elementy",
+		"count_many": "{{count}} elementów"
+	}
+}
