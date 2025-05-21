@@ -1,5 +1,25 @@
 # Roo Code Changelog
 
+## 3.18.0
+
+### Minor Changes
+
+- Added an auto-approve API request limit setting similar to Cline
+- Adds refresh models button for Unbound provider
+-   - Add support for Gemini 2.5 Flash preview models (thanks @shariqriazz and @daniel-lxs!)
+
+### Patch Changes
+
+- Add support for `gemini-2.5-flash-preview-05-20` on the Vertex provider
+- New models for the Chutes provider:
+- Shows in the UI when the context is intelligently condensed
+- Add a UI indicator while the context is condensing
+- Use YAML as default custom modes format
+- Fixed bug that prevented some file links from working in the Agent output
+- Adds a button to intelligently condense the context window
+- Adds a slider to configure threshold to trigger intelligent context condensing
+- Fix settings import when global settings are omitted
+
 ## [3.17.2] - 2025-05-15
 
 - Revert "Switch to the new Roo message parser" (appears to cause a tool parsing bug)
