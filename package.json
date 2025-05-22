@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.17.2",
+	"version": "3.18.0",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -51,16 +51,6 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
-		"submenus": [
-			{
-				"id": "roo-code.contextMenu",
-				"label": "%views.contextMenu.label%"
-			},
-			{
-				"id": "roo-code.terminalMenu",
-				"label": "%views.terminalMenu.label%"
-			}
-		],
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -166,7 +156,7 @@
 				"category": "%configuration.title%"
 			},
 			{
-				"command": "roo.acceptInput",
+				"command": "roo-cline.acceptInput",
 				"title": "%command.acceptInput.title%",
 				"category": "%configuration.title%"
 			},
@@ -184,11 +174,11 @@
 		"menus": {
 			"editor/context": [
 				{
-					"submenu": "roo-code.contextMenu",
+					"submenu": "roo-cline.contextMenu",
 					"group": "navigation"
 				}
 			],
-			"roo-code.contextMenu": [
+			"roo-cline.contextMenu": [
 				{
 					"command": "roo-cline.addToContext",
 					"group": "1_actions@1"
@@ -204,11 +194,11 @@
 			],
 			"terminal/context": [
 				{
-					"submenu": "roo-code.terminalMenu",
+					"submenu": "roo-cline.terminalMenu",
 					"group": "navigation"
 				}
 			],
-			"roo-code.terminalMenu": [
+			"roo-cline.terminalMenu": [
 				{
 					"command": "roo-cline.terminalAddToContext",
 					"group": "1_actions@1"
@@ -287,6 +277,16 @@
 				}
 			]
 		},
+		"submenus": [
+			{
+				"id": "roo-cline.contextMenu",
+				"label": "%views.contextMenu.label%"
+			},
+			{
+				"id": "roo-cline.terminalMenu",
+				"label": "%views.terminalMenu.label%"
+			}
+		],
 		"configuration": {
 			"title": "%configuration.title%",
 			"properties": {
