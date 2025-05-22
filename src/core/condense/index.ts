@@ -84,7 +84,12 @@ export async function summarizeConversation(
 	customCondensingPrompt?: string,
 	condensingApiHandler?: ApiHandler,
 ): Promise<SummarizeResponse> {
-	telemetryService.captureContextCondensed(taskId, isAutomaticTrigger ?? false)
+	telemetryService.captureContextCondensed(
+		taskId,
+		isAutomaticTrigger ?? false,
+		!!customCondensingPrompt?.trim(),
+		!!condensingApiHandler,
+	)
 	const response: SummarizeResponse = { messages, cost: 0, summary: "" }
 	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP))
 	if (messagesToSummarize.length <= 1) {
@@ -129,22 +134,6 @@ export async function summarizeConversation(
 				newContextTokens: 0,
 			}
 		}
-	}
-
-	// Log when using custom prompt for debugging and telemetry
-	if (customCondensingPrompt?.trim()) {
-		console.log(`Task [${taskId}]: Using custom condensing prompt.`)
-		// TODO: Add telemetry for custom condensing prompt usage
-		// This would require extending the telemetry service with a new method like:
-		// telemetryService.captureCustomCondensingPromptUsed(taskId);
-	}
-
-	// Log when using custom API handler for condensing
-	if (condensingApiHandler) {
-		console.log(`Task [${taskId}]: Using custom API handler for condensing.`)
-		// TODO: Add telemetry for custom condensing API handler usage
-		// This would require extending the telemetry service with a new method like:
-		// telemetryService.captureCustomCondensingApiUsed(taskId, condensingApiConfigId);
 	}
 
 	const stream = handlerToUse.createMessage(promptToUse, requestMessages)

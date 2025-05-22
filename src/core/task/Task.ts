@@ -1493,6 +1493,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+		const state = await this.providerRef.deref()?.getState()
 		const {
 			apiConfiguration,
 			autoApprovalEnabled,
@@ -1500,13 +1501,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			requestDelaySeconds,
 			experiments,
 			autoCondenseContextPercent = 100,
-		} = (await this.providerRef.deref()?.getState()) ?? {}
+		} = state ?? {}
 
 		// Get condensing configuration for automatic triggers
-		const state = await this.providerRef.deref()?.getState()
-		const customCondensingPrompt = state ? (state as any).customCondensingPrompt : undefined
-		const condensingApiConfigId = state ? (state as any).condensingApiConfigId : undefined
-		const listApiConfigMeta = state ? (state as any).listApiConfigMeta : undefined
+		const customCondensingPrompt = state?.customCondensingPrompt
+		const condensingApiConfigId = state?.condensingApiConfigId
+		const listApiConfigMeta = state?.listApiConfigMeta
 
 		// Determine API handler to use for condensing
 		let condensingApiHandler: ApiHandler | undefined
@@ -1563,7 +1563,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
-			const autoCondenseContext = experiments?.autoCondenseContext ?? false
+			const autoCondenseContext = state?.experiments?.autoCondenseContext ?? false
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens: contextTokens,
@@ -1602,8 +1602,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		)
 
 		// Check if we've reached the maximum number of auto-approved requests
-		const { allowedMaxRequests } = (await this.providerRef.deref()?.getState()) ?? {}
-		const maxRequests = allowedMaxRequests || Infinity
+		const maxRequests = state?.allowedMaxRequests || Infinity
 
 		// Increment the counter for each new API request
 		this.consecutiveAutoApprovedRequestsCount++
@@ -1628,7 +1627,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			this.isWaitingForFirstChunk = false
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
-			if (autoApprovalEnabled && alwaysApproveResubmit) {
+			if (state?.autoApprovalEnabled && state?.alwaysApproveResubmit) {
 				let errorMsg
 
 				if (error.error?.metadata?.raw) {
@@ -1639,7 +1638,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					errorMsg = "Unknown error"
 				}
 
-				const baseDelay = requestDelaySeconds || 5
+				const baseDelay = state.requestDelaySeconds || 5
 				let exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff

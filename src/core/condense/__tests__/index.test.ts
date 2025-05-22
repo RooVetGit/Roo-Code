@@ -3,10 +3,17 @@ import { ApiHandler } from "../../../api"
 import { ApiMessage } from "../../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../../api/transform/image-cleaning"
 import { summarizeConversation, getMessagesSinceLastSummary, N_MESSAGES_TO_KEEP } from "../index"
+import { telemetryService } from "../../../services/telemetry/TelemetryService"
 
 // Mock dependencies
 jest.mock("../../../api/transform/image-cleaning", () => ({
 	maybeRemoveImageBlocks: jest.fn((messages: ApiMessage[], _apiHandler: ApiHandler) => [...messages]),
+}))
+
+jest.mock("../../../services/telemetry/TelemetryService", () => ({
+	telemetryService: {
+		captureContextCondensed: jest.fn(),
+	},
 }))
 
 const taskId = "test-task-id"
@@ -302,6 +309,9 @@ describe("summarizeConversation with custom settings", () => {
 		// Reset mocks
 		jest.clearAllMocks()
 
+		// Reset telemetry mock
+		;(telemetryService.captureContextCondensed as jest.Mock).mockClear()
+
 		// Setup mock API handlers
 		mockMainApiHandler = {
 			createMessage: jest.fn().mockImplementation(() => {
@@ -487,12 +497,7 @@ describe("summarizeConversation with custom settings", () => {
 	/**
 	 * Test that telemetry is called for custom prompt usage
 	 */
-	it("should log when using custom prompt", async () => {
-		// Mock console.log to verify logging
-		const originalLog = console.log
-		const mockLog = jest.fn()
-		console.log = mockLog
-
+	it("should capture telemetry when using custom prompt", async () => {
 		await summarizeConversation(
 			sampleMessages,
 			mockMainApiHandler,
@@ -502,24 +507,19 @@ describe("summarizeConversation with custom settings", () => {
 			"Custom prompt",
 		)
 
-		// Verify logging was called
-		expect(mockLog).toHaveBeenCalledWith(
-			expect.stringContaining(`Task [${taskId}]: Using custom condensing prompt.`),
+		// Verify telemetry was called with custom prompt flag
+		expect(telemetryService.captureContextCondensed).toHaveBeenCalledWith(
+			taskId,
+			false,
+			true, // usedCustomPrompt
+			false, // usedCustomApiHandler
 		)
-
-		// Restore console.log
-		console.log = originalLog
 	})
 
 	/**
 	 * Test that telemetry is called for custom API handler usage
 	 */
-	it("should log when using custom API handler", async () => {
-		// Mock console.log to verify logging
-		const originalLog = console.log
-		const mockLog = jest.fn()
-		console.log = mockLog
-
+	it("should capture telemetry when using custom API handler", async () => {
 		await summarizeConversation(
 			sampleMessages,
 			mockMainApiHandler,
@@ -530,12 +530,35 @@ describe("summarizeConversation with custom settings", () => {
 			mockCondensingApiHandler,
 		)
 
-		// Verify logging was called
-		expect(mockLog).toHaveBeenCalledWith(
-			expect.stringContaining(`Task [${taskId}]: Using custom API handler for condensing.`),
+		// Verify telemetry was called with custom API handler flag
+		expect(telemetryService.captureContextCondensed).toHaveBeenCalledWith(
+			taskId,
+			false,
+			false, // usedCustomPrompt
+			true, // usedCustomApiHandler
+		)
+	})
+
+	/**
+	 * Test that telemetry is called with both custom prompt and API handler
+	 */
+	it("should capture telemetry when using both custom prompt and API handler", async () => {
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			true, // isAutomaticTrigger
+			"Custom prompt",
+			mockCondensingApiHandler,
 		)
 
-		// Restore console.log
-		console.log = originalLog
+		// Verify telemetry was called with both flags
+		expect(telemetryService.captureContextCondensed).toHaveBeenCalledWith(
+			taskId,
+			true, // isAutomaticTrigger
+			true, // usedCustomPrompt
+			true, // usedCustomApiHandler
+		)
 	})
 })
