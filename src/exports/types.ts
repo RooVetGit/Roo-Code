@@ -30,6 +30,7 @@ type GlobalSettings = {
 							| "groq"
 							| "chutes"
 							| "litellm"
+							| "nebius"
 					  )
 					| undefined
 		  }[]
@@ -200,6 +201,7 @@ type ProviderName =
 	| "groq"
 	| "chutes"
 	| "litellm"
+	| "nebius"
 
 export type { ProviderName }
 
@@ -227,6 +229,7 @@ type ProviderSettings = {
 				| "groq"
 				| "chutes"
 				| "litellm"
+				| "nebius"
 		  )
 		| undefined
 	includeMaxTokens?: boolean | undefined
@@ -338,6 +341,9 @@ type ProviderSettings = {
 	litellmBaseUrl?: string | undefined
 	litellmApiKey?: string | undefined
 	litellmModelId?: string | undefined
+	nebiusBaseUrl?: string | undefined
+	nebiusApiKey?: string | undefined
+	nebiusModelId?: string | undefined
 }
 
 export type { ProviderSettings }
@@ -368,6 +374,7 @@ type ProviderSettingsEntry = {
 				| "groq"
 				| "chutes"
 				| "litellm"
+				| "nebius"
 		  )
 		| undefined
 }
@@ -640,6 +647,7 @@ type IpcMessage =
 											| "groq"
 											| "chutes"
 											| "litellm"
+											| "nebius"
 									  )
 									| undefined
 								includeMaxTokens?: boolean | undefined
@@ -751,6 +759,9 @@ type IpcMessage =
 								litellmBaseUrl?: string | undefined
 								litellmApiKey?: string | undefined
 								litellmModelId?: string | undefined
+								nebiusBaseUrl?: string | undefined
+								nebiusApiKey?: string | undefined
+								nebiusModelId?: string | undefined
 								currentApiConfigName?: string | undefined
 								listApiConfigMeta?:
 									| {
@@ -779,6 +790,7 @@ type IpcMessage =
 														| "groq"
 														| "chutes"
 														| "litellm"
+														| "nebius"
 												  )
 												| undefined
 									  }[]
@@ -1117,6 +1129,7 @@ type TaskCommand =
 								| "groq"
 								| "chutes"
 								| "litellm"
+								| "nebius"
 						  )
 						| undefined
 					includeMaxTokens?: boolean | undefined
@@ -1228,6 +1241,9 @@ type TaskCommand =
 					litellmBaseUrl?: string | undefined
 					litellmApiKey?: string | undefined
 					litellmModelId?: string | undefined
+					nebiusBaseUrl?: string | undefined
+					nebiusApiKey?: string | undefined
+					nebiusModelId?: string | undefined
 					currentApiConfigName?: string | undefined
 					listApiConfigMeta?:
 						| {
@@ -1256,6 +1272,7 @@ type TaskCommand =
 											| "groq"
 											| "chutes"
 											| "litellm"
+											| "nebius"
 									  )
 									| undefined
 						  }[]

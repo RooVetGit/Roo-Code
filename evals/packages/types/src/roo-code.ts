@@ -476,6 +476,12 @@ const litellmSchema = z.object({
 	litellmModelId: z.string().optional(),
 })
 
+const nebiusSchema = z.object({
+	nebiusBaseUrl: z.string().optional(),
+	nebiusApiKey: z.string().optional(),
+	nebiusModelId: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -587,6 +593,11 @@ export const providerSettingsSchemaDiscriminated = z
 				apiProvider: z.literal("litellm"),
 			}),
 		),
+		nebiusSchema.merge(
+			z.object({
+				apiProvider: z.literal("nebius"),
+			}),
+		),
 		defaultSchema,
 	])
 	.and(genericProviderSettingsSchema)
@@ -614,6 +625,7 @@ export const providerSettingsSchema = z.object({
 	...groqSchema.shape,
 	...chutesSchema.shape,
 	...litellmSchema.shape,
+	...nebiusSchema.shape,
 	...genericProviderSettingsSchema.shape,
 })
 
@@ -714,6 +726,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	litellmBaseUrl: undefined,
 	litellmApiKey: undefined,
 	litellmModelId: undefined,
+	nebiusBaseUrl: undefined,
+	nebiusApiKey: undefined,
+	nebiusModelId: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]

@@ -173,6 +173,7 @@ export function NewRun() {
 					ollamaModelId,
 					lmStudioModelId,
 					openAiModelId,
+					nebiusModelId,
 				} = providerSettings
 
 				switch (apiProvider) {
@@ -206,6 +207,9 @@ export function NewRun() {
 						break
 					case "lmstudio":
 						setValue("model", lmStudioModelId ?? "")
+						break
+					case "nebius":
+						setValue("model", nebiusModelId ?? "")
 						break
 					default:
 						throw new Error(`Unsupported API provider: ${apiProvider}`)
