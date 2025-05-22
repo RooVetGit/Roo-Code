@@ -30,6 +30,7 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	nebiusDefaultModelId,
 } from "@roo/api"
 
 import { useRouterModels } from "./useRouterModels"
@@ -118,6 +119,11 @@ function getSelectedModel({
 			return info
 				? { id, info }
 				: { id: litellmDefaultModelId, info: routerModels.litellm[litellmDefaultModelId] }
+		}
+		case "nebius": {
+			const id = apiConfiguration.nebiusModelId ?? nebiusDefaultModelId
+			const info = routerModels.nebius[id]
+			return info ? { id, info } : { id: nebiusDefaultModelId, info: routerModels.nebius[nebiusDefaultModelId] }
 		}
 		case "xai": {
 			const id = apiConfiguration.apiModelId ?? xaiDefaultModelId

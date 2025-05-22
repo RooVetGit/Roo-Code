@@ -11,6 +11,7 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	nebiusDefaultModelId,
 } from "@roo/api"
 
 import { vscode } from "@src/utils/vscode"
@@ -32,6 +33,7 @@ import {
 	Groq,
 	LMStudio,
 	LiteLLM,
+	Nebius,
 	Mistral,
 	Ollama,
 	OpenAI,
@@ -171,6 +173,8 @@ const ApiOptions = ({
 			apiConfiguration?.lmStudioBaseUrl,
 			apiConfiguration?.litellmBaseUrl,
 			apiConfiguration?.litellmApiKey,
+			apiConfiguration?.nebiusBaseUrl,
+			apiConfiguration?.nebiusApiKey,
 			customHeaders,
 		],
 	)
@@ -230,6 +234,11 @@ const ApiOptions = ({
 						setApiConfigurationField("litellmModelId", litellmDefaultModelId)
 					}
 					break
+				case "nebius":
+					if (!apiConfiguration.nebiusModelId) {
+						setApiConfigurationField("nebiusModelId", nebiusDefaultModelId)
+					}
+					break
 			}
 
 			setApiConfigurationField("apiProvider", value)
@@ -241,6 +250,7 @@ const ApiOptions = ({
 			apiConfiguration.unboundModelId,
 			apiConfiguration.requestyModelId,
 			apiConfiguration.litellmModelId,
+			apiConfiguration.nebiusModelId,
 		],
 	)
 
@@ -405,6 +415,10 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					organizationAllowList={organizationAllowList}
 				/>
+			)}
+
+			{selectedProvider === "nebius" && (
+				<Nebius apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "human-relay" && (

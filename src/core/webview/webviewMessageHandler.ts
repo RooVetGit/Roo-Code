@@ -303,6 +303,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				glama: {},
 				unbound: {},
 				litellm: {},
+				nebius: {},
 			}
 
 			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
@@ -330,6 +331,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				modelFetchPromises.push({
 					key: "litellm",
 					options: { provider: "litellm", apiKey: litellmApiKey, baseUrl: litellmBaseUrl },
+				})
+			}
+
+			const nebiusApiKey = apiConfiguration.nebiusApiKey || message?.values?.nebiusApiKey
+			const nebiusBaseUrl = apiConfiguration.nebiusBaseUrl || message?.values?.nebiusBaseUrl
+			if (nebiusApiKey && nebiusBaseUrl) {
+				modelFetchPromises.push({
+					key: "nebius",
+					options: { provider: "nebius", apiKey: nebiusApiKey, baseUrl: nebiusBaseUrl },
 				})
 			}
 

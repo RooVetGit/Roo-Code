@@ -27,6 +27,7 @@ import {
 	GroqHandler,
 	ChutesHandler,
 	LiteLLMHandler,
+	NebiusHandler,
 } from "./providers"
 
 export interface SingleCompletionHandler {
@@ -106,6 +107,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new ChutesHandler(options)
 		case "litellm":
 			return new LiteLLMHandler(options)
+		case "nebius":
+			return new NebiusHandler(options)
 		default:
 			return new AnthropicHandler(options)
 	}
