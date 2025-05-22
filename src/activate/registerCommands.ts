@@ -176,7 +176,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
 	},
-	"extension.reloadAllMcpServers": async () => {
+	reloadAllMcpServers: async () => {
 		const visibleProvider = getVisibleProviderOrLog(outputChannel)
 		if (!visibleProvider) {
 			return
@@ -188,7 +188,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			vscode.window.showErrorMessage(`Failed to reload all MCP servers: ${error}`)
 		}
 	},
-	"extension.toggleAllMcpServersDisabled": async () => {
+	toggleAllMcpServersDisabled: async () => {
 		const visibleProvider = getVisibleProviderOrLog(outputChannel)
 		if (!visibleProvider) {
 			return

@@ -161,12 +161,12 @@
 				"category": "%configuration.title%"
 			},
 			{
-				"command": "extension.reloadAllMcpServers",
+				"command": "roo-cline.reloadAllMcpServers",
 				"title": "Reload All MCP Servers",
 				"icon": "$(sync)"
 			},
 			{
-				"command": "extension.toggleAllMcpServersDisabled",
+				"command": "roo-cline.toggleAllMcpServersDisabled",
 				"title": "Toggle All MCP Servers Enabled/Disabled",
 				"icon": "$(power)"
 			}

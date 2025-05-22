@@ -110,7 +110,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 								onClick={() =>
 									vscode.postMessage({
 										type: "executeVSCodeCommand",
-										command: "extension.reloadAllMcpServers",
+										command: "roo-cline.reloadAllMcpServers",
 									})
 								}
 								data-testid="reload-all-mcp-servers-button">
@@ -120,7 +120,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 								onClick={() =>
 									vscode.postMessage({
 										type: "executeVSCodeCommand",
-										command: "extension.toggleAllMcpServersDisabled",
+										command: "roo-cline.toggleAllMcpServersDisabled",
 									})
 								}
 								data-testid="toggle-all-mcp-servers-button">
