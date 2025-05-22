@@ -22,6 +22,7 @@ import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "../../../../src/schemas"
 import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
 import { z } from "zod"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
@@ -51,6 +52,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	setApiConfigurationField,
 	areSettingsCommitted,
 }) => {
+	const { t } = useAppTranslation()
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
 		message: "",
@@ -142,7 +144,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			<SectionHeader>
 				<div className="flex items-center gap-2">
 					<Database size={16} />
-					Codebase Indexing
+					{t("settings:codeIndex.title")}
 				</div>
 			</SectionHeader>
 			<Section>
@@ -154,12 +156,14 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							codebaseIndexEnabled: e.target.checked,
 						})
 					}>
-					Enable Codebase Indexing
+					{t("settings:codeIndex.enableLabel")}
 				</VSCodeCheckbox>
 
 				{codebaseIndexConfig?.codebaseIndexEnabled && (
 					<div className="mt-4 space-y-4">
-						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Embeddings Provider</div>
+						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>
+							{t("settings:codeIndex.providerLabel")}
+						</div>
 						<div className="flex items-center gap-2">
 							<Select
 								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
@@ -178,11 +182,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									}
 								}}>
 								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Select provider" />
+									<SelectValue placeholder={t("settings:codeIndex.selectProviderPlaceholder")} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="openai">OpenAI</SelectItem>
-									<SelectItem value="ollama">Ollama</SelectItem>
+									<SelectItem value="openai">{t("settings:codeIndex.openaiProvider")}</SelectItem>
+									<SelectItem value="ollama">{t("settings:codeIndex.ollamaProvider")}</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -194,12 +198,14 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									value={apiConfiguration.codeIndexOpenAiKey || ""}
 									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
 									style={{ width: "100%" }}>
-									OpenAI Key:
+									{t("settings:codeIndex.openaiKeyLabel")}
 								</VSCodeTextField>
 							</div>
 						)}
 
-						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Model</div>
+						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>
+							{t("settings:codeIndex.modelLabel")}
+						</div>
 						<div className="flex items-center gap-2">
 							<Select
 								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
@@ -210,7 +216,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									})
 								}>
 								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Select model" />
+									<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
 								</SelectTrigger>
 								<SelectContent>
 									{availableModelIds.map((modelId) => (
@@ -234,7 +240,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 											})
 										}
 										style={{ width: "100%" }}>
-										Ollama URL:
+										{t("settings:codeIndex.ollamaUrlLabel")}
 									</VSCodeTextField>
 								</div>
 							</>
@@ -250,7 +256,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									})
 								}
 								style={{ width: "100%" }}>
-								Qdrant URL
+								{t("settings:codeIndex.qdrantUrlLabel")}
 							</VSCodeTextField>
 						</div>
 
@@ -260,7 +266,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								value={apiConfiguration.codeIndexQdrantApiKey}
 								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
 								style={{ width: "100%" }}>
-								Qdrant Key:
+								{t("settings:codeIndex.qdrantKeyLabel")}
 							</VSCodeTextField>
 						</div>
 
@@ -307,27 +313,32 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										!areSettingsCommitted ||
 										!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
 									}>
-									Start Indexing
+									{t("settings:codeIndex.startIndexingButton")}
 								</VSCodeButton>
 							)}
 							{(indexingStatus.systemStatus === "Indexed" || indexingStatus.systemStatus === "Error") && (
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
-										<VSCodeButton appearance="secondary">Clear Index Data</VSCodeButton>
+										<VSCodeButton appearance="secondary">
+											{t("settings:codeIndex.clearIndexDataButton")}
+										</VSCodeButton>
 									</AlertDialogTrigger>
 									<AlertDialogContent>
 										<AlertDialogHeader>
-											<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+											<AlertDialogTitle>
+												{t("settings:codeIndex.clearDataDialog.title")}
+											</AlertDialogTitle>
 											<AlertDialogDescription>
-												This action cannot be undone. This will permanently delete your codebase
-												index data.
+												{t("settings:codeIndex.clearDataDialog.description")}
 											</AlertDialogDescription>
 										</AlertDialogHeader>
 										<AlertDialogFooter>
-											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogCancel>
+												{t("settings:codeIndex.clearDataDialog.cancelButton")}
+											</AlertDialogCancel>
 											<AlertDialogAction
 												onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
-												Clear Data
+												{t("settings:codeIndex.clearDataDialog.confirmButton")}
 											</AlertDialogAction>
 										</AlertDialogFooter>
 									</AlertDialogContent>
