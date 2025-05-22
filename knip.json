@@ -10,7 +10,6 @@
 		"**/*.test.tsx",
 		"**/stories/**",
 		"bin/**",
-		"e2e/**",
 		"evals/**",
 		"src/activate/**",
 		"src/exports/**",
