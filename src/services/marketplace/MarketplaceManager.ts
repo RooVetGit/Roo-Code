@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
+import * as yaml from "yaml"
 import { GitFetcher } from "./GitFetcher"
 import {
 	MarketplaceItem,
@@ -684,17 +685,16 @@ export class MarketplaceManager {
 				mcps: [],
 				files: [],
 			}
-			customHookable.hook("onFileOutput", ({ filePath, data }) => {
+			customHookable.hook("onFileOutput", ({ filePath, parsedData }) => {
+				const pD = parsedData as Record<string, any>
 				if (filePath.endsWith("/.roomodes")) {
-					const parsedData = JSON.parse(data)
-					if (parsedData?.customModes?.length) {
-						parsedData.customModes.forEach((mode: any) => {
+					if (pD?.customModes?.length) {
+						pD.customModes.forEach((mode: any) => {
 							itemInstalledMetadata.modes?.push(mode.slug)
 						})
 					}
 				} else if (filePath.endsWith("/.roo/mcp.json")) {
-					const parsedData = JSON.parse(data)
-					const mcpSlugs = Object.keys(parsedData?.mcpServers ?? {})
+					const mcpSlugs = Object.keys(pD?.mcpServers ?? {})
 					if (mcpSlugs.length) {
 						mcpSlugs.forEach((mcpSlug: any) => {
 							itemInstalledMetadata.mcps?.push(mcpSlug)
@@ -737,11 +737,13 @@ export class MarketplaceManager {
 				if (await fs.access(modesFilePath).catch(() => true))
 					vscode.window.showWarningMessage(`"${item.name}": modes file not found`)
 				else {
-					const parsedModesFile = JSON.parse(await fs.readFile(modesFilePath, "utf-8"))
+					const parsedModesFile = yaml.parse(await fs.readFile(modesFilePath, "utf-8"))
 					parsedModesFile.customModes = parsedModesFile.customModes.filter(
 						(m: any) => !itemInstalledMetadata.modes!.includes(m.slug),
 					)
-					await fs.writeFile(modesFilePath, JSON.stringify(parsedModesFile, null, 2), "utf-8")
+					if (parsedModesFile.customModes.length)
+						await fs.writeFile(modesFilePath, yaml.stringify(parsedModesFile, null, 2), "utf-8") // Remove file if no more modes left
+					else await fs.rm(modesFilePath)
 				}
 			}
 			if (itemInstalledMetadata.mcps) {
@@ -752,7 +754,9 @@ export class MarketplaceManager {
 					itemInstalledMetadata.mcps.forEach((mcp) => {
 						delete parsedMcpsFile.mcpServers[mcp]
 					})
-					await fs.writeFile(mcpsFilePath, JSON.stringify(parsedMcpsFile, null, 2), "utf-8")
+					if (Object.keys(parsedMcpsFile.mcpServers).length)
+						await fs.writeFile(mcpsFilePath, JSON.stringify(parsedMcpsFile, null, 2), "utf-8") // Remove file if no more modes left
+					else await fs.rm(mcpsFilePath)
 				}
 			}
 			if (itemInstalledMetadata.files) {

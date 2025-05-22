@@ -161,8 +161,10 @@ export class InstalledMetadataManager {
 			// Serialize metadata to YAML
 			const yamlContent = yaml.stringify(metadata)
 
-			// Write to file
-			await fs.writeFile(filePath, yamlContent, "utf-8")
+			// Write to file if there are any entries, otherwise remove file
+			if (Object.keys(metadata).length) await fs.writeFile(filePath, yamlContent, "utf-8")
+			else await fs.rm(filePath)
+
 			console.debug(`InstalledMetadataManager: Metadata saved successfully to ${filePath}`)
 		} catch (error) {
 			console.error(`InstalledMetadataManager: Error saving metadata file ${filePath}:`, error)

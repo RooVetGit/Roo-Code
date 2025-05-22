@@ -204,8 +204,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       config-rocket:
-        specifier: ^0.5.8
-        version: 0.5.8
+        specifier: ^0.6.1
+        version: 0.6.1
       default-shell:
         specifier: ^2.2.0
         version: 2.2.0
@@ -297,8 +297,8 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4
       roo-rocket:
-        specifier: ^0.4.0
-        version: 0.4.0(config-rocket@0.5.8)
+        specifier: ^0.5.0
+        version: 0.5.0(config-rocket@0.6.1)
       sanitize-filename:
         specifier: ^1.6.3
         version: 1.6.3
@@ -538,8 +538,8 @@ importers:
         specifier: ^1.0.0
         version: 1.1.1(@types/react-dom@18.3.7(@types/react@18.3.21))(@types/react@18.3.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       config-rocket:
-        specifier: ^0.5.8
-        version: 0.5.8
+        specifier: ^0.6.1
+        version: 0.6.1
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3946,8 +3946,8 @@ packages:
   confbox@0.2.2:
     resolution: {integrity: sha512-1NB+BKqhtNipMsov4xI/NnhCKp9XG9NamYp5PVm9klAT0fsrNPjaFICsCFhNhwZJKNh7zB/3q8qXz0E9oaMNtQ==}
 
-  config-rocket@0.5.8:
-    resolution: {integrity: sha512-89J5RCDPk/6BFsjmNBWqxbfhEubuVrN3WogVG0IvGgXXT1w3H7gJzxdYwVShVwiRVszI2kweOEXjMwXFumxY9Q==}
+  config-rocket@0.6.1:
+    resolution: {integrity: sha512-b6A0ankpEIJ59nRKLs3apgxEnl2hbDgikjkoIWGg86P9n+f9keF4Bp+KPr47WZwJ0wVb34E2UPEgtGx5QjJ0oQ==}
     engines: {node: '>=20.13.1'}
     hasBin: true
 
@@ -7341,11 +7341,11 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  roo-rocket@0.4.0:
-    resolution: {integrity: sha512-qKAQc9Wxgl3fkn4eEXX5kFJBTU17TlO1L0nzP73G5w56pVU7l7XkZWsZdF2e2QV4PAYHVNb9A6A2jTaKrBL/vg==}
+  roo-rocket@0.5.0:
+    resolution: {integrity: sha512-rE6XlnUhlaCjnOihxXhTT124NpFU1hQ/Zd6kG6VB7gNwmwnezg5dOlFbZZauCNv/IMx4MxwYwJzxLGuNjT9dYg==}
     hasBin: true
     peerDependencies:
-      config-rocket: ^0.5.3
+      config-rocket: ^0.6.1
 
   roughjs@4.6.6:
     resolution: {integrity: sha512-ZUz/69+SYpFN/g/lUlo2FXcIjRkSu3nDarreVdGGndHEBJ6cXPdKguS8JGxwj5HA5xIbVKSmLgr5b3AWxtRfvQ==}
@@ -12895,7 +12895,7 @@ snapshots:
 
   confbox@0.2.2: {}
 
-  config-rocket@0.5.8:
+  config-rocket@0.6.1:
     dependencies:
       citty: 0.1.6
       consola: 3.4.2
@@ -12906,6 +12906,7 @@ snapshots:
       pathe: 2.0.3
       std-env: 3.9.0
       tinyglobby: 0.2.13
+      yaml: 2.8.0
 
   consola@3.4.2: {}
 
@@ -17249,10 +17250,10 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.40.2
       fsevents: 2.3.3
 
-  roo-rocket@0.4.0(config-rocket@0.5.8):
+  roo-rocket@0.5.0(config-rocket@0.6.1):
     dependencies:
       citty: 0.1.6
-      config-rocket: 0.5.8
+      config-rocket: 0.6.1
       consola: 3.4.2
       defu: 6.1.4
       hookable: 5.5.3
