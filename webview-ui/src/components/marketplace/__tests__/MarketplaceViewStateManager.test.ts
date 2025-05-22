@@ -160,10 +160,10 @@ describe("MarketplaceViewStateManager", () => {
 				payload: { items: initialItems },
 			})
 
-			// First switch to sources
+			// First switch to settings
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			// Switch back to browse
@@ -188,10 +188,10 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.displayItems).toEqual(initialItems)
 			expect(state.allItems).toEqual(initialItems)
 
-			// Switch to sources again
+			// Switch to settings again
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			// Switch back to browse again
@@ -251,10 +251,10 @@ describe("MarketplaceViewStateManager", () => {
 				payload: { items: initialItems },
 			})
 
-			// Switch to sources tab
+			// Switch to settings tab
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			// Switch back to browse
@@ -601,20 +601,20 @@ describe("MarketplaceViewStateManager", () => {
 		it("should handle SET_ACTIVE_TAB transition", async () => {
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			const state = manager.getState()
-			expect(state.activeTab).toBe("sources")
+			expect(state.activeTab).toBe("settings")
 		})
 
 		it("should trigger initial fetch when switching to browse with no items", async () => {
 			jest.clearAllMocks() // Clear mock to ignore initialize() call
 
-			// Start in sources tab
+			// Start in settings tab
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			// Switch to browse tab
@@ -638,10 +638,10 @@ describe("MarketplaceViewStateManager", () => {
 				payload: { items: [createTestItem()] },
 			})
 
-			// Switch to sources tab
+			// Switch to settings tab
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			// Switch back to browse tab
@@ -684,10 +684,10 @@ describe("MarketplaceViewStateManager", () => {
 			})
 		})
 
-		it("should not trigger fetch when switching to sources tab", async () => {
+		it("should not trigger fetch when switching to settings tab", async () => {
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			expect(vscode.postMessage).not.toHaveBeenCalledWith({
@@ -726,11 +726,11 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.allItems).toHaveLength(1)
 		})
 
-		it("should not switch tabs when timeout occurs while in sources tab", async () => {
-			// First switch to sources tab
+		it("should not switch tabs when timeout occurs while in settings tab", async () => {
+			// First switch to settings tab
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
-				payload: { tab: "sources" },
+				payload: { tab: "settings" },
 			})
 
 			// Start a fetch
@@ -753,7 +753,7 @@ describe("MarketplaceViewStateManager", () => {
 			// Verify the tab didn't switch to browse
 			expect(tabSwitched).toBe(false)
 			const state = manager.getState()
-			expect(state.activeTab).toBe("sources")
+			expect(state.activeTab).toBe("settings")
 		})
 
 		it("should make minimal state updates when timeout occurs in browse tab", async () => {

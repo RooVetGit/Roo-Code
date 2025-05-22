@@ -206,6 +206,8 @@ describe("MarketplaceView", () => {
 					setTerminalCompressProgressBar: jest.fn(),
 					historyPreviewCollapsed: false,
 					setHistoryPreviewCollapsed: jest.fn(),
+					autoCondenseContextPercent: 100,
+					setAutoCondenseContextPercent: jest.fn(),
 					setMarketplaceSources: jest.fn(),
 					version: "1.0.0",
 					clineMessages: [],
