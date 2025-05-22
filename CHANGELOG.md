@@ -1,5 +1,15 @@
 # Roo Code Changelog
 
+## 3.18.1
+
+### Patch Changes
+
+- Fix changelog generation
+- Fix changeset (again)
+- Fix changeset npm script
+- v3.18.1 again
+-   - Add support for Claude Sonnet 4 and Claude Opus 4 models with thinking variants (thanks @shariqriazz!)
+
 ## [3.18.0] - 2025-05-21
 
 - Add support for Gemini 2.5 Flash preview models (thanks @shariqriazz and @daniel-lxs!)
