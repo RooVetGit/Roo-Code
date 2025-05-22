@@ -1,6 +1,8 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
 import { CacheControlEphemeral } from "@anthropic-ai/sdk/resources"
+import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
+
+import { getModelParams, SingleCompletionHandler } from ".."
 import {
 	anthropicDefaultModelId,
 	AnthropicModelId,
@@ -11,7 +13,6 @@ import {
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
-import { SingleCompletionHandler, getModelParams } from "../index"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
@@ -36,6 +37,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
 
 		switch (modelId) {
+			case "claude-opus-4-20250514":
+			case "claude-sonnet-4-20250514":
 			case "claude-3-7-sonnet-20250219":
 			case "claude-3-5-sonnet-20241022":
 			case "claude-3-5-haiku-20241022":
@@ -93,12 +96,16 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 						const betas = []
 
 						// Check for the thinking-128k variant first
-						if (virtualId === "claude-3-7-sonnet-20250219:thinking") {
+						if (
+							virtualId === "claude-3-7-sonnet-20250219:thinking" ||
+							virtualId === "claude-sonnet-4-20250514:thinking"
+						) {
 							betas.push("output-128k-2025-02-19")
 						}
 
 						// Then check for models that support prompt caching
 						switch (modelId) {
+							case "claude-sonnet-4-20250514":
 							case "claude-3-7-sonnet-20250219":
 							case "claude-3-5-sonnet-20241022":
 							case "claude-3-5-haiku-20241022":
@@ -205,8 +212,12 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		// The `:thinking` variant is a virtual identifier for the
 		// `claude-3-7-sonnet-20250219` model with a thinking budget.
 		// We can handle this more elegantly in the future.
-		if (id === "claude-3-7-sonnet-20250219:thinking") {
-			id = "claude-3-7-sonnet-20250219"
+		switch (id) {
+			case "claude-3-7-sonnet-20250219:thinking":
+				id = "claude-3-7-sonnet-20250219"
+				break
+			case "claude-sonnet-4-20250514:thinking":
+				id = "claude-sonnet-4-20250514"
 		}
 
 		return {

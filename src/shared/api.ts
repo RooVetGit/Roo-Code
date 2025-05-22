@@ -9,6 +9,30 @@ export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 export type AnthropicModelId = keyof typeof anthropicModels
 export const anthropicDefaultModelId: AnthropicModelId = "claude-3-7-sonnet-20250219"
 export const anthropicModels = {
+	"claude-sonnet-4-20250514:thinking": {
+		maxTokens: 128_000,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0, // $3 per million input tokens
+		outputPrice: 15.0, // $15 per million output tokens (inferred)
+		cacheWritesPrice: 3.75, // $3.75 per million tokens (5m Cache Writes)
+		cacheReadsPrice: 0.3, // $0.30 per million tokens (Cache Hits & Refreshes)
+		thinking: true,
+	},
+	"claude-sonnet-4-20250514": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0, // $3 per million input tokens
+		outputPrice: 15.0, // $15 per million output tokens (inferred)
+		cacheWritesPrice: 3.75, // $3.75 per million tokens (5m Cache Writes)
+		cacheReadsPrice: 0.3, // $0.30 per million tokens (Cache Hits & Refreshes)
+		thinking: false,
+	},
 	"claude-3-7-sonnet-20250219:thinking": {
 		maxTokens: 128_000,
 		contextWindow: 200_000,
