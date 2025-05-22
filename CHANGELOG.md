@@ -1,14 +1,8 @@
 # Roo Code Changelog
 
-## 3.18.1
+## [3.18.1] - 2025-05-22
 
-### Patch Changes
-
-- Fix changelog generation
-- Fix changeset (again)
-- Fix changeset npm script
-- v3.18.1 again
--   - Add support for Claude Sonnet 4 and Claude Opus 4 models with thinking variants (thanks @shariqriazz!)
+- Add support for Claude Sonnet 4 and Claude Opus 4 models with thinking variants in Anthropic, Bedrock, and Vertex (thanks @shariqriazz!)
 
 ## [3.18.0] - 2025-05-21
 
