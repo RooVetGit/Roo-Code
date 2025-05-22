@@ -18,6 +18,7 @@ import {
 	getAllModes,
 	ModeConfig,
 	GroupEntry,
+	findModeBySlug as findCustomModeBySlug,
 } from "@roo/shared/modes"
 import { modeConfigSchema } from "@roo/schemas"
 import { supportPrompt, SupportPromptType } from "@roo/shared/support-prompt"
@@ -141,9 +142,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	// Helper function to find a mode by slug
 	const findModeBySlug = useCallback(
 		(searchSlug: string, modes: readonly ModeConfig[] | undefined): ModeConfig | undefined => {
-			if (!modes) return undefined
-			const isModeWithSlug = (mode: ModeConfig): mode is ModeConfig => mode.slug === searchSlug
-			return modes.find(isModeWithSlug)
+			return findCustomModeBySlug(searchSlug, modes)
 		},
 		[],
 	)
