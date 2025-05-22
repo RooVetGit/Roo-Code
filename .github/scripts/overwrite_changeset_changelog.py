@@ -24,9 +24,10 @@ Environment Variables:
 import os
 
 CHANGELOG_PATH = os.environ.get("CHANGELOG_PATH", "CHANGELOG.md")
-VERSION = os.environ['VERSION']
+VERSION = os.environ["VERSION"]
 PREV_VERSION = os.environ.get("PREV_VERSION", "")
 NEW_CONTENT = os.environ.get("NEW_CONTENT", "")
+
 
 def overwrite_changelog_section(changelog_text: str, new_content: str):
     # Find the section for the specified version
@@ -36,27 +37,46 @@ def overwrite_changelog_section(changelog_text: str, new_content: str):
     print(f"prev_version: {PREV_VERSION}")
 
     notes_start_index = changelog_text.find(version_pattern) + len(version_pattern)
-    notes_end_index = changelog_text.find(prev_version_pattern, notes_start_index) if PREV_VERSION and prev_version_pattern in changelog_text else len(changelog_text)
+    notes_end_index = (
+        changelog_text.find(prev_version_pattern, notes_start_index)
+        if PREV_VERSION and prev_version_pattern in changelog_text
+        else len(changelog_text)
+    )
 
     if new_content:
-        return changelog_text[:notes_start_index] + f"{new_content}\n" + changelog_text[notes_end_index:]
+        return (
+            changelog_text[:notes_start_index]
+            + f"{new_content}\n"
+            + changelog_text[notes_end_index:]
+        )
     else:
         changeset_lines = changelog_text[notes_start_index:notes_end_index].split("\n")
         # Remove the first two lines from the regular changeset format, ex: \n### Patch Changes
-        parsed_lines = "\n".join(changeset_lines[2:]) 
-        updated_changelog = changelog_text[:notes_start_index] + parsed_lines + changelog_text[notes_end_index:]
-        updated_changelog = updated_changelog.replace(f"## {VERSION}", f"## [{VERSION}]")
+        parsed_lines = "\n".join(changeset_lines[2:])
+        updated_changelog = (
+            changelog_text[:notes_start_index]
+            + parsed_lines
+            + changelog_text[notes_end_index:]
+        )
+        updated_changelog = updated_changelog.replace(
+            f"## {VERSION}", f"## [{VERSION}]"
+        )
         return updated_changelog
 
-with open(CHANGELOG_PATH, 'r') as f:
+
+with open(CHANGELOG_PATH, "r") as f:
     changelog_content = f.read()
 
 new_changelog = overwrite_changelog_section(changelog_content, NEW_CONTENT)
-print("----------------------------------------------------------------------------------")
+print(
+    "----------------------------------------------------------------------------------"
+)
 print(new_changelog)
-print("----------------------------------------------------------------------------------")
+print(
+    "----------------------------------------------------------------------------------"
+)
 # Write back to CHANGELOG.md
-with open(CHANGELOG_PATH, 'w') as f:
+with open(CHANGELOG_PATH, "w") as f:
     f.write(new_changelog)
 
 print(f"{CHANGELOG_PATH} updated successfully!")
