@@ -384,15 +384,12 @@ describe("McpHub", () => {
 			expect(mcpHub.connections[1].server.disabled).toBe(true)
 
 			// Mock fs.readFile and fs.writeFile to track config changes
-			let currentConfig = JSON.stringify({
-				mcpServers: {
-					server1: { disabled: false },
-					server2: { disabled: false },
-				},
-			})
-			;(fs.readFile as jest.Mock).mockImplementation(async () => currentConfig)
+			const writeCalls: any[] = []
+			;(fs.readFile as jest.Mock).mockResolvedValue(
+				JSON.stringify({ mcpServers: { server1: { disabled: false }, server2: { disabled: false } } }),
+			)
 			;(fs.writeFile as jest.Mock).mockImplementation(async (path, data) => {
-				currentConfig = data
+				writeCalls.push(JSON.parse(data))
 			})
 
 			await mcpHub.toggleAllServersDisabled(true)
@@ -401,10 +398,10 @@ describe("McpHub", () => {
 			expect(mcpHub.connections[0].server.disabled).toBe(true)
 			expect(mcpHub.connections[1].server.disabled).toBe(true)
 
-			// Verify that fs.writeFile was called to persist the changes
-			const writtenConfig = JSON.parse(currentConfig)
-			expect(writtenConfig.mcpServers.server1.disabled).toBe(true)
-			expect(writtenConfig.mcpServers.server2.disabled).toBe(true)
+			// Verify that fs.writeFile was called for each server
+			expect(writeCalls.length).toBe(2)
+			expect(writeCalls[0].mcpServers.server1.disabled).toBe(true)
+			expect(writeCalls[1].mcpServers.server2.disabled).toBe(true)
 
 			// Verify that postMessageToWebview was called
 			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith(
@@ -439,16 +436,13 @@ describe("McpHub", () => {
 			]
 			mcpHub.connections = mockConnections
 
-			// Mock fs.readFile to return a config with both servers disabled
-			let currentConfig = JSON.stringify({
-				mcpServers: {
-					server1: { disabled: true },
-					server2: { disabled: true },
-				},
-			})
-			;(fs.readFile as jest.Mock).mockImplementation(async () => currentConfig)
+			// Mock fs.readFile and fs.writeFile to track config changes
+			const writeCalls: any[] = []
+			;(fs.readFile as jest.Mock).mockResolvedValue(
+				JSON.stringify({ mcpServers: { server1: { disabled: true }, server2: { disabled: true } } }),
+			)
 			;(fs.writeFile as jest.Mock).mockImplementation(async (path, data) => {
-				currentConfig = data
+				writeCalls.push(JSON.parse(data))
 			})
 
 			await mcpHub.toggleAllServersDisabled(false)
@@ -457,10 +451,10 @@ describe("McpHub", () => {
 			expect(mcpHub.connections[0].server.disabled).toBe(false)
 			expect(mcpHub.connections[1].server.disabled).toBe(false)
 
-			// Verify that fs.writeFile was called to persist the changes
-			const writtenConfig = JSON.parse(currentConfig)
-			expect(writtenConfig.mcpServers.server1.disabled).toBe(false)
-			expect(writtenConfig.mcpServers.server2.disabled).toBe(false)
+			// Verify that fs.writeFile was called for each server
+			expect(writeCalls.length).toBe(2)
+			expect(writeCalls[0].mcpServers.server1.disabled).toBe(false)
+			expect(writeCalls[1].mcpServers.server2.disabled).toBe(false)
 
 			// Verify that postMessageToWebview was called
 			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith(

@@ -1317,13 +1317,15 @@ export class McpHub {
 		const allServers = this.getAllServers()
 
 		// Set the Disabled flag for all servers
-		for (const server of allServers) {
-			await this.updateServerConfig(server.name, { disabled }, server.source)
-			const conn = this.findConnection(server.name, server.source)
-			if (conn) {
-				conn.server.disabled = disabled
-			}
-		}
+		await Promise.all(
+			allServers.map(async (server) => {
+				await this.updateServerConfig(server.name, { disabled }, server.source)
+				const conn = this.findConnection(server.name, server.source)
+				if (conn) {
+					conn.server.disabled = disabled
+				}
+			}),
+		)
 
 		// If activated, reload configuration
 		if (!disabled) {
