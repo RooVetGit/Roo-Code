@@ -39,7 +39,7 @@ export const Nebius = ({ apiConfiguration, setApiConfigurationField, routerModel
 			</VSCodeTextField>
 
 			<VSCodeTextField
-				value={apiConfiguration?.litellmApiKey || ""}
+				value={apiConfiguration?.nebiusApiKey || ""}
 				type="password"
 				onInput={handleInputChange("nebiusApiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
