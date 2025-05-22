@@ -27,7 +27,7 @@ export async function run() {
 	})
 
 	await vscode.commands.executeCommand(`${Package.name}.SidebarProvider.focus`)
-	await waitFor(() => Boolean(api.isReady()))
+	await waitFor(() => api.isReady())
 
 	// @ts-expect-error - Expose the API to the tests.
 	globalThis.api = api
