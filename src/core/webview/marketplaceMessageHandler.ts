@@ -242,7 +242,7 @@ export async function handleMarketplaceMessages(
 				try {
 					await marketplaceManager
 						.installMarketplaceItem(message.mpItem, message.mpInstallOptions)
-						.then(async (r) => r === "$COMMIT" && (await provider.postStateToWebview()))
+						.then(async (r) => r === "$COMMIT" && (await _onCommit()))
 				} catch (error) {
 					vscode.window.showErrorMessage(
 						`Failed to install item "${message.mpItem.name}":\n${error instanceof Error ? error.message : String(error)}`,
@@ -263,7 +263,7 @@ export async function handleMarketplaceMessages(
 					try {
 						await marketplaceManager
 							.installMarketplaceItem(item, { parameters })
-							.then(async (r) => r === "$COMMIT" && (await provider.postStateToWebview()))
+							.then(async (r) => r === "$COMMIT" && (await _onCommit()))
 					} catch (error) {
 						console.error(`Error submitting marketplace parameters: ${error}`)
 						vscode.window.showErrorMessage(
@@ -287,7 +287,7 @@ export async function handleMarketplaceMessages(
 				try {
 					await marketplaceManager
 						.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
-						.then(async (r) => r === "$COMMIT" && (await provider.postStateToWebview()))
+						.then(async (r) => r === "$COMMIT" && (await _onCommit()))
 				} catch (error) {
 					vscode.window.showErrorMessage(
 						`Failed to remove item "${message.mpItem.name}":\n${error instanceof Error ? error.message : String(error)}`,
@@ -301,5 +301,13 @@ export async function handleMarketplaceMessages(
 
 		default:
 			return false
+	}
+
+	async function _onCommit() {
+		await Promise.all([
+			provider.getMcpHub()?.reloadMcpServers?.(),
+			provider.customModesManager?.refreshMergedState?.(),
+			provider.postStateToWebview(),
+		])
 	}
 }

@@ -308,7 +308,7 @@ export class CustomModesManager {
 		await fs.writeFile(filePath, yaml.stringify(settings), "utf-8")
 	}
 
-	private async refreshMergedState(): Promise<void> {
+	public async refreshMergedState(): Promise<void> {
 		const settingsPath = await this.getCustomModesFilePath()
 		const roomodesPath = await this.getWorkspaceRoomodes()
 

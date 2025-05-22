@@ -353,6 +353,11 @@ export class McpHub {
 		)
 	}
 
+	public async reloadMcpServers() {
+		await this.initializeProjectMcpServers()
+		await this.initializeGlobalMcpServers()
+	}
+
 	private async initializeMcpServers(source: "global" | "project"): Promise<void> {
 		try {
 			const configPath =
