@@ -642,7 +642,11 @@ export class MarketplaceManager {
 		await assertsBinarySha256(binaryUint8, item.binaryHash)
 
 		// Extract config and check if it has prompt parameters.
-		const config = await extractRocketConfigFromUint8(binaryUint8)
+		const config = await extractRocketConfigFromUint8(binaryUint8).catch((e) => {
+			if (e?.message === "No rocket config found in the archive") return null
+
+			throw e
+		})
 		const configHavePromptParameters = config?.parameters?.some((param) => param.resolver.operation === "prompt")
 		if (configHavePromptParameters) {
 			vscode.window.showInformationMessage(`"${item.name}" is configurable, opening UI form...`)
@@ -685,16 +689,17 @@ export class MarketplaceManager {
 				mcps: [],
 				files: [],
 			}
-			customHookable.hook("onFileOutput", ({ filePath, parsedData }) => {
-				const pD = parsedData as Record<string, any>
+			customHookable.hook("onFileOutput", ({ filePath, data }) => {
 				if (filePath.endsWith("/.roomodes")) {
-					if (pD?.customModes?.length) {
-						pD.customModes.forEach((mode: any) => {
+					const parsedData = yaml.parse(data)
+					if (parsedData?.customModes?.length) {
+						parsedData.customModes.forEach((mode: any) => {
 							itemInstalledMetadata.modes?.push(mode.slug)
 						})
 					}
 				} else if (filePath.endsWith("/.roo/mcp.json")) {
-					const mcpSlugs = Object.keys(pD?.mcpServers ?? {})
+					const parsedData = JSON.parse(data)
+					const mcpSlugs = Object.keys(parsedData?.mcpServers ?? {})
 					if (mcpSlugs.length) {
 						mcpSlugs.forEach((mcpSlug: any) => {
 							itemInstalledMetadata.mcps?.push(mcpSlug)
@@ -711,7 +716,7 @@ export class MarketplaceManager {
 				nonAssemblyBehavior: true,
 				cwd,
 			}).then(() => {
-				_IMM.addInstalledItem("project", item.id, itemInstalledMetadata)
+				_IMM.addInstalledItem(target, item.id, itemInstalledMetadata)
 			})
 			vscode.window.showInformationMessage(`"${item.name}" installed successfully`)
 
