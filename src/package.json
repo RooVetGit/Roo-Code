@@ -318,7 +318,7 @@
 		}
 	},
 	"scripts": {
-		"lint": "eslint **/*.ts --max-warnings=0",
+		"lint": "eslint . --ext=ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
 		"pretest": "pnpm bundle",
 		"test": "jest -w=40% && vitest run",
