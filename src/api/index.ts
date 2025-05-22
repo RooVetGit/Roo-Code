@@ -24,6 +24,7 @@ import { XAIHandler } from "./providers/xai"
 import { GroqHandler } from "./providers/groq"
 import { ChutesHandler } from "./providers/chutes"
 import { LiteLLMHandler } from "./providers/litellm"
+import { NebiusHandler } from "./providers/nebius"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -104,6 +105,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new ChutesHandler(options)
 		case "litellm":
 			return new LiteLLMHandler(options)
+		case "nebius":
+			return new NebiusHandler(options)
 		default:
 			return new AnthropicHandler(options)
 	}

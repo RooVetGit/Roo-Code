@@ -105,6 +105,7 @@ export const providerNames = [
 	"groq",
 	"chutes",
 	"litellm",
+	"nebius",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -609,6 +610,12 @@ const litellmSchema = baseProviderSettingsSchema.extend({
 	litellmModelId: z.string().optional(),
 })
 
+const nebiusSchema = baseProviderSettingsSchema.extend({
+	nebiusBaseUrl: z.string().optional(),
+	nebiusApiKey: z.string().optional(),
+	nebiusModelId: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -635,6 +642,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
 	chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
+	nebiusSchema.merge(z.object({ apiProvider: z.literal("nebius") })),
 	defaultSchema,
 ])
 
@@ -661,7 +669,8 @@ export const providerSettingsSchema = z.object({
 	...groqSchema.shape,
 	...chutesSchema.shape,
 	...litellmSchema.shape,
-  ...codebaseIndexProviderSchema.shape
+	...nebiusSchema.shape,
+	...codebaseIndexProviderSchema.shape
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
@@ -764,6 +773,10 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	litellmBaseUrl: undefined,
 	litellmApiKey: undefined,
 	litellmModelId: undefined,
+	// Nebius LLM
+	nebiusBaseUrl: undefined,
+	nebiusApiKey: undefined,
+	nebiusModelId: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -973,6 +986,7 @@ export type SecretState = Pick<
 	| "groqApiKey"
 	| "chutesApiKey"
 	| "litellmApiKey"
+	| "nebiusApiKey"
 	| "codeIndexOpenAiKey"
 	| "codeIndexQdrantApiKey"
 >
@@ -999,6 +1013,7 @@ const secretStateRecord: SecretStateRecord = {
 	groqApiKey: undefined,
 	chutesApiKey: undefined,
 	litellmApiKey: undefined,
+	nebiusApiKey: undefined,
 	codeIndexOpenAiKey: undefined,
 	codeIndexQdrantApiKey: undefined,
 }

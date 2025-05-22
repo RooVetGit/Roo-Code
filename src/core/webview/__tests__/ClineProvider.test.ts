@@ -2253,6 +2253,7 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
+				nebius: {},
 			},
 		})
 	})
@@ -2294,6 +2295,7 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: {},
 				litellm: {},
+				nebius: {},
 			},
 		})
 
@@ -2391,6 +2393,7 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
+				nebius: {},
 			},
 		})
 	})

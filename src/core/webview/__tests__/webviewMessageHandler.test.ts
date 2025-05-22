@@ -70,6 +70,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
+				nebius: {},
 			},
 		})
 	})
@@ -155,6 +156,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
+				nebius: {},
 			},
 		})
 	})
@@ -190,6 +192,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: {},
 				litellm: {},
+				nebius: {},
 			},
 		})
 
