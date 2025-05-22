@@ -909,6 +909,10 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	public async abortTask(isAbandoned = false) {
+	// Save chat history before aborting
+	await this.saveClineMessages()
+	await this.saveApiConversationHistory()
+
 		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
@@ -940,7 +944,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		// Save the countdown message in the automatic retry or other content.
-		await this.saveClineMessages()
+	// This line is redundant now as saveClineMessages is called at the beginning.
+	// await this.saveClineMessages() 
 	}
 
 	// Used when a sub-task is launched and the parent task is waiting for it to
