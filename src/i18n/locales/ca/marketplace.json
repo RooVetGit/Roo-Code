@@ -1,0 +1,100 @@
+{
+	"type-group": {
+		"modes": "Modes",
+		"mcps": "Servidors MCP",
+		"prompts": "Prompts",
+		"packages": "Paquets",
+		"generic-type": "{{type}}s",
+		"match": "coincidència"
+	},
+	"item-card": {
+		"type-mode": "Mode",
+		"type-mcp": "Servidor MCP",
+		"type-prompt": "Prompt",
+		"type-package": "Paquet",
+		"type-other": "Altres",
+		"by-author": "per {{author}}",
+		"authors-profile": "Perfil de l'autor",
+		"remove-tag-filter": "Eliminar filtre d'etiqueta: {{tag}}",
+		"filter-by-tag": "Filtrar per etiqueta: {{tag}}",
+		"component-details": "Detalls del component",
+		"match-count": "{{count}} coincidènci{{count !== 1 ? 'es' : 'a'}}",
+		"view": "Veure",
+		"source": "Font"
+	},
+	"install-sidebar": {
+		"title": "Instal·la {{itemName}}",
+		"installButton": "Instal·lar",
+		"cancelButton": "Cancel·lar"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Cerca al mercat..."
+		},
+		"type": {
+			"label": "Tipus",
+			"all": "Tots els tipus",
+			"mode": "Mode",
+			"mcp server": "Servidor MCP",
+			"prompt": "Prompt",
+			"package": "Paquet"
+		},
+		"sort": {
+			"label": "Ordena per",
+			"name": "Nom",
+			"lastUpdated": "Última actualització"
+		},
+		"tags": {
+			"label": "Etiquetes",
+			"clear_one": "Esborra {{count}} etiqueta seleccionada",
+			"clear_other": "Esborra {{count}} etiquetes seleccionades",
+			"placeholder": "Cerca etiquetes...",
+			"noResults": "No s'han trobat etiquetes.",
+			"selected_one": "{{count}} etiqueta seleccionada",
+			"selected_other": "{{count}} etiquetes seleccionades"
+		}
+	},
+	"sources": {
+		"title": "Fonts del mercat",
+		"description": "Afegeix o gestiona fonts per als elements del mercat. Cada font és un repositori Git que conté definicions d'elements del mercat.",
+		"errors": {
+			"maxSources": "Màxim de {{max}} fonts permeses.",
+			"emptyUrl": "La URL no pot estar buida.",
+			"nonVisibleChars": "La URL conté caràcters no visibles.",
+			"invalidGitUrl": "Format d'URL de Git no vàlid.",
+			"duplicateUrl": "Ja existeix una font amb aquesta URL.",
+			"nameTooLong": "El nom no pot superar els 20 caràcters.",
+			"nonVisibleCharsName": "El nom conté caràcters no visibles.",
+			"duplicateName": "Ja existeix una font amb aquest nom."
+		},
+		"add": {
+			"namePlaceholder": "Nom opcional de la font (p. ex. 'El meu repositori privat')",
+			"urlPlaceholder": "URL del repositori Git (p. ex. 'https://github.com/user/repo.git')",
+			"urlFormats": "Formats compatibles: HTTPS, SSH o ruta de fitxer local.",
+			"button": "Afegeix font"
+		},
+		"current": {
+			"title": "Fonts actuals",
+			"empty": "Encara no s'han afegit fonts del mercat.",
+			"emptyHint": "Afegeix una font a dalt per explorar els elements del mercat.",
+			"refresh": "Actualitza la font",
+			"remove": "Elimina la font"
+		}
+	},
+	"tabs": {
+		"browse": "Explora",
+		"sources": "Fonts"
+	},
+	"title": "Mercat",
+	"items": {
+		"refresh": {
+			"refreshing": "Actualitzant elements del mercat..."
+		},
+		"empty": {
+			"noItems": "No s'han trobat elements del mercat.",
+			"emptyHint": "Prova d'ajustar els filtres o els termes de cerca"
+		},
+		"count_one": "{{count}} element",
+		"count_other": "{{count}} elements"
+	}
+}

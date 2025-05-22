@@ -15,6 +15,7 @@
 		"clean": "rimraf build tsconfig.tsbuildinfo .turbo"
 	},
 	"dependencies": {
+		"@radix-ui/react-accordion": "^1.2.10",
 		"@radix-ui/react-alert-dialog": "^1.1.6",
 		"@radix-ui/react-checkbox": "^1.1.5",
 		"@radix-ui/react-collapsible": "^1.1.3",
@@ -37,6 +38,7 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.0.0",
+		"config-rocket": "^0.6.1",
 		"date-fns": "^4.1.0",
 		"debounce": "^2.1.1",
 		"fast-deep-equal": "^3.1.3",
@@ -67,8 +69,8 @@
 		"tailwindcss": "^4.0.0",
 		"tailwindcss-animate": "^1.0.7",
 		"unist-util-visit": "^5.0.0",
-		"vscode-material-icons": "^0.1.1",
 		"use-sound": "^5.0.0",
+		"vscode-material-icons": "^0.1.1",
 		"vscrui": "^0.2.2",
 		"zod": "^3.24.2"
 	},

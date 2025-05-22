@@ -91,6 +91,11 @@
 				"icon": "$(history)"
 			},
 			{
+				"command": "roo-cline.marketplaceButtonClicked",
+				"title": "Marketplace",
+				"icon": "$(extensions)"
+			},
+			{
 				"command": "roo-cline.popoutButtonClicked",
 				"title": "%command.openInEditor.title%",
 				"icon": "$(link-external)"
@@ -219,18 +224,23 @@
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.historyButtonClicked",
+					"command": "roo-cline.marketplaceButtonClicked",
 					"group": "navigation@4",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.popoutButtonClicked",
+					"command": "roo-cline.historyButtonClicked",
 					"group": "navigation@5",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.settingsButtonClicked",
+					"command": "roo-cline.popoutButtonClicked",
 					"group": "navigation@6",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@7",
 					"when": "view == roo-cline.SidebarProvider"
 				}
 			],
@@ -251,17 +261,24 @@
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.historyButtonClicked",
+					"command": "roo-cline.marketplaceButtonClicked",
 					"group": "navigation@4",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.popoutButtonClicked",
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@7",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
+			],
+			"editor/title/context": [
+				{
+					"command": "roo-cline.historyButtonClicked",
 					"group": "navigation@5",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.settingsButtonClicked",
+					"command": "roo-cline.popoutButtonClicked",
 					"group": "navigation@6",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				}
@@ -348,6 +365,7 @@
 		"cheerio": "^1.0.0",
 		"chokidar": "^4.0.1",
 		"clone-deep": "^4.0.1",
+		"config-rocket": "^0.6.1",
 		"default-shell": "^2.2.0",
 		"delay": "^6.0.0",
 		"diff": "^5.2.0",
@@ -361,6 +379,7 @@
 		"i18next": "^24.2.2",
 		"ignore": "^7.0.3",
 		"isbinaryfile": "^5.0.2",
+		"kontroll": "^1.0.5",
 		"mammoth": "^1.8.0",
 		"monaco-vscode-textmate-theme-converter": "^0.1.7",
 		"node-cache": "^5.1.2",
@@ -376,6 +395,7 @@
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
 		"reconnecting-eventsource": "^1.6.4",
+		"roo-rocket": "^0.5.0",
 		"sanitize-filename": "^1.6.3",
 		"say": "^0.16.0",
 		"serialize-error": "^11.0.3",
@@ -396,9 +416,9 @@
 	},
 	"devDependencies": {
 		"@jest/globals": "^29.7.0",
+		"@roo-code/build": "workspace:^",
 		"@roo-code/config-eslint": "workspace:^",
 		"@roo-code/config-typescript": "workspace:^",
-		"@roo-code/build": "workspace:^",
 		"@types/clone-deep": "^4.0.4",
 		"@types/debug": "^4.1.12",
 		"@types/diff": "^5.2.1",

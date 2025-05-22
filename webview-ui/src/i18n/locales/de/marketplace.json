@@ -1,0 +1,102 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Installiert",
+		"settings": "Einstellungen",
+		"browse": "Durchsuchen",
+		"sources": "Quellen"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Marketplace-Einträge durchsuchen..."
+		},
+		"type": {
+			"label": "Nach Typ filtern:",
+			"all": "Alle Typen",
+			"mode": "Modus",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Paket"
+		},
+		"sort": {
+			"label": "Sortieren nach:",
+			"name": "Name",
+			"author": "Autor",
+			"lastUpdated": "Zuletzt aktualisiert"
+		},
+		"tags": {
+			"label": "Nach Tags filtern:",
+			"available": "{{count}} verfügbar",
+			"placeholder": "Tippen Sie, um Tags zu suchen und auszuwählen...",
+			"noResults": "Keine passenden Tags gefunden",
+			"clickToFilter": "Klicken Sie auf Tags zum Filtern",
+			"clear": "Lösche {{count}} ausgewählte Tags",
+			"selected": "{{count}} ausgewählte Tags"
+		}
+	},
+	"type-group": {
+		"match": "Treffer",
+		"modes": "Modi",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Pakete",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"count": "{{count}} Einträge gefunden",
+		"components": "{{count}} Komponenten",
+		"refresh": {
+			"button": "Aktualisieren",
+			"refreshing": "Aktualisiere...",
+			"mayTakeMoment": "Das kann einen Moment dauern..."
+		},
+		"empty": {
+			"noItems": "Keine Marketplace-Einträge gefunden",
+			"withFilters": "Versuche, deine Filter anzupassen",
+			"noSources": "Versuche, eine Quelle im Quellen-Tab hinzuzufügen",
+			"adjustFilters": "Versuche, deine Filter oder Suchbegriffe anzupassen",
+			"clearAllFilters": "Alle Filter löschen"
+		},
+		"card": {
+			"by": "von {{author}}",
+			"from": "von {{source}}",
+			"installProject": "Installieren",
+			"installGlobal": "Installieren (Global)",
+			"removeProject": "Entfernen",
+			"removeGlobal": "Entfernen (Global)",
+			"viewSource": "Ansehen",
+			"viewOnSource": "Auf {{source}} ansehen"
+		}
+	},
+	"installProjectTooltip": "Projektinstallation",
+	"sources": {
+		"title": "Marketplace Quellen",
+		"description": "Füge Quellen für Marketplace-Elemente hinzu oder verwalte sie. Jede Quelle ist ein Git-Repository, das Marketplace-Elementdefinitionen enthält.",
+		"add": {
+			"title": "Neue Quelle hinzufügen",
+			"urlPlaceholder": "Git-Repository-URL (z. B. 'https://github.com/user/repo.git')",
+			"urlFormats": "Unterstützte Formate: HTTPS, SSH oder lokaler Dateipfad.",
+			"namePlaceholder": "Optionaler Quellenname (z. B. 'Mein privates Repo')",
+			"button": "Quelle hinzufügen"
+		},
+		"current": {
+			"title": "Aktuelle Quellen",
+			"empty": "Noch keine Marketplace-Quellen hinzugefügt.",
+			"emptyHint": "Füge oben eine Quelle hinzu, um Marketplace-Elemente zu durchsuchen.",
+			"refresh": "Quelle aktualisieren",
+			"remove": "Quelle entfernen"
+		},
+		"errors": {
+			"maxSources": "Maximal {{max}} Quellen erlaubt.",
+			"emptyUrl": "Die URL darf nicht leer sein.",
+			"nonVisibleChars": "Die URL enthält nicht sichtbare Zeichen.",
+			"invalidGitUrl": "Ungültiges Git-URL-Format.",
+			"duplicateUrl": "Eine Quelle mit dieser URL ist bereits vorhanden.",
+			"nameTooLong": "Der Name darf 20 Zeichen nicht überschreiten.",
+			"nonVisibleCharsName": "Der Name enthält nicht sichtbare Zeichen.",
+			"duplicateName": "Eine Quelle mit diesem Namen ist bereits vorhanden.",
+			"emojiName": "Emoji-Zeichen können Anzeigeprobleme verursachen.",
+			"invalidUrl": "Invalid URL format"
+		}
+	}
+}

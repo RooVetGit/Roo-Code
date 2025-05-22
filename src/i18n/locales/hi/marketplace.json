@@ -1,0 +1,97 @@
+{
+	"type-group": {
+		"modes": "मोड",
+		"mcps": "एमसीपी सर्वर",
+		"prompts": "प्रॉम्प्ट्स",
+		"packages": "पैकेज",
+		"generic-type": "{{type}}",
+		"match": "मिलान"
+	},
+	"item-card": {
+		"type-mode": "मोड",
+		"type-mcp": "एमसीपी सर्वर",
+		"type-prompt": "प्रॉम्प्ट",
+		"type-package": "पैकेज",
+		"type-other": "अन्य",
+		"by-author": "लेखक: {{author}}",
+		"authors-profile": "लेखक का प्रोफ़ाइल",
+		"remove-tag-filter": "टैग फ़िल्टर हटाएं: {{tag}}",
+		"filter-by-tag": "टैग से फ़िल्टर करें: {{tag}}",
+		"component-details": "कंपोनेंट विवरण",
+		"match-count": "{{count}} मिलान",
+		"view": "देखें",
+		"source": "स्रोत"
+	},
+	"install-sidebar": {
+		"title": "{{itemName}} इंस्टॉल करें",
+		"installButton": "इंस्टॉल करें",
+		"cancelButton": "रद्द करें"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "मार्केटप्लेस खोजें..."
+		},
+		"type": {
+			"label": "प्रकार",
+			"all": "सभी प्रकार",
+			"mode": "मोड",
+			"mcp server": "एमसीपी सर्वर",
+			"prompt": "प्रॉम्प्ट",
+			"package": "पैकेज"
+		},
+		"sort": {
+			"label": "इसके अनुसार क्रमबद्ध करें",
+			"name": "नाम",
+			"lastUpdated": "अंतिम अपडेट"
+		},
+		"tags": {
+			"label": "टैग",
+			"clear": "{{count}} चयनित टैग साफ़ करें",
+			"placeholder": "टैग खोजें...",
+			"noResults": "कोई टैग नहीं मिला।",
+			"selected": "{{count}} टैग चयनित"
+		}
+	},
+	"sources": {
+		"title": "मार्केटप्लेस स्रोत",
+		"description": "मार्केटप्लेस आइटम के लिए स्रोत जोड़ें या प्रबंधित करें। प्रत्येक स्रोत एक Git रिपॉजिटरी है जिसमें मार्केटप्लेस आइटम परिभाषाएँ होती हैं।",
+		"errors": {
+			"maxSources": "{{max}} स्रोतों की अधिकतम संख्या अनुमत है।",
+			"emptyUrl": "URL खाली नहीं हो सकती।",
+			"nonVisibleChars": "URL में गैर-दृश्य वर्ण हैं।",
+			"invalidGitUrl": "अमान्य Git URL प्रारूप।",
+			"duplicateUrl": "इस URL वाला स्रोत पहले से मौजूद है।",
+			"nameTooLong": "नाम 20 वर्णों से अधिक नहीं हो सकता।",
+			"nonVisibleCharsName": "नाम में गैर-दृश्य वर्ण हैं।",
+			"duplicateName": "इस नाम वाला स्रोत पहले से मौजूद है।"
+		},
+		"add": {
+			"namePlaceholder": "वैकल्पिक स्रोत नाम (जैसे 'मेरा निजी रेपो')",
+			"urlPlaceholder": "Git रिपॉजिटरी URL (जैसे 'https://github.com/user/repo.git')",
+			"urlFormats": "समर्थित प्रारूप: HTTPS, SSH, या स्थानीय फ़ाइल पथ।",
+			"button": "स्रोत जोड़ें"
+		},
+		"current": {
+			"title": "वर्तमान स्रोत",
+			"empty": "अभी तक कोई मार्केटप्लेस स्रोत नहीं जोड़ा गया है।",
+			"emptyHint": "मार्केटप्लेस आइटम ब्राउज़ करने के लिए ऊपर एक स्रोत जोड़ें।",
+			"refresh": "स्रोत रीफ़्रेश करें",
+			"remove": "स्रोत हटाएं"
+		}
+	},
+	"tabs": {
+		"browse": "ब्राउज़ करें",
+		"sources": "स्रोत"
+	},
+	"title": "मार्केटप्लेस",
+	"items": {
+		"refresh": {
+			"refreshing": "मार्केटप्लेस आइटम रीफ़्रेश हो रहे हैं..."
+		},
+		"empty": {
+			"noItems": "कोई मार्केटप्लेस आइटम नहीं मिला।",
+			"emptyHint": "अपने फ़िल्टर या खोज शब्दों को समायोजित करने का प्रयास करें"
+		},
+		"count": "{{count}} आइटम"
+	}
+}

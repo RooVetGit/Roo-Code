@@ -1,0 +1,97 @@
+{
+	"type-group": {
+		"modes": "模式",
+		"mcps": "MCP服务器",
+		"prompts": "提示",
+		"packages": "包",
+		"generic-type": "{{type}}",
+		"match": "匹配"
+	},
+	"item-card": {
+		"type-mode": "模式",
+		"type-mcp": "MCP服务器",
+		"type-prompt": "提示",
+		"type-package": "包",
+		"type-other": "其他",
+		"by-author": "作者：{{author}}",
+		"authors-profile": "作者主页",
+		"remove-tag-filter": "移除标签过滤器：{{tag}}",
+		"filter-by-tag": "按标签过滤：{{tag}}",
+		"component-details": "组件详情",
+		"match-count": "{{count}}个匹配",
+		"view": "查看",
+		"source": "源码"
+	},
+	"install-sidebar": {
+		"title": "安装 {{itemName}}",
+		"installButton": "安装",
+		"cancelButton": "取消"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "搜索应用市场..."
+		},
+		"type": {
+			"label": "类型",
+			"all": "所有类型",
+			"mode": "模式",
+			"mcp server": "MCP 服务",
+			"prompt": "提示词",
+			"package": "包"
+		},
+		"sort": {
+			"label": "排序方式",
+			"name": "名称",
+			"lastUpdated": "最后更新"
+		},
+		"tags": {
+			"label": "标签",
+			"clear": "清除 {{count}} 个已选标签",
+			"placeholder": "搜索标签...",
+			"noResults": "未找到标签。",
+			"selected": "已选 {{count}} 个标签"
+		}
+	},
+	"sources": {
+		"title": "应用市场源",
+		"description": "添加或管理应用市场项的来源。每个来源都是一个包含应用市场项定义的 Git 仓库。",
+		"errors": {
+			"maxSources": "最多允许 {{max}} 个来源。",
+			"emptyUrl": "URL 不能为空。",
+			"nonVisibleChars": "URL 包含不可见字符。",
+			"invalidGitUrl": "无效的 Git URL 格式。",
+			"duplicateUrl": "具有此 URL 的来源已存在。",
+			"nameTooLong": "名称不能超过 20 个字符。",
+			"nonVisibleCharsName": "名称包含不可见字符。",
+			"duplicateName": "具有此名称的来源已存在。"
+		},
+		"add": {
+			"namePlaceholder": "可选来源名称（例如 '我的私有仓库'）",
+			"urlPlaceholder": "Git 仓库 URL（例如 'https://github.com/user/repo.git'）",
+			"urlFormats": "支持的格式：HTTPS、SSH 或本地文件路径。",
+			"button": "添加来源"
+		},
+		"current": {
+			"title": "当前来源",
+			"empty": "尚未添加应用市场来源。",
+			"emptyHint": "在上方添加来源以浏览应用市场项。",
+			"refresh": "刷新来源",
+			"remove": "移除来源"
+		}
+	},
+	"tabs": {
+		"browse": "浏览",
+		"sources": "来源"
+	},
+	"title": "应用市场",
+	"items": {
+		"refresh": {
+			"refreshing": "正在刷新应用市场项..."
+		},
+		"empty": {
+			"noItems": "未找到应用市场项。",
+			"emptyHint": "尝试调整您的过滤器或搜索词"
+		},
+		"count": "{{count}} 项"
+	}
+}

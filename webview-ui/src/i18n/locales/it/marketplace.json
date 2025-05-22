@@ -1,0 +1,102 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Installati",
+		"settings": "Impostazioni",
+		"browse": "Sfoglia",
+		"sources": "Fonti"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Cerca elementi del marketplace..."
+		},
+		"type": {
+			"label": "Filtra per tipo:",
+			"all": "Tutti i tipi",
+			"mode": "Modalità",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Pacchetto"
+		},
+		"sort": {
+			"label": "Ordina per:",
+			"name": "Nome",
+			"author": "Autore",
+			"lastUpdated": "Ultimo aggiornamento"
+		},
+		"tags": {
+			"label": "Filtra per tag:",
+			"available": "{{count}} disponibili",
+			"placeholder": "Digita per cercare e selezionare i tag...",
+			"noResults": "Nessun tag corrispondente trovato",
+			"clickToFilter": "Clicca sui tag per filtrare gli elementi",
+			"clear": "Cancella {{count}} tag selezionati",
+			"selected": "{{count}} tag selezionati"
+		}
+	},
+	"type-group": {
+		"match": "Corrispondenza",
+		"modes": "Modalità",
+		"mcps": "MCP Server",
+		"prompts": "Prompt",
+		"packages": "Pacchetti",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Nessun elemento trovato nel marketplace",
+			"withFilters": "Prova a modificare i filtri",
+			"noSources": "Prova ad aggiungere una fonte nella scheda Fonti",
+			"adjustFilters": "Prova a regolare i tuoi filtri o termini di ricerca",
+			"clearAllFilters": "Cancella tutti i filtri"
+		},
+		"count": "{{count}} elementi trovati",
+		"components": "{{count}} componenti",
+		"refresh": {
+			"button": "Aggiorna",
+			"refreshing": "Aggiornamento in corso...",
+			"mayTakeMoment": "Questo potrebbe richiedere un momento."
+		},
+		"card": {
+			"by": "di {{author}}",
+			"from": "da {{source}}",
+			"installProject": "Installa",
+			"installGlobal": "Installa (Globale)",
+			"removeProject": "Rimuovi",
+			"removeGlobal": "Rimuovi (Globale)",
+			"viewSource": "Visualizza",
+			"viewOnSource": "Visualizza su {{source}}"
+		}
+	},
+	"installProjectTooltip": "Installazione del progetto",
+	"sources": {
+		"title": "Fonti del Marketplace",
+		"description": "Aggiungi o gestisci le fonti per gli elementi del marketplace. Ogni fonte è un repository Git che contiene le definizioni degli elementi del marketplace.",
+		"add": {
+			"title": "Aggiungi nuova fonte",
+			"urlPlaceholder": "URL del repository Git (es., 'https://github.com/user/repo.git')",
+			"urlFormats": "Formati supportati: HTTPS, SSH o percorso file locale.",
+			"namePlaceholder": "Nome fonte opzionale (es., 'Il mio repository privato')",
+			"button": "Aggiungi fonte"
+		},
+		"current": {
+			"title": "Fonti attuali",
+			"empty": "Nessuna fonte Marketplace aggiunta finora.",
+			"emptyHint": "Aggiungi una fonte sopra per esplorare gli elementi del Marketplace.",
+			"refresh": "Aggiorna fonte",
+			"remove": "Rimuovi fonte"
+		},
+		"errors": {
+			"maxSources": "Massimo {{max}} fonti consentite.",
+			"emptyUrl": "L'URL non può essere vuoto.",
+			"invalidUrl": "Formato URL non valido.",
+			"nonVisibleChars": "L'URL contiene caratteri non visibili.",
+			"invalidGitUrl": "Formato URL Git non valido.",
+			"duplicateUrl": "Una fonte con questo URL esiste già.",
+			"nameTooLong": "Il nome non può superare i 20 caratteri.",
+			"nonVisibleCharsName": "Il nome contiene caratteri non visibili.",
+			"duplicateName": "Una fonte con questo nome esiste già.",
+			"emojiName": "I caratteri emoji possono causare problemi di visualizzazione."
+		}
+	}
+}

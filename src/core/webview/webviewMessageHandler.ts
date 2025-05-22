@@ -37,7 +37,26 @@ import { getCommand } from "../../utils/commands"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
-export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
+import { MarketplaceManager } from "../../services/marketplace"
+import { handleMarketplaceMessages } from "./marketplaceMessageHandler"
+
+const marketplaceMessages = new Set([
+	"openExternal",
+	"marketplaceSources",
+	"fetchMarketplaceItems",
+	"filterMarketplaceItems",
+	"refreshMarketplaceSource",
+	"installMarketplaceItem",
+	"installMarketplaceItemWithParameters",
+	"cancelMarketplaceInstall",
+	"removeInstalledMarketplaceItem",
+])
+
+export const webviewMessageHandler = async (
+	provider: ClineProvider,
+	message: WebviewMessage,
+	marketplaceManager?: MarketplaceManager,
+) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
@@ -1258,6 +1277,16 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			telemetryService.updateTelemetryState(isOptedIn)
 			await provider.postStateToWebview()
 			break
+		}
+	}
+
+	if (marketplaceManager && marketplaceMessages.has(message.type)) {
+		try {
+			console.log(`DEBUG: Routing ${message.type} message to marketplaceMessageHandler`)
+			const result = await handleMarketplaceMessages(provider, message, marketplaceManager)
+			console.log(`DEBUG: Marketplace message handled successfully: ${message.type}, result: ${result}`)
+		} catch (error) {
+			console.error(`DEBUG: Error handling marketplace message: ${error}`)
 		}
 	}
 }

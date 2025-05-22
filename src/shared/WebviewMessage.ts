@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import { ProviderSettings } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
+import { InstallMarketplaceItemOptions, MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
 
@@ -133,6 +134,19 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
 		| "condenseTaskContextRequest"
+		| "repositoryRefreshComplete"
+		| "setHistoryPreviewCollapsed"
+		| "openExternal"
+		| "marketplaceSources"
+		| "fetchMarketplaceItems"
+		| "filterMarketplaceItems"
+		| "marketplaceButtonClicked"
+		| "refreshMarketplaceSource"
+		| "installMarketplaceItem"
+		| "installMarketplaceItemWithParameters"
+		| "cancelMarketplaceInstall"
+		| "removeInstalledMarketplaceItem"
+		| "openMarketplaceInstallSidebarWithConfig"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -162,6 +176,12 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	sources?: MarketplaceSource[]
+	filters?: { type?: string; search?: string; tags?: string[] }
+	url?: string // For openExternal
+	mpItem?: MarketplaceItem
+	mpInstallOptions?: InstallMarketplaceItemOptions
+	config?: Record<string, any> // Add config to the payload
 }
 
 export const checkoutDiffPayloadSchema = z.object({
@@ -181,4 +201,25 @@ export const checkoutRestorePayloadSchema = z.object({
 
 export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSchema>
 
-export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload
+import { marketplaceItemSchema } from "../services/marketplace/schemas"
+
+export const installMarketplaceItemWithParametersPayloadSchema = z.object({
+	item: marketplaceItemSchema.strict(),
+	parameters: z.record(z.string(), z.any()),
+})
+
+export type InstallMarketplaceItemWithParametersPayload = z.infer<
+	typeof installMarketplaceItemWithParametersPayloadSchema
+>
+
+export const cancelMarketplaceInstallPayloadSchema = z.object({
+	itemId: z.string(),
+})
+
+export type CancelMarketplaceInstallPayload = z.infer<typeof cancelMarketplaceInstallPayloadSchema>
+
+export type WebViewMessagePayload =
+	| CheckpointDiffPayload
+	| CheckpointRestorePayload
+	| InstallMarketplaceItemWithParametersPayload
+	| CancelMarketplaceInstallPayload

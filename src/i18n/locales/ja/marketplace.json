@@ -1,0 +1,97 @@
+{
+	"type-group": {
+		"modes": "モード",
+		"mcps": "MCPサーバー",
+		"prompts": "プロンプト",
+		"packages": "パッケージ",
+		"generic-type": "{{type}}",
+		"match": "一致"
+	},
+	"item-card": {
+		"type-mode": "モード",
+		"type-mcp": "MCPサーバー",
+		"type-prompt": "プロンプト",
+		"type-package": "パッケージ",
+		"type-other": "その他",
+		"by-author": "作成者：{{author}}",
+		"authors-profile": "作成者のプロフィール",
+		"remove-tag-filter": "タグフィルターを削除：{{tag}}",
+		"filter-by-tag": "タグでフィルター：{{tag}}",
+		"component-details": "コンポーネントの詳細",
+		"match-count": "{{count}}件の一致",
+		"view": "表示",
+		"source": "ソース"
+	},
+	"install-sidebar": {
+		"title": "{{itemName}}をインストール",
+		"installButton": "インストール",
+		"cancelButton": "キャンセル"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "マーケットプレイスを検索..."
+		},
+		"type": {
+			"label": "タイプ",
+			"all": "すべてのタイプ",
+			"mode": "モード",
+			"mcp server": "MCPサーバー",
+			"prompt": "プロンプト",
+			"package": "パッケージ"
+		},
+		"sort": {
+			"label": "並べ替え",
+			"name": "名前",
+			"lastUpdated": "最終更新"
+		},
+		"tags": {
+			"label": "タグ",
+			"clear": "{{count}}個の選択されたタグをクリア",
+			"placeholder": "タグを検索...",
+			"noResults": "タグが見つかりませんでした。",
+			"selected": "{{count}}個のタグを選択"
+		}
+	},
+	"sources": {
+		"title": "マーケットプレイスソース",
+		"description": "マーケットプレイスアイテムのソースを追加または管理します。各ソースは、マーケットプレイスアイテムの定義を含むGitリポジトリです。",
+		"errors": {
+			"maxSources": "最大{{max}}個のソースが許可されています。",
+			"emptyUrl": "URLは空にできません。",
+			"nonVisibleChars": "URLに非表示文字が含まれています。",
+			"invalidGitUrl": "無効なGit URL形式。",
+			"duplicateUrl": "このURLを持つソースはすでに存在します。",
+			"nameTooLong": "名前は20文字を超えることはできません。",
+			"nonVisibleCharsName": "名前に非表示文字が含まれています。",
+			"duplicateName": "この名前を持つソースはすでに存在します。"
+		},
+		"add": {
+			"namePlaceholder": "オプションのソース名（例：'私のプライベートリポジトリ'）",
+			"urlPlaceholder": "GitリポジトリURL（例：'https://github.com/user/repo.git'）",
+			"urlFormats": "サポートされている形式：HTTPS、SSH、またはローカルファイルパス。",
+			"button": "ソースを追加"
+		},
+		"current": {
+			"title": "現在のソース",
+			"empty": "まだマーケットプレイスソースが追加されていません。",
+			"emptyHint": "マーケットプレイスアイテムを閲覧するには、上にソースを追加してください。",
+			"refresh": "ソースを更新",
+			"remove": "ソースを削除"
+		}
+	},
+	"tabs": {
+		"browse": "閲覧",
+		"sources": "ソース"
+	},
+	"title": "マーケットプレイス",
+	"items": {
+		"refresh": {
+			"refreshing": "マーケットプレイスアイテムを更新中..."
+		},
+		"empty": {
+			"noItems": "マーケットプレイスアイテムが見つかりませんでした。",
+			"emptyHint": "フィルターまたは検索語句を調整してみてください"
+		},
+		"count": "{{count}}個のアイテム"
+	}
+}
