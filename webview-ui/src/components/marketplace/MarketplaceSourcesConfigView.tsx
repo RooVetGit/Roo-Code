@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useStateManager } from "./useStateManager"
-import { validateSource } from "@roo/shared/MarketplaceValidation"
+import { validateSource, ValidationError } from "@roo/shared/MarketplaceValidation"
 import { cn } from "@src/lib/utils"
 
 export interface MarketplaceSourcesConfigProps {
@@ -19,6 +19,62 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 	const [newSourceUrl, setNewSourceUrl] = useState("")
 	const [newSourceName, setNewSourceName] = useState("")
 	const [error, setError] = useState("")
+	const [fieldErrors, setFieldErrors] = useState<{
+		name?: string
+		url?: string
+	}>({})
+
+	// Check if name contains emoji characters
+	const containsEmoji = (str: string): boolean => {
+		// Simple emoji detection using common emoji ranges
+		// This avoids using Unicode property escapes which require ES2018+
+		return (
+			/[\ud83c\ud83d\ud83e][\ud000-\udfff]/.test(str) || // Common emoji surrogate pairs
+			/[\u2600-\u27BF]/.test(str) || // Misc symbols and pictographs
+			/[\u2300-\u23FF]/.test(str) || // Miscellaneous Technical
+			/[\u2700-\u27FF]/.test(str) || // Dingbats
+			/[\u2B50\u2B55]/.test(str) || // Star, Circle
+			/[\u203C\u2049\u20E3\u2122\u2139\u2194-\u2199\u21A9\u21AA]/.test(str)
+		) // Punctuation
+	}
+
+	// Validate input fields without submitting
+	const validateFields = () => {
+		const newErrors: { name?: string; url?: string } = {}
+
+		// Validate name if provided
+		if (newSourceName) {
+			if (newSourceName.length > 20) {
+				newErrors.name = t("marketplace:sources.errors.nameTooLong")
+			} else if (containsEmoji(newSourceName)) {
+				newErrors.name = t("marketplace:sources.errors.emojiName")
+			} else {
+				// Check for duplicate names
+				const hasDuplicateName = state.sources.some(
+					(source) => source.name && source.name.toLowerCase() === newSourceName.toLowerCase(),
+				)
+				if (hasDuplicateName) {
+					newErrors.name = t("marketplace:sources.errors.duplicateName")
+				}
+			}
+		}
+
+		// Validate URL
+		if (!newSourceUrl.trim()) {
+			newErrors.url = t("marketplace:sources.errors.emptyUrl")
+		} else {
+			// Check for duplicate URLs
+			const hasDuplicateUrl = state.sources.some(
+				(source) => source.url.toLowerCase().trim() === newSourceUrl.toLowerCase().trim(),
+			)
+			if (hasDuplicateUrl) {
+				newErrors.url = t("marketplace:sources.errors.duplicateUrl")
+			}
+		}
+
+		setFieldErrors(newErrors)
+		return Object.keys(newErrors).length === 0
+	}
 
 	const handleAddSource = () => {
 		const MAX_SOURCES = 10
@@ -26,11 +82,27 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 			setError(t("marketplace:sources.errors.maxSources", { max: MAX_SOURCES }))
 			return
 		}
+
+		// Clear previous errors
+		setError("")
+
+		// Perform quick validation first
+		if (!validateFields()) {
+			// If we have specific field errors, show the first one as the main error
+			if (fieldErrors.url) {
+				setError(fieldErrors.url)
+			} else if (fieldErrors.name) {
+				setError(fieldErrors.name)
+			}
+			return
+		}
+
 		const sourceToValidate: MarketplaceSource = {
-			url: newSourceUrl,
-			name: newSourceName || undefined,
+			url: newSourceUrl.trim(),
+			name: newSourceName.trim() || undefined,
 			enabled: true,
 		}
+
 		const validationErrors = validateSource(sourceToValidate, state.sources)
 		if (validationErrors.length > 0) {
 			const errorMessages: Record<string, string> = {
@@ -42,7 +114,34 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 				"name:nonvisible": "marketplace:sources.errors.nonVisibleCharsName",
 				"name:duplicate": "marketplace:sources.errors.duplicateName",
 			}
-			const error = validationErrors[0]
+
+			// Group errors by field for better user feedback
+			const fieldErrorMap: Record<string, ValidationError[]> = {}
+			for (const error of validationErrors) {
+				if (!fieldErrorMap[error.field]) {
+					fieldErrorMap[error.field] = []
+				}
+				fieldErrorMap[error.field].push(error)
+			}
+
+			// Update field-specific errors
+			const newFieldErrors: { name?: string; url?: string } = {}
+			if (fieldErrorMap.name) {
+				const error = fieldErrorMap.name[0]
+				const errorKey = `name:${error.message.toLowerCase().split(" ")[0]}`
+				newFieldErrors.name = t(errorMessages[errorKey] || error.message)
+			}
+
+			if (fieldErrorMap.url) {
+				const error = fieldErrorMap.url[0]
+				const errorKey = `url:${error.message.toLowerCase().split(" ")[0]}`
+				newFieldErrors.url = t(errorMessages[errorKey] || error.message)
+			}
+
+			setFieldErrors(newFieldErrors)
+
+			// Set the main error message (prioritize URL errors)
+			const error = fieldErrorMap.url?.[0] || validationErrors[0]
 			const errorKey = `${error.field}:${error.message.toLowerCase().split(" ")[0]}`
 			setError(t(errorMessages[errorKey] || "marketplace:sources.errors.invalidGitUrl"))
 			return
@@ -97,16 +196,40 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 							onChange={(e) => {
 								setNewSourceName(e.target.value.slice(0, 20))
 								setError("")
+								setFieldErrors((prev) => ({ ...prev, name: undefined }))
+
+								// Live validation for emojis and length
+								const value = e.target.value
+								if (value && containsEmoji(value)) {
+									setFieldErrors((prev) => ({
+										...prev,
+										name: t("marketplace:sources.errors.emojiName"),
+									}))
+								} else if (value.length >= 20) {
+									setFieldErrors((prev) => ({
+										...prev,
+										name: t("marketplace:sources.errors.nameTooLong"),
+									}))
+								}
 							}}
 							maxLength={20}
-							className="pl-10"
+							className={cn("pl-10", {
+								"border-red-500 focus-visible:ring-red-500": fieldErrors.name,
+							})}
+							onBlur={() => validateFields()}
 						/>
 						<span className="absolute left-3 top-1/2 -translate-y-1/2 text-vscode-descriptionForeground">
 							<span className="codicon codicon-tag"></span>
 						</span>
-						<span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-vscode-descriptionForeground">
+						<span
+							className={cn(
+								"absolute right-3 top-1/2 -translate-y-1/2 text-xs",
+								newSourceName.length >= 18 ? "text-amber-500" : "text-vscode-descriptionForeground",
+								newSourceName.length >= 20 ? "text-red-500" : "",
+							)}>
 							{newSourceName.length}/20
 						</span>
+						{fieldErrors.name && <p className="text-xs text-red-500 mt-1 mb-0">{fieldErrors.name}</p>}
 					</div>
 					<div className="relative">
 						<Input
@@ -116,12 +239,25 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 							onChange={(e) => {
 								setNewSourceUrl(e.target.value)
 								setError("")
+								setFieldErrors((prev) => ({ ...prev, url: undefined }))
+
+								// Live validation for empty URL
+								if (!e.target.value.trim()) {
+									setFieldErrors((prev) => ({
+										...prev,
+										url: t("marketplace:sources.errors.emptyUrl"),
+									}))
+								}
 							}}
-							className="pl-10"
+							className={cn("pl-10", {
+								"border-red-500 focus-visible:ring-red-500": fieldErrors.url,
+							})}
+							onBlur={() => validateFields()}
 						/>
 						<span className="absolute left-3 top-1/2 -translate-y-1/2 text-vscode-descriptionForeground">
 							<span className="codicon codicon-link"></span>
 						</span>
+						{fieldErrors.url && <p className="text-xs text-red-500 mt-1 mb-0">{fieldErrors.url}</p>}
 					</div>
 					<p className="text-xs text-vscode-descriptionForeground m-0">
 						{t("marketplace:sources.add.urlFormats")}
@@ -135,7 +271,10 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 						</p>
 					</div>
 				)}
-				<Button onClick={handleAddSource} className="mt-2 w-full shadow-none border-none">
+				<Button
+					onClick={handleAddSource}
+					className="mt-2 w-full shadow-none border-none"
+					disabled={!!fieldErrors.name || !!fieldErrors.url || !newSourceUrl.trim()}>
 					<span className="codicon codicon-add"></span>
 					{t("marketplace:sources.add.button")}
 				</Button>

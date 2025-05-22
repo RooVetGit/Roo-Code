@@ -27,11 +27,6 @@
 		"installButton": "Install",
 		"cancelButton": "Cancel"
 	},
-	"install-sidebar": {
-		"title": "Install {{itemName}}",
-		"installButton": "Install",
-		"cancelButton": "Cancel"
-	},
 	"filters": {
 		"search": {
 			"placeholder": "Search marketplace..."
@@ -78,18 +73,19 @@
 			"current": {
 				"title": "Current Sources",
 				"empty": "No marketplace sources added yet.",
-				"emptyHint": "Add a source above to browse marketplace items."
-			},
-			"current": {
+				"emptyHint": "Add a source above to browse marketplace items.",
 				"refresh": "Refresh source",
 				"remove": "Remove source"
 			}
 		},
-		"tabs": {
-			"browse": "Browse",
-			"sources": "Sources"
-		},
 		"title": "Marketplace"
+	},
+	"done": "Done",
+	"refresh": "Refresh",
+	"tabs": {
+		"installed": "Installed",
+		"browse": "Browse",
+		"settings": "Settings"
 	},
 	"items": {
 		"refresh": {

@@ -1,6 +1,8 @@
 {
 	"title": "Marketplace",
 	"tabs": {
+		"installed": "Installati",
+		"settings": "Impostazioni",
 		"browse": "Sfoglia",
 		"sources": "Fonti"
 	},
@@ -12,7 +14,7 @@
 			"label": "Filtra per tipo:",
 			"all": "Tutti i tipi",
 			"mode": "Modalità",
-			"mcp": "Server MCP",
+			"mcp server": "MCP Server",
 			"prompt": "Prompt",
 			"package": "Pacchetto"
 		},
@@ -25,17 +27,17 @@
 		"tags": {
 			"label": "Filtra per tag:",
 			"available": "{{count}} disponibili",
-			"clear": "Cancella tag ({{count}})",
 			"placeholder": "Digita per cercare e selezionare i tag...",
 			"noResults": "Nessun tag corrispondente trovato",
-			"selected": "Mostrando elementi con uno qualsiasi dei tag selezionati ({{count}} selezionati)",
-			"clickToFilter": "Clicca sui tag per filtrare gli elementi"
+			"clickToFilter": "Clicca sui tag per filtrare gli elementi",
+			"clear": "Cancella {{count}} tag selezionati",
+			"selected": "{{count}} tag selezionati"
 		}
 	},
 	"type-group": {
 		"match": "Corrispondenza",
 		"modes": "Modalità",
-		"mcps": "Server MCP",
+		"mcps": "MCP Server",
 		"prompts": "Prompt",
 		"packages": "Pacchetti",
 		"generic-type": "{{type}}"
@@ -44,48 +46,57 @@
 		"empty": {
 			"noItems": "Nessun elemento trovato nel marketplace",
 			"withFilters": "Prova a modificare i filtri",
-			"noSources": "Prova ad aggiungere una fonte nella scheda Fonti"
+			"noSources": "Prova ad aggiungere una fonte nella scheda Fonti",
+			"adjustFilters": "Prova a regolare i tuoi filtri o termini di ricerca",
+			"clearAllFilters": "Cancella tutti i filtri"
 		},
 		"count": "{{count}} elementi trovati",
 		"components": "{{count}} componenti",
 		"refresh": {
 			"button": "Aggiorna",
-			"refreshing": "Aggiornamento in corso..."
+			"refreshing": "Aggiornamento in corso...",
+			"mayTakeMoment": "Questo potrebbe richiedere un momento."
 		},
 		"card": {
 			"by": "di {{author}}",
 			"from": "da {{source}}",
+			"installProject": "Installa",
+			"installGlobal": "Installa (Globale)",
+			"removeProject": "Rimuovi",
+			"removeGlobal": "Rimuovi (Globale)",
 			"viewSource": "Visualizza",
 			"viewOnSource": "Visualizza su {{source}}"
 		}
 	},
+	"installProjectTooltip": "Installazione del progetto",
 	"sources": {
-		"title": "Configura fonti del Marketplace",
-		"description": "Aggiungi repository Git che contengono elementi del marketplace. Questi repository verranno recuperati durante la navigazione nel marketplace.",
+		"title": "Fonti del Marketplace",
+		"description": "Aggiungi o gestisci le fonti per gli elementi del marketplace. Ogni fonte è un repository Git che contiene le definizioni degli elementi del marketplace.",
 		"add": {
 			"title": "Aggiungi nuova fonte",
-			"urlPlaceholder": "URL del repository Git (es., https://github.com/username/repo)",
-			"urlFormats": "Formati supportati: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) o protocollo Git (git://github.com/username/repo.git)",
-			"namePlaceholder": "Nome visualizzato (max 20 caratteri)",
+			"urlPlaceholder": "URL del repository Git (es., 'https://github.com/user/repo.git')",
+			"urlFormats": "Formati supportati: HTTPS, SSH o percorso file locale.",
+			"namePlaceholder": "Nome fonte opzionale (es., 'Il mio repository privato')",
 			"button": "Aggiungi fonte"
 		},
 		"current": {
 			"title": "Fonti attuali",
-			"count": "{{current}}/{{max}} max",
-			"empty": "Nessuna fonte configurata. Aggiungi una fonte per iniziare.",
-			"refresh": "Aggiorna questa fonte",
+			"empty": "Nessuna fonte Marketplace aggiunta finora.",
+			"emptyHint": "Aggiungi una fonte sopra per esplorare gli elementi del Marketplace.",
+			"refresh": "Aggiorna fonte",
 			"remove": "Rimuovi fonte"
 		},
 		"errors": {
-			"emptyUrl": "L'URL non può essere vuoto",
-			"invalidUrl": "Formato URL non valido",
-			"nonVisibleChars": "L'URL contiene caratteri non visibili diversi dagli spazi",
-			"invalidGitUrl": "L'URL deve essere un URL valido di un repository Git (es., https://github.com/username/repo)",
-			"duplicateUrl": "Questo URL è già presente nell'elenco (corrispondenza insensibile a maiuscole/minuscole e spazi)",
-			"nameTooLong": "Il nome deve essere di 20 caratteri o meno",
-			"nonVisibleCharsName": "Il nome contiene caratteri non visibili diversi dagli spazi",
-			"duplicateName": "Questo nome è già in uso (corrispondenza insensibile a maiuscole/minuscole e spazi)",
-			"maxSources": "Massimo {{max}} fonti consentite"
+			"maxSources": "Massimo {{max}} fonti consentite.",
+			"emptyUrl": "L'URL non può essere vuoto.",
+			"invalidUrl": "Formato URL non valido.",
+			"nonVisibleChars": "L'URL contiene caratteri non visibili.",
+			"invalidGitUrl": "Formato URL Git non valido.",
+			"duplicateUrl": "Una fonte con questo URL esiste già.",
+			"nameTooLong": "Il nome non può superare i 20 caratteri.",
+			"nonVisibleCharsName": "Il nome contiene caratteri non visibili.",
+			"duplicateName": "Una fonte con questo nome esiste già.",
+			"emojiName": "I caratteri emoji possono causare problemi di visualizzazione."
 		}
 	}
 }

@@ -1,6 +1,8 @@
 {
 	"title": "市场",
 	"tabs": {
+		"installed": "已安装",
+		"settings": "设置",
 		"browse": "浏览",
 		"sources": "来源"
 	},
@@ -12,7 +14,7 @@
 			"label": "按类型筛选：",
 			"all": "所有类型",
 			"mode": "模式",
-			"mcp": "MCP 服务器",
+			"mcp server": "MCP 服务器",
 			"prompt": "提示",
 			"package": "包"
 		},
@@ -44,48 +46,56 @@
 		"empty": {
 			"noItems": "未找到市场项目",
 			"withFilters": "尝试调整筛选条件",
-			"noSources": "尝试在来源标签页中添加来源"
+			"noSources": "尝试在来源标签页中添加来源",
+			"adjustFilters": "尝试调整你的筛选器或搜索词",
+			"clearAllFilters": "清除所有筛选器"
 		},
 		"count": "找到 {{count}} 个项目",
 		"components": "{{count}} 个组件",
 		"refresh": {
 			"button": "刷新",
-			"refreshing": "正在刷新..."
+			"refreshing": "正在刷新...",
+			"mayTakeMoment": "这可能需要一些时间。"
 		},
 		"card": {
 			"by": "作者：{{author}}",
 			"from": "来自：{{source}}",
+			"installProject": "安装",
+			"installGlobal": "安装（全局）",
+			"removeProject": "移除（项目）",
+			"removeGlobal": "移除（全局）",
 			"viewSource": "查看",
-			"viewOnSource": "在 {{source}} 上查看"
+			"viewOnSource": "在 {{source}} 上查看",
+			"installProjectTooltip": "项目安装"
 		}
 	},
 	"sources": {
-		"title": "配置市场来源",
-		"description": "添加包含市场项目的 Git 仓库。浏览市场时将获取这些仓库。",
+		"title": "市场来源",
+		"description": "添加或管理 Marketplace 项目的来源。每个来源都是包含 Marketplace 项目定义的 Git 存储库。",
 		"add": {
 			"title": "添加新来源",
-			"urlPlaceholder": "Git 仓库 URL（例如：https://github.com/username/repo）",
-			"urlFormats": "支持的格式：HTTPS (https://github.com/username/repo)、SSH (git@github.com:username/repo.git) 或 Git 协议 (git://github.com/username/repo.git)",
-			"namePlaceholder": "显示名称（最多 20 个字符）",
+			"urlPlaceholder": "Git 仓库 URL（例如“https://github.com/user/repo.git”)",
+			"urlFormats": "支持的格式：HTTPS、SSH 或本地文件路径。",
+			"namePlaceholder": "可选来源名称（例如“我的私有仓库”）",
 			"button": "添加来源"
 		},
 		"current": {
 			"title": "当前来源",
-			"count": "{{current}}/{{max}} 个上限",
-			"empty": "未配置来源。添加一个来源以开始。",
-			"refresh": "刷新此来源",
+			"empty": "尚未添加任何 Marketplace 来源。",
+			"emptyHint": "在上方添加一个来源以浏览 Marketplace 项目。",
+			"refresh": "刷新来源",
 			"remove": "移除来源"
 		},
 		"errors": {
-			"emptyUrl": "URL 不能为空",
-			"invalidUrl": "无效的 URL 格式",
-			"nonVisibleChars": "URL 包含空格以外的不可见字符",
-			"invalidGitUrl": "URL 必须是有效的 Git 仓库 URL（例如：https://github.com/username/repo）",
-			"duplicateUrl": "此 URL 已在列表中（不区分大小写和空格的匹配）",
-			"nameTooLong": "名称必须不超过 20 个字符",
-			"nonVisibleCharsName": "名称包含空格以外的不可见字符",
-			"duplicateName": "此名称已被使用（不区分大小写和空格的匹配）",
-			"maxSources": "最多允许 {{max}} 个来源"
+			"maxSources": "最多允许 {{max}} 个来源。",
+			"emptyUrl": "URL 不能为空。",
+			"nonVisibleChars": "URL 包含不可见字符。",
+			"invalidGitUrl": "无效的 Git URL 格式。",
+			"duplicateUrl": "具有此 URL 的来源已存在。",
+			"nameTooLong": "名称不得超过 20 个字符。",
+			"nonVisibleCharsName": "名称包含不可见字符。",
+			"duplicateName": "具有此名称的来源已存在。",
+			"emojiName": "表情符号可能导致显示问题。"
 		}
 	}
 }

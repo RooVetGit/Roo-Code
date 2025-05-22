@@ -1,6 +1,8 @@
 {
 	"title": "Marketplace",
 	"tabs": {
+		"installed": "Instalado",
+		"settings": "Configurações",
 		"browse": "Explorar",
 		"sources": "Fontes"
 	},
@@ -12,7 +14,7 @@
 			"label": "Filtrar por tipo:",
 			"all": "Todos os tipos",
 			"mode": "Modo",
-			"mcp": "Servidor MCP",
+			"mcp server": "Servidor MCP",
 			"prompt": "Prompt",
 			"package": "Pacote"
 		},
@@ -44,48 +46,56 @@
 		"empty": {
 			"noItems": "Nenhum item encontrado no marketplace",
 			"withFilters": "Tente ajustar os filtros",
-			"noSources": "Tente adicionar uma fonte na aba Fontes"
+			"noSources": "Tente adicionar uma fonte na aba Fontes",
+			"adjustFilters": "Tente ajustar seus filtros ou termos de pesquisa",
+			"clearAllFilters": "Limpar todos os filtros"
 		},
 		"count": "{{count}} itens encontrados",
 		"components": "{{count}} componentes",
 		"refresh": {
 			"button": "Atualizar",
-			"refreshing": "Atualizando..."
+			"refreshing": "Atualizando...",
+			"mayTakeMoment": "Isso pode levar um momento."
 		},
 		"card": {
 			"by": "por {{author}}",
 			"from": "de {{source}}",
+			"installProject": "Instalar",
+			"installGlobal": "Instalar (Global)",
+			"removeProject": "Remover",
+			"removeGlobal": "Remover (Global)",
 			"viewSource": "Ver",
-			"viewOnSource": "Ver no {{source}}"
+			"viewOnSource": "Ver no {{source}}",
+			"installProjectTooltip": "Instalação do projeto"
 		}
 	},
 	"sources": {
-		"title": "Configurar Fontes do Marketplace",
-		"description": "Adicione repositórios Git que contenham itens do marketplace. Estes repositórios serão buscados ao navegar pelo marketplace.",
+		"title": "Fontes do Marketplace",
+		"description": "Adicione ou gerencie fontes para os itens do Marketplace. Cada fonte é um repositório Git que contém definições de itens do Marketplace.",
 		"add": {
 			"title": "Adicionar Nova Fonte",
-			"urlPlaceholder": "URL do repositório Git (ex., https://github.com/username/repo)",
-			"urlFormats": "Formatos suportados: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) ou protocolo Git (git://github.com/username/repo.git)",
-			"namePlaceholder": "Nome de exibição (máx. 20 caracteres)",
+			"urlPlaceholder": "URL do repositório Git (ex., 'https://github.com/user/repo.git')",
+			"urlFormats": "Formatos suportados: HTTPS, SSH ou caminho de arquivo local.",
+			"namePlaceholder": "Nome de fonte opcional (ex., 'Meu repositório particular')",
 			"button": "Adicionar Fonte"
 		},
 		"current": {
 			"title": "Fontes Atuais",
-			"count": "{{current}}/{{max}} máx.",
-			"empty": "Nenhuma fonte configurada. Adicione uma fonte para começar.",
-			"refresh": "Atualizar esta fonte",
+			"empty": "Nenhuma fonte do Marketplace adicionada ainda.",
+			"emptyHint": "Adicione uma fonte acima para procurar itens do Marketplace.",
+			"refresh": "Atualizar fonte",
 			"remove": "Remover fonte"
 		},
 		"errors": {
-			"emptyUrl": "A URL não pode estar vazia",
-			"invalidUrl": "Formato de URL inválido",
-			"nonVisibleChars": "A URL contém caracteres não visíveis além de espaços",
-			"invalidGitUrl": "A URL deve ser uma URL válida de repositório Git (ex., https://github.com/username/repo)",
-			"duplicateUrl": "Esta URL já está na lista (correspondência insensível a maiúsculas/minúsculas e espaços)",
-			"nameTooLong": "O nome deve ter 20 caracteres ou menos",
-			"nonVisibleCharsName": "O nome contém caracteres não visíveis além de espaços",
-			"duplicateName": "Este nome já está em uso (correspondência insensível a maiúsculas/minúsculas e espaços)",
-			"maxSources": "Máximo de {{max}} fontes permitidas"
+			"maxSources": "Máximo de {{max}} fontes permitidas.",
+			"emptyUrl": "A URL não pode estar vazia.",
+			"nonVisibleChars": "A URL contém caracteres não visíveis.",
+			"invalidGitUrl": "Formato de URL Git inválido.",
+			"duplicateUrl": "Já existe uma fonte com este URL.",
+			"nameTooLong": "O nome não pode exceder 20 caracteres.",
+			"nonVisibleCharsName": "O nome contém caracteres não visíveis.",
+			"duplicateName": "Já existe uma fonte com este nome.",
+			"emojiName": "Caracteres emoji podem causar problemas de exibição."
 		}
 	}
 }

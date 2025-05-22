@@ -21,7 +21,7 @@ export interface ViewState {
 	allItems: MarketplaceItem[]
 	displayItems?: MarketplaceItem[] // Items currently being displayed (filtered or all)
 	isFetching: boolean
-	activeTab: "browse" | "sources"
+	activeTab: "browse" | "installed" | "settings"
 	refreshingUrls: string[]
 	sources: MarketplaceSource[]
 	installedMetadata: FullInstallatedMetadata
@@ -285,8 +285,8 @@ export class MarketplaceViewStateManager {
 					activeTab: tab,
 				}
 
-				// If switching to browse tab, trigger fetch
-				if (tab === "browse") {
+				// If switching to browse or installed tab, trigger fetch
+				if (tab === "browse" || tab === "installed") {
 					this.state.isFetching = true
 
 					vscode.postMessage({

@@ -1,9 +1,12 @@
 {
 	"title": "Marketplace",
 	"tabs": {
-		"browse": "Browse",
-		"sources": "Sources"
+		"installed": "Installed",
+		"settings": "Settings",
+		"browse": "Browse"
 	},
+	"done": "Done",
+	"refresh": "Refresh",
 	"filters": {
 		"search": {
 			"placeholder": "Search marketplace items..."
@@ -44,20 +47,23 @@
 		"empty": {
 			"noItems": "No marketplace items found",
 			"withFilters": "Try adjusting your filters",
-			"noSources": "Try adding a source in the Sources tab"
+			"noSources": "Try adding a source in the Sources tab",
+			"adjustFilters": "Try adjusting your filters or search terms",
+			"clearAllFilters": "Clear all filters"
 		},
 		"count": "{{count}} items found",
 		"components": "{{count}} components",
 		"refresh": {
 			"button": "Refresh",
-			"refreshing": "Refreshing..."
+			"refreshing": "Refreshing...",
+			"mayTakeMoment": "This may take a moment."
 		},
 		"card": {
 			"by": "by {{author}}",
 			"from": "from {{source}}",
-			"installProject": "Install (Project)",
+			"installProject": "Install",
 			"installGlobal": "Install (Global)",
-			"removeProject": "Remove (Project)",
+			"removeProject": "Remove",
 			"removeGlobal": "Remove (Global)",
 			"viewSource": "View",
 			"viewOnSource": "View on {{source}}"
@@ -88,6 +94,7 @@
 			"nameTooLong": "Name must be 20 characters or less",
 			"nonVisibleCharsName": "Name contains non-visible characters other than spaces",
 			"duplicateName": "This name is already in use (case and whitespace insensitive match)",
+			"emojiName": "Emoji characters may cause display issues",
 			"maxSources": "Maximum of {{max}} sources allowed"
 		}
 	}

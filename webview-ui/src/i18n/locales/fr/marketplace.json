@@ -1,6 +1,8 @@
 {
 	"title": "Marketplace",
 	"tabs": {
+		"installed": "Installé",
+		"settings": "Paramètres",
 		"browse": "Parcourir",
 		"sources": "Sources"
 	},
@@ -12,7 +14,7 @@
 			"label": "Filtrer par type :",
 			"all": "Tous les types",
 			"mode": "Mode",
-			"mcp": "Serveur MCP",
+			"mcp server": "MCP Server",
 			"prompt": "Prompt",
 			"package": "Paquet"
 		},
@@ -25,11 +27,11 @@
 		"tags": {
 			"label": "Filtrer par tags :",
 			"available": "{{count}} disponibles",
-			"clear": "Effacer les tags ({{count}})",
 			"placeholder": "Tapez pour rechercher et sélectionner des tags...",
 			"noResults": "Aucun tag correspondant trouvé",
-			"selected": "Affichage des éléments avec l'un des tags sélectionnés ({{count}} sélectionnés)",
-			"clickToFilter": "Cliquez sur les tags pour filtrer les éléments"
+			"clickToFilter": "Cliquez sur les tags pour filtrer les éléments",
+			"clear": "Effacer {{count}} tag{{count !== 1 ? 's' : ''}} sélectionné{{count !== 1 ? 's' : ''}}",
+			"selected": "{{count}} tag{{count !== 1 ? 's' : ''}} sélectionné{{count !== 1 ? 's' : ''}}"
 		}
 	},
 	"type-group": {
@@ -41,51 +43,60 @@
 		"generic-type": "{{type}}"
 	},
 	"items": {
-		"empty": {
-			"noItems": "Aucun élément trouvé dans le marketplace",
-			"withFilters": "Essayez d'ajuster les filtres",
-			"noSources": "Essayez d'ajouter une source dans l'onglet Sources"
-		},
-		"count": "{{count}} éléments trouvés",
+		"count": "{{count}} élément{{count !== 1 ? 's' : ''}} trouvé{{count !== 1 ? 's' : ''}}",
 		"components": "{{count}} composants",
 		"refresh": {
 			"button": "Actualiser",
-			"refreshing": "Actualisation..."
+			"refreshing": "Actualisation...",
+			"mayTakeMoment": "Cela peut prendre un moment..."
+		},
+		"empty": {
+			"noItems": "Aucun élément trouvé dans le marketplace",
+			"withFilters": "Essayez d'ajuster les filtres",
+			"noSources": "Essayez d'ajouter une source dans l'onglet Sources",
+			"adjustFilters": "Essaie d'ajuster tes filtres ou tes termes de recherche",
+			"clearAllFilters": "Effacer tous les filtres"
 		},
 		"card": {
 			"by": "par {{author}}",
 			"from": "de {{source}}",
+			"installProject": "Installer",
+			"installGlobal": "Installer (Global)",
+			"removeProject": "Supprimer",
+			"removeGlobal": "Supprimer (Global)",
 			"viewSource": "Voir",
 			"viewOnSource": "Voir sur {{source}}"
 		}
 	},
+	"installProjectTooltip": "Installation du projet",
 	"sources": {
-		"title": "Configurer les sources du Marketplace",
-		"description": "Ajoutez des dépôts Git contenant des éléments du marketplace. Ces dépôts seront récupérés lors de la navigation dans le marketplace.",
+		"title": "Sources du Marketplace",
+		"description": "Ajoutez ou gérez les sources des éléments du marketplace. Chaque source est un dépôt Git contenant les définitions des éléments du marketplace.",
 		"add": {
 			"title": "Ajouter une nouvelle source",
-			"urlPlaceholder": "URL du dépôt Git (ex., https://github.com/username/repo)",
-			"urlFormats": "Formats pris en charge : HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) ou protocole Git (git://github.com/username/repo.git)",
-			"namePlaceholder": "Nom d'affichage (max. 20 caractères)",
+			"urlPlaceholder": "URL du dépôt Git (ex., 'https://github.com/user/repo.git')",
+			"urlFormats": "Formats pris en charge : HTTPS, SSH ou chemin de fichier local.",
+			"namePlaceholder": "Nom de source facultatif (par ex., 'Mon dépôt privé')",
 			"button": "Ajouter la source"
 		},
 		"current": {
 			"title": "Sources actuelles",
-			"count": "{{current}}/{{max}} max.",
-			"empty": "Aucune source configurée. Ajoutez une source pour commencer.",
-			"refresh": "Actualiser cette source",
+			"empty": "Aucune source de marketplace ajoutée pour le moment.",
+			"emptyHint": "Ajoutez une source ci-dessus pour parcourir les éléments du marketplace.",
+			"refresh": "Actualiser la source",
 			"remove": "Supprimer la source"
 		},
 		"errors": {
-			"emptyUrl": "L'URL ne peut pas être vide",
-			"invalidUrl": "Format d'URL invalide",
-			"nonVisibleChars": "L'URL contient des caractères non visibles autres que des espaces",
-			"invalidGitUrl": "L'URL doit être une URL de dépôt Git valide (ex., https://github.com/username/repo)",
-			"duplicateUrl": "Cette URL est déjà dans la liste (correspondance insensible à la casse et aux espaces)",
-			"nameTooLong": "Le nom doit faire 20 caractères ou moins",
-			"nonVisibleCharsName": "Le nom contient des caractères non visibles autres que des espaces",
-			"duplicateName": "Ce nom est déjà utilisé (correspondance insensible à la casse et aux espaces)",
-			"maxSources": "Maximum de {{max}} sources autorisées"
+			"maxSources": "Maximum de {{max}} sources autorisées.",
+			"emptyUrl": "L'URL ne peut pas être vide.",
+			"nonVisibleChars": "L'URL contient des caractères non visibles.",
+			"invalidGitUrl": "Format d'URL Git non valide.",
+			"duplicateUrl": "Une source avec cette URL existe déjà.",
+			"nameTooLong": "Le nom ne peut pas dépasser 20 caractères.",
+			"nonVisibleCharsName": "Le nom contient des caractères non visibles.",
+			"duplicateName": "Une source avec ce nom existe déjà.",
+			"emojiName": "Les caractères emoji peuvent causer des problèmes d'affichage.",
+			"invalidUrl": "Invalid URL format"
 		}
 	}
 }

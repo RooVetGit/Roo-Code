@@ -9,7 +9,6 @@ import {
 } from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { isValidUrl } from "@roo/utils/url"
 import { ItemInstalledMetadata } from "@roo/services/marketplace/InstalledMetadataManager"
 
 interface MarketplaceItemActionsMenuProps {
@@ -18,16 +17,17 @@ interface MarketplaceItemActionsMenuProps {
 		project: ItemInstalledMetadata | undefined
 		global: ItemInstalledMetadata | undefined
 	}
+	triggerNode?: React.ReactNode
 }
 
-export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProps> = ({ item, installed }) => {
+export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProps> = ({
+	item,
+	installed,
+	triggerNode,
+}) => {
 	const { t } = useAppTranslation()
 
 	const itemSourceUrl = useMemo(() => {
-		if (item.sourceUrl && isValidUrl(item.sourceUrl)) {
-			return item.sourceUrl
-		}
-
 		let url = item.repoUrl
 		if (item.defaultBranch) {
 			url = `${url}/tree/${item.defaultBranch}`
@@ -36,8 +36,9 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 				url = `${url}/${normalizedPath}`
 			}
 		}
+
 		return url
-	}, [item.sourceUrl, item.repoUrl, item.defaultBranch, item.path])
+	}, [item.repoUrl, item.defaultBranch, item.path])
 
 	const handleOpenSourceUrl = useCallback(() => {
 		vscode.postMessage({
@@ -65,43 +66,32 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button
-					className="px-2 w-4"
-					variant="ghost"
-					size="icon"
-					aria-label={t("marketplace:items.card.actionsMenuLabel") || "Actions"}>
-					<MoreVertical className="size-4" />
-				</Button>
+				{triggerNode ?? (
+					<Button
+						className="px-2 w-4"
+						variant="ghost"
+						size="icon"
+						aria-label={t("marketplace:items.card.actionsMenuLabel") || "Actions"}>
+						<MoreVertical className="size-4" />
+					</Button>
+				)}
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="start" side="bottom">
+			<DropdownMenuContent align="start" side="left">
 				{/* View Source / External Link Item */}
 				<DropdownMenuItem aria-label={item.sourceName} onClick={handleOpenSourceUrl}>
-					<ExternalLink className="mr-2 h-4 w-4" />
+					<ExternalLink className="mr-1 size-3" />
 					<span>{t("marketplace:items.card.viewSource")}</span>
 				</DropdownMenuItem>
-
-				{/* Remove (Project) */}
-				{installed.project ? (
-					<DropdownMenuItem onClick={() => handleRemove({ target: "project" })}>
-						<Trash className="mr-2 h-4 w-4" />
-						<span>{t("marketplace:items.card.removeProject")}</span>
-					</DropdownMenuItem>
-				) : (
-					<DropdownMenuItem className="" onClick={() => handleInstall({ target: "project" })}>
-						<Download className="mr-2 h-4 w-4" />
-						<span>{t("marketplace:items.card.installProject")}</span>
-					</DropdownMenuItem>
-				)}
 
 				{/* Remove (Global) */}
 				{installed.global ? (
 					<DropdownMenuItem onClick={() => handleRemove({ target: "global" })}>
-						<Trash className="mr-2 h-4 w-4" />
+						<Trash className="mr-1 size-3" />
 						<span>{t("marketplace:items.card.removeGlobal")}</span>
 					</DropdownMenuItem>
 				) : (
 					<DropdownMenuItem onClick={() => handleInstall({ target: "global" })}>
-						<Download className="mr-2 h-4 w-4" />
+						<Download className="mr-1 size-3" />
 						<span>{t("marketplace:items.card.installGlobal")}</span>
 					</DropdownMenuItem>
 				)}

@@ -1,3 +1,4 @@
+import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -13,24 +14,23 @@ export interface MarketplaceListViewProps {
 	stateManager: MarketplaceViewStateManager
 	allTags: string[]
 	filteredTags: string[]
-	tagSearch: string
-	setTagSearch: (value: string) => void
-	isTagPopoverOpen: boolean
-	setIsTagPopoverOpen: (value: boolean) => void
+	showInstalledOnly?: boolean
 }
 
 export function MarketplaceListView({
 	stateManager,
 	allTags,
 	filteredTags,
-	tagSearch,
-	setTagSearch,
-	isTagPopoverOpen,
-	setIsTagPopoverOpen,
+	showInstalledOnly = false,
 }: MarketplaceListViewProps) {
 	const [state, manager] = useStateManager(stateManager)
 	const { t } = useAppTranslation()
-	const items = state.displayItems || []
+	const [isTagPopoverOpen, setIsTagPopoverOpen] = React.useState(false)
+	const [tagSearch, setTagSearch] = React.useState("")
+	const allItems = state.displayItems || []
+	const items = showInstalledOnly
+		? allItems.filter((item) => state.installedMetadata.project[item.id] || state.installedMetadata.global[item.id])
+		: allItems
 	const isEmpty = items.length === 0
 
 	return (
@@ -142,7 +142,7 @@ export function MarketplaceListView({
 											},
 										})
 									}
-									className="shadow-none bg-vscode-input-background px-2">
+									className="shadow-none bg-vscode-dropdown-background px-2">
 									{state.sortConfig.order === "asc" ? "↑" : "↓"}
 								</Button>
 							</div>
@@ -176,7 +176,7 @@ export function MarketplaceListView({
 								)}
 							</div>
 
-							<Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
+							<Popover open={isTagPopoverOpen} onOpenChange={(open) => setIsTagPopoverOpen(open)}>
 								<PopoverTrigger asChild>
 									<Button
 										variant="combobox"
@@ -193,7 +193,9 @@ export function MarketplaceListView({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+								<PopoverContent
+									className="w-[var(--radix-popover-trigger-width)] p-0"
+									onClick={(e) => e.stopPropagation()}>
 									<Command>
 										<div className="relative">
 											<CommandInput
@@ -238,7 +240,10 @@ export function MarketplaceListView({
 														}}
 														data-selected={state.filters.tags.includes(tag)}
 														className="grid grid-cols-[1rem_1fr] gap-2 cursor-pointer text-sm capitalize"
-														onMouseDown={(e) => e.preventDefault()}>
+														onMouseDown={(e) => {
+															e.stopPropagation()
+															e.preventDefault()
+														}}>
 														{state.filters.tags.includes(tag) ? (
 															<span className="codicon codicon-check" />
 														) : (
@@ -265,7 +270,7 @@ export function MarketplaceListView({
 				</div>
 			</div>
 
-			{state.isFetching && (
+			{state.isFetching && isEmpty && (
 				<div className="flex flex-col items-center justify-center h-64 text-vscode-descriptionForeground animate-fade-in">
 					<div className="animate-spin mb-4">
 						<span className="codicon codicon-sync text-3xl"></span>

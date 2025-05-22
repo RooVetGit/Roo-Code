@@ -1,0 +1,101 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Установлено",
+		"settings": "Настройки",
+		"browse": "Обзор",
+		"sources": "Источники"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Поиск элементов marketplace..."
+		},
+		"type": {
+			"label": "Фильтр по типу:",
+			"all": "Все типы",
+			"mode": "Режим",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Пакет"
+		},
+		"sort": {
+			"label": "Сортировать по:",
+			"name": "Имя",
+			"author": "Автор",
+			"lastUpdated": "Последнее обновление"
+		},
+		"tags": {
+			"label": "Фильтр по тегам:",
+			"available": "{{count}} доступно",
+			"clear": "Очистить теги ({{count}})",
+			"placeholder": "Введите для поиска и выбора тегов...",
+			"noResults": "Совпадающие теги не найдены",
+			"selected": "Показаны элементы с любым из выбранных тегов ({{count}} выбрано)",
+			"clickToFilter": "Щелкните теги для фильтрации элементов"
+		}
+	},
+	"type-group": {
+		"match": "Совпадение",
+		"modes": "Режимы",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Пакеты",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Элементы marketplace не найдены",
+			"withFilters": "Попробуйте настроить фильтры",
+			"noSources": "Попробуйте добавить источник на вкладке «Источники»",
+			"adjustFilters": "Попробуйте настроить фильтры или условия поиска",
+			"clearAllFilters": "Очистить все фильтры"
+		},
+		"count": "{{count}} элементов найдено",
+		"components": "{{count}} компонентов",
+		"refresh": {
+			"button": "Обновить",
+			"refreshing": "Обновление...",
+			"mayTakeMoment": "Это может занять некоторое время."
+		},
+		"card": {
+			"by": "от {{author}}",
+			"from": "из {{source}}",
+			"installProject": "Установить",
+			"installGlobal": "Установить (Глобально)",
+			"removeProject": "Удалить",
+			"removeGlobal": "Удалить (Глобально)",
+			"viewSource": "Просмотреть",
+			"viewOnSource": "Просмотреть на {{source}}",
+			"installProjectTooltip": "Установка проекта"
+		}
+	},
+	"sources": {
+		"title": "Источники Marketplace",
+		"description": "Добавьте или управляйте источниками для элементов Marketplace. Каждый источник — это репозиторий Git, содержащий определения элементов Marketplace.",
+		"add": {
+			"title": "Добавить новый источник",
+			"urlPlaceholder": "URL-адрес репозитория Git (например, 'https://github.com/user/repo.git')",
+			"urlFormats": "Поддерживаемые форматы: HTTPS, SSH или локальный файловый путь.",
+			"namePlaceholder": "Необязательное имя источника (например, «Мой частный репозиторий»)",
+			"button": "Добавить источник"
+		},
+		"current": {
+			"title": "Текущие источники",
+			"empty": "Пока не добавлено ни одного источника Marketplace.",
+			"emptyHint": "Добавьте источник выше, чтобы просмотреть элементы Marketplace.",
+			"refresh": "Обновить источник",
+			"remove": "Удалить источник"
+		},
+		"errors": {
+			"maxSources": "Разрешено не более {{max}} источников.",
+			"emptyUrl": "URL-адрес не может быть пустым.",
+			"nonVisibleChars": "URL-адрес содержит невидимые символы.",
+			"invalidGitUrl": "Недопустимый формат URL-адреса Git.",
+			"duplicateUrl": "Источник с этим URL-адресом уже существует.",
+			"nameTooLong": "Имя не может превышать 20 символов.",
+			"nonVisibleCharsName": "Имя содержит невидимые символы.",
+			"duplicateName": "Источник с этим именем уже существует.",
+			"emojiName": "Символы эмодзи могут вызвать проблемы с отображением."
+		}
+	}
+}

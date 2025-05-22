@@ -1,12 +1,18 @@
-import { render, fireEvent, screen } from "@testing-library/react"
+import { render, fireEvent, screen, waitFor } from "@testing-library/react"
 import { MarketplaceSourcesConfig } from "../MarketplaceSourcesConfigView"
 import { MarketplaceViewStateManager } from "../MarketplaceViewStateManager"
+import { validateSource, ValidationError } from "@roo/shared/MarketplaceValidation"
 
 // Mock the translation hook
 jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => key, // Return the key as-is for testing
 	}),
+}))
+
+// Mock the validateSource function
+jest.mock("@roo/shared/MarketplaceValidation", () => ({
+	validateSource: jest.fn(),
 }))
 
 describe("MarketplaceSourcesConfig", () => {
@@ -20,6 +26,8 @@ describe("MarketplaceSourcesConfig", () => {
 			payload: { sources: [] },
 		})
 		jest.clearAllMocks()
+		// Default mock implementation for validateSource
+		;(validateSource as jest.Mock).mockReturnValue([])
 	})
 
 	it("shows source count", () => {
@@ -68,17 +76,42 @@ describe("MarketplaceSourcesConfig", () => {
 		})
 	})
 
-	it("shows error when URL is empty", () => {
+	it("shows error when URL is empty on add (via client-side validation)", async () => {
 		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
 
-		const addButton = screen.getByText("marketplace:sources.add.button")
-		fireEvent.click(addButton)
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+		fireEvent.change(urlInput, { target: { value: "" } }) // Set URL to empty
+		fireEvent.blur(urlInput) // Trigger blur to activate client-side validation
 
-		const errorElement = screen.getByText("marketplace:sources.errors.invalidGitUrl")
-		expect(errorElement).toBeInTheDocument()
+		// This error is displayed as a field-specific error message
+		const errorMessage = await screen.findByText("marketplace:sources.errors.emptyUrl", {
+			selector: "p.text-xs.text-red-500",
+		})
+		expect(errorMessage).toBeInTheDocument()
 	})
 
-	it("shows error when max sources reached", () => {
+	it("shows error when URL is empty on blur", async () => {
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+
+		fireEvent.change(urlInput, { target: { value: "some-url" } })
+		fireEvent.blur(urlInput)
+		await waitFor(() => {
+			expect(
+				screen.queryByText("marketplace:sources.errors.emptyUrl", { selector: "p.text-xs.text-red-500" }),
+			).not.toBeInTheDocument()
+		})
+
+		fireEvent.change(urlInput, { target: { value: "" } })
+		fireEvent.blur(urlInput)
+		await waitFor(() => {
+			expect(
+				screen.getByText("marketplace:sources.errors.emptyUrl", { selector: "p.text-xs.text-red-500" }),
+			).toBeInTheDocument()
+		})
+	})
+
+	it("shows error when max sources reached", async () => {
 		// Add max number of sources with unique URLs
 		const maxSources = Array(10)
 			.fill(null)
@@ -100,8 +133,10 @@ describe("MarketplaceSourcesConfig", () => {
 		const addButton = screen.getByText("marketplace:sources.add.button")
 		fireEvent.click(addButton)
 
-		const errorElement = screen.getByText("marketplace:sources.errors.maxSources")
-		expect(errorElement).toBeInTheDocument()
+		await waitFor(() => {
+			const errorMessage = screen.getByText("marketplace:sources.errors.maxSources")
+			expect(errorMessage).toHaveClass("text-red-500", "p-2", "bg-red-100")
+		})
 	})
 
 	it("accepts multi-part corporate git URLs", async () => {
@@ -211,7 +246,7 @@ describe("MarketplaceSourcesConfig", () => {
 		expect(screen.getByText("11/20")).toBeInTheDocument()
 	})
 
-	it("clears inputs after adding source", () => {
+	it("clears inputs after adding source", async () => {
 		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
 
 		const nameInput = screen.getByPlaceholderText("marketplace:sources.add.namePlaceholder")
@@ -224,7 +259,109 @@ describe("MarketplaceSourcesConfig", () => {
 		const addButton = screen.getByText("marketplace:sources.add.button")
 		fireEvent.click(addButton)
 
-		expect(nameInput).toHaveValue("")
-		expect(urlInput).toHaveValue("")
+		await waitFor(() => {
+			expect(nameInput).toHaveValue("")
+			expect(urlInput).toHaveValue("")
+		})
+	})
+
+	it("shows error when name is too long on change", async () => {
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const nameInput = screen.getByPlaceholderText("marketplace:sources.add.namePlaceholder")
+		fireEvent.change(nameInput, { target: { value: "This name is way too long for the input field" } })
+		await waitFor(() => {
+			expect(
+				screen.getByText("marketplace:sources.errors.nameTooLong", { selector: "p.text-xs.text-red-500" }),
+			).toBeInTheDocument()
+		})
+	})
+
+	it("shows error when name contains emoji on change", async () => {
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const nameInput = screen.getByPlaceholderText("marketplace:sources.add.namePlaceholder")
+		fireEvent.change(nameInput, { target: { value: "Name with emoji 🚀" } })
+		await waitFor(() => {
+			expect(
+				screen.getByText("marketplace:sources.errors.emojiName", { selector: "p.text-xs.text-red-500" }),
+			).toBeInTheDocument()
+		})
+	})
+
+	it("shows error when URL is invalid after validation", async () => {
+		;(validateSource as jest.Mock).mockReturnValue([{ field: "url", message: "invalid" } as ValidationError])
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+		fireEvent.change(urlInput, { target: { value: "invalid-url" } })
+		const addButton = screen.getByText("marketplace:sources.add.button")
+		fireEvent.click(addButton)
+		await waitFor(() => {
+			const errorMessages = screen.queryAllByText("marketplace:sources.errors.invalidGitUrl")
+			const fieldErrorMessage = errorMessages.find((el) => el.classList.contains("text-xs"))
+			expect(fieldErrorMessage).toBeInTheDocument()
+		})
+	})
+
+	it("shows error when URL is a duplicate after validation", async () => {
+		stateManager.transition({
+			type: "UPDATE_SOURCES",
+			payload: { sources: [{ url: "https://github.com/existing/repo", enabled: true }] },
+		})
+		;(validateSource as jest.Mock).mockReturnValue([{ field: "url", message: "duplicate" } as ValidationError])
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+		fireEvent.change(urlInput, { target: { value: "https://github.com/existing/repo" } })
+		const addButton = screen.getByText("marketplace:sources.add.button")
+		fireEvent.click(addButton)
+		await waitFor(() => {
+			const errorMessages = screen.queryAllByText("marketplace:sources.errors.duplicateUrl")
+			const fieldErrorMessage = errorMessages.find((el) => el.classList.contains("text-xs"))
+			expect(fieldErrorMessage).toBeInTheDocument()
+		})
+	})
+
+	it("shows error when name is a duplicate after validation", async () => {
+		stateManager.transition({
+			type: "UPDATE_SOURCES",
+			payload: { sources: [{ name: "Existing Name", url: "https://github.com/existing/repo", enabled: true }] },
+		})
+		;(validateSource as jest.Mock).mockReturnValue([{ field: "name", message: "duplicate" } as ValidationError])
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const nameInput = screen.getByPlaceholderText("marketplace:sources.add.namePlaceholder")
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+		fireEvent.change(nameInput, { target: { value: "Existing Name" } })
+		fireEvent.change(urlInput, { target: { value: "https://github.com/new/repo" } })
+		const addButton = screen.getByText("marketplace:sources.add.button")
+		fireEvent.click(addButton)
+		await waitFor(() => {
+			const errorMessages = screen.queryAllByText("marketplace:sources.errors.duplicateName")
+			const fieldErrorMessage = errorMessages.find((el) => el.classList.contains("text-xs"))
+			expect(fieldErrorMessage).toBeInTheDocument()
+		})
+	})
+
+	it("disables add button when name has error", async () => {
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const nameInput = screen.getByPlaceholderText("marketplace:sources.add.namePlaceholder")
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+		const addButton = screen.getByText("marketplace:sources.add.button")
+
+		fireEvent.change(nameInput, { target: { value: "This name is way too long for the input field" } })
+		fireEvent.change(urlInput, { target: { value: "https://valid.com/repo" } })
+
+		await waitFor(() => {
+			expect(addButton).toBeDisabled()
+		})
+	})
+
+	it("disables add button when URL is empty", async () => {
+		render(<MarketplaceSourcesConfig stateManager={stateManager} />)
+		const urlInput = screen.getByPlaceholderText("marketplace:sources.add.urlPlaceholder")
+		const addButton = screen.getByText("marketplace:sources.add.button")
+
+		fireEvent.change(urlInput, { target: { value: "" } })
+
+		await waitFor(() => {
+			expect(addButton).toBeDisabled()
+		})
 	})
 })

@@ -1,6 +1,8 @@
 {
 	"title": "Marketplace",
 	"tabs": {
+		"installed": "Yüklendi",
+		"settings": "Ayarlar",
 		"browse": "Göz At",
 		"sources": "Kaynaklar"
 	},
@@ -12,7 +14,7 @@
 			"label": "Türe göre filtrele:",
 			"all": "Tüm türler",
 			"mode": "Mod",
-			"mcp": "MCP Sunucusu",
+			"mcp server": "MCP Server",
 			"prompt": "Prompt",
 			"package": "Paket"
 		},
@@ -25,18 +27,18 @@
 		"tags": {
 			"label": "Etiketlere göre filtrele:",
 			"available": "{{count}} mevcut",
-			"clear": "Etiketleri temizle ({{count}})",
+			"clear": "{{count}} seçili etiketi temizle",
 			"placeholder": "Etiket aramak ve seçmek için yazın...",
 			"noResults": "Eşleşen etiket bulunamadı",
-			"selected": "Seçili etiketlerden herhangi birine sahip öğeler gösteriliyor ({{count}} seçili)",
+			"selected": "{{count}} seçili etiket",
 			"clickToFilter": "Öğeleri filtrelemek için etiketlere tıklayın"
 		}
 	},
 	"type-group": {
 		"match": "Eşleşme",
 		"modes": "Modlar",
-		"mcps": "MCP Sunucuları",
-		"prompts": "Promptlar",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
 		"packages": "Paketler",
 		"generic-type": "{{type}}"
 	},
@@ -44,48 +46,56 @@
 		"empty": {
 			"noItems": "Marketplace öğesi bulunamadı",
 			"withFilters": "Filtreleri ayarlamayı deneyin",
-			"noSources": "Kaynaklar sekmesinde bir kaynak eklemeyi deneyin"
+			"noSources": "Kaynaklar sekmesinde bir kaynak eklemeyi deneyin",
+			"adjustFilters": "Filtrelerinizi veya arama terimlerinizi ayarlamayı deneyin",
+			"clearAllFilters": "Tüm filtreleri temizle"
 		},
 		"count": "{{count}} öğe bulundu",
 		"components": "{{count}} bileşen",
 		"refresh": {
 			"button": "Yenile",
-			"refreshing": "Yenileniyor..."
+			"refreshing": "Yenileniyor...",
+			"mayTakeMoment": "Bu biraz zaman alabilir."
 		},
 		"card": {
 			"by": "yazar: {{author}}",
 			"from": "kaynak: {{source}}",
+			"installProject": "Yükle",
+			"installGlobal": "Yükle (Global)",
+			"removeProject": "Kaldır",
+			"removeGlobal": "Kaldır (Global)",
 			"viewSource": "Görüntüle",
-			"viewOnSource": "{{source}} üzerinde görüntüle"
+			"viewOnSource": "{{source}} üzerinde görüntüle",
+			"installProjectTooltip": "Proje kurulumu"
 		}
 	},
 	"sources": {
-		"title": "Marketplace Kaynaklarını Yapılandır",
-		"description": "Marketplace öğeleri içeren Git depolarını ekleyin. Bu depolar marketplace'de gezinirken getirilecektir.",
+		"title": "Marketplace Kaynakları",
+		"description": "Marketplace öğeleri için kaynak ekleyin veya yönetin. Her kaynak, Marketplace öğe tanımlarını içeren bir Git deposudur.",
 		"add": {
 			"title": "Yeni Kaynak Ekle",
-			"urlPlaceholder": "Git deposu URL'si (örn., https://github.com/username/repo)",
-			"urlFormats": "Desteklenen formatlar: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) veya Git protokolü (git://github.com/username/repo.git)",
-			"namePlaceholder": "Görünen ad (maks. 20 karakter)",
+			"urlPlaceholder": "Git deposu URL'si (örn. 'https://github.com/user/repo.git')",
+			"urlFormats": "Desteklenen biçimler: HTTPS, SSH veya yerel dosya yolu.",
+			"namePlaceholder": "İsteğe bağlı kaynak adı (örn. 'Özel Depom')",
 			"button": "Kaynak Ekle"
 		},
 		"current": {
 			"title": "Mevcut Kaynaklar",
-			"count": "{{current}}/{{max}} maks.",
-			"empty": "Yapılandırılmış kaynak yok. Başlamak için bir kaynak ekleyin.",
-			"refresh": "Bu kaynağı yenile",
+			"empty": "Henüz Marketplace kaynağı eklenmedi.",
+			"emptyHint": "Marketplace öğelerine göz atmak için yukarıda bir kaynak ekleyin.",
+			"refresh": "Kaynağı yenile",
 			"remove": "Kaynağı kaldır"
 		},
 		"errors": {
-			"emptyUrl": "URL boş olamaz",
-			"invalidUrl": "Geçersiz URL formatı",
-			"nonVisibleChars": "URL boşluk dışında görünmeyen karakterler içeriyor",
-			"invalidGitUrl": "URL geçerli bir Git deposu URL'si olmalıdır (örn., https://github.com/username/repo)",
+			"maxSources": "Maksimum {{max}} kaynağa izin verilir.",
+			"emptyUrl": "URL boş olamaz.",
+			"nonVisibleChars": "URL görünmeyen karakterler içeriyor.",
+			"invalidGitUrl": "Geçersiz Git URL biçimi.",
 			"duplicateUrl": "Bu URL zaten listede (büyük/küçük harf ve boşluk duyarsız eşleşme)",
-			"nameTooLong": "İsim 20 karakter veya daha az olmalıdır",
-			"nonVisibleCharsName": "İsim boşluk dışında görünmeyen karakterler içeriyor",
-			"duplicateName": "Bu isim zaten kullanımda (büyük/küçük harf ve boşluk duyarsız eşleşme)",
-			"maxSources": "Maksimum {{max}} kaynak izin veriliyor"
+			"nameTooLong": "İsim 20 karakteri geçemez.",
+			"nonVisibleCharsName": "Ad görünmeyen karakterler içeriyor.",
+			"duplicateName": "Bu ada sahip bir kaynak zaten var.",
+			"emojiName": "Emoji karakterleri görüntüleme sorunlarına neden olabilir."
 		}
 	}
 }

@@ -12,7 +12,7 @@ import { ItemInstalledMetadata } from "@roo/services/marketplace/InstalledMetada
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Rocket, Server, Package, Sparkles, Download } from "lucide-react"
+import { Rocket, Server, Package, Sparkles, ChevronDown } from "lucide-react"
 
 interface MarketplaceItemCardProps {
 	item: MarketplaceItem
@@ -27,10 +27,10 @@ interface MarketplaceItemCardProps {
 }
 
 const icons = {
-	mode: <Rocket className="h-4 w-4" />,
-	mcp: <Server className="h-4 w-4" />,
-	package: <Package className="h-4 w-4" />,
-	prompt: <Sparkles className="h-4 w-4" />,
+	mode: <Rocket className="size-3" />,
+	mcp: <Server className="size-3" />,
+	package: <Package className="size-3" />,
+	prompt: <Sparkles className="size-3" />,
 }
 
 export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
@@ -65,63 +65,34 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 
 	return (
 		<div className="border border-vscode-panel-border rounded-sm p-3 bg-vscode-editor-background">
-			<div className="mb-2 flex gap-2">
-				{installed.project && (
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<span
-								className={cn(
-									"px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 w-fit",
-									"bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground",
-								)}
-								aria-label="Installed in project">
-								<Download className="h-3.5 w-3.5" aria-hidden="true" />
-								<span>Project</span>
-							</span>
-						</TooltipTrigger>
-						<TooltipContent>This package is installed in your current project workspace</TooltipContent>
-					</Tooltip>
-				)}
-				{installed.global && (
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<span
-								className={cn(
-									"px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 w-fit",
-									"bg-vscode-badge-background text-vscode-badge-foreground",
-								)}
-								aria-label="Installed globally">
-								<Download className="h-3.5 w-3.5" aria-hidden="true" />
-								<span>Global</span>
-							</span>
-						</TooltipTrigger>
-						<TooltipContent>This package is installed globally on your system</TooltipContent>
-					</Tooltip>
-				)}
-			</div>
-			<div className="flex justify-between items-start">
+			<div className="flex gap-2 items-start">
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span
+							className={cn(
+								"p-2 text-xs rounded-sm flex gap-1 items-center bg-primary text-vscode-button-foreground",
+							)}>
+							{icons[item.type]}
+						</span>
+					</TooltipTrigger>
+					<TooltipContent>{typeLabel}</TooltipContent>
+				</Tooltip>
 				<div>
 					<h3 className="text-lg font-semibold text-vscode-foreground mt-0 mb-1 leading-none">{item.name}</h3>
-					<AuthorInfo item={item} />
+					<AuthorInfo item={item} typeLabel={typeLabel} />
 				</div>
-				<span
-					className={cn(
-						"px-2 py-1 text-xs rounded-md flex gap-1 items-center bg-primary text-vscode-button-foreground",
-					)}>
-					{icons[item.type]} {typeLabel}
-				</span>
 			</div>
 
 			<p className="my-2 text-vscode-foreground">{item.description}</p>
 
 			{item.tags && item.tags.length > 0 && (
-				<div className="flex flex-wrap gap-1 my-2">
+				<div className="relative flex gap-1 my-2 overflow-x-auto scrollbar-hide">
 					{item.tags.map((tag) => (
 						<Button
 							key={tag}
 							size="sm"
 							variant={filters.tags.includes(tag) ? "default" : "secondary"}
-							className="shadow-none border-none rounded-sm capitalize text-xs px-2 h-5"
+							className="rounded-sm capitalize text-xs px-2 h-5 border-dashed"
 							onClick={() => {
 								const newTags = filters.tags.includes(tag)
 									? filters.tags.filter((t: string) => t !== tag)
@@ -163,7 +134,46 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 					)}
 				</div>
 
-				<MarketplaceItemActionsMenu item={item} installed={installed} />
+				<div className="flex items-center">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="sm"
+								variant="default"
+								className="text-xs h-5 rounded-r-none py-0 px-2"
+								onClick={() =>
+									vscode.postMessage({
+										type: installed.project
+											? "removeInstalledMarketplaceItem"
+											: "installMarketplaceItem",
+										mpItem: item,
+										mpInstallOptions: { target: "project" },
+									})
+								}>
+								{installed.project
+									? t("marketplace:items.card.removeProject")
+									: t("marketplace:items.card.installProject")}
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							{installed.project
+								? t("marketplace:items.card.removeProject")
+								: t("marketplace:items.card.installProject")}
+						</TooltipContent>
+					</Tooltip>
+					<MarketplaceItemActionsMenu
+						item={item}
+						installed={installed}
+						triggerNode={
+							<Button
+								size="sm"
+								variant="default"
+								className="h-5 px-1 py-0 rounded-l-none border-l border-l-white/10">
+								<ChevronDown className="size-3" />
+							</Button>
+						}
+					/>
+				</div>
 			</div>
 
 			{item.type === "package" && (
@@ -185,9 +195,10 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 
 interface AuthorInfoProps {
 	item: MarketplaceItem
+	typeLabel: string
 }
 
-const AuthorInfo: React.FC<AuthorInfoProps> = ({ item }) => {
+const AuthorInfo: React.FC<AuthorInfoProps> = ({ item, typeLabel }) => {
 	const { t } = useAppTranslation()
 
 	const handleOpenAuthorUrl = () => {
@@ -199,6 +210,7 @@ const AuthorInfo: React.FC<AuthorInfoProps> = ({ item }) => {
 	if (item.author) {
 		return (
 			<p className="text-sm text-vscode-descriptionForeground my-0">
+				{typeLabel}{" "}
 				{item.authorUrl && isValidUrl(item.authorUrl) ? (
 					<Button
 						variant="link"

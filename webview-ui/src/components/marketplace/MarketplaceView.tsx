@@ -13,19 +13,17 @@ import { RocketConfig } from "config-rocket"
 import { MarketplaceSourcesConfig } from "./MarketplaceSourcesConfigView"
 import { MarketplaceListView } from "./MarketplaceListView"
 import { cn } from "@/lib/utils"
-import { Package, RefreshCw, Server } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 interface MarketplaceViewProps {
 	onDone?: () => void
 	stateManager: MarketplaceViewStateManager
 }
-export function MarketplaceView({ stateManager }: MarketplaceViewProps) {
+export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) {
 	const { t } = useAppTranslation()
 	const [state, manager] = useStateManager(stateManager)
 
-	const [tagSearch, setTagSearch] = useState("")
-	const [isTagPopoverOpen, setIsTagPopoverOpen] = useState(false)
 	const [showInstallSidebar, setShowInstallSidebar] = useState<
 		| {
 				item: MarketplaceItem
@@ -84,11 +82,7 @@ export function MarketplaceView({ stateManager }: MarketplaceViewProps) {
 	)
 
 	// Memoize filtered tags
-	const filteredTags = useMemo(
-		() =>
-			tagSearch ? allTags.filter((tag: string) => tag.toLowerCase().includes(tagSearch.toLowerCase())) : allTags,
-		[allTags, tagSearch],
-	)
+	const filteredTags = useMemo(() => allTags, [allTags])
 
 	return (
 		<TooltipProvider>
@@ -96,53 +90,51 @@ export function MarketplaceView({ stateManager }: MarketplaceViewProps) {
 				<TabHeader className="flex flex-col sticky top-0 z-10 px-3 py-2">
 					<div className="flex justify-between items-center px-2">
 						<h3 className="font-bold m-0">{t("marketplace:title")}</h3>
-						<Button
-							className={cn("h-4 px-0", {
-								flex: state.activeTab === "browse",
-								hidden: state.activeTab === "sources",
-							})}
-							variant="ghost"
-							size="sm"
-							onClick={() => manager.transition({ type: "FETCH_ITEMS" })}>
-							<RefreshCw className={cn("size-4", state.isFetching && "animate-spin")} />
-						</Button>
+						<div className="flex gap-2 items-center">
+							<Button variant="secondary" onClick={() => manager.transition({ type: "FETCH_ITEMS" })}>
+								<RefreshCw className={cn("size-4", { "animate-spin": state.isFetching })} />
+								{t("marketplace:refresh")}
+							</Button>
+							<Button variant="default" onClick={onDone}>
+								{t("marketplace:done")}
+							</Button>
+						</div>
 					</div>
+
 					<div className="w-full mt-2">
-						<div className="bg-vscode-input-background rounded-md flex relative py-1">
-							<div
-								className={cn(
-									"absolute w-1/2 h-full top-0 rounded-sm bg-vscode-button-background transition-all duration-300 ease-in-out",
-									{
-										"left-0": state.activeTab === "browse",
-										"left-1/2": state.activeTab === "sources",
-									},
-								)}
-							/>
+						<div className="flex relative py-1">
+							<div className="absolute w-full h-[2px] -bottom-[2px] bg-vscode-input-border">
+								<div
+									className={cn(
+										"absolute w-1/3 h-[2px] bottom-0 bg-vscode-button-background transition-all duration-300 ease-in-out",
+										{
+											"left-0": state.activeTab === "browse",
+											"left-1/3": state.activeTab === "installed",
+											"left-2/3": state.activeTab === "settings",
+										},
+									)}
+								/>
+							</div>
 							<button
-								className={cn(
-									"flex items-center justify-center gap-2 flex-1 text-sm font-medium rounded-sm transition-colors duration-300 relative z-10",
-									state.activeTab === "browse"
-										? "text-vscode-button-foreground"
-										: "text-vscode-foreground hover:text-vscode-button-background",
-								)}
+								className="flex items-center justify-center gap-2 flex-1 text-sm font-medium rounded-sm transition-colors duration-300 relative z-10 text-vscode-foreground"
 								onClick={() =>
 									manager.transition({ type: "SET_ACTIVE_TAB", payload: { tab: "browse" } })
 								}>
-								<Package className="h-4 w-4" />
 								{t("marketplace:tabs.browse")}
 							</button>
 							<button
-								className={cn(
-									"flex items-center justify-center gap-2 flex-1 text-sm font-medium rounded-sm transition-colors duration-300 relative z-10",
-									state.activeTab === "sources"
-										? "text-vscode-button-foreground"
-										: "text-vscode-foreground hover:text-vscode-button-background",
-								)}
+								className="flex items-center justify-center gap-2 flex-1 text-sm font-medium rounded-sm transition-colors duration-300 relative z-10 text-vscode-foreground"
 								onClick={() =>
-									manager.transition({ type: "SET_ACTIVE_TAB", payload: { tab: "sources" } })
+									manager.transition({ type: "SET_ACTIVE_TAB", payload: { tab: "installed" } })
 								}>
-								<Server className="h-4 w-4" />
-								{t("marketplace:tabs.sources")}
+								{t("marketplace:tabs.installed")}
+							</button>
+							<button
+								className="flex items-center justify-center gap-2 flex-1 text-sm font-medium rounded-sm transition-colors duration-300 relative z-10 text-vscode-foreground"
+								onClick={() =>
+									manager.transition({ type: "SET_ACTIVE_TAB", payload: { tab: "settings" } })
+								}>
+								{t("marketplace:tabs.settings")}
 							</button>
 						</div>
 					</div>
@@ -153,23 +145,35 @@ export function MarketplaceView({ stateManager }: MarketplaceViewProps) {
 						<div
 							className={cn("absolute w-full transition-all duration-300 ease-in-out", {
 								"translate-x-0 opacity-100 z-10": state.activeTab === "browse",
-								"translate-x-[-100%] opacity-0 z-0": state.activeTab === "sources",
+								"translate-x-[-100%] opacity-0 z-0": state.activeTab === "installed",
+								"translate-x-[-200%] opacity-0 z-0": state.activeTab === "settings",
 							})}>
 							<MarketplaceListView
 								stateManager={stateManager}
 								allTags={allTags}
 								filteredTags={filteredTags}
-								tagSearch={tagSearch}
-								setTagSearch={setTagSearch}
-								isTagPopoverOpen={isTagPopoverOpen}
-								setIsTagPopoverOpen={setIsTagPopoverOpen}
 							/>
 						</div>
 
 						<div
 							className={cn("absolute w-full transition-all duration-300 ease-in-out", {
-								"translate-x-0 opacity-100 z-10": state.activeTab === "sources",
 								"translate-x-[100%] opacity-0 z-0": state.activeTab === "browse",
+								"translate-x-0 opacity-100 z-10": state.activeTab === "installed",
+								"translate-x-[-100%] opacity-0 z-0": state.activeTab === "settings",
+							})}>
+							<MarketplaceListView
+								stateManager={stateManager}
+								allTags={allTags}
+								filteredTags={filteredTags}
+								showInstalledOnly={true}
+							/>
+						</div>
+
+						<div
+							className={cn("absolute w-full transition-all duration-300 ease-in-out", {
+								"translate-x-[200%] opacity-0 z-0": state.activeTab === "browse",
+								"translate-x-[100%] opacity-0 z-0": state.activeTab === "installed",
+								"translate-x-0 opacity-100 z-10": state.activeTab === "settings",
 							})}>
 							<MarketplaceSourcesConfig stateManager={stateManager} />
 						</div>

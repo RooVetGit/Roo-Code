@@ -1,0 +1,102 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Geïnstalleerd",
+		"settings": "Instellingen",
+		"browse": "Bladeren",
+		"sources": "Bronnen"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Zoek marketplace items..."
+		},
+		"type": {
+			"label": "Filter op type:",
+			"all": "Alle types",
+			"mode": "Modus",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Pakket"
+		},
+		"sort": {
+			"label": "Sorteer op:",
+			"name": "Naam",
+			"author": "Auteur",
+			"lastUpdated": "Laatst bijgewerkt"
+		},
+		"tags": {
+			"label": "Filter op tags:",
+			"available": "{{count}} beschikbaar",
+			"placeholder": "Typ om tags te zoeken en selecteren...",
+			"noResults": "Geen overeenkomende tags gevonden",
+			"clickToFilter": "Klik op tags om items te filteren",
+			"clear": "Wis {{count}} geselecteerde tags",
+			"selected": "{{count}} geselecteerde tags"
+		}
+	},
+	"type-group": {
+		"match": "Overeenkomst",
+		"modes": "Modes",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Pakketten",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Geen marketplace items gevonden",
+			"withFilters": "Probeer je filters aan te passen",
+			"noSources": "Probeer een bron toe te voegen in het tabblad Bronnen",
+			"adjustFilters": "Probeer je filters of zoektermen aan te passen",
+			"clearAllFilters": "Alle filters wissen"
+		},
+		"count": "{{count}} items gevonden",
+		"components": "{{count}} componenten",
+		"refresh": {
+			"button": "Vernieuwen",
+			"refreshing": "Vernieuwen...",
+			"mayTakeMoment": "Dit kan even duren."
+		},
+		"card": {
+			"by": "door {{author}}",
+			"from": "van {{source}}",
+			"installProject": "Installeren",
+			"installGlobal": "Installeren (Globaal)",
+			"removeProject": "Verwijderen",
+			"removeGlobal": "Verwijderen (Globaal)",
+			"viewSource": "Bekijken",
+			"viewOnSource": "Bekijken op {{source}}"
+		}
+	},
+	"installProjectTooltip": "Projectinstallatie",
+	"sources": {
+		"title": "Marketplace bronnen",
+		"description": "Voeg bronnen voor Marketplace-items toe of beheer ze. Elke bron is een Git-repository die Marketplace-itemdefinities bevat.",
+		"add": {
+			"title": "Nieuwe bron toevoegen",
+			"urlPlaceholder": "Git repository URL (bijv. 'https://github.com/user/repo.git')",
+			"urlFormats": "Ondersteunde formaten: HTTPS, SSH of lokaal bestandspad.",
+			"namePlaceholder": "Optionele bronnaam (bijv. 'Mijn privé-repo')",
+			"button": "Bron toevoegen"
+		},
+		"current": {
+			"title": "Huidige bronnen",
+			"empty": "Nog geen Marketplace-bronnen toegevoegd.",
+			"emptyHint": "Voeg hierboven een bron toe om door Marketplace-items te bladeren.",
+			"refresh": "Bron vernieuwen",
+			"remove": "Bron verwijderen"
+		},
+		"errors": {
+			"maxSources": "Maximaal {{max}} bronnen toegestaan.",
+			"emptyUrl": "URL mag niet leeg zijn.",
+			"invalidUrl": "Ongeldig URL-formaat.",
+			"nonVisibleChars": "URL bevat niet-zichtbare tekens.",
+			"invalidGitUrl": "Ongeldige Git URL-indeling.",
+			"duplicateUrl": "Een bron met deze URL bestaat al.",
+			"nameTooLong": "Naam mag niet langer zijn dan 20 tekens.",
+			"nonVisibleCharsName": "Naam bevat niet-zichtbare tekens.",
+			"duplicateName": "Een bron met deze naam bestaat al.",
+			"emojiName": "Emoji-tekens kunnen weergaveproblemen veroorzaken."
+		}
+	}
+}

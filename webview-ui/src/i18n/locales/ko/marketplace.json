@@ -1,6 +1,8 @@
 {
 	"title": "마켓플레이스",
 	"tabs": {
+		"installed": "설치됨",
+		"settings": "설정",
 		"browse": "찾아보기",
 		"sources": "소스"
 	},
@@ -12,7 +14,7 @@
 			"label": "유형별 필터:",
 			"all": "모든 유형",
 			"mode": "모드",
-			"mcp": "MCP 서버",
+			"mcp server": "MCP Server",
 			"prompt": "프롬프트",
 			"package": "패키지"
 		},
@@ -25,17 +27,17 @@
 		"tags": {
 			"label": "태그별 필터:",
 			"available": "{{count}}개 사용 가능",
-			"clear": "태그 지우기 ({{count}})",
 			"placeholder": "태그 검색 및 선택...",
 			"noResults": "일치하는 태그가 없습니다",
-			"selected": "선택한 태그가 있는 항목 표시 중 ({{count}}개 선택됨)",
-			"clickToFilter": "태그를 클릭하여 항목 필터링"
+			"clickToFilter": "태그를 클릭하여 항목 필터링",
+			"clear": "{{count}}개의 선택된 태그 지우기",
+			"selected": "{{count}}개의 선택된 태그"
 		}
 	},
 	"type-group": {
 		"match": "일치",
 		"modes": "모드",
-		"mcps": "MCP 서버",
+		"mcps": "MCP Servers",
 		"prompts": "프롬프트",
 		"packages": "패키지",
 		"generic-type": "{{type}}"
@@ -44,48 +46,57 @@
 		"empty": {
 			"noItems": "마켓플레이스 항목을 찾을 수 없습니다",
 			"withFilters": "필터를 조정해 보세요",
-			"noSources": "소스 탭에서 소스를 추가해 보세요"
+			"noSources": "소스 탭에서 소스를 추가해 보세요",
+			"adjustFilters": "필터 또는 검색어를 조정해 보세요",
+			"clearAllFilters": "모든 필터 지우기"
 		},
-		"count": "{{count}}개 항목 찾음",
+		"count": "{{count}}개 항목",
 		"components": "{{count}}개 구성 요소",
 		"refresh": {
 			"button": "새로 고침",
-			"refreshing": "새로 고치는 중..."
+			"refreshing": "새로 고치는 중...",
+			"mayTakeMoment": "잠시 시간이 걸릴 수 있습니다."
 		},
 		"card": {
 			"by": "작성자: {{author}}",
 			"from": "출처: {{source}}",
+			"installProject": "설치",
+			"installGlobal": "설치 (글로벌)",
+			"removeProject": "제거",
+			"removeGlobal": "제거 (글로벌)",
 			"viewSource": "보기",
 			"viewOnSource": "{{source}}에서 보기"
 		}
 	},
+	"installProjectTooltip": "프로젝트 설치",
 	"sources": {
-		"title": "마켓플레이스 소스 구성",
-		"description": "마켓플레이스 항목이 포함된 Git 저장소를 추가합니다. 마켓플레이스를 탐색할 때 이러한 저장소를 가져옵니다.",
+		"title": "마켓플레이스 소스",
+		"description": "마켓플레이스 항목의 소스를 추가하거나 관리합니다. 각 소스는 마켓플레이스 항목 정의가 포함된 Git 리포지토리입니다.",
 		"add": {
 			"title": "새 소스 추가",
-			"urlPlaceholder": "Git 저장소 URL (예: https://github.com/username/repo)",
-			"urlFormats": "지원되는 형식: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) 또는 Git 프로토콜 (git://github.com/username/repo.git)",
-			"namePlaceholder": "표시 이름 (최대 20자)",
+			"urlPlaceholder": "Git 저장소 URL (예: 'https://github.com/user/repo.git')",
+			"urlFormats": "지원되는 형식: HTTPS, SSH 또는 로컬 파일 경로.",
+			"namePlaceholder": "선택적 소스 이름 (예: '내 개인 리포지토리')",
 			"button": "소스 추가"
 		},
 		"current": {
 			"title": "현재 소스",
-			"count": "{{current}}/{{max}} 최대",
-			"empty": "구성된 소스가 없습니다. 소스를 추가하여 시작하세요.",
-			"refresh": "이 소스 새로 고침",
+			"empty": "아직 Marketplace 소스가 추가되지 않았습니다.",
+			"emptyHint": "Marketplace 항목을 찾아보려면 위에 소스를 추가하세요.",
+			"refresh": "소스 새로 고침",
 			"remove": "소스 제거"
 		},
 		"errors": {
-			"emptyUrl": "URL을 입력해야 합니다",
-			"invalidUrl": "잘못된 URL 형식",
-			"nonVisibleChars": "URL에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
-			"invalidGitUrl": "URL은 유효한 Git 저장소 URL이어야 합니다 (예: https://github.com/username/repo)",
-			"duplicateUrl": "이 URL은 이미 목록에 있습니다 (대소문자 및 공백 구분 없이 일치)",
-			"nameTooLong": "이름은 20자 이하여야 합니다",
-			"nonVisibleCharsName": "이름에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
-			"duplicateName": "이 이름은 이미 사용 중입니다 (대소문자 및 공백 구분 없이 일치)",
-			"maxSources": "최대 {{max}}개의 소스만 허용됩니다"
+			"maxSources": "최대 {{max}}개의 소스가 허용됩니다.",
+			"emptyUrl": "URL을 비워 둘 수 없습니다.",
+			"invalidUrl": "잘못된 URL 형식입니다.",
+			"nonVisibleChars": "URL에 표시되지 않는 문자가 포함되어 있습니다.",
+			"invalidGitUrl": "잘못된 Git URL 형식입니다.",
+			"duplicateUrl": "이 URL이 있는 소스가 이미 있습니다.",
+			"nameTooLong": "이름은 20자를 초과할 수 없습니다.",
+			"nonVisibleCharsName": "이름에 표시되지 않는 문자가 포함되어 있습니다.",
+			"duplicateName": "이 이름의 소스가 이미 있습니다.",
+			"emojiName": "이모티콘 문자는 표시 문제를 일으킬 수 있습니다."
 		}
 	}
 }

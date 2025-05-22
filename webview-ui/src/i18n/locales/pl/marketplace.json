@@ -1,6 +1,8 @@
 {
 	"title": "Marketplace",
 	"tabs": {
+		"installed": "Zainstalowane",
+		"settings": "Ustawienia",
 		"browse": "Przeglądaj",
 		"sources": "Źródła"
 	},
@@ -12,7 +14,7 @@
 			"label": "Filtruj według typu:",
 			"all": "Wszystkie typy",
 			"mode": "Tryb",
-			"mcp": "Serwer MCP",
+			"mcp server": "MCP Server",
 			"prompt": "Prompt",
 			"package": "Pakiet"
 		},
@@ -25,17 +27,17 @@
 		"tags": {
 			"label": "Filtruj według tagów:",
 			"available": "{{count}} dostępnych",
-			"clear": "Wyczyść tagi ({{count}})",
 			"placeholder": "Wpisz, aby wyszukać i wybrać tagi...",
 			"noResults": "Nie znaleziono pasujących tagów",
-			"selected": "Pokazywanie elementów z wybranymi tagami (wybrano {{count}})",
-			"clickToFilter": "Kliknij tagi, aby filtrować elementy"
+			"clickToFilter": "Kliknij tagi, aby filtrować elementy",
+			"clear": "Wyczyść {{count}} wybranych tagów",
+			"selected": "{{count}} wybranych tagów"
 		}
 	},
 	"type-group": {
 		"match": "Dopasowanie",
 		"modes": "Tryby",
-		"mcps": "Serwery MCP",
+		"mcps": "MCP Servers",
 		"prompts": "Prompty",
 		"packages": "Pakiety",
 		"generic-type": "{{type}}"
@@ -44,48 +46,57 @@
 		"empty": {
 			"noItems": "Nie znaleziono elementów marketplace",
 			"withFilters": "Spróbuj dostosować filtry",
-			"noSources": "Spróbuj dodać źródło w zakładce Źródła"
+			"noSources": "Spróbuj dodać źródło w zakładce Źródła",
+			"adjustFilters": "Spróbuj dostosować filtry lub wyszukiwane hasła",
+			"clearAllFilters": "Wyczyść wszystkie filtry"
 		},
 		"count": "Znaleziono {{count}} elementów",
 		"components": "{{count}} komponentów",
 		"refresh": {
 			"button": "Odśwież",
-			"refreshing": "Odświeżanie..."
+			"refreshing": "Odświeżanie...",
+			"mayTakeMoment": "To może chwilę potrwać."
 		},
 		"card": {
 			"by": "autor: {{author}}",
 			"from": "z {{source}}",
+			"installProject": "Zainstaluj",
+			"installGlobal": "Zainstaluj (Globalny)",
+			"removeProject": "Usuń",
+			"removeGlobal": "Usuń (Globalny)",
 			"viewSource": "Zobacz",
 			"viewOnSource": "Zobacz na {{source}}"
 		}
 	},
+	"installProjectTooltip": "Instalacja projektu",
 	"sources": {
-		"title": "Konfiguruj źródła Marketplace",
-		"description": "Dodaj repozytoria Git zawierające elementy marketplace. Te repozytoria będą pobierane podczas przeglądania marketplace.",
+		"title": "Źródła Marketplace",
+		"description": "Dodaj lub zarządzaj źródłami dla elementów Marketplace. Każde źródło to repozytorium Git zawierające definicje elementów Marketplace.",
 		"add": {
 			"title": "Dodaj nowe źródło",
-			"urlPlaceholder": "URL repozytorium Git (np. https://github.com/username/repo)",
-			"urlFormats": "Obsługiwane formaty: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) lub protokół Git (git://github.com/username/repo.git)",
-			"namePlaceholder": "Nazwa wyświetlana (maks. 20 znaków)",
+			"urlPlaceholder": "URL repozytorium Git (np. 'https://github.com/user/repo.git')",
+			"urlFormats": "Obsługiwane formaty: HTTPS, SSH lub lokalna ścieżka pliku.",
+			"namePlaceholder": "Opcjonalna nazwa źródła (np. 'Moje prywatne repozytorium')",
 			"button": "Dodaj źródło"
 		},
 		"current": {
 			"title": "Obecne źródła",
-			"count": "{{current}}/{{max}} maks.",
-			"empty": "Brak skonfigurowanych źródeł. Dodaj źródło, aby rozpocząć.",
-			"refresh": "Odśwież to źródło",
+			"empty": "Nie dodano jeszcze żadnych źródeł Marketplace.",
+			"emptyHint": "Dodaj źródło powyżej, aby przeglądać elementy Marketplace.",
+			"refresh": "Odśwież źródło",
 			"remove": "Usuń źródło"
 		},
 		"errors": {
-			"emptyUrl": "URL nie może być pusty",
-			"invalidUrl": "Nieprawidłowy format URL",
-			"nonVisibleChars": "URL zawiera niewidoczne znaki inne niż spacje",
-			"invalidGitUrl": "URL musi być prawidłowym URL-em repozytorium Git (np. https://github.com/username/repo)",
-			"duplicateUrl": "Ten URL już znajduje się na liście (dopasowanie niewrażliwe na wielkość liter i spacje)",
-			"nameTooLong": "Nazwa musi mieć 20 znaków lub mniej",
-			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki inne niż spacje",
-			"duplicateName": "Ta nazwa jest już używana (dopasowanie niewrażliwe na wielkość liter i spacje)",
-			"maxSources": "Maksymalnie dozwolone {{max}} źródeł"
+			"maxSources": "Dozwolona jest maksymalnie liczba źródeł: {{max}}.",
+			"emptyUrl": "Adres URL nie może być pusty.",
+			"invalidUrl": "Nieprawidłowy format adresu URL.",
+			"nonVisibleChars": "Adres URL zawiera niewidoczne znaki.",
+			"invalidGitUrl": "Nieprawidłowy format adresu URL Git.",
+			"duplicateUrl": "Źródło o tym adresie URL już istnieje.",
+			"nameTooLong": "Nazwa nie może przekraczać 20 znaków.",
+			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki.",
+			"duplicateName": "Źródło o tej nazwie już istnieje.",
+			"emojiName": "Znaki emoji mogą powodować problemy z wyświetlaniem."
 		}
 	}
 }

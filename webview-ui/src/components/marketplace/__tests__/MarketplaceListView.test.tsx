@@ -3,6 +3,7 @@ import { MarketplaceListView } from "../MarketplaceListView"
 import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { ViewState } from "../MarketplaceViewStateManager"
 import userEvent from "@testing-library/user-event"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 // Mock translation hook
 jest.mock("@/i18n/TranslationContext", () => ({
@@ -68,10 +69,6 @@ const defaultProps = {
 	stateManager: {} as any,
 	allTags: ["tag1", "tag2"],
 	filteredTags: ["tag1", "tag2"],
-	tagSearch: "",
-	setTagSearch: jest.fn(),
-	isTagPopoverOpen: false,
-	setIsTagPopoverOpen: jest.fn(),
 }
 
 describe("MarketplaceListView", () => {
@@ -82,29 +79,36 @@ describe("MarketplaceListView", () => {
 		mockState.displayItems = []
 	})
 
+	const renderWithProviders = (props = {}) =>
+		render(
+			<TooltipProvider>
+				<MarketplaceListView {...defaultProps} {...props} />
+			</TooltipProvider>,
+		)
+
 	it("renders search input", () => {
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		const searchInput = screen.getByPlaceholderText("marketplace:filters.search.placeholder")
 		expect(searchInput).toBeInTheDocument()
 	})
 
 	it("renders type filter", () => {
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		expect(screen.getByText("marketplace:filters.type.label")).toBeInTheDocument()
 		expect(screen.getByText("marketplace:filters.type.all")).toBeInTheDocument()
 	})
 
 	it("renders sort options", () => {
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		expect(screen.getByText("marketplace:filters.sort.label")).toBeInTheDocument()
 		expect(screen.getByText("marketplace:filters.sort.name")).toBeInTheDocument()
 	})
 
 	it("renders tags section when tags are available", () => {
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		expect(screen.getByText("marketplace:filters.tags.label")).toBeInTheDocument()
 		expect(screen.getByText("(2)")).toBeInTheDocument() // Shows tag count
@@ -113,14 +117,14 @@ describe("MarketplaceListView", () => {
 	it("shows loading state when fetching", () => {
 		mockState.isFetching = true
 
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		expect(screen.getByText("marketplace:items.refresh.refreshing")).toBeInTheDocument()
 		expect(screen.getByText("This may take a moment...")).toBeInTheDocument()
 	})
 
 	it("shows empty state when no items and not fetching", () => {
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		expect(screen.getByText("marketplace:items.empty.noItems")).toBeInTheDocument()
 		expect(screen.getByText("Try adjusting your filters or search terms")).toBeInTheDocument()
@@ -153,13 +157,13 @@ describe("MarketplaceListView", () => {
 		]
 		mockState.displayItems = mockItems
 
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		expect(screen.getByText("marketplace:items.count")).toBeInTheDocument()
 	})
 
 	it("updates search filter when typing", () => {
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		const searchInput = screen.getByPlaceholderText("marketplace:filters.search.placeholder")
 		fireEvent.change(searchInput, { target: { value: "test" } })
@@ -174,7 +178,7 @@ describe("MarketplaceListView", () => {
 		const user = userEvent.setup()
 		mockState.filters.tags = ["tag1"]
 
-		render(<MarketplaceListView {...defaultProps} />)
+		renderWithProviders()
 
 		const clearButton = screen.getByText("marketplace:filters.tags.clear")
 		expect(clearButton).toBeInTheDocument()
