@@ -7,6 +7,7 @@ on:
 env:
   GIT_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
   NODE_VERSION: 20.18.1
+  PNPM_VERSION: 10.8.1
 
 jobs:
   publish-extension:
@@ -19,23 +20,31 @@ jobs:
         contains(github.event.pull_request.title, 'Changeset version bump') ) ||
         github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.GIT_REF }}
-      - uses: actions/setup-node@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: |
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Configure Git
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Install Dependencies
-        run: pnpm install
       - name: Create .env file
         run: echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
       - name: Package Extension
         run: |
-          current_package_version=$(node -p "require('./package.json').version")
-          pnpm vsix
+          current_package_version=$(node -p "require('./src/package.json').version")
+          pnpm build
           package=$(unzip -l bin/roo-cline-${current_package_version}.vsix)
           echo "$package" | grep -q "extension/package.json" || exit 1
           echo "$package" | grep -q "extension/package.nls.json" || exit 1
@@ -47,23 +56,23 @@ jobs:
           echo "$package" | grep -q ".env" || exit 1
       - name: Create and Push Git Tag
         run: |
-          current_package_version=$(node -p "require('./package.json').version")
+          current_package_version=$(node -p "require('./src/package.json').version")
           git tag -a "v${current_package_version}" -m "Release v${current_package_version}"
-          git push origin "v${current_package_version}"
+          git push origin "v${current_package_version}" --no-verify
           echo "Successfully created and pushed git tag v${current_package_version}"
       - name: Publish Extension
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
-          current_package_version=$(node -p "require('./package.json').version")
-          pnpm publish:marketplace
+          current_package_version=$(node -p "require('./src/package.json').version")
+          pnpm --filter roo-cline publish:marketplace
           echo "Successfully published version $current_package_version to VS Code Marketplace"
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          current_package_version=$(node -p "require('./package.json').version")
+          current_package_version=$(node -p "require('./src/package.json').version")
 
           # Extract changelog for current version
           echo "Extracting changelog for version ${current_package_version}"

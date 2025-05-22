@@ -14,6 +14,9 @@
 <div align="center">
   <h1>Roo Code (voorheen Roo Cline)</h1>
   <p align="center">
+  <img src="https://media.githubusercontent.com/media/RooCodeInc/Roo-Code/main/src/assets/docs/demo.gif" width="100%" />
+  </p>
+  <p align="center">
   <img src="https://media.githubusercontent.com/media/RooCodeInc/Roo-Code/main/assets/docs/demo.gif" width="100%" />
   </p>
   <p>Verbind met ontwikkelaars, draag ideeën bij en blijf op de hoogte met de nieuwste AI-gestuurde coderingstools.</p>
