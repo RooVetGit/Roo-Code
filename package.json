@@ -15,7 +15,7 @@
 		"build": "pnpm --filter roo-cline vsix",
 		"build:nightly": "pnpm --filter @roo-code/vscode-nightly vsix",
 		"changeset": "changeset",
-		"knip": "knip --include files",
+		"knip": "pnpm --filter @roo-code/build build && knip --include files",
 		"update-contributors": "node scripts/update-contributors.js"
 	},
 	"devDependencies": {
