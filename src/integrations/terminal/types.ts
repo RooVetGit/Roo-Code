@@ -9,19 +9,27 @@ export interface RooTerminal {
 	running: boolean
 	taskId?: string
 	process?: RooTerminalProcess
-	getCurrentWorkingDirectory(): string
-	isClosed: () => boolean
+
 	runCommand: (command: string, callbacks: RooTerminalCallbacks) => RooTerminalProcessResultPromise
+	sendInput: (input: string) => boolean
+
 	setActiveStream(stream: AsyncIterable<string> | undefined, pid?: number): void
-	shellExecutionComplete(exitDetails: ExitCodeDetails): void
+
+	getCurrentWorkingDirectory(): string
+	getLastCommand(): string
 	getProcessesWithOutput(): RooTerminalProcess[]
 	getUnretrievedOutput(): string
-	getLastCommand(): string
+
+	isWaitingForInput: () => boolean
+	isClosed: () => boolean
+
+	shellExecutionComplete(exitDetails: ExitCodeDetails): void
 	cleanCompletedProcessQueue(): void
 }
 
 export interface RooTerminalCallbacks {
 	onLine: (line: string, process: RooTerminalProcess) => void
+	onInputRequired?: (process: RooTerminalProcess) => void
 	onCompleted: (output: string | undefined, process: RooTerminalProcess) => void
 	onShellExecutionStarted: (pid: number | undefined, process: RooTerminalProcess) => void
 	onShellExecutionComplete: (details: ExitCodeDetails, process: RooTerminalProcess) => void
@@ -31,17 +39,22 @@ export interface RooTerminalCallbacks {
 export interface RooTerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 	command: string
 	isHot: boolean
+
 	run: (command: string) => Promise<void>
+	sendInput: (input: string) => void
 	continue: () => void
 	abort: () => void
+
 	hasUnretrievedOutput: () => boolean
 	getUnretrievedOutput: () => string
+	isWaitingForInput: () => boolean
 }
 
 export type RooTerminalProcessResultPromise = RooTerminalProcess & Promise<void>
 
 export interface RooTerminalProcessEvents {
 	line: [line: string]
+	input_required: []
 	continue: []
 	completed: [output?: string]
 	stream_available: [stream: AsyncIterable<string>]
