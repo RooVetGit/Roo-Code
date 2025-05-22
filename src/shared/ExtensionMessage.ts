@@ -70,6 +70,7 @@ export interface ExtensionMessage {
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
 		| "condenseTaskContextResponse"
+		| "markdownBlockLineHeight"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -170,6 +171,7 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	| "markdownBlockLineHeight"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
