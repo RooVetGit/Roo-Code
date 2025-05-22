@@ -5916,6 +5916,10 @@ packages:
   kolorist@1.8.0:
     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
 
+  kontroll@1.0.5:
+    resolution: {integrity: sha512-Fc9SZ3JGGkSrOo8rIGoZMjhfaaXY0DvJaewSdKve2KuT98icylO2J130Zsb/7Hzm9BnQ+88avT0ka51A4qBGuQ==}
+    engines: {node: '>=18.0.0'}
+
   langium@3.3.1:
     resolution: {integrity: sha512-QJv/h939gDpvT+9SiLVlY7tZC3xB2qK57v0J04Sh9wpMb6MP1q8gB21L3WIo8T5P1MSMg3Ep14L7KkDCFG3y4w==}
     engines: {node: '>=16.0.0'}
@@ -15422,6 +15426,8 @@ snapshots:
       seed-random: 2.2.0
 
   kolorist@1.8.0: {}
+
+  kontroll@1.0.5: {}
 
   langium@3.3.1:
     dependencies:

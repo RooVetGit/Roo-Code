@@ -17,6 +17,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
 import { t } from "../../i18n"
+import { countdown } from "kontroll"
 
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { GlobalFileNames } from "../../shared/globalFileNames"
@@ -354,6 +355,17 @@ export class McpHub {
 	}
 
 	public async reloadMcpServers() {
+		if (this.isConnecting) {
+			countdown(
+				2000,
+				() => {
+					this.reloadMcpServers()
+				},
+				{ key: "reloadMcpServers" },
+			)
+			return
+		}
+
 		await this.initializeProjectMcpServers()
 		await this.initializeGlobalMcpServers()
 	}
