@@ -403,6 +403,14 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfig": {
+			"label": "Cấu hình API nén ngữ cảnh",
+			"description": "Chọn hồ sơ cấu hình API để sử dụng cho việc nén ngữ cảnh. Mặc định sử dụng hồ sơ API hiện tại."
+		},
+		"customCondensingPrompt": {
+			"label": "Lời nhắc nén ngữ cảnh tùy chỉnh",
+			"description": "Lời nhắc hệ thống tùy chỉnh cho việc nén ngữ cảnh. Để trống để sử dụng lời nhắc mặc định."
+		},
 		"autoCondenseContextPercent": {
 			"label": "Ngưỡng kích hoạt nén ngữ cảnh thông minh",
 			"description": "Khi cửa sổ ngữ cảnh đạt đến ngưỡng này, Roo sẽ tự động nén nó."

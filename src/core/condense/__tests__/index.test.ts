@@ -279,3 +279,263 @@ describe("summarizeConversation", () => {
 		expect(result.summary).toBe("This is a summary with system prompt")
 	})
 })
+
+describe("summarizeConversation with custom settings", () => {
+	// Mock necessary dependencies
+	let mockMainApiHandler: ApiHandler
+	let mockCondensingApiHandler: ApiHandler
+	const defaultSystemPrompt = "Default prompt"
+	const taskId = "test-task"
+
+	// Sample messages for testing
+	const sampleMessages: ApiMessage[] = [
+		{ role: "user", content: "Hello", ts: 1 },
+		{ role: "assistant", content: "Hi there", ts: 2 },
+		{ role: "user", content: "How are you?", ts: 3 },
+		{ role: "assistant", content: "I'm good", ts: 4 },
+		{ role: "user", content: "What's new?", ts: 5 },
+		{ role: "assistant", content: "Not much", ts: 6 },
+		{ role: "user", content: "Tell me more", ts: 7 },
+	]
+
+	beforeEach(() => {
+		// Reset mocks
+		jest.clearAllMocks()
+
+		// Setup mock API handlers
+		mockMainApiHandler = {
+			createMessage: jest.fn().mockImplementation(() => {
+				return (async function* () {
+					yield { type: "text" as const, text: "Summary from main handler" }
+					yield { type: "usage" as const, totalCost: 0.05, outputTokens: 100 }
+				})()
+			}),
+			countTokens: jest.fn().mockImplementation(() => Promise.resolve(50)),
+			getModel: jest.fn().mockReturnValue({
+				id: "main-model",
+				info: {
+					contextWindow: 8000,
+					supportsImages: true,
+					supportsComputerUse: true,
+					supportsVision: true,
+					maxTokens: 4000,
+					supportsPromptCache: true,
+					maxCachePoints: 10,
+					minTokensPerCachePoint: 100,
+					cachableFields: ["system", "messages"],
+				},
+			}),
+		} as unknown as ApiHandler
+
+		mockCondensingApiHandler = {
+			createMessage: jest.fn().mockImplementation(() => {
+				return (async function* () {
+					yield { type: "text" as const, text: "Summary from condensing handler" }
+					yield { type: "usage" as const, totalCost: 0.03, outputTokens: 80 }
+				})()
+			}),
+			countTokens: jest.fn().mockImplementation(() => Promise.resolve(40)),
+			getModel: jest.fn().mockReturnValue({
+				id: "condensing-model",
+				info: {
+					contextWindow: 4000,
+					supportsImages: true,
+					supportsComputerUse: false,
+					supportsVision: false,
+					maxTokens: 2000,
+					supportsPromptCache: false,
+					maxCachePoints: 0,
+					minTokensPerCachePoint: 0,
+					cachableFields: [],
+				},
+			}),
+		} as unknown as ApiHandler
+	})
+
+	/**
+	 * Test that custom prompt is used when provided
+	 */
+	it("should use custom prompt when provided", async () => {
+		const customPrompt = "Custom summarization prompt"
+
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			customPrompt,
+		)
+
+		// Verify the custom prompt was used
+		const createMessageCalls = (mockMainApiHandler.createMessage as jest.Mock).mock.calls
+		expect(createMessageCalls.length).toBe(1)
+		expect(createMessageCalls[0][0]).toBe(customPrompt)
+	})
+
+	/**
+	 * Test that default system prompt is used when custom prompt is empty
+	 */
+	it("should use default systemPrompt when custom prompt is empty or not provided", async () => {
+		// Test with empty string
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			"  ", // Empty custom prompt
+		)
+
+		// Verify the default prompt was used
+		let createMessageCalls = (mockMainApiHandler.createMessage as jest.Mock).mock.calls
+		expect(createMessageCalls.length).toBe(1)
+		expect(createMessageCalls[0][0]).toContain("Your task is to create a detailed summary")
+
+		// Reset mock and test with undefined
+		jest.clearAllMocks()
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			undefined, // No custom prompt
+		)
+
+		// Verify the default prompt was used again
+		createMessageCalls = (mockMainApiHandler.createMessage as jest.Mock).mock.calls
+		expect(createMessageCalls.length).toBe(1)
+		expect(createMessageCalls[0][0]).toContain("Your task is to create a detailed summary")
+	})
+
+	/**
+	 * Test that condensing API handler is used when provided and valid
+	 */
+	it("should use condensingApiHandler when provided and valid", async () => {
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			undefined,
+			mockCondensingApiHandler,
+		)
+
+		// Verify the condensing handler was used
+		expect((mockCondensingApiHandler.createMessage as jest.Mock).mock.calls.length).toBe(1)
+		expect((mockMainApiHandler.createMessage as jest.Mock).mock.calls.length).toBe(0)
+	})
+
+	/**
+	 * Test fallback to main API handler when condensing handler is not provided
+	 */
+	it("should fall back to mainApiHandler if condensingApiHandler is not provided", async () => {
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			undefined,
+			undefined,
+		)
+
+		// Verify the main handler was used
+		expect((mockMainApiHandler.createMessage as jest.Mock).mock.calls.length).toBe(1)
+	})
+
+	/**
+	 * Test fallback to main API handler when condensing handler is invalid
+	 */
+	it("should fall back to mainApiHandler if condensingApiHandler is invalid", async () => {
+		// Create an invalid handler (missing createMessage)
+		const invalidHandler = {
+			countTokens: jest.fn(),
+			getModel: jest.fn(),
+			// createMessage is missing
+		} as unknown as ApiHandler
+
+		// Mock console.warn to verify warning message
+		const originalWarn = console.warn
+		const mockWarn = jest.fn()
+		console.warn = mockWarn
+
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			undefined,
+			invalidHandler,
+		)
+
+		// Verify the main handler was used as fallback
+		expect((mockMainApiHandler.createMessage as jest.Mock).mock.calls.length).toBe(1)
+
+		// Verify warning was logged
+		expect(mockWarn).toHaveBeenCalledWith(
+			expect.stringContaining("Chosen API handler for condensing does not support message creation"),
+		)
+
+		// Restore console.warn
+		console.warn = originalWarn
+	})
+
+	/**
+	 * Test that telemetry is called for custom prompt usage
+	 */
+	it("should log when using custom prompt", async () => {
+		// Mock console.log to verify logging
+		const originalLog = console.log
+		const mockLog = jest.fn()
+		console.log = mockLog
+
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			"Custom prompt",
+		)
+
+		// Verify logging was called
+		expect(mockLog).toHaveBeenCalledWith(
+			expect.stringContaining(`Task [${taskId}]: Using custom condensing prompt.`),
+		)
+
+		// Restore console.log
+		console.log = originalLog
+	})
+
+	/**
+	 * Test that telemetry is called for custom API handler usage
+	 */
+	it("should log when using custom API handler", async () => {
+		// Mock console.log to verify logging
+		const originalLog = console.log
+		const mockLog = jest.fn()
+		console.log = mockLog
+
+		await summarizeConversation(
+			sampleMessages,
+			mockMainApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			false,
+			undefined,
+			mockCondensingApiHandler,
+		)
+
+		// Verify logging was called
+		expect(mockLog).toHaveBeenCalledWith(
+			expect.stringContaining(`Task [${taskId}]: Using custom API handler for condensing.`),
+		)
+
+		// Restore console.log
+		console.log = originalLog
+	})
+})

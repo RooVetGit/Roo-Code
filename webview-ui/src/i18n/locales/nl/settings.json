@@ -403,6 +403,14 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfig": {
+			"label": "Contextcondensatie API-configuratie",
+			"description": "Kies het API-configuratieprofiel dat moet worden gebruikt voor contextcondensatie. Standaard wordt het huidige API-profiel gebruikt."
+		},
+		"customCondensingPrompt": {
+			"label": "Aangepaste contextcondensatieprompt",
+			"description": "Aangepaste systeemprompt voor contextcondensatie. Laat leeg om de standaardprompt te gebruiken."
+		},
 		"autoCondenseContextPercent": {
 			"label": "Drempelwaarde om intelligente contextcompressie te activeren",
 			"description": "Wanneer het contextvenster deze drempelwaarde bereikt, zal Roo het automatisch comprimeren."
