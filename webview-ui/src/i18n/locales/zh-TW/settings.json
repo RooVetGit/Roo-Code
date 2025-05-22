@@ -403,13 +403,17 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"condensingApiConfig": {
-			"label": "上下文壓縮 API 設定",
-			"description": "選擇用於上下文壓縮的 API 設定檔。預設使用目前的 API 設定檔。"
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
 		},
 		"customCondensingPrompt": {
 			"label": "自訂上下文壓縮提示",
-			"description": "自訂用於上下文壓縮的系統提示。留空則使用預設提示。"
+			"description": "自訂用於上下文壓縮的系統提示。留空則使用預設提示。",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
 		},
 		"autoCondenseContextPercent": {
 			"label": "觸發智慧上下文壓縮的閾值",
