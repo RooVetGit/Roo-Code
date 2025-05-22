@@ -201,8 +201,8 @@ export const parseOpenRouterModel = ({
 	// and we want to use 128k.
 	if (id.startsWith("anthropic/claude-3.7-sonnet")) {
 		modelInfo.maxTokens = id.includes("thinking")
-			? anthropicModels["claude-3-7-sonnet-20250219:thinking"].maxTokens
-			: anthropicModels["claude-3-7-sonnet-20250219"].maxTokens
+			? anthropicModels["claude-sonnet-4-20250514:thinking"].maxTokens
+			: anthropicModels["claude-sonnet-4-20250514"].maxTokens
 	}
 
 	return modelInfo
