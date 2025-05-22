@@ -87,7 +87,7 @@ export const ExperimentalSettings = ({
 							</div>
 						</div>
 
-						{/* New API Configuration Selection */}
+						{/* API Configuration Selection */}
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-4 font-bold">
 								<span className="codicon codicon-settings-gear" />
