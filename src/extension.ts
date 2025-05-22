@@ -21,6 +21,7 @@ import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
+import { logGlobalStorageSize } from "./utils/storageUtils"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
 import { formatLanguage } from "./shared/language"
@@ -43,12 +44,23 @@ import { initializeI18n } from "./i18n"
  */
 
 let outputChannel: vscode.OutputChannel
-let extensionContext: vscode.ExtensionContext
+let _extensionContext: vscode.ExtensionContext | undefined
+
+/**
+ * Returns the extension context.
+ * @throws Error if the extension context is not available.
+ */
+export function getExtensionContext(): vscode.ExtensionContext {
+	if (!_extensionContext) {
+		throw new Error("Extension context is not available.")
+	}
+	return _extensionContext
+}
 
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
-	extensionContext = context
+	_extensionContext = context
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated`)
@@ -130,6 +142,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
 	const enableLogging = typeof socketPath === "string"
 
+	// Log global storage items larger than 10KB
+	logGlobalStorageSize(10 * 1024)
+
 	// Watch the core files and automatically reload the extension host
 	const enableCoreAutoReload = process.env?.NODE_ENV === "development"
 	if (enableCoreAutoReload) {
@@ -150,7 +165,7 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated.
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
-	await McpServerManager.cleanup(extensionContext)
+	await McpServerManager.cleanup(getExtensionContext())
 	telemetryService.shutdown()
 	TerminalRegistry.cleanup()
 }
