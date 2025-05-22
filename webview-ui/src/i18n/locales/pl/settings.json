@@ -403,6 +403,14 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfig": {
+			"label": "Konfiguracja API kondensacji kontekstu",
+			"description": "Wybierz profil konfiguracji API, który ma być używany do kondensacji kontekstu. Domyślnie używa bieżącego profilu API."
+		},
+		"customCondensingPrompt": {
+			"label": "Niestandardowy monit kondensacji kontekstu",
+			"description": "Niestandardowy monit systemowy dla kondensacji kontekstu. Pozostaw puste, aby użyć domyślnego monitu."
+		},
 		"autoCondenseContextPercent": {
 			"label": "Próg wyzwalający inteligentną kondensację kontekstu",
 			"description": "Gdy okno kontekstu osiągnie ten próg, Roo automatycznie je skondensuje."

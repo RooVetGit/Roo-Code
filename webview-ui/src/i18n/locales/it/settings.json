@@ -403,6 +403,14 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfig": {
+			"label": "Configurazione API condensazione contesto",
+			"description": "Scegli il profilo di configurazione API da utilizzare per la condensazione del contesto. Per impostazione predefinita, utilizza il profilo API corrente."
+		},
+		"customCondensingPrompt": {
+			"label": "Prompt personalizzato condensazione contesto",
+			"description": "Prompt di sistema personalizzato per la condensazione del contesto. Lascia vuoto per utilizzare il prompt predefinito."
+		},
 		"autoCondenseContextPercent": {
 			"label": "Soglia per attivare la condensazione intelligente del contesto",
 			"description": "Quando la finestra di contesto raggiunge questa soglia, Roo la condenserà automaticamente."

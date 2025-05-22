@@ -403,6 +403,14 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfig": {
+			"label": "Bağlam Yoğunlaştırma API Yapılandırması",
+			"description": "Bağlam yoğunlaştırma için kullanılacak API yapılandırma profilini seçin. Varsayılan olarak mevcut API profilini kullanır."
+		},
+		"customCondensingPrompt": {
+			"label": "Özel Bağlam Yoğunlaştırma İstemcisi",
+			"description": "Bağlam yoğunlaştırma için özel sistem istemcisi. Varsayılan istemciyi kullanmak için boş bırakın."
+		},
 		"autoCondenseContextPercent": {
 			"label": "Akıllı bağlam sıkıştırmayı tetikleyecek eşik",
 			"description": "Bağlam penceresi bu eşiğe ulaştığında, Roo otomatik olarak sıkıştıracaktır."
