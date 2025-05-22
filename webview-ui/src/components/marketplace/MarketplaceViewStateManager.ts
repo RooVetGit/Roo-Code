@@ -103,7 +103,6 @@ export class MarketplaceViewStateManager {
 	private stateChangeHandlers: Set<StateChangeHandler> = new Set()
 
 	// Empty constructor is required for test initialization
-	// eslint-disable-next-line @typescript-eslint/no-useless-constructor
 	constructor() {
 		// Initialize is now handled by the loadInitialState call in the property initialization
 	}

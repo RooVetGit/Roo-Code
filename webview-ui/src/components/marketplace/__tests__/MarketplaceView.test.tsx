@@ -4,7 +4,7 @@ import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { ViewState } from "../MarketplaceViewStateManager"
 import userEvent from "@testing-library/user-event"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { RocketConfig } from "config-rocket"
+import type { RocketConfig } from "config-rocket"
 import { ExtensionStateContext } from "@/context/ExtensionStateContext"
 
 // Mock vscode API - IMPORTANT: This mock must be at the very top of the file

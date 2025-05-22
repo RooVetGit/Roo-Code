@@ -1,4 +1,4 @@
-import { RocketConfig } from "config-rocket"
+import type { RocketConfig } from "config-rocket"
 
 /**
  * Information about why an item matched search/filter criteria
@@ -38,6 +38,7 @@ export interface BaseMetadata {
 /**
  * Repository root metadata
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface RepositoryMetadata extends BaseMetadata {}
 
 /**

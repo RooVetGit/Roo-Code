@@ -1,7 +1,7 @@
 import * as path from "path"
 import * as fs from "fs/promises"
 import * as vscode from "vscode"
-import * as yaml from "js-yaml"
+import * as yaml from "yaml"
 import { SimpleGit } from "simple-git"
 import { validateAnyMetadata } from "./schemas"
 import {
@@ -189,7 +189,7 @@ export class MetadataScanner {
 
 				try {
 					const content = await fs.readFile(metadataPath, "utf-8")
-					const parsed = yaml.load(content) as Record<string, any>
+					const parsed = yaml.parse(content) as Record<string, any>
 
 					// Add type field if missing but has a parent directory indicating type
 					if (!parsed.type) {
@@ -318,7 +318,7 @@ export class MetadataScanner {
 			const metadataPath = path.join(packageDir, "metadata.en.yml")
 			try {
 				const content = await fs.readFile(metadataPath, "utf-8")
-				const parsed = yaml.load(content) as PackageMetadata
+				const parsed = yaml.parse(content) as PackageMetadata
 
 				if (parsed.items) {
 					for (const item of parsed.items) {

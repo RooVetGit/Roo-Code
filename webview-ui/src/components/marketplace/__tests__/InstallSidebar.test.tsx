@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react"
 import InstallSidebar from "../InstallSidebar"
 import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
-import { RocketConfig } from "config-rocket"
+import type { RocketConfig } from "config-rocket"
 import { renderWithProviders } from "@/test/test-utils"
 
 // Mock VSCode components

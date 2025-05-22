@@ -34,6 +34,7 @@ export function MarketplaceSourcesConfig({ stateManager }: MarketplaceSourcesCon
 			/[\u2300-\u23FF]/.test(str) || // Miscellaneous Technical
 			/[\u2700-\u27FF]/.test(str) || // Dingbats
 			/[\u2B50\u2B55]/.test(str) || // Star, Circle
+			// eslint-disable-next-line no-misleading-character-class
 			/[\u203C\u2049\u20E3\u2122\u2139\u2194-\u2199\u21A9\u21AA]/.test(str)
 		) // Punctuation
 	}

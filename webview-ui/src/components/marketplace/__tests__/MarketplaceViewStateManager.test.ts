@@ -422,7 +422,7 @@ describe("MarketplaceViewStateManager", () => {
 		})
 
 		it("should handle invalid transition payloads", async () => {
-			// @ts-ignore - Testing invalid payload
+			// @ts-expect-error - Testing invalid payload
 			await manager.transition({ type: "UPDATE_FILTERS", payload: { invalid: true } })
 			const state = manager.getState()
 			expect(state.filters).toEqual({

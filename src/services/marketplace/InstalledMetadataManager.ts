@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
-import * as yaml from "js-yaml"
+import * as yaml from "yaml"
 import { z } from "zod"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 
@@ -43,7 +43,7 @@ export class InstalledMetadataManager {
 	private async loadMetadataFile(filePath: string): Promise<ScopeInstalledMetadata> {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
-			const data = yaml.load(content)
+			const data = yaml.parse(content)
 
 			const validationResult = ScopeInstalledMetadataSchema.safeParse(data)
 
@@ -159,7 +159,7 @@ export class InstalledMetadataManager {
 			await fs.mkdir(path.dirname(filePath), { recursive: true })
 
 			// Serialize metadata to YAML
-			const yamlContent = yaml.dump(metadata)
+			const yamlContent = yaml.stringify(metadata)
 
 			// Write to file
 			await fs.writeFile(filePath, yamlContent, "utf-8")

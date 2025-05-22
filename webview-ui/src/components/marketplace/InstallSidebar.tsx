@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { VSCodeButton, VSCodeTextField, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { MarketplaceItem } from "../../../../src/services/marketplace/types"
-import { RocketConfig } from "config-rocket"
+import type { RocketConfig } from "config-rocket"
 
 interface MarketplaceInstallSidebarProps {
 	item: MarketplaceItem

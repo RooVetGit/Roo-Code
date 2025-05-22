@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
-import * as yaml from "js-yaml"
+import * as yaml from "yaml"
 import simpleGit, { SimpleGit } from "simple-git"
 import { MetadataScanner } from "./MetadataScanner"
 import { validateAnyMetadata } from "./schemas"
@@ -256,6 +256,7 @@ export class GitFetcher {
 
 			// Get current branch using existing git instance
 			// const branch =
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			;(await this.git?.revparse(["--abbrev-ref", "HEAD"])) || "main"
 		} catch (error) {
 			throw new Error(
@@ -288,7 +289,7 @@ export class GitFetcher {
 		const metadataContent = await fs.readFile(metadataPath, "utf-8")
 
 		try {
-			const parsed = yaml.load(metadataContent) as Record<string, any>
+			const parsed = yaml.parse(metadataContent) as Record<string, any>
 			return validateAnyMetadata(parsed) as RepositoryMetadata
 		} catch (error) {
 			console.error("Failed to parse repository metadata:", error)
