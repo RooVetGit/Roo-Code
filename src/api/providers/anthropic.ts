@@ -94,12 +94,9 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 
 						const betas = []
 
-						// Check for the thinking-128k variants first
-						if (
-							virtualId === "claude-3-7-sonnet-20250219:thinking" ||
-							virtualId === "claude-sonnet-4-20250514:thinking" ||
-							virtualId === "claude-opus-4-20250514:thinking"
-						) {
+						// Enable extended thinking for Claude 3.7 Sonnet only.
+						// https://docs.anthropic.com/en/docs/about-claude/models/migrating-to-claude-4#extended-output-no-longer-supported
+						if (virtualId === "claude-3-7-sonnet-20250219:thinking") {
 							betas.push("output-128k-2025-02-19")
 						}
 
