@@ -8,6 +8,7 @@ import { createDirectoriesForFile } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
 import { formatResponse } from "../../core/prompts/responses"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
+import { readFileSmart } from "../misc/readFileWithEncoding"
 
 import { DecorationController } from "./DecorationController"
 
@@ -53,7 +54,7 @@ export class DiffViewProvider {
 		this.preDiagnostics = vscode.languages.getDiagnostics()
 
 		if (fileExists) {
-			this.originalContent = await fs.readFile(absolutePath, "utf-8")
+			this.originalContent = await readFileSmart(absolutePath)
 		} else {
 			this.originalContent = ""
 		}
