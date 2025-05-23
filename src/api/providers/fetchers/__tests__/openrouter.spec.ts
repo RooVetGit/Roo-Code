@@ -49,7 +49,6 @@ describe("OpenRouter API", () => {
 				"agentica-org/deepcoder-14b-preview:free",
 				"aion-labs/aion-1.0",
 				"aion-labs/aion-1.0-mini",
-				"anthropic/claude-3.7-sonnet",
 				"anthropic/claude-3.7-sonnet:beta",
 				"anthropic/claude-3.7-sonnet:thinking",
 				"anthropic/claude-opus-4",
@@ -110,7 +109,6 @@ describe("OpenRouter API", () => {
 					.map(([id, _]) => id)
 					.sort(),
 			).toEqual([
-				"anthropic/claude-3.7-sonnet",
 				"anthropic/claude-3.7-sonnet:beta",
 				"anthropic/claude-3.7-sonnet:thinking",
 				"anthropic/claude-opus-4",
@@ -125,7 +123,7 @@ describe("OpenRouter API", () => {
 			).toEqual(["anthropic/claude-3.7-sonnet:thinking"])
 
 			expect(models["anthropic/claude-3.7-sonnet"]).toEqual({
-				maxTokens: 64000,
+				maxTokens: 8192,
 				contextWindow: 200000,
 				supportsImages: true,
 				supportsPromptCache: true,
@@ -135,9 +133,8 @@ describe("OpenRouter API", () => {
 				cacheReadsPrice: 0.3,
 				description: expect.any(String),
 				supportsComputerUse: true,
-				supportsReasoningBudget: true,
-				requiredReasoningBudget: false,
-				supportsReasoningEffort: true,
+				supportsReasoningBudget: false,
+				supportsReasoningEffort: false,
 				supportedParameters: ["max_tokens", "temperature", "reasoning", "include_reasoning"],
 			})
 
@@ -178,7 +175,7 @@ describe("OpenRouter API", () => {
 				{ id: "anthropic/claude-3.5-sonnet-20240620", maxTokens: 8192 },
 				{ id: "anthropic/claude-3.5-sonnet-20240620:beta", maxTokens: 8192 },
 				{ id: "anthropic/claude-3.5-sonnet:beta", maxTokens: 8192 },
-				{ id: "anthropic/claude-3.7-sonnet", maxTokens: 64000 },
+				{ id: "anthropic/claude-3.7-sonnet", maxTokens: 8192 },
 				{ id: "anthropic/claude-3.7-sonnet:beta", maxTokens: 128000 },
 				{ id: "anthropic/claude-3.7-sonnet:thinking", maxTokens: 128000 },
 			])
@@ -205,7 +202,6 @@ describe("OpenRouter API", () => {
 					description: undefined,
 					supportsReasoningBudget: false,
 					supportsReasoningEffort: undefined,
-					requiredReasoningBudget: false,
 					supportedParameters: undefined,
 				},
 				"Google AI Studio": {
@@ -220,7 +216,6 @@ describe("OpenRouter API", () => {
 					description: undefined,
 					supportsReasoningBudget: false,
 					supportsReasoningEffort: undefined,
-					requiredReasoningBudget: false,
 					supportedParameters: undefined,
 				},
 			})

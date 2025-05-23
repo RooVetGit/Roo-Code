@@ -10,7 +10,7 @@ export type AnthropicModelId = keyof typeof anthropicModels
 export const anthropicDefaultModelId: AnthropicModelId = "claude-3-7-sonnet-20250219"
 export const anthropicModels = {
 	"claude-sonnet-4-20250514": {
-		maxTokens: 8192,
+		maxTokens: 64_000, // Overridden to 8k if `enableReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -22,7 +22,7 @@ export const anthropicModels = {
 		supportsReasoningBudget: true,
 	},
 	"claude-opus-4-20250514": {
-		maxTokens: 8192,
+		maxTokens: 32_000, // Overridden to 8k if `enableReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -34,7 +34,7 @@ export const anthropicModels = {
 		supportsReasoningBudget: true,
 	},
 	"claude-3-7-sonnet-20250219:thinking": {
-		maxTokens: 128_000,
+		maxTokens: 128_000, // Unlocked by passing `beta` flag to the model. Otherwise, it's 64k.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -47,7 +47,7 @@ export const anthropicModels = {
 		requiredReasoningBudget: true,
 	},
 	"claude-3-7-sonnet-20250219": {
-		maxTokens: 8192,
+		maxTokens: 8192, // Since we already have a `:thinking` virtual model we aren't setting `supportsReasoningBudget: true` here.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,

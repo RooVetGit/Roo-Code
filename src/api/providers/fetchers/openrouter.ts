@@ -197,7 +197,6 @@ export const parseOpenRouterModel = ({
 			id.startsWith("anthropic/claude-3.7") ||
 			id.startsWith("anthropic/claude-sonnet-4") ||
 			id.startsWith("anthropic/claude-opus-4"),
-		requiredReasoningBudget: id === "anthropic/claude-3.7-sonnet:thinking",
 		supportsReasoningEffort: supportedParameters ? supportedParameters.includes("reasoning") : undefined,
 		supportedParameters: supportedParameters ? supportedParameters.filter(isModelParameter) : undefined,
 	}
@@ -208,10 +207,19 @@ export const parseOpenRouterModel = ({
 		modelInfo.supportsComputerUse = true
 	}
 
-	// Special case: Claude 3.7 Sonnet Thinking supports up to 128k tokens if
-	// a beta flag is enabled (which we do).
+	// For backwards compatibility with the old model definitions we will
+	// continue to disable extending thinking for anthropic/claude-3.7-sonnet
+	// and force it for anthropic/claude-3.7-sonnet:thinking.
+
+	if (id === "anthropic/claude-3.7-sonnet") {
+		modelInfo.maxTokens = anthropicModels["claude-3-7-sonnet-20250219"].maxTokens
+		modelInfo.supportsReasoningBudget = false
+		modelInfo.supportsReasoningEffort = false
+	}
+
 	if (id === "anthropic/claude-3.7-sonnet:thinking") {
 		modelInfo.maxTokens = anthropicModels["claude-3-7-sonnet-20250219:thinking"].maxTokens
+		modelInfo.requiredReasoningBudget = true
 	}
 
 	return modelInfo
