@@ -2,6 +2,7 @@ import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import OpenAI from "openai"
 
 import { ModelInfo, ProviderSettings } from "../../schemas"
+import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
 
 import type { ModelParams } from "./model-params"
 
@@ -21,21 +22,14 @@ export type GetModelResoningOptions = {
 	settings: ProviderSettings
 }
 
-const shouldUseReasoningBudget = (model: ModelInfo, settings: ProviderSettings, params: ModelParams) =>
-	(model.requiredReasoningBudget || (model.supportsReasoningBudget && settings.enableReasoningEffort)) &&
-	params.reasoningBudget
-
-const shouldUseReasoningEffort = (model: ModelInfo, params: ModelParams) =>
-	model.supportsReasoningEffort && params.reasoningEffort
-
 export const getOpenRouterReasoning = ({
 	model,
 	params,
 	settings,
 }: GetModelResoningOptions): OpenRouterReasoningParams | undefined =>
-	shouldUseReasoningBudget(model, settings, params)
+	shouldUseReasoningBudget({ model, settings })
 		? { max_tokens: params.reasoningBudget }
-		: shouldUseReasoningEffort(model, params)
+		: shouldUseReasoningEffort({ model, settings })
 			? { effort: params.reasoningEffort }
 			: undefined
 
@@ -44,7 +38,7 @@ export const getAnthropicReasoning = ({
 	params,
 	settings,
 }: GetModelResoningOptions): AnthropicReasoningParams | undefined =>
-	shouldUseReasoningBudget(model, settings, params)
+	shouldUseReasoningBudget({ model, settings })
 		? { type: "enabled", budget_tokens: params.reasoningBudget! }
 		: undefined
 
@@ -53,4 +47,4 @@ export const getOpenAiReasoning = ({
 	params,
 	settings,
 }: GetModelResoningOptions): OpenAiReasoningParams | undefined =>
-	shouldUseReasoningEffort(model, params) ? { reasoning_effort: params.reasoningEffort } : undefined
+	shouldUseReasoningEffort({ model, settings }) ? { reasoning_effort: params.reasoningEffort } : undefined

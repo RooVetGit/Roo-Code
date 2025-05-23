@@ -2,7 +2,7 @@ import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
 export type { ModelInfo, ProviderName, ProviderSettings }
 
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
 
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
@@ -1921,3 +1921,50 @@ export function toRouterName(value?: string): RouterName {
 export type ModelRecord = Record<string, ModelInfo>
 
 export type RouterModels = Record<RouterName, ModelRecord>
+
+export const shouldUseReasoningBudget = ({
+	model,
+	settings,
+}: {
+	model: ModelInfo
+	settings?: ProviderSettings
+}): boolean => !!model.requiredReasoningBudget || (!!model.supportsReasoningBudget && !!settings?.enableReasoningEffort)
+
+export const shouldUseReasoningEffort = ({
+	model,
+	settings,
+}: {
+	model: ModelInfo
+	settings?: ProviderSettings
+}): boolean => !!model.supportsReasoningEffort && (!!model.reasoningEffort || !!settings?.reasoningEffort)
+
+export const DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS = 16_384
+export const DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS = 8_192
+
+export const getModelMaxOutputTokens = ({
+	model,
+	settings,
+}: {
+	model: ModelInfo
+	settings?: ProviderSettings
+}): number | undefined => {
+	if (shouldUseReasoningBudget({ model, settings })) {
+		return settings?.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
+	}
+
+	return model.maxTokens ?? undefined
+}
+
+export const getModelMaxThinkingTokens = ({
+	model,
+	settings,
+}: {
+	model: ModelInfo
+	settings?: ProviderSettings
+}): number | undefined => {
+	if (shouldUseReasoningBudget({ model, settings })) {
+		return settings?.modelMaxThinkingTokens || DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS
+	}
+
+	return undefined
+}

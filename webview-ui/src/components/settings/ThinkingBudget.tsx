@@ -2,13 +2,15 @@ import { useEffect } from "react"
 import { Checkbox } from "vscrui"
 
 import { reasoningEfforts, ReasoningEffort } from "@roo/schemas"
-import { ProviderSettings, ModelInfo } from "@roo/shared/api"
+import {
+	type ProviderSettings,
+	type ModelInfo,
+	DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS,
+	DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS,
+} from "@roo/shared/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Slider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
-
-const DEFAULT_MAX_OUTPUT_TOKENS = 16_384
-const DEFAULT_MAX_THINKING_TOKENS = 8_192
 
 interface ThinkingBudgetProps {
 	apiConfiguration: ProviderSettings
@@ -24,8 +26,9 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	const isReasoningEffortSupported = !!modelInfo && modelInfo.supportsReasoningEffort
 
 	const enableReasoningEffort = apiConfiguration.enableReasoningEffort
-	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_MAX_OUTPUT_TOKENS
-	const customMaxThinkingTokens = apiConfiguration.modelMaxThinkingTokens || DEFAULT_MAX_THINKING_TOKENS
+	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
+	const customMaxThinkingTokens =
+		apiConfiguration.modelMaxThinkingTokens || DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS
 
 	// Dynamically expand or shrink the max thinking budget based on the custom
 	// max output tokens so that there's always a 20% buffer.
@@ -42,7 +45,11 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 		}
 	}, [isReasoningBudgetSupported, customMaxThinkingTokens, modelMaxThinkingTokens, setApiConfigurationField])
 
-	return isReasoningBudgetSupported ? (
+	if (!modelInfo) {
+		return null
+	}
+
+	return isReasoningBudgetSupported && !!modelInfo.maxTokens ? (
 		<>
 			{!isReasoningBudgetRequired && (
 				<div className="flex flex-col gap-1">
@@ -62,7 +69,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 						<div className="flex items-center gap-1">
 							<Slider
 								min={8192}
-								max={modelInfo.maxTokens!}
+								max={modelInfo.maxTokens}
 								step={1024}
 								value={[customMaxOutputTokens]}
 								onValueChange={([value]) => setApiConfigurationField("modelMaxTokens", value)}

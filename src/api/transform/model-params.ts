@@ -1,4 +1,5 @@
-import type { ApiHandlerOptions, ModelInfo } from "../../shared/api"
+import type { ModelInfo, ProviderSettings } from "../../shared/api"
+
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
 
 export type ModelParams = {
@@ -19,7 +20,7 @@ export function getModelParams({
 	defaultMaxTokens,
 	defaultTemperature = 0,
 }: {
-	options: ApiHandlerOptions
+	options: ProviderSettings
 	model: ModelInfo
 	defaultMaxTokens?: number
 	defaultTemperature?: number
