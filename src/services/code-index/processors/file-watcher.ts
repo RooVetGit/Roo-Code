@@ -117,6 +117,7 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the created file
 	 */
 	private async handleFileCreated(uri: vscode.Uri): Promise<void> {
+		this.accumulatedEvents.set(uri.fsPath, { uri, type: "create" })
 		this.scheduleBatchProcessing()
 	}
 
@@ -125,6 +126,7 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the changed file
 	 */
 	private async handleFileChanged(uri: vscode.Uri): Promise<void> {
+		this.accumulatedEvents.set(uri.fsPath, { uri, type: "change" })
 		this.scheduleBatchProcessing()
 	}
 
@@ -133,6 +135,7 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the deleted file
 	 */
 	private async handleFileDeleted(uri: vscode.Uri): Promise<void> {
+		this.accumulatedEvents.set(uri.fsPath, { uri, type: "delete" })
 		this.scheduleBatchProcessing()
 	}
 
