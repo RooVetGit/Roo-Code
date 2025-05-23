@@ -39,9 +39,10 @@ export default {
 		"^os-name$": "<rootDir>/__mocks__/os-name.js",
 		"^strip-bom$": "<rootDir>/__mocks__/strip-bom.js",
 		"^kontroll$": "<rootDir>/__mocks__/kontroll.js",
+		"^execa$": "<rootDir>/__mocks__/execa.js",
 	},
 	transformIgnorePatterns: [
-		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|serialize-error|strip-ansi|default-shell|os-name|strip-bom|kontroll)/)",
+		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|serialize-error|strip-ansi|default-shell|os-name|strip-bom|kontroll|execa)/)",
 	],
 	roots: ["<rootDir>"],
 	modulePathIgnorePatterns: ["dist", "out"],

@@ -73,6 +73,8 @@ describe("MetadataScanner", () => {
 				const normalizedBasePath = normalizePath(mockBasePath)
 				const normalizedComponentPath = normalizePath(path.join(mockBasePath, "component1"))
 
+				process.stdout.write(`\nMock readdir called with path: ${normalizedP}\n`)
+
 				if (normalizedP === normalizedBasePath) {
 					// For the base path, return only the component directory
 					const baseDirents = [componentDirDirent]
@@ -87,15 +89,16 @@ describe("MetadataScanner", () => {
 				}
 			})
 
-			mockedFs.readFile.mockResolvedValue(
-				Buffer.from(`
+			mockedFs.readFile.mockImplementation(async (p: string | Buffer | URL | FileHandle) => {
+				process.stdout.write(`\nMock readFile called with path: ${String(p)}\n`)
+				return Buffer.from(`
 name: Test Component
 description: A test component
 type: mcp
 version: 1.0.0
 sourceUrl: https://example.com/component1
-`),
-			)
+`)
+			})
 
 			const items = await metadataScanner.scanDirectory(mockBasePath, mockRepoUrl)
 
