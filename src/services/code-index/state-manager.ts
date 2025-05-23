@@ -52,11 +52,6 @@ export class CodeIndexStateManager {
 			}
 
 			this._progressEmitter.fire(this.getCurrentStatus())
-			console.log(
-				`[CodeIndexStateManager] System state changed to: ${this._systemStatus}${
-					message ? ` (${message})` : ""
-				}`,
-			)
 		}
 	}
 
@@ -79,9 +74,6 @@ export class CodeIndexStateManager {
 			// Only fire update if status, message or progress actually changed
 			if (oldStatus !== this._systemStatus || oldMessage !== this._statusMessage || progressChanged) {
 				this._progressEmitter.fire(this.getCurrentStatus())
-				console.log(
-					`[CodeIndexStateManager] Block Progress: ${message} (${this._processedItems}/${this._totalItems})`,
-				)
 			}
 		}
 	}
@@ -113,9 +105,6 @@ export class CodeIndexStateManager {
 
 			if (oldStatus !== this._systemStatus || oldMessage !== this._statusMessage || progressChanged) {
 				this._progressEmitter.fire(this.getCurrentStatus())
-				console.log(
-					`[CodeIndexStateManager] File Queue Progress: ${message} (${this._processedItems}/${this._totalItems})`,
-				)
 			}
 		}
 	}

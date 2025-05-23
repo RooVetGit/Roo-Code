@@ -223,7 +223,6 @@ export class DirectoryScanner implements IDirectoryScanner {
 				// File was deleted or is no longer supported/indexed
 				if (this.qdrantClient) {
 					try {
-						console.log(`[DirectoryScanner] Deleting points for deleted file: ${cachedFilePath}`)
 						await this.qdrantClient.deletePointsByFilePath(cachedFilePath)
 						await this.cacheManager.deleteHash(cachedFilePath)
 					} catch (error) {
@@ -275,9 +274,6 @@ export class DirectoryScanner implements IDirectoryScanner {
 							.map((info) => info.filePath),
 					),
 				]
-				console.log(
-					`[DirectoryScanner] Deleting existing points for ${uniqueFilePaths.length} file(s) in batch...`,
-				)
 				if (uniqueFilePaths.length > 0) {
 					try {
 						await this.qdrantClient.deletePointsByMultipleFilePaths(uniqueFilePaths)
@@ -323,14 +319,12 @@ export class DirectoryScanner implements IDirectoryScanner {
 					await this.cacheManager.updateHash(fileInfo.filePath, fileInfo.fileHash)
 				}
 				success = true
-				console.log(`[DirectoryScanner] Successfully processed batch of ${batchBlocks.length} blocks.`)
 			} catch (error) {
 				lastError = error as Error
 				console.error(`[DirectoryScanner] Error processing batch (attempt ${attempts}):`, error)
 
 				if (attempts < MAX_BATCH_RETRIES) {
 					const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempts - 1)
-					console.log(`[DirectoryScanner] Retrying batch in ${delay}ms...`)
 					await new Promise((resolve) => setTimeout(resolve, delay))
 				}
 			}

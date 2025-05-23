@@ -9,21 +9,11 @@ import { createHash } from "crypto"
 async function waitForFileProcessingToFinish(fileWatcher: FileWatcher, filePath: string): Promise<void> {
 	return new Promise<void>((resolve) => {
 		const listener = fileWatcher.onDidFinishBatchProcessing((summary) => {
-			console.log(
-				`[DEBUG TestHelper] waitForFileProcessingToFinish received onDidFinishBatchProcessing with summary for paths:`,
-				summary.processedFiles.map((f) => f.path),
-			)
 			const matchingFile = summary.processedFiles.find((result) => result.path === filePath)
 			if (matchingFile) {
-				console.log(
-					`[DEBUG TestHelper] waitForFileProcessingToFinish found matching path "${filePath}" and will resolve.`,
-				)
 				listener.dispose()
 				resolve()
 			} else {
-				console.log(
-					`[DEBUG TestHelper] waitForFileProcessingToFinish: path "${filePath}" not found in this batch.`,
-				)
 			}
 		})
 	})

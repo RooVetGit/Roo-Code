@@ -40,8 +40,6 @@ export class CodeIndexConfigManager {
 		requiresRestart: boolean
 		requiresClear: boolean
 	}> {
-		console.log("[CodeIndexConfigManager] Loading configuration...")
-
 		const previousConfigSnapshot: PreviousConfigSnapshot = {
 			enabled: this.isEnabled,
 			configured: this.isConfigured(),
@@ -95,9 +93,6 @@ export class CodeIndexConfigManager {
 		const currentDimension = currentModelId ? getModelDimension(this.embedderProvider, currentModelId) : undefined
 		const requiresClear =
 			previousDimension !== undefined && currentDimension !== undefined && previousDimension !== currentDimension
-		console.log(
-			`[CodeIndexConfigManager] Dimension check: Previous=${previousDimension}, Current=${currentDimension}, Changed=${requiresClear}`,
-		)
 
 		return {
 			configSnapshot: previousConfigSnapshot,

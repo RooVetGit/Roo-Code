@@ -37,7 +37,6 @@ export class CacheManager implements ICacheManager {
 			const cacheData = await vscode.workspace.fs.readFile(this.cachePath)
 			this.fileHashes = JSON.parse(cacheData.toString())
 		} catch (error) {
-			console.log("No cache file found or error reading cache, starting fresh")
 			this.fileHashes = {}
 		}
 	}
@@ -60,7 +59,6 @@ export class CacheManager implements ICacheManager {
 		try {
 			await vscode.workspace.fs.writeFile(this.cachePath, Buffer.from("{}"))
 			this.fileHashes = {}
-			console.log("Cache file cleared successfully")
 		} catch (error) {
 			console.error("Failed to clear cache file:", error, this.cachePath)
 		}

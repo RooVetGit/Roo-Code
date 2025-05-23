@@ -66,9 +66,6 @@ export class QdrantVectorStore implements IVectorStore {
 						field_name: `pathSegments.${i}`,
 						field_schema: "keyword",
 					})
-					console.log(
-						`[QdrantVectorStore] Ensured payload index for pathSegments.${i} on ${this.collectionName}`,
-					)
 				} catch (indexError) {
 					console.warn(
 						`[QdrantVectorStore] Could not create payload index for pathSegments.${i} on ${this.collectionName}. It might already exist or there was an issue.`,
@@ -236,9 +233,6 @@ export class QdrantVectorStore implements IVectorStore {
 			// Check if collection exists before attempting deletion to avoid errors
 			if (await this.collectionExists()) {
 				await this.client.deleteCollection(this.collectionName)
-				console.log(`[QdrantVectorStore] Collection ${this.collectionName} deleted.`)
-			} else {
-				console.log(`[QdrantVectorStore] Collection ${this.collectionName} does not exist, skipping deletion.`)
 			}
 		} catch (error) {
 			console.error(`[QdrantVectorStore] Failed to delete collection ${this.collectionName}:`, error)

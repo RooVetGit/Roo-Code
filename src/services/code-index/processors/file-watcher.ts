@@ -117,11 +117,6 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the created file
 	 */
 	private async handleFileCreated(uri: vscode.Uri): Promise<void> {
-		console.log(`[FileWatcher] File CREATED: ${uri.fsPath}`)
-		this.accumulatedEvents.set(uri.fsPath, { uri, type: "create" })
-		console.log(
-			`[FileWatcher] Accumulated event: create for ${uri.fsPath}. Total accumulated: ${this.accumulatedEvents.size}`,
-		)
 		this.scheduleBatchProcessing()
 	}
 
@@ -130,11 +125,6 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the changed file
 	 */
 	private async handleFileChanged(uri: vscode.Uri): Promise<void> {
-		console.log(`[FileWatcher] File CHANGED: ${uri.fsPath}`)
-		this.accumulatedEvents.set(uri.fsPath, { uri, type: "change" })
-		console.log(
-			`[FileWatcher] Accumulated event: change for ${uri.fsPath}. Total accumulated: ${this.accumulatedEvents.size}`,
-		)
 		this.scheduleBatchProcessing()
 	}
 
@@ -143,11 +133,6 @@ export class FileWatcher implements IFileWatcher {
 	 * @param uri URI of the deleted file
 	 */
 	private async handleFileDeleted(uri: vscode.Uri): Promise<void> {
-		console.log(`[FileWatcher] File DELETED: ${uri.fsPath}`)
-		this.accumulatedEvents.set(uri.fsPath, { uri, type: "delete" })
-		console.log(
-			`[FileWatcher] Accumulated event: delete for ${uri.fsPath}. Total accumulated: ${this.accumulatedEvents.size}`,
-		)
 		this.scheduleBatchProcessing()
 	}
 
@@ -166,7 +151,6 @@ export class FileWatcher implements IFileWatcher {
 	 */
 	private async triggerBatchProcessing(): Promise<void> {
 		if (this.accumulatedEvents.size === 0) {
-			console.log("[FileWatcher] No accumulated events to process")
 			return
 		}
 
@@ -175,7 +159,6 @@ export class FileWatcher implements IFileWatcher {
 
 		const filePathsInBatch = Array.from(eventsToProcess.keys())
 		this._onDidStartBatchProcessing.fire(filePathsInBatch)
-		console.log(`[FileWatcher] Triggered batch processing for ${filePathsInBatch.length} files`)
 
 		await this.processBatch(eventsToProcess)
 	}
@@ -442,10 +425,6 @@ export class FileWatcher implements IFileWatcher {
 		)
 
 		// Finalize
-		console.log("[DEBUG FileWatcher] Firing _onDidFinishBatchProcessing with summary:", {
-			processedFiles: batchResults.map((r) => r.path),
-			batchError: !!overallBatchError,
-		})
 		this._onDidFinishBatchProcessing.fire({
 			processedFiles: batchResults,
 			batchError: overallBatchError,
@@ -470,8 +449,6 @@ export class FileWatcher implements IFileWatcher {
 	 * @returns Promise resolving to processing result
 	 */
 	async processFile(filePath: string): Promise<FileProcessingResult> {
-		console.log(`[FileWatcher] Processing file: ${filePath}`)
-
 		try {
 			// Check if file should be ignored
 			const relativeFilePath = generateRelativeFilePath(filePath)
@@ -479,7 +456,6 @@ export class FileWatcher implements IFileWatcher {
 				!this.ignoreController.validateAccess(filePath) ||
 				(this.ignoreInstance && this.ignoreInstance.ignores(relativeFilePath))
 			) {
-				console.log(`[FileWatcher] processFile: SKIPPED (ignored by .rooignore or .gitignore) - ${filePath}`)
 				return {
 					path: filePath,
 					status: "skipped" as const,
@@ -490,7 +466,6 @@ export class FileWatcher implements IFileWatcher {
 			// Check file size
 			const fileStat = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
 			if (fileStat.size > MAX_FILE_SIZE_BYTES) {
-				console.log(`[FileWatcher] processFile: SKIPPED (too large) - ${filePath}`)
 				return {
 					path: filePath,
 					status: "skipped" as const,
@@ -507,7 +482,6 @@ export class FileWatcher implements IFileWatcher {
 
 			// Check if file has changed
 			if (this.cacheManager.getHash(filePath) === newHash) {
-				console.log(`[FileWatcher] processFile: SKIPPED (not changed) - ${filePath}`)
 				return {
 					path: filePath,
 					status: "skipped" as const,

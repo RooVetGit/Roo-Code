@@ -37,9 +37,7 @@ export class CodeIndexOrchestrator {
 			await this.fileWatcher.initialize()
 
 			this._fileWatcherSubscriptions = [
-				this.fileWatcher.onDidStartBatchProcessing((filePaths: string[]) => {
-					console.log(`[CodeIndexOrchestrator] Batch processing started for ${filePaths.length} files`)
-				}),
+				this.fileWatcher.onDidStartBatchProcessing((filePaths: string[]) => {}),
 				this.fileWatcher.onBatchProgressUpdate(({ processedInBatch, totalInBatch, currentFile }) => {
 					if (totalInBatch > 0 && this.stateManager.state !== "Indexing") {
 						this.stateManager.setSystemState("Indexing", "Processing file changes...")
@@ -72,14 +70,9 @@ export class CodeIndexOrchestrator {
 						const errorCount = summary.processedFiles.filter(
 							(f: { status: string }) => f.status === "error" || f.status === "local_error",
 						).length
-						console.log(
-							`[CodeIndexOrchestrator] Batch completed: ${successCount} succeeded, ${errorCount} failed`,
-						)
 					}
 				}),
 			]
-
-			console.log("[CodeIndexOrchestrator] File watcher started.")
 		} catch (error) {
 			console.error("[CodeIndexOrchestrator] Failed to start file watcher:", error)
 			throw error
@@ -120,7 +113,6 @@ export class CodeIndexOrchestrator {
 
 			if (collectionCreated) {
 				await this.cacheManager.clearCacheFile()
-				console.log("[CodeIndexOrchestrator] Qdrant collection created; cache cleared.")
 			}
 
 			this.stateManager.setSystemState("Indexing", "Services ready. Starting workspace scan...")
@@ -156,13 +148,9 @@ export class CodeIndexOrchestrator {
 
 			const { stats } = result
 
-			console.log(
-				`[CodeIndexOrchestrator] Initial scan complete. Processed Files: ${stats.processed}, Skipped Files: ${stats.skipped}, Blocks Found: ${result.totalBlockCount}, Blocks Indexed: ${cumulativeBlocksIndexed}`,
-			)
-
 			await this._startWatcher()
 
-			this.stateManager.setSystemState("Indexed", "Workspace scan and watcher started.")
+			this.stateManager.setSystemState("Indexed", "File watcher started.")
 		} catch (error: any) {
 			console.error("[CodeIndexOrchestrator] Error during indexing:", error)
 			try {
@@ -172,7 +160,6 @@ export class CodeIndexOrchestrator {
 			}
 
 			await this.cacheManager.clearCacheFile()
-			console.log("[CodeIndexOrchestrator] Cleared cache due to scan error.")
 
 			this.stateManager.setSystemState("Error", `Failed during initial scan: ${error.message || "Unknown error"}`)
 			this.stopWatcher()
@@ -188,7 +175,6 @@ export class CodeIndexOrchestrator {
 		this.fileWatcher.dispose()
 		this._fileWatcherSubscriptions.forEach((sub) => sub.dispose())
 		this._fileWatcherSubscriptions = []
-		console.log("[CodeIndexOrchestrator] File watcher stopped.")
 
 		if (this.stateManager.state !== "Error") {
 			this.stateManager.setSystemState("Standby", "File watcher stopped.")
@@ -201,7 +187,6 @@ export class CodeIndexOrchestrator {
 	 * and resetting the cache file.
 	 */
 	public async clearIndexData(): Promise<void> {
-		console.log("[CodeIndexOrchestrator] Clearing code index data...")
 		this._isProcessing = true
 
 		try {
@@ -210,7 +195,6 @@ export class CodeIndexOrchestrator {
 			try {
 				if (this.configManager.isFeatureConfigured) {
 					await this.vectorStore.deleteCollection()
-					console.log("[CodeIndexOrchestrator] Vector collection deleted.")
 				} else {
 					console.warn("[CodeIndexOrchestrator] Service not configured, skipping vector collection clear.")
 				}
@@ -220,11 +204,9 @@ export class CodeIndexOrchestrator {
 			}
 
 			await this.cacheManager.clearCacheFile()
-			console.log("[CodeIndexOrchestrator] Cache cleared.")
 
 			if (this.stateManager.state !== "Error") {
 				this.stateManager.setSystemState("Standby", "Index data cleared successfully.")
-				console.log("[CodeIndexOrchestrator] Code index data cleared successfully.")
 			}
 		} finally {
 			this._isProcessing = false

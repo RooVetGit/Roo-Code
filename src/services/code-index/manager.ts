@@ -104,7 +104,6 @@ export class CodeIndexManager {
 
 		// 2. Check if feature is enabled
 		if (!this.isFeatureEnabled) {
-			console.log("[CodeIndexManager] Feature disabled - skipping service initialization")
 			if (this._orchestrator) {
 				this._orchestrator.stopWatcher()
 			}
@@ -119,17 +118,11 @@ export class CodeIndexManager {
 
 		// 4. Determine if Core Services Need Recreation
 		const needsServiceRecreation = !this._serviceFactory || requiresRestart
-		console.log(
-			`[CodeIndexManager] ${needsServiceRecreation ? "Initial setup or restart required" : "Configuration loaded, no full re-initialization needed"}`,
-		)
 
 		if (needsServiceRecreation) {
-			console.log("[CodeIndexManager] (Re)initializing core services...")
-
 			// Stop watcher if it exists
 			if (this._orchestrator) {
 				this.stopWatcher()
-				console.log("[CodeIndexManager] Stopped existing watcher")
 			}
 
 			// (Re)Initialize service factory
@@ -175,13 +168,10 @@ export class CodeIndexManager {
 				embedder,
 				vectorStore,
 			)
-
-			console.log("[CodeIndexManager] Core services (re)initialized")
 		}
 
 		// 5. Handle Data Clearing
 		if (requiresClear) {
-			console.log("[CodeIndexManager] Configuration requires clearing data")
 			if (this._orchestrator) {
 				await this._orchestrator.clearIndexData()
 			}
@@ -197,7 +187,6 @@ export class CodeIndexManager {
 			(needsServiceRecreation && (!this._orchestrator || this._orchestrator.state !== "Indexing"))
 
 		if (shouldStartOrRestartIndexing) {
-			console.log("[CodeIndexManager] Starting/restarting indexing due to configuration changes")
 			this._orchestrator?.startIndexing() // This method is async, but we don't await it here
 		}
 
@@ -210,7 +199,6 @@ export class CodeIndexManager {
 
 	public async startIndexing(): Promise<void> {
 		if (!this.isFeatureEnabled) {
-			console.log("[CodeIndexManager] Feature disabled - skipping startIndexing")
 			return
 		}
 		this.assertInitialized()
@@ -222,7 +210,6 @@ export class CodeIndexManager {
 	 */
 	public stopWatcher(): void {
 		if (!this.isFeatureEnabled) {
-			console.log("[CodeIndexManager] Feature disabled - skipping stopWatcher")
 			return
 		}
 		if (this._orchestrator) {
@@ -238,7 +225,6 @@ export class CodeIndexManager {
 			this.stopWatcher()
 		}
 		this._stateManager.dispose()
-		console.log(`[CodeIndexManager] Disposed for workspace: ${this.workspacePath}`)
 	}
 
 	/**
@@ -247,7 +233,6 @@ export class CodeIndexManager {
 	 */
 	public async clearIndexData(): Promise<void> {
 		if (!this.isFeatureEnabled) {
-			console.log("[CodeIndexManager] Feature disabled - skipping clearIndexData")
 			return
 		}
 		this.assertInitialized()
@@ -263,7 +248,6 @@ export class CodeIndexManager {
 
 	public async searchIndex(query: string, directoryPrefix?: string): Promise<VectorStoreSearchResult[]> {
 		if (!this.isFeatureEnabled) {
-			console.log("[CodeIndexManager] Feature disabled - returning empty search results")
 			return []
 		}
 		this.assertInitialized()
