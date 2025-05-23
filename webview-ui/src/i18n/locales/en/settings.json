@@ -35,6 +35,7 @@
 	"codeIndex": {
 		"title": "Codebase Indexing",
 		"enableLabel": "Enable Codebase Indexing",
+		"enableDescription": "Enabling this feature will index your codebase. This might consume system resources and take some time depending on the size of your project.",
 		"providerLabel": "Embeddings Provider",
 		"selectProviderPlaceholder": "Select provider",
 		"openaiProvider": "OpenAI",

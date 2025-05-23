@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { Database } from "lucide-react"
-import { vscode } from "../../utils/vscode"
+import { useAppTranslation } from "@/i18n/TranslationContext"
+
 import { VSCodeCheckbox, VSCodeTextField, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -15,20 +15,20 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Section } from "./Section"
-import { SectionHeader } from "./SectionHeader"
-import { SetCachedStateField } from "./types"
+
+import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "../../../../src/schemas"
 import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
 import { z } from "zod"
-import { useAppTranslation } from "@/i18n/TranslationContext"
+
+import { SetCachedStateField } from "./types"
 
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
 	apiConfiguration: ProviderSettings
-	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
+	setCachedStateField: SetCachedStateField<"codebaseIndexConfig">
 	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 	areSettingsCommitted: boolean
 }
@@ -141,213 +141,208 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 	return (
 		<>
-			<SectionHeader>
-				<div className="flex items-center gap-2">
-					<Database size={16} />
-					{t("settings:codeIndex.title")}
-				</div>
-			</SectionHeader>
-			<Section>
-				<VSCodeCheckbox
-					checked={codebaseIndexConfig?.codebaseIndexEnabled}
-					onChange={(e: any) =>
-						setCachedStateField("codebaseIndexConfig", {
-							...codebaseIndexConfig,
-							codebaseIndexEnabled: e.target.checked,
-						})
-					}>
-					{t("settings:codeIndex.enableLabel")}
-				</VSCodeCheckbox>
+			<VSCodeCheckbox
+				checked={codebaseIndexConfig?.codebaseIndexEnabled}
+				onChange={(e: any) =>
+					setCachedStateField("codebaseIndexConfig", {
+						...codebaseIndexConfig,
+						codebaseIndexEnabled: e.target.checked,
+					})
+				}>
+				⚠️ {t("settings:codeIndex.enableLabel")}
+			</VSCodeCheckbox>
+			<div className="text-vscode-descriptionForeground text-sm mt-1 pl-6">
+				{t("settings:codeIndex.enableDescription")}
+			</div>
 
-				{codebaseIndexConfig?.codebaseIndexEnabled && (
-					<div className="mt-4 space-y-4">
-						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>
-							{t("settings:codeIndex.providerLabel")}
+			{codebaseIndexConfig?.codebaseIndexEnabled && (
+				<div className="mt-4 space-y-4">
+					<div className="text-sm text-vscode-descriptionForeground mt-4">
+						<span
+							className={`
+								inline-block w-3 h-3 rounded-full mr-2
+								${
+									indexingStatus.systemStatus === "Standby"
+										? "bg-gray-400"
+										: indexingStatus.systemStatus === "Indexing"
+											? "bg-yellow-500 animate-pulse"
+											: indexingStatus.systemStatus === "Indexed"
+												? "bg-green-500"
+												: indexingStatus.systemStatus === "Error"
+													? "bg-red-500"
+													: "bg-gray-400"
+								}
+							`}></span>
+						{indexingStatus.systemStatus}
+						{indexingStatus.message ? ` - ${indexingStatus.message}` : ""}
+					</div>
+
+					{indexingStatus.systemStatus === "Indexing" && (
+						<div className="mt-4 space-y-1">
+							<ProgressPrimitive.Root
+								className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
+								value={progressPercentage}>
+								<ProgressPrimitive.Indicator
+									className="h-full w-full flex-1 bg-primary transition-transform duration-300 ease-in-out"
+									style={{
+										transform: transformStyleString,
+									}}
+								/>
+							</ProgressPrimitive.Root>
 						</div>
-						<div className="flex items-center gap-2">
-							<Select
-								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
-								onValueChange={(value) => {
-									const newProvider = value as EmbedderProvider
-									const models = codebaseIndexModels?.[newProvider]
-									const modelIds = models ? Object.keys(models) : []
-									const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
+					)}
 
-									if (codebaseIndexConfig) {
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexEmbedderProvider: newProvider,
-											codebaseIndexEmbedderModelId: defaultModelId,
-										})
-									}
-								}}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder={t("settings:codeIndex.selectProviderPlaceholder")} />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="openai">{t("settings:codeIndex.openaiProvider")}</SelectItem>
-									<SelectItem value="ollama">{t("settings:codeIndex.ollamaProvider")}</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
+					<div style={{ fontWeight: "normal", marginBottom: "4px" }}>
+						{t("settings:codeIndex.providerLabel")}
+					</div>
+					<div className="flex items-center gap-2">
+						<Select
+							value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
+							onValueChange={(value) => {
+								const newProvider = value as EmbedderProvider
+								const models = codebaseIndexModels?.[newProvider]
+								const modelIds = models ? Object.keys(models) : []
+								const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
 
-						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
-							<div className="space-y-2">
-								<VSCodeTextField
-									type="password"
-									value={apiConfiguration.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
-									style={{ width: "100%" }}>
-									{t("settings:codeIndex.openaiKeyLabel")}
-								</VSCodeTextField>
-							</div>
-						)}
-
-						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>
-							{t("settings:codeIndex.modelLabel")}
-						</div>
-						<div className="flex items-center gap-2">
-							<Select
-								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-								onValueChange={(value) =>
+								if (codebaseIndexConfig) {
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
-										codebaseIndexEmbedderModelId: value,
-									})
-								}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
-								</SelectTrigger>
-								<SelectContent>
-									{availableModelIds.map((modelId) => (
-										<SelectItem key={modelId} value={modelId}>
-											{modelId}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-
-						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
-							<>
-								<div className="space-y-2">
-									<VSCodeTextField
-										value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || ""}
-										onInput={(e: any) =>
-											setCachedStateField("codebaseIndexConfig", {
-												...codebaseIndexConfig,
-												codebaseIndexEmbedderBaseUrl: e.target.value,
-											})
-										}
-										style={{ width: "100%" }}>
-										{t("settings:codeIndex.ollamaUrlLabel")}
-									</VSCodeTextField>
-								</div>
-							</>
-						)}
-
-						<div className="space-y-2">
-							<VSCodeTextField
-								value={codebaseIndexConfig.codebaseIndexQdrantUrl}
-								onInput={(e: any) =>
-									setCachedStateField("codebaseIndexConfig", {
-										...codebaseIndexConfig,
-										codebaseIndexQdrantUrl: e.target.value,
+										codebaseIndexEmbedderProvider: newProvider,
+										codebaseIndexEmbedderModelId: defaultModelId,
 									})
 								}
-								style={{ width: "100%" }}>
-								{t("settings:codeIndex.qdrantUrlLabel")}
-							</VSCodeTextField>
-						</div>
+							}}>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder={t("settings:codeIndex.selectProviderPlaceholder")} />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="openai">{t("settings:codeIndex.openaiProvider")}</SelectItem>
+								<SelectItem value="ollama">{t("settings:codeIndex.ollamaProvider")}</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
 
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
 						<div className="space-y-2">
 							<VSCodeTextField
 								type="password"
-								value={apiConfiguration.codeIndexQdrantApiKey}
-								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
+								value={apiConfiguration.codeIndexOpenAiKey || ""}
+								onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
 								style={{ width: "100%" }}>
-								{t("settings:codeIndex.qdrantKeyLabel")}
+								{t("settings:codeIndex.openaiKeyLabel")}
 							</VSCodeTextField>
 						</div>
+					)}
 
-						<div className="text-sm text-vscode-descriptionForeground mt-4">
-							<span
-								className={`
-									inline-block w-3 h-3 rounded-full mr-2
-									${
-										indexingStatus.systemStatus === "Standby"
-											? "bg-gray-400"
-											: indexingStatus.systemStatus === "Indexing"
-												? "bg-yellow-500 animate-pulse"
-												: indexingStatus.systemStatus === "Indexed"
-													? "bg-green-500"
-													: indexingStatus.systemStatus === "Error"
-														? "bg-red-500"
-														: "bg-gray-400"
-									}
-								`}></span>
-							{indexingStatus.systemStatus}
-							{indexingStatus.message ? ` - ${indexingStatus.message}` : ""}
-						</div>
-
-						{indexingStatus.systemStatus === "Indexing" && (
-							<div className="mt-4 space-y-1">
-								<ProgressPrimitive.Root
-									className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
-									value={progressPercentage}>
-									<ProgressPrimitive.Indicator
-										className="h-full w-full flex-1 bg-primary transition-transform duration-300 ease-in-out"
-										style={{
-											transform: transformStyleString,
-										}}
-									/>
-								</ProgressPrimitive.Root>
-							</div>
-						)}
-
-						<div className="flex gap-2 mt-4">
-							{(indexingStatus.systemStatus === "Error" || indexingStatus.systemStatus === "Standby") && (
-								<VSCodeButton
-									onClick={() => vscode.postMessage({ type: "startIndexing" })}
-									disabled={
-										!areSettingsCommitted ||
-										!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
-									}>
-									{t("settings:codeIndex.startIndexingButton")}
-								</VSCodeButton>
-							)}
-							{(indexingStatus.systemStatus === "Indexed" || indexingStatus.systemStatus === "Error") && (
-								<AlertDialog>
-									<AlertDialogTrigger asChild>
-										<VSCodeButton appearance="secondary">
-											{t("settings:codeIndex.clearIndexDataButton")}
-										</VSCodeButton>
-									</AlertDialogTrigger>
-									<AlertDialogContent>
-										<AlertDialogHeader>
-											<AlertDialogTitle>
-												{t("settings:codeIndex.clearDataDialog.title")}
-											</AlertDialogTitle>
-											<AlertDialogDescription>
-												{t("settings:codeIndex.clearDataDialog.description")}
-											</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel>
-												{t("settings:codeIndex.clearDataDialog.cancelButton")}
-											</AlertDialogCancel>
-											<AlertDialogAction
-												onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
-												{t("settings:codeIndex.clearDataDialog.confirmButton")}
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
-							)}
-						</div>
+					<div style={{ fontWeight: "normal", marginBottom: "4px" }}>
+						{t("settings:codeIndex.modelLabel")}
 					</div>
-				)}
-			</Section>
+					<div className="flex items-center gap-2">
+						<Select
+							value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
+							onValueChange={(value) =>
+								setCachedStateField("codebaseIndexConfig", {
+									...codebaseIndexConfig,
+									codebaseIndexEmbedderModelId: value,
+								})
+							}>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
+							</SelectTrigger>
+							<SelectContent>
+								{availableModelIds.map((modelId) => (
+									<SelectItem key={modelId} value={modelId}>
+										{modelId}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
+						<>
+							<div className="space-y-2">
+								<VSCodeTextField
+									value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || ""}
+									onInput={(e: any) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderBaseUrl: e.target.value,
+										})
+									}
+									style={{ width: "100%" }}>
+									{t("settings:codeIndex.ollamaUrlLabel")}
+								</VSCodeTextField>
+							</div>
+						</>
+					)}
+
+					<div className="space-y-2">
+						<VSCodeTextField
+							value={codebaseIndexConfig.codebaseIndexQdrantUrl}
+							onInput={(e: any) =>
+								setCachedStateField("codebaseIndexConfig", {
+									...codebaseIndexConfig,
+									codebaseIndexQdrantUrl: e.target.value,
+								})
+							}
+							style={{ width: "100%" }}>
+							{t("settings:codeIndex.qdrantUrlLabel")}
+						</VSCodeTextField>
+					</div>
+
+					<div className="space-y-2">
+						<VSCodeTextField
+							type="password"
+							value={apiConfiguration.codeIndexQdrantApiKey}
+							onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
+							style={{ width: "100%" }}>
+							{t("settings:codeIndex.qdrantKeyLabel")}
+						</VSCodeTextField>
+					</div>
+
+					<div className="flex gap-2 mt-4">
+						{(indexingStatus.systemStatus === "Error" || indexingStatus.systemStatus === "Standby") && (
+							<VSCodeButton
+								onClick={() => vscode.postMessage({ type: "startIndexing" })}
+								disabled={
+									!areSettingsCommitted ||
+									!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
+								}>
+								{t("settings:codeIndex.startIndexingButton")}
+							</VSCodeButton>
+						)}
+						{(indexingStatus.systemStatus === "Indexed" || indexingStatus.systemStatus === "Error") && (
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<VSCodeButton appearance="secondary">
+										{t("settings:codeIndex.clearIndexDataButton")}
+									</VSCodeButton>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>
+											{t("settings:codeIndex.clearDataDialog.title")}
+										</AlertDialogTitle>
+										<AlertDialogDescription>
+											{t("settings:codeIndex.clearDataDialog.description")}
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>
+											{t("settings:codeIndex.clearDataDialog.cancelButton")}
+										</AlertDialogCancel>
+										<AlertDialogAction
+											onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
+											{t("settings:codeIndex.clearDataDialog.confirmButton")}
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						)}
+					</div>
+				</div>
+			)}
 		</>
 	)
 }
