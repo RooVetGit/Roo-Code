@@ -7,7 +7,9 @@ export const baseMetadataSchema = z.object({
 	id: z.string().optional(),
 	name: z.string().min(1, "Name is required"),
 	description: z.string(),
-	version: z.string(),
+	version: z
+		.string()
+		.refine((v) => /^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(v), "Version must be in semver format"),
 	binaryUrl: z.string().url("Binary URL must be a valid URL").optional(),
 	binaryHash: z.string().optional(),
 	tags: z.array(z.string()).optional(),
