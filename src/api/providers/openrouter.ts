@@ -119,8 +119,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			...(reasoning && { reasoning }),
 		}
 
-		console.log("[OpenRouter] completionParams", completionParams)
-
 		const stream = await this.client.chat.completions.create(completionParams)
 
 		let lastUsage: CompletionUsage | undefined = undefined
