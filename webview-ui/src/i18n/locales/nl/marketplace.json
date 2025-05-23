@@ -98,5 +98,7 @@
 			"duplicateName": "Een bron met deze naam bestaat al.",
 			"emojiName": "Emoji-tekens kunnen weergaveproblemen veroorzaken."
 		}
-	}
+	},
+	"done": "Klaar",
+	"refresh": "Vernieuwen"
 }

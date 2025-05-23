@@ -46,43 +46,46 @@
 		},
 		"tags": {
 			"label": "Tag",
-			"clear_one": "Cancella {{count}} tag selezionato",
-			"clear_other": "Cancella {{count}} tag selezionati",
+			"clear": "Cancella {{count}} tag selezionat{{count !== 1 ? 'i' : 'o'}}",
 			"placeholder": "Cerca tag...",
 			"noResults": "Nessun tag trovato.",
-			"selected_one": "{{count}} tag selezionato",
-			"selected_other": "{{count}} tag selezionati"
-		}
-	},
-	"sources": {
-		"title": "Sorgenti del marketplace",
-		"description": "Aggiungi o gestisci le sorgenti per gli elementi del marketplace. Ogni sorgente è un repository Git contenente definizioni di elementi del marketplace.",
-		"errors": {
-			"maxSources": "Massimo {{max}} sorgenti consentite.",
-			"emptyUrl": "L'URL non può essere vuoto.",
-			"nonVisibleChars": "L'URL contiene caratteri non visibili.",
-			"invalidGitUrl": "Formato URL Git non valido.",
-			"duplicateUrl": "Esiste già una sorgente con questo URL.",
-			"nameTooLong": "Il nome non può superare i 20 caratteri.",
-			"nonVisibleCharsName": "Il nome contiene caratteri non visibili.",
-			"duplicateName": "Esiste già una sorgente con questo nome."
+			"selected": "{{count}} tag selezionat{{count !== 1 ? 'i' : 'o'}}"
 		},
-		"add": {
-			"namePlaceholder": "Nome sorgente opzionale (es. 'Il mio repository privato')",
-			"urlPlaceholder": "URL repository Git (es. 'https://github.com/user/repo.git')",
-			"urlFormats": "Formati supportati: HTTPS, SSH o percorso file locale.",
-			"button": "Aggiungi sorgente"
+		"sources": {
+			"title": "Sorgenti del marketplace",
+			"description": "Aggiungi o gestisci le sorgenti per gli elementi del marketplace. Ogni sorgente è un repository Git contenente definizioni di elementi del marketplace.",
+			"errors": {
+				"maxSources": "Massimo {{max}} sorgenti consentite.",
+				"emptyUrl": "L'URL non può essere vuoto.",
+				"nonVisibleChars": "L'URL contiene caratteri non visibili.",
+				"invalidGitUrl": "Formato URL Git non valido.",
+				"duplicateUrl": "Esiste già una sorgente con questo URL.",
+				"nameTooLong": "Il nome non può superare i 20 caratteri.",
+				"nonVisibleCharsName": "Il nome contiene caratteri non visibili.",
+				"duplicateName": "Esiste già una sorgente con questo nome."
+			},
+			"add": {
+				"namePlaceholder": "Nome sorgente opzionale (es. 'Il mio repository privato')",
+				"urlPlaceholder": "URL repository Git (es. 'https://github.com/user/repo.git')",
+				"urlFormats": "Formati supportati: HTTPS, SSH o percorso file locale.",
+				"button": "Aggiungi sorgente"
+			},
+			"current": {
+				"title": "Sorgenti attuali",
+				"empty": "Nessuna sorgente del marketplace aggiunta ancora.",
+				"emptyHint": "Aggiungi una sorgente sopra per sfogliare gli elementi del marketplace.",
+				"refresh": "Aggiorna sorgente",
+				"remove": "Rimuovi sorgente"
+			}
 		},
-		"current": {
-			"title": "Sorgenti attuali",
-			"empty": "Nessuna sorgente del marketplace aggiunta ancora.",
-			"emptyHint": "Aggiungi una sorgente sopra per sfogliare gli elementi del marketplace.",
-			"refresh": "Aggiorna sorgente",
-			"remove": "Rimuovi sorgente"
-		}
+		"title": "Marketplace"
 	},
+	"done": "Fatto",
+	"refresh": "Aggiorna",
 	"tabs": {
+		"installed": "Installati",
 		"browse": "Sfoglia",
+		"settings": "Impostazioni",
 		"sources": "Sorgenti"
 	},
 	"title": "Marketplace",
@@ -94,7 +97,6 @@
 			"noItems": "Nessun elemento del marketplace trovato.",
 			"emptyHint": "Prova a regolare i filtri o i termini di ricerca"
 		},
-		"count_one": "{{count}} elemento",
-		"count_other": "{{count}} elementi"
+		"count": "{{count}} element{{count !== 1 ? 'i' : 'o'}}"
 	}
 }

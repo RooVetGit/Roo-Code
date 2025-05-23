@@ -95,7 +95,10 @@
 			"nameTooLong": "El nom no pot superar els 20 caràcters.",
 			"nonVisibleCharsName": "El nom conté caràcters no visibles.",
 			"duplicateName": "Ja existeix una font amb aquest nom.",
-			"invalidUrl": "Invalid URL format"
+			"invalidUrl": "Format d'URL no vàlid",
+			"emojiName": "Els caràcters emoji poden causar problemes de visualització"
 		}
-	}
+	},
+	"done": "Fet",
+	"refresh": "Actualitzar"
 }

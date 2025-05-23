@@ -95,8 +95,10 @@
 			"duplicateUrl": "このURLを持つソースはすでに存在します。",
 			"nameTooLong": "名前は20文字を超えることはできません。",
 			"nonVisibleCharsName": "名前に表示されない文字が含まれています。",
-			"duplicateName": "この名前のソースはすでに存在します.",
+			"duplicateName": "この名前のソースはすでに存在します。",
 			"emojiName": "絵文字は表示上の問題を引き起こす可能性があります。"
 		}
-	}
+	},
+	"done": "完了",
+	"refresh": "更新"
 }

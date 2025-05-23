@@ -96,7 +96,9 @@
 			"nonVisibleCharsName": "नाम में गैर-दृश्यमान वर्ण हैं.",
 			"duplicateName": "इस नाम वाला स्रोत पहले से मौजूद है.",
 			"emojiName": "इमोजी वर्णों के कारण प्रदर्शन संबंधी समस्याएँ हो सकती हैं.",
-			"invalidUrl": "Invalid URL format"
+			"invalidUrl": "अमान्य URL स्वरूप"
 		}
-	}
+	},
+	"done": "पूर्ण",
+	"refresh": "रीफ्रेश करें"
 }

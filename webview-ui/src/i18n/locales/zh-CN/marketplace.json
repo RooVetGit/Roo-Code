@@ -65,18 +65,18 @@
 			"removeProject": "移除（项目）",
 			"removeGlobal": "移除（全局）",
 			"viewSource": "查看",
-			"viewOnSource": "在 {{source}} 上查看",
-			"installProjectTooltip": "项目安装"
+			"viewOnSource": "在 {{source}} 上查看"
 		}
 	},
+	"installProjectTooltip": "项目安装",
 	"sources": {
 		"title": "市场来源",
 		"description": "添加或管理 Marketplace 项目的来源。每个来源都是包含 Marketplace 项目定义的 Git 存储库。",
 		"add": {
 			"title": "添加新来源",
-			"urlPlaceholder": "Git 仓库 URL（例如“https://github.com/user/repo.git”)",
+			"urlPlaceholder": "Git 仓库 URL（例如 'https://github.com/user/repo.git'）",
 			"urlFormats": "支持的格式：HTTPS、SSH 或本地文件路径。",
-			"namePlaceholder": "可选来源名称（例如“我的私有仓库”）",
+			"namePlaceholder": "可选来源名称（例如 '我的私有仓库'）",
 			"button": "添加来源"
 		},
 		"current": {
@@ -91,11 +91,14 @@
 			"emptyUrl": "URL 不能为空。",
 			"nonVisibleChars": "URL 包含不可见字符。",
 			"invalidGitUrl": "无效的 Git URL 格式。",
+			"invalidUrl": "无效的 URL 格式",
 			"duplicateUrl": "具有此 URL 的来源已存在。",
 			"nameTooLong": "名称不得超过 20 个字符。",
 			"nonVisibleCharsName": "名称包含不可见字符。",
 			"duplicateName": "具有此名称的来源已存在。",
 			"emojiName": "表情符号可能导致显示问题。"
 		}
-	}
+	},
+	"done": "完成",
+	"refresh": "刷新"
 }

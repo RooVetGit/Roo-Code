@@ -46,43 +46,46 @@
 		},
 		"tags": {
 			"label": "Tags",
-			"clear_one": "Effacer {{count}} tag sélectionné",
-			"clear_other": "Effacer {{count}} tags sélectionnés",
+			"clear": "Effacer {{count}} tag{{count !== 1 ? 's' : ''}} sélectionné{{count !== 1 ? 's' : ''}}",
 			"placeholder": "Rechercher des tags...",
 			"noResults": "Aucun tag trouvé.",
-			"selected_one": "{{count}} tag sélectionné",
-			"selected_other": "{{count}} tags sélectionnés"
-		}
-	},
-	"sources": {
-		"title": "Sources de la place de marché",
-		"description": "Ajoutez ou gérez les sources des éléments de la place de marché. Chaque source est un dépôt Git contenant des définitions d'éléments de la place de marché.",
-		"errors": {
-			"maxSources": "Maximum de {{max}} sources autorisées.",
-			"emptyUrl": "L'URL ne peut pas être vide.",
-			"nonVisibleChars": "L'URL contient des caractères non visibles.",
-			"invalidGitUrl": "Format d'URL Git invalide.",
-			"duplicateUrl": "Une source avec cette URL existe déjà.",
-			"nameTooLong": "Le nom ne peut pas dépasser 20 caractères.",
-			"nonVisibleCharsName": "Le nom contient des caractères non visibles.",
-			"duplicateName": "Une source avec ce nom existe déjà."
+			"selected": "{{count}} tag{{count !== 1 ? 's' : ''}} sélectionné{{count !== 1 ? 's' : ''}}"
 		},
-		"add": {
-			"namePlaceholder": "Nom de source facultatif (par exemple, 'Mon dépôt privé')",
-			"urlPlaceholder": "URL du dépôt Git (par exemple, 'https://github.com/user/repo.git')",
-			"urlFormats": "Formats pris en charge : HTTPS, SSH ou chemin de fichier local.",
-			"button": "Ajouter une source"
+		"sources": {
+			"title": "Sources de la place de marché",
+			"description": "Ajoutez ou gérez les sources des éléments de la place de marché. Chaque source est un dépôt Git contenant des définitions d'éléments de la place de marché.",
+			"errors": {
+				"maxSources": "Maximum de {{max}} sources autorisées.",
+				"emptyUrl": "L'URL ne peut pas être vide.",
+				"nonVisibleChars": "L'URL contient des caractères non visibles.",
+				"invalidGitUrl": "Format d'URL Git invalide.",
+				"duplicateUrl": "Une source avec cette URL existe déjà.",
+				"nameTooLong": "Le nom ne peut pas dépasser 20 caractères.",
+				"nonVisibleCharsName": "Le nom contient des caractères non visibles.",
+				"duplicateName": "Une source avec ce nom existe déjà."
+			},
+			"add": {
+				"namePlaceholder": "Nom de source facultatif (par exemple, 'Mon dépôt privé')",
+				"urlPlaceholder": "URL du dépôt Git (par exemple, 'https://github.com/user/repo.git')",
+				"urlFormats": "Formats pris en charge : HTTPS, SSH ou chemin de fichier local.",
+				"button": "Ajouter une source"
+			},
+			"current": {
+				"title": "Sources actuelles",
+				"empty": "Aucune source de place de marché ajoutée pour l'instant.",
+				"emptyHint": "Ajoutez une source ci-dessus pour parcourir les éléments de la place de marché.",
+				"refresh": "Actualiser la source",
+				"remove": "Supprimer la source"
+			}
 		},
-		"current": {
-			"title": "Sources actuelles",
-			"empty": "Aucune source de place de marché ajoutée pour l'instant.",
-			"emptyHint": "Ajoutez une source ci-dessus pour parcourir les éléments de la place de marché.",
-			"refresh": "Actualiser la source",
-			"remove": "Supprimer la source"
-		}
+		"title": "Place de marché"
 	},
+	"done": "Terminé",
+	"refresh": "Actualiser",
 	"tabs": {
+		"installed": "Installé",
 		"browse": "Parcourir",
+		"settings": "Paramètres",
 		"sources": "Sources"
 	},
 	"title": "Place de marché",
@@ -94,7 +97,6 @@
 			"noItems": "Aucun élément de place de marché trouvé.",
 			"emptyHint": "Essayez d'ajuster vos filtres ou termes de recherche"
 		},
-		"count_one": "{{count}} élément",
-		"count_other": "{{count}} éléments"
+		"count": "{{count}} élément{{count !== 1 ? 's' : ''}}"
 	}
 }

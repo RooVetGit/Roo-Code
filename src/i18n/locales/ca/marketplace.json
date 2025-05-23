@@ -46,46 +46,47 @@
 		},
 		"tags": {
 			"label": "Etiquetes",
-			"clear_one": "Esborra {{count}} etiqueta seleccionada",
-			"clear_other": "Esborra {{count}} etiquetes seleccionades",
+			"clear": "Esborra {{count}} etiquet{{count !== 1 ? 'es seleccionades' : 'a seleccionada'}}",
 			"placeholder": "Cerca etiquetes...",
 			"noResults": "No s'han trobat etiquetes.",
-			"selected_one": "{{count}} etiqueta seleccionada",
-			"selected_other": "{{count}} etiquetes seleccionades"
-		}
-	},
-	"sources": {
-		"title": "Fonts del mercat",
-		"description": "Afegeix o gestiona fonts per als elements del mercat. Cada font és un repositori Git que conté definicions d'elements del mercat.",
-		"errors": {
-			"maxSources": "Màxim de {{max}} fonts permeses.",
-			"emptyUrl": "La URL no pot estar buida.",
-			"nonVisibleChars": "La URL conté caràcters no visibles.",
-			"invalidGitUrl": "Format d'URL de Git no vàlid.",
-			"duplicateUrl": "Ja existeix una font amb aquesta URL.",
-			"nameTooLong": "El nom no pot superar els 20 caràcters.",
-			"nonVisibleCharsName": "El nom conté caràcters no visibles.",
-			"duplicateName": "Ja existeix una font amb aquest nom."
+			"selected": "{{count}} etiquet{{count !== 1 ? 'es seleccionades' : 'a seleccionada'}}"
 		},
-		"add": {
-			"namePlaceholder": "Nom opcional de la font (p. ex. 'El meu repositori privat')",
-			"urlPlaceholder": "URL del repositori Git (p. ex. 'https://github.com/user/repo.git')",
-			"urlFormats": "Formats compatibles: HTTPS, SSH o ruta de fitxer local.",
-			"button": "Afegeix font"
+		"sources": {
+			"title": "Fonts del mercat",
+			"description": "Afegeix o gestiona fonts per als elements del mercat. Cada font és un repositori Git que conté definicions d'elements del mercat.",
+			"errors": {
+				"maxSources": "Màxim de {{max}} fonts permeses.",
+				"emptyUrl": "La URL no pot estar buida.",
+				"nonVisibleChars": "La URL conté caràcters no visibles.",
+				"invalidGitUrl": "Format d'URL de Git no vàlid.",
+				"duplicateUrl": "Ja existeix una font amb aquesta URL.",
+				"nameTooLong": "El nom no pot superar els 20 caràcters.",
+				"nonVisibleCharsName": "El nom conté caràcters no visibles.",
+				"duplicateName": "Ja existeix una font amb aquest nom."
+			},
+			"add": {
+				"namePlaceholder": "Nom opcional de la font (p. ex. 'El meu repositori privat')",
+				"urlPlaceholder": "URL del repositori Git (p. ex. 'https://github.com/user/repo.git')",
+				"urlFormats": "Formats compatibles: HTTPS, SSH o ruta de fitxer local.",
+				"button": "Afegeix font"
+			},
+			"current": {
+				"title": "Fonts actuals",
+				"empty": "Encara no s'han afegit fonts del mercat.",
+				"emptyHint": "Afegeix una font a dalt per explorar els elements del mercat.",
+				"refresh": "Actualitza la font",
+				"remove": "Elimina la font"
+			}
 		},
-		"current": {
-			"title": "Fonts actuals",
-			"empty": "Encara no s'han afegit fonts del mercat.",
-			"emptyHint": "Afegeix una font a dalt per explorar els elements del mercat.",
-			"refresh": "Actualitza la font",
-			"remove": "Elimina la font"
-		}
+		"title": "Mercat"
 	},
+	"done": "Fet",
+	"refresh": "Actualitza",
 	"tabs": {
+		"installed": "Instal·lat",
 		"browse": "Explora",
-		"sources": "Fonts"
+		"settings": "Configuració"
 	},
-	"title": "Mercat",
 	"items": {
 		"refresh": {
 			"refreshing": "Actualitzant elements del mercat..."
@@ -94,7 +95,6 @@
 			"noItems": "No s'han trobat elements del mercat.",
 			"emptyHint": "Prova d'ajustar els filtres o els termes de cerca"
 		},
-		"count_one": "{{count}} element",
-		"count_other": "{{count}} elements"
+		"count": "{{count}} element{{count !== 1 ? 's' : ''}}"
 	}
 }

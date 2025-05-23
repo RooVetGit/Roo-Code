@@ -46,45 +46,46 @@
 		},
 		"tags": {
 			"label": "Tagi",
-			"clear_one": "Wyczyść {{count}} wybrany tag",
-			"clear_few": "Wyczyść {{count}} wybrane tagi",
-			"clear_many": "Wyczyść {{count}} wybranych tagów",
+			"clear": "Wyczyść {{count}} wybran{{count === 1 ? 'y' : count < 5 ? 'e' : 'ych'}} tag{{count === 1 ? '' : count < 5 ? 'i' : 'ów'}}",
 			"placeholder": "Szukaj tagów...",
 			"noResults": "Nie znaleziono tagów.",
-			"selected_one": "{{count}} wybrany tag",
-			"selected_few": "{{count}} wybrane tagi",
-			"selected_many": "{{count}} wybranych tagów"
-		}
-	},
-	"sources": {
-		"title": "Źródła marketplace",
-		"description": "Dodaj lub zarządzaj źródłami elementów marketplace. Każde źródło to repozytorium Git zawierające definicje elementów marketplace.",
-		"errors": {
-			"maxSources": "Maksymalnie {{max}} źródeł dozwolonych.",
-			"emptyUrl": "URL nie może być pusty.",
-			"nonVisibleChars": "URL zawiera niewidoczne znaki.",
-			"invalidGitUrl": "Nieprawidłowy format URL Git.",
-			"duplicateUrl": "Źródło z tym URL już istnieje.",
-			"nameTooLong": "Nazwa nie może przekraczać 20 znaków.",
-			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki.",
-			"duplicateName": "Źródło z tą nazwą już istnieje."
+			"selected": "{{count}} wybran{{count === 1 ? 'y' : count < 5 ? 'e' : 'ych'}} tag{{count === 1 ? '' : count < 5 ? 'i' : 'ów'}}"
 		},
-		"add": {
-			"namePlaceholder": "Opcjonalna nazwa źródła (np. 'Moje prywatne repo')",
-			"urlPlaceholder": "URL repozytorium Git (np. 'https://github.com/user/repo.git')",
-			"urlFormats": "Obsługiwane formaty: HTTPS, SSH lub lokalna ścieżka pliku.",
-			"button": "Dodaj źródło"
+		"sources": {
+			"title": "Źródła marketplace",
+			"description": "Dodaj lub zarządzaj źródłami elementów marketplace. Każde źródło to repozytorium Git zawierające definicje elementów marketplace.",
+			"errors": {
+				"maxSources": "Maksymalnie {{max}} źródeł dozwolonych.",
+				"emptyUrl": "URL nie może być pusty.",
+				"nonVisibleChars": "URL zawiera niewidoczne znaki.",
+				"invalidGitUrl": "Nieprawidłowy format URL Git.",
+				"duplicateUrl": "Źródło z tym URL już istnieje.",
+				"nameTooLong": "Nazwa nie może przekraczać 20 znaków.",
+				"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki.",
+				"duplicateName": "Źródło z tą nazwą już istnieje."
+			},
+			"add": {
+				"namePlaceholder": "Opcjonalna nazwa źródła (np. 'Moje prywatne repo')",
+				"urlPlaceholder": "URL repozytorium Git (np. 'https://github.com/user/repo.git')",
+				"urlFormats": "Obsługiwane formaty: HTTPS, SSH lub lokalna ścieżka pliku.",
+				"button": "Dodaj źródło"
+			},
+			"current": {
+				"title": "Aktualne źródła",
+				"empty": "Nie dodano jeszcze żadnych źródeł marketplace.",
+				"emptyHint": "Dodaj źródło powyżej, aby przeglądać elementy marketplace.",
+				"refresh": "Odśwież źródło",
+				"remove": "Usuń źródło"
+			}
 		},
-		"current": {
-			"title": "Aktualne źródła",
-			"empty": "Nie dodano jeszcze żadnych źródeł marketplace.",
-			"emptyHint": "Dodaj źródło powyżej, aby przeglądać elementy marketplace.",
-			"refresh": "Odśwież źródło",
-			"remove": "Usuń źródło"
-		}
+		"title": "Marketplace"
 	},
+	"done": "Gotowe",
+	"refresh": "Odśwież",
 	"tabs": {
+		"installed": "Zainstalowane",
 		"browse": "Przeglądaj",
+		"settings": "Ustawienia",
 		"sources": "Źródła"
 	},
 	"title": "Marketplace",
@@ -96,8 +97,6 @@
 			"noItems": "Nie znaleziono elementów marketplace.",
 			"emptyHint": "Spróbuj dostosować filtry lub wyszukiwane hasła"
 		},
-		"count_one": "{{count}} element",
-		"count_few": "{{count}} elementy",
-		"count_many": "{{count}} elementów"
+		"count": "{{count}} element{{count === 1 ? '' : count < 5 ? 'y' : 'ów'}}"
 	}
 }

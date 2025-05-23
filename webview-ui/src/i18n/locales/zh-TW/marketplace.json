@@ -65,18 +65,18 @@
 			"removeProject": "移除",
 			"removeGlobal": "移除 (全域)",
 			"viewSource": "檢視",
-			"viewOnSource": "在 {{source}} 上檢視",
-			"installProjectTooltip": "專案安裝"
+			"viewOnSource": "在 {{source}} 上檢視"
 		}
 	},
+	"installProjectTooltip": "專案安裝",
 	"sources": {
 		"title": "市集來源",
 		"description": "新增或管理 Marketplace 項目的來源。每個來源都是包含 Marketplace 項目定義的 Git 儲存庫。",
 		"add": {
 			"title": "新增來源",
-			"urlPlaceholder": "Git 儲存庫 URL (例如：「https://github.com/user/repo.git」)",
+			"urlPlaceholder": "Git 儲存庫 URL (例如：'https://github.com/user/repo.git')",
 			"urlFormats": "支援的格式：HTTPS、SSH 或本機檔案路徑。",
-			"namePlaceholder": "選用來源名稱 (例如：「我的私有儲存庫」)",
+			"namePlaceholder": "選用來源名稱 (例如：'我的私有儲存庫')",
 			"button": "新增來源"
 		},
 		"current": {
@@ -91,11 +91,14 @@
 			"emptyUrl": "URL 不能為空。",
 			"nonVisibleChars": "URL 包含不可見字元。",
 			"invalidGitUrl": "無效的 Git URL 格式。",
+			"invalidUrl": "無效的 URL 格式",
 			"duplicateUrl": "具有此 URL 的來源已存在。",
 			"nameTooLong": "名稱不得超過 20 個字元。",
 			"nonVisibleCharsName": "名稱包含不可見字元。",
 			"duplicateName": "具有此名稱的來源已存在。",
 			"emojiName": "表情符號可能會導致顯示問題。"
 		}
-	}
+	},
+	"done": "完成",
+	"refresh": "重新整理"
 }

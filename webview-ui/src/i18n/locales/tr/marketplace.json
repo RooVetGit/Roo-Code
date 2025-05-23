@@ -65,10 +65,10 @@
 			"removeProject": "Kaldır",
 			"removeGlobal": "Kaldır (Global)",
 			"viewSource": "Görüntüle",
-			"viewOnSource": "{{source}} üzerinde görüntüle",
-			"installProjectTooltip": "Proje kurulumu"
+			"viewOnSource": "{{source}} üzerinde görüntüle"
 		}
 	},
+	"installProjectTooltip": "Proje kurulumu",
 	"sources": {
 		"title": "Marketplace Kaynakları",
 		"description": "Marketplace öğeleri için kaynak ekleyin veya yönetin. Her kaynak, Marketplace öğe tanımlarını içeren bir Git deposudur.",
@@ -91,11 +91,14 @@
 			"emptyUrl": "URL boş olamaz.",
 			"nonVisibleChars": "URL görünmeyen karakterler içeriyor.",
 			"invalidGitUrl": "Geçersiz Git URL biçimi.",
+			"invalidUrl": "Geçersiz URL biçimi",
 			"duplicateUrl": "Bu URL zaten listede (büyük/küçük harf ve boşluk duyarsız eşleşme)",
 			"nameTooLong": "İsim 20 karakteri geçemez.",
 			"nonVisibleCharsName": "Ad görünmeyen karakterler içeriyor.",
 			"duplicateName": "Bu ada sahip bir kaynak zaten var.",
 			"emojiName": "Emoji karakterleri görüntüleme sorunlarına neden olabilir."
 		}
-	}
+	},
+	"done": "Tamam",
+	"refresh": "Yenile"
 }

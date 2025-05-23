@@ -65,10 +65,10 @@
 			"removeProject": "Удалить",
 			"removeGlobal": "Удалить (Глобально)",
 			"viewSource": "Просмотреть",
-			"viewOnSource": "Просмотреть на {{source}}",
-			"installProjectTooltip": "Установка проекта"
+			"viewOnSource": "Просмотреть на {{source}}"
 		}
 	},
+	"installProjectTooltip": "Установка проекта",
 	"sources": {
 		"title": "Источники Marketplace",
 		"description": "Добавьте или управляйте источниками для элементов Marketplace. Каждый источник — это репозиторий Git, содержащий определения элементов Marketplace.",
@@ -91,11 +91,14 @@
 			"emptyUrl": "URL-адрес не может быть пустым.",
 			"nonVisibleChars": "URL-адрес содержит невидимые символы.",
 			"invalidGitUrl": "Недопустимый формат URL-адреса Git.",
+			"invalidUrl": "Недопустимый формат URL-адреса",
 			"duplicateUrl": "Источник с этим URL-адресом уже существует.",
 			"nameTooLong": "Имя не может превышать 20 символов.",
 			"nonVisibleCharsName": "Имя содержит невидимые символы.",
 			"duplicateName": "Источник с этим именем уже существует.",
 			"emojiName": "Символы эмодзи могут вызвать проблемы с отображением."
 		}
-	}
+	},
+	"done": "Готово",
+	"refresh": "Обновить"
 }

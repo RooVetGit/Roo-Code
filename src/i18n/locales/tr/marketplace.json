@@ -50,37 +50,43 @@
 			"placeholder": "Etiket ara...",
 			"noResults": "Etiket bulunamadı.",
 			"selected": "{{count}} etiket seçili"
-		}
-	},
-	"sources": {
-		"title": "Marketplace Kaynakları",
-		"description": "Marketplace öğeleri için kaynak ekleyin veya yönetin. Her kaynak, marketplace öğe tanımlarını içeren bir Git deposudur.",
-		"errors": {
-			"maxSources": "Maksimum {{max}} kaynağa izin verilir.",
-			"emptyUrl": "URL boş olamaz.",
-			"nonVisibleChars": "URL görünmez karakterler içeriyor.",
-			"invalidGitUrl": "Geçersiz Git URL formatı.",
-			"duplicateUrl": "Bu URL'ye sahip bir kaynak zaten var.",
-			"nameTooLong": "Ad 20 karakteri geçemez.",
-			"nonVisibleCharsName": "Ad görünmez karakterler içeriyor.",
-			"duplicateName": "Bu ada sahip bir kaynak zaten var."
 		},
-		"add": {
-			"namePlaceholder": "İsteğe bağlı kaynak adı (örn. 'Özel Depom')",
-			"urlPlaceholder": "Git deposu URL'si (örn. 'https://github.com/user/repo.git')",
-			"urlFormats": "Desteklenen formatlar: HTTPS, SSH veya yerel dosya yolu.",
-			"button": "Kaynak Ekle"
+		"sources": {
+			"title": "Marketplace Kaynakları",
+			"description": "Marketplace öğeleri için kaynak ekleyin veya yönetin. Her kaynak, marketplace öğe tanımlarını içeren bir Git deposudur.",
+			"errors": {
+				"maxSources": "Maksimum {{max}} kaynağa izin verilir.",
+				"emptyUrl": "URL boş olamaz.",
+				"nonVisibleChars": "URL görünmez karakterler içeriyor.",
+				"invalidGitUrl": "Geçersiz Git URL formatı.",
+				"invalidUrl": "Geçersiz URL formatı",
+				"duplicateUrl": "Bu URL'ye sahip bir kaynak zaten var.",
+				"nameTooLong": "Ad 20 karakteri geçemez.",
+				"nonVisibleCharsName": "Ad görünmez karakterler içeriyor.",
+				"duplicateName": "Bu ada sahip bir kaynak zaten var."
+			},
+			"add": {
+				"namePlaceholder": "İsteğe bağlı kaynak adı (örn. 'Özel Depom')",
+				"urlPlaceholder": "Git deposu URL'si (örn. 'https://github.com/user/repo.git')",
+				"urlFormats": "Desteklenen formatlar: HTTPS, SSH veya yerel dosya yolu.",
+				"button": "Kaynak Ekle"
+			},
+			"current": {
+				"title": "Mevcut Kaynaklar",
+				"empty": "Henüz marketplace kaynağı eklenmedi.",
+				"emptyHint": "Marketplace öğelerine göz atmak için yukarıdan bir kaynak ekleyin.",
+				"refresh": "Kaynağı yenile",
+				"remove": "Kaynağı kaldır"
+			}
 		},
-		"current": {
-			"title": "Mevcut Kaynaklar",
-			"empty": "Henüz marketplace kaynağı eklenmedi.",
-			"emptyHint": "Marketplace öğelerine göz atmak için yukarıdan bir kaynak ekleyin.",
-			"refresh": "Kaynağı yenile",
-			"remove": "Kaynağı kaldır"
-		}
+		"title": "Marketplace"
 	},
+	"done": "Tamam",
+	"refresh": "Yenile",
 	"tabs": {
+		"installed": "Yüklendi",
 		"browse": "Göz At",
+		"settings": "Ayarlar",
 		"sources": "Kaynaklar"
 	},
 	"title": "Marketplace",

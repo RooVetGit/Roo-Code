@@ -46,46 +46,47 @@
 		},
 		"tags": {
 			"label": "Tags",
-			"clear_one": "{{count}} ausgewählten Tag löschen",
-			"clear_other": "{{count}} ausgewählte Tags löschen",
+			"clear": "{{count}} ausgewählte{{count !== 1 ? 'n' : ''}} Tag{{count !== 1 ? 's' : ''}} löschen",
 			"placeholder": "Tags durchsuchen...",
 			"noResults": "Keine Tags gefunden.",
-			"selected_one": "{{count}} Tag ausgewählt",
-			"selected_other": "{{count}} Tags ausgewählt"
-		}
-	},
-	"sources": {
-		"title": "Marktplatz-Quellen",
-		"description": "Füge Quellen für Marktplatz-Items hinzu oder verwalte sie. Jede Quelle ist ein Git-Repository, das Marktplatz-Item-Definitionen enthält.",
-		"errors": {
-			"maxSources": "Maximal {{max}} Quellen erlaubt.",
-			"emptyUrl": "URL darf nicht leer sein.",
-			"nonVisibleChars": "URL enthält nicht sichtbare Zeichen.",
-			"invalidGitUrl": "Ungültiges Git-URL-Format.",
-			"duplicateUrl": "Quelle mit dieser URL existiert bereits.",
-			"nameTooLong": "Name darf 20 Zeichen nicht überschreiten.",
-			"nonVisibleCharsName": "Name enthält nicht sichtbare Zeichen.",
-			"duplicateName": "Quelle mit diesem Namen existiert bereits."
+			"selected": "{{count}} Tag{{count !== 1 ? 's' : ''}} ausgewählt"
 		},
-		"add": {
-			"namePlaceholder": "Optionaler Quellname (z.B. 'Mein privates Repo')",
-			"urlPlaceholder": "Git-Repository-URL (z.B. 'https://github.com/user/repo.git')",
-			"urlFormats": "Unterstützte Formate: HTTPS, SSH oder lokaler Dateipfad.",
-			"button": "Quelle hinzufügen"
+		"sources": {
+			"title": "Marktplatz-Quellen",
+			"description": "Füge Quellen für Marktplatz-Items hinzu oder verwalte sie. Jede Quelle ist ein Git-Repository, das Marktplatz-Item-Definitionen enthält.",
+			"errors": {
+				"maxSources": "Maximal {{max}} Quellen erlaubt.",
+				"emptyUrl": "URL darf nicht leer sein.",
+				"nonVisibleChars": "URL enthält nicht sichtbare Zeichen.",
+				"invalidGitUrl": "Ungültiges Git-URL-Format.",
+				"duplicateUrl": "Quelle mit dieser URL existiert bereits.",
+				"nameTooLong": "Name darf 20 Zeichen nicht überschreiten.",
+				"nonVisibleCharsName": "Name enthält nicht sichtbare Zeichen.",
+				"duplicateName": "Quelle mit diesem Namen existiert bereits."
+			},
+			"add": {
+				"namePlaceholder": "Optionaler Quellname (z.B. 'Mein privates Repo')",
+				"urlPlaceholder": "Git-Repository-URL (z.B. 'https://github.com/user/repo.git')",
+				"urlFormats": "Unterstützte Formate: HTTPS, SSH oder lokaler Dateipfad.",
+				"button": "Quelle hinzufügen"
+			},
+			"current": {
+				"title": "Aktuelle Quellen",
+				"empty": "Noch keine Marktplatz-Quellen hinzugefügt.",
+				"emptyHint": "Füge oben eine Quelle hinzu, um Marktplatz-Items zu durchsuchen.",
+				"refresh": "Quelle aktualisieren",
+				"remove": "Quelle entfernen"
+			}
 		},
-		"current": {
-			"title": "Aktuelle Quellen",
-			"empty": "Noch keine Marktplatz-Quellen hinzugefügt.",
-			"emptyHint": "Füge oben eine Quelle hinzu, um Marktplatz-Items zu durchsuchen.",
-			"refresh": "Quelle aktualisieren",
-			"remove": "Quelle entfernen"
-		}
+		"title": "Marktplatz"
 	},
+	"done": "Fertig",
+	"refresh": "Aktualisieren",
 	"tabs": {
+		"installed": "Installiert",
 		"browse": "Durchsuchen",
-		"sources": "Quellen"
+		"settings": "Einstellungen"
 	},
-	"title": "Marktplatz",
 	"items": {
 		"refresh": {
 			"refreshing": "Marktplatz-Items werden aktualisiert..."
@@ -94,7 +95,6 @@
 			"noItems": "Keine Marktplatz-Items gefunden.",
 			"emptyHint": "Versuche, deine Filter oder Suchbegriffe anzupassen"
 		},
-		"count_one": "{{count}} Item",
-		"count_other": "{{count}} Items"
+		"count": "{{count}} Item{{count !== 1 ? 's' : ''}}"
 	}
 }

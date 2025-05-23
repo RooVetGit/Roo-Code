@@ -50,37 +50,42 @@
 			"placeholder": "태그 검색...",
 			"noResults": "태그를 찾을 수 없습니다.",
 			"selected": "태그 {{count}}개 선택됨"
-		}
-	},
-	"sources": {
-		"title": "마켓플레이스 소스",
-		"description": "마켓플레이스 항목의 소스를 추가하거나 관리합니다. 각 소스는 마켓플레이스 항목 정의를 포함하는 Git 리포지토리입니다.",
-		"errors": {
-			"maxSources": "최대 {{max}}개의 소스가 허용됩니다.",
-			"emptyUrl": "URL은 비워둘 수 없습니다.",
-			"nonVisibleChars": "URL에 보이지 않는 문자가 포함되어 있습니다.",
-			"invalidGitUrl": "잘못된 Git URL 형식입니다.",
-			"duplicateUrl": "이 URL을 가진 소스가 이미 존재합니다.",
-			"nameTooLong": "이름은 20자를 초과할 수 없습니다.",
-			"nonVisibleCharsName": "이름에 보이지 않는 문자가 포함되어 있습니다.",
-			"duplicateName": "이 이름을 가진 소스가 이미 존재합니다."
 		},
-		"add": {
-			"namePlaceholder": "선택적 소스 이름 (예: '내 개인 리포지토리')",
-			"urlPlaceholder": "Git 리포지토리 URL (예: 'https://github.com/user/repo.git')",
-			"urlFormats": "지원되는 형식: HTTPS, SSH 또는 로컬 파일 경로.",
-			"button": "소스 추가"
+		"sources": {
+			"title": "마켓플레이스 소스",
+			"description": "마켓플레이스 항목의 소스를 추가하거나 관리합니다. 각 소스는 마켓플레이스 항목 정의를 포함하는 Git 리포지토리입니다.",
+			"errors": {
+				"maxSources": "최대 {{max}}개의 소스가 허용됩니다.",
+				"emptyUrl": "URL은 비워둘 수 없습니다.",
+				"nonVisibleChars": "URL에 보이지 않는 문자가 포함되어 있습니다.",
+				"invalidGitUrl": "잘못된 Git URL 형식입니다.",
+				"duplicateUrl": "이 URL을 가진 소스가 이미 존재합니다.",
+				"nameTooLong": "이름은 20자를 초과할 수 없습니다.",
+				"nonVisibleCharsName": "이름에 보이지 않는 문자가 포함되어 있습니다.",
+				"duplicateName": "이 이름을 가진 소스가 이미 존재합니다."
+			},
+			"add": {
+				"namePlaceholder": "선택적 소스 이름 (예: '내 개인 리포지토리')",
+				"urlPlaceholder": "Git 리포지토리 URL (예: 'https://github.com/user/repo.git')",
+				"urlFormats": "지원되는 형식: HTTPS, SSH 또는 로컬 파일 경로.",
+				"button": "소스 추가"
+			},
+			"current": {
+				"title": "현재 소스",
+				"empty": "아직 마켓플레이스 소스가 추가되지 않았습니다.",
+				"emptyHint": "마켓플레이스 항목을 탐색하려면 위에 소스를 추가하세요.",
+				"refresh": "소스 새로고침",
+				"remove": "소스 제거"
+			}
 		},
-		"current": {
-			"title": "현재 소스",
-			"empty": "아직 마켓플레이스 소스가 추가되지 않았습니다.",
-			"emptyHint": "마켓플레이스 항목을 탐색하려면 위에 소스를 추가하세요.",
-			"refresh": "소스 새로고침",
-			"remove": "소스 제거"
-		}
+		"title": "마켓플레이스"
 	},
+	"done": "완료",
+	"refresh": "새로고침",
 	"tabs": {
+		"installed": "설치됨",
 		"browse": "찾아보기",
+		"settings": "설정",
 		"sources": "소스"
 	},
 	"title": "마켓플레이스",

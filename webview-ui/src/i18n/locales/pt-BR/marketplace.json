@@ -65,10 +65,10 @@
 			"removeProject": "Remover",
 			"removeGlobal": "Remover (Global)",
 			"viewSource": "Ver",
-			"viewOnSource": "Ver no {{source}}",
-			"installProjectTooltip": "Instalação do projeto"
+			"viewOnSource": "Ver no {{source}}"
 		}
 	},
+	"installProjectTooltip": "Instalação do projeto",
 	"sources": {
 		"title": "Fontes do Marketplace",
 		"description": "Adicione ou gerencie fontes para os itens do Marketplace. Cada fonte é um repositório Git que contém definições de itens do Marketplace.",
@@ -91,11 +91,14 @@
 			"emptyUrl": "A URL não pode estar vazia.",
 			"nonVisibleChars": "A URL contém caracteres não visíveis.",
 			"invalidGitUrl": "Formato de URL Git inválido.",
+			"invalidUrl": "Formato de URL inválido",
 			"duplicateUrl": "Já existe uma fonte com este URL.",
 			"nameTooLong": "O nome não pode exceder 20 caracteres.",
 			"nonVisibleCharsName": "O nome contém caracteres não visíveis.",
 			"duplicateName": "Já existe uma fonte com este nome.",
 			"emojiName": "Caracteres emoji podem causar problemas de exibição."
 		}
-	}
+	},
+	"done": "Concluído",
+	"refresh": "Atualizar"
 }

@@ -65,10 +65,10 @@
 			"removeProject": "Gỡ cài đặt",
 			"removeGlobal": "Gỡ cài đặt (Toàn cục)",
 			"viewSource": "Xem",
-			"viewOnSource": "Xem trên {{source}}",
-			"installProjectTooltip": "Cài đặt dự án"
+			"viewOnSource": "Xem trên {{source}}"
 		}
 	},
+	"installProjectTooltip": "Cài đặt dự án",
 	"sources": {
 		"title": "Nguồn Marketplace",
 		"description": "Thêm hoặc quản lý nguồn cho các mục Marketplace. Mỗi nguồn là một kho Git chứa các định nghĩa mục Marketplace.",
@@ -91,11 +91,14 @@
 			"emptyUrl": "Không được để trống URL.",
 			"nonVisibleChars": "URL chứa các ký tự không hiển thị.",
 			"invalidGitUrl": "Định dạng URL Git không hợp lệ.",
+			"invalidUrl": "Định dạng URL không hợp lệ",
 			"duplicateUrl": "Đã có một nguồn có URL này.",
 			"nameTooLong": "Tên không được dài hơn 20 ký tự.",
 			"nonVisibleCharsName": "Tên chứa các ký tự không hiển thị.",
 			"duplicateName": "Đã có một nguồn có tên này.",
 			"emojiName": "Ký tự biểu tượng cảm xúc có thể gây ra sự cố hiển thị."
 		}
-	}
+	},
+	"done": "Xong",
+	"refresh": "Làm mới"
 }

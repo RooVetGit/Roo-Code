@@ -50,37 +50,43 @@
 			"placeholder": "搜尋標籤...",
 			"noResults": "找不到標籤。",
 			"selected": "已選取 {{count}} 個標籤"
-		}
-	},
-	"sources": {
-		"title": "市集來源",
-		"description": "新增或管理市集項目的來源。每個來源都是一個包含市集項目定義的 Git 儲存庫。",
-		"errors": {
-			"maxSources": "最多允許 {{max}} 個來源。",
-			"emptyUrl": "URL 不能為空。",
-			"nonVisibleChars": "URL 包含不可見字元。",
-			"invalidGitUrl": "無效的 Git URL 格式。",
-			"duplicateUrl": "具有此 URL 的來源已存在。",
-			"nameTooLong": "名稱不能超過 20 個字元。",
-			"nonVisibleCharsName": "名稱包含不可見字元。",
-			"duplicateName": "具有此名稱的來源已存在。"
 		},
-		"add": {
-			"namePlaceholder": "選用來源名稱（例如 '我的私人儲存庫'）",
-			"urlPlaceholder": "Git 儲存庫 URL（例如 'https://github.com/user/repo.git'）",
-			"urlFormats": "支援的格式：HTTPS、SSH 或本機檔案路徑。",
-			"button": "新增來源"
+		"sources": {
+			"title": "市集來源",
+			"description": "新增或管理市集項目的來源。每個來源都是一個包含市集項目定義的 Git 儲存庫。",
+			"errors": {
+				"maxSources": "最多允許 {{max}} 個來源。",
+				"emptyUrl": "URL 不能為空。",
+				"nonVisibleChars": "URL 包含不可見字元。",
+				"invalidGitUrl": "無效的 Git URL 格式。",
+				"invalidUrl": "無效的 URL 格式",
+				"duplicateUrl": "具有此 URL 的來源已存在。",
+				"nameTooLong": "名稱不能超過 20 個字元。",
+				"nonVisibleCharsName": "名稱包含不可見字元。",
+				"duplicateName": "具有此名稱的來源已存在。"
+			},
+			"add": {
+				"namePlaceholder": "選用來源名稱（例如 '我的私人儲存庫'）",
+				"urlPlaceholder": "Git 儲存庫 URL（例如 'https://github.com/user/repo.git'）",
+				"urlFormats": "支援的格式：HTTPS、SSH 或本機檔案路徑。",
+				"button": "新增來源"
+			},
+			"current": {
+				"title": "目前來源",
+				"empty": "尚未新增市集來源。",
+				"emptyHint": "在上方新增來源以瀏覽市集項目。",
+				"refresh": "重新整理來源",
+				"remove": "移除來源"
+			}
 		},
-		"current": {
-			"title": "目前來源",
-			"empty": "尚未新增市集來源。",
-			"emptyHint": "在上方新增來源以瀏覽市集項目。",
-			"refresh": "重新整理來源",
-			"remove": "移除來源"
-		}
+		"title": "市集"
 	},
+	"done": "完成",
+	"refresh": "重新整理",
 	"tabs": {
+		"installed": "已安裝",
 		"browse": "瀏覽",
+		"settings": "設定",
 		"sources": "來源"
 	},
 	"title": "市集",

@@ -98,5 +98,7 @@
 			"duplicateName": "Źródło o tej nazwie już istnieje.",
 			"emojiName": "Znaki emoji mogą powodować problemy z wyświetlaniem."
 		}
-	}
+	},
+	"done": "Gotowe",
+	"refresh": "Odśwież"
 }

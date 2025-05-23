@@ -50,37 +50,43 @@
 			"placeholder": "Tìm kiếm thẻ...",
 			"noResults": "Không tìm thấy thẻ nào.",
 			"selected": "{{count}} thẻ đã chọn"
-		}
-	},
-	"sources": {
-		"title": "Nguồn marketplace",
-		"description": "Thêm hoặc quản lý các nguồn cho các mục marketplace. Mỗi nguồn là một kho lưu trữ Git chứa các định nghĩa mục marketplace.",
-		"errors": {
-			"maxSources": "Tối đa {{max}} nguồn được phép.",
-			"emptyUrl": "URL không được để trống.",
-			"nonVisibleChars": "URL chứa các ký tự không hiển thị.",
-			"invalidGitUrl": "Định dạng URL Git không hợp lệ.",
-			"duplicateUrl": "Nguồn với URL này đã tồn tại.",
-			"nameTooLong": "Tên không được vượt quá 20 ký tự.",
-			"nonVisibleCharsName": "Tên chứa các ký tự không hiển thị.",
-			"duplicateName": "Nguồn với tên này đã tồn tại."
 		},
-		"add": {
-			"namePlaceholder": "Tên nguồn tùy chọn (ví dụ: 'Kho lưu trữ riêng của tôi')",
-			"urlPlaceholder": "URL kho lưu trữ Git (ví dụ: 'https://github.com/user/repo.git')",
-			"urlFormats": "Các định dạng được hỗ trợ: HTTPS, SSH hoặc đường dẫn tệp cục bộ.",
-			"button": "Thêm nguồn"
+		"sources": {
+			"title": "Nguồn marketplace",
+			"description": "Thêm hoặc quản lý các nguồn cho các mục marketplace. Mỗi nguồn là một kho lưu trữ Git chứa các định nghĩa mục marketplace.",
+			"errors": {
+				"maxSources": "Tối đa {{max}} nguồn được phép.",
+				"emptyUrl": "URL không được để trống.",
+				"nonVisibleChars": "URL chứa các ký tự không hiển thị.",
+				"invalidGitUrl": "Định dạng URL Git không hợp lệ.",
+				"invalidUrl": "Định dạng URL không hợp lệ",
+				"duplicateUrl": "Nguồn với URL này đã tồn tại.",
+				"nameTooLong": "Tên không được vượt quá 20 ký tự.",
+				"nonVisibleCharsName": "Tên chứa các ký tự không hiển thị.",
+				"duplicateName": "Nguồn với tên này đã tồn tại."
+			},
+			"add": {
+				"namePlaceholder": "Tên nguồn tùy chọn (ví dụ: 'Kho lưu trữ riêng của tôi')",
+				"urlPlaceholder": "URL kho lưu trữ Git (ví dụ: 'https://github.com/user/repo.git')",
+				"urlFormats": "Các định dạng được hỗ trợ: HTTPS, SSH hoặc đường dẫn tệp cục bộ.",
+				"button": "Thêm nguồn"
+			},
+			"current": {
+				"title": "Nguồn hiện tại",
+				"empty": "Chưa có nguồn marketplace nào được thêm.",
+				"emptyHint": "Thêm nguồn ở trên để duyệt các mục marketplace.",
+				"refresh": "Làm mới nguồn",
+				"remove": "Xóa nguồn"
+			}
 		},
-		"current": {
-			"title": "Nguồn hiện tại",
-			"empty": "Chưa có nguồn marketplace nào được thêm.",
-			"emptyHint": "Thêm nguồn ở trên để duyệt các mục marketplace.",
-			"refresh": "Làm mới nguồn",
-			"remove": "Xóa nguồn"
-		}
+		"title": "Marketplace"
 	},
+	"done": "Xong",
+	"refresh": "Làm mới",
 	"tabs": {
+		"installed": "Đã cài đặt",
 		"browse": "Duyệt",
+		"settings": "Cài đặt",
 		"sources": "Nguồn"
 	},
 	"title": "Marketplace",

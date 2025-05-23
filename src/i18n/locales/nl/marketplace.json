@@ -1,0 +1,102 @@
+{
+	"type-group": {
+		"modes": "Modi",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Pakketten",
+		"generic-type": "{{type}}",
+		"match": "overeenkomst"
+	},
+	"item-card": {
+		"type-mode": "Modus",
+		"type-mcp": "MCP Server",
+		"type-prompt": "Prompt",
+		"type-package": "Pakket",
+		"type-other": "Overig",
+		"by-author": "door {{author}}",
+		"authors-profile": "Profiel van auteur",
+		"remove-tag-filter": "Tag-filter verwijderen: {{tag}}",
+		"filter-by-tag": "Filteren op tag: {{tag}}",
+		"component-details": "Component details",
+		"match-count": "{{count}} overeenkomst{{count !== 1 ? 'en' : ''}}",
+		"view": "Bekijken",
+		"source": "Bron"
+	},
+	"install-sidebar": {
+		"title": "{{itemName}} installeren",
+		"installButton": "Installeren",
+		"cancelButton": "Annuleren"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "Zoeken in marketplace..."
+		},
+		"type": {
+			"label": "Type",
+			"all": "Alle types",
+			"mode": "Modus",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Pakket"
+		},
+		"sort": {
+			"label": "Sorteren op",
+			"name": "Naam",
+			"lastUpdated": "Laatst bijgewerkt"
+		},
+		"tags": {
+			"label": "Tags",
+			"clear": "{{count}} geselecteerde tag{{count !== 1 ? 's' : ''}} wissen",
+			"placeholder": "Zoeken naar tags...",
+			"noResults": "Geen tags gevonden.",
+			"selected": "{{count}} tag{{count !== 1 ? 's' : ''}} geselecteerd"
+		},
+		"sources": {
+			"title": "Marketplace bronnen",
+			"description": "Voeg bronnen toe of beheer ze voor marketplace items. Elke bron is een Git repository met marketplace item definities.",
+			"errors": {
+				"maxSources": "Maximum van {{max}} bronnen toegestaan.",
+				"emptyUrl": "URL mag niet leeg zijn.",
+				"nonVisibleChars": "URL bevat niet-zichtbare tekens.",
+				"invalidGitUrl": "Ongeldig Git URL formaat.",
+				"duplicateUrl": "Er bestaat al een bron met deze URL.",
+				"nameTooLong": "Naam mag niet langer zijn dan 20 tekens.",
+				"nonVisibleCharsName": "Naam bevat niet-zichtbare tekens.",
+				"duplicateName": "Er bestaat al een bron met deze naam."
+			},
+			"add": {
+				"namePlaceholder": "Optionele bronnaam (bijv. 'Mijn privé repo')",
+				"urlPlaceholder": "Git repository URL (bijv. 'https://github.com/user/repo.git')",
+				"urlFormats": "Ondersteunde formaten: HTTPS, SSH of lokaal bestandspad.",
+				"button": "Bron toevoegen"
+			},
+			"current": {
+				"title": "Huidige bronnen",
+				"empty": "Nog geen marketplace bronnen toegevoegd.",
+				"emptyHint": "Voeg hierboven een bron toe om marketplace items te bekijken.",
+				"refresh": "Bron vernieuwen",
+				"remove": "Bron verwijderen"
+			}
+		},
+		"title": "Marketplace"
+	},
+	"done": "Klaar",
+	"refresh": "Vernieuwen",
+	"tabs": {
+		"installed": "Geïnstalleerd",
+		"browse": "Bladeren",
+		"settings": "Instellingen",
+		"sources": "Bronnen"
+	},
+	"title": "Marketplace",
+	"items": {
+		"refresh": {
+			"refreshing": "Marketplace items vernieuwen..."
+		},
+		"empty": {
+			"noItems": "Geen marketplace items gevonden.",
+			"emptyHint": "Probeer je filters of zoektermen aan te passen"
+		},
+		"count": "{{count}} item{{count !== 1 ? 's' : ''}}"
+	}
+}

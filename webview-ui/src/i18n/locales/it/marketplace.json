@@ -98,5 +98,7 @@
 			"duplicateName": "Una fonte con questo nome esiste già.",
 			"emojiName": "I caratteri emoji possono causare problemi di visualizzazione."
 		}
-	}
+	},
+	"done": "Fatto",
+	"refresh": "Aggiorna"
 }

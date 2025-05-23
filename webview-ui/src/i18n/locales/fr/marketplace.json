@@ -96,7 +96,9 @@
 			"nonVisibleCharsName": "Le nom contient des caractères non visibles.",
 			"duplicateName": "Une source avec ce nom existe déjà.",
 			"emojiName": "Les caractères emoji peuvent causer des problèmes d'affichage.",
-			"invalidUrl": "Invalid URL format"
+			"invalidUrl": "Format d'URL non valide"
 		}
-	}
+	},
+	"done": "Terminé",
+	"refresh": "Actualiser"
 }

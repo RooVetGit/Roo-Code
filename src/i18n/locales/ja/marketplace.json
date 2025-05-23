@@ -50,37 +50,42 @@
 			"placeholder": "タグを検索...",
 			"noResults": "タグが見つかりませんでした。",
 			"selected": "{{count}}個のタグを選択"
-		}
-	},
-	"sources": {
-		"title": "マーケットプレイスソース",
-		"description": "マーケットプレイスアイテムのソースを追加または管理します。各ソースは、マーケットプレイスアイテムの定義を含むGitリポジトリです。",
-		"errors": {
-			"maxSources": "最大{{max}}個のソースが許可されています。",
-			"emptyUrl": "URLは空にできません。",
-			"nonVisibleChars": "URLに非表示文字が含まれています。",
-			"invalidGitUrl": "無効なGit URL形式。",
-			"duplicateUrl": "このURLを持つソースはすでに存在します。",
-			"nameTooLong": "名前は20文字を超えることはできません。",
-			"nonVisibleCharsName": "名前に非表示文字が含まれています。",
-			"duplicateName": "この名前を持つソースはすでに存在します。"
 		},
-		"add": {
-			"namePlaceholder": "オプションのソース名（例：'私のプライベートリポジトリ'）",
-			"urlPlaceholder": "GitリポジトリURL（例：'https://github.com/user/repo.git'）",
-			"urlFormats": "サポートされている形式：HTTPS、SSH、またはローカルファイルパス。",
-			"button": "ソースを追加"
+		"sources": {
+			"title": "マーケットプレイスソース",
+			"description": "マーケットプレイスアイテムのソースを追加または管理します。各ソースは、マーケットプレイスアイテムの定義を含むGitリポジトリです。",
+			"errors": {
+				"maxSources": "最大{{max}}個のソースが許可されています。",
+				"emptyUrl": "URLは空にできません。",
+				"nonVisibleChars": "URLに非表示文字が含まれています。",
+				"invalidGitUrl": "無効なGit URL形式。",
+				"duplicateUrl": "このURLを持つソースはすでに存在します。",
+				"nameTooLong": "名前は20文字を超えることはできません。",
+				"nonVisibleCharsName": "名前に非表示文字が含まれています。",
+				"duplicateName": "この名前を持つソースはすでに存在します。"
+			},
+			"add": {
+				"namePlaceholder": "オプションのソース名（例：'私のプライベートリポジトリ'）",
+				"urlPlaceholder": "GitリポジトリURL（例：'https://github.com/user/repo.git'）",
+				"urlFormats": "サポートされている形式：HTTPS、SSH、またはローカルファイルパス。",
+				"button": "ソースを追加"
+			},
+			"current": {
+				"title": "現在のソース",
+				"empty": "まだマーケットプレイスソースが追加されていません。",
+				"emptyHint": "マーケットプレイスアイテムを閲覧するには、上にソースを追加してください。",
+				"refresh": "ソースを更新",
+				"remove": "ソースを削除"
+			}
 		},
-		"current": {
-			"title": "現在のソース",
-			"empty": "まだマーケットプレイスソースが追加されていません。",
-			"emptyHint": "マーケットプレイスアイテムを閲覧するには、上にソースを追加してください。",
-			"refresh": "ソースを更新",
-			"remove": "ソースを削除"
-		}
+		"title": "マーケットプレイス"
 	},
+	"done": "完了",
+	"refresh": "更新",
 	"tabs": {
+		"installed": "インストール済み",
 		"browse": "閲覧",
+		"settings": "設定",
 		"sources": "ソース"
 	},
 	"title": "マーケットプレイス",

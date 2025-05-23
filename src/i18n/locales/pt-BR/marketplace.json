@@ -46,43 +46,47 @@
 		},
 		"tags": {
 			"label": "Tags",
-			"clear_one": "Limpar {{count}} tag selecionada",
-			"clear_other": "Limpar {{count}} tags selecionadas",
+			"clear": "Limpar {{count}} tag{{count !== 1 ? 's' : ''}} selecionada{{count !== 1 ? 's' : ''}}",
 			"placeholder": "Buscar tags...",
 			"noResults": "Nenhuma tag encontrada.",
-			"selected_one": "{{count}} tag selecionada",
-			"selected_other": "{{count}} tags selecionadas"
-		}
-	},
-	"sources": {
-		"title": "Fontes do marketplace",
-		"description": "Adicione ou gerencie fontes para os itens do marketplace. Cada fonte é um repositório Git contendo definições de itens do marketplace.",
-		"errors": {
-			"maxSources": "Máximo de {{max}} fontes permitidas.",
-			"emptyUrl": "A URL não pode estar vazia.",
-			"nonVisibleChars": "A URL contém caracteres não visíveis.",
-			"invalidGitUrl": "Formato de URL Git inválido.",
-			"duplicateUrl": "Uma fonte com esta URL já existe.",
-			"nameTooLong": "O nome não pode exceder 20 caracteres.",
-			"nonVisibleCharsName": "O nome contém caracteres não visíveis.",
-			"duplicateName": "Uma fonte com este nome já existe."
+			"selected": "{{count}} tag{{count !== 1 ? 's' : ''}} selecionada{{count !== 1 ? 's' : ''}}"
 		},
-		"add": {
-			"namePlaceholder": "Nome opcional da fonte (ex: 'Meu Repositório Privado')",
-			"urlPlaceholder": "URL do repositório Git (ex: 'https://github.com/user/repo.git')",
-			"urlFormats": "Formatos suportados: HTTPS, SSH ou caminho de arquivo local.",
-			"button": "Adicionar fonte"
+		"sources": {
+			"title": "Fontes do Marketplace",
+			"description": "Adicione ou gerencie fontes para os itens do marketplace. Cada fonte é um repositório Git contendo definições de itens do marketplace.",
+			"errors": {
+				"maxSources": "Máximo de {{max}} fontes permitidas.",
+				"emptyUrl": "A URL não pode estar vazia.",
+				"nonVisibleChars": "A URL contém caracteres não visíveis.",
+				"invalidGitUrl": "Formato de URL Git inválido.",
+				"invalidUrl": "Formato de URL inválido",
+				"duplicateUrl": "Uma fonte com esta URL já existe.",
+				"nameTooLong": "O nome não pode exceder 20 caracteres.",
+				"nonVisibleCharsName": "O nome contém caracteres não visíveis.",
+				"duplicateName": "Uma fonte com este nome já existe."
+			},
+			"add": {
+				"namePlaceholder": "Nome opcional da fonte (ex: 'Meu Repositório Privado')",
+				"urlPlaceholder": "URL do repositório Git (ex: 'https://github.com/user/repo.git')",
+				"urlFormats": "Formatos suportados: HTTPS, SSH ou caminho de arquivo local.",
+				"button": "Adicionar fonte"
+			},
+			"current": {
+				"title": "Fontes atuais",
+				"empty": "Nenhuma fonte do marketplace adicionada ainda.",
+				"emptyHint": "Adicione uma fonte acima para navegar pelos itens do marketplace.",
+				"refresh": "Atualizar fonte",
+				"remove": "Remover fonte"
+			}
 		},
-		"current": {
-			"title": "Fontes atuais",
-			"empty": "Nenhuma fonte do marketplace adicionada ainda.",
-			"emptyHint": "Adicione uma fonte acima para navegar pelos itens do marketplace.",
-			"refresh": "Atualizar fonte",
-			"remove": "Remover fonte"
-		}
+		"title": "Marketplace"
 	},
+	"done": "Concluído",
+	"refresh": "Atualizar",
 	"tabs": {
+		"installed": "Instalado",
 		"browse": "Navegar",
+		"settings": "Configurações",
 		"sources": "Fontes"
 	},
 	"title": "Marketplace",
@@ -94,7 +98,6 @@
 			"noItems": "Nenhum item do marketplace encontrado.",
 			"emptyHint": "Tente ajustar seus filtros ou termos de busca"
 		},
-		"count_one": "{{count}} item",
-		"count_other": "{{count}} itens"
+		"count": "{{count}} item{{count !== 1 ? 'ns' : ''}}"
 	}
 }
