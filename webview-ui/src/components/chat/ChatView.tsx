@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
-import { useDeepCompareEffect, useEvent, useMount } from "react-use"
+import { useEvent, useMount } from "react-use"
 import debounce from "debounce"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import removeMd from "remove-markdown"
@@ -146,6 +146,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const lastMessage = useMemo(() => messages.at(-1), [messages])
 	const secondLastMessage = useMemo(() => messages.at(-2), [messages])
 
+	// Memoized values for useEffect dependencies
+	const lastMessageType = lastMessage?.type
+	const lastMessageAsk = lastMessage?.ask
+	const lastMessagePartial = lastMessage?.partial
+	const lastMessageText = lastMessage?.text
+	const secondLastMessageAsk = secondLastMessage?.ask
+	const secondLastMessageSay = secondLastMessage?.say
+	const lastMessageSay = lastMessage?.say
+
 	// Setup sound hooks with use-sound
 	const volume = typeof soundVolume === "number" ? soundVolume : 0.5
 	const soundConfig = {
@@ -185,15 +194,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		vscode.postMessage({ type: "playTts", text })
 	}
 
-	useDeepCompareEffect(() => {
+	useEffect(() => {
 		// if last message is an ask, show user ask UI
 		// if user finished a task, then start a new task with a new conversation history since in this moment that the extension is waiting for user response, the user could close the extension and the conversation history would be lost.
 		// basically as long as a task is active, the conversation history will be persisted
 		if (lastMessage) {
-			switch (lastMessage.type) {
+			switch (lastMessageType) {
 				case "ask":
-					const isPartial = lastMessage.partial === true
-					switch (lastMessage.ask) {
+					const isPartial = lastMessagePartial === true
+					switch (lastMessageAsk) {
 						case "api_req_failed":
 							playSound("progress_loop")
 							setSendingDisabled(true)
@@ -231,7 +240,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSendingDisabled(isPartial)
 							setClineAsk("tool")
 							setEnableButtons(!isPartial)
-							const tool = JSON.parse(lastMessage.text || "{}") as ClineSayTool
+							const tool = JSON.parse(lastMessageText || "{}") as ClineSayTool
 							switch (tool.tool) {
 								case "editedExistingFile":
 								case "appliedDiff":
@@ -325,12 +334,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "say":
 					// Don't want to reset since there could be a "say" after
 					// an "ask" while ask is waiting for response.
-					switch (lastMessage.say) {
+					switch (lastMessageSay) {
 						case "api_req_retry_delayed":
 							setSendingDisabled(true)
 							break
 						case "api_req_started":
-							if (secondLastMessage?.ask === "command_output") {
+							if (secondLastMessageAsk === "command_output") {
 								// If the last ask is a command_output, and we
 								// receive an api_req_started, then that means
 								// the command has finished and we don't need
@@ -359,7 +368,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					break
 			}
 		}
-	}, [lastMessage, secondLastMessage])
+	}, [
+		lastMessage, // Keep lastMessage itself for isAutoApproved and direct parsing
+		lastMessageType,
+		lastMessageAsk,
+		lastMessagePartial,
+		lastMessageText,
+		secondLastMessageAsk,
+		secondLastMessageSay,
+		lastMessageSay,
+		isAutoApproved, // isAutoApproved is memoized and depends on lastMessage internally
+		t,
+	])
 
 	useEffect(() => {
 		if (messages.length === 0) {
@@ -872,12 +892,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		// labeled as `user_feedback`.
 		if (lastMessage && messages.length > 1) {
 			if (
-				lastMessage.text && // has text
-				(lastMessage.say === "text" || lastMessage.say === "completion_result") && // is a text message
-				!lastMessage.partial && // not a partial message
-				!lastMessage.text.startsWith("{") // not a json object
+				lastMessageText && // has text
+				(lastMessageSay === "text" || lastMessageSay === "completion_result") && // is a text message
+				!lastMessagePartial && // not a partial message
+				!lastMessageText.startsWith("{") // not a json object
 			) {
-				let text = lastMessage?.text || ""
+				let text = lastMessageText || ""
 				const mermaidRegex = /```mermaid[\s\S]*?```/g
 				// remove mermaid diagrams from text
 				text = text.replace(mermaidRegex, "")
@@ -897,8 +917,21 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		// Update previous value.
-		setWasStreaming(isStreaming)
-	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved, messages.length])
+		// The logic for wasStreaming is to prevent re-playing TTS when isStreaming flips from true to false
+		// if other dependencies haven't changed. If isStreaming is the only thing that changes,
+		// and it becomes false, we don't want to re-evaluate TTS for the same last message.
+		if (wasStreaming !== isStreaming) {
+			setWasStreaming(isStreaming)
+		}
+	}, [
+		isStreaming,
+		wasStreaming, // Keep wasStreaming to compare its previous state
+		lastMessageText,
+		lastMessageSay,
+		lastMessagePartial,
+		messages.length, // messages.length is a simple primitive
+		lastMessage, // Required for the messages.length > 1 check and ensuring lastMessage exists
+	])
 
 	const isBrowserSessionMessage = (message: ClineMessage): boolean => {
 		// Which of visible messages are browser session messages, see above.
@@ -1179,13 +1212,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		const autoApprove = async () => {
-			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
+			if (lastMessageAsk && isAutoApproved(lastMessage)) {
 				// Note that `isAutoApproved` can only return true if
 				// lastMessage is an ask of type "browser_action_launch",
 				// "use_mcp_server", "command", or "tool".
 
 				// Add delay for write operations.
-				if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
+				if (lastMessageAsk === "tool" && isWriteToolAction(lastMessage)) {
 					await new Promise((resolve) => setTimeout(resolve, writeDelayMs))
 				}
 
@@ -1205,7 +1238,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [
 		clineAsk,
 		enableButtons,
-		handlePrimaryButtonClick,
+		// handlePrimaryButtonClick, // Not used directly in this effect's logic
 		alwaysAllowBrowser,
 		alwaysAllowReadOnly,
 		alwaysAllowReadOnlyOutsideWorkspace,
@@ -1213,13 +1246,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowWriteOutsideWorkspace,
 		alwaysAllowExecute,
 		alwaysAllowMcp,
-		messages,
-		allowedCommands,
-		mcpServers,
-		isAutoApproved,
-		lastMessage,
+		// messages, // Removed as per optimization
+		// allowedCommands, // Part of isAutoApproved's dependencies
+		// mcpServers, // Part of isAutoApproved's dependencies
+		isAutoApproved, // Memoized: depends on allowedCommands, mcpServers, lastMessage etc.
+		lastMessage, // Keep lastMessage for isAutoApproved and isWriteToolAction
+		lastMessageAsk, // Specific primitive from lastMessage
+		lastMessageType, // Specific primitive from lastMessage
+		lastMessageText, // Specific primitive from lastMessage
 		writeDelayMs,
-		isWriteToolAction,
+		isWriteToolAction, // Memoized: depends on lastMessage
 	])
 
 	// Function to handle mode switching

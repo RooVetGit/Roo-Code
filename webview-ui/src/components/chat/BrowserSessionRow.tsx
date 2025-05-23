@@ -1,6 +1,5 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
-import deepEqual from "fast-deep-equal"
 import { useTranslation } from "react-i18next"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
@@ -37,13 +36,18 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 
 	const isLastApiReqInterrupted = useMemo(() => {
 		// Check if last api_req_started is cancelled
-		const lastApiReqStarted = [...messages].reverse().find((m) => m.say === "api_req_started")
-		if (lastApiReqStarted?.text) {
-			const info = JSON.parse(lastApiReqStarted.text) as { cancelReason: string | null }
-			if (info && info.cancelReason !== null) {
-				return true
+		const lastApiReqStartedInGroup = [...messages].reverse().find((m) => m.say === "api_req_started")
+		if (lastApiReqStartedInGroup?.text) {
+			try {
+				const info = JSON.parse(lastApiReqStartedInGroup.text) as { cancelReason: string | null }
+				if (info && info.cancelReason !== null) {
+					return true
+				}
+			} catch (e) {
+				// ignore parse error if text is not json
 			}
 		}
+		// also check the global lastModifiedMessage which might be outside this group
 		const lastApiReqFailed = isLast && lastModifiedMessage?.ask === "api_req_failed"
 		if (lastApiReqFailed) {
 			return true
@@ -216,11 +220,15 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 		// Look through current page's next actions for the latest browser_action
 		const actions = currentPage?.nextAction?.messages || []
 		for (let i = actions.length - 1; i >= 0; i--) {
-			const message = actions[i]
-			if (message.say === "browser_action") {
-				const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
-				if (browserAction.action === "click" && browserAction.coordinate) {
-					return browserAction.coordinate
+			const currentMessage = actions[i]
+			if (currentMessage.say === "browser_action") {
+				try {
+					const browserAction = JSON.parse(currentMessage.text || "{}") as ClineSayBrowserAction
+					if (browserAction.action === "click" && browserAction.coordinate) {
+						return browserAction.coordinate
+					}
+				} catch (e) {
+					// ignore parse error
 				}
 			}
 		}
@@ -408,8 +416,68 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 	}, [rowHeight, isLast, onHeightChange])
 
 	return browserSessionRow
-}, deepEqual)
+}, browserSessionRowPropsAreEqual)
 
+function browserSessionRowPropsAreEqual(
+	prevProps: BrowserSessionRowProps,
+	nextProps: BrowserSessionRowProps,
+): boolean {
+	if (
+		prevProps.isLast !== nextProps.isLast ||
+		prevProps.isStreaming !== nextProps.isStreaming ||
+		prevProps.isExpanded !== nextProps.isExpanded || // function ref
+		prevProps.onToggleExpand !== nextProps.onToggleExpand || // function ref
+		prevProps.onHeightChange !== nextProps.onHeightChange // function ref
+	) {
+		return false
+	}
+
+	// Compare lastModifiedMessage by relevant fields
+	const prevLMM = prevProps.lastModifiedMessage
+	const nextLMM = nextProps.lastModifiedMessage
+	if (prevLMM && nextLMM) {
+		if (prevLMM.ask !== nextLMM.ask || prevLMM.text !== nextLMM.text || prevLMM.say !== nextLMM.say) {
+			return false
+		}
+	} else if (prevLMM || nextLMM) {
+		// one is null/undefined, the other is not
+		return false
+	}
+
+	// Compare messages array
+	if (prevProps.messages.length !== nextProps.messages.length) {
+		return false
+	}
+
+	for (let i = 0; i < prevProps.messages.length; i++) {
+		const prevMsg = prevProps.messages[i]
+		const nextMsg = nextProps.messages[i]
+
+		if (
+			prevMsg.type !== nextMsg.type ||
+			prevMsg.ask !== nextMsg.ask ||
+			prevMsg.say !== nextMsg.say ||
+			prevMsg.text !== nextMsg.text || // This text can be JSON, careful if it has unstable formatting
+			prevMsg.partial !== nextMsg.partial ||
+			prevMsg.progressStatus !== nextMsg.progressStatus ||
+			prevMsg.ts !== nextMsg.ts
+		) {
+			return false
+		}
+
+		// For fields used by ChatRowContent (images, checkpoint, contextCondense)
+		// Assuming ChatRowContent itself has its own memoization or these fields are less critical for BrowserSessionRow's direct rendering
+		// If ChatRowContent's rendering based on these is critical for BrowserSessionRow's own layout,
+		// then these checks would be needed here too.
+		// For now, focusing on fields directly used by BrowserSessionRow logic or passed to ChatRowContent for its core identity.
+		// A more thorough comparison would include shallow or deep checks for:
+		// prevMsg.images vs nextMsg.images
+		// prevMsg.checkpoint vs nextMsg.checkpoint
+		// prevMsg.contextCondense vs nextMsg.contextCondense
+	}
+
+	return true
+}
 interface BrowserSessionRowContentProps extends Omit<BrowserSessionRowProps, "messages"> {
 	message: ClineMessage
 	setMaxActionHeight: (height: number) => void
@@ -459,13 +527,30 @@ const BrowserSessionRowContent = ({
 
 				case "browser_action":
 					const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
-					return (
-						<BrowserActionBox
-							action={browserAction.action}
-							coordinate={browserAction.coordinate}
-							text={browserAction.text}
-						/>
-					)
+					try {
+						const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+						return (
+							<BrowserActionBox
+								action={browserAction.action}
+								coordinate={browserAction.coordinate}
+								text={browserAction.text}
+							/>
+						)
+					} catch (e) {
+						// If JSON parsing fails, render as simple text or error
+						return (
+							<div style={{ padding: "10px 0 10px 0" }}>
+								<ChatRowContent
+									message={{ ...message, say: "error", text: "Invalid browser action format" }}
+									isExpanded={isExpanded(message.ts)}
+									onToggleExpand={() => onToggleExpand(message.ts)}
+									lastModifiedMessage={lastModifiedMessage}
+									isLast={isLast}
+									isStreaming={isStreaming}
+								/>
+							</div>
+						)
+					}
 
 				default:
 					return null

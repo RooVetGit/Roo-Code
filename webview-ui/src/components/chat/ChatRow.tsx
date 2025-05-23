@@ -1,7 +1,6 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
 import { useTranslation, Trans } from "react-i18next"
-import deepEqual from "fast-deep-equal"
 import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import { ClineApiReqInfo, ClineAskUseMcpServer, ClineMessage, ClineSayTool } from "@roo/shared/ExtensionMessage"
@@ -78,13 +77,96 @@ const ChatRow = memo(
 		// we cannot return null as virtuoso does not support it, so we use a separate visibleMessages array to filter out messages that should not be rendered
 		return chatrow
 	},
-	// memo does shallow comparison of props, so we need to do deep comparison of arrays/objects whose properties might change
-	deepEqual,
+	// Custom comparison function for React.memo
+	chatRowPropsAreEqual,
 )
 
-export default ChatRow
+function chatRowPropsAreEqual(prevProps: ChatRowProps, nextProps: ChatRowProps): boolean {
+	// Compare primitive props directly
+	if (
+		prevProps.isExpanded !== nextProps.isExpanded ||
+		prevProps.isLast !== nextProps.isLast ||
+		prevProps.isStreaming !== nextProps.isStreaming
+	) {
+		return false
+	}
 
-export const ChatRowContent = ({
+	// Compare callback functions by reference
+	if (
+		prevProps.onToggleExpand !== nextProps.onToggleExpand ||
+		prevProps.onHeightChange !== nextProps.onHeightChange ||
+		prevProps.onSuggestionClick !== nextProps.onSuggestionClick
+	) {
+		return false
+	}
+
+	// Compare 'message' object by specific fields
+	const prevMsg = prevProps.message
+	const nextMsg = nextProps.message
+
+	if (
+		prevMsg.type !== nextMsg.type ||
+		prevMsg.ask !== nextMsg.ask ||
+		prevMsg.say !== nextMsg.say ||
+		prevMsg.text !== nextMsg.text ||
+		prevMsg.partial !== nextMsg.partial ||
+		prevMsg.progressStatus !== nextMsg.progressStatus ||
+		prevMsg.ts !== nextMsg.ts
+	) {
+		return false
+	}
+
+	// Compare 'message.images' array (shallow comparison of array and its string elements)
+	if (prevMsg.images?.length !== nextMsg.images?.length) return false
+	if (prevMsg.images && nextMsg.images) {
+		for (let i = 0; i < prevMsg.images.length; i++) {
+			if (prevMsg.images[i] !== nextMsg.images[i]) return false
+		}
+	} else if (prevMsg.images || nextMsg.images) {
+		// one is null/undefined and the other is not
+		return false
+	}
+
+	// Compare 'message.checkpoint' object
+	if (prevMsg.checkpoint?.id !== nextMsg.checkpoint?.id) return false
+	if (prevMsg.checkpoint?.description !== nextMsg.checkpoint?.description) return false
+
+	// Compare 'message.contextCondense' object
+	const prevCondense = prevMsg.contextCondense
+	const nextCondense = nextMsg.contextCondense
+	if (
+		prevCondense?.keptCharacters !== nextCondense?.keptCharacters ||
+		prevCondense?.totalCharacters !== nextCondense?.totalCharacters ||
+		prevCondense?.removedCharacters !== nextCondense?.removedCharacters ||
+		prevCondense?.removedMessages !== nextCondense?.removedMessages ||
+		prevCondense?.removedTokens !== nextCondense?.removedTokens
+	) {
+		return false
+	}
+
+	// Compare 'lastModifiedMessage' object (if it exists)
+	const prevLastModMsg = prevProps.lastModifiedMessage
+	const nextLastModMsg = nextProps.lastModifiedMessage
+
+	if (prevLastModMsg && nextLastModMsg) {
+		if (
+			prevLastModMsg.ask !== nextLastModMsg.ask ||
+			prevLastModMsg.text !== nextLastModMsg.text ||
+			prevLastModMsg.say !== nextLastModMsg.say
+		) {
+			return false
+		}
+	} else if (prevLastModMsg || nextLastModMsg) {
+		// One exists and the other doesn't
+		return false
+	}
+
+	// All relevant props are equal
+	return true
+}
+
+export default ChatRow
+const ChatRowContentComponent = ({
 	message,
 	lastModifiedMessage,
 	isExpanded,
@@ -1104,3 +1186,10 @@ export const ChatRowContent = ({
 			}
 	}
 }
+
+// Memoize ChatRowContent to prevent re-renders if its specific props haven't changed.
+// This is particularly useful because ChatRow itself is memoized with a custom function,
+// but ChatRowContent is the one doing the bulk of the rendering logic.
+// We can use a simple shallow comparison (React.memo's default) or a more specific one if needed.
+// For now, default shallow comparison should be a good starting point if its props are mostly primitive or stable.
+export const ChatRowContent = React.memo(ChatRowContentComponent)
