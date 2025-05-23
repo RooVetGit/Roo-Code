@@ -2,13 +2,15 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
 import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels } from "../../shared/api"
+
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { getOpenAiReasoning } from "../transform/reasoning"
+import { getModelParams } from "../transform/model-params"
 
-import { type SingleCompletionHandler, getModelParams } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
+import { type SingleCompletionHandler } from "../index"
 
 const XAI_DEFAULT_TEMPERATURE = 0
 
@@ -87,13 +89,13 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
-		const { id: modelId, reasoningEffort } = this.getModel()
+		const { id: modelId, reasoning } = this.getModel()
 
 		try {
 			const response = await this.client.chat.completions.create({
 				model: modelId,
 				messages: [{ role: "user", content: prompt }],
-				...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+				...(reasoning && reasoning),
 			})
 
 			return response.choices[0]?.message.content || ""

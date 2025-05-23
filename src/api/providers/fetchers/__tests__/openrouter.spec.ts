@@ -178,8 +178,8 @@ describe("OpenRouter API", () => {
 				{ id: "anthropic/claude-3.5-sonnet-20240620", maxTokens: 8192 },
 				{ id: "anthropic/claude-3.5-sonnet-20240620:beta", maxTokens: 8192 },
 				{ id: "anthropic/claude-3.5-sonnet:beta", maxTokens: 8192 },
-				{ id: "anthropic/claude-3.7-sonnet", maxTokens: 8192 },
-				{ id: "anthropic/claude-3.7-sonnet:beta", maxTokens: 8192 },
+				{ id: "anthropic/claude-3.7-sonnet", maxTokens: 64000 },
+				{ id: "anthropic/claude-3.7-sonnet:beta", maxTokens: 128000 },
 				{ id: "anthropic/claude-3.7-sonnet:thinking", maxTokens: 128000 },
 			])
 

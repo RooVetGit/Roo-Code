@@ -998,6 +998,7 @@ export const openAiNativeModels = {
 		inputPrice: 10.0,
 		outputPrice: 40.0,
 		cacheReadsPrice: 2.5,
+		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o3-high": {
@@ -1008,6 +1009,7 @@ export const openAiNativeModels = {
 		inputPrice: 10.0,
 		outputPrice: 40.0,
 		cacheReadsPrice: 2.5,
+		supportsReasoningEffort: true,
 		reasoningEffort: "high",
 	},
 	"o3-low": {
@@ -1018,6 +1020,7 @@ export const openAiNativeModels = {
 		inputPrice: 10.0,
 		outputPrice: 40.0,
 		cacheReadsPrice: 2.5,
+		supportsReasoningEffort: true,
 		reasoningEffort: "low",
 	},
 	"o4-mini": {
@@ -1028,6 +1031,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o4-mini-high": {
@@ -1038,6 +1042,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		supportsReasoningEffort: true,
 		reasoningEffort: "high",
 	},
 	"o4-mini-low": {
@@ -1048,6 +1053,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		supportsReasoningEffort: true,
 		reasoningEffort: "low",
 	},
 	"o3-mini": {
@@ -1058,6 +1064,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
+		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o3-mini-high": {
@@ -1068,6 +1075,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
+		supportsReasoningEffort: true,
 		reasoningEffort: "high",
 	},
 	"o3-mini-low": {
@@ -1078,6 +1086,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
+		supportsReasoningEffort: true,
 		reasoningEffort: "low",
 	},
 	o1: {

@@ -15,13 +15,14 @@ import { convertToR1Format } from "../transform/r1-format"
 import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic"
 import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
 import { type OpenRouterReasoningParams, getOpenRouterReasoning } from "../transform/reasoning"
+import { getModelParams } from "../transform/model-params"
 
-import { type SingleCompletionHandler, getModelParams } from "../index"
+import { getModels } from "./fetchers/modelCache"
+import { getModelEndpoints } from "./fetchers/modelEndpointCache"
 
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { BaseProvider } from "./base-provider"
-import { getModels } from "./fetchers/modelCache"
-import { getModelEndpoints } from "./fetchers/modelEndpointCache"
+import type { SingleCompletionHandler } from "../index"
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 

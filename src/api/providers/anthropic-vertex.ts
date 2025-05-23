@@ -8,10 +8,11 @@ import { safeJsonParse } from "../../shared/safeJsonParse"
 import { ApiStream } from "../transform/stream"
 import { addCacheBreakpoints } from "../transform/caching/vertex"
 import { getAnthropicReasoning } from "../transform/reasoning"
+import { getModelParams } from "../transform/model-params"
 
-import { type SingleCompletionHandler, getModelParams } from "../index"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { BaseProvider } from "./base-provider"
+import type { SingleCompletionHandler } from "../index"
 
 // https://docs.anthropic.com/en/api/claude-on-vertex-ai
 export class AnthropicVertexHandler extends BaseProvider implements SingleCompletionHandler {

@@ -1,9 +1,7 @@
 // npx jest src/api/__tests__/index.test.ts
 
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
-
 import { ModelInfo } from "../../schemas"
-import { getModelParams } from "../index"
+import { getModelParams } from "../transform/model-params"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
 
 describe("getModelParams", () => {

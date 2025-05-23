@@ -12,10 +12,11 @@ import {
 
 import { ApiStream } from "../transform/stream"
 import { getAnthropicReasoning } from "../transform/reasoning"
+import { getModelParams } from "../transform/model-params"
 
-import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
-import { type SingleCompletionHandler, getModelParams } from "../index"
+import { BaseProvider } from "./base-provider"
+import type { SingleCompletionHandler } from "../index"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions

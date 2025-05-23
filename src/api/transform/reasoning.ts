@@ -2,7 +2,8 @@ import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import OpenAI from "openai"
 
 import { ModelInfo, ProviderSettings } from "../../schemas"
-import { ModelParams } from "../index"
+
+import type { ModelParams } from "./model-params"
 
 export type OpenRouterReasoningParams = {
 	effort?: "high" | "medium" | "low"
@@ -20,39 +21,36 @@ export type GetModelResoningOptions = {
 	settings: ProviderSettings
 }
 
-export function getOpenRouterReasoning({
-	model,
-	params,
-	settings,
-}: GetModelResoningOptions): OpenRouterReasoningParams | undefined {
-	if (model.requiredReasoningBudget || (model.supportsReasoningBudget && settings.enableReasoningEffort)) {
-		return { max_tokens: params.reasoningBudget }
-	} else if (model.supportsReasoningEffort && settings.reasoningEffort) {
-		return { effort: params.reasoningEffort }
-	} else {
-		return undefined
-	}
-}
+const shouldUseReasoningBudget = (model: ModelInfo, settings: ProviderSettings, params: ModelParams) =>
+	(model.requiredReasoningBudget || (model.supportsReasoningBudget && settings.enableReasoningEffort)) &&
+	params.reasoningBudget
 
-export function getAnthropicReasoning({
+const shouldUseReasoningEffort = (model: ModelInfo, params: ModelParams) =>
+	model.supportsReasoningEffort && params.reasoningEffort
+
+export const getOpenRouterReasoning = ({
 	model,
 	params,
 	settings,
-}: GetModelResoningOptions): AnthropicReasoningParams | undefined {
-	return (model.requiredReasoningBudget || (model.supportsReasoningBudget && settings.enableReasoningEffort)) &&
-		params.reasoningBudget
-		? { type: "enabled", budget_tokens: params.reasoningBudget }
+}: GetModelResoningOptions): OpenRouterReasoningParams | undefined =>
+	shouldUseReasoningBudget(model, settings, params)
+		? { max_tokens: params.reasoningBudget }
+		: shouldUseReasoningEffort(model, params)
+			? { effort: params.reasoningEffort }
+			: undefined
+
+export const getAnthropicReasoning = ({
+	model,
+	params,
+	settings,
+}: GetModelResoningOptions): AnthropicReasoningParams | undefined =>
+	shouldUseReasoningBudget(model, settings, params)
+		? { type: "enabled", budget_tokens: params.reasoningBudget! }
 		: undefined
-}
 
-export function getOpenAiReasoning({
+export const getOpenAiReasoning = ({
 	model,
 	params,
 	settings,
-}: GetModelResoningOptions): OpenAiReasoningParams | undefined {
-	if (model.supportsReasoningEffort && settings.reasoningEffort && params.reasoningEffort) {
-		return { reasoning_effort: params.reasoningEffort }
-	} else {
-		return undefined
-	}
-}
+}: GetModelResoningOptions): OpenAiReasoningParams | undefined =>
+	shouldUseReasoningEffort(model, params) ? { reasoning_effort: params.reasoningEffort } : undefined

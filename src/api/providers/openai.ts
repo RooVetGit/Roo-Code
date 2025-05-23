@@ -8,25 +8,27 @@ import {
 	ModelInfo,
 	openAiModelInfoSaneDefaults,
 } from "../../shared/api"
-import { SingleCompletionHandler } from "../index"
+
+import { XmlMatcher } from "../../utils/xml-matcher"
+
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
 import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { BaseProvider } from "./base-provider"
-import { XmlMatcher } from "../../utils/xml-matcher"
+import { getOpenAiReasoning } from "../transform/reasoning"
+import { getModelParams } from "../transform/model-params"
+
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
+import type { SingleCompletionHandler } from "../index"
+import { BaseProvider } from "./base-provider"
 
 export const AZURE_AI_INFERENCE_PATH = "/models/chat/completions"
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface OpenAiHandlerOptions extends ApiHandlerOptions {}
-
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
-	protected options: OpenAiHandlerOptions
+	protected options: ApiHandlerOptions
 	private client: OpenAI
 
-	constructor(options: OpenAiHandlerOptions) {
+	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
 
@@ -68,7 +70,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const modelInfo = this.getModel().info
+		const { info: modelInfo, reasoning } = this.getModel()
 		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
@@ -146,7 +148,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				messages: convertedMessages,
 				stream: true as const,
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
-				reasoning_effort: modelInfo.reasoningEffort,
+				...(reasoning && reasoning),
 			}
 
 			if (this.options.includeMaxTokens) {
@@ -236,11 +238,12 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	override getModel(): { id: string; info: ModelInfo } {
-		return {
-			id: this.options.openAiModelId ?? "",
-			info: this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults,
-		}
+	override getModel() {
+		const id = this.options.openAiModelId ?? ""
+		const info = this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults
+		const params = getModelParams({ options: this.options, model: info })
+		const reasoning = getOpenAiReasoning({ model: info, params, settings: this.options })
+		return { id, info, ...params, reasoning }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
