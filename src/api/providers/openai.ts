@@ -23,6 +23,9 @@ import { BaseProvider } from "./base-provider"
 
 export const AZURE_AI_INFERENCE_PATH = "/models/chat/completions"
 
+// TODO: Rename this to OpenAICompatibleHandler. Also, I think the
+// `OpenAINativeHandler` can subclass from this, since it's obviously
+// compatible with the OpenAI API. We can also rename it to `OpenAIHandler`.
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
