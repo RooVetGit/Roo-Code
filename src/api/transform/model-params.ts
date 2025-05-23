@@ -87,6 +87,9 @@ export function getModelParams({
 		reasoningEffort = customReasoningEffort ?? model.reasoningEffort
 	}
 
+	// TODO: We should consolidate this logic to compute `maxTokens` with
+	// `getModelMaxOutputTokens` in order to maintain a single source of truth.
+
 	const isAnthropic = format === "anthropic" || (format === "openrouter" && modelId.startsWith("anthropic/"))
 
 	// For "Hybrid" reasoning models, we should discard the model's actual
