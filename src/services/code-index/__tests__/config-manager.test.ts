@@ -37,8 +37,9 @@ describe("CodeIndexConfigManager", () => {
 				modelId: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
-				qdrantUrl: "",
+				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "",
+				searchMinScore: 0.4,
 			})
 			expect(result.requiresRestart).toBe(false)
 			expect(result.requiresClear).toBe(false)
@@ -70,6 +71,7 @@ describe("CodeIndexConfigManager", () => {
 				ollamaOptions: { ollamaBaseUrl: "" },
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
+				searchMinScore: 0.4,
 			})
 		})
 
@@ -188,6 +190,7 @@ describe("CodeIndexConfigManager", () => {
 				ollamaOptions: { ollamaBaseUrl: undefined },
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
+				searchMinScore: 0.4,
 			})
 		})
 

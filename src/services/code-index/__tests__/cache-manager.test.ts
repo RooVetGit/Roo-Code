@@ -149,21 +149,30 @@ describe("CacheManager", () => {
 	})
 
 	describe("clearCacheFile", () => {
-		it("should delete cache file and reset state", async () => {
+		it("should clear cache file and reset state", async () => {
 			cacheManager.updateHash("test.ts", "hash")
+
+			// Reset the mock to ensure writeFile succeeds for clearCacheFile
+			;(vscode.workspace.fs.writeFile as jest.Mock).mockClear()
+			;(vscode.workspace.fs.writeFile as jest.Mock).mockResolvedValue(undefined)
+
 			await cacheManager.clearCacheFile()
 
-			expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(mockCachePath)
+			expect(vscode.workspace.fs.writeFile).toHaveBeenCalledWith(mockCachePath, Buffer.from("{}"))
 			expect(cacheManager.getAllHashes()).toEqual({})
 		})
 
-		it("should handle delete errors gracefully", async () => {
+		it("should handle clear errors gracefully", async () => {
 			const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation()
-			;(vscode.workspace.fs.delete as jest.Mock).mockRejectedValue(new Error("Delete failed"))
+			;(vscode.workspace.fs.writeFile as jest.Mock).mockRejectedValue(new Error("Save failed"))
 
 			await cacheManager.clearCacheFile()
 
-			expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to clear cache file:", expect.any(Error))
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Failed to clear cache file:",
+				expect.any(Error),
+				mockCachePath,
+			)
 
 			consoleErrorSpy.mockRestore()
 		})

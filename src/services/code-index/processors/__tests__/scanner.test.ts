@@ -42,6 +42,7 @@ jest.mock("vscode", () => ({
 jest.mock("fs/promises")
 jest.mock("../../../glob/list-files")
 jest.mock("../../../../core/ignore/RooIgnoreController")
+jest.mock("ignore")
 
 describe("DirectoryScanner", () => {
 	let scanner: DirectoryScanner
@@ -49,6 +50,7 @@ describe("DirectoryScanner", () => {
 	let mockVectorStore: IVectorStore
 	let mockCodeParser: ICodeParser
 	let mockCacheManager: CacheManager
+	let mockIgnoreInstance: any
 
 	beforeEach(() => {
 		mockEmbedder = {
@@ -76,8 +78,17 @@ describe("DirectoryScanner", () => {
 			initialize: jest.fn().mockResolvedValue(undefined),
 			clearCacheFile: jest.fn().mockResolvedValue(undefined),
 		}
+		mockIgnoreInstance = {
+			ignores: jest.fn().mockReturnValue(false),
+		}
 
-		scanner = new DirectoryScanner(mockEmbedder, mockVectorStore, mockCodeParser, mockCacheManager)
+		scanner = new DirectoryScanner(
+			mockEmbedder,
+			mockVectorStore,
+			mockCodeParser,
+			mockCacheManager,
+			mockIgnoreInstance,
+		)
 
 		// Mock default implementations
 		;(stat as unknown as jest.Mock).mockResolvedValue({ size: 1024 })
