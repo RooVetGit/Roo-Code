@@ -94,7 +94,10 @@ export function getToolDescriptionsForMode(
 	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
 
 	// Conditionally exclude codebase_search if feature is disabled or not configured
-	if (!codeIndexManager || !(codeIndexManager.isFeatureEnabled && codeIndexManager.isFeatureConfigured)) {
+	if (
+		!codeIndexManager ||
+		!(codeIndexManager.isFeatureEnabled && codeIndexManager.isFeatureConfigured && codeIndexManager.isInitialized)
+	) {
 		tools.delete("codebase_search")
 	}
 
