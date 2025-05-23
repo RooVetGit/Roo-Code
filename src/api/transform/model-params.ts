@@ -87,16 +87,17 @@ export function getModelParams({
 		reasoningEffort = customReasoningEffort ?? model.reasoningEffort
 	}
 
+	const isAnthropic = format === "anthropic" || (format === "openrouter" && modelId.startsWith("anthropic/"))
+
 	// For "Hybrid" reasoning models, we should discard the model's actual
-	// `maxTokens` value if we're not using reasoning.
-	if (model.supportsReasoningBudget && !reasoningBudget) {
+	// `maxTokens` value if we're not using reasoning. We do this for Anthropic
+	// models only for now. Should we do this for Gemini too?
+	if (model.supportsReasoningBudget && !reasoningBudget && isAnthropic) {
 		maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS
 	}
 
 	// For Anthropic models we should always make sure a `maxTokens` value is
 	// set.
-	const isAnthropic = format === "anthropic" || (format === "openrouter" && modelId.startsWith("anthropic/"))
-
 	if (!maxTokens && isAnthropic) {
 		maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS
 	}
