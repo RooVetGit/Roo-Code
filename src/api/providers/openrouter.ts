@@ -8,7 +8,6 @@ import {
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
 	PROMPT_CACHING_MODELS,
-	REASONING_MODELS,
 } from "../../shared/api"
 
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -74,15 +73,9 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
-		let {
-			id: modelId,
-			maxTokens,
-			thinking,
-			temperature,
-			topP,
-			reasoningEffort,
-			promptCache,
-		} = await this.fetchModel()
+		const model = await this.fetchModel()
+
+		let { id: modelId, maxTokens, temperature, topP, reasoningEffort, reasoningBudget, promptCache } = model
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -111,7 +104,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			model: modelId,
 			...(maxTokens && maxTokens > 0 && { max_tokens: maxTokens }),
 			temperature,
-			thinking, // OpenRouter is temporarily supporting this.
 			top_p: topP,
 			messages: openAiMessages,
 			stream: true,
@@ -125,9 +117,11 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 						allow_fallbacks: false,
 					},
 				}),
-			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
+			// This way, the transforms field will only be included in the
+			// parameters when openRouterUseMiddleOutTransform is true.
 			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
-			...(REASONING_MODELS.has(modelId) && reasoningEffort && { reasoning: { effort: reasoningEffort } }),
+			...(reasoningEffort && { reasoning: { effort: reasoningEffort } }),
+			...(reasoningBudget && { reasoning: { max_tokens: reasoningBudget } }),
 		}
 
 		const stream = await this.client.chat.completions.create(completionParams)
@@ -201,7 +195,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		return {
 			id,
 			info,
-			// maxTokens, thinking, temperature, reasoningEffort
+			// Returns a `ModelParams` instance with `maxTokens`, `temperature`,
+			// `reasoningEffort`, and `reasoningBudget`.
 			...getModelParams({
 				options: this.options,
 				model: info,
@@ -215,12 +210,11 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	async completePrompt(prompt: string) {
-		let { id: modelId, maxTokens, thinking, temperature } = await this.fetchModel()
+		let { id: modelId, maxTokens, reasoningEffort, reasoningBudget, temperature } = await this.fetchModel()
 
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
 			max_tokens: maxTokens,
-			thinking,
 			temperature,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
@@ -233,6 +227,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 						allow_fallbacks: false,
 					},
 				}),
+			...(reasoningEffort && { reasoning: { effort: reasoningEffort } }),
+			...(reasoningBudget && { reasoning: { max_tokens: reasoningBudget } }),
 		}
 
 		const response = await this.client.chat.completions.create(completionParams)

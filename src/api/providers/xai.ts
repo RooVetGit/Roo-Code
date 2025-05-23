@@ -1,11 +1,11 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
-import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels, REASONING_MODELS } from "../../shared/api"
+import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 
-import { SingleCompletionHandler } from "../index"
+import { getModelParams, SingleCompletionHandler } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 
@@ -32,14 +32,9 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 				? (this.options.apiModelId as XAIModelId)
 				: xaiDefaultModelId
 
-		// Check if reasoning effort applies to this model
-		const supportsReasoning = REASONING_MODELS.has(id)
+		const info = xaiModels[id]
 
-		return {
-			id,
-			info: xaiModels[id],
-			reasoningEffort: supportsReasoning ? this.options.reasoningEffort : undefined,
-		}
+		return { id, info, ...getModelParams({ options: this.options, model: info }) }
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {

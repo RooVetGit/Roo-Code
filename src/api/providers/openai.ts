@@ -146,7 +146,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				messages: convertedMessages,
 				stream: true as const,
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
-				reasoning_effort: this.getModel().info.reasoningEffort,
+				reasoning_effort: modelInfo.reasoningEffort,
 			}
 
 			if (this.options.includeMaxTokens) {

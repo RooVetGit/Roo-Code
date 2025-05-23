@@ -55,7 +55,7 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 			info: { supportsPromptCache },
 			temperature,
 			maxTokens,
-			thinking,
+			reasoningBudget,
 		} = this.getModel()
 
 		/**
@@ -75,7 +75,7 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 			model: id,
 			max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 			temperature,
-			thinking,
+			thinking: reasoningBudget ? { type: "enabled", budget_tokens: reasoningBudget } : undefined,
 			// Cache the system prompt if caching is enabled.
 			system: supportsPromptCache
 				? [{ text: systemPrompt, type: "text" as const, cache_control: { type: "ephemeral" } }]
@@ -155,16 +155,16 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 		let id = modelId && modelId in vertexModels ? (modelId as VertexModelId) : vertexDefaultModelId
 		const info: ModelInfo = vertexModels[id]
 
-		// The `:thinking` variant is a virtual identifier for thinking-enabled
-		// models (similar to how it's handled in the Anthropic provider.)
-		if (id.endsWith(":thinking")) {
-			id = id.replace(":thinking", "") as VertexModelId
-		}
-
 		return {
-			id,
+			// The `:thinking` variant is a virtual identifier for thinking-enabled
+			// models (similar to how it's handled in the Anthropic provider.)
+			id: id.endsWith(":thinking") ? id.replace(":thinking", "") : id,
 			info,
-			...getModelParams({ options: this.options, model: info, defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS }),
+			...getModelParams({
+				options: this.options,
+				model: info,
+				defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+			}),
 		}
 	}
 
@@ -175,14 +175,14 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 				info: { supportsPromptCache },
 				temperature,
 				maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS,
-				thinking,
+				reasoningBudget,
 			} = this.getModel()
 
 			const params: Anthropic.Messages.MessageCreateParamsNonStreaming = {
 				model: id,
 				max_tokens: maxTokens,
 				temperature,
-				thinking,
+				thinking: reasoningBudget ? { type: "enabled", budget_tokens: reasoningBudget } : undefined,
 				messages: [
 					{
 						role: "user",

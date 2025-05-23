@@ -2,7 +2,8 @@ import axios from "axios"
 import { z } from "zod"
 
 import { isModelParameter } from "../../../schemas"
-import { ApiHandlerOptions, ModelInfo, anthropicModels, COMPUTER_USE_MODELS } from "../../../shared/api"
+import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../constants"
+import { ApiHandlerOptions, ModelInfo, COMPUTER_USE_MODELS, anthropicModels } from "../../../shared/api"
 import { parseApiPrice } from "../../../utils/cost"
 
 /**
@@ -192,7 +193,12 @@ export const parseOpenRouterModel = ({
 		cacheWritesPrice,
 		cacheReadsPrice,
 		description: model.description,
-		thinking: id === "anthropic/claude-3.7-sonnet:thinking",
+		supportsReasoningBudget:
+			id.startsWith("anthropic/claude-3.7") ||
+			id.startsWith("anthropic/claude-sonnet-4") ||
+			id.startsWith("anthropic/claude-opus-4"),
+		requiredReasoningBudget: id === "anthropic/claude-3.7-sonnet:thinking",
+		supportsReasoningEffort: supportedParameters ? supportedParameters.includes("reasoning") : undefined,
 		supportedParameters: supportedParameters ? supportedParameters.filter(isModelParameter) : undefined,
 	}
 
@@ -202,14 +208,10 @@ export const parseOpenRouterModel = ({
 		modelInfo.supportsComputerUse = true
 	}
 
-	// Claude 3.7 Sonnet is a "hybrid" thinking model, and the `maxTokens`
-	// values can be configured. For the non-thinking variant we want to
-	// use 8k. The `thinking` variant can be run in 64k and 128k modes,
-	// and we want to use 128k.
-	if (id.startsWith("anthropic/claude-3.7-sonnet")) {
-		modelInfo.maxTokens = id.includes("thinking")
-			? anthropicModels["claude-3-7-sonnet-20250219:thinking"].maxTokens
-			: anthropicModels["claude-3-7-sonnet-20250219"].maxTokens
+	// Special case: Claude 3.7 Sonnet Thinking supports up to 128k tokens if
+	// a beta flag is enabled (which we do).
+	if (id === "anthropic/claude-3.7-sonnet:thinking") {
+		modelInfo.maxTokens = anthropicModels["claude-3-7-sonnet-20250219:thinking"].maxTokens
 	}
 
 	return modelInfo

@@ -1,5 +1,4 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
 
 import { ProviderSettings, ModelInfo, ApiHandlerOptions } from "../shared/api"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./providers/constants"
@@ -102,8 +101,20 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 	}
 }
 
+type ModelParams = {
+	maxTokens: number | undefined
+	temperature: number
+	reasoningEffort: "low" | "medium" | "high" | undefined
+	reasoningBudget: number | undefined
+}
+
 export function getModelParams({
-	options,
+	options: {
+		modelMaxTokens: customMaxTokens,
+		modelMaxThinkingTokens: customMaxThinkingTokens,
+		modelTemperature: customTemperature,
+		reasoningEffort: customReasoningEffort,
+	},
 	model,
 	defaultMaxTokens,
 	defaultTemperature = 0,
@@ -114,32 +125,28 @@ export function getModelParams({
 	defaultMaxTokens?: number
 	defaultTemperature?: number
 	defaultReasoningEffort?: "low" | "medium" | "high"
-}) {
-	const {
-		modelMaxTokens: customMaxTokens,
-		modelMaxThinkingTokens: customMaxThinkingTokens,
-		modelTemperature: customTemperature,
-		reasoningEffort: customReasoningEffort,
-	} = options
-
+}): ModelParams {
 	let maxTokens = model.maxTokens ?? defaultMaxTokens
-	let thinking: BetaThinkingConfigParam | undefined = undefined
 	let temperature = customTemperature ?? defaultTemperature
-	const reasoningEffort = customReasoningEffort ?? defaultReasoningEffort
+	let reasoningEffort: ModelParams["reasoningEffort"] = undefined
+	let reasoningBudget: ModelParams["reasoningBudget"] = undefined
 
-	if (model.thinking) {
-		// Only honor `customMaxTokens` for thinking models.
+	if (model.supportsReasoningBudget) {
+		// "Hybrid" reasoning models use the `reasoningBudget` parameter.
 		maxTokens = customMaxTokens ?? maxTokens
 
 		// Clamp the thinking budget to be at most 80% of max tokens and at
 		// least 1024 tokens.
 		const maxBudgetTokens = Math.floor((maxTokens || ANTHROPIC_DEFAULT_MAX_TOKENS) * 0.8)
-		const budgetTokens = Math.max(Math.min(customMaxThinkingTokens ?? maxBudgetTokens, maxBudgetTokens), 1024)
-		thinking = { type: "enabled", budget_tokens: budgetTokens }
+		reasoningBudget = Math.max(Math.min(customMaxThinkingTokens ?? maxBudgetTokens, maxBudgetTokens), 1024)
 
-		// Anthropic "Thinking" models require a temperature of 1.0.
+		// Let's assume that "Hybrid" reasoning models require a temperature of
+		// 1.0 since Anthropic does.
 		temperature = 1.0
+	} else if (model.supportsReasoningEffort) {
+		// "Traditional" reasoning models use the `reasoningEffort` parameter.
+		reasoningEffort = customReasoningEffort ?? defaultReasoningEffort
 	}
 
-	return { maxTokens, thinking, temperature, reasoningEffort }
+	return { maxTokens, temperature, reasoningEffort, reasoningBudget }
 }

@@ -33,7 +33,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
 		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
-		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
+		let { id: modelId, betas = [], maxTokens, temperature, reasoningBudget } = this.getModel()
 
 		switch (modelId) {
 			case "claude-sonnet-4-20250514":
@@ -66,7 +66,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 						model: modelId,
 						max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 						temperature,
-						thinking,
+						thinking: reasoningBudget ? { type: "enabled", budget_tokens: reasoningBudget } : undefined,
 						// Setting cache breakpoint for system prompt so new tasks can reuse it.
 						system: [{ text: systemPrompt, type: "text", cache_control: cacheControl }],
 						messages: messages.map((message, index) => {
@@ -91,14 +91,6 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 						// prompt caching: https://x.com/alexalbert__/status/1823751995901272068
 						// https://github.com/anthropics/anthropic-sdk-typescript?tab=readme-ov-file#default-headers
 						// https://github.com/anthropics/anthropic-sdk-typescript/commit/c920b77fc67bd839bfeb6716ceab9d7c9bbe7393
-
-						const betas = []
-
-						// Enable extended thinking for Claude 3.7 Sonnet only.
-						// https://docs.anthropic.com/en/docs/about-claude/models/migrating-to-claude-4#extended-output-no-longer-supported
-						if (virtualId === "claude-3-7-sonnet-20250219:thinking") {
-							betas.push("output-128k-2025-02-19")
-						}
 
 						// Then check for models that support prompt caching
 						switch (modelId) {
@@ -204,24 +196,17 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		let id = modelId && modelId in anthropicModels ? (modelId as AnthropicModelId) : anthropicDefaultModelId
 		const info: ModelInfo = anthropicModels[id]
 
-		// Track the original model ID for special variant handling
-		const virtualId = id
-
-		// The `:thinking` variants are virtual identifiers for models with a thinking budget.
-		// We can handle this more elegantly in the future.
-		if (id === "claude-3-7-sonnet-20250219:thinking") {
-			id = "claude-3-7-sonnet-20250219"
-		} else if (id === "claude-sonnet-4-20250514:thinking") {
-			id = "claude-sonnet-4-20250514"
-		} else if (id === "claude-opus-4-20250514:thinking") {
-			id = "claude-opus-4-20250514"
-		}
-
 		return {
-			id,
+			// The `:thinking` variants are virtual identifiers for models with a thinking budget.
+			// We can handle this more elegantly in the future.
+			id: id === "claude-3-7-sonnet-20250219:thinking" ? "claude-3-7-sonnet-20250219" : id,
 			info,
-			virtualId, // Include the original ID to use for header selection
-			...getModelParams({ options: this.options, model: info, defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS }),
+			betas: id === "claude-3-7-sonnet-20250219:thinking" ? ["output-128k-2025-02-19"] : undefined,
+			...getModelParams({
+				options: this.options,
+				model: info,
+				defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+			}),
 		}
 	}
 

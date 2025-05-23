@@ -1,4 +1,4 @@
-// npx jest api/providers/fetchers/__tests__/fetchers.test.ts
+// npx vitest run --globals api/providers/fetchers/__tests__/openrouter.spec.ts
 
 import * as path from "path"
 
@@ -11,9 +11,8 @@ import { getOpenRouterModelEndpoints, getOpenRouterModels } from "../openrouter"
 nockBack.fixtures = path.join(__dirname, "fixtures")
 nockBack.setMode("lockdown")
 
-describe.skip("OpenRouter API", () => {
+describe("OpenRouter API", () => {
 	describe("getOpenRouterModels", () => {
-		// This flakes in CI (probably related to Nock). Need to figure out why.
 		it("fetches models and validates schema", async () => {
 			const { nockDone } = await nockBack("openrouter-models.json")
 
@@ -37,18 +36,13 @@ describe.skip("OpenRouter API", () => {
 				"anthropic/claude-3.7-sonnet",
 				"anthropic/claude-3.7-sonnet:beta",
 				"anthropic/claude-3.7-sonnet:thinking",
+				"anthropic/claude-opus-4",
+				"anthropic/claude-sonnet-4",
 			])
 
 			expect(
 				Object.entries(models)
-					.filter(([_, model]) => model.thinking)
-					.map(([id, _]) => id)
-					.sort(),
-			).toEqual(["anthropic/claude-3.7-sonnet:thinking"])
-
-			expect(
-				Object.entries(models)
-					.filter(([_, model]) => model.supportedParameters?.includes("reasoning"))
+					.filter(([_, model]) => model.supportsReasoningEffort)
 					.map(([id, _]) => id)
 					.sort(),
 			).toEqual([
@@ -110,6 +104,26 @@ describe.skip("OpenRouter API", () => {
 				"x-ai/grok-3-mini-beta",
 			])
 
+			expect(
+				Object.entries(models)
+					.filter(([_, model]) => model.supportsReasoningBudget)
+					.map(([id, _]) => id)
+					.sort(),
+			).toEqual([
+				"anthropic/claude-3.7-sonnet",
+				"anthropic/claude-3.7-sonnet:beta",
+				"anthropic/claude-3.7-sonnet:thinking",
+				"anthropic/claude-opus-4",
+				"anthropic/claude-sonnet-4",
+			])
+
+			expect(
+				Object.entries(models)
+					.filter(([_, model]) => model.requiredReasoningBudget)
+					.map(([id, _]) => id)
+					.sort(),
+			).toEqual(["anthropic/claude-3.7-sonnet:thinking"])
+
 			expect(models["anthropic/claude-3.7-sonnet"]).toEqual({
 				maxTokens: 8192,
 				contextWindow: 200000,
@@ -120,8 +134,10 @@ describe.skip("OpenRouter API", () => {
 				cacheWritesPrice: 3.75,
 				cacheReadsPrice: 0.3,
 				description: expect.any(String),
-				thinking: false,
 				supportsComputerUse: true,
+				supportsReasoningBudget: true,
+				requiredReasoningBudget: false,
+				supportsReasoningEffort: true,
 				supportedParameters: ["max_tokens", "temperature", "reasoning", "include_reasoning"],
 			})
 
@@ -135,8 +151,10 @@ describe.skip("OpenRouter API", () => {
 				cacheWritesPrice: 3.75,
 				cacheReadsPrice: 0.3,
 				description: expect.any(String),
-				thinking: true,
 				supportsComputerUse: true,
+				supportsReasoningBudget: true,
+				requiredReasoningBudget: true,
+				supportsReasoningEffort: true,
 				supportedParameters: ["max_tokens", "temperature", "reasoning", "include_reasoning"],
 			})
 
@@ -185,7 +203,10 @@ describe.skip("OpenRouter API", () => {
 					cacheWritesPrice: 1.625,
 					cacheReadsPrice: 0.31,
 					description: undefined,
-					thinking: false,
+					supportsReasoningBudget: false,
+					supportsReasoningEffort: undefined,
+					requiredReasoningBudget: false,
+					supportedParameters: undefined,
 				},
 				"Google AI Studio": {
 					maxTokens: 0,
@@ -197,7 +218,10 @@ describe.skip("OpenRouter API", () => {
 					cacheWritesPrice: 1.625,
 					cacheReadsPrice: 0.31,
 					description: undefined,
-					thinking: false,
+					supportsReasoningBudget: false,
+					supportsReasoningEffort: undefined,
+					requiredReasoningBudget: false,
+					supportedParameters: undefined,
 				},
 			})
 
