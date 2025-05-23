@@ -3,7 +3,6 @@ import type { ApiHandlerOptions } from "../../shared/api"
 
 import type { ApiStreamUsageChunk } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
-import { getOpenAiReasoning } from "../transform/reasoning"
 
 import { OpenAiHandler } from "./openai"
 
@@ -22,9 +21,8 @@ export class DeepSeekHandler extends OpenAiHandler {
 	override getModel() {
 		const modelId = this.options.apiModelId ?? deepSeekDefaultModelId
 		const info = deepSeekModels[modelId as keyof typeof deepSeekModels] || deepSeekModels[deepSeekDefaultModelId]
-		const params = getModelParams({ options: this.options, model: info })
-		const reasoning = getOpenAiReasoning({ model: info, params, settings: this.options })
-		return { id: modelId, info, ...params, reasoning }
+		const params = getModelParams({ format: "openai", settings: this.options, model: info })
+		return { id: modelId, info, ...params }
 	}
 
 	// Override to handle DeepSeek's usage metrics, including caching.

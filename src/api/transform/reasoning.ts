@@ -4,10 +4,10 @@ import OpenAI from "openai"
 import { ModelInfo, ProviderSettings } from "../../schemas"
 import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
 
-import type { ModelParams } from "./model-params"
+type ReasoningEffort = "low" | "medium" | "high"
 
 export type OpenRouterReasoningParams = {
-	effort?: "high" | "medium" | "low"
+	effort?: ReasoningEffort
 	max_tokens?: number
 	exclude?: boolean
 }
@@ -18,33 +18,35 @@ export type OpenAiReasoningParams = { reasoning_effort: OpenAI.Chat.ChatCompleti
 
 export type GetModelResoningOptions = {
 	model: ModelInfo
-	params: ModelParams
+	reasoningBudget: number | undefined
+	reasoningEffort: ReasoningEffort | undefined
 	settings: ProviderSettings
 }
 
 export const getOpenRouterReasoning = ({
 	model,
-	params,
+	reasoningBudget,
+	reasoningEffort,
 	settings,
 }: GetModelResoningOptions): OpenRouterReasoningParams | undefined =>
 	shouldUseReasoningBudget({ model, settings })
-		? { max_tokens: params.reasoningBudget }
+		? { max_tokens: reasoningBudget }
 		: shouldUseReasoningEffort({ model, settings })
-			? { effort: params.reasoningEffort }
+			? { effort: reasoningEffort }
 			: undefined
 
 export const getAnthropicReasoning = ({
 	model,
-	params,
+	reasoningBudget,
+	reasoningEffort,
 	settings,
 }: GetModelResoningOptions): AnthropicReasoningParams | undefined =>
-	shouldUseReasoningBudget({ model, settings })
-		? { type: "enabled", budget_tokens: params.reasoningBudget! }
-		: undefined
+	shouldUseReasoningBudget({ model, settings }) ? { type: "enabled", budget_tokens: reasoningBudget! } : undefined
 
 export const getOpenAiReasoning = ({
 	model,
-	params,
+	reasoningBudget,
+	reasoningEffort,
 	settings,
 }: GetModelResoningOptions): OpenAiReasoningParams | undefined =>
-	shouldUseReasoningEffort({ model, settings }) ? { reasoning_effort: params.reasoningEffort } : undefined
+	shouldUseReasoningEffort({ model, settings }) ? { reasoning_effort: reasoningEffort } : undefined

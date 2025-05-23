@@ -14,7 +14,7 @@ import { ApiStreamChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
 import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic"
 import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
-import { type OpenRouterReasoningParams, getOpenRouterReasoning } from "../transform/reasoning"
+import type { OpenRouterReasoningParams } from "../transform/reasoning"
 import { getModelParams } from "../transform/model-params"
 
 import { getModels } from "./fetchers/modelCache"
@@ -189,9 +189,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
 		const defaultTemperature = isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0
-		const params = getModelParams({ options: this.options, model: info, defaultTemperature })
-		const reasoning = getOpenRouterReasoning({ model: info, params, settings: this.options })
-		return { id, info, topP: isDeepSeekR1 ? 0.95 : undefined, ...params, reasoning }
+		const params = getModelParams({ format: "openrouter", settings: this.options, model: info, defaultTemperature })
+		return { id, info, topP: isDeepSeekR1 ? 0.95 : undefined, ...params }
 	}
 
 	async completePrompt(prompt: string) {

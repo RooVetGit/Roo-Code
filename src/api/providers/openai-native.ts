@@ -14,7 +14,6 @@ import { calculateApiCostOpenAI } from "../../utils/cost"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
-import { getOpenAiReasoning } from "../transform/reasoning"
 
 import type { SingleCompletionHandler } from "../index"
 import { BaseProvider } from "./base-provider"
@@ -166,13 +165,12 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 		const info: ModelInfo = openAiNativeModels[id]
 
-		const params = getModelParams({
-			options: this.options,
+		const { temperature, ...params } = getModelParams({
+			format: "openai",
+			settings: this.options,
 			model: info,
 			defaultTemperature: OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 		})
-
-		const reasoning = getOpenAiReasoning({ model: info, params, settings: this.options })
 
 		// The o3 models are named like "o3-mini-[reasoning-effort]", which are
 		// not valid model ids, so we need to strip the suffix.
@@ -181,8 +179,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			id: id.startsWith("o3-mini") ? "o3-mini" : id,
 			info,
 			...params,
-			temperature: id.startsWith("o1") || id.startsWith("o3-mini") ? undefined : params.temperature,
-			reasoning,
+			temperature: id.startsWith("o1") || id.startsWith("o3-mini") ? undefined : temperature,
 		}
 	}
 

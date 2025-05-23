@@ -11,7 +11,6 @@ import {
 } from "../../shared/api"
 
 import { ApiStream } from "../transform/stream"
-import { getAnthropicReasoning } from "../transform/reasoning"
 import { getModelParams } from "../transform/model-params"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
@@ -38,7 +37,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
 		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
-		let { id: modelId, betas = [], maxTokens, temperature, thinking } = this.getModel()
+		let { id: modelId, betas = [], maxTokens, temperature, reasoning: thinking } = this.getModel()
 
 		switch (modelId) {
 			case "claude-sonnet-4-20250514":
@@ -202,12 +201,11 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		const info: ModelInfo = anthropicModels[id]
 
 		const params = getModelParams({
-			options: this.options,
+			format: "anthropic",
+			settings: this.options,
 			model: info,
 			defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
 		})
-
-		const thinking = getAnthropicReasoning({ model: info, params, settings: this.options })
 
 		// The `:thinking` suffix indicates that the model is a "Hybrid"
 		// reasoning model and that reasoning is required to be enabled.
@@ -218,7 +216,6 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			info,
 			betas: id === "claude-3-7-sonnet-20250219:thinking" ? ["output-128k-2025-02-19"] : undefined,
 			...params,
-			thinking,
 		}
 	}
 

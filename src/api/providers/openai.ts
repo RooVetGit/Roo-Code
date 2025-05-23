@@ -15,7 +15,6 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
 import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { getOpenAiReasoning } from "../transform/reasoning"
 import { getModelParams } from "../transform/model-params"
 
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
@@ -241,9 +240,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	override getModel() {
 		const id = this.options.openAiModelId ?? ""
 		const info = this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults
-		const params = getModelParams({ options: this.options, model: info })
-		const reasoning = getOpenAiReasoning({ model: info, params, settings: this.options })
-		return { id, info, ...params, reasoning }
+		const params = getModelParams({ format: "openai", settings: this.options, model: info })
+		return { id, info, ...params }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {

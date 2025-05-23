@@ -5,7 +5,6 @@ import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels } from "../
 
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { getOpenAiReasoning } from "../transform/reasoning"
 import { getModelParams } from "../transform/model-params"
 
 import { DEFAULT_HEADERS } from "./constants"
@@ -35,9 +34,8 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 				: xaiDefaultModelId
 
 		const info = xaiModels[id]
-		const params = getModelParams({ options: this.options, model: info })
-		const reasoning = getOpenAiReasoning({ model: info, params, settings: this.options })
-		return { id, info, ...params, reasoning }
+		const params = getModelParams({ format: "openai", settings: this.options, model: info })
+		return { id, info, ...params }
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {

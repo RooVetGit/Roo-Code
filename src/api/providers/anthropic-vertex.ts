@@ -7,7 +7,6 @@ import { safeJsonParse } from "../../shared/safeJsonParse"
 
 import { ApiStream } from "../transform/stream"
 import { addCacheBreakpoints } from "../transform/caching/vertex"
-import { getAnthropicReasoning } from "../transform/reasoning"
 import { getModelParams } from "../transform/model-params"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
@@ -57,7 +56,7 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 			info: { supportsPromptCache },
 			temperature,
 			maxTokens,
-			thinking,
+			reasoning: thinking,
 		} = this.getModel()
 
 		/**
@@ -158,18 +157,17 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 		const info: ModelInfo = vertexModels[id]
 
 		const params = getModelParams({
-			options: this.options,
+			format: "anthropic",
+			settings: this.options,
 			model: info,
 			defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
 		})
-
-		const thinking = getAnthropicReasoning({ model: info, params, settings: this.options })
 
 		// The `:thinking` suffix indicates that the model is a "Hybrid"
 		// reasoning model and that reasoning is required to be enabled.
 		// The actual model ID honored by Anthropic's API does not have this
 		// suffix.
-		return { id: id.endsWith(":thinking") ? id.replace(":thinking", "") : id, info, ...params, thinking }
+		return { id: id.endsWith(":thinking") ? id.replace(":thinking", "") : id, info, ...params }
 	}
 
 	async completePrompt(prompt: string) {
@@ -179,7 +177,7 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 				info: { supportsPromptCache },
 				temperature,
 				maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS,
-				thinking,
+				reasoning: thinking,
 			} = this.getModel()
 
 			const params: Anthropic.Messages.MessageCreateParamsNonStreaming = {

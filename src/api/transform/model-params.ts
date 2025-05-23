@@ -1,34 +1,69 @@
+import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
 import type { ModelInfo, ProviderSettings } from "../../shared/api"
 
-import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
+import {
+	type AnthropicReasoningParams,
+	type OpenAiReasoningParams,
+	type OpenRouterReasoningParams,
+	getAnthropicReasoning,
+	getOpenAiReasoning,
+	getOpenRouterReasoning,
+} from "./reasoning"
 
-export type ModelParams = {
+type GetModelParamsOptions<T extends "openai" | "anthropic" | "openrouter"> = {
+	format: T
+	settings: ProviderSettings
+	model: ModelInfo
+	defaultMaxTokens?: number
+	defaultTemperature?: number
+}
+
+type BaseModelParams = {
 	maxTokens: number | undefined
 	temperature: number
 	reasoningEffort: "low" | "medium" | "high" | undefined
 	reasoningBudget: number | undefined
 }
 
+type OpenAiModelParams = {
+	format: "openai"
+	reasoning: OpenAiReasoningParams | undefined
+} & BaseModelParams
+
+type AnthropicModelParams = {
+	format: "anthropic"
+	reasoning: AnthropicReasoningParams | undefined
+} & BaseModelParams
+
+type OpenRouterModelParams = {
+	format: "openrouter"
+	reasoning: OpenRouterReasoningParams | undefined
+} & BaseModelParams
+
+export type ModelParams = OpenAiModelParams | AnthropicModelParams | OpenRouterModelParams
+
+// Function overloads for specific return types
+export function getModelParams(options: GetModelParamsOptions<"openai">): OpenAiModelParams
+export function getModelParams(options: GetModelParamsOptions<"anthropic">): AnthropicModelParams
+export function getModelParams(options: GetModelParamsOptions<"openrouter">): OpenRouterModelParams
 export function getModelParams({
-	options: {
+	format,
+	settings,
+	model,
+	defaultMaxTokens,
+	defaultTemperature = 0,
+}: GetModelParamsOptions<"openai" | "anthropic" | "openrouter">): ModelParams {
+	const {
 		modelMaxTokens: customMaxTokens,
 		modelMaxThinkingTokens: customMaxThinkingTokens,
 		modelTemperature: customTemperature,
 		reasoningEffort: customReasoningEffort,
-	},
-	model,
-	defaultMaxTokens,
-	defaultTemperature = 0,
-}: {
-	options: ProviderSettings
-	model: ModelInfo
-	defaultMaxTokens?: number
-	defaultTemperature?: number
-}): ModelParams {
+	} = settings
+
 	let maxTokens = model.maxTokens ?? defaultMaxTokens
 	let temperature = customTemperature ?? defaultTemperature
-	let reasoningEffort: ModelParams["reasoningEffort"] = undefined
 	let reasoningBudget: ModelParams["reasoningBudget"] = undefined
+	let reasoningEffort: ModelParams["reasoningEffort"] = undefined
 
 	if (model.supportsReasoningBudget) {
 		// "Hybrid" reasoning models use the `reasoningBudget` parameter.
@@ -47,5 +82,25 @@ export function getModelParams({
 		reasoningEffort = customReasoningEffort ?? model.reasoningEffort
 	}
 
-	return { maxTokens, temperature, reasoningEffort, reasoningBudget }
+	const params: BaseModelParams = { maxTokens, temperature, reasoningEffort, reasoningBudget }
+
+	if (format === "anthropic") {
+		return {
+			format,
+			...params,
+			reasoning: getAnthropicReasoning({ model, reasoningBudget, reasoningEffort, settings }),
+		}
+	} else if (format === "openai") {
+		return {
+			format,
+			...params,
+			reasoning: getOpenAiReasoning({ model, reasoningBudget, reasoningEffort, settings }),
+		}
+	} else {
+		return {
+			format,
+			...params,
+			reasoning: getOpenRouterReasoning({ model, reasoningBudget, reasoningEffort, settings }),
+		}
+	}
 }
