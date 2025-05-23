@@ -37,7 +37,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
 		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
-		let { id: modelId, betas = [], maxTokens, temperature, reasoningBudget } = this.getModel()
+		let { id: modelId, betas = [], maxTokens, temperature, thinking } = this.getModel()
 
 		switch (modelId) {
 			case "claude-sonnet-4-20250514":
@@ -70,7 +70,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 						model: modelId,
 						max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 						temperature,
-						thinking: reasoningBudget ? { type: "enabled", budget_tokens: reasoningBudget } : undefined,
+						thinking,
 						// Setting cache breakpoint for system prompt so new tasks can reuse it.
 						system: [{ text: systemPrompt, type: "text", cache_control: cacheControl }],
 						messages: messages.map((message, index) => {
