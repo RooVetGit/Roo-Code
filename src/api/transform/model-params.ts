@@ -89,7 +89,7 @@ export function getModelParams({
 
 	// For "Hybrid" reasoning models, we should discard the model's actual
 	// `maxTokens` value if we're not using reasoning.
-	if (model.supportsReasoningEffort && !reasoningBudget) {
+	if (model.supportsReasoningBudget && !reasoningBudget) {
 		maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS
 	}
 

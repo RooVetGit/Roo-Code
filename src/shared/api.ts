@@ -1009,7 +1009,6 @@ export const openAiNativeModels = {
 		inputPrice: 10.0,
 		outputPrice: 40.0,
 		cacheReadsPrice: 2.5,
-		supportsReasoningEffort: true,
 		reasoningEffort: "high",
 	},
 	"o3-low": {
@@ -1020,7 +1019,6 @@ export const openAiNativeModels = {
 		inputPrice: 10.0,
 		outputPrice: 40.0,
 		cacheReadsPrice: 2.5,
-		supportsReasoningEffort: true,
 		reasoningEffort: "low",
 	},
 	"o4-mini": {
@@ -1042,7 +1040,6 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
-		supportsReasoningEffort: true,
 		reasoningEffort: "high",
 	},
 	"o4-mini-low": {
@@ -1053,7 +1050,6 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
-		supportsReasoningEffort: true,
 		reasoningEffort: "low",
 	},
 	"o3-mini": {
@@ -1075,7 +1071,6 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
-		supportsReasoningEffort: true,
 		reasoningEffort: "high",
 	},
 	"o3-mini-low": {
@@ -1086,7 +1081,6 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
-		supportsReasoningEffort: true,
 		reasoningEffort: "low",
 	},
 	o1: {
@@ -1936,7 +1930,7 @@ export const shouldUseReasoningEffort = ({
 }: {
 	model: ModelInfo
 	settings?: ProviderSettings
-}): boolean => !!model.supportsReasoningEffort && (!!model.reasoningEffort || !!settings?.reasoningEffort)
+}): boolean => (!!model.supportsReasoningEffort && !!settings?.reasoningEffort) || !!model.reasoningEffort
 
 export const DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS = 16_384
 export const DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS = 8_192
@@ -1953,18 +1947,4 @@ export const getModelMaxOutputTokens = ({
 	}
 
 	return model.maxTokens ?? undefined
-}
-
-export const getModelMaxThinkingTokens = ({
-	model,
-	settings,
-}: {
-	model: ModelInfo
-	settings?: ProviderSettings
-}): number | undefined => {
-	if (shouldUseReasoningBudget({ model, settings })) {
-		return settings?.modelMaxThinkingTokens || DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS
-	}
-
-	return undefined
 }

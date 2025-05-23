@@ -157,6 +157,7 @@ describe("OpenAiHandler", () => {
 			expect(textChunks).toHaveLength(1)
 			expect(textChunks[0].text).toBe("Test response")
 		})
+
 		it("should include reasoning_effort when reasoning effort is enabled", async () => {
 			const reasoningOptions: ApiHandlerOptions = {
 				...mockOptions,

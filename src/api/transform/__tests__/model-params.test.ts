@@ -494,16 +494,34 @@ describe("getModelParams", () => {
 			expect(result.reasoningEffort).toBe("medium")
 			expect(result.reasoning).toBeUndefined() // Anthropic doesn't support reasoning effort
 		})
-	})
 
-	describe("Hybrid reasoning models (supportsReasoningEffort)", () => {
-		it("should use ANTHROPIC_DEFAULT_MAX_TOKENS for hybrid models when not using reasoning", () => {
+		it("should use reasoningEffort if supportsReasoningEffort is false but reasoningEffort is set", () => {
 			const model: ModelInfo = {
 				...baseModel,
 				maxTokens: 8000,
-				supportsReasoningEffort: true,
+				supportsReasoningEffort: false,
+				reasoningEffort: "medium",
 			}
 
+			const result = getModelParams({
+				...openaiParams,
+				settings: {},
+				model,
+			})
+
+			expect(result.maxTokens).toBe(8000)
+			expect(result.reasoningEffort).toBe("medium")
+		})
+	})
+
+	describe("Hybrid reasoning models (supportsReasoningEffort)", () => {
+		const model: ModelInfo = {
+			...baseModel,
+			maxTokens: 8000,
+			supportsReasoningBudget: true,
+		}
+
+		it("should use ANTHROPIC_DEFAULT_MAX_TOKENS for hybrid models when not using reasoning", () => {
 			const result = getModelParams({
 				...anthropicParams,
 				settings: {},
@@ -516,13 +534,6 @@ describe("getModelParams", () => {
 		})
 
 		it("should keep model maxTokens for hybrid models when using reasoning budget", () => {
-			const model: ModelInfo = {
-				...baseModel,
-				maxTokens: 8000,
-				supportsReasoningEffort: true,
-				supportsReasoningBudget: true,
-			}
-
 			const result = getModelParams({
 				...anthropicParams,
 				settings: { enableReasoningEffort: true },
@@ -532,25 +543,6 @@ describe("getModelParams", () => {
 			// Should keep model's maxTokens when using reasoning
 			expect(result.maxTokens).toBe(8000)
 			expect(result.reasoningBudget).toBe(6400) // 80% of 8000
-		})
-
-		it("should use ANTHROPIC_DEFAULT_MAX_TOKENS for hybrid models when using reasoning effort", () => {
-			const model: ModelInfo = {
-				...baseModel,
-				maxTokens: 8000,
-				supportsReasoningEffort: true,
-				reasoningEffort: "medium",
-			}
-
-			const result = getModelParams({
-				...openaiParams,
-				settings: {},
-				model,
-			})
-
-			// Should use ANTHROPIC_DEFAULT_MAX_TOKENS for hybrid models when not using reasoning budget
-			expect(result.maxTokens).toBe(ANTHROPIC_DEFAULT_MAX_TOKENS)
-			expect(result.reasoningEffort).toBe("medium")
 		})
 	})
 
