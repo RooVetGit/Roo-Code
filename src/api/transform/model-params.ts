@@ -1,5 +1,10 @@
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
-import type { ModelInfo, ProviderSettings } from "../../shared/api"
+import {
+	shouldUseReasoningBudget,
+	shouldUseReasoningEffort,
+	type ModelInfo,
+	type ProviderSettings,
+} from "../../shared/api"
 
 import {
 	type AnthropicReasoningParams,
@@ -12,9 +17,9 @@ import {
 
 type GetModelParamsOptions<T extends "openai" | "anthropic" | "openrouter"> = {
 	format: T
-	settings: ProviderSettings
+	modelId: string
 	model: ModelInfo
-	defaultMaxTokens?: number
+	settings: ProviderSettings
 	defaultTemperature?: number
 }
 
@@ -48,9 +53,9 @@ export function getModelParams(options: GetModelParamsOptions<"anthropic">): Ant
 export function getModelParams(options: GetModelParamsOptions<"openrouter">): OpenRouterModelParams
 export function getModelParams({
 	format,
-	settings,
+	modelId,
 	model,
-	defaultMaxTokens,
+	settings,
 	defaultTemperature = 0,
 }: GetModelParamsOptions<"openai" | "anthropic" | "openrouter">): ModelParams {
 	const {
@@ -60,12 +65,12 @@ export function getModelParams({
 		reasoningEffort: customReasoningEffort,
 	} = settings
 
-	let maxTokens = model.maxTokens ?? defaultMaxTokens
+	let maxTokens = model.maxTokens ?? undefined
 	let temperature = customTemperature ?? defaultTemperature
 	let reasoningBudget: ModelParams["reasoningBudget"] = undefined
 	let reasoningEffort: ModelParams["reasoningEffort"] = undefined
 
-	if (model.supportsReasoningBudget) {
+	if (shouldUseReasoningBudget({ model, settings })) {
 		// "Hybrid" reasoning models use the `reasoningBudget` parameter.
 		maxTokens = customMaxTokens ?? maxTokens
 
@@ -77,9 +82,23 @@ export function getModelParams({
 		// Let's assume that "Hybrid" reasoning models require a temperature of
 		// 1.0 since Anthropic does.
 		temperature = 1.0
-	} else if (model.supportsReasoningEffort) {
+	} else if (shouldUseReasoningEffort({ model, settings })) {
 		// "Traditional" reasoning models use the `reasoningEffort` parameter.
 		reasoningEffort = customReasoningEffort ?? model.reasoningEffort
+	}
+
+	// For "Hybrid" reasoning models, we should discard the model's actual
+	// `maxTokens` value if we're not using reasoning.
+	if (model.supportsReasoningEffort && !reasoningBudget) {
+		maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS
+	}
+
+	// For Anthropic models we should always make sure a `maxTokens` value is
+	// set.
+	const isAnthropic = format === "anthropic" || (format === "openrouter" && modelId.startsWith("anthropic/"))
+
+	if (!maxTokens && isAnthropic) {
+		maxTokens = ANTHROPIC_DEFAULT_MAX_TOKENS
 	}
 
 	const params: BaseModelParams = { maxTokens, temperature, reasoningEffort, reasoningBudget }

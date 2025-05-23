@@ -19,10 +19,10 @@ export class DeepSeekHandler extends OpenAiHandler {
 	}
 
 	override getModel() {
-		const modelId = this.options.apiModelId ?? deepSeekDefaultModelId
-		const info = deepSeekModels[modelId as keyof typeof deepSeekModels] || deepSeekModels[deepSeekDefaultModelId]
-		const params = getModelParams({ format: "openai", settings: this.options, model: info })
-		return { id: modelId, info, ...params }
+		const id = this.options.apiModelId ?? deepSeekDefaultModelId
+		const info = deepSeekModels[id as keyof typeof deepSeekModels] || deepSeekModels[deepSeekDefaultModelId]
+		const params = getModelParams({ format: "openai", modelId: id, model: info, settings: this.options })
+		return { id, info, ...params }
 	}
 
 	// Override to handle DeepSeek's usage metrics, including caching.

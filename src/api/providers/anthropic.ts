@@ -202,9 +202,9 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 
 		const params = getModelParams({
 			format: "anthropic",
-			settings: this.options,
+			modelId: id,
 			model: info,
-			defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+			settings: this.options,
 		})
 
 		// The `:thinking` suffix indicates that the model is a "Hybrid"

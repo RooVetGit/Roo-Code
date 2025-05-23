@@ -155,13 +155,7 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 		const modelId = this.options.apiModelId
 		let id = modelId && modelId in vertexModels ? (modelId as VertexModelId) : vertexDefaultModelId
 		const info: ModelInfo = vertexModels[id]
-
-		const params = getModelParams({
-			format: "anthropic",
-			settings: this.options,
-			model: info,
-			defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
-		})
+		const params = getModelParams({ format: "anthropic", modelId: id, model: info, settings: this.options })
 
 		// The `:thinking` suffix indicates that the model is a "Hybrid"
 		// reasoning model and that reasoning is required to be enabled.

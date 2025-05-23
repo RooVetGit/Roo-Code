@@ -167,8 +167,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 		const { temperature, ...params } = getModelParams({
 			format: "openai",
-			settings: this.options,
+			modelId: id,
 			model: info,
+			settings: this.options,
 			defaultTemperature: OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 		})
 

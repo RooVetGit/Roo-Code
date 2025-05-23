@@ -38,14 +38,12 @@ export const getOpenRouterReasoning = ({
 export const getAnthropicReasoning = ({
 	model,
 	reasoningBudget,
-	reasoningEffort,
 	settings,
 }: GetModelResoningOptions): AnthropicReasoningParams | undefined =>
 	shouldUseReasoningBudget({ model, settings }) ? { type: "enabled", budget_tokens: reasoningBudget! } : undefined
 
 export const getOpenAiReasoning = ({
 	model,
-	reasoningBudget,
 	reasoningEffort,
 	settings,
 }: GetModelResoningOptions): OpenAiReasoningParams | undefined =>
