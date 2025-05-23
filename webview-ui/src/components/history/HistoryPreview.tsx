@@ -21,15 +21,7 @@ const HistoryPreview = () => {
 				{tasks.length !== 0 && (
 					<>
 						{tasks.slice(0, 3).map((item) => {
-							let taskTitle = item.task
-							if (item.lastActiveModeSlug) {
-								const mode = getModeBySlug(item.lastActiveModeSlug, customModes) as
-									| ModeConfig
-									| undefined
-								if (mode?.name) {
-									taskTitle = `[Last Mode: ${mode.name}] ${item.task}`
-								}
-							}
+							const taskTitle = item.task
 							return (
 								<div
 									key={item.id}
@@ -52,15 +44,32 @@ const HistoryPreview = () => {
 											}}>
 											{taskTitle}
 										</div>
-										<div className="flex flex-row gap-2 text-xs text-vscode-descriptionForeground">
-											<span>↑ {formatLargeNumber(item.tokensIn || 0)}</span>
-											<span>↓ {formatLargeNumber(item.tokensOut || 0)}</span>
-											{!!item.totalCost && (
-												<span>
-													<Coins className="inline-block size-[1em]" />{" "}
-													{"$" + item.totalCost?.toFixed(2)}
-												</span>
-											)}
+										<div className="flex flex-wrap gap-2 text-xs text-vscode-descriptionForeground">
+											{item.lastActiveModeSlug &&
+												(() => {
+													const mode = getModeBySlug(item.lastActiveModeSlug, customModes) as
+														| ModeConfig
+														| undefined
+													if (mode?.name) {
+														return (
+															<span className="max-w-full overflow-hidden whitespace-nowrap">
+																{mode.name}
+															</span>
+														)
+													}
+													return null
+												})()}
+
+											<div className="flex flex-row gap-2">
+												<span>↑ {formatLargeNumber(item.tokensIn || 0)}</span>
+												<span>↓ {formatLargeNumber(item.tokensOut || 0)}</span>
+												{!!item.totalCost && (
+													<span>
+														<Coins className="inline-block size-[1em]" />{" "}
+														{"$" + item.totalCost?.toFixed(2)}
+													</span>
+												)}
+											</div>
 										</div>
 										{showAllWorkspaces && item.workspace && (
 											<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
