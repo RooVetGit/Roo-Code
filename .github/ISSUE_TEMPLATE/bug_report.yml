@@ -73,7 +73,7 @@ body:
     attributes:
       label: 💥 Outcome Summary
       description: |
-        Recap what went wrong in one or two lines. Use this if the bug is weird, unexpected, or needs extra context.
+        Recap what went wrong in one or two lines.
 
         Example: "Expected code to run, but got an empty response and no error."
       placeholder: Expected ___, but got ___.
