@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.18.1",
+	"version": "3.18.2",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -321,7 +321,7 @@
 		"lint": "eslint . --ext=ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
 		"pretest": "pnpm bundle",
-		"test": "jest -w=40% && vitest run",
+		"test": "jest -w=40% && vitest run --globals",
 		"format": "prettier --write .",
 		"bundle": "pnpm clean && pnpm --filter @roo-code/build build && node esbuild.mjs",
 		"build": "pnpm bundle --production && pnpm --filter @roo-code/vscode-webview build",

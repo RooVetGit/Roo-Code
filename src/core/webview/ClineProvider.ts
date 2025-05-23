@@ -573,7 +573,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		])
 
 		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "codicons", "codicon.css"])
-		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "vscode-material-icons"])
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"assets",
+			"vscode-material-icons",
+			"icons",
+		])
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 		const audioUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "audio"])
 
@@ -650,7 +654,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const scriptUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "build", "assets", "index.js"])
 		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "codicons", "codicon.css"])
-		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "vscode-material-icons"])
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"assets",
+			"vscode-material-icons",
+			"icons",
+		])
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 		const audioUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "audio"])
 
@@ -1255,7 +1263,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
-			allowedMaxRequests: allowedMaxRequests ?? Infinity,
+			allowedMaxRequests,
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
@@ -1361,7 +1369,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
-			allowedMaxRequests: stateValues.allowedMaxRequests ?? Infinity,
+			allowedMaxRequests: stateValues.allowedMaxRequests,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
