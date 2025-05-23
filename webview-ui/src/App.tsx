@@ -8,6 +8,7 @@ import TranslationProvider from "./i18n/TranslationContext"
 import { vscode } from "./utils/vscode"
 import { telemetryClient } from "./utils/TelemetryClient"
 import { ExtensionStateContextProvider, useExtensionState } from "./context/ExtensionStateContext"
+import ErrorBoundary from "./components/common/ErrorBoundary"
 import ChatView, { ChatViewRef } from "./components/chat/ChatView"
 import HistoryView from "./components/history/HistoryView"
 import SettingsView, { SettingsViewRef } from "./components/settings/SettingsView"
@@ -30,6 +31,8 @@ const App = () => {
 	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
 		useExtensionState()
 
+	const [isLoading, setIsLoading] = useState(true);
+	const [loadingError, setLoadingError] = useState<string | null>(null);
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
 
@@ -102,8 +105,38 @@ const App = () => {
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
 
-	if (!didHydrateState) {
-		return null
+	useEffect(() => {
+		if (didHydrateState) {
+			setIsLoading(false);
+			return;
+		}
+
+		const timer = setTimeout(() => {
+			if (!didHydrateState) {
+				setLoadingError(
+					"The extension is taking longer than expected to load. Please try reloading the VS Code window. If the issue persists, ensure your extension and VS Code are up to date."
+				);
+			}
+		}, 10000); // 10 seconds timeout
+
+		return () => clearTimeout(timer);
+	}, [didHydrateState]);
+
+	if (loadingError) {
+		return (
+			<div style={{ padding: '20px', textAlign: 'center' }}>
+				<h1>Error</h1>
+				<p>{loadingError}</p>
+			</div>
+		);
+	}
+
+	if (isLoading) {
+		return (
+			<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+				<p>Loading...</p>
+			</div>
+		);
 	}
 
 	// Do not conditionally load ChatView, it's expensive and there's state we
@@ -111,7 +144,7 @@ const App = () => {
 	return showWelcome ? (
 		<WelcomeView />
 	) : (
-		<>
+		<ErrorBoundary>
 			{tab === "prompts" && <PromptsView onDone={() => switchTab("chat")} />}
 			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
 			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}
@@ -132,7 +165,7 @@ const App = () => {
 				onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
 				onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
 			/>
-		</>
+		</ErrorBoundary>
 	)
 }
 

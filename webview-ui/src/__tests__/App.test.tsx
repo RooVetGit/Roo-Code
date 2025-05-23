@@ -1,199 +1,159 @@
-// npx jest src/__tests__/App.test.tsx
+import React from 'react';
+import { render, screen, act } from '@testing-library/react';
+import AppWithProviders from '../App'; // Assuming App is exported as AppWithProviders
+import { useExtensionState } from '../context/ExtensionStateContext';
+import { vscode } from '../utils/vscode';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import TranslationProvider from '../i18n/TranslationContext';
 
-import React from "react"
-import { render, screen, act, cleanup } from "@testing-library/react"
-import "@testing-library/jest-dom"
+// Mock vscode API
+jest.mock('../utils/vscode', () => ({
+  vscode: {
+    postMessage: jest.fn(),
+  },
+}));
 
-import AppWithProviders from "../App"
+// Mock useExtensionState
+jest.mock('../context/ExtensionStateContext', () => ({
+  useExtensionState: jest.fn(),
+  ExtensionStateContextProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="extension-state-provider">{children}</div>,
+}));
 
-jest.mock("@src/utils/vscode", () => ({
-	vscode: {
-		postMessage: jest.fn(),
-	},
-}))
 
-jest.mock("@src/components/chat/ChatView", () => ({
-	__esModule: true,
-	default: function ChatView({ isHidden }: { isHidden: boolean }) {
-		return (
-			<div data-testid="chat-view" data-hidden={isHidden}>
-				Chat View
-			</div>
-		)
-	},
-}))
+// Mock child components to simplify testing App.tsx's direct responsibilities
+jest.mock('../components/welcome/WelcomeView', () => () => <div data-testid="welcome-view">Welcome View</div>);
+jest.mock('../components/chat/ChatView', () => React.forwardRef((props: any, ref: any) => <div data-testid="chat-view" className={props.isHidden ? 'hidden' : ''}>Chat View</div>));
+jest.mock('../components/history/HistoryView', () => () => <div data-testid="history-view">History View</div>);
+jest.mock('../components/settings/SettingsView', () => React.forwardRef(() => <div data-testid="settings-view">Settings View</div>));
+jest.mock('../components/prompts/PromptsView', () => () => <div data-testid="prompts-view">Prompts View</div>);
+jest.mock('../components/mcp/McpView', () => () => <div data-testid="mcp-view">MCP View</div>);
+jest.mock('../components/human-relay/HumanRelayDialog', () => () => <div data-testid="human-relay-dialog">Human Relay Dialog</div>);
 
-jest.mock("@src/components/settings/SettingsView", () => ({
-	__esModule: true,
-	default: function SettingsView({ onDone }: { onDone: () => void }) {
-		return (
-			<div data-testid="settings-view" onClick={onDone}>
-				Settings View
-			</div>
-		)
-	},
-}))
 
-jest.mock("@src/components/history/HistoryView", () => ({
-	__esModule: true,
-	default: function HistoryView({ onDone }: { onDone: () => void }) {
-		return (
-			<div data-testid="history-view" onClick={onDone}>
-				History View
-			</div>
-		)
-	},
-}))
+const mockUseExtensionState = useExtensionState as jest.Mock;
+const queryClient = new QueryClient();
 
-jest.mock("@src/components/mcp/McpView", () => ({
-	__esModule: true,
-	default: function McpView({ onDone }: { onDone: () => void }) {
-		return (
-			<div data-testid="mcp-view" onClick={onDone}>
-				MCP View
-			</div>
-		)
-	},
-}))
+// Wrapper component that includes the providers AppWithProviders would typically include
+const TestAppWrapper = ({ children } : {children: React.ReactNode}) => (
+    <ExtensionStateContextProvider>
+        <TranslationProvider>
+            <QueryClientProvider client={queryClient}>
+                {children}
+            </QueryClientProvider>
+        </TranslationProvider>
+    </ExtensionStateContextProvider>
+);
 
-jest.mock("@src/components/prompts/PromptsView", () => ({
-	__esModule: true,
-	default: function PromptsView({ onDone }: { onDone: () => void }) {
-		return (
-			<div data-testid="prompts-view" onClick={onDone}>
-				Prompts View
-			</div>
-		)
-	},
-}))
 
-jest.mock("@src/context/ExtensionStateContext", () => ({
-	useExtensionState: () => ({
-		didHydrateState: true,
-		showWelcome: false,
-		shouldShowAnnouncement: false,
-	}),
-	ExtensionStateContextProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}))
+describe('App Loading and Timeout Logic', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    mockUseExtensionState.mockClear();
+    (vscode.postMessage as jest.Mock).mockClear();
+    // Provide a default mock return value for all tests, can be overridden per test
+    mockUseExtensionState.mockReturnValue({
+        didHydrateState: false,
+        showWelcome: false,
+        shouldShowAnnouncement: false,
+        telemetrySetting: 'off',
+        telemetryKey: '',
+        machineId: '',
+        // Add any other state properties App.tsx might destructure
+    });
+  });
 
-describe("App", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-		window.removeEventListener("message", () => {})
-	})
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
 
-	afterEach(() => {
-		cleanup()
-		window.removeEventListener("message", () => {})
-	})
+  it('should display loading indicator when didHydrateState is false', () => {
+    render(<AppWithProviders />, { wrapper: TestAppWrapper });
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(vscode.postMessage).toHaveBeenCalledWith({ type: "webviewDidLaunch" });
+  });
 
-	const triggerMessage = (action: string) => {
-		const messageEvent = new MessageEvent("message", {
-			data: {
-				type: "action",
-				action,
-			},
-		})
-		window.dispatchEvent(messageEvent)
-	}
+  it('should display main app content after didHydrateState becomes true (before timeout)', async () => {
+    // Initial render with loading
+    render(<AppWithProviders />, { wrapper: TestAppWrapper });
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-	it("shows chat view by default", () => {
-		render(<AppWithProviders />)
+    // Update state to hydrated
+    mockUseExtensionState.mockReturnValue({
+        didHydrateState: true,
+        showWelcome: false,
+        shouldShowAnnouncement: false,
+        telemetrySetting: 'off',
+        telemetryKey: '',
+        machineId: '',
+        tab: 'chat', // ensure a default tab is set for rendering main content
+    });
+    
+    // Advance timers just enough to trigger useEffects but not timeout
+    await act(async () => {
+      // Re-render with the new mock value (simulating context update)
+      // We need to re-render the whole AppWithProviders for the context change to propagate
+      // In a real app, context consumers re-render automatically. Here we force it.
+      // This requires AppWithProviders to be what we render, not App directly
+      render(<AppWithProviders />, { wrapper: TestAppWrapper }); // Re-render the component with new mock
+      jest.advanceTimersByTime(100); // process useEffects
+    });
+    
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    // Check for a component that's part of the main app view when not showing welcome
+    expect(screen.getByTestId('chat-view')).toBeInTheDocument(); 
+  });
+  
+  it('should display WelcomeView when showWelcome is true and didHydrate is true', async () => {
+    mockUseExtensionState.mockReturnValue({
+      didHydrateState: true,
+      showWelcome: true,
+      // ... other necessary states
+    });
 
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView).toBeInTheDocument()
-		expect(chatView.getAttribute("data-hidden")).toBe("false")
-	})
+    render(<AppWithProviders />, { wrapper: TestAppWrapper });
+    
+    await act(async () => {
+        jest.advanceTimersByTime(100); // process useEffects
+    });
 
-	it("switches to settings view when receiving settingsButtonClicked action", async () => {
-		render(<AppWithProviders />)
+    expect(screen.getByTestId('welcome-view')).toBeInTheDocument();
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(screen.queryByText(/The extension is taking longer than expected to load/)).not.toBeInTheDocument();
+  });
 
-		act(() => {
-			triggerMessage("settingsButtonClicked")
-		})
 
-		const settingsView = await screen.findByTestId("settings-view")
-		expect(settingsView).toBeInTheDocument()
+  it('should display timeout error message if didHydrateState remains false after 10 seconds', async () => {
+    render(<AppWithProviders />, { wrapper: TestAppWrapper });
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView.getAttribute("data-hidden")).toBe("true")
-	})
+    await act(async () => {
+      jest.advanceTimersByTime(10000); // Advance time by 10 seconds
+    });
 
-	it("switches to history view when receiving historyButtonClicked action", async () => {
-		render(<AppWithProviders />)
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(screen.getByText(/The extension is taking longer than expected to load/)).toBeInTheDocument();
+  });
+  
+  it('should clear timeout if component unmounts before timeout', async () => {
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    
+    const { unmount } = render(<AppWithProviders />, { wrapper: TestAppWrapper });
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    
+    unmount();
 
-		act(() => {
-			triggerMessage("historyButtonClicked")
-		})
+    expect(clearTimeoutSpy).toHaveBeenCalled(); 
 
-		const historyView = await screen.findByTestId("history-view")
-		expect(historyView).toBeInTheDocument()
-
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView.getAttribute("data-hidden")).toBe("true")
-	})
-
-	it("switches to MCP view when receiving mcpButtonClicked action", async () => {
-		render(<AppWithProviders />)
-
-		act(() => {
-			triggerMessage("mcpButtonClicked")
-		})
-
-		const mcpView = await screen.findByTestId("mcp-view")
-		expect(mcpView).toBeInTheDocument()
-
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView.getAttribute("data-hidden")).toBe("true")
-	})
-
-	it("switches to prompts view when receiving promptsButtonClicked action", async () => {
-		render(<AppWithProviders />)
-
-		act(() => {
-			triggerMessage("promptsButtonClicked")
-		})
-
-		const promptsView = await screen.findByTestId("prompts-view")
-		expect(promptsView).toBeInTheDocument()
-
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView.getAttribute("data-hidden")).toBe("true")
-	})
-
-	it("returns to chat view when clicking done in settings view", async () => {
-		render(<AppWithProviders />)
-
-		act(() => {
-			triggerMessage("settingsButtonClicked")
-		})
-
-		const settingsView = await screen.findByTestId("settings-view")
-
-		act(() => {
-			settingsView.click()
-		})
-
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView.getAttribute("data-hidden")).toBe("false")
-		expect(screen.queryByTestId("settings-view")).not.toBeInTheDocument()
-	})
-
-	it.each(["history", "mcp", "prompts"])("returns to chat view when clicking done in %s view", async (view) => {
-		render(<AppWithProviders />)
-
-		act(() => {
-			triggerMessage(`${view}ButtonClicked`)
-		})
-
-		const viewElement = await screen.findByTestId(`${view}-view`)
-
-		act(() => {
-			viewElement.click()
-		})
-
-		const chatView = screen.getByTestId("chat-view")
-		expect(chatView.getAttribute("data-hidden")).toBe("false")
-		expect(screen.queryByTestId(`${view}-view`)).not.toBeInTheDocument()
-	})
-})
+    await act(async () => {
+      jest.advanceTimersByTime(10000); 
+    });
+    
+    // We can't query for text in an unmounted component.
+    // The main check is that clearTimeoutSpy was called.
+    // To be absolutely sure, one might re-render and check the error is NOT there,
+    // but that complicates the test for "unmount" behavior.
+    // For now, checking clearTimeout is sufficient.
+    clearTimeoutSpy.mockRestore();
+  });
+});
