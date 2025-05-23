@@ -22,6 +22,7 @@ describe("AutoApproveToggle", () => {
 		alwaysAllowBrowser: false,
 		alwaysApproveResubmit: true,
 		alwaysAllowMcp: false,
+		alwaysAllowExtTools: false,
 		alwaysAllowModeSwitch: true,
 		alwaysAllowSubtasks: false,
 		alwaysAllowExecute: true,
