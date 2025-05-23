@@ -5,7 +5,7 @@ import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels, REASONING_
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 
-import { SingleCompletionHandler } from "../index"
+import { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 
@@ -42,7 +42,11 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const { id: modelId, info: modelInfo, reasoningEffort } = this.getModel()
 
 		// Use the OpenAI-compatible API.

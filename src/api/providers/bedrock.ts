@@ -26,6 +26,7 @@ import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-stra
 import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
 import { AMAZON_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
 import { convertToBedrockConverseMessages as sharedConverter } from "../transform/bedrock-converse-format"
+import { ApiHandlerCreateMessageMetadata } from "../index"
 
 const BEDROCK_DEFAULT_TEMPERATURE = 0.3
 const BEDROCK_MAX_TOKENS = 4096
@@ -189,7 +190,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		this.client = new BedrockRuntimeClient(clientConfig)
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		let modelConfig = this.getModel()
 		// Handle cross-region inference
 		const usePromptCache = Boolean(this.options.awsUsePromptCache && this.supportsAwsPromptCache(modelConfig))

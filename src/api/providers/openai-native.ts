@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import { SingleCompletionHandler } from "../"
+import { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../"
 import {
 	ApiHandlerOptions,
 	ModelInfo,
@@ -32,7 +32,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		this.client = new OpenAI({ baseURL: this.options.openAiNativeBaseUrl, apiKey })
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const model = this.getModel()
 
 		if (model.id.startsWith("o1")) {

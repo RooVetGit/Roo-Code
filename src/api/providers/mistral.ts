@@ -5,6 +5,7 @@ import { ApiHandlerOptions, mistralDefaultModelId, MistralModelId, mistralModels
 import { convertToMistralMessages } from "../transform/mistral-format"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
+import { ApiHandlerCreateMessageMetadata } from "../index"
 
 const MISTRAL_DEFAULT_TEMPERATURE = 0
 
@@ -41,7 +42,13 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 		return "https://api.mistral.ai"
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
+		const { id: model } = this.getModel()
+
 		const response = await this.client.chat.stream({
 			model: this.options.apiModelId || mistralDefaultModelId,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToMistralMessages(messages)],

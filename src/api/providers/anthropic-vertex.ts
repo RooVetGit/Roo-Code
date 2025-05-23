@@ -8,7 +8,7 @@ import { safeJsonParse } from "../../shared/safeJsonParse"
 import { ApiStream } from "../transform/stream"
 import { addCacheBreakpoints } from "../transform/caching/vertex"
 
-import { getModelParams, SingleCompletionHandler } from "../index"
+import { getModelParams, SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { BaseProvider } from "./base-provider"
 
@@ -49,7 +49,11 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		let {
 			id,
 			info: { supportsPromptCache },

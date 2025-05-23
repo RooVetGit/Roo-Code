@@ -11,7 +11,7 @@ import {
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
-import { SingleCompletionHandler, getModelParams } from "../index"
+import { SingleCompletionHandler, getModelParams, ApiHandlerCreateMessageMetadata } from "../index"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
@@ -30,7 +30,11 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		})
 	}
 
-	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
 		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
 		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
