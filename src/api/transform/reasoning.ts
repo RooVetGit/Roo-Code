@@ -16,7 +16,7 @@ export type AnthropicReasoningParams = BetaThinkingConfigParam
 
 export type OpenAiReasoningParams = { reasoning_effort: OpenAI.Chat.ChatCompletionCreateParams["reasoning_effort"] }
 
-export type GetModelResoningOptions = {
+export type GetModelReasoningOptions = {
 	model: ModelInfo
 	reasoningBudget: number | undefined
 	reasoningEffort: ReasoningEffort | undefined
@@ -28,7 +28,7 @@ export const getOpenRouterReasoning = ({
 	reasoningBudget,
 	reasoningEffort,
 	settings,
-}: GetModelResoningOptions): OpenRouterReasoningParams | undefined =>
+}: GetModelReasoningOptions): OpenRouterReasoningParams | undefined =>
 	shouldUseReasoningBudget({ model, settings })
 		? { max_tokens: reasoningBudget }
 		: shouldUseReasoningEffort({ model, settings })
@@ -39,12 +39,12 @@ export const getAnthropicReasoning = ({
 	model,
 	reasoningBudget,
 	settings,
-}: GetModelResoningOptions): AnthropicReasoningParams | undefined =>
+}: GetModelReasoningOptions): AnthropicReasoningParams | undefined =>
 	shouldUseReasoningBudget({ model, settings }) ? { type: "enabled", budget_tokens: reasoningBudget! } : undefined
 
 export const getOpenAiReasoning = ({
 	model,
 	reasoningEffort,
 	settings,
-}: GetModelResoningOptions): OpenAiReasoningParams | undefined =>
+}: GetModelReasoningOptions): OpenAiReasoningParams | undefined =>
 	shouldUseReasoningEffort({ model, settings }) ? { reasoning_effort: reasoningEffort } : undefined
