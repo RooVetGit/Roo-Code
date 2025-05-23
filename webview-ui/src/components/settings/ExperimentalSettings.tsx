@@ -15,8 +15,7 @@ import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, 
 import { VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "../../../../src/schemas"
 import { CodeIndexSettings } from "./CodeIndexSettings"
-import { ExtensionStateContextType } from '../../context/ExtensionStateContext'
-
+import { ExtensionStateContextType } from "../../context/ExtensionStateContext"
 
 const SUMMARY_PROMPT = `\
 Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
@@ -225,16 +224,16 @@ export const ExperimentalSettings = ({
 						</div>
 					</div>
 				)}
-			</Section>
 
-			<CodeIndexSettings
-				codebaseIndexModels={codebaseIndexModels}
-				codebaseIndexConfig={codebaseIndexConfig}
-				apiConfiguration={apiConfiguration}
-				setCachedStateField={setCachedStateField as SetCachedStateField<keyof ExtensionStateContextType>}
-				setApiConfigurationField={setApiConfigurationField}
-				areSettingsCommitted={areSettingsCommitted}
-			/>
+				<CodeIndexSettings
+					codebaseIndexModels={codebaseIndexModels}
+					codebaseIndexConfig={codebaseIndexConfig}
+					apiConfiguration={apiConfiguration}
+					setCachedStateField={setCachedStateField as SetCachedStateField<keyof ExtensionStateContextType>}
+					setApiConfigurationField={setApiConfigurationField}
+					areSettingsCommitted={areSettingsCommitted}
+				/>
+			</Section>
 		</div>
 	)
 }
