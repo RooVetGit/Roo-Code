@@ -64,6 +64,8 @@ export interface WebviewMessage {
 		| "allowedMaxRequests"
 		| "alwaysAllowSubtasks"
 		| "autoCondenseContextPercent"
+		| "condensingApiConfigId"
+		| "updateCondensingPrompt"
 		| "playSound"
 		| "playTts"
 		| "stopTts"

@@ -749,7 +749,7 @@ export class DiffViewProvider {
 		return result
 	}
 
-	async reset() {
+	async reset(): Promise<void> {
 		// Ensure any diff views opened by this provider are closed to release
 		// memory.
 		try {
