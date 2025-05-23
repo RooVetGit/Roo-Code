@@ -114,6 +114,14 @@ describe("OpenRouterHandler", () => {
 			expect(result.reasoningBudget).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})
+		it("sets maxTokens to 66000 for google/gemini-2.5-pro-preview", async () => {
+			const handler = new OpenRouterHandler({
+				openRouterApiKey: "test-key",
+				openRouterModelId: "google/gemini-2.5-pro-preview",
+			})
+			const result = await handler.fetchModel()
+			expect(result.maxTokens).toBe(66000)
+		})
 	})
 
 	describe("createMessage", () => {
