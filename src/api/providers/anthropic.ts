@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
 import { CacheControlEphemeral } from "@anthropic-ai/sdk/resources"
+
 import {
 	anthropicDefaultModelId,
 	AnthropicModelId,
@@ -8,10 +9,13 @@ import {
 	ApiHandlerOptions,
 	ModelInfo,
 } from "../../shared/api"
+
 import { ApiStream } from "../transform/stream"
+import { getAnthropicReasoning } from "../transform/reasoning"
+
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
-import { SingleCompletionHandler, getModelParams } from "../index"
+import { type SingleCompletionHandler, getModelParams } from "../index"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
@@ -196,17 +200,24 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		let id = modelId && modelId in anthropicModels ? (modelId as AnthropicModelId) : anthropicDefaultModelId
 		const info: ModelInfo = anthropicModels[id]
 
+		const params = getModelParams({
+			options: this.options,
+			model: info,
+			defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+		})
+
+		const thinking = getAnthropicReasoning({ model: info, params, settings: this.options })
+
+		// The `:thinking` suffix indicates that the model is a "Hybrid"
+		// reasoning model and that reasoning is required to be enabled.
+		// The actual model ID honored by Anthropic's API does not have this
+		// suffix.
 		return {
-			// The `:thinking` variants are virtual identifiers for models with a thinking budget.
-			// We can handle this more elegantly in the future.
 			id: id === "claude-3-7-sonnet-20250219:thinking" ? "claude-3-7-sonnet-20250219" : id,
 			info,
 			betas: id === "claude-3-7-sonnet-20250219:thinking" ? ["output-128k-2025-02-19"] : undefined,
-			...getModelParams({
-				options: this.options,
-				model: info,
-				defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
-			}),
+			...params,
+			thinking,
 		}
 	}
 

@@ -1,4 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
+import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
+import OpenAI from "openai"
 
 import { ProviderSettings, ModelInfo, ApiHandlerOptions } from "../shared/api"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./providers/constants"
@@ -101,7 +103,7 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 	}
 }
 
-type ModelParams = {
+export type ModelParams = {
 	maxTokens: number | undefined
 	temperature: number
 	reasoningEffort: "low" | "medium" | "high" | undefined

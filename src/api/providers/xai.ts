@@ -4,8 +4,9 @@ import OpenAI from "openai"
 import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
+import { getOpenAiReasoning } from "../transform/reasoning"
 
-import { getModelParams, SingleCompletionHandler } from "../index"
+import { type SingleCompletionHandler, getModelParams } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 
@@ -26,19 +27,19 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 	}
 
 	override getModel() {
-		// Determine which model ID to use (specified or default)
 		const id =
 			this.options.apiModelId && this.options.apiModelId in xaiModels
 				? (this.options.apiModelId as XAIModelId)
 				: xaiDefaultModelId
 
 		const info = xaiModels[id]
-
-		return { id, info, ...getModelParams({ options: this.options, model: info }) }
+		const params = getModelParams({ options: this.options, model: info })
+		const reasoning = getOpenAiReasoning({ model: info, params, settings: this.options })
+		return { id, info, ...params, reasoning }
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const { id: modelId, info: modelInfo, reasoningEffort } = this.getModel()
+		const { id: modelId, info: modelInfo, reasoning } = this.getModel()
 
 		// Use the OpenAI-compatible API.
 		const stream = await this.client.chat.completions.create({
@@ -48,7 +49,7 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
-			...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+			...(reasoning && reasoning),
 		})
 
 		for await (const chunk of stream) {

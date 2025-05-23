@@ -125,7 +125,7 @@ describe("OpenRouter API", () => {
 			).toEqual(["anthropic/claude-3.7-sonnet:thinking"])
 
 			expect(models["anthropic/claude-3.7-sonnet"]).toEqual({
-				maxTokens: 8192,
+				maxTokens: 64000,
 				contextWindow: 200000,
 				supportsImages: true,
 				supportsPromptCache: true,
