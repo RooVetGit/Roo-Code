@@ -190,8 +190,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+
+		const parentCline = this.getCurrentCline()
+		if (parentCline) {
+			const parentLastActiveMode = parentCline.currentModeSlug // Changed from initialModeSlug
+			const currentActiveMode = (await this.getState()).mode
+
+			if (parentLastActiveMode && parentLastActiveMode !== currentActiveMode) {
+				await this.handleModeSwitch(parentLastActiveMode)
+			}
+			await parentCline.resumePausedTask(lastMessage)
+		}
 	}
 
 	/*
@@ -467,6 +476,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			diffEnabled: enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
+			mode,
 			experiments,
 		} = await this.getState()
 
@@ -483,6 +493,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			currentModeSlug: mode,
 			...options,
 		})
 
@@ -498,6 +509,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
+		// Get current global mode first
+		let currentGlobalMode = (await this.getState()).mode
+
+		const targetModeSlug = historyItem.lastActiveModeSlug ?? currentGlobalMode
+
+		if (targetModeSlug !== currentGlobalMode) {
+			await this.handleModeSwitch(targetModeSlug)
+			// After switching, getState() will return the new active mode and its associated configs
+		}
+
+		// Re-fetch state after potential mode switch to get correct apiConfig, prompts, etc.
 		const {
 			apiConfiguration,
 			diffEnabled: enableDiff,
@@ -505,6 +527,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
 
 		const cline = new Task({
 			provider: this,
@@ -517,6 +540,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
+			currentModeSlug: targetModeSlug, // Pass the determined target mode slug
 			onCreated: (cline) => this.emit("clineCreated", cline),
 		})
 
@@ -715,6 +739,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (cline) {
 			telemetryService.captureModeSwitch(cline.taskId, newMode)
+			// Update the Cline instance's current mode *before* emitting the event
+			// and *before* updating global state, to ensure consistency if event handlers
+			// or global state watchers try to access the cline's mode.
+			await cline.updateCurrentModeSlug(newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
 		}
 

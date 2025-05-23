@@ -54,6 +54,7 @@ type GlobalSettings = {
 				totalCost: number
 				size?: number | undefined
 				workspace?: string | undefined
+				lastActiveModeSlug?: string | undefined
 		  }[]
 		| undefined
 	condensingApiConfigId?: string | undefined
