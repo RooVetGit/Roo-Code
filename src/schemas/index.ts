@@ -75,6 +75,8 @@ export const commandIds = [
 
 	"focusInput",
 	"acceptInput",
+	"reloadAllMcpServers",
+	"toggleAllMcpServersDisabled",
 ] as const
 
 export type CommandId = (typeof commandIds)[number]

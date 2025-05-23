@@ -176,6 +176,35 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
 	},
+	reloadAllMcpServers: async () => {
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+		if (!visibleProvider) {
+			return
+		}
+		try {
+			await visibleProvider.getMcpHub()?.restartAllMcpServers()
+		} catch (error) {
+			outputChannel.appendLine(`Failed to reload all MCP servers: ${error}`)
+			vscode.window.showErrorMessage(`Failed to reload all MCP servers: ${error}`)
+		}
+	},
+	toggleAllMcpServersDisabled: async () => {
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+		if (!visibleProvider) {
+			return
+		}
+		try {
+			const mcpHub = visibleProvider.getMcpHub()
+			if (mcpHub) {
+				const allServers = mcpHub.getAllServers()
+				const anyEnabled = allServers.some((server) => !server.disabled)
+				await mcpHub.toggleAllServersDisabled(anyEnabled)
+			}
+		} catch (error) {
+			outputChannel.appendLine(`Failed to toggle all MCP servers: ${error}`)
+			vscode.window.showErrorMessage(`Failed to toggle all MCP servers: ${error}`)
+		}
+	},
 })
 
 export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {

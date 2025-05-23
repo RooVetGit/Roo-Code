@@ -105,6 +105,29 @@ const McpView = ({ onDone }: McpViewProps) => {
 							</div>
 						</div>
 
+						<div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "15px" }}>
+							<Button
+								onClick={() =>
+									vscode.postMessage({
+										type: "executeVSCodeCommand",
+										command: "roo-cline.reloadAllMcpServers",
+									})
+								}
+								data-testid="reload-all-mcp-servers-button">
+								{t("mcp:reloadAllServers")}
+							</Button>
+							<Button
+								onClick={() =>
+									vscode.postMessage({
+										type: "executeVSCodeCommand",
+										command: "roo-cline.toggleAllMcpServersDisabled",
+									})
+								}
+								data-testid="toggle-all-mcp-servers-button">
+								{t("mcp:toggleAllServers")}
+							</Button>
+						</div>
+
 						{/* Server List */}
 						{servers.length > 0 && (
 							<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
