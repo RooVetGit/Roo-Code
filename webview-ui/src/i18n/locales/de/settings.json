@@ -255,7 +255,18 @@
 			"medium": "Mittel",
 			"low": "Niedrig"
 		},
-		"setReasoningLevel": "Denkaufwand aktivieren"
+		"setReasoningLevel": "Denkaufwand aktivieren",
+		"openRouterApiKeyEnvVar": "OpenRouter API-Schlüssel (Umgebungsvariable)",
+		"apiKeyEnvVarNotice": "Wenn der API-Schlüssel aus einer Umgebungsvariable bezogen werden soll, geben Sie hier den Variablennamen ein.",
+		"glamaApiKeyEnvVar": "Glama API-Schlüssel (Umgebungsvariable)",
+		"requestyApiKeyEnvVar": "Requesty API-Schlüssel (Umgebungsvariable)",
+		"anthropicApiKeyEnvVar": "Anthropic API-Schlüssel (Umgebungsvariable)",
+		"deepSeekApiKeyEnvVar": "DeepSeek API-Schlüssel (Umgebungsvariable)",
+		"geminiApiKeyEnvVar": "Gemini API-Schlüssel (Umgebungsvariable)",
+		"openAiApiKeyEnvVar": "OpenAI API-Schlüssel (Umgebungsvariable)",
+		"mistralApiKeyEnvVar": "Mistral API-Schlüssel (Umgebungsvariable)",
+		"xaiApiKeyEnvVar": "xAI API-Schlüssel (Umgebungsvariable)",
+		"unboundApiKeyEnvVar": "Unbound API-Schlüssel (Umgebungsvariable)"
 	},
 	"browser": {
 		"enable": {
@@ -534,7 +545,8 @@
 			"inputPrice": "z.B. 0.0001",
 			"outputPrice": "z.B. 0.0002",
 			"cacheWritePrice": "z.B. 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "Geben Sie die Umgebungsvariable mit dem API-Schlüssel ein..."
 	},
 	"defaults": {
 		"ollamaUrl": "Standard: http://localhost:11434",

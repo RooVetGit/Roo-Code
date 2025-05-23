@@ -255,7 +255,18 @@
 			"medium": "中",
 			"low": "低"
 		},
-		"setReasoningLevel": "推論労力を有効にする"
+		"setReasoningLevel": "推論労力を有効にする",
+		"openRouterApiKeyEnvVar": "OpenRouter APIキー (環境変数)",
+		"apiKeyEnvVarNotice": "APIキーを環境変数から取得する場合は、ここに変数名を入力してください。",
+		"glamaApiKeyEnvVar": "Glama APIキー (環境変数)",
+		"requestyApiKeyEnvVar": "Requesty APIキー (環境変数)",
+		"anthropicApiKeyEnvVar": "Anthropic APIキー (環境変数)",
+		"deepSeekApiKeyEnvVar": "DeepSeek APIキー (環境変数)",
+		"geminiApiKeyEnvVar": "Gemini APIキー (環境変数)",
+		"openAiApiKeyEnvVar": "OpenAI APIキー (環境変数)",
+		"mistralApiKeyEnvVar": "Mistral APIキー (環境変数)",
+		"xaiApiKeyEnvVar": "xAI APIキー (環境変数)",
+		"unboundApiKeyEnvVar": "Unbound APIキー (環境変数)"
 	},
 	"browser": {
 		"enable": {
@@ -534,7 +545,8 @@
 			"inputPrice": "例：0.0001",
 			"outputPrice": "例：0.0002",
 			"cacheWritePrice": "例：0.00005"
-		}
+		},
+		"apiKeyEnvVar": "APIキーを保持する環境変数を入力..."
 	},
 	"defaults": {
 		"ollamaUrl": "デフォルト：http://localhost:11434",

@@ -18,6 +18,7 @@ export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: Anthro
 	const { t } = useAppTranslation()
 
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
+	const [toggleApiKeyFields, setToggleApiKeyFields] = useState(!!apiConfiguration?.apiKeyEnvVar)
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -30,20 +31,46 @@ export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: Anthro
 		[setApiConfigurationField],
 	)
 
+	const handleToggleApiKeyChange = (checked: boolean) => {
+		setToggleApiKeyFields(checked)
+		if (!checked) {
+			setApiConfigurationField("apiKeyEnvVar", "") // Clear apiKeyEnvVar when unchecked
+		}
+	}
+
 	return (
 		<>
-			<VSCodeTextField
+			<Checkbox
+				checked={toggleApiKeyFields}
+				onChange={handleToggleApiKeyChange}
+				className="mb-2">
+				{t("settings:providers.apiKeyToggle")}
+			</Checkbox>
+			{toggleApiKeyFields ? (
+				<VSCodeTextField
+				value={apiConfiguration?.apiKeyEnvVar || ""}
+				type="text"
+				onInput={handleInputChange("apiKeyEnvVar")}
+				placeholder={t("settings:placeholders.apiKeyEnvVar")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.anthropicApiKeyEnvVar")}</label>
+				</VSCodeTextField>
+			) : (
+				<VSCodeTextField
 				value={apiConfiguration?.apiKey || ""}
 				type="password"
 				onInput={handleInputChange("apiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.anthropicApiKey")}</label>
-			</VSCodeTextField>
+				</VSCodeTextField>
+		)}
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
+				{toggleApiKeyFields
+					? t("settings:providers.apiKeyStorageNotice")
+					: t("settings:providers.apiKeyEnvVarNotice")}
 			</div>
-			{!apiConfiguration?.apiKey && (
+			{(!(apiConfiguration?.apiKey || apiConfiguration?.apiKeyEnvVar)) && (
 				<VSCodeButtonLink href="https://console.anthropic.com/settings/keys" appearance="secondary">
 					{t("settings:providers.getAnthropicApiKey")}
 				</VSCodeButtonLink>

@@ -255,7 +255,18 @@
 			"medium": "Trung bình",
 			"low": "Thấp"
 		},
-		"setReasoningLevel": "Kích hoạt nỗ lực suy luận"
+		"setReasoningLevel": "Kích hoạt nỗ lực suy luận",
+		"openRouterApiKeyEnvVar": "Khóa API OpenRouter (Biến môi trường)",
+		"apiKeyEnvVarNotice": "Nếu khóa API cần được lấy từ biến môi trường, hãy nhập tên biến tại đây.",
+		"glamaApiKeyEnvVar": "Khóa API Glama (Biến môi trường)",
+		"requestyApiKeyEnvVar": "Khóa API Requesty (Biến môi trường)",
+		"anthropicApiKeyEnvVar": "Khóa API Anthropic (Biến môi trường)",
+		"deepSeekApiKeyEnvVar": "Khóa API DeepSeek (Biến môi trường)",
+		"geminiApiKeyEnvVar": "Khóa API Gemini (Biến môi trường)",
+		"openAiApiKeyEnvVar": "Khóa API OpenAI (Biến môi trường)",
+		"mistralApiKeyEnvVar": "Khóa API Mistral (Biến môi trường)",
+		"xaiApiKeyEnvVar": "Khóa API xAI (Biến môi trường)",
+		"unboundApiKeyEnvVar": "Khóa API Unbound (Biến môi trường)"
 	},
 	"browser": {
 		"enable": {
@@ -534,7 +545,8 @@
 			"inputPrice": "vd: 0.0001",
 			"outputPrice": "vd: 0.0002",
 			"cacheWritePrice": "vd: 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "Nhập biến môi trường chứa khóa API..."
 	},
 	"defaults": {
 		"ollamaUrl": "Mặc định: http://localhost:11434",

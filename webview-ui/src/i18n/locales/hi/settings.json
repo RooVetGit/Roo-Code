@@ -255,7 +255,18 @@
 			"medium": "मध्यम",
 			"low": "निम्न"
 		},
-		"setReasoningLevel": "तर्क प्रयास सक्षम करें"
+		"setReasoningLevel": "तर्क प्रयास सक्षम करें",
+		"openRouterApiKeyEnvVar": "OpenRouter API कुंजी (पर्यावरण चर)",
+		"apiKeyEnvVarNotice": "यदि API कुंजी को पर्यावरण चर से प्राप्त करना है, तो यहां चर नाम दर्ज करें।",
+		"glamaApiKeyEnvVar": "Glama API कुंजी (पर्यावरण चर)",
+		"requestyApiKeyEnvVar": "Requesty API कुंजी (पर्यावरण चर)",
+		"anthropicApiKeyEnvVar": "Anthropic API कुंजी (पर्यावरण चर)",
+		"deepSeekApiKeyEnvVar": "DeepSeek API कुंजी (पर्यावरण चर)",
+		"geminiApiKeyEnvVar": "Gemini API कुंजी (पर्यावरण चर)",
+		"openAiApiKeyEnvVar": "OpenAI API कुंजी (पर्यावरण चर)",
+		"mistralApiKeyEnvVar": "Mistral API कुंजी (पर्यावरण चर)",
+		"xaiApiKeyEnvVar": "xAI API कुंजी (पर्यावरण चर)",
+		"unboundApiKeyEnvVar": "Unbound API कुंजी (पर्यावरण चर)"
 	},
 	"browser": {
 		"enable": {
@@ -534,7 +545,8 @@
 			"inputPrice": "उदा. 0.0001",
 			"outputPrice": "उदा. 0.0002",
 			"cacheWritePrice": "उदा. 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "API कुंजी रखने वाला पर्यावरण चर दर्ज करें..."
 	},
 	"defaults": {
 		"ollamaUrl": "डिफ़ॉल्ट: http://localhost:11434",

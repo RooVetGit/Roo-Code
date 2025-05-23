@@ -8,11 +8,14 @@
  *   --locale=<locale>   Only check a specific locale (e.g. --locale=fr)
  *   --file=<file>       Only check a specific file (e.g. --file=chat.json)
  *   --area=<area>       Only check a specific area (core, webview, or both)
+ *   --create-missing    Creates keys in the locale with the EN value
  *   --help              Show this help message
  */
 
+const { set } = require("@dotenvx/dotenvx")
 const fs = require("fs")
 const path = require("path")
+let createMissing = false
 
 // Process command line arguments
 const args = process.argv.slice(2).reduce(
@@ -30,6 +33,8 @@ const args = process.argv.slice(2).reduce(
 				console.error(`Error: Invalid area '${acc.area}'. Must be 'core', 'webview', or 'both'.`)
 				process.exit(1)
 			}
+		} else if (arg.startsWith("--create-missing")) {
+			createMissing = true
 		}
 		return acc
 	},
@@ -54,6 +59,7 @@ Options:
                       'core' = Backend (src/i18n/locales)
                       'webview' = Frontend UI (webview-ui/src/i18n/locales)
                       'both' = Check both areas (default)
+  --create-missing    Creates keys in the locale with the EN value
   --help              Show this help message
 
 Output:
@@ -103,6 +109,27 @@ function getValueAtPath(obj, path) {
 	}
 
 	return current
+}
+
+// Set value at a dotted path in an object
+function setValueAtPath(obj, path, value) {
+    const parts = path.split(".")
+    let current = obj
+
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i]
+
+        // If it's the last part, set the value
+        if (i === parts.length - 1) {
+            current[part] = value
+        } else {
+            // If the key doesn't exist or isn't an object, create an empty object
+            if (current[part] === undefined || typeof current[part] !== "object") {
+                current[part] = {}
+            }
+            current = current[part]
+        }
+    }
 }
 
 // Function to check translations for a specific area
@@ -198,11 +225,17 @@ function checkAreaTranslations(area) {
 						key,
 						englishValue,
 					})
+					if (createMissing === true) {
+						setValueAtPath(localeContent, key, englishValue) // Set the missing key in the locale content
+					}
 				}
 			}
 
 			if (missingKeys.length > 0) {
 				missingTranslations[locale][name] = missingKeys
+				if (createMissing === true) {
+					fs.writeFileSync(localeFilePath, JSON.stringify(localeContent, null, "\t"))
+				}
 			}
 		}
 	}

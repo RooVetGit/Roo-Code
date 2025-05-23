@@ -255,7 +255,18 @@
 			"medium": "中",
 			"low": "低"
 		},
-		"setReasoningLevel": "啟用推理工作量"
+		"setReasoningLevel": "啟用推理工作量",
+		"openRouterApiKeyEnvVar": "OpenRouter API金鑰（環境變數）",
+		"apiKeyEnvVarNotice": "如需從環境變數獲取API金鑰，請在此輸入變數名稱。",
+		"glamaApiKeyEnvVar": "Glama API金鑰（環境變數）",
+		"requestyApiKeyEnvVar": "Requesty API金鑰（環境變數）",
+		"anthropicApiKeyEnvVar": "Anthropic API金鑰（環境變數）",
+		"deepSeekApiKeyEnvVar": "DeepSeek API金鑰（環境變數）",
+		"geminiApiKeyEnvVar": "Gemini API金鑰（環境變數）",
+		"openAiApiKeyEnvVar": "OpenAI API金鑰（環境變數）",
+		"mistralApiKeyEnvVar": "Mistral API金鑰（環境變數）",
+		"xaiApiKeyEnvVar": "xAI API金鑰（環境變數）",
+		"unboundApiKeyEnvVar": "Unbound API金鑰（環境變數）"
 	},
 	"browser": {
 		"enable": {
@@ -534,7 +545,8 @@
 			"inputPrice": "例：0.0001",
 			"outputPrice": "例：0.0002",
 			"cacheWritePrice": "例：0.00005"
-		}
+		},
+		"apiKeyEnvVar": "輸入包含API金鑰的環境變數..."
 	},
 	"defaults": {
 		"ollamaUrl": "預設：http://localhost:11434",

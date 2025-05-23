@@ -255,7 +255,18 @@
 			"medium": "중간",
 			"low": "낮음"
 		},
-		"setReasoningLevel": "추론 노력 활성화"
+		"setReasoningLevel": "추론 노력 활성화",
+		"openRouterApiKeyEnvVar": "OpenRouter API 키 (환경 변수)",
+		"apiKeyEnvVarNotice": "API 키를 환경 변수에서 가져와야 하는 경우 여기에 변수 이름을 입력하세요.",
+		"glamaApiKeyEnvVar": "Glama API 키 (환경 변수)",
+		"requestyApiKeyEnvVar": "Requesty API 키 (환경 변수)",
+		"anthropicApiKeyEnvVar": "Anthropic API 키 (환경 변수)",
+		"deepSeekApiKeyEnvVar": "DeepSeek API 키 (환경 변수)",
+		"geminiApiKeyEnvVar": "Gemini API 키 (환경 변수)",
+		"openAiApiKeyEnvVar": "OpenAI API 키 (환경 변수)",
+		"mistralApiKeyEnvVar": "Mistral API 키 (환경 변수)",
+		"xaiApiKeyEnvVar": "xAI API 키 (환경 변수)",
+		"unboundApiKeyEnvVar": "Unbound API 키 (환경 변수)"
 	},
 	"browser": {
 		"enable": {
@@ -534,7 +545,8 @@
 			"inputPrice": "예: 0.0001",
 			"outputPrice": "예: 0.0002",
 			"cacheWritePrice": "예: 0.00005"
-		}
+		},
+		"apiKeyEnvVar": "API 키를 보유한 환경 변수 입력..."
 	},
 	"defaults": {
 		"ollamaUrl": "기본값: http://localhost:11434",
