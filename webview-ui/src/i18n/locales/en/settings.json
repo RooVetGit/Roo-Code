@@ -429,7 +429,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
 		"autoCondenseContextPercent": {
 			"label": "Threshold to trigger intelligent context condensing",
 			"description": "When the context window reaches this threshold, Roo will automatically condense it."
