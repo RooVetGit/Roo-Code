@@ -45,10 +45,14 @@ export class UrlContentFetcher {
 			return
 		}
 		const stats = await this.ensureChromiumExists()
+		const args = [
+			"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+		]
+		if (process.getuid && process.getuid() === 0) {
+			args.push("--no-sandbox")
+		}
 		this.browser = await stats.puppeteer.launch({
-			args: [
-				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-			],
+			args,
 			executablePath: stats.executablePath,
 		})
 		// (latest version of puppeteer does not add headless to user agent)
