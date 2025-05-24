@@ -295,6 +295,7 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
 					selectedModelId={selectedModelId}
+					selectedModelInfo={selectedModelInfo}
 					uriScheme={uriScheme}
 					fromWelcomeView={fromWelcomeView}
 				/>
@@ -457,6 +458,8 @@ const ApiOptions = ({
 				setApiConfigurationField={setApiConfigurationField}
 				modelInfo={selectedModelInfo}
 			/>
+
+			<pre>{JSON.stringify(selectedModelInfo, null, 2)}</pre>
 
 			{!fromWelcomeView && (
 				<>

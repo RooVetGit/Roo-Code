@@ -4,7 +4,7 @@ import { Checkbox } from "vscrui"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
-import { ProviderSettings, RouterModels, openRouterDefaultModelId } from "@roo/shared/api"
+import { ModelInfo, ProviderSettings, RouterModels, openRouterDefaultModelId } from "@roo/shared/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { getOpenRouterAuthUrl } from "@src/oauth/urls"
@@ -25,6 +25,7 @@ type OpenRouterProps = {
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	routerModels?: RouterModels
 	selectedModelId: string
+	selectedModelInfo?: ModelInfo
 	uriScheme: string | undefined
 	fromWelcomeView?: boolean
 }
@@ -34,6 +35,7 @@ export const OpenRouter = ({
 	setApiConfigurationField,
 	routerModels,
 	selectedModelId,
+	selectedModelInfo,
 	uriScheme,
 	fromWelcomeView,
 }: OpenRouterProps) => {
@@ -59,6 +61,8 @@ export const OpenRouter = ({
 			Object.keys(routerModels.openrouter).length > 1 &&
 			apiConfiguration.openRouterModelId in routerModels.openrouter,
 	})
+
+	console.log("[OpenRouter] selectedModelInfo", selectedModelInfo)
 
 	return (
 		<>
