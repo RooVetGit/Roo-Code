@@ -16,19 +16,19 @@
 		},
 		"build:nightly": {},
 		"bundle": {
-			"dependsOn": ["@roo-code/types#build", "@roo-code/build#build", "@roo-code/vscode-webview#build:nightly"],
+			"dependsOn": ["^build"],
 			"cache": false
 		},
 		"bundle:nightly": {
-			"dependsOn": ["@roo-code/types#build", "@roo-code/build#build", "@roo-code/vscode-webview#build:nightly"],
+			"dependsOn": ["^build"],
 			"cache": false
 		},
 		"vsix": {
-			"dependsOn": ["bundle"],
+			"dependsOn": ["bundle", "@roo-code/vscode-webview#build"],
 			"cache": false
 		},
 		"vsix:nightly": {
-			"dependsOn": ["bundle:nightly"],
+			"dependsOn": ["bundle:nightly", "@roo-code/vscode-webview#build:nightly"],
 			"cache": false
 		}
 	}
