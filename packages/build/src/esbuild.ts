@@ -9,7 +9,7 @@ export function copyPaths(copyPaths: [string, string][], srcDir: string, dstDir:
 
 		if (stats.isDirectory()) {
 			if (fs.existsSync(path.join(dstDir, dstRelPath))) {
-				fs.rmSync(path.join(dstDir, dstRelPath), { recursive: true })
+				fs.rmSync(path.join(dstDir, dstRelPath), { recursive: true, force: true })
 			}
 
 			fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
