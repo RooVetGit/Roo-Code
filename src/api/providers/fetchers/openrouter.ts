@@ -106,7 +106,11 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions): Promise<
 				id,
 				model,
 				modality: architecture?.modality,
-				maxTokens: id.startsWith("anthropic/") ? top_provider?.max_completion_tokens : 0,
+				maxTokens: id.startsWith("anthropic/")
+					? top_provider?.max_completion_tokens
+					: id === "google/gemini-2.5-pro-preview"
+						? 66000
+						: 0,
 				supportedParameters: supported_parameters,
 			})
 		}
