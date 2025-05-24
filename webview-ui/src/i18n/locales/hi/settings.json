@@ -114,6 +114,7 @@
 		"glamaApiKey": "Glama API कुंजी",
 		"getGlamaApiKey": "Glama API कुंजी प्राप्त करें",
 		"useCustomBaseUrl": "कस्टम बेस URL का उपयोग करें",
+		"useReasoning": "तर्क सक्षम करें",
 		"useHostHeader": "कस्टम होस्ट हेडर का उपयोग करें",
 		"useLegacyFormat": "पुराने OpenAI API प्रारूप का उपयोग करें",
 		"customHeaders": "कस्टम हेडर्स",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Requesty API कुंजी",
 		"refreshModels": {
 			"label": "मॉडल रिफ्रेश करें",
-			"hint": "नवीनतम मॉडल देखने के लिए कृपया सेटिंग्स को फिर से खोलें।"
+			"hint": "नवीनतम मॉडल देखने के लिए कृपया सेटिंग्स को फिर से खोलें।",
+			"loading": "मॉडल सूची अपडेट हो रही है...",
+			"success": "मॉडल सूची सफलतापूर्वक अपडेट की गई!",
+			"error": "मॉडल सूची अपडेट करने में विफल। कृपया पुनः प्रयास करें।"
 		},
 		"getRequestyApiKey": "Requesty API कुंजी प्राप्त करें",
 		"openRouterTransformsText": "संदर्भ आकार के लिए प्रॉम्प्ट और संदेश श्रृंखलाओं को संपीड़ित करें (<a>OpenRouter ट्रांसफॉर्म</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "कस्टम संदर्भ संघनन प्रॉम्प्ट",
+			"description": "संदर्भ संघनन के लिए कस्टम सिस्टम प्रॉम्प्ट। डिफ़ॉल्ट प्रॉम्प्ट का उपयोग करने के लिए खाली छोड़ें।",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "बुद्धिमान संदर्भ संघनन को ट्रिगर करने की सीमा",
+			"description": "जब संदर्भ विंडो इस सीमा तक पहुंचती है, तो Roo इसे स्वचालित रूप से संघनित कर देगा।"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "संदर्भ विंडो को बुद्धिमानी से संघनित करें",
-			"description": "जब कार्य का संदर्भ विंडो लगभग भर जाता है, तो पुराने संदेशों को हटाने के बजाय पिछली बातचीत को संक्षेप में प्रस्तुत करने के लिए LLM कॉल का उपयोग करता है। अस्वीकरण: संक्षेपण की लागत वर्तमान में UI में दिखाए गए API लागतों में शामिल नहीं है।"
+			"name": "बुद्धिमान संदर्भ संघनन को स्वचालित रूप से ट्रिगर करें",
+			"description": "बुद्धिमान संदर्भ संघनन कार्य के संदर्भ विंडो के पूर्व-निर्धारित सीमा तक पहुंचने पर पिछली बातचीत को संक्षेप में प्रस्तुत करने के लिए LLM कॉल का उपयोग करता है, बजाय इसके कि संदर्भ भरने पर पुराने संदेशों को हटा दिया जाए।"
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "प्रायोगिक एकीकृत diff रणनीति का उपयोग करें",

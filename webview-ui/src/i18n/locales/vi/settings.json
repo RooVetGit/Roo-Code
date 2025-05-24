@@ -114,6 +114,7 @@
 		"glamaApiKey": "Khóa API Glama",
 		"getGlamaApiKey": "Lấy khóa API Glama",
 		"useCustomBaseUrl": "Sử dụng URL cơ sở tùy chỉnh",
+		"useReasoning": "Bật lý luận",
 		"useHostHeader": "Sử dụng tiêu đề Host tùy chỉnh",
 		"useLegacyFormat": "Sử dụng định dạng API OpenAI cũ",
 		"customHeaders": "Tiêu đề tùy chỉnh",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Khóa API Requesty",
 		"refreshModels": {
 			"label": "Làm mới mô hình",
-			"hint": "Vui lòng mở lại cài đặt để xem các mô hình mới nhất."
+			"hint": "Vui lòng mở lại cài đặt để xem các mô hình mới nhất.",
+			"loading": "Đang làm mới danh sách mô hình...",
+			"success": "Danh sách mô hình đã được làm mới thành công!",
+			"error": "Không thể làm mới danh sách mô hình. Vui lòng thử lại."
 		},
 		"getRequestyApiKey": "Lấy khóa API Requesty",
 		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Lời nhắc nén ngữ cảnh tùy chỉnh",
+			"description": "Lời nhắc hệ thống tùy chỉnh cho việc nén ngữ cảnh. Để trống để sử dụng lời nhắc mặc định.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "Ngưỡng kích hoạt nén ngữ cảnh thông minh",
+			"description": "Khi cửa sổ ngữ cảnh đạt đến ngưỡng này, Roo sẽ tự động nén nó."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Nén cửa sổ ngữ cảnh một cách thông minh",
-			"description": "Sử dụng một lệnh gọi LLM để tóm tắt cuộc trò chuyện trước đó khi cửa sổ ngữ cảnh của tác vụ gần đầy, thay vì loại bỏ các tin nhắn cũ. Lưu ý: chi phí tóm tắt hiện không được tính vào chi phí API hiển thị trong giao diện người dùng."
+			"name": "Tự động kích hoạt nén ngữ cảnh thông minh",
+			"description": "Nén ngữ cảnh thông minh sử dụng một lệnh gọi LLM để tóm tắt cuộc trò chuyện trước đó khi cửa sổ ngữ cảnh của tác vụ đạt đến ngưỡng đã định, thay vì loại bỏ các tin nhắn cũ khi ngữ cảnh đầy."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Sử dụng chiến lược diff thống nhất thử nghiệm",

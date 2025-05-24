@@ -4,11 +4,10 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
-import { Language, ProviderSettings, GlobalState } from "../../schemas"
+import { Language, ProviderSettings, GlobalState, Package } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
-import { RouterName, toRouterName } from "../../shared/api"
+import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
-
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
@@ -33,7 +32,9 @@ import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
+import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
+import { getCommand } from "../../utils/commands"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
@@ -170,6 +171,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "askResponse":
 			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
+		case "autoCondenseContextPercent":
+			await updateGlobalState("autoCondenseContextPercent", message.value)
+			await provider.postStateToWebview()
+			break
 		case "terminalOperation":
 			if (message.terminalOperation) {
 				provider.getCurrentCline()?.handleTerminalOperation(message.terminalOperation)
@@ -278,29 +283,81 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.resetState()
 			break
 		case "flushRouterModels":
-			const routerName: RouterName = toRouterName(message.text)
-			await flushModels(routerName)
+			const routerNameFlush: RouterName = toRouterName(message.text)
+			await flushModels(routerNameFlush)
 			break
 		case "requestRouterModels":
 			const { apiConfiguration } = await provider.getState()
 
-			const [openRouterModels, requestyModels, glamaModels, unboundModels, litellmModels] = await Promise.all([
-				getModels("openrouter", apiConfiguration.openRouterApiKey),
-				getModels("requesty", apiConfiguration.requestyApiKey),
-				getModels("glama", apiConfiguration.glamaApiKey),
-				getModels("unbound", apiConfiguration.unboundApiKey),
-				getModels("litellm", apiConfiguration.litellmApiKey, apiConfiguration.litellmBaseUrl),
-			])
+			const routerModels: Partial<Record<RouterName, ModelRecord>> = {
+				openrouter: {},
+				requesty: {},
+				glama: {},
+				unbound: {},
+				litellm: {},
+			}
+
+			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
+				try {
+					return await getModels(options)
+				} catch (error) {
+					console.error(
+						`Failed to fetch models in webviewMessageHandler requestRouterModels for ${options.provider}:`,
+						error,
+					)
+					throw error // Re-throw to be caught by Promise.allSettled
+				}
+			}
+
+			const modelFetchPromises: Array<{ key: RouterName; options: GetModelsOptions }> = [
+				{ key: "openrouter", options: { provider: "openrouter" } },
+				{ key: "requesty", options: { provider: "requesty", apiKey: apiConfiguration.requestyApiKey } },
+				{ key: "glama", options: { provider: "glama" } },
+				{ key: "unbound", options: { provider: "unbound", apiKey: apiConfiguration.unboundApiKey } },
+			]
+
+			const litellmApiKey = apiConfiguration.litellmApiKey || message?.values?.litellmApiKey
+			const litellmBaseUrl = apiConfiguration.litellmBaseUrl || message?.values?.litellmBaseUrl
+			if (litellmApiKey && litellmBaseUrl) {
+				modelFetchPromises.push({
+					key: "litellm",
+					options: { provider: "litellm", apiKey: litellmApiKey, baseUrl: litellmBaseUrl },
+				})
+			}
+
+			const results = await Promise.allSettled(
+				modelFetchPromises.map(async ({ key, options }) => {
+					const models = await safeGetModels(options)
+					return { key, models } // key is RouterName here
+				}),
+			)
+
+			const fetchedRouterModels: Partial<Record<RouterName, ModelRecord>> = { ...routerModels }
+
+			results.forEach((result, index) => {
+				const routerName = modelFetchPromises[index].key // Get RouterName using index
+
+				if (result.status === "fulfilled") {
+					fetchedRouterModels[routerName] = result.value.models
+				} else {
+					// Handle rejection: Post a specific error message for this provider
+					const errorMessage = result.reason instanceof Error ? result.reason.message : String(result.reason)
+					console.error(`Error fetching models for ${routerName}:`, result.reason)
+
+					fetchedRouterModels[routerName] = {} // Ensure it's an empty object in the main routerModels message
+
+					provider.postMessageToWebview({
+						type: "singleRouterModelFetchResponse",
+						success: false,
+						error: errorMessage,
+						values: { provider: routerName },
+					})
+				}
+			})
 
 			provider.postMessageToWebview({
 				type: "routerModels",
-				routerModels: {
-					openrouter: openRouterModels,
-					requesty: requestyModels,
-					glama: glamaModels,
-					unbound: unboundModels,
-					litellm: litellmModels,
-				},
+				routerModels: fetchedRouterModels as Record<RouterName, ModelRecord>,
 			})
 			break
 		case "requestOpenAiModels":
@@ -376,7 +433,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			// Also update workspace settings.
 			await vscode.workspace
-				.getConfiguration("roo-cline")
+				.getConfiguration(Package.name)
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 
 			break
@@ -917,6 +974,14 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("enhancementApiConfigId", message.text)
 			await provider.postStateToWebview()
 			break
+		case "condensingApiConfigId":
+			await updateGlobalState("condensingApiConfigId", message.text)
+			await provider.postStateToWebview()
+			break
+		case "updateCondensingPrompt":
+			await updateGlobalState("customCondensingPrompt", message.text)
+			await provider.postStateToWebview()
+			break
 		case "autoApprovalEnabled":
 			await updateGlobalState("autoApprovalEnabled", message.bool ?? false)
 			await provider.postStateToWebview()
@@ -1230,7 +1295,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "humanRelayResponse":
 			if (message.requestId && message.text) {
-				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+				vscode.commands.executeCommand(getCommand("handleHumanRelayResponse"), {
 					requestId: message.requestId,
 					text: message.text,
 					cancelled: false,
@@ -1240,7 +1305,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 		case "humanRelayCancel":
 			if (message.requestId) {
-				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+				vscode.commands.executeCommand(getCommand("handleHumanRelayResponse"), {
 					requestId: message.requestId,
 					cancelled: true,
 				})

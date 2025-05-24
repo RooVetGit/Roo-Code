@@ -114,6 +114,7 @@
 		"glamaApiKey": "Glama API-sleutel",
 		"getGlamaApiKey": "Glama API-sleutel ophalen",
 		"useCustomBaseUrl": "Aangepaste basis-URL gebruiken",
+		"useReasoning": "Redenering inschakelen",
 		"useHostHeader": "Aangepaste Host-header gebruiken",
 		"useLegacyFormat": "Verouderd OpenAI API-formaat gebruiken",
 		"customHeaders": "Aangepaste headers",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Requesty API-sleutel",
 		"refreshModels": {
 			"label": "Modellen verversen",
-			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien."
+			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien.",
+			"loading": "Modellenlijst wordt vernieuwd...",
+			"success": "Modellenlijst succesvol vernieuwd!",
+			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw."
 		},
 		"getRequestyApiKey": "Requesty API-sleutel ophalen",
 		"openRouterTransformsText": "Comprimeer prompts en berichtreeksen tot de contextgrootte (<a>OpenRouter Transforms</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Aangepaste contextcondensatieprompt",
+			"description": "Aangepaste systeemprompt voor contextcondensatie. Laat leeg om de standaardprompt te gebruiken.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "Drempelwaarde om intelligente contextcompressie te activeren",
+			"description": "Wanneer het contextvenster deze drempelwaarde bereikt, zal Roo het automatisch comprimeren."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Contextvenster intelligent comprimeren",
-			"description": "Gebruikt een LLM-aanroep om eerdere gesprekken samen te vatten wanneer het contextvenster van de taak bijna vol is, in plaats van oude berichten te verwijderen. Let op: de kosten van het samenvatten zijn momenteel niet inbegrepen in de API-kosten die in de interface worden getoond."
+			"name": "Automatisch intelligente contextcompressie activeren",
+			"description": "Intelligente contextcompressie gebruikt een LLM-aanroep om eerdere gesprekken samen te vatten wanneer het contextvenster van de taak een vooraf ingestelde drempelwaarde bereikt, in plaats van oude berichten te verwijderen wanneer de context vol is."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Experimentele unified diff-strategie gebruiken",

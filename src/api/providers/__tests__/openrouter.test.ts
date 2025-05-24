@@ -35,7 +35,6 @@ jest.mock("../fetchers/modelCache", () => ({
 				cacheWritesPrice: 3.75,
 				cacheReadsPrice: 0.3,
 				description: "Claude 3.7 Sonnet with thinking",
-				thinking: true,
 				supportsComputerUse: true,
 			},
 		})
@@ -58,7 +57,7 @@ describe("OpenRouterHandler", () => {
 			baseURL: "https://openrouter.ai/api/v1",
 			apiKey: mockOptions.openRouterApiKey,
 			defaultHeaders: {
-				"HTTP-Referer": "https://github.com/RooCodeInc/Roo-Cline",
+				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
 				"X-Title": "Roo Code",
 			},
 		})
@@ -99,7 +98,7 @@ describe("OpenRouterHandler", () => {
 
 			const result = await handler.fetchModel()
 			expect(result.maxTokens).toBe(32_768)
-			expect(result.thinking).toEqual({ type: "enabled", budget_tokens: 16_384 })
+			expect(result.reasoningBudget).toEqual(16_384)
 			expect(result.temperature).toBe(1.0)
 		})
 
@@ -112,7 +111,7 @@ describe("OpenRouterHandler", () => {
 
 			const result = await handler.fetchModel()
 			expect(result.maxTokens).toBe(8192)
-			expect(result.thinking).toBeUndefined()
+			expect(result.reasoningBudget).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})
 	})

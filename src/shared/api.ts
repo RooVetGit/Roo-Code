@@ -1,16 +1,17 @@
+import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../api/providers/constants"
 import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
 export type { ModelInfo, ProviderName, ProviderSettings }
 
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
 
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
 export type AnthropicModelId = keyof typeof anthropicModels
 export const anthropicDefaultModelId: AnthropicModelId = "claude-3-7-sonnet-20250219"
 export const anthropicModels = {
-	"claude-3-7-sonnet-20250219:thinking": {
-		maxTokens: 128_000,
+	"claude-sonnet-4-20250514": {
+		maxTokens: 64_000, // Overridden to 8k if `enableReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -19,10 +20,35 @@ export const anthropicModels = {
 		outputPrice: 15.0, // $15 per million output tokens
 		cacheWritesPrice: 3.75, // $3.75 per million tokens
 		cacheReadsPrice: 0.3, // $0.30 per million tokens
-		thinking: true,
+		supportsReasoningBudget: true,
+	},
+	"claude-opus-4-20250514": {
+		maxTokens: 32_000, // Overridden to 8k if `enableReasoningEffort` is false.
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 15.0, // $15 per million input tokens
+		outputPrice: 75.0, // $75 per million output tokens
+		cacheWritesPrice: 18.75, // $18.75 per million tokens
+		cacheReadsPrice: 1.5, // $1.50 per million tokens
+		supportsReasoningBudget: true,
+	},
+	"claude-3-7-sonnet-20250219:thinking": {
+		maxTokens: 128_000, // Unlocked by passing `beta` flag to the model. Otherwise, it's 64k.
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0, // $3 per million input tokens
+		outputPrice: 15.0, // $15 per million output tokens
+		cacheWritesPrice: 3.75, // $3.75 per million tokens
+		cacheReadsPrice: 0.3, // $0.30 per million tokens
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
 	},
 	"claude-3-7-sonnet-20250219": {
-		maxTokens: 8192,
+		maxTokens: 8192, // Since we already have a `:thinking` virtual model we aren't setting `supportsReasoningBudget: true` here.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -31,7 +57,6 @@ export const anthropicModels = {
 		outputPrice: 15.0, // $15 per million output tokens
 		cacheWritesPrice: 3.75, // $3.75 per million tokens
 		cacheReadsPrice: 0.3, // $0.30 per million tokens
-		thinking: false,
 	},
 	"claude-3-5-sonnet-20241022": {
 		maxTokens: 8192,
@@ -159,6 +184,34 @@ export const bedrockModels = {
 		minTokensPerCachePoint: 1,
 		maxCachePoints: 1,
 		cachableFields: ["system"],
+	},
+	"anthropic.claude-sonnet-4-20250514-v1:0": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0,
+		outputPrice: 15.0,
+		cacheWritesPrice: 3.75,
+		cacheReadsPrice: 0.3,
+		minTokensPerCachePoint: 1024,
+		maxCachePoints: 4,
+		cachableFields: ["system", "messages", "tools"],
+	},
+	"anthropic.claude-opus-4-20250514-v1:0": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 15.0,
+		outputPrice: 75.0,
+		cacheWritesPrice: 18.75,
+		cacheReadsPrice: 1.5,
+		minTokensPerCachePoint: 1024,
+		maxCachePoints: 4,
+		cachableFields: ["system", "messages", "tools"],
 	},
 	"anthropic.claude-3-7-sonnet-20250219-v1:0": {
 		maxTokens: 8192,
@@ -472,6 +525,25 @@ export const openRouterDefaultModelInfo: ModelInfo = {
 export type VertexModelId = keyof typeof vertexModels
 export const vertexDefaultModelId: VertexModelId = "claude-3-7-sonnet@20250219"
 export const vertexModels = {
+	"gemini-2.5-flash-preview-05-20:thinking": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 3.5,
+		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
+	},
+	"gemini-2.5-flash-preview-05-20": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 0.6,
+	},
 	"gemini-2.5-flash-preview-04-17:thinking": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
@@ -479,8 +551,9 @@ export const vertexModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 3.5,
-		thinking: true,
 		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
@@ -489,7 +562,6 @@ export const vertexModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
-		thinking: false,
 	},
 	"gemini-2.5-pro-preview-03-25": {
 		maxTokens: 65_535,
@@ -563,6 +635,29 @@ export const vertexModels = {
 		inputPrice: 1.25,
 		outputPrice: 5,
 	},
+	"claude-sonnet-4@20250514": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0,
+		outputPrice: 15.0,
+		cacheWritesPrice: 3.75,
+		cacheReadsPrice: 0.3,
+		supportsReasoningBudget: true,
+	},
+	"claude-opus-4@20250514": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 15.0,
+		outputPrice: 75.0,
+		cacheWritesPrice: 18.75,
+		cacheReadsPrice: 1.5,
+	},
 	"claude-3-7-sonnet@20250219:thinking": {
 		maxTokens: 64_000,
 		contextWindow: 200_000,
@@ -573,7 +668,8 @@ export const vertexModels = {
 		outputPrice: 15.0,
 		cacheWritesPrice: 3.75,
 		cacheReadsPrice: 0.3,
-		thinking: true,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
 	},
 	"claude-3-7-sonnet@20250219": {
 		maxTokens: 8192,
@@ -585,7 +681,6 @@ export const vertexModels = {
 		outputPrice: 15.0,
 		cacheWritesPrice: 3.75,
 		cacheReadsPrice: 0.3,
-		thinking: false,
 	},
 	"claude-3-5-sonnet-v2@20241022": {
 		maxTokens: 8192,
@@ -661,8 +756,9 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 3.5,
-		thinking: true,
 		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
@@ -671,7 +767,25 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
-		thinking: false,
+	},
+	"gemini-2.5-flash-preview-05-20:thinking": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 3.5,
+		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
+	},
+	"gemini-2.5-flash-preview-05-20": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 0.6,
 	},
 	"gemini-2.5-flash-preview-05-20:thinking": {
 		maxTokens: 65_535,
@@ -904,6 +1018,7 @@ export const openAiNativeModels = {
 		inputPrice: 10.0,
 		outputPrice: 40.0,
 		cacheReadsPrice: 2.5,
+		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o3-high": {
@@ -934,6 +1049,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o4-mini-high": {
@@ -964,6 +1080,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
+		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o3-mini-high": {
@@ -1147,7 +1264,7 @@ export const unboundDefaultModelInfo: ModelInfo = {
 
 // LiteLLM
 // https://docs.litellm.ai/
-export const litellmDefaultModelId = "anthropic/claude-3-7-sonnet-20250219"
+export const litellmDefaultModelId = "claude-3-7-sonnet-20250219"
 export const litellmDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -1190,6 +1307,7 @@ export const xaiModels = {
 		inputPrice: 0.3,
 		outputPrice: 0.5,
 		description: "xAI's Grok-3 mini beta model with 131K context window",
+		supportsReasoningEffort: true,
 	},
 	"grok-3-mini-fast-beta": {
 		maxTokens: 8192,
@@ -1199,6 +1317,7 @@ export const xaiModels = {
 		inputPrice: 0.6,
 		outputPrice: 4.0,
 		description: "xAI's Grok-3 mini fast beta model with 131K context window",
+		supportsReasoningEffort: true,
 	},
 	"grok-2-latest": {
 		maxTokens: 8192,
@@ -1372,31 +1491,6 @@ export const vscodeLlmModels = {
 		name: "Claude 3.5 Sonnet",
 		supportsToolCalling: true,
 		maxInputTokens: 81638,
-	},
-	"claude-3.7-sonnet": {
-		contextWindow: 89827,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		family: "claude-3.7-sonnet",
-		version: "claude-3.7-sonnet",
-		name: "Claude 3.7 Sonnet",
-		supportsToolCalling: true,
-		maxInputTokens: 89827,
-	},
-	"claude-3.7-sonnet-thought": {
-		contextWindow: 89827,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		family: "claude-3.7-sonnet-thought",
-		version: "claude-3.7-sonnet-thought",
-		name: "Claude 3.7 Sonnet Thinking",
-		supportsToolCalling: false,
-		maxInputTokens: 89827,
-		thinking: true,
 	},
 	"gemini-2.0-flash-001": {
 		contextWindow: 127827,
@@ -1756,9 +1850,6 @@ export const chutesModels = {
  * Constants
  */
 
-// These models support reasoning efforts.
-export const REASONING_MODELS = new Set(["x-ai/grok-3-mini-beta", "grok-3-mini-beta", "grok-3-mini-fast-beta"])
-
 // These models support prompt caching.
 export const PROMPT_CACHING_MODELS = new Set([
 	"anthropic/claude-3-haiku",
@@ -1778,6 +1869,8 @@ export const PROMPT_CACHING_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet",
 	"anthropic/claude-3.7-sonnet:beta",
 	"anthropic/claude-3.7-sonnet:thinking",
+	"anthropic/claude-sonnet-4",
+	"anthropic/claude-opus-4",
 	"google/gemini-2.5-pro-preview",
 	"google/gemini-2.5-flash-preview",
 	"google/gemini-2.5-flash-preview:thinking",
@@ -1795,6 +1888,8 @@ export const COMPUTER_USE_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet",
 	"anthropic/claude-3.7-sonnet:beta",
 	"anthropic/claude-3.7-sonnet:thinking",
+	"anthropic/claude-sonnet-4",
+	"anthropic/claude-opus-4",
 ])
 
 const routerNames = ["openrouter", "requesty", "glama", "unbound", "litellm"] as const
@@ -1807,9 +1902,66 @@ export function toRouterName(value?: string): RouterName {
 	if (value && isRouterName(value)) {
 		return value
 	}
+
 	throw new Error(`Invalid router name: ${value}`)
 }
 
 export type ModelRecord = Record<string, ModelInfo>
 
 export type RouterModels = Record<RouterName, ModelRecord>
+
+export const shouldUseReasoningBudget = ({
+	model,
+	settings,
+}: {
+	model: ModelInfo
+	settings?: ProviderSettings
+}): boolean => !!model.requiredReasoningBudget || (!!model.supportsReasoningBudget && !!settings?.enableReasoningEffort)
+
+export const shouldUseReasoningEffort = ({
+	model,
+	settings,
+}: {
+	model: ModelInfo
+	settings?: ProviderSettings
+}): boolean => (!!model.supportsReasoningEffort && !!settings?.reasoningEffort) || !!model.reasoningEffort
+
+export const DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS = 16_384
+export const DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS = 8_192
+
+export const getModelMaxOutputTokens = ({
+	modelId,
+	model,
+	settings,
+}: {
+	modelId: string
+	model: ModelInfo
+	settings?: ProviderSettings
+}): number | undefined => {
+	if (shouldUseReasoningBudget({ model, settings })) {
+		return settings?.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
+	}
+
+	const isAnthropicModel = modelId.includes("claude")
+
+	// For "Hybrid" reasoning models, we should discard the model's actual
+	// `maxTokens` value if we're not using reasoning. We do this for Anthropic
+	// models only for now. Should we do this for Gemini too?
+	if (model.supportsReasoningBudget && isAnthropicModel) {
+		return ANTHROPIC_DEFAULT_MAX_TOKENS
+	}
+
+	return model.maxTokens ?? undefined
+}
+
+/**
+ * Options for fetching models from different providers.
+ * This is a discriminated union type where the provider property determines
+ * which other properties are required.
+ */
+export type GetModelsOptions =
+	| { provider: "openrouter" }
+	| { provider: "glama" }
+	| { provider: "requesty"; apiKey?: string }
+	| { provider: "unbound"; apiKey?: string }
+	| { provider: "litellm"; apiKey: string; baseUrl: string }

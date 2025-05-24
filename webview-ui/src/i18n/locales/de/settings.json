@@ -114,6 +114,7 @@
 		"glamaApiKey": "Glama API-Schlüssel",
 		"getGlamaApiKey": "Glama API-Schlüssel erhalten",
 		"useCustomBaseUrl": "Benutzerdefinierte Basis-URL verwenden",
+		"useReasoning": "Reasoning aktivieren",
 		"useHostHeader": "Benutzerdefinierten Host-Header verwenden",
 		"useLegacyFormat": "Altes OpenAI API-Format verwenden",
 		"customHeaders": "Benutzerdefinierte Headers",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Requesty API-Schlüssel",
 		"refreshModels": {
 			"label": "Modelle aktualisieren",
-			"hint": "Bitte öffne die Einstellungen erneut, um die neuesten Modelle zu sehen."
+			"hint": "Bitte öffne die Einstellungen erneut, um die neuesten Modelle zu sehen.",
+			"loading": "Modellliste wird aktualisiert...",
+			"success": "Modellliste erfolgreich aktualisiert!",
+			"error": "Fehler beim Aktualisieren der Modellliste. Bitte versuche es erneut."
 		},
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"autoCondenseContextPercent": {
+			"label": "Schwellenwert für intelligente Kontextkomprimierung",
+			"description": "Wenn das Kontextfenster diesen Schwellenwert erreicht, wird Roo es automatisch komprimieren."
+		},
+		"condensingApiConfiguration": {
+			"label": "API-Konfiguration für Kontextkomprimierung",
+			"description": "Wählen Sie, welche API-Konfiguration für Kontextkomprimierungsoperationen verwendet werden soll. Lassen Sie unausgewählt, um die aktuelle aktive Konfiguration zu verwenden.",
+			"useCurrentConfig": "Aktuelle Konfiguration verwenden"
+		},
+		"customCondensingPrompt": {
+			"label": "Benutzerdefinierter Kontextkomprimierungs-Prompt",
+			"description": "Passen Sie den System-Prompt an, der für die Kontextkomprimierung verwendet wird. Lassen Sie leer, um den Standard-Prompt zu verwenden.",
+			"placeholder": "Geben Sie hier Ihren benutzerdefinierten Komprimierungs-Prompt ein...\n\nSie können die gleiche Struktur wie der Standard-Prompt verwenden:\n- Vorherige Konversation\n- Aktuelle Arbeit\n- Wichtige technische Konzepte\n- Relevante Dateien und Code\n- Problemlösung\n- Ausstehende Aufgaben und nächste Schritte",
+			"reset": "Auf Standard zurücksetzen",
+			"hint": "Leer = Standard-Prompt verwenden"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Kontextfenster intelligent komprimieren",
-			"description": "Verwendet einen LLM-Aufruf, um das vorherige Gespräch zusammenzufassen, wenn das Kontextfenster der Aufgabe fast voll ist, anstatt alte Nachrichten zu verwerfen. Hinweis: Die Kosten für die Zusammenfassung sind derzeit nicht in den in der Benutzeroberfläche angezeigten API-Kosten enthalten."
+			"name": "Intelligente Kontextkomprimierung automatisch auslösen",
+			"description": "Intelligente Kontextkomprimierung verwendet einen LLM-Aufruf, um das vorherige Gespräch zusammenzufassen, wenn das Kontextfenster der Aufgabe einen voreingestellten Schwellenwert erreicht, anstatt alte Nachrichten zu verwerfen, wenn der Kontext voll ist."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Experimentelle einheitliche Diff-Strategie verwenden",

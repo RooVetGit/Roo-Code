@@ -70,6 +70,7 @@ export interface ExtensionMessage {
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
 		| "condenseTaskContextResponse"
+		| "singleRouterModelFetchResponse"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -170,6 +171,8 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	| "condensingApiConfigId"
+	| "customCondensingPrompt"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -206,6 +209,7 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
+	autoCondenseContextPercent: number
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

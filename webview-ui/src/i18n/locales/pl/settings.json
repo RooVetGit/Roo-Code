@@ -114,6 +114,7 @@
 		"glamaApiKey": "Klucz API Glama",
 		"getGlamaApiKey": "Uzyskaj klucz API Glama",
 		"useCustomBaseUrl": "Użyj niestandardowego URL bazowego",
+		"useReasoning": "Włącz rozumowanie",
 		"useHostHeader": "Użyj niestandardowego nagłówka Host",
 		"useLegacyFormat": "Użyj starszego formatu API OpenAI",
 		"customHeaders": "Niestandardowe nagłówki",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Klucz API Requesty",
 		"refreshModels": {
 			"label": "Odśwież modele",
-			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele."
+			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele.",
+			"loading": "Odświeżanie listy modeli...",
+			"success": "Lista modeli została pomyślnie odświeżona!",
+			"error": "Nie udało się odświeżyć listy modeli. Spróbuj ponownie."
 		},
 		"getRequestyApiKey": "Uzyskaj klucz API Requesty",
 		"openRouterTransformsText": "Kompresuj podpowiedzi i łańcuchy wiadomości do rozmiaru kontekstu (<a>Transformacje OpenRouter</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Niestandardowy monit kondensacji kontekstu",
+			"description": "Niestandardowy monit systemowy dla kondensacji kontekstu. Pozostaw puste, aby użyć domyślnego monitu.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "Próg wyzwalający inteligentną kondensację kontekstu",
+			"description": "Gdy okno kontekstu osiągnie ten próg, Roo automatycznie je skondensuje."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Inteligentnie kondensuj okno kontekstu",
-			"description": "Używa wywołania LLM do podsumowania wcześniejszej rozmowy, gdy okno kontekstu zadania jest prawie pełne, zamiast usuwać stare wiadomości. Zastrzeżenie: koszt podsumowania nie jest obecnie uwzględniony w kosztach API pokazywanych w interfejsie."
+			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu",
+			"description": "Inteligentna kondensacja kontekstu używa wywołania LLM do podsumowania wcześniejszej rozmowy, gdy okno kontekstu zadania osiągnie ustawiony próg, zamiast usuwać stare wiadomości, gdy kontekst się zapełni."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Użyj eksperymentalnej ujednoliconej strategii diff",

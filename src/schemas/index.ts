@@ -1,10 +1,83 @@
 // Updates to this file will automatically propgate to src/exports/types.ts
 // via a pre-commit hook. If you want to update the types before committing you
-// can run `npm run generate-types`.
+// can run `pnpm generate-types`.
 
 import { z } from "zod"
 
 import { Equals, Keys, AssertEqual } from "../utils/type-fu"
+
+/**
+ * Extension
+ */
+
+import { publisher, name, version } from "../package.json"
+
+// These ENV variables can be defined by ESBuild when building the extension
+// in order to override the values in package.json. This allows us to build
+// different extension variants with the same package.json file.
+// The build process still needs to emit a modified package.json for consumption
+// by VSCode, but that build artifact is not used during the transpile step of
+// the build, so we still need this override mechanism.
+export const Package = {
+	publisher,
+	name: process.env.PKG_NAME || name,
+	version: process.env.PKG_VERSION || version,
+	outputChannel: process.env.PKG_OUTPUT_CHANNEL || "Roo-Code",
+	sha: process.env.PKG_SHA,
+} as const
+
+/**
+ * CodeAction
+ */
+
+export const codeActionIds = ["explainCode", "fixCode", "improveCode", "addToContext", "newTask"] as const
+
+export type CodeActionId = (typeof codeActionIds)[number]
+
+export type CodeActionName = "EXPLAIN" | "FIX" | "IMPROVE" | "ADD_TO_CONTEXT" | "NEW_TASK"
+
+/**
+ * TerminalAction
+ */
+
+export const terminalActionIds = ["terminalAddToContext", "terminalFixCommand", "terminalExplainCommand"] as const
+
+export type TerminalActionId = (typeof terminalActionIds)[number]
+
+export type TerminalActionName = "ADD_TO_CONTEXT" | "FIX" | "EXPLAIN"
+
+export type TerminalActionPromptType = `TERMINAL_${TerminalActionName}`
+
+/**
+ * Command
+ */
+
+export const commandIds = [
+	"activationCompleted",
+
+	"plusButtonClicked",
+	"promptsButtonClicked",
+	"mcpButtonClicked",
+	"historyButtonClicked",
+	"popoutButtonClicked",
+	"settingsButtonClicked",
+
+	"openInNewTab",
+
+	"showHumanRelayDialog",
+	"registerHumanRelayCallback",
+	"unregisterHumanRelayCallback",
+	"handleHumanRelayResponse",
+
+	"newTask",
+
+	"setCustomStoragePath",
+
+	"focusInput",
+	"acceptInput",
+] as const
+
+export type CommandId = (typeof commandIds)[number]
 
 /**
  * ProviderName
@@ -99,6 +172,19 @@ export const reasoningEffortsSchema = z.enum(reasoningEfforts)
 export type ReasoningEffort = z.infer<typeof reasoningEffortsSchema>
 
 /**
+ * ModelParameter
+ */
+
+export const modelParameters = ["max_tokens", "temperature", "reasoning", "include_reasoning"] as const
+
+export const modelParametersSchema = z.enum(modelParameters)
+
+export type ModelParameter = z.infer<typeof modelParametersSchema>
+
+export const isModelParameter = (value: string): value is ModelParameter =>
+	modelParameters.includes(value as ModelParameter)
+
+/**
  * ModelInfo
  */
 
@@ -109,13 +195,16 @@ export const modelInfoSchema = z.object({
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	supportsReasoningBudget: z.boolean().optional(),
+	requiredReasoningBudget: z.boolean().optional(),
+	supportsReasoningEffort: z.boolean().optional(),
+	supportedParameters: z.array(modelParametersSchema).optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
 	cacheReadsPrice: z.number().optional(),
 	description: z.string().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
-	thinking: z.boolean().optional(),
 	minTokensPerCachePoint: z.number().optional(),
 	maxCachePoints: z.number().optional(),
 	cachableFields: z.array(z.string()).optional(),
@@ -349,12 +438,14 @@ export type ProviderSettingsEntry = z.infer<typeof providerSettingsEntrySchema>
 
 const baseProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
-	reasoningEffort: reasoningEffortsSchema.optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
-	// Claude 3.7 Sonnet Thinking
+
+	// Model reasoning.
+	enableReasoningEffort: z.boolean().optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
 })
@@ -412,7 +503,6 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiUseAzure: z.boolean().optional(),
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
-	enableReasoningEffort: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
 })
@@ -523,31 +613,30 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	defaultSchema,
 ])
 
-export const providerSettingsSchema = z
-	.object({
-		apiProvider: providerNamesSchema.optional(),
-	})
-	.merge(anthropicSchema)
-	.merge(glamaSchema)
-	.merge(openRouterSchema)
-	.merge(bedrockSchema)
-	.merge(vertexSchema)
-	.merge(openAiSchema)
-	.merge(ollamaSchema)
-	.merge(vsCodeLmSchema)
-	.merge(lmStudioSchema)
-	.merge(geminiSchema)
-	.merge(openAiNativeSchema)
-	.merge(mistralSchema)
-	.merge(deepSeekSchema)
-	.merge(unboundSchema)
-	.merge(requestySchema)
-	.merge(humanRelaySchema)
-	.merge(fakeAiSchema)
-	.merge(xaiSchema)
-	.merge(groqSchema)
-	.merge(chutesSchema)
-	.merge(litellmSchema)
+export const providerSettingsSchema = z.object({
+	apiProvider: providerNamesSchema.optional(),
+	...anthropicSchema.shape,
+	...glamaSchema.shape,
+	...openRouterSchema.shape,
+	...bedrockSchema.shape,
+	...vertexSchema.shape,
+	...openAiSchema.shape,
+	...ollamaSchema.shape,
+	...vsCodeLmSchema.shape,
+	...lmStudioSchema.shape,
+	...geminiSchema.shape,
+	...openAiNativeSchema.shape,
+	...mistralSchema.shape,
+	...deepSeekSchema.shape,
+	...unboundSchema.shape,
+	...requestySchema.shape,
+	...humanRelaySchema.shape,
+	...fakeAiSchema.shape,
+	...xaiSchema.shape,
+	...groqSchema.shape,
+	...chutesSchema.shape,
+	...litellmSchema.shape,
+})
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
 
@@ -594,7 +683,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openAiUseAzure: undefined,
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
-	enableReasoningEffort: undefined,
 	openAiHostHeader: undefined, // Keep temporarily for backward compatibility during migration
 	openAiHeaders: undefined,
 	// Ollama
@@ -624,12 +712,13 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Requesty
 	requestyApiKey: undefined,
 	requestyModelId: undefined,
-	// Claude 3.7 Sonnet Thinking
+	// Reasoning
+	enableReasoningEffort: undefined,
+	reasoningEffort: undefined,
 	modelMaxTokens: undefined,
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
-	reasoningEffort: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
@@ -663,6 +752,9 @@ export const globalSettingsSchema = z.object({
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
 
+	condensingApiConfigId: z.string().optional(),
+	customCondensingPrompt: z.string().optional(),
+
 	autoApprovalEnabled: z.boolean().optional(),
 	alwaysAllowReadOnly: z.boolean().optional(),
 	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
@@ -677,7 +769,8 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
-	allowedMaxRequests: z.number().optional(),
+	allowedMaxRequests: z.number().nullish(),
+	autoCondenseContextPercent: z.number().optional(),
 
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
@@ -743,6 +836,9 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customInstructions: undefined,
 	taskHistory: undefined,
 
+	condensingApiConfigId: undefined,
+	customCondensingPrompt: undefined,
+
 	autoApprovalEnabled: undefined,
 	alwaysAllowReadOnly: undefined,
 	alwaysAllowReadOnlyOutsideWorkspace: undefined,
@@ -758,6 +854,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
 	allowedMaxRequests: undefined,
+	autoCondenseContextPercent: undefined,
 
 	browserToolEnabled: undefined,
 	browserViewportSize: undefined,

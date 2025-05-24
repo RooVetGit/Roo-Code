@@ -114,6 +114,7 @@
 		"glamaApiKey": "Clé API Glama",
 		"getGlamaApiKey": "Obtenir la clé API Glama",
 		"useCustomBaseUrl": "Utiliser une URL de base personnalisée",
+		"useReasoning": "Activer le raisonnement",
 		"useHostHeader": "Utiliser un en-tête Host personnalisé",
 		"useLegacyFormat": "Utiliser le format API OpenAI hérité",
 		"customHeaders": "En-têtes personnalisés",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Clé API Requesty",
 		"refreshModels": {
 			"label": "Actualiser les modèles",
-			"hint": "Veuillez rouvrir les paramètres pour voir les modèles les plus récents."
+			"hint": "Veuillez rouvrir les paramètres pour voir les modèles les plus récents.",
+			"loading": "Actualisation de la liste des modèles...",
+			"success": "Liste des modèles actualisée avec succès !",
+			"error": "Échec de l'actualisation de la liste des modèles. Veuillez réessayer."
 		},
 		"getRequestyApiKey": "Obtenir la clé API Requesty",
 		"openRouterTransformsText": "Compresser les prompts et chaînes de messages à la taille du contexte (<a>Transformations OpenRouter</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"autoCondenseContextPercent": {
+			"label": "Seuil pour déclencher la condensation intelligente du contexte",
+			"description": "Lorsque la fenêtre de contexte atteint ce seuil, Roo la condensera automatiquement."
+		},
+		"condensingApiConfiguration": {
+			"label": "Configuration API pour la condensation du contexte",
+			"description": "Sélectionnez quelle configuration API utiliser pour les opérations de condensation du contexte. Laissez non sélectionné pour utiliser la configuration active actuelle.",
+			"useCurrentConfig": "Utiliser la configuration actuelle"
+		},
+		"customCondensingPrompt": {
+			"label": "Prompt personnalisé pour la condensation du contexte",
+			"description": "Personnalisez le prompt système utilisé pour la condensation du contexte. Laissez vide pour utiliser le prompt par défaut.",
+			"placeholder": "Entrez votre prompt de condensation personnalisé ici...\n\nVous pouvez utiliser la même structure que le prompt par défaut :\n- Conversation précédente\n- Travail actuel\n- Concepts techniques clés\n- Fichiers et code pertinents\n- Résolution de problèmes\n- Tâches en attente et prochaines étapes",
+			"reset": "Réinitialiser par défaut",
+			"hint": "Vide = utiliser le prompt par défaut"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Condenser intelligemment la fenêtre de contexte",
-			"description": "Utilise un appel LLM pour résumer la conversation précédente lorsque la fenêtre de contexte de la tâche est presque pleine, plutôt que de supprimer les anciens messages. Avertissement : le coût de la synthèse n'est actuellement pas inclus dans les coûts API affichés dans l'interface."
+			"name": "Déclencher automatiquement la condensation intelligente du contexte",
+			"description": "La condensation intelligente du contexte utilise un appel LLM pour résumer la conversation passée lorsque la fenêtre de contexte de la tâche atteint un seuil prédéfini, plutôt que de supprimer les anciens messages lorsque le contexte est plein."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Utiliser la stratégie diff unifiée expérimentale",

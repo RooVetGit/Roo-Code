@@ -114,6 +114,7 @@
 		"glamaApiKey": "Glama API 金鑰",
 		"getGlamaApiKey": "取得 Glama API 金鑰",
 		"useCustomBaseUrl": "使用自訂基礎 URL",
+		"useReasoning": "啟用推理",
 		"useHostHeader": "使用自訂 Host 標頭",
 		"useLegacyFormat": "使用舊版 OpenAI API 格式",
 		"customHeaders": "自訂標頭",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Requesty API 金鑰",
 		"refreshModels": {
 			"label": "重新整理模型",
-			"hint": "請重新開啟設定以查看最新模型。"
+			"hint": "請重新開啟設定以查看最新模型。",
+			"loading": "正在重新整理模型列表...",
+			"success": "模型列表重新整理成功！",
+			"error": "重新整理模型列表失敗。請再試一次。"
 		},
 		"getRequestyApiKey": "取得 Requesty API 金鑰",
 		"openRouterTransformsText": "將提示和訊息鏈壓縮到上下文大小 (<a>OpenRouter 轉換</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "自訂上下文壓縮提示",
+			"description": "自訂用於上下文壓縮的系統提示。留空則使用預設提示。",
+			"placeholder": "請在此輸入您的自訂上下文壓縮提示...\n\n您可以參考預設提示的結構：\n- 先前對話\n- 目前工作\n- 主要技術概念\n- 相關檔案與程式碼\n- 問題解決\n- 未完成的任務與後續步驟",
+			"reset": "重設為預設值",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "觸發智慧上下文壓縮的閾值",
+			"description": "當上下文視窗達到此閾值時，Roo 將自動壓縮它。"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "智慧壓縮上下文視窗",
-			"description": "當工作的上下文視窗接近填滿時，使用 LLM 呼叫來摘要過去的對話，而非捨棄舊訊息。注意：目前 UI 中顯示的 API 費用並未包含摘要的成本。"
+			"name": "自動觸發智慧上下文壓縮",
+			"description": "智慧上下文壓縮使用 LLM 呼叫來摘要過去的對話，在工作的上下文視窗達到預設閾值時進行，而非在上下文填滿時捨棄舊訊息。"
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "使用實驗性統一差異比對策略",

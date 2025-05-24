@@ -130,7 +130,7 @@ jest.mock("../../environment/getEnvironmentDetails", () => ({
 jest.mock("../../ignore/RooIgnoreController")
 
 // Mock storagePathManager to prevent dynamic import issues
-jest.mock("../../../shared/storagePathManager", () => ({
+jest.mock("../../../utils/storage", () => ({
 	getTaskDirectoryPath: jest
 		.fn()
 		.mockImplementation((globalStoragePath, taskId) => Promise.resolve(`${globalStoragePath}/tasks/${taskId}`)),
@@ -548,6 +548,7 @@ describe("Cline", () => {
 				// Create a stream that fails on first chunk
 				const mockError = new Error("API Error")
 				const mockFailedStream = {
+					// eslint-disable-next-line require-yield
 					async *[Symbol.asyncIterator]() {
 						throw mockError
 					},
@@ -672,6 +673,7 @@ describe("Cline", () => {
 				// Create a stream that fails on first chunk
 				const mockError = new Error("API Error")
 				const mockFailedStream = {
+					// eslint-disable-next-line require-yield
 					async *[Symbol.asyncIterator]() {
 						throw mockError
 					},

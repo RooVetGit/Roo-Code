@@ -114,6 +114,7 @@
 		"glamaApiKey": "Glama API-ключ",
 		"getGlamaApiKey": "Получить Glama API-ключ",
 		"useCustomBaseUrl": "Использовать пользовательский базовый URL",
+		"useReasoning": "Включить рассуждения",
 		"useHostHeader": "Использовать пользовательский Host-заголовок",
 		"useLegacyFormat": "Использовать устаревший формат OpenAI API",
 		"customHeaders": "Пользовательские заголовки",
@@ -123,7 +124,10 @@
 		"requestyApiKey": "Requesty API-ключ",
 		"refreshModels": {
 			"label": "Обновить модели",
-			"hint": "Пожалуйста, откройте настройки заново, чтобы увидеть последние модели."
+			"hint": "Пожалуйста, откройте настройки заново, чтобы увидеть последние модели.",
+			"loading": "Обновление списка моделей...",
+			"success": "Список моделей успешно обновлен!",
+			"error": "Не удалось обновить список моделей. Пожалуйста, попробуйте снова."
 		},
 		"getRequestyApiKey": "Получить Requesty API-ключ",
 		"openRouterTransformsText": "Сжимать подсказки и цепочки сообщений до размера контекста (<a>OpenRouter Transforms</a>)",
@@ -403,9 +407,25 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Пользовательская подсказка для сжатия контекста",
+			"description": "Пользовательская системная подсказка для сжатия контекста. Оставьте пустым, чтобы использовать подсказку по умолчанию.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "Порог для запуска интеллектуального сжатия контекста",
+			"description": "Когда контекстное окно достигает этого порога, Roo автоматически его сожмёт."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Интеллектуальное сжатие контекстного окна",
-			"description": "Использует вызов LLM для обобщения предыдущего разговора, когда контекстное окно задачи почти заполнено, вместо удаления старых сообщений. Примечание: стоимость обобщения в настоящее время не включена в стоимость API, отображаемую в интерфейсе."
+			"name": "Автоматически запускать интеллектуальное сжатие контекста",
+			"description": "Интеллектуальное сжатие контекста использует вызов LLM для обобщения предыдущего разговора, когда контекстное окно задачи достигает заданного порога, вместо удаления старых сообщений при заполнении контекста."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Использовать экспериментальную стратегию унифицированного диффа",
