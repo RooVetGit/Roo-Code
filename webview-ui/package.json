@@ -5,7 +5,7 @@
 	"scripts": {
 		"lint": "eslint src --ext=ts,tsx --max-warnings=0",
 		"check-types": "tsc",
-		"pretest": "if [ \"$CI\" != \"true\" ]; then turbo run bundle --cwd ..; fi",
+		"pretest": "turbo run bundle --cwd ..",
 		"test": "jest -w=40%",
 		"format": "prettier --write src",
 		"dev": "vite",
