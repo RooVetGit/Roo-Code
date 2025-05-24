@@ -65,7 +65,8 @@
 			"removeProject": "Kaldır",
 			"removeGlobal": "Kaldır (Global)",
 			"viewSource": "Görüntüle",
-			"viewOnSource": "{{source}} üzerinde görüntüle"
+			"viewOnSource": "{{source}} üzerinde görüntüle",
+			"noWorkspaceTooltip": "Marketplace öğelerini yüklemek için bir çalışma alanı açın"
 		}
 	},
 	"installProjectTooltip": "Proje kurulumu",

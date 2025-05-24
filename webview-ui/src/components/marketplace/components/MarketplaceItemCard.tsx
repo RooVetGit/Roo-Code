@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Rocket, Server, Package, Sparkles, ChevronDown } from "lucide-react"
+import { useExtensionState } from "@/context/ExtensionStateContext"
 
 interface MarketplaceItemCardProps {
 	item: MarketplaceItem
@@ -42,6 +43,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 	setActiveTab,
 }) => {
 	const { t } = useAppTranslation()
+	const { cwd } = useExtensionState()
 
 	const typeLabel = useMemo(() => {
 		const labels: Partial<Record<MarketplaceItem["type"], string>> = {
@@ -137,28 +139,35 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 				<div className="flex items-center">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button
-								size="sm"
-								variant="default"
-								className="text-xs h-5 rounded-r-none py-0 px-2"
-								onClick={() =>
-									vscode.postMessage({
-										type: installed.project
-											? "removeInstalledMarketplaceItem"
-											: "installMarketplaceItem",
-										mpItem: item,
-										mpInstallOptions: { target: "project" },
-									})
-								}>
-								{installed.project
-									? t("marketplace:items.card.removeProject")
-									: t("marketplace:items.card.installProject")}
-							</Button>
+							<span className="inline-block">
+								<Button
+									size="sm"
+									variant={installed.project ? "secondary" : "default"}
+									className="text-xs h-5 rounded-r-none py-0 px-2"
+									disabled={!cwd}
+									onClick={() => {
+										if (cwd) {
+											vscode.postMessage({
+												type: installed.project
+													? "removeInstalledMarketplaceItem"
+													: "installMarketplaceItem",
+												mpItem: item,
+												mpInstallOptions: { target: "project" },
+											})
+										}
+									}}>
+									{installed.project
+										? t("marketplace:items.card.removeProject")
+										: t("marketplace:items.card.installProject")}
+								</Button>
+							</span>
 						</TooltipTrigger>
 						<TooltipContent>
-							{installed.project
-								? t("marketplace:items.card.removeProject")
-								: t("marketplace:items.card.installProject")}
+							{!cwd
+								? t("marketplace:items.card.noWorkspaceTooltip")
+								: installed.project
+									? t("marketplace:items.card.removeProject")
+									: t("marketplace:items.card.installProject")}
 						</TooltipContent>
 					</Tooltip>
 					<MarketplaceItemActionsMenu
@@ -167,7 +176,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 						triggerNode={
 							<Button
 								size="sm"
-								variant="default"
+								variant={installed.project ? "secondary" : "default"}
 								className="h-5 px-1 py-0 rounded-l-none border-l border-l-white/10">
 								<ChevronDown className="size-3" />
 							</Button>

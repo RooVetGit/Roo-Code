@@ -5,14 +5,12 @@ import { ViewState } from "../MarketplaceViewStateManager"
 import userEvent from "@testing-library/user-event"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
-// Mock translation hook
 jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
-		t: (key: string) => key, // Return the key as-is for easy testing
+		t: (key: string) => key,
 	}),
 }))
 
-// Mock ResizeObserver
 class MockResizeObserver {
 	observe() {}
 	unobserve() {}
@@ -21,7 +19,6 @@ class MockResizeObserver {
 
 global.ResizeObserver = MockResizeObserver
 
-// Mock state manager with initial state
 const mockTransition = jest.fn()
 const mockState: ViewState = {
 	allItems: [],
@@ -45,12 +42,10 @@ const mockState: ViewState = {
 	},
 }
 
-// Mock useStateManager hook
 jest.mock("../useStateManager", () => ({
 	useStateManager: () => [mockState, { transition: mockTransition }],
 }))
 
-// Mock all lucide-react icons
 jest.mock("lucide-react", () => {
 	return new Proxy(
 		{},

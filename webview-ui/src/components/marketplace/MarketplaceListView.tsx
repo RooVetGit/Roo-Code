@@ -79,7 +79,7 @@ export function MarketplaceListView({
 											{t("marketplace:filters.type.mode")}
 										</span>
 									</SelectItem>
-									<SelectItem value="mcp server">
+									<SelectItem value="mcp">
 										<span className="flex items-center gap-2">
 											<Server className="h-4 w-4" />
 											{t("marketplace:filters.type.mcp server")}

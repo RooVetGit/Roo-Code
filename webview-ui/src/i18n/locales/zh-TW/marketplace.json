@@ -65,7 +65,8 @@
 			"removeProject": "移除",
 			"removeGlobal": "移除 (全域)",
 			"viewSource": "檢視",
-			"viewOnSource": "在 {{source}} 上檢視"
+			"viewOnSource": "在 {{source}} 上檢視",
+			"noWorkspaceTooltip": "開啟工作區以安裝市集項目"
 		}
 	},
 	"installProjectTooltip": "專案安裝",

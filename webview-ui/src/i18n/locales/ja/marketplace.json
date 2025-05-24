@@ -65,7 +65,8 @@
 			"removeProject": "削除",
 			"removeGlobal": "削除 (グローバル)",
 			"viewSource": "表示",
-			"viewOnSource": "{{source}}で表示"
+			"viewOnSource": "{{source}}で表示",
+			"noWorkspaceTooltip": "マーケットプレイスアイテムをインストールするには、ワークスペースを開いてください"
 		}
 	},
 	"installProjectTooltip": "プロジェクトのインストール",

@@ -133,6 +133,7 @@ type GlobalSettings = {
 		| {
 				autoCondenseContext: boolean
 				powerSteering: boolean
+				marketplace: boolean
 		  }
 		| undefined
 	language?:
@@ -930,6 +931,7 @@ type IpcMessage =
 									| {
 											autoCondenseContext: boolean
 											powerSteering: boolean
+											marketplace: boolean
 									  }
 									| undefined
 								language?:
@@ -1451,6 +1453,7 @@ type TaskCommand =
 						| {
 								autoCondenseContext: boolean
 								powerSteering: boolean
+								marketplace: boolean
 						  }
 						| undefined
 					language?:

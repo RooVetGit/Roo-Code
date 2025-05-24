@@ -65,7 +65,8 @@
 			"removeProject": "हटाएं",
 			"removeGlobal": "हटाएं (ग्लोबल)",
 			"viewSource": "देखें",
-			"viewOnSource": "{{source}} पर देखें"
+			"viewOnSource": "{{source}} पर देखें",
+			"noWorkspaceTooltip": "मार्केटप्लेस आइटम इंस्टॉल करने के लिए एक कार्यक्षेत्र खोलें"
 		}
 	},
 	"installProjectTooltip": "परियोजना स्थापना",
