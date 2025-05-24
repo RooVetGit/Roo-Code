@@ -149,7 +149,8 @@
 		"didSearchReplace": "Roo ha eseguito ricerca e sostituzione in questo file:",
 		"wantsToInsert": "Roo vuole inserire contenuto in questo file:",
 		"wantsToInsertWithLineNumber": "Roo vuole inserire contenuto in questo file alla riga {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo vuole aggiungere contenuto alla fine di questo file:"
+		"wantsToInsertAtEnd": "Roo vuole aggiungere contenuto alla fine di questo file:",
+		"wantsToReadAndXMore": "Roo vuole leggere questo file e altri {{count}}:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vuole visualizzare i file di primo livello in questa directory:",

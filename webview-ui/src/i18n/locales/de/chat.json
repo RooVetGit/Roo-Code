@@ -140,6 +140,7 @@
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo möchte diese Datei lesen:",
+		"wantsToReadAndXMore": "Roo möchte diese Datei und {{count}} weitere lesen:",
 		"wantsToReadOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs lesen:",
 		"didRead": "Roo hat diese Datei gelesen:",
 		"wantsToEdit": "Roo möchte diese Datei bearbeiten:",

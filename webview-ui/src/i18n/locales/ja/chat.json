@@ -149,7 +149,8 @@
 		"didSearchReplace": "Rooはこのファイルで検索と置換を実行しました:",
 		"wantsToInsert": "Rooはこのファイルにコンテンツを挿入したい:",
 		"wantsToInsertWithLineNumber": "Rooはこのファイルの{{lineNumber}}行目にコンテンツを挿入したい:",
-		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:"
+		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:",
+		"wantsToReadAndXMore": "Roo はこのファイルと他に {{count}} 個のファイルを読み込もうとしています:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Rooはこのディレクトリのトップレベルファイルを表示したい:",

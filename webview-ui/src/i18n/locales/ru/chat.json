@@ -144,7 +144,8 @@
 		"didSearchReplace": "Roo выполнил поиск и замену в этом файле:",
 		"wantsToInsert": "Roo хочет вставить содержимое в этот файл:",
 		"wantsToInsertWithLineNumber": "Roo хочет вставить содержимое в этот файл на строку {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:"
+		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:",
+		"wantsToReadAndXMore": "Roo хочет прочитать этот файл и еще {{count}}:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo хочет просмотреть файлы верхнего уровня в этой директории:",

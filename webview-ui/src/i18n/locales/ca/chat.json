@@ -149,7 +149,8 @@
 		"didSearchReplace": "Roo ha realitzat cerca i substitució en aquest fitxer:",
 		"wantsToInsert": "Roo vol inserir contingut en aquest fitxer:",
 		"wantsToInsertWithLineNumber": "Roo vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer:",
-		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:"
+		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:",
+		"wantsToReadAndXMore": "En Roo vol llegir aquest fitxer i {{count}} més:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori:",
