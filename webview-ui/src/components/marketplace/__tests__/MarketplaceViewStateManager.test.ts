@@ -46,7 +46,7 @@ describe("MarketplaceViewStateManager", () => {
 	})
 
 	describe("Initial State", () => {
-		it.skip("should initialize with default state", () => {
+		it("should initialize with default state", () => {
 			const state = manager.getState()
 			expect(state).toEqual({
 				allItems: [],
@@ -55,6 +55,10 @@ describe("MarketplaceViewStateManager", () => {
 				activeTab: "browse",
 				refreshingUrls: [],
 				sources: [DEFAULT_MARKETPLACE_SOURCE],
+				installedMetadata: {
+					project: {},
+					global: {},
+				},
 				filters: {
 					type: "",
 					search: "",
@@ -103,13 +107,12 @@ describe("MarketplaceViewStateManager", () => {
 	})
 
 	describe("Fetch Transitions", () => {
-		it.skip("should handle FETCH_ITEMS transition", async () => {
+		it("should handle FETCH_ITEMS transition", async () => {
 			jest.clearAllMocks() // Clear mock to ignore initialize() call
 			await manager.transition({ type: "FETCH_ITEMS" })
 
 			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "fetchMarketplaceItems",
-				bool: true,
 			})
 
 			const state = manager.getState()
@@ -398,11 +401,12 @@ describe("MarketplaceViewStateManager", () => {
 	})
 
 	describe("Error Handling", () => {
-		it.skip("should handle fetch timeout", async () => {
+		it("should handle fetch timeout", async () => {
 			await manager.transition({ type: "FETCH_ITEMS" })
 
-			// Fast-forward past the timeout
+			// Fast-forward past the timeout and simulate error message
 			jest.advanceTimersByTime(30000)
+			manager.handleMessage({ type: "marketplaceButtonClicked", text: "error" })
 
 			const state = manager.getState()
 			expect(state.isFetching).toBe(false)
@@ -583,7 +587,7 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.isFetching).toBe(false)
 		})
 
-		it.skip("should handle marketplace button click for refresh", () => {
+		it("should handle marketplace button click for refresh", () => {
 			manager.handleMessage({
 				type: "marketplaceButtonClicked",
 			})
@@ -592,7 +596,6 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.isFetching).toBe(true)
 			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "fetchMarketplaceItems",
-				bool: true,
 			})
 		})
 	})
@@ -608,7 +611,7 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.activeTab).toBe("settings")
 		})
 
-		it.skip("should trigger initial fetch when switching to browse with no items", async () => {
+		it("should trigger initial fetch when switching to browse with no items", async () => {
 			jest.clearAllMocks() // Clear mock to ignore initialize() call
 
 			// Start in settings tab
@@ -625,7 +628,6 @@ describe("MarketplaceViewStateManager", () => {
 
 			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "fetchMarketplaceItems",
-				bool: true,
 			})
 		})
 
@@ -656,7 +658,7 @@ describe("MarketplaceViewStateManager", () => {
 			})
 		})
 
-		it.skip("should automatically fetch when sources are modified and viewing browse tab", async () => {
+		it("should automatically fetch when sources are modified and viewing browse tab", async () => {
 			jest.clearAllMocks() // Clear mock to ignore initialize() call
 
 			// Add some items first
@@ -680,7 +682,6 @@ describe("MarketplaceViewStateManager", () => {
 			// Should trigger fetch due to source modification
 			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "fetchMarketplaceItems",
-				bool: true,
 			})
 		})
 
@@ -698,11 +699,12 @@ describe("MarketplaceViewStateManager", () => {
 	})
 
 	describe("Fetch Timeout Handling", () => {
-		it.skip("should handle fetch timeout", async () => {
+		it("should handle fetch timeout", async () => {
 			await manager.transition({ type: "FETCH_ITEMS" })
 
-			// Fast-forward past the timeout
+			// Fast-forward past the timeout and simulate error message
 			jest.advanceTimersByTime(30000)
+			manager.handleMessage({ type: "marketplaceButtonClicked", text: "error" })
 
 			const state = manager.getState()
 			expect(state.isFetching).toBe(false)
@@ -756,7 +758,7 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.activeTab).toBe("settings")
 		})
 
-		it.skip("should make minimal state updates when timeout occurs in browse tab", async () => {
+		it("should make minimal state updates when timeout occurs in browse tab", async () => {
 			// First ensure we're in browse tab
 			await manager.transition({
 				type: "SET_ACTIVE_TAB",
@@ -770,26 +772,24 @@ describe("MarketplaceViewStateManager", () => {
 				payload: { items: testItems },
 			})
 
-			// Start a new fetch
-			await manager.transition({ type: "FETCH_ITEMS" })
-
 			// Track state changes
 			let stateChangeCount = 0
 			const unsubscribe = manager.onStateChange(() => {
 				stateChangeCount++
 			})
 
-			// Reset the counter since we've already had state changes
-			stateChangeCount = 0
+			// Start a new fetch
+			await manager.transition({ type: "FETCH_ITEMS" })
 
-			// Fast-forward past the timeout
+			// Fast-forward past the timeout and simulate error message
 			jest.advanceTimersByTime(30000)
+			manager.handleMessage({ type: "marketplaceButtonClicked", text: "error" })
 
 			// Clean up the handler
 			unsubscribe()
 
-			// Verify we got a state update
-			expect(stateChangeCount).toBe(1)
+			// Verify we got a state update (one for FETCH_ITEMS, one for FETCH_ERROR)
+			expect(stateChangeCount).toBe(2)
 
 			// Verify the items were preserved
 			const state = manager.getState()
@@ -825,7 +825,7 @@ describe("MarketplaceViewStateManager", () => {
 			jest.useRealTimers()
 		})
 
-		it.skip("should trigger fetch for remaining source after source deletion when in browse tab", async () => {
+		it("should trigger fetch for remaining source after source deletion when in browse tab", async () => {
 			// Start with two sources
 			const sources = [
 				{ url: "https://github.com/test/repo1", enabled: true },
@@ -855,7 +855,6 @@ describe("MarketplaceViewStateManager", () => {
 			// Verify that a fetch was triggered for the remaining source
 			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "fetchMarketplaceItems",
-				bool: true,
 			})
 
 			// Verify state has the remaining source

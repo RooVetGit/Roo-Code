@@ -260,15 +260,17 @@ export class MarketplaceViewStateManager {
 			}
 
 			case "FETCH_ERROR": {
-				// Preserve current filters and sources
-				const { filters, sources, activeTab } = this.state
+				// Preserve current filters, sources, and items
+				const { filters, sources, activeTab, allItems, displayItems } = this.state
 
-				// Reset state but preserve filters and sources
+				// Reset state but preserve filters, sources, and items
 				this.state = {
 					...this.getDefaultState(),
 					filters,
 					sources,
 					activeTab,
+					allItems,
+					displayItems,
 					isFetching: false,
 				}
 				this.notifyStateChange()

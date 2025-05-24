@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Use experimental multi block diff tool",
 			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
+		},
+		"MARKETPLACE": {
+			"name": "Enable Marketplace in Roo Code",
+			"description": "When enabled, Roo will be able to install and manage items from the Marketplace.",
+			"warning": "The Marketplace is not yet enabled. If you want to be an early adopter, please enable it in the Experimental Settings."
 		}
 	},
 	"promptCaching": {

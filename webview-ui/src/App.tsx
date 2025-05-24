@@ -3,7 +3,7 @@ import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
-import TranslationProvider from "./i18n/TranslationContext"
+import TranslationProvider, { useAppTranslation } from "./i18n/TranslationContext"
 import { MarketplaceViewStateManager } from "./components/marketplace/MarketplaceViewStateManager"
 
 import { vscode } from "./utils/vscode"
@@ -30,8 +30,16 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 }
 
 const App = () => {
-	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
-		useExtensionState()
+	const {
+		didHydrateState,
+		showWelcome,
+		shouldShowAnnouncement,
+		telemetrySetting,
+		telemetryKey,
+		machineId,
+		experiments,
+	} = useExtensionState()
+	const { t } = useAppTranslation()
 
 	// Create a persistent state manager
 	const marketplaceStateManager = useMemo(() => new MarketplaceViewStateManager(), [])
@@ -124,9 +132,17 @@ const App = () => {
 			{tab === "settings" && (
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
 			)}
-			{tab === "marketplace" && (
-				<MarketplaceView stateManager={marketplaceStateManager} onDone={() => switchTab("chat")} />
-			)}
+			{tab === "marketplace" &&
+				(experiments.marketplace ? (
+					<MarketplaceView stateManager={marketplaceStateManager} onDone={() => switchTab("chat")} />
+				) : (
+					<div className="flex flex-col items-center justify-center h-full p-8 text-center">
+						<div className="text-lg font-semibold mb-2">{t("settings:experimental.MARKETPLACE.name")}</div>
+						<div className="text-vscode-descriptionForeground mb-4">
+							{t("settings:experimental.MARKETPLACE.warning")}
+						</div>
+					</div>
+				))}
 			<ChatView
 				ref={chatViewRef}
 				isHidden={tab !== "chat"}

@@ -65,7 +65,8 @@
 			"removeProject": "제거",
 			"removeGlobal": "제거 (글로벌)",
 			"viewSource": "보기",
-			"viewOnSource": "{{source}}에서 보기"
+			"viewOnSource": "{{source}}에서 보기",
+			"noWorkspaceTooltip": "마켓플레이스 항목을 설치하려면 작업 영역을 여세요"
 		}
 	},
 	"installProjectTooltip": "프로젝트 설치",

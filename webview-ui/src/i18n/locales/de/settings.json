@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentelles Multi-Block-Diff-Werkzeug verwenden",
 			"description": "Wenn aktiviert, verwendet Roo das Multi-Block-Diff-Werkzeug. Dies versucht, mehrere Codeblöcke in der Datei in einer Anfrage zu aktualisieren."
+		},
+		"MARKETPLACE": {
+			"name": "Marktplatz in Roo Code aktivieren",
+			"description": "Wenn aktiviert, kann Roo Elemente vom Marktplatz installieren und verwalten.",
+			"warning": "Der Marktplatz ist noch nicht aktiviert. Wenn du ein Early Adopter sein möchtest, aktiviere ihn bitte in den Experimentellen Einstellungen."
 		}
 	},
 	"promptCaching": {

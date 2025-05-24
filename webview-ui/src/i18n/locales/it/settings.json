@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Usa strumento diff multi-blocco sperimentale",
 			"description": "Quando abilitato, Roo utilizzerà lo strumento diff multi-blocco. Questo tenterà di aggiornare più blocchi di codice nel file in una singola richiesta."
+		},
+		"MARKETPLACE": {
+			"name": "Abilita Marketplace in Roo Code",
+			"description": "Quando abilitato, Roo sarà in grado di installare e gestire elementi dal Marketplace.",
+			"warning": "Il Marketplace non è ancora abilitato. Se vuoi essere un early adopter, abilitalo nelle Impostazioni sperimentali."
 		}
 	},
 	"promptCaching": {

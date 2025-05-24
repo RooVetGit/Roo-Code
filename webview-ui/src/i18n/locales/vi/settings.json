@@ -30,7 +30,7 @@
 		"terminal": "Terminal",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
-		"about": "Giới thiệu"
+		"about": "Giới thiệu Roo Code"
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Sử dụng công cụ diff đa khối thử nghiệm",
 			"description": "Khi được bật, Roo sẽ sử dụng công cụ diff đa khối. Điều này sẽ cố gắng cập nhật nhiều khối mã trong tệp trong một yêu cầu."
+		},
+		"MARKETPLACE": {
+			"name": "Bật Marketplace trong Roo Code",
+			"description": "Khi được bật, Roo sẽ có thể cài đặt và quản lý các mục từ Marketplace.",
+			"warning": "Marketplace chưa được bật. Nếu bạn muốn trở thành người dùng sớm, vui lòng bật nó trong Cài đặt thử nghiệm."
 		}
 	},
 	"promptCaching": {

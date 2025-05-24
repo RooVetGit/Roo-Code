@@ -7,25 +7,22 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import type { RocketConfig } from "config-rocket"
 import { ExtensionStateContext } from "@/context/ExtensionStateContext"
 
-// Mock vscode API - IMPORTANT: This mock must be at the very top of the file
 const mockPostMessage = jest.fn()
 jest.mock("@src/utils/vscode", () => ({
 	vscode: {
 		postMessage: mockPostMessage,
-		getState: jest.fn(() => ({})), // Mock getState as well if it's used
+		getState: jest.fn(() => ({})),
 		setState: jest.fn(),
 	},
 }))
 
-// Mock translation hook
 jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
-		t: (key: string) => key, // Return the key as-is for easy testing
+		t: (key: string) => key,
 	}),
 }))
 
-// Mock useEvent from react-use
-let mockUseEventHandler: ((event: MessageEvent) => void) | undefined // Declare outside mock
+let mockUseEventHandler: ((event: MessageEvent) => void) | undefined
 jest.mock("react-use", () => ({
 	useEvent: jest.fn((eventName, handler) => {
 		if (eventName === "message") {
@@ -34,7 +31,6 @@ jest.mock("react-use", () => ({
 	}),
 }))
 
-// Mock ResizeObserver
 class MockResizeObserver {
 	observe() {}
 	unobserve() {}
@@ -237,6 +233,7 @@ describe("MarketplaceView", () => {
 					experiments: {
 						autoCondenseContext: false,
 						powerSteering: false,
+						marketplace: true,
 					},
 					marketplaceSources: [],
 				}}>
@@ -254,7 +251,7 @@ describe("MarketplaceView", () => {
 		expect(screen.getByText("marketplace:done")).toBeInTheDocument()
 	})
 
-	it("calls onDone when Done button is clicked", async () => {
+	it("calls onDone when Done button is clicked and active tab is browse or installed", async () => {
 		const user = userEvent.setup()
 		const onDoneMock = jest.fn()
 		renderWithProviders({ onDone: onDoneMock })

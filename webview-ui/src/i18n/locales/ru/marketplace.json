@@ -65,7 +65,8 @@
 			"removeProject": "Удалить",
 			"removeGlobal": "Удалить (Глобально)",
 			"viewSource": "Просмотреть",
-			"viewOnSource": "Просмотреть на {{source}}"
+			"viewOnSource": "Просмотреть на {{source}}",
+			"noWorkspaceTooltip": "Откройте рабочую область для установки элементов marketplace"
 		}
 	},
 	"installProjectTooltip": "Установка проекта",

@@ -65,7 +65,8 @@
 			"removeProject": "移除（项目）",
 			"removeGlobal": "移除（全局）",
 			"viewSource": "查看",
-			"viewOnSource": "在 {{source}} 上查看"
+			"viewOnSource": "在 {{source}} 上查看",
+			"noWorkspaceTooltip": "打开工作区以安装市场项目"
 		}
 	},
 	"installProjectTooltip": "项目安装",

@@ -310,6 +310,25 @@ describe("MarketplaceItemCard", () => {
 		})
 	})
 
+	it("disables install button and shows tooltip when no workspace is open", async () => {
+		// Mock useExtensionState to simulate no workspace
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		jest.spyOn(require("@/context/ExtensionStateContext"), "useExtensionState").mockReturnValue({
+			filePaths: [],
+		} as any)
+
+		const user = userEvent.setup()
+		renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
+
+		const installButton = screen.getByRole("button", { name: "Install Project" })
+		expect(installButton).toBeDisabled()
+
+		// Hover to trigger tooltip
+		await user.hover(installButton)
+		const tooltip = await screen.findByText("Open a workspace to install marketplace items")
+		expect(tooltip).toBeInTheDocument()
+	})
+
 	describe("MarketplaceItemCard expandable section badge", () => {
 		it("shows badge count for matched sub-items", () => {
 			const packageItem: MarketplaceItem = {

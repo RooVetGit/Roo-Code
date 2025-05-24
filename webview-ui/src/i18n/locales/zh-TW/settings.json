@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "使用實驗性多區塊差異比對工具",
 			"description": "啟用後，Roo 將使用多區塊差異比對工具，嘗試在單一請求中更新檔案內的多個程式碼區塊。"
+		},
+		"MARKETPLACE": {
+			"name": "在 Roo Code 中啟用 Marketplace",
+			"description": "啟用後，Roo 將能夠從 Marketplace 安裝和管理項目。",
+			"warning": "Marketplace 尚未啟用。如果您想成為早期採用者，請在實驗性設定中啟用它。"
 		}
 	},
 	"promptCaching": {

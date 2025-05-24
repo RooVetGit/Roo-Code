@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Deneysel çoklu blok diff aracını kullan",
 			"description": "Etkinleştirildiğinde, Roo çoklu blok diff aracını kullanacaktır. Bu, tek bir istekte dosyadaki birden fazla kod bloğunu güncellemeye çalışacaktır."
+		},
+		"MARKETPLACE": {
+			"name": "Roo Code'da Pazaryeri'ni etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo Pazaryeri'nden öğeleri yükleyebilir ve yönetebilir.",
+			"warning": "Pazaryeri henüz etkinleştirilmedi. Erken benimseyen olmak istiyorsanız, lütfen Deneysel Ayarlar'da etkinleştirin."
 		}
 	},
 	"promptCaching": {

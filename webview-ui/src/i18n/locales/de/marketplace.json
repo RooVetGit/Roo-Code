@@ -65,7 +65,8 @@
 			"removeProject": "Entfernen",
 			"removeGlobal": "Entfernen (Global)",
 			"viewSource": "Ansehen",
-			"viewOnSource": "Auf {{source}} ansehen"
+			"viewOnSource": "Auf {{source}} ansehen",
+			"noWorkspaceTooltip": "Öffne einen Arbeitsbereich, um Marketplace-Elemente zu installieren"
 		}
 	},
 	"installProjectTooltip": "Projektinstallation",

@@ -82,8 +82,18 @@ export class MarketplaceManager {
 	async getMarketplaceItems(
 		enabledSources: MarketplaceSource[],
 	): Promise<{ items: MarketplaceItem[]; errors?: string[] }> {
-		const items: MarketplaceItem[] = []
+		const dedupedItems: Record<string, MarketplaceItem> = {}
 		const errors: string[] = []
+
+		function _dedupeAndAddItem(item: MarketplaceItem) {
+			const id = item.id
+			const existingItem = dedupedItems[id]
+			if (existingItem) {
+				if (existingItem.version >= item.version) return
+			}
+
+			dedupedItems[id] = item
+		}
 
 		// Process sources sequentially with locking
 		for (const source of enabledSources) {
@@ -105,7 +115,7 @@ export class MarketplaceManager {
 							sourceName: source.name || this.getRepoNameFromUrl(source.url),
 							sourceUrl: source.url,
 						}))
-						items.push(...itemsWithSource)
+						itemsWithSource.forEach(_dedupeAndAddItem)
 					}
 				})
 			} catch (error) {
@@ -118,13 +128,13 @@ export class MarketplaceManager {
 		}
 
 		// Store the current items
-		this.currentItems = items
+		this.currentItems = Object.values(dedupedItems)
 		// Preserve original unfiltered items
-		this.originalItems = items
+		this.originalItems = this.currentItems
 
 		// Return both items and errors
 		const result = {
-			items,
+			items: this.originalItems,
 			...(errors.length > 0 && { errors }),
 		}
 

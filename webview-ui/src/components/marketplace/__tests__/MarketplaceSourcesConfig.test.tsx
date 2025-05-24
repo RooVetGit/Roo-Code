@@ -3,14 +3,12 @@ import { MarketplaceSourcesConfig } from "../MarketplaceSourcesConfigView"
 import { MarketplaceViewStateManager } from "../MarketplaceViewStateManager"
 import { validateSource, ValidationError } from "@roo/shared/MarketplaceValidation"
 
-// Mock the translation hook
 jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
-		t: (key: string) => key, // Return the key as-is for testing
+		t: (key: string) => key,
 	}),
 }))
 
-// Mock the validateSource function
 jest.mock("@roo/shared/MarketplaceValidation", () => ({
 	validateSource: jest.fn(),
 }))
@@ -20,13 +18,11 @@ describe("MarketplaceSourcesConfig", () => {
 
 	beforeEach(() => {
 		stateManager = new MarketplaceViewStateManager()
-		// Reset state manager to have no sources
 		stateManager.transition({
 			type: "UPDATE_SOURCES",
 			payload: { sources: [] },
 		})
 		jest.clearAllMocks()
-		// Default mock implementation for validateSource
 		;(validateSource as jest.Mock).mockReturnValue([])
 	})
 
@@ -83,7 +79,6 @@ describe("MarketplaceSourcesConfig", () => {
 		fireEvent.change(urlInput, { target: { value: "" } }) // Set URL to empty
 		fireEvent.blur(urlInput) // Trigger blur to activate client-side validation
 
-		// This error is displayed as a field-specific error message
 		const errorMessage = await screen.findByText("marketplace:sources.errors.emptyUrl", {
 			selector: "p.text-xs.text-red-500",
 		})
@@ -112,7 +107,6 @@ describe("MarketplaceSourcesConfig", () => {
 	})
 
 	it("shows error when max sources reached", async () => {
-		// Add max number of sources with unique URLs
 		const maxSources = Array(10)
 			.fill(null)
 			.map((_, i) => ({
@@ -233,7 +227,6 @@ describe("MarketplaceSourcesConfig", () => {
 		const longName = "This is a very long source name that exceeds limit"
 		fireEvent.change(nameInput, { target: { value: longName } })
 
-		// The component should truncate to 20 chars
 		expect(nameInput).toHaveValue(longName.slice(0, 20))
 	})
 

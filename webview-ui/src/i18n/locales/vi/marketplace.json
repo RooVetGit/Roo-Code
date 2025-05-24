@@ -65,7 +65,8 @@
 			"removeProject": "Gỡ cài đặt",
 			"removeGlobal": "Gỡ cài đặt (Toàn cục)",
 			"viewSource": "Xem",
-			"viewOnSource": "Xem trên {{source}}"
+			"viewOnSource": "Xem trên {{source}}",
+			"noWorkspaceTooltip": "Mở một không gian làm việc để cài đặt các mục marketplace"
 		}
 	},
 	"installProjectTooltip": "Cài đặt dự án",

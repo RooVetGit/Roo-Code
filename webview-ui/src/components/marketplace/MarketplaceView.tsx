@@ -95,7 +95,15 @@ export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) 
 								<RefreshCw className={cn("size-4", { "animate-spin": state.isFetching })} />
 								{t("marketplace:refresh")}
 							</Button>
-							<Button variant="default" onClick={onDone}>
+							<Button
+								variant="default"
+								onClick={() => {
+									if (state.activeTab === "browse" || state.activeTab === "installed") {
+										onDone?.()
+									} else {
+										manager.transition({ type: "SET_ACTIVE_TAB", payload: { tab: "browse" } })
+									}
+								}}>
 								{t("marketplace:done")}
 							</Button>
 						</div>
@@ -145,8 +153,8 @@ export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) 
 						<div
 							className={cn("absolute w-full transition-all duration-300 ease-in-out", {
 								"translate-x-0 opacity-100 z-10": state.activeTab === "browse",
-								"translate-x-[-100%] opacity-0 z-0": state.activeTab === "installed",
-								"translate-x-[-200%] opacity-0 z-0": state.activeTab === "settings",
+								"translate-x-[-100%] opacity-0 invisible z-0": state.activeTab === "installed",
+								"translate-x-[-200%] opacity-0 invisible z-0": state.activeTab === "settings",
 							})}>
 							<MarketplaceListView
 								stateManager={stateManager}
@@ -157,9 +165,9 @@ export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) 
 
 						<div
 							className={cn("absolute w-full transition-all duration-300 ease-in-out", {
-								"translate-x-[100%] opacity-0 z-0": state.activeTab === "browse",
+								"translate-x-[100%] opacity-0 invisible z-0": state.activeTab === "browse",
 								"translate-x-0 opacity-100 z-10": state.activeTab === "installed",
-								"translate-x-[-100%] opacity-0 z-0": state.activeTab === "settings",
+								"translate-x-[-100%] opacity-0 invisible z-0": state.activeTab === "settings",
 							})}>
 							<MarketplaceListView
 								stateManager={stateManager}
@@ -171,8 +179,8 @@ export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) 
 
 						<div
 							className={cn("absolute w-full transition-all duration-300 ease-in-out", {
-								"translate-x-[200%] opacity-0 z-0": state.activeTab === "browse",
-								"translate-x-[100%] opacity-0 z-0": state.activeTab === "installed",
+								"translate-x-[200%] opacity-0 invisible z-0": state.activeTab === "browse",
+								"translate-x-[100%] opacity-0 invisible z-0": state.activeTab === "installed",
 								"translate-x-0 opacity-100 z-10": state.activeTab === "settings",
 							})}>
 							<MarketplaceSourcesConfig stateManager={stateManager} />

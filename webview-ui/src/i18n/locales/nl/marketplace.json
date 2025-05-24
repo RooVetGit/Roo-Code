@@ -65,7 +65,8 @@
 			"removeProject": "Verwijderen",
 			"removeGlobal": "Verwijderen (Globaal)",
 			"viewSource": "Bekijken",
-			"viewOnSource": "Bekijken op {{source}}"
+			"viewOnSource": "Bekijken op {{source}}",
+			"noWorkspaceTooltip": "Open een werkruimte om marketplace-items te installeren"
 		}
 	},
 	"installProjectTooltip": "Projectinstallatie",

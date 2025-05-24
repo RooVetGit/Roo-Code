@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentele multi-block diff-tool gebruiken",
 			"description": "Indien ingeschakeld, gebruikt Roo de multi-block diff-tool. Hiermee wordt geprobeerd meerdere codeblokken in het bestand in één verzoek bij te werken."
+		},
+		"MARKETPLACE": {
+			"name": "Marktplaats in Roo Code inschakelen",
+			"description": "Indien ingeschakeld, kan Roo items van de Marktplaats installeren en beheren.",
+			"warning": "De Marktplaats is nog niet ingeschakeld. Als je een vroege gebruiker wilt zijn, schakel deze dan in de Experimentele instellingen in."
 		}
 	},
 	"promptCaching": {

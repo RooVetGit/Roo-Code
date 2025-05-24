@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "실험적 다중 블록 diff 도구 사용",
 			"description": "활성화하면 Roo가 다중 블록 diff 도구를 사용합니다. 이것은 하나의 요청에서 파일의 여러 코드 블록을 업데이트하려고 시도합니다."
+		},
+		"MARKETPLACE": {
+			"name": "Roo Code에서 마켓플레이스 활성화",
+			"description": "활성화하면 Roo는 마켓플레이스에서 항목을 설치하고 관리할 수 있습니다.",
+			"warning": "마켓플레이스는 아직 활성화되지 않았습니다. 얼리 어답터가 되려면 실험적 설정에서 활성화하세요."
 		}
 	},
 	"promptCaching": {

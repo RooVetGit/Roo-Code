@@ -430,6 +430,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
 			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
+		},
+		"MARKETPLACE": {
+			"name": "Włącz Marketplace w Roo Code",
+			"description": "Po włączeniu, Roo będzie w stanie instalować i zarządzać elementami z Marketplace.",
+			"warning": "Marketplace nie jest jeszcze włączony. Jeśli chcesz być wczesnym użytkownikiem, włącz go w Ustawieniach eksperymentalnych."
 		}
 	},
 	"promptCaching": {
