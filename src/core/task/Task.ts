@@ -109,6 +109,7 @@ export type TaskOptions = {
 	parentTask?: Task
 	taskNumber?: number
 	onCreated?: (cline: Task) => void
+	currentModeSlug: string
 }
 
 export class Task extends EventEmitter<ClineEvents> {
@@ -119,6 +120,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+	currentModeSlug: string
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
@@ -201,6 +203,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		currentModeSlug,
 	}: TaskOptions) {
 		super()
 
@@ -235,6 +238,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
+		this.currentModeSlug = currentModeSlug
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -290,6 +294,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		await this.saveApiConversationHistory()
 	}
 
+	public async updateCurrentModeSlug(newModeSlug: string) {
+		this.currentModeSlug = newModeSlug
+		// NOTE: Consider if a mode switch should immediately trigger a save of task metadata.
+		// For now, the updated currentModeSlug will be saved with the next natural
+		// save operation (e.g., when a new message is added).
+	}
+	
 	async overwriteApiConversationHistory(newHistory: ApiMessage[]) {
 		this.apiConversationHistory = newHistory
 		await this.saveApiConversationHistory()
@@ -345,6 +356,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
+				lastActiveModeSlug: this.currentModeSlug,
 			})
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
