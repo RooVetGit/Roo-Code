@@ -64,6 +64,7 @@ Toutes les contributions doivent commencer par un ticket GitHub.
 - **Créer un ticket :** Utilise les modèles appropriés :
     - **Bugs :** Modèle "Bug Report".
     - **Fonctionnalités :** Modèle "Detailed Feature Proposal". Approbation requise avant de commencer.
+    - **Captures rapides :** Modèle "Quick Issue Capture" pour les tâches des mainteneurs, la dette technique et les tâches internes.
 - **Réclamer des tickets :** Commente et attends l'assignation officielle.
 
 **Les PRs sans tickets approuvés peuvent être fermées.**

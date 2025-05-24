@@ -64,6 +64,7 @@ Todas as contribuições devem começar com uma Issue do GitHub.
 - **Criar uma issue:** Use os templates apropriados:
     - **Bugs:** Template "Bug Report".
     - **Recursos:** Template "Detailed Feature Proposal". Aprovação necessária antes de começar.
+    - **Capturas rápidas:** Template "Quick Issue Capture" para tarefas dos mantenedores, dívida técnica e tarefas internas.
 - **Reivindicar issues:** Comente e aguarde atribuição oficial.
 
 **PRs sem issues aprovadas podem ser fechados.**

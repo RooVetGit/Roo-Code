@@ -119,7 +119,7 @@ Làm cho Roo Code hoạt động theo cách của bạn với:
 
 - **Discord:** [Tham gia máy chủ Discord của chúng tôi](https://discord.gg/roocode) để được trợ giúp và thảo luận trong thời gian thực
 - **Reddit:** [Ghé thăm subreddit của chúng tôi](https://www.reddit.com/r/RooCode) để chia sẻ kinh nghiệm và mẹo
-- **GitHub:** [Báo cáo vấn đề](https://github.com/RooCodeInc/Roo-Code/issues) hoặc [yêu cầu tính năng](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** Báo cáo [lỗi](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [vấn đề bắt nhanh](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), hoặc [yêu cầu tính năng](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

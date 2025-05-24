@@ -119,7 +119,7 @@ MCP 通过允许您添加无限自定义工具来扩展 Roo Code 的能力。与
 
 - **Discord：** [加入我们的 Discord 服务器](https://discord.gg/roocode)获取实时帮助和讨论
 - **Reddit：** [访问我们的 subreddit](https://www.reddit.com/r/RooCode)分享经验和技巧
-- **GitHub：** 报告[问题](https://github.com/RooCodeInc/Roo-Code/issues)或请求[功能](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub：** 报告[错误](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)、[快速捕获问题](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)，或请求[功能](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

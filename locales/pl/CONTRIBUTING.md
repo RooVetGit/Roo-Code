@@ -64,6 +64,7 @@ Każdy wkład musi zaczynać się od GitHub Issue.
 - **Utwórz issue:** Używaj odpowiednich szablonów:
     - **Błędy:** Szablon "Bug Report".
     - **Funkcje:** Szablon "Detailed Feature Proposal". Wymagane zatwierdzenie przed rozpoczęciem.
+    - **Szybkie rejestrowanie:** Szablon "Quick Issue Capture" dla zadań opiekunów, długu technicznego i zadań wewnętrznych.
 - **Zgłoś chęć pracy:** Skomentuj i poczekaj na oficjalne przypisanie.
 
 **PR bez zatwierdzonego issue może zostać zamknięty.**

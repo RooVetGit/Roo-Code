@@ -64,6 +64,7 @@ Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻�
 - **建立 issue：** 使用適當範本：
     - **Bug：** 「Bug Report」範本。
     - **功能：** 「Detailed Feature Proposal」範本。開始前需獲得批准。
+    - **快速捕獲：** 「Quick Issue Capture」範本，用於維護者待辦事項、技術債務和內部任務。
 - **認領 issue：** 留言並等待正式分配。
 
 **未關聯已批准 issue 的 PR 可能會被關閉。**

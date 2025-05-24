@@ -64,6 +64,7 @@ Totes les contribucions han de començar amb una Issue de GitHub.
 - **Crear una issue:** Utilitza les plantilles adequades:
     - **Errors:** Plantilla "Bug Report".
     - **Funcionalitats:** Plantilla "Detailed Feature Proposal". Es requereix aprovació abans de començar.
+    - **Captures ràpides:** Plantilla "Quick Issue Capture" per a tasques de manteniment, deute tècnic i tasques internes.
 - **Reclamar issues:** Comenta i espera l'assignació oficial.
 
 **Els PRs sense issues aprovades poden ser tancats.**

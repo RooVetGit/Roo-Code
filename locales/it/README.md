@@ -119,7 +119,7 @@ Fai funzionare Roo Code a modo tuo con:
 
 - **Discord:** [Unisciti al nostro server Discord](https://discord.gg/roocode) per aiuto in tempo reale e discussioni
 - **Reddit:** [Visita il nostro subreddit](https://www.reddit.com/r/RooCode) per condividere esperienze e consigli
-- **GitHub:** [Segnala problemi](https://github.com/RooCodeInc/Roo-Code/issues) o [richiedi funzionalità](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** Segnala [bug](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [problemi di cattura rapida](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), o [richiedi funzionalità](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

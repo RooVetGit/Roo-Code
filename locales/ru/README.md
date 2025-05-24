@@ -121,7 +121,7 @@ MCP расширяет возможности Roo Code, позволяя доб�
 
 - **Discord:** [Присоединяйтесь к нашему серверу Discord](https://discord.gg/roocode) для помощи в реальном времени и обсуждений
 - **Reddit:** [Посетите наш subreddit](https://www.reddit.com/r/RooCode) чтобы поделиться опытом и советами
-- **GitHub:** Сообщайте об [ошибках](https://github.com/RooCodeInc/Roo-Code/issues) или запрашивайте [функции](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** Сообщайте о [багах](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [проблемах быстрого снимка](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), или запрашивайте [функции](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

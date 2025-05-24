@@ -64,6 +64,7 @@ Roo Code 是一个由社区驱动的项目，我们高度重视每一份贡献�
 - **创建 issue：** 使用适当模板：
     - **Bug：** "Bug Report" 模板。
     - **功能：** "Detailed Feature Proposal" 模板。开始前需获得批准。
+    - **快速捕获：** "Quick Issue Capture" 模板，用于维护者待办事项、技术债务和内部任务。
 - **认领 issue：** 评论并等待正式分配。
 
 **未关联已批准 issue 的 PR 可能会被关闭。**

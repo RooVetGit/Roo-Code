@@ -64,6 +64,7 @@ Tüm katkılar bir GitHub Issue ile başlamalıdır.
 - **Issue oluştur:** Uygun şablonları kullan:
     - **Hatalar:** "Bug Report" şablonu.
     - **Özellikler:** "Detailed Feature Proposal" şablonu. Başlamadan önce onay gerekir.
+    - **Hızlı yakalama:** Maintainer görevleri, teknik borç ve iç görevler için "Quick Issue Capture" şablonu.
 - **Issue'ları sahiplen:** Yorum yap ve resmi atamayı bekle.
 
 **Onaylanmış issue'lara bağlı olmayan PR'lar kapatılabilir.**

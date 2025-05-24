@@ -1,0 +1,44 @@
+name: Quick Issue Capture
+description: Quickly capture any issue as a starting point
+labels: ["quick-capture", "needs-triage"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              **⚡ Quick Issue Template**
+
+              Use this for maintainer todos, technical debt, internal refactors, or issues needing further triage or categorization.
+
+              **Not for this template:**
+              - 🐛 **User-facing bugs** → Use [Bug Report](./bug_report.yml)
+              - 💡 **Feature ideas** → Use [GitHub Discussions](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+              - 📋 **Detailed feature proposals** → Use [Detailed Feature Proposal](./feature_request.yml)
+
+    - type: dropdown
+      id: type
+      attributes:
+          label: Issue Type
+          description: What kind of issue is this?
+          options:
+              - Technical Debt
+              - Code Refactor
+              - Developer Experience
+              - CI/CD Improvement
+              - Documentation Update
+              - Performance Optimization
+              - Security Enhancement
+              - Testing Improvement
+              - Maintainer Todo
+              - Internal Tool/Script
+              - Other Issue
+      validations:
+          required: true
+
+    - type: textarea
+      id: summary
+      attributes:
+          label: Summary
+          description: Brief description of what needs to be done
+          placeholder: e.g., "Refactor provider validation logic" or "Add unit tests for McpHub"
+      validations:
+          required: true

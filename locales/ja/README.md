@@ -119,7 +119,7 @@ Roo Codeをあなた好みに動作させる方法：
 
 - **Discord：** リアルタイムのヘルプとディスカッションについては[Discord サーバーに参加](https://discord.gg/roocode)
 - **Reddit：** 経験とヒントを共有するには[サブレディット](https://www.reddit.com/r/RooCode)にアクセス
-- **GitHub：** [問題](https://github.com/RooCodeInc/Roo-Code/issues)を報告したり[機能](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)をリクエスト
+- **GitHub：** [バグ](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)、[クイックキャプチャ問題](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)を報告したり[機能](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)をリクエスト
 
 ---
 

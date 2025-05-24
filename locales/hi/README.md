@@ -119,7 +119,7 @@ MCP आपको असीमित कस्टम टूल्स जोड़
 
 - **Discord:** रीयल-टाइम मदद और चर्चाओं के लिए [हमारे Discord सर्वर में शामिल हों](https://discord.gg/roocode)
 - **Reddit:** अनुभव और टिप्स साझा करने के लिए [हमारे subreddit पर जाएं](https://www.reddit.com/r/RooCode)
-- **GitHub:** [समस्याओं की रिपोर्ट करें](https://github.com/RooCodeInc/Roo-Code/issues) या [फीचर अनुरोध करें](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** [बग्स की रिपोर्ट करें](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [त्वरित कैप्चर समस्याएं](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), या [फीचर अनुरोध करें](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

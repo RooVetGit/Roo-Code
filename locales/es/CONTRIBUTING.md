@@ -64,6 +64,7 @@ Todas las contribuciones deben comenzar con un Issue de GitHub.
 - **Crear un issue**: Usa las plantillas apropiadas:
     - **Errores:** Plantilla "Bug Report".
     - **Funciones:** Plantilla "Detailed Feature Proposal". Se requiere aprobación antes de comenzar.
+    - **Capturas rápidas:** Plantilla "Quick Issue Capture" para tareas pendientes de mantenedores, deuda técnica y tareas internas.
 - **Reclamar issues**: Comenta y espera la asignación oficial.
 
 **Los PRs sin issues aprobados pueden ser cerrados.**

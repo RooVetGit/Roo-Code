@@ -120,7 +120,7 @@ Roo Code 可以配合您的需求進行調整：
 
 - **Discord：** [加入我們的 Discord 伺服器](https://discord.gg/roocode)取得即時幫助和討論
 - **Reddit：** [存取我們的 subreddit](https://www.reddit.com/r/RooCode)分享經驗和技巧
-- **GitHub：** [報告問題](https://github.com/RooCodeInc/Roo-Code/issues)或[請求功能](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub：** [報告錯誤](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)、[快速捕獲問題](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)，或[請求功能](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

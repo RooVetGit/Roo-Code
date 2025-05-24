@@ -120,7 +120,7 @@ Laat Roo Code werken zoals jij wilt met:
 
 - **Discord:** [Word lid van onze Discord-server](https://discord.gg/roocode) voor directe hulp en discussies
 - **Reddit:** [Bezoek onze subreddit](https://www.reddit.com/r/RooCode) om ervaringen en tips te delen
-- **GitHub:** Meld [problemen](https://github.com/RooCodeInc/Roo-Code/issues) of vraag [features](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) aan
+- **GitHub:** Meld [bugs](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [snelle vastleggingsissues](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), of vraag [features](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) aan
 
 ---
 

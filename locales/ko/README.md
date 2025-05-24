@@ -119,7 +119,7 @@ MCP는 무제한 커스텀 도구를 추가할 수 있게 하여 Roo Code의 기
 
 - **Discord:** 실시간 도움과 토론을 위한 [Discord 서버 참여](https://discord.gg/roocode)
 - **Reddit:** 경험과 팁을 공유하는 [서브레딧 방문](https://www.reddit.com/r/RooCode)
-- **GitHub:** [문제 보고](https://github.com/RooCodeInc/Roo-Code/issues) 또는 [기능 요청](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** [버그](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [빠른 캡처 문제](https://github.com/RooCodeInc/Roo-Code/issues/new/choose) 보고 또는 [기능 요청](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

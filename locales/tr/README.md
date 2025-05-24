@@ -119,7 +119,7 @@ Roo Code'u kendi tarzınıza göre çalıştırın:
 
 - **Discord:** Gerçek zamanlı yardım ve tartışmalar için [Discord sunucumuza katılın](https://discord.gg/roocode)
 - **Reddit:** Deneyimlerinizi ve ipuçlarınızı paylaşmak için [subreddit'imizi ziyaret edin](https://www.reddit.com/r/RooCode)
-- **GitHub:** [Sorunları bildirin](https://github.com/RooCodeInc/Roo-Code/issues) veya [özellik talep edin](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** [Hataları](https://github.com/RooCodeInc/Roo-Code/issues/new/choose), [hızlı yakalama sorunlarını](https://github.com/RooCodeInc/Roo-Code/issues/new/choose) bildirin veya [özellik talep edin](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 

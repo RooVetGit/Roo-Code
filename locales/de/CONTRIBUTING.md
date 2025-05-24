@@ -64,6 +64,7 @@ Alle Beiträge müssen mit einem GitHub Issue beginnen.
 - **Issue erstellen**: Nutze die passenden Vorlagen:
     - **Bugs:** "Bug Report"-Vorlage.
     - **Features:** "Detailed Feature Proposal"-Vorlage. Vor dem Start ist eine Genehmigung erforderlich.
+    - **Schnellerfassung:** "Quick Issue Capture"-Vorlage für Wartungsaufgaben, technische Schulden und interne Aufgaben.
 - **Issues beanspruchen**: Kommentiere und warte auf die offizielle Zuweisung.
 
 **PRs ohne genehmigte Issues können geschlossen werden.**

@@ -64,6 +64,7 @@ All contributions must begin with a GitHub Issue.
 - **Create an issue**: Use appropriate templates:
     - **Bugs:** "Bug Report" template.
     - **Features:** "Detailed Feature Proposal" template. Approval required before starting.
+    - **Quick captures:** "Quick Issue Capture" template for maintainer todos, technical debt, and internal tasks.
 - **Claim issues**: Comment and await official assignment.
 
 **PRs without approved issues may be closed.**

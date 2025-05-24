@@ -64,6 +64,7 @@ Mọi đóng góp đều phải bắt đầu bằng một GitHub Issue.
 - **Tạo issue mới:** Sử dụng mẫu phù hợp:
     - **Lỗi:** Mẫu "Bug Report".
     - **Tính năng:** Mẫu "Detailed Feature Proposal". Cần được phê duyệt trước khi bắt đầu.
+    - **Bắt nhanh:** Mẫu "Quick Issue Capture" cho các nhiệm vụ của người bảo trì, nợ kỹ thuật và công việc nội bộ.
 - **Nhận issue:** Bình luận và chờ được gán chính thức.
 
 **PR không có issue đã duyệt có thể bị đóng.**
