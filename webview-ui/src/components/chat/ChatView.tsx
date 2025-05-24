@@ -16,7 +16,7 @@ import { combineApiRequests } from "@roo/combineApiRequests"
 import { combineCommandSequences } from "@roo/combineCommandSequences"
 import { getApiMetrics } from "@roo/getApiMetrics"
 import { AudioType } from "@roo/WebviewMessage"
-import { getAllModes } from "@roo//modes"
+import { getAllModes } from "@roo/modes"
 
 import { vscode } from "@src/utils/vscode"
 import { validateCommand } from "@src/utils/command-validation"
