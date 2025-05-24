@@ -101,6 +101,9 @@ type GlobalSettings = {
 	terminalCompressProgressBar?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
+	diffViewAutoFocus?: boolean | undefined
+	autoCloseRooTabs?: boolean | undefined
+	autoCloseAllRooTabs?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
@@ -233,6 +236,9 @@ type ProviderSettings = {
 		| undefined
 	includeMaxTokens?: boolean | undefined
 	diffEnabled?: boolean | undefined
+	diffViewAutoFocus?: boolean | undefined
+	autoCloseRooTabs?: boolean | undefined
+	autoCloseAllRooTabs?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	modelTemperature?: (number | null) | undefined
 	rateLimitSeconds?: number | undefined
@@ -240,6 +246,7 @@ type ProviderSettings = {
 	reasoningEffort?: ("low" | "medium" | "high") | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
+	promptCachingDisabled?: boolean | undefined
 	apiModelId?: string | undefined
 	apiKey?: string | undefined
 	anthropicBaseUrl?: string | undefined
@@ -649,6 +656,9 @@ type IpcMessage =
 									| undefined
 								includeMaxTokens?: boolean | undefined
 								diffEnabled?: boolean | undefined
+								diffViewAutoFocus?: boolean | undefined
+								autoCloseRooTabs?: boolean | undefined
+								autoCloseAllRooTabs?: boolean | undefined
 								fuzzyMatchThreshold?: number | undefined
 								modelTemperature?: (number | null) | undefined
 								rateLimitSeconds?: number | undefined
@@ -656,6 +666,7 @@ type IpcMessage =
 								reasoningEffort?: ("low" | "medium" | "high") | undefined
 								modelMaxTokens?: number | undefined
 								modelMaxThinkingTokens?: number | undefined
+								promptCachingDisabled?: boolean | undefined
 								apiModelId?: string | undefined
 								apiKey?: string | undefined
 								anthropicBaseUrl?: string | undefined
@@ -1133,6 +1144,9 @@ type TaskCommand =
 						| undefined
 					includeMaxTokens?: boolean | undefined
 					diffEnabled?: boolean | undefined
+					diffViewAutoFocus?: boolean | undefined
+					autoCloseRooTabs?: boolean | undefined
+					autoCloseAllRooTabs?: boolean | undefined
 					fuzzyMatchThreshold?: number | undefined
 					modelTemperature?: (number | null) | undefined
 					rateLimitSeconds?: number | undefined
@@ -1140,6 +1154,7 @@ type TaskCommand =
 					reasoningEffort?: ("low" | "medium" | "high") | undefined
 					modelMaxTokens?: number | undefined
 					modelMaxThinkingTokens?: number | undefined
+					promptCachingDisabled?: boolean | undefined
 					apiModelId?: string | undefined
 					apiKey?: string | undefined
 					anthropicBaseUrl?: string | undefined

@@ -11,6 +11,10 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 
 export interface WebviewMessage {
 	type:
+		| "diffViewAutoFocus"
+		| "autoCloseRooTabs"
+		| "autoCloseAllRooTabs" // Added new setting
+		| "apiConfiguration"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
