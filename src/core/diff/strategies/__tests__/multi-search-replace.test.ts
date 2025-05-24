@@ -9,7 +9,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 		})
 
 		it("validates correct marker sequence", () => {
-			const diff = "<<<<<<< SEARCH\n" + "some content\n" + "=======\n" + "new content\n" + ">>>>>>> REPLACE"
+			const diff = "<<<<<<< SEARCH\nsome content\n\n=======\nnew content\n\n>>>>>>> REPLACE"
 			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 		})
 
@@ -64,7 +64,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 		})
 
 		it("detects two separators", () => {
-			const diff = "<<<<<<< SEARCH\n" + "content\n" + "=======\n" + "=======\n" + ">>>>>>> REPLACE"
+			const diff = "<<<<<<< SEARCH\ncontent\n\n=======\n=======\n\n>>>>>>> REPLACE"
 			const result = strategy["validateMarkerSequencing"](diff)
 			expect(result.success).toBe(false)
 			expect(result.error).toContain("'=======' found in your diff content")
@@ -95,7 +95,9 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 
 			it("should replace matching content", async () => {
 				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function hello() {
     console.log("hello")
@@ -104,7 +106,9 @@ function hello() {
 function hello() {
     console.log("hello world")
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -115,7 +119,9 @@ function hello() {
 
 			it("should replace matching content in multiple blocks", async () => {
 				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function hello() {
 =======
@@ -125,7 +131,9 @@ function helloWorld() {
     console.log("hello")
 =======
     console.log("hello world")
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -136,21 +144,26 @@ function helloWorld() {
 
 			it("should replace matching content in multiple blocks with line numbers", async () => {
 				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						startLine: 1,
+						content: `test.ts
 <<<<<<< SEARCH
-:start_line:1
--------
 function hello() {
 =======
 function helloWorld() {
->>>>>>> REPLACE
+>>>>>>> REPLACE`,
+					},
+					{
+						startLine: 2,
+						content: `
 <<<<<<< SEARCH
-:start_line:2
--------
     console.log("hello")
 =======
     console.log("hello world")
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -161,15 +174,17 @@ function helloWorld() {
 
 			it("should replace matching content when end_line is passed in", async () => {
 				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						startLine: 1,
+						content: `test.ts
 <<<<<<< SEARCH
-:start_line:1
-:end_line:1
--------
 function hello() {
 =======
 function helloWorld() {
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -180,7 +195,9 @@ function helloWorld() {
 
 			it("should match content with different surrounding whitespace", async () => {
 				const originalContent = "\nfunction example() {\n    return 42;\n}\n\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function example() {
     return 42;
@@ -189,7 +206,9 @@ function example() {
 function example() {
     return 43;
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -200,7 +219,9 @@ function example() {
 
 			it("should match content with different indentation in search block", async () => {
 				const originalContent = "    function test() {\n        return true;\n    }\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function test() {
     return true;
@@ -209,7 +230,9 @@ function test() {
 function test() {
     return false;
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -220,7 +243,9 @@ function test() {
 
 			it("should handle tab-based indentation", async () => {
 				const originalContent = "function test() {\n\treturn true;\n}\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function test() {
 \treturn true;
@@ -229,7 +254,9 @@ function test() {
 function test() {
 \treturn false;
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -240,7 +267,9 @@ function test() {
 
 			it("should preserve mixed tabs and spaces", async () => {
 				const originalContent = "\tclass Example {\n\t    constructor() {\n\t\tthis.value = 0;\n\t    }\n\t}"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 \tclass Example {
 \t    constructor() {
@@ -253,7 +282,9 @@ function test() {
 \t\tthis.value = 1;
 \t    }
 \t}
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -266,7 +297,9 @@ function test() {
 
 			it("should handle additional indentation with tabs", async () => {
 				const originalContent = "\tfunction test() {\n\t\treturn true;\n\t}"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function test() {
 \treturn true;
@@ -276,7 +309,9 @@ function test() {
 \t// Add comment
 \treturn false;
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -287,7 +322,9 @@ function test() {
 
 			it("should preserve exact indentation characters when adding lines", async () => {
 				const originalContent = "\tfunction test() {\n\t\treturn true;\n\t}"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 \tfunction test() {
 \t\treturn true;
@@ -298,7 +335,9 @@ function test() {
 \t\t// Second comment
 \t\treturn true;
 \t}
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -311,7 +350,9 @@ function test() {
 
 			it("should handle Windows-style CRLF line endings", async () => {
 				const originalContent = "function test() {\r\n    return true;\r\n}\r\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function test() {
     return true;
@@ -320,7 +361,9 @@ function test() {
 function test() {
     return false;
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -331,7 +374,9 @@ function test() {
 
 			it("should return false if search content does not match", async () => {
 				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 function hello() {
     console.log("wrong")
@@ -340,7 +385,9 @@ function hello() {
 function hello() {
     console.log("hello world")
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(false)
@@ -348,7 +395,7 @@ function hello() {
 
 			it("should return false if diff format is invalid", async () => {
 				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
-				const diffContent = `test.ts\nInvalid diff format`
+				const diffContent = [{ content: `test.ts\nInvalid diff format` }]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(false)
@@ -357,7 +404,9 @@ function hello() {
 			it("should handle multiple lines with proper indentation", async () => {
 				const originalContent =
 					"class Example {\n    constructor() {\n        this.value = 0\n    }\n\n    getValue() {\n        return this.value\n    }\n}\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     getValue() {
         return this.value
@@ -368,7 +417,9 @@ function hello() {
         console.log("Getting value")
         return this.value
     }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -381,7 +432,9 @@ function hello() {
 
 			it("should preserve whitespace exactly in the output", async () => {
 				const originalContent = "    indented\n        more indented\n    back\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     indented
         more indented
@@ -390,7 +443,9 @@ function hello() {
     modified
         still indented
     end
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -401,7 +456,9 @@ function hello() {
 
 			it("should preserve indentation when adding new lines after existing content", async () => {
 				const originalContent = "				onScroll={() => updateHighlights()}"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 				onScroll={() => updateHighlights()}
 =======
@@ -410,7 +467,9 @@ function hello() {
 					e.preventDefault()
 					e.stopPropagation()
 				}}
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -432,7 +491,9 @@ class Example {
     }
 }`.trim()
 
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     class Example {
         constructor() {
@@ -453,7 +514,9 @@ class Example {
             }
         }
     }
->>>>>>> REPLACE`.trim()
+>>>>>>> REPLACE`.trim(),
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -483,7 +546,9 @@ class Example {
         }
     }
 }`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     constructor() {
         this.value = 0;
@@ -499,7 +564,9 @@ class Example {
         this.validate();
         }
     }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -523,7 +590,9 @@ class Example {
         for item in items:
             process(item)
     return True`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     if condition:
         do_something()
@@ -535,7 +604,9 @@ class Example {
         while items:
             item = items.pop()
             process(item)
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -558,7 +629,9 @@ class Example {
         return true;
     }
 }`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     const x = 1;
     
@@ -568,7 +641,9 @@ class Example {
     
     // Check x
     if (x) {
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -592,7 +667,9 @@ class Example {
         }
     }
 }`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     method() {
         if (true) {
@@ -609,7 +686,9 @@ class Example {
             console.error(e);
         }
     }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -637,14 +716,18 @@ class Example {
         }
     }
 }`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
             this.init();
             this.setup();
 =======
         this.init();
         this.setup();
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -668,12 +751,16 @@ class Example {
         }
     }
 }`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
             this.init();
 =======
 this.init();
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -698,7 +785,9 @@ this.init();
         }
     }
 }`.trim()
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
             this.init();
             this.setup();
@@ -707,7 +796,9 @@ this.init();
         this.init();
             this.setup();
     this.validate();
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -746,17 +837,22 @@ function five() {
     return "target";
 }`.trim()
 
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     return "target";
 =======
     return "updated";
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+						startLine: 9,
+					},
+				]
 
 				// Search around the middle (function three)
 				// Even though all functions contain the target text,
 				// it should match the one closest to line 9 first
-				const result = await strategy.applyDiff(originalContent, diffContent, 9)
+				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
 				if (result.success) {
 					expect(result.content).toBe(`function one() {
@@ -792,7 +888,9 @@ function five() {
 
 				it("should strip line numbers from both search and replace sections", async () => {
 					const originalContent = "function test() {\n    return true;\n}\n"
-					const diffContent = `test.ts
+					const diffContent = [
+						{
+							content: `test.ts
 <<<<<<< SEARCH
 1 | function test() {
 2 |     return true;
@@ -801,7 +899,9 @@ function five() {
 1 | function test() {
 2 |     return false;
 3 | }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+						},
+					]
 
 					const result = await strategy.applyDiff(originalContent, diffContent)
 					expect(result.success).toBe(true)
@@ -812,7 +912,9 @@ function five() {
 
 				it("should strip line numbers with leading spaces", async () => {
 					const originalContent = "function test() {\n    return true;\n}\n"
-					const diffContent = `test.ts
+					const diffContent = [
+						{
+							content: `test.ts
 <<<<<<< SEARCH
  1 | function test() {
  2 |     return true;
@@ -821,7 +923,9 @@ function five() {
  1 | function test() {
  2 |     return false;
  3 | }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+						},
+					]
 
 					const result = await strategy.applyDiff(originalContent, diffContent)
 					expect(result.success).toBe(true)
@@ -832,7 +936,9 @@ function five() {
 
 				it("should preserve content that naturally starts with pipe", async () => {
 					const originalContent = "|header|another|\n|---|---|\n|data|more|\n"
-					const diffContent = `test.ts
+					const diffContent = [
+						{
+							content: `test.ts
 <<<<<<< SEARCH
 1 | |header|another|
 2 | |---|---|
@@ -841,7 +947,9 @@ function five() {
 1 | |header|another|
 2 | |---|---|
 3 | |data|updated|
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+						},
+					]
 
 					const result = await strategy.applyDiff(originalContent, diffContent)
 					expect(result.success).toBe(true)
@@ -857,8 +965,6 @@ function five() {
 
 						const diffContent = [
 							"<<<<<<< SEARCH",
-							":start_line:1",
-							"-------",
 							"1 | function test() {",
 							"    return true;", // missing line number
 							"3 | }",
@@ -869,7 +975,9 @@ function five() {
 							">>>>>>> REPLACE",
 						].join("\n")
 
-						const result = await strategy.applyDiff(originalContent, diffContent)
+						const diff = [{ startLine: 1, content: diffContent }]
+
+						const result = await strategy.applyDiff(originalContent, diff)
 						expect(result.success).toBe(true)
 						if (result.success) {
 							expect(result.content).toBe("function test() {\n    return fallback;\n}\n")
@@ -881,8 +989,6 @@ function five() {
 
 						const diffContent = [
 							"<<<<<<< SEARCH",
-							":start_line:1",
-							"-------",
 							"| function test() {",
 							"|     return true;",
 							"| }",
@@ -893,7 +999,9 @@ function five() {
 							">>>>>>> REPLACE",
 						].join("\n")
 
-						const result = await strategy.applyDiff(originalContent, diffContent)
+						const diff = [{ startLine: 1, content: diffContent }]
+
+						const result = await strategy.applyDiff(originalContent, diff)
 						expect(result.success).toBe(true)
 						if (result.success) {
 							expect(result.content).toBe("function test() {\n    return piped;\n}\n")
@@ -903,7 +1011,9 @@ function five() {
 
 				it("should preserve indentation when stripping line numbers", async () => {
 					const originalContent = "    function test() {\n        return true;\n    }\n"
-					const diffContent = `test.ts
+					const diffContent = [
+						{
+							content: `test.ts
 <<<<<<< SEARCH
 1 |     function test() {
 2 |         return true;
@@ -912,7 +1022,9 @@ function five() {
 1 |     function test() {
 2 |         return false;
 3 |     }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+						},
+					]
 
 					const result = await strategy.applyDiff(originalContent, diffContent)
 					expect(result.success).toBe(true)
@@ -923,7 +1035,9 @@ function five() {
 
 				it("should handle different line numbers between sections", async () => {
 					const originalContent = "function test() {\n    return true;\n}\n"
-					const diffContent = `test.ts
+					const diffContent = [
+						{
+							content: `test.ts
 <<<<<<< SEARCH
 10 | function test() {
 11 |     return true;
@@ -932,7 +1046,9 @@ function five() {
 20 | function test() {
 21 |     return false;
 22 | }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+						},
+					]
 
 					const result = await strategy.applyDiff(originalContent, diffContent)
 					expect(result.success).toBe(true)
@@ -984,7 +1100,10 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+
+					const diff = [{ content: diffContent }]
+
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1001,7 +1120,10 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+
+					const diff = [{ content: diffContent }]
+
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1018,7 +1140,10 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+
+					const diff = [{ content: diffContent }]
+
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1035,7 +1160,9 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1053,7 +1180,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1071,7 +1199,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1088,7 +1217,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1105,7 +1235,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1122,7 +1253,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1139,7 +1271,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1156,7 +1289,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1281,7 +1415,8 @@ function five() {
 						"=======\n" +
 						"replaced content\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("replaced content\n")
@@ -1298,7 +1433,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1315,7 +1451,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1332,7 +1469,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1349,7 +1487,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1366,7 +1505,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1384,7 +1524,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1401,7 +1542,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1418,7 +1560,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1435,7 +1578,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1452,7 +1596,8 @@ function five() {
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("unchanged\n")
@@ -1497,7 +1642,8 @@ function five() {
 						"=======\n" +
 						"replaced content\n" +
 						">>>>>>> REPLACE"
-					const result = await strategy.applyDiff(originalContent, diffContent)
+					const diff = [{ content: diffContent }]
+					const result = await strategy.applyDiff(originalContent, diff)
 					expect(result.success).toBe(true)
 					if (result.success) {
 						expect(result.content).toBe("replaced content\n")
@@ -1514,7 +1660,9 @@ function five() {
 
 			it("should not strip content that starts with pipe but no line number", async () => {
 				const originalContent = "| Pipe\n|---|\n| Data\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 | Pipe
 |---|
@@ -1523,7 +1671,9 @@ function five() {
 | Pipe
 |---|
 | Updated
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -1534,7 +1684,9 @@ function five() {
 
 			it("should handle mix of line-numbered and pipe-only content", async () => {
 				const originalContent = "| Pipe\n|---|\n| Data\n"
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
 | Pipe
 |---|
@@ -1543,7 +1695,9 @@ function five() {
 1 | | Pipe
 2 | |---|
 3 | | NewData
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -1568,11 +1722,15 @@ function five() {
     // Comment to remove
     console.log("world");
 }`
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
     // Comment to remove
 =======
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -1594,7 +1752,9 @@ function five() {
         // End init
     }
 }`
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
         // Initialize
         this.value = 0;
@@ -1602,7 +1762,9 @@ function five() {
         this.name = "";
         // End init
 =======
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -1623,13 +1785,17 @@ function five() {
     }
     return true;
 }`
-				const diffContent = `test.ts
+				const diffContent = [
+					{
+						content: `test.ts
 <<<<<<< SEARCH
         // Remove this
         console.log("test");
         // And this
 =======
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
@@ -1644,13 +1810,15 @@ function five() {
 
 			it("should delete a line when search block has line number prefix and replace is empty", async () => {
 				const originalContent = "line 1\nline to delete\nline 3"
-				const diffContent = `
-<<<<<<< SEARCH
-:start_line:2
--------
+				const diffContent = [
+					{
+						startLine: 2,
+						content: `\n<<<<<<< SEARCH
 2 | line to delete
 =======
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+					},
+				]
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(true)
 				if (result.success) {
@@ -1669,7 +1837,9 @@ function five() {
 		it("should match content with small differences (>90% similar)", async () => {
 			const originalContent =
 				"function getData() {\n    const results = fetchData();\n    return results.filter(Boolean);\n}\n"
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					content: `test.ts
 <<<<<<< SEARCH
 function getData() {
     const result = fetchData();
@@ -1680,7 +1850,9 @@ function getData() {
     const data = fetchData();
     return data.filter(Boolean);
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			strategy = new MultiSearchReplaceDiffStrategy(0.9, 5) // Use 5 line buffer for tests
 
@@ -1695,7 +1867,9 @@ function getData() {
 
 		it("should not match when content is too different (<90% similar)", async () => {
 			const originalContent = "function processUsers(data) {\n    return data.map(user => user.name);\n}\n"
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					content: `test.ts
 <<<<<<< SEARCH
 function handleItems(items) {
     return items.map(item => item.username);
@@ -1704,7 +1878,9 @@ function handleItems(items) {
 function processData(data) {
     return data.map(d => d.value);
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(false)
@@ -1712,7 +1888,9 @@ function processData(data) {
 
 		it("should match content with extra whitespace", async () => {
 			const originalContent = "function sum(a, b) {\n    return a + b;\n}"
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					content: `test.ts
 <<<<<<< SEARCH
 function   sum(a,   b)    {
     return    a + b;
@@ -1721,7 +1899,9 @@ function   sum(a,   b)    {
 function sum(a, b) {
     return a + b + 1;
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
@@ -1733,14 +1913,18 @@ function sum(a, b) {
 		it("should match content with smart quotes", async () => {
 			const originalContent =
 				"**Enjoy Roo Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/RooCode/) or [Discord](https://discord.gg/roocode). Happy coding!"
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					content: `test.ts
 <<<<<<< SEARCH
 **Enjoy Roo Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/RooCode/) or [Discord](https://discord.gg/roocode). Happy coding!
 =======
 **Enjoy Roo Code!** Whether you keep it on a short leash or let it roam autonomously, we can't wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/RooCode/) or [Discord](https://discord.gg/roocode). Happy coding!
 
 You're still here?
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
@@ -1753,13 +1937,17 @@ You're still here?
 
 		it("should not exact match empty lines", async () => {
 			const originalContent = "function sum(a, b) {\n\n    return a + b;\n}"
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					content: `test.ts
 <<<<<<< SEARCH
 function sum(a, b) {
 =======
 import { a } from "a";
 function sum(a, b) {
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
@@ -1790,7 +1978,10 @@ function three() {
     return 3;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 5,
+					content: `test.ts
 <<<<<<< SEARCH
 function two() {
     return 2;
@@ -1799,9 +1990,11 @@ function two() {
 function two() {
     return "two";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
-			const result = await strategy.applyDiff(originalContent, diffContent, 5)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -1832,7 +2025,10 @@ function three() {
     return 3;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 5,
+					content: `test.ts
 <<<<<<< SEARCH
 function three() {
     return 3;
@@ -1841,11 +2037,13 @@ function three() {
 function three() {
     return "three";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Even though we specify lines 5-7, it should still find the match at lines 9-11
 			// because it's within the 5-line buffer zone
-			const result = await strategy.applyDiff(originalContent, diffContent, 5)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -1896,10 +2094,11 @@ pointer-events: none; /* Disable clicks on these elements */
 z-index: 1000; /* Ensure it's above the overlay */
 pointer-events: auto; /* Enable clicks on the promotion dialog */
 }`
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 12,
+					content: `test.ts
 <<<<<<< SEARCH
-:start_line:12
--------
 .overlay {
 =======
 .piece {
@@ -1908,7 +2107,9 @@ will-change: transform;
 
 .overlay {
 >>>>>>> REPLACE
-`
+`,
+				},
+			]
 
 			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
@@ -1975,7 +2176,9 @@ function five() {
     return 5;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					content: `test.ts
 <<<<<<< SEARCH
 :start_line:5
 -------
@@ -1986,7 +2189,9 @@ function five() {
 function five() {
     return "five";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Searching around function two() (lines 5-7)
 			// function five() is more than 5 lines away, so it shouldn't match
@@ -2004,7 +2209,10 @@ function two() {
     return 2;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 1,
+					content: `test.ts
 <<<<<<< SEARCH
 function one() {
     return 1;
@@ -2013,9 +2221,11 @@ function one() {
 function one() {
     return "one";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
-			const result = await strategy.applyDiff(originalContent, diffContent, 1)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -2038,7 +2248,10 @@ function two() {
     return 2;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 5,
+					content: `test.ts
 <<<<<<< SEARCH
 function two() {
     return 2;
@@ -2047,9 +2260,11 @@ function two() {
 function two() {
     return "two";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
-			const result = await strategy.applyDiff(originalContent, diffContent, 5)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -2081,7 +2296,10 @@ function moreStuff() {
     console.log("world");
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 10,
+					content: `test.ts
 <<<<<<< SEARCH
 function processData(data) {
     return data.map(x => x * 2);
@@ -2092,10 +2310,12 @@ function processData(data) {
     console.log("Processing data...");
     return data.map(x => x * 2);
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Target the second instance of processData
-			const result = await strategy.applyDiff(originalContent, diffContent, 10)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function processData(data) {
@@ -2133,7 +2353,10 @@ function three() {
     return 3;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 9,
+					content: `test.ts
 <<<<<<< SEARCH
 function three() {
     return 3;
@@ -2142,10 +2365,12 @@ function three() {
 function three() {
     return "three";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Only provide start_line, should search from there to end of file
-			const result = await strategy.applyDiff(originalContent, diffContent, 8)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -2179,7 +2404,10 @@ function process() {
 function two() {
     return 2;
 }`
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 10,
+					content: `test.ts
 <<<<<<< SEARCH
 function process() {
     return "old";
@@ -2188,11 +2416,13 @@ function process() {
 function process() {
     return "new";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Should match the second instance exactly at lines 10-12
 			// even though the first instance at 6-8 is within the expanded search range
-			const result = await strategy.applyDiff(originalContent, diffContent, 10)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`
@@ -2227,7 +2457,10 @@ function process() {
 function two() {
     return 2;
 }`.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 3,
+					content: `test.ts
 <<<<<<< SEARCH
 function process() {
     return "target";
@@ -2236,11 +2469,13 @@ function process() {
 function process() {
     return "updated";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Specify wrong line numbers (3-5), but content exists at 6-8
 			// Should still find and replace it since it's within the expanded range
-			const result = await strategy.applyDiff(originalContent, diffContent, 3)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -2271,7 +2506,10 @@ function three() {
 		  return 3;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 1000,
+					content: `test.ts
 <<<<<<< SEARCH
 :start_line:1000
 -------
@@ -2282,11 +2520,13 @@ function three() {
 function three() {
 		  return "three";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// Line 1000 is way outside the bounds of the file (10 lines)
 			// and outside of any reasonable buffer range, so it should fail
-			const result = await strategy.applyDiff(originalContent, diffContent, 1000)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(false)
 		})
 
@@ -2304,10 +2544,11 @@ function three() {
 		  return 3;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [
+				{
+					startLine: 11,
+					content: `test.ts
 <<<<<<< SEARCH
-:start_line:11
--------
 function three() {
 		  return 3;
 }
@@ -2315,11 +2556,13 @@ function three() {
 function three() {
 		  return "three";
 }
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+				},
+			]
 
 			// File only has 10 lines, but we specify line 11
 			// It should still find the match since it's within the buffer zone (5 lines)
-			const result = await strategy.applyDiff(originalContent, diffContent, 11)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(`function one() {
@@ -2354,14 +2597,17 @@ function two() {
     return 2;
 }
 `.trim()
-			const diffContent = `test.ts
+			const diffContent = [{
+				startLine: 10,
+				content: `test.ts
 <<<<<<< SEARCH
 9 | function process() {
 10 |     return "target";
 =======
 9 | function process2() {
 10 |     return "target222";
->>>>>>> REPLACE`
+>>>>>>> REPLACE`,
+			}]
 
 			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
