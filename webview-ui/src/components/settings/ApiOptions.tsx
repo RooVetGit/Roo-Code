@@ -458,6 +458,8 @@ const ApiOptions = ({
 				modelInfo={selectedModelInfo}
 			/>
 
+			<pre>{JSON.stringify(selectedModelInfo, null, 2)}</pre>
+
 			{!fromWelcomeView && (
 				<>
 					<DiffSettingsControl
