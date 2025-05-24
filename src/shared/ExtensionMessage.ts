@@ -65,6 +65,7 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "fontAliasing"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
@@ -75,6 +76,7 @@ export interface ExtensionMessage {
 		| "indexCleared"
 		| "codebaseIndexConfig"
 	text?: string
+	value?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
