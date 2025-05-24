@@ -103,7 +103,6 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
-		console.log("[CodeIndexConfigManager.isConfigured] Entry. EmbedderProvider:", this.embedderProvider)
 
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
