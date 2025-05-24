@@ -1,31 +1,17 @@
 // npx jest src/core/tools/__tests__/writeToFileTool.test.ts
 
-// We verwijderen ongebruikte imports
-import * as vscode from "vscode"
+import * as path from "path"
+import delay from "delay"
 
-// Ongebruikte import verwijderd
-import * as formatResponseModule from "../../prompts/responses"
-
-// Mock formatResponse
-jest.mock("../../prompts/responses", () => ({
-	formatResponse: {
-		toolError: jest.fn().mockReturnValue("Tool error"),
-		rooIgnoreError: jest.fn().mockReturnValue("RooIgnore error"),
-		createPrettyPatch: jest.fn().mockReturnValue("Pretty patch"),
-		lineCountTruncationError: jest.fn().mockReturnValue("Line count truncation error"),
-	},
-}))
-
-const formatResponse = formatResponseModule.formatResponse
-import { ToolUse } from "../../../shared/tools"
+import { writeToFileTool } from "../writeToFileTool"
+import { ToolUse, ToolResponse } from "../../../shared/tools"
 import { fileExistsAtPath } from "../../../utils/fs"
-import { stripLineNumbers, everyLineHasLineNumbers } from "../../../integrations/misc/extract-text"
 import { isPathOutsideWorkspace } from "../../../utils/pathUtils"
 import { detectCodeOmission } from "../../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../../utils/text-normalization"
-import { writeToFileTool } from "../writeToFileTool"
+import { addLineNumbers, stripLineNumbers, everyLineHasLineNumbers } from "../../../integrations/misc/extract-text"
 
-// Mock dependencies
+// Mock external dependencies
 jest.mock("path", () => {
 	const originalPath = jest.requireActual("path")
 	return {
@@ -34,758 +20,526 @@ jest.mock("path", () => {
 	}
 })
 
-jest.mock("delay", () => jest.fn().mockResolvedValue(undefined))
-
-jest.mock("vscode", () => ({
-	window: {
-		showWarningMessage: jest.fn().mockResolvedValue(undefined),
-	},
-	env: {
-		openExternal: jest.fn(),
-	},
-	Uri: {
-		parse: jest.fn().mockReturnValue("mock-uri"),
-	},
-}))
+jest.mock("delay")
 
 jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockResolvedValue(true),
-}))
-
-jest.mock("../../../integrations/misc/extract-text", () => ({
-	addLineNumbers: jest.fn().mockImplementation(
-		(content: string) =>
-			content
-				.split("\n")
-				.map((line: string, i: number) => `${i + 1} | ${line}`)
-				.join("\n") + "\n",
-	),
-	stripLineNumbers: jest.fn().mockImplementation((content) => content.replace(/^\d+ \| /gm, "")),
-	everyLineHasLineNumbers: jest.fn().mockReturnValue(false),
-}))
-
-jest.mock("../../../utils/path", () => ({
-	getReadablePath: jest.fn().mockImplementation((_, path) => path),
+	fileExistsAtPath: jest.fn(),
 }))
 
 jest.mock("../../../utils/pathUtils", () => ({
-	isPathOutsideWorkspace: jest.fn().mockReturnValue(false),
+	isPathOutsideWorkspace: jest.fn(),
 }))
 
 jest.mock("../../../integrations/editor/detect-omission", () => ({
-	detectCodeOmission: jest.fn().mockReturnValue(false),
+	detectCodeOmission: jest.fn(),
 }))
 
 jest.mock("../../../utils/text-normalization", () => ({
-	unescapeHtmlEntities: jest.fn().mockImplementation((content) => content),
+	unescapeHtmlEntities: jest.fn().mockImplementation((text) => text),
 }))
 
-describe("writeToFileTool", () => {
-	// Setup common test variables
+jest.mock("../../../integrations/misc/extract-text", () => ({
+	addLineNumbers: jest.fn().mockImplementation((content) => content),
+	stripLineNumbers: jest.fn().mockImplementation((content) => content),
+	everyLineHasLineNumbers: jest.fn().mockReturnValue(false),
+}))
+
+jest.mock("../../ignore/RooIgnoreController", () => ({
+	RooIgnoreController: class {
+		initialize() {
+			return Promise.resolve()
+		}
+		validateAccess() {
+			return true
+		}
+	},
+}))
+
+jest.mock("../../../utils/path", () => ({
+	getReadablePath: jest.fn().mockImplementation((cwd, relPath) => relPath),
+}))
+
+jest.mock("../../prompts/responses", () => ({
+	formatResponse: {
+		toolError: jest.fn().mockImplementation((msg) => `Error: ${msg}`),
+		rooIgnoreError: jest.fn().mockImplementation((path) => `RooIgnore error for ${path}`),
+		lineCountTruncationError: jest
+			.fn()
+			.mockImplementation(
+				(actualLines, isNewFile, diffEnabled) =>
+					`Line count error: ${actualLines} lines, new file: ${isNewFile}, diff enabled: ${diffEnabled}`,
+			),
+		createPrettyPatch: jest
+			.fn()
+			.mockImplementation((path, original, modified) => `Diff for ${path}: ${original} -> ${modified}`),
+	},
+}))
+
+describe("WriteToFileTool - Newline and Empty Content Scenarios", () => {
+	// Mocked functions
+	const mockedDelay = delay as jest.MockedFunction<typeof delay>
+	const mockedFileExistsAtPath = fileExistsAtPath as jest.MockedFunction<typeof fileExistsAtPath>
+	const mockedIsPathOutsideWorkspace = isPathOutsideWorkspace as jest.MockedFunction<typeof isPathOutsideWorkspace>
+	const mockedDetectCodeOmission = detectCodeOmission as jest.MockedFunction<typeof detectCodeOmission>
+	const mockedPathResolve = path.resolve as jest.MockedFunction<typeof path.resolve>
+	const mockedAddLineNumbers = addLineNumbers as jest.MockedFunction<typeof addLineNumbers>
+	const mockedStripLineNumbers = stripLineNumbers as jest.MockedFunction<typeof stripLineNumbers>
+	const mockedEveryLineHasLineNumbers = everyLineHasLineNumbers as jest.MockedFunction<typeof everyLineHasLineNumbers>
+
+	// Mock instances
 	let mockCline: any
-	let mockAskApproval: jest.Mock
-	let mockHandleError: jest.Mock
-	let mockPushToolResult: jest.Mock
-	let mockRemoveClosingTag: jest.Mock
-	let mockToolUse: ToolUse
+	let mockDiffViewProvider: any
+	let askApprovalResult: boolean
+	let handleErrorCalled: boolean
+	let pushToolResultCalls: ToolResponse[]
 
 	beforeEach(() => {
-		// Reset mocks
 		jest.clearAllMocks()
 
-		// Create mock implementations
+		// Reset state
+		askApprovalResult = true
+		handleErrorCalled = false
+		pushToolResultCalls = []
+
+		// Setup path mocks
+		mockedPathResolve.mockReturnValue("/test/file.txt")
+		mockedIsPathOutsideWorkspace.mockReturnValue(false)
+		mockedFileExistsAtPath.mockResolvedValue(false) // Default to new file
+		mockedDetectCodeOmission.mockReturnValue(false)
+		mockedDelay.mockResolvedValue(undefined)
+
+		// Setup extract-text mocks
+		mockedAddLineNumbers.mockImplementation((content) => content)
+		mockedStripLineNumbers.mockImplementation((content) => content)
+		mockedEveryLineHasLineNumbers.mockReturnValue(false)
+
+		// Setup diff view provider mock
+		mockDiffViewProvider = {
+			editType: undefined,
+			isEditing: false,
+			originalContent: "",
+			open: jest.fn().mockResolvedValue(undefined),
+			update: jest.fn().mockResolvedValue(undefined),
+			reset: jest.fn().mockResolvedValue(undefined),
+			revertChanges: jest.fn().mockResolvedValue(undefined),
+			saveChanges: jest.fn().mockResolvedValue({
+				newProblemsMessage: "",
+				userEdits: null,
+				finalContent: "",
+			}),
+			scrollToFirstDiff: jest.fn(),
+		}
+
+		// Setup cline mock
 		mockCline = {
+			cwd: "/test",
 			consecutiveMistakeCount: 0,
 			didEditFile: false,
-			cwd: "/test",
-			say: jest.fn().mockResolvedValue(undefined),
-			ask: jest.fn().mockResolvedValue(true),
-			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
-			recordToolError: jest.fn(),
-			diffViewProvider: {
-				editType: undefined,
-				isEditing: false,
-				open: jest.fn().mockResolvedValue(undefined),
-				update: jest.fn().mockResolvedValue(undefined),
-				reset: jest.fn().mockResolvedValue(undefined),
-				revertChanges: jest.fn().mockResolvedValue(undefined),
-				saveChanges: jest.fn().mockResolvedValue({
-					newProblemsMessage: "",
-					userEdits: null,
-					finalContent: "final content",
-				}),
-				scrollToFirstDiff: jest.fn(),
-				originalContent: "original content",
-			},
+			diffStrategy: false,
+			diffViewProvider: mockDiffViewProvider,
 			rooIgnoreController: {
 				validateAccess: jest.fn().mockReturnValue(true),
+			},
+			api: {
+				getModel: jest.fn().mockReturnValue({ id: "claude-3-sonnet" }),
 			},
 			fileContextTracker: {
 				trackFileContext: jest.fn().mockResolvedValue(undefined),
 			},
-			api: {
-				getModel: jest.fn().mockReturnValue({ id: "test-model" }),
-			},
-			diffStrategy: false as any,
+			say: jest.fn().mockResolvedValue(undefined),
+			ask: jest.fn().mockResolvedValue(true),
+			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
+			recordToolError: jest.fn(),
 		}
+	})
 
-		mockAskApproval = jest.fn().mockResolvedValue(true)
-		mockHandleError = jest.fn()
-		mockPushToolResult = jest.fn()
-		mockRemoveClosingTag = jest.fn().mockImplementation((_, content) => content)
+	/**
+	 * Helper function to execute writeToFileTool with given parameters
+	 */
+	async function executeWriteToFileTool(
+		params: Partial<ToolUse["params"]> = {},
+		options: {
+			fileExists?: boolean
+			partial?: boolean
+			approvalResult?: boolean
+		} = {},
+	): Promise<void> {
+		const { fileExists = false, partial = false, approvalResult = true } = options
 
-		// Default tool use object
-		mockToolUse = {
+		// Configure mocks
+		mockedFileExistsAtPath.mockResolvedValue(fileExists)
+		askApprovalResult = approvalResult
+
+		// Create tool use object
+		const toolUse: ToolUse = {
 			type: "tool_use",
 			name: "write_to_file",
 			params: {
-				path: "test/file.txt",
-				content: "Test content",
-				line_count: "1",
+				path: "test.txt",
+				content: "",
+				...params,
 			},
-			partial: false,
+			partial,
 		}
-	})
 
-	describe("Parameter validation", () => {
-		it("should return early if both path and content are missing", async () => {
-			// Setup
-			mockToolUse = {
-				type: "tool_use",
-				name: "write_to_file",
-				params: {
-					path: undefined,
-					content: undefined,
+		// Only add line_count if not explicitly provided in params
+		if (!("line_count" in params)) {
+			toolUse.params.line_count = "1"
+		}
+
+		// Execute the tool
+		await writeToFileTool(
+			mockCline,
+			toolUse,
+			async () => askApprovalResult,
+			async (_operation: string, _error: any) => {
+				handleErrorCalled = true
+			},
+			(result: ToolResponse) => {
+				pushToolResultCalls.push(result)
+			},
+			(_tagName: string, content?: string) => content ?? "",
+		)
+	}
+
+	describe("Empty Content Scenarios", () => {
+		it("should handle empty string content successfully", async () => {
+			await executeWriteToFileTool({
+				path: "empty.txt",
+				content: "",
+				line_count: "1",
+			})
+
+			// Verify the tool completed without errors
+			expect(handleErrorCalled).toBe(false)
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+
+			// Verify diff view provider was called correctly
+			expect(mockDiffViewProvider.open).toHaveBeenCalledWith("empty.txt")
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("", true)
+			expect(mockDiffViewProvider.saveChanges).toHaveBeenCalled()
+
+			// Verify file tracking
+			expect(mockCline.fileContextTracker.trackFileContext).toHaveBeenCalledWith("empty.txt", "roo_edited")
+
+			// Verify success message
+			expect(pushToolResultCalls).toHaveLength(1)
+			expect(pushToolResultCalls[0]).toContain("successfully saved")
+		})
+
+		it("should handle empty content with correct line count calculation", async () => {
+			await executeWriteToFileTool({
+				path: "empty.txt",
+				content: "",
+				line_count: "1", // Empty string should be 1 line
+			})
+
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+			expect(handleErrorCalled).toBe(false)
+		})
+
+		it("should handle empty content in partial mode", async () => {
+			await executeWriteToFileTool(
+				{
+					path: "empty.txt",
+					content: "",
 					line_count: "1",
 				},
-				partial: false,
-			}
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
+				{ partial: true },
 			)
 
-			// Verify - should return early without any error handling
-			expect(mockCline.recordToolError).not.toHaveBeenCalled()
-			expect(mockCline.sayAndCreateMissingParamError).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.reset).not.toHaveBeenCalled()
-			expect(mockPushToolResult).not.toHaveBeenCalled()
+			// In partial mode, should update diff view but not save
+			expect(mockDiffViewProvider.open).toHaveBeenCalledWith("empty.txt")
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("", false)
+			expect(mockDiffViewProvider.saveChanges).not.toHaveBeenCalled()
+		})
+	})
+
+	describe("Newline-Only Content Scenarios", () => {
+		it("should handle single newline content successfully", async () => {
+			await executeWriteToFileTool({
+				path: "newline.txt",
+				content: "\n",
+				line_count: "2", // Single newline creates 2 lines
+			})
+
+			expect(handleErrorCalled).toBe(false)
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+
+			// Verify content was passed correctly
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("\n", true)
+
+			// Verify success
+			expect(pushToolResultCalls).toHaveLength(1)
+			expect(pushToolResultCalls[0]).toContain("successfully saved")
 		})
 
-		it("should handle missing content parameter when path is present", async () => {
-			// Setup
-			mockToolUse = {
-				type: "tool_use",
-				name: "write_to_file",
-				params: {
-					path: "test/file.txt",
-					content: undefined,
+		it("should handle multiple newlines content successfully", async () => {
+			const multipleNewlines = "\n\n\n"
+
+			await executeWriteToFileTool({
+				path: "multiple-newlines.txt",
+				content: multipleNewlines,
+				line_count: "4", // Three newlines create 4 lines
+			})
+
+			expect(handleErrorCalled).toBe(false)
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+
+			// Verify content was passed correctly
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith(multipleNewlines, true)
+
+			// Verify success
+			expect(pushToolResultCalls).toHaveLength(1)
+			expect(pushToolResultCalls[0]).toContain("successfully saved")
+		})
+
+		it("should handle newline-only content in partial mode", async () => {
+			await executeWriteToFileTool(
+				{
+					path: "newline.txt",
+					content: "\n\n",
+					line_count: "3",
+				},
+				{ partial: true },
+			)
+
+			// In partial mode, should update diff view but not save
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("\n\n", false)
+			expect(mockDiffViewProvider.saveChanges).not.toHaveBeenCalled()
+		})
+
+		it("should handle newlines with line number processing", async () => {
+			const newlineContent = "\n\n"
+
+			// Mock that content has line numbers
+			mockedEveryLineHasLineNumbers.mockReturnValue(true)
+			mockedStripLineNumbers.mockReturnValue("stripped_content")
+
+			await executeWriteToFileTool({
+				path: "newline-numbered.txt",
+				content: newlineContent,
+				line_count: "3",
+			})
+
+			// Should strip line numbers when detected
+			expect(mockedEveryLineHasLineNumbers).toHaveBeenCalledWith(newlineContent)
+			expect(mockedStripLineNumbers).toHaveBeenCalledWith(newlineContent)
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("stripped_content", true)
+		})
+	})
+
+	describe("Edge Cases with Empty and Newline Content", () => {
+		it("should handle empty content when editing existing file", async () => {
+			await executeWriteToFileTool(
+				{
+					path: "existing.txt",
+					content: "",
 					line_count: "1",
 				},
-				partial: false,
-			}
-
-			// Make sure we have a valid path to trigger the content check
-			// The early return only happens when both path and content are undefined
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
+				{ fileExists: true },
 			)
 
-			// Verify - in this case we should reach the error handling code
-			expect(mockCline.recordToolError).not.toHaveBeenCalled()
-			expect(mockCline.sayAndCreateMissingParamError).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.reset).not.toHaveBeenCalled()
-			expect(mockPushToolResult).not.toHaveBeenCalled()
+			// Should work the same for existing files
+			expect(handleErrorCalled).toBe(false)
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("", true)
 		})
 
-		it("should handle missing line_count parameter", async () => {
-			// Setup
-			mockToolUse.params.line_count = undefined
+		it("should handle newline content when editing existing file", async () => {
+			mockDiffViewProvider.originalContent = "original content"
 
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.consecutiveMistakeCount).toBe(1)
-			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
-			expect(mockCline.say).toHaveBeenCalled()
-			expect(mockPushToolResult).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.revertChanges).toHaveBeenCalled()
-		})
-	})
-
-	describe("RooIgnore validation", () => {
-		it("should handle files blocked by RooIgnore", async () => {
-			// Setup
-			mockCline.rooIgnoreController.validateAccess.mockReturnValue(false)
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.say).toHaveBeenCalledWith("rooignore_error", "test/file.txt")
-			expect(formatResponse.rooIgnoreError).toHaveBeenCalledWith("test/file.txt")
-			expect(formatResponse.toolError).toHaveBeenCalled()
-			expect(mockPushToolResult).toHaveBeenCalled()
-		})
-	})
-
-	describe("File existence detection", () => {
-		it("should detect existing file using diffViewProvider.editType", async () => {
-			// Setup
-			mockCline.diffViewProvider.editType = "modify"
-
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(fileExistsAtPath).not.toHaveBeenCalled()
-			expect(mockCline.ask).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalled()
-		})
-
-		it("should detect existing file using fileExistsAtPath", async () => {
-			// Setup
-			mockCline.diffViewProvider.editType = undefined
-			;(fileExistsAtPath as jest.Mock).mockResolvedValue(true)
-
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(fileExistsAtPath).toHaveBeenCalledWith("/test/test/file.txt")
-			expect(mockCline.diffViewProvider.editType).toBe("modify")
-			expect(mockCline.ask).toHaveBeenCalled()
-		})
-
-		it("should detect new file using fileExistsAtPath", async () => {
-			// Setup
-			mockCline.diffViewProvider.editType = undefined
-			;(fileExistsAtPath as jest.Mock).mockResolvedValue(false)
-
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(fileExistsAtPath).toHaveBeenCalledWith("/test/test/file.txt")
-			expect(mockCline.diffViewProvider.editType).toBe("create")
-			expect(mockCline.ask).toHaveBeenCalled()
-		})
-	})
-
-	describe("Content preprocessing", () => {
-		it("should remove markdown code block markers at the start", async () => {
-			// Setup
-			mockToolUse.params.content = "```javascript\nconst x = 1;"
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("const x = 1;", true)
-		})
-
-		it("should unescape HTML entities for non-Claude models", async () => {
-			// Setup
-			mockToolUse.params.content = "&lt;div&gt;Test&lt;/div&gt;"
-			mockCline.api.getModel.mockReturnValue({ id: "gemini" })
-			;(unescapeHtmlEntities as jest.Mock).mockReturnValue("<div>Test</div>")
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(unescapeHtmlEntities).toHaveBeenCalledWith("&lt;div&gt;Test&lt;/div&gt;")
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("<div>Test</div>", true)
-		})
-
-		it("should not unescape HTML entities for Claude models", async () => {
-			// Setup
-			mockToolUse.params.content = "&lt;div&gt;Test&lt;/div&gt;"
-			mockCline.api.getModel.mockReturnValue({ id: "claude-3" })
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(unescapeHtmlEntities).not.toHaveBeenCalled()
-		})
-	})
-
-	describe("Workspace path handling", () => {
-		it("should detect files outside workspace", async () => {
-			// Setup
-			;(isPathOutsideWorkspace as jest.Mock).mockReturnValue(true)
-
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(isPathOutsideWorkspace).toHaveBeenCalledWith("/test/test/file.txt")
-			expect(mockCline.ask).toHaveBeenCalled()
-			const askCall = (mockCline.ask as jest.Mock).mock.calls[0]
-			const messageProps = JSON.parse(askCall[1])
-			expect(messageProps.isOutsideWorkspace).toBe(true)
-		})
-	})
-
-	describe("Partial updates", () => {
-		it("should handle partial updates", async () => {
-			// Setup
-			mockToolUse.partial = true
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.ask).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalled()
-			expect(mockPushToolResult).not.toHaveBeenCalled()
-		})
-
-		it("should update existing editor when already editing", async () => {
-			// Setup
-			mockToolUse.partial = true
-			mockCline.diffViewProvider.isEditing = true
-
-			// Reset mocks
-			jest.clearAllMocks()
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Ongebruikte variabele verwijderd
-
-			// Verify
-			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalled()
-		})
-	})
-
-	describe("Line number handling", () => {
-		it("should strip line numbers if content has them", async () => {
-			// Setup - reset mockToolUse to default first
-			mockToolUse = {
-				type: "tool_use",
-				name: "write_to_file",
-				params: {
-					path: "test/file.txt",
-					content: "1 | Line 1\n2 | Line 2",
+			await executeWriteToFileTool(
+				{
+					path: "existing.txt",
+					content: "\n",
 					line_count: "2",
 				},
-				partial: false,
-			}
-			;(everyLineHasLineNumbers as jest.Mock).mockReturnValue(true)
-
-			// Reset mocks
-			jest.clearAllMocks()
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
+				{ fileExists: true },
 			)
 
-			// Verify
-			expect(everyLineHasLineNumbers).toHaveBeenCalled()
-			expect(stripLineNumbers).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalled()
+			expect(handleErrorCalled).toBe(false)
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("\n", true)
+		})
+
+		it("should handle code omission detection with empty content", async () => {
+			// Mock code omission detection to return true
+			mockedDetectCodeOmission.mockReturnValue(true)
+			mockCline.diffStrategy = true
+
+			await executeWriteToFileTool({
+				path: "empty-with-omission.txt",
+				content: "",
+				line_count: "1",
+			})
+
+			// Should detect omission and revert changes
+			expect(mockedDetectCodeOmission).toHaveBeenCalledWith("", "", 1)
+			expect(mockDiffViewProvider.revertChanges).toHaveBeenCalled()
+			expect(pushToolResultCalls).toHaveLength(1)
+			expect(pushToolResultCalls[0]).toContain("Content appears to be truncated")
+		})
+
+		it("should handle code omission detection with newline content", async () => {
+			mockedDetectCodeOmission.mockReturnValue(true)
+			mockCline.diffStrategy = true
+
+			await executeWriteToFileTool({
+				path: "newline-with-omission.txt",
+				content: "\n\n",
+				line_count: "3",
+			})
+
+			// Should detect omission and revert changes
+			expect(mockedDetectCodeOmission).toHaveBeenCalledWith("", "\n\n", 3)
+			expect(mockDiffViewProvider.revertChanges).toHaveBeenCalled()
+		})
+
+		it("should handle user rejection of empty content", async () => {
+			await executeWriteToFileTool(
+				{
+					path: "rejected-empty.txt",
+					content: "",
+					line_count: "1",
+				},
+				{ approvalResult: false },
+			)
+
+			// Should revert changes when user rejects
+			expect(mockDiffViewProvider.revertChanges).toHaveBeenCalled()
+			expect(mockDiffViewProvider.saveChanges).not.toHaveBeenCalled()
+		})
+
+		it("should handle user rejection of newline content", async () => {
+			await executeWriteToFileTool(
+				{
+					path: "rejected-newline.txt",
+					content: "\n\n\n",
+					line_count: "4",
+				},
+				{ approvalResult: false },
+			)
+
+			// Should revert changes when user rejects
+			expect(mockDiffViewProvider.revertChanges).toHaveBeenCalled()
+			expect(mockDiffViewProvider.saveChanges).not.toHaveBeenCalled()
 		})
 	})
 
-	describe("Approval handling", () => {
-		it("should revert changes if approval is denied", async () => {
-			// Setup
-			mockAskApproval.mockResolvedValue(false)
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockAskApproval).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.revertChanges).toHaveBeenCalled()
-			expect(mockPushToolResult).not.toHaveBeenCalled()
-		})
-	})
-
-	describe("Missing parameter handling", () => {
-		it("should handle missing path parameter in non-partial mode", async () => {
-			// Setup - we need to bypass the early return by mocking the implementation
-			// Ongebruikte variabele verwijderd
-
-			// Create a mock implementation that skips the early return check
-			const mockWriteToFileToolImpl = async (...args: any[]) => {
-				const [cline, block, , , pushToolResult] = args
-				// Skip the early return check and go straight to the parameter validation
-				if (!block.partial) {
-					if (!block.params.path) {
-						cline.consecutiveMistakeCount++
-						cline.recordToolError("write_to_file")
-						pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
-						await cline.diffViewProvider.reset()
-						return
-					}
-				}
-			}
-
-			// Replace the original implementation with our mock
-			jest.spyOn(require("../writeToFileTool"), "writeToFileTool").mockImplementation(mockWriteToFileToolImpl)
-
-			// Setup the test
-			mockToolUse = {
+	describe("Line Count Validation with Empty and Newline Content", () => {
+		it("should handle missing line_count with empty content", async () => {
+			// Create tool use object directly to ensure line_count is undefined
+			const toolUse: ToolUse = {
 				type: "tool_use",
 				name: "write_to_file",
 				params: {
-					path: undefined,
-					content: "Test content",
-					line_count: "1",
+					path: "empty-no-count.txt",
+					content: "",
+					// line_count intentionally omitted
 				},
 				partial: false,
 			}
 
-			// Execute
-			await mockWriteToFileToolImpl(
+			// Execute the tool directly
+			await writeToFileTool(
 				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
+				toolUse,
+				async () => true,
+				async (_operation: string, _error: any) => {
+					handleErrorCalled = true
+				},
+				(result: ToolResponse) => {
+					pushToolResultCalls.push(result)
+				},
+				(_tagName: string, content?: string) => content ?? "",
 			)
 
-			// Verify
+			// Should increment mistake count and show error
 			expect(mockCline.consecutiveMistakeCount).toBe(1)
 			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
-			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("write_to_file", "path")
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
-			expect(mockPushToolResult).toHaveBeenCalled()
-
-			// Restore the original implementation
-			jest.restoreAllMocks()
+			expect(pushToolResultCalls).toHaveLength(1)
+			expect(pushToolResultCalls[0]).toContain("Line count error")
 		})
 
-		it("should handle missing content parameter in non-partial mode", async () => {
-			// Setup - we need to bypass the early return by mocking the implementation
-			// Ongebruikte variabele verwijderd
-
-			// Create a mock implementation that skips the early return check
-			const mockWriteToFileToolImpl = async (...args: any[]) => {
-				const [cline, block, , , pushToolResult] = args
-				// Skip the early return check and go straight to the parameter validation
-				if (!block.partial) {
-					if (block.params.path && block.params.content === undefined) {
-						cline.consecutiveMistakeCount++
-						cline.recordToolError("write_to_file")
-						pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
-						await cline.diffViewProvider.reset()
-						return
-					}
-				}
-			}
-
-			// Replace the original implementation with our mock
-			jest.spyOn(require("../writeToFileTool"), "writeToFileTool").mockImplementation(mockWriteToFileToolImpl)
-
-			// Setup the test
-			mockToolUse = {
+		it("should handle missing line_count with newline content", async () => {
+			// Create tool use object directly to ensure line_count is undefined
+			const toolUse: ToolUse = {
 				type: "tool_use",
 				name: "write_to_file",
 				params: {
-					path: "test/file.txt",
-					content: undefined,
-					line_count: "1",
+					path: "newline-no-count.txt",
+					content: "\n\n",
+					// line_count intentionally omitted
 				},
 				partial: false,
 			}
 
-			// Execute
-			await mockWriteToFileToolImpl(
+			// Execute the tool directly
+			await writeToFileTool(
 				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
+				toolUse,
+				async () => true,
+				async (_operation: string, _error: any) => {
+					handleErrorCalled = true
+				},
+				(result: ToolResponse) => {
+					pushToolResultCalls.push(result)
+				},
+				(_tagName: string, content?: string) => content ?? "",
 			)
 
-			// Verify
+			// Should increment mistake count and show error
 			expect(mockCline.consecutiveMistakeCount).toBe(1)
 			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
-			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("write_to_file", "content")
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
-			expect(mockPushToolResult).toHaveBeenCalled()
+		})
 
-			// Restore the original implementation
-			jest.restoreAllMocks()
+		it("should handle zero line_count with empty content", async () => {
+			await executeWriteToFileTool({
+				path: "empty-zero-count.txt",
+				content: "",
+				line_count: "0",
+			})
+
+			// Should treat as missing line count
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
 		})
 	})
 
-	describe("Code omission detection", () => {
-		it("should detect code omissions and revert changes when diffStrategy is enabled", async () => {
-			// Setup
-			mockCline.diffStrategy = true as any
-			;(detectCodeOmission as jest.Mock).mockReturnValue(true)
-
-			// Reset mocks
-			jest.clearAllMocks()
-
-			// Mock formatResponse.toolError to return the expected error message
-			const mockErrorMessage =
-				"Content appears to be truncated (file has 1 lines but was predicted to have 1 lines), and found comments indicating omitted code (e.g., '// rest of code unchanged', '/* previous code */'). Please provide the complete file content without any omissions if possible, or otherwise use the 'apply_diff' tool to apply the diff to the original file."
-			jest.spyOn(formatResponseModule.formatResponse, "toolError").mockReturnValueOnce(mockErrorMessage)
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(detectCodeOmission).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.revertChanges).toHaveBeenCalled()
-			expect(mockPushToolResult).toHaveBeenCalledWith(mockErrorMessage)
-		})
-
-		it("should show warning when code omission is detected but diffStrategy is disabled", async () => {
-			// Setup
-			mockCline.diffStrategy = false as any
-			;(detectCodeOmission as jest.Mock).mockReturnValue(true)
-
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(detectCodeOmission).toHaveBeenCalled()
-			expect(vscode.window.showWarningMessage).toHaveBeenCalled()
-
-			// Simulate user clicking on the guide link by directly calling the callback
-			// that would be triggered when the user clicks on the button
-			const mockThen = jest.fn()
-			;(vscode.window.showWarningMessage as jest.Mock).mockReturnValueOnce({
-				then: mockThen,
+	describe("Content Preprocessing with Empty and Newline Content", () => {
+		it("should handle empty content with markdown code block markers", async () => {
+			await executeWriteToFileTool({
+				path: "empty-with-markers.txt",
+				content: "```\n```",
+				line_count: "1",
 			})
 
-			// Re-run the code to use our new mock
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Get the callback function that was passed to then
-			const thenCallback = mockThen.mock.calls[0][0]
-
-			// Call the callback with the button text
-			thenCallback("Follow cline guide to fix the issue")
-
-			// Verify the URL is opened
-			expect(vscode.env.openExternal).toHaveBeenCalledWith("mock-uri")
-			expect(vscode.Uri.parse).toHaveBeenCalledWith(
-				"https://github.com/cline/cline/wiki/Troubleshooting-%E2%80%90-Cline-Deleting-Code-with-%22Rest-of-Code-Here%22-Comments",
-			)
-		})
-	})
-
-	describe("File saving and tracking", () => {
-		it("should track file context after saving", async () => {
-			// Execute
-			await writeToFileTool(
-				mockCline,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.fileContextTracker.trackFileContext).toHaveBeenCalledWith("test/file.txt", "roo_edited")
-			expect(mockCline.didEditFile).toBe(true)
+			// Content should be processed to remove markers, leaving empty string
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("", true)
 		})
 
-		it("should handle user edits in the response", async () => {
-			// Setup
-			mockCline.diffViewProvider.saveChanges.mockResolvedValue({
-				newProblemsMessage: "",
-				userEdits: "User edited content",
-				finalContent: "Final content with user edits",
+		it("should handle newline content with markdown code block markers", async () => {
+			await executeWriteToFileTool({
+				path: "newline-with-markers.txt",
+				content: "```\n\n\n```",
+				line_count: "3",
 			})
 
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.say).toHaveBeenCalledWith("user_feedback_diff", expect.any(String))
-			expect(mockPushToolResult).toHaveBeenCalledWith(
-				expect.stringContaining("The user made the following updates to your content"),
-			)
+			// Content should be processed to remove markers, leaving newlines
+			expect(mockDiffViewProvider.update).toHaveBeenCalledWith("\n", true)
 		})
 
-		it("should handle successful save without user edits", async () => {
-			// Setup
-			mockCline.diffViewProvider.saveChanges.mockResolvedValue({
-				newProblemsMessage: "",
-				userEdits: null,
-				finalContent: "Final content",
+		it("should handle HTML entity unescaping with empty content for non-Claude models", async () => {
+			// Mock non-Claude model
+			mockCline.api.getModel.mockReturnValue({ id: "gpt-4" })
+
+			await executeWriteToFileTool({
+				path: "empty-html.txt",
+				content: "",
+				line_count: "1",
 			})
 
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockCline.say).not.toHaveBeenCalledWith("user_feedback_diff", expect.any(String))
-			expect(mockPushToolResult).toHaveBeenCalledWith("The content was successfully saved to test/file.txt.")
-		})
-	})
-
-	describe("Error handling", () => {
-		it("should handle errors during execution", async () => {
-			// Setup
-			mockCline.diffViewProvider.open.mockRejectedValue(new Error("Test error"))
-
-			// Execute
-			await writeToFileTool(
-				mockCline as any,
-				mockToolUse,
-				mockAskApproval,
-				mockHandleError,
-				mockPushToolResult,
-				mockRemoveClosingTag,
-			)
-
-			// Verify
-			expect(mockHandleError).toHaveBeenCalledWith("writing file", expect.any(Error))
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+			// Should call unescapeHtmlEntities for non-Claude models
+			expect(unescapeHtmlEntities).toHaveBeenCalledWith("")
 		})
 	})
 })
