@@ -11,6 +11,7 @@ import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task, TaskOptions } from "../../task/Task"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -36,6 +37,8 @@ jest.mock("axios", () => ({
 	get: jest.fn().mockResolvedValue({ data: { data: [] } }),
 	post: jest.fn(),
 }))
+
+jest.mock("../../../utils/safeWriteJson")
 
 jest.mock(
 	"@modelcontextprotocol/sdk/types.js",
@@ -1974,10 +1977,7 @@ describe("Project MCP Settings", () => {
 		)
 
 		// Verify file was created with default content
-		expect(fs.writeFile).toHaveBeenCalledWith(
-			expect.stringContaining("mcp.json"),
-			JSON.stringify({ mcpServers: {} }, null, 2),
-		)
+		expect(safeWriteJson).toHaveBeenCalledWith(expect.stringContaining("mcp.json"), { mcpServers: {} })
 	})
 
 	test("handles openProjectMcpSettings when workspace is not open", async () => {
