@@ -146,13 +146,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	const enableLogging = typeof socketPath === "string"
 
 	// Watch the core files and automatically reload the extension host.
-	const enableCoreAutoReload = process.env?.NODE_ENV === "development"
-
-	if (enableCoreAutoReload) {
-		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED!`)
+	if (process.env.NODE_ENV === "development") {
+		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED! Watching for changes in ${context.extensionPath}/**/*.ts`)
 
 		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(context.extensionPath, "src/**/*.ts"),
+			new vscode.RelativePattern(context.extensionPath, "**/*.ts"),
 		)
 
 		watcher.onDidChange((uri) => {
