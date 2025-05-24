@@ -7,10 +7,6 @@ import type { RooCodeAPI } from "@roo-code/types"
 
 import { waitFor } from "./utils"
 
-declare global {
-	let api: RooCodeAPI
-}
-
 export async function run() {
 	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
 
@@ -23,13 +19,12 @@ export async function run() {
 	await api.setConfiguration({
 		apiProvider: "openrouter" as const,
 		openRouterApiKey: process.env.OPENROUTER_API_KEY!,
-		openRouterModelId: "google/gemini-2.0-flash-001",
+		openRouterModelId: "openai/gpt-4.1",
 	})
 
 	await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
 	await waitFor(() => api.isReady())
 
-	// @ts-expect-error - Expose the API to the tests.
 	globalThis.api = api
 
 	// Add all the tests to the runner.

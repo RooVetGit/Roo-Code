@@ -1,13 +1,12 @@
 import * as assert from "assert"
 
-import type { RooCodeAPI, ClineMessage } from "@roo-code/types"
+import type { ClineMessage } from "@roo-code/types"
 
 import { sleep, waitFor, waitUntilCompleted } from "./utils"
 
 suite.skip("Roo Code Subtasks", () => {
 	test("Should handle subtask cancellation and resumption correctly", async () => {
-		// @ts-expect-error - Expose the API to the tests.
-		const api = globalThis.api as RooCodeAPI
+		const api = globalThis.api
 
 		const messages: Record<string, ClineMessage[]> = {}
 
