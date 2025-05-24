@@ -1245,7 +1245,7 @@ export const unboundDefaultModelInfo: ModelInfo = {
 
 // LiteLLM
 // https://docs.litellm.ai/
-export const litellmDefaultModelId = "anthropic/claude-3-7-sonnet-20250219"
+export const litellmDefaultModelId = "claude-3-7-sonnet-20250219"
 export const litellmDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -1472,32 +1472,6 @@ export const vscodeLlmModels = {
 		name: "Claude 3.5 Sonnet",
 		supportsToolCalling: true,
 		maxInputTokens: 81638,
-	},
-	"claude-3.7-sonnet": {
-		contextWindow: 89827,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		family: "claude-3.7-sonnet",
-		version: "claude-3.7-sonnet",
-		name: "Claude 3.7 Sonnet",
-		supportsToolCalling: true,
-		maxInputTokens: 89827,
-	},
-	"claude-3.7-sonnet-thought": {
-		contextWindow: 89827,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		family: "claude-3.7-sonnet-thought",
-		version: "claude-3.7-sonnet-thought",
-		name: "Claude 3.7 Sonnet Thinking",
-		supportsToolCalling: false,
-		maxInputTokens: 89827,
-		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
 	},
 	"gemini-2.0-flash-001": {
 		contextWindow: 127827,
@@ -1960,3 +1934,15 @@ export const getModelMaxOutputTokens = ({
 
 	return model.maxTokens ?? undefined
 }
+
+/**
+ * Options for fetching models from different providers.
+ * This is a discriminated union type where the provider property determines
+ * which other properties are required.
+ */
+export type GetModelsOptions =
+	| { provider: "openrouter" }
+	| { provider: "glama" }
+	| { provider: "requesty"; apiKey?: string }
+	| { provider: "unbound"; apiKey?: string }
+	| { provider: "litellm"; apiKey: string; baseUrl: string }
