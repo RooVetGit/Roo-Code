@@ -1561,8 +1561,10 @@ describe("ClineProvider", () => {
 				setModeConfig: jest.fn(),
 			} as any
 
-			// Mock current config name
-			mockContext.globalState.get = jest.fn((key: string) => {
+			// Mock the ContextProxy's getValue method to return the current config name
+			const contextProxy = (provider as any).contextProxy
+			const getValueSpy = jest.spyOn(contextProxy, "getValue")
+			getValueSpy.mockImplementation((key: any) => {
 				if (key === "currentApiConfigName") return "current-config"
 				return undefined
 			})
