@@ -320,7 +320,7 @@
 	"scripts": {
 		"lint": "eslint . --ext=ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
-		"pretest": "pnpm --filter @roo-code/build build && pnpm --filter @roo-code/types bundle && node esbuild.mjs",
+		"pretest": "pnpm --filter @roo-code/build build && pnpm --filter @roo-code/types build && node esbuild.mjs",
 		"test": "jest -w=40% && vitest run --globals",
 		"format": "prettier --write .",
 		"bundle": "node esbuild.mjs",
