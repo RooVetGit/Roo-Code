@@ -163,10 +163,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		terminalCompressProgressBar,
 		condensingApiConfigId,
 		customCondensingPrompt,
-		codebaseIndexConfig = {
-			...extensionState.codebaseIndexConfig,
-			codebaseIndexQdrantUrl: "http://localhost:6333",
-		}, //If this default is not set, the default value won't be set in the settings when saving
+		codebaseIndexConfig,
 		codebaseIndexModels,
 	} = cachedState
 
