@@ -25,7 +25,6 @@ type OpenRouterProps = {
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	routerModels?: RouterModels
 	selectedModelId: string
-	selectedModelInfo?: ModelInfo
 	uriScheme: string | undefined
 	fromWelcomeView?: boolean
 }
@@ -35,7 +34,6 @@ export const OpenRouter = ({
 	setApiConfigurationField,
 	routerModels,
 	selectedModelId,
-	selectedModelInfo,
 	uriScheme,
 	fromWelcomeView,
 }: OpenRouterProps) => {
@@ -61,8 +59,6 @@ export const OpenRouter = ({
 			Object.keys(routerModels.openrouter).length > 1 &&
 			apiConfiguration.openRouterModelId in routerModels.openrouter,
 	})
-
-	console.log("[OpenRouter] selectedModelInfo", selectedModelInfo)
 
 	return (
 		<>
