@@ -40,16 +40,15 @@ export class QdrantVectorStore implements IVectorStore {
 	private async getCollectionInfo(): Promise<Schemas["CollectionInfo"] | null> {
 		try {
 			const collectionInfo = await this.client.getCollection(this.collectionName)
-			return collectionInfo // Success
-		} catch (error: any) {
-			// Log a warning if the error is not a typical 404 "Not Found"
-			if (error?.response?.status !== 404) {
+			return collectionInfo
+		} catch (error: unknown) {
+			if (error instanceof Error) {
 				console.warn(
 					`[QdrantVectorStore] Warning during getCollectionInfo for "${this.collectionName}". Collection may not exist or another error occurred:`,
-					error?.message || error, // Log error message or the error itself
+					error.message,
 				)
 			}
-			return null // Treat any error as "collection info not retrievable"
+			return null
 		}
 	}
 
