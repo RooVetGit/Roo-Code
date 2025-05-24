@@ -10,7 +10,10 @@
 		"clean": {
 			"cache": false
 		},
-		"build": {},
+		"build": {
+			"outputs": ["dist/**"],
+			"inputs": ["src/**", "package.json", "tsconfig.json", "tsup.config.ts"]
+		},
 		"build:nightly": {},
 		"bundle": {
 			"dependsOn": ["@roo-code/types#build", "@roo-code/build#build", "@roo-code/vscode-webview#build:nightly"],

@@ -5,7 +5,7 @@
 	"scripts": {
 		"lint": "eslint src --ext=ts,tsx --max-warnings=0",
 		"check-types": "tsc",
-		"pretest": "pnpm --filter @roo-code/types build",
+		"pretest": "turbo run bundle --cwd ..",
 		"test": "jest -w=40%",
 		"format": "prettier --write src",
 		"dev": "vite",
