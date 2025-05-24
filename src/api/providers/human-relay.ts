@@ -1,9 +1,11 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 
-import { ModelInfo } from "../../shared/api"
+import type { ModelInfo } from "@roo-code/types"
+
 import { getCommand } from "../../utils/commands"
 import { ApiStream } from "../transform/stream"
+
 import { ApiHandler, SingleCompletionHandler } from "../index"
 /**
  * Human Relay API processor

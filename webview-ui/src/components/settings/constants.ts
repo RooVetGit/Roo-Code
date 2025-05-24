@@ -1,6 +1,6 @@
+import type { ProviderName, ModelInfo } from "@roo-code/types"
+
 import {
-	ProviderName,
-	ModelInfo,
 	anthropicModels,
 	bedrockModels,
 	deepSeekModels,
@@ -11,11 +11,8 @@ import {
 	xaiModels,
 	groqModels,
 	chutesModels,
-} from "@roo/shared/api"
-
-export { PROMPT_CACHING_MODELS } from "@roo/shared/api"
-
-export { AWS_REGIONS } from "@roo/shared/aws_regions"
+} from "@roo/api"
+export { AWS_REGIONS } from "@roo/aws_regions"
 
 export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,

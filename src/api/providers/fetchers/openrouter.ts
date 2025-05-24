@@ -1,10 +1,10 @@
 import axios from "axios"
 import { z } from "zod"
 
-import { isModelParameter } from "../../../schemas"
-import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../constants"
-import { ApiHandlerOptions, ModelInfo, COMPUTER_USE_MODELS, anthropicModels } from "../../../shared/api"
-import { parseApiPrice } from "../../../utils/cost"
+import { type ModelInfo, isModelParameter } from "@roo-code/types"
+
+import { ApiHandlerOptions, COMPUTER_USE_MODELS, anthropicModels } from "../../../shared/api"
+import { parseApiPrice } from "../../../shared/cost"
 
 /**
  * OpenRouterBaseModel

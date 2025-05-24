@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react"
+import { z } from "zod"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { useAppTranslation } from "@/i18n/TranslationContext"
-
 import { VSCodeCheckbox, VSCodeTextField, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
+
+import { EmbedderProvider } from "@roo/embeddingModels"
+
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { vscode } from "@src/utils/vscode"
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -14,12 +24,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
-import { vscode } from "@/utils/vscode"
-import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "../../../../src/schemas"
-import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
-import { z } from "zod"
+} from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
 
