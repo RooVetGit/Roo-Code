@@ -148,6 +148,34 @@ export function isCustomMode(slug: string, customModes?: ModeConfig[]): boolean 
 	return !!customModes?.some((mode) => mode.slug === slug)
 }
 
+/**
+ * Find a mode by its slug, don't fall back to built-in modes
+ */
+export function findModeBySlug(slug: string, modes: readonly ModeConfig[] | undefined): ModeConfig | undefined {
+	return modes?.find((mode) => mode.slug === slug)
+}
+
+/**
+ * Get the mode selection based on the provided mode slug, prompt component, and custom modes.
+ * If a custom mode is found, it takes precedence over the built-in modes.
+ * If no custom mode is found, the built-in mode is used.
+ * If neither is found, the default mode is used.
+ */
+export function getModeSelection(mode: string, promptComponent?: PromptComponent, customModes?: ModeConfig[]) {
+	const customMode = findModeBySlug(mode, customModes)
+	const builtInMode = findModeBySlug(mode, modes)
+
+	const modeToUse = customMode || promptComponent || builtInMode
+
+	const roleDefinition = modeToUse?.roleDefinition || ""
+	const baseInstructions = modeToUse?.customInstructions || ""
+
+	return {
+		roleDefinition,
+		baseInstructions,
+	}
+}
+
 // Custom error class for file restrictions
 export class FileRestrictionError extends Error {
 	constructor(mode: string, pattern: string, description: string | undefined, filePath: string) {
