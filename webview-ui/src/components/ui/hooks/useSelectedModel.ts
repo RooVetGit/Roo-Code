@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import {
 	type ProviderName,
 	type ProviderSettings,
@@ -43,17 +44,33 @@ export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 	const routerModels = useRouterModels()
 	const openRouterModelProviders = useOpenRouterModelProviders(openRouterModelId)
 
-	const { id, info } =
-		apiConfiguration &&
-		typeof routerModels.data !== "undefined" &&
-		typeof openRouterModelProviders.data !== "undefined"
+	// Create a default empty router models structure
+	const emptyRouterModels: RouterModels = useMemo(
+		() => ({
+			openrouter: {},
+			requesty: {},
+			glama: {},
+			unbound: {},
+			litellm: {},
+		}),
+		[],
+	)
+
+	const { id, info } = useMemo(() => {
+		return apiConfiguration && routerModels.data && openRouterModelProviders.data
 			? getSelectedModel({
 					provider,
 					apiConfiguration,
-					routerModels: routerModels.data,
+					routerModels: (routerModels.data as RouterModels) || emptyRouterModels,
 					openRouterModelProviders: openRouterModelProviders.data,
 				})
-			: { id: anthropicDefaultModelId, info: undefined }
+			: getSelectedModel({
+					provider,
+					apiConfiguration: apiConfiguration || {},
+					routerModels: emptyRouterModels,
+					openRouterModelProviders: {},
+				})
+	}, [provider, apiConfiguration, routerModels.data, openRouterModelProviders.data, emptyRouterModels])
 
 	return {
 		provider,
