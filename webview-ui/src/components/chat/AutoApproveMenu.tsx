@@ -129,12 +129,29 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				overflowY: "auto",
 				...style,
 			}}>
+			{isExpanded && (
+				<div className="flex flex-col gap-2">
+					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
+					<div
+						style={{
+							color: "var(--vscode-descriptionForeground)",
+							fontSize: "12px",
+						}}>
+						<Trans
+							i18nKey="chat:autoApprove.description"
+							components={{
+								settingsLink: <VSCodeLink href="#" onClick={handleOpenSettings} />,
+							}}
+						/>
+					</div>
+				</div>
+			)}
 			<div
 				style={{
 					display: "flex",
 					alignItems: "center",
 					gap: "8px",
-					padding: isExpanded ? "8px 0" : "8px 0 0 0",
+					padding: "8px 0",
 					cursor: "pointer",
 				}}
 				onClick={toggleExpanded}>
@@ -175,7 +192,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						{enabledActionsList || t("chat:autoApprove.none")}
 					</span>
 					<span
-						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
+						className={`codicon codicon-chevron-${isExpanded ? "up" : "right"}`}
 						style={{
 							flexShrink: 0,
 							marginLeft: isExpanded ? "2px" : "-2px",
@@ -183,62 +200,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					/>
 				</div>
 			</div>
-
-			{isExpanded && (
-				<div className="flex flex-col gap-2">
-					<div
-						style={{
-							color: "var(--vscode-descriptionForeground)",
-							fontSize: "12px",
-						}}>
-						<Trans
-							i18nKey="chat:autoApprove.description"
-							components={{
-								settingsLink: <VSCodeLink href="#" onClick={handleOpenSettings} />,
-							}}
-						/>
-					</div>
-
-					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
-
-					{/* Auto-approve API request count limit input row inspired by Cline */}
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "8px",
-							marginTop: "10px",
-							marginBottom: "8px",
-							color: "var(--vscode-descriptionForeground)",
-						}}>
-						<span style={{ flexShrink: 1, minWidth: 0 }}>
-							<Trans i18nKey="settings:autoApprove.apiRequestLimit.title" />:
-						</span>
-						<VSCodeTextField
-							placeholder={t("settings:autoApprove.apiRequestLimit.unlimited")}
-							value={(allowedMaxRequests ?? Infinity) === Infinity ? "" : allowedMaxRequests?.toString()}
-							onInput={(e) => {
-								const input = e.target as HTMLInputElement
-								// Remove any non-numeric characters
-								input.value = input.value.replace(/[^0-9]/g, "")
-								const value = parseInt(input.value)
-								const parsedValue = !isNaN(value) && value > 0 ? value : undefined
-								setAllowedMaxRequests(parsedValue)
-								vscode.postMessage({ type: "allowedMaxRequests", value: parsedValue })
-							}}
-							style={{ flex: 1 }}
-						/>
-					</div>
-					<div
-						style={{
-							color: "var(--vscode-descriptionForeground)",
-							fontSize: "12px",
-							marginBottom: "10px",
-						}}>
-						<Trans i18nKey="settings:autoApprove.apiRequestLimit.description" />
-					</div>
-				</div>
-			)}
 		</div>
 	)
 }
