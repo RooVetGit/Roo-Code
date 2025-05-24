@@ -9,19 +9,19 @@ import {
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromIni } from "@aws-sdk/credential-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
-import { SingleCompletionHandler } from "../"
+
+import type { ModelInfo, ProviderSettings } from "@roo-code/types"
+
+import { SingleCompletionHandler } from "../index"
 import {
 	BedrockModelId,
-	ModelInfo as SharedModelInfo,
 	bedrockDefaultModelId,
 	bedrockModels,
 	bedrockDefaultPromptRouterModelId,
 } from "../../shared/api"
-import { ProviderSettings } from "../../schemas"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { logger } from "../../utils/logging"
-// New cache-related imports
 import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-strategy"
 import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
 import { AMAZON_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
@@ -510,7 +510,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	 *
 	 *************************************************************************************/
 
-	private costModelConfig: { id: BedrockModelId | string; info: SharedModelInfo } = {
+	private costModelConfig: { id: BedrockModelId | string; info: ModelInfo } = {
 		id: "",
 		info: { maxTokens: 0, contextWindow: 0, supportsPromptCache: false, supportsImages: false },
 	}
@@ -617,7 +617,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	//Prompt Router responses come back in a different sequence and the model used is in the response and must be fetched by name
-	getModelById(modelId: string, modelType?: string): { id: BedrockModelId | string; info: SharedModelInfo } {
+	getModelById(modelId: string, modelType?: string): { id: BedrockModelId | string; info: ModelInfo } {
 		// Try to find the model in bedrockModels
 		const baseModelId = this.parseBaseModelId(modelId) as BedrockModelId
 
@@ -647,7 +647,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		return model
 	}
 
-	override getModel(): { id: BedrockModelId | string; info: SharedModelInfo } {
+	override getModel(): { id: BedrockModelId | string; info: ModelInfo } {
 		if (this.costModelConfig?.id?.trim().length > 0) {
 			return this.costModelConfig
 		}
@@ -679,7 +679,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		modelConfig.info.maxTokens = modelConfig.info.maxTokens || BEDROCK_MAX_TOKENS
 
-		return modelConfig as { id: BedrockModelId | string; info: SharedModelInfo }
+		return modelConfig as { id: BedrockModelId | string; info: ModelInfo }
 	}
 
 	/************************************************************************************
@@ -691,10 +691,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	// Store previous cache point placements for maintaining consistency across consecutive messages
 	private previousCachePointPlacements: { [conversationId: string]: any[] } = {}
 
-	private supportsAwsPromptCache(modelConfig: {
-		id: BedrockModelId | string
-		info: SharedModelInfo
-	}): boolean | undefined {
+	private supportsAwsPromptCache(modelConfig: { id: BedrockModelId | string; info: ModelInfo }): boolean | undefined {
 		// Check if the model supports prompt cache
 		// The cachableFields property is not part of the ModelInfo type in schemas
 		// but it's used in the bedrockModels object in shared/api.ts

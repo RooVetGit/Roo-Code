@@ -1,6 +1,9 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { ApiHandler, SingleCompletionHandler } from ".."
-import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
+
+import type { ModelInfo } from "@roo-code/types"
+
+import type { ApiHandler, SingleCompletionHandler } from "../index"
+import type { ApiHandlerOptions } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 
 interface FakeAI {

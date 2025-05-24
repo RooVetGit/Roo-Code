@@ -3,8 +3,30 @@
 	"tasks": {
 		"lint": {},
 		"check-types": {},
-		"test": {},
+		"test": {
+			"dependsOn": ["@roo-code/types#build"]
+		},
 		"format": {},
-		"clean": { "cache": false }
+		"clean": {
+			"cache": false
+		},
+		"build": {},
+		"build:nightly": {},
+		"bundle": {
+			"dependsOn": ["@roo-code/types#build", "@roo-code/build#build", "@roo-code/vscode-webview#build:nightly"],
+			"cache": false
+		},
+		"bundle:nightly": {
+			"dependsOn": ["@roo-code/types#build", "@roo-code/build#build", "@roo-code/vscode-webview#build:nightly"],
+			"cache": false
+		},
+		"vsix": {
+			"dependsOn": ["bundle"],
+			"cache": false
+		},
+		"vsix:nightly": {
+			"dependsOn": ["bundle:nightly"],
+			"cache": false
+		}
 	}
 }

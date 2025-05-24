@@ -49,7 +49,7 @@ suite.skip("Roo Code Subtasks", () => {
 		// The parent task should not have resumed yet, so we shouldn't see
 		// "Parent task resumed".
 		assert.ok(
-			messages[parentTaskId].find(({ type, text }) => type === "say" && text === "Parent task resumed") ===
+			messages[parentTaskId]?.find(({ type, text }) => type === "say" && text === "Parent task resumed") ===
 				undefined,
 			"Parent task should not have resumed after subtask cancellation",
 		)
@@ -63,7 +63,7 @@ suite.skip("Roo Code Subtasks", () => {
 
 		// The parent task should still not have resumed.
 		assert.ok(
-			messages[parentTaskId].find(({ type, text }) => type === "say" && text === "Parent task resumed") ===
+			messages[parentTaskId]?.find(({ type, text }) => type === "say" && text === "Parent task resumed") ===
 				undefined,
 			"Parent task should not have resumed after subtask cancellation",
 		)

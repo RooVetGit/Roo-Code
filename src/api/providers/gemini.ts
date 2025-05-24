@@ -7,12 +7,15 @@ import {
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
 
-import { ApiHandlerOptions, ModelInfo, GeminiModelId, geminiDefaultModelId, geminiModels } from "../../shared/api"
+import type { ModelInfo } from "@roo-code/types"
+
+import { ApiHandlerOptions, GeminiModelId, geminiDefaultModelId, geminiModels } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
 
-import { SingleCompletionHandler } from "../index"
 import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
 import type { ApiStream } from "../transform/stream"
+
+import { SingleCompletionHandler } from "../index"
 import { BaseProvider } from "./base-provider"
 
 type GeminiHandlerOptions = ApiHandlerOptions & {
