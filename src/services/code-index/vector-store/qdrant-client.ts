@@ -157,8 +157,13 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param payload Payload to check
 	 * @returns Boolean indicating if the payload is valid
 	 */
-	private isPayloadValid(payload: Record<string, unknown>): payload is Payload {
-		return "filePath" in payload && "codeChunk" in payload && "startLine" in payload && "endLine" in payload
+	private isPayloadValid(payload: Record<string, unknown> | null | undefined): payload is Payload {
+		if (!payload) {
+			return false
+		}
+		const validKeys = ["filePath", "codeChunk", "startLine", "endLine"]
+		const hasValidKeys = validKeys.every((key) => key in payload)
+		return hasValidKeys
 	}
 
 	/**
@@ -205,7 +210,7 @@ export class QdrantVectorStore implements IVectorStore {
 			}
 
 			const operationResult = await this.client.query(this.collectionName, searchRequest)
-			const filteredPoints = operationResult.points.filter((p) => this.isPayloadValid(p.payload!))
+			const filteredPoints = operationResult.points.filter((p) => this.isPayloadValid(p.payload))
 
 			return filteredPoints as VectorStoreSearchResult[]
 		} catch (error) {
