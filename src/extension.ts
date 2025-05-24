@@ -22,6 +22,7 @@ import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
+import { CodeIndexManager } from "./services/code-index/manager"
 import { migrateSettings } from "./utils/migrateSettings"
 import { API } from "./extension/api"
 
@@ -74,8 +75,22 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
-	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
+	const codeIndexManager = CodeIndexManager.getInstance(context)
+
+	try {
+		await codeIndexManager?.initialize(contextProxy)
+	} catch (error) {
+		outputChannel.appendLine(
+			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
+		)
+	}
+
+	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
 	telemetryService.setProvider(provider)
+
+	if (codeIndexManager) {
+		context.subscriptions.push(codeIndexManager)
+	}
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {

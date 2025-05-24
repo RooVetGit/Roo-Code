@@ -9,7 +9,11 @@ fi
 if [ "$OS" = "Windows_NT" ]; then
   pnpm_cmd="pnpm.cmd"
 else
-  pnpm_cmd="pnpm"
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm_cmd="pnpm"
+  else
+    pnpm_cmd="npx pnpm"
+  fi
 fi
 
 # Detect if running on Windows and use npx.cmd, otherwise use npx.
@@ -19,5 +23,5 @@ else
   npx_cmd="npx"
 fi
 
-"$npx_cmd" lint-staged
-"$pnpm_cmd" lint
+$npx_cmd lint-staged
+$pnpm_cmd lint

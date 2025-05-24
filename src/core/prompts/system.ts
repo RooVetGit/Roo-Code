@@ -8,6 +8,7 @@ import { DiffStrategy } from "../../shared/tools"
 import { formatLanguage } from "../../shared/language"
 
 import { McpHub } from "../../services/mcp/McpHub"
+import { CodeIndexManager } from "../../services/code-index/manager"
 
 import { PromptVariables, loadSystemPromptFile } from "./sections/custom-system-prompt"
 
@@ -60,6 +61,8 @@ async function generatePrompt(
 			: Promise.resolve(""),
 	])
 
+	const codeIndexManager = CodeIndexManager.getInstance(context)
+
 	const basePrompt = `${roleDefinition}
 
 ${markdownFormattingSection()}
@@ -70,6 +73,7 @@ ${getToolDescriptionsForMode(
 	mode,
 	cwd,
 	supportsComputerUse,
+	codeIndexManager,
 	effectiveDiffStrategy,
 	browserViewportSize,
 	mcpHub,
@@ -81,7 +85,7 @@ ${getToolUseGuidelinesSection()}
 
 ${mcpServersSection}
 
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy)}
+${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, codeIndexManager)}
 
 ${modesSection}
 

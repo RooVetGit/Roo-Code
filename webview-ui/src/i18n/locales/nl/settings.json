@@ -32,6 +32,29 @@
 		"language": "Taal",
 		"about": "Over Roo Code"
 	},
+	"codeIndex": {
+		"title": "Codebase indexering",
+		"enableLabel": "Codebase indexering inschakelen",
+		"enableDescription": "Het inschakelen van deze functie zal je codebase indexeren. Dit kan systeembronnen verbruiken en enige tijd duren, afhankelijk van de grootte van je project.",
+		"providerLabel": "Embeddings provider",
+		"selectProviderPlaceholder": "Selecteer provider",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiKeyLabel": "OpenAI-sleutel:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Selecteer model",
+		"ollamaUrlLabel": "Ollama URL:",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant-sleutel:",
+		"startIndexingButton": "Indexering starten",
+		"clearIndexDataButton": "Indexgegevens wissen",
+		"clearDataDialog": {
+			"title": "Weet je het zeker?",
+			"description": "Deze actie kan niet ongedaan worden gemaakt. Dit zal je codebase-indexgegevens permanent verwijderen.",
+			"cancelButton": "Annuleren",
+			"confirmButton": "Gegevens wissen"
+		}
+	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
 		"readOnly": {
@@ -124,7 +147,10 @@
 		"requestyApiKey": "Requesty API-sleutel",
 		"refreshModels": {
 			"label": "Modellen verversen",
-			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien."
+			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien.",
+			"loading": "Modellenlijst wordt vernieuwd...",
+			"success": "Modellenlijst succesvol vernieuwd!",
+			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw."
 		},
 		"getRequestyApiKey": "Requesty API-sleutel ophalen",
 		"openRouterTransformsText": "Comprimeer prompts en berichtreeksen tot de contextgrootte (<a>OpenRouter Transforms</a>)",

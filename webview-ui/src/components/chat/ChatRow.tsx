@@ -36,6 +36,7 @@ import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
 import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
 import { CondensingContextRow, ContextCondenseRow } from "./ContextCondenseRow"
+import CodebaseSearchResultsDisplay from "./CodebaseSearchResultsDisplay"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -353,6 +354,21 @@ export const ChatRowContent = ({
 						/>
 					</>
 				)
+			case "codebaseSearch": {
+				return (
+					<div style={headerStyle}>
+						{toolIcon("search")}
+						<span style={{ fontWeight: "bold" }}>
+							{tool.path
+								? t("chat:codebaseSearch.wantsToSearchWithPath", {
+										query: tool.query,
+										path: tool.path,
+									})
+								: t("chat:codebaseSearch.wantsToSearch", { query: tool.query })}
+						</span>
+					</div>
+				)
+			}
 			case "newFileCreated":
 				return (
 					<>
@@ -941,6 +957,36 @@ export const ChatRowContent = ({
 						return <CondensingContextRow />
 					}
 					return message.contextCondense ? <ContextCondenseRow {...message.contextCondense} /> : null
+				case "codebase_search_result":
+					let parsed: {
+						content: {
+							query: string
+							results: Array<{
+								filePath: string
+								score: number
+								startLine: number
+								endLine: number
+								codeChunk: string
+							}>
+						}
+					} | null = null
+
+					try {
+						if (message.text) {
+							parsed = JSON.parse(message.text)
+						}
+					} catch (error) {
+						console.error("Failed to parse codebaseSearch content:", error)
+					}
+
+					if (parsed && !parsed?.content) {
+						console.error("Invalid codebaseSearch content structure:", parsed.content)
+						return <div>Error displaying search results.</div>
+					}
+
+					const { query = "", results = [] } = parsed?.content || {}
+
+					return <CodebaseSearchResultsDisplay query={query} results={results} />
 				default:
 					return (
 						<>

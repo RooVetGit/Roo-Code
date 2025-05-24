@@ -1,20 +1,22 @@
 import { HTMLAttributes } from "react"
-import { useAppTranslation } from "@/i18n/TranslationContext"
+import { VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
 import { FlaskConical } from "lucide-react"
 
-import type { ExperimentId } from "@roo-code/types"
+import type { ExperimentId, CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
 import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 
-import { cn } from "@/lib/utils"
-import { vscode } from "@/utils/vscode"
+import { vscode } from "@src/utils/vscode"
+import { ExtensionStateContextType } from "@src/context/ExtensionStateContext"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { cn } from "@src/lib/utils"
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider } from "@src/components/ui"
 
 import { SetCachedStateField, SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider } from "@/components/ui/"
-import { VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
+import { CodeIndexSettings } from "./CodeIndexSettings"
 
 const SUMMARY_PROMPT = `\
 Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
@@ -60,12 +62,18 @@ type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Record<ExperimentId, boolean>
 	setExperimentEnabled: SetExperimentEnabled
 	autoCondenseContextPercent: number
-	setCachedStateField: SetCachedStateField<"autoCondenseContextPercent">
+	setCachedStateField: SetCachedStateField<"autoCondenseContextPercent" | "codebaseIndexConfig">
 	condensingApiConfigId?: string
 	setCondensingApiConfigId: (value: string) => void
 	customCondensingPrompt?: string
 	setCustomCondensingPrompt: (value: string) => void
 	listApiConfigMeta: any[]
+	// CodeIndexSettings props
+	codebaseIndexModels: CodebaseIndexModels | undefined
+	codebaseIndexConfig: CodebaseIndexConfig | undefined
+	apiConfiguration: ProviderSettings
+	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
+	areSettingsCommitted: boolean
 }
 
 export const ExperimentalSettings = ({
@@ -78,6 +86,11 @@ export const ExperimentalSettings = ({
 	customCondensingPrompt,
 	setCustomCondensingPrompt,
 	listApiConfigMeta,
+	codebaseIndexModels,
+	codebaseIndexConfig,
+	apiConfiguration,
+	setApiConfigurationField,
+	areSettingsCommitted,
 	className,
 	...props
 }: ExperimentalSettingsProps) => {
@@ -212,6 +225,15 @@ export const ExperimentalSettings = ({
 						</div>
 					</div>
 				)}
+
+				<CodeIndexSettings
+					codebaseIndexModels={codebaseIndexModels}
+					codebaseIndexConfig={codebaseIndexConfig}
+					apiConfiguration={apiConfiguration}
+					setCachedStateField={setCachedStateField as SetCachedStateField<keyof ExtensionStateContextType>}
+					setApiConfigurationField={setApiConfigurationField}
+					areSettingsCommitted={areSettingsCommitted}
+				/>
 			</Section>
 		</div>
 	)
