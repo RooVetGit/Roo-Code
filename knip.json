@@ -12,6 +12,7 @@
 		"bin/**",
 		"apps/vscode-e2e/**",
 		"evals/**",
+		"src/extension/**",
 		"src/activate/**",
 		"src/workers/**",
 		"src/schemas/ipc.ts",
