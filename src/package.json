@@ -320,7 +320,7 @@
 	"scripts": {
 		"lint": "eslint . --ext=ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
-		"pretest": "turbo run bundle --cwd ..",
+		"pretest": "if [ \"$CI\" != \"true\" ]; then turbo run bundle --cwd ..; fi",
 		"test": "jest -w=40% && vitest run --globals",
 		"format": "prettier --write .",
 		"bundle": "node esbuild.mjs",
