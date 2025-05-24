@@ -775,6 +775,8 @@ export const geminiModels = {
 		supportsPromptCache: true,
 		inputPrice: 0.15,
 		outputPrice: 3.5,
+		cacheReadsPrice: 0.0375,
+		cacheWritesPrice: 1.0,
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
 		requiredReasoningBudget: true,
@@ -786,6 +788,8 @@ export const geminiModels = {
 		supportsPromptCache: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
+		cacheReadsPrice: 0.0375,
+		cacheWritesPrice: 1.0,
 	},
 	"gemini-2.5-pro-exp-03-25": {
 		maxTokens: 65_535,
