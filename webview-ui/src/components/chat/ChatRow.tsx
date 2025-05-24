@@ -42,7 +42,7 @@ interface ChatRowProps {
 	isExpanded: boolean
 	isLast: boolean
 	isStreaming: boolean
-	onToggleExpand: () => void
+	onToggleExpand: (ts: number) => void // Modified to accept timestamp
 	onHeightChange: (isTaller: boolean) => void
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
 }
@@ -300,7 +300,7 @@ export const ChatRowContent = ({
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -326,7 +326,7 @@ export const ChatRowContent = ({
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -348,7 +348,7 @@ export const ChatRowContent = ({
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -380,7 +380,7 @@ export const ChatRowContent = ({
 							language={getLanguageFromPath(tool.path || "") || "log"}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -426,7 +426,7 @@ export const ChatRowContent = ({
 							language="markdown"
 							isLoading={message.partial}
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -446,7 +446,7 @@ export const ChatRowContent = ({
 							code={tool.content}
 							language="shell-session"
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -466,7 +466,7 @@ export const ChatRowContent = ({
 							code={tool.content}
 							language="shellsession"
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -486,7 +486,7 @@ export const ChatRowContent = ({
 							code={tool.content}
 							language="markdown"
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -516,7 +516,7 @@ export const ChatRowContent = ({
 							code={tool.content}
 							language="shellsession"
 							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+							onToggleExpand={() => onToggleExpand(message.ts)}
 						/>
 					</>
 				)
@@ -804,7 +804,7 @@ export const ChatRowContent = ({
 									MozUserSelect: "none",
 									msUserSelect: "none",
 								}}
-								onClick={onToggleExpand}>
+								onClick={() => onToggleExpand(message.ts)}>
 								<div style={{ display: "flex", alignItems: "center", gap: "10px", flexGrow: 1 }}>
 									{icon}
 									{title}
@@ -843,7 +843,7 @@ export const ChatRowContent = ({
 										code={safeJsonParse<any>(message.text)?.request}
 										language="markdown"
 										isExpanded={true}
-										onToggleExpand={onToggleExpand}
+										onToggleExpand={() => onToggleExpand(message.ts)}
 									/>
 								</div>
 							)}
@@ -889,7 +889,7 @@ export const ChatRowContent = ({
 								language="diff"
 								isFeedback={true}
 								isExpanded={isExpanded}
-								onToggleExpand={onToggleExpand}
+								onToggleExpand={() => onToggleExpand(message.ts)}
 							/>
 						</div>
 					)
@@ -936,7 +936,7 @@ export const ChatRowContent = ({
 									code={message.text}
 									language="json"
 									isExpanded={true}
-									onToggleExpand={onToggleExpand}
+									onToggleExpand={() => onToggleExpand(message.ts)}
 								/>
 							</div>
 						</>
@@ -1096,7 +1096,7 @@ export const ChatRowContent = ({
 													code={useMcpServer.arguments}
 													language="json"
 													isExpanded={true}
-													onToggleExpand={onToggleExpand}
+													onToggleExpand={() => onToggleExpand(message.ts)}
 												/>
 											</div>
 										)}
