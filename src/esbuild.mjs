@@ -44,7 +44,7 @@ async function main() {
 	 */
 	const plugins = [
 		{
-			name: "copy-files",
+			name: "copyFiles",
 			setup(build) {
 				build.onEnd(() => {
 					copyPaths(
@@ -62,13 +62,13 @@ async function main() {
 			},
 		},
 		{
-			name: "copy-wasms",
+			name: "copyWasms",
 			setup(build) {
 				build.onEnd(() => copyWasms(srcDir, distDir))
 			},
 		},
 		{
-			name: "copy-locales",
+			name: "copyLocales",
 			setup(build) {
 				build.onEnd(() => copyLocales(srcDir, distDir))
 			},
