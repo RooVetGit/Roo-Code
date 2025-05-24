@@ -936,10 +936,24 @@ export class McpHub {
 		})
 
 		// Send sorted servers to webview
-		await this.providerRef.deref()?.postMessageToWebview({
-			type: "mcpServers",
-			mcpServers: sortedConnections.map((connection) => connection.server),
-		})
+		const provider = this.providerRef.deref()
+		if (provider) {
+			await provider.postMessageToWebview({
+				type: "mcpServers",
+				mcpServers: sortedConnections.map((connection) => connection.server),
+			})
+
+			// When MCP logs are updated, trigger a system prompt refresh
+			// by calling postStateToWebview which will re-generate the prompt
+			console.log("MCP logs updated, triggering context refresh")
+
+			// Get the current Cline instance (Task)
+			if (provider && typeof provider.postStateToWebview === "function") {
+				// Force the system prompt to be regenerated on the next API request
+				// by triggering a new state update
+				await provider.postStateToWebview()
+			}
+		}
 	}
 
 	public async toggleServerDisabled(

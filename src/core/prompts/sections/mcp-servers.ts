@@ -6,7 +6,9 @@ export async function getMcpServersSection(
 	diffStrategy?: DiffStrategy,
 	enableMcpServerCreation?: boolean,
 ): Promise<string> {
-	if (!mcpHub) {
+	// Return empty string if no McpHub is provided or MCP server creation is disabled
+	// This ensures that MCP server logs won't be included in the context when disabled
+	if (!mcpHub || enableMcpServerCreation === false) {
 		return ""
 	}
 
@@ -37,11 +39,23 @@ export async function getMcpServersSection(
 
 						const config = JSON.parse(server.config)
 
+						// Include recent console logs (stdout/stderr) if available
+						const recentLogs = server.errorHistory?.length
+							? `\n\n### Recent Console Logs\n${server.errorHistory
+									.slice(-5) // Last 5 logs
+									.map(
+										(log) =>
+											`- [${log.level.toUpperCase()}] ${log.message.split("\n")[0]}${log.message.includes("\n") ? "..." : ""}`,
+									)
+									.join("\n")}`
+							: ""
+
 						return (
 							`## ${server.name} (\`${config.command}${config.args && Array.isArray(config.args) ? ` ${config.args.join(" ")}` : ""}\`)` +
 							(tools ? `\n\n### Available Tools\n${tools}` : "") +
 							(templates ? `\n\n### Resource Templates\n${templates}` : "") +
-							(resources ? `\n\n### Direct Resources\n${resources}` : "")
+							(resources ? `\n\n### Direct Resources\n${resources}` : "") +
+							recentLogs
 						)
 					})
 					.join("\n\n")}`
