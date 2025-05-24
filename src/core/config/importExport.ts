@@ -84,6 +84,15 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 		if (e instanceof ZodError) {
 			error = e.issues.map((issue) => `[${issue.path.join(".")}]: ${issue.message}`).join("\n")
 			telemetryService.captureSchemaValidationError({ schemaName: "ImportExport", error: e })
+		} else if (e instanceof SyntaxError) {
+			// Extract position info from the error message
+			const match = e.message.match(/at position (\d+)/)
+			if (match) {
+				const position = parseInt(match[1], 10)
+				error = `Expected property name or '}' in JSON at position ${position}`
+			} else {
+				error = e.message
+			}
 		} else if (e instanceof Error) {
 			error = e.message
 		}

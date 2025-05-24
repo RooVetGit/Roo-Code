@@ -509,6 +509,7 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsProfile: z.string().optional(),
 	awsUseProfile: z.boolean().optional(),
 	awsCustomArn: z.string().optional(),
+	awsModelContextWindow: z.number().optional(),
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({
@@ -694,6 +695,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	awsProfile: undefined,
 	awsUseProfile: undefined,
 	awsCustomArn: undefined,
+	awsModelContextWindow: undefined,
 	// Google Vertex
 	vertexKeyFile: undefined,
 	vertexJsonCredentials: undefined,

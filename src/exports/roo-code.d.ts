@@ -283,6 +283,7 @@ type ProviderSettings = {
 	awsProfile?: string | undefined
 	awsUseProfile?: boolean | undefined
 	awsCustomArn?: string | undefined
+	awsModelContextWindow?: number | undefined
 	vertexKeyFile?: string | undefined
 	vertexJsonCredentials?: string | undefined
 	vertexProjectId?: string | undefined
@@ -694,6 +695,7 @@ type IpcMessage =
 								awsProfile?: string | undefined
 								awsUseProfile?: boolean | undefined
 								awsCustomArn?: string | undefined
+								awsModelContextWindow?: number | undefined
 								vertexKeyFile?: string | undefined
 								vertexJsonCredentials?: string | undefined
 								vertexProjectId?: string | undefined
@@ -1206,6 +1208,7 @@ type TaskCommand =
 					awsProfile?: string | undefined
 					awsUseProfile?: boolean | undefined
 					awsCustomArn?: string | undefined
+					awsModelContextWindow?: number | undefined
 					vertexKeyFile?: string | undefined
 					vertexJsonCredentials?: string | undefined
 					vertexProjectId?: string | undefined
