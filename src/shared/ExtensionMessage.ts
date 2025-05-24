@@ -68,6 +68,7 @@ export interface ExtensionMessage {
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
+		| "mcpExecutionStatus"
 		| "vsCodeSetting"
 		| "condenseTaskContextResponse"
 		| "singleRouterModelFetchResponse"
@@ -288,6 +289,7 @@ export interface ClineAskUseMcpServer {
 	toolName?: string
 	arguments?: string
 	uri?: string
+	response?: string
 }
 
 export interface ClineApiReqInfo {
