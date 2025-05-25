@@ -45,6 +45,7 @@ export class DiffViewProvider {
 	private viewColumn: ViewColumn = -1 // ViewColumn.Active
 	private userInteractionListeners: vscode.Disposable[] = []
 	private suppressInteractionFlag: boolean = false
+	private preDiffActiveEditor?: vscode.TextEditor // Store active editor before diff operation
 
 	constructor(private cwd: string) {}
 
@@ -185,6 +186,9 @@ export class DiffViewProvider {
 	 * @param viewColumn (Optional) The VSCode editor group to open the diff in.
 	 */
 	async open(relPath: string, viewColumn: ViewColumn): Promise<void> {
+		// Store the pre-diff active editor for potential focus restoration
+		this.preDiffActiveEditor = vscode.window.activeTextEditor
+
 		this.viewColumn = viewColumn
 		this.disableAutoFocusAfterUserInteraction()
 		// Set the edit type based on the file existence
@@ -251,6 +255,51 @@ export class DiffViewProvider {
 			this.scrollEditorToLine(0) // Will this crash for new files?
 		}
 		this.streamedLines = []
+	}
+
+	/**
+	 * Prepares the optimal view column and placement for the diff view.
+	 * For existing open files: Places diff beside the original tab in the same group.
+	 * For new/unopened files: Places at the end of the currently active editor group.
+	 */
+	private async prepareDiffViewPlacement(absolutePath: string): Promise<void> {
+		if (!this.documentWasOpen) {
+			return Promise.resolve()
+		}
+		// For existing files that are currently open, find the original tab
+		const originalTab = this.findTabForFile(absolutePath)
+		if (originalTab) {
+			// Find the tab group containing the original tab
+			const tabGroup = vscode.window.tabGroups.all.find((group) => group.tabs.some((tab) => tab === originalTab))
+
+			if (tabGroup) {
+				const viewColumn = this.viewColumn !== ViewColumn.Active ? tabGroup.viewColumn : this.viewColumn
+				// Ensure the original tab is active within its group to place diff beside it
+				await this.showTextDocumentSafe({
+					uri: vscode.Uri.file(absolutePath),
+					options: {
+						viewColumn: viewColumn,
+						preserveFocus: true,
+						preview: false,
+					},
+				})
+				// Update viewColumn to match the original file's group
+				this.viewColumn = viewColumn
+			}
+		}
+		// For new files or unopened files, keep the original viewColumn (active group)
+		// No additional preparation needed as it will default to end of active group
+	}
+
+	/**
+	 * Finds the VS Code tab for a given file path.
+	 */
+	private findTabForFile(absolutePath: string): vscode.Tab | undefined {
+		return vscode.window.tabGroups.all
+			.flatMap((group) => group.tabs)
+			.find(
+				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
+			)
 	}
 
 	/**
@@ -384,6 +433,9 @@ export class DiffViewProvider {
 
 		await this.closeAllRooOpenedViews()
 
+		// Implement post-diff focus behavior
+		await this.handlePostDiffFocus()
+
 		// If no auto-close settings are enabled and the document was not open before,
 		// open the file after the diff is complete.
 
@@ -502,11 +554,98 @@ export class DiffViewProvider {
 			await this.closeAllRooOpenedViews()
 		}
 
+		// Implement post-diff focus behavior
+		await this.handlePostDiffFocus()
+
 		// Edit is done.
 		this.resetWithListeners()
 	}
 
-	private filterTabsToClose(tab: vscode.Tab, settings: DiffSettings): boolean {
+	/**
+	 * Handles post-diff focus behavior.
+	 * Currently defaults to focusing the edited file (Behavior A).
+	 * Future implementation will support configurable focus behavior.
+	 */
+	private async handlePostDiffFocus(): Promise<void> {
+		if (!this.relPath) {
+			return
+		}
+
+		if (this.autoCloseAllRooTabs) {
+			// Focus on the pre-diff active tab
+			await this.focusOnPreDiffActiveTab()
+			return
+		}
+		// Focus on the edited file (temporary default)
+		await this.focusOnEditedFile()
+	}
+
+	/**
+	 * Focuses on the tab of the file that was just edited.
+	 */
+	private async focusOnEditedFile(): Promise<void> {
+		if (!this.relPath) {
+			return
+		}
+
+		try {
+			const absolutePath = path.resolve(this.cwd, this.relPath)
+			const fileUri = vscode.Uri.file(absolutePath)
+
+			// Check if the file still exists as a tab
+			const editedFileTab = this.findTabForFile(absolutePath)
+			if (editedFileTab) {
+				// Find the tab group containing the edited file
+				const tabGroup = vscode.window.tabGroups.all.find((group) =>
+					group.tabs.some((tab) => tab === editedFileTab),
+				)
+
+				if (tabGroup) {
+					// Make the edited file's tab active
+					await this.showTextDocumentSafe({
+						uri: fileUri,
+						options: {
+							viewColumn: tabGroup.viewColumn,
+							preserveFocus: false,
+							preview: false,
+						},
+					})
+				}
+			}
+		} catch (error) {
+			console.error("Roo Debug: Error focusing on edited file:", error)
+		}
+	}
+
+	/**
+	 * Restores focus to the tab that was active before the diff operation.
+	 * This method is prepared for future use when configurable focus behavior is implemented.
+	 */
+	private async focusOnPreDiffActiveTab(): Promise<void> {
+		if (!this.preDiffActiveEditor || !this.preDiffActiveEditor.document) {
+			return
+		}
+
+		try {
+			// Check if the pre-diff active editor is still valid and its document is still open
+			const isDocumentStillOpen = vscode.workspace.textDocuments.some(
+				(doc) => doc === this.preDiffActiveEditor!.document,
+			)
+
+			if (isDocumentStillOpen) {
+				// Restore focus to the pre-diff active editor
+				await vscode.window.showTextDocument(this.preDiffActiveEditor.document.uri, {
+					viewColumn: this.preDiffActiveEditor.viewColumn,
+					preserveFocus: false,
+					preview: false,
+				})
+			}
+		} catch (error) {
+			console.error("Roo Debug: Error restoring focus to pre-diff active tab:", error)
+		}
+	}
+
+	private tabToCloseFilter(tab: vscode.Tab, settings: DiffSettings): boolean {
 		// Always close DiffView tabs opened by Roo
 		if (tab.input instanceof vscode.TabInputTextDiff && tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME) {
 			return true
@@ -622,7 +761,7 @@ export class DiffViewProvider {
 
 		const closeOps = vscode.window.tabGroups.all
 			.flatMap((tg) => tg.tabs)
-			.filter((tab) => this.filterTabsToClose(tab, settings))
+			.filter((tab) => this.tabToCloseFilter(tab, settings))
 			.map(this.closeTab)
 
 		await Promise.all(closeOps)
@@ -640,7 +779,6 @@ export class DiffViewProvider {
 
 		// right uri = the file path
 		const rightUri = vscode.Uri.file(path.resolve(this.cwd, this.relPath))
-
 		// Open new diff editor.
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
 			const fileName = path.basename(rightUri.fsPath)
@@ -657,44 +795,61 @@ export class DiffViewProvider {
 			}
 			// set interaction flag to true to prevent autoFocus from being triggered
 			this.suppressInteractionFlag = true
-			vscode.commands
-				.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
-				.then(async () => {
-					// set interaction flag to false to allow autoFocus to be triggered
-					this.suppressInteractionFlag = false
+			// Implement improved diff view placement logic
+			const previousEditor = vscode.window.activeTextEditor
+			this.prepareDiffViewPlacement(rightUri.fsPath).then(() => {
+				vscode.commands
+					.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
+					.then(async () => {
+						// set interaction flag to false to allow autoFocus to be triggered
+						this.suppressInteractionFlag = false
 
-					// Get the active text editor, which should be the diff editor opened by vscode.diff
-					const diffEditor = vscode.window.activeTextEditor
+						// Get the active text editor, which should be the diff editor opened by vscode.diff
+						const diffEditor = vscode.window.activeTextEditor
 
-					// Ensure we have a valid editor and it's the one we expect (the right side of the diff)
-					if (!diffEditor || !arePathsEqual(diffEditor.document.uri.fsPath, rightUri.fsPath)) {
-						reject(new Error("Failed to get diff editor after opening."))
-						return
-					}
+						// Ensure we have a valid editor and it's the one we expect (the right side of the diff)
+						if (!diffEditor || !arePathsEqual(diffEditor.document.uri.fsPath, rightUri.fsPath)) {
+							reject(new Error("Failed to get diff editor after opening."))
+							return
+						}
 
-					this.activeDiffEditor = diffEditor // Assign to activeDiffEditor
+						this.activeDiffEditor = diffEditor // Assign to activeDiffEditor
 
-					// Ensure rightUri is tracked even if not explicitly shown again
-					this.rooOpenedTabs.add(rightUri.toString())
+						// Ensure rightUri is tracked even if not explicitly shown again
+						this.rooOpenedTabs.add(rightUri.toString())
 
-					// If autoFocus is disabled, explicitly clear the selection to prevent cursor focus.
-					if (!settings.autoFocus) {
-						// Use dynamically read autoFocus
-						// Add a small delay to allow VS Code to potentially set focus first,
-						// then clear it.
-						await new Promise((resolve) => setTimeout(resolve, 50))
-						const beginningOfDocument = new vscode.Position(0, 0)
-						diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
-					}
+						// If autoFocus is disabled, explicitly clear the selection to prevent cursor focus.
+						if (!settings.autoFocus) {
+							// Use dynamically read autoFocus
+							// Add a small delay to allow VS Code to potentially set focus first,
+							// then clear it.
+							await new Promise((resolve) => setTimeout(resolve, 50))
+							const beginningOfDocument = new vscode.Position(0, 0)
+							diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
+						}
 
-					// Resolve the promise with the diff editor
-					resolve(diffEditor)
-				})
-			// Removed the second .then block that called getEditorFromDiffTab
-			// This may happen on very slow machines ie project idx
-			setTimeout(() => {
-				reject(new Error("Failed to open diff editor, please try again..."))
-			}, 10_000)
+						// if this happens in a window different from the active one, we need to show the document
+						if (previousEditor) {
+							await this.showTextDocumentSafe({
+								textDocument: previousEditor.document,
+								options: {
+									preview: false,
+									preserveFocus: false,
+									selection: previousEditor.selection,
+									viewColumn: previousEditor.viewColumn,
+								},
+							})
+						}
+
+						// Resolve the promise with the diff editor
+						resolve(diffEditor)
+					})
+				// Removed the second .then block that called getEditorFromDiffTab
+				// This may happen on very slow machines ie project idx
+				setTimeout(() => {
+					reject(new Error("Failed to open diff editor, please try again..."))
+				}, 10_000)
+			})
 		})
 	}
 
@@ -768,6 +923,7 @@ export class DiffViewProvider {
 		this.streamedLines = []
 		this.preDiagnostics = []
 		this.rooOpenedTabs.clear()
+		this.preDiffActiveEditor = undefined
 	}
 
 	resetWithListeners() {
