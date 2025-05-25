@@ -94,7 +94,7 @@ export const TypeGroup: React.FC<TypeGroupProps> = ({ type, items, className }) 
 				</div>
 			)
 		}
-	}, [items, t, type])
+	}, [items, type])
 
 	if (!items?.length) {
 		return null

@@ -1,4 +1,4 @@
-import type { RocketConfig } from "config-rocket"
+import type { RocketConfig } from "roo-rocket"
 
 /**
  * Information about why an item matched search/filter criteria

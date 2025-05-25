@@ -4,7 +4,7 @@ import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { ViewState } from "../MarketplaceViewStateManager"
 import userEvent from "@testing-library/user-event"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import type { RocketConfig } from "config-rocket"
+import type { RocketConfig } from "roo-rocket"
 import { ExtensionStateContext } from "@/context/ExtensionStateContext"
 
 const mockPostMessage = jest.fn()

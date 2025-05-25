@@ -16,7 +16,7 @@ import {
 import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { assertsMpContext, createHookable, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
-import { assertsBinarySha256, unpackFromUint8, extractRocketConfigFromUint8 } from "config-rocket/cli"
+import { assertsBinarySha256, unpackFromUint8, extractRocketConfigFromUint8 } from "roo-rocket"
 import { getPanel } from "../../activate/registerCommands"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { InstalledMetadataManager, ItemInstalledMetadata } from "./InstalledMetadataManager"
