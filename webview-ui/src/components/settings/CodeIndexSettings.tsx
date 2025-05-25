@@ -71,7 +71,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 	const modelsForProvider =
-		currentProvider === "openai" || currentProvider === "ollama"
+		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "gemini"
 			? codebaseIndexModels?.[currentProvider]
 			: codebaseIndexModels?.openai
 	const availableModelIds = Object.keys(modelsForProvider || {})
@@ -144,15 +144,26 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexEmbedderProvider: z.literal("ollama"),
 				codebaseIndexEmbedderBaseUrl: z.string().url("Ollama URL must be a valid URL"),
 			}),
+			gemini: baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("gemini"),
+				geminiApiKey: z.string().min(1, "Gemini API key is required"),
+				codebaseIndexEmbedderModelId: z.string().min(1, "Gemini Model ID is required"),
+				geminiEmbeddingTaskType: z.string().min(1, "Gemini Task Type is required"),
+			}),
 		}
 
 		try {
 			const schema =
-				config.codebaseIndexEmbedderProvider === "openai" ? providerSchemas.openai : providerSchemas.ollama
+				config.codebaseIndexEmbedderProvider === "openai"
+					? providerSchemas.openai
+					: config.codebaseIndexEmbedderProvider === "ollama"
+						? providerSchemas.ollama
+						: providerSchemas.gemini
 
 			schema.parse({
 				...config,
 				codeIndexOpenAiKey: apiConfig.codeIndexOpenAiKey,
+				geminiApiKey: apiConfig.geminiApiKey,
 			})
 			return true
 		} catch {
@@ -264,6 +275,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								<SelectContent>
 									<SelectItem value="openai">{t("settings:codeIndex.openaiProvider")}</SelectItem>
 									<SelectItem value="ollama">{t("settings:codeIndex.ollamaProvider")}</SelectItem>
+									<SelectItem value="gemini">{t("settings:codeIndex.geminiProvider")}</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -328,6 +340,69 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
+					)}
+
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "gemini" && (
+						<>
+							<div className="flex flex-col gap-3">
+								<div className="flex items-center gap-4 font-bold">
+									<div>{t("settings:codeIndex.geminiApiKey")}</div>
+								</div>
+								<div>
+									<VSCodeTextField
+										type="password"
+										value={apiConfiguration.geminiApiKey || ""}
+										onInput={(e: any) => setApiConfigurationField("geminiApiKey", e.target.value)}
+										placeholder={t("settings:codeIndex.apiKeyPlaceholder")}
+										style={{ width: "100%" }}></VSCodeTextField>
+								</div>
+							</div>
+							<div className="flex flex-col gap-3">
+								<div className="flex items-center gap-4 font-bold">
+									<div>{t("settings:codeIndex.embeddingTaskType")}</div>
+								</div>
+								<div>
+									<div className="flex items-center gap-2">
+										<Select
+											value={
+												codebaseIndexConfig?.geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY"
+											}
+											onValueChange={(value) =>
+												setCachedStateField("codebaseIndexConfig", {
+													...codebaseIndexConfig,
+													geminiEmbeddingTaskType: value,
+												})
+											}>
+											<SelectTrigger className="w-full">
+												<SelectValue
+													placeholder={t("settings:codeIndex.selectTaskTypePlaceholder")}
+												/>
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="CODE_RETRIEVAL_QUERY">
+													{t("settings:codeIndex.selectTaskType.codeRetrievalQuery")}
+												</SelectItem>
+												<SelectItem value="RETRIEVAL_DOCUMENT">
+													{t("settings:codeIndex.selectTaskType.retrievalDocument")}
+												</SelectItem>
+												<SelectItem value="RETRIEVAL_QUERY">
+													{t("settings:codeIndex.selectTaskType.retrievalQuery")}
+												</SelectItem>
+												<SelectItem value="SEMANTIC_SIMILARITY">
+													{t("settings:codeIndex.selectTaskType.semanticSimilarity")}
+												</SelectItem>
+												<SelectItem value="CLASSIFICATION">
+													{t("settings:codeIndex.selectTaskType.classification")}
+												</SelectItem>
+												<SelectItem value="CLUSTERING">
+													{t("settings:codeIndex.selectTaskType.clustering")}
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+							</div>
+						</>
 					)}
 
 					<div className="flex flex-col gap-3">
