@@ -117,6 +117,115 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				telemetryService.updateTelemetryState(isOptedIn)
 			})
 
+			// Auto-request router models if API keys are configured
+			// Add a slight delay to ensure the webview is fully initialized
+			setTimeout(async () => {
+				try {
+					const state = await provider.getStateToPostToWebview()
+					const { apiConfiguration } = state
+
+					if (
+						apiConfiguration.openRouterApiKey ||
+						apiConfiguration.requestyApiKey ||
+						apiConfiguration.glamaApiKey ||
+						apiConfiguration.unboundApiKey ||
+						(apiConfiguration.litellmApiKey && apiConfiguration.litellmBaseUrl)
+					) {
+						// Request router models automatically on initialization
+						provider.log("Auto-requesting router models on initialization")
+
+						// Use the same logic as requestRouterModels case
+						const routerModels: Partial<Record<RouterName, ModelRecord>> = {
+							openrouter: {},
+							requesty: {},
+							glama: {},
+							unbound: {},
+							litellm: {},
+						}
+
+						const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
+							try {
+								return await getModels(options)
+							} catch (error) {
+								console.error(
+									`Failed to fetch models in auto-initialization for ${options.provider}:`,
+									error,
+								)
+								return {}
+							}
+						}
+
+						const modelFetchPromises: Array<{ key: RouterName; options: GetModelsOptions }> = []
+
+						if (apiConfiguration.openRouterApiKey) {
+							modelFetchPromises.push({ key: "openrouter", options: { provider: "openrouter" } })
+						}
+
+						if (apiConfiguration.requestyApiKey) {
+							modelFetchPromises.push({
+								key: "requesty",
+								options: { provider: "requesty", apiKey: apiConfiguration.requestyApiKey },
+							})
+						}
+
+						if (apiConfiguration.glamaApiKey) {
+							modelFetchPromises.push({ key: "glama", options: { provider: "glama" } })
+						}
+
+						if (apiConfiguration.unboundApiKey) {
+							modelFetchPromises.push({
+								key: "unbound",
+								options: { provider: "unbound", apiKey: apiConfiguration.unboundApiKey },
+							})
+						}
+
+						if (apiConfiguration.litellmApiKey && apiConfiguration.litellmBaseUrl) {
+							modelFetchPromises.push({
+								key: "litellm",
+								options: {
+									provider: "litellm",
+									apiKey: apiConfiguration.litellmApiKey,
+									baseUrl: apiConfiguration.litellmBaseUrl,
+								},
+							})
+						}
+
+						if (modelFetchPromises.length > 0) {
+							const results = await Promise.allSettled(
+								modelFetchPromises.map(async ({ key, options }) => {
+									const models = await safeGetModels(options)
+									return { key, models }
+								}),
+							)
+
+							const fetchedRouterModels: Partial<Record<RouterName, ModelRecord>> = { ...routerModels }
+
+							results.forEach((result, index) => {
+								const routerName = modelFetchPromises[index].key
+
+								if (result.status === "fulfilled") {
+									fetchedRouterModels[routerName] = result.value.models
+								} else {
+									fetchedRouterModels[routerName] = {}
+								}
+							})
+
+							provider.log(
+								`Auto-fetched router models for: ${modelFetchPromises.map((p) => p.key).join(", ")}`,
+							)
+							await provider.postMessageToWebview({
+								type: "routerModels",
+								routerModels: fetchedRouterModels as Record<RouterName, ModelRecord>,
+							})
+						}
+					}
+				} catch (error) {
+					provider.log(
+						`Error auto-fetching router models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+					)
+				}
+			}, 1000) // 1 second delay
+
 			provider.isViewLaunched = true
 			break
 		case "newTask":
@@ -289,7 +398,50 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "requestRouterModels":
 			const { apiConfiguration } = await provider.getState()
 
-			const routerModels: Partial<Record<RouterName, ModelRecord>> = {
+			// 只请求用户配置的提供商的模型列表
+			const promises = []
+			const routerNames = []
+
+			// 只有在用户配置了API密钥时才请求相应提供商的模型列表
+			if (apiConfiguration.openRouterApiKey) {
+				promises.push(getModels({ provider: "openrouter" }))
+				routerNames.push("openrouter")
+			}
+
+			if (apiConfiguration.requestyApiKey) {
+				promises.push(getModels({ provider: "requesty", apiKey: apiConfiguration.requestyApiKey }))
+				routerNames.push("requesty")
+			}
+
+			if (apiConfiguration.glamaApiKey) {
+				promises.push(getModels({ provider: "glama" }))
+				routerNames.push("glama")
+			}
+
+			if (apiConfiguration.unboundApiKey) {
+				promises.push(getModels({ provider: "unbound", apiKey: apiConfiguration.unboundApiKey }))
+				routerNames.push("unbound")
+			}
+
+			if (apiConfiguration.litellmApiKey && apiConfiguration.litellmBaseUrl) {
+				promises.push(
+					getModels({
+						provider: "litellm",
+						apiKey: apiConfiguration.litellmApiKey,
+						baseUrl: apiConfiguration.litellmBaseUrl,
+					}),
+				)
+				routerNames.push("litellm")
+			}
+
+			// Use Promise.allSettled to handle API failures gracefully
+			const results = await Promise.allSettled(promises)
+
+			// Extract results, using empty objects for any failed requests
+			const modelResults = results.map((result) => (result.status === "fulfilled" ? result.value : {}))
+
+			// Build routerModels object with all providers
+			const routerModels = {
 				openrouter: {},
 				requesty: {},
 				glama: {},
@@ -297,67 +449,14 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				litellm: {},
 			}
 
-			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
-				try {
-					return await getModels(options)
-				} catch (error) {
-					console.error(
-						`Failed to fetch models in webviewMessageHandler requestRouterModels for ${options.provider}:`,
-						error,
-					)
-					throw error // Re-throw to be caught by Promise.allSettled
-				}
-			}
-
-			const modelFetchPromises: Array<{ key: RouterName; options: GetModelsOptions }> = [
-				{ key: "openrouter", options: { provider: "openrouter" } },
-				{ key: "requesty", options: { provider: "requesty", apiKey: apiConfiguration.requestyApiKey } },
-				{ key: "glama", options: { provider: "glama" } },
-				{ key: "unbound", options: { provider: "unbound", apiKey: apiConfiguration.unboundApiKey } },
-			]
-
-			const litellmApiKey = apiConfiguration.litellmApiKey || message?.values?.litellmApiKey
-			const litellmBaseUrl = apiConfiguration.litellmBaseUrl || message?.values?.litellmBaseUrl
-			if (litellmApiKey && litellmBaseUrl) {
-				modelFetchPromises.push({
-					key: "litellm",
-					options: { provider: "litellm", apiKey: litellmApiKey, baseUrl: litellmBaseUrl },
-				})
-			}
-
-			const results = await Promise.allSettled(
-				modelFetchPromises.map(async ({ key, options }) => {
-					const models = await safeGetModels(options)
-					return { key, models } // key is RouterName here
-				}),
-			)
-
-			const fetchedRouterModels: Partial<Record<RouterName, ModelRecord>> = { ...routerModels }
-
-			results.forEach((result, index) => {
-				const routerName = modelFetchPromises[index].key // Get RouterName using index
-
-				if (result.status === "fulfilled") {
-					fetchedRouterModels[routerName] = result.value.models
-				} else {
-					// Handle rejection: Post a specific error message for this provider
-					const errorMessage = result.reason instanceof Error ? result.reason.message : String(result.reason)
-					console.error(`Error fetching models for ${routerName}:`, result.reason)
-
-					fetchedRouterModels[routerName] = {} // Ensure it's an empty object in the main routerModels message
-
-					provider.postMessageToWebview({
-						type: "singleRouterModelFetchResponse",
-						success: false,
-						error: errorMessage,
-						values: { provider: routerName },
-					})
-				}
+			// Assign results to corresponding providers
+			routerNames.forEach((name, index) => {
+				routerModels[name as RouterName] = modelResults[index]
 			})
 
 			provider.postMessageToWebview({
 				type: "routerModels",
-				routerModels: fetchedRouterModels as Record<RouterName, ModelRecord>,
+				routerModels,
 			})
 			break
 		case "requestOpenAiModels":

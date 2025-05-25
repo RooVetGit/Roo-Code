@@ -1,4 +1,5 @@
 import axios from "axios"
+import * as https from "https"
 import { z } from "zod"
 
 import { isModelParameter } from "../../../schemas"
@@ -96,8 +97,47 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions): Promise<
 	const models: Record<string, ModelInfo> = {}
 	const baseURL = options?.openRouterBaseUrl || "https://openrouter.ai/api/v1"
 
+	// Ensure baseURL uses HTTPS protocol
+	const secureBaseURL = baseURL.startsWith("https://")
+		? baseURL
+		: baseURL.startsWith("http://")
+			? baseURL.replace("http://", "https://")
+			: `https://${baseURL}`
+
 	try {
-		const response = await axios.get<OpenRouterModelsResponse>(`${baseURL}/models`)
+		// Use Node.js native https module instead of axios
+		const url = new URL(`${secureBaseURL}/models`)
+
+		const responseData = await new Promise<OpenRouterModelsResponse>((resolve, reject) => {
+			const req = https.request(url, (res: any) => {
+				let data = ""
+
+				res.on("data", (chunk: any) => {
+					data += chunk
+				})
+
+				res.on("end", () => {
+					if (res.statusCode >= 200 && res.statusCode < 300) {
+						try {
+							const parsedData = JSON.parse(data)
+							resolve(parsedData)
+						} catch (error) {
+							reject(new Error(`Failed to parse JSON response: ${error}`))
+						}
+					} else {
+						reject(new Error(`Request failed with status code ${res.statusCode}`))
+					}
+				})
+			})
+
+			req.on("error", (error: any) => {
+				reject(error)
+			})
+
+			req.end()
+		})
+
+		const response = { data: responseData }
 		const result = openRouterModelsResponseSchema.safeParse(response.data)
 		const data = result.success ? result.data.data : response.data.data
 
@@ -120,6 +160,16 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions): Promise<
 		console.error(
 			`Error fetching OpenRouter models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 		)
+
+		// Add detailed error logging for axios errors
+		if (axios.isAxiosError(error) && error.response) {
+			console.error("OpenRouter API error response:", {
+				status: error.response.status,
+				statusText: error.response.statusText,
+				data: error.response.data,
+				headers: error.response.headers,
+			})
+		}
 	}
 
 	return models
