@@ -19,38 +19,18 @@ export class CodeIndexConfigManager {
 	private qdrantApiKey?: string
 	private searchMinScore?: number
 
-	constructor(private readonly contextProxy: ContextProxy) {}
+	constructor(private readonly contextProxy: ContextProxy) {
+		// Initialize with current configuration to avoid false restart triggers
+		this._loadAndSetConfiguration()
+	}
 
 	/**
-	 * Loads persisted configuration from globalState.
+	 * Private method that handles loading configuration from storage and updating instance variables.
+	 * This eliminates code duplication between initializeWithCurrentConfig() and loadConfiguration().
 	 */
-	public async loadConfiguration(): Promise<{
-		configSnapshot: PreviousConfigSnapshot
-		currentConfig: {
-			isEnabled: boolean
-			isConfigured: boolean
-			embedderProvider: EmbedderProvider
-			modelId?: string
-			openAiOptions?: ApiHandlerOptions
-			ollamaOptions?: ApiHandlerOptions
-			qdrantUrl?: string
-			qdrantApiKey?: string
-			searchMinScore?: number
-		}
-		requiresRestart: boolean
-	}> {
-		const previousConfigSnapshot: PreviousConfigSnapshot = {
-			enabled: this.isEnabled,
-			configured: this.isConfigured(),
-			embedderProvider: this.embedderProvider,
-			modelId: this.modelId,
-			openAiKey: this.openAiOptions?.openAiNativeApiKey,
-			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl,
-			qdrantUrl: this.qdrantUrl,
-			qdrantApiKey: this.qdrantApiKey,
-		}
-
-		let codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
+	private _loadAndSetConfiguration(): void {
+		// Load configuration from storage
+		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexSearchMinScore: 0.4,
@@ -70,6 +50,7 @@ export class CodeIndexConfigManager {
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 
+		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
@@ -82,6 +63,40 @@ export class CodeIndexConfigManager {
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
 		}
+	}
+
+	/**
+	 * Loads persisted configuration from globalState.
+	 */
+	public async loadConfiguration(): Promise<{
+		configSnapshot: PreviousConfigSnapshot
+		currentConfig: {
+			isEnabled: boolean
+			isConfigured: boolean
+			embedderProvider: EmbedderProvider
+			modelId?: string
+			openAiOptions?: ApiHandlerOptions
+			ollamaOptions?: ApiHandlerOptions
+			qdrantUrl?: string
+			qdrantApiKey?: string
+			searchMinScore?: number
+		}
+		requiresRestart: boolean
+	}> {
+		// Capture the ACTUAL previous state before loading new configuration
+		const previousConfigSnapshot: PreviousConfigSnapshot = {
+			enabled: this.isEnabled,
+			configured: this.isConfigured(),
+			embedderProvider: this.embedderProvider,
+			modelId: this.modelId,
+			openAiKey: this.openAiOptions?.openAiNativeApiKey ?? "",
+			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
+			qdrantUrl: this.qdrantUrl ?? "",
+			qdrantApiKey: this.qdrantApiKey ?? "",
+		}
+
+		// Load new configuration from storage and update instance variables
+		this._loadAndSetConfiguration()
 
 		const requiresRestart = this.doesConfigChangeRequireRestart(previousConfigSnapshot)
 
@@ -127,15 +142,15 @@ export class CodeIndexConfigManager {
 	doesConfigChangeRequireRestart(prev: PreviousConfigSnapshot): boolean {
 		const nowConfigured = this.isConfigured()
 
-		// Handle null/undefined values safely
+		// Handle null/undefined values safely - use empty strings for consistency with loaded config
 		const prevEnabled = prev?.enabled ?? false
 		const prevConfigured = prev?.configured ?? false
 		const prevProvider = prev?.embedderProvider ?? "openai"
 		const prevModelId = prev?.modelId ?? undefined
-		const prevOpenAiKey = prev?.openAiKey ?? undefined
-		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? undefined
-		const prevQdrantUrl = prev?.qdrantUrl ?? undefined
-		const prevQdrantApiKey = prev?.qdrantApiKey ?? undefined
+		const prevOpenAiKey = prev?.openAiKey ?? ""
+		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
+		const prevQdrantUrl = prev?.qdrantUrl ?? ""
+		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled+configured
 		if ((!prevEnabled || !prevConfigured) && this.isEnabled && nowConfigured) {
@@ -165,22 +180,22 @@ export class CodeIndexConfigManager {
 
 			// Authentication changes
 			if (this.embedderProvider === "openai") {
-				const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? undefined
+				const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
 				if (prevOpenAiKey !== currentOpenAiKey) {
 					return true
 				}
 			}
 
 			if (this.embedderProvider === "ollama") {
-				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? undefined
+				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
 				if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
 					return true
 				}
 			}
 
 			// Qdrant configuration changes
-			const currentQdrantUrl = this.qdrantUrl ?? undefined
-			const currentQdrantApiKey = this.qdrantApiKey ?? undefined
+			const currentQdrantUrl = this.qdrantUrl ?? ""
+			const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
 			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
 				return true
