@@ -17,6 +17,7 @@ export class CodeIndexConfigManager {
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
+	private dimension?: number // Added for custom model dimension
 
 	constructor(private readonly contextProxy: ContextProxy) {}
 
@@ -35,6 +36,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
+			dimension?: number // Add dimension to return type
 		}
 		requiresRestart: boolean
 	}> {
@@ -47,6 +49,7 @@ export class CodeIndexConfigManager {
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
+			dimension: this.dimension, // Added dimension to snapshot
 		}
 
 		let codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
@@ -56,8 +59,10 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
+			codebaseIndexEmbedderDimension: null,
 		}
 
+		// Destructure known properties, access dimension defensively
 		const {
 			codebaseIndexEnabled,
 			codebaseIndexQdrantUrl,
@@ -65,6 +70,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
 		} = codebaseIndexConfig
+		const codebaseIndexEmbedderDimension = (codebaseIndexConfig as any)?.codebaseIndexEmbedderDimension
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
@@ -72,15 +78,23 @@ export class CodeIndexConfigManager {
 		this.isEnabled = codebaseIndexEnabled || false
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
-		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 		this.searchMinScore = SEARCH_MIN_SCORE
 
 		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
+		this.openAiOptions = {
+			openAiNativeApiKey: openAiKey,
+			openAiBaseUrl: this.embedderProvider === "openai" ? codebaseIndexEmbedderBaseUrl : undefined,
+		}
 		this.modelId = codebaseIndexEmbedderModelId || undefined
 
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
 		}
+		// Parse and store dimension, ensuring it's a positive number or undefined
+		this.dimension =
+			typeof codebaseIndexEmbedderDimension === "number" && codebaseIndexEmbedderDimension > 0
+				? codebaseIndexEmbedderDimension
+				: undefined
 
 		return {
 			configSnapshot: previousConfigSnapshot,
@@ -94,6 +108,7 @@ export class CodeIndexConfigManager {
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.searchMinScore,
+				dimension: this.dimension,
 			},
 			requiresRestart: this._didConfigChangeRequireRestart(previousConfigSnapshot),
 		}
@@ -103,7 +118,6 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
-
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
 			const qdrantUrl = this.qdrantUrl
@@ -160,6 +174,9 @@ export class CodeIndexConfigManager {
 			if (prev.qdrantUrl !== this.qdrantUrl || prev.qdrantApiKey !== this.qdrantApiKey) {
 				return true
 			}
+
+			// Check dimension change
+			if (prev.dimension !== this.dimension) return true
 		}
 
 		return false
@@ -179,6 +196,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.searchMinScore,
+			dimension: this.dimension,
 		}
 	}
 

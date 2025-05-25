@@ -313,6 +313,57 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.customStoragePath.description%"
+				},
+				"roo-cline.codebaseIndexEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable codebase indexing for semantic search.",
+					"scope": "resource"
+				},
+				"roo-cline.codebaseIndexEmbedderProvider": {
+					"type": "string",
+					"enum": [
+						"openai",
+						"ollama"
+					],
+					"default": "openai",
+					"description": "Select the embedding provider (OpenAI or Ollama).",
+					"scope": "resource"
+				},
+				"roo-cline.codebaseIndexEmbedderBaseUrl": {
+					"type": "string",
+					"default": "",
+					"description": "Optional: Base URL for the selected embedding provider API (e.g., for proxies, Azure OpenAI, or self-hosted Ollama).",
+					"scope": "resource"
+				},
+				"roo-cline.codebaseIndexEmbedderModelId": {
+					"type": "string",
+					"default": "",
+					"description": "Optional: Specify a custom embedding model ID. Leave empty to use the provider's default (e.g., text-embedding-3-small for OpenAI).",
+					"scope": "resource"
+				},
+				"roo-cline.codebaseIndexEmbedderDimension": {
+					"type": [
+						"number",
+						"null"
+					],
+					"default": null,
+					"description": "Optional: Specify the embedding dimension for your custom model ID if it's not automatically recognized. Required only if using an unknown model ID.",
+					"scope": "resource"
+				},
+				"roo-cline.codebaseIndexQdrantUrl": {
+					"type": "string",
+					"default": "http://localhost:6333",
+					"description": "URL for the Qdrant vector database instance.",
+					"scope": "resource"
+				},
+				"roo-cline.codebaseIndexSearchMinScore": {
+					"type": "number",
+					"default": 0.4,
+					"minimum": 0,
+					"maximum": 1,
+					"description": "Minimum similarity score (0-1) for codebase search results.",
+					"scope": "resource"
 				}
 			}
 		}

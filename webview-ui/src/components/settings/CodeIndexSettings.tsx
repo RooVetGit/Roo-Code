@@ -212,13 +212,12 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									const newProvider = value as EmbedderProvider
 									const models = codebaseIndexModels?.[newProvider]
 									const modelIds = models ? Object.keys(models) : []
-									const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
-
+									// Don't reset modelId when provider changes, allow user to manage it explicitly
 									if (codebaseIndexConfig) {
 										setCachedStateField("codebaseIndexConfig", {
 											...codebaseIndexConfig,
 											codebaseIndexEmbedderProvider: newProvider,
-											codebaseIndexEmbedderModelId: defaultModelId,
+											// codebaseIndexEmbedderModelId: defaultModelId, // Removed this line
 										})
 									}
 								}}>
@@ -233,55 +232,36 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 					</div>
 
+					{/* OpenAI Specific Settings */}
 					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
 						<div className="flex flex-col gap-3">
+							{/* OpenAI API Key */}
 							<div className="flex items-center gap-4 font-bold">
 								<div>{t("settings:codeIndex.openaiKeyLabel")}</div>
 							</div>
 							<div>
 								<VSCodeTextField
+									placeholder={t("settings:codeIndex.openaiKeyPlaceholder") || undefined}
 									type="password"
 									value={apiConfiguration.codeIndexOpenAiKey || ""}
 									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
-						</div>
-					)}
-
-					<div className="flex items-center gap-4 font-bold">
-						<div>{t("settings:codeIndex.modelLabel")}</div>
-					</div>
-					<div>
-						<div className="flex items-center gap-2">
-							<Select
-								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-								onValueChange={(value) =>
-									setCachedStateField("codebaseIndexConfig", {
-										...codebaseIndexConfig,
-										codebaseIndexEmbedderModelId: value,
-									})
-								}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
-								</SelectTrigger>
-								<SelectContent>
-									{availableModelIds.map((modelId) => (
-										<SelectItem key={modelId} value={modelId}>
-											{modelId}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-					</div>
-
-					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
-						<div className="flex flex-col gap-3">
+							{/* OpenAI Base URL */}
 							<div className="flex items-center gap-4 font-bold">
-								<div>{t("settings:codeIndex.ollamaUrlLabel")}</div>
+								<div>
+									{t("settings:codeIndex.openaiUrlLabel", {
+										defaultValue: "OpenAI Base URL (Optional)",
+									})}
+								</div>
 							</div>
 							<div>
 								<VSCodeTextField
+									placeholder={
+										t("settings:codeIndex.openaiUrlPlaceholder", {
+											defaultValue: "e.g., https://my-proxy.com/v1 or Azure endpoint",
+										}) || undefined
+									}
 									value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || ""}
 									onInput={(e: any) =>
 										setCachedStateField("codebaseIndexConfig", {
@@ -293,6 +273,112 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</div>
 						</div>
 					)}
+
+					{/* Ollama Specific Settings */}
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.ollamaUrlLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									placeholder={
+										t("settings:codeIndex.ollamaUrlPlaceholder", {
+											defaultValue: "e.g., http://localhost:11434",
+										}) || undefined
+									}
+									value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || ""}
+									onInput={(e: any) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderBaseUrl: e.target.value,
+										})
+									}
+									style={{ width: "100%" }}></VSCodeTextField>
+							</div>
+						</div>
+					)}
+
+					{/* Model ID (Common to OpenAI/Ollama) */}
+					<div className="flex items-center gap-4 font-bold">
+						<div>{t("settings:codeIndex.modelLabel")}</div>
+					</div>
+					<div>
+						<VSCodeTextField
+							placeholder={
+								t("settings:codeIndex.modelIdPlaceholder", {
+									defaultValue: "Leave empty for default (e.g., text-embedding-3-small)",
+								}) || undefined
+							}
+							value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
+							onInput={(e: any) =>
+								setCachedStateField("codebaseIndexConfig", {
+									...codebaseIndexConfig,
+									codebaseIndexEmbedderModelId: e.target.value,
+								})
+							}
+							style={{ width: "100%" }}></VSCodeTextField>
+						<p className="text-xs text-vscode-descriptionForeground mt-1">
+							{t("settings:codeIndex.modelIdDescription", {
+								defaultValue: "Available models depend on your provider and configuration.",
+							})}
+							{currentProvider === "openai" && availableModelIds.length > 0 && (
+								<>
+									{" "}
+									{t("settings:codeIndex.openaiDefaults", { defaultValue: "Defaults:" })}{" "}
+									{availableModelIds.slice(0, 3).join(", ")}
+									{availableModelIds.length > 3 ? "..." : ""}
+								</>
+							)}
+							{currentProvider === "ollama" && availableModelIds.length > 0 && (
+								<>
+									{" "}
+									{t("settings:codeIndex.ollamaDefaults", { defaultValue: "Common:" })}{" "}
+									{availableModelIds.slice(0, 3).join(", ")}
+									{availableModelIds.length > 3 ? "..." : ""}
+								</>
+							)}
+						</p>
+					</div>
+
+					{/* Custom Model Dimension (Optional) */}
+					<div className="flex flex-col gap-3">
+						<div className="flex items-center gap-4 font-bold">
+							<div>
+								{t("settings:codeIndex.dimensionLabel", {
+									defaultValue: "Custom Model Dimension (Optional)",
+								})}
+							</div>
+						</div>
+						<div>
+							<VSCodeTextField
+								type="text" // Use text type for HTML input
+								placeholder={
+									t("settings:codeIndex.dimensionPlaceholder", {
+										defaultValue: "e.g., 1536. Only needed if model is not recognized.",
+									}) || undefined
+								}
+								value={codebaseIndexConfig?.codebaseIndexEmbedderDimension?.toString() ?? ""} // Ensure value is string
+								onInput={(e: any) => {
+									const rawValue = e.target.value
+									const parsedValue = parseInt(rawValue, 10)
+									const dimensionToSave = !isNaN(parsedValue) && parsedValue > 0 ? parsedValue : null
+									setCachedStateField("codebaseIndexConfig", {
+										...codebaseIndexConfig,
+										codebaseIndexEmbedderDimension: dimensionToSave,
+									})
+								}}
+								style={{ width: "100%" }}></VSCodeTextField>
+							<p className="text-xs text-vscode-descriptionForeground mt-1">
+								{t("settings:codeIndex.dimensionDescription", {
+									defaultValue:
+										"Specify the embedding dimension only if using a custom model ID not listed in the defaults.",
+								})}
+							</p>
+						</div>
+					</div>
+
+					{/* Qdrant Settings */}
 
 					<div className="flex flex-col gap-3">
 						<div className="flex items-center gap-4 font-bold">
