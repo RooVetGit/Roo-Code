@@ -134,7 +134,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					display: "flex",
 					alignItems: "center",
 					gap: "8px",
-					padding: isExpanded ? "8px 0" : "8px 0 0 0",
+					padding: "8px 0 0 0", // Ensure consistent padding for the toggle header
 					cursor: "pointer",
 				}}
 				onClick={toggleExpanded}>
@@ -207,8 +207,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							display: "flex",
 							alignItems: "center",
 							gap: "8px",
-							marginTop: "10px",
-							marginBottom: "8px",
+							// marginTop: "10px", // Removed to use parent's gap for spacing
+							// marginBottom: "8px", // Removed to use parent's gap for spacing
 							color: "var(--vscode-descriptionForeground)",
 						}}>
 						<span style={{ flexShrink: 1, minWidth: 0 }}>
