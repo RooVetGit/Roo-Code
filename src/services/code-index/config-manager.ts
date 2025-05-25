@@ -3,6 +3,7 @@ import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
 import { SEARCH_MIN_SCORE } from "./constants"
+import { getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 
 /**
  * Manages configuration state and validation for the code indexing feature.
@@ -82,6 +83,8 @@ export class CodeIndexConfigManager {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
 		}
 
+		const requiresRestart = this.doesConfigChangeRequireRestart(previousConfigSnapshot)
+
 		return {
 			configSnapshot: previousConfigSnapshot,
 			currentConfig: {
@@ -95,7 +98,7 @@ export class CodeIndexConfigManager {
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.searchMinScore,
 			},
-			requiresRestart: this._didConfigChangeRequireRestart(previousConfigSnapshot),
+			requiresRestart,
 		}
 	}
 
@@ -103,7 +106,6 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
-
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
 			const qdrantUrl = this.qdrantUrl
@@ -121,48 +123,97 @@ export class CodeIndexConfigManager {
 
 	/**
 	 * Determines if a configuration change requires restarting the indexing process.
-	 * @param prev The previous configuration snapshot
-	 * @returns boolean indicating whether a restart is needed
 	 */
-	private _didConfigChangeRequireRestart(prev: PreviousConfigSnapshot): boolean {
-		const nowConfigured = this.isConfigured() // Recalculate based on current state
+	doesConfigChangeRequireRestart(prev: PreviousConfigSnapshot): boolean {
+		const nowConfigured = this.isConfigured()
 
-		// Check for transition from disabled/unconfigured to enabled+configured
-		const transitionedToReady = (!prev.enabled || !prev.configured) && this.isEnabled && nowConfigured
-		if (transitionedToReady) return true
+		// Handle null/undefined values safely
+		const prevEnabled = prev?.enabled ?? false
+		const prevConfigured = prev?.configured ?? false
+		const prevProvider = prev?.embedderProvider ?? "openai"
+		const prevModelId = prev?.modelId ?? undefined
+		const prevOpenAiKey = prev?.openAiKey ?? undefined
+		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? undefined
+		const prevQdrantUrl = prev?.qdrantUrl ?? undefined
+		const prevQdrantApiKey = prev?.qdrantApiKey ?? undefined
 
-		// If wasn't ready before and isn't ready now, no restart needed for config change itself
-		if (!prev.configured && !nowConfigured) return false
-		// If was disabled and still is, no restart needed
-		if (!prev.enabled && !this.isEnabled) return false
+		// 1. Transition from disabled/unconfigured to enabled+configured
+		if ((!prevEnabled || !prevConfigured) && this.isEnabled && nowConfigured) {
+			return true
+		}
 
-		// Check for changes in relevant settings if the feature is enabled (or was enabled)
-		if (this.isEnabled || prev.enabled) {
-			// Check for embedder type change
-			if (prev.embedderProvider !== this.embedderProvider) return true
-			if (prev.modelId !== this.modelId) return true // Any model change requires restart
+		// 2. If was disabled and still is, no restart needed
+		if (!prevEnabled && !this.isEnabled) {
+			return false
+		}
 
-			// Check OpenAI settings change if using OpenAI
-			if (this.embedderProvider === "openai") {
-				if (prev.openAiKey !== this.openAiOptions?.openAiNativeApiKey) return true
-				// Model ID check moved above
+		// 3. If wasn't ready before and isn't ready now, no restart needed
+		if (!prevConfigured && !nowConfigured) {
+			return false
+		}
+
+		// 4. Check for changes in relevant settings if the feature is enabled (or was enabled)
+		if (this.isEnabled || prevEnabled) {
+			// Provider change
+			if (prevProvider !== this.embedderProvider) {
+				return true
 			}
 
-			// Check Ollama settings change if using Ollama
-			if (this.embedderProvider === "ollama") {
-				if (prev.ollamaBaseUrl !== this.ollamaOptions?.ollamaBaseUrl) {
+			if (this._hasVectorDimensionChanged(prevProvider, prevModelId)) {
+				return true
+			}
+
+			// Authentication changes
+			if (this.embedderProvider === "openai") {
+				const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? undefined
+				if (prevOpenAiKey !== currentOpenAiKey) {
 					return true
 				}
-				// Model ID check moved above
 			}
 
-			// Check Qdrant settings changes
-			if (prev.qdrantUrl !== this.qdrantUrl || prev.qdrantApiKey !== this.qdrantApiKey) {
+			if (this.embedderProvider === "ollama") {
+				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? undefined
+				if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+					return true
+				}
+			}
+
+			// Qdrant configuration changes
+			const currentQdrantUrl = this.qdrantUrl ?? undefined
+			const currentQdrantApiKey = this.qdrantApiKey ?? undefined
+
+			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
 				return true
 			}
 		}
 
 		return false
+	}
+
+	/**
+	 * Checks if model changes result in vector dimension changes that require restart.
+	 */
+	private _hasVectorDimensionChanged(prevProvider: EmbedderProvider, prevModelId?: string): boolean {
+		const currentProvider = this.embedderProvider
+		const currentModelId = this.modelId ?? getDefaultModelId(currentProvider)
+		const resolvedPrevModelId = prevModelId ?? getDefaultModelId(prevProvider)
+
+		// If model IDs are the same and provider is the same, no dimension change
+		if (prevProvider === currentProvider && resolvedPrevModelId === currentModelId) {
+			return false
+		}
+
+		// Get vector dimensions for both models
+		const prevDimension = getModelDimension(prevProvider, resolvedPrevModelId)
+		const currentDimension = getModelDimension(currentProvider, currentModelId)
+
+		// If we can't determine dimensions, be safe and restart
+		if (prevDimension === undefined || currentDimension === undefined) {
+			return true
+		}
+
+		// Only restart if dimensions actually changed
+		return prevDimension !== currentDimension
 	}
 
 	/**
