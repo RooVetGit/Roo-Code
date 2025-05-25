@@ -264,7 +264,35 @@ export class DiffViewProvider {
 	 */
 	private async prepareDiffViewPlacement(absolutePath: string): Promise<void> {
 		if (!this.documentWasOpen) {
-			return Promise.resolve()
+			// focus the last tab in the active group
+			const activeGroup = vscode.window.tabGroups.activeTabGroup
+			if (!(activeGroup && activeGroup.tabs.length > 0)) {
+				return // No active group or no tabs in the active group, nothing to focus
+			}
+			const lastTab = activeGroup.tabs[activeGroup.tabs.length - 1]
+			if (!lastTab.input) {
+				return // No input for the last tab, nothing to focus
+			}
+			// TabInputText | TabInputCustom | TabInputWebview | TabInputNotebook have an URI, so we can focus it
+			if (
+				!(
+					lastTab.input instanceof vscode.TabInputText ||
+					lastTab.input instanceof vscode.TabInputCustom ||
+					lastTab.input instanceof vscode.TabInputNotebook
+				)
+			) {
+				return // Last tab is not a text input, nothing to focus
+			}
+			await this.showTextDocumentSafe({
+				uri: lastTab.input.uri,
+				options: {
+					viewColumn: activeGroup.viewColumn,
+					preserveFocus: true,
+					preview: false,
+				},
+			})
+			this.viewColumn = activeGroup.viewColumn // Set viewColumn to the active group
+			return
 		}
 		// For existing files that are currently open, find the original tab
 		const originalTab = this.findTabForFile(absolutePath)
