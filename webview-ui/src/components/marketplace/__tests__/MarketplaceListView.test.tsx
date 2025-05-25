@@ -50,7 +50,7 @@ jest.mock("lucide-react", () => {
 	return new Proxy(
 		{},
 		{
-			get: function (obj, prop) {
+			get: function (_obj, prop) {
 				if (prop === "__esModule") {
 					return true
 				}

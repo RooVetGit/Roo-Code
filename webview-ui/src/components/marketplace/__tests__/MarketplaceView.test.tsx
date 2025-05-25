@@ -52,7 +52,7 @@ jest.mock("lucide-react", () => {
 	return new Proxy(
 		{},
 		{
-			get: function (obj, prop) {
+			get: function (_obj, prop) {
 				if (prop === "__esModule") {
 					return true
 				}
@@ -204,6 +204,8 @@ describe("MarketplaceView", () => {
 					setHistoryPreviewCollapsed: jest.fn(),
 					autoCondenseContextPercent: 100,
 					setAutoCondenseContextPercent: jest.fn(),
+					setCondensingApiConfigId: jest.fn(),
+					setCustomCondensingPrompt: jest.fn(),
 					setMarketplaceSources: jest.fn(),
 					version: "1.0.0",
 					clineMessages: [],
