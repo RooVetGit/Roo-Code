@@ -75,12 +75,16 @@ describe("CodeIndexConfigManager", () => {
 		})
 
 		it("should detect restart requirement when provider changes", async () => {
-			// Initial state
+			// Initial state - properly configured
 			mockContextProxy.getGlobalState.mockReturnValue({
 				codebaseIndexEnabled: true,
 				codebaseIndexQdrantUrl: "http://qdrant.local",
 				codebaseIndexEmbedderProvider: "openai",
 				codebaseIndexEmbedderModelId: "text-embedding-3-large",
+			})
+			mockContextProxy.getSecret.mockImplementation((key: string) => {
+				if (key === "codeIndexOpenAiKey") return "test-openai-key"
+				return undefined
 			})
 
 			await configManager.loadConfiguration()
@@ -91,11 +95,259 @@ describe("CodeIndexConfigManager", () => {
 				codebaseIndexQdrantUrl: "http://qdrant.local",
 				codebaseIndexEmbedderProvider: "ollama",
 				codebaseIndexEmbedderBaseUrl: "http://ollama.local",
-				codebaseIndexEmbedderModelId: "llama2",
+				codebaseIndexEmbedderModelId: "nomic-embed-text",
 			})
 
 			const result = await configManager.loadConfiguration()
 			expect(result.requiresRestart).toBe(true)
+		})
+
+		it("should detect restart requirement when vector dimensions change", async () => {
+			// Initial state with text-embedding-3-small (1536D)
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-small",
+			})
+			mockContextProxy.getSecret.mockReturnValue("test-key")
+
+			await configManager.loadConfiguration()
+
+			// Change to text-embedding-3-large (3072D)
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-large",
+			})
+
+			const result = await configManager.loadConfiguration()
+			expect(result.requiresRestart).toBe(true)
+		})
+
+		it("should NOT require restart when models have same dimensions", async () => {
+			// Initial state with text-embedding-3-small (1536D)
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-small",
+			})
+			mockContextProxy.getSecret.mockImplementation((key: string) => {
+				if (key === "codeIndexOpenAiKey") return "test-key"
+				return undefined
+			})
+
+			await configManager.loadConfiguration()
+
+			// Change to text-embedding-ada-002 (also 1536D)
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-ada-002",
+			})
+
+			const result = await configManager.loadConfiguration()
+			expect(result.requiresRestart).toBe(false)
+		})
+
+		it("should detect restart requirement when transitioning to enabled+configured", async () => {
+			// Initial state - disabled
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: false,
+			})
+
+			await configManager.loadConfiguration()
+
+			// Enable and configure
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-small",
+			})
+			mockContextProxy.getSecret.mockReturnValue("test-key")
+
+			const result = await configManager.loadConfiguration()
+			expect(result.requiresRestart).toBe(true)
+		})
+
+		describe("simplified restart detection", () => {
+			it("should detect restart requirement for API key changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+				})
+				mockContextProxy.getSecret.mockReturnValue("old-key")
+
+				await configManager.loadConfiguration()
+
+				// Change API key
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "new-key"
+					return undefined
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(true)
+			})
+
+			it("should detect restart requirement for Qdrant URL changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://old-qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+				})
+				mockContextProxy.getSecret.mockReturnValue("test-key")
+
+				await configManager.loadConfiguration()
+
+				// Change Qdrant URL
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://new-qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(true)
+			})
+
+			it("should handle unknown model dimensions safely", async () => {
+				// Initial state with known model
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+				})
+				mockContextProxy.getSecret.mockReturnValue("test-key")
+
+				await configManager.loadConfiguration()
+
+				// Change to unknown model
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "unknown-model",
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(true)
+			})
+
+			it("should handle Ollama configuration changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "ollama",
+					codebaseIndexEmbedderBaseUrl: "http://old-ollama.local",
+					codebaseIndexEmbedderModelId: "nomic-embed-text",
+				})
+
+				await configManager.loadConfiguration()
+
+				// Change Ollama base URL
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "ollama",
+					codebaseIndexEmbedderBaseUrl: "http://new-ollama.local",
+					codebaseIndexEmbedderModelId: "nomic-embed-text",
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(true)
+			})
+
+			it("should not require restart when disabled remains disabled", async () => {
+				// Initial state - disabled but configured
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: false,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				await configManager.loadConfiguration()
+
+				// Still disabled but change other settings
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: false,
+					codebaseIndexQdrantUrl: "http://different-qdrant.local",
+					codebaseIndexEmbedderProvider: "ollama",
+					codebaseIndexEmbedderBaseUrl: "http://ollama.local",
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(false)
+			})
+
+			it("should not require restart when unconfigured remains unconfigured", async () => {
+				// Initial state - enabled but unconfigured (missing API key)
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+				})
+				mockContextProxy.getSecret.mockReturnValue(undefined)
+
+				await configManager.loadConfiguration()
+
+				// Still unconfigured but change model
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-large",
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(false)
+			})
+		})
+
+		describe("getRestartInfo public method", () => {
+			it("should provide restart info without loading configuration", async () => {
+				// Setup initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+				})
+				mockContextProxy.getSecret.mockReturnValue("test-key")
+
+				await configManager.loadConfiguration()
+
+				// Create a mock previous config
+				const mockPrevConfig = {
+					enabled: true,
+					configured: true,
+					embedderProvider: "openai" as const,
+					modelId: "text-embedding-3-large", // Different model with different dimensions
+					openAiKey: "test-key",
+					ollamaBaseUrl: undefined,
+					qdrantUrl: "http://qdrant.local",
+					qdrantApiKey: undefined,
+				}
+
+				const requiresRestart = configManager.doesConfigChangeRequireRestart(mockPrevConfig)
+				expect(requiresRestart).toBe(true)
+			})
 		})
 	})
 
