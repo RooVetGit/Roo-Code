@@ -15,15 +15,21 @@ import {
 export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
+	private readonly configuredDimension?: number
 
 	/**
 	 * Creates a new OpenAI embedder
-	 * @param options API handler options
+	 * @param options API handler options including optional model ID and dimension
 	 */
-	constructor(options: ApiHandlerOptions & { openAiEmbeddingModelId?: string }) {
+	constructor(options: ApiHandlerOptions & { openAiEmbeddingModelId?: string; embeddingDimension?: number }) {
 		super(options)
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
-		this.embeddingsClient = new OpenAI({ apiKey })
+		const baseURL = this.options.openAiBaseUrl
+		this.configuredDimension = options.embeddingDimension
+		this.embeddingsClient = new OpenAI({
+			apiKey,
+			...(baseURL && { baseURL }),
+		})
 		this.defaultModelId = options.openAiEmbeddingModelId || "text-embedding-3-small"
 	}
 
@@ -98,10 +104,15 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
-				const response = await this.embeddingsClient.embeddings.create({
+				const params: OpenAI.Embeddings.EmbeddingCreateParams = {
 					input: batchTexts,
 					model: model,
-				})
+				}
+				if (this.configuredDimension) {
+					params.dimensions = this.configuredDimension
+				}
+
+				const response = await this.embeddingsClient.embeddings.create(params)
 
 				return {
 					embeddings: response.data.map((item) => item.embedding),

@@ -86,6 +86,7 @@ type GlobalSettings = {
 				codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
 				codebaseIndexEmbedderBaseUrl?: string | undefined
 				codebaseIndexEmbedderModelId?: string | undefined
+				codebaseIndexEmbedderDimension?: (number | null) | undefined
 		  }
 		| undefined
 	alwaysAllowWrite?: boolean | undefined
@@ -865,6 +866,7 @@ type IpcMessage =
 											codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
 											codebaseIndexEmbedderBaseUrl?: string | undefined
 											codebaseIndexEmbedderModelId?: string | undefined
+											codebaseIndexEmbedderDimension?: (number | null) | undefined
 									  }
 									| undefined
 								alwaysAllowWrite?: boolean | undefined
@@ -1377,6 +1379,7 @@ type TaskCommand =
 								codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
 								codebaseIndexEmbedderBaseUrl?: string | undefined
 								codebaseIndexEmbedderModelId?: string | undefined
+								codebaseIndexEmbedderDimension?: (number | null) | undefined
 						  }
 						| undefined
 					alwaysAllowWrite?: boolean | undefined

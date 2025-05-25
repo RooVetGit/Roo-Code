@@ -232,6 +232,7 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
+	codebaseIndexEmbedderDimension: z.number().nullish(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
@@ -244,7 +245,7 @@ export const codebaseIndexModelsSchema = z.object({
 export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
 
 export const codebaseIndexProviderSchema = z.object({
-  codeIndexOpenAiKey: z.string().optional(),
+	codeIndexOpenAiKey: z.string().optional(),
 	codeIndexQdrantApiKey: z.string().optional(),
 })
 
@@ -661,7 +662,7 @@ export const providerSettingsSchema = z.object({
 	...groqSchema.shape,
 	...chutesSchema.shape,
 	...litellmSchema.shape,
-  ...codebaseIndexProviderSchema.shape
+	...codebaseIndexProviderSchema.shape,
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>

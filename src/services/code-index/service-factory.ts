@@ -31,12 +31,20 @@ export class CodeIndexServiceFactory {
 			if (!config.openAiOptions?.openAiNativeApiKey) {
 				throw new Error("OpenAI configuration missing for embedder creation")
 			}
-			return new OpenAiEmbedder(config.openAiOptions) // Reverted temporarily
+			return new OpenAiEmbedder({
+				...config.openAiOptions,
+				openAiEmbeddingModelId: config.modelId,
+				embeddingDimension: config.dimension,
+			})
 		} else if (provider === "ollama") {
 			if (!config.ollamaOptions?.ollamaBaseUrl) {
 				throw new Error("Ollama configuration missing for embedder creation")
 			}
-			return new CodeIndexOllamaEmbedder(config.ollamaOptions) // Reverted temporarily
+			const ollamaOptions = {
+				...config.ollamaOptions,
+				ollamaModelId: config.modelId,
+			}
+			return new CodeIndexOllamaEmbedder(ollamaOptions)
 		}
 
 		throw new Error(`Invalid embedder type configured: ${config.embedderProvider}`)
@@ -49,19 +57,23 @@ export class CodeIndexServiceFactory {
 		const config = this.configManager.getConfig()
 
 		const provider = config.embedderProvider as EmbedderProvider
-		const defaultModel = getDefaultModelId(provider)
-		// Determine the modelId based on the provider and config, using apiModelId
-		const modelId =
-			provider === "openai"
-				? (config.openAiOptions?.apiModelId ?? defaultModel)
-				: (config.ollamaOptions?.apiModelId ?? defaultModel)
+		const defaultModelId = getDefaultModelId(provider)
+		// Use the actual configured modelId, falling back to the provider default
+		const modelIdToUse = config.modelId || defaultModelId
 
-		const vectorSize = getModelDimension(provider, modelId)
+		// Try to get dimension from known profiles
+		let vectorSize = getModelDimension(provider, modelIdToUse)
 
+		// If not found in profiles, check if a dimension was manually configured
 		if (vectorSize === undefined) {
-			throw new Error(
-				`Could not determine vector dimension for model '${modelId}'. Check model profiles or config.`,
-			)
+			if (config.dimension !== undefined && config.dimension > 0) {
+				vectorSize = config.dimension
+			} else {
+				// Dimension still unknown, throw error
+				throw new Error(
+					`Could not determine vector dimension for model '${modelIdToUse}'. Model not found in built-in profiles, and no valid dimension was manually configured in settings (roo-cline.codebaseIndexEmbedderDimension).`,
+				)
+			}
 		}
 
 		if (!config.qdrantUrl) {
