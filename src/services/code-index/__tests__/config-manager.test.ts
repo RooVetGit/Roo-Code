@@ -320,6 +320,75 @@ describe("CodeIndexConfigManager", () => {
 			})
 		})
 
+		describe("empty/missing API key handling", () => {
+			it("should not require restart when API keys are consistently empty", async () => {
+				// Initial state with no API keys (undefined from secrets)
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+				})
+				mockContextProxy.getSecret.mockReturnValue(undefined)
+
+				await configManager.loadConfiguration()
+
+				// Change an unrelated setting while keeping API keys empty
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+					codebaseIndexSearchMinScore: 0.5, // Changed unrelated setting
+				})
+
+				const result = await configManager.loadConfiguration()
+				// Should NOT require restart since API keys are consistently empty
+				expect(result.requiresRestart).toBe(false)
+			})
+
+			it("should not require restart when API keys transition from undefined to empty string", async () => {
+				// Initial state with undefined API keys
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: false, // Start disabled to avoid restart due to enable+configure
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+				})
+				mockContextProxy.getSecret.mockReturnValue(undefined)
+
+				await configManager.loadConfiguration()
+
+				// Change to empty string API keys (simulating what happens when secrets return "")
+				mockContextProxy.getSecret.mockReturnValue("")
+
+				const result = await configManager.loadConfiguration()
+				// Should NOT require restart since undefined and "" are both "empty"
+				expect(result.requiresRestart).toBe(false)
+			})
+
+			it("should require restart when API key actually changes from empty to non-empty", async () => {
+				// Initial state with empty API key
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+				})
+				mockContextProxy.getSecret.mockReturnValue("")
+
+				await configManager.loadConfiguration()
+
+				// Add actual API key
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "actual-api-key"
+					return ""
+				})
+
+				const result = await configManager.loadConfiguration()
+				// Should require restart since we went from empty to actual key
+				expect(result.requiresRestart).toBe(true)
+			})
+		})
+
 		describe("getRestartInfo public method", () => {
 			it("should provide restart info without loading configuration", async () => {
 				// Setup initial state
@@ -439,6 +508,75 @@ describe("CodeIndexConfigManager", () => {
 
 		it("should return correct model ID", () => {
 			expect(configManager.currentModelId).toBe("text-embedding-3-large")
+		})
+	})
+
+	describe("initialization and restart prevention", () => {
+		it("should not require restart when configuration hasn't changed between calls", async () => {
+			// Setup initial configuration - start with enabled and configured to avoid initial transition restart
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-small",
+			})
+			mockContextProxy.getSecret.mockImplementation((key: string) => {
+				if (key === "codeIndexOpenAiKey") return "test-key"
+				return undefined
+			})
+
+			// First load - this will initialize the config manager with current state
+			await configManager.loadConfiguration()
+
+			// Second load with same configuration - should not require restart
+			const secondResult = await configManager.loadConfiguration()
+			expect(secondResult.requiresRestart).toBe(false)
+		})
+
+		it("should properly initialize with current config to prevent false restarts", async () => {
+			// Setup configuration
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: false, // Start disabled to avoid transition restart
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-small",
+			})
+			mockContextProxy.getSecret.mockImplementation((key: string) => {
+				if (key === "codeIndexOpenAiKey") return "test-key"
+				return undefined
+			})
+
+			// Create a new config manager (simulating what happens in CodeIndexManager.initialize)
+			const newConfigManager = new CodeIndexConfigManager(mockContextProxy)
+
+			// Load configuration - should not require restart since the manager should be initialized with current config
+			const result = await newConfigManager.loadConfiguration()
+			expect(result.requiresRestart).toBe(false)
+		})
+
+		it("should not require restart when settings are saved but code indexing config unchanged", async () => {
+			// This test simulates the original issue: handleExternalSettingsChange() being called
+			// when other settings are saved, but code indexing settings haven't changed
+
+			// Setup initial state - enabled and configured
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-small",
+			})
+			mockContextProxy.getSecret.mockImplementation((key: string) => {
+				if (key === "codeIndexOpenAiKey") return "test-key"
+				return undefined
+			})
+
+			// First load to establish baseline
+			await configManager.loadConfiguration()
+
+			// Simulate external settings change where code indexing config hasn't changed
+			// (this is what happens when other settings are saved)
+			const result = await configManager.loadConfiguration()
+			expect(result.requiresRestart).toBe(false)
 		})
 	})
 })
