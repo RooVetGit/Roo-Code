@@ -125,11 +125,32 @@ const ApiOptions = ({
 	const { data: routerModels, refetch: refetchRouterModels } = useRouterModels()
 
 	// Update `apiModelId` whenever `selectedModelId` changes.
+	// Only for static providers that use apiModelId field.
 	useEffect(() => {
-		if (selectedModelId) {
-			setApiConfigurationField("apiModelId", selectedModelId)
+		if (selectedModelId && selectedProvider) {
+			// Only update apiModelId for static providers, not router providers
+			const staticProviders = [
+				"gemini",
+				"anthropic",
+				"openai-native",
+				"bedrock",
+				"vertex",
+				"deepseek",
+				"mistral",
+				"xai",
+				"groq",
+				"chutes",
+			]
+
+			if (staticProviders.includes(selectedProvider)) {
+				// Only update if the current apiModelId is different from selectedModelId
+				// This prevents overwriting user-saved values during provider switching
+				if (apiConfiguration.apiModelId !== selectedModelId) {
+					setApiConfigurationField("apiModelId", selectedModelId)
+				}
+			}
 		}
-	}, [selectedModelId, setApiConfigurationField])
+	}, [selectedModelId, selectedProvider, apiConfiguration.apiModelId, setApiConfigurationField])
 
 	// Debounced refresh model updates, only executed 250ms after the user
 	// stops typing.
@@ -226,6 +247,8 @@ const ApiOptions = ({
 					}
 					break
 			}
+			// Handle static providers that use apiModelId
+			// Don't modify apiModelId during provider switching - let useSelectedModel handle it
 
 			setApiConfigurationField("apiProvider", value)
 		},
