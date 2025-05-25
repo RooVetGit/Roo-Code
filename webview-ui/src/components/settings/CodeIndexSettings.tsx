@@ -210,8 +210,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
 								onValueChange={(value) => {
 									const newProvider = value as EmbedderProvider
-									const models = codebaseIndexModels?.[newProvider]
-									const modelIds = models ? Object.keys(models) : []
 									// Don't reset modelId when provider changes, allow user to manage it explicitly
 									if (codebaseIndexConfig) {
 										setCachedStateField("codebaseIndexConfig", {
