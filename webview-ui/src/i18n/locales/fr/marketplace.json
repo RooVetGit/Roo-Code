@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Installé",
 		"settings": "Paramètres",
-		"browse": "Parcourir",
-		"sources": "Sources"
+		"browse": "Parcourir"
 	},
+	"done": "Terminé",
+	"refresh": "Actualiser",
 	"filters": {
 		"search": {
 			"placeholder": "Rechercher des éléments du marketplace..."
@@ -30,8 +31,8 @@
 			"placeholder": "Tapez pour rechercher et sélectionner des tags...",
 			"noResults": "Aucun tag correspondant trouvé",
 			"clickToFilter": "Cliquez sur les tags pour filtrer les éléments",
-			"clear": "Effacer {{count}} tag{{count !== 1 ? 's' : ''}} sélectionné{{count !== 1 ? 's' : ''}}",
-			"selected": "{{count}} tag{{count !== 1 ? 's' : ''}} sélectionné{{count !== 1 ? 's' : ''}}"
+			"clear": "Effacer les tags ({{count}})",
+			"selected": "Affichage des éléments avec l'un des tags sélectionnés ({{count}} sélectionnés)"
 		}
 	},
 	"type-group": {
@@ -45,10 +46,11 @@
 	"items": {
 		"count": "{{count}} élément{{count !== 1 ? 's' : ''}} trouvé{{count !== 1 ? 's' : ''}}",
 		"components": "{{count}} composants",
+		"matched": "{{count}} correspondances",
 		"refresh": {
 			"button": "Actualiser",
 			"refreshing": "Actualisation...",
-			"mayTakeMoment": "Cela peut prendre un moment..."
+			"mayTakeMoment": "Cela peut prendre un moment."
 		},
 		"empty": {
 			"noItems": "Aucun élément trouvé dans le marketplace",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Installation du projet",
 	"sources": {
 		"title": "Sources du Marketplace",
-		"description": "Ajoutez ou gérez les sources des éléments du marketplace. Chaque source est un dépôt Git contenant les définitions des éléments du marketplace.",
+		"description": "Ajoutez des dépôts Git qui contiennent des éléments du marketplace. Ces dépôts seront récupérés lors de la navigation sur le marketplace.",
 		"add": {
 			"title": "Ajouter une nouvelle source",
-			"urlPlaceholder": "URL du dépôt Git (ex., 'https://github.com/user/repo.git')",
-			"urlFormats": "Formats pris en charge : HTTPS, SSH ou chemin de fichier local.",
-			"namePlaceholder": "Nom de source facultatif (par ex., 'Mon dépôt privé')",
+			"urlPlaceholder": "URL du dépôt Git (ex., https://github.com/username/repo)",
+			"urlFormats": "Formats pris en charge : HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) ou protocole Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nom d'affichage (max. 20 caractères)",
 			"button": "Ajouter la source"
 		},
 		"current": {
 			"title": "Sources actuelles",
-			"empty": "Aucune source de marketplace ajoutée pour le moment.",
-			"emptyHint": "Ajoutez une source ci-dessus pour parcourir les éléments du marketplace.",
-			"refresh": "Actualiser la source",
+			"empty": "Aucune source configurée. Ajoutez une source pour commencer.",
+			"refresh": "Actualiser cette source",
 			"remove": "Supprimer la source"
 		},
 		"errors": {
-			"maxSources": "Maximum de {{max}} sources autorisées.",
-			"emptyUrl": "L'URL ne peut pas être vide.",
-			"nonVisibleChars": "L'URL contient des caractères non visibles.",
-			"invalidGitUrl": "Format d'URL Git non valide.",
-			"duplicateUrl": "Une source avec cette URL existe déjà.",
-			"nameTooLong": "Le nom ne peut pas dépasser 20 caractères.",
-			"nonVisibleCharsName": "Le nom contient des caractères non visibles.",
-			"duplicateName": "Une source avec ce nom existe déjà.",
-			"emojiName": "Les caractères emoji peuvent causer des problèmes d'affichage.",
-			"invalidUrl": "Format d'URL non valide"
+			"emptyUrl": "L'URL ne peut pas être vide",
+			"invalidUrl": "Format d'URL non valide",
+			"nonVisibleChars": "L'URL contient des caractères non visibles autres que des espaces",
+			"invalidGitUrl": "L'URL doit être une URL de dépôt Git valide (ex., https://github.com/username/repo)",
+			"duplicateUrl": "Cette URL est déjà dans la liste (insensible à la casse et aux espaces)",
+			"nameTooLong": "Le nom doit avoir 20 caractères ou moins",
+			"nonVisibleCharsName": "Le nom contient des caractères non visibles autres que des espaces",
+			"duplicateName": "Ce nom est déjà utilisé (insensible à la casse et aux espaces)",
+			"emojiName": "Les caractères emoji peuvent causer des problèmes d'affichage",
+			"maxSources": "Maximum de {{max}} sources autorisées"
 		}
-	},
-	"done": "Terminé",
-	"refresh": "Actualiser"
+	}
 }

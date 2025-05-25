@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Instalado",
 		"settings": "Configuración",
-		"browse": "Explorar",
-		"sources": "Fuentes"
+		"browse": "Explorar"
 	},
+	"done": "Listo",
+	"refresh": "Actualizar",
 	"filters": {
 		"search": {
 			"placeholder": "Buscar elementos del marketplace..."
@@ -30,8 +31,8 @@
 			"placeholder": "Escriba para buscar y seleccionar etiquetas...",
 			"noResults": "No se encontraron etiquetas coincidentes",
 			"clickToFilter": "Haga clic en las etiquetas para filtrar elementos",
-			"clear": "Limpiar {{count}} etiqueta{{count !== 1 ? 's' : ''}} seleccionada",
-			"selected": "{{count}} etiqueta{{count !== 1 ? 's' : ''}} seleccionada"
+			"clear": "Limpiar etiquetas ({{count}})",
+			"selected": "Mostrando elementos con cualquiera de las etiquetas seleccionadas ({{count}} seleccionadas)"
 		}
 	},
 	"type-group": {
@@ -45,10 +46,11 @@
 	"items": {
 		"count": "{{count}} elemento{{count !== 1 ? 's' : ''}} encontrados",
 		"components": "{{count}} componentes",
+		"matched": "{{count}} coincidencias",
 		"refresh": {
 			"button": "Actualizar",
 			"refreshing": "Actualizando...",
-			"mayTakeMoment": "Esto puede tardar un momento..."
+			"mayTakeMoment": "Esto puede tardar un momento."
 		},
 		"empty": {
 			"noItems": "No se encontraron elementos en el marketplace",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Instalación del proyecto",
 	"sources": {
 		"title": "Fuentes del Marketplace",
-		"description": "Agregue o administre fuentes para los elementos del marketplace. Cada fuente es un repositorio Git que contiene definiciones de elementos del marketplace.",
+		"description": "Agregue repositorios de Git que contengan elementos del marketplace. Estos repositorios se obtendrán al navegar por el marketplace.",
 		"add": {
 			"title": "Agregar nueva fuente",
-			"urlPlaceholder": "URL del repositorio Git (ej., 'https://github.com/user/repo.git')",
-			"urlFormats": "Formatos admitidos: HTTPS, SSH o ruta de archivo local.",
-			"namePlaceholder": "Nombre de fuente opcional (ej., 'Mi repositorio privado')",
+			"urlPlaceholder": "URL del repositorio Git (ej., https://github.com/username/repo)",
+			"urlFormats": "Formatos admitidos: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) o protocolo Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nombre de visualización (máx. 20 caracteres)",
 			"button": "Agregar fuente"
 		},
 		"current": {
 			"title": "Fuentes actuales",
-			"empty": "Aún no se han agregado fuentes de marketplace.",
-			"emptyHint": "Agregue una fuente arriba para explorar los elementos del marketplace.",
-			"refresh": "Actualizar fuente",
+			"empty": "No hay fuentes configuradas. Agregue una fuente para comenzar.",
+			"refresh": "Actualizar esta fuente",
 			"remove": "Eliminar fuente"
 		},
 		"errors": {
-			"maxSources": "Se permite un máximo de {{max}} fuentes.",
-			"emptyUrl": "La URL no puede estar vacía.",
-			"invalidUrl": "Formato de URL no válido.",
-			"nonVisibleChars": "La URL contiene caracteres no visibles.",
-			"invalidGitUrl": "Formato de URL Git no válido.",
-			"duplicateUrl": "Ya existe una fuente con esta URL.",
-			"nameTooLong": "El nombre no puede exceder los 20 caracteres.",
-			"nonVisibleCharsName": "El nombre contiene caracteres no visibles.",
-			"duplicateName": "Ya existe una fuente con este nombre.",
-			"emojiName": "Los caracteres emoji pueden causar problemas de visualización."
+			"emptyUrl": "La URL no puede estar vacía",
+			"invalidUrl": "Formato de URL no válido",
+			"nonVisibleChars": "La URL contiene caracteres no visibles además de espacios",
+			"invalidGitUrl": "La URL debe ser una URL de repositorio Git válida (ej., https://github.com/username/repo)",
+			"duplicateUrl": "Esta URL ya está en la lista (coincidencia insensible a mayúsculas/minúsculas y espacios en blanco)",
+			"nameTooLong": "El nombre debe tener 20 caracteres o menos",
+			"nonVisibleCharsName": "El nombre contiene caracteres no visibles además de espacios",
+			"duplicateName": "Este nombre ya está en uso (coincidencia insensible a mayúsculas/minúsculas y espacios en blanco)",
+			"emojiName": "Los caracteres emoji pueden causar problemas de visualización",
+			"maxSources": "Máximo de {{max}} fuentes permitidas"
 		}
-	},
-	"done": "Listo",
-	"refresh": "Actualizar"
+	}
 }

@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Đã cài đặt",
 		"settings": "Cài đặt",
-		"browse": "Duyệt",
-		"sources": "Nguồn"
+		"browse": "Duyệt"
 	},
+	"done": "Xong",
+	"refresh": "Làm mới",
 	"filters": {
 		"search": {
 			"placeholder": "Tìm kiếm các mục marketplace..."
@@ -52,6 +53,7 @@
 		},
 		"count": "Tìm thấy {{count}} mục",
 		"components": "{{count}} thành phần",
+		"matched": "{{count}} khớp",
 		"refresh": {
 			"button": "Làm mới",
 			"refreshing": "Đang làm mới...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Cài đặt dự án",
 	"sources": {
 		"title": "Nguồn Marketplace",
-		"description": "Thêm hoặc quản lý nguồn cho các mục Marketplace. Mỗi nguồn là một kho Git chứa các định nghĩa mục Marketplace.",
+		"description": "Thêm các kho Git chứa các mục marketplace. Các kho này sẽ được tìm nạp khi duyệt marketplace.",
 		"add": {
 			"title": "Thêm Nguồn Mới",
-			"urlPlaceholder": "URL kho Git (ví dụ: 'https://github.com/user/repo.git')",
-			"urlFormats": "Định dạng được hỗ trợ: HTTPS, SSH hoặc đường dẫn tệp cục bộ.",
-			"namePlaceholder": "Tên nguồn tùy chọn (ví dụ: 'Kho riêng của tôi')",
+			"urlPlaceholder": "URL kho Git (ví dụ: https://github.com/username/repo)",
+			"urlFormats": "Định dạng được hỗ trợ: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) hoặc giao thức Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Tên hiển thị (tối đa 20 ký tự)",
 			"button": "Thêm Nguồn"
 		},
 		"current": {
 			"title": "Nguồn Hiện Tại",
-			"empty": "Chưa có nguồn Marketplace nào được thêm.",
-			"emptyHint": "Thêm một nguồn ở trên để duyệt các mục Marketplace.",
-			"refresh": "Làm mới nguồn",
+			"empty": "Chưa có nguồn nào được cấu hình. Thêm một nguồn để bắt đầu.",
+			"refresh": "Làm mới nguồn này",
 			"remove": "Xóa nguồn"
 		},
 		"errors": {
-			"maxSources": "Cho phép tối đa {{max}} nguồn.",
-			"emptyUrl": "Không được để trống URL.",
-			"nonVisibleChars": "URL chứa các ký tự không hiển thị.",
-			"invalidGitUrl": "Định dạng URL Git không hợp lệ.",
+			"emptyUrl": "URL không được để trống",
 			"invalidUrl": "Định dạng URL không hợp lệ",
-			"duplicateUrl": "Đã có một nguồn có URL này.",
-			"nameTooLong": "Tên không được dài hơn 20 ký tự.",
-			"nonVisibleCharsName": "Tên chứa các ký tự không hiển thị.",
-			"duplicateName": "Đã có một nguồn có tên này.",
-			"emojiName": "Ký tự biểu tượng cảm xúc có thể gây ra sự cố hiển thị."
+			"nonVisibleChars": "URL chứa các ký tự không hiển thị ngoài dấu cách",
+			"invalidGitUrl": "URL phải là URL kho Git hợp lệ (ví dụ: https://github.com/username/repo)",
+			"duplicateUrl": "URL này đã có trong danh sách (khớp không phân biệt chữ hoa chữ thường và khoảng trắng)",
+			"nameTooLong": "Tên phải có 20 ký tự hoặc ít hơn",
+			"nonVisibleCharsName": "Tên chứa các ký tự không hiển thị ngoài dấu cách",
+			"duplicateName": "Tên này đã được sử dụng (khớp không phân biệt chữ hoa chữ thường và khoảng trắng)",
+			"emojiName": "Ký tự biểu tượng cảm xúc có thể gây ra sự cố hiển thị",
+			"maxSources": "Cho phép tối đa {{max}} nguồn"
 		}
-	},
-	"done": "Xong",
-	"refresh": "Làm mới"
+	}
 }

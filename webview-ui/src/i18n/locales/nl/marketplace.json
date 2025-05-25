@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Geïnstalleerd",
 		"settings": "Instellingen",
-		"browse": "Bladeren",
-		"sources": "Bronnen"
+		"browse": "Bladeren"
 	},
+	"done": "Klaar",
+	"refresh": "Vernieuwen",
 	"filters": {
 		"search": {
 			"placeholder": "Zoek marketplace items..."
@@ -30,8 +31,8 @@
 			"placeholder": "Typ om tags te zoeken en selecteren...",
 			"noResults": "Geen overeenkomende tags gevonden",
 			"clickToFilter": "Klik op tags om items te filteren",
-			"clear": "Wis {{count}} geselecteerde tags",
-			"selected": "{{count}} geselecteerde tags"
+			"clear": "Tags wissen ({{count}})",
+			"selected": "Items weergeven met een van de geselecteerde tags ({{count}} geselecteerd)"
 		}
 	},
 	"type-group": {
@@ -52,6 +53,7 @@
 		},
 		"count": "{{count}} items gevonden",
 		"components": "{{count}} componenten",
+		"matched": "{{count}} overeenkomsten",
 		"refresh": {
 			"button": "Vernieuwen",
 			"refreshing": "Vernieuwen...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Projectinstallatie",
 	"sources": {
 		"title": "Marketplace bronnen",
-		"description": "Voeg bronnen voor Marketplace-items toe of beheer ze. Elke bron is een Git-repository die Marketplace-itemdefinities bevat.",
+		"description": "Voeg Git-repositories toe die marketplace-items bevatten. Deze repositories worden opgehaald bij het browsen door de marketplace.",
 		"add": {
 			"title": "Nieuwe bron toevoegen",
-			"urlPlaceholder": "Git repository URL (bijv. 'https://github.com/user/repo.git')",
-			"urlFormats": "Ondersteunde formaten: HTTPS, SSH of lokaal bestandspad.",
-			"namePlaceholder": "Optionele bronnaam (bijv. 'Mijn privé-repo')",
+			"urlPlaceholder": "Git repository URL (bijv. https://github.com/username/repo)",
+			"urlFormats": "Ondersteunde formaten: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) of Git-protocol (git://github.com/username/repo.git)",
+			"namePlaceholder": "Weergavenaam (max. 20 tekens)",
 			"button": "Bron toevoegen"
 		},
 		"current": {
 			"title": "Huidige bronnen",
-			"empty": "Nog geen Marketplace-bronnen toegevoegd.",
-			"emptyHint": "Voeg hierboven een bron toe om door Marketplace-items te bladeren.",
-			"refresh": "Bron vernieuwen",
+			"empty": "Geen bronnen geconfigureerd. Voeg een bron toe om te beginnen.",
+			"refresh": "Deze bron vernieuwen",
 			"remove": "Bron verwijderen"
 		},
 		"errors": {
-			"maxSources": "Maximaal {{max}} bronnen toegestaan.",
-			"emptyUrl": "URL mag niet leeg zijn.",
-			"invalidUrl": "Ongeldig URL-formaat.",
-			"nonVisibleChars": "URL bevat niet-zichtbare tekens.",
-			"invalidGitUrl": "Ongeldige Git URL-indeling.",
-			"duplicateUrl": "Een bron met deze URL bestaat al.",
-			"nameTooLong": "Naam mag niet langer zijn dan 20 tekens.",
-			"nonVisibleCharsName": "Naam bevat niet-zichtbare tekens.",
-			"duplicateName": "Een bron met deze naam bestaat al.",
-			"emojiName": "Emoji-tekens kunnen weergaveproblemen veroorzaken."
+			"emptyUrl": "URL kan niet leeg zijn",
+			"invalidUrl": "Ongeldig URL-formaat",
+			"nonVisibleChars": "URL bevat niet-zichtbare tekens anders dan spaties",
+			"invalidGitUrl": "URL moet een geldige Git-repository-URL zijn (bijv. https://github.com/username/repo)",
+			"duplicateUrl": "Deze URL staat al in de lijst (hoofdlettergevoelig en witruimte-ongevoelige overeenkomst)",
+			"nameTooLong": "Naam moet 20 tekens of minder zijn",
+			"nonVisibleCharsName": "Naam bevat niet-zichtbare tekens anders dan spaties",
+			"duplicateName": "Deze naam is al in gebruik (hoofdlettergevoelig en witruimte-ongevoelige overeenkomst)",
+			"emojiName": "Emoji-tekens kunnen weergaveproblemen veroorzaken",
+			"maxSources": "Maximaal {{max}} bronnen toegestaan"
 		}
-	},
-	"done": "Klaar",
-	"refresh": "Vernieuwen"
+	}
 }

@@ -51,8 +51,11 @@ describe("ExpandableSection", () => {
 		expect(screen.getByText("123")).toBeInTheDocument()
 		expect(screen.getByText("123")).toHaveClass(
 			"text-xs",
-			"bg-vscode-badge-background",
-			"text-vscode-badge-foreground",
+			"bg-primary",
+			"text-primary-foreground",
+			"px-1",
+			"py-0.5",
+			"rounded",
 		)
 	})
 

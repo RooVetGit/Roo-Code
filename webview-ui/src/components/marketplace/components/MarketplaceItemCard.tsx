@@ -62,7 +62,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 
 	const expandableSectionBadge = useMemo(() => {
 		const matchCount = item.items?.filter((subItem) => subItem.matchInfo?.matched).length ?? 0
-		return matchCount > 0 ? t("marketplace:items.components", { count: matchCount }) : undefined
+		return matchCount > 0 ? t("marketplace:items.matched", { count: matchCount }) : undefined
 	}, [item.items, t])
 
 	return (
@@ -93,8 +93,10 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 						<Button
 							key={tag}
 							size="sm"
-							variant={filters.tags.includes(tag) ? "default" : "secondary"}
-							className="rounded-sm capitalize text-xs px-2 h-5 border-dashed"
+							variant="secondary"
+							className={cn("rounded-sm capitalize text-xs px-2 h-5 border-dashed", {
+								"border-solid border-primary text-primary": filters.tags.includes(tag),
+							})}
 							onClick={() => {
 								const newTags = filters.tags.includes(tag)
 									? filters.tags.filter((t: string) => t !== tag)

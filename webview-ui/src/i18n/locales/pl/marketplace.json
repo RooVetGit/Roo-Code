@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Zainstalowane",
 		"settings": "Ustawienia",
-		"browse": "Przeglądaj",
-		"sources": "Źródła"
+		"browse": "Przeglądaj"
 	},
+	"done": "Gotowe",
+	"refresh": "Odśwież",
 	"filters": {
 		"search": {
 			"placeholder": "Szukaj elementów marketplace..."
@@ -30,8 +31,8 @@
 			"placeholder": "Wpisz, aby wyszukać i wybrać tagi...",
 			"noResults": "Nie znaleziono pasujących tagów",
 			"clickToFilter": "Kliknij tagi, aby filtrować elementy",
-			"clear": "Wyczyść {{count}} wybranych tagów",
-			"selected": "{{count}} wybranych tagów"
+			"clear": "Wyczyść tagi ({{count}})",
+			"selected": "Wyświetlanie elementów z dowolnym z wybranych tagów (wybrano {{count}})"
 		}
 	},
 	"type-group": {
@@ -50,8 +51,9 @@
 			"adjustFilters": "Spróbuj dostosować filtry lub wyszukiwane hasła",
 			"clearAllFilters": "Wyczyść wszystkie filtry"
 		},
-		"count": "Znaleziono {{count}} elementów",
+		"count": "{{count}} elementów znalezionych",
 		"components": "{{count}} komponentów",
+		"matched": "{{count}} dopasowanych",
 		"refresh": {
 			"button": "Odśwież",
 			"refreshing": "Odświeżanie...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Instalacja projektu",
 	"sources": {
 		"title": "Źródła Marketplace",
-		"description": "Dodaj lub zarządzaj źródłami dla elementów Marketplace. Każde źródło to repozytorium Git zawierające definicje elementów Marketplace.",
+		"description": "Dodaj repozytoria Git zawierające elementy marketplace. Te repozytoria zostaną pobrane podczas przeglądania marketplace.",
 		"add": {
 			"title": "Dodaj nowe źródło",
-			"urlPlaceholder": "URL repozytorium Git (np. 'https://github.com/user/repo.git')",
-			"urlFormats": "Obsługiwane formaty: HTTPS, SSH lub lokalna ścieżka pliku.",
-			"namePlaceholder": "Opcjonalna nazwa źródła (np. 'Moje prywatne repozytorium')",
+			"urlPlaceholder": "URL repozytorium Git (np. https://github.com/username/repo)",
+			"urlFormats": "Obsługiwane formaty: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) lub protokół Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nazwa wyświetlana (maks. 20 znaków)",
 			"button": "Dodaj źródło"
 		},
 		"current": {
 			"title": "Obecne źródła",
-			"empty": "Nie dodano jeszcze żadnych źródeł Marketplace.",
-			"emptyHint": "Dodaj źródło powyżej, aby przeglądać elementy Marketplace.",
-			"refresh": "Odśwież źródło",
+			"empty": "Brak skonfigurowanych źródeł. Dodaj źródło, aby rozpocząć.",
+			"refresh": "Odśwież to źródło",
 			"remove": "Usuń źródło"
 		},
 		"errors": {
-			"maxSources": "Dozwolona jest maksymalnie liczba źródeł: {{max}}.",
-			"emptyUrl": "Adres URL nie może być pusty.",
-			"invalidUrl": "Nieprawidłowy format adresu URL.",
-			"nonVisibleChars": "Adres URL zawiera niewidoczne znaki.",
-			"invalidGitUrl": "Nieprawidłowy format adresu URL Git.",
-			"duplicateUrl": "Źródło o tym adresie URL już istnieje.",
-			"nameTooLong": "Nazwa nie może przekraczać 20 znaków.",
-			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki.",
-			"duplicateName": "Źródło o tej nazwie już istnieje.",
-			"emojiName": "Znaki emoji mogą powodować problemy z wyświetlaniem."
+			"emptyUrl": "URL nie może być pusty",
+			"invalidUrl": "Nieprawidłowy format URL",
+			"nonVisibleChars": "URL zawiera niewidoczne znaki inne niż spacje",
+			"invalidGitUrl": "URL musi być prawidłowym adresem URL repozytorium Git (np. https://github.com/username/repo)",
+			"duplicateUrl": "Ten URL jest już na liście (dopasowanie bez uwzględniania wielkości liter i spacji)",
+			"nameTooLong": "Nazwa musi mieć 20 znaków lub mniej",
+			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki inne niż spacje",
+			"duplicateName": "Ta nazwa jest już używana (dopasowanie bez uwzględniania wielkości liter i spacji)",
+			"emojiName": "Znaki emoji mogą powodować problemy z wyświetlaniem",
+			"maxSources": "Dozwolona jest maksymalnie liczba źródeł: {{max}}"
 		}
-	},
-	"done": "Gotowe",
-	"refresh": "Odśwież"
+	}
 }

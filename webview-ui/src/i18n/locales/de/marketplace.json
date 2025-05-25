@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Installiert",
 		"settings": "Einstellungen",
-		"browse": "Durchsuchen",
-		"sources": "Quellen"
+		"browse": "Durchsuchen"
 	},
+	"done": "Fertig",
+	"refresh": "Aktualisieren",
 	"filters": {
 		"search": {
 			"placeholder": "Marketplace-Einträge durchsuchen..."
@@ -45,10 +46,11 @@
 	"items": {
 		"count": "{{count}} Einträge gefunden",
 		"components": "{{count}} Komponenten",
+		"matched": "{{count}} Treffer",
 		"refresh": {
 			"button": "Aktualisieren",
 			"refreshing": "Aktualisiere...",
-			"mayTakeMoment": "Das kann einen Moment dauern..."
+			"mayTakeMoment": "Das kann einen Moment dauern."
 		},
 		"empty": {
 			"noItems": "Keine Marketplace-Einträge gefunden",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Projektinstallation",
 	"sources": {
 		"title": "Marketplace Quellen",
-		"description": "Füge Quellen für Marketplace-Elemente hinzu oder verwalte sie. Jede Quelle ist ein Git-Repository, das Marketplace-Elementdefinitionen enthält.",
+		"description": "Füge Git-Repositories hinzu, die Marketplace-Elemente enthalten. Diese Repositories werden beim Durchsuchen des Marktplatzes abgerufen.",
 		"add": {
 			"title": "Neue Quelle hinzufügen",
-			"urlPlaceholder": "Git-Repository-URL (z. B. 'https://github.com/user/repo.git')",
-			"urlFormats": "Unterstützte Formate: HTTPS, SSH oder lokaler Dateipfad.",
-			"namePlaceholder": "Optionaler Quellenname (z. B. 'Mein privates Repo')",
+			"urlPlaceholder": "Git-Repository-URL (z. B. https://github.com/username/repo)",
+			"urlFormats": "Unterstützte Formate: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) oder Git-Protokoll (git://github.com/username/repo.git)",
+			"namePlaceholder": "Anzeigename (max. 20 Zeichen)",
 			"button": "Quelle hinzufügen"
 		},
 		"current": {
 			"title": "Aktuelle Quellen",
-			"empty": "Noch keine Marketplace-Quellen hinzugefügt.",
-			"emptyHint": "Füge oben eine Quelle hinzu, um Marketplace-Elemente zu durchsuchen.",
-			"refresh": "Quelle aktualisieren",
+			"empty": "Keine Quellen konfiguriert. Füge eine Quelle hinzu, um zu beginnen.",
+			"refresh": "Diese Quelle aktualisieren",
 			"remove": "Quelle entfernen"
 		},
 		"errors": {
-			"maxSources": "Maximal {{max}} Quellen erlaubt.",
-			"emptyUrl": "Die URL darf nicht leer sein.",
-			"nonVisibleChars": "Die URL enthält nicht sichtbare Zeichen.",
-			"invalidGitUrl": "Ungültiges Git-URL-Format.",
-			"duplicateUrl": "Eine Quelle mit dieser URL ist bereits vorhanden.",
-			"nameTooLong": "Der Name darf 20 Zeichen nicht überschreiten.",
-			"nonVisibleCharsName": "Der Name enthält nicht sichtbare Zeichen.",
-			"duplicateName": "Eine Quelle mit diesem Namen ist bereits vorhanden.",
-			"emojiName": "Emoji-Zeichen können Anzeigeprobleme verursachen.",
-			"invalidUrl": "Ungültiges URL-Format"
+			"emptyUrl": "URL darf nicht leer sein",
+			"invalidUrl": "Ungültiges URL-Format",
+			"nonVisibleChars": "URL enthält nicht sichtbare Zeichen außer Leerzeichen",
+			"invalidGitUrl": "URL muss eine gültige Git-Repository-URL sein (z. B. https://github.com/username/repo)",
+			"duplicateUrl": "Diese URL ist bereits in der Liste (Groß-/Kleinschreibung und Leerzeichen werden ignoriert)",
+			"nameTooLong": "Name muss 20 Zeichen oder weniger sein",
+			"nonVisibleCharsName": "Name enthält nicht sichtbare Zeichen außer Leerzeichen",
+			"duplicateName": "Dieser Name wird bereits verwendet (Groß-/Kleinschreibung und Leerzeichen werden ignoriert)",
+			"emojiName": "Emoji-Zeichen können Anzeigeprobleme verursachen",
+			"maxSources": "Maximal {{max}} Quellen erlaubt"
 		}
-	},
-	"done": "Fertig",
-	"refresh": "Aktualisieren"
+	}
 }

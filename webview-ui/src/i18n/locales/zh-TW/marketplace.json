@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "已安裝",
 		"settings": "設定",
-		"browse": "瀏覽",
-		"sources": "來源"
+		"browse": "瀏覽"
 	},
+	"done": "完成",
+	"refresh": "重新整理",
 	"filters": {
 		"search": {
 			"placeholder": "搜尋市集項目..."
@@ -52,6 +53,7 @@
 		},
 		"count": "找到 {{count}} 個項目",
 		"components": "{{count}} 個元件",
+		"matched": "{{count}} 個符合",
 		"refresh": {
 			"button": "重新整理",
 			"refreshing": "重新整理中...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "專案安裝",
 	"sources": {
 		"title": "市集來源",
-		"description": "新增或管理 Marketplace 項目的來源。每個來源都是包含 Marketplace 項目定義的 Git 儲存庫。",
+		"description": "新增包含市集項目的 Git 儲存庫。瀏覽市集時將會擷取這些儲存庫。",
 		"add": {
 			"title": "新增來源",
-			"urlPlaceholder": "Git 儲存庫 URL (例如：'https://github.com/user/repo.git')",
-			"urlFormats": "支援的格式：HTTPS、SSH 或本機檔案路徑。",
-			"namePlaceholder": "選用來源名稱 (例如：'我的私有儲存庫')",
+			"urlPlaceholder": "Git 儲存庫 URL (例如：https://github.com/username/repo)",
+			"urlFormats": "支援的格式：HTTPS (https://github.com/username/repo)、SSH (git@github.com:username/repo.git) 或 Git 協定 (git://github.com/username/repo.git)",
+			"namePlaceholder": "顯示名稱 (最多 20 個字元)",
 			"button": "新增來源"
 		},
 		"current": {
 			"title": "目前來源",
-			"empty": "尚未新增任何 Marketplace 來源。",
-			"emptyHint": "在上方新增一個來源以瀏覽 Marketplace 項目。",
-			"refresh": "重新整理來源",
+			"empty": "未設定任何來源。新增來源以開始。",
+			"refresh": "重新整理此來源",
 			"remove": "移除來源"
 		},
 		"errors": {
-			"maxSources": "最多允許 {{max}} 個來源。",
-			"emptyUrl": "URL 不能為空。",
-			"nonVisibleChars": "URL 包含不可見字元。",
-			"invalidGitUrl": "無效的 Git URL 格式。",
+			"emptyUrl": "URL 不能為空",
 			"invalidUrl": "無效的 URL 格式",
-			"duplicateUrl": "具有此 URL 的來源已存在。",
-			"nameTooLong": "名稱不得超過 20 個字元。",
-			"nonVisibleCharsName": "名稱包含不可見字元。",
-			"duplicateName": "具有此名稱的來源已存在。",
-			"emojiName": "表情符號可能會導致顯示問題。"
+			"nonVisibleChars": "URL 包含除了空格以外的不可見字元",
+			"invalidGitUrl": "URL 必須是有效的 Git 儲存庫 URL (例如：https://github.com/username/repo)",
+			"duplicateUrl": "此 URL 已在清單中 (不區分大小寫和空格的符合)",
+			"nameTooLong": "名稱必須為 20 個字元或更少",
+			"nonVisibleCharsName": "名稱包含除了空格以外的不可見字元",
+			"duplicateName": "此名稱已被使用 (不區分大小寫和空格的符合)",
+			"emojiName": "表情符號可能會導致顯示問題",
+			"maxSources": "最多允許 {{max}} 個來源"
 		}
-	},
-	"done": "完成",
-	"refresh": "重新整理"
+	}
 }

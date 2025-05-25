@@ -47,44 +47,27 @@ export const TypeGroup: React.FC<TypeGroupProps> = ({ type, items, className }) 
 	// Get the appropriate icon for the type
 	const typeIcon = typeIcons[type as keyof typeof typeIcons] || <Package className="size-3" />
 
-	// Determine if we should use horizontal layout (modes only for now) or card layout (for mcps)
-	const isHorizontalLayout = type === "mode"
-
 	// Memoize the list items
 	const listItems = useMemo(() => {
 		if (!items?.length) return null
 
-		if (isHorizontalLayout) {
-			// Horizontal layout for modes
+		if (type === "mode") {
 			return (
 				<div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] mt-2 gap-1.5">
 					{items.map((item, index) => {
-						const cardClassName = cn(
-							"flex items-center gap-2 py-1 px-2 rounded-md bg-vscode-input-background/50",
-							"hover:border-vscode-focusBorder transition-colors",
-							{
-								"border-vscode-textLink": item.matchInfo?.matched,
-								"border-vscode-panel-border": !item.matchInfo?.matched,
-							},
-						)
-
 						return (
 							<div
 								key={`${item.path || index}`}
-								className={cardClassName}
-								title={item.description || item.name}>
-								<span
-									className={cn("font-medium text-sm", {
-										"text-vscode-textLink": item.matchInfo?.matched,
-										"text-vscode-foreground": !item.matchInfo?.matched,
-									})}>
-									{item.name}
-								</span>
-								{item.matchInfo?.matched && (
-									<span className="text-xs bg-vscode-badge-background text-vscode-badge-foreground px-1 py-0.5 rounded">
-										{t("marketplace:type-group.match")}
-									</span>
+								className={cn(
+									"flex items-center justify-between gap-2 py-1 px-2 rounded-md bg-vscode-input-background/50",
+									"hover:border-vscode-focusBorder transition-colors border",
+									{
+										"border-primary border-dashed": item.matchInfo?.matched,
+										"border-transparent": !item.matchInfo?.matched,
+									},
 								)}
+								title={item.description || item.name}>
+								<span className="font-medium text-sm text-vscode-foreground">{item.name}</span>
 							</div>
 						)
 					})}
@@ -94,20 +77,14 @@ export const TypeGroup: React.FC<TypeGroupProps> = ({ type, items, className }) 
 			return (
 				<div className="grid grid-cols-1 gap-3 mt-2">
 					{items.map((item, index) => (
-						<div key={`${item.path || index}`} className="bg-vscode-input-background/50 p-2 rounded-sm">
-							<div className="flex items-center gap-2 mb-1">
-								<h5
-									className={cn(
-										"text-sm font-medium m-0",
-										item.matchInfo?.matched ? "text-vscode-textLink" : "text-vscode-foreground",
-									)}>
-									{item.name}
-								</h5>
-								{item.matchInfo?.matched && (
-									<span className="ml-auto text-xs bg-vscode-badge-background text-vscode-badge-foreground px-1 py-0.5 rounded">
-										{t("marketplace:type-group.match")}
-									</span>
-								)}
+						<div
+							key={`${item.path || index}`}
+							className={cn("bg-vscode-input-background/50 p-2 rounded-sm border", {
+								"border-primary border-dashed": item.matchInfo?.matched,
+								"border-transparent": !item.matchInfo?.matched,
+							})}>
+							<div className="flex items-center gap-2 mb-2">
+								<h5 className="text-sm font-medium m-0 text-vscode-foreground">{item.name}</h5>
 							</div>
 							{item.description && (
 								<p className="text-sm text-vscode-descriptionForeground m-0 ml-4">{item.description}</p>
@@ -117,7 +94,7 @@ export const TypeGroup: React.FC<TypeGroupProps> = ({ type, items, className }) 
 				</div>
 			)
 		}
-	}, [items, t, isHorizontalLayout])
+	}, [items, t, type])
 
 	if (!items?.length) {
 		return null

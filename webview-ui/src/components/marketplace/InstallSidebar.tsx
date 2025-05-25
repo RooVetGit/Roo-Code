@@ -41,7 +41,7 @@ const InstallSidebar: React.FC<MarketplaceInstallSidebarProps> = ({ item, config
 				className="flex flex-col p-4 bg-vscode-sideBar-background text-vscode-foreground h-full w-3/4 shadow-lg" // Adjust width and add shadow
 				onClick={(e) => e.stopPropagation()}>
 				<h2 className="text-xl font-bold mb-4">Install {item.name}</h2>
-				<div className="flex-grow overflow-y-auto space-y-4">
+				<div className="overflow-y-auto space-y-4">
 					{config.parameters?.map((param) => {
 						// Only render prompt parameters
 						if (param.resolver.operation !== "prompt") return null

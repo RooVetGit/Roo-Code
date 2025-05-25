@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "설치됨",
 		"settings": "설정",
-		"browse": "찾아보기",
-		"sources": "소스"
+		"browse": "찾아보기"
 	},
+	"done": "완료",
+	"refresh": "새로 고침",
 	"filters": {
 		"search": {
 			"placeholder": "마켓플레이스 항목 검색..."
@@ -30,8 +31,8 @@
 			"placeholder": "태그 검색 및 선택...",
 			"noResults": "일치하는 태그가 없습니다",
 			"clickToFilter": "태그를 클릭하여 항목 필터링",
-			"clear": "{{count}}개의 선택된 태그 지우기",
-			"selected": "{{count}}개의 선택된 태그"
+			"clear": "태그 지우기 ({{count}})",
+			"selected": "선택된 태그 중 하나라도 있는 항목 표시 ({{count}}개 선택됨)"
 		}
 	},
 	"type-group": {
@@ -50,8 +51,9 @@
 			"adjustFilters": "필터 또는 검색어를 조정해 보세요",
 			"clearAllFilters": "모든 필터 지우기"
 		},
-		"count": "{{count}}개 항목",
+		"count": "{{count}}개 항목 발견",
 		"components": "{{count}}개 구성 요소",
+		"matched": "{{count}}개 일치",
 		"refresh": {
 			"button": "새로 고침",
 			"refreshing": "새로 고치는 중...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "프로젝트 설치",
 	"sources": {
 		"title": "마켓플레이스 소스",
-		"description": "마켓플레이스 항목의 소스를 추가하거나 관리합니다. 각 소스는 마켓플레이스 항목 정의가 포함된 Git 리포지토리입니다.",
+		"description": "마켓플레이스 항목이 포함된 Git 리포지토리를 추가합니다. 마켓플레이스를 탐색할 때 이 리포지토리가 가져와집니다.",
 		"add": {
 			"title": "새 소스 추가",
-			"urlPlaceholder": "Git 저장소 URL (예: 'https://github.com/user/repo.git')",
-			"urlFormats": "지원되는 형식: HTTPS, SSH 또는 로컬 파일 경로.",
-			"namePlaceholder": "선택적 소스 이름 (예: '내 개인 리포지토리')",
+			"urlPlaceholder": "Git 리포지토리 URL (예: https://github.com/username/repo)",
+			"urlFormats": "지원되는 형식: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) 또는 Git 프로토콜 (git://github.com/username/repo.git)",
+			"namePlaceholder": "표시 이름 (최대 20자)",
 			"button": "소스 추가"
 		},
 		"current": {
 			"title": "현재 소스",
-			"empty": "아직 Marketplace 소스가 추가되지 않았습니다.",
-			"emptyHint": "Marketplace 항목을 찾아보려면 위에 소스를 추가하세요.",
-			"refresh": "소스 새로 고침",
+			"empty": "구성된 소스가 없습니다. 시작하려면 소스를 추가하세요.",
+			"refresh": "이 소스 새로 고침",
 			"remove": "소스 제거"
 		},
 		"errors": {
-			"maxSources": "최대 {{max}}개의 소스가 허용됩니다.",
-			"emptyUrl": "URL을 비워 둘 수 없습니다.",
-			"invalidUrl": "잘못된 URL 형식입니다.",
-			"nonVisibleChars": "URL에 표시되지 않는 문자가 포함되어 있습니다.",
-			"invalidGitUrl": "잘못된 Git URL 형식입니다.",
-			"duplicateUrl": "이 URL이 있는 소스가 이미 있습니다.",
-			"nameTooLong": "이름은 20자를 초과할 수 없습니다.",
-			"nonVisibleCharsName": "이름에 표시되지 않는 문자가 포함되어 있습니다.",
-			"duplicateName": "이 이름의 소스가 이미 있습니다.",
-			"emojiName": "이모티콘 문자는 표시 문제를 일으킬 수 있습니다."
+			"emptyUrl": "URL은 비워 둘 수 없습니다",
+			"invalidUrl": "잘못된 URL 형식",
+			"nonVisibleChars": "URL에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
+			"invalidGitUrl": "URL은 유효한 Git 리포지토리 URL이어야 합니다 (예: https://github.com/username/repo)",
+			"duplicateUrl": "이 URL은 이미 목록에 있습니다 (대소문자 및 공백 무시 일치)",
+			"nameTooLong": "이름은 20자 이하여야 합니다",
+			"nonVisibleCharsName": "이름에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
+			"duplicateName": "이 이름은 이미 사용 중입니다 (대소문자 및 공백 무시 일치)",
+			"emojiName": "이모티콘 문자는 표시 문제를 일으킬 수 있습니다",
+			"maxSources": "최대 {{max}}개의 소스가 허용됩니다"
 		}
-	},
-	"done": "완료",
-	"refresh": "새로 고침"
+	}
 }

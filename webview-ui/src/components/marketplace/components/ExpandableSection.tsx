@@ -8,6 +8,7 @@ interface ExpandableSectionProps {
 	className?: string
 	defaultExpanded?: boolean
 	badge?: string
+	matched?: boolean
 }
 
 export const ExpandableSection: React.FC<ExpandableSectionProps> = ({
@@ -16,6 +17,7 @@ export const ExpandableSection: React.FC<ExpandableSectionProps> = ({
 	className,
 	defaultExpanded = false,
 	badge,
+	matched = false,
 }) => {
 	// Create a unique value for the accordion item
 	const accordionValue = React.useMemo(() => `section-${title.replace(/\s+/g, "-").toLowerCase()}`, [title])
@@ -25,19 +27,21 @@ export const ExpandableSection: React.FC<ExpandableSectionProps> = ({
 			type="single"
 			collapsible
 			defaultValue={defaultExpanded ? accordionValue : undefined}
-			className={cn("border-t-0", className)}>
+			className={cn("border-t-0", className, {
+				"bg-vscode-list-activeSelectionBackground": matched,
+			})}>
 			<AccordionItem value={accordionValue}>
 				<AccordionTrigger
 					className="py-2 text-sm hover:no-underline hover:cursor-pointer"
 					aria-controls="details-content"
 					id="details-button">
-					<div className="flex items-center justify-between w-full">
+					<div className="flex items-center gap-2 w-full">
 						<span className="font-medium flex items-center">
 							<span className="codicon codicon-list-unordered mr-1"></span>
 							{title}
 						</span>
 						{badge && (
-							<span className="mr-2 text-xs bg-vscode-badge-background text-vscode-badge-foreground px-1 py-0.5 rounded">
+							<span className="text-xs bg-primary text-primary-foreground px-1 py-0.5 rounded">
 								{badge}
 							</span>
 						)}

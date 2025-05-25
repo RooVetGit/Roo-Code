@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Instal·lat",
 		"settings": "Configuració",
-		"browse": "Explorar",
-		"sources": "Fonts"
+		"browse": "Explorar"
 	},
+	"done": "Fet",
+	"refresh": "Actualitzar",
 	"filters": {
 		"search": {
 			"placeholder": "Cercar elements del marketplace..."
@@ -52,6 +53,7 @@
 		},
 		"count": "{{count}} element{{count !== 1 ? 's' : ''}} trobats",
 		"components": "{{count}} components",
+		"matched": "{{count}} coincidències",
 		"refresh": {
 			"button": "Actualitzar",
 			"refreshing": "Actualitzant...",
@@ -61,7 +63,7 @@
 			"by": "per {{author}}",
 			"from": "de {{source}}",
 			"installProject": "Instal·lar",
-			"installGlobal": "Instal·lar (Global),",
+			"installGlobal": "Instal·lar (Global)",
 			"removeProject": "Eliminar",
 			"removeGlobal": "Eliminar (Global)",
 			"viewSource": "Veure",
@@ -69,7 +71,6 @@
 			"noWorkspaceTooltip": "Obre un espai de treball per instal·lar elements del marketplace"
 		}
 	},
-	"installProjectTooltip": "Instal·lació del projecte",
 	"sources": {
 		"title": "Fonts del Marketplace",
 		"description": "Afegeix o gestiona fonts per als elements del marketplace. Cada font és un repositori Git que conté definicions d'elements del marketplace.",
@@ -83,7 +84,7 @@
 		"current": {
 			"title": "Fonts actuals",
 			"empty": "Encara no s'ha afegit cap font del marketplace.",
-			"emptyHint": "Afegeix una font a dalt per explorar els elements del marketplace.",
+			"emptyHint": "No s'ha configurat cap font. Afegeix una font per començar.",
 			"refresh": "Actualitzar font",
 			"remove": "Eliminar font"
 		},
@@ -99,7 +100,5 @@
 			"invalidUrl": "Format d'URL no vàlid",
 			"emojiName": "Els caràcters emoji poden causar problemes de visualització"
 		}
-	},
-	"done": "Fet",
-	"refresh": "Actualitzar"
+	}
 }

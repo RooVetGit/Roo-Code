@@ -36,7 +36,6 @@
 		}
 	},
 	"type-group": {
-		"match": "Match",
 		"modes": "Modes",
 		"mcps": "MCP Servers",
 		"prompts": "Prompts",
@@ -53,6 +52,7 @@
 		},
 		"count": "{{count}} items found",
 		"components": "{{count}} components",
+		"matched": "{{count}} matched",
 		"refresh": {
 			"button": "Refresh",
 			"refreshing": "Refreshing...",

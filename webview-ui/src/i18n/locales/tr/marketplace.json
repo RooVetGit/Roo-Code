@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Yüklendi",
 		"settings": "Ayarlar",
-		"browse": "Göz At",
-		"sources": "Kaynaklar"
+		"browse": "Göz At"
 	},
+	"done": "Tamam",
+	"refresh": "Yenile",
 	"filters": {
 		"search": {
 			"placeholder": "Marketplace öğelerini ara..."
@@ -27,10 +28,10 @@
 		"tags": {
 			"label": "Etiketlere göre filtrele:",
 			"available": "{{count}} mevcut",
-			"clear": "{{count}} seçili etiketi temizle",
+			"clear": "Etiketleri temizle ({{count}})",
 			"placeholder": "Etiket aramak ve seçmek için yazın...",
 			"noResults": "Eşleşen etiket bulunamadı",
-			"selected": "{{count}} seçili etiket",
+			"selected": "Seçili etiketlerden herhangi birine sahip öğeler gösteriliyor ({{count}} seçili)",
 			"clickToFilter": "Öğeleri filtrelemek için etiketlere tıklayın"
 		}
 	},
@@ -52,6 +53,7 @@
 		},
 		"count": "{{count}} öğe bulundu",
 		"components": "{{count}} bileşen",
+		"matched": "{{count}} eşleşen",
 		"refresh": {
 			"button": "Yenile",
 			"refreshing": "Yenileniyor...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Proje kurulumu",
 	"sources": {
 		"title": "Marketplace Kaynakları",
-		"description": "Marketplace öğeleri için kaynak ekleyin veya yönetin. Her kaynak, Marketplace öğe tanımlarını içeren bir Git deposudur.",
+		"description": "Marketplace öğelerini içeren Git depoları ekleyin. Bu depolar, marketplace'e göz atarken getirilecektir.",
 		"add": {
 			"title": "Yeni Kaynak Ekle",
-			"urlPlaceholder": "Git deposu URL'si (örn. 'https://github.com/user/repo.git')",
-			"urlFormats": "Desteklenen biçimler: HTTPS, SSH veya yerel dosya yolu.",
-			"namePlaceholder": "İsteğe bağlı kaynak adı (örn. 'Özel Depom')",
+			"urlPlaceholder": "Git deposu URL'si (örn. https://github.com/username/repo)",
+			"urlFormats": "Desteklenen biçimler: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) veya Git protokolü (git://github.com/username/repo.git)",
+			"namePlaceholder": "Görünen ad (maks. 20 karakter)",
 			"button": "Kaynak Ekle"
 		},
 		"current": {
 			"title": "Mevcut Kaynaklar",
-			"empty": "Henüz Marketplace kaynağı eklenmedi.",
-			"emptyHint": "Marketplace öğelerine göz atmak için yukarıda bir kaynak ekleyin.",
-			"refresh": "Kaynağı yenile",
+			"empty": "Yapılandırılmış kaynak yok. Başlamak için bir kaynak ekleyin.",
+			"refresh": "Bu kaynağı yenile",
 			"remove": "Kaynağı kaldır"
 		},
 		"errors": {
-			"maxSources": "Maksimum {{max}} kaynağa izin verilir.",
-			"emptyUrl": "URL boş olamaz.",
-			"nonVisibleChars": "URL görünmeyen karakterler içeriyor.",
-			"invalidGitUrl": "Geçersiz Git URL biçimi.",
+			"emptyUrl": "URL boş olamaz",
 			"invalidUrl": "Geçersiz URL biçimi",
+			"nonVisibleChars": "URL, boşluklar dışında görünmeyen karakterler içeriyor",
+			"invalidGitUrl": "URL, geçerli bir Git deposu URL'si olmalıdır (örn. https://github.com/username/repo)",
 			"duplicateUrl": "Bu URL zaten listede (büyük/küçük harf ve boşluk duyarsız eşleşme)",
-			"nameTooLong": "İsim 20 karakteri geçemez.",
-			"nonVisibleCharsName": "Ad görünmeyen karakterler içeriyor.",
-			"duplicateName": "Bu ada sahip bir kaynak zaten var.",
-			"emojiName": "Emoji karakterleri görüntüleme sorunlarına neden olabilir."
+			"nameTooLong": "Ad 20 karakter veya daha az olmalıdır",
+			"nonVisibleCharsName": "Ad, boşluklar dışında görünmeyen karakterler içeriyor",
+			"duplicateName": "Bu ad zaten kullanımda (büyük/küçük harf ve boşluk duyarsız eşleşme)",
+			"emojiName": "Emoji karakterleri görüntüleme sorunlarına neden olabilir",
+			"maxSources": "Maksimum {{max}} kaynağa izin verilir"
 		}
-	},
-	"done": "Tamam",
-	"refresh": "Yenile"
+	}
 }

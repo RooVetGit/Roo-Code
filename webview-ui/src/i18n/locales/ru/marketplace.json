@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Установлено",
 		"settings": "Настройки",
-		"browse": "Обзор",
-		"sources": "Источники"
+		"browse": "Обзор"
 	},
+	"done": "Готово",
+	"refresh": "Обновить",
 	"filters": {
 		"search": {
 			"placeholder": "Поиск элементов marketplace..."
@@ -52,6 +53,7 @@
 		},
 		"count": "{{count}} элементов найдено",
 		"components": "{{count}} компонентов",
+		"matched": "{{count}} совпадений",
 		"refresh": {
 			"button": "Обновить",
 			"refreshing": "Обновление...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Установка проекта",
 	"sources": {
 		"title": "Источники Marketplace",
-		"description": "Добавьте или управляйте источниками для элементов Marketplace. Каждый источник — это репозиторий Git, содержащий определения элементов Marketplace.",
+		"description": "Добавьте репозитории Git, содержащие элементы marketplace. Эти репозитории будут получены при просмотре marketplace.",
 		"add": {
 			"title": "Добавить новый источник",
-			"urlPlaceholder": "URL-адрес репозитория Git (например, 'https://github.com/user/repo.git')",
-			"urlFormats": "Поддерживаемые форматы: HTTPS, SSH или локальный файловый путь.",
-			"namePlaceholder": "Необязательное имя источника (например, «Мой частный репозиторий»)",
+			"urlPlaceholder": "URL-адрес репозитория Git (например, https://github.com/username/repo)",
+			"urlFormats": "Поддерживаемые форматы: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) или протокол Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Отображаемое имя (не более 20 символов)",
 			"button": "Добавить источник"
 		},
 		"current": {
 			"title": "Текущие источники",
-			"empty": "Пока не добавлено ни одного источника Marketplace.",
-			"emptyHint": "Добавьте источник выше, чтобы просмотреть элементы Marketplace.",
-			"refresh": "Обновить источник",
+			"empty": "Источники не настроены. Добавьте источник, чтобы начать.",
+			"refresh": "Обновить этот источник",
 			"remove": "Удалить источник"
 		},
 		"errors": {
-			"maxSources": "Разрешено не более {{max}} источников.",
-			"emptyUrl": "URL-адрес не может быть пустым.",
-			"nonVisibleChars": "URL-адрес содержит невидимые символы.",
-			"invalidGitUrl": "Недопустимый формат URL-адреса Git.",
+			"emptyUrl": "URL-адрес не может быть пустым",
 			"invalidUrl": "Недопустимый формат URL-адреса",
-			"duplicateUrl": "Источник с этим URL-адресом уже существует.",
-			"nameTooLong": "Имя не может превышать 20 символов.",
-			"nonVisibleCharsName": "Имя содержит невидимые символы.",
-			"duplicateName": "Источник с этим именем уже существует.",
-			"emojiName": "Символы эмодзи могут вызвать проблемы с отображением."
+			"nonVisibleChars": "URL-адрес содержит невидимые символы, кроме пробелов",
+			"invalidGitUrl": "URL-адрес должен быть действительным URL-адресом репозитория Git (например, https://github.com/username/repo)",
+			"duplicateUrl": "Этот URL-адрес уже есть в списке (совпадение без учета регистра и пробелов)",
+			"nameTooLong": "Имя должно быть не более 20 символов",
+			"nonVisibleCharsName": "Имя содержит невидимые символы, кроме пробелов",
+			"duplicateName": "Это имя уже используется (совпадение без учета регистра и пробелов)",
+			"emojiName": "Символы эмодзи могут вызвать проблемы с отображением",
+			"maxSources": "Разрешено не более {{max}} источников"
 		}
-	},
-	"done": "Готово",
-	"refresh": "Обновить"
+	}
 }

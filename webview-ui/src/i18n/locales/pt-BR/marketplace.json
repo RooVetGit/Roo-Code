@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "Instalado",
 		"settings": "Configurações",
-		"browse": "Explorar",
-		"sources": "Fontes"
+		"browse": "Explorar"
 	},
+	"done": "Concluído",
+	"refresh": "Atualizar",
 	"filters": {
 		"search": {
 			"placeholder": "Pesquisar itens do marketplace..."
@@ -52,6 +53,7 @@
 		},
 		"count": "{{count}} itens encontrados",
 		"components": "{{count}} componentes",
+		"matched": "{{count}} correspondências",
 		"refresh": {
 			"button": "Atualizar",
 			"refreshing": "Atualizando...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "Instalação do projeto",
 	"sources": {
 		"title": "Fontes do Marketplace",
-		"description": "Adicione ou gerencie fontes para os itens do Marketplace. Cada fonte é um repositório Git que contém definições de itens do Marketplace.",
+		"description": "Adicione repositórios Git que contêm itens do marketplace. Esses repositórios serão buscados ao navegar pelo marketplace.",
 		"add": {
 			"title": "Adicionar Nova Fonte",
-			"urlPlaceholder": "URL do repositório Git (ex., 'https://github.com/user/repo.git')",
-			"urlFormats": "Formatos suportados: HTTPS, SSH ou caminho de arquivo local.",
-			"namePlaceholder": "Nome de fonte opcional (ex., 'Meu repositório particular')",
+			"urlPlaceholder": "URL do repositório Git (ex., https://github.com/username/repo)",
+			"urlFormats": "Formatos suportados: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) ou protocolo Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nome de exibição (máx. 20 caracteres)",
 			"button": "Adicionar Fonte"
 		},
 		"current": {
 			"title": "Fontes Atuais",
-			"empty": "Nenhuma fonte do Marketplace adicionada ainda.",
-			"emptyHint": "Adicione uma fonte acima para procurar itens do Marketplace.",
-			"refresh": "Atualizar fonte",
+			"empty": "Nenhuma fonte configurada. Adicione uma fonte para começar.",
+			"refresh": "Atualizar esta fonte",
 			"remove": "Remover fonte"
 		},
 		"errors": {
-			"maxSources": "Máximo de {{max}} fontes permitidas.",
-			"emptyUrl": "A URL não pode estar vazia.",
-			"nonVisibleChars": "A URL contém caracteres não visíveis.",
-			"invalidGitUrl": "Formato de URL Git inválido.",
+			"emptyUrl": "A URL não pode estar vazia",
 			"invalidUrl": "Formato de URL inválido",
-			"duplicateUrl": "Já existe uma fonte com este URL.",
-			"nameTooLong": "O nome não pode exceder 20 caracteres.",
-			"nonVisibleCharsName": "O nome contém caracteres não visíveis.",
-			"duplicateName": "Já existe uma fonte com este nome.",
-			"emojiName": "Caracteres emoji podem causar problemas de exibição."
+			"nonVisibleChars": "A URL contém caracteres não visíveis além de espaços",
+			"invalidGitUrl": "A URL deve ser uma URL de repositório Git válida (ex., https://github.com/username/repo)",
+			"duplicateUrl": "Esta URL já está na lista (correspondência insensível a maiúsculas/minúsculas e espaços em branco)",
+			"nameTooLong": "O nome deve ter 20 caracteres ou menos",
+			"nonVisibleCharsName": "O nome contém caracteres não visíveis além de espaços",
+			"duplicateName": "Este nome já está em uso (correspondência insensível a maiúsculas/minúsculas e espaços em branco)",
+			"emojiName": "Caracteres emoji podem causar problemas de exibição",
+			"maxSources": "Máximo de {{max}} fontes permitidas"
 		}
-	},
-	"done": "Concluído",
-	"refresh": "Atualizar"
+	}
 }

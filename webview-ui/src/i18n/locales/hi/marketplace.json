@@ -3,9 +3,10 @@
 	"tabs": {
 		"installed": "इंस्टॉल किया गया",
 		"settings": "सेटिंग्स",
-		"browse": "ब्राउज़ करें",
-		"sources": "स्रोत"
+		"browse": "ब्राउज़ करें"
 	},
+	"done": "पूर्ण",
+	"refresh": "रीफ्रेश करें",
 	"filters": {
 		"search": {
 			"placeholder": "मार्केटप्लेस आइटम खोजें..."
@@ -30,8 +31,8 @@
 			"placeholder": "टैग खोजने और चुनने के लिए टाइप करें...",
 			"noResults": "कोई मिलान टैग नहीं मिला",
 			"clickToFilter": "आइटम फ़िल्टर करने के लिए टैग पर क्लिक करें",
-			"clear": "{{count}} चयनित टैग साफ़ करें",
-			"selected": "{{count}} चयनित टैग"
+			"clear": "टैग साफ़ करें ({{count}})",
+			"selected": "चयनित टैग में से किसी एक के साथ आइटम दिखा रहा है ({{count}} चयनित)"
 		}
 	},
 	"type-group": {
@@ -50,8 +51,9 @@
 			"adjustFilters": "अपने फ़िल्टर या खोज शब्दों को समायोजित करने का प्रयास करें",
 			"clearAllFilters": "सभी फ़िल्टर साफ़ करें"
 		},
-		"count": "{{count}} आइटम{{count !== 1 ? 's' : ''}} मिले",
+		"count": "{{count}} आइटम मिले",
 		"components": "{{count}} कंपोनेंट",
+		"matched": "{{count}} मिलान",
 		"refresh": {
 			"button": "रीफ्रेश करें",
 			"refreshing": "रीफ्रेश हो रहा है...",
@@ -72,34 +74,31 @@
 	"installProjectTooltip": "परियोजना स्थापना",
 	"sources": {
 		"title": "Marketplace स्रोत",
-		"description": "Marketplace आइटम के लिए स्रोत जोड़ें या प्रबंधित करें. प्रत्येक स्रोत एक Git रिपॉजिटरी है जिसमें Marketplace आइटम परिभाषाएँ हैं।",
+		"description": "मार्केटप्लेस आइटम वाले Git रिपॉजिटरी जोड़ें। मार्केटप्लेस ब्राउज़ करते समय ये रिपॉजिटरी प्राप्त किए जाएंगे।",
 		"add": {
 			"title": "नया स्रोत जोड़ें",
-			"urlPlaceholder": "Git रिपॉजिटरी URL (उदा. 'https://github.com/user/repo.git')",
-			"urlFormats": "समर्थित प्रारूप: HTTPS, SSH या स्थानीय फ़ाइल पथ।",
-			"namePlaceholder": "वैकल्पिक स्रोत नाम (जैसे 'मेरा निजी रेपो')",
+			"urlPlaceholder": "Git रिपॉजिटरी URL (उदा. https://github.com/username/repo)",
+			"urlFormats": "समर्थित प्रारूप: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git), या Git प्रोटोकॉल (git://github.com/username/repo.git)",
+			"namePlaceholder": "प्रदर्शन नाम (अधिकतम 20 वर्ण)",
 			"button": "स्रोत जोड़ें"
 		},
 		"current": {
 			"title": "वर्तमान स्रोत",
-			"empty": "अभी तक कोई Marketplace स्रोत नहीं जोड़ा गया है.",
-			"emptyHint": "Marketplace आइटम ब्राउज़ करने के लिए ऊपर एक स्रोत जोड़ें.",
-			"refresh": "स्रोत ताज़ा करें",
+			"empty": "कोई स्रोत कॉन्फ़िगर नहीं किया गया है। आरंभ करने के लिए एक स्रोत जोड़ें।",
+			"refresh": "इस स्रोत को रीफ्रेश करें",
 			"remove": "स्रोत हटाएं"
 		},
 		"errors": {
-			"maxSources": "अधिकतम {{max}} स्रोतों की अनुमति है.",
-			"emptyUrl": "URL खाली नहीं हो सकता.",
-			"nonVisibleChars": "URL में गैर-दृश्यमान वर्ण हैं.",
-			"invalidGitUrl": "अमान्य Git URL स्वरूप.",
-			"duplicateUrl": "इस URL वाला स्रोत पहले से मौजूद है.",
-			"nameTooLong": "नाम 20 अक्षरों से अधिक नहीं हो सकता.",
-			"nonVisibleCharsName": "नाम में गैर-दृश्यमान वर्ण हैं.",
-			"duplicateName": "इस नाम वाला स्रोत पहले से मौजूद है.",
-			"emojiName": "इमोजी वर्णों के कारण प्रदर्शन संबंधी समस्याएँ हो सकती हैं.",
-			"invalidUrl": "अमान्य URL स्वरूप"
+			"emptyUrl": "URL खाली नहीं हो सकता",
+			"invalidUrl": "अमान्य URL स्वरूप",
+			"nonVisibleChars": "URL में रिक्त स्थान के अलावा गैर-दृश्यमान वर्ण हैं",
+			"invalidGitUrl": "URL एक वैध Git रिपॉजिटरी URL होना चाहिए (उदा. https://github.com/username/repo)",
+			"duplicateUrl": "यह URL पहले से ही सूची में है (केस और व्हाइटस्पेस असंवेदनशील मिलान)",
+			"nameTooLong": "नाम 20 वर्ण या उससे कम होना चाहिए",
+			"nonVisibleCharsName": "नाम में रिक्त स्थान के अलावा गैर-दृश्यमान वर्ण हैं",
+			"duplicateName": "यह नाम पहले से उपयोग में है (केस और व्हाइटस्पेस असंवेदनशील मिलान)",
+			"emojiName": "इमोजी वर्णों के कारण प्रदर्शन संबंधी समस्याएँ हो सकती हैं",
+			"maxSources": "अधिकतम {{max}} स्रोतों की अनुमति है"
 		}
-	},
-	"done": "पूर्ण",
-	"refresh": "रीफ्रेश करें"
+	}
 }
