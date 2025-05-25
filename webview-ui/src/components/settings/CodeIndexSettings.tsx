@@ -97,6 +97,30 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		}
 	}, [codebaseIndexConfig, codebaseIndexModels])
 
+	/**
+	 * Determines the appropriate model ID when changing providers
+	 */
+	function getModelIdForProvider(
+		newProvider: EmbedderProvider,
+		currentProvider: EmbedderProvider | undefined,
+		currentModelId: string | undefined,
+		availableModels: CodebaseIndexModels | undefined,
+	): string {
+		if (newProvider === currentProvider && currentModelId) {
+			return currentModelId
+		}
+
+		const models = availableModels?.[newProvider]
+		const modelIds = models ? Object.keys(models) : []
+
+		if (currentModelId && modelIds.includes(currentModelId)) {
+			return currentModelId
+		}
+
+		const selectedModel = modelIds.length > 0 ? modelIds[0] : ""
+		return selectedModel
+	}
+
 	function validateIndexingConfig(config: CodebaseIndexConfig | undefined, apiConfig: ProviderSettings): boolean {
 		if (!config) return false
 
@@ -210,15 +234,34 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
 								onValueChange={(value) => {
 									const newProvider = value as EmbedderProvider
-									const models = codebaseIndexModels?.[newProvider]
-									const modelIds = models ? Object.keys(models) : []
-									const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
+									const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
+									const currentModelId = codebaseIndexConfig?.codebaseIndexEmbedderModelId
+
+									console.log("[CodeIndexSettings] Provider selection changed:", {
+										newProvider,
+										currentProvider,
+										currentModelId,
+										providerChanged: newProvider !== currentProvider,
+									})
+
+									const modelIdToUse = getModelIdForProvider(
+										newProvider,
+										currentProvider,
+										currentModelId,
+										codebaseIndexModels,
+									)
+
+									console.log("[CodeIndexSettings] Setting new config:", {
+										provider: newProvider,
+										modelId: modelIdToUse,
+										modelChanged: currentModelId !== modelIdToUse,
+									})
 
 									if (codebaseIndexConfig) {
 										setCachedStateField("codebaseIndexConfig", {
 											...codebaseIndexConfig,
 											codebaseIndexEmbedderProvider: newProvider,
-											codebaseIndexEmbedderModelId: defaultModelId,
+											codebaseIndexEmbedderModelId: modelIdToUse,
 										})
 									}
 								}}>
