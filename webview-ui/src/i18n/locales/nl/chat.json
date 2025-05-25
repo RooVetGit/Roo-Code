@@ -260,5 +260,10 @@
 			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-verzoek(en) bereikt. Wil je de teller resetten en doorgaan met de taak?",
 			"button": "Resetten en doorgaan"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo wil de codebase doorzoeken op <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wil de codebase doorzoeken op <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "{{count}} resultaat/resultaten gevonden voor <code>{{query}}</code>:"
 	}
 }

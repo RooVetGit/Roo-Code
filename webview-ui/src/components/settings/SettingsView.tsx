@@ -166,6 +166,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		terminalCompressProgressBar,
 		condensingApiConfigId,
 		customCondensingPrompt,
+		codebaseIndexConfig,
+		codebaseIndexModels,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -304,7 +306,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "maxOpenTabsContext", value: maxOpenTabsContext })
 			vscode.postMessage({ type: "maxWorkspaceFiles", value: maxWorkspaceFiles ?? 200 })
 			vscode.postMessage({ type: "showRooIgnoredFiles", bool: showRooIgnoredFiles })
-			vscode.postMessage({ type: "maxReadFileLine", value: maxReadFileLine ?? 500 })
+			vscode.postMessage({ type: "maxReadFileLine", value: maxReadFileLine ?? -1 })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
@@ -313,6 +315,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "updateCondensingPrompt", text: customCondensingPrompt || "" })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
+			vscode.postMessage({ type: "codebaseIndexConfig", values: codebaseIndexConfig })
 			setChangeDetected(false)
 		}
 	}
@@ -661,12 +664,17 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							setExperimentEnabled={setExperimentEnabled}
 							experiments={experiments}
 							autoCondenseContextPercent={autoCondenseContextPercent}
-							setCachedStateField={setCachedStateField}
 							condensingApiConfigId={condensingApiConfigId}
 							setCondensingApiConfigId={(value) => setCachedStateField("condensingApiConfigId", value)}
 							customCondensingPrompt={customCondensingPrompt}
 							setCustomCondensingPrompt={(value) => setCachedStateField("customCondensingPrompt", value)}
 							listApiConfigMeta={listApiConfigMeta ?? []}
+							setCachedStateField={setCachedStateField}
+							codebaseIndexModels={codebaseIndexModels}
+							codebaseIndexConfig={codebaseIndexConfig}
+							apiConfiguration={apiConfiguration}
+							setApiConfigurationField={setApiConfigurationField}
+							areSettingsCommitted={!isChangeDetected}
 						/>
 					)}
 

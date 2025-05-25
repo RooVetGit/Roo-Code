@@ -260,5 +260,10 @@
 			"description": "Roo 已達到 {{count}} 次 API 請求的自動核准限制。您想要重設計數並繼續工作嗎？",
 			"button": "重設並繼續"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo 想要搜尋程式碼庫：<code>{{query}}</code>",
+		"wantsToSearchWithPath": "Roo 想要在 <code>{{path}}</code> 中搜尋：<code>{{query}}</code>",
+		"didSearch": "找到 {{count}} 個結果：<code>{{query}}</code>"
 	}
 }

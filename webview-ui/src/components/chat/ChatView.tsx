@@ -729,6 +729,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				"listFilesRecursive",
 				"listCodeDefinitionNames",
 				"searchFiles",
+				"codebaseSearch",
 			].includes(tool.tool)
 		}
 
@@ -1194,8 +1195,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// This is copied from `handlePrimaryButtonClick`, which we used
 				// to call from `autoApprove`. I'm not sure how many of these
 				// things are actually needed.
-				setInputValue("")
-				setSelectedImages([])
 				setSendingDisabled(true)
 				setClineAsk(undefined)
 				setEnableButtons(false)

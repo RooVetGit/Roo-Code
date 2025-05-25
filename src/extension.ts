@@ -24,6 +24,7 @@ import { telemetryService } from "./services/telemetry/TelemetryService"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
 import { formatLanguage } from "./shared/language"
+import { CodeIndexManager } from "./services/code-index/manager"
 
 import {
 	handleUri,
@@ -74,8 +75,22 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
-	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
+	const codeIndexManager = CodeIndexManager.getInstance(context)
+
+	try {
+		await codeIndexManager?.initialize(contextProxy)
+	} catch (error) {
+		outputChannel.appendLine(
+			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
+		)
+	}
+
+	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
 	telemetryService.setProvider(provider)
+
+	if (codeIndexManager) {
+		context.subscriptions.push(codeIndexManager)
+	}
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
@@ -130,17 +145,19 @@ export async function activate(context: vscode.ExtensionContext) {
 	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
 	const enableLogging = typeof socketPath === "string"
 
-	// Watch the core files and automatically reload the extension host
-	const enableCoreAutoReload = process.env?.NODE_ENV === "development"
-	if (enableCoreAutoReload) {
-		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED!`)
+	// Watch the core files and automatically reload the extension host.
+	if (process.env.NODE_ENV === "development") {
+		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED! Watching for changes in ${context.extensionPath}/**/*.ts`)
+
 		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(context.extensionPath, "src/**/*.ts"),
+			new vscode.RelativePattern(context.extensionPath, "**/*.ts"),
 		)
+
 		watcher.onDidChange((uri) => {
 			console.log(`♻️ File changed: ${uri.fsPath}. Reloading host…`)
 			vscode.commands.executeCommand("workbench.action.reloadWindow")
 		})
+
 		context.subscriptions.push(watcher)
 	}
 
