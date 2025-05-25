@@ -1198,6 +1198,7 @@ export const mistralModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.3,
 		outputPrice: 0.9,
+		supportsComputerUse: true,
 	},
 	"mistral-large-latest": {
 		maxTokens: 131_000,
