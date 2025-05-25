@@ -26,6 +26,58 @@ export async function readFileTool(
 	const startLineStr: string | undefined = block.params.start_line
 	const endLineStr: string | undefined = block.params.end_line
 
+	// Get the full path early for history check
+	const fullPathForHistoryCheck = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
+
+	// Pre-read check
+	if (relPath && fullPathForHistoryCheck) {
+		const lastUserMessageIndex = findLastIndex(cline.apiConversationHistory, msg => msg.role === "user");
+		const recentMessagesToSearch = lastUserMessageIndex === -1 ? cline.apiConversationHistory : cline.apiConversationHistory.slice(lastUserMessageIndex + 1);
+
+		for (let i = recentMessagesToSearch.length - 1; i >= 0; i--) {
+			const message = recentMessagesToSearch[i];
+			if (message.role === "assistant" && Array.isArray(message.content)) {
+				for (const blk of message.content) {
+					// Check for recent readFileTool result
+					if (blk.type === "tool_result" && blk.tool_name === "readFileTool" && blk.tool_use_id) {
+						const originalToolUseMsg = cline.apiConversationHistory.find(m => 
+							m.role === "assistant" && Array.isArray(m.content) && m.content.some(b => b.type === "tool_use" && b.id === blk.tool_use_id)
+						);
+						if (originalToolUseMsg && Array.isArray(originalToolUseMsg.content)) {
+							const originalToolUse = originalToolUseMsg.content.find(b => b.type === "tool_use" && b.id === blk.tool_use_id) as ToolUse<"read_file"> | undefined;
+							const historicalPath = originalToolUse?.params.path ? path.resolve(cline.cwd, removeClosingTag("path", originalToolUse.params.path)) : "";
+							if (historicalPath === fullPathForHistoryCheck) {
+								const historicalContent = Array.isArray(blk.content) ? blk.content.find(c => c.type === "text")?.text : blk.content;
+								if (typeof historicalContent === "string") {
+									cline.providerRef.deref()?.log(`[Task ${cline.taskId}] Bypassing readFileTool for ${getReadablePath(cline.cwd, relPath)} - using content from recent readFileTool result (tool_use_id: ${blk.tool_use_id}).`);
+									// We need to reconstruct the XML string that would have been produced
+									// For simplicity, we'll assume it was a full read if we hit this cache.
+									// A more robust solution would store the exact XML or parameters of the original read.
+									const xmlResult = `<file><path>${relPath}</path>\n<content lines="1-${historicalContent.split("\n").length}">\n${historicalContent}</content>\n</file>`;
+									pushToolResult(xmlResult);
+									return; // Bypass actual file read
+								}
+							}
+						}
+					} 
+					// Check for recent writeToFileTool call
+					else if (blk.type === "tool_use" && blk.name === "writeToFileTool") {
+						const writeToolUse = blk as ToolUse<"writeToFileTool">;
+						const writtenPath = writeToolUse.params.path ? path.resolve(cline.cwd, removeClosingTag("path", writeToolUse.params.path)) : "";
+						if (writtenPath === fullPathForHistoryCheck) {
+							cline.providerRef.deref()?.log(`[Task ${cline.taskId}] Bypassing readFileTool for ${getReadablePath(cline.cwd, relPath)} - using content from recent writeToFileTool call (tool_use_id: ${writeToolUse.id}).`);
+							// Construct a similar XML result as if the file was read
+							const contentFromWrite = writeToolUse.params.content || "";
+							const xmlResult = `<file><path>${relPath}</path>\n<content lines="1-${contentFromWrite.split("\n").length}">\n${contentFromWrite}</content>\n</file>`;
+							pushToolResult(xmlResult);
+							return; // Bypass actual file read
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Get the full path and determine if it's outside the workspace
 	const fullPath = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
 	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
