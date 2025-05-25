@@ -16,8 +16,8 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
+import debounce from "lodash.debounce"
 import { t } from "../../i18n"
-import { countdown } from "kontroll"
 
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { GlobalFileNames } from "../../shared/globalFileNames"
@@ -112,6 +112,10 @@ export class McpHub {
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
 	private refCount: number = 0 // Reference counter for active clients
+
+	private debouncedReloadLogic = debounce(() => {
+		this.reloadMcpServers()
+	}, 1000)
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
@@ -355,16 +359,7 @@ export class McpHub {
 	}
 
 	public async reloadMcpServers() {
-		if (this.isConnecting) {
-			countdown(
-				2000,
-				() => {
-					this.reloadMcpServers()
-				},
-				{ key: "reloadMcpServers" },
-			)
-			return
-		}
+		if (this.isConnecting) this.debouncedReloadLogic()
 
 		await this.initializeProjectMcpServers()
 		await this.initializeGlobalMcpServers()

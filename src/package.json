@@ -381,7 +381,6 @@
 		"i18next": "^24.2.2",
 		"ignore": "^7.0.3",
 		"isbinaryfile": "^5.0.2",
-		"kontroll": "^1.0.5",
 		"lodash.debounce": "^4.0.8",
 		"mammoth": "^1.8.0",
 		"monaco-vscode-textmate-theme-converter": "^0.1.7",
