@@ -1192,13 +1192,14 @@ export const mistralModels = {
 		outputPrice: 0.9,
 	},
 	"devstral-small-2505": {
-		maxTokens: 256_000,
-		contextWindow: 256_000,
+		maxTokens: 32_000, // Based on Mistral Small, as Devstral is a fine-tune
+		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
-		inputPrice: 0.3,
-		outputPrice: 0.9,
+		inputPrice: 0.1,
+		outputPrice: 0.3,
 		supportsComputerUse: true,
+		description: "Devstral Small, a SOTA coding model that excels at using tools to explore codebases, editing multiple files and powering software engineering agents. (Finetuned from Mistral-Small-3.1, 128k context window)."
 	},
 	"mistral-large-latest": {
 		maxTokens: 131_000,
