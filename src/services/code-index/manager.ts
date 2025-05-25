@@ -262,8 +262,8 @@ export class CodeIndexManager {
 			const isFeatureEnabled = this.isFeatureEnabled
 			const isFeatureConfigured = this.isFeatureConfigured
 
-			// If configuration changes require a restart, restart the service
-			if (requiresRestart && isFeatureEnabled && isFeatureConfigured) {
+			// If configuration changes require a restart and the manager is initialized, restart the service
+			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
 				this.stopWatcher()
 				await this.startIndexing()
 			}
