@@ -15,6 +15,7 @@ export class CodeIndexConfigManager {
 	private modelId?: string
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
+	private geminiOptions?: ApiHandlerOptions
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -37,6 +38,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
+			geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
 		}
 
 		const {
@@ -45,10 +47,12 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
+			geminiEmbeddingTaskType,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
+		const geminiApiKey = this.contextProxy?.getSecret("geminiApiKey") ?? ""
 
 		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
@@ -57,11 +61,24 @@ export class CodeIndexConfigManager {
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 		this.searchMinScore = SEARCH_MIN_SCORE
 
-		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
+		if (codebaseIndexEmbedderProvider === "ollama") {
+			this.embedderProvider = "ollama"
+		} else if (codebaseIndexEmbedderProvider === "gemini") {
+			this.embedderProvider = "gemini"
+		} else {
+			this.embedderProvider = "openai"
+		}
+
 		this.modelId = codebaseIndexEmbedderModelId || undefined
 
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
+		}
+
+		this.geminiOptions = {
+			geminiApiKey,
+			geminiEmbeddingTaskType: geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY",
+			apiModelId: this.modelId,
 		}
 	}
 
@@ -77,6 +94,7 @@ export class CodeIndexConfigManager {
 			modelId?: string
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
+			geminiOptions?: ApiHandlerOptions
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
@@ -91,6 +109,8 @@ export class CodeIndexConfigManager {
 			modelId: this.modelId,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey ?? "",
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
+			geminiApiKey: this.geminiOptions?.geminiApiKey,
+			geminiEmbeddingTaskType: this.geminiOptions?.geminiEmbeddingTaskType,
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
@@ -109,6 +129,7 @@ export class CodeIndexConfigManager {
 				modelId: this.modelId,
 				openAiOptions: this.openAiOptions,
 				ollamaOptions: this.ollamaOptions,
+				geminiOptions: this.geminiOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.searchMinScore,
@@ -133,6 +154,15 @@ export class CodeIndexConfigManager {
 			const isConfigured = !!(ollamaBaseUrl && qdrantUrl)
 			return isConfigured
 		}
+
+		if (this.embedderProvider === "gemini") {
+			// Gemini requires an API key and Qdrant URL
+			const geminiApiKey = this.geminiOptions?.geminiApiKey
+			const geminiEmbeddingTaskType = this.geminiOptions?.geminiEmbeddingTaskType
+			const qdrantUrl = this.qdrantUrl
+			const isConfigured = !!(geminiApiKey && geminiEmbeddingTaskType && qdrantUrl)
+			return isConfigured
+		}
 		return false // Should not happen if embedderProvider is always set correctly
 	}
 
@@ -149,6 +179,7 @@ export class CodeIndexConfigManager {
 		const prevModelId = prev?.modelId ?? undefined
 		const prevOpenAiKey = prev?.openAiKey ?? ""
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
+		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
@@ -189,6 +220,13 @@ export class CodeIndexConfigManager {
 			if (this.embedderProvider === "ollama") {
 				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
 				if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+					return true
+				}
+			}
+
+			if (this.embedderProvider === "gemini") {
+				const currentGeminiApiKey = this.geminiOptions?.geminiApiKey ?? ""
+				if (prevGeminiApiKey !== currentGeminiApiKey) {
 					return true
 				}
 			}

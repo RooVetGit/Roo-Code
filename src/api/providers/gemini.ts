@@ -25,7 +25,7 @@ type GeminiHandlerOptions = ApiHandlerOptions & {
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 
-	private client: GoogleGenAI
+	protected client: GoogleGenAI
 
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
 		super()
