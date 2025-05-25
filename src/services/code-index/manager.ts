@@ -101,9 +101,8 @@ export class CodeIndexManager {
 		// 1. ConfigManager Initialization and Configuration Loading
 		if (!this._configManager) {
 			this._configManager = new CodeIndexConfigManager(contextProxy)
-			// For first initialization, load configuration to set up initial state
-			await this._configManager.loadConfiguration()
 		}
+		// Load configuration once to get current state and restart requirements
 		const { requiresRestart } = await this._configManager.loadConfiguration()
 
 		// 2. Check if feature is enabled
