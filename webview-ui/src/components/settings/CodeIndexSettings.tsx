@@ -237,25 +237,12 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 									const currentModelId = codebaseIndexConfig?.codebaseIndexEmbedderModelId
 
-									console.log("[CodeIndexSettings] Provider selection changed:", {
-										newProvider,
-										currentProvider,
-										currentModelId,
-										providerChanged: newProvider !== currentProvider,
-									})
-
 									const modelIdToUse = getModelIdForProvider(
 										newProvider,
 										currentProvider,
 										currentModelId,
 										codebaseIndexModels,
 									)
-
-									console.log("[CodeIndexSettings] Setting new config:", {
-										provider: newProvider,
-										modelId: modelIdToUse,
-										modelChanged: currentModelId !== modelIdToUse,
-									})
 
 									if (codebaseIndexConfig) {
 										setCachedStateField("codebaseIndexConfig", {
