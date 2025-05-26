@@ -44,5 +44,8 @@
 		"*.{js,jsx,ts,tsx,json,css,md}": [
 			"prettier --write"
 		]
+	},
+	"dependencies": {
+		"@octokit/rest": "^21.1.1"
 	}
 }

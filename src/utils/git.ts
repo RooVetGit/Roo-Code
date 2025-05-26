@@ -158,3 +158,40 @@ export async function getWorkingState(cwd: string): Promise<string> {
 		return `Failed to get working state: ${error instanceof Error ? error.message : String(error)}`
 	}
 }
+
+export async function getGitHubRepoInfo(cwd: string): Promise<{ owner: string; repo: string } | null> {
+	try {
+		const isInstalled = await checkGitInstalled();
+		if (!isInstalled) {
+			console.error("Git is not installed. Cannot infer GitHub repo info.");
+			return null;
+		}
+
+		const isRepo = await checkGitRepo(cwd);
+		if (!isRepo) {
+			console.error("Not a git repository. Cannot infer GitHub repo info.");
+			return null;
+		}
+
+		const { stdout: remoteUrl } = await execAsync("git remote get-url origin", { cwd });
+		const url = remoteUrl.trim();
+
+		// Try to parse HTTPS URL: https://github.com/OWNER/REPO.git
+		let match = url.match(/github\.com\/([^/]+)\/([^/.]+)(\.git)?$/i);
+		if (match && match[1] && match[2]) {
+			return { owner: match[1], repo: match[2] };
+		}
+
+		// Try to parse SSH URL: git@github.com:OWNER/REPO.git
+		match = url.match(/git@github\.com:([^/]+)\/([^/.]+)(\.git)?$/i);
+		if (match && match[1] && match[2]) {
+			return { owner: match[1], repo: match[2] };
+		}
+		
+		console.error(`Could not parse GitHub owner and repo from remote URL: ${url}`);
+		return null;
+	} catch (error) {
+		console.error("Error getting GitHub remote URL:", error);
+		return null;
+	}
+}

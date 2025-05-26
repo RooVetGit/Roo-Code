@@ -2,25 +2,25 @@ import { ToolUse } from "../../shared/tools"
 import { t } from "../../i18n"
 
 /**
- * Class for detecting consecutive identical tool calls
+ * Class for detecting patterns of tool call repetition in recent history
  * to prevent the AI from getting stuck in a loop.
  */
 export class ToolRepetitionDetector {
-	private previousToolCallJson: string | null = null
-	private consecutiveIdenticalToolCallCount: number = 0
-	private readonly consecutiveIdenticalToolCallLimit: number
+	private toolCallHistory: string[] = []
+	private readonly HISTORY_SIZE: number = 5 // Defines the window for checking repetitions
+	private readonly REPETITION_THRESHOLD: number // The number of occurrences to trigger detection
 
 	/**
 	 * Creates a new ToolRepetitionDetector
-	 * @param limit The maximum number of identical consecutive tool calls allowed
+	 * @param repetitionLimitInHistory The maximum number of identical tool calls allowed within the history window.
 	 */
-	constructor(limit: number = 3) {
-		this.consecutiveIdenticalToolCallLimit = limit
+	constructor(repetitionLimitInHistory: number = 3) {
+		this.REPETITION_THRESHOLD = repetitionLimitInHistory
 	}
 
 	/**
-	 * Checks if the current tool call is identical to the previous one
-	 * and determines if execution should be allowed
+	 * Checks if the current tool call has been repeated frequently in the recent history
+	 * and determines if execution should be allowed.
 	 *
 	 * @param currentToolCallBlock ToolUse object representing the current tool call
 	 * @returns Object indicating if execution is allowed and a message to show if not
@@ -35,25 +35,27 @@ export class ToolRepetitionDetector {
 		// Serialize the block to a canonical JSON string for comparison
 		const currentToolCallJson = this.serializeToolUse(currentToolCallBlock)
 
-		// Compare with previous tool call
-		if (this.previousToolCallJson === currentToolCallJson) {
-			this.consecutiveIdenticalToolCallCount++
-		} else {
-			this.consecutiveIdenticalToolCallCount = 1 // Start with 1 for the first occurrence
-			this.previousToolCallJson = currentToolCallJson
+		// Add current call to history
+		this.toolCallHistory.push(currentToolCallJson)
+
+		// Trim history if it exceeds HISTORY_SIZE
+		if (this.toolCallHistory.length > this.HISTORY_SIZE) {
+			this.toolCallHistory.shift() // Remove the oldest entry
 		}
 
-		// Check if limit is reached
-		if (this.consecutiveIdenticalToolCallCount >= this.consecutiveIdenticalToolCallLimit) {
-			// Reset counters to allow recovery if user guides the AI past this point
-			this.consecutiveIdenticalToolCallCount = 0
-			this.previousToolCallJson = null
+		// Count occurrences of the current tool call in the history
+		const repetitionCount = this.toolCallHistory.filter(call => call === currentToolCallJson).length
+
+		// Check if repetition threshold is reached
+		if (repetitionCount >= this.REPETITION_THRESHOLD) {
+			// Reset history to allow recovery if user guides the AI past this point
+			this.toolCallHistory = []
 
 			// Return result indicating execution should not be allowed
 			return {
 				allowExecution: false,
 				askUser: {
-					messageKey: "mistake_limit_reached",
+					messageKey: "mistake_limit_reached", // This key seems appropriate for various error limits
 					messageDetail: t("tools:toolRepetitionLimitReached", { toolName: currentToolCallBlock.name }),
 				},
 			}

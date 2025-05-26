@@ -188,6 +188,7 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
+	createGitHubPullRequestTool: "create GitHub pull request",
 } as const
 
 export type { ToolGroup }
@@ -219,6 +220,9 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	modes: {
 		tools: ["switch_mode", "new_task"],
 		alwaysAvailable: true,
+	},
+	github: {
+		tools: ["createGitHubPullRequestTool"],
 	},
 }
 

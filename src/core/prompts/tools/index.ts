@@ -22,9 +22,11 @@ import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
 import { getCodebaseSearchDescription } from "./codebase-search"
 import { CodeIndexManager } from "../../../services/code-index/manager"
+import { createGitHubPullRequestToolDefinition } from "./definitions/createGitHubPullRequestToolDefinition" // Added import
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
+	createGitHubPullRequestTool: () => createGitHubPullRequestToolDefinition.description, // Added new tool
 	execute_command: (args) => getExecuteCommandDescription(args),
 	read_file: (args) => getReadFileDescription(args),
 	fetch_instructions: () => getFetchInstructionsDescription(),

@@ -26,6 +26,10 @@ import {
 	addCustomInstructions,
 	markdownFormattingSection,
 } from "./sections"
+import { 
+	getDevstralRoleAndCoreInstructions, 
+	getDevstralToolUsageGuidelines 
+} from "./sections/devstral-specific" // Import Devstral specific prompts
 import { formatLanguage } from "../../shared/language"
 import { CodeIndexManager } from "../../services/code-index/manager"
 
@@ -45,17 +49,37 @@ async function generatePrompt(
 	enableMcpServerCreation?: boolean,
 	language?: string,
 	rooIgnoreInstructions?: string,
+	isDevstralModel?: boolean, 
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
 	}
 
-	// If diff is disabled, don't pass the diffStrategy
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
-
-	// Get the full mode config to ensure we have the role definition
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
-	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
+	let roleDefinitionFromMode = promptComponent?.roleDefinition || modeConfig.roleDefinition
+	
+	let finalCombinedRoleDefinition: string;
+	let devstralCoreSystemInstructions = "";
+	let devstralSpecificToolGuidelines = "";
+
+	if (isDevstralModel) {
+		const fullDevstralCore = getDevstralRoleAndCoreInstructions();
+		// The getDevstralRoleAndCoreInstructions includes the intro "You are Devstral..." and the <ROLE> block.
+		// It also includes other sections like <EFFICIENCY>, <CODE_QUALITY>, etc.
+		// We will prepend Devstral's intro + ROLE to the mode-specific role definition.
+		// And then append the other Devstral core instructions later in the prompt.
+		const devstralIntroAndRoleMatch = fullDevstralCore.match(/^(You are Devstral.*?<\/ROLE>)/s);
+		const devstralIntroAndRole = devstralIntroAndRoleMatch ? devstralIntroAndRoleMatch[0] : "You are Devstral, a helpful agentic model trained by Mistral AI and using the OpenHands scaffold."; // Fallback
+
+		finalCombinedRoleDefinition = `${devstralIntroAndRole}\n\n${roleDefinitionFromMode}`;
+		
+		// Extract remaining general instructions (EFFICIENCY, CODE_QUALITY, etc.)
+		devstralCoreSystemInstructions = fullDevstralCore.replace(/^(You are Devstral.*?<\/ROLE>\s*)/s, "").trim();
+		devstralSpecificToolGuidelines = getDevstralToolUsageGuidelines();
+	} else {
+		finalCombinedRoleDefinition = roleDefinitionFromMode;
+	}
 
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
@@ -65,8 +89,12 @@ async function generatePrompt(
 	])
 
 	const codeIndexManager = CodeIndexManager.getInstance(context)
+	
+	const toolUseGuidelines = getToolUseGuidelinesSection() + 
+		(isDevstralModel ? `\n\n${devstralSpecificToolGuidelines}` : "");
 
-	const basePrompt = `${roleDefinition}
+	// Construct the base prompt, including Devstral specific instructions if applicable
+	let basePrompt = `${finalCombinedRoleDefinition}
 
 ${markdownFormattingSection()}
 
@@ -82,9 +110,16 @@ ${getToolDescriptionsForMode(
 	mcpHub,
 	customModeConfigs,
 	experiments,
+	isDevstralModel, // Pass isDevstralModel
 )}
 
-${getToolUseGuidelinesSection()}
+${toolUseGuidelines}`
+
+	if (isDevstralModel) {
+		basePrompt += `\n\n${devstralCoreSystemInstructions}`
+	}
+
+basePrompt += `
 
 ${mcpServersSection}
 
@@ -119,6 +154,7 @@ export const SYSTEM_PROMPT = async (
 	enableMcpServerCreation?: boolean,
 	language?: string,
 	rooIgnoreInstructions?: string,
+	isDevstralModel: boolean = false, 
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -131,7 +167,6 @@ export const SYSTEM_PROMPT = async (
 		return undefined
 	}
 
-	// Try to load custom system prompt from file
 	const variablesForPrompt: PromptVariables = {
 		workspace: cwd,
 		mode: mode,
@@ -141,15 +176,17 @@ export const SYSTEM_PROMPT = async (
 	}
 	const fileCustomSystemPrompt = await loadSystemPromptFile(cwd, mode, variablesForPrompt)
 
-	// Check if it's a custom mode
 	const promptComponent = getPromptComponent(customModePrompts?.[mode])
-
-	// Get full mode config from custom modes or fall back to built-in modes
 	const currentMode = getModeBySlug(mode, customModes) || modes.find((m) => m.slug === mode) || modes[0]
 
-	// If a file-based custom system prompt exists, use it
 	if (fileCustomSystemPrompt) {
-		const roleDefinition = promptComponent?.roleDefinition || currentMode.roleDefinition
+		let roleDefinitionFromFile = promptComponent?.roleDefinition || currentMode.roleDefinition
+		if (isDevstralModel) {
+			// Prepend Devstral's intro and ROLE even for file-based custom system prompts
+			const devstralIntroAndRoleMatch = getDevstralRoleAndCoreInstructions().match(/^(You are Devstral.*?<\/ROLE>)/s);
+			const devstralIntroAndRole = devstralIntroAndRoleMatch ? devstralIntroAndRoleMatch[0] : "You are Devstral, a helpful agentic model trained by Mistral AI and using the OpenHands scaffold.";
+			roleDefinitionFromFile = `${devstralIntroAndRole}\n\n${roleDefinitionFromFile}`;
+		}
 		const customInstructions = await addCustomInstructions(
 			promptComponent?.customInstructions || currentMode.customInstructions || "",
 			globalCustomInstructions || "",
@@ -157,16 +194,12 @@ export const SYSTEM_PROMPT = async (
 			mode,
 			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
 		)
-
-		// For file-based prompts, don't include the tool sections
-		return `${roleDefinition}
-
-${fileCustomSystemPrompt}
-
-${customInstructions}`
+		// Note: For file-based prompts, only the role definition is augmented.
+		// The main body from the file is used, and general Devstral instructions (efficiency, code quality, etc.)
+		// and Devstral tool guidelines are NOT inserted here, as the file prompt is a full override.
+		return `${roleDefinitionFromFile}\n\n${fileCustomSystemPrompt}\n\n${customInstructions}`
 	}
 
-	// If diff is disabled, don't pass the diffStrategy
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 
 	return generatePrompt(
@@ -185,5 +218,6 @@ ${customInstructions}`
 		enableMcpServerCreation,
 		language,
 		rooIgnoreInstructions,
+		isDevstralModel, 
 	)
 }

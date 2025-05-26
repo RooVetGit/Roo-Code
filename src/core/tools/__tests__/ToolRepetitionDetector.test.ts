@@ -25,7 +25,8 @@ function createToolUse(name: string, displayName?: string, params: Record<string
 }
 
 describe("ToolRepetitionDetector", () => {
-	// ===== Initialization tests =====
+	// ===== Legacy Consecutive Repetition Tests (Commented Out) =====
+	/*
 	describe("initialization", () => {
 		it("should default to a limit of 3 if no argument provided", () => {
 			const detector = new ToolRepetitionDetector()
@@ -58,7 +59,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== No Repetition tests =====
 	describe("no repetition", () => {
 		it("should allow execution for different tool calls", () => {
 			const detector = new ToolRepetitionDetector()
@@ -91,7 +91,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== Repetition Below Limit tests =====
 	describe("repetition below limit", () => {
 		it("should allow execution when repetition is below limit and block when limit reached", () => {
 			const detector = new ToolRepetitionDetector(3)
@@ -110,7 +109,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== Repetition Reaches Limit tests =====
 	describe("repetition reaches limit", () => {
 		it("should block execution when repetition reaches the limit", () => {
 			const detector = new ToolRepetitionDetector(3)
@@ -144,7 +142,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== Repetition After Limit (Post-Reset) tests =====
 	describe("repetition after limit", () => {
 		it("should allow execution of previously problematic tool after reset", () => {
 			const detector = new ToolRepetitionDetector(2)
@@ -177,7 +174,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== Tool Name Interpolation tests =====
 	describe("tool name interpolation", () => {
 		it("should include tool name in the error message", () => {
 			const detector = new ToolRepetitionDetector(2)
@@ -192,7 +188,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== Edge Cases =====
 	describe("edge cases", () => {
 		it("should handle empty tool call", () => {
 			const detector = new ToolRepetitionDetector(2)
@@ -259,7 +254,6 @@ describe("ToolRepetitionDetector", () => {
 		})
 	})
 
-	// ===== Explicit Nth Call Blocking tests =====
 	describe("explicit Nth call blocking behavior", () => {
 		it("should block on the 1st call for limit 1", () => {
 			const detector = new ToolRepetitionDetector(1)
@@ -301,4 +295,158 @@ describe("ToolRepetitionDetector", () => {
 			expect(result3.askUser).toBeDefined()
 		})
 	})
-})
+	*/
+
+	// ===== New History-based Repetition Tests =====
+	describe("History-based Repetition Detection", () => {
+		const HISTORY_SIZE = 5; // Default in implementation
+		const REPETITION_THRESHOLD = 3; // Default in implementation
+
+		it("Test Case: No repetition within history window", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			let result;
+			result = detector.check(createToolUse("toolA", "Tool A"));
+			expect(result.allowExecution).toBe(true);
+			result = detector.check(createToolUse("toolB", "Tool B"));
+			expect(result.allowExecution).toBe(true);
+			result = detector.check(createToolUse("toolC", "Tool C"));
+			expect(result.allowExecution).toBe(true);
+			result = detector.check(createToolUse("toolD", "Tool D"));
+			expect(result.allowExecution).toBe(true);
+			result = detector.check(createToolUse("toolE", "Tool E"));
+			expect(result.allowExecution).toBe(true);
+		});
+
+		it("Test Case: Tool repeated up to the threshold within the history window (should trigger)", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			detector.check(createToolUse("toolA", "Tool A"));
+			detector.check(createToolUse("toolB", "Tool B"));
+			detector.check(createToolUse("toolA", "Tool A"));
+			detector.check(createToolUse("toolC", "Tool C"));
+			// This is the 3rd "toolA" within the last 5 calls
+			const result = detector.check(createToolUse("toolA", "Tool A"));
+			expect(result.allowExecution).toBe(false);
+			expect(result.askUser?.messageDetail).toContain("Tool A");
+		});
+		
+		it("Test Case: Tool repeated exactly threshold times consecutively", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			detector.check(createToolUse("toolA", "Tool A")); // 1st
+			detector.check(createToolUse("toolA", "Tool A")); // 2nd
+			const result = detector.check(createToolUse("toolA", "Tool A")); // 3rd - triggers
+			expect(result.allowExecution).toBe(false);
+			expect(result.askUser?.messageDetail).toContain("Tool A");
+		});
+
+
+		it("Test Case: Tool repeated less than the threshold", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			detector.check(createToolUse("toolA", "Tool A"));
+			detector.check(createToolUse("toolB", "Tool B"));
+			detector.check(createToolUse("toolA", "Tool A")); // Only 2 occurrences of toolA
+			detector.check(createToolUse("toolC", "Tool C"));
+			const result = detector.check(createToolUse("toolD", "Tool D"));
+			expect(result.allowExecution).toBe(true);
+		});
+
+		it("Test Case: History window full, but no single tool meets the repetition threshold", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD); // Threshold is 3
+			detector.check(createToolUse("toolA", "Tool A")); // A:1
+			detector.check(createToolUse("toolB", "Tool B")); // B:1
+			detector.check(createToolUse("toolA", "Tool A")); // A:2
+			detector.check(createToolUse("toolB", "Tool B")); // B:2
+			detector.check(createToolUse("toolC", "Tool C")); // C:1 (History: A,B,A,B,C)
+			// Next call, toolD. History becomes: B,A,B,C,D. No tool meets threshold of 3.
+			const result = detector.check(createToolUse("toolD", "Tool D"));
+			expect(result.allowExecution).toBe(true);
+		});
+
+		it("Test Case: After a repetition is flagged and history is cleared, subsequent distinct tool calls are allowed", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			detector.check(createToolUse("toolA", "Tool A"));
+			detector.check(createToolUse("toolA", "Tool A"));
+			let result = detector.check(createToolUse("toolA", "Tool A")); // Flagged
+			expect(result.allowExecution).toBe(false);
+
+			// History should be cleared
+			result = detector.check(createToolUse("toolB", "Tool B")); // Should be allowed
+			expect(result.allowExecution).toBe(true);
+			result = detector.check(createToolUse("toolC", "Tool C")); // Should be allowed
+			expect(result.allowExecution).toBe(true);
+		});
+		
+		it("Test Case: Varying history sizes and thresholds - smaller window", () => {
+			const detector = new ToolRepetitionDetector(2); // Threshold 2, History size remains 5 (default internal)
+			detector.check(createToolUse("toolX", "Tool X"));
+			// This is the 2nd "toolX"
+			const result = detector.check(createToolUse("toolX", "Tool X"));
+			expect(result.allowExecution).toBe(false);
+			expect(result.askUser?.messageDetail).toContain("Tool X");
+		});
+
+		it("Test Case: Varying history sizes and thresholds - larger threshold", () => {
+			const detector = new ToolRepetitionDetector(4); // Threshold 4
+			detector.check(createToolUse("toolY", "Tool Y"));
+			detector.check(createToolUse("toolY", "Tool Y"));
+			detector.check(createToolUse("toolY", "Tool Y"));
+			let result = detector.check(createToolUse("toolZ", "Tool Z")); // Still allowed
+			expect(result.allowExecution).toBe(true);
+			// This is the 4th "toolY"
+			result = detector.check(createToolUse("toolY", "Tool Y"));
+			expect(result.allowExecution).toBe(false);
+			expect(result.askUser?.messageDetail).toContain("Tool Y");
+		});
+
+		it("should correctly handle tool calls with different parameters", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			detector.check(createToolUse("toolP", "Tool P", { p1: "v1" }));
+			detector.check(createToolUse("toolP", "Tool P", { p1: "v2" }));
+			detector.check(createToolUse("toolP", "Tool P", { p1: "v1" }));
+			detector.check(createToolUse("toolP", "Tool P", { p1: "v3" }));
+			// Only 2 occurrences of toolP with p1:v1
+			const result = detector.check(createToolUse("toolP", "Tool P", { p1: "v1" })); 
+			expect(result.allowExecution).toBe(false); // This should be the 3rd time {p1:"v1"} appears
+		});
+
+		it("should correctly handle tool calls with same parameters in different order", () => {
+			const detector = new ToolRepetitionDetector(REPETITION_THRESHOLD);
+			detector.check(createToolUse("toolS", "Tool S", { a: "1", b: "2" }));
+			detector.check(createToolUse("toolOther", "Tool Other"));
+			detector.check(createToolUse("toolS", "Tool S", { b: "2", a: "1" }));
+			detector.check(createToolUse("toolDifferent", "Tool Different"));
+			const result = detector.check(createToolUse("toolS", "Tool S", { a: "1", b: "2" }));
+			expect(result.allowExecution).toBe(false); // Parameters are sorted, so these are identical
+			expect(result.askUser?.messageDetail).toContain("Tool S");
+		});
+		
+		it("should correctly fill and slide the history window", () => {
+			const detector = new ToolRepetitionDetector(3); // Threshold 3, History 5
+			// Fill history without triggering
+			detector.check(createToolUse("tool1", "T1")); // H: [T1]
+			detector.check(createToolUse("tool2", "T2")); // H: [T1, T2]
+			detector.check(createToolUse("tool1", "T1")); // H: [T1, T2, T1]
+			detector.check(createToolUse("tool2", "T2")); // H: [T1, T2, T1, T2]
+			detector.check(createToolUse("tool3", "T3")); // H: [T1, T2, T1, T2, T3] (Full)
+			
+			// Next call, tool1. History slides. Old T1 is out.
+			// H: [T2, T1, T2, T3, T1]. T1 count is 2.
+			let result = detector.check(createToolUse("tool1", "T1"));
+			expect(result.allowExecution).toBe(true);
+
+			// Next call, tool2. History slides. Old T2 is out.
+			// H: [T1, T2, T3, T1, T2]. T2 count is 2.
+			result = detector.check(createToolUse("tool2", "T2"));
+			expect(result.allowExecution).toBe(true);
+			
+			// Next call, tool1. History slides.
+			// H: [T2, T3, T1, T2, T1]. T1 count is 2. (Mistake in manual trace, should be T1:2)
+			// Let's re-trace for this specific call:
+			// Current history before this call: [T1(latest), T2, T3, T1, T2(oldest)] (reversed for clarity of adding)
+			// Adding T1: [T1, T1, T2, T3, T1] (after shift: [T1, T2, T3, T1, T1])
+			// T1 count is 3.
+			result = detector.check(createToolUse("tool1", "T1"));
+			expect(result.allowExecution).toBe(false); // T1 now appears 3 times in the window [T2,T3,T1,T2,T1] -> [T3,T1,T2,T1,T1]
+			expect(result.askUser?.messageDetail).toContain("T1");
+		});
+	});
+});
