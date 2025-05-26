@@ -133,6 +133,7 @@ type GlobalSettings = {
 		| {
 				autoCondenseContext: boolean
 				powerSteering: boolean
+				marketplace: boolean
 		  }
 		| undefined
 	language?:
@@ -202,6 +203,13 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	marketplaceSources?:
+		| {
+				url: string
+				name?: string | undefined
+				enabled: boolean
+		  }[]
+		| undefined
 	historyPreviewCollapsed?: boolean | undefined
 }
 
@@ -909,6 +917,7 @@ type IpcMessage =
 									| {
 											autoCondenseContext: boolean
 											powerSteering: boolean
+											marketplace: boolean
 									  }
 									| undefined
 								language?:
@@ -978,6 +987,13 @@ type IpcMessage =
 									  }
 									| undefined
 								enhancementApiConfigId?: string | undefined
+								marketplaceSources?:
+									| {
+											url: string
+											name?: string | undefined
+											enabled: boolean
+									  }[]
+									| undefined
 								historyPreviewCollapsed?: boolean | undefined
 							}
 							text: string
@@ -1421,6 +1437,7 @@ type TaskCommand =
 						| {
 								autoCondenseContext: boolean
 								powerSteering: boolean
+								marketplace: boolean
 						  }
 						| undefined
 					language?:
@@ -1490,6 +1507,13 @@ type TaskCommand =
 						  }
 						| undefined
 					enhancementApiConfigId?: string | undefined
+					marketplaceSources?:
+						| {
+								url: string
+								name?: string | undefined
+								enabled: boolean
+						  }[]
+						| undefined
 					historyPreviewCollapsed?: boolean | undefined
 				}
 				text: string

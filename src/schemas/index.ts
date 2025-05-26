@@ -75,6 +75,8 @@ export const commandIds = [
 
 	"focusInput",
 	"acceptInput",
+
+	"marketplaceButtonClicked",
 ] as const
 
 export type CommandId = (typeof commandIds)[number]
@@ -426,7 +428,7 @@ export type CommandExecutionStatus = z.infer<typeof commandExecutionStatusSchema
  * ExperimentId
  */
 
-export const experimentIds = ["autoCondenseContext", "powerSteering"] as const
+export const experimentIds = ["autoCondenseContext", "powerSteering", "marketplace"] as const
 
 export const experimentIdsSchema = z.enum(experimentIds)
 
@@ -439,6 +441,7 @@ export type ExperimentId = z.infer<typeof experimentIdsSchema>
 const experimentsSchema = z.object({
 	autoCondenseContext: z.boolean(),
 	powerSteering: z.boolean(),
+	marketplace: z.boolean(),
 })
 
 export type Experiments = z.infer<typeof experimentsSchema>
@@ -851,6 +854,15 @@ export const globalSettingsSchema = z.object({
 	customModePrompts: customModePromptsSchema.optional(),
 	customSupportPrompts: customSupportPromptsSchema.optional(),
 	enhancementApiConfigId: z.string().optional(),
+	marketplaceSources: z
+		.array(
+			z.object({
+				url: z.string(),
+				name: z.string().optional(),
+				enabled: z.boolean(),
+			}),
+		)
+		.optional(),
 	historyPreviewCollapsed: z.boolean().optional(),
 })
 
@@ -937,6 +949,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customSupportPrompts: undefined,
 	enhancementApiConfigId: undefined,
 	cachedChromeHostUrl: undefined,
+	marketplaceSources: undefined,
 	historyPreviewCollapsed: undefined,
 }
 

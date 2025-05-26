@@ -1,0 +1,104 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Installiert",
+		"settings": "Einstellungen",
+		"browse": "Durchsuchen"
+	},
+	"done": "Fertig",
+	"refresh": "Aktualisieren",
+	"filters": {
+		"search": {
+			"placeholder": "Marketplace-Einträge durchsuchen..."
+		},
+		"type": {
+			"label": "Nach Typ filtern:",
+			"all": "Alle Typen",
+			"mode": "Modus",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Paket"
+		},
+		"sort": {
+			"label": "Sortieren nach:",
+			"name": "Name",
+			"author": "Autor",
+			"lastUpdated": "Zuletzt aktualisiert"
+		},
+		"tags": {
+			"label": "Nach Tags filtern:",
+			"available": "{{count}} verfügbar",
+			"placeholder": "Tippen Sie, um Tags zu suchen und auszuwählen...",
+			"noResults": "Keine passenden Tags gefunden",
+			"clickToFilter": "Klicken Sie auf Tags zum Filtern",
+			"clear": "Lösche {{count}} ausgewählte Tags",
+			"selected": "{{count}} ausgewählte Tags"
+		}
+	},
+	"type-group": {
+		"match": "Treffer",
+		"modes": "Modi",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Pakete",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"count": "{{count}} Einträge gefunden",
+		"components": "{{count}} Komponenten",
+		"matched": "{{count}} Treffer",
+		"refresh": {
+			"button": "Aktualisieren",
+			"refreshing": "Aktualisiere...",
+			"mayTakeMoment": "Das kann einen Moment dauern."
+		},
+		"empty": {
+			"noItems": "Keine Marketplace-Einträge gefunden",
+			"withFilters": "Versuche, deine Filter anzupassen",
+			"noSources": "Versuche, eine Quelle im Quellen-Tab hinzuzufügen",
+			"adjustFilters": "Versuche, deine Filter oder Suchbegriffe anzupassen",
+			"clearAllFilters": "Alle Filter löschen"
+		},
+		"card": {
+			"by": "von {{author}}",
+			"from": "von {{source}}",
+			"installProject": "Installieren",
+			"installGlobal": "Installieren (Global)",
+			"removeProject": "Entfernen",
+			"removeGlobal": "Entfernen (Global)",
+			"viewSource": "Ansehen",
+			"viewOnSource": "Auf {{source}} ansehen",
+			"noWorkspaceTooltip": "Öffne einen Arbeitsbereich, um Marketplace-Elemente zu installieren"
+		}
+	},
+	"installProjectTooltip": "Projektinstallation",
+	"sources": {
+		"title": "Marketplace Quellen",
+		"description": "Füge Git-Repositories hinzu, die Marketplace-Elemente enthalten. Diese Repositories werden beim Durchsuchen des Marktplatzes abgerufen.",
+		"add": {
+			"title": "Neue Quelle hinzufügen",
+			"urlPlaceholder": "Git-Repository-URL (z. B. https://github.com/username/repo)",
+			"urlFormats": "Unterstützte Formate: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) oder Git-Protokoll (git://github.com/username/repo.git)",
+			"namePlaceholder": "Anzeigename (max. 20 Zeichen)",
+			"button": "Quelle hinzufügen"
+		},
+		"current": {
+			"title": "Aktuelle Quellen",
+			"empty": "Keine Quellen konfiguriert. Füge eine Quelle hinzu, um zu beginnen.",
+			"refresh": "Diese Quelle aktualisieren",
+			"remove": "Quelle entfernen"
+		},
+		"errors": {
+			"emptyUrl": "URL darf nicht leer sein",
+			"invalidUrl": "Ungültiges URL-Format",
+			"nonVisibleChars": "URL enthält nicht sichtbare Zeichen außer Leerzeichen",
+			"invalidGitUrl": "URL muss eine gültige Git-Repository-URL sein (z. B. https://github.com/username/repo)",
+			"duplicateUrl": "Diese URL ist bereits in der Liste (Groß-/Kleinschreibung und Leerzeichen werden ignoriert)",
+			"nameTooLong": "Name muss 20 Zeichen oder weniger sein",
+			"nonVisibleCharsName": "Name enthält nicht sichtbare Zeichen außer Leerzeichen",
+			"duplicateName": "Dieser Name wird bereits verwendet (Groß-/Kleinschreibung und Leerzeichen werden ignoriert)",
+			"emojiName": "Emoji-Zeichen können Anzeigeprobleme verursachen",
+			"maxSources": "Maximal {{max}} Quellen erlaubt"
+		}
+	}
+}

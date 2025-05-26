@@ -1,0 +1,104 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Zainstalowane",
+		"settings": "Ustawienia",
+		"browse": "Przeglądaj"
+	},
+	"done": "Gotowe",
+	"refresh": "Odśwież",
+	"filters": {
+		"search": {
+			"placeholder": "Szukaj elementów marketplace..."
+		},
+		"type": {
+			"label": "Filtruj według typu:",
+			"all": "Wszystkie typy",
+			"mode": "Tryb",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Pakiet"
+		},
+		"sort": {
+			"label": "Sortuj według:",
+			"name": "Nazwa",
+			"author": "Autor",
+			"lastUpdated": "Ostatnia aktualizacja"
+		},
+		"tags": {
+			"label": "Filtruj według tagów:",
+			"available": "{{count}} dostępnych",
+			"placeholder": "Wpisz, aby wyszukać i wybrać tagi...",
+			"noResults": "Nie znaleziono pasujących tagów",
+			"clickToFilter": "Kliknij tagi, aby filtrować elementy",
+			"clear": "Wyczyść tagi ({{count}})",
+			"selected": "Wyświetlanie elementów z dowolnym z wybranych tagów (wybrano {{count}})"
+		}
+	},
+	"type-group": {
+		"match": "Dopasowanie",
+		"modes": "Tryby",
+		"mcps": "MCP Servers",
+		"prompts": "Prompty",
+		"packages": "Pakiety",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Nie znaleziono elementów marketplace",
+			"withFilters": "Spróbuj dostosować filtry",
+			"noSources": "Spróbuj dodać źródło w zakładce Źródła",
+			"adjustFilters": "Spróbuj dostosować filtry lub wyszukiwane hasła",
+			"clearAllFilters": "Wyczyść wszystkie filtry"
+		},
+		"count": "{{count}} elementów znalezionych",
+		"components": "{{count}} komponentów",
+		"matched": "{{count}} dopasowanych",
+		"refresh": {
+			"button": "Odśwież",
+			"refreshing": "Odświeżanie...",
+			"mayTakeMoment": "To może chwilę potrwać."
+		},
+		"card": {
+			"by": "autor: {{author}}",
+			"from": "z {{source}}",
+			"installProject": "Zainstaluj",
+			"installGlobal": "Zainstaluj (Globalny)",
+			"removeProject": "Usuń",
+			"removeGlobal": "Usuń (Globalny)",
+			"viewSource": "Zobacz",
+			"viewOnSource": "Zobacz na {{source}}",
+			"noWorkspaceTooltip": "Otwórz obszar roboczy, aby zainstalować elementy Marketplace"
+		}
+	},
+	"installProjectTooltip": "Instalacja projektu",
+	"sources": {
+		"title": "Źródła Marketplace",
+		"description": "Dodaj repozytoria Git zawierające elementy marketplace. Te repozytoria zostaną pobrane podczas przeglądania marketplace.",
+		"add": {
+			"title": "Dodaj nowe źródło",
+			"urlPlaceholder": "URL repozytorium Git (np. https://github.com/username/repo)",
+			"urlFormats": "Obsługiwane formaty: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) lub protokół Git (git://github.com/username/repo.git)",
+			"namePlaceholder": "Nazwa wyświetlana (maks. 20 znaków)",
+			"button": "Dodaj źródło"
+		},
+		"current": {
+			"title": "Obecne źródła",
+			"empty": "Brak skonfigurowanych źródeł. Dodaj źródło, aby rozpocząć.",
+			"refresh": "Odśwież to źródło",
+			"remove": "Usuń źródło"
+		},
+		"errors": {
+			"emptyUrl": "URL nie może być pusty",
+			"invalidUrl": "Nieprawidłowy format URL",
+			"nonVisibleChars": "URL zawiera niewidoczne znaki inne niż spacje",
+			"invalidGitUrl": "URL musi być prawidłowym adresem URL repozytorium Git (np. https://github.com/username/repo)",
+			"duplicateUrl": "Ten URL jest już na liście (dopasowanie bez uwzględniania wielkości liter i spacji)",
+			"nameTooLong": "Nazwa musi mieć 20 znaków lub mniej",
+			"nonVisibleCharsName": "Nazwa zawiera niewidoczne znaki inne niż spacje",
+			"duplicateName": "Ta nazwa jest już używana (dopasowanie bez uwzględniania wielkości liter i spacji)",
+			"emojiName": "Znaki emoji mogą powodować problemy z wyświetlaniem",
+			"maxSources": "Dozwolona jest maksymalnie liczba źródeł: {{max}}"
+		}
+	}
+}

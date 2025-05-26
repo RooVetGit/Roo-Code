@@ -91,6 +91,11 @@
 				"icon": "$(history)"
 			},
 			{
+				"command": "roo-cline.marketplaceButtonClicked",
+				"title": "Marketplace",
+				"icon": "$(extensions)"
+			},
+			{
 				"command": "roo-cline.popoutButtonClicked",
 				"title": "%command.openInEditor.title%",
 				"icon": "$(link-external)"
@@ -219,18 +224,23 @@
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.historyButtonClicked",
+					"command": "roo-cline.marketplaceButtonClicked",
 					"group": "navigation@4",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.popoutButtonClicked",
+					"command": "roo-cline.historyButtonClicked",
 					"group": "navigation@5",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.settingsButtonClicked",
+					"command": "roo-cline.popoutButtonClicked",
 					"group": "navigation@6",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@7",
 					"when": "view == roo-cline.SidebarProvider"
 				}
 			],
@@ -251,17 +261,24 @@
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.historyButtonClicked",
+					"command": "roo-cline.marketplaceButtonClicked",
 					"group": "navigation@4",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.popoutButtonClicked",
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@7",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
+			],
+			"editor/title/context": [
+				{
+					"command": "roo-cline.historyButtonClicked",
 					"group": "navigation@5",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.settingsButtonClicked",
+					"command": "roo-cline.popoutButtonClicked",
 					"group": "navigation@6",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				}
@@ -381,6 +398,7 @@
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
 		"reconnecting-eventsource": "^1.6.4",
+		"roo-rocket": "^0.5.1",
 		"sanitize-filename": "^1.6.3",
 		"say": "^0.16.0",
 		"serialize-error": "^11.0.3",

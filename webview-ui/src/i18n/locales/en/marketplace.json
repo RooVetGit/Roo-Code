@@ -1,0 +1,102 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Installed",
+		"settings": "Settings",
+		"browse": "Browse"
+	},
+	"done": "Done",
+	"refresh": "Refresh",
+	"filters": {
+		"search": {
+			"placeholder": "Search marketplace items..."
+		},
+		"type": {
+			"label": "Filter by type:",
+			"all": "All types",
+			"mode": "Mode",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Package"
+		},
+		"sort": {
+			"label": "Sort by:",
+			"name": "Name",
+			"author": "Author",
+			"lastUpdated": "Last Updated"
+		},
+		"tags": {
+			"label": "Filter by tags:",
+			"available": "{{count}} available",
+			"clear": "Clear tags ({{count}})",
+			"placeholder": "Type to search and select tags...",
+			"noResults": "No matching tags found",
+			"selected": "Showing items with any of the selected tags ({{count}} selected)",
+			"clickToFilter": "Click tags to filter items"
+		}
+	},
+	"type-group": {
+		"modes": "Modes",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Packages",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "No marketplace items found",
+			"withFilters": "Try adjusting your filters",
+			"noSources": "Try adding a source in the Sources tab",
+			"adjustFilters": "Try adjusting your filters or search terms",
+			"clearAllFilters": "Clear all filters"
+		},
+		"count": "{{count}} items found",
+		"components": "{{count}} components",
+		"matched": "{{count}} matched",
+		"refresh": {
+			"button": "Refresh",
+			"refreshing": "Refreshing...",
+			"mayTakeMoment": "This may take a moment."
+		},
+		"card": {
+			"by": "by {{author}}",
+			"from": "from {{source}}",
+			"installProject": "Install",
+			"installGlobal": "Install (Global)",
+			"removeProject": "Remove",
+			"removeGlobal": "Remove (Global)",
+			"viewSource": "View",
+			"viewOnSource": "View on {{source}}",
+			"noWorkspaceTooltip": "Open a workspace to install marketplace items"
+		}
+	},
+	"sources": {
+		"title": "Configure Marketplace Sources",
+		"description": "Add Git repositories that contain marketplace items. These repositories will be fetched when browsing the marketplace.",
+		"add": {
+			"title": "Add New Source",
+			"urlPlaceholder": "Git repository URL (e.g., https://github.com/username/repo)",
+			"urlFormats": "Supported formats: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git), or Git protocol (git://github.com/username/repo.git)",
+			"namePlaceholder": "Display name (max 20 chars)",
+			"button": "Add Source"
+		},
+		"current": {
+			"title": "Current Sources",
+			"empty": "No sources configured. Add a source to get started.",
+			"refresh": "Refresh this source",
+			"remove": "Remove source"
+		},
+		"errors": {
+			"emptyUrl": "URL cannot be empty",
+			"invalidUrl": "Invalid URL format",
+			"nonVisibleChars": "URL contains non-visible characters other than spaces",
+			"invalidGitUrl": "URL must be a valid Git repository URL (e.g., https://github.com/username/repo)",
+			"duplicateUrl": "This URL is already in the list (case and whitespace insensitive match)",
+			"nameTooLong": "Name must be 20 characters or less",
+			"nonVisibleCharsName": "Name contains non-visible characters other than spaces",
+			"duplicateName": "This name is already in use (case and whitespace insensitive match)",
+			"emojiName": "Emoji characters may cause display issues",
+			"maxSources": "Maximum of {{max}} sources allowed"
+		}
+	}
+}

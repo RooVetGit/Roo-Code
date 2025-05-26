@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, useMemo } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
-import TranslationProvider from "./i18n/TranslationContext"
+import TranslationProvider, { useAppTranslation } from "./i18n/TranslationContext"
+import { MarketplaceViewStateManager } from "./components/marketplace/MarketplaceViewStateManager"
 
 import { vscode } from "./utils/vscode"
 import { telemetryClient } from "./utils/TelemetryClient"
@@ -13,10 +14,11 @@ import HistoryView from "./components/history/HistoryView"
 import SettingsView, { SettingsViewRef } from "./components/settings/SettingsView"
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
+import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import PromptsView from "./components/prompts/PromptsView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 
-type Tab = "settings" | "history" | "mcp" | "prompts" | "chat"
+type Tab = "settings" | "history" | "mcp" | "prompts" | "chat" | "marketplace"
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
@@ -24,11 +26,23 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 	promptsButtonClicked: "prompts",
 	mcpButtonClicked: "mcp",
 	historyButtonClicked: "history",
+	marketplaceButtonClicked: "marketplace",
 }
 
 const App = () => {
-	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
-		useExtensionState()
+	const {
+		didHydrateState,
+		showWelcome,
+		shouldShowAnnouncement,
+		telemetrySetting,
+		telemetryKey,
+		machineId,
+		experiments,
+	} = useExtensionState()
+	const { t } = useAppTranslation()
+
+	// Create a persistent state manager
+	const marketplaceStateManager = useMemo(() => new MarketplaceViewStateManager(), [])
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
@@ -118,6 +132,17 @@ const App = () => {
 			{tab === "settings" && (
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
 			)}
+			{tab === "marketplace" &&
+				(experiments.marketplace ? (
+					<MarketplaceView stateManager={marketplaceStateManager} onDone={() => switchTab("chat")} />
+				) : (
+					<div className="flex flex-col items-center justify-center h-full p-8 text-center">
+						<div className="text-lg font-semibold mb-2">{t("settings:experimental.MARKETPLACE.name")}</div>
+						<div className="text-vscode-descriptionForeground mb-4">
+							{t("settings:experimental.MARKETPLACE.warning")}
+						</div>
+					</div>
+				))}
 			<ChatView
 				ref={chatViewRef}
 				isHidden={tab !== "chat"}

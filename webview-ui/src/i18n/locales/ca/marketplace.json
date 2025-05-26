@@ -1,0 +1,104 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Instal·lat",
+		"settings": "Configuració",
+		"browse": "Explorar"
+	},
+	"done": "Fet",
+	"refresh": "Actualitzar",
+	"filters": {
+		"search": {
+			"placeholder": "Cercar elements del marketplace..."
+		},
+		"type": {
+			"label": "Filtrar per tipus:",
+			"all": "Tots els tipus",
+			"mode": "Mode",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Package"
+		},
+		"sort": {
+			"label": "Ordenar per:",
+			"name": "Nom",
+			"author": "Autor",
+			"lastUpdated": "Última actualització"
+		},
+		"tags": {
+			"label": "Filtrar per etiquetes:",
+			"available": "{{count}} disponibles",
+			"placeholder": "Escriu per cercar i seleccionar etiquetes...",
+			"noResults": "No s'han trobat etiquetes coincidents",
+			"clickToFilter": "Fes clic a les etiquetes per filtrar elements",
+			"clear": "Netejar {{count}} etiqueta{{count !== 1 ? 's' : ''}} seleccionada",
+			"selected": "{{count}} etiqueta{{count !== 1 ? 's' : ''}} seleccionada"
+		}
+	},
+	"type-group": {
+		"match": "Coincidència",
+		"modes": "Modes",
+		"mcps": "Servidors MCP",
+		"prompts": "Prompts",
+		"packages": "Paquets",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "No s'han trobat elements al marketplace",
+			"withFilters": "Prova d'ajustar els filtres",
+			"noSources": "Prova d'afegir una font a la pestanya Fonts",
+			"adjustFilters": "Prova d'ajustar els filtres o els termes de cerca",
+			"clearAllFilters": "Esborrar tots els filtres"
+		},
+		"count": "{{count}} element{{count !== 1 ? 's' : ''}} trobats",
+		"components": "{{count}} components",
+		"matched": "{{count}} coincidències",
+		"refresh": {
+			"button": "Actualitzar",
+			"refreshing": "Actualitzant...",
+			"mayTakeMoment": "Això pot trigar un moment."
+		},
+		"card": {
+			"by": "per {{author}}",
+			"from": "de {{source}}",
+			"installProject": "Instal·lar",
+			"installGlobal": "Instal·lar (Global)",
+			"removeProject": "Eliminar",
+			"removeGlobal": "Eliminar (Global)",
+			"viewSource": "Veure",
+			"viewOnSource": "Veure a {{source}}",
+			"noWorkspaceTooltip": "Obre un espai de treball per instal·lar elements del marketplace"
+		}
+	},
+	"sources": {
+		"title": "Fonts del Marketplace",
+		"description": "Afegeix o gestiona fonts per als elements del marketplace. Cada font és un repositori Git que conté definicions d'elements del marketplace.",
+		"add": {
+			"title": "Afegir nova font",
+			"urlPlaceholder": "URL del repositori Git (p. ex., 'https://github.com/user/repo.git')",
+			"urlFormats": "Formats admesos: HTTPS, SSH o ruta de fitxer local.",
+			"namePlaceholder": "Nom de font opcional (p. ex., 'El meu repositori privat')",
+			"button": "Afegir font"
+		},
+		"current": {
+			"title": "Fonts actuals",
+			"empty": "Encara no s'ha afegit cap font del marketplace.",
+			"emptyHint": "No s'ha configurat cap font. Afegeix una font per començar.",
+			"refresh": "Actualitzar font",
+			"remove": "Eliminar font"
+		},
+		"errors": {
+			"maxSources": "S'ha permès un màxim de {{max}} fonts.",
+			"emptyUrl": "L'URL no pot estar buit.",
+			"nonVisibleChars": "L'URL conté caràcters no visibles.",
+			"invalidGitUrl": "Format d'URL de Git no vàlid.",
+			"duplicateUrl": "Ja existeix una font amb aquest URL.",
+			"nameTooLong": "El nom no pot superar els 20 caràcters.",
+			"nonVisibleCharsName": "El nom conté caràcters no visibles.",
+			"duplicateName": "Ja existeix una font amb aquest nom.",
+			"invalidUrl": "Format d'URL no vàlid",
+			"emojiName": "Els caràcters emoji poden causar problemes de visualització"
+		}
+	}
+}

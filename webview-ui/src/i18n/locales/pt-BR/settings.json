@@ -30,7 +30,7 @@
 		"terminal": "Terminal",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre"
+		"about": "Sobre Roo Code"
 	},
 	"codeIndex": {
 		"title": "Indexação de Código",
@@ -469,6 +469,11 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Usar ferramenta diff de múltiplos blocos experimental",
 			"description": "Quando ativado, o Roo usará a ferramenta diff de múltiplos blocos. Isso tentará atualizar vários blocos de código no arquivo em uma única solicitação."
+		},
+		"MARKETPLACE": {
+			"name": "Ativar Marketplace no Roo Code",
+			"description": "Quando ativado, o Roo poderá instalar e gerenciar itens do Marketplace.",
+			"warning": "O Marketplace ainda não está ativado. Se você quiser ser um adotante inicial, ative-o nas Configurações experimentais."
 		}
 	},
 	"promptCaching": {

@@ -1,0 +1,104 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Yüklendi",
+		"settings": "Ayarlar",
+		"browse": "Göz At"
+	},
+	"done": "Tamam",
+	"refresh": "Yenile",
+	"filters": {
+		"search": {
+			"placeholder": "Marketplace öğelerini ara..."
+		},
+		"type": {
+			"label": "Türe göre filtrele:",
+			"all": "Tüm türler",
+			"mode": "Mod",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Paket"
+		},
+		"sort": {
+			"label": "Sırala:",
+			"name": "İsim",
+			"author": "Yazar",
+			"lastUpdated": "Son güncelleme"
+		},
+		"tags": {
+			"label": "Etiketlere göre filtrele:",
+			"available": "{{count}} mevcut",
+			"clear": "Etiketleri temizle ({{count}})",
+			"placeholder": "Etiket aramak ve seçmek için yazın...",
+			"noResults": "Eşleşen etiket bulunamadı",
+			"selected": "Seçili etiketlerden herhangi birine sahip öğeler gösteriliyor ({{count}} seçili)",
+			"clickToFilter": "Öğeleri filtrelemek için etiketlere tıklayın"
+		}
+	},
+	"type-group": {
+		"match": "Eşleşme",
+		"modes": "Modlar",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Paketler",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Marketplace öğesi bulunamadı",
+			"withFilters": "Filtreleri ayarlamayı deneyin",
+			"noSources": "Kaynaklar sekmesinde bir kaynak eklemeyi deneyin",
+			"adjustFilters": "Filtrelerinizi veya arama terimlerinizi ayarlamayı deneyin",
+			"clearAllFilters": "Tüm filtreleri temizle"
+		},
+		"count": "{{count}} öğe bulundu",
+		"components": "{{count}} bileşen",
+		"matched": "{{count}} eşleşen",
+		"refresh": {
+			"button": "Yenile",
+			"refreshing": "Yenileniyor...",
+			"mayTakeMoment": "Bu biraz zaman alabilir."
+		},
+		"card": {
+			"by": "yazar: {{author}}",
+			"from": "kaynak: {{source}}",
+			"installProject": "Yükle",
+			"installGlobal": "Yükle (Global)",
+			"removeProject": "Kaldır",
+			"removeGlobal": "Kaldır (Global)",
+			"viewSource": "Görüntüle",
+			"viewOnSource": "{{source}} üzerinde görüntüle",
+			"noWorkspaceTooltip": "Marketplace öğelerini yüklemek için bir çalışma alanı açın"
+		}
+	},
+	"installProjectTooltip": "Proje kurulumu",
+	"sources": {
+		"title": "Marketplace Kaynakları",
+		"description": "Marketplace öğelerini içeren Git depoları ekleyin. Bu depolar, marketplace'e göz atarken getirilecektir.",
+		"add": {
+			"title": "Yeni Kaynak Ekle",
+			"urlPlaceholder": "Git deposu URL'si (örn. https://github.com/username/repo)",
+			"urlFormats": "Desteklenen biçimler: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) veya Git protokolü (git://github.com/username/repo.git)",
+			"namePlaceholder": "Görünen ad (maks. 20 karakter)",
+			"button": "Kaynak Ekle"
+		},
+		"current": {
+			"title": "Mevcut Kaynaklar",
+			"empty": "Yapılandırılmış kaynak yok. Başlamak için bir kaynak ekleyin.",
+			"refresh": "Bu kaynağı yenile",
+			"remove": "Kaynağı kaldır"
+		},
+		"errors": {
+			"emptyUrl": "URL boş olamaz",
+			"invalidUrl": "Geçersiz URL biçimi",
+			"nonVisibleChars": "URL, boşluklar dışında görünmeyen karakterler içeriyor",
+			"invalidGitUrl": "URL, geçerli bir Git deposu URL'si olmalıdır (örn. https://github.com/username/repo)",
+			"duplicateUrl": "Bu URL zaten listede (büyük/küçük harf ve boşluk duyarsız eşleşme)",
+			"nameTooLong": "Ad 20 karakter veya daha az olmalıdır",
+			"nonVisibleCharsName": "Ad, boşluklar dışında görünmeyen karakterler içeriyor",
+			"duplicateName": "Bu ad zaten kullanımda (büyük/küçük harf ve boşluk duyarsız eşleşme)",
+			"emojiName": "Emoji karakterleri görüntüleme sorunlarına neden olabilir",
+			"maxSources": "Maksimum {{max}} kaynağa izin verilir"
+		}
+	}
+}

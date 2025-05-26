@@ -1,0 +1,104 @@
+{
+	"title": "마켓플레이스",
+	"tabs": {
+		"installed": "설치됨",
+		"settings": "설정",
+		"browse": "찾아보기"
+	},
+	"done": "완료",
+	"refresh": "새로 고침",
+	"filters": {
+		"search": {
+			"placeholder": "마켓플레이스 항목 검색..."
+		},
+		"type": {
+			"label": "유형별 필터:",
+			"all": "모든 유형",
+			"mode": "모드",
+			"mcp server": "MCP Server",
+			"prompt": "프롬프트",
+			"package": "패키지"
+		},
+		"sort": {
+			"label": "정렬 기준:",
+			"name": "이름",
+			"author": "작성자",
+			"lastUpdated": "최근 업데이트"
+		},
+		"tags": {
+			"label": "태그별 필터:",
+			"available": "{{count}}개 사용 가능",
+			"placeholder": "태그 검색 및 선택...",
+			"noResults": "일치하는 태그가 없습니다",
+			"clickToFilter": "태그를 클릭하여 항목 필터링",
+			"clear": "태그 지우기 ({{count}})",
+			"selected": "선택된 태그 중 하나라도 있는 항목 표시 ({{count}}개 선택됨)"
+		}
+	},
+	"type-group": {
+		"match": "일치",
+		"modes": "모드",
+		"mcps": "MCP Servers",
+		"prompts": "프롬프트",
+		"packages": "패키지",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "마켓플레이스 항목을 찾을 수 없습니다",
+			"withFilters": "필터를 조정해 보세요",
+			"noSources": "소스 탭에서 소스를 추가해 보세요",
+			"adjustFilters": "필터 또는 검색어를 조정해 보세요",
+			"clearAllFilters": "모든 필터 지우기"
+		},
+		"count": "{{count}}개 항목 발견",
+		"components": "{{count}}개 구성 요소",
+		"matched": "{{count}}개 일치",
+		"refresh": {
+			"button": "새로 고침",
+			"refreshing": "새로 고치는 중...",
+			"mayTakeMoment": "잠시 시간이 걸릴 수 있습니다."
+		},
+		"card": {
+			"by": "작성자: {{author}}",
+			"from": "출처: {{source}}",
+			"installProject": "설치",
+			"installGlobal": "설치 (글로벌)",
+			"removeProject": "제거",
+			"removeGlobal": "제거 (글로벌)",
+			"viewSource": "보기",
+			"viewOnSource": "{{source}}에서 보기",
+			"noWorkspaceTooltip": "마켓플레이스 항목을 설치하려면 작업 영역을 여세요"
+		}
+	},
+	"installProjectTooltip": "프로젝트 설치",
+	"sources": {
+		"title": "마켓플레이스 소스",
+		"description": "마켓플레이스 항목이 포함된 Git 리포지토리를 추가합니다. 마켓플레이스를 탐색할 때 이 리포지토리가 가져와집니다.",
+		"add": {
+			"title": "새 소스 추가",
+			"urlPlaceholder": "Git 리포지토리 URL (예: https://github.com/username/repo)",
+			"urlFormats": "지원되는 형식: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) 또는 Git 프로토콜 (git://github.com/username/repo.git)",
+			"namePlaceholder": "표시 이름 (최대 20자)",
+			"button": "소스 추가"
+		},
+		"current": {
+			"title": "현재 소스",
+			"empty": "구성된 소스가 없습니다. 시작하려면 소스를 추가하세요.",
+			"refresh": "이 소스 새로 고침",
+			"remove": "소스 제거"
+		},
+		"errors": {
+			"emptyUrl": "URL은 비워 둘 수 없습니다",
+			"invalidUrl": "잘못된 URL 형식",
+			"nonVisibleChars": "URL에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
+			"invalidGitUrl": "URL은 유효한 Git 리포지토리 URL이어야 합니다 (예: https://github.com/username/repo)",
+			"duplicateUrl": "이 URL은 이미 목록에 있습니다 (대소문자 및 공백 무시 일치)",
+			"nameTooLong": "이름은 20자 이하여야 합니다",
+			"nonVisibleCharsName": "이름에 공백 이외의 보이지 않는 문자가 포함되어 있습니다",
+			"duplicateName": "이 이름은 이미 사용 중입니다 (대소문자 및 공백 무시 일치)",
+			"emojiName": "이모티콘 문자는 표시 문제를 일으킬 수 있습니다",
+			"maxSources": "최대 {{max}}개의 소스가 허용됩니다"
+		}
+	}
+}

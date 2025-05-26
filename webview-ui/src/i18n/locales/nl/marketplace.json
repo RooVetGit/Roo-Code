@@ -1,0 +1,104 @@
+{
+	"title": "Marketplace",
+	"tabs": {
+		"installed": "Geïnstalleerd",
+		"settings": "Instellingen",
+		"browse": "Bladeren"
+	},
+	"done": "Klaar",
+	"refresh": "Vernieuwen",
+	"filters": {
+		"search": {
+			"placeholder": "Zoek marketplace items..."
+		},
+		"type": {
+			"label": "Filter op type:",
+			"all": "Alle types",
+			"mode": "Modus",
+			"mcp server": "MCP Server",
+			"prompt": "Prompt",
+			"package": "Pakket"
+		},
+		"sort": {
+			"label": "Sorteer op:",
+			"name": "Naam",
+			"author": "Auteur",
+			"lastUpdated": "Laatst bijgewerkt"
+		},
+		"tags": {
+			"label": "Filter op tags:",
+			"available": "{{count}} beschikbaar",
+			"placeholder": "Typ om tags te zoeken en selecteren...",
+			"noResults": "Geen overeenkomende tags gevonden",
+			"clickToFilter": "Klik op tags om items te filteren",
+			"clear": "Tags wissen ({{count}})",
+			"selected": "Items weergeven met een van de geselecteerde tags ({{count}} geselecteerd)"
+		}
+	},
+	"type-group": {
+		"match": "Overeenkomst",
+		"modes": "Modes",
+		"mcps": "MCP Servers",
+		"prompts": "Prompts",
+		"packages": "Pakketten",
+		"generic-type": "{{type}}"
+	},
+	"items": {
+		"empty": {
+			"noItems": "Geen marketplace items gevonden",
+			"withFilters": "Probeer je filters aan te passen",
+			"noSources": "Probeer een bron toe te voegen in het tabblad Bronnen",
+			"adjustFilters": "Probeer je filters of zoektermen aan te passen",
+			"clearAllFilters": "Alle filters wissen"
+		},
+		"count": "{{count}} items gevonden",
+		"components": "{{count}} componenten",
+		"matched": "{{count}} overeenkomsten",
+		"refresh": {
+			"button": "Vernieuwen",
+			"refreshing": "Vernieuwen...",
+			"mayTakeMoment": "Dit kan even duren."
+		},
+		"card": {
+			"by": "door {{author}}",
+			"from": "van {{source}}",
+			"installProject": "Installeren",
+			"installGlobal": "Installeren (Globaal)",
+			"removeProject": "Verwijderen",
+			"removeGlobal": "Verwijderen (Globaal)",
+			"viewSource": "Bekijken",
+			"viewOnSource": "Bekijken op {{source}}",
+			"noWorkspaceTooltip": "Open een werkruimte om marketplace-items te installeren"
+		}
+	},
+	"installProjectTooltip": "Projectinstallatie",
+	"sources": {
+		"title": "Marketplace bronnen",
+		"description": "Voeg Git-repositories toe die marketplace-items bevatten. Deze repositories worden opgehaald bij het browsen door de marketplace.",
+		"add": {
+			"title": "Nieuwe bron toevoegen",
+			"urlPlaceholder": "Git repository URL (bijv. https://github.com/username/repo)",
+			"urlFormats": "Ondersteunde formaten: HTTPS (https://github.com/username/repo), SSH (git@github.com:username/repo.git) of Git-protocol (git://github.com/username/repo.git)",
+			"namePlaceholder": "Weergavenaam (max. 20 tekens)",
+			"button": "Bron toevoegen"
+		},
+		"current": {
+			"title": "Huidige bronnen",
+			"empty": "Geen bronnen geconfigureerd. Voeg een bron toe om te beginnen.",
+			"refresh": "Deze bron vernieuwen",
+			"remove": "Bron verwijderen"
+		},
+		"errors": {
+			"emptyUrl": "URL kan niet leeg zijn",
+			"invalidUrl": "Ongeldig URL-formaat",
+			"nonVisibleChars": "URL bevat niet-zichtbare tekens anders dan spaties",
+			"invalidGitUrl": "URL moet een geldige Git-repository-URL zijn (bijv. https://github.com/username/repo)",
+			"duplicateUrl": "Deze URL staat al in de lijst (hoofdlettergevoelig en witruimte-ongevoelige overeenkomst)",
+			"nameTooLong": "Naam moet 20 tekens of minder zijn",
+			"nonVisibleCharsName": "Naam bevat niet-zichtbare tekens anders dan spaties",
+			"duplicateName": "Deze naam is al in gebruik (hoofdlettergevoelig en witruimte-ongevoelige overeenkomst)",
+			"emojiName": "Emoji-tekens kunnen weergaveproblemen veroorzaken",
+			"maxSources": "Maximaal {{max}} bronnen toegestaan"
+		}
+	}
+}
