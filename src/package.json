@@ -328,7 +328,7 @@
 		"build:development": "pnpm bundle && pnpm --filter @roo-code/vscode-webview build",
 		"publish:marketplace": "vsce publish --no-dependencies && ovsx publish --no-dependencies",
 		"vscode:prepublish": "pnpm build",
-		"vsix": "mkdirp ../bin && npx vsce package --no-dependencies --out ../bin",
+		"vsix": "mkdirp ../bin && vsce package --no-dependencies --out ../bin",
 		"watch:esbuild": "pnpm bundle --watch",
 		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
 		"generate-types": "tsx scripts/generate-types.mts",
