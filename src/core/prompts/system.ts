@@ -8,7 +8,7 @@ import {
 	getModeBySlug,
 	getGroupName,
 } from "../../shared/modes"
-import { PromptVariables } from "./sections/custom-system-prompt"
+import { PromptVariables, loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { DiffStrategy } from "../../shared/tools"
 import { McpHub } from "../../services/mcp/McpHub"
 import { getToolDescriptionsForMode } from "./tools"
@@ -26,8 +26,8 @@ import {
 	addCustomInstructions,
 	markdownFormattingSection,
 } from "./sections"
-import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { formatLanguage } from "../../shared/language"
+import { CodeIndexManager } from "../../services/code-index/manager"
 
 async function generatePrompt(
 	context: vscode.ExtensionContext,
@@ -64,6 +64,8 @@ async function generatePrompt(
 			: Promise.resolve(""),
 	])
 
+	const codeIndexManager = CodeIndexManager.getInstance(context)
+
 	const basePrompt = `${roleDefinition}
 
 ${markdownFormattingSection()}
@@ -74,6 +76,7 @@ ${getToolDescriptionsForMode(
 	mode,
 	cwd,
 	supportsComputerUse,
+	codeIndexManager,
 	effectiveDiffStrategy,
 	browserViewportSize,
 	mcpHub,
@@ -85,7 +88,7 @@ ${getToolUseGuidelinesSection()}
 
 ${mcpServersSection}
 
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy)}
+${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, codeIndexManager)}
 
 ${modesSection}
 

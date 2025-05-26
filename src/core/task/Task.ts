@@ -12,7 +12,7 @@ import { serializeError } from "serialize-error"
 import { TokenUsage, ToolUsage, ToolName, ContextCondense } from "../../schemas"
 
 // api
-import { ApiHandler, buildApiHandler } from "../../api"
+import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
 import { ApiStream } from "../../api/transform/stream"
 
 // shared
@@ -20,6 +20,7 @@ import { ProviderSettings } from "../../shared/api"
 import { findLastIndex } from "../../shared/array"
 import { combineApiRequests } from "../../shared/combineApiRequests"
 import { combineCommandSequences } from "../../shared/combineCommandSequences"
+import { t } from "../../i18n"
 import {
 	ClineApiReqCancelReason,
 	ClineApiReqInfo,
@@ -76,7 +77,7 @@ import {
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
-import { getMessagesSinceLastSummary } from "../condense"
+import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 export type ClineEvents = {
@@ -134,6 +135,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly apiConfiguration: ProviderSettings
 	api: ApiHandler
 	private lastApiRequestTime?: number
+	private consecutiveAutoApprovedRequestsCount: number = 0
 
 	toolRepetitionDetector: ToolRepetitionDetector
 	rooIgnoreController?: RooIgnoreController
@@ -478,6 +480,64 @@ export class Task extends EventEmitter<ClineEvents> {
 		} else if (terminalOperation === "abort") {
 			this.terminalProcess?.abort()
 		}
+	}
+
+	public async condenseContext(): Promise<void> {
+		const systemPrompt = await this.getSystemPrompt()
+
+		// Get condensing configuration
+		// Using type assertion to handle the case where Phase 1 hasn't been implemented yet
+		const state = await this.providerRef.deref()?.getState()
+		const customCondensingPrompt = state ? (state as any).customCondensingPrompt : undefined
+		const condensingApiConfigId = state ? (state as any).condensingApiConfigId : undefined
+		const listApiConfigMeta = state ? (state as any).listApiConfigMeta : undefined
+
+		// Determine API handler to use
+		let condensingApiHandler: ApiHandler | undefined
+		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
+			// Using type assertion for the id property to avoid implicit any
+			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+			if (matchingConfig) {
+				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
+					id: condensingApiConfigId,
+				})
+				// Ensure profile and apiProvider exist before trying to build handler
+				if (profile && profile.apiProvider) {
+					condensingApiHandler = buildApiHandler(profile)
+				}
+			}
+		}
+
+		const {
+			messages,
+			summary,
+			cost,
+			newContextTokens = 0,
+		} = await summarizeConversation(
+			this.apiConversationHistory,
+			this.api, // Main API handler (fallback)
+			systemPrompt, // Default summarization prompt (fallback)
+			this.taskId,
+			false, // manual trigger
+			customCondensingPrompt, // User's custom prompt
+			condensingApiHandler, // Specific handler for condensing
+		)
+		if (!summary) {
+			return
+		}
+		await this.overwriteApiConversationHistory(messages)
+		const { contextTokens } = this.getTokenUsage()
+		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens: contextTokens }
+		await this.say(
+			"condense_context",
+			undefined /* text */,
+			undefined /* images */,
+			false /* partial */,
+			undefined /* checkpoint */,
+			undefined /* progressStatus */,
+			{ isNonInteractive: true } /* options */,
+			contextCondense,
+		)
 	}
 
 	async say(
@@ -980,9 +1040,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(
 				"mistake_limit_reached",
-				this.api.getModel().id.includes("claude")
-					? `This may indicate a failure in his thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
-					: "Roo Code uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
+				t("common:errors.mistake_limit_guidance"),
 			)
 
 			if (response === "messageResponse") {
@@ -1185,7 +1243,7 @@ export class Task extends EventEmitter<ClineEvents> {
 							cacheReadTokens += chunk.cacheReadTokens ?? 0
 							totalCost = chunk.totalCost
 							break
-						case "text":
+						case "text": {
 							assistantMessage += chunk.text
 
 							// Parse raw assistant message into content blocks.
@@ -1201,6 +1259,7 @@ export class Task extends EventEmitter<ClineEvents> {
 							// Present content to user.
 							presentAssistantMessage(this)
 							break
+						}
 					}
 
 					if (this.abort) {
@@ -1367,35 +1426,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+	private async getSystemPrompt(): Promise<string> {
+		const { mcpEnabled } = (await this.providerRef.deref()?.getState()) ?? {}
 		let mcpHub: McpHub | undefined
-
-		const { apiConfiguration, mcpEnabled, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds } =
-			(await this.providerRef.deref()?.getState()) ?? {}
-
-		let rateLimitDelay = 0
-
-		// Only apply rate limiting if this isn't the first request
-		if (this.lastApiRequestTime) {
-			const now = Date.now()
-			const timeSinceLastRequest = now - this.lastApiRequestTime
-			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
-			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
-		}
-
-		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
-		if (rateLimitDelay > 0 && retryAttempt === 0) {
-			// Show countdown timer
-			for (let i = rateLimitDelay; i > 0; i--) {
-				const delayMessage = `Rate limiting for ${i} seconds...`
-				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
-				await delay(1000)
-			}
-		}
-
-		// Update last request time before making the request
-		this.lastApiRequestTime = Date.now()
-
 		if (mcpEnabled ?? true) {
 			const provider = this.providerRef.deref()
 
@@ -1431,7 +1464,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 
-		const systemPrompt = await (async () => {
+		return await (async () => {
 			const provider = this.providerRef.deref()
 
 			if (!provider) {
@@ -1456,8 +1489,67 @@ export class Task extends EventEmitter<ClineEvents> {
 				rooIgnoreInstructions,
 			)
 		})()
+	}
 
+	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+		const state = await this.providerRef.deref()?.getState()
+		const {
+			apiConfiguration,
+			autoApprovalEnabled,
+			alwaysApproveResubmit,
+			requestDelaySeconds,
+			experiments,
+			mode,
+			autoCondenseContextPercent = 100,
+		} = state ?? {}
+
+		// Get condensing configuration for automatic triggers
+		const customCondensingPrompt = state?.customCondensingPrompt
+		const condensingApiConfigId = state?.condensingApiConfigId
+		const listApiConfigMeta = state?.listApiConfigMeta
+
+		// Determine API handler to use for condensing
+		let condensingApiHandler: ApiHandler | undefined
+		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
+			// Using type assertion for the id property to avoid implicit any
+			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+			if (matchingConfig) {
+				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
+					id: condensingApiConfigId,
+				})
+				// Ensure profile and apiProvider exist before trying to build handler
+				if (profile && profile.apiProvider) {
+					condensingApiHandler = buildApiHandler(profile)
+				}
+			}
+		}
+
+		let rateLimitDelay = 0
+
+		// Only apply rate limiting if this isn't the first request
+		if (this.lastApiRequestTime) {
+			const now = Date.now()
+			const timeSinceLastRequest = now - this.lastApiRequestTime
+			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
+			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
+		}
+
+		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
+		if (rateLimitDelay > 0 && retryAttempt === 0) {
+			// Show countdown timer
+			for (let i = rateLimitDelay; i > 0; i--) {
+				const delayMessage = `Rate limiting for ${i} seconds...`
+				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
+				await delay(1000)
+			}
+		}
+
+		// Update last request time before making the request
+		this.lastApiRequestTime = Date.now()
+
+		const systemPrompt = await this.getSystemPrompt()
 		const { contextTokens } = this.getTokenUsage()
+
 		if (contextTokens) {
 			// Default max tokens value for thinking models when no specific
 			// value is set.
@@ -1465,7 +1557,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const modelInfo = this.api.getModel().info
 
-			const maxTokens = modelInfo.thinking
+			const maxTokens = modelInfo.supportsReasoningBudget
 				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
 				: modelInfo.maxTokens
 
@@ -1479,7 +1571,11 @@ export class Task extends EventEmitter<ClineEvents> {
 				contextWindow,
 				apiHandler: this.api,
 				autoCondenseContext,
+				autoCondenseContextPercent,
 				systemPrompt,
+				taskId: this.taskId,
+				customCondensingPrompt,
+				condensingApiHandler,
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
@@ -1494,7 +1590,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					false /* partial */,
 					undefined /* checkpoint */,
 					undefined /* progressStatus */,
-					undefined /* options */,
+					{ isNonInteractive: true } /* options */,
 					contextCondense,
 				)
 			}
@@ -1505,7 +1601,26 @@ export class Task extends EventEmitter<ClineEvents> {
 			({ role, content }) => ({ role, content }),
 		)
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+		// Check if we've reached the maximum number of auto-approved requests
+		const maxRequests = state?.allowedMaxRequests || Infinity
+
+		// Increment the counter for each new API request
+		this.consecutiveAutoApprovedRequestsCount++
+
+		if (this.consecutiveAutoApprovedRequestsCount > maxRequests) {
+			const { response } = await this.ask("auto_approval_max_req_reached", JSON.stringify({ count: maxRequests }))
+			// If we get past the promise, it means the user approved and did not start a new task
+			if (response === "yesButtonClicked") {
+				this.consecutiveAutoApprovedRequestsCount = 0
+			}
+		}
+
+		const metadata: ApiHandlerCreateMessageMetadata = {
+			mode: mode,
+			taskId: this.taskId,
+		}
+
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, metadata)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {

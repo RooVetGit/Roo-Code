@@ -10,7 +10,8 @@
 		"contextWindow": "Okno kontekstu:",
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
-		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
+		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
+		"condenseContext": "Inteligentnie skondensuj kontekst"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",
@@ -69,7 +70,7 @@
 		"tooltip": "Anuluj bieżącą operację"
 	},
 	"scrollToBottom": "Przewiń do dołu czatu",
-	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji.<br />Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
+	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji. Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
 	"onboarding": "<strong>Twoja lista zadań w tym obszarze roboczym jest pusta.</strong> Zacznij od wpisania zadania poniżej. Nie wiesz, jak zacząć? Przeczytaj więcej o tym, co Roo może dla Ciebie zrobić w <DocsLink>dokumentacji</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -200,19 +201,19 @@
 	},
 	"contextCondense": {
 		"title": "Kontekst skondensowany",
-		"conversationSummary": "Podsumowanie rozmowy",
+		"condensing": "Kondensowanie kontekstu...",
 		"tokens": "tokeny"
 	},
 	"followUpSuggest": {
 		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 wydany",
-		"description": "Roo Code 3.17 przynosi potężne nowe funkcje i ulepszenia na podstawie Twoich opinii.",
+		"title": "🎉 Roo Code {{version}} wydany",
+		"description": "Roo Code {{version}} przynosi potężne nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
-		"feature1": "<bold>Niejawne buforowanie dla Gemini</bold>: Wywołania API Gemini są teraz automatycznie buforowane, co zmniejsza koszty API",
-		"feature2": "<bold>Inteligentniejszy wybór trybu</bold>: Definicje trybów mogą teraz zawierać wskazówki dotyczące tego, kiedy każdy tryb powinien być używany, umożliwiając lepszą orkiestrację",
-		"feature3": "<bold>Inteligentne kondensowanie kontekstu</bold>: Inteligentnie podsumowuje historię rozmów, gdy kontekst zapełnia się, zamiast obcinania (włącz w Ustawienia -> Eksperymentalne)",
+		"feature1": "<bold>Modele podglądu Gemini 2.5 Flash</bold>: Uzyskaj dostęp do najnowszych modeli Gemini Flash zapewniających szybsze i bardziej efektywne odpowiedzi",
+		"feature2": "<bold>Inteligentne kondensowanie kontekstu</bold>: Nowy przycisk w nagłówku zadania pozwala na inteligentne kondensowanie treści z wizualną informacją zwrotną",
+		"feature3": "<bold>Wsparcie YAML dla definicji trybów</bold>: Twórz i dostosowuj tryby łatwiej dzięki wsparciu dla YAML",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -252,5 +253,17 @@
 		"title": "Ostrzeżenie wykonania polecenia",
 		"description": "Twoje polecenie jest wykonywane bez integracji powłoki terminala VSCode. Aby ukryć to ostrzeżenie, możesz wyłączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink> lub rozwiązać problemy z integracją terminala VSCode korzystając z poniższego linku.",
 		"troubleshooting": "Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki."
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Osiągnięto limit automatycznie zatwierdzonych żądań",
+			"description": "Roo osiągnął automatycznie zatwierdzony limit {{count}} żądania/żądań API. Czy chcesz zresetować licznik i kontynuować zadanie?",
+			"button": "Zresetuj i kontynuuj"
+		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo chce przeszukać bazę kodu w poszukiwaniu <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo chce przeszukać bazę kodu w poszukiwaniu <code>{{query}}</code> w <code>{{path}}</code>:",
+		"didSearch": "Znaleziono {{count}} wynik(ów) dla <code>{{query}}</code>:"
 	}
 }
