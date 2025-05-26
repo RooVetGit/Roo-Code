@@ -141,10 +141,7 @@ Please suggest improvements for:
 Provide the improved code along with explanations for each enhancement.`,
 	},
 	ADD_TO_CONTEXT: {
-		template: `\${filePath}: (line: \${startLine}-\${endLine})
-\`\`\`
-\${selectedText}
-\`\`\`\n`,
+		template: `@/\${filePath}:\${startLine}-\${endLine} `,
 	},
 	TERMINAL_ADD_TO_CONTEXT: {
 		template: `\${userInput}

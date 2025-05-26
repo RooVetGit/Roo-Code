@@ -75,7 +75,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 			)
 
 			actions.push(
-				...this.createActionPair(ACTION_NAMES.EXPLAIN, vscode.CodeActionKind.QuickFix, COMMAND_IDS.EXPLAIN, [
+				this.createAction(ACTION_NAMES.COMPLETE, vscode.CodeActionKind.QuickFix, COMMAND_IDS.COMPLETE, [
 					filePath,
 					effectiveRange.text,
 					effectiveRange.range.start.line + 1,
@@ -91,7 +91,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 				if (relevantDiagnostics.length > 0) {
 					const diagnosticMessages = relevantDiagnostics.map(EditorUtils.createDiagnosticData)
 					actions.push(
-						...this.createActionPair(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
+						this.createAction(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
 							filePath,
 							effectiveRange.text,
 							effectiveRange.range.start.line + 1,
@@ -100,30 +100,58 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 						]),
 					)
 				}
-			} else {
-				actions.push(
-					...this.createActionPair(ACTION_NAMES.FIX_LOGIC, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
-						filePath,
-						effectiveRange.text,
-						effectiveRange.range.start.line + 1,
-						effectiveRange.range.end.line + 1,
-					]),
-				)
 			}
 
-			actions.push(
-				...this.createActionPair(
-					ACTION_NAMES.IMPROVE,
-					vscode.CodeActionKind.RefactorRewrite,
-					COMMAND_IDS.IMPROVE,
-					[
-						filePath,
-						effectiveRange.text,
-						effectiveRange.range.start.line + 1,
-						effectiveRange.range.end.line + 1,
-					],
-				),
-			)
+			// actions.push(
+			// 	...this.createActionPair(ACTION_NAMES.EXPLAIN, vscode.CodeActionKind.QuickFix, COMMAND_IDS.EXPLAIN, [
+			// 		filePath,
+			// 		effectiveRange.text,
+			// 		effectiveRange.range.start.line + 1,
+			// 		effectiveRange.range.end.line + 1,
+			// 	]),
+			// )
+
+			// if (context.diagnostics.length > 0) {
+			// 	const relevantDiagnostics = context.diagnostics.filter((d) =>
+			// 		EditorUtils.hasIntersectingRange(effectiveRange.range, d.range),
+			// 	)
+
+			// 	if (relevantDiagnostics.length > 0) {
+			// 		const diagnosticMessages = relevantDiagnostics.map(EditorUtils.createDiagnosticData)
+			// 		actions.push(
+			// 			...this.createActionPair(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
+			// 				filePath,
+			// 				effectiveRange.text,
+			// 				effectiveRange.range.start.line + 1,
+			// 				effectiveRange.range.end.line + 1,
+			// 				diagnosticMessages,
+			// 			]),
+			// 		)
+			// 	}
+			// } else {
+			// 	actions.push(
+			// 		...this.createActionPair(ACTION_NAMES.FIX_LOGIC, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
+			// 			filePath,
+			// 			effectiveRange.text,
+			// 			effectiveRange.range.start.line + 1,
+			// 			effectiveRange.range.end.line + 1,
+			// 		]),
+			// 	)
+			// }
+
+			// actions.push(
+			// 	...this.createActionPair(
+			// 		ACTION_NAMES.IMPROVE,
+			// 		vscode.CodeActionKind.RefactorRewrite,
+			// 		COMMAND_IDS.IMPROVE,
+			// 		[
+			// 			filePath,
+			// 			effectiveRange.text,
+			// 			effectiveRange.range.start.line + 1,
+			// 			effectiveRange.range.end.line + 1,
+			// 		],
+			// 	),
+			// )
 
 			return actions
 		} catch (error) {

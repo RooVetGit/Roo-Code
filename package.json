@@ -69,6 +69,12 @@
 				"key": "ctrl+alt+u",
 				"mac": "cmd+alt+u",
 				"when": "-"
+			},
+			{
+				"command": "roo-cline.openInNewTab",
+				"key": "ctrl+alt+o",
+				"mac": "cmd+alt+u",
+				"when": "-"
 			}
 		],
 		"submenus": [

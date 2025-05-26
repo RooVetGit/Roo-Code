@@ -125,7 +125,12 @@ Your response might be:
  * @returns 生成的MCP提示内容
  */
 export async function generateCodebasePrompt(mcpHub: McpHub | undefined, conversation: Array<any>, cline: Cline): Promise<string> {
+  async function not_support() {
+    await cline.say("text", `(Codebase当前不可用)\n\n`)
+  }
+  
   if (!mcpHub) {
+    await not_support()
     return ""
   }
 
@@ -138,6 +143,7 @@ export async function generateCodebasePrompt(mcpHub: McpHub | undefined, convers
 
     if (!codeContextServer) {
       console.log("No code_context MCP server found")
+      await not_support()
       return ""
     }
 
@@ -208,6 +214,7 @@ ${contextContent}
     return ""
   } catch (error) {
     console.error("Failed to generate MCP prompt:", error)
+    await not_support()
     return ""
   }
 }

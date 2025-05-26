@@ -63,7 +63,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[], extra_body?: any): ApiStream {
 		const modelInfo = this.getModel().info
 		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.getModel().id ?? ""
@@ -177,7 +177,8 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 				messages: [{ role: "system", content: "#end" }],
 				stream: true as const,
 				stream_options: { include_usage: true },
-				stop: uuid
+				stop: uuid,
+				...extra_body,
 			}
 			
 			// 最终响应将作为stream

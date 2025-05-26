@@ -81,6 +81,7 @@ import { newTaskTool } from "./tools/newTaskTool"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
 import { addCodebaseInToConversation } from "./prompts/codebase"
+import { addExternThinkingInToConversation } from "./prompts/thinking"
 
 // ... everything else
 import { parseMentions } from "./mentions"
@@ -1067,9 +1068,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 			await addCodebaseInToConversation(cleanConversationHistory, mcpHub, this)
 			this.codebase_enable = false
 		}
+		// await addExternThinkingInToConversation(systemPrompt, cleanConversationHistory, this)
 
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
+
+		while (this.checkpointServiceInitializing) { await delay(10) }
 
 		try {
 			// Awaiting first chunk to see if it will throw an error.

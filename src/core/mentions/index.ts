@@ -4,13 +4,14 @@ import { openFile } from "../../integrations/misc/open-file"
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 import { mentionRegexGlobal, formatGitSuggestion, type MentionSuggestion } from "../../shared/context-mentions"
 import fs from "fs/promises"
-import { extractTextFromFile } from "../../integrations/misc/extract-text"
+import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
 import { isBinaryFile } from "isbinaryfile"
 import { diagnosticsToProblemsString } from "../../integrations/diagnostics"
 import { getCommitInfo, getWorkingState } from "../../utils/git"
 import { getLatestTerminalOutput } from "../../integrations/terminal/get-latest-output"
 import { getWorkspacePath } from "../../utils/path"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
+import { readLines } from "../../integrations/misc/read-lines"
 
 import { Cline } from "../Cline"
 
@@ -166,6 +167,18 @@ export async function parseMentions(
 }
 
 async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
+	let start_line:number | undefined = undefined
+	let end_line:number | undefined = undefined
+	if (mentionPath.includes(":")) {
+		const split = mentionPath.split(":")
+		mentionPath = split[0]
+		const lines = split[1]
+		if (lines.includes("-")){
+			start_line = parseInt(lines.split("-")[0]) || undefined
+			end_line = parseInt(lines.split("-")[1]) || undefined
+		}
+	}
+
 	const absPath = path.resolve(cwd, mentionPath)
 
 	try {
@@ -173,7 +186,15 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 
 		if (stats.isFile()) {
 			try {
-				const content = await extractTextFromFile(absPath)
+				let content: string
+				if (start_line !== undefined && end_line !== undefined) {
+					// 使用 readLines 读取指定范围的行
+					content = await readLines(absPath, end_line-1, start_line-1)
+					// 添加行号
+					content = addLineNumbers(content, start_line)
+				} else {
+					content = await extractTextFromFile(absPath)
+				}
 				return content
 			} catch (error) {
 				return `(Failed to read contents of ${mentionPath}): ${error.message}`
