@@ -6,11 +6,12 @@ import type { ModelInfo } from "@roo-code/types"
 
 import { ApiHandlerOptions, openAiModelInfoSaneDefaults } from "../../shared/api"
 import { XmlMatcher } from "../../utils/xml-matcher"
+
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 
 import { BaseProvider } from "./base-provider"
-import { SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 const LMSTUDIO_DEFAULT_TEMPERATURE = 0
 
@@ -27,7 +28,11 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		})
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
 			...convertToOpenAiMessages(messages),

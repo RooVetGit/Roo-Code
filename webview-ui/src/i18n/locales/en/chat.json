@@ -70,7 +70,7 @@
 		"tooltip": "Cancel the current operation"
 	},
 	"scrollToBottom": "Scroll to bottom of chat",
-	"about": "Generate, refactor, and debug code with AI assistance.<br />Check out our <DocsLink>documentation</DocsLink> to learn more.",
+	"about": "Generate, refactor, and debug code with AI assistance. Check out our <DocsLink>documentation</DocsLink> to learn more.",
 	"onboarding": "Your task list in this workspace is empty.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -162,9 +162,9 @@
 		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
 	},
 	"codebaseSearch": {
-		"wantsToSearch": "Roo wants to search the codebase for '{{query}}':",
-		"wantsToSearchWithPath": "Roo wants to search the codebase for '{{query}}' in '{{path}}':",
-		"didSearch": "Found {{count}} result(s) for '{{query}}':"
+		"wantsToSearch": "Roo wants to search the codebase for <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wants to search the codebase for <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "Found {{count}} result(s) for <code>{{query}}</code>:"
 	},
 	"commandOutput": "Command Output",
 	"response": "Response",

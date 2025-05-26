@@ -17,7 +17,7 @@ import { ApiStream } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
 import { BaseProvider } from "./base-provider"
-import type { SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 const OPENAI_NATIVE_DEFAULT_TEMPERATURE = 0
 
@@ -34,7 +34,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		this.client = new OpenAI({ baseURL: this.options.openAiNativeBaseUrl, apiKey })
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const model = this.getModel()
 		let id: "o3-mini" | "o3" | "o4-mini" | undefined
 

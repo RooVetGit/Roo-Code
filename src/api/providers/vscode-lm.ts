@@ -10,7 +10,7 @@ import { ApiStream } from "../transform/stream"
 import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
 
 import { BaseProvider } from "./base-provider"
-import { SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 /**
  * Handles interaction with VS Code's Language Model API for chat-based operations.
@@ -152,6 +152,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	 *
 	 * @param systemPrompt - The system prompt to initialize the conversation context
 	 * @param messages - An array of message parameters following the Anthropic message format
+	 * @param metadata - Optional metadata for the message
 	 *
 	 * @yields {ApiStream} An async generator that yields either text chunks or tool calls from the model response
 	 *
@@ -333,7 +334,11 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		return content
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		// Ensure clean state before starting a new request
 		this.ensureCleanState()
 		const client: vscode.LanguageModelChat = await this.getClient()

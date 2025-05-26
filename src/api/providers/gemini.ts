@@ -15,7 +15,7 @@ import { safeJsonParse } from "../../shared/safeJsonParse"
 import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
 import type { ApiStream } from "../transform/stream"
 
-import { SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { BaseProvider } from "./base-provider"
 
 type GeminiHandlerOptions = ApiHandlerOptions & {
@@ -57,7 +57,11 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					: new GoogleGenAI({ apiKey })
 	}
 
-	async *createMessage(systemInstruction: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	async *createMessage(
+		systemInstruction: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const { id: model, thinkingConfig, maxOutputTokens, info } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)

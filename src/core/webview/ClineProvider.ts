@@ -825,6 +825,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					this.contextProxy.setProviderSettings(providerSettings),
 				])
 
+				// Notify CodeIndexManager about the settings change
+				if (this.codeIndexManager) {
+					await this.codeIndexManager.handleExternalSettingsChange()
+				}
+
 				// Change the provider for the current task.
 				// TODO: We should rename `buildApiHandler` for clarity (e.g. `getProviderClient`).
 				const task = this.getCurrentCline()
@@ -1345,17 +1350,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
-			maxReadFileLine: maxReadFileLine ?? 500,
+			maxReadFileLine: maxReadFileLine ?? -1,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
 			condensingApiConfigId,
 			customCondensingPrompt,
-			codebaseIndexModels: codebaseIndexModels ?? {
-				openai: {},
-				ollama: {},
-			},
+			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
 			codebaseIndexConfig: codebaseIndexConfig ?? {
 				codebaseIndexEnabled: false,
 				codebaseIndexQdrantUrl: "http://localhost:6333",
@@ -1452,15 +1454,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
-			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,
 			customCondensingPrompt: stateValues.customCondensingPrompt,
-			codebaseIndexModels: stateValues.codebaseIndexModels ?? {
-				openai: {},
-				ollama: {},
-			},
+			codebaseIndexModels: stateValues.codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
 			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
 				codebaseIndexEnabled: false,
 				codebaseIndexQdrantUrl: "http://localhost:6333",

@@ -1191,8 +1191,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// This is copied from `handlePrimaryButtonClick`, which we used
 				// to call from `autoApprove`. I'm not sure how many of these
 				// things are actually needed.
-				setInputValue("")
-				setSelectedImages([])
 				setSendingDisabled(true)
 				setClineAsk(undefined)
 				setEnableButtons(false)
@@ -1323,7 +1321,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						{telemetrySetting === "unset" && <TelemetryBanner />}
 						{/* Show the task history preview if expanded and tasks exist */}
 						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
-						<p className="text-vscode-editor-foreground leading-tight font-vscode-font-family text-center">
+						<p className="text-vscode-editor-foreground leading-tight font-vscode-font-family text-center text-balance max-w-[380px]">
 							<Trans
 								i18nKey="chat:about"
 								components={{

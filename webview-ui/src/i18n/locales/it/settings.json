@@ -35,7 +35,7 @@
 	"codeIndex": {
 		"title": "Indicizzazione del codice",
 		"enableLabel": "Abilita indicizzazione del codice",
-		"enableDescription": "L'attivazione di questa funzionalità indicizzerà il tuo codice. Questo potrebbe consumare risorse di sistema e richiedere tempo a seconda delle dimensioni del tuo progetto.",
+		"enableDescription": "<0>L'indicizzazione del codice</0> è una funzionalità sperimentale che crea un indice di ricerca semantica del tuo progetto utilizzando embedding AI. Questo permette a Roo Code di comprendere meglio e navigare grandi basi di codice trovando codice rilevante basato sul significato piuttosto che solo su parole chiave.",
 		"providerLabel": "Fornitore di embedding",
 		"selectProviderPlaceholder": "Seleziona fornitore",
 		"openaiProvider": "OpenAI",
@@ -48,6 +48,7 @@
 		"qdrantKeyLabel": "Chiave Qdrant:",
 		"startIndexingButton": "Avvia indicizzazione",
 		"clearIndexDataButton": "Cancella dati indice",
+		"unsavedSettingsMessage": "Per favore salva le tue impostazioni prima di avviare il processo di indicizzazione.",
 		"clearDataDialog": {
 			"title": "Sei sicuro?",
 			"description": "Questa azione non può essere annullata. Eliminerà permanentemente i dati di indice del tuo codice.",
@@ -429,7 +430,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
 		"condensingApiConfiguration": {
 			"label": "API Configuration for Context Condensing",
 			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",

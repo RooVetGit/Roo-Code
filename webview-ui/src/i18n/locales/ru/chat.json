@@ -70,7 +70,7 @@
 		"tooltip": "Отменить текущую операцию"
 	},
 	"scrollToBottom": "Прокрутить чат вниз",
-	"about": "Создавайте, рефакторите и отлаживайте код с помощью ИИ.<br />Подробнее см. в нашей <DocsLink>документации</DocsLink>.",
+	"about": "Создавайте, рефакторите и отлаживайте код с помощью ИИ. Подробнее см. в нашей <DocsLink>документации</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
 			"title": "Задачи-бумеранги",
@@ -262,8 +262,8 @@
 		}
 	},
 	"codebaseSearch": {
-		"wantsToSearch": "Roo хочет выполнить поиск в кодовой базе по '{{query}}':",
-		"wantsToSearchWithPath": "Roo хочет выполнить поиск в кодовой базе по '{{query}}' в '{{path}}':",
-		"didSearch": "Найдено {{count}} результат(ов) для '{{query}}':"
+		"wantsToSearch": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code> в <code>{{path}}</code>:",
+		"didSearch": "Найдено {{count}} результат(ов) для <code>{{query}}</code>:"
 	}
 }

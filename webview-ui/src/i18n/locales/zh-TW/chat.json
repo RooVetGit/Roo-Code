@@ -70,7 +70,7 @@
 		"tooltip": "取消目前操作"
 	},
 	"scrollToBottom": "捲動至對話框底部",
-	"about": "透過 AI 輔助產生、重構和偵錯程式碼。<br />查看我們的 <DocsLink>說明文件</DocsLink> 以瞭解更多資訊。",
+	"about": "透過 AI 輔助產生、重構和偵錯程式碼。查看我們的 <DocsLink>說明文件</DocsLink> 以瞭解更多資訊。",
 	"onboarding": "<strong>您在此工作區中的工作清單是空的。</strong> 請在下方輸入工作以開始。 不確定如何開始？ 在 <DocsLink>說明文件</DocsLink> 中閱讀更多關於 Roo 能為您做什麼的資訊。",
 	"rooTips": {
 		"boomerangTasks": {
@@ -262,8 +262,8 @@
 		}
 	},
 	"codebaseSearch": {
-		"wantsToSearch": "Roo 想要搜尋程式碼庫：「{{query}}」",
-		"wantsToSearchWithPath": "Roo 想要在「{{path}}」中搜尋：「{{query}}」",
-		"didSearch": "找到 {{count}} 個結果：「{{query}}」"
+		"wantsToSearch": "Roo 想要搜尋程式碼庫：<code>{{query}}</code>",
+		"wantsToSearchWithPath": "Roo 想要在 <code>{{path}}</code> 中搜尋：<code>{{query}}</code>",
+		"didSearch": "找到 {{count}} 個結果：<code>{{query}}</code>"
 	}
 }

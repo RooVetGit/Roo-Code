@@ -35,7 +35,7 @@
 	"codeIndex": {
 		"title": "Indexación de código",
 		"enableLabel": "Habilitar indexación de código",
-		"enableDescription": "Habilitar esta función indexará tu base de código. Esto puede consumir recursos del sistema y llevar tiempo dependiendo del tamaño de tu proyecto.",
+		"enableDescription": "<0>La indexación de código</0> es una función experimental que crea un índice de búsqueda semántica de tu proyecto usando embeddings de IA. Esto permite a Roo Code entender mejor y navegar grandes bases de código encontrando código relevante basado en significado en lugar de solo palabras clave.",
 		"providerLabel": "Proveedor de embeddings",
 		"selectProviderPlaceholder": "Seleccionar proveedor",
 		"openaiProvider": "OpenAI",
@@ -48,6 +48,7 @@
 		"qdrantKeyLabel": "Clave de Qdrant:",
 		"startIndexingButton": "Iniciar indexación",
 		"clearIndexDataButton": "Borrar datos de índice",
+		"unsavedSettingsMessage": "Por favor guarda tus ajustes antes de iniciar el proceso de indexación.",
 		"clearDataDialog": {
 			"title": "¿Estás seguro?",
 			"description": "Esta acción no se puede deshacer. Esto eliminará permanentemente los datos de índice de tu base de código.",
@@ -429,7 +430,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
 		"autoCondenseContextPercent": {
 			"label": "Umbral para activar la condensación inteligente de contexto",
 			"description": "Cuando la ventana de contexto alcanza este umbral, Roo la condensará automáticamente."

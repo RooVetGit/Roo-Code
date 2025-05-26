@@ -1,4 +1,4 @@
-import { QdrantClient } from "@qdrant/js-client-rest"
+import { QdrantClient, Schemas } from "@qdrant/js-client-rest"
 import { createHash } from "crypto"
 import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
@@ -37,19 +37,32 @@ export class QdrantVectorStore implements IVectorStore {
 		this.collectionName = `ws-${hash.substring(0, 16)}`
 	}
 
+	private async getCollectionInfo(): Promise<Schemas["CollectionInfo"] | null> {
+		try {
+			const collectionInfo = await this.client.getCollection(this.collectionName)
+			return collectionInfo
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				console.warn(
+					`[QdrantVectorStore] Warning during getCollectionInfo for "${this.collectionName}". Collection may not exist or another error occurred:`,
+					error.message,
+				)
+			}
+			return null
+		}
+	}
+
 	/**
 	 * Initializes the vector store
 	 * @returns Promise resolving to boolean indicating if a new collection was created
 	 */
 	async initialize(): Promise<boolean> {
+		let created = false
 		try {
-			let created = false
-			const collections = await this.client.getCollections()
-			const collectionExists = collections.collections.some(
-				(collection) => collection.name === this.collectionName,
-			)
+			const collectionInfo = await this.getCollectionInfo()
 
-			if (!collectionExists) {
+			if (collectionInfo === null) {
+				// Collection info not retrieved (assume not found or inaccessible), create it
 				await this.client.createCollection(this.collectionName, {
 					vectors: {
 						size: this.vectorSize,
@@ -57,26 +70,50 @@ export class QdrantVectorStore implements IVectorStore {
 					},
 				})
 				created = true
+			} else {
+				// Collection exists, check vector size
+				const existingVectorSize = collectionInfo.config?.params?.vectors?.size
+				if (existingVectorSize === this.vectorSize) {
+					created = false // Exists and correct
+				} else {
+					// Exists but wrong vector size, recreate
+					console.warn(
+						`[QdrantVectorStore] Collection ${this.collectionName} exists with vector size ${existingVectorSize}, but expected ${this.vectorSize}. Recreating collection.`,
+					)
+					await this.client.deleteCollection(this.collectionName) // Known to exist
+					await this.client.createCollection(this.collectionName, {
+						vectors: {
+							size: this.vectorSize,
+							distance: this.DISTANCE_METRIC,
+						},
+					})
+					created = true
+				}
 			}
 
-			// Create payload indexes for pathSegments up to depth 5
+			// Create payload indexes
 			for (let i = 0; i <= 4; i++) {
 				try {
 					await this.client.createPayloadIndex(this.collectionName, {
 						field_name: `pathSegments.${i}`,
 						field_schema: "keyword",
 					})
-				} catch (indexError) {
-					console.warn(
-						`[QdrantVectorStore] Could not create payload index for pathSegments.${i} on ${this.collectionName}. It might already exist or there was an issue.`,
-						indexError,
-					)
+				} catch (indexError: any) {
+					const errorMessage = (indexError?.message || "").toLowerCase()
+					if (!errorMessage.includes("already exists")) {
+						console.warn(
+							`[QdrantVectorStore] Could not create payload index for pathSegments.${i} on ${this.collectionName}. Details:`,
+							indexError?.message || indexError,
+						)
+					}
 				}
 			}
-
 			return created
-		} catch (error) {
-			console.error("Failed to initialize Qdrant collection:", error)
+		} catch (error: any) {
+			console.error(
+				`[QdrantVectorStore] Failed to initialize Qdrant collection "${this.collectionName}":`,
+				error?.message || error,
+			)
 			throw error
 		}
 	}
@@ -129,8 +166,13 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param payload Payload to check
 	 * @returns Boolean indicating if the payload is valid
 	 */
-	private isPayloadValid(payload: Record<string, unknown>): payload is Payload {
-		return "filePath" in payload && "codeChunk" in payload && "startLine" in payload && "endLine" in payload
+	private isPayloadValid(payload: Record<string, unknown> | null | undefined): payload is Payload {
+		if (!payload) {
+			return false
+		}
+		const validKeys = ["filePath", "codeChunk", "startLine", "endLine"]
+		const hasValidKeys = validKeys.every((key) => key in payload)
+		return hasValidKeys
 	}
 
 	/**
@@ -177,7 +219,7 @@ export class QdrantVectorStore implements IVectorStore {
 			}
 
 			const operationResult = await this.client.query(this.collectionName, searchRequest)
-			const filteredPoints = operationResult.points.filter((p) => this.isPayloadValid(p.payload!))
+			const filteredPoints = operationResult.points.filter((p) => this.isPayloadValid(p.payload))
 
 			return filteredPoints as VectorStoreSearchResult[]
 		} catch (error) {
@@ -262,16 +304,7 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @returns Promise resolving to boolean indicating if the collection exists
 	 */
 	async collectionExists(): Promise<boolean> {
-		try {
-			// Prefer direct API call if supported
-			await this.client.getCollection(this.collectionName)
-			return true
-		} catch (error: any) {
-			if (error?.response?.status === 404) {
-				return false
-			}
-			console.error("Error checking collection existence:", error)
-			return false
-		}
+		const collectionInfo = await this.getCollectionInfo()
+		return collectionInfo !== null
 	}
 }

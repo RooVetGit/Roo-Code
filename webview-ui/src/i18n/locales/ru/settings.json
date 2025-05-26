@@ -35,7 +35,7 @@
 	"codeIndex": {
 		"title": "Индексация кодовой базы",
 		"enableLabel": "Включить индексацию кодовой базы",
-		"enableDescription": "Включение этой функции проиндексирует вашу кодовую базу. Это может потреблять системные ресурсы и занять некоторое время в зависимости от размера вашего проекта.",
+		"enableDescription": "<0>Индексация кодовой базы</0> — это экспериментальная функция, которая создает семантический поисковый индекс вашего проекта с использованием ИИ-эмбеддингов. Это позволяет Roo Code лучше понимать и навигировать по большим кодовым базам, находя релевантный код на основе смысла, а не только ключевых слов.",
 		"providerLabel": "Провайдер эмбеддингов",
 		"selectProviderPlaceholder": "Выберите провайдера",
 		"openaiProvider": "OpenAI",
@@ -48,6 +48,7 @@
 		"qdrantKeyLabel": "Ключ Qdrant:",
 		"startIndexingButton": "Начать индексацию",
 		"clearIndexDataButton": "Очистить данные индекса",
+		"unsavedSettingsMessage": "Пожалуйста, сохрани настройки перед запуском процесса индексации.",
 		"clearDataDialog": {
 			"title": "Вы уверены?",
 			"description": "Это действие нельзя отменить. Оно навсегда удалит данные индекса вашей кодовой базы.",
@@ -429,7 +430,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
 		"condensingApiConfiguration": {
 			"label": "API Configuration for Context Condensing",
 			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",

@@ -2117,7 +2117,7 @@ describe("getTelemetryProperties", () => {
 		mockCline = new Task(defaultTaskOptions)
 		mockCline.api = {
 			getModel: jest.fn().mockReturnValue({
-				id: "claude-3-7-sonnet-20250219",
+				id: "claude-sonnet-4-20250514",
 				info: { contextWindow: 200000 },
 			}),
 		}
@@ -2137,7 +2137,7 @@ describe("getTelemetryProperties", () => {
 
 		const properties = await provider.getTelemetryProperties()
 
-		expect(properties).toHaveProperty("modelId", "claude-3-7-sonnet-20250219")
+		expect(properties).toHaveProperty("modelId", "claude-sonnet-4-20250514")
 	})
 })
 

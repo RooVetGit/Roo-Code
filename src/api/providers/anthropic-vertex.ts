@@ -13,7 +13,7 @@ import { getModelParams } from "../transform/model-params"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { BaseProvider } from "./base-provider"
-import type { SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 // https://docs.anthropic.com/en/api/claude-on-vertex-ai
 export class AnthropicVertexHandler extends BaseProvider implements SingleCompletionHandler {
@@ -52,7 +52,11 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		let {
 			id,
 			info: { supportsPromptCache },

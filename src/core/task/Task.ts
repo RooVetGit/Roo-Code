@@ -22,13 +22,14 @@ import type {
 } from "@roo-code/types"
 
 // api
-import { ApiHandler, buildApiHandler } from "../../api"
+import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
 import { ApiStream } from "../../api/transform/stream"
 
 // shared
 import { findLastIndex } from "../../shared/array"
 import { combineApiRequests } from "../../shared/combineApiRequests"
 import { combineCommandSequences } from "../../shared/combineCommandSequences"
+import { t } from "../../i18n"
 import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
@@ -1040,9 +1041,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(
 				"mistake_limit_reached",
-				this.api.getModel().id.includes("claude")
-					? `This may indicate a failure in his thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
-					: "Roo Code uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
+				t("common:errors.mistake_limit_guidance"),
 			)
 
 			if (response === "messageResponse") {
@@ -1501,6 +1500,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			alwaysApproveResubmit,
 			requestDelaySeconds,
 			experiments,
+			mode,
 			autoCondenseContextPercent = 100,
 		} = state ?? {}
 
@@ -1616,7 +1616,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+		const metadata: ApiHandlerCreateMessageMetadata = {
+			mode: mode,
+			taskId: this.taskId,
+		}
+
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, metadata)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
