@@ -4,6 +4,7 @@ import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { ViewState } from "../MarketplaceViewStateManager"
 import userEvent from "@testing-library/user-event"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ExtensionStateContextProvider } from "@/context/ExtensionStateContext"
 
 jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
@@ -76,9 +77,12 @@ describe("MarketplaceListView", () => {
 
 	const renderWithProviders = (props = {}) =>
 		render(
-			<TooltipProvider>
-				<MarketplaceListView {...defaultProps} {...props} />
-			</TooltipProvider>,
+			<ExtensionStateContextProvider>
+				<TooltipProvider>
+					<MarketplaceListView {...defaultProps} {...props} />
+				</TooltipProvider>
+				,
+			</ExtensionStateContextProvider>,
 		)
 
 	it("renders search input", () => {

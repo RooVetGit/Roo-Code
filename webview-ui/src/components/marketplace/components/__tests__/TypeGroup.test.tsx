@@ -102,8 +102,8 @@ describe("TypeGroup", () => {
 		render(<TypeGroup type="mode" items={matchedItems} />)
 
 		const matchedText = screen.getByText("Matched Item")
-		expect(matchedText).toHaveClass("text-vscode-textLink")
-		expect(screen.getByText("Match")).toBeInTheDocument()
+		expect(matchedText).toHaveClass("text-vscode-foreground")
+		expect(matchedText.parentElement).toHaveClass("border-primary border-dashed")
 	})
 
 	it("renders description when provided", () => {
