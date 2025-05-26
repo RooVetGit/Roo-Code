@@ -22,6 +22,7 @@
 		"check-types": "tsc --noEmit",
 		"test": "vitest --globals --run",
 		"build": "tsup",
+		"watch": "tsup --watch",
 		"clean": "rimraf dist .turbo"
 	},
 	"dependencies": {

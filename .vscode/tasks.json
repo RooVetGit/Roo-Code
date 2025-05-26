@@ -5,7 +5,7 @@
 	"tasks": [
 		{
 			"label": "watch",
-			"dependsOn": ["webview", "watch:tsc", "watch:esbuild"],
+			"dependsOn": ["webview", "watch:tsc", "watch:esbuild", "watch:roo-code-types"],
 			"presentation": {
 				"reveal": "never"
 			},
@@ -64,6 +64,28 @@
 			"command": "pnpm --filter roo-cline watch:tsc",
 			"group": "build",
 			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
+			"presentation": {
+				"group": "watch",
+				"reveal": "always"
+			}
+		},
+		{
+			"label": "watch:roo-code-types",
+			"type": "shell",
+			"command": "pnpm --filter @roo-code/types watch",
+			"group": "build",
+			"problemMatcher": {
+				"owner": "tsup",
+				"pattern": {
+					"regexp": "^$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*Build start.*",
+					"endsPattern": ".*Build success.*|.*Build failed.*"
+				}
+			},
 			"isBackground": true,
 			"presentation": {
 				"group": "watch",
