@@ -61,11 +61,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		totalItems: 0,
 		currentItemUnit: "items",
 	})
-
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 	const modelsForProvider =
-		currentProvider === "openai" || currentProvider === "ollama"
+		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "lmstudio"
 			? codebaseIndexModels?.[currentProvider]
 			: codebaseIndexModels?.openai
 	const availableModelIds = Object.keys(modelsForProvider || {})
@@ -138,11 +137,26 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexEmbedderProvider: z.literal("ollama"),
 				codebaseIndexEmbedderBaseUrl: z.string().url("Ollama URL must be a valid URL"),
 			}),
+			lmstudio: baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("lmstudio"),
+				codebaseIndexEmbedderBaseUrl: z.string().url("Lm Studio URL must be a valid URL"),
+			}),
 		}
-
 		try {
-			const schema =
-				config.codebaseIndexEmbedderProvider === "openai" ? providerSchemas.openai : providerSchemas.ollama
+			let schema
+			switch (config.codebaseIndexEmbedderProvider) {
+				case "openai":
+					schema = providerSchemas.openai
+					break
+				case "ollama":
+					schema = providerSchemas.ollama
+					break
+				case "lmstudio":
+					schema = providerSchemas.lmstudio
+					break
+				default:
+					schema = providerSchemas.openai
+			}
 
 			schema.parse({
 				...config,
@@ -209,7 +223,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						{indexingStatus.systemStatus}
 						{indexingStatus.message ? ` - ${indexingStatus.message}` : ""}
 					</div>
-
 					{indexingStatus.systemStatus === "Indexing" && (
 						<div className="space-y-1">
 							<ProgressPrimitive.Root
@@ -224,7 +237,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</ProgressPrimitive.Root>
 						</div>
 					)}
-
 					<div className="flex items-center gap-4 font-bold">
 						<div>{t("settings:codeIndex.providerLabel")}</div>
 					</div>
@@ -258,11 +270,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								<SelectContent>
 									<SelectItem value="openai">{t("settings:codeIndex.openaiProvider")}</SelectItem>
 									<SelectItem value="ollama">{t("settings:codeIndex.ollamaProvider")}</SelectItem>
+									<SelectItem value="lmstudio">{t("settings:codeIndex.lmstudioProvider")}</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 					</div>
-
 					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-4 font-bold">
@@ -277,7 +289,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</div>
 						</div>
 					)}
-
 					<div className="flex items-center gap-4 font-bold">
 						<div>{t("settings:codeIndex.modelLabel")}</div>
 					</div>
@@ -323,7 +334,24 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</div>
 						</div>
 					)}
-
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "lmstudio" && (
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.lmstudioUrlLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "http://localhost:1234"}
+									onInput={(e: any) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderBaseUrl: e.target.value,
+										})
+									}
+									style={{ width: "100%" }}></VSCodeTextField>
+							</div>
+						</div>
+					)}
 					<div className="flex flex-col gap-3">
 						<div className="flex items-center gap-4 font-bold">
 							<div>{t("settings:codeIndex.qdrantUrlLabel")}</div>
@@ -340,7 +368,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
 					</div>
-
 					<div className="flex flex-col gap-3">
 						<div className="flex items-center gap-4 font-bold">
 							<div>{t("settings:codeIndex.qdrantKeyLabel")}</div>
@@ -353,13 +380,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
 					</div>
-
 					{(!areSettingsCommitted || !validateIndexingConfig(codebaseIndexConfig, apiConfiguration)) && (
 						<p className="text-sm text-vscode-descriptionForeground mb-2">
 							{t("settings:codeIndex.unsavedSettingsMessage")}
 						</p>
 					)}
-
 					<div className="flex gap-2">
 						{(indexingStatus.systemStatus === "Error" || indexingStatus.systemStatus === "Standby") && (
 							<VSCodeButton

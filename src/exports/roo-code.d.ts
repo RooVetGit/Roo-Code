@@ -77,15 +77,23 @@ type GlobalSettings = {
 							}
 					  }
 					| undefined
+				lmstudio?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
 		  }
 		| undefined
 	codebaseIndexConfig?:
 		| {
 				codebaseIndexEnabled?: boolean | undefined
 				codebaseIndexQdrantUrl?: string | undefined
-				codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+				codebaseIndexEmbedderProvider?: ("openai" | "ollama" | "lmstudio") | undefined
 				codebaseIndexEmbedderBaseUrl?: string | undefined
 				codebaseIndexEmbedderModelId?: string | undefined
+				codebaseIndexEmbedderDimension?: number | undefined
 		  }
 		| undefined
 	alwaysAllowWrite?: boolean | undefined
@@ -856,15 +864,25 @@ type IpcMessage =
 														}
 												  }
 												| undefined
+											lmstudio?:
+												| {
+														[x: string]: {
+															dimension: number
+														}
+												  }
+												| undefined
 									  }
 									| undefined
 								codebaseIndexConfig?:
 									| {
 											codebaseIndexEnabled?: boolean | undefined
 											codebaseIndexQdrantUrl?: string | undefined
-											codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+											codebaseIndexEmbedderProvider?:
+												| ("openai" | "ollama" | "lmstudio")
+												| undefined
 											codebaseIndexEmbedderBaseUrl?: string | undefined
 											codebaseIndexEmbedderModelId?: string | undefined
+											codebaseIndexEmbedderDimension?: number | undefined
 									  }
 									| undefined
 								alwaysAllowWrite?: boolean | undefined
@@ -1368,15 +1386,23 @@ type TaskCommand =
 											}
 									  }
 									| undefined
+								lmstudio?:
+									| {
+											[x: string]: {
+												dimension: number
+											}
+									  }
+									| undefined
 						  }
 						| undefined
 					codebaseIndexConfig?:
 						| {
 								codebaseIndexEnabled?: boolean | undefined
 								codebaseIndexQdrantUrl?: string | undefined
-								codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+								codebaseIndexEmbedderProvider?: ("openai" | "ollama" | "lmstudio") | undefined
 								codebaseIndexEmbedderBaseUrl?: string | undefined
 								codebaseIndexEmbedderModelId?: string | undefined
+								codebaseIndexEmbedderDimension?: number | undefined
 						  }
 						| undefined
 					alwaysAllowWrite?: boolean | undefined

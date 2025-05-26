@@ -229,9 +229,10 @@ export type ModelInfo = z.infer<typeof modelInfoSchema>
 export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEnabled: z.boolean().optional(),
 	codebaseIndexQdrantUrl: z.string().optional(),
-	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama"]).optional(),
+	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama", "lmstudio"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
+	codebaseIndexEmbedderDimension: z.number().optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
@@ -239,12 +240,13 @@ export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
 export const codebaseIndexModelsSchema = z.object({
 	openai: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 	ollama: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+	lmstudio: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 })
 
 export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
 
 export const codebaseIndexProviderSchema = z.object({
-  codeIndexOpenAiKey: z.string().optional(),
+	codeIndexOpenAiKey: z.string().optional(),
 	codeIndexQdrantApiKey: z.string().optional(),
 })
 
@@ -661,7 +663,7 @@ export const providerSettingsSchema = z.object({
 	...groqSchema.shape,
 	...chutesSchema.shape,
 	...litellmSchema.shape,
-  ...codebaseIndexProviderSchema.shape
+	...codebaseIndexProviderSchema.shape,
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>

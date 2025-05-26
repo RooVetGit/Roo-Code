@@ -15,6 +15,7 @@ export class CodeIndexConfigManager {
 	private modelId?: string
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
+	private lmStudioOptions?: ApiHandlerOptions
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -56,12 +57,25 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 		this.searchMinScore = SEARCH_MIN_SCORE
-
-		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
+		switch (codebaseIndexEmbedderProvider) {
+			case "ollama":
+				this.embedderProvider = "ollama"
+				break
+			case "lmstudio":
+				this.embedderProvider = "lmstudio"
+				break
+			default:
+				this.embedderProvider = "openai"
+				break
+		}
 		this.modelId = codebaseIndexEmbedderModelId || undefined
 
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
+		}
+
+		this.lmStudioOptions = {
+			lmStudioBaseUrl: codebaseIndexEmbedderBaseUrl,
 		}
 	}
 
@@ -77,6 +91,7 @@ export class CodeIndexConfigManager {
 			modelId?: string
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
+			lmStudioOptions?: ApiHandlerOptions
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
@@ -91,6 +106,7 @@ export class CodeIndexConfigManager {
 			modelId: this.modelId,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey ?? "",
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
+			lmStudioBaseUrl: this.lmStudioOptions?.lmStudioBaseUrl ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
@@ -109,6 +125,7 @@ export class CodeIndexConfigManager {
 				modelId: this.modelId,
 				openAiOptions: this.openAiOptions,
 				ollamaOptions: this.ollamaOptions,
+				lmStudioOptions: this.lmStudioOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.searchMinScore,
@@ -132,6 +149,12 @@ export class CodeIndexConfigManager {
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(ollamaBaseUrl && qdrantUrl)
 			return isConfigured
+		} else if (this.embedderProvider === "lmstudio") {
+			// Lm Studio model ID has a default, so only base URL is strictly required for config
+			const lmStudioBaseUrl = this.lmStudioOptions?.lmStudioBaseUrl
+			const qdrantUrl = this.qdrantUrl
+			const isConfigured = !!(lmStudioBaseUrl && qdrantUrl)
+			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly
 	}
@@ -149,6 +172,7 @@ export class CodeIndexConfigManager {
 		const prevModelId = prev?.modelId ?? undefined
 		const prevOpenAiKey = prev?.openAiKey ?? ""
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
+		const prevLmStudioBaseUrl = prev?.lmStudioBaseUrl ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
@@ -189,6 +213,13 @@ export class CodeIndexConfigManager {
 			if (this.embedderProvider === "ollama") {
 				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
 				if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+					return true
+				}
+			}
+
+			if (this.embedderProvider === "lmstudio") {
+				const currentLmStudioBaseUrl = this.lmStudioOptions?.lmStudioBaseUrl ?? ""
+				if (prevLmStudioBaseUrl !== currentLmStudioBaseUrl) {
 					return true
 				}
 			}
@@ -242,6 +273,7 @@ export class CodeIndexConfigManager {
 			modelId: this.modelId,
 			openAiOptions: this.openAiOptions,
 			ollamaOptions: this.ollamaOptions,
+			lmStudioOptions: this.lmStudioOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.searchMinScore,

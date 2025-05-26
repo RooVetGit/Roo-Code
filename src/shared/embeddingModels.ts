@@ -2,7 +2,7 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "lmstudio" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
@@ -28,6 +28,11 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		"all-minilm": { dimension: 384 },
 		// Add default Ollama model if applicable, e.g.:
 		// 'default': { dimension: 768 } // Assuming a default dimension
+	},
+	lmstudio: {
+		"text-embedding-nomic-embed-text-v1.5@f16": { dimension: 768 },
+		"text-embedding-nomic-embed-text-v1.5@f32": { dimension: 768 },
+		"text-embedding-mxbai-embed-large-v1": { dimension: 1024 },
 	},
 }
 
@@ -76,6 +81,18 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 		}
 		// Fallback if no Ollama models are defined (shouldn't happen with the constant)
 		console.warn("No default Ollama model found in profiles.")
+		// Return a placeholder or throw an error, depending on desired behavior
+		return "unknown-default" // Placeholder specific model ID
+	}
+	if (provider === "lmstudio") {
+		// Choose a sensible default for Lm Studio, e.g., the first one listed or a specific one
+		const lmStudioModels = EMBEDDING_MODEL_PROFILES.lmstudio
+		const defaultLmStudioModel = lmStudioModels && Object.keys(lmStudioModels)[0]
+		if (defaultLmStudioModel) {
+			return defaultLmStudioModel
+		}
+		// Fallback if no Lm Studio models are defined (shouldn't happen with the constant)
+		console.warn("No default Lm Studio model found in profiles.")
 		// Return a placeholder or throw an error, depending on desired behavior
 		return "unknown-default" // Placeholder specific model ID
 	}

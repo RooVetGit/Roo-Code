@@ -37,6 +37,7 @@ describe("CodeIndexConfigManager", () => {
 				modelId: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
+				lmStudioOptions: { lmStudioBaseUrl: "" },
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
@@ -68,6 +69,7 @@ describe("CodeIndexConfigManager", () => {
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
 				ollamaOptions: { ollamaBaseUrl: "" },
+				lmStudioOptions: { lmStudioBaseUrl: "" },
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
@@ -270,6 +272,31 @@ describe("CodeIndexConfigManager", () => {
 				expect(result.requiresRestart).toBe(true)
 			})
 
+			it("should handle LM Studio configuration changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "lmstudio",
+					codebaseIndexEmbedderBaseUrl: "http://old-lmstudio.local",
+					codebaseIndexEmbedderModelId: "text-embedding-model",
+				})
+
+				await configManager.loadConfiguration()
+
+				// Change LMStudio base URL
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "lmstudio",
+					codebaseIndexEmbedderBaseUrl: "http://new-lmstudio.local",
+					codebaseIndexEmbedderModelId: "text-embedding-model",
+				})
+
+				const result = await configManager.loadConfiguration()
+				expect(result.requiresRestart).toBe(true)
+			})
+
 			it("should not require restart when disabled remains disabled", async () => {
 				// Initial state - disabled but configured
 				mockContextProxy.getGlobalState.mockReturnValue({
@@ -448,6 +475,18 @@ describe("CodeIndexConfigManager", () => {
 			expect(configManager.isFeatureConfigured).toBe(true)
 		})
 
+		it("should validate LM Studio configuration correctly", async () => {
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "lmstudio",
+				codebaseIndexEmbedderBaseUrl: "http://lmstudio.local",
+			})
+
+			await configManager.loadConfiguration()
+			expect(configManager.isFeatureConfigured).toBe(true)
+		})
+
 		it("should return false when required values are missing", async () => {
 			mockContextProxy.getGlobalState.mockReturnValue({
 				codebaseIndexEnabled: true,
@@ -485,6 +524,7 @@ describe("CodeIndexConfigManager", () => {
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
 				ollamaOptions: { ollamaBaseUrl: undefined },
+				lmStudioOptions: { lmStudioBaseUrl: undefined },
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,

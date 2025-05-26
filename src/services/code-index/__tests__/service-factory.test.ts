@@ -3,11 +3,13 @@ import { CodeIndexConfigManager } from "../config-manager"
 import { CacheManager } from "../cache-manager"
 import { OpenAiEmbedder } from "../embedders/openai"
 import { CodeIndexOllamaEmbedder } from "../embedders/ollama"
+import { CodeIndexLmStudioEmbedder } from "../embedders/lmstudio"
 import { QdrantVectorStore } from "../vector-store/qdrant-client"
 
 // Mock the embedders and vector store
 jest.mock("../embedders/openai")
 jest.mock("../embedders/ollama")
+jest.mock("../embedders/lmstudio")
 jest.mock("../vector-store/qdrant-client")
 
 // Mock the embedding models module
@@ -18,6 +20,7 @@ jest.mock("../../../shared/embeddingModels", () => ({
 
 const MockedOpenAiEmbedder = OpenAiEmbedder as jest.MockedClass<typeof OpenAiEmbedder>
 const MockedCodeIndexOllamaEmbedder = CodeIndexOllamaEmbedder as jest.MockedClass<typeof CodeIndexOllamaEmbedder>
+const MockedCodeIndexLmStudioEmbedder = CodeIndexLmStudioEmbedder as jest.MockedClass<typeof CodeIndexLmStudioEmbedder>
 const MockedQdrantVectorStore = QdrantVectorStore as jest.MockedClass<typeof QdrantVectorStore>
 
 // Import the mocked functions
@@ -87,6 +90,28 @@ describe("CodeIndexServiceFactory", () => {
 			})
 		})
 
+		it("should pass model ID to LMStudio embedder when using LMStudio provider", () => {
+			// Arrange
+			const testModelId = "text-embedding-nomic-embed-text-v1.5@f16"
+			const testConfig = {
+				embedderProvider: "lmstudio",
+				modelId: testModelId,
+				lmStudioOptions: {
+					lmStudioBaseUrl: "http://localhost:1234",
+				},
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+
+			// Act
+			factory.createEmbedder()
+
+			// Assert
+			expect(MockedCodeIndexLmStudioEmbedder).toHaveBeenCalledWith({
+				lmStudioBaseUrl: "http://localhost:1234",
+				embeddingModelId: testModelId,
+			})
+		})
+
 		it("should handle undefined model ID for OpenAI embedder", () => {
 			// Arrange
 			const testConfig = {
@@ -129,6 +154,27 @@ describe("CodeIndexServiceFactory", () => {
 			})
 		})
 
+		it("should handle undefined model ID for LMStudio embedder", () => {
+			// Arrange
+			const testConfig = {
+				embedderProvider: "lmstudio",
+				modelId: undefined,
+				lmStudioOptions: {
+					lmStudioBaseUrl: "http://localhost:1234",
+				},
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+
+			// Act
+			factory.createEmbedder()
+
+			// Assert
+			expect(MockedCodeIndexLmStudioEmbedder).toHaveBeenCalledWith({
+				lmStudioBaseUrl: "http://localhost:1234",
+				embeddingModelId: undefined,
+			})
+		})
+
 		it("should throw error when OpenAI API key is missing", () => {
 			// Arrange
 			const testConfig = {
@@ -157,6 +203,21 @@ describe("CodeIndexServiceFactory", () => {
 
 			// Act & Assert
 			expect(() => factory.createEmbedder()).toThrow("Ollama configuration missing for embedder creation")
+		})
+
+		it("should throw error when LMStudio base URL is missing", () => {
+			// Arrange
+			const testConfig = {
+				embedderProvider: "lmstudio",
+				modelId: "text-embedding-nomic-embed-text-v1.5@f16",
+				lmStudioOptions: {
+					lmStudioBaseUrl: undefined,
+				},
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+
+			// Act & Assert
+			expect(() => factory.createEmbedder()).toThrow("LM Studio configuration missing for embedder creation")
 		})
 
 		it("should throw error for invalid embedder provider", () => {
@@ -224,6 +285,31 @@ describe("CodeIndexServiceFactory", () => {
 				"/test/workspace",
 				"http://localhost:6333",
 				768,
+				"test-key",
+			)
+		})
+
+		it("should use config.modelId for LMStudio provider", () => {
+			// Arrange
+			const testModelId = "text-embedding-ada-002"
+			const testConfig = {
+				embedderProvider: "lmstudio",
+				modelId: testModelId,
+				qdrantUrl: "http://localhost:6333",
+				qdrantApiKey: "test-key",
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+			mockGetModelDimension.mockReturnValue(1024)
+
+			// Act
+			factory.createVectorStore()
+
+			// Assert
+			expect(mockGetModelDimension).toHaveBeenCalledWith("lmstudio", testModelId)
+			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
+				"/test/workspace",
+				"http://localhost:6333",
+				1024,
 				"test-key",
 			)
 		})
