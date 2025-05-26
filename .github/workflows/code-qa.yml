@@ -72,7 +72,7 @@ jobs:
       - name: Check types
         run: pnpm check-types
 
-  unit-test:
+  platform-unit-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -133,3 +133,10 @@ jobs:
       - name: Run integration tests
         working-directory: apps/vscode-e2e
         run: xvfb-run -a pnpm test:ci
+
+  unit-test:
+    needs: [platform-unit-test] # [platform-unit-test, integration-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: NO-OP
+        run: echo "All tests passed."
