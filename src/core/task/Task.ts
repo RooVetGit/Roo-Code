@@ -396,7 +396,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					// data or one whole message at a time so ignore partial for
 					// saves, and only post parts of partial message instead of
 					// whole array in new listener.
-					this.updateClineMessage(lastMessage)
+					await this.updateClineMessage(lastMessage)
 					throw new Error("Current ask promise was ignored (#1)")
 				} else {
 					// This is a new partial message, so add it with partial
@@ -431,7 +431,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
 					await this.saveClineMessages()
-					this.updateClineMessage(lastMessage)
+					await this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new and complete message, so add it like normal.
 					this.askResponse = undefined
@@ -570,7 +570,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.images = images
 					lastMessage.partial = partial
 					lastMessage.progressStatus = progressStatus
-					this.updateClineMessage(lastMessage)
+					await this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new partial message, so add it with partial state.
 					const sayTs = Date.now()
@@ -608,7 +608,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					await this.saveClineMessages()
 
 					// More performant than an entire `postStateToWebview`.
-					this.updateClineMessage(lastMessage)
+					await this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new and complete message, so add it like normal.
 					const sayTs = Date.now()
