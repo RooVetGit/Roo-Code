@@ -151,6 +151,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
+	geminiEmbeddingTaskType: z.string().optional(),
 })
 
 const openAiNativeSchema = apiModelIdProviderModelSchema.extend({
@@ -316,6 +317,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	// Gemini
 	"geminiApiKey",
 	"googleGeminiBaseUrl",
+	"geminiEmbeddingTaskType",
 	// OpenAI Native
 	"openAiNativeApiKey",
 	"openAiNativeBaseUrl",
