@@ -80,6 +80,9 @@ export const globalSettingsSchema = z.object({
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -164,6 +167,9 @@ export const GLOBAL_SETTINGS_KEYS = keysOf<GlobalSettings>()([
 
 	"rateLimitSeconds",
 	"diffEnabled",
+	"diffViewAutoFocus",
+	"autoCloseRooTabs",
+	"autoCloseAllRooTabs",
 	"fuzzyMatchThreshold",
 	"experiments",
 
