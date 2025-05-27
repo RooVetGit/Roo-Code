@@ -1,9 +1,13 @@
+// npx jest src/core/prompts/__tests__/system.test.ts
+
 import * as vscode from "vscode"
+
+import { ModeConfig } from "@roo-code/types"
 
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
-import "../../../utils/path" // Import path utils to get access to toPosix string extension.
+import { defaultModeSlug, modes, Mode } from "../../../shared/modes"
+import "../../../utils/path"
 import { addCustomInstructions } from "../sections/custom-instructions"
 import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 
@@ -211,6 +215,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -231,6 +238,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -253,6 +263,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -273,6 +286,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -293,6 +309,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -313,6 +332,9 @@ describe("SYSTEM_PROMPT", () => {
 			true, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toContain("apply_diff")
@@ -334,6 +356,9 @@ describe("SYSTEM_PROMPT", () => {
 			false, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).not.toContain("apply_diff")
@@ -355,6 +380,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).not.toContain("apply_diff")
@@ -403,6 +431,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toContain("Language Preference:")
@@ -461,6 +492,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		// Role definition should be at the top
@@ -496,6 +530,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			false, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		// Role definition from promptComponent should be at the top
@@ -526,6 +563,9 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			false, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		// Should use the default mode's role definition
@@ -570,6 +610,9 @@ describe("addCustomInstructions", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -590,6 +633,9 @@ describe("addCustomInstructions", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toMatchSnapshot()
@@ -612,6 +658,9 @@ describe("addCustomInstructions", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).toContain("Creating an MCP Server")
@@ -635,9 +684,35 @@ describe("addCustomInstructions", () => {
 			undefined, // diffEnabled
 			undefined, // experiments
 			false, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
 		)
 
 		expect(prompt).not.toContain("Creating an MCP Server")
+		expect(prompt).toMatchSnapshot()
+	})
+
+	it("should include partial read instructions when partialReadsEnabled is true", async () => {
+		const prompt = await SYSTEM_PROMPT(
+			mockContext,
+			"/test/path",
+			false, // supportsComputerUse
+			undefined, // mcpHub
+			undefined, // diffStrategy
+			undefined, // browserViewportSize
+			defaultModeSlug, // mode
+			undefined, // customModePrompts
+			undefined, // customModes,
+			undefined, // globalCustomInstructions
+			undefined, // diffEnabled
+			undefined, // experiments
+			true, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			true, // partialReadsEnabled
+		)
+
 		expect(prompt).toMatchSnapshot()
 	})
 

@@ -8,29 +8,30 @@ import delay from "delay"
 import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
-// schemas
-import { TokenUsage, ToolUsage, ToolName, ContextCondense } from "../../schemas"
-
-// api
-import { ApiHandler, buildApiHandler } from "../../api"
-import { ApiStream } from "../../api/transform/stream"
-
-// shared
-import { ProviderSettings } from "../../shared/api"
-import { findLastIndex } from "../../shared/array"
-import { combineApiRequests } from "../../shared/combineApiRequests"
-import { combineCommandSequences } from "../../shared/combineCommandSequences"
-import { t } from "../../i18n"
-import {
-	ClineApiReqCancelReason,
-	ClineApiReqInfo,
+import type {
+	ProviderSettings,
+	TokenUsage,
+	ToolUsage,
+	ToolName,
+	ContextCondense,
 	ClineAsk,
 	ClineMessage,
 	ClineSay,
 	ToolProgressStatus,
-} from "../../shared/ExtensionMessage"
+	HistoryItem,
+} from "@roo-code/types"
+
+// api
+import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
+import { ApiStream } from "../../api/transform/stream"
+
+// shared
+import { findLastIndex } from "../../shared/array"
+import { combineApiRequests } from "../../shared/combineApiRequests"
+import { combineCommandSequences } from "../../shared/combineCommandSequences"
+import { t } from "../../i18n"
+import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
-import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
@@ -50,7 +51,7 @@ import { RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 
 // utils
-import { calculateApiCostAnthropic } from "../../utils/cost"
+import { calculateApiCostAnthropic } from "../../shared/cost"
 import { getWorkspacePath } from "../../utils/path"
 
 // prompts
@@ -1325,6 +1326,21 @@ export class Task extends EventEmitter<ClineEvents> {
 			} finally {
 				this.isStreaming = false
 			}
+			if (
+				inputTokens > 0 ||
+				outputTokens > 0 ||
+				cacheWriteTokens > 0 ||
+				cacheReadTokens > 0 ||
+				typeof totalCost !== "undefined"
+			) {
+				telemetryService.captureLlmCompletion(this.taskId, {
+					inputTokens,
+					outputTokens,
+					cacheWriteTokens,
+					cacheReadTokens,
+					cost: totalCost,
+				})
+			}
 
 			// Need to call here in case the stream was aborted.
 			if (this.abort || this.abandoned) {
@@ -1454,18 +1470,19 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		const rooIgnoreInstructions = this.rooIgnoreController?.getInstructions()
 
+		const state = await this.providerRef.deref()?.getState()
 		const {
 			browserViewportSize,
 			mode,
+			customModes,
 			customModePrompts,
 			customInstructions,
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
 			language,
-		} = (await this.providerRef.deref()?.getState()) ?? {}
-
-		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
+			maxReadFileLine,
+		} = state ?? {}
 
 		return await (async () => {
 			const provider = this.providerRef.deref()
@@ -1490,6 +1507,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				enableMcpServerCreation,
 				language,
 				rooIgnoreInstructions,
+				maxReadFileLine !== -1,
 			)
 		})()
 	}
@@ -1502,6 +1520,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			alwaysApproveResubmit,
 			requestDelaySeconds,
 			experiments,
+			mode,
 			autoCondenseContextPercent = 100,
 		} = state ?? {}
 
@@ -1617,7 +1636,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+		const metadata: ApiHandlerCreateMessageMetadata = {
+			mode: mode,
+			taskId: this.taskId,
+		}
+
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, metadata)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {

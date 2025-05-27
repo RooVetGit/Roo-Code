@@ -2,7 +2,9 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
 import { GoogleAuth, JWTInput } from "google-auth-library"
 
-import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
+import type { ModelInfo } from "@roo-code/types"
+
+import { ApiHandlerOptions, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
 
 import { ApiStream } from "../transform/stream"
@@ -11,7 +13,7 @@ import { getModelParams } from "../transform/model-params"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { BaseProvider } from "./base-provider"
-import type { SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 // https://docs.anthropic.com/en/api/claude-on-vertex-ai
 export class AnthropicVertexHandler extends BaseProvider implements SingleCompletionHandler {
@@ -50,7 +52,11 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		let {
 			id,
 			info: { supportsPromptCache },

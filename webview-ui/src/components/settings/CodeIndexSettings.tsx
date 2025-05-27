@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from "react"
+import { z } from "zod"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { Trans } from "react-i18next"
-import { useAppTranslation } from "@/i18n/TranslationContext"
-
 import { VSCodeCheckbox, VSCodeTextField, VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Trans } from "react-i18next"
+
+import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
+
+import { EmbedderProvider } from "@roo/embeddingModels"
+
+import { vscode } from "@src/utils/vscode"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { buildDocLink } from "@src/utils/docLinks"
+
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -15,13 +27,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
-import { vscode } from "@/utils/vscode"
-import { buildDocLink } from "@/utils/docLinks"
-import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "../../../../src/schemas"
-import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
-import { z } from "zod"
+} from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
 
@@ -96,6 +102,30 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			window.removeEventListener("message", handleMessage)
 		}
 	}, [codebaseIndexConfig, codebaseIndexModels])
+
+	/**
+	 * Determines the appropriate model ID when changing providers
+	 */
+	function getModelIdForProvider(
+		newProvider: EmbedderProvider,
+		currentProvider: EmbedderProvider | undefined,
+		currentModelId: string | undefined,
+		availableModels: CodebaseIndexModels | undefined,
+	): string {
+		if (newProvider === currentProvider && currentModelId) {
+			return currentModelId
+		}
+
+		const models = availableModels?.[newProvider]
+		const modelIds = models ? Object.keys(models) : []
+
+		if (currentModelId && modelIds.includes(currentModelId)) {
+			return currentModelId
+		}
+
+		const selectedModel = modelIds.length > 0 ? modelIds[0] : ""
+		return selectedModel
+	}
 
 	function validateIndexingConfig(config: CodebaseIndexConfig | undefined, apiConfig: ProviderSettings): boolean {
 		if (!config) return false
@@ -210,15 +240,21 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
 								onValueChange={(value) => {
 									const newProvider = value as EmbedderProvider
-									const models = codebaseIndexModels?.[newProvider]
-									const modelIds = models ? Object.keys(models) : []
-									const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
+									const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
+									const currentModelId = codebaseIndexConfig?.codebaseIndexEmbedderModelId
+
+									const modelIdToUse = getModelIdForProvider(
+										newProvider,
+										currentProvider,
+										currentModelId,
+										codebaseIndexModels,
+									)
 
 									if (codebaseIndexConfig) {
 										setCachedStateField("codebaseIndexConfig", {
 											...codebaseIndexConfig,
 											codebaseIndexEmbedderProvider: newProvider,
-											codebaseIndexEmbedderModelId: defaultModelId,
+											codebaseIndexEmbedderModelId: modelIdToUse,
 										})
 									}
 								}}>
