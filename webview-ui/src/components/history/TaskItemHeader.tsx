@@ -1,7 +1,7 @@
 import React from "react"
 import type { HistoryItem } from "@roo-code/types"
 import prettyBytes from "pretty-bytes"
-import { Coins } from "lucide-react"
+import { DollarSign } from "lucide-react"
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
 import { Button } from "@/components/ui"
@@ -16,7 +16,7 @@ export interface TaskItemHeaderProps {
 	onDelete?: (taskId: string) => void
 }
 
-export const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelectionMode, t, onDelete }) => {
+const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelectionMode, t, onDelete }) => {
 	const isCompact = variant === "compact"
 
 	// Standardized icon styles
@@ -57,16 +57,16 @@ export const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, i
 				{(item.tokensIn || item.tokensOut) && (
 					<span className="text-vscode-descriptionForeground flex items-center gap-px">
 						<i className="codicon codicon-arrow-up" style={metadataIconWithTextAdjustStyle} />
-						{formatLargeNumber(item.tokensIn || 0)}
+						<span data-testid="tokens-in">{formatLargeNumber(item.tokensIn || 0)}</span>
 						<i className="codicon codicon-arrow-down" style={metadataIconWithTextAdjustStyle} />
-						{formatLargeNumber(item.tokensOut || 0)}
+						<span data-testid="tokens-out">{formatLargeNumber(item.tokensOut || 0)}</span>
 					</span>
 				)}
 
 				{/* Cost Info */}
 				{!!item.totalCost && (
 					<span className="text-vscode-descriptionForeground flex items-center gap-px">
-						<Coins className="inline-block size-[1em]" />$
+						<DollarSign className="inline-block size-[1em]" />
 						{isCompact ? item.totalCost.toFixed(2) : item.totalCost.toFixed(4)}
 					</span>
 				)}
@@ -75,9 +75,9 @@ export const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, i
 				{!!item.cacheWrites && (
 					<span className="text-vscode-descriptionForeground flex items-center gap-px">
 						<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
-						{formatLargeNumber(item.cacheWrites || 0)}
+						<span data-testid="cache-writes">{formatLargeNumber(item.cacheWrites || 0)}</span>
 						<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
-						{formatLargeNumber(item.cacheReads || 0)}
+						<span data-testid="cache-reads">{formatLargeNumber(item.cacheReads || 0)}</span>
 					</span>
 				)}
 
@@ -114,4 +114,4 @@ export const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, i
 	)
 }
 
-export default React.memo(TaskItemHeader)
+export default TaskItemHeader

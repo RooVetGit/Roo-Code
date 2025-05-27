@@ -3,10 +3,10 @@ import type { HistoryItem } from "@roo-code/types"
 
 import { vscode } from "@/utils/vscode"
 import { cn } from "@/lib/utils"
-import { Checkbox } from "@/components/ui"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
-import { TaskItemHeader } from "./TaskItemHeader"
+import TaskItemHeader from "./TaskItemHeader"
 
 interface TaskItemProps {
 	item: HistoryItem
