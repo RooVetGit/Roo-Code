@@ -15,6 +15,7 @@ import type {
 	ProviderSettings,
 	RooCodeSettings,
 	ProviderSettingsEntry,
+	TelemetryProperties,
 	CodeActionId,
 	CodeActionName,
 	TerminalActionId,
@@ -52,7 +53,7 @@ import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { TelemetryPropertiesProvider, telemetryService } from "../../services/telemetry"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
@@ -67,7 +68,10 @@ export type ClineProviderEvents = {
 	clineCreated: [cline: Task]
 }
 
-export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
+export class ClineProvider
+	extends EventEmitter<ClineProviderEvents>
+	implements vscode.WebviewViewProvider, TelemetryPropertiesProvider
+{
 	// Used in package.json as the view's id. This value cannot be changed due
 	// to how VSCode caches views based on their id, and updating the id would
 	// break existing instances of the extension.
@@ -557,7 +561,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		try {
 			const fs = require("fs")
 			const path = require("path")
-			const portFilePath = path.resolve(__dirname, "../.vite-port")
+			const portFilePath = path.resolve(__dirname, "../../.vite-port")
 
 			if (fs.existsSync(portFilePath)) {
 				localPort = fs.readFileSync(portFilePath, "utf8").trim()
@@ -618,7 +622,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"default-src 'none'",
 			`font-src ${webview.cspSource}`,
 			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
-			`img-src ${webview.cspSource} data:`,
+			`img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:`,
 			`media-src ${webview.cspSource}`,
 			`script-src 'unsafe-eval' ${webview.cspSource} https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
 			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
@@ -703,7 +707,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -1566,59 +1570,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * This method is called by the telemetry service to get context information
 	 * like the current mode, API provider, etc.
 	 */
-	public async getTelemetryProperties(): Promise<Record<string, any>> {
+	public async getTelemetryProperties(): Promise<TelemetryProperties> {
 		const { mode, apiConfiguration, language } = await this.getState()
-		const appVersion = this.context.extension?.packageJSON?.version
-		const vscodeVersion = vscode.version
-		const platform = process.platform
-		const editorName = vscode.env.appName // Get the editor name (VS Code, Cursor, etc.)
+		const task = this.getCurrentCline()
 
-		const properties: Record<string, any> = {
-			vscodeVersion,
-			platform,
-			editorName,
+		return {
+			appVersion: this.context.extension?.packageJSON?.version,
+			vscodeVersion: vscode.version,
+			platform: process.platform,
+			editorName: vscode.env.appName,
+			language,
+			mode,
+			apiProvider: apiConfiguration?.apiProvider,
+			modelId: task?.api?.getModel().id,
+			diffStrategy: task?.diffStrategy?.getName(),
+			isSubtask: task ? !!task.parentTask : undefined,
 		}
-
-		// Add extension version
-		if (appVersion) {
-			properties.appVersion = appVersion
-		}
-
-		// Add language
-		if (language) {
-			properties.language = language
-		}
-
-		// Add current mode
-		if (mode) {
-			properties.mode = mode
-		}
-
-		// Add API provider
-		if (apiConfiguration?.apiProvider) {
-			properties.apiProvider = apiConfiguration.apiProvider
-		}
-
-		// Add model ID if available
-		const currentCline = this.getCurrentCline()
-
-		if (currentCline?.api) {
-			const { id: modelId } = currentCline.api.getModel()
-
-			if (modelId) {
-				properties.modelId = modelId
-			}
-		}
-
-		if (currentCline?.diffStrategy) {
-			properties.diffStrategy = currentCline.diffStrategy.getName()
-		}
-
-		// Add isSubtask property that indicates whether this task is a subtask
-		if (currentCline) {
-			properties.isSubtask = !!currentCline.parentTask
-		}
-
-		return properties
 	}
 }
