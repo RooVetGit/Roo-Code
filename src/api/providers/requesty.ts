@@ -116,8 +116,8 @@ export class RequestyHandler extends BaseProvider implements SingleCompletionHan
 			model,
 			max_tokens,
 			temperature,
-			reasoning_effort,
-			thinking,
+			...(reasoning_effort && { reasoning_effort }),
+			...(thinking && { thinking }),
 			stream: true,
 			stream_options: { include_usage: true },
 			requesty: { trace_id: metadata?.taskId, extra: { mode: metadata?.mode } },
@@ -148,20 +148,13 @@ export class RequestyHandler extends BaseProvider implements SingleCompletionHan
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
-		const model = await this.fetchModel()
+		const { id: model, maxTokens: max_tokens, temperature } = await this.fetchModel()
 
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [{ role: "system", content: prompt }]
 
-		let maxTokens = undefined
-		if (this.options.includeMaxTokens) {
-			maxTokens = model.info.maxTokens
-		}
-
-		const temperature = this.options.modelTemperature
-
 		const completionParams: RequestyChatCompletionParams = {
-			model: model.id,
-			max_tokens: maxTokens,
+			model,
+			max_tokens,
 			messages: openAiMessages,
 			temperature: temperature,
 		}
