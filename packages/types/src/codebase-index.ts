@@ -7,9 +7,10 @@ import { z } from "zod"
 export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEnabled: z.boolean().optional(),
 	codebaseIndexQdrantUrl: z.string().optional(),
-	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama"]).optional(),
+	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama", "gemini"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
+	geminiEmbeddingTaskType: z.string().optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
@@ -21,6 +22,7 @@ export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
 export const codebaseIndexModelsSchema = z.object({
 	openai: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 	ollama: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+	gemini: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 })
 
 export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
