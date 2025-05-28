@@ -127,7 +127,7 @@ describe("summarizeConversation", () => {
 		expect(result.cost).toBe(0)
 		expect(result.summary).toBe("")
 		expect(result.newContextTokens).toBeUndefined()
-		expect(result.error).toBeUndefined()
+		expect(result.error).toBeTruthy() // Error should be set for not enough messages
 		expect(mockApiHandler.createMessage).not.toHaveBeenCalled()
 	})
 
@@ -153,7 +153,7 @@ describe("summarizeConversation", () => {
 		expect(result.cost).toBe(0)
 		expect(result.summary).toBe("")
 		expect(result.newContextTokens).toBeUndefined()
-		expect(result.error).toBeUndefined()
+		expect(result.error).toBeTruthy() // Error should be set for recent summary
 		expect(mockApiHandler.createMessage).not.toHaveBeenCalled()
 	})
 
@@ -394,6 +394,110 @@ describe("summarizeConversation", () => {
 		expect(result.error).toBeUndefined()
 		expect(result.newContextTokens).toBe(80) // 50 output tokens + 30 from countTokens
 		expect(result.newContextTokens).toBeLessThan(prevContextTokens)
+	})
+
+	it("should return error when not enough messages to summarize", async () => {
+		const messages: ApiMessage[] = [{ role: "user", content: "Hello", ts: 1 }]
+
+		const result = await summarizeConversation(
+			messages,
+			mockApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			DEFAULT_PREV_CONTEXT_TOKENS,
+		)
+
+		// Should return original messages when not enough to summarize
+		expect(result.messages).toEqual(messages)
+		expect(result.cost).toBe(0)
+		expect(result.summary).toBe("")
+		expect(result.error).toBeTruthy() // Error should be set
+		expect(result.newContextTokens).toBeUndefined()
+		expect(mockApiHandler.createMessage).not.toHaveBeenCalled()
+	})
+
+	it("should return error when recent summary exists in kept messages", async () => {
+		const messages: ApiMessage[] = [
+			{ role: "user", content: "Hello", ts: 1 },
+			{ role: "assistant", content: "Hi there", ts: 2 },
+			{ role: "user", content: "How are you?", ts: 3 },
+			{ role: "assistant", content: "I'm good", ts: 4 },
+			{ role: "user", content: "What's new?", ts: 5 },
+			{ role: "assistant", content: "Recent summary", ts: 6, isSummary: true }, // Summary in last 3 messages
+			{ role: "user", content: "Tell me more", ts: 7 },
+		]
+
+		const result = await summarizeConversation(
+			messages,
+			mockApiHandler,
+			defaultSystemPrompt,
+			taskId,
+			DEFAULT_PREV_CONTEXT_TOKENS,
+		)
+
+		// Should return original messages when recent summary exists
+		expect(result.messages).toEqual(messages)
+		expect(result.cost).toBe(0)
+		expect(result.summary).toBe("")
+		expect(result.error).toBeTruthy() // Error should be set
+		expect(result.newContextTokens).toBeUndefined()
+		expect(mockApiHandler.createMessage).not.toHaveBeenCalled()
+	})
+
+	it("should return error when both condensing and main API handlers are invalid", async () => {
+		const messages: ApiMessage[] = [
+			{ role: "user", content: "Hello", ts: 1 },
+			{ role: "assistant", content: "Hi there", ts: 2 },
+			{ role: "user", content: "How are you?", ts: 3 },
+			{ role: "assistant", content: "I'm good", ts: 4 },
+			{ role: "user", content: "What's new?", ts: 5 },
+			{ role: "assistant", content: "Not much", ts: 6 },
+			{ role: "user", content: "Tell me more", ts: 7 },
+		]
+
+		// Create invalid handlers (missing createMessage)
+		const invalidMainHandler = {
+			countTokens: jest.fn(),
+			getModel: jest.fn(),
+			// createMessage is missing
+		} as unknown as ApiHandler
+
+		const invalidCondensingHandler = {
+			countTokens: jest.fn(),
+			getModel: jest.fn(),
+			// createMessage is missing
+		} as unknown as ApiHandler
+
+		// Mock console.error to verify error message
+		const originalError = console.error
+		const mockError = jest.fn()
+		console.error = mockError
+
+		const result = await summarizeConversation(
+			messages,
+			invalidMainHandler,
+			defaultSystemPrompt,
+			taskId,
+			DEFAULT_PREV_CONTEXT_TOKENS,
+			false,
+			undefined,
+			invalidCondensingHandler,
+		)
+
+		// Should return original messages when both handlers are invalid
+		expect(result.messages).toEqual(messages)
+		expect(result.cost).toBe(0)
+		expect(result.summary).toBe("")
+		expect(result.error).toBeTruthy() // Error should be set
+		expect(result.newContextTokens).toBeUndefined()
+
+		// Verify error was logged
+		expect(mockError).toHaveBeenCalledWith(
+			expect.stringContaining("Main API handler is also invalid for condensing"),
+		)
+
+		// Restore console.error
+		console.error = originalError
 	})
 })
 
