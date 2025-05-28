@@ -63,6 +63,28 @@ export const Ollama = ({ apiConfiguration, setApiConfigurationField }: OllamaPro
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.ollama.modelId")}</label>
 			</VSCodeTextField>
+			<VSCodeTextField
+				value={apiConfiguration?.ollamaApiTimeout?.toString() || "10"}
+				onInput={handleInputChange("ollamaApiTimeout", (e) => {
+					const value = parseInt((e.target as HTMLInputElement).value)
+					return isNaN(value) ? undefined : value
+				})}
+				type="text"
+				inputMode="numeric"
+				placeholder={t("settings:placeholders.numbers.maxTokens")}
+				style={{
+					borderColor: (() => {
+						const value = apiConfiguration?.ollamaApiTimeout
+						if (!value) return "var(--vscode-input-border)"
+						return value > 0 ? "var(--vscode-charts-green)" : "var(--vscode-errorForeground)"
+					})(),
+				}}
+				className="w-full mt-4">
+				<label className="block font-medium mb-1">{t("settings:providers.openAiApiTimeout")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2 mb-2">
+				{t("settings:providers.openAiApiTimeoutDescription")}
+			</div>
 			{ollamaModels.length > 0 && (
 				<VSCodeRadioGroup
 					value={

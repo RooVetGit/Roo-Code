@@ -616,6 +616,28 @@ export const OpenAICompatible = ({
 					{t("settings:providers.customModel.resetDefaults")}
 				</Button>
 			</div>
+			<VSCodeTextField
+				value={apiConfiguration?.openAiApiTimeout?.toString() || "10"}
+				onInput={handleInputChange("openAiApiTimeout", (e) => {
+					const value = parseInt((e.target as HTMLInputElement).value)
+					return isNaN(value) ? undefined : value
+				})}
+				type="text"
+				inputMode="numeric"
+				placeholder={t("settings:placeholders.numbers.maxTokens")}
+				style={{
+					borderColor: (() => {
+						const value = apiConfiguration?.openAiApiTimeout
+						if (!value) return "var(--vscode-input-border)"
+						return value > 0 ? "var(--vscode-charts-green)" : "var(--vscode-errorForeground)"
+					})(),
+				}}
+				className="w-full mt-4">
+				<label className="block font-medium mb-1">{t("settings:providers.openAiApiTimeout")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground -mt-2">
+				{t("settings:providers.openAiApiTimeoutDescription")}
+			</div>
 		</>
 	)
 }

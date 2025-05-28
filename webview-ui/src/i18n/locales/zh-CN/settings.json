@@ -184,6 +184,8 @@
 		"apiKey": "API 密钥",
 		"openAiBaseUrl": "OpenAI 基础 URL",
 		"getOpenAiApiKey": "获取 OpenAI API 密钥",
+		"openAiApiTimeout": "超时时间（分钟）",
+		"openAiApiTimeoutDescription": "对提供者的 API 请求超时时间（最少 5 分钟）。若在此期间无响应，将重试请求。对于较慢的模型请增加此值。",
 		"mistralApiKey": "Mistral API 密钥",
 		"getMistralApiKey": "获取 Mistral / Codestral API 密钥",
 		"codestralBaseUrl": "Codestral 基础 URL（可选）",

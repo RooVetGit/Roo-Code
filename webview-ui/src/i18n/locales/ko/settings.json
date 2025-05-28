@@ -184,6 +184,8 @@
 		"openAiApiKey": "OpenAI API 키",
 		"openAiBaseUrl": "기본 URL",
 		"getOpenAiApiKey": "OpenAI API 키 받기",
+		"openAiApiTimeout": "타임아웃(분)",
+		"openAiApiTimeoutDescription": "제공자에 대한 API 요청의 타임아웃(최소 5분). 이 기간 내에 응답이 없으면 요청이 재시도됩니다. 느린 모델의 경우 값을 늘리세요.",
 		"mistralApiKey": "Mistral API 키",
 		"getMistralApiKey": "Mistral / Codestral API 키 받기",
 		"codestralBaseUrl": "Codestral 기본 URL (선택사항)",

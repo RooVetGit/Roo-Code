@@ -184,6 +184,8 @@
 		"apiKey": "API-Schlüssel",
 		"openAiBaseUrl": "Basis-URL",
 		"getOpenAiApiKey": "OpenAI API-Schlüssel erhalten",
+		"openAiApiTimeout": "Zeitlimit (Minuten)",
+		"openAiApiTimeoutDescription": "Zeitlimit für API-Anfragen an den Anbieter (mind. 5 Min.). Wenn innerhalb dieses Zeitraums keine Antwort erfolgt, wird die Anfrage wiederholt. Erhöhen Sie den Wert für langsamere Modelle.",
 		"mistralApiKey": "Mistral API-Schlüssel",
 		"getMistralApiKey": "Mistral / Codestral API-Schlüssel erhalten",
 		"codestralBaseUrl": "Codestral Basis-URL (Optional)",
