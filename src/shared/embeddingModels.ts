@@ -48,9 +48,14 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
  * Retrieves the embedding dimension for a given provider and model ID.
  * @param provider The embedder provider (e.g., "openai").
  * @param modelId The specific model ID (e.g., "text-embedding-3-small").
+ * @param requestedDimension Optional dimension requested by the user.
  * @returns The dimension size or undefined if the model is not found.
  */
-export function getModelDimension(provider: EmbedderProvider, modelId: string): number | undefined {
+export function getModelDimension(
+	provider: EmbedderProvider,
+	modelId: string,
+	requestedDimension?: number,
+): number | undefined {
 	const providerProfiles = EMBEDDING_MODEL_PROFILES[provider]
 	if (!providerProfiles) {
 		console.warn(`Provider not found in profiles: ${provider}`)
@@ -62,6 +67,14 @@ export function getModelDimension(provider: EmbedderProvider, modelId: string): 
 		// Don't warn here, as it might be a custom model ID not in our profiles
 		// console.warn(`Model not found for provider ${provider}: ${modelId}`)
 		return undefined // Or potentially return a default/fallback dimension?
+	}
+
+	if (
+		requestedDimension &&
+		modelProfile.supportDimensions &&
+		modelProfile.supportDimensions.includes(requestedDimension)
+	) {
+		return requestedDimension
 	}
 
 	return modelProfile.dimension

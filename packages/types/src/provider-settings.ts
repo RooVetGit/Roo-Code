@@ -152,6 +152,7 @@ const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
 	geminiEmbeddingTaskType: z.string().optional(),
+	geminiEmbeddingDimension: z.number().optional(),
 })
 
 const openAiNativeSchema = apiModelIdProviderModelSchema.extend({

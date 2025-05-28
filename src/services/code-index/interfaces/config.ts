@@ -15,6 +15,7 @@ export interface CodeIndexConfig {
 	qdrantUrl?: string
 	qdrantApiKey?: string
 	searchMinScore?: number
+	geminiEmbeddingDimension?: number
 }
 
 /**
@@ -29,6 +30,7 @@ export type PreviousConfigSnapshot = {
 	ollamaBaseUrl?: string
 	geminiApiKey?: string
 	geminiEmbeddingTaskType?: string
+	geminiEmbeddingDimension?: number // Add here
 	qdrantUrl?: string
 	qdrantApiKey?: string
 }

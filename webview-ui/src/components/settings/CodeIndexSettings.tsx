@@ -6,7 +6,7 @@ import { Trans } from "react-i18next"
 
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
-import { EmbedderProvider } from "@roo/embeddingModels"
+import { EmbedderProvider, EMBEDDING_MODEL_PROFILES } from "@roo/embeddingModels"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -76,6 +76,14 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			? codebaseIndexModels?.[currentProvider]
 			: codebaseIndexModels?.openai
 	const availableModelIds = Object.keys(modelsForProvider || {})
+
+	// Logic for Gemini dimension selector
+	const selectedModelIdForGeminiDim = codebaseIndexConfig?.codebaseIndexEmbedderModelId
+	const geminiModelProfileForDim =
+		currentProvider === "gemini" && selectedModelIdForGeminiDim
+			? EMBEDDING_MODEL_PROFILES.gemini?.[selectedModelIdForGeminiDim]
+			: undefined
+	const geminiSupportedDims = geminiModelProfileForDim?.supportDimensions
 
 	useEffect(() => {
 		// Request initial indexing status from extension host
@@ -149,6 +157,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexEmbedderProvider: z.literal("gemini"),
 				geminiApiKey: z.string().min(1, "Gemini API key is required"),
 				geminiEmbeddingTaskType: z.string().min(1, "Gemini Task Type is required"),
+				geminiEmbeddingDimension: z
+					.number()
+					.int()
+					.positive("Embedding dimension must be a positive integer")
+					.optional(),
 			}),
 		}
 
@@ -402,6 +415,46 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									</div>
 								</div>
 							</div>
+							{currentProvider === "gemini" &&
+								geminiModelProfileForDim &&
+								geminiSupportedDims &&
+								geminiSupportedDims.length > 0 && (
+									<div className="flex flex-col gap-3">
+										<div className="flex items-center gap-4 font-bold">
+											<div>{t("settings:codeIndex.embeddingDimension")}</div>
+										</div>
+										<div>
+											<div className="flex items-center gap-2">
+												<Select
+													value={codebaseIndexConfig?.geminiEmbeddingDimension?.toString()}
+													onValueChange={(dimStr) => {
+														const newDim = parseInt(dimStr, 10)
+														if (!isNaN(newDim)) {
+															setCachedStateField("codebaseIndexConfig", {
+																...codebaseIndexConfig,
+																geminiEmbeddingDimension: newDim,
+															})
+														}
+													}}>
+													<SelectTrigger className="w-full">
+														<SelectValue
+															placeholder={t(
+																"settings:codeIndex.selectDimensionPlaceholder",
+															)}
+														/>
+													</SelectTrigger>
+													<SelectContent>
+														{geminiSupportedDims.map((dim) => (
+															<SelectItem key={dim} value={dim.toString()}>
+																{dim}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+										</div>
+									</div>
+								)}
 							<div className="flex flex-col gap-3">
 								<RateLimitSecondsControl
 									value={apiConfiguration.rateLimitSeconds || 0}

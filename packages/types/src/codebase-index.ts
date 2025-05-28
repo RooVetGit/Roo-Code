@@ -11,6 +11,7 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
 	geminiEmbeddingTaskType: z.string().optional(),
+	geminiEmbeddingDimension: z.number().optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
