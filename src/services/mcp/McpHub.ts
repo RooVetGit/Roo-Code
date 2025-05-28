@@ -1641,7 +1641,7 @@ export class McpHub {
 				await this.notifyWebviewOfServerChanges()
 			}
 		} catch (error) {
-			this.showErrorMessage(`Failed to update disabledForPromptTool ssettings for tool ${toolName}`, error)
+			this.showErrorMessage(`Failed to update disabledForPromptTool settings for tool ${toolName}`, error)
 			throw error // Re-throw to ensure the error is properly handled
 		}
 	}
