@@ -13,6 +13,7 @@ import { supportPrompt } from "../../shared/support-prompt"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -129,6 +130,12 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "customInstructions":
 			await provider.updateCustomInstructions(message.text)
+			break
+		case "openCustomInstructionsFile":
+			await provider.openCustomInstructionsFile()
+			break
+		case "refreshCustomInstructions":
+			await provider.refreshCustomInstructions()
 			break
 		case "alwaysAllowReadOnly":
 			await updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)

@@ -34,6 +34,21 @@ export async function migrateSettings(
 
 		// Process each file migration
 		try {
+			// Migrate custom instructions from GlobalState to file
+			const customInstructionsKey = "customInstructions"
+			const customInstructionsContent = context.globalState.get<string>(customInstructionsKey)
+			const customInstructionsFilePath = path.join(settingsDir, GlobalFileNames.customInstructions)
+
+			if (customInstructionsContent && !(await fileExistsAtPath(customInstructionsFilePath))) {
+				await fs.writeFile(customInstructionsFilePath, customInstructionsContent, "utf-8")
+				await context.globalState.update(customInstructionsKey, undefined) // Delete from GlobalState
+				outputChannel.appendLine("Migrated custom instructions from GlobalState to file.")
+			} else {
+				outputChannel.appendLine(
+					`Skipping custom instructions migration: ${customInstructionsContent ? "file already exists" : "no data in GlobalState"}`,
+				)
+			}
+
 			for (const migration of fileMigrations) {
 				const oldPath = path.join(settingsDir, migration.oldName)
 				const newPath = path.join(settingsDir, migration.newName)

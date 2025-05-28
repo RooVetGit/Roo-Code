@@ -1079,7 +1079,33 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 				</div>
 
 				<div className="pb-5 border-b border-vscode-input-border">
-					<h3 className="text-vscode-foreground mb-3">{t("prompts:globalCustomInstructions.title")}</h3>
+					<div className="flex justify-between items-center mb-3">
+						<h3 className="text-vscode-foreground m-0">{t("prompts:globalCustomInstructions.title")}</h3>
+						<div className="flex gap-2">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => {
+									vscode.postMessage({
+										type: "openCustomInstructionsFile",
+									})
+								}}
+								title={t("prompts:globalCustomInstructions.openFile")}>
+								<span className="codicon codicon-go-to-file"></span>
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => {
+									vscode.postMessage({
+										type: "refreshCustomInstructions",
+									})
+								}}
+								title={t("prompts:globalCustomInstructions.refreshFile")}>
+								<span className="codicon codicon-refresh"></span>
+							</Button>
+						</div>
+					</div>
 
 					<div className="text-sm text-vscode-descriptionForeground mb-2">
 						<Trans i18nKey="prompts:globalCustomInstructions.description">

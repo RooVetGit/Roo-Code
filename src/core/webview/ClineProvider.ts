@@ -958,9 +958,45 @@ export class ClineProvider
 	}
 
 	async updateCustomInstructions(instructions?: string) {
-		// User may be clearing the field.
-		await this.updateGlobalState("customInstructions", instructions || undefined)
+		const settingsDirPath = await this.ensureSettingsDirectoryExists()
+		const customInstructionsFilePath = path.join(settingsDirPath, GlobalFileNames.customInstructions)
+
+		if (instructions && instructions.trim()) {
+			await fs.writeFile(customInstructionsFilePath, instructions.trim(), "utf-8")
+		} else {
+			// If instructions are empty or undefined, delete the file if it exists
+			try {
+				await fs.unlink(customInstructionsFilePath)
+			} catch (error) {
+				// Ignore if file doesn't exist
+				if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+					throw error
+				}
+			}
+		}
 		await this.postStateToWebview()
+	}
+
+	async openCustomInstructionsFile(): Promise<void> {
+		const settingsDirPath = await this.ensureSettingsDirectoryExists()
+		const customInstructionsFilePath = path.join(settingsDirPath, GlobalFileNames.customInstructions)
+		const fileUri = vscode.Uri.file(customInstructionsFilePath)
+		await vscode.commands.executeCommand("vscode.open", fileUri, { preview: false, preserveFocus: true })
+		await vscode.commands.executeCommand("workbench.action.files.revert", fileUri)
+	}
+
+	async refreshCustomInstructions(): Promise<void> {
+		const settingsDirPath = await this.ensureSettingsDirectoryExists()
+		const customInstructionsFilePath = path.join(settingsDirPath, GlobalFileNames.customInstructions)
+		let content: string | undefined = undefined
+		try {
+			content = await fs.readFile(customInstructionsFilePath, "utf-8")
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+				throw error
+			}
+		}
+		await this.updateCustomInstructions(content)
 	}
 
 	// MCP
@@ -992,6 +1028,21 @@ export class ClineProvider
 		const { getSettingsDirectoryPath } = await import("../../utils/storage")
 		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
 		return getSettingsDirectoryPath(globalStoragePath)
+	}
+
+	private async readCustomInstructionsFromFile(): Promise<string | undefined> {
+		const settingsDirPath = await this.ensureSettingsDirectoryExists()
+		const customInstructionsFilePath = path.join(settingsDirPath, GlobalFileNames.customInstructions)
+
+		if (await fileExistsAtPath(customInstructionsFilePath)) {
+			try {
+				return await fs.readFile(customInstructionsFilePath, "utf-8")
+			} catch (error) {
+				this.log(`Error reading custom instructions file: ${error}`)
+				return undefined
+			}
+		}
+		return undefined
 	}
 
 	// OpenRouter
@@ -1403,7 +1454,7 @@ export class ClineProvider
 		return {
 			apiConfiguration: providerSettings,
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
-			customInstructions: stateValues.customInstructions,
+			customInstructions: await this.readCustomInstructionsFromFile(),
 			apiModelId: stateValues.apiModelId,
 			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
 			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,

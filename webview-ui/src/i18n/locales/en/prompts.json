@@ -48,6 +48,8 @@
 	"globalCustomInstructions": {
 		"title": "Custom Instructions for All Modes",
 		"description": "These instructions apply to all modes. They provide a base set of behaviors that can be enhanced by mode-specific instructions below. <0>Learn more</0>",
+		"openFile": "Open custom instructions file",
+		"refreshFile": "Refresh custom instructions from file",
 		"loadFromFile": "Instructions can also be loaded from the <span>.roo/rules/</span> folder in your workspace (.roorules and .clinerules are deprecated and will stop working soon)."
 	},
 	"systemPrompt": {
