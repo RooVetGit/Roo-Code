@@ -72,6 +72,7 @@ export type SummarizeResponse = {
  * @param {ApiHandler} apiHandler - The API handler to use for token counting (fallback if condensingApiHandler not provided)
  * @param {string} systemPrompt - The system prompt for API requests (fallback if customCondensingPrompt not provided)
  * @param {string} taskId - The task ID for the conversation, used for telemetry
+ * @param {number} prevContextTokens - The number of tokens currently in the context, used to ensure we don't grow the context
  * @param {boolean} isAutomaticTrigger - Whether the summarization is triggered automatically
  * @param {string} customCondensingPrompt - Optional custom prompt to use for condensing
  * @param {ApiHandler} condensingApiHandler - Optional specific API handler to use for condensing
