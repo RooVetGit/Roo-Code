@@ -443,10 +443,11 @@ export class ClineProvider
 		webviewView.onDidDispose(
 			async () => {
 				if (inTabMode) {
-					this.log("Disposing ClineProvider because it was in tab mode.")
+					this.log("Disposing ClineProvider instance for tab view")
 					await this.dispose()
 				} else {
-					this.log("NOT disposing ClineProvider because it is in sidebar mode and can be reused.")
+					this.log("Preserving ClineProvider instance for sidebar view reuse")
+				}
 				}
 			},
 			null,
