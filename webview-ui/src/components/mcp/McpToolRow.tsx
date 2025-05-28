@@ -57,16 +57,39 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 						<div
 							role="switch"
 							aria-checked={tool.enabledForPrompt}
-							className={`flex items-center cursor-pointer rounded-full w-8 h-4 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-								tool.enabledForPrompt ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
-							}`}
+							tabIndex={0}
+							style={{
+								width: "32px",
+								height: "16px",
+								backgroundColor: tool.enabledForPrompt
+									? "var(--vscode-button-background)"
+									: "var(--vscode-titleBar-inactiveForeground)",
+								borderRadius: "8px",
+								position: "relative",
+								cursor: "pointer",
+								transition: "background-color 0.2s",
+								opacity: tool.enabledForPrompt ? 1 : 0.6,
+							}}
 							onClick={handleEnabledForPromptChange}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault()
+									handleEnabledForPromptChange()
+								}
+							}}
 							data-tool-prompt-toggle={tool.name}
 							title={t("mcp:tool.togglePromptInclusion")}>
-							<span
-								className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
-									tool.enabledForPrompt ? "translate-x-4" : "translate-x-1"
-								}`}
+							<div
+								style={{
+									width: "12px",
+									height: "12px",
+									backgroundColor: "var(--vscode-titleBar-activeForeground)",
+									borderRadius: "50%",
+									position: "absolute",
+									top: "2px",
+									left: tool.enabledForPrompt ? "18px" : "2px",
+									transition: "left 0.2s",
+								}}
 							/>
 						</div>
 					)}
