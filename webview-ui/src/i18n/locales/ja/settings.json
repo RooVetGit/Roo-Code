@@ -61,6 +61,8 @@
 			"classification": "分類",
 			"clustering": "クラスタリング"
 		},
+		"embeddingDimension": "埋め込み次元",
+		"selectDimensionPlaceholder": "次元を選択",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrantキー：",
 		"startIndexingButton": "インデックス作成を開始",

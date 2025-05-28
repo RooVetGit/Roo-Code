@@ -61,6 +61,8 @@
 			"classification": "分类",
 			"clustering": "聚类"
 		},
+		"embeddingDimension": "嵌入维度",
+		"selectDimensionPlaceholder": "选择维度",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant 密钥：",
 		"startIndexingButton": "开始索引",

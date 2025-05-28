@@ -61,6 +61,8 @@
 			"classification": "Sınıflandırma",
 			"clustering": "Kümeleme"
 		},
+		"embeddingDimension": "Gömme Boyutu",
+		"selectDimensionPlaceholder": "Boyut Seçin",
 		"qdrantUrlLabel": "Qdrant URL'si",
 		"qdrantKeyLabel": "Qdrant Anahtarı:",
 		"startIndexingButton": "İndekslemeyi Başlat",

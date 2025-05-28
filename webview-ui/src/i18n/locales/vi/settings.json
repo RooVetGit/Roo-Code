@@ -61,6 +61,8 @@
 			"classification": "Phân loại",
 			"clustering": "Phân cụm"
 		},
+		"embeddingDimension": "Kích thước nhúng",
+		"selectDimensionPlaceholder": "Chọn kích thước",
 		"qdrantUrlLabel": "URL Qdrant",
 		"qdrantKeyLabel": "Khóa Qdrant:",
 		"startIndexingButton": "Bắt đầu lập chỉ mục",

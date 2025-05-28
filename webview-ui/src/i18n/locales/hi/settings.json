@@ -61,6 +61,8 @@
 			"classification": "वर्गीकरण",
 			"clustering": "क्लस्टरिंग"
 		},
+		"embeddingDimension": "एम्बेडिंग आयाम",
+		"selectDimensionPlaceholder": "आयाम चुनें",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant कुंजी:",
 		"startIndexingButton": "इंडेक्सिंग शुरू करें",

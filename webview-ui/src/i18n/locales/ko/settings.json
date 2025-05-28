@@ -61,6 +61,8 @@
 			"classification": "분류",
 			"clustering": "클러스터링"
 		},
+		"embeddingDimension": "임베딩 차원",
+		"selectDimensionPlaceholder": "차원 선택",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant 키:",
 		"startIndexingButton": "인덱싱 시작",

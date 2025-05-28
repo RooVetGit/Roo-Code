@@ -61,6 +61,8 @@
 			"classification": "Clasificación",
 			"clustering": "Agrupación"
 		},
+		"embeddingDimension": "Dimensión del embedding",
+		"selectDimensionPlaceholder": "Seleccionar dimensión",
 		"qdrantUrlLabel": "URL de Qdrant",
 		"qdrantKeyLabel": "Clave de Qdrant:",
 		"startIndexingButton": "Iniciar indexación",
