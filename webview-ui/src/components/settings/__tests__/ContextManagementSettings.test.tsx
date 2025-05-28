@@ -207,6 +207,43 @@ describe("ContextManagementSettings", () => {
 			],
 		}
 
+		it("toggles auto condense context setting", () => {
+			const mockSetCachedStateField = jest.fn()
+			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
+			render(<ContextManagementSettings {...props} />)
+
+			const checkbox = screen.getByTestId("auto-condense-context-checkbox")
+			expect(checkbox).toBeChecked()
+
+			// Toggle off
+			fireEvent.click(checkbox)
+			expect(mockSetCachedStateField).toHaveBeenCalledWith("autoCondenseContext", false)
+
+			// Additional settings should not be visible when disabled
+			expect(screen.queryByTestId("auto-condense-percent-slider")).not.toBeInTheDocument()
+			expect(screen.queryByTestId("condensing-api-config-select")).not.toBeInTheDocument()
+			expect(screen.queryByTestId("custom-condensing-prompt-textarea")).not.toBeInTheDocument()
+		})
+
+		it("shows additional settings when auto condense is enabled", () => {
+			render(<ContextManagementSettings {...autoCondenseProps} />)
+
+			// Additional settings should be visible
+			expect(screen.getByTestId("auto-condense-percent-slider")).toBeInTheDocument()
+			expect(screen.getByTestId("condensing-api-config-select")).toBeInTheDocument()
+			expect(screen.getByTestId("custom-condensing-prompt-textarea")).toBeInTheDocument()
+		})
+
+		it("hides additional settings when auto condense is disabled", () => {
+			const props = { ...autoCondenseProps, autoCondenseContext: false }
+			render(<ContextManagementSettings {...props} />)
+
+			// Additional settings should not be visible
+			expect(screen.queryByTestId("auto-condense-percent-slider")).not.toBeInTheDocument()
+			expect(screen.queryByTestId("condensing-api-config-select")).not.toBeInTheDocument()
+			expect(screen.queryByTestId("custom-condensing-prompt-textarea")).not.toBeInTheDocument()
+		})
+
 		it("updates auto condense context percent", () => {
 			const mockSetCachedStateField = jest.fn()
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
