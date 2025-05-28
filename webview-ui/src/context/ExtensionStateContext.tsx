@@ -1,20 +1,24 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
 
-import { ProviderSettingsEntry, ExtensionMessage, ExtensionState } from "@roo/shared/ExtensionMessage"
-import { ProviderSettings } from "@roo/shared/api"
-import { findLastIndex } from "@roo/shared/array"
-import { McpServer } from "@roo/shared/mcp"
-import { checkExistKey } from "@roo/shared/checkExistApiConfig"
-import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } from "@roo/shared/modes"
-import { CustomSupportPrompts } from "@roo/shared/support-prompt"
-import { experimentDefault, ExperimentId } from "@roo/shared/experiments"
-import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
-import { RouterModels } from "@roo/shared/api"
-import { AttachedFileSpec } from "../../../src/shared/tools"
+import type {
+	ProviderSettings,
+	ProviderSettingsEntry,
+	CustomModePrompts,
+	ModeConfig,
+	ExperimentId,
+} from "@roo-code/types"
 
-import { vscode } from "@src/utils/vscode"
-import { convertTextMateToHljs } from "@src/utils/textMateToHljs"
+import { ExtensionMessage, ExtensionState } from "@roo/ExtensionMessage"
+import { findLastIndex } from "@roo/array"
+import { McpServer } from "@roo/mcp"
+import { checkExistKey } from "@roo/checkExistApiConfig"
+import { Mode, defaultModeSlug, defaultPrompts } from "@roo/modes"
+import { CustomSupportPrompts } from "@roo/support-prompt"
+import { experimentDefault } from "@roo/experiments"
+import { TelemetrySetting } from "@roo/TelemetrySetting"
+import { RouterModels } from "@roo/api"
+import { AttachedFileSpec } from "../../../src/shared/tools"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	historyPreviewCollapsed?: boolean // Add the new state property
@@ -25,7 +29,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	hasSystemPromptOverride?: boolean
 	currentCheckpoint?: string
 	filePaths: string[]
-  attachedFiles?: AttachedFileSpec[]
+	attachedFiles?: AttachedFileSpec[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
 	condensingApiConfigId?: string
 	setCondensingApiConfigId: (value: string) => void
