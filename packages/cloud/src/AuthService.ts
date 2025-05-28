@@ -4,12 +4,14 @@ import EventEmitter from "events"
 import axios from "axios"
 import * as vscode from "vscode"
 
+import type { CloudUserInfo } from "@roo-code/types"
+
 import { getClerkBaseUrl, getRooCodeApiUrl } from "./Config"
 import { RefreshTimer } from "./RefreshTimer"
 
-export interface AuthServiceEventMap {
-	"active-session": { previousState: AuthState }
-	"logged-out": { previousState: AuthState }
+export interface AuthServiceEvents {
+	"active-session": [data: { previousState: AuthState }]
+	"logged-out": [data: { previousState: AuthState }]
 }
 
 const CLIENT_TOKEN_KEY = "clerk-client-token"
@@ -18,13 +20,7 @@ const AUTH_STATE_KEY = "clerk-auth-state"
 
 type AuthState = "initializing" | "logged-out" | "active-session" | "inactive-session"
 
-export interface CloudUserInfo {
-	name?: string
-	email?: string
-	picture?: string
-}
-
-export class AuthService extends EventEmitter {
+export class AuthService extends EventEmitter<AuthServiceEvents> {
 	private context: vscode.ExtensionContext
 	private state: AuthState = "initializing"
 
@@ -397,24 +393,6 @@ export class AuthService extends EventEmitter {
 
 		this._instance = new AuthService(context, onUserInfo)
 		await this._instance.initialize()
-	}
-
-	/**
-	 * EventEmitter methods
-	 */
-	override emit<K extends keyof AuthServiceEventMap>(event: K, data: AuthServiceEventMap[K]) {
-		return super.emit(event, data)
-	}
-
-	override on<K extends keyof AuthServiceEventMap>(event: K, listener: (data: AuthServiceEventMap[K]) => void) {
-		return super.on(event, listener)
-	}
-
-	override off<K extends keyof AuthServiceEventMap>(event: K, listener: (data: AuthServiceEventMap[K]) => void) {
-		return super.off(event, listener)
-	}
-
-	override once<K extends keyof AuthServiceEventMap>(event: K, listener: (data: AuthServiceEventMap[K]) => void) {
-		return super.once(event, listener)
+		return this._instance
 	}
 }

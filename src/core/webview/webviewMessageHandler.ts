@@ -4,7 +4,7 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { type Language, type ProviderSettings, type GlobalState, TelemetryEventName } from "@roo-code/types"
-import { AuthService, OrganizationSettingService } from "@roo-code/cloud"
+import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { ClineProvider } from "./ClineProvider"
@@ -108,8 +108,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						await provider.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
 						async () => {
 							try {
-								if (AuthService.instance.hasActiveSession()) {
-									const userInfo = await AuthService.instance.getUserInfo()
+								if (CloudService.instance.hasActiveSession()) {
+									const userInfo = await CloudService.instance.getUserInfo()
 									provider.postMessageToWebview({ type: "authenticatedUser", userInfo })
 								}
 							} catch (error) {
@@ -1342,7 +1342,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "rooCloudSignIn": {
 			try {
 				TelemetryService.instance.captureEvent(TelemetryEventName.AUTHENTICATION_INITIATED)
-				await AuthService.instance.login()
+				await CloudService.instance.login()
 			} catch (error) {
 				provider.log(`AuthService#login failed: ${error}`)
 				vscode.window.showErrorMessage("Sign in failed.")
@@ -1352,11 +1352,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "rooCloudSignOut": {
 			try {
-				await AuthService.instance.logout((userInfo) =>
-					provider.postMessageToWebview({ type: "authenticatedUser", userInfo }),
-				)
-
-				await OrganizationSettingService.instance.removeSettings()
+				await CloudService.instance.logout()
 				await provider.postStateToWebview()
 				provider.postMessageToWebview({ type: "authenticatedUser", userInfo: undefined })
 			} catch (error) {

@@ -12,7 +12,7 @@ try {
 	console.warn("Failed to load environment variables:", e)
 }
 
-import { AuthService, OrganizationSettingService, RooCodeTelemetryClient } from "@roo-code/cloud"
+import { CloudService } from "@roo-code/cloud"
 import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
@@ -59,11 +59,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
-	// Initialize auth service.
-	await AuthService.createInstance(context, (userInfo) =>
-		ClineProvider.getVisibleInstance()?.postMessageToWebview({ type: "authenticatedUser", userInfo }),
-	)
-
 	// Initialize telemetry service.
 	const telemetryService = TelemetryService.createInstance()
 
@@ -73,16 +68,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		console.warn("Failed to register PostHogTelemetryClient:", error)
 	}
 
-	try {
-		telemetryService.register(new RooCodeTelemetryClient(AuthService.instance))
-	} catch (error) {
-		console.warn("Failed to register RooCodeTelemetryClient:", error)
-	}
-
-	// Initialize org settings service.
-	await OrganizationSettingService.createInstance(context, () =>
-		ClineProvider.getVisibleInstance()?.postStateToWebview(),
-	)
+	// Initialize Roo Code Cloud service.
+	await CloudService.createInstance(context, {
+		onUserInfoChanged: (userInfo) =>
+			ClineProvider.getVisibleInstance()?.postMessageToWebview({ type: "authenticatedUser", userInfo }),
+		onSettingsChanged: () => ClineProvider.getVisibleInstance()?.postStateToWebview(),
+	})
 
 	// Initialize i18n for internationalization support
 	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))

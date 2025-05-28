@@ -8,6 +8,7 @@ import type {
 	ExperimentId,
 	ClineMessage,
 	OrganizationAllowList,
+	CloudUserInfo,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -111,11 +112,7 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
-	userInfo?: {
-		name?: string
-		email?: string
-		picture?: string
-	}
+	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
 }
 

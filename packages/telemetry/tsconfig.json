@@ -1,9 +1,5 @@
 {
 	"extends": "@roo-code/config-typescript/vscode-library.json",
-	"include": [
-		"src",
-		"../cloud/src/RooCodeTelemetryClient.ts",
-		"../cloud/src/__tests__/RooCodeTelemetryClient.test.ts"
-	],
+	"include": ["src"],
 	"exclude": ["node_modules"]
 }

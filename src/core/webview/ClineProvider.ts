@@ -25,7 +25,7 @@ import {
 	ORGANIZATION_ALLOW_ALL,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
-import { OrganizationSettingService } from "@roo-code/cloud"
+import { CloudService } from "@roo-code/cloud"
 
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
@@ -1421,7 +1421,7 @@ export class ClineProvider
 		let organizationAllowList = ORGANIZATION_ALLOW_ALL
 
 		try {
-			organizationAllowList = await OrganizationSettingService.instance.getAllowList()
+			organizationAllowList = await CloudService.instance.getAllowList()
 		} catch (error) {
 			console.error(
 				`[getState] failed to get organization allow list: ${error instanceof Error ? error.message : String(error)}`,

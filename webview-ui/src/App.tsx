@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
+import type { CloudUserInfo } from "@roo-code/types"
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import TranslationProvider from "./i18n/TranslationContext"
@@ -34,11 +35,7 @@ const App = () => {
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
-	const [userInfo, setUserInfo] = useState<{
-		name?: string
-		email?: string
-		picture?: string
-	} | null>(null)
+	const [userInfo, setUserInfo] = useState<CloudUserInfo | null>(null)
 
 	const [humanRelayDialogState, setHumanRelayDialogState] = useState<{
 		isOpen: boolean

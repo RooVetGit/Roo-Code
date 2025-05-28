@@ -1,5 +1,11 @@
 import { z } from "zod"
 
+export interface CloudUserInfo {
+	name?: string
+	email?: string
+	picture?: string
+}
+
 /**
  * Organization Allow List
  */
