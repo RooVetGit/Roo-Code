@@ -50,7 +50,7 @@ export async function parseMentions(
 	cwd: string,
 	urlContentFetcher: UrlContentFetcher,
 	fileContextTracker?: FileContextTracker,
-	rooIgnoreController?: any,
+	rooIgnoreController?: RooIgnoreController,
 	showRooIgnoredFiles: boolean = true,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
