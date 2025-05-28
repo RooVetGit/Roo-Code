@@ -17,6 +17,8 @@ import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
+import { RooIgnoreController } from "../ignore/RooIgnoreController"
+
 export async function openMention(mention?: string): Promise<void> {
 	if (!mention) {
 		return
