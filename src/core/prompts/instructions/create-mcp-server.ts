@@ -100,6 +100,26 @@ if (!API_KEY) {
   throw new Error('OPENWEATHER_API_KEY environment variable is required');
 }
 
+// Define types for OpenWeather API responses
+interface WeatherData {
+  main: {
+    temp: number;
+    humidity: number;
+  };
+  weather: Array<{
+    description: string;
+  }>;
+  wind: {
+    speed: number;
+  };
+}
+
+interface ForecastData {
+  list: Array<WeatherData & {
+    dt_txt: string;
+  }>;
+}
+
 // Create an MCP server
 const server = new McpServer({
   name: "weather-server",
@@ -124,7 +144,7 @@ server.tool(
   },
   async ({ city, days = 3 }) => {
     try {
-      const response = await weatherApi.get('forecast', {
+      const response = await weatherApi.get<ForecastData>('forecast', {
         params: {
           q: city,
           cnt: Math.min(days, 5) * 8,
@@ -164,7 +184,7 @@ server.resource(
   { uri: "weather://San Francisco/current", list: true },
   async (uri) => {
     try {
-      const response = await weatherApi.get('weather', {
+      const response = weatherApi.get<WeatherData>('weather', {
         params: { q: "San Francisco" },
       });
 
