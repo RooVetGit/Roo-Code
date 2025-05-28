@@ -448,7 +448,6 @@ export class ClineProvider
 				} else {
 					this.log("Preserving ClineProvider instance for sidebar view reuse")
 				}
-				}
 			},
 			null,
 			this.disposables,
