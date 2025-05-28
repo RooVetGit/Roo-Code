@@ -9,26 +9,28 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import {
+import type {
 	GlobalState,
 	ProviderName,
 	ProviderSettings,
 	RooCodeSettings,
 	ProviderSettingsEntry,
-	Package,
+	TelemetryProperties,
 	CodeActionId,
 	CodeActionName,
 	TerminalActionId,
 	TerminalActionPromptType,
-} from "../../schemas"
+	HistoryItem,
+} from "@roo-code/types"
+
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
+import { Package } from "../../shared/package"
 import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
 import { AttachedFileSpec } from "../../shared/tools"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
@@ -52,7 +54,7 @@ import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { TelemetryPropertiesProvider, telemetryService } from "../../services/telemetry"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
@@ -67,7 +69,10 @@ export type ClineProviderEvents = {
 	clineCreated: [cline: Task]
 }
 
-export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
+export class ClineProvider
+	extends EventEmitter<ClineProviderEvents>
+	implements vscode.WebviewViewProvider, TelemetryPropertiesProvider
+{
 	// Used in package.json as the view's id. This value cannot be changed due
 	// to how VSCode caches views based on their id, and updating the id would
 	// break existing instances of the extension.
@@ -560,7 +565,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		try {
 			const fs = require("fs")
 			const path = require("path")
-			const portFilePath = path.resolve(__dirname, "../.vite-port")
+			const portFilePath = path.resolve(__dirname, "../../.vite-port")
 
 			if (fs.existsSync(portFilePath)) {
 				localPort = fs.readFileSync(portFilePath, "utf8").trim()
@@ -1570,59 +1575,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * This method is called by the telemetry service to get context information
 	 * like the current mode, API provider, etc.
 	 */
-	public async getTelemetryProperties(): Promise<Record<string, any>> {
+	public async getTelemetryProperties(): Promise<TelemetryProperties> {
 		const { mode, apiConfiguration, language } = await this.getState()
-		const appVersion = this.context.extension?.packageJSON?.version
-		const vscodeVersion = vscode.version
-		const platform = process.platform
-		const editorName = vscode.env.appName // Get the editor name (VS Code, Cursor, etc.)
+		const task = this.getCurrentCline()
 
-		const properties: Record<string, any> = {
-			vscodeVersion,
-			platform,
-			editorName,
+		return {
+			appVersion: this.context.extension?.packageJSON?.version,
+			vscodeVersion: vscode.version,
+			platform: process.platform,
+			editorName: vscode.env.appName,
+			language,
+			mode,
+			apiProvider: apiConfiguration?.apiProvider,
+			modelId: task?.api?.getModel().id,
+			diffStrategy: task?.diffStrategy?.getName(),
+			isSubtask: task ? !!task.parentTask : undefined,
 		}
-
-		// Add extension version
-		if (appVersion) {
-			properties.appVersion = appVersion
-		}
-
-		// Add language
-		if (language) {
-			properties.language = language
-		}
-
-		// Add current mode
-		if (mode) {
-			properties.mode = mode
-		}
-
-		// Add API provider
-		if (apiConfiguration?.apiProvider) {
-			properties.apiProvider = apiConfiguration.apiProvider
-		}
-
-		// Add model ID if available
-		const currentCline = this.getCurrentCline()
-
-		if (currentCline?.api) {
-			const { id: modelId } = currentCline.api.getModel()
-
-			if (modelId) {
-				properties.modelId = modelId
-			}
-		}
-
-		if (currentCline?.diffStrategy) {
-			properties.diffStrategy = currentCline.diffStrategy.getName()
-		}
-
-		// Add isSubtask property that indicates whether this task is a subtask
-		if (currentCline) {
-			properties.isSubtask = !!currentCline.parentTask
-		}
-
-		return properties
 	}
 }
