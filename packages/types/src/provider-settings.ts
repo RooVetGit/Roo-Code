@@ -315,6 +315,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"geminiApiKey",
 	"googleGeminiBaseUrl",
 	"geminiEmbeddingTaskType",
+	"geminiEmbeddingDimension",
 	// OpenAI Native
 	"openAiNativeApiKey",
 	"openAiNativeBaseUrl",
