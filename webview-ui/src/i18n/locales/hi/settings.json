@@ -338,16 +338,16 @@
 			"description": "जब संदर्भ विंडो इस सीमा तक पहुंचती है, तो Roo इसे स्वचालित रूप से संघनित कर देगा।"
 		},
 		"condensingApiConfiguration": {
-			"label": "API Configuration for Context Condensing",
-			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
-			"useCurrentConfig": "Default"
+			"label": "संदर्भ संघनन के लिए API कॉन्फ़िगरेशन",
+			"description": "संदर्भ संघनन कार्यों के लिए किस API कॉन्फ़िगरेशन का उपयोग करना है, यह चुनें। वर्तमान सक्रिय कॉन्फ़िगरेशन का उपयोग करने के लिए अचयनित छोड़ें।",
+			"useCurrentConfig": "डिफ़ॉल्ट"
 		},
 		"customCondensingPrompt": {
 			"label": "कस्टम संदर्भ संघनन प्रॉम्प्ट",
 			"description": "संदर्भ संघनन के लिए कस्टम सिस्टम प्रॉम्प्ट। डिफ़ॉल्ट प्रॉम्प्ट का उपयोग करने के लिए खाली छोड़ें।",
-			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset to Default",
-			"hint": "Empty = use default prompt"
+			"placeholder": "अपना कस्टम संघनन प्रॉम्प्ट यहाँ दर्ज करें...\n\nआप डिफ़ॉल्ट प्रॉम्प्ट जैसी ही संरचना का उपयोग कर सकते हैं:\n- पिछली बातचीत\n- वर्तमान कार्य\n- प्रमुख तकनीकी अवधारणाएँ\n- प्रासंगिक फ़ाइलें और कोड\n- समस्या समाधान\n- लंबित कार्य और अगले चरण",
+			"reset": "डिफ़ॉल्ट पर रीसेट करें",
+			"hint": "खाली = डिफ़ॉल्ट प्रॉम्प्ट का उपयोग करें"
 		},
 		"autoCondenseContext": {
 			"name": "बुद्धिमान संदर्भ संघनन को स्वचालित रूप से ट्रिगर करें"

@@ -338,16 +338,16 @@
 			"description": "Khi cửa sổ ngữ cảnh đạt đến ngưỡng này, Roo sẽ tự động nén nó."
 		},
 		"condensingApiConfiguration": {
-			"label": "API Configuration for Context Condensing",
-			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
-			"useCurrentConfig": "Default"
+			"label": "Cấu hình API cho Tóm tắt Ngữ cảnh",
+			"description": "Chọn cấu hình API để sử dụng cho các thao tác tóm tắt ngữ cảnh. Để trống để sử dụng cấu hình đang hoạt động hiện tại.",
+			"useCurrentConfig": "Mặc định"
 		},
 		"customCondensingPrompt": {
 			"label": "Lời nhắc nén ngữ cảnh tùy chỉnh",
 			"description": "Lời nhắc hệ thống tùy chỉnh cho việc nén ngữ cảnh. Để trống để sử dụng lời nhắc mặc định.",
-			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset to Default",
-			"hint": "Empty = use default prompt"
+			"placeholder": "Nhập prompt tóm tắt tùy chỉnh của bạn tại đây...\n\nBạn có thể sử dụng cùng cấu trúc như prompt mặc định:\n- Cuộc hội thoại trước\n- Công việc hiện tại\n- Khái niệm kỹ thuật chính\n- Tệp và mã liên quan\n- Giải quyết vấn đề\n- Công việc đang chờ và các bước tiếp theo",
+			"reset": "Khôi phục mặc định",
+			"hint": "Để trống = sử dụng prompt mặc định"
 		},
 		"autoCondenseContext": {
 			"name": "Tự động kích hoạt nén ngữ cảnh thông minh"

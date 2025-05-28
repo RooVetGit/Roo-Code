@@ -338,16 +338,16 @@
 			"description": "Quando a janela de contexto atingir este limite, o Roo a condensará automaticamente."
 		},
 		"condensingApiConfiguration": {
-			"label": "API Configuration for Context Condensing",
-			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
-			"useCurrentConfig": "Default"
+			"label": "Configuração de API para Condensação de Contexto",
+			"description": "Selecione qual configuração de API usar para operações de condensação de contexto. Deixe desmarcado para usar a configuração ativa atual.",
+			"useCurrentConfig": "Padrão"
 		},
 		"customCondensingPrompt": {
 			"label": "Prompt Personalizado de Condensação de Contexto",
 			"description": "Prompt de sistema personalizado para condensação de contexto. Deixe em branco para usar o prompt padrão.",
-			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset to Default",
-			"hint": "Empty = use default prompt"
+			"placeholder": "Digite seu prompt de condensação personalizado aqui...\n\nVocê pode usar a mesma estrutura do prompt padrão:\n- Conversa Anterior\n- Trabalho Atual\n- Conceitos Técnicos Principais\n- Arquivos e Código Relevantes\n- Resolução de Problemas\n- Tarefas Pendentes e Próximos Passos",
+			"reset": "Restaurar Padrão",
+			"hint": "Vazio = usar prompt padrão"
 		},
 		"autoCondenseContext": {
 			"name": "Acionar automaticamente a condensação inteligente de contexto"
