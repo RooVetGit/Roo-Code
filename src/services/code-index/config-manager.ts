@@ -326,7 +326,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.searchMinScore,
-			geminiEmbeddingDimension: this.geminiEmbeddingDimension,
+			geminiEmbeddingDimension: this.geminiOptions?.geminiEmbeddingDimension,
 		}
 	}
 
