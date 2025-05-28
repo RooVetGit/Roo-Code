@@ -57,6 +57,8 @@
 			"classification": "Classificazione",
 			"clustering": "Clustering"
 		},
+		"embeddingDimension": "Dimensione embedding",
+		"selectDimensionPlaceholder": "Seleziona dimensione",
 		"qdrantUrlLabel": "URL Qdrant",
 		"qdrantKeyLabel": "Chiave Qdrant:",
 		"startIndexingButton": "Avvia indicizzazione",

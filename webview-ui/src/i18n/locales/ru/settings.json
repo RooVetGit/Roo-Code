@@ -57,6 +57,8 @@
 			"classification": "Классификация",
 			"clustering": "Кластеризация"
 		},
+		"embeddingDimension": "Размерность эмбеддинга",
+		"selectDimensionPlaceholder": "Выберите размерность",
 		"qdrantUrlLabel": "URL Qdrant",
 		"qdrantKeyLabel": "Ключ Qdrant:",
 		"startIndexingButton": "Начать индексацию",
