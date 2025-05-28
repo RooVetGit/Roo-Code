@@ -279,14 +279,14 @@ IMPORTANT: Regardless of what else you see in the MCP settings file, you must de
 
 ## Editing MCP Servers
 
-The user may ask to add tools or resources that may make sense to add to an existing MCP server (listed under 'Connected MCP Servers' above: ${
-		mcpHub
-			? mcpHub
-					.getServers()
-					.map((server) => server.name)
-					.join(", ") || "(None running currently)"
-			: "(None running currently)"
-	}, e.g. if it would use the same API. This would be possible if you can locate the MCP server repository on the user's system by looking at the server arguments for a filepath. You might then use list_files and read_file to explore the files in the repository, and use write_to_file${diffStrategy ? " or apply_diff" : ""} to make changes to the files.
+The user may ask to add tools or resources that may make sense to add to an existing MCP server (listed under 'Connected MCP Servers' above: ${(() => {
+		if (!mcpHub) return "(None running currently)"
+		const servers = mcpHub
+			.getServers()
+			.map((server) => server.name)
+			.join(", ")
+		return servers || "(None running currently)"
+	})()}, e.g. if it would use the same API. This would be possible if you can locate the MCP server repository on the user's system by looking at the server arguments for a filepath. You might then use list_files and read_file to explore the files in the repository, and use write_to_file${diffStrategy ? " or apply_diff" : ""} to make changes to the files.
 
 However some MCP servers may be running from installed packages rather than a local repository, in which case it may make more sense to create a new MCP server.
 
