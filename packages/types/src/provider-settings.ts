@@ -330,6 +330,8 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	// Code Index
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
+	"codebaseIndexOpenAiCompatibleBaseUrl",
+	"codebaseIndexOpenAiCompatibleApiKey",
 	// Reasoning
 	"enableReasoningEffort",
 	"reasoningEffort",

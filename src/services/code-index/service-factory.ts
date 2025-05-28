@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
+import { OpenAiCompatibleEmbedder } from "./embedders/openai-compatible"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
@@ -43,6 +44,15 @@ export class CodeIndexServiceFactory {
 				...config.ollamaOptions,
 				ollamaModelId: config.modelId,
 			})
+		} else if (provider === "openai-compatible") {
+			if (!config.openAiCompatibleOptions?.baseUrl || !config.openAiCompatibleOptions?.apiKey) {
+				throw new Error("OpenAI Compatible configuration missing for embedder creation")
+			}
+			return new OpenAiCompatibleEmbedder(
+				config.openAiCompatibleOptions.baseUrl,
+				config.openAiCompatibleOptions.apiKey,
+				config.modelId,
+			)
 		}
 
 		throw new Error(`Invalid embedder type configured: ${config.embedderProvider}`)

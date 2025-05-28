@@ -219,6 +219,7 @@ export type SecretState = Pick<
 	| "litellmApiKey"
 	| "codeIndexOpenAiKey"
 	| "codeIndexQdrantApiKey"
+	| "codebaseIndexOpenAiCompatibleApiKey"
 >
 
 export const SECRET_STATE_KEYS = keysOf<SecretState>()([
@@ -241,6 +242,7 @@ export const SECRET_STATE_KEYS = keysOf<SecretState>()([
 	"litellmApiKey",
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
+	"codebaseIndexOpenAiCompatibleApiKey",
 ])
 
 export const isSecretStateKey = (key: string): key is Keys<SecretState> =>
