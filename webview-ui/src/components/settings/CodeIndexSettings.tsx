@@ -30,6 +30,7 @@ import {
 } from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
+import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
@@ -400,6 +401,12 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										</Select>
 									</div>
 								</div>
+							</div>
+							<div className="flex flex-col gap-3">
+								<RateLimitSecondsControl
+									value={apiConfiguration.rateLimitSeconds || 0}
+									onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+								/>
 							</div>
 						</>
 					)}

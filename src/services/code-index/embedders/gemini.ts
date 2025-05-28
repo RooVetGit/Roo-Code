@@ -112,12 +112,12 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 
 			// Process the current batch if not empty
 			if (currentBatch.length > 0) {
-				// Add proactive delay for rate limiting, except for the very first batch.
-				if (!isFirstBatch) {
-					console.log(`Adding proactive delay of ${GEMINI_RATE_LIMIT_DELAY_MS}ms before Gemini batch`)
-					await new Promise((resolve) => setTimeout(resolve, GEMINI_RATE_LIMIT_DELAY_MS))
-				}
-				isFirstBatch = false // Set to false after the first potential delay or first run
+				const delayMs =
+					this.options.rateLimitSeconds !== undefined
+						? this.options.rateLimitSeconds * 1000
+						: GEMINI_RATE_LIMIT_DELAY_MS
+				console.log(`Adding proactive delay of ${delayMs}ms before Gemini batch`)
+				await new Promise((resolve) => setTimeout(resolve, delayMs))
 
 				try {
 					const batchResult = await this._embedBatchWithRetries(currentBatch, model, taskType)
