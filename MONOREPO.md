@@ -38,4 +38,5 @@ pnpm clean && pnpm bundle
 pnpm clean && pnpm build
 pnpm clean && pnpm npx turbo watch:bundle
 pnpm clean && pnpm npx turbo watch:tsc
+cd apps/vscode-e2e && pnpm test:ci
 ```
