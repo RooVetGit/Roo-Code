@@ -6,6 +6,14 @@ export type EmbedderProvider = "openai" | "ollama" | "gemini" // Add other provi
 
 export interface EmbeddingModelProfile {
 	dimension: number
+	/**
+	 * Specific dimensions supported by the model
+	 */
+	supportDimensions?: number[]
+	/**
+	 * Optional maximum input tokens for the model.
+	 */
+	maxInputTokens?: number
 	// Add other model-specific properties if needed, e.g., context window size
 }
 
@@ -30,9 +38,9 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		// 'default': { dimension: 768 } // Assuming a default dimension
 	},
 	gemini: {
-		"gemini-embedding-exp-03-07": { dimension: 3072 },
-		"models/text-embedding-004": { dimension: 768 },
-		"models/embedding-001": { dimension: 768 },
+		"gemini-embedding-exp-03-07": { dimension: 3072, supportDimensions: [3072, 1536, 768], maxInputTokens: 8192 },
+		"models/text-embedding-004": { dimension: 768, maxInputTokens: 2048 },
+		"models/embedding-001": { dimension: 768, maxInputTokens: 2048 },
 	},
 }
 
