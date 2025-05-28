@@ -21,5 +21,5 @@ export async function injectEnv<C extends string | Record<PropertyKey, any>>(con
 		return process.env[name] ?? notFoundValue
 	})
 
-	return (isObject ? JSON.parse(_config) : _config) as C extends string ? string : Record<PropertyKey, any>
+	return (isObject ? JSON.parse(_config) : _config) as C extends string ? string : C
 }
