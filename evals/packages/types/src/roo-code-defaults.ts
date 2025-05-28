@@ -45,6 +45,9 @@ export const rooCodeDefaults: RooCodeSettings = {
 	terminalShellIntegrationDisabled: false,
 
 	diffEnabled: true,
+	diffViewAutoFocus: false,
+	autoCloseRooTabs: true,
+	autoCloseAllRooTabs: true,
 	fuzzyMatchThreshold: 1,
 
 	enableCheckpoints: false,

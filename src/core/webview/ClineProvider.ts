@@ -1224,6 +1224,8 @@ export class ClineProvider
 			ttsEnabled,
 			ttsSpeed,
 			diffEnabled,
+			diffViewAutoFocus,
+			autoCloseRooTabs,
 			enableCheckpoints,
 			taskHistory,
 			soundVolume,
@@ -1308,6 +1310,8 @@ export class ClineProvider
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
+			diffViewAutoFocus: diffViewAutoFocus ?? true,
+			autoCloseRooTabs: autoCloseRooTabs ?? false,
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
@@ -1416,6 +1420,8 @@ export class ClineProvider
 			ttsEnabled: stateValues.ttsEnabled ?? false,
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
+			diffViewAutoFocus: stateValues.diffViewAutoFocus ?? false,
+			autoCloseRooTabs: stateValues.autoCloseRooTabs ?? false,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
@@ -1586,5 +1592,29 @@ export class ClineProvider
 			diffStrategy: task?.diffStrategy?.getName(),
 			isSubtask: task ? !!task.parentTask : undefined,
 		}
+	}
+
+	// add getter for view
+	public getViewColumn(): vscode.ViewColumn {
+		// we can only check tabgroups, as there is no official api to check if there are multiple torn windows
+		const multipleWindows = vscode.window.tabGroups.all.length > 1
+		// if there's only one active window, use vscodes native ability to chose the view column etc without losing focus
+		if (!multipleWindows) {
+			// If there are no other windows, return the active view column
+			return vscode.ViewColumn.Active
+		}
+		// If there are multiple windows, we need to check if the view is a WebviewPanel
+		const isViewPanel = this.view?.viewType === "roo-cline.TabPanelProvider"
+		if (!isViewPanel) {
+			// If the view is not a WebviewPanel, return 1. 1 is the default view column of the editor.
+			// Non default values can only be found in WebviewPanel.
+			return vscode.ViewColumn.One
+		}
+		// If the view is a WebviewPanel, return its viewColumn.
+		// This property is only set if the webview is in one of the editor view columns.
+		// Therefore, we can safely return it or default to beside.
+		const viewColumn = (this.view as vscode.WebviewPanel).viewColumn
+		// If the view is not a WebviewPanel, return the default view column, which is 1. This
+		return viewColumn ?? vscode.ViewColumn.Active
 	}
 }

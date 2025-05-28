@@ -426,6 +426,18 @@
 			"matchPrecision": {
 				"label": "Precisão de correspondência",
 				"description": "Este controle deslizante controla quão precisamente as seções de código devem corresponder ao aplicar diffs. Valores mais baixos permitem correspondências mais flexíveis, mas aumentam o risco de substituições incorretas. Use valores abaixo de 100% com extrema cautela."
+			},
+			"autoFocus": {
+				"label": "Focar automaticamente a aba de diferenças ao mostrar alterações de arquivos",
+				"description": "Se esta opção estiver desativada, a aba de diferenças será aberta em segundo plano e não tomará o foco. Isso só se aplica se 'autoApprovalEnabled' e 'autoApprovalEnabled' estiverem ativados."
+			},
+			"autoClose": {
+				"label": "Fechar automaticamente as abas do Roo",
+				"description": "Quando ativado, o Roo fechará automaticamente as abas que abriu (como visualizações de diferenças e arquivos abertos) quando uma tarefa que envolve modificação de arquivos é concluída ou revertida."
+			},
+			"autoCloseAll": {
+				"label": "Fechar automaticamente todas as abas tocadas pelo Roo",
+				"description": "Quando ativado (e a configuração acima também está ativada), o Roo fechará automaticamente todas as abas com as quais interagiu durante uma tarefa de modificação de arquivo, incluindo aquelas que já estavam abertas antes do início da tarefa."
 			}
 		}
 	},

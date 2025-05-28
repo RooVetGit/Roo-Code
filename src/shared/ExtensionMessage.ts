@@ -158,6 +158,9 @@ export type ExtensionState = Pick<
 	| "terminalZdotdir"
 	| "terminalCompressProgressBar"
 	| "diffEnabled"
+	| "diffViewAutoFocus"
+	| "autoCloseRooTabs"
+	| "autoCloseAllRooTabs" // Added new setting
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.
 	| "language"

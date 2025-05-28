@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { undefined, z } from "zod"
 
 import { Equals, Keys, AssertEqual } from "./utils.js"
 
@@ -336,6 +336,9 @@ export type ProviderSettingsEntry = z.infer<typeof providerSettingsEntrySchema>
 const genericProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
@@ -701,6 +704,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	includeMaxTokens: undefined,
 	reasoningEffort: undefined,
 	diffEnabled: undefined,
+	diffViewAutoFocus: undefined,
+	autoCloseRooTabs: undefined,
+	autoCloseAllRooTabs: undefined,
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
@@ -780,6 +786,9 @@ export const globalSettingsSchema = z.object({
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -858,6 +867,9 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
+	diffViewAutoFocus: undefined,
+	autoCloseRooTabs: undefined,
+	autoCloseAllRooTabs: undefined,
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
 
