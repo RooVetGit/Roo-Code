@@ -357,7 +357,8 @@ export class ClineProvider
 		this.view = webviewView
 
 		// Set panel reference according to webview type
-		if ("onDidChangeViewState" in webviewView) {
+		const inTabMode = "onDidChangeViewState" in webviewView
+		if (inTabMode) {
 			// Tag page type
 			setPanel(webviewView, "tab")
 		} else if ("onDidChangeVisibility" in webviewView) {
@@ -459,7 +460,12 @@ export class ClineProvider
 		// This happens when the user closes the view or when the view is closed programmatically
 		webviewView.onDidDispose(
 			async () => {
-				await this.dispose()
+				if (inTabMode) {
+					this.log("Disposing ClineProvider instance for tab view")
+					await this.dispose()
+				} else {
+					this.log("Preserving ClineProvider instance for sidebar view reuse")
+				}
 			},
 			null,
 			this.disposables,

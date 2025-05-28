@@ -1,4 +1,4 @@
-// npx jest core/sliding-window/__tests__/sliding-window.test.ts
+// npx jest src/core/sliding-window/__tests__/sliding-window.test.ts
 
 import { Anthropic } from "@anthropic-ai/sdk"
 
@@ -48,7 +48,9 @@ describe("Sliding Window", () => {
 			TelemetryService.createInstance([])
 		}
 	})
-
+	/**
+	 * Tests for the truncateConversation function
+	 */
 	describe("truncateConversation", () => {
 		it("should retain the first message", () => {
 			const messages: ApiMessage[] = [
@@ -135,6 +137,9 @@ describe("Sliding Window", () => {
 		})
 	})
 
+	/**
+	 * Tests for the estimateTokenCount function
+	 */
 	describe("estimateTokenCount", () => {
 		it("should return 0 for empty or undefined content", async () => {
 			expect(await estimateTokenCount([], mockApiHandler)).toBe(0)
@@ -221,6 +226,9 @@ describe("Sliding Window", () => {
 		})
 	})
 
+	/**
+	 * Tests for the truncateConversationIfNeeded function
+	 */
 	describe("truncateConversationIfNeeded", () => {
 		const createModelInfo = (contextWindow: number, maxTokens?: number): ModelInfo => ({
 			contextWindow,
@@ -554,6 +562,7 @@ describe("Sliding Window", () => {
 				mockApiHandler,
 				"System prompt",
 				taskId,
+				70001,
 				true,
 				undefined, // customCondensingPrompt
 				undefined, // condensingApiHandler
@@ -573,11 +582,12 @@ describe("Sliding Window", () => {
 		})
 
 		it("should fall back to truncateConversation when autoCondenseContext is true but summarization fails", async () => {
-			// Mock the summarizeConversation function to return empty summary
+			// Mock the summarizeConversation function to return an error
 			const mockSummarizeResponse: condenseModule.SummarizeResponse = {
 				messages: messages, // Original messages unchanged
-				summary: "", // Empty summary indicates failure
+				summary: "", // Empty summary
 				cost: 0.01,
+				error: "Summarization failed", // Error indicates failure
 			}
 
 			const summarizeSpy = jest
@@ -717,6 +727,7 @@ describe("Sliding Window", () => {
 				mockApiHandler,
 				"System prompt",
 				taskId,
+				60000,
 				true,
 				undefined, // customCondensingPrompt
 				undefined, // condensingApiHandler
@@ -776,6 +787,9 @@ describe("Sliding Window", () => {
 		})
 	})
 
+	/**
+	 * Tests for the getMaxTokens function (private but tested through truncateConversationIfNeeded)
+	 */
 	describe("getMaxTokens", () => {
 		// We'll test this indirectly through truncateConversationIfNeeded
 		const createModelInfo = (contextWindow: number, maxTokens?: number): ModelInfo => ({
