@@ -147,7 +147,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			gemini: baseSchema.extend({
 				codebaseIndexEmbedderProvider: z.literal("gemini"),
 				geminiApiKey: z.string().min(1, "Gemini API key is required"),
-				codebaseIndexEmbedderModelId: z.string().min(1, "Gemini Model ID is required"),
 				geminiEmbeddingTaskType: z.string().min(1, "Gemini Task Type is required"),
 			}),
 		}

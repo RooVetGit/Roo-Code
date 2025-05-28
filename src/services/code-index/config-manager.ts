@@ -280,6 +280,7 @@ export class CodeIndexConfigManager {
 			modelId: this.modelId,
 			openAiOptions: this.openAiOptions,
 			ollamaOptions: this.ollamaOptions,
+			geminiOptions: this.geminiOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.searchMinScore,
