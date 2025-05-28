@@ -6,28 +6,35 @@ const _originalFsPromisesAccess = actualFsPromises.access
 
 jest.mock("fs/promises", () => {
 	const actual = jest.requireActual("fs/promises")
-	return {
-		// Explicitly mock functions used by the SUT and tests, defaulting to actual implementations
-		writeFile: jest.fn(actual.writeFile),
-		readFile: jest.fn(actual.readFile),
-		rename: jest.fn(actual.rename),
-		unlink: jest.fn(actual.unlink),
-		access: jest.fn(actual.access),
-		mkdtemp: jest.fn(actual.mkdtemp),
-		rm: jest.fn(actual.rm),
-		readdir: jest.fn(actual.readdir),
-		// Ensure all functions from 'fs/promises' that might be called are explicitly mocked
-		// or ensure that the SUT and tests only call functions defined here.
-		// For any function not listed, calls like fs.someOtherFunc would be undefined.
-	}
+	// Start with all actual implementations.
+	const mockedFs = { ...actual }
+
+	// Selectively wrap functions with jest.fn() if they are spied on
+	// or have their implementations changed in tests.
+	// This ensures that other fs.promises functions used by the SUT
+	// (like proper-lockfile's internals) will use their actual implementations.
+	mockedFs.writeFile = jest.fn(actual.writeFile)
+	mockedFs.readFile = jest.fn(actual.readFile)
+	mockedFs.rename = jest.fn(actual.rename)
+	mockedFs.unlink = jest.fn(actual.unlink)
+	mockedFs.access = jest.fn(actual.access)
+	mockedFs.mkdtemp = jest.fn(actual.mkdtemp)
+	mockedFs.rm = jest.fn(actual.rm)
+	mockedFs.readdir = jest.fn(actual.readdir)
+	// fs.stat and fs.lstat will be available via { ...actual }
+
+	return mockedFs
 })
 
 import * as fs from "fs/promises" // This will now be the mocked version
 import * as path from "path"
 import * as os from "os"
-import { safeWriteJson, activeLocks } from "../safeWriteJson"
+// import * as lockfile from 'proper-lockfile' // No longer directly used in tests
+import { safeWriteJson } from "../safeWriteJson"
 
 describe("safeWriteJson", () => {
+	jest.useRealTimers() // Use real timers for this test suite
+
 	let tempTestDir: string = ""
 	let currentTestFilePath = ""
 
@@ -36,7 +43,7 @@ describe("safeWriteJson", () => {
 		const tempDirPrefix = path.join(os.tmpdir(), "safeWriteJson-test-")
 		tempTestDir = await fs.mkdtemp(tempDirPrefix)
 		currentTestFilePath = path.join(tempTestDir, "test-data.json")
-		activeLocks.clear()
+		// Individual tests will now handle creation of currentTestFilePath if needed.
 	})
 
 	afterEach(async () => {
@@ -44,7 +51,7 @@ describe("safeWriteJson", () => {
 			await fs.rm(tempTestDir, { recursive: true, force: true })
 			tempTestDir = ""
 		}
-		activeLocks.clear()
+		// activeLocks is no longer used
 
 		// Explicitly reset mock implementations to default (actual) behavior
 		// This helps prevent state leakage between tests if spy.mockRestore() isn't fully effective
@@ -102,6 +109,13 @@ describe("safeWriteJson", () => {
 
 	// Failure Scenarios
 	test("should handle failure when writing to tempNewFilePath", async () => {
+		// Ensure the target file does not exist for this test.
+		try {
+			await fs.unlink(currentTestFilePath)
+		} catch (e: any) {
+			if (e.code !== "ENOENT") throw e
+		}
+
 		const data = { message: "This should not be written" }
 		const writeFileSpy = jest.spyOn(fs, "writeFile")
 		// Make the first call to writeFile (for tempNewFilePath) fail
@@ -261,6 +275,13 @@ describe("safeWriteJson", () => {
 	})
 
 	test("should handle failure when renaming tempNewFilePath to filePath (filePath does not exist)", async () => {
+		// Ensure the target file does not exist for this test.
+		try {
+			await fs.unlink(currentTestFilePath)
+		} catch (e: any) {
+			if (e.code !== "ENOENT") throw e
+		}
+
 		const data = { message: "This should not be written" }
 		const renameSpy = jest.spyOn(fs, "rename")
 		// The rename from tempNew to target fails
@@ -285,18 +306,30 @@ describe("safeWriteJson", () => {
 		renameSpy.mockRestore()
 	})
 
-	test("should throw an error if a lock is already held for the filePath", async () => {
+	test("should throw an error if an inter-process lock is already held for the filePath", async () => {
+		jest.resetModules() // Clear module cache to ensure fresh imports for this test
+
 		const data = { message: "test lock" }
-		// Manually acquire lock for testing purposes
-		activeLocks.add(path.resolve(currentTestFilePath))
+		// Ensure the resource file exists.
+		await fs.writeFile(currentTestFilePath, "{}", "utf8")
 
-		await expect(safeWriteJson(currentTestFilePath, data)).rejects.toThrow(
-			`File operation already in progress for this path: ${path.resolve(currentTestFilePath)}`,
-		)
+		// Temporarily mock proper-lockfile for this test only
+		jest.doMock("proper-lockfile", () => ({
+			...jest.requireActual("proper-lockfile"),
+			lock: jest.fn().mockRejectedValueOnce(new Error("Failed to get lock.")),
+		}))
 
-		// Ensure lock is still there (safeWriteJson shouldn't release if it didn't acquire)
-		expect(activeLocks.has(path.resolve(currentTestFilePath))).toBe(true)
-		activeLocks.delete(path.resolve(currentTestFilePath)) // Manual cleanup for this test
+		// Re-require safeWriteJson so it picks up the mocked proper-lockfile
+		const { safeWriteJson: safeWriteJsonWithMockedLock } =
+			require("../safeWriteJson") as typeof import("../safeWriteJson")
+
+		try {
+			await expect(safeWriteJsonWithMockedLock(currentTestFilePath, data)).rejects.toThrow(
+				/Failed to get lock.|Lock file is already being held/i,
+			)
+		} finally {
+			jest.unmock("proper-lockfile") // Ensure the mock is removed after this test
+		}
 	})
 	test("should release lock even if an error occurs mid-operation", async () => {
 		const data = { message: "test lock release on error" }
@@ -306,7 +339,9 @@ describe("safeWriteJson", () => {
 
 		await expect(safeWriteJson(currentTestFilePath, data)).rejects.toThrow("Simulated FS Error during writeFile")
 
-		expect(activeLocks.has(path.resolve(currentTestFilePath))).toBe(false) // Lock should be released
+		// Lock should be released, meaning the .lock file should not exist
+		const lockPath = `${path.resolve(currentTestFilePath)}.lock`
+		await expect(fs.access(lockPath)).rejects.toThrow(expect.objectContaining({ code: "ENOENT" }))
 
 		writeFileSpy.mockRestore()
 	})
@@ -321,7 +356,10 @@ describe("safeWriteJson", () => {
 
 		await expect(safeWriteJson(currentTestFilePath, data)).rejects.toThrow("Simulated EACCES Error")
 
-		expect(activeLocks.has(path.resolve(currentTestFilePath))).toBe(false) // Lock should be released
+		// Lock should be released, meaning the .lock file should not exist
+		const lockPath = `${path.resolve(currentTestFilePath)}.lock`
+		await expect(fs.access(lockPath)).rejects.toThrow(expect.objectContaining({ code: "ENOENT" }))
+
 		const tempFiles = await listTempFiles(tempTestDir, "test-data.json")
 		// .new file might have been created before access check, should be cleaned up
 		expect(tempFiles.filter((f: string) => f.includes(".new_")).length).toBe(0)
