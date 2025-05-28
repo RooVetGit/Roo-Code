@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { t } from "../../i18n"
 import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
@@ -51,6 +52,7 @@ export type SummarizeResponse = {
 	summary: string // The summary text; empty string for no summary
 	cost: number // The cost of the summarization operation
 	newContextTokens?: number // The number of tokens in the context for the next API request
+	error?: string // Populated iff the operation fails: error message shown to the user on failure (see Task.ts)
 }
 
 /**
@@ -80,6 +82,7 @@ export async function summarizeConversation(
 	apiHandler: ApiHandler,
 	systemPrompt: string,
 	taskId: string,
+	prevContextTokens: number,
 	isAutomaticTrigger?: boolean,
 	customCondensingPrompt?: string,
 	condensingApiHandler?: ApiHandler,
@@ -151,8 +154,8 @@ export async function summarizeConversation(
 	}
 	summary = summary.trim()
 	if (summary.length === 0) {
-		console.warn("Received empty summary from API")
-		return { ...response, cost }
+		const error = t("common:errors.condense_failed")
+		return { ...response, cost, error }
 	}
 	const summaryMessage: ApiMessage = {
 		role: "assistant",
@@ -172,6 +175,10 @@ export async function summarizeConversation(
 		typeof message.content === "string" ? [{ text: message.content, type: "text" as const }] : message.content,
 	)
 	const newContextTokens = outputTokens + (await apiHandler.countTokens(contextBlocks))
+	if (newContextTokens >= prevContextTokens) {
+		const error = t("common:errors.condense_context_grew")
+		return { ...response, cost, error }
+	}
 	return { messages: newMessages, summary, cost, newContextTokens }
 }
 

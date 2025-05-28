@@ -122,11 +122,12 @@ export async function truncateConversationIfNeeded({
 				apiHandler,
 				systemPrompt,
 				taskId,
+				prevContextTokens,
 				true, // automatic trigger
 				customCondensingPrompt,
 				condensingApiHandler,
 			)
-			if (result.summary) {
+			if (!result.error) {
 				return { ...result, prevContextTokens }
 			}
 		}
