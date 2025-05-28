@@ -210,7 +210,7 @@ describe("ContextManagementSettings", () => {
 		it("toggles auto condense context setting", () => {
 			const mockSetCachedStateField = jest.fn()
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
-			render(<ContextManagementSettings {...props} />)
+			const { rerender } = render(<ContextManagementSettings {...props} />)
 
 			const checkbox = screen.getByTestId("auto-condense-context-checkbox")
 			expect(checkbox).toBeChecked()
@@ -219,10 +219,13 @@ describe("ContextManagementSettings", () => {
 			fireEvent.click(checkbox)
 			expect(mockSetCachedStateField).toHaveBeenCalledWith("autoCondenseContext", false)
 
+			// Re-render with updated props to simulate the state change
+			rerender(<ContextManagementSettings {...props} autoCondenseContext={false} />)
+
 			// Additional settings should not be visible when disabled
 			expect(screen.queryByTestId("auto-condense-percent-slider")).not.toBeInTheDocument()
-			expect(screen.queryByTestId("condensing-api-config-select")).not.toBeInTheDocument()
-			expect(screen.queryByTestId("custom-condensing-prompt-textarea")).not.toBeInTheDocument()
+			expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+			expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
 		})
 
 		it("shows additional settings when auto condense is enabled", () => {
@@ -230,8 +233,8 @@ describe("ContextManagementSettings", () => {
 
 			// Additional settings should be visible
 			expect(screen.getByTestId("auto-condense-percent-slider")).toBeInTheDocument()
-			expect(screen.getByTestId("condensing-api-config-select")).toBeInTheDocument()
-			expect(screen.getByTestId("custom-condensing-prompt-textarea")).toBeInTheDocument()
+			expect(screen.getByRole("combobox")).toBeInTheDocument()
+			expect(screen.getByRole("textbox")).toBeInTheDocument()
 		})
 
 		it("hides additional settings when auto condense is disabled", () => {
@@ -240,8 +243,8 @@ describe("ContextManagementSettings", () => {
 
 			// Additional settings should not be visible
 			expect(screen.queryByTestId("auto-condense-percent-slider")).not.toBeInTheDocument()
-			expect(screen.queryByTestId("condensing-api-config-select")).not.toBeInTheDocument()
-			expect(screen.queryByTestId("custom-condensing-prompt-textarea")).not.toBeInTheDocument()
+			expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+			expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
 		})
 
 		it("updates auto condense context percent", () => {

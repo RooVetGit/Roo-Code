@@ -276,7 +276,6 @@ export const ContextManagementSettings = ({
 								<VSCodeTextArea
 									resize="vertical"
 									value={customCondensingPrompt || SUMMARY_PROMPT}
-									data-testid="custom-condensing-prompt-textarea"
 									onChange={(e) => {
 										const value = (e.target as HTMLTextAreaElement).value
 										setCachedStateField("customCondensingPrompt", value)
@@ -292,7 +291,6 @@ export const ContextManagementSettings = ({
 									<Button
 										variant="secondary"
 										size="sm"
-										data-testid="custom-condensing-prompt-reset"
 										onClick={() => {
 											setCachedStateField("customCondensingPrompt", SUMMARY_PROMPT)
 											vscode.postMessage({
