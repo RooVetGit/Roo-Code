@@ -5,6 +5,18 @@ import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
 import { SEARCH_MIN_SCORE } from "./constants"
 import { getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 
+// Define a type for the raw config state from globalState
+interface RawCodebaseIndexConfigState {
+	codebaseIndexEnabled?: boolean
+	codebaseIndexQdrantUrl?: string
+	codebaseIndexSearchMinScore?: number // Assuming this is also from globalState based on default
+	codebaseIndexEmbedderProvider?: "openai" | "ollama" | "gemini"
+	codebaseIndexEmbedderBaseUrl?: string
+	codebaseIndexEmbedderModelId?: string
+	geminiEmbeddingTaskType?: string
+	geminiEmbeddingDimension?: number // Ensure this is part of the raw state type
+}
+
 /**
  * Manages configuration state and validation for the code indexing feature.
  * Handles loading, validating, and providing access to configuration values.
@@ -31,7 +43,7 @@ export class CodeIndexConfigManager {
 	 */
 	private _loadAndSetConfiguration(): void {
 		// Load configuration from storage
-		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
+		const rawConfig = (this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexSearchMinScore: 0.4,
@@ -39,7 +51,8 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
 			geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
-		}
+			geminiEmbeddingDimension: undefined,
+		}) as RawCodebaseIndexConfigState // Cast to our defined raw state type
 
 		const {
 			codebaseIndexEnabled,
@@ -48,11 +61,13 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
 			geminiEmbeddingTaskType,
-		} = codebaseIndexConfig
+			geminiEmbeddingDimension,
+		} = rawConfig // Destructure from the typed rawConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 		const geminiApiKey = this.contextProxy?.getSecret("geminiApiKey") ?? ""
+		const rateLimitSeconds = this.contextProxy?.getGlobalState("rateLimitSeconds") ?? undefined
 
 		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
@@ -79,6 +94,8 @@ export class CodeIndexConfigManager {
 			geminiApiKey,
 			geminiEmbeddingTaskType: geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY",
 			apiModelId: this.modelId,
+			geminiEmbeddingDimension,
+			rateLimitSeconds,
 		}
 	}
 
@@ -159,6 +176,7 @@ export class CodeIndexConfigManager {
 			// Gemini requires an API key and Qdrant URL
 			const geminiApiKey = this.geminiOptions?.geminiApiKey
 			const geminiEmbeddingTaskType = this.geminiOptions?.geminiEmbeddingTaskType
+
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(geminiApiKey && geminiEmbeddingTaskType && qdrantUrl)
 			return isConfigured
@@ -180,6 +198,7 @@ export class CodeIndexConfigManager {
 		const prevOpenAiKey = prev?.openAiKey ?? ""
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
+		const prevGeminiEmbeddingDimension = prev?.geminiEmbeddingDimension // Access from prev
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
@@ -205,7 +224,9 @@ export class CodeIndexConfigManager {
 				return true
 			}
 
-			if (this._hasVectorDimensionChanged(prevProvider, prevModelId)) {
+			// Check for dimension change, including the new geminiEmbeddingDimension
+			if (this._hasVectorDimensionChanged(prevProvider, prevModelId, prev.geminiEmbeddingDimension)) {
+				// Use prev.geminiEmbeddingDimension
 				return true
 			}
 
@@ -229,6 +250,11 @@ export class CodeIndexConfigManager {
 				if (prevGeminiApiKey !== currentGeminiApiKey) {
 					return true
 				}
+
+				const currentGeminiEmbeddingDimension = this.geminiOptions?.geminiEmbeddingDimension
+				if (currentGeminiEmbeddingDimension !== prevGeminiEmbeddingDimension) {
+					return true
+				}
 			}
 
 			// Qdrant configuration changes
@@ -246,19 +272,35 @@ export class CodeIndexConfigManager {
 	/**
 	 * Checks if model changes result in vector dimension changes that require restart.
 	 */
-	private _hasVectorDimensionChanged(prevProvider: EmbedderProvider, prevModelId?: string): boolean {
+	private _hasVectorDimensionChanged(
+		prevProvider: EmbedderProvider,
+		prevModelId?: string,
+		prevGeminiDimension?: number,
+	): boolean {
 		const currentProvider = this.embedderProvider
 		const currentModelId = this.modelId ?? getDefaultModelId(currentProvider)
 		const resolvedPrevModelId = prevModelId ?? getDefaultModelId(prevProvider)
 
 		// If model IDs are the same and provider is the same, no dimension change
 		if (prevProvider === currentProvider && resolvedPrevModelId === currentModelId) {
+			// If provider and model are same, check if gemini dimension changed
+			if (currentProvider === "gemini" && this.geminiOptions?.geminiEmbeddingDimension !== prevGeminiDimension) {
+				return true
+			}
 			return false
 		}
 
 		// Get vector dimensions for both models
-		const prevDimension = getModelDimension(prevProvider, resolvedPrevModelId)
-		const currentDimension = getModelDimension(currentProvider, currentModelId)
+		const prevDimension = getModelDimension(
+			prevProvider,
+			resolvedPrevModelId,
+			prevProvider === "gemini" ? prevGeminiDimension : undefined,
+		)
+		const currentDimension = getModelDimension(
+			currentProvider,
+			currentModelId,
+			currentProvider === "gemini" ? this.geminiOptions?.geminiEmbeddingDimension : undefined,
+		)
 
 		// If we can't determine dimensions, be safe and restart
 		if (prevDimension === undefined || currentDimension === undefined) {
@@ -284,6 +326,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.searchMinScore,
+			geminiEmbeddingDimension: this.geminiEmbeddingDimension,
 		}
 	}
 

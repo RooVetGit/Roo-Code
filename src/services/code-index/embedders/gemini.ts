@@ -9,6 +9,7 @@ import { GEMINI_RATE_LIMIT_DELAY_MS, MAX_BATCH_RETRIES, INITIAL_RETRY_DELAY_MS }
 export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder {
 	private readonly defaultModelId: string
 	private readonly defaultTaskType: string
+	private embeddingQueue: Promise<void> = Promise.resolve() // Sequential queue for embedding operations
 
 	/**
 	 * Creates a new Gemini embedder instance.
@@ -21,24 +22,47 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	}
 
 	/**
-	 * Creates embeddings for the given texts using the Gemini API.
+	 * Creates embeddings for the given texts using the Gemini API, ensuring sequential processing.
 	 * @param texts - An array of strings to embed.
 	 * @param model - Optional model ID to override the default.
-	 * @returns A promise that resolves to an EmbeddingResponse containing the embeddings and usage data.
+	 * @returns A promise that resolves to an EmbeddingResponse containing the embeddings.
 	 */
-	// Removed async keyword from the method signature as it no longer uses await at the top level.
-	// It constructs and returns a promise.
 	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
-		try {
-			const modelId = model || this.defaultModelId
-			const result = await this.embedWithTokenLimit(texts, modelId, this.defaultTaskType)
-			return {
-				embeddings: result.embeddings,
+		// This function will be executed when it's this task's turn in the queue.
+		const taskExecution = async (): Promise<EmbeddingResponse> => {
+			try {
+				const modelId = model || this.defaultModelId
+				// embedWithTokenLimit handles batching, internal delays, and retries for API calls.
+				const result = await this.embedWithTokenLimit(texts, modelId, this.defaultTaskType)
+				return {
+					embeddings: result.embeddings,
+					// If EmbeddingResponse is updated to include usage, and result.usage is reliable:
+					// usage: result.usage,
+				}
+			} catch (error: any) {
+				// Errors are logged within embedWithTokenLimit or _embedBatchWithRetries.
+				// This re-throws the error to be caught by the specific caller of createEmbeddings.
+				console.error("Error during Gemini embedding task execution in queue:", error.message)
+				throw error
 			}
-		} catch (error: any) {
-			console.error("Gemini embedding task failed:", error)
-			throw error
 		}
+
+		// Chain this task onto the queue.
+		// The actual execution of taskExecution() is deferred until the previous promise in the queue resolves.
+		const taskPromise = this.embeddingQueue.then(taskExecution)
+
+		// Update the queue to wait for the current task to complete (or fail).
+		// .catch(() => {}) ensures that an error in one task doesn't break the queue for subsequent tasks.
+		// Each task's success/failure is handled by its own promise (taskPromise), which is returned to the caller.
+		this.embeddingQueue = taskPromise
+			.catch(() => {
+				// This task failed, but the queue should proceed for the next one.
+				// The error from taskPromise will be handled by its specific awaiter below.
+			})
+			.then(() => undefined) // Ensure the queue promise resolves to void for the next .then() in the chain.
+
+		// Return the promise for this specific task. The caller will await this.
+		return taskPromise
 	}
 
 	/**
@@ -112,12 +136,15 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 
 			// Process the current batch if not empty
 			if (currentBatch.length > 0) {
-				const delayMs =
-					this.options.rateLimitSeconds !== undefined
-						? this.options.rateLimitSeconds * 1000
-						: GEMINI_RATE_LIMIT_DELAY_MS
-				console.log(`Adding proactive delay of ${delayMs}ms before Gemini batch`)
-				await new Promise((resolve) => setTimeout(resolve, delayMs))
+				if (!isFirstBatch) {
+					const delayMs =
+						this.options.rateLimitSeconds !== undefined
+							? this.options.rateLimitSeconds * 1000
+							: GEMINI_RATE_LIMIT_DELAY_MS
+					console.log(`Adding proactive delay of ${delayMs}ms before Gemini batch`)
+					await new Promise((resolve) => setTimeout(resolve, delayMs))
+					isFirstBatch = false
+				}
 
 				try {
 					const batchResult = await this._embedBatchWithRetries(currentBatch, model, taskType)
