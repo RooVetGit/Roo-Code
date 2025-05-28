@@ -4,7 +4,7 @@ import { resolve } from "path"
 
 describe("CommonJS Import Tests", () => {
 	const packageRoot = resolve(__dirname, "../..")
-	const cjsPath = resolve(packageRoot, "dist", "index.js")
+	const cjsPath = resolve(packageRoot, "dist", "index.cjs")
 
 	it("should import types using require() syntax", () => {
 		// Clear require cache to ensure fresh import.
