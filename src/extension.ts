@@ -173,20 +173,27 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (process.env.NODE_ENV === "development") {
 		const pattern = "**/*.ts"
 
+		const watchPaths = [
+			{ path: context.extensionPath, name: "extension" },
+			{ path: path.join(context.extensionPath, "../packages/types"), name: "types" },
+			{ path: path.join(context.extensionPath, "../packages/telemetry"), name: "telemetry" },
+			{ path: path.join(context.extensionPath, "../packages/cloud"), name: "cloud" },
+		]
+
 		console.log(
-			`♻️♻️♻️ Core auto-reloading is ENABLED! Watching for changes in ${context.extensionPath}/${pattern}`,
+			`♻️♻️♻️ Core auto-reloading is ENABLED. Watching for changes in: ${watchPaths.map(({ name }) => name).join(", ")}`,
 		)
 
-		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(context.extensionPath, pattern),
-		)
+		watchPaths.forEach(({ path: watchPath, name }) => {
+			const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(watchPath, pattern))
 
-		watcher.onDidChange((uri) => {
-			console.log(`♻️ File changed: ${uri.fsPath}. Reloading host…`)
-			vscode.commands.executeCommand("workbench.action.reloadWindow")
+			watcher.onDidChange((uri) => {
+				console.log(`♻️ ${name} file changed: ${uri.fsPath}. Reloading host…`)
+				vscode.commands.executeCommand("workbench.action.reloadWindow")
+			})
+
+			context.subscriptions.push(watcher)
 		})
-
-		context.subscriptions.push(watcher)
 	}
 
 	return new API(outputChannel, provider, socketPath, enableLogging)
