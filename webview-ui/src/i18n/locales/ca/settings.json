@@ -338,16 +338,16 @@
 			"description": "Quan la finestra de context assoleix aquest llindar, Roo la condensarà automàticament."
 		},
 		"condensingApiConfiguration": {
-			"label": "API Configuration for Context Condensing",
-			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
-			"useCurrentConfig": "Default"
+			"label": "Configuració d'API per a la condensació de context",
+			"description": "Seleccioneu quina configuració d'API utilitzar per a les operacions de condensació de context. Deixeu-ho sense seleccionar per utilitzar la configuració activa actual.",
+			"useCurrentConfig": "Per defecte"
 		},
 		"customCondensingPrompt": {
-			"label": "Custom Context Condensing Prompt",
-			"description": "Customize the system prompt used for context condensing. Leave empty to use the default prompt.",
-			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset to Default",
-			"hint": "Empty = use default prompt"
+			"label": "Indicació personalitzada de condensació de context",
+			"description": "Personalitzeu la indicació del sistema utilitzada per a la condensació de context. Deixeu-ho buit per utilitzar la indicació per defecte.",
+			"placeholder": "Introduïu aquí la vostra indicació de condensació personalitzada...\n\nPodeu utilitzar la mateixa estructura que la indicació per defecte:\n- Conversa anterior\n- Treball actual\n- Conceptes tècnics clau\n- Fitxers i codi rellevants\n- Resolució de problemes\n- Tasques pendents i següents passos",
+			"reset": "Restablir als valors per defecte",
+			"hint": "Buit = utilitzar indicació per defecte"
 		},
 		"autoCondenseContext": {
 			"name": "Activar automàticament la condensació intel·ligent de context"
