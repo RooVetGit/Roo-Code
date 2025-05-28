@@ -49,7 +49,7 @@
 		"modelLabel": "模型",
 		"selectModelPlaceholder": "选择模型",
 		"ollamaUrlLabel": "Ollama URL：",
-		"geminiApiKey": "Gemini API 密钥:",
+		"geminiApiKey": "Gemini API 密钥：",
 		"apiKeyPlaceholder": "输入 API 密钥...",
 		"embeddingTaskType": "嵌入任务类型",
 		"selectTaskTypePlaceholder": "选择任务类型",
