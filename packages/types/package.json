@@ -4,14 +4,14 @@
 	"description": "TypeScript type definitions for Roo Code.",
 	"publishConfig": {
 		"access": "public",
-		"main": "./dist/index.cjs",
+		"main": "./dist/index.js",
 		"module": "./dist/index.mjs",
 		"types": "./dist/index.d.ts",
 		"exports": {
 			".": {
 				"types": "./dist/index.d.ts",
 				"import": "./dist/index.mjs",
-				"require": "./dist/index.cjs"
+				"require": "./dist/index.js"
 			}
 		}
 	},
@@ -30,14 +30,14 @@
 		"roo-code",
 		"ai"
 	],
-	"main": "./dist/index.cjs",
+	"main": "./dist/index.js",
 	"exports": {
 		".": {
 			"types": "./src/index.ts",
 			"import": "./src/index.ts",
 			"require": {
 				"types": "./dist/index.d.ts",
-				"default": "./dist/index.cjs"
+				"default": "./dist/index.js"
 			}
 		}
 	},

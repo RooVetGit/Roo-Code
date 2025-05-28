@@ -18,7 +18,7 @@ describe("Package Exports Integration Tests", () => {
 	})
 
 	it("should import from built CJS file", () => {
-		const cjsPath = resolve(distPath, "index.cjs")
+		const cjsPath = resolve(distPath, "index.js")
 
 		// Clear require cache to ensure fresh import
 		delete require.cache[cjsPath]
@@ -34,7 +34,7 @@ describe("Package Exports Integration Tests", () => {
 
 	it("should have consistent exports between ESM and CJS builds", async () => {
 		const esmPath = resolve(distPath, "index.mjs")
-		const cjsPath = resolve(distPath, "index.cjs")
+		const cjsPath = resolve(distPath, "index.js")
 
 		// Clear require cache.
 		delete require.cache[cjsPath]
