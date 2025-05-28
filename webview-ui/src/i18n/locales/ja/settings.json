@@ -49,7 +49,7 @@
 		"modelLabel": "モデル",
 		"selectModelPlaceholder": "モデルを選択",
 		"ollamaUrlLabel": "Ollama URL：",
-		"geminiApiKey": "Gemini APIキー:",
+		"geminiApiKey": "Gemini APIキー：",
 		"apiKeyPlaceholder": "APIキーを入力...",
 		"embeddingTaskType": "埋め込みタスクタイプ",
 		"selectTaskTypePlaceholder": "タスクタイプを選択",
