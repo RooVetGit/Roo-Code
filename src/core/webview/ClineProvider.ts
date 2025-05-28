@@ -66,6 +66,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
+	private focusTimeoutId: NodeJS.Timeout | undefined
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -191,6 +192,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.log("Disposing ClineProvider...")
 		await this.removeClineFromStack()
 		this.log("Cleared task")
+
+		if (this.focusTimeoutId) {
+			clearTimeout(this.focusTimeoutId)
+			this.focusTimeoutId = undefined
+		}
 
 		if (this.view && "dispose" in this.view) {
 			this.view.dispose()
@@ -409,6 +415,25 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		webviewView.onDidDispose(
 			async () => {
 				await this.dispose()
+			},
+			null,
+			this.disposables,
+		)
+
+		vscode.window.onDidChangeWindowState?.(
+			(windowState) => {
+				if (windowState.focused && this.view?.visible) {
+					if (this.focusTimeoutId) {
+						clearTimeout(this.focusTimeoutId)
+					}
+					
+					this.focusTimeoutId = setTimeout(() => {
+						if (this.view?.visible) {
+							this.postMessageToWebview({ type: "action", action: "focusInput" })
+						}
+						this.focusTimeoutId = undefined
+					}, 100)
+				}
 			},
 			null,
 			this.disposables,

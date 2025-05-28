@@ -148,6 +148,9 @@ jest.mock("vscode", () => ({
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
+		onDidChangeWindowState: jest.fn().mockImplementation(() => ({
+			dispose: jest.fn(),
+		})),
 	},
 	workspace: {
 		getConfiguration: jest.fn().mockReturnValue({
@@ -284,14 +287,12 @@ describe("ClineProvider", () => {
 			dispose: jest.fn(),
 		}
 
-		// Mock output channel
 		mockOutputChannel = {
 			appendLine: jest.fn(),
 			clear: jest.fn(),
 			dispose: jest.fn(),
 		} as unknown as vscode.OutputChannel
 
-		// Mock webview
 		mockPostMessage = jest.fn()
 
 		mockWebviewView = {
@@ -2111,5 +2112,169 @@ describe("getTelemetryProperties", () => {
 		const properties = await provider.getTelemetryProperties()
 
 		expect(properties).toHaveProperty("modelId", "claude-3-7-sonnet-20250219")
+	})
+
+	describe("Window Focus Handling", () => {
+		let provider: ClineProvider
+		let mockContext: vscode.ExtensionContext
+		let mockOutputChannel: vscode.OutputChannel
+		let mockWebviewView: vscode.WebviewView
+		let mockPostMessage: jest.Mock
+		let mockWindowStateListeners: Array<(e: vscode.WindowState) => void> = []
+
+		beforeEach(() => {
+			jest.clearAllMocks()
+			
+			mockWindowStateListeners = []
+			
+			;(vscode.window.onDidChangeWindowState as jest.Mock).mockImplementation((listener) => {
+				mockWindowStateListeners.push(listener)
+				return { dispose: jest.fn() }
+			})
+
+			const globalState: Record<string, string | undefined> = {
+				mode: "code",
+			}
+
+			const secrets: Record<string, string | undefined> = {}
+
+			mockContext = {
+				extensionPath: "/test/path",
+				extensionUri: {} as vscode.Uri,
+				globalState: {
+					get: jest.fn().mockImplementation((key: string) => globalState[key]),
+					update: jest.fn().mockImplementation((key: string, value: string | undefined) => (globalState[key] = value)),
+					keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+				},
+				secrets: {
+					get: jest.fn().mockImplementation((key: string) => secrets[key]),
+					store: jest.fn().mockImplementation((key: string, value: string | undefined) => (secrets[key] = value)),
+					delete: jest.fn().mockImplementation((key: string) => delete secrets[key]),
+				},
+				subscriptions: [],
+				extension: {
+					packageJSON: { version: "1.0.0" },
+				},
+				globalStorageUri: {
+					fsPath: "/test/storage/path",
+				},
+			} as unknown as vscode.ExtensionContext
+
+			// Mock output channel
+			mockOutputChannel = {
+				appendLine: jest.fn(),
+				clear: jest.fn(),
+				dispose: jest.fn(),
+			} as unknown as vscode.OutputChannel
+
+			// Mock webview
+			mockPostMessage = jest.fn()
+
+			mockWebviewView = {
+				webview: {
+					postMessage: mockPostMessage,
+					html: "",
+					options: {},
+					onDidReceiveMessage: jest.fn(),
+					asWebviewUri: jest.fn(),
+				},
+				visible: true,
+				onDidDispose: jest.fn().mockImplementation((callback) => {
+					callback()
+					return { dispose: jest.fn() }
+				}),
+				onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
+			} as unknown as vscode.WebviewView
+
+			provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		})
+
+		test("registers window state change listener on webview resolution", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+
+			expect(vscode.window.onDidChangeWindowState).toHaveBeenCalled()
+			expect(mockWindowStateListeners.length).toBeGreaterThan(0)
+		})
+
+		test("sends focusInput message when window becomes focused and webview is visible", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+			
+			mockPostMessage.mockClear()
+
+			const windowState: vscode.WindowState = { focused: true, active: true }
+			mockWindowStateListeners.forEach((listener) => listener(windowState))
+
+			await new Promise((resolve) => setTimeout(resolve, 150))
+
+			expect(mockPostMessage).toHaveBeenCalledWith({
+				type: "action",
+				action: "focusInput",
+			})
+		})
+
+		test("does not send focusInput message when window becomes focused but webview is not visible", async () => {
+			const invisibleWebviewView = {
+				...mockWebviewView,
+				visible: false,
+			}
+			await provider.resolveWebviewView(invisibleWebviewView)
+			
+			mockPostMessage.mockClear()
+
+			const windowState: vscode.WindowState = { focused: true, active: true }
+			mockWindowStateListeners.forEach((listener) => listener(windowState))
+
+			await new Promise((resolve) => setTimeout(resolve, 150))
+
+			expect(mockPostMessage).not.toHaveBeenCalledWith({
+				type: "action",
+				action: "focusInput",
+			})
+		})
+
+		test("does not send focusInput message when window loses focus", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+			
+			mockPostMessage.mockClear()
+
+			const windowState: vscode.WindowState = { focused: false, active: false }
+			mockWindowStateListeners.forEach((listener) => listener(windowState))
+
+			await new Promise((resolve) => setTimeout(resolve, 150))
+
+			expect(mockPostMessage).not.toHaveBeenCalledWith({
+				type: "action",
+				action: "focusInput",
+			})
+		})
+
+		test("properly disposes window state listener and clears timeout", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+			
+			expect(vscode.window.onDidChangeWindowState).toHaveBeenCalled()
+			expect(mockWindowStateListeners.length).toBeGreaterThan(0)
+			
+			await new Promise(resolve => setTimeout(resolve, 10))
+			
+			const windowState: vscode.WindowState = { focused: true, active: true }
+			mockWindowStateListeners.forEach((listener) => listener(windowState))
+			
+			await new Promise(resolve => setTimeout(resolve, 10))
+			
+			const timeoutId = (provider as any).focusTimeoutId
+			expect(timeoutId).toBeDefined()
+			
+			const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout')
+			
+			await provider.dispose()
+			
+			expect(clearTimeoutSpy).toHaveBeenCalledWith(timeoutId)
+			
+			expect((provider as any).focusTimeoutId).toBeUndefined()
+			
+			expect((provider as any).disposables).toEqual([])
+			
+			clearTimeoutSpy.mockRestore()
+		})
 	})
 })

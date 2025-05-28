@@ -131,6 +131,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const lastTtsRef = useRef<string>("")
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
+	const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
 	// UI layout depends on the last 2 messages
 	// (since it relies on the content of these messages, we are deep comparing. i.e. the button state after hitting button sets enableButtons to false, and this effect otherwise would have to true again even if messages didn't change
@@ -551,7 +552,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}
 							break
 						case "focusInput":
-							textAreaRef.current?.focus()
+							if (focusTimeoutRef.current) {
+								clearTimeout(focusTimeoutRef.current)
+							}
+							
+							focusTimeoutRef.current = setTimeout(() => {
+								if (!isHidden && !sendingDisabled && !enableButtons && textAreaRef.current) {
+									try {
+										textAreaRef.current.focus()
+									} catch (e) {
+										console.debug("Failed to focus input:", e)
+									}
+								}
+								focusTimeoutRef.current = null
+							}, 50)
 							break
 					}
 					break
@@ -602,6 +616,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// NOTE: the VSCode window needs to be focused for this to work.
 	useMount(() => textAreaRef.current?.focus())
+
+	// Cleanup effect for focus timeout
+	useEffect(() => {
+		return () => {
+			if (focusTimeoutRef.current) {
+				clearTimeout(focusTimeoutRef.current)
+			}
+		}
+	}, [])
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
