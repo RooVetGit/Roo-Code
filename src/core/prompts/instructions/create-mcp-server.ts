@@ -83,8 +83,7 @@ weather-server/
 			}
 	├── tsconfig.json
 	└── src/
-			└── weather-server/
-					└── index.ts      # Main server implementation
+			└── index.ts      # Main server implementation
 \`\`\`
 
 2. Replace \`src/index.ts\` with the following:
@@ -189,8 +188,12 @@ server.resource(
         ],
       };
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(\`Weather API error: \${
+          error.response?.data.message ?? error.message
+        }\`);
+      }
       throw error;
-    }
   }
 );
 
@@ -224,8 +227,12 @@ server.resource(
         ],
       };
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(\`Weather API error: \${
+          error.response?.data.message ?? error.message
+        }\`);
+      }
       throw error;
-    }
   }
 );
 
