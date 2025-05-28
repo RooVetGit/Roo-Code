@@ -172,6 +172,8 @@
 		"getGeminiApiKey": "Obtenir la clé API Gemini",
 		"openAiApiKey": "Clé API OpenAI",
 		"openAiBaseUrl": "URL de base",
+		"openAiApiTimeout": "Délai d'attente (minutes)",
+		"openAiApiTimeoutDescription": "Délai d'attente pour les requêtes API au fournisseur (min. 5 min). Si aucune réponse dans ce délai, la requête sera réessayée. Augmentez cette valeur pour les modèles plus lents.",
 		"getOpenAiApiKey": "Obtenir la clé API OpenAI",
 		"mistralApiKey": "Clé API Mistral",
 		"getMistralApiKey": "Obtenir la clé API Mistral / Codestral",
