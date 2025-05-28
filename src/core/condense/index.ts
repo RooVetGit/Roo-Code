@@ -97,13 +97,15 @@ export async function summarizeConversation(
 	const response: SummarizeResponse = { messages, cost: 0, summary: "" }
 	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP))
 	if (messagesToSummarize.length <= 1) {
-		return response // Not enough messages to warrant a summary
+		const error = t("common:errors.condense_not_enough_messages")
+		return { ...response, error }
 	}
 	const keepMessages = messages.slice(-N_MESSAGES_TO_KEEP)
 	// Check if there's a recent summary in the messages we're keeping
 	const recentSummaryExists = keepMessages.some((message) => message.isSummary)
 	if (recentSummaryExists) {
-		return response // We recently summarized these messages; it's too soon to summarize again.
+		const error = t("common:errors.condensed_recently")
+		return { ...response, error }
 	}
 	const finalRequestMessage: Anthropic.MessageParam = {
 		role: "user",
@@ -131,12 +133,8 @@ export async function summarizeConversation(
 			// Consider throwing an error or returning a specific error response.
 			console.error("Main API handler is also invalid for condensing. Cannot proceed.")
 			// Return an appropriate error structure for SummarizeResponse
-			return {
-				messages,
-				summary: "",
-				cost: 0,
-				newContextTokens: 0,
-			}
+			const error = t("common:errors.condense_handler_invalid")
+			return { ...response, error }
 		}
 	}
 
