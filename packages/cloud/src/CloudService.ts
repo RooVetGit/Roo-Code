@@ -1,21 +1,14 @@
 import * as vscode from "vscode"
-import EventEmitter from "events"
 
-import type { CloudUserInfo, TelemetryEvent } from "@roo-code/types"
+import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList, OrganizationSettings } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
-import { AuthService, type AuthServiceEvents } from "./AuthService"
+import { CloudServiceCallbacks } from "./types"
+import { AuthService } from "./AuthService"
 import { SettingsService } from "./SettingsService"
 import { TelemetryClient } from "./TelemetryClient"
 
-export type CloudServiceEvents = AuthServiceEvents
-
-export interface CloudServiceCallbacks {
-	onUserInfoChanged?: (userInfo: CloudUserInfo | undefined) => void
-	onSettingsChanged?: () => void
-}
-
-export class CloudService extends EventEmitter<CloudServiceEvents> {
+export class CloudService {
 	private static _instance: CloudService | null = null
 
 	private context: vscode.ExtensionContext
@@ -26,7 +19,6 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 	private isInitialized = false
 
 	private constructor(context: vscode.ExtensionContext, callbacks: CloudServiceCallbacks) {
-		super()
 		this.context = context
 		this.callbacks = callbacks
 	}
@@ -38,14 +30,11 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 
 		try {
 			this.authService = await AuthService.createInstance(this.context, (userInfo) => {
-				this.callbacks.onUserInfoChanged?.(userInfo)
+				this.callbacks.userChanged?.(userInfo)
 			})
 
-			this.authService.on("active-session", (args) => this.emit("active-session", args))
-			this.authService.on("logged-out", (args) => this.emit("logged-out", args))
-
 			this.settingsService = await SettingsService.createInstance(this.context, () =>
-				this.callbacks.onSettingsChanged?.(),
+				this.callbacks.settingsChanged?.(),
 			)
 
 			this.telemetryClient = new TelemetryClient(this.authService)
@@ -72,7 +61,7 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 
 	public async logout(): Promise<void> {
 		this.ensureInitialized()
-		return this.authService!.logout((userInfo) => this.callbacks.onUserInfoChanged?.(userInfo))
+		return this.authService!.logout()
 	}
 
 	public isAuthenticated(): boolean {
@@ -102,17 +91,17 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 
 	public async handleAuthCallback(code: string | null, state: string | null): Promise<void> {
 		this.ensureInitialized()
-		return this.authService!.handleCallback(code, state, (userInfo) => this.callbacks.onUserInfoChanged?.(userInfo))
+		return this.authService!.handleCallback(code, state)
 	}
 
 	// SettingsService
 
-	public getOrganizationSettings() {
+	public getOrganizationSettings(): OrganizationSettings | undefined {
 		this.ensureInitialized()
 		return this.settingsService!.getSettings()
 	}
 
-	public getAllowList() {
+	public getAllowList(): OrganizationAllowList {
 		this.ensureInitialized()
 		return this.settingsService!.getAllowList()
 	}
@@ -131,7 +120,6 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 			this.settingsService.dispose()
 		}
 
-		this.removeAllListeners()
 		this.isInitialized = false
 	}
 

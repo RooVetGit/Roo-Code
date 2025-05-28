@@ -6,6 +6,7 @@ import * as vscode from "vscode"
 
 import type { CloudUserInfo } from "@roo-code/types"
 
+import { CloudServiceCallbacks } from "./types"
 import { getClerkBaseUrl, getRooCodeApiUrl } from "./Config"
 import { RefreshTimer } from "./RefreshTimer"
 
@@ -22,27 +23,28 @@ type AuthState = "initializing" | "logged-out" | "active-session" | "inactive-se
 
 export class AuthService extends EventEmitter<AuthServiceEvents> {
 	private context: vscode.ExtensionContext
+	private userChanged: CloudServiceCallbacks["userChanged"]
+	private timer: RefreshTimer
 	private state: AuthState = "initializing"
 
 	private clientToken: string | null = null
 	private sessionToken: string | null = null
 	private sessionId: string | null = null
 
-	private timer: RefreshTimer
-
-	constructor(context: vscode.ExtensionContext, onUserInfo: (userInfo: CloudUserInfo | undefined) => void) {
+	constructor(context: vscode.ExtensionContext, userChanged: CloudServiceCallbacks["userChanged"]) {
 		super()
 
 		this.context = context
+		this.userChanged = userChanged
 
 		this.timer = new RefreshTimer({
 			callback: async () => {
-				await this.refreshSession(onUserInfo)
+				await this.refreshSession()
 				return true
 			},
-			successInterval: 50000,
-			initialBackoffMs: 1000,
-			maxBackoffMs: 300000,
+			successInterval: 50_000,
+			initialBackoffMs: 1_000,
+			maxBackoffMs: 300_000,
 		})
 	}
 
@@ -62,7 +64,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			this.clientToken = (await this.context.secrets.get(CLIENT_TOKEN_KEY)) || null
 			this.sessionId = this.context.globalState.get<string>(SESSION_ID_KEY) || null
 
-			// Determine initial state
+			// Determine initial state.
 			if (!this.clientToken || !this.sessionId) {
 				// TODO: it may be possible to get a new session with the client,
 				// but the obvious Clerk endpoints don't support that.
@@ -109,18 +111,14 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 	 * @param code The authorization code from the callback
 	 * @param state The state parameter from the callback
 	 */
-	public async handleCallback(
-		code: string | null,
-		state: string | null,
-		onUserInfo?: (userInfo: CloudUserInfo | undefined) => void,
-	): Promise<void> {
+	public async handleCallback(code: string | null, state: string | null): Promise<void> {
 		if (!code || !state) {
 			vscode.window.showInformationMessage("Invalid Roo Code Cloud sign in url")
 			return
 		}
 
 		try {
-			// 1. Validate state parameter to prevent CSRF attacks
+			// Validate state parameter to prevent CSRF attacks.
 			const storedState = this.context.globalState.get(AUTH_STATE_KEY)
 
 			if (state !== storedState) {
@@ -142,11 +140,10 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			this.emit("active-session", { previousState })
 			this.timer.start()
 
-			if (onUserInfo) {
-				this.getUserInfo().then(onUserInfo)
+			if (this.userChanged) {
+				this.getUserInfo().then(this.userChanged)
 			}
 
-			// Show success message
 			vscode.window.showInformationMessage("Successfully authenticated with Roo Code Cloud")
 			console.log("[auth] Successfully authenticated with Roo Code Cloud")
 		} catch (error) {
@@ -163,7 +160,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 	 *
 	 * This method removes all stored tokens and stops the refresh timer.
 	 */
-	public async logout(onUserInfo?: (userInfo: CloudUserInfo | undefined) => void): Promise<void> {
+	public async logout(): Promise<void> {
 		try {
 			this.timer.stop()
 
@@ -185,8 +182,8 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 				await this.clerkLogout(oldClientToken, oldSessionId)
 			}
 
-			if (onUserInfo) {
-				this.getUserInfo().then(onUserInfo)
+			if (this.userChanged) {
+				this.getUserInfo().then(this.userChanged)
 			}
 
 			vscode.window.showInformationMessage("Logged out from Roo Code Cloud")
@@ -227,7 +224,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 	 *
 	 * This method refreshes the session token using the client token.
 	 */
-	private async refreshSession(onUserInfo: (userInfo: CloudUserInfo | undefined) => void): Promise<void> {
+	private async refreshSession() {
 		if (!this.sessionId || !this.clientToken) {
 			console.log("[auth] Cannot refresh session: missing session ID or token")
 			this.state = "inactive-session"
@@ -240,7 +237,10 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 		if (previousState !== "active-session") {
 			this.emit("active-session", { previousState })
-			this.getUserInfo().then(onUserInfo)
+
+			if (this.userChanged) {
+				this.getUserInfo().then(this.userChanged)
+			}
 		}
 	}
 
@@ -383,15 +383,12 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		return this._instance
 	}
 
-	static async createInstance(
-		context: vscode.ExtensionContext,
-		onUserInfo: (userInfo: CloudUserInfo | undefined) => void,
-	) {
+	static async createInstance(context: vscode.ExtensionContext, userChanged: CloudServiceCallbacks["userChanged"]) {
 		if (this._instance) {
 			throw new Error("AuthService instance already created")
 		}
 
-		this._instance = new AuthService(context, onUserInfo)
+		this._instance = new AuthService(context, userChanged)
 		await this._instance.initialize()
 		return this._instance
 	}

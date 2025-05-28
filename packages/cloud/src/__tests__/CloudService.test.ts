@@ -6,6 +6,7 @@ import { CloudService } from "../CloudService"
 import { AuthService } from "../AuthService"
 import { SettingsService } from "../SettingsService"
 import { TelemetryService } from "@roo-code/telemetry"
+import { CloudServiceCallbacks } from "../types"
 
 vi.mock("vscode", () => ({
 	ExtensionContext: vi.fn(),
@@ -108,16 +109,10 @@ describe("CloudService", () => {
 		}
 
 		vi.mocked(AuthService.createInstance).mockResolvedValue(mockAuthService as unknown as AuthService)
-		Object.defineProperty(AuthService, "instance", {
-			get: () => mockAuthService,
-			configurable: true,
-		})
+		Object.defineProperty(AuthService, "instance", { get: () => mockAuthService, configurable: true })
 
 		vi.mocked(SettingsService.createInstance).mockResolvedValue(mockSettingsService as unknown as SettingsService)
-		Object.defineProperty(SettingsService, "instance", {
-			get: () => mockSettingsService,
-			configurable: true,
-		})
+		Object.defineProperty(SettingsService, "instance", { get: () => mockSettingsService, configurable: true })
 
 		vi.mocked(TelemetryService.hasInstance).mockReturnValue(true)
 		Object.defineProperty(TelemetryService, "instance", {
@@ -133,11 +128,7 @@ describe("CloudService", () => {
 
 	describe("createInstance", () => {
 		it("should create and initialize CloudService instance", async () => {
-			const callbacks = {
-				onUserInfoChanged: vi.fn(),
-				onSettingsChanged: vi.fn(),
-			}
-
+			const callbacks = { userChanged: vi.fn(), settingsChanged: vi.fn() }
 			const cloudService = await CloudService.createInstance(mockContext, callbacks)
 
 			expect(cloudService).toBeInstanceOf(CloudService)
@@ -156,9 +147,11 @@ describe("CloudService", () => {
 
 	describe("authentication methods", () => {
 		let cloudService: CloudService
+		let callbacks: CloudServiceCallbacks
 
 		beforeEach(async () => {
-			cloudService = await CloudService.createInstance(mockContext)
+			callbacks = { userChanged: vi.fn(), settingsChanged: vi.fn() }
+			cloudService = await CloudService.createInstance(mockContext, callbacks)
 		})
 
 		it("should delegate login to AuthService", async () => {
@@ -168,7 +161,7 @@ describe("CloudService", () => {
 
 		it("should delegate logout to AuthService", async () => {
 			await cloudService.logout()
-			expect(mockAuthService.logout).toHaveBeenCalledWith(expect.any(Function))
+			expect(mockAuthService.logout).toHaveBeenCalled()
 		})
 
 		it("should delegate isAuthenticated to AuthService", () => {
@@ -201,7 +194,7 @@ describe("CloudService", () => {
 
 		it("should delegate handleAuthCallback to AuthService", async () => {
 			await cloudService.handleAuthCallback("code", "state")
-			expect(mockAuthService.handleCallback).toHaveBeenCalledWith("code", "state", expect.any(Function))
+			expect(mockAuthService.handleCallback).toHaveBeenCalledWith("code", "state")
 		})
 	})
 
