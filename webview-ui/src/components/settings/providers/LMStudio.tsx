@@ -72,7 +72,7 @@ export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudi
 				})}
 				type="text"
 				inputMode="numeric"
-				placeholder={t("settings:placeholders.numbers.maxTokens")}
+				placeholder="10"
 				style={{
 					borderColor: (() => {
 						const value = apiConfiguration?.lmStudioApiTimeout
