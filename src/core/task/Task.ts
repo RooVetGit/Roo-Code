@@ -528,7 +528,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		)
 		if (error) {
 			this.say(
-				"error",
+				"condense_context_error",
 				error,
 				undefined /* images */,
 				false /* partial */,
@@ -1610,7 +1610,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
 			}
 			if (truncateResult.error) {
-				await this.say("error", truncateResult.error)
+				await this.say("condense_context_error", truncateResult.error)
 			} else if (truncateResult.summary) {
 				const { summary, cost, prevContextTokens, newContextTokens = 0 } = truncateResult
 				const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }

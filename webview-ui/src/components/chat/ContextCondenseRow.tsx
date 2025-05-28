@@ -59,3 +59,14 @@ export const CondensingContextRow = () => {
 		</div>
 	)
 }
+
+export const CondenseContextErrorRow = ({ errorText }: { errorText?: string }) => {
+	const { t } = useTranslation()
+	return (
+		<div className="flex items-center gap-2">
+			<span className="text-sm text-vscode-editorWarning-foreground opacity-80 mb-[0.125rem]"></span>
+			<span className="font-bold text-vscode-foreground">{t("common:contextCondense.errorHeader")}</span>
+			<span className="text-vscode-descriptionForeground text-sm">{errorText}</span>
+		</div>
+	)
+}
