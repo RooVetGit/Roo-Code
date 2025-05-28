@@ -71,7 +71,7 @@ export const Ollama = ({ apiConfiguration, setApiConfigurationField }: OllamaPro
 				})}
 				type="text"
 				inputMode="numeric"
-				placeholder={t("settings:placeholders.numbers.maxTokens")}
+				placeholder="10"
 				style={{
 					borderColor: (() => {
 						const value = apiConfiguration?.ollamaApiTimeout
