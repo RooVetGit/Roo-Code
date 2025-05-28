@@ -26,6 +26,9 @@ jest.mock("@/components/ui", () => ({
 
 describe("ContextManagementSettings", () => {
 	const defaultProps = {
+		autoCondenseContext: true,
+		autoCondenseContextPercent: 100,
+		listApiConfigMeta: [],
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
 		showRooIgnoredFiles: false,

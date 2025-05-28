@@ -1219,6 +1219,7 @@ export class ClineProvider
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			allowedMaxRequests,
+			autoCondenseContext,
 			autoCondenseContextPercent,
 			soundEnabled,
 			ttsEnabled,
@@ -1295,6 +1296,7 @@ export class ClineProvider
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			allowedMaxRequests,
+			autoCondenseContext: autoCondenseContext ?? true,
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
@@ -1409,6 +1411,7 @@ export class ClineProvider
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
 			allowedMaxRequests: stateValues.allowedMaxRequests,
+			autoCondenseContext: stateValues.autoCondenseContext ?? true,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
