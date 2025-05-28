@@ -98,113 +98,6 @@ export const ContextManagementSettings = ({
 			</SectionHeader>
 
 			<Section>
-				{autoCondenseContext && (
-					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
-						<div className="flex items-center gap-4 font-bold">
-							<span className="codicon codicon-fold" />
-							<div>{t("settings:experimental.autoCondenseContextPercent.label")}</div>
-						</div>
-						<div>
-							<div className="flex items-center gap-2">
-								<Slider
-									min={10}
-									max={100}
-									step={1}
-									value={[autoCondenseContextPercent]}
-									onValueChange={([value]) =>
-										setCachedStateField("autoCondenseContextPercent", value)
-									}
-								/>
-								<span className="w-20">{autoCondenseContextPercent}%</span>
-							</div>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:experimental.autoCondenseContextPercent.description")}
-							</div>
-						</div>
-
-						{/* API Configuration Selection */}
-						<div className="flex flex-col gap-3">
-							<div className="flex items-center gap-4 font-bold">
-								<span className="codicon codicon-settings-gear" />
-								<div>{t("settings:experimental.condensingApiConfiguration.label")}</div>
-							</div>
-							<div>
-								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
-									{t("settings:experimental.condensingApiConfiguration.description")}
-								</div>
-								<Select
-									value={condensingApiConfigId || "-"}
-									onValueChange={(value) => {
-										const newConfigId = value === "-" ? "" : value
-										setCachedStateField("condensingApiConfigId", newConfigId)
-										vscode.postMessage({
-											type: "condensingApiConfigId",
-											text: newConfigId,
-										})
-									}}>
-									<SelectTrigger className="w-full">
-										<SelectValue
-											placeholder={t(
-												"settings:experimental.condensingApiConfiguration.useCurrentConfig",
-											)}
-										/>
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="-">
-											{t("settings:experimental.condensingApiConfiguration.useCurrentConfig")}
-										</SelectItem>
-										{(listApiConfigMeta || []).map((config) => (
-											<SelectItem key={config.id} value={config.id}>
-												{config.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
-
-						{/* Custom Prompt Section */}
-						<div className="flex flex-col gap-3">
-							<div className="flex items-center gap-4 font-bold">
-								<span className="codicon codicon-edit" />
-								<div>{t("settings:experimental.customCondensingPrompt.label")}</div>
-							</div>
-							<div>
-								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
-									{t("settings:experimental.customCondensingPrompt.description")}
-								</div>
-								<VSCodeTextArea
-									resize="vertical"
-									value={customCondensingPrompt || SUMMARY_PROMPT}
-									onChange={(e) => {
-										const value = (e.target as HTMLTextAreaElement).value
-										setCachedStateField("customCondensingPrompt", value)
-										vscode.postMessage({
-											type: "updateCondensingPrompt",
-											text: value,
-										})
-									}}
-									rows={8}
-									className="w-full font-mono text-sm"
-								/>
-								<div className="mt-2">
-									<Button
-										variant="secondary"
-										size="sm"
-										onClick={() => {
-											setCachedStateField("customCondensingPrompt", SUMMARY_PROMPT)
-											vscode.postMessage({
-												type: "updateCondensingPrompt",
-												text: SUMMARY_PROMPT,
-											})
-										}}>
-										{t("settings:experimental.customCondensingPrompt.reset")}
-									</Button>
-								</div>
-							</div>
-						</div>
-					</div>
-				)}
 				<div>
 					<span className="block font-medium mb-1">{t("settings:contextManagement.openTabs.label")}</span>
 					<div className="flex items-center gap-2">
@@ -292,6 +185,124 @@ export const ContextManagementSettings = ({
 						{t("settings:contextManagement.maxReadFile.description")}
 					</div>
 				</div>
+			</Section>
+
+			<Section>
+				<VSCodeCheckbox
+					checked={autoCondenseContext}
+					onChange={(e: any) => setCachedStateField("autoCondenseContext", e.target.checked)}
+					data-testid="auto-condense-context-checkbox">
+					<span className="font-medium">{t("settings:contextManagement.autoCondenseContext.name")}</span>
+				</VSCodeCheckbox>
+				{autoCondenseContext && (
+					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+						<div className="flex items-center gap-4 font-bold">
+							<span className="codicon codicon-fold" />
+							<div>{t("settings:contextManagement.autoCondenseContextPercent.label")}</div>
+						</div>
+						<div>
+							<div className="flex items-center gap-2">
+								<Slider
+									min={10}
+									max={100}
+									step={1}
+									value={[autoCondenseContextPercent]}
+									onValueChange={([value]) =>
+										setCachedStateField("autoCondenseContextPercent", value)
+									}
+								/>
+								<span className="w-20">{autoCondenseContextPercent}%</span>
+							</div>
+							<div className="text-vscode-descriptionForeground text-sm mt-1">
+								{t("settings:contextManagement.autoCondenseContextPercent.description")}
+							</div>
+						</div>
+
+						{/* API Configuration Selection */}
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<span className="codicon codicon-settings-gear" />
+								<div>{t("settings:contextManagement.condensingApiConfiguration.label")}</div>
+							</div>
+							<div>
+								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
+									{t("settings:contextManagement.condensingApiConfiguration.description")}
+								</div>
+								<Select
+									value={condensingApiConfigId || "-"}
+									onValueChange={(value) => {
+										const newConfigId = value === "-" ? "" : value
+										setCachedStateField("condensingApiConfigId", newConfigId)
+										vscode.postMessage({
+											type: "condensingApiConfigId",
+											text: newConfigId,
+										})
+									}}>
+									<SelectTrigger className="w-full">
+										<SelectValue
+											placeholder={t(
+												"settings:contextManagement.condensingApiConfiguration.useCurrentConfig",
+											)}
+										/>
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="-">
+											{t(
+												"settings:contextManagement.condensingApiConfiguration.useCurrentConfig",
+											)}
+										</SelectItem>
+										{(listApiConfigMeta || []).map((config) => (
+											<SelectItem key={config.id} value={config.id}>
+												{config.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						</div>
+
+						{/* Custom Prompt Section */}
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<span className="codicon codicon-edit" />
+								<div>{t("settings:contextManagement.customCondensingPrompt.label")}</div>
+							</div>
+							<div>
+								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
+									{t("settings:contextManagement.customCondensingPrompt.description")}
+								</div>
+								<VSCodeTextArea
+									resize="vertical"
+									value={customCondensingPrompt || SUMMARY_PROMPT}
+									onChange={(e) => {
+										const value = (e.target as HTMLTextAreaElement).value
+										setCachedStateField("customCondensingPrompt", value)
+										vscode.postMessage({
+											type: "updateCondensingPrompt",
+											text: value,
+										})
+									}}
+									rows={8}
+									className="w-full font-mono text-sm"
+								/>
+								<div className="mt-2">
+									<Button
+										variant="secondary"
+										size="sm"
+										onClick={() => {
+											setCachedStateField("customCondensingPrompt", SUMMARY_PROMPT)
+											vscode.postMessage({
+												type: "updateCondensingPrompt",
+												text: SUMMARY_PROMPT,
+											})
+										}}>
+										{t("settings:contextManagement.customCondensingPrompt.reset")}
+									</Button>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 			</Section>
 		</div>
 	)
