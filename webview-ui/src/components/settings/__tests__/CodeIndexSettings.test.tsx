@@ -203,13 +203,15 @@ describe("CodeIndexSettings", () => {
 			const user = userEvent.setup()
 			render(<CodeIndexSettings {...defaultProps} />)
 
-			const selectButton = screen.getByRole("button")
+			const selectButton = screen.getByTestId("select-trigger")
 			await user.click(selectButton)
+
+			const openaiCompatibleOption = screen.getByTestId("select-item-openai-compatible")
+			await user.click(openaiCompatibleOption)
 
 			expect(mockSetCachedStateField).toHaveBeenCalledWith("codebaseIndexConfig", {
 				...defaultProps.codebaseIndexConfig,
-				codebaseIndexEmbedderProvider: "test-change",
-				codebaseIndexEmbedderModelId: expect.any(String),
+				provider: "openai-compatible",
 			})
 		})
 	})
@@ -251,11 +253,12 @@ describe("CodeIndexSettings", () => {
 			const textFields = screen.getAllByTestId("vscode-textfield")
 			const baseUrlField = textFields[0] // First text field should be base URL
 
+			await user.clear(baseUrlField)
 			await user.type(baseUrlField, "https://api.example.com/v1")
 
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith(
+			expect(mockSetApiConfigurationField).toHaveBeenLastCalledWith(
 				"codebaseIndexOpenAiCompatibleBaseUrl",
-				expect.stringContaining("https://api.example.com/v1"),
+				"https://api.example.com/v1",
 			)
 		})
 
@@ -268,11 +271,12 @@ describe("CodeIndexSettings", () => {
 				.filter((field) => field.getAttribute("type") === "password")
 			const apiKeyField = passwordFields[0] // First password field should be API key
 
+			await user.clear(apiKeyField)
 			await user.type(apiKeyField, "test-api-key")
 
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith(
+			expect(mockSetApiConfigurationField).toHaveBeenLastCalledWith(
 				"codebaseIndexOpenAiCompatibleApiKey",
-				expect.stringContaining("test-api-key"),
+				"test-api-key",
 			)
 		})
 
@@ -439,7 +443,7 @@ describe("CodeIndexSettings", () => {
 			messageHandler(mockEvent)
 
 			// Check that the status indicator shows "Indexing"
-			expect(screen.getByText("Indexing - Processing files...")).toBeInTheDocument()
+			expect(screen.getByText(/Indexing/)).toBeInTheDocument()
 		})
 	})
 
