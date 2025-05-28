@@ -35,6 +35,8 @@ jest.mock("@/i18n/TranslationContext", () => ({
 }))
 
 // Mock vscode utilities - this is necessary since we're not in a VSCode environment
+import { vscode } from "@/utils/vscode"
+
 jest.mock("@/utils/vscode", () => ({
 	vscode: {
 		postMessage: jest.fn(),
@@ -175,9 +177,21 @@ describe("ContextManagementSettings", () => {
 		render(<ContextManagementSettings {...propsWithAutoCondense} />)
 
 		// Should render the auto condense section
-		expect(screen.getByText("settings:experimental.autoCondenseContextPercent.label")).toBeInTheDocument()
-		expect(screen.getByText("settings:experimental.condensingApiConfiguration.label")).toBeInTheDocument()
-		expect(screen.getByText("settings:experimental.customCondensingPrompt.label")).toBeInTheDocument()
+		// Should render the auto condense section
+		const autoCondenseCheckbox = screen.getByTestId("auto-condense-context-checkbox")
+		expect(autoCondenseCheckbox).toBeInTheDocument()
+
+		// Should render the slider with correct value
+		const slider = screen.getByTestId("auto-condense-percent-slider")
+		expect(slider).toBeInTheDocument()
+
+		// Should render the API config select
+		const apiSelect = screen.getByRole("combobox")
+		expect(apiSelect).toBeInTheDocument()
+
+		// Should render the custom prompt textarea
+		const textarea = screen.getByRole("textbox")
+		expect(textarea).toBeInTheDocument()
 	})
 
 	describe("Auto Condense Context functionality", () => {
@@ -199,12 +213,11 @@ describe("ContextManagementSettings", () => {
 			render(<ContextManagementSettings {...props} />)
 
 			// Find the auto condense percent slider
-			const sliders = screen.getAllByRole("slider")
-			const autoCondenseSlider = sliders[0] // First slider should be auto condense
+			const slider = screen.getByTestId("auto-condense-percent-slider")
 
 			// Test slider interaction
-			autoCondenseSlider.focus()
-			fireEvent.keyDown(autoCondenseSlider, { key: "ArrowRight" })
+			slider.focus()
+			fireEvent.keyDown(slider, { key: "ArrowRight" })
 
 			expect(mockSetCachedStateField).toHaveBeenCalledWith("autoCondenseContextPercent", 76)
 		})
@@ -217,16 +230,15 @@ describe("ContextManagementSettings", () => {
 		it("updates condensing API configuration", () => {
 			const mockSetCachedStateField = jest.fn()
 			const mockPostMessage = jest.fn()
-			require("@/utils/vscode").vscode.postMessage = mockPostMessage
+			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
 			render(<ContextManagementSettings {...props} />)
 
-			// Find and click the select trigger
-			const selectTrigger = screen.getByRole("combobox")
-			fireEvent.click(selectTrigger)
+			const apiSelect = screen.getByRole("combobox")
+			fireEvent.click(apiSelect)
 
-			// Select a different config
 			const configOption = screen.getByText("Config 1")
 			fireEvent.click(configOption)
 
@@ -240,17 +252,18 @@ describe("ContextManagementSettings", () => {
 		it("handles selecting default config option", () => {
 			const mockSetCachedStateField = jest.fn()
 			const mockPostMessage = jest.fn()
-			require("@/utils/vscode").vscode.postMessage = mockPostMessage
+			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
 			render(<ContextManagementSettings {...props} />)
 
-			// Find and click the select trigger
-			const selectTrigger = screen.getByRole("combobox")
-			fireEvent.click(selectTrigger)
-
-			// Select the default option (use current config)
-			const defaultOption = screen.getByText("settings:experimental.condensingApiConfiguration.useCurrentConfig")
+			// Test selecting default config
+			const apiSelect = screen.getByRole("combobox")
+			fireEvent.click(apiSelect)
+			const defaultOption = screen.getByText(
+				"settings:contextManagement.condensingApiConfiguration.useCurrentConfig",
+			)
 			fireEvent.click(defaultOption)
 
 			expect(mockSetCachedStateField).toHaveBeenCalledWith("condensingApiConfigId", "")
@@ -263,7 +276,8 @@ describe("ContextManagementSettings", () => {
 		it("updates custom condensing prompt", () => {
 			const mockSetCachedStateField = jest.fn()
 			const mockPostMessage = jest.fn()
-			require("@/utils/vscode").vscode.postMessage = mockPostMessage
+			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
 			render(<ContextManagementSettings {...props} />)
@@ -282,12 +296,15 @@ describe("ContextManagementSettings", () => {
 		it("resets custom condensing prompt to default", () => {
 			const mockSetCachedStateField = jest.fn()
 			const mockPostMessage = jest.fn()
-			require("@/utils/vscode").vscode.postMessage = mockPostMessage
+			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
 			render(<ContextManagementSettings {...props} />)
 
-			const resetButton = screen.getByText("settings:experimental.customCondensingPrompt.reset")
+			const resetButton = screen.getByRole("button", {
+				name: "settings:contextManagement.customCondensingPrompt.reset",
+			})
 			fireEvent.click(resetButton)
 
 			// Should reset to the default SUMMARY_PROMPT

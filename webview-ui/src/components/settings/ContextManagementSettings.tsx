@@ -210,6 +210,7 @@ export const ContextManagementSettings = ({
 									onValueChange={([value]) =>
 										setCachedStateField("autoCondenseContextPercent", value)
 									}
+									data-testid="auto-condense-percent-slider"
 								/>
 								<span className="w-20">{autoCondenseContextPercent}%</span>
 							</div>
@@ -237,7 +238,8 @@ export const ContextManagementSettings = ({
 											type: "condensingApiConfigId",
 											text: newConfigId,
 										})
-									}}>
+									}}
+									data-testid="condensing-api-config-select">
 									<SelectTrigger className="w-full">
 										<SelectValue
 											placeholder={t(
@@ -274,6 +276,7 @@ export const ContextManagementSettings = ({
 								<VSCodeTextArea
 									resize="vertical"
 									value={customCondensingPrompt || SUMMARY_PROMPT}
+									data-testid="custom-condensing-prompt-textarea"
 									onChange={(e) => {
 										const value = (e.target as HTMLTextAreaElement).value
 										setCachedStateField("customCondensingPrompt", value)
@@ -289,6 +292,7 @@ export const ContextManagementSettings = ({
 									<Button
 										variant="secondary"
 										size="sm"
+										data-testid="custom-condensing-prompt-reset"
 										onClick={() => {
 											setCachedStateField("customCondensingPrompt", SUMMARY_PROMPT)
 											vscode.postMessage({
