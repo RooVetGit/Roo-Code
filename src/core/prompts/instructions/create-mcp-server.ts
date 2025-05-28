@@ -194,6 +194,7 @@ server.resource(
         }\`);
       }
       throw error;
+    }
   }
 );
 
@@ -233,6 +234,7 @@ server.resource(
         }\`);
       }
       throw error;
+    }
   }
 );
 
