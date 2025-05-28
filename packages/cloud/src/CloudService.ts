@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 
-import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList, OrganizationSettings } from "@roo-code/types"
+import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { CloudServiceCallbacks } from "./types"
@@ -84,22 +84,12 @@ export class CloudService {
 		return this.authService!.getState()
 	}
 
-	public getSessionToken(): string | undefined {
-		this.ensureInitialized()
-		return this.authService!.getSessionToken()
-	}
-
 	public async handleAuthCallback(code: string | null, state: string | null): Promise<void> {
 		this.ensureInitialized()
 		return this.authService!.handleCallback(code, state)
 	}
 
 	// SettingsService
-
-	public getOrganizationSettings(): OrganizationSettings | undefined {
-		this.ensureInitialized()
-		return this.settingsService!.getSettings()
-	}
 
 	public getAllowList(): OrganizationAllowList {
 		this.ensureInitialized()

@@ -187,11 +187,6 @@ describe("CloudService", () => {
 			expect(result).toBe("logged-out")
 		})
 
-		it("should delegate getSessionToken to AuthService", () => {
-			cloudService.getSessionToken()
-			expect(mockAuthService.getSessionToken).toHaveBeenCalled()
-		})
-
 		it("should delegate handleAuthCallback to AuthService", async () => {
 			await cloudService.handleAuthCallback("code", "state")
 			expect(mockAuthService.handleCallback).toHaveBeenCalledWith("code", "state")
@@ -203,11 +198,6 @@ describe("CloudService", () => {
 
 		beforeEach(async () => {
 			cloudService = await CloudService.createInstance(mockContext)
-		})
-
-		it("should delegate getOrganizationSettings to SettingsService", () => {
-			cloudService.getOrganizationSettings()
-			expect(mockSettingsService.getSettings).toHaveBeenCalled()
 		})
 
 		it("should delegate getAllowList to SettingsService", () => {
