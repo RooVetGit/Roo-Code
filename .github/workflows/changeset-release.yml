@@ -10,6 +10,7 @@ env:
   REPO_PATH: ${{ github.repository }}
   GIT_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
   NODE_VERSION: 20.18.1
+  PNPM_VERSION: 10.8.1
 
 jobs:
   # Job 1: Create version bump PR when changesets are merged to main
@@ -30,15 +31,18 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ env.GIT_REF }}
-
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'pnpm'
             
       - name: Install Dependencies
-        run: npm run install:all
+        run: pnpm install
 
       # Check if there are any new changesets to process
       - name: Check for changesets
@@ -56,9 +60,9 @@ jobs:
         with:
           commit: "changeset version bump"
           title: "Changeset version bump"
-          version: npm run version-packages # This performs the changeset version bump
+          version: pnpm changeset:version # This performs the changeset version bump
         env:
-          GITHUB_TOKEN: ${{ secrets.CROSS_REPO_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Job 2: Process version bump PR created by R00-B0T
   changeset-pr-edit-approve:
@@ -92,28 +96,9 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.CROSS_REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
           ref: ${{ steps.checkout-ref.outputs.git_ref }}
-
-      # Get current and previous versions to edit changelog entry
-      - name: Get version
-        id: get_version
-        run: |
-          VERSION=$(git show HEAD:package.json | jq -r '.version')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          PREV_VERSION=$(git show origin/main:package.json | jq -r '.version')
-          echo "prev_version=$PREV_VERSION" >> $GITHUB_OUTPUT
-          echo "version=$VERSION"
-          echo "prev_version=$PREV_VERSION"
-
-      # Update CHANGELOG.md with proper format
-      - name: Update Changelog Format
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'changelog-ready') }}
-        env:
-          VERSION: ${{ steps.get_version.outputs.version }}
-          PREV_VERSION: ${{ steps.get_version.outputs.prev_version }}
-        run: python .github/scripts/overwrite_changeset_changelog.py
 
       # Commit and push changelog updates
       - name: Push Changelog updates
@@ -156,4 +141,4 @@ jobs:
         if: false # Needs enablePullRequestAutoMerge in repo settings to work contains(github.event.pull_request.labels.*.name, 'changelog-ready')
         run: gh pr merge --auto --merge ${{ github.event.pull_request.number }}
         env:
-          GH_TOKEN: ${{ secrets.CROSS_REPO_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ import React from "react"
 import { render, screen } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { ProviderSettings } from "@roo/shared/api"
+import type { ProviderSettings } from "@roo-code/types"
 
 import TaskHeader, { TaskHeaderProps } from "../TaskHeader"
 
@@ -40,6 +40,8 @@ describe("TaskHeader", () => {
 		doesModelSupportPromptCache: true,
 		totalCost: 0.05,
 		contextTokens: 200,
+		buttonsDisabled: false,
+		handleCondenseContext: jest.fn(),
 		onClose: jest.fn(),
 	}
 

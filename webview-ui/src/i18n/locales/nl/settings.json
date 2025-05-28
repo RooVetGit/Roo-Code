@@ -32,6 +32,30 @@
 		"language": "Taal",
 		"about": "Over Roo Code"
 	},
+	"codeIndex": {
+		"title": "Codebase indexering",
+		"enableLabel": "Codebase indexering inschakelen",
+		"enableDescription": "<0>Codebase indexering</0> is een experimentele functie die een semantische zoekindex van je project creëert met behulp van AI-embeddings. Dit stelt Roo Code in staat om grote codebases beter te begrijpen en te navigeren door relevante code te vinden op basis van betekenis in plaats van alleen trefwoorden.",
+		"providerLabel": "Embeddings provider",
+		"selectProviderPlaceholder": "Selecteer provider",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiKeyLabel": "OpenAI-sleutel:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Selecteer model",
+		"ollamaUrlLabel": "Ollama URL:",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant-sleutel:",
+		"startIndexingButton": "Indexering starten",
+		"clearIndexDataButton": "Indexgegevens wissen",
+		"unsavedSettingsMessage": "Sla je instellingen op voordat je het indexeringsproces start.",
+		"clearDataDialog": {
+			"title": "Weet je het zeker?",
+			"description": "Deze actie kan niet ongedaan worden gemaakt. Dit zal je codebase-indexgegevens permanent verwijderen.",
+			"cancelButton": "Annuleren",
+			"confirmButton": "Gegevens wissen"
+		}
+	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
 		"readOnly": {
@@ -79,6 +103,11 @@
 			"allowedCommandsDescription": "Commando-prefixen die automatisch kunnen worden uitgevoerd als 'Altijd goedkeuren voor uitvoeren' is ingeschakeld. Voeg * toe om alle commando's toe te staan (gebruik met voorzichtigheid).",
 			"commandPlaceholder": "Voer commando-prefix in (bijv. 'git ')",
 			"addButton": "Toevoegen"
+		},
+		"apiRequestLimit": {
+			"title": "Maximale verzoeken",
+			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
+			"unlimited": "Onbeperkt"
 		}
 	},
 	"providers": {
@@ -109,6 +138,7 @@
 		"glamaApiKey": "Glama API-sleutel",
 		"getGlamaApiKey": "Glama API-sleutel ophalen",
 		"useCustomBaseUrl": "Aangepaste basis-URL gebruiken",
+		"useReasoning": "Redenering inschakelen",
 		"useHostHeader": "Aangepaste Host-header gebruiken",
 		"useLegacyFormat": "Verouderd OpenAI API-formaat gebruiken",
 		"customHeaders": "Aangepaste headers",
@@ -118,7 +148,10 @@
 		"requestyApiKey": "Requesty API-sleutel",
 		"refreshModels": {
 			"label": "Modellen verversen",
-			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien."
+			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien.",
+			"loading": "Modellenlijst wordt vernieuwd...",
+			"success": "Modellenlijst succesvol vernieuwd!",
+			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw."
 		},
 		"getRequestyApiKey": "Requesty API-sleutel ophalen",
 		"openRouterTransformsText": "Comprimeer prompts en berichtreeksen tot de contextgrootte (<a>OpenRouter Transforms</a>)",
@@ -185,6 +218,8 @@
 		},
 		"unboundApiKey": "Unbound API-sleutel",
 		"getUnboundApiKey": "Unbound API-sleutel ophalen",
+		"unboundRefreshModelsSuccess": "Modellenlijst bijgewerkt! U kunt nu kiezen uit de nieuwste modellen.",
+		"unboundInvalidApiKey": "Ongeldige API-sleutel. Controleer uw API-sleutel en probeer het opnieuw.",
 		"humanRelay": {
 			"description": "Geen API-sleutel vereist, maar de gebruiker moet helpen met kopiëren en plakken naar de webchat-AI.",
 			"instructions": "Tijdens gebruik verschijnt een dialoogvenster en wordt het huidige bericht automatisch naar het klembord gekopieerd. Je moet deze plakken in webversies van AI (zoals ChatGPT of Claude), vervolgens het antwoord van de AI terugkopiëren naar het dialoogvenster en op bevestigen klikken."
@@ -395,10 +430,25 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Aangepaste contextcondensatieprompt",
+			"description": "Aangepaste systeemprompt voor contextcondensatie. Laat leeg om de standaardprompt te gebruiken.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "Drempelwaarde om intelligente contextcompressie te activeren",
+			"description": "Wanneer het contextvenster deze drempelwaarde bereikt, zal Roo het automatisch comprimeren."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Contextvenster intelligent comprimeren",
-			"description": "Gebruikt een LLM-aanroep om eerdere gesprekken samen te vatten wanneer het contextvenster van de taak bijna vol is, in plaats van oude berichten te verwijderen. Let op: de kosten van het samenvatten zijn momenteel niet inbegrepen in de API-kosten die in de interface worden getoond."
+			"name": "Automatisch intelligente contextcompressie activeren",
+			"description": "Intelligente contextcompressie gebruikt een LLM-aanroep om eerdere gesprekken samen te vatten wanneer het contextvenster van de taak een vooraf ingestelde drempelwaarde bereikt, in plaats van oude berichten te verwijderen wanneer de context vol is."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Experimentele unified diff-strategie gebruiken",
@@ -461,7 +511,7 @@
 		"useCustomModel": "Aangepast gebruiken: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Heb je vragen of feedback? Open gerust een issue op <githubLink>github.com/RooVetGit/Roo-Code</githubLink> of sluit je aan bij <redditLink>reddit.com/r/RooCode</redditLink> of <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Heb je vragen of feedback? Open gerust een issue op <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> of sluit je aan bij <redditLink>reddit.com/r/RooCode</redditLink> of <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Anonieme fout- en gebruiksrapportage toestaan",
 			"description": "Help Roo Code te verbeteren door anonieme gebruiksgegevens en foutmeldingen te verzenden. Er worden nooit code, prompts of persoonlijke gegevens verzonden. Zie ons privacybeleid voor meer informatie."

@@ -3,7 +3,7 @@ import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
 import { ChevronsUpDown, Check, X } from "lucide-react"
 
-import { ProviderSettings, ModelInfo } from "@roo/schemas"
+import type { ProviderSettings, ModelInfo } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
@@ -21,7 +21,6 @@ import {
 	Button,
 } from "@src/components/ui"
 
-import { ThinkingBudget } from "./ThinkingBudget"
 import { ModelInfoView } from "./ModelInfoView"
 
 type ModelIdKey = keyof Pick<
@@ -179,11 +178,6 @@ export const ModelPicker = ({
 					setIsDescriptionExpanded={setIsDescriptionExpanded}
 				/>
 			)}
-			<ThinkingBudget
-				apiConfiguration={apiConfiguration}
-				setApiConfigurationField={setApiConfigurationField}
-				modelInfo={selectedModelInfo}
-			/>
 			<div className="text-sm text-vscode-descriptionForeground">
 				<Trans
 					i18nKey="settings:modelPicker.automaticFetch"

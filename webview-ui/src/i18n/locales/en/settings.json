@@ -32,6 +32,30 @@
 		"language": "Language",
 		"about": "About Roo Code"
 	},
+	"codeIndex": {
+		"title": "Codebase Indexing",
+		"enableLabel": "Enable Codebase Indexing",
+		"enableDescription": "<0>Codebase Indexing</0> is an experimental feature that creates a semantic search index of your project using AI embeddings. This enables Roo Code to better understand and navigate large codebases by finding relevant code based on meaning rather than just keywords.",
+		"providerLabel": "Embeddings Provider",
+		"selectProviderPlaceholder": "Select provider",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiKeyLabel": "OpenAI Key:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Select model",
+		"ollamaUrlLabel": "Ollama URL:",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant Key:",
+		"startIndexingButton": "Start Indexing",
+		"clearIndexDataButton": "Clear Index Data",
+		"unsavedSettingsMessage": "Please save your settings before starting the indexing process.",
+		"clearDataDialog": {
+			"title": "Are you sure?",
+			"description": "This action cannot be undone. This will permanently delete your codebase index data.",
+			"cancelButton": "Cancel",
+			"confirmButton": "Clear Data"
+		}
+	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
 		"readOnly": {
@@ -79,6 +103,11 @@
 			"allowedCommandsDescription": "Command prefixes that can be auto-executed when \"Always approve execute operations\" is enabled. Add * to allow all commands (use with caution).",
 			"commandPlaceholder": "Enter command prefix (e.g., 'git ')",
 			"addButton": "Add"
+		},
+		"apiRequestLimit": {
+			"title": "Max Requests",
+			"description": "Automatically make this many API requests before asking for approval to continue with the task.",
+			"unlimited": "Unlimited"
 		}
 	},
 	"providers": {
@@ -109,6 +138,7 @@
 		"glamaApiKey": "Glama API Key",
 		"getGlamaApiKey": "Get Glama API Key",
 		"useCustomBaseUrl": "Use custom base URL",
+		"useReasoning": "Enable reasoning",
 		"useHostHeader": "Use custom Host header",
 		"useLegacyFormat": "Use legacy OpenAI API format",
 		"customHeaders": "Custom Headers",
@@ -118,7 +148,10 @@
 		"requestyApiKey": "Requesty API Key",
 		"refreshModels": {
 			"label": "Refresh Models",
-			"hint": "Please reopen the settings to see the latest models."
+			"hint": "Please reopen the settings to see the latest models.",
+			"loading": "Refreshing models list...",
+			"success": "Models list refreshed successfully!",
+			"error": "Failed to refresh models list. Please try again."
 		},
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
@@ -185,6 +218,8 @@
 		},
 		"unboundApiKey": "Unbound API Key",
 		"getUnboundApiKey": "Get Unbound API Key",
+		"unboundRefreshModelsSuccess": "Models list updated! You can now select from the latest models.",
+		"unboundInvalidApiKey": "Invalid API key. Please check your API key and try again.",
 		"humanRelay": {
 			"description": "No API key is required, but the user needs to help copy and paste the information to the web chat AI.",
 			"instructions": "During use, a dialog box will pop up and the current message will be copied to the clipboard automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then copy the AI's reply back to the dialog box and click the confirm button."
@@ -395,10 +430,25 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
+		"autoCondenseContextPercent": {
+			"label": "Threshold to trigger intelligent context condensing",
+			"description": "When the context window reaches this threshold, Roo will automatically condense it."
+		},
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Custom Context Condensing Prompt",
+			"description": "Customize the system prompt used for context condensing. Leave empty to use the default prompt.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Intelligently condense the context window",
-			"description": "Uses an LLM call to summarize the past conversation when the task's context window is almost full, rather than dropping old messages. Disclaimer: the cost of summarizing is not currently included in the API costs shown in the UI."
+			"name": "Automatically trigger intelligent context condensing",
+			"description": "Intelligent context condensing uses an LLM call to summarize the past conversation when the task's context window reaches a preset threshold, rather than dropping old messages when the context fills."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Use experimental unified diff strategy",
@@ -461,7 +511,7 @@
 		"useCustomModel": "Use custom: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "If you have any questions or feedback, feel free to open an issue at <githubLink>github.com/RooVetGit/Roo-Code</githubLink> or join <redditLink>reddit.com/r/RooCode</redditLink> or <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "If you have any questions or feedback, feel free to open an issue at <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> or join <redditLink>reddit.com/r/RooCode</redditLink> or <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Allow anonymous error and usage reporting",
 			"description": "Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent. See our privacy policy for more details."

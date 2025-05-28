@@ -4,15 +4,18 @@ import { useTranslation, Trans } from "react-i18next"
 import deepEqual from "fast-deep-equal"
 import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
-import { ClineApiReqInfo, ClineAskUseMcpServer, ClineMessage, ClineSayTool } from "@roo/shared/ExtensionMessage"
-import { COMMAND_OUTPUT_STRING } from "@roo/shared/combineCommandSequences"
-import { safeJsonParse } from "@roo/shared/safeJsonParse"
+import type { ClineMessage } from "@roo-code/types"
+
+import { ClineApiReqInfo, ClineAskUseMcpServer, ClineSayTool } from "@roo/ExtensionMessage"
+import { COMMAND_OUTPUT_STRING } from "@roo/combineCommandSequences"
+import { safeJsonParse } from "@roo/safeJsonParse"
 
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
 import { vscode } from "@src/utils/vscode"
 import { removeLeadingNonAlphanumeric } from "@src/utils/removeLeadingNonAlphanumeric"
+import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import { Button } from "@src/components/ui"
 
 import { ToolUseBlock, ToolUseBlockHeader } from "../common/ToolUseBlock"
@@ -31,6 +34,9 @@ import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
+import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
+import { CondensingContextRow, ContextCondenseRow } from "./ContextCondenseRow"
+import CodebaseSearchResultsDisplay from "./CodebaseSearchResultsDisplay"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -43,6 +49,7 @@ interface ChatRowProps {
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
 
 const ChatRow = memo(
@@ -291,7 +298,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content ?? tool.diff}
-							language={tool.tool === "appliedDiff" ? "diff" : undefined}
+							language="diff"
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
@@ -339,6 +346,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.diff}
+							language="diff"
 							progressStatus={message.progressStatus}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
@@ -346,6 +354,28 @@ export const ChatRowContent = ({
 						/>
 					</>
 				)
+			case "codebaseSearch": {
+				return (
+					<div style={headerStyle}>
+						{toolIcon("search")}
+						<span style={{ fontWeight: "bold" }}>
+							{tool.path ? (
+								<Trans
+									i18nKey="chat:codebaseSearch.wantsToSearchWithPath"
+									components={{ code: <code></code> }}
+									values={{ query: tool.query, path: tool.path }}
+								/>
+							) : (
+								<Trans
+									i18nKey="chat:codebaseSearch.wantsToSearch"
+									components={{ code: <code></code> }}
+									values={{ query: tool.query }}
+								/>
+							)}
+						</span>
+					</div>
+				)
+			}
 			case "newFileCreated":
 				return (
 					<>
@@ -356,6 +386,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content}
+							language={getLanguageFromPath(tool.path || "") || "log"}
 							isLoading={message.partial}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
@@ -401,6 +432,7 @@ export const ChatRowContent = ({
 						</div>
 						<CodeAccordian
 							code={tool.content}
+							language="markdown"
 							isLoading={message.partial}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
@@ -441,7 +473,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content}
-							language="shell-session"
+							language="shellsession"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -461,6 +493,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path}
 							code={tool.content}
+							language="markdown"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -490,7 +523,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
 							code={tool.content}
-							language="log"
+							language="shellsession"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -710,7 +743,7 @@ export const ChatRowContent = ({
 											backgroundColor: "var(--vscode-editor-background)",
 											borderTop: "none",
 										}}>
-										<CodeBlock source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`} />
+										<CodeBlock source={message.text || ""} language="xml" />
 									</div>
 								)}
 							</div>
@@ -926,6 +959,41 @@ export const ChatRowContent = ({
 							checkpoint={message.checkpoint}
 						/>
 					)
+				case "condense_context":
+					if (message.partial) {
+						return <CondensingContextRow />
+					}
+					return message.contextCondense ? <ContextCondenseRow {...message.contextCondense} /> : null
+				case "codebase_search_result":
+					let parsed: {
+						content: {
+							query: string
+							results: Array<{
+								filePath: string
+								score: number
+								startLine: number
+								endLine: number
+								codeChunk: string
+							}>
+						}
+					} | null = null
+
+					try {
+						if (message.text) {
+							parsed = JSON.parse(message.text)
+						}
+					} catch (error) {
+						console.error("Failed to parse codebaseSearch content:", error)
+					}
+
+					if (parsed && !parsed?.content) {
+						console.error("Invalid codebaseSearch content structure:", parsed.content)
+						return <div>Error displaying search results.</div>
+					}
+
+					const { query = "", results = [] } = parsed?.content || {}
+
+					return <CodebaseSearchResultsDisplay query={query} results={results} />
 				default:
 					return (
 						<>
@@ -1083,6 +1151,9 @@ export const ChatRowContent = ({
 							/>
 						</>
 					)
+				case "auto_approval_max_req_reached": {
+					return <AutoApprovedRequestLimitWarning message={message} />
+				}
 				default:
 					return null
 			}

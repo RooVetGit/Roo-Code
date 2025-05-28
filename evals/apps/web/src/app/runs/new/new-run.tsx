@@ -7,7 +7,7 @@ import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
-import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck } from "lucide-react"
+import { X, Rocket, Check, ChevronsUpDown, SlidersHorizontal, Book, CircleCheck } from "lucide-react"
 
 import { globalSettingsSchema, providerSettingsSchema, rooCodeDefaults } from "@evals/types"
 
@@ -45,6 +45,10 @@ import {
 	PopoverTrigger,
 	ScrollArea,
 	Slider,
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogFooter,
 } from "@/components/ui"
 
 import { SettingsDiff } from "./settings-diff"
@@ -83,6 +87,10 @@ export function NewRun() {
 
 	const [model, suite, settings] = watch(["model", "suite", "settings", "concurrency"])
 
+	const [systemPromptDialogOpen, setSystemPromptDialogOpen] = useState(false)
+	const [systemPrompt, setSystemPrompt] = useState("")
+	const systemPromptRef = useRef<HTMLTextAreaElement>(null)
+
 	const onSubmit = useCallback(
 		async (values: FormValues) => {
 			try {
@@ -97,13 +105,13 @@ export function NewRun() {
 					values.settings = { ...(values.settings || {}), openRouterModelId }
 				}
 
-				const { id } = await createRun(values)
+				const { id } = await createRun({ ...values, systemPrompt })
 				router.push(`/runs/${id}`)
 			} catch (e) {
 				toast.error(e instanceof Error ? e.message : "An unknown error occurred.")
 			}
 		},
-		[mode, model, models.data, router],
+		[mode, model, models.data, router, systemPrompt],
 	)
 
 	const onFilterModels = useCallback(
@@ -287,7 +295,7 @@ export function NewRun() {
 								type="button"
 								variant="secondary"
 								onClick={() => document.getElementById("json-upload")?.click()}>
-								<HardDriveUpload />
+								<SlidersHorizontal />
 								Import Settings
 							</Button>
 							<input
@@ -313,6 +321,25 @@ export function NewRun() {
 							)}
 							<FormMessage />
 						</FormItem>
+
+						<Button type="button" variant="secondary" onClick={() => setSystemPromptDialogOpen(true)}>
+							<Book />
+							Override System Prompt
+						</Button>
+
+						<Dialog open={systemPromptDialogOpen} onOpenChange={setSystemPromptDialogOpen}>
+							<DialogContent>
+								<DialogTitle>Override System Prompt</DialogTitle>
+								<Textarea
+									ref={systemPromptRef}
+									value={systemPrompt}
+									onChange={(e) => setSystemPrompt(e.target.value)}
+								/>
+								<DialogFooter>
+									<Button onClick={() => setSystemPromptDialogOpen(false)}>Done</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
 					</div>
 
 					<FormField
@@ -388,6 +415,7 @@ export function NewRun() {
 					</div>
 				</form>
 			</FormProvider>
+
 			<Button
 				variant="default"
 				className="absolute top-4 right-12 size-12 rounded-full"

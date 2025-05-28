@@ -32,6 +32,30 @@
 		"language": "Idioma",
 		"about": "Acerca de Roo Code"
 	},
+	"codeIndex": {
+		"title": "Indexación de código",
+		"enableLabel": "Habilitar indexación de código",
+		"enableDescription": "<0>La indexación de código</0> es una función experimental que crea un índice de búsqueda semántica de tu proyecto usando embeddings de IA. Esto permite a Roo Code entender mejor y navegar grandes bases de código encontrando código relevante basado en significado en lugar de solo palabras clave.",
+		"providerLabel": "Proveedor de embeddings",
+		"selectProviderPlaceholder": "Seleccionar proveedor",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiKeyLabel": "Clave de OpenAI:",
+		"modelLabel": "Modelo",
+		"selectModelPlaceholder": "Seleccionar modelo",
+		"ollamaUrlLabel": "URL de Ollama:",
+		"qdrantUrlLabel": "URL de Qdrant",
+		"qdrantKeyLabel": "Clave de Qdrant:",
+		"startIndexingButton": "Iniciar indexación",
+		"clearIndexDataButton": "Borrar datos de índice",
+		"unsavedSettingsMessage": "Por favor guarda tus ajustes antes de iniciar el proceso de indexación.",
+		"clearDataDialog": {
+			"title": "¿Estás seguro?",
+			"description": "Esta acción no se puede deshacer. Esto eliminará permanentemente los datos de índice de tu base de código.",
+			"cancelButton": "Cancelar",
+			"confirmButton": "Borrar datos"
+		}
+	},
 	"autoApprove": {
 		"description": "Permitir que Roo realice operaciones automáticamente sin requerir aprobación. Habilite esta configuración solo si confía plenamente en la IA y comprende los riesgos de seguridad asociados.",
 		"readOnly": {
@@ -79,6 +103,11 @@
 			"allowedCommandsDescription": "Prefijos de comandos que pueden ser ejecutados automáticamente cuando \"Aprobar siempre operaciones de ejecución\" está habilitado. Añade * para permitir todos los comandos (usar con precaución).",
 			"commandPlaceholder": "Ingrese prefijo de comando (ej. 'git ')",
 			"addButton": "Añadir"
+		},
+		"apiRequestLimit": {
+			"title": "Solicitudes máximas",
+			"description": "Realizar automáticamente esta cantidad de solicitudes a la API antes de pedir aprobación para continuar con la tarea.",
+			"unlimited": "Ilimitado"
 		}
 	},
 	"providers": {
@@ -109,6 +138,7 @@
 		"glamaApiKey": "Clave API de Glama",
 		"getGlamaApiKey": "Obtener clave API de Glama",
 		"useCustomBaseUrl": "Usar URL base personalizada",
+		"useReasoning": "Habilitar razonamiento",
 		"useHostHeader": "Usar encabezado Host personalizado",
 		"useLegacyFormat": "Usar formato API de OpenAI heredado",
 		"customHeaders": "Encabezados personalizados",
@@ -118,7 +148,10 @@
 		"requestyApiKey": "Clave API de Requesty",
 		"refreshModels": {
 			"label": "Actualizar modelos",
-			"hint": "Por favor, vuelve a abrir la configuración para ver los modelos más recientes."
+			"hint": "Por favor, vuelve a abrir la configuración para ver los modelos más recientes.",
+			"loading": "Actualizando lista de modelos...",
+			"success": "¡Lista de modelos actualizada correctamente!",
+			"error": "Error al actualizar la lista de modelos. Por favor, inténtalo de nuevo."
 		},
 		"getRequestyApiKey": "Obtener clave API de Requesty",
 		"openRouterTransformsText": "Comprimir prompts y cadenas de mensajes al tamaño del contexto (<a>Transformaciones de OpenRouter</a>)",
@@ -185,6 +218,8 @@
 		},
 		"unboundApiKey": "Clave API de Unbound",
 		"getUnboundApiKey": "Obtener clave API de Unbound",
+		"unboundRefreshModelsSuccess": "¡Lista de modelos actualizada! Ahora puede seleccionar entre los últimos modelos.",
+		"unboundInvalidApiKey": "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
 		"humanRelay": {
 			"description": "No se requiere clave API, pero el usuario necesita ayudar a copiar y pegar la información en el chat web de IA.",
 			"instructions": "Durante el uso, aparecerá un cuadro de diálogo y el mensaje actual se copiará automáticamente al portapapeles. Debe pegarlo en las versiones web de IA (como ChatGPT o Claude), luego copiar la respuesta de la IA de vuelta al cuadro de diálogo y hacer clic en el botón de confirmar."
@@ -395,10 +430,25 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
+		"autoCondenseContextPercent": {
+			"label": "Umbral para activar la condensación inteligente de contexto",
+			"description": "Cuando la ventana de contexto alcanza este umbral, Roo la condensará automáticamente."
+		},
+		"condensingApiConfiguration": {
+			"label": "Configuración de API para condensación de contexto",
+			"description": "Seleccione qué configuración de API usar para operaciones de condensación de contexto. Deje sin seleccionar para usar la configuración activa actual.",
+			"useCurrentConfig": "Usar configuración actual"
+		},
+		"customCondensingPrompt": {
+			"label": "Prompt personalizado para condensación de contexto",
+			"description": "Personalice el prompt del sistema utilizado para la condensación de contexto. Deje vacío para usar el prompt predeterminado.",
+			"placeholder": "Ingrese su prompt de condensación personalizado aquí...\n\nPuede usar la misma estructura que el prompt predeterminado:\n- Conversación anterior\n- Trabajo actual\n- Conceptos técnicos clave\n- Archivos y código relevantes\n- Resolución de problemas\n- Tareas pendientes y próximos pasos",
+			"reset": "Restablecer a predeterminado",
+			"hint": "Vacío = usar prompt predeterminado"
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Condensar inteligentemente la ventana de contexto",
-			"description": "Utiliza una llamada LLM para resumir la conversación anterior cuando la ventana de contexto de la tarea está casi llena, en lugar de eliminar mensajes antiguos. Aviso: el costo de resumir actualmente no está incluido en los costos de API mostrados en la interfaz."
+			"name": "Activar automáticamente la condensación inteligente de contexto",
+			"description": "La condensación inteligente de contexto utiliza una llamada LLM para resumir la conversación anterior cuando la ventana de contexto de la tarea alcanza un umbral preestablecido, en lugar de eliminar mensajes antiguos cuando el contexto se llena."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usar estrategia de diff unificada experimental",
@@ -461,7 +511,7 @@
 		"useCustomModel": "Usar personalizado: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Si tiene alguna pregunta o comentario, no dude en abrir un issue en <githubLink>github.com/RooVetGit/Roo-Code</githubLink> o unirse a <redditLink>reddit.com/r/RooCode</redditLink> o <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Si tiene alguna pregunta o comentario, no dude en abrir un issue en <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> o unirse a <redditLink>reddit.com/r/RooCode</redditLink> o <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Permitir informes anónimos de errores y uso",
 			"description": "Ayude a mejorar Roo Code enviando datos de uso anónimos e informes de errores. Nunca se envía código, prompts o información personal. Consulte nuestra política de privacidad para más detalles."

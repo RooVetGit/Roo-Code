@@ -8,9 +8,12 @@ mock/
 
 .DS_Store
 
+# IDEs
+.idea
+
 # Builds
 bin/
-roo-cline-*.vsix
+*.vsix
 
 # Local prompts and rules
 /local-prompts
@@ -27,12 +30,15 @@ docs/_site/
 .env.*
 !.env.*.sample
 
-
-#Local lint config
-.eslintrc.local.json
-
-#Logging
+# Logging
 logs
 
 # Vite development
 .vite-port
+
+# Turborepo
+.turbo
+
+# IntelliJ and Qodo plugin folders
+.idea/
+.qodo/

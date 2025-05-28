@@ -32,6 +32,30 @@
 		"language": "Język",
 		"about": "O Roo Code"
 	},
+	"codeIndex": {
+		"title": "Indeksowanie kodu",
+		"enableLabel": "Włącz indeksowanie kodu",
+		"enableDescription": "<0>Indeksowanie kodu</0> to eksperymentalna funkcja, która tworzy semantyczny indeks wyszukiwania Twojego projektu przy użyciu osadzeń AI. Umożliwia to Roo Code lepsze zrozumienie i nawigację po dużych bazach kodu poprzez znajdowanie odpowiedniego kodu na podstawie znaczenia, a nie tylko słów kluczowych.",
+		"providerLabel": "Dostawca osadzania",
+		"selectProviderPlaceholder": "Wybierz dostawcę",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiKeyLabel": "Klucz OpenAI:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Wybierz model",
+		"ollamaUrlLabel": "URL Ollama:",
+		"qdrantUrlLabel": "URL Qdrant",
+		"qdrantKeyLabel": "Klucz Qdrant:",
+		"startIndexingButton": "Rozpocznij indeksowanie",
+		"clearIndexDataButton": "Wyczyść dane indeksu",
+		"unsavedSettingsMessage": "Zapisz swoje ustawienia przed rozpoczęciem procesu indeksowania.",
+		"clearDataDialog": {
+			"title": "Czy jesteś pewien?",
+			"description": "Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie danych indeksu Twojego kodu.",
+			"cancelButton": "Anuluj",
+			"confirmButton": "Wyczyść dane"
+		}
+	},
 	"autoApprove": {
 		"description": "Pozwól Roo na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
 		"readOnly": {
@@ -79,6 +103,11 @@
 			"allowedCommandsDescription": "Prefiksy poleceń, które mogą być automatycznie wykonywane, gdy \"Zawsze zatwierdzaj operacje wykonania\" jest włączone. Dodaj * aby zezwolić na wszystkie polecenia (używaj z ostrożnością).",
 			"commandPlaceholder": "Wprowadź prefiks polecenia (np. 'git ')",
 			"addButton": "Dodaj"
+		},
+		"apiRequestLimit": {
+			"title": "Maksymalna liczba żądań",
+			"description": "Automatycznie wykonaj tyle żądań API przed poproszeniem o zgodę na kontynuowanie zadania.",
+			"unlimited": "Bez limitu"
 		}
 	},
 	"providers": {
@@ -109,6 +138,7 @@
 		"glamaApiKey": "Klucz API Glama",
 		"getGlamaApiKey": "Uzyskaj klucz API Glama",
 		"useCustomBaseUrl": "Użyj niestandardowego URL bazowego",
+		"useReasoning": "Włącz rozumowanie",
 		"useHostHeader": "Użyj niestandardowego nagłówka Host",
 		"useLegacyFormat": "Użyj starszego formatu API OpenAI",
 		"customHeaders": "Niestandardowe nagłówki",
@@ -118,7 +148,10 @@
 		"requestyApiKey": "Klucz API Requesty",
 		"refreshModels": {
 			"label": "Odśwież modele",
-			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele."
+			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele.",
+			"loading": "Odświeżanie listy modeli...",
+			"success": "Lista modeli została pomyślnie odświeżona!",
+			"error": "Nie udało się odświeżyć listy modeli. Spróbuj ponownie."
 		},
 		"getRequestyApiKey": "Uzyskaj klucz API Requesty",
 		"openRouterTransformsText": "Kompresuj podpowiedzi i łańcuchy wiadomości do rozmiaru kontekstu (<a>Transformacje OpenRouter</a>)",
@@ -185,6 +218,8 @@
 		},
 		"unboundApiKey": "Klucz API Unbound",
 		"getUnboundApiKey": "Uzyskaj klucz API Unbound",
+		"unboundRefreshModelsSuccess": "Lista modeli zaktualizowana! Możesz teraz wybierać spośród najnowszych modeli.",
+		"unboundInvalidApiKey": "Nieprawidłowy klucz API. Sprawdź swój klucz API i spróbuj ponownie.",
 		"humanRelay": {
 			"description": "Nie jest wymagany klucz API, ale użytkownik będzie musiał pomóc w kopiowaniu i wklejaniu informacji do czatu internetowego AI.",
 			"instructions": "Podczas użytkowania pojawi się okno dialogowe, a bieżąca wiadomość zostanie automatycznie skopiowana do schowka. Będziesz musiał wkleić ją do internetowych wersji AI (takich jak ChatGPT lub Claude), a następnie skopiować odpowiedź AI z powrotem do okna dialogowego i kliknąć przycisk potwierdzenia."
@@ -395,10 +430,25 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
+		"condensingApiConfiguration": {
+			"label": "API Configuration for Context Condensing",
+			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
+			"useCurrentConfig": "Default"
+		},
+		"customCondensingPrompt": {
+			"label": "Niestandardowy monit kondensacji kontekstu",
+			"description": "Niestandardowy monit systemowy dla kondensacji kontekstu. Pozostaw puste, aby użyć domyślnego monitu.",
+			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
+			"reset": "Reset to Default",
+			"hint": "Empty = use default prompt"
+		},
+		"autoCondenseContextPercent": {
+			"label": "Próg wyzwalający inteligentną kondensację kontekstu",
+			"description": "Gdy okno kontekstu osiągnie ten próg, Roo automatycznie je skondensuje."
+		},
 		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Inteligentnie kondensuj okno kontekstu",
-			"description": "Używa wywołania LLM do podsumowania wcześniejszej rozmowy, gdy okno kontekstu zadania jest prawie pełne, zamiast usuwać stare wiadomości. Zastrzeżenie: koszt podsumowania nie jest obecnie uwzględniony w kosztach API pokazywanych w interfejsie."
+			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu",
+			"description": "Inteligentna kondensacja kontekstu używa wywołania LLM do podsumowania wcześniejszej rozmowy, gdy okno kontekstu zadania osiągnie ustawiony próg, zamiast usuwać stare wiadomości, gdy kontekst się zapełni."
 		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Użyj eksperymentalnej ujednoliconej strategii diff",
@@ -461,7 +511,7 @@
 		"useCustomModel": "Użyj niestandardowy: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Jeśli masz jakiekolwiek pytania lub opinie, śmiało otwórz zgłoszenie na <githubLink>github.com/RooVetGit/Roo-Code</githubLink> lub dołącz do <redditLink>reddit.com/r/RooCode</redditLink> lub <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Jeśli masz jakiekolwiek pytania lub opinie, śmiało otwórz zgłoszenie na <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> lub dołącz do <redditLink>reddit.com/r/RooCode</redditLink> lub <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Zezwól na anonimowe raportowanie błędów i użycia",
 			"description": "Pomóż ulepszyć Roo Code, wysyłając anonimowe dane o użytkowaniu i raporty o błędach. Nigdy nie są wysyłane kod, podpowiedzi ani informacje osobiste. Zobacz naszą politykę prywatności, aby uzyskać więcej szczegółów."
