@@ -37,9 +37,7 @@ import { formatLanguage } from "../../shared/language"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
-import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
-import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import type { IndexProgressUpdate } from "../../services/code-index/interfaces/manager"
@@ -47,8 +45,8 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
-import { CustomModesManager } from "../config/CustomModesManager"
 import { buildApiHandler } from "../../api"
+import { ComponentManager } from "./ComponentManager"
 import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -82,17 +80,24 @@ export class ClineProvider
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
 	private codeIndexStatusSubscription?: vscode.Disposable
-	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
-	public get workspaceTracker(): WorkspaceTracker | undefined {
-		return this._workspaceTracker
+	private componentManager: ComponentManager
+
+	public get workspaceTracker() {
+		return this.componentManager.workspaceTracker
 	}
-	protected mcpHub?: McpHub // Change from private to protected
+
+	private get mcpHub() {
+		return this.componentManager.mcpHub
+	}
+
+	public get customModesManager() {
+		return this.componentManager.customModesManager
+	}
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
 	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
-	public readonly customModesManager: CustomModesManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -116,23 +121,10 @@ export class ClineProvider
 		// properties like mode and provider.
 		telemetryService.setProvider(this)
 
-		this._workspaceTracker = new WorkspaceTracker(this)
-
 		this.providerSettingsManager = new ProviderSettingsManager(this.context)
 
-		this.customModesManager = new CustomModesManager(this.context, async () => {
-			await this.postStateToWebview()
-		})
-
-		// Initialize MCP Hub through the singleton manager
-		McpServerManager.getInstance(this.context, this)
-			.then((hub) => {
-				this.mcpHub = hub
-				this.mcpHub.registerClient()
-			})
-			.catch((error) => {
-				this.log(`Failed to initialize MCP Hub: ${error}`)
-			})
+		// Initialize ComponentManager to handle workspaceTracker, mcpHub, and customModesManager
+		this.componentManager = new ComponentManager(this.context, this)
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -217,8 +209,6 @@ export class ClineProvider
 	*/
 	async dispose() {
 		this.log("Disposing ClineProvider...")
-		await this.removeClineFromStack()
-		this.log("Cleared task")
 
 		if (this.view && "dispose" in this.view) {
 			this.view.dispose()
@@ -233,16 +223,17 @@ export class ClineProvider
 			}
 		}
 
-		this._workspaceTracker?.dispose()
-		this._workspaceTracker = undefined
-		await this.mcpHub?.unregisterClient()
-		this.mcpHub = undefined
-		this.customModesManager?.dispose()
-		this.log("Disposed all disposables")
-		ClineProvider.activeInstances.delete(this)
+		await this.componentManager.dispose()
 
-		// Unregister from McpServerManager
-		McpServerManager.unregisterProvider(this)
+		await this.removeClineFromStack()
+		this.log("Cleared task")
+
+		this.log("Disposed all disposables")
+
+		if (this.componentManager.isDisposed) {
+			// As resolveWebviewView is not executed during dispose, the instance can be safely removed.
+			ClineProvider.activeInstances.delete(this)
+		}
 	}
 
 	public static getVisibleInstance(): ClineProvider | undefined {
@@ -335,6 +326,11 @@ export class ClineProvider
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
+
+		ClineProvider.activeInstances.add(this)
+		if (this.componentManager.isDisposed) {
+			this.componentManager = new ComponentManager(this.context, this)
+		}
 
 		this.view = webviewView
 

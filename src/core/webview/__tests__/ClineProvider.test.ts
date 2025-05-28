@@ -321,7 +321,7 @@ describe("ClineProvider", () => {
 		updateGlobalStateSpy = jest.spyOn(provider.contextProxy, "setValue")
 
 		// @ts-ignore - Accessing private property for testing.
-		provider.customModesManager = mockCustomModesManager
+		provider.componentManager._customModesManager = mockCustomModesManager
 	})
 
 	test("constructor initializes correctly", () => {
@@ -1592,7 +1592,7 @@ describe("ClineProvider", () => {
 			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
 			// Mock CustomModesManager methods
-			;(provider as any).customModesManager = {
+			;(provider as any).componentManager._customModesManager = {
 				updateCustomMode: jest.fn().mockResolvedValue(undefined),
 				getCustomModes: jest.fn().mockResolvedValue([
 					{
