@@ -8,19 +8,21 @@ import delay from "delay"
 import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
-import type {
-	ProviderSettings,
-	TokenUsage,
-	ToolUsage,
-	ToolName,
-	ContextCondense,
-	ClineAsk,
-	ClineMessage,
-	ClineSay,
-	ToolProgressStatus,
-	HistoryItem,
+import {
+	type ProviderSettings,
+	type TokenUsage,
+	type ToolUsage,
+	type ToolName,
+	type ContextCondense,
+	type ClineAsk,
+	type ClineMessage,
+	type ClineSay,
+	type ToolProgressStatus,
+	type HistoryItem,
+	TelemetryEventName,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
+import { CloudService } from "@roo-code/cloud"
 
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
@@ -322,8 +324,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
 
-		if (message.partial !== true) {
-			TelemetryService.instance.captureTaskMessage(this.taskId, message)
+		const shouldCaptureMessage = message.partial !== true && CloudService.isEnabled()
+
+		if (shouldCaptureMessage) {
+			CloudService.instance.captureEvent({
+				event: TelemetryEventName.TASK_MESSAGE,
+				properties: { taskId: this.taskId, message },
+			})
 		}
 	}
 
@@ -336,8 +343,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage })
 		this.emit("message", { action: "updated", message: partialMessage })
 
-		if (partialMessage.partial !== true) {
-			TelemetryService.instance.captureTaskMessage(this.taskId, partialMessage)
+		const shouldCaptureMessage = partialMessage.partial !== true && CloudService.isEnabled()
+
+		if (shouldCaptureMessage) {
+			CloudService.instance.captureEvent({
+				event: TelemetryEventName.TASK_MESSAGE,
+				properties: { taskId: this.taskId, message: partialMessage },
+			})
 		}
 	}
 

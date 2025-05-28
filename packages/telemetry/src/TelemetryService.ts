@@ -1,11 +1,6 @@
 import { ZodError } from "zod"
 
-import {
-	type TelemetryClient,
-	type TelemetryPropertiesProvider,
-	type ClineMessage,
-	TelemetryEventName,
-} from "@roo-code/types"
+import { type TelemetryClient, type TelemetryPropertiesProvider, TelemetryEventName } from "@roo-code/types"
 
 /**
  * TelemetryService wrapper class that defers initialization.
@@ -75,10 +70,6 @@ export class TelemetryService {
 
 	public captureTaskCompleted(taskId: string): void {
 		this.captureEvent(TelemetryEventName.TASK_COMPLETED, { taskId })
-	}
-
-	public captureTaskMessage(taskId: string, message: ClineMessage): void {
-		this.captureEvent(TelemetryEventName.TASK_MESSAGE, { taskId, message })
 	}
 
 	public captureConversationMessage(taskId: string, source: "user" | "assistant"): void {

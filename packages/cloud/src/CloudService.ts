@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import EventEmitter from "events"
 
-import type { CloudUserInfo } from "@roo-code/types"
+import type { CloudUserInfo, TelemetryEvent } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { AuthService, type AuthServiceEvents } from "./AuthService"
@@ -117,6 +117,13 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 		return this.settingsService!.getAllowList()
 	}
 
+	// TelemetryClient
+
+	public captureEvent(event: TelemetryEvent): void {
+		this.ensureInitialized()
+		this.telemetryClient!.capture(event)
+	}
+
 	// Lifecycle
 
 	public dispose(): void {
@@ -164,5 +171,9 @@ export class CloudService extends EventEmitter<CloudServiceEvents> {
 			this._instance.dispose()
 			this._instance = null
 		}
+	}
+
+	static isEnabled(): boolean {
+		return !!this._instance?.isAuthenticated()
 	}
 }
