@@ -97,7 +97,10 @@ export async function summarizeConversation(
 	const response: SummarizeResponse = { messages, cost: 0, summary: "" }
 	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP))
 	if (messagesToSummarize.length <= 1) {
-		const error = t("common:errors.condense_not_enough_messages")
+		const error =
+			messages.length <= N_MESSAGES_TO_KEEP + 1
+				? t("common:errors.condense_not_enough_messages")
+				: t("common:errors.condensed_recently")
 		return { ...response, error }
 	}
 	const keepMessages = messages.slice(-N_MESSAGES_TO_KEEP)
