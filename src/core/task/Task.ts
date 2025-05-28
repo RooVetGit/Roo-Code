@@ -20,6 +20,7 @@ import type {
 	ToolProgressStatus,
 	HistoryItem,
 } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
 
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
@@ -41,7 +42,6 @@ import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 import { BrowserSession } from "../../services/browser/BrowserSession"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
 // integrations
@@ -243,9 +243,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.taskNumber = taskNumber
 
 		if (historyItem) {
-			telemetryService.captureTaskRestarted(this.taskId)
+			TelemetryService.instance.captureTaskRestarted(this.taskId)
 		} else {
-			telemetryService.captureTaskCreated(this.taskId)
+			TelemetryService.instance.captureTaskCreated(this.taskId)
 		}
 
 		this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
@@ -321,6 +321,10 @@ export class Task extends EventEmitter<ClineEvents> {
 		await this.providerRef.deref()?.postStateToWebview()
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
+
+		if (message.partial !== true) {
+			TelemetryService.instance.captureTaskMessage(this.taskId, message)
+		}
 	}
 
 	public async overwriteClineMessages(newMessages: ClineMessage[]) {
@@ -331,6 +335,10 @@ export class Task extends EventEmitter<ClineEvents> {
 	private async updateClineMessage(partialMessage: ClineMessage) {
 		await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage })
 		this.emit("message", { action: "updated", message: partialMessage })
+
+		if (partialMessage.partial !== true) {
+			TelemetryService.instance.captureTaskMessage(this.taskId, partialMessage)
+		}
 	}
 
 	private async saveClineMessages() {
@@ -1055,7 +1063,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				await this.say("user_feedback", text, images)
 
 				// Track consecutive mistake errors in telemetry.
-				telemetryService.captureConsecutiveMistakeError(this.taskId)
+				TelemetryService.instance.captureConsecutiveMistakeError(this.taskId)
 			}
 
 			this.consecutiveMistakeCount = 0
@@ -1110,7 +1118,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
 
 		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
-		telemetryService.captureConversationMessage(this.taskId, "user")
+		TelemetryService.instance.captureConversationMessage(this.taskId, "user")
 
 		// Since we sent off a placeholder api_req_started message to update the
 		// webview while waiting to actually start the API request (to load
@@ -1330,7 +1338,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				cacheReadTokens > 0 ||
 				typeof totalCost !== "undefined"
 			) {
-				telemetryService.captureLlmCompletion(this.taskId, {
+				TelemetryService.instance.captureLlmCompletion(this.taskId, {
 					inputTokens,
 					outputTokens,
 					cacheWriteTokens,
@@ -1384,7 +1392,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					content: [{ type: "text", text: assistantMessage }],
 				})
 
-				telemetryService.captureConversationMessage(this.taskId, "assistant")
+				TelemetryService.instance.captureConversationMessage(this.taskId, "assistant")
 
 				// NOTE: This comment is here for future reference - this was a
 				// workaround for `userMessageContent` not getting set to true.

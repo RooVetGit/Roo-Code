@@ -12,6 +12,9 @@ try {
 	console.warn("Failed to load environment variables:", e)
 }
 
+import { AuthService, OrganizationSettingService, RooCodeTelemetryClient } from "@roo-code/cloud"
+import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
+
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
 import { Package } from "./shared/package"
@@ -21,7 +24,6 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
-import { telemetryService } from "./services/telemetry/TelemetryService"
 import { CodeIndexManager } from "./services/code-index/manager"
 import { migrateSettings } from "./utils/migrateSettings"
 import { API } from "./extension/api"
@@ -57,8 +59,30 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
-	// Initialize telemetry service after environment variables are loaded.
-	telemetryService.initialize(context)
+	// Initialize auth service.
+	await AuthService.createInstance(context, (userInfo) =>
+		ClineProvider.getVisibleInstance()?.postMessageToWebview({ type: "authenticatedUser", userInfo }),
+	)
+
+	// Initialize telemetry service.
+	const telemetryService = TelemetryService.createInstance()
+
+	try {
+		telemetryService.register(new PostHogTelemetryClient())
+	} catch (error) {
+		console.warn("Failed to register PostHogTelemetryClient:", error)
+	}
+
+	try {
+		telemetryService.register(new RooCodeTelemetryClient(AuthService.instance))
+	} catch (error) {
+		console.warn("Failed to register RooCodeTelemetryClient:", error)
+	}
+
+	// Initialize org settings service.
+	await OrganizationSettingService.createInstance(context, () =>
+		ClineProvider.getVisibleInstance()?.postStateToWebview(),
+	)
 
 	// Initialize i18n for internationalization support
 	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
@@ -86,7 +110,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
-	telemetryService.setProvider(provider)
+	TelemetryService.instance.setProvider(provider)
 
 	if (codeIndexManager) {
 		context.subscriptions.push(codeIndexManager)
@@ -147,10 +171,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Watch the core files and automatically reload the extension host.
 	if (process.env.NODE_ENV === "development") {
-		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED! Watching for changes in ${context.extensionPath}/**/*.ts`)
+		const pattern = "**/*.ts"
+
+		console.log(
+			`♻️♻️♻️ Core auto-reloading is ENABLED! Watching for changes in ${context.extensionPath}/${pattern}`,
+		)
 
 		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(context.extensionPath, "**/*.ts"),
+			new vscode.RelativePattern(context.extensionPath, pattern),
 		)
 
 		watcher.onDidChange((uri) => {
@@ -168,6 +196,6 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
 	await McpServerManager.cleanup(extensionContext)
-	telemetryService.shutdown()
+	TelemetryService.instance.shutdown()
 	TerminalRegistry.cleanup()
 }

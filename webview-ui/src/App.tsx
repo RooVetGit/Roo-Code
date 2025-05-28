@@ -15,8 +15,9 @@ import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
 import PromptsView from "./components/prompts/PromptsView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
+import { AccountView } from "./components/account/AccountView"
 
-type Tab = "settings" | "history" | "mcp" | "prompts" | "chat"
+type Tab = "settings" | "history" | "mcp" | "prompts" | "chat" | "account"
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
@@ -24,6 +25,7 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 	promptsButtonClicked: "prompts",
 	mcpButtonClicked: "mcp",
 	historyButtonClicked: "history",
+	accountButtonClicked: "account",
 }
 
 const App = () => {
@@ -32,6 +34,11 @@ const App = () => {
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
+	const [userInfo, setUserInfo] = useState<{
+		name?: string
+		email?: string
+		picture?: string
+	} | null>(null)
 
 	const [humanRelayDialogState, setHumanRelayDialogState] = useState<{
 		isOpen: boolean
@@ -80,6 +87,10 @@ const App = () => {
 			if (message.type === "acceptInput") {
 				chatViewRef.current?.acceptInput()
 			}
+
+			if (message.type === "authenticatedUser") {
+				setUserInfo(message.userInfo || null)
+			}
 		},
 		[switchTab],
 	)
@@ -118,6 +129,7 @@ const App = () => {
 			{tab === "settings" && (
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
 			)}
+			{tab === "account" && <AccountView userInfo={userInfo} onDone={() => switchTab("chat")} />}
 			<ChatView
 				ref={chatViewRef}
 				isHidden={tab !== "chat"}
