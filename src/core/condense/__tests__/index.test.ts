@@ -240,7 +240,7 @@ describe("summarizeConversation", () => {
 		expect(result.messages).toEqual(messages)
 		expect(result.cost).toBe(0.02)
 		expect(result.summary).toBe("")
-		expect(result.error).toBeDefined()
+		expect(result.error).toBeTruthy() // Error should be set
 		expect(result.newContextTokens).toBeUndefined()
 	})
 
@@ -351,7 +351,7 @@ describe("summarizeConversation", () => {
 		expect(result.messages).toEqual(messages)
 		expect(result.cost).toBe(0.08)
 		expect(result.summary).toBe("")
-		expect(result.error).toBeDefined()
+		expect(result.error).toBeTruthy() // Error should be set
 		expect(result.newContextTokens).toBeUndefined()
 	})
 
