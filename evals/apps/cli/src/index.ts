@@ -212,7 +212,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		},
 		shell: "/bin/bash",
 		cancelSignal,
-	})`${codeCommand} -n ${path.resolve(exercisesPath, language, exercise)}`
+	})`${codeCommand} -n ${workspacePath}`
 
 	// If debugging:
 	// subprocess.stdout.pipe(process.stdout)
