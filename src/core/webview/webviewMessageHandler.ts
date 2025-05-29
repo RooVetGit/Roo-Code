@@ -3,9 +3,11 @@ import fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
+import type { Language, ProviderSettings, GlobalState } from "@roo-code/types"
+
 import { ClineProvider } from "./ClineProvider"
-import { Language, ProviderSettings, GlobalState, Package } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
+import { Package } from "../../shared/package"
 import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -27,7 +29,7 @@ import { getOllamaModels } from "../../api/providers/ollama"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { getLmStudioModels } from "../../api/providers/lmstudio"
 import { openMention } from "../mentions"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { telemetryService } from "../../services/telemetry"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
@@ -170,6 +172,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "askResponse":
 			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+			break
+		case "autoCondenseContext":
+			await updateGlobalState("autoCondenseContext", message.bool)
+			await provider.postStateToWebview()
 			break
 		case "autoCondenseContextPercent":
 			await updateGlobalState("autoCondenseContextPercent", message.value)

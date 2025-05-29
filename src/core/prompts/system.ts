@@ -1,19 +1,18 @@
-import {
-	Mode,
-	modes,
-	CustomModePrompts,
-	PromptComponent,
-	defaultModeSlug,
-	ModeConfig,
-	getModeBySlug,
-	getGroupName,
-} from "../../shared/modes"
-import { PromptVariables, loadSystemPromptFile } from "./sections/custom-system-prompt"
-import { DiffStrategy } from "../../shared/tools"
-import { McpHub } from "../../services/mcp/McpHub"
-import { getToolDescriptionsForMode } from "./tools"
 import * as vscode from "vscode"
 import * as os from "os"
+
+import type { ModeConfig, PromptComponent, CustomModePrompts } from "@roo-code/types"
+
+import { Mode, modes, defaultModeSlug, getModeBySlug, getGroupName, getModeSelection } from "../../shared/modes"
+import { DiffStrategy } from "../../shared/tools"
+import { formatLanguage } from "../../shared/language"
+
+import { McpHub } from "../../services/mcp/McpHub"
+import { CodeIndexManager } from "../../services/code-index/manager"
+
+import { PromptVariables, loadSystemPromptFile } from "./sections/custom-system-prompt"
+
+import { getToolDescriptionsForMode } from "./tools"
 import {
 	getRulesSection,
 	getSystemInfoSection,
@@ -26,8 +25,6 @@ import {
 	addCustomInstructions,
 	markdownFormattingSection,
 } from "./sections"
-import { formatLanguage } from "../../shared/language"
-import { CodeIndexManager } from "../../services/code-index/manager"
 
 async function generatePrompt(
 	context: vscode.ExtensionContext,
@@ -45,6 +42,7 @@ async function generatePrompt(
 	enableMcpServerCreation?: boolean,
 	language?: string,
 	rooIgnoreInstructions?: string,
+	partialReadsEnabled?: boolean,
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -53,9 +51,9 @@ async function generatePrompt(
 	// If diff is disabled, don't pass the diffStrategy
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 
-	// Get the full mode config to ensure we have the role definition
+	// Get the full mode config to ensure we have the role definition (used for groups, etc.)
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
-	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
+	const { roleDefinition, baseInstructions } = getModeSelection(mode, promptComponent, customModeConfigs)
 
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
@@ -82,6 +80,7 @@ ${getToolDescriptionsForMode(
 	mcpHub,
 	customModeConfigs,
 	experiments,
+	partialReadsEnabled,
 )}
 
 ${getToolUseGuidelinesSection()}
@@ -98,7 +97,7 @@ ${getSystemInfoSection(cwd)}
 
 ${getObjectiveSection()}
 
-${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
+${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
 
 	return basePrompt
 }
@@ -119,6 +118,7 @@ export const SYSTEM_PROMPT = async (
 	enableMcpServerCreation?: boolean,
 	language?: string,
 	rooIgnoreInstructions?: string,
+	partialReadsEnabled?: boolean,
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -149,9 +149,14 @@ export const SYSTEM_PROMPT = async (
 
 	// If a file-based custom system prompt exists, use it
 	if (fileCustomSystemPrompt) {
-		const roleDefinition = promptComponent?.roleDefinition || currentMode.roleDefinition
+		const { roleDefinition, baseInstructions: baseInstructionsForFile } = getModeSelection(
+			mode,
+			promptComponent,
+			customModes,
+		)
+
 		const customInstructions = await addCustomInstructions(
-			promptComponent?.customInstructions || currentMode.customInstructions || "",
+			baseInstructionsForFile,
 			globalCustomInstructions || "",
 			cwd,
 			mode,
@@ -185,5 +190,6 @@ ${customInstructions}`
 		enableMcpServerCreation,
 		language,
 		rooIgnoreInstructions,
+		partialReadsEnabled,
 	)
 }

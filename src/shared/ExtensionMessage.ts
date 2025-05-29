@@ -1,6 +1,4 @@
-import { GitCommit } from "../utils/git"
-
-import {
+import type {
 	GlobalSettings,
 	ProviderSettingsEntry,
 	ProviderSettings,
@@ -8,16 +6,14 @@ import {
 	ModeConfig,
 	TelemetrySetting,
 	ExperimentId,
-	ClineAsk,
-	ClineSay,
-	ToolProgressStatus,
 	ClineMessage,
-} from "../schemas"
+} from "@roo-code/types"
+
+import { GitCommit } from "../utils/git"
+
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
-
-export type { ProviderSettingsEntry, ToolProgressStatus }
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -214,10 +210,9 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
+	autoCondenseContext: boolean
 	autoCondenseContextPercent: number
 }
-
-export type { ClineMessage, ClineAsk, ClineSay }
 
 export interface ClineSayTool {
 	tool:

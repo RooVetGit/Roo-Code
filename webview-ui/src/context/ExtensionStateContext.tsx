@@ -1,16 +1,23 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
 
-import { ProviderSettingsEntry, ExtensionMessage, ExtensionState } from "@roo/shared/ExtensionMessage"
-import { ProviderSettings } from "@roo/shared/api"
-import { findLastIndex } from "@roo/shared/array"
-import { McpServer } from "@roo/shared/mcp"
-import { checkExistKey } from "@roo/shared/checkExistApiConfig"
-import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } from "@roo/shared/modes"
-import { CustomSupportPrompts } from "@roo/shared/support-prompt"
-import { experimentDefault, ExperimentId } from "@roo/shared/experiments"
-import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
-import { RouterModels } from "@roo/shared/api"
+import type {
+	ProviderSettings,
+	ProviderSettingsEntry,
+	CustomModePrompts,
+	ModeConfig,
+	ExperimentId,
+} from "@roo-code/types"
+
+import { ExtensionMessage, ExtensionState } from "@roo/ExtensionMessage"
+import { findLastIndex } from "@roo/array"
+import { McpServer } from "@roo/mcp"
+import { checkExistKey } from "@roo/checkExistApiConfig"
+import { Mode, defaultModeSlug, defaultPrompts } from "@roo/modes"
+import { CustomSupportPrompts } from "@roo/support-prompt"
+import { experimentDefault } from "@roo/experiments"
+import { TelemetrySetting } from "@roo/TelemetrySetting"
+import { RouterModels } from "@roo/api"
 
 import { vscode } from "@src/utils/vscode"
 import { convertTextMateToHljs } from "@src/utils/textMateToHljs"
@@ -101,6 +108,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	terminalCompressProgressBar?: boolean
 	setTerminalCompressProgressBar: (value: boolean) => void
 	setHistoryPreviewCollapsed: (value: boolean) => void
+	autoCondenseContext: boolean
+	setAutoCondenseContext: (value: boolean) => void
 	autoCondenseContextPercent: number
 	setAutoCondenseContextPercent: (value: number) => void
 	routerModels?: RouterModels
@@ -184,6 +193,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
 		terminalCompressProgressBar: true, // Default to compress progress bar output
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
+		autoCondenseContext: true,
 		autoCondenseContextPercent: 100,
 		codebaseIndexConfig: {
 			codebaseIndexEnabled: false,
@@ -378,6 +388,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			}),
 		setHistoryPreviewCollapsed: (value) =>
 			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })),
+		setAutoCondenseContext: (value) => setState((prevState) => ({ ...prevState, autoCondenseContext: value })),
 		setAutoCondenseContextPercent: (value) =>
 			setState((prevState) => ({ ...prevState, autoCondenseContextPercent: value })),
 		setCondensingApiConfigId: (value) => setState((prevState) => ({ ...prevState, condensingApiConfigId: value })),

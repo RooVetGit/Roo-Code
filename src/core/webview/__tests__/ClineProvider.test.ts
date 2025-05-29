@@ -4,13 +4,16 @@ import Anthropic from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 import axios from "axios"
 
-import { ClineProvider } from "../ClineProvider"
-import { ProviderSettingsEntry, ClineMessage, ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
-import { setTtsEnabled } from "../../../utils/tts"
+import type { ProviderSettingsEntry, ClineMessage } from "@roo-code/types"
+
+import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
+import { setTtsEnabled } from "../../../utils/tts"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task, TaskOptions } from "../../task/Task"
+
+import { ClineProvider } from "../ClineProvider"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -419,6 +422,7 @@ describe("ClineProvider", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			autoCondenseContext: true,
 			autoCondenseContextPercent: 100,
 		}
 
@@ -589,6 +593,24 @@ describe("ClineProvider", () => {
 
 		const state = await provider.getState()
 		expect(state.alwaysApproveResubmit).toBe(false)
+	})
+
+	test("autoCondenseContext defaults to true", async () => {
+		// Mock globalState.get to return undefined for autoCondenseContext
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) =>
+			key === "autoCondenseContext" ? undefined : null,
+		)
+		const state = await provider.getState()
+		expect(state.autoCondenseContext).toBe(true)
+	})
+
+	test("handles autoCondenseContext message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		await messageHandler({ type: "autoCondenseContext", bool: false })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("autoCondenseContext", false)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("autoCondenseContext", false)
+		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
 	test("autoCondenseContextPercent defaults to 100", async () => {

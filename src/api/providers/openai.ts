@@ -2,12 +2,9 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI, { AzureOpenAI } from "openai"
 import axios from "axios"
 
-import {
-	ApiHandlerOptions,
-	azureOpenAiDefaultApiVersion,
-	ModelInfo,
-	openAiModelInfoSaneDefaults,
-} from "../../shared/api"
+import type { ModelInfo } from "@roo-code/types"
+
+import { ApiHandlerOptions, azureOpenAiDefaultApiVersion, openAiModelInfoSaneDefaults } from "../../shared/api"
 
 import { XmlMatcher } from "../../utils/xml-matcher"
 
@@ -18,8 +15,8 @@ import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
-import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { BaseProvider } from "./base-provider"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 export const AZURE_AI_INFERENCE_PATH = "/models/chat/completions"
 
@@ -157,6 +154,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(reasoning && reasoning),
 			}
 
+			// @TODO: Move this to the `getModelParams` function.
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
 			}
