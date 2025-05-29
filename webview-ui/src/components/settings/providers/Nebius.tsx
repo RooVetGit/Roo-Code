@@ -31,8 +31,6 @@ export const Nebius = ({ apiConfiguration, setApiConfigurationField, routerModel
 	return (
 		<>
 			<VSCodeTextField
-				value={apiConfiguration?.nebiusBaseUrl || "http://localhost:4000"}
-				onInput={handleInputChange("nebiusBaseUrl")}
 				value={apiConfiguration?.nebiusBaseUrl || "https://api.studio.nebius.ai/v1"}
 				onInput={handleInputChange("nebiusBaseUrl")}
 				placeholder="https://api.studio.nebius.ai/v1"
