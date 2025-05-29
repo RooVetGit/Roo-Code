@@ -86,12 +86,16 @@ export class TelemetryClient extends BaseTelemetryClient {
 	}
 
 	protected override isEventCapturable(eventName: TelemetryEventName): boolean {
-		return (
-			(eventName != TelemetryEventName.TASK_MESSAGE ||
-				this.settingsService.getSettings()?.cloudSettings?.recordTaskMessages ||
-				false) &&
-			super.isEventCapturable(eventName)
-		)
+		// Ensure that this event type is supported by the telemetry client
+		if (!super.isEventCapturable(eventName)) { return false; }
+		
+		// Only record message telemetry if a cloud account is present and explicitly configured to record messages
+		if (eventName === TelemetryEventName.TASK_MESSAGE) {
+			return this.settingsService.getSettings()?.cloudSettings?.recordTaskMessages || false)
+		}
+		
+		// Other telemetry types are capturable at this point
+		return true
 	}
 
 	public override async shutdown() {}
