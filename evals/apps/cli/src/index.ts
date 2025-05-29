@@ -203,6 +203,9 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	const isDocker = fs.existsSync("/.dockerenv")
 
 	if (isDocker) {
+		if (run.concurrency > 1) {
+			throw new Error("Cannot run multiple tasks in parallel in Docker. Please set concurrency to 1.")
+		}
 		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --wait --log trace --disable-gpu --password-store="basic"`
 	}
 
