@@ -3,10 +3,12 @@ import { BaseTelemetryClient } from "@roo-code/telemetry"
 
 import { getRooCodeApiUrl } from "./Config"
 import { AuthService } from "./AuthService"
+import { SettingsService } from "./SettingsService"
 
 export class TelemetryClient extends BaseTelemetryClient {
 	constructor(
 		private authService: AuthService,
+		private settingsService: SettingsService,
 		debug = false,
 	) {
 		super(
@@ -81,6 +83,15 @@ export class TelemetryClient extends BaseTelemetryClient {
 
 	public override isTelemetryEnabled(): boolean {
 		return true
+	}
+
+	protected override isEventCapturable(eventName: TelemetryEventName): boolean {
+		return (
+			(eventName != TelemetryEventName.TASK_MESSAGE ||
+				this.settingsService.getSettings()?.cloudSettings?.recordTaskMessages ||
+				false) &&
+			super.isEventCapturable(eventName)
+		)
 	}
 
 	public override async shutdown() {}
