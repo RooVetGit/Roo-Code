@@ -36,11 +36,11 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
  WORKDIR /home/vscode
  USER vscode
 
- # Copy exercises
- RUN git clone https://github.com/RooCodeInc/Roo-Code-Evals.git exercises
+ # Copy evals
+ RUN git clone https://github.com/RooCodeInc/Roo-Code-Evals.git evals
 
- # Prepare exercises
- WORKDIR /home/vscode/exercises/python
+ # Prepare evals
+ WORKDIR /home/vscode/evals/python
  RUN curl -LsSf https://astral.sh/uv/install.sh | sh
  RUN /home/vscode/.local/bin/uv sync
 

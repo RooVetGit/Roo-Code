@@ -550,7 +550,7 @@ if (!fs.existsSync(extensionDevelopmentPath)) {
 
 if (!fs.existsSync(exercisesPath)) {
 	console.error(
-		`Exercises path does not exist. Please run "git clone https://github.com/RooCodeInc/Roo-Code-Evals.git exercises".`,
+		`Exercises do not exist at ${exercisesPath}. Please run "git clone https://github.com/RooCodeInc/Roo-Code-Evals.git evals".`,
 	)
 	process.exit(1)
 }
