@@ -113,8 +113,7 @@ const TaskHeader = ({
 							title={t("chat:task.condenseContext")}
 							disabled={buttonsDisabled}
 							onClick={() => currentTaskItem && handleCondenseContext(currentTaskItem.id)}
-							className="shrink-0"
-							style={{ minHeight: "20px", minWidth: "20px", padding: "2px" }}
+							className="shrink-0 min-h-[20px] min-w-[20px] p-[2px]"
 						/>
 						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
 					</div>
