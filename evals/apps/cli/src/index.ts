@@ -194,12 +194,32 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	console.log(`${Date.now()} [cli#runExercise] Opening new VS Code window at ${workspacePath}`)
 
-	await execa({
+	const controller = new AbortController()
+	const cancelSignal = controller.signal
+
+	// If debugging:
+	// Use --wait --log trace or --verbose.
+	let codeCommand = `code --disable-workspace-trust`
+	const isDocker = fs.existsSync("/.dockerenv")
+
+	if (isDocker) {
+		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --wait --log trace --disable-gpu --password-store="basic"`
+	}
+
+	const subprocess = execa({
 		env: {
 			ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
 		},
 		shell: "/bin/bash",
-	})`code --disable-workspace-trust -n ${workspacePath}`
+		cancelSignal,
+	})`${codeCommand} -n ${path.resolve(exercisesPath, language, exercise)}`
+
+	// If debugging:
+	// subprocess.stdout.pipe(process.stdout)
+
+	// Give VSCode some time to spawn before connectint to its unix socket.
+	await new Promise((resolve) => setTimeout(resolve, isDocker ? 5_000 : 1_000))
+	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
 
 	// Give VSCode some time to spawn before connecting to its unix socket.
 	await new Promise((resolve) => setTimeout(resolve, 3_000))
@@ -309,23 +329,30 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	console.log(`${Date.now()} [cli#runExercise | ${language} / ${exercise}] starting task`)
 
-	client.sendMessage({
-		type: IpcMessageType.TaskCommand,
-		origin: IpcOrigin.Client,
-		clientId: client.clientId!,
-		data: {
-			commandName: TaskCommandName.StartNewTask,
+	if (client.isReady) {
+		client.sendMessage({
+			type: IpcMessageType.TaskCommand,
+			origin: IpcOrigin.Client,
+			clientId: client.clientId!,
 			data: {
-				configuration: {
-					...rooCodeDefaults,
-					openRouterApiKey: process.env.OPENROUTER_API_KEY!,
-					...run.settings,
+				commandName: TaskCommandName.StartNewTask,
+				data: {
+					configuration: {
+						...rooCodeDefaults,
+						openRouterApiKey: process.env.OPENROUTER_API_KEY!,
+						...run.settings,
+					},
+					text: prompt,
+					newTab: true,
 				},
-				text: prompt,
-				newTab: true,
 			},
-		},
-	})
+		})
+	} else {
+		console.log(`[cli#runExercise | ${language} / ${exercise}] unable to connect`)
+		client.disconnect()
+		taskFinishedAt = Date.now()
+		isClientDisconnected = true
+	}
 
 	try {
 		await pWaitFor(() => !!taskFinishedAt || isClientDisconnected, { interval: 1_000, timeout: TASK_TIMEOUT })
@@ -364,6 +391,9 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 		client.disconnect()
 	}
+
+	controller.abort()
+	await subprocess
 
 	return { success: !!taskFinishedAt }
 }
@@ -520,7 +550,7 @@ if (!fs.existsSync(extensionDevelopmentPath)) {
 
 if (!fs.existsSync(exercisesPath)) {
 	console.error(
-		`Exercises path does not exist. Please run "git clone https://github.com/cte/Roo-Code-Benchmark.git exercises".`,
+		`Exercises path does not exist. Please run "git clone https://github.com/RooCodeInc/Roo-Code-Evals.git exercises".`,
 	)
 	process.exit(1)
 }
