@@ -111,6 +111,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	terminalCompressProgressBar?: boolean
 	setTerminalCompressProgressBar: (value: boolean) => void
 	setHistoryPreviewCollapsed: (value: boolean) => void
+	autoCondenseContext: boolean
+	setAutoCondenseContext: (value: boolean) => void
 	autoCondenseContextPercent: number
 	setAutoCondenseContextPercent: (value: number) => void
 	routerModels?: RouterModels
@@ -195,6 +197,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalCompressProgressBar: true, // Default to compress progress bar output
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
 		organizationAllowList: ORGANIZATION_ALLOW_ALL,
+		autoCondenseContext: true,
 		autoCondenseContextPercent: 100,
 		codebaseIndexConfig: {
 			codebaseIndexEnabled: false,
@@ -389,6 +392,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			}),
 		setHistoryPreviewCollapsed: (value) =>
 			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })),
+		setAutoCondenseContext: (value) => setState((prevState) => ({ ...prevState, autoCondenseContext: value })),
 		setAutoCondenseContextPercent: (value) =>
 			setState((prevState) => ({ ...prevState, autoCondenseContextPercent: value })),
 		setCondensingApiConfigId: (value) => setState((prevState) => ({ ...prevState, condensingApiConfigId: value })),

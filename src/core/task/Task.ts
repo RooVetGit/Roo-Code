@@ -1127,11 +1127,15 @@ export class Task extends EventEmitter<ClineEvents> {
 			}),
 		)
 
+		const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
+
 		const parsedUserContent = await processUserContentMentions({
 			userContent,
 			cwd: this.cwd,
 			urlContentFetcher: this.urlContentFetcher,
 			fileContextTracker: this.fileContextTracker,
+			rooIgnoreController: this.rooIgnoreController,
+			showRooIgnoredFiles,
 		})
 
 		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)
@@ -1547,8 +1551,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			autoApprovalEnabled,
 			alwaysApproveResubmit,
 			requestDelaySeconds,
-			experiments,
 			mode,
+			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
 		} = state ?? {}
 
@@ -1612,7 +1616,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
-			const autoCondenseContext = experiments?.autoCondenseContext ?? false
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens: contextTokens,

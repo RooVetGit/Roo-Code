@@ -204,6 +204,7 @@ describe("mergeExtensionState", () => {
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
 			organizationAllowList: { allowAll: true, providers: {} },
+			autoCondenseContext: true,
 			autoCondenseContextPercent: 100,
 		}
 

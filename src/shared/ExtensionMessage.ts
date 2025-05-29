@@ -219,6 +219,7 @@ export type ExtensionState = Pick<
 
 	organizationAllowList: OrganizationAllowList
 
+	autoCondenseContext: boolean
 	autoCondenseContextPercent: number
 }
 
