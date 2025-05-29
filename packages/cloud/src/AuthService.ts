@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 
 import type { CloudUserInfo } from "@roo-code/types"
 
-import { getClerkBaseUrl, getRooCodeApiUrl } from "./Config"
+import { getClerkBaseUrl, getDeepLinkUrl, getRooCodeApiUrl } from "./Config"
 import { RefreshTimer } from "./RefreshTimer"
 
 export interface AuthServiceEvents {
@@ -93,8 +93,9 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			// Generate a cryptographically random state parameter.
 			const state = crypto.randomBytes(16).toString("hex")
 			await this.context.globalState.update(AUTH_STATE_KEY, state)
-			const uri = vscode.Uri.parse(`${getRooCodeApiUrl()}/extension/sign-in?state=${state}`)
-			await vscode.env.openExternal(uri)
+			const params = new URLSearchParams({ state, ide: getDeepLinkUrl(this.context) })
+			const url = `${getRooCodeApiUrl()}/extension/sign-in?${params.toString()}`
+			await vscode.env.openExternal(vscode.Uri.parse(url))
 		} catch (error) {
 			console.error(`[auth] Error initiating Roo Code Cloud auth: ${error}`)
 			throw new Error(`Failed to initiate Roo Code Cloud authentication: ${error}`)
