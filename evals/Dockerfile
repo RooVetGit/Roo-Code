@@ -76,4 +76,3 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 
  EXPOSE 3000
  CMD ["pnpm", "web"]
- 
