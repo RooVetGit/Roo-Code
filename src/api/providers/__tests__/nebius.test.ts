@@ -151,6 +151,9 @@ describe("NebiusHandler", () => {
 				nebiusModelId: "deepseek-ai/DeepSeek-R1",
 			})
 
+			// Ensure the model is loaded
+			await handler.fetchModel()
+
 			const mockStream = {
 				async *[Symbol.asyncIterator]() {
 					yield {
@@ -169,16 +172,19 @@ describe("NebiusHandler", () => {
 
 			await handler.createMessage(systemPrompt, messages).next()
 
-			// Verify R1 format is used - the first message should combine system and user content
+			// Verify R1 format is used - the system prompt and first user message should be merged
 			expect(mockCreate).toHaveBeenCalledWith(
 				expect.objectContaining({
 					model: "deepseek-ai/DeepSeek-R1",
-					messages: expect.arrayContaining([
-						expect.objectContaining({
+					messages: [
+						{
 							role: "user",
-							content: expect.stringContaining("test system prompt"),
-						}),
-					]),
+							content: "test system prompt\ntest message",
+						},
+					],
+					temperature: 0,
+					stream: true,
+					stream_options: { include_usage: true },
 				}),
 			)
 		})
