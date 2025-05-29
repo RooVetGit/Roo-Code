@@ -2,7 +2,7 @@
 
 import axios from "axios"
 import { getNebiusModels } from "../nebius"
-import { COMPUTER_USE_MODELS } from "../../../../shared/api"
+import { LITELLM_COMPUTER_USE_MODELS } from "../../../../shared/api"
 
 jest.mock("axios")
 
@@ -129,9 +129,9 @@ describe("Nebius API", () => {
 			expect(computerUseModels).toContain("anthropic/claude-3.5-sonnet")
 			expect(computerUseModels).toContain("anthropic/claude-3.7-sonnet")
 
-			// Verify these models are in the COMPUTER_USE_MODELS set
+			// Verify these models are in the LITELLM_COMPUTER_USE_MODELS set
 			computerUseModels.forEach((modelId) => {
-				expect(COMPUTER_USE_MODELS.has(modelId)).toBe(true)
+				expect(LITELLM_COMPUTER_USE_MODELS.has(modelId)).toBe(true)
 			})
 		})
 
