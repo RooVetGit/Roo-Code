@@ -106,8 +106,10 @@ describe("TaskHeader", () => {
 	})
 
 	it("should disable the condense context button when buttonsDisabled is true", () => {
-		renderTaskHeader({ buttonsDisabled: true })
+		const handleCondenseContext = jest.fn()
+		renderTaskHeader({ buttonsDisabled: true, handleCondenseContext })
 		const condenseButton = screen.getByTitle("chat:task.condenseContext")
-		expect(condenseButton).toBeDisabled()
+		fireEvent.click(condenseButton)
+		expect(handleCondenseContext).not.toHaveBeenCalled()
 	})
 })
