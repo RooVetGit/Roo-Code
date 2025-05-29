@@ -217,10 +217,6 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	// If debugging:
 	// subprocess.stdout.pipe(process.stdout)
 
-	// Give VSCode some time to spawn before connectint to its unix socket.
-	await new Promise((resolve) => setTimeout(resolve, isDocker ? 5_000 : 1_000))
-	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
-
 	// Give VSCode some time to spawn before connecting to its unix socket.
 	await new Promise((resolve) => setTimeout(resolve, 3_000))
 	console.log(`${Date.now()} [cli#runExercise] Connecting to ${taskSocketPath}`)
