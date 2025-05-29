@@ -6,7 +6,7 @@
 	"views.activitybar.title": "Roo Code",
 	"command.newTask.title": "Новая задача",
 	"command.mcpServers.title": "MCP серверы",
-	"command.prompts.title": "Промпты",
+	"command.prompts.title": "Режимы",
 	"command.history.title": "История",
 	"command.openInEditor.title": "Открыть в редакторе",
 	"command.settings.title": "Настройки",
@@ -27,5 +27,6 @@
 	"settings.vsCodeLmModelSelector.description": "Настройки для VSCode Language Model API",
 	"settings.vsCodeLmModelSelector.vendor.description": "Поставщик языковой модели (например, copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "Семейство языковой модели (например, gpt-4)",
-	"settings.customStoragePath.description": "Пользовательский путь хранения. Оставьте пустым для использования пути по умолчанию. Поддерживает абсолютные пути (например, 'D:\\RooCodeStorage')"
+	"settings.customStoragePath.description": "Пользовательский путь хранения. Оставьте пустым для использования пути по умолчанию. Поддерживает абсолютные пути (например, 'D:\\RooCodeStorage')",
+	"settings.rooCodeCloudEnabled.description": "Включить Roo Code Cloud."
 }

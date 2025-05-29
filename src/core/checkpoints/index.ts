@@ -1,6 +1,8 @@
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { Task } from "../task/Task"
 
 import { getWorkspacePath } from "../../utils/path"
@@ -10,7 +12,6 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
 export function getCheckpointService(cline: Task) {
@@ -152,7 +153,7 @@ async function getInitializedCheckpointService(
 	}
 }
 
-export async function checkpointSave(cline: Task) {
+export async function checkpointSave(cline: Task, force = false) {
 	const service = getCheckpointService(cline)
 
 	if (!service) {
@@ -166,10 +167,10 @@ export async function checkpointSave(cline: Task) {
 		return
 	}
 
-	telemetryService.captureCheckpointCreated(cline.taskId)
+	TelemetryService.instance.captureCheckpointCreated(cline.taskId)
 
 	// Start the checkpoint process in the background.
-	return service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`).catch((err) => {
+	return service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force }).catch((err) => {
 		console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
 		cline.enableCheckpoints = false
 	})
@@ -198,7 +199,7 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 
 	try {
 		await service.restoreCheckpoint(commitHash)
-		telemetryService.captureCheckpointRestored(cline.taskId)
+		TelemetryService.instance.captureCheckpointRestored(cline.taskId)
 		await provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
 
 		if (mode === "restore") {
@@ -256,7 +257,7 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 		return
 	}
 
-	telemetryService.captureCheckpointDiffed(cline.taskId)
+	TelemetryService.instance.captureCheckpointDiffed(cline.taskId)
 
 	if (!previousCommitHash && mode === "checkpoint") {
 		const previousCheckpoint = cline.clineMessages

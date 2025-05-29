@@ -17,7 +17,7 @@
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
 	"command.mcpServers.title": "Serveurs MCP",
-	"command.prompts.title": "Invites",
+	"command.prompts.title": "Modes",
 	"command.history.title": "Historique",
 	"command.openInEditor.title": "Ouvrir dans l'Éditeur",
 	"command.settings.title": "Paramètres",
@@ -27,5 +27,6 @@
 	"settings.vsCodeLmModelSelector.description": "Paramètres pour l'API du modèle de langage VSCode",
 	"settings.vsCodeLmModelSelector.vendor.description": "Le fournisseur du modèle de langage (ex: copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "La famille du modèle de langage (ex: gpt-4)",
-	"settings.customStoragePath.description": "Chemin de stockage personnalisé. Laisser vide pour utiliser l'emplacement par défaut. Prend en charge les chemins absolus (ex: 'D:\\RooCodeStorage')"
+	"settings.customStoragePath.description": "Chemin de stockage personnalisé. Laisser vide pour utiliser l'emplacement par défaut. Prend en charge les chemins absolus (ex: 'D:\\RooCodeStorage')",
+	"settings.rooCodeCloudEnabled.description": "Activer Roo Code Cloud."
 }

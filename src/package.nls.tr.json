@@ -17,7 +17,7 @@
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
 	"command.mcpServers.title": "MCP Sunucuları",
-	"command.prompts.title": "Komut İstemleri",
+	"command.prompts.title": "Modlar",
 	"command.history.title": "Geçmiş",
 	"command.openInEditor.title": "Düzenleyicide Aç",
 	"command.settings.title": "Ayarlar",
@@ -27,5 +27,6 @@
 	"settings.vsCodeLmModelSelector.description": "VSCode dil modeli API'si için ayarlar",
 	"settings.vsCodeLmModelSelector.vendor.description": "Dil modelinin sağlayıcısı (örn: copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "Dil modelinin ailesi (örn: gpt-4)",
-	"settings.customStoragePath.description": "Özel depolama yolu. Varsayılan konumu kullanmak için boş bırakın. Mutlak yolları destekler (örn: 'D:\\RooCodeStorage')"
+	"settings.customStoragePath.description": "Özel depolama yolu. Varsayılan konumu kullanmak için boş bırakın. Mutlak yolları destekler (örn: 'D:\\RooCodeStorage')",
+	"settings.rooCodeCloudEnabled.description": "Roo Code Cloud'u Etkinleştir."
 }

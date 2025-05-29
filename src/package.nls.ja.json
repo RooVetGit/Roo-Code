@@ -6,7 +6,7 @@
 	"views.activitybar.title": "Roo Code",
 	"command.newTask.title": "新しいタスク",
 	"command.mcpServers.title": "MCPサーバー",
-	"command.prompts.title": "プロンプト",
+	"command.prompts.title": "モード",
 	"command.history.title": "履歴",
 	"command.openInEditor.title": "エディタで開く",
 	"command.settings.title": "設定",
@@ -27,5 +27,6 @@
 	"settings.vsCodeLmModelSelector.description": "VSCode 言語モデル API の設定",
 	"settings.vsCodeLmModelSelector.vendor.description": "言語モデルのベンダー（例：copilot）",
 	"settings.vsCodeLmModelSelector.family.description": "言語モデルのファミリー（例：gpt-4）",
-	"settings.customStoragePath.description": "カスタムストレージパス。デフォルトの場所を使用する場合は空のままにします。絶対パスをサポートします（例：'D:\\RooCodeStorage'）"
+	"settings.customStoragePath.description": "カスタムストレージパス。デフォルトの場所を使用する場合は空のままにします。絶対パスをサポートします（例：'D:\\RooCodeStorage'）",
+	"settings.rooCodeCloudEnabled.description": "Roo Code Cloud を有効にする。"
 }

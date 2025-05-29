@@ -21,6 +21,7 @@ import {
 	AlertTriangle,
 	Globe,
 	Info,
+	MessageSquare,
 	LucideIcon,
 } from "lucide-react"
 
@@ -62,6 +63,7 @@ import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
+import PromptsSettings from "./PromptsSettings"
 import { cn } from "@/lib/utils"
 
 export const settingsTabsContainer = "flex flex-1 overflow-hidden [&.narrow_.tab-label]:hidden"
@@ -83,6 +85,7 @@ const sectionNames = [
 	"notifications",
 	"contextManagement",
 	"terminal",
+	"prompts",
 	"experimental",
 	"language",
 	"about",
@@ -129,6 +132,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		alwaysAllowWrite,
 		alwaysAllowWriteOutsideWorkspace,
 		alwaysApproveResubmit,
+		autoCondenseContext,
 		autoCondenseContextPercent,
 		browserToolEnabled,
 		browserViewportSize,
@@ -253,6 +257,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowMcp", bool: alwaysAllowMcp })
 			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
 			vscode.postMessage({ type: "allowedMaxRequests", value: allowedMaxRequests ?? undefined })
+			vscode.postMessage({ type: "autoCondenseContext", bool: autoCondenseContext })
 			vscode.postMessage({ type: "autoCondenseContextPercent", value: autoCondenseContextPercent })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
@@ -369,6 +374,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "notifications", icon: Bell },
 			{ id: "contextManagement", icon: Database },
 			{ id: "terminal", icon: SquareTerminal },
+			{ id: "prompts", icon: MessageSquare },
 			{ id: "experimental", icon: FlaskConical },
 			{ id: "language", icon: Globe },
 			{ id: "about", icon: Info },
@@ -610,6 +616,11 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					{/* Context Management Section */}
 					{activeTab === "contextManagement" && (
 						<ContextManagementSettings
+							autoCondenseContext={autoCondenseContext}
+							autoCondenseContextPercent={autoCondenseContextPercent}
+							condensingApiConfigId={condensingApiConfigId}
+							customCondensingPrompt={customCondensingPrompt}
+							listApiConfigMeta={listApiConfigMeta ?? []}
 							maxOpenTabsContext={maxOpenTabsContext}
 							maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
 							showRooIgnoredFiles={showRooIgnoredFiles}
@@ -635,17 +646,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						/>
 					)}
 
+					{/* Prompts Section */}
+					{activeTab === "prompts" && <PromptsSettings />}
+
 					{/* Experimental Section */}
 					{activeTab === "experimental" && (
 						<ExperimentalSettings
 							setExperimentEnabled={setExperimentEnabled}
 							experiments={experiments}
-							autoCondenseContextPercent={autoCondenseContextPercent}
-							condensingApiConfigId={condensingApiConfigId}
-							setCondensingApiConfigId={(value) => setCachedStateField("condensingApiConfigId", value)}
-							customCondensingPrompt={customCondensingPrompt}
-							setCustomCondensingPrompt={(value) => setCachedStateField("customCondensingPrompt", value)}
-							listApiConfigMeta={listApiConfigMeta ?? []}
 							setCachedStateField={setCachedStateField}
 							codebaseIndexModels={codebaseIndexModels}
 							codebaseIndexConfig={codebaseIndexConfig}

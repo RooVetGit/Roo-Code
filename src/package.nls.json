@@ -6,7 +6,7 @@
 	"views.activitybar.title": "Roo Code",
 	"command.newTask.title": "New Task",
 	"command.mcpServers.title": "MCP Servers",
-	"command.prompts.title": "Prompts",
+	"command.prompts.title": "Modes",
 	"command.history.title": "History",
 	"command.openInEditor.title": "Open in Editor",
 	"command.settings.title": "Settings",
@@ -27,5 +27,6 @@
 	"settings.vsCodeLmModelSelector.description": "Settings for VSCode Language Model API",
 	"settings.vsCodeLmModelSelector.vendor.description": "The vendor of the language model (e.g. copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "The family of the language model (e.g. gpt-4)",
-	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
+	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')",
+	"settings.rooCodeCloudEnabled.description": "Enable Roo Code Cloud."
 }
