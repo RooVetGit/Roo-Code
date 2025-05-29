@@ -30,6 +30,7 @@ export const providerNames = [
 	"groq",
 	"chutes",
 	"litellm",
+	"nebius",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -200,6 +201,12 @@ const litellmSchema = baseProviderSettingsSchema.extend({
 	litellmModelId: z.string().optional(),
 })
 
+const nebiusSchema = baseProviderSettingsSchema.extend({
+	nebiusBaseUrl: z.string().optional(),
+	nebiusApiKey: z.string().optional(),
+	nebiusModelId: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -226,6 +233,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
 	chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
+	nebiusSchema.merge(z.object({ apiProvider: z.literal("nebius") })),
 	defaultSchema,
 ])
 
@@ -252,6 +260,7 @@ export const providerSettingsSchema = z.object({
 	...groqSchema.shape,
 	...chutesSchema.shape,
 	...litellmSchema.shape,
+	...nebiusSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 
@@ -353,4 +362,8 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"litellmBaseUrl",
 	"litellmApiKey",
 	"litellmModelId",
+	// Nebius
+	"nebiusBaseUrl",
+	"nebiusApiKey",
+	"nebiusModelId",
 ])

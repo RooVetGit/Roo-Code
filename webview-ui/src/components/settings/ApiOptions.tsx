@@ -418,7 +418,11 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "nebius" && (
-				<Nebius apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+				<Nebius
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+					organizationAllowList={organizationAllowList}
+				/>
 			)}
 
 			{selectedProvider === "human-relay" && (

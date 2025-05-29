@@ -1,7 +1,9 @@
 import { useCallback } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { ProviderSettings, RouterModels, nebiusDefaultModelId } from "@roo/shared/api"
+import type { ProviderSettings, OrganizationAllowList } from "@roo-code/types"
+
+import { RouterModels, nebiusDefaultModelId } from "@roo/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 
@@ -12,9 +14,15 @@ type NebiusProps = {
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	routerModels?: RouterModels
+	organizationAllowList: OrganizationAllowList
 }
 
-export const Nebius = ({ apiConfiguration, setApiConfigurationField, routerModels }: NebiusProps) => {
+export const Nebius = ({
+	apiConfiguration,
+	setApiConfigurationField,
+	routerModels,
+	organizationAllowList,
+}: NebiusProps) => {
 	const { t } = useAppTranslation()
 
 	const handleInputChange = useCallback(
@@ -59,6 +67,7 @@ export const Nebius = ({ apiConfiguration, setApiConfigurationField, routerModel
 				serviceName="Nebius"
 				serviceUrl="https://docs.nebius.ai/"
 				setApiConfigurationField={setApiConfigurationField}
+				organizationAllowList={organizationAllowList}
 			/>
 		</>
 	)
