@@ -8,6 +8,10 @@ import { VSCodeTextField, VSCodeRadioGroup, VSCodeRadio } from "@vscode/webview-
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
+import { useExtensionState } from "@/context/ExtensionStateContext"
+import { getModeBySlug } from "../../../../src/shared/modes"
+import { ModeConfig } from "@roo-code/types"
+
 import { cn } from "@/lib/utils"
 import { Button, Checkbox } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
@@ -35,6 +39,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		setShowAllWorkspaces,
 	} = useTaskSearch()
 	const { t } = useAppTranslation()
+	const { customModes } = useExtensionState() // Added
 
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 	const [isSelectionMode, setIsSelectionMode] = useState(false)
@@ -285,10 +290,25 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											wordBreak: "break-word",
 											overflowWrap: "anywhere",
 										}}
-										data-testid="task-content"
-										dangerouslySetInnerHTML={{ __html: item.task }}
-									/>
-									<div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+										data-testid="task-content">
+										<span dangerouslySetInnerHTML={{ __html: item.task }} />
+									</div>
+									<div className="flex flex-col gap-1">
+										{item.lastActiveModeSlug &&
+											(() => {
+												const mode = getModeBySlug(item.lastActiveModeSlug, customModes) as
+													| ModeConfig
+													| undefined
+												if (mode?.name) {
+													return (
+														<div className="mt-2 mb-1 text-ellipsis overflow-hidden whitespace-nowrap">
+															{mode.name}
+														</div>
+													)
+												}
+												return null
+											})()}
+
 										<div
 											data-testid="tokens-container"
 											style={{

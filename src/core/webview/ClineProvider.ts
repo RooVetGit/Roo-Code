@@ -181,6 +181,15 @@ export class ClineProvider
 		}
 	}
 
+	public async clearStack() {
+		this.log("Clearing entire cline stack")
+		while (this.clineStack.length > 0) {
+			// removeClineFromStack already logs the removal of each task
+			await this.removeClineFromStack()
+		}
+		this.log("Cline stack cleared")
+	}
+
 	// returns the current cline object in the stack (the top one)
 	// if the stack is empty, returns undefined
 	getCurrentCline(): Task | undefined {
@@ -206,8 +215,17 @@ export class ClineProvider
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+
+		const parentCline = this.getCurrentCline()
+		if (parentCline) {
+			const parentLastActiveMode = parentCline.currentModeSlug // Changed from initialModeSlug
+			const currentActiveMode = (await this.getState()).mode
+
+			if (parentLastActiveMode && parentLastActiveMode !== currentActiveMode) {
+				await this.handleModeSwitch(parentLastActiveMode)
+			}
+			await parentCline.resumePausedTask(lastMessage)
+		}
 	}
 
 	/*
@@ -497,6 +515,7 @@ export class ClineProvider
 			diffEnabled: enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
+			mode,
 			experiments,
 		} = await this.getState()
 
@@ -513,6 +532,7 @@ export class ClineProvider
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			currentModeSlug: mode,
 			...options,
 		})
 
@@ -528,6 +548,17 @@ export class ClineProvider
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
+		// Get current global mode first
+		let currentGlobalMode = (await this.getState()).mode
+
+		const targetModeSlug = historyItem.lastActiveModeSlug ?? currentGlobalMode
+
+		if (targetModeSlug !== currentGlobalMode) {
+			await this.handleModeSwitch(targetModeSlug)
+			// After switching, getState() will return the new active mode and its associated configs
+		}
+
+		// Re-fetch state after potential mode switch to get correct apiConfig, prompts, etc.
 		const {
 			apiConfiguration,
 			diffEnabled: enableDiff,
@@ -535,6 +566,7 @@ export class ClineProvider
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
 
 		const cline = new Task({
 			provider: this,
@@ -547,6 +579,7 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
+			currentModeSlug: targetModeSlug, // Pass the determined target mode slug
 			onCreated: (cline) => this.emit("clineCreated", cline),
 		})
 
@@ -749,11 +782,16 @@ export class ClineProvider
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
-		const cline = this.getCurrentCline()
+		// Telemetry for mode switch (provider level)
+		const cline = this.getCurrentCline() // Get current cline for task ID if available
+		telemetryService.captureModeSwitch(cline?.taskId || "global", newMode)
 
+		// Emit an event that the provider's mode is switching.
+		// The active Cline instance itself should only update its internal currentModeSlug
+		// if the switch_mode tool is used within its context.
+		// A global mode switch should not change an active task's inherent mode.
 		if (cline) {
-			telemetryService.captureModeSwitch(cline.taskId, newMode)
-			cline.emit("taskModeSwitched", cline.taskId, newMode)
+			cline.emit("taskModeSwitched", cline.taskId, newMode) // Task is now running in a provider with a new mode
 		}
 
 		await this.updateGlobalState("mode", newMode)

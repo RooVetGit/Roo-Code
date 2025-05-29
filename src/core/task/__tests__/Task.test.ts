@@ -275,6 +275,7 @@ describe("Cline", () => {
 			const cline = new Task({
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
+				currentModeSlug: "code",
 				fuzzyMatchThreshold: 0.95,
 				task: "test task",
 				startTask: false,
@@ -287,6 +288,7 @@ describe("Cline", () => {
 			const cline = new Task({
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
+				currentModeSlug: "code",
 				enableDiff: true,
 				fuzzyMatchThreshold: 0.95,
 				task: "test task",
@@ -301,7 +303,7 @@ describe("Cline", () => {
 
 		it("should require either task or historyItem", () => {
 			expect(() => {
-				new Task({ provider: mockProvider, apiConfiguration: mockApiConfig })
+				new Task({ provider: mockProvider, apiConfiguration: mockApiConfig, currentModeSlug: "code" })
 			}).toThrow("Either historyItem or task/images must be provided")
 		})
 	})
@@ -313,6 +315,7 @@ describe("Cline", () => {
 				const [cline, task] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
+					currentModeSlug: "code", // Added for test
 					task: "test task",
 				})
 
@@ -421,6 +424,7 @@ describe("Cline", () => {
 				const [clineWithImages, taskWithImages] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: configWithImages,
+					currentModeSlug: "code", // Added for test
 					task: "test task",
 				})
 
@@ -444,6 +448,7 @@ describe("Cline", () => {
 				const [clineWithoutImages, taskWithoutImages] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: configWithoutImages,
+					currentModeSlug: "code", // Added for test
 					task: "test task",
 				})
 
@@ -535,6 +540,7 @@ describe("Cline", () => {
 				const [cline, task] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
+					currentModeSlug: "code", // Added for test
 					task: "test task",
 				})
 
@@ -660,6 +666,7 @@ describe("Cline", () => {
 				const [cline, task] = Task.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
+					currentModeSlug: "code", // Added for test
 					task: "test task",
 				})
 
@@ -785,6 +792,7 @@ describe("Cline", () => {
 					const [cline, task] = Task.create({
 						provider: mockProvider,
 						apiConfiguration: mockApiConfig,
+						currentModeSlug: "code", // Added for test
 						task: "test task",
 					})
 
