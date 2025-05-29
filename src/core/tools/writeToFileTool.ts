@@ -26,7 +26,7 @@ export async function writeToFileTool(
 	let newContent: string | undefined = block.params.content
 	let predictedLineCount: number | undefined = parseInt(block.params.line_count ?? "0")
 
-	if (!relPath || !newContent) {
+	if (!relPath || newContent === undefined) {
 		// checking for newContent ensure relPath is complete
 		// wait so we can determine if it's a new file or editing an existing file
 		return
@@ -54,11 +54,11 @@ export async function writeToFileTool(
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
 	if (newContent.startsWith("```")) {
 		// cline handles cases where it includes language specifiers like ```python ```js
-		newContent = newContent.split("\n").slice(1).join("\n").trim()
+		newContent = newContent.split("\n").slice(1).join("\n")
 	}
 
 	if (newContent.endsWith("```")) {
-		newContent = newContent.split("\n").slice(0, -1).join("\n").trim()
+		newContent = newContent.split("\n").slice(0, -1).join("\n")
 	}
 
 	if (!cline.api.getModel().id.includes("claude")) {
@@ -104,7 +104,7 @@ export async function writeToFileTool(
 				return
 			}
 
-			if (!newContent) {
+			if (newContent === undefined) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("write_to_file")
 				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
