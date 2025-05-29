@@ -98,7 +98,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			const name = packageJSON?.name ?? "roo-cline"
 			const params = new URLSearchParams({
 				state,
-				editor_redirect: `${vscode.env.uriScheme}://${publisher}.${name}`,
+				auth_redirect: `${vscode.env.uriScheme}://${publisher}.${name}`,
 			})
 			const url = `${getRooCodeApiUrl()}/extension/sign-in?${params.toString()}`
 			await vscode.env.openExternal(vscode.Uri.parse(url))
