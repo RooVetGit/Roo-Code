@@ -13,6 +13,11 @@ jest.mock("react-i18next", () => ({
 	useTranslation: () => ({
 		t: (key: string) => key, // Simple mock that returns the key
 	}),
+	// Mock initReactI18next to prevent initialization errors in tests
+	initReactI18next: {
+		type: "3rdParty",
+		init: jest.fn(),
+	},
 }))
 
 // Mock the vscode API
@@ -35,7 +40,7 @@ jest.mock("@src/context/ExtensionStateContext", () => ({
 			apiKey: "test-api-key", // Add relevant fields
 			apiModelId: "claude-3-opus-20240229", // Add relevant fields
 		} as ProviderSettings, // Optional: Add type assertion if ProviderSettings is imported
-		currentTaskItem: { id: "test-task-id" }, // Add a mock currentTaskItem for the condense button
+		currentTaskItem: { id: "test-task-id" },
 	}),
 }))
 
