@@ -129,7 +129,7 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 const ollamaSchema = baseProviderSettingsSchema.extend({
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
-	ollamaApiTimeout: z.number().optional().describe("Timeout in minutes for Ollama API requests"),
+	ollamaApiTimeout: z.number().optional(),
 })
 
 const vsCodeLmSchema = baseProviderSettingsSchema.extend({
