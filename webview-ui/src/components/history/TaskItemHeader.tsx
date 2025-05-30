@@ -2,7 +2,7 @@ import React from "react"
 import type { HistoryItem } from "@roo-code/types"
 import prettyBytes from "pretty-bytes"
 import { vscode } from "@/utils/vscode"
-import { formatLargeNumber, formatDate } from "@/utils/format"
+import { formatDate } from "@/utils/format"
 import { Button } from "@/components/ui"
 import { CopyButton } from "./CopyButton"
 
@@ -18,17 +18,6 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelect
 	const isCompact = variant === "compact"
 
 	// Standardized icon styles
-	const metadataIconStyle: React.CSSProperties = {
-		fontSize: "12px",
-		color: "var(--vscode-descriptionForeground)",
-		verticalAlign: "middle",
-	}
-
-	const metadataIconWithTextAdjustStyle: React.CSSProperties = {
-		...metadataIconStyle,
-		marginBottom: "-2px",
-	}
-
 	const actionIconStyle: React.CSSProperties = {
 		fontSize: "16px",
 		color: "var(--vscode-descriptionForeground)",
