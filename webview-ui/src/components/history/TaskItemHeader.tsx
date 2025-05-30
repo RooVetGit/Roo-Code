@@ -1,12 +1,10 @@
 import React from "react"
 import type { HistoryItem } from "@roo-code/types"
 import prettyBytes from "pretty-bytes"
-import { DollarSign } from "lucide-react"
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
 import { Button } from "@/components/ui"
 import { CopyButton } from "./CopyButton"
-import { ExportButton } from "./ExportButton"
 
 export interface TaskItemHeaderProps {
 	item: HistoryItem
@@ -53,24 +51,6 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelect
 					{formatDate(item.ts)}
 				</span>
 
-				{/* Tokens Info */}
-				{(item.tokensIn || item.tokensOut) && (
-					<span className="text-vscode-descriptionForeground flex items-center gap-px">
-						<i className="codicon codicon-arrow-up" style={metadataIconWithTextAdjustStyle} />
-						<span data-testid="tokens-in">{formatLargeNumber(item.tokensIn || 0)}</span>
-						<i className="codicon codicon-arrow-down" style={metadataIconWithTextAdjustStyle} />
-						<span data-testid="tokens-out">{formatLargeNumber(item.tokensOut || 0)}</span>
-					</span>
-				)}
-
-				{/* Cost Info */}
-				{!!item.totalCost && (
-					<span className="text-vscode-descriptionForeground flex items-center gap-px">
-						<DollarSign className="inline-block size-[1em]" />
-						{isCompact ? item.totalCost.toFixed(2) : item.totalCost.toFixed(4)}
-					</span>
-				)}
-
 				{/* Cache Info */}
 				{!!item.cacheWrites && (
 					<span className="text-vscode-descriptionForeground flex items-center gap-px">
@@ -79,11 +59,6 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelect
 						<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
 						<span data-testid="cache-reads">{formatLargeNumber(item.cacheReads || 0)}</span>
 					</span>
-				)}
-
-				{/* Size Info - only in full variant */}
-				{!isCompact && item.size && (
-					<span className="text-vscode-descriptionForeground">{prettyBytes(item.size)}</span>
 				)}
 			</div>
 
@@ -94,8 +69,6 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelect
 						<CopyButton itemTask={item.task} />
 					) : (
 						<>
-							<CopyButton itemTask={item.task} />
-							<ExportButton itemId={item.id} />
 							{onDelete && (
 								<Button
 									variant="ghost"
@@ -105,6 +78,11 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelect
 									onClick={handleDeleteClick}>
 									<span className="codicon codicon-trash" style={actionIconStyle} />
 								</Button>
+							)}
+							{!isCompact && item.size && (
+								<span className="text-vscode-descriptionForeground ml-1 text-sm">
+									{prettyBytes(item.size)}
+								</span>
 							)}
 						</>
 					)}

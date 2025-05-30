@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import TaskItemHeader from "./TaskItemHeader"
+import TaskItemFooter from "./TaskItemFooter"
 
 interface TaskItemProps {
 	item: HistoryItem
@@ -105,6 +106,9 @@ const TaskItem = ({
 						{...(isCompact ? {} : { dangerouslySetInnerHTML: { __html: item.task } })}>
 						{isCompact ? item.task : undefined}
 					</div>
+
+					{/* Task Item Footer */}
+					<TaskItemFooter item={item} variant={variant} isSelectionMode={isSelectionMode} />
 
 					{/* Workspace info */}
 					{showWorkspace && item.workspace && (
