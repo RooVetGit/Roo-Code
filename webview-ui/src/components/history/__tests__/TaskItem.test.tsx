@@ -7,6 +7,13 @@ jest.mock("@src/utils/vscode")
 jest.mock("@src/i18n/TranslationContext")
 jest.mock("lucide-react", () => ({
 	DollarSign: () => <span data-testid="dollar-sign">$</span>,
+	Coins: () => <span data-testid="coins-icon" />, // Mock for Coins icon used in TaskItemFooter compact
+}))
+jest.mock("../CopyButton", () => ({
+	CopyButton: jest.fn(() => <button data-testid="mock-copy-button">Copy</button>),
+}))
+jest.mock("../ExportButton", () => ({
+	ExportButton: jest.fn(() => <button data-testid="mock-export-button">Export</button>),
 }))
 
 const mockTask: HistoryItem = {
@@ -30,9 +37,9 @@ describe("TaskItem", () => {
 
 		expect(screen.getByText("Test task content")).toBeInTheDocument()
 		// Check for tokens display
-		expect(screen.getByTestId("tokens-in")).toHaveTextContent("100")
-		expect(screen.getByTestId("tokens-out")).toHaveTextContent("50")
-		expect(screen.getByText("0.00")).toBeInTheDocument() // Cost
+		expect(screen.getByTestId("tokens-in-footer-compact")).toHaveTextContent("100")
+		expect(screen.getByTestId("tokens-out-footer-compact")).toHaveTextContent("50")
+		expect(screen.getByTestId("cost-footer-compact")).toHaveTextContent("$0.00") // Cost
 	})
 
 	it("renders full variant correctly", () => {
@@ -40,8 +47,8 @@ describe("TaskItem", () => {
 
 		expect(screen.getByTestId("task-item-test-task-1")).toBeInTheDocument()
 		expect(screen.getByTestId("task-content")).toBeInTheDocument()
-		expect(screen.getByTestId("tokens-in")).toHaveTextContent("100")
-		expect(screen.getByTestId("tokens-out")).toHaveTextContent("50")
+		expect(screen.getByTestId("tokens-in-footer-full")).toHaveTextContent("100")
+		expect(screen.getByTestId("tokens-out-footer-full")).toHaveTextContent("50")
 	})
 
 	it("shows workspace when showWorkspace is true", () => {

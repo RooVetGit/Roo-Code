@@ -300,9 +300,9 @@ describe("HistoryView", () => {
 		// Find first task container
 		const taskContainer = screen.getByTestId("virtuoso-item-1")
 
-		// Find token counts within the task container (TaskItem -> TaskItemHeader)
-		expect(within(taskContainer).getByTestId("tokens-in")).toHaveTextContent("100")
-		expect(within(taskContainer).getByTestId("tokens-out")).toHaveTextContent("50")
+		// Find token counts within the task container (TaskItem -> TaskItemFooter)
+		expect(within(taskContainer).getByTestId("tokens-in-footer-full")).toHaveTextContent("100")
+		expect(within(taskContainer).getByTestId("tokens-out-footer-full")).toHaveTextContent("50")
 	})
 
 	it("displays cache information when available", () => {
