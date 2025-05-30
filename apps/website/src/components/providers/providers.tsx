@@ -2,11 +2,12 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ThemeProvider } from "next-themes"
+
 import { PostHogProvider } from "./posthog-provider"
 
-export const Providers = ({ children }: { children: React.ReactNode }) => {
-	const queryClient = React.useMemo(() => new QueryClient(), [])
+const queryClient = new QueryClient()
 
+export const Providers = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<PostHogProvider>
