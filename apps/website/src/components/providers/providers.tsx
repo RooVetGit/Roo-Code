@@ -5,7 +5,7 @@ import { ThemeProvider } from "next-themes"
 import { PostHogProvider } from "./posthog-provider"
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
-	const queryClient = new QueryClient()
+	const queryClient = React.useMemo(() => new QueryClient(), [])
 
 	return (
 		<QueryClientProvider client={queryClient}>
