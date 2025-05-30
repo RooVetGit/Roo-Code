@@ -2,9 +2,9 @@ import { memo } from "react"
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
-import { useExtensionState } from "@/context/ExtensionStateContext" // Added
-import { getModeBySlug } from "../../../../src/shared/modes" // Added
-import type { ModeConfig } from "../../../../src/schemas" // Added
+import { useExtensionState } from "@/context/ExtensionStateContext"
+import { getModeBySlug } from "../../../../src/shared/modes"
+import { ModeConfig } from "@roo-code/types"
 
 import { CopyButton } from "./CopyButton"
 import { useTaskSearch } from "./useTaskSearch"
@@ -13,7 +13,7 @@ import { Coins } from "lucide-react"
 
 const HistoryPreview = () => {
 	const { tasks, showAllWorkspaces } = useTaskSearch()
-	const { customModes } = useExtensionState() // Added
+	const { customModes } = useExtensionState()
 
 	return (
 		<>

@@ -8,9 +8,10 @@ import { VSCodeTextField, VSCodeRadioGroup, VSCodeRadio } from "@vscode/webview-
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
-import { useExtensionState } from "@/context/ExtensionStateContext" // Added
-import { getModeBySlug } from "../../../../src/shared/modes" // Added
-import type { ModeConfig } from "../../../../src/schemas" // Added
+import { useExtensionState } from "@/context/ExtensionStateContext"
+import { getModeBySlug } from "../../../../src/shared/modes"
+import { ModeConfig } from "@roo-code/types"
+
 import { cn } from "@/lib/utils"
 import { Button, Checkbox } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
