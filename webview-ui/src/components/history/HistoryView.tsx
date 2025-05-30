@@ -290,6 +290,9 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											overflowWrap: "anywhere",
 										}}
 										data-testid="task-content">
+										<span dangerouslySetInnerHTML={{ __html: item.task }} />
+									</div>
+									<div className="flex flex-col gap-1">
 										{item.lastActiveModeSlug &&
 											(() => {
 												const mode = getModeBySlug(item.lastActiveModeSlug, customModes) as
@@ -297,14 +300,14 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 													| undefined
 												if (mode?.name) {
 													return (
-														<span className="font-semibold mr-1">{`[Last Mode: ${mode.name}]`}</span>
+														<div className="mt-2 mb-1 text-ellipsis overflow-hidden whitespace-nowrap">
+															{mode.name}
+														</div>
 													)
 												}
 												return null
 											})()}
-										<span dangerouslySetInnerHTML={{ __html: item.task }} />
-									</div>
-									<div className="flex flex-col gap-1">
+
 										<div
 											data-testid="tokens-container"
 											style={{
