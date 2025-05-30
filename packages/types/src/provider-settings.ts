@@ -148,7 +148,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 	lmStudioBaseUrl: z.string().optional(),
 	lmStudioDraftModelId: z.string().optional(),
 	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
-	lmStudioApiTimeout: z.number().optional().describe("Timeout in minutes for LMStudio API requests"),
+	lmStudioApiTimeout: z.number().optional(),
 })
 
 const geminiSchema = apiModelIdProviderModelSchema.extend({
