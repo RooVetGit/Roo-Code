@@ -100,6 +100,7 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsProfile: z.string().optional(),
 	awsUseProfile: z.boolean().optional(),
 	awsCustomArn: z.string().optional(),
+	awsModelContextWindow: z.number().optional(),
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({
@@ -283,6 +284,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"awsProfile",
 	"awsUseProfile",
 	"awsCustomArn",
+	"awsModelContextWindow",
 	// Google Vertex
 	"vertexKeyFile",
 	"vertexJsonCredentials",
