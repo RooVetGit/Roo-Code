@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 
+import { rooCodeSettingsSchema, getModelId } from "@roo-code/types"
+
 import { getRuns } from "@/db"
-import { getLanguageScores } from "@/lib/server/get-language-scores"
-import { rooCodeSettingsSchema } from "@/lib/schemas"
-import { getModelInfo } from "@/lib/model-info"
+import { getLanguageScores } from "@/lib/server"
 import { formatScore } from "@/lib"
 
 import { Evals } from "./evals"
@@ -41,8 +41,7 @@ export default async function Page() {
 				score: formatScore(run.passed / (run.passed + run.failed)),
 				languageScores: languageScores[run.id],
 				taskMetrics: run.taskMetrics!,
-				settings: settings,
-				modelInfo: getModelInfo(settings),
+				modelId: getModelId(settings),
 			}
 		})
 

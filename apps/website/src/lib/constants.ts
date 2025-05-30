@@ -1,6 +1,3 @@
-/**
- * Shared URLs used throughout the application
- */
 export const EXTERNAL_LINKS = {
 	GITHUB: "https://github.com/RooVetGit/Roo-Code",
 	DISCORD: "https://discord.gg/roocode",

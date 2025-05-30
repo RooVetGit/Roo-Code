@@ -6,7 +6,6 @@ import { ScatterChart, Scatter, XAxis, YAxis, Label, Customized, Cross } from "r
 import { TaskMetrics, type Run } from "@/db"
 
 import { ChartConfig, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
-import { ModelInfo, RooCodeSettings } from "@/lib/schemas"
 import { formatTokens, formatCurrency, formatDuration, formatScore } from "@/lib"
 import {
 	ChartContainer,
@@ -20,6 +19,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui"
+import { useOpenRouterModels } from "@/lib/hooks/use-open-router-models"
 
 export function Evals({
 	runs,
@@ -29,25 +29,29 @@ export function Evals({
 		score: number
 		languageScores?: Record<"go" | "java" | "javascript" | "python" | "rust", number>
 		taskMetrics: TaskMetrics
-		settings?: RooCodeSettings
-		modelInfo?: ModelInfo | null
+		modelId?: string
 	})[]
 }) {
-	const data = useMemo(
+	const { data: openRouterModels } = useOpenRouterModels()
+
+	const tableData = useMemo(
 		() =>
-			runs
-				.map((run) => ({
-					label: run.description || run.model,
-					score: run.score,
-					cost: run.taskMetrics.cost,
-				}))
-				.filter(({ cost }) => cost < 100),
-		[runs],
+			runs.map((run) => ({
+				...run,
+				label: run.description || run.model,
+				score: run.score,
+				cost: run.taskMetrics.cost,
+				model: openRouterModels?.[run.modelId ?? ""],
+				modelInfo: openRouterModels?.[run.modelId ?? ""]?.modelInfo,
+			})),
+		[runs, openRouterModels],
 	)
 
+	const chartData = useMemo(() => tableData.filter(({ cost }) => cost < 100), [tableData])
+
 	const chartConfig = useMemo(
-		() => data.reduce((acc, run) => ({ ...acc, [run.label]: run }), {} as ChartConfig),
-		[data],
+		() => chartData.reduce((acc, run) => ({ ...acc, [run.label]: run }), {} as ChartConfig),
+		[chartData],
 	)
 
 	return (
@@ -119,10 +123,10 @@ export function Evals({
 					</TableRow>
 				</TableHeader>
 				<TableBody className="font-mono">
-					{runs.map((run) => (
+					{tableData.map((run) => (
 						<TableRow key={run.id}>
-							<TableCell>
-								<div className="font-sans">{run.label}</div>
+							<TableCell title={run.model?.description}>
+								<div className="font-sans">{run.model?.name || run.label}</div>
 								<div className="text-xs opacity-50">
 									{formatTokens(run.modelInfo?.contextWindow ?? 0)}
 								</div>
@@ -190,7 +194,7 @@ export function Evals({
 							</YAxis>
 							<ChartTooltip content={<ChartTooltipContent labelKey="label" hideIndicator />} />
 							<Customized component={renderQuadrant} />
-							{data.map((d, i) => (
+							{chartData.map((d, i) => (
 								<Scatter key={d.label} name={d.label} data={[d]} fill={`hsl(var(--chart-${i + 1}))`} />
 							))}
 							<ChartLegend content={<ChartLegendContent />} />
