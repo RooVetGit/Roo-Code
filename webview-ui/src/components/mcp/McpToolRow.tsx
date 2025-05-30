@@ -25,6 +25,17 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 		})
 	}
 
+	const handleEnabledForPromptChange = () => {
+		if (!serverName) return
+		vscode.postMessage({
+			type: "toggleToolEnabledForPrompt",
+			serverName,
+			source: serverSource || "global",
+			toolName: tool.name,
+			isEnabled: !tool.enabledForPrompt,
+		})
+	}
+
 	return (
 		<div
 			key={tool.name}
@@ -39,11 +50,58 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 					<span className="codicon codicon-symbol-method" style={{ marginRight: "6px" }}></span>
 					<span style={{ fontWeight: 500 }}>{tool.name}</span>
 				</div>
-				{serverName && alwaysAllowMcp && (
-					<VSCodeCheckbox checked={tool.alwaysAllow} onChange={handleAlwaysAllowChange} data-tool={tool.name}>
-						{t("mcp:tool.alwaysAllow")}
-					</VSCodeCheckbox>
-				)}
+				<div className="flex items-center space-x-4">
+					{" "}
+					{/* Wrapper for checkboxes */}
+					{serverName && (
+						<div
+							role="switch"
+							aria-checked={tool.enabledForPrompt}
+							tabIndex={0}
+							style={{
+								width: "32px",
+								height: "16px",
+								backgroundColor: tool.enabledForPrompt
+									? "var(--vscode-button-background)"
+									: "var(--vscode-titleBar-inactiveForeground)",
+								borderRadius: "8px",
+								position: "relative",
+								cursor: "pointer",
+								transition: "background-color 0.2s",
+								opacity: tool.enabledForPrompt ? 1 : 0.6,
+							}}
+							onClick={handleEnabledForPromptChange}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault()
+									handleEnabledForPromptChange()
+								}
+							}}
+							data-tool-prompt-toggle={tool.name}
+							title={t("mcp:tool.togglePromptInclusion")}>
+							<div
+								style={{
+									width: "12px",
+									height: "12px",
+									backgroundColor: "var(--vscode-titleBar-activeForeground)",
+									borderRadius: "50%",
+									position: "absolute",
+									top: "2px",
+									left: tool.enabledForPrompt ? "18px" : "2px",
+									transition: "left 0.2s",
+								}}
+							/>
+						</div>
+					)}
+					{serverName && alwaysAllowMcp && (
+						<VSCodeCheckbox
+							checked={tool.alwaysAllow}
+							onChange={handleAlwaysAllowChange}
+							data-tool={tool.name}>
+							{t("mcp:tool.alwaysAllow")}
+						</VSCodeCheckbox>
+					)}
+				</div>
 			</div>
 			{tool.description && (
 				<div
