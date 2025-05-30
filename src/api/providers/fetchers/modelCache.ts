@@ -5,7 +5,7 @@ import NodeCache from "node-cache"
 
 import { ContextProxy } from "../../../core/config/ContextProxy"
 import { getCacheDirectoryPath } from "../../../utils/storage"
-import { RouterName, ModelRecord } from "../../../shared/api"
+import { RouterName, ModelRecord, GetModelsOptions } from "../../../shared/api"
 import { fileExistsAtPath } from "../../../utils/fs"
 
 import { getOpenRouterModels } from "./openrouter"
@@ -13,7 +13,8 @@ import { getRequestyModels } from "./requesty"
 import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
 import { getLiteLLMModels } from "./litellm"
-import { GetModelsOptions } from "../../../shared/api"
+import { getNebiusModels } from "./nebius"
+
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
 async function writeModels(router: RouterName, data: ModelRecord) {
@@ -67,6 +68,10 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 			case "litellm":
 				// Type safety ensures apiKey and baseUrl are always provided for litellm
 				models = await getLiteLLMModels(options.apiKey, options.baseUrl)
+				break
+			case "nebius":
+				// Type safety ensures apiKey and baseUrl are always provided for nebius
+				models = await getNebiusModels(options.apiKey, options.baseUrl)
 				break
 			default: {
 				// Ensures router is exhaustively checked if RouterName is a strict union

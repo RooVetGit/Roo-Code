@@ -52,6 +52,11 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
+		case "nebius":
+			if (!apiConfiguration.nebiusApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			break
 		case "anthropic":
 			if (!apiConfiguration.apiKey) {
 				return i18next.t("settings:validation.apiKey")
@@ -218,6 +223,9 @@ export function validateModelId(apiConfiguration: ProviderSettings, routerModels
 			break
 		case "litellm":
 			modelId = apiConfiguration.litellmModelId
+			break
+		case "nebius":
+			modelId = apiConfiguration.nebiusModelId
 			break
 	}
 
