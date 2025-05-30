@@ -62,7 +62,17 @@ export async function switchModeTool(
 			}
 
 			// Switch the mode using shared handler
-			await cline.providerRef.deref()?.handleModeSwitch(mode_slug)
+			const provider = cline.providerRef.deref()
+			if (provider) {
+				await provider.handleModeSwitch(mode_slug)
+				// After provider's global mode is switched, update this Cline instance's currentModeSlug
+				await cline.updateCurrentModeSlug(mode_slug)
+			} else {
+				// Should not happen, but handle gracefully
+				cline.recordToolError("switch_mode")
+				pushToolResult(formatResponse.toolError("Failed to get provider reference for mode switch."))
+				return
+			}
 
 			pushToolResult(
 				`Successfully switched from ${getModeBySlug(currentMode)?.name ?? currentMode} mode to ${
