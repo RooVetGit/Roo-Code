@@ -5,6 +5,7 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { ApiHandler } from "../../../api"
+import { AwsBedrockHandler } from "../../../api/providers"
 import { ApiMessage } from "../../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../../api/transform/image-cleaning"
 import { summarizeConversation, getMessagesSinceLastSummary, N_MESSAGES_TO_KEEP } from "../index"
@@ -25,6 +26,12 @@ const taskId = "test-task-id"
 const DEFAULT_PREV_CONTEXT_TOKENS = 1000
 
 describe("getMessagesSinceLastSummary", () => {
+	let mockApiHandler: ApiHandler
+
+	beforeEach(() => {
+		mockApiHandler = {} as unknown as ApiHandler
+	})
+
 	it("should return all messages when there is no summary", () => {
 		const messages: ApiMessage[] = [
 			{ role: "user", content: "Hello", ts: 1 },
@@ -32,7 +39,7 @@ describe("getMessagesSinceLastSummary", () => {
 			{ role: "user", content: "How are you?", ts: 3 },
 		]
 
-		const result = getMessagesSinceLastSummary(messages)
+		const result = getMessagesSinceLastSummary(messages, mockApiHandler)
 		expect(result).toEqual(messages)
 	})
 
@@ -45,7 +52,7 @@ describe("getMessagesSinceLastSummary", () => {
 			{ role: "assistant", content: "I'm good", ts: 5 },
 		]
 
-		const result = getMessagesSinceLastSummary(messages)
+		const result = getMessagesSinceLastSummary(messages, mockApiHandler)
 		expect(result).toEqual([
 			{ role: "assistant", content: "Summary of conversation", ts: 3, isSummary: true },
 			{ role: "user", content: "How are you?", ts: 4 },
@@ -62,7 +69,7 @@ describe("getMessagesSinceLastSummary", () => {
 			{ role: "user", content: "What's new?", ts: 5 },
 		]
 
-		const result = getMessagesSinceLastSummary(messages)
+		const result = getMessagesSinceLastSummary(messages, mockApiHandler)
 		expect(result).toEqual([
 			{ role: "assistant", content: "Second summary", ts: 4, isSummary: true },
 			{ role: "user", content: "What's new?", ts: 5 },
@@ -70,8 +77,54 @@ describe("getMessagesSinceLastSummary", () => {
 	})
 
 	it("should handle empty messages array", () => {
-		const result = getMessagesSinceLastSummary([])
+		const result = getMessagesSinceLastSummary([], mockApiHandler)
 		expect(result).toEqual([])
+	})
+
+	it("should prepend user message when using AwsBedrockHandler with summary as first message", () => {
+		const mockAwsBedrockHandler = new AwsBedrockHandler({
+			apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+			awsAccessKey: "test-key",
+			awsSecretKey: "test-secret",
+			awsRegion: "us-east-1",
+		})
+
+		const messages: ApiMessage[] = [
+			{ role: "user", content: "Hello", ts: 1 },
+			{ role: "assistant", content: "Hi there", ts: 2 },
+			{ role: "assistant", content: "Summary of conversation", ts: 1000, isSummary: true },
+			{ role: "user", content: "How are you?", ts: 1001 },
+			{ role: "assistant", content: "I'm good", ts: 1002 },
+		]
+
+		const result = getMessagesSinceLastSummary(messages, mockAwsBedrockHandler)
+
+		// Should prepend user message before the summary
+		expect(result).toEqual([
+			{ role: "user", content: "Please continue from the following summary:", ts: 999 },
+			{ role: "assistant", content: "Summary of conversation", ts: 1000, isSummary: true },
+			{ role: "user", content: "How are you?", ts: 1001 },
+			{ role: "assistant", content: "I'm good", ts: 1002 },
+		])
+	})
+
+	it("should not prepend user message when using non-AwsBedrockHandler", () => {
+		const messages: ApiMessage[] = [
+			{ role: "user", content: "Hello", ts: 1 },
+			{ role: "assistant", content: "Hi there", ts: 2 },
+			{ role: "assistant", content: "Summary of conversation", ts: 1000, isSummary: true },
+			{ role: "user", content: "How are you?", ts: 1001 },
+			{ role: "assistant", content: "I'm good", ts: 1002 },
+		]
+
+		const result = getMessagesSinceLastSummary(messages, mockApiHandler)
+
+		// Should not prepend user message for non-AwsBedrockHandler
+		expect(result).toEqual([
+			{ role: "assistant", content: "Summary of conversation", ts: 1000, isSummary: true },
+			{ role: "user", content: "How are you?", ts: 1001 },
+			{ role: "assistant", content: "I'm good", ts: 1002 },
+		])
 	})
 })
 
