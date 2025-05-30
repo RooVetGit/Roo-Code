@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 import axios from "axios"
 
-import { type ProviderSettingsEntry, type ClineMessage, ORGANIZATION_ALLOW_ALL } from "@roo-code/types"
+import { type ProviderSettingsEntry, type ClineMessage, ORGANIZATION_ALLOW_ALL, HistoryItem } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
@@ -195,11 +195,11 @@ jest.mock("../../../integrations/workspace/WorkspaceTracker", () => {
 	}))
 })
 
-jest.mock("../../task/Task", () => ({
-	Task: jest
-		.fn()
-		.mockImplementation(
-			(_provider, _apiConfiguration, _customInstructions, _diffEnabled, _fuzzyMatchThreshold, _task, taskId) => ({
+jest.mock("../../task/Task", () => {
+	return {
+		Task: jest.fn().mockImplementation((options: TaskOptions) => {
+			const generatedTaskId = `mock-task-${Date.now()}-${Math.random().toString(36).substring(7)}`
+			return {
 				api: undefined,
 				abortTask: jest.fn(),
 				handleWebviewAskResponse: jest.fn(),
@@ -207,14 +207,24 @@ jest.mock("../../task/Task", () => ({
 				apiConversationHistory: [],
 				overwriteClineMessages: jest.fn(),
 				overwriteApiConversationHistory: jest.fn(),
-				getTaskNumber: jest.fn().mockReturnValue(0),
+				getTaskNumber: jest.fn().mockReturnValue(options.taskNumber || 0),
 				setTaskNumber: jest.fn(),
 				setParentTask: jest.fn(),
 				setRootTask: jest.fn(),
-				taskId: taskId || "test-task-id",
-			}),
-		),
-}))
+				taskId: options.historyItem?.id || generatedTaskId, // Use historyItem.id if available
+				currentModeSlug: options.currentModeSlug,
+				updateCurrentModeSlug: jest.fn(),
+				saveMessages: jest.fn().mockResolvedValue(options.historyItem?.id || "mock-history-item-id"),
+				getEditorState: jest.fn().mockReturnValue({ selections: [], visibleRanges: [] }),
+				emitContextMentions: jest.fn(),
+				initialPrompt: options.task, // This is the task string
+				historyItem: options.historyItem, // Keep track of historyItem if passed
+				emit: jest.fn(), // Add mock for emit
+				resumePausedTask: jest.fn().mockResolvedValue(undefined), // Add mock for resumePausedTask
+			}
+		}),
+	}
+})
 
 jest.mock("../../../integrations/misc/extract-text", () => ({
 	extractTextFromFile: jest.fn().mockImplementation(async (_filePath: string) => {
@@ -1918,6 +1928,570 @@ describe("ClineProvider", () => {
 				}),
 			)
 		})
+	})
+})
+
+describe("Task Mode Preservation on Resume", () => {
+	let provider: ClineProvider // Declare provider here
+	let mockContext: vscode.ExtensionContext // Declare mockContext here
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+
+	let mockGetGlobalState: jest.SpyInstance<any, [key: string, defaultValue?: any]>
+	let handleModeSwitchSpy: jest.SpyInstance<Promise<void>, [newMode: string]> // Corrected spy type
+
+	beforeEach(() => {
+		// Reset mocks
+		jest.clearAllMocks()
+
+		// Mock context
+		const globalState: Record<string, string | undefined> = {
+			mode: "architect",
+			currentApiConfigName: "current-config",
+		}
+
+		const secrets: Record<string, string | undefined> = {}
+
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => globalState[key]),
+				update: jest
+					.fn()
+					.mockImplementation((key: string, value: string | undefined) => (globalState[key] = value)),
+				keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: {
+				get: jest.fn().mockImplementation((key: string) => secrets[key]),
+				store: jest.fn().mockImplementation((key: string, value: string | undefined) => (secrets[key] = value)),
+				delete: jest.fn().mockImplementation((key: string) => delete secrets[key]),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			dispose: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn().mockImplementation((callback) => {
+				callback()
+				return { dispose: jest.fn() }
+			}),
+			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		// @ts-ignore - Accessing private property for testing.
+		provider.customModesManager = {
+			updateCustomMode: jest.fn().mockResolvedValue(undefined),
+			getCustomModes: jest.fn().mockResolvedValue([]),
+			dispose: jest.fn(),
+		}
+		// Ensure webview is resolved for postMessage to work if needed by underlying calls
+		provider.resolveWebviewView(mockWebviewView)
+
+		mockGetGlobalState = jest.spyOn(mockContext.globalState, "get")
+		handleModeSwitchSpy = jest.spyOn(provider, "handleModeSwitch")
+		;(Task as unknown as jest.Mock).mockClear()
+	})
+
+	afterEach(() => {
+		mockGetGlobalState.mockRestore()
+		handleModeSwitchSpy.mockRestore()
+	})
+
+	test("initClineWithHistoryItem should use lastActiveModeSlug from history item if present and different from current mode", async () => {
+		const initialProviderMode = "initial-provider-mode"
+		const historyItemMode = "history-item-mode"
+		mockGetGlobalState.mockImplementation((key: string) => {
+			// This mock will be called by provider.getState() which is used by handleModeSwitch and initClineWithHistoryItem
+			if (key === "mode") return initialProviderMode // Initial global mode before any switch
+			if (key === "currentApiConfigName") return "initial-config-name"
+			if (key === "listApiConfigMeta")
+				return [{ id: "initial-config-id", name: "initial-config-name", apiProvider: "test-initial" }]
+			if (key === `apiConfiguration_initial-config-id`)
+				return { apiProvider: "test-initial", id: "initial-config-id", name: "initial-config-name" }
+			// For the target historyItemMode
+			if (key === `apiConfigId_${historyItemMode}`) return "history-item-config-id"
+			if (key === `apiConfiguration_history-item-config-id`)
+				return { apiProvider: "test-history", id: "history-item-config-id", name: "history-item-config" }
+			return undefined
+		})
+		// Set the provider to the initial state.
+		await provider.handleModeSwitch(initialProviderMode)
+		let stateBeforeInit = await provider.getState()
+		expect(stateBeforeInit.mode).toBe(initialProviderMode)
+
+		const mockHistoryItem: HistoryItem = {
+			id: "hist-1",
+			number: 1,
+			ts: Date.now(),
+			task: "Test task",
+			tokensIn: 0,
+			tokensOut: 0,
+			totalCost: 0,
+			lastActiveModeSlug: historyItemMode,
+		}
+
+		await provider.initClineWithHistoryItem(mockHistoryItem)
+
+		expect(handleModeSwitchSpy).toHaveBeenCalledWith(historyItemMode) // Corrected: no second argument
+
+		expect(Task).toHaveBeenCalledTimes(1)
+		const taskConstructorOptions = (Task as unknown as jest.Mock).mock.calls[0][0] as TaskOptions
+		expect(taskConstructorOptions.currentModeSlug).toBe(historyItemMode)
+
+		const state = await provider.getState()
+		expect(state.mode).toBe(historyItemMode)
+	})
+
+	test("initClineWithHistoryItem should use provider's current mode if lastActiveModeSlug is missing", async () => {
+		const currentProviderMode = "current-provider-mode"
+		mockGetGlobalState.mockImplementation((key: string) => {
+			if (key === "mode") return currentProviderMode
+			if (key === "currentApiConfigName") return "provider-mode-config-name"
+			if (key === "listApiConfigMeta")
+				return [
+					{ id: "provider-mode-config-id", name: "provider-mode-config-name", apiProvider: "test-provider" },
+				]
+			if (key === `apiConfiguration_provider-mode-config-id`)
+				return {
+					apiProvider: "test-provider",
+					id: "provider-mode-config-id",
+					name: "provider-mode-config-name",
+				}
+			return undefined
+		})
+		// Set the provider to the currentProviderMode
+		await provider.handleModeSwitch(currentProviderMode)
+		let stateBeforeInit = await provider.getState()
+		expect(stateBeforeInit.mode).toBe(currentProviderMode)
+
+		const mockHistoryItem: HistoryItem = {
+			id: "hist-2",
+			number: 2,
+			ts: Date.now(),
+			task: "Test task without mode",
+			tokensIn: 0,
+			tokensOut: 0,
+			totalCost: 0,
+		}
+
+		await provider.initClineWithHistoryItem(mockHistoryItem)
+
+		const callsToHandleModeSwitch = handleModeSwitchSpy.mock.calls
+		const otherCalls = callsToHandleModeSwitch.filter((call) => call[0] !== currentProviderMode)
+		expect(otherCalls.length).toBe(0)
+
+		expect(Task).toHaveBeenCalledTimes(1)
+		const taskConstructorOptions = (Task as unknown as jest.Mock).mock.calls[0][0] as TaskOptions
+		expect(taskConstructorOptions.currentModeSlug).toBe(currentProviderMode)
+
+		const state = await provider.getState()
+		expect(state.mode).toBe(currentProviderMode)
+	})
+
+	test("initClineWithHistoryItem should use lastActiveModeSlug (no handleModeSwitch if same as current)", async () => {
+		const sameMode = "same-mode-for-all"
+		mockGetGlobalState.mockImplementation((key: string) => {
+			if (key === "mode") return sameMode
+			if (key === "currentApiConfigName") return "same-mode-config-name"
+			if (key === "listApiConfigMeta")
+				return [{ id: "same-mode-config-id", name: "same-mode-config-name", apiProvider: "test-same" }]
+			if (key === `apiConfiguration_same-mode-config-id`)
+				return { apiProvider: "test-same", id: "same-mode-config-id", name: "same-mode-config-name" }
+			return undefined
+		})
+		// Set the provider to the sameMode
+		await provider.handleModeSwitch(sameMode)
+		let stateBeforeInit = await provider.getState()
+		expect(stateBeforeInit.mode).toBe(sameMode)
+
+		const mockHistoryItem: HistoryItem = {
+			id: "hist-3",
+			number: 3,
+			ts: Date.now(),
+			task: "Test task with same mode",
+			tokensIn: 0,
+			tokensOut: 0,
+			totalCost: 0,
+			lastActiveModeSlug: sameMode,
+		}
+
+		await provider.initClineWithHistoryItem(mockHistoryItem)
+		// If targetModeSlug is same as current, handleModeSwitch for mode *change* is not called.
+		// It might be called for config sync, but not with a *different* mode.
+		handleModeSwitchSpy.mock.calls.forEach((call) => {
+			expect(call[0]).toBe(sameMode)
+		})
+		// More specific: it should not be called to *change* the mode.
+		// The plan: "If targetModeSlug differs from current active mode, calls this.handleModeSwitch(targetModeSlug)."
+		// This implies it's *not* called if they don't differ for the purpose of changing mode.
+		// If handleModeSwitch has side effects beyond mode string change (like API config update), it might still be called.
+		// For this test, we primarily care that the mode passed to Task is correct and provider state is correct.
+
+		expect(Task).toHaveBeenCalledTimes(1)
+		const taskConstructorOptions = (Task as unknown as jest.Mock).mock.calls[0][0] as TaskOptions
+		expect(taskConstructorOptions.currentModeSlug).toBe(sameMode)
+
+		const state = await provider.getState()
+		expect(state.mode).toBe(sameMode)
+	})
+})
+
+describe("Task Mode Preservation with Subtasks", () => {
+	let provider: ClineProvider // Declare provider here
+	let mockContext: vscode.ExtensionContext // Declare mockContext here
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+
+	let handleModeSwitchSpy: jest.SpyInstance<Promise<void>, [newMode: string]> // Corrected spy type
+	let parentTaskMock: any
+	let subTaskMock: any
+
+	beforeEach(async () => {
+		// Reset mocks
+		jest.clearAllMocks()
+
+		// Mock context
+		const globalState: Record<string, string | undefined> = {
+			mode: "architect", // Initial global mode
+			currentApiConfigName: "architect-config", // Default config for architect
+			apiConfigId_architect: "architect-config-id",
+			"apiConfiguration_architect-config-id": JSON.stringify({
+				apiProvider: "test-architect",
+				id: "architect-config-id",
+				name: "architect-config",
+			}),
+			"apiConfigId_parent-mode": "parent-config-id",
+			"apiConfiguration_parent-config-id": JSON.stringify({
+				apiProvider: "test-parent",
+				id: "parent-config-id",
+				name: "parent-config",
+			}),
+			"apiConfigId_subtask-mode": "subtask-config-id",
+			"apiConfiguration_subtask-config-id": JSON.stringify({
+				apiProvider: "test-subtask",
+				id: "subtask-config-id",
+				name: "subtask-config",
+			}),
+			"apiConfigId_same-mode-for-all": "same-config-id",
+			"apiConfiguration_same-config-id": JSON.stringify({
+				apiProvider: "test-same",
+				id: "same-config-id",
+				name: "same-config",
+			}),
+			listApiConfigMeta: JSON.stringify([
+				// Mock listApiConfigMeta for handleModeSwitch
+				{ id: "architect-config-id", name: "architect-config", apiProvider: "test-architect" },
+				{ id: "parent-config-id", name: "parent-config", apiProvider: "test-parent" },
+				{ id: "subtask-config-id", name: "subtask-config", apiProvider: "test-subtask" },
+				{ id: "same-config-id", name: "same-config", apiProvider: "test-same" },
+			]),
+		}
+		const secrets: Record<string, string | undefined> = {}
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => {
+					const value = globalState[key]
+					// Parse JSON for specific keys if they are expected to be objects/arrays
+					if (key.startsWith("apiConfiguration_") || key === "listApiConfigMeta") {
+						return value ? JSON.parse(value) : undefined
+					}
+					return value
+				}),
+				update: jest.fn().mockImplementation((key: string, value: any) => {
+					// Store objects/arrays as JSON strings
+					if (typeof value === "object") {
+						globalState[key] = JSON.stringify(value)
+					} else {
+						globalState[key] = value
+					}
+				}),
+				keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: {
+				get: jest.fn().mockImplementation((key: string) => secrets[key]),
+				store: jest.fn().mockImplementation((key: string, value: string | undefined) => (secrets[key] = value)),
+				delete: jest.fn().mockImplementation((key: string) => delete secrets[key]),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			dispose: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn().mockImplementation((callback) => {
+				callback()
+				return { dispose: jest.fn() }
+			}),
+			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		// @ts-ignore - Accessing private property for testing.
+		provider.customModesManager = {
+			updateCustomMode: jest.fn().mockResolvedValue(undefined),
+			getCustomModes: jest.fn().mockResolvedValue([]),
+			dispose: jest.fn(),
+		}
+		await provider.resolveWebviewView(mockWebviewView) // Ensure webview is resolved
+
+		handleModeSwitchSpy = jest.spyOn(provider, "handleModeSwitch")
+		;(Task as unknown as jest.Mock).mockClear()
+
+		const parentMode = "parent-mode"
+		// Set provider's initial state for the parent task by calling handleModeSwitch
+		await provider.handleModeSwitch(parentMode)
+		// Initialize parent task. initClineWithTask will use the provider's current state.
+		await provider.initClineWithTask("Parent task") // Corrected: Pass only task string
+		parentTaskMock = provider.getCurrentCline()
+		// The Task mock should have captured the currentModeSlug from the options passed by initClineWithTask
+		// (which internally gets it from provider.getState().mode)
+		expect(parentTaskMock.currentModeSlug).toBe(parentMode)
+
+		const subTaskMode = "subtask-mode"
+		// Simulate provider mode changing for the subtask
+		await provider.handleModeSwitch(subTaskMode) // Corrected: Only one argument
+		let subTaskState = await provider.getState() // Get state after mode switch
+		expect(subTaskState.mode).toBe(subTaskMode)
+
+		// Initialize subtask, passing the parentTaskMock
+		await provider.initClineWithTask("Sub task", undefined, parentTaskMock) // Corrected: Pass task string, undefined for images, then parentTask
+		subTaskMock = provider.getCurrentCline()
+		expect(subTaskMock.currentModeSlug).toBe(subTaskMode)
+		expect(provider.getClineStackSize()).toBe(2)
+	})
+
+	afterEach(() => {
+		handleModeSwitchSpy.mockRestore()
+	})
+
+	test("finishSubTask should restore parent task's mode if different from current provider mode", async () => {
+		let providerStateBeforeFinish = await provider.getState()
+		expect(providerStateBeforeFinish.mode).toBe("subtask-mode")
+		expect(parentTaskMock.currentModeSlug).toBe("parent-mode")
+
+		await provider.finishSubTask("subtask-finished-message")
+
+		expect(provider.getClineStackSize()).toBe(1)
+		expect(provider.getCurrentCline()).toBe(parentTaskMock)
+		// Check if handleModeSwitch was called to revert to parent's mode
+		expect(handleModeSwitchSpy).toHaveBeenCalledWith("parent-mode")
+
+		const stateAfterFinish = await provider.getState()
+		expect(stateAfterFinish.mode).toBe("parent-mode")
+	})
+
+	test("finishSubTask should not call handleModeSwitch to change mode if parent's mode is same", async () => {
+		;(Task as unknown as jest.Mock).mockClear()
+		handleModeSwitchSpy.mockClear()
+
+		// Clear stack from tasks potentially created in the describe's beforeEach
+		await provider.clearStack()
+		expect(provider.getClineStackSize()).toBe(0)
+
+		const sameMode = "same-mode-for-all"
+		await provider.handleModeSwitch(sameMode) // Set provider to sameMode
+
+		// Initialize parent task in sameMode
+		await provider.initClineWithTask("Parent task same")
+		parentTaskMock = provider.getCurrentCline()
+		expect(provider.getClineStackSize()).toBe(1) // After parent task
+
+		// Initialize subtask, provider is already in sameMode
+		await provider.initClineWithTask("Sub task same", undefined, parentTaskMock)
+		subTaskMock = provider.getCurrentCline()
+		expect(provider.getClineStackSize()).toBe(2) // After subtask
+
+		let providerStateBeforeFinish = await provider.getState()
+		expect(providerStateBeforeFinish.mode).toBe(sameMode)
+		expect(parentTaskMock.currentModeSlug).toBe(sameMode)
+
+		await provider.finishSubTask("subtask-finished-same-mode")
+
+		expect(provider.getClineStackSize()).toBe(1)
+		expect(provider.getCurrentCline()).toBe(parentTaskMock)
+
+		// handleModeSwitch should not be called to *change* mode from sameMode
+		const callsToChangeMode = handleModeSwitchSpy.mock.calls.filter(
+			(call) => call[0] !== sameMode && call[0] !== undefined,
+		)
+		expect(callsToChangeMode.length).toBe(0)
+
+		const stateAfterFinish = await provider.getState()
+		expect(stateAfterFinish.mode).toBe(sameMode)
+	})
+})
+
+describe("Task Mode Decoupling from Global UI Mode Changes", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+
+	let activeTaskMock: any
+	const taskSpecificMode = "task-specific-mode"
+	const newGlobalUIMode = "new-global-ui-mode"
+
+	beforeEach(async () => {
+		// Reset mocks
+		jest.clearAllMocks()
+
+		// Mock context
+		const globalState: Record<string, string | undefined> = {
+			mode: taskSpecificMode, // Initial global mode is the task's mode
+			currentApiConfigName: "task-specific-config",
+			"apiConfigId_task-specific-mode": "task-specific-config-id",
+			"apiConfiguration_task-specific-config-id": JSON.stringify({
+				apiProvider: "test-task-specific",
+				id: "task-specific-config-id",
+				name: "task-specific-config",
+			}),
+			"apiConfigId_new-global-ui-mode": "new-global-config-id",
+			"apiConfiguration_new-global-config-id": JSON.stringify({
+				apiProvider: "test-new-global",
+				id: "new-global-config-id",
+				name: "new-global-config",
+			}),
+			listApiConfigMeta: JSON.stringify([
+				{ id: "task-specific-config-id", name: "task-specific-config", apiProvider: "test-task-specific" },
+				{ id: "new-global-config-id", name: "new-global-config", apiProvider: "test-new-global" },
+			]),
+		}
+		const secrets: Record<string, string | undefined> = {}
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => {
+					const value = globalState[key]
+					if (key.startsWith("apiConfiguration_") || key === "listApiConfigMeta") {
+						return value ? JSON.parse(value) : undefined
+					}
+					return value
+				}),
+				update: jest.fn().mockImplementation((key: string, value: any) => {
+					if (typeof value === "object") {
+						globalState[key] = JSON.stringify(value)
+					} else {
+						globalState[key] = value
+					}
+				}),
+				keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: {
+				get: jest.fn().mockImplementation((key: string) => secrets[key]),
+				store: jest.fn().mockImplementation((key: string, value: string | undefined) => (secrets[key] = value)),
+				delete: jest.fn().mockImplementation((key: string) => delete secrets[key]),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			dispose: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn().mockImplementation((callback) => {
+				callback()
+				return { dispose: jest.fn() }
+			}),
+			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		// @ts-ignore - Accessing private property for testing.
+		provider.customModesManager = {
+			updateCustomMode: jest.fn().mockResolvedValue(undefined),
+			getCustomModes: jest.fn().mockResolvedValue([]),
+			dispose: jest.fn(),
+		}
+		await provider.resolveWebviewView(mockWebviewView) // Ensure webview is resolved
+		;(Task as unknown as jest.Mock).mockClear()
+		// Set provider's initial state for the active task by calling handleModeSwitch
+		await provider.handleModeSwitch(taskSpecificMode)
+
+		// Initialize the active task. initClineWithTask will use the provider's current state.
+		await provider.initClineWithTask("Active Task")
+		activeTaskMock = provider.getCurrentCline()
+		expect(activeTaskMock.currentModeSlug).toBe(taskSpecificMode)
+		let providerStateAfterTaskInit = await provider.getState()
+		expect(providerStateAfterTaskInit.mode).toBe(taskSpecificMode)
+	})
+
+	test("Global UI mode switch via handleModeSwitch should NOT change active Cline's currentModeSlug", async () => {
+		let providerStateBeforeSwitch = await provider.getState()
+		expect(activeTaskMock.currentModeSlug).toBe(taskSpecificMode)
+		expect(providerStateBeforeSwitch.mode).toBe(taskSpecificMode)
+
+		await provider.handleModeSwitch(newGlobalUIMode) // Corrected: Only one argument
+
+		let providerStateAfterSwitch = await provider.getState()
+		expect(providerStateAfterSwitch.mode).toBe(newGlobalUIMode)
+
+		expect(activeTaskMock.currentModeSlug).toBe(taskSpecificMode) // Task's internal mode should remain unchanged
+		expect(activeTaskMock.updateCurrentModeSlug).not.toHaveBeenCalled()
 	})
 })
 

@@ -192,6 +192,15 @@ export class ClineProvider
 		}
 	}
 
+	public async clearStack() {
+		this.log("Clearing entire cline stack")
+		while (this.clineStack.length > 0) {
+			// removeClineFromStack already logs the removal of each task
+			await this.removeClineFromStack()
+		}
+		this.log("Cline stack cleared")
+	}
+
 	// returns the current cline object in the stack (the top one)
 	// if the stack is empty, returns undefined
 	getCurrentCline(): Task | undefined {
