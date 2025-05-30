@@ -162,7 +162,7 @@ describe("OpenAiHandler", () => {
 		it("should include reasoning_effort when reasoning effort is enabled", async () => {
 			const reasoningOptions: ApiHandlerOptions = {
 				...mockOptions,
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 				openAiCustomModelInfo: {
 					contextWindow: 128_000,
 					supportsPromptCache: false,
@@ -184,7 +184,7 @@ describe("OpenAiHandler", () => {
 		it("should not include reasoning_effort when reasoning effort is disabled", async () => {
 			const noReasoningOptions: ApiHandlerOptions = {
 				...mockOptions,
-				enableReasoningEffort: false,
+				setReasoningEffort: false,
 				openAiCustomModelInfo: { contextWindow: 128_000, supportsPromptCache: false },
 			}
 			const noReasoningHandler = new OpenAiHandler(noReasoningOptions)

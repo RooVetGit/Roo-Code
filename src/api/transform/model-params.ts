@@ -1,7 +1,7 @@
 import type { ModelInfo, ProviderSettings } from "@roo-code/types"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
-import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
+import { shouldSetReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
 
 import {
 	type AnthropicReasoningParams,
@@ -67,7 +67,7 @@ export function getModelParams({
 	let reasoningBudget: ModelParams["reasoningBudget"] = undefined
 	let reasoningEffort: ModelParams["reasoningEffort"] = undefined
 
-	if (shouldUseReasoningBudget({ model, settings })) {
+	if (shouldSetReasoningBudget({ model, settings })) {
 		// "Hybrid" reasoning models use the `reasoningBudget` parameter.
 		maxTokens = customMaxTokens ?? maxTokens
 

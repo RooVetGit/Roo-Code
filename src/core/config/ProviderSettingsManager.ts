@@ -26,6 +26,7 @@ export const providerProfilesSchema = z.object({
 			rateLimitSecondsMigrated: z.boolean().optional(),
 			diffSettingsMigrated: z.boolean().optional(),
 			openAiHeadersMigrated: z.boolean().optional(),
+			manualThinkingBudgetMigrated: z.boolean().optional(),
 		})
 		.optional(),
 })
@@ -48,6 +49,7 @@ export class ProviderSettingsManager {
 			rateLimitSecondsMigrated: true, // Mark as migrated on fresh installs
 			diffSettingsMigrated: true, // Mark as migrated on fresh installs
 			openAiHeadersMigrated: true, // Mark as migrated on fresh installs
+			manualThinkingBudgetMigrated: true, // Mark as migrated on fresh installs
 		},
 	}
 
@@ -113,6 +115,7 @@ export class ProviderSettingsManager {
 						rateLimitSecondsMigrated: false,
 						diffSettingsMigrated: false,
 						openAiHeadersMigrated: false,
+						manualThinkingBudgetMigrated: false,
 					} // Initialize with default values
 					isDirty = true
 				}
@@ -132,6 +135,12 @@ export class ProviderSettingsManager {
 				if (!providerProfiles.migrations.openAiHeadersMigrated) {
 					await this.migrateOpenAiHeaders(providerProfiles)
 					providerProfiles.migrations.openAiHeadersMigrated = true
+					isDirty = true
+				}
+
+				if (!providerProfiles.migrations.manualThinkingBudgetMigrated) {
+					await this.migrateManualThinkingBudget(providerProfiles)
+					providerProfiles.migrations.manualThinkingBudgetMigrated = true
 					isDirty = true
 				}
 
@@ -225,6 +234,23 @@ export class ProviderSettingsManager {
 			}
 		} catch (error) {
 			console.error(`[MigrateOpenAiHeaders] Failed to migrate OpenAI headers:`, error)
+		}
+	}
+
+	private async migrateManualThinkingBudget(providerProfiles: ProviderProfiles) {
+		try {
+			for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+				// For existing users who have modelMaxThinkingTokens set, enable manual control
+				// This maintains backward compatibility - if they were manually setting thinking tokens,
+				// they should continue to have manual control enabled
+				if (apiConfig.modelMaxThinkingTokens !== undefined && apiConfig.setReasoningEffort === undefined) {
+					apiConfig.setReasoningEffort = true
+				}
+				// For new users or existing users without thinking tokens set,
+				// default to false (automatic mode) - this is handled by the UI component's default logic
+			}
+		} catch (error) {
+			console.error(`[MigrateManualThinkingBudget] Failed to migrate manual thinking budget settings:`, error)
 		}
 	}
 

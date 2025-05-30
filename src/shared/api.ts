@@ -10,7 +10,7 @@ export type AnthropicModelId = keyof typeof anthropicModels
 export const anthropicDefaultModelId: AnthropicModelId = "claude-sonnet-4-20250514"
 export const anthropicModels = {
 	"claude-sonnet-4-20250514": {
-		maxTokens: 64_000, // Overridden to 8k if `enableReasoningEffort` is false.
+		maxTokens: 64_000, // Overridden to 8k if `setReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -22,7 +22,7 @@ export const anthropicModels = {
 		supportsReasoningBudget: true,
 	},
 	"claude-opus-4-20250514": {
-		maxTokens: 32_000, // Overridden to 8k if `enableReasoningEffort` is false.
+		maxTokens: 32_000, // Overridden to 8k if `setReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -533,7 +533,7 @@ export const vertexModels = {
 		outputPrice: 3.5,
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
+		requiredReasoningBudget: false,
 	},
 	"gemini-2.5-flash-preview-05-20": {
 		maxTokens: 65_535,
@@ -552,7 +552,7 @@ export const vertexModels = {
 		outputPrice: 3.5,
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
+		requiredReasoningBudget: false,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
@@ -757,7 +757,7 @@ export const geminiModels = {
 		outputPrice: 3.5,
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
+		requiredReasoningBudget: false,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
@@ -778,7 +778,7 @@ export const geminiModels = {
 		cacheWritesPrice: 1.0,
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
+		requiredReasoningBudget: false,
 	},
 	"gemini-2.5-flash-preview-05-20": {
 		maxTokens: 65_535,
@@ -1990,13 +1990,13 @@ export type ModelRecord = Record<string, ModelInfo>
 
 export type RouterModels = Record<RouterName, ModelRecord>
 
-export const shouldUseReasoningBudget = ({
+export const shouldSetReasoningBudget = ({
 	model,
 	settings,
 }: {
 	model: ModelInfo
 	settings?: ProviderSettings
-}): boolean => !!model.requiredReasoningBudget || (!!model.supportsReasoningBudget && !!settings?.enableReasoningEffort)
+}): boolean => !!model.requiredReasoningBudget || (!!model.supportsReasoningBudget && !!settings?.setReasoningEffort)
 
 export const shouldUseReasoningEffort = ({
 	model,
@@ -2018,7 +2018,7 @@ export const getModelMaxOutputTokens = ({
 	model: ModelInfo
 	settings?: ProviderSettings
 }): number | undefined => {
-	if (shouldUseReasoningBudget({ model, settings })) {
+	if (shouldSetReasoningBudget({ model, settings })) {
 		return settings?.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
 	}
 

@@ -23,9 +23,10 @@ export class VertexHandler extends GeminiHandler implements SingleCompletionHand
 				return {
 					id,
 					info,
-					thinkingConfig: this.options.modelMaxThinkingTokens
-						? { thinkingBudget: this.options.modelMaxThinkingTokens }
-						: undefined,
+					thinkingConfig:
+						this.options.setReasoningEffort && this.options.modelMaxThinkingTokens !== undefined
+							? { thinkingBudget: this.options.modelMaxThinkingTokens }
+							: undefined,
 					maxOutputTokens: this.options.modelMaxTokens ?? info.maxTokens ?? undefined,
 				}
 			}

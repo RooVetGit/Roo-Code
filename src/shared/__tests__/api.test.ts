@@ -4,7 +4,7 @@ import type { ModelInfo, ProviderSettings } from "@roo-code/types"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../../api/providers/constants"
 
-import { getModelMaxOutputTokens, shouldUseReasoningBudget, shouldUseReasoningEffort } from "../api"
+import { getModelMaxOutputTokens, shouldSetReasoningBudget, shouldUseReasoningEffort } from "../api"
 
 describe("getMaxTokensForModel", () => {
 	const modelId = "test"
@@ -159,7 +159,7 @@ describe("getMaxTokensForModel", () => {
 	})
 
 	test("should return ANTHROPIC_DEFAULT_MAX_TOKENS for Anthropic models that support reasoning budget but aren't using it", () => {
-		// Test case for models that support reasoning budget but enableReasoningEffort is false
+		// Test case for models that support reasoning budget but setReasoningEffort is false
 		const anthropicModelId = "claude-sonnet-4-20250514"
 		const model: ModelInfo = {
 			contextWindow: 200_000,
@@ -169,7 +169,7 @@ describe("getMaxTokensForModel", () => {
 		}
 
 		const settings: ProviderSettings = {
-			enableReasoningEffort: false, // Not using reasoning
+			setReasoningEffort: false, // Not using reasoning
 		}
 
 		const result = getModelMaxOutputTokens({ modelId: anthropicModelId, model, settings })
@@ -187,7 +187,7 @@ describe("getMaxTokensForModel", () => {
 		}
 
 		const settings: ProviderSettings = {
-			enableReasoningEffort: false, // Not using reasoning
+			setReasoningEffort: false, // Not using reasoning
 		}
 
 		const result = getModelMaxOutputTokens({ modelId: geminiModelId, model, settings })
@@ -204,9 +204,9 @@ describe("shouldUseReasoningBudget", () => {
 		}
 
 		// Should return true regardless of settings
-		expect(shouldUseReasoningBudget({ model })).toBe(true)
-		expect(shouldUseReasoningBudget({ model, settings: {} })).toBe(true)
-		expect(shouldUseReasoningBudget({ model, settings: { enableReasoningEffort: false } })).toBe(true)
+		expect(shouldSetReasoningBudget({ model })).toBe(true)
+		expect(shouldSetReasoningBudget({ model, settings: {} })).toBe(true)
+		expect(shouldSetReasoningBudget({ model, settings: { setReasoningEffort: false } })).toBe(true)
 	})
 
 	it("should return true when model supports reasoning budget and settings enable reasoning effort", () => {
@@ -217,10 +217,10 @@ describe("shouldUseReasoningBudget", () => {
 		}
 
 		const settings: ProviderSettings = {
-			enableReasoningEffort: true,
+			setReasoningEffort: true,
 		}
 
-		expect(shouldUseReasoningBudget({ model, settings })).toBe(true)
+		expect(shouldSetReasoningBudget({ model, settings })).toBe(true)
 	})
 
 	it("should return false when model supports reasoning budget but settings don't enable reasoning effort", () => {
@@ -231,12 +231,12 @@ describe("shouldUseReasoningBudget", () => {
 		}
 
 		const settings: ProviderSettings = {
-			enableReasoningEffort: false,
+			setReasoningEffort: false,
 		}
 
-		expect(shouldUseReasoningBudget({ model, settings })).toBe(false)
-		expect(shouldUseReasoningBudget({ model, settings: {} })).toBe(false)
-		expect(shouldUseReasoningBudget({ model })).toBe(false)
+		expect(shouldSetReasoningBudget({ model, settings })).toBe(false)
+		expect(shouldSetReasoningBudget({ model, settings: {} })).toBe(false)
+		expect(shouldSetReasoningBudget({ model })).toBe(false)
 	})
 
 	it("should return false when model doesn't support reasoning budget", () => {
@@ -246,11 +246,11 @@ describe("shouldUseReasoningBudget", () => {
 		}
 
 		const settings: ProviderSettings = {
-			enableReasoningEffort: true,
+			setReasoningEffort: true,
 		}
 
-		expect(shouldUseReasoningBudget({ model, settings })).toBe(false)
-		expect(shouldUseReasoningBudget({ model })).toBe(false)
+		expect(shouldSetReasoningBudget({ model, settings })).toBe(false)
+		expect(shouldSetReasoningBudget({ model })).toBe(false)
 	})
 
 	it("should handle undefined settings gracefully", () => {
@@ -266,8 +266,8 @@ describe("shouldUseReasoningBudget", () => {
 			supportsReasoningBudget: true,
 		}
 
-		expect(shouldUseReasoningBudget({ model: modelWithRequired, settings: undefined })).toBe(true)
-		expect(shouldUseReasoningBudget({ model: modelWithSupported, settings: undefined })).toBe(false)
+		expect(shouldSetReasoningBudget({ model: modelWithRequired, settings: undefined })).toBe(true)
+		expect(shouldSetReasoningBudget({ model: modelWithSupported, settings: undefined })).toBe(false)
 	})
 })
 

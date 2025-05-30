@@ -3,7 +3,7 @@ import OpenAI from "openai"
 
 import type { ModelInfo, ProviderSettings } from "@roo-code/types"
 
-import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
+import { shouldSetReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
 
 type ReasoningEffort = "low" | "medium" | "high"
 
@@ -30,7 +30,7 @@ export const getOpenRouterReasoning = ({
 	reasoningEffort,
 	settings,
 }: GetModelReasoningOptions): OpenRouterReasoningParams | undefined =>
-	shouldUseReasoningBudget({ model, settings })
+	shouldSetReasoningBudget({ model, settings })
 		? { max_tokens: reasoningBudget }
 		: shouldUseReasoningEffort({ model, settings })
 			? { effort: reasoningEffort }
@@ -41,7 +41,7 @@ export const getAnthropicReasoning = ({
 	reasoningBudget,
 	settings,
 }: GetModelReasoningOptions): AnthropicReasoningParams | undefined =>
-	shouldUseReasoningBudget({ model, settings }) ? { type: "enabled", budget_tokens: reasoningBudget! } : undefined
+	shouldSetReasoningBudget({ model, settings }) ? { type: "enabled", budget_tokens: reasoningBudget! } : undefined
 
 export const getOpenAiReasoning = ({
 	model,

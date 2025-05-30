@@ -340,7 +340,7 @@ const genericProviderSettingsSchema = z.object({
 	rateLimitSeconds: z.number().optional(),
 
 	// Model reasoning.
-	enableReasoningEffort: z.boolean().optional(),
+	setReasoningEffort: z.boolean().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -395,7 +395,7 @@ const openAiSchema = z.object({
 	openAiUseAzure: z.boolean().optional(),
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
-	enableReasoningEffort: z.boolean().optional(),
+	setReasoningEffort: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
 })
@@ -663,7 +663,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openAiUseAzure: undefined,
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
-	enableReasoningEffort: undefined,
+	setReasoningEffort: undefined,
 	openAiHostHeader: undefined, // Keep temporarily for backward compatibility during migration
 	openAiHeaders: undefined,
 	// Ollama

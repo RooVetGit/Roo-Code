@@ -207,7 +207,7 @@ describe("getModelParams", () => {
 			})
 		})
 
-		it("should handle supportsReasoningBudget with enableReasoningEffort setting", () => {
+		it("should handle supportsReasoningBudget with setReasoningEffort setting", () => {
 			const model: ModelInfo = {
 				...baseModel,
 				maxTokens: 2000,
@@ -216,7 +216,7 @@ describe("getModelParams", () => {
 
 			const result = getModelParams({
 				...anthropicParams,
-				settings: { enableReasoningEffort: true },
+				settings: { setReasoningEffort: true },
 				model,
 			})
 
@@ -228,7 +228,7 @@ describe("getModelParams", () => {
 			})
 		})
 
-		it("should not use reasoning budget when supportsReasoningBudget is true but enableReasoningEffort is false", () => {
+		it("should not use reasoning budget when supportsReasoningBudget is true but setReasoningEffort is false", () => {
 			const model: ModelInfo = {
 				...baseModel,
 				maxTokens: 2000,
@@ -237,7 +237,7 @@ describe("getModelParams", () => {
 
 			const result = getModelParams({
 				...anthropicParams,
-				settings: { enableReasoningEffort: false },
+				settings: { setReasoningEffort: false },
 				model,
 			})
 
@@ -537,7 +537,7 @@ describe("getModelParams", () => {
 		it("should keep model maxTokens for hybrid models when using reasoning budget", () => {
 			const result = getModelParams({
 				...anthropicParams,
-				settings: { enableReasoningEffort: true },
+				settings: { setReasoningEffort: true },
 				model,
 			})
 
@@ -560,7 +560,7 @@ describe("getModelParams", () => {
 			// Only reasoning budget should be used (takes precedence)
 			const result = getModelParams({
 				...anthropicParams,
-				settings: { enableReasoningEffort: true },
+				settings: { setReasoningEffort: true },
 				model,
 			})
 
@@ -645,7 +645,7 @@ describe("getModelParams", () => {
 			const result = getModelParams({
 				...anthropicParams,
 				settings: {
-					enableReasoningEffort: true,
+					setReasoningEffort: true,
 					modelMaxTokens: 20000,
 					modelMaxThinkingTokens: 10000,
 					modelTemperature: 0.8,

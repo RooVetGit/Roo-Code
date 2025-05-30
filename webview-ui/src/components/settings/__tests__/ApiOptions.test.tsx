@@ -298,7 +298,7 @@ describe("ApiOptions", () => {
 			const mockSetApiConfigurationField = jest.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 				openAiCustomModelInfo: {
 					...openAiModelInfoSaneDefaults, // Start with defaults
 					reasoningEffort: "low" as const, // Set an initial value
@@ -320,8 +320,8 @@ describe("ApiOptions", () => {
 			// Simulate unchecking the checkbox
 			fireEvent.click(checkbox)
 
-			// 1. Check if enableReasoningEffort was set to false
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("enableReasoningEffort", false)
+			// 1. Check if setReasoningEffort was set to false
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("setReasoningEffort", false)
 
 			// 2. Check if openAiCustomModelInfo was updated
 			const updateCall = mockSetApiConfigurationField.mock.calls.find(
@@ -341,7 +341,7 @@ describe("ApiOptions", () => {
 			const mockSetApiConfigurationField = jest.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
-				enableReasoningEffort: false, // Initially disabled
+				setReasoningEffort: false, // Initially disabled
 				openAiCustomModelInfo: {
 					...openAiModelInfoSaneDefaults,
 				},
@@ -360,7 +360,7 @@ describe("ApiOptions", () => {
 			const mockSetApiConfigurationField = jest.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
-				enableReasoningEffort: false, // Initially disabled
+				setReasoningEffort: false, // Initially disabled
 				openAiCustomModelInfo: {
 					...openAiModelInfoSaneDefaults,
 				},
@@ -376,8 +376,8 @@ describe("ApiOptions", () => {
 			// Simulate checking the checkbox
 			fireEvent.click(checkbox)
 
-			// 1. Check if enableReasoningEffort was set to true
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("enableReasoningEffort", true)
+			// 1. Check if setReasoningEffort was set to true
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("setReasoningEffort", true)
 
 			// We can't directly test the rendering of the ReasoningEffort component after the state change
 			// without a more complex setup involving state management mocks or re-rendering.
@@ -388,7 +388,7 @@ describe("ApiOptions", () => {
 			const mockSetApiConfigurationField = jest.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
-				enableReasoningEffort: true, // Initially enabled
+				setReasoningEffort: true, // Initially enabled
 				openAiCustomModelInfo: {
 					...openAiModelInfoSaneDefaults,
 					reasoningEffort: "low" as const,

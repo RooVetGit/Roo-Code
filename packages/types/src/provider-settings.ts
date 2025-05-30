@@ -60,7 +60,7 @@ const baseProviderSettingsSchema = z.object({
 	rateLimitSeconds: z.number().optional(),
 
 	// Model reasoning.
-	enableReasoningEffort: z.boolean().optional(),
+	setReasoningEffort: z.boolean().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -331,7 +331,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
 	// Reasoning
-	"enableReasoningEffort",
+	"setReasoningEffort",
 	"reasoningEffort",
 	"modelMaxTokens",
 	"modelMaxThinkingTokens",

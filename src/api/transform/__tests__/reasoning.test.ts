@@ -47,7 +47,7 @@ describe("reasoning.ts", () => {
 			}
 
 			const settingsWithEnabled: ProviderSettings = {
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 			}
 
 			const options = {
@@ -108,7 +108,7 @@ describe("reasoning.ts", () => {
 			}
 
 			const settingsWithBoth: ProviderSettings = {
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 				reasoningEffort: "low",
 			}
 
@@ -189,14 +189,14 @@ describe("reasoning.ts", () => {
 			expect(result).toEqual({ max_tokens: 0 })
 		})
 
-		it("should not use reasoning budget when supportsReasoningBudget is true but enableReasoningEffort is false", () => {
+		it("should not use reasoning budget when supportsReasoningBudget is true but setReasoningEffort is false", () => {
 			const modelWithSupported: ModelInfo = {
 				...baseModel,
 				supportsReasoningBudget: true,
 			}
 
 			const settingsWithDisabled: ProviderSettings = {
-				enableReasoningEffort: false,
+				setReasoningEffort: false,
 			}
 
 			const options = {
@@ -252,7 +252,7 @@ describe("reasoning.ts", () => {
 			}
 
 			const settingsWithEnabled: ProviderSettings = {
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 			}
 
 			const options = {
@@ -274,14 +274,14 @@ describe("reasoning.ts", () => {
 			expect(result).toBeUndefined()
 		})
 
-		it("should return undefined when supportsReasoningBudget is true but enableReasoningEffort is false", () => {
+		it("should return undefined when supportsReasoningBudget is true but setReasoningEffort is false", () => {
 			const modelWithSupported: ModelInfo = {
 				...baseModel,
 				supportsReasoningBudget: true,
 			}
 
 			const settingsWithDisabled: ProviderSettings = {
-				enableReasoningEffort: false,
+				setReasoningEffort: false,
 			}
 
 			const options = {
@@ -513,7 +513,7 @@ describe("reasoning.ts", () => {
 			}
 
 			const settingsWithEnabled: ProviderSettings = {
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 			}
 
 			const options = {
@@ -583,7 +583,7 @@ describe("reasoning.ts", () => {
 			}
 
 			const settingsWithBoth: ProviderSettings = {
-				enableReasoningEffort: true,
+				setReasoningEffort: true,
 				reasoningEffort: "high",
 			}
 

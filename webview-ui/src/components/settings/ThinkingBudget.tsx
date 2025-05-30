@@ -21,10 +21,10 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	const isReasoningBudgetRequired = !!modelInfo && modelInfo.requiredReasoningBudget
 	const isReasoningEffortSupported = !!modelInfo && modelInfo.supportsReasoningEffort
 
-	const enableReasoningEffort = apiConfiguration.enableReasoningEffort
+	const setReasoningEffort = apiConfiguration.setReasoningEffort
 	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
 	const customMaxThinkingTokens =
-		apiConfiguration.modelMaxThinkingTokens || DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS
+		apiConfiguration.modelMaxThinkingTokens ?? DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS
 
 	// Dynamically expand or shrink the max thinking budget based on the custom
 	// max output tokens so that there's always a 20% buffer.
@@ -50,15 +50,20 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 			{!isReasoningBudgetRequired && (
 				<div className="flex flex-col gap-1">
 					<Checkbox
-						checked={enableReasoningEffort}
+						checked={setReasoningEffort}
 						onChange={(checked: boolean) =>
-							setApiConfigurationField("enableReasoningEffort", checked === true)
+							setApiConfigurationField("setReasoningEffort", checked === true)
 						}>
-						{t("settings:providers.useReasoning")}
+						{t("settings:providers.setReasoningEffort")}
 					</Checkbox>
+					<div className="text-xs text-vscode-descriptionForeground">
+						{setReasoningEffort
+							? t("settings:providers.explicitReasoning")
+							: t("settings:providers.implicitReasoning")}
+					</div>
 				</div>
 			)}
-			{(isReasoningBudgetRequired || enableReasoningEffort) && (
+			{(isReasoningBudgetRequired || setReasoningEffort) && (
 				<>
 					<div className="flex flex-col gap-1">
 						<div className="font-medium">{t("settings:thinkingBudget.maxTokens")}</div>
@@ -77,7 +82,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 						<div className="font-medium">{t("settings:thinkingBudget.maxThinkingTokens")}</div>
 						<div className="flex items-center gap-1" data-testid="reasoning-budget">
 							<Slider
-								min={1024}
+								min={0}
 								max={modelMaxThinkingTokens}
 								step={1024}
 								value={[customMaxThinkingTokens]}

@@ -225,9 +225,9 @@ export const OpenAICompatible = ({
 
 			<div className="flex flex-col gap-1">
 				<Checkbox
-					checked={apiConfiguration.enableReasoningEffort ?? false}
+					checked={apiConfiguration.setReasoningEffort ?? false}
 					onChange={(checked: boolean) => {
-						setApiConfigurationField("enableReasoningEffort", checked)
+						setApiConfigurationField("setReasoningEffort", checked)
 
 						if (!checked) {
 							const { reasoningEffort: _, ...openAiCustomModelInfo } =
@@ -238,7 +238,7 @@ export const OpenAICompatible = ({
 					}}>
 					{t("settings:providers.setReasoningLevel")}
 				</Checkbox>
-				{!!apiConfiguration.enableReasoningEffort && (
+				{!!apiConfiguration.setReasoningEffort && (
 					<ThinkingBudget
 						apiConfiguration={{
 							...apiConfiguration,
