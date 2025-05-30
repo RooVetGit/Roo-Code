@@ -33,6 +33,16 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 			})}>
 			{isCompact ? (
 				<>
+					{/* Compact Cache */}
+					{!!item.cacheWrites && (
+						<span className="flex items-center gap-px" data-testid="cache-compact">
+							<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
+							{formatLargeNumber(item.cacheWrites || 0)}
+							<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
+							{formatLargeNumber(item.cacheReads || 0)}
+						</span>
+					)}
+					
 					{/* Compact Tokens */}
 					{(item.tokensIn || item.tokensOut) && (
 						<>
@@ -55,6 +65,21 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 			) : (
 				<>
 					<div className="flex flex-col gap-1">
+						{/* Cache Info */}
+						{!!item.cacheWrites && (
+							<div className="flex items-center flex-wrap gap-x-1">
+								<span className="font-medium">{t("history:cacheLabel")}</span>
+								<span className="flex items-center gap-px" data-testid="cache-writes">
+									<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
+									<span className="font-medium">{formatLargeNumber(item.cacheWrites || 0)}</span>
+								</span>
+								<span className="flex items-center gap-px" data-testid="cache-reads">
+									<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
+									<span className="font-medium">{formatLargeNumber(item.cacheReads || 0)}</span>
+								</span>
+							</div>
+						)}
+						
 						{/* Full Tokens */}
 						{(item.tokensIn || item.tokensOut) && (
 							<div className="flex items-center flex-wrap gap-x-1">

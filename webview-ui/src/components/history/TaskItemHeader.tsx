@@ -50,16 +50,6 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, variant, isSelect
 				<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
 					{formatDate(item.ts)}
 				</span>
-
-				{/* Cache Info */}
-				{!!item.cacheWrites && (
-					<span className="text-vscode-descriptionForeground flex items-center gap-px">
-						<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
-						<span data-testid="cache-writes">{formatLargeNumber(item.cacheWrites || 0)}</span>
-						<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
-						<span data-testid="cache-reads">{formatLargeNumber(item.cacheReads || 0)}</span>
-					</span>
-				)}
 			</div>
 
 			{/* Action Buttons */}
