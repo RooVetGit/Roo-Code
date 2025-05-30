@@ -184,7 +184,7 @@
 		"apiKey": "API कुंजी",
 		"openAiBaseUrl": "बेस URL",
 		"openAiApiTimeout": "Timeout (मिनट)",
-		"openAiApiTimeoutDescription": "Timeout for API requests to Provider (min 5 min). if no response within this period, the request is retried. Increase for slower models.",
+		"openAiApiTimeoutDescription": "प्रदाता को API अनुरोधों के लिए समय सीमा (न्यूनतम 5 मिनट)। यदि इस अवधि के भीतर कोई प्रतिक्रिया नहीं मिलती है, तो अनुरोध को फिर से भेजा जाता है। धीमे मॉडल के लिए समय सीमा बढ़ाएं।",
 		"getOpenAiApiKey": "OpenAI API कुंजी प्राप्त करें",
 		"mistralApiKey": "Mistral API कुंजी",
 		"getMistralApiKey": "Mistral / Codestral API कुंजी प्राप्त करें",
