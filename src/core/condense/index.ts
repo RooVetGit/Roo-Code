@@ -6,6 +6,7 @@ import { t } from "../../i18n"
 import { ApiHandler } from "../../api"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
+import { AwsBedrockHandler } from "../../api/providers"
 
 export const N_MESSAGES_TO_KEEP = 3
 
@@ -98,7 +99,30 @@ export async function summarizeConversation(
 	)
 
 	const response: SummarizeResponse = { messages, cost: 0, summary: "" }
-	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP))
+
+	// Use condensing API handler if provided, otherwise use main API handler
+	let handlerToUse = condensingApiHandler || apiHandler
+
+	// Check if the chosen handler supports the required functionality
+	if (!handlerToUse || typeof handlerToUse.createMessage !== "function") {
+		console.warn(
+			"Chosen API handler for condensing does not support message creation or is invalid, falling back to main apiHandler.",
+		)
+
+		handlerToUse = apiHandler // Fallback to the main, presumably valid, apiHandler
+
+		// Ensure the main apiHandler itself is valid before this point or add another check.
+		if (!handlerToUse || typeof handlerToUse.createMessage !== "function") {
+			// This case should ideally not happen if main apiHandler is always valid.
+			// Consider throwing an error or returning a specific error response.
+			console.error("Main API handler is also invalid for condensing. Cannot proceed.")
+			// Return an appropriate error structure for SummarizeResponse
+			const error = t("common:errors.condense_handler_invalid")
+			return { ...response, error }
+		}
+	}
+
+	const messagesToSummarize = getMessagesSinceLastSummary(messages.slice(0, -N_MESSAGES_TO_KEEP), handlerToUse)
 
 	if (messagesToSummarize.length <= 1) {
 		const error =
@@ -126,32 +150,10 @@ export async function summarizeConversation(
 		({ role, content }) => ({ role, content }),
 	)
 
-	// Note: this doesn't need to be a stream, consider using something like apiHandler.completePrompt
 	// Use custom prompt if provided and non-empty, otherwise use the default SUMMARY_PROMPT
 	const promptToUse = customCondensingPrompt?.trim() ? customCondensingPrompt.trim() : SUMMARY_PROMPT
 
-	// Use condensing API handler if provided, otherwise use main API handler
-	let handlerToUse = condensingApiHandler || apiHandler
-
-	// Check if the chosen handler supports the required functionality
-	if (!handlerToUse || typeof handlerToUse.createMessage !== "function") {
-		console.warn(
-			"Chosen API handler for condensing does not support message creation or is invalid, falling back to main apiHandler.",
-		)
-
-		handlerToUse = apiHandler // Fallback to the main, presumably valid, apiHandler
-
-		// Ensure the main apiHandler itself is valid before this point or add another check.
-		if (!handlerToUse || typeof handlerToUse.createMessage !== "function") {
-			// This case should ideally not happen if main apiHandler is always valid.
-			// Consider throwing an error or returning a specific error response.
-			console.error("Main API handler is also invalid for condensing. Cannot proceed.")
-			// Return an appropriate error structure for SummarizeResponse
-			const error = t("common:errors.condense_handler_invalid")
-			return { ...response, error }
-		}
-	}
-
+	// Note: this doesn't need to be a stream, consider using something like apiHandler.completePrompt
 	const stream = handlerToUse.createMessage(promptToUse, requestMessages)
 
 	let summary = ""
@@ -205,7 +207,7 @@ export async function summarizeConversation(
 }
 
 /* Returns the list of all messages since the last summary message, including the summary. Returns all messages if there is no summary. */
-export function getMessagesSinceLastSummary(messages: ApiMessage[]): ApiMessage[] {
+export function getMessagesSinceLastSummary(messages: ApiMessage[], apiHandler: ApiHandler): ApiMessage[] {
 	let lastSummaryIndexReverse = [...messages].reverse().findIndex((message) => message.isSummary)
 
 	if (lastSummaryIndexReverse === -1) {
@@ -213,5 +215,20 @@ export function getMessagesSinceLastSummary(messages: ApiMessage[]): ApiMessage[
 	}
 
 	const lastSummaryIndex = messages.length - lastSummaryIndexReverse - 1
-	return messages.slice(lastSummaryIndex)
+	const messagesSinceSummary = messages.slice(lastSummaryIndex)
+	return maybePrependUserMessage(messagesSinceSummary, apiHandler)
+}
+
+function maybePrependUserMessage(messages: ApiMessage[], apiHandler: ApiHandler): ApiMessage[] {
+	if (messages.length === 0 || !messages[0].isSummary || !(apiHandler instanceof AwsBedrockHandler)) {
+		return messages
+	}
+	// Bedrock requires the first message to be a user message.
+	// See https://github.com/RooCodeInc/Roo-Code/issues/4147
+	const userMessage: ApiMessage = {
+		role: "user",
+		content: "Please continue from the following summary:",
+		ts: messages[0]?.ts ? messages[0].ts - 1 : Date.now(),
+	}
+	return [userMessage, ...messages]
 }

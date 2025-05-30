@@ -1650,7 +1650,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		const messagesSinceLastSummary = getMessagesSinceLastSummary(this.apiConversationHistory)
+		const messagesSinceLastSummary = getMessagesSinceLastSummary(this.apiConversationHistory, this.api)
 		const cleanConversationHistory = maybeRemoveImageBlocks(messagesSinceLastSummary, this.api).map(
 			({ role, content }) => ({ role, content }),
 		)
