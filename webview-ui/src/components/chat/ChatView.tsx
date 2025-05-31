@@ -145,6 +145,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const lastTtsRef = useRef<string>("")
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
+	const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const [isCondensing, setIsCondensing] = useState<boolean>(false)
 	const everVisibleMessagesTsRef = useRef<LRUCache<number, boolean>>(
 		new LRUCache({
@@ -642,7 +643,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}
 							break
 						case "focusInput":
-							textAreaRef.current?.focus()
+							if (focusTimeoutRef.current) {
+								clearTimeout(focusTimeoutRef.current)
+							}
+							
+							focusTimeoutRef.current = setTimeout(() => {
+								if (!isHidden && !sendingDisabled && !enableButtons && textAreaRef.current) {
+									try {
+										textAreaRef.current.focus()
+									} catch (e) {
+										console.debug("Failed to focus input:", e)
+									}
+								}
+								focusTimeoutRef.current = null
+							}, 50)
 							break
 					}
 					break
@@ -704,6 +718,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// NOTE: the VSCode window needs to be focused for this to work.
 	useMount(() => textAreaRef.current?.focus())
+
+	// Cleanup effect for focus timeout
+	useEffect(() => {
+		return () => {
+			if (focusTimeoutRef.current) {
+				clearTimeout(focusTimeoutRef.current)
+			}
+		}
+	}, [])
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
