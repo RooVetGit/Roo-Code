@@ -355,7 +355,7 @@ describe("TelemetryClient", () => {
 			)
 		})
 
-		it.only("should attempt to capture TASK_MESSAGE events when recordTaskMessages is true", async () => {
+		it("should attempt to capture TASK_MESSAGE events when recordTaskMessages is true", async () => {
 			mockSettingsService.getSettings.mockReturnValue({
 				cloudSettings: {
 					recordTaskMessages: true,
