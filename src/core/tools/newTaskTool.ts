@@ -92,6 +92,9 @@ export async function newTaskTool(
 			cline.isPaused = true
 			cline.emit("taskPaused")
 
+			// no tool should be used after new task tool
+			cline.didAlreadyUseTool += 5
+
 			return
 		}
 	} catch (error) {
