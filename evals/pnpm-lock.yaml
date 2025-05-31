@@ -250,11 +250,11 @@ importers:
         specifier: ^0.15.0
         version: 0.15.6
       drizzle-orm:
-        specifier: ^0.43.0
-        version: 0.43.1(@libsql/client@0.15.6)
+        specifier: ^0.44.0
+        version: 0.44.1(@libsql/client@0.15.6)
       drizzle-zod:
         specifier: ^0.7.0
-        version: 0.7.1(drizzle-orm@0.43.1(@libsql/client@0.15.6))(zod@3.24.4)
+        version: 0.7.1(drizzle-orm@0.44.1(@libsql/client@0.15.6))(zod@3.24.4)
       p-map:
         specifier: ^7.0.3
         version: 7.0.3
@@ -2118,8 +2118,8 @@ packages:
     resolution: {integrity: sha512-PUjYKWtzOzPtdtQlTHQG3qfv4Y0XT8+Eas6UbxCmxTj7qgMf+39dDujf1BP1I+qqZtw9uzwTh8jYtkMuCq+B0Q==}
     hasBin: true
 
-  drizzle-orm@0.43.1:
-    resolution: {integrity: sha512-dUcDaZtE/zN4RV/xqGrVSMpnEczxd5cIaoDeor7Zst9wOe/HzC/7eAaulywWGYXdDEc9oBPMjayVEDg0ziTLJA==}
+  drizzle-orm@0.44.1:
+    resolution: {integrity: sha512-prIWOlwJbiYInvcJxE+IMiJCtMiFVrSUJCwx6AXSJvGOdLu35qZ46QncTZDgloiLNCG0XxTC8agQElSmsl++TA==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -2135,6 +2135,7 @@ packages:
       '@types/better-sqlite3': '*'
       '@types/pg': '*'
       '@types/sql.js': '*'
+      '@upstash/redis': '>=1.34.7'
       '@vercel/postgres': '>=0.8.0'
       '@xata.io/client': '*'
       better-sqlite3: '>=7'
@@ -2177,6 +2178,8 @@ packages:
       '@types/pg':
         optional: true
       '@types/sql.js':
+        optional: true
+      '@upstash/redis':
         optional: true
       '@vercel/postgres':
         optional: true
@@ -5806,13 +5809,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.43.1(@libsql/client@0.15.6):
+  drizzle-orm@0.44.1(@libsql/client@0.15.6):
     optionalDependencies:
       '@libsql/client': 0.15.6
 
-  drizzle-zod@0.7.1(drizzle-orm@0.43.1(@libsql/client@0.15.6))(zod@3.24.4):
+  drizzle-zod@0.7.1(drizzle-orm@0.44.1(@libsql/client@0.15.6))(zod@3.24.4):
     dependencies:
-      drizzle-orm: 0.43.1(@libsql/client@0.15.6)
+      drizzle-orm: 0.44.1(@libsql/client@0.15.6)
       zod: 3.24.4
 
   dunder-proto@1.0.1:
