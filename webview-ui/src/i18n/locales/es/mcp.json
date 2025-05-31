@@ -2,6 +2,7 @@
 	"title": "Servidores MCP",
 	"done": "Listo",
 	"description": "El <0>Model Context Protocol</0> permite la comunicación con servidores MCP que se ejecutan localmente y proporcionan herramientas y recursos adicionales para extender las capacidades de Roo. Puedes usar <1>servidores creados por la comunidad</1> o pedir a Roo que cree nuevas herramientas específicas para tu flujo de trabajo (por ejemplo, \"añadir una herramienta que obtenga la documentación más reciente de npm\").",
+	"instructions": "Instrucciones",
 	"enableToggle": {
 		"title": "Habilitar servidores MCP",
 		"description": "Cuando está habilitado, Roo podrá interactuar con servidores MCP para obtener funcionalidades avanzadas. Si no usas MCP, puedes desactivarlo para reducir el uso de tokens de Roo."

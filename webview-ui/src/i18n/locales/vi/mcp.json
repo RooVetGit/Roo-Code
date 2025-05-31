@@ -2,6 +2,7 @@
 	"title": "Máy chủ MCP",
 	"done": "Hoàn thành",
 	"description": "<0>Giao thức ngữ cảnh mô hình</0> cho phép giao tiếp với các máy chủ MCP đang chạy cục bộ, cung cấp các công cụ và tài nguyên bổ sung để mở rộng khả năng của Roo. Bạn có thể sử dụng <1>các máy chủ do cộng đồng tạo</1> hoặc yêu cầu Roo tạo các công cụ mới dành riêng cho quy trình làm việc của bạn (ví dụ: \"thêm công cụ lấy tài liệu npm mới nhất\").",
+	"instructions": "Hướng dẫn",
 	"enableToggle": {
 		"title": "Bật máy chủ MCP",
 		"description": "Khi được bật, Roo sẽ có thể tương tác với các máy chủ MCP cho chức năng nâng cao. Nếu bạn không sử dụng MCP, bạn có thể tắt tính năng này để giảm lượng token mà Roo sử dụng."

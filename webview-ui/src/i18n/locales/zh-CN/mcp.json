@@ -1,14 +1,15 @@
 {
 	"title": "MCP服务管理",
 	"done": "完成",
-	"description": "<0>Model Context Protocol</0> 支持与本地MCP服务通信，提供扩展功能。您可以使用<1>社区服务器</1>，或通过指令创建定制工具（例如：“新增获取最新npm文档的工具”）。",
+	"description": "<0>Model Context Protocol</0> 支持与本地MCP服务通信，提供扩展功能。您可以使用<1>社区服务器</1>，或通过指令创建定制工具（例如：\"新增获取最新npm文档的工具\"）。",
+	"instructions": "使用说明",
 	"enableToggle": {
 		"title": "启用MCP服务",
 		"description": "启用后Roo可与MCP服务交互获取高级功能。未使用时建议关闭以节省Token消耗。"
 	},
 	"enableServerCreation": {
 		"title": "允许创建工具",
-		"description": "启用后模型可通过“添加新工具”等指令创建MCP服务。无需创建功能时建议关闭以节省Token。"
+		"description": "启用后模型可通过\"添加新工具\"等指令创建MCP服务。无需创建功能时建议关闭以节省Token。"
 	},
 	"editGlobalMCP": "编辑全局配置",
 	"editProjectMCP": "编辑项目配置",

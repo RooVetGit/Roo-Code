@@ -2,6 +2,7 @@
 	"title": "Servidors MCP",
 	"done": "Fet",
 	"description": "El <0>Model Context Protocol</0> permet la comunicació amb servidors MCP que s'executen localment i proporcionen eines i recursos addicionals per ampliar les capacitats de Roo. Pots utilitzar <1>servidors creats per la comunitat</1> o demanar a Roo que creï noves eines específiques per al teu flux de treball (per exemple, \"afegir una eina que obtingui la documentació més recent de npm\").",
+	"instructions": "Instruccions",
 	"enableToggle": {
 		"title": "Habilitar servidors MCP",
 		"description": "Quan està habilitat, Roo podrà interactuar amb servidors MCP per a funcionalitats avançades. Si no utilitzes MCP, pots desactivar això per reduir l'ús de tokens de Roo."
