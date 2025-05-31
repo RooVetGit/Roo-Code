@@ -98,7 +98,7 @@ describe("Bedrock Component", () => {
 		expect(screen.queryByTestId("vpc-endpoint-input")).not.toBeInTheDocument()
 
 		// Click the checkbox
-		fireEvent.click(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint"))
+		fireEvent.click(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint"))
 
 		// Text field should now be visible
 		expect(screen.getByTestId("vpc-endpoint-input")).toBeInTheDocument()
@@ -123,7 +123,7 @@ describe("Bedrock Component", () => {
 		expect(screen.getByTestId("vpc-endpoint-input")).toBeInTheDocument()
 
 		// Click the checkbox to uncheck it
-		fireEvent.click(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint"))
+		fireEvent.click(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint"))
 
 		// Text field should now be hidden
 		expect(screen.queryByTestId("vpc-endpoint-input")).not.toBeInTheDocument()
@@ -208,13 +208,13 @@ describe("Bedrock Component", () => {
 			expect(screen.getByTestId("vpc-endpoint-input")).toHaveValue("https://bedrock-vpc.example.com")
 
 			// Uncheck the checkbox
-			fireEvent.click(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint"))
+			fireEvent.click(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint"))
 
 			// Verify endpoint enabled was set to false
 			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsBedrockEndpointEnabled", false)
 
 			// Check the checkbox again
-			fireEvent.click(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint"))
+			fireEvent.click(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint"))
 
 			// Verify endpoint enabled was set to true
 			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsBedrockEndpointEnabled", true)
@@ -275,7 +275,7 @@ describe("Bedrock Component", () => {
 			// Check for the example URLs section
 			// Since we don't have a specific testid for the examples section,
 			// we'll check for the text content
-			expect(screen.getByText("Examples:")).toBeInTheDocument()
+			expect(screen.getByText("settings:providers.awsBedrockVpc.examples")).toBeInTheDocument()
 			expect(screen.getByText("• https://vpce-xxx.bedrock.region.vpce.amazonaws.com/")).toBeInTheDocument()
 			expect(screen.getByText("• https://gateway.my-company.com/route/app/bedrock")).toBeInTheDocument()
 		})
@@ -295,13 +295,13 @@ describe("Bedrock Component", () => {
 			)
 
 			// Initially the examples should be visible
-			expect(screen.getByText("Examples:")).toBeInTheDocument()
+			expect(screen.getByText("settings:providers.awsBedrockVpc.examples")).toBeInTheDocument()
 
 			// Uncheck the VPC endpoint checkbox
-			fireEvent.click(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint"))
+			fireEvent.click(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint"))
 
 			// Now the examples should be hidden
-			expect(screen.queryByText("Examples:")).not.toBeInTheDocument()
+			expect(screen.queryByText("settings:providers.awsBedrockVpc.examples")).not.toBeInTheDocument()
 			expect(screen.queryByText("• https://vpce-xxx.bedrock.region.vpce.amazonaws.com/")).not.toBeInTheDocument()
 			expect(screen.queryByText("• https://gateway.my-company.com/route/app/bedrock")).not.toBeInTheDocument()
 		})
@@ -353,7 +353,7 @@ describe("Bedrock Component", () => {
 			)
 
 			// Verify checkbox is checked and endpoint is visible
-			expect(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint")).toBeChecked()
+			expect(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint")).toBeChecked()
 			expect(screen.getByTestId("vpc-endpoint-input")).toBeInTheDocument()
 			expect(screen.getByTestId("vpc-endpoint-input")).toHaveValue("https://custom-endpoint.aws.com")
 
@@ -374,7 +374,7 @@ describe("Bedrock Component", () => {
 			)
 
 			// Verify checkbox is unchecked and endpoint is not visible
-			expect(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint")).not.toBeChecked()
+			expect(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint")).not.toBeChecked()
 			expect(screen.queryByTestId("vpc-endpoint-input")).not.toBeInTheDocument()
 		})
 
@@ -394,7 +394,7 @@ describe("Bedrock Component", () => {
 			)
 
 			// Verify initial state
-			expect(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint")).not.toBeChecked()
+			expect(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint")).not.toBeChecked()
 			expect(screen.queryByTestId("vpc-endpoint-input")).not.toBeInTheDocument()
 
 			// Update with new configuration
@@ -412,7 +412,7 @@ describe("Bedrock Component", () => {
 			)
 
 			// Verify updated state
-			expect(screen.getByTestId("checkbox-input-use-custom-vpc-endpoint")).toBeChecked()
+			expect(screen.getByTestId("checkbox-input-settings:providers.awsbedrockvpc.usecustomvpcendpoint")).toBeChecked()
 			expect(screen.getByTestId("vpc-endpoint-input")).toBeInTheDocument()
 			expect(screen.getByTestId("vpc-endpoint-input")).toHaveValue("https://updated-endpoint.aws.com")
 		})
