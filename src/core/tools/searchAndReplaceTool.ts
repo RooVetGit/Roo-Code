@@ -116,6 +116,14 @@ export async function searchAndReplaceTool(
 			endLine: endLine,
 		}
 
+		const accessAllowed = cline.rooIgnoreController?.validateAccess(validRelPath)
+
+		if (!accessAllowed) {
+			await cline.say("rooignore_error", validRelPath)
+			pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(validRelPath)))
+			return
+		}
+
 		const absolutePath = path.resolve(cline.cwd, validRelPath)
 		const fileExists = await fileExistsAtPath(absolutePath)
 

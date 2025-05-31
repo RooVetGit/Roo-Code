@@ -1,5 +1,41 @@
 # Roo Code Changelog
 
+## [3.19.1] - 2025-05-30
+
+- Experimental feature to allow reading multiple files at once (thanks @samhvw8!)
+- Fix to correctly pass headers to SSE MCP servers
+- Adding support for custom VPC endpoints when using Amazon Bedrock (thanks @kcwhite!)
+- Fix bug with context condensing in Amazon Bedrock
+- Fix UTF-8 encoding in ExecaTerminalProcess (thanks @mr-ryan-james!)
+- Set sidebar name bugfix (thanks @chrarnoldus!)
+- Fix link to CONTRIBUTING.md in feature request template (thanks @cannuri!)
+- Add task metadata to Unbound and improve caching logic (thanks @pugazhendhi-m!)
+
+## [3.19.0] - 2025-05-29
+
+- Enable intelligent content condensing by default and move condense button out of expanded task menu
+- Skip condense and show error if context grows during condensing
+- Transform Prompts tab into Modes tab and move support prompts to Settings for better organization
+- Add DeepSeek R1 0528 model support to Chutes provider (thanks @zeozeozeo!)
+- Fix @directory not respecting .rooignore files (thanks @xyOz-dev!)
+- Add rooignore checking for insert_content and search_and_replace tools
+- Fix menu breaking when Roo is moved between primary and secondary sidebars (thanks @chrarnoldus!)
+- Resolve memory leak in ChatView by stabilizing callback props (thanks @samhvw8!)
+- Fix write_to_file to properly create empty files when content is empty (thanks @Ruakij!)
+- Fix chat input clearing during running tasks (thanks @xyOz-dev!)
+- Update AWS regions to include Spain and Hyderabad
+- Improve POSIX shell compatibility in pre-push hook (thanks @PeterDaveHello and @chrarnoldus!)
+- Update PAGER environment variable for Windows compatibility in Terminal (thanks @SmartManoj!)
+- Add environment variable injection support for whole MCP config (thanks @NamesMT!)
+- Update codebase search description to emphasize English query requirements (thanks @ChuKhaLi!)
+
+## [3.18.5] - 2025-05-27
+
+- Add thinking controls for Requesty (thanks @dtrugman!)
+- Re-enable telemetry
+- Improve zh-TW Traditional Chinese locale (thanks @PeterDaveHello and @chrarnoldus!)
+- Improve model metadata for LiteLLM
+
 ## [3.18.4] - 2025-05-25
 
 - Fix codebase indexing settings saving and Ollama indexing (thanks @daniel-lxs!)

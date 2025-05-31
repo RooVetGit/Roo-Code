@@ -52,6 +52,7 @@ async function main() {
 							["../README.md", "README.md"],
 							["../CHANGELOG.md", "CHANGELOG.md"],
 							["../LICENSE", "LICENSE"],
+							["../.env", ".env", { optional: true }],
 							["node_modules/vscode-material-icons/generated", "assets/vscode-material-icons"],
 							["../webview-ui/audio", "webview-ui/audio"],
 						],
@@ -98,9 +99,6 @@ async function main() {
 		entryPoints: ["extension.ts"],
 		outfile: "dist/extension.js",
 		external: ["vscode"],
-		alias: {
-			"@roo-code/types": path.resolve(__dirname, "../packages/types/dist/index.js"),
-		},
 	}
 
 	/**
@@ -110,9 +108,6 @@ async function main() {
 		...buildOptions,
 		entryPoints: ["workers/countTokens.ts"],
 		outdir: "dist/workers",
-		alias: {
-			"@roo-code/types": path.resolve(__dirname, "../packages/types/dist/index.js"),
-		},
 	}
 
 	const [extensionCtx, workerCtx] = await Promise.all([

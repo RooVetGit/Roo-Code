@@ -3,9 +3,15 @@ import { useEvent } from "react-use"
 import { Checkbox } from "vscrui"
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import type { ProviderSettings, ModelInfo, ReasoningEffort } from "@roo-code/types"
+import {
+	type ProviderSettings,
+	type ModelInfo,
+	type ReasoningEffort,
+	type OrganizationAllowList,
+	azureOpenAiDefaultApiVersion,
+	openAiModelInfoSaneDefaults,
+} from "@roo-code/types"
 
-import { azureOpenAiDefaultApiVersion, openAiModelInfoSaneDefaults } from "@roo/api"
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -20,9 +26,14 @@ import { ThinkingBudget } from "../ThinkingBudget"
 type OpenAICompatibleProps = {
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
+	organizationAllowList: OrganizationAllowList
 }
 
-export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }: OpenAICompatibleProps) => {
+export const OpenAICompatible = ({
+	apiConfiguration,
+	setApiConfigurationField,
+	organizationAllowList,
+}: OpenAICompatibleProps) => {
 	const { t } = useAppTranslation()
 
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
@@ -132,6 +143,7 @@ export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }:
 				modelIdKey="openAiModelId"
 				serviceName="OpenAI"
 				serviceUrl="https://platform.openai.com"
+				organizationAllowList={organizationAllowList}
 			/>
 			<R1FormatSetting
 				onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}
