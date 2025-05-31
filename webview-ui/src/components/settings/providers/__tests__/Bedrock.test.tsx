@@ -6,12 +6,12 @@ import { ProviderSettings } from "@roo-code/types"
 // Mock the vscrui Checkbox component
 jest.mock("vscrui", () => ({
 	Checkbox: ({ children, checked, onChange }: any) => (
-		<label data-testid={`checkbox-${children?.toString().replace(/\\s+/g, "-").toLowerCase()}`}>
+		<label data-testid={`checkbox-${children?.toString().replace(/\s+/g, "-").toLowerCase()}`}>
 			<input
 				type="checkbox"
 				checked={checked}
 				onChange={() => onChange(!checked)} // Toggle the checked state
-				data-testid={`checkbox-input-${children?.toString().replace(/\\s+/g, "-").toLowerCase()}`}
+				data-testid={`checkbox-input-${children?.toString().replace(/\s+/g, "-").toLowerCase()}`}
 			/>
 			{children}
 		</label>
@@ -20,28 +20,31 @@ jest.mock("vscrui", () => ({
 
 // Mock the VSCodeTextField component
 jest.mock("@vscode/webview-ui-toolkit/react", () => ({
-	VSCodeTextField: ({ children, value, onInput, placeholder, className, style, "data-testid": dataTestId }: any) => {
-		// Special case for VPC endpoint field with data-testid
-		if (dataTestId === "vpc-endpoint-input") {
-			return (
-				<div data-testid="vpc-endpoint-text-field" className={className} style={style}>
-					{children}
-					<input
-						type="text"
-						value={value}
-						onChange={(e) => onInput && onInput(e)}
-						placeholder={placeholder}
-						data-testid="vpc-endpoint-input"
-					/>
-				</div>
-			)
-		}
-
-		// Regular text fields
+	VSCodeTextField: ({
+		children,
+		value,
+		onInput,
+		placeholder,
+		className,
+		style,
+		"data-testid": dataTestId,
+		...rest
+	}: any) => {
+		// For all text fields - apply data-testid directly to input if provided
 		return (
-			<div data-testid="vscode-text-field" className={className} style={style}>
+			<div
+				data-testid={dataTestId ? `${dataTestId}-text-field` : "vscode-text-field"}
+				className={className}
+				style={style}>
 				{children}
-				<input type="text" value={value} onChange={(e) => onInput && onInput(e)} placeholder={placeholder} />
+				<input
+					type="text"
+					value={value}
+					onChange={(e) => onInput && onInput(e)}
+					placeholder={placeholder}
+					data-testid={dataTestId}
+					{...rest}
+				/>
 			</div>
 		)
 	},
