@@ -441,7 +441,7 @@
 		"@types/turndown": "^5.0.5",
 		"@types/vscode": "^1.84.0",
 		"@vscode/test-electron": "^2.5.2",
-		"@vscode/vsce": "3.3.2",
+		"@vscode/vsce": "3.4.2",
 		"esbuild": "^0.25.0",
 		"execa": "^9.5.2",
 		"glob": "^11.0.1",
