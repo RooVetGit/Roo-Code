@@ -67,16 +67,16 @@ export default defineConfig(({ mode }) => {
 
 	// TODO: We can use `@roo-code/build` to generate `define` once the
 	// monorepo is deployed.
-	if (mode === "nightly") {
-		outDir = "../apps/vscode-nightly/build/webview-ui/build"
+	if (mode === "next") {
+		outDir = "../apps/vscode-next/build/webview-ui/build"
 
-		const nightlyPkg = JSON.parse(
-			fs.readFileSync(path.join(__dirname, "..", "apps", "vscode-nightly", "package.nightly.json"), "utf8"),
+		const nextPkg = JSON.parse(
+			fs.readFileSync(path.join(__dirname, "..", "apps", "vscode-next", "package.next.json"), "utf8"),
 		)
 
-		define["process.env.PKG_NAME"] = JSON.stringify(nightlyPkg.name)
-		define["process.env.PKG_VERSION"] = JSON.stringify(nightlyPkg.version)
-		define["process.env.PKG_OUTPUT_CHANNEL"] = JSON.stringify("Roo-Code-Nightly")
+		define["process.env.PKG_NAME"] = JSON.stringify(nextPkg.name)
+		define["process.env.PKG_VERSION"] = JSON.stringify(nextPkg.version)
+		define["process.env.PKG_OUTPUT_CHANNEL"] = JSON.stringify("Roo-Code-Next")
 	}
 
 	const plugins: PluginOption[] = [react(), tailwindcss(), persistPortPlugin(), wasmPlugin()]

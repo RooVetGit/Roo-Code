@@ -10,7 +10,7 @@
 		"format": "prettier --write src",
 		"dev": "vite",
 		"build": "tsc -b && vite build",
-		"build:nightly": "tsc -b && vite build --mode nightly",
+		"build:next": "tsc -b && vite build --mode next",
 		"preview": "vite preview",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
