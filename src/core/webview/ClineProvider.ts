@@ -591,7 +591,6 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
-
 		const cline = new Task({
 			provider: this,
 			apiConfiguration,
@@ -808,17 +807,10 @@ export class ClineProvider
 	public async handleModeSwitch(newMode: Mode) {
 		// Telemetry for mode switch (provider level)
 		const cline = this.getCurrentCline() // Get current cline for task ID if available
-		telemetryService.captureModeSwitch(cline?.taskId || "global", newMode)
+		TelemetryService.instance.captureModeSwitch(cline?.taskId || "global", newMode)
 
-		// Emit an event that the provider's mode is switching.
-		// The active Cline instance itself should only update its internal currentModeSlug
-		// if the switch_mode tool is used within its context.
-		// A global mode switch should not change an active task's inherent mode.
 		if (cline) {
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
-			// Update the Cline instance's current mode *before* emitting the event
-			// and *before* updating global state, to ensure consistency if event handlers
-			// or global state watchers try to access the cline's mode.
 			await cline.updateCurrentModeSlug(newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
 		}
