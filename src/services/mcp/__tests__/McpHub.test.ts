@@ -100,7 +100,7 @@ describe("McpHub", () => {
 						command: "node",
 						args: ["test.js"],
 						alwaysAllow: ["allowed-tool"],
-						disabledForPromptTools: ["disabled-tool"],
+						disabledTools: ["disabled-tool"],
 					},
 				},
 			}),
@@ -215,14 +215,14 @@ describe("McpHub", () => {
 	})
 
 	describe("toggleToolEnabledForPrompt", () => {
-		it("should add tool to disabledForPromptTools list when enabling", async () => {
+		it("should add tool to disabledTools list when enabling", async () => {
 			const mockConfig = {
 				mcpServers: {
 					"test-server": {
 						type: "stdio",
 						command: "node",
 						args: ["test.js"],
-						disabledForPromptTools: [],
+						disabledTools: [],
 					},
 				},
 			}
@@ -246,17 +246,17 @@ describe("McpHub", () => {
 			expect(writtenConfig.mcpServers).toBeDefined()
 			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
 			expect(Array.isArray(writtenConfig.mcpServers["test-server"].enabledForPrompt)).toBe(false)
-			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).toContain("new-tool")
+			expect(writtenConfig.mcpServers["test-server"].disabledTools).toContain("new-tool")
 		})
 
-		it("should remove tool from disabledForPromptTools list when disabling", async () => {
+		it("should remove tool from disabledTools list when disabling", async () => {
 			const mockConfig = {
 				mcpServers: {
 					"test-server": {
 						type: "stdio",
 						command: "node",
 						args: ["test.js"],
-						disabledForPromptTools: ["existing-tool"],
+						disabledTools: ["existing-tool"],
 					},
 				},
 			}
@@ -280,10 +280,10 @@ describe("McpHub", () => {
 			expect(writtenConfig.mcpServers).toBeDefined()
 			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
 			expect(Array.isArray(writtenConfig.mcpServers["test-server"].enabledForPrompt)).toBe(false)
-			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).not.toContain("existing-tool")
+			expect(writtenConfig.mcpServers["test-server"].disabledTools).not.toContain("existing-tool")
 		})
 
-		it("should initialize disabledForPromptTools if it does not exist", async () => {
+		it("should initialize disabledTools if it does not exist", async () => {
 			const mockConfig = {
 				mcpServers: {
 					"test-server": {
@@ -300,7 +300,7 @@ describe("McpHub", () => {
 			// Call with false because of "true" is default value
 			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "new-tool", false)
 
-			// Verify the config was updated with initialized disabledForPromptTools
+			// Verify the config was updated with initialized disabledTools
 			// Find the write call with the normalized path
 			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
 			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
@@ -310,8 +310,8 @@ describe("McpHub", () => {
 			const callToUse = writeCall || writeCalls[0]
 
 			const writtenConfig = JSON.parse(callToUse[1])
-			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).toBeDefined()
-			expect(writtenConfig.mcpServers["test-server"].disabledForPromptTools).toContain("new-tool")
+			expect(writtenConfig.mcpServers["test-server"].disabledTools).toBeDefined()
+			expect(writtenConfig.mcpServers["test-server"].disabledTools).toContain("new-tool")
 		})
 	})
 
