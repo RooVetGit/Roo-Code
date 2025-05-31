@@ -7,6 +7,13 @@ import { ToolProgressStatus } from "@roo-code/types"
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
+import { SuperfluousDuplicatedLineEngine } from "./engines/superfluous-duplicated-line.engine"
+
+export interface SearchReplaceContext {
+	startLine: number
+	searchContent: string
+	replaceContent: string
+}
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
 
@@ -360,7 +367,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		let delta = 0
 		let diffResults: DiffResult[] = []
 		let appliedCount = 0
-		const replacements = matches
+		const replacements: SearchReplaceContext[] = matches
 			.map((match) => ({
 				startLine: Number(match[2] ?? 0),
 				searchContent: match[6],
@@ -514,6 +521,19 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 			}
 
+			// --- Start: Replacement Engine Processing ---
+			// Now that we found the match, call the engine with the actual match location
+			const engineContext = {
+				startLine: matchIndex + 1, // Convert back to 1-based index for the engine
+				searchContent: replacement.searchContent,
+				replaceContent: replacement.replaceContent,
+			}
+			const additionalLinesToConsume = SuperfluousDuplicatedLineEngine.process(
+				resultLines.join("\n"),
+				engineContext,
+			)
+			// --- End: Replacement Engine Processing ---
+
 			// Get the matched lines from the original content
 			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
 
@@ -554,11 +574,17 @@ Only use a single line of '=======' between search and replacement content, beca
 				return finalIndent + line.trim()
 			})
 
+			// Initialize effectiveSearchLinesCount (determines how many lines from original are considered "replaced")
+			let effectiveSearchLinesCount = searchLines.length + additionalLinesToConsume
+
 			// Construct the final content
 			const beforeMatch = resultLines.slice(0, matchIndex)
-			const afterMatch = resultLines.slice(matchIndex + searchLines.length)
+			// Use effectiveSearchLinesCount here to determine the slice point
+			const afterMatch = resultLines.slice(matchIndex + effectiveSearchLinesCount)
+
 			resultLines = [...beforeMatch, ...indentedReplaceLines, ...afterMatch]
-			delta = delta - matchedLines.length + replaceLines.length
+			// Use effectiveSearchLinesCount for delta calculation
+			delta = delta - effectiveSearchLinesCount + replaceLines.length
 			appliedCount++
 		}
 		const finalContent = resultLines.join(lineEnding)

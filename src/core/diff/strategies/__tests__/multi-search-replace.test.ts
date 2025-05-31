@@ -2407,4 +2407,203 @@ function two() {
 			expect(description).toContain("</apply_diff>")
 		})
 	})
+
+	describe("generalized line duplication heuristic", () => {
+		let strategy: MultiSearchReplaceDiffStrategy
+
+		beforeEach(() => {
+			strategy = new MultiSearchReplaceDiffStrategy()
+		})
+
+		it("should correctly append content and avoid duplicating a closing brace", async () => {
+			const originalContent = `function test() {
+	console.log("original");
+}`
+
+			const diffContent = `<<<<<<< SEARCH
+:start_line:2
+-------
+	console.log("original");
+=======
+	console.log("original");
+}
+function newFunction() {
+	console.log("appended");
+}
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			if (result.success)
+				expect(result.content).toBe(`function test() {
+	console.log("original");
+}
+function newFunction() {
+	console.log("appended");
+}`)
+		})
+
+		it("should correctly append content and avoid duplicating a common line", async () => {
+			const originalContent = `Section A
+Common Line to keep
+Section B`
+
+			const diffContent = `<<<<<<< SEARCH
+:start_line:1
+-------
+Section A
+=======
+Section A
+Common Line to keep
+New Appended Content
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			if (result.success)
+				expect(result.content).toBe(`Section A
+Common Line to keep
+New Appended Content
+Section B`)
+		})
+
+		it("should correctly append content and avoid duplicating multiple lines with nested braces", async () => {
+			const originalContent = `function devConfig() {
+	return {
+		name: "test"
+	};
+}`
+
+			const diffContent = `<<<<<<< SEARCH
+		name: "test"
+=======
+		name: "test"
+	};
+}
+function prodConfig() {
+	return {
+		name: "prod"
+	};
+}
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			if (result.success)
+				expect(result.content).toBe(`function devConfig() {
+	return {
+		name: "test"
+	};
+}
+function prodConfig() {
+	return {
+		name: "prod"
+	};
+}`)
+		})
+
+		it("should not alter behavior when the line after search prefix in REPLACE differs from original line after SEARCH", async () => {
+			const originalContent = `Line 1
+Line 2 (original next)
+Line 3`
+
+			const diffContent = `<<<<<<< SEARCH
+:start_line:1
+-------
+Line 1
+=======
+Line 1
+Line X (different next in replace)
+Appended Content
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			if (result.success)
+				expect(result.content).toBe(`Line 1
+Line X (different next in replace)
+Appended Content
+Line 2 (original next)
+Line 3`)
+		})
+
+		it("should not trigger heuristic if SEARCH content is not a prefix of REPLACE content", async () => {
+			const originalContent = `Alpha
+Bravo
+Charlie`
+
+			const diffContent = `<<<<<<< SEARCH
+:start_line:1
+-------
+Alpha
+=======
+Completely New Content
+Even More New Content
+Bravo
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			if (result.success)
+				expect(result.content).toBe(`Completely New Content
+Even More New Content
+Bravo
+Bravo
+Charlie`)
+		})
+
+		it("should handle edge case where heuristic conditions are met but no line follows search in original", async () => {
+			const originalContent = `Last Line`
+
+			const diffContent = `<<<<<<< SEARCH
+:start_line:1
+-------
+Last Line
+=======
+Last Line
+New Line
+Added Content
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			if (result.success)
+				expect(result.content).toBe(`Last Line
+New Line
+Added Content`)
+		})
+
+		it("should handle case where similarity threshold is not met", async () => {
+			const originalContent = `Original Content
+Next Line
+Final Line`
+
+			const diffContent = `<<<<<<< SEARCH
+:start_line:1
+-------
+Original Content
+=======
+Completely Different Content
+Next Line
+Appended Content
+>>>>>>> REPLACE`
+
+			const result = await strategy.applyDiff(originalContent, diffContent)
+
+			expect(result.success).toBe(true)
+			// Should behave as normal replacement since similarity < 0.95
+			if (result.success)
+				expect(result.content).toBe(`Completely Different Content
+Next Line
+Appended Content
+Next Line
+Final Line`)
+		})
+	})
 })
