@@ -53,6 +53,7 @@ import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
+import { SeedControl } from "./SeedControl"
 import { buildDocLink } from "@src/utils/docLinks"
 
 export interface ApiOptionsProps {
@@ -487,6 +488,10 @@ const ApiOptions = ({
 					<RateLimitSecondsControl
 						value={apiConfiguration.rateLimitSeconds || 0}
 						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+					/>
+					<SeedControl
+						value={apiConfiguration.modelSeed}
+						onChange={handleInputChange("modelSeed", noTransform)}
 					/>
 				</>
 			)}
