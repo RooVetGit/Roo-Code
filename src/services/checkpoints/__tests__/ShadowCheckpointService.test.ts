@@ -11,8 +11,15 @@ import { fileExistsAtPath } from "../../../utils/fs"
 import * as fileSearch from "../../../services/search/file-search"
 
 import { RepoPerTaskCheckpointService } from "../RepoPerTaskCheckpointService"
-
 jest.setTimeout(10_000)
+
+// Mock ripgrep service
+jest.mock("../../../services/ripgrep")
+
+// Mock file search service
+jest.mock("../../../services/search/file-search", () => ({
+	executeRipgrep: jest.fn().mockResolvedValue([]),
+}))
 
 const tmpDir = path.join(os.tmpdir(), "CheckpointService")
 
@@ -423,29 +430,51 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 				const renameSpy = jest.spyOn(fs, "rename")
 
-				jest.spyOn(fileSearch, "executeRipgrep").mockImplementation(({ args }) => {
-					const searchPattern = args[4]
+				// Mock executeRipgrep to simulate finding the nested .git/HEAD file.
+				// nestedGitDir is an absolute path to the .git directory of the nested repo.
+				// workspaceDir is an absolute path to the main workspace.
+				jest.spyOn(fileSearch, "executeRipgrep").mockImplementation(
+					async ({ args: rgArgs, workspacePath: rgInvocationWorkspacePath }) => {
+						// ShadowCheckpointService calls ripgrep with:
+						// args: ["--files", "--hidden", "--follow", "-g", "**/<path_sep>.git/<path_sep>HEAD", workspaceDir]
+						// workspacePath: workspaceDir
 
-					if (searchPattern.includes(".git/HEAD")) {
-						return Promise.resolve([
-							{
-								path: path.relative(workspaceDir, nestedGitDir),
-								type: "folder",
-								label: ".git",
-							},
-						])
-					} else {
+						const globPattern = rgArgs[4] // e.g., "**/.git/HEAD"
+						const searchBaseDir = rgArgs[5] // The directory ripgrep is told to search within.
+
+						if (
+							globPattern.includes(path.join(".git", "HEAD")) &&
+							searchBaseDir === workspaceDir &&
+							rgInvocationWorkspacePath === workspaceDir
+						) {
+							// Construct the relative path of the nested .git/HEAD file with respect to workspaceDir
+							const nestedHeadFileAbsPath = path.join(nestedGitDir, "HEAD")
+							const relativeNestedHeadFilePath = path.relative(workspaceDir, nestedHeadFileAbsPath) // e.g., "nested-project/.git/HEAD"
+
+							return Promise.resolve([
+								{
+									type: "file", // Must be 'file' for the service's filter
+									path: relativeNestedHeadFilePath, // Must end with '.git/HEAD' and be relative to workspaceDir
+								},
+							])
+						}
 						return Promise.resolve([])
-					}
-				})
+					},
+				)
 
 				const service = new klass(taskId, shadowDir, workspaceDir, () => {})
 				await service.initShadowGit()
 
-				// Verify rename was called with correct paths.
-				expect(renameSpy.mock.calls).toHaveLength(1)
+				// Verify rename was called with correct paths - both disable and restore
+				expect(renameSpy.mock.calls).toHaveLength(2)
+
+				// First call should rename .git to .git_disabled
 				expect(renameSpy.mock.calls[0][0]).toBe(nestedGitDir)
 				expect(renameSpy.mock.calls[0][1]).toBe(nestedGitDisabledDir)
+
+				// Second call should rename .git_disabled back to .git
+				expect(renameSpy.mock.calls[1][0]).toBe(nestedGitDisabledDir)
+				expect(renameSpy.mock.calls[1][1]).toBe(nestedGitDir)
 
 				jest.spyOn(require("../../../utils/fs"), "fileExistsAtPath").mockImplementation((path) => {
 					if (path === nestedGitDir) {
