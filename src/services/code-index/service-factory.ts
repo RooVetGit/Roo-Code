@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
+import { CodeIndexGeminiEmbedder } from "./embedders/gemini"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
@@ -43,6 +44,11 @@ export class CodeIndexServiceFactory {
 				...config.ollamaOptions,
 				ollamaModelId: config.modelId,
 			})
+		} else if (provider === "gemini") {
+			if (!config.geminiOptions?.geminiApiKey) {
+				throw new Error("Gemini configuration missing for embedder creation")
+			}
+			return new CodeIndexGeminiEmbedder(config.geminiOptions)
 		}
 
 		throw new Error(`Invalid embedder type configured: ${config.embedderProvider}`)
@@ -58,8 +64,12 @@ export class CodeIndexServiceFactory {
 		const defaultModel = getDefaultModelId(provider)
 		// Use the embedding model ID from config, not the chat model IDs
 		const modelId = config.modelId ?? defaultModel
+		let requestedDimension: number | undefined
+		if (provider === "gemini") {
+			requestedDimension = config.geminiEmbeddingDimension
+		}
 
-		const vectorSize = getModelDimension(provider, modelId)
+		const vectorSize = getModelDimension(provider, modelId, requestedDimension)
 
 		if (vectorSize === undefined) {
 			throw new Error(

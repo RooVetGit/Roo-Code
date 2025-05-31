@@ -11,9 +11,11 @@ export interface CodeIndexConfig {
 	modelId?: string
 	openAiOptions?: ApiHandlerOptions
 	ollamaOptions?: ApiHandlerOptions
+	geminiOptions?: ApiHandlerOptions
 	qdrantUrl?: string
 	qdrantApiKey?: string
 	searchMinScore?: number
+	geminiEmbeddingDimension?: number
 }
 
 /**
@@ -26,6 +28,9 @@ export type PreviousConfigSnapshot = {
 	modelId?: string
 	openAiKey?: string
 	ollamaBaseUrl?: string
+	geminiApiKey?: string
+	geminiEmbeddingTaskType?: string
+	geminiEmbeddingDimension?: number // Add here
 	qdrantUrl?: string
 	qdrantApiKey?: string
 }
