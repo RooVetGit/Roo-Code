@@ -1,0 +1,481 @@
+diff --git a/.changeset/eager-buckets-feel.md b/.changeset/eager-buckets-feel.md
+deleted file mode 100644
+index 801da70a..00000000
+--- a/.changeset/eager-buckets-feel.md
++++ /dev/null
+@@ -1,5 +0,0 @@
+----
+-"roo-cline": major
+----
+-
+-Default enabled autoCondenseContext and moved settings out of Experimental
+diff --git a/.changeset/spotty-steaks-brake.md b/.changeset/spotty-steaks-brake.md
+deleted file mode 100644
+index 47fa9afc..00000000
+--- a/.changeset/spotty-steaks-brake.md
++++ /dev/null
+@@ -1,5 +0,0 @@
+----
+-"roo-cline": patch
+----
+-
+-Skips condense operations if the context size grows & shows an error
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4a690d96..28ac8180 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # Roo Code Changelog
+ 
++## 4.0.0
++
++### Major Changes
++
++- Default enabled autoCondenseContext and moved settings out of Experimental
++
++### Patch Changes
++
++- Skips condense operations if the context size grows & shows an error
++
+ ## [3.18.5] - 2025-05-27
+ 
+ - Add thinking controls for Requesty (thanks @dtrugman!)
+diff --git a/src/api/providers/__tests__/vscode-lm.test.ts b/src/api/providers/__tests__/vscode-lm.test.ts
+index 59d49f76..b5790ec7 100644
+--- a/src/api/providers/__tests__/vscode-lm.test.ts
++++ b/src/api/providers/__tests__/vscode-lm.test.ts
+@@ -193,6 +193,8 @@ describe("VsCodeLmHandler", () => {
+ 				callId: "call-1",
+ 			}
+ 
++			const toolTag = `<${toolCallData.name}><operation>add</operation><numbers>[2,2]</numbers></${toolCallData.name}>`
++
+ 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+ 				stream: (async function* () {
+ 					yield new vscode.LanguageModelToolCallPart(
+@@ -203,7 +205,7 @@ describe("VsCodeLmHandler", () => {
+ 					return
+ 				})(),
+ 				text: (async function* () {
+-					yield JSON.stringify({ type: "tool_call", ...toolCallData })
++					yield toolTag
+ 					return
+ 				})(),
+ 			})
+@@ -217,8 +219,127 @@ describe("VsCodeLmHandler", () => {
+ 			expect(chunks).toHaveLength(2) // Tool call chunk + usage chunk
+ 			expect(chunks[0]).toEqual({
+ 				type: "text",
+-				text: JSON.stringify({ type: "tool_call", ...toolCallData }),
++				text: toolTag,
++			})
++		})
++
++		it("should escape '<' characters in tool call input", async () => {
++			const systemPrompt = "You are a helpful assistant"
++			const messages: Anthropic.Messages.MessageParam[] = [
++				{
++					role: "user" as const,
++					content: "Test < symbol",
++				},
++			]
++
++			const toolCallData = {
++				name: "tester",
++				arguments: { query: "1 < 2" },
++				callId: "call-less",
++			}
++
++			const escaped = `<${toolCallData.name}><query>1 &lt; 2</query></${toolCallData.name}>`
++
++			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
++				stream: (async function* () {
++					yield new vscode.LanguageModelToolCallPart(
++						toolCallData.callId,
++						toolCallData.name,
++						toolCallData.arguments,
++					)
++					return
++				})(),
++				text: (async function* () {
++					yield escaped
++					return
++				})(),
++			})
++
++			const stream = handler.createMessage(systemPrompt, messages)
++			const chunks: any[] = []
++			for await (const chunk of stream) {
++				chunks.push(chunk)
++			}
++
++			expect(chunks[0]).toEqual({ type: "text", text: escaped })
++		})
++
++		it("should escape '&' characters in tool call input", async () => {
++			const systemPrompt = "You are a helpful assistant"
++			const messages: Anthropic.Messages.MessageParam[] = [
++				{
++					role: "user" as const,
++					content: "Test & symbol",
++				},
++			]
++
++			const toolCallData = {
++				name: "tester",
++				arguments: { query: "A & B" },
++				callId: "call-amp",
++			}
++
++			const escaped = `<${toolCallData.name}><query>A &amp; B</query></${toolCallData.name}>`
++
++			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
++				stream: (async function* () {
++					yield new vscode.LanguageModelToolCallPart(
++						toolCallData.callId,
++						toolCallData.name,
++						toolCallData.arguments,
++					)
++					return
++				})(),
++				text: (async function* () {
++					yield escaped
++					return
++				})(),
++			})
++
++			const stream = handler.createMessage(systemPrompt, messages)
++			const chunks: any[] = []
++			for await (const chunk of stream) {
++				chunks.push(chunk)
++			}
++
++			expect(chunks[0]).toEqual({ type: "text", text: escaped })
++		})
++
++		it("should convert JSON tool call text to XML", async () => {
++			const systemPrompt = "You are a helpful assistant"
++			const messages: Anthropic.Messages.MessageParam[] = [
++				{
++					role: "user" as const,
++					content: "Do something",
++				},
++			]
++
++			const json = JSON.stringify({
++				name: "calculator",
++				input: { op: "add", nums: [1, 2] },
++				callId: "call-json",
+ 			})
++
++			const expected = `<calculator><op>add</op><nums>[1,2]</nums></calculator>`
++
++			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
++				stream: (async function* () {
++					yield new vscode.LanguageModelTextPart(json)
++					return
++				})(),
++				text: (async function* () {
++					yield json
++					return
++				})(),
++			})
++
++			const stream = handler.createMessage(systemPrompt, messages)
++			const chunks: any[] = []
++			for await (const chunk of stream) {
++				chunks.push(chunk)
++			}
++
++			expect(chunks[0]).toEqual({ type: "text", text: expected })
+ 		})
+ 
+ 		it("should handle errors", async () => {
+diff --git a/src/api/providers/vscode-lm.ts b/src/api/providers/vscode-lm.ts
+index 5990193e..4676cdcf 100644
+--- a/src/api/providers/vscode-lm.ts
++++ b/src/api/providers/vscode-lm.ts
+@@ -12,6 +12,45 @@ import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
+ import { BaseProvider } from "./base-provider"
+ import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+ 
++// Escape &, < and > characters so tool call values can be safely
++// embedded in XML-like tags.
++export function escapeXml(value: string): string {
++	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
++}
++
++// Attempt to convert a JSON string describing a tool call to the XML format used
++// by VS Code for tool call text. The expected JSON shape is:
++// `{ name: string, input?: Record<string, unknown>, arguments?: Record<string, unknown>, callId?: string }`
++// Returns the XML string on success or `null` if parsing fails.
++export function convertJsonToolCallToXml(json: string): string | null {
++	try {
++		const parsed = JSON.parse(json)
++
++		if (!parsed || typeof parsed !== "object") {
++			return null
++		}
++
++		const name: unknown = (parsed as any).name
++		const input: unknown = (parsed as any).input ?? (parsed as any).arguments
++
++		if (typeof name !== "string" || !input || typeof input !== "object") {
++			return null
++		}
++
++		let tag = `<${name}>`
++		for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
++			const rawVal = typeof value === "object" ? JSON.stringify(value) : String(value)
++			const val = escapeXml(rawVal)
++			tag += `<${key}>${val}</${key}>`
++		}
++		tag += `</${name}>`
++
++		return tag
++	} catch {
++		return null
++	}
++}
++
+ /**
+  * Handles interaction with VS Code's Language Model API for chat-based operations.
+  * This handler extends BaseProvider to provide VS Code LM specific functionality.
+@@ -388,10 +427,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
+ 						continue
+ 					}
+ 
+-					accumulatedText += chunk.value
++					const converted = convertJsonToolCallToXml(chunk.value)
++					const textValue = converted || chunk.value
++
++					accumulatedText += textValue
+ 					yield {
+ 						type: "text",
+-						text: chunk.value,
++						text: textValue,
+ 					}
+ 				} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
+ 					try {
+@@ -412,16 +454,21 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
+ 							continue
+ 						}
+ 
+-						// Convert tool calls to text format with proper error handling
+-						const toolCall = {
+-							type: "tool_call",
+-							name: chunk.name,
+-							arguments: chunk.input,
+-							callId: chunk.callId,
++						// Convert tool calls to XML style tag format
++						const buildToolTag = (name: string, input: Record<string, unknown>): string => {
++							let tag = `<${name}>`
++							for (const [key, value] of Object.entries(input)) {
++								const rawVal = typeof value === "object" ? JSON.stringify(value) : String(value)
++								const val = escapeXml(rawVal)
++								tag += `<${key}>${val}</${key}>`
++							}
++							tag += `</${name}>`
++							return tag
+ 						}
+ 
+-						const toolCallText = JSON.stringify(toolCall)
+-						accumulatedText += toolCallText
++						const toolCallText = buildToolTag(chunk.name, chunk.input as Record<string, unknown>)
++						const normalizedToolCall = normalizeVsCodeActionTags(toolCallText)
++						accumulatedText += normalizedToolCall
+ 
+ 						// Log tool call for debugging
+ 						console.debug("Roo Code <Language Model API>: Processing tool call:", {
+@@ -432,7 +479,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
+ 
+ 						yield {
+ 							type: "text",
+-							text: toolCallText,
++							text: normalizedToolCall,
+ 						}
+ 					} catch (error) {
+ 						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)
+@@ -578,3 +625,41 @@ export async function getVsCodeLmModels() {
+ 		return []
+ 	}
+ }
++/**
++ * Normalizes VS Code action/tool call tags by removing redundant whitespace,
++ * ensuring proper XML-like formatting, and preventing malformed tags.
++ * This is useful for tool call serialization to ensure consistency.
++ *
++ * @param toolCallText - The tool call text in XML-like format
++ * @returns The normalized tool call text
++ */
++function normalizeVsCodeActionTags(toolCallText: string): string {
++	// Remove leading/trailing whitespace and collapse multiple spaces between tags
++	let normalized = toolCallText.trim().replace(/>\s+</g, "><")
++
++	// Optionally, ensure all tags are properly closed (basic check)
++	// (This does not fully validate XML, just a simple sanity check)
++	const tagStack: string[] = []
++	const tagRegex = /<\/?([a-zA-Z0-9_\-]+)[^>]*>/g
++	let match: RegExpExecArray | null
++	while ((match = tagRegex.exec(normalized)) !== null) {
++		const [tag, tagName] = match
++		if (tag.startsWith("</")) {
++			// Closing tag
++			if (tagStack.length === 0 || tagStack[tagStack.length - 1] !== tagName) {
++				// Mismatched tag, skip normalization
++				return normalized
++			}
++			tagStack.pop()
++		} else if (!tag.endsWith("/>")) {
++			// Opening tag (not self-closing)
++			tagStack.push(tagName)
++		}
++	}
++	// If stack is not empty, tags are unbalanced, return as-is
++	if (tagStack.length > 0) {
++		return normalized
++	}
++
++	return normalized
++}
+diff --git a/src/core/assistant-message/__tests__/parseAssistantMessage.test.ts b/src/core/assistant-message/__tests__/parseAssistantMessage.test.ts
+index 19f88a91..093093ba 100644
+--- a/src/core/assistant-message/__tests__/parseAssistantMessage.test.ts
++++ b/src/core/assistant-message/__tests__/parseAssistantMessage.test.ts
+@@ -273,10 +273,10 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
+ 
+ 			it("should handle multi-line parameters", () => {
+ 				const message = `<write_to_file><path>file.ts</path><content>
+-	line 1
+-	line 2
+-	line 3
+-	</content><line_count>3</line_count></write_to_file>`
++        line 1
++        line 2
++        line 3
++        </content><line_count>3</line_count></write_to_file>`
+ 				const result = parser(message).filter((block) => !isEmptyTextContent(block))
+ 
+ 				expect(result).toHaveLength(1)
+@@ -291,6 +291,30 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
+ 				expect(toolUse.partial).toBe(false)
+ 			})
+ 
++			it("should allow whitespace in tool and parameter tags", () => {
++				const message = "< read_file >< path >src/file.ts</ path ></ read_file >"
++				const result = parser(message).filter((block) => !isEmptyTextContent(block))
++
++				expect(result).toHaveLength(1)
++				const toolUse = result[0] as ToolUse
++				expect(toolUse.type).toBe("tool_use")
++				expect(toolUse.name).toBe("read_file")
++				expect(toolUse.params.path).toBe("src/file.ts")
++				expect(toolUse.partial).toBe(false)
++			})
++
++			it("should trim parameter values surrounded by whitespace and newlines", () => {
++				const message = `<read_file><path>\n  src/file.ts  \n</path></read_file>`
++				const result = parser(message).filter((block) => !isEmptyTextContent(block))
++
++				expect(result).toHaveLength(1)
++				const toolUse = result[0] as ToolUse
++				expect(toolUse.type).toBe("tool_use")
++				expect(toolUse.name).toBe("read_file")
++				expect(toolUse.params.path).toBe("src/file.ts")
++				expect(toolUse.partial).toBe(false)
++			})
++
+ 			it("should handle a complex message with multiple content types", () => {
+ 				const message = `I'll help you with that task.
+ 
+diff --git a/src/core/assistant-message/parseAssistantMessage.ts b/src/core/assistant-message/parseAssistantMessage.ts
+index 2fe747a6..53937f35 100644
+--- a/src/core/assistant-message/parseAssistantMessage.ts
++++ b/src/core/assistant-message/parseAssistantMessage.ts
+@@ -4,7 +4,12 @@ import { TextContent, ToolUse, ToolParamName, toolParamNames } from "../../share
+ 
+ export type AssistantMessageContent = TextContent | ToolUse
+ 
++function normalizeTags(input: string): string {
++	return input.replace(/<\s*(\/?)\s*([^>]+?)\s*>/g, "<$1$2>")
++}
++
+ export function parseAssistantMessage(assistantMessage: string): AssistantMessageContent[] {
++	assistantMessage = normalizeTags(assistantMessage)
+ 	let contentBlocks: AssistantMessageContent[] = []
+ 	let currentTextContent: TextContent | undefined = undefined
+ 	let currentTextContentStartIndex = 0
+diff --git a/src/core/assistant-message/parseAssistantMessageV2.ts b/src/core/assistant-message/parseAssistantMessageV2.ts
+index 6d3594cf..7d8216fc 100644
+--- a/src/core/assistant-message/parseAssistantMessageV2.ts
++++ b/src/core/assistant-message/parseAssistantMessageV2.ts
+@@ -37,7 +37,12 @@ export type AssistantMessageContent = TextContent | ToolUse
+  *          `true`.
+  */
+ 
++function normalizeTags(input: string): string {
++	return input.replace(/<\s*(\/?)\s*([^>]+?)\s*>/g, "<$1$2>")
++}
++
+ export function parseAssistantMessageV2(assistantMessage: string): AssistantMessageContent[] {
++	assistantMessage = normalizeTags(assistantMessage)
+ 	const contentBlocks: AssistantMessageContent[] = []
+ 
+ 	let currentTextContentStart = 0 // Index where the current text block started.
+diff --git a/src/package.json b/src/package.json
+index 3a391be0..b071425f 100644
+--- a/src/package.json
++++ b/src/package.json
+@@ -3,7 +3,7 @@
+ 	"displayName": "%extension.displayName%",
+ 	"description": "%extension.description%",
+ 	"publisher": "RooVeterinaryInc",
+-	"version": "3.18.5",
++	"version": "4.0.0",
+ 	"icon": "assets/icons/icon.png",
+ 	"galleryBanner": {
+ 		"color": "#617A91",
+diff --git a/webview-ui/src/components/chat/TaskHeader.tsx b/webview-ui/src/components/chat/TaskHeader.tsx
+index 71cbde10..abfc6fd4 100644
+--- a/webview-ui/src/components/chat/TaskHeader.tsx
++++ b/webview-ui/src/components/chat/TaskHeader.tsx
+@@ -58,16 +58,6 @@ const TaskHeader = ({
+ 
+ 	const { width: windowWidth } = useWindowSize()
+ 
+-	const condenseButton = (
+-		<button
+-			title={t("chat:task.condenseContext")}
+-			disabled={buttonsDisabled}
+-			onClick={() => currentTaskItem && handleCondenseContext(currentTaskItem.id)}
+-			className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer disabled:cursor-not-allowed opacity-85 hover:opacity-100 bg-transparent border-none rounded-md">
+-			<FoldVertical size={16} />
+-		</button>
+-	)
+-
+ 	return (
+ 		<div className="py-2 px-3">
+ 			<div
+@@ -117,7 +107,13 @@ const TaskHeader = ({
+ 									: undefined
+ 							}
+ 						/>
+-						{condenseButton}
++						<button
++							title={t("chat:task.condenseContext")}
++							disabled={buttonsDisabled}
++							onClick={() => currentTaskItem && handleCondenseContext(currentTaskItem.id)}
++							className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer disabled:cursor-not-allowed opacity-85 hover:opacity-100 bg-transparent border-none rounded-md">
++							<FoldVertical size={16} />
++						</button>
+ 						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
+ 					</div>
+ 				)}
+@@ -162,7 +158,6 @@ const TaskHeader = ({
+ 												: undefined
+ 										}
+ 									/>
+-									{condenseButton}
+ 								</div>
+ 							)}
+ 							<div className="flex justify-between items-center h-[20px]">

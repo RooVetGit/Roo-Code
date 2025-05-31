@@ -273,10 +273,10 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
 
 			it("should handle multi-line parameters", () => {
 				const message = `<write_to_file><path>file.ts</path><content>
-	line 1
-	line 2
-	line 3
-	</content><line_count>3</line_count></write_to_file>`
+        line 1
+        line 2
+        line 3
+        </content><line_count>3</line_count></write_to_file>`
 				const result = parser(message).filter((block) => !isEmptyTextContent(block))
 
 				expect(result).toHaveLength(1)
@@ -288,6 +288,30 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
 				expect(toolUse.params.content).toContain("line 2")
 				expect(toolUse.params.content).toContain("line 3")
 				expect(toolUse.params.line_count).toBe("3")
+				expect(toolUse.partial).toBe(false)
+			})
+
+			it("should allow whitespace in tool and parameter tags", () => {
+				const message = "< read_file >< path >src/file.ts</ path ></ read_file >"
+				const result = parser(message).filter((block) => !isEmptyTextContent(block))
+
+				expect(result).toHaveLength(1)
+				const toolUse = result[0] as ToolUse
+				expect(toolUse.type).toBe("tool_use")
+				expect(toolUse.name).toBe("read_file")
+				expect(toolUse.params.path).toBe("src/file.ts")
+				expect(toolUse.partial).toBe(false)
+			})
+
+			it("should trim parameter values surrounded by whitespace and newlines", () => {
+				const message = `<read_file><path>\n  src/file.ts  \n</path></read_file>`
+				const result = parser(message).filter((block) => !isEmptyTextContent(block))
+
+				expect(result).toHaveLength(1)
+				const toolUse = result[0] as ToolUse
+				expect(toolUse.type).toBe("tool_use")
+				expect(toolUse.name).toBe("read_file")
+				expect(toolUse.params.path).toBe("src/file.ts")
 				expect(toolUse.partial).toBe(false)
 			})
 

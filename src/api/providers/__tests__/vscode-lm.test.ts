@@ -193,6 +193,8 @@ describe("VsCodeLmHandler", () => {
 				callId: "call-1",
 			}
 
+			const toolTag = `<${toolCallData.name}><operation>add</operation><numbers>[2,2]</numbers></${toolCallData.name}>`
+
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
 				stream: (async function* () {
 					yield new vscode.LanguageModelToolCallPart(
@@ -203,7 +205,7 @@ describe("VsCodeLmHandler", () => {
 					return
 				})(),
 				text: (async function* () {
-					yield JSON.stringify({ type: "tool_call", ...toolCallData })
+					yield toolTag
 					return
 				})(),
 			})
@@ -217,8 +219,127 @@ describe("VsCodeLmHandler", () => {
 			expect(chunks).toHaveLength(2) // Tool call chunk + usage chunk
 			expect(chunks[0]).toEqual({
 				type: "text",
-				text: JSON.stringify({ type: "tool_call", ...toolCallData }),
+				text: toolTag,
 			})
+		})
+
+		it("should escape '<' characters in tool call input", async () => {
+			const systemPrompt = "You are a helpful assistant"
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user" as const,
+					content: "Test < symbol",
+				},
+			]
+
+			const toolCallData = {
+				name: "tester",
+				arguments: { query: "1 < 2" },
+				callId: "call-less",
+			}
+
+			const escaped = `<${toolCallData.name}><query>1 &lt; 2</query></${toolCallData.name}>`
+
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelToolCallPart(
+						toolCallData.callId,
+						toolCallData.name,
+						toolCallData.arguments,
+					)
+					return
+				})(),
+				text: (async function* () {
+					yield escaped
+					return
+				})(),
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks[0]).toEqual({ type: "text", text: escaped })
+		})
+
+		it("should escape '&' characters in tool call input", async () => {
+			const systemPrompt = "You are a helpful assistant"
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user" as const,
+					content: "Test & symbol",
+				},
+			]
+
+			const toolCallData = {
+				name: "tester",
+				arguments: { query: "A & B" },
+				callId: "call-amp",
+			}
+
+			const escaped = `<${toolCallData.name}><query>A &amp; B</query></${toolCallData.name}>`
+
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelToolCallPart(
+						toolCallData.callId,
+						toolCallData.name,
+						toolCallData.arguments,
+					)
+					return
+				})(),
+				text: (async function* () {
+					yield escaped
+					return
+				})(),
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks[0]).toEqual({ type: "text", text: escaped })
+		})
+
+		it("should convert JSON tool call text to XML", async () => {
+			const systemPrompt = "You are a helpful assistant"
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user" as const,
+					content: "Do something",
+				},
+			]
+
+			const json = JSON.stringify({
+				name: "calculator",
+				input: { op: "add", nums: [1, 2] },
+				callId: "call-json",
+			})
+
+			const expected = `<calculator><op>add</op><nums>[1,2]</nums></calculator>`
+
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelTextPart(json)
+					return
+				})(),
+				text: (async function* () {
+					yield json
+					return
+				})(),
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks[0]).toEqual({ type: "text", text: expected })
 		})
 
 		it("should handle errors", async () => {

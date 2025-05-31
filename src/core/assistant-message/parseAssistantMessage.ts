@@ -4,7 +4,12 @@ import { TextContent, ToolUse, ToolParamName, toolParamNames } from "../../share
 
 export type AssistantMessageContent = TextContent | ToolUse
 
+function normalizeTags(input: string): string {
+	return input.replace(/<\s*(\/?)\s*([^>]+?)\s*>/g, "<$1$2>")
+}
+
 export function parseAssistantMessage(assistantMessage: string): AssistantMessageContent[] {
+	assistantMessage = normalizeTags(assistantMessage)
 	let contentBlocks: AssistantMessageContent[] = []
 	let currentTextContent: TextContent | undefined = undefined
 	let currentTextContentStartIndex = 0

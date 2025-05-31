@@ -12,6 +12,45 @@ import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
+// Escape &, < and > characters so tool call values can be safely
+// embedded in XML-like tags.
+export function escapeXml(value: string): string {
+	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+// Attempt to convert a JSON string describing a tool call to the XML format used
+// by VS Code for tool call text. The expected JSON shape is:
+// `{ name: string, input?: Record<string, unknown>, arguments?: Record<string, unknown>, callId?: string }`
+// Returns the XML string on success or `null` if parsing fails.
+export function convertJsonToolCallToXml(json: string): string | null {
+	try {
+		const parsed = JSON.parse(json)
+
+		if (!parsed || typeof parsed !== "object") {
+			return null
+		}
+
+		const name: unknown = (parsed as any).name
+		const input: unknown = (parsed as any).input ?? (parsed as any).arguments
+
+		if (typeof name !== "string" || !input || typeof input !== "object") {
+			return null
+		}
+
+		let tag = `<${name}>`
+		for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+			const rawVal = typeof value === "object" ? JSON.stringify(value) : String(value)
+			const val = escapeXml(rawVal)
+			tag += `<${key}>${val}</${key}>`
+		}
+		tag += `</${name}>`
+
+		return tag
+	} catch {
+		return null
+	}
+}
+
 /**
  * Handles interaction with VS Code's Language Model API for chat-based operations.
  * This handler extends BaseProvider to provide VS Code LM specific functionality.
@@ -388,10 +427,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 						continue
 					}
 
-					accumulatedText += chunk.value
+					const converted = convertJsonToolCallToXml(chunk.value)
+					const textValue = converted || chunk.value
+
+					accumulatedText += textValue
 					yield {
 						type: "text",
-						text: chunk.value,
+						text: textValue,
 					}
 				} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
 					try {
@@ -412,16 +454,21 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 							continue
 						}
 
-						// Convert tool calls to text format with proper error handling
-						const toolCall = {
-							type: "tool_call",
-							name: chunk.name,
-							arguments: chunk.input,
-							callId: chunk.callId,
+						// Convert tool calls to XML style tag format
+						const buildToolTag = (name: string, input: Record<string, unknown>): string => {
+							let tag = `<${name}>`
+							for (const [key, value] of Object.entries(input)) {
+								const rawVal = typeof value === "object" ? JSON.stringify(value) : String(value)
+								const val = escapeXml(rawVal)
+								tag += `<${key}>${val}</${key}>`
+							}
+							tag += `</${name}>`
+							return tag
 						}
 
-						const toolCallText = JSON.stringify(toolCall)
-						accumulatedText += toolCallText
+						const toolCallText = buildToolTag(chunk.name, chunk.input as Record<string, unknown>)
+						const normalizedToolCall = normalizeVsCodeActionTags(toolCallText)
+						accumulatedText += normalizedToolCall
 
 						// Log tool call for debugging
 						console.debug("Roo Code <Language Model API>: Processing tool call:", {
@@ -432,7 +479,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 						yield {
 							type: "text",
-							text: toolCallText,
+							text: normalizedToolCall,
 						}
 					} catch (error) {
 						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)
@@ -577,4 +624,42 @@ export async function getVsCodeLmModels() {
 		)
 		return []
 	}
+}
+/**
+ * Normalizes VS Code action/tool call tags by removing redundant whitespace,
+ * ensuring proper XML-like formatting, and preventing malformed tags.
+ * This is useful for tool call serialization to ensure consistency.
+ *
+ * @param toolCallText - The tool call text in XML-like format
+ * @returns The normalized tool call text
+ */
+function normalizeVsCodeActionTags(toolCallText: string): string {
+	// Remove leading/trailing whitespace and collapse multiple spaces between tags
+	let normalized = toolCallText.trim().replace(/>\s+</g, "><")
+
+	// Optionally, ensure all tags are properly closed (basic check)
+	// (This does not fully validate XML, just a simple sanity check)
+	const tagStack: string[] = []
+	const tagRegex = /<\/?([a-zA-Z0-9_\-]+)[^>]*>/g
+	let match: RegExpExecArray | null
+	while ((match = tagRegex.exec(normalized)) !== null) {
+		const [tag, tagName] = match
+		if (tag.startsWith("</")) {
+			// Closing tag
+			if (tagStack.length === 0 || tagStack[tagStack.length - 1] !== tagName) {
+				// Mismatched tag, skip normalization
+				return normalized
+			}
+			tagStack.pop()
+		} else if (!tag.endsWith("/>")) {
+			// Opening tag (not self-closing)
+			tagStack.push(tagName)
+		}
+	}
+	// If stack is not empty, tags are unbalanced, return as-is
+	if (tagStack.length > 0) {
+		return normalized
+	}
+
+	return normalized
 }

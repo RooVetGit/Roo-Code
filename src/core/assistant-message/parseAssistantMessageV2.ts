@@ -37,7 +37,12 @@ export type AssistantMessageContent = TextContent | ToolUse
  *          `true`.
  */
 
+function normalizeTags(input: string): string {
+	return input.replace(/<\s*(\/?)\s*([^>]+?)\s*>/g, "<$1$2>")
+}
+
 export function parseAssistantMessageV2(assistantMessage: string): AssistantMessageContent[] {
+	assistantMessage = normalizeTags(assistantMessage)
 	const contentBlocks: AssistantMessageContent[] = []
 
 	let currentTextContentStart = 0 // Index where the current text block started.
