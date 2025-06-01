@@ -93,7 +93,7 @@ importers:
         specifier: 5.8.3
         version: 5.8.3
 
-  apps/vscode-nightly:
+  apps/vscode-next:
     devDependencies:
       '@roo-code/build':
         specifier: workspace:^

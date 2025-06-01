@@ -14,12 +14,12 @@
 			"outputs": ["dist/**"],
 			"inputs": ["src/**", "package.json", "tsconfig.json", "tsup.config.ts"]
 		},
-		"build:nightly": {},
+		"build:next": {},
 		"bundle": {
 			"dependsOn": ["^build"],
 			"cache": false
 		},
-		"bundle:nightly": {
+		"bundle:next": {
 			"dependsOn": ["^build"],
 			"cache": false
 		},
@@ -27,8 +27,8 @@
 			"dependsOn": ["bundle", "@roo-code/vscode-webview#build"],
 			"cache": false
 		},
-		"vsix:nightly": {
-			"dependsOn": ["bundle:nightly", "@roo-code/vscode-webview#build:nightly"],
+		"vsix:next": {
+			"dependsOn": ["bundle:next", "@roo-code/vscode-webview#build:next"],
 			"cache": false
 		},
 		"watch:bundle": {

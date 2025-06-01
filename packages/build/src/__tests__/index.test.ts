@@ -109,10 +109,10 @@ describe("generatePackageJson", () => {
 			},
 			overrideJson: {
 				name: "roo-code-nightly",
-				displayName: "Roo Code Nightly",
+				displayName: "Roo Code Next",
 				publisher: "RooVeterinaryInc",
 				version: "0.0.1",
-				icon: "assets/icons/icon-nightly.png",
+				icon: "assets/icons/icon-next.png",
 				scripts: {},
 			},
 			substitution: ["roo-cline", "roo-code-nightly"],
@@ -120,11 +120,11 @@ describe("generatePackageJson", () => {
 
 		expect(generatedPackageJson).toStrictEqual({
 			name: "roo-code-nightly",
-			displayName: "Roo Code Nightly",
+			displayName: "Roo Code Next",
 			description: "%extension.description%",
 			publisher: "RooVeterinaryInc",
 			version: "0.0.1",
-			icon: "assets/icons/icon-nightly.png",
+			icon: "assets/icons/icon-next.png",
 			contributes: {
 				viewsContainers: {
 					activitybar: [

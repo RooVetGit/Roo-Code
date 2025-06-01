@@ -1,4 +1,4 @@
-name: Nightly Publish
+name: Publish Roo Code Next
 
 on:
   workflow_run:
@@ -13,7 +13,7 @@ env:
   PNPM_VERSION: 10.8.1
 
 jobs:
-  publish-nightly:
+  publish-next:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
@@ -36,7 +36,7 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Forge numeric Nightly version
+      - name: Forge numeric version
         id: version
         env:
           RUN_NUMBER: ${{ github.run_number }}
@@ -48,15 +48,15 @@ jobs:
           node <<'EOF'
             const fs = require('fs');
             const path = require('path');
-            const pkgPath = path.join(__dirname, 'apps', 'vscode-nightly', 'package.nightly.json');
+            const pkgPath = path.join(__dirname, 'apps', 'vscode-next', 'package.next.json');
             const pkg = JSON.parse(fs.readFileSync(pkgPath,'utf8'));
             const [maj, min] = pkg.version.split('.');
             pkg.version = `${maj}.${min}.${process.env.VERSION_NUMBER}`;
             fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-            console.log(`🔖 Nightly version set to ${pkg.version}`);
+            console.log(`🔖 Version set to ${pkg.version}`);
           EOF
       - name: Build VSIX
-        run: pnpm build:nightly # Produces bin/roo-code-nightly-0.0.[count].vsix
+        run: pnpm build:next # Produces bin/roo-code-next-0.0.[count].vsix
       - name: Publish to VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
