@@ -1268,7 +1268,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		const autoApprove = async () => {
 			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
 				if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
-					await new Promise<void>((resolve, _reject) => {
+					await new Promise<void>((resolve) => {
 						autoApproveTimeoutRef.current = setTimeout(resolve, writeDelayMs)
 					})
 				}
