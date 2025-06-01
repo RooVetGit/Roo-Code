@@ -45,6 +45,11 @@ export enum TelemetryEventName {
 	DIFF_APPLICATION_ERROR = "Diff Application Error",
 	SHELL_INTEGRATION_ERROR = "Shell Integration Error",
 	CONSECUTIVE_MISTAKE_ERROR = "Consecutive Mistake Error",
+
+	// Internal experiment metrics
+	EXPERIMENT_METRIC = "Experiment Metric",
+	INTERNAL_EXPERIMENT_SUCCESS = "Internal Experiment Success",
+	INTERNAL_EXPERIMENT_ERROR = "Internal Experiment Error",
 }
 
 /**
@@ -112,6 +117,9 @@ export const rooCodeTelemetryEventSchema = z.discriminatedUnion("type", [
 			TelemetryEventName.CONSECUTIVE_MISTAKE_ERROR,
 			TelemetryEventName.CONTEXT_CONDENSED,
 			TelemetryEventName.SLIDING_WINDOW_TRUNCATION,
+			TelemetryEventName.EXPERIMENT_METRIC,
+			TelemetryEventName.INTERNAL_EXPERIMENT_SUCCESS,
+			TelemetryEventName.INTERNAL_EXPERIMENT_ERROR,
 		]),
 		properties: telemetryPropertiesSchema,
 	}),

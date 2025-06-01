@@ -11,6 +11,9 @@ type ExperimentKey = Keys<typeof EXPERIMENT_IDS>
 
 interface ExperimentConfig {
 	enabled: boolean
+	internal?: boolean // Mark as internal
+	nightlyDefault?: boolean // Enable by default in nightly
+	description?: string
 }
 
 export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
@@ -18,12 +21,31 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	CONCURRENT_FILE_READS: { enabled: false },
 }
 
-export const experimentDefault = Object.fromEntries(
-	Object.entries(experimentConfigsMap).map(([_, config]) => [
-		EXPERIMENT_IDS[_ as keyof typeof EXPERIMENT_IDS] as ExperimentId,
-		config.enabled,
-	]),
-) as Record<ExperimentId, boolean>
+export function getExperimentDefaults(isNightly: boolean = false): Record<ExperimentId, boolean> {
+	const defaults: Record<ExperimentId, boolean> = {} as Record<ExperimentId, boolean>
+
+	Object.entries(experimentConfigsMap).forEach(([key, config]) => {
+		const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
+
+		if (isNightly && config.nightlyDefault) {
+			defaults[experimentId] = true
+		} else {
+			defaults[experimentId] = config.enabled
+		}
+	})
+
+	return defaults
+}
+
+// Check if running nightly build
+export function isNightlyBuild(): boolean {
+	// This will be determined by the build process
+	// For now, we can check environment variables or package name
+	return process.env.ROO_CODE_NIGHTLY === "true"
+}
+
+// Update experimentDefault to use nightly defaults when appropriate
+export const experimentDefault = getExperimentDefaults(isNightlyBuild())
 
 export const experiments = {
 	get: (id: ExperimentKey): ExperimentConfig | undefined => experimentConfigsMap[id],

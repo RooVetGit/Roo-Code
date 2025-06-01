@@ -55,7 +55,15 @@ export const ExperimentalSettings = ({
 
 			<Section>
 				{Object.entries(experimentConfigsMap)
-					.filter((config) => config[0] !== "DIFF_STRATEGY" && config[0] !== "MULTI_SEARCH_AND_REPLACE")
+					.filter((config) => {
+						// Filter out internal experiments (those starting with underscore)
+						const experimentId = EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]
+						return (
+							!experimentId.startsWith("_") &&
+							config[0] !== "DIFF_STRATEGY" &&
+							config[0] !== "MULTI_SEARCH_AND_REPLACE"
+						)
+					})
 					.map((config) => {
 						if (config[0] === "CONCURRENT_FILE_READS") {
 							return (
@@ -78,7 +86,10 @@ export const ExperimentalSettings = ({
 								experimentKey={config[0]}
 								enabled={experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false}
 								onChange={(enabled) =>
-									setExperimentEnabled(EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS], enabled)
+									setExperimentEnabled(
+										EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS],
+										enabled,
+									)
 								}
 							/>
 						)
