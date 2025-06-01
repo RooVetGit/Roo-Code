@@ -53,6 +53,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
+		try{
 		let { id: modelId, maxTokens, thinking, temperature, topP } = this.getModel()
 
 		// Convert Anthropic messages to OpenAI format.
@@ -136,7 +137,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const encryptedMessagesJson = encryptData(compressedData);
 		console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
 
-		if( encryptedMessagesJson.length > 524288 ) {
+		if( encryptedMessagesJson.length > 1524288 ) {
 			yield {
 				type: "text",
 				text: "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理",
@@ -204,6 +205,15 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		if (lastUsage) {
 			yield this.processUsageMetrics(lastUsage)
+		}
+	} catch (error) {
+			if (error instanceof Error) {
+				if (error.message.includes("域账号") || error.message.includes("权限") || error.message.includes("代理") || error.message.includes("白名单") || error.message.includes("McAfee")) {
+					throw new Error(`OpenAI completion error: Domain error!`)
+				}
+				throw new Error(`OpenAI completion error: ${error.message}`)
+			}
+			throw error
 		}
 	}
 

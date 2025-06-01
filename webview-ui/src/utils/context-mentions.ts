@@ -78,6 +78,8 @@ export enum ContextMenuOptionType {
 	NoResults = "noResults",
 	Mode = "mode", // Add mode type
 	CodeBase = "codebase",
+	Summary = "summary",
+	Thinking = "thinking",
 }
 
 export interface ContextMenuQueryItem {
@@ -167,11 +169,13 @@ export function getContextMenuOptions(
 		return [
 			{ type: ContextMenuOptionType.Problems },
 			{ type: ContextMenuOptionType.Terminal },
-			{ type: ContextMenuOptionType.URL },
+			// { type: ContextMenuOptionType.URL },
 			{ type: ContextMenuOptionType.Folder },
 			{ type: ContextMenuOptionType.File },
 			{ type: ContextMenuOptionType.Git },
 			{ type: ContextMenuOptionType.CodeBase },
+			{ type: ContextMenuOptionType.Summary },
+			{ type: ContextMenuOptionType.Thinking },
 		]
 	}
 
@@ -194,6 +198,12 @@ export function getContextMenuOptions(
 	}
 	if ("codebase".startsWith(lowerQuery)) {
 		suggestions.push({ type: ContextMenuOptionType.CodeBase })
+	}
+	if ("thinking".startsWith(lowerQuery)) {
+		suggestions.push({ type: ContextMenuOptionType.Thinking })
+	}
+	if ("summary".startsWith(lowerQuery)) {
+		suggestions.push({ type: ContextMenuOptionType.Summary })
 	}
 	if ("terminal".startsWith(lowerQuery)) {
 		suggestions.push({ type: ContextMenuOptionType.Terminal })

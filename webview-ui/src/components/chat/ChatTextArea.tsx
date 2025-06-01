@@ -185,6 +185,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				{ type: ContextMenuOptionType.Problems, value: "problems" },
 				{ type: ContextMenuOptionType.Terminal, value: "terminal" },
 				{ type: ContextMenuOptionType.CodeBase, value: "codebase" },
+				{ type: ContextMenuOptionType.Thinking, value: "thinking" },
+				{ type: ContextMenuOptionType.Summary, value: "summary" },
 				...gitCommits,
 				...openedTabs
 					.filter((tab) => tab.path)
@@ -267,6 +269,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						insertValue = value || ""
 					} else if (type === ContextMenuOptionType.CodeBase) {
 						insertValue = "codebase"
+					} else if (type === ContextMenuOptionType.Summary) {
+						insertValue = "summary"
+					} else if (type === ContextMenuOptionType.Thinking) {
+						insertValue = "thinking"
 					}
 
 					const { newValue, mentionIndex } = insertMention(

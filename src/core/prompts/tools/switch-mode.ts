@@ -1,5 +1,4 @@
 export function getSwitchModeDescription(): string {
-	return `{switch-mode.ts}`
 	return `## switch_mode
 Description: Request to switch to a different mode. This tool allows modes to request switching to another mode when needed, such as switching to 'editer' mode to make code changes. The user must approve the mode switch.
 Parameters:

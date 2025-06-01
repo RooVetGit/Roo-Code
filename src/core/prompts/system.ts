@@ -82,7 +82,7 @@ ${modeConfig.groups.length? getToolUseGuidelinesSection():""}
 
 ${mcpServersSection}
 
-${modeConfig.groups.length? getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, modeConfig):""}
+${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, modeConfig)}
 
 ${modesSection}
 

@@ -1,5 +1,4 @@
 export function getFetchInstructionsDescription(): string {
-	return `{fetch-instructions.ts}`
     return `## fetch_instructions
 Description: Request to fetch instructions to perform a task
 Parameters:

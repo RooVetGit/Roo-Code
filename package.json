@@ -3,7 +3,7 @@
 	"displayName": "Rid Code (fork from Roo Code)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.14.6",
+	"version": "3.14.8",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -394,6 +394,21 @@
 					"type": "string",
 					"default": "",
 					"description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
+				},
+				"roo-cline.externalThinkingModelId": {
+					"type": "string",
+					"default": "gpt-4o",
+					"description": "external thinking model ID"
+				},
+				"roo-cline.externalThinkingApiKey": {
+					"type": "string",
+					"default": "xxx",
+					"description": "external thinking API key"
+				},
+				"roo-cline.externalThinkingBaseUrl": {
+					"type": "string",
+					"default": "http://172.13.28.66:46605/v1",
+					"description": "external thinking API base URL"
 				}
 			}
 		}
@@ -537,6 +552,7 @@
 		"tsup": "^8.4.0",
 		"tsx": "^4.19.3",
 		"typescript": "^5.4.5",
+		"vitest": "^3.1.4",
 		"zod-to-ts": "^1.2.0"
 	},
 	"lint-staged": {

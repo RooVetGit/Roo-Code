@@ -313,3 +313,87 @@ ${Queries.map((str: any) => `- ${str}`).join("\n")}
     return ""
   }
 }
+
+
+
+/**
+ * 生成MCP相关的提示内容
+ * 
+ * @param mcpHub McpHub实例，用于获取代码上下文
+ * @returns 当前支持rag的文件
+ */
+export async function getSummary(mcpHub?: McpHub, paths?:string[] | undefined): Promise<string> {
+  if (!mcpHub) {
+    return ""
+  }
+
+  try {
+    // 获取MCP服务器列表
+    const servers = mcpHub.getServers()
+
+    // 查找code_context服务器
+    const codeContextServer = servers.find(server => server.name.toLowerCase().includes('code_context'))
+
+    if (!codeContextServer) {
+      console.log("No code_context MCP server found")
+      return ""
+    }
+
+    try {
+      const params: any = paths === undefined ? {} : { paths }
+      // 使用提取的搜索查询来增强相关性
+      const result = await mcpHub.callTool(
+        codeContextServer.name,
+        "get_summary",
+        params,
+        codeContextServer.source
+      )
+
+      if (result && result.content) {
+        // 处理内容数组，提取文本内容
+        if (result.content[0].type === "text" && result.content[0].text !== "") {
+          return `These summaries include the file paths of the summarized documents and overviews of the files overall and locally. Summaries starting with "- " indicate an overall summary of the file content. Those not starting with "- " indicate a summary of a local part of the file, which includes the line numbers of the local part in the source file.\n<summary>\n${result.content[0].text}\n</summary>\n`
+        }
+      }
+    } catch (toolError) {
+      console.error("Failed to call get_keywords tool:", toolError)
+    }
+    return ""
+  } catch (error) {
+    console.error("Failed to generate MCP prompt:", error)
+    return ""
+  }
+}
+
+export async function addSummaryInToConversation(cleanConversationHistory: {
+  role: "user" | "assistant";
+  content: string | Anthropic.Messages.ContentBlockParam[];
+}[],
+  mcpHub: McpHub | undefined, cline: Cline, paths?: string[] | undefined) {
+  // 将CodeBase加入最后一个对话块
+  const lastMessage = cleanConversationHistory.at(-1);
+  if (lastMessage && (typeof lastMessage.content === "string" || Array.isArray(lastMessage.content))) {
+    const Summary = await getSummary(mcpHub, paths)
+    if (Summary && Summary !== "") {
+
+      const CodeBaseContext = Summary
+      if (Array.isArray(lastMessage.content)) {
+        lastMessage.content.push({
+          type: "text",
+          text: CodeBaseContext,
+        });
+      } else if (typeof lastMessage.content === "string") {
+        lastMessage.content = [
+          {
+            type: "text",
+            text: lastMessage.content // 原始文本内容
+          },
+          {
+            type: "text",
+            text: CodeBaseContext
+          }
+        ];
+      }
+    }
+  }
+}

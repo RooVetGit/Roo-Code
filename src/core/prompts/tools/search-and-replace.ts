@@ -1,8 +1,6 @@
 import { ToolArgs } from "./types"
 
 export function getSearchAndReplaceDescription(args: ToolArgs): string {
-  return `{search-and-replace.ts}
-<RooJson>{"\${args.cwd.toPosix()}":"${args.cwd.toPosix()}"}`
 	return `## search_and_replace
 Description: Use this tool to find and replace specific text strings or patterns (using regex) within a file. It's suitable for targeted replacements across multiple locations within the file. Supports literal text and regex patterns, case sensitivity options, and optional line ranges. Shows a diff preview before applying changes.
 

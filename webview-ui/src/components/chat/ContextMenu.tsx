@@ -90,6 +90,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				return <span>Problems</span>
 			case ContextMenuOptionType.CodeBase:
 				return <span>CodeBase</span>
+			case ContextMenuOptionType.Summary:
+				return <span>Summary</span>
+			case ContextMenuOptionType.Thinking:
+				return <span>Thinking</span>
 			case ContextMenuOptionType.Terminal:
 				return <span>Terminal</span>
 			case ContextMenuOptionType.URL:
@@ -174,6 +178,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				return "warning"
 			case ContextMenuOptionType.CodeBase:
 				return "notebook"
+			case ContextMenuOptionType.Summary:
+				return "library"
+			case ContextMenuOptionType.Thinking:
+				return "lightbulb"
 			case ContextMenuOptionType.Terminal:
 				return "terminal"
 			case ContextMenuOptionType.URL:

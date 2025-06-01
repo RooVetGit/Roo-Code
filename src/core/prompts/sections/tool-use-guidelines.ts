@@ -1,5 +1,4 @@
 export function getToolUseGuidelinesSection(): string {
-  return `{tool-use-guidelines.ts}`
 	return `# Tool Use Guidelines
 
 1. In <thinking> tags, assess what information you already have and what information you need to proceed with the task.

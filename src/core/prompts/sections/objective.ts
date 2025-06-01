@@ -1,5 +1,4 @@
 export function getObjectiveSection(): string {
-	return `{objective.ts}`
 	return `====
 
 OBJECTIVE

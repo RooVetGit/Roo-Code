@@ -69,6 +69,10 @@ export async function parseMentions(
 			return `Terminal Output (see below for output)`
 		} else if (mention === "codebase") {
 			return ""
+		} else if (mention === "thinking") {
+			return ""
+		} else if (mention.startsWith("summary")) {
+			return ""
 		}
 		return match
 	})
@@ -151,8 +155,19 @@ export async function parseMentions(
 			if (cline) {
 				cline.codebase_enable = true
 			}
+		} else if (mention === "thinking") {
+			if (cline) {
+				cline.thinking_enable = true
+			}
+		} else if (mention.startsWith("summary")) {
+			if (cline) {
+				cline.summary_enable = true
+				if (mention.includes(":")) {
+					const mentionPath = mention.slice(8)
+					cline.summary_path = mentionPath
+				}
+			}
 		}
-
 	}
 
 	if (urlMention) {

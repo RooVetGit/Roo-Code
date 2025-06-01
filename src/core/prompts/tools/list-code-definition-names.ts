@@ -1,8 +1,6 @@
 import { ToolArgs } from "./types"
 
 export function getListCodeDefinitionNamesDescription(args: ToolArgs): string {
-	return `{list-code-definition-names.ts}
-<RooJson>{"\${args.cwd}":"${args.cwd}"}`
 	return `## list_code_definition_names
 Description: Request to list definition names (classes, functions, methods, etc.) from source code. This tool can analyze either a single file or all files at the top level of a specified directory. It provides insights into the codebase structure and important constructs, encapsulating high-level concepts and relationships that are crucial for understanding the overall architecture.
 Parameters:

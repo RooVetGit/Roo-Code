@@ -74,7 +74,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
 			return
 		}
-
+		try{
 		if (this.options.openAiStreamingEnabled ?? true) {
 			let systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
 				role: "system",
@@ -146,7 +146,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			const encryptedMessagesJson = encryptData(compressedData);
 			console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
 
-			if( encryptedMessagesJson.length > 524288 ) {
+			if( encryptedMessagesJson.length > 1524288 ) {
 				yield {
 					type: "text",
 					text: "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理",
@@ -200,9 +200,6 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 				const delta = chunk.choices[0]?.delta ?? {}
 
 				if (delta.content) {
-					if (typeof delta.content === 'string' && (delta.content.includes("域帐号认证失败") || delta.content.includes("McAfee Web Gateway")) ) {
-						throw new Error(`Request error: Domain error`)
-					}
 					for (const chunk of matcher.update(delta.content)) {
 						yield chunk
 					}
@@ -252,6 +249,15 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			}
 			yield this.processUsageMetrics(0, modelInfo)
 			return
+		}
+		} catch (error) {
+			if (error instanceof Error) {
+				if (error.message.includes("域账号") || error.message.includes("权限") || error.message.includes("代理") || error.message.includes("白名单") || error.message.includes("McAfee")) {
+					throw new Error(`OpenAI completion error: Domain error!`)
+				}
+				throw new Error(`OpenAI completion error: ${error.message}`)
+			}
+			throw error
 		}
 	}
 

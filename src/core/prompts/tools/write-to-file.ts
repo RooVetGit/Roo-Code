@@ -1,8 +1,6 @@
 import { ToolArgs } from "./types"
 
 export function getWriteToFileDescription(args: ToolArgs): string {
-  return `{write-to-file.ts}
-<RooJson>{"\${args.cwd}":"${args.cwd}"}`
 	return `## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -18,25 +16,14 @@ Your file content here
 <line_count>total number of lines in the file, including empty lines</line_count>
 </write_to_file>
 
-Example: Requesting to write to frontend-config.json
+Example: Requesting to write to version-config.json
 <write_to_file>
-<path>frontend-config.json</path>
+<path>version-config.json</path>
 <content>
 {
-  "apiEndpoint": "https://api.example.com",
-  "theme": {
-    "primaryColor": "#007bff",
-    "secondaryColor": "#6c757d",
-    "fontFamily": "Arial, sans-serif"
-  },
-  "features": {
-    "darkMode": true,
-    "notifications": true,
-    "analytics": false
-  },
   "version": "1.0.0"
 }
 </content>
-<line_count>14</line_count>
+<line_count>3</line_count>
 </write_to_file>`
 }

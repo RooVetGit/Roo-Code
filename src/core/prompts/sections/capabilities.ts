@@ -12,6 +12,25 @@ export function getCapabilitiesSection(
 ): string {
 	const tools_group = modeConfig?.groups || []
 
+	if  (tools_group?.length === 0) {
+		return `====
+
+CAPABILITIES
+
+- You can directly output the mermaid format flowchart for rendering, in the format like:
+\`\`\`mermaid
+graph TD
+    A("start") --> B{"make decision"};
+    B -- "yes" --> C["perform action"];
+    B -- "no" --> D("end");
+    C --> D;
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px;
+    style D fill:#bbf,stroke:#333,stroke-width:2px,color:#fff;
+\`\`\`
+`
+	}
+
 	const read_0 = 
 `- You can use the list_code_definition_names tool to get an overview of source code definitions for all files at the top level of a specified directory. This can be particularly useful when you need to understand the broader context and relationships between certain parts of the code. You may need to call this tool multiple times to understand various parts of the codebase related to the task.
 - For example, when asked to make edits or improvements you might analyze the file structure with using list_files tool to get an overview of the project, then use list_code_definition_names to get further insight using source code definitions for files located in relevant directories, then read_file to examine the contents of relevant files, analyze the code and suggest improvements or make necessary edits, then use edit tools to apply the changes. If you refactored code that could affect other parts of the codebase, you could use search_files to ensure you update other files as needed.
@@ -32,5 +51,16 @@ ${tools_group?.includes("read") ? read_0 :""}
 ${tools_group?.includes("command") ? execute :""}
 ${tools_group?.includes("mcp") ? mcp :""}
 ${tools_group?.includes("browser") && supportsComputerUse ? computer_use :""}
+- You can directly output the mermaid format flowchart for rendering, in the format like:
+\`\`\`mermaid
+graph TD
+    A("start") --> B{"make decision"};
+    B -- "yes" --> C["perform action"];
+    B -- "no" --> D("end");
+    C --> D;
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px;
+    style D fill:#bbf,stroke:#333,stroke-width:2px,color:#fff;
+\`\`\`
 `
 }

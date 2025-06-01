@@ -80,7 +80,7 @@ import { newTaskTool } from "./tools/newTaskTool"
 // prompts
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
-import { addCodebaseInToConversation } from "./prompts/codebase"
+import { addCodebaseInToConversation, addSummaryInToConversation } from "./prompts/codebase"
 import { addExternThinkingInToConversation } from "./prompts/thinking"
 
 // ... everything else
@@ -198,6 +198,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private didCompleteReadingStream = false
 
 	codebase_enable = false
+	thinking_enable = false
+	summary_enable = false
+	summary_path:string|undefined = undefined
 
 	// metrics
 	private toolUsage: ToolUsage = {}
@@ -1068,8 +1071,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 			await addCodebaseInToConversation(cleanConversationHistory, mcpHub, this)
 			this.codebase_enable = false
 		}
-		// await addExternThinkingInToConversation(systemPrompt, cleanConversationHistory, this)
-
+		if (this.summary_enable) {
+			if (this.summary_path) {
+				await addSummaryInToConversation(cleanConversationHistory, mcpHub, this, [this.summary_path])
+				this.summary_path = undefined
+			} else {
+				await addSummaryInToConversation(cleanConversationHistory, mcpHub, this)
+			}
+			this.summary_enable = false
+		}
+		if (this.thinking_enable) {
+			await addExternThinkingInToConversation(systemPrompt, cleanConversationHistory, this)
+			this.thinking_enable = false
+		}
+		
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
 
