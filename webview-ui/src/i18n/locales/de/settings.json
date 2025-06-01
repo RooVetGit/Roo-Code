@@ -171,6 +171,7 @@
 		"groqApiKey": "Groq API-Schlüssel",
 		"getGeminiApiKey": "Gemini API-Schlüssel erhalten",
 		"openAiApiKey": "OpenAI API-Schlüssel",
+		"apiKey": "API-Schlüssel",
 		"openAiBaseUrl": "Basis-URL",
 		"getOpenAiApiKey": "OpenAI API-Schlüssel erhalten",
 		"mistralApiKey": "Mistral API-Schlüssel",
@@ -189,6 +190,11 @@
 		"awsSessionToken": "AWS Sitzungstoken",
 		"awsRegion": "AWS Region",
 		"awsCrossRegion": "Regionsübergreifende Inferenz verwenden",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Benutzerdefinierten VPC-Endpunkt verwenden",
+			"vpcEndpointUrlPlaceholder": "VPC-Endpunkt-URL eingeben (optional)",
+			"examples": "Beispiele:"
+		},
 		"enablePromptCaching": "Prompt-Caching aktivieren",
 		"enablePromptCachingTitle": "Prompt-Caching aktivieren, um die Leistung zu verbessern und Kosten für unterstützte Modelle zu reduzieren.",
 		"cacheUsageNote": "Hinweis: Wenn Sie keine Cache-Nutzung sehen, versuchen Sie ein anderes Modell auszuwählen und dann Ihr gewünschtes Modell erneut auszuwählen.",
@@ -368,6 +374,10 @@
 			"label": ".rooignore-Dateien in Listen und Suchen anzeigen",
 			"description": "Wenn aktiviert, werden Dateien, die mit Mustern in .rooignore übereinstimmen, in Listen mit einem Schlosssymbol angezeigt. Wenn deaktiviert, werden diese Dateien vollständig aus Dateilisten und Suchen ausgeblendet."
 		},
+		"maxConcurrentFileReads": {
+			"label": "Concurrent file reads limit",
+			"description": "Maximum number of files the 'read_file' tool can process concurrently. Higher values may speed up reading multiple small files but increase memory usage."
+		},
 		"maxReadFile": {
 			"label": "Schwellenwert für automatische Dateilesekürzung",
 			"description": "Roo liest diese Anzahl von Zeilen, wenn das Modell keine Start-/Endwerte angibt. Wenn diese Zahl kleiner als die Gesamtzahl der Zeilen ist, erstellt Roo einen Zeilennummernindex der Codedefinitionen. Spezialfälle: -1 weist Roo an, die gesamte Datei zu lesen (ohne Indexierung), und 0 weist an, keine Zeilen zu lesen und nur Zeilenindizes für minimalen Kontext bereitzustellen. Niedrigere Werte minimieren die anfängliche Kontextnutzung und ermöglichen präzise nachfolgende Zeilenbereich-Lesungen. Explizite Start-/End-Anfragen sind von dieser Einstellung nicht begrenzt.",
@@ -472,6 +482,10 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentelles Multi-Block-Diff-Werkzeug verwenden",
 			"description": "Wenn aktiviert, verwendet Roo das Multi-Block-Diff-Werkzeug. Dies versucht, mehrere Codeblöcke in der Datei in einer Anfrage zu aktualisieren."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "Gleichzeitiges Lesen von Dateien aktivieren",
+			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage lesen (bis zu 15 Dateien). Wenn deaktiviert, muss Roo Dateien nacheinander lesen. Das Deaktivieren kann helfen, wenn Sie mit weniger leistungsfähigen Modellen arbeiten oder mehr Kontrolle über den Dateizugriff wünschen."
 		}
 	},
 	"promptCaching": {
@@ -540,7 +554,10 @@
 			"invalidFormat": "Ungültiges ARN-Format. Bitte überprüfen Sie die Formatanforderungen.",
 			"regionMismatch": "Warnung: Die Region in deiner ARN ({{arnRegion}}) stimmt nicht mit deiner ausgewählten Region ({{region}}) überein. Dies kann zu Zugriffsproblemen führen. Der Provider wird die Region aus der ARN verwenden."
 		},
-		"modelAvailability": "Die von dir angegebene Modell-ID ({{modelId}}) ist nicht verfügbar. Bitte wähle ein anderes Modell."
+		"modelAvailability": "Die von dir angegebene Modell-ID ({{modelId}}) ist nicht verfügbar. Bitte wähle ein anderes Modell.",
+		"providerNotAllowed": "Anbieter '{{provider}}' ist von deiner Organisation nicht erlaubt",
+		"modelNotAllowed": "Modell '{{model}}' ist für Anbieter '{{provider}}' von deiner Organisation nicht erlaubt",
+		"profileInvalid": "Dieses Profil enthält einen Anbieter oder ein Modell, das von deiner Organisation nicht erlaubt ist"
 	},
 	"placeholders": {
 		"apiKey": "API-Schlüssel eingeben...",

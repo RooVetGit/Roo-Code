@@ -9,30 +9,37 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import type {
-	GlobalState,
-	ProviderName,
-	ProviderSettings,
-	RooCodeSettings,
-	ProviderSettingsEntry,
-	TelemetryProperties,
-	CodeActionId,
-	CodeActionName,
-	TerminalActionId,
-	TerminalActionPromptType,
-	HistoryItem,
+import {
+	type GlobalState,
+	type ProviderName,
+	type ProviderSettings,
+	type RooCodeSettings,
+	type ProviderSettingsEntry,
+	type TelemetryProperties,
+	type TelemetryPropertiesProvider,
+	type CodeActionId,
+	type CodeActionName,
+	type TerminalActionId,
+	type TerminalActionPromptType,
+	type HistoryItem,
+	type CloudUserInfo,
+	requestyDefaultModelId,
+	openRouterDefaultModelId,
+	glamaDefaultModelId,
+	ORGANIZATION_ALLOW_ALL,
 } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+import { CloudService } from "@roo-code/cloud"
 
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import { Package } from "../../shared/package"
-import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
-import { experimentDefault } from "../../shared/experiments"
+import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
@@ -53,11 +60,11 @@ import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
-import { TelemetryPropertiesProvider, telemetryService } from "../../services/telemetry"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
+import { ProfileValidator } from "../../shared/ProfileValidator"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -66,6 +73,12 @@ import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 
 export type ClineProviderEvents = {
 	clineCreated: [cline: Task]
+}
+
+class OrganizationAllowListViolationError extends Error {
+	constructor(message: string) {
+		super(message)
+	}
 }
 
 export class ClineProvider
@@ -90,7 +103,7 @@ export class ClineProvider
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
+	public readonly latestAnnouncementId = "may-29-2025-3-19" // Update for v3.19.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -114,7 +127,7 @@ export class ClineProvider
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
-		telemetryService.setProvider(this)
+		TelemetryService.instance.setProvider(this)
 
 		this._workspaceTracker = new WorkspaceTracker(this)
 
@@ -288,7 +301,7 @@ export class ClineProvider
 		params: Record<string, string | any[]>,
 	): Promise<void> {
 		// Capture telemetry for code action usage
-		telemetryService.captureCodeActionUsed(promptType)
+		TelemetryService.instance.captureCodeActionUsed(promptType)
 
 		const visibleProvider = await ClineProvider.getInstance()
 
@@ -314,7 +327,7 @@ export class ClineProvider
 		promptType: TerminalActionPromptType,
 		params: Record<string, string | any[]>,
 	): Promise<void> {
-		telemetryService.captureCodeActionUsed(promptType)
+		TelemetryService.instance.captureCodeActionUsed(promptType)
 
 		const visibleProvider = await ClineProvider.getInstance()
 
@@ -330,7 +343,15 @@ export class ClineProvider
 			return
 		}
 
-		await visibleProvider.initClineWithTask(prompt)
+		try {
+			await visibleProvider.initClineWithTask(prompt)
+		} catch (error) {
+			if (error instanceof OrganizationAllowListViolationError) {
+				// Errors from terminal commands seem to get swallowed / ignored.
+				vscode.window.showErrorMessage(error.message)
+			}
+			throw error
+		}
 	}
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
@@ -494,11 +515,16 @@ export class ClineProvider
 	) {
 		const {
 			apiConfiguration,
+			organizationAllowList,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
+		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
+			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
+		}
 
 		const cline = new Task({
 			provider: this,
@@ -628,7 +654,7 @@ export class ClineProvider
 			"default-src 'none'",
 			`font-src ${webview.cspSource}`,
 			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
-			`img-src ${webview.cspSource} data:`,
+			`img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:`,
 			`media-src ${webview.cspSource}`,
 			`script-src 'unsafe-eval' ${webview.cspSource} https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
 			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
@@ -713,7 +739,7 @@ export class ClineProvider
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -752,7 +778,7 @@ export class ClineProvider
 		const cline = this.getCurrentCline()
 
 		if (cline) {
-			telemetryService.captureModeSwitch(cline.taskId, newMode)
+			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
 		}
 
@@ -1273,6 +1299,9 @@ export class ClineProvider
 			maxReadFileLine,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
+			cloudUserInfo,
+			organizationAllowList,
+			maxConcurrentFileReads,
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexConfig,
@@ -1363,10 +1392,13 @@ export class ClineProvider
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? -1,
+			maxConcurrentFileReads: maxConcurrentFileReads ?? 15,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
+			cloudUserInfo,
+			organizationAllowList,
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
@@ -1399,6 +1431,26 @@ export class ClineProvider
 		// Ensure apiProvider is set properly if not already in state
 		if (!providerSettings.apiProvider) {
 			providerSettings.apiProvider = apiProvider
+		}
+
+		let organizationAllowList = ORGANIZATION_ALLOW_ALL
+
+		try {
+			organizationAllowList = await CloudService.instance.getAllowList()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get organization allow list: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let cloudUserInfo: CloudUserInfo | null = null
+
+		try {
+			cloudUserInfo = CloudService.instance.getUserInfo()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get cloud user info: ${error instanceof Error ? error.message : String(error)}`,
+			)
 		}
 
 		// Return the same structure as before
@@ -1468,7 +1520,15 @@ export class ClineProvider
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
+			maxConcurrentFileReads: experiments.isEnabled(
+				stateValues.experiments ?? experimentDefault,
+				EXPERIMENT_IDS.CONCURRENT_FILE_READS,
+			)
+				? (stateValues.maxConcurrentFileReads ?? 15)
+				: 1,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
+			cloudUserInfo,
+			organizationAllowList,
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,
 			customCondensingPrompt: stateValues.customCondensingPrompt,
@@ -1583,8 +1643,11 @@ export class ClineProvider
 		const { mode, apiConfiguration, language } = await this.getState()
 		const task = this.getCurrentCline()
 
+		const packageJSON = this.context.extension?.packageJSON
+
 		return {
-			appVersion: this.context.extension?.packageJSON?.version,
+			appName: packageJSON?.name ?? Package.name,
+			appVersion: packageJSON?.version ?? Package.version,
 			vscodeVersion: vscode.version,
 			platform: process.platform,
 			editorName: vscode.env.appName,

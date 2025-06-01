@@ -1,18 +1,23 @@
+// npx jest core/condense/__tests__/index.test.ts
+
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
+
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { ApiHandler } from "../../../api"
 import { ApiMessage } from "../../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../../api/transform/image-cleaning"
 import { summarizeConversation, getMessagesSinceLastSummary, N_MESSAGES_TO_KEEP } from "../index"
-import { telemetryService } from "../../../services/telemetry/TelemetryService"
 
-// Mock dependencies
 jest.mock("../../../api/transform/image-cleaning", () => ({
 	maybeRemoveImageBlocks: jest.fn((messages: ApiMessage[], _apiHandler: ApiHandler) => [...messages]),
 }))
 
-jest.mock("../../../services/telemetry/TelemetryService", () => ({
-	telemetryService: {
-		captureContextCondensed: jest.fn(),
+jest.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		instance: {
+			captureContextCondensed: jest.fn(),
+		},
 	},
 }))
 
@@ -31,7 +36,7 @@ describe("getMessagesSinceLastSummary", () => {
 		expect(result).toEqual(messages)
 	})
 
-	it("should return messages since the last summary", () => {
+	it("should return messages since the last summary with prepended user message", () => {
 		const messages: ApiMessage[] = [
 			{ role: "user", content: "Hello", ts: 1 },
 			{ role: "assistant", content: "Hi there", ts: 2 },
@@ -42,13 +47,14 @@ describe("getMessagesSinceLastSummary", () => {
 
 		const result = getMessagesSinceLastSummary(messages)
 		expect(result).toEqual([
+			{ role: "user", content: "Please continue from the following summary:", ts: 0 },
 			{ role: "assistant", content: "Summary of conversation", ts: 3, isSummary: true },
 			{ role: "user", content: "How are you?", ts: 4 },
 			{ role: "assistant", content: "I'm good", ts: 5 },
 		])
 	})
 
-	it("should handle multiple summary messages and return since the last one", () => {
+	it("should handle multiple summary messages and return since the last one with prepended user message", () => {
 		const messages: ApiMessage[] = [
 			{ role: "user", content: "Hello", ts: 1 },
 			{ role: "assistant", content: "First summary", ts: 2, isSummary: true },
@@ -59,6 +65,7 @@ describe("getMessagesSinceLastSummary", () => {
 
 		const result = getMessagesSinceLastSummary(messages)
 		expect(result).toEqual([
+			{ role: "user", content: "Please continue from the following summary:", ts: 0 },
 			{ role: "assistant", content: "Second summary", ts: 4, isSummary: true },
 			{ role: "user", content: "What's new?", ts: 5 },
 		])
@@ -524,7 +531,7 @@ describe("summarizeConversation with custom settings", () => {
 		jest.clearAllMocks()
 
 		// Reset telemetry mock
-		;(telemetryService.captureContextCondensed as jest.Mock).mockClear()
+		;(TelemetryService.instance.captureContextCondensed as jest.Mock).mockClear()
 
 		// Setup mock API handlers
 		mockMainApiHandler = {
@@ -729,7 +736,7 @@ describe("summarizeConversation with custom settings", () => {
 		)
 
 		// Verify telemetry was called with custom prompt flag
-		expect(telemetryService.captureContextCondensed).toHaveBeenCalledWith(
+		expect(TelemetryService.instance.captureContextCondensed).toHaveBeenCalledWith(
 			taskId,
 			false,
 			true, // usedCustomPrompt
@@ -753,7 +760,7 @@ describe("summarizeConversation with custom settings", () => {
 		)
 
 		// Verify telemetry was called with custom API handler flag
-		expect(telemetryService.captureContextCondensed).toHaveBeenCalledWith(
+		expect(TelemetryService.instance.captureContextCondensed).toHaveBeenCalledWith(
 			taskId,
 			false,
 			false, // usedCustomPrompt
@@ -777,7 +784,7 @@ describe("summarizeConversation with custom settings", () => {
 		)
 
 		// Verify telemetry was called with both flags
-		expect(telemetryService.captureContextCondensed).toHaveBeenCalledWith(
+		expect(TelemetryService.instance.captureContextCondensed).toHaveBeenCalledWith(
 			taskId,
 			true, // isAutomaticTrigger
 			true, // usedCustomPrompt
