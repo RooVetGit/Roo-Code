@@ -68,7 +68,7 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 
 			for await (const chunk of completion) {
 				const delta = chunk.choices[0]?.delta
-				const usage = chunk.usage as OpenAI.CompletionUsage
+				const usage = chunk.usage as LiteLLMUsage
 
 				if (delta?.content) {
 					yield { type: "text", text: delta.content }
@@ -124,4 +124,9 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 			throw error
 		}
 	}
+}
+
+// LiteLLM usage may include an extra field for Anthropic use cases.
+interface LiteLLMUsage extends OpenAI.CompletionUsage {
+	cache_creation_input_tokens?: number
 }
