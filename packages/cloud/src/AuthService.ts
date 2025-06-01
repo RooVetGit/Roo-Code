@@ -53,6 +53,55 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		})
 	}
 
+	private async handleCredentialsChange(): Promise<void> {
+		try {
+			const credentials = await this.loadCredentials()
+
+			if (credentials) {
+				if (
+					this.credentials === null ||
+					this.credentials.clientToken !== credentials.clientToken ||
+					this.credentials.sessionId !== credentials.sessionId
+				) {
+					this.transitionToInactiveSession(credentials)
+				}
+			} else {
+				if (this.state !== "logged-out") {
+					this.transitionToLoggedOut()
+				}
+			}
+		} catch (error) {
+			console.error("[auth] Error handling credentials change:", error)
+		}
+	}
+
+	private transitionToLoggedOut(): void {
+		this.timer.stop()
+
+		const previousState = this.state
+
+		this.credentials = null
+		this.sessionToken = null
+		this.userInfo = null
+		this.state = "logged-out"
+
+		this.emit("logged-out", { previousState })
+
+		console.log("[auth] Transitioned to logged-out state")
+	}
+
+	private transitionToInactiveSession(credentials: AuthCredentials): void {
+		this.credentials = credentials
+		this.state = "inactive-session"
+
+		this.sessionToken = null
+		this.userInfo = null
+
+		this.timer.start()
+
+		console.log("[auth] Transitioned to inactive-session state")
+	}
+
 	/**
 	 * Initialize the auth state
 	 *
@@ -65,24 +114,15 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			return
 		}
 
-		try {
-			const credentials = await this.loadCredentials()
+		this.handleCredentialsChange()
 
-			if (credentials) {
-				this.credentials = credentials
-				this.state = "inactive-session"
-				this.timer.start()
-			} else {
-				const previousState = this.state
-				this.state = "logged-out"
-				this.emit("logged-out", { previousState })
-			}
-
-			console.log(`[auth] Initialized with state: ${this.state}`)
-		} catch (error) {
-			console.error(`[auth] Error initializing AuthService: ${error}`)
-			this.state = "logged-out"
-		}
+		this.context.subscriptions.push(
+			this.context.secrets.onDidChange((e) => {
+				if (e.key === AUTH_CREDENTIALS_KEY) {
+					this.handleCredentialsChange()
+				}
+			}),
+		)
 	}
 
 	private async storeCredentials(credentials: AuthCredentials): Promise<void> {
@@ -95,7 +135,6 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 		try {
 			const parsedJson = JSON.parse(credentialsJson)
-			// Validate using Zod schema
 			return authCredentialsSchema.parse(parsedJson)
 		} catch (error) {
 			if (error instanceof z.ZodError) {
@@ -161,19 +200,9 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 				throw new Error("Invalid state parameter. Authentication request may have been tampered with.")
 			}
 
-			const { credentials, sessionToken } = await this.clerkSignIn(code)
+			const { credentials } = await this.clerkSignIn(code)
 
 			await this.storeCredentials(credentials)
-
-			this.credentials = credentials
-			this.sessionToken = sessionToken
-
-			const previousState = this.state
-			this.state = "active-session"
-			this.emit("active-session", { previousState })
-			this.timer.start()
-
-			this.fetchUserInfo()
 
 			vscode.window.showInformationMessage("Successfully authenticated with Roo Code Cloud")
 			console.log("[auth] Successfully authenticated with Roo Code Cloud")
@@ -192,26 +221,20 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 	 * This method removes all stored tokens and stops the refresh timer.
 	 */
 	public async logout(): Promise<void> {
-		try {
-			this.timer.stop()
+		const oldCredentials = this.credentials
 
+		try {
+			// Clear credentials from storage - onDidChange will handle state transitions
 			await this.clearCredentials()
 			await this.context.globalState.update(AUTH_STATE_KEY, undefined)
 
-			const oldCredentials = this.credentials
-
-			this.credentials = null
-			this.sessionToken = null
-			this.userInfo = null
-			const previousState = this.state
-			this.state = "logged-out"
-			this.emit("logged-out", { previousState })
-
 			if (oldCredentials) {
-				await this.clerkLogout(oldCredentials)
+				try {
+					await this.clerkLogout(oldCredentials)
+				} catch (error) {
+					console.error("[auth] Error calling clerkLogout:", error)
+				}
 			}
-
-			this.fetchUserInfo()
 
 			vscode.window.showInformationMessage("Logged out from Roo Code Cloud")
 			console.log("[auth] Logged out from Roo Code Cloud")
@@ -263,6 +286,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		this.state = "active-session"
 
 		if (previousState !== "active-session") {
+			console.log("[auth] Transitioned to active-session state")
 			this.emit("active-session", { previousState })
 			this.fetchUserInfo()
 		}
