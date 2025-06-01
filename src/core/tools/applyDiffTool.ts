@@ -87,7 +87,7 @@ export async function applyDiffTool(
 				return
 			}
 
-			const originalContent = await fs.readFile(absolutePath, "utf-8")
+			let originalContent: string | null = await fs.readFile(absolutePath, "utf-8")
 
 			// Apply the diff to the original content
 			const diffResult = (await cline.diffStrategy?.applyDiff(
@@ -98,6 +98,9 @@ export async function applyDiffTool(
 				success: false,
 				error: "No diff strategy available",
 			}
+
+			// Release the original content from memory as it's no longer needed
+			originalContent = null
 
 			if (!diffResult.success) {
 				cline.consecutiveMistakeCount++
