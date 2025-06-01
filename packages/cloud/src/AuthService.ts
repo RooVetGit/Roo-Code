@@ -114,7 +114,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			return
 		}
 
-		this.handleCredentialsChange()
+		await this.handleCredentialsChange()
 
 		this.context.subscriptions.push(
 			this.context.secrets.onDidChange((e) => {
