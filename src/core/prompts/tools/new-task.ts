@@ -3,6 +3,7 @@ import { ToolArgs } from "./types"
 export function getNewTaskDescription(_args: ToolArgs): string {
 	return `## new_task
 Description: This will let you create a new task instance in the chosen mode using your provided message.
+IMPORTANT: This tool can only be called once per message.
 
 Parameters:
 - mode: (required) The slug of the mode to start the new task in (e.g., "code", "debug", "architect").
