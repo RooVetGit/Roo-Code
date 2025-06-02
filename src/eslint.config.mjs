@@ -12,6 +12,7 @@ export default [
 
 			"no-empty": "error",
 			"no-implicit-coercion": "error",
+			"no-useless-catch": "error",
 
 			"@typescript-eslint/no-unused-vars": "off",
 			"@typescript-eslint/no-explicit-any": "off",

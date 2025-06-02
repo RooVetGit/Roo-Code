@@ -20,6 +20,7 @@ export default [
 			"react/display-name": "off",
 			"no-empty": "error",
 			"no-implicit-coercion": "error",
+			"no-useless-catch": "error",
 		},
 	},
 	{
