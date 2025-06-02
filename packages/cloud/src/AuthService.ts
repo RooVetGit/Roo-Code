@@ -281,14 +281,19 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			return
 		}
 
-		const previousState = this.state
-		this.sessionToken = await this.clerkCreateSessionToken()
-		this.state = "active-session"
+		try {
+			const previousState = this.state
+			this.sessionToken = await this.clerkCreateSessionToken()
+			this.state = "active-session"
 
-		if (previousState !== "active-session") {
-			console.log("[auth] Transitioned to active-session state")
-			this.emit("active-session", { previousState })
-			this.fetchUserInfo()
+			if (previousState !== "active-session") {
+				console.log("[auth] Transitioned to active-session state")
+				this.emit("active-session", { previousState })
+				this.fetchUserInfo()
+			}
+		} catch (error) {
+			console.error("[auth] Failed to refresh session", error)
+			throw error
 		}
 	}
 
