@@ -33,6 +33,7 @@ describe("Internal Feature Flags", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				concurrentFileReads: false,
+				_nightlyTestBanner: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -41,6 +42,7 @@ describe("Internal Feature Flags", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: true,
 				concurrentFileReads: false,
+				_nightlyTestBanner: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
 		})
@@ -49,24 +51,36 @@ describe("Internal Feature Flags", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				concurrentFileReads: false,
+				_nightlyTestBanner: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
 	})
 
 	describe("isNightlyBuild", () => {
-		it("should return false when ROO_CODE_NIGHTLY is not set", () => {
-			delete process.env.ROO_CODE_NIGHTLY
-			expect(isNightlyBuild()).toBe(false)
+		const originalPkgName = process.env.PKG_NAME
+
+		afterEach(() => {
+			// Restore original PKG_NAME
+			if (originalPkgName !== undefined) {
+				process.env.PKG_NAME = originalPkgName
+			} else {
+				delete process.env.PKG_NAME
+			}
 		})
 
-		it("should return true when ROO_CODE_NIGHTLY is 'true'", () => {
-			process.env.ROO_CODE_NIGHTLY = "true"
+		it("should return true when PKG_NAME is roo-code-nightly", () => {
+			process.env.PKG_NAME = "roo-code-nightly"
 			expect(isNightlyBuild()).toBe(true)
 		})
 
-		it("should return false when ROO_CODE_NIGHTLY is any other value", () => {
-			process.env.ROO_CODE_NIGHTLY = "false"
+		it("should return false when PKG_NAME is not roo-code-nightly", () => {
+			process.env.PKG_NAME = "roo-cline"
+			expect(isNightlyBuild()).toBe(false)
+		})
+
+		it("should return false when PKG_NAME is undefined", () => {
+			delete process.env.PKG_NAME
 			expect(isNightlyBuild()).toBe(false)
 		})
 	})
@@ -76,15 +90,20 @@ describe("Internal Feature Flags", () => {
 			const defaults = getExperimentDefaults(false)
 			expect(defaults.powerSteering).toBe(false)
 			expect(defaults.concurrentFileReads).toBe(false)
+			expect(defaults._nightlyTestBanner).toBe(false)
 		})
 
 		it("should respect nightlyDefault for nightly builds", () => {
-			// This test will be more meaningful when internal flags are added
 			const stableDefaults = getExperimentDefaults(false)
 			const nightlyDefaults = getExperimentDefaults(true)
 
-			// For now, they should be the same since no flags have nightlyDefault
-			expect(stableDefaults).toEqual(nightlyDefaults)
+			// Stable defaults
+			expect(stableDefaults.powerSteering).toBe(false)
+			expect(stableDefaults._nightlyTestBanner).toBe(false)
+
+			// Nightly defaults - these have nightlyDefault: true
+			expect(nightlyDefaults.powerSteering).toBe(true)
+			expect(nightlyDefaults._nightlyTestBanner).toBe(true)
 		})
 	})
 

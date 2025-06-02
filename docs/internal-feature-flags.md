@@ -38,10 +38,10 @@ export const experimentIds = [
 	"concurrentFileReads",
 
 	// Internal feature flags (prefix with underscore for clarity)
+	"_nightlyTestBanner",
 	"_improvedFileReader",
 	"_asyncToolExecution",
 	"_enhancedDiffStrategy",
-	"_experimentalCaching",
 ] as const
 ```
 
@@ -58,10 +58,8 @@ export const EXPERIMENT_IDS = {
 	CONCURRENT_FILE_READS: "concurrentFileReads",
 
 	// Internal flags (use underscore prefix)
-	_IMPROVED_FILE_READER: "_improvedFileReader",
-	_ASYNC_TOOL_EXECUTION: "_asyncToolExecution",
-	_ENHANCED_DIFF_STRATEGY: "_enhancedDiffStrategy",
-	_EXPERIMENTAL_CACHING: "_experimentalCaching",
+	_NIGHTLY_TEST_BANNER: "_nightlyTestBanner",
+	// Add more internal flags as needed
 } as const satisfies Record<string, ExperimentId>
 
 interface ExperimentConfig {
@@ -77,30 +75,24 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	CONCURRENT_FILE_READS: { enabled: false },
 
 	// Internal flags
-	_IMPROVED_FILE_READER: {
+	_NIGHTLY_TEST_BANNER: {
 		enabled: false,
-		internal: true,
+		internal: false, // Currently visible to users
 		nightlyDefault: true,
-		description: "Internal: Optimized file reading with streaming and caching",
+		description: "Internal: Shows a test banner in nightly builds",
 	},
-	_ASYNC_TOOL_EXECUTION: {
-		enabled: false,
-		internal: true,
-		nightlyDefault: true,
-		description: "Internal: Parallel tool execution for better performance",
-	},
-	// ... other internal flags
+	// Add more internal flags as needed
 }
 ```
 
-### 3. Nightly Build Configuration
+### 3. Nightly Build Detection
 
-Create a nightly defaults system:
+The nightly build detection is implemented as follows:
 
 ```typescript
 // src/shared/experiments.ts
 export function getExperimentDefaults(isNightly: boolean = false): Record<ExperimentId, boolean> {
-	const defaults: Record<ExperimentId, boolean> = {}
+	const defaults: Record<ExperimentId, boolean> = {} as Record<ExperimentId, boolean>
 
 	Object.entries(experimentConfigsMap).forEach(([key, config]) => {
 		const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
@@ -117,9 +109,9 @@ export function getExperimentDefaults(isNightly: boolean = false): Record<Experi
 
 // Check if running nightly build
 export function isNightlyBuild(): boolean {
-	// Check package name from extension context
-	const extensionId = vscode.extensions.getExtension("RooVeterinaryInc.roo-cline")?.id
-	return extensionId?.includes("nightly") ?? false
+	// The nightly build process defines PKG_NAME as "roo-code-nightly" at compile time
+	// This is the most reliable single indicator for nightly builds
+	return process.env.PKG_NAME === "roo-code-nightly"
 }
 
 // Update experimentDefault to use nightly defaults when appropriate
@@ -128,27 +120,25 @@ export const experimentDefault = getExperimentDefaults(isNightlyBuild())
 
 ### 4. Hide Internal Flags from UI
 
-Modify the settings UI to hide internal flags:
+To hide internal flags from the settings UI, filter experiments that start with underscore:
 
 ```typescript
 // webview-ui/src/components/settings/ExperimentalSettings.tsx
 <Section>
   {Object.entries(experimentConfigsMap)
-    .filter((config) => {
+    .filter(([key, config]) => {
       // Filter out internal experiments (those starting with underscore)
-      const experimentId = EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]
+      const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
       return !experimentId.startsWith('_')
     })
-    .map((config) => {
-      // Render only user-facing experiments
+    .map(([key, config]) => {
+      const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
       return (
         <ExperimentalFeature
-          key={config[0]}
-          experimentKey={config[0]}
-          enabled={experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false}
-          onChange={(enabled) =>
-            setExperimentEnabled(EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS], enabled)
-          }
+          key={key}
+          experimentKey={key}
+          enabled={experiments[experimentId] ?? false}
+          onChange={(enabled) => setExperimentEnabled(experimentId, enabled)}
         />
       )
     })}
@@ -159,59 +149,48 @@ Modify the settings UI to hide internal flags:
 
 ### 1. Nightly Build Workflow
 
-Update `.github/workflows/nightly-publish.yml`:
+The nightly build workflow (`.github/workflows/nightly-publish.yml`) includes:
 
 ```yaml
-- name: Enable Internal Feature Flags
+- name: Log Internal Experiments
   run: |
-      # Set environment variable for nightly build
-      echo "ROO_CODE_NIGHTLY=true" >> $GITHUB_ENV
-
       # Log enabled experiments
-      node scripts/log-experiments.js --nightly
+      node scripts/log-experiments.js
 ```
 
-### 2. Validation Script (Optional)
+### 2. Build Configuration
 
-Create `scripts/validate-internal-flags.js`:
+The nightly build process sets the PKG_NAME environment variable in `apps/vscode-nightly/esbuild.mjs`:
 
 ```javascript
-#!/usr/bin/env node
-
-const { EXPERIMENT_IDS, experimentConfigsMap } = require("../src/shared/experiments")
-
-// Validate internal flags
-const internalFlags = Object.entries(experimentConfigsMap)
-	.filter(([_, config]) => config.internal)
-	.map(([key, config]) => ({
-		key,
-		id: EXPERIMENT_IDS[key],
-		...config,
-	}))
-
-console.log(`Found ${internalFlags.length} internal feature flags:`)
-internalFlags.forEach(({ id, nightlyDefault }) => {
-	console.log(`  - ${id}: nightlyDefault=${nightlyDefault}`)
-})
-
-// Ensure internal flags are prefixed
-const invalidFlags = internalFlags.filter(({ id }) => !id.startsWith("_"))
-if (invalidFlags.length > 0) {
-	console.error("❌ Internal flags must start with underscore:")
-	invalidFlags.forEach(({ id }) => console.error(`  - ${id}`))
-	process.exit(1)
+define: {
+	"process.env.PKG_NAME": '"roo-code-nightly"',
+	"process.env.PKG_VERSION": `"${overrideJson.version}"`,
+	"process.env.PKG_OUTPUT_CHANNEL": '"Roo-Code-Nightly"',
+	// ... other defines
 }
-
-console.log("✅ All internal flags are properly configured")
 ```
 
-### 3. Gradual Rollout Process
+### 3. Experiment Logging Script
+
+The `scripts/log-experiments.js` script:
+
+- Checks if running in nightly mode via `process.env.PKG_NAME === "roo-code-nightly"`
+- Parses the experiments configuration from the TypeScript source
+- Logs which experiments are enabled based on build type
+- Separates user-facing and internal experiments in the output
+
+### 4. Gradual Rollout Process
+
+For managing the lifecycle of internal flags, you can extend the configuration:
 
 ```typescript
 // src/shared/experiments.ts
-export interface InternalExperimentConfig extends ExperimentConfig {
-	internal: boolean
-	nightlyDefault: boolean
+interface ExperimentConfig {
+	enabled: boolean
+	internal?: boolean
+	nightlyDefault?: boolean
+	description?: string
 	stableRolloutDate?: string // When to enable in stable
 	removalDate?: string // When to remove the flag
 }
@@ -496,8 +475,6 @@ export class MultiSearchReplaceDiffStrategy {
 
 ```typescript
 // packages/types/src/experiment.ts
-import { z } from "zod"
-
 export const experimentIds = [
 	"powerSteering",
 	"concurrentFileReads",
@@ -505,12 +482,7 @@ export const experimentIds = [
 	"_enhancedDiffStrategy",
 ] as const
 
-export const experimentsSchema = z.object({
-	powerSteering: z.boolean(),
-	concurrentFileReads: z.boolean(),
-	// Add schema for new flag
-	_enhancedDiffStrategy: z.boolean(),
-})
+export type ExperimentId = (typeof experimentIds)[number]
 ```
 
 ### Step 2: Update Experiments Configuration
@@ -545,25 +517,29 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 // webview-ui/src/components/settings/ExperimentalSettings.tsx
 import { experimentConfigsMap, EXPERIMENT_IDS } from "../../../src/shared/experiments"
 
-<Section>
-  {Object.entries(experimentConfigsMap)
-    .filter(([key, config]) => {
-      // Filter out internal experiments
-      const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
-      return !experimentId.startsWith('_')
-    })
-    .map(([key, config]) => {
-      const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
-      return (
-        <ExperimentalFeature
-          key={key}
-          experimentKey={key}
-          enabled={experiments[experimentId] ?? false}
-          onChange={(enabled) => setExperimentEnabled(experimentId, enabled)}
-        />
-      )
-    })}
-</Section>
+export function ExperimentalSettings({ experiments, setExperimentEnabled }) {
+  return (
+    <Section>
+      {Object.entries(experimentConfigsMap)
+        .filter(([key, config]) => {
+          // Filter out internal experiments
+          const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
+          return !experimentId.startsWith('_')
+        })
+        .map(([key, config]) => {
+          const experimentId = EXPERIMENT_IDS[key as keyof typeof EXPERIMENT_IDS]
+          return (
+            <ExperimentalFeature
+              key={key}
+              experimentKey={key}
+              enabled={experiments[experimentId] ?? false}
+              onChange={(enabled) => setExperimentEnabled(experimentId, enabled)}
+            />
+          )
+        })}
+    </Section>
+  )
+}
 ```
 
 ### Step 4: Use the Internal Flag in Code
@@ -735,12 +711,28 @@ describe("Apply Diff with internal flags", () => {
 
 ### Manual Testing in Development
 
+To test internal flags during development:
+
+1. **Temporarily enable in code**:
+
 ```typescript
-// For testing, temporarily enable the flag in development
-// src/extension.ts
-if (process.env.NODE_ENV === "development") {
-	// Override specific internal flags for testing
-	experimentDefault._enhancedDiffStrategy = true
+// For testing, temporarily modify the config
+experimentConfigsMap._ENHANCED_DIFF_STRATEGY.enabled = true
+```
+
+2. **Use environment variable**:
+
+```bash
+# Set PKG_NAME to simulate nightly build
+PKG_NAME=roo-code-nightly npm run dev
+```
+
+3. **Modify the isNightlyBuild function temporarily**:
+
+```typescript
+export function isNightlyBuild(): boolean {
+	// For testing only - remove before committing
+	return true
 }
 ```
 

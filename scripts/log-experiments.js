@@ -4,7 +4,7 @@ const path = require("path")
 const fs = require("fs")
 
 // Check if running in nightly mode
-const isNightly = process.env.ROO_CODE_NIGHTLY === "true"
+const isNightly = process.env.PKG_NAME === "roo-code-nightly"
 
 // Read the experiments configuration
 const experimentsPath = path.join(__dirname, "../src/shared/experiments.ts")
