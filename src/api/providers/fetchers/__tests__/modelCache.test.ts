@@ -4,6 +4,7 @@ import { getOpenRouterModels } from "../openrouter"
 import { getRequestyModels } from "../requesty"
 import { getGlamaModels } from "../glama"
 import { getUnboundModels } from "../unbound"
+import { getModelHarborModels } from "../modelharbor"
 
 // Mock NodeCache to avoid cache interference
 jest.mock("node-cache", () => {
@@ -27,12 +28,14 @@ jest.mock("../openrouter")
 jest.mock("../requesty")
 jest.mock("../glama")
 jest.mock("../unbound")
+jest.mock("../modelharbor")
 
 const mockGetLiteLLMModels = getLiteLLMModels as jest.MockedFunction<typeof getLiteLLMModels>
 const mockGetOpenRouterModels = getOpenRouterModels as jest.MockedFunction<typeof getOpenRouterModels>
 const mockGetRequestyModels = getRequestyModels as jest.MockedFunction<typeof getRequestyModels>
 const mockGetGlamaModels = getGlamaModels as jest.MockedFunction<typeof getGlamaModels>
 const mockGetUnboundModels = getUnboundModels as jest.MockedFunction<typeof getUnboundModels>
+const mockGetModelHarborModels = getModelHarborModels as jest.MockedFunction<typeof getModelHarborModels>
 
 const DUMMY_REQUESTY_KEY = "requesty-key-for-testing"
 const DUMMY_UNBOUND_KEY = "unbound-key-for-testing"
@@ -128,6 +131,31 @@ describe("getModels with new GetModelsOptions", () => {
 		const result = await getModels({ provider: "unbound", apiKey: DUMMY_UNBOUND_KEY })
 
 		expect(mockGetUnboundModels).toHaveBeenCalledWith(DUMMY_UNBOUND_KEY)
+		expect(result).toEqual(mockModels)
+	})
+
+	it("calls getModelHarborModels for modelharbor provider", async () => {
+		const mockModels = {
+			"qwen/qwen2.5-coder-32b": {
+				maxTokens: 8192,
+				contextWindow: 131072,
+				supportsImages: false,
+				supportsPromptCache: false,
+				supportsComputerUse: false,
+				supportsReasoningBudget: false,
+				requiredReasoningBudget: false,
+				supportsReasoningEffort: false,
+				inputPrice: 0.06,
+				outputPrice: 0.18,
+				cacheReadsPrice: 0,
+				description: "Qwen 2.5 Coder 32B - ModelHarbor model",
+			},
+		}
+		mockGetModelHarborModels.mockResolvedValue(mockModels)
+
+		const result = await getModels({ provider: "modelharbor" })
+
+		expect(mockGetModelHarborModels).toHaveBeenCalled()
 		expect(result).toEqual(mockModels)
 	})
 

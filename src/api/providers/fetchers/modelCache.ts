@@ -13,7 +13,7 @@ import { getRequestyModels } from "./requesty"
 import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
 import { getLiteLLMModels } from "./litellm"
-import { getModelHarborModels } from "./modelharbor.js"
+import { getModelHarborModels } from "./modelharbor"
 import { GetModelsOptions } from "../../../shared/api"
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
@@ -83,16 +83,22 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 		if (models) {
 			// Cache the fetched models (even if empty, to signify a successful fetch with no models)
 			memoryCache.set(provider, models)
-			await writeModels(provider, models).catch((err) =>
-				console.error(`[getModels] Error writing ${provider} models to file cache:`, err),
-			)
+			await writeModels(provider, models).catch((err) => {
+				// Only log cache write errors if not in test environment
+				if (!process.env.NODE_ENV?.includes("test") && !process.env.JEST_WORKER_ID) {
+					console.error(`[getModels] Error writing ${provider} models to file cache:`, err)
+				}
+			})
 		}
 
 		try {
 			models = await readModels(provider)
 			// console.log(`[getModels] read ${router} models from file cache`)
 		} catch (error) {
-			console.error(`[getModels] error reading ${provider} models from file cache`, error)
+			// Only log cache read errors if not in test environment
+			if (!process.env.NODE_ENV?.includes("test") && !process.env.JEST_WORKER_ID) {
+				console.error(`[getModels] error reading ${provider} models from file cache`, error)
+			}
 		}
 		return models || {}
 	} catch (error) {

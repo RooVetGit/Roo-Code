@@ -32,14 +32,15 @@ jest.mock("../useRouterModels", () => ({
 					description:
 						"Qwen2.5-Coder-32B is a powerful coding-focused model with excellent performance in code generation and understanding.",
 				},
-				"openai/gpt-4.1": {
-					maxTokens: 16384,
-					contextWindow: 128000,
-					supportsImages: true,
-					supportsPromptCache: true,
-					inputPrice: 0.0002,
-					outputPrice: 0.0008,
-					description: "OpenAI GPT-4.1 with vision support and advanced function calling capabilities.",
+				"qwen/qwen3-32b-fast": {
+					maxTokens: 8192,
+					contextWindow: 40960,
+					supportsImages: false,
+					supportsPromptCache: false,
+					inputPrice: 0.3,
+					outputPrice: 0.9,
+					description:
+						"Qwen3-32B is a powerful large language model with excellent performance across various tasks including reasoning, coding, and creative writing.",
 				},
 			},
 		},
@@ -85,18 +86,18 @@ describe("useSelectedModel - ModelHarbor", () => {
 		expect(result.current.info?.contextWindow).toBe(131072)
 	})
 
-	it("should return OpenAI model when specified", () => {
+	it("should return Qwen32b-fast model when specified", () => {
 		const apiConfiguration: ProviderSettings = {
 			apiProvider: "modelharbor",
-			modelharborModelId: "openai/gpt-4.1",
+			modelharborModelId: "qwen/qwen3-32b-fast",
 		}
 
 		const { result } = renderHook(() => useSelectedModel(apiConfiguration))
 
-		expect(result.current.id).toBe("openai/gpt-4.1")
+		expect(result.current.id).toBe("qwen/qwen3-32b-fast")
 		expect(result.current.info).toBeDefined()
-		expect(result.current.info?.maxTokens).toBe(16384)
-		expect(result.current.info?.contextWindow).toBe(128000)
+		expect(result.current.info?.maxTokens).toBe(8192)
+		expect(result.current.info?.contextWindow).toBe(40960)
 	})
 
 	it("should fallback to default when invalid model is specified", () => {

@@ -44,7 +44,7 @@ export class ModelHarborHandler extends BaseOpenAiCompatibleProvider<ModelHarbor
 				modelHarborOutputChannel.appendLine("🚀 Initializing ModelHarbor models from extension host...")
 			}
 			this.modelsCache = await getModelHarborModels()
-			if (modelHarborOutputChannel) {
+			if (modelHarborOutputChannel && this.modelsCache) {
 				const modelCount = Object.keys(this.modelsCache).length
 				modelHarborOutputChannel.appendLine(`✅ Successfully initialized ${modelCount} ModelHarbor models`)
 			}

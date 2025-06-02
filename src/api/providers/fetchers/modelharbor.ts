@@ -51,6 +51,12 @@ interface ModelHarborApiResponse {
 	data: ModelHarborApiModel[]
 }
 
+// Helper function to round price to avoid floating point precision issues
+function roundPrice(price: number): number {
+	// Round to 6 decimal places to handle typical pricing precision
+	return Math.round(price * 1000000) / 1000000
+}
+
 export async function getModelHarborModels(): Promise<Record<string, ModelInfo>> {
 	try {
 		const response = await fetch("https://api.modelharbor.com/v1/model/info")
@@ -74,13 +80,13 @@ export async function getModelHarborModels(): Promise<Record<string, ModelInfo>>
 
 						// Convert token costs to per-million token costs (multiply by 1,000,000)
 						const inputPrice = model_info.input_cost_per_token
-							? model_info.input_cost_per_token * 1000000
+							? roundPrice(model_info.input_cost_per_token * 1000000)
 							: 0
 						const outputPrice = model_info.output_cost_per_token
-							? model_info.output_cost_per_token * 1000000
+							? roundPrice(model_info.output_cost_per_token * 1000000)
 							: 0
 						const cacheReadsPrice = model_info.cache_read_input_token_cost
-							? model_info.cache_read_input_token_cost * 1000000
+							? roundPrice(model_info.cache_read_input_token_cost * 1000000)
 							: 0
 
 						models[apiModel.model_name] = {
