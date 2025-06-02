@@ -11,6 +11,7 @@ import { getClerkBaseUrl, getRooCodeApiUrl } from "./Config"
 import { RefreshTimer } from "./RefreshTimer"
 
 export interface AuthServiceEvents {
+	"inactive-session": [data: { previousState: AuthState }]
 	"active-session": [data: { previousState: AuthState }]
 	"logged-out": [data: { previousState: AuthState }]
 	"user-info": [data: { userInfo: CloudUserInfo }]
@@ -92,10 +93,14 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 	private transitionToInactiveSession(credentials: AuthCredentials): void {
 		this.credentials = credentials
+
+		const previousState = this.state
 		this.state = "inactive-session"
 
 		this.sessionToken = null
 		this.userInfo = null
+
+		this.emit("inactive-session", { previousState })
 
 		this.timer.start()
 
