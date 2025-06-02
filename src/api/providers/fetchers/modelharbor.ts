@@ -53,7 +53,6 @@ interface ModelHarborApiResponse {
 
 export async function getModelHarborModels(): Promise<Record<string, ModelInfo>> {
 	try {
-		console.log("🚀 Fetching ModelHarbor models from extension host...")
 		const response = await fetch("https://api.modelharbor.com/v1/model/info")
 
 		if (!response.ok) {
@@ -61,7 +60,6 @@ export async function getModelHarborModels(): Promise<Record<string, ModelInfo>>
 		}
 
 		const data: ModelHarborApiResponse = await response.json()
-		console.log(`📊 Received ${data.data.length} model entries from ModelHarbor API`)
 
 		// Transform ModelHarbor response to our ModelInfo format
 		const models: Record<string, ModelInfo> = {}
@@ -116,14 +114,6 @@ export async function getModelHarborModels(): Promise<Record<string, ModelInfo>>
 				sortedModels[modelName] = modelInfo
 			}
 		}
-
-		console.log(
-			`✅ Successfully processed ${processedCount} unique ModelHarbor models out of ${data.data.length} entries`,
-		)
-		console.log(
-			"Available models:",
-			sortedModelNames.slice(0, 5).concat(sortedModelNames.length > 5 ? ["..."] : []),
-		)
 
 		return sortedModels
 	} catch (error) {
