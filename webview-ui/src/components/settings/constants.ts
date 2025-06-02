@@ -27,6 +27,7 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 }
 
 export const PROVIDERS = [
+	{ value: "modelharbor", label: "ModelHarbor" },
 	{ value: "openrouter", label: "OpenRouter" },
 	{ value: "anthropic", label: "Anthropic" },
 	{ value: "gemini", label: "Google Gemini" },

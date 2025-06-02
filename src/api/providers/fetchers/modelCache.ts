@@ -13,6 +13,7 @@ import { getRequestyModels } from "./requesty"
 import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
 import { getLiteLLMModels } from "./litellm"
+import { getModelHarborModels } from "./modelharbor.js"
 import { GetModelsOptions } from "../../../shared/api"
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
@@ -68,6 +69,9 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 				// Type safety ensures apiKey and baseUrl are always provided for litellm
 				models = await getLiteLLMModels(options.apiKey, options.baseUrl)
 				break
+			case "modelharbor":
+				models = await getModelHarborModels()
+				break
 			default: {
 				// Ensures router is exhaustively checked if RouterName is a strict union
 				const exhaustiveCheck: never = provider
@@ -75,11 +79,14 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 			}
 		}
 
-		// Cache the fetched models (even if empty, to signify a successful fetch with no models)
-		memoryCache.set(provider, models)
-		await writeModels(provider, models).catch((err) =>
-			console.error(`[getModels] Error writing ${provider} models to file cache:`, err),
-		)
+		// Ensure models is not undefined before caching
+		if (models) {
+			// Cache the fetched models (even if empty, to signify a successful fetch with no models)
+			memoryCache.set(provider, models)
+			await writeModels(provider, models).catch((err) =>
+				console.error(`[getModels] Error writing ${provider} models to file cache:`, err),
+			)
+		}
 
 		try {
 			models = await readModels(provider)

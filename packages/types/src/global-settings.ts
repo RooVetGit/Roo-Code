@@ -48,7 +48,7 @@ export const globalSettingsSchema = z.object({
 	allowedMaxRequests: z.number().nullish(),
 	autoCondenseContext: z.boolean().optional(),
 	autoCondenseContextPercent: z.number().optional(),
- 	maxConcurrentFileReads: z.number().optional(),
+	maxConcurrentFileReads: z.number().optional(),
 
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
@@ -221,6 +221,7 @@ export type SecretState = Pick<
 	| "groqApiKey"
 	| "chutesApiKey"
 	| "litellmApiKey"
+	| "modelharborApiKey"
 	| "codeIndexOpenAiKey"
 	| "codeIndexQdrantApiKey"
 >
@@ -243,6 +244,7 @@ export const SECRET_STATE_KEYS = keysOf<SecretState>()([
 	"groqApiKey",
 	"chutesApiKey",
 	"litellmApiKey",
+	"modelharborApiKey",
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
 ])

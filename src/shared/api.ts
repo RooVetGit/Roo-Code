@@ -6,7 +6,7 @@ export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
 
 // RouterName
 
-const routerNames = ["openrouter", "requesty", "glama", "unbound", "litellm"] as const
+const routerNames = ["openrouter", "requesty", "glama", "unbound", "litellm", "modelharbor"] as const
 
 export type RouterName = (typeof routerNames)[number]
 
@@ -82,3 +82,4 @@ export type GetModelsOptions =
 	| { provider: "requesty"; apiKey?: string }
 	| { provider: "unbound"; apiKey?: string }
 	| { provider: "litellm"; apiKey: string; baseUrl: string }
+	| { provider: "modelharbor" }
