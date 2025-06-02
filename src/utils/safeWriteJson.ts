@@ -1,6 +1,9 @@
 import * as fs from "fs/promises"
+import * as fsSync from "fs"
 import * as path from "path"
 import * as lockfile from "proper-lockfile"
+import Disassembler from "stream-json/Disassembler"
+import Stringer from "stream-json/Stringer"
 
 /**
  * Safely writes JSON data to a file.
@@ -13,12 +16,8 @@ import * as lockfile from "proper-lockfile"
  * @param {any} data - The data to serialize to JSON and write.
  * @returns {Promise<void>}
  */
-async function safeWriteJson(
-	filePath: string,
-	data: any,
-	replacer?: (key: string, value: any) => any,
-	space: string | number = 2,
-): Promise<void> {
+
+async function safeWriteJson(filePath: string, data: any): Promise<void> {
 	const absoluteFilePath = path.resolve(filePath)
 	const lockPath = `${absoluteFilePath}.lock`
 	let releaseLock = async () => {} // Initialized to a no-op
@@ -59,8 +58,8 @@ async function safeWriteJson(
 			path.dirname(absoluteFilePath),
 			`.${path.basename(absoluteFilePath)}.new_${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`,
 		)
-		const jsonData = JSON.stringify(data, replacer, space)
-		await fs.writeFile(actualTempNewFilePath, jsonData, "utf8")
+
+		await _streamDataToFile(actualTempNewFilePath, data)
 
 		// Step 2: Check if the target file exists. If so, rename it to a backup path.
 		try {
@@ -157,6 +156,60 @@ async function safeWriteJson(
 			console.error(`Failed to release lock for ${lockPath}:`, unlockError)
 		}
 	}
+}
+
+/**
+ * Helper function to stream JSON data to a file.
+ * @param targetPath The path to write the stream to.
+ * @param data The data to stream.
+ * @returns Promise<void>
+ */
+async function _streamDataToFile(targetPath: string, data: any): Promise<void> {
+	// Stream data to avoid high memory usage for large JSON objects.
+	const fileWriteStream = fsSync.createWriteStream(targetPath, { encoding: "utf8" })
+	const disassembler = Disassembler.disassembler()
+	// Output will be compact JSON as standard Stringer is used.
+	const stringer = Stringer.stringer()
+
+	return new Promise<void>((resolve, reject) => {
+		let errorOccurred = false
+		const handleError = (_streamName: string) => (err: Error) => {
+			if (!errorOccurred) {
+				errorOccurred = true
+				if (!fileWriteStream.destroyed) {
+					fileWriteStream.destroy(err)
+				}
+				reject(err)
+			}
+		}
+
+		disassembler.on("error", handleError("Disassembler"))
+		stringer.on("error", handleError("Stringer"))
+		fileWriteStream.on("error", (err: Error) => {
+			if (!errorOccurred) {
+				errorOccurred = true
+				reject(err)
+			}
+		})
+
+		fileWriteStream.on("finish", () => {
+			if (!errorOccurred) {
+				resolve()
+			}
+		})
+
+		disassembler.pipe(stringer).pipe(fileWriteStream)
+
+		// stream-json's Disassembler might error if `data` is undefined.
+		// JSON.stringify(undefined) would produce the string "undefined" if it's the root value.
+		// Writing 'null' is a safer JSON representation for a root undefined value.
+		if (data === undefined) {
+			disassembler.write(null)
+		} else {
+			disassembler.write(data)
+		}
+		disassembler.end()
+	})
 }
 
 export { safeWriteJson }
