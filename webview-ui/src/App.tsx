@@ -16,6 +16,7 @@ import McpView from "./components/mcp/McpView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 import { AccountView } from "./components/account/AccountView"
+import { NightlyTestBanner } from "./components/NightlyTestBanner"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "account"
 
@@ -37,6 +38,7 @@ const App = () => {
 		telemetryKey,
 		machineId,
 		cloudUserInfo,
+		experiments,
 	} = useExtensionState()
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
@@ -121,6 +123,7 @@ const App = () => {
 		<WelcomeView />
 	) : (
 		<>
+			<NightlyTestBanner experiments={experiments} />
 			{tab === "modes" && <ModesView onDone={() => switchTab("chat")} />}
 			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
 			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}

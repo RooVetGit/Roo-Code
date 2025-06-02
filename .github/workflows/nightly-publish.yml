@@ -36,6 +36,10 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Log Internal Experiments
+        run: |
+          # Log enabled experiments
+          node scripts/log-experiments.js
       - name: Forge numeric Nightly version
         id: version
         env:
