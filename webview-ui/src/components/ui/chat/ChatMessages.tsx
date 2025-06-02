@@ -29,7 +29,9 @@ export function ChatMessages() {
 					key={index}
 					message={message}
 					isHeaderVisible={
-						!!message.annotations?.length || index === 0 || messages[index - 1].role !== message.role
+						(Array.isArray(message.annotations) && message.annotations.length > 0) ||
+						index === 0 ||
+						messages[index - 1].role !== message.role
 					}
 					isLast={index === messageCount - 1}
 					isLoading={isLoading}

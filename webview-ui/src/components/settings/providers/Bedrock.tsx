@@ -17,11 +17,11 @@ type BedrockProps = {
 
 export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedModelInfo }: BedrockProps) => {
 	const { t } = useAppTranslation()
-	const [awsEndpointSelected, setAwsEndpointSelected] = useState(!!apiConfiguration?.awsBedrockEndpointEnabled)
+	const [awsEndpointSelected, setAwsEndpointSelected] = useState(apiConfiguration?.awsBedrockEndpointEnabled === true)
 
 	// Update the endpoint enabled state when the configuration changes
 	useEffect(() => {
-		setAwsEndpointSelected(!!apiConfiguration?.awsBedrockEndpointEnabled)
+		setAwsEndpointSelected(apiConfiguration?.awsBedrockEndpointEnabled === true)
 	}, [apiConfiguration?.awsBedrockEndpointEnabled])
 
 	const handleInputChange = useCallback(

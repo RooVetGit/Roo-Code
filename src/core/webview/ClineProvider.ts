@@ -825,7 +825,7 @@ export class ClineProvider
 	}
 
 	public hasProviderProfileEntry(name: string): boolean {
-		return !!this.getProviderProfileEntry(name)
+		return this.getProviderProfileEntry(name) !== undefined
 	}
 
 	async upsertProviderProfile(
@@ -1656,7 +1656,7 @@ export class ClineProvider
 			apiProvider: apiConfiguration?.apiProvider,
 			modelId: task?.api?.getModel().id,
 			diffStrategy: task?.diffStrategy?.getName(),
-			isSubtask: task ? !!task.parentTask : undefined,
+			isSubtask: task ? task.parentTask !== undefined : undefined,
 		}
 	}
 }

@@ -36,7 +36,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	}
 
 	public get isInitialized() {
-		return !!this.git
+		return this.git !== undefined
 	}
 
 	constructor(taskId: string, checkpointsDir: string, workspaceDir: string, log: (message: string) => void) {

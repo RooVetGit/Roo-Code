@@ -34,7 +34,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 			{isCompact ? (
 				<>
 					{/* Compact Cache */}
-					{!!item.cacheWrites && (
+					{typeof item.cacheWrites === "number" && item.cacheWrites > 0 && (
 						<span className="flex items-center gap-px" data-testid="cache-compact">
 							<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
 							{formatLargeNumber(item.cacheWrites || 0)}
@@ -42,7 +42,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 							{formatLargeNumber(item.cacheReads || 0)}
 						</span>
 					)}
-					
+
 					{/* Compact Tokens */}
 					{(item.tokensIn || item.tokensOut) && (
 						<>
@@ -55,7 +55,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 						</>
 					)}
 					{/* Compact Cost */}
-					{!!item.totalCost && (
+					{item.totalCost > 0 && (
 						<span className="flex items-center">
 							<Coins className="inline-block size-[1em] mr-1" />
 							<span data-testid="cost-footer-compact">{"$" + item.totalCost.toFixed(2)}</span>
@@ -66,7 +66,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 				<>
 					<div className="flex flex-col gap-1">
 						{/* Cache Info */}
-						{!!item.cacheWrites && (
+						{typeof item.cacheWrites === "number" && item.cacheWrites > 0 && (
 							<div className="flex items-center flex-wrap gap-x-1">
 								<span className="font-medium">{t("history:cacheLabel")}</span>
 								<span className="flex items-center gap-px" data-testid="cache-writes">
@@ -74,12 +74,15 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 									<span className="font-medium">{formatLargeNumber(item.cacheWrites || 0)}</span>
 								</span>
 								<span className="flex items-center gap-px" data-testid="cache-reads">
-									<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
+									<i
+										className="codicon codicon-arrow-right"
+										style={metadataIconWithTextAdjustStyle}
+									/>
 									<span className="font-medium">{formatLargeNumber(item.cacheReads || 0)}</span>
 								</span>
 							</div>
 						)}
-						
+
 						{/* Full Tokens */}
 						{(item.tokensIn || item.tokensOut) && (
 							<div className="flex items-center flex-wrap gap-x-1">
@@ -95,7 +98,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 							</div>
 						)}
 						{/* Full Cost */}
-						{!!item.totalCost && (
+						{item.totalCost > 0 && (
 							<div className="flex items-center flex-wrap gap-x-1">
 								<span className="font-medium">{t("history:apiCostLabel")}</span>
 								<span data-testid="cost-footer-full">{"$" + item.totalCost.toFixed(4)}</span>

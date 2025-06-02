@@ -53,7 +53,7 @@ export const useOpenRouterKeyInfo = (apiKey?: string, baseUrl?: string, options?
 		queryKey: ["openrouter-key-info", apiKey, baseUrl],
 		queryFn: () => getOpenRouterKeyInfo(apiKey, baseUrl),
 		staleTime: 30 * 1000, // 30 seconds
-		enabled: !!apiKey,
+		enabled: typeof apiKey === "string" && apiKey !== "",
 		...options,
 	})
 }

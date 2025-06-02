@@ -174,6 +174,7 @@ describe("OpenAiHandler", () => {
 			const stream = reasoningHandler.createMessage(systemPrompt, messages)
 			// Consume the stream to trigger the API call
 			for await (const _chunk of stream) {
+				console.debug("Consuming stream for reasoning test")
 			}
 			// Assert the mockCreate was called with reasoning_effort
 			expect(mockCreate).toHaveBeenCalled()
@@ -191,6 +192,7 @@ describe("OpenAiHandler", () => {
 			const stream = noReasoningHandler.createMessage(systemPrompt, messages)
 			// Consume the stream to trigger the API call
 			for await (const _chunk of stream) {
+				console.debug("Consuming stream for no-reasoning test")
 			}
 			// Assert the mockCreate was called without reasoning_effort
 			expect(mockCreate).toHaveBeenCalled()

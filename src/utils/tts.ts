@@ -32,7 +32,9 @@ export const playTts = async (message: string, options: PlayTtsOptions = {}) => 
 	try {
 		queue.push({ message, options })
 		await processQueue()
-	} catch (error) {}
+	} catch (error) {
+		console.debug("Error processing TTS queue:", error)
+	}
 }
 
 export const stopTts = () => {

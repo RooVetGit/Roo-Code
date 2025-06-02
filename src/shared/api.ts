@@ -34,7 +34,9 @@ export const shouldUseReasoningBudget = ({
 }: {
 	model: ModelInfo
 	settings?: ProviderSettings
-}): boolean => !!model.requiredReasoningBudget || (!!model.supportsReasoningBudget && !!settings?.enableReasoningEffort)
+}): boolean =>
+	model.requiredReasoningBudget === true ||
+	(model.supportsReasoningBudget === true && settings?.enableReasoningEffort === true)
 
 export const shouldUseReasoningEffort = ({
 	model,
@@ -42,7 +44,14 @@ export const shouldUseReasoningEffort = ({
 }: {
 	model: ModelInfo
 	settings?: ProviderSettings
-}): boolean => (!!model.supportsReasoningEffort && !!settings?.reasoningEffort) || !!model.reasoningEffort
+}): boolean =>
+	(model.supportsReasoningEffort === true &&
+		settings?.reasoningEffort !== undefined &&
+		(typeof settings.reasoningEffort === "string" || // String literals are inherently non-empty
+			(typeof settings.reasoningEffort === "number" && settings.reasoningEffort !== 0))) ||
+	(model.reasoningEffort !== undefined &&
+		(typeof model.reasoningEffort === "string" || // String literals are inherently non-empty
+			(typeof model.reasoningEffort === "number" && model.reasoningEffort !== 0)))
 
 export const DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS = 16_384
 export const DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS = 8_192

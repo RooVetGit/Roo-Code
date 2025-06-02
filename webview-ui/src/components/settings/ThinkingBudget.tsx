@@ -17,9 +17,9 @@ interface ThinkingBudgetProps {
 export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, modelInfo }: ThinkingBudgetProps) => {
 	const { t } = useAppTranslation()
 
-	const isReasoningBudgetSupported = !!modelInfo && modelInfo.supportsReasoningBudget
-	const isReasoningBudgetRequired = !!modelInfo && modelInfo.requiredReasoningBudget
-	const isReasoningEffortSupported = !!modelInfo && modelInfo.supportsReasoningEffort
+	const isReasoningBudgetSupported = modelInfo !== undefined && modelInfo.supportsReasoningBudget === true
+	const isReasoningBudgetRequired = modelInfo !== undefined && modelInfo.requiredReasoningBudget === true
+	const isReasoningEffortSupported = modelInfo !== undefined && modelInfo.supportsReasoningEffort === true
 
 	const enableReasoningEffort = apiConfiguration.enableReasoningEffort
 	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
@@ -45,7 +45,9 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 		return null
 	}
 
-	return isReasoningBudgetSupported && !!modelInfo.maxTokens ? (
+	return isReasoningBudgetSupported &&
+		typeof modelInfo.maxTokens === "number" && // modelInfo is guaranteed to be defined here
+		modelInfo.maxTokens > 0 ? (
 		<>
 			{!isReasoningBudgetRequired && (
 				<div className="flex flex-col gap-1">

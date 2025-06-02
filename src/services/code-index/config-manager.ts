@@ -124,13 +124,18 @@ export class CodeIndexConfigManager {
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
 			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(openAiKey && qdrantUrl)
+			const isConfigured =
+				typeof openAiKey === "string" && openAiKey !== "" && typeof qdrantUrl === "string" && qdrantUrl !== ""
 			return isConfigured
 		} else if (this.embedderProvider === "ollama") {
 			// Ollama model ID has a default, so only base URL is strictly required for config
 			const ollamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl
 			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(ollamaBaseUrl && qdrantUrl)
+			const isConfigured =
+				typeof ollamaBaseUrl === "string" &&
+				ollamaBaseUrl !== "" &&
+				typeof qdrantUrl === "string" &&
+				qdrantUrl !== ""
 			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly

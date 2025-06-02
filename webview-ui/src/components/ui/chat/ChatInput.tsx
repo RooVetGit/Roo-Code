@@ -80,7 +80,7 @@ function ChatInputField({ placeholder = "Chat" }: ChatInputFieldProps) {
 function ChatInputSubmit() {
 	const { isLoading, stop } = useChatUI()
 	const { isDisabled } = useChatInput()
-	const isStoppable = isLoading && !!stop
+	const isStoppable = isLoading && typeof stop === "function"
 
 	return (
 		<div className="absolute bottom-[1px] left-[1px] right-[1px] h-[40px] bg-input border-t border-vscode-editor-background rounded-b-md p-1">

@@ -72,7 +72,10 @@ const ApiConfigManager = ({
 		}
 
 		// If provider allows all models, profile is valid
-		return !!providerConfig.allowAll || !!(providerConfig.models && providerConfig.models.length > 0)
+		return (
+			providerConfig.allowAll === true ||
+			(Array.isArray(providerConfig.models) && providerConfig.models.length > 0)
+		)
 	}
 
 	const validateName = (name: string, isNewProfile: boolean): string | null => {
