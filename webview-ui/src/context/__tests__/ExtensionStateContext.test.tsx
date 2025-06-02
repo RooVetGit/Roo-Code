@@ -220,8 +220,8 @@ describe("mergeExtensionState", () => {
 			apiConfiguration: { modelMaxThinkingTokens: 456, modelTemperature: 0.3 },
 			experiments: {
 				powerSteering: true,
-				autoCondenseContext: true,
 				concurrentFileReads: true,
+				_nightlyTestBanner: false,
 			} as Record<ExperimentId, boolean>,
 		}
 
