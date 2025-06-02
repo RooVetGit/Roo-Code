@@ -182,6 +182,8 @@
 		"getXaiApiKey": "xAI API-sleutel ophalen",
 		"litellmApiKey": "LiteLLM API-sleutel",
 		"litellmBaseUrl": "LiteLLM basis-URL",
+		"modelharborApiKey": "ModelHarbor API-sleutel",
+		"getModelHarborApiKey": "ModelHarbor API-sleutel verkrijgen",
 		"awsCredentials": "AWS-inloggegevens",
 		"awsProfile": "AWS-profiel",
 		"awsProfileName": "AWS-profielnaam",

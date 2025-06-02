@@ -182,6 +182,8 @@
 		"getXaiApiKey": "获取 xAI API 密钥",
 		"litellmApiKey": "LiteLLM API 密钥",
 		"litellmBaseUrl": "LiteLLM 基础 URL",
+		"modelharborApiKey": "ModelHarbor API 密钥",
+		"getModelHarborApiKey": "获取 ModelHarbor API 密钥",
 		"awsCredentials": "AWS 凭证",
 		"awsProfile": "AWS 配置文件",
 		"awsProfileName": "AWS 配置文件名称",

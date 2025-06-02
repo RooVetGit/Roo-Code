@@ -182,6 +182,8 @@
 		"getXaiApiKey": "xAI API 키 받기",
 		"litellmApiKey": "LiteLLM API 키",
 		"litellmBaseUrl": "LiteLLM 기본 URL",
+		"modelharborApiKey": "ModelHarbor API 키",
+		"getModelHarborApiKey": "ModelHarbor API 키 받기",
 		"awsCredentials": "AWS 자격 증명",
 		"awsProfile": "AWS 프로필",
 		"awsProfileName": "AWS 프로필 이름",

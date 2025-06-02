@@ -182,6 +182,8 @@
 		"getXaiApiKey": "Obtenir clau API de xAI",
 		"litellmApiKey": "Clau API de LiteLLM",
 		"litellmBaseUrl": "URL base de LiteLLM",
+		"modelharborApiKey": "Clau API de ModelHarbor",
+		"getModelHarborApiKey": "Obtenir clau API de ModelHarbor",
 		"awsCredentials": "Credencials d'AWS",
 		"awsProfile": "Perfil d'AWS",
 		"awsProfileName": "Nom del perfil d'AWS",

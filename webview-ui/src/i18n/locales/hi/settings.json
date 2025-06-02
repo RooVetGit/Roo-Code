@@ -182,6 +182,8 @@
 		"getXaiApiKey": "xAI API कुंजी प्राप्त करें",
 		"litellmApiKey": "LiteLLM API कुंजी",
 		"litellmBaseUrl": "LiteLLM आधार URL",
+		"modelharborApiKey": "ModelHarbor API कुंजी",
+		"getModelHarborApiKey": "ModelHarbor API कुंजी प्राप्त करें",
 		"awsCredentials": "AWS क्रेडेंशियल्स",
 		"awsProfile": "AWS प्रोफाइल",
 		"awsProfileName": "AWS प्रोफाइल नाम",
