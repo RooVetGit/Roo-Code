@@ -906,12 +906,13 @@ export const ChatRowContent = ({
 					return (
 						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
 							<div className="flex justify-between">
-								<div className="flex-grow px-2 py-1 w-fit wrap-anywhere">
+								<div className="flex-grow px-2 py-1 wrap-anywhere">
 									<Mention text={message.text} withShadow />
 								</div>
 								<Button
 									variant="ghost"
 									size="icon"
+									className="shrink-0"
 									disabled={isStreaming}
 									onClick={(e) => {
 										e.stopPropagation()
