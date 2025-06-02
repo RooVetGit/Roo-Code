@@ -125,7 +125,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly taskNumber: number
 	readonly workspacePath: string
 	currentModeSlug: string
-
+	modeIsFrozen: boolean = false
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
@@ -299,12 +299,16 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	public async updateCurrentModeSlug(newModeSlug: string) {
-		this.currentModeSlug = newModeSlug
-		// NOTE: Consider if a mode switch should immediately trigger a save of task metadata.
-		// For now, the updated currentModeSlug will be saved with the next natural
-		// save operation (e.g., when a new message is added).
+		if (this.modeIsFrozen) {
+			// If the mode is frozen, ignore any attempts to change it.
+			return // Crucial: Exit without updating the mode
+		}
+		// Only update if the new mode is actually different to avoid unnecessary assignments
+		if (this.currentModeSlug !== newModeSlug) {
+			this.currentModeSlug = newModeSlug
+		}
 	}
-	
+
 	async overwriteApiConversationHistory(newHistory: ApiMessage[]) {
 		this.apiConversationHistory = newHistory
 		await this.saveApiConversationHistory()
@@ -482,6 +486,14 @@ export class Task extends EventEmitter<ClineEvents> {
 			askTs = Date.now()
 			this.lastMessageTs = askTs
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+		}
+
+		// Set modeIsFrozen if the task just completed
+		if (
+			(type === "completion_result" || type === "resume_completed_task") &&
+			(partial === false || partial === undefined)
+		) {
+			this.modeIsFrozen = true
 		}
 
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
@@ -1079,6 +1091,20 @@ export class Task extends EventEmitter<ClineEvents> {
 	): Promise<boolean> {
 		if (this.abort) {
 			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
+		}
+
+		// Reset modeIsFrozen when a new message is sent
+		if (this.modeIsFrozen) {
+			this.modeIsFrozen = false
+			// Get the actual current mode from the provider and update the task's mode
+			const provider = this.providerRef.deref()
+			if (provider) {
+				const providerState = await provider.getState()
+				if (providerState.mode !== this.currentModeSlug) {
+					this.currentModeSlug = providerState.mode
+				}
+			}
+			await this.saveClineMessages() // Save messages now reflects the unfreezing and potential mode update
 		}
 
 		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
