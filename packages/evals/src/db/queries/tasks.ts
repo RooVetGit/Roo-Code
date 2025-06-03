@@ -1,10 +1,10 @@
 import { and, eq } from "drizzle-orm"
 
-import type { ExerciseLanguage } from "../../types/index.js"
+import type { ExerciseLanguage } from "../../exercises/index.js"
 
 import { RecordNotFoundError, RecordNotCreatedError } from "./errors.js"
 import type { InsertTask, UpdateTask } from "../schema.js"
-import { insertTaskSchema, tasks } from "../schema.js"
+import { tasks } from "../schema.js"
 import { db } from "../db.js"
 
 export const findTask = async (id: number) => {
@@ -21,7 +21,7 @@ export const createTask = async (args: InsertTask) => {
 	const records = await db
 		.insert(tasks)
 		.values({
-			...insertTaskSchema.parse(args),
+			...args,
 			createdAt: new Date(),
 		})
 		.returning()

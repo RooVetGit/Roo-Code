@@ -13,10 +13,6 @@ import {
 	ipcMessageSchema,
 } from "@roo-code/types"
 
-/**
- * IpcServer
- */
-
 export class IpcServer extends EventEmitter<IpcServerEvents> implements RooCodeIpcServer {
 	private readonly _socketPath: string
 	private readonly _log: (...args: unknown[]) => void

@@ -3,23 +3,7 @@ import * as crypto from "node:crypto"
 
 import ipc from "node-ipc"
 
-import {
-	type IpcMessage,
-	type Ack,
-	type TaskCommand,
-	type TaskEvent,
-	IpcOrigin,
-	IpcMessageType,
-	ipcMessageSchema,
-} from "@roo-code/types"
-
-export type IpcClientEvents = {
-	[IpcMessageType.Connect]: []
-	[IpcMessageType.Disconnect]: []
-	[IpcMessageType.Ack]: [data: Ack]
-	[IpcMessageType.TaskCommand]: [data: TaskCommand]
-	[IpcMessageType.TaskEvent]: [data: TaskEvent]
-}
+import { type IpcClientEvents, type IpcMessage, IpcOrigin, IpcMessageType, ipcMessageSchema } from "@roo-code/types"
 
 export class IpcClient extends EventEmitter<IpcClientEvents> {
 	private readonly _socketPath: string

@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { rooCodeSettingsSchema } from "@evals/types"
+import { rooCodeSettingsSchema } from "@roo-code/types"
 
 /**
  * CreateRun

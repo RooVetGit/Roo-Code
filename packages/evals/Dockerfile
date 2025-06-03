@@ -72,7 +72,7 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
  COPY --chown=vscode:vscode ./evals/.env ./
 
  # Push database schema
- RUN pnpm --filter @evals/db db:push
+ RUN pnpm --filter @roo-code/evals db:push
 
  EXPOSE 3000
  CMD ["pnpm", "web"]

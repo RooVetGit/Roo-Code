@@ -4,7 +4,7 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import { fileURLToPath } from "url"
 
-import { ExerciseLanguage, exerciseLanguages } from "@evals/types"
+import { type ExerciseLanguage, exerciseLanguages } from "@roo-code/evals"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

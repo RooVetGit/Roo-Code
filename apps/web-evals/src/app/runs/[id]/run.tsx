@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { LoaderCircle } from "lucide-react"
 
-import * as db from "@evals/db"
+import * as db from "@roo-code/evals"
 
 import { formatCurrency, formatDuration, formatTokens } from "@/lib/formatters"
 import { useRunStatus } from "@/hooks/use-run-status"

@@ -8,12 +8,21 @@
 		"lint": "eslint src --ext=ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
 		"test": "vitest run",
-		"clean": "rimraf dist .turbo"
+		"clean": "rimraf dist .turbo",
+		"drizzle-kit": "dotenvx run -f .env -- tsx node_modules/drizzle-kit/bin.cjs",
+		"db:generate": "pnpm drizzle-kit generate",
+		"db:migrate": "pnpm drizzle-kit migrate",
+		"db:push": "pnpm drizzle-kit push",
+		"db:pull": "pnpm drizzle-kit pull",
+		"db:check": "pnpm drizzle-kit check",
+		"db:up": "pnpm drizzle-kit up",
+		"db:studio": "pnpm drizzle-kit studio"
 	},
 	"dependencies": {
+		"@libsql/client": "^0.15.8",
+		"@roo-code/ipc": "workspace:^",
 		"@roo-code/types": "workspace:^",
 		"drizzle-orm": "^0.44.1",
-		"drizzle-zod": "^0.8.2",
 		"execa": "^9.5.2",
 		"gluegun": "^5.2.0",
 		"node-ipc": "^12.0.0",
@@ -29,6 +38,7 @@
 		"@types/node-ipc": "^9.2.3",
 		"@types/ps-tree": "^1.1.6",
 		"drizzle-kit": "^0.31.1",
+		"tsx": "^4.19.3",
 		"vitest": "^3.1.3"
 	}
 }

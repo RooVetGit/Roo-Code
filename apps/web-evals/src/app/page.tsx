@@ -1,4 +1,4 @@
-import { getRuns } from "@evals/db"
+import { getRuns } from "@roo-code/evals"
 
 import { Home } from "./home"
 

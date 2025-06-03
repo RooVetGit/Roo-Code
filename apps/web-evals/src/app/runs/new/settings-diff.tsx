@@ -1,8 +1,10 @@
 import { Fragment, HTMLAttributes } from "react"
 
-import { RooCodeSettings, ROO_CODE_SETTINGS_KEYS } from "@evals/types"
+import { type Keys, type RooCodeSettings, GLOBAL_SETTINGS_KEYS, PROVIDER_SETTINGS_KEYS } from "@roo-code/types"
 
 import { cn } from "@/lib/utils"
+
+export const ROO_CODE_SETTINGS_KEYS = [...GLOBAL_SETTINGS_KEYS, ...PROVIDER_SETTINGS_KEYS] as Keys<RooCodeSettings>[]
 
 type SettingsDiffProps = HTMLAttributes<HTMLDivElement> & {
 	defaultSettings: RooCodeSettings

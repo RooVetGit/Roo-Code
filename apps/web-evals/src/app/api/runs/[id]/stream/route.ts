@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server"
 
-import { findRun } from "@evals/db"
-import { IpcMessageType } from "@evals/types"
-import { IpcClient } from "@evals/ipc"
+import { findRun } from "@roo-code/evals"
+import { IpcClient } from "@roo-code/ipc"
+import { IpcMessageType } from "@roo-code/types"
 
 import { SSEStream } from "@/lib/server/sse-stream"
 

@@ -4,7 +4,7 @@ import type { ToolUsage } from "@roo-code/types"
 
 import { RecordNotFoundError, RecordNotCreatedError } from "./errors.js"
 import type { InsertRun, UpdateRun } from "../schema.js"
-import { insertRunSchema, schema } from "../schema.js"
+import { schema } from "../schema.js"
 import { db } from "../db.js"
 import { createTaskMetrics } from "./taskMetrics.js"
 import { getTasks } from "./tasks.js"
@@ -23,7 +23,7 @@ export const createRun = async (args: InsertRun) => {
 	const records = await db
 		.insert(schema.runs)
 		.values({
-			...insertRunSchema.parse(args),
+			...args,
 			createdAt: new Date(),
 		})
 		.returning()

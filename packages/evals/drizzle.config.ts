@@ -12,7 +12,7 @@ const dbCredentials = process.env.BENCHMARKS_DB_PATH
 
 export default defineConfig({
 	out: "./drizzle",
-	schema: "./src/schema.ts",
+	schema: "./src/db/schema.ts",
 	dialect,
 	dbCredentials,
 })

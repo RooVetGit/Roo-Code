@@ -1,6 +1,6 @@
 import { CircleCheck, CircleDashed, CircleSlash, LoaderCircle } from "lucide-react"
 
-import { type Task } from "@evals/db"
+import type { Task } from "@roo-code/evals"
 
 type TaskStatusProps = {
 	task: Task

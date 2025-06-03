@@ -8,14 +8,20 @@ import fs from "fs"
 import { revalidatePath } from "next/cache"
 import pMap from "p-map"
 
-import { ExerciseLanguage, exerciseLanguages } from "@evals/types"
-import * as db from "@evals/db"
+import {
+	type ExerciseLanguage,
+	exerciseLanguages,
+	createRun as _createRun,
+	updateRun as _updateRun,
+	deleteRun as _deleteRun,
+	createTask,
+} from "@roo-code/evals"
 
 import { CreateRun } from "@/lib/schemas"
 import { getExercisesForLanguage } from "./exercises"
 
 export async function createRun({ suite, exercises = [], systemPrompt, ...values }: CreateRun) {
-	const run = await db.createRun({
+	const run = await _createRun({
 		...values,
 		socketPath: path.join(os.tmpdir(), `roo-code-evals-${crypto.randomUUID()}.sock`),
 	})
@@ -28,13 +34,13 @@ export async function createRun({ suite, exercises = [], systemPrompt, ...values
 				throw new Error("Invalid exercise path: " + path)
 			}
 
-			await db.createTask({ ...values, runId: run.id, language: language as ExerciseLanguage, exercise })
+			await createTask({ ...values, runId: run.id, language: language as ExerciseLanguage, exercise })
 		}
 	} else {
 		for (const language of exerciseLanguages) {
 			const exercises = await getExercisesForLanguage(language)
 
-			await pMap(exercises, (exercise) => db.createTask({ ...values, runId: run.id, language, exercise }), {
+			await pMap(exercises, (exercise) => createTask({ ...values, runId: run.id, language, exercise }), {
 				concurrency: 10,
 			})
 		}
@@ -51,7 +57,7 @@ export async function createRun({ suite, exercises = [], systemPrompt, ...values
 
 		const childProcess = spawn(
 			"pnpm",
-			["--filter", "@evals/cli", "dev", "run", "all", "--runId", run.id.toString()],
+			["--filter", "@roo-code/evals", "dev", "run", "all", "--runId", run.id.toString()],
 			{
 				detached: true,
 				stdio: ["ignore", logFile, logFile],
@@ -60,7 +66,7 @@ export async function createRun({ suite, exercises = [], systemPrompt, ...values
 		)
 
 		childProcess.unref()
-		await db.updateRun(run.id, { pid: childProcess.pid })
+		await _updateRun(run.id, { pid: childProcess.pid })
 	} catch (error) {
 		console.error(error)
 	}
@@ -69,6 +75,6 @@ export async function createRun({ suite, exercises = [], systemPrompt, ...values
 }
 
 export async function deleteRun(runId: number) {
-	await db.deleteRun(runId)
+	await _deleteRun(runId)
 	revalidatePath("/runs")
 }

@@ -3,9 +3,14 @@ import * as fs from "fs"
 
 import { filesystem } from "gluegun"
 
-import { type ExerciseLanguage, exerciseLanguages } from "../types/index.js"
-
 import { exercisesPath } from "./paths.js"
+
+export const exerciseLanguages = ["go", "java", "javascript", "python", "rust"] as const
+
+export type ExerciseLanguage = (typeof exerciseLanguages)[number]
+
+export const isExerciseLanguage = (value: string): value is ExerciseLanguage =>
+	exerciseLanguages.includes(value as ExerciseLanguage)
 
 let exercisesByLanguage: Record<ExerciseLanguage, string[]> | null = null
 

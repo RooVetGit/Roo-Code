@@ -9,7 +9,8 @@ import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
 import { X, Rocket, Check, ChevronsUpDown, SlidersHorizontal, Book, CircleCheck } from "lucide-react"
 
-import { globalSettingsSchema, providerSettingsSchema, rooCodeDefaults } from "@evals/types"
+import { globalSettingsSchema, providerSettingsSchema } from "@roo-code/types"
+import { rooCodeDefaults } from "@roo-code/evals"
 
 import { createRun } from "@/lib/server/runs"
 import {

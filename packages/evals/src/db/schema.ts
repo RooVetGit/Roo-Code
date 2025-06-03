@@ -1,16 +1,9 @@
 import { sqliteTable, text, real, integer, blob, uniqueIndex } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
-import { createInsertSchema } from "drizzle-zod"
 
-import {
-	type RooCodeSettings,
-	type ToolUsage,
-	rooCodeSettingsSchema,
-	toolNames,
-	toolUsageSchema,
-} from "@roo-code/types"
+import { type RooCodeSettings, type ToolUsage, toolNames } from "@roo-code/types"
 
-import { exerciseLanguages } from "../types/index.js"
+import { type ExerciseLanguage, exerciseLanguages } from "../exercises/index.js"
 
 /**
  * runs
@@ -36,10 +29,6 @@ export const runsRelations = relations(runs, ({ one }) => ({
 
 export type Run = typeof runs.$inferSelect
 
-export const insertRunSchema = createInsertSchema(runs).omit({ id: true, createdAt: true }).extend({
-	settings: rooCodeSettingsSchema.optional(),
-})
-
 export type InsertRun = Omit<typeof runs.$inferInsert, "id" | "createdAt">
 
 export type UpdateRun = Partial<Omit<Run, "id" | "createdAt">>
@@ -56,7 +45,7 @@ export const tasks = sqliteTable(
 			.references(() => runs.id)
 			.notNull(),
 		taskMetricsId: integer({ mode: "number" }).references(() => taskMetrics.id),
-		language: text({ enum: exerciseLanguages }).notNull(),
+		language: text({ enum: exerciseLanguages }).notNull().$type<ExerciseLanguage>(),
 		exercise: text().notNull(),
 		passed: integer({ mode: "boolean" }),
 		startedAt: integer({ mode: "timestamp" }),
@@ -72,8 +61,6 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
 }))
 
 export type Task = typeof tasks.$inferSelect
-
-export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true })
 
 export type InsertTask = Omit<typeof tasks.$inferInsert, "id" | "createdAt">
 
@@ -98,10 +85,6 @@ export const taskMetrics = sqliteTable("taskMetrics", {
 
 export type TaskMetrics = typeof taskMetrics.$inferSelect
 
-export const insertTaskMetricsSchema = createInsertSchema(taskMetrics)
-	.omit({ id: true, createdAt: true })
-	.extend({ toolUsage: toolUsageSchema.optional() })
-
 export type InsertTaskMetrics = Omit<typeof taskMetrics.$inferInsert, "id" | "createdAt">
 
 export type UpdateTaskMetrics = Partial<Omit<TaskMetrics, "id" | "createdAt">>
@@ -125,10 +108,6 @@ export const toolErrorsRelations = relations(toolErrors, ({ one }) => ({
 }))
 
 export type ToolError = typeof toolErrors.$inferSelect
-
-export const insertToolErrorSchema = createInsertSchema(toolErrors)
-	.omit({ id: true, createdAt: true })
-	.extend({ toolUsage: toolUsageSchema.optional() })
 
 export type InsertToolError = Omit<typeof toolErrors.$inferInsert, "id" | "createdAt">
 

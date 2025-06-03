@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Ellipsis, Rocket } from "lucide-react"
 
-import type { Run, TaskMetrics } from "@evals/db"
+import type { Run, TaskMetrics } from "@roo-code/evals"
 
 import { deleteRun } from "@/lib/server/runs"
 import { formatCurrency, formatDuration, formatTokens, formatToolUsageSuccessRate } from "@/lib/formatters"

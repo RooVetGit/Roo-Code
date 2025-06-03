@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm"
 
 import { RecordNotFoundError, RecordNotCreatedError } from "./errors.js"
 import type { InsertTaskMetrics, UpdateTaskMetrics } from "../schema.js"
-import { insertTaskMetricsSchema, taskMetrics } from "../schema.js"
+import { taskMetrics } from "../schema.js"
 import { db } from "../db.js"
 
 export const findTaskMetrics = async (id: number) => {
@@ -19,7 +19,7 @@ export const createTaskMetrics = async (args: InsertTaskMetrics) => {
 	const records = await db
 		.insert(taskMetrics)
 		.values({
-			...insertTaskMetricsSchema.parse(args),
+			...args,
 			createdAt: new Date(),
 		})
 		.returning()

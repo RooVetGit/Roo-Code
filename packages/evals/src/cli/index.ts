@@ -9,6 +9,8 @@ import { build, filesystem, GluegunPrompt, GluegunToolbox } from "gluegun"
 import psTree from "ps-tree"
 
 import { RooCodeEventName, IpcOrigin, IpcMessageType, TaskCommandName } from "@roo-code/types"
+import { IpcServer, IpcClient } from "@roo-code/ipc"
+
 import {
 	type Run,
 	type Task,
@@ -22,13 +24,9 @@ import {
 	updateTaskMetrics,
 	createToolError,
 } from "../db/index.js"
-
-import { type ExerciseLanguage, EvalEventName, exerciseLanguages, rooCodeDefaults } from "../types/index.js"
-
-import { IpcServer, IpcClient } from "../ipc/index.js"
-
-import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
-import { getExercises } from "./exercises.js"
+import { rooCodeDefaults } from "../settings/index.js"
+import { __dirname, extensionDevelopmentPath, exercisesPath } from "../exercises/index.js"
+import { type ExerciseLanguage, exerciseLanguages, getExercises } from "../exercises/exercises.js"
 
 type TaskResult = { success: boolean }
 type TaskPromise = Promise<TaskResult>
@@ -125,7 +123,7 @@ const run = async (toolbox: GluegunToolbox) => {
 			server.broadcast({
 				type: IpcMessageType.TaskEvent,
 				origin: IpcOrigin.Server,
-				data: { eventName: passed ? EvalEventName.Pass : EvalEventName.Fail, taskId: task.id },
+				data: { eventName: passed ? RooCodeEventName.EvalPass : RooCodeEventName.EvalFail, taskId: task.id },
 			})
 
 			return { success: passed }
@@ -234,7 +232,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	let rooTaskId: string | undefined
 	let isClientDisconnected = false
 
-	const ignoreEvents: Record<"broadcast" | "log", (RooCodeEventName | EvalEventName)[]> = {
+	const ignoreEvents: Record<"broadcast" | "log", RooCodeEventName[]> = {
 		broadcast: [RooCodeEventName.Message],
 		log: [RooCodeEventName.Message, RooCodeEventName.TaskTokenUsageUpdated, RooCodeEventName.TaskAskResponded],
 	}
@@ -279,7 +277,6 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		}
 
 		if (eventName === RooCodeEventName.TaskToolFailed) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [_taskId, toolName, error] = payload
 			await createToolError({ taskId: task.id, toolName, error })
 		}

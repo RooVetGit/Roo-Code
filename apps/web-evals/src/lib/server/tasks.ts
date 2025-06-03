@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 
-import * as db from "@evals/db"
+import { getTasks as _getTasks } from "@roo-code/evals"
 
 export async function getTasks(runId: number) {
-	const tasks = await db.getTasks(runId)
+	const tasks = await _getTasks(runId)
 	revalidatePath(`/runs/${runId}`)
 	return tasks
 }

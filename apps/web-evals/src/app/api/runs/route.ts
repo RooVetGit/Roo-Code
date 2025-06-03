@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createRun } from "@evals/db"
+import { createRun } from "@roo-code/evals"
 
 export async function POST(request: Request) {
 	try {

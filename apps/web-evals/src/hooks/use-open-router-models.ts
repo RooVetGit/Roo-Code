@@ -1,15 +1,7 @@
 import { z } from "zod"
 import { useQuery } from "@tanstack/react-query"
 
-import { type ModelInfo } from "@evals/types"
-
-const supportsPromptCache = ["anthropic/claude-3.7-sonnet", "anthropic/claude-3.5-sonnet", "anthropic/claude-3-5-haiku"]
-
-const supportsComputerUse = ["anthropic/claude-3.7-sonnet", "anthropic/claude-3.5-sonnet"]
-
-const supportsThinking = ["anthropic/claude-3.7-sonnet:thinking"]
-
-const parsePrice = (price?: string) => (price ? parseFloat(price) * 1_000_000 : undefined)
+import type { ModelInfo } from "@roo-code/types"
 
 export const openRouterModelSchema = z.object({
 	id: z.string(),
@@ -55,15 +47,8 @@ export const getOpenRouterModels = async (): Promise<OpenRouterModel[]> => {
 		.map((rawModel) => ({
 			...rawModel,
 			modelInfo: {
-				maxTokens: rawModel.top_provider?.max_completion_tokens ?? undefined,
 				contextWindow: rawModel.context_length,
-				supportsImages: rawModel.architecture?.modality?.includes("image"),
-				supportsPromptCache: supportsPromptCache.some((model) => rawModel.id.startsWith(model)),
-				supportsComputerUse: supportsComputerUse.some((model) => rawModel.id.startsWith(model)),
-				inputPrice: parsePrice(rawModel.pricing?.prompt),
-				outputPrice: parsePrice(rawModel.pricing?.completion),
-				description: rawModel.description,
-				thinking: supportsThinking.some((model) => rawModel.id.startsWith(model)),
+				supportsPromptCache: false,
 			},
 		}))
 }
