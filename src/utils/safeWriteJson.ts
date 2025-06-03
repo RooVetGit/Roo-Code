@@ -19,12 +19,11 @@ import Stringer from "stream-json/Stringer"
 
 async function safeWriteJson(filePath: string, data: any): Promise<void> {
 	const absoluteFilePath = path.resolve(filePath)
-	const lockPath = `${absoluteFilePath}.lock`
 	let releaseLock = async () => {} // Initialized to a no-op
 
 	// Acquire the lock before any file operations
 	try {
-		releaseLock = await lockfile.lock(lockPath, {
+		releaseLock = await lockfile.lock(absoluteFilePath, {
 			stale: 31000, // Stale after 31 seconds
 			update: 10000, // Update mtime every 10 seconds to prevent staleness if operation is long
 			retries: {
@@ -34,9 +33,8 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 				minTimeout: 100, // Minimum time to wait before the first retry (in ms)
 				maxTimeout: 1000, // Maximum time to wait for any single retry (in ms)
 			},
-			realpath: false, // Skip realpath check as we've already resolved absoluteFilePath
 			onCompromised: (err) => {
-				console.error(`Lock at ${lockPath} was compromised:`, err)
+				console.error(`Lock at ${absoluteFilePath} was compromised:`, err)
 				throw err
 			},
 		})
@@ -44,8 +42,9 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 		// If lock acquisition fails, we throw immediately.
 		// The releaseLock remains a no-op, so the finally block in the main file operations
 		// try-catch-finally won't try to release an unacquired lock if this path is taken.
-		console.error(`Failed to acquire lock for ${lockPath}:`, lockError)
-		throw lockError // Propagate the lock acquisition error
+		console.error(`Failed to acquire lock for ${absoluteFilePath}:`, lockError)
+		// Propagate the lock acquisition error
+		throw lockError
 	}
 
 	// Variables to hold the actual paths of temp files if they are created.
@@ -63,7 +62,8 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 
 		// Step 2: Check if the target file exists. If so, rename it to a backup path.
 		try {
-			await fs.access(absoluteFilePath) // Check for target file existence
+			// Check for target file existence
+			await fs.access(absoluteFilePath)
 			// Target exists, create a backup path and rename.
 			actualTempBackupFilePath = path.join(
 				path.dirname(absoluteFilePath),
@@ -85,13 +85,15 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 
 		// If we reach here, the new file is successfully in place.
 		// The original actualTempNewFilePath is now the main file, so we shouldn't try to clean it up as "temp".
-		actualTempNewFilePath = null // Mark as "used" or "committed"
+		// Mark as "used" or "committed"
+		actualTempNewFilePath = null
 
 		// Step 4: If a backup was created, attempt to delete it.
 		if (actualTempBackupFilePath) {
 			try {
 				await fs.unlink(actualTempBackupFilePath)
-				actualTempBackupFilePath = null // Mark backup as handled
+				// Mark backup as handled
+				actualTempBackupFilePath = null
 			} catch (unlinkBackupError) {
 				// Log this error, but do not re-throw. The main operation was successful.
 				// actualTempBackupFilePath remains set, indicating an orphaned backup.
@@ -111,7 +113,8 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 		if (backupFileToRollbackOrCleanupWithinCatch) {
 			try {
 				await fs.rename(backupFileToRollbackOrCleanupWithinCatch, absoluteFilePath)
-				actualTempBackupFilePath = null // Mark as handled, prevent later unlink of this path
+				// Mark as handled, prevent later unlink of this path
+				actualTempBackupFilePath = null
 			} catch (rollbackError) {
 				// actualTempBackupFilePath (outer scope) remains pointing to backupFileToRollbackOrCleanupWithinCatch
 				console.error(
@@ -153,7 +156,7 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 			await releaseLock()
 		} catch (unlockError) {
 			// Do not re-throw here, as the originalError from the try/catch (if any) is more important.
-			console.error(`Failed to release lock for ${lockPath}:`, unlockError)
+			console.error(`Failed to release lock for ${absoluteFilePath}:`, unlockError)
 		}
 	}
 }
