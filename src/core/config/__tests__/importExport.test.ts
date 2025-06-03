@@ -407,11 +407,10 @@ describe("importExport", () => {
 				contextProxy: mockContextProxy,
 			})
 
-			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/mock/path/roo-code-settings.json",
-				JSON.stringify({ providerProfiles: mockProviderProfiles, globalSettings: mockGlobalSettings }, null, 2),
-				"utf-8",
-			)
+			expect(safeWriteJson).toHaveBeenCalledWith("/mock/path/roo-code-settings.json", {
+				providerProfiles: mockProviderProfiles,
+				globalSettings: mockGlobalSettings,
+			})
 		})
 
 		it("should handle errors during the export process", async () => {
