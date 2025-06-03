@@ -218,6 +218,7 @@ const ApiOptions = ({
 					const tempConfig = { ...apiConfiguration, apiProvider: value, apiModelId: modelId }
 					const modelError = getModelValidationError(tempConfig, routerModels, organizationAllowList)
 					// if we have any errors, reset the modelId to default value to prevent ambiguity
+					// otherwise, keep the modelId as is
 					if (modelError) {
 						setApiConfigurationField(field, defaultValue || "")
 					}
@@ -231,9 +232,6 @@ const ApiOptions = ({
 						"openRouterModelId",
 						openRouterDefaultModelId,
 					)
-					break
-				case "glama":
-					validateAndResetModel(apiConfiguration.glamaModelId, "glamaModelId", glamaDefaultModelId)
 					break
 				case "unbound":
 					validateAndResetModel(apiConfiguration.unboundModelId, "unboundModelId", unboundDefaultModelId)
