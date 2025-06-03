@@ -3,6 +3,6 @@
 	"compilerOptions": {
 		"types": ["vitest/globals"]
 	},
-	"include": ["src"],
+	"include": ["src", "drizzle.config.ts"],
 	"exclude": ["node_modules"]
 }
