@@ -202,7 +202,13 @@ const ApiOptions = ({
 		(value: ProviderName) => {
 			setApiConfigurationField("apiProvider", value)
 
-			// Helper function to validate and reset model if invalid
+			// It would be much easier to have a single attribute that stores
+			// the modelId, but we have a separate attribute for each of
+			// OpenRouter, Glama, Unbound, and Requesty.
+			// If you switch to one of these providers and the corresponding
+			// modelId is not set then you immediately end up in an error state.
+			// To address that we set the modelId to the default value for th
+			// provider if it's not already set.
 			const validateAndResetModel = (
 				modelId: string | undefined,
 				field: keyof ProviderSettings,
@@ -211,15 +217,13 @@ const ApiOptions = ({
 				if (modelId) {
 					const tempConfig = { ...apiConfiguration, apiProvider: value, apiModelId: modelId }
 					const modelError = getModelValidationError(tempConfig, routerModels, organizationAllowList)
+					// if we have any errors, reset the modelId to default value to prevent ambiguity
 					if (modelError) {
-						setApiConfigurationField(field, "")
+						setApiConfigurationField(field, defaultValue || "")
 					}
-				} else if (defaultValue) {
-					setApiConfigurationField(field, defaultValue)
 				}
 			}
 
-			// Validate current model for the new provider
 			switch (value) {
 				case "openrouter":
 					validateAndResetModel(
