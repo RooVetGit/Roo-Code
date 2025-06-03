@@ -11,10 +11,6 @@ inputs:
         description: "pnpm version to use"
         required: false
         default: "10.8.1"
-    skip-checkout:
-        description: "Skip checkout step if already done"
-        required: false
-        default: "false"
     skip-install:
         description: "Skip dependency installation"
         required: false
@@ -27,9 +23,6 @@ inputs:
 runs:
     using: "composite"
     steps:
-        - name: Checkout code
-          if: ${{ inputs.skip-checkout != 'true' }}
-          uses: actions/checkout@v4
         - name: Install pnpm
           uses: pnpm/action-setup@v4
           with:

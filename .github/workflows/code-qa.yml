@@ -12,6 +12,8 @@ jobs:
   check-translations:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
       - name: Verify all translations are complete
@@ -20,6 +22,8 @@ jobs:
   knip:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
       - name: Run knip checks
@@ -28,6 +32,8 @@ jobs:
   compile:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
       - name: Lint
@@ -41,6 +47,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
       - name: Run unit tests
@@ -66,6 +74,8 @@ jobs:
     needs: [check-openrouter-api-key]
     if: needs.check-openrouter-api-key.outputs.exists == 'true'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
       - name: Create .env.local file

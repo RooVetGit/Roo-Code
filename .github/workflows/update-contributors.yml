@@ -13,6 +13,8 @@ jobs:
       contents: write  # Needed for pushing changes.
       pull-requests: write  # Needed for creating PRs.
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
       - name: Disable Husky
