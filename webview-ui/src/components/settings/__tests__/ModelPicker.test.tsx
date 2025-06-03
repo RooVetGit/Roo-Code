@@ -136,4 +136,106 @@ describe("ModelPicker", () => {
 		// Verify the API config was updated with the custom model ID
 		expect(mockSetApiConfigurationField).toHaveBeenCalledWith(defaultProps.modelIdKey, customModelId)
 	})
+
+	describe("Error Message Display", () => {
+		it("displays error message when errorMessage prop is provided", async () => {
+			const errorMessage = "Model not available for your organization"
+			const propsWithError = {
+				...defaultProps,
+				errorMessage,
+			}
+
+			await act(async () => {
+				render(
+					<QueryClientProvider client={queryClient}>
+						<ModelPicker {...propsWithError} />
+					</QueryClientProvider>,
+				)
+			})
+
+			// Check that the error message is displayed
+			expect(screen.getByText(errorMessage)).toBeInTheDocument()
+		})
+
+		it("does not display error message when errorMessage prop is undefined", async () => {
+			await act(async () => renderModelPicker())
+
+			// Check that no error message is displayed
+			expect(screen.queryByTestId("api-error-message")).not.toBeInTheDocument()
+		})
+
+		it("displays error message below the model selector", async () => {
+			const errorMessage = "Invalid model selected"
+			const propsWithError = {
+				...defaultProps,
+				errorMessage,
+			}
+
+			await act(async () => {
+				render(
+					<QueryClientProvider client={queryClient}>
+						<ModelPicker {...propsWithError} />
+					</QueryClientProvider>,
+				)
+			})
+
+			// Check that both the model selector and error message are present
+			const modelSelector = screen.getByRole("combobox")
+			const errorElement = screen.getByText(errorMessage)
+
+			expect(modelSelector).toBeInTheDocument()
+			expect(errorElement).toBeInTheDocument()
+
+			// Verify the error message is rendered (positioning is handled by CSS)
+			expect(errorElement).toBeVisible()
+		})
+
+		it("updates error message when errorMessage prop changes", async () => {
+			const initialError = "Initial error"
+			const updatedError = "Updated error"
+
+			const { rerender } = render(
+				<QueryClientProvider client={queryClient}>
+					<ModelPicker {...defaultProps} errorMessage={initialError} />
+				</QueryClientProvider>,
+			)
+
+			// Check initial error is displayed
+			expect(screen.getByText(initialError)).toBeInTheDocument()
+
+			// Update the error message
+			rerender(
+				<QueryClientProvider client={queryClient}>
+					<ModelPicker {...defaultProps} errorMessage={updatedError} />
+				</QueryClientProvider>,
+			)
+
+			// Check that the error message has been updated
+			expect(screen.queryByText(initialError)).not.toBeInTheDocument()
+			expect(screen.getByText(updatedError)).toBeInTheDocument()
+		})
+
+		it("removes error message when errorMessage prop becomes undefined", async () => {
+			const errorMessage = "Temporary error"
+
+			const { rerender } = render(
+				<QueryClientProvider client={queryClient}>
+					<ModelPicker {...defaultProps} errorMessage={errorMessage} />
+				</QueryClientProvider>,
+			)
+
+			// Check error is initially displayed
+			expect(screen.getByText(errorMessage)).toBeInTheDocument()
+
+			// Remove the error message
+			rerender(
+				<QueryClientProvider client={queryClient}>
+					<ModelPicker {...defaultProps} errorMessage={undefined} />
+				</QueryClientProvider>,
+			)
+
+			// Check that the error message has been removed
+			expect(screen.queryByText(errorMessage)).not.toBeInTheDocument()
+		})
+	})
 })
