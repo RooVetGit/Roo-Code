@@ -2264,6 +2264,7 @@ describe("ClineProvider - Router Models", () => {
 		expect(getModels).toHaveBeenCalledWith({ provider: "requesty", apiKey: "requesty-key" })
 		expect(getModels).toHaveBeenCalledWith({ provider: "glama" })
 		expect(getModels).toHaveBeenCalledWith({ provider: "unbound", apiKey: "unbound-key" })
+		expect(getModels).toHaveBeenCalledWith({ provider: "modelharbor" })
 		expect(getModels).toHaveBeenCalledWith({
 			provider: "litellm",
 			apiKey: "litellm-key",
@@ -2278,6 +2279,7 @@ describe("ClineProvider - Router Models", () => {
 				requesty: mockModels,
 				glama: mockModels,
 				unbound: mockModels,
+				modelharbor: mockModels,
 				litellm: mockModels,
 			},
 		})
@@ -2307,6 +2309,7 @@ describe("ClineProvider - Router Models", () => {
 			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty fail
 			.mockResolvedValueOnce(mockModels) // glama success
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound fail
+			.mockRejectedValueOnce(new Error("ModelHarbor API error")) // modelharbor fail
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm fail
 
 		await messageHandler({ type: "requestRouterModels" })
@@ -2319,6 +2322,7 @@ describe("ClineProvider - Router Models", () => {
 				requesty: {},
 				glama: mockModels,
 				unbound: {},
+				modelharbor: {},
 				litellm: {},
 			},
 		})
@@ -2336,6 +2340,13 @@ describe("ClineProvider - Router Models", () => {
 			success: false,
 			error: "Unbound API error",
 			values: { provider: "unbound" },
+		})
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "ModelHarbor API error",
+			values: { provider: "modelharbor" },
 		})
 
 		expect(mockPostMessage).toHaveBeenCalledWith({
@@ -2416,6 +2427,7 @@ describe("ClineProvider - Router Models", () => {
 				requesty: mockModels,
 				glama: mockModels,
 				unbound: mockModels,
+				modelharbor: mockModels,
 				litellm: {},
 			},
 		})
