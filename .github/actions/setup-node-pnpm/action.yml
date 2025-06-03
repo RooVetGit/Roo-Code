@@ -1,4 +1,5 @@
 name: "Setup Node.js and pnpm"
+
 description: "Sets up Node.js and pnpm with caching and installs dependencies"
 
 inputs:
