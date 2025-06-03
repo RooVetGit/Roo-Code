@@ -233,3 +233,55 @@ export function validateModelId(apiConfiguration: ProviderSettings, routerModels
 
 	return undefined
 }
+
+/**
+ * Extracts model-specific validation errors from the API configuration
+ * This is used to show model errors specifically in the model selector components
+ */
+export function getModelValidationError(
+	apiConfiguration: ProviderSettings,
+	routerModels?: RouterModels,
+	organizationAllowList?: OrganizationAllowList,
+): string | undefined {
+	const modelId = getModelIdForProvider(apiConfiguration, apiConfiguration.apiProvider || "")
+	const configWithModelId = {
+		...apiConfiguration,
+		apiModelId: modelId || "",
+	}
+
+	const orgError = validateProviderAgainstOrganizationSettings(configWithModelId, organizationAllowList)
+	if (orgError && orgError.includes("model")) {
+		return orgError
+	}
+
+	return validateModelId(configWithModelId, routerModels)
+}
+
+/**
+ * Validates API configuration but excludes model-specific errors
+ * This is used for the general API error display to prevent duplication
+ * when model errors are shown in the model selector
+ */
+export function validateApiConfigurationExcludingModelErrors(
+	apiConfiguration: ProviderSettings,
+	_routerModels?: RouterModels, // keeping this for compatibility with the old function
+	organizationAllowList?: OrganizationAllowList,
+): string | undefined {
+	const keysAndIdsPresentErrorMessage = validateModelsAndKeysProvided(apiConfiguration)
+	if (keysAndIdsPresentErrorMessage) {
+		return keysAndIdsPresentErrorMessage
+	}
+
+	const organizationAllowListErrorMessage = validateProviderAgainstOrganizationSettings(
+		apiConfiguration,
+		organizationAllowList,
+	)
+
+	// only return organization errors if they're not model-specific
+	if (organizationAllowListErrorMessage && !organizationAllowListErrorMessage.includes("model")) {
+		return organizationAllowListErrorMessage
+	}
+
+	// skip model validation errors as they'll be shown in the model selector
+	return undefined
+}

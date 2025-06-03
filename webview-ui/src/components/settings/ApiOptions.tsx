@@ -14,7 +14,7 @@ import {
 } from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
-import { validateApiConfiguration } from "@src/utils/validate"
+import { validateApiConfigurationExcludingModelErrors, getModelValidationError } from "@src/utils/validate"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
@@ -176,8 +176,11 @@ const ApiOptions = ({
 	)
 
 	useEffect(() => {
-		const apiValidationResult = validateApiConfiguration(apiConfiguration, routerModels, organizationAllowList)
-
+		const apiValidationResult = validateApiConfigurationExcludingModelErrors(
+			apiConfiguration,
+			routerModels,
+			organizationAllowList,
+		)
 		setErrorMessage(apiValidationResult)
 	}, [apiConfiguration, routerModels, organizationAllowList, setErrorMessage])
 
@@ -197,51 +200,58 @@ const ApiOptions = ({
 
 	const onProviderChange = useCallback(
 		(value: ProviderName) => {
-			// It would be much easier to have a single attribute that stores
-			// the modelId, but we have a separate attribute for each of
-			// OpenRouter, Glama, Unbound, and Requesty.
-			// If you switch to one of these providers and the corresponding
-			// modelId is not set then you immediately end up in an error state.
-			// To address that we set the modelId to the default value for th
-			// provider if it's not already set.
-			switch (value) {
-				case "openrouter":
-					if (!apiConfiguration.openRouterModelId) {
-						setApiConfigurationField("openRouterModelId", openRouterDefaultModelId)
+			setApiConfigurationField("apiProvider", value)
+
+			// Helper function to validate and reset model if invalid
+			const validateAndResetModel = (
+				modelId: string | undefined,
+				field: keyof ProviderSettings,
+				defaultValue?: string,
+			) => {
+				if (modelId) {
+					const tempConfig = { ...apiConfiguration, apiProvider: value, apiModelId: modelId }
+					const modelError = getModelValidationError(tempConfig, routerModels, organizationAllowList)
+					if (modelError) {
+						setApiConfigurationField(field, "")
 					}
-					break
-				case "glama":
-					if (!apiConfiguration.glamaModelId) {
-						setApiConfigurationField("glamaModelId", glamaDefaultModelId)
-					}
-					break
-				case "unbound":
-					if (!apiConfiguration.unboundModelId) {
-						setApiConfigurationField("unboundModelId", unboundDefaultModelId)
-					}
-					break
-				case "requesty":
-					if (!apiConfiguration.requestyModelId) {
-						setApiConfigurationField("requestyModelId", requestyDefaultModelId)
-					}
-					break
-				case "litellm":
-					if (!apiConfiguration.litellmModelId) {
-						setApiConfigurationField("litellmModelId", litellmDefaultModelId)
-					}
-					break
+				} else if (defaultValue) {
+					setApiConfigurationField(field, defaultValue)
+				}
 			}
 
-			setApiConfigurationField("apiProvider", value)
+			// Validate current model for the new provider
+			switch (value) {
+				case "openrouter":
+					validateAndResetModel(
+						apiConfiguration.openRouterModelId,
+						"openRouterModelId",
+						openRouterDefaultModelId,
+					)
+					break
+				case "glama":
+					validateAndResetModel(apiConfiguration.glamaModelId, "glamaModelId", glamaDefaultModelId)
+					break
+				case "unbound":
+					validateAndResetModel(apiConfiguration.unboundModelId, "unboundModelId", unboundDefaultModelId)
+					break
+				case "requesty":
+					validateAndResetModel(apiConfiguration.requestyModelId, "requestyModelId", requestyDefaultModelId)
+					break
+				case "litellm":
+					validateAndResetModel(apiConfiguration.litellmModelId, "litellmModelId", litellmDefaultModelId)
+					break
+				case "openai":
+					validateAndResetModel(apiConfiguration.openAiModelId, "openAiModelId")
+					break
+				case "ollama":
+					validateAndResetModel(apiConfiguration.ollamaModelId, "ollamaModelId")
+					break
+				case "lmstudio":
+					validateAndResetModel(apiConfiguration.lmStudioModelId, "lmStudioModelId")
+					break
+			}
 		},
-		[
-			setApiConfigurationField,
-			apiConfiguration.openRouterModelId,
-			apiConfiguration.glamaModelId,
-			apiConfiguration.unboundModelId,
-			apiConfiguration.requestyModelId,
-			apiConfiguration.litellmModelId,
-		],
+		[setApiConfigurationField, apiConfiguration, routerModels, organizationAllowList],
 	)
 
 	const docs = useMemo(() => {

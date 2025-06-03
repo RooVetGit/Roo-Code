@@ -12,6 +12,7 @@ import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Button } from "@src/components/ui"
 
 import { inputEventTransform } from "../transforms"
+import { getModelValidationError } from "@src/utils/validate"
 import { ModelPicker } from "../ModelPicker"
 
 type LiteLLMProps = {
@@ -143,6 +144,7 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField, organizati
 				serviceUrl="https://docs.litellm.ai/"
 				setApiConfigurationField={setApiConfigurationField}
 				organizationAllowList={organizationAllowList}
+				errorMessage={getModelValidationError(apiConfiguration, routerModels, organizationAllowList)}
 			/>
 		</>
 	)

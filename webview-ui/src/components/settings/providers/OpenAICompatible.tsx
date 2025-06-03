@@ -19,6 +19,7 @@ import { Button } from "@src/components/ui"
 
 import { convertHeadersToObject } from "../utils/headers"
 import { inputEventTransform, noTransform } from "../transforms"
+import { getModelValidationError } from "@src/utils/validate"
 import { ModelPicker } from "../ModelPicker"
 import { R1FormatSetting } from "../R1FormatSetting"
 import { ThinkingBudget } from "../ThinkingBudget"
@@ -144,6 +145,7 @@ export const OpenAICompatible = ({
 				serviceName="OpenAI"
 				serviceUrl="https://platform.openai.com"
 				organizationAllowList={organizationAllowList}
+				errorMessage={getModelValidationError(apiConfiguration, undefined, organizationAllowList)}
 			/>
 			<R1FormatSetting
 				onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}

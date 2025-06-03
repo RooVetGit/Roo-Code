@@ -23,6 +23,7 @@ import {
 } from "@src/components/ui"
 
 import { ModelInfoView } from "./ModelInfoView"
+import { ApiErrorMessage } from "./ApiErrorMessage"
 
 type ModelIdKey = keyof Pick<
 	ProviderSettings,
@@ -38,6 +39,7 @@ interface ModelPickerProps {
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 	organizationAllowList: OrganizationAllowList
+	errorMessage?: string
 }
 
 export const ModelPicker = ({
@@ -49,6 +51,7 @@ export const ModelPicker = ({
 	apiConfiguration,
 	setApiConfigurationField,
 	organizationAllowList,
+	errorMessage,
 }: ModelPickerProps) => {
 	const { t } = useAppTranslation()
 
@@ -177,6 +180,7 @@ export const ModelPicker = ({
 					</PopoverContent>
 				</Popover>
 			</div>
+			{errorMessage && <ApiErrorMessage errorMessage={errorMessage} />}
 			{selectedModelId && selectedModelInfo && (
 				<ModelInfoView
 					apiProvider={apiConfiguration.apiProvider}
