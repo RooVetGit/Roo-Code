@@ -1135,7 +1135,7 @@ export class McpHub {
 			mcpServers: config.mcpServers,
 		}
 
-		await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
+		await safeWriteJson(configPath, updatedConfig)
 	}
 
 	public async updateServerTimeout(
