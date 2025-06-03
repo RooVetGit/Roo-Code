@@ -1,7 +1,7 @@
 services:
   postgres:
     container_name: postgres-evals
-    image: postgres:15.4
+    image: postgres:15.13
     ports:
       - 5432:5432
     volumes:
