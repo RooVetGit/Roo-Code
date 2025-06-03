@@ -122,7 +122,8 @@ export const ModelPicker = ({
 							variant="combobox"
 							role="combobox"
 							aria-expanded={open}
-							className="w-full justify-between">
+							className="w-full justify-between"
+							data-testid="model-picker-button">
 							<div>{selectedModelId ?? t("settings:common.select")}</div>
 							<ChevronsUpDown className="opacity-50" />
 						</Button>
@@ -157,7 +158,11 @@ export const ModelPicker = ({
 								</CommandEmpty>
 								<CommandGroup>
 									{modelIds.map((model) => (
-										<CommandItem key={model} value={model} onSelect={onSelect}>
+										<CommandItem
+											key={model}
+											value={model}
+											onSelect={onSelect}
+											data-testid={`model-option-${model}`}>
 											{model}
 											<Check
 												className={cn(
