@@ -22,7 +22,7 @@ describe("ExecaTerminal", () => {
 			onShellExecutionComplete: vi.fn(),
 		}
 
-		const subprocess = terminal.runCommand("ls -al", callbacks)
+		const subprocess = terminal.runCommand("LANG=C ls -al", callbacks)
 		await subprocess
 
 		expect(callbacks.onLine).toHaveBeenCalled()
