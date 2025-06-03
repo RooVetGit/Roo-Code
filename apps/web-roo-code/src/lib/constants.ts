@@ -1,7 +1,11 @@
 export const EXTERNAL_LINKS = {
-	GITHUB: "https://github.com/RooVetGit/Roo-Code",
+	GITHUB: "https://github.com/RooCodeInc/Roo-Code",
 	DISCORD: "https://discord.gg/roocode",
 	REDDIT: "https://reddit.com/r/RooCode",
+	X: "https://x.com/roo_code",
+	LINKEDIN: "https://www.linkedin.com/company/roo-code",
+	TIKTOK: "https://www.tiktok.com/@roo.code",
+	BLUESKY: "https://bsky.app/profile/roocode.bsky.social",
 	DOCUMENTATION: "https://docs.roocode.com",
 	CAREERS: "https://careers.roocode.com",
 	ISSUES: "https://github.com/RooVetGit/Roo-Code/issues",
