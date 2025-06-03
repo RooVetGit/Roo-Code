@@ -28,7 +28,7 @@ importers:
         version: 9.1.7
       knip:
         specifier: ^5.44.4
-        version: 5.55.1(@types/node@22.15.20)(typescript@5.8.3)
+        version: 5.55.1(@types/node@22.15.29)(typescript@5.8.3)
       lint-staged:
         specifier: ^15.2.11
         version: 15.5.2
@@ -13863,7 +13863,6 @@ snapshots:
   '@types/node@22.15.29':
     dependencies:
       undici-types: 6.21.0
-    optional: true
 
   '@types/parse-json@4.0.2': {}
 
@@ -17564,10 +17563,10 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  knip@5.55.1(@types/node@22.15.20)(typescript@5.8.3):
+  knip@5.55.1(@types/node@22.15.29)(typescript@5.8.3):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
-      '@types/node': 22.15.20
+      '@types/node': 22.15.29
       enhanced-resolve: 5.18.1
       fast-glob: 3.3.3
       formatly: 0.2.3

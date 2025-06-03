@@ -1,11 +1,9 @@
 import * as fs from "fs"
 import * as path from "path"
-import * as os from "os"
 
-import pMap from "p-map"
 import pWaitFor from "p-wait-for"
 import { execa, parseCommandString } from "execa"
-import { build, filesystem, GluegunPrompt, GluegunToolbox } from "gluegun"
+import { build, GluegunToolbox } from "gluegun"
 import psTree from "ps-tree"
 
 import { RooCodeEventName, IpcOrigin, IpcMessageType, TaskCommandName } from "@roo-code/types"
@@ -15,18 +13,14 @@ import {
 	type Run,
 	type Task,
 	findRun,
-	createRun,
 	finishRun,
-	createTask,
 	getTasks,
 	updateTask,
 	createTaskMetrics,
 	updateTaskMetrics,
 	createToolError,
 } from "../db/index.js"
-import { rooCodeDefaults } from "../settings/index.js"
-import { __dirname, extensionDevelopmentPath, exercisesPath } from "../exercises/index.js"
-import { type ExerciseLanguage, exerciseLanguages, getExercises } from "../exercises/exercises.js"
+import { __dirname, extensionDevelopmentPath, exercisesPath, type ExerciseLanguage } from "../exercises/index.js"
 
 type TaskResult = { success: boolean }
 type TaskPromise = Promise<TaskResult>
@@ -44,50 +38,14 @@ const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: num
 }
 
 const run = async (toolbox: GluegunToolbox) => {
-	const { config, prompt } = toolbox
-
-	let { language, exercise } = config
-
-	if (![undefined, ...exerciseLanguages, "all"].includes(language)) {
-		throw new Error(`Language is invalid: ${language}`)
-	}
-
-	if (!["undefined", "string"].includes(typeof exercise)) {
-		throw new Error(`Exercise is invalid: ${exercise}`)
-	}
-
+	const { config } = toolbox
 	const id = config.runId ? Number(config.runId) : undefined
-	let run: Run
 
-	if (id) {
-		run = await findRun(id)
-	} else {
-		run = await createRun({
-			model: rooCodeDefaults.openRouterModelId!,
-			pid: process.pid,
-			socketPath: path.resolve(os.tmpdir(), `roo-code-evals-${crypto.randomUUID().slice(0, 8)}.sock`),
-		})
-
-		if (language === "all") {
-			for (const language of exerciseLanguages) {
-				const exercises = getExercises()[language as ExerciseLanguage]
-
-				await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }), {
-					concurrency: run.concurrency,
-				})
-			}
-		} else if (exercise === "all") {
-			const exercises = getExercises()[language as ExerciseLanguage]
-			await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }), {
-				concurrency: run.concurrency,
-			})
-		} else {
-			language = language || (await askLanguage(prompt))
-			exercise = exercise || (await askExercise(prompt, language))
-			await createTask({ runId: run.id, language, exercise })
-		}
+	if (!id) {
+		throw new Error("Run ID is required.")
 	}
 
+	const run = await findRun(id)
 	const tasks = await getTasks(run.id)
 
 	if (!tasks[0]) {
@@ -99,11 +57,6 @@ const run = async (toolbox: GluegunToolbox) => {
 	await execa({ cwd: exercisesPath })`git checkout -f`
 	await execa({ cwd: exercisesPath })`git clean -fd`
 	await execa({ cwd: exercisesPath })`git checkout -b runs/${run.id}-${crypto.randomUUID().slice(0, 8)} main`
-
-	fs.writeFileSync(
-		path.resolve(exercisesPath, "settings.json"),
-		JSON.stringify({ ...rooCodeDefaults, ...run.settings }, null, 2),
-	)
 
 	const server = new IpcServer(run.socketPath, () => {})
 	server.listen()
@@ -328,7 +281,6 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 				commandName: TaskCommandName.StartNewTask,
 				data: {
 					configuration: {
-						...rooCodeDefaults,
 						openRouterApiKey: process.env.OPENROUTER_API_KEY!,
 						...run.settings,
 					},
@@ -470,34 +422,6 @@ const runUnitTest = async ({ task }: { task: Task }) => {
 	}
 
 	return passed
-}
-
-const askLanguage = async (prompt: GluegunPrompt) => {
-	const { language } = await prompt.ask<{ language: ExerciseLanguage }>({
-		type: "select",
-		name: "language",
-		message: "Which language?",
-		choices: [...exerciseLanguages],
-	})
-
-	return language
-}
-
-const askExercise = async (prompt: GluegunPrompt, language: ExerciseLanguage) => {
-	const exercises = filesystem.subdirectories(path.join(exercisesPath, language))
-
-	if (exercises.length === 0) {
-		throw new Error(`No exercises found for ${language}`)
-	}
-
-	const { exercise } = await prompt.ask<{ exercise: string }>({
-		type: "select",
-		name: "exercise",
-		message: "Which exercise?",
-		choices: exercises.map((exercise) => path.basename(exercise)).filter((exercise) => !exercise.startsWith(".")),
-	})
-
-	return exercise
 }
 
 const main = async () => {

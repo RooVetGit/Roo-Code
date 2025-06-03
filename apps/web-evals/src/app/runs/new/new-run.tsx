@@ -10,7 +10,6 @@ import { toast } from "sonner"
 import { X, Rocket, Check, ChevronsUpDown, SlidersHorizontal, Book, CircleCheck } from "lucide-react"
 
 import { globalSettingsSchema, providerSettingsSchema } from "@roo-code/types"
-import { rooCodeDefaults } from "@roo-code/evals"
 
 import { createRun } from "@/lib/server/runs"
 import {
@@ -52,6 +51,7 @@ import {
 	DialogFooter,
 } from "@/components/ui"
 
+import { rooCodeDefaults } from "./defaults"
 import { SettingsDiff } from "./settings-diff"
 
 export function NewRun() {

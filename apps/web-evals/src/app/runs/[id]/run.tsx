@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { LoaderCircle } from "lucide-react"
 
-import * as db from "@roo-code/evals"
+import type { Run, TaskMetrics as _TaskMetrics } from "@roo-code/evals"
 
 import { formatCurrency, formatDuration, formatTokens } from "@/lib/formatters"
 import { useRunStatus } from "@/hooks/use-run-status"
@@ -12,9 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TaskStatus } from "./task-status"
 import { ConnectionStatus } from "./connection-status"
 
-type TaskMetrics = Pick<db.TaskMetrics, "tokensIn" | "tokensOut" | "tokensContext" | "duration" | "cost">
+type TaskMetrics = Pick<_TaskMetrics, "tokensIn" | "tokensOut" | "tokensContext" | "duration" | "cost">
 
-export function Run({ run }: { run: db.Run }) {
+export function Run({ run }: { run: Run }) {
 	const { tasks, status, tokenUsage, usageUpdatedAt } = useRunStatus(run)
 
 	const taskMetrics: Record<number, TaskMetrics> = useMemo(() => {
