@@ -1,7 +1,7 @@
 import { RecordNotCreatedError } from "./errors.js"
 import type { InsertToolError } from "../schema.js"
 import { toolErrors } from "../schema.js"
-import { db } from "../db.js"
+import { client as db } from "../db.js"
 
 export const createToolError = async (args: InsertToolError) => {
 	const records = await db

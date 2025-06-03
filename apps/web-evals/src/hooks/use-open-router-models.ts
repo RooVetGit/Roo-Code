@@ -1,37 +1,17 @@
 import { z } from "zod"
 import { useQuery } from "@tanstack/react-query"
 
-import type { ModelInfo } from "@roo-code/types"
-
 export const openRouterModelSchema = z.object({
 	id: z.string(),
 	name: z.string(),
-	description: z.string(),
-	created: z.number(),
-	context_length: z.number(),
-	pricing: z.object({
-		prompt: z.string().optional(),
-		completion: z.string().optional(),
-	}),
-	top_provider: z
-		.object({
-			max_completion_tokens: z.number().nullish(),
-		})
-		.optional(),
-	architecture: z
-		.object({
-			modality: z.string(),
-		})
-		.optional(),
 })
 
-export type OpenRouterModel = z.infer<typeof openRouterModelSchema> & { modelInfo: ModelInfo }
+export type OpenRouterModel = z.infer<typeof openRouterModelSchema>
 
 export const getOpenRouterModels = async (): Promise<OpenRouterModel[]> => {
 	const response = await fetch("https://openrouter.ai/api/v1/models")
 
 	if (!response.ok) {
-		console.error("Failed to fetch OpenRouter models")
 		return []
 	}
 
@@ -42,19 +22,11 @@ export const getOpenRouterModels = async (): Promise<OpenRouterModel[]> => {
 		return []
 	}
 
-	return result.data.data
-		.sort((a, b) => a.name.localeCompare(b.name))
-		.map((rawModel) => ({
-			...rawModel,
-			modelInfo: {
-				contextWindow: rawModel.context_length,
-				supportsPromptCache: false,
-			},
-		}))
+	return result.data.data.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export const useOpenRouterModels = () =>
-	useQuery<OpenRouterModel[]>({
+	useQuery({
 		queryKey: ["getOpenRouterModels"],
 		queryFn: getOpenRouterModels,
 	})

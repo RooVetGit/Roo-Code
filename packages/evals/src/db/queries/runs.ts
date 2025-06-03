@@ -5,7 +5,7 @@ import type { ToolUsage } from "@roo-code/types"
 import { RecordNotFoundError, RecordNotCreatedError } from "./errors.js"
 import type { InsertRun, UpdateRun } from "../schema.js"
 import { schema } from "../schema.js"
-import { db } from "../db.js"
+import { client as db } from "../db.js"
 import { createTaskMetrics } from "./taskMetrics.js"
 import { getTasks } from "./tasks.js"
 
@@ -61,8 +61,8 @@ export const finishRun = async (runId: number) => {
 			cacheReads: sum(schema.taskMetrics.cacheReads).mapWith(Number),
 			cost: sum(schema.taskMetrics.cost).mapWith(Number),
 			duration: sum(schema.taskMetrics.duration).mapWith(Number),
-			passed: sql<number>`sum(${schema.tasks.passed} = 1)`,
-			failed: sql<number>`sum(${schema.tasks.passed} = 0)`,
+			passed: sql<number>`sum(CASE WHEN ${schema.tasks.passed} THEN 1 ELSE 0 END)`,
+			failed: sql<number>`sum(CASE WHEN ${schema.tasks.passed} THEN 0 ELSE 1 END)`,
 		})
 		.from(schema.taskMetrics)
 		.innerJoin(schema.tasks, eq(schema.taskMetrics.id, schema.tasks.taskMetricsId))

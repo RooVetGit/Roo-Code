@@ -5,7 +5,7 @@ import type { ExerciseLanguage } from "../../exercises/index.js"
 import { RecordNotFoundError, RecordNotCreatedError } from "./errors.js"
 import type { InsertTask, UpdateTask } from "../schema.js"
 import { tasks } from "../schema.js"
-import { db } from "../db.js"
+import { client as db } from "../db.js"
 
 export const findTask = async (id: number) => {
 	const run = await db.query.tasks.findFirst({ where: eq(tasks.id, id) })
