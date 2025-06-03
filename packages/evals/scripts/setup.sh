@@ -318,19 +318,19 @@ else
   echo "✅ Done"
 fi
 
-if [[ ! -s .env ]]; then
-  cp .env.sample .env || exit 1
+if [[ ! -s .env.local ]]; then
+  touch .env.local || exit 1
 fi
 
 echo -n "🗄️ Syncing Roo Code evals database... "
 pnpm --filter @roo-code/evals db:push --force &>/dev/null || exit 1
 echo "✅ Done"
 
-if ! grep -q "OPENROUTER_API_KEY" .env; then
+if ! grep -q "OPENROUTER_API_KEY" .env.local; then
   read -p "🔐 Enter your OpenRouter API key (sk-or-v1-...): " openrouter_api_key
   echo "🔑 Validating..."
   curl --silent --fail https://openrouter.ai/api/v1/key -H "Authorization: Bearer $openrouter_api_key" &>/dev/null || exit 1
-  echo "OPENROUTER_API_KEY=$openrouter_api_key" >> .env || exit 1
+  echo "OPENROUTER_API_KEY=$openrouter_api_key" >> .env.local || exit 1
 fi
 
 current_version=$(code --list-extensions --show-versions 2>/dev/null | grep roo)
@@ -346,9 +346,9 @@ if ! nc -z localhost 3000; then
   read -p "🌐 Would you like to start the evals web app? (Y/n): " start_evals
 
   if [[ "$start_evals" =~ ^[Yy]|^$ ]]; then
-    pnpm web
+    pnpm --filter @roo-code/web-evals dev
   else
-    echo "💡 You can start it anytime with 'pnpm web'."
+    echo "💡 You can start it anytime with 'pnpm --filter @roo-code/web-evals dev'."
   fi
 else
   echo "👟 The evals web app is running at http://localhost:3000"

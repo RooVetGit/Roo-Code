@@ -7,7 +7,6 @@ RUN npm install -g npm-run-all
 # Install dependencies
 RUN apt update && apt install -y sudo curl git vim jq
 
-
 # Create a `vscode` user
 RUN useradd -m vscode -s /bin/bash && \
   echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode && \
@@ -72,7 +71,7 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
  COPY --chown=vscode:vscode ./evals/.env ./
 
  # Push database schema
- RUN pnpm --filter @roo-code/evals db:push
+ RUN pnpm --filter @roo-code/evals db:push --force
 
  EXPOSE 3000
  CMD ["pnpm", "web"]

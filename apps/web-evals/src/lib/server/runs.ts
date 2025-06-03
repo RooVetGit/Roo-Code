@@ -56,15 +56,11 @@ export async function createRun({ suite, exercises = [], systemPrompt, ...values
 			? { ...process.env, FOOTGUN_SYSTEM_PROMPT: systemPrompt }
 			: process.env
 
-		const childProcess = spawn(
-			"pnpm",
-			["--filter", "@roo-code/evals", "dev", "run", "all", "--runId", run.id.toString()],
-			{
-				detached: true,
-				stdio: ["ignore", logFile, logFile],
-				env,
-			},
-		)
+		const childProcess = spawn("pnpm", ["--filter", "@roo-code/evals", "cli", run.id.toString()], {
+			detached: true,
+			stdio: ["ignore", logFile, logFile],
+			env,
+		})
 
 		childProcess.unref()
 		await _updateRun(run.id, { pid: childProcess.pid })

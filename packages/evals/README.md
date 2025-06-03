@@ -14,7 +14,7 @@ cd Roo-Code
 Run the setup script:
 
 ```sh
-cd evals
+cd packages/evals
 ./scripts/setup.sh
 ```
 
