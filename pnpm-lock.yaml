@@ -506,6 +506,9 @@ importers:
       axios:
         specifier: ^1.7.4
         version: 1.9.0
+      chardet:
+        specifier: ^2.1.0
+        version: 2.1.0
       cheerio:
         specifier: ^1.0.0
         version: 1.0.0
@@ -548,6 +551,9 @@ importers:
       i18next:
         specifier: ^24.2.2
         version: 24.2.3(typescript@5.8.3)
+      iconv-lite:
+        specifier: ^0.6.3
+        version: 0.6.3
       ignore:
         specifier: ^7.0.3
         version: 7.0.4
@@ -4778,6 +4784,9 @@ packages:
 
   chardet@0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
+
+  chardet@2.1.0:
+    resolution: {integrity: sha512-bNFETTG/pM5ryzQ9Ad0lJOTa6HWD/YsScAR3EnCPZRPlQh77JocYktSHOUHelyhm8IARL+o4c4F1bP5KVOjiRA==}
 
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
@@ -14579,6 +14588,8 @@ snapshots:
   character-reference-invalid@2.0.1: {}
 
   chardet@0.7.0: {}
+
+  chardet@2.1.0: {}
 
   check-error@2.1.1: {}
 

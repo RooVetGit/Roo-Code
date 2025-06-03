@@ -1,5 +1,5 @@
 import delay from "delay"
-import fs from "fs/promises"
+import { readFileSmart } from "../../integrations/misc/readFileWithEncoding"
 import path from "path"
 
 import { getReadablePath } from "../../utils/path"
@@ -89,7 +89,7 @@ export async function insertContentTool(
 		cline.consecutiveMistakeCount = 0
 
 		// Read the file
-		const fileContent = await fs.readFile(absolutePath, "utf8")
+		const fileContent = await readFileSmart(absolutePath)
 		cline.diffViewProvider.editType = "modify"
 		cline.diffViewProvider.originalContent = fileContent
 		const lines = fileContent.split("\n")
