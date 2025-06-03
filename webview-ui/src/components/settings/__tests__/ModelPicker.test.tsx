@@ -73,7 +73,7 @@ describe("ModelPicker", () => {
 
 		await act(async () => {
 			// Open the popover by clicking the button.
-			const button = screen.getByRole("combobox")
+			const button = screen.getByTestId("model-picker-button")
 			fireEvent.click(button)
 		})
 
@@ -91,7 +91,7 @@ describe("ModelPicker", () => {
 		// Need to find and click the CommandItem to trigger onSelect
 		await act(async () => {
 			// Find the CommandItem for model2 and click it
-			const modelItem = screen.getByText("model2")
+			const modelItem = screen.getByTestId("model-option-model2")
 			fireEvent.click(modelItem)
 		})
 
@@ -104,7 +104,7 @@ describe("ModelPicker", () => {
 
 		await act(async () => {
 			// Open the popover by clicking the button.
-			const button = screen.getByRole("combobox")
+			const button = screen.getByTestId("model-picker-button")
 			fireEvent.click(button)
 		})
 
@@ -154,6 +154,7 @@ describe("ModelPicker", () => {
 			})
 
 			// Check that the error message is displayed
+			expect(screen.getByTestId("api-error-message")).toBeInTheDocument()
 			expect(screen.getByText(errorMessage)).toBeInTheDocument()
 		})
 
@@ -180,13 +181,13 @@ describe("ModelPicker", () => {
 			})
 
 			// Check that both the model selector and error message are present
-			const modelSelector = screen.getByRole("combobox")
+			const modelSelector = screen.getByTestId("model-picker-button")
+			const errorContainer = screen.getByTestId("api-error-message")
 			const errorElement = screen.getByText(errorMessage)
 
 			expect(modelSelector).toBeInTheDocument()
+			expect(errorContainer).toBeInTheDocument()
 			expect(errorElement).toBeInTheDocument()
-
-			// Verify the error message is rendered (positioning is handled by CSS)
 			expect(errorElement).toBeVisible()
 		})
 
@@ -201,6 +202,7 @@ describe("ModelPicker", () => {
 			)
 
 			// Check initial error is displayed
+			expect(screen.getByTestId("api-error-message")).toBeInTheDocument()
 			expect(screen.getByText(initialError)).toBeInTheDocument()
 
 			// Update the error message
@@ -211,6 +213,7 @@ describe("ModelPicker", () => {
 			)
 
 			// Check that the error message has been updated
+			expect(screen.getByTestId("api-error-message")).toBeInTheDocument()
 			expect(screen.queryByText(initialError)).not.toBeInTheDocument()
 			expect(screen.getByText(updatedError)).toBeInTheDocument()
 		})
@@ -225,6 +228,7 @@ describe("ModelPicker", () => {
 			)
 
 			// Check error is initially displayed
+			expect(screen.getByTestId("api-error-message")).toBeInTheDocument()
 			expect(screen.getByText(errorMessage)).toBeInTheDocument()
 
 			// Remove the error message
@@ -235,6 +239,7 @@ describe("ModelPicker", () => {
 			)
 
 			// Check that the error message has been removed
+			expect(screen.queryByTestId("api-error-message")).not.toBeInTheDocument()
 			expect(screen.queryByText(errorMessage)).not.toBeInTheDocument()
 		})
 	})
