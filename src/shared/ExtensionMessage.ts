@@ -7,6 +7,8 @@ import type {
 	TelemetrySetting,
 	ExperimentId,
 	ClineMessage,
+	OrganizationAllowList,
+	CloudUserInfo,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -65,6 +67,7 @@ export interface ExtensionMessage {
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
+		| "authenticatedUser"
 		| "condenseTaskContextResponse"
 		| "singleRouterModelFetchResponse"
 		| "indexingStatusUpdate"
@@ -77,6 +80,7 @@ export interface ExtensionMessage {
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "accountButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
@@ -108,6 +112,8 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	userInfo?: CloudUserInfo
+	organizationAllowList?: OrganizationAllowList
 }
 
 export type ExtensionState = Pick<
@@ -147,6 +153,7 @@ export type ExtensionState = Pick<
 	// | "maxWorkspaceFiles" // Optional in GlobalSettings, required here.
 	// | "showRooIgnoredFiles" // Optional in GlobalSettings, required here.
 	// | "maxReadFileLine" // Optional in GlobalSettings, required here.
+	| "maxConcurrentFileReads" // Optional in GlobalSettings, required here.
 	| "terminalOutputLineLimit"
 	| "terminalShellIntegrationTimeout"
 	| "terminalShellIntegrationDisabled"
@@ -210,6 +217,12 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
+
+	cloudUserInfo: CloudUserInfo | null
+	cloudIsAuthenticated: boolean
+	organizationAllowList: OrganizationAllowList
+
+	autoCondenseContext: boolean
 	autoCondenseContextPercent: number
 }
 
@@ -238,6 +251,7 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	additionalFileCount?: number // Number of additional files in the same read_file request
 	search?: string
 	replace?: string
 	useRegex?: boolean
@@ -246,6 +260,13 @@ export interface ClineSayTool {
 	endLine?: number
 	lineNumber?: number
 	query?: string
+	batchFiles?: Array<{
+		path: string
+		lineSnippet: string
+		isOutsideWorkspace?: boolean
+		key: string
+	}>
+	question?: string
 }
 
 // Must keep in sync with system prompt.

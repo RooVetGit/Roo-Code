@@ -149,7 +149,9 @@
 		"didSearchReplace": "已完成搜索和替换:",
 		"wantsToInsert": "需要在此文件中插入内容:",
 		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
-		"wantsToInsertAtEnd": "需要在文件末尾添加内容:"
+		"wantsToInsertAtEnd": "需要在文件末尾添加内容:",
+		"wantsToReadAndXMore": "Roo 想读取此文件以及另外 {{count}} 个文件：",
+		"wantsToReadMultiple": "Roo 想要读取多个文件："
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "需要查看目录文件列表:",
@@ -202,6 +204,7 @@
 	"contextCondense": {
 		"title": "上下文已压缩",
 		"condensing": "正在压缩上下文...",
+		"errorHeader": "上下文压缩失败",
 		"tokens": "tokens"
 	},
 	"followUpSuggest": {
@@ -211,9 +214,9 @@
 		"title": "🎉 Roo Code {{version}} 已发布",
 		"description": "Roo Code {{version}} 带来基于您反馈的强大新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>Gemini 2.5 Flash 预览模型</bold>: 访问最新的 Gemini Flash 模型，获得更快速高效的响应",
-		"feature2": "<bold>智能上下文压缩</bold>: 任务标题中的新按钮让您能够智能压缩内容并提供可视化反馈",
-		"feature3": "<bold>模式定义的 YAML 支持</bold>: 通过 YAML 支持更轻松地创建和自定义模式",
+		"feature1": "<bold>智能上下文压缩默认启用</bold>: 上下文压缩现已默认启用，并提供可配置的自动压缩触发设置",
+		"feature2": "<bold>手动压缩按钮</bold>: 任务标题中的新按钮让您随时手动触发上下文压缩",
+		"feature3": "<bold>高级压缩设置</bold>: 通过<contextSettingsLink>上下文设置</contextSettingsLink>精确控制自动压缩的时机和方式",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
@@ -249,6 +252,7 @@
 		}
 	},
 	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
+	"profileViolationWarning": "当前配置文件违反了您的组织设置",
 	"shellIntegration": {
 		"title": "命令执行警告",
 		"description": "您的命令正在没有 VSCode 终端 shell 集成的情况下执行。要隐藏此警告，您可以在 <settingsLink>Roo Code 设置</settingsLink>的 <strong>Terminal</strong> 部分禁用 shell 集成，或使用下方链接排查 VSCode 终端集成问题。",
@@ -265,5 +269,13 @@
 		"wantsToSearch": "Roo 需要搜索代码库: <code>{{query}}</code>",
 		"wantsToSearchWithPath": "Roo 需要在 <code>{{path}}</code> 中搜索: <code>{{query}}</code>",
 		"didSearch": "找到 {{count}} 个结果: <code>{{query}}</code>"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "全部批准"
+		},
+		"deny": {
+			"title": "全部拒绝"
+		}
 	}
 }

@@ -10,25 +10,26 @@ import {
 import { fromIni } from "@aws-sdk/credential-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import type { ModelInfo, ProviderSettings } from "@roo-code/types"
-
 import {
-	BedrockModelId,
+	type ModelInfo,
+	type ProviderSettings,
+	type BedrockModelId,
 	bedrockDefaultModelId,
 	bedrockModels,
 	bedrockDefaultPromptRouterModelId,
-} from "../../shared/api"
+	BEDROCK_DEFAULT_TEMPERATURE,
+	BEDROCK_MAX_TOKENS,
+	BEDROCK_DEFAULT_CONTEXT,
+	BEDROCK_REGION_INFO,
+} from "@roo-code/types"
+
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { logger } from "../../utils/logging"
 import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-strategy"
 import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
-import { AMAZON_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
 import { convertToBedrockConverseMessages as sharedConverter } from "../transform/bedrock-converse-format"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
-
-const BEDROCK_DEFAULT_TEMPERATURE = 0.3
-const BEDROCK_MAX_TOKENS = 4096
 
 /************************************************************************************
  *
@@ -124,7 +125,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		let region = this.options.awsRegion
 
 		// process the various user input options, be opinionated about the intent of the options
-		// and determine the model to use during inference and for cost caclulations
+		// and determine the model to use during inference and for cost calculations
 		// There are variations on ARN strings that can be entered making the conditional logic
 		// more involved than the non-ARN branch of logic
 		if (this.options.awsCustomArn) {
@@ -169,6 +170,9 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		const clientConfig: BedrockRuntimeClientConfig = {
 			region: this.options.awsRegion,
+			// Add the endpoint configuration when specified and enabled
+			...(this.options.awsBedrockEndpoint &&
+				this.options.awsBedrockEndpointEnabled && { endpoint: this.options.awsBedrockEndpoint }),
 		}
 
 		if (this.options.awsUseProfile && this.options.awsProfile) {
@@ -187,6 +191,65 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		this.client = new BedrockRuntimeClient(clientConfig)
+	}
+
+	// Helper to guess model info from custom modelId string if not in bedrockModels
+	private guessModelInfoFromId(modelId: string): Partial<ModelInfo> {
+		// Define a mapping for model ID patterns and their configurations
+		const modelConfigMap: Record<string, Partial<ModelInfo>> = {
+			"claude-4": {
+				maxTokens: 8192,
+				contextWindow: 200_000,
+				supportsImages: true,
+				supportsPromptCache: true,
+			},
+			"claude-3-7": {
+				maxTokens: 8192,
+				contextWindow: 200_000,
+				supportsImages: true,
+				supportsPromptCache: true,
+			},
+			"claude-3-5": {
+				maxTokens: 8192,
+				contextWindow: 200_000,
+				supportsImages: true,
+				supportsPromptCache: true,
+			},
+			"claude-4-opus": {
+				maxTokens: 4096,
+				contextWindow: 200_000,
+				supportsImages: true,
+				supportsPromptCache: true,
+			},
+			"claude-3-opus": {
+				maxTokens: 4096,
+				contextWindow: 200_000,
+				supportsImages: true,
+				supportsPromptCache: true,
+			},
+			"claude-3-haiku": {
+				maxTokens: 4096,
+				contextWindow: 200_000,
+				supportsImages: true,
+				supportsPromptCache: true,
+			},
+		}
+
+		// Match the model ID to a configuration
+		const id = modelId.toLowerCase()
+		for (const [pattern, config] of Object.entries(modelConfigMap)) {
+			if (id.includes(pattern)) {
+				return config
+			}
+		}
+
+		// Default fallback
+		return {
+			maxTokens: BEDROCK_MAX_TOKENS,
+			contextWindow: BEDROCK_DEFAULT_CONTEXT,
+			supportsImages: false,
+			supportsPromptCache: false,
+		}
 	}
 
 	override async *createMessage(
@@ -637,15 +700,23 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				info: JSON.parse(JSON.stringify(bedrockModels[bedrockDefaultPromptRouterModelId])),
 			}
 		} else {
+			// Use heuristics for model info, then allow overrides from ProviderSettings
+			const guessed = this.guessModelInfoFromId(modelId)
 			model = {
 				id: bedrockDefaultModelId,
-				info: JSON.parse(JSON.stringify(bedrockModels[bedrockDefaultModelId])),
+				info: {
+					...JSON.parse(JSON.stringify(bedrockModels[bedrockDefaultModelId])),
+					...guessed,
+				},
 			}
 		}
 
-		// If modelMaxTokens is explicitly set in options, override the default
+		// Always allow user to override detected/guessed maxTokens and contextWindow
 		if (this.options.modelMaxTokens && this.options.modelMaxTokens > 0) {
 			model.info.maxTokens = this.options.modelMaxTokens
+		}
+		if (this.options.awsModelContextWindow && this.options.awsModelContextWindow > 0) {
+			model.info.contextWindow = this.options.awsModelContextWindow
 		}
 
 		return model
@@ -681,8 +752,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			}
 		}
 
-		modelConfig.info.maxTokens = modelConfig.info.maxTokens || BEDROCK_MAX_TOKENS
-
+		// Don't override maxTokens/contextWindow here; handled in getModelById (and includes user overrides)
 		return modelConfig as { id: BedrockModelId | string; info: ModelInfo }
 	}
 
@@ -729,11 +799,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	 *************************************************************************************/
 
 	private static getPrefixList(): string[] {
-		return Object.keys(AMAZON_BEDROCK_REGION_INFO)
+		return Object.keys(BEDROCK_REGION_INFO)
 	}
 
 	private static getPrefixForRegion(region: string): string | undefined {
-		for (const [prefix, info] of Object.entries(AMAZON_BEDROCK_REGION_INFO)) {
+		for (const [prefix, info] of Object.entries(BEDROCK_REGION_INFO)) {
 			if (info.pattern && region.startsWith(info.pattern)) {
 				return prefix
 			}
@@ -742,7 +812,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	private static prefixIsMultiRegion(arnPrefix: string): boolean {
-		for (const [prefix, info] of Object.entries(AMAZON_BEDROCK_REGION_INFO)) {
+		for (const [prefix, info] of Object.entries(BEDROCK_REGION_INFO)) {
 			if (arnPrefix === prefix) {
 				if (info?.multiRegion) return info.multiRegion
 				else return false

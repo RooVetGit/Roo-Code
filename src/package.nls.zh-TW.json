@@ -16,8 +16,9 @@
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
+	"views.sidebar.name": "Roo Code",
 	"command.mcpServers.title": "MCP 伺服器",
-	"command.prompts.title": "提示",
+	"command.prompts.title": "模式",
 	"command.history.title": "歷史記錄",
 	"command.openInEditor.title": "在編輯器中開啟",
 	"command.settings.title": "設定",
@@ -27,5 +28,6 @@
 	"settings.vsCodeLmModelSelector.description": "VSCode 語言模型 API 的設定",
 	"settings.vsCodeLmModelSelector.vendor.description": "語言模型供應商（例如：copilot）",
 	"settings.vsCodeLmModelSelector.family.description": "語言模型系列（例如：gpt-4）",
-	"settings.customStoragePath.description": "自訂儲存路徑。留空以使用預設位置。支援絕對路徑（例如：'D:\\RooCodeStorage'）"
+	"settings.customStoragePath.description": "自訂儲存路徑。留空以使用預設位置。支援絕對路徑（例如：'D:\\RooCodeStorage'）",
+	"settings.rooCodeCloudEnabled.description": "啟用 Roo Code Cloud。"
 }

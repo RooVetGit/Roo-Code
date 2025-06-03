@@ -12,7 +12,11 @@ try {
 	console.warn("Failed to load environment variables:", e)
 }
 
+import { CloudService } from "@roo-code/cloud"
+import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
+
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
+import { createOutputChannelLogger, createDualLogger } from "./utils/outputChannelLogger"
 
 import { Package } from "./shared/package"
 import { formatLanguage } from "./shared/language"
@@ -21,7 +25,6 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
-import { telemetryService } from "./services/telemetry/TelemetryService"
 import { CodeIndexManager } from "./services/code-index/manager"
 import { migrateSettings } from "./utils/migrateSettings"
 import { API } from "./extension/api"
@@ -57,8 +60,23 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
-	// Initialize telemetry service after environment variables are loaded.
-	telemetryService.initialize(context)
+	// Initialize telemetry service.
+	const telemetryService = TelemetryService.createInstance()
+
+	try {
+		telemetryService.register(new PostHogTelemetryClient())
+	} catch (error) {
+		console.warn("Failed to register PostHogTelemetryClient:", error)
+	}
+
+	// Create logger for cloud services
+	const cloudLogger = createDualLogger(createOutputChannelLogger(outputChannel))
+
+	// Initialize Roo Code Cloud service.
+	await CloudService.createInstance(context, {
+		stateChanged: () => ClineProvider.getVisibleInstance()?.postStateToWebview(),
+		log: cloudLogger,
+	})
 
 	// Initialize i18n for internationalization support
 	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
@@ -86,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
-	telemetryService.setProvider(provider)
+	TelemetryService.instance.setProvider(provider)
 
 	if (codeIndexManager) {
 		context.subscriptions.push(codeIndexManager)
@@ -147,18 +165,29 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Watch the core files and automatically reload the extension host.
 	if (process.env.NODE_ENV === "development") {
-		console.log(`♻️♻️♻️ Core auto-reloading is ENABLED! Watching for changes in ${context.extensionPath}/**/*.ts`)
+		const pattern = "**/*.ts"
 
-		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(context.extensionPath, "**/*.ts"),
+		const watchPaths = [
+			{ path: context.extensionPath, name: "extension" },
+			{ path: path.join(context.extensionPath, "../packages/types"), name: "types" },
+			{ path: path.join(context.extensionPath, "../packages/telemetry"), name: "telemetry" },
+			{ path: path.join(context.extensionPath, "../packages/cloud"), name: "cloud" },
+		]
+
+		console.log(
+			`♻️♻️♻️ Core auto-reloading is ENABLED. Watching for changes in: ${watchPaths.map(({ name }) => name).join(", ")}`,
 		)
 
-		watcher.onDidChange((uri) => {
-			console.log(`♻️ File changed: ${uri.fsPath}. Reloading host…`)
-			vscode.commands.executeCommand("workbench.action.reloadWindow")
-		})
+		watchPaths.forEach(({ path: watchPath, name }) => {
+			const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(watchPath, pattern))
 
-		context.subscriptions.push(watcher)
+			watcher.onDidChange((uri) => {
+				console.log(`♻️ ${name} file changed: ${uri.fsPath}. Reloading host…`)
+				vscode.commands.executeCommand("workbench.action.reloadWindow")
+			})
+
+			context.subscriptions.push(watcher)
+		})
 	}
 
 	return new API(outputChannel, provider, socketPath, enableLogging)
@@ -168,6 +197,6 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
 	await McpServerManager.cleanup(extensionContext)
-	telemetryService.shutdown()
+	TelemetryService.instance.shutdown()
 	TerminalRegistry.cleanup()
 }
