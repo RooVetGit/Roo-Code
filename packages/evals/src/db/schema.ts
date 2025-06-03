@@ -1,9 +1,9 @@
 import { pgTable, text, timestamp, integer, real, boolean, jsonb, uniqueIndex } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 
-import { type RooCodeSettings, ToolName, type ToolUsage, toolNames } from "@roo-code/types"
+import type { RooCodeSettings, ToolName, ToolUsage } from "@roo-code/types"
 
-import { type ExerciseLanguage, exerciseLanguages } from "../exercises/index.js"
+import type { ExerciseLanguage } from "../exercises/index.js"
 
 /**
  * runs
@@ -45,7 +45,7 @@ export const tasks = pgTable(
 			.references(() => runs.id)
 			.notNull(),
 		taskMetricsId: integer("task_metrics_id").references(() => taskMetrics.id),
-		language: text({ enum: exerciseLanguages }).notNull().$type<ExerciseLanguage>(),
+		language: text().notNull().$type<ExerciseLanguage>(),
 		exercise: text().notNull(),
 		passed: boolean(),
 		startedAt: timestamp("started_at"),
@@ -97,7 +97,7 @@ export const toolErrors = pgTable("toolErrors", {
 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
 	runId: integer("run_id").references(() => runs.id),
 	taskId: integer("task_id").references(() => tasks.id),
-	toolName: text("tool_name", { enum: toolNames }).notNull().$type<ToolName>(),
+	toolName: text("tool_name").notNull().$type<ToolName>(),
 	error: text().notNull(),
 	createdAt: timestamp("created_at").notNull(),
 })

@@ -3,7 +3,7 @@ import * as path from "path"
 
 import pWaitFor from "p-wait-for"
 import { execa, parseCommandString } from "execa"
-import { build, GluegunToolbox } from "gluegun"
+import { command, run, number, positional } from "cmd-ts"
 import psTree from "ps-tree"
 
 import { RooCodeEventName, IpcOrigin, IpcMessageType, TaskCommandName } from "@roo-code/types"
@@ -20,7 +20,7 @@ import {
 	updateTaskMetrics,
 	createToolError,
 } from "../db/index.js"
-import { __dirname, extensionDevelopmentPath, exercisesPath, type ExerciseLanguage } from "../exercises/index.js"
+import { type ExerciseLanguage, exercisesPath } from "../exercises/index.js"
 
 type TaskResult = { success: boolean }
 type TaskPromise = Promise<TaskResult>
@@ -37,14 +37,7 @@ const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: num
 	rust: { commands: ["cargo test"] }, // timeout 15s bash -c "cd '$dir' && cargo test > /dev/null 2>&1"
 }
 
-const run = async (toolbox: GluegunToolbox) => {
-	const { config } = toolbox
-	const id = config.runId ? Number(config.runId) : undefined
-
-	if (!id) {
-		throw new Error("Run ID is required.")
-	}
-
+const runEvals = async (id: number) => {
 	const run = await findRun(id)
 	const tasks = await getTasks(run.id)
 
@@ -425,41 +418,21 @@ const runUnitTest = async ({ task }: { task: Task }) => {
 }
 
 const main = async () => {
-	const cli = build()
-		.brand("cli")
-		.src(__dirname)
-		.help()
-		.version()
-		.command({
-			name: "run",
-			description: "Run an eval",
-			run: ({ config, parameters }) => {
-				config.language = parameters.first
-				config.exercise = parameters.second
-
-				if (parameters.options["runId"]) {
-					config.runId = parameters.options["runId"]
-				}
+	const result = await run(
+		command({
+			name: "cli",
+			description: "Execute an eval run.",
+			version: "0.0.0",
+			args: {
+				runId: positional({ type: number, displayName: "runId" }),
 			},
-		})
-		.defaultCommand()
-		.create()
+			handler: (args) => runEvals(args.runId),
+		}),
+		process.argv.slice(2),
+	)
 
-	const toolbox = await cli.run(process.argv)
-	const { command } = toolbox
-
-	switch (command?.name) {
-		case "run":
-			await run(toolbox)
-			break
-	}
-
+	console.log(result)
 	process.exit(0)
-}
-
-if (!fs.existsSync(extensionDevelopmentPath)) {
-	console.error(`"extensionDevelopmentPath" does not exist.`)
-	process.exit(1)
 }
 
 if (!fs.existsSync(exercisesPath)) {
