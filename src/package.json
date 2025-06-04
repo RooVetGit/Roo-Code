@@ -11,7 +11,7 @@
 	},
 	"engines": {
 		"vscode": "^1.84.0",
-		"node": "20.19.2"
+		"node": "22.16.0"
 	},
 	"author": {
 		"name": "Roo Code"
@@ -433,7 +433,7 @@
 		"@types/glob": "^8.1.0",
 		"@types/jest": "^29.5.14",
 		"@types/mocha": "^10.0.10",
-		"@types/node": "20.x",
+		"@types/node": "22.x",
 		"@types/node-cache": "^4.1.3",
 		"@types/node-ipc": "^9.2.3",
 		"@types/ps-tree": "^1.1.6",
