@@ -1,0 +1,52 @@
+import { ModelInfo, lMStudioDefaultModelInfo } from "@roo-code/types"
+import { LLMInfo, LMStudioClient } from "@lmstudio/sdk"
+import axios from "axios"
+
+export const parseLMStudioModel = (rawModel: LLMInfo): ModelInfo => {
+	const modelInfo: ModelInfo = Object.assign({}, lMStudioDefaultModelInfo, {
+		description: `${rawModel.displayName} - ${rawModel.paramsString} - ${rawModel.path}`,
+		contextWindow: rawModel.maxContextLength,
+		supportsPromptCache: true,
+		supportsImages: rawModel.vision,
+		supportsComputerUse: false,
+		maxTokens: rawModel.maxContextLength,
+	})
+
+	return modelInfo
+}
+
+export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Promise<Record<string, ModelInfo>> {
+	// clearing the input can leave an empty string; use the default in that case
+	baseUrl = baseUrl === "" ? "http://localhost:1234" : baseUrl
+
+	const models: Record<string, ModelInfo> = {}
+	// ws is required to connect using the LMStudio library
+	const lmsUrl = baseUrl.replace(/^http:\/\//, "ws://").replace(/^https:\/\//, "wss://")
+
+	try {
+		if (!URL.canParse(lmsUrl)) {
+			return models
+		}
+
+		// test the connection to LM Studio first
+		// errors will be caught further down
+		await axios.get(`${baseUrl}/v1/models`)
+
+		const client = new LMStudioClient({ baseUrl: lmsUrl })
+		const response = (await client.system.listDownloadedModels()) as Array<LLMInfo>
+
+		for (const lmstudioModel of response) {
+			models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)
+		}
+	} catch (error) {
+		if (error.code === "ECONNREFUSED") {
+			console.error(`Error connecting to LMStudio at ${baseUrl}`)
+		} else {
+			console.error(
+				`Error fetching LMStudio models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+			)
+		}
+	}
+
+	return models
+}
