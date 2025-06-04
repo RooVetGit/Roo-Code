@@ -148,6 +148,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexEmbedderProvider: z.literal("openai-compatible"),
 				codebaseIndexOpenAiCompatibleBaseUrl: z.string().url("Base URL must be a valid URL"),
 				codebaseIndexOpenAiCompatibleApiKey: z.string().min(1, "API key is required"),
+				codebaseIndexOpenAiCompatibleModelDimension: z
+					.number()
+					.int("Dimension must be an integer")
+					.positive("Dimension must be a positive number")
+					.optional(),
 			}),
 		}
 
@@ -164,6 +169,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codeIndexOpenAiKey: apiConfig.codeIndexOpenAiKey,
 				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
+				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
 			})
 			return true
 		} catch {
@@ -333,30 +339,20 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
 									}
 									onInput={(e: any) => {
-										const currentFullValue = (e.target as HTMLInputElement).value
-										if (currentFullValue === "") {
+										const value = e.target.value
+										if (value === "") {
 											setApiConfigurationField(
 												"codebaseIndexOpenAiCompatibleModelDimension",
 												undefined,
 											)
 										} else {
-											const parsedValue = parseInt(currentFullValue, 10)
-											// Ensure it's a positive integer and the input string is a clean representation of that number.
-											// e.g., "123" is valid, "0123" becomes 123 but String(123) !== "0123" (this depends on desired strictness for leading zeros)
-											// For now, we'll be strict: the string must exactly match the parsed positive number.
-											if (
-												!isNaN(parsedValue) &&
-												parsedValue > 0 &&
-												String(parsedValue) === currentFullValue
-											) {
+											const parsedValue = parseInt(value, 10)
+											if (!isNaN(parsedValue)) {
 												setApiConfigurationField(
 													"codebaseIndexOpenAiCompatibleModelDimension",
 													parsedValue,
 												)
 											}
-											// If input is invalid (e.g., "abc", "-5", "123xyz", "0"), do not update the state.
-											// The VSCodeTextField might visually show the invalid input temporarily,
-											// but the underlying state (and thus the 'value' prop on next render) won't reflect it.
 										}
 									}}
 									placeholder={t("settings:codeIndex.openaiCompatibleModelDimensionPlaceholder")}
