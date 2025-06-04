@@ -329,38 +329,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									}
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
-							<div className="flex items-center gap-4 font-bold">
-								<div>{t("settings:codeIndex.openaiCompatibleModelDimensionLabel")}</div>
-							</div>
-							<div>
-								<VSCodeTextField
-									type="text"
-									value={
-										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
-									}
-									onInput={(e: any) => {
-										const value = e.target.value
-										if (value === "") {
-											setApiConfigurationField(
-												"codebaseIndexOpenAiCompatibleModelDimension",
-												undefined,
-											)
-										} else {
-											const parsedValue = parseInt(value, 10)
-											if (!isNaN(parsedValue)) {
-												setApiConfigurationField(
-													"codebaseIndexOpenAiCompatibleModelDimension",
-													parsedValue,
-												)
-											}
-										}
-									}}
-									placeholder={t("settings:codeIndex.openaiCompatibleModelDimensionPlaceholder")}
-									style={{ width: "100%" }}></VSCodeTextField>
-								<p className="text-vscode-descriptionForeground text-sm mt-1">
-									{t("settings:codeIndex.openaiCompatibleModelDimensionDescription")}
-								</p>
-							</div>
 						</div>
 					)}
 
@@ -403,6 +371,43 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							)}
 						</div>
 					</div>
+
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" && (
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.openaiCompatibleModelDimensionLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									type="text"
+									value={
+										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
+									}
+									onInput={(e: any) => {
+										const value = e.target.value
+										if (value === "") {
+											setApiConfigurationField(
+												"codebaseIndexOpenAiCompatibleModelDimension",
+												undefined,
+											)
+										} else {
+											const parsedValue = parseInt(value, 10)
+											if (!isNaN(parsedValue)) {
+												setApiConfigurationField(
+													"codebaseIndexOpenAiCompatibleModelDimension",
+													parsedValue,
+												)
+											}
+										}
+									}}
+									placeholder={t("settings:codeIndex.openaiCompatibleModelDimensionPlaceholder")}
+									style={{ width: "100%" }}></VSCodeTextField>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:codeIndex.openaiCompatibleModelDimensionDescription")}
+								</p>
+							</div>
+						</div>
+					)}
 
 					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
 						<div className="flex flex-col gap-3">
