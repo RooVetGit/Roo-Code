@@ -6,6 +6,7 @@ import {
 	MAX_BATCH_RETRIES as MAX_RETRIES,
 	INITIAL_RETRY_DELAY_MS as INITIAL_DELAY_MS,
 } from "../constants"
+import { getDefaultModelId } from "../../../shared/embeddingModels"
 
 /**
  * OpenAI Compatible implementation of the embedder interface with batching and rate limiting.
@@ -33,7 +34,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			baseURL: baseUrl,
 			apiKey: apiKey,
 		})
-		this.defaultModelId = modelId || "text-embedding-3-small"
+		this.defaultModelId = modelId || getDefaultModelId("openai-compatible")
 	}
 
 	/**
