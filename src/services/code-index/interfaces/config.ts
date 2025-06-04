@@ -11,7 +11,7 @@ export interface CodeIndexConfig {
 	modelId?: string
 	openAiOptions?: ApiHandlerOptions
 	ollamaOptions?: ApiHandlerOptions
-	openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
+	openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number }
 	qdrantUrl?: string
 	qdrantApiKey?: string
 	searchMinScore?: number
@@ -29,6 +29,7 @@ export type PreviousConfigSnapshot = {
 	ollamaBaseUrl?: string
 	openAiCompatibleBaseUrl?: string
 	openAiCompatibleApiKey?: string
+	openAiCompatibleModelDimension?: number
 	qdrantUrl?: string
 	qdrantApiKey?: string
 }

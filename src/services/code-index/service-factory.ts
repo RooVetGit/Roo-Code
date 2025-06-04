@@ -52,6 +52,7 @@ export class CodeIndexServiceFactory {
 				config.openAiCompatibleOptions.baseUrl,
 				config.openAiCompatibleOptions.apiKey,
 				config.modelId,
+				config.openAiCompatibleOptions.modelDimension, // Pass the dimension
 			)
 		}
 
@@ -69,12 +70,27 @@ export class CodeIndexServiceFactory {
 		// Use the embedding model ID from config, not the chat model IDs
 		const modelId = config.modelId ?? defaultModel
 
-		const vectorSize = getModelDimension(provider, modelId)
+		let vectorSize: number | undefined
+
+		if (provider === "openai-compatible") {
+			if (config.openAiCompatibleOptions?.modelDimension && config.openAiCompatibleOptions.modelDimension > 0) {
+				vectorSize = config.openAiCompatibleOptions.modelDimension
+			} else {
+				// Fallback if not provided or invalid in openAiCompatibleOptions
+				vectorSize = getModelDimension(provider, modelId)
+			}
+		} else {
+			vectorSize = getModelDimension(provider, modelId)
+		}
 
 		if (vectorSize === undefined) {
-			throw new Error(
-				`Could not determine vector dimension for model '${modelId}'. Check model profiles or config.`,
-			)
+			let errorMessage = `Could not determine vector dimension for model '${modelId}' with provider '${provider}'. `
+			if (provider === "openai-compatible") {
+				errorMessage += `Please ensure the 'Embedding Dimension' is correctly set in the OpenAI-Compatible provider settings.`
+			} else {
+				errorMessage += `Check model profiles or configuration.`
+			}
+			throw new Error(errorMessage)
 		}
 
 		if (!config.qdrantUrl) {

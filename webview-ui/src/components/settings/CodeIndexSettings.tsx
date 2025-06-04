@@ -323,6 +323,48 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									}
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.openaiCompatibleModelDimensionLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									type="text"
+									value={
+										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
+									}
+									onInput={(e: any) => {
+										const currentFullValue = (e.target as HTMLInputElement).value
+										if (currentFullValue === "") {
+											setApiConfigurationField(
+												"codebaseIndexOpenAiCompatibleModelDimension",
+												undefined,
+											)
+										} else {
+											const parsedValue = parseInt(currentFullValue, 10)
+											// Ensure it's a positive integer and the input string is a clean representation of that number.
+											// e.g., "123" is valid, "0123" becomes 123 but String(123) !== "0123" (this depends on desired strictness for leading zeros)
+											// For now, we'll be strict: the string must exactly match the parsed positive number.
+											if (
+												!isNaN(parsedValue) &&
+												parsedValue > 0 &&
+												String(parsedValue) === currentFullValue
+											) {
+												setApiConfigurationField(
+													"codebaseIndexOpenAiCompatibleModelDimension",
+													parsedValue,
+												)
+											}
+											// If input is invalid (e.g., "abc", "-5", "123xyz", "0"), do not update the state.
+											// The VSCodeTextField might visually show the invalid input temporarily,
+											// but the underlying state (and thus the 'value' prop on next render) won't reflect it.
+										}
+									}}
+									placeholder={t("settings:codeIndex.openaiCompatibleModelDimensionPlaceholder")}
+									style={{ width: "100%" }}></VSCodeTextField>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:codeIndex.openaiCompatibleModelDimensionDescription")}
+								</p>
+							</div>
 						</div>
 					)}
 
@@ -331,25 +373,38 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							<Select
-								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-								onValueChange={(value) =>
-									setCachedStateField("codebaseIndexConfig", {
-										...codebaseIndexConfig,
-										codebaseIndexEmbedderModelId: value,
-									})
-								}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
-								</SelectTrigger>
-								<SelectContent>
-									{availableModelIds.map((modelId) => (
-										<SelectItem key={modelId} value={modelId}>
-											{modelId}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" ? (
+								<VSCodeTextField
+									value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
+									onInput={(e: any) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderModelId: e.target.value,
+										})
+									}
+									placeholder="Enter custom model ID"
+									style={{ width: "100%" }}></VSCodeTextField>
+							) : (
+								<Select
+									value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
+									onValueChange={(value) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderModelId: value,
+										})
+									}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
+									</SelectTrigger>
+									<SelectContent>
+										{availableModelIds.map((modelId) => (
+											<SelectItem key={modelId} value={modelId}>
+												{modelId}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
 						</div>
 					</div>
 

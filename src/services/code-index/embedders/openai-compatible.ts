@@ -14,14 +14,16 @@ import {
 export class OpenAiCompatibleEmbedder implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
+	private readonly modelDimension?: number
 
 	/**
 	 * Creates a new OpenAI Compatible embedder
 	 * @param baseUrl The base URL for the OpenAI-compatible API endpoint
 	 * @param apiKey The API key for authentication
 	 * @param modelId Optional model identifier (defaults to "text-embedding-3-small")
+	 * @param dimension Optional embedding dimension for the model
 	 */
-	constructor(baseUrl: string, apiKey: string, modelId?: string) {
+	constructor(baseUrl: string, apiKey: string, modelId?: string, dimension?: number) {
 		if (!baseUrl) {
 			throw new Error("Base URL is required for OpenAI Compatible embedder")
 		}
@@ -34,6 +36,7 @@ export class OpenAiCompatibleEmbedder implements IEmbedder {
 			apiKey: apiKey,
 		})
 		this.defaultModelId = modelId || "text-embedding-3-small"
+		this.modelDimension = dimension
 	}
 
 	/**

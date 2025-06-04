@@ -15,7 +15,7 @@ export class CodeIndexConfigManager {
 	private modelId?: string
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
-	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
+	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number }
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -52,6 +52,9 @@ export class CodeIndexConfigManager {
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 		const openAiCompatibleBaseUrl = this.contextProxy?.getGlobalState("codebaseIndexOpenAiCompatibleBaseUrl") ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
+		const openAiCompatibleModelDimension = this.contextProxy?.getGlobalState(
+			"codebaseIndexOpenAiCompatibleModelDimension",
+		) as number | undefined
 
 		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
@@ -80,6 +83,7 @@ export class CodeIndexConfigManager {
 				? {
 						baseUrl: openAiCompatibleBaseUrl,
 						apiKey: openAiCompatibleApiKey,
+						modelDimension: openAiCompatibleModelDimension,
 					}
 				: undefined
 	}
@@ -113,6 +117,7 @@ export class CodeIndexConfigManager {
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
 			openAiCompatibleBaseUrl: this.openAiCompatibleOptions?.baseUrl ?? "",
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
+			openAiCompatibleModelDimension: this.openAiCompatibleOptions?.modelDimension,
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
@@ -179,6 +184,7 @@ export class CodeIndexConfigManager {
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
 		const prevOpenAiCompatibleBaseUrl = prev?.openAiCompatibleBaseUrl ?? ""
 		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
+		const prevOpenAiCompatibleModelDimension = prev?.openAiCompatibleModelDimension
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
@@ -226,9 +232,11 @@ export class CodeIndexConfigManager {
 			if (this.embedderProvider === "openai-compatible") {
 				const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
 				const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
+				const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
 				if (
 					prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
-					prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
+					prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey ||
+					prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension
 				) {
 					return true
 				}

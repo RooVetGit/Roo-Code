@@ -35,6 +35,7 @@ export const codebaseIndexProviderSchema = z.object({
 	codeIndexQdrantApiKey: z.string().optional(),
 	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleApiKey: z.string().optional(),
+	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 })
 
 export type CodebaseIndexProvider = z.infer<typeof codebaseIndexProviderSchema>

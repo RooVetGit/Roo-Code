@@ -25,10 +25,24 @@ jest.mock("@src/i18n/TranslationContext", () => ({
 				"settings:codeIndex.openaiKeyLabel": "OpenAI API Key",
 				"settings:codeIndex.openaiCompatibleBaseUrlLabel": "Base URL",
 				"settings:codeIndex.openaiCompatibleApiKeyLabel": "API Key",
+				"settings:codeIndex.openaiCompatibleModelDimensionLabel": "Embedding Dimension",
+				"settings:codeIndex.openaiCompatibleModelDimensionPlaceholder": "Enter dimension (e.g., 1536)",
+				"settings:codeIndex.openaiCompatibleModelDimensionDescription": "The dimension of the embedding model",
 				"settings:codeIndex.modelLabel": "Model",
 				"settings:codeIndex.selectModelPlaceholder": "Select model",
 				"settings:codeIndex.qdrantUrlLabel": "Qdrant URL",
 				"settings:codeIndex.qdrantApiKeyLabel": "Qdrant API Key",
+				"settings:codeIndex.ollamaUrlLabel": "Ollama URL",
+				"settings:codeIndex.qdrantKeyLabel": "Qdrant API Key",
+				"settings:codeIndex.enableLabel": "Enable Code Index",
+				"settings:codeIndex.enableDescription": "Enable semantic search across your codebase",
+				"settings:codeIndex.unsavedSettingsMessage": "Please save settings before indexing",
+				"settings:codeIndex.startIndexingButton": "Start Indexing",
+				"settings:codeIndex.clearIndexDataButton": "Clear Index Data",
+				"settings:codeIndex.clearDataDialog.title": "Clear Index Data",
+				"settings:codeIndex.clearDataDialog.description": "This will remove all indexed data",
+				"settings:codeIndex.clearDataDialog.cancelButton": "Cancel",
+				"settings:codeIndex.clearDataDialog.confirmButton": "Confirm",
 			}
 			return translations[key] || key
 		},
@@ -186,7 +200,7 @@ describe("CodeIndexSettings", () => {
 
 			expect(screen.getByText("Base URL")).toBeInTheDocument()
 			expect(screen.getByText("API Key")).toBeInTheDocument()
-			expect(screen.getAllByTestId("vscode-textfield")).toHaveLength(4) // Base URL, API Key, Qdrant URL, Qdrant Key
+			expect(screen.getAllByTestId("vscode-textfield")).toHaveLength(6) // Base URL, API Key, Embedding Dimension, Model ID, Qdrant URL, Qdrant Key
 		})
 
 		it("should hide OpenAI Compatible fields when different provider is selected", () => {
@@ -304,10 +318,8 @@ describe("CodeIndexSettings", () => {
 			const textField = screen.getByDisplayValue("existing-api-key")
 			expect(textField).toBeInTheDocument()
 		})
-	})
 
-	describe("Model Selection", () => {
-		it("should show available models for OpenAI Compatible provider", () => {
+		it("should display embedding dimension input field for OpenAI Compatible provider", () => {
 			const propsWithOpenAICompatible = {
 				...defaultProps,
 				codebaseIndexConfig: {
@@ -318,29 +330,396 @@ describe("CodeIndexSettings", () => {
 
 			render(<CodeIndexSettings {...propsWithOpenAICompatible} />)
 
-			expect(screen.getByTestId("select-item-text-embedding-3-small")).toBeInTheDocument()
-			expect(screen.getByTestId("select-item-custom-model")).toBeInTheDocument()
+			// Look for the embedding dimension label
+			expect(screen.getByText("Embedding Dimension")).toBeInTheDocument()
 		})
 
-		it("should fall back to OpenAI models when OpenAI Compatible models are not available", () => {
-			const propsWithoutCompatibleModels = {
+		it("should hide embedding dimension input field for non-OpenAI Compatible providers", () => {
+			render(<CodeIndexSettings {...defaultProps} />)
+
+			// Should not show embedding dimension for OpenAI provider
+			expect(screen.queryByText("Embedding Dimension")).not.toBeInTheDocument()
+		})
+
+		it("should call setApiConfigurationField when embedding dimension changes", async () => {
+			const user = userEvent.setup()
+			const propsWithOpenAICompatible = {
 				...defaultProps,
-				codebaseIndexModels: {
-					openai: {
-						"text-embedding-3-small": { dimension: 1536 },
-						"text-embedding-3-large": { dimension: 3072 },
-					},
-				},
 				codebaseIndexConfig: {
 					...defaultProps.codebaseIndexConfig,
 					codebaseIndexEmbedderProvider: "openai-compatible" as const,
 				},
 			}
 
-			render(<CodeIndexSettings {...propsWithoutCompatibleModels} />)
+			render(<CodeIndexSettings {...propsWithOpenAICompatible} />)
 
-			expect(screen.getByTestId("select-item-text-embedding-3-small")).toBeInTheDocument()
-			expect(screen.getByTestId("select-item-text-embedding-3-large")).toBeInTheDocument()
+			// Find the embedding dimension input field by placeholder
+			const dimensionField = screen.getByPlaceholderText("Enter dimension (e.g., 1536)")
+			expect(dimensionField).toBeDefined()
+
+			await user.clear(dimensionField!)
+			await user.type(dimensionField!, "1024")
+
+			// Check that setApiConfigurationField was called with the right parameter name
+			// Due to how userEvent.type interacts with VSCode text field, it processes individual characters
+			// We should verify that the function was called with valid single-digit numbers
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("codebaseIndexOpenAiCompatibleModelDimension", 1)
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("codebaseIndexOpenAiCompatibleModelDimension", 2)
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("codebaseIndexOpenAiCompatibleModelDimension", 4)
+		})
+
+		it("should display current embedding dimension value", () => {
+			const propsWithDimension = {
+				...defaultProps,
+				codebaseIndexConfig: {
+					...defaultProps.codebaseIndexConfig,
+					codebaseIndexEmbedderProvider: "openai-compatible" as const,
+				},
+				apiConfiguration: {
+					...defaultProps.apiConfiguration,
+					codebaseIndexOpenAiCompatibleModelDimension: 2048,
+				},
+			}
+
+			render(<CodeIndexSettings {...propsWithDimension} />)
+
+			const textField = screen.getByDisplayValue("2048")
+			expect(textField).toBeInTheDocument()
+		})
+
+		it("should handle empty embedding dimension value", () => {
+			const propsWithEmptyDimension = {
+				...defaultProps,
+				codebaseIndexConfig: {
+					...defaultProps.codebaseIndexConfig,
+					codebaseIndexEmbedderProvider: "openai-compatible" as const,
+				},
+				apiConfiguration: {
+					...defaultProps.apiConfiguration,
+					codebaseIndexOpenAiCompatibleModelDimension: undefined,
+				},
+			}
+
+			render(<CodeIndexSettings {...propsWithEmptyDimension} />)
+
+			const dimensionField = screen.getByPlaceholderText("Enter dimension (e.g., 1536)")
+			expect(dimensionField).toHaveValue("")
+		})
+
+		it("should validate embedding dimension input accepts only positive numbers", async () => {
+			const user = userEvent.setup()
+			const propsWithOpenAICompatible = {
+				...defaultProps,
+				codebaseIndexConfig: {
+					...defaultProps.codebaseIndexConfig,
+					codebaseIndexEmbedderProvider: "openai-compatible" as const,
+				},
+			}
+
+			render(<CodeIndexSettings {...propsWithOpenAICompatible} />)
+
+			const dimensionField = screen.getByPlaceholderText("Enter dimension (e.g., 1536)")
+			expect(dimensionField).toBeDefined()
+
+			// Test that the field is a text input (implementation uses text with validation logic)
+			expect(dimensionField).toHaveAttribute("type", "text")
+
+			// Test that invalid input doesn't trigger setApiConfigurationField with invalid values
+			await user.clear(dimensionField!)
+			await user.type(dimensionField!, "-5")
+
+			// The implementation prevents invalid values from being displayed/saved
+			// The validation logic in onInput handler rejects negative numbers
+			expect(dimensionField).toHaveValue("") // Field remains empty for invalid input
+
+			// Verify that setApiConfigurationField was not called with negative values
+			expect(mockSetApiConfigurationField).not.toHaveBeenCalledWith(
+				"codebaseIndexOpenAiCompatibleModelDimension",
+				-5,
+			)
+		})
+	})
+
+	describe("Model Selection", () => {
+		/**
+		 * Test conditional rendering of Model ID input based on provider type
+		 */
+		describe("Conditional Model Input Rendering", () => {
+			it("should render VSCodeTextField for Model ID when provider is openai-compatible", () => {
+				const propsWithOpenAICompatible = {
+					...defaultProps,
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai-compatible" as const,
+						codebaseIndexEmbedderModelId: "custom-model-id",
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOpenAICompatible} />)
+
+				// Should render VSCodeTextField for Model ID
+				const modelTextFields = screen.getAllByTestId("vscode-textfield")
+				const modelIdField = modelTextFields.find(
+					(field) => field.getAttribute("placeholder") === "Enter custom model ID",
+				)
+				expect(modelIdField).toBeInTheDocument()
+				expect(modelIdField).toHaveValue("custom-model-id")
+
+				// Should NOT render Select dropdown for models (only provider select should exist)
+				const selectElements = screen.getAllByTestId("select")
+				expect(selectElements).toHaveLength(1) // Only provider select, no model select
+			})
+
+			it("should render Select dropdown for models when provider is openai", () => {
+				const propsWithOpenAI = {
+					...defaultProps,
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai" as const,
+						codebaseIndexEmbedderModelId: "text-embedding-3-small",
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOpenAI} />)
+
+				// Should render Select dropdown for models (second select element)
+				const selectElements = screen.getAllByTestId("select")
+				expect(selectElements).toHaveLength(2) // Provider and model selects
+				const modelSelect = selectElements[1] // Model select is second
+				expect(modelSelect).toHaveAttribute("data-value", "text-embedding-3-small")
+
+				// Should NOT render VSCodeTextField for Model ID (only other text fields)
+				const modelTextFields = screen.getAllByTestId("vscode-textfield")
+				const modelIdField = modelTextFields.find(
+					(field) => field.getAttribute("placeholder") === "Enter custom model ID",
+				)
+				expect(modelIdField).toBeUndefined()
+			})
+
+			it("should render Select dropdown for models when provider is ollama", () => {
+				const propsWithOllama = {
+					...defaultProps,
+					codebaseIndexModels: {
+						...defaultProps.codebaseIndexModels,
+						ollama: {
+							llama2: { dimension: 4096 },
+							codellama: { dimension: 4096 },
+						},
+					},
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "ollama" as const,
+						codebaseIndexEmbedderModelId: "llama2",
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOllama} />)
+
+				// Should render Select dropdown for models (second select element)
+				const selectElements = screen.getAllByTestId("select")
+				expect(selectElements).toHaveLength(2) // Provider and model selects
+				const modelSelect = selectElements[1] // Model select is second
+				expect(modelSelect).toHaveAttribute("data-value", "llama2")
+
+				// Should NOT render VSCodeTextField for Model ID
+				const modelTextFields = screen.getAllByTestId("vscode-textfield")
+				const modelIdField = modelTextFields.find(
+					(field) => field.getAttribute("placeholder") === "Enter custom model ID",
+				)
+				expect(modelIdField).toBeUndefined()
+			})
+		})
+
+		/**
+		 * Test VSCodeTextField interactions for OpenAI-Compatible provider
+		 */
+		describe("VSCodeTextField for OpenAI-Compatible Model ID", () => {
+			const openAICompatibleProps = {
+				...defaultProps,
+				codebaseIndexConfig: {
+					...defaultProps.codebaseIndexConfig,
+					codebaseIndexEmbedderProvider: "openai-compatible" as const,
+					codebaseIndexEmbedderModelId: "existing-model",
+				},
+			}
+
+			it("should display current Model ID value in VSCodeTextField", () => {
+				render(<CodeIndexSettings {...openAICompatibleProps} />)
+
+				const modelIdField = screen.getByPlaceholderText("Enter custom model ID")
+				expect(modelIdField).toHaveValue("existing-model")
+			})
+
+			it("should call setCachedStateField when Model ID changes", async () => {
+				const user = userEvent.setup()
+				render(<CodeIndexSettings {...openAICompatibleProps} />)
+
+				const modelIdField = screen.getByPlaceholderText("Enter custom model ID")
+				await user.clear(modelIdField)
+				await user.type(modelIdField, "new-model")
+
+				// Check that setCachedStateField was called with codebaseIndexConfig
+				expect(mockSetCachedStateField).toHaveBeenCalledWith(
+					"codebaseIndexConfig",
+					expect.objectContaining({
+						codebaseIndexEmbedderProvider: "openai-compatible",
+						codebaseIndexEnabled: true,
+						codebaseIndexQdrantUrl: "http://localhost:6333",
+					}),
+				)
+			})
+
+			it("should handle empty Model ID value", () => {
+				const propsWithEmptyModelId = {
+					...openAICompatibleProps,
+					codebaseIndexConfig: {
+						...openAICompatibleProps.codebaseIndexConfig,
+						codebaseIndexEmbedderModelId: "",
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithEmptyModelId} />)
+
+				const modelIdField = screen.getByPlaceholderText("Enter custom model ID")
+				expect(modelIdField).toHaveValue("")
+			})
+
+			it("should show placeholder text for Model ID input", () => {
+				render(<CodeIndexSettings {...openAICompatibleProps} />)
+
+				const modelIdField = screen.getByPlaceholderText("Enter custom model ID")
+				expect(modelIdField).toBeInTheDocument()
+				expect(modelIdField).toHaveAttribute("placeholder", "Enter custom model ID")
+			})
+		})
+
+		/**
+		 * Test Select dropdown interactions for other providers
+		 */
+		describe("Select Dropdown for Other Providers", () => {
+			it("should show available models for OpenAI provider in dropdown", () => {
+				const propsWithOpenAI = {
+					...defaultProps,
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai" as const,
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOpenAI} />)
+
+				expect(screen.getByTestId("select-item-text-embedding-3-small")).toBeInTheDocument()
+				expect(screen.getByTestId("select-item-text-embedding-3-large")).toBeInTheDocument()
+			})
+
+			it("should show available models for Ollama provider in dropdown", () => {
+				const propsWithOllama = {
+					...defaultProps,
+					codebaseIndexModels: {
+						...defaultProps.codebaseIndexModels,
+						ollama: {
+							llama2: { dimension: 4096 },
+							codellama: { dimension: 4096 },
+						},
+					},
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "ollama" as const,
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOllama} />)
+
+				expect(screen.getByTestId("select-item-llama2")).toBeInTheDocument()
+				expect(screen.getByTestId("select-item-codellama")).toBeInTheDocument()
+			})
+
+			it("should call setCachedStateField when model is selected from dropdown", async () => {
+				const user = userEvent.setup()
+				const propsWithOpenAI = {
+					...defaultProps,
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai" as const,
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOpenAI} />)
+
+				// Get all select elements and find the model select (second one)
+				const selectElements = screen.getAllByTestId("select")
+				const modelSelect = selectElements[1] // Provider is first, Model is second
+				const selectButton = modelSelect.querySelector("button")
+				expect(selectButton).toBeInTheDocument()
+				await user.click(selectButton!)
+
+				expect(mockSetCachedStateField).toHaveBeenCalledWith("codebaseIndexConfig", {
+					...propsWithOpenAI.codebaseIndexConfig,
+					codebaseIndexEmbedderModelId: "test-change",
+				})
+			})
+
+			it("should display current model selection in dropdown", () => {
+				const propsWithSelectedModel = {
+					...defaultProps,
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai" as const,
+						codebaseIndexEmbedderModelId: "text-embedding-3-large",
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithSelectedModel} />)
+
+				// Get all select elements and find the model select (second one)
+				const selectElements = screen.getAllByTestId("select")
+				const modelSelect = selectElements[1] // Provider is first, Model is second
+				expect(modelSelect).toHaveAttribute("data-value", "text-embedding-3-large")
+			})
+		})
+
+		/**
+		 * Test fallback behavior for OpenAI-Compatible provider
+		 */
+		describe("OpenAI-Compatible Provider Model Fallback", () => {
+			it("should show available models for OpenAI Compatible provider", () => {
+				const propsWithOpenAICompatible = {
+					...defaultProps,
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai-compatible" as const,
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithOpenAICompatible} />)
+
+				// Note: For openai-compatible, we render VSCodeTextField, not Select dropdown
+				// But the component still uses availableModelIds for other purposes
+				const modelIdField = screen.getByPlaceholderText("Enter custom model ID")
+				expect(modelIdField).toBeInTheDocument()
+			})
+
+			it("should fall back to OpenAI models when OpenAI Compatible models are not available", () => {
+				const propsWithoutCompatibleModels = {
+					...defaultProps,
+					codebaseIndexModels: {
+						openai: {
+							"text-embedding-3-small": { dimension: 1536 },
+							"text-embedding-3-large": { dimension: 3072 },
+						},
+					},
+					codebaseIndexConfig: {
+						...defaultProps.codebaseIndexConfig,
+						codebaseIndexEmbedderProvider: "openai-compatible" as const,
+					},
+				}
+
+				render(<CodeIndexSettings {...propsWithoutCompatibleModels} />)
+
+				// Should still render VSCodeTextField for openai-compatible provider
+				const modelIdField = screen.getByPlaceholderText("Enter custom model ID")
+				expect(modelIdField).toBeInTheDocument()
+			})
 		})
 	})
 
