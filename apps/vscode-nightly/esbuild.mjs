@@ -50,7 +50,7 @@ async function main() {
 
 	if (fs.existsSync(distDir)) {
 		console.log(`[${name}] Cleaning dist directory: ${distDir}`)
-		fs.rmSync(buildDir, { recursive: true, force: true })
+		fs.rmSync(distDir, { recursive: true, force: true })
 	}
 
 	/**
