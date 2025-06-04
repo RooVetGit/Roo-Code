@@ -233,6 +233,9 @@ const ApiOptions = ({
 						openRouterDefaultModelId,
 					)
 					break
+				case "glama":
+					validateAndResetModel(apiConfiguration.glamaModelId, "glamaModelId", glamaDefaultModelId)
+					break
 				case "unbound":
 					validateAndResetModel(apiConfiguration.unboundModelId, "unboundModelId", unboundDefaultModelId)
 					break
