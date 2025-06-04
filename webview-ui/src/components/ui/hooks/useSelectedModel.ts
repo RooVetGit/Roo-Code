@@ -177,12 +177,12 @@ function getSelectedModel({
 		}
 		case "ollama": {
 			const id = apiConfiguration.ollamaModelId ?? ""
-			const info = openAiModelInfoSaneDefaults
+			const info = routerModels.ollama[id]
 			return { id, info }
 		}
 		case "lmstudio": {
 			const id = apiConfiguration.lmStudioModelId ?? ""
-			const info = openAiModelInfoSaneDefaults
+			const info = routerModels.lmstudio[id]
 			return { id, info }
 		}
 		case "vscode-lm": {
