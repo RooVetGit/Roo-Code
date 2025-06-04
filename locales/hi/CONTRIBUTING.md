@@ -92,7 +92,7 @@ git clone https://github.com/आपका_यूज़रनेम/Roo-Code.git
 2. **डिपेंडेंसी इंस्टॉल करें:**
 
 ```
-npm run install:all
+pnpm install
 ```
 
 3. **डिबगिंग:** VS Code में `F5` दबाएं।

@@ -92,7 +92,7 @@ git clone https://github.com/KULLANICI_ADIN/Roo-Code.git
 2. **Bağımlılıkları yükle:**
 
 ```
-npm run install:all
+pnpm install
 ```
 
 3. **Hata ayıklama:** VS Code'da `F5` ile aç.

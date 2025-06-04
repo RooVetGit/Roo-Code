@@ -92,7 +92,7 @@ git clone https://github.com/EL_TEU_USUARI/Roo-Code.git
 2. **Instal·la dependències:**
 
 ```
-npm run install:all
+pnpm install
 ```
 
 3. **Depuració:** Obre amb VS Code (`F5`).

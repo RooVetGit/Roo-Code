@@ -92,7 +92,7 @@ git clone https://github.com/당신의_아이디/Roo-Code.git
 2. **의존성 설치:**
 
 ```
-npm run install:all
+pnpm install
 ```
 
 3. **디버깅:** VS Code에서 `F5`를 눌러 실행하세요.

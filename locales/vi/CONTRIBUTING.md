@@ -92,7 +92,7 @@ git clone https://github.com/TEN_TAI_KHOAN/Roo-Code.git
 2. **Cài đặt phụ thuộc:**
 
 ```
-npm run install:all
+pnpm install
 ```
 
 3. **Debug:** Mở bằng VS Code (`F5`).

@@ -92,7 +92,7 @@ git clone https://github.com/你的帳號/Roo-Code.git
 2. **安裝相依套件：**
 
 ```
-npm run install:all
+pnpm install
 ```
 
 3. **除錯：** 在 VS Code 中按 `F5` 開啟。
