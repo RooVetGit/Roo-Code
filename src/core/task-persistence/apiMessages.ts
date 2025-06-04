@@ -21,17 +21,34 @@ export async function readApiMessages({
 	const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
 
 	if (await fileExistsAtPath(filePath)) {
-		return JSON.parse(await fs.readFile(filePath, "utf8"))
+		const fileContent = await fs.readFile(filePath, "utf8")
+		const parsedData = JSON.parse(fileContent)
+		if (Array.isArray(parsedData) && parsedData.length === 0) {
+			console.error(
+				`[Roo-Debug] readApiMessages: Found API conversation history file, but it's empty. TaskId: ${taskId}, Path: ${filePath}`,
+			)
+		}
+		return parsedData
 	} else {
 		const oldPath = path.join(taskDir, "claude_messages.json")
 
 		if (await fileExistsAtPath(oldPath)) {
-			const data = JSON.parse(await fs.readFile(oldPath, "utf8"))
+			const fileContent = await fs.readFile(oldPath, "utf8")
+			const parsedData = JSON.parse(fileContent)
+			if (Array.isArray(parsedData) && parsedData.length === 0) {
+				console.error(
+					`[Roo-Debug] readApiMessages: Found OLD API conversation history file (claude_messages.json), but it's empty. TaskId: ${taskId}, Path: ${oldPath}`,
+				)
+			}
 			await fs.unlink(oldPath)
-			return data
+			return parsedData
 		}
 	}
 
+	// If we reach here, neither the new nor the old history file was found.
+	console.error(
+		`[Roo-Debug] readApiMessages: API conversation history file not found for taskId: ${taskId}. Expected at: ${filePath}`,
+	)
 	return []
 }
 
