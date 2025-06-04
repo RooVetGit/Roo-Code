@@ -216,7 +216,11 @@ export class CodeIndexManager {
 	 */
 	public dispose(): void {
 		if (this._orchestrator) {
-			this.stopWatcher()
+			this.stopWatcher() // This calls _orchestrator.stopWatcher()
+			// Ensure orchestrator is fully cleaned up if it has a dispose method
+			if (typeof (this._orchestrator as any).dispose === "function") {
+				;(this._orchestrator as any).dispose()
+			}
 		}
 		this._stateManager.dispose()
 	}

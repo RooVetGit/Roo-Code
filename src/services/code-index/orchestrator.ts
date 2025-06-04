@@ -219,4 +219,13 @@ export class CodeIndexOrchestrator {
 	public get state(): IndexingState {
 		return this.stateManager.state
 	}
+
+	/**
+	 * Disposes of resources held by the orchestrator.
+	 */
+	public dispose(): void {
+		this.stopWatcher()
+		// Dispose other resources if any (e.g., if scanner or vectorStore had disposables not managed elsewhere)
+		// For now, stopWatcher handles the primary disposable (fileWatcher).
+	}
 }
