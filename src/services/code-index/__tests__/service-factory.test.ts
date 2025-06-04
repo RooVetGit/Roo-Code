@@ -183,34 +183,6 @@ describe("CodeIndexServiceFactory", () => {
 				"https://api.example.com/v1",
 				"test-api-key",
 				testModelId,
-				undefined,
-			)
-		})
-
-		it("should pass modelDimension to OpenAI Compatible embedder when provided", () => {
-			// Arrange
-			const testModelId = "custom-model"
-			const testDimension = 1024
-			const testConfig = {
-				embedderProvider: "openai-compatible",
-				modelId: testModelId,
-				openAiCompatibleOptions: {
-					baseUrl: "https://api.example.com/v1",
-					apiKey: "test-api-key",
-					modelDimension: testDimension,
-				},
-			}
-			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
-
-			// Act
-			factory.createEmbedder()
-
-			// Assert
-			expect(MockedOpenAiCompatibleEmbedder).toHaveBeenCalledWith(
-				"https://api.example.com/v1",
-				"test-api-key",
-				testModelId,
-				testDimension,
 			)
 		})
 
@@ -233,7 +205,6 @@ describe("CodeIndexServiceFactory", () => {
 			expect(MockedOpenAiCompatibleEmbedder).toHaveBeenCalledWith(
 				"https://api.example.com/v1",
 				"test-api-key",
-				undefined,
 				undefined,
 			)
 		})
