@@ -1043,4 +1043,14 @@ Suggestions:
 			return `Bedrock completion error: ${errorMessage}`
 		}
 	}
+
+	override dispose(): void {
+		// Clear custom cache specific to this handler
+		this.previousCachePointPlacements = {}
+		logger.debug("AwsBedrockHandler: Cleared previousCachePointPlacements.", { ctx: "bedrock" })
+
+		// Call base class dispose for any generic cleanup (like the SDK client)
+		// The base dispose method handles client disposal reflectively.
+		super.dispose()
+	}
 }

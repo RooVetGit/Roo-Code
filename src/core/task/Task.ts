@@ -1001,6 +1001,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.browserSession.closeBrowser()
 		this.rooIgnoreController?.dispose()
 		this.fileContextTracker.dispose()
+		this.api?.dispose?.() // Added this line
 
 		// If we're not streaming then `abortStream` (which reverts the diff
 		// view changes) won't be called, so we need to revert the changes here.
@@ -1010,6 +1011,25 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// Save the countdown message in the automatic retry or other content.
 		await this.saveClineMessages()
+	}
+
+	// Added new dispose method as per leak report suggestion
+	public dispose(): void {
+		console.log(`[subtasks] disposing task ${this.taskId}.${this.instanceId}`)
+		this.abortTask(true) // Call abortTask to ensure all resources are released
+
+		// Explicitly call dispose on the api handler again, in case abortTask didn't catch it
+		// or if dispose is called directly without abortTask.
+		this.api?.dispose?.()
+
+		// Clear any other task-specific resources if they weren't handled by abortTask
+		if (this.pauseInterval) {
+			clearInterval(this.pauseInterval)
+			this.pauseInterval = undefined
+		}
+		// Ensure other disposables are handled if not already by abortTask
+		// this.rooIgnoreController?.dispose(); // Already called in abortTask
+		// this.fileContextTracker.dispose(); // Already called in abortTask
 	}
 
 	// Used when a sub-task is launched and the parent task is waiting for it to

@@ -164,7 +164,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	 * converts the messages to VS Code LM format, and streams the response chunks.
 	 * Tool calls handling is currently a work in progress.
 	 */
-	dispose(): void {
+	override dispose(): void {
 		if (this.disposable) {
 			this.disposable.dispose()
 		}

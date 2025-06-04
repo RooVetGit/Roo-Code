@@ -10,6 +10,8 @@ import { countTokens } from "../../utils/countTokens"
  * Base class for API providers that implements common functionality.
  */
 export abstract class BaseProvider implements ApiHandler {
+	// constructor remains empty, no new properties added here
+
 	abstract createMessage(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
@@ -31,5 +33,26 @@ export abstract class BaseProvider implements ApiHandler {
 		}
 
 		return countTokens(content, { useWorker: true })
+	}
+
+	/**
+	 * Disposes of any resources held by the provider.
+	 * Attempts common disposal methods on the client if it exists.
+	 */
+	public dispose(): void {
+		// Use reflection to find any property named 'client' on the instance
+		const clientProperty = (this as any).client
+		if (clientProperty) {
+			// Try common disposal methods that SDKs might have
+			if (typeof clientProperty.close === "function") {
+				clientProperty.close()
+			} else if (typeof clientProperty.destroy === "function") {
+				clientProperty.destroy()
+			} else if (typeof clientProperty.dispose === "function") {
+				clientProperty.dispose()
+			}
+			// Clear the reference on the instance
+			;(this as any).client = undefined
+		}
 	}
 }

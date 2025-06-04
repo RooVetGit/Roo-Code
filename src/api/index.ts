@@ -56,6 +56,11 @@ export interface ApiHandler {
 	 * @returns A promise resolving to the token count
 	 */
 	countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number>
+
+	/**
+	 * Optional method to dispose of any resources held by the API handler.
+	 */
+	dispose?: () => void
 }
 
 export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
