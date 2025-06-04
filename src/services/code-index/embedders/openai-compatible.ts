@@ -152,7 +152,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	 */
 	get embedderInfo(): EmbedderInfo {
 		return {
-			name: "openai-compatible" as any, // Type assertion needed until AvailableEmbedders is updated
+			name: "openai-compatible",
 		}
 	}
 }
