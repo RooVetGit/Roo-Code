@@ -2,10 +2,18 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "gemini" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
+	/**
+	 * Specific dimensions supported by the model
+	 */
+	supportDimensions?: number[]
+	/**
+	 * Optional maximum input tokens for the model.
+	 */
+	maxInputTokens?: number
 	// Add other model-specific properties if needed, e.g., context window size
 }
 
@@ -29,15 +37,25 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		// Add default Ollama model if applicable, e.g.:
 		// 'default': { dimension: 768 } // Assuming a default dimension
 	},
+	gemini: {
+		"gemini-embedding-exp-03-07": { dimension: 3072, supportDimensions: [3072, 1536, 768], maxInputTokens: 8192 },
+		"models/text-embedding-004": { dimension: 768, maxInputTokens: 2048 },
+		"models/embedding-001": { dimension: 768, maxInputTokens: 2048 },
+	},
 }
 
 /**
  * Retrieves the embedding dimension for a given provider and model ID.
  * @param provider The embedder provider (e.g., "openai").
  * @param modelId The specific model ID (e.g., "text-embedding-3-small").
+ * @param requestedDimension Optional dimension requested by the user.
  * @returns The dimension size or undefined if the model is not found.
  */
-export function getModelDimension(provider: EmbedderProvider, modelId: string): number | undefined {
+export function getModelDimension(
+	provider: EmbedderProvider,
+	modelId: string,
+	requestedDimension?: number,
+): number | undefined {
 	const providerProfiles = EMBEDDING_MODEL_PROFILES[provider]
 	if (!providerProfiles) {
 		console.warn(`Provider not found in profiles: ${provider}`)
@@ -49,6 +67,14 @@ export function getModelDimension(provider: EmbedderProvider, modelId: string): 
 		// Don't warn here, as it might be a custom model ID not in our profiles
 		// console.warn(`Model not found for provider ${provider}: ${modelId}`)
 		return undefined // Or potentially return a default/fallback dimension?
+	}
+
+	if (
+		requestedDimension &&
+		modelProfile.supportDimensions &&
+		modelProfile.supportDimensions.includes(requestedDimension)
+	) {
+		return requestedDimension
 	}
 
 	return modelProfile.dimension
@@ -78,6 +104,9 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 		console.warn("No default Ollama model found in profiles.")
 		// Return a placeholder or throw an error, depending on desired behavior
 		return "unknown-default" // Placeholder specific model ID
+	}
+	if (provider === "gemini") {
+		return "gemini-embedding-exp-03-07"
 	}
 
 	// Fallback for unknown providers
