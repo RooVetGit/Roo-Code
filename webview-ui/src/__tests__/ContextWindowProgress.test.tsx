@@ -38,6 +38,7 @@ jest.mock("@src/components/chat/TaskHeader", () => {
 // Mock useSelectedModel hook
 jest.mock("@src/components/ui/hooks/useSelectedModel", () => ({
 	useSelectedModel: jest.fn(() => ({
+		id: "test",
 		info: { contextWindow: 4000 },
 	})),
 }))
@@ -56,6 +57,8 @@ describe("ContextWindowProgress", () => {
 			totalCost: 0.001,
 			contextTokens: 1000,
 			onClose: jest.fn(),
+			buttonsDisabled: false,
+			handleCondenseContext: jest.fn((_taskId: string) => {}),
 		}
 
 		return render(

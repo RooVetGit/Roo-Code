@@ -12,17 +12,22 @@ try {
 	console.warn("Failed to load environment variables:", e)
 }
 
-import "./utils/path" // Necessary to have access to String.prototype.toPosix.
+import { CloudService } from "@roo-code/cloud"
+import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
 
+import "./utils/path" // Necessary to have access to String.prototype.toPosix.
+import { createOutputChannelLogger, createDualLogger } from "./utils/outputChannelLogger"
+
+import { Package } from "./shared/package"
+import { formatLanguage } from "./shared/language"
 import { ContextProxy } from "./core/config/ContextProxy"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
-import { telemetryService } from "./services/telemetry/TelemetryService"
-import { API } from "./exports/api"
+import { CodeIndexManager } from "./services/code-index/manager"
 import { migrateSettings } from "./utils/migrateSettings"
-import { formatLanguage } from "./shared/language"
+import { API } from "./extension/api"
 
 import {
 	handleUri,
@@ -48,15 +53,30 @@ let extensionContext: vscode.ExtensionContext
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
-	outputChannel = vscode.window.createOutputChannel("Roo-Code")
+	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
-	outputChannel.appendLine("Roo-Code extension activated")
+	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
-	// Initialize telemetry service after environment variables are loaded.
-	telemetryService.initialize()
+	// Initialize telemetry service.
+	const telemetryService = TelemetryService.createInstance()
+
+	try {
+		telemetryService.register(new PostHogTelemetryClient())
+	} catch (error) {
+		console.warn("Failed to register PostHogTelemetryClient:", error)
+	}
+
+	// Create logger for cloud services
+	const cloudLogger = createDualLogger(createOutputChannelLogger(outputChannel))
+
+	// Initialize Roo Code Cloud service.
+	await CloudService.createInstance(context, {
+		stateChanged: () => ClineProvider.getVisibleInstance()?.postStateToWebview(),
+		log: cloudLogger,
+	})
 
 	// Initialize i18n for internationalization support
 	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
@@ -65,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
-	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+	const defaultCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 
 	// Initialize global state if not already set.
 	if (!context.globalState.get("allowedCommands")) {
@@ -73,8 +93,22 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
-	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
-	telemetryService.setProvider(provider)
+	const codeIndexManager = CodeIndexManager.getInstance(context)
+
+	try {
+		await codeIndexManager?.initialize(contextProxy)
+	} catch (error) {
+		outputChannel.appendLine(
+			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
+		)
+	}
+
+	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
+	TelemetryService.instance.setProvider(provider)
+
+	if (codeIndexManager) {
+		context.subscriptions.push(codeIndexManager)
+	}
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
@@ -123,21 +157,46 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerTerminalActions(context)
 
 	// Allows other extensions to activate once Roo is ready.
-	vscode.commands.executeCommand("roo-cline.activationCompleted")
+	vscode.commands.executeCommand(`${Package.name}.activationCompleted`)
 
 	// Implements the `RooCodeAPI` interface.
 	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
 	const enableLogging = typeof socketPath === "string"
+
+	// Watch the core files and automatically reload the extension host.
+	if (process.env.NODE_ENV === "development") {
+		const pattern = "**/*.ts"
+
+		const watchPaths = [
+			{ path: context.extensionPath, name: "extension" },
+			{ path: path.join(context.extensionPath, "../packages/types"), name: "types" },
+			{ path: path.join(context.extensionPath, "../packages/telemetry"), name: "telemetry" },
+			{ path: path.join(context.extensionPath, "../packages/cloud"), name: "cloud" },
+		]
+
+		console.log(
+			`♻️♻️♻️ Core auto-reloading is ENABLED. Watching for changes in: ${watchPaths.map(({ name }) => name).join(", ")}`,
+		)
+
+		watchPaths.forEach(({ path: watchPath, name }) => {
+			const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(watchPath, pattern))
+
+			watcher.onDidChange((uri) => {
+				console.log(`♻️ ${name} file changed: ${uri.fsPath}. Reloading host…`)
+				vscode.commands.executeCommand("workbench.action.reloadWindow")
+			})
+
+			context.subscriptions.push(watcher)
+		})
+	}
+
 	return new API(outputChannel, provider, socketPath, enableLogging)
 }
 
-// This method is called when your extension is deactivated
+// This method is called when your extension is deactivated.
 export async function deactivate() {
-	outputChannel.appendLine("Roo-Code extension deactivated")
-	// Clean up MCP server manager
+	outputChannel.appendLine(`${Package.name} extension deactivated`)
 	await McpServerManager.cleanup(extensionContext)
-	telemetryService.shutdown()
-
-	// Clean up terminal handlers
+	TelemetryService.instance.shutdown()
 	TerminalRegistry.cleanup()
 }

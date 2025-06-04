@@ -28,9 +28,43 @@
 		"notifications": "Bildirimler",
 		"contextManagement": "Bağlam",
 		"terminal": "Terminal",
+		"prompts": "Promptlar",
 		"experimental": "Deneysel",
 		"language": "Dil",
 		"about": "Roo Code Hakkında"
+	},
+	"prompts": {
+		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur."
+	},
+	"codeIndex": {
+		"title": "Kod Tabanı İndeksleme",
+		"enableLabel": "Kod Tabanı İndekslemeyi Etkinleştir",
+		"enableDescription": "<0>Kod Tabanı İndeksleme</0>, AI gömme teknolojisini kullanarak projenizin semantik arama indeksini oluşturan deneysel bir özelliktir. Bu, Roo Code'un sadece anahtar kelimeler yerine anlam temelinde ilgili kodu bularak büyük kod tabanlarını daha iyi anlamasını ve gezinmesini sağlar.",
+		"providerLabel": "Gömme Sağlayıcısı",
+		"selectProviderPlaceholder": "Sağlayıcı seç",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI Uyumlu",
+		"openaiCompatibleBaseUrlLabel": "Temel URL:",
+		"openaiCompatibleApiKeyLabel": "API Anahtarı:",
+		"openaiCompatibleModelDimensionLabel": "Gömme Boyutu:",
+		"openaiCompatibleModelDimensionPlaceholder": "örn., 1536",
+		"openaiCompatibleModelDimensionDescription": "Modeliniz için gömme boyutu (çıktı boyutu). Bu değer için sağlayıcınızın belgelerine bakın. Yaygın değerler: 384, 768, 1536, 3072.",
+		"openaiKeyLabel": "OpenAI Anahtarı:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Model seç",
+		"ollamaUrlLabel": "Ollama URL:",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant Anahtarı:",
+		"startIndexingButton": "İndekslemeyi Başlat",
+		"clearIndexDataButton": "İndeks Verilerini Temizle",
+		"unsavedSettingsMessage": "İndeksleme işlemini başlatmadan önce lütfen ayarlarını kaydet.",
+		"clearDataDialog": {
+			"title": "Emin misiniz?",
+			"description": "Bu işlem geri alınamaz. Bu, kod tabanı indeks verilerinizi kalıcı olarak silecektir.",
+			"cancelButton": "İptal",
+			"confirmButton": "Verileri Temizle"
+		}
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
@@ -79,6 +113,11 @@
 			"allowedCommandsDescription": "\"Yürütme işlemlerini her zaman onayla\" etkinleştirildiğinde otomatik olarak yürütülebilen komut önekleri. Tüm komutlara izin vermek için * ekleyin (dikkatli kullanın).",
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
 			"addButton": "Ekle"
+		},
+		"apiRequestLimit": {
+			"title": "Maksimum İstek",
+			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
+			"unlimited": "Sınırsız"
 		}
 	},
 	"providers": {
@@ -109,6 +148,7 @@
 		"glamaApiKey": "Glama API Anahtarı",
 		"getGlamaApiKey": "Glama API Anahtarı Al",
 		"useCustomBaseUrl": "Özel temel URL kullan",
+		"useReasoning": "Akıl yürütmeyi etkinleştir",
 		"useHostHeader": "Özel Host başlığı kullan",
 		"useLegacyFormat": "Eski OpenAI API formatını kullan",
 		"customHeaders": "Özel Başlıklar",
@@ -118,7 +158,10 @@
 		"requestyApiKey": "Requesty API Anahtarı",
 		"refreshModels": {
 			"label": "Modelleri Yenile",
-			"hint": "En son modelleri görmek için lütfen ayarları yeniden açın."
+			"hint": "En son modelleri görmek için lütfen ayarları yeniden açın.",
+			"loading": "Model listesi yenileniyor...",
+			"success": "Model listesi başarıyla yenilendi!",
+			"error": "Model listesi yenilenemedi. Lütfen tekrar deneyin."
 		},
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
@@ -134,6 +177,7 @@
 		"groqApiKey": "Groq API Anahtarı",
 		"getGeminiApiKey": "Gemini API Anahtarı Al",
 		"openAiApiKey": "OpenAI API Anahtarı",
+		"apiKey": "API Anahtarı",
 		"openAiBaseUrl": "Temel URL",
 		"getOpenAiApiKey": "OpenAI API Anahtarı Al",
 		"mistralApiKey": "Mistral API Anahtarı",
@@ -152,6 +196,11 @@
 		"awsSessionToken": "AWS Oturum Belirteci",
 		"awsRegion": "AWS Bölgesi",
 		"awsCrossRegion": "Bölgeler arası çıkarım kullan",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Özel VPC uç noktası kullan",
+			"vpcEndpointUrlPlaceholder": "VPC uç noktası URL'sini girin (isteğe bağlı)",
+			"examples": "Örnekler:"
+		},
 		"enablePromptCaching": "İstem önbelleğini etkinleştir",
 		"enablePromptCachingTitle": "Desteklenen modeller için performansı artırmak ve maliyetleri azaltmak için istem önbelleğini etkinleştir.",
 		"cacheUsageNote": "Not: Önbellek kullanımını görmüyorsanız, farklı bir model seçip ardından istediğiniz modeli tekrar seçmeyi deneyin.",
@@ -185,6 +234,8 @@
 		},
 		"unboundApiKey": "Unbound API Anahtarı",
 		"getUnboundApiKey": "Unbound API Anahtarı Al",
+		"unboundRefreshModelsSuccess": "Model listesi güncellendi! Artık en son modeller arasından seçim yapabilirsiniz.",
+		"unboundInvalidApiKey": "Geçersiz API anahtarı. Lütfen API anahtarınızı kontrol edin ve tekrar deneyin.",
 		"humanRelay": {
 			"description": "API anahtarı gerekmez, ancak kullanıcının bilgileri web sohbet yapay zekasına kopyalayıp yapıştırması gerekir.",
 			"instructions": "Kullanım sırasında bir iletişim kutusu açılacak ve mevcut mesaj otomatik olarak panoya kopyalanacaktır. Bunları web yapay zekalarına (ChatGPT veya Claude gibi) yapıştırmanız, ardından yapay zekanın yanıtını iletişim kutusuna kopyalayıp onay düğmesine tıklamanız gerekir."
@@ -298,6 +349,25 @@
 	},
 	"contextManagement": {
 		"description": "Yapay zekanın bağlam penceresine hangi bilgilerin dahil edileceğini kontrol edin, token kullanımını ve yanıt kalitesini etkiler",
+		"autoCondenseContextPercent": {
+			"label": "Akıllı bağlam sıkıştırmayı tetikleyecek eşik",
+			"description": "Bağlam penceresi bu eşiğe ulaştığında, Roo otomatik olarak sıkıştıracaktır."
+		},
+		"condensingApiConfiguration": {
+			"label": "Bağlam Yoğunlaştırma için API Yapılandırması",
+			"description": "Bağlam yoğunlaştırma işlemleri için hangi API yapılandırmasının kullanılacağını seçin. Mevcut aktif yapılandırmayı kullanmak için seçimsiz bırakın.",
+			"useCurrentConfig": "Varsayılan"
+		},
+		"customCondensingPrompt": {
+			"label": "Özel Bağlam Yoğunlaştırma İstemcisi",
+			"description": "Bağlam yoğunlaştırma için özel sistem istemcisi. Varsayılan istemciyi kullanmak için boş bırakın.",
+			"placeholder": "Özel yoğunlaştırma promptunuzu buraya girin...\n\nVarsayılan prompt ile aynı yapıyı kullanabilirsiniz:\n- Önceki Konuşma\n- Mevcut Çalışma\n- Temel Teknik Kavramlar\n- İlgili Dosyalar ve Kod\n- Problem Çözme\n- Bekleyen Görevler ve Sonraki Adımlar",
+			"reset": "Varsayılana Sıfırla",
+			"hint": "Boş = varsayılan promptu kullan"
+		},
+		"autoCondenseContext": {
+			"name": "Akıllı bağlam sıkıştırmayı otomatik olarak tetikle"
+		},
 		"openTabs": {
 			"label": "Açık sekmeler bağlam sınırı",
 			"description": "Bağlama dahil edilecek maksimum VSCode açık sekme sayısı. Daha yüksek değerler daha fazla bağlam sağlar ancak token kullanımını artırır."
@@ -315,6 +385,10 @@
 			"description": "Model başlangıç/bitiş değerlerini belirtmediğinde Roo bu sayıda satırı okur. Bu sayı dosyanın toplam satır sayısından azsa, Roo kod tanımlamalarının satır numarası dizinini oluşturur. Özel durumlar: -1, Roo'ya tüm dosyayı okumasını (dizinleme olmadan), 0 ise hiç satır okumamasını ve minimum bağlam için yalnızca satır dizinleri sağlamasını belirtir. Düşük değerler başlangıç bağlam kullanımını en aza indirir ve sonraki hassas satır aralığı okumalarına olanak tanır. Açık başlangıç/bitiş istekleri bu ayarla sınırlı değildir.",
 			"lines": "satır",
 			"always_full_read": "Her zaman tüm dosyayı oku"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Eşzamanlı dosya okuma sınırı",
+			"description": "'read_file' aracının aynı anda işleyebileceği maksimum dosya sayısı. Daha yüksek değerler birden çok küçük dosyanın okunmasını hızlandırabilir ancak bellek kullanımını artırır."
 		}
 	},
 	"terminal": {
@@ -395,11 +469,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Bağlam penceresini akıllıca sıkıştır",
-			"description": "Görevin bağlam penceresi neredeyse dolduğunda, eski mesajları atmak yerine önceki konuşmayı özetlemek için bir LLM çağrısı kullanır. Not: Özetleme maliyeti şu anda arayüzde gösterilen API maliyetlerine dahil değildir."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Deneysel birleştirilmiş diff stratejisini kullan",
 			"description": "Deneysel birleştirilmiş diff stratejisini etkinleştir. Bu strateji, model hatalarından kaynaklanan yeniden deneme sayısını azaltabilir, ancak beklenmeyen davranışlara veya hatalı düzenlemelere neden olabilir. Yalnızca riskleri anlıyorsanız ve tüm değişiklikleri dikkatlice incelemeye istekliyseniz etkinleştirin."
@@ -419,6 +488,10 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Deneysel çoklu blok diff aracını kullan",
 			"description": "Etkinleştirildiğinde, Roo çoklu blok diff aracını kullanacaktır. Bu, tek bir istekte dosyadaki birden fazla kod bloğunu güncellemeye çalışacaktır."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "Eşzamanlı dosya okumayı etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo tek bir istekte birden fazla dosya okuyabilir (en fazla 15 dosya). Devre dışı bırakıldığında, Roo dosyaları birer birer okumalıdır. Daha az yetenekli modellerle çalışırken veya dosya erişimi üzerinde daha fazla kontrol istediğinizde devre dışı bırakmak yardımcı olabilir."
 		}
 	},
 	"promptCaching": {
@@ -461,7 +534,7 @@
 		"useCustomModel": "Özel kullan: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Herhangi bir sorunuz veya geri bildiriminiz varsa, <githubLink>github.com/RooVetGit/Roo-Code</githubLink> adresinde bir konu açmaktan veya <redditLink>reddit.com/r/RooCode</redditLink> ya da <discordLink>discord.gg/roocode</discordLink>'a katılmaktan çekinmeyin",
+		"feedback": "Herhangi bir sorunuz veya geri bildiriminiz varsa, <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> adresinde bir konu açmaktan veya <redditLink>reddit.com/r/RooCode</redditLink> ya da <discordLink>discord.gg/roocode</discordLink>'a katılmaktan çekinmeyin",
 		"telemetry": {
 			"label": "Anonim hata ve kullanım raporlamaya izin ver",
 			"description": "Anonim kullanım verileri ve hata raporları göndererek Roo Code'u geliştirmeye yardımcı olun. Hiçbir kod, istem veya kişisel bilgi asla gönderilmez. Daha fazla ayrıntı için gizlilik politikamıza bakın."
@@ -487,7 +560,10 @@
 			"invalidFormat": "Geçersiz ARN formatı. Lütfen format gereksinimlerini kontrol edin.",
 			"regionMismatch": "Uyarı: ARN'nizdeki bölge ({{arnRegion}}) seçtiğiniz bölge ({{region}}) ile eşleşmiyor. Bu erişim sorunlarına neden olabilir. Sağlayıcı, ARN'deki bölgeyi kullanacak."
 		},
-		"modelAvailability": "Sağladığınız model kimliği ({{modelId}}) kullanılamıyor. Lütfen başka bir model seçin."
+		"modelAvailability": "Sağladığınız model kimliği ({{modelId}}) kullanılamıyor. Lütfen başka bir model seçin.",
+		"providerNotAllowed": "Sağlayıcı '{{provider}}' kuruluşunuz tarafından izin verilmiyor",
+		"modelNotAllowed": "Model '{{model}}' sağlayıcı '{{provider}}' için kuruluşunuz tarafından izin verilmiyor",
+		"profileInvalid": "Bu profil, kuruluşunuz tarafından izin verilmeyen bir sağlayıcı veya model içeriyor"
 	},
 	"placeholders": {
 		"apiKey": "API anahtarını girin...",

@@ -28,22 +28,6 @@ jest.mock("shiki", () => ({
 	},
 }))
 
-// Mock all lucide-react icons with a proxy to handle any icon requested
-jest.mock("lucide-react", () => {
-	return new Proxy(
-		{},
-		{
-			get: function (obj, prop) {
-				// Return a component factory for any icon that's requested
-				if (prop === "__esModule") {
-					return true
-				}
-				return () => <div data-testid={`${String(prop)}-icon`}>{String(prop)}</div>
-			},
-		},
-	)
-})
-
 // Mock the highlighter utility
 jest.mock("../../../utils/highlighter", () => {
 	const mockHighlighter = {
@@ -140,6 +124,7 @@ describe("CodeBlock", () => {
 
 	it("handles WASM loading errors", async () => {
 		const mockError = new Error("WASM load failed")
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const highlighterUtil = require("../../../utils/highlighter")
 		highlighterUtil.getHighlighter.mockRejectedValueOnce(mockError)
 
@@ -163,6 +148,7 @@ describe("CodeBlock", () => {
 
 	it("verifies highlighter utility is used correctly", async () => {
 		const code = "const x = 1;"
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const highlighterUtil = require("../../../utils/highlighter")
 
 		await act(async () => {

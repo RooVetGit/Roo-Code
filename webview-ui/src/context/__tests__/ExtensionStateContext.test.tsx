@@ -2,10 +2,11 @@
 
 import { render, screen, act } from "@testing-library/react"
 
-import { ExtensionState } from "@roo/shared/ExtensionMessage"
+import { ProviderSettings, ExperimentId } from "@roo-code/types"
+
+import { ExtensionState } from "@roo/ExtensionMessage"
+
 import { ExtensionStateContextProvider, useExtensionState, mergeExtensionState } from "../ExtensionStateContext"
-import { ExperimentId } from "@roo/shared/experiments"
-import { ProviderSettings } from "@roo/shared/api"
 
 const TestComponent = () => {
 	const { allowedCommands, setAllowedCommands, soundEnabled, showRooIgnoredFiles, setShowRooIgnoredFiles } =
@@ -202,6 +203,11 @@ describe("mergeExtensionState", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			cloudUserInfo: null,
+			organizationAllowList: { allowAll: true, providers: {} },
+			autoCondenseContext: true,
+			autoCondenseContextPercent: 100,
+			cloudIsAuthenticated: false,
 		}
 
 		const prevState: ExtensionState = {
@@ -216,6 +222,7 @@ describe("mergeExtensionState", () => {
 			experiments: {
 				powerSteering: true,
 				autoCondenseContext: true,
+				concurrentFileReads: true,
 			} as Record<ExperimentId, boolean>,
 		}
 
@@ -229,6 +236,7 @@ describe("mergeExtensionState", () => {
 		expect(result.experiments).toEqual({
 			powerSteering: true,
 			autoCondenseContext: true,
+			concurrentFileReads: true,
 		})
 	})
 })

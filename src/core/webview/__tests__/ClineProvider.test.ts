@@ -1,17 +1,20 @@
-// npx jest src/core/webview/__tests__/ClineProvider.test.ts
+// npx jest core/webview/__tests__/ClineProvider.test.ts
 
 import Anthropic from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 import axios from "axios"
 
-import { ClineProvider } from "../ClineProvider"
-import { ProviderSettingsEntry, ClineMessage, ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
-import { setSoundEnabled } from "../../../utils/sound"
-import { setTtsEnabled } from "../../../utils/tts"
+import { type ProviderSettingsEntry, type ClineMessage, ORGANIZATION_ALLOW_ALL } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+
+import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
+import { setTtsEnabled } from "../../../utils/tts"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task, TaskOptions } from "../../task/Task"
+
+import { ClineProvider } from "../ClineProvider"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -92,13 +95,11 @@ jest.mock("../../../services/browser/browserDiscovery", () => ({
 	}),
 }))
 
-// Initialize mocks
 const mockAddCustomInstructions = jest.fn().mockResolvedValue("Combined instructions")
 
 ;(jest.requireMock("../../prompts/sections/custom-instructions") as any).addCustomInstructions =
 	mockAddCustomInstructions
 
-// Mock delay module
 jest.mock("delay", () => {
 	const delayFn = (_ms: number) => Promise.resolve()
 	delayFn.createDelay = () => delayFn
@@ -107,7 +108,7 @@ jest.mock("delay", () => {
 	return delayFn
 })
 
-// MCP-related modules are mocked once above (lines 87-109)
+// MCP-related modules are mocked once above (lines 87-109).
 
 jest.mock(
 	"@modelcontextprotocol/sdk/client/index.js",
@@ -171,10 +172,6 @@ jest.mock("vscode", () => ({
 		Development: 2,
 		Test: 3,
 	},
-}))
-
-jest.mock("../../../utils/sound", () => ({
-	setSoundEnabled: jest.fn(),
 }))
 
 jest.mock("../../../utils/tts", () => ({
@@ -242,10 +239,12 @@ describe("ClineProvider", () => {
 	let updateGlobalStateSpy: jest.SpyInstance<ClineProvider["contextProxy"]["updateGlobalState"]>
 
 	beforeEach(() => {
-		// Reset mocks
 		jest.clearAllMocks()
 
-		// Mock context
+		if (!TelemetryService.hasInstance()) {
+			TelemetryService.createInstance([])
+		}
+
 		const globalState: Record<string, string | undefined> = {
 			mode: "architect",
 			currentApiConfigName: "current-config",
@@ -365,7 +364,7 @@ describe("ClineProvider", () => {
 
 		// Verify Content Security Policy contains the necessary PostHog domains
 		expect(mockWebviewView.webview.html).toContain(
-			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
+			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com",
 		)
 
 		// Extract the script-src directive section and verify required security elements
@@ -392,6 +391,13 @@ describe("ClineProvider", () => {
 			alwaysAllowReadOnly: false,
 			alwaysAllowReadOnlyOutsideWorkspace: false,
 			alwaysAllowWrite: false,
+			codebaseIndexConfig: {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 			alwaysAllowWriteOutsideWorkspace: false,
 			alwaysAllowExecute: false,
 			alwaysAllowBrowser: false,
@@ -417,6 +423,11 @@ describe("ClineProvider", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			cloudUserInfo: null,
+			organizationAllowList: ORGANIZATION_ALLOW_ALL,
+			autoCondenseContext: true,
+			autoCondenseContextPercent: 100,
+			cloudIsAuthenticated: false,
 		}
 
 		const message: ExtensionMessage = {
@@ -545,14 +556,12 @@ describe("ClineProvider", () => {
 
 		// Simulate setting sound to enabled
 		await messageHandler({ type: "soundEnabled", bool: true })
-		expect(setSoundEnabled).toHaveBeenCalledWith(true)
 		expect(updateGlobalStateSpy).toHaveBeenCalledWith("soundEnabled", true)
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("soundEnabled", true)
 		expect(mockPostMessage).toHaveBeenCalled()
 
 		// Simulate setting sound to disabled
 		await messageHandler({ type: "soundEnabled", bool: false })
-		expect(setSoundEnabled).toHaveBeenCalledWith(false)
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("soundEnabled", false)
 		expect(mockPostMessage).toHaveBeenCalled()
 
@@ -588,6 +597,45 @@ describe("ClineProvider", () => {
 
 		const state = await provider.getState()
 		expect(state.alwaysApproveResubmit).toBe(false)
+	})
+
+	test("autoCondenseContext defaults to true", async () => {
+		// Mock globalState.get to return undefined for autoCondenseContext
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) =>
+			key === "autoCondenseContext" ? undefined : null,
+		)
+		const state = await provider.getState()
+		expect(state.autoCondenseContext).toBe(true)
+	})
+
+	test("handles autoCondenseContext message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		await messageHandler({ type: "autoCondenseContext", bool: false })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("autoCondenseContext", false)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("autoCondenseContext", false)
+		expect(mockPostMessage).toHaveBeenCalled()
+	})
+
+	test("autoCondenseContextPercent defaults to 100", async () => {
+		// Mock globalState.get to return undefined for autoCondenseContextPercent
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) =>
+			key === "autoCondenseContextPercent" ? undefined : null,
+		)
+
+		const state = await provider.getState()
+		expect(state.autoCondenseContextPercent).toBe(100)
+	})
+
+	test("handles autoCondenseContextPercent message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		await messageHandler({ type: "autoCondenseContextPercent", value: 75 })
+
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("autoCondenseContextPercent", 75)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("autoCondenseContextPercent", 75)
+		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
 	it("loads saved API config when switching modes", async () => {
@@ -1539,8 +1587,10 @@ describe("ClineProvider", () => {
 				setModeConfig: jest.fn(),
 			} as any
 
-			// Mock current config name
-			mockContext.globalState.get = jest.fn((key: string) => {
+			// Mock the ContextProxy's getValue method to return the current config name
+			const contextProxy = (provider as any).contextProxy
+			const getValueSpy = jest.spyOn(contextProxy, "getValue")
+			getValueSpy.mockImplementation((key: any) => {
 				if (key === "currentApiConfigName") return "current-config"
 				return undefined
 			})
@@ -2090,7 +2140,7 @@ describe("getTelemetryProperties", () => {
 		mockCline = new Task(defaultTaskOptions)
 		mockCline.api = {
 			getModel: jest.fn().mockReturnValue({
-				id: "claude-3-7-sonnet-20250219",
+				id: "claude-sonnet-4-20250514",
 				info: { contextWindow: 200000 },
 			}),
 		}
@@ -2110,6 +2160,264 @@ describe("getTelemetryProperties", () => {
 
 		const properties = await provider.getTelemetryProperties()
 
-		expect(properties).toHaveProperty("modelId", "claude-3-7-sonnet-20250219")
+		expect(properties).toHaveProperty("modelId", "claude-sonnet-4-20250514")
+	})
+})
+
+// Mock getModels for router model tests
+jest.mock("../../../api/providers/fetchers/modelCache", () => ({
+	getModels: jest.fn(),
+	flushModels: jest.fn(),
+}))
+
+describe("ClineProvider - Router Models", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+
+	beforeEach(() => {
+		jest.clearAllMocks()
+
+		const globalState: Record<string, string | undefined> = {}
+		const secrets: Record<string, string | undefined> = {}
+
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => globalState[key]),
+				update: jest
+					.fn()
+					.mockImplementation((key: string, value: string | undefined) => (globalState[key] = value)),
+				keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: {
+				get: jest.fn().mockImplementation((key: string) => secrets[key]),
+				store: jest.fn().mockImplementation((key: string, value: string | undefined) => (secrets[key] = value)),
+				delete: jest.fn().mockImplementation((key: string) => delete secrets[key]),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			dispose: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn().mockImplementation((callback) => {
+				callback()
+				return { dispose: jest.fn() }
+			}),
+			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+	})
+
+	test("handles requestRouterModels with successful responses", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Mock getState to return API configuration
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				openRouterApiKey: "openrouter-key",
+				requestyApiKey: "requesty-key",
+				glamaApiKey: "glama-key",
+				unboundApiKey: "unbound-key",
+				litellmApiKey: "litellm-key",
+				litellmBaseUrl: "http://localhost:4000",
+			},
+		} as any)
+
+		const mockModels = {
+			"model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model 1" },
+			"model-2": { maxTokens: 8192, contextWindow: 16384, description: "Test model 2" },
+		}
+
+		const { getModels } = require("../../../api/providers/fetchers/modelCache")
+		getModels.mockResolvedValue(mockModels)
+
+		await messageHandler({ type: "requestRouterModels" })
+
+		// Verify getModels was called for each provider with correct options
+		expect(getModels).toHaveBeenCalledWith({ provider: "openrouter" })
+		expect(getModels).toHaveBeenCalledWith({ provider: "requesty", apiKey: "requesty-key" })
+		expect(getModels).toHaveBeenCalledWith({ provider: "glama" })
+		expect(getModels).toHaveBeenCalledWith({ provider: "unbound", apiKey: "unbound-key" })
+		expect(getModels).toHaveBeenCalledWith({
+			provider: "litellm",
+			apiKey: "litellm-key",
+			baseUrl: "http://localhost:4000",
+		})
+
+		// Verify response was sent
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "routerModels",
+			routerModels: {
+				openrouter: mockModels,
+				requesty: mockModels,
+				glama: mockModels,
+				unbound: mockModels,
+				litellm: mockModels,
+			},
+		})
+	})
+
+	test("handles requestRouterModels with individual provider failures", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				openRouterApiKey: "openrouter-key",
+				requestyApiKey: "requesty-key",
+				glamaApiKey: "glama-key",
+				unboundApiKey: "unbound-key",
+				litellmApiKey: "litellm-key",
+				litellmBaseUrl: "http://localhost:4000",
+			},
+		} as any)
+
+		const mockModels = { "model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model" } }
+		const { getModels } = require("../../../api/providers/fetchers/modelCache")
+
+		// Mock some providers to succeed and others to fail
+		getModels
+			.mockResolvedValueOnce(mockModels) // openrouter success
+			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty fail
+			.mockResolvedValueOnce(mockModels) // glama success
+			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound fail
+			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm fail
+
+		await messageHandler({ type: "requestRouterModels" })
+
+		// Verify main response includes successful providers and empty objects for failed ones
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "routerModels",
+			routerModels: {
+				openrouter: mockModels,
+				requesty: {},
+				glama: mockModels,
+				unbound: {},
+				litellm: {},
+			},
+		})
+
+		// Verify error messages were sent for failed providers
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "Requesty API error",
+			values: { provider: "requesty" },
+		})
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "Unbound API error",
+			values: { provider: "unbound" },
+		})
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "LiteLLM connection failed",
+			values: { provider: "litellm" },
+		})
+	})
+
+	test("handles requestRouterModels with LiteLLM values from message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Mock state without LiteLLM config
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				openRouterApiKey: "openrouter-key",
+				requestyApiKey: "requesty-key",
+				glamaApiKey: "glama-key",
+				unboundApiKey: "unbound-key",
+				// No litellm config
+			},
+		} as any)
+
+		const mockModels = { "model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model" } }
+		const { getModels } = require("../../../api/providers/fetchers/modelCache")
+		getModels.mockResolvedValue(mockModels)
+
+		await messageHandler({
+			type: "requestRouterModels",
+			values: {
+				litellmApiKey: "message-litellm-key",
+				litellmBaseUrl: "http://message-url:4000",
+			},
+		})
+
+		// Verify LiteLLM was called with values from message
+		expect(getModels).toHaveBeenCalledWith({
+			provider: "litellm",
+			apiKey: "message-litellm-key",
+			baseUrl: "http://message-url:4000",
+		})
+	})
+
+	test("skips LiteLLM when neither config nor message values are provided", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				openRouterApiKey: "openrouter-key",
+				requestyApiKey: "requesty-key",
+				glamaApiKey: "glama-key",
+				unboundApiKey: "unbound-key",
+				// No litellm config
+			},
+		} as any)
+
+		const mockModels = { "model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model" } }
+		const { getModels } = require("../../../api/providers/fetchers/modelCache")
+		getModels.mockResolvedValue(mockModels)
+
+		await messageHandler({ type: "requestRouterModels" })
+
+		// Verify LiteLLM was NOT called
+		expect(getModels).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				provider: "litellm",
+			}),
+		)
+
+		// Verify response includes empty object for LiteLLM
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "routerModels",
+			routerModels: {
+				openrouter: mockModels,
+				requesty: mockModels,
+				glama: mockModels,
+				unbound: mockModels,
+				litellm: {},
+			},
+		})
 	})
 })

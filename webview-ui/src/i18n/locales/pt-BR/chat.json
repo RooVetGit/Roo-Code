@@ -10,7 +10,8 @@
 		"contextWindow": "Janela de contexto:",
 		"closeAndStart": "Fechar tarefa e iniciar nova",
 		"export": "Exportar histórico de tarefas",
-		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)"
+		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
+		"condenseContext": "Condensar contexto de forma inteligente"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -69,7 +70,7 @@
 		"tooltip": "Cancelar a operação atual"
 	},
 	"scrollToBottom": "Rolar para o final do chat",
-	"about": "Gere, refatore e depure código com assistência de IA.<br />Confira nossa <DocsLink>documentação</DocsLink> para saber mais.",
+	"about": "Gere, refatore e depure código com assistência de IA. Confira nossa <DocsLink>documentação</DocsLink> para saber mais.",
 	"onboarding": "<strong>Sua lista de tarefas neste espaço de trabalho está vazia.</strong> Comece digitando uma tarefa abaixo. Não sabe como começar? Leia mais sobre o que o Roo pode fazer por você nos <DocsLink>documentos</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -148,7 +149,9 @@
 		"didSearchReplace": "Roo realizou busca e substituição neste arquivo:",
 		"wantsToInsert": "Roo quer inserir conteúdo neste arquivo:",
 		"wantsToInsertWithLineNumber": "Roo quer inserir conteúdo neste arquivo na linha {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo quer adicionar conteúdo ao final deste arquivo:"
+		"wantsToInsertAtEnd": "Roo quer adicionar conteúdo ao final deste arquivo:",
+		"wantsToReadAndXMore": "Roo quer ler este arquivo e mais {{count}}:",
+		"wantsToReadMultiple": "Roo deseja ler múltiplos arquivos:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo quer visualizar os arquivos de nível superior neste diretório:",
@@ -198,16 +201,22 @@
 		"thinking": "Pensando",
 		"seconds": "{{count}}s"
 	},
+	"contextCondense": {
+		"title": "Contexto condensado",
+		"condensing": "Condensando contexto...",
+		"errorHeader": "Falha ao condensar contexto",
+		"tokens": "tokens"
+	},
 	"followUpSuggest": {
 		"copyToInput": "Copiar para entrada (ou Shift + clique)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.17 Lançado",
-		"description": "Roo Code 3.17 traz poderosos novos recursos e melhorias baseados no seu feedback.",
+		"title": "🎉 Roo Code {{version}} Lançado",
+		"description": "Roo Code {{version}} traz poderosos novos recursos e melhorias baseados no seu feedback.",
 		"whatsNew": "O que há de novo",
-		"feature1": "<bold>Cache implícito para Gemini</bold>: Chamadas de API Gemini agora são automaticamente armazenadas em cache, reduzindo custos de API",
-		"feature2": "<bold>Seleção de modo mais inteligente</bold>: Definições de modo podem agora incluir orientações sobre quando cada modo deve ser usado, permitindo melhor orquestração",
-		"feature3": "<bold>Condensação inteligente de contexto</bold>: Resume de forma inteligente o histórico de conversas quando o contexto fica cheio, em vez de truncar (ative em Configurações -> Experimental)",
+		"feature1": "<bold>Condensação Inteligente de Contexto Habilitada por Padrão</bold>: A condensação de contexto agora está habilitada por padrão com configurações ajustáveis para quando a condensação automática acontece",
+		"feature2": "<bold>Botão de Condensação Manual</bold>: Novo botão no cabeçalho da tarefa permite acionar manualmente a condensação de contexto a qualquer momento",
+		"feature3": "<bold>Configurações de Condensação Aprimoradas</bold>: Ajuste quando e como a condensação automática ocorre através das <contextSettingsLink>Configurações de Contexto</contextSettingsLink>",
 		"hideButton": "Ocultar anúncio",
 		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -243,9 +252,30 @@
 		}
 	},
 	"systemPromptWarning": "AVISO: Substituição personalizada de instrução do sistema ativa. Isso pode comprometer gravemente a funcionalidade e causar comportamento imprevisível.",
+	"profileViolationWarning": "O perfil atual viola as configurações da sua organização",
 	"shellIntegration": {
 		"title": "Aviso de execução de comando",
 		"description": "Seu comando está sendo executado sem a integração de shell do terminal VSCode. Para suprimir este aviso, você pode desativar a integração de shell na seção <strong>Terminal</strong> das <settingsLink>configurações do Roo Code</settingsLink> ou solucionar problemas de integração do terminal VSCode usando o link abaixo.",
 		"troubleshooting": "Clique aqui para a documentação de integração de shell."
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Limite de Solicitações Auto-aprovadas Atingido",
+			"description": "Roo atingiu o limite auto-aprovado de {{count}} solicitação(ões) de API. Deseja redefinir a contagem e prosseguir com a tarefa?",
+			"button": "Redefinir e Continuar"
+		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo quer pesquisar na base de código por <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo quer pesquisar na base de código por <code>{{query}}</code> em <code>{{path}}</code>:",
+		"didSearch": "Encontrado {{count}} resultado(s) para <code>{{query}}</code>:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Aprovar tudo"
+		},
+		"deny": {
+			"title": "Negar tudo"
+		}
 	}
 }

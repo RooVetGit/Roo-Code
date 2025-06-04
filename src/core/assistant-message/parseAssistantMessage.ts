@@ -1,5 +1,6 @@
+import { type ToolName, toolNames } from "@roo-code/types"
+
 import { TextContent, ToolUse, ToolParamName, toolParamNames } from "../../shared/tools"
-import { toolNames, ToolName } from "../../schemas"
 
 export type AssistantMessageContent = TextContent | ToolUse
 
@@ -60,7 +61,7 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 				// contain the closing tag, in which case the param would have
 				// closed and we end up with the rest of the file contents here.
 				// To work around this, we get the string between the starting
-				// ontent tag and the LAST content tag.
+				// content tag and the LAST content tag.
 				const contentParamName: ToolParamName = "content"
 
 				if (currentToolUse.name === "write_to_file" && accumulator.endsWith(`</${contentParamName}>`)) {

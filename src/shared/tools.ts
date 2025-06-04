@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "../schemas"
+import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "@roo-code/types"
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 
@@ -45,11 +45,8 @@ export const toolParamNames = [
 	"question",
 	"result",
 	"diff",
-	"start_line",
-	"end_line",
 	"mode_slug",
 	"reason",
-	"operations",
 	"line",
 	"mode",
 	"message",
@@ -61,8 +58,10 @@ export const toolParamNames = [
 	"replace",
 	"use_regex",
 	"ignore_case",
+	"args",
 	"start_line",
 	"end_line",
+	"query",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -83,7 +82,7 @@ export interface ExecuteCommandToolUse extends ToolUse {
 
 export interface ReadFileToolUse extends ToolUse {
 	name: "read_file"
-	params: Partial<Pick<Record<ToolParamName, string>, "path" | "start_line" | "end_line">>
+	params: Partial<Pick<Record<ToolParamName, string>, "args" | "path" | "start_line" | "end_line">>
 }
 
 export interface FetchInstructionsToolUse extends ToolUse {
@@ -99,6 +98,11 @@ export interface WriteToFileToolUse extends ToolUse {
 export interface InsertCodeBlockToolUse extends ToolUse {
 	name: "insert_content"
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "line" | "content">>
+}
+
+export interface CodebaseSearchToolUse extends ToolUse {
+	name: "codebase_search"
+	params: Partial<Pick<Record<ToolParamName, string>, "query" | "path">>
 }
 
 export interface SearchFilesToolUse extends ToolUse {
@@ -181,14 +185,20 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	new_task: "create new task",
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
+	codebase_search: "codebase search",
 } as const
-
-export type { ToolGroup }
 
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names"],
+		tools: [
+			"read_file",
+			"fetch_instructions",
+			"search_files",
+			"list_files",
+			"list_code_definition_names",
+			"codebase_search",
+		],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],

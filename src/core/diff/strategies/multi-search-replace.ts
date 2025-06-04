@@ -1,7 +1,10 @@
+/* eslint-disable no-irregular-whitespace */
+
 import { distance } from "fastest-levenshtein"
 
+import { ToolProgressStatus } from "@roo-code/types"
+
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
-import { ToolProgressStatus } from "../../../shared/ExtensionMessage"
 import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
 
@@ -89,10 +92,8 @@ export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
 
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
 		return `## apply_diff
-Description: Request to replace existing code using a search and replace block.
-This tool allows for precise, surgical replaces to files by specifying exactly what content to search for and what to replace it with.
-The tool will maintain proper indentation and formatting while making changes.
-Only a single operation is allowed per tool use.
+Description: Request to apply targeted modifications to an existing file by searching for specific sections of content and replacing them. This tool is ideal for precise, surgical edits when you know the exact content to change. It helps maintain proper indentation and formatting.
+You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes to one file efficiently.
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
@@ -242,6 +243,30 @@ Only use a single line of '=======' between search and replacement content, beca
 				">>>>>>> REPLACE\n",
 		})
 
+		const reportLineMarkerInReplaceError = (marker: string) => ({
+			success: false,
+			error:
+				`ERROR: Invalid line marker '${marker}' found in REPLACE section at line ${state.line}\n` +
+				"\n" +
+				"Line markers (:start_line: and :end_line:) are only allowed in SEARCH sections.\n" +
+				"\n" +
+				"CORRECT FORMAT:\n" +
+				"<<<<<<< SEARCH\n" +
+				":start_line:5\n" +
+				"content to find\n" +
+				"=======\n" +
+				"replacement content\n" +
+				">>>>>>> REPLACE\n" +
+				"\n" +
+				"INCORRECT FORMAT:\n" +
+				"<<<<<<< SEARCH\n" +
+				"content to find\n" +
+				"=======\n" +
+				":start_line:5    <-- Invalid location\n" +
+				"replacement content\n" +
+				">>>>>>> REPLACE\n",
+		})
+
 		const lines = diffContent.split("\n")
 		const searchCount = lines.filter((l) => l.trim() === SEARCH).length
 		const sepCount = lines.filter((l) => l.trim() === SEP).length
@@ -252,6 +277,16 @@ Only use a single line of '=======' between search and replacement content, beca
 		for (const line of diffContent.split("\n")) {
 			state.line++
 			const marker = line.trim()
+
+			// Check for line markers in REPLACE sections (but allow escaped ones)
+			if (state.current === State.AFTER_SEPARATOR) {
+				if (marker.startsWith(":start_line:") && !line.trim().startsWith("\\:start_line:")) {
+					return reportLineMarkerInReplaceError(":start_line:")
+				}
+				if (marker.startsWith(":end_line:") && !line.trim().startsWith("\\:end_line:")) {
+					return reportLineMarkerInReplaceError(":end_line:")
+				}
+			}
 
 			switch (state.current) {
 				case State.START:

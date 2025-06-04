@@ -8,41 +8,14 @@ on:
     types: [opened, reopened, ready_for_review, synchronize]
     branches: [main]
 
-env:
-  NODE_VERSION: 20.18.1
-
 jobs:
-  compile:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm run install:all
-      - name: Compile
-        run: npm run compile
-      - name: Check types
-        run: npm run check-types
-      - name: Lint
-        run: npm run lint
-
   check-translations:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm run install:all
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
       - name: Verify all translations are complete
         run: node scripts/find-missing-translations.js
 
@@ -51,63 +24,35 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm run install:all
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
       - name: Run knip checks
-        run: npm run knip
+        run: pnpm knip
 
-  test-extension:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm run install:all
-      - name: Compile (to build and copy WASM files)
-        run: npm run compile
-      - name: Run jest unit tests
-        run: npx jest --silent
-      - name: Run vitest unit tests
-        run: npx vitest run --silent
-
-  test-webview:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm run install:all
-      - name: Run unit tests
-        working-directory: webview-ui
-        run: npx jest --silent
-
-  unit-test:
-    needs: [test-extension, test-webview]
+  compile:
     runs-on: ubuntu-latest
     steps:
-      - name: NO-OP
-        run: echo "All unit tests passed."
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+      - name: Lint
+        run: pnpm lint
+      - name: Check types
+        run: pnpm check-types
+
+  platform-unit-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+      - name: Run unit tests
+        run: pnpm test
 
   check-openrouter-api-key:
     runs-on: ubuntu-latest
@@ -131,16 +76,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm run install:all
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
       - name: Create .env.local file
-        working-directory: e2e
+        working-directory: apps/vscode-e2e
         run: echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" > .env.local
       - name: Run integration tests
-        working-directory: e2e
-        run: xvfb-run -a npm run ci
+        working-directory: apps/vscode-e2e
+        run: xvfb-run -a pnpm test:ci

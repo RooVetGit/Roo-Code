@@ -1,10 +1,11 @@
 {
 	"readFile": {
 		"linesRange": " (líneas {{start}}-{{end}})",
-		"linesFromToEnd": " (líneas {{start}}-final)",
-		"linesFromStartTo": " (líneas 1-{{end}})",
 		"definitionsOnly": " (solo definiciones)",
 		"maxLines": " (máximo {{max}} líneas)"
 	},
-	"toolRepetitionLimitReached": "Roo parece estar atrapado en un bucle, intentando la misma acción ({{toolName}}) repetidamente. Esto podría indicar un problema con su estrategia actual. Considera reformular la tarea, proporcionar instrucciones más específicas o guiarlo hacia un enfoque diferente."
+	"toolRepetitionLimitReached": "Roo parece estar atrapado en un bucle, intentando la misma acción ({{toolName}}) repetidamente. Esto podría indicar un problema con su estrategia actual. Considera reformular la tarea, proporcionar instrucciones más específicas o guiarlo hacia un enfoque diferente.",
+	"codebaseSearch": {
+		"approval": "Buscando '{{query}}' en la base de código..."
+	}
 }

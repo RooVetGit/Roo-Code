@@ -1,7 +1,9 @@
 import { useCallback, useState } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { ProviderSettings, RouterModels, requestyDefaultModelId } from "@roo/shared/api"
+import { type ProviderSettings, type OrganizationAllowList, requestyDefaultModelId } from "@roo-code/types"
+
+import type { RouterModels } from "@roo/api"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -17,6 +19,7 @@ type RequestyProps = {
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	routerModels?: RouterModels
 	refetchRouterModels: () => void
+	organizationAllowList: OrganizationAllowList
 }
 
 export const Requesty = ({
@@ -24,6 +27,7 @@ export const Requesty = ({
 	setApiConfigurationField,
 	routerModels,
 	refetchRouterModels,
+	organizationAllowList,
 }: RequestyProps) => {
 	const { t } = useAppTranslation()
 
@@ -91,6 +95,7 @@ export const Requesty = ({
 				modelIdKey="requestyModelId"
 				serviceName="Requesty"
 				serviceUrl="https://requesty.ai"
+				organizationAllowList={organizationAllowList}
 			/>
 		</>
 	)

@@ -1,9 +1,12 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 
-import { ModelInfo } from "../../shared/api"
-import { ApiHandler, SingleCompletionHandler } from "../index"
+import type { ModelInfo } from "@roo-code/types"
+
+import { getCommand } from "../../utils/commands"
 import { ApiStream } from "../transform/stream"
+
+import type { ApiHandler, SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 /**
  * Human Relay API processor
@@ -18,8 +21,13 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 	 * Create a message processing flow, display a dialog box to request human assistance
 	 * @param systemPrompt System prompt words
 	 * @param messages Message list
+	 * @param metadata Optional metadata
 	 */
-	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		// Get the most recent user message
 		const latestMessage = messages[messages.length - 1]
 
@@ -111,17 +119,17 @@ function getMessageContent(message: Anthropic.Messages.MessageParam): string {
  */
 async function showHumanRelayDialog(promptText: string): Promise<string | undefined> {
 	return new Promise<string | undefined>((resolve) => {
-		// Create a unique request ID
+		// Create a unique request ID.
 		const requestId = Date.now().toString()
 
-		// Register a global callback function
+		// Register a global callback function.
 		vscode.commands.executeCommand(
-			"roo-cline.registerHumanRelayCallback",
+			getCommand("registerHumanRelayCallback"),
 			requestId,
 			(response: string | undefined) => resolve(response),
 		)
 
-		// Open the dialog box directly using the current panel
-		vscode.commands.executeCommand("roo-cline.showHumanRelayDialog", { requestId, promptText })
+		// Open the dialog box directly using the current panel.
+		vscode.commands.executeCommand(getCommand("showHumanRelayDialog"), { requestId, promptText })
 	})
 }

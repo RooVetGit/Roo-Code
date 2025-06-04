@@ -28,9 +28,43 @@
 		"notifications": "通知",
 		"contextManagement": "上下文",
 		"terminal": "终端",
+		"prompts": "提示词",
 		"experimental": "实验性",
 		"language": "语言",
 		"about": "关于 Roo Code"
+	},
+	"prompts": {
+		"description": "配置用于快速操作的支持提示词，如增强提示词、解释代码和修复问题。这些提示词帮助 Roo 为常见开发任务提供更好的支持。"
+	},
+	"codeIndex": {
+		"title": "代码库索引",
+		"enableLabel": "启用代码库索引",
+		"enableDescription": "<0>代码库索引</0>是一个实验性功能，使用 AI 嵌入为您的项目创建语义搜索索引。这使 Roo Code 能够通过基于含义而非仅仅关键词来查找相关代码，从而更好地理解和导航大型代码库。",
+		"providerLabel": "嵌入提供商",
+		"selectProviderPlaceholder": "选择提供商",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI 兼容",
+		"openaiCompatibleBaseUrlLabel": "基础 URL：",
+		"openaiCompatibleApiKeyLabel": "API 密钥：",
+		"openaiCompatibleModelDimensionLabel": "嵌入维度：",
+		"openaiCompatibleModelDimensionPlaceholder": "例如，1536",
+		"openaiCompatibleModelDimensionDescription": "模型的嵌入维度（输出大小）。请查阅您的提供商文档获取此值。常见值：384、768、1536、3072。",
+		"openaiKeyLabel": "OpenAI 密钥：",
+		"modelLabel": "模型",
+		"selectModelPlaceholder": "选择模型",
+		"ollamaUrlLabel": "Ollama URL：",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant 密钥：",
+		"startIndexingButton": "开始索引",
+		"clearIndexDataButton": "清除索引数据",
+		"unsavedSettingsMessage": "请先保存设置再开始索引过程。",
+		"clearDataDialog": {
+			"title": "确定要继续吗？",
+			"description": "此操作无法撤消。这将永久删除您的代码库索引数据。",
+			"cancelButton": "取消",
+			"confirmButton": "清除数据"
+		}
 	},
 	"autoApprove": {
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
@@ -79,6 +113,11 @@
 			"allowedCommandsDescription": "当\"自动批准命令行操作\"启用时可以自动执行的命令前缀。添加 * 以允许所有命令（谨慎使用）。",
 			"commandPlaceholder": "输入命令前缀（例如 'git '）",
 			"addButton": "添加"
+		},
+		"apiRequestLimit": {
+			"title": "最大请求数",
+			"description": "在请求批准以继续执行任务之前，自动发出此数量的 API 请求。",
+			"unlimited": "无限制"
 		}
 	},
 	"providers": {
@@ -109,6 +148,7 @@
 		"glamaApiKey": "Glama API 密钥",
 		"getGlamaApiKey": "获取 Glama API 密钥",
 		"useCustomBaseUrl": "使用自定义基础 URL",
+		"useReasoning": "启用推理",
 		"useHostHeader": "使用自定义 Host 标头",
 		"useLegacyFormat": "使用传统 OpenAI API 格式",
 		"customHeaders": "自定义标头",
@@ -118,7 +158,10 @@
 		"requestyApiKey": "Requesty API 密钥",
 		"refreshModels": {
 			"label": "刷新模型",
-			"hint": "请重新打开设置以查看最新模型。"
+			"hint": "请重新打开设置以查看最新模型。",
+			"loading": "正在刷新模型列表...",
+			"success": "模型列表刷新成功！",
+			"error": "刷新模型列表失败。请重试。"
 		},
 		"getRequestyApiKey": "获取 Requesty API 密钥",
 		"openRouterTransformsText": "自动压缩提示词和消息链到上下文长度限制内 (<a>OpenRouter转换</a>)",
@@ -134,6 +177,7 @@
 		"groqApiKey": "Groq API 密钥",
 		"getGeminiApiKey": "获取 Gemini API 密钥",
 		"openAiApiKey": "OpenAI API 密钥",
+		"apiKey": "API 密钥",
 		"openAiBaseUrl": "OpenAI 基础 URL",
 		"getOpenAiApiKey": "获取 OpenAI API 密钥",
 		"mistralApiKey": "Mistral API 密钥",
@@ -152,6 +196,11 @@
 		"awsSessionToken": "AWS 会话Token",
 		"awsRegion": "AWS 区域",
 		"awsCrossRegion": "使用跨区域推理",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "使用自定义 VPC 端点",
+			"vpcEndpointUrlPlaceholder": "输入 VPC 端点 URL（可选）",
+			"examples": "示例："
+		},
 		"enablePromptCaching": "启用提示缓存",
 		"enablePromptCachingTitle": "开启提示缓存可提升性能并节省成本",
 		"cacheUsageNote": "提示：若未显示缓存使用情况，请切换模型后重新选择",
@@ -185,6 +234,8 @@
 		},
 		"unboundApiKey": "Unbound API 密钥",
 		"getUnboundApiKey": "获取 Unbound API 密钥",
+		"unboundRefreshModelsSuccess": "模型列表已更新！您现在可以从最新模型中选择。",
+		"unboundInvalidApiKey": "无效的API密钥。请检查您的API密钥并重试。",
 		"humanRelay": {
 			"description": "不需要 API 密钥，但用户需要帮助将信息复制并粘贴到网页聊天 AI。",
 			"instructions": "使用期间，将弹出对话框并自动将当前消息复制到剪贴板。您需要将这些内容粘贴到 AI 的网页版本（如 ChatGPT 或 Claude），然后将 AI 的回复复制回对话框并点击确认按钮。"
@@ -298,6 +349,25 @@
 	},
 	"contextManagement": {
 		"description": "管理AI上下文信息（影响token用量和回答质量）",
+		"autoCondenseContextPercent": {
+			"label": "触发智能上下文压缩的阈值",
+			"description": "当上下文窗口达到此阈值时，Roo 将自动压缩它。"
+		},
+		"condensingApiConfiguration": {
+			"label": "上下文压缩的API配置",
+			"description": "选择用于上下文压缩操作的API配置。留空则使用当前活动的配置。",
+			"useCurrentConfig": "使用当前配置"
+		},
+		"customCondensingPrompt": {
+			"label": "自定义上下文压缩提示词",
+			"description": "自定义用于上下文压缩的系统提示词。留空则使用默认提示词。",
+			"placeholder": "在此输入您的自定义压缩提示词...\n\n您可以使用与默认提示词相同的结构：\n- 之前的对话\n- 当前工作\n- 关键技术概念\n- 相关文件和代码\n- 问题解决\n- 待处理任务和下一步",
+			"reset": "重置为默认值",
+			"hint": "留空 = 使用默认提示词"
+		},
+		"autoCondenseContext": {
+			"name": "自动触发智能上下文压缩"
+		},
 		"openTabs": {
 			"label": "标签页数量限制",
 			"description": "允许纳入上下文的最大标签页数（数值越大消耗token越多）"
@@ -315,6 +385,10 @@
 			"description": "自动读取文件行数设置：-1=完整读取 0=仅生成行号索引，较小值可节省token，支持后续使用行号进行读取。 <0>了解更多</0>",
 			"lines": "行",
 			"always_full_read": "始终读取整个文件"
+		},
+		"maxConcurrentFileReads": {
+			"label": "并发文件读取限制",
+			"description": "read_file 工具可以同时处理的最大文件数。较高的值可能会加快读取多个小文件的速度，但会增加内存使用量。"
 		}
 	},
 	"terminal": {
@@ -395,11 +469,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "智能压缩上下文窗口",
-			"description": "当任务上下文窗口接近填满时，使用 LLM 调用来总结过去的对话，而不是删除旧消息。注意：目前 UI 中显示的 API 费用不包括总结的成本。"
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "启用diff更新工具",
 			"description": "可减少因模型错误导致的重复尝试，但可能引发意外操作。启用前请确保理解风险并会仔细检查所有修改。"
@@ -419,6 +488,10 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "允许批量搜索和替换",
 			"description": "启用后，Roo 将尝试在一个请求中进行批量搜索和替换。"
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "启用并发文件读取",
+			"description": "启用后，Roo 可以在单个请求中读取多个文件（最多 15 个文件）。禁用后，Roo 必须逐个读取文件。在使用能力较弱的模型或希望对文件访问有更多控制时，禁用此功能可能会有所帮助。"
 		}
 	},
 	"promptCaching": {
@@ -461,7 +534,7 @@
 		"useCustomModel": "使用自定义：{{modelId}}"
 	},
 	"footer": {
-		"feedback": "如果您有任何问题或反馈，请随时在 <githubLink>github.com/RooVetGit/Roo-Code</githubLink> 上提出问题或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "如果您有任何问题或反馈，请随时在 <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> 上提出问题或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "允许匿名数据收集",
 			"description": "匿名收集错误报告和使用数据（不含代码/提示/个人信息），详情见隐私政策"
@@ -487,7 +560,10 @@
 			"invalidFormat": "ARN 格式无效。请检查格式要求。",
 			"regionMismatch": "警告：您的 ARN 中的区域 ({{arnRegion}}) 与您选择的区域 ({{region}}) 不匹配。这可能会导致访问问题。提供程序将使用 ARN 中的区域。"
 		},
-		"modelAvailability": "模型ID {{modelId}} 不可用，请重新选择"
+		"modelAvailability": "模型ID {{modelId}} 不可用，请重新选择",
+		"providerNotAllowed": "提供商 '{{provider}}' 不允许用于您的组织",
+		"modelNotAllowed": "模型 '{{model}}' 不允许用于提供商 '{{provider}}'，您的组织不允许",
+		"profileInvalid": "此配置文件包含您的组织不允许的提供商或模型"
 	},
 	"placeholders": {
 		"apiKey": "请输入 API 密钥...",

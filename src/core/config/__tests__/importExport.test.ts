@@ -5,7 +5,9 @@ import * as path from "path"
 
 import * as vscode from "vscode"
 
-import { ProviderName } from "../../../schemas"
+import type { ProviderName } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { importSettings, exportSettings } from "../importExport"
 import { ProviderSettingsManager } from "../ProviderSettingsManager"
 import { ContextProxy } from "../ContextProxy"
@@ -39,6 +41,10 @@ describe("importExport", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks()
+
+		if (!TelemetryService.hasInstance()) {
+			TelemetryService.createInstance([])
+		}
 
 		mockProviderSettingsManager = {
 			export: jest.fn(),
@@ -225,7 +231,8 @@ describe("importExport", () => {
 				customModesManager: mockCustomModesManager,
 			})
 
-			expect(result).toEqual({ success: false, error: "Expected property name or '}' in JSON at position 2" })
+			expect(result.success).toBe(false)
+			expect(result.error).toMatch(/^Expected property name or '}' in JSON at position 2/)
 			expect(fs.readFile).toHaveBeenCalledWith("/mock/path/settings.json", "utf-8")
 			expect(mockProviderSettingsManager.import).not.toHaveBeenCalled()
 			expect(mockContextProxy.setValues).not.toHaveBeenCalled()
@@ -279,41 +286,41 @@ describe("importExport", () => {
 			expect(result.providerProfiles?.apiConfigs["default"]).toBeDefined()
 			expect(result.providerProfiles?.apiConfigs["default"].apiProvider).toBe("anthropic")
 		})
-	})
 
-	it("should call updateCustomMode for each custom mode in config", async () => {
-		;(vscode.window.showOpenDialog as jest.Mock).mockResolvedValue([{ fsPath: "/mock/path/settings.json" }])
+		it("should call updateCustomMode for each custom mode in config", async () => {
+			;(vscode.window.showOpenDialog as jest.Mock).mockResolvedValue([{ fsPath: "/mock/path/settings.json" }])
 
-		const customModes = [
-			{ slug: "mode1", name: "Mode One", roleDefinition: "Custom role one", groups: [] },
-			{ slug: "mode2", name: "Mode Two", roleDefinition: "Custom role two", groups: [] },
-		]
+			const customModes = [
+				{ slug: "mode1", name: "Mode One", roleDefinition: "Custom role one", groups: [] },
+				{ slug: "mode2", name: "Mode Two", roleDefinition: "Custom role two", groups: [] },
+			]
 
-		const mockFileContent = JSON.stringify({
-			providerProfiles: { currentApiConfigName: "test", apiConfigs: {} },
-			globalSettings: { mode: "code", customModes },
-		})
+			const mockFileContent = JSON.stringify({
+				providerProfiles: { currentApiConfigName: "test", apiConfigs: {} },
+				globalSettings: { mode: "code", customModes },
+			})
 
-		;(fs.readFile as jest.Mock).mockResolvedValue(mockFileContent)
+			;(fs.readFile as jest.Mock).mockResolvedValue(mockFileContent)
 
-		mockProviderSettingsManager.export.mockResolvedValue({
-			currentApiConfigName: "test",
-			apiConfigs: {},
-		})
+			mockProviderSettingsManager.export.mockResolvedValue({
+				currentApiConfigName: "test",
+				apiConfigs: {},
+			})
 
-		mockProviderSettingsManager.listConfig.mockResolvedValue([])
+			mockProviderSettingsManager.listConfig.mockResolvedValue([])
 
-		const result = await importSettings({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
-			customModesManager: mockCustomModesManager,
-		})
+			const result = await importSettings({
+				providerSettingsManager: mockProviderSettingsManager,
+				contextProxy: mockContextProxy,
+				customModesManager: mockCustomModesManager,
+			})
 
-		expect(result.success).toBe(true)
-		expect(mockCustomModesManager.updateCustomMode).toHaveBeenCalledTimes(customModes.length)
+			expect(result.success).toBe(true)
+			expect(mockCustomModesManager.updateCustomMode).toHaveBeenCalledTimes(customModes.length)
 
-		customModes.forEach((mode) => {
-			expect(mockCustomModesManager.updateCustomMode).toHaveBeenCalledWith(mode.slug, mode)
+			customModes.forEach((mode) => {
+				expect(mockCustomModesManager.updateCustomMode).toHaveBeenCalledWith(mode.slug, mode)
+			})
 		})
 	})
 
@@ -364,6 +371,39 @@ describe("importExport", () => {
 			expect(mockProviderSettingsManager.export).toHaveBeenCalled()
 			expect(mockContextProxy.export).toHaveBeenCalled()
 			expect(fs.mkdir).toHaveBeenCalledWith("/mock/path", { recursive: true })
+
+			expect(fs.writeFile).toHaveBeenCalledWith(
+				"/mock/path/roo-code-settings.json",
+				JSON.stringify({ providerProfiles: mockProviderProfiles, globalSettings: mockGlobalSettings }, null, 2),
+				"utf-8",
+			)
+		})
+
+		it("should include globalSettings when allowedMaxRequests is null", async () => {
+			;(vscode.window.showSaveDialog as jest.Mock).mockResolvedValue({
+				fsPath: "/mock/path/roo-code-settings.json",
+			})
+
+			const mockProviderProfiles = {
+				currentApiConfigName: "test",
+				apiConfigs: { test: { apiProvider: "openai" as ProviderName, id: "test-id" } },
+				migrations: { rateLimitSecondsMigrated: false },
+			}
+
+			mockProviderSettingsManager.export.mockResolvedValue(mockProviderProfiles)
+
+			const mockGlobalSettings = {
+				mode: "code",
+				autoApprovalEnabled: true,
+				allowedMaxRequests: null,
+			}
+
+			mockContextProxy.export.mockResolvedValue(mockGlobalSettings)
+
+			await exportSettings({
+				providerSettingsManager: mockProviderSettingsManager,
+				contextProxy: mockContextProxy,
+			})
 
 			expect(fs.writeFile).toHaveBeenCalledWith(
 				"/mock/path/roo-code-settings.json",
