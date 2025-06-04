@@ -3,7 +3,7 @@ import { CodeIndexConfigManager } from "../config-manager"
 import { CacheManager } from "../cache-manager"
 import { OpenAiEmbedder } from "../embedders/openai"
 import { CodeIndexOllamaEmbedder } from "../embedders/ollama"
-import { OpenAiCompatibleEmbedder } from "../embedders/openai-compatible"
+import { OpenAICompatibleEmbedder } from "../embedders/openai-compatible"
 import { QdrantVectorStore } from "../vector-store/qdrant-client"
 
 // Mock the embedders and vector store
@@ -20,7 +20,7 @@ jest.mock("../../../shared/embeddingModels", () => ({
 
 const MockedOpenAiEmbedder = OpenAiEmbedder as jest.MockedClass<typeof OpenAiEmbedder>
 const MockedCodeIndexOllamaEmbedder = CodeIndexOllamaEmbedder as jest.MockedClass<typeof CodeIndexOllamaEmbedder>
-const MockedOpenAiCompatibleEmbedder = OpenAiCompatibleEmbedder as jest.MockedClass<typeof OpenAiCompatibleEmbedder>
+const MockedOpenAICompatibleEmbedder = OpenAICompatibleEmbedder as jest.MockedClass<typeof OpenAICompatibleEmbedder>
 const MockedQdrantVectorStore = QdrantVectorStore as jest.MockedClass<typeof QdrantVectorStore>
 
 // Import the mocked functions
@@ -179,7 +179,7 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedOpenAiCompatibleEmbedder).toHaveBeenCalledWith(
+			expect(MockedOpenAICompatibleEmbedder).toHaveBeenCalledWith(
 				"https://api.example.com/v1",
 				"test-api-key",
 				testModelId,
@@ -202,7 +202,7 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedOpenAiCompatibleEmbedder).toHaveBeenCalledWith(
+			expect(MockedOpenAICompatibleEmbedder).toHaveBeenCalledWith(
 				"https://api.example.com/v1",
 				"test-api-key",
 				undefined,

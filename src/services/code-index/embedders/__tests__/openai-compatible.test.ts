@@ -1,5 +1,5 @@
 import { OpenAI } from "openai"
-import { OpenAiCompatibleEmbedder } from "../openai-compatible"
+import { OpenAICompatibleEmbedder } from "../openai-compatible"
 import { MAX_BATCH_TOKENS, MAX_ITEM_TOKENS, MAX_BATCH_RETRIES, INITIAL_RETRY_DELAY_MS } from "../../constants"
 
 // Mock the OpenAI SDK
@@ -7,8 +7,8 @@ jest.mock("openai")
 
 const MockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 
-describe("OpenAiCompatibleEmbedder", () => {
-	let embedder: OpenAiCompatibleEmbedder
+describe("OpenAICompatibleEmbedder", () => {
+	let embedder: OpenAICompatibleEmbedder
 	let mockOpenAIInstance: jest.Mocked<OpenAI>
 	let mockEmbeddingsCreate: jest.MockedFunction<any>
 
@@ -38,7 +38,7 @@ describe("OpenAiCompatibleEmbedder", () => {
 
 	describe("constructor", () => {
 		it("should create embedder with valid configuration", () => {
-			embedder = new OpenAiCompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
+			embedder = new OpenAICompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
 
 			expect(MockedOpenAI).toHaveBeenCalledWith({
 				baseURL: testBaseUrl,
@@ -48,7 +48,7 @@ describe("OpenAiCompatibleEmbedder", () => {
 		})
 
 		it("should use default model when modelId is not provided", () => {
-			embedder = new OpenAiCompatibleEmbedder(testBaseUrl, testApiKey)
+			embedder = new OpenAICompatibleEmbedder(testBaseUrl, testApiKey)
 
 			expect(MockedOpenAI).toHaveBeenCalledWith({
 				baseURL: testBaseUrl,
@@ -58,19 +58,19 @@ describe("OpenAiCompatibleEmbedder", () => {
 		})
 
 		it("should throw error when baseUrl is missing", () => {
-			expect(() => new OpenAiCompatibleEmbedder("", testApiKey, testModelId)).toThrow(
+			expect(() => new OpenAICompatibleEmbedder("", testApiKey, testModelId)).toThrow(
 				"Base URL is required for OpenAI Compatible embedder",
 			)
 		})
 
 		it("should throw error when apiKey is missing", () => {
-			expect(() => new OpenAiCompatibleEmbedder(testBaseUrl, "", testModelId)).toThrow(
+			expect(() => new OpenAICompatibleEmbedder(testBaseUrl, "", testModelId)).toThrow(
 				"API key is required for OpenAI Compatible embedder",
 			)
 		})
 
 		it("should throw error when both baseUrl and apiKey are missing", () => {
-			expect(() => new OpenAiCompatibleEmbedder("", "", testModelId)).toThrow(
+			expect(() => new OpenAICompatibleEmbedder("", "", testModelId)).toThrow(
 				"Base URL is required for OpenAI Compatible embedder",
 			)
 		})
@@ -78,7 +78,7 @@ describe("OpenAiCompatibleEmbedder", () => {
 
 	describe("embedderInfo", () => {
 		beforeEach(() => {
-			embedder = new OpenAiCompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
+			embedder = new OpenAICompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
 		})
 
 		it("should return correct embedder info", () => {
@@ -92,7 +92,7 @@ describe("OpenAiCompatibleEmbedder", () => {
 
 	describe("createEmbeddings", () => {
 		beforeEach(() => {
-			embedder = new OpenAiCompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
+			embedder = new OpenAICompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
 		})
 
 		it("should create embeddings for single text", async () => {

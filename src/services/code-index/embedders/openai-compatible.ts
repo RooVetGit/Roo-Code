@@ -11,7 +11,7 @@ import {
  * OpenAI Compatible implementation of the embedder interface with batching and rate limiting.
  * This embedder allows using any OpenAI-compatible API endpoint by specifying a custom baseURL.
  */
-export class OpenAiCompatibleEmbedder implements IEmbedder {
+export class OpenAICompatibleEmbedder implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
 
