@@ -68,27 +68,29 @@ export function getModelDimension(provider: EmbedderProvider, modelId: string): 
  * @returns The default specific model ID for the provider (e.g., "text-embedding-3-small").
  */
 export function getDefaultModelId(provider: EmbedderProvider): string {
-	// Simple default logic for now
-	if (provider === "openai") {
-		return "text-embedding-3-small"
-	}
-	if (provider === "ollama") {
-		// Choose a sensible default for Ollama, e.g., the first one listed or a specific one
-		const ollamaModels = EMBEDDING_MODEL_PROFILES.ollama
-		const defaultOllamaModel = ollamaModels && Object.keys(ollamaModels)[0]
-		if (defaultOllamaModel) {
-			return defaultOllamaModel
-		}
-		// Fallback if no Ollama models are defined (shouldn't happen with the constant)
-		console.warn("No default Ollama model found in profiles.")
-		// Return a placeholder or throw an error, depending on desired behavior
-		return "unknown-default" // Placeholder specific model ID
-	}
-	if (provider === "openai-compatible") {
-		return "text-embedding-3-small"
-	}
+	switch (provider) {
+		case "openai":
+			return "text-embedding-3-small"
 
-	// Fallback for unknown providers
-	console.warn(`Unknown provider for default model ID: ${provider}. Falling back to OpenAI default.`)
-	return "text-embedding-3-small"
+		case "ollama": {
+			// Choose a sensible default for Ollama, e.g., the first one listed or a specific one
+			const ollamaModels = EMBEDDING_MODEL_PROFILES.ollama
+			const defaultOllamaModel = ollamaModels && Object.keys(ollamaModels)[0]
+			if (defaultOllamaModel) {
+				return defaultOllamaModel
+			}
+			// Fallback if no Ollama models are defined (shouldn't happen with the constant)
+			console.warn("No default Ollama model found in profiles.")
+			// Return a placeholder or throw an error, depending on desired behavior
+			return "unknown-default" // Placeholder specific model ID
+		}
+
+		case "openai-compatible":
+			return "text-embedding-3-small"
+
+		default:
+			// Fallback for unknown providers
+			console.warn(`Unknown provider for default model ID: ${provider}. Falling back to OpenAI default.`)
+			return "text-embedding-3-small"
+	}
 }
