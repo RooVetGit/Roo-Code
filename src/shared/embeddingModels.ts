@@ -70,6 +70,7 @@ export function getModelDimension(provider: EmbedderProvider, modelId: string): 
 export function getDefaultModelId(provider: EmbedderProvider): string {
 	switch (provider) {
 		case "openai":
+		case "openai-compatible":
 			return "text-embedding-3-small"
 
 		case "ollama": {
@@ -84,10 +85,6 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 			// Return a placeholder or throw an error, depending on desired behavior
 			return "unknown-default" // Placeholder specific model ID
 		}
-
-		case "openai-compatible":
-			return "text-embedding-3-small"
-
 		default:
 			// Fallback for unknown providers
 			console.warn(`Unknown provider for default model ID: ${provider}. Falling back to OpenAI default.`)
