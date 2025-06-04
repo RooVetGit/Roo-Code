@@ -45,7 +45,7 @@
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
 		"openaiCompatibleProvider": "OpenAI 兼容",
-		"openaiCompatibleBaseUrlLabel": "基础 URL:",
+		"openaiCompatibleBaseUrlLabel": "基础 URL：",
 		"openaiCompatibleApiKeyLabel": "API 密钥:",
 		"openaiCompatibleModelDimensionLabel": "嵌入维度：",
 		"openaiCompatibleModelDimensionPlaceholder": "例如，1536",
