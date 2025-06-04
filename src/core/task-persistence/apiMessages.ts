@@ -22,26 +22,41 @@ export async function readApiMessages({
 
 	if (await fileExistsAtPath(filePath)) {
 		const fileContent = await fs.readFile(filePath, "utf8")
-		const parsedData = JSON.parse(fileContent)
-		if (Array.isArray(parsedData) && parsedData.length === 0) {
+		try {
+			const parsedData = JSON.parse(fileContent)
+			if (Array.isArray(parsedData) && parsedData.length === 0) {
+				console.error(
+					`[Roo-Debug] readApiMessages: Found API conversation history file, but it's empty (parsed as []). TaskId: ${taskId}, Path: ${filePath}`,
+				)
+			}
+			return parsedData
+		} catch (error) {
 			console.error(
-				`[Roo-Debug] readApiMessages: Found API conversation history file, but it's empty. TaskId: ${taskId}, Path: ${filePath}`,
+				`[Roo-Debug] readApiMessages: Error parsing API conversation history file. TaskId: ${taskId}, Path: ${filePath}, Error: ${error}`,
 			)
+			throw error
 		}
-		return parsedData
 	} else {
 		const oldPath = path.join(taskDir, "claude_messages.json")
 
 		if (await fileExistsAtPath(oldPath)) {
 			const fileContent = await fs.readFile(oldPath, "utf8")
-			const parsedData = JSON.parse(fileContent)
-			if (Array.isArray(parsedData) && parsedData.length === 0) {
+			try {
+				const parsedData = JSON.parse(fileContent)
+				if (Array.isArray(parsedData) && parsedData.length === 0) {
+					console.error(
+						`[Roo-Debug] readApiMessages: Found OLD API conversation history file (claude_messages.json), but it's empty (parsed as []). TaskId: ${taskId}, Path: ${oldPath}`,
+					)
+				}
+				await fs.unlink(oldPath)
+				return parsedData
+			} catch (error) {
 				console.error(
-					`[Roo-Debug] readApiMessages: Found OLD API conversation history file (claude_messages.json), but it's empty. TaskId: ${taskId}, Path: ${oldPath}`,
+					`[Roo-Debug] readApiMessages: Error parsing OLD API conversation history file (claude_messages.json). TaskId: ${taskId}, Path: ${oldPath}, Error: ${error}`,
 				)
+				// DO NOT unlink oldPath if parsing failed, throw error instead.
+				throw error
 			}
-			await fs.unlink(oldPath)
-			return parsedData
 		}
 	}
 
