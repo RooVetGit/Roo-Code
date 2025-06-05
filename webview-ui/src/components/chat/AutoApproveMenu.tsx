@@ -43,6 +43,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		(key: AutoApproveSetting, value: boolean) => {
 			vscode.postMessage({ type: key, bool: value })
 
+			// Update the specific setting
 			switch (key) {
 				case "alwaysAllowReadOnly":
 					setAlwaysAllowReadOnly(value)
@@ -69,6 +70,29 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					setAlwaysApproveResubmit(value)
 					break
 			}
+
+			// After updating the specific setting, check if any action is now enabled.
+			// If so, ensure autoApprovalEnabled is true.
+			// This needs to be done after the state updates, so we'll use a temporary check
+			// or re-evaluate the `toggles` object.
+			// For simplicity, we'll assume the `toggles` state will reflect the change
+			// in the next render cycle, and we can force autoApprovalEnabled to true
+			// if any action is being enabled.
+			if (value === true) {
+				setAutoApprovalEnabled(true)
+				vscode.postMessage({ type: "autoApprovalEnabled", bool: true })
+			} else {
+				// If an action is being disabled, check if all are now disabled.
+				// If so, set autoApprovalEnabled to false.
+				// This requires re-evaluating the state of all toggles *after* the current one is set.
+				// A more robust solution would involve passing the updated `toggles` object
+				// or re-calculating `hasAnyAutoApprovedAction` here.
+				// For now, let's rely on the `hasAnyAutoApprovedAction` memoized value
+				// which will update on the next render.
+				// If the user unchecks the last enabled option, autoApprovalEnabled should become false.
+				// This logic is already handled by the main checkbox's disabled state in the collapsed view.
+				// So, we only need to ensure it turns ON when an individual is turned ON.
+			}
 		},
 		[
 			setAlwaysAllowReadOnly,
@@ -79,6 +103,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysAllowModeSwitch,
 			setAlwaysAllowSubtasks,
 			setAlwaysApproveResubmit,
+			setAutoApprovalEnabled, // Added setAutoApprovalEnabled to dependencies
+			vscode, // Added vscode to dependencies
 		],
 	)
 
@@ -107,10 +133,20 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	const enabledActionsList = Object.entries(toggles)
-		.filter(([_key, value]) => !!value)
-		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
-		.join(", ")
+	const hasAnyAutoApprovedAction = useMemo(
+		() => Object.values(toggles).some((value) => !!value),
+		[toggles],
+	)
+
+	const displayedAutoApproveText = useMemo(() => {
+		if (autoApprovalEnabled && hasAnyAutoApprovedAction) {
+			return Object.entries(toggles)
+				.filter(([_key, value]) => !!value)
+				.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
+				.join(", ")
+		}
+		return t("chat:autoApprove.none")
+	}, [autoApprovalEnabled, hasAnyAutoApprovedAction, toggles, t])
 
 	const handleOpenSettings = useCallback(
 		() =>
@@ -140,9 +176,10 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				onClick={toggleExpanded}>
 				<div onClick={(e) => e.stopPropagation()}>
 					<VSCodeCheckbox
-						checked={autoApprovalEnabled ?? false}
+						checked={autoApprovalEnabled && hasAnyAutoApprovedAction}
+						disabled={!hasAnyAutoApprovedAction}
 						onChange={() => {
-							const newValue = !(autoApprovalEnabled ?? false)
+							const newValue = !(autoApprovalEnabled && hasAnyAutoApprovedAction)
 							setAutoApprovalEnabled(newValue)
 							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
 						}}
@@ -172,7 +209,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							flex: 1,
 							minWidth: 0,
 						}}>
-						{enabledActionsList || t("chat:autoApprove.none")}
+						{displayedAutoApproveText}
 					</span>
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
@@ -199,7 +236,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						/>
 					</div>
 
-					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
+					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} isOverallApprovalEnabled={autoApprovalEnabled} />
 
 					{/* Auto-approve API request count limit input row inspired by Cline */}
 					<div
