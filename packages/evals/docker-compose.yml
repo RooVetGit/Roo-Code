@@ -1,12 +1,17 @@
-# Server:
-# docker compose build web
+# Build the web and runner images:
+# docker compose build web runner
+#
+# Start all "server" services (db, redis, web):
 # docker compose --profile server up
-
-# Client:
-# docker compose build runner
-# docker compose up runner --no-start
+#
+# Start a shell in the runner container:
+# docker compose run --rm runner bash
+#
+# Or using the docker cli:
 # docker run -it --rm --network evals_default evals-runner bash
-# docker run --rm --network evals_default evals-runner sh -c "pnpm --filter @roo-code/evals cli 3"
+#
+# To enable docker execution, run:
+# docker run -it --rm --network evals_default -v /var/run/docker.sock:/var/run/docker.sock -e HOST_EXECUTION_METHOD=docker evals-runner bash
 
 services:
     db:
@@ -52,7 +57,6 @@ services:
             - HOST_EXECUTION_METHOD=docker
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        user: "0:0" # Run as root to access docker socket.
         depends_on:
             db:
                 condition: service_healthy
@@ -64,6 +68,10 @@ services:
         build:
             context: ../../
             dockerfile: packages/evals/Dockerfile.runner
+        environment:
+            - HOST_EXECUTION_METHOD=docker
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
         stdin_open: true
         tty: true
         profiles:

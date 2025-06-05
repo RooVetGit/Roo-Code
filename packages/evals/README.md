@@ -2,7 +2,13 @@
 
 ## Get Started
 
-NOTE: This is MacOS only for now!
+### Prerequisites
+
+- [Docker Desktop](https://docs.docker.com/desktop/)
+- [git](https://git-scm.com/)
+- That's it!
+
+### Setup
 
 Clone the Roo Code repo:
 
@@ -11,27 +17,28 @@ git clone https://github.com/RooCodeInc/Roo-Code.git
 cd Roo-Code
 ```
 
-Run the setup script:
+Add your OpenRouter API key:
 
 ```sh
-cd packages/evals
-./scripts/setup.sh
+echo "OPENROUTER_API_KEY=sk-or-v1-[...]" > packages/evals/.env.local
+```
+
+### Run
+
+Start the evals service:
+
+```sh
+cd packages/evals && docker compose --profile server up
 ```
 
 Navigate to [localhost:3000](http://localhost:3000/) in your browser.
 
-## Running Migrations
+## Advanced Usage / Debugging
 
-Update `src/schema.ts` as needed, and then run:
+The evals system runs VS Code headlessly in Docker containers for consistent, reproducible environments. While this design ensures reliability, it can make debugging more challenging. For debugging purposes, you can run the system locally on macOS, though this approach is less reliable due to hardware and environment variability.
 
-```sh
-pnpm db:generate
-```
-
-Inspect the sql in the migration file added to `drizzle/`.
-
-If it looks okay, then run:
+To configure your MacOS system to run evals locally, execute the setup script:
 
 ```sh
-pnpm db:migrate
+cd packages/evals && ./scripts/setup.sh
 ```

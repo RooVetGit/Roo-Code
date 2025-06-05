@@ -1,6 +1,3 @@
-# docker build -f packages/evals/Dockerfile.web -t evals-web .
-# docker run -it evals-web
-
 FROM node:20-slim AS base
 
 # Install pnpm
@@ -11,65 +8,55 @@ RUN npm install -g npm@latest
 RUN npm install -g npm-run-all
 
 # Install system packages
-RUN apt update && apt install -y sudo curl git vim jq postgresql-client
+RUN apt update && apt install -y curl git vim jq postgresql-client
 
-# Install Docker CLI
+# Install Docker cli
 RUN apt install -y apt-transport-https ca-certificates gnupg lsb-release
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN apt update && apt install -y docker-ce-cli
 
-# Create a `vscode` user and add to docker group
-RUN useradd -m vscode -s /bin/bash && \
-  echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode && \
-  chmod 0440 /etc/sudoers.d/vscode
-
-WORKDIR /home/vscode
-USER vscode
+WORKDIR /roo
 
 # Copy evals
 RUN git clone https://github.com/RooCodeInc/Roo-Code-Evals.git evals
 
-WORKDIR /home/vscode/repo
+WORKDIR /roo/repo
 
 # Install npm packages
 RUN mkdir -p \
   scripts \
   apps/web-evals \
-  packages/build \
-  packages/cloud \
   packages/config-eslint \
   packages/config-typescript \
   packages/evals \
   packages/ipc \
-  packages/telemetry \
-  packages/types \
-  src \
-  webview-ui
+  packages/types
 
-COPY --chown=vscode:vscode ./package.json                            ./
-COPY --chown=vscode:vscode ./pnpm-lock.yaml                          ./
-COPY --chown=vscode:vscode ./pnpm-workspace.yaml                     ./
-COPY --chown=vscode:vscode ./scripts/bootstrap.mjs                   ./scripts/
-COPY --chown=vscode:vscode ./apps/web-evals/package.json             ./apps/web-evals/
-COPY --chown=vscode:vscode ./packages/build/package.json             ./packages/build/
-COPY --chown=vscode:vscode ./packages/cloud/package.json             ./packages/cloud/
-COPY --chown=vscode:vscode ./packages/config-eslint/package.json     ./packages/config-eslint/
-COPY --chown=vscode:vscode ./packages/config-typescript/package.json ./packages/config-typescript/
-COPY --chown=vscode:vscode ./packages/evals/package.json             ./packages/evals/
-COPY --chown=vscode:vscode ./packages/ipc/package.json               ./packages/ipc/
-COPY --chown=vscode:vscode ./packages/telemetry/package.json         ./packages/telemetry/
-COPY --chown=vscode:vscode ./packages/types/package.json             ./packages/types/
-COPY --chown=vscode:vscode ./src/package.json                        ./src/
-COPY --chown=vscode:vscode ./webview-ui/package.json                 ./webview-ui/
+COPY ./package.json                            ./
+COPY ./pnpm-lock.yaml                          ./
+COPY ./pnpm-workspace.yaml                     ./
+COPY ./scripts/bootstrap.mjs                   ./scripts/
+COPY ./apps/web-evals/package.json             ./apps/web-evals/
+COPY ./packages/config-eslint/package.json     ./packages/config-eslint/
+COPY ./packages/config-typescript/package.json ./packages/config-typescript/
+COPY ./packages/evals/package.json             ./packages/evals/
+COPY ./packages/ipc/package.json               ./packages/ipc/
+COPY ./packages/types/package.json             ./packages/types/
+
 RUN pnpm install
 
-COPY --chown=vscode:vscode . ./
+# Copy source code
+COPY . ./
 
-COPY --chown=vscode:vscode packages/evals/.docker/entrypoints/web.sh /usr/local/bin/entrypoint.sh
-RUN sudo chmod +x /usr/local/bin/entrypoint.sh
+# Build the web-evals app
+RUN pnpm --filter @roo-code/web-evals build
+
+# Copy entrypoint script
+COPY packages/evals/.docker/entrypoints/web.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENV DATABASE_URL=postgresql://postgres:password@db:5432/evals_development
-
+ENV REDIS_URL=redis://redis:6379
 EXPOSE 3000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

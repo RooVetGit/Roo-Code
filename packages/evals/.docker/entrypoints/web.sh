@@ -37,33 +37,12 @@ run_migrations() {
     fi
 }
 
-start_web_service() {
-    echo "🌐 Starting web service..."
-    exec "$@"
-}
-
 main() {
-    if [ $# -eq 0 ]; then
-        set -- pnpm --filter @roo-code/web-evals dev
-    fi
-
-    if [ "$SKIP_MIGRATION" = "true" ]; then
-        echo "⏭️  Skipping migration (SKIP_MIGRATION=true)"
-        start_web_service "$@"
-        return
-    fi
-
-    if [ "$MIGRATION_ONLY" = "true" ]; then
-        echo "🔄 Running migration only (MIGRATION_ONLY=true)"
-        wait_for_db
-        run_migrations
-        echo "✅ Migration completed, exiting..."
-        exit 0
-    fi
-
     wait_for_db
     run_migrations
-    start_web_service "$@"
+
+    echo "🌐 Starting web service..."
+    pnpm --filter @roo-code/web-evals start
 }
 
 main "$@"
