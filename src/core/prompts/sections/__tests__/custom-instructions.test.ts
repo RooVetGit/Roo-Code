@@ -18,13 +18,27 @@ fs.stat = statMock as any
 fs.readdir = readdirMock as any
 fs.readlink = readlinkMock as any
 
-// Mock path.resolve and path.join to be predictable in tests
-jest.mock("path", () => ({
-	...jest.requireActual("path"),
-	resolve: jest.fn().mockImplementation((...args) => args.join("/")),
-	join: jest.fn().mockImplementation((...args) => args.join("/")),
-	relative: jest.fn().mockImplementation((from, to) => to),
-}))
+const actualPath = jest.requireActual("path")
+
+// Mock path module
+jest.mock("path", () => {
+	const pathActual = jest.requireActual("path")
+	return {
+		...pathActual, // Use actual implementations for most functions
+		join: jest.fn().mockImplementation((...args: string[]) => {
+			// Filter out undefined/null/empty strings
+			return args.filter((arg) => typeof arg === "string" && arg.length > 0).join(pathActual.sep)
+		}),
+		// resolve, parse, dirname, basename etc., will use actual implementations
+	}
+})
+
+// Simplified mock for LANGUAGES, as it's imported by the module under test
+const LANGUAGES = {
+	en: "English",
+	es: "Español",
+	fr: "Français",
+}
 
 // Mock process.cwd
 const originalCwd = process.cwd
@@ -685,13 +699,15 @@ describe("Rules directory reading", () => {
 			if (filePath.toString() === "/fake/path/.roo/rules/regular.txt") {
 				return Promise.resolve("regular file content")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/../symlink-target.txt") {
+			if (filePath.toString() === "/fake/path/.roo/symlink-target.txt") {
+				// Changed
 				return Promise.resolve("symlink target content")
 			}
 			if (filePath.toString() === "/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt") {
 				return Promise.resolve("regular file content under symlink target dir")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/../nested-symlink-target.txt") {
+			if (filePath.toString() === "/fake/path/.roo/nested-symlink-target.txt") {
+				// Changed
 				return Promise.resolve("nested symlink target content")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -702,11 +718,11 @@ describe("Rules directory reading", () => {
 		// Verify both regular file and symlink target content are included
 		expect(result).toContain("# Rules from /fake/path/.roo/rules/regular.txt:")
 		expect(result).toContain("regular file content")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/../symlink-target.txt:")
+		expect(result).toContain("# Rules from /fake/path/.roo/symlink-target.txt:") // Changed
 		expect(result).toContain("symlink target content")
 		expect(result).toContain("# Rules from /fake/path/.roo/rules/symlink-target-dir/subdir_link.txt:")
 		expect(result).toContain("regular file content under symlink target dir")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/../nested-symlink-target.txt:")
+		expect(result).toContain("# Rules from /fake/path/.roo/nested-symlink-target.txt:") // Changed
 		expect(result).toContain("nested symlink target content")
 
 		// Verify readlink was called with the symlink path
@@ -715,9 +731,9 @@ describe("Rules directory reading", () => {
 
 		// Verify both files were read
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/regular.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/../symlink-target.txt", "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/symlink-target.txt", "utf-8") // Changed
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/../nested-symlink-target.txt", "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/nested-symlink-target.txt", "utf-8") // Changed
 	})
 	beforeEach(() => {
 		jest.clearAllMocks()
