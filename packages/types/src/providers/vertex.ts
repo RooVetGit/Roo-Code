@@ -60,6 +60,14 @@ export const vertexModels = {
 		inputPrice: 2.5,
 		outputPrice: 15,
 	},
+	"gemini-2.5-pro-preview-06-05": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 2.5,
+		outputPrice: 15,
+	},
 	"gemini-2.5-pro-exp-03-25": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
