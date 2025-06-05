@@ -1,7 +1,5 @@
 # Run Roo Code Evals
 
-## Get Started
-
 ### Prerequisites
 
 - [Docker Desktop](https://docs.docker.com/desktop/)
