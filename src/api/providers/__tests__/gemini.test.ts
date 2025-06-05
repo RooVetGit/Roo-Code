@@ -2,8 +2,9 @@
 
 import { Anthropic } from "@anthropic-ai/sdk"
 
+import { type ModelInfo, geminiDefaultModelId } from "@roo-code/types"
+
 import { GeminiHandler } from "../gemini"
-import { geminiDefaultModelId, type ModelInfo } from "../../../shared/api"
 
 const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
 

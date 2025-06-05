@@ -2,23 +2,23 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
 import {
-	ApiHandlerOptions,
-	ModelInfo,
+	type ModelInfo,
 	openAiNativeDefaultModelId,
 	OpenAiNativeModelId,
 	openAiNativeModels,
-} from "../../shared/api"
+	OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+} from "@roo-code/types"
 
-import { calculateApiCostOpenAI } from "../../utils/cost"
+import type { ApiHandlerOptions } from "../../shared/api"
+
+import { calculateApiCostOpenAI } from "../../shared/cost"
 
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
-import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { BaseProvider } from "./base-provider"
-
-const OPENAI_NATIVE_DEFAULT_TEMPERATURE = 0
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 export type OpenAiNativeModel = ReturnType<OpenAiNativeHandler["getModel"]>
 

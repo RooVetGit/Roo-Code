@@ -1,11 +1,13 @@
 import * as vscode from "vscode"
 import delay from "delay"
 
-import { CommandId, Package } from "../schemas"
+import type { CommandId } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+
+import { Package } from "../shared/package"
 import { getCommand } from "../utils/commands"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { ContextProxy } from "../core/config/ContextProxy"
-import { telemetryService } from "../services/telemetry/TelemetryService"
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -68,6 +70,17 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions): Record<CommandId, any> => ({
 	activationCompleted: () => {},
+	accountButtonClicked: () => {
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+
+		if (!visibleProvider) {
+			return
+		}
+
+		TelemetryService.instance.captureTitleButtonClicked("account")
+
+		visibleProvider.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
+	},
 	plusButtonClicked: async () => {
 		const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
@@ -75,7 +88,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			return
 		}
 
-		telemetryService.captureTitleButtonClicked("plus")
+		TelemetryService.instance.captureTitleButtonClicked("plus")
 
 		await visibleProvider.removeClineFromStack()
 		await visibleProvider.postStateToWebview()
@@ -88,7 +101,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			return
 		}
 
-		telemetryService.captureTitleButtonClicked("mcp")
+		TelemetryService.instance.captureTitleButtonClicked("mcp")
 
 		visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 	},
@@ -99,12 +112,12 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			return
 		}
 
-		telemetryService.captureTitleButtonClicked("prompts")
+		TelemetryService.instance.captureTitleButtonClicked("prompts")
 
 		visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 	},
 	popoutButtonClicked: () => {
-		telemetryService.captureTitleButtonClicked("popout")
+		TelemetryService.instance.captureTitleButtonClicked("popout")
 
 		return openClineInNewTab({ context, outputChannel })
 	},
@@ -116,7 +129,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			return
 		}
 
-		telemetryService.captureTitleButtonClicked("settings")
+		TelemetryService.instance.captureTitleButtonClicked("settings")
 
 		visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		// Also explicitly post the visibility message to trigger scroll reliably
@@ -129,7 +142,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			return
 		}
 
-		telemetryService.captureTitleButtonClicked("history")
+		TelemetryService.instance.captureTitleButtonClicked("history")
 
 		visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 	},

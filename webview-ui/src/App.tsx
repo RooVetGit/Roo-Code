@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
-import TranslationProvider from "./i18n/TranslationContext"
+import { ExtensionMessage } from "@roo/ExtensionMessage"
 
+import TranslationProvider from "./i18n/TranslationContext"
 import { vscode } from "./utils/vscode"
 import { telemetryClient } from "./utils/TelemetryClient"
 import { ExtensionStateContextProvider, useExtensionState } from "./context/ExtensionStateContext"
@@ -13,22 +13,32 @@ import HistoryView from "./components/history/HistoryView"
 import SettingsView, { SettingsViewRef } from "./components/settings/SettingsView"
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
-import PromptsView from "./components/prompts/PromptsView"
+import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
+import { AccountView } from "./components/account/AccountView"
 
-type Tab = "settings" | "history" | "mcp" | "prompts" | "chat"
+type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "account"
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
 	settingsButtonClicked: "settings",
-	promptsButtonClicked: "prompts",
+	promptsButtonClicked: "modes",
 	mcpButtonClicked: "mcp",
 	historyButtonClicked: "history",
+	accountButtonClicked: "account",
 }
 
 const App = () => {
-	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
-		useExtensionState()
+	const {
+		didHydrateState,
+		showWelcome,
+		shouldShowAnnouncement,
+		telemetrySetting,
+		telemetryKey,
+		machineId,
+		cloudUserInfo,
+		cloudIsAuthenticated,
+	} = useExtensionState()
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
@@ -112,11 +122,18 @@ const App = () => {
 		<WelcomeView />
 	) : (
 		<>
-			{tab === "prompts" && <PromptsView onDone={() => switchTab("chat")} />}
+			{tab === "modes" && <ModesView onDone={() => switchTab("chat")} />}
 			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
 			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}
 			{tab === "settings" && (
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
+			)}
+			{tab === "account" && (
+				<AccountView
+					userInfo={cloudUserInfo}
+					isAuthenticated={cloudIsAuthenticated}
+					onDone={() => switchTab("chat")}
+				/>
 			)}
 			<ChatView
 				ref={chatViewRef}

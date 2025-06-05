@@ -3,11 +3,14 @@ import OpenAI, { AzureOpenAI } from "openai"
 import axios from "axios"
 
 import {
-	ApiHandlerOptions,
+	type ModelInfo,
 	azureOpenAiDefaultApiVersion,
-	ModelInfo,
 	openAiModelInfoSaneDefaults,
-} from "../../shared/api"
+	DEEP_SEEK_DEFAULT_TEMPERATURE,
+	OPENAI_AZURE_AI_INFERENCE_PATH,
+} from "@roo-code/types"
+
+import type { ApiHandlerOptions } from "../../shared/api"
 
 import { XmlMatcher } from "../../utils/xml-matcher"
 
@@ -17,11 +20,9 @@ import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
-import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
-import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
-
-export const AZURE_AI_INFERENCE_PATH = "/models/chat/completions"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -157,13 +158,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(reasoning && reasoning),
 			}
 
+			// @TODO: Move this to the `getModelParams` function.
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
 			}
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
-				isAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
+				isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			const matcher = new XmlMatcher(
@@ -222,7 +224,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				this._isAzureAiInference(modelUrl) ? { path: AZURE_AI_INFERENCE_PATH } : {},
+				this._isAzureAiInference(modelUrl) ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield {
@@ -262,7 +264,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				isAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
+				isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			return response.choices[0]?.message.content || ""
@@ -299,7 +301,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
 					reasoning_effort: this.getModel().info.reasoningEffort,
 				},
-				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
+				methodIsAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield* this.handleStreamResponse(stream)
@@ -319,7 +321,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
+				methodIsAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield {

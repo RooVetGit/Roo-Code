@@ -1,7 +1,8 @@
-import { ToolName } from "../../../schemas"
+import type { ToolName, ModeConfig } from "@roo-code/types"
+
 import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS, DiffStrategy, readToolOverrideWithArgs } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
+import { Mode, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
 
 import { ToolArgs } from "./types"
 import { getExecuteCommandDescription } from "./execute-command"
@@ -118,6 +119,8 @@ export async function getToolDescriptionsForMode(
 	mcpHub?: McpHub,
 	customModes?: ModeConfig[],
 	experiments?: Record<string, boolean>,
+	partialReadsEnabled?: boolean,
+	settings?: Record<string, any>,
 ): Promise<string> {
 	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
@@ -126,6 +129,8 @@ export async function getToolDescriptionsForMode(
 		diffStrategy,
 		browserViewportSize,
 		mcpHub,
+		partialReadsEnabled,
+		settings,
 	}
 
 	const tools = new Set<string>()

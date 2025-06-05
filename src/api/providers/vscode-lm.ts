@@ -1,12 +1,16 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 
+import { type ModelInfo, openAiModelInfoSaneDefaults } from "@roo-code/types"
+
+import type { ApiHandlerOptions } from "../../shared/api"
+import { SELECTOR_SEPARATOR, stringifyVsCodeLmModelSelector } from "../../shared/vsCodeSelectorUtils"
+
 import { ApiStream } from "../transform/stream"
 import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
-import { SELECTOR_SEPARATOR, stringifyVsCodeLmModelSelector } from "../../shared/vsCodeSelectorUtils"
-import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
+
 import { BaseProvider } from "./base-provider"
-import type { SingleCompletionHandler, ApiHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 /**
  * Handles interaction with VS Code's Language Model API for chat-based operations.

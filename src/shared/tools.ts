@@ -2,7 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import fs from "fs/promises"
 import path from "path"
 
-import { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "../schemas"
+import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "@roo-code/types"
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 
@@ -47,11 +47,8 @@ export const toolParamNames = [
 	"question",
 	"result",
 	"diff",
-	"start_line",
-	"end_line",
 	"mode_slug",
 	"reason",
-	"operations",
 	"line",
 	"mode",
 	"message",
@@ -63,6 +60,7 @@ export const toolParamNames = [
 	"replace",
 	"use_regex",
 	"ignore_case",
+	"args",
 	"start_line",
 	"end_line",
 	"query",
@@ -86,7 +84,7 @@ export interface ExecuteCommandToolUse extends ToolUse {
 
 export interface ReadFileToolUse extends ToolUse {
 	name: "read_file"
-	params: Partial<Pick<Record<ToolParamName, string>, "path" | "start_line" | "end_line">>
+	params: Partial<Pick<Record<ToolParamName, string>, "args" | "path" | "start_line" | "end_line">>
 }
 
 export interface FetchInstructionsToolUse extends ToolUse {
@@ -191,8 +189,6 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
 } as const
-
-export type { ToolGroup }
 
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {

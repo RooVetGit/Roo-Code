@@ -5,12 +5,12 @@ import fs from "fs/promises"
 import * as vscode from "vscode"
 import { z, ZodError } from "zod"
 
-import { globalSettingsSchema } from "../../schemas"
+import { globalSettingsSchema } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
 
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
@@ -83,7 +83,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 
 		if (e instanceof ZodError) {
 			error = e.issues.map((issue) => `[${issue.path.join(".")}]: ${issue.message}`).join("\n")
-			telemetryService.captureSchemaValidationError({ schemaName: "ImportExport", error: e })
+			TelemetryService.instance.captureSchemaValidationError({ schemaName: "ImportExport", error: e })
 		} else if (e instanceof Error) {
 			error = e.message
 		}

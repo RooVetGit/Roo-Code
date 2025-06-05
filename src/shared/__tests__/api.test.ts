@@ -1,13 +1,8 @@
 // npx jest src/shared/__tests__/api.test.ts
 
-import {
-	type ModelInfo,
-	ProviderSettings,
-	getModelMaxOutputTokens,
-	shouldUseReasoningBudget,
-	shouldUseReasoningEffort,
-} from "../api"
-import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../../api/providers/constants"
+import { type ModelInfo, type ProviderSettings, ANTHROPIC_DEFAULT_MAX_TOKENS } from "@roo-code/types"
+
+import { getModelMaxOutputTokens, shouldUseReasoningBudget, shouldUseReasoningEffort } from "../api"
 
 describe("getMaxTokensForModel", () => {
 	const modelId = "test"

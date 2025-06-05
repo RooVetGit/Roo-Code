@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import { ModelInfo } from "../../shared/api"
+import type { ModelInfo } from "@roo-code/types"
 
 import type { ApiHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { ApiStream } from "../transform/stream"
@@ -15,6 +15,7 @@ export abstract class BaseProvider implements ApiHandler {
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream
+
 	abstract getModel(): { id: string; info: ModelInfo }
 
 	/**

@@ -3,27 +3,7 @@ import * as path from "path"
 
 import { ViewsContainer, Views, Menus, Configuration, contributesSchema } from "./types.js"
 
-export function copyPaths(copyPaths: [string, string][], srcDir: string, dstDir: string) {
-	copyPaths.forEach(([srcRelPath, dstRelPath]) => {
-		const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
-
-		if (stats.isDirectory()) {
-			if (fs.existsSync(path.join(dstDir, dstRelPath))) {
-				fs.rmSync(path.join(dstDir, dstRelPath), { recursive: true })
-			}
-
-			fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
-
-			const count = copyDir(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath), 0)
-			console.log(`[copyPaths] Copied ${count} files from ${srcRelPath} to ${dstRelPath}`)
-		} else {
-			fs.copyFileSync(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath))
-			console.log(`[copyPaths] Copied ${srcRelPath} to ${dstRelPath}`)
-		}
-	})
-}
-
-export function copyDir(srcDir: string, dstDir: string, count: number): number {
+function copyDir(srcDir: string, dstDir: string, count: number): number {
 	const entries = fs.readdirSync(srcDir, { withFileTypes: true })
 
 	for (const entry of entries) {
@@ -40,6 +20,67 @@ export function copyDir(srcDir: string, dstDir: string, count: number): number {
 	}
 
 	return count
+}
+
+function rmDir(dirPath: string, maxRetries: number = 3): void {
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
+		try {
+			fs.rmSync(dirPath, { recursive: true, force: true })
+			return
+		} catch (error) {
+			const isLastAttempt = attempt === maxRetries
+
+			const isEnotemptyError =
+				error instanceof Error && "code" in error && (error.code === "ENOTEMPTY" || error.code === "EBUSY")
+
+			if (isLastAttempt || !isEnotemptyError) {
+				throw error // Re-throw if it's the last attempt or not a locking error.
+			}
+
+			// Wait with exponential backoff before retrying.
+			const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000) // Cap at 1s.
+			console.warn(`[rmDir] Attempt ${attempt} failed for ${dirPath}, retrying in ${delay}ms...`)
+
+			// Synchronous sleep for simplicity in build scripts.
+			const start = Date.now()
+
+			while (Date.now() - start < delay) {
+				/* Busy wait */
+			}
+		}
+	}
+}
+
+type CopyPathOptions = {
+	optional?: boolean
+}
+
+export function copyPaths(copyPaths: [string, string, CopyPathOptions?][], srcDir: string, dstDir: string) {
+	copyPaths.forEach(([srcRelPath, dstRelPath, options = {}]) => {
+		try {
+			const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
+
+			if (stats.isDirectory()) {
+				if (fs.existsSync(path.join(dstDir, dstRelPath))) {
+					rmDir(path.join(dstDir, dstRelPath))
+				}
+
+				fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
+
+				const count = copyDir(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath), 0)
+				console.log(`[copyPaths] Copied ${count} files from ${srcRelPath} to ${dstRelPath}`)
+			} else {
+				fs.copyFileSync(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath))
+				console.log(`[copyPaths] Copied ${srcRelPath} to ${dstRelPath}`)
+			}
+		} catch (error) {
+			if (options.optional) {
+				console.warn(`[copyPaths] Optional file not found: ${srcRelPath}`)
+			} else {
+				throw error
+			}
+		}
+	})
 }
 
 export function copyWasms(srcDir: string, distDir: string): void {
@@ -172,12 +213,12 @@ function transformArrayRecord<T>(obj: Record<string, any[]>, from: string, to: s
 	return Object.entries(obj).reduce(
 		(acc, [key, ary]) => ({
 			...acc,
-			[key.replace(from, to)]: ary.map((item) => {
+			[key.replaceAll(from, to)]: ary.map((item) => {
 				const transformedItem = { ...item }
 
 				for (const prop of props) {
 					if (prop in item && typeof item[prop] === "string") {
-						transformedItem[prop] = item[prop].replace(from, to)
+						transformedItem[prop] = item[prop].replaceAll(from, to)
 					}
 				}
 
@@ -191,7 +232,7 @@ function transformArrayRecord<T>(obj: Record<string, any[]>, from: string, to: s
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function transformArray<T>(arr: any[], from: string, to: string, idProp: string): T[] {
 	return arr.map(({ [idProp]: id, ...rest }) => ({
-		[idProp]: id.replace(from, to),
+		[idProp]: id.replaceAll(from, to),
 		...rest,
 	}))
 }
@@ -201,7 +242,7 @@ function transformRecord<T>(obj: Record<string, any>, from: string, to: string):
 	return Object.entries(obj).reduce(
 		(acc, [key, value]) => ({
 			...acc,
-			[key.replace(from, to)]: value,
+			[key.replaceAll(from, to)]: value,
 		}),
 		{} as T,
 	)
