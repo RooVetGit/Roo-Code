@@ -13,6 +13,165 @@ import {
 	escapeDotsForDisplay,
 } from "./utils"
 
+/**
+ * Renders the section for completely missing files for a specific locale
+ * @param locale The language locale
+ * @param files Array of target file paths that are completely missing
+ * @param area The translation area
+ * @param results Results object containing file results
+ * @param mapping The path mapping containing namespace information
+ * @returns Void - outputs directly to bufferLog
+ */
+function renderMissingFilesSection(
+	locale: string,
+	files: string[],
+	area: string,
+	results: Results,
+	mapping: PathMapping,
+): void {
+	bufferLog(`    ${locale}: missing ${files.length} files`)
+	files.sort().forEach((targetFilePath) => {
+		bufferLog(`      ${targetFilePath}`)
+
+		// Find the source file that this targetFilePath corresponds to
+		let sourceFileForMissing = "unknown_source.file"
+		const fileResultForMissing = results[area][locale][targetFilePath]
+		if (
+			fileResultForMissing &&
+			fileResultForMissing.missing.length === 1 &&
+			fileResultForMissing.missing[0].key.length === 1
+		) {
+			sourceFileForMissing = fileResultForMissing.missing[0].key[0]
+		} else {
+			// Fallback if not easily found (should be available for completely missing files)
+			const allSourcesForMapping = enumerateSourceFiles(mapping.source)
+			for (const sf of allSourcesForMapping) {
+				if (resolveTargetPath(sf, mapping.targetTemplate, locale) === targetFilePath) {
+					sourceFileForMissing = sf
+					break
+				}
+			}
+		}
+
+		if (mapping.reportFileLevelOnly === true) {
+			bufferLog(`        Missing file: ALL CONTENT (entire file)`)
+		} else {
+			// JSON files
+			const sourceContent = parseJsonContent(loadFileContent(sourceFileForMissing), sourceFileForMissing)
+			if (sourceContent) {
+				let issues = checkMissingTranslations(sourceContent, {}) // Get all keys
+				// Filter out issues where the source value is an object
+				const primitiveIssues = issues.filter(
+					(issue) => typeof issue.sourceValue !== "object" || issue.sourceValue === null,
+				)
+				bufferLog(`        Missing keys: ALL KEYS (${primitiveIssues.length} total)`)
+			} else {
+				bufferLog(`        Missing keys: Unable to load corresponding source file ${sourceFileForMissing}`)
+			}
+		}
+	})
+}
+
+/**
+ * Renders the section for files with missing keys for a specific locale
+ * @param locale The language locale
+ * @param fileMap Map of target files to their missing keys and source files
+ * @param mapping The path mapping containing namespace information
+ * @param options Lint options for verbose output
+ * @returns Void - outputs directly to bufferLog
+ */
+function renderMissingKeysSection(
+	locale: string,
+	fileMap: Map<string, { keys: Set<string>; sourceFile: string }>,
+	mapping: PathMapping,
+): void {
+	const filesWithMissingKeys = Array.from(fileMap.keys())
+	if (filesWithMissingKeys.length > 0) {
+		bufferLog(`    ${locale}: ${filesWithMissingKeys.length} files with missing translations`)
+		filesWithMissingKeys.sort().forEach((targetFilePath) => {
+			bufferLog(`      ${targetFilePath}`)
+			const fileData = fileMap.get(targetFilePath)
+			if (fileData && fileData.keys.size > 0) {
+				bufferLog(`        Missing keys (${fileData.keys.size} total):`)
+				const originalSourceFileName = fileData.sourceFile
+
+				Array.from(fileData.keys)
+					.map((spa) => spa.split("\u0000")) // pathArrayKey
+					.sort((a, b) => escapeDotsForDisplay(a).localeCompare(escapeDotsForDisplay(b)))
+					.forEach((pathArrayKey) => {
+						let displayKeyPrefix = ""
+						if (mapping.displayNamespace) {
+							displayKeyPrefix = mapping.displayNamespace + ":"
+						} else if (mapping.useFilenameAsNamespace && originalSourceFileName !== "unknown_source.file") {
+							displayKeyPrefix = path.basename(originalSourceFileName, ".json") + ":"
+						}
+
+						if (mapping.reportFileLevelOnly === true) {
+							// Should not be reached if logic is correct, keys are not reported for fileLevelOnly
+							bufferLog(`          - ${escapeDotsForDisplay(pathArrayKey)}`) // Fallback
+						} else {
+							bufferLog(`          - ${displayKeyPrefix}${escapeDotsForDisplay(pathArrayKey)}`)
+						}
+					})
+			}
+		})
+	}
+}
+
+/**
+ * Renders the section for extra translations for a specific locale
+ * @param locale The language locale
+ * @param fileMap Map of target files to their extra translation issues
+ * @param mapping The path mapping containing namespace information
+ * @returns Void - outputs directly to bufferLog
+ */
+function renderExtraTranslationsSection(
+	locale: string,
+	fileMap: Map<string, { issues: TranslationIssue[]; sourceFile: string }>,
+	mapping: PathMapping,
+): void {
+	fileMap.forEach(({ issues: extras, sourceFile: derivedSourceFile }, targetFilePath) => {
+		if (!mapping) return
+
+		// Attempt to derive sourceFile if it's "DERIVE_LATER"
+		let actualSourceFile = derivedSourceFile
+		if (actualSourceFile === "DERIVE_LATER") {
+			const allSourcesForMapping = enumerateSourceFiles(mapping.source)
+			for (const sf of allSourcesForMapping) {
+				if (resolveTargetPath(sf, mapping.targetTemplate, locale) === targetFilePath) {
+					actualSourceFile = sf
+					break
+				}
+			}
+			if (actualSourceFile === "DERIVE_LATER") actualSourceFile = "unknown_source.file"
+		}
+
+		const extraFileMarkers = extras.filter((ex) => ex.key.length === 1 && ex.key[0] === "EXTRA_FILE_MARKER")
+		const extraJsonKeys = extras.filter((ex) => !(ex.key.length === 1 && ex.key[0] === "EXTRA_FILE_MARKER"))
+
+		extraFileMarkers.forEach((issue) => {
+			const extraFilePathDisplay = issue.localeValue as string // Full path to extra file
+			bufferLog(`    ${locale}: ${extraFilePathDisplay} (Extra File)`)
+		})
+
+		if (extraJsonKeys.length > 0) {
+			let displayKeyPrefix = ""
+			if (mapping.displayNamespace) {
+				displayKeyPrefix = mapping.displayNamespace + ":"
+			} else if (mapping.useFilenameAsNamespace && actualSourceFile !== "unknown_source.file") {
+				displayKeyPrefix = path.basename(actualSourceFile, ".json") + ":"
+			}
+
+			bufferLog(`    ${locale}: ${targetFilePath}: ${extraJsonKeys.length} extra translations`)
+			extraJsonKeys
+				.sort((a, b) => escapeDotsForDisplay(a.key).localeCompare(escapeDotsForDisplay(b.key)))
+				.forEach((issue) => {
+					bufferLog(`        ${displayKeyPrefix}${escapeDotsForDisplay(issue.key)}`)
+				})
+		}
+	})
+}
+
 // Create a mutable copy of the languages array that can be overridden
 let languages = [...originalLanguages]
 
@@ -542,8 +701,6 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 					for (const [targetFilePath, fileRes] of Object.entries(localeResults)) {
 						if (fileRes.missing && fileRes.missing.length > 0) {
 							// Try to find the original source file for this targetFilePath
-							// This is the challenging part without direct storage.
-							// Attempt to find sourceFile based on how results are populated by processFileLocale
 							let sourceFileAssociatedWithTarget = "unknown_source.file" // Default
 							// Heuristic: iterate all source files for this mapping, resolve their target, and see if it matches.
 							const currentMapping = mappings.find((m) => m.area === area)
@@ -598,117 +755,12 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 
 				// Report missing files
 				missingFilesByLocaleDisplay.forEach((files, lang) => {
-					bufferLog(`    ${lang}: missing ${files.length} files`)
-					files.sort().forEach((targetFilePath) => {
-						bufferLog(`      ${targetFilePath}`)
-						const mapping = mappingForArea // Use mappingForArea
-
-						// Find the source file that this targetFilePath corresponds to
-						let sourceFileForMissing = "unknown_source.file"
-						const fileResultForMissing = results[area][lang][targetFilePath]
-						if (
-							fileResultForMissing &&
-							fileResultForMissing.missing.length === 1 &&
-							fileResultForMissing.missing[0].key.length === 1
-						) {
-							sourceFileForMissing = fileResultForMissing.missing[0].key[0]
-						} else {
-							// Fallback if not easily found (should be available for completely missing files)
-							const allSourcesForMapping = enumerateSourceFiles(mapping.source)
-							for (const sf of allSourcesForMapping) {
-								if (resolveTargetPath(sf, mapping.targetTemplate, lang) === targetFilePath) {
-									sourceFileForMissing = sf
-									break
-								}
-							}
-						}
-
-						if (mapping.reportFileLevelOnly === true) {
-							bufferLog(`        Missing file: ALL CONTENT (entire file)`)
-						} else {
-							// JSON files
-							const sourceContent = parseJsonContent(
-								loadFileContent(sourceFileForMissing),
-								sourceFileForMissing,
-							)
-							if (sourceContent) {
-								let issues = checkMissingTranslations(sourceContent, {}) // Get all keys
-								// Filter out issues where the source value is an object
-								const primitiveIssues = issues.filter(
-									(issue) => typeof issue.sourceValue !== "object" || issue.sourceValue === null,
-								)
-								bufferLog(`        Missing keys: ALL KEYS (${primitiveIssues.length} total)`)
-								if (options?.verbose && primitiveIssues.length > 0) {
-									let displayKeyPrefix = ""
-									if (mapping.displayNamespace) {
-										displayKeyPrefix = mapping.displayNamespace + ":"
-									} else if (mapping.useFilenameAsNamespace) {
-										displayKeyPrefix = path.basename(sourceFileForMissing, ".json") + ":"
-									}
-									primitiveIssues
-										.sort((a, b) =>
-											escapeDotsForDisplay(a.key).localeCompare(escapeDotsForDisplay(b.key)),
-										)
-										.forEach((issue) => {
-											bufferLog(
-												`          - ${displayKeyPrefix}${escapeDotsForDisplay(issue.key)} - ${JSON.stringify(issue.sourceValue)} [en]`,
-											)
-										})
-								}
-							} else {
-								bufferLog(
-									`        Missing keys: Unable to load corresponding source file ${sourceFileForMissing}`,
-								)
-							}
-						}
-					})
+					renderMissingFilesSection(lang, files, area, results, mappingForArea)
 				})
 
 				// Report files with missing keys
 				missingKeysByLocaleDisplay.forEach((fileMap, lang) => {
-					const filesWithMissingKeys = Array.from(fileMap.keys())
-					if (filesWithMissingKeys.length > 0) {
-						bufferLog(`    ${lang}: ${filesWithMissingKeys.length} files with missing translations`)
-						filesWithMissingKeys.sort().forEach((targetFilePath) => {
-							bufferLog(`      ${targetFilePath}`)
-							const fileData = fileMap.get(targetFilePath)
-							if (fileData && fileData.keys.size > 0) {
-								bufferLog(`        Missing keys (${fileData.keys.size} total):`)
-								const mapping = mappingForArea
-								const originalSourceFileName = fileData.sourceFile // Use stored sourceFile
-
-								// const missingIssuesInFile = results[area][lang][targetFilePath].missing // Removed as it's no longer used
-								Array.from(fileData.keys)
-									.map((spa) => spa.split("\u0000")) // pathArrayKey
-									.sort((a, b) => escapeDotsForDisplay(a).localeCompare(escapeDotsForDisplay(b)))
-									.forEach((pathArrayKey) => {
-										// const issue = missingIssuesInFile.find( // Removed as it's no longer used
-										// 	(iss) => iss.key.join("\u0000") === pathArrayKey.join("\u0000"),
-										// )
-										// const englishValue = issue ? issue.sourceValue : undefined // Removed as it's no longer used
-
-										let displayKeyPrefix = ""
-										if (mapping.displayNamespace) {
-											displayKeyPrefix = mapping.displayNamespace + ":"
-										} else if (
-											mapping.useFilenameAsNamespace &&
-											originalSourceFileName !== "unknown_source.file"
-										) {
-											displayKeyPrefix = path.basename(originalSourceFileName, ".json") + ":"
-										}
-
-										if (mapping.reportFileLevelOnly === true) {
-											// Should not be reached if logic is correct, keys are not reported for fileLevelOnly
-											bufferLog(`          - ${escapeDotsForDisplay(pathArrayKey)}`) // Fallback
-										} else {
-											bufferLog(
-												`          - ${displayKeyPrefix}${escapeDotsForDisplay(pathArrayKey)}`,
-											)
-										}
-									})
-							}
-						})
-					}
+					renderMissingKeysSection(lang, fileMap, mappingForArea)
 				})
 			}
 
@@ -716,54 +768,7 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 			if (extraByLocale.size > 0 && (checkTypes.includes("extra") || checkTypes.includes("all"))) {
 				bufferLog(`  ⚠️ Extra translations:`)
 				extraByLocale.forEach((fileMap, locale) => {
-					// locale -> targetFilePath -> {issues, sourceFile (DERIVE_LATER)}
-					fileMap.forEach(({ issues: extras, sourceFile: derivedSourceFile }, targetFilePath) => {
-						const mapping = mappingForArea
-						if (!mapping) return
-
-						// Attempt to derive sourceFile if it's "DERIVE_LATER"
-						let actualSourceFile = derivedSourceFile
-						if (actualSourceFile === "DERIVE_LATER") {
-							const allSourcesForMapping = enumerateSourceFiles(mapping.source)
-							for (const sf of allSourcesForMapping) {
-								if (resolveTargetPath(sf, mapping.targetTemplate, locale) === targetFilePath) {
-									actualSourceFile = sf
-									break
-								}
-							}
-							if (actualSourceFile === "DERIVE_LATER") actualSourceFile = "unknown_source.file"
-						}
-
-						const extraFileMarkers = extras.filter(
-							(ex) => ex.key.length === 1 && ex.key[0] === "EXTRA_FILE_MARKER",
-						)
-						const extraJsonKeys = extras.filter(
-							(ex) => !(ex.key.length === 1 && ex.key[0] === "EXTRA_FILE_MARKER"),
-						)
-
-						extraFileMarkers.forEach((issue) => {
-							const extraFilePathDisplay = issue.localeValue as string // Full path to extra file
-							bufferLog(`    ${locale}: ${extraFilePathDisplay} (Extra File)`)
-						})
-
-						if (extraJsonKeys.length > 0) {
-							let displayKeyPrefix = ""
-							if (mapping.displayNamespace) {
-								displayKeyPrefix = mapping.displayNamespace + ":"
-							} else if (mapping.useFilenameAsNamespace && actualSourceFile !== "unknown_source.file") {
-								displayKeyPrefix = path.basename(actualSourceFile, ".json") + ":"
-							}
-
-							bufferLog(`    ${locale}: ${targetFilePath}: ${extraJsonKeys.length} extra translations`)
-							extraJsonKeys
-								.sort((a, b) => escapeDotsForDisplay(a.key).localeCompare(escapeDotsForDisplay(b.key)))
-								.forEach((issue) => {
-									bufferLog(
-										`        ${displayKeyPrefix}${escapeDotsForDisplay(issue.key)}: "${issue.localeValue}"`,
-									)
-								})
-						}
-					})
+					renderExtraTranslationsSection(locale, fileMap, mappingForArea)
 				})
 			}
 
