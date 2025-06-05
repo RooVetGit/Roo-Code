@@ -51,6 +51,7 @@ import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
+import { MaxContextWindowControl } from "./MaxContextWindowControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
@@ -483,6 +484,11 @@ const ApiOptions = ({
 						value={apiConfiguration.modelTemperature}
 						onChange={handleInputChange("modelTemperature", noTransform)}
 						maxValue={2}
+					/>
+					<MaxContextWindowControl
+						value={apiConfiguration.modelMaxContextWindow}
+						onChange={handleInputChange("modelMaxContextWindow", noTransform)}
+						maxValue={1000000}
 					/>
 					<RateLimitSecondsControl
 						value={apiConfiguration.rateLimitSeconds || 0}

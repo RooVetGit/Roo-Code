@@ -57,6 +57,7 @@ const baseProviderSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
+	modelMaxContextWindow: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
 
 	// Model reasoning.
@@ -346,6 +347,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"diffEnabled",
 	"fuzzyMatchThreshold",
 	"modelTemperature",
+	"modelMaxContextWindow",
 	"rateLimitSeconds",
 	// Fake AI
 	"fakeAi",

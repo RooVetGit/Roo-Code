@@ -497,6 +497,11 @@
 		"description": "Controls randomness in the model's responses.",
 		"rangeDescription": "Higher values make output more random, lower values make it more deterministic."
 	},
+	"maxContextWindow": {
+		"useCustom": "Use custom context max window",
+		"description": "Controls randomness in the model's responses.",
+		"rangeDescription": "Higher values make output more random, lower values make it more deterministic."
+	},
 	"modelInfo": {
 		"supportsImages": "Supports images",
 		"noImages": "Does not support images",
