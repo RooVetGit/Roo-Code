@@ -51,5 +51,4 @@
     3. Leave successful tests in `.test.ts`
 
 # Executing package specific commands
-
-Any time you are using a workspace to run commands, you must always specify `<cwd>workspace/directory</cwd>`
+Any time you are using a workspace to run commands, you must always specify `<execute_command><cwd>workspace/directory</cwd> ...`
