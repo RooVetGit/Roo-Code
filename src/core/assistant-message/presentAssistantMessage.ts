@@ -31,6 +31,7 @@ import { formatResponse } from "../prompts/responses"
 import { validateToolUse } from "../tools/validateToolUse"
 import { Task } from "../task/Task"
 import { codebaseSearchTool } from "../tools/codebaseSearchTool"
+import { generateTestsTool } from "../tools/generateTestsTool";
 
 /**
  * Processes and presents assistant message content to the user interface.
@@ -184,8 +185,10 @@ export async function presentAssistantMessage(cline: Task) {
 						return `[${block.name}]`
 					case "switch_mode":
 						return `[${block.name} to '${block.params.mode_slug}'${block.params.reason ? ` because: ${block.params.reason}` : ""}]`
-					case "codebase_search": // Add case for the new tool
+					case "codebase_search":
 						return `[${block.name} for '${block.params.query}']`
+					case "generateTestsTool":
+						return `[${block.name} for '${block.params.symbolName}' in '${block.params.filePath}']`
 					case "new_task": {
 						const mode = block.params.mode ?? defaultModeSlug
 						const message = block.params.message ?? "(no message)"
@@ -466,6 +469,10 @@ export async function presentAssistantMessage(cline: Task) {
 						askFinishSubTaskApproval,
 					)
 					break
+				// Handles requests to generate unit tests for a specified code symbol.
+				case "generateTestsTool":
+					await generateTestsTool(cline, block, askApproval, handleError, pushToolResult)
+					break;
 			}
 
 			break
