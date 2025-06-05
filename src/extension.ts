@@ -105,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
 	TelemetryService.instance.setProvider(provider)
-
+	
 	if (codeIndexManager) {
 		context.subscriptions.push(codeIndexManager)
 	}
