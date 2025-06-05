@@ -113,6 +113,12 @@ RUN pnpm install
 # Copy source code
 COPY . ./
 
+# Validate that .env.local exists and is not empty
+RUN if [ ! -f "packages/evals/.env.local" ] || [ ! -s "packages/evals/.env.local" ]; then \
+  echo "ERROR: packages/evals/.env.local is missing or empty. Please create it with your API keys before building."; \
+  exit 1; \
+fi
+
 # Copy ENV secrets
 COPY packages/evals/.env.local ./packages/evals/
 
@@ -120,7 +126,7 @@ COPY packages/evals/.env.local ./packages/evals/
 RUN cp -r /roo/.vscode-template /roo/.vscode
 
 # Build the Roo Code extension
-RUN pnpm build -- --out ../bin/roo-code.vsix \
+RUN pnpm vsix -- --out ../bin/roo-code.vsix \
     && code --no-sandbox --user-data-dir /roo/.vscode --install-extension bin/roo-code.vsix
 
 # Copy entrypoint script

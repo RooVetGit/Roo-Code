@@ -28,7 +28,7 @@ echo "OPENROUTER_API_KEY=sk-or-v1-[...]" > packages/evals/.env.local
 Start the evals service:
 
 ```sh
-cd packages/evals && docker compose --profile server up
+docker compose -f packages/evals/docker-compose.yml --profile server --profile runner up --build --scale runner=0
 ```
 
 Navigate to [localhost:3000](http://localhost:3000/) in your browser.

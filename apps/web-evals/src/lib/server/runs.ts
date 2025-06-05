@@ -48,7 +48,7 @@ export async function createRun({ suite, exercises = [], systemPrompt, ...values
 	revalidatePath("/runs")
 
 	try {
-		const isRunningInDocker = true // fs.existsSync("/.dockerenv")
+		const isRunningInDocker = fs.existsSync("/.dockerenv")
 
 		const dockerArgs = [
 			`--name evals-controller-${run.id}`,

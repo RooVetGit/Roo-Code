@@ -75,4 +75,4 @@ services:
         stdin_open: true
         tty: true
         profiles:
-            - client
+            - runner
