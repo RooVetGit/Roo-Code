@@ -490,7 +490,7 @@ const ApiOptions = ({
 						<MaxContextWindowControl
 							value={apiConfiguration.modelMaxContextWindow}
 							onChange={handleInputChange("modelMaxContextWindow", noTransform)}
-							maxValue={1000000}
+							maxValue={1048576}
 						/>
 					)}
 

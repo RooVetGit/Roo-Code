@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui"
 interface MaxContextWindowControlProps {
 	value: number | undefined | null
 	onChange: (value: number | undefined | null) => void
-	maxValue?: number // Some providers like OpenAI use 0-2 range.
+	maxValue?: number
 }
 
 export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }: MaxContextWindowControlProps) => {
@@ -52,10 +52,10 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 					<div>
 						<div className="flex items-center gap-2">
 							<Slider
-								min={0}
+								min={200000}
 								max={maxValue}
 								step={1}
-								value={[inputValue ?? 0]}
+								value={[inputValue ?? 1048576]}
 								onValueChange={([value]) => setInputValue(value)}
 							/>
 							<span className="w-10">{inputValue}</span>
