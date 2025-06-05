@@ -15,6 +15,8 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import { processAndFilterReadRequest } from "../services/fileReadCacheService"
+import { ConversationMessage } from "../services/fileReadCacheService"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -68,52 +70,6 @@ interface FileResult {
 	xmlContent?: string // Final XML content for this file
 	feedbackText?: string // User feedback text from approval/denial
 	feedbackImages?: any[] // User feedback images from approval/denial
-}
-
-// New interface for cache entry
-interface FileReadCacheEntry {
-	mtimeMs: number
-	loadedRanges: LineRange[]
-	fullFileContent?: string // Store content only if full file was read
-}
-
-// In-memory cache for file reads (scoped to the module for simplicity in this pass)
-const fileReadCache = new Map<string, FileReadCacheEntry>()
-
-// Helper to check if a requested range is covered by existing loaded ranges
-function isRangeCovered(requestedRange: LineRange, loadedRanges: LineRange[]): boolean {
-	for (const loaded of loadedRanges) {
-		// Check for full containment: requested range must be entirely within a loaded range
-		if (requestedRange.start >= loaded.start && requestedRange.end <= loaded.end) {
-			return true
-		}
-	}
-	return false
-}
-
-// Helper to merge new ranges into existing ones (optional, but good for optimization)
-function mergeRanges(existingRanges: LineRange[], newRanges: LineRange[]): LineRange[] {
-	const allRanges = [...existingRanges, ...newRanges].sort((a, b) => a.start - b.start)
-	const merged: LineRange[] = []
-
-	if (allRanges.length === 0) {
-		return merged
-	}
-
-	let currentMerge = { ...allRanges[0] }
-
-	for (let i = 1; i < allRanges.length; i++) {
-		const nextRange = allRanges[i]
-		// If ranges overlap or are contiguous
-		if (nextRange.start <= currentMerge.end + 1) {
-			currentMerge.end = Math.max(currentMerge.end, nextRange.end)
-		} else {
-			merged.push(currentMerge)
-			currentMerge = { ...nextRange }
-		}
-	}
-	merged.push(currentMerge)
-	return merged
 }
 
 export async function readFileTool(
@@ -477,43 +433,30 @@ export async function readFileTool(
 			const fullPath = path.resolve(cline.cwd, relPath)
 			const { maxReadFileLine = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
 
+			// INTEGRATION WITH fileReadCacheService
+			const cacheResult = await processAndFilterReadRequest(
+				fullPath,
+				fileResult.lineRanges ?? [],
+				(cline.apiConversationHistory as ConversationMessage[]) ?? [],
+			)
+
+			if (cacheResult.status === "REJECT_ALL") {
+				updateFileResult(relPath, {
+					notice: "File content is already up-to-date in the conversation history.",
+					xmlContent: `<file><path>${relPath}</path><notice>File content is already up-to-date in the conversation history.</notice></file>`,
+				})
+				continue // Move to the next file
+			}
+
+			if (cacheResult.status === "ALLOW_PARTIAL") {
+				fileResult.lineRanges = cacheResult.rangesToRead
+			}
+			// For ALLOW_ALL, we proceed with the original fileResult.lineRanges
+
 			let fileContent: string | undefined // To store content read from file
 			let linesRead: LineRange[] = [] // To store ranges actually read
 
 			try {
-				const currentStats = fs.statSync(fullPath)
-				const currentMtimeMs = currentStats.mtimeMs
-				const cachedEntry = fileReadCache.get(fullPath)
-
-				// Check cache for redundant reads
-				if (cachedEntry && cachedEntry.mtimeMs === currentMtimeMs) {
-					const requestedRanges =
-						fileResult.lineRanges && fileResult.lineRanges.length > 0
-							? fileResult.lineRanges
-							: [{ start: 1, end: Infinity }] // Represent full file read if no specific range
-
-					let allRequestedRangesCovered = true
-					for (const reqRange of requestedRanges) {
-						if (!isRangeCovered(reqRange, cachedEntry.loadedRanges) && !cachedEntry.fullFileContent) {
-							allRequestedRangesCovered = false
-							break
-						}
-					}
-
-					if (allRequestedRangesCovered) {
-						const noticeMsg = `Content for '${relPath}' (ranges: ${JSON.stringify(fileResult.lineRanges || "full file")}) already loaded and file not modified. Skipping read.`
-						console.log(`[readFileTool] ${noticeMsg}`)
-						updateFileResult(relPath, {
-							notice: noticeMsg,
-							xmlContent: `<file><path>${relPath}</path><notice>${noticeMsg}</notice></file>`,
-						})
-						continue // Skip actual file I/O
-					}
-				} else if (cachedEntry && cachedEntry.mtimeMs !== currentMtimeMs) {
-					console.log(`[readFileTool] Cache for '${relPath}' is stale. Invalidating.`)
-					fileReadCache.delete(fullPath)
-				}
-
 				const [totalLines, isBinary] = await Promise.all([countFileLines(fullPath), isBinaryFile(fullPath)])
 
 				// Handle binary files (but allow specific file types that extractTextFromFile can handle)
@@ -545,8 +488,16 @@ export async function readFileTool(
 						const lineRangeAttr = ` lines="${range.start}-${range.end}"`
 						rangeResults.push(`<content${lineRangeAttr}>\n${content}</content>`)
 					}
+					const stats = fs.statSync(fullPath)
+					const metadata = {
+						fileName: relPath,
+						mtime: stats.mtime.toISOString(),
+						lineRanges: linesRead,
+					}
+					const metadataXml = `<metadata>${JSON.stringify(metadata)}</metadata>\n`
+
 					updateFileResult(relPath, {
-						xmlContent: `<file><path>${relPath}</path>\n${rangeResults.join("\n")}\n</file>`,
+						xmlContent: `<file><path>${relPath}</path>\n${rangeResults.join("\n")}\n${metadataXml}</file>`,
 					})
 				}
 				// Handle definitions-only mode
@@ -615,20 +566,18 @@ export async function readFileTool(
 					// Track file read
 					await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
+					const stats = fs.statSync(fullPath)
+					const metadata = {
+						fileName: relPath,
+						mtime: stats.mtime.toISOString(),
+						lineRanges: linesRead,
+					}
+					xmlInfo += `<metadata>${JSON.stringify(metadata)}</metadata>\n`
+
 					updateFileResult(relPath, {
 						xmlContent: `<file><path>${relPath}</path>\n${xmlInfo}</file>`,
 					})
 				}
-
-				// Update cache after successful read
-				fileReadCache.set(fullPath, {
-					mtimeMs: currentMtimeMs,
-					loadedRanges: mergeRanges(fileReadCache.get(fullPath)?.loadedRanges || [], linesRead), // Merge new ranges
-					fullFileContent:
-						linesRead.length === 1 && linesRead[0].start === 1 && linesRead[0].end === totalLines
-							? fileContent
-							: undefined, // Only cache full content if entire file was read
-				})
 			} catch (error) {
 				const errorMsg = error instanceof Error ? error.message : String(error)
 				updateFileResult(relPath, {

@@ -1,4 +1,5 @@
 import path from "path"
+import fs from "fs/promises"
 import delay from "delay"
 import * as vscode from "vscode"
 
@@ -221,7 +222,18 @@ export async function writeToFileTool(
 			// Get the formatted response message
 			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
-			pushToolResult(message)
+			const stats = await fs.stat(path.resolve(cline.cwd, relPath))
+			const newMtime = stats.mtime.toISOString()
+			const lineCount = newContent.split("\n").length
+
+			const metadata = {
+				fileName: relPath,
+				mtime: newMtime,
+				lineRanges: [{ start: 1, end: lineCount }],
+			}
+			const metadataXml = `<metadata>${JSON.stringify(metadata)}</metadata>`
+
+			pushToolResult(message + "\n" + metadataXml)
 
 			await cline.diffViewProvider.reset()
 

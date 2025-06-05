@@ -17,6 +17,7 @@ jest.mock("isbinaryfile")
 
 jest.mock("../../../integrations/misc/line-counter")
 jest.mock("../../../integrations/misc/read-lines")
+jest.mock("../../services/fileReadCacheService")
 
 // Mock input content for tests
 let mockInputContent = ""
@@ -69,6 +70,8 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	>
 
 	const mockedIsBinaryFile = isBinaryFile as jest.MockedFunction<typeof isBinaryFile>
+	const { processAndFilterReadRequest } = require("../../services/fileReadCacheService")
+	const mockedProcessAndFilterReadRequest = processAndFilterReadRequest as jest.Mock
 
 	const mockCline: any = {}
 	let mockProvider: any
@@ -76,6 +79,10 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 	beforeEach(async () => {
 		jest.clearAllMocks()
+		mockedProcessAndFilterReadRequest.mockResolvedValue({
+			status: "ALLOW_ALL",
+			rangesToRead: [],
+		})
 
 		// Create test directory and file
 		if (!fs.existsSync(testDir)) {
@@ -108,6 +115,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockCline.cwd = process.cwd() // Use actual cwd for resolving test files
 		mockCline.task = "Test"
 		mockCline.providerRef = mockProvider
+		mockCline.apiConversationHistory = []
 		mockCline.rooIgnoreController = {
 			validateAccess: jest.fn().mockReturnValue(true),
 		}
@@ -376,6 +384,114 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	})
 })
 
+describe("readFileTool with fileReadCacheService", () => {
+	const testDir = path.join(__dirname, "test_files_cache")
+	const testFilePath = path.join(testDir, "cached_file.txt")
+	const fileContent = Array.from({ length: 20 }, (_, i) => `Line ${i + 1}`).join("\n")
+
+	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
+	const mockedReadLines = readLines as jest.MockedFunction<typeof readLines>
+	const { processAndFilterReadRequest } = require("../../services/fileReadCacheService")
+	const mockedProcessAndFilterReadRequest = processAndFilterReadRequest as jest.Mock
+
+	const mockCline: any = {}
+	let mockProvider: any
+	let toolResult: ToolResponse | undefined
+
+	beforeEach(async () => {
+		jest.clearAllMocks()
+		if (!fs.existsSync(testDir)) {
+			await fsp.mkdir(testDir, { recursive: true })
+		}
+		await fsp.writeFile(testFilePath, fileContent)
+
+		mockedCountFileLines.mockResolvedValue(20)
+		mockedReadLines.mockImplementation(async (filePath, end, start) => {
+			const lines = fileContent.split("\n")
+			// Ensure start is a number, default to 0 if undefined
+			const startIndex = start ?? 0
+			// Handle undefined end, which slice can take to mean 'to the end'
+			const endIndex = end === undefined ? undefined : end + 1
+			return lines.slice(startIndex, endIndex).join("\n")
+		})
+
+		mockProvider = {
+			getState: jest.fn().mockResolvedValue({ maxReadFileLine: -1 }),
+			deref: jest.fn().mockReturnThis(),
+		}
+
+		mockCline.cwd = process.cwd()
+		mockCline.providerRef = mockProvider
+		mockCline.apiConversationHistory = []
+		mockCline.rooIgnoreController = { validateAccess: jest.fn().mockReturnValue(true) }
+		mockCline.ask = jest.fn().mockResolvedValue({ response: "yesButtonClicked" })
+		mockCline.fileContextTracker = { trackFileContext: jest.fn() }
+		mockCline.say = jest.fn()
+	})
+
+	afterEach(async () => {
+		if (fs.existsSync(testDir)) {
+			await fsp.rm(testDir, { recursive: true, force: true })
+		}
+	})
+
+	async function executeToolWithCache(
+		args: string,
+		cacheResponse: { status: string; rangesToRead: any[] },
+	): Promise<ToolResponse | undefined> {
+		mockedProcessAndFilterReadRequest.mockResolvedValue(cacheResponse)
+
+		const toolUse: ReadFileToolUse = {
+			type: "tool_use",
+			name: "read_file",
+			params: { args },
+			partial: false,
+		}
+
+		let result: ToolResponse | undefined
+		await readFileTool(
+			mockCline,
+			toolUse,
+			mockCline.ask,
+			jest.fn(),
+			(res: ToolResponse) => {
+				result = res
+			},
+			(_: ToolParamName, content?: string) => content ?? "",
+		)
+		return result
+	}
+
+	it('should not call readLines when cache returns "REJECT_ALL"', async () => {
+		const result = await executeToolWithCache(`<file><path>${testFilePath}</path></file>`, {
+			status: "REJECT_ALL",
+			rangesToRead: [],
+		})
+
+		expect(mockedReadLines).not.toHaveBeenCalled()
+		expect(result).toContain("<notice>File content is already up-to-date in the conversation history.</notice>")
+	})
+
+	it('should call readLines with filtered ranges for "ALLOW_PARTIAL"', async () => {
+		const rangesToRead = [{ start: 5, end: 10 }]
+		await executeToolWithCache(`<file><path>${testFilePath}</path><line_range>1-20</line_range></file>`, {
+			status: "ALLOW_PARTIAL",
+			rangesToRead,
+		})
+
+		expect(mockedReadLines).toHaveBeenCalledWith(testFilePath, 9, 4)
+	})
+
+	it('should call readLines with original ranges for "ALLOW_ALL"', async () => {
+		await executeToolWithCache(`<file><path>${testFilePath}</path><line_range>1-15</line_range></file>`, {
+			status: "ALLOW_ALL",
+			rangesToRead: [], // This won't be used
+		})
+
+		expect(mockedReadLines).toHaveBeenCalledWith(testFilePath, 14, 0)
+	})
+})
+
 describe("read_file tool XML output structure", () => {
 	// Add new test data for feedback messages
 	const _feedbackMessage = "Test feedback message"
@@ -561,8 +677,10 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool()
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="1-5">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-5">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -574,7 +692,7 @@ describe("read_file tool XML output structure", () => {
 
 			// Verify using regex to check structure
 			const xmlStructureRegex = new RegExp(
-				`^<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-5">\\n.*</content>\\n</file>\\n</files>$`,
+				`^<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-5">\\n.*</content>\\n<metadata>.*</metadata>\\n</file>\\n</files>$`,
 				"s",
 			)
 			expect(result).toMatch(xmlStructureRegex)
@@ -605,8 +723,10 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { totalLines: 0 })
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content/><notice>File is empty</notice>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 	})
@@ -645,8 +765,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="2-5">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="2-5">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -681,8 +803,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-3">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -770,8 +894,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Should adjust to actual file length
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="3-5">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="3-5">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 
 			// Verify
@@ -1017,8 +1143,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${file1Path}</path>\n<content lines="1-1">\n${file1Numbered}</content>\n</file>\n<file><path>${file2Path}</path>\n<content lines="1-1">\n${file2Numbered}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${file1Path.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${file1Numbered}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n<file><path>${file2Path.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${file2Numbered}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -1125,8 +1253,10 @@ describe("read_file tool XML output structure", () => {
 			])
 
 			// Verify result
-			expect(result).toBe(
-				`<files>\n<file><path>${validPath}</path>\n<content lines="1-1">\n${numberedContent}</content>\n</file>\n<file><path>${invalidPath}</path><error>${formatResponse.rooIgnoreError(invalidPath)}</error></file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${validPath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n<file><path>${invalidPath.replace(/\\/g, "\\\\")}</path><error>${formatResponse.rooIgnoreError(invalidPath)}</error></file>\\n</files>`,
+				),
 			)
 		})
 
@@ -1195,7 +1325,11 @@ describe("read_file tool XML output structure", () => {
 
 			// Check the result
 			expect(mockPushToolResult).toHaveBeenCalledWith(
-				`<files>\n<file><path>${textPath}</path>\n<content lines="1-1">\n${numberedTextContent}</content>\n</file>\n<file><path>${binaryPath}</path>\n<content lines="1-1">\n${numberedPdfContent}</content>\n</file>\n</files>`,
+				expect.stringMatching(
+					new RegExp(
+						`<files>\\n<file><path>${textPath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${numberedTextContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n<file><path>${binaryPath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${numberedPdfContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+					),
+				),
 			)
 		})
 
@@ -1260,8 +1394,10 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { maxReadFileLine, totalLines })
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content/><notice>File is empty</notice>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -1279,8 +1415,10 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { totalLines: 0 })
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content/><notice>File is empty</notice>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -1329,9 +1467,7 @@ describe("read_file tool XML output structure", () => {
 			// Verify
 			// If file doesn't exist, validateAccessAndExistence causes an error with 'stat'
 			// The readFileTool catches this and formats the error.
-			expect(result).toContain(
-				`<files>\n<file><path>${testFilePath}</path><error>Error reading file: Error: ENOENT: no such file or directory, stat '${testFilePath}'</error></file>\n</files>`,
-			)
+			expect(result).toContain(`Error reading file: ENOENT: no such file or directory, open '${testFilePath}'`)
 			expect(result).not.toContain(`<content`)
 		})
 
