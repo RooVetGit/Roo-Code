@@ -75,7 +75,8 @@ export const ModelInfoView = ({
 			<span className="italic">
 				{selectedModelId === "gemini-2.5-pro-preview-03-25" ||
 				selectedModelId === "gemini-2.5-pro-preview-05-06" ||
-				selectedModelId === "gemini-2.5-pro-preview-06-05"
+				selectedModelId === "gemini-2.5-pro-preview-06-05" ||
+				selectedModelId === "gemini-2.5-pro-preview-06-05:thinking"
 					? t("settings:modelInfo.gemini.billingEstimate")
 					: t("settings:modelInfo.gemini.freeRequests", {
 							count: selectedModelId && selectedModelId.includes("flash") ? 15 : 2,
