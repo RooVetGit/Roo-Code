@@ -677,15 +677,15 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 								const mapping = mappingForArea
 								const originalSourceFileName = fileData.sourceFile // Use stored sourceFile
 
-								const missingIssuesInFile = results[area][lang][targetFilePath].missing
+								// const missingIssuesInFile = results[area][lang][targetFilePath].missing // Removed as it's no longer used
 								Array.from(fileData.keys)
 									.map((spa) => spa.split("\u0000")) // pathArrayKey
 									.sort((a, b) => escapeDotsForDisplay(a).localeCompare(escapeDotsForDisplay(b)))
 									.forEach((pathArrayKey) => {
-										const issue = missingIssuesInFile.find(
-											(iss) => iss.key.join("\u0000") === pathArrayKey.join("\u0000"),
-										)
-										const englishValue = issue ? issue.sourceValue : undefined
+										// const issue = missingIssuesInFile.find( // Removed as it's no longer used
+										// 	(iss) => iss.key.join("\u0000") === pathArrayKey.join("\u0000"),
+										// )
+										// const englishValue = issue ? issue.sourceValue : undefined // Removed as it's no longer used
 
 										let displayKeyPrefix = ""
 										if (mapping.displayNamespace) {
@@ -699,12 +699,10 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 
 										if (mapping.reportFileLevelOnly === true) {
 											// Should not be reached if logic is correct, keys are not reported for fileLevelOnly
-											bufferLog(
-												`          - ${escapeDotsForDisplay(pathArrayKey)} - ${JSON.stringify(englishValue)} [en]`,
-											) // Fallback
+											bufferLog(`          - ${escapeDotsForDisplay(pathArrayKey)}`) // Fallback
 										} else {
 											bufferLog(
-												`          - ${displayKeyPrefix}${escapeDotsForDisplay(pathArrayKey)} - ${JSON.stringify(englishValue)} [en]`,
+												`          - ${displayKeyPrefix}${escapeDotsForDisplay(pathArrayKey)}`,
 											)
 										}
 									})
