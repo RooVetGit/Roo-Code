@@ -50,3 +50,5 @@ jest.mock("lucide-react", () => {
 		},
 	)
 })
+
+// Mock lucide-react icons globally using Proxy for dynamic icon handling
