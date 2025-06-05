@@ -73,10 +73,13 @@ export const OPEN_ROUTER_REQUIRED_REASONING_BUDGET_MODELS = new Set([
 ])
 
 export const OPEN_ROUTER_REASONING_BUDGET_MODELS = new Set([
-	...OPEN_ROUTER_REQUIRED_REASONING_BUDGET_MODELS,
 	"anthropic/claude-3.7-sonnet:beta",
 	"anthropic/claude-opus-4",
 	"anthropic/claude-sonnet-4",
 	"google/gemini-2.5-pro-preview",
 	"google/gemini-2.5-flash-preview-05-20",
+	// Also include the models that require the reasoning budget to be enabled
+	// even though `OPEN_ROUTER_REQUIRED_REASONING_BUDGET_MODELS` takes precedence.
+	"anthropic/claude-3.7-sonnet:thinking",
+	"google/gemini-2.5-flash-preview-05-20:thinking",
 ])
