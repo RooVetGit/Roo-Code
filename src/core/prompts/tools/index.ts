@@ -97,7 +97,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => Promise<string | un
 	apply_diff: async (args) => {
 		const overrideContent = await readToolOverrideWithArgs(
 			args.cwd,
-			`apply_diff${args.diffStrategy?.getName()}`,
+			`apply_diff${args.diffStrategy ? args.diffStrategy.getName() : ''}`,
 			args,
 		)
 		return (
