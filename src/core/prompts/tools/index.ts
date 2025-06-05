@@ -1,6 +1,6 @@
 import type { ToolName, ModeConfig } from "@roo-code/types"
 
-import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS, DiffStrategy } from "../../../shared/tools"
+import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS, DiffStrategy, readToolOverrideWithArgs } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { Mode, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
 
@@ -25,29 +25,91 @@ import { getCodebaseSearchDescription } from "./codebase-search"
 import { CodeIndexManager } from "../../../services/code-index/manager"
 
 // Map of tool names to their description functions
-const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
-	execute_command: (args) => getExecuteCommandDescription(args),
-	read_file: (args) => getReadFileDescription(args),
-	fetch_instructions: () => getFetchInstructionsDescription(),
-	write_to_file: (args) => getWriteToFileDescription(args),
-	search_files: (args) => getSearchFilesDescription(args),
-	list_files: (args) => getListFilesDescription(args),
-	list_code_definition_names: (args) => getListCodeDefinitionNamesDescription(args),
-	browser_action: (args) => getBrowserActionDescription(args),
-	ask_followup_question: () => getAskFollowupQuestionDescription(),
-	attempt_completion: () => getAttemptCompletionDescription(),
-	use_mcp_tool: (args) => getUseMcpToolDescription(args),
-	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
-	codebase_search: () => getCodebaseSearchDescription(),
-	switch_mode: () => getSwitchModeDescription(),
-	new_task: (args) => getNewTaskDescription(args),
-	insert_content: (args) => getInsertContentDescription(args),
-	search_and_replace: (args) => getSearchAndReplaceDescription(args),
-	apply_diff: (args) =>
-		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
+const toolDescriptionMap: Record<string, (args: ToolArgs) => Promise<string | undefined>> = {
+	execute_command: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "execute_command", args)
+		return overrideContent || getExecuteCommandDescription(args)
+	},
+	read_file: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "read_file", args)
+		return overrideContent || getReadFileDescription(args)
+	},
+	fetch_instructions: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "fetch_instructions", args)
+		return overrideContent || getFetchInstructionsDescription()
+	},
+	write_to_file: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "write_to_file", args)
+		return overrideContent || getWriteToFileDescription(args)
+	},
+	search_files: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "search_files", args)
+		return overrideContent || getSearchFilesDescription(args)
+	},
+	list_files: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "list_files", args)
+		return overrideContent || getListFilesDescription(args)
+	},
+	list_code_definition_names: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "list_code_definition_names", args)
+		return overrideContent || getListCodeDefinitionNamesDescription(args)
+	},
+	browser_action: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "browser_action", args)
+		return overrideContent || getBrowserActionDescription(args)
+	},
+	ask_followup_question: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "ask_followup_question", args)
+		return overrideContent || getAskFollowupQuestionDescription()
+	},
+	attempt_completion: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "attempt_completion", args)
+		return overrideContent || getAttemptCompletionDescription()
+	},
+	use_mcp_tool: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "use_mcp_tool", args)
+		return overrideContent || getUseMcpToolDescription(args)
+	},
+	access_mcp_resource: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "access_mcp_resource", args)
+		return overrideContent || getAccessMcpResourceDescription(args)
+	},
+	codebase_search: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "codebase_search", args)
+		return overrideContent || getCodebaseSearchDescription()
+	},
+	switch_mode: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "switch_mode", args)
+		return overrideContent || getSwitchModeDescription()
+	},
+	new_task: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "new_task", args)
+		return overrideContent || getNewTaskDescription(args)
+	},
+	insert_content: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "insert_content", args)
+		return overrideContent || getInsertContentDescription(args)
+	},
+	search_and_replace: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(args.cwd, "search_and_replace", args)
+		return overrideContent || getSearchAndReplaceDescription(args)
+	},
+	apply_diff: async (args) => {
+		const overrideContent = await readToolOverrideWithArgs(
+			args.cwd,
+			`apply_diff${args.diffStrategy?.getName()}`,
+			args,
+		)
+		return (
+			overrideContent ||
+			(args.diffStrategy
+				? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions })
+				: "")
+		)
+	},
 }
 
-export function getToolDescriptionsForMode(
+export async function getToolDescriptionsForMode(
 	mode: Mode,
 	cwd: string,
 	supportsComputerUse: boolean,
@@ -59,7 +121,7 @@ export function getToolDescriptionsForMode(
 	experiments?: Record<string, boolean>,
 	partialReadsEnabled?: boolean,
 	settings?: Record<string, any>,
-): string {
+): Promise<string> {
 	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
 		cwd,
@@ -107,18 +169,19 @@ export function getToolDescriptionsForMode(
 	}
 
 	// Map tool descriptions for allowed tools
-	const descriptions = Array.from(tools).map((toolName) => {
+	const descriptionPromises = Array.from(tools).map(async (toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]
 		if (!descriptionFn) {
 			return undefined
 		}
 
-		return descriptionFn({
+		return await descriptionFn({
 			...args,
 			toolOptions: undefined, // No tool options in group-based approach
 		})
 	})
 
+	const descriptions = await Promise.all(descriptionPromises)
 	return `# Tools\n\n${descriptions.filter(Boolean).join("\n\n")}`
 }
 
