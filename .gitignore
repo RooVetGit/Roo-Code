@@ -6,6 +6,10 @@ node_modules
 coverage/
 mock/
 
+# Webview UI specific ignores
+webview-ui/node_modules
+webview-ui/dist
+
 .DS_Store
 
 # IDEs

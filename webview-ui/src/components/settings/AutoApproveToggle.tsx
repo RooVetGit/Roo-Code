@@ -87,9 +87,10 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 
 type AutoApproveToggleProps = AutoApproveToggles & {
 	onToggle: (key: AutoApproveSetting, value: boolean) => void
+	isOverallApprovalEnabled?: boolean // New prop
 }
 
-export const AutoApproveToggle = ({ onToggle, ...props }: AutoApproveToggleProps) => {
+export const AutoApproveToggle = ({ onToggle, isOverallApprovalEnabled, ...props }: AutoApproveToggleProps) => {
 	const { t } = useAppTranslation()
 
 	return (
@@ -99,22 +100,28 @@ export const AutoApproveToggle = ({ onToggle, ...props }: AutoApproveToggleProps
 				"[@media(min-width:600px)]:gap-4",
 				"[@media(min-width:800px)]:max-w-[800px]",
 			)}>
-			{Object.values(autoApproveSettingsConfig).map(({ key, descriptionKey, labelKey, icon, testId }) => (
-				<Button
-					key={key}
-					variant={props[key] ? "default" : "outline"}
-					onClick={() => onToggle(key, !props[key])}
-					title={t(descriptionKey || "")}
-					aria-label={t(labelKey)}
-					aria-pressed={!!props[key]}
-					data-testid={testId}
-					className={cn(" aspect-square h-[80px]", !props[key] && "opacity-50")}>
-					<span className={cn("flex flex-col items-center gap-1")}>
-						<span className={`codicon codicon-${icon}`} />
-						<span className="text-sm text-center">{t(labelKey)}</span>
-					</span>
-				</Button>
-			))}
+			{Object.values(autoApproveSettingsConfig).map(({ key, descriptionKey, labelKey, icon, testId }) => {
+				const isButtonActive = props[key] // This reflects the actual state of the individual toggle
+				const isButtonVisuallyEnabled = isOverallApprovalEnabled === false ? false : isButtonActive
+
+				return (
+					<Button
+						key={key}
+						variant={isButtonActive ? "default" : "outline"} // Variant always reflects its own state
+						onClick={() => onToggle(key, !props[key])}
+						title={t(descriptionKey || "")}
+						aria-label={t(labelKey)}
+						aria-pressed={!!isButtonActive}
+						data-testid={testId}
+						className={cn(" aspect-square h-[80px]", !isButtonVisuallyEnabled && "opacity-50")} // Opacity based on overall state
+					>
+						<span className={cn("flex flex-col items-center gap-1")}>
+							<span className={`codicon codicon-${icon}`} />
+							<span className="text-sm text-center">{t(labelKey)}</span>
+						</span>
+					</Button>
+				)
+			})}
 		</div>
 	)
 }
