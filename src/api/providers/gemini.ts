@@ -141,9 +141,12 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				return {
 					id,
 					info,
-					thinkingConfig: this.options.modelMaxThinkingTokens
-						? { thinkingBudget: this.options.modelMaxThinkingTokens, includeThoughts: true }
-						: undefined,
+					thinkingConfig: {
+						...(this.options.modelMaxThinkingTokens && {
+							thinkingBudget: this.options.modelMaxThinkingTokens,
+						}),
+						includeThoughts: true,
+					},
 					maxOutputTokens: this.options.modelMaxTokens ?? info.maxTokens ?? undefined,
 				}
 			}
