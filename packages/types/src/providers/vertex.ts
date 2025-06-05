@@ -227,6 +227,7 @@ export const vertexModels = {
 } as const satisfies Record<string, ModelInfo>
 
 export const VERTEX_REGIONS = [
+	{ value: "global", label: "global" },
 	{ value: "us-east5", label: "us-east5" },
 	{ value: "us-central1", label: "us-central1" },
 	{ value: "europe-west1", label: "europe-west1" },
