@@ -57,7 +57,6 @@ const baseProviderSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
-	modelMaxContextWindow: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
 
 	// Model reasoning.
@@ -153,6 +152,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
+	modelMaxContextWindow: z.number().nullish(),
 })
 
 const openAiNativeSchema = apiModelIdProviderModelSchema.extend({
@@ -319,6 +319,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	// Gemini
 	"geminiApiKey",
 	"googleGeminiBaseUrl",
+	"modelMaxContextWindow",
 	// OpenAI Native
 	"openAiNativeApiKey",
 	"openAiNativeBaseUrl",
@@ -347,7 +348,6 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"diffEnabled",
 	"fuzzyMatchThreshold",
 	"modelTemperature",
-	"modelMaxContextWindow",
 	"rateLimitSeconds",
 	// Fake AI
 	"fakeAi",

@@ -485,11 +485,15 @@ const ApiOptions = ({
 						onChange={handleInputChange("modelTemperature", noTransform)}
 						maxValue={2}
 					/>
-					<MaxContextWindowControl
-						value={apiConfiguration.modelMaxContextWindow}
-						onChange={handleInputChange("modelMaxContextWindow", noTransform)}
-						maxValue={1000000}
-					/>
+
+					{selectedProvider === "gemini" && (
+						<MaxContextWindowControl
+							value={apiConfiguration.modelMaxContextWindow}
+							onChange={handleInputChange("modelMaxContextWindow", noTransform)}
+							maxValue={1000000}
+						/>
+					)}
+
 					<RateLimitSecondsControl
 						value={apiConfiguration.rateLimitSeconds || 0}
 						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}

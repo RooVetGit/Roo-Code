@@ -13,7 +13,7 @@ interface MaxContextWindowControlProps {
 
 export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }: MaxContextWindowControlProps) => {
 	const { t } = useAppTranslation()
-	const [isCustomTemperature, setIsCustomTemperature] = useState(value !== undefined)
+	const [isCustomMaxContextWindow, setIsCustomMaxContextWindow] = useState(value !== undefined)
 	const [inputValue, setInputValue] = useState(value)
 
 	useDebounce(() => onChange(inputValue), 50, [onChange, inputValue])
@@ -21,7 +21,7 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 	// Sync internal state with prop changes when switching profiles.
 	useEffect(() => {
 		const hasCustomTemperature = value !== undefined && value !== null
-		setIsCustomTemperature(hasCustomTemperature)
+		setIsCustomMaxContextWindow(hasCustomTemperature)
 		setInputValue(value)
 	}, [value])
 
@@ -29,10 +29,10 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 		<>
 			<div>
 				<VSCodeCheckbox
-					checked={isCustomTemperature}
+					checked={isCustomMaxContextWindow}
 					onChange={(e: any) => {
 						const isChecked = e.target.checked
-						setIsCustomTemperature(isChecked)
+						setIsCustomMaxContextWindow(isChecked)
 
 						if (!isChecked) {
 							setInputValue(null) // Unset the temperature, note that undefined is unserializable.
@@ -47,7 +47,7 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 				</div>
 			</div>
 
-			{isCustomTemperature && (
+			{isCustomMaxContextWindow && (
 				<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
 					<div>
 						<div className="flex items-center gap-2">
