@@ -62,6 +62,7 @@ export interface WebviewMessage {
 		| "alwaysAllowSubtasks"
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
+		| "disableSlidingWindow"
 		| "condensingApiConfigId"
 		| "updateCondensingPrompt"
 		| "playSound"

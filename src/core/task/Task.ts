@@ -8,6 +8,8 @@ import delay from "delay"
 import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
+import { experiments, EXPERIMENT_IDS, experimentDefault } from "../../shared/experiments"
+
 import {
 	type ProviderSettings,
 	type TokenUsage,
@@ -1607,6 +1609,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			mode,
 			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
+			experiments: experimentsConfig = {},
 		} = state ?? {}
 
 		// Get condensing configuration for automatic triggers
@@ -1677,6 +1680,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				apiHandler: this.api,
 				autoCondenseContext,
 				autoCondenseContextPercent,
+				disableSlidingWindow: experiments.isEnabled({ ...experimentDefault, ...experimentsConfig }, EXPERIMENT_IDS.DISABLE_SLIDING_WINDOW),
 				systemPrompt,
 				taskId: this.taskId,
 				customCondensingPrompt,

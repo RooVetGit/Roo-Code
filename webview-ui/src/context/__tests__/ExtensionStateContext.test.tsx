@@ -194,7 +194,7 @@ describe("mergeExtensionState", () => {
 			writeDelayMs: 1000,
 			requestDelaySeconds: 5,
 			mode: "default",
-			experiments: {} as Record<ExperimentId, boolean>,
+			experiments: { disableSlidingWindow: false } as Record<ExperimentId, boolean>,
 			customModes: [],
 			maxOpenTabsContext: 20,
 			maxWorkspaceFiles: 100,
@@ -213,7 +213,7 @@ describe("mergeExtensionState", () => {
 		const prevState: ExtensionState = {
 			...baseState,
 			apiConfiguration: { modelMaxTokens: 1234, modelMaxThinkingTokens: 123 },
-			experiments: {} as Record<ExperimentId, boolean>,
+			experiments: { disableSlidingWindow: false } as Record<ExperimentId, boolean>,
 		}
 
 		const newState: ExtensionState = {
@@ -223,6 +223,7 @@ describe("mergeExtensionState", () => {
 				powerSteering: true,
 				autoCondenseContext: true,
 				concurrentFileReads: true,
+				disableSlidingWindow: false,
 			} as Record<ExperimentId, boolean>,
 		}
 

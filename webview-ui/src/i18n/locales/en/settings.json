@@ -492,6 +492,10 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Use experimental multi block diff tool",
 			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
+		},
+		"DISABLE_SLIDING_WINDOW": {
+			"name": "Disable automatic context clearing (Sliding Window)",
+			"description": "When enabled, Roo will not automatically clear or condense the conversation context when it grows beyond the model's limit. This preserves the full history but may lead to API errors if the context becomes too large."
 		}
 	},
 	"promptCaching": {

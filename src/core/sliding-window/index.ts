@@ -70,6 +70,7 @@ type TruncateOptions = {
 	apiHandler: ApiHandler
 	autoCondenseContext: boolean
 	autoCondenseContextPercent: number
+	disableSlidingWindow: boolean
 	systemPrompt: string
 	taskId: string
 	customCondensingPrompt?: string
@@ -93,6 +94,7 @@ export async function truncateConversationIfNeeded({
 	apiHandler,
 	autoCondenseContext,
 	autoCondenseContextPercent,
+	disableSlidingWindow,
 	systemPrompt,
 	taskId,
 	customCondensingPrompt,
@@ -112,6 +114,11 @@ export async function truncateConversationIfNeeded({
 
 	// Calculate total effective tokens (totalTokens never includes the last message)
 	const prevContextTokens = totalTokens + lastMessageTokens
+
+	// If sliding window is disabled, return original messages without any truncation
+	if (disableSlidingWindow) {
+		return { messages, summary: "", cost, prevContextTokens, error }
+	}
 
 	// Calculate available tokens for conversation history
 	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window

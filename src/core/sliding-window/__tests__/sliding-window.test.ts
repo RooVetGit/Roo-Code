@@ -263,6 +263,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -302,6 +303,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -335,6 +337,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -347,6 +350,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -366,6 +370,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -378,6 +383,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -412,6 +418,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -445,6 +452,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -471,6 +479,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -507,6 +516,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -552,6 +562,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: true,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -617,6 +628,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: true,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -662,6 +674,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 50, // This shouldn't matter since autoCondenseContext is false
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -717,6 +730,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: true,
 				autoCondenseContextPercent: 50, // Set threshold to 50% - our tokens are at 60%
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -767,6 +781,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: true,
 				autoCondenseContextPercent: 50, // Set threshold to 50% - our tokens are at 40%
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -775,6 +790,78 @@ describe("Sliding Window", () => {
 			expect(summarizeSpy).not.toHaveBeenCalled()
 
 			// Verify no truncation or summarization occurred
+			expect(result).toEqual({
+				messages: messagesWithSmallContent,
+				summary: "",
+				cost: 0,
+				prevContextTokens: totalTokens,
+			})
+
+			// Clean up
+			summarizeSpy.mockRestore()
+		})
+
+		it("should not truncate when disableSlidingWindow is true even if tokens exceed threshold", async () => {
+			const modelInfo = createModelInfo(100000, 30000)
+			const totalTokens = 80001 // Well above threshold
+
+			// Create messages with very small content in the last one to avoid token overflow
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens,
+				contextWindow: modelInfo.contextWindow,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: false,
+				autoCondenseContextPercent: 100,
+				disableSlidingWindow: true, // This should prevent any truncation
+				systemPrompt: "System prompt",
+				taskId,
+			})
+
+			// Should return original messages without any truncation
+			expect(result).toEqual({
+				messages: messagesWithSmallContent,
+				summary: "",
+				cost: 0,
+				prevContextTokens: totalTokens,
+			})
+		})
+
+		it("should not use summarizeConversation when disableSlidingWindow is true even with autoCondenseContext enabled", async () => {
+			// Reset any previous mock calls
+			jest.clearAllMocks()
+			const summarizeSpy = jest.spyOn(condenseModule, "summarizeConversation")
+
+			const modelInfo = createModelInfo(100000, 30000)
+			const totalTokens = 80001 // Well above threshold
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens,
+				contextWindow: modelInfo.contextWindow,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: true, // This would normally trigger summarization
+				autoCondenseContextPercent: 50, // Well below our 80% usage
+				disableSlidingWindow: true, // This should prevent any processing
+				systemPrompt: "System prompt",
+				taskId,
+			})
+
+			// Verify summarizeConversation was not called
+			expect(summarizeSpy).not.toHaveBeenCalled()
+
+			// Should return original messages without any processing
 			expect(result).toEqual({
 				messages: messagesWithSmallContent,
 				summary: "",
@@ -827,6 +914,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -846,6 +934,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -876,6 +965,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -895,6 +985,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -924,6 +1015,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -938,6 +1030,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -965,6 +1058,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
@@ -979,6 +1073,7 @@ describe("Sliding Window", () => {
 				apiHandler: mockApiHandler,
 				autoCondenseContext: false,
 				autoCondenseContextPercent: 100,
+				disableSlidingWindow: false,
 				systemPrompt: "System prompt",
 				taskId,
 			})
