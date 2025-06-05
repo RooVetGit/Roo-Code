@@ -104,7 +104,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysAllowSubtasks,
 			setAlwaysApproveResubmit,
 			setAutoApprovalEnabled, // Added setAutoApprovalEnabled to dependencies
-			vscode, // Added vscode to dependencies
 		],
 	)
 
@@ -133,10 +132,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	const hasAnyAutoApprovedAction = useMemo(
-		() => Object.values(toggles).some((value) => !!value),
-		[toggles],
-	)
+	const hasAnyAutoApprovedAction = useMemo(() => Object.values(toggles).some((value) => !!value), [toggles])
 
 	const displayedAutoApproveText = useMemo(() => {
 		if (autoApprovalEnabled && hasAnyAutoApprovedAction) {
@@ -236,7 +232,11 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						/>
 					</div>
 
-					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} isOverallApprovalEnabled={autoApprovalEnabled} />
+					<AutoApproveToggle
+						{...toggles}
+						onToggle={onAutoApproveToggle}
+						isOverallApprovalEnabled={autoApprovalEnabled}
+					/>
 
 					{/* Auto-approve API request count limit input row inspired by Cline */}
 					<div
