@@ -10,7 +10,7 @@ has_asdf_plugin() {
 
 build_extension() {
   echo "🔨 Building the Roo Code extension..."
-  pnpm -w build -- --out ../bin/roo-code-$(git rev-parse --short HEAD).vsix || exit 1
+  pnpm -w vsix -- --out ../bin/roo-code-$(git rev-parse --short HEAD).vsix || exit 1
   code --install-extension ../../bin/roo-code-$(git rev-parse --short HEAD).vsix || exit 1
   cd evals
 }
