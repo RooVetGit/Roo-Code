@@ -1570,6 +1570,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async getSystemPrompt(): Promise<string> {
+		const vsclmtService= this.providerRef.deref()?.getVSCLMToolService()
 		const { mcpEnabled } = (await this.providerRef.deref()?.getState()) ?? {}
 		let mcpHub: McpHub | undefined
 		if (mcpEnabled ?? true) {
@@ -1621,6 +1622,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				provider.context,
 				this.cwd,
 				(this.api.getModel().info.supportsComputerUse ?? false) && (browserToolEnabled ?? true),
+				vsclmtService,
 				mcpHub,
 				this.diffStrategy,
 				browserViewportSize,
