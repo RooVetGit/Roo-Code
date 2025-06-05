@@ -190,6 +190,50 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
 	},
+	// Command to generate unit tests for a specified symbol in a file.
+	// It prompts the user for the file path and symbol name, then constructs
+	// a tool_use string and initiates a new task flow via initClineWithTask.
+	// The generateTestsTool is then expected to be invoked by the Task's tool dispatcher.
+	"roo-cline.generateTests": async () => {
+		const visibleProvider = await ClineProvider.getInstance();
+		if (!visibleProvider) {
+			vscode.window.showErrorMessage("Roo Code is not active. Please open Roo Code chat.");
+			return;
+		}
+
+		const filePath = await vscode.window.showInputBox({
+			prompt: "Enter the path to the file (relative to workspace root)",
+			placeHolder: "e.g., src/utils/myHelper.ts",
+		});
+		if (!filePath) {
+			return; // User cancelled
+		}
+
+		const symbolName = await vscode.window.showInputBox({
+			prompt: "Enter the symbol name (e.g., function or class name)",
+			placeHolder: "e.g., myHelperFunction",
+		});
+		if (!symbolName) {
+			return; // User cancelled
+		}
+
+		// Construct the tool use string as if the LLM requested it.
+		// Ensure parameters are XML-attribute-safe. For simplicity, assuming they are for now.
+		// A more robust solution would properly escape attributes if needed.
+		const toolCallString = `<tool_use tool_name="generateTestsTool" filePath="${filePath}" symbolName="${symbolName}"></tool_use>`;
+
+		try {
+			// This will start a new interaction flow within the visible Roo Code panel,
+			// treating the toolCallString as the initial "user" message.
+			// The Task machinery should then parse and execute this tool call.
+			await visibleProvider.initClineWithTask(toolCallString);
+			vscode.window.showInformationMessage(`Roo is generating tests for ${symbolName} in ${filePath}. Check the Roo Code chat.`);
+		} catch (error) {
+			vscode.window.showErrorMessage(`Failed to start test generation: ${error instanceof Error ? error.message : String(error)}`);
+			// Log to output channel as well
+			visibleProvider.log(`Error in roo-cline.generateTests command: ${error instanceof Error ? error.message : String(error)}`);
+		}
+	},
 })
 
 export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {

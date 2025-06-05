@@ -165,6 +165,11 @@
 				"command": "roo-cline.acceptInput",
 				"title": "%command.acceptInput.title%",
 				"category": "%configuration.title%"
+			},
+			{
+				"command": "roo-cline.generateTests",
+				"title": "Roo: Generate Tests for Symbol",
+				"category": "%configuration.title%"
 			}
 		],
 		"menus": {
@@ -280,6 +285,16 @@
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@7",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "roo-cline.focusInput",
+					"when": "config.roo-cline.enableExperimentalFeatures"
+				},
+				{
+					"command": "roo-cline.generateTests",
+					"when": "true"
 				}
 			]
 		},
