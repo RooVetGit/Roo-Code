@@ -42,3 +42,14 @@ To configure your MacOS system to run evals locally, execute the setup script:
 ```sh
 cd packages/evals && ./scripts/setup.sh
 ```
+
+The setup script does the following:
+
+- Installs development tools: Homebrew, asdf, GitHub CLI, pnpm
+- Installs programming languages: Node.js 20.19.2, Python 3.13.2, Go 1.24.2, Rust 1.85.1, Java 17
+- Sets up VS Code with required extensions
+- Configures Docker services (PostgreSQL, Redis)
+- Clones/updates the evals repository
+- Creates and migrates a Postgres database
+- Prompts for an OpenRouter API key to add to `.env.local`
+- Optionally builds and installs the Roo Code extension from source
