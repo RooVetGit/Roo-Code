@@ -497,6 +497,11 @@
 		"description": "Controla la aleatoriedad en las respuestas del modelo.",
 		"rangeDescription": "Valores más altos hacen que la salida sea más aleatoria, valores más bajos la hacen más determinista."
 	},
+	"maxContextWindow": {
+		"useCustom": "Usar ventana de contexto máxima personalizada",
+		"description": "Establece el tamaño máximo de la ventana de contexto del modelo. Cuando las conversaciones se acercan a este límite, Roo Code condensará automáticamente los mensajes antiguos para ajustarse a la restricción.",
+		"rangeDescription": "Los valores más altos permiten conversaciones más largas antes de condensarse; los valores más bajos activan la condensación antes para permanecer dentro de los límites de velocidad de la API."
+	},
 	"modelInfo": {
 		"supportsImages": "Soporta imágenes",
 		"noImages": "No soporta imágenes",

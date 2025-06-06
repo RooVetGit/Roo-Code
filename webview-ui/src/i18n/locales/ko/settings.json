@@ -497,6 +497,11 @@
 		"description": "모델 응답의 무작위성을 제어합니다.",
 		"rangeDescription": "높은 값은 출력을 더 무작위하게, 낮은 값은 더 결정적으로 만듭니다."
 	},
+	"maxContextWindow": {
+		"useCustom": "사용자 정의 최대 컨텍스트 창 사용",
+		"description": "모델의 최대 컨텍스트 창 크기를 설정합니다. 대화가 이 제한에 도달하면 Roo Code는 자동으로 이전 메시지를 압축하여 제한 범위 내에 있도록 합니다.",
+		"rangeDescription": "값이 높을수록 응축되기 전에 더 긴 대화가 가능하고, 값이 낮을수록 API 속도 제한 내에 머물기 위해 더 빨리 응축이 실행됩니다."
+	},
 	"modelInfo": {
 		"supportsImages": "이미지 지원",
 		"noImages": "이미지 지원 안 함",
