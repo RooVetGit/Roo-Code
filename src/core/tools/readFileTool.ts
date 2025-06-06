@@ -1,4 +1,5 @@
 import path from "path"
+import fs from "fs" // Added fs import
 import { isBinaryFile } from "isbinaryfile"
 
 import { Task } from "../task/Task"
@@ -14,6 +15,8 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import { processAndFilterReadRequest } from "../services/fileReadCacheService"
+import { ConversationMessage } from "../services/fileReadCacheService"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -57,7 +60,6 @@ interface FileEntry {
 	lineRanges?: LineRange[]
 }
 
-// New interface to track file processing state
 interface FileResult {
 	path: string
 	status: "approved" | "denied" | "blocked" | "error" | "pending"
@@ -431,7 +433,29 @@ export async function readFileTool(
 			const fullPath = path.resolve(cline.cwd, relPath)
 			const { maxReadFileLine = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
 
-			// Process approved files
+			// INTEGRATION WITH fileReadCacheService
+			const cacheResult = await processAndFilterReadRequest(
+				fullPath,
+				fileResult.lineRanges ?? [],
+				(cline.apiConversationHistory as ConversationMessage[]) ?? [],
+			)
+
+			if (cacheResult.status === "REJECT_ALL") {
+				updateFileResult(relPath, {
+					notice: "File content is already up-to-date in the conversation history.",
+					xmlContent: `<file><path>${relPath}</path><notice>File content is already up-to-date in the conversation history.</notice></file>`,
+				})
+				continue // Move to the next file
+			}
+
+			if (cacheResult.status === "ALLOW_PARTIAL") {
+				fileResult.lineRanges = cacheResult.rangesToRead
+			}
+			// For ALLOW_ALL, we proceed with the original fileResult.lineRanges
+
+			let fileContent: string | undefined // To store content read from file
+			let linesRead: LineRange[] = [] // To store ranges actually read
+
 			try {
 				const [totalLines, isBinary] = await Promise.all([countFileLines(fullPath), isBinaryFile(fullPath)])
 
@@ -458,17 +482,26 @@ export async function readFileTool(
 							await readLines(fullPath, range.end - 1, range.start - 1),
 							range.start,
 						)
+						fileContent = content // Store content for caching
+						linesRead.push(range) // Store the specific range read
+
 						const lineRangeAttr = ` lines="${range.start}-${range.end}"`
 						rangeResults.push(`<content${lineRangeAttr}>\n${content}</content>`)
 					}
-					updateFileResult(relPath, {
-						xmlContent: `<file><path>${relPath}</path>\n${rangeResults.join("\n")}\n</file>`,
-					})
-					continue
-				}
+					const stats = fs.statSync(fullPath)
+					const metadata = {
+						fileName: relPath,
+						mtime: stats.mtime.toISOString(),
+						lineRanges: linesRead,
+					}
+					const metadataXml = `<metadata>${JSON.stringify(metadata)}</metadata>\n`
 
+					updateFileResult(relPath, {
+						xmlContent: `<file><path>${relPath}</path>\n${rangeResults.join("\n")}\n${metadataXml}</file>`,
+					})
+				}
 				// Handle definitions-only mode
-				if (maxReadFileLine === 0) {
+				else if (maxReadFileLine === 0) {
 					try {
 						const defResult = await parseSourceCodeDefinitionsForFile(fullPath, cline.rooIgnoreController)
 						if (defResult) {
@@ -477,6 +510,8 @@ export async function readFileTool(
 								xmlContent: `<file><path>${relPath}</path>\n<list_code_definition_names>${defResult}</list_code_definition_names>\n${xmlInfo}</file>`,
 							})
 						}
+						fileContent = "" // No content to cache for definitions only
+						linesRead = [] // No specific lines read
 					} catch (error) {
 						if (error instanceof Error && error.message.startsWith("Unsupported language:")) {
 							console.warn(`[read_file] Warning: ${error.message}`)
@@ -486,12 +521,13 @@ export async function readFileTool(
 							)
 						}
 					}
-					continue
 				}
-
 				// Handle files exceeding line threshold
-				if (maxReadFileLine > 0 && totalLines > maxReadFileLine) {
+				else if (maxReadFileLine > 0 && totalLines > maxReadFileLine) {
 					const content = addLineNumbers(await readLines(fullPath, maxReadFileLine - 1, 0))
+					fileContent = content // Store content for caching
+					linesRead = [{ start: 1, end: maxReadFileLine }] // Store the range read
+
 					const lineRangeAttr = ` lines="1-${maxReadFileLine}"`
 					let xmlInfo = `<content${lineRangeAttr}>\n${content}</content>\n`
 
@@ -513,24 +549,35 @@ export async function readFileTool(
 							)
 						}
 					}
-					continue
 				}
-
 				// Handle normal file read
-				const content = await extractTextFromFile(fullPath)
-				const lineRangeAttr = ` lines="1-${totalLines}"`
-				let xmlInfo = totalLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
+				else {
+					const content = await extractTextFromFile(fullPath)
+					fileContent = content // Store content for caching
+					linesRead = [{ start: 1, end: totalLines }] // Store the full range read
 
-				if (totalLines === 0) {
-					xmlInfo += `<notice>File is empty</notice>\n`
+					const lineRangeAttr = ` lines="1-${totalLines}"`
+					let xmlInfo = totalLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
+
+					if (totalLines === 0) {
+						xmlInfo += `<notice>File is empty</notice>\n`
+					}
+
+					// Track file read
+					await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+					const stats = fs.statSync(fullPath)
+					const metadata = {
+						fileName: relPath,
+						mtime: stats.mtime.toISOString(),
+						lineRanges: linesRead,
+					}
+					xmlInfo += `<metadata>${JSON.stringify(metadata)}</metadata>\n`
+
+					updateFileResult(relPath, {
+						xmlContent: `<file><path>${relPath}</path>\n${xmlInfo}</file>`,
+					})
 				}
-
-				// Track file read
-				await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
-
-				updateFileResult(relPath, {
-					xmlContent: `<file><path>${relPath}</path>\n${xmlInfo}</file>`,
-				})
 			} catch (error) {
 				const errorMsg = error instanceof Error ? error.message : String(error)
 				updateFileResult(relPath, {
