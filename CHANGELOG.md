@@ -1,9 +1,16 @@
 # Roo Code Changelog
 
+## [3.19.5] - 2025-06-05
+
+- Fix Gemini 2.5 Pro Preview thinking budget bug
+
 ## [3.19.4] - 2025-06-05
 
 - Add Gemini Pro 06-05 model support (thanks @daniel-lxs and @shariqriazz!)
 - Fix reading PDF, DOCX, and IPYNB files in read_file tool (thanks @samhvw8!)
+- Fix Mermaid CSP errors with enhanced bundling strategy (thanks @KJ7LNW!)
+- Improve model info detection for custom Bedrock ARNs (thanks @adamhill!)
+- Add OpenAI Compatible embedder for codebase indexing (thanks @SannidhyaSah!)
 - Fix multiple memory leaks in ChatView component (thanks @kiwina!)
 - Fix WorkspaceTracker resource leaks by disposing FileSystemWatcher (thanks @kiwina!)
 - Fix RooTips setTimeout cleanup to prevent state updates on unmounted components (thanks @kiwina!)
