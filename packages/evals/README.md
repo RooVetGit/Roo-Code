@@ -29,13 +29,13 @@ Start the evals service:
 docker compose -f packages/evals/docker-compose.yml --profile server --profile runner up --build --scale runner=0
 ```
 
-The initial build process can take a minute or two. Upon success you should see ouput indicating that a web service is running on [localhost:3000](http://localhost:3000/):
+The initial build process can take a minute or two. Upon success you should see ouput indicating that a web service is running on [localhost:8080](http://localhost:8080/):
 <img width="1182" alt="Screenshot 2025-06-05 at 12 05 38 PM" src="https://github.com/user-attachments/assets/34f25a59-1362-458c-aafa-25e13cdb2a7a" />
 
 Additionally, you'll find in Docker Desktop that database and redis services are running:
 <img width="1283" alt="Screenshot 2025-06-05 at 12 07 09 PM" src="https://github.com/user-attachments/assets/ad75d791-9cc7-41e3-8168-df7b21b49da2" />
 
-Navigate to [localhost:3000](http://localhost:3000/) in your browser and click the 🚀 button.
+Navigate to [localhost:8080](http://localhost:8080/) in your browser and click the 🚀 button.
 
 By default a evals run will run all programming exercises in [Roo Code Evals](https://github.com/RooCodeInc/Roo-Code-Evals) repository with the Claude Sonnet 4 model and default settings. For basic configuration you can specify the LLM to use and any subset of the exercises you'd like. For advanced configuration you can import a Roo Code settings file which will allow you to run the evals with Roo Code configured any way you'd like (this includes custom modes, a footgun prompt, etc).
 
@@ -67,7 +67,6 @@ The memory and CPU limits can be set from the "Resources" section of the Docker 
 To stop an evals run early you can simply stop the "controller" container using Docker Desktop. This will prevent any new task containers from being spawned. You can optionally stop any existing task containers immediately or let them finish their current tasks at which point they will exit.
 
 <img width="1302" alt="Screenshot 2025-06-06 at 9 00 41 AM" src="https://github.com/user-attachments/assets/a9d4725b-730c-441a-ba24-ac99f9599ced" />
-
 
 ## Advanced Usage / Debugging
 

@@ -52,7 +52,7 @@ services:
             context: ../../
             dockerfile: packages/evals/Dockerfile.web
         ports:
-            - "3000:3000"
+            - "8080:3000"
         environment:
             - HOST_EXECUTION_METHOD=docker
         volumes:
