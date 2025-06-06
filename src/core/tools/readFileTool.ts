@@ -488,7 +488,7 @@ export async function readFileTool(
 						const lineRangeAttr = ` lines="${range.start}-${range.end}"`
 						rangeResults.push(`<content${lineRangeAttr}>\n${content}</content>`)
 					}
-					const stats = fs.statSync(fullPath)
+					const stats = await fs.promises.stat(fullPath)
 					const metadata = {
 						fileName: relPath,
 						mtime: stats.mtime.toISOString(),
