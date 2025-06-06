@@ -1,4 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
+import fs from "fs/promises"
+import path from "path"
 
 import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "@roo-code/types"
 
@@ -266,4 +268,86 @@ export interface DiffStrategy {
 	applyDiff(originalContent: string, diffContent: string, startLine?: number, endLine?: number): Promise<DiffResult>
 
 	getProgressStatus?(toolUse: ToolUse, result?: any): ToolProgressStatus
+}
+
+/**
+ * Safely reads a file from the .roo directory with the given filename.
+ * Returns an empty string if the file doesn't exist or cannot be read.
+ *
+ * @param cwd - The working directory
+ * @param file - The filename to read from the .roo directory
+ * @returns A promise that resolves to the file content or empty string
+ */
+export async function readToolOverride(cwd: string, file: string): Promise<string> {
+	try {
+		const filePath = path.join(cwd, ".roo", "tools", `${file}.md`)
+		const content = await fs.readFile(filePath, "utf-8")
+		return content.trim()
+	} catch (err) {
+		const errorCode = (err as NodeJS.ErrnoException).code
+		if (!errorCode || !["ENOENT", "EISDIR"].includes(errorCode)) {
+			throw err
+		}
+		return ""
+	}
+}
+
+/**
+ * Interpolates args data into a tool description string.
+ * Replaces placeholders like ${args.cwd} or ${args.cwd.toPosix()} with actual values from the args object.
+ *
+ * @param content - The tool description content with placeholders
+ * @param args - The tool arguments object containing values to interpolate
+ * @returns The content with interpolated values
+ */
+function interpolateToolDescription(content: string, args: any): string {
+	// Replace ${args.property.method()} or ${args.property} patterns with actual values
+	return content.replace(/\$\{args\.([^}]+)\}/g, (match, expression) => {
+		try {
+			// Split the expression by dots to handle nested properties and methods
+			const parts = expression.split(".")
+			let value = args
+
+			for (const part of parts) {
+				if (part.includes("()")) {
+					// Handle method calls
+					const methodName = part.replace("()", "")
+					if (value && typeof value[methodName] === "function") {
+						value = value[methodName]()
+					} else {
+						return match // Return original if method doesn't exist
+					}
+				} else {
+					// Handle properties
+					if (value && Object.hasOwn(value, part)) {
+						value = value[part]
+					} else {
+						return match // Return original if property doesn't exist
+					}
+				}
+			}
+
+			return value !== undefined ? String(value) : match
+		} catch (error) {
+			// If any error occurs during evaluation, return the original placeholder
+			return match
+		}
+	})
+}
+
+/**
+ * Gets tool override content with args interpolation.
+ * Reads the override file and interpolates args data into the content.
+ *
+ * @param cwd - The working directory
+ * @param file - The filename to read from the .roo directory
+ * @param args - The tool arguments object for interpolation
+ * @returns The interpolated content or empty string
+ */
+export async function readToolOverrideWithArgs(cwd: string, file: string, args: any): Promise<string> {
+	const content = await readToolOverride(cwd, file)
+	if (!content) {
+		return ""
+	}
+	return interpolateToolDescription(content, args)
 }
