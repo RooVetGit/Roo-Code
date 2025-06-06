@@ -18,6 +18,8 @@ import { getListCodeDefinitionNamesDescription } from "./list-code-definition-na
 // Removed: import { getReplaceLineDescription } from "./replace-line" // Added
 import { getUndoEditDescription } from "./undo-edit" // Added
 import { getReplaceTextRangeDescription } from "./replace-text-range"; // Added
+import { getAnalyzeMultimodalDataDescription } from "./analyze-multimodal-data"; // Added
+import { getSynthesizeAndPlanDescription } from "./synthesize-and-plan"; // Added
 import { getBrowserActionDescription } from "./browser-action"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
@@ -51,6 +53,8 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	// Removed: replace_line: (args) => getReplaceLineDescription(args), // Added
 	undo_edit: (args) => getUndoEditDescription(args), // Added
 	replace_text_range: (args) => getReplaceTextRangeDescription(args), // Added
+	analyze_multimodal_data: (args) => getAnalyzeMultimodalDataDescription(args), // Added
+	synthesize_and_plan: (args) => getSynthesizeAndPlanDescription(args), // Added
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -152,4 +156,6 @@ export {
 	// Removed: getReplaceLineDescription, // Added
 	getUndoEditDescription, // Added
 	getReplaceTextRangeDescription, // Added
+	getAnalyzeMultimodalDataDescription, // Added
+	getSynthesizeAndPlanDescription, // Added
 }

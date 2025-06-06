@@ -4,6 +4,7 @@ import crypto from "crypto"
 import EventEmitter from "events"
 
 import { Anthropic } from "@anthropic-ai/sdk"
+import * as vscode from "vscode"; // Added
 import delay from "delay"
 import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
@@ -36,8 +37,10 @@ import { t } from "../../i18n"
 import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
-import { defaultModeSlug } from "../../shared/modes"
+import { defaultModeSlug, getFullModeDetails, getModeBySlug, isToolAllowedForMode } from "../../shared/modes" // Modified
 import { DiffStrategy } from "../../shared/tools"
+import { EXPERIMENT_IDS, experiments as Experiments } from "../../shared/experiments"; // Added
+import { formatLanguage } from "../../shared/language"; // Added
 
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
@@ -51,15 +54,23 @@ import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
 import { findToolName, formatContentBlockToMarkdown } from "../../integrations/misc/export-markdown"
 import { RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
+import { Terminal } from "../../integrations/terminal/Terminal"; // Added
 
 // utils
 import { calculateApiCostAnthropic } from "../../shared/cost"
-import { getWorkspacePath } from "../../utils/path"
+import { getWorkspacePath, arePathsEqual } from "../../utils/path" // Modified
+
+// services
+// This is a slight misplacement, listFiles is a service, not a util/prompt.
+// It should ideally be grouped with other service imports if there's a clear distinction.
+import { listFiles } from "../../services/glob/list-files"; // Added
 
 // prompts
 import { formatResponse } from "../prompts/responses"
 import { SYSTEM_PROMPT } from "../prompts/system"
 
+import fs from "fs/promises"; // For reading JSON and other text files Added for analyze_multimodal_data
+// import path from "path"; // Already imported at the top, ensure it's used correctly for path.resolve, path.extname. Re-importing here for clarity in diff, but ideally one import at top.
 // core modules
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
@@ -67,9 +78,11 @@ import { RooIgnoreController } from "../ignore/RooIgnoreController"
 import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
+import { AudioProcessor } from "../processors/AudioProcessor";
+import { CsvProcessor } from "../processors/CsvProcessor";
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
-import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
+// Removed import: import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
 	type CheckpointDiffOptions,
 	type CheckpointRestoreOptions,
@@ -115,6 +128,12 @@ export type TaskOptions = {
 	onCreated?: (cline: Task) => void
 	maxAttempts?: number; // Added
 	language?: string; // Added
+}
+
+// Added: AgentState Interface
+interface AgentState {
+	synthesis: string;
+	plan: string[];
 }
 
 // Added: SolutionAttempt Interface
@@ -187,6 +206,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	public readonly language: string; // Added
 	private attempts: SolutionAttempt[] = []; // Added
 	private bestAttempt: SolutionAttempt | null = null; // Added
+	private agentState: AgentState; // Added for agent state
 
 	// LLM Messages & Chat Messages
 	apiConversationHistory: ApiMessage[] = []
@@ -290,6 +310,10 @@ export class Task extends EventEmitter<ClineEvents> {
 		// Initialize multi-attempt properties
 		this.maxAttempts = maxAttempts ?? 3; // Added
 		this.language = language ?? 'python'; // Added
+		this.agentState = { // Added: Initialize agentState
+            synthesis: "No synthesis performed yet. The agent is at the initial state.",
+            plan: [],
+        };
 
 		onCreated?.(this)
 
@@ -1231,7 +1255,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			showRooIgnoredFiles,
 		})
 
-		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)
+		const environmentDetails = await this.getEnvironmentDetails(includeFileDetails) // Modified to call internal method
 
 		// Add environment details as its own text block, separate from tool
 		// results.
@@ -2114,6 +2138,205 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		this.emit("taskCompleted", this.taskId, this.getTokenUsage(), this.toolUsage);
+	}
+
+	// New method: getEnvironmentDetails (incorporates logic from former external file)
+	public async getEnvironmentDetails(includeFileDetails: boolean = false, includeAgentState: boolean = true): Promise<string> {
+		let details = "";
+
+		const clineProvider = this.providerRef.deref(); // 'this' refers to Task instance
+		const state = await clineProvider?.getState();
+		const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } = state ?? {};
+
+		details += "\n\n# VSCode Visible Files";
+		const visibleFilePaths = vscode.window.visibleTextEditors
+			?.map((editor) => editor.document?.uri?.fsPath)
+			.filter(Boolean)
+			.map((absolutePath) => path.relative(this.cwd, absolutePath))
+			.slice(0, maxWorkspaceFiles);
+
+		const allowedVisibleFiles = this.rooIgnoreController
+			? this.rooIgnoreController.filterPaths(visibleFilePaths)
+			: visibleFilePaths.map((p) => p.toPosix()).join("\n");
+
+		if (allowedVisibleFiles) {
+			details += `\n${allowedVisibleFiles}`;
+		} else {
+			details += "\n(No visible files)";
+		}
+
+		details += "\n\n# VSCode Open Tabs";
+		const { maxOpenTabsContext } = state ?? {};
+		const maxTabs = maxOpenTabsContext ?? 20;
+		const openTabPaths = vscode.window.tabGroups.all
+			.flatMap((group) => group.tabs)
+			.map((tab) => (tab.input as vscode.TabInputText)?.uri?.fsPath)
+			.filter(Boolean)
+			.map((absolutePath) => path.relative(this.cwd, absolutePath).toPosix())
+			.slice(0, maxTabs);
+
+		const allowedOpenTabs = this.rooIgnoreController
+			? this.rooIgnoreController.filterPaths(openTabPaths)
+			: openTabPaths.map((p) => p.toPosix()).join("\n");
+
+		if (allowedOpenTabs) {
+			details += `\n${allowedOpenTabs}`;
+		} else {
+			details += "\n(No open tabs)";
+		}
+
+		const busyTerminals = [
+			...TerminalRegistry.getTerminals(true, this.taskId),
+			...TerminalRegistry.getBackgroundTerminals(true),
+		];
+
+		const inactiveTerminals = [
+			...TerminalRegistry.getTerminals(false, this.taskId),
+			...TerminalRegistry.getBackgroundTerminals(false),
+		];
+
+		if (busyTerminals.length > 0) {
+			if (this.didEditFile) {
+				await delay(300);
+			}
+			await pWaitFor(() => busyTerminals.every((t) => !TerminalRegistry.isProcessHot(t.id)), {
+				interval: 100,
+				timeout: 5_000,
+			}).catch(() => {});
+		}
+
+		this.didEditFile = false;
+		let terminalDetails = "";
+
+		if (busyTerminals.length > 0) {
+			terminalDetails += "\n\n# Actively Running Terminals";
+			for (const busyTerminal of busyTerminals) {
+				terminalDetails += `\n## Original command: \`${busyTerminal.getLastCommand()}\``;
+				let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id);
+				if (newOutput) {
+					newOutput = Terminal.compressTerminalOutput(newOutput, terminalOutputLineLimit);
+					terminalDetails += `\n### New Output\n${newOutput}`;
+				}
+			}
+		}
+
+		const terminalsWithOutput = inactiveTerminals.filter((terminal) => {
+			const completedProcesses = terminal.getProcessesWithOutput();
+			return completedProcesses.length > 0;
+		});
+
+		if (terminalsWithOutput.length > 0) {
+			terminalDetails += "\n\n# Inactive Terminals with Completed Process Output";
+			for (const inactiveTerminal of terminalsWithOutput) {
+				let terminalOutputs: string[] = [];
+				const completedProcesses = inactiveTerminal.getProcessesWithOutput();
+				for (const process of completedProcesses) {
+					let output = process.getUnretrievedOutput();
+					if (output) {
+						output = Terminal.compressTerminalOutput(output, terminalOutputLineLimit);
+						terminalOutputs.push(`Command: \`${process.command}\`\n${output}`);
+					}
+				}
+				inactiveTerminal.cleanCompletedProcessQueue();
+				if (terminalOutputs.length > 0) {
+					terminalDetails += `\n## Terminal ${inactiveTerminal.id}`;
+					terminalOutputs.forEach((output) => {
+						terminalDetails += `\n### New Output\n${output}`;
+					});
+				}
+			}
+		}
+
+		const recentlyModifiedFiles = this.fileContextTracker.getAndClearRecentlyModifiedFiles();
+		if (recentlyModifiedFiles.length > 0) {
+			details +=
+				"\n\n# Recently Modified Files\nThese files have been modified since you last accessed them (file was just edited so you may need to re-read it before editing):";
+			for (const filePath of recentlyModifiedFiles) {
+				details += `\n${filePath}`;
+			}
+		}
+
+		if (terminalDetails) {
+			details += terminalDetails;
+		}
+
+		const now = new Date();
+		const formatter = new Intl.DateTimeFormat(undefined, {
+			year: "numeric", month: "numeric", day: "numeric",
+			hour: "numeric", minute: "numeric", second: "numeric", hour12: true,
+		});
+		const timeZone = formatter.resolvedOptions().timeZone;
+		const timeZoneOffset = -now.getTimezoneOffset() / 60;
+		const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset));
+		const timeZoneOffsetMinutes = Math.abs(Math.round((Math.abs(timeZoneOffset) - timeZoneOffsetHours) * 60));
+		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`;
+		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`;
+
+		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages); // Use this.clineMessages
+		const { id: modelId, info: modelInfo } = this.api.getModel();
+		const contextWindow = modelInfo.contextWindow;
+		const contextPercentage = contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined;
+		details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`;
+		details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`;
+
+		const {
+			mode, customModes, customModePrompts, experiments = {} as Record<string, any>, // Using any for experiments from state
+			customInstructions: globalCustomInstructions, language,
+		} = state ?? {};
+		const currentMode = mode ?? defaultModeSlug;
+		// Need to ensure getFullModeDetails, formatLanguage, EXPERIMENT_IDS, Experiments, isToolAllowedForMode, getModeBySlug are imported or available in Task.ts scope
+		// For now, assuming they are available. This might require adding more imports to Task.ts if they were not already.
+		// These are often utility functions from shared directories.
+		const modeDetails = await getFullModeDetails(currentMode, customModes, customModePrompts, {
+			cwd: this.cwd, globalCustomInstructions, language: language ?? formatLanguage(vscode.env.language),
+		});
+		details += `\n\n# Current Mode\n`;
+		details += `<slug>${currentMode}</slug>\n`;
+		details += `<name>${modeDetails.name}</name>\n`;
+		details += `<model>${modelId}</model>\n`;
+
+		if (Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)) { // EXPERIMENT_IDS and Experiments would need to be imported
+			details += `<role>${modeDetails.roleDefinition}</role>\n`;
+			if (modeDetails.customInstructions) {
+				details += `<custom_instructions>${modeDetails.customInstructions}</custom_instructions>\n`;
+			}
+		}
+
+		if (!isToolAllowedForMode("write_to_file", currentMode, customModes ?? [], { apply_diff: this.diffEnabled }) &&
+			!isToolAllowedForMode("apply_diff", currentMode, customModes ?? [], { apply_diff: this.diffEnabled })) {
+			const currentModeName = getModeBySlug(currentMode, customModes)?.name ?? currentMode;
+			const defaultModeName = getModeBySlug(defaultModeSlug, customModes)?.name ?? defaultModeSlug;
+			details += `\n\nNOTE: You are currently in '${currentModeName}' mode, which does not allow write operations. To write files, the user will need to switch to a mode that supports file writing, such as '${defaultModeName}' mode.`;
+		}
+
+		if (includeFileDetails) {
+			details += `\n\n# Current Workspace Directory (${this.cwd.toPosix()}) Files\n`;
+			const isDesktop = arePathsEqual(this.cwd, path.join(os.homedir(), "Desktop")); // arePathsEqual would need to be imported
+			if (isDesktop) {
+				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)";
+			} else {
+				const maxFiles = maxWorkspaceFiles ?? 200;
+				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles);  // listFiles would need to be imported
+				const { showRooIgnoredFiles = true } = state ?? {};
+				const result = formatResponse.formatFilesList(
+					this.cwd, files, didHitLimit, this.rooIgnoreController, showRooIgnoredFiles,
+				);
+				details += result;
+			}
+		}
+
+		// Append Agent State
+		if (includeAgentState) {
+            details += "\n\n# Agent's Internal State (Mental Model)";
+            details += `\n## Current Synthesis:\n${this.agentState.synthesis}`;
+            if (this.agentState.plan && this.agentState.plan.length > 0) {
+                details += `\n\n## Current Plan:\n- ${this.agentState.plan.join("\n- ")}`;
+            } else {
+                details += `\n\n## Current Plan:\n(No active plan. Use 'synthesize_and_plan' to create one.)`;
+            }
+        }
+
+		return `<environment_details>\n${details.trim()}\n</environment_details>`;
 	}
 
 	// Added: isPatchValid method

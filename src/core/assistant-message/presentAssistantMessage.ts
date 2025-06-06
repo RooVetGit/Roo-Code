@@ -31,6 +31,10 @@ import { formatResponse } from "../prompts/responses"
 import { validateToolUse } from "../tools/validateToolUse"
 import { Task } from "../task/Task"
 import { codebaseSearchTool } from "../tools/codebaseSearchTool"
+import { AudioProcessor } from "../../core/processors/AudioProcessor"; // Added for analyze_multimodal_data
+import { CsvProcessor } from "../../core/processors/CsvProcessor"; // Added for analyze_multimodal_data
+import fs from "fs/promises"; // Added for analyze_multimodal_data
+import path from "path"; // Added for analyze_multimodal_data
 
 /**
  * Processes and presents assistant message content to the user interface.
@@ -466,6 +470,192 @@ export async function presentAssistantMessage(cline: Task) {
 						askFinishSubTaskApproval,
 					)
 					break
+				// --- synthesize_and_plan case START ---
+				case "synthesize_and_plan": {
+					const goal: string | undefined = block.params.goal;
+					const toolName: ToolName = "synthesize_and_plan";
+
+					try {
+						if (block.partial) {
+							await cline.ask(
+								"tool",
+								JSON.stringify({ tool: toolName, goal: removeClosingTag("goal", goal) }),
+								block.partial,
+							).catch(() => {});
+							break;
+						}
+
+						if (!goal) {
+							cline.consecutiveMistakeCount++;
+							cline.recordToolError(toolName);
+							pushToolResult(await cline.sayAndCreateMissingParamError(toolName, "goal"));
+							break;
+						}
+						cline.consecutiveMistakeCount = 0;
+
+						const didApprove = await askApproval("tool", `Synthesizing a plan for goal: ${goal}`);
+						if (!didApprove) {
+							pushToolResult(formatResponse.toolDenied());
+							break;
+						}
+
+						const conversationSummary = cline.clineMessages
+							.map(m => `[${new Date(m.ts).toLocaleTimeString()}] ${m.type} ${m.say || m.ask}: ${m.text?.substring(0, 200)}`)
+							.join('\n');
+
+						const environmentDetails = await cline.getEnvironmentDetails(false, false);
+
+						const metaPrompt = `You are a strategic AI planning assistant. Analyze the situation and formulate a plan.
+
+GOAL: "${goal}"
+
+CURRENT CONTEXT:
+<conversation_history>
+${conversationSummary}
+</conversation_history>
+
+<workspace_state>
+${environmentDetails}
+</workspace_state>
+
+Based on all information, update the agent's mental model. Respond ONLY with a JSON object with keys "synthesis" (a brief summary of the current state) and "plan" (a string array of concrete next steps).`;
+
+						await cline.say("api_req_started", JSON.stringify({ request: `Synthesizing plan for: "${goal}"` }), [], false, undefined, undefined, {isNonInteractive: true});
+
+						let planJson = "";
+						const stream = cline.api.createMessage(metaPrompt, [{role: "user", content: "Generate the plan."}]);
+						for await (const chunk of stream) {
+							if (chunk.type === "text") {
+								planJson += chunk.text;
+							} else if (chunk.type === "usage") {
+								// Not explicitly handling usage for this internal LLM call in this tool
+							}
+						}
+						planJson = planJson.trim();
+
+						try {
+							const parsedState = JSON.parse(planJson);
+							if (parsedState.synthesis && Array.isArray(parsedState.plan)) {
+								cline.agentState = {
+									synthesis: parsedState.synthesis,
+									plan: parsedState.plan,
+								};
+								await cline.say("completion_result", `New plan synthesized and adopted:\n- ${cline.agentState.plan.join("\n- ")}`, [], false, undefined, undefined, {isNonInteractive: true});
+								pushToolResult(formatResponse.toolResult("Internal state and plan have been updated successfully."));
+							} else {
+								throw new Error("LLM response for plan did not contain correct JSON structure (synthesis and plan array).");
+							}
+						} catch (parseError: any) {
+							cline.recordToolError(toolName, `Failed to parse LLM response as JSON: ${parseError.message}. Response: ${planJson}`);
+							pushToolResult(formatResponse.toolError(`Failed to update mental model. LLM response was not valid JSON: ${planJson.substring(0, 200)}...`));
+						}
+
+						cline.recordToolUsage(toolName);
+						break;
+					} catch (error) {
+						cline.recordToolError(toolName, error instanceof Error ? error.message : String(error));
+						await handleError("synthesizing and planning", error instanceof Error ? error : new Error(String(error)));
+						break;
+					}
+				}
+				// --- synthesize_and_plan case END ---
+				// --- analyze_multimodal_data case START ---
+				case "analyze_multimodal_data": {
+					const file_paths_param: string | undefined = block.params.file_paths;
+					const toolName: ToolName = "analyze_multimodal_data";
+
+					// `this` inside presentAssistantMessage refers to `cline` (the Task instance)
+					// `askApproval`, `handleError`, `pushToolResult`, `removeClosingTag` are passed into `presentAssistantMessage`
+
+					try {
+						if (block.partial) {
+							await cline.ask( // Use cline directly
+								"tool",
+								JSON.stringify({ tool: toolName, paths: removeClosingTag("file_paths", file_paths_param) }),
+								block.partial,
+							).catch(() => {});
+							break;
+						}
+
+						if (!file_paths_param) {
+							cline.consecutiveMistakeCount++;
+							cline.recordToolError(toolName);
+							pushToolResult(await cline.sayAndCreateMissingParamError(toolName, "file_paths"));
+							break;
+						}
+						cline.consecutiveMistakeCount = 0;
+
+						const relPaths = file_paths_param.split('\n').map(p => p.trim()).filter(Boolean);
+						if (relPaths.length === 0) {
+							cline.recordToolError(toolName, "No file paths provided after splitting and filtering.");
+							pushToolResult(formatResponse.toolError("No file paths provided."));
+							break;
+						}
+
+						// Use the askApproval passed into presentAssistantMessage
+						const didApprove = await askApproval("tool", `Analyzing data from: ${relPaths.join(', ')}`);
+						if (!didApprove) {
+							pushToolResult(formatResponse.toolDenied());
+							break;
+						}
+
+						await cline.say("api_req_started", JSON.stringify({ request: `Analyzing ${relPaths.length} file(s)...`}), [], false, undefined, undefined, { isNonInteractive: true });
+
+						let analysisResults = "";
+						for (const relPath of relPaths) {
+							const absolutePath = path.resolve(cline.cwd, relPath);
+							const extension = path.extname(relPath).toLowerCase();
+							let result = `\n--- Analysis for ${relPath} ---\n`;
+
+							try {
+								if (!cline.rooIgnoreController?.validateAccess(relPath)) {
+									result += formatResponse.rooIgnoreError(relPath);
+									analysisResults += result;
+									continue;
+								}
+								await fs.access(absolutePath);
+
+								switch (extension) {
+									case '.wav':
+									case '.mp3':
+										result += await AudioProcessor.process(absolutePath);
+										break;
+									case '.csv':
+										result += await CsvProcessor.process(absolutePath);
+										break;
+									case '.json':
+										const jsonContent = await fs.readFile(absolutePath, 'utf-8');
+										JSON.parse(jsonContent);
+										result += `File is a valid JSON. Content length: ${jsonContent.length} characters. First 500 chars:\n${jsonContent.substring(0, 500)}`;
+										break;
+									case '.txt':
+									default:
+										const textContent = await fs.readFile(absolutePath, 'utf-8');
+										result += `File treated as plain text. Content length: ${textContent.length} characters. First 500 chars:\n${textContent.substring(0, 500)}`;
+										break;
+								}
+							} catch (e: any) {
+								if (e.code === 'ENOENT') {
+									 result += `Error processing file: File not found at ${relPath}`;
+								} else {
+									 result += `Error processing file ${relPath}: ${e.message}`;
+								}
+							}
+							analysisResults += result + "\n";
+						}
+
+						await cline.say("completion_result", `Analysis complete for ${relPaths.length} file(s). Results included in tool output.`, [], false, undefined, undefined, { isNonInteractive: true });
+						pushToolResult(formatResponse.toolResult(analysisResults.trim()));
+						cline.recordToolUsage(toolName);
+						break;
+					} catch (error) {
+						cline.recordToolError(toolName, error instanceof Error ? error.message : String(error));
+						// Use handleError passed into presentAssistantMessage
+						await handleError("analyzing multimodal data", error instanceof Error ? error : new Error(String(error)));
+						break;
+					}
+				}
+				// --- analyze_multimodal_data case END ---
 			}
 
 			break

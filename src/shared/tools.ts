@@ -190,6 +190,8 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	// replace_line: "replace line", // Removed
 	undo_edit: "undo edit", // Kept
 	replace_text_range: "replace text range", // Kept (consolidated tool)
+	analyze_multimodal_data: "analyze multimodal data", // Added
+	synthesize_and_plan: "synthesize and plan (update mental model)", // Added
 } as const
 
 // Define available tool groups.
@@ -235,6 +237,8 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	// "replace_line", // Removed
 	"undo_edit", // Kept
 	"replace_text_range", // Kept (consolidated tool)
+	"analyze_multimodal_data", // Added
+	"synthesize_and_plan", // Added
 ] as const
 
 export type DiffResult =
