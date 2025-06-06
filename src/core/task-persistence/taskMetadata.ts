@@ -45,7 +45,14 @@ export async function taskMetadata({
 		}
 		return {
 			historyItem,
-			tokenUsage: { totalTokensIn: 0, totalTokensOut: 0, totalCacheWrites: 0, totalCacheReads: 0, totalCost: 0 },
+			tokenUsage: {
+				totalTokensIn: 0,
+				totalTokensOut: 0,
+				totalCacheWrites: 0,
+				totalCacheReads: 0,
+				totalCost: 0,
+				contextTokens: 0,
+			},
 		}
 	}
 
