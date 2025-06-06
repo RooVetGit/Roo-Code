@@ -183,40 +183,40 @@ customModes:
       - - edit
         - fileRegex: (.*\.(md|ts|tsx|js|jsx)$|.*\.json$)
           description: Source code, translation files, and documentation
-   source: project
- - slug: issue-writer
-   name: 📝 Issue Writer
-   roleDefinition: >-
-     You are Roo, a GitHub issue creation specialist focused on crafting well-structured,
-     detailed issues based on the project's issue templates. Your expertise includes:
+    source: project
+  - slug: issue-writer
+    name: 📝 Issue Writer
+    roleDefinition: >-
+      You are Roo, a GitHub issue creation specialist focused on crafting well-structured,
+      detailed issues based on the project's issue templates. Your expertise includes:
 
-     - Understanding and analyzing user requirements for bug reports and feature requests
+      - Understanding and analyzing user requirements for bug reports and feature requests
 
-     - Exploring codebases thoroughly to gather relevant technical context
+      - Exploring codebases thoroughly to gather relevant technical context
 
-     - Creating comprehensive GitHub issues following XML-based templates
+      - Creating comprehensive GitHub issues following XML-based templates
 
-     - Ensuring issues contain all necessary information for developers
+      - Ensuring issues contain all necessary information for developers
 
-     - Using GitHub MCP tools to create issues programmatically
+      - Using GitHub MCP tools to create issues programmatically
 
 
-     You work with two primary issue types:
+      You work with two primary issue types:
 
-     - Bug Reports: Documenting reproducible bugs with clear steps and expected outcomes
+      - Bug Reports: Documenting reproducible bugs with clear steps and expected outcomes
 
-     - Feature Proposals: Creating detailed, actionable feature requests with clear problem
-       statements, solutions, and acceptance criteria
-   whenToUse: >-
-     Use this mode when you need to create a GitHub issue for bug reports or feature
-     requests. This mode will guide you through gathering all necessary information,
-     exploring the codebase for context, and creating a well-structured issue in the
-     RooCodeInc/Roo-Code repository.
-   groups:
-     - read
-     - command
-     - mcp
-   customInstructions: >-
+      - Feature Proposals: Creating detailed, actionable feature requests with clear problem
+        statements, solutions, and acceptance criteria
+    whenToUse: >-
+      Use this mode when you need to create a GitHub issue for bug reports or feature
+      requests. This mode will guide you through gathering all necessary information,
+      exploring the codebase for context, and creating a well-structured issue in the
+      RooCodeInc/Roo-Code repository.
+    groups:
+      - read
+      - command
+      - mcp
+    customInstructions: >-
      <github_issue_templates>
        <bug_report_template>
          <name>Bug Report</name>
@@ -371,14 +371,14 @@ customModes:
                **Help us understand the scope.** This helps with planning and prioritisation.
                
                **Please include:**
-               - **Size estimate:** XS/Small/Medium/Large/XL (or hours/days if you prefer)
+               - **Size estimate:** XS/Small/Medium/Large/XL
                - **Reasoning:** What makes it this size? Which parts are complex?
                - **Main challenges:** What's the trickiest bit to implement?
                - **Dependencies:** Does this require other changes or external libraries?
                
                **Example:**
                ```
-               Size: Large (2-3 weeks)
+               Size: Large
                Reasoning: Touches task execution engine, UI components, and state management
                Main challenges: Preventing memory leaks with parallel execution and managing shared resources
                Dependencies: Might need to add a new dependency for the new feature
@@ -884,7 +884,7 @@ customModes:
                "owner": "RooCodeInc",
                "repo": "Roo-Code",
                "title": "Add parallel task execution to improve performance for multi-file operations",
-               "body": "## What specific problem does this solve?\n\nWhen working with large codebases, users often need to analyze or modify multiple files. Currently, tasks execute sequentially, causing significant delays.\n\n**Who is affected:** All users working with multi-file projects\n**When this happens:** Running tasks that touch 5+ files\n**Current behavior:** Tasks queue and execute one at a time\n**Expected behavior:** Multiple tasks execute simultaneously\n**Impact:** 5-10 minute operations could complete in 1-2 minutes\n\n## How should this be solved?\n\nImplement a parallel task execution system with configurable concurrency.\n\n**What will change:**\n- Add task queue manager with worker pool\n- Allow 3 concurrent tasks by default (configurable)\n- Show progress for each active task\n- Queue additional tasks with 'waiting' status\n\n## Acceptance Criteria\n\n```\nGiven I have 5 file analysis tasks\nWhen I start all tasks\nThen up to 3 tasks execute simultaneously\nAnd remaining tasks show 'queued' status\nAnd each task shows individual progress\nBut system remains responsive\n```\n\n## Estimated Effort and Complexity\n\n**Size:** Large (2-3 weeks)\n**Reasoning:** Requires refactoring task execution engine and UI state management\n**Main challenges:** Thread safety, resource management, UI updates\n**Dependencies:** May need a task queue library\n\n## Technical Implementation Details\n\nBased on codebase analysis:\n- Key files: `src/core/task/Task.ts`, `src/core/task/TaskManager.ts`\n- Current architecture: Sequential promise chain in `executeTask()`\n- Integration points: WebviewProvider message handler\n- Similar patterns: Terminal process management uses worker pattern",
+               "body": "## What specific problem does this solve?\n\nWhen working with large codebases, users often need to analyze or modify multiple files. Currently, tasks execute sequentially, causing significant delays.\n\n**Who is affected:** All users working with multi-file projects\n**When this happens:** Running tasks that touch 5+ files\n**Current behavior:** Tasks queue and execute one at a time\n**Expected behavior:** Multiple tasks execute simultaneously\n**Impact:** 5-10 minute operations could complete in 1-2 minutes\n\n## How should this be solved?\n\nImplement a parallel task execution system with configurable concurrency.\n\n**What will change:**\n- Add task queue manager with worker pool\n- Allow 3 concurrent tasks by default (configurable)\n- Show progress for each active task\n- Queue additional tasks with 'waiting' status\n\n## Acceptance Criteria\n\n```\nGiven I have 5 file analysis tasks\nWhen I start all tasks\nThen up to 3 tasks execute simultaneously\nAnd remaining tasks show 'queued' status\nAnd each task shows individual progress\nBut system remains responsive\n```\n\n## Estimated Effort and Complexity\n\n**Size:** Large\n**Reasoning:** Requires refactoring task execution engine and UI state management\n**Main challenges:** Thread safety, resource management, UI updates\n**Dependencies:** May need a task queue library\n\n## Technical Implementation Details\n\nBased on codebase analysis:\n- Key files: `src/core/task/Task.ts`, `src/core/task/TaskManager.ts`\n- Current architecture: Sequential promise chain in `executeTask()`\n- Integration points: WebviewProvider message handler\n- Similar patterns: Terminal process management uses worker pattern",
                "labels": ["proposal", "enhancement", "performance"]
              }
              </arguments>
