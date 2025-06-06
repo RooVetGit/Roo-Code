@@ -11,12 +11,13 @@ import { getFetchInstructionsDescription } from "./fetch-instructions"
 import { getWriteToFileDescription } from "./write-to-file"
 import { getSearchFilesDescription } from "./search-files"
 import { getListFilesDescription } from "./list-files"
-import { getInsertContentDescription } from "./insert-content"
+// Removed: import { getInsertContentDescription } from "./insert-content"
 import { getSearchAndReplaceDescription } from "./search-and-replace"
 import { getListCodeDefinitionNamesDescription } from "./list-code-definition-names"
-import { getDeleteLineDescription } from "./delete-line" // Added
-import { getReplaceLineDescription } from "./replace-line" // Added
+// Removed: import { getDeleteLineDescription } from "./delete-line" // Added
+// Removed: import { getReplaceLineDescription } from "./replace-line" // Added
 import { getUndoEditDescription } from "./undo-edit" // Added
+import { getReplaceTextRangeDescription } from "./replace-text-range"; // Added
 import { getBrowserActionDescription } from "./browser-action"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
@@ -44,11 +45,12 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	codebase_search: () => getCodebaseSearchDescription(),
 	switch_mode: () => getSwitchModeDescription(),
 	new_task: (args) => getNewTaskDescription(args),
-	insert_content: (args) => getInsertContentDescription(args),
+	// Removed: insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
-	delete_line: (args) => getDeleteLineDescription(args), // Added
-	replace_line: (args) => getReplaceLineDescription(args), // Added
+	// Removed: delete_line: (args) => getDeleteLineDescription(args), // Added
+	// Removed: replace_line: (args) => getReplaceLineDescription(args), // Added
 	undo_edit: (args) => getUndoEditDescription(args), // Added
+	replace_text_range: (args) => getReplaceTextRangeDescription(args), // Added
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -143,10 +145,11 @@ export {
 	getUseMcpToolDescription,
 	getAccessMcpResourceDescription,
 	getSwitchModeDescription,
-	getInsertContentDescription,
+	// Removed: getInsertContentDescription,
 	getSearchAndReplaceDescription,
 	getCodebaseSearchDescription,
-	getDeleteLineDescription, // Added
-	getReplaceLineDescription, // Added
+	// Removed: getDeleteLineDescription, // Added
+	// Removed: getReplaceLineDescription, // Added
 	getUndoEditDescription, // Added
+	getReplaceTextRangeDescription, // Added
 }

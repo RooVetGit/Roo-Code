@@ -183,12 +183,13 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
-	insert_content: "insert content",
+	// insert_content: "insert content", // Removed
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
-	delete_line: "delete line", // Added
-	replace_line: "replace line", // Added
-	undo_edit: "undo edit", // Added
+	// delete_line: "delete line", // Removed
+	// replace_line: "replace line", // Removed
+	undo_edit: "undo edit", // Kept
+	replace_text_range: "replace text range", // Kept (consolidated tool)
 } as const
 
 // Define available tool groups.
@@ -204,7 +205,10 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 		],
 	},
 	edit: {
-		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
+		// Removed 'insert_content' from here,
+		// 'replace_text_range' covers its functionality and is in ALWAYS_AVAILABLE_TOOLS.
+		// 'delete_line' and 'replace_line' are also removed as their functionality is covered by 'replace_text_range'.
+		tools: ["apply_diff", "write_to_file", "search_and_replace"],
 	},
 	browser: {
 		tools: ["browser_action"],
@@ -227,9 +231,10 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
-	"delete_line", // Added
-	"replace_line", // Added
-	"undo_edit", // Added
+	// "delete_line", // Removed
+	// "replace_line", // Removed
+	"undo_edit", // Kept
+	"replace_text_range", // Kept (consolidated tool)
 ] as const
 
 export type DiffResult =
