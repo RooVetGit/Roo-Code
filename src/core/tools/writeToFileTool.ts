@@ -162,6 +162,18 @@ export async function writeToFileTool(
 			await delay(300) // wait for diff view to update
 			cline.diffViewProvider.scrollToFirstDiff()
 
+			// Perform context validation
+			if (!isContextValid(cline.diffViewProvider.originalContent || "", newContent)) {
+				cline.recordToolError("write_to_file", "Context validation failed")
+				pushToolResult(
+					formatResponse.toolError(
+						"Context validation failed: The proposed change significantly alters the file structure or content beyond the intended edit. Edit operation aborted.",
+					),
+				)
+				await cline.diffViewProvider.revertChanges()
+				return
+			}
+
 			// Check for code omissions before proceeding
 			if (detectCodeOmission(cline.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {
 				if (cline.diffStrategy) {
@@ -206,6 +218,14 @@ export async function writeToFileTool(
 			if (!didApprove) {
 				await cline.diffViewProvider.revertChanges()
 				return
+			}
+
+			// Save current state to history BEFORE writing the new state
+			if (relPath && cline.diffViewProvider.originalContent !== undefined && cline.diffViewProvider.originalContent !== null) {
+				const absolutePath = path.resolve(cline.cwd, relPath);
+				const history = cline.editHistory.get(absolutePath) || [];
+				history.push(cline.diffViewProvider.originalContent); // Push the state WE ARE ABOUT TO OVERWRITE
+				cline.editHistory.set(absolutePath, history);
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties

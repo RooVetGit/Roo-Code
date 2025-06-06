@@ -74,6 +74,7 @@ export async function searchAndReplaceTool(
 	const replace: string | undefined = block.params.replace
 	const useRegex: boolean = block.params.use_regex === "true"
 	const ignoreCase: boolean = block.params.ignore_case === "true"
+	const requireUniqueMatch: boolean = block.params.requireUniqueMatch === "true" // Added
 	const startLine: number | undefined = block.params.start_line ? parseInt(block.params.start_line, 10) : undefined
 	const endLine: number | undefined = block.params.end_line ? parseInt(block.params.end_line, 10) : undefined
 
@@ -87,6 +88,7 @@ export async function searchAndReplaceTool(
 				replace: removeClosingTag("replace", replace),
 				useRegex: block.params.use_regex === "true",
 				ignoreCase: block.params.ignore_case === "true",
+				requireUniqueMatch: block.params.requireUniqueMatch === "true", // Added
 				startLine,
 				endLine,
 			}
@@ -111,6 +113,7 @@ export async function searchAndReplaceTool(
 			replace: validReplace,
 			useRegex: useRegex,
 			ignoreCase: ignoreCase,
+			requireUniqueMatch: requireUniqueMatch, // Added
 			startLine: startLine,
 			endLine: endLine,
 		}
@@ -156,31 +159,91 @@ export async function searchAndReplaceTool(
 			return
 		}
 
-		// Create search pattern and perform replacement
-		const flags = ignoreCase ? "gi" : "g"
-		const searchPattern = useRegex ? new RegExp(validSearch, flags) : new RegExp(escapeRegExp(validSearch), flags)
+		// Determine the text to search in
+		let textToSearchIn: string
+		let isRangeSearch = false
+		const lines = fileContent.split("\n")
+		let startRange = 0
+		let endRange = lines.length
 
-		let newContent: string
 		if (startLine !== undefined || endLine !== undefined) {
-			// Handle line-specific replacement
-			const lines = fileContent.split("\n")
-			const start = Math.max((startLine ?? 1) - 1, 0)
-			const end = Math.min((endLine ?? lines.length) - 1, lines.length - 1)
-
-			// Get content before and after target section
-			const beforeLines = lines.slice(0, start)
-			const afterLines = lines.slice(end + 1)
-
-			// Get and modify target section
-			const targetContent = lines.slice(start, end + 1).join("\n")
-			const modifiedContent = targetContent.replace(searchPattern, validReplace)
-			const modifiedLines = modifiedContent.split("\n")
-
-			// Reconstruct full content
-			newContent = [...beforeLines, ...modifiedLines, ...afterLines].join("\n")
+			isRangeSearch = true
+			startRange = Math.max((startLine ?? 1) - 1, 0)
+			endRange = Math.min((endLine ?? lines.length), lines.length) // Use lines.length for slice end
+			textToSearchIn = lines.slice(startRange, endRange).join("\n")
 		} else {
-			// Global replacement
-			newContent = fileContent.replace(searchPattern, validReplace)
+			textToSearchIn = fileContent
+		}
+
+		if (requireUniqueMatch) {
+			// If useRegex is true, we cannot reliably count literal occurrences with split.
+			// The LLM should be instructed to use requireUniqueMatch with literal strings, not regex.
+			// For this implementation, we'll assume validSearch is a literal string if requireUniqueMatch is true.
+			if (useRegex) {
+				pushToolResult(
+					formatResponse.toolError(
+						`Error: requireUniqueMatch cannot be used with use_regex=true. Please provide a literal search string.`,
+					),
+				)
+				return
+			}
+
+			const searchTermForCounting = ignoreCase ? validSearch.toLowerCase() : validSearch
+			const sourceTextForCounting = ignoreCase ? textToSearchIn.toLowerCase() : textToSearchIn
+			const occurrences = sourceTextForCounting.split(searchTermForCounting).length - 1
+
+			if (occurrences === 0) {
+				pushToolResult(
+					formatResponse.toolError(
+						`Error: Could not find the exact text '${validSearch}' to replace in ${validRelPath}${
+							isRangeSearch ? ` (lines ${startLine}-${endLine})` : ""
+						}.`,
+					),
+				)
+				return
+			}
+			if (occurrences > 1) {
+				pushToolResult(
+					formatResponse.toolError(
+						`Error: Found multiple (${occurrences}) occurrences of the text '${validSearch}' in ${validRelPath}${
+							isRangeSearch ? ` (lines ${startLine}-${endLine})` : ""
+						}. Must be unique when requireUniqueMatch is true.`,
+					),
+				)
+				return
+			}
+		}
+
+		// Create search pattern and perform replacement
+		let newContent: string
+
+		if (requireUniqueMatch) {
+			// Literal, single replacement
+			const singleReplacePattern = new RegExp(escapeRegExp(validSearch), ignoreCase ? "i" : "")
+			if (isRangeSearch) {
+				const beforeLines = lines.slice(0, startRange)
+				const afterLines = lines.slice(endRange)
+				const targetContent = lines.slice(startRange, endRange).join("\n")
+				const modifiedContent = targetContent.replace(singleReplacePattern, validReplace)
+				newContent = [...beforeLines, modifiedContent, ...afterLines].join("\n")
+			} else {
+				newContent = fileContent.replace(singleReplacePattern, validReplace)
+			}
+		} else {
+			// Global or regex replacement (existing logic)
+			const globalSearchPattern = useRegex
+				? new RegExp(validSearch, ignoreCase ? "gi" : "g")
+				: new RegExp(escapeRegExp(validSearch), ignoreCase ? "gi" : "g")
+
+			if (isRangeSearch) {
+				const beforeLines = lines.slice(0, startRange)
+				const afterLines = lines.slice(endRange)
+				const targetContent = lines.slice(startRange, endRange).join("\n")
+				const modifiedContent = targetContent.replace(globalSearchPattern, validReplace)
+				newContent = [...beforeLines, modifiedContent, ...afterLines].join("\n")
+			} else {
+				newContent = fileContent.replace(globalSearchPattern, validReplace)
+			}
 		}
 
 		// Initialize diff view
@@ -217,6 +280,15 @@ export async function searchAndReplaceTool(
 			pushToolResult("Changes were rejected by the user.")
 			await cline.diffViewProvider.reset()
 			return
+		}
+
+		// Save current state to history BEFORE writing the new state
+		// fileContent is the original content before replacement, which is also what originalContent should be.
+		if (cline.diffViewProvider.originalContent !== undefined && cline.diffViewProvider.originalContent !== null) {
+			const absolutePath = path.resolve(cline.cwd, validRelPath);
+			const history = cline.editHistory.get(absolutePath) || [];
+			history.push(cline.diffViewProvider.originalContent);
+			cline.editHistory.set(absolutePath, history);
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties

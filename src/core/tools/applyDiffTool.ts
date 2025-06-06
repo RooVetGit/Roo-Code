@@ -141,8 +141,24 @@ export async function applyDiffTool(
 			cline.consecutiveMistakeCount = 0
 			cline.consecutiveMistakeCountForApplyDiff.delete(relPath)
 
+			// Perform context validation before showing diff view
+			// We need to re-read the original content for validation as it was nulled out
+			const originalContentForValidation = await fs.readFile(absolutePath, "utf-8")
+			if (!isContextValid(originalContentForValidation, diffResult.content)) {
+				cline.recordToolError("apply_diff", "Context validation failed")
+				pushToolResult(
+					formatResponse.toolError(
+						"Context validation failed: Applying the diff would significantly alter the file structure or content beyond the intended scope. Operation aborted.",
+					),
+				)
+				// No diff view was shown, so no revertChanges needed for it.
+				return
+			}
+
 			// Show diff view before asking for approval
 			cline.diffViewProvider.editType = "modify"
+			// Set originalContent for DiffViewProvider here, using the freshly read content
+			cline.diffViewProvider.originalContent = originalContentForValidation
 			await cline.diffViewProvider.open(relPath)
 			await cline.diffViewProvider.update(diffResult.content, true)
 			await cline.diffViewProvider.scrollToFirstDiff()
@@ -163,6 +179,14 @@ export async function applyDiffTool(
 			if (!didApprove) {
 				await cline.diffViewProvider.revertChanges() // Cline likely handles closing the diff view
 				return
+			}
+
+			// Save current state to history BEFORE writing the new state
+			if (relPath && cline.diffViewProvider.originalContent !== undefined && cline.diffViewProvider.originalContent !== null) {
+				const absolutePath = path.resolve(cline.cwd, relPath);
+				const history = cline.editHistory.get(absolutePath) || [];
+				history.push(cline.diffViewProvider.originalContent);
+				cline.editHistory.set(absolutePath, history);
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties

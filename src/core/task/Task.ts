@@ -113,7 +113,32 @@ export type TaskOptions = {
 	parentTask?: Task
 	taskNumber?: number
 	onCreated?: (cline: Task) => void
+	maxAttempts?: number; // Added
+	language?: string; // Added
 }
+
+// Added: SolutionAttempt Interface
+interface SolutionAttempt {
+	patch: string;
+	testOutput: string;
+	testSuccess: boolean;
+	testStats: Record<string, any>; // General stats like passed, failed, errors
+	errorMessages?: string[];
+	testDetails?: Record<string, "PASSED" | "FAILED" | "ERROR" | "SKIPPED">; // Specific test results
+	executionTime?: number; // in seconds
+	attemptNumber: number;
+	validationResult?: { isValid: boolean; reason: string }; // Added
+}
+
+// Added: TEST_COMMANDS Constant
+const TEST_COMMANDS: Record<string, string[][]> = {
+	python: [["pytest"], ["python", "-m", "unittest"]],
+	javascript: [["npm", "test"], ["yarn", "test"]],
+	typescript: [["npm", "test"], ["yarn", "test"]],
+	java: [["mvn", "test"], ["gradle", "test"]],
+	go: [["go", "test", "./..."]],
+	rust: [["cargo", "test"]],
+};
 
 export class Task extends EventEmitter<ClineEvents> {
 	readonly taskId: string
@@ -155,6 +180,13 @@ export class Task extends EventEmitter<ClineEvents> {
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
 	didEditFile: boolean = false
+	public editHistory: Map<string, string[]> = new Map(); // Added for undo functionality
+
+	// Multi-attempt solution generation
+	public readonly maxAttempts: number; // Added
+	public readonly language: string; // Added
+	private attempts: SolutionAttempt[] = []; // Added
+	private bestAttempt: SolutionAttempt | null = null; // Added
 
 	// LLM Messages & Chat Messages
 	apiConversationHistory: ApiMessage[] = []
@@ -205,6 +237,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		maxAttempts, // Added to destructuring
+		language, // Added to destructuring
 	}: TaskOptions) {
 		super()
 
@@ -252,6 +286,10 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
+
+		// Initialize multi-attempt properties
+		this.maxAttempts = maxAttempts ?? 3; // Added
+		this.language = language ?? 'python'; // Added
 
 		onCreated?.(this)
 
@@ -707,13 +745,20 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
-		await this.initiateTaskLoop([
+		// await this.initiateTaskLoop([ // Commented out old loop
+		// 	{
+		// 		type: "text",
+		// 		text: `<task>\n${task}\n</task>`,
+		// 	},
+		// 	...imageBlocks,
+		// ])
+		await this.executeMultiAttemptTask([ // Call new multi-attempt loop
 			{
 				type: "text",
 				text: `<task>\n${task}\n</task>`,
 			},
 			...imageBlocks,
-		])
+		]);
 	}
 
 	public async resumePausedTask(lastMessage: string) {
@@ -1871,5 +1916,265 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public get cwd() {
 		return this.workspacePath
+	}
+
+	// --- STUBBED METHODS FOR MULTI-ATTEMPT ---
+	private async runTests(): Promise<{ success: boolean, output: string, stats: Record<string, any> }> {
+		this.providerRef.deref()?.log("runTests (stubbed)");
+		// Simulate a delay
+		await new Promise(resolve => setTimeout(resolve, 500));
+		// Alternate between success and failure for testing the loop
+		const success = this.attempts.length % 2 === 0; // Success on 1st, 3rd, etc. attempt (0-indexed)
+		return {
+			success,
+			output: success ? "All tests passed (stubbed)" : "Some tests failed (stubbed)\nError: TestExample failed.",
+			stats: {
+				passed: success ? 2 : 1,
+				failed: success ? 0 : 1,
+				errors: 0,
+				total: 2,
+				executionTime: Math.random() * 2 + 0.1 // 0.1 to 2.1 seconds
+			}
+		};
+	}
+
+	private extractTestDetails(testOutput: string): { stats: Record<string, any>, errorMessages: string[], testDetails: Record<string, "PASSED" | "FAILED" | "ERROR" | "SKIPPED"> } {
+		this.providerRef.deref()?.log("extractTestDetails (stubbed)");
+		const failed = testOutput.includes("failed");
+		const errorMessages = failed ? ["Error: TestExample failed due to assertion error."] : [];
+		return {
+			stats: {
+				// These might be redundant if runTests already provides them,
+				// but could be used for more detailed parsing if needed.
+				// For now, keep it simple.
+			},
+			errorMessages,
+			testDetails: {
+				"test_example_1": failed ? "FAILED" : "PASSED",
+				"test_example_2": "PASSED"
+			}
+		};
+	}
+
+	private analyzeTestResults(): string {
+		this.providerRef.deref()?.log("analyzeTestResults (stubbed)");
+		if (this.attempts.length === 0) return "No previous attempts to analyze.";
+		const lastAttempt = this.attempts[this.attempts.length - 1];
+		let analysis = `Attempt ${lastAttempt.attemptNumber} results:\n`;
+		if (lastAttempt.validationResult && !lastAttempt.validationResult.isValid) { // Check validationResult
+			analysis += `  Validation Failed: ${lastAttempt.validationResult.reason}\n`;
+		}
+		analysis += `  Test Success: ${lastAttempt.testSuccess}\n`;
+		analysis += `  Test Stats: Passed: ${lastAttempt.testStats.passed ?? 'N/A'}, Failed: ${lastAttempt.testStats.failed ?? 'N/A'}, Errors: ${lastAttempt.testStats.errors ?? 'N/A'}\n`;
+		if (lastAttempt.errorMessages && lastAttempt.errorMessages.length > 0) {
+			analysis += `  Error Messages:\n    ${lastAttempt.errorMessages.join("\n    ")}\n`;
+		}
+		analysis += "Consider these results for the next attempt.";
+		return analysis;
+	}
+
+	private async getPatchFromCurrentState(): Promise<string> {
+		this.providerRef.deref()?.log("getPatchFromCurrentState (stubbed)");
+		// Simulate a delay
+		await new Promise(resolve => setTimeout(resolve, 100));
+		return `diff --git a/file.ts b/file.ts\n--- a/file.ts\n+++ b/file.ts\n@@ -1,${this.attempts.length} +1,${this.attempts.length}\n-old line version ${this.attempts.length}\n+new line version ${this.attempts.length + 1}`;
+	}
+
+	private async runSingleCodingAttempt(userContent: Anthropic.Messages.ContentBlockParam[], includeFileDetails: boolean = false): Promise<{ llmMadeChanges: boolean }> {
+		this.providerRef.deref()?.log(`runSingleCodingAttempt (stubbed) for attempt ${this.attempts.length + 1}. User content: ${JSON.stringify(userContent).substring(0,100)}...`);
+		// This is where the refactored logic of `recursivelyMakeClineRequests` would go.
+		// For now, it just simulates an LLM interaction that might make changes.
+		// We can simulate `this.didEditFile` being set by other tools if needed.
+		// To make the loop proceed, we'll assume it makes changes.
+		await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate LLM thinking and tool use
+		this.didEditFile = true; // Assume tools were used and files were edited.
+		return { llmMadeChanges: true };
+	}
+
+	// --- NEW MAIN LOOP METHOD ---
+	public async executeMultiAttemptTask(initialUserContentBlocks: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
+		this.providerRef.deref()?.log(`Starting multi-attempt task. Max attempts: ${this.maxAttempts}, Language: ${this.language}`);
+		// Conceptual: Ensure a base checkpoint is created or identified at the start if using checkpoints.
+		// await this.checkpointService?.ensureBaseCheckpoint("base");
+
+		let currentTaskInstructions = [...initialUserContentBlocks]; // Use a mutable copy for instructions
+
+		for (let i = 0; i < this.maxAttempts; i++) {
+			if (this.abort) {
+				this.providerRef.deref()?.log("Task aborted, exiting multi-attempt loop.");
+				break;
+			}
+			const attemptNumber = this.attempts.length + 1;
+			this.providerRef.deref()?.log(`Starting attempt ${attemptNumber}/${this.maxAttempts}`);
+
+			// Reset didEditFile for the new attempt
+			this.didEditFile = false;
+
+			// Conceptual: Reset workspace to base state if not the first attempt.
+			// For the first attempt, the workspace is already in its initial state.
+			// if (attemptNumber > 1) {
+			//     this.providerRef.deref()?.log(\`Attempt \${attemptNumber}: Resetting workspace to base state (conceptual).\`);
+			//     // await this.checkpointService?.restore("base");
+			// }
+
+			let attemptSpecificInstructions = [...currentTaskInstructions]; // Start with the latest instructions
+			if (this.attempts.length > 0) {
+				const analysisText = this.analyzeTestResults();
+				attemptSpecificInstructions.push({ type: "text", text: `\n\n--- Analysis of Previous Attempts ---\n${analysisText}` });
+			}
+
+			const { llmMadeChanges } = await this.runSingleCodingAttempt(attemptSpecificInstructions);
+
+			if (!llmMadeChanges && !this.didEditFile) {
+				this.providerRef.deref()?.log(`Attempt ${attemptNumber}: LLM reported no changes or made no edits.`);
+				// If no changes were made, and tests weren't run yet for this state,
+				// we might want to log this and continue. If tests pass, it's fine.
+				// If tests fail, it's a failed attempt.
+			}
+
+			const patch = await this.getPatchFromCurrentState();
+			const validationResult = this.isPatchValid(patch); // Added: Call isPatchValid
+
+			if (!validationResult.isValid) { // Added: Conditional logic for invalid patch
+				this.providerRef.deref()?.log(`Attempt ${attemptNumber}: Invalid patch - ${validationResult.reason}`);
+				const currentAttemptData: SolutionAttempt = {
+					patch,
+					testOutput: "Tests not run due to invalid patch.",
+					testSuccess: false,
+					testStats: { errors: 1, reason: validationResult.reason, passed:0, failed:0, total:0 }, // Ensure stats object is well-formed
+					errorMessages: [validationResult.reason],
+					attemptNumber,
+					validationResult, // Store validation result
+				};
+				this.attempts.push(currentAttemptData);
+				if (i < this.maxAttempts - 1) {
+					// Update currentTaskInstructions for the next iteration based on this attempt's failure.
+					currentTaskInstructions = [
+						...initialUserContentBlocks,
+						{type: "text", text: `Previous attempt (Attempt ${attemptNumber}) failed patch validation: ${validationResult.reason}. Please try a different approach.`}
+					];
+				}
+				continue; // Skip to next attempt
+			}
+
+			// If patch is valid, proceed with tests
+			const testRunResult = await this.runTests();
+			const detailedTestInfo = this.extractTestDetails(testRunResult.output);
+
+			const currentAttemptData: SolutionAttempt = {
+				patch,
+				testOutput: testRunResult.output,
+				testSuccess: testRunResult.success,
+				testStats: { ...(testRunResult.stats || {}), ...(detailedTestInfo.stats || {}) },
+				errorMessages: detailedTestInfo.errorMessages,
+				testDetails: detailedTestInfo.testDetails,
+				executionTime: testRunResult.stats?.executionTime,
+				attemptNumber,
+				validationResult, // Store validation result
+			};
+			this.attempts.push(currentAttemptData);
+
+			if (currentAttemptData.testSuccess &&
+				(!this.bestAttempt || (currentAttemptData.testStats.passed ?? 0) > (this.bestAttempt.testStats.passed ?? 0))) {
+				this.providerRef.deref()?.log(`Attempt ${attemptNumber} is new best attempt.`);
+				this.bestAttempt = currentAttemptData;
+			}
+
+			if (currentAttemptData.testSuccess && (currentAttemptData.testStats.failed ?? 0) === 0 && (currentAttemptData.testStats.errors ?? 0) === 0) {
+				this.providerRef.deref()?.log(`Attempt ${attemptNumber} successful with all tests passed.`);
+				break;
+			}
+
+			if (i < this.maxAttempts - 1) {
+				this.providerRef.deref()?.log(`Attempt ${attemptNumber} did not pass all tests. Preparing for next attempt.`);
+				// Update currentTaskInstructions for the next iteration based on this attempt's failure.
+				// This is a simple feedback message; more sophisticated analysis could go here.
+				currentTaskInstructions = [
+					...initialUserContentBlocks, // Start with the original problem
+					{type: "text", text: `The previous attempt (Attempt ${attemptNumber}) did not pass all tests. Test output:\n${currentAttemptData.testOutput}\nPlease analyze this feedback and try a different approach.`}
+				];
+			} else {
+				this.providerRef.deref()?.log(`Attempt ${attemptNumber} was the last attempt and did not pass all tests.`);
+			}
+		}
+
+		if (this.bestAttempt) {
+			this.providerRef.deref()?.log(`Applying best attempt: ${this.bestAttempt.attemptNumber}.`);
+			// Conceptual: await this.applyPatch(this.bestAttempt.patch); OR
+			// Conceptual: await this.checkpointService?.restore(this.bestAttempt.checkpointId); // if storing checkpoint per attempt
+			await this.say("text", `Solution from attempt ${this.bestAttempt.attemptNumber} (best) applied.`);
+		} else if (this.attempts.length > 0) {
+			const lastAttempt = this.attempts[this.attempts.length - 1];
+			this.providerRef.deref()?.log(`No fully successful attempt. Applying last attempt: ${lastAttempt.attemptNumber}.`);
+			// Conceptual: await this.applyPatch(lastAttempt.patch);
+			await this.say("text", `Solution from last attempt (${lastAttempt.attemptNumber}) applied as no fully successful solution was found.`);
+		} else {
+			this.providerRef.deref()?.log("No attempts made or no solution to apply.");
+			await this.say("text", "No solution could be applied after multiple attempts.");
+		}
+
+		this.emit("taskCompleted", this.taskId, this.getTokenUsage(), this.toolUsage);
+	}
+
+	// Added: isPatchValid method
+	private isPatchValid(patchStr: string): { isValid: boolean; reason: string } {
+		if (!patchStr || patchStr.trim() === "") {
+			return { isValid: false, reason: "Empty patch" };
+		}
+
+		const modifiedFiles: string[] = [];
+		const diffHeaderPattern = /^\+\+\+ b\/(.+)$/gm;
+		let match;
+		while ((match = diffHeaderPattern.exec(patchStr)) !== null) {
+			if (match[1] !== "/dev/null" && match[1].trim() !== "") { // Ensure not /dev/null and not empty string
+				modifiedFiles.push(match[1].trim());
+			}
+		}
+
+		if (modifiedFiles.length === 0) {
+			// Check for deletions only if no additions/modifications found
+			const minusHeaderPattern = /^--- a\/(.+)$/gm;
+			let minusMatch;
+			let hasSourceFileDeletion = false;
+			const tempTestPatterns = [ // Re-define for scope, or move to class/global if used elsewhere often
+				(f: string) => f.startsWith('tests/'), (f: string) => f.startsWith('test/'),
+				(f: string) => f.startsWith('__tests__/'), (f: string) => /^test_/.test(f),
+				(f: string) => /\.test\.(js|ts|jsx|tsx|py)$/.test(f),
+				(f: string) => /\.spec\.(js|ts|jsx|tsx|py)$/.test(f),
+				(f: string) => /_test\.py$/.test(f)
+			];
+			while ((minusMatch = minusHeaderPattern.exec(patchStr)) !== null) {
+				const deletedFile = minusMatch[1].trim();
+				if (deletedFile !== "/dev/null" && deletedFile !== "") {
+					const isTestFile = tempTestPatterns.some(pattern => pattern(deletedFile));
+					if (!isTestFile) {
+						hasSourceFileDeletion = true;
+						break;
+					}
+				}
+			}
+			if (hasSourceFileDeletion) {
+				return { isValid: true, reason: "Valid patch with source file deletions only." };
+			}
+			return { isValid: false, reason: "No source files appear to be added, modified, or deleted." };
+		}
+
+		const testPatterns = [
+			(f: string) => f.startsWith('tests/'),
+			(f: string) => f.startsWith('test/'),
+			(f: string) => f.startsWith('__tests__/'),
+			(f: string) => /^test_/.test(f),
+			(f: string) => /\.test\.(js|ts|jsx|tsx|py)$/.test(f),
+			(f: string) => /\.spec\.(js|ts|jsx|tsx|py)$/.test(f),
+			(f: string) => /_test\.py$/.test(f)
+		];
+
+		const sourceFiles = modifiedFiles.filter(file => !testPatterns.some(pattern => pattern(file)));
+
+		if (sourceFiles.length === 0) {
+			return { isValid: false, reason: "Only test files were modified (and no source files deleted/added)" };
+		}
+
+		return { isValid: true, reason: "Valid patch with source file modifications" };
 	}
 }

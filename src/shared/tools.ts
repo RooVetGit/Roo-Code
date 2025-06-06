@@ -186,6 +186,9 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
+	delete_line: "delete line", // Added
+	replace_line: "replace line", // Added
+	undo_edit: "undo edit", // Added
 } as const
 
 // Define available tool groups.
@@ -224,6 +227,9 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"delete_line", // Added
+	"replace_line", // Added
+	"undo_edit", // Added
 ] as const
 
 export type DiffResult =

@@ -6,10 +6,8 @@ Description: Use this tool specifically for adding new lines of content into a f
 
 Parameters:
 - path: (required) File path relative to workspace directory ${args.cwd.toPosix()}
-- line: (required) Line number where content will be inserted (1-based)
-	      Use 0 to append at end of file
-	      Use any positive number to insert before that line
-- content: (required) The content to insert at the specified line
+- line: (required) Line number where content will be inserted (1-based). Must be between 1 and N+1 (where N is the current number of lines in the file), inclusive. Use 1 to insert at the beginning of the file. Use N+1 to append at the end of the file (or use 0, which is an alias for N+1).
+- content: (required) The content to insert. Can be multiple lines.
 
 Example for inserting imports at start of file:
 <insert_content>
@@ -21,12 +19,21 @@ import { sum } from './math';
 </content>
 </insert_content>
 
-Example for appending to the end of file:
+Example for appending to the end of file (using N+1, assuming file has 100 lines, so insert at 101):
+<insert_content>
+<path>src/utils.ts</path>
+<line>101</line>
+<content>
+// This is appended to the end of the file
+</content>
+</insert_content>
+
+Example for appending to the end of file (using 0):
 <insert_content>
 <path>src/utils.ts</path>
 <line>0</line>
 <content>
-// This is the end of the file
+// This is also appended to the end of the file
 </content>
 </insert_content>
 `

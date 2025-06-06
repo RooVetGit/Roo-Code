@@ -129,9 +129,11 @@ export async function readFileTool(
 				if (file.line_range) {
 					const ranges = Array.isArray(file.line_range) ? file.line_range : [file.line_range]
 					for (const range of ranges) {
-						const match = String(range).match(/(\d+)-(\d+)/) // Ensure range is treated as string
+						const match = String(range).match(/(\d+)-(-?\d+)/) // Ensure range is treated as string
 						if (match) {
-							const [, start, end] = match.map(Number)
+							const [, startStr, endStr] = match
+							const start = parseInt(startStr, 10)
+							const end = parseInt(endStr, 10)
 							if (!isNaN(start) && !isNaN(end)) {
 								fileEntry.lineRanges?.push({ start, end })
 							}
@@ -157,8 +159,11 @@ export async function readFileTool(
 
 		if (legacyStartLineStr && legacyEndLineStr) {
 			const start = parseInt(legacyStartLineStr, 10)
-			const end = parseInt(legacyEndLineStr, 10)
-			if (!isNaN(start) && !isNaN(end) && start > 0 && end > 0) {
+			const start = parseInt(legacyStartLineStr, 10)
+			let end = parseInt(legacyEndLineStr, 10) // Let end be potentially -1
+
+			// Validate start and end, allowing end to be -1
+			if (!isNaN(start) && !isNaN(end) && start > 0 && (end > 0 || end === -1)) {
 				fileEntry.lineRanges?.push({ start, end })
 			} else {
 				console.warn(
@@ -206,8 +211,8 @@ export async function readFileTool(
 			if (fileResult.lineRanges) {
 				let hasRangeError = false
 				for (const range of fileResult.lineRanges) {
-					if (range.start > range.end) {
-						const errorMsg = "Invalid line range: end line cannot be less than start line"
+					if (range.start < 1) {
+						const errorMsg = "Invalid line range: start line must be 1 or greater"
 						updateFileResult(relPath, {
 							status: "blocked",
 							error: errorMsg,
@@ -217,8 +222,19 @@ export async function readFileTool(
 						hasRangeError = true
 						break
 					}
-					if (isNaN(range.start) || isNaN(range.end)) {
-						const errorMsg = "Invalid line range values"
+					if (range.end !== -1 && range.start > range.end) {
+						const errorMsg = "Invalid line range: end line cannot be less than start line (unless end line is -1 for EOF)"
+						updateFileResult(relPath, {
+							status: "blocked",
+							error: errorMsg,
+							xmlContent: `<file><path>${relPath}</path><error>Error reading file: ${errorMsg}</error></file>`,
+						})
+						await handleError(`reading file ${relPath}`, new Error(errorMsg))
+						hasRangeError = true
+						break
+					}
+					if (isNaN(range.start) || isNaN(range.end)) { // This check might be redundant if parsing is robust
+						const errorMsg = "Invalid line range values (NaN)"
 						updateFileResult(relPath, {
 							status: "blocked",
 							error: errorMsg,
@@ -454,11 +470,12 @@ export async function readFileTool(
 				if (fileResult.lineRanges && fileResult.lineRanges.length > 0) {
 					const rangeResults: string[] = []
 					for (const range of fileResult.lineRanges) {
+						const endLineForReadLines = range.end === -1 ? undefined : range.end - 1
 						const content = addLineNumbers(
-							await readLines(fullPath, range.end - 1, range.start - 1),
+							await readLines(fullPath, endLineForReadLines, range.start - 1),
 							range.start,
 						)
-						const lineRangeAttr = ` lines="${range.start}-${range.end}"`
+						const lineRangeAttr = ` lines="${range.start}-${range.end === -1 ? "EOF" : range.end}"`
 						rangeResults.push(`<content${lineRangeAttr}>\n${content}</content>`)
 					}
 					updateFileResult(relPath, {

@@ -13,7 +13,7 @@ ${args.partialReadsEnabled ? `By specifying line ranges, you can efficiently rea
 Parameters:
 - args: Contains one or more file elements, where each file contains:
   - path: (required) File path (relative to workspace directory ${args.cwd})
-  ${args.partialReadsEnabled ? `- line_range: (optional) One or more line range elements in format "start-end" (1-based, inclusive)` : ""}
+  ${args.partialReadsEnabled ? `- line_range: (optional) One or more line range elements in format "START-END" (1-based, inclusive). END can be -1 to read until the end of the file.` : ""}
 
 Usage:
 <read_file>

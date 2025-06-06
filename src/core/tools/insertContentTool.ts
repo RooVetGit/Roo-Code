@@ -78,21 +78,31 @@ export async function insertContentTool(
 			return
 		}
 
+		// Read the file first to get the number of lines for validation
+		const fileContent = await fs.readFile(absolutePath, "utf8")
+		const lines = fileContent.split("\n")
+
 		const lineNumber = parseInt(line, 10)
-		if (isNaN(lineNumber) || lineNumber < 0) {
+		// Validate lineNumber (1-indexed)
+		// It can be lines.length + 1 to insert at the very end (after the last line)
+		if (isNaN(lineNumber) || lineNumber < 1 || lineNumber > lines.length + 1) {
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("insert_content")
-			pushToolResult(formatResponse.toolError("Invalid line number. Must be a non-negative integer."))
+			pushToolResult(
+				formatResponse.toolError(
+					`Invalid line number. Must be between 1 and ${lines.length + 1} (inclusive). File has ${
+						lines.length
+					} lines.`,
+				),
+			)
 			return
 		}
 
 		cline.consecutiveMistakeCount = 0
 
-		// Read the file
-		const fileContent = await fs.readFile(absolutePath, "utf8")
+		// File content is already read, and lines are available
 		cline.diffViewProvider.editType = "modify"
 		cline.diffViewProvider.originalContent = fileContent
-		const lines = fileContent.split("\n")
 
 		const updatedContent = insertGroups(lines, [
 			{
@@ -134,6 +144,14 @@ export async function insertContentTool(
 			await cline.diffViewProvider.revertChanges()
 			pushToolResult("Changes were rejected by the user.")
 			return
+		}
+
+		// Save current state to history BEFORE writing the new state
+		if (relPath && cline.diffViewProvider.originalContent !== undefined && cline.diffViewProvider.originalContent !== null) {
+			const absolutePath = path.resolve(cline.cwd, relPath);
+			const history = cline.editHistory.get(absolutePath) || [];
+			history.push(cline.diffViewProvider.originalContent);
+			cline.editHistory.set(absolutePath, history);
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties

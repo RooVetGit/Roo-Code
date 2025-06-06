@@ -14,6 +14,9 @@ import { getListFilesDescription } from "./list-files"
 import { getInsertContentDescription } from "./insert-content"
 import { getSearchAndReplaceDescription } from "./search-and-replace"
 import { getListCodeDefinitionNamesDescription } from "./list-code-definition-names"
+import { getDeleteLineDescription } from "./delete-line" // Added
+import { getReplaceLineDescription } from "./replace-line" // Added
+import { getUndoEditDescription } from "./undo-edit" // Added
 import { getBrowserActionDescription } from "./browser-action"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
@@ -43,6 +46,9 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	new_task: (args) => getNewTaskDescription(args),
 	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
+	delete_line: (args) => getDeleteLineDescription(args), // Added
+	replace_line: (args) => getReplaceLineDescription(args), // Added
+	undo_edit: (args) => getUndoEditDescription(args), // Added
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -140,4 +146,7 @@ export {
 	getInsertContentDescription,
 	getSearchAndReplaceDescription,
 	getCodebaseSearchDescription,
+	getDeleteLineDescription, // Added
+	getReplaceLineDescription, // Added
+	getUndoEditDescription, // Added
 }

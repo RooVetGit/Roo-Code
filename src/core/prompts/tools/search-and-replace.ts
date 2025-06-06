@@ -14,10 +14,12 @@ Optional Parameters:
 - end_line: Ending line number for restricted replacement (1-based)
 - use_regex: Set to "true" to treat search as a regex pattern (default: false)
 - ignore_case: Set to "true" to ignore case when matching (default: false)
+- requireUniqueMatch: Set to "true" to ensure only one match is found and replaced (default: false). If true, 'search' is a literal string, 'use_regex' is ignored for matching (though 'ignore_case' is still respected). If 0 or >1 matches, an error occurs.
 
 Notes:
-- When use_regex is true, the search parameter is treated as a regular expression pattern
-- When ignore_case is true, the search is case-insensitive regardless of regex mode
+- When use_regex is true (and requireUniqueMatch is false), the search parameter is treated as a regular expression pattern.
+- When ignore_case is true, the search is case-insensitive.
+- If requireUniqueMatch is true, the 'search' string is treated as a literal string and the tool will only perform a replacement if exactly one occurrence is found. 'use_regex' is ignored for matching purposes if requireUniqueMatch is true (though 'ignore_case' is still respected for the literal match). If 0 or more than 1 match is found, an error is returned.
 
 Examples:
 
