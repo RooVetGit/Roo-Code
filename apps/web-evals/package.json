@@ -5,7 +5,7 @@
 	"scripts": {
 		"lint": "next lint",
 		"check-types": "tsc -b",
-		"dev": "scripts/check-services.sh && next dev",
+		"dev": "scripts/check-services.sh && next dev --port 8080",
 		"format": "prettier --write src",
 		"build": "next build",
 		"start": "next start"
