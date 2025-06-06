@@ -54,6 +54,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
+import { MaxOutputTokensControl } from "./MaxOutputTokensControl"
 
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -462,8 +463,19 @@ const ApiOptions = ({
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
 					/>
+
 				</>
 			)}
+
+			{selectedModelInfo &&
+				typeof selectedModelInfo.maxTokens === "number" &&
+				selectedModelInfo.maxTokens > 0 && (
+					<MaxOutputTokensControl
+						apiConfiguration={apiConfiguration}
+						setApiConfigurationField={setApiConfigurationField}
+						modelInfo={selectedModelInfo}
+					/>
+				)}
 
 			<ThinkingBudget
 				key={`${selectedProvider}-${selectedModelId}`}
