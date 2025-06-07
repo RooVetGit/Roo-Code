@@ -26,7 +26,7 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 				disabled={buttonsDisabled}
 				onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
 			/>
-			{!!item?.size && item.size > 0 && (
+			{typeof item?.size === "number" && item.size > 0 && (
 				<>
 					<div className="flex items-center">
 						<IconButton

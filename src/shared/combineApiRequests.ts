@@ -68,13 +68,17 @@ export function combineApiRequests(messages: ClineMessage[]): ClineMessage[] {
 				if (startMessage.text) {
 					startData = JSON.parse(startMessage.text)
 				}
-			} catch (e) {}
+			} catch (e) {
+				console.debug("Error parsing startMessage text:", e)
+			}
 
 			try {
 				if (message.text) {
 					finishData = JSON.parse(message.text)
 				}
-			} catch (e) {}
+			} catch (e) {
+				console.debug("Error parsing message text:", e)
+			}
 
 			result[startIndex] = { ...startMessage, text: JSON.stringify({ ...startData, ...finishData }) }
 		}

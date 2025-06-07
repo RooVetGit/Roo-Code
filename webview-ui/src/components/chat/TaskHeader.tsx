@@ -118,7 +118,7 @@ const TaskHeader = ({
 							}
 						/>
 						{condenseButton}
-						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
+						{totalCost > 0 && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -204,7 +204,7 @@ const TaskHeader = ({
 									</div>
 								)}
 
-							{!!totalCost && (
+							{totalCost > 0 && (
 								<div className="flex justify-between items-center h-[20px]">
 									<div className="flex items-center gap-1">
 										<span className="font-bold">{t("chat:task.apiCost")}</span>
