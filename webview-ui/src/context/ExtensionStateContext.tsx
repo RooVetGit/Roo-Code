@@ -345,10 +345,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setSoundVolume: (value) => setState((prevState) => ({ ...prevState, soundVolume: value })),
 		setTtsEnabled: (value) => setState((prevState) => ({ ...prevState, ttsEnabled: value })),
 		setTtsSpeed: (value) => setState((prevState) => ({ ...prevState, ttsSpeed: value })),
-		setDiffEnabled: (value) => setState((prevState) => ({ ...prevState, diffEnabled: value })),
-		setDiffViewAutoFocus: (value) => setState((prevState) => ({ ...prevState, diffViewAutoFocus: value })),
-		setAutoCloseRooTabs: (value) => setState((prevState) => ({ ...prevState, autoCloseRooTabs: value })),
-		setAutoCloseAllRooTabs: (value) => setState((prevState) => ({ ...prevState, autoCloseAllRooTabs: value })), // Added new setter
+		setDiffEnabled: (value) => setApiConfiguration({ diffEnabled: value }),
+		setDiffViewAutoFocus: (value) => setApiConfiguration({ diffViewAutoFocus: value }),
+		setAutoCloseRooTabs: (value) => setApiConfiguration({ autoCloseRooTabs: value }),
+		setAutoCloseAllRooTabs: (value) => setApiConfiguration({ autoCloseAllRooTabs: value }),
 		setEnableCheckpoints: (value) => setState((prevState) => ({ ...prevState, enableCheckpoints: value })),
 		setBrowserViewportSize: (value: string) =>
 			setState((prevState) => ({ ...prevState, browserViewportSize: value })),

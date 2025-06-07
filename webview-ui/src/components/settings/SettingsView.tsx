@@ -137,10 +137,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		browserToolEnabled,
 		browserViewportSize,
 		enableCheckpoints,
-		diffViewAutoFocus,
-		autoCloseRooTabs,
-		autoCloseAllRooTabs,
-		diffEnabled,
 		experiments,
 		fuzzyMatchThreshold,
 		maxOpenTabsContext,
@@ -215,25 +211,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					return prevState
 				}
 
-				const newState: ExtensionStateContextType = {
-					...prevState,
-					apiConfiguration: { ...prevState.apiConfiguration, [field]: value },
-				}
-				// Update the field in root state for sync
-				if (field === "diffEnabled") {
-					newState.diffEnabled = value as boolean // type is boolean
-				} else if (field === "diffViewAutoFocus") {
-					newState.diffViewAutoFocus = value as boolean // type is boolean
-				} else if (field === "autoCloseRooTabs") {
-					newState.autoCloseRooTabs = value as boolean // type is boolean
-				} else if (field === "autoCloseAllRooTabs") {
-					newState.autoCloseAllRooTabs = value as boolean // type is boolean
-				} else if (field === "fuzzyMatchThreshold") {
-					newState.fuzzyMatchThreshold = value as number // type is number
-				}
-
 				setChangeDetected(true)
-				return newState
+				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
 			})
 		},
 		[],
@@ -285,10 +264,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
 			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
-			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
-			vscode.postMessage({ type: "diffViewAutoFocus", bool: diffViewAutoFocus })
-			vscode.postMessage({ type: "autoCloseRooTabs", bool: autoCloseRooTabs })
-			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: autoCloseAllRooTabs })
+			vscode.postMessage({ type: "diffEnabled", bool: apiConfiguration.diffEnabled })
+			vscode.postMessage({ type: "diffViewAutoFocus", bool: apiConfiguration.diffViewAutoFocus })
+			vscode.postMessage({ type: "autoCloseRooTabs", bool: apiConfiguration.autoCloseRooTabs })
+			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: apiConfiguration.autoCloseAllRooTabs })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
 			vscode.postMessage({ type: "remoteBrowserHost", text: remoteBrowserHost })
