@@ -395,6 +395,7 @@
 		"os-name": "^6.0.0",
 		"p-limit": "^6.2.0",
 		"p-wait-for": "^5.0.2",
+		"partial-xml-stream-parser": "^1.7.0",
 		"pdf-parse": "^1.1.1",
 		"pkce-challenge": "^4.1.0",
 		"pretty-bytes": "^6.1.1",

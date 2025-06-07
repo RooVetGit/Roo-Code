@@ -41,6 +41,7 @@ export default {
 	},
 	transformIgnorePatterns: [
 		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|serialize-error|strip-ansi|default-shell|os-name|strip-bom)/)",
+		"/node_modules/(?!partial-xml-stream-parser/)",
 	],
 	roots: ["<rootDir>"],
 	modulePathIgnorePatterns: ["dist", "out"],
