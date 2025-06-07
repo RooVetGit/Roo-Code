@@ -1694,7 +1694,7 @@ export class ClineProvider
 			return vscode.ViewColumn.Active
 		}
 		// If there are multiple windows, we need to check if the view is a WebviewPanel
-		const isViewPanel = this.view?.viewType === "roo-cline.TabPanelProvider"
+		const isViewPanel = this.view?.viewType === ClineProvider.tabPanelId
 		if (!isViewPanel) {
 			// If the view is not a WebviewPanel, return 1. 1 is the default view column of the editor.
 			// Non default values can only be found in WebviewPanel.
