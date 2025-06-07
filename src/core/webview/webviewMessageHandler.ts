@@ -49,6 +49,35 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		await provider.contextProxy.setValue(key, value)
 
 	switch (message.type) {
+		case "diffViewAutoFocus":
+			const diffViewAutoFocus = message.bool ?? true
+			await provider.context.globalState.update("diffViewAutoFocus", diffViewAutoFocus)
+			// Also update workspace settings
+			const currentConfig = vscode.workspace.getConfiguration("roo-cline")
+			await currentConfig.update("diffViewAutoFocus", diffViewAutoFocus, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("diffViewAutoFocus", diffViewAutoFocus)
+			await provider.postStateToWebview()
+			break
+		case "autoCloseRooTabs":
+			const autoCloseRooTabs = message.bool ?? false
+			await provider.context.globalState.update("autoCloseRooTabs", autoCloseRooTabs)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("autoCloseRooTabs", autoCloseRooTabs, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("autoCloseRooTabs", autoCloseRooTabs)
+			await provider.postStateToWebview()
+			break
+		case "autoCloseAllRooTabs":
+			const autoCloseAllRooTabs = message.bool ?? false
+			await provider.context.globalState.update("autoCloseAllRooTabs", autoCloseAllRooTabs)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("autoCloseAllRooTabs", autoCloseAllRooTabs, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("autoCloseAllRooTabs", autoCloseAllRooTabs)
+			await provider.postStateToWebview()
+			break
 		case "webviewDidLaunch":
 			// Load custom modes first
 			const customModes = await provider.customModesManager.getCustomModes()

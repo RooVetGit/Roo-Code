@@ -55,6 +55,9 @@ export type ProviderSettingsEntry = z.infer<typeof providerSettingsEntrySchema>
 const baseProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	diffEnabled: z.boolean().optional(),
+	diffViewAutoFocus: z.boolean().optional(),
+	autoCloseRooTabs: z.boolean().optional(),
+	autoCloseAllRooTabs: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
@@ -347,6 +350,9 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	// Generic
 	"includeMaxTokens",
 	"diffEnabled",
+	"diffViewAutoFocus",
+	"autoCloseRooTabs",
+	"autoCloseAllRooTabs",
 	"fuzzyMatchThreshold",
 	"modelTemperature",
 	"rateLimitSeconds",
