@@ -43,7 +43,7 @@ export async function newTaskTool(
 
 			cline.consecutiveMistakeCount = 0
 			// Un-escape one level of backslashes before '@' for hierarchical subtasks
-			// Un-escape one level: \\@ -> @ (This seems to be the observed behavior)
+// Un-escape one level: \\@ -> \@ (removes one backslash for hierarchical subtasks)
 			const unescapedMessage = message.replace(/\\\\@/g, "\\@")
 
 			// Verify the mode exists
