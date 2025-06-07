@@ -582,7 +582,7 @@ export class McpHub {
 			// Inject variables to the config (environment, magic variables,...)
 			const configInjected = (await injectVariables(config, {
 				env: process.env,
-				workspaceFolder: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '""',
+				workspaceFolder: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "",
 			})) as typeof config
 
 			if (configInjected.type === "stdio") {
