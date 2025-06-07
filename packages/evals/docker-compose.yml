@@ -16,7 +16,7 @@
 services:
     db:
         container_name: evals-db
-        image: postgres:15.4
+        image: postgres:17.5
         ports:
             - 5432:5432
         volumes:
