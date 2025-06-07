@@ -11,6 +11,7 @@ import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 import { Button } from "@src/components/ui"
 
 import { inputEventTransform } from "../transforms"
+import { getModelValidationError } from "@src/utils/validate"
 import { ModelPicker } from "../ModelPicker"
 import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
 
@@ -96,6 +97,7 @@ export const Requesty = ({
 				serviceName="Requesty"
 				serviceUrl="https://requesty.ai"
 				organizationAllowList={organizationAllowList}
+				errorMessage={getModelValidationError(apiConfiguration, routerModels, organizationAllowList)}
 			/>
 		</>
 	)
