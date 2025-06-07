@@ -73,6 +73,7 @@ export interface ExtensionMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "codebaseIndexConfig"
+		| "contentRefreshed"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -105,6 +106,7 @@ export interface ExtensionMessage {
 	customMode?: ModeConfig
 	slug?: string
 	success?: boolean
+	contentId?: string
 	values?: Record<string, any>
 	requestId?: string
 	promptText?: string

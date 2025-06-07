@@ -51,6 +51,7 @@ export interface WebviewMessage {
 		| "openImage"
 		| "openFile"
 		| "openMention"
+		| "openContent"
 		| "cancelTask"
 		| "updateVSCodeSetting"
 		| "getVSCodeSetting"
@@ -118,6 +119,7 @@ export interface WebviewMessage {
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
 		| "openCustomModesSettings"
+		| "refreshContent"
 		| "checkpointDiff"
 		| "checkpointRestore"
 		| "deleteMcpServer"
@@ -170,6 +172,7 @@ export interface WebviewMessage {
 	modeConfig?: ModeConfig
 	timeout?: number
 	payload?: WebViewMessagePayload
+	contentId?: string
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]

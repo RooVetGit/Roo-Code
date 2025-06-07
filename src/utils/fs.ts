@@ -45,3 +45,19 @@ export async function fileExistsAtPath(filePath: string): Promise<boolean> {
 		return false
 	}
 }
+
+/**
+ * Safely read a file and return its trimmed content
+ */
+export async function safeReadFile(filePath: string): Promise<string> {
+	try {
+		const content = await fs.readFile(filePath, "utf-8")
+		return content ? content.trim() : ""
+	} catch (err) {
+		const errorCode = (err as NodeJS.ErrnoException).code
+		if (!errorCode || !["ENOENT", "EISDIR"].includes(errorCode)) {
+			throw err
+		}
+		return ""
+	}
+}
