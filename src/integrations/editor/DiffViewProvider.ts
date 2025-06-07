@@ -16,6 +16,7 @@ import { Task } from "../../core/task/Task"
 import { DecorationController } from "./DecorationController"
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { UserInteractionProvider } from "./UserInteractionProvider"
+import { PostDiffViewBehaviorUtils } from "./PostDiffViewBehaviorUtils"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 
@@ -43,26 +44,35 @@ export class DiffViewProvider {
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
 	private rooOpenedTabs: Set<string> = new Set()
-	private preserveFocus: boolean | undefined = undefined
 	private autoApproval: boolean | undefined = undefined
 	private autoFocus: boolean | undefined = undefined
-	private autoCloseTabs: boolean = false
 	private autoCloseAllRooTabs: boolean = false // Added new setting
 	// have to set the default view column to -1 since we need to set it in the initialize method and during initialization the enum ViewColumn is undefined
 	private viewColumn: ViewColumn = -1 // ViewColumn.Active
 	private userInteractionProvider: UserInteractionProvider
 	private suppressInteractionFlag: boolean = false
 	private preDiffActiveEditor?: vscode.TextEditor // Store active editor before diff operation
+	private postDiffBehaviorUtils: PostDiffViewBehaviorUtils
 
 	constructor(private cwd: string) {
 		this.userInteractionProvider = new UserInteractionProvider({
 			onUserInteraction: () => {
-				this.preserveFocus = true
 				this.autoFocus = false
 			},
 			getSuppressFlag: () => this.suppressInteractionFlag,
 			autoApproval: false,
 			autoFocus: true,
+		})
+
+		// Initialize PostDiffviewBehaviorUtils with initial context
+		this.postDiffBehaviorUtils = new PostDiffViewBehaviorUtils({
+			relPath: this.relPath,
+			editType: this.editType,
+			documentWasOpen: this.documentWasOpen,
+			cwd: this.cwd,
+			rooOpenedTabs: this.rooOpenedTabs,
+			preDiffActiveEditor: this.preDiffActiveEditor,
+			autoCloseAllRooTabs: this.autoCloseAllRooTabs,
 		})
 	}
 
@@ -79,11 +89,14 @@ export class DiffViewProvider {
 		}
 		const settings = await this._readDiffSettings()
 		this.autoFocus = settings.autoFocus
-		this.autoCloseTabs = settings.autoCloseRooTabs
 		this.autoCloseAllRooTabs = settings.autoCloseAllRooTabs
-		this.preserveFocus = this.autoApproval && !this.autoFocus
 		// Track currently visible editors and active editor for focus restoration and tab cleanup
 		this.rooOpenedTabs.clear()
+
+		// Update PostDiffviewBehaviorUtils context with latest values
+		this.postDiffBehaviorUtils.updateContext({
+			autoCloseAllRooTabs: this.autoCloseAllRooTabs,
+		})
 	}
 
 	private async _readDiffSettings(): Promise<DiffSettings> {
@@ -143,6 +156,14 @@ export class DiffViewProvider {
 		this.preDiffActiveEditor = vscode.window.activeTextEditor
 
 		this.viewColumn = viewColumn
+
+		// Update PostDiffviewBehaviorUtils context with current state
+		this.postDiffBehaviorUtils.updateContext({
+			relPath: relPath,
+			editType: this.editType,
+			documentWasOpen: this.documentWasOpen,
+			preDiffActiveEditor: this.preDiffActiveEditor,
+		})
 		// Update the user interaction provider with current settings
 		this.userInteractionProvider.updateOptions({
 			autoApproval: this.autoApproval ?? false,
@@ -202,6 +223,10 @@ export class DiffViewProvider {
 					(tab) =>
 						tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
 				).length > 0
+
+		this.postDiffBehaviorUtils.updateContext({
+			documentWasOpen: this.documentWasOpen,
+		})
 
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
@@ -417,10 +442,10 @@ export class DiffViewProvider {
 			}
 		}
 
-		await this.closeAllRooOpenedViews()
+		await this.postDiffBehaviorUtils.closeAllRooOpenedViews(await this._readDiffSettings())
 
 		// Implement post-diff focus behavior
-		await this.handlePostDiffFocus()
+		await this.postDiffBehaviorUtils.handlePostDiffFocus()
 
 		// If no auto-close settings are enabled and the document was not open before,
 		// open the file after the diff is complete.
@@ -583,7 +608,7 @@ export class DiffViewProvider {
 				await updatedDocument.save()
 			}
 
-			await this.closeAllRooOpenedViews()
+			await this.postDiffBehaviorUtils.closeAllRooOpenedViews(await this._readDiffSettings())
 			await fs.unlink(absolutePath)
 
 			// Remove only the directories we created, in reverse order.
@@ -615,220 +640,14 @@ export class DiffViewProvider {
 				await this.showTextDocumentSafe({ uri: vscode.Uri.file(absolutePath), options: { preview: false } })
 			}
 
-			await this.closeAllRooOpenedViews()
+			await this.postDiffBehaviorUtils.closeAllRooOpenedViews(await this._readDiffSettings())
 		}
 
 		// Implement post-diff focus behavior
-		await this.handlePostDiffFocus()
+		await this.postDiffBehaviorUtils.handlePostDiffFocus()
 
 		// Edit is done.
 		this.resetWithListeners()
-	}
-
-	/**
-	 * Handles post-diff focus behavior.
-	 * Currently defaults to focusing the edited file (Behavior A).
-	 * Future implementation will support configurable focus behavior.
-	 */
-	private async handlePostDiffFocus(): Promise<void> {
-		if (!this.relPath) {
-			return
-		}
-
-		if (this.autoCloseAllRooTabs) {
-			// Focus on the pre-diff active tab
-			await this.focusOnPreDiffActiveTab()
-			return
-		}
-		// Focus on the edited file (temporary default)
-		await this.focusOnEditedFile()
-	}
-
-	/**
-	 * Focuses on the tab of the file that was just edited.
-	 */
-	private async focusOnEditedFile(): Promise<void> {
-		if (!this.relPath) {
-			return
-		}
-
-		try {
-			const absolutePath = path.resolve(this.cwd, this.relPath)
-			const fileUri = vscode.Uri.file(absolutePath)
-
-			// Check if the file still exists as a tab
-			const editedFileTab = this.findTabForFile(absolutePath)
-			if (editedFileTab) {
-				// Find the tab group containing the edited file
-				const tabGroup = vscode.window.tabGroups.all.find((group) =>
-					group.tabs.some((tab) => tab === editedFileTab),
-				)
-
-				if (tabGroup) {
-					// Make the edited file's tab active
-					await this.showTextDocumentSafe({
-						uri: fileUri,
-						options: {
-							viewColumn: tabGroup.viewColumn,
-							preserveFocus: false,
-							preview: false,
-						},
-					})
-				}
-			}
-		} catch (error) {
-			console.error("Roo Debug: Error focusing on edited file:", error)
-		}
-	}
-
-	/**
-	 * Restores focus to the tab that was active before the diff operation.
-	 * This method is prepared for future use when configurable focus behavior is implemented.
-	 */
-	private async focusOnPreDiffActiveTab(): Promise<void> {
-		if (!this.preDiffActiveEditor || !this.preDiffActiveEditor.document) {
-			return
-		}
-
-		try {
-			// Check if the pre-diff active editor is still valid and its document is still open
-			const isDocumentStillOpen = vscode.workspace.textDocuments.some(
-				(doc) => doc === this.preDiffActiveEditor!.document,
-			)
-
-			if (isDocumentStillOpen) {
-				// Restore focus to the pre-diff active editor
-				await vscode.window.showTextDocument(this.preDiffActiveEditor.document.uri, {
-					viewColumn: this.preDiffActiveEditor.viewColumn,
-					preserveFocus: false,
-					preview: false,
-				})
-			}
-		} catch (error) {
-			console.error("Roo Debug: Error restoring focus to pre-diff active tab:", error)
-		}
-	}
-
-	private tabToCloseFilter(tab: vscode.Tab, settings: DiffSettings): boolean {
-		// Always close DiffView tabs opened by Roo
-		if (tab.input instanceof vscode.TabInputTextDiff && tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME) {
-			return true
-		}
-
-		let isRooOpenedTextTab = false
-		if (tab.input instanceof vscode.TabInputText) {
-			const currentTabUri = (tab.input as vscode.TabInputText).uri
-			for (const openedUriString of this.rooOpenedTabs) {
-				try {
-					const previouslyOpenedUri = vscode.Uri.parse(openedUriString, true) // true for strict parsing
-					if (currentTabUri.scheme === "file" && previouslyOpenedUri.scheme === "file") {
-						if (arePathsEqual(currentTabUri.fsPath, previouslyOpenedUri.fsPath)) {
-							isRooOpenedTextTab = true
-							break
-						}
-					} else {
-						if (currentTabUri.toString() === previouslyOpenedUri.toString()) {
-							isRooOpenedTextTab = true
-							break
-						}
-					}
-				} catch (e) {
-					// Log parsing error if necessary, or ignore if a URI in rooOpenedTabs is malformed
-					console.error(`Roo Debug: Error parsing URI from rooOpenedTabs: ${openedUriString}`, e)
-				}
-			}
-		}
-
-		if (!isRooOpenedTextTab) {
-			return false // Not a text tab or not identified as opened by Roo
-		}
-
-		// Haken 2 (settings.autoCloseAllRooTabs) - takes precedence
-		if (settings.autoCloseAllRooTabs) {
-			// This implies Haken 1 is also effectively on
-			return true // Close all Roo-opened text tabs
-		}
-
-		// Only Haken 1 (settings.autoCloseRooTabs) is on, Haken 2 is off
-		if (settings.autoCloseRooTabs) {
-			const tabUriFsPath = (tab.input as vscode.TabInputText).uri.fsPath
-			const absolutePathDiffedFile = this.relPath ? path.resolve(this.cwd, this.relPath) : null
-
-			// Guard against null absolutePathDiffedFile if relPath is somehow not set
-			if (!absolutePathDiffedFile) {
-				// If we don't know the main diffed file, but Haken 1 is on,
-				// it's safer to close any tab Roo opened to avoid leaving extras.
-				return true
-			}
-
-			const isMainDiffedFileTab = arePathsEqual(tabUriFsPath, absolutePathDiffedFile)
-
-			if (this.editType === "create" && isMainDiffedFileTab) {
-				return true // Case: New file, Haken 1 is on -> Close its tab.
-			}
-
-			if (this.editType === "modify" && isMainDiffedFileTab) {
-				return !this.documentWasOpen
-			}
-
-			// If the tab is for a file OTHER than the main diffedFile, but was opened by Roo
-			if (!isMainDiffedFileTab) {
-				// This covers scenarios where Roo might open auxiliary files (though less common for single diff).
-				// If Haken 1 is on, these should also be closed.
-				return true
-			}
-		}
-		return false // Default: do not close if no above condition met
-	}
-
-	private async closeTab(tab: vscode.Tab) {
-		// If a tab has made it through the filter, it means one of the auto-close settings
-		// (autoCloseTabs or autoCloseAllRooTabs) is active and the conditions for closing
-		// this specific tab are met. Therefore, we should always bypass the dirty check.
-		// const bypassDirtyCheck = true; // This is implicitly true now.
-
-		// Attempt to find the freshest reference to the tab before closing,
-		// as the original 'tab' object from the initial flatMap might be stale.
-		const tabInputToClose = tab.input
-		const freshTabToClose = vscode.window.tabGroups.all
-			.flatMap((group) => group.tabs)
-			.find((t) => t.input === tabInputToClose)
-
-		if (freshTabToClose) {
-			try {
-				await vscode.window.tabGroups.close(freshTabToClose, true) // true to bypass dirty check implicitly
-			} catch (closeError) {
-				console.error(`Roo Debug CloseLoop: Error closing tab "${freshTabToClose.label}":`, closeError)
-			}
-		} else {
-			// This case should ideally not happen if the tab was in the filtered list.
-			// It might indicate the tab was closed by another means or its input changed.
-			console.warn(
-				`Roo Debug CloseLoop: Tab "${tab.label}" (input: ${JSON.stringify(tab.input)}) intended for closure was not found in the current tab list.`,
-			)
-			// Fallback: Try to close the original tab reference if the fresh one isn't found,
-			// though this is less likely to succeed if it's genuinely stale.
-			try {
-				console.log(`Roo Debug CloseLoop: Attempting to close original (stale?) tab "${tab.label}"`)
-				await vscode.window.tabGroups.close(tab, true)
-			} catch (fallbackCloseError) {
-				console.error(
-					`Roo Debug CloseLoop: Error closing original tab reference for "${tab.label}":`,
-					fallbackCloseError,
-				)
-			}
-		}
-	}
-
-	private async closeAllRooOpenedViews() {
-		const settings = await this._readDiffSettings() // Dynamically read settings
-
-		const closeOps = vscode.window.tabGroups.all
-			.flatMap((tg) => tg.tabs)
-			.filter((tab) => this.tabToCloseFilter(tab, settings))
-			.map(this.closeTab)
-
-		await Promise.all(closeOps)
 	}
 
 	/**
@@ -972,7 +791,7 @@ export class DiffViewProvider {
 		// Ensure any diff views opened by this provider are closed to release
 		// memory.
 		try {
-			await this.closeAllRooOpenedViews()
+			await this.postDiffBehaviorUtils.closeAllRooOpenedViews(await this._readDiffSettings())
 		} catch (error) {
 			console.error("Error closing diff views", error)
 		}

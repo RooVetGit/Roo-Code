@@ -1,29 +1,30 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+// npx jest src/integrations/editor/__tests__/UserInteractionProvider.test.ts
+
 import * as vscode from "vscode"
 import { UserInteractionProvider } from "../UserInteractionProvider"
 
-vi.mock("vscode", () => ({
+jest.mock("vscode", () => ({
 	window: {
 		tabGroups: {
-			onDidChangeTabs: vi.fn(),
-			onDidChangeTabGroups: vi.fn(),
+			onDidChangeTabs: jest.fn(),
+			onDidChangeTabGroups: jest.fn(),
 		},
-		onDidChangeActiveTextEditor: vi.fn(),
-		onDidChangeTextEditorSelection: vi.fn(),
+		onDidChangeActiveTextEditor: jest.fn(),
+		onDidChangeTextEditorSelection: jest.fn(),
 	},
 }))
 
 describe("UserInteractionProvider", () => {
 	let provider: UserInteractionProvider
-	let mockOnUserInteraction: ReturnType<typeof vi.fn>
-	let mockGetSuppressFlag: ReturnType<typeof vi.fn>
-	let mockDisposable: { dispose: ReturnType<typeof vi.fn> }
+	let mockOnUserInteraction: jest.Mock
+	let mockGetSuppressFlag: jest.Mock
+	let mockDisposable: { dispose: jest.Mock }
 
 	beforeEach(() => {
-		vi.clearAllMocks()
-		mockOnUserInteraction = vi.fn()
-		mockGetSuppressFlag = vi.fn().mockReturnValue(false)
-		mockDisposable = { dispose: vi.fn() }
+		jest.clearAllMocks()
+		mockOnUserInteraction = jest.fn()
+		mockGetSuppressFlag = jest.fn().mockReturnValue(false)
+		mockDisposable = { dispose: jest.fn() }
 
 		// Mock the event listeners to return disposables
 		;(vscode.window.onDidChangeTextEditorSelection as any).mockReturnValue(mockDisposable)
@@ -75,10 +76,7 @@ describe("UserInteractionProvider", () => {
 	it("should call onUserInteraction when text editor selection changes", () => {
 		provider.enable()
 
-		// Get the callback that was registered
 		const selectionChangeCallback = (vscode.window.onDidChangeTextEditorSelection as any).mock.calls[0][0]
-
-		// Simulate the event
 		selectionChangeCallback({})
 
 		expect(mockOnUserInteraction).toHaveBeenCalled()
@@ -88,10 +86,7 @@ describe("UserInteractionProvider", () => {
 		mockGetSuppressFlag.mockReturnValue(true)
 		provider.enable()
 
-		// Get the callback that was registered
 		const selectionChangeCallback = (vscode.window.onDidChangeTextEditorSelection as any).mock.calls[0][0]
-
-		// Simulate the event
 		selectionChangeCallback({})
 
 		expect(mockOnUserInteraction).not.toHaveBeenCalled()
@@ -100,10 +95,7 @@ describe("UserInteractionProvider", () => {
 	it("should call onUserInteraction when active text editor changes", () => {
 		provider.enable()
 
-		// Get the callback that was registered
 		const activeEditorChangeCallback = (vscode.window.onDidChangeActiveTextEditor as any).mock.calls[0][0]
-
-		// Simulate the event with a non-null editor
 		activeEditorChangeCallback({ document: { uri: "test" } })
 
 		expect(mockOnUserInteraction).toHaveBeenCalled()
@@ -112,10 +104,7 @@ describe("UserInteractionProvider", () => {
 	it("should not call onUserInteraction when active editor is null", () => {
 		provider.enable()
 
-		// Get the callback that was registered
 		const activeEditorChangeCallback = (vscode.window.onDidChangeActiveTextEditor as any).mock.calls[0][0]
-
-		// Simulate the event with null editor
 		activeEditorChangeCallback(null)
 
 		expect(mockOnUserInteraction).not.toHaveBeenCalled()
@@ -125,14 +114,13 @@ describe("UserInteractionProvider", () => {
 		provider.enable()
 		provider.dispose()
 
-		expect(mockDisposable.dispose).toHaveBeenCalledTimes(4) // 4 listeners
+		expect(mockDisposable.dispose).toHaveBeenCalledTimes(4)
 	})
 
 	it("should update options correctly", () => {
 		provider.updateOptions({ autoApproval: false, autoFocus: false })
 		provider.enable()
 
-		// Should not set up listeners with updated options
 		expect(vscode.window.onDidChangeTextEditorSelection).not.toHaveBeenCalled()
 	})
 
@@ -141,6 +129,6 @@ describe("UserInteractionProvider", () => {
 		expect(mockDisposable.dispose).toHaveBeenCalledTimes(0)
 
 		provider.enable()
-		expect(mockDisposable.dispose).toHaveBeenCalledTimes(4) // Previous listeners disposed
+		expect(mockDisposable.dispose).toHaveBeenCalledTimes(4)
 	})
 })
