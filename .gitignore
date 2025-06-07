@@ -4,9 +4,12 @@ out
 out-*
 node_modules
 coverage/
-mock/
 
 .DS_Store
+
+# Webview UI specific ignores
+webview-ui/node_modules
+webview-ui/dist
 
 # IDEs
 .idea
