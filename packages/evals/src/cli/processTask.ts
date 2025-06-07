@@ -51,7 +51,7 @@ export const processTask = async ({ taskId, logger }: { taskId: number; logger?:
 export const processTaskInContainer = async ({
 	taskId,
 	logger,
-	maxRetries = 5,
+	maxRetries = 10,
 }: {
 	taskId: number
 	logger: FileLogger
@@ -67,8 +67,6 @@ export const processTaskInContainer = async ({
 
 	const command = `pnpm --filter @roo-code/evals cli --taskId ${taskId}`
 	logger.info(command)
-
-	let lastError: unknown
 
 	for (let attempt = 0; attempt <= maxRetries; attempt++) {
 		const containerName = `evals-task-${taskId}.${attempt}`
@@ -92,10 +90,8 @@ export const processTaskInContainer = async ({
 		try {
 			const result = await subprocess
 			logger.info(`container process completed with exit code: ${result.exitCode}`)
-			return result
+			return
 		} catch (error) {
-			lastError = error
-
 			if (error && typeof error === "object" && "exitCode" in error) {
 				logger.error(
 					`container process failed with exit code: ${error.exitCode} (attempt ${attempt + 1}/${maxRetries + 1})`,
@@ -111,5 +107,6 @@ export const processTaskInContainer = async ({
 	}
 
 	logger.error(`all ${maxRetries + 1} attempts failed, giving up`)
-	throw lastError
+
+	// TODO: Mark task as failed.
 }
