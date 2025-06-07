@@ -5,6 +5,7 @@
 import { performance } from "perf_hooks"
 import { parseAssistantMessage as parseAssistantMessageV1 } from "../parseAssistantMessage"
 import { parseAssistantMessageV2 } from "../parseAssistantMessageV2"
+import { parseAssistantMessageV3 } from "../parseAssistantMessageV3"
 
 const formatNumber = (num: number): string => {
 	return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -83,27 +84,35 @@ const runBenchmark = () => {
 	const namePadding = maxNameLength + 2
 
 	console.log(
-		`| ${"Test Case".padEnd(namePadding)} | V1 Time (ms) | V2 Time (ms) | V1/V2 Ratio | V1 Heap (bytes) | V2 Heap (bytes) |`,
+		`| ${"Test Case".padEnd(namePadding)} | V1 Time (ms) | V2 Time (ms) | V3 Time (ms) | V1/V2 Ratio | V1/V3 Ratio | V2/V3 Ratio | V1 Heap (bytes) | V2 Heap (bytes) | V3 Heap (bytes) |`,
 	)
 	console.log(
-		`| ${"-".repeat(namePadding)} | ------------ | ------------ | ----------- | ---------------- | ---------------- |`,
+		`| ${"-".repeat(namePadding)} | ------------ | ------------ | ------------ | ----------- | ----------- | ----------- | ---------------- | ---------------- | ---------------- |`,
 	)
 
 	for (const testCase of testCases) {
 		const v1Time = measureExecutionTime(parseAssistantMessageV1, testCase.input)
 		const v2Time = measureExecutionTime(parseAssistantMessageV2, testCase.input)
-		const timeRatio = v1Time / v2Time
+		const v3Time = measureExecutionTime(parseAssistantMessageV3, testCase.input)
+		const timeRatioV1V2 = v1Time / v2Time
+		const timeRatioV1V3 = v1Time / v3Time
+		const timeRatioV2V3 = v2Time / v3Time
 
 		const v1Memory = measureMemoryUsage(parseAssistantMessageV1, testCase.input)
 		const v2Memory = measureMemoryUsage(parseAssistantMessageV2, testCase.input)
+		const v3Memory = measureMemoryUsage(parseAssistantMessageV3, testCase.input)
 
 		console.log(
 			`| ${testCase.name.padEnd(namePadding)} | ` +
 				`${v1Time.toFixed(4).padStart(12)} | ` +
 				`${v2Time.toFixed(4).padStart(12)} | ` +
-				`${timeRatio.toFixed(2).padStart(11)} | ` +
+				`${v3Time.toFixed(4).padStart(12)} | ` +
+				`${timeRatioV1V2.toFixed(2).padStart(11)} | ` +
+				`${timeRatioV1V3.toFixed(2).padStart(11)} | ` +
+				`${timeRatioV2V3.toFixed(2).padStart(11)} | ` +
 				`${formatNumber(Math.round(v1Memory.heapUsed)).padStart(16)} | ` +
-				`${formatNumber(Math.round(v2Memory.heapUsed)).padStart(16)} |`,
+				`${formatNumber(Math.round(v2Memory.heapUsed)).padStart(16)} | ` +
+				`${formatNumber(Math.round(v3Memory.heapUsed)).padStart(16)} |`,
 		)
 	}
 }

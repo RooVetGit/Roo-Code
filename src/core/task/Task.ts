@@ -64,7 +64,7 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
-import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
+import { type AssistantMessageContent, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
@@ -82,6 +82,7 @@ import { processUserContentMentions } from "../mentions/processUserContentMentio
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
+import { parseAssistantMessageV3 } from "../assistant-message/parseAssistantMessageV3"
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -1332,7 +1333,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 							// Parse raw assistant message into content blocks.
 							const prevLength = this.assistantMessageContent.length
-							this.assistantMessageContent = parseAssistantMessage(assistantMessage)
+							this.assistantMessageContent = parseAssistantMessageV3(assistantMessage)
 
 							if (this.assistantMessageContent.length > prevLength) {
 								// New content we need to present, reset to
