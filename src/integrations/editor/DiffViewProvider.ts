@@ -393,9 +393,9 @@ export class DiffViewProvider {
 			.map((tab) =>
 				vscode.window.tabGroups.close(tab).then(
 					() => undefined,
-(err) => {
-  // Ignore errors when closing diff tabs - they may already be closed
-},
+					(err) => {
+						// Ignore errors when closing diff tabs - they may already be closed
+					},
 				),
 			)
 
@@ -479,11 +479,9 @@ export class DiffViewProvider {
 						{ preserveFocus: true },
 					)
 					.then(
-						async () => {
+						() => {
 							// Give a brief moment for the editor to appear in tab groups
-							await new Promise((r) => setTimeout(r, 100))
-							if (!checkAndResolve()) {
-							}
+							setTimeout(checkAndResolve, 100)
 						},
 						(err) => {
 							if (timeoutId) clearTimeout(timeoutId)
