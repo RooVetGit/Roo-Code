@@ -31,7 +31,7 @@ import {
 } from "../../shared/mcp"
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
-import { injectEnv, injectVariables } from "../../utils/config"
+import { injectVariables } from "../../utils/config"
 
 export type McpConnection = {
 	server: McpServer
