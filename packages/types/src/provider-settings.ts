@@ -152,6 +152,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
+	modelMaxContextWindow: z.number().nullish(),
 })
 
 const openAiNativeSchema = apiModelIdProviderModelSchema.extend({
@@ -318,6 +319,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	// Gemini
 	"geminiApiKey",
 	"googleGeminiBaseUrl",
+	"modelMaxContextWindow",
 	// OpenAI Native
 	"openAiNativeApiKey",
 	"openAiNativeBaseUrl",
