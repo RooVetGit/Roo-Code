@@ -14,7 +14,7 @@ type ModelInfoViewProps = {
 	modelInfo?: ModelInfo
 	isDescriptionExpanded: boolean
 	setIsDescriptionExpanded: (isExpanded: boolean) => void
-	maxContextWindow?: number
+	maxContextWindow?: number | null
 }
 
 export const ModelInfoView = ({
