@@ -18,7 +18,8 @@
 	"tool": {
 		"alwaysAllow": "Altijd toestaan",
 		"parameters": "Parameters",
-		"noDescription": "Geen beschrijving"
+		"noDescription": "Geen beschrijving",
+		"togglePromptInclusion": "Inclusie in prompt in-/uitschakelen"
 	},
 	"tabs": {
 		"tools": "Tools",
