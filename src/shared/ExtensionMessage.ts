@@ -144,6 +144,7 @@ export type ExtensionState = Pick<
 	| "screenshotQuality"
 	| "remoteBrowserEnabled"
 	| "remoteBrowserHost"
+	| "showBrowserForTextMode"
 	// | "enableCheckpoints" // Optional in GlobalSettings, required here.
 	| "ttsEnabled"
 	| "ttsSpeed"
@@ -295,6 +296,17 @@ export type BrowserActionResult = {
 	logs?: string
 	currentUrl?: string
 	currentMousePosition?: string
+	textContent?: string // For text-based browsing when model doesn't support images
+	interactiveElements?: InteractiveElement[] // For enhanced text-based browsing
+}
+
+export interface InteractiveElement {
+	type: "button" | "link" | "input" | "textarea" | "select" | "form"
+	selector: string
+	text?: string
+	placeholder?: string
+	href?: string
+	description: string
 }
 
 export interface ClineAskUseMcpServer {
