@@ -504,6 +504,7 @@
 		"rangeDescription": "Giá trị cao hơn làm cho đầu ra ngẫu nhiên hơn, giá trị thấp hơn làm cho nó xác định hơn."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "Cửa sổ ngữ cảnh tối đa",
 		"useCustom": "Sử dụng cửa sổ ngữ cảnh tối đa tùy chỉnh",
 		"description": "Đặt kích thước cửa sổ ngữ cảnh tối đa cho mô hình. Khi các cuộc hội thoại đạt đến giới hạn này, Roo Code sẽ tự động cô đọng các tin nhắn cũ hơn để duy trì trong phạm vi ràng buộc.",
 		"rangeDescription": "Giá trị cao hơn cho phép các cuộc hội thoại dài hơn trước khi ngưng tụ, giá trị thấp hơn kích hoạt ngưng tụ sớm hơn để duy trì trong giới hạn tốc độ API."

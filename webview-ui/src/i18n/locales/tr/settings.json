@@ -504,6 +504,7 @@
 		"rangeDescription": "Daha yüksek değerler çıktıyı daha rastgele yapar, daha düşük değerler daha deterministik hale getirir."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "Maksimum Bağlam Penceresi",
 		"useCustom": "Özel maksimum bağlam penceresini kullan",
 		"description": "Model için maksimum bağlam penceresi boyutunu ayarlar. Konuşmalar bu sınıra yaklaştığında, Roo Kodu kısıtlama dahilinde kalmak için eski mesajları otomatik olarak yoğunlaştıracaktır.",
 		"rangeDescription": "Daha yüksek değerler, yoğunlaşmadan önce daha uzun görüşmelere izin verirken, daha düşük değerler API oran sınırları içinde kalmak için daha erken yoğunlaşmayı tetikler."

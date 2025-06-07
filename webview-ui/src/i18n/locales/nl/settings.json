@@ -504,6 +504,7 @@
 		"rangeDescription": "Hogere waarden maken de output willekeuriger, lagere waarden maken deze deterministischer."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "Maximaal contextvenster",
 		"useCustom": "Gebruik aangepast maximaal contextvenster",
 		"description": "Stelt de maximale grootte van het contextvenster voor het model in. Wanneer conversaties deze limiet naderen, condenseert Roo Code automatisch oudere berichten om binnen de beperking te blijven.",
 		"rangeDescription": "Hogere waarden zorgen voor langere conversaties voordat er condensatie plaatsvindt, lagere waarden activeren eerder condensatie om binnen de API-snelheidslimieten te blijven."

@@ -504,6 +504,7 @@
 		"rangeDescription": "Wyższe wartości sprawiają, że wyjście jest bardziej losowe, niższe wartości czynią je bardziej deterministycznym."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "",
 		"useCustom": "Użyj niestandardowego okna maksymalnego kontekstu",
 		"description": "Ustawia maksymalny rozmiar okna kontekstu dla modelu. Gdy konwersacje zbliżają się do tego limitu, Roo Code automatycznie skondensuje starsze wiadomości, aby zachować ograniczenie.",
 		"rangeDescription": "Wyższe wartości umożliwiają dłuższe konwersacje przed kondensacją, niższe wartości uruchamiają kondensację wcześniej, aby utrzymać się w granicach szybkości interfejsu API."

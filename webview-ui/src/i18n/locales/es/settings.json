@@ -44,12 +44,6 @@
 		"selectProviderPlaceholder": "Seleccionar proveedor",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
-		"openaiCompatibleProvider": "Compatible con OpenAI",
-		"openaiCompatibleBaseUrlLabel": "URL base:",
-		"openaiCompatibleApiKeyLabel": "Clave API:",
-		"openaiCompatibleModelDimensionLabel": "Dimensión de Embedding:",
-		"openaiCompatibleModelDimensionPlaceholder": "ej., 1536",
-		"openaiCompatibleModelDimensionDescription": "La dimensión de embedding (tamaño de salida) para tu modelo. Consulta la documentación de tu proveedor para este valor. Valores comunes: 384, 768, 1536, 3072.",
 		"openaiKeyLabel": "Clave de OpenAI:",
 		"modelLabel": "Modelo",
 		"selectModelPlaceholder": "Seleccionar modelo",
@@ -504,6 +498,7 @@
 		"rangeDescription": "Valores más altos hacen que la salida sea más aleatoria, valores más bajos la hacen más determinista."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "",
 		"useCustom": "Usar ventana de contexto máxima personalizada",
 		"description": "Establece el tamaño máximo de la ventana de contexto del modelo. Cuando las conversaciones se acercan a este límite, Roo Code condensará automáticamente los mensajes antiguos para ajustarse a la restricción.",
 		"rangeDescription": "Los valores más altos permiten conversaciones más largas antes de condensarse; los valores más bajos activan la condensación antes para permanecer dentro de los límites de velocidad de la API."

@@ -504,6 +504,7 @@
 		"rangeDescription": "Höhere Werte machen die Ausgabe zufälliger, niedrigere Werte machen sie deterministischer."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "Maximales Kontextfenster",
 		"useCustom": "Benutzerdefiniertes maximales Kontextfenster verwenden",
 		"description": "Legt die maximale Kontextfenstergröße für das Modell fest. Wenn Konversationen diese Grenze erreichen, komprimiert Roo Code ältere Nachrichten automatisch, um die Beschränkung einzuhalten.",
 		"rangeDescription": "Höhere Werte ermöglichen längere Gespräche vor der Verdichtung, niedrigere Werte lösen eine frühere Verdichtung aus, um innerhalb der API-Ratengrenzen zu bleiben."

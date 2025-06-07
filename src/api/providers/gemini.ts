@@ -132,8 +132,15 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	override getModel() {
 		const modelId = this.options.apiModelId
 		let id = modelId && modelId in geminiModels ? (modelId as GeminiModelId) : geminiDefaultModelId
-		const info: ModelInfo = geminiModels[id]
+		let info: ModelInfo = geminiModels[id]
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
+
+		if (this.options.maxContextWindow) {
+			info = {
+				...info,
+				contextWindow: this.options.maxContextWindow,
+			}
+		}
 
 		// The `:thinking` suffix indicates that the model is a "Hybrid"
 		// reasoning model and that reasoning is required to be enabled.

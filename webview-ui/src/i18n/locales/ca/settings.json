@@ -504,6 +504,7 @@
 		"rangeDescription": "Valors més alts fan que la sortida sigui més aleatòria, valors més baixos la fan més determinista."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "",
 		"useCustom": "Utilitza una finestra de context màxim personalitzada",
 		"description": "Estableix la mida màxima de la finestra de context per al model. Quan les converses s'acosten a aquest límit, Roo Code condensarà automàticament els missatges més antics per mantenir-se dins de la restricció.",
 		"rangeDescription": "Els valors més alts permeten converses més llargues abans de condensar-se, els valors més baixos activen la condensació abans per mantenir-se dins dels límits de velocitat de l'API."

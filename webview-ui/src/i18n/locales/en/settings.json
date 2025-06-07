@@ -504,6 +504,7 @@
 		"rangeDescription": "Higher values make output more random, lower values make it more deterministic."
 	},
 	"maxContextWindow": {
+		"maxContextWindow": "Max Context Window",
 		"useCustom": "Use custom max context window",
 		"description": "Sets the maximum context window size for the model. When conversations approach this limit, Roo Code will automatically condense older messages to stay within the constraint.",
 		"rangeDescription": "Higher values allow longer conversations before condensing, lower values trigger condensing sooner to stay within API rate limits."

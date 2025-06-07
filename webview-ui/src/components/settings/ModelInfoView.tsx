@@ -14,6 +14,7 @@ type ModelInfoViewProps = {
 	modelInfo?: ModelInfo
 	isDescriptionExpanded: boolean
 	setIsDescriptionExpanded: (isExpanded: boolean) => void
+	maxContextWindow?: number
 }
 
 export const ModelInfoView = ({
@@ -22,8 +23,12 @@ export const ModelInfoView = ({
 	modelInfo,
 	isDescriptionExpanded,
 	setIsDescriptionExpanded,
+	maxContextWindow,
 }: ModelInfoViewProps) => {
 	const { t } = useAppTranslation()
+
+	const maxContextWindowValue =
+		apiProvider === "gemini" && maxContextWindow ? maxContextWindow : modelInfo?.contextWindow
 
 	const infoItems = [
 		<ModelInfoSupportsItem
@@ -69,6 +74,15 @@ export const ModelInfoView = ({
 			<>
 				<span className="font-medium">{t("settings:modelInfo.cacheWritesPrice")}:</span>{" "}
 				{formatPrice(modelInfo.cacheWritesPrice || 0)} / 1M tokens
+			</>
+		),
+		maxContextWindowValue && (
+			<>
+				<span className="font-medium">{t("settings:maxContextWindow.maxContextWindow")}:</span>{" "}
+				{maxContextWindowValue.toLocaleString()} tokens
+				{apiProvider === "gemini" && maxContextWindowValue && (
+					<span className="text-vscode-descriptionForeground ml-1">(custom limit)</span>
+				)}
 			</>
 		),
 		apiProvider === "gemini" && (

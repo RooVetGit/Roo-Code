@@ -462,6 +462,7 @@ const ApiOptions = ({
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
+						maxContextWindow={selectedProvider === "gemini" ? apiConfiguration.maxContextWindow : undefined}
 					/>
 				</>
 			)}
@@ -488,8 +489,8 @@ const ApiOptions = ({
 
 					{selectedProvider === "gemini" && (
 						<MaxContextWindowControl
-							value={apiConfiguration.modelMaxContextWindow}
-							onChange={handleInputChange("modelMaxContextWindow", noTransform)}
+							value={apiConfiguration.maxContextWindow}
+							onChange={handleInputChange("maxContextWindow", noTransform)}
 							maxValue={1048576}
 						/>
 					)}
