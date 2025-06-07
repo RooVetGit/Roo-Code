@@ -232,6 +232,10 @@ const CodeBlock = memo(
 		const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 		const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 		const { t } = useAppTranslation()
+		const isMountedRef = useRef(true)
+		const buttonPositionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+		const collapseTimeout1Ref = useRef<NodeJS.Timeout | null>(null)
+		const collapseTimeout2Ref = useRef<NodeJS.Timeout | null>(null)
 
 		// Update current language when prop changes, but only if user hasn't
 		// made a selection.
@@ -243,6 +247,26 @@ const CodeBlock = memo(
 			}
 		}, [language, currentLanguage])
 
+		// Manage mounted state
+		useEffect(() => {
+			isMountedRef.current = true
+			return () => {
+				isMountedRef.current = false
+			}
+		}, [])
+
+		// Cleanup for collapse/expand timeouts
+		useEffect(() => {
+			return () => {
+				if (collapseTimeout1Ref.current) {
+					clearTimeout(collapseTimeout1Ref.current)
+				}
+				if (collapseTimeout2Ref.current) {
+					clearTimeout(collapseTimeout2Ref.current)
+				}
+			}
+		}, [])
+
 		// Syntax highlighting with cached Shiki instance.
 		useEffect(() => {
 			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${currentLanguage || "txt"}">${source || ""}</code></pre>`
@@ -250,10 +274,13 @@ const CodeBlock = memo(
 			const highlight = async () => {
 				// Show plain text if language needs to be loaded.
 				if (currentLanguage && !isLanguageLoaded(currentLanguage)) {
-					setHighlightedCode(fallback)
+					if (isMountedRef.current) {
+						setHighlightedCode(fallback)
+					}
 				}
 
 				const highlighter = await getHighlighter(currentLanguage)
+				if (!isMountedRef.current) return
 
 				const html = await highlighter.codeToHtml(source || "", {
 					lang: currentLanguage || "txt",
@@ -277,13 +304,18 @@ const CodeBlock = memo(
 						},
 					] as ShikiTransformer[],
 				})
+				if (!isMountedRef.current) return
 
-				setHighlightedCode(html)
+				if (isMountedRef.current) {
+					setHighlightedCode(html)
+				}
 			}
 
 			highlight().catch((e) => {
 				console.error("[CodeBlock] Syntax highlighting error:", e, "\nStack trace:", e.stack)
-				setHighlightedCode(fallback)
+				if (isMountedRef.current) {
+					setHighlightedCode(fallback)
+				}
 			})
 		}, [source, currentLanguage, collapsedHeight])
 
@@ -455,8 +487,15 @@ const CodeBlock = memo(
 		// Update button position and scroll when highlightedCode changes
 		useEffect(() => {
 			if (highlightedCode) {
+				// Clear any existing timeout before setting a new one
+				if (buttonPositionTimeoutRef.current) {
+					clearTimeout(buttonPositionTimeoutRef.current)
+				}
 				// Update button position
-				setTimeout(updateCodeBlockButtonPosition, 0)
+				buttonPositionTimeoutRef.current = setTimeout(() => {
+					updateCodeBlockButtonPosition()
+					buttonPositionTimeoutRef.current = null // Optional: Clear ref after execution
+				}, 0)
 
 				// Scroll to bottom if needed (immediately after Shiki updates)
 				if (shouldScrollAfterHighlightRef.current) {
@@ -477,6 +516,12 @@ const CodeBlock = memo(
 
 					// Reset the flag
 					shouldScrollAfterHighlightRef.current = false
+				}
+			}
+			// Cleanup function for this effect
+			return () => {
+				if (buttonPositionTimeoutRef.current) {
+					clearTimeout(buttonPositionTimeoutRef.current)
 				}
 			}
 		}, [highlightedCode, updateCodeBlockButtonPosition])
@@ -682,23 +727,30 @@ const CodeBlock = memo(
 						{showCollapseButton && (
 							<CodeBlockButton
 								onClick={() => {
-									// Get the current code block element and scrollable container
-									const codeBlock = codeBlockRef.current
-									const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-									if (!codeBlock || !scrollContainer) return
-
+									// Get the current code block element
+									const codeBlock = codeBlockRef.current // Capture ref early
 									// Toggle window shade state
 									setWindowShade(!windowShade)
 
-									// After UI updates, ensure code block is visible and update button position
-									setTimeout(
-										() => {
-											codeBlock.scrollIntoView({ behavior: "smooth", block: "nearest" })
+									// Clear any previous timeouts
+									if (collapseTimeout1Ref.current) clearTimeout(collapseTimeout1Ref.current)
+									if (collapseTimeout2Ref.current) clearTimeout(collapseTimeout2Ref.current)
 
-											// Wait for scroll to complete before updating button position
-											setTimeout(() => {
-												updateCodeBlockButtonPosition()
-											}, 50)
+									// After UI updates, ensure code block is visible and update button position
+									collapseTimeout1Ref.current = setTimeout(
+										() => {
+											if (codeBlock) {
+												// Check if codeBlock element still exists
+												codeBlock.scrollIntoView({ behavior: "smooth", block: "nearest" })
+
+												// Wait for scroll to complete before updating button position
+												collapseTimeout2Ref.current = setTimeout(() => {
+													// updateCodeBlockButtonPosition itself should also check for refs if needed
+													updateCodeBlockButtonPosition()
+													collapseTimeout2Ref.current = null
+												}, 50)
+											}
+											collapseTimeout1Ref.current = null
 										},
 										WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
 									)
