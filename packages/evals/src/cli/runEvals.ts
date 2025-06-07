@@ -42,12 +42,12 @@ export const runEvals = async (runId: number) => {
 		await queue.addAll(
 			tasks
 				.filter((task) => task.finishedAt === null)
-				.map((task) => () => {
+				.map((task) => async () => {
 					try {
 						if (containerized) {
-							processTaskInContainer({ taskId: task.id, logger })
+							await processTaskInContainer({ taskId: task.id, logger })
 						} else {
-							processTask({ taskId: task.id, logger })
+							await processTask({ taskId: task.id, logger })
 						}
 					} catch (error) {
 						logger.error("error processing task", error)
