@@ -1,3 +1,12 @@
+function escapeHtml(text: string): string {
+	return text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;")
+}
+
 export function highlightFzfMatch(
 	text: string,
 	positions: number[],
@@ -39,6 +48,9 @@ export function highlightFzfMatch(
 
 	// Build final string
 	return parts
-		.map((part) => (part.highlight ? `<span class="${highlightClassName}">${part.text}</span>` : part.text))
+		.map((part) => {
+			const escapedText = escapeHtml(part.text)
+			return part.highlight ? `<span class="${highlightClassName}">${escapedText}</span>` : escapedText
+		})
 		.join("")
 }
