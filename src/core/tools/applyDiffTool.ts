@@ -184,10 +184,36 @@ export async function applyDiffTool(
 			// Get the formatted response message
 			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
+			const stats = await fs.stat(absolutePath)
+			const newMtime = stats.mtime.toISOString()
+
+			const lineRanges: { start: number; end: number }[] = []
+			const diffBlocks = diffContent.split("<<<<<<< SEARCH")
+			for (const block of diffBlocks) {
+				if (!block.trim()) continue
+				const startLineMatch = block.match(/:start_line:(\d+)/)
+				if (startLineMatch) {
+					const startLine = parseInt(startLineMatch[1], 10)
+					const parts = block.split("=======")
+					if (parts.length > 1) {
+						const replacement = parts[1].split(">>>>>>> REPLACE")[0]
+						const lineCount = replacement.trim().split("\n").length
+						lineRanges.push({ start: startLine, end: startLine + lineCount - 1 })
+					}
+				}
+			}
+
+			const metadata = {
+				fileName: relPath,
+				mtime: newMtime,
+				lineRanges,
+			}
+			const metadataXml = `<metadata>${JSON.stringify(metadata)}</metadata>`
+
 			if (partFailHint) {
-				pushToolResult(partFailHint + message)
+				pushToolResult(partFailHint + message + "\n" + metadataXml)
 			} else {
-				pushToolResult(message)
+				pushToolResult(message + "\n" + metadataXml)
 			}
 
 			await cline.diffViewProvider.reset()

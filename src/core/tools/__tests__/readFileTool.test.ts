@@ -1,6 +1,8 @@
 // npx jest src/core/tools/__tests__/readFileTool.test.ts
 
 import * as path from "path"
+import * as fs from "fs"
+import * as fsp from "fs/promises"
 
 import { countFileLines } from "../../../integrations/misc/line-counter"
 import { readLines } from "../../../integrations/misc/read-lines"
@@ -11,24 +13,11 @@ import { ReadFileToolUse, ToolParamName, ToolResponse } from "../../../shared/to
 import { readFileTool } from "../readFileTool"
 import { formatResponse } from "../../prompts/responses"
 
-jest.mock("path", () => {
-	const originalPath = jest.requireActual("path")
-	return {
-		...originalPath,
-		resolve: jest.fn().mockImplementation((...args) => args.join("/")),
-	}
-})
-
-jest.mock("fs/promises", () => ({
-	mkdir: jest.fn().mockResolvedValue(undefined),
-	writeFile: jest.fn().mockResolvedValue(undefined),
-	readFile: jest.fn().mockResolvedValue("{}"),
-}))
-
 jest.mock("isbinaryfile")
 
 jest.mock("../../../integrations/misc/line-counter")
 jest.mock("../../../integrations/misc/read-lines")
+jest.mock("../../services/fileReadCacheService")
 
 // Mock input content for tests
 let mockInputContent = ""
@@ -64,14 +53,10 @@ jest.mock("../../ignore/RooIgnoreController", () => ({
 	},
 }))
 
-jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockReturnValue(true),
-}))
-
 describe("read_file tool with maxReadFileLine setting", () => {
 	// Test data
-	const testFilePath = "test/file.txt"
-	const absoluteFilePath = "/test/file.txt"
+	const testDir = path.join(__dirname, "test_files")
+	const testFilePath = path.join(testDir, "file.txt") // Use path.join for OS-agnostic paths
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
 	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5\n"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
@@ -85,16 +70,26 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	>
 
 	const mockedIsBinaryFile = isBinaryFile as jest.MockedFunction<typeof isBinaryFile>
-	const mockedPathResolve = path.resolve as jest.MockedFunction<typeof path.resolve>
+	const { processAndFilterReadRequest } = require("../../services/fileReadCacheService")
+	const mockedProcessAndFilterReadRequest = processAndFilterReadRequest as jest.Mock
 
 	const mockCline: any = {}
 	let mockProvider: any
 	let toolResult: ToolResponse | undefined
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		jest.clearAllMocks()
+		mockedProcessAndFilterReadRequest.mockResolvedValue({
+			status: "ALLOW_ALL",
+			rangesToRead: [],
+		})
 
-		mockedPathResolve.mockReturnValue(absoluteFilePath)
+		// Create test directory and file
+		if (!fs.existsSync(testDir)) {
+			await fsp.mkdir(testDir, { recursive: true })
+		}
+		await fsp.writeFile(testFilePath, fileContent)
+
 		mockedIsBinaryFile.mockResolvedValue(false)
 
 		mockInputContent = fileContent
@@ -117,9 +112,10 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			deref: jest.fn().mockReturnThis(),
 		}
 
-		mockCline.cwd = "/"
+		mockCline.cwd = process.cwd() // Use actual cwd for resolving test files
 		mockCline.task = "Test"
 		mockCline.providerRef = mockProvider
+		mockCline.apiConversationHistory = []
 		mockCline.rooIgnoreController = {
 			validateAccess: jest.fn().mockReturnValue(true),
 		}
@@ -138,6 +134,13 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockCline.recordToolError = jest.fn().mockReturnValue(undefined)
 
 		toolResult = undefined
+	})
+
+	afterEach(async () => {
+		// Clean up test directory
+		if (fs.existsSync(testDir)) {
+			await fsp.rm(testDir, { recursive: true, force: true })
+		}
 	})
 
 	/**
@@ -165,6 +168,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		addLineNumbersMock.mockClear()
 
 		// Format args string based on params
+		// Use the actual testFilePath which is now absolute
 		let argsContent = `<file><path>${options.path || testFilePath}</path>`
 		if (options.start_line && options.end_line) {
 			argsContent += `<line_range>${options.start_line}-${options.end_line}</line_range>`
@@ -380,13 +384,121 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	})
 })
 
+describe("readFileTool with fileReadCacheService", () => {
+	const testDir = path.join(__dirname, "test_files_cache")
+	const testFilePath = path.join(testDir, "cached_file.txt")
+	const fileContent = Array.from({ length: 20 }, (_, i) => `Line ${i + 1}`).join("\n")
+
+	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
+	const mockedReadLines = readLines as jest.MockedFunction<typeof readLines>
+	const { processAndFilterReadRequest } = require("../../services/fileReadCacheService")
+	const mockedProcessAndFilterReadRequest = processAndFilterReadRequest as jest.Mock
+
+	const mockCline: any = {}
+	let mockProvider: any
+	let toolResult: ToolResponse | undefined
+
+	beforeEach(async () => {
+		jest.clearAllMocks()
+		if (!fs.existsSync(testDir)) {
+			await fsp.mkdir(testDir, { recursive: true })
+		}
+		await fsp.writeFile(testFilePath, fileContent)
+
+		mockedCountFileLines.mockResolvedValue(20)
+		mockedReadLines.mockImplementation(async (filePath, end, start) => {
+			const lines = fileContent.split("\n")
+			// Ensure start is a number, default to 0 if undefined
+			const startIndex = start ?? 0
+			// Handle undefined end, which slice can take to mean 'to the end'
+			const endIndex = end === undefined ? undefined : end + 1
+			return lines.slice(startIndex, endIndex).join("\n")
+		})
+
+		mockProvider = {
+			getState: jest.fn().mockResolvedValue({ maxReadFileLine: -1 }),
+			deref: jest.fn().mockReturnThis(),
+		}
+
+		mockCline.cwd = process.cwd()
+		mockCline.providerRef = mockProvider
+		mockCline.apiConversationHistory = []
+		mockCline.rooIgnoreController = { validateAccess: jest.fn().mockReturnValue(true) }
+		mockCline.ask = jest.fn().mockResolvedValue({ response: "yesButtonClicked" })
+		mockCline.fileContextTracker = { trackFileContext: jest.fn() }
+		mockCline.say = jest.fn()
+	})
+
+	afterEach(async () => {
+		if (fs.existsSync(testDir)) {
+			await fsp.rm(testDir, { recursive: true, force: true })
+		}
+	})
+
+	async function executeToolWithCache(
+		args: string,
+		cacheResponse: { status: string; rangesToRead: any[] },
+	): Promise<ToolResponse | undefined> {
+		mockedProcessAndFilterReadRequest.mockResolvedValue(cacheResponse)
+
+		const toolUse: ReadFileToolUse = {
+			type: "tool_use",
+			name: "read_file",
+			params: { args },
+			partial: false,
+		}
+
+		let result: ToolResponse | undefined
+		await readFileTool(
+			mockCline,
+			toolUse,
+			mockCline.ask,
+			jest.fn(),
+			(res: ToolResponse) => {
+				result = res
+			},
+			(_: ToolParamName, content?: string) => content ?? "",
+		)
+		return result
+	}
+
+	it('should not call readLines when cache returns "REJECT_ALL"', async () => {
+		const result = await executeToolWithCache(`<file><path>${testFilePath}</path></file>`, {
+			status: "REJECT_ALL",
+			rangesToRead: [],
+		})
+
+		expect(mockedReadLines).not.toHaveBeenCalled()
+		expect(result).toContain("<notice>File content is already up-to-date in the conversation history.</notice>")
+	})
+
+	it('should call readLines with filtered ranges for "ALLOW_PARTIAL"', async () => {
+		const rangesToRead = [{ start: 5, end: 10 }]
+		await executeToolWithCache(`<file><path>${testFilePath}</path><line_range>1-20</line_range></file>`, {
+			status: "ALLOW_PARTIAL",
+			rangesToRead,
+		})
+
+		expect(mockedReadLines).toHaveBeenCalledWith(testFilePath, 9, 4)
+	})
+
+	it('should call readLines with original ranges for "ALLOW_ALL"', async () => {
+		await executeToolWithCache(`<file><path>${testFilePath}</path><line_range>1-15</line_range></file>`, {
+			status: "ALLOW_ALL",
+			rangesToRead: [], // This won't be used
+		})
+
+		expect(mockedReadLines).toHaveBeenCalledWith(testFilePath, 14, 0)
+	})
+})
+
 describe("read_file tool XML output structure", () => {
 	// Add new test data for feedback messages
 	const _feedbackMessage = "Test feedback message"
 	const _feedbackImages = ["image1.png", "image2.png"]
 	// Test data
-	const testFilePath = "test/file.txt"
-	const absoluteFilePath = "/test/file.txt"
+	const testDir = path.join(__dirname, "test_files_xml") // Use a different directory for this describe block
+	const testFilePath = path.join(testDir, "file.txt")
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
 
@@ -398,17 +510,21 @@ describe("read_file tool XML output structure", () => {
 		typeof parseSourceCodeDefinitionsForFile
 	>
 	const mockedIsBinaryFile = isBinaryFile as jest.MockedFunction<typeof isBinaryFile>
-	const mockedPathResolve = path.resolve as jest.MockedFunction<typeof path.resolve>
 
 	// Mock instances
 	const mockCline: any = {}
 	let mockProvider: any
 	let toolResult: ToolResponse | undefined
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		jest.clearAllMocks()
 
-		mockedPathResolve.mockReturnValue(absoluteFilePath)
+		// Create test directory and file
+		if (!fs.existsSync(testDir)) {
+			await fsp.mkdir(testDir, { recursive: true })
+		}
+		await fsp.writeFile(testFilePath, fileContent)
+
 		mockedIsBinaryFile.mockResolvedValue(false)
 
 		// Set default implementation for extractTextFromFile
@@ -426,7 +542,7 @@ describe("read_file tool XML output structure", () => {
 			deref: jest.fn().mockReturnThis(),
 		}
 
-		mockCline.cwd = "/"
+		mockCline.cwd = process.cwd() // Use actual cwd
 		mockCline.task = "Test"
 		mockCline.providerRef = mockProvider
 		mockCline.rooIgnoreController = {
@@ -446,6 +562,13 @@ describe("read_file tool XML output structure", () => {
 		mockCline.didRejectTool = false
 
 		toolResult = undefined
+	})
+
+	afterEach(async () => {
+		// Clean up test directory
+		if (fs.existsSync(testDir)) {
+			await fsp.rm(testDir, { recursive: true, force: true })
+		}
 	})
 
 	/**
@@ -554,8 +677,10 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool()
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="1-5">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-5">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -567,7 +692,7 @@ describe("read_file tool XML output structure", () => {
 
 			// Verify using regex to check structure
 			const xmlStructureRegex = new RegExp(
-				`^<files>\\n<file><path>${testFilePath}</path>\\n<content lines="1-5">\\n.*</content>\\n</file>\\n</files>$`,
+				`^<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-5">\\n.*</content>\\n<metadata>.*</metadata>\\n</file>\\n</files>$`,
 				"s",
 			)
 			expect(result).toMatch(xmlStructureRegex)
@@ -598,8 +723,10 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { totalLines: 0 })
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content/><notice>File is empty</notice>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 	})
@@ -638,8 +765,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="2-5">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="2-5">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -674,8 +803,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-3">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
@@ -763,8 +894,10 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Should adjust to actual file length
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content lines="3-5">\n${numberedContent}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content lines="3-5">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 
 			// Verify
@@ -978,29 +1111,27 @@ describe("read_file tool XML output structure", () => {
 	describe("Multiple Files Tests", () => {
 		it("should handle multiple file entries correctly", async () => {
 			// Setup
-			const file1Path = "test/file1.txt"
-			const file2Path = "test/file2.txt"
-			const file1Numbered = "1 | File 1 content"
-			const file2Numbered = "1 | File 2 content"
+			const file1Path = path.join(testDir, "file1.txt")
+			const file2Path = path.join(testDir, "file2.txt")
+			const file1Content = "File 1 content"
+			const file2Content = "File 2 content"
+			await fsp.writeFile(file1Path, file1Content)
+			await fsp.writeFile(file2Path, file2Content)
 
-			// Mock path resolution
-			mockedPathResolve.mockImplementation((_, filePath) => {
-				if (filePath === file1Path) return "/test/file1.txt"
-				if (filePath === file2Path) return "/test/file2.txt"
-				return filePath
-			})
+			const file1Numbered = `1 | ${file1Content}`
+			const file2Numbered = `1 | ${file2Content}`
 
 			// Mock content for each file
 			mockedCountFileLines.mockResolvedValue(1)
 			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
 			mockedExtractTextFromFile.mockImplementation((filePath) => {
-				if (filePath === "/test/file1.txt") {
+				if (filePath === file1Path) {
 					return Promise.resolve(file1Numbered)
 				}
-				if (filePath === "/test/file2.txt") {
+				if (filePath === file2Path) {
 					return Promise.resolve(file2Numbered)
 				}
-				throw new Error("Unexpected file path")
+				throw new Error(`Unexpected file path: ${filePath}`)
 			})
 
 			// Execute
@@ -1012,40 +1143,37 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${file1Path}</path>\n<content lines="1-1">\n${file1Numbered}</content>\n</file>\n<file><path>${file2Path}</path>\n<content lines="1-1">\n${file2Numbered}</content>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${file1Path.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${file1Numbered}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n<file><path>${file2Path.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${file2Numbered}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
 		it("should handle errors in multiple file entries independently", async () => {
 			// Setup
-			const validPath = "test/valid.txt"
-			const invalidPath = "test/invalid.txt"
-			const numberedContent = "1 | Valid file content"
-
-			// Mock path resolution
-			mockedPathResolve.mockImplementation((_, filePath) => {
-				if (filePath === validPath) return "/test/valid.txt"
-				if (filePath === invalidPath) return "/test/invalid.txt"
-				return filePath
-			})
+			const validPath = path.join(testDir, "valid.txt")
+			const invalidPath = path.join(testDir, "invalid.txt") // This file won't be created, RooIgnore will block
+			const validContent = "Valid file content"
+			await fsp.writeFile(validPath, validContent)
+			const numberedContent = `1 | ${validContent}`
 
 			// Mock RooIgnore to block invalid file and track validation order
 			const validationOrder: string[] = []
 			mockCline.rooIgnoreController = {
-				validateAccess: jest.fn().mockImplementation((path) => {
-					validationOrder.push(`validate:${path}`)
-					const isValid = path !== invalidPath
-					if (!isValid) {
-						validationOrder.push(`error:${path}`)
+				validateAccess: jest.fn().mockImplementation((p) => {
+					// p is absolute path
+					validationOrder.push(`validate:${p}`)
+					const isPathValid = p === validPath
+					if (!isPathValid) {
+						validationOrder.push(`error:${p}`)
 					}
-					return isValid
+					return isPathValid
 				}),
 			}
 
 			// Mock say to track RooIgnore error
 			mockCline.say = jest.fn().mockImplementation((_type, _path) => {
-				// Don't add error to validationOrder here since validateAccess already does it
 				return Promise.resolve()
 			})
 
@@ -1054,36 +1182,37 @@ describe("read_file tool XML output structure", () => {
 
 			// Mock file operations to track operation order
 			mockedCountFileLines.mockImplementation((filePath) => {
-				const relPath = filePath === "/test/valid.txt" ? validPath : invalidPath
-				validationOrder.push(`countLines:${relPath}`)
-				if (filePath.includes(validPath)) {
+				validationOrder.push(`countLines:${filePath}`)
+				if (filePath === validPath) {
 					return Promise.resolve(1)
 				}
-				throw new Error("File not found")
+				// This should not be reached for invalidPath due to RooIgnore
+				throw new Error("File not found or access denied by mock")
 			})
 
 			mockedIsBinaryFile.mockImplementation((filePath) => {
-				const relPath = filePath === "/test/valid.txt" ? validPath : invalidPath
-				validationOrder.push(`isBinary:${relPath}`)
-				if (filePath.includes(validPath)) {
+				validationOrder.push(`isBinary:${filePath}`)
+				if (filePath === validPath) {
 					return Promise.resolve(false)
 				}
-				throw new Error("File not found")
+				// This should not be reached for invalidPath
+				throw new Error("File not found or access denied by mock")
 			})
 
 			mockedExtractTextFromFile.mockImplementation((filePath) => {
-				if (filePath === "/test/valid.txt") {
+				if (filePath === validPath) {
 					validationOrder.push(`extract:${validPath}`)
 					return Promise.resolve(numberedContent)
 				}
-				return Promise.reject(new Error("File not found"))
+				// This should not be reached for invalidPath
+				return Promise.reject(new Error("File not found or access denied by mock"))
 			})
 
 			// Mock approval for both files
 			mockCline.ask = jest
 				.fn()
 				.mockResolvedValueOnce({ response: "yesButtonClicked" }) // First file approved
-				.mockResolvedValueOnce({ response: "noButtonClicked" }) // Second file denied
+				.mockResolvedValueOnce({ response: "noButtonClicked" }) // Second file denied - this won't be hit due to RooIgnore
 
 			// Execute - Skip the default validateAccess mock
 			const { readFileTool } = require("../readFileTool")
@@ -1117,44 +1246,52 @@ describe("read_file tool XML output structure", () => {
 			expect(validationOrder).toEqual([
 				`validate:${validPath}`,
 				`validate:${invalidPath}`,
-				`error:${invalidPath}`,
-				`countLines:${validPath}`,
+				`error:${invalidPath}`, // RooIgnore blocks invalidPath
+				`countLines:${validPath}`, // Operations proceed for validPath
 				`isBinary:${validPath}`,
 				`extract:${validPath}`,
 			])
 
 			// Verify result
-			expect(result).toBe(
-				`<files>\n<file><path>${validPath}</path>\n<content lines="1-1">\n${numberedContent}</content>\n</file>\n<file><path>${invalidPath}</path><error>${formatResponse.rooIgnoreError(invalidPath)}</error></file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${validPath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${numberedContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n<file><path>${invalidPath.replace(/\\/g, "\\\\")}</path><error>${formatResponse.rooIgnoreError(invalidPath)}</error></file>\\n</files>`,
+				),
 			)
 		})
 
 		it("should handle mixed binary and text files", async () => {
 			// Setup
-			const textPath = "test/text.txt"
-			const binaryPath = "test/binary.pdf"
-			const numberedContent = "1 | Text file content"
-			const pdfContent = "1 | PDF content extracted"
+			const textPath = path.join(testDir, "text.txt")
+			const binaryPath = path.join(testDir, "binary.pdf")
+			const textContent = "Text file content"
+			const pdfContentRaw = "PDF content extracted" // Raw content
+			await fsp.writeFile(textPath, textContent)
+			await fsp.writeFile(binaryPath, "dummy binary data") // Actual content doesn't matter for this mock setup
 
-			// Mock path.resolve to return the expected paths
-			mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+			const numberedTextContent = addLineNumbersMock(textContent) // "1 | Text file content"
+			const numberedPdfContent = addLineNumbersMock(pdfContentRaw) // "1 | PDF content extracted"
 
 			// Mock binary file detection
-			mockedIsBinaryFile.mockImplementation((path) => {
-				if (path.includes("text.txt")) return Promise.resolve(false)
-				if (path.includes("binary.pdf")) return Promise.resolve(true)
+			mockedIsBinaryFile.mockImplementation((p) => {
+				if (p === textPath) return Promise.resolve(false)
+				if (p === binaryPath) return Promise.resolve(true)
 				return Promise.resolve(false)
 			})
 
-			mockedCountFileLines.mockImplementation((path) => {
+			mockedCountFileLines.mockImplementation((p) => {
 				return Promise.resolve(1)
 			})
 
-			mockedExtractTextFromFile.mockImplementation((path) => {
-				if (path.includes("binary.pdf")) {
-					return Promise.resolve(pdfContent)
+			// Specific mock for this test to ensure correct content is numbered and returned
+			mockedExtractTextFromFile.mockImplementation((p) => {
+				if (p === binaryPath) {
+					return Promise.resolve(numberedPdfContent) // Use pre-calculated numbered content
 				}
-				return Promise.resolve(numberedContent)
+				if (p === textPath) {
+					return Promise.resolve(numberedTextContent) // Use pre-calculated numbered content
+				}
+				throw new Error(`Unexpected path in mixed binary/text test mock: ${p}`)
 			})
 
 			// Configure mocks for the test
@@ -1188,17 +1325,25 @@ describe("read_file tool XML output structure", () => {
 
 			// Check the result
 			expect(mockPushToolResult).toHaveBeenCalledWith(
-				`<files>\n<file><path>${textPath}</path>\n<content lines="1-1">\n${numberedContent}</content>\n</file>\n<file><path>${binaryPath}</path>\n<content lines="1-1">\n${pdfContent}</content>\n</file>\n</files>`,
+				expect.stringMatching(
+					new RegExp(
+						`<files>\\n<file><path>${textPath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${numberedTextContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n<file><path>${binaryPath.replace(/\\/g, "\\\\")}</path>\\n<content lines="1-1">\\n${numberedPdfContent}</content>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+					),
+				),
 			)
 		})
 
 		it("should block unsupported binary files", async () => {
 			// Setup
-			const unsupportedBinaryPath = "test/binary.exe"
+			const unsupportedBinaryPath = path.join(testDir, "binary.exe")
+			await fsp.writeFile(unsupportedBinaryPath, "dummy binary data")
 
 			mockedIsBinaryFile.mockImplementation(() => Promise.resolve(true))
 			mockedCountFileLines.mockImplementation(() => Promise.resolve(1))
 			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
+			// Ensure getSupportedBinaryFormats is mocked correctly for this test
+			const originalGetSupported = extractTextModule.getSupportedBinaryFormats
+			extractTextModule.getSupportedBinaryFormats = jest.fn(() => [".pdf", ".docx"])
 
 			// Create standalone mock functions
 			const mockAskApproval = jest.fn().mockResolvedValue({ response: "yesButtonClicked" })
@@ -1230,12 +1375,15 @@ describe("read_file tool XML output structure", () => {
 			expect(mockPushToolResult).toHaveBeenCalledWith(
 				`<files>\n<file><path>${unsupportedBinaryPath}</path>\n<notice>Binary file</notice>\n</file>\n</files>`,
 			)
+			// Restore original mock
+			extractTextModule.getSupportedBinaryFormats = originalGetSupported
 		})
 	})
 
 	describe("Edge Cases Tests", () => {
 		it("should handle empty files correctly with maxReadFileLine=-1", async () => {
 			// Setup - use empty string
+			await fsp.writeFile(testFilePath, "") // Ensure file is actually empty
 			mockInputContent = ""
 			const maxReadFileLine = -1
 			const totalLines = 0
@@ -1246,13 +1394,16 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { maxReadFileLine, totalLines })
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content/><notice>File is empty</notice>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
 		it("should handle empty files correctly with maxReadFileLine=0", async () => {
 			// Setup
+			await fsp.writeFile(testFilePath, "") // Ensure file is actually empty
 			mockedCountFileLines.mockResolvedValue(0)
 			mockedExtractTextFromFile.mockResolvedValue("")
 			mockedReadLines.mockResolvedValue("")
@@ -1264,48 +1415,72 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { totalLines: 0 })
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			expect(result).toMatch(
+				new RegExp(
+					`<files>\\n<file><path>${testFilePath.replace(/\\/g, "\\\\")}</path>\\n<content/><notice>File is empty</notice>\\n<metadata>{.*}</metadata>\\n</file>\\n</files>`,
+				),
 			)
 		})
 
 		it("should handle binary files with custom content correctly", async () => {
 			// Setup
+			const exePath = testFilePath.replace(".txt", ".exe")
+			await fsp.writeFile(exePath, "dummy binary data for exe") // Create the dummy .exe file
+
 			mockedIsBinaryFile.mockResolvedValue(true)
-			mockedExtractTextFromFile.mockResolvedValue("")
+			mockedExtractTextFromFile.mockResolvedValue("") // extractTextFromFile returns empty for unsupported binary
 			mockedReadLines.mockResolvedValue("")
+			// Ensure getSupportedBinaryFormats is mocked correctly for this test
+			const originalGetSupported = extractTextModule.getSupportedBinaryFormats
+			extractTextModule.getSupportedBinaryFormats = jest.fn(() => [".pdf", ".docx"]) // .exe is not supported
 
 			// Execute
-			const result = await executeReadFileTool({}, { isBinary: true })
+			const result = await executeReadFileTool(
+				{ args: `<file><path>${exePath}</path></file>` },
+				{ isBinary: true },
+			)
 
 			// Verify
 			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path>\n<notice>Binary file</notice>\n</file>\n</files>`,
+				`<files>\n<file><path>${exePath}</path>\n<notice>Binary file</notice>\n</file>\n</files>`,
 			)
 			expect(mockedReadLines).not.toHaveBeenCalled()
+			// Restore original mock
+			extractTextModule.getSupportedBinaryFormats = originalGetSupported
 		})
 
 		it("should handle file read errors correctly", async () => {
 			// Setup
-			const errorMessage = "File not found"
-			// For error cases, we need to override the mock to simulate a failure
-			mockedExtractTextFromFile.mockRejectedValue(new Error(errorMessage))
+			// To test this, ensure the file does not exist when validateAccessAndExistence is called.
+			if (fs.existsSync(testFilePath)) {
+				await fsp.rm(testFilePath) // Delete the file created by beforeEach
+			}
+
+			// This mock will not be reached if validateAccessAndExistence fails first due to ENOENT
+			mockedExtractTextFromFile.mockRejectedValue(
+				new Error(`ENOENT: no such file or directory, open '${testFilePath}'`),
+			)
 
 			// Execute
 			const result = await executeReadFileTool({})
 
 			// Verify
-			expect(result).toBe(
-				`<files>\n<file><path>${testFilePath}</path><error>Error reading file: ${errorMessage}</error></file>\n</files>`,
-			)
+			// If file doesn't exist, validateAccessAndExistence causes an error with 'stat'
+			// The readFileTool catches this and formats the error.
+			expect(result).toContain(`Error reading file: ENOENT: no such file or directory, open '${testFilePath}'`)
 			expect(result).not.toContain(`<content`)
 		})
 
 		it("should handle files with XML-like content", async () => {
 			// Setup
 			const xmlContent = "<root><child>Test</child></root>"
-			mockInputContent = xmlContent
-			mockedExtractTextFromFile.mockResolvedValue(`1 | ${xmlContent}`)
+			await fsp.writeFile(testFilePath, xmlContent) // Write actual XML content
+			mockInputContent = xmlContent // This mock might still be used by addLineNumbersMock
+			// extractTextFromFile will now read the actual file content
+			mockedExtractTextFromFile.mockImplementation(async (filePath) => {
+				const actualContent = await fsp.readFile(filePath, "utf-8")
+				return addLineNumbersMock(actualContent)
+			})
 
 			// Execute
 			const result = await executeReadFileTool()
@@ -1316,7 +1491,44 @@ describe("read_file tool XML output structure", () => {
 
 		it("should handle files with very long paths", async () => {
 			// Setup
-			const longPath = "very/long/path/".repeat(10) + "file.txt"
+			const longPathDir = path.join(
+				testDir,
+				"very",
+				"long",
+				"path",
+				"very",
+				"long",
+				"path",
+				"very",
+				"long",
+				"path",
+				"very",
+				"long",
+				"path",
+				"very",
+				"long",
+				"path",
+			)
+			const longFileName = "file.txt"
+			const longPath = path.join(longPathDir, longFileName)
+			const longFileActualContent = "content for long path file"
+
+			await fsp.mkdir(longPathDir, { recursive: true })
+			await fsp.writeFile(longPath, longFileActualContent)
+
+			// Specific mock for this test to read actual content and number it
+			const originalExtractMock = mockedExtractTextFromFile.getMockImplementation()
+			mockedExtractTextFromFile.mockImplementation(async (p) => {
+				if (p === longPath) {
+					const actualContent = await fsp.readFile(p, "utf-8")
+					return addLineNumbersMock(actualContent)
+				}
+				// Fallback for other paths if any (should not happen in this specific test call)
+				if (originalExtractMock) {
+					return originalExtractMock(p)
+				}
+				throw new Error(`Unexpected path in longPath test mock: ${p}`)
+			})
 
 			// Execute
 			const result = await executeReadFileTool({
@@ -1325,6 +1537,12 @@ describe("read_file tool XML output structure", () => {
 
 			// Verify long path is handled correctly
 			expect(result).toContain(`<path>${longPath}</path>`)
+			expect(result).toContain(addLineNumbersMock(longFileActualContent)) // Expect numbered actual content
+
+			// Restore original mock if necessary (though beforeEach will reset it)
+			if (originalExtractMock) {
+				mockedExtractTextFromFile.mockImplementation(originalExtractMock)
+			}
 		})
 	})
 })

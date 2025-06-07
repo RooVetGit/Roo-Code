@@ -39,6 +39,12 @@ async function main() {
 		fs.rmSync(distDir, { recursive: true, force: true })
 	}
 
+	const assetsMaterialIconsDir = path.join(srcDir, "assets", "vscode-material-icons")
+	if (fs.existsSync(assetsMaterialIconsDir)) {
+		console.log(`[${name}] Cleaning assets directory: ${assetsMaterialIconsDir}`)
+		fs.rmSync(assetsMaterialIconsDir, { recursive: true, force: true })
+	}
+
 	/**
 	 * @type {import('esbuild').Plugin[]}
 	 */
