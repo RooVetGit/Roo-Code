@@ -70,7 +70,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setDiffEnabled: (value: boolean) => void
 	setDiffViewAutoFocus: (value: boolean) => void
 	setAutoCloseRooTabs: (value: boolean) => void
-	setAutoCloseAllRooTabs: (value: boolean) => void // Added new setter
+	setAutoCloseAllRooTabs: (value: boolean) => void
 	setEnableCheckpoints: (value: boolean) => void
 	setBrowserViewportSize: (value: string) => void
 	setFuzzyMatchThreshold: (value: number) => void

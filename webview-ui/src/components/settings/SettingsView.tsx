@@ -139,7 +139,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		enableCheckpoints,
 		diffViewAutoFocus,
 		autoCloseRooTabs,
-		autoCloseAllRooTabs, // Added new setting
+		autoCloseAllRooTabs,
 		diffEnabled,
 		experiments,
 		fuzzyMatchThreshold,
@@ -288,7 +288,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
 			vscode.postMessage({ type: "diffViewAutoFocus", bool: diffViewAutoFocus })
 			vscode.postMessage({ type: "autoCloseRooTabs", bool: autoCloseRooTabs })
-			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: autoCloseAllRooTabs }) // Send new setting
+			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: autoCloseAllRooTabs })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
 			vscode.postMessage({ type: "remoteBrowserHost", text: remoteBrowserHost })

@@ -30,9 +30,8 @@ interface DiffCheckAutoCloseControlProps {
 }
 
 interface DiffCheckAutoCloseAllControlProps {
-	// Added new component interface
 	autoCloseAllRooTabs: boolean
-	disabled: boolean // Added disabled prop
+	disabled: boolean
 	onChange: (e: any) => void
 }
 
@@ -74,7 +73,6 @@ const DiffViewAutoCloseAllControl: React.FC<DiffCheckAutoCloseAllControlProps> =
 	disabled,
 	onChange,
 }) => {
-	// Added new component
 	const { t } = useAppTranslation()
 	return (
 		<div>
@@ -119,7 +117,7 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 	diffEnabled = true,
 	diffViewAutoFocus = true,
 	autoCloseRooTabs = false,
-	autoCloseAllRooTabs = false, // Added new setting
+	autoCloseAllRooTabs = false,
 	fuzzyMatchThreshold = 1.0,
 	onChange,
 }) => {
@@ -158,7 +156,6 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 	)
 
 	const handleAutoCloseAllRooTabsChange = useCallback(
-		// Added new handler
 		(e: any) => {
 			onChange("autoCloseAllRooTabs", e.target.checked)
 		},
@@ -190,7 +187,7 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 						autoCloseRooTabs={autoCloseRooTabs}
 						onChange={handleAutoCloseRooTabsChange}
 					/>
-					<DiffViewAutoCloseAllControl // Added new component
+					<DiffViewAutoCloseAllControl
 						autoCloseAllRooTabs={autoCloseAllRooTabs}
 						disabled={!autoCloseRooTabs} // Disabled if autoCloseRooTabs is false
 						onChange={handleAutoCloseAllRooTabsChange}

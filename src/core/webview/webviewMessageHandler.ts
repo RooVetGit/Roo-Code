@@ -68,7 +68,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("autoCloseRooTabs", autoCloseRooTabs)
 			await provider.postStateToWebview()
 			break
-		case "autoCloseAllRooTabs": // Added new setting
+		case "autoCloseAllRooTabs":
 			const autoCloseAllRooTabs = message.bool ?? false
 			await provider.context.globalState.update("autoCloseAllRooTabs", autoCloseAllRooTabs)
 			// Also update workspace settings

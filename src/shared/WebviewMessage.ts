@@ -14,7 +14,7 @@ export interface WebviewMessage {
 	type:
 		| "diffViewAutoFocus"
 		| "autoCloseRooTabs"
-		| "autoCloseAllRooTabs" // Added new setting
+		| "autoCloseAllRooTabs"
 		| "apiConfiguration"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
