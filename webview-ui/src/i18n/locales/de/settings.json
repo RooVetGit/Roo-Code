@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Gleichzeitiges Lesen von Dateien aktivieren",
 			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage lesen (bis zu 15 Dateien). Wenn deaktiviert, muss Roo Dateien nacheinander lesen. Das Deaktivieren kann helfen, wenn Sie mit weniger leistungsfähigen Modellen arbeiten oder mehr Kontrolle über den Dateizugriff wünschen."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Multi-Range-Diff-Operationen aktivieren",
+			"description": "Erlaubt Roo, Änderungen an mehreren Dateien und mehreren Bereichen innerhalb von Dateien in einer einzigen Anfrage anzuwenden. Diese erweiterte Funktion kann weniger fähige Modelle überlasten und sollte mit Vorsicht verwendet werden."
 		}
 	},
 	"promptCaching": {

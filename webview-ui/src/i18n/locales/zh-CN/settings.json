@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "启用并发文件读取",
 			"description": "启用后，Roo 可以在单个请求中读取多个文件（最多 15 个文件）。禁用后，Roo 必须逐个读取文件。在使用能力较弱的模型或希望对文件访问有更多控制时，禁用此功能可能会有所帮助。"
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "启用多范围diff操作",
+			"description": "允许Roo在单个请求中对多个文件和文件内的多个范围应用更改。这个高级功能可能会让能力较弱的模型不堪重负，应谨慎使用。"
 		}
 	},
 	"promptCaching": {

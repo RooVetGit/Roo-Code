@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Gelijktijdig lezen van bestanden inschakelen",
 			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek lezen (tot 15 bestanden). Wanneer uitgeschakeld, moet Roo bestanden één voor één lezen. Uitschakelen kan helpen bij het werken met minder capabele modellen of wanneer u meer controle over bestandstoegang wilt."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Multi-range diff bewerkingen inschakelen",
+			"description": "Laat Roo toe om wijzigingen toe te passen op meerdere bestanden en meerdere bereiken binnen bestanden in één verzoek. Deze geavanceerde functie kan minder capabele modellen overweldigen en moet met voorzichtigheid worden gebruikt."
 		}
 	},
 	"promptCaching": {

@@ -3334,7 +3334,6 @@ Diff format:
 =======
 [new content to replace with]
 >>>>>>> REPLACE
-
 \`\`\`
 
 
@@ -3364,7 +3363,6 @@ def calculate_total(items):
     """Calculate total with 10% markup"""
     return sum(item * 1.1 for item in items)
 >>>>>>> REPLACE
-
 \`\`\`
 
 Search/Replace content with multi edits:
@@ -3389,7 +3387,6 @@ def calculate_sum(items):
     return sum 
 >>>>>>> REPLACE
 \`\`\`
-
 
 Usage:
 <apply_diff>

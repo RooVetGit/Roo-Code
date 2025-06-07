@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "啟用並行檔案讀取",
 			"description": "啟用後，Roo 可以在單一請求中讀取多個檔案（最多 15 個檔案）。停用後，Roo 必須逐一讀取檔案。在使用能力較弱的模型或希望對檔案存取有更多控制時，停用此功能可能會有所幫助。"
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "啟用多範圍diff操作",
+			"description": "允許Roo在單個請求中對多個檔案和檔案內的多個範圍應用變更。這個進階功能可能會讓能力較弱的模型不堪重負，應謹慎使用。"
 		}
 	},
 	"promptCaching": {

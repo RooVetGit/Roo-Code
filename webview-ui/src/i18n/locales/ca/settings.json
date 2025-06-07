@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Habilitar lectura concurrent de fitxers",
 			"description": "Quan està habilitat, Roo pot llegir múltiples fitxers en una sola sol·licitud (fins a 15 fitxers). Quan està deshabilitat, Roo ha de llegir fitxers un per un. Deshabilitar-ho pot ajudar quan es treballa amb models menys capaços o quan voleu més control sobre l'accés als fitxers."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Habilita operacions de diff multi-rang",
+			"description": "Permet a Roo aplicar canvis a múltiples fitxers i múltiples rangs dins dels fitxers en una sola petició. Aquesta funció avançada pot aclaparar models menys capaços i s'ha d'usar amb precaució."
 		}
 	},
 	"promptCaching": {

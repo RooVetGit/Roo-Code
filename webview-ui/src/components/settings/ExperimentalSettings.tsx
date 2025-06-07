@@ -72,13 +72,28 @@ export const ExperimentalSettings = ({
 								/>
 							)
 						}
+						if (config[0] === "MULTI_FILE_APPLY_DIFF") {
+							return (
+								<ExperimentalFeature
+									key={config[0]}
+									experimentKey={config[0]}
+									enabled={experiments[EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF] ?? false}
+									onChange={(enabled) =>
+										setExperimentEnabled(EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF, enabled)
+									}
+								/>
+							)
+						}
 						return (
 							<ExperimentalFeature
 								key={config[0]}
 								experimentKey={config[0]}
 								enabled={experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false}
 								onChange={(enabled) =>
-									setExperimentEnabled(EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS], enabled)
+									setExperimentEnabled(
+										EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS],
+										enabled,
+									)
 								}
 							/>
 						)

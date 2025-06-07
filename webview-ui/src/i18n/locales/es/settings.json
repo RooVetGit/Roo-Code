@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Habilitar lectura concurrente de archivos",
 			"description": "Cuando está habilitado, Roo puede leer múltiples archivos en una sola solicitud (hasta 15 archivos). Cuando está deshabilitado, Roo debe leer archivos uno a la vez. Deshabilitarlo puede ayudar cuando se trabaja con modelos menos capaces o cuando desea más control sobre el acceso a archivos."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Habilitar operaciones de diff multi-rango",
+			"description": "Permite a Roo aplicar cambios a múltiples archivos y múltiples rangos dentro de archivos en una sola solicitud. Esta función avanzada puede abrumar a modelos menos capaces y debe usarse con precaución."
 		}
 	},
 	"promptCaching": {

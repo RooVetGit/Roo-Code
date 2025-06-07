@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Włącz jednoczesne odczytywanie plików",
 			"description": "Po włączeniu Roo może odczytać wiele plików w jednym żądaniu (do 15 plików). Po wyłączeniu Roo musi odczytywać pliki pojedynczo. Wyłączenie może pomóc podczas pracy z mniej wydajnymi modelami lub gdy chcesz mieć większą kontrolę nad dostępem do plików."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Włącz operacje diff wielozakresowe",
+			"description": "Pozwala Roo na zastosowanie zmian w wielu plikach i wielu zakresach w plikach w jednym żądaniu. Ta zaawansowana funkcja może przytłoczyć mniej zdolne modele i powinna być używana z ostrożnością."
 		}
 	},
 	"promptCaching": {

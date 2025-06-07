@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Abilita lettura simultanea dei file",
 			"description": "Quando abilitato, Roo può leggere più file in una singola richiesta (fino a 15 file). Quando disabilitato, Roo deve leggere i file uno alla volta. Disabilitarlo può aiutare quando si lavora con modelli meno capaci o quando si desidera maggiore controllo sull'accesso ai file."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Abilita operazioni diff multi-range",
+			"description": "Consente a Roo di applicare modifiche a più file e più range all'interno dei file in una singola richiesta. Questa funzionalità avanzata può sopraffare modelli meno capaci e dovrebbe essere usata con cautela."
 		}
 	},
 	"promptCaching": {

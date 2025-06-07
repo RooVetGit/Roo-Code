@@ -1,5 +1,6 @@
 import { distance } from "fastest-levenshtein"
 import { ToolProgressStatus } from "@roo-code/types"
+
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
@@ -48,6 +49,7 @@ function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, e
 		if (leftIndex >= startIndex) {
 			const originalChunk = lines.slice(leftIndex, leftIndex + searchLen).join("\n")
 			const similarity = getSimilarity(originalChunk, searchChunk)
+
 			if (similarity > bestScore) {
 				bestScore = similarity
 				bestMatchIndex = leftIndex
@@ -59,6 +61,7 @@ function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, e
 		if (rightIndex <= endIndex - searchLen) {
 			const originalChunk = lines.slice(rightIndex, rightIndex + searchLen).join("\n")
 			const similarity = getSimilarity(originalChunk, searchChunk)
+
 			if (similarity > bestScore) {
 				bestScore = similarity
 				bestMatchIndex = rightIndex
@@ -71,12 +74,12 @@ function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, e
 	return { bestScore, bestMatchIndex, bestMatchContent }
 }
 
-export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
+export class MultiFileSearchReplaceDiffStrategy implements DiffStrategy {
 	private fuzzyThreshold: number
 	private bufferLines: number
 
 	getName(): string {
-		return "MultiSearchReplace"
+		return "MultiFileSearchReplace"
 	}
 
 	constructor(fuzzyThreshold?: number, bufferLines?: number) {
@@ -89,28 +92,33 @@ export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
 
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
 		return `## apply_diff
-Description: Request to apply targeted modifications to an existing file by searching for specific sections of content and replacing them. This tool is ideal for precise, surgical edits when you know the exact content to change. It helps maintain proper indentation and formatting.
-You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes to one file efficiently.
+
+Description: Request to apply targeted modifications to one or more files by searching for specific sections of content and replacing them. This tool supports both single-file and multi-file operations, allowing you to make changes across multiple files in a single request.
+
+You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes efficiently.
+
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
 Parameters:
-- path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
-- diff: (required) The search/replace block defining the changes.
+- args: Contains one or more file elements, where each file contains:
+  - path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
+  - diff: (required) One or more diff elements containing:
+    - content: (required) The search/replace block defining the changes.
+    - start_line: (optional) The line number of original content where the search block starts.
 
 Diff format:
 \`\`\`
 <<<<<<< SEARCH
-:start_line: (required) The line number of original content where the search block starts.
+:start_line: (optional) The line number of original content where the search block starts.
 -------
 [exact content to find including whitespace]
 =======
 [new content to replace with]
 >>>>>>> REPLACE
 \`\`\`
-
 
 Example:
 
@@ -124,10 +132,14 @@ Original file:
 \`\`\`
 
 Search/Replace content:
+<apply_diff>
+<args>
+<file>
+  <path>eg.file.py</path>
+  <diff>
+    <content>
 \`\`\`
 <<<<<<< SEARCH
-:start_line:1
--------
 def calculate_total(items):
     total = 0
     for item in items:
@@ -139,22 +151,34 @@ def calculate_total(items):
     return sum(item * 1.1 for item in items)
 >>>>>>> REPLACE
 \`\`\`
+    </content>
+  </diff>
+</file>
+</args>
+</apply_diff>
 
-Search/Replace content with multi edits:
+Search/Replace content with multi edits in one file:
+<apply_diff>
+<args>
+<file>
+  <path>eg.file.py</path>
+  <diff>
+    <content>
 \`\`\`
 <<<<<<< SEARCH
-:start_line:1
--------
 def calculate_total(items):
     sum = 0
 =======
 def calculate_sum(items):
     sum = 0
 >>>>>>> REPLACE
-
+\`\`\`
+    </content>
+  </diff>
+  <diff>
+    <content>
+\`\`\`
 <<<<<<< SEARCH
-:start_line:4
--------
         total += item
     return total
 =======
@@ -162,15 +186,55 @@ def calculate_sum(items):
     return sum 
 >>>>>>> REPLACE
 \`\`\`
+    </content>
+  </diff>
+</file>
+<file>
+  <path>eg.file2.py</path>
+  <diff>
+    <content>
+\`\`\`
+<<<<<<< SEARCH
+def greet(name):
+    return "Hello " + name
+=======
+def greet(name):
+    return f"Hello {name}!"
+>>>>>>> REPLACE
+\`\`\`
+    </content>
+  </diff>
+</file>
+</args>
+</apply_diff>
+
 
 Usage:
 <apply_diff>
-<path>File path here</path>
-<diff>
+<args>
+<file>
+  <path>File path here</path>
+  <diff>
+    <content>
 Your search/replace content here
 You can use multi search/replace block in one diff block, but make sure to include the line numbers for each block.
 Only use a single line of '=======' between search and replacement content, because multiple '=======' will corrupt the file.
-</diff>
+    </content>
+    <start_line>1</start_line>
+  </diff>
+</file>
+<file>
+  <path>Another file path</path>
+  <diff>
+    <content>
+Another search/replace content here
+You can apply changes to multiple files in a single request.
+Each file requires its own path, start_line, and diff elements.
+    </content>
+    <start_line>5</start_line>
+  </diff>
+</file>
+</args>
 </apply_diff>`
 	}
 
@@ -192,11 +256,12 @@ Only use a single line of '=======' between search and replacement content, beca
 		}
 
 		const state = { current: State.START, line: 0 }
+
 		const SEARCH = "<<<<<<< SEARCH"
 		const SEP = "======="
 		const REPLACE = ">>>>>>> REPLACE"
-		const SEARCH_PREFIX = "<<<<<<<"
-		const REPLACE_PREFIX = ">>>>>>>"
+		const SEARCH_PREFIX = "<<<<<<< "
+		const REPLACE_PREFIX = ">>>>>>> "
 
 		const reportMergeConflictError = (found: string, _expected: string) => ({
 			success: false,
@@ -229,7 +294,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				"\n" +
 				"CORRECT FORMAT:\n\n" +
 				"<<<<<<< SEARCH\n" +
-				":start_line: (required) The line number of original content where the search block starts.\n" +
+				":start_line: (optional) The line number of original content where the search block starts.\n" +
 				"-------\n" +
 				"[exact content to find including whitespace]\n" +
 				"=======\n" +
@@ -256,7 +321,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				"<<<<<<< SEARCH\n" +
 				"content to find\n" +
 				"=======\n" +
-				":start_line:5    <-- Invalid location\n" +
+				":start_line:5 <-- Invalid location\n" +
 				"replacement content\n" +
 				">>>>>>> REPLACE\n",
 		})
@@ -265,6 +330,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		const searchCount = lines.filter((l) => l.trim() === SEARCH).length
 		const sepCount = lines.filter((l) => l.trim() === SEP).length
 		const replaceCount = lines.filter((l) => l.trim() === REPLACE).length
+
 		const likelyBadStructure = searchCount !== replaceCount || sepCount < searchCount
 
 		for (const line of diffContent.split("\n")) {
@@ -330,35 +396,49 @@ Only use a single line of '=======' between search and replacement content, beca
 		_paramStartLine?: number,
 		_paramEndLine?: number,
 	): Promise<DiffResult> {
-		// Handle backward compatibility - convert array format to string
-		let diffString: string
-		let startLine: number | undefined
-
+		// Handle array-based input for multi-file support
 		if (Array.isArray(diffContent)) {
-			// New array format from tests - concatenate all blocks
-			if (diffContent.length === 0) {
-				return {
-					success: false,
-					error: "No diff content provided",
+			// Process each diff item separately and combine results
+			let resultContent = originalContent
+			const allFailParts: DiffResult[] = []
+			let successCount = 0
+
+			for (const diffItem of diffContent) {
+				const singleResult = await this.applySingleDiff(resultContent, diffItem.content, diffItem.startLine)
+
+				if (singleResult.success && singleResult.content) {
+					resultContent = singleResult.content
+					successCount++
+				} else {
+					allFailParts.push(singleResult)
 				}
 			}
 
-			// For multiple blocks, concatenate them with newlines
-			if (diffContent.length > 1) {
-				diffString = diffContent.map((block) => block.content).join("\n\n")
-				startLine = _paramStartLine // Use the provided start line for multi-block
-			} else {
-				// Single block
-				diffString = diffContent[0].content
-				startLine = diffContent[0].startLine ?? _paramStartLine
+			if (successCount === 0) {
+				return {
+					success: false,
+					error: "Failed to apply any diffs",
+					failParts: allFailParts,
+				}
 			}
-		} else {
-			// Original string format
-			diffString = diffContent
-			startLine = _paramStartLine
+
+			return {
+				success: true,
+				content: resultContent,
+				failParts: allFailParts.length > 0 ? allFailParts : undefined,
+			}
 		}
 
-		const validseq = this.validateMarkerSequencing(diffString)
+		// Handle string-based input (legacy)
+		return this.applySingleDiff(originalContent, diffContent, _paramStartLine)
+	}
+
+	private async applySingleDiff(
+		originalContent: string,
+		diffContent: string,
+		_paramStartLine?: number,
+	): Promise<DiffResult> {
+		const validseq = this.validateMarkerSequencing(diffContent)
 		if (!validseq.success) {
 			return {
 				success: false,
@@ -378,7 +458,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)   Matches the final ">>>>>>> REPLACE" marker on its own line (and requires a following newline or the end of file).
 		*/
 		let matches = [
-			...diffString.matchAll(
+			...diffContent.matchAll(
 				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
 			),
 		]
@@ -494,6 +574,7 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestMatchIndex,
 					bestMatchContent: midContent,
 				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+
 				matchIndex = bestMatchIndex
 				bestMatchScore = bestScore
 				bestMatchContent = midContent
@@ -547,7 +628,15 @@ Only use a single line of '=======' between search and replacement content, beca
 
 					diffResults.push({
 						success: false,
-						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+						error: `No sufficiently similar match found${lineRange} (${Math.floor(
+							bestMatchScore * 100,
+						)}% similar, needs ${Math.floor(
+							this.fuzzyThreshold * 100,
+						)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(
+							bestMatchScore * 100,
+						)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${
+							startLine ? `starting at line ${startLine}` : "start to end"
+						}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
 					})
 					continue
 				}
@@ -622,6 +711,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		const diffContent = toolUse.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"
+
 			if (toolUse.partial) {
 				if (Math.floor(diffContent.length / 10) % 10 === 0) {
 					const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
@@ -639,6 +729,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 			}
 		}
+
 		return {}
 	}
 }

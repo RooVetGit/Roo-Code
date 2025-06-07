@@ -492,6 +492,10 @@
 		"CONCURRENT_FILE_READS": {
 			"name": "Bật đọc tệp đồng thời",
 			"description": "Khi bật, Roo có thể đọc nhiều tệp trong một yêu cầu duy nhất (tối đa 15 tệp). Khi tắt, Roo phải đọc từng tệp một. Việc tắt có thể hữu ích khi làm việc với các mô hình ít khả năng hơn hoặc khi bạn muốn kiểm soát nhiều hơn quyền truy cập tệp."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Bật các thao tác diff đa phạm vi",
+			"description": "Cho phép Roo áp dụng thay đổi cho nhiều tệp và nhiều phạm vi trong các tệp trong một yêu cầu duy nhất. Tính năng nâng cao này có thể làm choáng ngợp các mô hình kém khả năng hơn và nên được sử dụng một cách thận trọng."
 		}
 	},
 	"promptCaching": {
