@@ -15,6 +15,7 @@ import { Task } from "../../core/task/Task"
 
 import { DecorationController } from "./DecorationController"
 import { ClineProvider } from "../../core/webview/ClineProvider"
+import { UserInteractionProvider } from "./UserInteractionProvider"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 
@@ -49,11 +50,21 @@ export class DiffViewProvider {
 	private autoCloseAllRooTabs: boolean = false // Added new setting
 	// have to set the default view column to -1 since we need to set it in the initialize method and during initialization the enum ViewColumn is undefined
 	private viewColumn: ViewColumn = -1 // ViewColumn.Active
-	private userInteractionListeners: vscode.Disposable[] = []
+	private userInteractionProvider: UserInteractionProvider
 	private suppressInteractionFlag: boolean = false
 	private preDiffActiveEditor?: vscode.TextEditor // Store active editor before diff operation
 
-	constructor(private cwd: string) {}
+	constructor(private cwd: string) {
+		this.userInteractionProvider = new UserInteractionProvider({
+			onUserInteraction: () => {
+				this.preserveFocus = true
+				this.autoFocus = false
+			},
+			getSuppressFlag: () => this.suppressInteractionFlag,
+			autoApproval: false,
+			autoFocus: true,
+		})
+	}
 
 	public async initialize() {
 		const provider = ClineProvider.getVisibleInstance()
@@ -111,79 +122,15 @@ export class DiffViewProvider {
 	}
 
 	/**
-	 * Resets the auto-focus listeners to prevent memory leaks.
-	 * This is called when the diff editor is closed or when the user interacts with other editors.
-	 */
-	private resetAutoFocusListeners() {
-		this.userInteractionListeners.forEach((listener) => listener.dispose())
-		this.userInteractionListeners = []
-	}
-
-	/**
 	 * Disables auto-focus on the diff editor after user interaction.
 	 * This is to prevent the diff editor from stealing focus when the user interacts with other editors or tabs.
 	 */
 	public disableAutoFocusAfterUserInteraction() {
-		this.resetAutoFocusListeners()
-		// if auto approval is disabled or auto focus is disabled, we don't need to add listeners
-		if (!this.autoApproval || !this.autoFocus) {
-			return
-		}
-		// then add new listeners
-		const changeTextEditorSelectionListener = vscode.window.onDidChangeTextEditorSelection((_e) => {
-			// If the change was done programmatically, or if there is actually no editor or the user did not allow auto approval, we don't want to suppress focus
-			if (this.suppressInteractionFlag) {
-				// If the user is interacting with the diff editor, we don't want to suppress focus
-				// If the user is interacting with another editor, we want to suppress focus
-				return
-			}
-			// Consider this a "user interaction"
-			this.preserveFocus = true
-			this.autoFocus = false
-			// remove the listeners since we don't need them anymore
-			this.resetAutoFocusListeners()
-		}, this)
-		const changeActiveTextEditorListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
-			// If the change was done programmatically, or if there is actually no editor or the user did not allow auto approval, we don't want to suppress focus
-			if (this.suppressInteractionFlag || !editor) {
-				// If the user is interacting with the diff editor, we don't want to suppress focus
-				// If the user is interacting with another editor, we want to suppress focus
-				return
-			}
-			// Consider this a "user interaction"
-			this.preserveFocus = true
-			this.autoFocus = false
-			// remove the listeners since we don't need them anymore
-			this.resetAutoFocusListeners()
-		}, this)
-		const changeTabListener = vscode.window.tabGroups.onDidChangeTabs((_e) => {
-			// Some tab was added/removed/changed
-			// If the change was done programmatically, or the user did not allow auto approval, we don't want to suppress focus
-			if (this.suppressInteractionFlag) {
-				return
-			}
-			this.preserveFocus = true
-			this.autoFocus = false
-			// remove the listeners since we don't need them anymore
-			this.resetAutoFocusListeners()
-		}, this)
-		const changeTabGroupListener = vscode.window.tabGroups.onDidChangeTabGroups((_e) => {
-			// Tab group layout changed (e.g., split view)
-			// If the change was done programmatically, or the user did not allow auto approval, we don't want to suppress focus
-			if (this.suppressInteractionFlag) {
-				return
-			}
-			this.preserveFocus = true
-			this.autoFocus = false
-			// remove the listeners since we don't need them anymore
-			this.resetAutoFocusListeners()
-		}, this)
-		this.userInteractionListeners.push(
-			changeTextEditorSelectionListener,
-			changeActiveTextEditorListener,
-			changeTabListener,
-			changeTabGroupListener,
-		)
+		this.userInteractionProvider.updateOptions({
+			autoApproval: this.autoApproval ?? false,
+			autoFocus: this.autoFocus ?? true,
+		})
+		this.userInteractionProvider.enable()
 	}
 
 	/**
@@ -196,6 +143,11 @@ export class DiffViewProvider {
 		this.preDiffActiveEditor = vscode.window.activeTextEditor
 
 		this.viewColumn = viewColumn
+		// Update the user interaction provider with current settings
+		this.userInteractionProvider.updateOptions({
+			autoApproval: this.autoApproval ?? false,
+			autoFocus: this.autoFocus ?? true,
+		})
 		this.disableAutoFocusAfterUserInteraction()
 		// Set the edit type based on the file existence
 		this.relPath = relPath
@@ -1040,6 +992,6 @@ export class DiffViewProvider {
 
 	resetWithListeners() {
 		this.reset()
-		this.resetAutoFocusListeners()
+		this.userInteractionProvider.dispose()
 	}
 }
