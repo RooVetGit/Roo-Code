@@ -10,6 +10,7 @@ Roo Code to projekt napędzany przez społeczność i bardzo cenimy każdy wkła
 
 - [Zanim zaczniesz współtworzyć](#zanim-zaczniesz-współtworzyć)
 - [Znajdowanie i planowanie swojego wkładu](#znajdowanie-i-planowanie-swojego-wkładu)
+    - [Prośby o funkcje vs. Szczegółowe propozycje funkcji](#prośby-o-funkcje-vs-szczegółowe-propozycje-funkcji)
 - [Proces rozwoju i zgłaszania](#proces-rozwoju-i-zgłaszania)
 - [Prawne](#prawne)
 
@@ -63,7 +64,7 @@ Każdy wkład musi zaczynać się od GitHub Issue.
 - **Sprawdź istniejące issues:** Przeszukaj [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Utwórz issue:** Używaj odpowiednich szablonów:
     - **Błędy:** Szablon "Bug Report".
-    - **Funkcje:** Szablon "Detailed Feature Proposal". Wymagane zatwierdzenie przed rozpoczęciem.
+    - **Funkcje:** Szablon "Detailed Feature Proposal". Wymagane zatwierdzenie przed rozpoczęciem. (Zobacz [Prośby o funkcje vs. Szczegółowe propozycje funkcji](#prośby-o-funkcje-vs-szczegółowe-propozycje-funkcji) poniżej)
 - **Zgłoś chęć pracy:** Skomentuj i poczekaj na oficjalne przypisanie.
 
 **PR bez zatwierdzonego issue może zostać zamknięty.**
@@ -78,6 +79,46 @@ Każdy wkład musi zaczynać się od GitHub Issue.
 - Najpierw sprawdź istniejące zgłoszenia.
 - Twórz nowe zgłoszenia błędów używając [szablonu "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Luki bezpieczeństwa:** Zgłaszaj prywatnie przez [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Prośby o funkcje vs. Szczegółowe propozycje funkcji
+
+Zrozumienie różnicy między tymi dwoma typami zgłoszeń jest kluczowe dla wyboru właściwego podejścia:
+
+#### Prośba o funkcję (GitHub Discussions)
+
+**Cel**: Dzielenie się ogólnymi pomysłami lub sugestiami bez szczegółowego planowania.
+
+**Jak zgłosić**:
+
+- Przejdź do [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Lub kliknij link "Feature Request" po naciśnięciu przycisku "New Issue" w sekcji issues
+
+**Użyj tego gdy**:
+
+- Twój pomysł nie jest jeszcze w pełni rozwinięty
+- Chcesz uzyskać opinię lub feedback społeczności
+- Proponujesz pomysły bez planów osobistej implementacji
+
+#### Szczegółowa propozycja funkcji (GitHub Issues)
+
+**Cel**: Jasno określone funkcje przeznaczone do natychmiastowej implementacji po zatwierdzeniu.
+
+**Jak zgłosić**:
+
+- Przejdź do [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Kliknij "New Issue" i wybierz szablon "Detailed Feature Proposal"
+
+**Użyj tego gdy**:
+
+- Twoja funkcja jest w pełni zaplanowana i gotowa do zatwierdzenia
+- Ty lub ktoś inny zamierza wkrótce zaimplementować funkcję
+- Potrzebne jest formalne zatwierdzenie przed rozpoczęciem rozwoju
+
+**Uwaga**: Szczegółowe propozycje funkcji muszą być zatwierdzone i przypisane przez maintainera przed rozpoczęciem implementacji, jak wspomniano w sekcji [Podejście Issue-First](#podejście-issue-first) powyżej.
+
+![Wybór szablonu Issue](placeholder-for-issue-template-selection-image)
+
+**Ważne**: Wybór niewłaściwego szablonu może spowodować przekierowanie lub zamknięcie twojego zgłoszenia. Nie używaj raportów błędów do pomysłów na funkcje.
 
 ## Proces rozwoju i zgłaszania
 

@@ -10,6 +10,7 @@ Roo Code ist ein Community-getriebenes Projekt, und wir schätzen jeden Beitrag 
 
 - [Bevor du beiträgst](#bevor-du-beiträgst)
 - [Beitrag finden & planen](#beitrag-finden--planen)
+    - [Feature-Anfragen vs. Detaillierte Feature-Vorschläge](#feature-anfragen-vs-detaillierte-feature-vorschläge)
 - [Entwicklung & Einreichung](#entwicklung--einreichung)
 - [Rechtliches](#rechtliches)
 
@@ -63,7 +64,7 @@ Alle Beiträge müssen mit einem GitHub Issue beginnen.
 - **Bestehende Issues prüfen**: Durchsuche die [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Issue erstellen**: Nutze die passenden Vorlagen:
     - **Bugs:** "Bug Report"-Vorlage.
-    - **Features:** "Detailed Feature Proposal"-Vorlage. Vor dem Start ist eine Genehmigung erforderlich.
+    - **Features:** "Detailed Feature Proposal"-Vorlage. Vor dem Start ist eine Genehmigung erforderlich. (Siehe [Feature-Anfragen vs. Detaillierte Feature-Vorschläge](#feature-anfragen-vs-detaillierte-feature-vorschläge) unten)
 - **Issues beanspruchen**: Kommentiere und warte auf die offizielle Zuweisung.
 
 **PRs ohne genehmigte Issues können geschlossen werden.**
@@ -78,6 +79,46 @@ Alle Beiträge müssen mit einem GitHub Issue beginnen.
 - Prüfe zuerst, ob der Bug bereits gemeldet wurde.
 - Erstelle neue Bug-Reports mit der ["Bug Report"-Vorlage](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Sicherheitslücken:** Melde diese privat über [Security Advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Feature-Anfragen vs. Detaillierte Feature-Vorschläge
+
+Das Verständnis des Unterschieds zwischen diesen beiden Einreichungstypen ist entscheidend für die Wahl des richtigen Ansatzes:
+
+#### Feature-Anfrage (GitHub Discussions)
+
+**Zweck**: Allgemeine Ideen oder Vorschläge ohne detaillierte Planung teilen.
+
+**Wie einreichen**:
+
+- Navigiere zu [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Oder klicke auf den "Feature Request"-Link, wenn du den "New Issue"-Button im Issues-Bereich drückst
+
+**Verwende dies wenn**:
+
+- Deine Idee noch nicht vollständig ausgearbeitet ist
+- Du Community-Input oder Feedback möchtest
+- Du Ideen vorschlägst, ohne sie persönlich umsetzen zu wollen
+
+#### Detaillierter Feature-Vorschlag (GitHub Issues)
+
+**Zweck**: Klar umrissene Features, die nach Genehmigung sofort umgesetzt werden sollen.
+
+**Wie einreichen**:
+
+- Navigiere zu [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Klicke auf "New Issue" und wähle die "Detailed Feature Proposal"-Vorlage
+
+**Verwende dies wenn**:
+
+- Dein Feature vollständig durchdacht und bereit für die Genehmigung ist
+- Du oder jemand anderes beabsichtigt, das Feature bald umzusetzen
+- Eine formelle Genehmigung vor Entwicklungsbeginn benötigt wird
+
+**Hinweis**: Detaillierte Feature-Vorschläge müssen von einem Maintainer genehmigt und zugewiesen werden, bevor mit der Implementierung begonnen wird, wie im obigen Abschnitt [Issue-First-Ansatz](#issue-first-ansatz) erwähnt.
+
+![Issue-Vorlagen-Auswahl](placeholder-for-issue-template-selection-image)
+
+**Wichtig**: Die Wahl der falschen Vorlage kann dazu führen, dass deine Einreichung umgeleitet oder geschlossen wird. Verwende keine Bug-Reports für Feature-Ideen.
 
 ## Entwicklung & Einreichung
 

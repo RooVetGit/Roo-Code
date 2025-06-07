@@ -10,6 +10,7 @@ Roo Code es un proyecto impulsado por la comunidad, y valoramos profundamente ca
 
 - [Antes de Contribuir](#antes-de-contribuir)
 - [Encontrar y Planificar tu Contribución](#encontrar-y-planificar-tu-contribución)
+    - [Solicitudes de Funciones vs. Propuestas Detalladas de Funciones](#solicitudes-de-funciones-vs-propuestas-detalladas-de-funciones)
 - [Proceso de Desarrollo y Envío](#proceso-de-desarrollo-y-envío)
 - [Legal](#legal)
 
@@ -63,7 +64,7 @@ Todas las contribuciones deben comenzar con un Issue de GitHub.
 - **Revisar issues existentes**: Busca en [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Crear un issue**: Usa las plantillas apropiadas:
     - **Errores:** Plantilla "Bug Report".
-    - **Funciones:** Plantilla "Detailed Feature Proposal". Se requiere aprobación antes de comenzar.
+    - **Funciones:** Plantilla "Detailed Feature Proposal". Se requiere aprobación antes de comenzar. (Ver [Solicitudes de Funciones vs. Propuestas Detalladas de Funciones](#solicitudes-de-funciones-vs-propuestas-detalladas-de-funciones) abajo)
 - **Reclamar issues**: Comenta y espera la asignación oficial.
 
 **Los PRs sin issues aprobados pueden ser cerrados.**
@@ -78,6 +79,46 @@ Todas las contribuciones deben comenzar con un Issue de GitHub.
 - Primero verifica si ya existen reportes.
 - Crea nuevos reportes de errores usando la [plantilla "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Problemas de seguridad**: Reporta de forma privada a través de [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Solicitudes de Funciones vs. Propuestas Detalladas de Funciones
+
+Comprender la diferencia entre estos dos tipos de envío es crucial para elegir el enfoque correcto:
+
+#### Solicitud de Función (GitHub Discussions)
+
+**Propósito**: Compartir ideas o sugerencias generales sin planificación detallada.
+
+**Cómo enviar**:
+
+- Navega a [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- O haz clic en el enlace "Feature Request" al presionar el botón "New Issue" en la sección de issues
+
+**Usa esto cuando**:
+
+- Tu idea aún no está completamente desarrollada
+- Quieres comentarios o retroalimentación de la comunidad
+- Estás proponiendo ideas sin planes de implementarlas personalmente
+
+#### Propuesta Detallada de Función (GitHub Issues)
+
+**Propósito**: Funciones claramente delineadas destinadas a implementación inmediata después de la aprobación.
+
+**Cómo enviar**:
+
+- Navega a [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Haz clic en "New Issue" y selecciona la plantilla "Detailed Feature Proposal"
+
+**Usa esto cuando**:
+
+- Tu función está completamente planificada y lista para aprobación
+- Tú o alguien más tiene la intención de implementar la función pronto
+- Se necesita aprobación formal antes de comenzar el desarrollo
+
+**Nota**: Las Propuestas Detalladas de Funciones deben ser aprobadas y asignadas por un mantenedor antes de comenzar la implementación, como se menciona en la sección [Enfoque Issue-First](#enfoque-issue-first) anterior.
+
+![Selección de Plantilla de Issue](placeholder-for-issue-template-selection-image)
+
+**Importante**: Elegir la plantilla incorrecta puede hacer que tu envío sea redirigido o cerrado. No uses Reportes de Errores para ideas de funciones.
 
 ## Proceso de Desarrollo y Envío
 

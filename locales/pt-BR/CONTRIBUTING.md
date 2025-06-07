@@ -10,6 +10,7 @@ O Roo Code é um projeto impulsionado pela comunidade e valorizamos muito cada c
 
 - [Antes de Contribuir](#antes-de-contribuir)
 - [Encontrando & Planejando sua Contribuição](#encontrando--planejando-sua-contribuição)
+    - [Solicitações de Recursos vs. Propostas Detalhadas de Recursos](#solicitações-de-recursos-vs-propostas-detalhadas-de-recursos)
 - [Processo de Desenvolvimento & Submissão](#processo-de-desenvolvimento--submissão)
 - [Legal](#legal)
 
@@ -63,7 +64,7 @@ Todas as contribuições devem começar com uma Issue do GitHub.
 - **Verificar issues existentes:** Procure em [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Criar uma issue:** Use os templates apropriados:
     - **Bugs:** Template "Bug Report".
-    - **Recursos:** Template "Detailed Feature Proposal". Aprovação necessária antes de começar.
+    - **Recursos:** Template "Detailed Feature Proposal". Aprovação necessária antes de começar. (Veja [Solicitações de Recursos vs. Propostas Detalhadas de Recursos](#solicitações-de-recursos-vs-propostas-detalhadas-de-recursos) abaixo)
 - **Reivindicar issues:** Comente e aguarde atribuição oficial.
 
 **PRs sem issues aprovadas podem ser fechados.**
@@ -78,6 +79,46 @@ Todas as contribuições devem começar com uma Issue do GitHub.
 - Verifique primeiro se já existem relatórios.
 - Crie novos relatórios de bugs usando o [template "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Vulnerabilidades de segurança:** Relate de forma privada via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Solicitações de Recursos vs. Propostas Detalhadas de Recursos
+
+Entender a diferença entre esses dois tipos de submissão é crucial para escolher a abordagem correta:
+
+#### Solicitação de Recurso (GitHub Discussions)
+
+**Propósito**: Compartilhar ideias ou sugestões gerais sem planejamento detalhado.
+
+**Como enviar**:
+
+- Navegue para [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Ou clique no link "Feature Request" ao pressionar o botão "New Issue" na seção de issues
+
+**Use isso quando**:
+
+- Sua ideia ainda não está totalmente desenvolvida
+- Você quer input ou feedback da comunidade
+- Você está propondo ideias sem planos de implementá-las pessoalmente
+
+#### Proposta Detalhada de Recurso (GitHub Issues)
+
+**Propósito**: Recursos claramente delineados destinados à implementação imediata após aprovação.
+
+**Como enviar**:
+
+- Navegue para [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Clique em "New Issue" e selecione o template "Detailed Feature Proposal"
+
+**Use isso quando**:
+
+- Seu recurso está completamente planejado e pronto para aprovação
+- Você ou outra pessoa pretende implementar o recurso em breve
+- Aprovação formal é necessária antes de iniciar o desenvolvimento
+
+**Nota**: Propostas Detalhadas de Recursos devem ser aprovadas e atribuídas por um mantenedor antes de iniciar a implementação, conforme mencionado na seção [Abordagem Issue-First](#abordagem-issue-first) acima.
+
+![Seleção de Template de Issue](placeholder-for-issue-template-selection-image)
+
+**Importante**: Escolher o template errado pode levar ao redirecionamento ou fechamento da sua submissão. Não use Relatórios de Bug para ideias de recursos.
 
 ## Processo de Desenvolvimento & Submissão
 

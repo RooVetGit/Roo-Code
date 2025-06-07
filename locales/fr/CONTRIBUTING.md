@@ -10,6 +10,7 @@ Roo Code est un projet porté par la communauté, et chaque contribution compte 
 
 - [Avant de contribuer](#avant-de-contribuer)
 - [Trouver et planifier ta contribution](#trouver-et-planifier-ta-contribution)
+    - [Demandes de fonctionnalités vs. Propositions détaillées de fonctionnalités](#demandes-de-fonctionnalités-vs-propositions-détaillées-de-fonctionnalités)
 - [Processus de développement et de soumission](#processus-de-développement-et-de-soumission)
 - [Légal](#légal)
 
@@ -63,7 +64,7 @@ Toutes les contributions doivent commencer par un ticket GitHub.
 - **Vérifier les tickets existants :** Cherche dans les [Issues GitHub](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Créer un ticket :** Utilise les modèles appropriés :
     - **Bugs :** Modèle "Bug Report".
-    - **Fonctionnalités :** Modèle "Detailed Feature Proposal". Approbation requise avant de commencer.
+    - **Fonctionnalités :** Modèle "Detailed Feature Proposal". Approbation requise avant de commencer. (Voir [Demandes de fonctionnalités vs. Propositions détaillées de fonctionnalités](#demandes-de-fonctionnalités-vs-propositions-détaillées-de-fonctionnalités) ci-dessous)
 - **Réclamer des tickets :** Commente et attends l'assignation officielle.
 
 **Les PRs sans tickets approuvés peuvent être fermées.**
@@ -78,6 +79,46 @@ Toutes les contributions doivent commencer par un ticket GitHub.
 - Vérifie d'abord les rapports existants.
 - Crée de nouveaux rapports de bugs avec le [modèle "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Failles de sécurité :** Signale-les en privé via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Demandes de fonctionnalités vs. Propositions détaillées de fonctionnalités
+
+Comprendre la différence entre ces deux types de soumission est crucial pour choisir la bonne approche :
+
+#### Demande de fonctionnalité (GitHub Discussions)
+
+**Objectif** : Partager des idées ou suggestions générales sans planification détaillée.
+
+**Comment soumettre** :
+
+- Navigue vers [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Ou clique sur le lien "Feature Request" en appuyant sur le bouton "New Issue" dans la section issues
+
+**Utilise ceci quand** :
+
+- Ton idée n'est pas encore entièrement développée
+- Tu souhaites des commentaires ou du feedback de la communauté
+- Tu proposes des idées sans avoir l'intention de les implémenter personnellement
+
+#### Proposition détaillée de fonctionnalité (GitHub Issues)
+
+**Objectif** : Fonctionnalités clairement définies destinées à une implémentation immédiate après approbation.
+
+**Comment soumettre** :
+
+- Navigue vers [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Clique sur "New Issue" et sélectionne le modèle "Detailed Feature Proposal"
+
+**Utilise ceci quand** :
+
+- Ta fonctionnalité est entièrement planifiée et prête pour l'approbation
+- Toi ou quelqu'un d'autre a l'intention d'implémenter la fonctionnalité bientôt
+- Une approbation formelle est nécessaire avant de commencer le développement
+
+**Note** : Les Propositions détaillées de fonctionnalités doivent être approuvées et assignées par un mainteneur avant de commencer l'implémentation, comme mentionné dans la section [Approche Issue-First](#approche-issue-first) ci-dessus.
+
+![Sélection du modèle d'issue](placeholder-for-issue-template-selection-image)
+
+**Important** : Choisir le mauvais modèle peut entraîner la redirection ou la fermeture de ta soumission. N'utilise pas les rapports de bugs pour des idées de fonctionnalités.
 
 ## Processus de développement et de soumission
 

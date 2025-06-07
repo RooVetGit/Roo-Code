@@ -10,6 +10,7 @@ Roo Code is een door de community gedreven project en we waarderen elke bijdrage
 
 - [Voordat je bijdraagt](#voordat-je-bijdraagt)
 - [Je bijdrage vinden & plannen](#je-bijdrage-vinden--plannen)
+    - [Functieverzoeken vs. Gedetailleerde functievoorstellen](#functieverzoeken-vs-gedetailleerde-functievoorstellen)
 - [Ontwikkelings- & indieningsproces](#ontwikkelings--indieningsproces)
 - [Juridisch](#juridisch)
 
@@ -63,7 +64,7 @@ Elke bijdrage moet beginnen met een GitHub Issue.
 - **Bestaande issues controleren:** Zoek in [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Issue aanmaken:** Gebruik de juiste templates:
     - **Bugs:** "Bug Report"-template.
-    - **Functies:** "Detailed Feature Proposal"-template. Goedkeuring vereist voor je begint.
+    - **Functies:** "Detailed Feature Proposal"-template. Goedkeuring vereist voor je begint. (Zie [Functieverzoeken vs. Gedetailleerde functievoorstellen](#functieverzoeken-vs-gedetailleerde-functievoorstellen) hieronder)
 - **Issues claimen:** Reageer en wacht op officiële toewijzing.
 
 **PR's zonder goedgekeurde issues kunnen worden gesloten.**
@@ -78,6 +79,46 @@ Elke bijdrage moet beginnen met een GitHub Issue.
 - Controleer eerst of er al meldingen zijn.
 - Maak nieuwe bugmeldingen met de ["Bug Report"-template](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Beveiligingsproblemen:** Meld privé via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Functieverzoeken vs. Gedetailleerde functievoorstellen
+
+Het begrijpen van het verschil tussen deze twee inzendingstypes is cruciaal voor het kiezen van de juiste aanpak:
+
+#### Functieverzoek (GitHub Discussions)
+
+**Doel**: Algemene ideeën of suggesties delen zonder gedetailleerde planning.
+
+**Hoe in te dienen**:
+
+- Navigeer naar [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Of klik op de "Feature Request"-link wanneer je op de "New Issue"-knop drukt in de issues-sectie
+
+**Gebruik dit wanneer**:
+
+- Je idee nog niet volledig is uitgewerkt
+- Je community-input of feedback wilt
+- Je ideeën voorstelt zonder plannen om ze persoonlijk te implementeren
+
+#### Gedetailleerd functievoorstel (GitHub Issues)
+
+**Doel**: Duidelijk omschreven functies bedoeld voor onmiddellijke implementatie na goedkeuring.
+
+**Hoe in te dienen**:
+
+- Navigeer naar [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Klik op "New Issue" en selecteer de "Detailed Feature Proposal"-template
+
+**Gebruik dit wanneer**:
+
+- Je functie volledig is uitgedacht en klaar is voor goedkeuring
+- Jij of iemand anders van plan is de functie binnenkort te implementeren
+- Formele goedkeuring nodig is voordat de ontwikkeling begint
+
+**Opmerking**: Gedetailleerde functievoorstellen moeten worden goedgekeurd en toegewezen door een maintainer voordat met de implementatie wordt begonnen, zoals vermeld in de sectie [Issue-First-aanpak](#issue-first-aanpak) hierboven.
+
+![Issue Template Selectie](placeholder-for-issue-template-selection-image)
+
+**Belangrijk**: Het kiezen van de verkeerde template kan ertoe leiden dat je inzending wordt omgeleid of gesloten. Gebruik geen Bug Reports voor functie-ideeën.
 
 ## Ontwikkelings- & indieningsproces
 

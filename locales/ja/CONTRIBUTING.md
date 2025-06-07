@@ -10,6 +10,7 @@ Roo Code はコミュニティ主導のプロジェクトであり、すべて�
 
 - [貢献する前に](#貢献する前に)
 - [貢献内容の発見と計画](#貢献内容の発見と計画)
+    - [機能リクエスト vs. 詳細な機能提案](#機能リクエスト-vs-詳細な機能提案)
 - [開発と提出のプロセス](#開発と提出のプロセス)
 - [法的事項](#法的事項)
 
@@ -63,7 +64,7 @@ PRでこれらの領域との関連性に言及してください。
 - **既存Issueの確認：** [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)を検索。
 - **Issueの作成：** 適切なテンプレートを使用：
     - **バグ：** 「Bug Report」テンプレート。
-    - **機能：** 「Detailed Feature Proposal」テンプレート。開始前に承認が必要。
+    - **機能：** 「Detailed Feature Proposal」テンプレート。開始前に承認が必要。（下記の[機能リクエスト vs. 詳細な機能提案](#機能リクエスト-vs-詳細な機能提案)を参照）
 - **Issue担当表明：** コメントし、正式な割り当てを待つ。
 
 **承認されたIssueに紐付けられていないPRは閉じられる可能性があります。**
@@ -78,6 +79,46 @@ PRでこれらの領域との関連性に言及してください。
 - まず既存の報告がないか確認。
 - 新しいバグは[「Bug Report」テンプレート](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)で報告。
 - **セキュリティ問題：** [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new)を通じて非公開で報告。
+
+### 機能リクエスト vs. 詳細な機能提案
+
+これら2つの提出タイプの違いを理解することは、適切なアプローチを選択するために重要です：
+
+#### 機能リクエスト（GitHub Discussions）
+
+**目的**：詳細な計画なしに一般的なアイデアや提案を共有する。
+
+**提出方法**：
+
+- [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)へ移動
+- またはissuesセクションで「New Issue」ボタンを押す際に「Feature Request」リンクをクリック
+
+**使用する場合**：
+
+- アイデアがまだ完全に開発されていない
+- コミュニティからの意見やフィードバックが欲しい
+- 個人的に実装する予定なしにアイデアを提案している
+
+#### 詳細な機能提案（GitHub Issues）
+
+**目的**：承認後すぐに実装を意図した、明確に概説された機能。
+
+**提出方法**：
+
+- [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)へ移動
+- 「New Issue」をクリックし、「Detailed Feature Proposal」テンプレートを選択
+
+**使用する場合**：
+
+- 機能が完全に計画され、承認の準備ができている
+- あなたまたは他の誰かがすぐに機能を実装する意図がある
+- 開発開始前に正式な承認が必要
+
+**注意**：詳細な機能提案は、上記の[Issue-First アプローチ](#issue-first-アプローチ)セクションで述べられているように、実装を開始する前にメンテナーによって承認され、割り当てられる必要があります。
+
+![Issueテンプレート選択](placeholder-for-issue-template-selection-image)
+
+**重要**：間違ったテンプレートを選択すると、提出がリダイレクトまたはクローズされる可能性があります。機能のアイデアにバグレポートを使用しないでください。
 
 ## 開発と提出のプロセス
 
