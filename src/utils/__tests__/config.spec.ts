@@ -53,7 +53,7 @@ describe("injectEnv", () => {
 		const result = await injectEnv(configString, "NOT_FOUND")
 		expect(result).toBe(expectedString)
 		expect(consoleWarnSpy).toHaveBeenCalledWith(
-			"[injectVariables] variable MISSING_VAR referenced but not found in env",
+			`[injectVariables] variable "MISSING_VAR" referenced but not found in "env"`,
 		)
 		consoleWarnSpy.mockRestore()
 	})
@@ -65,7 +65,7 @@ describe("injectEnv", () => {
 		const result = await injectEnv(configString)
 		expect(result).toBe(expectedString)
 		expect(consoleWarnSpy).toHaveBeenCalledWith(
-			"[injectVariables] variable ANOTHER_MISSING referenced but not found in env",
+			`[injectVariables] variable "ANOTHER_MISSING" referenced but not found in "env"`,
 		)
 		consoleWarnSpy.mockRestore()
 	})
