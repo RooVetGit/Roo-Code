@@ -30,6 +30,8 @@ import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-stra
 import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
 import { convertToBedrockConverseMessages as sharedConverter } from "../transform/bedrock-converse-format"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { getModelParams } from "../transform/model-params"
+import { shouldUseReasoningBudget } from "../../shared/api"
 
 /************************************************************************************
  *
@@ -40,8 +42,8 @@ import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from ".
 // Define interface for Bedrock inference config
 interface BedrockInferenceConfig {
 	maxTokens: number
-	temperature: number
-	topP: number
+	temperature?: number
+	topP?: number
 }
 
 // Define types for stream events based on AWS SDK
@@ -58,10 +60,20 @@ export interface StreamEvent {
 			text?: string
 		}
 		contentBlockIndex?: number
+		// Extended thinking support
+		contentBlock?: {
+			type?: "thinking" | "text"
+			thinking?: string
+			text?: string
+		}
 	}
 	contentBlockDelta?: {
 		delta?: {
 			text?: string
+			// Extended thinking support
+			type?: "thinking_delta" | "text_delta" | "signature_delta"
+			thinking?: string
+			signature?: string
 		}
 		contentBlockIndex?: number
 	}
@@ -257,6 +269,49 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
+		const maxRetries = 3
+		let retryCount = 0
+		let lastError: unknown
+
+		while (retryCount < maxRetries) {
+			try {
+				yield* this.createMessageInternal(systemPrompt, messages, metadata)
+				return
+			} catch (error) {
+				lastError = error
+				retryCount++
+
+				// Check if error is retryable
+				const errorType = this.getErrorType(error)
+				const retryableErrors = ["THROTTLING", "ABORT", "GENERIC"]
+
+				if (!retryableErrors.includes(errorType) || retryCount >= maxRetries) {
+					// Not retryable or max retries reached
+					throw error
+				}
+
+				// Log retry attempt
+				logger.info(`Retrying Bedrock request (attempt ${retryCount}/${maxRetries})`, {
+					ctx: "bedrock",
+					errorType,
+					errorMessage: error instanceof Error ? error.message : String(error),
+				})
+
+				// Exponential backoff: 1s, 2s, 4s
+				const delay = Math.pow(2, retryCount - 1) * 1000
+				await new Promise((resolve) => setTimeout(resolve, delay))
+			}
+		}
+
+		// If we get here, all retries failed
+		throw lastError
+	}
+
+	private async *createMessageInternal(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		let modelConfig = this.getModel()
 		// Handle cross-region inference
 		const usePromptCache = Boolean(this.options.awsUsePromptCache && this.supportsAwsPromptCache(modelConfig))
@@ -280,18 +335,57 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			conversationId,
 		)
 
+		// Get model parameters including reasoning configuration
+		const params = getModelParams({
+			format: "anthropic",
+			modelId: modelConfig.id as string,
+			model: modelConfig.info,
+			settings: this.options,
+		})
+
 		// Construct the payload
 		const inferenceConfig: BedrockInferenceConfig = {
-			maxTokens: modelConfig.info.maxTokens as number,
-			temperature: this.options.modelTemperature as number,
+			maxTokens: params.maxTokens || (modelConfig.info.maxTokens as number),
+			temperature: params.temperature || (this.options.modelTemperature as number),
 			topP: 0.1,
 		}
 
-		const payload = {
+		// Build the base payload
+		const payload: any = {
 			modelId: modelConfig.id,
 			messages: formatted.messages,
 			system: formatted.system,
 			inferenceConfig,
+		}
+
+		// Add extended thinking support ONLY if explicitly enabled by the user
+		// Reasoning is disabled by default as per requirements
+		if (
+			this.options.enableReasoningEffort &&
+			shouldUseReasoningBudget({ model: modelConfig.info, settings: this.options }) &&
+			params.reasoning &&
+			params.reasoningBudget
+		) {
+			// Add the anthropic_version field required for extended thinking
+			payload.anthropic_version = "bedrock-20250514"
+
+			// Add additionalModelRequestFields with thinking configuration
+			payload.additionalModelRequestFields = {
+				thinking: {
+					type: "enabled",
+					budget_tokens: params.reasoningBudget,
+				},
+			}
+
+			// Remove temperature, topP, and top_k when thinking is enabled as they are incompatible
+			delete inferenceConfig.temperature
+			delete inferenceConfig.topP
+
+			logger.info("Extended thinking enabled for Bedrock request", {
+				ctx: "bedrock",
+				modelId: modelConfig.id,
+				budgetTokens: params.reasoningBudget,
+			})
 		}
 
 		// Create AbortController with 10 minute timeout
@@ -397,21 +491,59 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				}
 
 				// Handle content blocks
-				if (streamEvent.contentBlockStart?.start?.text) {
-					yield {
-						type: "text",
-						text: streamEvent.contentBlockStart.start.text,
+				if (streamEvent.contentBlockStart) {
+					// Handle thinking content blocks
+					if (streamEvent.contentBlockStart.contentBlock?.type === "thinking") {
+						yield {
+							type: "reasoning",
+							text: streamEvent.contentBlockStart.contentBlock.thinking || "",
+						}
+						continue
 					}
-					continue
+					// Handle regular text content blocks
+					if (streamEvent.contentBlockStart.start?.text || streamEvent.contentBlockStart.contentBlock?.text) {
+						yield {
+							type: "text",
+							text:
+								streamEvent.contentBlockStart.start?.text ||
+								streamEvent.contentBlockStart.contentBlock?.text ||
+								"",
+						}
+						continue
+					}
 				}
 
 				// Handle content deltas
-				if (streamEvent.contentBlockDelta?.delta?.text) {
-					yield {
-						type: "text",
-						text: streamEvent.contentBlockDelta.delta.text,
+				if (streamEvent.contentBlockDelta?.delta) {
+					const delta = streamEvent.contentBlockDelta.delta
+
+					// Handle thinking deltas
+					if (delta.type === "thinking_delta" && delta.thinking) {
+						yield {
+							type: "reasoning",
+							text: delta.thinking,
+						}
+						continue
 					}
-					continue
+
+					// Handle signature deltas (part of thinking)
+					if (delta.type === "signature_delta" && delta.signature) {
+						// Signature is part of the thinking process, treat it as reasoning
+						yield {
+							type: "reasoning",
+							text: delta.signature,
+						}
+						continue
+					}
+
+					// Handle regular text deltas
+					if (delta.text) {
+						yield {
+							type: "text",
+							text: delta.text,
+						}
+						continue
+					}
 				}
 				// Handle message stop
 				if (streamEvent.messageStop) {
@@ -509,7 +641,14 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		conversationId?: string, // Optional conversation ID to track cache points across messages
 	): { system: SystemContentBlock[]; messages: Message[] } {
 		// First convert messages using shared converter for proper image handling
-		const convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
+		let convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
+
+		// Handle extended thinking for tool use
+		// When using tools with extended thinking, we need to preserve the thinking block
+		// from previous assistant messages
+		if (this.options.enableReasoningEffort && modelInfo?.supportsReasoningBudget) {
+			convertedMessages = this.preserveThinkingBlocks(convertedMessages)
+		}
 
 		// If prompt caching is disabled, return the converted messages directly
 		if (!usePromptCache) {
@@ -792,6 +931,35 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		return content
 	}
 
+	/**
+	 * Preserves thinking blocks from previous assistant messages for tool use continuity
+	 */
+	private preserveThinkingBlocks(messages: Message[]): Message[] {
+		// When using extended thinking with tools, we need to preserve the entire
+		// thinking block from previous assistant messages to maintain reasoning continuity
+		return messages.map((message, index) => {
+			if (message.role === "assistant" && index > 0) {
+				// Check if this assistant message follows a tool use pattern
+				const prevMessage = messages[index - 1]
+				if (prevMessage.role === "user" && this.hasToolUseContent(prevMessage)) {
+					// This is likely a response to tool use, preserve any thinking blocks
+					return message
+				}
+			}
+			return message
+		})
+	}
+
+	/**
+	 * Checks if a message contains tool use content
+	 */
+	private hasToolUseContent(message: Message): boolean {
+		if (!message.content || !Array.isArray(message.content)) {
+			return false
+		}
+		return message.content.some((block: any) => block.toolUse || block.toolResult)
+	}
+
 	/************************************************************************************
 	 *
 	 *     AMAZON REGIONS
@@ -905,10 +1073,22 @@ Suggestions:
 			messageTemplate: `Invalid ARN format. ARN should follow the pattern: arn:aws:bedrock:region:account-id:resource-type/resource-name`,
 			logLevel: "error",
 		},
+		THINKING_NOT_SUPPORTED: {
+			patterns: ["thinking", "reasoning", "additionalmodelrequestfields"],
+			messageTemplate: `Extended thinking/reasoning is not supported for this model or configuration.
+
+Please verify:
+1. You're using a supported model (Claude 3.7 Sonnet, Claude 4 Sonnet, or Claude 4 Opus)
+2. Your AWS region supports extended thinking
+3. You have the necessary permissions to use this feature
+
+If the issue persists, try disabling "Enable Reasoning Mode" in the settings.`,
+			logLevel: "error",
+		},
 		// Default/generic error
 		GENERIC: {
 			patterns: [], // Empty patterns array means this is the default
-			messageTemplate: `Unknown Error`,
+			messageTemplate: `Bedrock is unable to process your request. Please check your configuration and try again.`,
 			logLevel: "error",
 		},
 	}

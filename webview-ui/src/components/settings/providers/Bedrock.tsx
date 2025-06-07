@@ -8,6 +8,7 @@ import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
 
 import { inputEventTransform, noTransform } from "../transforms"
+import { ThinkingBudget } from "../ThinkingBudget"
 
 type BedrockProps = {
 	apiConfiguration: ProviderSettings
@@ -151,6 +152,11 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 					</div>
 				</>
 			)}
+			<ThinkingBudget
+				apiConfiguration={apiConfiguration}
+				setApiConfigurationField={setApiConfigurationField}
+				modelInfo={selectedModelInfo}
+			/>
 		</>
 	)
 }
