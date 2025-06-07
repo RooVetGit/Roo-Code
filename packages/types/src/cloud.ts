@@ -104,3 +104,13 @@ export const ORGANIZATION_DEFAULT: OrganizationSettings = {
 	defaultSettings: {},
 	allowList: ORGANIZATION_ALLOW_ALL,
 } as const
+
+/**
+ * Share Types
+ */
+
+export interface ShareResponse {
+	success: boolean
+	shareUrl?: string
+	error?: string
+}
