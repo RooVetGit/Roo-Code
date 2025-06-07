@@ -37,7 +37,7 @@ export async function injectVariables<C extends string | Record<PropertyKey, any
 		else
 			_config = _config.replace(new RegExp(`\\$\\{${key}:([\\w]+)\\}`, "g"), (match, name) => {
 				if (value[name] == null)
-					console.warn(`[injectVariables] variable ${name} referenced but not found in ${key}`)
+					console.warn(`[injectVariables] variable "${name}" referenced but not found in "${key}"`)
 
 				return value[name] ?? propNotFoundValue ?? match
 			})
