@@ -51,7 +51,7 @@ export const processTask = async ({ taskId, logger }: { taskId: number; logger?:
 export const processTaskInContainer = async ({
 	taskId,
 	logger,
-	maxRetries = 3,
+	maxRetries = 5,
 }: {
 	taskId: number
 	logger: FileLogger
@@ -76,7 +76,7 @@ export const processTaskInContainer = async ({
 		const isRetry = attempt > 0
 
 		if (isRetry) {
-			const delayMs = Math.pow(2, attempt - 1) * 1000
+			const delayMs = Math.pow(2, attempt - 1) * 1000 * (0.5 + Math.random())
 			logger.info(`retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries + 1})`)
 			await new Promise((resolve) => setTimeout(resolve, delayMs))
 		}
