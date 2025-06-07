@@ -349,10 +349,7 @@ export class DiffViewProvider {
 			// Remove only the directories we created, in reverse order.
 			for (let i = this.createdDirs.length - 1; i >= 0; i--) {
 				await fs.rmdir(this.createdDirs[i])
-				console.log(`Directory ${this.createdDirs[i]} has been deleted.`)
 			}
-
-			console.log(`File ${absolutePath} has been deleted.`)
 		} else {
 			// Revert document.
 			const edit = new vscode.WorkspaceEdit()
@@ -369,7 +366,6 @@ export class DiffViewProvider {
 			// changes and saved during the edit.
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
-			console.log(`File ${absolutePath} has been reverted to its original content.`)
 
 			if (this.documentWasOpen) {
 				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
@@ -397,9 +393,7 @@ export class DiffViewProvider {
 			.map((tab) =>
 				vscode.window.tabGroups.close(tab).then(
 					() => undefined,
-					(err) => {
-						console.error(`Failed to close diff tab ${tab.label}`, err)
-					},
+					(err) => {},
 				),
 			)
 
@@ -432,31 +426,75 @@ export class DiffViewProvider {
 
 		// Open new diff editor.
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
-			const fileName = path.basename(uri.fsPath)
-			const fileExists = this.editType === "modify"
+			;(async () => {
+				const fileName = path.basename(uri.fsPath)
+				const fileExists = this.editType === "modify"
+				let timeoutId: NodeJS.Timeout | undefined
 
-			const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
-				if (editor && arePathsEqual(editor.document.uri.fsPath, uri.fsPath)) {
-					disposable.dispose()
-					resolve(editor)
+				const checkAndResolve = () => {
+					for (const group of vscode.window.tabGroups.all) {
+						for (const tab of group.tabs) {
+							if (
+								tab.input instanceof vscode.TabInputTextDiff &&
+								tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME &&
+								arePathsEqual(tab.input.modified.fsPath, uri.fsPath)
+							) {
+								// Found the diff editor, now try to show it to get the TextEditor instance
+								vscode.window.showTextDocument(tab.input.modified, { preserveFocus: true }).then(
+									(editor) => {
+										if (timeoutId) clearTimeout(timeoutId)
+										disposableTabGroup.dispose()
+										resolve(editor)
+									},
+									(err) => {
+										if (timeoutId) clearTimeout(timeoutId)
+										disposableTabGroup.dispose()
+										reject(
+											new Error(`Failed to show diff editor after finding tab: ${err.message}`),
+										)
+									},
+								)
+								return true
+							}
+						}
+					}
+					return false
 				}
-			})
 
-			vscode.commands.executeCommand(
-				"vscode.diff",
-				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-					query: Buffer.from(this.originalContent ?? "").toString("base64"),
-				}),
-				uri,
-				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
-				{ preserveFocus: true },
-			)
+				// Listen for changes in tab groups, which includes tabs moving between windows
+				const disposableTabGroup = vscode.window.tabGroups.onDidChangeTabGroups(() => {
+					checkAndResolve()
+				})
 
-			// This may happen on very slow machines i.e. project idx.
-			setTimeout(() => {
-				disposable.dispose()
-				reject(new Error("Failed to open diff editor, please try again..."))
-			}, 10_000)
+				vscode.commands
+					.executeCommand(
+						"vscode.diff",
+						vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+							query: Buffer.from(this.originalContent ?? "").toString("base64"),
+						}),
+						uri,
+						`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+						{ preserveFocus: true },
+					)
+					.then(
+						async () => {
+							// Give a brief moment for the editor to appear in tab groups
+							await new Promise((r) => setTimeout(r, 100))
+							if (!checkAndResolve()) {
+							}
+						},
+						(err) => {
+							if (timeoutId) clearTimeout(timeoutId)
+							disposableTabGroup.dispose()
+							reject(new Error(`Failed to open diff editor command: ${err.message}`))
+						},
+					)
+
+				timeoutId = setTimeout(() => {
+					disposableTabGroup.dispose()
+					reject(new Error("Failed to open diff editor, please try again..."))
+				}, 10_000)
+			})()
 		})
 	}
 
