@@ -60,6 +60,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	{ isHidden, showAnnouncement, hideAnnouncement },
 	ref,
 ) => {
+	const isMountedRef = useRef(true)
 	const [audioBaseUri] = useState(() => {
 		const w = window as any
 		return w.AUDIO_BASE_URI || ""
@@ -157,6 +158,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	useEffect(() => {
 		clineAskRef.current = clineAsk
 	}, [clineAsk])
+
+	useEffect(() => {
+		isMountedRef.current = true
+		return () => {
+			isMountedRef.current = false
+		}
+	}, [])
 
 	const isProfileDisabled = useMemo(
 		() => !!apiConfiguration && !ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList),
@@ -1109,10 +1117,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	useEffect(() => {
+		let timerId: NodeJS.Timeout | undefined
 		if (!disableAutoScrollRef.current) {
-			setTimeout(() => scrollToBottomSmooth(), 50)
-			// Don't cleanup since if visibleMessages.length changes it cancels.
-			// return () => clearTimeout(timer)
+			timerId = setTimeout(() => scrollToBottomSmooth(), 50)
+		}
+		return () => {
+			if (timerId) {
+				clearTimeout(timerId)
+			}
 		}
 	}, [groupedMessages.length, scrollToBottomSmooth])
 
@@ -1234,6 +1246,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// Add delay for write operations.
 				if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
 					await new Promise((resolve) => setTimeout(resolve, writeDelayMs))
+					if (!isMountedRef.current) {
+						return
+					}
 				}
 
 				vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
@@ -1241,9 +1256,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// This is copied from `handlePrimaryButtonClick`, which we used
 				// to call from `autoApprove`. I'm not sure how many of these
 				// things are actually needed.
-				setSendingDisabled(true)
-				setClineAsk(undefined)
-				setEnableButtons(false)
+				if (isMountedRef.current) {
+					setSendingDisabled(true)
+					setClineAsk(undefined)
+					setEnableButtons(false)
+				}
 			}
 		}
 		autoApprove()
@@ -1415,10 +1432,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						<Virtuoso
 							ref={virtuosoRef}
 							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
-							className="scrollable grow overflow-y-scroll"
-							components={{
-								Footer: () => <div className="h-[5px]" />, // Add empty padding at the bottom
-							}}
+							className="scrollable grow overflow-y-scroll mb-[5px]"
 							// increasing top by 3_000 to prevent jumping around when user collapses a row
 							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
 							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
