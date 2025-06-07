@@ -216,6 +216,7 @@
 		"googleCloudKeyFile": "Ruta del archivo de clave de Google Cloud",
 		"googleCloudProjectId": "ID del proyecto de Google Cloud",
 		"googleCloudRegion": "Región de Google Cloud",
+		"googleCloudApiKey": "Clave API de Vertex AI",
 		"lmStudio": {
 			"baseUrl": "URL base (opcional)",
 			"modelId": "ID del modelo",

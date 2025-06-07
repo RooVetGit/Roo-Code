@@ -216,6 +216,7 @@
 		"googleCloudKeyFile": "Google Cloud कुंजी फ़ाइल पथ",
 		"googleCloudProjectId": "Google Cloud प्रोजेक्ट ID",
 		"googleCloudRegion": "Google Cloud क्षेत्र",
+		"googleCloudApiKey": "Vertex AI API कुंजी",
 		"lmStudio": {
 			"baseUrl": "बेस URL (वैकल्पिक)",
 			"modelId": "मॉडल ID",

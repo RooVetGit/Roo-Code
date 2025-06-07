@@ -106,6 +106,7 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({
+	vertexApiKey: z.string().optional(),
 	vertexKeyFile: z.string().optional(),
 	vertexJsonCredentials: z.string().optional(),
 	vertexProjectId: z.string().optional(),
@@ -290,6 +291,7 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"awsBedrockEndpointEnabled",
 	"awsBedrockEndpoint",
 	// Google Vertex
+	"vertexApiKey",
 	"vertexKeyFile",
 	"vertexJsonCredentials",
 	"vertexProjectId",

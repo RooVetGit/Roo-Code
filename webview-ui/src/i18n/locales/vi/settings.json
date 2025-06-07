@@ -216,6 +216,7 @@
 		"googleCloudKeyFile": "Đường dẫn tệp khóa Google Cloud",
 		"googleCloudProjectId": "ID dự án Google Cloud",
 		"googleCloudRegion": "Vùng Google Cloud",
+		"googleCloudApiKey": "Khóa API Vertex AI",
 		"lmStudio": {
 			"baseUrl": "URL cơ sở (tùy chọn)",
 			"modelId": "ID mô hình",
