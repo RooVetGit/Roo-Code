@@ -235,10 +235,13 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 			logError("subprocess did not finish within timeout, force killing")
 
 			try {
-				await execa("kill", ["-9", subprocess.pid?.toString() || ""], { reject: false })
-				log("subprocess force killed")
+				if (subprocess.kill("SIGKILL")) {
+					log("SIGKILL sent to subprocess")
+				} else {
+					logError("failed to send SIGKILL to subprocess")
+				}
 			} catch (killError) {
-				logError("failed to force kill subprocess:", killError)
+				logError("subprocess.kill(SIGKILL) failed:", killError)
 			}
 		} else {
 			throw error
