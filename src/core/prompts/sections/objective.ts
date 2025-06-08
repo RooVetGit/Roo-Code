@@ -1,7 +1,8 @@
 import { CodeIndexManager } from "../../../services/code-index/manager"
 
 export function getObjectiveSection(codeIndexManager?: CodeIndexManager): string {
-	const isCodebaseSearchAvailable = codeIndexManager &&
+	const isCodebaseSearchAvailable =
+		codeIndexManager &&
 		codeIndexManager.isFeatureEnabled &&
 		codeIndexManager.isFeatureConfigured &&
 		codeIndexManager.isInitialized

@@ -5,11 +5,11 @@ export function getBrowserActionDescription(args: ToolArgs): string | undefined 
 		return undefined
 	}
 	return `## browser_action
-Description: Request to interact with a Puppeteer-controlled browser. Every action, except \`close\`, will be responded to with a screenshot of the browser's current state, along with any new console logs. You may only perform one browser action per message, and wait for the user's response including a screenshot and logs to determine the next action.
+Description: Request to interact with a Puppeteer-controlled browser. For models that support images, every action (except \`close\`) will be responded to with a screenshot of the browser's current state, along with any new console logs. For models that don't support images, the \`launch\` action will convert the webpage to markdown text for analysis and provide a list of interactive elements with CSS selectors for programmatic interaction. You may only perform one browser action per message, and wait for the user's response including a screenshot/text content and logs to determine the next action.
 - The sequence of actions **must always start with** launching the browser at a URL, and **must always end with** closing the browser. If you need to visit a new URL that is not possible to navigate to from the current webpage, you must first close the browser, then launch again at the new URL.
 - While the browser is active, only the \`browser_action\` tool can be used. No other tools should be called during this time. You may proceed to use other tools only after closing the browser. For example if you run into an error and need to fix a file, you must close the browser, then use other tools to make the necessary changes, then re-launch the browser to verify the result.
-- The browser window has a resolution of **${args.browserViewportSize}** pixels. When performing any click actions, ensure the coordinates are within this resolution range.
-- Before clicking on any elements such as icons, links, or buttons, you must consult the provided screenshot of the page to determine the coordinates of the element. The click should be targeted at the **center of the element**, not on its edges.
+- For models that support images: The browser window has a resolution of **${args.browserViewportSize}** pixels. When performing any click actions, ensure the coordinates are within this resolution range. Before clicking on any elements such as icons, links, or buttons, you must consult the provided screenshot of the page to determine the coordinates of the element. The click should be targeted at the **center of the element**, not on its edges.
+- For models that don't support images: Enhanced interactive text-based browsing is supported. The \`launch\` action provides webpage content as markdown text plus a list of interactive elements (buttons, links, inputs) with CSS selectors. You can use \`click\` and \`type\` actions with CSS selectors instead of coordinates for programmatic interaction.
 Parameters:
 - action: (required) The action to perform. The available actions are:
     * launch: Launch a new Puppeteer-controlled browser instance at the specified URL. This **must always be the first action**.
@@ -18,10 +18,13 @@ Parameters:
     * hover: Move the cursor to a specific x,y coordinate.
         - Use with the \`coordinate\` parameter to specify the location.
         - Always move to the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot.
-    * click: Click at a specific x,y coordinate.
-        - Use with the \`coordinate\` parameter to specify the location.
-        - Always click in the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot.
+    * click: Click at a specific x,y coordinate (for image-supporting models) or CSS selector (for text-based browsing).
+        - For image-supporting models: Use with the \`coordinate\` parameter to specify x,y location.
+        - For text-based browsing: Use with the \`coordinate\` parameter to specify a CSS selector (e.g., "button.submit", "#login-btn", "a[href='/about']").
+        - Always click in the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot or CSS selector.
     * type: Type a string of text on the keyboard. You might use this after clicking on a text field to input text.
+        - For image-supporting models: Use after clicking on a text field.
+        - For text-based browsing: Use with the \`coordinate\` parameter to specify a CSS selector for the input field (e.g., "input[name='username']", "#password", "textarea.comment").
         - Use with the \`text\` parameter to provide the string to type.
     * resize: Resize the viewport to a specific w,h size.
         - Use with the \`size\` parameter to specify the new size.
@@ -31,8 +34,9 @@ Parameters:
         - Example: \`<action>close</action>\`
 - url: (optional) Use this for providing the URL for the \`launch\` action.
     * Example: <url>https://example.com</url>
-- coordinate: (optional) The X and Y coordinates for the \`click\` and \`hover\` actions. Coordinates should be within the **${args.browserViewportSize}** resolution.
-    * Example: <coordinate>450,300</coordinate>
+- coordinate: (optional) The X and Y coordinates for the \`click\` and \`hover\` actions (image-supporting models), or CSS selector for \`click\` and \`type\` actions (text-based browsing). For image-supporting models, coordinates should be within the **${args.browserViewportSize}** resolution.
+    * Example for image-supporting models: <coordinate>450,300</coordinate>
+    * Example for text-based browsing: <coordinate>button.submit</coordinate> or <coordinate>#login-btn</coordinate>
 - size: (optional) The width and height for the \`resize\` action.
     * Example: <size>1280,720</size>
 - text: (optional) Use this for providing the text for the \`type\` action.

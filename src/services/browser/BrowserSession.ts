@@ -59,16 +59,27 @@ export class BrowserSession {
 	/**
 	 * Launches a local browser instance
 	 */
-	private async launchLocalBrowser(): Promise<void> {
+	private async launchLocalBrowser(modelSupportsImages: boolean, modelSupportsComputerUse: boolean): Promise<void> {
 		console.log("Launching local browser")
 		const stats = await this.ensureChromiumExists()
+
+		// Determine browser visibility based on model capabilities
+		let shouldShowBrowser: boolean
+		if (!modelSupportsImages && modelSupportsComputerUse) {
+			// Computer use models without image support: run headless by default
+			shouldShowBrowser = this.context.globalState.get("showBrowserForTextMode") ?? false
+		} else {
+			// All other cases (including non-computer use models): show browser by default for better UX
+			shouldShowBrowser = this.context.globalState.get("showBrowserForTextMode") ?? true
+		}
+
 		this.browser = await stats.puppeteer.launch({
 			args: [
 				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
 			],
 			executablePath: stats.executablePath,
 			defaultViewport: this.getViewport(),
-			// headless: false,
+			headless: !shouldShowBrowser,
 		})
 	}
 
@@ -156,7 +167,10 @@ export class BrowserSession {
 		return false
 	}
 
-	async launchBrowser(): Promise<void> {
+	async launchBrowser(
+		modelSupportsImages: boolean = false,
+		modelSupportsComputerUse: boolean = false,
+	): Promise<void> {
 		console.log("launch browser called")
 
 		// Check if remote browser connection is enabled
@@ -171,7 +185,7 @@ export class BrowserSession {
 				// If browser wasn't open, just reset the state
 				this.resetBrowserState()
 			}
-			await this.launchLocalBrowser()
+			await this.launchLocalBrowser(modelSupportsImages, modelSupportsComputerUse)
 		} else {
 			console.log("Connecting to remote browser")
 			// Remote browser connection is enabled
@@ -180,8 +194,14 @@ export class BrowserSession {
 			// If all remote connection attempts fail, fall back to local browser
 			if (!remoteConnected) {
 				console.log("Falling back to local browser")
-				await this.launchLocalBrowser()
+				await this.launchLocalBrowser(modelSupportsImages, modelSupportsComputerUse)
 			}
+		}
+
+		// Ensure we have a page available for doAction calls
+		if (this.browser && !this.page) {
+			console.log("Creating initial page for browser session")
+			this.page = await this.browser.newPage()
 		}
 	}
 
@@ -197,10 +217,10 @@ export class BrowserSession {
 				await this.browser.disconnect().catch(() => {})
 			} else {
 				await this.browser?.close().catch(() => {})
-				this.resetBrowserState()
 			}
 
-			// this.resetBrowserState()
+			// Always reset browser state after closing/disconnecting
+			this.resetBrowserState()
 		}
 		return {}
 	}
