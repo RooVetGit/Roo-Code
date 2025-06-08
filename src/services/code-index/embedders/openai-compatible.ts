@@ -111,10 +111,37 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				const response = await this.embeddingsClient.embeddings.create({
 					input: batchTexts,
 					model: model,
+					encoding_format: "base64", // Use base64 to protect embedding dimensions from openai sabotage
 				})
 
+				// Convert base64 embeddings to float32 arrays
+				const processedEmbeddings = response.data.map((item: any) => {
+					if (typeof item.embedding === "string") {
+						const buffer = Buffer.from(item.embedding, "base64")
+						const float32Array = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4)
+						return {
+							...item,
+							embedding: Array.from(float32Array),
+						}
+					}
+					return item
+				})
+
+				// Replace the original data with processed embeddings
+				response.data = processedEmbeddings
+
+				const embeddings = response.data.map((item) => item.embedding)
+
+				console.log(`[OpenAI-Compatible Embedder] After mapping - embedding length: ${embeddings[0]?.length}`)
+				if (embeddings[0]) {
+					console.log(
+						`[OpenAI-Compatible Embedder] First 10 values after mapping:`,
+						embeddings[0].slice(0, 5),
+					)
+				}
+
 				return {
-					embeddings: response.data.map((item) => item.embedding),
+					embeddings,
 					usage: {
 						promptTokens: response.usage?.prompt_tokens || 0,
 						totalTokens: response.usage?.total_tokens || 0,
