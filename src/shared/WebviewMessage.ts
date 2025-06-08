@@ -169,6 +169,8 @@ export interface WebviewMessage {
 		| "marketplaceInstallResult"
 		| "fetchMarketplaceData"
 		| "switchTab"
+		| "profileSpecificThresholdsEnabled"
+		| "profileThresholds"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean

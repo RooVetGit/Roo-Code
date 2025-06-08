@@ -259,6 +259,8 @@ export type ExtensionState = Pick<
 	autoCondenseContextPercent: number
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
+	profileSpecificThresholdsEnabled: boolean
+	profileThresholds: Record<string, number>
 }
 
 export interface ClineSayTool {

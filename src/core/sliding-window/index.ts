@@ -74,6 +74,9 @@ type TruncateOptions = {
 	taskId: string
 	customCondensingPrompt?: string
 	condensingApiHandler?: ApiHandler
+	profileSpecificThresholdsEnabled: boolean
+	profileThresholds: Record<string, number>
+	currentProfileId: string
 }
 
 type TruncateResponse = SummarizeResponse & { prevContextTokens: number }
@@ -97,6 +100,9 @@ export async function truncateConversationIfNeeded({
 	taskId,
 	customCondensingPrompt,
 	condensingApiHandler,
+	profileSpecificThresholdsEnabled,
+	profileThresholds,
+	currentProfileId,
 }: TruncateOptions): Promise<TruncateResponse> {
 	let error: string | undefined
 	let cost = 0
@@ -117,9 +123,20 @@ export async function truncateConversationIfNeeded({
 	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window
 	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
+	// Determine the effective threshold to use
+	let effectiveThreshold = autoCondenseContextPercent
+	if (profileSpecificThresholdsEnabled) {
+		const profileThreshold = profileThresholds[currentProfileId]
+		if (profileThreshold !== undefined) {
+			// Special case: if the value is -1, use the global autoCondenseContextPercent
+			effectiveThreshold = profileThreshold === -1 ? autoCondenseContextPercent : profileThreshold
+		}
+		// If no specific threshold is found for the profile, fall back to global setting
+	}
+
 	if (autoCondenseContext) {
 		const contextPercent = (100 * prevContextTokens) / contextWindow
-		if (contextPercent >= autoCondenseContextPercent || prevContextTokens > allowedTokens) {
+		if (contextPercent >= effectiveThreshold || prevContextTokens > allowedTokens) {
 			// Attempt to intelligently condense the context
 			const result = await summarizeConversation(
 				messages,

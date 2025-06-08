@@ -393,6 +393,16 @@
 			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
+		},
+		"profileThresholds": {
+			"enabled": "Enable profile-specific thresholds",
+			"description": "Allows setting different context condensing thresholds for each API configuration profile.",
+			"configureLabel": "Configure threshold for profile:",
+			"selectProfile": "Select a profile",
+			"infoText": "ℹ️ Enter -1 to use the default threshold",
+			"configuredProfiles": "Configured Profiles:",
+			"defaultThreshold": "Default ({{defaultThreshold}}%)",
+			"removeAriaLabel": "Remove threshold for {{profileName}}"
 		}
 	},
 	"terminal": {

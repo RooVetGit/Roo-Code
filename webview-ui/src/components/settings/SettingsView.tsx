@@ -172,6 +172,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		codebaseIndexConfig,
 		codebaseIndexModels,
 		customSupportPrompts,
+		profileSpecificThresholdsEnabled,
+		profileThresholds,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -315,6 +317,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "codebaseIndexConfig", values: codebaseIndexConfig })
+			vscode.postMessage({ type: "profileSpecificThresholdsEnabled", bool: profileSpecificThresholdsEnabled })
+			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
 			setChangeDetected(false)
 		}
 	}
@@ -644,6 +648,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							showRooIgnoredFiles={showRooIgnoredFiles}
 							maxReadFileLine={maxReadFileLine}
 							maxConcurrentFileReads={maxConcurrentFileReads}
+							profileSpecificThresholdsEnabled={profileSpecificThresholdsEnabled}
+							profileThresholds={profileThresholds}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

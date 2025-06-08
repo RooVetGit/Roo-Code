@@ -1643,6 +1643,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			mode,
 			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
+			profileSpecificThresholdsEnabled = false,
+			profileThresholds = {},
 		} = state ?? {}
 
 		// Get condensing configuration for automatic triggers
@@ -1719,6 +1721,9 @@ export class Task extends EventEmitter<ClineEvents> {
 				taskId: this.taskId,
 				customCondensingPrompt,
 				condensingApiHandler,
+				profileSpecificThresholdsEnabled,
+				profileThresholds,
+				currentProfileId: state?.currentApiConfigName || "default",
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
