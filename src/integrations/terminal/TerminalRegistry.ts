@@ -100,6 +100,7 @@ export class TerminalRegistry {
 							{ terminalId: terminal?.id, command: process?.command, exitCode: e.exitCode },
 						)
 
+						terminal.busy = false
 						return
 					}
 
