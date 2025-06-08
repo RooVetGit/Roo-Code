@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import type { HistoryItem } from "@roo-code/types"
 
 import { vscode } from "@/utils/vscode"
+import { useExtensionState } from "@/context/ExtensionStateContext"
 
 import { DeleteTaskDialog } from "../history/DeleteTaskDialog"
 import { IconButton } from "./IconButton"
@@ -17,10 +18,11 @@ interface TaskActionsProps {
 export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 	const { t } = useTranslation()
+	const { sharingEnabled } = useExtensionState()
 
 	return (
 		<div className="flex flex-row gap-1">
-			{item?.id && (
+			{item?.id && sharingEnabled && (
 				<IconButton
 					iconClass="codicon-link"
 					title={t("chat:task.share")}
