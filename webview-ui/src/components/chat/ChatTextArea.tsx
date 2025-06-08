@@ -161,15 +161,21 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		// Initialize prompt history from task history
 		useEffect(() => {
-			if (taskHistory && taskHistory.length > 0) {
-				// Extract user prompts from task history
+			if (taskHistory && taskHistory.length > 0 && cwd) {
+				// Extract user prompts from task history for the current workspace only
 				const prompts = taskHistory
-					.filter((item) => item.task && item.task.trim() !== "")
+					.filter((item) => {
+						// Filter by workspace and ensure task is not empty
+						return item.task && item.task.trim() !== "" && (!item.workspace || item.workspace === cwd)
+					})
 					.map((item) => item.task)
-					.reverse() // Most recent first
+				// taskHistory is already in chronological order (oldest first)
+				// We keep it as-is so that navigation works correctly:
+				// - Arrow up increases index to go back in history (older prompts)
+				// - Arrow down decreases index to go forward (newer prompts)
 				setPromptHistory(prompts)
 			}
-		}, [taskHistory])
+		}, [taskHistory, cwd])
 
 		// Fetch git commits when Git is selected or when typing a hash.
 		useEffect(() => {
