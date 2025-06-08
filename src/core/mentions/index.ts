@@ -72,6 +72,9 @@ export async function parseMentions(
 		} else if (mention === "thinking") {
 			return ""
 		} else if (mention.startsWith("summary")) {
+			if (mention.includes(":")) {
+				return mention.slice(8)
+			}
 			return ""
 		}
 		return match
