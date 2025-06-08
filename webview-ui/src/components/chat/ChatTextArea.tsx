@@ -75,6 +75,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			cwd,
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
+			taskHistory,
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -152,6 +153,23 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
+
+		// Prompt history navigation state
+		const [historyIndex, setHistoryIndex] = useState(-1)
+		const [tempInput, setTempInput] = useState("")
+		const [promptHistory, setPromptHistory] = useState<string[]>([])
+
+		// Initialize prompt history from task history
+		useEffect(() => {
+			if (taskHistory && taskHistory.length > 0) {
+				// Extract user prompts from task history
+				const prompts = taskHistory
+					.filter((item) => item.task && item.task.trim() !== "")
+					.map((item) => item.task)
+					.reverse() // Most recent first
+				setPromptHistory(prompts)
+			}
+		}, [taskHistory])
 
 		// Fetch git commits when Git is selected or when typing a hash.
 		useEffect(() => {
@@ -360,10 +378,90 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				const isComposing = event.nativeEvent?.isComposing ?? false
 
+				// Handle prompt history navigation
+				if (!showContextMenu && promptHistory.length > 0 && !isComposing) {
+					const textarea = event.currentTarget
+					const { selectionStart, selectionEnd, value } = textarea
+					const lines = value.substring(0, selectionStart).split("\n")
+					const currentLineIndex = lines.length - 1
+					const totalLines = value.split("\n").length
+					const isAtFirstLine = currentLineIndex === 0
+					const isAtLastLine = currentLineIndex === totalLines - 1
+					const hasSelection = selectionStart !== selectionEnd
+
+					// Only navigate history if cursor is at first/last line and no text is selected
+					if (!hasSelection) {
+						if (event.key === "ArrowUp" && isAtFirstLine) {
+							event.preventDefault()
+
+							// Save current input if starting navigation
+							if (historyIndex === -1 && inputValue.trim() !== "") {
+								setTempInput(inputValue)
+							}
+
+							// Navigate to previous prompt
+							const newIndex = historyIndex + 1
+							if (newIndex < promptHistory.length) {
+								setHistoryIndex(newIndex)
+								const historicalPrompt = promptHistory[newIndex]
+								setInputValue(historicalPrompt)
+
+								// Set cursor to end of first line
+								setTimeout(() => {
+									if (textAreaRef.current) {
+										const firstLineEnd =
+											historicalPrompt.indexOf("\n") === -1
+												? historicalPrompt.length
+												: historicalPrompt.indexOf("\n")
+										textAreaRef.current.setSelectionRange(firstLineEnd, firstLineEnd)
+									}
+								}, 0)
+							}
+							return
+						}
+
+						if (event.key === "ArrowDown" && isAtLastLine) {
+							event.preventDefault()
+
+							// Navigate to next prompt
+							if (historyIndex > 0) {
+								const newIndex = historyIndex - 1
+								setHistoryIndex(newIndex)
+								const historicalPrompt = promptHistory[newIndex]
+								setInputValue(historicalPrompt)
+
+								// Set cursor to start of last line
+								setTimeout(() => {
+									if (textAreaRef.current) {
+										const lines = historicalPrompt.split("\n")
+										const lastLineStart = historicalPrompt.length - lines[lines.length - 1].length
+										textAreaRef.current.setSelectionRange(lastLineStart, lastLineStart)
+									}
+								}, 0)
+							} else if (historyIndex === 0) {
+								// Return to current input
+								setHistoryIndex(-1)
+								setInputValue(tempInput)
+
+								// Set cursor to start
+								setTimeout(() => {
+									if (textAreaRef.current) {
+										textAreaRef.current.setSelectionRange(0, 0)
+									}
+								}, 0)
+							}
+							return
+						}
+					}
+				}
+
 				if (event.key === "Enter" && !event.shiftKey && !isComposing) {
 					event.preventDefault()
 
 					if (!sendingDisabled) {
+						// Reset history navigation state when sending
+						setHistoryIndex(-1)
+						setTempInput("")
 						onSend()
 					}
 				}
@@ -427,6 +525,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				queryItems,
 				customModes,
 				fileSearchResults,
+				historyIndex,
+				tempInput,
+				promptHistory,
 			],
 		)
 
@@ -444,6 +545,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			(e: React.ChangeEvent<HTMLTextAreaElement>) => {
 				const newValue = e.target.value
 				setInputValue(newValue)
+
+				// Reset history navigation when user types
+				if (historyIndex !== -1) {
+					setHistoryIndex(-1)
+					setTempInput("")
+				}
 
 				const newCursorPosition = e.target.selectionStart
 				setCursorPosition(newCursorPosition)
@@ -499,7 +606,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setFileSearchResults([]) // Clear file search results.
 				}
 			},
-			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading],
+			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, historyIndex],
 		)
 
 		useEffect(() => {
