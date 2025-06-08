@@ -216,6 +216,7 @@
 		"googleCloudKeyFile": "Google Cloud-sleutelbestandspad",
 		"googleCloudProjectId": "Google Cloud-project-ID",
 		"googleCloudRegion": "Google Cloud-regio",
+		"googleCloudApiKey": "Vertex AI API-sleutel",
 		"lmStudio": {
 			"baseUrl": "Basis-URL (optioneel)",
 			"modelId": "Model-ID",

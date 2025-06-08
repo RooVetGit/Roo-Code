@@ -233,4 +233,5 @@ export const VERTEX_REGIONS = [
 	{ value: "europe-west1", label: "europe-west1" },
 	{ value: "europe-west4", label: "europe-west4" },
 	{ value: "asia-southeast1", label: "asia-southeast1" },
+	{ value: "global", label: "global" },
 ]

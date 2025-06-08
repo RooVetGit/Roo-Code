@@ -216,6 +216,7 @@
 		"googleCloudKeyFile": "Google Cloud 密钥文件路径",
 		"googleCloudProjectId": "Google Cloud 项目 ID",
 		"googleCloudRegion": "Google Cloud 区域",
+		"googleCloudApiKey": "Vertex AI API 密钥",
 		"lmStudio": {
 			"baseUrl": "基础 URL（可选）",
 			"modelId": "模型 ID",

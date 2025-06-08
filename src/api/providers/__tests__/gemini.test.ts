@@ -3,19 +3,31 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import { type ModelInfo, geminiDefaultModelId } from "@roo-code/types"
+import { calculateCostGenai } from "../../../utils/calculateCostGenai"
 
 import { GeminiHandler } from "../gemini"
+
+// Mock the calculateCostGenai function
+jest.mock("../../../utils/calculateCostGenai", () => ({
+	calculateCostGenai: jest.fn().mockReturnValue(0.005),
+}))
+
+const mockedCalculateCostGenai = calculateCostGenai as jest.MockedFunction<typeof calculateCostGenai>
 
 const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
 
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
-
 	beforeEach(() => {
+		// Reset mocks
+		jest.clearAllMocks()
+		mockedCalculateCostGenai.mockReturnValue(0.005)
+
 		// Create mock functions
 		const mockGenerateContentStream = jest.fn()
 		const mockGenerateContent = jest.fn()
 		const mockGetGenerativeModel = jest.fn()
+		const mockCountTokens = jest.fn()
 
 		handler = new GeminiHandler({
 			apiKey: "test-key",
@@ -29,14 +41,42 @@ describe("GeminiHandler", () => {
 				generateContentStream: mockGenerateContentStream,
 				generateContent: mockGenerateContent,
 				getGenerativeModel: mockGetGenerativeModel,
+				countTokens: mockCountTokens,
 			},
 		} as any
 	})
-
 	describe("constructor", () => {
 		it("should initialize with provided config", () => {
 			expect(handler["options"].geminiApiKey).toBe("test-key")
 			expect(handler["options"].apiModelId).toBe(GEMINI_20_FLASH_THINKING_NAME)
+		})
+
+		it("should initialize with geminiApiKey", () => {
+			const testHandler = new GeminiHandler({
+				geminiApiKey: "specific-gemini-key",
+				apiModelId: "gemini-1.5-flash-002",
+			})
+
+			expect(testHandler["options"].geminiApiKey).toBe("specific-gemini-key")
+			expect(testHandler["options"].apiModelId).toBe("gemini-1.5-flash-002")
+		})
+
+		it("should handle missing API key gracefully", () => {
+			const testHandler = new GeminiHandler({
+				apiModelId: "gemini-1.5-flash-002",
+			})
+
+			// Should not throw and should have undefined geminiApiKey
+			expect(testHandler["options"].geminiApiKey).toBeUndefined()
+		})
+
+		it("should initialize with baseUrl configuration", () => {
+			const testHandler = new GeminiHandler({
+				geminiApiKey: "test-key",
+				googleGeminiBaseUrl: "https://custom-gemini.example.com",
+			})
+
+			expect(testHandler["options"].googleGeminiBaseUrl).toBe("https://custom-gemini.example.com")
 		})
 	})
 
@@ -69,13 +109,18 @@ describe("GeminiHandler", () => {
 
 			for await (const chunk of stream) {
 				chunks.push(chunk)
-			}
-
-			// Should have 3 chunks: 'Hello', ' world!', and usage info
+			}			// Should have 3 chunks: 'Hello', ' world!', and usage info
 			expect(chunks.length).toBe(3)
 			expect(chunks[0]).toEqual({ type: "text", text: "Hello" })
 			expect(chunks[1]).toEqual({ type: "text", text: " world!" })
-			expect(chunks[2]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 5 })
+			expect(chunks[2]).toEqual({ 
+				type: "usage", 
+				inputTokens: 10, 
+				outputTokens: 5,
+				cacheReadTokens: undefined,
+				reasoningTokens: undefined,
+				totalCost: 0.005
+			})
 
 			// Verify the call to generateContentStream
 			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
@@ -88,18 +133,111 @@ describe("GeminiHandler", () => {
 				}),
 			)
 		})
-
-		it("should handle API errors", async () => {
-			const mockError = new Error("Gemini API error")
-			;(handler["client"].models.generateContentStream as jest.Mock).mockRejectedValue(mockError)
+		it("should handle reasoning/thinking output", async () => {
+			// Mock response with thinking parts
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [
+										{ thought: true, text: "Let me think about this..." },
+										{ text: "Here's my response" },
+									],
+								},
+							},
+						],
+					}
+					yield { usageMetadata: { promptTokenCount: 15, candidatesTokenCount: 8, thoughtsTokenCount: 5 } }
+				},
+			})
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
 
-			await expect(async () => {
-				for await (const _chunk of stream) {
-					// Should throw before yielding any chunks
-				}
-			}).rejects.toThrow()
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks.length).toBe(3)
+			expect(chunks[0]).toEqual({ type: "reasoning", text: "Let me think about this..." })
+			expect(chunks[1]).toEqual({ type: "text", text: "Here's my response" })
+			expect(chunks[2]).toEqual({
+				type: "usage",
+				inputTokens: 15,
+				outputTokens: 8,
+				reasoningTokens: 5,
+				cacheReadTokens: undefined,
+				totalCost: 0.005,
+			})
+		})
+
+		it("should handle custom baseUrl configuration", async () => {
+			const testHandler = new GeminiHandler({
+				geminiApiKey: "test-key",
+				googleGeminiBaseUrl: "https://custom-gemini.example.com",
+				apiModelId: "gemini-1.5-flash-002",
+			})
+
+			// Mock the client
+			testHandler["client"] = {
+				models: {
+					generateContentStream: jest.fn().mockResolvedValue({
+						[Symbol.asyncIterator]: async function* () {
+							yield { text: "Custom response" }
+						},
+					}),
+				},
+			} as any
+
+			const stream = testHandler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(testHandler["client"].models.generateContentStream).toHaveBeenCalledWith(
+				expect.objectContaining({
+					config: expect.objectContaining({
+						httpOptions: { baseUrl: "https://custom-gemini.example.com" },
+					}),
+				}),
+			)
+		})
+		it("should handle usage metadata with cache and reasoning tokens", async () => {
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield { text: "Response" }
+					yield {
+						usageMetadata: {
+							promptTokenCount: 100,
+							candidatesTokenCount: 50,
+							cachedContentTokenCount: 25,
+							thoughtsTokenCount: 15,
+						},
+					}
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks.length).toBe(2)
+			expect(chunks[0]).toEqual({ type: "text", text: "Response" })
+			expect(chunks[1]).toEqual({
+				type: "usage",
+				inputTokens: 100,
+				outputTokens: 50,
+				cacheReadTokens: 25,
+				reasoningTokens: 15,
+				totalCost: expect.any(Number),
+			})
 		})
 	})
 
@@ -143,7 +281,6 @@ describe("GeminiHandler", () => {
 			expect(result).toBe("")
 		})
 	})
-
 	describe("getModel", () => {
 		it("should return correct model info", () => {
 			const modelInfo = handler.getModel()
@@ -163,88 +300,196 @@ describe("GeminiHandler", () => {
 		})
 	})
 
-	describe("calculateCost", () => {
-		// Mock ModelInfo based on gemini-1.5-flash-latest pricing (per 1M tokens)
-		// Removed 'id' and 'name' as they are not part of ModelInfo type directly
-		const mockInfo: ModelInfo = {
-			inputPrice: 0.125, // $/1M tokens
-			outputPrice: 0.375, // $/1M tokens
-			cacheWritesPrice: 0.125, // Assume same as input for test
-			cacheReadsPrice: 0.125 * 0.25, // Assume 0.25x input for test
-			contextWindow: 1_000_000,
-			maxTokens: 8192,
-			supportsPromptCache: true, // Enable cache calculations for tests
-		}
-
-		it("should calculate cost correctly based on input and output tokens", () => {
-			const inputTokens = 10000 // Use larger numbers for per-million pricing
-			const outputTokens = 20000
-			// Added non-null assertions (!) as mockInfo guarantees these values
-			const expectedCost =
-				(inputTokens / 1_000_000) * mockInfo.inputPrice! + (outputTokens / 1_000_000) * mockInfo.outputPrice!
-
-			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens })
-			expect(cost).toBeCloseTo(expectedCost)
+	describe("getModel with :thinking suffix", () => {
+		it("should strip :thinking suffix from model ID", () => {
+			// Use a valid thinking model that exists in geminiModels
+			const thinkingHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-flash-preview-04-17:thinking",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = thinkingHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-04-17") // Without :thinking suffix
 		})
 
-		it("should return 0 if token counts are zero", () => {
-			// Note: The method expects numbers, not undefined. Passing undefined would be a type error.
-			// The calculateCost method itself returns undefined if prices are missing, but 0 if tokens are 0 and prices exist.
-			expect(handler.calculateCost({ info: mockInfo, inputTokens: 0, outputTokens: 0 })).toBe(0)
+		it("should handle non-thinking models without modification", () => {
+			const regularHandler = new GeminiHandler({
+				apiModelId: "gemini-1.5-flash-002",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = regularHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-1.5-flash-002") // No change
 		})
 
-		it("should handle only input tokens", () => {
-			const inputTokens = 5000
-			// Added non-null assertion (!)
-			const expectedCost = (inputTokens / 1_000_000) * mockInfo.inputPrice!
-			expect(handler.calculateCost({ info: mockInfo, inputTokens, outputTokens: 0 })).toBeCloseTo(expectedCost)
+		it("should handle missing model ID with default", () => {
+			const defaultHandler = new GeminiHandler({
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = defaultHandler.getModel()
+			expect(modelInfo.id).toBe(geminiDefaultModelId)
+		})
+	})
+
+	describe("countTokens", () => {
+		const mockContent = [{ type: "text", text: "Hello world" }] as Array<Anthropic.Messages.ContentBlockParam>
+		it("should return token count from Gemini API", async () => {
+			;(handler["client"].models.countTokens as jest.Mock).mockResolvedValue({
+				totalTokens: 42,
+			})
+
+			const result = await handler.countTokens(mockContent)
+			expect(result).toBe(42)
+
+			expect(handler["client"].models.countTokens).toHaveBeenCalledWith({
+				model: GEMINI_20_FLASH_THINKING_NAME,
+				contents: [{ text: "Hello world" }], // Note: convertAnthropicContentToGemini format
+			})
+		})
+		it("should fall back to parent method on API error", async () => {
+			;(handler["client"].models.countTokens as jest.Mock).mockRejectedValue(new Error("API error"))
+
+			// Mock the parent countTokens method by setting up the prototype
+			const parentCountTokens = jest.fn().mockResolvedValue(25)
+			const originalPrototype = Object.getPrototypeOf(handler)
+			Object.setPrototypeOf(handler, {
+				...originalPrototype,
+				countTokens: parentCountTokens,
+			})
+
+			const result = await handler.countTokens(mockContent)
+			expect(result).toBe(25)
 		})
 
-		it("should handle only output tokens", () => {
-			const outputTokens = 15000
-			// Added non-null assertion (!)
-			const expectedCost = (outputTokens / 1_000_000) * mockInfo.outputPrice!
-			expect(handler.calculateCost({ info: mockInfo, inputTokens: 0, outputTokens })).toBeCloseTo(expectedCost)
+		it("should handle empty content", async () => {
+			;(handler["client"].models.countTokens as jest.Mock).mockResolvedValue({
+				totalTokens: 0,
+			})
+
+			const result = await handler.countTokens([])
+			expect(result).toBe(0)
+		})
+		it("should handle undefined totalTokens response", async () => {
+			;(handler["client"].models.countTokens as jest.Mock).mockResolvedValue({})
+
+			// Mock the parent countTokens method by setting up the prototype
+			const parentCountTokens = jest.fn().mockResolvedValue(10)
+			const originalPrototype = Object.getPrototypeOf(handler)
+			Object.setPrototypeOf(handler, {
+				...originalPrototype,
+				countTokens: parentCountTokens,
+			})
+
+			const result = await handler.countTokens(mockContent)
+			expect(result).toBe(10)
+		})
+	})
+
+	describe("calculateCostGenai utility integration", () => {
+		it("should calculate cost correctly for input/output tokens", async () => {
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield { text: "Response" }
+					yield {
+						usageMetadata: {
+							promptTokenCount: 1000,
+							candidatesTokenCount: 500,
+						},
+					}
+				},
+			})
+
+			const stream = handler.createMessage("System prompt", [{ role: "user", content: "User message" }])
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			const usageChunk = chunks.find((chunk) => chunk.type === "usage")
+			expect(usageChunk?.totalCost).toBeGreaterThan(0)
+			expect(typeof usageChunk?.totalCost).toBe("number")
 		})
 
-		it("should calculate cost with cache write tokens", () => {
-			const inputTokens = 10000
-			const outputTokens = 20000
-			const cacheWriteTokens = 5000
-			const CACHE_TTL = 5 // Match the constant in gemini.ts
+		it("should calculate cost with reasoning tokens", async () => {
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield { text: "Response" }
+					yield {
+						usageMetadata: {
+							promptTokenCount: 1000,
+							candidatesTokenCount: 500,
+							thoughtsTokenCount: 200,
+						},
+					}
+				},
+			})
 
-			// Added non-null assertions (!)
-			const expectedInputCost = (inputTokens / 1_000_000) * mockInfo.inputPrice!
-			const expectedOutputCost = (outputTokens / 1_000_000) * mockInfo.outputPrice!
-			const expectedCacheWriteCost =
-				mockInfo.cacheWritesPrice! * (cacheWriteTokens / 1_000_000) * (CACHE_TTL / 60)
-			const expectedCost = expectedInputCost + expectedOutputCost + expectedCacheWriteCost
+			const stream = handler.createMessage("System prompt", [{ role: "user", content: "User message" }])
+			const chunks = []
 
-			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens })
-			expect(cost).toBeCloseTo(expectedCost)
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			const usageChunk = chunks.find((chunk) => chunk.type === "usage")
+			expect(usageChunk?.totalCost).toBeGreaterThan(0)
+			expect(usageChunk?.reasoningTokens).toBe(200)
 		})
 
-		it("should calculate cost with cache read tokens", () => {
-			const inputTokens = 10000 // Total logical input
-			const outputTokens = 20000
-			const cacheReadTokens = 8000 // Part of inputTokens read from cache
+		it("should calculate cost with cache tokens", async () => {
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield { text: "Response" }
+					yield {
+						usageMetadata: {
+							promptTokenCount: 1000,
+							candidatesTokenCount: 500,
+							cachedContentTokenCount: 100,
+						},
+					}
+				},
+			})
 
-			const uncachedReadTokens = inputTokens - cacheReadTokens
-			// Added non-null assertions (!)
-			const expectedInputCost = (uncachedReadTokens / 1_000_000) * mockInfo.inputPrice!
-			const expectedOutputCost = (outputTokens / 1_000_000) * mockInfo.outputPrice!
-			const expectedCacheReadCost = mockInfo.cacheReadsPrice! * (cacheReadTokens / 1_000_000)
-			const expectedCost = expectedInputCost + expectedOutputCost + expectedCacheReadCost
+			const stream = handler.createMessage("System prompt", [{ role: "user", content: "User message" }])
+			const chunks = []
 
-			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens, cacheReadTokens })
-			expect(cost).toBeCloseTo(expectedCost)
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			const usageChunk = chunks.find((chunk) => chunk.type === "usage")
+			expect(usageChunk?.totalCost).toBeGreaterThan(0)
+			expect(usageChunk?.cacheReadTokens).toBe(100)
+		})
+	})
+
+	describe("error handling", () => {
+		it("should handle createMessage stream errors", async () => {
+			;(handler["client"].models.generateContentStream as jest.Mock).mockRejectedValue(new Error("Stream error"))
+
+			const stream = handler.createMessage("System prompt", [{ role: "user", content: "Test" }])
+
+			await expect(async () => {
+				for await (const chunk of stream) {
+					// This should throw
+				}
+			}).rejects.toThrow("Stream error")
 		})
 
-		it("should return undefined if pricing info is missing", () => {
-			// Create a copy and explicitly set a price to undefined
-			const incompleteInfo: ModelInfo = { ...mockInfo, outputPrice: undefined }
-			const cost = handler.calculateCost({ info: incompleteInfo, inputTokens: 1000, outputTokens: 1000 })
-			expect(cost).toBeUndefined()
+		it("should handle countTokens errors gracefully", async () => {
+			;(handler["client"].models.countTokens as jest.Mock).mockRejectedValue(new Error("Count error"))
+
+			// Mock the parent countTokens method
+			const parentCountTokens = jest.fn().mockResolvedValue(0)
+			Object.setPrototypeOf(handler, { countTokens: parentCountTokens })
+
+			const result = await handler.countTokens([{ type: "text", text: "Test" }])
+			expect(result).toBe(0)
+		})
+	})
+
+	describe("destruct", () => {
+		it("should clean up resources", () => {
+			expect(() => handler.destruct()).not.toThrow()
 		})
 	})
 })

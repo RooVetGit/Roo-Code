@@ -4,14 +4,14 @@ import {
 	type GenerateContentResponseUsageMetadata,
 	type GenerateContentParameters,
 	type GenerateContentConfig,
+	CountTokensParameters,
 } from "@google/genai"
-import type { JWTInput } from "google-auth-library"
 
 import { type ModelInfo, type GeminiModelId, geminiDefaultModelId, geminiModels } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
-import { safeJsonParse } from "../../shared/safeJsonParse"
 
+import { calculateCostGenai } from "../../utils/calculateCostGenai"
 import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
 import type { ApiStream } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
@@ -19,43 +19,15 @@ import { getModelParams } from "../transform/model-params"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { BaseProvider } from "./base-provider"
 
-type GeminiHandlerOptions = ApiHandlerOptions & {
-	isVertex?: boolean
-}
-
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
-
 	private client: GoogleGenAI
 
-	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
+	constructor(options: ApiHandlerOptions) {
 		super()
-
 		this.options = options
-
-		const project = this.options.vertexProjectId ?? "not-provided"
-		const location = this.options.vertexRegion ?? "not-provided"
 		const apiKey = this.options.geminiApiKey ?? "not-provided"
-
-		this.client = this.options.vertexJsonCredentials
-			? new GoogleGenAI({
-					vertexai: true,
-					project,
-					location,
-					googleAuthOptions: {
-						credentials: safeJsonParse<JWTInput>(this.options.vertexJsonCredentials, undefined),
-					},
-				})
-			: this.options.vertexKeyFile
-				? new GoogleGenAI({
-						vertexai: true,
-						project,
-						location,
-						googleAuthOptions: { keyFile: this.options.vertexKeyFile },
-					})
-				: isVertex
-					? new GoogleGenAI({ vertexai: true, project, location })
-					: new GoogleGenAI({ apiKey })
+		this.client = new GoogleGenAI({ apiKey })
 	}
 
 	async *createMessage(
@@ -66,7 +38,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const { id: model, info, reasoning: thinkingConfig, maxTokens } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
-
 		const config: GenerateContentConfig = {
 			systemInstruction,
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
@@ -124,7 +95,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				outputTokens,
 				cacheReadTokens,
 				reasoningTokens,
-				totalCost: this.calculateCost({ info, inputTokens, outputTokens, cacheReadTokens }),
+				totalCost: calculateCostGenai({ info, inputTokens, outputTokens, cacheReadTokens }),
 			}
 		}
 	}
@@ -171,10 +142,11 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			const { id: model } = this.getModel()
 
-			const response = await this.client.models.countTokens({
+			const params: CountTokensParameters = {
 				model,
 				contents: convertAnthropicContentToGemini(content),
-			})
+			}
+			const response = await this.client.models.countTokens(params)
 
 			if (response.totalTokens === undefined) {
 				console.warn("Gemini token counting returned undefined, using fallback")
@@ -187,58 +159,5 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			return super.countTokens(content)
 		}
 	}
-
-	public calculateCost({
-		info,
-		inputTokens,
-		outputTokens,
-		cacheReadTokens = 0,
-	}: {
-		info: ModelInfo
-		inputTokens: number
-		outputTokens: number
-		cacheReadTokens?: number
-	}) {
-		if (!info.inputPrice || !info.outputPrice || !info.cacheReadsPrice) {
-			return undefined
-		}
-
-		let inputPrice = info.inputPrice
-		let outputPrice = info.outputPrice
-		let cacheReadsPrice = info.cacheReadsPrice
-
-		// If there's tiered pricing then adjust the input and output token prices
-		// based on the input tokens used.
-		if (info.tiers) {
-			const tier = info.tiers.find((tier) => inputTokens <= tier.contextWindow)
-
-			if (tier) {
-				inputPrice = tier.inputPrice ?? inputPrice
-				outputPrice = tier.outputPrice ?? outputPrice
-				cacheReadsPrice = tier.cacheReadsPrice ?? cacheReadsPrice
-			}
-		}
-
-		// Subtract the cached input tokens from the total input tokens.
-		const uncachedInputTokens = inputTokens - cacheReadTokens
-
-		let cacheReadCost = cacheReadTokens > 0 ? cacheReadsPrice * (cacheReadTokens / 1_000_000) : 0
-
-		const inputTokensCost = inputPrice * (uncachedInputTokens / 1_000_000)
-		const outputTokensCost = outputPrice * (outputTokens / 1_000_000)
-		const totalCost = inputTokensCost + outputTokensCost + cacheReadCost
-
-		const trace: Record<string, { price: number; tokens: number; cost: number }> = {
-			input: { price: inputPrice, tokens: uncachedInputTokens, cost: inputTokensCost },
-			output: { price: outputPrice, tokens: outputTokens, cost: outputTokensCost },
-		}
-
-		if (cacheReadTokens > 0) {
-			trace.cacheRead = { price: cacheReadsPrice, tokens: cacheReadTokens, cost: cacheReadCost }
-		}
-
-		// console.log(`[GeminiHandler] calculateCost -> ${totalCost}`, trace)
-
-		return totalCost
-	}
+	public destruct() {}
 }

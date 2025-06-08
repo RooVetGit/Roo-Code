@@ -74,6 +74,13 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.googleCloudProjectId")}</label>
 			</VSCodeTextField>
+			<VSCodeTextField
+				value={apiConfiguration?.vertexApiKey || ""}
+				onInput={handleInputChange("vertexApiKey")}
+				placeholder={t("settings:placeholders.apiKey")}
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.googleCloudApiKey")}</label>
+			</VSCodeTextField>
 			<div>
 				<label className="block font-medium mb-1">{t("settings:providers.googleCloudRegion")}</label>
 				<Select

@@ -216,6 +216,7 @@
 		"googleCloudKeyFile": "Google Cloud Anahtar Dosyası Yolu",
 		"googleCloudProjectId": "Google Cloud Proje Kimliği",
 		"googleCloudRegion": "Google Cloud Bölgesi",
+		"googleCloudApiKey": "Vertex AI API Anahtarı",
 		"lmStudio": {
 			"baseUrl": "Temel URL (İsteğe bağlı)",
 			"modelId": "Model Kimliği",
