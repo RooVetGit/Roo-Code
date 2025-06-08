@@ -110,6 +110,7 @@ describe("OpenAICompatibleEmbedder", () => {
 			expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
 				input: testTexts,
 				model: testModelId,
+				encoding_format: "base64",
 			})
 			expect(result).toEqual({
 				embeddings: [[0.1, 0.2, 0.3]],
@@ -130,6 +131,7 @@ describe("OpenAICompatibleEmbedder", () => {
 			expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
 				input: testTexts,
 				model: testModelId,
+				encoding_format: "base64",
 			})
 			expect(result).toEqual({
 				embeddings: [
@@ -154,6 +156,7 @@ describe("OpenAICompatibleEmbedder", () => {
 			expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
 				input: testTexts,
 				model: customModel,
+				encoding_format: "base64",
 			})
 		})
 
