@@ -1,3 +1,15 @@
+export type InjectableConfigType =
+	| string
+	| {
+			[key: string]:
+				| undefined
+				| null
+				| boolean
+				| number
+				| InjectableConfigType
+				| Array<undefined | null | boolean | number | InjectableConfigType>
+	  }
+
 /**
  * Deeply injects environment variables into a configuration object/string/json
  *
@@ -5,7 +17,7 @@
  *
  * Does not mutate original object
  */
-export async function injectEnv<C extends string | Record<PropertyKey, any>>(config: C, notFoundValue: any = "") {
+export async function injectEnv<C extends InjectableConfigType>(config: C, notFoundValue: any = "") {
 	return injectVariables(config, { env: process.env }, notFoundValue)
 }
 
@@ -20,8 +32,8 @@ export async function injectEnv<C extends string | Record<PropertyKey, any>>(con
  *
  * Matched keys that have `null` | `undefined` values are treated as not found.
  */
-export async function injectVariables<C extends string | Record<PropertyKey, any>>(
-	config: string | Record<PropertyKey, any>,
+export async function injectVariables<C extends InjectableConfigType>(
+	config: C,
 	variables: Record<string, undefined | null | string | Record<string, undefined | null | string>>,
 	propNotFoundValue?: any,
 ) {

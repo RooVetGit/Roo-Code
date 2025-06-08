@@ -31,14 +31,44 @@ describe("injectEnv", () => {
 			key: "${env:API_KEY}",
 			url: "${env:ENDPOINT}",
 			nested: {
-				value: "Keep this ${env:API_KEY}",
+				string: "Keep this ${env:API_KEY}",
+				number: 123,
+				boolean: true,
+				stringArr: ["${env:API_KEY}", "${env:ENDPOINT}"],
+				numberArr: [123, 456],
+				booleanArr: [true, false],
+			},
+			deeply: {
+				nested: {
+					string: "Keep this ${env:API_KEY}",
+					number: 123,
+					boolean: true,
+					stringArr: ["${env:API_KEY}", "${env:ENDPOINT}"],
+					numberArr: [123, 456],
+					booleanArr: [true, false],
+				},
 			},
 		}
 		const expectedObject = {
 			key: "12345",
 			url: "https://example.com",
 			nested: {
-				value: "Keep this 12345",
+				string: "Keep this 12345",
+				number: 123,
+				boolean: true,
+				stringArr: ["12345", "https://example.com"],
+				numberArr: [123, 456],
+				booleanArr: [true, false],
+			},
+			deeply: {
+				nested: {
+					string: "Keep this 12345",
+					number: 123,
+					boolean: true,
+					stringArr: ["12345", "https://example.com"],
+					numberArr: [123, 456],
+					booleanArr: [true, false],
+				},
 			},
 		}
 		const result = await injectEnv(configObject)
