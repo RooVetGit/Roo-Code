@@ -78,7 +78,7 @@
 		"custom_storage_path_set": "Ruta de almacenamiento personalizada establecida: {{path}}",
 		"default_storage_path": "Se ha vuelto a usar la ruta de almacenamiento predeterminada",
 		"settings_imported": "Configuración importada correctamente.",
-		"share_link_copied": "¡Enlace de compartir copiado al portapapeles!"
+		"share_link_copied": "Enlace de compartir copiado al portapapeles"
 	},
 	"answers": {
 		"yes": "Sí",

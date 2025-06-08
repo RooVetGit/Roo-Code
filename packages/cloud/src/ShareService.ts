@@ -1,7 +1,7 @@
 import axios from "axios"
 import * as vscode from "vscode"
 
-import type { ShareResponse } from "@roo-code/types"
+import { shareResponseSchema } from "@roo-code/types"
 import { getRooCodeApiUrl } from "./Config"
 import type { AuthService } from "./AuthService"
 import type { SettingsService } from "./SettingsService"
@@ -24,10 +24,6 @@ export class ShareService {
 	 */
 	async shareTask(taskId: string): Promise<boolean> {
 		try {
-			if (!this.authService.hasActiveSession()) {
-				return false
-			}
-
 			const sessionToken = this.authService.getSessionToken()
 			if (!sessionToken) {
 				return false
@@ -45,7 +41,7 @@ export class ShareService {
 				},
 			)
 
-			const data = response.data as ShareResponse
+			const data = shareResponseSchema.parse(response.data)
 			this.log("[share] Share link created successfully:", data)
 
 			if (data.success && data.shareUrl) {

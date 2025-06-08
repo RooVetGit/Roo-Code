@@ -78,7 +78,7 @@
 		"custom_storage_path_set": "Custom storage path set: {{path}}",
 		"default_storage_path": "Reverted to using default storage path",
 		"settings_imported": "Settings imported successfully.",
-		"share_link_copied": "Share link copied to clipboard!"
+		"share_link_copied": "Share link copied to clipboard"
 	},
 	"answers": {
 		"yes": "Yes",

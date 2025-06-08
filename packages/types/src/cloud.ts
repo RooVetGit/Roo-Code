@@ -109,8 +109,10 @@ export const ORGANIZATION_DEFAULT: OrganizationSettings = {
  * Share Types
  */
 
-export interface ShareResponse {
-	success: boolean
-	shareUrl?: string
-	error?: string
-}
+export const shareResponseSchema = z.object({
+	success: z.boolean(),
+	shareUrl: z.string().optional(),
+	error: z.string().optional(),
+})
+
+export type ShareResponse = z.infer<typeof shareResponseSchema>
