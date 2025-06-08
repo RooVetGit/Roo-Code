@@ -23,6 +23,9 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 		</select>
 	),
 	VSCodeOption: ({ children, value }: any) => <option value={value}>{children}</option>,
+	VSCodeTextField: ({ value, onInput, placeholder, className, disabled }: any) => (
+		<input value={value} onChange={onInput} placeholder={placeholder} className={className} disabled={disabled} />
+	),
 }))
 
 describe("ProfileThresholdManager", () => {
@@ -74,7 +77,7 @@ describe("ProfileThresholdManager", () => {
 			expect(saveButton).toBeDisabled() // Should be disabled initially
 
 			// Should render info text
-			expect(screen.getByText("settings:contextManagement.profileThresholds.infoText")).toBeInTheDocument()
+			expect(screen.getByText("Enter -1 to use the default threshold")).toBeInTheDocument()
 
 			// Should not render configured profiles section when empty
 			expect(

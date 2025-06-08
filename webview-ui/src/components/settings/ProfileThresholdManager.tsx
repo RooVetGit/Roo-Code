@@ -1,4 +1,4 @@
-import { VSCodeButton, VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeDropdown, VSCodeOption, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ProviderSettingsEntry } from "@roo-code/types"
@@ -71,17 +71,21 @@ export const ProfileThresholdManager: React.FC<ProfileThresholdManagerProps> = (
 	}
 
 	return (
-		<div className="border border-vscode-panel-border rounded p-4 mt-2">
-			<div className="mb-4">
-				<label className="text-sm font-medium mb-2 block">
+		<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+			<div className="flex items-center gap-4 font-bold">
+				<span className="codicon codicon-settings-gear" />
+				<div>
 					{t("settings:contextManagement.profileThresholds.configureLabel") ||
 						"Configure threshold for profile:"}
-				</label>
-				<div className="flex items-center gap-2">
+				</div>
+			</div>
+			<div>
+				<div className="flex flex-col gap-2">
 					<VSCodeDropdown
 						value={selectedProfileId}
 						onChange={(e: any) => handleProfileChange(e.target.value)}
-						className="flex-1">
+						className="w-full"
+						data-testid="profile-dropdown">
 						<VSCodeOption value="">
 							{t("settings:contextManagement.profileThresholds.selectProfile") || "Select a profile"}
 						</VSCodeOption>
@@ -91,23 +95,24 @@ export const ProfileThresholdManager: React.FC<ProfileThresholdManagerProps> = (
 							</VSCodeOption>
 						))}
 					</VSCodeDropdown>
-					<input
-						type="number"
-						value={thresholdInput}
-						onChange={(e) => handleThresholdChange(e.target.value)}
-						placeholder="%"
-						className="w-20 bg-vscode-input-background text-vscode-input-foreground p-1 rounded border border-vscode-input-border"
-						disabled={!selectedProfileId}
-					/>
-					<VSCodeButton
-						onClick={handleSave}
-						disabled={!selectedProfileId || thresholdInput === "" || !hasUnsavedChanges}>
-						{t("settings:common.save") || "Save"}
-					</VSCodeButton>
+					<div className="flex items-center justify-between">
+						<VSCodeTextField
+							value={thresholdInput}
+							onInput={(e: any) => handleThresholdChange(e.target.value)}
+							placeholder="%"
+							className="w-16"
+							disabled={!selectedProfileId}
+						/>
+						<VSCodeButton
+							onClick={handleSave}
+							disabled={!selectedProfileId || thresholdInput === "" || !hasUnsavedChanges}>
+							{t("settings:common.save") || "Save"}
+						</VSCodeButton>
+					</div>
 				</div>
-				<div className="text-xs text-vscode-descriptionForeground mt-2">
-					{t("settings:contextManagement.profileThresholds.infoText") ||
-						"ℹ️ Enter -1 to use the default threshold"}
+				<div className="inline-flex items-center text-vscode-descriptionForeground text-sm mt-1">
+					<span className="codicon codicon-info mr-1" />
+					<span>Enter -1 to use the default threshold</span>
 				</div>
 			</div>
 			{Object.keys(profileThresholds).length > 0 && (
