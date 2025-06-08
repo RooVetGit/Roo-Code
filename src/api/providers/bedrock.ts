@@ -33,6 +33,9 @@ import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from ".
 import { getModelParams } from "../transform/model-params"
 import { shouldUseReasoningBudget } from "../../shared/api"
 
+// Constants for Bedrock Extended Thinking
+const BEDROCK_ANTHROPIC_VERSION = "bedrock-20250514"
+
 /************************************************************************************
  *
  *     TYPES
@@ -44,6 +47,21 @@ interface BedrockInferenceConfig {
 	maxTokens: number
 	temperature?: number
 	topP?: number
+}
+
+// Define interface for Bedrock payload
+interface BedrockPayload {
+	modelId: BedrockModelId | string
+	messages: Message[]
+	system?: SystemContentBlock[]
+	inferenceConfig: BedrockInferenceConfig
+	anthropic_version?: string
+	additionalModelRequestFields?: {
+		thinking?: {
+			type: "enabled"
+			budget_tokens: number
+		}
+	}
 }
 
 // Define types for stream events based on AWS SDK
@@ -130,6 +148,80 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	protected options: ProviderSettings
 	private client: BedrockRuntimeClient
 	private arnInfo: any
+
+	/**
+	 * Determines if extended thinking should be enabled based on model support and user settings
+	 */
+	private shouldEnableExtendedThinking(modelInfo: ModelInfo, params: any): boolean {
+		return !!(
+			this.options.enableReasoningEffort &&
+			shouldUseReasoningBudget({ model: modelInfo, settings: this.options }) &&
+			params.reasoning &&
+			params.reasoningBudget
+		)
+	}
+
+	/**
+	 * Handles thinking content block events
+	 */
+	private *handleThinkingContentBlock(contentBlock: any): Generator<any, void, unknown> {
+		if (contentBlock?.type === "thinking" && contentBlock.thinking !== undefined) {
+			yield {
+				type: "reasoning",
+				text: contentBlock.thinking || "",
+			}
+		}
+	}
+
+	/**
+	 * Handles text content block events
+	 */
+	private *handleTextContentBlock(start: any, contentBlock: any): Generator<any, void, unknown> {
+		const text = start?.text || contentBlock?.text
+		if (text !== undefined) {
+			yield {
+				type: "text",
+				text: text || "",
+			}
+		}
+	}
+
+	/**
+	 * Handles thinking delta events
+	 */
+	private *handleThinkingDelta(delta: any): Generator<any, void, unknown> {
+		if (delta.type === "thinking_delta" && delta.thinking) {
+			yield {
+				type: "reasoning",
+				text: delta.thinking,
+			}
+		}
+	}
+
+	/**
+	 * Handles signature delta events (part of thinking)
+	 */
+	private *handleSignatureDelta(delta: any): Generator<any, void, unknown> {
+		if (delta.type === "signature_delta" && delta.signature) {
+			// Signature is part of the thinking process, treat it as reasoning
+			yield {
+				type: "reasoning",
+				text: delta.signature,
+			}
+		}
+	}
+
+	/**
+	 * Handles text delta events
+	 */
+	private *handleTextDelta(delta: any): Generator<any, void, unknown> {
+		if (delta.text) {
+			yield {
+				type: "text",
+				text: delta.text,
+			}
+		}
+	}
 
 	constructor(options: ProviderSettings) {
 		super()
@@ -351,7 +443,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		// Build the base payload
-		const payload: any = {
+		const payload: BedrockPayload = {
 			modelId: modelConfig.id,
 			messages: formatted.messages,
 			system: formatted.system,
@@ -360,14 +452,9 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		// Add extended thinking support ONLY if explicitly enabled by the user
 		// Reasoning is disabled by default as per requirements
-		if (
-			this.options.enableReasoningEffort &&
-			shouldUseReasoningBudget({ model: modelConfig.info, settings: this.options }) &&
-			params.reasoning &&
-			params.reasoningBudget
-		) {
+		if (this.shouldEnableExtendedThinking(modelConfig.info, params) && params.reasoningBudget) {
 			// Add the anthropic_version field required for extended thinking
-			payload.anthropic_version = "bedrock-20250514"
+			payload.anthropic_version = BEDROCK_ANTHROPIC_VERSION
 
 			// Add additionalModelRequestFields with thinking configuration
 			payload.additionalModelRequestFields = {
@@ -378,6 +465,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			}
 
 			// Remove temperature, topP, and top_k when thinking is enabled as they are incompatible
+			// AWS Bedrock requires these parameters to be undefined when using extended thinking
+			// as the thinking process uses its own internal temperature and sampling parameters
 			delete inferenceConfig.temperature
 			delete inferenceConfig.topP
 
@@ -492,23 +581,17 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 				// Handle content blocks
 				if (streamEvent.contentBlockStart) {
+					const { contentBlock, start } = streamEvent.contentBlockStart
+
 					// Handle thinking content blocks
-					if (streamEvent.contentBlockStart.contentBlock?.type === "thinking") {
-						yield {
-							type: "reasoning",
-							text: streamEvent.contentBlockStart.contentBlock.thinking || "",
-						}
+					if (contentBlock?.type === "thinking") {
+						yield* this.handleThinkingContentBlock(contentBlock)
 						continue
 					}
+
 					// Handle regular text content blocks
-					if (streamEvent.contentBlockStart.start?.text || streamEvent.contentBlockStart.contentBlock?.text) {
-						yield {
-							type: "text",
-							text:
-								streamEvent.contentBlockStart.start?.text ||
-								streamEvent.contentBlockStart.contentBlock?.text ||
-								"",
-						}
+					if (start?.text || contentBlock?.text) {
+						yield* this.handleTextContentBlock(start, contentBlock)
 						continue
 					}
 				}
@@ -518,32 +601,13 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 					const delta = streamEvent.contentBlockDelta.delta
 
 					// Handle thinking deltas
-					if (delta.type === "thinking_delta" && delta.thinking) {
-						yield {
-							type: "reasoning",
-							text: delta.thinking,
-						}
-						continue
-					}
+					yield* this.handleThinkingDelta(delta)
 
 					// Handle signature deltas (part of thinking)
-					if (delta.type === "signature_delta" && delta.signature) {
-						// Signature is part of the thinking process, treat it as reasoning
-						yield {
-							type: "reasoning",
-							text: delta.signature,
-						}
-						continue
-					}
+					yield* this.handleSignatureDelta(delta)
 
 					// Handle regular text deltas
-					if (delta.text) {
-						yield {
-							type: "text",
-							text: delta.text,
-						}
-						continue
-					}
+					yield* this.handleTextDelta(delta)
 				}
 				// Handle message stop
 				if (streamEvent.messageStop) {
@@ -643,12 +707,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		// First convert messages using shared converter for proper image handling
 		let convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
 
-		// Handle extended thinking for tool use
-		// When using tools with extended thinking, we need to preserve the thinking block
-		// from previous assistant messages
-		if (this.options.enableReasoningEffort && modelInfo?.supportsReasoningBudget) {
-			convertedMessages = this.preserveThinkingBlocks(convertedMessages)
-		}
+		// No need to preserve thinking blocks - the messages are already properly formatted
 
 		// If prompt caching is disabled, return the converted messages directly
 		if (!usePromptCache) {
@@ -929,35 +988,6 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		return content
-	}
-
-	/**
-	 * Preserves thinking blocks from previous assistant messages for tool use continuity
-	 */
-	private preserveThinkingBlocks(messages: Message[]): Message[] {
-		// When using extended thinking with tools, we need to preserve the entire
-		// thinking block from previous assistant messages to maintain reasoning continuity
-		return messages.map((message, index) => {
-			if (message.role === "assistant" && index > 0) {
-				// Check if this assistant message follows a tool use pattern
-				const prevMessage = messages[index - 1]
-				if (prevMessage.role === "user" && this.hasToolUseContent(prevMessage)) {
-					// This is likely a response to tool use, preserve any thinking blocks
-					return message
-				}
-			}
-			return message
-		})
-	}
-
-	/**
-	 * Checks if a message contains tool use content
-	 */
-	private hasToolUseContent(message: Message): boolean {
-		if (!message.content || !Array.isArray(message.content)) {
-			return false
-		}
-		return message.content.some((block: any) => block.toolUse || block.toolResult)
 	}
 
 	/************************************************************************************
