@@ -141,7 +141,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				}
 
 				return {
-					embeddings,
+					embeddings: embeddings,
 					usage: {
 						promptTokens: response.usage?.prompt_tokens || 0,
 						totalTokens: response.usage?.total_tokens || 0,
