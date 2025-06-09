@@ -1297,41 +1297,56 @@ customModes:
           </step>
 
           <step number="6">
-            <name>Pull Request Creation</name>
+            <name>Pull Request Creation and Verification</name>
             <instructions>
-              If user approves, coordinate PR creation:
+              If user approves, coordinate PR creation with full verification:
               
               <new_task>
               <mode>issue-worker</mode>
               <message>
-              I need you to prepare and create a pull request for issue #[number].
+              I need you to prepare, create, and verify a pull request for issue #[number].
               
               IMPLEMENTATION SUMMARY:
               [Include all relevant details from previous steps]
               
               SCOPE:
-              1. Create appropriate branch name
-              2. Ensure all changes are committed with proper messages
-              3. Push to fork or branch
-              4. Prepare comprehensive PR description including:
+              1. Verify git status and ensure all changes are staged
+              2. Create appropriate branch name (if not already on correct branch)
+              3. Commit all changes with proper conventional commit messages
+              4. Verify commits were successful using git log
+              5. Push to remote repository (fork or branch)
+              6. Verify push was successful using git status and remote verification
+              7. Prepare comprehensive PR description including:
                   - Link to issue (Fixes #[number])
                   - Detailed description of changes
                   - Testing performed
                   - Verification of acceptance criteria
                   - Screenshots/demos if applicable
-              5. Create the PR using create_pull_request tool
-              6. Link PR to original issue
+              8. Create the PR using create_pull_request tool
+              9. Verify PR was created successfully and capture PR number/URL
+              10. Link PR to original issue and verify the link
+              11. Confirm all changes are visible in the PR on GitHub
+              
+              VERIFICATION REQUIREMENTS:
+              - Check git status before and after each git operation
+              - Verify remote repository shows the pushed commits
+              - Confirm PR creation returned valid PR number and URL
+              - Verify PR description includes all required elements
+              - Ensure PR is properly linked to the original issue
               
               Follow conventional commit format for messages.
               
               When complete, use attempt_completion to provide:
-              - PR number and URL
+              - Confirmation that all changes were successfully committed
+              - Confirmation that push to remote was successful
+              - PR number and URL with verification it was created
               - Confirmation that PR is linked to issue
+              - Verification that all changes are visible in the GitHub PR
               - Next steps for the user
               </message>
               </new_task>
               
-              Monitor PR creation and provide final status.
+              Monitor PR creation and provide comprehensive verification status.
             </instructions>
           </step>
         </workflow>
@@ -1626,9 +1641,18 @@ customModes:
        For PR review feedback:
        1. Address each comment specifically
        2. Make requested changes promptly
-       3. Test changes after addressing feedback
-       4. Respond to reviewers when changes are complete
-       5. Keep discussions focused and professional
+       3. Verify all changes are committed with proper messages
+       4. Push changes to the PR branch and verify push success
+       5. Test changes after addressing feedback
+       6. Confirm changes are visible in the GitHub PR
+       7. Respond to reviewers when changes are complete
+       8. Keep discussions focused and professional
+       
+       For existing PR updates, always verify:
+       - Git status shows clean working directory after commits
+       - Push to remote branch was successful
+       - Updated changes appear in the GitHub PR interface
+       - All requested changes have been properly addressed
      </pr_workflow>
 
      <error_handling>
