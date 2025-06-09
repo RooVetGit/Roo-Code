@@ -504,7 +504,7 @@
 		"rangeDescription": "值越高回答越多样，值越低越保守"
 	},
 	"maxContextWindow": {
-		"maxContextWindow": "",
+		"maxContextWindow": "最大上下文窗口",
 		"useCustom": "使用自定义最大上下文窗口",
 		"description": "设置模型的最大上下文窗口大小。当对话接近此限制时，Roo Code 会自动压缩较旧的消息以使其符合限制条件。",
 		"rangeDescription": "较高的值允许在压缩之前进行更长的对话，较低的值会更快地触发压缩以保持在 API 速率限制内。"

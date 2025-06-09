@@ -507,7 +507,7 @@
 		"maxContextWindow": "",
 		"useCustom": "Utiliser la fenêtre contextuelle maximale personnalisée",
 		"description": "Définit la taille maximale de la fenêtre contextuelle du modèle. Lorsque les conversations approchent de cette limite, Roo Code condense automatiquement les messages plus anciens pour respecter la contrainte.",
-		"rangeDescription": "Des valeurs plus élevées permettent des conversations plus longues avant la condensation, des valeurs plus faibles déclenchent la condensation plus tôt pour rester dans les limites de débit de l'API.."
+		"rangeDescription": "Des valeurs plus élevées permettent des conversations plus longues avant la condensation, des valeurs plus faibles déclenchent la condensation plus tôt pour rester dans les limites de débit de l'API."
 	},
 	"modelInfo": {
 		"supportsImages": "Prend en charge les images",

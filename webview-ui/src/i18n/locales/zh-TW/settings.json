@@ -506,7 +506,7 @@
 	"maxContextWindow": {
 		"maxContextWindow": "最大上下文視窗",
 		"useCustom": "使用自訂最大上下文視窗",
-		"description": "設定模型的最大上下文視窗大小。當對話接近此限制時，Roo Code 將自動壓縮舊訊息以保持在限制範圍內。.",
+		"description": "設定模型的最大上下文視窗大小。當對話接近此限制時，Roo Code 將自動壓縮舊訊息以保持在限制範圍內。",
 		"rangeDescription": "較高的值允許在壓縮之前進行更長的對話，較低的值會更快觸發壓縮以保持在 API 速率限制內。"
 	},
 	"modelInfo": {
