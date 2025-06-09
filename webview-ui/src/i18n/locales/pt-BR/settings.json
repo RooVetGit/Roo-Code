@@ -393,6 +393,13 @@
 		"maxConcurrentFileReads": {
 			"label": "Limite de leituras simultâneas",
 			"description": "Número máximo de arquivos que a ferramenta 'read_file' pode processar simultaneamente. Valores mais altos podem acelerar a leitura de vários arquivos pequenos, mas aumentam o uso de memória."
+		},
+		"condensingThreshold": {
+			"label": "Context Condensing Threshold",
+			"selectProfile": "Select profile for threshold",
+			"defaultProfile": "Default (applies to all unconfigured profiles)",
+			"defaultDescription": "This threshold applies to all profiles unless overridden",
+			"profileDescription": "Custom threshold for this specific profile"
 		}
 	},
 	"terminal": {

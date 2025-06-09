@@ -393,6 +393,13 @@
 		"maxConcurrentFileReads": {
 			"label": "并发文件读取限制",
 			"description": "read_file 工具可以同时处理的最大文件数。较高的值可能会加快读取多个小文件的速度，但会增加内存使用量。"
+		},
+		"condensingThreshold": {
+			"label": "Context Condensing Threshold",
+			"selectProfile": "Select profile for threshold",
+			"defaultProfile": "Default (applies to all unconfigured profiles)",
+			"defaultDescription": "This threshold applies to all profiles unless overridden",
+			"profileDescription": "Custom threshold for this specific profile"
 		}
 	},
 	"terminal": {

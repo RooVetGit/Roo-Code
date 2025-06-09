@@ -74,7 +74,6 @@ type TruncateOptions = {
 	taskId: string
 	customCondensingPrompt?: string
 	condensingApiHandler?: ApiHandler
-	profileSpecificThresholdsEnabled: boolean
 	profileThresholds: Record<string, number>
 	currentProfileId: string
 }
@@ -100,7 +99,6 @@ export async function truncateConversationIfNeeded({
 	taskId,
 	customCondensingPrompt,
 	condensingApiHandler,
-	profileSpecificThresholdsEnabled,
 	profileThresholds,
 	currentProfileId,
 }: TruncateOptions): Promise<TruncateResponse> {
@@ -125,14 +123,12 @@ export async function truncateConversationIfNeeded({
 
 	// Determine the effective threshold to use
 	let effectiveThreshold = autoCondenseContextPercent
-	if (profileSpecificThresholdsEnabled) {
-		const profileThreshold = profileThresholds[currentProfileId]
-		if (profileThreshold !== undefined) {
-			// Special case: if the value is -1, use the global autoCondenseContextPercent
-			effectiveThreshold = profileThreshold === -1 ? autoCondenseContextPercent : profileThreshold
-		}
-		// If no specific threshold is found for the profile, fall back to global setting
+	const profileThreshold = profileThresholds[currentProfileId]
+	if (profileThreshold !== undefined) {
+		// Special case: if the value is -1, use the global autoCondenseContextPercent
+		effectiveThreshold = profileThreshold === -1 ? autoCondenseContextPercent : profileThreshold
 	}
+	// If no specific threshold is found for the profile, fall back to global setting
 
 	if (autoCondenseContext) {
 		const contextPercent = (100 * prevContextTokens) / contextWindow

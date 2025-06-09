@@ -49,7 +49,6 @@ describe("ContextManagementSettings", () => {
 		maxWorkspaceFiles: 200,
 		showRooIgnoredFiles: false,
 		setCachedStateField: vitest.fn(),
-		profileSpecificThresholdsEnabled: false,
 		profileThresholds: {},
 	}
 
@@ -529,117 +528,6 @@ describe("ContextManagementSettings", () => {
 			expect(screen.getByText("settings:contextManagement.openTabs.label")).toBeInTheDocument()
 			expect(screen.getByText("settings:contextManagement.workspaceFiles.label")).toBeInTheDocument()
 			expect(screen.getByText("settings:contextManagement.rooignore.label")).toBeInTheDocument()
-		})
-	})
-
-	/**
-	 * Tests for profile-specific thresholds functionality
-	 */
-	describe("Profile-specific thresholds", () => {
-		it("renders ProfileThresholdManager when profile-specific thresholds are enabled", () => {
-			const propsWithProfileThresholds = {
-				...defaultProps,
-				profileSpecificThresholdsEnabled: true,
-				profileThresholds: {
-					"profile-1": 60,
-				},
-				listApiConfigMeta: [
-					{ id: "profile-1", name: "Profile 1" },
-					{ id: "profile-2", name: "Profile 2" },
-				],
-			}
-
-			render(<ContextManagementSettings {...propsWithProfileThresholds} />)
-
-			// Should render the profile-specific thresholds checkbox
-			const profileThresholdsCheckbox = screen.getByTestId("profile-specific-thresholds-checkbox")
-			expect(profileThresholdsCheckbox).toBeInTheDocument()
-			expect(profileThresholdsCheckbox).toBeChecked()
-
-			// Should render the ProfileThresholdManager component - verify it's present
-			// Look for the threshold input which is a reliable indicator the component rendered
-			expect(screen.getByPlaceholderText("%")).toBeInTheDocument()
-
-			// Verify the component renders profile options in the dropdown
-			expect(screen.getByText("Profile 1")).toBeInTheDocument()
-			expect(screen.getByText("Profile 2")).toBeInTheDocument()
-		})
-
-		it("does not render ProfileThresholdManager when profile-specific thresholds are disabled", () => {
-			const propsWithoutProfileThresholds = {
-				...defaultProps,
-				profileSpecificThresholdsEnabled: false,
-				listApiConfigMeta: [
-					{ id: "profile-1", name: "Profile 1" },
-					{ id: "profile-2", name: "Profile 2" },
-				],
-			}
-
-			render(<ContextManagementSettings {...propsWithoutProfileThresholds} />)
-
-			// Should render the profile-specific thresholds checkbox
-			const profileThresholdsCheckbox = screen.getByTestId("profile-specific-thresholds-checkbox")
-			expect(profileThresholdsCheckbox).toBeInTheDocument()
-			expect(profileThresholdsCheckbox).not.toBeChecked()
-
-			// Should NOT render the ProfileThresholdManager component
-			expect(screen.queryByTestId("profile-dropdown")).not.toBeInTheDocument()
-			expect(screen.queryByPlaceholderText("%")).not.toBeInTheDocument()
-		})
-
-		it("toggles ProfileThresholdManager visibility when checkbox is clicked", () => {
-			const mockSetCachedStateField = vitest.fn()
-			const props = {
-				...defaultProps,
-				profileSpecificThresholdsEnabled: false,
-				setCachedStateField: mockSetCachedStateField,
-				listApiConfigMeta: [{ id: "profile-1", name: "Profile 1" }],
-			}
-
-			const { rerender } = render(<ContextManagementSettings {...props} />)
-
-			const profileThresholdsCheckbox = screen.getByTestId("profile-specific-thresholds-checkbox")
-
-			// Initially should not show ProfileThresholdManager
-			expect(
-				screen.queryByText("settings:contextManagement.profileThresholds.configureLabel"),
-			).not.toBeInTheDocument()
-
-			// Click to enable
-			fireEvent.click(profileThresholdsCheckbox)
-			expect(mockSetCachedStateField).toHaveBeenCalledWith("profileSpecificThresholdsEnabled", true)
-
-			// Re-render with updated props to simulate the state change
-			rerender(<ContextManagementSettings {...props} profileSpecificThresholdsEnabled={true} />)
-
-			// Should now show ProfileThresholdManager - verify threshold input is present
-			expect(screen.getByPlaceholderText("%")).toBeInTheDocument()
-		})
-
-		it("calls setCachedStateField when profile thresholds are updated", () => {
-			const mockSetCachedStateField = vitest.fn()
-			const propsWithProfileThresholds = {
-				...defaultProps,
-				profileSpecificThresholdsEnabled: true,
-				profileThresholds: {},
-				setCachedStateField: mockSetCachedStateField,
-				listApiConfigMeta: [{ id: "profile-1", name: "Profile 1" }],
-			}
-
-			render(<ContextManagementSettings {...propsWithProfileThresholds} />)
-
-			// Find the threshold input element within ProfileThresholdManager
-			const thresholdInput = screen.getByPlaceholderText("%")
-
-			// Verify the input is initially disabled (no profile selected)
-			expect(thresholdInput).toBeDisabled()
-
-			// Test basic input functionality
-			fireEvent.change(thresholdInput, { target: { value: "65" } })
-
-			// Note: VSCodeDropdown interaction testing is complex with the VSCode UI toolkit,
-			// so we focus on verifying the component renders and basic input functionality works
-			// The actual dropdown interaction and save functionality is tested in ProfileThresholdManager.test.tsx
 		})
 	})
 })

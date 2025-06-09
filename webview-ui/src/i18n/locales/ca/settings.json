@@ -393,6 +393,13 @@
 		"maxConcurrentFileReads": {
 			"label": "Límit de lectures simultànies",
 			"description": "Nombre màxim de fitxers que l'eina 'read_file' pot processar simultàniament. Els valors més alts poden accelerar la lectura de múltiples fitxers petits però augmenten l'ús de memòria."
+		},
+		"condensingThreshold": {
+			"label": "Context Condensing Threshold",
+			"selectProfile": "Select profile for threshold",
+			"defaultProfile": "Default (applies to all unconfigured profiles)",
+			"defaultDescription": "This threshold applies to all profiles unless overridden",
+			"profileDescription": "Custom threshold for this specific profile"
 		}
 	},
 	"terminal": {

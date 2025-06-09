@@ -158,6 +158,7 @@ export interface WebviewMessage {
 		| "indexCleared"
 		| "focusPanelRequest"
 		| "codebaseIndexConfig"
+<<<<<<< HEAD
 		| "setHistoryPreviewCollapsed"
 		| "openExternal"
 		| "filterMarketplaceItems"
@@ -170,6 +171,8 @@ export interface WebviewMessage {
 		| "fetchMarketplaceData"
 		| "switchTab"
 		| "profileSpecificThresholdsEnabled"
+=======
+>>>>>>> 2a369c26f (feat: refactor profile-specific thresholds implementation)
 		| "profileThresholds"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"

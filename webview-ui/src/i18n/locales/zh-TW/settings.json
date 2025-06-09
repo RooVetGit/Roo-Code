@@ -393,6 +393,13 @@
 		"maxConcurrentFileReads": {
 			"label": "並行檔案讀取限制",
 			"description": "read_file 工具可以同時處理的最大檔案數。較高的值可能會加快讀取多個小檔案的速度，但會增加記憶體使用量。"
+		},
+		"condensingThreshold": {
+			"label": "Context Condensing Threshold",
+			"selectProfile": "Select profile for threshold",
+			"defaultProfile": "Default (applies to all unconfigured profiles)",
+			"defaultDescription": "This threshold applies to all profiles unless overridden",
+			"profileDescription": "Custom threshold for this specific profile"
 		}
 	},
 	"terminal": {

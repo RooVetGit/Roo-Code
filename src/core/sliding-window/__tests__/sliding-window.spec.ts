@@ -272,7 +272,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -314,7 +313,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -350,7 +348,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -365,7 +362,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -387,7 +383,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -402,7 +397,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -439,7 +433,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -475,7 +468,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -504,7 +496,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -543,7 +534,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -591,7 +581,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -659,7 +648,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -707,7 +695,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 50, // This shouldn't matter since autoCondenseContext is false
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -765,7 +752,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 50, // Set threshold to 50% - our tokens are at 60%
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -818,7 +804,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 50, // Set threshold to 50% - our tokens are at 40%
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -858,8 +843,8 @@ describe("Sliding Window", () => {
 		]
 
 		/**
-		 * Test that when profileSpecificThresholdsEnabled is true,
-		 * a profile's specific threshold is correctly used instead of the global threshold
+		 * Test that a profile's specific threshold is correctly used instead of the global threshold
+		 * when defined in profileThresholds
 		 */
 		it("should use profile-specific threshold when enabled and profile has specific threshold", async () => {
 			const modelInfo = createModelInfo(100000, 30000)
@@ -906,7 +891,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100, // Global threshold of 100%
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: true,
 				profileThresholds,
 				currentProfileId,
 			})
@@ -973,7 +957,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 75, // Global threshold of 75%
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: true,
 				profileThresholds,
 				currentProfileId,
 			})
@@ -1028,7 +1011,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 80, // Global threshold of 80%
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: true,
 				profileThresholds,
 				currentProfileId,
 			})
@@ -1090,7 +1072,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1112,7 +1093,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1145,7 +1125,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1167,7 +1146,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1199,7 +1177,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1216,7 +1193,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1246,7 +1222,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
@@ -1263,7 +1238,6 @@ describe("Sliding Window", () => {
 				autoCondenseContextPercent: 100,
 				systemPrompt: "System prompt",
 				taskId,
-				profileSpecificThresholdsEnabled: false,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})

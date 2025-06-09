@@ -1376,7 +1376,6 @@ export class ClineProvider
 			customCondensingPrompt,
 			codebaseIndexConfig,
 			codebaseIndexModels,
-			profileSpecificThresholdsEnabled,
 			profileThresholds,
 		} = await this.getState()
 
@@ -1485,7 +1484,6 @@ export class ClineProvider
 				codebaseIndexEmbedderModelId: "",
 			},
 			mdmCompliant: this.checkMdmCompliance(),
-			profileSpecificThresholdsEnabled: profileSpecificThresholdsEnabled ?? false,
 			profileThresholds: profileThresholds ?? {},
 		}
 	}
@@ -1636,7 +1634,6 @@ export class ClineProvider
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",
 			},
-			profileSpecificThresholdsEnabled: stateValues.profileSpecificThresholdsEnabled ?? false,
 			profileThresholds: stateValues.profileThresholds ?? {},
 		}
 	}

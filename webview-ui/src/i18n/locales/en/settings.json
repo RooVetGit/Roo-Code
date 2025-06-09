@@ -370,7 +370,8 @@
 			"hint": "Empty = use default prompt"
 		},
 		"autoCondenseContext": {
-			"name": "Automatically trigger intelligent context condensing"
+			"name": "Automatically trigger intelligent context condensing",
+			"description": "When enabled, Roo will automatically condense the context when the threshold is reached. When disabled, you can still manually trigger context condensing."
 		},
 		"openTabs": {
 			"label": "Open tabs context limit",
@@ -394,15 +395,12 @@
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
 		},
-		"profileThresholds": {
-			"enabled": "Enable profile-specific thresholds",
-			"description": "Allows setting different context condensing thresholds for each API configuration profile.",
-			"configureLabel": "Configure threshold for profile:",
-			"selectProfile": "Select a profile",
-			"infoText": "ℹ️ Enter -1 to use the default threshold",
-			"configuredProfiles": "Configured Profiles:",
-			"defaultThreshold": "Default ({{defaultThreshold}}%)",
-			"removeAriaLabel": "Remove threshold for {{profileName}}"
+		"condensingThreshold": {
+			"label": "Context Condensing Threshold",
+			"selectProfile": "Select profile for threshold",
+			"defaultProfile": "Default (applies to all unconfigured profiles)",
+			"defaultDescription": "This threshold applies to all profiles unless overridden",
+			"profileDescription": "Custom threshold for this specific profile"
 		}
 	},
 	"terminal": {
