@@ -68,6 +68,8 @@ describe("ChatTextArea", () => {
 			apiConfiguration: {
 				apiProvider: "anthropic",
 			},
+			taskHistory: [],
+			cwd: "/test/workspace",
 		})
 	})
 
@@ -76,6 +78,8 @@ describe("ChatTextArea", () => {
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
+				taskHistory: [],
+				cwd: "/test/workspace",
 			})
 			render(<ChatTextArea {...defaultProps} sendingDisabled={true} />)
 			const enhanceButton = getEnhancePromptButton()
@@ -94,6 +98,8 @@ describe("ChatTextArea", () => {
 				filePaths: [],
 				openedTabs: [],
 				apiConfiguration,
+				taskHistory: [],
+				cwd: "/test/workspace",
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="Test prompt" />)
@@ -114,6 +120,8 @@ describe("ChatTextArea", () => {
 				apiConfiguration: {
 					apiProvider: "openrouter",
 				},
+				taskHistory: [],
+				cwd: "/test/workspace",
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="" />)
@@ -131,6 +139,8 @@ describe("ChatTextArea", () => {
 				apiConfiguration: {
 					apiProvider: "openrouter",
 				},
+				taskHistory: [],
+				cwd: "/test/workspace",
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="Test prompt" />)
@@ -155,6 +165,8 @@ describe("ChatTextArea", () => {
 					apiProvider: "openrouter",
 					newSetting: "test",
 				},
+				taskHistory: [],
+				cwd: "/test/workspace",
 			})
 
 			rerender(<ChatTextArea {...defaultProps} />)
@@ -407,6 +419,249 @@ describe("ChatTextArea", () => {
 
 			// Verify setInputValue was not called
 			expect(setInputValue).not.toHaveBeenCalled()
+		})
+
+		describe("prompt history navigation", () => {
+			const mockTaskHistory = [
+				{ task: "First prompt", workspace: "/test/workspace" },
+				{ task: "Second prompt", workspace: "/test/workspace" },
+				{ task: "Third prompt", workspace: "/test/workspace" },
+			]
+
+			beforeEach(() => {
+				;(useExtensionState as jest.Mock).mockReturnValue({
+					filePaths: [],
+					openedTabs: [],
+					apiConfiguration: {
+						apiProvider: "anthropic",
+					},
+					taskHistory: mockTaskHistory,
+					cwd: "/test/workspace",
+				})
+			})
+
+			it("should navigate to previous prompt on arrow up", () => {
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Simulate arrow up key press
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+
+				// Should set the most recent prompt (last in array)
+				expect(setInputValue).toHaveBeenCalledWith("First prompt")
+			})
+
+			it("should navigate through history with multiple arrow up presses", () => {
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// First arrow up - most recent prompt
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("First prompt")
+
+				// Update input value to simulate the state change
+				setInputValue.mockClear()
+
+				// Second arrow up - previous prompt
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("Second prompt")
+			})
+
+			it("should navigate forward with arrow down", () => {
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Go back in history first (index 0 -> "First prompt", then index 1 -> "Second prompt")
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				setInputValue.mockClear()
+
+				// Navigate forward (from index 1 back to index 0)
+				fireEvent.keyDown(textarea, { key: "ArrowDown" })
+				expect(setInputValue).toHaveBeenCalledWith("First prompt")
+			})
+
+			it("should preserve current input when starting navigation", () => {
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="Current input" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Navigate to history
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("First prompt")
+
+				setInputValue.mockClear()
+
+				// Navigate back to current input
+				fireEvent.keyDown(textarea, { key: "ArrowDown" })
+				fireEvent.keyDown(textarea, { key: "ArrowDown" })
+				expect(setInputValue).toHaveBeenCalledWith("Current input")
+			})
+
+			it("should reset history navigation when user types", () => {
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Navigate to history
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				setInputValue.mockClear()
+
+				// Type something
+				fireEvent.change(textarea, { target: { value: "New input", selectionStart: 9 } })
+
+				// Should reset history navigation
+				expect(setInputValue).toHaveBeenCalledWith("New input")
+			})
+
+			it("should reset history navigation when sending message", () => {
+				const onSend = jest.fn()
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea
+						{...defaultProps}
+						onSend={onSend}
+						setInputValue={setInputValue}
+						inputValue="Test message"
+					/>,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Navigate to history first
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				setInputValue.mockClear()
+
+				// Send message
+				fireEvent.keyDown(textarea, { key: "Enter" })
+
+				expect(onSend).toHaveBeenCalled()
+			})
+
+			it("should navigate history when cursor is at first line", () => {
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Clear any calls from initial render
+				setInputValue.mockClear()
+
+				// With empty input, cursor is at first line by default
+				// Arrow up should navigate history
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("First prompt")
+			})
+
+			it("should filter history by current workspace", () => {
+				const mixedTaskHistory = [
+					{ task: "Workspace 1 prompt", workspace: "/test/workspace" },
+					{ task: "Other workspace prompt", workspace: "/other/workspace" },
+					{ task: "Workspace 1 prompt 2", workspace: "/test/workspace" },
+				]
+
+				;(useExtensionState as jest.Mock).mockReturnValue({
+					filePaths: [],
+					openedTabs: [],
+					apiConfiguration: {
+						apiProvider: "anthropic",
+					},
+					taskHistory: mixedTaskHistory,
+					cwd: "/test/workspace",
+				})
+
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Should only show prompts from current workspace
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("Workspace 1 prompt")
+
+				setInputValue.mockClear()
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("Workspace 1 prompt 2")
+			})
+
+			it("should handle empty task history gracefully", () => {
+				;(useExtensionState as jest.Mock).mockReturnValue({
+					filePaths: [],
+					openedTabs: [],
+					apiConfiguration: {
+						apiProvider: "anthropic",
+					},
+					taskHistory: [],
+					cwd: "/test/workspace",
+				})
+
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Should not crash or call setInputValue
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).not.toHaveBeenCalled()
+			})
+
+			it("should ignore empty or whitespace-only tasks", () => {
+				const taskHistoryWithEmpty = [
+					{ task: "Valid prompt", workspace: "/test/workspace" },
+					{ task: "", workspace: "/test/workspace" },
+					{ task: "   ", workspace: "/test/workspace" },
+					{ task: "Another valid prompt", workspace: "/test/workspace" },
+				]
+
+				;(useExtensionState as jest.Mock).mockReturnValue({
+					filePaths: [],
+					openedTabs: [],
+					apiConfiguration: {
+						apiProvider: "anthropic",
+					},
+					taskHistory: taskHistoryWithEmpty,
+					cwd: "/test/workspace",
+				})
+
+				const setInputValue = jest.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+
+				// Should skip empty tasks
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("Valid prompt")
+
+				setInputValue.mockClear()
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("Another valid prompt")
+			})
 		})
 	})
 
