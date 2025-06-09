@@ -46,11 +46,6 @@ interface ChatTextAreaProps {
 	modeShortcutText: string
 }
 
-interface CursorPositionState {
-	value: string
-	afterRender?: "SET_CURSOR_FIRST_LINE" | "SET_CURSOR_LAST_LINE" | "SET_CURSOR_START"
-}
-
 const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 	(
 		{
@@ -162,11 +157,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		// Use custom hook for prompt history navigation
 		const {
-			historyIndex,
-			setHistoryIndex,
-			tempInput,
-			setTempInput,
-			promptHistory,
 			inputValueWithCursor,
 			setInputValueWithCursor,
 			handleHistoryNavigation,
@@ -491,7 +481,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 
 			setInputValueWithCursor({ value: inputValueWithCursor.value })
-		}, [inputValueWithCursor])
+		}, [inputValueWithCursor, setInputValueWithCursor])
 
 		// Ref to store the search timeout.
 		const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)

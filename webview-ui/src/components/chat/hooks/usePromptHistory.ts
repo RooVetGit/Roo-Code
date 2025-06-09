@@ -79,7 +79,7 @@ export const usePromptHistory = ({
 
 	// Reset history navigation when user types (but not when we're setting it programmatically)
 	const resetOnInputChange = useCallback(
-		(newValue: string) => {
+		(_newValue: string) => {
 			if (historyIndex !== -1) {
 				setHistoryIndex(-1)
 				setTempInput("")
