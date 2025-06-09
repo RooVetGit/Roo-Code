@@ -94,18 +94,8 @@ describe("attemptCompletionTool - DISABLE_COMPLETION_COMMAND experiment", () => 
 			)
 
 			// When there's a lastMessage that's not a command ask, it should say completion_result first
-			expect(mockCline.say).toHaveBeenCalledWith(
-				"completion_result",
-				"Task completed successfully",
-				undefined,
-				false,
-			)
-			expect(mockCline.emit).toHaveBeenCalledWith(
-				"taskCompleted",
-				mockCline.taskId,
-				expect.any(Object),
-				expect.any(Object),
-			)
+			expect(mockCline.say).toHaveBeenCalledWith("completion_result", "Task completed successfully", undefined, false)
+			expect(mockCline.emit).toHaveBeenCalledWith("taskCompleted", mockCline.taskId, expect.any(Object), expect.any(Object))
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "npm test")
 			expect(mockExecuteCommand).toHaveBeenCalled()
 		})
@@ -137,18 +127,8 @@ describe("attemptCompletionTool - DISABLE_COMPLETION_COMMAND experiment", () => 
 			)
 
 			// Should say completion_result and emit before asking for approval
-			expect(mockCline.say).toHaveBeenCalledWith(
-				"completion_result",
-				"Task completed successfully",
-				undefined,
-				false,
-			)
-			expect(mockCline.emit).toHaveBeenCalledWith(
-				"taskCompleted",
-				mockCline.taskId,
-				expect.any(Object),
-				expect.any(Object),
-			)
+			expect(mockCline.say).toHaveBeenCalledWith("completion_result", "Task completed successfully", undefined, false)
+			expect(mockCline.emit).toHaveBeenCalledWith("taskCompleted", mockCline.taskId, expect.any(Object), expect.any(Object))
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "npm test")
 			expect(mockExecuteCommand).not.toHaveBeenCalled()
 		})
@@ -185,12 +165,7 @@ describe("attemptCompletionTool - DISABLE_COMPLETION_COMMAND experiment", () => 
 				mockAskFinishSubTaskApproval,
 			)
 
-			expect(mockCline.say).toHaveBeenCalledWith(
-				"completion_result",
-				"Task completed successfully",
-				undefined,
-				false,
-			)
+			expect(mockCline.say).toHaveBeenCalledWith("completion_result", "Task completed successfully", undefined, false)
 			expect(mockAskApproval).not.toHaveBeenCalled()
 			expect(mockExecuteCommand).not.toHaveBeenCalled()
 		})
@@ -215,18 +190,8 @@ describe("attemptCompletionTool - DISABLE_COMPLETION_COMMAND experiment", () => 
 				mockAskFinishSubTaskApproval,
 			)
 
-			expect(mockCline.say).toHaveBeenCalledWith(
-				"completion_result",
-				"Task completed successfully",
-				undefined,
-				false,
-			)
-			expect(mockCline.emit).toHaveBeenCalledWith(
-				"taskCompleted",
-				mockCline.taskId,
-				expect.any(Object),
-				expect.any(Object),
-			)
+			expect(mockCline.say).toHaveBeenCalledWith("completion_result", "Task completed successfully", undefined, false)
+			expect(mockCline.emit).toHaveBeenCalledWith("taskCompleted", mockCline.taskId, expect.any(Object), expect.any(Object))
 			expect(mockAskApproval).not.toHaveBeenCalled()
 		})
 	})
@@ -258,12 +223,7 @@ describe("attemptCompletionTool - DISABLE_COMPLETION_COMMAND experiment", () => 
 				mockAskFinishSubTaskApproval,
 			)
 
-			expect(mockCline.say).toHaveBeenCalledWith(
-				"completion_result",
-				"Task completed successfully",
-				undefined,
-				false,
-			)
+			expect(mockCline.say).toHaveBeenCalledWith("completion_result", "Task completed successfully", undefined, false)
 			expect(mockAskApproval).not.toHaveBeenCalled()
 
 			// Reset mocks
@@ -287,12 +247,7 @@ describe("attemptCompletionTool - DISABLE_COMPLETION_COMMAND experiment", () => 
 				mockAskFinishSubTaskApproval,
 			)
 
-			expect(mockCline.say).toHaveBeenCalledWith(
-				"completion_result",
-				"Task completed successfully",
-				undefined,
-				false,
-			)
+			expect(mockCline.say).toHaveBeenCalledWith("completion_result", "Task completed successfully", undefined, false)
 			expect(mockAskApproval).not.toHaveBeenCalled()
 		})
 	})
