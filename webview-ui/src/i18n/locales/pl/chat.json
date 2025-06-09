@@ -11,7 +11,8 @@
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
 		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
-		"condenseContext": "Inteligentnie skondensuj kontekst"
+		"condenseContext": "Inteligentnie skondensuj kontekst",
+		"share": "Udostępnij zadanie"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",
@@ -149,7 +150,9 @@
 		"didSearchReplace": "Roo wykonał wyszukiwanie i zamianę w tym pliku:",
 		"wantsToInsert": "Roo chce wstawić zawartość do tego pliku:",
 		"wantsToInsertWithLineNumber": "Roo chce wstawić zawartość do tego pliku w linii {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:"
+		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:",
+		"wantsToReadAndXMore": "Roo chce przeczytać ten plik i {{count}} więcej:",
+		"wantsToReadMultiple": "Roo chce odczytać wiele plików:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu:",
@@ -212,9 +215,9 @@
 		"title": "🎉 Roo Code {{version}} wydany",
 		"description": "Roo Code {{version}} przynosi potężne nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
-		"feature1": "<bold>Modele podglądu Gemini 2.5 Flash</bold>: Uzyskaj dostęp do najnowszych modeli Gemini Flash zapewniających szybsze i bardziej efektywne odpowiedzi",
-		"feature2": "<bold>Inteligentne kondensowanie kontekstu</bold>: Nowy przycisk w nagłówku zadania pozwala na inteligentne kondensowanie treści z wizualną informacją zwrotną",
-		"feature3": "<bold>Wsparcie YAML dla definicji trybów</bold>: Twórz i dostosowuj tryby łatwiej dzięki wsparciu dla YAML",
+		"feature1": "<bold>Inteligentne Kondensowanie Kontekstu Włączone Domyślnie</bold>: Kondensowanie kontekstu jest teraz włączone domyślnie z konfigurowalnymi ustawieniami określającymi kiedy następuje automatyczne kondensowanie",
+		"feature2": "<bold>Przycisk Ręcznego Kondensowania</bold>: Nowy przycisk w nagłówku zadania pozwala ręcznie uruchomić kondensowanie kontekstu w dowolnym momencie",
+		"feature3": "<bold>Ulepszone Ustawienia Kondensowania</bold>: Dostosuj kiedy i jak następuje automatyczne kondensowanie poprzez <contextSettingsLink>Ustawienia Kontekstu</contextSettingsLink>",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -267,5 +270,13 @@
 		"wantsToSearch": "Roo chce przeszukać bazę kodu w poszukiwaniu <code>{{query}}</code>:",
 		"wantsToSearchWithPath": "Roo chce przeszukać bazę kodu w poszukiwaniu <code>{{query}}</code> w <code>{{path}}</code>:",
 		"didSearch": "Znaleziono {{count}} wynik(ów) dla <code>{{query}}</code>:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Zatwierdź wszystko"
+		},
+		"deny": {
+			"title": "Odrzuć wszystko"
+		}
 	}
 }

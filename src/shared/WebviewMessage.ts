@@ -4,7 +4,7 @@ import type { ProviderSettings, PromptComponent, ModeConfig } from "@roo-code/ty
 
 import { Mode } from "./modes"
 
-export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
+export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse" | "objectResponse"
 
 export type PromptMode = Mode | "enhance"
 
@@ -36,6 +36,7 @@ export interface WebviewMessage {
 		| "didShowAnnouncement"
 		| "selectImages"
 		| "exportCurrentTask"
+		| "shareCurrentTask"
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
@@ -79,6 +80,7 @@ export interface WebviewMessage {
 		| "openMcpSettings"
 		| "openProjectMcpSettings"
 		| "restartMcpServer"
+		| "refreshAllMcpServers"
 		| "toggleToolAlwaysAllow"
 		| "toggleMcpServer"
 		| "updateMcpTimeout"
@@ -133,6 +135,7 @@ export interface WebviewMessage {
 		| "remoteBrowserEnabled"
 		| "language"
 		| "maxReadFileLine"
+		| "maxConcurrentFileReads"
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"

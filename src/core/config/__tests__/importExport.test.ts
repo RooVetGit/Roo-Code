@@ -12,6 +12,7 @@ import { importSettings, exportSettings } from "../importExport"
 import { ProviderSettingsManager } from "../ProviderSettingsManager"
 import { ContextProxy } from "../ContextProxy"
 import { CustomModesManager } from "../CustomModesManager"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 jest.mock("vscode", () => ({
 	window: {
@@ -32,6 +33,8 @@ jest.mock("fs/promises", () => ({
 jest.mock("os", () => ({
 	homedir: jest.fn(() => "/mock/home"),
 }))
+
+jest.mock("../../../utils/safeWriteJson")
 
 describe("importExport", () => {
 	let mockProviderSettingsManager: jest.Mocked<ProviderSettingsManager>
@@ -231,10 +234,8 @@ describe("importExport", () => {
 				customModesManager: mockCustomModesManager,
 			})
 
-			expect(result).toEqual({
-				success: false,
-				error: "Expected property name or '}' in JSON at position 2",
-			})
+			expect(result.success).toBe(false)
+			expect(result.error).toMatch(/^Expected property name or '}' in JSON at position 2/)
 			expect(fs.readFile).toHaveBeenCalledWith("/mock/path/settings.json", "utf-8")
 			expect(mockProviderSettingsManager.import).not.toHaveBeenCalled()
 			expect(mockContextProxy.setValues).not.toHaveBeenCalled()
@@ -374,11 +375,10 @@ describe("importExport", () => {
 			expect(mockContextProxy.export).toHaveBeenCalled()
 			expect(fs.mkdir).toHaveBeenCalledWith("/mock/path", { recursive: true })
 
-			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/mock/path/roo-code-settings.json",
-				JSON.stringify({ providerProfiles: mockProviderProfiles, globalSettings: mockGlobalSettings }, null, 2),
-				"utf-8",
-			)
+			expect(safeWriteJson).toHaveBeenCalledWith("/mock/path/roo-code-settings.json", {
+				providerProfiles: mockProviderProfiles,
+				globalSettings: mockGlobalSettings,
+			})
 		})
 
 		it("should include globalSettings when allowedMaxRequests is null", async () => {
@@ -407,11 +407,10 @@ describe("importExport", () => {
 				contextProxy: mockContextProxy,
 			})
 
-			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/mock/path/roo-code-settings.json",
-				JSON.stringify({ providerProfiles: mockProviderProfiles, globalSettings: mockGlobalSettings }, null, 2),
-				"utf-8",
-			)
+			expect(safeWriteJson).toHaveBeenCalledWith("/mock/path/roo-code-settings.json", {
+				providerProfiles: mockProviderProfiles,
+				globalSettings: mockGlobalSettings,
+			})
 		})
 
 		it("should handle errors during the export process", async () => {
@@ -426,7 +425,8 @@ describe("importExport", () => {
 			})
 
 			mockContextProxy.export.mockResolvedValue({ mode: "code" })
-			;(fs.writeFile as jest.Mock).mockRejectedValue(new Error("Write error"))
+			// Simulate an error during the safeWriteJson operation
+			;(safeWriteJson as jest.Mock).mockRejectedValueOnce(new Error("Safe write error"))
 
 			await exportSettings({
 				providerSettingsManager: mockProviderSettingsManager,
@@ -437,8 +437,10 @@ describe("importExport", () => {
 			expect(mockProviderSettingsManager.export).toHaveBeenCalled()
 			expect(mockContextProxy.export).toHaveBeenCalled()
 			expect(fs.mkdir).toHaveBeenCalledWith("/mock/path", { recursive: true })
-			expect(fs.writeFile).toHaveBeenCalled()
+			expect(safeWriteJson).toHaveBeenCalled() // safeWriteJson is called, but it will throw
 			// The error is caught and the function exits silently.
+			// Optionally, ensure no error message was shown if that's part of "silent"
+			// expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
 		})
 
 		it("should handle errors during directory creation", async () => {

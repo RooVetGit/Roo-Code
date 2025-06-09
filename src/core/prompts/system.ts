@@ -43,6 +43,7 @@ async function generatePrompt(
 	language?: string,
 	rooIgnoreInstructions?: string,
 	partialReadsEnabled?: boolean,
+	settings?: Record<string, any>,
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -81,9 +82,10 @@ ${getToolDescriptionsForMode(
 	customModeConfigs,
 	experiments,
 	partialReadsEnabled,
+	settings,
 )}
 
-${getToolUseGuidelinesSection()}
+${getToolUseGuidelinesSection(codeIndexManager)}
 
 ${mcpServersSection}
 
@@ -91,11 +93,11 @@ ${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)}
+${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, codeIndexManager)}
 
 ${getSystemInfoSection(cwd)}
 
-${getObjectiveSection()}
+${getObjectiveSection(codeIndexManager, experiments)}
 
 ${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
 
@@ -119,6 +121,7 @@ export const SYSTEM_PROMPT = async (
 	language?: string,
 	rooIgnoreInstructions?: string,
 	partialReadsEnabled?: boolean,
+	settings?: Record<string, any>,
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -191,5 +194,6 @@ ${customInstructions}`
 		language,
 		rooIgnoreInstructions,
 		partialReadsEnabled,
+		settings,
 	)
 }

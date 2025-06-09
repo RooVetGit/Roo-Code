@@ -11,7 +11,8 @@
 		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
 		"export": "Görev geçmişini dışa aktar",
 		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
-		"condenseContext": "Bağlamı akıllıca yoğunlaştır"
+		"condenseContext": "Bağlamı akıllıca yoğunlaştır",
+		"share": "Görevi paylaş"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
@@ -149,7 +150,9 @@
 		"didSearchReplace": "Roo bu dosyada arama ve değiştirme yaptı:",
 		"wantsToInsert": "Roo bu dosyaya içerik eklemek istiyor:",
 		"wantsToInsertWithLineNumber": "Roo bu dosyanın {{lineNumber}}. satırına içerik eklemek istiyor:",
-		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:"
+		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:",
+		"wantsToReadAndXMore": "Roo bu dosyayı ve {{count}} tane daha okumak istiyor:",
+		"wantsToReadMultiple": "Roo birden fazla dosya okumak istiyor:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo bu dizindeki üst düzey dosyaları görüntülemek istiyor:",
@@ -212,9 +215,9 @@
 		"title": "🎉 Roo Code {{version}} Yayınlandı",
 		"description": "Roo Code {{version}} geri bildirimlerinize dayalı güçlü yeni özellikler ve iyileştirmeler getiriyor.",
 		"whatsNew": "Yenilikler",
-		"feature1": "<bold>Gemini 2.5 Flash Önizleme Modelleri</bold>: Daha hızlı ve verimli yanıtlar için en yeni Gemini Flash modellerine erişin",
-		"feature2": "<bold>Akıllı Bağlam Yoğunlaştırma</bold>: Görev başlığındaki yeni düğme, görsel geri bildirimle içeriği akıllıca yoğunlaştırmanızı sağlar",
-		"feature3": "<bold>Mod Tanımlamaları için YAML Desteği</bold>: YAML desteğiyle modları daha kolay oluşturun ve özelleştirin",
+		"feature1": "<bold>Akıllı Bağlam Sıkıştırma Varsayılan Olarak Etkin</bold>: Bağlam sıkıştırma artık varsayılan olarak etkin ve otomatik sıkıştırmanın ne zaman gerçekleşeceği için yapılandırılabilir ayarlar mevcut",
+		"feature2": "<bold>Manuel Sıkıştırma Butonu</bold>: Görev başlığındaki yeni buton, istediğiniz zaman manuel olarak bağlam sıkıştırmayı tetiklemenize olanak tanır",
+		"feature3": "<bold>Gelişmiş Sıkıştırma Ayarları</bold>: <contextSettingsLink>Bağlam Ayarları</contextSettingsLink> üzerinden otomatik sıkıştırmanın ne zaman ve nasıl gerçekleşeceğini ince ayarlayın",
 		"hideButton": "Duyuruyu gizle",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
 	},
@@ -267,5 +270,13 @@
 		"wantsToSearch": "Roo kod tabanında <code>{{query}}</code> aramak istiyor:",
 		"wantsToSearchWithPath": "Roo <code>{{path}}</code> içinde kod tabanında <code>{{query}}</code> aramak istiyor:",
 		"didSearch": "<code>{{query}}</code> için {{count}} sonuç bulundu:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Tümünü Onayla"
+		},
+		"deny": {
+			"title": "Tümünü Reddet"
+		}
 	}
 }

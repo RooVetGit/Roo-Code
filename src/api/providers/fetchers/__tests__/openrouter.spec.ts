@@ -9,7 +9,7 @@ import {
 	OPEN_ROUTER_COMPUTER_USE_MODELS,
 	OPEN_ROUTER_REASONING_BUDGET_MODELS,
 	OPEN_ROUTER_REQUIRED_REASONING_BUDGET_MODELS,
-} from "../../../../shared/api"
+} from "@roo-code/types"
 
 import { getOpenRouterModelEndpoints, getOpenRouterModels } from "../openrouter"
 
@@ -185,10 +185,11 @@ describe("OpenRouter API", () => {
 
 			expect(endpoints).toEqual({
 				Google: {
-					maxTokens: 0,
+					maxTokens: 65535,
 					contextWindow: 1048576,
 					supportsImages: true,
 					supportsPromptCache: true,
+					supportsReasoningBudget: true,
 					inputPrice: 1.25,
 					outputPrice: 10,
 					cacheWritesPrice: 1.625,
@@ -198,10 +199,11 @@ describe("OpenRouter API", () => {
 					supportedParameters: undefined,
 				},
 				"Google AI Studio": {
-					maxTokens: 0,
+					maxTokens: 65536,
 					contextWindow: 1048576,
 					supportsImages: true,
 					supportsPromptCache: true,
+					supportsReasoningBudget: true,
 					inputPrice: 1.25,
 					outputPrice: 10,
 					cacheWritesPrice: 1.625,

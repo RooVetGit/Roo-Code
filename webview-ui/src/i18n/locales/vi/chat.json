@@ -11,7 +11,8 @@
 		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
 		"export": "Xuất lịch sử nhiệm vụ",
 		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)",
-		"condenseContext": "Cô đọng ngữ cảnh thông minh"
+		"condenseContext": "Cô đọng ngữ cảnh thông minh",
+		"share": "Chia sẻ nhiệm vụ"
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",
@@ -149,7 +150,9 @@
 		"didSearchReplace": "Roo đã thực hiện tìm kiếm và thay thế trong tệp này:",
 		"wantsToInsert": "Roo muốn chèn nội dung vào tệp này:",
 		"wantsToInsertWithLineNumber": "Roo muốn chèn nội dung vào dòng {{lineNumber}} của tệp này:",
-		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:"
+		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:",
+		"wantsToReadAndXMore": "Roo muốn đọc tệp này và {{count}} tệp khác:",
+		"wantsToReadMultiple": "Roo muốn đọc nhiều tệp:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
@@ -212,9 +215,9 @@
 		"title": "🎉 Roo Code {{version}} Đã phát hành",
 		"description": "Roo Code {{version}} mang đến các tính năng mạnh mẽ và cải tiến mới dựa trên phản hồi của bạn.",
 		"whatsNew": "Có gì mới",
-		"feature1": "<bold>Mô hình xem trước Gemini 2.5 Flash</bold>: Truy cập các mô hình Gemini Flash mới nhất cho phản hồi nhanh hơn và hiệu quả hơn",
-		"feature2": "<bold>Cô đọng ngữ cảnh thông minh</bold>: Nút mới trong tiêu đề nhiệm vụ cho phép bạn cô đọng nội dung một cách thông minh với phản hồi trực quan",
-		"feature3": "<bold>Hỗ trợ YAML cho định nghĩa chế độ</bold>: Tạo và tùy chỉnh chế độ dễ dàng hơn với hỗ trợ YAML",
+		"feature1": "<bold>Cô đọng ngữ cảnh thông minh được bật mặc định</bold>: Cô đọng ngữ cảnh hiện được bật mặc định với các cài đặt có thể cấu hình cho khi nào tự động cô đọng",
+		"feature2": "<bold>Nút cô đọng thủ công</bold>: Nút mới trong tiêu đề nhiệm vụ cho phép bạn kích hoạt cô đọng ngữ cảnh thủ công bất cứ lúc nào",
+		"feature3": "<bold>Cài đặt cô đọng nâng cao</bold>: Tinh chỉnh khi nào và cách thức tự động cô đọng thông qua <contextSettingsLink>Cài đặt ngữ cảnh</contextSettingsLink>",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -267,5 +270,13 @@
 		"wantsToSearch": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code>:",
 		"wantsToSearchWithPath": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code> trong <code>{{path}}</code>:",
 		"didSearch": "Đã tìm thấy {{count}} kết quả cho <code>{{query}}</code>:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Chấp nhận tất cả"
+		},
+		"deny": {
+			"title": "Từ chối tất cả"
+		}
 	}
 }

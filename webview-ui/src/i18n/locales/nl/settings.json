@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Selecteer provider",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI-compatibel",
+		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
+		"openaiCompatibleApiKeyLabel": "API-sleutel:",
+		"openaiCompatibleModelDimensionLabel": "Embedding Dimensie:",
+		"openaiCompatibleModelDimensionPlaceholder": "bijv., 1536",
+		"openaiCompatibleModelDimensionDescription": "De embedding dimensie (uitvoergrootte) voor uw model. Controleer de documentatie van uw provider voor deze waarde. Veelvoorkomende waarden: 384, 768, 1536, 3072.",
 		"openaiKeyLabel": "OpenAI-sleutel:",
 		"modelLabel": "Model",
 		"selectModelPlaceholder": "Selecteer model",
@@ -170,6 +176,7 @@
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
 		"getGeminiApiKey": "Gemini API-sleutel ophalen",
+		"apiKey": "API-sleutel",
 		"openAiApiKey": "OpenAI API-sleutel",
 		"openAiBaseUrl": "Basis-URL",
 		"getOpenAiApiKey": "OpenAI API-sleutel ophalen",
@@ -189,6 +196,11 @@
 		"awsSessionToken": "AWS-sessietoken",
 		"awsRegion": "AWS-regio",
 		"awsCrossRegion": "Gebruik cross-region inference",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Aangepast VPC-eindpunt gebruiken",
+			"vpcEndpointUrlPlaceholder": "Voer VPC-eindpunt URL in (optioneel)",
+			"examples": "Voorbeelden:"
+		},
 		"enablePromptCaching": "Prompt caching inschakelen",
 		"enablePromptCachingTitle": "Schakel prompt caching in om de prestaties te verbeteren en de kosten te verlagen voor ondersteunde modellen.",
 		"cacheUsageNote": "Let op: als je geen cachegebruik ziet, probeer dan een ander model te selecteren en vervolgens weer je gewenste model.",
@@ -373,6 +385,10 @@
 			"description": "Roo leest dit aantal regels wanneer het model geen begin/eindwaarden opgeeft. Als dit aantal lager is dan het totaal, genereert Roo een index van codelijnen. Speciale gevallen: -1 laat Roo het hele bestand lezen (zonder indexering), 0 leest geen regels en geeft alleen een minimale index. Lagere waarden minimaliseren het initiële contextgebruik en maken precieze vervolg-leesopdrachten mogelijk. Expliciete begin/eind-aanvragen worden niet door deze instelling beperkt.",
 			"lines": "regels",
 			"always_full_read": "Altijd volledig bestand lezen"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Limiet gelijktijdige bestandslezingen",
+			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
 		}
 	},
 	"terminal": {
@@ -472,6 +488,14 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentele multi-block diff-tool gebruiken",
 			"description": "Indien ingeschakeld, gebruikt Roo de multi-block diff-tool. Hiermee wordt geprobeerd meerdere codeblokken in het bestand in één verzoek bij te werken."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "Gelijktijdig lezen van bestanden inschakelen",
+			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek lezen (tot 15 bestanden). Wanneer uitgeschakeld, moet Roo bestanden één voor één lezen. Uitschakelen kan helpen bij het werken met minder capabele modellen of wanneer u meer controle over bestandstoegang wilt."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Commando-uitvoering in attempt_completion uitschakelen",
+			"description": "Indien ingeschakeld, zal de attempt_completion tool geen commando's uitvoeren. Dit is een experimentele functie ter voorbereiding op het afschaffen van commando-uitvoering bij taakvoltooiing."
 		}
 	},
 	"promptCaching": {

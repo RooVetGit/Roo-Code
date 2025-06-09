@@ -11,7 +11,8 @@
 		"closeAndStart": "कार्य बंद करें और नया शुरू करें",
 		"export": "कार्य इतिहास निर्यात करें",
 		"delete": "कार्य हटाएं (पुष्टि को छोड़ने के लिए Shift + क्लिक)",
-		"condenseContext": "संदर्भ को बुद्धिमानी से संघनित करें"
+		"condenseContext": "संदर्भ को बुद्धिमानी से संघनित करें",
+		"share": "कार्य साझा करें"
 	},
 	"unpin": "पिन करें",
 	"pin": "अवपिन करें",
@@ -149,7 +150,9 @@
 		"didSearchReplace": "Roo ने इस फ़ाइल में खोज और प्रतिस्थापन किया:",
 		"wantsToInsert": "Roo इस फ़ाइल में सामग्री डालना चाहता है:",
 		"wantsToInsertWithLineNumber": "Roo इस फ़ाइल की {{lineNumber}} लाइन पर सामग्री डालना चाहता है:",
-		"wantsToInsertAtEnd": "Roo इस फ़ाइल के अंत में सामग्री जोड़ना चाहता है:"
+		"wantsToInsertAtEnd": "Roo इस फ़ाइल के अंत में सामग्री जोड़ना चाहता है:",
+		"wantsToReadAndXMore": "रू इस फ़ाइल को और {{count}} अन्य को पढ़ना चाहता है:",
+		"wantsToReadMultiple": "Roo कई फ़ाइलें पढ़ना चाहता है:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo इस निर्देशिका में शीर्ष स्तर की फ़ाइलें देखना चाहता है:",
@@ -212,9 +215,9 @@
 		"title": "🎉 Roo Code {{version}} रिलीज़ हुआ",
 		"description": "Roo Code {{version}} आपके फीडबैक के आधार पर शक्तिशाली नई सुविधाएँ और सुधार लाता है।",
 		"whatsNew": "नई सुविधाएँ",
-		"feature1": "<bold>Gemini 2.5 Flash प्रीव्यू मॉडल्स</bold>: तेज़ और अधिक कुशल प्रतिक्रियाओं के लिए नवीनतम Gemini Flash मॉडल्स का उपयोग करें",
-		"feature2": "<bold>बुद्धिमान संदर्भ संघनन</bold>: कार्य हेडर में नया बटन जो आपको विज़ुअल फीडबैक के साथ सामग्री को बुद्धिमानी से संघनित करने की अनुमति देता है",
-		"feature3": "<bold>मोड परिभाषाओं के लिए YAML समर्थन</bold>: YAML समर्थन के साथ आसानी से मोड बनाएं और अनुकूलित करें",
+		"feature1": "<bold>बुद्धिमान संदर्भ संघनन डिफ़ॉल्ट रूप से सक्षम</bold>: संदर्भ संघनन अब डिफ़ॉल्ट रूप से सक्षम है और स्वचालित संघनन कब होगा इसके लिए कॉन्फ़िगरेबल सेटिंग्स हैं",
+		"feature2": "<bold>मैन्युअल संघनन बटन</bold>: कार्य हेडर में नया बटन आपको किसी भी समय मैन्युअल रूप से संदर्भ संघनन ट्रिगर करने की अनुमति देता है",
+		"feature3": "<bold>उन्नत संघनन सेटिंग्स</bold>: <contextSettingsLink>संदर्भ सेटिंग्स</contextSettingsLink> के माध्यम से स्वचालित संघनन कब और कैसे होता है इसे फाइन-ट्यून करें",
 		"hideButton": "घोषणा छिपाएँ",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> और <redditLink>Reddit</redditLink> पर अधिक जानकारी प्राप्त करें और चर्चा में भाग लें 🚀"
 	},
@@ -267,5 +270,13 @@
 		"wantsToSearch": "Roo कोडबेस में <code>{{query}}</code> खोजना चाहता है:",
 		"wantsToSearchWithPath": "Roo <code>{{path}}</code> में कोडबेस में <code>{{query}}</code> खोजना चाहता है:",
 		"didSearch": "<code>{{query}}</code> के लिए {{count}} परिणाम मिले:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "सभी स्वीकृत करें"
+		},
+		"deny": {
+			"title": "सभी अस्वीकार करें"
+		}
 	}
 }

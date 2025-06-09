@@ -11,6 +11,7 @@
 		"closeAndStart": "Aufgabe schließen und neue starten",
 		"export": "Aufgabenverlauf exportieren",
 		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
+		"share": "Aufgabe teilen",
 		"condenseContext": "Kontext intelligent komprimieren"
 	},
 	"unpin": "Lösen von oben",
@@ -140,6 +141,7 @@
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo möchte diese Datei lesen:",
+		"wantsToReadAndXMore": "Roo möchte diese Datei und {{count}} weitere lesen:",
 		"wantsToReadOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs lesen:",
 		"didRead": "Roo hat diese Datei gelesen:",
 		"wantsToEdit": "Roo möchte diese Datei bearbeiten:",
@@ -149,7 +151,8 @@
 		"didSearchReplace": "Roo hat Suchen und Ersetzen in dieser Datei durchgeführt:",
 		"wantsToInsert": "Roo möchte Inhalte in diese Datei einfügen:",
 		"wantsToInsertWithLineNumber": "Roo möchte Inhalte in diese Datei in Zeile {{lineNumber}} einfügen:",
-		"wantsToInsertAtEnd": "Roo möchte Inhalte am Ende dieser Datei anhängen:"
+		"wantsToInsertAtEnd": "Roo möchte Inhalte am Ende dieser Datei anhängen:",
+		"wantsToReadMultiple": "Roo möchte mehrere Dateien lesen:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo möchte die Dateien auf oberster Ebene in diesem Verzeichnis anzeigen:",
@@ -212,9 +215,9 @@
 		"title": "🎉 Roo Code {{version}} veröffentlicht",
 		"description": "Roo Code {{version}} bringt leistungsstarke neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
 		"whatsNew": "Was ist neu",
-		"feature1": "<bold>Gemini 2.5 Flash Vorschaumodelle</bold>: Zugriff auf die neuesten Gemini Flash-Modelle für schnellere und effizientere Antworten",
-		"feature2": "<bold>Intelligente Kontextverdichtung</bold>: Neuer Button in der Aufgabenleiste ermöglicht dir die intelligente Verdichtung von Inhalten mit visueller Rückmeldung",
-		"feature3": "<bold>YAML-Unterstützung für Modusdefinitionen</bold>: Erstelle und passe Modi einfacher mit YAML-Unterstützung an",
+		"feature1": "<bold>Intelligente Kontext-Kondensierung standardmäßig aktiviert</bold>: Kontext-Kondensierung ist jetzt standardmäßig aktiviert mit konfigurierbaren Einstellungen für automatische Kondensierung",
+		"feature2": "<bold>Manueller Kondensierungs-Button</bold>: Neuer Button im Task-Header ermöglicht es dir, Kontext-Kondensierung jederzeit manuell auszulösen",
+		"feature3": "<bold>Erweiterte Kondensierungs-Einstellungen</bold>: Feinabstimmung wann und wie automatische Kondensierung über die <contextSettingsLink>Kontext-Einstellungen</contextSettingsLink> erfolgt",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -267,5 +270,13 @@
 		"wantsToSearch": "Roo möchte den Codebase nach <code>{{query}}</code> durchsuchen:",
 		"wantsToSearchWithPath": "Roo möchte den Codebase nach <code>{{query}}</code> in <code>{{path}}</code> durchsuchen:",
 		"didSearch": "{{count}} Ergebnis(se) für <code>{{query}}</code> gefunden:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Alle genehmigen"
+		},
+		"deny": {
+			"title": "Alle ablehnen"
+		}
 	}
 }

@@ -1,7 +1,7 @@
 {
 	"name": "@roo-code/cloud",
 	"description": "Roo Code Cloud VSCode integration.",
-	"private": true,
+	"version": "0.0.0",
 	"type": "module",
 	"exports": "./src/index.ts",
 	"scripts": {
@@ -13,7 +13,8 @@
 	"dependencies": {
 		"@roo-code/telemetry": "workspace:^",
 		"@roo-code/types": "workspace:^",
-		"axios": "^1.7.4"
+		"axios": "^1.7.4",
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@roo-code/config-eslint": "workspace:^",

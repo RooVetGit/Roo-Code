@@ -22,8 +22,11 @@ import {
 	type TerminalActionId,
 	type TerminalActionPromptType,
 	type HistoryItem,
+	type CloudUserInfo,
+	requestyDefaultModelId,
+	openRouterDefaultModelId,
+	glamaDefaultModelId,
 	ORGANIZATION_ALLOW_ALL,
-	CloudUserInfo,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService } from "@roo-code/cloud"
@@ -31,13 +34,12 @@ import { CloudService } from "@roo-code/cloud"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import { Package } from "../../shared/package"
-import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
-import { experimentDefault } from "../../shared/experiments"
+import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
@@ -90,6 +92,7 @@ export class ClineProvider
 	public static readonly tabPanelId = `${Package.name}.TabPanelProvider`
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
+	private webviewDisposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
 	private codeIndexStatusSubscription?: vscode.Disposable
@@ -101,7 +104,7 @@ export class ClineProvider
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
+	public readonly latestAnnouncementId = "may-29-2025-3-19" // Update for v3.19.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -226,6 +229,15 @@ export class ClineProvider
 	- https://vscode-docs.readthedocs.io/en/stable/extensions/patterns-and-principles/
 	- https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	*/
+	private clearWebviewResources() {
+		while (this.webviewDisposables.length) {
+			const x = this.webviewDisposables.pop()
+			if (x) {
+				x.dispose()
+			}
+		}
+	}
+
 	async dispose() {
 		this.log("Disposing ClineProvider...")
 		await this.removeClineFromStack()
@@ -235,6 +247,8 @@ export class ClineProvider
 			this.view.dispose()
 			this.log("Disposed webview")
 		}
+
+		this.clearWebviewResources()
 
 		while (this.disposables.length) {
 			const x = this.disposables.pop()
@@ -252,7 +266,6 @@ export class ClineProvider
 		this.log("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
-		// Unregister from McpServerManager
 		McpServerManager.unregisterProvider(this)
 	}
 
@@ -367,7 +380,7 @@ export class ClineProvider
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize out-of-scope variables that need to recieve persistent global state values
+		// Initialize out-of-scope variables that need to receive persistent global state values
 		this.getState().then(
 			({
 				terminalShellIntegrationTimeout = Terminal.defaultShellIntegrationTimeout,
@@ -412,7 +425,7 @@ export class ClineProvider
 				: this.getHtmlContent(webviewView.webview)
 
 		// Sets up an event listener to listen for messages passed from the webview view context
-		// and executes code based on the message that is recieved
+		// and executes code based on the message that is received
 		this.setWebviewMessageListener(webviewView.webview)
 
 		// Subscribe to code index status updates if the manager exists
@@ -423,8 +436,7 @@ export class ClineProvider
 					values: update,
 				})
 			})
-			// Add the subscription to the main disposables array
-			this.disposables.push(this.codeIndexStatusSubscription)
+			this.webviewDisposables.push(this.codeIndexStatusSubscription)
 		}
 
 		// Logs show up in bottom panel > Debug Console
@@ -435,26 +447,20 @@ export class ClineProvider
 		if ("onDidChangeViewState" in webviewView) {
 			// WebviewView and WebviewPanel have all the same properties except for this visibility listener
 			// panel
-			webviewView.onDidChangeViewState(
-				() => {
-					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
-					}
-				},
-				null,
-				this.disposables,
-			)
+			const viewStateDisposable = webviewView.onDidChangeViewState(() => {
+				if (this.view?.visible) {
+					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+				}
+			})
+			this.webviewDisposables.push(viewStateDisposable)
 		} else if ("onDidChangeVisibility" in webviewView) {
 			// sidebar
-			webviewView.onDidChangeVisibility(
-				() => {
-					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
-					}
-				},
-				null,
-				this.disposables,
-			)
+			const visibilityDisposable = webviewView.onDidChangeVisibility(() => {
+				if (this.view?.visible) {
+					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+				}
+			})
+			this.webviewDisposables.push(visibilityDisposable)
 		}
 
 		// Listen for when the view is disposed
@@ -465,7 +471,10 @@ export class ClineProvider
 					this.log("Disposing ClineProvider instance for tab view")
 					await this.dispose()
 				} else {
-					this.log("Preserving ClineProvider instance for sidebar view reuse")
+					this.log("Clearing webview resources for sidebar view")
+					this.clearWebviewResources()
+					this.codeIndexStatusSubscription?.dispose()
+					this.codeIndexStatusSubscription = undefined
 				}
 			},
 			null,
@@ -473,16 +482,13 @@ export class ClineProvider
 		)
 
 		// Listen for when color changes
-		vscode.workspace.onDidChangeConfiguration(
-			async (e) => {
-				if (e && e.affectsConfiguration("workbench.colorTheme")) {
-					// Sends latest theme name to webview
-					await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
-				}
-			},
-			null,
-			this.disposables,
-		)
+		const configDisposable = vscode.workspace.onDidChangeConfiguration(async (e) => {
+			if (e && e.affectsConfiguration("workbench.colorTheme")) {
+				// Sends latest theme name to webview
+				await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+			}
+		})
+		this.webviewDisposables.push(configDisposable)
 
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()
@@ -495,7 +501,7 @@ export class ClineProvider
 	}
 
 	// When initializing a new task, (not from history but from a tool command
-	// new_task) there is no need to remove the previouse task since the new
+	// new_task) there is no need to remove the previous task since the new
 	// task is a subtask of the previous one, and when it finishes it is removed
 	// from the stack and the caller is resumed in this way we can have a chain
 	// of tasks, each one being a sub task of the previous one until the main
@@ -720,7 +726,7 @@ export class ClineProvider
 		/*
 		content security policy of your webview to only allow scripts that have a specific nonce
 		create a content security policy meta tag so that only loading scripts with a nonce is allowed
-		As your extension grows you will likely want to add custom styles, fonts, and/or images to your webview. If you do, you will need to update the content security policy meta tag to explicity allow for these resources. E.g.
+		As your extension grows you will likely want to add custom styles, fonts, and/or images to your webview. If you do, you will need to update the content security policy meta tag to explicitly allow for these resources. E.g.
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
 		- 'unsafe-inline' is required for styles due to vscode-webview-toolkit's dynamic style injection
 		- since we pass base64 images to the webview, we need to specify img-src ${webview.cspSource} data:;
@@ -758,14 +764,15 @@ export class ClineProvider
 
 	/**
 	 * Sets up an event listener to listen for messages passed from the webview context and
-	 * executes code based on the message that is recieved.
+	 * executes code based on the message that is received.
 	 *
 	 * @param webview A reference to the extension webview
 	 */
 	private setWebviewMessageListener(webview: vscode.Webview) {
 		const onReceiveMessage = async (message: WebviewMessage) => webviewMessageHandler(this, message)
 
-		webview.onDidReceiveMessage(onReceiveMessage, null, this.disposables)
+		const messageDisposable = webview.onDidReceiveMessage(onReceiveMessage)
+		this.webviewDisposables.push(messageDisposable)
 	}
 
 	/**
@@ -1298,7 +1305,10 @@ export class ClineProvider
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
 			cloudUserInfo,
+			cloudIsAuthenticated,
+			sharingEnabled,
 			organizationAllowList,
+			maxConcurrentFileReads,
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexConfig,
@@ -1389,11 +1399,14 @@ export class ClineProvider
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? -1,
+			maxConcurrentFileReads: maxConcurrentFileReads ?? 15,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
 			cloudUserInfo,
+			cloudIsAuthenticated: cloudIsAuthenticated ?? false,
+			sharingEnabled: sharingEnabled ?? false,
 			organizationAllowList,
 			condensingApiConfigId,
 			customCondensingPrompt,
@@ -1446,6 +1459,26 @@ export class ClineProvider
 		} catch (error) {
 			console.error(
 				`[getState] failed to get cloud user info: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let cloudIsAuthenticated: boolean = false
+
+		try {
+			cloudIsAuthenticated = CloudService.instance.isAuthenticated()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get cloud authentication state: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let sharingEnabled: boolean = false
+
+		try {
+			sharingEnabled = await CloudService.instance.canShareTask()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get sharing enabled state: ${error instanceof Error ? error.message : String(error)}`,
 			)
 		}
 
@@ -1516,8 +1549,16 @@ export class ClineProvider
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
+			maxConcurrentFileReads: experiments.isEnabled(
+				stateValues.experiments ?? experimentDefault,
+				EXPERIMENT_IDS.CONCURRENT_FILE_READS,
+			)
+				? (stateValues.maxConcurrentFileReads ?? 15)
+				: 1,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 			cloudUserInfo,
+			cloudIsAuthenticated,
+			sharingEnabled,
 			organizationAllowList,
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,

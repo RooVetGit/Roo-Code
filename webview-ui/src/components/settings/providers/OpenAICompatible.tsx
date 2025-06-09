@@ -3,9 +3,15 @@ import { useEvent } from "react-use"
 import { Checkbox } from "vscrui"
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import type { ProviderSettings, ModelInfo, ReasoningEffort, OrganizationAllowList } from "@roo-code/types"
+import {
+	type ProviderSettings,
+	type ModelInfo,
+	type ReasoningEffort,
+	type OrganizationAllowList,
+	azureOpenAiDefaultApiVersion,
+	openAiModelInfoSaneDefaults,
+} from "@roo-code/types"
 
-import { azureOpenAiDefaultApiVersion, openAiModelInfoSaneDefaults } from "@roo/api"
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -127,7 +133,7 @@ export const OpenAICompatible = ({
 				onInput={handleInputChange("openAiApiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
 				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.openAiApiKey")}</label>
+				<label className="block font-medium mb-1">{t("settings:providers.apiKey")}</label>
 			</VSCodeTextField>
 			<ModelPicker
 				apiConfiguration={apiConfiguration}

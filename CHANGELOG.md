@@ -1,5 +1,77 @@
 # Roo Code Changelog
 
+## [3.19.5] - 2025-06-05
+
+- Fix Gemini 2.5 Pro Preview thinking budget bug
+
+## [3.19.4] - 2025-06-05
+
+- Add Gemini Pro 06-05 model support (thanks @daniel-lxs and @shariqriazz!)
+- Fix reading PDF, DOCX, and IPYNB files in read_file tool (thanks @samhvw8!)
+- Fix Mermaid CSP errors with enhanced bundling strategy (thanks @KJ7LNW!)
+- Improve model info detection for custom Bedrock ARNs (thanks @adamhill!)
+- Add OpenAI Compatible embedder for codebase indexing (thanks @SannidhyaSah!)
+- Fix multiple memory leaks in ChatView component (thanks @kiwina!)
+- Fix WorkspaceTracker resource leaks by disposing FileSystemWatcher (thanks @kiwina!)
+- Fix RooTips setTimeout cleanup to prevent state updates on unmounted components (thanks @kiwina!)
+- Fix FileSystemWatcher leak in RooIgnoreController (thanks @kiwina!)
+- Fix clipboard memory leak by clearing setTimeout in useCopyToClipboard (thanks @kiwina!)
+- Fix ClineProvider instance cleanup (thanks @xyOz-dev!)
+- Enforce codebase_search as primary tool for code understanding tasks (thanks @hannesrudolph!)
+- Improve Docker setup for evals
+- Move evals into pnpm workspace, switch from SQLite to Postgres
+- Refactor MCP to use getDefaultEnvironment for stdio client transport (thanks @samhvw8!)
+- Get rid of "partial" component in names referencing not necessarily partial messages (thanks @wkordalski!)
+- Improve feature request template (thanks @elianiva!)
+
+## [3.19.3] - 2025-06-02
+
+- Fix SSE MCP Invocation - Fixed SSE connection issue in McpHub.ts by ensuring transport.start override only applies to stdio transports, allowing SSE and streamable-http transports to retain their original start methods (thanks @taylorwilsdon!)
+
+## [3.19.2] - 2025-06-01
+
+- Add support for Streamable HTTP Transport MCP servers (thanks @taylorwilsdon!)
+- Add cached read and writes to stats and cost calculation for LiteLLM provider (thanks @mollux!)
+- Prevent dump of an entire file into the context on user edit (thanks @KJ7LNW!)
+- Fix directory link handling in markdown (thanks @KJ7LNW!)
+- Prevent start_line/end_line in apply_diff REPLACE (thanks @KJ7LNW!)
+- Unify history item UI with TaskItem and TaskItemHeader (thanks @KJ7LNW!)
+- Fix the label of the OpenAI-compatible API keys
+- Fix Virtuoso footer re-rendering issue (thanks @kiwina!)
+- Optimize ChatRowContent layout and styles (thanks @zhangtony239!)
+- Release memory in apply diff (thanks @xyOz-dev!)
+- Upgrade Node.js to v20.19.2 for security enhancements (thanks @PeterDaveHello!)
+- Fix typos (thanks @noritaka1166!)
+
+## [3.19.1] - 2025-05-30
+
+- Experimental feature to allow reading multiple files at once (thanks @samhvw8!)
+- Fix to correctly pass headers to SSE MCP servers
+- Adding support for custom VPC endpoints when using Amazon Bedrock (thanks @kcwhite!)
+- Fix bug with context condensing in Amazon Bedrock
+- Fix UTF-8 encoding in ExecaTerminalProcess (thanks @mr-ryan-james!)
+- Set sidebar name bugfix (thanks @chrarnoldus!)
+- Fix link to CONTRIBUTING.md in feature request template (thanks @cannuri!)
+- Add task metadata to Unbound and improve caching logic (thanks @pugazhendhi-m!)
+
+## [3.19.0] - 2025-05-29
+
+- Enable intelligent content condensing by default and move condense button out of expanded task menu
+- Skip condense and show error if context grows during condensing
+- Transform Prompts tab into Modes tab and move support prompts to Settings for better organization
+- Add DeepSeek R1 0528 model support to Chutes provider (thanks @zeozeozeo!)
+- Fix @directory not respecting .rooignore files (thanks @xyOz-dev!)
+- Add rooignore checking for insert_content and search_and_replace tools
+- Fix menu breaking when Roo is moved between primary and secondary sidebars (thanks @chrarnoldus!)
+- Resolve memory leak in ChatView by stabilizing callback props (thanks @samhvw8!)
+- Fix write_to_file to properly create empty files when content is empty (thanks @Ruakij!)
+- Fix chat input clearing during running tasks (thanks @xyOz-dev!)
+- Update AWS regions to include Spain and Hyderabad
+- Improve POSIX shell compatibility in pre-push hook (thanks @PeterDaveHello and @chrarnoldus!)
+- Update PAGER environment variable for Windows compatibility in Terminal (thanks @SmartManoj!)
+- Add environment variable injection support for whole MCP config (thanks @NamesMT!)
+- Update codebase search description to emphasize English query requirements (thanks @ChuKhaLi!)
+
 ## [3.18.5] - 2025-05-27
 
 - Add thinking controls for Requesty (thanks @dtrugman!)

@@ -62,6 +62,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	{ isHidden, showAnnouncement, hideAnnouncement },
 	ref,
 ) => {
+	const isMountedRef = useRef(true)
 	const [audioBaseUri] = useState(() => {
 		const w = window as any
 		return w.AUDIO_BASE_URI || ""
@@ -160,6 +161,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	useEffect(() => {
 		clineAskRef.current = clineAsk
 	}, [clineAsk])
+
+	useEffect(() => {
+		isMountedRef.current = true
+		return () => {
+			isMountedRef.current = false
+		}
+	}, [])
 
 	const isProfileDisabled = useMemo(
 		() => !!apiConfiguration && !ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList),
@@ -268,6 +276,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								case "finishTask":
 									setPrimaryButtonText(t("chat:completeSubtaskAndReturn"))
 									setSecondaryButtonText(undefined)
+									break
+								case "readFile":
+									if (tool.batchFiles && Array.isArray(tool.batchFiles)) {
+										setPrimaryButtonText(t("chat:read-batch.approve.title"))
+										setSecondaryButtonText(t("chat:read-batch.deny.title"))
+									} else {
+										setPrimaryButtonText(t("chat:approve.title"))
+										setSecondaryButtonText(t("chat:reject.title"))
+									}
 									break
 								default:
 									setPrimaryButtonText(t("chat:approve.title"))
@@ -1114,28 +1131,30 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[scrollToBottomSmooth, scrollToBottomAuto],
 	)
 
-	useEffect(() => {
-		let timer: NodeJS.Timeout | undefined
-		if (!disableAutoScrollRef.current) {
-			timer = setTimeout(() => scrollToBottomSmooth(), 50)
-		}
-		return () => {
-			if (timer) {
-				clearTimeout(timer)
-			}
-		}
-	}, [groupedMessages.length, scrollToBottomSmooth])
+useEffect(() => {
+	let timerId: NodeJS.Timeout | undefined
 
-	const handleWheel = useCallback((event: Event) => {
-		const wheelEvent = event as WheelEvent
+	if (!disableAutoScrollRef.current) {
+		timerId = setTimeout(() => scrollToBottomSmooth(), 50)
+	}
 
-		if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
-			if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
-				// User scrolled up
-				disableAutoScrollRef.current = true
-			}
+	return () => {
+		if (timerId) {
+			clearTimeout(timerId)
 		}
-	}, [])
+	}
+}, [groupedMessages.length, scrollToBottomSmooth])
+
+const handleWheel = useCallback((event: Event) => {
+	const wheelEvent = event as WheelEvent
+
+	if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
+		if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
+			// User scrolled up
+			disableAutoScrollRef.current = true
+		}
+	}
+}, [])
 
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
@@ -1176,6 +1195,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[handleSendMessage, setInputValue], // setInputValue is stable, handleSendMessage depends on clineAsk
 	)
 
+	const handleBatchFileResponse = useCallback((response: { [key: string]: boolean }) => {
+		// Handle batch file response, e.g., for file uploads
+		vscode.postMessage({ type: "askResponse", askResponse: "objectResponse", text: JSON.stringify(response) })
+	}, [])
+
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
 			// browser session group
@@ -1210,19 +1234,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					onHeightChange={handleRowHeightChange}
 					isStreaming={isStreaming}
 					onSuggestionClick={handleSuggestionClickInRow} // This was already stabilized
+					onBatchFileResponse={handleBatchFileResponse}
 				/>
 			)
 		},
 		[
-			// Original broader dependencies
 			expandedRows,
-			groupedMessages,
+			toggleRowExpansion,
 			modifiedMessages,
+			groupedMessages.length,
 			handleRowHeightChange,
 			isStreaming,
-			toggleRowExpansion,
 			handleSuggestionClickInRow,
-			setExpandedRows, // For the inline onToggleExpand in BrowserSessionRow
+			handleBatchFileResponse,
 		],
 	)
 
@@ -1237,23 +1261,33 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		const autoApprove = async () => {
-			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
-				if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
-					await new Promise<void>((resolve) => {
-						autoApproveTimeoutRef.current = setTimeout(resolve, writeDelayMs)
-					})
-				}
+	if (lastMessage?.ask && isAutoApproved(lastMessage)) {
+		if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
+			await new Promise<void>((resolve) => {
+				// Keep a reference so it can be cleared elsewhere if needed
+				autoApproveTimeoutRef.current = setTimeout(resolve, writeDelayMs)
+			})
 
-				if (autoApproveTimeoutRef.current === null || autoApproveTimeoutRef.current) {
-					vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
-
-					setSendingDisabled(true)
-					setClineAsk(undefined)
-					setEnableButtons(false)
-				}
+			// Component may have un-mounted while we were waiting
+			if (!isMountedRef.current) {
+				return
 			}
 		}
-		autoApprove()
+
+		if (autoApproveTimeoutRef.current === null || autoApproveTimeoutRef.current) {
+			vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
+
+			// Copied from `handlePrimaryButtonClick`
+			if (isMountedRef.current) {
+				setSendingDisabled(true)
+				setClineAsk(undefined)
+				setEnableButtons(false)
+			}
+		}
+	}
+}
+
+autoApprove()
 
 		return () => {
 			if (autoApproveTimeoutRef.current) {
@@ -1429,10 +1463,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						<Virtuoso
 							ref={virtuosoRef}
 							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
-							className="scrollable grow overflow-y-scroll"
-							components={{
-								Footer: () => <div className="h-[5px]" />, // Add empty padding at the bottom
-							}}
+							className="scrollable grow overflow-y-scroll mb-[5px]"
 							// increasing top by 3_000 to prevent jumping around when user collapses a row
 							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
 							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered

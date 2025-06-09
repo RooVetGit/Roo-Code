@@ -1,6 +1,8 @@
 import axios from "axios"
 
-import { LITELLM_COMPUTER_USE_MODELS, ModelRecord } from "../../../shared/api"
+import { LITELLM_COMPUTER_USE_MODELS } from "@roo-code/types"
+
+import type { ModelRecord } from "../../../shared/api"
 
 /**
  * Fetches available models from a LiteLLM server
@@ -19,8 +21,10 @@ export async function getLiteLLMModels(apiKey: string, baseUrl: string): Promise
 		if (apiKey) {
 			headers["Authorization"] = `Bearer ${apiKey}`
 		}
+		// Use URL constructor to properly join base URL and path
+		const url = new URL("/v1/model/info", baseUrl).href
 		// Added timeout to prevent indefinite hanging
-		const response = await axios.get(`${baseUrl}/v1/model/info`, { headers, timeout: 5000 })
+		const response = await axios.get(url, { headers, timeout: 5000 })
 		const models: ModelRecord = {}
 
 		const computerModels = Array.from(LITELLM_COMPUTER_USE_MODELS)
@@ -55,6 +59,12 @@ export async function getLiteLLMModels(apiKey: string, baseUrl: string): Promise
 					inputPrice: modelInfo.input_cost_per_token ? modelInfo.input_cost_per_token * 1000000 : undefined,
 					outputPrice: modelInfo.output_cost_per_token
 						? modelInfo.output_cost_per_token * 1000000
+						: undefined,
+					cacheWritesPrice: modelInfo.cache_creation_input_token_cost
+						? modelInfo.cache_creation_input_token_cost * 1000000
+						: undefined,
+					cacheReadsPrice: modelInfo.cache_read_input_token_cost
+						? modelInfo.cache_read_input_token_cost * 1000000
 						: undefined,
 					description: `${modelName} via LiteLLM proxy`,
 				}

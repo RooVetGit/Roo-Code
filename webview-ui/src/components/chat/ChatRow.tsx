@@ -30,6 +30,7 @@ import McpToolRow from "../mcp/McpToolRow"
 import { Mention } from "./Mention"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
 import { FollowUpSuggest } from "./FollowUpSuggest"
+import { BatchFilePermission } from "./BatchFilePermission"
 import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
@@ -47,6 +48,7 @@ interface ChatRowProps {
 	onToggleExpand: (ts: number) => void
 	onHeightChange: (isTaller: boolean) => void
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
+	onBatchFileResponse?: (response: { [key: string]: boolean }) => void
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -95,6 +97,7 @@ export const ChatRowContent = ({
 	isStreaming,
 	onToggleExpand,
 	onSuggestionClick,
+	onBatchFileResponse,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
@@ -399,6 +402,30 @@ export const ChatRowContent = ({
 					</>
 				)
 			case "readFile":
+				// Check if this is a batch file permission request
+				const isBatchRequest = message.type === "ask" && tool.batchFiles && Array.isArray(tool.batchFiles)
+
+				if (isBatchRequest) {
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("files")}
+								<span style={{ fontWeight: "bold" }}>
+									{t("chat:fileOperations.wantsToReadMultiple")}
+								</span>
+							</div>
+							<BatchFilePermission
+								files={tool.batchFiles || []}
+								onPermissionResponse={(response) => {
+									onBatchFileResponse?.(response)
+								}}
+								ts={message?.ts}
+							/>
+						</>
+					)
+				}
+
+				// Regular single file read request
 				return (
 					<>
 						<div style={headerStyle}>
@@ -407,7 +434,11 @@ export const ChatRowContent = ({
 								{message.type === "ask"
 									? tool.isOutsideWorkspace
 										? t("chat:fileOperations.wantsToReadOutsideWorkspace")
-										: t("chat:fileOperations.wantsToRead")
+										: tool.additionalFileCount && tool.additionalFileCount > 0
+											? t("chat:fileOperations.wantsToReadAndXMore", {
+													count: tool.additionalFileCount,
+												})
+											: t("chat:fileOperations.wantsToRead")
 									: t("chat:fileOperations.didRead")}
 							</span>
 						</div>
@@ -873,14 +904,15 @@ export const ChatRowContent = ({
 					)
 				case "user_feedback":
 					return (
-						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap word-break-break-word overflow-wrap-anywhere">
-							<div className="flex justify-between gap-2">
-								<div className="flex-grow px-2 py-1">
+						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
+							<div className="flex justify-between">
+								<div className="flex-grow px-2 py-1 wrap-anywhere">
 									<Mention text={message.text} withShadow />
 								</div>
 								<Button
 									variant="ghost"
 									size="icon"
+									className="shrink-0"
 									disabled={isStreaming}
 									onClick={(e) => {
 										e.stopPropagation()
