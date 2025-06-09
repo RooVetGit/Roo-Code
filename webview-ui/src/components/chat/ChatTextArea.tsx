@@ -45,6 +45,11 @@ interface ChatTextAreaProps {
 	modeShortcutText: string
 }
 
+interface CursorPositionState {
+	value: string
+	afterRender?: "SET_CURSOR_FIRST_LINE" | "SET_CURSOR_LAST_LINE" | "SET_CURSOR_START"
+}
+
 const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 	(
 		{
@@ -158,6 +163,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [historyIndex, setHistoryIndex] = useState(-1)
 		const [tempInput, setTempInput] = useState("")
 		const [promptHistory, setPromptHistory] = useState<string[]>([])
+		const [inputValueWithCursor, setInputValueWithCursor] = useState<CursorPositionState>({ value: inputValue })
 
 		// Initialize prompt history from task history
 		useEffect(() => {
@@ -411,17 +417,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								setHistoryIndex(newIndex)
 								const historicalPrompt = promptHistory[newIndex]
 								setInputValue(historicalPrompt)
-
-								// Set cursor to end of first line
-								setTimeout(() => {
-									if (textAreaRef.current) {
-										const firstLineEnd =
-											historicalPrompt.indexOf("\n") === -1
-												? historicalPrompt.length
-												: historicalPrompt.indexOf("\n")
-										textAreaRef.current.setSelectionRange(firstLineEnd, firstLineEnd)
-									}
-								}, 0)
+								setInputValueWithCursor({
+									value: historicalPrompt,
+									afterRender: "SET_CURSOR_FIRST_LINE",
+								})
 							}
 							return
 						}
@@ -435,26 +434,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								setHistoryIndex(newIndex)
 								const historicalPrompt = promptHistory[newIndex]
 								setInputValue(historicalPrompt)
-
-								// Set cursor to start of last line
-								setTimeout(() => {
-									if (textAreaRef.current) {
-										const lines = historicalPrompt.split("\n")
-										const lastLineStart = historicalPrompt.length - lines[lines.length - 1].length
-										textAreaRef.current.setSelectionRange(lastLineStart, lastLineStart)
-									}
-								}, 0)
+								setInputValueWithCursor({
+									value: historicalPrompt,
+									afterRender: "SET_CURSOR_LAST_LINE",
+								})
 							} else if (historyIndex === 0) {
 								// Return to current input
 								setHistoryIndex(-1)
 								setInputValue(tempInput)
-
-								// Set cursor to start
-								setTimeout(() => {
-									if (textAreaRef.current) {
-										textAreaRef.current.setSelectionRange(0, 0)
-									}
-								}, 0)
+								setInputValueWithCursor({
+									value: tempInput,
+									afterRender: "SET_CURSOR_START",
+								})
 							}
 							return
 						}
@@ -543,6 +534,27 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setIntendedCursorPosition(null) // Reset the state.
 			}
 		}, [inputValue, intendedCursorPosition])
+
+		// Handle cursor positioning after history navigation
+		useLayoutEffect(() => {
+			if (!inputValueWithCursor.afterRender || !textAreaRef.current) return
+
+			if (inputValueWithCursor.afterRender === "SET_CURSOR_FIRST_LINE") {
+				const firstLineEnd =
+					inputValueWithCursor.value.indexOf("\n") === -1
+						? inputValueWithCursor.value.length
+						: inputValueWithCursor.value.indexOf("\n")
+				textAreaRef.current.setSelectionRange(firstLineEnd, firstLineEnd)
+			} else if (inputValueWithCursor.afterRender === "SET_CURSOR_LAST_LINE") {
+				const lines = inputValueWithCursor.value.split("\n")
+				const lastLineStart = inputValueWithCursor.value.length - lines[lines.length - 1].length
+				textAreaRef.current.setSelectionRange(lastLineStart, lastLineStart)
+			} else if (inputValueWithCursor.afterRender === "SET_CURSOR_START") {
+				textAreaRef.current.setSelectionRange(0, 0)
+			}
+
+			setInputValueWithCursor({ value: inputValueWithCursor.value })
+		}, [inputValueWithCursor])
 
 		// Ref to store the search timeout.
 		const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
