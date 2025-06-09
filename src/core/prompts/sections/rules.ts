@@ -45,14 +45,8 @@ function getEditingInstructions(diffStrategy?: DiffStrategy): string {
 	return instructions.join("\n")
 }
 
-export function getRulesSection(
-	cwd: string,
-	supportsComputerUse: boolean,
-	diffStrategy?: DiffStrategy,
-	codeIndexManager?: CodeIndexManager,
-): string {
-	const isCodebaseSearchAvailable =
-		codeIndexManager &&
+export function getRulesSection(cwd: string, supportsComputerUse: boolean, diffStrategy?: DiffStrategy, codeIndexManager?: CodeIndexManager): string {
+	const isCodebaseSearchAvailable = codeIndexManager &&
 		codeIndexManager.isFeatureEnabled &&
 		codeIndexManager.isFeatureConfigured &&
 		codeIndexManager.isInitialized

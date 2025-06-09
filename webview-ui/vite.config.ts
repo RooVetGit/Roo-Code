@@ -124,9 +124,7 @@ export default defineConfig(({ mode }) => {
 						if (moduleInfo?.importers.some((importer) => importer.includes("node_modules/mermaid"))) {
 							return "mermaid-bundle"
 						}
-						if (
-							moduleInfo?.dynamicImporters.some((importer) => importer.includes("node_modules/mermaid"))
-						) {
+						if (moduleInfo?.dynamicImporters.some((importer) => importer.includes("node_modules/mermaid"))) {
 							return "mermaid-bundle"
 						}
 					},
