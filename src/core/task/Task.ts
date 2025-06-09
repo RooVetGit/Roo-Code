@@ -243,6 +243,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.rootTask = rootTask
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
+		this.lastApiRequestTime = parentTask?.lastApiRequestTime ?? rootTask?.lastApiRequestTime
 
 		if (historyItem) {
 			TelemetryService.instance.captureTaskRestarted(this.taskId)
@@ -1871,5 +1872,13 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public get cwd() {
 		return this.workspacePath
+	}
+
+	public getLastApiRequestTime(): number | undefined {
+		return this.lastApiRequestTime
+	}
+
+	public setLastApiRequestTime(time: number | undefined) {
+		this.lastApiRequestTime = time
 	}
 }

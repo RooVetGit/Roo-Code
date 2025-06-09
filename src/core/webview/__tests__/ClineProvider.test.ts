@@ -464,7 +464,8 @@ describe("ClineProvider", () => {
 		const stackSizeBeforeAbort = provider.getClineStackSize()
 
 		// call the removeClineFromStack method so it will call the current cline abort and remove it from the stack
-		await provider.removeClineFromStack()
+		const removed = await provider.removeClineFromStack()
+		expect(removed).toBe(mockCline)
 
 		// get the stack size after the abort call
 		const stackSizeAfterAbort = provider.getClineStackSize()

@@ -46,8 +46,8 @@ async function main() {
 		{
 			name: "copyFiles",
 			setup(build) {
-				build.onEnd(() => {
-					copyPaths(
+				build.onEnd(async () => {
+					await copyPaths(
 						[
 							["../README.md", "README.md"],
 							["../CHANGELOG.md", "CHANGELOG.md"],

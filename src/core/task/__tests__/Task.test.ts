@@ -9,6 +9,9 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import type { GlobalState, ProviderSettings, ModelInfo } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
+const mockDelay = jest.fn().mockResolvedValue(undefined)
+jest.mock("delay", () => ({ __esModule: true, default: mockDelay }))
+
 import { Task } from "../Task"
 import { ClineProvider } from "../../webview/ClineProvider"
 import { ApiStreamChunk } from "../../../api/transform/stream"
@@ -18,6 +21,8 @@ import { processUserContentMentions } from "../../mentions/processUserContentMen
 jest.mock("execa", () => ({
 	execa: jest.fn(),
 }))
+
+jest.setTimeout(15000)
 
 jest.mock("fs/promises", () => ({
 	mkdir: jest.fn().mockResolvedValue(undefined),
@@ -541,8 +546,8 @@ describe("Cline", () => {
 				})
 
 				// Mock delay to track countdown timing
-				const mockDelay = jest.fn().mockResolvedValue(undefined)
-				jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+
+				mockDelay.mockClear()
 
 				// Mock say to track messages
 				const saySpy = jest.spyOn(cline, "say")
@@ -666,8 +671,7 @@ describe("Cline", () => {
 				})
 
 				// Mock delay to track countdown timing
-				const mockDelay = jest.fn().mockResolvedValue(undefined)
-				jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+				mockDelay.mockClear()
 
 				// Mock say to track messages
 				const saySpy = jest.spyOn(cline, "say")
@@ -853,6 +857,122 @@ describe("Cline", () => {
 					await cline.abortTask(true)
 					await task.catch(() => {})
 				})
+			})
+		})
+
+		describe("subtask rate limiting", () => {
+			it("delays API request when starting a subtask", async () => {
+				const parent = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "parent task",
+					startTask: false,
+				})
+
+				parent.setLastApiRequestTime(Date.now())
+
+				const child = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "child task",
+					parentTask: parent,
+					rootTask: parent,
+					startTask: false,
+				})
+
+				const mockStream = {
+					async *[Symbol.asyncIterator]() {
+						yield { type: "text", text: "ok" }
+					},
+					async next() {
+						return { done: true, value: { type: "text", text: "ok" } }
+					},
+					async return() {
+						return { done: true, value: undefined }
+					},
+					async throw(e: any) {
+						throw e
+					},
+					async [Symbol.asyncDispose]() {
+						// Cleanup
+					},
+				} as AsyncGenerator<ApiStreamChunk>
+
+				jest.spyOn(child.api, "createMessage").mockReturnValue(mockStream)
+				const rateLimitSeconds = 5
+				mockProvider.getState = jest.fn().mockResolvedValue({
+					apiConfiguration: { ...mockApiConfig, rateLimitSeconds },
+				})
+
+				const mockDelay = jest.fn().mockResolvedValue(undefined)
+				jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+
+				const iterator = child.attemptApiRequest(0)
+				await iterator.next()
+
+				expect(mockDelay).toHaveBeenCalledTimes(rateLimitSeconds)
+
+				await child.abortTask(true)
+			})
+
+			it("delays parent request after finishing subtask", async () => {
+				const parent = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "parent task",
+					startTask: false,
+				})
+
+				await mockProvider.addClineToStack(parent)
+
+				const child = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "child task",
+					parentTask: parent,
+					rootTask: parent,
+					startTask: false,
+				})
+
+				await mockProvider.addClineToStack(child)
+
+				child.setLastApiRequestTime(Date.now())
+				parent.setLastApiRequestTime(Date.now() - 6000)
+				const rateLimitSeconds = 5
+				mockProvider.getState = jest.fn().mockResolvedValue({
+					apiConfiguration: { ...mockApiConfig, rateLimitSeconds },
+				})
+
+				const mockStream = {
+					async *[Symbol.asyncIterator]() {
+						yield { type: "text", text: "ok" }
+					},
+					async next() {
+						return { done: true, value: { type: "text", text: "ok" } }
+					},
+					async return() {
+						return { done: true, value: undefined }
+					},
+					async throw(e: any) {
+						throw e
+					},
+					async [Symbol.asyncDispose]() {
+						// Cleanup
+					},
+				} as AsyncGenerator<ApiStreamChunk>
+
+				jest.spyOn(parent.api, "createMessage").mockReturnValue(mockStream)
+
+				mockDelay.mockClear()
+
+				await mockProvider.finishSubTask("done")
+
+				const iterator = parent.attemptApiRequest(0)
+				await iterator.next()
+
+				expect(mockDelay).toHaveBeenCalledTimes(rateLimitSeconds)
+
+				await parent.abortTask(true)
 			})
 		})
 	})

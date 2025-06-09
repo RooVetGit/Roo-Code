@@ -168,13 +168,13 @@ export class ClineProvider
 
 	// Removes and destroys the top Cline instance (the current finished task),
 	// activating the previous one (resuming the parent task).
-	async removeClineFromStack() {
+	async removeClineFromStack(): Promise<Task | undefined> {
 		if (this.clineStack.length === 0) {
-			return
+			return undefined
 		}
 
 		// Pop the top Cline instance from the stack.
-		let cline = this.clineStack.pop()
+		const cline = this.clineStack.pop()
 
 		if (cline) {
 			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
@@ -189,10 +189,10 @@ export class ClineProvider
 				)
 			}
 
-			// Make sure no reference kept, once promises end it will be
-			// garbage collected.
-			cline = undefined
+			return cline
 		}
+
+		return undefined
 	}
 
 	// returns the current cline object in the stack (the top one)
@@ -218,10 +218,14 @@ export class ClineProvider
 	// this is used when a sub task is finished and the parent task needs to be resumed
 	async finishSubTask(lastMessage: string) {
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
-		// remove the last cline instance from the stack (this is the finished sub task)
-		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+		const finishedCline = await this.removeClineFromStack()
+		const parentCline = this.getCurrentCline()
+
+		if (finishedCline && parentCline) {
+			parentCline.setLastApiRequestTime(finishedCline.getLastApiRequestTime())
+		}
+
+		await parentCline?.resumePausedTask(lastMessage)
 	}
 
 	/*

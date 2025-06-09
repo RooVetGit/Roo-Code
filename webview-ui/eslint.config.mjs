@@ -5,6 +5,13 @@ export default [
 	...reactConfig,
 	{
 		rules: {
+			"@typescript-eslint/no-unused-expressions": [
+				"error",
+				{
+					"allowShortCircuit": true,
+					"allowTernary": true
+				}
+			],
 			"@typescript-eslint/no-unused-vars": [
 				"error",
 				{
@@ -12,8 +19,8 @@ export default [
 					ignoreRestSiblings: true,
 					varsIgnorePattern: "^_",
 					argsIgnorePattern: "^_",
-					caughtErrorsIgnorePattern: "^_",
-				},
+					caughtErrorsIgnorePattern: "^_"
+				}
 			],
 			"@typescript-eslint/no-explicit-any": "off",
 			"react/prop-types": "off",

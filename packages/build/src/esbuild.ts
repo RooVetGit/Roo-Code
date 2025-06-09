@@ -22,16 +22,19 @@ function copyDir(srcDir: string, dstDir: string, count: number): number {
 	return count
 }
 
-function rmDir(dirPath: string, maxRetries: number = 3): void {
+async function rmDir(dirPath: string, maxRetries: number = 3): Promise<void> {
 	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
 			fs.rmSync(dirPath, { recursive: true, force: true })
 			return
-		} catch (error) {
+		} catch (error: unknown) {
 			const isLastAttempt = attempt === maxRetries
 
 			const isEnotemptyError =
-				error instanceof Error && "code" in error && (error.code === "ENOTEMPTY" || error.code === "EBUSY")
+				typeof error === "object" &&
+				error !== null &&
+				"code" in error &&
+				(error.code === "ENOTEMPTY" || error.code === "EBUSY")
 
 			if (isLastAttempt || !isEnotemptyError) {
 				throw error // Re-throw if it's the last attempt or not a locking error.
@@ -41,12 +44,8 @@ function rmDir(dirPath: string, maxRetries: number = 3): void {
 			const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000) // Cap at 1s.
 			console.warn(`[rmDir] Attempt ${attempt} failed for ${dirPath}, retrying in ${delay}ms...`)
 
-			// Synchronous sleep for simplicity in build scripts.
-			const start = Date.now()
-
-			while (Date.now() - start < delay) {
-				/* Busy wait */
-			}
+			// Use an asynchronous wait.
+			await new Promise((resolve) => setTimeout(resolve, delay))
 		}
 	}
 }
@@ -55,14 +54,18 @@ type CopyPathOptions = {
 	optional?: boolean
 }
 
-export function copyPaths(copyPaths: [string, string, CopyPathOptions?][], srcDir: string, dstDir: string) {
-	copyPaths.forEach(([srcRelPath, dstRelPath, options = {}]) => {
+export async function copyPaths(
+	copyPaths: [string, string, CopyPathOptions?][],
+	srcDir: string,
+	dstDir: string,
+): Promise<void> {
+	for (const [srcRelPath, dstRelPath, options = {}] of copyPaths) {
 		try {
 			const stats = fs.lstatSync(path.join(srcDir, srcRelPath))
 
 			if (stats.isDirectory()) {
 				if (fs.existsSync(path.join(dstDir, dstRelPath))) {
-					rmDir(path.join(dstDir, dstRelPath))
+					await rmDir(path.join(dstDir, dstRelPath))
 				}
 
 				fs.mkdirSync(path.join(dstDir, dstRelPath), { recursive: true })
@@ -73,14 +76,14 @@ export function copyPaths(copyPaths: [string, string, CopyPathOptions?][], srcDi
 				fs.copyFileSync(path.join(srcDir, srcRelPath), path.join(dstDir, dstRelPath))
 				console.log(`[copyPaths] Copied ${srcRelPath} to ${dstRelPath}`)
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			if (options.optional) {
 				console.warn(`[copyPaths] Optional file not found: ${srcRelPath}`)
 			} else {
 				throw error
 			}
 		}
-	})
+	}
 }
 
 export function copyWasms(srcDir: string, distDir: string): void {
@@ -171,7 +174,7 @@ export function setupLocaleWatcher(srcDir: string, distDir: string) {
 			}
 		})
 		console.log("Watcher for locale files is set up")
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error(
 			`Error setting up watcher for ${localesDir}:`,
 			error instanceof Error ? error.message : "Unknown error",
