@@ -88,7 +88,7 @@ jobs:
     notify-slack-on-failure:
         runs-on: ubuntu-latest
         needs: [check-translations, knip, compile, platform-unit-test, integration-test]
-        if: ${{ always() && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/cte/slack-webhook')) || (github.event_name == 'pull_request' && (github.base_ref == 'main' && github.head_ref == 'cte/slack-webhook'))) && contains(needs.*.result, 'failure') }}
+        if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(needs.*.result, 'failure') }}
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
