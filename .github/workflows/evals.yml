@@ -1,6 +1,11 @@
 name: Evals Docker Compose
 
 on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/evals/**'
+      - '.github/workflows/evals*.yml'
   workflow_dispatch:
     inputs:
       run_full_evals:
