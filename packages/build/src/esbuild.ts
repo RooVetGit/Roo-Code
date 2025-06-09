@@ -147,9 +147,7 @@ export function copyWasms(srcDir: string, distDir: string): void {
 	const languageWasmDir = path.join(nodeModulesDir, "tree-sitter-wasms", "out")
 
 	if (!fs.existsSync(languageWasmDir)) {
-		console.warn(`[copyWasms] Warning: Directory does not exist: ${languageWasmDir}`)
-		console.warn(`[copyWasms] Skipping tree-sitter language WASM files copy`)
-		return
+		throw new Error(`Directory does not exist: ${languageWasmDir}`)
 	}
 
 	// Dynamically read all WASM files from the directory instead of using a hardcoded list.
