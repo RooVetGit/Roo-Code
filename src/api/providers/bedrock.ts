@@ -165,63 +165,30 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	/**
-	 * Handles thinking content block events
+	 * Unified stream event processor for better maintainability
 	 */
-	private *handleThinkingContentBlock(contentBlock: any): Generator<ApiStreamChunk, void, unknown> {
-		if (contentBlock?.type === "thinking" && contentBlock.thinking !== undefined) {
-			yield {
-				type: "reasoning",
-				text: contentBlock.thinking || "",
+	private *processStreamEvent(streamEvent: StreamEvent): Generator<ApiStreamChunk, void, unknown> {
+		// Handle content blocks
+		if (streamEvent.contentBlockStart) {
+			const { contentBlock, start } = streamEvent.contentBlockStart
+
+			if (contentBlock?.type === "thinking" && contentBlock.thinking !== undefined) {
+				yield { type: "reasoning", text: contentBlock.thinking || "" }
+			} else if (start?.text || contentBlock?.text) {
+				yield { type: "text", text: start?.text || contentBlock?.text || "" }
 			}
 		}
-	}
 
-	/**
-	 * Handles text content block events
-	 */
-	private *handleTextContentBlock(start: any, contentBlock: any): Generator<ApiStreamChunk, void, unknown> {
-		const text = start?.text || contentBlock?.text
-		if (text !== undefined) {
-			yield {
-				type: "text",
-				text: text || "",
-			}
-		}
-	}
+		// Handle content deltas
+		if (streamEvent.contentBlockDelta?.delta) {
+			const { delta } = streamEvent.contentBlockDelta
 
-	/**
-	 * Handles thinking delta events
-	 */
-	private *handleThinkingDelta(delta: any): Generator<ApiStreamChunk, void, unknown> {
-		if (delta.type === "thinking_delta" && delta.thinking) {
-			yield {
-				type: "reasoning",
-				text: delta.thinking,
-			}
-		}
-	}
-
-	/**
-	 * Handles signature delta events (part of thinking)
-	 */
-	private *handleSignatureDelta(delta: any): Generator<ApiStreamChunk, void, unknown> {
-		if (delta.type === "signature_delta" && delta.signature) {
-			// Signature is part of the thinking process, treat it as reasoning
-			yield {
-				type: "reasoning",
-				text: delta.signature,
-			}
-		}
-	}
-
-	/**
-	 * Handles text delta events
-	 */
-	private *handleTextDelta(delta: any): Generator<ApiStreamChunk, void, unknown> {
-		if (delta.text) {
-			yield {
-				type: "text",
-				text: delta.text,
+			if (delta.type === "thinking_delta" && delta.thinking) {
+				yield { type: "reasoning", text: delta.thinking }
+			} else if (delta.type === "signature_delta" && delta.signature) {
+				yield { type: "reasoning", text: delta.signature }
+			} else if (delta.text) {
+				yield { type: "text", text: delta.text }
 			}
 		}
 	}
@@ -582,36 +549,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 					continue
 				}
 
-				// Handle content blocks
-				if (streamEvent.contentBlockStart) {
-					const { contentBlock, start } = streamEvent.contentBlockStart
-
-					// Handle thinking content blocks
-					if (contentBlock?.type === "thinking") {
-						yield* this.handleThinkingContentBlock(contentBlock)
-						continue
-					}
-
-					// Handle regular text content blocks
-					if (start?.text || contentBlock?.text) {
-						yield* this.handleTextContentBlock(start, contentBlock)
-						continue
-					}
-				}
-
-				// Handle content deltas
-				if (streamEvent.contentBlockDelta?.delta) {
-					const delta = streamEvent.contentBlockDelta.delta
-
-					// Handle thinking deltas
-					yield* this.handleThinkingDelta(delta)
-
-					// Handle signature deltas (part of thinking)
-					yield* this.handleSignatureDelta(delta)
-
-					// Handle regular text deltas
-					yield* this.handleTextDelta(delta)
-				}
+				// Use unified stream event processor
+				yield* this.processStreamEvent(streamEvent)
 				// Handle message stop
 				if (streamEvent.messageStop) {
 					continue
