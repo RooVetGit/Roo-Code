@@ -40,7 +40,7 @@ export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Prom
 		}
 	} catch (error) {
 		if (error.code === "ECONNREFUSED") {
-			console.error(`Error connecting to LMStudio at ${baseUrl}`)
+			console.warn(`Error connecting to LMStudio at ${baseUrl}`)
 		} else {
 			console.error(
 				`Error fetching LMStudio models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
