@@ -46,6 +46,15 @@ interface BedrockInferenceConfig {
 	topP?: number
 }
 
+// Define interface for Bedrock thinking configuration
+interface BedrockThinkingConfig {
+	thinking: {
+		type: "enabled"
+		budget_tokens: number
+	}
+	[key: string]: any // Add index signature to be compatible with DocumentType
+}
+
 // Define interface for Bedrock payload
 interface BedrockPayload {
 	modelId: BedrockModelId | string
@@ -53,7 +62,7 @@ interface BedrockPayload {
 	system?: SystemContentBlock[]
 	inferenceConfig: BedrockInferenceConfig
 	anthropic_version?: string
-	additionalModelRequestFields?: any
+	additionalModelRequestFields?: BedrockThinkingConfig
 }
 
 // Define types for stream events based on AWS SDK
@@ -315,7 +324,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			conversationId,
 		)
 
-		let additionalModelRequestFields: any | undefined
+		let additionalModelRequestFields: BedrockThinkingConfig | undefined
 		let thinkingEnabled = false
 
 		if (
