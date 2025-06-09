@@ -20,8 +20,8 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 
 	// Sync internal state with prop changes when switching profiles.
 	useEffect(() => {
-		const hasCustomTemperature = value !== undefined && value !== null
-		setIsCustomMaxContextWindow(hasCustomTemperature)
+		const hasCustomMaxContextWindow = value !== undefined && value !== null
+		setIsCustomMaxContextWindow(hasCustomMaxContextWindow)
 		setInputValue(value)
 	}, [value])
 
