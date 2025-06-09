@@ -1079,11 +1079,13 @@ customModes:
               3. For PRs, also use get_pull_request_reviews to get review feedback
               4. Identify all requirements, acceptance criteria, and technical details
               5. List any related issues, PRs, or discussions mentioned
+              6. Check if the issue/PR specifies a target branch or if there are branch requirements
               
               DO NOT:
               - Attempt to implement anything yet
               - Make design decisions yet
               - Explore the codebase yet
+              - Make any branch changes yet
               
               When complete, use attempt_completion to provide:
               - Full issue/PR details including number, title, and type
@@ -1091,6 +1093,7 @@ customModes:
               - Key technical details mentioned
               - Related issues/PRs/discussions
               - For PRs: specific changes requested in reviews
+              - Target branch information (if specified in issue/PR or comments)
               
               This information will be used to coordinate the implementation workflow.
               </message>
@@ -1101,9 +1104,56 @@ customModes:
           </step>
 
           <step number="2">
+            <name>Branch Verification and Setup</name>
+            <instructions>
+              Before proceeding with any implementation work, ensure we're on the correct branch:
+              
+              <new_task>
+              <mode>issue-worker</mode>
+              <message>
+              I need you to verify and ensure we're working on the correct git branch for GitHub issue/PR #[number].
+              
+              CONTEXT FROM ANALYSIS:
+              [Include target branch information from step 1]
+              - Issue/PR number: #[number]
+              - Target branch: [branch name if specified, otherwise 'main' or 'master']
+              - Issue type: [bug fix, feature, etc.]
+              
+              SCOPE:
+              1. Check the current git branch using git utilities
+              2. Determine the correct target branch:
+                 - If specified in the issue/PR, use that branch
+                 - For bug fixes: typically 'main' or 'master'
+                 - For features: may be 'main', 'develop', or a specific feature branch
+                 - For PR feedback: use the PR's target branch
+              3. If not on the correct branch, switch to it using git utilities
+              4. Verify the branch switch was successful
+              5. Report the current branch status
+              
+              IMPORTANT:
+              - Use the git utility functions from src/utils/git.ts
+              - If branch switching fails, report the issue and ask for guidance
+              - Do not proceed with any code changes until on the correct branch
+              
+              When complete, use attempt_completion to provide:
+              - Current branch name
+              - Target branch name
+              - Whether branch switch was needed and successful
+              - Any branch-related issues or warnings
+              - Confirmation that we're ready to proceed with implementation
+              
+              This ensures all subsequent work happens on the correct branch.
+              </message>
+              </new_task>
+              
+              Wait for branch verification to complete before proceeding.
+            </instructions>
+          </step>
+
+          <step number="3">
             <name>Architecture and Design Planning</name>
             <instructions>
-              Based on the context gathered, delegate design planning to architect mode:
+              Based on the context gathered and branch verification, delegate design planning:
               
               <new_task>
               <mode>issue-worker</mode>
@@ -1115,6 +1165,11 @@ customModes:
               - Requirements: [list all requirements]
               - Acceptance criteria: [list all criteria]
               - Technical constraints: [any mentioned constraints]
+              
+              BRANCH CONTEXT:
+              [Include branch information from step 2]
+              - Current branch: [branch name]
+              - Confirmed we're on the correct branch for this work
               
               SCOPE:
               1. Analyze the requirements and create a detailed implementation approach
@@ -1151,7 +1206,7 @@ customModes:
             </instructions>
           </step>
 
-          <step number="3">
+          <step number="4">
             <name>Codebase Exploration</name>
             <instructions>
               With the architectural plan ready, delegate detailed codebase exploration:
@@ -1200,7 +1255,7 @@ customModes:
             </instructions>
           </step>
 
-          <step number="4">
+          <step number="5">
             <name>Final Verification and Summary</name>
             <instructions>
               After the complete implementation is finished:
@@ -1241,7 +1296,7 @@ customModes:
             </instructions>
           </step>
 
-          <step number="5">
+          <step number="6">
             <name>Pull Request Creation</name>
             <instructions>
               If user approves, coordinate PR creation:
