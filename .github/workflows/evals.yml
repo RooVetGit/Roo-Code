@@ -50,10 +50,33 @@ jobs:
                   HOST_EXECUTION_METHOD=docker
                   EOF
 
-            - name: Build Docker images
+            - name: Build web image with cache
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: packages/evals/Dockerfile.web
+                tags: evals-web:latest
+                cache-from: type=gha
+                cache-to: type=gha,mode=max
+                push: false
+                load: true
+      
+            - name: Build runner image with cache
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: packages/evals/Dockerfile.runner
+                tags: evals-runner:latest
+                cache-from: type=gha
+                cache-to: type=gha,mode=max
+                push: false
+                load: true
+      
+            - name: Tag images for docker-compose
               run: |
-                  cd packages/evals
-                  docker compose build web runner
+                cd packages/evals
+                docker tag evals-web:latest evals-web
+                docker tag evals-runner:latest evals-runner
 
             - name: Start server services
               run: |
@@ -133,10 +156,34 @@ jobs:
                   HOST_EXECUTION_METHOD=docker
                   EOF
 
-            - name: Build and start services
+            - name: Build web image with cache
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: packages/evals/Dockerfile.web
+                tags: evals-web:latest
+                cache-from: type=gha
+                cache-to: type=gha,mode=max
+                push: false
+                load: true
+      
+            - name: Build runner image with cache
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: packages/evals/Dockerfile.runner
+                tags: evals-runner:latest
+                cache-from: type=gha
+                cache-to: type=gha,mode=max
+                push: false
+                load: true
+      
+            - name: Tag images and start services
               run: |
-                  cd packages/evals
-                  docker compose --profile server --profile runner up --build -d --scale runner=0
+                cd packages/evals
+                docker tag evals-web:latest evals-web
+                docker tag evals-runner:latest evals-runner
+                docker compose --profile server --profile runner up -d --scale runner=0
 
             - name: Wait for services
               run: |

@@ -42,10 +42,33 @@ jobs:
                   HOST_EXECUTION_METHOD=docker
                   EOF
 
-            - name: Build images
+            - name: Build images with cache
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: packages/evals/Dockerfile.web
+                tags: evals-web:latest
+                cache-from: type=gha
+                cache-to: type=gha,mode=max
+                push: false
+                load: true
+      
+            - name: Build runner image with cache
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: packages/evals/Dockerfile.runner
+                tags: evals-runner:latest
+                cache-from: type=gha
+                cache-to: type=gha,mode=max
+                push: false
+                load: true
+      
+            - name: Tag images for docker-compose
               run: |
-                  cd packages/evals
-                  docker compose build web runner
+                cd packages/evals
+                docker tag evals-web:latest evals-web
+                docker tag evals-runner:latest evals-runner
 
             - name: Start server services
               run: |
