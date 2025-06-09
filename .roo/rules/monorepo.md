@@ -49,3 +49,6 @@
     1. Move any failing tests → `name.spec.ts`
     2. Add new tests → `name.spec.ts`
     3. Leave successful tests in `.test.ts`
+
+# Executing package specific commands
+Any time you are using a workspace to run commands, you must always specify `<execute_command><cwd>workspace/directory</cwd> ...`
