@@ -52,7 +52,7 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 					<div>
 						<div className="flex items-center gap-2">
 							<Slider
-								min={200000}
+								min={32000}
 								max={maxValue}
 								step={1}
 								value={[inputValue ?? 1048576]}
