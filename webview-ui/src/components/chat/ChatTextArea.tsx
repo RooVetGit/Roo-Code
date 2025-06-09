@@ -27,6 +27,7 @@ import ContextMenu from "./ContextMenu"
 import { VolumeX, Pin, Check } from "lucide-react"
 import { IconButton } from "./IconButton"
 import { cn } from "@/lib/utils"
+import { usePromptHistory } from "./hooks/usePromptHistory"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -159,29 +160,24 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
 
-		// Prompt history navigation state
-		const [historyIndex, setHistoryIndex] = useState(-1)
-		const [tempInput, setTempInput] = useState("")
-		const [promptHistory, setPromptHistory] = useState<string[]>([])
-		const [inputValueWithCursor, setInputValueWithCursor] = useState<CursorPositionState>({ value: inputValue })
-
-		// Initialize prompt history from task history
-		useEffect(() => {
-			if (taskHistory && taskHistory.length > 0 && cwd) {
-				// Extract user prompts from task history for the current workspace only
-				const prompts = taskHistory
-					.filter((item) => {
-						// Filter by workspace and ensure task is not empty
-						return item.task && item.task.trim() !== "" && (!item.workspace || item.workspace === cwd)
-					})
-					.map((item) => item.task)
-				// taskHistory is already in chronological order (oldest first)
-				// We keep it as-is so that navigation works correctly:
-				// - Arrow up increases index to go back in history (older prompts)
-				// - Arrow down decreases index to go forward (newer prompts)
-				setPromptHistory(prompts)
-			}
-		}, [taskHistory, cwd])
+		// Use custom hook for prompt history navigation
+		const {
+			historyIndex,
+			setHistoryIndex,
+			tempInput,
+			setTempInput,
+			promptHistory,
+			inputValueWithCursor,
+			setInputValueWithCursor,
+			handleHistoryNavigation,
+			resetHistoryNavigation,
+			resetOnInputChange,
+		} = usePromptHistory({
+			taskHistory,
+			cwd,
+			inputValue,
+			setInputValue,
+		})
 
 		// Fetch git commits when Git is selected or when typing a hash.
 		useEffect(() => {
@@ -390,66 +386,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				const isComposing = event.nativeEvent?.isComposing ?? false
 
-				// Handle prompt history navigation
-				if (!showContextMenu && promptHistory.length > 0 && !isComposing) {
-					const textarea = event.currentTarget
-					const { selectionStart, selectionEnd, value } = textarea
-					const lines = value.substring(0, selectionStart).split("\n")
-					const currentLineIndex = lines.length - 1
-					const totalLines = value.split("\n").length
-					const isAtFirstLine = currentLineIndex === 0
-					const isAtLastLine = currentLineIndex === totalLines - 1
-					const hasSelection = selectionStart !== selectionEnd
-
-					// Only navigate history if cursor is at first/last line and no text is selected
-					if (!hasSelection) {
-						if (event.key === "ArrowUp" && isAtFirstLine) {
-							event.preventDefault()
-
-							// Save current input if starting navigation
-							if (historyIndex === -1 && inputValue.trim() !== "") {
-								setTempInput(inputValue)
-							}
-
-							// Navigate to previous prompt
-							const newIndex = historyIndex + 1
-							if (newIndex < promptHistory.length) {
-								setHistoryIndex(newIndex)
-								const historicalPrompt = promptHistory[newIndex]
-								setInputValue(historicalPrompt)
-								setInputValueWithCursor({
-									value: historicalPrompt,
-									afterRender: "SET_CURSOR_FIRST_LINE",
-								})
-							}
-							return
-						}
-
-						if (event.key === "ArrowDown" && isAtLastLine) {
-							event.preventDefault()
-
-							// Navigate to next prompt
-							if (historyIndex > 0) {
-								const newIndex = historyIndex - 1
-								setHistoryIndex(newIndex)
-								const historicalPrompt = promptHistory[newIndex]
-								setInputValue(historicalPrompt)
-								setInputValueWithCursor({
-									value: historicalPrompt,
-									afterRender: "SET_CURSOR_LAST_LINE",
-								})
-							} else if (historyIndex === 0) {
-								// Return to current input
-								setHistoryIndex(-1)
-								setInputValue(tempInput)
-								setInputValueWithCursor({
-									value: tempInput,
-									afterRender: "SET_CURSOR_START",
-								})
-							}
-							return
-						}
-					}
+				// Handle prompt history navigation using custom hook
+				if (handleHistoryNavigation(event, showContextMenu, isComposing)) {
+					return
 				}
 
 				if (event.key === "Enter" && !event.shiftKey && !isComposing) {
@@ -457,8 +396,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 					if (!sendingDisabled) {
 						// Reset history navigation state when sending
-						setHistoryIndex(-1)
-						setTempInput("")
+						resetHistoryNavigation()
 						onSend()
 					}
 				}
@@ -522,9 +460,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				queryItems,
 				customModes,
 				fileSearchResults,
-				historyIndex,
-				tempInput,
-				promptHistory,
+				handleHistoryNavigation,
+				resetHistoryNavigation,
 			],
 		)
 
@@ -565,10 +502,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setInputValue(newValue)
 
 				// Reset history navigation when user types
-				if (historyIndex !== -1) {
-					setHistoryIndex(-1)
-					setTempInput("")
-				}
+				resetOnInputChange(newValue)
 
 				const newCursorPosition = e.target.selectionStart
 				setCursorPosition(newCursorPosition)
@@ -624,7 +558,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setFileSearchResults([]) // Clear file search results.
 				}
 			},
-			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, historyIndex],
+			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, resetOnInputChange],
 		)
 
 		useEffect(() => {
