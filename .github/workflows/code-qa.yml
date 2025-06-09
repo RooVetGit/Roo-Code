@@ -90,6 +90,9 @@ jobs:
         needs: [check-translations, knip, compile, platform-unit-test, integration-test]
         if: ${{ always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/cte/slack-webhook') && github.event_name == 'push' && contains(needs.*.result, 'failure') }}
         steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
             - name: Send Slack notification on failure
               uses: ./.github/actions/slack-notify
               with:
