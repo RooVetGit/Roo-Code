@@ -587,7 +587,7 @@ describe("Cline", () => {
 
 				// Force abort immediately so the stream loop exits
 				Object.defineProperty(cline, "abort", {
-					get: () => true,
+					get: () => false,
 					set: () => {},
 					configurable: true,
 				})
