@@ -1,0 +1,235 @@
+name: Evals Docker Compose
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_full_evals:
+        description: 'Run full evaluation suite'
+        required: false
+        default: 'false'
+        type: boolean
+      concurrency:
+        description: 'Evaluation concurrency level'
+        required: false
+        default: '2'
+        type: string
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  build-and-test:
+    name: Build and Test Evals
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create environment files
+        run: |
+          cd packages/evals
+          
+          # Create .env.test for testing
+          cat > .env.test << EOF
+          NODE_ENV=test
+          DATABASE_URL=postgresql://postgres:password@db:5432/evals_test
+          REDIS_URL=redis://redis:6379
+          HOST_EXECUTION_METHOD=docker
+          EOF
+          
+          # Create .env.development for development
+          cat > .env.development << EOF
+          NODE_ENV=development
+          DATABASE_URL=postgresql://postgres:password@db:5432/evals_development
+          REDIS_URL=redis://redis:6379
+          HOST_EXECUTION_METHOD=docker
+          EOF
+
+      - name: Build Docker images
+        run: |
+          cd packages/evals
+          docker compose build web runner
+
+      - name: Start server services
+        run: |
+          cd packages/evals
+          docker compose --profile server up -d
+
+      - name: Wait for services to be ready
+        run: |
+          cd packages/evals
+          
+          # Wait for PostgreSQL to be ready
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres -d evals_development; do sleep 2; done'
+          
+          # Wait for Redis to be ready
+          echo "Waiting for Redis..."
+          timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
+          
+          # Wait for web service to be ready
+          echo "Waiting for web service..."
+          timeout 60 bash -c 'until curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:3000 2>/dev/null; do sleep 2; done'
+
+      - name: Run database migrations
+        run: |
+          cd packages/evals
+          docker compose exec -T web pnpm db:push
+
+      - name: Run tests
+        run: |
+          cd packages/evals
+          docker compose run --rm runner pnpm _test
+
+      - name: Check service logs on failure
+        if: failure()
+        run: |
+          cd packages/evals
+          echo "=== Database logs ==="
+          docker compose logs db
+          echo "=== Redis logs ==="
+          docker compose logs redis
+          echo "=== Web service logs ==="
+          docker compose logs web
+
+      - name: Cleanup
+        if: always()
+        run: |
+          cd packages/evals
+          docker compose down -v --remove-orphans
+
+  run-sample-evals:
+    name: Run Sample Evaluations
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event.inputs.run_full_evals == 'true' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create environment files
+        run: |
+          cd packages/evals
+          
+          cat > .env.local << EOF
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          EOF
+          
+          cat > .env.development << EOF
+          NODE_ENV=development
+          DATABASE_URL=postgresql://postgres:password@db:5432/evals_development
+          REDIS_URL=redis://redis:6379
+          HOST_EXECUTION_METHOD=docker
+          EOF
+
+      - name: Build and start services
+        run: |
+          cd packages/evals
+          docker compose --profile server --profile runner up --build -d --scale runner=0
+
+      - name: Wait for services
+        run: |
+          cd packages/evals
+          timeout 120 bash -c 'until docker compose exec -T db pg_isready -U postgres -d evals_development; do sleep 2; done'
+          timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3000 2>/dev/null; do sleep 2; done'
+
+      - name: Run database setup
+        run: |
+          cd packages/evals
+          docker compose exec -T web pnpm db:push
+
+      - name: Run sample evaluation
+        env:
+          CONCURRENCY: ${{ github.event.inputs.concurrency || '2' }}
+        run: |
+          cd packages/evals
+          
+          # Run a limited set of evaluations for CI
+          docker compose run --rm runner pnpm cli run \
+            --concurrency $CONCURRENCY \
+            --timeout 300 \
+            --max-exercises 3 \
+            --model "anthropic/claude-3-5-sonnet-20241022"
+
+      - name: Upload evaluation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results
+          path: |
+            packages/evals/results/
+            packages/evals/logs/
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          cd packages/evals
+          docker compose down -v --remove-orphans
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'packages/evals'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  docker-compose-validate:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose file
+        run: |
+          cd packages/evals
+          docker compose config --quiet
+
+      - name: Check Docker Compose services
+        run: |
+          cd packages/evals
+          docker compose config --services | sort > services.txt
+          echo "Available services:"
+          cat services.txt
+          
+          # Verify expected services exist
+          for service in db redis web runner; do
+            if ! grep -q "^$service$" services.txt; then
+              echo "ERROR: Service '$service' not found in docker-compose.yml"
+              exit 1
+            fi
+          done
+          
+          echo "All expected services found ✓"
