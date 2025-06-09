@@ -223,6 +223,7 @@ export type ExtensionState = Pick<
 
 	cloudUserInfo: CloudUserInfo | null
 	cloudIsAuthenticated: boolean
+	sharingEnabled: boolean
 	organizationAllowList: OrganizationAllowList
 
 	autoCondenseContext: boolean

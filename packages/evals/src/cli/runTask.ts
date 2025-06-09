@@ -18,20 +18,24 @@ import { IpcClient } from "@roo-code/ipc"
 import { type Run, type Task, updateTask, createTaskMetrics, updateTaskMetrics, createToolError } from "../db/index.js"
 import { exercisesPath } from "../exercises/index.js"
 
-import { getTag, isDockerContainer } from "./utils.js"
+import { isDockerContainer } from "./utils.js"
+import { FileLogger } from "./FileLogger.js"
+
+class SubprocessTimeoutError extends Error {
+	constructor(timeout: number) {
+		super(`Subprocess timeout after ${timeout}ms`)
+		this.name = "SubprocessTimeoutError"
+	}
+}
 
 type RunTaskOptions = {
 	run: Run
 	task: Task
 	publish: (taskEvent: TaskEvent) => Promise<void>
+	logger: FileLogger
 }
 
-export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
-	const tag = getTag("runTask", { run, task })
-	const log = (message: string, ...args: unknown[]) => console.log(`[${Date.now()} | ${tag}] ${message}`, ...args)
-	const logError = (message: string, ...args: unknown[]) =>
-		console.error(`[${Date.now()} | ${tag}] ${message}`, ...args)
-
+export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) => {
 	const { language, exercise } = task
 	const prompt = fs.readFileSync(path.resolve(exercisesPath, `prompts/${language}.md`), "utf-8")
 	const workspacePath = path.resolve(exercisesPath, language, exercise)
@@ -45,7 +49,7 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 		? `xvfb-run --auto-servernum --server-num=1 code --wait --log trace --disable-workspace-trust --disable-gpu --disable-lcd-text --no-sandbox --user-data-dir /roo/.vscode --password-store="basic" -n ${workspacePath}`
 		: `code --disable-workspace-trust -n ${workspacePath}`
 
-	log(codeCommand)
+	logger.info(codeCommand)
 
 	// Sleep for a random amount of time between 5 and 10 seconds, unless we're
 	// running in a container, in which case there are no issues with flooding
@@ -74,8 +78,8 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 			attempts--
 
 			if (attempts <= 0) {
-				logError(`unable to connect to IPC socket -> ${ipcSocketPath}`)
-				return
+				logger.error(`unable to connect to IPC socket -> ${ipcSocketPath}`)
+				throw new Error("Unable to connect.")
 			}
 		}
 	}
@@ -105,7 +109,7 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 			!ignoreEvents.log.includes(eventName) &&
 			(eventName !== RooCodeEventName.Message || payload[0].message.partial !== true)
 		) {
-			log(`${eventName} ->`, payload)
+			logger.info(`${eventName} ->`, payload)
 		}
 
 		if (eventName === RooCodeEventName.TaskStarted) {
@@ -165,7 +169,7 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 	})
 
 	client.on(IpcMessageType.Disconnect, async () => {
-		log(`disconnected from IPC socket -> ${ipcSocketPath}`)
+		logger.info(`disconnected from IPC socket -> ${ipcSocketPath}`)
 		isClientDisconnected = true
 	})
 
@@ -185,10 +189,10 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 	try {
 		await pWaitFor(() => !!taskFinishedAt || isClientDisconnected, { interval: 1_000, timeout: EVALS_TIMEOUT })
 	} catch (_error) {
-		logError("time limit reached")
+		logger.error("time limit reached")
 
 		if (rooTaskId && !isClientDisconnected) {
-			log("cancelling task")
+			logger.info("cancelling task")
 			client.sendCommand({ commandName: TaskCommandName.CancelTask, data: rooTaskId })
 			await new Promise((resolve) => setTimeout(resolve, 5_000)) // Allow some time for the task to cancel.
 		}
@@ -196,9 +200,11 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 		await updateTask(task.id, { finishedAt: new Date() })
 	}
 
-	if (!isClientDisconnected) {
+	if (isClientDisconnected) {
+		logger.error("client disconnected before task finished")
+	} else {
 		if (rooTaskId) {
-			log("closing task")
+			logger.info("closing task")
 			client.sendCommand({ commandName: TaskCommandName.CloseTask, data: rooTaskId })
 			await new Promise((resolve) => setTimeout(resolve, 2_000)) // Allow some time for the window to close.
 		}
@@ -206,6 +212,38 @@ export const runTask = async ({ run, task, publish }: RunTaskOptions) => {
 		client.disconnect()
 	}
 
+	logger.info("waiting for subprocess to finish")
 	controller.abort()
-	await subprocess
+
+	// Wait for subprocess to finish gracefully, with a timeout.
+	const SUBPROCESS_TIMEOUT = 10_000
+
+	try {
+		await Promise.race([
+			subprocess,
+			new Promise((_, reject) =>
+				setTimeout(() => reject(new SubprocessTimeoutError(SUBPROCESS_TIMEOUT)), SUBPROCESS_TIMEOUT),
+			),
+		])
+
+		logger.info("subprocess finished gracefully")
+	} catch (error) {
+		if (error instanceof SubprocessTimeoutError) {
+			logger.error("subprocess did not finish within timeout, force killing")
+
+			try {
+				if (subprocess.kill("SIGKILL")) {
+					logger.info("SIGKILL sent to subprocess")
+				} else {
+					logger.error("failed to send SIGKILL to subprocess")
+				}
+			} catch (killError) {
+				logger.error("subprocess.kill(SIGKILL) failed:", killError)
+			}
+		} else {
+			throw error
+		}
+	}
+
+	logger.close()
 }
