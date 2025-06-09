@@ -64,11 +64,8 @@ interface BedrockPayload {
 	}
 }
 
-// Define interface for stream chunks with proper typing
-interface StreamChunk {
-	type: "reasoning" | "text"
-	text: string
-}
+// Import the proper stream chunk types
+import { ApiStreamChunk } from "../transform/stream"
 
 // Define types for stream events based on AWS SDK
 export interface StreamEvent {
@@ -170,7 +167,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	/**
 	 * Handles thinking content block events
 	 */
-	private *handleThinkingContentBlock(contentBlock: any): Generator<StreamChunk, void, unknown> {
+	private *handleThinkingContentBlock(contentBlock: any): Generator<ApiStreamChunk, void, unknown> {
 		if (contentBlock?.type === "thinking" && contentBlock.thinking !== undefined) {
 			yield {
 				type: "reasoning",
@@ -182,7 +179,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	/**
 	 * Handles text content block events
 	 */
-	private *handleTextContentBlock(start: any, contentBlock: any): Generator<StreamChunk, void, unknown> {
+	private *handleTextContentBlock(start: any, contentBlock: any): Generator<ApiStreamChunk, void, unknown> {
 		const text = start?.text || contentBlock?.text
 		if (text !== undefined) {
 			yield {
@@ -195,7 +192,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	/**
 	 * Handles thinking delta events
 	 */
-	private *handleThinkingDelta(delta: any): Generator<StreamChunk, void, unknown> {
+	private *handleThinkingDelta(delta: any): Generator<ApiStreamChunk, void, unknown> {
 		if (delta.type === "thinking_delta" && delta.thinking) {
 			yield {
 				type: "reasoning",
@@ -207,7 +204,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	/**
 	 * Handles signature delta events (part of thinking)
 	 */
-	private *handleSignatureDelta(delta: any): Generator<StreamChunk, void, unknown> {
+	private *handleSignatureDelta(delta: any): Generator<ApiStreamChunk, void, unknown> {
 		if (delta.type === "signature_delta" && delta.signature) {
 			// Signature is part of the thinking process, treat it as reasoning
 			yield {
@@ -220,7 +217,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	/**
 	 * Handles text delta events
 	 */
-	private *handleTextDelta(delta: any): Generator<StreamChunk, void, unknown> {
+	private *handleTextDelta(delta: any): Generator<ApiStreamChunk, void, unknown> {
 		if (delta.text) {
 			yield {
 				type: "text",
