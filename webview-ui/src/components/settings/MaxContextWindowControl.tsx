@@ -35,7 +35,7 @@ export const MaxContextWindowControl = ({ value, onChange, maxValue = 1000000 }:
 						setIsCustomMaxContextWindow(isChecked)
 
 						if (!isChecked) {
-							setInputValue(null) // Unset the max context window, note that undefined is unserializable.
+							setInputValue(null) // Unset the max context window limit, note that undefined is unserializable.
 						} else {
 							setInputValue(value ?? 0) // Use the value from apiConfiguration, if set.
 						}
