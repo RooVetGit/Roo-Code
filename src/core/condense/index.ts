@@ -93,8 +93,8 @@ export async function summarizeConversation(
 	TelemetryService.instance.captureContextCondensed(
 		taskId,
 		isAutomaticTrigger ?? false,
-		!!customCondensingPrompt?.trim(),
-		!!condensingApiHandler,
+		typeof customCondensingPrompt === "string" && customCondensingPrompt.trim() !== "",
+		condensingApiHandler !== undefined,
 	)
 
 	const response: SummarizeResponse = { messages, cost: 0, summary: "" }

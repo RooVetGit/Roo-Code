@@ -18,7 +18,7 @@ export const OpenAI = ({ apiConfiguration, setApiConfigurationField }: OpenAIPro
 	const { t } = useAppTranslation()
 
 	const [openAiNativeBaseUrlSelected, setOpenAiNativeBaseUrlSelected] = useState(
-		!!apiConfiguration?.openAiNativeBaseUrl,
+		typeof apiConfiguration?.openAiNativeBaseUrl === "string" && apiConfiguration.openAiNativeBaseUrl !== "",
 	)
 
 	const handleInputChange = useCallback(

@@ -8,8 +8,11 @@ export default [
 			// TODO: These should be fixed and the rules re-enabled.
 			"no-regex-spaces": "off",
 			"no-useless-escape": "off",
-			"no-empty": "off",
 			"prefer-const": "off",
+
+			"no-empty": "error",
+			"no-implicit-coercion": "error",
+			"no-useless-catch": "error",
 
 			"@typescript-eslint/no-unused-vars": "off",
 			"@typescript-eslint/no-explicit-any": "off",

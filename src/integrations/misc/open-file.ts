@@ -138,7 +138,9 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 					break
 				}
 			}
-		} catch {} // not essential, sometimes tab operations fail
+		} catch (e) {
+			console.debug("Error processing tab operations:", e)
+		} // not essential, sometimes tab operations fail
 
 		const document = await vscode.workspace.openTextDocument(uriToProcess)
 		const selection =
