@@ -138,21 +138,47 @@ pnpm install
 
 3. **Run the extension**:
 
-Press `F5` (or **Run** → **Start Debugging**) in VSCode to open a new window with Roo Code running.
+There are several ways to run the Roo Code extension:
 
-Changes to the webview will appear immediately. Changes to the core extension will require a restart of the extension host.
+### Development Mode (F5)
 
-Alternatively you can build a .vsix and install it directly in VSCode:
+For active development, use VSCode's built-in debugging:
+
+Press `F5` (or go to **Run** → **Start Debugging**) in VSCode. This will open a new VSCode window with the Roo Code extension running.
+
+- Changes to the webview will appear immediately.
+- Changes to the core extension will require a restart of the extension host (close and reopen the new VSCode window).
+
+### Automated VSIX Installation
+
+To build and install the extension as a VSIX package directly into VSCode:
 
 ```sh
-pnpm vsix
+pnpm install:vsix
 ```
 
-A `.vsix` file will appear in the `bin/` directory which can be installed with:
+This command will:
 
-```sh
-code --install-extension bin/roo-cline-<version>.vsix
-```
+- Uninstall any existing version of the extension.
+- Build the latest VSIX package.
+- Install the newly built VSIX.
+- Attempt to reload the VS Code window. (A manual VS Code restart may still be required for changes to take full effect.)
+
+### Manual VSIX Installation
+
+If you prefer to install the VSIX package manually:
+
+1.  First, build the VSIX package:
+    ```sh
+    pnpm vsix
+    ```
+2.  A `.vsix` file will be generated in the `bin/` directory (e.g., `bin/roo-cline-<version>.vsix`).
+3.  Install it manually using the VSCode CLI:
+    ```sh
+    code --install-extension bin/roo-cline-<version>.vsix
+    ```
+
+---
 
 We use [changesets](https://github.com/changesets/changesets) for versioning and publishing. Check our `CHANGELOG.md` for release notes.
 
