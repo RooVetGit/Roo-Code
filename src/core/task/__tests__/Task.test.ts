@@ -14,6 +14,7 @@ import { ClineProvider } from "../../webview/ClineProvider"
 import { ApiStreamChunk } from "../../../api/transform/stream"
 import { ContextProxy } from "../../config/ContextProxy"
 import { processUserContentMentions } from "../../mentions/processUserContentMentions"
+import * as slidingWindow from "../../sliding-window"
 
 jest.mock("execa", () => ({
 	execa: jest.fn(),
@@ -531,6 +532,82 @@ describe("Cline", () => {
 					type: "text",
 					text: "[Referenced image in conversation]",
 				})
+			})
+
+			it("should use maxContextWindow when provider is gemini and maxContextWindow is set", async () => {
+				// Arrange: set apiProvider to gemini and maxContextWindow
+				const geminiConfig = {
+					...mockApiConfig,
+					apiProvider: "gemini" as const,
+					maxContextWindow: 42,
+				}
+				const created = Task.create({
+					provider: mockProvider,
+					apiConfiguration: geminiConfig,
+					task: "test gemini context window",
+				}) as unknown as [any, Promise<void>]
+				const cline = created[0] as any
+				const task = created[1] as Promise<void>
+
+				// Stub model info to have a different default contextWindow
+				;(cline.api as any).getModel = jest.fn().mockReturnValue({
+					id: "gemini-model",
+					info: {
+						contextWindow: 100,
+						supportsReasoningBudget: true,
+						maxTokens: 1000,
+						supportsComputerUse: false,
+						supportsPromptCache: false,
+						inputPrice: 0,
+						outputPrice: 0,
+					},
+				})
+
+				// Stub required methods to let attemptApiRequest proceed
+				;(cline as any).getSystemPrompt = jest.fn().mockResolvedValue("")
+				;(cline as any).getTokenUsage = jest.fn().mockReturnValue({
+					contextTokens: 1,
+					totalTokensIn: 0,
+					totalTokensOut: 0,
+					totalCost: 0,
+				})
+
+				// Stub createMessage to avoid real API calls
+				jest.spyOn(cline.api as any, "createMessage").mockReturnValue((async function* () {})())
+
+				// Spy on truncateConversationIfNeeded to capture its options
+				const twSpy = jest.spyOn(slidingWindow, "truncateConversationIfNeeded").mockResolvedValue({
+					messages: [],
+					summary: "",
+					cost: 0,
+					prevContextTokens: 0,
+					newContextTokens: 0,
+					error: undefined,
+				})
+
+				// Force abort immediately so the stream loop exits
+				Object.defineProperty(cline, "abort", {
+					get: () => true,
+					set: () => {},
+					configurable: true,
+				})
+
+				// Act: run through the generator
+				try {
+					for await (const _ of cline.attemptApiRequest()) {
+					}
+				} catch {
+					/* ignore */
+				}
+
+				// Assert: the contextWindow passed to truncateConversationIfNeeded is the maxContextWindow
+				expect(twSpy).toHaveBeenCalled()
+				const optionsPassed = twSpy.mock.calls[0][0]
+				expect(optionsPassed.contextWindow).toBe(42)
+
+				// Cleanup
+				await cline.abortTask(true)
+				await task.catch(() => {})
 			})
 
 			it.skip("should handle API retry with countdown", async () => {
