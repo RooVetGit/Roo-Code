@@ -710,7 +710,6 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		// First convert messages using shared converter for proper image handling
 		let convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
 
-		// No need to preserve thinking blocks - the messages are already properly formatted
 
 		// If prompt caching is disabled, return the converted messages directly
 		if (!usePromptCache) {
