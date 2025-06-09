@@ -82,5 +82,5 @@ export type GetModelsOptions =
 	| { provider: "requesty"; apiKey?: string }
 	| { provider: "unbound"; apiKey?: string }
 	| { provider: "litellm"; apiKey: string; baseUrl: string }
-	| { provider: "ollama"; baseUrl: string }
-	| { provider: "lmstudio"; baseUrl: string }
+	| { provider: "ollama"; baseUrl?: string }
+	| { provider: "lmstudio"; baseUrl?: string }

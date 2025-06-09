@@ -30,6 +30,8 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	lMStudioDefaultModelInfo,
+	ollamaDefaultModelInfo,
 } from "@roo-code/types"
 
 import type { RouterModels } from "@roo/api"
@@ -177,13 +179,19 @@ function getSelectedModel({
 		}
 		case "ollama": {
 			const id = apiConfiguration.ollamaModelId ?? ""
-			const info = routerModels.ollama[id]
-			return { id, info }
+			const info = routerModels.ollama && routerModels.ollama[id]
+			return {
+				id,
+				info: info ? info : ollamaDefaultModelInfo,
+			}
 		}
 		case "lmstudio": {
 			const id = apiConfiguration.lmStudioModelId ?? ""
-			const info = routerModels.lmstudio[id]
-			return { id, info }
+			const info = routerModels.lmstudio && routerModels.lmstudio[id]
+			return {
+				id,
+				info: info ? info : lMStudioDefaultModelInfo,
+			}
 		}
 		case "vscode-lm": {
 			const id = apiConfiguration?.vsCodeLmModelSelector
