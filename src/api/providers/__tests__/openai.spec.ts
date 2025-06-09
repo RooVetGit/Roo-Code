@@ -441,10 +441,13 @@ describe("OpenAiHandler", () => {
 					stream: true,
 					stream_options: { include_usage: true },
 					temperature: 0,
-					max_tokens: -1,
 				},
 				{ path: "/models/chat/completions" },
 			)
+
+			// Verify max_tokens is NOT included when includeMaxTokens is not set
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("max_tokens")
 		})
 
 		it("should handle non-streaming responses with Azure AI Inference Service", async () => {
@@ -484,10 +487,13 @@ describe("OpenAiHandler", () => {
 						{ role: "user", content: systemPrompt },
 						{ role: "user", content: "Hello!" },
 					],
-					max_tokens: -1, // Default from openAiModelInfoSaneDefaults
 				},
 				{ path: "/models/chat/completions" },
 			)
+
+			// Verify max_tokens is NOT included when includeMaxTokens is not set
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("max_tokens")
 		})
 
 		it("should handle completePrompt with Azure AI Inference Service", async () => {
@@ -498,10 +504,13 @@ describe("OpenAiHandler", () => {
 				{
 					model: azureOptions.openAiModelId,
 					messages: [{ role: "user", content: "Test prompt" }],
-					max_tokens: -1, // Default from openAiModelInfoSaneDefaults
 				},
 				{ path: "/models/chat/completions" },
 			)
+
+			// Verify max_tokens is NOT included when includeMaxTokens is not set
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("max_tokens")
 		})
 	})
 
@@ -542,6 +551,225 @@ describe("OpenAiHandler", () => {
 			const mockCalls = mockCreate.mock.calls
 			const lastCall = mockCalls[mockCalls.length - 1]
 			expect(lastCall[0]).not.toHaveProperty("stream_options")
+		})
+	})
+
+	describe("O3 Family Models", () => {
+		const o3Options = {
+			...mockOptions,
+			openAiModelId: "o3-mini",
+			openAiCustomModelInfo: {
+				contextWindow: 128_000,
+				maxTokens: 65536,
+				supportsPromptCache: false,
+				reasoningEffort: "medium" as "low" | "medium" | "high",
+			},
+		}
+
+		it("should handle O3 model with streaming and include max_tokens when includeMaxTokens is true", async () => {
+			const o3Handler = new OpenAiHandler({
+				...o3Options,
+				includeMaxTokens: true,
+				modelMaxTokens: 32000,
+				modelTemperature: 0.5,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = o3Handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o3-mini",
+					messages: [
+						{
+							role: "developer",
+							content: "Formatting re-enabled\nYou are a helpful assistant.",
+						},
+						{ role: "user", content: "Hello!" },
+					],
+					stream: true,
+					stream_options: { include_usage: true },
+					reasoning_effort: "medium",
+					temperature: 0.5,
+					max_tokens: 32000,
+				}),
+				{},
+			)
+		})
+
+		it("should handle O3 model with streaming and exclude max_tokens when includeMaxTokens is false", async () => {
+			const o3Handler = new OpenAiHandler({
+				...o3Options,
+				includeMaxTokens: false,
+				modelTemperature: 0.7,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = o3Handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o3-mini",
+					messages: [
+						{
+							role: "developer",
+							content: "Formatting re-enabled\nYou are a helpful assistant.",
+						},
+						{ role: "user", content: "Hello!" },
+					],
+					stream: true,
+					stream_options: { include_usage: true },
+					reasoning_effort: "medium",
+					temperature: 0.7,
+				}),
+				{},
+			)
+
+			// Verify max_tokens is NOT included
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("max_tokens")
+		})
+
+		it("should handle O3 model non-streaming with max_tokens and reasoning_effort", async () => {
+			const o3Handler = new OpenAiHandler({
+				...o3Options,
+				openAiStreamingEnabled: false,
+				includeMaxTokens: true,
+				modelTemperature: 0.3,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = o3Handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o3-mini",
+					messages: [
+						{
+							role: "developer",
+							content: "Formatting re-enabled\nYou are a helpful assistant.",
+						},
+						{ role: "user", content: "Hello!" },
+					],
+					reasoning_effort: "medium",
+					temperature: 0.3,
+					max_tokens: 65536, // Falls back to model default
+				}),
+				{},
+			)
+
+			// Verify stream is not set
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("stream")
+		})
+
+		it("should use default temperature of 0 when not specified for O3 models", async () => {
+			const o3Handler = new OpenAiHandler({
+				...o3Options,
+				// No modelTemperature specified
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = o3Handler.createMessage(systemPrompt, messages)
+			await stream.next()
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					temperature: 0, // Default temperature
+				}),
+				{},
+			)
+		})
+
+		it("should handle O3 model with Azure AI Inference Service respecting includeMaxTokens", async () => {
+			const o3AzureHandler = new OpenAiHandler({
+				...o3Options,
+				openAiBaseUrl: "https://test.services.ai.azure.com",
+				includeMaxTokens: false, // Should NOT include max_tokens
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = o3AzureHandler.createMessage(systemPrompt, messages)
+			await stream.next()
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o3-mini",
+				}),
+				{ path: "/models/chat/completions" },
+			)
+
+			// Verify max_tokens is NOT included when includeMaxTokens is false
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("max_tokens")
+		})
+
+		it("should include max_tokens for O3 model with Azure AI Inference Service when includeMaxTokens is true", async () => {
+			const o3AzureHandler = new OpenAiHandler({
+				...o3Options,
+				openAiBaseUrl: "https://test.services.ai.azure.com",
+				includeMaxTokens: true, // Should include max_tokens
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = o3AzureHandler.createMessage(systemPrompt, messages)
+			await stream.next()
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o3-mini",
+					max_tokens: 65536, // Included when includeMaxTokens is true
+				}),
+				{ path: "/models/chat/completions" },
+			)
 		})
 	})
 })

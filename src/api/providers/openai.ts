@@ -158,12 +158,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(reasoning && reasoning),
 			}
 
-			// @TODO: Move this to the `getModelParams` function.
-			// Add max_tokens if specified or if using Azure AI Inference Service
-			if (this.options.includeMaxTokens === true || isAzureAiInference) {
-				// Use user-configured modelMaxTokens if available, otherwise fall back to model's default maxTokens
-				requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
-			}
+			// Add max_tokens if needed
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo, isAzureAiInference)
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
@@ -224,10 +220,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						: [systemMessage, ...convertToOpenAiMessages(messages)],
 			}
 
-			// Add max_tokens if specified or if using Azure AI Inference Service
-			if (this.options.includeMaxTokens === true || isAzureAiInference) {
-				requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
-			}
+			// Add max_tokens if needed
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo, isAzureAiInference)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -263,17 +257,16 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
-			const modelInfo = this.getModel().info
+			const model = this.getModel()
+			const modelInfo = model.info
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: this.getModel().id,
+				model: model.id,
 				messages: [{ role: "user", content: prompt }],
 			}
 
-			// Add max_tokens if specified or if using Azure AI Inference Service
-			if (this.options.includeMaxTokens === true || isAzureAiInference) {
-				requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
-			}
+			// Add max_tokens if needed
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo, isAzureAiInference)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -312,8 +305,12 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				],
 				stream: true,
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
-				reasoning_effort: this.getModel().info.reasoningEffort,
+				reasoning_effort: modelInfo.reasoningEffort,
+				temperature: this.options.modelTemperature ?? 0,
 			}
+
+			// Add max_tokens if needed
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo, methodIsAzureAiInference)
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
@@ -331,7 +328,12 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					},
 					...convertToOpenAiMessages(messages),
 				],
+				reasoning_effort: modelInfo.reasoningEffort,
+				temperature: this.options.modelTemperature ?? 0,
 			}
+
+			// Add max_tokens if needed
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo, methodIsAzureAiInference)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -382,6 +384,23 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	private _isAzureAiInference(baseUrl?: string): boolean {
 		const urlHost = this._getUrlHost(baseUrl)
 		return urlHost.endsWith(".services.ai.azure.com")
+	}
+
+	/**
+	 * Adds max_tokens to the request body if needed based on provider configuration
+	 */
+	private addMaxTokensIfNeeded(
+		requestOptions:
+			| OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
+			| OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+		modelInfo: ModelInfo,
+		isAzureAiInference: boolean,
+	): void {
+		// Only add max_tokens if includeMaxTokens is true
+		if (this.options.includeMaxTokens === true) {
+			// Use user-configured modelMaxTokens if available, otherwise fall back to model's default maxTokens
+			requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+		}
 	}
 }
 
