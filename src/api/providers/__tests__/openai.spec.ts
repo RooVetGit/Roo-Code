@@ -5,6 +5,7 @@ import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import { openAiModelInfoSaneDefaults } from "@roo-code/types"
 
 const mockCreate = vitest.fn()
 
@@ -197,6 +198,113 @@ describe("OpenAiHandler", () => {
 			const callArgs = mockCreate.mock.calls[0][0]
 			expect(callArgs.reasoning_effort).toBeUndefined()
 		})
+
+		it("should include max_tokens when includeMaxTokens is true", async () => {
+			const optionsWithMaxTokens: ApiHandlerOptions = {
+				...mockOptions,
+				includeMaxTokens: true,
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 4096,
+					supportsPromptCache: false,
+				},
+			}
+			const handlerWithMaxTokens = new OpenAiHandler(optionsWithMaxTokens)
+			const stream = handlerWithMaxTokens.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called with max_tokens
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.max_tokens).toBe(4096)
+		})
+
+		it("should not include max_tokens when includeMaxTokens is false", async () => {
+			const optionsWithoutMaxTokens: ApiHandlerOptions = {
+				...mockOptions,
+				includeMaxTokens: false,
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 4096,
+					supportsPromptCache: false,
+				},
+			}
+			const handlerWithoutMaxTokens = new OpenAiHandler(optionsWithoutMaxTokens)
+			const stream = handlerWithoutMaxTokens.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called without max_tokens
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.max_tokens).toBeUndefined()
+		})
+
+		it("should not include max_tokens when includeMaxTokens is undefined", async () => {
+			const optionsWithUndefinedMaxTokens: ApiHandlerOptions = {
+				...mockOptions,
+				// includeMaxTokens is not set, should not include max_tokens
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 4096,
+					supportsPromptCache: false,
+				},
+			}
+			const handlerWithDefaultMaxTokens = new OpenAiHandler(optionsWithUndefinedMaxTokens)
+			const stream = handlerWithDefaultMaxTokens.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called without max_tokens
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.max_tokens).toBeUndefined()
+		})
+
+		it("should use user-configured modelMaxTokens instead of model default maxTokens", async () => {
+			const optionsWithUserMaxTokens: ApiHandlerOptions = {
+				...mockOptions,
+				includeMaxTokens: true,
+				modelMaxTokens: 32000, // User-configured value
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 4096, // Model's default value (should not be used)
+					supportsPromptCache: false,
+				},
+			}
+			const handlerWithUserMaxTokens = new OpenAiHandler(optionsWithUserMaxTokens)
+			const stream = handlerWithUserMaxTokens.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called with user-configured modelMaxTokens (32000), not model default maxTokens (4096)
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.max_tokens).toBe(32000)
+		})
+
+		it("should fallback to model default maxTokens when user modelMaxTokens is not set", async () => {
+			const optionsWithoutUserMaxTokens: ApiHandlerOptions = {
+				...mockOptions,
+				includeMaxTokens: true,
+				// modelMaxTokens is not set
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 4096, // Model's default value (should be used as fallback)
+					supportsPromptCache: false,
+				},
+			}
+			const handlerWithoutUserMaxTokens = new OpenAiHandler(optionsWithoutUserMaxTokens)
+			const stream = handlerWithoutUserMaxTokens.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called with model default maxTokens (4096) as fallback
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.max_tokens).toBe(4096)
+		})
 	})
 
 	describe("error handling", () => {
@@ -333,6 +441,7 @@ describe("OpenAiHandler", () => {
 					stream: true,
 					stream_options: { include_usage: true },
 					temperature: 0,
+					max_tokens: -1,
 				},
 				{ path: "/models/chat/completions" },
 			)
@@ -375,6 +484,7 @@ describe("OpenAiHandler", () => {
 						{ role: "user", content: systemPrompt },
 						{ role: "user", content: "Hello!" },
 					],
+					max_tokens: -1, // Default from openAiModelInfoSaneDefaults
 				},
 				{ path: "/models/chat/completions" },
 			)
@@ -388,6 +498,7 @@ describe("OpenAiHandler", () => {
 				{
 					model: azureOptions.openAiModelId,
 					messages: [{ role: "user", content: "Test prompt" }],
+					max_tokens: -1, // Default from openAiModelInfoSaneDefaults
 				},
 				{ path: "/models/chat/completions" },
 			)

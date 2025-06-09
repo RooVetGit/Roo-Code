@@ -159,8 +159,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// @TODO: Move this to the `getModelParams` function.
-			if (this.options.includeMaxTokens) {
-				requestOptions.max_tokens = modelInfo.maxTokens
+			// Add max_tokens if specified or if using Azure AI Inference Service
+			if (this.options.includeMaxTokens === true || isAzureAiInference) {
+				// Use user-configured modelMaxTokens if available, otherwise fall back to model's default maxTokens
+				requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 			}
 
 			const stream = await this.client.chat.completions.create(
@@ -222,6 +224,11 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						: [systemMessage, ...convertToOpenAiMessages(messages)],
 			}
 
+			// Add max_tokens if specified or if using Azure AI Inference Service
+			if (this.options.includeMaxTokens === true || isAzureAiInference) {
+				requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+			}
+
 			const response = await this.client.chat.completions.create(
 				requestOptions,
 				this._isAzureAiInference(modelUrl) ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
@@ -256,10 +263,16 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+			const modelInfo = this.getModel().info
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
+			}
+
+			// Add max_tokens if specified or if using Azure AI Inference Service
+			if (this.options.includeMaxTokens === true || isAzureAiInference) {
+				requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 			}
 
 			const response = await this.client.chat.completions.create(
@@ -282,25 +295,28 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
-		if (this.options.openAiStreamingEnabled ?? true) {
-			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+		const modelInfo = this.getModel().info
+		const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
+		if (this.options.openAiStreamingEnabled ?? true) {
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
 
+			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+				model: modelId,
+				messages: [
+					{
+						role: "developer",
+						content: `Formatting re-enabled\n${systemPrompt}`,
+					},
+					...convertToOpenAiMessages(messages),
+				],
+				stream: true,
+				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+				reasoning_effort: this.getModel().info.reasoningEffort,
+			}
+
 			const stream = await this.client.chat.completions.create(
-				{
-					model: modelId,
-					messages: [
-						{
-							role: "developer",
-							content: `Formatting re-enabled\n${systemPrompt}`,
-						},
-						...convertToOpenAiMessages(messages),
-					],
-					stream: true,
-					...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
-					reasoning_effort: this.getModel().info.reasoningEffort,
-				},
+				requestOptions,
 				methodIsAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
 
@@ -316,8 +332,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					...convertToOpenAiMessages(messages),
 				],
 			}
-
-			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,

@@ -601,5 +601,7 @@
 	"labels": {
 		"customArn": "Custom ARN",
 		"useCustomArn": "Use custom ARN..."
-	}
+	},
+	"includeMaxOutputTokens": "Include Max Output Tokens",
+	"includeMaxOutputTokensDescription": "Send max output tokens parameter in API requests. Some providers may not support this."
 }
