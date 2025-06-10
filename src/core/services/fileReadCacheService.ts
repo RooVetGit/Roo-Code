@@ -1,4 +1,8 @@
 import fs from "fs"
+import { lruCache } from "../utils/lruCache"
+import { ROO_AGENT_CONFIG } from "../config/envConfig"
+
+const CACHE_SIZE = ROO_AGENT_CONFIG.fileReadCacheSize()
 
 // Types
 export interface LineRange {
@@ -27,6 +31,9 @@ type CacheResult =
 	| { status: "ALLOW_ALL"; rangesToRead: LineRange[] }
 	| { status: "ALLOW_PARTIAL"; rangesToRead: LineRange[] }
 	| { status: "REJECT_ALL"; rangesToRead: LineRange[] }
+
+// Initialize a new LRU cache for file modification times.
+const mtimeCache = new lruCache<string, string>(CACHE_SIZE)
 
 /**
  * Checks if two line ranges overlap.
@@ -75,6 +82,31 @@ export function subtractRanges(originals: LineRange[], toRemoves: LineRange[]): 
 }
 
 /**
+ *
+ * @param filePath The path to the file to get the mtime for.
+ * @returns The mtime of the file as an ISO string, or null if the file does not exist.
+ * @throws An error if there is an error getting the file stats, other than the file not existing.
+ */
+async function getFileMtime(filePath: string): Promise<string | null> {
+	const cachedMtime = mtimeCache.get(filePath)
+	if (cachedMtime) {
+		return cachedMtime
+	}
+	try {
+		const stats = await fs.promises.stat(filePath)
+		const mtime = stats.mtime.toISOString()
+		mtimeCache.set(filePath, mtime)
+		return mtime
+	} catch (error) {
+		if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+			return null // File does not exist, so no mtime.
+		}
+		// For other errors, we want to know about them.
+		throw error
+	}
+}
+
+/**
  * Processes a read request against cached file data in conversation history.
  * @param requestedFilePath - The full path of the file being requested.
  * @param requestedRanges - The line ranges being requested.
@@ -87,8 +119,11 @@ export async function processAndFilterReadRequest(
 	conversationHistory: ConversationMessage[],
 ): Promise<CacheResult> {
 	try {
-		const stats = await fs.promises.stat(requestedFilePath)
-		const currentMtime = stats.mtime.toISOString()
+		const currentMtime = await getFileMtime(requestedFilePath)
+		if (currentMtime === null) {
+			// If file does not exist, there's nothing to read from cache. Let the tool handle it.
+			return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
+		}
 
 		let rangesToRead = [...requestedRanges]
 
@@ -127,13 +162,8 @@ export async function processAndFilterReadRequest(
 			return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
 		}
 	} catch (error) {
-		// If we can't get file stats, it's safer to allow the read.
-		if (error.code === "ENOENT") {
-			// File doesn't exist, let the regular tool handle it.
-			return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
-		}
 		console.error(`Error processing file read request for ${requestedFilePath}:`, error)
-		// On other errors, allow the read to proceed to handle it.
+		// On other errors, allow the read to proceed to let the tool handle it.
 		return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
 	}
 }
