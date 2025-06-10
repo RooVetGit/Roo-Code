@@ -16,6 +16,10 @@ jobs:
         runs-on: blacksmith-16vcpu-ubuntu-2404
         timeout-minutes: 45
 
+        defaults:
+            run:
+                working-directory: packages/evals
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -25,8 +29,6 @@ jobs:
 
             - name: Create environment
               run: |
-                  cd packages/evals
-
                   cat > .env.local << EOF
                   OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY || 'test-key-for-build' }}
                   EOF
@@ -50,32 +52,23 @@ jobs:
                   load: true
 
             - name: Tag image
-              run: |
-                  cd packages/evals
-                  docker tag evals-runner:latest evals-runner
+              run: docker tag evals-runner:latest evals-runner
 
             - name: Start containers
               run: |
-                  cd packages/evals
                   docker compose up -d db redis
                   timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
                   timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
-
-            - name: Test runner
-              run: |
-                  cd packages/evals
                   docker compose run --rm runner sh -c 'nc -z db 5432 && echo "✓ Runner -> Database connection successful"'
                   docker compose run --rm runner sh -c 'nc -z redis 6379 && echo "✓ Runner -> Redis connection successful"'
-                  docker compose run --rm runner docker --version
                   docker compose run --rm runner docker ps
 
+            - name: Run database migrations
+              run: docker compose run --rm runner pnpm --filter @roo-code/evals db:migrate
+
             - name: Run evals
-              run: |
-                  cd packages/evals
-                  docker compose run --rm runner pnpm --filter @roo-code/evals cli --ci
+              run: docker compose run --rm runner pnpm --filter @roo-code/evals cli --ci
 
             - name: Cleanup
               if: always()
-              run: |
-                  cd packages/evals
-                  docker compose down -v --remove-orphans
+              run: docker compose down -v --remove-orphans
