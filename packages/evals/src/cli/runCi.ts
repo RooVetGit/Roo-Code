@@ -7,7 +7,7 @@ import { runEvals } from "./runEvals.js"
 
 export const runCi = async ({
 	concurrency = 1,
-	exercisesPerLanguage = 1,
+	exercisesPerLanguage,
 }: {
 	concurrency?: number
 	exercisesPerLanguage?: number
@@ -17,8 +17,13 @@ export const runCi = async ({
 	const run = await createRun({ model: "anthropic/claude-sonnet-4", socketPath: "", concurrency })
 
 	for (const language of exerciseLanguages) {
-		const exercises = (await getExercisesForLanguage(EVALS_REPO_PATH, language)).slice(0, exercisesPerLanguage)
-		await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }))
+		let exercises = await getExercisesForLanguage(EVALS_REPO_PATH, language)
+
+		if (exercisesPerLanguage) {
+			exercises = exercises.slice(0, exercisesPerLanguage)
+		}
+
+		await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }), { concurrency })
 	}
 
 	await runEvals(run.id)

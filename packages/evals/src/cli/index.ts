@@ -24,7 +24,7 @@ const main = async () => {
 
 				try {
 					if (ci) {
-						await runCi()
+						await runCi({ concurrency: 3, exercisesPerLanguage: 5 })
 					} else if (runId !== -1) {
 						await runEvals(runId)
 					} else if (taskId !== -1) {
