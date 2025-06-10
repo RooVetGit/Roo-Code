@@ -23,11 +23,6 @@
 		"this_and_subsequent": "Diese und alle nachfolgenden Nachrichten"
 	},
 	"errors": {
-		"invalid_mcp_config": "Ungültiges MCP-Projekt-Konfigurationsformat",
-		"invalid_mcp_settings_format": "Ungültiges MCP-Einstellungen-JSON-Format. Bitte stelle sicher, dass deine Einstellungen dem korrekten JSON-Format entsprechen.",
-		"invalid_mcp_settings_syntax": "Ungültiges MCP-Einstellungen-JSON-Format. Bitte überprüfe deine Einstellungsdatei auf Syntaxfehler.",
-		"invalid_mcp_settings_validation": "Ungültiges MCP-Einstellungen-Format: {{errorMessages}}",
-		"failed_initialize_project_mcp": "Fehler beim Initialisieren des Projekt-MCP-Servers: {{error}}",
 		"invalid_data_uri": "Ungültiges Daten-URI-Format",
 		"checkpoint_timeout": "Zeitüberschreitung beim Versuch, den Checkpoint wiederherzustellen.",
 		"checkpoint_failed": "Fehler beim Wiederherstellen des Checkpoints.",
@@ -44,8 +39,6 @@
 		"delete_api_config": "Fehler beim Löschen der API-Konfiguration",
 		"list_api_config": "Fehler beim Abrufen der API-Konfigurationsliste",
 		"update_server_timeout": "Fehler beim Aktualisieren des Server-Timeouts",
-		"failed_update_project_mcp": "Fehler beim Aktualisieren der Projekt-MCP-Server",
-		"create_mcp_json": "Fehler beim Erstellen oder Öffnen von .roo/mcp.json: {{error}}",
 		"hmr_not_running": "Der lokale Entwicklungsserver läuft nicht, HMR wird nicht funktionieren. Bitte führen Sie 'npm run dev' vor dem Start der Erweiterung aus, um HMR zu aktivieren.",
 		"retrieve_current_mode": "Fehler beim Abrufen des aktuellen Modus aus dem Zustand.",
 		"failed_delete_repo": "Fehler beim Löschen des zugehörigen Shadow-Repositorys oder -Zweigs: {{error}}",
@@ -59,7 +52,9 @@
 		"condense_not_enough_messages": "Nicht genügend Nachrichten zum Verdichten des Kontexts",
 		"condensed_recently": "Kontext wurde kürzlich verdichtet; dieser Versuch wird übersprungen",
 		"condense_handler_invalid": "API-Handler zum Verdichten des Kontexts ist ungültig",
-		"condense_context_grew": "Kontextgröße ist während der Verdichtung gewachsen; dieser Versuch wird übersprungen"
+		"condense_context_grew": "Kontextgröße ist während der Verdichtung gewachsen; dieser Versuch wird übersprungen",
+		"share_task_failed": "Teilen der Aufgabe fehlgeschlagen. Bitte versuche es erneut.",
+		"share_no_active_task": "Keine aktive Aufgabe zum Teilen"
 	},
 	"warnings": {
 		"no_terminal_content": "Kein Terminal-Inhalt ausgewählt",
@@ -69,13 +64,10 @@
 		"no_changes": "Keine Änderungen gefunden.",
 		"clipboard_copy": "Systemnachricht erfolgreich in die Zwischenablage kopiert",
 		"history_cleanup": "{{count}} Aufgabe(n) mit fehlenden Dateien aus dem Verlauf bereinigt.",
-		"mcp_server_restarting": "MCP-Server {{serverName}} wird neu gestartet...",
-		"mcp_server_connected": "MCP-Server {{serverName}} verbunden",
-		"mcp_server_deleted": "MCP-Server gelöscht: {{serverName}}",
-		"mcp_server_not_found": "Server \"{{serverName}}\" nicht in der Konfiguration gefunden",
 		"custom_storage_path_set": "Benutzerdefinierter Speicherpfad festgelegt: {{path}}",
 		"default_storage_path": "Auf Standardspeicherpfad zurückgesetzt",
-		"settings_imported": "Einstellungen erfolgreich importiert."
+		"settings_imported": "Einstellungen erfolgreich importiert.",
+		"share_link_copied": "Share-Link in die Zwischenablage kopiert"
 	},
 	"answers": {
 		"yes": "Ja",
