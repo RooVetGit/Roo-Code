@@ -87,6 +87,7 @@ export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) =>
 	let taskStartedAt = Date.now()
 	let taskFinishedAt: number | undefined
 	let taskAbortedAt: number | undefined
+	let taskTimedOut: boolean = false
 	let taskMetricsId: number | undefined
 	let rooTaskId: string | undefined
 	let isClientDisconnected = false
@@ -196,6 +197,7 @@ export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) =>
 			timeout: EVALS_TIMEOUT,
 		})
 	} catch (_error) {
+		taskTimedOut = true
 		logger.error("time limit reached")
 
 		if (rooTaskId && !isClientDisconnected) {
@@ -207,15 +209,15 @@ export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) =>
 		taskFinishedAt = Date.now()
 	}
 
-	if (taskFinishedAt) {
-		logger.info("setting task finished at")
-		await updateTask(task.id, { finishedAt: new Date() })
-	}
-
-	if (!taskFinishedAt && isClientDisconnected) {
+	if (!taskFinishedAt && !taskTimedOut) {
 		logger.error("client disconnected before task finished")
 		throw new Error("Client disconnected before task completion.")
 	}
+
+	// If the task was aborted unexpectedly or the client disconnected
+	// unexpectedly, then throw to trigger a retry.
+	logger.info("setting task finished at")
+	await updateTask(task.id, { finishedAt: new Date() })
 
 	if (rooTaskId && !isClientDisconnected) {
 		logger.info("closing task")
