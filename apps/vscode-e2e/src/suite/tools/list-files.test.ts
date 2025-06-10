@@ -29,7 +29,7 @@ suite("Roo Code list_files Tool", () => {
 		if (!workspaceFolders || workspaceFolders.length === 0) {
 			throw new Error("No workspace folder found")
 		}
-		workspaceDir = workspaceFolders[0].uri.fsPath
+		workspaceDir = workspaceFolders[0]!.uri.fsPath
 		console.log("Workspace directory:", workspaceDir)
 
 		// Create test directory structure

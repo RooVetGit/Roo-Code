@@ -62,7 +62,7 @@ Final content`,
 		if (!workspaceFolders || workspaceFolders.length === 0) {
 			throw new Error("No workspace folder found")
 		}
-		workspaceDir = workspaceFolders[0].uri.fsPath
+		workspaceDir = workspaceFolders[0]!.uri.fsPath
 		console.log("Using workspace directory:", workspaceDir)
 
 		// Create all test files before any tests run
