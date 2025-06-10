@@ -125,17 +125,45 @@ suite("Roo Code read_file Tool", () => {
 		let taskCompleted = false
 		let errorOccurred: string | null = null
 		let toolExecuted = false
+		let toolResult: string | null = null
 
 		// Listen for messages
 		const messageHandler = ({ message }: { message: ClineMessage }) => {
 			messages.push(message)
 
-			// Check for tool execution
+			// Check for tool execution and extract result
 			if (message.type === "say" && message.say === "api_req_started") {
 				const text = message.text || ""
 				if (text.includes("read_file")) {
 					toolExecuted = true
 					console.log("Tool executed:", text.substring(0, 200))
+
+					// Parse the tool result from the api_req_started message
+					try {
+						const requestData = JSON.parse(text)
+						if (requestData.request && requestData.request.includes("[read_file")) {
+							console.log("Full request for debugging:", requestData.request)
+							// Try multiple patterns to extract the content
+							// Pattern 1: Content between triple backticks
+							let resultMatch = requestData.request.match(/```[^`]*\n([\s\S]*?)\n```/)
+							if (!resultMatch) {
+								// Pattern 2: Content after "Result:" with line numbers
+								resultMatch = requestData.request.match(/Result:[\s\S]*?\n((?:\d+\s*\|[^\n]*\n?)+)/)
+							}
+							if (!resultMatch) {
+								// Pattern 3: Simple content after Result:
+								resultMatch = requestData.request.match(/Result:\s*\n([\s\S]+?)(?:\n\n|$)/)
+							}
+							if (resultMatch) {
+								toolResult = resultMatch[1]
+								console.log("Extracted tool result:", toolResult)
+							} else {
+								console.log("Could not extract tool result from request")
+							}
+						}
+					} catch (e) {
+						console.log("Failed to parse tool result:", e)
+					}
 				}
 			}
 
@@ -205,7 +233,18 @@ suite("Roo Code read_file Tool", () => {
 			// Check that no errors occurred
 			assert.strictEqual(errorOccurred, null, "No errors should have occurred")
 
-			// Verify the AI read the file content - be more flexible with the check
+			// Verify the tool returned the correct content
+			assert.ok(toolResult !== null, "Tool should have returned a result")
+			// The tool returns content with line numbers, so we need to extract just the content
+			// For single line, the format is "1 | Hello, World!"
+			const actualContent = (toolResult as string).replace(/^\d+\s*\|\s*/, "")
+			assert.strictEqual(
+				actualContent.trim(),
+				"Hello, World!",
+				"Tool should have returned the exact file content",
+			)
+
+			// Also verify the AI mentioned the content in its response
 			const hasContent = messages.some(
 				(m) =>
 					m.type === "say" &&
@@ -215,7 +254,7 @@ suite("Roo Code read_file Tool", () => {
 			)
 			assert.ok(hasContent, "AI should have mentioned the file content 'Hello, World!'")
 
-			console.log("Test passed! File read successfully")
+			console.log("Test passed! File read successfully with correct content")
 		} finally {
 			// Clean up
 			api.off("message", messageHandler)
@@ -230,17 +269,42 @@ suite("Roo Code read_file Tool", () => {
 		const messages: ClineMessage[] = []
 		let taskCompleted = false
 		let toolExecuted = false
+		let toolResult: string | null = null
 
 		// Listen for messages
 		const messageHandler = ({ message }: { message: ClineMessage }) => {
 			messages.push(message)
 
-			// Check for tool execution
+			// Check for tool execution and extract result
 			if (message.type === "say" && message.say === "api_req_started") {
 				const text = message.text || ""
 				if (text.includes("read_file")) {
 					toolExecuted = true
 					console.log("Tool executed for multiline file")
+
+					// Parse the tool result
+					try {
+						const requestData = JSON.parse(text)
+						if (requestData.request && requestData.request.includes("[read_file")) {
+							console.log("Full request for debugging:", requestData.request)
+							// Try multiple patterns to extract the content
+							let resultMatch = requestData.request.match(/```[^`]*\n([\s\S]*?)\n```/)
+							if (!resultMatch) {
+								resultMatch = requestData.request.match(/Result:[\s\S]*?\n((?:\d+\s*\|[^\n]*\n?)+)/)
+							}
+							if (!resultMatch) {
+								resultMatch = requestData.request.match(/Result:\s*\n([\s\S]+?)(?:\n\n|$)/)
+							}
+							if (resultMatch) {
+								toolResult = resultMatch[1]
+								console.log("Extracted multiline tool result")
+							} else {
+								console.log("Could not extract tool result from request")
+							}
+						}
+					} catch (e) {
+						console.log("Failed to parse tool result:", e)
+					}
 				}
 			}
 
@@ -279,7 +343,22 @@ suite("Roo Code read_file Tool", () => {
 			// Verify the read_file tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")
 
-			// Verify the AI mentioned the correct number of lines - be more flexible
+			// Verify the tool returned the correct multiline content
+			assert.ok(toolResult !== null, "Tool should have returned a result")
+			// The tool returns content with line numbers, so we need to extract just the content
+			const lines = (toolResult as string).split("\n").map((line) => {
+				const match = line.match(/^\d+\s*\|\s*(.*)$/)
+				return match ? match[1] : line
+			})
+			const actualContent = lines.join("\n")
+			const expectedContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+			assert.strictEqual(
+				actualContent.trim(),
+				expectedContent,
+				"Tool should have returned the exact multiline content",
+			)
+
+			// Also verify the AI mentioned the correct number of lines
 			const hasLineCount = messages.some(
 				(m) =>
 					m.type === "say" &&
@@ -288,7 +367,7 @@ suite("Roo Code read_file Tool", () => {
 			)
 			assert.ok(hasLineCount, "AI should have mentioned the file has 5 lines")
 
-			console.log("Test passed! Multiline file read successfully")
+			console.log("Test passed! Multiline file read successfully with correct content")
 		} finally {
 			// Clean up
 			api.off("message", messageHandler)
@@ -302,17 +381,42 @@ suite("Roo Code read_file Tool", () => {
 		const messages: ClineMessage[] = []
 		let taskCompleted = false
 		let toolExecuted = false
+		let toolResult: string | null = null
 
 		// Listen for messages
 		const messageHandler = ({ message }: { message: ClineMessage }) => {
 			messages.push(message)
 
-			// Check for tool execution
+			// Check for tool execution and extract result
 			if (message.type === "say" && message.say === "api_req_started") {
 				const text = message.text || ""
 				if (text.includes("read_file")) {
 					toolExecuted = true
 					console.log("Tool executed:", text.substring(0, 300))
+
+					// Parse the tool result
+					try {
+						const requestData = JSON.parse(text)
+						if (requestData.request && requestData.request.includes("[read_file")) {
+							console.log("Full request for debugging:", requestData.request)
+							// Try multiple patterns to extract the content
+							let resultMatch = requestData.request.match(/```[^`]*\n([\s\S]*?)\n```/)
+							if (!resultMatch) {
+								resultMatch = requestData.request.match(/Result:[\s\S]*?\n((?:\d+\s*\|[^\n]*\n?)+)/)
+							}
+							if (!resultMatch) {
+								resultMatch = requestData.request.match(/Result:\s*\n([\s\S]+?)(?:\n\n|$)/)
+							}
+							if (resultMatch) {
+								toolResult = resultMatch[1]
+								console.log("Extracted line range tool result")
+							} else {
+								console.log("Could not extract tool result from request")
+							}
+						}
+					} catch (e) {
+						console.log("Failed to parse tool result:", e)
+					}
 				}
 			}
 
@@ -351,7 +455,24 @@ suite("Roo Code read_file Tool", () => {
 			// Verify tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")
 
-			// Verify the AI mentioned the specific lines - be more flexible
+			// Verify the tool returned the correct lines (when line range is used)
+			if (toolResult && (toolResult as string).includes(" | ")) {
+				// The result includes line numbers
+				assert.ok(
+					(toolResult as string).includes("2 | Line 2"),
+					"Tool result should include line 2 with line number",
+				)
+				assert.ok(
+					(toolResult as string).includes("3 | Line 3"),
+					"Tool result should include line 3 with line number",
+				)
+				assert.ok(
+					(toolResult as string).includes("4 | Line 4"),
+					"Tool result should include line 4 with line number",
+				)
+			}
+
+			// Also verify the AI mentioned the specific lines
 			const hasLines = messages.some(
 				(m) =>
 					m.type === "say" &&
