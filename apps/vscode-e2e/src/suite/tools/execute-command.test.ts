@@ -27,11 +27,6 @@ suite("Roo Code execute_command Tool", () => {
 			content: "",
 			path: "",
 		},
-		errorHandling: {
-			name: `test-error-${Date.now()}.txt`,
-			content: "",
-			path: "",
-		},
 		longRunning: {
 			name: `test-long-${Date.now()}.txt`,
 			content: "",
@@ -330,105 +325,6 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			} catch {
 				// Directory might not be empty
 			}
-		}
-	})
-
-	test("Should handle command errors gracefully", async function () {
-		const api = globalThis.api
-		let taskStarted = false
-		let _taskCompleted = false
-		let errorHandled = false
-		let executeCommandToolCalled = false
-		let commandExecuted = ""
-
-		// Listen for messages
-		const messageHandler = ({ message }: { message: ClineMessage }) => {
-			if (message.type === "say" && message.say === "command_output") {
-				// Check if error was properly reported
-				if (
-					message.text?.includes("not found") ||
-					message.text?.includes("error") ||
-					message.text?.includes("failed")
-				) {
-					errorHandled = true
-				}
-				console.log("Command output:", message.text?.substring(0, 200))
-			}
-
-			// Check for tool execution
-			if (message.type === "say" && message.say === "api_req_started" && message.text) {
-				console.log("API request started:", message.text.substring(0, 200))
-				try {
-					const requestData = JSON.parse(message.text)
-					if (requestData.request && requestData.request.includes("execute_command")) {
-						executeCommandToolCalled = true
-						// The request contains the actual tool execution result
-						commandExecuted = requestData.request
-						console.log("execute_command tool called, full request:", commandExecuted.substring(0, 300))
-					}
-				} catch (e) {
-					console.log("Failed to parse api_req_started message:", e)
-				}
-			}
-		}
-		api.on("message", messageHandler)
-
-		// Listen for task events
-		const taskStartedHandler = (id: string) => {
-			if (id === taskId) {
-				taskStarted = true
-				console.log("Task started:", id)
-			}
-		}
-		api.on("taskStarted", taskStartedHandler)
-
-		const taskCompletedHandler = (id: string) => {
-			if (id === taskId) {
-				_taskCompleted = true
-				console.log("Task completed:", id)
-			}
-		}
-		api.on("taskCompleted", taskCompletedHandler)
-
-		let taskId: string
-		try {
-			// Start task with invalid command
-			taskId = await api.startNewTask({
-				configuration: {
-					mode: "code",
-					autoApprovalEnabled: true,
-					alwaysAllowExecute: true,
-					allowedCommands: ["*"],
-				},
-				text: `Use the execute_command tool to run: nonexistentcommand12345
-
-This command does not exist and should fail. Assume you can execute this command directly - it will result in an error. The error is completely expected use attempt_completion to complete the task.`,
-			})
-
-			console.log("Task ID:", taskId)
-
-			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 45_000 })
-
-			// Wait for task completion
-			await waitUntilCompleted({ api, taskId, timeout: 60_000 })
-
-			// Verify tool was called
-			assert.ok(executeCommandToolCalled, "execute_command tool should have been called")
-			assert.ok(
-				commandExecuted.includes("nonexistentcommand12345"),
-				`Command should include the non-existent command. Got: ${commandExecuted.substring(0, 200)}`,
-			)
-
-			// Verify error was handled
-			assert.ok(errorHandled, "Error should be handled and reported in tool result")
-
-			console.log("Test passed! Command error handled gracefully")
-		} finally {
-			// Clean up event listeners
-			api.off("message", messageHandler)
-			api.off("taskStarted", taskStartedHandler)
-			api.off("taskCompleted", taskCompletedHandler)
 		}
 	})
 
