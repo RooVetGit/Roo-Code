@@ -83,10 +83,10 @@ describe("fileReadCacheService", () => {
 						{
 							fileName: MOCK_FILE_PATH,
 							mtime: CURRENT_MTIME,
-							loadedRanges: [{ start: 1, end: 10 }],
+							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
-				},
+				} as any,
 			]
 			const result = await processAndFilterReadRequest(MOCK_FILE_PATH, requestedRanges, conversationHistory)
 			expect(result.status).toBe("REJECT_ALL")
@@ -101,10 +101,10 @@ describe("fileReadCacheService", () => {
 						{
 							fileName: MOCK_FILE_PATH,
 							mtime: CURRENT_MTIME,
-							loadedRanges: [{ start: 1, end: 10 }],
+							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
-				},
+				} as any,
 			]
 			const result = await processAndFilterReadRequest(MOCK_FILE_PATH, requestedRanges, conversationHistory)
 			expect(result.status).toBe("ALLOW_PARTIAL")
@@ -119,10 +119,10 @@ describe("fileReadCacheService", () => {
 						{
 							fileName: MOCK_FILE_PATH,
 							mtime: CURRENT_MTIME - 100, // Older mtime
-							loadedRanges: [{ start: 1, end: 10 }],
+							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
-				},
+				} as any,
 			]
 			const result = await processAndFilterReadRequest(MOCK_FILE_PATH, requestedRanges, conversationHistory)
 			expect(result.status).toBe("ALLOW_ALL")
@@ -137,10 +137,10 @@ describe("fileReadCacheService", () => {
 						{
 							fileName: "/another/file.txt",
 							mtime: CURRENT_MTIME,
-							loadedRanges: [{ start: 1, end: 10 }],
+							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
-				},
+				} as any,
 			]
 			const result = await processAndFilterReadRequest(MOCK_FILE_PATH, requestedRanges, conversationHistory)
 			expect(result.status).toBe("ALLOW_ALL")
@@ -156,20 +156,20 @@ describe("fileReadCacheService", () => {
 						{
 							fileName: MOCK_FILE_PATH,
 							mtime: CURRENT_MTIME - 100,
-							loadedRanges: [{ start: 1, end: 20 }],
+							lineRanges: [{ start: 1, end: 20 }],
 						},
 					],
-				},
+				} as any,
 				{
 					// Newer, correct mtime but only partial coverage
 					files: [
 						{
 							fileName: MOCK_FILE_PATH,
 							mtime: CURRENT_MTIME,
-							loadedRanges: [{ start: 1, end: 5 }],
+							lineRanges: [{ start: 1, end: 5 }],
 						},
 					],
-				},
+				} as any,
 			]
 			const result = await processAndFilterReadRequest(MOCK_FILE_PATH, requestedRanges, conversationHistory)
 			expect(result.status).toBe("ALLOW_PARTIAL")

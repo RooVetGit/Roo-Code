@@ -8,7 +8,7 @@ export interface LineRange {
 
 export interface FileMetadata {
 	fileName: string
-	mtime: string
+	mtime: number
 	lineRanges: LineRange[]
 }
 
@@ -24,9 +24,9 @@ export interface ConversationMessage {
 }
 
 type CacheResult =
-	| { status: "ALLOW_ALL" }
+	| { status: "ALLOW_ALL"; rangesToRead: LineRange[] }
 	| { status: "ALLOW_PARTIAL"; rangesToRead: LineRange[] }
-	| { status: "REJECT_ALL" }
+	| { status: "REJECT_ALL"; rangesToRead: LineRange[] }
 
 /**
  * Checks if two line ranges overlap.
@@ -44,7 +44,7 @@ function rangesOverlap(r1: LineRange, r2: LineRange): boolean {
  * @param toSubtract - The range to subtract.
  * @returns An array of ranges remaining after subtraction.
  */
-function subtractRange(from: LineRange, toSubtract: LineRange): LineRange[] {
+export function subtractRange(from: LineRange, toSubtract: LineRange): LineRange[] {
 	// No overlap
 	if (from.end < toSubtract.start || from.start > toSubtract.end) {
 		return [from]
@@ -59,6 +59,19 @@ function subtractRange(from: LineRange, toSubtract: LineRange): LineRange[] {
 		remainingRanges.push({ start: toSubtract.end + 1, end: from.end })
 	}
 	return remainingRanges
+}
+
+/**
+ * Subtracts a set of ranges from another set of ranges.
+ */
+export function subtractRanges(originals: LineRange[], toRemoves: LineRange[]): LineRange[] {
+	let remaining = [...originals]
+
+	for (const toRemove of toRemoves) {
+		remaining = remaining.flatMap((original) => subtractRange(original, toRemove))
+	}
+
+	return remaining
 }
 
 /**
@@ -85,7 +98,7 @@ export async function processAndFilterReadRequest(
 			// This logic is simplified; in a real scenario, you'd get the line count.
 			// For this example, we'll assume we can't determine the full range without reading the file,
 			// so we proceed with ALLOW_ALL if no ranges are specified.
-			return { status: "ALLOW_ALL" }
+			return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
 		}
 
 		for (const message of conversationHistory) {
@@ -107,20 +120,20 @@ export async function processAndFilterReadRequest(
 		}
 
 		if (rangesToRead.length === 0) {
-			return { status: "REJECT_ALL" }
+			return { status: "REJECT_ALL", rangesToRead: [] }
 		} else if (rangesToRead.length < requestedRanges.length) {
 			return { status: "ALLOW_PARTIAL", rangesToRead }
 		} else {
-			return { status: "ALLOW_ALL" }
+			return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
 		}
 	} catch (error) {
 		// If we can't get file stats, it's safer to allow the read.
 		if (error.code === "ENOENT") {
 			// File doesn't exist, let the regular tool handle it.
-			return { status: "ALLOW_ALL" }
+			return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
 		}
 		console.error(`Error processing file read request for ${requestedFilePath}:`, error)
 		// On other errors, allow the read to proceed to handle it.
-		return { status: "ALLOW_ALL" }
+		return { status: "ALLOW_ALL", rangesToRead: requestedRanges }
 	}
 }
