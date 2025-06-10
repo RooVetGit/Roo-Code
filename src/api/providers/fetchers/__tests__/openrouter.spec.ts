@@ -35,7 +35,6 @@ describe("OpenRouter API", () => {
 			}
 
 			// Verify we have all supported models except intentionally excluded Google models
-			const excludedModels = openRouterSupportedCaching.filter((id) => id.startsWith("google/"))
 			const expectedCachingModels = openRouterSupportedCaching.filter((id) => !id.startsWith("google/")).sort()
 
 			expect(ourCachingModels.sort()).toEqual(expectedCachingModels)
