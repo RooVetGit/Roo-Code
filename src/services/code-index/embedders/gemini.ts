@@ -28,41 +28,16 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	 * @returns A promise that resolves to an EmbeddingResponse containing the embeddings.
 	 */
 	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
-		// This function will be executed when it's this task's turn in the queue.
-		const taskExecution = async (): Promise<EmbeddingResponse> => {
-			try {
-				const modelId = model || this.defaultModelId
-				// embedWithTokenLimit handles batching, internal delays, and retries for API calls.
-				const result = await this.embedWithTokenLimit(texts, modelId, this.defaultTaskType)
-				return {
-					embeddings: result.embeddings,
-					// If EmbeddingResponse is updated to include usage, and result.usage is reliable:
-					// usage: result.usage,
-				}
-			} catch (error: any) {
-				// Errors are logged within embedWithTokenLimit or _embedBatchWithRetries.
-				// This re-throws the error to be caught by the specific caller of createEmbeddings.
-				console.error("Error during Gemini embedding task execution in queue:", error.message)
-				throw error
+		try {
+			const modelId = model || this.defaultModelId
+			const result = await this.embedWithTokenLimit(texts, modelId, this.defaultTaskType)
+			return {
+				embeddings: result.embeddings,
 			}
+		} catch (error: any) {
+			console.error("Error during Gemini embedding task execution in queue:", error.message)
+			throw error
 		}
-
-		// Chain this task onto the queue.
-		// The actual execution of taskExecution() is deferred until the previous promise in the queue resolves.
-		const taskPromise = this.embeddingQueue.then(taskExecution)
-
-		// Update the queue to wait for the current task to complete (or fail).
-		// .catch(() => {}) ensures that an error in one task doesn't break the queue for subsequent tasks.
-		// Each task's success/failure is handled by its own promise (taskPromise), which is returned to the caller.
-		this.embeddingQueue = taskPromise
-			.catch(() => {
-				// This task failed, but the queue should proceed for the next one.
-				// The error from taskPromise will be handled by its specific awaiter below.
-			})
-			.then(() => undefined) // Ensure the queue promise resolves to void for the next .then() in the chain.
-
-		// Return the promise for this specific task. The caller will await this.
-		return taskPromise
 	}
 
 	/**
