@@ -47,7 +47,7 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const model = this.getModel()
 
-		if (model.id.startsWith("deepseek-ai/DeepSeek-R1")) {
+		if (model.id.includes("DeepSeek-R1")) {
 			const stream = await this.client.chat.completions.create({
 				...this.getCompletionParams(systemPrompt, messages),
 				messages: convertToR1Format([{ role: "user", content: systemPrompt }, ...messages]),
@@ -91,7 +91,7 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 
 	override getModel() {
 		const model = super.getModel()
-		const isDeepSeekR1 = model.id.startsWith("deepseek-ai/DeepSeek-R1")
+		const isDeepSeekR1 = model.id.includes("DeepSeek-R1")
 		return {
 			...model,
 			info: {
