@@ -2,10 +2,7 @@ name: Evals
 
 on:
     pull_request:
-        branches: [main, develop]
-        paths:
-            - "packages/evals/**"
-            - ".github/workflows/evals*.yml"
+        types: [labeled]
     workflow_dispatch:
 
 env:
@@ -14,6 +11,8 @@ env:
 
 jobs:
     evals:
+        # Run if triggered manually or if PR has 'evals' label.
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.label.name, 'evals')
         runs-on: ubuntu-latest
         timeout-minutes: 30
 
@@ -91,7 +90,7 @@ jobs:
 
                   echo "Testing web service startup..."
                   timeout 60 bash -c 'until curl -f http://localhost:3000/api/health 2>/dev/null; do echo "Waiting for web service..."; sleep 2; done'
-                  
+
                   echo "✓ Web service is healthy"
                   echo "Health check response:"
                   curl -s http://localhost:3000/api/health | jq 2>/dev/null || curl -s http://localhost:3000/api/health
