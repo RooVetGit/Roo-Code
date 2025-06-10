@@ -18,7 +18,6 @@ import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
 
 import { inputEventTransform, noTransform } from "../transforms"
-import { getModelValidationError } from "@src/utils/validate"
 
 import { ModelPicker } from "../ModelPicker"
 import { OpenRouterBalanceDisplay } from "./OpenRouterBalanceDisplay"
@@ -31,6 +30,7 @@ type OpenRouterProps = {
 	uriScheme: string | undefined
 	fromWelcomeView?: boolean
 	organizationAllowList: OrganizationAllowList
+	modelValidationError?: string
 }
 
 export const OpenRouter = ({
@@ -41,6 +41,7 @@ export const OpenRouter = ({
 	uriScheme,
 	fromWelcomeView,
 	organizationAllowList,
+	modelValidationError,
 }: OpenRouterProps) => {
 	const { t } = useAppTranslation()
 
@@ -136,7 +137,7 @@ export const OpenRouter = ({
 				serviceName="OpenRouter"
 				serviceUrl="https://openrouter.ai/models"
 				organizationAllowList={organizationAllowList}
-				errorMessage={getModelValidationError(apiConfiguration, routerModels, organizationAllowList)}
+				errorMessage={modelValidationError}
 			/>
 			{openRouterModelProviders && Object.keys(openRouterModelProviders).length > 0 && (
 				<div>

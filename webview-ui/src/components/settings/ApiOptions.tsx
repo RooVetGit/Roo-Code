@@ -259,6 +259,10 @@ const ApiOptions = ({
 		[setApiConfigurationField, apiConfiguration, routerModels, organizationAllowList],
 	)
 
+	const modelValidationError = useMemo(() => {
+		return getModelValidationError(apiConfiguration, routerModels, organizationAllowList)
+	}, [apiConfiguration, routerModels, organizationAllowList])
+
 	const docs = useMemo(() => {
 		const provider = PROVIDERS.find(({ value }) => value === selectedProvider)
 		const name = provider?.label
@@ -318,6 +322,7 @@ const ApiOptions = ({
 					uriScheme={uriScheme}
 					fromWelcomeView={fromWelcomeView}
 					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -328,6 +333,7 @@ const ApiOptions = ({
 					routerModels={routerModels}
 					refetchRouterModels={refetchRouterModels}
 					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -338,6 +344,7 @@ const ApiOptions = ({
 					routerModels={routerModels}
 					uriScheme={uriScheme}
 					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -347,6 +354,7 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
 					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -383,6 +391,7 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -419,6 +428,7 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 

@@ -10,7 +10,6 @@ import { getGlamaAuthUrl } from "@src/oauth/urls"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform } from "../transforms"
-import { getModelValidationError } from "@src/utils/validate"
 import { ModelPicker } from "../ModelPicker"
 
 type GlamaProps = {
@@ -19,6 +18,7 @@ type GlamaProps = {
 	routerModels?: RouterModels
 	uriScheme?: string
 	organizationAllowList: OrganizationAllowList
+	modelValidationError?: string
 }
 
 export const Glama = ({
@@ -27,6 +27,7 @@ export const Glama = ({
 	routerModels,
 	uriScheme,
 	organizationAllowList,
+	modelValidationError,
 }: GlamaProps) => {
 	const { t } = useAppTranslation()
 
@@ -68,7 +69,7 @@ export const Glama = ({
 				serviceName="Glama"
 				serviceUrl="https://glama.ai/models"
 				organizationAllowList={organizationAllowList}
-				errorMessage={getModelValidationError(apiConfiguration, routerModels, organizationAllowList)}
+				errorMessage={modelValidationError}
 			/>
 		</>
 	)

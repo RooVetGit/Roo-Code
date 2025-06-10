@@ -11,7 +11,6 @@ import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 import { Button } from "@src/components/ui"
 
 import { inputEventTransform } from "../transforms"
-import { getModelValidationError } from "@src/utils/validate"
 import { ModelPicker } from "../ModelPicker"
 import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
 
@@ -21,6 +20,7 @@ type RequestyProps = {
 	routerModels?: RouterModels
 	refetchRouterModels: () => void
 	organizationAllowList: OrganizationAllowList
+	modelValidationError?: string
 }
 
 export const Requesty = ({
@@ -29,6 +29,7 @@ export const Requesty = ({
 	routerModels,
 	refetchRouterModels,
 	organizationAllowList,
+	modelValidationError,
 }: RequestyProps) => {
 	const { t } = useAppTranslation()
 
@@ -97,7 +98,7 @@ export const Requesty = ({
 				serviceName="Requesty"
 				serviceUrl="https://requesty.ai"
 				organizationAllowList={organizationAllowList}
-				errorMessage={getModelValidationError(apiConfiguration, routerModels, organizationAllowList)}
+				errorMessage={modelValidationError}
 			/>
 		</>
 	)
