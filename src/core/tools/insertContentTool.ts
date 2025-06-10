@@ -92,7 +92,14 @@ export async function insertContentTool(
 		const fileContent = await fs.readFile(absolutePath, "utf8")
 		cline.diffViewProvider.editType = "modify"
 		cline.diffViewProvider.originalContent = fileContent
-		const lines = fileContent.split("\n")
+		let lines = fileContent.split("\n")
+
+		// Special handling for appending to the end of the file (line 0)
+		// If the original file content ends with a newline, split("\n") will result in a trailing empty string.
+		// When appending, we want to avoid adding an extra blank line.
+		if (lineNumber === 0 && lines.length > 0 && lines[lines.length - 1] === "") {
+			lines.pop() // Remove the trailing empty string
+		}
 
 		const updatedContent = insertGroups(lines, [
 			{
