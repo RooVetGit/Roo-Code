@@ -32,7 +32,7 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 			info: { maxTokens: max_tokens },
 		} = this.getModel()
 
-		const temperature = this.options.modelTemperature ?? this.defaultTemperature
+		const temperature = this.options.modelTemperature ?? this.getModel().info.temperature
 
 		return {
 			model,
