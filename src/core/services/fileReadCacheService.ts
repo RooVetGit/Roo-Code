@@ -1,5 +1,6 @@
-import { stat } from "fs/promises"
+import fs from "fs"
 
+// Types
 export interface LineRange {
 	start: number
 	end: number
@@ -7,113 +8,119 @@ export interface LineRange {
 
 export interface FileMetadata {
 	fileName: string
-	mtime: number
-	loadedRanges: LineRange[]
+	mtime: string
+	lineRanges: LineRange[]
 }
 
 export interface ConversationMessage {
+	role: "user" | "assistant"
+	content: any
+	ts: number
+	tool?: {
+		name: string
+		options: any
+	}
 	files?: FileMetadata[]
 }
 
-export interface FilteredReadRequest {
-	status: "REJECT_ALL" | "ALLOW_PARTIAL" | "ALLOW_ALL"
-	rangesToRead: LineRange[]
-}
+type CacheResult =
+	| { status: "ALLOW_ALL" }
+	| { status: "ALLOW_PARTIAL"; rangesToRead: LineRange[] }
+	| { status: "REJECT_ALL" }
 
 /**
- * Checks if two ranges overlap.
+ * Checks if two line ranges overlap.
+ * @param r1 - The first line range.
+ * @param r2 - The second line range.
+ * @returns True if the ranges overlap, false otherwise.
  */
 function rangesOverlap(r1: LineRange, r2: LineRange): boolean {
 	return r1.start <= r2.end && r1.end >= r2.start
 }
 
 /**
- * Subtracts one range from another.
- * Returns an array of ranges that are in `original` but not in `toRemove`.
+ * Subtracts one line range from another.
+ * @param from - The range to subtract from.
+ * @param toSubtract - The range to subtract.
+ * @returns An array of ranges remaining after subtraction.
  */
-export function subtractRange(original: LineRange, toRemove: LineRange): LineRange[] {
-	if (!rangesOverlap(original, toRemove)) {
-		return [original]
+function subtractRange(from: LineRange, toSubtract: LineRange): LineRange[] {
+	// No overlap
+	if (from.end < toSubtract.start || from.start > toSubtract.end) {
+		return [from]
 	}
-
-	const result: LineRange[] = []
-
-	// Part of original before toRemove
-	if (original.start < toRemove.start) {
-		result.push({ start: original.start, end: toRemove.start - 1 })
+	const remainingRanges: LineRange[] = []
+	// Part of 'from' is before 'toSubtract'
+	if (from.start < toSubtract.start) {
+		remainingRanges.push({ start: from.start, end: toSubtract.start - 1 })
 	}
-
-	// Part of original after toRemove
-	if (original.end > toRemove.end) {
-		result.push({ start: toRemove.end + 1, end: original.end })
+	// Part of 'from' is after 'toSubtract'
+	if (from.end > toSubtract.end) {
+		remainingRanges.push({ start: toSubtract.end + 1, end: from.end })
 	}
-
-	return result
+	return remainingRanges
 }
 
 /**
- * Subtracts a set of ranges from another set of ranges.
+ * Processes a read request against cached file data in conversation history.
+ * @param requestedFilePath - The full path of the file being requested.
+ * @param requestedRanges - The line ranges being requested.
+ * @param conversationHistory - The history of conversation messages.
+ * @returns A CacheResult indicating whether to allow, partially allow, or reject the read.
  */
-export function subtractRanges(originals: LineRange[], toRemoves: LineRange[]): LineRange[] {
-	let remaining = [...originals]
-
-	for (const toRemove of toRemoves) {
-		remaining = remaining.flatMap((original) => subtractRange(original, toRemove))
-	}
-
-	return remaining
-}
-
 export async function processAndFilterReadRequest(
-	requestedFile: string,
+	requestedFilePath: string,
 	requestedRanges: LineRange[],
 	conversationHistory: ConversationMessage[],
-): Promise<FilteredReadRequest> {
-	let currentMtime: number
+): Promise<CacheResult> {
 	try {
-		currentMtime = (await stat(requestedFile)).mtime.getTime()
-	} catch (error) {
-		// File doesn't exist or other error, so we must read.
-		return {
-			status: "ALLOW_ALL",
-			rangesToRead: requestedRanges,
-		}
-	}
+		const stats = await fs.promises.stat(requestedFilePath)
+		const currentMtime = stats.mtime.toISOString()
 
-	let rangesThatStillNeedToBeRead = [...requestedRanges]
+		let rangesToRead = [...requestedRanges]
 
-	for (let i = conversationHistory.length - 1; i >= 0; i--) {
-		const message = conversationHistory[i]
-		if (!message.files) {
-			continue
+		// If no specific ranges are requested, treat it as a request for the whole file.
+		if (rangesToRead.length === 0) {
+			// We need to know the number of lines to create a full range.
+			// This logic is simplified; in a real scenario, you'd get the line count.
+			// For this example, we'll assume we can't determine the full range without reading the file,
+			// so we proceed with ALLOW_ALL if no ranges are specified.
+			return { status: "ALLOW_ALL" }
 		}
 
-		const relevantFileHistory = message.files.find((f) => f.fileName === requestedFile)
-
-		if (relevantFileHistory && relevantFileHistory.mtime >= currentMtime) {
-			rangesThatStillNeedToBeRead = subtractRanges(rangesThatStillNeedToBeRead, relevantFileHistory.loadedRanges)
-
-			if (rangesThatStillNeedToBeRead.length === 0) {
-				return {
-					status: "REJECT_ALL",
-					rangesToRead: [],
+		for (const message of conversationHistory) {
+			if (message.files) {
+				for (const file of message.files) {
+					if (file.fileName === requestedFilePath && new Date(file.mtime) >= new Date(currentMtime)) {
+						// File in history is up-to-date. Check ranges.
+						for (const cachedRange of file.lineRanges) {
+							rangesToRead = rangesToRead.flatMap((reqRange) => {
+								if (rangesOverlap(reqRange, cachedRange)) {
+									return subtractRange(reqRange, cachedRange)
+								}
+								return [reqRange]
+							})
+						}
+					}
 				}
 			}
 		}
-	}
 
-	const originalRangesString = JSON.stringify(requestedRanges.sort((a, b) => a.start - b.start))
-	const finalRangesString = JSON.stringify(rangesThatStillNeedToBeRead.sort((a, b) => a.start - b.start))
-
-	if (originalRangesString === finalRangesString) {
-		return {
-			status: "ALLOW_ALL",
-			rangesToRead: requestedRanges,
+		if (rangesToRead.length === 0) {
+			return { status: "REJECT_ALL" }
+		} else if (rangesToRead.length < requestedRanges.length) {
+			return { status: "ALLOW_PARTIAL", rangesToRead }
+		} else {
+			return { status: "ALLOW_ALL" }
 		}
-	}
-
-	return {
-		status: "ALLOW_PARTIAL",
-		rangesToRead: rangesThatStillNeedToBeRead,
+	} catch (error) {
+		// If we can't get file stats, it's safer to allow the read.
+		if (error.code === "ENOENT") {
+			// File doesn't exist, let the regular tool handle it.
+			return { status: "ALLOW_ALL" }
+		}
+		console.error(`Error processing file read request for ${requestedFilePath}:`, error)
+		// On other errors, allow the read to proceed to handle it.
+		return { status: "ALLOW_ALL" }
 	}
 }
