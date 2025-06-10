@@ -23,8 +23,6 @@ describe("OpenRouter API", () => {
 
 			const models = await getOpenRouterModels()
 
-			// Check that our caching models list is a subset of what OpenRouter supports
-			// (we may intentionally exclude some models that support caching)
 			const openRouterSupportedCaching = Object.entries(models)
 				.filter(([_, model]) => model.supportsPromptCache)
 				.map(([id, _]) => id)
@@ -36,22 +34,9 @@ describe("OpenRouter API", () => {
 				expect(openRouterSupportedCaching).toContain(modelId)
 			}
 
-			// Check that we have the expected models (excluding intentionally excluded ones)
-			const excludedCachingModels = new Set([
-				// All Google models intentionally excluded from caching
-				"google/gemini-2.5-pro-preview",
-				"google/gemini-2.0-flash-001",
-				"google/gemini-2.5-flash-preview",
-				"google/gemini-2.5-flash-preview-05-20",
-				"google/gemini-2.5-flash-preview-05-20:thinking",
-				"google/gemini-2.5-flash-preview:thinking",
-				"google/gemini-flash-1.5",
-				"google/gemini-flash-1.5-8b",
-			])
-
-			const expectedCachingModels = openRouterSupportedCaching
-				.filter((id) => !excludedCachingModels.has(id))
-				.sort()
+			// Verify we have all supported models except intentionally excluded Google models
+			const excludedModels = openRouterSupportedCaching.filter((id) => id.startsWith("google/"))
+			const expectedCachingModels = openRouterSupportedCaching.filter((id) => !id.startsWith("google/")).sort()
 
 			expect(ourCachingModels.sort()).toEqual(expectedCachingModels)
 
