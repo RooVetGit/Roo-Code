@@ -370,7 +370,8 @@
 			"hint": "Để trống = sử dụng prompt mặc định"
 		},
 		"autoCondenseContext": {
-			"name": "Tự động kích hoạt nén ngữ cảnh thông minh"
+			"name": "Tự động kích hoạt nén ngữ cảnh thông minh",
+			"description": "Khi được bật, Roo sẽ tự động nén ngữ cảnh khi đạt đến ngưỡng. Khi bị tắt, bạn vẫn có thể kích hoạt nén ngữ cảnh thủ công."
 		},
 		"openTabs": {
 			"label": "Giới hạn ngữ cảnh tab đang mở",

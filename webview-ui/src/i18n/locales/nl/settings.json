@@ -370,7 +370,8 @@
 			"hint": "Leeg = gebruik standaardprompt"
 		},
 		"autoCondenseContext": {
-			"name": "Automatisch intelligente contextcompressie activeren"
+			"name": "Automatisch intelligente contextcompressie activeren",
+			"description": "Wanneer ingeschakeld, zal Roo automatisch de context comprimeren wanneer de drempel wordt bereikt. Wanneer uitgeschakeld, kun je nog steeds handmatig contextcompressie activeren."
 		},
 		"openTabs": {
 			"label": "Limiet geopende tabbladen in context",

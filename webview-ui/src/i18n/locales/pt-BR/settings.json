@@ -370,7 +370,8 @@
 			"hint": "Vazio = usar prompt padrão"
 		},
 		"autoCondenseContext": {
-			"name": "Acionar automaticamente a condensação inteligente de contexto"
+			"name": "Acionar automaticamente a condensação inteligente de contexto",
+			"description": "Quando habilitado, o Roo condensará automaticamente o contexto quando o limite for atingido. Quando desabilitado, você ainda pode acionar manualmente a condensação de contexto."
 		},
 		"openTabs": {
 			"label": "Limite de contexto de abas abertas",

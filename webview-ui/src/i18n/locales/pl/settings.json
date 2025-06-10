@@ -370,7 +370,8 @@
 			"hint": "Puste = użyj domyślnego monitu"
 		},
 		"autoCondenseContext": {
-			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu"
+			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu",
+			"description": "Gdy włączone, Roo automatycznie skondensuje kontekst po osiągnięciu progu. Gdy wyłączone, nadal możesz ręcznie wyzwolić kondensację kontekstu."
 		},
 		"openTabs": {
 			"label": "Limit kontekstu otwartych kart",

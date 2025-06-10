@@ -370,7 +370,8 @@
 			"hint": "Vuoto = usa prompt predefinito"
 		},
 		"autoCondenseContext": {
-			"name": "Attiva automaticamente la condensazione intelligente del contesto"
+			"name": "Attiva automaticamente la condensazione intelligente del contesto",
+			"description": "Quando abilitato, Roo condenserà automaticamente il contesto quando viene raggiunta la soglia. Quando disabilitato, puoi ancora attivare manualmente la condensazione del contesto."
 		},
 		"openTabs": {
 			"label": "Limite contesto schede aperte",

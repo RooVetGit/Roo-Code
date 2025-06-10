@@ -370,7 +370,8 @@
 			"hint": "Leer = Standard-Prompt verwenden"
 		},
 		"autoCondenseContext": {
-			"name": "Intelligente Kontextkomprimierung automatisch auslösen"
+			"name": "Intelligente Kontextkomprimierung automatisch auslösen",
+			"description": "Wenn aktiviert, wird Roo automatisch den Kontext komprimieren, wenn der Schwellenwert erreicht wird. Wenn deaktiviert, können Sie die Kontextkomprimierung weiterhin manuell auslösen."
 		},
 		"openTabs": {
 			"label": "Geöffnete Tabs Kontextlimit",

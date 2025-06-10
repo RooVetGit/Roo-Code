@@ -370,7 +370,8 @@
 			"hint": "Buit = utilitzar indicació per defecte"
 		},
 		"autoCondenseContext": {
-			"name": "Activar automàticament la condensació intel·ligent de context"
+			"name": "Activar automàticament la condensació intel·ligent de context",
+			"description": "Quan està activat, Roo condensarà automàticament el context quan s'assoleixi el llindar. Quan està desactivat, encara pots activar manualment la condensació de context."
 		},
 		"openTabs": {
 			"label": "Límit de context de pestanyes obertes",

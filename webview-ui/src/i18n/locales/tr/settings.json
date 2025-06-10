@@ -370,7 +370,8 @@
 			"hint": "Boş = varsayılan promptu kullan"
 		},
 		"autoCondenseContext": {
-			"name": "Akıllı bağlam sıkıştırmayı otomatik olarak tetikle"
+			"name": "Akıllı bağlam sıkıştırmayı otomatik olarak tetikle",
+			"description": "Etkinleştirildiğinde, Roo eşiğe ulaşıldığında bağlamı otomatik olarak sıkıştırır. Devre dışı bırakıldığında, bağlam sıkıştırmayı hala manuel olarak tetikleyebilirsiniz."
 		},
 		"openTabs": {
 			"label": "Açık sekmeler bağlam sınırı",

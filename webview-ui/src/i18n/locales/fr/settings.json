@@ -370,7 +370,8 @@
 			"hint": "Vide = utiliser le prompt par défaut"
 		},
 		"autoCondenseContext": {
-			"name": "Déclencher automatiquement la condensation intelligente du contexte"
+			"name": "Déclencher automatiquement la condensation intelligente du contexte",
+			"description": "Lorsque cette option est activée, Roo condensera automatiquement le contexte lorsque le seuil est atteint. Lorsqu'elle est désactivée, vous pouvez toujours déclencher manuellement la condensation du contexte."
 		},
 		"openTabs": {
 			"label": "Limite de contexte des onglets ouverts",

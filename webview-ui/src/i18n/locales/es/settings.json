@@ -370,7 +370,8 @@
 			"hint": "Vacío = usar prompt predeterminado"
 		},
 		"autoCondenseContext": {
-			"name": "Activar automáticamente la condensación inteligente de contexto"
+			"name": "Activar automáticamente la condensación inteligente de contexto",
+			"description": "Cuando está habilitado, Roo condensará automáticamente el contexto cuando se alcance el umbral. Cuando está deshabilitado, aún puedes activar manualmente la condensación de contexto."
 		},
 		"openTabs": {
 			"label": "Límite de contexto de pestañas abiertas",
