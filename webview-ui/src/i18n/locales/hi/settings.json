@@ -600,7 +600,6 @@
 	},
 	"labels": {
 		"customArn": "कस्टम ARN",
-		"useCustomArn": "कस्टम ARN का उपयोग करें...",
-		"invalidModel": "(अमान्य)"
+		"useCustomArn": "कस्टम ARN का उपयोग करें..."
 	}
 }

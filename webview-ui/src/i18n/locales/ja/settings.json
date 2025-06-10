@@ -600,7 +600,6 @@
 	},
 	"labels": {
 		"customArn": "カスタム ARN",
-		"useCustomArn": "カスタム ARN を使用...",
-		"invalidModel": "(無効)"
+		"useCustomArn": "カスタム ARN を使用..."
 	}
 }

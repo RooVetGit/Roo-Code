@@ -600,7 +600,6 @@
 	},
 	"labels": {
 		"customArn": "Aangepaste ARN",
-		"useCustomArn": "Aangepaste ARN gebruiken...",
-		"invalidModel": "(ongeldig)"
+		"useCustomArn": "Aangepaste ARN gebruiken..."
 	}
 }

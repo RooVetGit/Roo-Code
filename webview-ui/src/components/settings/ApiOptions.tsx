@@ -207,17 +207,8 @@ const ApiOptions = ({
 				}))
 			: []
 
-		// Add the current selected model if it's not in the valid models list
-		// This allows users to see their invalid selection
-		if (selectedModelId && !modelOptions.some((option) => option.value === selectedModelId)) {
-			modelOptions.unshift({
-				value: selectedModelId,
-				label: `${selectedModelId} ${t("settings:labels.invalidModel")}`,
-			})
-		}
-
 		return modelOptions
-	}, [selectedProvider, organizationAllowList, selectedModelId])
+	}, [selectedProvider, organizationAllowList])
 
 	const onProviderChange = useCallback(
 		(value: ProviderName) => {
@@ -238,13 +229,9 @@ const ApiOptions = ({
 				// in case we haven't set a default value for a provider
 				if (!defaultValue) return
 
-				const providerModels = MODELS_BY_PROVIDER[value]
-				const filteredModels = filterModels(providerModels || null, value, organizationAllowList)
-				const isModelValid = modelId && filteredModels && Object.keys(filteredModels).includes(modelId)
-
-				// set default if no model is set OR if the current model is invalid for the new provider
-				// this is to help 'reset' the invalid model when switching providers
-				const shouldSetDefault = !modelId || !isModelValid
+				// only set default if no model is set, but don't reset invalid models
+				// let users see and decide what to do with invalid model selections
+				const shouldSetDefault = !modelId
 
 				if (shouldSetDefault) {
 					setApiConfigurationField(field, defaultValue)
@@ -290,7 +277,7 @@ const ApiOptions = ({
 				)
 			}
 		},
-		[setApiConfigurationField, apiConfiguration, organizationAllowList],
+		[setApiConfigurationField, apiConfiguration],
 	)
 
 	const modelValidationError = useMemo(() => {
