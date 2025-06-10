@@ -27,7 +27,6 @@
 	"dependencies": {
 		"@roo-code/ipc": "workspace:^",
 		"@roo-code/types": "workspace:^",
-		"better-sqlite3": "^11.10.0",
 		"cmd-ts": "^0.13.0",
 		"drizzle-orm": "^0.44.1",
 		"execa": "^9.6.0",
@@ -43,7 +42,7 @@
 	"devDependencies": {
 		"@roo-code/config-eslint": "workspace:^",
 		"@roo-code/config-typescript": "workspace:^",
-		"@types/node": "^22.15.20",
+		"@types/node": "20.x",
 		"@types/node-ipc": "^9.2.3",
 		"@types/ps-tree": "^1.1.6",
 		"drizzle-kit": "^0.31.1",

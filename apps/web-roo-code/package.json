@@ -18,15 +18,13 @@
 		"db:studio": "pnpm drizzle-kit studio"
 	},
 	"dependencies": {
-		"@libsql/client": "^0.15.7",
 		"@radix-ui/react-dialog": "^1.1.14",
 		"@radix-ui/react-slot": "^1.2.3",
+		"@roo-code/evals": "workspace:^",
 		"@roo-code/types": "workspace:^",
 		"@tanstack/react-query": "^5.79.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"drizzle-orm": "^0.44.0",
-		"drizzle-zod": "^0.8.0",
 		"embla-carousel-auto-scroll": "^8.6.0",
 		"embla-carousel-autoplay": "^8.6.0",
 		"embla-carousel-react": "^8.6.0",
@@ -47,11 +45,10 @@
 		"@roo-code/config-eslint": "workspace:^",
 		"@roo-code/config-typescript": "workspace:^",
 		"@tailwindcss/typography": "^0.5.16",
-		"@types/node": "^20.17.54",
+		"@types/node": "20.x",
 		"@types/react": "^18.3.23",
 		"@types/react-dom": "^18.3.7",
 		"autoprefixer": "^10.4.21",
-		"drizzle-kit": "^0.31.0",
 		"postcss": "^8.5.4",
 		"tailwindcss": "^3.4.17"
 	}
