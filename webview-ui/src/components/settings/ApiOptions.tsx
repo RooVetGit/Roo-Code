@@ -11,6 +11,16 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	openAiNativeDefaultModelId,
+	anthropicDefaultModelId,
+	geminiDefaultModelId,
+	deepSeekDefaultModelId,
+	mistralDefaultModelId,
+	xaiDefaultModelId,
+	groqDefaultModelId,
+	chutesDefaultModelId,
+	bedrockDefaultModelId,
+	vertexDefaultModelId,
 } from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
@@ -214,14 +224,19 @@ const ApiOptions = ({
 				field: keyof ProviderSettings,
 				defaultValue?: string,
 			) => {
+				// in case we haven't set a default value for a provider
+				if (!defaultValue) return
+
+				let shouldSetDefault = !modelId
 				if (modelId) {
+					// if a model has been set, check if it's valid with the new provider
 					const tempConfig = { ...apiConfiguration, apiProvider: value, apiModelId: modelId }
-					const modelError = getModelValidationError(tempConfig, routerModels, organizationAllowList)
-					// if we have any errors, reset the modelId to default value to prevent ambiguity
-					// otherwise, keep the modelId as is
-					if (modelError) {
-						setApiConfigurationField(field, defaultValue || "")
-					}
+					const hasValidationError = getModelValidationError(tempConfig, routerModels, organizationAllowList)
+					shouldSetDefault = !!hasValidationError
+				}
+
+				if (shouldSetDefault) {
+					setApiConfigurationField(field, defaultValue)
 				}
 			}
 
@@ -244,6 +259,36 @@ const ApiOptions = ({
 					break
 				case "litellm":
 					validateAndResetModel(apiConfiguration.litellmModelId, "litellmModelId", litellmDefaultModelId)
+					break
+				case "anthropic":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", anthropicDefaultModelId)
+					break
+				case "openai-native":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", openAiNativeDefaultModelId)
+					break
+				case "gemini":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", geminiDefaultModelId)
+					break
+				case "deepseek":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", deepSeekDefaultModelId)
+					break
+				case "mistral":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", mistralDefaultModelId)
+					break
+				case "xai":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", xaiDefaultModelId)
+					break
+				case "groq":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", groqDefaultModelId)
+					break
+				case "chutes":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", chutesDefaultModelId)
+					break
+				case "bedrock":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", bedrockDefaultModelId)
+					break
+				case "vertex":
+					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", vertexDefaultModelId)
 					break
 				case "openai":
 					validateAndResetModel(apiConfiguration.openAiModelId, "openAiModelId")

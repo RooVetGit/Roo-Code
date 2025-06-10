@@ -14,12 +14,12 @@ export function validateApiConfiguration(
 		return keysAndIdsPresentErrorMessage
 	}
 
-	const organizationAllowListErrorMessage = validateProviderAgainstOrganizationSettings(
+	const organizationAllowListError = validateProviderAgainstOrganizationSettings(
 		apiConfiguration,
 		organizationAllowList,
 	)
-	if (organizationAllowListErrorMessage) {
-		return organizationAllowListErrorMessage
+	if (organizationAllowListError) {
+		return organizationAllowListError.message
 	}
 
 	return validateModelId(apiConfiguration, routerModels)
@@ -107,17 +107,25 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 	return undefined
 }
 
+type ValidationError = {
+	message: string
+	code: 'PROVIDER_NOT_ALLOWED' | 'MODEL_NOT_ALLOWED'
+}
+
 function validateProviderAgainstOrganizationSettings(
 	apiConfiguration: ProviderSettings,
 	organizationAllowList?: OrganizationAllowList,
-): string | undefined {
+): ValidationError | undefined {
 	if (organizationAllowList && !organizationAllowList.allowAll) {
 		const provider = apiConfiguration.apiProvider
 		if (!provider) return undefined
 
 		const providerConfig = organizationAllowList.providers[provider]
 		if (!providerConfig) {
-			return i18next.t("settings:validation.providerNotAllowed", { provider })
+			return {
+				message: i18next.t("settings:validation.providerNotAllowed", { provider }),
+				code: 'PROVIDER_NOT_ALLOWED'
+			}
 		}
 
 		if (!providerConfig.allowAll) {
@@ -125,10 +133,13 @@ function validateProviderAgainstOrganizationSettings(
 			const allowedModels = providerConfig.models || []
 
 			if (modelId && !allowedModels.includes(modelId)) {
-				return i18next.t("settings:validation.modelNotAllowed", {
-					model: modelId,
-					provider,
-				})
+				return {
+					message: i18next.t("settings:validation.modelNotAllowed", {
+						model: modelId,
+						provider,
+					}),
+					code: 'MODEL_NOT_ALLOWED'
+				}
 			}
 		}
 	}
@@ -250,8 +261,8 @@ export function getModelValidationError(
 	}
 
 	const orgError = validateProviderAgainstOrganizationSettings(configWithModelId, organizationAllowList)
-	if (orgError && orgError.includes("model")) {
-		return orgError
+	if (orgError && orgError.code === 'MODEL_NOT_ALLOWED') {
+		return orgError.message
 	}
 
 	return validateModelId(configWithModelId, routerModels)
@@ -272,14 +283,14 @@ export function validateApiConfigurationExcludingModelErrors(
 		return keysAndIdsPresentErrorMessage
 	}
 
-	const organizationAllowListErrorMessage = validateProviderAgainstOrganizationSettings(
+	const organizationAllowListError = validateProviderAgainstOrganizationSettings(
 		apiConfiguration,
 		organizationAllowList,
 	)
 
 	// only return organization errors if they're not model-specific
-	if (organizationAllowListErrorMessage && !organizationAllowListErrorMessage.includes("model")) {
-		return organizationAllowListErrorMessage
+	if (organizationAllowListError && organizationAllowListError.code === 'PROVIDER_NOT_ALLOWED') {
+		return organizationAllowListError.message
 	}
 
 	// skip model validation errors as they'll be shown in the model selector
