@@ -402,7 +402,7 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 				},
 				text: `Use the execute_command tool to run: nonexistentcommand12345
 
-This command does not exist and should fail. Assume you can execute this command directly - it will result in an error. Handle the error gracefully and use attempt_completion to complete the task.`,
+This command does not exist and should fail. Assume you can execute this command directly - it will result in an error. The error is completely expected use attempt_completion to complete the task.`,
 			})
 
 			console.log("Task ID:", taskId)
