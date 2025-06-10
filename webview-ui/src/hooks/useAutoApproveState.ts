@@ -35,24 +35,15 @@ interface UseAutoApproveStateProps {
 
 export const useAutoApproveState = ({ toggles, setters, setCachedStateField }: UseAutoApproveStateProps) => {
 	// Calculate if any auto-approve action is enabled
-	const hasAnyAutoApprovedAction = useMemo(() => Object.values(toggles).some((value) => !!value), [toggles])
+	const hasAnyAutoApprovedAction = useMemo(() => {
+		return Object.values(toggles).some((value) => !!value)
+	}, [toggles])
 
 	// Update individual auto-approval setting
 	const updateAutoApprovalState = useCallback(
 		(key: AutoApproveSetting, value: boolean) => {
-			// Calculate updated toggles state
-			const updatedToggles = { ...toggles, [key]: value }
-			const hasAnyEnabled = Object.values(updatedToggles).some((v) => !!v)
-
 			// Send vscode message for individual setting
 			vscode.postMessage({ type: key, bool: value })
-
-			// Update main auto-approval setting based on new state if setter available
-			if (setters?.setAutoApprovalEnabled) {
-				const shouldEnableAutoApproval = hasAnyEnabled
-				setters.setAutoApprovalEnabled(shouldEnableAutoApproval)
-				vscode.postMessage({ type: "autoApprovalEnabled", bool: shouldEnableAutoApproval })
-			}
 
 			// Update the specific setting state using appropriate setter
 			if (setters) {
@@ -82,6 +73,15 @@ export const useAutoApproveState = ({ toggles, setters, setCachedStateField }: U
 						setters.setAlwaysApproveResubmit?.(value)
 						break
 				}
+
+				// Update main auto-approval setting after state update
+				if (setters.setAutoApprovalEnabled) {
+					// Calculate if any will be enabled after this update
+					const updatedToggles = { ...toggles, [key]: value }
+					const hasAnyEnabled = Object.values(updatedToggles).some((v) => !!v)
+					setters.setAutoApprovalEnabled(hasAnyEnabled)
+					vscode.postMessage({ type: "autoApprovalEnabled", bool: hasAnyEnabled })
+				}
 			} else if (setCachedStateField) {
 				// Fallback to setCachedStateField for settings page
 				setCachedStateField(key, value)
@@ -95,51 +95,34 @@ export const useAutoApproveState = ({ toggles, setters, setCachedStateField }: U
 		(enabled?: boolean) => {
 			const newValue = enabled !== undefined ? enabled : !hasAnyAutoApprovedAction
 
-			// Set all individual toggles to the new value
-			Object.keys(autoApproveSettingsConfig).forEach((key) => {
-				const settingKey = key as AutoApproveSetting
-				// Send vscode message for individual setting
-				vscode.postMessage({ type: settingKey, bool: newValue })
+			// Batch all updates to reduce re-renders
+			if (setters) {
+				// Update all individual settings in one batch
+				setters.setAlwaysAllowReadOnly?.(newValue)
+				setters.setAlwaysAllowWrite?.(newValue)
+				setters.setAlwaysAllowExecute?.(newValue)
+				setters.setAlwaysAllowBrowser?.(newValue)
+				setters.setAlwaysAllowMcp?.(newValue)
+				setters.setAlwaysAllowModeSwitch?.(newValue)
+				setters.setAlwaysAllowSubtasks?.(newValue)
+				setters.setAlwaysApproveResubmit?.(newValue)
 
-				// Update individual setting state using appropriate setter
-				if (setters) {
-					switch (settingKey) {
-						case "alwaysAllowReadOnly":
-							setters.setAlwaysAllowReadOnly?.(newValue)
-							break
-						case "alwaysAllowWrite":
-							setters.setAlwaysAllowWrite?.(newValue)
-							break
-						case "alwaysAllowExecute":
-							setters.setAlwaysAllowExecute?.(newValue)
-							break
-						case "alwaysAllowBrowser":
-							setters.setAlwaysAllowBrowser?.(newValue)
-							break
-						case "alwaysAllowMcp":
-							setters.setAlwaysAllowMcp?.(newValue)
-							break
-						case "alwaysAllowModeSwitch":
-							setters.setAlwaysAllowModeSwitch?.(newValue)
-							break
-						case "alwaysAllowSubtasks":
-							setters.setAlwaysAllowSubtasks?.(newValue)
-							break
-						case "alwaysApproveResubmit":
-							setters.setAlwaysApproveResubmit?.(newValue)
-							break
-					}
-				} else if (setCachedStateField) {
-					// Fallback to setCachedStateField for settings page
-					setCachedStateField(settingKey, newValue)
+				// Update main auto-approval setting
+				if (setters.setAutoApprovalEnabled) {
+					setters.setAutoApprovalEnabled(newValue)
 				}
-			})
-
-			// Update main auto-approval setting once at the end
-			if (setters?.setAutoApprovalEnabled) {
-				setters.setAutoApprovalEnabled(newValue)
-				vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+			} else if (setCachedStateField) {
+				// Fallback to setCachedStateField for settings page
+				Object.keys(autoApproveSettingsConfig).forEach((key) => {
+					setCachedStateField(key as AutoApproveSetting, newValue)
+				})
 			}
+
+			// Send all vscode messages in one batch
+			Object.keys(autoApproveSettingsConfig).forEach((key) => {
+				vscode.postMessage({ type: key as AutoApproveSetting, bool: newValue })
+			})
+			vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
 		},
 		[hasAnyAutoApprovedAction, setters, setCachedStateField],
 	)

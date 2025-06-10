@@ -76,7 +76,7 @@ export const AutoApproveSettings = ({
 	}
 
 	// Use the centralized auto-approve state hook
-	const { hasAnyAutoApprovedAction, updateAutoApprovalState, handleMasterToggle } = useAutoApproveState({
+	const { updateAutoApprovalState } = useAutoApproveState({
 		toggles,
 		setCachedStateField,
 	})
@@ -102,28 +102,7 @@ export const AutoApproveSettings = ({
 			</SectionHeader>
 
 			<Section>
-				{/* Master Auto-Approval Checkbox */}
-				<div className="flex flex-col gap-4 mb-6">
-					<div className="flex items-center gap-3">
-						<VSCodeCheckbox
-							checked={hasAnyAutoApprovedAction}
-							onChange={() => handleMasterToggle()}
-							data-testid="master-auto-approve-checkbox">
-							<span className="font-medium text-base">
-								{t("settings:autoApprove.masterToggle.label")}
-							</span>
-						</VSCodeCheckbox>
-					</div>
-					<div className="text-vscode-descriptionForeground text-sm pl-6">
-						{t("settings:autoApprove.masterToggle.description")}
-					</div>
-				</div>
-
-				<AutoApproveToggle
-					{...toggles}
-					onToggle={updateAutoApprovalState}
-					isOverallApprovalEnabled={hasAnyAutoApprovedAction}
-				/>
+				<AutoApproveToggle {...toggles} onToggle={updateAutoApprovalState} />
 
 				{/* ADDITIONAL SETTINGS */}
 

@@ -44,14 +44,14 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 	const toggles = useMemo(
 		() => ({
-			alwaysAllowReadOnly: alwaysAllowReadOnly,
-			alwaysAllowWrite: alwaysAllowWrite,
-			alwaysAllowExecute: alwaysAllowExecute,
-			alwaysAllowBrowser: alwaysAllowBrowser,
-			alwaysAllowMcp: alwaysAllowMcp,
-			alwaysAllowModeSwitch: alwaysAllowModeSwitch,
-			alwaysAllowSubtasks: alwaysAllowSubtasks,
-			alwaysApproveResubmit: alwaysApproveResubmit,
+			alwaysAllowReadOnly,
+			alwaysAllowWrite,
+			alwaysAllowExecute,
+			alwaysAllowBrowser,
+			alwaysAllowMcp,
+			alwaysAllowModeSwitch,
+			alwaysAllowSubtasks,
+			alwaysApproveResubmit,
 		}),
 		[
 			alwaysAllowReadOnly,
@@ -65,10 +65,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	// Use the centralized auto-approve state hook
-	const { hasAnyAutoApprovedAction, updateAutoApprovalState, handleMasterToggle } = useAutoApproveState({
-		toggles,
-		setters: {
+	// Memoize setters object to prevent recreating it on every render
+	const setters = useMemo(
+		() => ({
 			setAlwaysAllowReadOnly,
 			setAlwaysAllowWrite,
 			setAlwaysAllowExecute,
@@ -78,7 +77,24 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysAllowSubtasks,
 			setAlwaysApproveResubmit,
 			setAutoApprovalEnabled,
-		},
+		}),
+		[
+			setAlwaysAllowReadOnly,
+			setAlwaysAllowWrite,
+			setAlwaysAllowExecute,
+			setAlwaysAllowBrowser,
+			setAlwaysAllowMcp,
+			setAlwaysAllowModeSwitch,
+			setAlwaysAllowSubtasks,
+			setAlwaysApproveResubmit,
+			setAutoApprovalEnabled,
+		],
+	)
+
+	// Use the centralized auto-approve state hook
+	const { hasAnyAutoApprovedAction, updateAutoApprovalState, handleMasterToggle } = useAutoApproveState({
+		toggles,
+		setters,
 	})
 
 	const displayedAutoApproveText = useMemo(() => {

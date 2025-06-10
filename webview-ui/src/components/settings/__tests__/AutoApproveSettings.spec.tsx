@@ -34,8 +34,6 @@ jest.mock("@/i18n/TranslationContext", () => ({
 			const translations: Record<string, string> = {
 				"settings:sections.autoApprove": "Auto Approve",
 				"settings:autoApprove.description": "Auto-approve certain actions",
-				"settings:autoApprove.masterToggle.label": "Enable Auto-Approval",
-				"settings:autoApprove.masterToggle.description": "Enable or disable all auto-approval settings at once",
 				"settings:autoApprove.readOnly.label": "Read-only",
 				"settings:autoApprove.write.label": "Write files",
 				"settings:autoApprove.execute.label": "Execute",
@@ -82,55 +80,6 @@ describe("AutoApproveSettings", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks()
-	})
-
-	describe("Master Auto-Approval Checkbox", () => {
-		it("should render master checkbox when no settings are enabled", () => {
-			render(<AutoApproveSettings {...defaultProps} />)
-
-			const masterCheckbox = screen.getByTestId("master-auto-approve-checkbox")
-			expect(masterCheckbox).toBeInTheDocument()
-			expect(masterCheckbox).not.toBeChecked()
-		})
-
-		it("should render master checkbox as checked when any setting is enabled", () => {
-			render(<AutoApproveSettings {...defaultProps} alwaysAllowReadOnly={true} />)
-
-			const masterCheckbox = screen.getByTestId("master-auto-approve-checkbox")
-			expect(masterCheckbox).toBeChecked()
-		})
-
-		it("should render master checkbox as checked when multiple settings are enabled", () => {
-			render(
-				<AutoApproveSettings
-					{...defaultProps}
-					alwaysAllowReadOnly={true}
-					alwaysAllowWrite={true}
-					alwaysAllowBrowser={true}
-				/>,
-			)
-
-			const masterCheckbox = screen.getByTestId("master-auto-approve-checkbox")
-			expect(masterCheckbox).toBeChecked()
-		})
-	})
-
-	describe("Individual toggles with master state", () => {
-		it("should show individual toggles with full opacity when master is enabled", () => {
-			render(<AutoApproveSettings {...defaultProps} alwaysAllowReadOnly={true} />)
-
-			const readOnlyToggle = screen.getByTestId("always-allow-readonly-toggle")
-			expect(readOnlyToggle).toBeInTheDocument()
-			expect(readOnlyToggle).not.toHaveClass("opacity-50")
-		})
-
-		it("should show individual toggles with reduced opacity when master is disabled", () => {
-			render(<AutoApproveSettings {...defaultProps} />)
-
-			const readOnlyToggle = screen.getByTestId("always-allow-readonly-toggle")
-			expect(readOnlyToggle).toBeInTheDocument()
-			expect(readOnlyToggle).toHaveClass("opacity-50")
-		})
 	})
 
 	describe("Additional settings visibility", () => {
