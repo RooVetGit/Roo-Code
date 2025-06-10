@@ -465,7 +465,11 @@ export class DiffViewProvider {
 
 				// Listen for changes in tab groups, which includes tabs moving between windows
 				const disposableTabGroup = vscode.window.tabGroups.onDidChangeTabGroups(() => {
-					checkAndResolve()
+					const found = checkAndResolve()
+					if (found) {
+						// Editor found and resolved, no need to continue listening
+						console.debug("Diff editor found via tab group change listener")
+					}
 				})
 
 				vscode.commands
@@ -481,7 +485,16 @@ export class DiffViewProvider {
 					.then(
 						() => {
 							// Give a brief moment for the editor to appear in tab groups
-							setTimeout(checkAndResolve, 100)
+							setTimeout(() => {
+								const found = checkAndResolve()
+								if (!found) {
+									// If not found immediately, rely on tab group change listener
+									// and the 10-second timeout fallback to handle resolution
+									console.debug(
+										"Diff editor not found in initial check, waiting for tab group changes...",
+									)
+								}
+							}, 100)
 						},
 						(err) => {
 							if (timeoutId) clearTimeout(timeoutId)
