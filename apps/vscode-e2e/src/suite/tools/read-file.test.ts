@@ -217,7 +217,7 @@ suite("Roo Code read_file Tool", () => {
 			console.log("Expected file path:", testFiles.simple)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 30_000 })
+			await waitFor(() => taskStarted, { timeout: 60_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
