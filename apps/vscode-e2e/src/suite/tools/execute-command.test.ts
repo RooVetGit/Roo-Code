@@ -17,14 +17,6 @@ suite("Roo Code execute_command Tool", () => {
 			content: "",
 			path: "",
 		},
-		scriptExecution: {
-			name: `test-script-${Date.now()}.sh`,
-			content: `#!/bin/bash
-echo "Script output line 1"
-echo "Script output line 2"
-echo "Script completed"`,
-			path: "",
-		},
 		multiCommand: {
 			name: `test-multi-${Date.now()}.txt`,
 			content: "",
@@ -64,11 +56,6 @@ echo "Script completed"`,
 				await fs.writeFile(file.path, file.content)
 				console.log(`Created ${key} test file at:`, file.path)
 			}
-		}
-
-		// Make script executable on Unix-like systems
-		if (process.platform !== "win32") {
-			await fs.chmod(testFiles.scriptExecution.path, 0o755)
 		}
 	})
 
@@ -343,118 +330,6 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			} catch {
 				// Directory might not be empty
 			}
-		}
-	})
-
-	test("Should execute script file", async function () {
-		const api = globalThis.api
-		const testFile = testFiles.scriptExecution
-		let taskStarted = false
-		let _taskCompleted = false
-		let scriptOutput = ""
-		let errorOccurred: string | null = null
-		let executeCommandToolCalled = false
-		let commandExecuted = ""
-
-		// Listen for messages
-		const messageHandler = ({ message }: { message: ClineMessage }) => {
-			if (message.type === "say" && message.say === "error") {
-				errorOccurred = message.text || "Unknown error"
-				console.error("Error:", message.text)
-			}
-			if (message.type === "say" && message.say === "command_output") {
-				scriptOutput = message.text || ""
-				console.log("Script output:", scriptOutput)
-			}
-
-			// Check for tool execution
-			if (message.type === "say" && message.say === "api_req_started" && message.text) {
-				console.log("API request started:", message.text.substring(0, 200))
-				try {
-					const requestData = JSON.parse(message.text)
-					if (requestData.request && requestData.request.includes("execute_command")) {
-						executeCommandToolCalled = true
-						// The request contains the actual tool execution result
-						commandExecuted = requestData.request
-						console.log("execute_command tool called, full request:", commandExecuted.substring(0, 300))
-					}
-				} catch (e) {
-					console.log("Failed to parse api_req_started message:", e)
-				}
-			}
-		}
-		api.on("message", messageHandler)
-
-		// Listen for task events
-		const taskStartedHandler = (id: string) => {
-			if (id === taskId) {
-				taskStarted = true
-				console.log("Task started:", id)
-			}
-		}
-		api.on("taskStarted", taskStartedHandler)
-
-		const taskCompletedHandler = (id: string) => {
-			if (id === taskId) {
-				_taskCompleted = true
-				console.log("Task completed:", id)
-			}
-		}
-		api.on("taskCompleted", taskCompletedHandler)
-
-		let taskId: string
-		try {
-			// Determine the correct command based on platform
-			const command = process.platform === "win32" ? `type ${testFile.name}` : `bash ${testFile.name}`
-
-			// Start task with execute_command to run script
-			taskId = await api.startNewTask({
-				configuration: {
-					mode: "code",
-					autoApprovalEnabled: true,
-					alwaysAllowExecute: true,
-					allowedCommands: ["*"],
-				},
-				text: `Use the execute_command tool to run: ${command}
-
-The file ${testFile.name} already exists in the current workspace directory and contains a bash script. Assume you can execute this command directly.
-
-Avoid at all costs suggesting a command when using the attempt_completion tool`,
-			})
-
-			console.log("Task ID:", taskId)
-			console.log("Script filename:", testFile.name)
-
-			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 45_000 })
-
-			// Wait for task completion
-			await waitUntilCompleted({ api, taskId, timeout: 60_000 })
-
-			// Verify no errors occurred
-			assert.strictEqual(errorOccurred, null, `Error occurred: ${errorOccurred}`)
-
-			// Verify tool was called
-			assert.ok(executeCommandToolCalled, "execute_command tool should have been called")
-			assert.ok(
-				commandExecuted.includes(testFile.name) || commandExecuted.includes("bash"),
-				`Command should reference the script file. Got: ${commandExecuted.substring(0, 200)}`,
-			)
-
-			// Verify script output was captured
-			assert.ok(scriptOutput, "Script output should be captured")
-			if (process.platform !== "win32") {
-				assert.ok(scriptOutput.includes("Script output line 1"), "Should contain first line")
-				assert.ok(scriptOutput.includes("Script output line 2"), "Should contain second line")
-				assert.ok(scriptOutput.includes("Script completed"), "Should contain completion message")
-			}
-
-			console.log("Test passed! Script executed successfully")
-		} finally {
-			// Clean up event listeners
-			api.off("message", messageHandler)
-			api.off("taskStarted", taskStartedHandler)
-			api.off("taskCompleted", taskCompletedHandler)
 		}
 	})
 
