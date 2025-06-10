@@ -4,6 +4,7 @@ import {
 	subtractRange,
 	subtractRanges,
 	ConversationMessage,
+	mtimeCache,
 } from "../fileReadCacheService"
 import { stat } from "fs/promises"
 import { lruCache } from "../../utils/lruCache"
@@ -60,17 +61,33 @@ describe("fileReadCacheService", () => {
 	})
 	describe("processAndFilterReadRequest", () => {
 		const MOCK_FILE_PATH = "/test/file.txt"
-		const CURRENT_MTIME = new Date().toISOString()
+		const CURRENT_MTIME = new Date("2025-01-01T12:00:00.000Z")
+
 		beforeEach(() => {
 			vi.clearAllMocks()
-			mockedStat.mockResolvedValue({ mtime: { toISOString: () => CURRENT_MTIME } } as any)
+			mtimeCache.clear()
+			vi.useFakeTimers().setSystemTime(CURRENT_MTIME)
+			mockedStat.mockResolvedValue({
+				mtime: CURRENT_MTIME,
+				size: 1024, // Add size for the new cache implementation
+			} as any)
 		})
+
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		afterAll(() => {
+			vi.clearAllMocks()
+		})
+
 		it("should allow all when history is empty", async () => {
 			const requestedRanges = [{ start: 1, end: 10 }]
 			const result = await processAndFilterReadRequest(MOCK_FILE_PATH, requestedRanges, [])
 			expect(result.status).toBe("ALLOW_ALL")
 			expect(result.rangesToRead).toEqual(requestedRanges)
 		})
+
 		it("should reject all when a full cache hit occurs", async () => {
 			const requestedRanges = [{ start: 1, end: 10 }]
 			const conversationHistory: ConversationMessage[] = [
@@ -78,7 +95,7 @@ describe("fileReadCacheService", () => {
 					files: [
 						{
 							fileName: MOCK_FILE_PATH,
-							mtime: new Date(CURRENT_MTIME).getTime(),
+							mtime: CURRENT_MTIME.getTime(),
 							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
@@ -88,6 +105,7 @@ describe("fileReadCacheService", () => {
 			expect(result.status).toBe("REJECT_ALL")
 			expect(result.rangesToRead).toEqual([])
 		})
+
 		it("should allow partial when a partial cache hit occurs", async () => {
 			const requestedRanges = [{ start: 1, end: 20 }]
 			const conversationHistory: ConversationMessage[] = [
@@ -95,7 +113,7 @@ describe("fileReadCacheService", () => {
 					files: [
 						{
 							fileName: MOCK_FILE_PATH,
-							mtime: new Date(CURRENT_MTIME).getTime(),
+							mtime: CURRENT_MTIME.getTime(),
 							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
@@ -105,6 +123,7 @@ describe("fileReadCacheService", () => {
 			expect(result.status).toBe("ALLOW_PARTIAL")
 			expect(result.rangesToRead).toEqual([{ start: 11, end: 20 }])
 		})
+
 		it("should allow all when mtime is older in history", async () => {
 			const requestedRanges = [{ start: 1, end: 10 }]
 			const conversationHistory: ConversationMessage[] = [
@@ -112,7 +131,7 @@ describe("fileReadCacheService", () => {
 					files: [
 						{
 							fileName: MOCK_FILE_PATH,
-							mtime: new Date(CURRENT_MTIME).getTime() - 100, // Older mtime
+							mtime: CURRENT_MTIME.getTime() - 100, // Older mtime
 							lineRanges: [{ start: 1, end: 10 }],
 						},
 					],
@@ -122,6 +141,7 @@ describe("fileReadCacheService", () => {
 			expect(result.status).toBe("ALLOW_ALL")
 			expect(result.rangesToRead).toEqual(requestedRanges)
 		})
+
 		it("should allow all when file does not exist", async () => {
 			mockedStat.mockRejectedValue({ code: "ENOENT" })
 			const requestedRanges = [{ start: 1, end: 10 }]
@@ -129,6 +149,7 @@ describe("fileReadCacheService", () => {
 			expect(result.status).toBe("ALLOW_ALL")
 			expect(result.rangesToRead).toEqual(requestedRanges)
 		})
+
 		it("should throw an error for non-ENOENT stat errors", async () => {
 			const error = new Error("EPERM")
 			mockedStat.mockRejectedValue(error)

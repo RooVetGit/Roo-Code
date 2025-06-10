@@ -565,7 +565,7 @@ export async function readFileTool(
 					// Track file read
 					await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
-					const stats = fs.statSync(fullPath)
+					const stats = await fs.promises.stat(fullPath)
 					const metadata = {
 						fileName: relPath,
 						mtime: stats.mtime.toISOString(),
