@@ -3,6 +3,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
 import type { ApiHandlerOptions } from "../../shared/api"
+import { XmlMatcher } from "../../utils/xml-matcher"
 import { convertToR1Format } from "../transform/r1-format"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
@@ -52,15 +53,22 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 				messages: convertToR1Format([{ role: "user", content: systemPrompt }, ...messages]),
 			})
 
+			const matcher = new XmlMatcher(
+				"think",
+				(chunk) =>
+					({
+						type: chunk.matched ? "reasoning" : "text",
+						text: chunk.data,
+					}) as const,
+			)
+
 			for await (const chunk of stream) {
 				const delta = chunk.choices[0]?.delta
 
-				if ("reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
-					yield { type: "reasoning", text: delta.reasoning }
-				}
-
 				if (delta?.content) {
-					yield { type: "text", text: delta.content }
+					for (const processedChunk of matcher.update(delta.content)) {
+						yield processedChunk
+					}
 				}
 
 				if (chunk.usage) {
@@ -70,6 +78,11 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 						outputTokens: chunk.usage.completion_tokens || 0,
 					}
 				}
+			}
+
+			// Process any remaining content
+			for (const processedChunk of matcher.final()) {
+				yield processedChunk
 			}
 		} else {
 			yield* super.createMessage(systemPrompt, messages)

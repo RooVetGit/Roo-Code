@@ -79,7 +79,7 @@ describe("ChutesHandler", () => {
 				yield {
 					choices: [
 						{
-							delta: { reasoning: "Thinking..." },
+							delta: { content: "<think>Thinking..." },
 							index: 0,
 						},
 					],
@@ -88,7 +88,7 @@ describe("ChutesHandler", () => {
 				yield {
 					choices: [
 						{
-							delta: { content: "Hello" },
+							delta: { content: "</think>Hello" },
 							index: 0,
 						},
 					],
