@@ -6,8 +6,8 @@ import { createRun, createTask } from "../db/index.js"
 import { runEvals } from "./runEvals.js"
 
 export const runCi = async ({
-	concurrency = 3,
-	exercisesPerLanguage = 3,
+	concurrency = 1,
+	exercisesPerLanguage = 1,
 }: {
 	concurrency?: number
 	exercisesPerLanguage?: number

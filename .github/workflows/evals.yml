@@ -90,7 +90,11 @@ jobs:
                   docker compose exec -T web sh -c 'nc -z redis 6379 && echo "✓ Redis connection successful"'
 
                   echo "Testing web service startup..."
-                  timeout 30 bash -c 'until curl -f http://localhost:3000 2>/dev/null || curl -f http://localhost:3000/health 2>/dev/null; do sleep 2; done' || echo "Web service may not have health endpoint, continuing..."
+                  timeout 60 bash -c 'until curl -f http://localhost:3000/api/health 2>/dev/null; do echo "Waiting for web service..."; sleep 2; done'
+                  
+                  echo "✓ Web service is healthy"
+                  echo "Health check response:"
+                  curl -s http://localhost:3000/api/health | jq 2>/dev/null || curl -s http://localhost:3000/api/health
 
             - name: Test runner container networking
               run: |
