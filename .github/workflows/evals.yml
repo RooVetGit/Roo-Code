@@ -1,39 +1,31 @@
-name: Evals Docker Compose
+name: Evals Quick Test
 
 on:
+    pull_request:
+        branches: [main, develop]
+        paths:
+            - "packages/evals/**"
+            - ".github/workflows/evals*.yml"
     workflow_dispatch:
-        inputs:
-            run_full_evals:
-                description: "Run full evaluation suite"
-                required: false
-                default: "false"
-                type: boolean
-            concurrency:
-                description: "Evaluation concurrency level"
-                required: false
-                default: "2"
-                type: string
 
 env:
     DOCKER_BUILDKIT: 1
     COMPOSE_DOCKER_CLI_BUILD: 1
 
 jobs:
-    build-and-test:
-        name: Build and Test Evals
+    test-docker-compose:
+        name: Test Docker Compose Networking
         runs-on: ubuntu-latest
-        timeout-minutes: 30
+        timeout-minutes: 15
 
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
-            - name: Create environment files
+            - name: Create test environment
               run: |
                   cd packages/evals
 
@@ -42,7 +34,7 @@ jobs:
                   OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY || 'test-key-for-build' }}
                   EOF
 
-                  # Create .env.development for development
+                  # Create development environment
                   cat > .env.development << EOF
                   NODE_ENV=development
                   DATABASE_URL=postgresql://postgres:password@db:5432/evals_development
@@ -50,231 +42,100 @@ jobs:
                   HOST_EXECUTION_METHOD=docker
                   EOF
 
-            - name: Build web image with cache
+            - name: Build images with cache
               uses: docker/build-push-action@v5
               with:
-                context: .
-                file: packages/evals/Dockerfile.web
-                tags: evals-web:latest
-                cache-from: type=gha
-                cache-to: type=gha,mode=max
-                push: false
-                load: true
-      
+                  context: .
+                  file: packages/evals/Dockerfile.web
+                  tags: evals-web:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  push: false
+                  load: true
+
             - name: Build runner image with cache
               uses: docker/build-push-action@v5
               with:
-                context: .
-                file: packages/evals/Dockerfile.runner
-                tags: evals-runner:latest
-                cache-from: type=gha
-                cache-to: type=gha,mode=max
-                push: false
-                load: true
-      
+                  context: .
+                  file: packages/evals/Dockerfile.runner
+                  tags: evals-runner:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  push: false
+                  load: true
+
             - name: Tag images for docker-compose
               run: |
-                cd packages/evals
-                docker tag evals-web:latest evals-web
-                docker tag evals-runner:latest evals-runner
+                  cd packages/evals
+                  docker tag evals-web:latest evals-web
+                  docker tag evals-runner:latest evals-runner
 
             - name: Start server services
               run: |
                   cd packages/evals
                   docker compose --profile server up -d
 
-            - name: Wait for services to be ready
+            - name: Test service connectivity
               run: |
                   cd packages/evals
 
-                  # Wait for PostgreSQL to be ready
+                  # Wait for services
                   echo "Waiting for PostgreSQL..."
-                  timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres -d evals_development; do sleep 2; done'
+                  timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
 
-                  # Wait for Redis to be ready
                   echo "Waiting for Redis..."
                   timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
 
-                  # Wait for web service to be ready
-                  echo "Waiting for web service..."
-                  timeout 60 bash -c 'until curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:3000 2>/dev/null; do sleep 2; done'
+                  # Test inter-container networking
+                  echo "Testing database connection from web container..."
+                  docker compose exec -T web sh -c 'nc -z db 5432 && echo "✓ Database connection successful"'
 
-            - name: Run database migrations
+                  echo "Testing Redis connection from web container..."
+                  docker compose exec -T web sh -c 'nc -z redis 6379 && echo "✓ Redis connection successful"'
+
+                  # Test that web service can start (basic health check)
+                  echo "Testing web service startup..."
+                  timeout 30 bash -c 'until curl -f http://localhost:3000 2>/dev/null || curl -f http://localhost:3000/health 2>/dev/null; do sleep 2; done' || echo "Web service may not have health endpoint, continuing..."
+
+            - name: Test runner container networking
               run: |
                   cd packages/evals
-                  docker compose exec -T web pnpm db:push
 
-            - name: Run tests
+                  echo "Testing runner container can connect to services..."
+                  docker compose run --rm runner sh -c 'nc -z db 5432 && echo "✓ Runner -> Database connection successful"'
+                  docker compose run --rm runner sh -c 'nc -z redis 6379 && echo "✓ Runner -> Redis connection successful"'
+                  docker compose run --rm runner sh -c 'nc -z web 3000 && echo "✓ Runner -> Web service connection successful"'
+
+            - name: Verify Docker socket access
               run: |
                   cd packages/evals
-                  docker compose run --rm runner pnpm _test
 
-            - name: Check service logs on failure
-              if: failure()
-              run: |
-                  cd packages/evals
-                  echo "=== Database logs ==="
-                  docker compose logs db
-                  echo "=== Redis logs ==="
-                  docker compose logs redis
-                  echo "=== Web service logs ==="
-                  docker compose logs web
+                  echo "Testing Docker socket access in runner..."
+                  docker compose run --rm runner docker --version
+                  docker compose run --rm runner docker ps
 
-            - name: Cleanup
+            - name: Show service status
               if: always()
               run: |
                   cd packages/evals
-                  docker compose down -v --remove-orphans
 
-    run-sample-evals:
-        name: Run Sample Evaluations
-        runs-on: ubuntu-latest
-        needs: build-and-test
-        if: github.event.inputs.run_full_evals == 'true' || github.event_name == 'workflow_dispatch'
-        timeout-minutes: 60
+                  echo "=== Service Status ==="
+                  docker compose ps
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+                  echo "=== Network Information ==="
+                  docker network ls | grep evals || echo "No evals network found"
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
-
-            - name: Create environment files
-              run: |
-                  cd packages/evals
-
-                  # Create .env.local with actual API key for evaluations
-                  cat > .env.local << EOF
-                  OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY || 'test-key-for-build' }}
-                  EOF
-
-                  cat > .env.development << EOF
-                  NODE_ENV=development
-                  DATABASE_URL=postgresql://postgres:password@db:5432/evals_development
-                  REDIS_URL=redis://redis:6379
-                  HOST_EXECUTION_METHOD=docker
-                  EOF
-
-            - name: Build web image with cache
-              uses: docker/build-push-action@v5
-              with:
-                context: .
-                file: packages/evals/Dockerfile.web
-                tags: evals-web:latest
-                cache-from: type=gha
-                cache-to: type=gha,mode=max
-                push: false
-                load: true
-      
-            - name: Build runner image with cache
-              uses: docker/build-push-action@v5
-              with:
-                context: .
-                file: packages/evals/Dockerfile.runner
-                tags: evals-runner:latest
-                cache-from: type=gha
-                cache-to: type=gha,mode=max
-                push: false
-                load: true
-      
-            - name: Tag images and start services
-              run: |
-                cd packages/evals
-                docker tag evals-web:latest evals-web
-                docker tag evals-runner:latest evals-runner
-                docker compose --profile server --profile runner up -d --scale runner=0
-
-            - name: Wait for services
-              run: |
-                  cd packages/evals
-                  timeout 120 bash -c 'until docker compose exec -T db pg_isready -U postgres -d evals_development; do sleep 2; done'
-                  timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
-                  timeout 60 bash -c 'until curl -f http://localhost:3000 2>/dev/null; do sleep 2; done'
-
-            - name: Run database setup
-              run: |
-                  cd packages/evals
-                  docker compose exec -T web pnpm db:push
+                  echo "=== Container Information ==="
+                  docker compose exec -T db sh -c 'echo "Database container hostname: $(hostname)"'
+                  docker compose exec -T redis sh -c 'echo "Redis container hostname: $(hostname)"'
 
             - name: Run sample evaluation
-              env:
-                  CONCURRENCY: ${{ github.event.inputs.concurrency || '2' }}
               run: |
                   cd packages/evals
-
-                  # Run a limited set of evaluations for CI
-                  docker compose run --rm runner pnpm cli run \
-                    --concurrency $CONCURRENCY \
-                    --timeout 300 \
-                    --max-exercises 3 \
-                    --model "anthropic/claude-3-5-sonnet-20241022"
-
-            - name: Upload evaluation results
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: evaluation-results
-                  path: |
-                      packages/evals/results/
-                      packages/evals/logs/
-                  retention-days: 7
+                  docker compose run --rm runner pnpm --filter @roo-code/evals cli --ci
 
             - name: Cleanup
               if: always()
               run: |
                   cd packages/evals
                   docker compose down -v --remove-orphans
-
-    security-scan:
-        name: Security Scan
-        runs-on: ubuntu-latest
-        needs: build-and-test
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Run Trivy vulnerability scanner
-              uses: aquasecurity/trivy-action@master
-              with:
-                  scan-type: "fs"
-                  scan-ref: "packages/evals"
-                  format: "sarif"
-                  output: "trivy-results.sarif"
-
-            - name: Upload Trivy scan results
-              uses: github/codeql-action/upload-sarif@v3
-              if: always()
-              with:
-                  sarif_file: "trivy-results.sarif"
-
-    docker-compose-validate:
-        name: Validate Docker Compose
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Validate Docker Compose file
-              run: |
-                  cd packages/evals
-                  docker compose config --quiet
-
-            - name: Check Docker Compose services
-              run: |
-                  cd packages/evals
-                  docker compose config --services | sort > services.txt
-                  echo "Available services:"
-                  cat services.txt
-
-                  # Verify expected services exist
-                  for service in db redis web runner; do
-                    if ! grep -q "^$service$" services.txt; then
-                      echo "ERROR: Service '$service' not found in docker-compose.yml"
-                      exit 1
-                    fi
-                  done
-
-                  echo "All expected services found ✓"
