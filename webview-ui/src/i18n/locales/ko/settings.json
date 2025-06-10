@@ -600,6 +600,7 @@
 	},
 	"labels": {
 		"customArn": "사용자 지정 ARN",
-		"useCustomArn": "사용자 지정 ARN 사용..."
+		"useCustomArn": "사용자 지정 ARN 사용...",
+		"invalidModel": "(유효하지 않음)"
 	}
 }

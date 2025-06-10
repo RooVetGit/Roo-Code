@@ -212,7 +212,7 @@ const ApiOptions = ({
 		if (selectedModelId && !modelOptions.some((option) => option.value === selectedModelId)) {
 			modelOptions.unshift({
 				value: selectedModelId,
-				label: `${selectedModelId} (invalid)`,
+				label: `${selectedModelId} ${t("settings:labels.invalidModel")}`,
 			})
 		}
 

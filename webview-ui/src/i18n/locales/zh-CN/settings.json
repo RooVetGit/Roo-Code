@@ -600,6 +600,7 @@
 	},
 	"labels": {
 		"customArn": "自定义 ARN",
-		"useCustomArn": "使用自定义 ARN..."
+		"useCustomArn": "使用自定义 ARN...",
+		"invalidModel": "(无效)"
 	}
 }

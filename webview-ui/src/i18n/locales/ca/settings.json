@@ -600,6 +600,7 @@
 	},
 	"labels": {
 		"customArn": "ARN personalitzat",
-		"useCustomArn": "Utilitza ARN personalitzat..."
+		"useCustomArn": "Utilitza ARN personalitzat...",
+		"invalidModel": "(invàlid)"
 	}
 }

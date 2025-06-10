@@ -600,6 +600,7 @@
 	},
 	"labels": {
 		"customArn": "Custom ARN",
-		"useCustomArn": "Use custom ARN..."
+		"useCustomArn": "Use custom ARN...",
+		"invalidModel": "(invalid)"
 	}
 }

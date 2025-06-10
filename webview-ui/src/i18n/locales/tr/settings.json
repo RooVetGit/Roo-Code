@@ -600,6 +600,7 @@
 	},
 	"labels": {
 		"customArn": "Özel ARN",
-		"useCustomArn": "Özel ARN kullan..."
+		"useCustomArn": "Özel ARN kullan...",
+		"invalidModel": "(geçersiz)"
 	}
 }
