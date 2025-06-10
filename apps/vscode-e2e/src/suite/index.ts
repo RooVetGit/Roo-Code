@@ -19,7 +19,7 @@ export async function run() {
 	await api.setConfiguration({
 		apiProvider: "openrouter" as const,
 		openRouterApiKey: process.env.OPENROUTER_API_KEY!,
-		openRouterModelId: "anthropic/claude-3.5-sonnet",
+		openRouterModelId: "openai/gpt-4.1",
 	})
 
 	await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
