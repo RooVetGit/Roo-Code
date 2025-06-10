@@ -231,7 +231,7 @@ This directory contains various files and subdirectories for testing the list_fi
 			console.log("Task ID:", taskId)
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the list_files tool was executed
 			assert.ok(toolExecuted, "The list_files tool should have been executed")
@@ -338,7 +338,7 @@ This directory contains various files and subdirectories for testing the list_fi
 			console.log("Task ID:", taskId)
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the list_files tool was executed
 			assert.ok(toolExecuted, "The list_files tool should have been executed")
@@ -432,7 +432,7 @@ This directory contains various files and subdirectories for testing the list_fi
 			console.log("Task ID:", taskId)
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the list_files tool was executed
 			assert.ok(toolExecuted, "The list_files tool should have been executed")

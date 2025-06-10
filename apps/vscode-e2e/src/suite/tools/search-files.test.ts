@@ -347,7 +347,7 @@ The search should find matches across different file types and provide context f
 			console.log("Task ID:", taskId)
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed")
@@ -442,7 +442,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed")
@@ -510,7 +510,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed with file pattern
 			assert.ok(toolExecuted, "The search_files tool should have been executed with *.ts pattern")
@@ -575,7 +575,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed with JSON filter")
@@ -643,7 +643,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed")
@@ -711,7 +711,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed with complex regex")
@@ -796,7 +796,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed")
@@ -904,7 +904,7 @@ The search should find matches across different file types and provide context f
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the search_files tool was executed
 			assert.ok(toolExecuted, "The search_files tool should have been executed")

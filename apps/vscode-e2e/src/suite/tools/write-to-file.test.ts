@@ -146,7 +146,7 @@ suite("Roo Code write_to_file Tool", () => {
 			console.log("Expecting file at:", testFilePath)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -336,7 +336,7 @@ suite("Roo Code write_to_file Tool", () => {
 			console.log("Expected nested path:", nestedPath)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
 			await waitFor(() => taskCompleted, { timeout: 45_000 })

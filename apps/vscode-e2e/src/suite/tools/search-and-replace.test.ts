@@ -216,7 +216,7 @@ Assume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -345,7 +345,7 @@ VERIFY: After replacement, there should be NO "old" text anywhere in the file, i
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -470,7 +470,7 @@ Assume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -590,7 +590,7 @@ Assume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {

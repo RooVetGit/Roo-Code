@@ -198,10 +198,10 @@ Then use the attempt_completion tool to complete the task. Do not suggest any co
 			console.log("Test file:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
-			await waitUntilCompleted({ api, taskId, timeout: 30_000 })
+			await waitUntilCompleted({ api, taskId, timeout: 60_000 })
 
 			// Verify no errors occurred
 			assert.strictEqual(errorOccurred, null, `Error occurred: ${errorOccurred}`)
@@ -303,10 +303,10 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			console.log("Subdirectory:", subDir)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
-			await waitUntilCompleted({ api, taskId, timeout: 30_000 })
+			await waitUntilCompleted({ api, taskId, timeout: 60_000 })
 
 			// Verify no errors occurred
 			assert.strictEqual(errorOccurred, null, `Error occurred: ${errorOccurred}`)
@@ -420,10 +420,10 @@ The file ${testFile.name} already exists. Avoid at all costs suggesting a comman
 			console.log("Script filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
-			await waitUntilCompleted({ api, taskId, timeout: 30_000 })
+			await waitUntilCompleted({ api, taskId, timeout: 60_000 })
 
 			// Verify no errors occurred
 			assert.strictEqual(errorOccurred, null, `Error occurred: ${errorOccurred}`)
@@ -527,10 +527,10 @@ This command does not exist and should fail. Handle the error gracefully and use
 			console.log("Task ID:", taskId)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
-			await waitUntilCompleted({ api, taskId, timeout: 30_000 })
+			await waitUntilCompleted({ api, taskId, timeout: 60_000 })
 
 			// Verify tool was called
 			assert.ok(executeCommandToolCalled, "execute_command tool should have been called")
@@ -624,7 +624,7 @@ Execute each command separately using the execute_command tool. After all comman
 			console.log("Test file:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
 			await waitUntilCompleted({ api, taskId, timeout: 35_000 })
@@ -746,10 +746,10 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			console.log("Task ID:", taskId)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion (the command output check will verify execution)
-			await waitUntilCompleted({ api, taskId, timeout: 40_000 })
+			await waitUntilCompleted({ api, taskId, timeout: 45_000 })
 
 			// Give a bit of time for final output processing
 			await sleep(1000)

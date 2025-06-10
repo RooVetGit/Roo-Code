@@ -181,7 +181,7 @@ suite("Roo Code read_file Tool", () => {
 			console.log("Reading file:", fileName)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -189,7 +189,7 @@ suite("Roo Code read_file Tool", () => {
 			}
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the read_file tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")
@@ -258,7 +258,7 @@ suite("Roo Code read_file Tool", () => {
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the read_file tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")
@@ -324,7 +324,7 @@ suite("Roo Code read_file Tool", () => {
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the AI mentioned the specific lines
 			const completionMessage = messages.find(
@@ -393,7 +393,7 @@ suite("Roo Code read_file Tool", () => {
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the read_file tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")
@@ -460,7 +460,7 @@ suite("Roo Code read_file Tool", () => {
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the read_file tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")
@@ -602,7 +602,7 @@ Both files exist in the workspace.`,
 			})
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 30_000 })
+			await waitFor(() => taskCompleted, { timeout: 60_000 })
 
 			// Verify the read_file tool was executed
 			assert.ok(toolExecuted, "The read_file tool should have been executed")

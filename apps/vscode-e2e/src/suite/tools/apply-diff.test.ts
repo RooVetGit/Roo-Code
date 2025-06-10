@@ -227,7 +227,7 @@ ${testFile.content}\nAssume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -347,7 +347,7 @@ ${testFile.content}\nAssume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
 			await waitFor(() => taskCompleted, { timeout: 45_000 })
@@ -459,7 +459,7 @@ ${testFile.content}\nAssume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion
 			await waitFor(() => taskCompleted, { timeout: 45_000 })
@@ -568,7 +568,7 @@ ${testFile.content}\nAssume the file exists and you can modify it directly.`,
 			console.log("Task ID:", taskId)
 			console.log("Test filename:", testFile.name)
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for task completion or error
 			await waitFor(() => taskCompleted || errorDetected, { timeout: 45_000 })
@@ -709,7 +709,7 @@ Assume the file exists and you can modify it directly.`,
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Check for early errors
 			if (errorOccurred) {

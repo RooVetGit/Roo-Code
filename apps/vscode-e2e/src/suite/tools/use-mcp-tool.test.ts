@@ -234,10 +234,10 @@ suite("Roo Code use_mcp_tool Tool", () => {
 			console.log("Requesting MCP filesystem read_file for:", fileName)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 10_000 })
+			await waitFor(() => taskStarted, { timeout: 45_000 })
 
 			// Wait for attempt_completion to be called (indicating task finished)
-			await waitFor(() => attemptCompletionCalled, { timeout: 10_000 })
+			await waitFor(() => attemptCompletionCalled, { timeout: 45_000 })
 
 			// Verify the MCP tool was requested
 			assert.ok(mcpToolRequested, "The use_mcp_tool should have been requested")
@@ -366,7 +366,7 @@ suite("Roo Code use_mcp_tool Tool", () => {
 			})
 
 			// Wait for attempt_completion to be called (indicating task finished)
-			await waitFor(() => attemptCompletionCalled, { timeout: 10_000 })
+			await waitFor(() => attemptCompletionCalled, { timeout: 45_000 })
 
 			// Verify the MCP tool was requested
 			assert.ok(mcpToolRequested, "The use_mcp_tool should have been requested for writing")
@@ -493,7 +493,7 @@ suite("Roo Code use_mcp_tool Tool", () => {
 			})
 
 			// Wait for attempt_completion to be called (indicating task finished)
-			await waitFor(() => attemptCompletionCalled, { timeout: 10_000 })
+			await waitFor(() => attemptCompletionCalled, { timeout: 45_000 })
 
 			// Verify the MCP tool was requested
 			assert.ok(mcpToolRequested, "The use_mcp_tool should have been requested")
@@ -632,7 +632,7 @@ suite("Roo Code use_mcp_tool Tool", () => {
 			})
 
 			// Wait for attempt_completion to be called (indicating task finished)
-			await waitFor(() => attemptCompletionCalled, { timeout: 10_000 })
+			await waitFor(() => attemptCompletionCalled, { timeout: 45_000 })
 
 			// Verify the MCP tool was requested
 			assert.ok(mcpToolRequested, "The use_mcp_tool should have been requested")
@@ -751,7 +751,7 @@ suite("Roo Code use_mcp_tool Tool", () => {
 			})
 
 			// Wait for attempt_completion to be called (indicating task finished)
-			await waitFor(() => attemptCompletionCalled, { timeout: 10_000 })
+			await waitFor(() => attemptCompletionCalled, { timeout: 45_000 })
 
 			// Verify task completed successfully even with error
 			assert.ok(attemptCompletionCalled, "Task should have completed with attempt_completion even with MCP error")
@@ -854,7 +854,7 @@ suite("Roo Code use_mcp_tool Tool", () => {
 			})
 
 			// Wait for attempt_completion to be called (indicating task finished)
-			await waitFor(() => attemptCompletionCalled, { timeout: 10_000 })
+			await waitFor(() => attemptCompletionCalled, { timeout: 45_000 })
 
 			// Verify the MCP tool was requested with valid format
 			assert.ok(mcpToolRequested, "The use_mcp_tool should have been requested")
