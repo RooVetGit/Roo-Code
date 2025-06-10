@@ -16,6 +16,7 @@ import McpView from "./components/mcp/McpView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 import { AccountView } from "./components/account/AccountView"
+import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "account"
 
@@ -111,6 +112,13 @@ const App = () => {
 
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
+
+	// Focus the WebView when non-interactive content is clicked
+	useAddNonInteractiveClickListener(
+		useCallback(() => {
+			vscode.postMessage({ type: "focusPanelRequest" })
+		}, []),
+	)
 
 	if (!didHydrateState) {
 		return null

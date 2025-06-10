@@ -148,6 +148,7 @@ export interface WebviewMessage {
 		| "clearIndexData"
 		| "indexingStatusUpdate"
 		| "indexCleared"
+		| "focusPanelRequest"
 		| "codebaseIndexConfig"
 	text?: string
 	disabled?: boolean
