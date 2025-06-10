@@ -70,6 +70,8 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
+				ollama: mockModels,
+				lmstudio: mockModels,
 			},
 		})
 	})
@@ -155,6 +157,8 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
+				ollama: mockModels,
+				lmstudio: mockModels,
 			},
 		})
 	})
@@ -175,6 +179,8 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
 			.mockResolvedValueOnce(mockModels) // glama
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
+			.mockRejectedValueOnce(new Error("Ollama connection failed")) // ollama
+			.mockRejectedValueOnce(new Error("LMStudio connection failed")) // lmstudio
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
 
 		await webviewMessageHandler(mockClineProvider, {
@@ -190,6 +196,8 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: {},
 				litellm: {},
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 
@@ -199,6 +207,20 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			success: false,
 			error: "Requesty API error",
 			values: { provider: "requesty" },
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "Ollama connection failed",
+			values: { provider: "ollama" },
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "LMStudio connection failed",
+			values: { provider: "lmstudio" },
 		})
 
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
