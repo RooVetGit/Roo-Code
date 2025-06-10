@@ -217,7 +217,7 @@ describe("OpenAiHandler", () => {
 			// Assert the mockCreate was called with max_tokens
 			expect(mockCreate).toHaveBeenCalled()
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs.max_tokens).toBe(4096)
+			expect(callArgs.max_completion_tokens).toBe(4096)
 		})
 
 		it("should not include max_tokens when includeMaxTokens is false", async () => {
@@ -238,7 +238,7 @@ describe("OpenAiHandler", () => {
 			// Assert the mockCreate was called without max_tokens
 			expect(mockCreate).toHaveBeenCalled()
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs.max_tokens).toBeUndefined()
+			expect(callArgs.max_completion_tokens).toBeUndefined()
 		})
 
 		it("should not include max_tokens when includeMaxTokens is undefined", async () => {
@@ -259,7 +259,7 @@ describe("OpenAiHandler", () => {
 			// Assert the mockCreate was called without max_tokens
 			expect(mockCreate).toHaveBeenCalled()
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs.max_tokens).toBeUndefined()
+			expect(callArgs.max_completion_tokens).toBeUndefined()
 		})
 
 		it("should use user-configured modelMaxTokens instead of model default maxTokens", async () => {
@@ -281,7 +281,7 @@ describe("OpenAiHandler", () => {
 			// Assert the mockCreate was called with user-configured modelMaxTokens (32000), not model default maxTokens (4096)
 			expect(mockCreate).toHaveBeenCalled()
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs.max_tokens).toBe(32000)
+			expect(callArgs.max_completion_tokens).toBe(32000)
 		})
 
 		it("should fallback to model default maxTokens when user modelMaxTokens is not set", async () => {
@@ -303,7 +303,7 @@ describe("OpenAiHandler", () => {
 			// Assert the mockCreate was called with model default maxTokens (4096) as fallback
 			expect(mockCreate).toHaveBeenCalled()
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs.max_tokens).toBe(4096)
+			expect(callArgs.max_completion_tokens).toBe(4096)
 		})
 	})
 
@@ -447,7 +447,7 @@ describe("OpenAiHandler", () => {
 
 			// Verify max_tokens is NOT included when includeMaxTokens is not set
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs).not.toHaveProperty("max_tokens")
+			expect(callArgs).not.toHaveProperty("max_completion_tokens")
 		})
 
 		it("should handle non-streaming responses with Azure AI Inference Service", async () => {
@@ -493,7 +493,7 @@ describe("OpenAiHandler", () => {
 
 			// Verify max_tokens is NOT included when includeMaxTokens is not set
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs).not.toHaveProperty("max_tokens")
+			expect(callArgs).not.toHaveProperty("max_completion_tokens")
 		})
 
 		it("should handle completePrompt with Azure AI Inference Service", async () => {
@@ -510,7 +510,7 @@ describe("OpenAiHandler", () => {
 
 			// Verify max_tokens is NOT included when includeMaxTokens is not set
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs).not.toHaveProperty("max_tokens")
+			expect(callArgs).not.toHaveProperty("max_completion_tokens")
 		})
 	})
 
@@ -566,7 +566,7 @@ describe("OpenAiHandler", () => {
 			},
 		}
 
-		it("should handle O3 model with streaming and include max_tokens when includeMaxTokens is true", async () => {
+		it("should handle O3 model with streaming and NOT include max_tokens even when includeMaxTokens is true", async () => {
 			const o3Handler = new OpenAiHandler({
 				...o3Options,
 				includeMaxTokens: true,
@@ -601,7 +601,7 @@ describe("OpenAiHandler", () => {
 					stream_options: { include_usage: true },
 					reasoning_effort: "medium",
 					temperature: 0.5,
-					max_tokens: 32000,
+					// O3 models do not support max_tokens
 				}),
 				{},
 			)
@@ -647,10 +647,10 @@ describe("OpenAiHandler", () => {
 
 			// Verify max_tokens is NOT included
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs).not.toHaveProperty("max_tokens")
+			expect(callArgs).not.toHaveProperty("max_completion_tokens")
 		})
 
-		it("should handle O3 model non-streaming with max_tokens and reasoning_effort", async () => {
+		it("should handle O3 model non-streaming with reasoning_effort but NO max_tokens", async () => {
 			const o3Handler = new OpenAiHandler({
 				...o3Options,
 				openAiStreamingEnabled: false,
@@ -683,7 +683,7 @@ describe("OpenAiHandler", () => {
 					],
 					reasoning_effort: "medium",
 					temperature: 0.3,
-					max_tokens: 65536, // Falls back to model default
+					// O3 models do not support max_tokens
 				}),
 				{},
 			)
@@ -743,10 +743,10 @@ describe("OpenAiHandler", () => {
 
 			// Verify max_tokens is NOT included when includeMaxTokens is false
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs).not.toHaveProperty("max_tokens")
+			expect(callArgs).not.toHaveProperty("max_completion_tokens")
 		})
 
-		it("should include max_tokens for O3 model with Azure AI Inference Service when includeMaxTokens is true", async () => {
+		it("should NOT include max_tokens for O3 model with Azure AI Inference Service even when includeMaxTokens is true", async () => {
 			const o3AzureHandler = new OpenAiHandler({
 				...o3Options,
 				openAiBaseUrl: "https://test.services.ai.azure.com",
@@ -766,7 +766,7 @@ describe("OpenAiHandler", () => {
 			expect(mockCreate).toHaveBeenCalledWith(
 				expect.objectContaining({
 					model: "o3-mini",
-					max_tokens: 65536, // Included when includeMaxTokens is true
+					// O3 models do not support max_tokens
 				}),
 				{ path: "/models/chat/completions" },
 			)

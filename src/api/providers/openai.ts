@@ -159,7 +159,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo, isAzureAiInference)
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
@@ -221,7 +221,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo, isAzureAiInference)
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -266,7 +266,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo, isAzureAiInference)
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -309,8 +309,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				temperature: this.options.modelTemperature ?? 0,
 			}
 
-			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo, methodIsAzureAiInference)
+			// O3 family models do not support max_tokens parameter
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
@@ -332,8 +331,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				temperature: this.options.modelTemperature ?? 0,
 			}
 
-			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo, methodIsAzureAiInference)
+			// O3 family models do not support max_tokens parameter
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -387,19 +385,21 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	/**
-	 * Adds max_tokens to the request body if needed based on provider configuration
+	 * Adds max_completion_tokens to the request body if needed based on provider configuration
+	 * Note: max_tokens is deprecated in favor of max_completion_tokens as per OpenAI documentation
+	 * O3 family models handle max_tokens separately in handleO3FamilyMessage
 	 */
 	private addMaxTokensIfNeeded(
 		requestOptions:
 			| OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
 			| OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
 		modelInfo: ModelInfo,
-		isAzureAiInference: boolean,
 	): void {
-		// Only add max_tokens if includeMaxTokens is true
+		// Only add max_completion_tokens if includeMaxTokens is true
 		if (this.options.includeMaxTokens === true) {
 			// Use user-configured modelMaxTokens if available, otherwise fall back to model's default maxTokens
-			requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+			// Using max_completion_tokens as max_tokens is deprecated
+			;(requestOptions as any).max_completion_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 		}
 	}
 }
