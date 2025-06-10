@@ -171,17 +171,14 @@ export function findModeBySlug(slug: string, modes: readonly ModeConfig[] | unde
  * If neither is found, the default mode is used.
  */
 export function getModeSelection(mode: string, promptComponent?: PromptComponent, customModes?: ModeConfig[]) {
-	const customMode = findModeBySlug(mode, customModes)
-	const builtInMode = findModeBySlug(mode, modes)
-
-	const modeToUse = customMode || promptComponent || builtInMode
-
-	const roleDefinition = modeToUse?.roleDefinition || ""
-	const baseInstructions = modeToUse?.customInstructions || ""
+	const modeToUse =
+		findModeBySlug(mode, customModes) ||
+		(promptComponent?.roleDefinition ? promptComponent : undefined) ||
+		findModeBySlug(mode, modes)
 
 	return {
-		roleDefinition,
-		baseInstructions,
+		roleDefinition: modeToUse?.roleDefinition || "",
+		baseInstructions: modeToUse?.customInstructions || "",
 	}
 }
 
