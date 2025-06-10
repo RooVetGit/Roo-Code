@@ -1,4 +1,4 @@
-name: Evals Quick Test
+name: Evals
 
 on:
     pull_request:
@@ -13,10 +13,9 @@ env:
     COMPOSE_DOCKER_CLI_BUILD: 1
 
 jobs:
-    test-docker-compose:
-        name: Test Docker Compose Networking
+    evals:
         runs-on: ubuntu-latest
-        timeout-minutes: 15
+        timeout-minutes: 30
 
         steps:
             - name: Checkout repository
@@ -25,16 +24,14 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
-            - name: Create test environment
+            - name: Create environment
               run: |
                   cd packages/evals
 
-                  # Create .env.local (required for Docker build)
                   cat > .env.local << EOF
                   OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY || 'test-key-for-build' }}
                   EOF
 
-                  # Create development environment
                   cat > .env.development << EOF
                   NODE_ENV=development
                   DATABASE_URL=postgresql://postgres:password@db:5432/evals_development
@@ -42,7 +39,7 @@ jobs:
                   HOST_EXECUTION_METHOD=docker
                   EOF
 
-            - name: Build images with cache
+            - name: Build web image
               uses: docker/build-push-action@v5
               with:
                   context: .
@@ -53,7 +50,7 @@ jobs:
                   push: false
                   load: true
 
-            - name: Build runner image with cache
+            - name: Build runner image
               uses: docker/build-push-action@v5
               with:
                   context: .
@@ -64,18 +61,18 @@ jobs:
                   push: false
                   load: true
 
-            - name: Tag images for docker-compose
+            - name: Tag images
               run: |
                   cd packages/evals
                   docker tag evals-web:latest evals-web
                   docker tag evals-runner:latest evals-runner
 
-            - name: Start server services
+            - name: Start containers
               run: |
                   cd packages/evals
                   docker compose --profile server up -d
 
-            - name: Test service connectivity
+            - name: Wait for containers
               run: |
                   cd packages/evals
 
@@ -86,14 +83,12 @@ jobs:
                   echo "Waiting for Redis..."
                   timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
 
-                  # Test inter-container networking
                   echo "Testing database connection from web container..."
                   docker compose exec -T web sh -c 'nc -z db 5432 && echo "✓ Database connection successful"'
 
                   echo "Testing Redis connection from web container..."
                   docker compose exec -T web sh -c 'nc -z redis 6379 && echo "✓ Redis connection successful"'
 
-                  # Test that web service can start (basic health check)
                   echo "Testing web service startup..."
                   timeout 30 bash -c 'until curl -f http://localhost:3000 2>/dev/null || curl -f http://localhost:3000/health 2>/dev/null; do sleep 2; done' || echo "Web service may not have health endpoint, continuing..."
 
@@ -106,7 +101,7 @@ jobs:
                   docker compose run --rm runner sh -c 'nc -z redis 6379 && echo "✓ Runner -> Redis connection successful"'
                   docker compose run --rm runner sh -c 'nc -z web 3000 && echo "✓ Runner -> Web service connection successful"'
 
-            - name: Verify Docker socket access
+            - name: Test Docker socket access
               run: |
                   cd packages/evals
 
@@ -129,7 +124,7 @@ jobs:
                   docker compose exec -T db sh -c 'echo "Database container hostname: $(hostname)"'
                   docker compose exec -T redis sh -c 'echo "Redis container hostname: $(hostname)"'
 
-            - name: Run sample evaluation
+            - name: Run evals
               run: |
                   cd packages/evals
                   docker compose run --rm runner pnpm --filter @roo-code/evals cli --ci
