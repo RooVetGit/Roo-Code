@@ -57,11 +57,7 @@ jobs:
             - name: Start containers
               run: |
                   cd packages/evals
-                  docker compose --profile server up -d
-
-            - name: Wait for containers
-              run: |
-                  cd packages/evals
+                  docker compose up -d db redis
                   timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
                   timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
                   docker compose exec -T web sh -c 'nc -z db 5432 && echo "✓ Database connection successful"'
