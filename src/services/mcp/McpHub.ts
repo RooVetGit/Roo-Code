@@ -32,6 +32,7 @@ import {
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
 import { injectEnv } from "../../utils/config"
+import { createOutputChannelLogger, type LogFunction } from "../../utils/outputChannelLogger"
 
 export type McpConnection = {
 	server: McpServer
@@ -132,9 +133,27 @@ export class McpHub {
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
 	private refCount: number = 0 // Reference counter for active clients
+	private log: LogFunction
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
+		// Initialize logging using the provider's log method
+		this.log = (...args: unknown[]) => {
+			const provider = this.providerRef.deref()
+			if (provider) {
+				provider.log(
+					args
+						.map((arg) =>
+							typeof arg === "string"
+								? arg
+								: arg instanceof Error
+									? `${arg.message}\n${arg.stack || ""}`
+									: JSON.stringify(arg),
+						)
+						.join(" "),
+				)
+			}
+		}
 		this.watchMcpSettingsFile()
 		this.watchProjectMcpFile()
 		this.setupWorkspaceFoldersWatcher()
@@ -147,7 +166,7 @@ export class McpHub {
 	 */
 	public registerClient(): void {
 		this.refCount++
-		console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
+		this.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
 	}
 
 	/**
@@ -156,9 +175,9 @@ export class McpHub {
 	 */
 	public async unregisterClient(): Promise<void> {
 		this.refCount--
-		console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
+		this.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
 		if (this.refCount <= 0) {
-			console.log("McpHub: Last client unregistered. Disposing hub.")
+			this.log("McpHub: Last client unregistered. Disposing hub.")
 			await this.dispose()
 		}
 	}
@@ -236,6 +255,7 @@ export class McpHub {
 	 * @param error The error object
 	 */
 	private showErrorMessage(message: string, error: unknown): void {
+		this.log(`${message}: ${error instanceof Error ? error.message : String(error)}`)
 		console.error(`${message}:`, error)
 	}
 
@@ -299,7 +319,7 @@ export class McpHub {
 				config = JSON.parse(content)
 			} catch (parseError) {
 				const errorMessage = t("common:errors.invalid_mcp_settings_syntax")
-				console.error(errorMessage, parseError)
+				this.log(`${errorMessage}: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
 				vscode.window.showErrorMessage(errorMessage)
 				return
 			}
@@ -313,7 +333,7 @@ export class McpHub {
 				const errorMessages = result.error.errors
 					.map((err) => `${err.path.join(".")}: ${err.message}`)
 					.join("\n")
-				console.error("Invalid project MCP settings format:", errorMessages)
+				this.log(`Invalid project MCP settings format: ${errorMessages}`)
 				vscode.window.showErrorMessage(t("common:errors.invalid_mcp_settings_validation", { errorMessages }))
 			}
 		} catch (error) {
@@ -403,7 +423,7 @@ export class McpHub {
 				const errorMessages = result.error.errors
 					.map((err) => `${err.path.join(".")}: ${err.message}`)
 					.join("\n")
-				console.error(`Invalid ${source} MCP settings format:`, errorMessages)
+				this.log(`Invalid ${source} MCP settings format: ${errorMessages}`)
 				vscode.window.showErrorMessage(t("common:errors.invalid_mcp_settings_validation", { errorMessages }))
 
 				if (source === "global") {
@@ -418,7 +438,7 @@ export class McpHub {
 		} catch (error) {
 			if (error instanceof SyntaxError) {
 				const errorMessage = t("common:errors.invalid_mcp_settings_syntax")
-				console.error(errorMessage, error)
+				this.log(`${errorMessage}: ${error instanceof Error ? error.message : String(error)}`)
 				vscode.window.showErrorMessage(errorMessage)
 			} else {
 				this.showErrorMessage(`Failed to initialize ${source} MCP servers`, error)
@@ -492,7 +512,9 @@ export class McpHub {
 
 					// Set up stdio specific error handling
 					transport.onerror = async (error) => {
-						console.error(`Transport error for "${name}":`, error)
+						this.log(
+							`Transport error for "${name}": ${error instanceof Error ? error.message : String(error)}`,
+						)
 						const connection = this.findConnection(name, source)
 						if (connection) {
 							connection.server.status = "disconnected"
@@ -521,10 +543,10 @@ export class McpHub {
 
 							if (isInfoLog) {
 								// Log normal informational messages
-								console.log(`Server "${name}" info:`, output)
+								this.log(`Server "${name}" info: ${output}`)
 							} else {
 								// Treat as error log
-								console.error(`Server "${name}" stderr:`, output)
+								this.log(`Server "${name}" stderr: ${output}`)
 								const connection = this.findConnection(name, source)
 								if (connection) {
 									this.appendErrorMessage(connection, output)
@@ -535,27 +557,36 @@ export class McpHub {
 							}
 						})
 					} else {
-						console.error(`No stderr stream for ${name}`)
+						this.log(`No stderr stream for ${name}`)
 					}
 					break
 				}
 				case "streamable-http":
 				case "sse": {
 					// For both sse and streamable-http, we try streamable-http first and fallback to sse.
+					let transportCreated = false
+					let lastError: Error | null = null
+					let createdTransport: StreamableHTTPClientTransport | SSEClientTransport | null = null
+
+					// First, try StreamableHTTP
 					try {
-						transport = new StreamableHTTPClientTransport(new URL(configInjected.url), {
+						createdTransport = new StreamableHTTPClientTransport(new URL(configInjected.url), {
 							requestInit: {
 								headers: configInjected.headers,
 							},
 						})
-						// We don't await client.connect here because it will be called later.
-						// This is just to see if the transport can be created.
-						console.log(`Attempting to connect to "${name}" using Streamable HTTP transport.`)
+						this.log(`Attempting to connect to "${name}" using Streamable HTTP transport.`)
+						transportCreated = true
 					} catch (streamableError) {
-						if (configInjected.type === "sse") {
-							console.warn(
-								`Streamable HTTP connection failed for "${name}", falling back to SSE transport. Error: ${streamableError}`,
-							)
+						lastError =
+							streamableError instanceof Error ? streamableError : new Error(String(streamableError))
+						this.log(`Failed to create StreamableHTTP transport for "${name}": ${lastError.message}`)
+					}
+
+					// If StreamableHTTP transport creation failed and this is an SSE type, try SSE
+					if (!transportCreated && configInjected.type === "sse") {
+						try {
+							this.log(`Falling back to SSE transport for "${name}"`)
 							const sseOptions = {
 								requestInit: {
 									headers: configInjected.headers,
@@ -576,20 +607,30 @@ export class McpHub {
 								},
 							}
 							global.EventSource = ReconnectingEventSource
-							transport = new SSEClientTransport(new URL(configInjected.url), {
+							createdTransport = new SSEClientTransport(new URL(configInjected.url), {
 								...sseOptions,
 								eventSourceInit: reconnectingEventSourceOptions,
 							})
-							console.log(`Falling back to "${name}" using SSE transport.`)
-						} else {
-							// If it was explicitly streamable-http and failed, re-throw the error
-							throw streamableError
+							transportCreated = true
+						} catch (sseError) {
+							lastError = sseError instanceof Error ? sseError : new Error(String(sseError))
+							this.log(`Failed to create SSE transport for "${name}": ${lastError.message}`)
 						}
 					}
 
+					// If transport creation failed entirely, throw the last error
+					if (!transportCreated || !createdTransport) {
+						throw lastError || new Error("Failed to create transport")
+					}
+
+					// Assign the successfully created transport
+					transport = createdTransport
+
 					// Set up common error and close handling for both SSE and Streamable HTTP
 					transport.onerror = async (error) => {
-						console.error(`Transport error for "${name}":`, error)
+						this.log(
+							`Transport error for "${name}": ${error instanceof Error ? error.message : String(error)}`,
+						)
 						const connection = this.findConnection(name, source)
 						if (connection) {
 							connection.server.status = "disconnected"
@@ -620,11 +661,12 @@ export class McpHub {
 				transport.start = async () => {}
 			}
 
+			// Create connection object with connecting status
 			const connection: McpConnection = {
 				server: {
 					name,
 					config: JSON.stringify(configInjected),
-					status: "connected", // Set to connected here as connect() is awaited above
+					status: "connecting", // Set to connecting until connection is established
 					disabled: configInjected.disabled,
 					source,
 					projectPath: source === "project" ? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath : undefined,
@@ -635,13 +677,116 @@ export class McpHub {
 			}
 			this.connections.push(connection)
 
-			connection.server.error = ""
-			connection.server.instructions = client.getInstructions()
+			// Now actually establish the connection
+			try {
+				this.log(`Establishing connection to "${name}"...`)
+				await client.connect(transport)
+				this.log(`Successfully connected to "${name}"`)
 
-			// Initial fetch of tools and resources
-			connection.server.tools = await this.fetchToolsList(name, source)
-			connection.server.resources = await this.fetchResourcesList(name, source)
-			connection.server.resourceTemplates = await this.fetchResourceTemplatesList(name, source)
+				// Only mark as connected after successful connection
+				connection.server.status = "connected"
+				connection.server.error = ""
+				connection.server.instructions = client.getInstructions()
+
+				// Initial fetch of tools and resources
+				connection.server.tools = await this.fetchToolsList(name, source)
+				connection.server.resources = await this.fetchResourcesList(name, source)
+				connection.server.resourceTemplates = await this.fetchResourceTemplatesList(name, source)
+			} catch (connectionError) {
+				const connectionErrorMessage =
+					connectionError instanceof Error ? connectionError.message : String(connectionError)
+				this.log(`Connection failed for "${name}": ${connectionErrorMessage}`)
+
+				// If this is an SSE-type server and connection failed, try fallback to SSE
+				if (configInjected.type === "sse" && transport instanceof StreamableHTTPClientTransport) {
+					this.log(`Attempting SSE fallback for "${name}" after connection failure`)
+
+					try {
+						// Close the failed StreamableHTTP transport
+						await transport.close()
+
+						// Create SSE transport
+						const sseOptions = {
+							requestInit: {
+								headers: configInjected.headers,
+							},
+						}
+						const reconnectingEventSourceOptions = {
+							max_retry_time: 5000,
+							withCredentials: configInjected.headers?.["Authorization"] ? true : false,
+							fetch: (url: string | URL, init: RequestInit) => {
+								const headers = new Headers({
+									...(init?.headers || {}),
+									...(configInjected.headers || {}),
+								})
+								return fetch(url, {
+									...init,
+									headers,
+								})
+							},
+						}
+						global.EventSource = ReconnectingEventSource
+						const sseTransport = new SSEClientTransport(new URL(configInjected.url), {
+							...sseOptions,
+							eventSourceInit: reconnectingEventSourceOptions,
+						})
+
+						// Set up error and close handlers for SSE transport
+						sseTransport.onerror = async (error) => {
+							this.log(
+								`SSE Transport error for "${name}": ${error instanceof Error ? error.message : String(error)}`,
+							)
+							const conn = this.findConnection(name, source)
+							if (conn) {
+								conn.server.status = "disconnected"
+								this.appendErrorMessage(conn, error instanceof Error ? error.message : `${error}`)
+							}
+							await this.notifyWebviewOfServerChanges()
+						}
+
+						sseTransport.onclose = async () => {
+							const conn = this.findConnection(name, source)
+							if (conn) {
+								conn.server.status = "disconnected"
+							}
+							await this.notifyWebviewOfServerChanges()
+						}
+
+						// Update connection with new transport
+						connection.transport = sseTransport
+
+						// Try to connect with SSE transport
+						await client.connect(sseTransport)
+						this.log(`Successfully connected to "${name}" using SSE fallback`)
+
+						// Mark as connected after successful SSE connection
+						connection.server.status = "connected"
+						connection.server.error = ""
+						connection.server.instructions = client.getInstructions()
+
+						// Initial fetch of tools and resources
+						connection.server.tools = await this.fetchToolsList(name, source)
+						connection.server.resources = await this.fetchResourcesList(name, source)
+						connection.server.resourceTemplates = await this.fetchResourceTemplatesList(name, source)
+					} catch (sseError) {
+						const sseErrorMessage = sseError instanceof Error ? sseError.message : String(sseError)
+						this.log(`SSE fallback also failed for "${name}": ${sseErrorMessage}`)
+
+						// Mark connection as failed
+						connection.server.status = "disconnected"
+						this.appendErrorMessage(
+							connection,
+							`Connection failed: ${connectionErrorMessage}. SSE fallback failed: ${sseErrorMessage}`,
+						)
+						throw connectionError // Re-throw the original error
+					}
+				} else {
+					// Mark connection as failed
+					connection.server.status = "disconnected"
+					this.appendErrorMessage(connection, connectionErrorMessage)
+					throw connectionError
+				}
+			}
 		} catch (error) {
 			// Update status with error
 			const connection = this.findConnection(name, source)
@@ -740,7 +885,9 @@ export class McpHub {
 					alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
 				}
 			} catch (error) {
-				console.error(`Failed to read alwaysAllow config for ${serverName}:`, error)
+				this.log(
+					`Failed to read alwaysAllow config for ${serverName}: ${error instanceof Error ? error.message : String(error)}`,
+				)
 				// Continue with empty alwaysAllowConfig
 			}
 
@@ -752,7 +899,9 @@ export class McpHub {
 
 			return tools
 		} catch (error) {
-			console.error(`Failed to fetch tools for ${serverName}:`, error)
+			this.log(
+				`Failed to fetch tools for ${serverName}: ${error instanceof Error ? error.message : String(error)}`,
+			)
 			return []
 		}
 	}
@@ -802,7 +951,9 @@ export class McpHub {
 				await connection.transport.close()
 				await connection.client.close()
 			} catch (error) {
-				console.error(`Failed to close transport for ${name}:`, error)
+				this.log(
+					`Failed to close transport for ${name}: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 
@@ -899,7 +1050,9 @@ export class McpHub {
 						// Pass the source from the config to restartConnection
 						await this.restartConnection(name, source)
 					} catch (error) {
-						console.error(`Failed to restart server ${name} after change in ${changedPath}:`, error)
+						this.log(
+							`Failed to restart server ${name} after change in ${changedPath}: ${error instanceof Error ? error.message : String(error)}`,
+						)
 					}
 				})
 
@@ -921,7 +1074,9 @@ export class McpHub {
 						// Pass the source from the config to restartConnection
 						await this.restartConnection(name, source)
 					} catch (error) {
-						console.error(`Failed to restart server ${name} after change in ${filePath}:`, error)
+						this.log(
+							`Failed to restart server ${name} after change in ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+						)
 					}
 				})
 
@@ -1058,7 +1213,9 @@ export class McpHub {
 						)
 					}
 				} catch (error) {
-					console.error(`Failed to refresh capabilities for ${serverName}:`, error)
+					this.log(
+						`Failed to refresh capabilities for ${serverName}: ${error instanceof Error ? error.message : String(error)}`,
+					)
 				}
 			}
 
@@ -1096,7 +1253,7 @@ export class McpHub {
 		try {
 			await fs.access(configPath)
 		} catch (error) {
-			console.error("Settings file not accessible:", error)
+			this.log(`Settings file not accessible: ${error instanceof Error ? error.message : String(error)}`)
 			throw new Error("Settings file not accessible")
 		}
 
@@ -1268,7 +1425,9 @@ export class McpHub {
 			const parsedConfig = ServerConfigSchema.parse(JSON.parse(connection.server.config))
 			timeout = (parsedConfig.timeout ?? 60) * 1000
 		} catch (error) {
-			console.error("Failed to parse server config for timeout:", error)
+			this.log(
+				`Failed to parse server config for timeout: ${error instanceof Error ? error.message : String(error)}`,
+			)
 			// Default to 60 seconds if parsing fails
 			timeout = 60 * 1000
 		}
@@ -1372,17 +1531,19 @@ export class McpHub {
 	async dispose(): Promise<void> {
 		// Prevent multiple disposals
 		if (this.isDisposed) {
-			console.log("McpHub: Already disposed.")
+			this.log("McpHub: Already disposed.")
 			return
 		}
-		console.log("McpHub: Disposing...")
+		this.log("McpHub: Disposing...")
 		this.isDisposed = true
 		this.removeAllFileWatchers()
 		for (const connection of this.connections) {
 			try {
 				await this.deleteConnection(connection.server.name, connection.server.source)
 			} catch (error) {
-				console.error(`Failed to close connection for ${connection.server.name}:`, error)
+				this.log(
+					`Failed to close connection for ${connection.server.name}: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 		this.connections = []
