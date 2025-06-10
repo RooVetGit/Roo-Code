@@ -191,6 +191,8 @@ echo "Script completed"`,
 				},
 				text: `Use the execute_command tool to run this command: echo "Hello from test" > ${testFile.name}
 
+The file ${testFile.name} will be created in the current workspace directory. Assume you can execute this command directly.
+
 Then use the attempt_completion tool to complete the task. Do not suggest any commands in the attempt_completion.`,
 			})
 
@@ -295,6 +297,8 @@ Then use the attempt_completion tool to complete the task. Do not suggest any co
 				text: `Use the execute_command tool with these exact parameters:
 - command: echo "Test in subdirectory" > output.txt
 - cwd: ${subDir}
+
+The subdirectory ${subDir} exists in the workspace. Assume you can execute this command directly with the specified working directory.
 
 Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			})
@@ -413,7 +417,9 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 				},
 				text: `Use the execute_command tool to run: ${command}
 
-The file ${testFile.name} already exists. Avoid at all costs suggesting a command when using the attempt_completion tool`,
+The file ${testFile.name} already exists in the current workspace directory and contains a bash script. Assume you can execute this command directly.
+
+Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			})
 
 			console.log("Task ID:", taskId)
@@ -521,7 +527,7 @@ The file ${testFile.name} already exists. Avoid at all costs suggesting a comman
 				},
 				text: `Use the execute_command tool to run: nonexistentcommand12345
 
-This command does not exist and should fail. Handle the error gracefully and use attempt_completion to complete the task.`,
+This command does not exist and should fail. Assume you can execute this command directly - it will result in an error. Handle the error gracefully and use attempt_completion to complete the task.`,
 			})
 
 			console.log("Task ID:", taskId)
@@ -616,6 +622,8 @@ This command does not exist and should fail. Handle the error gracefully and use
 1. echo "First command" > ${testFile.name}
 2. echo "Second command" >> ${testFile.name}
 3. echo "Third command" >> ${testFile.name}
+
+The file ${testFile.name} will be created in the current workspace directory. Assume you can execute these commands directly.
 
 Execute each command separately using the execute_command tool. After all commands are executed, use the attempt_completion tool to complete the task. Do not suggest any commands in the attempt_completion.`,
 			})
@@ -739,6 +747,8 @@ Execute each command separately using the execute_command tool. After all comman
 					allowedCommands: ["*"],
 				},
 				text: `Use the execute_command tool to run: ${sleepCommand} && echo "Command completed after delay"
+
+Assume you can execute this command directly in the current workspace directory.
 
 Avoid at all costs suggesting a command when using the attempt_completion tool`,
 			})
