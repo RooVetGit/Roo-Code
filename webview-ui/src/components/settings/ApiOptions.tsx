@@ -251,65 +251,43 @@ const ApiOptions = ({
 				}
 			}
 
-			switch (value) {
-				case "openrouter":
-					validateAndResetModel(
-						apiConfiguration.openRouterModelId,
-						"openRouterModelId",
-						openRouterDefaultModelId,
-					)
-					break
-				case "glama":
-					validateAndResetModel(apiConfiguration.glamaModelId, "glamaModelId", glamaDefaultModelId)
-					break
-				case "unbound":
-					validateAndResetModel(apiConfiguration.unboundModelId, "unboundModelId", unboundDefaultModelId)
-					break
-				case "requesty":
-					validateAndResetModel(apiConfiguration.requestyModelId, "requestyModelId", requestyDefaultModelId)
-					break
-				case "litellm":
-					validateAndResetModel(apiConfiguration.litellmModelId, "litellmModelId", litellmDefaultModelId)
-					break
-				case "anthropic":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", anthropicDefaultModelId)
-					break
-				case "openai-native":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", openAiNativeDefaultModelId)
-					break
-				case "gemini":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", geminiDefaultModelId)
-					break
-				case "deepseek":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", deepSeekDefaultModelId)
-					break
-				case "mistral":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", mistralDefaultModelId)
-					break
-				case "xai":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", xaiDefaultModelId)
-					break
-				case "groq":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", groqDefaultModelId)
-					break
-				case "chutes":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", chutesDefaultModelId)
-					break
-				case "bedrock":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", bedrockDefaultModelId)
-					break
-				case "vertex":
-					validateAndResetModel(apiConfiguration.apiModelId, "apiModelId", vertexDefaultModelId)
-					break
-				case "openai":
-					validateAndResetModel(apiConfiguration.openAiModelId, "openAiModelId")
-					break
-				case "ollama":
-					validateAndResetModel(apiConfiguration.ollamaModelId, "ollamaModelId")
-					break
-				case "lmstudio":
-					validateAndResetModel(apiConfiguration.lmStudioModelId, "lmStudioModelId")
-					break
+			// Define a mapping object that associates each provider with its model configuration
+			const PROVIDER_MODEL_CONFIG: Partial<
+				Record<
+					ProviderName,
+					{
+						field: keyof ProviderSettings
+						default?: string
+					}
+				>
+			> = {
+				openrouter: { field: "openRouterModelId", default: openRouterDefaultModelId },
+				glama: { field: "glamaModelId", default: glamaDefaultModelId },
+				unbound: { field: "unboundModelId", default: unboundDefaultModelId },
+				requesty: { field: "requestyModelId", default: requestyDefaultModelId },
+				litellm: { field: "litellmModelId", default: litellmDefaultModelId },
+				anthropic: { field: "apiModelId", default: anthropicDefaultModelId },
+				"openai-native": { field: "apiModelId", default: openAiNativeDefaultModelId },
+				gemini: { field: "apiModelId", default: geminiDefaultModelId },
+				deepseek: { field: "apiModelId", default: deepSeekDefaultModelId },
+				mistral: { field: "apiModelId", default: mistralDefaultModelId },
+				xai: { field: "apiModelId", default: xaiDefaultModelId },
+				groq: { field: "apiModelId", default: groqDefaultModelId },
+				chutes: { field: "apiModelId", default: chutesDefaultModelId },
+				bedrock: { field: "apiModelId", default: bedrockDefaultModelId },
+				vertex: { field: "apiModelId", default: vertexDefaultModelId },
+				openai: { field: "openAiModelId" },
+				ollama: { field: "ollamaModelId" },
+				lmstudio: { field: "lmStudioModelId" },
+			}
+
+			const config = PROVIDER_MODEL_CONFIG[value]
+			if (config) {
+				validateAndResetModel(
+					apiConfiguration[config.field] as string | undefined,
+					config.field,
+					config.default,
+				)
 			}
 		},
 		[setApiConfigurationField, apiConfiguration, organizationAllowList],
