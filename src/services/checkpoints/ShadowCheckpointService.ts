@@ -25,15 +25,13 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	protected readonly dotGitDir: string
 	protected git?: SimpleGit
 	protected readonly log: (message: string) => void
-	// --- ADDITION: Static logger for static methods ---
+	// Static logger for static methods
 	protected static log: (message: string) => void = console.log
 
-	// --- CHANGE START: Add cache for nested git repo paths ---
-	// --- ADDITION: GC related properties ---
+	// GC related properties
 	private gcCounter: number = 0
 	private readonly GC_CHECKPOINT_THRESHOLD: number = Number(process.env.GC_CHECKPOINT_THRESHOLD) || 20 // Run gc every 20 checkpoints
 	private _nestedGitDirPaths: string[] | null = null // Cache for relative paths like "submodule/.git"
-	// --- CHANGE END: Add cache for nested git repo paths ---
 	protected shadowGitConfigWorktree?: string
 
 	public get baseHash() {
@@ -97,19 +95,10 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 			// --- STAGE 1: Run GC on init for existing repo ---
 			this.log(`[${this.constructor.name}#initShadowGit] Existing shadow repo found. Running garbage collection.`)
-			try {
-				const gcStartTime = Date.now()
-				// Use the more thorough repack command
-				this.log(`[${this.constructor.name}#initShadowGit] Running git repack -adf --path-walk --quiet...`)
-				await git.raw(["repack", "-a", "-d", "-f", "--path-walk", "--quiet"])
-				this.log(
-					`[${this.constructor.name}#initShadowGit] Repository repack completed in ${Date.now() - gcStartTime}ms.`,
-				)
-			} catch (gcError) {
-				this.log(
-					`[${this.constructor.name}#initShadowGit] Repository repack failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
-				)
-			}
+			const gcStartTime = Date.now()
+
+			const isWindows = process.platform === 'win32'
+			await this.tryRepack(git, isWindows, gcStartTime)
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
@@ -134,10 +123,9 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 		await onInit?.()
 
-		// --- CHANGE START: Warm up the nested git paths cache ---
+		// Warm up the nested git paths cache
 		// This ensures the potentially slow scan happens once during initialization.
 		await this.findAndCacheNestedGitRepoPaths()
-		// --- CHANGE END: Warm up the nested git paths cache ---
 
 		this.emit("initialize", {
 			type: "initialize",
@@ -161,7 +149,33 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		await fs.writeFile(path.join(this.dotGitDir, "info", "exclude"), patterns.join("\n"))
 	}
 
-	// --- CHANGE START: New method to find and cache nested .git directory paths ---
+	private async tryRepack(git: SimpleGit, isWindows: boolean, gcStartTime: number) {
+		// Define commands to try based on platform
+		const commands = isWindows
+			? [
+				 // Try the more thorough repack command on Git 2.49.0 for Windows
+				{ args: ["repack", "-a", "-d", "-f", "--path-walk", "--quiet"], desc: "advanced repack with --path-walk" },
+				{ args: ["repack", "-a", "-d", "-f", "--window=250", "--quiet"], desc: "repack with --window=250" }
+			]
+			: [
+				{ args: ["repack", "-a", "-d", "-f", "--window=250", "--quiet"], desc: "repack with --window=250" }
+			]
+
+		// Try each command until one succeeds
+		for (const command of commands) {
+			try {
+				this.log(`[${this.constructor.name}#initShadowGit] Running ${command.desc}...`)
+				await git.raw(command.args)
+				this.log(`[${this.constructor.name}#initShadowGit] Repository repack completed in ${Date.now() - gcStartTime}ms.`)
+				return // Success - exit early
+			} catch (error) {
+				this.log(`[${this.constructor.name}#initShadowGit] ${command.desc} failed: ${error instanceof Error ? error.message : String(error)}`)
+			}
+		}
+
+		this.log(`[${this.constructor.name}#initShadowGit] Repository repack failed, continuing without optimization.`)
+	}
+
 	// This method scans for nested .git directories once and caches their paths
 	// to avoid repeated expensive scans by ripgrep.
 	private async findAndCacheNestedGitRepoPaths(): Promise<string[]> {
@@ -195,9 +209,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 		return this._nestedGitDirPaths
 	}
-	// --- CHANGE END: New method to find and cache nested .git directory paths ---
 
-	// --- CHANGE START: Modify stageAll to be more performant ---
 	// Instead of `git add .`, this uses `git status` to find specific changes
 	// and then `git add <files>` and `git rm <files>`.
 	private async stageAll(git: SimpleGit) {
@@ -255,10 +267,10 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await this.renameNestedGitRepos(false)
 		}
 	}
+
 	// Since we use git to track checkpoints, we need to temporarily disable
 	// nested git repos to work around git's requirement of using submodules for
 	// nested repos.
-
 	// This method now uses the pre-scanned and cached list of nested .git directories.
 	private async renameNestedGitRepos(disable: boolean) {
 		const nestedGitDirPaths = await this.findAndCacheNestedGitRepoPaths() // Uses cache after first scan
@@ -294,7 +306,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 		}
 	}
-	// --- CHANGE END: Modify renameNestedGitRepos to use cached paths ---
 
 	private async getShadowGitConfigWorktree(git: SimpleGit) {
 		if (!this.shadowGitConfigWorktree) {
@@ -381,20 +392,13 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 			const start = Date.now()
 
-			// --- CHANGE START: Consider if renameNestedGitRepos is needed around clean/reset ---
 			// If `git clean` or `git reset` could be affected by nested .git repos
 			// (e.g., if they try to operate on them as submodules despite core.worktree),
 			// you might need to wrap this section with renameNestedGitRepos(true/false).
 			// However, `core.worktree` usually makes Git operate on the workspace files directly.
 			// For now, assuming it's not strictly needed here for performance, but it's a thought.
-			// await this.renameNestedGitRepos(true);
-			// try {
 			await this.git.clean("f", ["-d", "-f"])
 			await this.git.reset(["--hard", commitHash])
-			// } finally {
-			//    await this.renameNestedGitRepos(false);
-			// }
-			// --- CHANGE END: Consider if renameNestedGitRepos is needed around clean/reset ---
 
 			// Remove all checkpoints after the specified commitHash.
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)
@@ -532,7 +536,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 		return result
 	}
-	// --- CHANGE END: Modify getDiff for performance and accuracy ---
 
 	/**
 	 * EventEmitter
