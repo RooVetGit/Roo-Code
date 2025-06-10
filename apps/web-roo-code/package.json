@@ -7,15 +7,7 @@
 		"check-types": "tsc --noEmit",
 		"dev": "next dev",
 		"build": "next build",
-		"start": "next start",
-		"drizzle-kit": "dotenvx run -f .env -- tsx node_modules/drizzle-kit/bin.cjs",
-		"db:generate": "pnpm drizzle-kit generate",
-		"db:migrate": "pnpm drizzle-kit migrate",
-		"db:push": "pnpm drizzle-kit push",
-		"db:pull": "pnpm drizzle-kit pull",
-		"db:check": "pnpm drizzle-kit check",
-		"db:up": "pnpm drizzle-kit up",
-		"db:studio": "pnpm drizzle-kit studio"
+		"start": "next start"
 	},
 	"dependencies": {
 		"@radix-ui/react-dialog": "^1.1.14",
