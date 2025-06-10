@@ -64,6 +64,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxReadFileLine?: number
 	maxConcurrentFileReads?: number
 	profileThresholds: Record<string, number>
+	currentProfileId?: string
 	setCachedStateField: SetCachedStateField<
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
@@ -91,11 +92,19 @@ export const ContextManagementSettings = ({
 	maxReadFileLine,
 	maxConcurrentFileReads,
 	profileThresholds,
+	currentProfileId,
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
 	const { t } = useAppTranslation()
-	const [selectedThresholdProfile, setSelectedThresholdProfile] = React.useState<string>("default")
+	const [selectedThresholdProfile, setSelectedThresholdProfile] = React.useState<string>(
+		currentProfileId || "default",
+	)
+
+	// Update selected profile when current profile changes
+	React.useEffect(() => {
+		setSelectedThresholdProfile(currentProfileId || "default")
+	}, [currentProfileId])
 
 	// Helper function to get the current threshold value based on selected profile
 	const getCurrentThresholdValue = () => {

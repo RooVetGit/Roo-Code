@@ -396,11 +396,11 @@
 			"always_full_read": "Always read entire file"
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "Condensing Trigger Threshold",
+			"selectProfile": "Configure threshold for profile",
+			"defaultProfile": "Global Default (all profiles)",
+			"defaultDescription": "When context reaches this percentage, it will be automatically condensed for all profiles unless they have custom settings",
+			"profileDescription": "Custom threshold for this profile only (overrides global default)"
 		}
 	},
 	"terminal": {

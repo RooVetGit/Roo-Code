@@ -125,8 +125,19 @@ export async function truncateConversationIfNeeded({
 	let effectiveThreshold = autoCondenseContextPercent
 	const profileThreshold = profileThresholds[currentProfileId]
 	if (profileThreshold !== undefined) {
-		// Special case: if the value is -1, use the global autoCondenseContextPercent
-		effectiveThreshold = profileThreshold === -1 ? autoCondenseContextPercent : profileThreshold
+		if (profileThreshold === -1) {
+			// Special case: -1 means inherit from global setting
+			effectiveThreshold = autoCondenseContextPercent
+		} else if (profileThreshold >= 10 && profileThreshold <= 100) {
+			// Valid custom threshold
+			effectiveThreshold = profileThreshold
+		} else {
+			// Invalid threshold value, fall back to global setting
+			console.warn(
+				`Invalid profile threshold ${profileThreshold} for profile "${currentProfileId}". Using global default of ${autoCondenseContextPercent}%`,
+			)
+			effectiveThreshold = autoCondenseContextPercent
+		}
 	}
 	// If no specific threshold is found for the profile, fall back to global setting
 
