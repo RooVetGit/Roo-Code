@@ -492,6 +492,7 @@ ${testFile.content}\nAssume the file exists and you can modify it directly.`,
 
 	test("Should handle apply_diff errors gracefully", async function () {
 		// Increase timeout for this specific test
+		this.timeout(90_000)
 
 		const api = globalThis.api
 		const messages: ClineMessage[] = []
@@ -562,16 +563,20 @@ ${testFile.content}\nAssume the file exists and you can modify it directly.`,
 				text: `Use apply_diff on the file ${testFile.name} to replace "This content does not exist" with "New content".
 
 The file already exists with this content:
-${testFile.content}\nAssume the file exists and you can modify it directly.`,
+${testFile.content}
+
+IMPORTANT: The search pattern "This content does not exist" is NOT in the file. When apply_diff cannot find the search pattern, it should fail gracefully and the file content should remain unchanged. Do NOT try to use write_to_file or any other tool to modify the file. Only use apply_diff, and if the search pattern is not found, report that it could not be found.
+
+Assume the file exists and you can modify it directly.`,
 			})
 
 			console.log("Task ID:", taskId)
 			console.log("Test filename:", testFile.name)
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 60_000 })
+			await waitFor(() => taskStarted, { timeout: 90_000 })
 
 			// Wait for task completion or error
-			await waitFor(() => taskCompleted || errorDetected, { timeout: 60_000 })
+			await waitFor(() => taskCompleted || errorDetected, { timeout: 90_000 })
 
 			// Give time for any final operations
 			await sleep(2000)

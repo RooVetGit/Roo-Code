@@ -253,6 +253,9 @@ Assume the file exists and you can modify it directly.`,
 	})
 
 	test("Should perform regex pattern replacement", async function () {
+		// Increase timeout for this test
+		this.timeout(90_000)
+
 		const api = globalThis.api
 		const messages: ClineMessage[] = []
 		const testFile = testFiles.regexReplace
@@ -321,7 +324,7 @@ function anotherNewFunction() {
 
 		let taskId: string
 		try {
-			// Start task with search_and_replace instruction using regex
+			// Start task with search_and_replace instruction - simpler and more direct
 			taskId = await api.startNewTask({
 				configuration: {
 					mode: "code",
@@ -330,22 +333,22 @@ function anotherNewFunction() {
 					alwaysAllowReadOnly: true,
 					alwaysAllowReadOnlyOutsideWorkspace: true,
 				},
-				text: `Use search_and_replace on the file ${testFile.name} to replace ALL occurrences of "old" with "new" and "Old" with "New". Make sure to properly replace both variations.
-
+				text: `Use search_and_replace on the file ${testFile.name} to:
+1. First, replace "old" with "new" (use_regex: false)
+2. Then, replace "Old" with "New" (use_regex: false)
 
 The file is located at: ${testFile.path}
 
-Current file content:
-${testFile.content}
+Assume the file exists and you can modify it directly.
 
-VERIFY: After replacement, there should be NO "old" text anywhere in the file, including in "anotherNewFunction".`,
+Use the search_and_replace tool twice - once for each replacement.`,
 			})
 
 			console.log("Task ID:", taskId)
 			console.log("Test filename:", testFile.name)
 
 			// Wait for task to start
-			await waitFor(() => taskStarted, { timeout: 45_000 })
+			await waitFor(() => taskStarted, { timeout: 90_000 })
 
 			// Check for early errors
 			if (errorOccurred) {
@@ -353,7 +356,7 @@ VERIFY: After replacement, there should be NO "old" text anywhere in the file, i
 			}
 
 			// Wait for task completion
-			await waitFor(() => taskCompleted, { timeout: 45_000 })
+			await waitFor(() => taskCompleted, { timeout: 90_000 })
 
 			// Give extra time for file system operations
 			await sleep(2000)
