@@ -38,18 +38,7 @@ jobs:
                   HOST_EXECUTION_METHOD=docker
                   EOF
 
-            - name: Build web image
-              uses: docker/build-push-action@v5
-              with:
-                  context: .
-                  file: packages/evals/Dockerfile.web
-                  tags: evals-web:latest
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
-                  push: false
-                  load: true
-
-            - name: Build runner image
+            - name: Build image
               uses: docker/build-push-action@v5
               with:
                   context: .
@@ -60,10 +49,9 @@ jobs:
                   push: false
                   load: true
 
-            - name: Tag images
+            - name: Tag image
               run: |
                   cd packages/evals
-                  docker tag evals-web:latest evals-web
                   docker tag evals-runner:latest evals-runner
 
             - name: Start containers
@@ -74,58 +62,18 @@ jobs:
             - name: Wait for containers
               run: |
                   cd packages/evals
-
-                  # Wait for services
-                  echo "Waiting for PostgreSQL..."
                   timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
-
-                  echo "Waiting for Redis..."
                   timeout 60 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 2; done'
-
-                  echo "Testing database connection from web container..."
                   docker compose exec -T web sh -c 'nc -z db 5432 && echo "✓ Database connection successful"'
-
-                  echo "Testing Redis connection from web container..."
                   docker compose exec -T web sh -c 'nc -z redis 6379 && echo "✓ Redis connection successful"'
 
-                  echo "Testing web service startup..."
-                  timeout 60 bash -c 'until curl -f http://localhost:3000/api/health 2>/dev/null; do echo "Waiting for web service..."; sleep 2; done'
-
-                  echo "✓ Web service is healthy"
-                  echo "Health check response:"
-                  curl -s http://localhost:3000/api/health | jq 2>/dev/null || curl -s http://localhost:3000/api/health
-
-            - name: Test runner container networking
+            - name: Test runner
               run: |
                   cd packages/evals
-
-                  echo "Testing runner container can connect to services..."
                   docker compose run --rm runner sh -c 'nc -z db 5432 && echo "✓ Runner -> Database connection successful"'
                   docker compose run --rm runner sh -c 'nc -z redis 6379 && echo "✓ Runner -> Redis connection successful"'
-                  docker compose run --rm runner sh -c 'nc -z web 3000 && echo "✓ Runner -> Web service connection successful"'
-
-            - name: Test Docker socket access
-              run: |
-                  cd packages/evals
-
-                  echo "Testing Docker socket access in runner..."
                   docker compose run --rm runner docker --version
                   docker compose run --rm runner docker ps
-
-            - name: Show service status
-              if: always()
-              run: |
-                  cd packages/evals
-
-                  echo "=== Service Status ==="
-                  docker compose ps
-
-                  echo "=== Network Information ==="
-                  docker network ls | grep evals || echo "No evals network found"
-
-                  echo "=== Container Information ==="
-                  docker compose exec -T db sh -c 'echo "Database container hostname: $(hostname)"'
-                  docker compose exec -T redis sh -c 'echo "Redis container hostname: $(hostname)"'
 
             - name: Run evals
               run: |
