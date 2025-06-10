@@ -9,7 +9,6 @@ import { GEMINI_RATE_LIMIT_DELAY_MS, MAX_BATCH_RETRIES, INITIAL_RETRY_DELAY_MS }
 export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder {
 	private readonly defaultModelId: string
 	private readonly defaultTaskType: string
-	private embeddingQueue: Promise<void> = Promise.resolve() // Sequential queue for embedding operations
 
 	/**
 	 * Creates a new Gemini embedder instance.
