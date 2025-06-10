@@ -1589,7 +1589,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				enableMcpServerCreation,
 				language,
 				rooIgnoreInstructions,
-				maxReadFileLine !== -1,
+				true, // Always enable partial reads in the prompt
 				{
 					maxConcurrentFileReads,
 				},
