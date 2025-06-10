@@ -31,6 +31,14 @@ Object.defineProperty(window, "matchMedia", {
 	})),
 })
 
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+	constructor(_cb: ResizeObserverCallback) {}
+	observe() {}
+	disconnect() {}
+	unobserve() {}
+}
+
 // Mock lucide-react icons globally using Proxy for dynamic icon handling
 jest.mock("lucide-react", () => {
 	return new Proxy(

@@ -6,6 +6,7 @@ import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { AutoApproveToggle, AutoApproveSetting, autoApproveSettingsConfig } from "../settings/AutoApproveToggle"
+import { useAutoApproveState } from "@src/hooks/useAutoApproveState"
 
 interface AutoApproveMenuProps {
 	style?: React.CSSProperties
@@ -39,74 +40,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 	const { t } = useAppTranslation()
 
-	const onAutoApproveToggle = useCallback(
-		(key: AutoApproveSetting, value: boolean) => {
-			vscode.postMessage({ type: key, bool: value })
-
-			// Update the specific setting
-			switch (key) {
-				case "alwaysAllowReadOnly":
-					setAlwaysAllowReadOnly(value)
-					break
-				case "alwaysAllowWrite":
-					setAlwaysAllowWrite(value)
-					break
-				case "alwaysAllowExecute":
-					setAlwaysAllowExecute(value)
-					break
-				case "alwaysAllowBrowser":
-					setAlwaysAllowBrowser(value)
-					break
-				case "alwaysAllowMcp":
-					setAlwaysAllowMcp(value)
-					break
-				case "alwaysAllowModeSwitch":
-					setAlwaysAllowModeSwitch(value)
-					break
-				case "alwaysAllowSubtasks":
-					setAlwaysAllowSubtasks(value)
-					break
-				case "alwaysApproveResubmit":
-					setAlwaysApproveResubmit(value)
-					break
-			}
-
-			// After updating the specific setting, check if any action is now enabled.
-			// If so, ensure autoApprovalEnabled is true.
-			// This needs to be done after the state updates, so we'll use a temporary check
-			// or re-evaluate the `toggles` object.
-			// For simplicity, we'll assume the `toggles` state will reflect the change
-			// in the next render cycle, and we can force autoApprovalEnabled to true
-			// if any action is being enabled.
-			if (value === true) {
-				setAutoApprovalEnabled(true)
-				vscode.postMessage({ type: "autoApprovalEnabled", bool: true })
-			} else {
-				// If an action is being disabled, check if all are now disabled.
-				// If so, set autoApprovalEnabled to false.
-				// This requires re-evaluating the state of all toggles *after* the current one is set.
-				// A more robust solution would involve passing the updated `toggles` object
-				// or re-calculating `hasAnyAutoApprovedAction` here.
-				// For now, let's rely on the `hasAnyAutoApprovedAction` memoized value
-				// which will update on the next render.
-				// If the user unchecks the last enabled option, autoApprovalEnabled should become false.
-				// This logic is already handled by the main checkbox's disabled state in the collapsed view.
-				// So, we only need to ensure it turns ON when an individual is turned ON.
-			}
-		},
-		[
-			setAlwaysAllowReadOnly,
-			setAlwaysAllowWrite,
-			setAlwaysAllowExecute,
-			setAlwaysAllowBrowser,
-			setAlwaysAllowMcp,
-			setAlwaysAllowModeSwitch,
-			setAlwaysAllowSubtasks,
-			setAlwaysApproveResubmit,
-			setAutoApprovalEnabled, // Added setAutoApprovalEnabled to dependencies
-		],
-	)
-
 	const toggleExpanded = useCallback(() => setIsExpanded((prev) => !prev), [])
 
 	const toggles = useMemo(
@@ -132,17 +65,31 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	const hasAnyAutoApprovedAction = useMemo(() => Object.values(toggles).some((value) => !!value), [toggles])
+	// Use the centralized auto-approve state hook
+	const { hasAnyAutoApprovedAction, updateAutoApprovalState, handleMasterToggle } = useAutoApproveState({
+		toggles,
+		setters: {
+			setAlwaysAllowReadOnly,
+			setAlwaysAllowWrite,
+			setAlwaysAllowExecute,
+			setAlwaysAllowBrowser,
+			setAlwaysAllowMcp,
+			setAlwaysAllowModeSwitch,
+			setAlwaysAllowSubtasks,
+			setAlwaysApproveResubmit,
+			setAutoApprovalEnabled,
+		},
+	})
 
 	const displayedAutoApproveText = useMemo(() => {
-		if (autoApprovalEnabled && hasAnyAutoApprovedAction) {
+		if (hasAnyAutoApprovedAction) {
 			return Object.entries(toggles)
 				.filter(([_key, value]) => !!value)
 				.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
 				.join(", ")
 		}
 		return t("chat:autoApprove.none")
-	}, [autoApprovalEnabled, hasAnyAutoApprovedAction, toggles, t])
+	}, [hasAnyAutoApprovedAction, toggles, t])
 
 	const handleOpenSettings = useCallback(
 		() =>
@@ -172,13 +119,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				onClick={toggleExpanded}>
 				<div onClick={(e) => e.stopPropagation()}>
 					<VSCodeCheckbox
-						checked={autoApprovalEnabled && hasAnyAutoApprovedAction}
-						disabled={!hasAnyAutoApprovedAction}
-						onChange={() => {
-							const newValue = !(autoApprovalEnabled && hasAnyAutoApprovedAction)
-							setAutoApprovalEnabled(newValue)
-							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
-						}}
+						checked={hasAnyAutoApprovedAction}
+						disabled={false}
+						onChange={() => handleMasterToggle()}
 					/>
 				</div>
 				<div
@@ -234,7 +177,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 					<AutoApproveToggle
 						{...toggles}
-						onToggle={onAutoApproveToggle}
+						onToggle={updateAutoApprovalState}
 						isOverallApprovalEnabled={autoApprovalEnabled}
 					/>
 

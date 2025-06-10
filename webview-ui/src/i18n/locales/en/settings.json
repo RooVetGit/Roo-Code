@@ -68,6 +68,10 @@
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"masterToggle": {
+			"label": "Enable Auto-Approval",
+			"description": "Enable or disable all auto-approval settings at once. When disabled, all individual auto-approval toggles are visually disabled but their saved states are preserved."
+		},
 		"readOnly": {
 			"label": "Read",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",

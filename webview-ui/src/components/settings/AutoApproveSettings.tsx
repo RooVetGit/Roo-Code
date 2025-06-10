@@ -10,6 +10,7 @@ import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { AutoApproveToggle } from "./AutoApproveToggle"
+import { useAutoApproveState } from "@/hooks/useAutoApproveState"
 
 type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowReadOnly?: boolean
@@ -62,6 +63,24 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 
+	// Prepare toggles object for the hook
+	const toggles = {
+		alwaysAllowReadOnly,
+		alwaysAllowWrite,
+		alwaysAllowBrowser,
+		alwaysApproveResubmit,
+		alwaysAllowMcp,
+		alwaysAllowModeSwitch,
+		alwaysAllowSubtasks,
+		alwaysAllowExecute,
+	}
+
+	// Use the centralized auto-approve state hook
+	const { hasAnyAutoApprovedAction, updateAutoApprovalState, handleMasterToggle } = useAutoApproveState({
+		toggles,
+		setCachedStateField,
+	})
+
 	const handleAddCommand = () => {
 		const currentCommands = allowedCommands ?? []
 
@@ -83,16 +102,27 @@ export const AutoApproveSettings = ({
 			</SectionHeader>
 
 			<Section>
+				{/* Master Auto-Approval Checkbox */}
+				<div className="flex flex-col gap-4 mb-6">
+					<div className="flex items-center gap-3">
+						<VSCodeCheckbox
+							checked={hasAnyAutoApprovedAction}
+							onChange={() => handleMasterToggle()}
+							data-testid="master-auto-approve-checkbox">
+							<span className="font-medium text-base">
+								{t("settings:autoApprove.masterToggle.label")}
+							</span>
+						</VSCodeCheckbox>
+					</div>
+					<div className="text-vscode-descriptionForeground text-sm pl-6">
+						{t("settings:autoApprove.masterToggle.description")}
+					</div>
+				</div>
+
 				<AutoApproveToggle
-					alwaysAllowReadOnly={alwaysAllowReadOnly}
-					alwaysAllowWrite={alwaysAllowWrite}
-					alwaysAllowBrowser={alwaysAllowBrowser}
-					alwaysApproveResubmit={alwaysApproveResubmit}
-					alwaysAllowMcp={alwaysAllowMcp}
-					alwaysAllowModeSwitch={alwaysAllowModeSwitch}
-					alwaysAllowSubtasks={alwaysAllowSubtasks}
-					alwaysAllowExecute={alwaysAllowExecute}
-					onToggle={(key, value) => setCachedStateField(key, value)}
+					{...toggles}
+					onToggle={updateAutoApprovalState}
+					isOverallApprovalEnabled={hasAnyAutoApprovedAction}
 				/>
 
 				{/* ADDITIONAL SETTINGS */}
