@@ -34,8 +34,9 @@ describe("OpenRouter API", () => {
 				expect(openRouterSupportedCaching).toContain(modelId)
 			}
 
-			// Verify we have all supported models except intentionally excluded Google models
-			const expectedCachingModels = openRouterSupportedCaching.filter((id) => !id.startsWith("google/")).sort()
+			// Verify we have all supported models except intentionally excluded ones
+			const excludedModels = new Set(["google/gemini-2.5-pro-preview"]) // Excluded due to lag issue (#4487)
+			const expectedCachingModels = openRouterSupportedCaching.filter((id) => !excludedModels.has(id)).sort()
 
 			expect(ourCachingModels.sort()).toEqual(expectedCachingModels)
 

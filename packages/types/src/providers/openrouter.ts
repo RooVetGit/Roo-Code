@@ -39,6 +39,13 @@ export const OPEN_ROUTER_PROMPT_CACHING_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet:thinking",
 	"anthropic/claude-sonnet-4",
 	"anthropic/claude-opus-4",
+	"google/gemini-2.5-flash-preview",
+	"google/gemini-2.5-flash-preview:thinking",
+	"google/gemini-2.5-flash-preview-05-20",
+	"google/gemini-2.5-flash-preview-05-20:thinking",
+	"google/gemini-2.0-flash-001",
+	"google/gemini-flash-1.5",
+	"google/gemini-flash-1.5-8b",
 ])
 
 // https://www.anthropic.com/news/3-5-models-and-computer-use
