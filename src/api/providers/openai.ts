@@ -310,6 +310,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// O3 family models do not support max_tokens parameter
+			// but they do support max_completion_tokens
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
@@ -332,6 +334,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// O3 family models do not support max_tokens parameter
+			// but they do support max_completion_tokens
+			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
