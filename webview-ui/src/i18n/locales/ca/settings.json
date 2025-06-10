@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Seleccionar proveïdor",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Compatible amb OpenAI",
+		"openaiCompatibleBaseUrlLabel": "URL base:",
+		"openaiCompatibleApiKeyLabel": "Clau API:",
+		"openaiCompatibleModelDimensionLabel": "Dimensió d'Embedding:",
+		"openaiCompatibleModelDimensionPlaceholder": "p. ex., 1536",
+		"openaiCompatibleModelDimensionDescription": "La dimensió d'embedding (mida de sortida) per al teu model. Consulta la documentació del teu proveïdor per a aquest valor. Valors comuns: 384, 768, 1536, 3072.",
 		"geminiProvider": "Gemini",
 		"openaiKeyLabel": "Clau OpenAI:",
 		"modelLabel": "Model",
@@ -500,7 +506,11 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Habilitar lectura concurrent de fitxers",
-			"description": "Quan està habilitat, Roo pot llegir múltiples fitxers en una sola sol·licitud (fins a 15 fitxers). Quan està deshabilitat, Roo ha de llegir fitxers un per un. Deshabilitar-ho pot ajudar quan es treballa amb models menys capaços o quan voleu més control sobre l'accés als fitxers."
+			"description": "Quan està habilitat, Roo pot llegir múltiples fitxers en una sola sol·licitud. Quan està deshabilitat, Roo ha de llegir fitxers un per un. Deshabilitar-ho pot ajudar quan es treballa amb models menys capaços o quan voleu més control sobre l'accés als fitxers."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Desactivar l'execució de comandes a attempt_completion",
+			"description": "Quan està activat, l'eina attempt_completion no executarà comandes. Aquesta és una característica experimental per preparar la futura eliminació de l'execució de comandes en la finalització de tasques."
 		}
 	},
 	"promptCaching": {

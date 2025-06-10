@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Selecionar provedor",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Compatível com OpenAI",
+		"openaiCompatibleBaseUrlLabel": "URL Base:",
+		"openaiCompatibleApiKeyLabel": "Chave de API:",
+		"openaiCompatibleModelDimensionLabel": "Dimensão de Embedding:",
+		"openaiCompatibleModelDimensionPlaceholder": "ex., 1536",
+		"openaiCompatibleModelDimensionDescription": "A dimensão de embedding (tamanho de saída) para seu modelo. Verifique a documentação do seu provedor para este valor. Valores comuns: 384, 768, 1536, 3072.",
 		"geminiProvider": "Gemini",
 		"openaiKeyLabel": "Chave OpenAI:",
 		"modelLabel": "Modelo",
@@ -500,7 +506,11 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Habilitar leitura simultânea de arquivos",
-			"description": "Quando habilitado, o Roo pode ler vários arquivos em uma única solicitação (até 15 arquivos). Quando desabilitado, o Roo deve ler arquivos um de cada vez. Desabilitar pode ajudar ao trabalhar com modelos menos capazes ou quando você deseja mais controle sobre o acesso aos arquivos."
+			"description": "Quando habilitado, o Roo pode ler vários arquivos em uma única solicitação. Quando desabilitado, o Roo deve ler arquivos um de cada vez. Desabilitar pode ajudar ao trabalhar com modelos menos capazes ou quando você deseja mais controle sobre o acesso aos arquivos."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Desativar execução de comando em attempt_completion",
+			"description": "Quando ativado, a ferramenta attempt_completion não executará comandos. Este é um recurso experimental para preparar a futura descontinuação da execução de comandos na conclusão da tarefa."
 		}
 	},
 	"promptCaching": {

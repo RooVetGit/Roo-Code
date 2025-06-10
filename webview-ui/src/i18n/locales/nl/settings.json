@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Selecteer provider",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI-compatibel",
+		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
+		"openaiCompatibleApiKeyLabel": "API-sleutel:",
+		"openaiCompatibleModelDimensionLabel": "Embedding Dimensie:",
+		"openaiCompatibleModelDimensionPlaceholder": "bijv., 1536",
+		"openaiCompatibleModelDimensionDescription": "De embedding dimensie (uitvoergrootte) voor uw model. Controleer de documentatie van uw provider voor deze waarde. Veelvoorkomende waarden: 384, 768, 1536, 3072.",
 		"geminiProvider": "Gemini",
 		"openaiKeyLabel": "OpenAI-sleutel:",
 		"modelLabel": "Model",
@@ -500,7 +506,11 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Gelijktijdig lezen van bestanden inschakelen",
-			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek lezen (tot 15 bestanden). Wanneer uitgeschakeld, moet Roo bestanden één voor één lezen. Uitschakelen kan helpen bij het werken met minder capabele modellen of wanneer u meer controle over bestandstoegang wilt."
+			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek lezen. Wanneer uitgeschakeld, moet Roo bestanden één voor één lezen. Uitschakelen kan helpen bij het werken met minder capabele modellen of wanneer u meer controle over bestandstoegang wilt."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Commando-uitvoering in attempt_completion uitschakelen",
+			"description": "Indien ingeschakeld, zal de attempt_completion tool geen commando's uitvoeren. Dit is een experimentele functie ter voorbereiding op het afschaffen van commando-uitvoering bij taakvoltooiing."
 		}
 	},
 	"promptCaching": {

@@ -10,7 +10,7 @@ interface RawCodebaseIndexConfigState {
 	codebaseIndexEnabled?: boolean
 	codebaseIndexQdrantUrl?: string
 	codebaseIndexSearchMinScore?: number // Assuming this is also from globalState based on default
-	codebaseIndexEmbedderProvider?: "openai" | "ollama" | "gemini"
+	codebaseIndexEmbedderProvider?: "openai" | "ollama" | "openai-compatible" | "gemini"
 	codebaseIndexEmbedderBaseUrl?: string
 	codebaseIndexEmbedderModelId?: string
 	geminiEmbeddingTaskType?: string
@@ -27,7 +27,9 @@ export class CodeIndexConfigManager {
 	private modelId?: string
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
+	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number }
 	private geminiOptions?: ApiHandlerOptions
+
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -66,6 +68,12 @@ export class CodeIndexConfigManager {
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
+		const openAiCompatibleBaseUrl = this.contextProxy?.getGlobalState("codebaseIndexOpenAiCompatibleBaseUrl") ?? ""
+		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
+		const openAiCompatibleModelDimension = this.contextProxy?.getGlobalState(
+			"codebaseIndexOpenAiCompatibleModelDimension",
+		) as number | undefined
+
 		const geminiApiKey = this.contextProxy?.getSecret("geminiApiKey") ?? ""
 		const rateLimitSeconds = this.contextProxy?.getGlobalState("rateLimitSeconds") ?? undefined
 
@@ -76,8 +84,11 @@ export class CodeIndexConfigManager {
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 		this.searchMinScore = SEARCH_MIN_SCORE
 
+		// Set embedder provider with support for openai-compatible
 		if (codebaseIndexEmbedderProvider === "ollama") {
 			this.embedderProvider = "ollama"
+		} else if (codebaseIndexEmbedderProvider === "openai-compatible") {
+			this.embedderProvider = "openai-compatible"
 		} else if (codebaseIndexEmbedderProvider === "gemini") {
 			this.embedderProvider = "gemini"
 		} else {
@@ -89,6 +100,15 @@ export class CodeIndexConfigManager {
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
 		}
+
+		this.openAiCompatibleOptions =
+			openAiCompatibleBaseUrl && openAiCompatibleApiKey
+				? {
+						baseUrl: openAiCompatibleBaseUrl,
+						apiKey: openAiCompatibleApiKey,
+						modelDimension: openAiCompatibleModelDimension,
+					}
+				: undefined
 
 		this.geminiOptions = {
 			geminiApiKey,
@@ -111,6 +131,7 @@ export class CodeIndexConfigManager {
 			modelId?: string
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
+			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 			geminiOptions?: ApiHandlerOptions
 			qdrantUrl?: string
 			qdrantApiKey?: string
@@ -126,6 +147,9 @@ export class CodeIndexConfigManager {
 			modelId: this.modelId,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey ?? "",
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
+			openAiCompatibleBaseUrl: this.openAiCompatibleOptions?.baseUrl ?? "",
+			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
+			openAiCompatibleModelDimension: this.openAiCompatibleOptions?.modelDimension,
 			geminiApiKey: this.geminiOptions?.geminiApiKey,
 			geminiEmbeddingTaskType: this.geminiOptions?.geminiEmbeddingTaskType,
 			qdrantUrl: this.qdrantUrl ?? "",
@@ -146,6 +170,7 @@ export class CodeIndexConfigManager {
 				modelId: this.modelId,
 				openAiOptions: this.openAiOptions,
 				ollamaOptions: this.ollamaOptions,
+				openAiCompatibleOptions: this.openAiCompatibleOptions,
 				geminiOptions: this.geminiOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
@@ -170,6 +195,11 @@ export class CodeIndexConfigManager {
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(ollamaBaseUrl && qdrantUrl)
 			return isConfigured
+		} else if (this.embedderProvider === "openai-compatible") {
+			const baseUrl = this.openAiCompatibleOptions?.baseUrl
+			const apiKey = this.openAiCompatibleOptions?.apiKey
+			const qdrantUrl = this.qdrantUrl
+			return !!(baseUrl && apiKey && qdrantUrl)
 		}
 
 		if (this.embedderProvider === "gemini") {
@@ -197,6 +227,9 @@ export class CodeIndexConfigManager {
 		const prevModelId = prev?.modelId ?? undefined
 		const prevOpenAiKey = prev?.openAiKey ?? ""
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
+		const prevOpenAiCompatibleBaseUrl = prev?.openAiCompatibleBaseUrl ?? ""
+		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
+		const prevOpenAiCompatibleModelDimension = prev?.openAiCompatibleModelDimension
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevGeminiEmbeddingDimension = prev?.geminiEmbeddingDimension // Access from prev
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
@@ -241,6 +274,19 @@ export class CodeIndexConfigManager {
 			if (this.embedderProvider === "ollama") {
 				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
 				if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+					return true
+				}
+			}
+
+			if (this.embedderProvider === "openai-compatible") {
+				const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
+				const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
+				const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
+				if (
+					prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
+					prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey ||
+					prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension
+				) {
 					return true
 				}
 			}
@@ -322,6 +368,7 @@ export class CodeIndexConfigManager {
 			modelId: this.modelId,
 			openAiOptions: this.openAiOptions,
 			ollamaOptions: this.ollamaOptions,
+			openAiCompatibleOptions: this.openAiCompatibleOptions,
 			geminiOptions: this.geminiOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,

@@ -23,12 +23,22 @@ describe("OpenRouter API", () => {
 
 			const models = await getOpenRouterModels()
 
-			expect(
-				Object.entries(models)
-					.filter(([_, model]) => model.supportsPromptCache)
-					.map(([id, _]) => id)
-					.sort(),
-			).toEqual(Array.from(OPEN_ROUTER_PROMPT_CACHING_MODELS).sort())
+			const openRouterSupportedCaching = Object.entries(models)
+				.filter(([_, model]) => model.supportsPromptCache)
+				.map(([id, _]) => id)
+
+			const ourCachingModels = Array.from(OPEN_ROUTER_PROMPT_CACHING_MODELS)
+
+			// Verify all our caching models are actually supported by OpenRouter
+			for (const modelId of ourCachingModels) {
+				expect(openRouterSupportedCaching).toContain(modelId)
+			}
+
+			// Verify we have all supported models except intentionally excluded ones
+			const excludedModels = new Set(["google/gemini-2.5-pro-preview"]) // Excluded due to lag issue (#4487)
+			const expectedCachingModels = openRouterSupportedCaching.filter((id) => !excludedModels.has(id)).sort()
+
+			expect(ourCachingModels.sort()).toEqual(expectedCachingModels)
 
 			expect(
 				Object.entries(models)
@@ -185,10 +195,11 @@ describe("OpenRouter API", () => {
 
 			expect(endpoints).toEqual({
 				Google: {
-					maxTokens: 0,
+					maxTokens: 65535,
 					contextWindow: 1048576,
 					supportsImages: true,
 					supportsPromptCache: true,
+					supportsReasoningBudget: true,
 					inputPrice: 1.25,
 					outputPrice: 10,
 					cacheWritesPrice: 1.625,
@@ -198,10 +209,11 @@ describe("OpenRouter API", () => {
 					supportedParameters: undefined,
 				},
 				"Google AI Studio": {
-					maxTokens: 0,
+					maxTokens: 65536,
 					contextWindow: 1048576,
 					supportsImages: true,
 					supportsPromptCache: true,
+					supportsReasoningBudget: true,
 					inputPrice: 1.25,
 					outputPrice: 10,
 					cacheWritesPrice: 1.625,

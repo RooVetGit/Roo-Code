@@ -72,8 +72,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 	const modelsForProvider =
-		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "gemini"
-			? codebaseIndexModels?.[currentProvider]
+		currentProvider === "openai" ||
+		currentProvider === "ollama" ||
+		currentProvider === "openai-compatible" ||
+		currentProvider === "gemini"
+			? codebaseIndexModels?.[currentProvider] || codebaseIndexModels?.openai
 			: codebaseIndexModels?.openai
 	const availableModelIds = Object.keys(modelsForProvider || {})
 
@@ -153,6 +156,16 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexEmbedderProvider: z.literal("ollama"),
 				codebaseIndexEmbedderBaseUrl: z.string().url("Ollama URL must be a valid URL"),
 			}),
+			"openai-compatible": baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("openai-compatible"),
+				codebaseIndexOpenAiCompatibleBaseUrl: z.string().url("Base URL must be a valid URL"),
+				codebaseIndexOpenAiCompatibleApiKey: z.string().min(1, "API key is required"),
+				codebaseIndexOpenAiCompatibleModelDimension: z
+					.number()
+					.int("Dimension must be an integer")
+					.positive("Dimension must be a positive number")
+					.optional(),
+			}),
 			gemini: baseSchema.extend({
 				codebaseIndexEmbedderProvider: z.literal("gemini"),
 				geminiApiKey: z.string().min(1, "Gemini API key is required"),
@@ -171,11 +184,16 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					? providerSchemas.openai
 					: config.codebaseIndexEmbedderProvider === "ollama"
 						? providerSchemas.ollama
-						: providerSchemas.gemini
+						: config.codebaseIndexEmbedderProvider === "openai-compatible"
+							? providerSchemas["openai-compatible"]
+							: providerSchemas.gemini
 
 			schema.parse({
 				...config,
 				codeIndexOpenAiKey: apiConfig.codeIndexOpenAiKey,
+				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
+				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
+				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
 				geminiApiKey: apiConfig.geminiApiKey,
 			})
 			return true
@@ -288,6 +306,9 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								<SelectContent>
 									<SelectItem value="openai">{t("settings:codeIndex.openaiProvider")}</SelectItem>
 									<SelectItem value="ollama">{t("settings:codeIndex.ollamaProvider")}</SelectItem>
+									<SelectItem value="openai-compatible">
+										{t("settings:codeIndex.openaiCompatibleProvider")}
+									</SelectItem>
 									<SelectItem value="gemini">{t("settings:codeIndex.geminiProvider")}</SelectItem>
 								</SelectContent>
 							</Select>
@@ -309,32 +330,110 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 					)}
 
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" && (
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.openaiCompatibleBaseUrlLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									value={apiConfiguration.codebaseIndexOpenAiCompatibleBaseUrl || ""}
+									onInput={(e: any) =>
+										setApiConfigurationField("codebaseIndexOpenAiCompatibleBaseUrl", e.target.value)
+									}
+									style={{ width: "100%" }}></VSCodeTextField>
+							</div>
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.openaiCompatibleApiKeyLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									type="password"
+									value={apiConfiguration.codebaseIndexOpenAiCompatibleApiKey || ""}
+									onInput={(e: any) =>
+										setApiConfigurationField("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
+									}
+									style={{ width: "100%" }}></VSCodeTextField>
+							</div>
+						</div>
+					)}
+
 					<div className="flex items-center gap-4 font-bold">
 						<div>{t("settings:codeIndex.modelLabel")}</div>
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							<Select
-								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-								onValueChange={(value) =>
-									setCachedStateField("codebaseIndexConfig", {
-										...codebaseIndexConfig,
-										codebaseIndexEmbedderModelId: value,
-									})
-								}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
-								</SelectTrigger>
-								<SelectContent>
-									{availableModelIds.map((modelId) => (
-										<SelectItem key={modelId} value={modelId}>
-											{modelId}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" ? (
+								<VSCodeTextField
+									value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
+									onInput={(e: any) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderModelId: e.target.value,
+										})
+									}
+									placeholder="Enter custom model ID"
+									style={{ width: "100%" }}></VSCodeTextField>
+							) : (
+								<Select
+									value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
+									onValueChange={(value) =>
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderModelId: value,
+										})
+									}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
+									</SelectTrigger>
+									<SelectContent>
+										{availableModelIds.map((modelId) => (
+											<SelectItem key={modelId} value={modelId}>
+												{modelId}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
 						</div>
 					</div>
+
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" && (
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.openaiCompatibleModelDimensionLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									type="text"
+									value={
+										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
+									}
+									onInput={(e: any) => {
+										const value = e.target.value
+										if (value === "") {
+											setApiConfigurationField(
+												"codebaseIndexOpenAiCompatibleModelDimension",
+												undefined,
+											)
+										} else {
+											const parsedValue = parseInt(value, 10)
+											if (!isNaN(parsedValue)) {
+												setApiConfigurationField(
+													"codebaseIndexOpenAiCompatibleModelDimension",
+													parsedValue,
+												)
+											}
+										}
+									}}
+									placeholder={t("settings:codeIndex.openaiCompatibleModelDimensionPlaceholder")}
+									style={{ width: "100%" }}></VSCodeTextField>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:codeIndex.openaiCompatibleModelDimensionDescription")}
+								</p>
+							</div>
+						</div>
+					)}
 
 					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
 						<div className="flex flex-col gap-3">

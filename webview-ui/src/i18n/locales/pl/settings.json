@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Wybierz dostawcę",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Kompatybilny z OpenAI",
+		"openaiCompatibleBaseUrlLabel": "Bazowy URL:",
+		"openaiCompatibleApiKeyLabel": "Klucz API:",
+		"openaiCompatibleModelDimensionLabel": "Wymiar Embeddingu:",
+		"openaiCompatibleModelDimensionPlaceholder": "np., 1536",
+		"openaiCompatibleModelDimensionDescription": "Wymiar embeddingu (rozmiar wyjściowy) dla twojego modelu. Sprawdź dokumentację swojego dostawcy, aby uzyskać tę wartość. Typowe wartości: 384, 768, 1536, 3072.",
 		"geminiProvider": "Gemini",
 		"openaiKeyLabel": "Klucz OpenAI:",
 		"modelLabel": "Model",
@@ -500,7 +506,11 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Włącz jednoczesne odczytywanie plików",
-			"description": "Po włączeniu Roo może odczytać wiele plików w jednym żądaniu (do 15 plików). Po wyłączeniu Roo musi odczytywać pliki pojedynczo. Wyłączenie może pomóc podczas pracy z mniej wydajnymi modelami lub gdy chcesz mieć większą kontrolę nad dostępem do plików."
+			"description": "Po włączeniu Roo może odczytać wiele plików w jednym żądaniu. Po wyłączeniu Roo musi odczytywać pliki pojedynczo. Wyłączenie może pomóc podczas pracy z mniej wydajnymi modelami lub gdy chcesz mieć większą kontrolę nad dostępem do plików."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Wyłącz wykonywanie poleceń w attempt_completion",
+			"description": "Gdy włączone, narzędzie attempt_completion nie będzie wykonywać poleceń. Jest to funkcja eksperymentalna przygotowująca do przyszłego wycofania wykonywania poleceń po zakończeniu zadania."
 		}
 	},
 	"promptCaching": {

@@ -2,7 +2,7 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" | "gemini" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
@@ -36,6 +36,11 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		"all-minilm": { dimension: 384 },
 		// Add default Ollama model if applicable, e.g.:
 		// 'default': { dimension: 768 } // Assuming a default dimension
+	},
+	"openai-compatible": {
+		"text-embedding-3-small": { dimension: 1536 },
+		"text-embedding-3-large": { dimension: 3072 },
+		"text-embedding-ada-002": { dimension: 1536 },
 	},
 	gemini: {
 		"gemini-embedding-exp-03-07": { dimension: 3072, supportDimensions: [3072, 1536, 768], maxInputTokens: 8192 },
@@ -89,27 +94,27 @@ export function getModelDimension(
  * @returns The default specific model ID for the provider (e.g., "text-embedding-3-small").
  */
 export function getDefaultModelId(provider: EmbedderProvider): string {
-	// Simple default logic for now
-	if (provider === "openai") {
-		return "text-embedding-3-small"
-	}
-	if (provider === "ollama") {
-		// Choose a sensible default for Ollama, e.g., the first one listed or a specific one
-		const ollamaModels = EMBEDDING_MODEL_PROFILES.ollama
-		const defaultOllamaModel = ollamaModels && Object.keys(ollamaModels)[0]
-		if (defaultOllamaModel) {
-			return defaultOllamaModel
+	switch (provider) {
+		case "openai":
+		case "openai-compatible":
+			return "text-embedding-3-small"
+		case "gemini":
+			return "gemini-embedding-exp-03-07"
+		case "ollama": {
+			// Choose a sensible default for Ollama, e.g., the first one listed or a specific one
+			const ollamaModels = EMBEDDING_MODEL_PROFILES.ollama
+			const defaultOllamaModel = ollamaModels && Object.keys(ollamaModels)[0]
+			if (defaultOllamaModel) {
+				return defaultOllamaModel
+			}
+			// Fallback if no Ollama models are defined (shouldn't happen with the constant)
+			console.warn("No default Ollama model found in profiles.")
+			// Return a placeholder or throw an error, depending on desired behavior
+			return "unknown-default" // Placeholder specific model ID
 		}
-		// Fallback if no Ollama models are defined (shouldn't happen with the constant)
-		console.warn("No default Ollama model found in profiles.")
-		// Return a placeholder or throw an error, depending on desired behavior
-		return "unknown-default" // Placeholder specific model ID
+		default:
+			// Fallback for unknown providers
+			console.warn(`Unknown provider for default model ID: ${provider}. Falling back to OpenAI default.`)
+			return "text-embedding-3-small"
 	}
-	if (provider === "gemini") {
-		return "gemini-embedding-exp-03-07"
-	}
-
-	// Fallback for unknown providers
-	console.warn(`Unknown provider for default model ID: ${provider}. Falling back to OpenAI default.`)
-	return "text-embedding-3-small"
 }

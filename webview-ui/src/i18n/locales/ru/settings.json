@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Выберите провайдера",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI-совместимый",
+		"openaiCompatibleBaseUrlLabel": "Базовый URL:",
+		"openaiCompatibleApiKeyLabel": "Ключ API:",
+		"openaiCompatibleModelDimensionLabel": "Размерность эмбеддинга:",
+		"openaiCompatibleModelDimensionPlaceholder": "напр., 1536",
+		"openaiCompatibleModelDimensionDescription": "Размерность эмбеддинга (размер выходных данных) для вашей модели. Проверьте документацию вашего провайдера для этого значения. Распространенные значения: 384, 768, 1536, 3072.",
 		"geminiProvider": "Gemini",
 		"openaiKeyLabel": "Ключ OpenAI:",
 		"modelLabel": "Модель",
@@ -500,7 +506,11 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Включить одновременное чтение файлов",
-			"description": "При включении Roo может читать несколько файлов в одном запросе (до 15 файлов). При отключении Roo должен читать файлы по одному. Отключение может помочь при работе с менее производительными моделями или когда вы хотите больше контроля над доступом к файлам."
+			"description": "При включении Roo может читать несколько файлов в одном запросе. При отключении Roo должен читать файлы по одному. Отключение может помочь при работе с менее производительными моделями или когда вы хотите больше контроля над доступом к файлам."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Отключить выполнение команд в attempt_completion",
+			"description": "Если включено, инструмент attempt_completion не будет выполнять команды. Это экспериментальная функция для подготовки к будущему прекращению поддержки выполнения команд при завершении задачи."
 		}
 	},
 	"promptCaching": {
