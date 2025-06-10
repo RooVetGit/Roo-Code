@@ -312,7 +312,7 @@ const ApiOptions = ({
 					break
 			}
 		},
-		[setApiConfigurationField, apiConfiguration, routerModels, organizationAllowList],
+		[setApiConfigurationField, apiConfiguration, organizationAllowList],
 	)
 
 	const modelValidationError = useMemo(() => {
