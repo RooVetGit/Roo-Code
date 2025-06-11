@@ -288,7 +288,6 @@ describe("git utils", () => {
 					if (command === cmd) {
 						callback(null, response)
 						return {} as any
-						return {} as any
 					}
 				}
 				callback(new Error("Unexpected command"))
