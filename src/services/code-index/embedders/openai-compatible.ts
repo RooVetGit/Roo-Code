@@ -132,14 +132,6 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 				const embeddings = response.data.map((item) => item.embedding)
 
-				console.log(`[OpenAI-Compatible Embedder] After mapping - embedding length: ${embeddings[0]?.length}`)
-				if (embeddings[0]) {
-					console.log(
-						`[OpenAI-Compatible Embedder] First 10 values after mapping:`,
-						embeddings[0].slice(0, 5),
-					)
-				}
-
 				return {
 					embeddings: embeddings,
 					usage: {
