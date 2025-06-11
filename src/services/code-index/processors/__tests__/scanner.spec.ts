@@ -64,6 +64,7 @@ describe("DirectoryScanner", () => {
 	let mockCodeParser: any
 	let mockCacheManager: any
 	let mockIgnoreInstance: any
+	let mockStats: any
 
 	beforeEach(async () => {
 		mockEmbedder = {
@@ -103,19 +104,56 @@ describe("DirectoryScanner", () => {
 			mockIgnoreInstance,
 		)
 
-		// Mock default implementations
-		vi.mocked(stat).mockResolvedValue({ size: 1024 })
+		// Mock default implementations - create proper Stats object
+		mockStats = {
+			size: 1024,
+			isFile: () => true,
+			isDirectory: () => false,
+			isBlockDevice: () => false,
+			isCharacterDevice: () => false,
+			isSymbolicLink: () => false,
+			isFIFO: () => false,
+			isSocket: () => false,
+			dev: 0,
+			ino: 0,
+			mode: 0,
+			nlink: 0,
+			uid: 0,
+			gid: 0,
+			rdev: 0,
+			blksize: 0,
+			blocks: 0,
+			atimeMs: 0,
+			mtimeMs: 0,
+			ctimeMs: 0,
+			birthtimeMs: 0,
+			atime: new Date(),
+			mtime: new Date(),
+			ctime: new Date(),
+			birthtime: new Date(),
+			atimeNs: BigInt(0),
+			mtimeNs: BigInt(0),
+			ctimeNs: BigInt(0),
+			birthtimeNs: BigInt(0),
+		}
+		vi.mocked(stat).mockResolvedValue(mockStats)
 
 		// Get and mock the listFiles function
 		const { listFiles } = await import("../../../glob/list-files")
-		vi.mocked(listFiles).mockResolvedValue([["test/file1.js", "test/file2.js"], []])
+		vi.mocked(listFiles).mockResolvedValue([["test/file1.js", "test/file2.js"], false])
 	})
 
 	describe("scanDirectory", () => {
 		it("should skip files larger than MAX_FILE_SIZE_BYTES", async () => {
 			const { listFiles } = await import("../../../glob/list-files")
-			vi.mocked(listFiles).mockResolvedValue([["test/file1.js"], []])
-			vi.mocked(stat).mockResolvedValueOnce({ size: 2 * 1024 * 1024 }) // 2MB > 1MB limit
+			vi.mocked(listFiles).mockResolvedValue([["test/file1.js"], false])
+
+			// Create large file mock stats
+			const largeFileStats = {
+				...mockStats,
+				size: 2 * 1024 * 1024, // 2MB > 1MB limit
+			}
+			vi.mocked(stat).mockResolvedValueOnce(largeFileStats)
 
 			const result = await scanner.scanDirectory("/test")
 			expect(result.stats.skipped).toBe(1)
@@ -124,7 +162,7 @@ describe("DirectoryScanner", () => {
 
 		it("should parse changed files and return code blocks", async () => {
 			const { listFiles } = await import("../../../glob/list-files")
-			vi.mocked(listFiles).mockResolvedValue([["test/file1.js"], []])
+			vi.mocked(listFiles).mockResolvedValue([["test/file1.js"], false])
 			const mockBlocks: any[] = [
 				{
 					file_path: "test/file1.js",
