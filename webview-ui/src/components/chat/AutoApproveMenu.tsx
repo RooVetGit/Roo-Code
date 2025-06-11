@@ -15,7 +15,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 	const [isExpanded, setIsExpanded] = useState(false)
 
 	const {
-		autoApprovalEnabled,
 		setAutoApprovalEnabled,
 		alwaysAllowReadOnly,
 		alwaysAllowWrite,
@@ -107,6 +106,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
+	const hasAnyAutoApprovedAction = Object.values(toggles).some((value) => !!value)
+
 	const enabledActionsList = Object.entries(toggles)
 		.filter(([_key, value]) => !!value)
 		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
@@ -140,11 +141,16 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				onClick={toggleExpanded}>
 				<div onClick={(e) => e.stopPropagation()}>
 					<VSCodeCheckbox
-						checked={autoApprovalEnabled ?? false}
+						checked={hasAnyAutoApprovedAction}
 						onChange={() => {
-							const newValue = !(autoApprovalEnabled ?? false)
+							const newValue = !hasAnyAutoApprovedAction
 							setAutoApprovalEnabled(newValue)
 							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+
+							// Toggle all individual auto-approve settings
+							Object.keys(autoApproveSettingsConfig).forEach((key) => {
+								onAutoApproveToggle(key as AutoApproveSetting, newValue)
+							})
 						}}
 					/>
 				</div>
