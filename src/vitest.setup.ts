@@ -1,8 +1,17 @@
-// Vitest setup file
-import "./utils/path" // Import to enable String.prototype.toPosix()
+import nock from "nock"
 
-// Mock fs/promises for tests that need it
-import { vi } from "vitest"
+import "./utils/path" // Import to enable String.prototype.toPosix().
 
-// Global mocks that many tests expect
+// Disable network requests by default for all tests.
+nock.disableNetConnect()
+
+export function allowNetConnect(host?: string | RegExp) {
+	if (host) {
+		nock.enableNetConnect(host)
+	} else {
+		nock.enableNetConnect()
+	}
+}
+
+// Global mocks that many tests expect.
 global.structuredClone = global.structuredClone || ((obj: any) => JSON.parse(JSON.stringify(obj)))
