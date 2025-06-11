@@ -59,10 +59,5 @@
 		"removing": "Öğe kaldırılıyor: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" başarıyla kaldırıldı",
 		"removeError": "\"{{itemName}}\" kaldırılamadı: {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "Lütfen {{paramName}} için bir değer girin"
-		}
 	}
 }

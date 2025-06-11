@@ -59,10 +59,5 @@
 		"removing": "आइटम हटा रहे हैं: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" सफलतापूर्वक हटाया गया",
 		"removeError": "\"{{itemName}}\" हटाने में विफल: {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "कृपया {{paramName}} के लिए एक मान प्रदान करें"
-		}
 	}
 }

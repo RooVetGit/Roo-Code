@@ -59,10 +59,5 @@
 		"removing": "正在移除项目：\"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" 移除成功",
 		"removeError": "\"{{itemName}}\" 移除失败：{{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "请为 {{paramName}} 提供值"
-		}
 	}
 }

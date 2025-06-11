@@ -59,10 +59,5 @@
 		"removing": "Đang xóa mục: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" đã được xóa thành công",
 		"removeError": "Xóa \"{{itemName}}\" thất bại: {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "Vui lòng cung cấp giá trị cho {{paramName}}"
-		}
 	}
 }

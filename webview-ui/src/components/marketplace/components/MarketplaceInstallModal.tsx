@@ -119,7 +119,7 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 		for (const param of effectiveParameters) {
 			// Only validate if parameter is not optional (optional defaults to false)
 			if (!param.optional && !parameterValues[param.key]?.trim()) {
-				setValidationError(t("marketplace:install.validation.required", { paramName: param.name }))
+				setValidationError(t("marketplace:install.validationRequired", { paramName: param.name }))
 				return
 			}
 		}

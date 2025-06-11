@@ -92,7 +92,8 @@
 		"done": "Fet",
 		"goToMcp": "Anar a la pestanya MCP",
 		"goToModes": "Anar a la pestanya Modes",
-		"moreInfoMcp": "Veure documentació MCP de {{name}}"
+		"moreInfoMcp": "Veure documentació MCP de {{name}}",
+		"validationRequired": "Si us plau, proporciona un valor per a {{paramName}}"
 	},
 	"sources": {
 		"title": "Configurar fonts del marketplace",

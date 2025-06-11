@@ -59,10 +59,5 @@
 		"removing": "항목 제거 중: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" 제거 완료",
 		"removeError": "\"{{itemName}}\" 제거 실패: {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "{{paramName}}에 대한 값을 입력해 주세요"
-		}
 	}
 }

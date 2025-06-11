@@ -92,7 +92,8 @@
 		"done": "Done",
 		"goToMcp": "Go to MCP Tab",
 		"goToModes": "Go to Modes Tab",
-		"moreInfoMcp": "View {{name}} MCP documentation"
+		"moreInfoMcp": "View {{name}} MCP documentation",
+		"validationRequired": "Please provide a value for {{paramName}}"
 	},
 	"sources": {
 		"title": "Configure Marketplace Sources",

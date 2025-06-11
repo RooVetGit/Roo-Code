@@ -19,7 +19,7 @@ jest.mock("@/i18n/TranslationContext", () => ({
 			if (key === "marketplace:install.configuration") return "Configuration"
 			if (key === "marketplace:install.button") return "Install"
 			if (key === "common:answers.cancel") return "Cancel"
-			if (key === "marketplace:install.validation.required") {
+			if (key === "marketplace:install.validationRequired") {
 				return `Please provide a value for ${params?.paramName || "parameter"}`
 			}
 			return key

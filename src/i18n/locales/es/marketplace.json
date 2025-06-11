@@ -59,10 +59,5 @@
 		"removing": "Eliminando elemento: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" eliminado correctamente",
 		"removeError": "Error al eliminar \"{{itemName}}\": {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "Por favor proporciona un valor para {{paramName}}"
-		}
 	}
 }

@@ -59,10 +59,5 @@
 		"removing": "Item verwijderen: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" succesvol verwijderd",
 		"removeError": "Verwijdering van \"{{itemName}}\" mislukt: {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "Geef een waarde op voor {{paramName}}"
-		}
 	}
 }

@@ -92,7 +92,8 @@
 		"done": "Fertig",
 		"goToMcp": "Zum MCP-Tab gehen",
 		"goToModes": "Zum Modi-Tab gehen",
-		"moreInfoMcp": "{{name}} MCP-Dokumentation anzeigen"
+		"moreInfoMcp": "{{name}} MCP-Dokumentation anzeigen",
+		"validationRequired": "Bitte gib einen Wert für {{paramName}} an"
 	},
 	"sources": {
 		"title": "Marketplace-Quellen konfigurieren",

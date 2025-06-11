@@ -92,7 +92,8 @@
 		"done": "完成",
 		"goToMcp": "转到 MCP 标签页",
 		"goToModes": "转到模式标签页",
-		"moreInfoMcp": "查看 {{name}} MCP 文档"
+		"moreInfoMcp": "查看 {{name}} MCP 文档",
+		"validationRequired": "请为 {{paramName}} 提供值"
 	},
 	"sources": {
 		"title": "配置 Marketplace 源",

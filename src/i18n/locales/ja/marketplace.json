@@ -59,10 +59,5 @@
 		"removing": "アイテムを削除中: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\"の削除が完了しました",
 		"removeError": "\"{{itemName}}\"の削除に失敗しました: {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "{{paramName}}の値を入力してください"
-		}
 	}
 }

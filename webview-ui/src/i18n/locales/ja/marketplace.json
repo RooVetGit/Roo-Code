@@ -92,7 +92,8 @@
 		"done": "完了",
 		"goToMcp": "MCPタブに移動",
 		"goToModes": "モードタブに移動",
-		"moreInfoMcp": "{{name}} MCPドキュメントを表示"
+		"moreInfoMcp": "{{name}} MCPドキュメントを表示",
+		"validationRequired": "{{paramName}}の値を入力してください"
 	},
 	"sources": {
 		"title": "Marketplaceソースを設定",

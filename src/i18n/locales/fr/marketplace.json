@@ -59,10 +59,5 @@
 		"removing": "Suppression de l'élément : \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" supprimé avec succès",
 		"removeError": "Échec de la suppression de \"{{itemName}}\" : {{errorMessage}}"
-	},
-	"install": {
-		"validation": {
-			"required": "Veuillez fournir une valeur pour {{paramName}}"
-		}
 	}
 }
