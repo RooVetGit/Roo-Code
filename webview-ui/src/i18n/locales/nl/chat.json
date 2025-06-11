@@ -7,12 +7,12 @@
 		"tokens": "Tokens:",
 		"cache": "Cache:",
 		"apiCost": "API-kosten:",
+		"condenseContext": "Context intelligent samenvatten",
 		"contextWindow": "Contextlengte:",
 		"closeAndStart": "Taak sluiten en een nieuwe starten",
 		"export": "Taakgeschiedenis exporteren",
-		"delete": "Taak verwijderen (Shift + Klik om bevestiging over te slaan)",
-		"condenseContext": "Context intelligent samenvatten",
-		"share": "Taak delen"
+		"share": "Taak delen",
+		"delete": "Taak verwijderen (Shift + Klik om bevestiging over te slaan)"
 	},
 	"unpin": "Losmaken",
 	"pin": "Vastmaken",
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "Goedkeuren",
 		"tooltip": "Deze actie goedkeuren"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Alles goedkeuren"
+		},
+		"deny": {
+			"title": "Alles weigeren"
+		}
 	},
 	"runCommand": {
 		"title": "Commando uitvoeren",
@@ -131,11 +139,19 @@
 		},
 		"current": "Huidig"
 	},
+	"contextCondense": {
+		"title": "Context samengevat",
+		"condensing": "Context aan het samenvatten...",
+		"errorHeader": "Context samenvatten mislukt",
+		"tokens": "tokens"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo wil gedetailleerde instructies ophalen om te helpen met de huidige taak"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo wil dit bestand lezen:",
+		"wantsToReadMultiple": "Roo wil meerdere bestanden lezen:",
+		"wantsToReadAndXMore": "Roo wil dit bestand en nog {{count}} andere lezen:",
 		"wantsToReadOutsideWorkspace": "Roo wil dit bestand buiten de werkruimte lezen:",
 		"didRead": "Roo heeft dit bestand gelezen:",
 		"wantsToEdit": "Roo wil dit bestand bewerken:",
@@ -145,9 +161,7 @@
 		"didSearchReplace": "Roo heeft zoeken en vervangen uitgevoerd op dit bestand:",
 		"wantsToInsert": "Roo wil inhoud invoegen in dit bestand:",
 		"wantsToInsertWithLineNumber": "Roo wil inhoud invoegen in dit bestand op regel {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:",
-		"wantsToReadAndXMore": "Roo wil dit bestand en nog {{count}} andere lezen:",
-		"wantsToReadMultiple": "Roo wil meerdere bestanden lezen:"
+		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wil de bovenliggende bestanden in deze map bekijken:",
@@ -158,6 +172,11 @@
 		"didViewDefinitions": "Roo heeft broncode-definitienamen bekeken die in deze map worden gebruikt:",
 		"wantsToSearch": "Roo wil deze map doorzoeken op <code>{{regex}}</code>:",
 		"didSearch": "Roo heeft deze map doorzocht op <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo wil de codebase doorzoeken op <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wil de codebase doorzoeken op <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "{{count}} resultaat/resultaten gevonden voor <code>{{query}}</code>:"
 	},
 	"commandOutput": "Commando-uitvoer",
 	"response": "Antwoord",
@@ -201,22 +220,16 @@
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} uitgebracht",
 		"description": "Roo Code {{version}} brengt krachtige nieuwe functies en verbeteringen op basis van jouw feedback.",
+		"whatsNew": "Wat is er nieuw",
 		"feature1": "<bold>Intelligente Contextcompressie Standaard Ingeschakeld</bold>: Contextcompressie is nu standaard ingeschakeld met configureerbare instellingen voor wanneer automatische compressie plaatsvindt",
 		"feature2": "<bold>Handmatige Compressieknop</bold>: Nieuwe knop in de taakheader stelt je in staat om op elk moment handmatig contextcompressie te activeren",
 		"feature3": "<bold>Verbeterde Compressie-instellingen</bold>: Stel bij wanneer en hoe automatische compressie plaatsvindt via de <contextSettingsLink>Contextinstellingen</contextSettingsLink>",
 		"hideButton": "Aankondiging verbergen",
-		"detailsDiscussLinks": "Meer details en discussie in <discordLink>Discord</discordLink> en <redditLink>Reddit</redditLink> 🚀",
-		"whatsNew": "Wat is er nieuw"
+		"detailsDiscussLinks": "Meer details en discussie in <discordLink>Discord</discordLink> en <redditLink>Reddit</redditLink> 🚀"
 	},
 	"reasoning": {
 		"thinking": "Denkt na",
 		"seconds": "{{count}}s"
-	},
-	"contextCondense": {
-		"title": "Context samengevat",
-		"condensing": "Context aan het samenvatten...",
-		"errorHeader": "Context samenvatten mislukt",
-		"tokens": "tokens"
 	},
 	"followUpSuggest": {
 		"copyToInput": "Kopiëren naar invoer (zelfde als shift + klik)"
@@ -264,19 +277,6 @@
 			"title": "Limiet voor automatisch goedgekeurde verzoeken bereikt",
 			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-verzoek(en) bereikt. Wil je de teller resetten en doorgaan met de taak?",
 			"button": "Resetten en doorgaan"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo wil de codebase doorzoeken op <code>{{query}}</code>:",
-		"wantsToSearchWithPath": "Roo wil de codebase doorzoeken op <code>{{query}}</code> in <code>{{path}}</code>:",
-		"didSearch": "{{count}} resultaat/resultaten gevonden voor <code>{{query}}</code>:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Alles goedkeuren"
-		},
-		"deny": {
-			"title": "Alles weigeren"
 		}
 	}
 }

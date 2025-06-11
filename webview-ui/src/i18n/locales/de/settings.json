@@ -45,12 +45,12 @@
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
 		"openaiCompatibleProvider": "OpenAI-kompatibel",
+		"openaiKeyLabel": "OpenAI-Schlüssel:",
 		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
 		"openaiCompatibleApiKeyLabel": "API-Schlüssel:",
 		"openaiCompatibleModelDimensionLabel": "Embedding-Dimension:",
 		"openaiCompatibleModelDimensionPlaceholder": "z.B. 1536",
 		"openaiCompatibleModelDimensionDescription": "Die Embedding-Dimension (Ausgabegröße) für Ihr Modell. Überprüfen Sie die Dokumentation Ihres Anbieters für diesen Wert. Übliche Werte: 384, 768, 1536, 3072.",
-		"openaiKeyLabel": "OpenAI-Schlüssel:",
 		"modelLabel": "Modell",
 		"selectModelPlaceholder": "Modell auswählen",
 		"ollamaUrlLabel": "Ollama-URL:",
@@ -485,13 +485,13 @@
 			"name": "Experimentellen \"Servolenkung\"-Modus verwenden",
 			"description": "Wenn aktiviert, wird Roo das Modell häufiger an die Details seiner aktuellen Modusdefinition erinnern. Dies führt zu einer stärkeren Einhaltung von Rollendefinitionen und benutzerdefinierten Anweisungen, verwendet aber mehr Tokens pro Nachricht."
 		},
-		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Experimentelles Multi-Block-Diff-Werkzeug verwenden",
-			"description": "Wenn aktiviert, verwendet Roo das Multi-Block-Diff-Werkzeug. Dies versucht, mehrere Codeblöcke in der Datei in einer Anfrage zu aktualisieren."
-		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Gleichzeitiges Lesen von Dateien aktivieren",
 			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage lesen. Wenn deaktiviert, muss Roo Dateien nacheinander lesen. Das Deaktivieren kann helfen, wenn du mit weniger leistungsfähigen Modellen arbeitest oder mehr Kontrolle über den Dateizugriff möchtest."
+		},
+		"MULTI_SEARCH_AND_REPLACE": {
+			"name": "Experimentelles Multi-Block-Diff-Werkzeug verwenden",
+			"description": "Wenn aktiviert, verwendet Roo das Multi-Block-Diff-Werkzeug. Dies versucht, mehrere Codeblöcke in der Datei in einer Anfrage zu aktualisieren."
 		},
 		"MARKETPLACE": {
 			"name": "Marketplace aktivieren",

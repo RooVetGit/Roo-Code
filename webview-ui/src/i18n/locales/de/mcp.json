@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "Globale MCP bearbeiten",
 	"editProjectMCP": "Projekt-MCP bearbeiten",
+	"refreshMCP": "MCP-Server aktualisieren",
 	"learnMoreEditingSettings": "Mehr über das Bearbeiten von MCP-Einstellungsdateien erfahren",
 	"tool": {
 		"alwaysAllow": "Immer erlauben",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "Wiederhole...",
 		"retryConnection": "Verbindung wiederholen"
-	},
-	"refreshMCP": "MCP-Server aktualisieren"
+	}
 }

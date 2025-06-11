@@ -7,20 +7,15 @@
 		"tokens": "Tokens:",
 		"cache": "Cache:",
 		"apiCost": "Costo API:",
+		"condenseContext": "Condensa contesto in modo intelligente",
 		"contextWindow": "Lunghezza del contesto:",
 		"closeAndStart": "Chiudi attività e iniziane una nuova",
 		"export": "Esporta cronologia attività",
-		"delete": "Elimina attività (Shift + Clic per saltare la conferma)",
-		"condenseContext": "Condensa contesto in modo intelligente",
-		"share": "Condividi attività"
+		"share": "Condividi attività",
+		"delete": "Elimina attività (Shift + Clic per saltare la conferma)"
 	},
 	"unpin": "Rilascia",
 	"pin": "Fissa",
-	"tokenProgress": {
-		"availableSpace": "Spazio disponibile: {{amount}} tokens",
-		"tokensUsed": "Tokens utilizzati: {{used}} di {{total}}",
-		"reservedForResponse": "Riservato per risposta del modello: {{amount}} tokens"
-	},
 	"retry": {
 		"title": "Riprova",
 		"tooltip": "Prova di nuovo l'operazione"
@@ -37,6 +32,11 @@
 		"title": "Salva",
 		"tooltip": "Salva le modifiche al file"
 	},
+	"tokenProgress": {
+		"availableSpace": "Spazio disponibile: {{amount}} tokens",
+		"tokensUsed": "Tokens utilizzati: {{used}} di {{total}}",
+		"reservedForResponse": "Riservato per risposta del modello: {{amount}} tokens"
+	},
 	"reject": {
 		"title": "Rifiuta",
 		"tooltip": "Rifiuta questa azione"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "Approva",
 		"tooltip": "Approva questa azione"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Approva tutto"
+		},
+		"deny": {
+			"title": "Nega tutto"
+		}
 	},
 	"runCommand": {
 		"title": "Esegui comando",
@@ -94,6 +102,7 @@
 	"selectMode": "Seleziona modalità di interazione",
 	"selectApiConfig": "Seleziona la configurazione API",
 	"enhancePrompt": "Migliora prompt con contesto aggiuntivo",
+	"enhancePromptDescription": "Il pulsante 'Migliora prompt' aiuta a migliorare la tua richiesta fornendo contesto aggiuntivo, chiarimenti o riformulazioni. Prova a digitare una richiesta qui e fai di nuovo clic sul pulsante per vedere come funziona.",
 	"addImages": "Aggiungi immagini al messaggio",
 	"sendMessage": "Invia messaggio",
 	"typeMessage": "Scrivi un messaggio...",
@@ -101,20 +110,11 @@
 	"addContext": "@ per aggiungere contesto, / per cambiare modalità",
 	"dragFiles": "tieni premuto shift per trascinare file",
 	"dragFilesImages": "tieni premuto shift per trascinare file/immagini",
-	"enhancePromptDescription": "Il pulsante 'Migliora prompt' aiuta a migliorare la tua richiesta fornendo contesto aggiuntivo, chiarimenti o riformulazioni. Prova a digitare una richiesta qui e fai di nuovo clic sul pulsante per vedere come funziona.",
 	"errorReadingFile": "Errore nella lettura del file:",
 	"noValidImages": "Nessuna immagine valida è stata elaborata",
 	"separator": "Separatore",
 	"edit": "Modifica...",
 	"forNextMode": "per la prossima modalità",
-	"instructions": {
-		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente"
-	},
-	"error": "Errore",
-	"diffError": {
-		"title": "Modifica non riuscita"
-	},
-	"troubleMessage": "Roo sta avendo problemi...",
 	"apiRequest": {
 		"title": "Richiesta API",
 		"failed": "Richiesta API fallita",
@@ -139,8 +139,19 @@
 		},
 		"current": "Corrente"
 	},
+	"contextCondense": {
+		"title": "Contesto condensato",
+		"condensing": "Condensazione del contesto...",
+		"errorHeader": "Impossibile condensare il contesto",
+		"tokens": "token"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente"
+	},
 	"fileOperations": {
 		"wantsToRead": "Roo vuole leggere questo file:",
+		"wantsToReadMultiple": "Roo vuole leggere più file:",
+		"wantsToReadAndXMore": "Roo vuole leggere questo file e altri {{count}}:",
 		"wantsToReadOutsideWorkspace": "Roo vuole leggere questo file al di fuori dell'area di lavoro:",
 		"didRead": "Roo ha letto questo file:",
 		"wantsToEdit": "Roo vuole modificare questo file:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Roo ha eseguito ricerca e sostituzione in questo file:",
 		"wantsToInsert": "Roo vuole inserire contenuto in questo file:",
 		"wantsToInsertWithLineNumber": "Roo vuole inserire contenuto in questo file alla riga {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo vuole aggiungere contenuto alla fine di questo file:",
-		"wantsToReadAndXMore": "Roo vuole leggere questo file e altri {{count}}:",
-		"wantsToReadMultiple": "Roo vuole leggere più file:"
+		"wantsToInsertAtEnd": "Roo vuole aggiungere contenuto alla fine di questo file:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vuole visualizzare i file di primo livello in questa directory:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo ha visualizzato i nomi delle definizioni di codice sorgente utilizzate in questa directory:",
 		"wantsToSearch": "Roo vuole cercare in questa directory <code>{{regex}}</code>:",
 		"didSearch": "Roo ha cercato in questa directory <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo vuole cercare nella base di codice <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo vuole cercare nella base di codice <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "Trovato {{count}} risultato/i per <code>{{query}}</code>:"
 	},
 	"commandOutput": "Output del comando",
 	"response": "Risposta",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo ha una domanda:"
 	},
 	"taskCompleted": "Attività completata",
+	"error": "Errore",
+	"diffError": {
+		"title": "Modifica non riuscita"
+	},
+	"troubleMessage": "Roo sta avendo problemi...",
 	"powershell": {
 		"issues": "Sembra che tu stia avendo problemi con Windows PowerShell, consulta questa"
 	},
@@ -197,19 +216,6 @@
 		"title": "Auto-approvazione:",
 		"none": "Nessuna",
 		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente. Configurazione più dettagliata disponibile nelle <settingsLink>Impostazioni</settingsLink>."
-	},
-	"reasoning": {
-		"thinking": "Sto pensando",
-		"seconds": "{{count}}s"
-	},
-	"contextCondense": {
-		"title": "Contesto condensato",
-		"condensing": "Condensazione del contesto...",
-		"errorHeader": "Impossibile condensare il contesto",
-		"tokens": "token"
-	},
-	"followUpSuggest": {
-		"copyToInput": "Copia nell'input (o Shift + clic)"
 	},
 	"announcement": {
 		"title": "🎉 Rilasciato Roo Code {{version}}",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>Impostazioni di Condensazione Migliorate</bold>: Regola quando e come avviene la condensazione automatica tramite le <contextSettingsLink>Impostazioni di Contesto</contextSettingsLink>",
 		"hideButton": "Nascondi annuncio",
 		"detailsDiscussLinks": "Ottieni maggiori dettagli e partecipa alle discussioni su <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
+	},
+	"reasoning": {
+		"thinking": "Sto pensando",
+		"seconds": "{{count}}s"
+	},
+	"followUpSuggest": {
+		"copyToInput": "Copia nell'input (o Shift + clic)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vuole utilizzare il browser:",
@@ -264,19 +277,6 @@
 			"title": "Limite di Richieste Auto-approvate Raggiunto",
 			"description": "Roo ha raggiunto il limite auto-approvato di {{count}} richiesta/e API. Vuoi reimpostare il contatore e procedere con l'attività?",
 			"button": "Reimposta e Continua"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo vuole cercare nella base di codice <code>{{query}}</code>:",
-		"wantsToSearchWithPath": "Roo vuole cercare nella base di codice <code>{{query}}</code> in <code>{{path}}</code>:",
-		"didSearch": "Trovato {{count}} risultato/i per <code>{{query}}</code>:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Approva tutto"
-		},
-		"deny": {
-			"title": "Nega tutto"
 		}
 	}
 }

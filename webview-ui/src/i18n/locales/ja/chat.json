@@ -7,20 +7,15 @@
 		"tokens": "トークン:",
 		"cache": "キャッシュ:",
 		"apiCost": "APIコスト:",
+		"condenseContext": "コンテキストをインテリジェントに圧縮",
 		"contextWindow": "コンテキストウィンドウ:",
 		"closeAndStart": "タスクを閉じて新しいタスクを開始",
 		"export": "タスク履歴をエクスポート",
-		"delete": "タスクを削除（Shift + クリックで確認をスキップ）",
-		"condenseContext": "コンテキストをインテリジェントに圧縮",
-		"share": "タスクを共有"
+		"share": "タスクを共有",
+		"delete": "タスクを削除（Shift + クリックで確認をスキップ）"
 	},
 	"unpin": "ピン留めを解除",
 	"pin": "ピン留め",
-	"tokenProgress": {
-		"availableSpace": "利用可能な空き容量: {{amount}} トークン",
-		"tokensUsed": "使用トークン: {{used}} / {{total}}",
-		"reservedForResponse": "モデル応答用に予約: {{amount}} トークン"
-	},
 	"retry": {
 		"title": "再試行",
 		"tooltip": "操作を再試行"
@@ -37,6 +32,11 @@
 		"title": "保存",
 		"tooltip": "ファイル変更を保存"
 	},
+	"tokenProgress": {
+		"availableSpace": "利用可能な空き容量: {{amount}} トークン",
+		"tokensUsed": "使用トークン: {{used}} / {{total}}",
+		"reservedForResponse": "モデル応答用に予約: {{amount}} トークン"
+	},
 	"reject": {
 		"title": "拒否",
 		"tooltip": "このアクションを拒否"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "承認",
 		"tooltip": "このアクションを承認"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "すべて承認"
+		},
+		"deny": {
+			"title": "すべて拒否"
+		}
 	},
 	"runCommand": {
 		"title": "コマンド実行",
@@ -94,6 +102,7 @@
 	"selectMode": "対話モードを選択",
 	"selectApiConfig": "API構成を選択",
 	"enhancePrompt": "追加コンテキストでプロンプトを強化",
+	"enhancePromptDescription": "「プロンプトを強化」ボタンは、追加コンテキスト、説明、または言い換えを提供することで、リクエストを改善します。ここにリクエストを入力し、ボタンを再度クリックして動作を確認してください。",
 	"addImages": "メッセージに画像を追加",
 	"sendMessage": "メッセージを送信",
 	"typeMessage": "メッセージを入力...",
@@ -101,17 +110,11 @@
 	"addContext": "コンテキスト追加は@、モード切替は/",
 	"dragFiles": "ファイルをドラッグするにはShiftキーを押したまま",
 	"dragFilesImages": "ファイル/画像をドラッグするにはShiftキーを押したまま",
-	"enhancePromptDescription": "「プロンプトを強化」ボタンは、追加コンテキスト、説明、または言い換えを提供することで、リクエストを改善します。ここにリクエストを入力し、ボタンを再度クリックして動作を確認してください。",
 	"errorReadingFile": "ファイル読み込みエラー:",
 	"noValidImages": "有効な画像が処理されませんでした",
 	"separator": "区切り",
 	"edit": "編集...",
 	"forNextMode": "次のモード用",
-	"error": "エラー",
-	"diffError": {
-		"title": "編集に失敗しました"
-	},
-	"troubleMessage": "Rooに問題が発生しています...",
 	"apiRequest": {
 		"title": "APIリクエスト",
 		"failed": "APIリクエスト失敗",
@@ -136,11 +139,19 @@
 		},
 		"current": "現在"
 	},
+	"contextCondense": {
+		"title": "コンテキスト要約",
+		"condensing": "コンテキストを圧縮中...",
+		"errorHeader": "コンテキストの圧縮に失敗しました",
+		"tokens": "トークン"
+	},
 	"instructions": {
 		"wantsToFetch": "Rooは現在のタスクを支援するための詳細な指示を取得したい"
 	},
 	"fileOperations": {
 		"wantsToRead": "Rooはこのファイルを読みたい:",
+		"wantsToReadMultiple": "Roo は複数のファイルを読み取ろうとしています：",
+		"wantsToReadAndXMore": "Roo はこのファイルと他に {{count}} 個のファイルを読み込もうとしています:",
 		"wantsToReadOutsideWorkspace": "Rooはワークスペース外のこのファイルを読みたい:",
 		"didRead": "Rooはこのファイルを読みました:",
 		"wantsToEdit": "Rooはこのファイルを編集したい:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Rooはこのファイルで検索と置換を実行しました:",
 		"wantsToInsert": "Rooはこのファイルにコンテンツを挿入したい:",
 		"wantsToInsertWithLineNumber": "Rooはこのファイルの{{lineNumber}}行目にコンテンツを挿入したい:",
-		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:",
-		"wantsToReadAndXMore": "Roo はこのファイルと他に {{count}} 個のファイルを読み込もうとしています:",
-		"wantsToReadMultiple": "Rooは複数のファイルを読み取ろうとしています："
+		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Rooはこのディレクトリのトップレベルファイルを表示したい:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示しました:",
 		"wantsToSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索したい:",
 		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Rooはコードベースで <code>{{query}}</code> を検索したい:",
+		"wantsToSearchWithPath": "Rooは <code>{{path}}</code> 内のコードベースで <code>{{query}}</code> を検索したい:",
+		"didSearch": "<code>{{query}}</code> の検索結果: {{count}} 件"
 	},
 	"commandOutput": "コマンド出力",
 	"response": "応答",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Rooは質問があります:"
 	},
 	"taskCompleted": "タスク完了",
+	"error": "エラー",
+	"diffError": {
+		"title": "編集に失敗しました"
+	},
+	"troubleMessage": "Rooに問題が発生しています...",
 	"powershell": {
 		"issues": "Windows PowerShellに問題があるようです。こちらを参照してください"
 	},
@@ -197,19 +216,6 @@
 		"title": "自動承認:",
 		"none": "なし",
 		"description": "自動承認はRoo Codeに許可を求めずに操作を実行する権限を与えます。完全に信頼できる操作のみ有効にしてください。より詳細な設定は<settingsLink>設定</settingsLink>で利用できます。"
-	},
-	"reasoning": {
-		"thinking": "考え中",
-		"seconds": "{{count}}秒"
-	},
-	"contextCondense": {
-		"title": "コンテキスト要約",
-		"condensing": "コンテキストを圧縮中...",
-		"errorHeader": "コンテキストの圧縮に失敗しました",
-		"tokens": "トークン"
-	},
-	"followUpSuggest": {
-		"copyToInput": "入力欄にコピー（またはShift + クリック）"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} リリース",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>拡張された圧縮設定</bold>: <contextSettingsLink>コンテキスト設定</contextSettingsLink>で自動圧縮がいつどのように発生するかを細かく調整",
 		"hideButton": "通知を非表示",
 		"detailsDiscussLinks": "詳細は<discordLink>Discord</discordLink>と<redditLink>Reddit</redditLink>でご確認・ディスカッションください 🚀"
+	},
+	"reasoning": {
+		"thinking": "考え中",
+		"seconds": "{{count}}秒"
+	},
+	"followUpSuggest": {
+		"copyToInput": "入力欄にコピー（またはShift + クリック）"
 	},
 	"browser": {
 		"rooWantsToUse": "Rooはブラウザを使用したい:",
@@ -264,19 +277,6 @@
 			"title": "自動承認リクエスト制限に達しました",
 			"description": "Rooは{{count}}件のAPI自動承認リクエスト制限に達しました。カウントをリセットしてタスクを続行しますか？",
 			"button": "リセットして続行"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Rooはコードベースで <code>{{query}}</code> を検索したい:",
-		"wantsToSearchWithPath": "Rooは <code>{{path}}</code> 内のコードベースで <code>{{query}}</code> を検索したい:",
-		"didSearch": "<code>{{query}}</code> の検索結果: {{count}} 件"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "すべて承認"
-		},
-		"deny": {
-			"title": "すべて拒否"
 		}
 	}
 }

@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "Global MCP'yi Düzenle",
 	"editProjectMCP": "Proje MCP'sini Düzenle",
+	"refreshMCP": "MCP Sunucularını Yenile",
 	"learnMoreEditingSettings": "MCP ayar dosyalarını düzenleme hakkında daha fazla bilgi",
 	"tool": {
 		"alwaysAllow": "Her zaman izin ver",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "Tekrar deneniyor...",
 		"retryConnection": "Bağlantıyı tekrar dene"
-	},
-	"refreshMCP": "MCP Sunucularını Yenile"
+	}
 }

@@ -7,20 +7,15 @@
 		"tokens": "Tokens:",
 		"cache": "Cache:",
 		"apiCost": "API-Kosten:",
+		"condenseContext": "Kontext intelligent komprimieren",
 		"contextWindow": "Kontextfenster:",
 		"closeAndStart": "Aufgabe schließen und neue starten",
 		"export": "Aufgabenverlauf exportieren",
-		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
 		"share": "Aufgabe teilen",
-		"condenseContext": "Kontext intelligent komprimieren"
+		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)"
 	},
 	"unpin": "Lösen von oben",
 	"pin": "Anheften",
-	"tokenProgress": {
-		"availableSpace": "Verfügbarer Speicher: {{amount}} Tokens",
-		"tokensUsed": "Verwendete Tokens: {{used}} von {{total}}",
-		"reservedForResponse": "Reserviert für Modellantwort: {{amount}} Tokens"
-	},
 	"retry": {
 		"title": "Wiederholen",
 		"tooltip": "Versuch erneut starten"
@@ -37,6 +32,11 @@
 		"title": "Speichern",
 		"tooltip": "Dateiänderungen speichern"
 	},
+	"tokenProgress": {
+		"availableSpace": "Verfügbarer Speicher: {{amount}} Tokens",
+		"tokensUsed": "Verwendete Tokens: {{used}} von {{total}}",
+		"reservedForResponse": "Reserviert für Modellantwort: {{amount}} Tokens"
+	},
 	"reject": {
 		"title": "Ablehnen",
 		"tooltip": "Diese Aktion ablehnen"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "Genehmigen",
 		"tooltip": "Diese Aktion genehmigen"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Alle genehmigen"
+		},
+		"deny": {
+			"title": "Alle ablehnen"
+		}
 	},
 	"runCommand": {
 		"title": "Befehl ausführen",
@@ -94,6 +102,7 @@
 	"selectMode": "Interaktionsmodus auswählen",
 	"selectApiConfig": "API-Konfiguration auswählen",
 	"enhancePrompt": "Prompt mit zusätzlichem Kontext verbessern",
+	"enhancePromptDescription": "Die Schaltfläche 'Prompt verbessern' hilft, deine Anfrage durch zusätzlichen Kontext, Klarstellungen oder Umformulierungen zu verbessern. Versuche, hier eine Anfrage einzugeben und klicke erneut auf die Schaltfläche, um zu sehen, wie es funktioniert.",
 	"addImages": "Bilder zur Nachricht hinzufügen",
 	"sendMessage": "Nachricht senden",
 	"typeMessage": "Nachricht eingeben...",
@@ -101,17 +110,11 @@
 	"addContext": "@ für Kontext, / zum Moduswechsel",
 	"dragFiles": "Shift halten, um Dateien einzufügen",
 	"dragFilesImages": "Shift halten, um Dateien/Bilder einzufügen",
-	"enhancePromptDescription": "Die Schaltfläche 'Prompt verbessern' hilft, deine Anfrage durch zusätzlichen Kontext, Klarstellungen oder Umformulierungen zu verbessern. Versuche, hier eine Anfrage einzugeben und klicke erneut auf die Schaltfläche, um zu sehen, wie es funktioniert.",
 	"errorReadingFile": "Fehler beim Lesen der Datei:",
 	"noValidImages": "Keine gültigen Bilder wurden verarbeitet",
 	"separator": "Trennlinie",
 	"edit": "Bearbeiten...",
 	"forNextMode": "für nächsten Modus",
-	"error": "Fehler",
-	"diffError": {
-		"title": "Bearbeitung fehlgeschlagen"
-	},
-	"troubleMessage": "Roo hat Probleme...",
 	"apiRequest": {
 		"title": "API-Anfrage",
 		"failed": "API-Anfrage fehlgeschlagen",
@@ -136,11 +139,18 @@
 		},
 		"current": "Aktuell"
 	},
+	"contextCondense": {
+		"title": "Kontext komprimiert",
+		"condensing": "Kontext wird komprimiert...",
+		"errorHeader": "Kontext konnte nicht komprimiert werden",
+		"tokens": "Tokens"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo möchte detaillierte Anweisungen abrufen, um bei der aktuellen Aufgabe zu helfen"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo möchte diese Datei lesen:",
+		"wantsToReadMultiple": "Roo möchte mehrere Dateien lesen:",
 		"wantsToReadAndXMore": "Roo möchte diese Datei und {{count}} weitere lesen:",
 		"wantsToReadOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs lesen:",
 		"didRead": "Roo hat diese Datei gelesen:",
@@ -151,8 +161,7 @@
 		"didSearchReplace": "Roo hat Suchen und Ersetzen in dieser Datei durchgeführt:",
 		"wantsToInsert": "Roo möchte Inhalte in diese Datei einfügen:",
 		"wantsToInsertWithLineNumber": "Roo möchte Inhalte in diese Datei in Zeile {{lineNumber}} einfügen:",
-		"wantsToInsertAtEnd": "Roo möchte Inhalte am Ende dieser Datei anhängen:",
-		"wantsToReadMultiple": "Roo möchte mehrere Dateien lesen:"
+		"wantsToInsertAtEnd": "Roo möchte Inhalte am Ende dieser Datei anhängen:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo möchte die Dateien auf oberster Ebene in diesem Verzeichnis anzeigen:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo hat Quellcode-Definitionsnamen in diesem Verzeichnis angezeigt:",
 		"wantsToSearch": "Roo möchte dieses Verzeichnis nach <code>{{regex}}</code> durchsuchen:",
 		"didSearch": "Roo hat dieses Verzeichnis nach <code>{{regex}}</code> durchsucht:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo möchte den Codebase nach <code>{{query}}</code> durchsuchen:",
+		"wantsToSearchWithPath": "Roo möchte den Codebase nach <code>{{query}}</code> in <code>{{path}}</code> durchsuchen:",
+		"didSearch": "{{count}} Ergebnis(se) für <code>{{query}}</code> gefunden:"
 	},
 	"commandOutput": "Befehlsausgabe",
 	"response": "Antwort",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo hat eine Frage:"
 	},
 	"taskCompleted": "Aufgabe abgeschlossen",
+	"error": "Fehler",
+	"diffError": {
+		"title": "Bearbeitung fehlgeschlagen"
+	},
+	"troubleMessage": "Roo hat Probleme...",
 	"powershell": {
 		"issues": "Es scheint, dass du Probleme mit Windows PowerShell hast, bitte sieh dir dies an"
 	},
@@ -197,19 +216,6 @@
 		"title": "Automatische Genehmigung:",
 		"none": "Keine",
 		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust. Detailliertere Konfiguration verfügbar in den <settingsLink>Einstellungen</settingsLink>."
-	},
-	"reasoning": {
-		"thinking": "Denke nach",
-		"seconds": "{{count}}s"
-	},
-	"contextCondense": {
-		"title": "Kontext komprimiert",
-		"condensing": "Kontext wird komprimiert...",
-		"errorHeader": "Kontext konnte nicht komprimiert werden",
-		"tokens": "Tokens"
-	},
-	"followUpSuggest": {
-		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} veröffentlicht",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>Erweiterte Kondensierungs-Einstellungen</bold>: Feinabstimmung wann und wie automatische Kondensierung über die <contextSettingsLink>Kontext-Einstellungen</contextSettingsLink> erfolgt",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
+	},
+	"reasoning": {
+		"thinking": "Denke nach",
+		"seconds": "{{count}}s"
+	},
+	"followUpSuggest": {
+		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo möchte den Browser verwenden:",
@@ -264,19 +277,6 @@
 			"title": "Limit für automatisch genehmigte Anfragen erreicht",
 			"description": "Roo hat das automatisch genehmigte Limit von {{count}} API-Anfrage(n) erreicht. Möchtest du den Zähler zurücksetzen und mit der Aufgabe fortfahren?",
 			"button": "Zurücksetzen und fortfahren"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo möchte den Codebase nach <code>{{query}}</code> durchsuchen:",
-		"wantsToSearchWithPath": "Roo möchte den Codebase nach <code>{{query}}</code> in <code>{{path}}</code> durchsuchen:",
-		"didSearch": "{{count}} Ergebnis(se) für <code>{{query}}</code> gefunden:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Alle genehmigen"
-		},
-		"deny": {
-			"title": "Alle ablehnen"
 		}
 	}
 }

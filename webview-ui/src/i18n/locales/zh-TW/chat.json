@@ -7,20 +7,15 @@
 		"tokens": "Tokens:",
 		"cache": "快取：",
 		"apiCost": "API 費用：",
+		"condenseContext": "智慧壓縮上下文",
 		"contextWindow": "上下文長度：",
 		"closeAndStart": "關閉現有工作並開始一項新的工作",
 		"export": "匯出工作紀錄",
-		"delete": "刪除工作（按住 Shift 並點選可跳過確認）",
-		"condenseContext": "智慧壓縮上下文",
-		"share": "分享工作"
+		"share": "分享工作",
+		"delete": "刪除工作（按住 Shift 並點選可跳過確認）"
 	},
 	"unpin": "取消置頂",
 	"pin": "置頂",
-	"tokenProgress": {
-		"availableSpace": "可用空間：{{amount}} tokens",
-		"tokensUsed": "已使用 tokens: {{used}} / {{total}}",
-		"reservedForResponse": "為模型回應保留：{{amount}} tokens"
-	},
 	"retry": {
 		"title": "重試",
 		"tooltip": "再次嘗試操作"
@@ -37,6 +32,11 @@
 		"title": "儲存",
 		"tooltip": "儲存檔案變更"
 	},
+	"tokenProgress": {
+		"availableSpace": "可用空間：{{amount}} tokens",
+		"tokensUsed": "已使用 tokens: {{used}} / {{total}}",
+		"reservedForResponse": "為模型回應保留：{{amount}} tokens"
+	},
 	"reject": {
 		"title": "拒絕",
 		"tooltip": "拒絕此操作"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "核准",
 		"tooltip": "核准此操作"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "全部核准"
+		},
+		"deny": {
+			"title": "全部拒絕"
+		}
 	},
 	"runCommand": {
 		"title": "執行命令",
@@ -94,6 +102,7 @@
 	"selectMode": "選擇互動模式",
 	"selectApiConfig": "選取 API 設定",
 	"enhancePrompt": "使用額外內容增強提示",
+	"enhancePromptDescription": "「增強提示」按鈕透過提供額外內容、說明或重新表述來幫助改進您的請求。嘗試在此處輸入請求，然後再次點選按鈕以了解其運作方式。",
 	"addImages": "新增圖片到訊息中",
 	"sendMessage": "傳送訊息",
 	"typeMessage": "輸入訊息...",
@@ -101,17 +110,11 @@
 	"addContext": "輸入 @ 新增內容，輸入 / 切換模式",
 	"dragFiles": "按住 Shift 鍵拖曳檔案",
 	"dragFilesImages": "按住 Shift 鍵拖曳檔案/圖片",
-	"enhancePromptDescription": "「增強提示」按鈕透過提供額外內容、說明或重新表述來幫助改進您的請求。嘗試在此處輸入請求，然後再次點選按鈕以了解其運作方式。",
 	"errorReadingFile": "讀取檔案時發生錯誤：",
 	"noValidImages": "未處理到任何有效圖片",
 	"separator": "分隔符號",
 	"edit": "編輯...",
 	"forNextMode": "用於下一個模式",
-	"error": "錯誤",
-	"diffError": {
-		"title": "編輯失敗"
-	},
-	"troubleMessage": "Roo 遇到問題...",
 	"apiRequest": {
 		"title": "API 請求",
 		"failed": "API 請求失敗",
@@ -136,11 +139,19 @@
 		},
 		"current": "目前"
 	},
+	"contextCondense": {
+		"title": "上下文已壓縮",
+		"condensing": "正在壓縮上下文...",
+		"errorHeader": "上下文壓縮失敗",
+		"tokens": "tokens"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo 想要取得詳細指示以協助目前任務"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo 想要讀取此檔案：",
+		"wantsToReadMultiple": "Roo 想要讀取多個檔案：",
+		"wantsToReadAndXMore": "Roo 想要讀取此檔案以及另外 {{count}} 個檔案：",
 		"wantsToReadOutsideWorkspace": "Roo 想要讀取此工作區外的檔案：",
 		"didRead": "Roo 已讀取此檔案：",
 		"wantsToEdit": "Roo 想要編輯此檔案：",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Roo 已在此檔案執行搜尋和取代：",
 		"wantsToInsert": "Roo 想要在此檔案中插入內容：",
 		"wantsToInsertWithLineNumber": "Roo 想要在此檔案第 {{lineNumber}} 行插入內容：",
-		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容：",
-		"wantsToReadAndXMore": "Roo 想要讀取此檔案以及另外 {{count}} 個檔案：",
-		"wantsToReadMultiple": "Roo 想要讀取多個檔案："
+		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容："
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo 想要檢視此目錄中最上層的檔案：",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo 已檢視此目錄中使用的原始碼定義名稱：",
 		"wantsToSearch": "Roo 想要在此目錄中搜尋 <code>{{regex}}</code>：",
 		"didSearch": "Roo 已在此目錄中搜尋 <code>{{regex}}</code>："
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo 想要搜尋程式碼庫：<code>{{query}}</code>",
+		"wantsToSearchWithPath": "Roo 想要在 <code>{{path}}</code> 中搜尋：<code>{{query}}</code>",
+		"didSearch": "找到 {{count}} 個結果：<code>{{query}}</code>"
 	},
 	"commandOutput": "命令輸出",
 	"response": "回應",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo 有一個問題："
 	},
 	"taskCompleted": "工作完成",
+	"error": "錯誤",
+	"diffError": {
+		"title": "編輯失敗"
+	},
+	"troubleMessage": "Roo 遇到問題...",
 	"powershell": {
 		"issues": "看起來您遇到了 Windows PowerShell 的問題，請參考此處"
 	},
@@ -197,19 +216,6 @@
 		"title": "自動核准：",
 		"none": "無",
 		"description": "自動核准讓 Roo Code 可以在無需徵求您同意的情況下執行動作。請僅對您完全信任的動作啟用此功能。您可以在<settingsLink>設定</settingsLink>中進行更詳細的調整。"
-	},
-	"reasoning": {
-		"thinking": "思考中",
-		"seconds": "{{count}}秒"
-	},
-	"contextCondense": {
-		"title": "上下文已壓縮",
-		"condensing": "正在壓縮上下文...",
-		"errorHeader": "上下文壓縮失敗",
-		"tokens": "tokens"
-	},
-	"followUpSuggest": {
-		"copyToInput": "複製到輸入框（或按住 Shift 並點選）"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} 已發布",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>進階壓縮設定</bold>: 透過<contextSettingsLink>上下文設定</contextSettingsLink>精確控制自動壓縮的時機和方式",
 		"hideButton": "隱藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 取得更多詳細資訊並參與討論 🚀"
+	},
+	"reasoning": {
+		"thinking": "思考中",
+		"seconds": "{{count}}秒"
+	},
+	"followUpSuggest": {
+		"copyToInput": "複製到輸入框（或按住 Shift 並點選）"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo 想要使用瀏覽器：",
@@ -264,19 +277,6 @@
 			"title": "已達自動核准請求限制",
 			"description": "Roo 已達到 {{count}} 次 API 請求的自動核准限制。您想要重設計數並繼續工作嗎？",
 			"button": "重設並繼續"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo 想要搜尋程式碼庫：<code>{{query}}</code>",
-		"wantsToSearchWithPath": "Roo 想要在 <code>{{path}}</code> 中搜尋：<code>{{query}}</code>",
-		"didSearch": "找到 {{count}} 個結果：<code>{{query}}</code>"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "全部核准"
-		},
-		"deny": {
-			"title": "全部拒絕"
 		}
 	}
 }

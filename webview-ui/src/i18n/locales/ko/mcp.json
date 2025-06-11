@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "글로벌 MCP 편집",
 	"editProjectMCP": "프로젝트 MCP 편집",
+	"refreshMCP": "MCP 서버 새로 고침",
 	"learnMoreEditingSettings": "MCP 설정 파일 편집 방법 더 알아보기",
 	"tool": {
 		"alwaysAllow": "항상 허용",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "다시 시도 중...",
 		"retryConnection": "연결 다시 시도"
-	},
-	"refreshMCP": "MCP 서버 새로 고침"
+	}
 }

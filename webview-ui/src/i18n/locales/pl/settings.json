@@ -45,12 +45,12 @@
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
 		"openaiCompatibleProvider": "Kompatybilny z OpenAI",
+		"openaiKeyLabel": "Klucz OpenAI:",
 		"openaiCompatibleBaseUrlLabel": "Bazowy URL:",
 		"openaiCompatibleApiKeyLabel": "Klucz API:",
 		"openaiCompatibleModelDimensionLabel": "Wymiar Embeddingu:",
 		"openaiCompatibleModelDimensionPlaceholder": "np., 1536",
 		"openaiCompatibleModelDimensionDescription": "Wymiar embeddingu (rozmiar wyjściowy) dla twojego modelu. Sprawdź dokumentację swojego dostawcy, aby uzyskać tę wartość. Typowe wartości: 384, 768, 1536, 3072.",
-		"openaiKeyLabel": "Klucz OpenAI:",
 		"modelLabel": "Model",
 		"selectModelPlaceholder": "Wybierz model",
 		"ollamaUrlLabel": "URL Ollama:",
@@ -176,8 +176,8 @@
 		"getGroqApiKey": "Uzyskaj klucz API Groq",
 		"groqApiKey": "Klucz API Groq",
 		"getGeminiApiKey": "Uzyskaj klucz API Gemini",
-		"apiKey": "Klucz API",
 		"openAiApiKey": "Klucz API OpenAI",
+		"apiKey": "Klucz API",
 		"openAiBaseUrl": "URL bazowy",
 		"getOpenAiApiKey": "Uzyskaj klucz API OpenAI",
 		"mistralApiKey": "Klucz API Mistral",
@@ -380,15 +380,15 @@
 			"label": "Pokaż pliki .rooignore na listach i w wyszukiwaniach",
 			"description": "Gdy włączone, pliki pasujące do wzorców w .rooignore będą pokazywane na listach z symbolem kłódki. Gdy wyłączone, te pliki będą całkowicie ukryte z list plików i wyszukiwań."
 		},
+		"maxConcurrentFileReads": {
+			"label": "Limit jednoczesnych odczytów",
+			"description": "Maksymalna liczba plików, które narzędzie 'read_file' może przetwarzać jednocześnie. Wyższe wartości mogą przyspieszyć odczyt wielu małych plików, ale zwiększają zużycie pamięci."
+		},
 		"maxReadFile": {
 			"label": "Próg automatycznego skracania odczytu pliku",
 			"description": "Roo odczytuje tę liczbę linii, gdy model nie określa wartości początkowej/końcowej. Jeśli ta liczba jest mniejsza niż całkowita liczba linii pliku, Roo generuje indeks numerów linii definicji kodu. Przypadki specjalne: -1 nakazuje Roo odczytać cały plik (bez indeksowania), a 0 nakazuje nie czytać żadnych linii i dostarczyć tylko indeksy linii dla minimalnego kontekstu. Niższe wartości minimalizują początkowe użycie kontekstu, umożliwiając późniejsze precyzyjne odczyty zakresów linii. Jawne żądania początku/końca nie są ograniczone tym ustawieniem.",
 			"lines": "linii",
 			"always_full_read": "Zawsze czytaj cały plik"
-		},
-		"maxConcurrentFileReads": {
-			"label": "Limit jednoczesnych odczytów",
-			"description": "Maksymalna liczba plików, które narzędzie 'read_file' może przetwarzać jednocześnie. Wyższe wartości mogą przyspieszyć odczyt wielu małych plików, ale zwiększają zużycie pamięci."
 		}
 	},
 	"terminal": {
@@ -485,13 +485,13 @@
 			"name": "Użyj eksperymentalnego trybu \"wspomagania kierownicy\"",
 			"description": "Po włączeniu, Roo będzie częściej przypominać modelowi o szczegółach jego bieżącej definicji trybu. Doprowadzi to do silniejszego przestrzegania definicji ról i niestandardowych instrukcji, ale będzie używać więcej tokenów na wiadomość."
 		},
-		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
-			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
-		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Włącz jednoczesne odczytywanie plików",
 			"description": "Po włączeniu Roo może odczytać wiele plików w jednym żądaniu. Po wyłączeniu Roo musi odczytywać pliki pojedynczo. Wyłączenie może pomóc podczas pracy z mniej wydajnymi modelami lub gdy chcesz mieć większą kontrolę nad dostępem do plików."
+		},
+		"MULTI_SEARCH_AND_REPLACE": {
+			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
+			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
 		},
 		"DISABLE_COMPLETION_COMMAND": {
 			"name": "Wyłącz wykonywanie poleceń w attempt_completion",

@@ -7,12 +7,12 @@
 		"tokens": "Токенов:",
 		"cache": "Кэш:",
 		"apiCost": "Стоимость API:",
+		"condenseContext": "Интеллектуально сжать контекст",
 		"contextWindow": "Длина контекста:",
 		"closeAndStart": "Закрыть задачу и начать новую",
 		"export": "Экспортировать историю задач",
-		"delete": "Удалить задачу (Shift + клик для пропуска подтверждения)",
-		"condenseContext": "Интеллектуально сжать контекст",
-		"share": "Поделиться задачей"
+		"share": "Поделиться задачей",
+		"delete": "Удалить задачу (Shift + клик для пропуска подтверждения)"
 	},
 	"unpin": "Открепить",
 	"pin": "Закрепить",
@@ -46,6 +46,14 @@
 		"title": "Одобрить",
 		"tooltip": "Одобрить это действие"
 	},
+	"read-batch": {
+		"approve": {
+			"title": "Одобрить все"
+		},
+		"deny": {
+			"title": "Отклонить все"
+		}
+	},
 	"runCommand": {
 		"title": "Выполнить команду",
 		"tooltip": "Выполнить эту команду"
@@ -54,13 +62,13 @@
 		"title": "Продолжить во время выполнения",
 		"tooltip": "Продолжить несмотря на предупреждения"
 	},
-	"resumeTask": {
-		"title": "Возобновить задачу",
-		"tooltip": "Продолжить текущую задачу"
-	},
 	"killCommand": {
 		"title": "Завершить команду",
 		"tooltip": "Завершить текущую команду"
+	},
+	"resumeTask": {
+		"title": "Возобновить задачу",
+		"tooltip": "Продолжить текущую задачу"
 	},
 	"terminate": {
 		"title": "Завершить",
@@ -72,6 +80,7 @@
 	},
 	"scrollToBottom": "Прокрутить чат вниз",
 	"about": "Создавайте, рефакторите и отлаживайте код с помощью ИИ. Подробнее см. в нашей <DocsLink>документации</DocsLink>.",
+	"onboarding": "<strong>Ваш список задач в этом рабочем пространстве пуст.</strong> Начните с ввода задачи ниже. Не знаете, с чего начать? Подробнее о возможностях Roo читайте в <DocsLink>документации</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
 			"title": "Задачи-бумеранги",
@@ -90,7 +99,6 @@
 			"description": "Специализированные персонажи с собственным поведением и назначенными моделями"
 		}
 	},
-	"onboarding": "<strong>Ваш список задач в этом рабочем пространстве пуст.</strong> Начните с ввода задачи ниже. Не знаете, с чего начать? Подробнее о возможностях Roo читайте в <DocsLink>документации</DocsLink>.",
 	"selectMode": "Выберите режим взаимодействия",
 	"selectApiConfig": "Выберите конфигурацию API",
 	"enhancePrompt": "Улучшить запрос с дополнительным контекстом",
@@ -131,11 +139,19 @@
 		},
 		"current": "Текущая"
 	},
+	"contextCondense": {
+		"title": "Контекст сжат",
+		"condensing": "Сжатие контекста...",
+		"errorHeader": "Не удалось сжать контекст",
+		"tokens": "токены"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo хочет получить подробные инструкции для помощи с текущей задачей"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo хочет прочитать этот файл:",
+		"wantsToReadMultiple": "Roo хочет прочитать несколько файлов:",
+		"wantsToReadAndXMore": "Roo хочет прочитать этот файл и еще {{count}}:",
 		"wantsToReadOutsideWorkspace": "Roo хочет прочитать этот файл вне рабочей области:",
 		"didRead": "Roo прочитал этот файл:",
 		"wantsToEdit": "Roo хочет отредактировать этот файл:",
@@ -145,9 +161,7 @@
 		"didSearchReplace": "Roo выполнил поиск и замену в этом файле:",
 		"wantsToInsert": "Roo хочет вставить содержимое в этот файл:",
 		"wantsToInsertWithLineNumber": "Roo хочет вставить содержимое в этот файл на строку {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:",
-		"wantsToReadAndXMore": "Roo хочет прочитать этот файл и еще {{count}}:",
-		"wantsToReadMultiple": "Roo хочет прочитать несколько файлов:"
+		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo хочет просмотреть файлы верхнего уровня в этой директории:",
@@ -158,6 +172,11 @@
 		"didViewDefinitions": "Roo просмотрел имена определений исходного кода в этой директории:",
 		"wantsToSearch": "Roo хочет выполнить поиск в этой директории по <code>{{regex}}</code>:",
 		"didSearch": "Roo выполнил поиск в этой директории по <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code> в <code>{{path}}</code>:",
+		"didSearch": "Найдено {{count}} результат(ов) для <code>{{query}}</code>:"
 	},
 	"commandOutput": "Вывод команды",
 	"response": "Ответ",
@@ -212,12 +231,6 @@
 		"thinking": "Обдумывание",
 		"seconds": "{{count}}с"
 	},
-	"contextCondense": {
-		"title": "Контекст сжат",
-		"condensing": "Сжатие контекста...",
-		"errorHeader": "Не удалось сжать контекст",
-		"tokens": "токены"
-	},
 	"followUpSuggest": {
 		"copyToInput": "Скопировать во ввод (то же, что shift + клик)"
 	},
@@ -264,19 +277,6 @@
 			"title": "Достигнут лимит автоматически одобренных запросов",
 			"description": "Roo достиг автоматически одобренного лимита в {{count}} API-запрос(ов). Хотите сбросить счетчик и продолжить задачу?",
 			"button": "Сбросить и продолжить"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code>:",
-		"wantsToSearchWithPath": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code> в <code>{{path}}</code>:",
-		"didSearch": "Найдено {{count}} результат(ов) для <code>{{query}}</code>:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Одобрить все"
-		},
-		"deny": {
-			"title": "Отклонить все"
 		}
 	}
 }

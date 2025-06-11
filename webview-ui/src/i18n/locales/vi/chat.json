@@ -7,20 +7,15 @@
 		"tokens": "Tokens:",
 		"cache": "Bộ nhớ đệm:",
 		"apiCost": "Chi phí API:",
+		"condenseContext": "Cô đọng ngữ cảnh thông minh",
 		"contextWindow": "Chiều dài bối cảnh:",
 		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
 		"export": "Xuất lịch sử nhiệm vụ",
-		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)",
-		"condenseContext": "Cô đọng ngữ cảnh thông minh",
-		"share": "Chia sẻ nhiệm vụ"
+		"share": "Chia sẻ nhiệm vụ",
+		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",
-	"tokenProgress": {
-		"availableSpace": "Không gian khả dụng: {{amount}} tokens",
-		"tokensUsed": "Tokens đã sử dụng: {{used}} trong {{total}}",
-		"reservedForResponse": "Dành riêng cho phản hồi mô hình: {{amount}} tokens"
-	},
 	"retry": {
 		"title": "Thử lại",
 		"tooltip": "Thử lại thao tác"
@@ -37,6 +32,11 @@
 		"title": "Lưu",
 		"tooltip": "Lưu các thay đổi tệp"
 	},
+	"tokenProgress": {
+		"availableSpace": "Không gian khả dụng: {{amount}} tokens",
+		"tokensUsed": "Tokens đã sử dụng: {{used}} trong {{total}}",
+		"reservedForResponse": "Dành riêng cho phản hồi mô hình: {{amount}} tokens"
+	},
 	"reject": {
 		"title": "Từ chối",
 		"tooltip": "Từ chối hành động này"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "Phê duyệt",
 		"tooltip": "Phê duyệt hành động này"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Chấp nhận tất cả"
+		},
+		"deny": {
+			"title": "Từ chối tất cả"
+		}
 	},
 	"runCommand": {
 		"title": "Chạy lệnh",
@@ -94,6 +102,7 @@
 	"selectMode": "Chọn chế độ tương tác",
 	"selectApiConfig": "Chọn cấu hình API",
 	"enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
+	"enhancePromptDescription": "Nút 'Nâng cao yêu cầu' giúp cải thiện yêu cầu của bạn bằng cách cung cấp ngữ cảnh bổ sung, làm rõ hoặc diễn đạt lại. Hãy thử nhập yêu cầu tại đây và nhấp vào nút một lần nữa để xem cách thức hoạt động.",
 	"addImages": "Thêm hình ảnh vào tin nhắn",
 	"sendMessage": "Gửi tin nhắn",
 	"typeMessage": "Nhập tin nhắn...",
@@ -101,17 +110,11 @@
 	"addContext": "@ để thêm ngữ cảnh, / để chuyển chế độ",
 	"dragFiles": "giữ shift để kéo tệp",
 	"dragFilesImages": "giữ shift để kéo tệp/hình ảnh",
-	"enhancePromptDescription": "Nút 'Nâng cao yêu cầu' giúp cải thiện yêu cầu của bạn bằng cách cung cấp ngữ cảnh bổ sung, làm rõ hoặc diễn đạt lại. Hãy thử nhập yêu cầu tại đây và nhấp vào nút một lần nữa để xem cách thức hoạt động.",
 	"errorReadingFile": "Lỗi khi đọc tệp:",
 	"noValidImages": "Không có hình ảnh hợp lệ nào được xử lý",
 	"separator": "Dấu phân cách",
 	"edit": "Chỉnh sửa...",
 	"forNextMode": "cho chế độ tiếp theo",
-	"error": "Lỗi",
-	"diffError": {
-		"title": "Chỉnh sửa không thành công"
-	},
-	"troubleMessage": "Roo đang gặp sự cố...",
 	"apiRequest": {
 		"title": "Yêu cầu API",
 		"failed": "Yêu cầu API thất bại",
@@ -136,11 +139,19 @@
 		},
 		"current": "Hiện tại"
 	},
+	"contextCondense": {
+		"title": "Ngữ cảnh đã tóm tắt",
+		"condensing": "Đang cô đọng ngữ cảnh...",
+		"errorHeader": "Không thể cô đọng ngữ cảnh",
+		"tokens": "token"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo muốn đọc tệp này:",
+		"wantsToReadMultiple": "Roo muốn đọc nhiều tệp:",
+		"wantsToReadAndXMore": "Roo muốn đọc tệp này và {{count}} tệp khác:",
 		"wantsToReadOutsideWorkspace": "Roo muốn đọc tệp này bên ngoài không gian làm việc:",
 		"didRead": "Roo đã đọc tệp này:",
 		"wantsToEdit": "Roo muốn chỉnh sửa tệp này:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Roo đã thực hiện tìm kiếm và thay thế trong tệp này:",
 		"wantsToInsert": "Roo muốn chèn nội dung vào tệp này:",
 		"wantsToInsertWithLineNumber": "Roo muốn chèn nội dung vào dòng {{lineNumber}} của tệp này:",
-		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:",
-		"wantsToReadAndXMore": "Roo muốn đọc tệp này và {{count}} tệp khác:",
-		"wantsToReadMultiple": "Roo muốn đọc nhiều tệp:"
+		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo đã xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
 		"wantsToSearch": "Roo muốn tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
 		"didSearch": "Roo đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code> trong <code>{{path}}</code>:",
+		"didSearch": "Đã tìm thấy {{count}} kết quả cho <code>{{query}}</code>:"
 	},
 	"commandOutput": "Kết quả lệnh",
 	"response": "Phản hồi",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo có một câu hỏi:"
 	},
 	"taskCompleted": "Nhiệm vụ hoàn thành",
+	"error": "Lỗi",
+	"diffError": {
+		"title": "Chỉnh sửa không thành công"
+	},
+	"troubleMessage": "Roo đang gặp sự cố...",
 	"powershell": {
 		"issues": "Có vẻ như bạn đang gặp vấn đề với Windows PowerShell, vui lòng xem"
 	},
@@ -197,19 +216,6 @@
 		"title": "Tự động phê duyệt:",
 		"none": "Không",
 		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>."
-	},
-	"reasoning": {
-		"thinking": "Đang suy nghĩ",
-		"seconds": "{{count}} giây"
-	},
-	"contextCondense": {
-		"title": "Ngữ cảnh đã tóm tắt",
-		"condensing": "Đang cô đọng ngữ cảnh...",
-		"errorHeader": "Không thể cô đọng ngữ cảnh",
-		"tokens": "token"
-	},
-	"followUpSuggest": {
-		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Đã phát hành",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>Cài đặt cô đọng nâng cao</bold>: Tinh chỉnh khi nào và cách thức tự động cô đọng thông qua <contextSettingsLink>Cài đặt ngữ cảnh</contextSettingsLink>",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
+	},
+	"reasoning": {
+		"thinking": "Đang suy nghĩ",
+		"seconds": "{{count}} giây"
+	},
+	"followUpSuggest": {
+		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo muốn sử dụng trình duyệt:",
@@ -264,19 +277,6 @@
 			"title": "Đã Đạt Giới Hạn Yêu Cầu Tự Động Phê Duyệt",
 			"description": "Roo đã đạt đến giới hạn tự động phê duyệt là {{count}} yêu cầu API. Bạn có muốn đặt lại bộ đếm và tiếp tục nhiệm vụ không?",
 			"button": "Đặt lại và Tiếp tục"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code>:",
-		"wantsToSearchWithPath": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code> trong <code>{{path}}</code>:",
-		"didSearch": "Đã tìm thấy {{count}} kết quả cho <code>{{query}}</code>:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Chấp nhận tất cả"
-		},
-		"deny": {
-			"title": "Từ chối tất cả"
 		}
 	}
 }

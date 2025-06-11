@@ -45,12 +45,12 @@
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
 		"openaiCompatibleProvider": "Compatible con OpenAI",
+		"openaiKeyLabel": "Clave de OpenAI:",
 		"openaiCompatibleBaseUrlLabel": "URL base:",
 		"openaiCompatibleApiKeyLabel": "Clave API:",
 		"openaiCompatibleModelDimensionLabel": "Dimensión de Embedding:",
 		"openaiCompatibleModelDimensionPlaceholder": "ej., 1536",
 		"openaiCompatibleModelDimensionDescription": "La dimensión de embedding (tamaño de salida) para tu modelo. Consulta la documentación de tu proveedor para este valor. Valores comunes: 384, 768, 1536, 3072.",
-		"openaiKeyLabel": "Clave de OpenAI:",
 		"modelLabel": "Modelo",
 		"selectModelPlaceholder": "Seleccionar modelo",
 		"ollamaUrlLabel": "URL de Ollama:",
@@ -380,15 +380,15 @@
 			"label": "Mostrar archivos .rooignore en listas y búsquedas",
 			"description": "Cuando está habilitado, los archivos que coinciden con los patrones en .rooignore se mostrarán en listas con un símbolo de candado. Cuando está deshabilitado, estos archivos se ocultarán completamente de las listas de archivos y búsquedas."
 		},
+		"maxConcurrentFileReads": {
+			"label": "Límite de lecturas simultáneas",
+			"description": "Número máximo de archivos que la herramienta 'read_file' puede procesar simultáneamente. Valores más altos pueden acelerar la lectura de múltiples archivos pequeños pero aumentan el uso de memoria."
+		},
 		"maxReadFile": {
 			"label": "Umbral de auto-truncado de lectura de archivos",
 			"description": "Roo lee este número de líneas cuando el modelo omite valores de inicio/fin. Si este número es menor que el total del archivo, Roo genera un índice de números de línea de las definiciones de código. Casos especiales: -1 indica a Roo que lea el archivo completo (sin indexación), y 0 indica que no lea líneas y proporcione solo índices de línea para un contexto mínimo. Valores más bajos minimizan el uso inicial de contexto, permitiendo lecturas posteriores de rangos de líneas precisos. Las solicitudes con inicio/fin explícitos no están limitadas por esta configuración.",
 			"lines": "líneas",
 			"always_full_read": "Siempre leer el archivo completo"
-		},
-		"maxConcurrentFileReads": {
-			"label": "Límite de lecturas simultáneas",
-			"description": "Número máximo de archivos que la herramienta 'read_file' puede procesar simultáneamente. Valores más altos pueden acelerar la lectura de múltiples archivos pequeños pero aumentan el uso de memoria."
 		}
 	},
 	"terminal": {
@@ -485,13 +485,13 @@
 			"name": "Usar modo experimental de \"dirección asistida\"",
 			"description": "Cuando está habilitado, Roo recordará al modelo los detalles de su definición de modo actual con más frecuencia. Esto llevará a una mayor adherencia a las definiciones de roles e instrucciones personalizadas, pero usará más tokens por mensaje."
 		},
-		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Usar herramienta experimental de diff de bloques múltiples",
-			"description": "Cuando está habilitado, Roo usará la herramienta de diff de bloques múltiples. Esto intentará actualizar múltiples bloques de código en el archivo en una sola solicitud."
-		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Habilitar lectura concurrente de archivos",
 			"description": "Cuando está habilitado, Roo puede leer múltiples archivos en una sola solicitud. Cuando está deshabilitado, Roo debe leer archivos uno a la vez. Deshabilitarlo puede ayudar cuando se trabaja con modelos menos capaces o cuando deseas más control sobre el acceso a archivos."
+		},
+		"MULTI_SEARCH_AND_REPLACE": {
+			"name": "Usar herramienta experimental de diff de bloques múltiples",
+			"description": "Cuando está habilitado, Roo usará la herramienta de diff de bloques múltiples. Esto intentará actualizar múltiples bloques de código en el archivo en una sola solicitud."
 		},
 		"MARKETPLACE": {
 			"name": "Habilitar Marketplace",

@@ -7,20 +7,15 @@
 		"tokens": "Token 用量:",
 		"cache": "缓存:",
 		"apiCost": "API 费用:",
+		"condenseContext": "智能压缩上下文",
 		"contextWindow": "上下文长度：",
 		"closeAndStart": "关闭任务并开始新任务",
 		"export": "导出任务历史",
-		"delete": "删除任务（Shift + 点击跳过确认）",
 		"share": "分享任务",
-		"condenseContext": "智能压缩上下文"
+		"delete": "删除任务（Shift + 点击跳过确认）"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",
-	"tokenProgress": {
-		"availableSpace": "可用: {{amount}}",
-		"tokensUsed": "已使用: {{used}} / {{total}}",
-		"reservedForResponse": "已保留: {{amount}}"
-	},
 	"retry": {
 		"title": "重试",
 		"tooltip": "再次尝试操作"
@@ -37,6 +32,11 @@
 		"title": "保存",
 		"tooltip": "保存文件更改"
 	},
+	"tokenProgress": {
+		"availableSpace": "可用: {{amount}}",
+		"tokensUsed": "已使用: {{used}} / {{total}}",
+		"reservedForResponse": "已保留: {{amount}}"
+	},
 	"reject": {
 		"title": "拒绝",
 		"tooltip": "拒绝此操作"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "批准",
 		"tooltip": "批准此操作"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "全部批准"
+		},
+		"deny": {
+			"title": "全部拒绝"
+		}
 	},
 	"runCommand": {
 		"title": "运行命令",
@@ -94,6 +102,7 @@
 	"selectMode": "选择交互模式",
 	"selectApiConfig": "选择 API 配置",
 	"enhancePrompt": "增强提示词",
+	"enhancePromptDescription": "'增强提示'按钮通过提供额外上下文、澄清或重新表述来帮助改进您的请求。尝试在此处输入请求，然后再次点击按钮查看其工作原理。",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
 	"typeMessage": "输入消息...",
@@ -101,17 +110,11 @@
 	"addContext": "@添加上下文，/切换模式",
 	"dragFiles": "Shift+拖拽文件",
 	"dragFilesImages": "Shift+拖拽文件/图片",
-	"enhancePromptDescription": "'增强提示'按钮通过提供额外上下文、澄清或重新表述来帮助改进您的请求。尝试在此处输入请求，然后再次点击按钮查看其工作原理。",
 	"errorReadingFile": "读取文件时出错:",
 	"noValidImages": "没有处理有效图片",
 	"separator": "分隔符",
 	"edit": "编辑...",
 	"forNextMode": "用于下一个模式",
-	"error": "错误",
-	"diffError": {
-		"title": "编辑失败"
-	},
-	"troubleMessage": "Roo遇到问题...",
 	"apiRequest": {
 		"title": "API请求",
 		"failed": "API请求失败",
@@ -136,11 +139,19 @@
 		},
 		"current": "当前"
 	},
+	"contextCondense": {
+		"title": "上下文已压缩",
+		"condensing": "正在压缩上下文...",
+		"errorHeader": "上下文压缩失败",
+		"tokens": "tokens"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务"
 	},
 	"fileOperations": {
 		"wantsToRead": "需要读取文件:",
+		"wantsToReadMultiple": "Roo 想要读取多个文件：",
+		"wantsToReadAndXMore": "Roo 想读取此文件以及另外 {{count}} 个文件：",
 		"wantsToReadOutsideWorkspace": "请求访问外部文件:",
 		"didRead": "已读取文件:",
 		"wantsToEdit": "需要编辑文件:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "已完成搜索和替换:",
 		"wantsToInsert": "需要在此文件中插入内容:",
 		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
-		"wantsToInsertAtEnd": "需要在文件末尾添加内容:",
-		"wantsToReadAndXMore": "Roo 想读取此文件以及另外 {{count}} 个文件：",
-		"wantsToReadMultiple": "Roo 想要读取多个文件："
+		"wantsToInsertAtEnd": "需要在文件末尾添加内容:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "需要查看目录文件列表:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo已查看此目录中使用的源代码定义名称:",
 		"wantsToSearch": "需要搜索内容: {{regex}}",
 		"didSearch": "已完成内容搜索: {{regex}}"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo 需要搜索代码库: <code>{{query}}</code>",
+		"wantsToSearchWithPath": "Roo 需要在 <code>{{path}}</code> 中搜索: <code>{{query}}</code>",
+		"didSearch": "找到 {{count}} 个结果: <code>{{query}}</code>"
 	},
 	"commandOutput": "命令输出",
 	"response": "响应",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo有一个问题:"
 	},
 	"taskCompleted": "任务完成",
+	"error": "错误",
+	"diffError": {
+		"title": "编辑失败"
+	},
+	"troubleMessage": "Roo遇到问题...",
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
 	},
@@ -197,19 +216,6 @@
 		"title": "自动批准:",
 		"none": "无",
 		"description": "允许直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整"
-	},
-	"reasoning": {
-		"thinking": "思考中",
-		"seconds": "{{count}}秒"
-	},
-	"contextCondense": {
-		"title": "上下文已压缩",
-		"condensing": "正在压缩上下文...",
-		"errorHeader": "上下文压缩失败",
-		"tokens": "tokens"
-	},
-	"followUpSuggest": {
-		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} 已发布",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>高级压缩设置</bold>: 通过<contextSettingsLink>上下文设置</contextSettingsLink>精确控制自动压缩的时机和方式",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
+	},
+	"reasoning": {
+		"thinking": "思考中",
+		"seconds": "{{count}}秒"
+	},
+	"followUpSuggest": {
+		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo想使用浏览器:",
@@ -264,19 +277,6 @@
 			"title": "已达自动批准请求限制",
 			"description": "Roo 已达到 {{count}} 次 API 请求的自动批准限制。您想重置计数并继续任务吗？",
 			"button": "重置并继续"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo 需要搜索代码库: <code>{{query}}</code>",
-		"wantsToSearchWithPath": "Roo 需要在 <code>{{path}}</code> 中搜索: <code>{{query}}</code>",
-		"didSearch": "找到 {{count}} 个结果: <code>{{query}}</code>"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "全部批准"
-		},
-		"deny": {
-			"title": "全部拒绝"
 		}
 	}
 }

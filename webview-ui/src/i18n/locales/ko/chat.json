@@ -7,20 +7,15 @@
 		"tokens": "토큰:",
 		"cache": "캐시:",
 		"apiCost": "API 비용:",
+		"condenseContext": "컨텍스트 지능적으로 압축",
 		"contextWindow": "컨텍스트 창:",
 		"closeAndStart": "작업 닫고 새 작업 시작",
 		"export": "작업 기록 내보내기",
-		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)",
-		"condenseContext": "컨텍스트 지능적으로 압축",
-		"share": "작업 공유"
+		"share": "작업 공유",
+		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)"
 	},
 	"unpin": "고정 해제하기",
 	"pin": "고정하기",
-	"tokenProgress": {
-		"availableSpace": "사용 가능한 공간: {{amount}} 토큰",
-		"tokensUsed": "사용된 토큰: {{used}} / {{total}}",
-		"reservedForResponse": "모델 응답용 예약: {{amount}} 토큰"
-	},
 	"retry": {
 		"title": "다시 시도",
 		"tooltip": "작업 다시 시도"
@@ -37,6 +32,11 @@
 		"title": "저장",
 		"tooltip": "파일 변경사항 저장"
 	},
+	"tokenProgress": {
+		"availableSpace": "사용 가능한 공간: {{amount}} 토큰",
+		"tokensUsed": "사용된 토큰: {{used}} / {{total}}",
+		"reservedForResponse": "모델 응답용 예약: {{amount}} 토큰"
+	},
 	"reject": {
 		"title": "거부",
 		"tooltip": "이 작업 거부"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "승인",
 		"tooltip": "이 작업 승인"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "모두 승인"
+		},
+		"deny": {
+			"title": "모두 거부"
+		}
 	},
 	"runCommand": {
 		"title": "명령 실행",
@@ -94,6 +102,7 @@
 	"selectMode": "상호작용 모드 선택",
 	"selectApiConfig": "API 구성 선택",
 	"enhancePrompt": "추가 컨텍스트로 프롬프트 향상",
+	"enhancePromptDescription": "'프롬프트 향상' 버튼은 추가 컨텍스트, 명확화 또는 재구성을 제공하여 요청을 개선합니다. 여기에 요청을 입력한 다음 버튼을 다시 클릭하여 작동 방식을 확인해보세요.",
 	"addImages": "메시지에 이미지 추가",
 	"sendMessage": "메시지 보내기",
 	"typeMessage": "메시지 입력...",
@@ -101,17 +110,11 @@
 	"addContext": "컨텍스트 추가는 @, 모드 전환은 /",
 	"dragFiles": "파일을 드래그하려면 shift 키 누르기",
 	"dragFilesImages": "파일/이미지를 드래그하려면 shift 키 누르기",
-	"enhancePromptDescription": "'프롬프트 향상' 버튼은 추가 컨텍스트, 명확화 또는 재구성을 제공하여 요청을 개선합니다. 여기에 요청을 입력한 다음 버튼을 다시 클릭하여 작동 방식을 확인해보세요.",
 	"errorReadingFile": "파일 읽기 오류:",
 	"noValidImages": "처리된 유효한 이미지가 없습니다",
 	"separator": "구분자",
 	"edit": "편집...",
 	"forNextMode": "다음 모드용",
-	"error": "오류",
-	"diffError": {
-		"title": "편집 실패"
-	},
-	"troubleMessage": "Roo에 문제가 발생했습니다...",
 	"apiRequest": {
 		"title": "API 요청",
 		"failed": "API 요청 실패",
@@ -136,11 +139,19 @@
 		},
 		"current": "현재"
 	},
+	"contextCondense": {
+		"title": "컨텍스트 요약됨",
+		"condensing": "컨텍스트 압축 중...",
+		"errorHeader": "컨텍스트 압축 실패",
+		"tokens": "토큰"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo는 현재 작업을 지원하기 위해 자세한 지침을 가져오려고 합니다"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo가 이 파일을 읽고 싶어합니다:",
+		"wantsToReadMultiple": "Roo가 여러 파일을 읽으려고 합니다:",
+		"wantsToReadAndXMore": "Roo가 이 파일과 {{count}}개의 파일을 더 읽으려고 합니다:",
 		"wantsToReadOutsideWorkspace": "Roo가 워크스페이스 외부의 이 파일을 읽고 싶어합니다:",
 		"didRead": "Roo가 이 파일을 읽었습니다:",
 		"wantsToEdit": "Roo가 이 파일을 편집하고 싶어합니다:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Roo가 이 파일에서 검색 및 바꾸기를 수행했습니다:",
 		"wantsToInsert": "Roo가 이 파일에 내용을 삽입하고 싶어합니다:",
 		"wantsToInsertWithLineNumber": "Roo가 이 파일의 {{lineNumber}}번 줄에 내용을 삽입하고 싶어합니다:",
-		"wantsToInsertAtEnd": "Roo가 이 파일의 끝에 내용을 추가하고 싶어합니다:",
-		"wantsToReadAndXMore": "Roo가 이 파일과 {{count}}개의 파일을 더 읽으려고 합니다:",
-		"wantsToReadMultiple": "Roo가 여러 파일을 읽으려고 합니다:"
+		"wantsToInsertAtEnd": "Roo가 이 파일의 끝에 내용을 추가하고 싶어합니다:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo가 이 디렉토리의 최상위 파일을 보고 싶어합니다:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보았습니다:",
 		"wantsToSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색하고 싶어합니다:",
 		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo가 코드베이스에서 <code>{{query}}</code>을(를) 검색하고 싶어합니다:",
+		"wantsToSearchWithPath": "Roo가 <code>{{path}}</code>에서 <code>{{query}}</code>을(를) 검색하고 싶어합니다:",
+		"didSearch": "<code>{{query}}</code>에 대한 검색 결과 {{count}}개 찾음:"
 	},
 	"commandOutput": "명령 출력",
 	"response": "응답",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo에게 질문이 있습니다:"
 	},
 	"taskCompleted": "작업 완료",
+	"error": "오류",
+	"diffError": {
+		"title": "편집 실패"
+	},
+	"troubleMessage": "Roo에 문제가 발생했습니다...",
 	"powershell": {
 		"issues": "Windows PowerShell에 문제가 있는 것 같습니다. 다음을 참조하세요"
 	},
@@ -197,19 +216,6 @@
 		"title": "자동 승인:",
 		"none": "없음",
 		"description": "자동 승인을 사용하면 Roo Code가 권한을 요청하지 않고 작업을 수행할 수 있습니다. 완전히 신뢰할 수 있는 작업에만 활성화하세요. 더 자세한 구성은 <settingsLink>설정</settingsLink>에서 사용할 수 있습니다."
-	},
-	"reasoning": {
-		"thinking": "생각 중",
-		"seconds": "{{count}}초"
-	},
-	"contextCondense": {
-		"title": "컨텍스트 요약됨",
-		"condensing": "컨텍스트 압축 중...",
-		"errorHeader": "컨텍스트 압축 실패",
-		"tokens": "토큰"
-	},
-	"followUpSuggest": {
-		"copyToInput": "입력창에 복사 (또는 Shift + 클릭)"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} 출시",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>향상된 압축 설정</bold>: <contextSettingsLink>컨텍스트 설정</contextSettingsLink>을 통해 자동 압축이 언제 어떻게 발생하는지 세밀하게 조정",
 		"hideButton": "공지 숨기기",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink>와 <redditLink>Reddit</redditLink>에서 더 자세한 정보를 확인하고 논의하세요 🚀"
+	},
+	"reasoning": {
+		"thinking": "생각 중",
+		"seconds": "{{count}}초"
+	},
+	"followUpSuggest": {
+		"copyToInput": "입력창에 복사 (또는 Shift + 클릭)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo가 브라우저를 사용하고 싶어합니다:",
@@ -264,19 +277,6 @@
 			"title": "자동 승인 요청 한도 도달",
 			"description": "Roo가 {{count}}개의 API 요청(들)에 대한 자동 승인 한도에 도달했습니다. 카운트를 재설정하고 작업을 계속하시겠습니까?",
 			"button": "재설정 후 계속"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo가 코드베이스에서 <code>{{query}}</code>을(를) 검색하고 싶어합니다:",
-		"wantsToSearchWithPath": "Roo가 <code>{{path}}</code>에서 <code>{{query}}</code>을(를) 검색하고 싶어합니다:",
-		"didSearch": "<code>{{query}}</code>에 대한 검색 결과 {{count}}개 찾음:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "모두 승인"
-		},
-		"deny": {
-			"title": "모두 거부"
 		}
 	}
 }

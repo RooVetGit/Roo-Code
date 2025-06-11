@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "グローバルMCPを編集",
 	"editProjectMCP": "プロジェクトMCPを編集",
+	"refreshMCP": "MCPサーバーを更新",
 	"learnMoreEditingSettings": "MCP設定ファイルの編集方法を詳しく見る",
 	"tool": {
 		"alwaysAllow": "常に許可",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "再試行中...",
 		"retryConnection": "再接続"
-	},
-	"refreshMCP": "MCPサーバーを更新"
+	}
 }

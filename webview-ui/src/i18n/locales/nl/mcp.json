@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "Globale MCP bewerken",
 	"editProjectMCP": "Project-MCP bewerken",
+	"refreshMCP": "MCP-servers vernieuwen",
 	"learnMoreEditingSettings": "Meer over het bewerken van MCP-instellingen",
 	"tool": {
 		"alwaysAllow": "Altijd toestaan",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "Opnieuw proberen...",
 		"retryConnection": "Verbinding opnieuw proberen"
-	},
-	"refreshMCP": "MCP-servers vernieuwen"
+	}
 }

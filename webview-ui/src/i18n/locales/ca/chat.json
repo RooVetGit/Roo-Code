@@ -7,20 +7,15 @@
 		"tokens": "Tokens:",
 		"cache": "Caché:",
 		"apiCost": "Cost d'API:",
+		"condenseContext": "Condensar context de forma intel·ligent",
 		"contextWindow": "Finestra de context:",
 		"closeAndStart": "Tancar tasca i iniciar-ne una de nova",
 		"export": "Exportar historial de tasques",
-		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
-		"condenseContext": "Condensar context de forma intel·ligent",
-		"share": "Compartir tasca"
+		"share": "Compartir tasca",
+		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
-	"tokenProgress": {
-		"availableSpace": "Espai disponible: {{amount}} tokens",
-		"tokensUsed": "Tokens utilitzats: {{used}} de {{total}}",
-		"reservedForResponse": "Reservat per a resposta del model: {{amount}} tokens"
-	},
 	"retry": {
 		"title": "Tornar a intentar",
 		"tooltip": "Torna a provar l'operació"
@@ -37,6 +32,11 @@
 		"title": "Desar",
 		"tooltip": "Desa els canvis del fitxer"
 	},
+	"tokenProgress": {
+		"availableSpace": "Espai disponible: {{amount}} tokens",
+		"tokensUsed": "Tokens utilitzats: {{used}} de {{total}}",
+		"reservedForResponse": "Reservat per a resposta del model: {{amount}} tokens"
+	},
 	"reject": {
 		"title": "Rebutjar",
 		"tooltip": "Rebutja aquesta acció"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "Aprovar",
 		"tooltip": "Aprova aquesta acció"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Aprovar tot"
+		},
+		"deny": {
+			"title": "Denegar tot"
+		}
 	},
 	"runCommand": {
 		"title": "Executar ordre",
@@ -94,6 +102,7 @@
 	"selectMode": "Selecciona el mode d'interacció",
 	"selectApiConfig": "Seleccioneu la configuració de l'API",
 	"enhancePrompt": "Millora la sol·licitud amb context addicional",
+	"enhancePromptDescription": "El botó 'Millora la sol·licitud' ajuda a millorar la teva sol·licitud proporcionant context addicional, aclariments o reformulacions. Prova d'escriure una sol·licitud aquí i fes clic al botó de nou per veure com funciona.",
 	"addImages": "Afegeix imatges al missatge",
 	"sendMessage": "Envia el missatge",
 	"typeMessage": "Escriu un missatge...",
@@ -101,17 +110,11 @@
 	"addContext": "@ per afegir context, / per canviar de mode",
 	"dragFiles": "manté premut shift per arrossegar fitxers",
 	"dragFilesImages": "manté premut shift per arrossegar fitxers/imatges",
-	"enhancePromptDescription": "El botó 'Millora la sol·licitud' ajuda a millorar la teva sol·licitud proporcionant context addicional, aclariments o reformulacions. Prova d'escriure una sol·licitud aquí i fes clic al botó de nou per veure com funciona.",
 	"errorReadingFile": "Error en llegir el fitxer:",
 	"noValidImages": "No s'ha processat cap imatge vàlida",
 	"separator": "Separador",
 	"edit": "Edita...",
 	"forNextMode": "per al següent mode",
-	"error": "Error",
-	"diffError": {
-		"title": "Edició fallida"
-	},
-	"troubleMessage": "Roo està tenint problemes...",
 	"apiRequest": {
 		"title": "Sol·licitud API",
 		"failed": "Sol·licitud API ha fallat",
@@ -136,11 +139,19 @@
 		},
 		"current": "Actual"
 	},
+	"contextCondense": {
+		"title": "Context condensat",
+		"condensing": "Condensant context...",
+		"errorHeader": "Error en condensar el context",
+		"tokens": "tokens"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo vol obtenir instruccions detallades per ajudar amb la tasca actual."
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo vol llegir aquest fitxer:",
+		"wantsToReadMultiple": "Roo vol llegir diversos fitxers:",
+		"wantsToReadAndXMore": "En Roo vol llegir aquest fitxer i {{count}} més:",
 		"wantsToReadOutsideWorkspace": "Roo vol llegir aquest fitxer fora de l'espai de treball:",
 		"didRead": "Roo ha llegit aquest fitxer:",
 		"wantsToEdit": "Roo vol editar aquest fitxer:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Roo ha realitzat cerca i substitució en aquest fitxer:",
 		"wantsToInsert": "Roo vol inserir contingut en aquest fitxer:",
 		"wantsToInsertWithLineNumber": "Roo vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer:",
-		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:",
-		"wantsToReadAndXMore": "En Roo vol llegir aquest fitxer i {{count}} més:",
-		"wantsToReadMultiple": "Roo vol llegir diversos fitxers:"
+		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo ha vist noms de definicions de codi font utilitzats en aquest directori:",
 		"wantsToSearch": "Roo vol cercar en aquest directori <code>{{regex}}</code>:",
 		"didSearch": "Roo ha cercat en aquest directori <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo vol cercar a la base de codi <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo vol cercar a la base de codi <code>{{query}}</code> a <code>{{path}}</code>:",
+		"didSearch": "S'han trobat {{count}} resultat(s) per a <code>{{query}}</code>:"
 	},
 	"commandOutput": "Sortida de l'ordre",
 	"response": "Resposta",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo té una pregunta:"
 	},
 	"taskCompleted": "Tasca completada",
+	"error": "Error",
+	"diffError": {
+		"title": "Edició fallida"
+	},
+	"troubleMessage": "Roo està tenint problemes...",
 	"powershell": {
 		"issues": "Sembla que estàs tenint problemes amb Windows PowerShell, si us plau consulta aquesta documentació per a més informació."
 	},
@@ -197,19 +216,6 @@
 		"title": "Aprovació automàtica:",
 		"none": "Cap",
 		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament. Configuració més detallada disponible a la <settingsLink>Configuració</settingsLink>."
-	},
-	"reasoning": {
-		"thinking": "Pensant",
-		"seconds": "{{count}}s"
-	},
-	"contextCondense": {
-		"title": "Context condensat",
-		"condensing": "Condensant context...",
-		"errorHeader": "Error en condensar el context",
-		"tokens": "tokens"
-	},
-	"followUpSuggest": {
-		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} publicat",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>Configuració avançada de condensació</bold>: Ajusta quan i com es produeix la condensació automàtica a través de <contextSettingsLink>Configuració de context</contextSettingsLink>",
 		"hideButton": "Amagar anunci",
 		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
+	},
+	"reasoning": {
+		"thinking": "Pensant",
+		"seconds": "{{count}}s"
+	},
+	"followUpSuggest": {
+		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vol utilitzar el navegador:",
@@ -264,19 +277,6 @@
 			"title": "S'ha arribat al límit de sol·licituds aprovades automàticament",
 			"description": "Roo ha arribat al límit aprovat automàticament de {{count}} sol·licitud(s) d'API. Vols reiniciar el comptador i continuar amb la tasca?",
 			"button": "Reiniciar i continuar"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo vol cercar a la base de codi <code>{{query}}</code>:",
-		"wantsToSearchWithPath": "Roo vol cercar a la base de codi <code>{{query}}</code> a <code>{{path}}</code>:",
-		"didSearch": "S'han trobat {{count}} resultat(s) per a <code>{{query}}</code>:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Aprovar tot"
-		},
-		"deny": {
-			"title": "Denegar tot"
 		}
 	}
 }

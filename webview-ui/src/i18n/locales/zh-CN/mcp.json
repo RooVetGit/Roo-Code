@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "编辑全局 MCP",
 	"editProjectMCP": "编辑项目 MCP",
+	"refreshMCP": "刷新 MCP 服务器",
 	"learnMoreEditingSettings": "了解如何编辑 MCP 设置文件",
 	"tool": {
 		"alwaysAllow": "始终允许",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "重试中...",
 		"retryConnection": "重试连接"
-	},
-	"refreshMCP": "刷新 MCP 服务器"
+	}
 }

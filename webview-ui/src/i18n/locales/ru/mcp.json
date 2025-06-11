@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "Редактировать глобальный MCP",
 	"editProjectMCP": "Редактировать проектный MCP",
+	"refreshMCP": "Обновить MCP серверы",
 	"learnMoreEditingSettings": "Подробнее о редактировании файлов настроек MCP",
 	"tool": {
 		"alwaysAllow": "Всегда разрешать",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "Повторная попытка...",
 		"retryConnection": "Повторить подключение"
-	},
-	"refreshMCP": "Обновить MCP серверы"
+	}
 }

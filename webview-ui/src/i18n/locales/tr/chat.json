@@ -7,20 +7,15 @@
 		"tokens": "Tokenlar:",
 		"cache": "Önbellek:",
 		"apiCost": "API Maliyeti:",
+		"condenseContext": "Bağlamı akıllıca yoğunlaştır",
 		"contextWindow": "Bağlam Uzunluğu:",
 		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
 		"export": "Görev geçmişini dışa aktar",
-		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
-		"condenseContext": "Bağlamı akıllıca yoğunlaştır",
-		"share": "Görevi paylaş"
+		"share": "Görevi paylaş",
+		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
-	"tokenProgress": {
-		"availableSpace": "Kullanılabilir alan: {{amount}} token",
-		"tokensUsed": "Kullanılan tokenlar: {{used}} / {{total}}",
-		"reservedForResponse": "Model yanıtı için ayrılan: {{amount}} token"
-	},
 	"retry": {
 		"title": "Yeniden Dene",
 		"tooltip": "İşlemi tekrar dene"
@@ -37,6 +32,11 @@
 		"title": "Kaydet",
 		"tooltip": "Dosya değişikliklerini kaydet"
 	},
+	"tokenProgress": {
+		"availableSpace": "Kullanılabilir alan: {{amount}} token",
+		"tokensUsed": "Kullanılan tokenlar: {{used}} / {{total}}",
+		"reservedForResponse": "Model yanıtı için ayrılan: {{amount}} token"
+	},
 	"reject": {
 		"title": "Reddet",
 		"tooltip": "Bu eylemi reddet"
@@ -45,6 +45,14 @@
 	"approve": {
 		"title": "Onayla",
 		"tooltip": "Bu eylemi onayla"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Tümünü Onayla"
+		},
+		"deny": {
+			"title": "Tümünü Reddet"
+		}
 	},
 	"runCommand": {
 		"title": "Komutu Çalıştır",
@@ -94,6 +102,7 @@
 	"selectMode": "Etkileşim modunu seçin",
 	"selectApiConfig": "API yapılandırmasını seçin",
 	"enhancePrompt": "Ek bağlamla istemi geliştir",
+	"enhancePromptDescription": "'İstemi geliştir' düğmesi, ek bağlam, açıklama veya yeniden ifade sağlayarak isteğinizi iyileştirmeye yardımcı olur. Buraya bir istek yazıp düğmeye tekrar tıklayarak nasıl çalıştığını görebilirsiniz.",
 	"addImages": "Mesaja resim ekle",
 	"sendMessage": "Mesaj gönder",
 	"typeMessage": "Bir mesaj yazın...",
@@ -101,17 +110,11 @@
 	"addContext": "Bağlam eklemek için @, mod değiştirmek için /",
 	"dragFiles": "dosyaları sürüklemek için shift tuşuna basılı tutun",
 	"dragFilesImages": "dosyaları/resimleri sürüklemek için shift tuşuna basılı tutun",
-	"enhancePromptDescription": "'İstemi geliştir' düğmesi, ek bağlam, açıklama veya yeniden ifade sağlayarak isteğinizi iyileştirmeye yardımcı olur. Buraya bir istek yazıp düğmeye tekrar tıklayarak nasıl çalıştığını görebilirsiniz.",
 	"errorReadingFile": "Dosya okuma hatası:",
 	"noValidImages": "Hiçbir geçerli resim işlenmedi",
 	"separator": "Ayırıcı",
 	"edit": "Düzenle...",
 	"forNextMode": "sonraki mod için",
-	"error": "Hata",
-	"diffError": {
-		"title": "Düzenleme Başarısız"
-	},
-	"troubleMessage": "Roo sorun yaşıyor...",
 	"apiRequest": {
 		"title": "API İsteği",
 		"failed": "API İsteği Başarısız",
@@ -136,11 +139,19 @@
 		},
 		"current": "Mevcut"
 	},
+	"contextCondense": {
+		"title": "Bağlam Özetlendi",
+		"condensing": "Bağlam yoğunlaştırılıyor...",
+		"errorHeader": "Bağlam yoğunlaştırılamadı",
+		"tokens": "token"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo mevcut göreve yardımcı olmak için ayrıntılı talimatlar almak istiyor"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo bu dosyayı okumak istiyor:",
+		"wantsToReadMultiple": "Roo birden fazla dosya okumak istiyor:",
+		"wantsToReadAndXMore": "Roo bu dosyayı ve {{count}} tane daha okumak istiyor:",
 		"wantsToReadOutsideWorkspace": "Roo çalışma alanı dışındaki bu dosyayı okumak istiyor:",
 		"didRead": "Roo bu dosyayı okudu:",
 		"wantsToEdit": "Roo bu dosyayı düzenlemek istiyor:",
@@ -150,9 +161,7 @@
 		"didSearchReplace": "Roo bu dosyada arama ve değiştirme yaptı:",
 		"wantsToInsert": "Roo bu dosyaya içerik eklemek istiyor:",
 		"wantsToInsertWithLineNumber": "Roo bu dosyanın {{lineNumber}}. satırına içerik eklemek istiyor:",
-		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:",
-		"wantsToReadAndXMore": "Roo bu dosyayı ve {{count}} tane daha okumak istiyor:",
-		"wantsToReadMultiple": "Roo birden fazla dosya okumak istiyor:"
+		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo bu dizindeki üst düzey dosyaları görüntülemek istiyor:",
@@ -163,6 +172,11 @@
 		"didViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntüledi:",
 		"wantsToSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yapmak istiyor:",
 		"didSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yaptı:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo kod tabanında <code>{{query}}</code> aramak istiyor:",
+		"wantsToSearchWithPath": "Roo <code>{{path}}</code> içinde kod tabanında <code>{{query}}</code> aramak istiyor:",
+		"didSearch": "<code>{{query}}</code> için {{count}} sonuç bulundu:"
 	},
 	"commandOutput": "Komut Çıktısı",
 	"response": "Yanıt",
@@ -190,6 +204,11 @@
 		"hasQuestion": "Roo'nun bir sorusu var:"
 	},
 	"taskCompleted": "Görev Tamamlandı",
+	"error": "Hata",
+	"diffError": {
+		"title": "Düzenleme Başarısız"
+	},
+	"troubleMessage": "Roo sorun yaşıyor...",
 	"powershell": {
 		"issues": "Windows PowerShell ile ilgili sorunlar yaşıyor gibi görünüyorsunuz, lütfen şu konuya bakın"
 	},
@@ -197,19 +216,6 @@
 		"title": "Otomatik-onay:",
 		"none": "Hiçbiri",
 		"description": "Otomatik onay, Roo Code'un izin istemeden işlemler gerçekleştirmesine olanak tanır. Yalnızca tamamen güvendiğiniz eylemler için etkinleştirin. Daha detaylı yapılandırma <settingsLink>Ayarlar</settingsLink>'da mevcuttur."
-	},
-	"reasoning": {
-		"thinking": "Düşünüyor",
-		"seconds": "{{count}}sn"
-	},
-	"contextCondense": {
-		"title": "Bağlam Özetlendi",
-		"condensing": "Bağlam yoğunlaştırılıyor...",
-		"errorHeader": "Bağlam yoğunlaştırılamadı",
-		"tokens": "token"
-	},
-	"followUpSuggest": {
-		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Yayınlandı",
@@ -220,6 +226,13 @@
 		"feature3": "<bold>Gelişmiş Sıkıştırma Ayarları</bold>: <contextSettingsLink>Bağlam Ayarları</contextSettingsLink> üzerinden otomatik sıkıştırmanın ne zaman ve nasıl gerçekleşeceğini ince ayarlayın",
 		"hideButton": "Duyuruyu gizle",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
+	},
+	"reasoning": {
+		"thinking": "Düşünüyor",
+		"seconds": "{{count}}sn"
+	},
+	"followUpSuggest": {
+		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo tarayıcıyı kullanmak istiyor:",
@@ -264,19 +277,6 @@
 			"title": "Otomatik Onaylanan İstek Limiti Aşıldı",
 			"description": "Roo, {{count}} API isteği/istekleri için otomatik onaylanan limite ulaştı. Sayacı sıfırlamak ve göreve devam etmek istiyor musunuz?",
 			"button": "Sıfırla ve Devam Et"
-		}
-	},
-	"codebaseSearch": {
-		"wantsToSearch": "Roo kod tabanında <code>{{query}}</code> aramak istiyor:",
-		"wantsToSearchWithPath": "Roo <code>{{path}}</code> içinde kod tabanında <code>{{query}}</code> aramak istiyor:",
-		"didSearch": "<code>{{query}}</code> için {{count}} sonuç bulundu:"
-	},
-	"read-batch": {
-		"approve": {
-			"title": "Tümünü Onayla"
-		},
-		"deny": {
-			"title": "Tümünü Reddet"
 		}
 	}
 }

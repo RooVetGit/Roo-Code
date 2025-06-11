@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "Chỉnh sửa MCP toàn cục",
 	"editProjectMCP": "Chỉnh sửa MCP dự án",
+	"refreshMCP": "Làm mới Máy chủ MCP",
 	"learnMoreEditingSettings": "Tìm hiểu thêm về chỉnh sửa file cài đặt MCP",
 	"tool": {
 		"alwaysAllow": "Luôn cho phép",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "Đang thử lại...",
 		"retryConnection": "Thử kết nối lại"
-	},
-	"refreshMCP": "Làm mới Máy chủ MCP"
+	}
 }

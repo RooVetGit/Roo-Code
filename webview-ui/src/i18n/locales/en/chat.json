@@ -136,8 +136,7 @@
 			"cancel": "Cancel",
 			"cannotUndo": "This action cannot be undone.",
 			"restoreFilesAndTaskDescription": "Restores your project's files back to a snapshot taken at this point and deletes all messages after this point."
-		},
-		"current": "Current"
+		}
 	},
 	"contextCondense": {
 		"title": "Context Condensed",

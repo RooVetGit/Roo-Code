@@ -45,12 +45,12 @@
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
 		"openaiCompatibleProvider": "OpenAI-compatibel",
+		"openaiKeyLabel": "OpenAI-sleutel:",
 		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
 		"openaiCompatibleApiKeyLabel": "API-sleutel:",
 		"openaiCompatibleModelDimensionLabel": "Embedding Dimensie:",
 		"openaiCompatibleModelDimensionPlaceholder": "bijv., 1536",
 		"openaiCompatibleModelDimensionDescription": "De embedding dimensie (uitvoergrootte) voor uw model. Controleer de documentatie van uw provider voor deze waarde. Veelvoorkomende waarden: 384, 768, 1536, 3072.",
-		"openaiKeyLabel": "OpenAI-sleutel:",
 		"modelLabel": "Model",
 		"selectModelPlaceholder": "Selecteer model",
 		"ollamaUrlLabel": "Ollama URL:",
@@ -176,8 +176,8 @@
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
 		"getGeminiApiKey": "Gemini API-sleutel ophalen",
-		"apiKey": "API-sleutel",
 		"openAiApiKey": "OpenAI API-sleutel",
+		"apiKey": "API-sleutel",
 		"openAiBaseUrl": "Basis-URL",
 		"getOpenAiApiKey": "OpenAI API-sleutel ophalen",
 		"mistralApiKey": "Mistral API-sleutel",
@@ -380,15 +380,15 @@
 			"label": ".rooignore-bestanden tonen in lijsten en zoekopdrachten",
 			"description": "Indien ingeschakeld, worden bestanden die overeenkomen met patronen in .rooignore getoond in lijsten met een slotje. Indien uitgeschakeld, worden deze bestanden volledig verborgen in lijsten en zoekopdrachten."
 		},
+		"maxConcurrentFileReads": {
+			"label": "Limiet gelijktijdige bestandslezingen",
+			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
+		},
 		"maxReadFile": {
 			"label": "Automatisch afkappen bij bestandslezen",
 			"description": "Roo leest dit aantal regels wanneer het model geen begin/eindwaarden opgeeft. Als dit aantal lager is dan het totaal, genereert Roo een index van codelijnen. Speciale gevallen: -1 laat Roo het hele bestand lezen (zonder indexering), 0 leest geen regels en geeft alleen een minimale index. Lagere waarden minimaliseren het initiële contextgebruik en maken precieze vervolg-leesopdrachten mogelijk. Expliciete begin/eind-aanvragen worden niet door deze instelling beperkt.",
 			"lines": "regels",
 			"always_full_read": "Altijd volledig bestand lezen"
-		},
-		"maxConcurrentFileReads": {
-			"label": "Limiet gelijktijdige bestandslezingen",
-			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
 		}
 	},
 	"terminal": {
@@ -485,13 +485,13 @@
 			"name": "Experimentele 'power steering'-modus gebruiken",
 			"description": "Indien ingeschakeld, herinnert Roo het model vaker aan de details van de huidige modusdefinitie. Dit leidt tot sterkere naleving van roldefinities en aangepaste instructies, maar gebruikt meer tokens per bericht."
 		},
-		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Experimentele multi-block diff-tool gebruiken",
-			"description": "Indien ingeschakeld, gebruikt Roo de multi-block diff-tool. Hiermee wordt geprobeerd meerdere codeblokken in het bestand in één verzoek bij te werken."
-		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Gelijktijdig lezen van bestanden inschakelen",
 			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek lezen. Wanneer uitgeschakeld, moet Roo bestanden één voor één lezen. Uitschakelen kan helpen bij het werken met minder capabele modellen of wanneer u meer controle over bestandstoegang wilt."
+		},
+		"MULTI_SEARCH_AND_REPLACE": {
+			"name": "Experimentele multi-block diff-tool gebruiken",
+			"description": "Indien ingeschakeld, gebruikt Roo de multi-block diff-tool. Hiermee wordt geprobeerd meerdere codeblokken in het bestand in één verzoek bij te werken."
 		},
 		"MARKETPLACE": {
 			"name": "Marketplace inschakelen",

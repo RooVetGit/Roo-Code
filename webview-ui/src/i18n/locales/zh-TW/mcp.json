@@ -14,6 +14,7 @@
 	},
 	"editGlobalMCP": "編輯全域 MCP",
 	"editProjectMCP": "編輯專案 MCP",
+	"refreshMCP": "重新整理 MCP 伺服器",
 	"learnMoreEditingSettings": "了解如何編輯 MCP 設定檔",
 	"tool": {
 		"alwaysAllow": "總是允許",
@@ -53,6 +54,5 @@
 	"serverStatus": {
 		"retrying": "重試中...",
 		"retryConnection": "重試連線"
-	},
-	"refreshMCP": "重新整理 MCP 伺服器"
+	}
 }
