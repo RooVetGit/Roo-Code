@@ -1347,11 +1347,10 @@ export class ClineProvider
 		const cwd = this.cwd
 
 		// Only fetch marketplace data if the feature is enabled
-		const currentExperiments = await this.getState().then((state) => state.experiments)
 		let marketplaceItems: any[] = []
 		let marketplaceInstalledMetadata: any = { project: {}, global: {} }
 
-		if (currentExperiments.marketplace) {
+		if (experiments.marketplace) {
 			marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
 			marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
 		}
