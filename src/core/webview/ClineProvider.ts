@@ -1346,8 +1346,15 @@ export class ClineProvider
 		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
-		const marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
-		const marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
+		// Only fetch marketplace data if the feature is enabled
+		const currentExperiments = await this.getState().then((state) => state.experiments)
+		let marketplaceItems: any[] = []
+		let marketplaceInstalledMetadata: any = { project: {}, global: {} }
+
+		if (currentExperiments.marketplace) {
+			marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
+			marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
+		}
 
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug
