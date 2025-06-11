@@ -93,7 +93,8 @@
 		"goToMcp": "Vai alla scheda MCP",
 		"goToModes": "Vai alla scheda Modalità",
 		"moreInfoMcp": "Visualizza documentazione MCP {{name}}",
-		"validationRequired": "Fornisci un valore per {{paramName}}"
+		"validationRequired": "Fornisci un valore per {{paramName}}",
+		"prerequisites": "Prerequisiti"
 	},
 	"sources": {
 		"title": "Configura fonti del Marketplace",

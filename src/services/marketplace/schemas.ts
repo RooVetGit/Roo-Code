@@ -17,6 +17,7 @@ export const mcpInstallationMethodSchema = z.object({
 	name: z.string().min(1),
 	content: z.string().min(1),
 	parameters: z.array(mcpParameterSchema).optional(),
+	prerequisites: z.array(z.string()).optional(),
 })
 
 /**
@@ -36,6 +37,7 @@ export const marketplaceItemSchema = z.object({
 	authorUrl: z.string().url("Author URL must be a valid URL").optional(),
 	tags: z.array(z.string()).optional(),
 	content: z.union([z.string().min(1), z.array(mcpInstallationMethodSchema)]), // Embedded content (YAML for modes, JSON for mcps, or named methods)
+	prerequisites: z.array(z.string()).optional(),
 })
 
 /**
@@ -61,6 +63,7 @@ export const modeMarketplaceItemYamlSchema = z.object({
 	authorUrl: z.string().url().optional(),
 	tags: z.array(z.string()).optional(),
 	content: z.string(),
+	prerequisites: z.array(z.string()).optional(),
 })
 
 export const mcpMarketplaceItemYamlSchema = z.object({
@@ -73,6 +76,7 @@ export const mcpMarketplaceItemYamlSchema = z.object({
 	tags: z.array(z.string()).optional(),
 	content: z.union([z.string(), z.array(mcpInstallationMethodSchema)]),
 	parameters: z.array(mcpParameterSchema).optional(),
+	prerequisites: z.array(z.string()).optional(),
 })
 
 // Export aliases for backward compatibility (these are the same as the YAML schemas)

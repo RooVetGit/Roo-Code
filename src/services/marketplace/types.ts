@@ -22,6 +22,7 @@ export interface ModeMarketplaceItem {
 	authorUrl?: string
 	tags?: string[]
 	content: string // Embedded YAML content for .roomodes
+	prerequisites?: string[]
 }
 
 export interface McpParameter {
@@ -35,6 +36,7 @@ export interface McpInstallationMethod {
 	name: string
 	content: string
 	parameters?: McpParameter[]
+	prerequisites?: string[]
 }
 
 export interface McpMarketplaceItem {
@@ -47,6 +49,7 @@ export interface McpMarketplaceItem {
 	tags?: string[]
 	content: string | McpInstallationMethod[] // Can be a single config or array of named methods
 	parameters?: McpParameter[]
+	prerequisites?: string[]
 }
 
 /**
@@ -63,6 +66,7 @@ export interface MarketplaceItem {
 	tags?: string[]
 	content: string | McpInstallationMethod[] // Can be a single config or array of named methods
 	parameters?: McpParameter[] // Optional parameters for MCPs
+	prerequisites?: string[]
 }
 
 export interface InstallMarketplaceItemOptions {

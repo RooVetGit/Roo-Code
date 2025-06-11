@@ -93,7 +93,8 @@
 		"goToMcp": "MCP टैब पर जाएं",
 		"goToModes": "मोड टैब पर जाएं",
 		"moreInfoMcp": "{{name}} MCP दस्तावेज़ देखें",
-		"validationRequired": "कृपया {{paramName}} के लिए एक मान प्रदान करें"
+		"validationRequired": "कृपया {{paramName}} के लिए एक मान प्रदान करें",
+		"prerequisites": "आवश्यकताएं"
 	},
 	"sources": {
 		"title": "Marketplace स्रोत कॉन्फ़िगर करें",

@@ -78,6 +78,24 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 		return Array.from(paramMap.values())
 	}, [item, selectedMethodIndex])
 
+	// Get effective prerequisites for the selected method (global + method-specific)
+	const effectivePrerequisites = useMemo(() => {
+		if (!item) return []
+
+		const globalPrereqs = item.prerequisites || []
+		let methodPrereqs: string[] = []
+
+		// Get method-specific prerequisites if content is an array
+		if (Array.isArray(item.content)) {
+			const selectedMethod = item.content[selectedMethodIndex] as McpInstallationMethod
+			methodPrereqs = selectedMethod?.prerequisites || []
+		}
+
+		// Combine and deduplicate prerequisites
+		const allPrereqs = [...globalPrereqs, ...methodPrereqs]
+		return Array.from(new Set(allPrereqs))
+	}, [item, selectedMethodIndex])
+
 	// Update parameter values when method changes
 	React.useEffect(() => {
 		if (item) {
@@ -271,6 +289,20 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 										))}
 									</SelectContent>
 								</Select>
+							</div>
+						)}
+
+						{/* Prerequisites */}
+						{effectivePrerequisites.length > 0 && (
+							<div className="space-y-2">
+								<div className="text-base font-semibold">{t("marketplace:install.prerequisites")}</div>
+								<ul className="list-disc list-inside space-y-1 text-sm">
+									{effectivePrerequisites.map((prereq, index) => (
+										<li key={index} className="text-muted-foreground">
+											{prereq}
+										</li>
+									))}
+								</ul>
 							</div>
 						)}
 

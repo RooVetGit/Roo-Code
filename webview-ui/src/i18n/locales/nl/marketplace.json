@@ -93,7 +93,8 @@
 		"goToMcp": "Ga naar MCP-tabblad",
 		"goToModes": "Ga naar Modi-tabblad",
 		"moreInfoMcp": "{{name}} MCP-documentatie bekijken",
-		"validationRequired": "Geef een waarde op voor {{paramName}}"
+		"validationRequired": "Geef een waarde op voor {{paramName}}",
+		"prerequisites": "Vereisten"
 	},
 	"sources": {
 		"title": "Marketplace-bronnen configureren",

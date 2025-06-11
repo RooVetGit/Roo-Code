@@ -93,7 +93,8 @@
 		"goToMcp": "Przejdź do zakładki MCP",
 		"goToModes": "Przejdź do zakładki Tryby",
 		"moreInfoMcp": "Zobacz dokumentację MCP {{name}}",
-		"validationRequired": "Podaj wartość dla {{paramName}}"
+		"validationRequired": "Podaj wartość dla {{paramName}}",
+		"prerequisites": "Wymagania wstępne"
 	},
 	"sources": {
 		"title": "Konfiguruj źródła marketplace",

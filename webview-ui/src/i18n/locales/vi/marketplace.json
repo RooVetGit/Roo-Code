@@ -93,7 +93,8 @@
 		"goToMcp": "Đi đến Tab MCP",
 		"goToModes": "Đi đến Tab Chế độ",
 		"moreInfoMcp": "Xem tài liệu MCP {{name}}",
-		"validationRequired": "Vui lòng cung cấp giá trị cho {{paramName}}"
+		"validationRequired": "Vui lòng cung cấp giá trị cho {{paramName}}",
+		"prerequisites": "Điều kiện tiên quyết"
 	},
 	"sources": {
 		"title": "Cấu hình Nguồn Marketplace",

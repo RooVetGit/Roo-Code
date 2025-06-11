@@ -81,6 +81,7 @@
 		"project": "Project (current workspace)",
 		"global": "Global (all workspaces)",
 		"method": "Installation Method",
+		"prerequisites": "Prerequisites",
 		"configuration": "Configuration",
 		"configurationDescription": "Configure the parameters required for this MCP server",
 		"button": "Install",

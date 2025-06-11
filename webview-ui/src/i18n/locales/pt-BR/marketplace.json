@@ -93,7 +93,8 @@
 		"goToMcp": "Ir para aba MCP",
 		"goToModes": "Ir para aba Modos",
 		"moreInfoMcp": "Ver documentação MCP do {{name}}",
-		"validationRequired": "Por favor, forneça um valor para {{paramName}}"
+		"validationRequired": "Por favor, forneça um valor para {{paramName}}",
+		"prerequisites": "Pré-requisitos"
 	},
 	"sources": {
 		"title": "Configurar fontes do marketplace",
