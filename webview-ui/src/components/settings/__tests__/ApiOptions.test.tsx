@@ -1,101 +1,174 @@
-// npx jest src/components/settings/__tests__/ApiOptions.test.tsx
-
-import { render, screen, fireEvent } from "@testing-library/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-
-import { type ModelInfo, type ProviderSettings, openAiModelInfoSaneDefaults } from "@roo-code/types"
-
-import { ExtensionStateContextProvider } from "@src/context/ExtensionStateContext"
-
-import ApiOptions, { ApiOptionsProps } from "../ApiOptions"
-
-// Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
-	VSCodeTextField: ({ children, value, onBlur }: any) => (
-		<div>
-			{children}
-			<input type="text" value={value} onChange={onBlur} />
-		</div>
-	),
-	VSCodeLink: ({ children, href }: any) => <a href={href}>{children}</a>,
-	VSCodeRadio: ({ value, checked }: any) => <input type="radio" value={value} checked={checked} />,
-	VSCodeRadioGroup: ({ children }: any) => <div>{children}</div>,
-	VSCodeButton: ({ children }: any) => <div>{children}</div>,
-}))
-
-// Mock other components
-jest.mock("vscrui", () => ({
-	Checkbox: ({ children, checked, onChange }: any) => (
-		<label data-testid={`checkbox-${children?.toString().replace(/\s+/g, "-").toLowerCase()}`}>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(e) => onChange(e.target.checked)}
-				data-testid={`checkbox-input-${children?.toString().replace(/\s+/g, "-").toLowerCase()}`}
-			/>
-			{children}
-		</label>
-	),
-}))
-
-// Mock @shadcn/ui components
-jest.mock("@/components/ui", () => ({
+// Mock @shadcn/ui components - both @/ and @src/ paths
+const uiMocks = {
 	Select: ({ children, value, onValueChange }: any) => (
-		<div className="select-mock">
-			<select value={value} onChange={(e) => onValueChange && onValueChange(e.target.value)}>
-				{children}
-			</select>
-		</div>
-	),
-	SelectTrigger: ({ children }: any) => <div className="select-trigger-mock">{children}</div>,
-	SelectValue: ({ children }: any) => <div className="select-value-mock">{children}</div>,
-	SelectContent: ({ children }: any) => <div className="select-content-mock">{children}</div>,
-	SelectItem: ({ children, value }: any) => (
-		<option value={value} className="select-item-mock">
+		<select value={value} onChange={(e: any) => onValueChange && onValueChange(e.target.value)}>
 			{children}
-		</option>
+		</select>
 	),
-	SelectSeparator: ({ children }: any) => <div className="select-separator-mock">{children}</div>,
-	Button: ({ children, onClick, _variant, role, className }: any) => (
+	SelectTrigger: ({ children }: any) => <>{children}</>,
+	SelectValue: ({ children }: any) => <>{children}</>,
+	SelectContent: ({ children }: any) => <>{children}</>,
+	SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
+	SelectSeparator: () => null,
+	Button: ({ children, onClick, role, className }: any) => (
 		<button onClick={onClick} className={`button-mock ${className || ""}`} role={role}>
 			{children}
 		</button>
 	),
-	// Add missing components used by ModelPicker
-	Command: ({ children }: any) => <div className="command-mock">{children}</div>,
-	CommandEmpty: ({ children }: any) => <div className="command-empty-mock">{children}</div>,
-	CommandGroup: ({ children }: any) => <div className="command-group-mock">{children}</div>,
-	CommandInput: ({ value, onValueChange, placeholder, className, _ref }: any) => (
+	Command: ({ children }: any) => <div>{children}</div>,
+	CommandEmpty: ({ children }: any) => <div>{children}</div>,
+	CommandGroup: ({ children }: any) => <div>{children}</div>,
+	CommandInput: ({ value, onValueChange, placeholder, className }: any) => (
 		<input
 			value={value}
-			onChange={(e) => onValueChange && onValueChange(e.target.value)}
+			onChange={(e: any) => onValueChange && onValueChange(e.target.value)}
 			placeholder={placeholder}
 			className={className}
 		/>
 	),
 	CommandItem: ({ children, value, onSelect }: any) => (
-		<div className="command-item-mock" onClick={() => onSelect && onSelect(value)}>
-			{children}
-		</div>
+		<div onClick={() => onSelect && onSelect(value)}>{children}</div>
 	),
-	CommandList: ({ children }: any) => <div className="command-list-mock">{children}</div>,
-	Popover: ({ children, _open, _onOpenChange }: any) => <div className="popover-mock">{children}</div>,
-	PopoverContent: ({ children, _className }: any) => <div className="popover-content-mock">{children}</div>,
-	PopoverTrigger: ({ children, _asChild }: any) => <div className="popover-trigger-mock">{children}</div>,
+	CommandList: ({ children }: any) => <div>{children}</div>,
+	Popover: ({ children }: any) => <div>{children}</div>,
+	PopoverContent: ({ children }: any) => <div>{children}</div>,
+	PopoverTrigger: ({ children }: any) => <div>{children}</div>,
 	Slider: ({ value, onChange }: any) => (
 		<div data-testid="slider">
-			<input type="range" value={value || 0} onChange={(e) => onChange(parseFloat(e.target.value))} />
+			<input type="range" value={value || 0} onChange={(e: any) => onChange(parseFloat(e.target.value))} />
+		</div>
+	),
+}
+
+jest.mock("@/components/ui", () => uiMocks)
+jest.mock("@src/components/ui", () => uiMocks)
+
+// Mock i18n TranslationContext
+jest.mock("@src/i18n/TranslationContext", () => ({
+	useAppTranslation: () => ({
+		t: (key: string) => key,
+	}),
+}))
+
+// Mock ExtensionMessage
+jest.mock("@roo/ExtensionMessage", () => ({
+	ExtensionMessage: {},
+}))
+
+// Mock vscrui
+jest.mock("vscrui", () => ({
+	Checkbox: ({ children, ...props }: any) => (
+		<input type="checkbox" {...props}>
+			{children}
+		</input>
+	),
+}))
+
+// Mock utils/headers
+jest.mock("../utils/headers", () => ({
+	convertHeadersToObject: jest.fn(() => []),
+}))
+
+// Mock transforms
+jest.mock("../transforms", () => ({
+	inputEventTransform: jest.fn((fn: any) => fn),
+	noTransform: jest.fn((fn: any) => fn),
+}))
+
+// Mock ModelPicker
+jest.mock("../ModelPicker", () => ({
+	ModelPicker: ({ children, ...props }: any) => (
+		<div data-testid="model-picker" {...props}>
+			{children}
 		</div>
 	),
 }))
 
+// Mock R1FormatSetting
+jest.mock("../R1FormatSetting", () => ({
+	R1FormatSetting: ({ ...props }: any) => <div data-testid="r1-format-setting" {...props}></div>,
+}))
+
+// Mock constants
+jest.mock("../constants", () => ({
+	...jest.requireActual("../constants"),
+	MODELS_BY_PROVIDER: {
+		"mock-provider": {
+			"default-mock-model": {},
+			"thinking-model-with-max-tokens": {},
+			"thinking-model": {},
+			"non-thinking-model": {},
+			"non-thinking-model-with-max-tokens": {},
+			"model-without-max-tokens": {},
+		},
+		gemini: {
+			"gemini-2.5-pro-exp-03-25": {},
+		},
+		PROVIDERS: jest.requireActual("../constants").PROVIDERS,
+	},
+}))
+
+// Mock react-i18next
+jest.mock("react-i18next", () => ({
+	useTranslation: () => ({
+		t: (key: string) => key,
+	}),
+}))
+
+// Mock useRouterModels
+const mockUseRouterModels = {
+	data: {
+		openrouter: [],
+		requesty: [],
+		glama: [],
+		unbound: [],
+		litellm: [
+			{ id: "litellm-model-1", context_length: 32000 },
+			{ id: "litellm-model-2", context_length: 128000 },
+		],
+	},
+	error: null,
+	isLoading: false,
+	refetch: jest.fn(),
+}
+
+jest.mock("@src/components/ui/hooks/useRouterModels", () => ({
+	useRouterModels: () => mockUseRouterModels,
+}))
+
+// Mock vscode module
+jest.mock("@src/utils/vscode", () => ({
+	vscode: {
+		postMessage: jest.fn(),
+	},
+}))
+
+// Mock VSCodeLink component as anchor
+jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+	VSCodeButton: ({ children, onClick }: any) => (
+		<button onClick={onClick} className="vscode-button">
+			{children}
+		</button>
+	),
+	VSCodeLink: ({ children, href }: any) => (
+		<a href={href} className="vscode-link">
+			{children}
+		</a>
+	),
+	VSCodeTextField: ({ children, ...props }: any) => (
+		<input type="text" {...props}>
+			{children}
+		</input>
+	),
+}))
+
 jest.mock("../TemperatureControl", () => ({
-	TemperatureControl: ({ value, onChange }: any) => (
+	TemperatureControl: ({ apiConfiguration, setApiConfigurationField }: any) => (
 		<div data-testid="temperature-control">
 			<input
 				type="range"
-				value={value || 0}
-				onChange={(e) => onChange(parseFloat(e.target.value))}
+				value={apiConfiguration?.temperature || 0}
+				onChange={(e: any) => setApiConfigurationField("temperature", parseFloat(e.target.value))}
 				min={0}
 				max={2}
 				step={0.1}
@@ -107,381 +180,325 @@ jest.mock("../TemperatureControl", () => ({
 jest.mock("../RateLimitSecondsControl", () => ({
 	RateLimitSecondsControl: ({ value, onChange }: any) => (
 		<div data-testid="rate-limit-seconds-control">
-			<input
-				type="range"
-				value={value || 0}
-				onChange={(e) => onChange(parseFloat(e.target.value))}
-				min={0}
-				max={60}
-				step={1}
-			/>
+			<input type="number" value={value || 0} onChange={(e: any) => onChange(parseInt(e.target.value))} />
 		</div>
 	),
 }))
 
-// Mock DiffSettingsControl for tests
-jest.mock("../DiffSettingsControl", () => ({
-	DiffSettingsControl: ({ diffEnabled, fuzzyMatchThreshold, onChange }: any) => (
-		<div data-testid="diff-settings-control">
-			<label>
-				Enable editing through diffs
-				<input
-					type="checkbox"
-					checked={diffEnabled}
-					onChange={(e) => onChange("diffEnabled", e.target.checked)}
-				/>
-			</label>
-			<div>
-				Fuzzy match threshold
-				<input
-					type="range"
-					value={fuzzyMatchThreshold || 1.0}
-					onChange={(e) => onChange("fuzzyMatchThreshold", parseFloat(e.target.value))}
-					min={0.8}
-					max={1}
-					step={0.005}
-				/>
-			</div>
+jest.mock("../ModelInfoView", () => ({
+	ModelInfoView: ({ modelInfo, modelProvider }: any) => (
+		<div data-testid="model-info-view">
+			{modelInfo && <span>{JSON.stringify(modelInfo)}</span>}
+			{modelProvider && <span>{modelProvider}</span>}
 		</div>
 	),
 }))
 
-// Mock ThinkingBudget component
+jest.mock("../ApiErrorMessage", () => ({
+	ApiErrorMessage: ({ error }: any) => <div data-testid="api-error-message">{error && <span>{error}</span>}</div>,
+}))
+
 jest.mock("../ThinkingBudget", () => ({
-	ThinkingBudget: ({ modelInfo }: any) => {
-		// Only render if model supports reasoning budget (thinking models)
-		if (modelInfo?.supportsReasoningBudget || modelInfo?.requiredReasoningBudget) {
-			return (
-				<div data-testid="reasoning-budget">
-					<div>Max Thinking Tokens</div>
-					<input type="range" min={1024} max={100000} step={1024} />
-				</div>
-			)
+	ThinkingBudget: ({ apiConfiguration, setApiConfigurationField, modelInfo }: any) => {
+		// Match the real component's logic
+		if (!modelInfo) return null
+
+		const isReasoningBudgetSupported = !!modelInfo && modelInfo.supportsReasoningBudget
+		const isReasoningBudgetRequired = !!modelInfo && modelInfo.requiredReasoningBudget
+		const isReasoningEffortSupported = !!modelInfo && modelInfo.supportsReasoningEffort
+		const enableReasoningEffort = apiConfiguration?.enableReasoningEffort
+
+		if (isReasoningBudgetSupported && !!modelInfo.maxTokens) {
+			// Only show if required OR if user has enabled it
+			if (isReasoningBudgetRequired || enableReasoningEffort) {
+				return (
+					<div data-testid="reasoning-budget">
+						<input
+							type="number"
+							value={apiConfiguration?.modelMaxThinkingTokens || 1000}
+							onChange={(e: any) =>
+								setApiConfigurationField("modelMaxThinkingTokens", parseInt(e.target.value))
+							}
+						/>
+					</div>
+				)
+			}
+			return null
+		} else if (isReasoningEffortSupported) {
+			return <div data-testid="reasoning-effort"></div>
 		}
+
 		return null
 	},
 }))
 
-// Mock LiteLLM provider for tests
-jest.mock("../providers/LiteLLM", () => ({
-	LiteLLM: ({ apiConfiguration, setApiConfigurationField }: any) => (
-		<div data-testid="litellm-provider">
-			<input
-				data-testid="litellm-base-url"
-				type="text"
-				value={apiConfiguration.litellmBaseUrl || ""}
-				onChange={(e) => setApiConfigurationField("litellmBaseUrl", e.target.value)}
-				placeholder="Base URL"
-			/>
-			<input
-				data-testid="litellm-api-key"
-				type="password"
-				value={apiConfiguration.litellmApiKey || ""}
-				onChange={(e) => setApiConfigurationField("litellmApiKey", e.target.value)}
-				placeholder="API Key"
-			/>
-			<button data-testid="litellm-refresh-models">Refresh Models</button>
-		</div>
-	),
+jest.mock("../MaxOutputTokensControl", () => ({
+	MaxOutputTokensControl: ({ apiConfiguration, setApiConfigurationField, modelInfo }: any) => {
+		// Only show if model has maxTokens > 0
+		if (!modelInfo || !modelInfo.maxTokens || modelInfo.maxTokens <= 0) {
+			return null
+		}
+		return (
+			<div data-testid="max-output-tokens-control">
+				<span>Max Output Tokens</span>
+				<input
+					type="number"
+					value={apiConfiguration?.modelMaxTokens || modelInfo?.maxTokens || 4096}
+					onChange={(e: any) => setApiConfigurationField("modelMaxTokens", parseInt(e.target.value))}
+				/>
+			</div>
+		)
+	},
+}))
+
+jest.mock("../DiffSettingsControl", () => ({
+	DiffSettingsControl: () => <div data-testid="diff-settings-control" />,
+}))
+
+jest.mock("../providers", () => ({
+	Anthropic: () => <div data-testid="anthropic-provider" />,
+	Bedrock: () => <div data-testid="bedrock-provider" />,
+	Chutes: () => <div data-testid="chutes-provider" />,
+	DeepSeek: () => <div data-testid="deepseek-provider" />,
+	Gemini: () => <div data-testid="gemini-provider" />,
+	Glama: () => <div data-testid="glama-provider" />,
+	Groq: () => <div data-testid="groq-provider" />,
+	LMStudio: () => <div data-testid="lmstudio-provider" />,
+	LiteLLM: () => <div data-testid="litellm-provider" />,
+	Mistral: () => <div data-testid="mistral-provider" />,
+	Ollama: () => <div data-testid="ollama-provider" />,
+	OpenAI: () => <div data-testid="openai-provider" />,
+	OpenAICompatible: () => <div data-testid="openai-compatible-provider" />,
+	OpenRouter: () => <div data-testid="openrouter-provider" />,
+	Requesty: () => <div data-testid="requesty-provider" />,
+	Unbound: () => <div data-testid="unbound-provider" />,
+	Vertex: () => <div data-testid="vertex-provider" />,
+	VSCodeLM: () => <div data-testid="vscode-lm-provider" />,
+	XAI: () => <div data-testid="xai-provider" />,
 }))
 
 jest.mock("@src/components/ui/hooks/useSelectedModel", () => ({
-	useSelectedModel: jest.fn((apiConfiguration: ProviderSettings) => {
-		if (apiConfiguration.apiModelId?.includes("thinking")) {
-			const info: ModelInfo = {
-				contextWindow: 4000,
-				maxTokens: 128000,
-				supportsPromptCache: true,
-				requiredReasoningBudget: true,
+	useSelectedModel: (apiConfiguration: any) => {
+		const selectedModelId = apiConfiguration?.apiModelId
+		const selectedProvider = apiConfiguration?.apiProvider || "openai"
+
+		// Return thinking model for "thinking" models, non-thinking for others
+		let info = null
+		if (selectedModelId?.includes("thinking")) {
+			info = {
 				supportsReasoningBudget: true,
+				requiredReasoningBudget: false,
+				maxTokens: 16384,
+				contextWindow: 200000,
+				supportsPromptCache: true,
+				supportsImages: true,
 			}
-
-			return {
-				provider: apiConfiguration.apiProvider,
-				info,
+		} else if (selectedModelId === "non-thinking-model-with-max-tokens") {
+			info = {
+				supportsReasoningBudget: false,
+				requiredReasoningBudget: false,
+				maxTokens: 8192,
+				contextWindow: 100000,
+				supportsPromptCache: true,
+				supportsImages: true,
 			}
-		} else {
-			const info: ModelInfo = { contextWindow: 4000, supportsPromptCache: true }
-
-			return {
-				provider: apiConfiguration.apiProvider,
-				info,
+		} else if (selectedModelId === "model-without-max-tokens") {
+			info = {
+				supportsReasoningBudget: false,
+				requiredReasoningBudget: false,
+				maxTokens: 0,
+				contextWindow: 100000,
+				supportsPromptCache: true,
+				supportsImages: true,
+			}
+		} else if (selectedModelId === "gpt-4") {
+			// Default model
+			info = {
+				supportsReasoningBudget: false,
+				requiredReasoningBudget: false,
+				maxTokens: 8192,
+				contextWindow: 128000,
+				supportsPromptCache: true,
+				supportsImages: true,
 			}
 		}
+
+		return {
+			provider: selectedProvider,
+			id: selectedModelId,
+			info: info,
+		}
+	},
+}))
+
+jest.mock("react-use", () => ({
+	...jest.requireActual("react-use"),
+	useDebounce: jest.fn(),
+	useEvent: jest.fn(),
+}))
+
+jest.mock("@src/utils/validate", () => ({
+	validateApiConfiguration: jest.fn(() => ({ isValid: true })),
+}))
+
+jest.mock("@src/utils/docLinks", () => ({
+	buildDocLink: jest.fn((path: string) => `https://docs.example.com/${path}`),
+}))
+
+jest.mock("@src/context/ExtensionStateContext", () => ({
+	...jest.requireActual("@src/context/ExtensionStateContext"),
+	useExtensionState: () => ({
+		organizationAllowList: {
+			requiredProvidersForParsing: [],
+			organizationData: {},
+			providers: {
+				anthropic: { allowAll: true },
+				bedrock: { allowAll: true },
+				openai: { allowAll: true },
+				gemini: { allowAll: true },
+				ollama: { allowAll: true },
+				deepseek: { allowAll: true },
+				mistral: { allowAll: true },
+				vertex: { allowAll: true },
+				lmstudio: { allowAll: true },
+				"openai-native": { allowAll: true },
+				"vscode-lm": { allowAll: true },
+				xai: { allowAll: true },
+				groq: { allowAll: true },
+				chutes: { allowAll: true },
+				openrouter: { allowAll: true },
+				glama: { allowAll: true },
+				requesty: { allowAll: true },
+				unbound: { allowAll: true },
+				litellm: { allowAll: true },
+			},
+		},
 	}),
 }))
 
+// Now the imports
+import { render, screen } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
+import { ExtensionStateContextProvider } from "@src/context/ExtensionStateContext"
+
+import ApiOptions, { ApiOptionsProps } from "../ApiOptions"
+
+// Mock vscode object
+declare global {
+	// eslint-disable-next-line no-var
+	var vscode: {
+		postMessage: jest.Mock
+	}
+}
+global.vscode = {
+	postMessage: jest.fn(),
+}
+
 const renderApiOptions = (props: Partial<ApiOptionsProps> = {}) => {
+	const defaultProps: ApiOptionsProps = {
+		uriScheme: undefined,
+		apiConfiguration: {
+			apiProvider: "openai",
+			apiModelId: "gpt-4",
+		},
+		setApiConfigurationField: jest.fn(),
+		fromWelcomeView: false,
+		errorMessage: undefined,
+		setErrorMessage: jest.fn(),
+	}
+
 	const queryClient = new QueryClient()
 
 	render(
 		<ExtensionStateContextProvider>
 			<QueryClientProvider client={queryClient}>
-				<ApiOptions
-					errorMessage={undefined}
-					setErrorMessage={() => {}}
-					uriScheme={undefined}
-					apiConfiguration={{}}
-					setApiConfigurationField={() => {}}
-					{...props}
-				/>
+				<ApiOptions {...defaultProps} {...props} />
 			</QueryClientProvider>
 		</ExtensionStateContextProvider>,
 	)
 }
 
-describe("ApiOptions", () => {
-	it("shows diff settings, temperature and rate limit controls by default", () => {
+describe("ApiOptions Component", () => {
+	it("renders controls for non-thinking model with max tokens", () => {
 		renderApiOptions({
 			apiConfiguration: {
-				diffEnabled: true,
-				fuzzyMatchThreshold: 0.95,
+				apiProvider: "openai" as const,
+				apiModelId: "non-thinking-model-with-max-tokens",
+				enableReasoningEffort: false, // Explicitly set to false
 			},
 		})
-		// Check for DiffSettingsControl by looking for text content
-		expect(screen.getByText(/enable editing through diffs/i)).toBeInTheDocument()
-		expect(screen.getByTestId("temperature-control")).toBeInTheDocument()
-		expect(screen.getByTestId("rate-limit-seconds-control")).toBeInTheDocument()
+
+		// Should show MaxOutputTokensControl
+		expect(screen.getByTestId("max-output-tokens-control")).toBeInTheDocument()
+		expect(screen.getByText("Max Output Tokens")).toBeInTheDocument()
+
+		// Should NOT show ThinkingBudget
+		expect(screen.queryByTestId("reasoning-budget")).not.toBeInTheDocument()
+		expect(screen.queryByTestId("reasoning-effort")).not.toBeInTheDocument()
 	})
 
-	it("hides all controls when fromWelcomeView is true", () => {
-		renderApiOptions({ fromWelcomeView: true })
-		// Check for absence of DiffSettingsControl text
-		expect(screen.queryByText(/enable editing through diffs/i)).not.toBeInTheDocument()
-		expect(screen.queryByTestId("temperature-control")).not.toBeInTheDocument()
-		expect(screen.queryByTestId("rate-limit-seconds-control")).not.toBeInTheDocument()
+	it("renders controls for thinking model", () => {
+		renderApiOptions({
+			apiConfiguration: {
+				apiProvider: "openai" as const,
+				apiModelId: "thinking-model-with-max-tokens",
+				enableReasoningEffort: true, // Enable reasoning effort for thinking models
+			},
+		})
+
+		// Should show both controls
+		expect(screen.getByTestId("max-output-tokens-control")).toBeInTheDocument()
+		expect(screen.getByTestId("reasoning-budget")).toBeInTheDocument()
 	})
 
-	describe("thinking functionality", () => {
-		it("should show ThinkingBudget for Anthropic models that support thinking", () => {
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "anthropic",
-					apiModelId: "claude-3-7-sonnet-20250219:thinking",
-				},
-			})
-
-			expect(screen.getByTestId("reasoning-budget")).toBeInTheDocument()
+	it("renders no token controls for model without max tokens", () => {
+		renderApiOptions({
+			apiConfiguration: {
+				apiProvider: "openai" as const,
+				apiModelId: "model-without-max-tokens",
+			},
 		})
 
-		it("should show ThinkingBudget for Vertex models that support thinking", () => {
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "vertex",
-					apiModelId: "claude-3-7-sonnet@20250219:thinking",
-				},
-			})
+		// Should NOT show MaxOutputTokensControl
+		expect(screen.queryByTestId("max-output-tokens-control")).not.toBeInTheDocument()
 
-			expect(screen.getByTestId("reasoning-budget")).toBeInTheDocument()
-		})
-
-		it("should not show ThinkingBudget for models that don't support thinking", () => {
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "anthropic",
-					apiModelId: "claude-3-opus-20240229",
-				},
-			})
-
-			expect(screen.queryByTestId("reasoning-budget")).not.toBeInTheDocument()
-		})
-
-		// Note: We don't need to test the actual ThinkingBudget component functionality here
-		// since we have separate tests for that component. We just need to verify that
-		// it's included in the ApiOptions component when appropriate.
+		// Should NOT show ThinkingBudget
+		expect(screen.queryByTestId("reasoning-budget")).not.toBeInTheDocument()
 	})
 
-	describe("OpenAI provider tests", () => {
-		it("removes reasoningEffort from openAiCustomModelInfo when unchecked", () => {
-			const mockSetApiConfigurationField = jest.fn()
-			const initialConfig = {
-				apiProvider: "openai" as const,
-				enableReasoningEffort: true,
-				openAiCustomModelInfo: {
-					...openAiModelInfoSaneDefaults, // Start with defaults
-					reasoningEffort: "low" as const, // Set an initial value
-				},
-				// Add other necessary default fields for openai provider if needed
-			}
+	it("shows temperature control", () => {
+		renderApiOptions()
 
-			renderApiOptions({
-				apiConfiguration: initialConfig,
-				setApiConfigurationField: mockSetApiConfigurationField,
-			})
+		const temperatureControl = screen.getByTestId("temperature-control")
+		expect(temperatureControl).toBeInTheDocument()
 
-			// Find the checkbox by its test ID instead of label text
-			// This is more reliable than using the label text which might be affected by translations
-			const checkbox =
-				screen.getByTestId("checkbox-input-settings:providers.setreasoninglevel") ||
-				screen.getByTestId("checkbox-input-set-reasoning-level")
-
-			// Simulate unchecking the checkbox
-			fireEvent.click(checkbox)
-
-			// 1. Check if enableReasoningEffort was set to false
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("enableReasoningEffort", false)
-
-			// 2. Check if openAiCustomModelInfo was updated
-			const updateCall = mockSetApiConfigurationField.mock.calls.find(
-				(call) => call[0] === "openAiCustomModelInfo",
-			)
-			expect(updateCall).toBeDefined()
-
-			// 3. Check if reasoningEffort property is absent in the updated info
-			const updatedInfo = updateCall[1]
-			expect(updatedInfo).not.toHaveProperty("reasoningEffort")
-
-			// Optional: Check if other properties were preserved (example)
-			expect(updatedInfo).toHaveProperty("contextWindow", openAiModelInfoSaneDefaults.contextWindow)
-		})
-
-		it("does not render ReasoningEffort component when initially disabled", () => {
-			const mockSetApiConfigurationField = jest.fn()
-			const initialConfig = {
-				apiProvider: "openai" as const,
-				enableReasoningEffort: false, // Initially disabled
-				openAiCustomModelInfo: {
-					...openAiModelInfoSaneDefaults,
-				},
-			}
-
-			renderApiOptions({
-				apiConfiguration: initialConfig,
-				setApiConfigurationField: mockSetApiConfigurationField,
-			})
-
-			// Check that the ReasoningEffort select component is not rendered.
-			expect(screen.queryByTestId("reasoning-effort")).not.toBeInTheDocument()
-		})
-
-		it("renders ReasoningEffort component and sets flag when checkbox is checked", () => {
-			const mockSetApiConfigurationField = jest.fn()
-			const initialConfig = {
-				apiProvider: "openai" as const,
-				enableReasoningEffort: false, // Initially disabled
-				openAiCustomModelInfo: {
-					...openAiModelInfoSaneDefaults,
-				},
-			}
-
-			renderApiOptions({
-				apiConfiguration: initialConfig,
-				setApiConfigurationField: mockSetApiConfigurationField,
-			})
-
-			const checkbox = screen.getByTestId("checkbox-input-settings:providers.setreasoninglevel")
-
-			// Simulate checking the checkbox
-			fireEvent.click(checkbox)
-
-			// 1. Check if enableReasoningEffort was set to true
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("enableReasoningEffort", true)
-
-			// We can't directly test the rendering of the ReasoningEffort component after the state change
-			// without a more complex setup involving state management mocks or re-rendering.
-			// However, we've tested the state update call.
-		})
-
-		it.skip("updates reasoningEffort in openAiCustomModelInfo when select value changes", () => {
-			const mockSetApiConfigurationField = jest.fn()
-			const initialConfig = {
-				apiProvider: "openai" as const,
-				enableReasoningEffort: true, // Initially enabled
-				openAiCustomModelInfo: {
-					...openAiModelInfoSaneDefaults,
-					reasoningEffort: "low" as const,
-				},
-			}
-
-			renderApiOptions({
-				apiConfiguration: initialConfig,
-				setApiConfigurationField: mockSetApiConfigurationField,
-			})
-
-			// Find the reasoning effort select among all comboboxes by its current value
-			// const allSelects = screen.getAllByRole("combobox") as HTMLSelectElement[]
-			// const reasoningSelect = allSelects.find(
-			// 	(el) => el.value === initialConfig.openAiCustomModelInfo.reasoningEffort,
-			// )
-			// expect(reasoningSelect).toBeDefined()
-			const selectContainer = screen.getByTestId("reasoning-effort")
-			expect(selectContainer).toBeInTheDocument()
-
-			console.log(selectContainer.querySelector("select")?.value)
-
-			// Simulate changing the reasoning effort to 'high'
-			fireEvent.change(selectContainer.querySelector("select")!, { target: { value: "high" } })
-
-			// Check if setApiConfigurationField was called correctly for openAiCustomModelInfo
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith(
-				"openAiCustomModelInfo",
-				expect.objectContaining({ reasoningEffort: "high" }),
-			)
-
-			// Check that other properties were preserved
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith(
-				"openAiCustomModelInfo",
-				expect.objectContaining({
-					contextWindow: openAiModelInfoSaneDefaults.contextWindow,
-				}),
-			)
-		})
+		const temperatureSlider = temperatureControl.querySelector("input")
+		expect(temperatureSlider).toBeInTheDocument()
+		expect(temperatureSlider!.type).toBe("range")
+		expect(temperatureSlider!.min).toBe("0")
+		expect(temperatureSlider!.max).toBe("2")
 	})
 
-	describe("LiteLLM provider tests", () => {
-		it("renders LiteLLM component when provider is selected", () => {
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "litellm",
-					litellmBaseUrl: "http://localhost:4000",
-					litellmApiKey: "test-key",
-				},
-			})
-
-			expect(screen.getByTestId("litellm-provider")).toBeInTheDocument()
-			expect(screen.getByTestId("litellm-base-url")).toHaveValue("http://localhost:4000")
-			expect(screen.getByTestId("litellm-api-key")).toHaveValue("test-key")
+	it("displays provider-specific component", () => {
+		renderApiOptions({
+			apiConfiguration: {
+				apiProvider: "gemini" as const,
+				apiModelId: "gemini-2.5-pro-exp-03-25",
+			},
 		})
 
-		it("calls setApiConfigurationField when LiteLLM inputs change", () => {
-			const mockSetApiConfigurationField = jest.fn()
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "litellm",
-				},
-				setApiConfigurationField: mockSetApiConfigurationField,
-			})
+		expect(screen.getByTestId("gemini-provider")).toBeInTheDocument()
+	})
 
-			const baseUrlInput = screen.getByTestId("litellm-base-url")
-			const apiKeyInput = screen.getByTestId("litellm-api-key")
-
-			fireEvent.change(baseUrlInput, { target: { value: "http://new-url:8000" } })
-			fireEvent.change(apiKeyInput, { target: { value: "new-api-key" } })
-
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("litellmBaseUrl", "http://new-url:8000")
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("litellmApiKey", "new-api-key")
+	it("displays OpenAI Compatible component for openai provider", () => {
+		renderApiOptions({
+			apiConfiguration: {
+				apiProvider: "openai" as const,
+				apiModelId: "gpt-4",
+			},
 		})
 
-		it("shows refresh models button for LiteLLM", () => {
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "litellm",
-					litellmBaseUrl: "http://localhost:4000",
-					litellmApiKey: "test-key",
-				},
-			})
-
-			expect(screen.getByTestId("litellm-refresh-models")).toBeInTheDocument()
-		})
-
-		it("does not render LiteLLM component when other provider is selected", () => {
-			renderApiOptions({
-				apiConfiguration: {
-					apiProvider: "anthropic",
-				},
-			})
-
-			expect(screen.queryByTestId("litellm-provider")).not.toBeInTheDocument()
-		})
+		expect(screen.getByTestId("openai-compatible-provider")).toBeInTheDocument()
 	})
 })

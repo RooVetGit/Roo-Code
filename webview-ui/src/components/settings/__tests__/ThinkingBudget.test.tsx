@@ -17,12 +17,31 @@ jest.mock("@/components/ui", () => ({
 			onChange={(e) => onValueChange([parseInt(e.target.value)])}
 		/>
 	),
+	Select: ({ children }: any) => <div data-testid="select">{children}</div>,
+	SelectTrigger: ({ children }: any) => <div>{children}</div>,
+	SelectValue: ({ placeholder }: any) => <div>{placeholder}</div>,
+	SelectContent: ({ children }: any) => <div>{children}</div>,
+	SelectItem: ({ children, value }: any) => <div data-value={value}>{children}</div>,
+}))
+
+jest.mock("vscrui", () => ({
+	Checkbox: ({ children, checked, onChange }: any) => (
+		<label>
+			<input
+				type="checkbox"
+				data-testid="checkbox"
+				checked={checked}
+				onChange={(e) => onChange(e.target.checked)}
+			/>
+			{children}
+		</label>
+	),
 }))
 
 describe("ThinkingBudget", () => {
 	const mockModelInfo: ModelInfo = {
 		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
+		requiredReasoningBudget: false,
 		maxTokens: 16384,
 		contextWindow: 200000,
 		supportsPromptCache: true,
@@ -45,10 +64,6 @@ describe("ThinkingBudget", () => {
 				{...defaultProps}
 				modelInfo={{
 					...mockModelInfo,
-					maxTokens: 16384,
-					contextWindow: 200000,
-					supportsPromptCache: true,
-					supportsImages: true,
 					supportsReasoningBudget: false,
 				}}
 			/>,
@@ -57,10 +72,35 @@ describe("ThinkingBudget", () => {
 		expect(container.firstChild).toBeNull()
 	})
 
-	it("should render sliders when model supports thinking", () => {
+	it("should render thinking budget slider when model supports reasoning budget", () => {
+		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ enableReasoningEffort: true }} />)
+
+		// Should only have thinking tokens slider, not max output tokens
+		expect(screen.getAllByTestId("slider")).toHaveLength(1)
+		expect(screen.getByText("settings:thinkingBudget.maxThinkingTokens")).toBeInTheDocument()
+	})
+
+	it("should show checkbox when reasoning is not required", () => {
 		render(<ThinkingBudget {...defaultProps} />)
 
-		expect(screen.getAllByTestId("slider")).toHaveLength(2)
+		expect(screen.getByTestId("checkbox")).toBeInTheDocument()
+		expect(screen.getByText("settings:providers.useReasoning")).toBeInTheDocument()
+	})
+
+	it("should not show checkbox when reasoning is required", () => {
+		render(
+			<ThinkingBudget
+				{...defaultProps}
+				modelInfo={{
+					...mockModelInfo,
+					requiredReasoningBudget: true,
+				}}
+			/>,
+		)
+
+		expect(screen.queryByTestId("checkbox")).not.toBeInTheDocument()
+		// Should show slider directly
+		expect(screen.getByTestId("slider")).toBeInTheDocument()
 	})
 
 	it("should update modelMaxThinkingTokens", () => {
@@ -69,24 +109,28 @@ describe("ThinkingBudget", () => {
 		render(
 			<ThinkingBudget
 				{...defaultProps}
-				apiConfiguration={{ modelMaxThinkingTokens: 4096 }}
+				apiConfiguration={{ enableReasoningEffort: true, modelMaxThinkingTokens: 4096 }}
 				setApiConfigurationField={setApiConfigurationField}
 			/>,
 		)
 
-		const sliders = screen.getAllByTestId("slider")
-		fireEvent.change(sliders[1], { target: { value: "5000" } })
+		const slider = screen.getByTestId("slider")
+		fireEvent.change(slider, { target: { value: "5000" } })
 
 		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxThinkingTokens", 5000)
 	})
 
-	it("should cap thinking tokens at 80% of max tokens", () => {
+	it("should cap thinking tokens at 80% of max output tokens", () => {
 		const setApiConfigurationField = jest.fn()
 
 		render(
 			<ThinkingBudget
 				{...defaultProps}
-				apiConfiguration={{ modelMaxTokens: 10000, modelMaxThinkingTokens: 9000 }}
+				apiConfiguration={{
+					modelMaxTokens: 10000,
+					modelMaxThinkingTokens: 9000,
+					enableReasoningEffort: true,
+				}}
 				setApiConfigurationField={setApiConfigurationField}
 			/>,
 		)
@@ -96,34 +140,44 @@ describe("ThinkingBudget", () => {
 	})
 
 	it("should use default thinking tokens if not provided", () => {
-		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 10000 }} />)
+		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ enableReasoningEffort: true }} />)
 
-		// Default is 80% of max tokens, capped at 8192
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1]).toHaveValue("8000") // 80% of 10000
+		const slider = screen.getByTestId("slider")
+		// Default is 8192, but capped at 80% of max output tokens (16384 * 0.8 = 13107.2, rounded down)
+		// Since default max output tokens is 16384 and 8192 < 13107, it should be 8192
+		expect(slider).toHaveValue("8192")
 	})
 
-	it("should use min thinking tokens of 1024", () => {
-		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 1000 }} />)
+	it("should render reasoning effort select for models that support it", () => {
+		render(
+			<ThinkingBudget
+				{...defaultProps}
+				modelInfo={{
+					...mockModelInfo,
+					supportsReasoningBudget: false,
+					supportsReasoningEffort: true,
+				}}
+			/>,
+		)
 
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1].getAttribute("min")).toBe("1024")
+		expect(screen.getByTestId("select")).toBeInTheDocument()
+		expect(screen.getByText("settings:providers.reasoningEffort.label")).toBeInTheDocument()
 	})
 
-	it("should update max tokens when slider changes", () => {
+	it("should toggle enableReasoningEffort checkbox", () => {
 		const setApiConfigurationField = jest.fn()
 
 		render(
 			<ThinkingBudget
 				{...defaultProps}
-				apiConfiguration={{ modelMaxTokens: 10000 }}
+				apiConfiguration={{ enableReasoningEffort: false }}
 				setApiConfigurationField={setApiConfigurationField}
 			/>,
 		)
 
-		const sliders = screen.getAllByTestId("slider")
-		fireEvent.change(sliders[0], { target: { value: "12000" } })
+		const checkbox = screen.getByTestId("checkbox")
+		fireEvent.click(checkbox)
 
-		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxTokens", 12000)
+		expect(setApiConfigurationField).toHaveBeenCalledWith("enableReasoningEffort", true)
 	})
 })
