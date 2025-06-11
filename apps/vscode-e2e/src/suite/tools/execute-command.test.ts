@@ -170,6 +170,7 @@ suite("Roo Code execute_command Tool", () => {
 					autoApprovalEnabled: true,
 					alwaysAllowExecute: true,
 					allowedCommands: ["*"],
+					terminalShellIntegrationDisabled: true,
 				},
 				text: `Use the execute_command tool to run this command: echo "Hello from test" > ${testFile.name}
 
@@ -275,6 +276,7 @@ Then use the attempt_completion tool to complete the task. Do not suggest any co
 					autoApprovalEnabled: true,
 					alwaysAllowExecute: true,
 					allowedCommands: ["*"],
+					terminalShellIntegrationDisabled: true,
 				},
 				text: `Use the execute_command tool with these exact parameters:
 - command: echo "Test in subdirectory" > output.txt
@@ -391,6 +393,7 @@ Avoid at all costs suggesting a command when using the attempt_completion tool`,
 					autoApprovalEnabled: true,
 					alwaysAllowExecute: true,
 					allowedCommands: ["*"],
+					terminalShellIntegrationDisabled: true,
 				},
 				text: `Use the execute_command tool to create a file with multiple lines. Execute these commands one by one:
 1. echo "Line 1" > ${testFile.name}
@@ -515,6 +518,7 @@ After both commands are executed, use the attempt_completion tool to complete th
 					autoApprovalEnabled: true,
 					alwaysAllowExecute: true,
 					allowedCommands: ["*"],
+					terminalShellIntegrationDisabled: true,
 				},
 				text: `Use the execute_command tool to run: ${sleepCommand} && echo "Command completed after delay"
 
