@@ -181,12 +181,14 @@ export class CustomModesManager {
 
 		this.disposables.push(settingsWatcher.onDidChange(handleSettingsChange))
 		this.disposables.push(settingsWatcher.onDidCreate(handleSettingsChange))
+		this.disposables.push(settingsWatcher.onDidDelete(handleSettingsChange))
 		this.disposables.push(settingsWatcher)
 
-		// Watch .roomodes file if it exists
-		const roomodesPath = await this.getWorkspaceRoomodes()
-
-		if (roomodesPath) {
+		// Watch .roomodes file - watch the path even if it doesn't exist yet
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		if (workspaceFolders && workspaceFolders.length > 0) {
+			const workspaceRoot = getWorkspacePath()
+			const roomodesPath = path.join(workspaceRoot, ROOMODES_FILENAME)
 			const roomodesWatcher = vscode.workspace.createFileSystemWatcher(roomodesPath)
 
 			const handleRoomodesChange = async () => {
@@ -203,19 +205,21 @@ export class CustomModesManager {
 				}
 			}
 
-			roomodesWatcher.onDidChange(handleRoomodesChange)
-			roomodesWatcher.onDidCreate(handleRoomodesChange)
-			roomodesWatcher.onDidDelete(async () => {
-				// When .roomodes is deleted, refresh with only settings modes
-				try {
-					const settingsModes = await this.loadModesFromFile(settingsPath)
-					await this.context.globalState.update("customModes", settingsModes)
-					this.clearCache()
-					await this.onUpdate()
-				} catch (error) {
-					console.error(`[CustomModesManager] Error handling .roomodes file deletion:`, error)
-				}
-			})
+			this.disposables.push(roomodesWatcher.onDidChange(handleRoomodesChange))
+			this.disposables.push(roomodesWatcher.onDidCreate(handleRoomodesChange))
+			this.disposables.push(
+				roomodesWatcher.onDidDelete(async () => {
+					// When .roomodes is deleted, refresh with only settings modes
+					try {
+						const settingsModes = await this.loadModesFromFile(settingsPath)
+						await this.context.globalState.update("customModes", settingsModes)
+						this.clearCache()
+						await this.onUpdate()
+					} catch (error) {
+						console.error(`[CustomModesManager] Error handling .roomodes file deletion:`, error)
+					}
+				}),
+			)
 			this.disposables.push(roomodesWatcher)
 		}
 	}
@@ -339,7 +343,7 @@ export class CustomModesManager {
 		await fs.writeFile(filePath, yaml.stringify(settings), "utf-8")
 	}
 
-	public async refreshMergedState(): Promise<void> {
+	private async refreshMergedState(): Promise<void> {
 		const settingsPath = await this.getCustomModesFilePath()
 		const roomodesPath = await this.getWorkspaceRoomodes()
 
