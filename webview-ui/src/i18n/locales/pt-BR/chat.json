@@ -279,5 +279,12 @@
 		"deny": {
 			"title": "Negar tudo"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index ready",
+		"indexing": "Indexing {{percentage}}%",
+		"indexed": "Indexed",
+		"error": "Index error",
+		"status": "Index status"
 	}
 }

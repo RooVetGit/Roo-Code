@@ -279,5 +279,12 @@
 		"deny": {
 			"title": "सभी अस्वीकार करें"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index ready",
+		"indexing": "Indexing {{percentage}}%",
+		"indexed": "Indexed",
+		"error": "Index error",
+		"status": "Index status"
 	}
 }

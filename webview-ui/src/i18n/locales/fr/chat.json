@@ -279,5 +279,12 @@
 		"deny": {
 			"title": "Tout refuser"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index ready",
+		"indexing": "Indexing {{percentage}}%",
+		"indexed": "Indexed",
+		"error": "Index error",
+		"status": "Index status"
 	}
 }
