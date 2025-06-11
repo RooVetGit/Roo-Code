@@ -1,21 +1,9 @@
+import { ClineMessage, HistoryItem } from "@roo-code/types"
 import { useCallback, useEffect, useMemo, useState } from "react"
-
-interface ClineMessage {
-	type: "say" | "ask"
-	say?: string
-	ask?: string
-	ts: number
-	text?: string
-}
-
-interface TaskHistoryItem {
-	task: string
-	workspace?: string
-}
 
 interface UsePromptHistoryProps {
 	clineMessages: ClineMessage[] | undefined
-	taskHistory: TaskHistoryItem[] | undefined
+	taskHistory: HistoryItem[] | undefined
 	cwd: string | undefined
 	inputValue: string
 	setInputValue: (value: string) => void
