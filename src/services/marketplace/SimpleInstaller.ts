@@ -48,8 +48,21 @@ export class SimpleInstaller {
 		try {
 			const existing = await fs.readFile(filePath, "utf-8")
 			existingData = yaml.parse(existing) || { customModes: [] }
-		} catch (error) {
-			// File doesn't exist, use default structure
+		} catch (error: any) {
+			if (error.code === "ENOENT") {
+				// File doesn't exist, use default structure - this is fine
+				existingData = { customModes: [] }
+			} else if (error.name === "YAMLParseError" || error.message?.includes("YAML")) {
+				// YAML parsing error - don't overwrite the file!
+				const fileName = target === "project" ? ".roomodes" : "custom-modes.yaml"
+				throw new Error(
+					`Cannot install mode: The ${fileName} file contains invalid YAML. ` +
+						`Please fix the syntax errors in the file before installing new modes.`,
+				)
+			} else {
+				// Other unexpected errors - re-throw
+				throw error
+			}
 		}
 
 		// Ensure customModes array exists
@@ -168,8 +181,21 @@ export class SimpleInstaller {
 		try {
 			const existing = await fs.readFile(filePath, "utf-8")
 			existingData = JSON.parse(existing) || { mcpServers: {} }
-		} catch (error) {
-			// File doesn't exist, use default structure
+		} catch (error: any) {
+			if (error.code === "ENOENT") {
+				// File doesn't exist, use default structure
+				existingData = { mcpServers: {} }
+			} else if (error instanceof SyntaxError) {
+				// JSON parsing error - don't overwrite the file!
+				const fileName = target === "project" ? ".roo/mcp.json" : "mcp-settings.json"
+				throw new Error(
+					`Cannot install MCP server: The ${fileName} file contains invalid JSON. ` +
+						`Please fix the syntax errors in the file before installing new servers.`,
+				)
+			} else {
+				// Other unexpected errors - re-throw
+				throw error
+			}
 		}
 
 		// Ensure mcpServers object exists
@@ -222,7 +248,18 @@ export class SimpleInstaller {
 
 		try {
 			const existing = await fs.readFile(filePath, "utf-8")
-			const existingData = yaml.parse(existing)
+			let existingData: any
+
+			try {
+				existingData = yaml.parse(existing)
+			} catch (parseError) {
+				// If we can't parse the file, we can't safely remove a mode
+				const fileName = target === "project" ? ".roomodes" : "custom-modes.yaml"
+				throw new Error(
+					`Cannot remove mode: The ${fileName} file contains invalid YAML. ` +
+						`Please fix the syntax errors before removing modes.`,
+				)
+			}
 
 			if (existingData?.customModes) {
 				// Parse the item content to get the slug
@@ -245,8 +282,12 @@ export class SimpleInstaller {
 				// Always write back the file, even if empty
 				await fs.writeFile(filePath, yaml.stringify(existingData), "utf-8")
 			}
-		} catch (error) {
-			// File doesn't exist or other error, nothing to remove
+		} catch (error: any) {
+			if (error.code === "ENOENT") {
+				// File doesn't exist, nothing to remove
+				return
+			}
+			throw error
 		}
 	}
 

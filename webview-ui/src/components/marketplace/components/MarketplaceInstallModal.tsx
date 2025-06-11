@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { MarketplaceItem, McpParameter, McpInstallationMethod } from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
@@ -109,6 +109,27 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 		}
 	}, [item, selectedMethodIndex])
 
+	// Listen for installation result messages
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "marketplaceInstallResult" && message.slug === item?.id) {
+				if (message.success) {
+					// Installation succeeded - show success state
+					setInstallationComplete(true)
+					setValidationError(null)
+				} else {
+					// Installation failed - show error
+					setValidationError(message.error || "Installation failed")
+					setInstallationComplete(false)
+				}
+			}
+		}
+
+		window.addEventListener("message", handleMessage)
+		return () => window.removeEventListener("message", handleMessage)
+	}, [item?.id])
+
 	const handleInstall = () => {
 		if (!item) return
 
@@ -145,8 +166,8 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 			},
 		})
 
-		// Show post-installation options
-		setInstallationComplete(true)
+		// Don't show success immediately - wait for backend result
+		// The success state will be shown when installation actually succeeds
 		setValidationError(null)
 	}
 
