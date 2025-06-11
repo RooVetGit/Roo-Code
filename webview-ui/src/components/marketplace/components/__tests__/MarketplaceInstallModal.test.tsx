@@ -19,6 +19,9 @@ jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string, params?: any) => {
 			// Simple mock translation that returns the key with params
+			if (key === "marketplace:install.validation.required") {
+				return `Please provide a value for ${params?.paramName || "parameter"}`
+			}
 			if (params) {
 				return `${key}:${JSON.stringify(params)}`
 			}

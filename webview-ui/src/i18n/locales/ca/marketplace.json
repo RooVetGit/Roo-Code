@@ -17,7 +17,7 @@
 			"label": "Filtrar per tipus:",
 			"all": "Tots els tipus",
 			"mode": "Mode",
-			"mcp server": "Servidor MCP"
+			"mcpServer": "Servidor MCP"
 		},
 		"sort": {
 			"label": "Ordenar per:",

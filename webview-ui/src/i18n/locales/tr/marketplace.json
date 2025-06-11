@@ -17,7 +17,7 @@
 			"label": "Türe göre filtrele:",
 			"all": "Tüm türler",
 			"mode": "Mod",
-			"mcp server": "MCP Sunucusu"
+			"mcpServer": "MCP Sunucusu"
 		},
 		"sort": {
 			"label": "Sırala:",

@@ -17,7 +17,7 @@
 			"label": "Filtruj według typu:",
 			"all": "Wszystkie typy",
 			"mode": "Tryb",
-			"mcp server": "Serwer MCP"
+			"mcpServer": "Serwer MCP"
 		},
 		"sort": {
 			"label": "Sortuj według:",

@@ -28,7 +28,7 @@ jest.mock("@/i18n/TranslationContext", () => ({
 			}
 			const translations: Record<string, any> = {
 				"marketplace:filters.type.mode": "Mode",
-				"marketplace:filters.type.mcp server": "MCP Server",
+				"marketplace:filters.type.mcpServer": "MCP Server",
 				"marketplace:filters.tags.clear": "Remove filter",
 				"marketplace:filters.tags.clickToFilter": "Add filter",
 				"marketplace:items.components": "Components", // This should be a string for the title prop

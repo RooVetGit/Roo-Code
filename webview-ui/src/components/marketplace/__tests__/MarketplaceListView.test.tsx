@@ -70,7 +70,6 @@ describe("MarketplaceListView", () => {
 				<TooltipProvider>
 					<MarketplaceListView {...defaultProps} {...props} />
 				</TooltipProvider>
-				,
 			</ExtensionStateContextProvider>,
 		)
 

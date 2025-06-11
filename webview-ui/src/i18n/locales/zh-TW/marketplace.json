@@ -17,7 +17,7 @@
 			"label": "依類型篩選：",
 			"all": "所有類型",
 			"mode": "模式",
-			"mcp server": "MCP 伺服器"
+			"mcpServer": "MCP 伺服器"
 		},
 		"sort": {
 			"label": "排序方式：",

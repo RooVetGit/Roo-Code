@@ -24,7 +24,7 @@
 			"label": "Type",
 			"all": "All Types",
 			"mode": "Mode",
-			"mcp server": "MCP Server"
+			"mcpServer": "MCP Server"
 		},
 		"sort": {
 			"label": "Sort By",
@@ -59,5 +59,10 @@
 		"removing": "Removing item: \"{{itemName}}\"",
 		"removeSuccess": "\"{{itemName}}\" removed successfully",
 		"removeError": "Failed to remove \"{{itemName}}\": {{errorMessage}}"
+	},
+	"install": {
+		"validation": {
+			"required": "Please provide a value for {{paramName}}"
+		}
 	}
 }

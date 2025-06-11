@@ -17,7 +17,7 @@
 			"label": "Lọc theo loại:",
 			"all": "Tất cả loại",
 			"mode": "Chế độ",
-			"mcp server": "Máy chủ MCP"
+			"mcpServer": "Máy chủ MCP"
 		},
 		"sort": {
 			"label": "Sắp xếp theo:",

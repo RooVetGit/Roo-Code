@@ -14,11 +14,14 @@ jest.mock("@/utils/vscode", () => ({
 // Mock translation
 jest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
-		t: (key: string) => {
+		t: (key: string, params?: any) => {
 			// Simple mock translation
 			if (key === "marketplace:install.configuration") return "Configuration"
 			if (key === "marketplace:install.button") return "Install"
 			if (key === "common:answers.cancel") return "Cancel"
+			if (key === "marketplace:install.validation.required") {
+				return `Please provide a value for ${params?.paramName || "parameter"}`
+			}
 			return key
 		},
 	}),

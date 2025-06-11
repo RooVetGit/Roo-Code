@@ -17,7 +17,7 @@
 			"label": "按类型筛选：",
 			"all": "所有类型",
 			"mode": "模式",
-			"mcp server": "MCP 服务"
+			"mcpServer": "MCP 服务"
 		},
 		"sort": {
 			"label": "排序方式：",

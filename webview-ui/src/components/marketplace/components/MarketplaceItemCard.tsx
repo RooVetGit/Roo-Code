@@ -32,7 +32,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 	const typeLabel = useMemo(() => {
 		const labels: Partial<Record<MarketplaceItem["type"], string>> = {
 			mode: t("marketplace:filters.type.mode"),
-			mcp: t("marketplace:filters.type.mcp server"),
+			mcp: t("marketplace:filters.type.mcpServer"),
 		}
 		return labels[item.type] ?? "N/A"
 	}, [item.type, t])

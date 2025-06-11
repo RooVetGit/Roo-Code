@@ -17,7 +17,7 @@
 			"label": "유형별 필터:",
 			"all": "모든 유형",
 			"mode": "모드",
-			"mcp server": "MCP 서버"
+			"mcpServer": "MCP 서버"
 		},
 		"sort": {
 			"label": "정렬 기준:",
