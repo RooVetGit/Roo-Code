@@ -128,7 +128,7 @@ export function Evals({
 					{tableData.map((run) => (
 						<TableRow key={run.id}>
 							<TableCell title={run.model?.description}>
-								<div className="font-sans">{run.model?.name || run.label}</div>
+								<div className="font-sans">{run.label}</div>
 								<div className="text-xs opacity-50">
 									{formatTokens(run.modelInfo?.contextWindow ?? 0)}
 								</div>
