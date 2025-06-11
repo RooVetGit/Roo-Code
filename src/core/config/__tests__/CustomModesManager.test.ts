@@ -1,6 +1,5 @@
 // npx jest src/core/config/__tests__/CustomModesManager.test.ts
 
-import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 
@@ -14,14 +13,67 @@ import { GlobalFileNames } from "../../../shared/globalFileNames"
 
 import { CustomModesManager } from "../CustomModesManager"
 
-jest.mock("vscode")
+jest.mock("vscode", () => {
+	type Disposable = { dispose: () => void }
+
+	type _Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) => Disposable
+
+	const MOCK_EMITTER_REGISTRY = new Map<object, Set<(data: any) => any>>()
+
+	return {
+		EventEmitter: jest.fn().mockImplementation(() => {
+			const emitterInstanceKey = {}
+			MOCK_EMITTER_REGISTRY.set(emitterInstanceKey, new Set())
+
+			return {
+				event: function <T>(listener: (e: T) => any): Disposable {
+					const listeners = MOCK_EMITTER_REGISTRY.get(emitterInstanceKey)
+					listeners!.add(listener as any)
+					return {
+						dispose: () => {
+							listeners!.delete(listener as any)
+						},
+					}
+				},
+
+				fire: function <T>(data: T): void {
+					const listeners = MOCK_EMITTER_REGISTRY.get(emitterInstanceKey)
+					listeners!.forEach((fn) => fn(data))
+				},
+
+				dispose: () => {
+					MOCK_EMITTER_REGISTRY.get(emitterInstanceKey)!.clear()
+					MOCK_EMITTER_REGISTRY.delete(emitterInstanceKey)
+				},
+			}
+		}),
+		Uri: {
+			file: jest.fn().mockImplementation((path) => ({ fsPath: path })),
+		},
+		window: {
+			showErrorMessage: jest.fn(),
+		},
+		workspace: {
+			workspaceFolders: undefined, // Will be set in tests
+			onDidSaveTextDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+			createFileSystemWatcher: jest.fn().mockReturnValue({
+				onDidCreate: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+				onDidChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+				onDidDelete: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+				dispose: jest.fn(),
+			}),
+		},
+	}
+})
+
+const vscode = require("vscode")
 jest.mock("fs/promises")
 jest.mock("../../../utils/fs")
 jest.mock("../../../utils/path")
 
 describe("CustomModesManager", () => {
 	let manager: CustomModesManager
-	let mockContext: vscode.ExtensionContext
+	let mockContext: any
 	let mockOnUpdate: jest.Mock
 	let mockWorkspaceFolders: { uri: { fsPath: string } }[]
 
@@ -30,7 +82,7 @@ describe("CustomModesManager", () => {
 	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
 	const mockRoomodes = `${path.sep}mock${path.sep}workspace${path.sep}.roomodes`
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		mockOnUpdate = jest.fn()
 		mockContext = {
 			globalState: {
@@ -40,10 +92,10 @@ describe("CustomModesManager", () => {
 			globalStorageUri: {
 				fsPath: mockStoragePath,
 			},
-		} as unknown as vscode.ExtensionContext
+		}
 
 		mockWorkspaceFolders = [{ uri: { fsPath: "/mock/workspace" } }]
-		;(vscode.workspace as any).workspaceFolders = mockWorkspaceFolders
+		vscode.workspace.workspaceFolders = mockWorkspaceFolders
 		;(vscode.workspace.onDidSaveTextDocument as jest.Mock).mockReturnValue({ dispose: jest.fn() })
 		;(getWorkspacePath as jest.Mock).mockReturnValue("/mock/workspace")
 		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
@@ -57,7 +109,12 @@ describe("CustomModesManager", () => {
 			throw new Error("File not found")
 		})
 
+		// Create manager with deferred file watching setup
 		manager = new CustomModesManager(mockContext, mockOnUpdate)
+
+		// Wait for the deferred file watching setup to complete
+		await new Promise((resolve) => process.nextTick(resolve))
+		await new Promise((resolve) => setTimeout(resolve, 10))
 	})
 
 	afterEach(() => {
@@ -643,16 +700,22 @@ describe("CustomModesManager", () => {
 			;(arePathsEqual as jest.Mock).mockImplementation((path1: string, path2: string) => {
 				return path.normalize(path1) === path.normalize(path2)
 			})
-			// Get the registered callback
-			const registerCall = (vscode.workspace.onDidSaveTextDocument as jest.Mock).mock.calls[0]
-			expect(registerCall).toBeDefined()
-			const [callback] = registerCall
 
-			// Simulate file save event
-			const mockDocument = {
-				uri: { fsPath: configPath },
-			}
-			await callback(mockDocument)
+			// Verify that createFileSystemWatcher was called
+			expect(vscode.workspace.createFileSystemWatcher).toHaveBeenCalled()
+
+			// Get the watcher that was created
+			const watcher = vscode.workspace.createFileSystemWatcher.mock.results[0].value
+
+			// Verify that onDidChange was called to register a callback
+			expect(watcher.onDidChange).toHaveBeenCalled()
+
+			// Get the callback that was registered
+			const changeCallback = watcher.onDidChange.mock.calls[0][0]
+			expect(changeCallback).toBeDefined()
+
+			// Simulate file change event by calling the callback directly
+			await changeCallback()
 
 			// Verify file was processed
 			expect(fs.readFile).toHaveBeenCalledWith(configPath, "utf-8")
@@ -709,7 +772,7 @@ describe("CustomModesManager", () => {
 
 		it("handles errors gracefully", async () => {
 			const mockShowError = jest.fn()
-			;(vscode.window.showErrorMessage as jest.Mock) = mockShowError
+			vscode.window.showErrorMessage = mockShowError
 			;(fs.writeFile as jest.Mock).mockRejectedValue(new Error("Write error"))
 
 			await manager.deleteCustomMode("non-existent-mode")
