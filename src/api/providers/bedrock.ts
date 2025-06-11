@@ -65,6 +65,42 @@ interface BedrockPayload {
 	additionalModelRequestFields?: BedrockThinkingConfig
 }
 
+// Define specific types for content block events to avoid 'as any' usage
+// These handle the multiple possible structures returned by AWS SDK
+interface ContentBlockStartEvent {
+	start?: {
+		text?: string
+		thinking?: string
+	}
+	contentBlockIndex?: number
+	// Alternative structure used by some AWS SDK versions
+	content_block?: {
+		type?: string
+		thinking?: string
+	}
+	// Official AWS SDK structure for reasoning (as documented)
+	contentBlock?: {
+		type?: string
+		thinking?: string
+		reasoningContent?: {
+			text?: string
+		}
+	}
+}
+
+interface ContentBlockDeltaEvent {
+	delta?: {
+		text?: string
+		thinking?: string
+		type?: string
+		// AWS SDK structure for reasoning content deltas
+		reasoningContent?: {
+			text?: string
+		}
+	}
+	contentBlockIndex?: number
+}
+
 // Define types for stream events based on AWS SDK
 export interface StreamEvent {
 	messageStart?: {
@@ -74,38 +110,8 @@ export interface StreamEvent {
 		stopReason?: "end_turn" | "tool_use" | "max_tokens" | "stop_sequence"
 		additionalModelResponseFields?: Record<string, unknown>
 	}
-	contentBlockStart?: {
-		start?: {
-			text?: string
-			thinking?: string
-		}
-		contentBlockIndex?: number
-		content_block?: {
-			type?: string
-			thinking?: string
-		}
-		// Alternative structure that might be used
-		contentBlock?: {
-			type?: string
-			thinking?: string
-			// AWS SDK structure for reasoning
-			reasoningContent?: {
-				text?: string
-			}
-		}
-	}
-	contentBlockDelta?: {
-		delta?: {
-			text?: string
-			thinking?: string
-			type?: string
-			// Based on AWS docs, reasoning might come through reasoningContent
-			reasoningContent?: {
-				text?: string
-			}
-		}
-		contentBlockIndex?: number
-	}
+	contentBlockStart?: ContentBlockStartEvent
+	contentBlockDelta?: ContentBlockDeltaEvent
 	metadata?: {
 		usage?: {
 			inputTokens: number
@@ -327,13 +333,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		let additionalModelRequestFields: BedrockThinkingConfig | undefined
 		let thinkingEnabled = false
 
-		if (
-			(metadata?.thinking?.enabled ||
-				(shouldUseReasoningBudget({ model: modelConfig.info, settings: this.options }) &&
-					modelConfig.reasoning &&
-					modelConfig.reasoningBudget)) &&
-			modelConfig.info.supportsReasoningBudget
-		) {
+		// Determine if thinking should be enabled
+		// metadata?.thinking?.enabled: Explicitly enabled through API metadata (direct request)
+		// shouldUseReasoningBudget(): Enabled through user settings (enableReasoningEffort = true)
+		const isThinkingExplicitlyEnabled = metadata?.thinking?.enabled
+		const isThinkingEnabledBySettings =
+			shouldUseReasoningBudget({ model: modelConfig.info, settings: this.options }) &&
+			modelConfig.reasoning &&
+			modelConfig.reasoningBudget
+
+		if ((isThinkingExplicitlyEnabled || isThinkingEnabledBySettings) && modelConfig.info.supportsReasoningBudget) {
 			thinkingEnabled = true
 			additionalModelRequestFields = {
 				thinking: {
@@ -471,10 +480,9 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 				// Handle content blocks
 				if (streamEvent.contentBlockStart) {
-					// The actual AWS SDK structure based on the documentation
-					const cbStart = streamEvent.contentBlockStart as any
+					const cbStart = streamEvent.contentBlockStart
 
-					// Check if this is a reasoning block
+					// Check if this is a reasoning block (official AWS SDK structure)
 					if (cbStart.contentBlock?.reasoningContent) {
 						if (cbStart.contentBlockIndex && cbStart.contentBlockIndex > 0) {
 							yield { type: "reasoning", text: "\n" }
@@ -484,13 +492,15 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 							text: cbStart.contentBlock.reasoningContent.text || "",
 						}
 					}
-					// Check for thinking block - handle both possible structures
+					// Check for thinking block - handle both possible AWS SDK structures
+					// cbStart.contentBlock: newer/official structure
+					// cbStart.content_block: alternative structure seen in some AWS SDK versions
 					else if (cbStart.contentBlock?.type === "thinking" || cbStart.content_block?.type === "thinking") {
 						const contentBlock = cbStart.contentBlock || cbStart.content_block
 						if (cbStart.contentBlockIndex && cbStart.contentBlockIndex > 0) {
 							yield { type: "reasoning", text: "\n" }
 						}
-						if (contentBlock.thinking) {
+						if (contentBlock?.thinking) {
 							yield {
 								type: "reasoning",
 								text: contentBlock.thinking,
@@ -507,12 +517,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 				// Handle content deltas
 				if (streamEvent.contentBlockDelta) {
-					const cbDelta = streamEvent.contentBlockDelta as any
+					const cbDelta = streamEvent.contentBlockDelta
 					const delta = cbDelta.delta
 
-					// Check for reasoning content - handle multiple possible structures
+					// Process reasoning and text content deltas
+					// Multiple structures are supported for AWS SDK compatibility:
+					// - delta.reasoningContent.text: official AWS docs structure for reasoning
+					// - delta.thinking: alternative structure for thinking content
+					// - delta.text: standard text content
 					if (delta) {
-						// Check for reasoningContent property (as shown in AWS docs)
+						// Check for reasoningContent property (official AWS SDK structure)
 						if (delta.reasoningContent?.text) {
 							yield {
 								type: "reasoning",
@@ -521,7 +535,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 							continue
 						}
 
-						// Fallback to original structure
+						// Handle alternative thinking structure (fallback for older SDK versions)
 						if (delta.type === "thinking_delta" && delta.thinking) {
 							yield {
 								type: "reasoning",
