@@ -135,7 +135,7 @@ export class SimpleInstaller {
 			}
 		}
 
-		// Handle _selectedIndex from parameters (legacy support)
+		// Handle _selectedIndex from parameters if provided
 		if (options?.parameters?._selectedIndex !== undefined && Array.isArray(item.content)) {
 			const index = options.parameters._selectedIndex
 			if (index >= 0 && index < item.content.length) {
