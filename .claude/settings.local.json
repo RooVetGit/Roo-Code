@@ -1,0 +1,12 @@
+{
+	"permissions": {
+		"allow": [
+			"Bash(gh api:*)",
+			"Bash(grep:*)",
+			"Bash(npm run lint)",
+			"Bash(npm run typecheck:*)",
+			"Bash(npm run:*)"
+		],
+		"deny": []
+	}
+}

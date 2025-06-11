@@ -166,6 +166,10 @@ const App = () => {
 				isHidden={tab !== "chat"}
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}
+				onNavigateToSettings={() => {
+					switchTab("settings")
+					setCurrentSection("experimental")
+				}}
 			/>
 			<HumanRelayDialog
 				isOpen={humanRelayDialogState.isOpen}

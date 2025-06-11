@@ -26,6 +26,7 @@ import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { VolumeX, Pin, Check } from "lucide-react"
 import { IconButton } from "./IconButton"
+import { IndexingStatusDot } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
 
@@ -44,6 +45,7 @@ interface ChatTextAreaProps {
 	mode: Mode
 	setMode: (value: Mode) => void
 	modeShortcutText: string
+	onNavigateToSettings?: () => void
 }
 
 const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
@@ -63,6 +65,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			mode,
 			setMode,
 			modeShortcutText,
+			onNavigateToSettings,
 		},
 		ref,
 	) => {
@@ -1171,6 +1174,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					</div>
 
 					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
+						<IndexingStatusDot onNavigateToSettings={onNavigateToSettings} />
 						<IconButton
 							iconClass={isEnhancingPrompt ? "codicon-loading" : "codicon-sparkle"}
 							title={t("chat:enhancePrompt")}

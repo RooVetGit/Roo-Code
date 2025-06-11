@@ -46,6 +46,7 @@ export interface ChatViewProps {
 	isHidden: boolean
 	showAnnouncement: boolean
 	hideAnnouncement: () => void
+	onNavigateToSettings?: () => void
 }
 
 export interface ChatViewRef {
@@ -57,7 +58,7 @@ export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
 
 const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewProps> = (
-	{ isHidden, showAnnouncement, hideAnnouncement },
+	{ isHidden, showAnnouncement, hideAnnouncement, onNavigateToSettings },
 	ref,
 ) => {
 	const isMountedRef = useRef(true)
@@ -1546,6 +1547,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				mode={mode}
 				setMode={setMode}
 				modeShortcutText={modeShortcutText}
+				onNavigateToSettings={onNavigateToSettings}
 			/>
 
 			{isProfileDisabled && (
