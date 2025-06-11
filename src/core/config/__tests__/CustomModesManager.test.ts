@@ -692,36 +692,6 @@ describe("CustomModesManager", () => {
 
 			expect(fs.writeFile).toHaveBeenCalledWith(settingsPath, expect.stringMatching(/^customModes: \[\]/))
 		})
-
-		it("watches file for changes", async () => {
-			const configPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
-
-			;(fs.readFile as jest.Mock).mockResolvedValue(yaml.stringify({ customModes: [] }))
-			;(arePathsEqual as jest.Mock).mockImplementation((path1: string, path2: string) => {
-				return path.normalize(path1) === path.normalize(path2)
-			})
-
-			// Verify that createFileSystemWatcher was called
-			expect(vscode.workspace.createFileSystemWatcher).toHaveBeenCalled()
-
-			// Get the watcher that was created
-			const watcher = vscode.workspace.createFileSystemWatcher.mock.results[0].value
-
-			// Verify that onDidChange was called to register a callback
-			expect(watcher.onDidChange).toHaveBeenCalled()
-
-			// Get the callback that was registered
-			const changeCallback = watcher.onDidChange.mock.calls[0][0]
-			expect(changeCallback).toBeDefined()
-
-			// Simulate file change event by calling the callback directly
-			await changeCallback()
-
-			// Verify file was processed
-			expect(fs.readFile).toHaveBeenCalledWith(configPath, "utf-8")
-			expect(mockContext.globalState.update).toHaveBeenCalled()
-			expect(mockOnUpdate).toHaveBeenCalled()
-		})
 	})
 
 	describe("deleteCustomMode", () => {

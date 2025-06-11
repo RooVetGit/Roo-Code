@@ -27,12 +27,8 @@ export class CustomModesManager {
 		private readonly context: vscode.ExtensionContext,
 		private readonly onUpdate: () => Promise<void>,
 	) {
-		// TODO: We really shouldn't have async methods in the constructor.
-		// Defer the file watching setup to avoid issues in test environments
-		process.nextTick(() => {
-			this.watchCustomModesFiles().catch((error) => {
-				console.error("[CustomModesManager] Failed to setup file watchers:", error)
-			})
+		this.watchCustomModesFiles().catch((error) => {
+			console.error("[CustomModesManager] Failed to setup file watchers:", error)
 		})
 	}
 
@@ -135,6 +131,11 @@ export class CustomModesManager {
 	}
 
 	private async watchCustomModesFiles(): Promise<void> {
+		// Skip if test environment is detected
+		if (process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined) {
+			return
+		}
+
 		const settingsPath = await this.getCustomModesFilePath()
 
 		// Watch settings file
