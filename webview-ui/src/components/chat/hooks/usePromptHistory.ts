@@ -91,8 +91,8 @@ export const usePromptHistory = ({
 				return item.task && item.task.trim() !== "" && (!item.workspace || item.workspace === cwd)
 			})
 			.map((item) => item.task)
-			// Limit history size to prevent memory issues
-			.slice(-MAX_PROMPT_HISTORY_SIZE)
+			// Limit history size to prevent memory issues - take oldest tasks first
+			.slice(0, MAX_PROMPT_HISTORY_SIZE)
 		// No reverse - keep chronological order so up arrow shows older tasks first
 
 		return taskPrompts
