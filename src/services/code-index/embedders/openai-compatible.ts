@@ -167,13 +167,31 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				// Log the error for debugging
 				console.error(`OpenAI Compatible embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
-				if (!hasMoreAttempts) {
-					throw new Error(
-						`Failed to create embeddings after ${MAX_RETRIES} attempts: ${error.message || error}`,
-					)
+				// Provide more context in the error message using robust error extraction
+				let errorMessage = "Unknown error"
+				if (error?.message) {
+					errorMessage = error.message
+				} else if (typeof error === "string") {
+					errorMessage = error
+				} else if (error && typeof error.toString === "function") {
+					try {
+						errorMessage = error.toString()
+					} catch {
+						errorMessage = "Unknown error"
+					}
 				}
 
-				throw error
+				const statusCode = error?.status || error?.response?.status
+
+				if (statusCode === 401) {
+					throw new Error(`Failed to create embeddings: Authentication failed. Please check your API key.`)
+				} else if (statusCode) {
+					throw new Error(
+						`Failed to create embeddings after ${MAX_RETRIES} attempts: HTTP ${statusCode} - ${errorMessage}`,
+					)
+				} else {
+					throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts: ${errorMessage}`)
+				}
 			}
 		}
 
