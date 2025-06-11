@@ -143,6 +143,8 @@ export class CustomModesManager {
 
 		const handleSettingsChange = async () => {
 			try {
+				// Ensure that the settings file exists (especially important for delete events)
+				await this.getCustomModesFilePath()
 				const content = await fs.readFile(settingsPath, "utf-8")
 
 				const errorMessage =
