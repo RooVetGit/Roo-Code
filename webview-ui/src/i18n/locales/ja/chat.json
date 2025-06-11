@@ -1,4 +1,11 @@
 {
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "自動承認済みリクエスト上限に達しました",
+			"description": "Rooは自動承認された上限の{{count}}回のAPIリクエストに達しました。カウントをリセットしてタスクを続行しますか？",
+			"button": "リセットして続ける"
+		}
+	},
 	"greeting": "Roo Code へようこそ",
 	"task": {
 		"title": "タスク",
@@ -137,7 +144,7 @@
 			"cannotUndo": "このアクションは元に戻せません。",
 			"restoreFilesAndTaskDescription": "この時点で撮影されたスナップショットにプロジェクトのファイルを復元し、この時点以降のすべてのメッセージを削除します。"
 		},
-		"current": "現在"
+		"current": "実際"
 	},
 	"contextCondense": {
 		"title": "コンテキスト要約",
@@ -271,12 +278,5 @@
 		"title": "コマンド実行警告",
 		"description": "コマンドはVSCodeターミナルシェル統合なしで実行されています。この警告を非表示にするには、<settingsLink>Roo Code設定</settingsLink>の<strong>Terminal</strong>セクションでシェル統合を無効にするか、以下のリンクを使用してVSCodeターミナル統合のトラブルシューティングを行ってください。",
 		"troubleshooting": "シェル統合のドキュメントはこちらをクリック"
-	},
-	"ask": {
-		"autoApprovedRequestLimitReached": {
-			"title": "自動承認リクエスト制限に達しました",
-			"description": "Rooは{{count}}件のAPI自動承認リクエスト制限に達しました。カウントをリセットしてタスクを続行しますか？",
-			"button": "リセットして続行"
-		}
 	}
 }

@@ -81,6 +81,7 @@
 		"project": "Progetto (area di lavoro corrente)",
 		"global": "Globale (tutte le aree di lavoro)",
 		"method": "Metodo di installazione",
+		"prerequisites": "Prerequisiti",
 		"configuration": "Configurazione",
 		"configurationDescription": "Configura i parametri richiesti per questo server MCP",
 		"button": "Installa",
@@ -93,8 +94,7 @@
 		"goToMcp": "Vai alla scheda MCP",
 		"goToModes": "Vai alla scheda Modalità",
 		"moreInfoMcp": "Visualizza documentazione MCP {{name}}",
-		"validationRequired": "Fornisci un valore per {{paramName}}",
-		"prerequisites": "Prerequisiti"
+		"validationRequired": "Fornisci un valore per {{paramName}}"
 	},
 	"sources": {
 		"title": "Configura fonti del Marketplace",

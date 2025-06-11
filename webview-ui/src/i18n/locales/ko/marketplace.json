@@ -81,6 +81,7 @@
 		"project": "프로젝트 (현재 워크스페이스)",
 		"global": "전역 (모든 워크스페이스)",
 		"method": "설치 방법",
+		"prerequisites": "전제 조건",
 		"configuration": "설정",
 		"configurationDescription": "이 MCP 서버에 필요한 매개변수를 설정하세요",
 		"button": "설치",
@@ -93,8 +94,7 @@
 		"goToMcp": "MCP 탭으로 이동",
 		"goToModes": "모드 탭으로 이동",
 		"moreInfoMcp": "{{name}} MCP 문서 보기",
-		"validationRequired": "{{paramName}}에 대한 값을 입력해주세요",
-		"prerequisites": "전제 조건"
+		"validationRequired": "{{paramName}}에 대한 값을 입력해주세요"
 	},
 	"sources": {
 		"title": "Marketplace 소스 설정",

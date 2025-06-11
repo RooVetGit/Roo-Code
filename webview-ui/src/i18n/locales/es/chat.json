@@ -1,4 +1,11 @@
 {
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Límite de solicitudes auto-aprobadas alcanzado",
+			"description": "Roo ha alcanzado el límite auto-aprobado de {{count}} solicitud(es) de API. ¿Desea reiniciar el contador y continuar con la tarea?",
+			"button": "Restablecer y Continuar"
+		}
+	},
 	"greeting": "Bienvenido a Roo Code",
 	"task": {
 		"title": "Tarea",
@@ -137,7 +144,7 @@
 			"cannotUndo": "Esta acción no se puede deshacer.",
 			"restoreFilesAndTaskDescription": "Restaura los archivos de tu proyecto a una instantánea tomada en este punto y elimina todos los mensajes posteriores a este punto."
 		},
-		"current": "Actual"
+		"current": "Real"
 	},
 	"contextCondense": {
 		"title": "Contexto condensado",
@@ -271,12 +278,5 @@
 		"title": "Advertencia de ejecución de comandos",
 		"description": "Tu comando se está ejecutando sin la integración de shell de terminal de VSCode. Para suprimir esta advertencia, puedes desactivar la integración de shell en la sección <strong>Terminal</strong> de la <settingsLink>configuración de Roo Code</settingsLink> o solucionar problemas de integración de terminal de VSCode usando el enlace de abajo.",
 		"troubleshooting": "Haz clic aquí para ver la documentación de integración de shell."
-	},
-	"ask": {
-		"autoApprovedRequestLimitReached": {
-			"title": "Límite de Solicitudes Auto-aprobadas Alcanzado",
-			"description": "Roo ha alcanzado el límite auto-aprobado de {{count}} solicitud(es) API. ¿Deseas reiniciar el contador y continuar con la tarea?",
-			"button": "Reiniciar y Continuar"
-		}
 	}
 }

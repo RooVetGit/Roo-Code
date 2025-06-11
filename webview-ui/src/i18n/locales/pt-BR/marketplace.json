@@ -81,6 +81,7 @@
 		"project": "Projeto (workspace atual)",
 		"global": "Global (todos os workspaces)",
 		"method": "Método de instalação",
+		"prerequisites": "Pré-requisitos",
 		"configuration": "Configuração",
 		"configurationDescription": "Configure os parâmetros necessários para este servidor MCP",
 		"button": "Instalar",
@@ -93,8 +94,7 @@
 		"goToMcp": "Ir para aba MCP",
 		"goToModes": "Ir para aba Modos",
 		"moreInfoMcp": "Ver documentação MCP do {{name}}",
-		"validationRequired": "Por favor, forneça um valor para {{paramName}}",
-		"prerequisites": "Pré-requisitos"
+		"validationRequired": "Por favor, forneça um valor para {{paramName}}"
 	},
 	"sources": {
 		"title": "Configurar fontes do marketplace",

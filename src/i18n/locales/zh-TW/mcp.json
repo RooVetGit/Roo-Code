@@ -3,7 +3,6 @@
 		"invalid_settings_format": "MCP 設定 JSON 格式無效。請確保您的設定遵循正確的 JSON 格式。",
 		"invalid_settings_syntax": "MCP 設定 JSON 格式無效。請檢查您的設定檔案是否有語法錯誤。",
 		"invalid_settings_validation": "MCP 設定格式無效：{{errorMessages}}",
-
 		"create_json": "建立或開啟 .roo/mcp.json 失敗：{{error}}",
 		"failed_update_project": "更新專案 MCP 伺服器失敗"
 	},

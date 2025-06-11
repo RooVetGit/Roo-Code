@@ -81,6 +81,7 @@
 		"project": "Projekt (bieżący obszar roboczy)",
 		"global": "Globalnie (wszystkie obszary robocze)",
 		"method": "Metoda instalacji",
+		"prerequisites": "Wymagania wstępne",
 		"configuration": "Konfiguracja",
 		"configurationDescription": "Skonfiguruj parametry wymagane dla tego serwera MCP",
 		"button": "Zainstaluj",
@@ -93,8 +94,7 @@
 		"goToMcp": "Przejdź do zakładki MCP",
 		"goToModes": "Przejdź do zakładki Tryby",
 		"moreInfoMcp": "Zobacz dokumentację MCP {{name}}",
-		"validationRequired": "Podaj wartość dla {{paramName}}",
-		"prerequisites": "Wymagania wstępne"
+		"validationRequired": "Podaj wartość dla {{paramName}}"
 	},
 	"sources": {
 		"title": "Konfiguruj źródła marketplace",

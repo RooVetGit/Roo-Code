@@ -3,7 +3,6 @@
 		"invalid_settings_format": "MCP設定のJSONフォーマットが無効です。設定が正しいJSONフォーマットに従っていることを確認してください。",
 		"invalid_settings_syntax": "MCP設定のJSONフォーマットが無効です。設定ファイルの構文エラーを確認してください。",
 		"invalid_settings_validation": "MCP設定フォーマットが無効です：{{errorMessages}}",
-
 		"create_json": ".roo/mcp.jsonの作成または開くことに失敗しました：{{error}}",
 		"failed_update_project": "プロジェクトMCPサーバーの更新に失敗しました"
 	},

@@ -81,6 +81,7 @@
 		"project": "Dự án (không gian làm việc hiện tại)",
 		"global": "Toàn cục (tất cả không gian làm việc)",
 		"method": "Phương thức cài đặt",
+		"prerequisites": "Điều kiện tiên quyết",
 		"configuration": "Cấu hình",
 		"configurationDescription": "Cấu hình các tham số cần thiết cho máy chủ MCP này",
 		"button": "Cài đặt",
@@ -93,8 +94,7 @@
 		"goToMcp": "Đi đến Tab MCP",
 		"goToModes": "Đi đến Tab Chế độ",
 		"moreInfoMcp": "Xem tài liệu MCP {{name}}",
-		"validationRequired": "Vui lòng cung cấp giá trị cho {{paramName}}",
-		"prerequisites": "Điều kiện tiên quyết"
+		"validationRequired": "Vui lòng cung cấp giá trị cho {{paramName}}"
 	},
 	"sources": {
 		"title": "Cấu hình Nguồn Marketplace",

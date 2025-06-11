@@ -81,6 +81,7 @@
 		"project": "專案（目前工作區）",
 		"global": "全域（所有工作區）",
 		"method": "安裝方法",
+		"prerequisites": "前置條件",
 		"configuration": "設定",
 		"configurationDescription": "設定此 MCP 伺服器所需的參數",
 		"button": "安裝",
@@ -93,8 +94,7 @@
 		"goToMcp": "前往 MCP 標籤頁",
 		"goToModes": "前往模式標籤頁",
 		"moreInfoMcp": "檢視 {{name}} MCP 文件",
-		"validationRequired": "請為 {{paramName}} 提供值",
-		"prerequisites": "前置條件"
+		"validationRequired": "請為 {{paramName}} 提供值"
 	},
 	"sources": {
 		"title": "設定 Marketplace 來源",

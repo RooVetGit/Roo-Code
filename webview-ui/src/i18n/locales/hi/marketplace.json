@@ -81,6 +81,7 @@
 		"project": "प्रोजेक्ट (वर्तमान वर्कस्पेस)",
 		"global": "ग्लोबल (सभी वर्कस्पेस)",
 		"method": "इंस्टॉलेशन विधि",
+		"prerequisites": "आवश्यकताएं",
 		"configuration": "कॉन्फ़िगरेशन",
 		"configurationDescription": "इस MCP सर्वर के लिए आवश्यक पैरामीटर कॉन्फ़िगर करें",
 		"button": "इंस्टॉल करें",
@@ -93,8 +94,7 @@
 		"goToMcp": "MCP टैब पर जाएं",
 		"goToModes": "मोड टैब पर जाएं",
 		"moreInfoMcp": "{{name}} MCP दस्तावेज़ देखें",
-		"validationRequired": "कृपया {{paramName}} के लिए एक मान प्रदान करें",
-		"prerequisites": "आवश्यकताएं"
+		"validationRequired": "कृपया {{paramName}} के लिए एक मान प्रदान करें"
 	},
 	"sources": {
 		"title": "Marketplace स्रोत कॉन्फ़िगर करें",

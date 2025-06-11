@@ -1,8 +1,4 @@
 {
-	"input": {
-		"task_prompt": "O que você quer que o Roo faça?",
-		"task_placeholder": "Digite sua tarefa aqui"
-	},
 	"extension": {
 		"name": "Roo Code",
 		"description": "Uma equipe completa de desenvolvedores com IA em seu editor."
@@ -90,10 +86,8 @@
 		"enter_absolute_path": "Por favor, digite um caminho absoluto (ex: D:\\RooCodeStorage ou /home/user/storage)",
 		"enter_valid_path": "Por favor, digite um caminho válido"
 	},
-	"settings": {
-		"providers": {
-			"groqApiKey": "Chave de API Groq",
-			"getGroqApiKey": "Obter chave de API Groq"
-		}
+	"input": {
+		"task_prompt": "O que você quer que o Roo faça?",
+		"task_placeholder": "Digite sua tarefa aqui"
 	}
 }

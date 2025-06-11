@@ -1,15 +1,15 @@
 {
-	"number_format": {
-		"thousand_suffix": "k",
-		"million_suffix": "m",
-		"billion_suffix": "b"
-	},
 	"answers": {
 		"yes": "Sim",
 		"no": "Não",
 		"cancel": "Cancelar",
 		"remove": "Remover",
 		"keep": "Manter"
+	},
+	"number_format": {
+		"thousand_suffix": "k",
+		"million_suffix": "m",
+		"billion_suffix": "b"
 	},
 	"ui": {
 		"search_placeholder": "Pesquisar..."

@@ -81,6 +81,7 @@
 		"project": "Projecte (espai de treball actual)",
 		"global": "Global (tots els espais de treball)",
 		"method": "Mètode d'instal·lació",
+		"prerequisites": "Prerequisits",
 		"configuration": "Configuració",
 		"configurationDescription": "Configura els paràmetres necessaris per a aquest servidor MCP",
 		"button": "Instal·lar",
@@ -93,8 +94,7 @@
 		"goToMcp": "Anar a la pestanya MCP",
 		"goToModes": "Anar a la pestanya Modes",
 		"moreInfoMcp": "Veure documentació MCP de {{name}}",
-		"validationRequired": "Si us plau, proporciona un valor per a {{paramName}}",
-		"prerequisites": "Prerequisits"
+		"validationRequired": "Si us plau, proporciona un valor per a {{paramName}}"
 	},
 	"sources": {
 		"title": "Configurar fonts del marketplace",

@@ -1,4 +1,11 @@
 {
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Limiet voor automatisch goedgekeurde aanvragen bereikt",
+			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-verzoek(en) bereikt. Wilt u de teller resetten en doorgaan met de taak?",
+			"button": "Resetten en doorgaan"
+		}
+	},
 	"greeting": "Welkom bij Roo Code",
 	"task": {
 		"title": "Taak",
@@ -137,7 +144,7 @@
 			"cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
 			"restoreFilesAndTaskDescription": "Herstelt de bestanden van je project naar een momentopname die op dit punt is gemaakt en verwijdert alle berichten na dit punt."
 		},
-		"current": "Huidig"
+		"current": "Actueel"
 	},
 	"contextCondense": {
 		"title": "Context samengevat",
@@ -271,12 +278,5 @@
 		"title": "Waarschuwing commando-uitvoering",
 		"description": "Je commando wordt uitgevoerd zonder VSCode-terminal shell-integratie. Om deze waarschuwing te onderdrukken kun je shell-integratie uitschakelen in het gedeelte <strong>Terminal</strong> van de <settingsLink>Roo Code-instellingen</settingsLink> of de VSCode-terminalintegratie oplossen via de onderstaande link.",
 		"troubleshooting": "Klik hier voor shell-integratie documentatie."
-	},
-	"ask": {
-		"autoApprovedRequestLimitReached": {
-			"title": "Limiet voor automatisch goedgekeurde verzoeken bereikt",
-			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-verzoek(en) bereikt. Wil je de teller resetten en doorgaan met de taak?",
-			"button": "Resetten en doorgaan"
-		}
 	}
 }

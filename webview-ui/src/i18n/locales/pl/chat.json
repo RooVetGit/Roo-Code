@@ -1,4 +1,11 @@
 {
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Osiągnięto Limit Automatycznie Zatwierdzonych Wniosków",
+			"description": "Roo osiągnął automatycznie zatwierdzony limit {{count}} żądań API. Czy chcesz zresetować licznik i kontynuować zadanie?",
+			"button": "Resetuj i Kontynuuj"
+		}
+	},
 	"greeting": "Witamy w Roo Code",
 	"task": {
 		"title": "Zadanie",
@@ -137,7 +144,7 @@
 			"cannotUndo": "Tej akcji nie można cofnąć.",
 			"restoreFilesAndTaskDescription": "Przywraca pliki Twojego projektu do zrzutu wykonanego w tym punkcie i usuwa wszystkie wiadomości po tym punkcie."
 		},
-		"current": "Bieżący"
+		"current": "Faktyczne"
 	},
 	"contextCondense": {
 		"title": "Kontekst skondensowany",
@@ -271,12 +278,5 @@
 		"title": "Ostrzeżenie wykonania polecenia",
 		"description": "Twoje polecenie jest wykonywane bez integracji powłoki terminala VSCode. Aby ukryć to ostrzeżenie, możesz wyłączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink> lub rozwiązać problemy z integracją terminala VSCode korzystając z poniższego linku.",
 		"troubleshooting": "Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki."
-	},
-	"ask": {
-		"autoApprovedRequestLimitReached": {
-			"title": "Osiągnięto limit automatycznie zatwierdzonych żądań",
-			"description": "Roo osiągnął automatycznie zatwierdzony limit {{count}} żądania/żądań API. Czy chcesz zresetować licznik i kontynuować zadanie?",
-			"button": "Zresetuj i kontynuuj"
-		}
 	}
 }

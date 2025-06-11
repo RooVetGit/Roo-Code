@@ -1,4 +1,11 @@
 {
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Đã đạt giới hạn yêu cầu phê duyệt tự động",
+			"description": "Roo đã đạt đến giới hạn tự động phê duyệt là {{count}} yêu cầu API. Bạn có muốn đặt lại số lượng và tiếp tục với tác vụ không?",
+			"button": "Đặt lại và Tiếp tục"
+		}
+	},
 	"greeting": "Chào mừng đến với Roo Code",
 	"task": {
 		"title": "Nhiệm vụ",
@@ -137,7 +144,7 @@
 			"cannotUndo": "Hành động này không thể hoàn tác.",
 			"restoreFilesAndTaskDescription": "Khôi phục các tệp dự án của bạn về bản chụp được thực hiện tại thời điểm này và xóa tất cả tin nhắn sau điểm này."
 		},
-		"current": "Hiện tại"
+		"current": "Thực tế"
 	},
 	"contextCondense": {
 		"title": "Ngữ cảnh đã tóm tắt",
@@ -271,12 +278,5 @@
 		"title": "Cảnh báo thực thi lệnh",
 		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell terminal VSCode. Để ẩn cảnh báo này, bạn có thể vô hiệu hóa tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink> hoặc khắc phục sự cố tích hợp terminal VSCode bằng liên kết bên dưới.",
 		"troubleshooting": "Nhấp vào đây để xem tài liệu tích hợp shell."
-	},
-	"ask": {
-		"autoApprovedRequestLimitReached": {
-			"title": "Đã Đạt Giới Hạn Yêu Cầu Tự Động Phê Duyệt",
-			"description": "Roo đã đạt đến giới hạn tự động phê duyệt là {{count}} yêu cầu API. Bạn có muốn đặt lại bộ đếm và tiếp tục nhiệm vụ không?",
-			"button": "Đặt lại và Tiếp tục"
-		}
 	}
 }

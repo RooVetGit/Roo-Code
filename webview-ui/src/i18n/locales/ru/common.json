@@ -1,15 +1,15 @@
 {
-	"number_format": {
-		"thousand_suffix": "тыс",
-		"million_suffix": "млн",
-		"billion_suffix": "млрд"
-	},
 	"answers": {
 		"yes": "Да",
 		"no": "Нет",
 		"cancel": "Отмена",
 		"remove": "Удалить",
 		"keep": "Оставить"
+	},
+	"number_format": {
+		"thousand_suffix": "тыс",
+		"million_suffix": "млн",
+		"billion_suffix": "млрд"
 	},
 	"ui": {
 		"search_placeholder": "Поиск..."

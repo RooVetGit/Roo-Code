@@ -81,6 +81,7 @@
 		"project": "プロジェクト（現在のワークスペース）",
 		"global": "グローバル（すべてのワークスペース）",
 		"method": "インストール方法",
+		"prerequisites": "前提条件",
 		"configuration": "設定",
 		"configurationDescription": "このMCPサーバーに必要なパラメーターを設定",
 		"button": "インストール",
@@ -93,8 +94,7 @@
 		"goToMcp": "MCPタブに移動",
 		"goToModes": "モードタブに移動",
 		"moreInfoMcp": "{{name}} MCPドキュメントを表示",
-		"validationRequired": "{{paramName}}の値を入力してください",
-		"prerequisites": "前提条件"
+		"validationRequired": "{{paramName}}の値を入力してください"
 	},
 	"sources": {
 		"title": "Marketplaceソースを設定",
