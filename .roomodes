@@ -146,7 +146,6 @@ customModes:
       - mcp
     source: project
   
-  customModes:
   - slug: pr-reviewer
     name: 🔍 PR Reviewer
     roleDefinition: You are a pull request reviewer specializing in code quality,
