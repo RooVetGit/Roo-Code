@@ -77,6 +77,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
 			taskHistory,
+			clineMessages,
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -163,6 +164,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			resetHistoryNavigation,
 			resetOnInputChange,
 		} = usePromptHistory({
+			clineMessages,
 			taskHistory,
 			cwd,
 			inputValue,
@@ -492,7 +494,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setInputValue(newValue)
 
 				// Reset history navigation when user types
-				resetOnInputChange(newValue)
+				resetOnInputChange()
 
 				const newCursorPosition = e.target.selectionStart
 				setCursorPosition(newCursorPosition)

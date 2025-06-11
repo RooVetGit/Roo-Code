@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 
+interface ClineMessage {
+	type: "say" | "ask"
+	say?: string
+	ask?: string
+	ts: number
+	text?: string
+}
+
 interface TaskHistoryItem {
 	task: string
 	workspace?: string
 }
 
 interface UsePromptHistoryProps {
+	clineMessages: ClineMessage[] | undefined
 	taskHistory: TaskHistoryItem[] | undefined
 	cwd: string | undefined
 	inputValue: string
@@ -31,10 +40,11 @@ export interface UsePromptHistoryReturn {
 		isComposing: boolean,
 	) => boolean
 	resetHistoryNavigation: () => void
-	resetOnInputChange: (newValue: string) => void
+	resetOnInputChange: () => void
 }
 
 export const usePromptHistory = ({
+	clineMessages,
 	taskHistory,
 	cwd,
 	inputValue,
@@ -49,14 +59,33 @@ export const usePromptHistory = ({
 	const [promptHistory, setPromptHistory] = useState<string[]>([])
 	const [inputValueWithCursor, setInputValueWithCursor] = useState<CursorPositionState>({ value: inputValue })
 
-	// Initialize prompt history from task history with performance optimization
+	// Initialize prompt history with hybrid approach: conversation messages if in task, otherwise task history
 	const filteredPromptHistory = useMemo(() => {
+		// First try to get conversation messages (user_feedback from clineMessages)
+		const conversationPrompts = clineMessages
+			?.filter((message) => {
+				// Filter for user_feedback messages that have text content
+				return (
+					message.type === "say" &&
+					message.say === "user_feedback" &&
+					message.text &&
+					message.text.trim() !== ""
+				)
+			})
+			.map((message) => message.text!)
+
+		// If we have conversation messages, use those (newest first when navigating up)
+		if (conversationPrompts && conversationPrompts.length > 0) {
+			return conversationPrompts.slice(-MAX_PROMPT_HISTORY_SIZE).reverse() // newest first for conversation messages
+		}
+
+		// Fall back to task history if no conversation messages
 		if (!taskHistory || taskHistory.length === 0 || !cwd) {
 			return []
 		}
 
 		// Extract user prompts from task history for the current workspace only
-		const prompts = taskHistory
+		const taskPrompts = taskHistory
 			.filter((item) => {
 				// Filter by workspace and ensure task is not empty
 				return item.task && item.task.trim() !== "" && (!item.workspace || item.workspace === cwd)
@@ -64,29 +93,26 @@ export const usePromptHistory = ({
 			.map((item) => item.task)
 			// Limit history size to prevent memory issues
 			.slice(-MAX_PROMPT_HISTORY_SIZE)
+		// No reverse - keep chronological order so up arrow shows older tasks first
 
-		// taskHistory is already in chronological order (oldest first)
-		// We keep it as-is so that navigation works correctly:
-		// - Arrow up increases index to go back in history (older prompts)
-		// - Arrow down decreases index to go forward (newer prompts)
-		return prompts
-	}, [taskHistory, cwd])
+		return taskPrompts
+	}, [clineMessages, taskHistory, cwd])
 
-	// Update prompt history when filtered history changes
+	// Update prompt history when filtered history changes and reset navigation
 	useEffect(() => {
 		setPromptHistory(filteredPromptHistory)
+		// Reset navigation state when switching between history sources
+		setHistoryIndex(-1)
+		setTempInput("")
 	}, [filteredPromptHistory])
 
 	// Reset history navigation when user types (but not when we're setting it programmatically)
-	const resetOnInputChange = useCallback(
-		(_newValue: string) => {
-			if (historyIndex !== -1) {
-				setHistoryIndex(-1)
-				setTempInput("")
-			}
-		},
-		[historyIndex],
-	)
+	const resetOnInputChange = useCallback(() => {
+		if (historyIndex !== -1) {
+			setHistoryIndex(-1)
+			setTempInput("")
+		}
+	}, [historyIndex])
 
 	const handleHistoryNavigation = useCallback(
 		(event: React.KeyboardEvent<HTMLTextAreaElement>, showContextMenu: boolean, isComposing: boolean): boolean => {
@@ -116,11 +142,13 @@ export const usePromptHistory = ({
 						if (newIndex < promptHistory.length) {
 							setHistoryIndex(newIndex)
 							const historicalPrompt = promptHistory[newIndex]
-							setInputValue(historicalPrompt)
-							setInputValueWithCursor({
-								value: historicalPrompt,
-								afterRender: "SET_CURSOR_FIRST_LINE",
-							})
+							if (historicalPrompt) {
+								setInputValue(historicalPrompt)
+								setInputValueWithCursor({
+									value: historicalPrompt,
+									afterRender: "SET_CURSOR_FIRST_LINE",
+								})
+							}
 						}
 						return true
 					}
@@ -133,11 +161,13 @@ export const usePromptHistory = ({
 							const newIndex = historyIndex - 1
 							setHistoryIndex(newIndex)
 							const historicalPrompt = promptHistory[newIndex]
-							setInputValue(historicalPrompt)
-							setInputValueWithCursor({
-								value: historicalPrompt,
-								afterRender: "SET_CURSOR_LAST_LINE",
-							})
+							if (historicalPrompt) {
+								setInputValue(historicalPrompt)
+								setInputValueWithCursor({
+									value: historicalPrompt,
+									afterRender: "SET_CURSOR_LAST_LINE",
+								})
+							}
 						} else if (historyIndex === 0) {
 							// Return to current input
 							setHistoryIndex(-1)
