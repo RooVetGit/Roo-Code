@@ -8,6 +8,7 @@ import { MarketplaceItem, MarketplaceItemType } from "./types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { t } from "../../i18n"
+import { TelemetryService } from "@roo-code/telemetry"
 
 export class MarketplaceManager {
 	private configLoader: RemoteConfigLoader
@@ -95,6 +96,27 @@ export class MarketplaceManager {
 			const result = await this.installer.installItem(item, { target, parameters })
 			vscode.window.showInformationMessage(t("marketplace:installation.installSuccess", { itemName: item.name }))
 
+			// Capture telemetry for successful installation
+			const telemetryProperties: Record<string, any> = {}
+			if (parameters && Object.keys(parameters).length > 0) {
+				telemetryProperties.hasParameters = true
+				// For MCP items with multiple installation methods, track which one was used
+				if (item.type === "mcp" && parameters._selectedIndex !== undefined && Array.isArray(item.content)) {
+					const selectedMethod = item.content[parameters._selectedIndex]
+					if (selectedMethod && selectedMethod.name) {
+						telemetryProperties.installationMethodName = selectedMethod.name
+					}
+				}
+			}
+
+			TelemetryService.instance.captureMarketplaceItemInstalled(
+				item.id,
+				item.type,
+				item.name,
+				target,
+				telemetryProperties,
+			)
+
 			// Open the config file that was modified, optionally at the specific line
 			const document = await vscode.workspace.openTextDocument(result.filePath)
 			const options: vscode.TextDocumentShowOptions = {}
@@ -127,6 +149,9 @@ export class MarketplaceManager {
 		try {
 			await this.installer.removeItem(item, { target })
 			vscode.window.showInformationMessage(t("marketplace:installation.removeSuccess", { itemName: item.name }))
+
+			// Capture telemetry for successful removal
+			TelemetryService.instance.captureMarketplaceItemRemoved(item.id, item.type, item.name, target)
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			vscode.window.showErrorMessage(

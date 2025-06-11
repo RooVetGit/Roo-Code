@@ -9,6 +9,16 @@ jest.mock("@roo-code/cloud", () => ({
 	getRooCodeApiUrl: () => "https://test.api.com",
 }))
 
+// Mock TelemetryService
+jest.mock("../../../../packages/telemetry/src/TelemetryService", () => ({
+	TelemetryService: {
+		instance: {
+			captureMarketplaceItemInstalled: jest.fn(),
+			captureMarketplaceItemRemoved: jest.fn(),
+		},
+	},
+}))
+
 // Mock vscode first
 jest.mock("vscode", () => ({
 	workspace: {
