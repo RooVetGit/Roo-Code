@@ -494,8 +494,8 @@
 			"description": "Etkinleştirildiğinde, Roo tek bir istekte birden fazla dosya okuyabilir. Devre dışı bırakıldığında, Roo dosyaları birer birer okumalıdır. Daha az yetenekli modellerle çalışırken veya dosya erişimi üzerinde daha fazla kontrol istediğinizde devre dışı bırakmak yardımcı olabilir."
 		},
 		"MARKETPLACE": {
-			"name": "Roo Code'da Marketplace'i Etkinleştir",
-			"description": "Etkinleştirildiğinde, Roo Marketplace'ten öğeleri yükleyebilir ve yönetebilir."
+			"name": "Marketplace'i Etkinleştir",
+			"description": "Etkinleştirildiğinde, Marketplace'ten MCP'leri ve özel modları yükleyebilirsiniz."
 		},
 		"DISABLE_COMPLETION_COMMAND": {
 			"name": "attempt_completion'da komut yürütmeyi devre dışı bırak",

@@ -494,8 +494,8 @@
 			"description": "Lorsqu'activé, Roo peut lire plusieurs fichiers dans une seule requête. Lorsque désactivé, Roo doit lire les fichiers un par un. La désactivation peut aider lors du travail avec des modèles moins performants ou lorsque tu souhaites plus de contrôle sur l'accès aux fichiers."
 		},
 		"MARKETPLACE": {
-			"name": "Activer le Marketplace dans Roo Code",
-			"description": "Lorsque cette option est activée, Roo pourra installer et gérer des éléments du Marketplace."
+			"name": "Activer le Marketplace",
+			"description": "Lorsque cette option est activée, tu peux installer des MCP et des modes personnalisés depuis le Marketplace."
 		},
 		"DISABLE_COMPLETION_COMMAND": {
 			"name": "Désactiver l'exécution des commandes dans attempt_completion",

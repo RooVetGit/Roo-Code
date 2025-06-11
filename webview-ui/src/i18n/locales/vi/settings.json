@@ -494,8 +494,8 @@
 			"description": "Khi bật, Roo có thể đọc nhiều tệp trong một yêu cầu duy nhất. Khi tắt, Roo phải đọc từng tệp một. Việc tắt có thể hữu ích khi làm việc với các mô hình ít khả năng hơn hoặc khi bạn muốn kiểm soát nhiều hơn quyền truy cập tệp."
 		},
 		"MARKETPLACE": {
-			"name": "Bật Marketplace trong Roo Code",
-			"description": "Khi được bật, Roo sẽ có thể cài đặt và quản lý các mục từ Marketplace."
+			"name": "Bật Marketplace",
+			"description": "Khi được bật, bạn có thể cài đặt MCP và chế độ tùy chỉnh từ Marketplace."
 		},
 		"DISABLE_COMPLETION_COMMAND": {
 			"name": "Tắt thực thi lệnh trong attempt_completion",

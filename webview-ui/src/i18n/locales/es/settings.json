@@ -494,8 +494,8 @@
 			"description": "Cuando está habilitado, Roo puede leer múltiples archivos en una sola solicitud. Cuando está deshabilitado, Roo debe leer archivos uno a la vez. Deshabilitarlo puede ayudar cuando se trabaja con modelos menos capaces o cuando deseas más control sobre el acceso a archivos."
 		},
 		"MARKETPLACE": {
-			"name": "Habilitar Marketplace en Roo Code",
-			"description": "Cuando está habilitado, Roo podrá instalar y gestionar elementos del Marketplace."
+			"name": "Habilitar Marketplace",
+			"description": "Cuando está habilitado, puedes instalar MCP y modos personalizados del Marketplace."
 		},
 		"DISABLE_COMPLETION_COMMAND": {
 			"name": "Desactivar la ejecución de comandos en attempt_completion",
