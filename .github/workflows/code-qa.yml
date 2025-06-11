@@ -18,6 +18,8 @@ jobs:
               uses: ./.github/actions/setup-node-pnpm
             - name: Verify all translations are complete
               run: node scripts/find-missing-translations.js
+            - name: Verify all translations are ordered properly
+              run: node scripts/lint-locale-key-ordering.js
 
     knip:
         runs-on: ubuntu-latest
