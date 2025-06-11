@@ -102,7 +102,7 @@
       Plan the test implementation based on gathered information:
       
       For New Tests:
-      - Define test suite structure with describe/it blocks
+      - Define test suite structure with suite/test blocks
       - Plan setup and teardown procedures
       - Identify required test data and fixtures
       - Design event listeners and validation points
