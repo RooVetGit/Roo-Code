@@ -109,12 +109,7 @@ describe("CustomModesManager", () => {
 			throw new Error("File not found")
 		})
 
-		// Create manager with deferred file watching setup
 		manager = new CustomModesManager(mockContext, mockOnUpdate)
-
-		// Wait for the deferred file watching setup to complete
-		await new Promise((resolve) => process.nextTick(resolve))
-		await new Promise((resolve) => setTimeout(resolve, 10))
 	})
 
 	afterEach(() => {
