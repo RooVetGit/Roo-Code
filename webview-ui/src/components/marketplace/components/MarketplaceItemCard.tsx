@@ -47,28 +47,9 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 		setShowInstallModal(true)
 	}
 
-	const handleCardClick = (e: React.MouseEvent) => {
-		// Don't navigate if clicking on a button or link
-		const target = e.target as HTMLElement
-		if (target.closest("button") || target.closest("a")) {
-			return
-		}
-
-		if (item.url && isValidUrl(item.url)) {
-			vscode.postMessage({ type: "openExternal", url: item.url })
-		}
-	}
-
 	return (
 		<>
-			<div
-				className={cn(
-					"border border-vscode-panel-border rounded-sm p-3 bg-vscode-editor-background",
-					item.url &&
-						isValidUrl(item.url) &&
-						"cursor-pointer hover:bg-vscode-list-hoverBackground transition-colors",
-				)}
-				onClick={handleCardClick}>
+			<div className="border border-vscode-panel-border rounded-sm p-3 bg-vscode-editor-background">
 				<div className="flex gap-2 items-start justify-between">
 					<div className="flex gap-2 items-start">
 						<div>
