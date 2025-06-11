@@ -111,7 +111,12 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				const response = await this.embeddingsClient.embeddings.create({
 					input: batchTexts,
 					model: model,
-					encoding_format: "base64", // Use base64 to protect embedding dimensions from openai sabotage
+					// The OpenAI package has custom parsing that truncates embedding dimension to 256,
+					// which destroys accuracy.
+					// If we pass `encoding_format: "base64"`, it does not perform any parsing,
+					// leaving parsing up to us. This is likely a bug in the OpenAI package, possibly
+					// addressed by https://github.com/openai/openai-node/pull/1448 (but maybe not)
+					encoding_format: "base64",
 				})
 
 				// Convert base64 embeddings to float32 arrays
