@@ -14,6 +14,7 @@ import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import { GlobalContentIds } from "../../shared/globalContentIds"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
@@ -130,7 +131,23 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.initClineWithTask(message.text, message.images)
 			break
 		case "customInstructions":
-			await provider.updateCustomInstructions(message.text)
+			await provider.contentManager.updateContent(GlobalContentIds.customInstructions, message.text)
+			break
+		case "openContent":
+			if (message.contentId) {
+				// Check for contentId instead of filePath
+				await provider.contentManager.openContent(message.contentId)
+			} else {
+				console.error("openContent message missing contentId")
+			}
+			break
+		case "refreshContent":
+			if (message.contentId) {
+				await provider.contentManager.refreshContent(message.contentId)
+			} else {
+				// Handle error or log if contentId is missing
+				console.error("refreshContent message missing contentId")
+			}
 			break
 		case "alwaysAllowReadOnly":
 			await updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)

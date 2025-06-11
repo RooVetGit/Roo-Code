@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import path from "path"
 import { Mode } from "../../../shared/modes"
-import { fileExistsAtPath } from "../../../utils/fs"
+import { fileExistsAtPath, safeReadFile } from "../../../utils/fs"
 
 export type PromptVariables = {
 	workspace?: string
@@ -23,23 +23,6 @@ function interpolatePromptContent(content: string, variables: PromptVariables): 
 		}
 	}
 	return interpolatedContent
-}
-
-/**
- * Safely reads a file, returning an empty string if the file doesn't exist
- */
-async function safeReadFile(filePath: string): Promise<string> {
-	try {
-		const content = await fs.readFile(filePath, "utf-8")
-		// When reading with "utf-8" encoding, content should be a string
-		return content.trim()
-	} catch (err) {
-		const errorCode = (err as NodeJS.ErrnoException).code
-		if (!errorCode || !["ENOENT", "EISDIR"].includes(errorCode)) {
-			throw err
-		}
-		return ""
-	}
 }
 
 /**

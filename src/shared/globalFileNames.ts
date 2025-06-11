@@ -3,5 +3,6 @@ export const GlobalFileNames = {
 	uiMessages: "ui_messages.json",
 	mcpSettings: "mcp_settings.json",
 	customModes: "custom_modes.yaml",
+	customInstructions: "custom_instructions.md",
 	taskMetadata: "task_metadata.json",
 }

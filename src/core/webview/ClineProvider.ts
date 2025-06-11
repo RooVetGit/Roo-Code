@@ -37,6 +37,7 @@ import { Package } from "../../shared/package"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
+import { GlobalContentIds } from "../../shared/globalContentIds"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
@@ -65,6 +66,7 @@ import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
+import { ContentManager } from "../../services/content/ContentManager"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -101,6 +103,7 @@ export class ClineProvider
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
+	public contentManager: ContentManager // Declare private member
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -147,6 +150,14 @@ export class ClineProvider
 			.catch((error) => {
 				this.log(`Failed to initialize MCP Hub: ${error}`)
 			})
+
+		// Instantiate ContentManager
+		this.contentManager = new ContentManager({
+			log: this.log.bind(this),
+			postMessageToWebview: this.postMessageToWebview.bind(this),
+			postStateToWebview: this.postStateToWebview.bind(this),
+			globalStorageUriFsPath: this.contextProxy.globalStorageUri.fsPath,
+		})
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -988,10 +999,23 @@ export class ClineProvider
 		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
 	}
 
-	async updateCustomInstructions(instructions?: string) {
-		// User may be clearing the field.
-		await this.updateGlobalState("customInstructions", instructions || undefined)
-		await this.postStateToWebview()
+	// Settings Directory
+
+	async ensureSettingsDirectoryExists(): Promise<string> {
+		const { getSettingsDirectoryPath } = await import("../../utils/storage")
+		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+		return getSettingsDirectoryPath(globalStoragePath)
+	}
+
+	private async getContentPath(contentId: string): Promise<string | undefined> {
+		const settingsDir = await this.ensureSettingsDirectoryExists()
+		switch (contentId) {
+			case GlobalContentIds.customInstructions:
+				return path.join(settingsDir, GlobalFileNames.customInstructions)
+			default:
+				this.log(`Unknown contentId: ${contentId}`)
+				return undefined
+		}
 	}
 
 	// MCP
@@ -1017,12 +1041,6 @@ export class ClineProvider
 			return path.join(os.homedir(), ".roo-code", "mcp")
 		}
 		return mcpServersDir
-	}
-
-	async ensureSettingsDirectoryExists(): Promise<string> {
-		const { getSettingsDirectoryPath } = await import("../../utils/storage")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-		return getSettingsDirectoryPath(globalStoragePath)
 	}
 
 	// OpenRouter
@@ -1486,7 +1504,7 @@ export class ClineProvider
 		return {
 			apiConfiguration: providerSettings,
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
-			customInstructions: stateValues.customInstructions,
+			customInstructions: await this.contentManager.readContent(GlobalContentIds.customInstructions),
 			apiModelId: stateValues.apiModelId,
 			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
 			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,

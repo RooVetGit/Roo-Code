@@ -48,6 +48,18 @@ describe("Settings Migration", () => {
 		// Mock extension context
 		mockContext = {
 			globalStorageUri: { fsPath: mockStoragePath },
+			globalState: {
+				get: jest.fn((key: string) => {
+					if (key === "clineCustomModes") {
+						return "some old custom modes content"
+					}
+					if (key === "customInstructions") {
+						return undefined
+					}
+					return undefined
+				}),
+				update: jest.fn().mockResolvedValue(undefined),
+			},
 		} as unknown as vscode.ExtensionContext
 
 		// Set global outputChannel for all tests

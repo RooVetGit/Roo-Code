@@ -16,6 +16,7 @@ const mockedFs = fs as jest.Mocked<typeof fs>
 
 // Mock the fileExistsAtPath function
 jest.mock("../../../utils/fs", () => ({
+	...(jest.requireActual("../../../utils/fs") as object), // Spread all original exports
 	fileExistsAtPath: jest.fn().mockResolvedValue(true),
 	createDirectoriesForFile: jest.fn().mockResolvedValue([]),
 }))

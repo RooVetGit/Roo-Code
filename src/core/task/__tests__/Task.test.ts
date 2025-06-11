@@ -140,6 +140,7 @@ jest.mock("../../../utils/storage", () => ({
 }))
 
 jest.mock("../../../utils/fs", () => ({
+	...(jest.requireActual("../../../utils/fs") as object), // Spread all original exports
 	fileExistsAtPath: jest.fn().mockImplementation((filePath) => {
 		return filePath.includes("ui_messages.json") || filePath.includes("api_conversation_history.json")
 	}),
