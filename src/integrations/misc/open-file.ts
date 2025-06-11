@@ -3,7 +3,7 @@ import * as os from "os"
 import * as vscode from "vscode"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 
-export async function openImage(dataUri: string) {
+export async function openImage(dataUri: string, options?: { values?: { action?: string } }) {
 	const matches = dataUri.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
 	if (!matches) {
 		vscode.window.showErrorMessage("Invalid data URI format")
@@ -11,9 +11,41 @@ export async function openImage(dataUri: string) {
 	}
 	const [, format, base64Data] = matches
 	const imageBuffer = Buffer.from(base64Data, "base64")
+
+	// Default behavior: open the image
 	const tempFilePath = path.join(os.tmpdir(), `temp_image_${Date.now()}.${format}`)
 	try {
 		await vscode.workspace.fs.writeFile(vscode.Uri.file(tempFilePath), imageBuffer)
+		// Check if this is a copy action
+		if (options?.values?.action === "copy") {
+			try {
+				// Use different clipboard commands based on platform
+				let clipboardCmd: string
+				if (process.platform === "darwin") {
+					// macOS
+					clipboardCmd = `osascript -e 'set the clipboard to (POSIX file "${tempFilePath}")'`
+				} else if (process.platform === "win32") {
+					// Windows (using PowerShell)
+					clipboardCmd = `powershell -command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetImage([System.Drawing.Image]::FromFile('${tempFilePath}'))"`
+				} else {
+					// Linux (assuming xclip is installed)
+					clipboardCmd = `xclip -selection clipboard -t image/${format} -i "${tempFilePath}"`
+				}
+
+				// Execute the clipboard command
+				const cp = require("child_process")
+				cp.exec(clipboardCmd, (err: any) => {
+					if (err) {
+						vscode.window.showErrorMessage(`Error copying image: ${err.message}`)
+					} else {
+						vscode.window.showInformationMessage("Image copied to clipboard")
+					}
+				})
+			} catch (error) {
+				vscode.window.showErrorMessage(`Error copying image: ${error}`)
+			}
+			return
+		}
 		await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(tempFilePath))
 	} catch (error) {
 		vscode.window.showErrorMessage(`Error opening image: ${error}`)
