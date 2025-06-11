@@ -1,19 +1,9 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { cn } from "@src/lib/utils"
 import { vscode } from "@src/utils/vscode"
-
-interface IndexingStatus {
-	systemStatus: string
-	message?: string
-	processedItems: number
-	totalItems: number
-	currentItemUnit?: string
-}
-
-interface IndexingStatusUpdateMessage {
-	type: "indexingStatusUpdate"
-	values: IndexingStatus
-}
+import { useAppTranslation } from "@/i18n/TranslationContext"
+import { useTooltip } from "@/hooks/useTooltip"
+import type { IndexingStatus, IndexingStatusUpdateMessage } from "@roo/ExtensionMessage"
 
 interface IndexingStatusDotProps {
 	onNavigateToSettings?: () => void
@@ -21,14 +11,15 @@ interface IndexingStatusDotProps {
 }
 
 export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigateToSettings, className }) => {
+	const { t } = useAppTranslation()
+	const { showTooltip, handleMouseEnter, handleMouseLeave, cleanup } = useTooltip({ delay: 300 })
+
 	const [indexingStatus, setIndexingStatus] = useState<IndexingStatus>({
 		systemStatus: "Standby",
 		processedItems: 0,
 		totalItems: 0,
 		currentItemUnit: "items",
 	})
-	const [showTooltip, setShowTooltip] = useState(false)
-	const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(null)
 
 	useEffect(() => {
 		// Request initial indexing status
@@ -46,42 +37,33 @@ export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigate
 
 		return () => {
 			window.removeEventListener("message", handleMessage)
-			if (tooltipTimeout) clearTimeout(tooltipTimeout)
+			cleanup()
 		}
-	}, [tooltipTimeout])
+	}, [cleanup])
 
-	// Calculate progress percentage
-	const progressPercentage =
-		indexingStatus.totalItems > 0
-			? Math.round((indexingStatus.processedItems / indexingStatus.totalItems) * 100)
-			: 0
+	// Calculate progress percentage with memoization
+	const progressPercentage = useMemo(
+		() =>
+			indexingStatus.totalItems > 0
+				? Math.round((indexingStatus.processedItems / indexingStatus.totalItems) * 100)
+				: 0,
+		[indexingStatus.processedItems, indexingStatus.totalItems],
+	)
 
-	// Get tooltip text
+	// Get tooltip text with internationalization
 	const getTooltipText = () => {
 		switch (indexingStatus.systemStatus) {
 			case "Standby":
-				return "Index ready"
+				return t("chat:indexingStatus.ready")
 			case "Indexing":
-				return `Indexing ${progressPercentage}%`
+				return t("chat:indexingStatus.indexing", { percentage: progressPercentage })
 			case "Indexed":
-				return "Indexed"
+				return t("chat:indexingStatus.indexed")
 			case "Error":
-				return "Index error"
+				return t("chat:indexingStatus.error")
 			default:
-				return "Index status"
+				return t("chat:indexingStatus.status")
 		}
-	}
-
-	// Handle mouse events for tooltip
-	const handleMouseEnter = () => {
-		if (tooltipTimeout) clearTimeout(tooltipTimeout)
-		const timeout = setTimeout(() => setShowTooltip(true), 300) // 300ms delay
-		setTooltipTimeout(timeout)
-	}
-
-	const handleMouseLeave = () => {
-		if (tooltipTimeout) clearTimeout(tooltipTimeout)
-		setShowTooltip(false)
 	}
 
 	// Navigate to settings when clicked
