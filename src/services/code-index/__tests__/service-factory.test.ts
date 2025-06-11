@@ -295,7 +295,7 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createVectorStore()
 
 			// Assert
-			expect(mockGetModelDimension).toHaveBeenCalledWith("openai", testModelId)
+			expect(mockGetModelDimension).toHaveBeenCalledWith("openai", testModelId, undefined)
 			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
 				"/test/workspace",
 				"http://localhost:6333",
@@ -320,7 +320,7 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createVectorStore()
 
 			// Assert
-			expect(mockGetModelDimension).toHaveBeenCalledWith("ollama", testModelId)
+			expect(mockGetModelDimension).toHaveBeenCalledWith("ollama", testModelId, undefined)
 			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
 				"/test/workspace",
 				"http://localhost:6333",
@@ -470,7 +470,7 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createVectorStore()
 
 			// Assert
-			expect(mockGetModelDimension).toHaveBeenCalledWith("openai", "default-model")
+			expect(mockGetModelDimension).toHaveBeenCalledWith("openai", "default-model", undefined)
 			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
 				"/test/workspace",
 				"http://localhost:6333",
