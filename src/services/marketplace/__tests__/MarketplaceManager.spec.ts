@@ -105,8 +105,10 @@ describe("MarketplaceManager", () => {
 				},
 			}
 
-			mockFs.readFile.mockImplementation((path: any) => {
-				if (path.includes(".roo/mcp.json")) {
+			mockFs.readFile.mockImplementation((filePath: any) => {
+				// Normalize path separators for cross-platform compatibility
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				if (normalizedPath.includes(".roo/mcp.json")) {
 					return Promise.resolve(JSON.stringify(mockMcpConfig))
 				}
 				return Promise.reject(new Error("ENOENT"))
@@ -130,8 +132,10 @@ describe("MarketplaceManager", () => {
 				],
 			}
 
-			mockFs.readFile.mockImplementation((path: any) => {
-				if (path.includes(".roomodes")) {
+			mockFs.readFile.mockImplementation((filePath: any) => {
+				// Normalize path separators for cross-platform compatibility
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				if (normalizedPath.includes(".roomodes")) {
 					return Promise.resolve("mock-yaml-content")
 				}
 				return Promise.reject(new Error("ENOENT"))
@@ -166,11 +170,13 @@ describe("MarketplaceManager", () => {
 				],
 			}
 
-			mockFs.readFile.mockImplementation((path: any) => {
-				if (path.includes("mcp_settings.json")) {
+			mockFs.readFile.mockImplementation((filePath: any) => {
+				// Normalize path separators for cross-platform compatibility
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				if (normalizedPath.includes("mcp_settings.json")) {
 					return Promise.resolve(JSON.stringify(mockGlobalMcp))
 				}
-				if (path.includes("custom_modes.yaml")) {
+				if (normalizedPath.includes("custom_modes.yaml")) {
 					return Promise.resolve("mock-yaml-content")
 				}
 				return Promise.reject(new Error("ENOENT"))
@@ -204,11 +210,13 @@ describe("MarketplaceManager", () => {
 				],
 			}
 
-			mockFs.readFile.mockImplementation((path: any) => {
-				if (path.includes(".roo/mcp.json")) {
+			mockFs.readFile.mockImplementation((filePath: any) => {
+				// Normalize path separators for cross-platform compatibility
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				if (normalizedPath.includes(".roo/mcp.json")) {
 					return Promise.resolve(JSON.stringify(mockProjectMcp))
 				}
-				if (path.includes("custom_modes.yaml")) {
+				if (normalizedPath.includes("custom_modes.yaml")) {
 					return Promise.resolve("mock-yaml-content")
 				}
 				return Promise.reject(new Error("ENOENT"))
