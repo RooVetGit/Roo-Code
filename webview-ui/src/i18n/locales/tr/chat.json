@@ -281,10 +281,10 @@
 		}
 	},
 	"indexingStatus": {
-		"ready": "Index ready",
-		"indexing": "Indexing {{percentage}}%",
-		"indexed": "Indexed",
-		"error": "Index error",
-		"status": "Index status"
+		"ready": "İndeks hazır",
+		"indexing": "İndeksleniyor {{percentage}}%",
+		"indexed": "İndekslendi",
+		"error": "İndeks hatası",
+		"status": "İndeks durumu"
 	}
 }

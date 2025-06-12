@@ -281,10 +281,10 @@
 		}
 	},
 	"indexingStatus": {
-		"ready": "Index ready",
-		"indexing": "Indexing {{percentage}}%",
-		"indexed": "Indexed",
-		"error": "Index error",
-		"status": "Index status"
+		"ready": "इंडेक्स तैयार",
+		"indexing": "इंडेक्सिंग {{percentage}}%",
+		"indexed": "इंडेक्स किया गया",
+		"error": "इंडेक्स त्रुटि",
+		"status": "इंडेक्स स्थिति"
 	}
 }

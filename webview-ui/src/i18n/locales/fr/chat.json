@@ -281,10 +281,10 @@
 		}
 	},
 	"indexingStatus": {
-		"ready": "Index ready",
-		"indexing": "Indexing {{percentage}}%",
-		"indexed": "Indexed",
-		"error": "Index error",
-		"status": "Index status"
+		"ready": "Index prêt",
+		"indexing": "Indexation {{percentage}}%",
+		"indexed": "Indexé",
+		"error": "Erreur d'index",
+		"status": "Statut de l'index"
 	}
 }
