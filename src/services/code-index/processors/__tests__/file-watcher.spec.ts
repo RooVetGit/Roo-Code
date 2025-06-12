@@ -127,6 +127,22 @@ vi.mock("../../../utils/path", () => ({
 	getWorkspacePath: vi.fn().mockReturnValue("/mock/workspace"),
 }))
 
+// Also mock the get-relative-path module to ensure it uses our mocked getWorkspacePath
+vi.mock("../../shared/get-relative-path", async () => {
+	const actual = await vi.importActual("../../shared/get-relative-path")
+	return {
+		...actual,
+		generateRelativeFilePath: vi.fn((absolutePath: string) => {
+			// Mock the relative path calculation
+			const workspaceRoot = "/mock/workspace"
+			if (absolutePath.startsWith(workspaceRoot)) {
+				return absolutePath.substring(workspaceRoot.length + 1)
+			}
+			return absolutePath
+		}),
+	}
+})
+
 // Type the mocked functions for proper intellisense
 const mockedVscode = vi.mocked(vscode, true)
 
@@ -467,7 +483,7 @@ describe("FileWatcher", () => {
 					id: "mocked-uuid-v5-for-testing",
 					vector: [0.1, 0.2, 0.3],
 					payload: {
-						filePath: "../../../../../mock/workspace/test.js",
+						filePath: "test.js",
 						codeChunk: "test content",
 						startLine: 1,
 						endLine: 5,
