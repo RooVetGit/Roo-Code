@@ -1,4 +1,4 @@
-import { vitest, describe, it, expect, beforeEach, afterEach } from "vitest"
+import { vitest, describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import type { MockedClass, MockedFunction } from "vitest"
 import { OpenAI } from "openai"
 import { OpenAICompatibleEmbedder } from "../openai-compatible"
@@ -470,7 +470,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				const testTexts = ["Hello world"]
 
 				// Create a real OpenAI instance to test the actual package behavior
-				const realOpenAI = new (jest.requireActual("openai").OpenAI)({
+				const realOpenAI = new ((await vi.importActual("openai")) as any).OpenAI({
 					baseURL: testBaseUrl,
 					apiKey: testApiKey,
 				})
@@ -498,18 +498,18 @@ describe("OpenAICompatibleEmbedder", () => {
 				}
 
 				// Mock the methodRequest method which is called by post()
-				const mockMethodRequest = jest.fn()
+				const mockMethodRequest = vi.fn()
 				const mockAPIPromise = {
-					then: jest.fn().mockImplementation((callback) => {
+					then: vi.fn().mockImplementation((callback) => {
 						return Promise.resolve(callback(mockApiResponse))
 					}),
-					catch: jest.fn(),
-					finally: jest.fn(),
+					catch: vi.fn(),
+					finally: vi.fn(),
 				}
 				mockMethodRequest.mockReturnValue(mockAPIPromise)
 
 				// Replace the methodRequest method on the client
-				;(realOpenAI as any).post = jest.fn().mockImplementation((path, opts) => {
+				;(realOpenAI as any).post = vi.fn().mockImplementation((path, opts) => {
 					return mockMethodRequest("post", path, opts)
 				})
 
