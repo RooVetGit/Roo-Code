@@ -84,7 +84,7 @@ export async function testParseSourceCodeDefinitions(
 	vi.clearAllMocks()
 	vi.mock("fs/promises")
 	const mockedFs = (await vi.importActual("fs/promises")) as typeof import("fs/promises")
-	;(mockedFs.readFile as any).mockResolvedValue(content)
+	;(fs.readFile as any).mockResolvedValue(content)
 
 	// Get the mock function
 	const { loadRequiredLanguageParsers } = await import("../languageParser")
