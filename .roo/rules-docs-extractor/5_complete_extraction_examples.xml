@@ -821,10 +821,58 @@ DEBUG=auth:* npm start
       </step>
     </workflow>
   </example>
+  <example name="documentation_review_example">
+    <scenario>
+      Review a user-provided documentation section for accuracy against the codebase
+      and provide recommendations for improvement in the chat.
+    </scenario>
+    <workflow>
+      <step number="1">
+        <description>User provides documentation for review</description>
+        <user_input>
+          "Here's our current draft for the JWT_SECRET setting. Can you check it for accuracy? 'The `JWT_SECRET` is an optional key for enhancing security.'"
+        </user_input>
+      </step>
+      <step number="2">
+        <description>Analyze relevant code</description>
+        <tool_use><![CDATA[
+<codebase_search>
+<query>JWT_SECRET configuration implementation</query>
+</codebase_search>
+        ]]></tool_use>
+        <expected_findings>
+          - Code where `JWT_SECRET` is read (e.g., `process.env.JWT_SECRET`)
+          - Logic that fails if the secret is missing
+          - Default values or error handling related to the secret
+        </expected_findings>
+      </step>
+      <step number="3">
+        <description>Formulate and provide feedback in chat</description>
+        <tool_use><![CDATA[
+<attempt_completion>
+<result>
+I have reviewed the documentation section provided for the `JWT_SECRET` setting. Here are my recommendations for improvement:
 
-  <best_practices>
-    <practice name="comprehensive_coverage">
-      <description>Ensure all aspects are documented</description>
+**Overall Assessment**: The current draft is critically inaccurate and could lead to security vulnerabilities if followed.
+
+**Recommendations for Improvement**:
+
+*   **Critical Inaccuracy**:
+    *   The documentation states that `JWT_SECRET` is optional. However, the application will fail to start if it is not provided. It is a **required** setting for the application to function securely.
+    *   **Suggestion**: "The `JWT_SECRET` is a **required** environment variable used to sign and verify JSON Web Tokens. The application will not run without it."
+
+This feedback can be copied and pasted for your documentation team.
+</result>
+</attempt_completion>
+        ]]></tool_use>
+        <note>No file is written. The feedback is provided directly to the user in the chat interface.</note>
+      </step>
+    </workflow>
+  </example>
+ 
+   <best_practices>
+     <practice name="comprehensive_coverage">
+       <description>Ensure all aspects are documented</description>
       <checklist>
         <item>Technical implementation details</item>
         <item>Business logic and rules</item>

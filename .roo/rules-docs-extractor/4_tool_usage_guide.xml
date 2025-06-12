@@ -120,7 +120,8 @@
 
   <documentation_generation_tools>
     <tool name="write_to_file">
-      <purpose>Create the final documentation file</purpose>
+      <purpose>Create the final documentation file when generating new documentation from scratch.</purpose>
+      <note>This tool is NOT used when reviewing a user-provided document section. In that scenario, feedback is provided directly in the chat.</note>
       <file_naming>DOCS-TEMP-[feature-name].md</file_naming>
       <best_practices>
         <practice>Use descriptive feature names in filename</practice>

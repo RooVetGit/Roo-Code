@@ -10,12 +10,13 @@
     <step number="1">
       <title>Understand Documentation Request</title>
       <actions>
-        <action>Parse the user's request to identify the feature or component</action>
-        <action>Default to user-friendly documentation unless technical docs are specifically requested</action>
-        <action>Focus on practical benefits and real-world usage</action>
-        <action>Note any specific aspects the user wants emphasized</action>
+        <action>Parse the user's request to identify the feature or component.</action>
+        <action>Determine if the user has provided a documentation section for review or is requesting new documentation.</action>
+        <action>Default to user-friendly documentation unless technical docs are specifically requested.</action>
+        <action>Focus on practical benefits and real-world usage.</action>
+        <action>Note any specific aspects the user wants emphasized.</action>
       </actions>
-      <note>The user will specify what they want documented in their initial message - no need to ask</note>
+      <note>The user will specify what they want documented in their initial message. The workflow branches based on whether a review is requested or new documentation is to be generated.</note>
     </step>
 
     <step number="2">
@@ -201,47 +202,26 @@
   </analysis_phases>
 
   <documentation_generation>
+    <note>This phase has two paths: Reviewing existing docs or Generating new docs. The path taken is determined in the initialization phase.</note>
     <step number="1">
-      <title>Choose Documentation Style</title>
+      <title>Path 1: Review and Recommend Improvements</title>
+      <note>This path is followed if the user provided a documentation section for review.</note>
       <actions>
-        <action>Default to user-focused template for end-user features</action>
-        <action>Use comprehensive template only for developer APIs or complex systems</action>
-        <action>Prioritize clarity and practical examples over exhaustive detail</action>
+        <action>Compare the provided documentation against the analysis of the codebase.</action>
+        <action>Identify inaccuracies (technical, logical), omissions, and areas for improvement.</action>
+        <action>Categorize inaccuracies by severity (e.g., Critical, Major, Minor, Suggestion).</action>
+        <action>Formulate a structured recommendation in the chat, suitable for being copied to the docs team.</action>
+        <action>Do not write any files or make changes yourself.</action>
       </actions>
-      <decision_criteria>
-        <criterion>If feature is user-facing → Use user_focused_template</criterion>
-        <criterion>If feature is developer API → Consider comprehensive_template</criterion>
-        <criterion>If unclear → Ask user for preference</criterion>
-      </decision_criteria>
     </step>
-
     <step number="2">
-      <title>Structure Documentation</title>
+      <title>Path 2: Generate New Documentation</title>
+      <note>This path is followed if the user requested new documentation.</note>
       <actions>
-        <action>Start with clear problem statement and benefits</action>
-        <action>Use before/after examples when applicable</action>
-        <action>Keep technical details minimal unless essential</action>
-        <action>Focus on common use cases and questions</action>
-      </actions>
-    </step>
-
-    <step number="3">
-      <title>Generate Markdown Output</title>
-      <actions>
-        <action>Create DOCS-TEMP-[feature].md file</action>
-        <action>Use conversational tone and active voice</action>
-        <action>Include visual separators (---) between sections</action>
-        <action>Add practical examples and troubleshooting tips</action>
-      </actions>
-    </step>
-
-    <step number="4">
-      <title>Add User-Friendly Elements</title>
-      <actions>
-        <action>Include "Why This Matters" section with real scenarios</action>
-        <action>Add "Common Questions" in Q&A format</action>
-        <action>Provide clear troubleshooting steps</action>
-        <action>End with "Need Help?" section pointing to resources</action>
+        <action>Choose a documentation style (e.g., user-focused or comprehensive) from `2_documentation_patterns.xml`.</action>
+        <action>Structure the documentation with clear sections, examples, and user-friendly elements.</action>
+        <action>Create a `DOCS-TEMP-[feature].md` file with the generated content.</action>
+        <action>Use a conversational tone and practical examples from `7_user_friendly_examples.xml`.</action>
       </actions>
     </step>
   </documentation_generation>

@@ -64,6 +64,29 @@
           Warn about intricate dependency chains affecting the feature
         </discovery>
       </important_discoveries>
+      <review_findings>
+       <template><![CDATA[
+I have reviewed the documentation section provided. Here are my recommendations for improvement:
+
+**Overall Assessment**: [Brief summary of the document's quality]
+
+**Recommendations for Improvement**:
+
+*   **Critical Inaccuracies**:
+   *   [Inaccuracy 1]: The documentation states [X], but the code implements [Y].
+   *   [Inaccuracy 2]: ...
+
+*   **Major Omissions**:
+   *   The documentation is missing information about [Missing Feature/Concept].
+   *   ...
+
+*   **Suggestions for Clarity**:
+   *   The section on [Topic] could be clarified by [Suggestion].
+   *   ...
+
+This feedback can be copied and pasted for your documentation team.
+       ]]></template>
+      </review_findings>
     </findings_communication>
   </user_interaction>
 
@@ -244,6 +267,16 @@ I've completed the comprehensive documentation extraction for the authentication
 
 The documentation is structured for multiple audiences and includes all requested metadata, version information, and cross-references.
     ]]></example>
+    <example_review><![CDATA[
+I have completed the review of the provided documentation section.
+
+**Action Taken**:
+- Analyzed the provided text against the current codebase for accuracy.
+- Identified several areas for improvement and outlined them as a recommendation.
+
+**Next Steps**:
+- The detailed feedback has been provided in the chat. You can copy and paste it to your documentation team. No files were created.
+    ]]></example_review>
   </completion_message>
 
   <error_handling>
