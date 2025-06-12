@@ -25,6 +25,7 @@
 	"errors": {
 		"invalid_data_uri": "잘못된 데이터 URI 형식",
 		"error_copying_image": "이미지 복사 중 오류 발생: {{errorMessage}}",
+		"error_saving_image": "이미지 저장 중 오류 발생: {{errorMessage}}",
 		"error_opening_image": "이미지 열기 중 오류 발생: {{error}}",
 		"could_not_open_file": "파일을 열 수 없습니다: {{errorMessage}}",
 		"could_not_open_file_generic": "파일을 열 수 없습니다!",
@@ -72,7 +73,8 @@
 		"default_storage_path": "기본 저장 경로로 되돌아갔습니다",
 		"settings_imported": "설정이 성공적으로 가져와졌습니다.",
 		"share_link_copied": "공유 링크가 클립보드에 복사되었습니다",
-		"image_copied_to_clipboard": "이미지 데이터 URI가 클립보드에 복사되었습니다"
+		"image_copied_to_clipboard": "이미지 데이터 URI가 클립보드에 복사되었습니다",
+		"image_saved": "이미지가 {{path}}에 저장되었습니다"
 	},
 	"answers": {
 		"yes": "예",

@@ -30,6 +30,7 @@
 		"failed_initialize_project_mcp": "初始化项目MCP服务器失败：{{error}}",
 		"invalid_data_uri": "数据 URI 格式无效",
 		"error_copying_image": "复制图片时出错：{{errorMessage}}",
+		"error_saving_image": "保存图片时出错：{{errorMessage}}",
 		"error_opening_image": "打开图片时出错：{{error}}",
 		"could_not_open_file": "无法打开文件：{{errorMessage}}",
 		"could_not_open_file_generic": "无法打开文件！",
@@ -77,7 +78,8 @@
 		"default_storage_path": "已恢复使用默认存储路径",
 		"settings_imported": "设置已成功导入。",
 		"share_link_copied": "分享链接已复制到剪贴板",
-		"image_copied_to_clipboard": "图片数据 URI 已复制到剪贴板"
+		"image_copied_to_clipboard": "图片数据 URI 已复制到剪贴板",
+		"image_saved": "图片已保存到 {{path}}"
 	},
 	"answers": {
 		"yes": "是",

@@ -25,6 +25,7 @@
 	"errors": {
 		"invalid_data_uri": "Ungültiges Daten-URI-Format",
 		"error_copying_image": "Fehler beim Kopieren des Bildes: {{errorMessage}}",
+		"error_saving_image": "Fehler beim Speichern des Bildes: {{errorMessage}}",
 		"error_opening_image": "Fehler beim Öffnen des Bildes: {{error}}",
 		"could_not_open_file": "Datei konnte nicht geöffnet werden: {{errorMessage}}",
 		"could_not_open_file_generic": "Datei konnte nicht geöffnet werden!",
@@ -72,7 +73,8 @@
 		"default_storage_path": "Auf Standardspeicherpfad zurückgesetzt",
 		"settings_imported": "Einstellungen erfolgreich importiert.",
 		"share_link_copied": "Share-Link in die Zwischenablage kopiert",
-		"image_copied_to_clipboard": "Bild-Daten-URI in die Zwischenablage kopiert"
+		"image_copied_to_clipboard": "Bild-Daten-URI in die Zwischenablage kopiert",
+		"image_saved": "Bild gespeichert unter {{path}}"
 	},
 	"answers": {
 		"yes": "Ja",
