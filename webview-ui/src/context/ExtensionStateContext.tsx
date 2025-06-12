@@ -68,6 +68,9 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setTtsEnabled: (value: boolean) => void
 	setTtsSpeed: (value: number) => void
 	setDiffEnabled: (value: boolean) => void
+	setDiffViewAutoFocus: (value: boolean) => void
+	setAutoCloseRooTabs: (value: boolean) => void
+	setAutoCloseAllRooTabs: (value: boolean) => void
 	setEnableCheckpoints: (value: boolean) => void
 	setBrowserViewportSize: (value: string) => void
 	setFuzzyMatchThreshold: (value: number) => void
@@ -348,7 +351,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setSoundVolume: (value) => setState((prevState) => ({ ...prevState, soundVolume: value })),
 		setTtsEnabled: (value) => setState((prevState) => ({ ...prevState, ttsEnabled: value })),
 		setTtsSpeed: (value) => setState((prevState) => ({ ...prevState, ttsSpeed: value })),
-		setDiffEnabled: (value) => setState((prevState) => ({ ...prevState, diffEnabled: value })),
+		setDiffEnabled: (value) => setApiConfiguration({ diffEnabled: value }),
+		setDiffViewAutoFocus: (value) => setApiConfiguration({ diffViewAutoFocus: value }),
+		setAutoCloseRooTabs: (value) => setApiConfiguration({ autoCloseRooTabs: value }),
+		setAutoCloseAllRooTabs: (value) => setApiConfiguration({ autoCloseAllRooTabs: value }),
 		setEnableCheckpoints: (value) => setState((prevState) => ({ ...prevState, enableCheckpoints: value })),
 		setBrowserViewportSize: (value: string) =>
 			setState((prevState) => ({ ...prevState, browserViewportSize: value })),

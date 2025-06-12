@@ -84,6 +84,8 @@ jest.mock("../../ignore/RooIgnoreController", () => ({
 	},
 }))
 
+const MOCK_VIEW_COLUMN = 1
+
 describe("writeToFileTool", () => {
 	// Test data
 	const testFilePath = "test/file.txt"
@@ -160,6 +162,7 @@ describe("writeToFileTool", () => {
 				}
 				return "Tool result message"
 			}),
+			resetWithListeners: jest.fn().mockResolvedValue(undefined),
 		}
 		mockCline.api = {
 			getModel: jest.fn().mockReturnValue({ id: "claude-3" }),
@@ -171,6 +174,11 @@ describe("writeToFileTool", () => {
 		mockCline.ask = jest.fn().mockResolvedValue(undefined)
 		mockCline.recordToolError = jest.fn()
 		mockCline.sayAndCreateMissingParamError = jest.fn().mockResolvedValue("Missing param error")
+		mockCline.providerRef = {
+			deref: jest.fn().mockReturnValue({
+				getViewColumn: jest.fn().mockReturnValue(MOCK_VIEW_COLUMN),
+			}),
+		}
 
 		mockAskApproval = jest.fn().mockResolvedValue(true)
 		mockHandleError = jest.fn().mockResolvedValue(undefined)
@@ -230,7 +238,7 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { accessAllowed: true })
 
 			expect(mockCline.rooIgnoreController.validateAccess).toHaveBeenCalledWith(testFilePath)
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath, MOCK_VIEW_COLUMN)
 		})
 	})
 
@@ -305,7 +313,7 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { fileExists: false })
 
 			expect(mockCline.consecutiveMistakeCount).toBe(0)
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath, MOCK_VIEW_COLUMN)
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(testContent, true)
 			expect(mockAskApproval).toHaveBeenCalled()
 			expect(mockCline.diffViewProvider.saveChanges).toHaveBeenCalled()
@@ -346,7 +354,7 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { isPartial: true })
 
 			expect(mockCline.ask).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath, MOCK_VIEW_COLUMN)
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(testContent, false)
 		})
 	})
@@ -387,7 +395,7 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({})
 
 			expect(mockHandleError).toHaveBeenCalledWith("writing file", expect.any(Error))
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+			expect(mockCline.diffViewProvider.resetWithListeners).toHaveBeenCalled()
 		})
 
 		it("handles partial streaming errors", async () => {
@@ -396,7 +404,7 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { isPartial: true })
 
 			expect(mockHandleError).toHaveBeenCalledWith("writing file", expect.any(Error))
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+			expect(mockCline.diffViewProvider.resetWithListeners).toHaveBeenCalled()
 		})
 	})
 })

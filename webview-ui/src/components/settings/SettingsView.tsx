@@ -137,7 +137,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		browserToolEnabled,
 		browserViewportSize,
 		enableCheckpoints,
-		diffEnabled,
 		experiments,
 		fuzzyMatchThreshold,
 		maxOpenTabsContext,
@@ -265,7 +264,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
 			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
-			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
+			vscode.postMessage({ type: "diffEnabled", bool: apiConfiguration.diffEnabled })
+			vscode.postMessage({ type: "diffViewAutoFocus", bool: apiConfiguration.diffViewAutoFocus })
+			vscode.postMessage({ type: "autoCloseRooTabs", bool: apiConfiguration.autoCloseRooTabs })
+			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: apiConfiguration.autoCloseAllRooTabs })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
 			vscode.postMessage({ type: "remoteBrowserHost", text: remoteBrowserHost })

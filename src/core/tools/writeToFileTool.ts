@@ -85,7 +85,9 @@ export async function writeToFileTool(
 			// update editor
 			if (!cline.diffViewProvider.isEditing) {
 				// open the editor and prepare to stream content in
-				await cline.diffViewProvider.open(relPath)
+				const clineRef = cline.providerRef.deref()
+				const viewColumn = clineRef?.getViewColumn() ?? vscode.ViewColumn.Active
+				await cline.diffViewProvider.open(relPath, viewColumn)
 			}
 
 			// editor is open, stream content in
@@ -100,7 +102,7 @@ export async function writeToFileTool(
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("write_to_file")
 				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
-				await cline.diffViewProvider.reset()
+				await cline.diffViewProvider.resetWithListeners()
 				return
 			}
 
@@ -108,7 +110,7 @@ export async function writeToFileTool(
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("write_to_file")
 				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
-				await cline.diffViewProvider.reset()
+				await cline.diffViewProvider.resetWithListeners()
 				return
 			}
 
@@ -151,7 +153,9 @@ export async function writeToFileTool(
 				// show gui message before showing edit animation
 				const partialMessage = JSON.stringify(sharedMessageProps)
 				await cline.ask("tool", partialMessage, true).catch(() => {}) // sending true for partial even though it's not a partial, cline shows the edit row before the content is streamed into the editor
-				await cline.diffViewProvider.open(relPath)
+				const clineRef = cline.providerRef.deref()
+				const viewColumn = clineRef?.getViewColumn() ?? vscode.ViewColumn.Active
+				await cline.diffViewProvider.open(relPath, viewColumn)
 			}
 
 			await cline.diffViewProvider.update(
@@ -223,13 +227,13 @@ export async function writeToFileTool(
 
 			pushToolResult(message)
 
-			await cline.diffViewProvider.reset()
+			await cline.diffViewProvider.resetWithListeners()
 
 			return
 		}
 	} catch (error) {
 		await handleError("writing file", error)
-		await cline.diffViewProvider.reset()
+		await cline.diffViewProvider.resetWithListeners()
 		return
 	}
 }
