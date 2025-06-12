@@ -1,7 +1,7 @@
 import { HTMLAttributes } from "react"
 import { FlaskConical } from "lucide-react"
 
-import type { ExperimentId, CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
+import type { Experiments, CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
 import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 
@@ -16,7 +16,7 @@ import { ExperimentalFeature } from "./ExperimentalFeature"
 import { CodeIndexSettings } from "./CodeIndexSettings"
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
-	experiments: Record<ExperimentId, boolean>
+	experiments: Experiments
 	setExperimentEnabled: SetExperimentEnabled
 	setCachedStateField: SetCachedStateField<"codebaseIndexConfig">
 	// CodeIndexSettings props

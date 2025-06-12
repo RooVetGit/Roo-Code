@@ -17,10 +17,10 @@ export type ExperimentId = z.infer<typeof experimentIdsSchema>
  */
 
 export const experimentsSchema = z.object({
-	powerSteering: z.boolean(),
-	marketplace: z.boolean(),
-	disableCompletionCommand: z.boolean(),
-	multiFileApplyDiff: z.boolean(),
+	powerSteering: z.boolean().optional(),
+	disableCompletionCommand: z.boolean().optional(),
+	marketplace: z.boolean().optional(),
+	multiFileApplyDiff: z.boolean().optional(),
 })
 
 export type Experiments = z.infer<typeof experimentsSchema>
