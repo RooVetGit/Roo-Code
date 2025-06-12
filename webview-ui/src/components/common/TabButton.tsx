@@ -17,7 +17,9 @@ export function TabButton({ icon, label, isActive, onClick }: TabButtonProps) {
 				isActive ? activeClasses : inactiveClasses
 			}`}
 			onClick={onClick}>
-			<span className={`codicon codicon-${icon} text-sm`}></span>
+			<span
+				className={`codicon codicon-${icon} text-sm`}
+				style={isActive ? { color: "var(--vscode-focusBorder)" } : undefined}></span>
 			{label}
 		</button>
 	)
