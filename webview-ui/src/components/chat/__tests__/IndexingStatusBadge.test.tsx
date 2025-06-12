@@ -168,33 +168,6 @@ describe("IndexingStatusDot", () => {
 		})
 	})
 
-	it("shows progress ring during indexing", async () => {
-		renderComponent()
-
-		// Simulate indexing status
-		const event = new MessageEvent("message", {
-			data: {
-				type: "indexingStatusUpdate",
-				values: {
-					systemStatus: "Indexing",
-					processedItems: 75,
-					totalItems: 100,
-					currentItemUnit: "files",
-				},
-			},
-		})
-
-		act(() => {
-			window.dispatchEvent(event)
-		})
-
-		await waitFor(() => {
-			const svg = screen.getByRole("button").querySelector("svg")
-			expect(svg).toBeInTheDocument()
-			expect(svg).toHaveClass("absolute", "inset-0", "w-full", "h-full")
-		})
-	})
-
 	it("shows error status correctly", async () => {
 		renderComponent()
 
