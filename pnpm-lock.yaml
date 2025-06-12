@@ -733,7 +733,7 @@ importers:
         specifier: ^0.2.3
         version: 0.2.3
       tree-sitter-wasms:
-        specifier: ^0.1.11
+        specifier: ^0.1.12
         version: 0.1.12
       turndown:
         specifier: ^7.2.0
@@ -745,8 +745,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       web-tree-sitter:
-        specifier: ^0.22.6
-        version: 0.22.6
+        specifier: ^0.25.6
+        version: 0.25.6
       workerpool:
         specifier: ^9.2.0
         version: 9.2.0
@@ -10080,8 +10080,8 @@ packages:
     resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
     engines: {node: '>= 14'}
 
-  web-tree-sitter@0.22.6:
-    resolution: {integrity: sha512-hS87TH71Zd6mGAmYCvlgxeGDjqd9GTeqXNqTT+u0Gs51uIozNIaaq/kUAbV/Zf56jb2ZOyG8BxZs2GG9wbLi6Q==}
+  web-tree-sitter@0.25.6:
+    resolution: {integrity: sha512-WG+/YGbxw8r+rLlzzhV+OvgiOJCWdIpOucG3qBf3RCBFMkGDb1CanUi2BxCxjnkpzU3/hLWPT8VO5EKsMk9Fxg==}
 
   web-vitals@4.2.4:
     resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
@@ -21099,7 +21099,7 @@ snapshots:
 
   web-streams-polyfill@4.0.0-beta.3: {}
 
-  web-tree-sitter@0.22.6: {}
+  web-tree-sitter@0.25.6: {}
 
   web-vitals@4.2.4: {}
 

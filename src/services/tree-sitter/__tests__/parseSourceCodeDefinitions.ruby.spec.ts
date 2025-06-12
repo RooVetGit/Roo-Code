@@ -1,8 +1,11 @@
-// Mocks must come first, before imports
+// npx vitest services/tree-sitter/__tests__/parseSourceCodeDefinitions.ruby.spec.ts
+
 vi.mock("fs/promises")
+
 vi.mock("../languageParser", () => ({
 	loadRequiredLanguageParsers: vi.fn(),
 }))
+
 vi.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: vi.fn().mockImplementation(() => Promise.resolve(true)),
 }))

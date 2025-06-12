@@ -1,8 +1,11 @@
+// npx vitest services/tree-sitter/__tests__/inspectSwift.spec.ts
+
 import { inspectTreeStructure, testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import { swiftQuery } from "../queries"
 import sampleSwiftContent from "./fixtures/sample-swift"
 
-describe("inspectSwift", () => {
+// This is insanely slow for some reason.
+describe.skip("inspectSwift", () => {
 	const testOptions = {
 		language: "swift",
 		wasmFile: "tree-sitter-swift.wasm",

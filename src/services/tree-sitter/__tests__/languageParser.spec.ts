@@ -1,28 +1,39 @@
-import type { MockedClass } from "vitest"
+// npx vitest services/tree-sitter/__tests__/languageParser.spec.ts
 
-// Mock web-tree-sitter - must come before imports
-const mockSetLanguage = vi.fn()
+import { loadRequiredLanguageParsers } from "../languageParser"
+
 vi.mock("web-tree-sitter", () => {
-	return {
-		__esModule: true,
-		default: vi.fn().mockImplementation(() => ({
+	const mockParserInit = vi.fn().mockResolvedValue(undefined)
+	const mockLanguageLoad = vi.fn().mockResolvedValue({
+		query: vi.fn().mockReturnValue({ id: "mock-query" }),
+	})
+	const mockSetLanguage = vi.fn()
+
+	// Create a constructor function that also has static methods
+	function MockParser() {
+		return {
 			setLanguage: mockSetLanguage,
-		})),
+		}
+	}
+	MockParser.init = mockParserInit
+
+	return {
+		Parser: MockParser,
+		Language: {
+			load: mockLanguageLoad,
+		},
+		// Export the mocks so tests can access them
+		__mocks: {
+			mockParserInit,
+			mockLanguageLoad,
+			mockSetLanguage,
+		},
 	}
 })
 
-import { loadRequiredLanguageParsers } from "../languageParser"
-import Parser from "web-tree-sitter"
-
-// Add static methods to Parser mock
-const ParserMock = Parser as MockedClass<typeof Parser>
-ParserMock.init = vi.fn().mockResolvedValue(undefined)
-ParserMock.Language = {
-	load: vi.fn().mockResolvedValue({
-		query: vi.fn().mockReturnValue("mockQuery"),
-	}),
-	prototype: {}, // Add required prototype property
-} as unknown as typeof Parser.Language
+// Import the mocked module to get access to the mock functions
+const { __mocks } = (await import("web-tree-sitter")) as any
+const { mockParserInit, mockLanguageLoad, mockSetLanguage } = __mocks
 
 describe("Language Parser", () => {
 	beforeEach(() => {
@@ -35,16 +46,14 @@ describe("Language Parser", () => {
 			await loadRequiredLanguageParsers(files)
 			await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.init).toHaveBeenCalledTimes(1)
+			expect(mockParserInit).toHaveBeenCalledTimes(1)
 		})
 
 		it("should load JavaScript parser for .js and .jsx files", async () => {
 			const files = ["test.js", "test.jsx"]
 			const parsers = await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(
-				expect.stringContaining("tree-sitter-javascript.wasm"),
-			)
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-javascript.wasm"))
 			expect(parsers.js).toBeDefined()
 			expect(parsers.jsx).toBeDefined()
 			expect(parsers.js.query).toBeDefined()
@@ -55,10 +64,8 @@ describe("Language Parser", () => {
 			const files = ["test.ts", "test.tsx"]
 			const parsers = await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(
-				expect.stringContaining("tree-sitter-typescript.wasm"),
-			)
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-tsx.wasm"))
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-typescript.wasm"))
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-tsx.wasm"))
 			expect(parsers.ts).toBeDefined()
 			expect(parsers.tsx).toBeDefined()
 		})
@@ -67,7 +74,7 @@ describe("Language Parser", () => {
 			const files = ["test.py"]
 			const parsers = await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-python.wasm"))
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-python.wasm"))
 			expect(parsers.py).toBeDefined()
 		})
 
@@ -75,7 +82,7 @@ describe("Language Parser", () => {
 			const files = ["test.js", "test.py", "test.rs", "test.go"]
 			const parsers = await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledTimes(4)
+			expect(mockLanguageLoad).toHaveBeenCalledTimes(4)
 			expect(parsers.js).toBeDefined()
 			expect(parsers.py).toBeDefined()
 			expect(parsers.rs).toBeDefined()
@@ -86,8 +93,8 @@ describe("Language Parser", () => {
 			const files = ["test.c", "test.h", "test.cpp", "test.hpp"]
 			const parsers = await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-c.wasm"))
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-cpp.wasm"))
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-c.wasm"))
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-cpp.wasm"))
 			expect(parsers.c).toBeDefined()
 			expect(parsers.h).toBeDefined()
 			expect(parsers.cpp).toBeDefined()
@@ -98,7 +105,7 @@ describe("Language Parser", () => {
 			const files = ["test.kt", "test.kts"]
 			const parsers = await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-kotlin.wasm"))
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-kotlin.wasm"))
 			expect(parsers.kt).toBeDefined()
 			expect(parsers.kts).toBeDefined()
 			expect(parsers.kt.query).toBeDefined()
@@ -115,10 +122,8 @@ describe("Language Parser", () => {
 			const files = ["test1.js", "test2.js", "test3.js"]
 			await loadRequiredLanguageParsers(files)
 
-			expect(ParserMock.Language.load).toHaveBeenCalledTimes(1)
-			expect(ParserMock.Language.load).toHaveBeenCalledWith(
-				expect.stringContaining("tree-sitter-javascript.wasm"),
-			)
+			expect(mockLanguageLoad).toHaveBeenCalledTimes(1)
+			expect(mockLanguageLoad).toHaveBeenCalledWith(expect.stringContaining("tree-sitter-javascript.wasm"))
 		})
 
 		it("should set language for each parser instance", async () => {
