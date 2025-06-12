@@ -1,0 +1,498 @@
+<documentation_patterns>
+  <overview>
+    Standard patterns and templates for structuring extracted documentation
+    to serve multiple audiences effectively.
+  </overview>
+
+  <output_structure>
+    <main_template><![CDATA[
+# [Feature Name] Documentation
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Quick Start](#quick-start)
+3. [Architecture](#architecture)
+4. [API Reference](#api-reference)
+5. [Configuration](#configuration)
+6. [User Guide](#user-guide)
+7. [Developer Guide](#developer-guide)
+8. [Administrator Guide](#administrator-guide)
+9. [Security](#security)
+10. [Performance](#performance)
+11. [Troubleshooting](#troubleshooting)
+12. [FAQ](#faq)
+13. [Changelog](#changelog)
+14. [References](#references)
+
+---
+
+## Overview
+
+### Purpose
+[High-level description of what this feature does and why it exists]
+
+### Key Features
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+### Target Audiences
+- **End Users**: [How they interact with this feature]
+- **Developers**: [How they integrate or extend this feature]
+- **Administrators**: [How they configure and maintain this feature]
+- **Stakeholders**: [Business value and impact]
+
+### Version Information
+- **Current Version**: [version]
+- **Compatibility**: [supported versions/platforms]
+- **Dependencies**: [key dependencies]
+- **Last Updated**: [date]
+
+---
+
+## Quick Start
+
+### For Users
+[Simple steps to start using the feature]
+
+### For Developers
+[Quick integration example]
+
+### For Administrators
+[Basic setup instructions]
+
+---
+
+## Architecture
+
+### System Overview
+[High-level architecture diagram or description]
+
+### Components
+[Detailed component breakdown]
+
+### Data Flow
+[How data moves through the system]
+
+### Design Patterns
+[Key patterns used in implementation]
+
+---
+
+## API Reference
+
+### REST Endpoints
+[Detailed endpoint documentation]
+
+### GraphQL Schema
+[Schema definitions if applicable]
+
+### SDK/Library Methods
+[Public API methods and signatures]
+
+### Events and Webhooks
+[Event-driven interfaces]
+
+---
+
+## Configuration
+
+### Environment Variables
+[All environment configuration options]
+
+### Configuration Files
+[File-based configuration options]
+
+### Feature Flags
+[Toggle-able features]
+
+### Default Values
+[Default configuration settings]
+
+---
+
+## User Guide
+
+### Getting Started
+[Step-by-step user instructions]
+
+### Common Workflows
+[Typical user journeys]
+
+### Advanced Features
+[Power user capabilities]
+
+### Tips and Tricks
+[Productivity enhancers]
+
+---
+
+## Developer Guide
+
+### Setup Development Environment
+[Local development setup]
+
+### Code Structure
+[Directory and file organization]
+
+### Contributing Guidelines
+[How to contribute code]
+
+### Testing
+[How to write and run tests]
+
+### Debugging
+[Common debugging techniques]
+
+---
+
+## Administrator Guide
+
+### Installation
+[Production installation steps]
+
+### Configuration Management
+[Managing configurations]
+
+### Monitoring
+[Health checks and metrics]
+
+### Backup and Recovery
+[Data protection strategies]
+
+### Scaling
+[Performance optimization]
+
+---
+
+## Security
+
+### Authentication
+[How users are authenticated]
+
+### Authorization
+[Access control mechanisms]
+
+### Data Protection
+[Encryption and privacy measures]
+
+### Security Best Practices
+[Recommendations for secure usage]
+
+### Known Vulnerabilities
+[Disclosed security issues and fixes]
+
+---
+
+## Performance
+
+### Benchmarks
+[Performance metrics and baselines]
+
+### Optimization Tips
+[How to improve performance]
+
+### Resource Requirements
+[CPU, memory, storage needs]
+
+### Scaling Considerations
+[Horizontal and vertical scaling]
+
+---
+
+## Troubleshooting
+
+### Common Issues
+[Frequently encountered problems and solutions]
+
+### Error Messages
+[Error code reference and meanings]
+
+### Debug Mode
+[How to enable detailed logging]
+
+### Support Channels
+[Where to get help]
+
+---
+
+## FAQ
+
+### General Questions
+[Common questions and answers]
+
+### Technical Questions
+[Developer-focused Q&A]
+
+### Administrative Questions
+[Admin-focused Q&A]
+
+---
+
+## Changelog
+
+### Version History
+[Major version changes and features]
+
+### Migration Guides
+[How to upgrade between versions]
+
+### Deprecation Notices
+[Features being phased out]
+
+---
+
+## References
+
+### Related Documentation
+[Links to related features/components]
+
+### External Resources
+[Third-party documentation]
+
+### Glossary
+[Technical terms and definitions]
+
+### Index
+[Alphabetical index of key concepts]
+    ]]></main_template>
+  </output_structure>
+
+  <audience_specific_sections>
+    <audience type="end_users">
+      <focus_areas>
+        <area>Step-by-step tutorials with screenshots</area>
+        <area>Common use case examples</area>
+        <area>Troubleshooting guides for user errors</area>
+        <area>Feature benefits and value propositions</area>
+      </focus_areas>
+      <writing_style>
+        <guideline>Use simple, non-technical language</guideline>
+        <guideline>Include visual aids and examples</guideline>
+        <guideline>Focus on outcomes rather than implementation</guideline>
+        <guideline>Provide clear action steps</guideline>
+      </writing_style>
+    </audience>
+
+    <audience type="developers">
+      <focus_areas>
+        <area>Code examples and snippets</area>
+        <area>API specifications and contracts</area>
+        <area>Integration patterns and best practices</area>
+        <area>Performance optimization techniques</area>
+      </focus_areas>
+      <writing_style>
+        <guideline>Use precise technical terminology</guideline>
+        <guideline>Include code samples in multiple languages</guideline>
+        <guideline>Document edge cases and limitations</guideline>
+        <guideline>Provide debugging and testing guidance</guideline>
+      </writing_style>
+    </audience>
+
+    <audience type="administrators">
+      <focus_areas>
+        <area>Deployment and configuration procedures</area>
+        <area>Monitoring and maintenance tasks</area>
+        <area>Security hardening guidelines</area>
+        <area>Backup and disaster recovery</area>
+      </focus_areas>
+      <writing_style>
+        <guideline>Focus on operational aspects</guideline>
+        <guideline>Include command-line examples</guideline>
+        <guideline>Document automation opportunities</guideline>
+        <guideline>Emphasize security and compliance</guideline>
+      </writing_style>
+    </audience>
+
+    <audience type="stakeholders">
+      <focus_areas>
+        <area>Business value and ROI</area>
+        <area>Feature capabilities and limitations</area>
+        <area>Competitive advantages</area>
+        <area>Risk assessment and mitigation</area>
+      </focus_areas>
+      <writing_style>
+        <guideline>Use business-oriented language</guideline>
+        <guideline>Include metrics and KPIs</guideline>
+        <guideline>Focus on strategic benefits</guideline>
+        <guideline>Provide executive summaries</guideline>
+      </writing_style>
+    </audience>
+  </audience_specific_sections>
+
+  <metadata_patterns>
+    <version_info>
+      <template><![CDATA[
+### Version Compatibility Matrix
+| Component | Min Version | Recommended | Max Version | Notes |
+|-----------|-------------|-------------|-------------|-------|
+| [Component] | [version] | [version] | [version] | [notes] |
+      ]]></template>
+    </version_info>
+
+    <deprecation_notice>
+      <template><![CDATA[
+> ⚠️ **Deprecation Notice**
+> 
+> This feature/method is deprecated as of version [X.Y.Z].
+> - **Deprecated**: [date]
+> - **Removal Target**: [version/date]
+> - **Migration Path**: [See migration guide](#migration)
+> - **Replacement**: [new feature/method]
+      ]]></template>
+    </deprecation_notice>
+
+    <security_warning>
+      <template><![CDATA[
+> 🔒 **Security Consideration**
+> 
+> [Description of security concern]
+> - **Risk Level**: [High/Medium/Low]
+> - **Affected Versions**: [versions]
+> - **Mitigation**: [steps to address]
+> - **References**: [CVE/advisory links]
+      ]]></template>
+    </security_warning>
+
+    <performance_note>
+      <template><![CDATA[
+> ⚡ **Performance Impact**
+> 
+> [Description of performance consideration]
+> - **Impact**: [metrics/benchmarks]
+> - **Optimization**: [recommended approach]
+> - **Trade-offs**: [considerations]
+      ]]></template>
+    </performance_note>
+  </metadata_patterns>
+
+  <code_documentation_patterns>
+    <api_endpoint>
+      <template><![CDATA[
+### `[METHOD] /api/[path]`
+
+**Description**: [What this endpoint does]
+
+**Authentication**: [Required/Optional] - [Type]
+
+**Parameters**:
+| Name | Type | Required | Description | Example |
+|------|------|----------|-------------|---------|
+| [param] | [type] | [Yes/No] | [description] | [example] |
+
+**Request Body**:
+```json
+{
+  "field": "value"
+}
+```
+
+**Response**:
+- **Success (200)**:
+  ```json
+  {
+    "status": "success",
+    "data": {}
+  }
+  ```
+- **Error (4xx/5xx)**:
+  ```json
+  {
+    "error": "error_code",
+    "message": "Human readable message"
+  }
+  ```
+
+**Example**:
+```bash
+curl -X [METHOD] https://api.example.com/[path] \
+  -H "Authorization: Bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{"field": "value"}'
+```
+      ]]></template>
+    </api_endpoint>
+
+    <function_documentation>
+      <template><![CDATA[
+### `functionName(parameters)`
+
+**Purpose**: [What this function does]
+
+**Parameters**:
+- `param1` (Type): [Description]
+- `param2` (Type, optional): [Description] - Default: [value]
+
+**Returns**: `Type` - [Description of return value]
+
+**Throws**:
+- `ErrorType`: [When this error occurs]
+
+**Example**:
+```typescript
+const result = functionName(value1, value2);
+// Expected output: [description]
+```
+
+**Notes**:
+- [Important consideration 1]
+- [Important consideration 2]
+      ]]></template>
+    </function_documentation>
+
+    <configuration_option>
+      <template><![CDATA[
+### `CONFIG_NAME`
+
+**Type**: `string | number | boolean`
+
+**Default**: `default_value`
+
+**Environment Variable**: `APP_CONFIG_NAME`
+
+**Description**: [What this configuration controls]
+
+**Valid Values**:
+- `value1`: [Description]
+- `value2`: [Description]
+
+**Example**:
+```yaml
+config:
+  name: value
+```
+
+**Impact**: [What changes when this is modified]
+      ]]></template>
+    </configuration_option>
+  </code_documentation_patterns>
+
+  <cross_reference_patterns>
+    <internal_link>
+      <format>[Link Text](#section-anchor)</format>
+      <example>[See Configuration Guide](#configuration)</example>
+    </internal_link>
+
+    <external_link>
+      <format>[Link Text](https://external.url)</format>
+      <example>[Official Documentation](https://docs.example.com)</example>
+    </external_link>
+
+    <related_feature>
+      <template><![CDATA[
+> 📌 **Related Features**
+> - [Feature A](../feature-a/README.md): [How it relates]
+> - [Feature B](../feature-b/README.md): [How it relates]
+      ]]></template>
+    </related_feature>
+
+    <see_also>
+      <template><![CDATA[
+> 👉 **See Also**
+> - [Related Topic 1](#anchor1)
+> - [Related Topic 2](#anchor2)
+> - [External Resource](https://example.com)
+      ]]></template>
+    </see_also>
+  </cross_reference_patterns>
+</documentation_patterns>
