@@ -1,15 +1,70 @@
 // npx vitest core/prompts/__tests__/system.spec.ts
 
-import * as vscode from "vscode"
+// Mock environment-specific values for consistent tests - MUST BE FIRST
+vi.mock("os", async () => {
+	const actual = await vi.importActual("os")
+	return {
+		...actual,
+		homedir: () => "/home/user",
+	}
+})
 
-import { ModeConfig } from "@roo-code/types"
+vi.mock("default-shell", () => ({
+	default: "/bin/zsh",
+}))
 
-import { SYSTEM_PROMPT } from "../system"
-import { McpHub } from "../../../services/mcp/McpHub"
-import { defaultModeSlug, modes, Mode } from "../../../shared/modes"
-import "../../../utils/path"
-import { addCustomInstructions } from "../sections/custom-instructions"
-import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
+vi.mock("os-name", () => ({
+	default: () => "Linux",
+}))
+
+vi.mock("../../../utils/shell", () => ({
+	getShell: () => "/bin/zsh",
+}))
+
+// Mock the system info section
+vi.mock("../sections/system-info", () => ({
+	getSystemInfoSection: vi.fn().mockImplementation((cwd: string) => {
+		return `====
+
+SYSTEM INFORMATION
+
+Operating System: Linux
+Default Shell: /bin/zsh
+Home Directory: /home/user
+Current Workspace Directory: ${cwd}
+
+The Current Workspace Directory is the active VS Code project directory, and is therefore the default directory for all tool operations. New terminals will be created in the current workspace directory, however if you change directories in a terminal it will then have a different working directory; changing directories in a terminal does not modify the workspace directory, because you do not have access to change the workspace directory. When the user initially gives you a task, a recursive list of all filepaths in the current workspace directory ('/test/path') will be included in environment_details. This provides an overview of the project's file structure, offering key insights into the project from directory/file names (how developers conceptualize and organize their code) and file extensions (the language used). This can also guide decision-making on which files to explore further. If you need to further explore directories such as outside the current workspace directory, you can use the list_files tool. If you pass 'true' for the recursive parameter, it will list files recursively. Otherwise, it will list files at the top level, which is better suited for generic directories where you don't necessarily need the nested structure, like the Desktop.`
+	}),
+}))
+
+// Mock vscode language
+vi.mock("vscode", () => ({
+	env: {
+		language: "en",
+	},
+	workspace: {
+		workspaceFolders: [
+			{
+				uri: {
+					fsPath: "/test/path",
+				},
+			},
+		],
+		getWorkspaceFolder: vi.fn().mockReturnValue({
+			uri: {
+				fsPath: "/test/path",
+			},
+		}),
+	},
+	window: {
+		activeTextEditor: undefined,
+	},
+	EventEmitter: vi.fn().mockImplementation(() => ({
+		event: vi.fn(),
+		fire: vi.fn(),
+		dispose: vi.fn(),
+	})),
+}))
 
 // Mock the sections
 vi.mock("../sections/modes", () => ({
@@ -66,55 +121,16 @@ vi.mock("../sections/custom-instructions", () => ({
 		),
 }))
 
-// Mock environment-specific values for consistent tests
-vi.mock("os", async () => {
-	const actual = await vi.importActual("os")
-	return {
-		...actual,
-		homedir: () => "/home/user",
-	}
-})
+import * as vscode from "vscode"
 
-vi.mock("default-shell", () => ({
-	default: "/bin/zsh",
-}))
+import { ModeConfig } from "@roo-code/types"
 
-vi.mock("os-name", () => ({
-	default: () => "Linux",
-}))
-
-// Mock vscode language
-vi.mock("vscode", () => ({
-	env: {
-		language: "en",
-	},
-	workspace: {
-		workspaceFolders: [
-			{
-				uri: {
-					fsPath: "/test/path",
-				},
-			},
-		],
-		getWorkspaceFolder: vi.fn().mockReturnValue({
-			uri: {
-				fsPath: "/test/path",
-			},
-		}),
-	},
-	window: {
-		activeTextEditor: undefined,
-	},
-	EventEmitter: vi.fn().mockImplementation(() => ({
-		event: vi.fn(),
-		fire: vi.fn(),
-		dispose: vi.fn(),
-	})),
-}))
-
-vi.mock("../../../utils/shell", () => ({
-	getShell: () => "/bin/zsh",
-}))
+import { SYSTEM_PROMPT } from "../system"
+import { McpHub } from "../../../services/mcp/McpHub"
+import { defaultModeSlug, modes, Mode } from "../../../shared/modes"
+import "../../../utils/path"
+import { addCustomInstructions } from "../sections/custom-instructions"
+import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 
 // Create a mock ExtensionContext
 const mockContext = {
