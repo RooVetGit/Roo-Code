@@ -177,6 +177,97 @@ describe("OpenAICompatibleEmbedder", () => {
 		})
 
 		/**
+		 * Test base64 conversion logic
+		 */
+		describe("base64 conversion", () => {
+			it("should convert base64 encoded embeddings to float arrays", async () => {
+				const testTexts = ["Hello world"]
+
+				// Create a Float32Array with test values that can be exactly represented in Float32
+				const testEmbedding = new Float32Array([0.25, 0.5, 0.75, 1.0])
+
+				// Convert to base64 string (simulating what OpenAI API returns)
+				const buffer = Buffer.from(testEmbedding.buffer)
+				const base64String = buffer.toString("base64")
+
+				const mockResponse = {
+					data: [{ embedding: base64String }], // Base64 string instead of array
+					usage: { prompt_tokens: 10, total_tokens: 15 },
+				}
+				mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+				const result = await embedder.createEmbeddings(testTexts)
+
+				expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
+					input: testTexts,
+					model: testModelId,
+					encoding_format: "base64",
+				})
+
+				// Verify the base64 string was converted back to the original float array
+				expect(result).toEqual({
+					embeddings: [[0.25, 0.5, 0.75, 1.0]],
+					usage: { promptTokens: 10, totalTokens: 15 },
+				})
+			})
+
+			it("should handle multiple base64 encoded embeddings", async () => {
+				const testTexts = ["Hello world", "Goodbye world"]
+
+				// Create test embeddings with values that can be exactly represented in Float32
+				const embedding1 = new Float32Array([0.25, 0.5, 0.75])
+				const embedding2 = new Float32Array([1.0, 1.25, 1.5])
+
+				// Convert to base64 strings
+				const base64String1 = Buffer.from(embedding1.buffer).toString("base64")
+				const base64String2 = Buffer.from(embedding2.buffer).toString("base64")
+
+				const mockResponse = {
+					data: [{ embedding: base64String1 }, { embedding: base64String2 }],
+					usage: { prompt_tokens: 20, total_tokens: 30 },
+				}
+				mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+				const result = await embedder.createEmbeddings(testTexts)
+
+				expect(result).toEqual({
+					embeddings: [
+						[0.25, 0.5, 0.75],
+						[1.0, 1.25, 1.5],
+					],
+					usage: { promptTokens: 20, totalTokens: 30 },
+				})
+			})
+
+			it("should handle mixed base64 and array embeddings", async () => {
+				const testTexts = ["Hello world", "Goodbye world"]
+
+				// Create one base64 embedding and one regular array (edge case)
+				const embedding1 = new Float32Array([0.25, 0.5, 0.75])
+				const base64String1 = Buffer.from(embedding1.buffer).toString("base64")
+
+				const mockResponse = {
+					data: [
+						{ embedding: base64String1 }, // Base64 string
+						{ embedding: [1.0, 1.25, 1.5] }, // Regular array
+					],
+					usage: { prompt_tokens: 20, total_tokens: 30 },
+				}
+				mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+				const result = await embedder.createEmbeddings(testTexts)
+
+				expect(result).toEqual({
+					embeddings: [
+						[0.25, 0.5, 0.75],
+						[1.0, 1.25, 1.5],
+					],
+					usage: { promptTokens: 20, totalTokens: 30 },
+				})
+			})
+		})
+
+		/**
 		 * Test batching logic when texts exceed token limits
 		 */
 		describe("batching logic", () => {
@@ -252,11 +343,15 @@ describe("OpenAICompatibleEmbedder", () => {
 				const testTexts = ["Hello world"]
 				const rateLimitError = { status: 429, message: "Rate limit exceeded" }
 
+				// Create base64 encoded embedding for successful response
+				const testEmbedding = new Float32Array([0.25, 0.5, 0.75])
+				const base64String = Buffer.from(testEmbedding.buffer).toString("base64")
+
 				mockEmbeddingsCreate
 					.mockRejectedValueOnce(rateLimitError)
 					.mockRejectedValueOnce(rateLimitError)
 					.mockResolvedValueOnce({
-						data: [{ embedding: [0.1, 0.2, 0.3] }],
+						data: [{ embedding: base64String }],
 						usage: { prompt_tokens: 10, total_tokens: 15 },
 					})
 
@@ -271,7 +366,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(3)
 				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("Rate limit hit, retrying in"))
 				expect(result).toEqual({
-					embeddings: [[0.1, 0.2, 0.3]],
+					embeddings: [[0.25, 0.5, 0.75]],
 					usage: { promptTokens: 10, totalTokens: 15 },
 				})
 			})
