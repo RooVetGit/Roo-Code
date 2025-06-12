@@ -217,7 +217,7 @@
 		"description": "Roo Code {{version}} porta noves funcionalitats potents i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
 		"feature1": "<bold>Marketplace Experimental</bold>: Descobreix i instal·la modes i MCP del nou marketplace (activa'l a la <experimentalSettingsLink>Configuració Experimental</experimentalSettingsLink>)",
-		"feature2": "<bold>Operacions de fitxer millorades</bold>: Operacions d'escriptura multi-concurrent experimentals i lectura concurrent ara disponible a la <contextSettingsLink>Configuració de Context</contextSettingsLink>",
+		"feature2": "<bold>Operacions de fitxer millorades</bold>: Operacions d'escriptura multi-concurrent experimentals i lectura concurrent ara disponibles a la <contextSettingsLink>Configuració de Context</contextSettingsLink>",
 		"feature3": "<bold>Millores MCP i més</bold>: Suport MCP millorat, controls Mermaid, suport Amazon Bedrock thinking, i més!",
 		"hideButton": "Amagar anunci",
 		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
