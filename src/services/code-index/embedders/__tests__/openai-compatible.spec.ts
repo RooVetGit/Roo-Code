@@ -458,5 +458,84 @@ describe("OpenAICompatibleEmbedder", () => {
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow()
 			})
 		})
+
+		/**
+		 * Test to confirm OpenAI package bug with base64 encoding
+		 * This test verifies that when we request encoding_format: "base64",
+		 * the OpenAI package returns unparsed base64 strings as expected.
+		 * This is the behavior we rely on in our workaround.
+		 */
+		describe("OpenAI package base64 behavior verification", () => {
+			it("should return unparsed base64 when encoding_format is base64", async () => {
+				const testTexts = ["Hello world"]
+
+				// Create a real OpenAI instance to test the actual package behavior
+				const realOpenAI = new (jest.requireActual("openai").OpenAI)({
+					baseURL: testBaseUrl,
+					apiKey: testApiKey,
+				})
+
+				// Create test embedding data as base64 using values that can be exactly represented in Float32
+				const testEmbedding = new Float32Array([0.25, 0.5, 0.75, 1.0])
+				const buffer = Buffer.from(testEmbedding.buffer)
+				const base64String = buffer.toString("base64")
+
+				// Mock the raw API response that would come from OpenAI
+				const mockApiResponse = {
+					data: [
+						{
+							object: "embedding",
+							embedding: base64String, // Raw base64 string from API
+							index: 0,
+						},
+					],
+					model: "text-embedding-3-small",
+					object: "list",
+					usage: {
+						prompt_tokens: 2,
+						total_tokens: 2,
+					},
+				}
+
+				// Mock the methodRequest method which is called by post()
+				const mockMethodRequest = jest.fn()
+				const mockAPIPromise = {
+					then: jest.fn().mockImplementation((callback) => {
+						return Promise.resolve(callback(mockApiResponse))
+					}),
+					catch: jest.fn(),
+					finally: jest.fn(),
+				}
+				mockMethodRequest.mockReturnValue(mockAPIPromise)
+
+				// Replace the methodRequest method on the client
+				;(realOpenAI as any).post = jest.fn().mockImplementation((path, opts) => {
+					return mockMethodRequest("post", path, opts)
+				})
+
+				// Call the embeddings.create method with base64 encoding
+				const response = await realOpenAI.embeddings.create({
+					input: testTexts,
+					model: "text-embedding-3-small",
+					encoding_format: "base64",
+				})
+
+				// Verify that the response contains the raw base64 string
+				// This confirms the OpenAI package doesn't parse base64 when explicitly requested
+				expect(response.data[0].embedding).toBe(base64String)
+				expect(typeof response.data[0].embedding).toBe("string")
+
+				// Verify we can manually convert it back to the original float array
+				const returnedBuffer = Buffer.from(response.data[0].embedding as string, "base64")
+				const returnedFloat32Array = new Float32Array(
+					returnedBuffer.buffer,
+					returnedBuffer.byteOffset,
+					returnedBuffer.byteLength / 4,
+				)
+				const returnedArray = Array.from(returnedFloat32Array)
+
+				expect(returnedArray).toEqual([0.25, 0.5, 0.75, 1.0])
+			})
+		})
 	})
 })
