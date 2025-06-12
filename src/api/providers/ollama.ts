@@ -2,16 +2,19 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import axios from "axios"
 
-import { SingleCompletionHandler } from "../"
-import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
+import { type ModelInfo, openAiModelInfoSaneDefaults, DEEP_SEEK_DEFAULT_TEMPERATURE } from "@roo-code/types"
+
+import type { ApiHandlerOptions } from "../../shared/api"
+
+import { XmlMatcher } from "../../utils/xml-matcher"
+
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
 import { ApiStream } from "../transform/stream"
-import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
-import { XmlMatcher } from "../../utils/xml-matcher"
-import { BaseProvider } from "./base-provider"
 
-// Alias for the usage object returned in streaming chunks
+import { BaseProvider } from "./base-provider"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+
 type CompletionUsage = OpenAI.Chat.Completions.ChatCompletionChunk["usage"]
 
 export class OllamaHandler extends BaseProvider implements SingleCompletionHandler {
@@ -27,7 +30,11 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 		})
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const modelId = this.getModel().id
 		const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [

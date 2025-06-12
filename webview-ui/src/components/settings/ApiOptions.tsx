@@ -11,13 +11,15 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
-} from "@roo/shared/api"
+} from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
-import { validateApiConfiguration, validateModelId } from "@src/utils/validate"
+import { validateApiConfiguration } from "@src/utils/validate"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { filterProviders, filterModels } from "./utils/organizationFilters"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
 
 import {
@@ -42,12 +44,11 @@ import {
 	XAI,
 } from "./providers"
 
-import { MODELS_BY_PROVIDER, PROVIDERS, REASONING_MODELS } from "./constants"
+import { MODELS_BY_PROVIDER, PROVIDERS } from "./constants"
 import { inputEventTransform, noTransform } from "./transforms"
 import { ModelInfoView } from "./ModelInfoView"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
-import { ReasoningEffort } from "./ReasoningEffort"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
@@ -72,6 +73,7 @@ const ApiOptions = ({
 	setErrorMessage,
 }: ApiOptionsProps) => {
 	const { t } = useAppTranslation()
+	const { organizationAllowList } = useExtensionState()
 
 	const [customHeaders, setCustomHeaders] = useState<[string, string][]>(() => {
 		const headers = apiConfiguration?.openAiHeaders || {}
@@ -174,22 +176,24 @@ const ApiOptions = ({
 	)
 
 	useEffect(() => {
-		const apiValidationResult =
-			validateApiConfiguration(apiConfiguration) || validateModelId(apiConfiguration, routerModels)
+		const apiValidationResult = validateApiConfiguration(apiConfiguration, routerModels, organizationAllowList)
 
 		setErrorMessage(apiValidationResult)
-	}, [apiConfiguration, routerModels, setErrorMessage])
+	}, [apiConfiguration, routerModels, organizationAllowList, setErrorMessage])
 
-	const selectedProviderModels = useMemo(
-		() =>
-			MODELS_BY_PROVIDER[selectedProvider]
-				? Object.keys(MODELS_BY_PROVIDER[selectedProvider]).map((modelId) => ({
-						value: modelId,
-						label: modelId,
-					}))
-				: [],
-		[selectedProvider],
-	)
+	const selectedProviderModels = useMemo(() => {
+		const models = MODELS_BY_PROVIDER[selectedProvider]
+		if (!models) return []
+
+		const filteredModels = filterModels(models, selectedProvider, organizationAllowList)
+
+		return filteredModels
+			? Object.keys(filteredModels).map((modelId) => ({
+					value: modelId,
+					label: modelId,
+				}))
+			: []
+	}, [selectedProvider, organizationAllowList])
 
 	const onProviderChange = useCallback(
 		(value: ProviderName) => {
@@ -279,7 +283,7 @@ const ApiOptions = ({
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
 					<SelectContent>
-						{PROVIDERS.map(({ value, label }) => (
+						{filterProviders(PROVIDERS, organizationAllowList).map(({ value, label }) => (
 							<SelectItem key={value} value={value}>
 								{label}
 							</SelectItem>
@@ -298,6 +302,7 @@ const ApiOptions = ({
 					selectedModelId={selectedModelId}
 					uriScheme={uriScheme}
 					fromWelcomeView={fromWelcomeView}
+					organizationAllowList={organizationAllowList}
 				/>
 			)}
 
@@ -307,6 +312,7 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
 					refetchRouterModels={refetchRouterModels}
+					organizationAllowList={organizationAllowList}
 				/>
 			)}
 
@@ -316,6 +322,7 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
 					uriScheme={uriScheme}
+					organizationAllowList={organizationAllowList}
 				/>
 			)}
 
@@ -324,6 +331,7 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
+					organizationAllowList={organizationAllowList}
 				/>
 			)}
 
@@ -359,6 +367,7 @@ const ApiOptions = ({
 				<OpenAICompatible
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
+					organizationAllowList={organizationAllowList}
 				/>
 			)}
 
@@ -394,7 +403,7 @@ const ApiOptions = ({
 				<LiteLLM
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
+					organizationAllowList={organizationAllowList}
 				/>
 			)}
 
@@ -453,22 +462,15 @@ const ApiOptions = ({
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
 					/>
-
-					<ThinkingBudget
-						key={`${selectedProvider}-${selectedModelId}`}
-						apiConfiguration={apiConfiguration}
-						setApiConfigurationField={setApiConfigurationField}
-						modelInfo={selectedModelInfo}
-					/>
 				</>
 			)}
 
-			{REASONING_MODELS.has(selectedModelId) && (
-				<ReasoningEffort
-					apiConfiguration={apiConfiguration}
-					setApiConfigurationField={setApiConfigurationField}
-				/>
-			)}
+			<ThinkingBudget
+				key={`${selectedProvider}-${selectedModelId}`}
+				apiConfiguration={apiConfiguration}
+				setApiConfigurationField={setApiConfigurationField}
+				modelInfo={selectedModelInfo}
+			/>
 
 			{!fromWelcomeView && (
 				<>

@@ -7,21 +7,19 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 
 type CopyButtonProps = {
 	itemTask: string
+	className?: string
 }
 
-export const CopyButton = ({ itemTask }: CopyButtonProps) => {
+export const CopyButton = ({ itemTask, className }: CopyButtonProps) => {
 	const { isCopied, copy } = useClipboard()
 	const { t } = useAppTranslation()
 
 	const onCopy = useCallback(
 		(e: React.MouseEvent) => {
 			e.stopPropagation()
-			const tempDiv = document.createElement("div")
-			tempDiv.innerHTML = itemTask
-			const text = tempDiv.textContent || tempDiv.innerText || ""
 
 			if (!isCopied) {
-				copy(text)
+				copy(itemTask)
 			}
 		},
 		[isCopied, copy, itemTask],
@@ -34,7 +32,7 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 			title={t("history:copyPrompt")}
 			onClick={onCopy}
 			data-testid="copy-prompt-button"
-			className="opacity-50 hover:opacity-100">
+			className={cn("opacity-50 hover:opacity-100", className)}>
 			<span className={cn("codicon scale-80", { "codicon-check": isCopied, "codicon-copy": !isCopied })} />
 		</Button>
 	)

@@ -1,4 +1,4 @@
-// npx jest src/core/task/__tests__/Task.test.ts
+// npx jest core/task/__tests__/Task.test.ts
 
 import * as os from "os"
 import * as path from "path"
@@ -6,10 +6,11 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import { GlobalState } from "../../../schemas"
+import type { GlobalState, ProviderSettings, ModelInfo } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { Task } from "../Task"
 import { ClineProvider } from "../../webview/ClineProvider"
-import { ProviderSettings, ModelInfo } from "../../../shared/api"
 import { ApiStreamChunk } from "../../../api/transform/stream"
 import { ContextProxy } from "../../config/ContextProxy"
 import { processUserContentMentions } from "../../mentions/processUserContentMentions"
@@ -126,10 +127,9 @@ jest.mock("../../environment/getEnvironmentDetails", () => ({
 	getEnvironmentDetails: jest.fn().mockResolvedValue(""),
 }))
 
-// Mock RooIgnoreController
 jest.mock("../../ignore/RooIgnoreController")
 
-// Mock storagePathManager to prevent dynamic import issues
+// Mock storagePathManager to prevent dynamic import issues.
 jest.mock("../../../utils/storage", () => ({
 	getTaskDirectoryPath: jest
 		.fn()
@@ -139,14 +139,12 @@ jest.mock("../../../utils/storage", () => ({
 		.mockImplementation((globalStoragePath) => Promise.resolve(`${globalStoragePath}/settings`)),
 }))
 
-// Mock fileExistsAtPath
 jest.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: jest.fn().mockImplementation((filePath) => {
 		return filePath.includes("ui_messages.json") || filePath.includes("api_conversation_history.json")
 	}),
 }))
 
-// Mock fs/promises
 const mockMessages = [
 	{
 		ts: Date.now(),
@@ -163,6 +161,10 @@ describe("Cline", () => {
 	let mockExtensionContext: vscode.ExtensionContext
 
 	beforeEach(() => {
+		if (!TelemetryService.hasInstance()) {
+			TelemetryService.createInstance([])
+		}
+
 		// Setup mock extension context
 		const storageUri = {
 			fsPath: path.join(os.tmpdir(), "test-storage"),

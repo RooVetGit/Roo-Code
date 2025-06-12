@@ -2,7 +2,7 @@ import { useState, memo } from "react"
 import { Trans } from "react-i18next"
 import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
-import { Package } from "@roo/schemas"
+import { Package } from "@roo/package"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@src/components/ui"
@@ -54,7 +54,31 @@ const Announcement = ({ hideAnnouncement }: AnnouncementProps) => {
 						</li>
 						<li>
 							•{" "}
-							<Trans i18nKey="chat:announcement.feature3" components={{ bold: <b />, code: <code /> }} />
+							<Trans
+								i18nKey="chat:announcement.feature3"
+								components={{
+									bold: <b />,
+									code: <code />,
+									contextSettingsLink: (
+										<VSCodeLink
+											href="#"
+											onClick={(e) => {
+												e.preventDefault()
+												setOpen(false)
+												hideAnnouncement()
+												window.postMessage(
+													{
+														type: "action",
+														action: "settingsButtonClicked",
+														values: { section: "contextManagement" },
+													},
+													"*",
+												)
+											}}
+										/>
+									),
+								}}
+							/>
 						</li>
 					</ul>
 					<Trans

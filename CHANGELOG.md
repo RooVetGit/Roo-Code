@@ -1,5 +1,141 @@
 # Roo Code Changelog
 
+## [3.19.7] - 2025-06-11
+
+- Fix McpHub sidebar focus behavior to prevent unwanted focus grabbing
+- Disable checkpoint functionality when nested git repositories are detected to prevent conflicts
+- Remove unused Storybook components and dependencies to reduce bundle size
+- Add data-testid ESLint rule for improved testing standards (thanks @elianiva!)
+- Update development dependencies including eslint, knip, @types/node, i18next, fast-xml-parser, and @google/genai
+- Improve CI infrastructure with GitHub Actions and Blacksmith runner migrations
+
+## [3.19.6] - 2025-06-09
+
+- Replace explicit caching with implicit caching to reduce latency for Gemini models
+- Clarify that the default concurrent file read limit is 15 files (thanks @olearycrew!)
+- Fix copy button logic (thanks @samhvw8!)
+- Fade buttons on history preview if no interaction in progress (thanks @sachasayan!)
+- Allow MCP server refreshing, fix state changes in MCP server management UI view (thanks @taylorwilsdon!)
+- Remove unnecessary npx usage in some npm scripts (thanks @user202729!)
+- Bug fix for trailing slash error when using LiteLLM provider (thanks @kcwhite!)
+
+## [3.19.5] - 2025-06-05
+
+- Fix Gemini 2.5 Pro Preview thinking budget bug
+
+## [3.19.4] - 2025-06-05
+
+- Add Gemini Pro 06-05 model support (thanks @daniel-lxs and @shariqriazz!)
+- Fix reading PDF, DOCX, and IPYNB files in read_file tool (thanks @samhvw8!)
+- Fix Mermaid CSP errors with enhanced bundling strategy (thanks @KJ7LNW!)
+- Improve model info detection for custom Bedrock ARNs (thanks @adamhill!)
+- Add OpenAI Compatible embedder for codebase indexing (thanks @SannidhyaSah!)
+- Fix multiple memory leaks in ChatView component (thanks @kiwina!)
+- Fix WorkspaceTracker resource leaks by disposing FileSystemWatcher (thanks @kiwina!)
+- Fix RooTips setTimeout cleanup to prevent state updates on unmounted components (thanks @kiwina!)
+- Fix FileSystemWatcher leak in RooIgnoreController (thanks @kiwina!)
+- Fix clipboard memory leak by clearing setTimeout in useCopyToClipboard (thanks @kiwina!)
+- Fix ClineProvider instance cleanup (thanks @xyOz-dev!)
+- Enforce codebase_search as primary tool for code understanding tasks (thanks @hannesrudolph!)
+- Improve Docker setup for evals
+- Move evals into pnpm workspace, switch from SQLite to Postgres
+- Refactor MCP to use getDefaultEnvironment for stdio client transport (thanks @samhvw8!)
+- Get rid of "partial" component in names referencing not necessarily partial messages (thanks @wkordalski!)
+- Improve feature request template (thanks @elianiva!)
+
+## [3.19.3] - 2025-06-02
+
+- Fix SSE MCP Invocation - Fixed SSE connection issue in McpHub.ts by ensuring transport.start override only applies to stdio transports, allowing SSE and streamable-http transports to retain their original start methods (thanks @taylorwilsdon!)
+
+## [3.19.2] - 2025-06-01
+
+- Add support for Streamable HTTP Transport MCP servers (thanks @taylorwilsdon!)
+- Add cached read and writes to stats and cost calculation for LiteLLM provider (thanks @mollux!)
+- Prevent dump of an entire file into the context on user edit (thanks @KJ7LNW!)
+- Fix directory link handling in markdown (thanks @KJ7LNW!)
+- Prevent start_line/end_line in apply_diff REPLACE (thanks @KJ7LNW!)
+- Unify history item UI with TaskItem and TaskItemHeader (thanks @KJ7LNW!)
+- Fix the label of the OpenAI-compatible API keys
+- Fix Virtuoso footer re-rendering issue (thanks @kiwina!)
+- Optimize ChatRowContent layout and styles (thanks @zhangtony239!)
+- Release memory in apply diff (thanks @xyOz-dev!)
+- Upgrade Node.js to v20.19.2 for security enhancements (thanks @PeterDaveHello!)
+- Fix typos (thanks @noritaka1166!)
+
+## [3.19.1] - 2025-05-30
+
+- Experimental feature to allow reading multiple files at once (thanks @samhvw8!)
+- Fix to correctly pass headers to SSE MCP servers
+- Adding support for custom VPC endpoints when using Amazon Bedrock (thanks @kcwhite!)
+- Fix bug with context condensing in Amazon Bedrock
+- Fix UTF-8 encoding in ExecaTerminalProcess (thanks @mr-ryan-james!)
+- Set sidebar name bugfix (thanks @chrarnoldus!)
+- Fix link to CONTRIBUTING.md in feature request template (thanks @cannuri!)
+- Add task metadata to Unbound and improve caching logic (thanks @pugazhendhi-m!)
+
+## [3.19.0] - 2025-05-29
+
+- Enable intelligent content condensing by default and move condense button out of expanded task menu
+- Skip condense and show error if context grows during condensing
+- Transform Prompts tab into Modes tab and move support prompts to Settings for better organization
+- Add DeepSeek R1 0528 model support to Chutes provider (thanks @zeozeozeo!)
+- Fix @directory not respecting .rooignore files (thanks @xyOz-dev!)
+- Add rooignore checking for insert_content and search_and_replace tools
+- Fix menu breaking when Roo is moved between primary and secondary sidebars (thanks @chrarnoldus!)
+- Resolve memory leak in ChatView by stabilizing callback props (thanks @samhvw8!)
+- Fix write_to_file to properly create empty files when content is empty (thanks @Ruakij!)
+- Fix chat input clearing during running tasks (thanks @xyOz-dev!)
+- Update AWS regions to include Spain and Hyderabad
+- Improve POSIX shell compatibility in pre-push hook (thanks @PeterDaveHello and @chrarnoldus!)
+- Update PAGER environment variable for Windows compatibility in Terminal (thanks @SmartManoj!)
+- Add environment variable injection support for whole MCP config (thanks @NamesMT!)
+- Update codebase search description to emphasize English query requirements (thanks @ChuKhaLi!)
+
+## [3.18.5] - 2025-05-27
+
+- Add thinking controls for Requesty (thanks @dtrugman!)
+- Re-enable telemetry
+- Improve zh-TW Traditional Chinese locale (thanks @PeterDaveHello and @chrarnoldus!)
+- Improve model metadata for LiteLLM
+
+## [3.18.4] - 2025-05-25
+
+- Fix codebase indexing settings saving and Ollama indexing (thanks @daniel-lxs!)
+- Fix handling BOM when user rejects apply_diff (thanks @avtc!)
+- Fix wrongfully clearing input on auto-approve (thanks @Ruakij!)
+- Fix correct spawnSync parameters for pnpm check in bootstrap.mjs (thanks @ChuKhaLi!)
+- Update xAI models and default model ID (thanks @PeterDaveHello!)
+- Add metadata to create message (thanks @dtrugman!)
+
+## [3.18.3] - 2025-05-24
+
+- Add reasoning support for Claude 4 and Gemini 2.5 Flash on OpenRouter, plus a fix for o1-pro
+- Add experimental codebase indexing + semantic search feature (thanks @daniel-lxs!)
+- For providers that used to default to Sonnet 3.7, change to Sonnet 4
+- Enable prompt caching for Gemini 2.5 Flash Preview (thanks @shariqriazz!)
+- Preserve model settings when selecting a specific OpenRouter provider
+- Add ability to refresh LiteLLM models list
+- Improve tool descriptions to guide proper file editing tool selection
+- Fix MCP Server error loading config when running with npx and bunx (thanks @devxpain!)
+- Improve pnpm bootstrapping and add compile script (thanks @KJ7LNW!)
+- Simplify object assignment & use startsWith (thanks @noritaka1166!)
+- Fix mark-as-read logic in the context tracker (thanks @samhvw8!)
+- Remove deprecated claude-3.7-sonnet models from vscodelm (thanks @shariqriazz!)
+
+## [3.18.2] - 2025-05-23
+
+- Fix vscode-material-icons in the filer picker
+- Fix global settings export
+- Respect user-configured terminal integration timeout (thanks @KJ7LNW)
+- Contex condensing enhancements (thanks @SannidhyaSah)
+
+## [3.18.1] - 2025-05-22
+
+- Add support for Claude Sonnet 4 and Claude Opus 4 models with thinking variants in Anthropic, Bedrock, and Vertex (thanks @shariqriazz!)
+- Fix README gif display in all localized versions
+- Fix referer URL
+- Switch codebase to a monorepo and create an automated "nightly" build
+
 ## [3.18.0] - 2025-05-21
 
 - Add support for Gemini 2.5 Flash preview models (thanks @shariqriazz and @daniel-lxs!)
@@ -1116,7 +1252,7 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 
 ## [2.2.16]
 
-- Incorporate Premshay's [PR](https://github.com/RooCodeInc/Roo-Cline/pull/60) to add support for Amazon Nova and Meta Llama Models via Bedrock (3, 3.1, 3.2) and unified Bedrock calls using BedrockClient and Bedrock Runtime API
+- Incorporate Premshay's [PR](https://github.com/RooCodeInc/Roo-Code/pull/60) to add support for Amazon Nova and Meta Llama Models via Bedrock (3, 3.1, 3.2) and unified Bedrock calls using BedrockClient and Bedrock Runtime API
 
 ## [2.2.14 - 2.2.15]
 
@@ -1188,7 +1324,7 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 
 ## [2.1.15]
 
-- Incorporate dbasclpy's [PR](https://github.com/RooCodeInc/Roo-Cline/pull/54) to add support for gemini-exp-1206
+- Incorporate dbasclpy's [PR](https://github.com/RooCodeInc/Roo-Code/pull/54) to add support for gemini-exp-1206
 - Make it clear that diff editing is very experimental
 
 ## [2.1.14]
@@ -1198,7 +1334,7 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 
 ## [2.1.13]
 
-- Fix https://github.com/RooCodeInc/Roo-Cline/issues/50 where sound effects were not respecting settings
+- Fix https://github.com/RooCodeInc/Roo-Code/issues/50 where sound effects were not respecting settings
 
 ## [2.1.12]
 
@@ -1206,7 +1342,7 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 
 ## [2.1.11]
 
-- Incorporate lloydchang's [PR](https://github.com/RooCodeInc/Roo-Cline/pull/42) to add support for OpenRouter compression
+- Incorporate lloydchang's [PR](https://github.com/RooCodeInc/Roo-Code/pull/42) to add support for OpenRouter compression
 
 ## [2.1.10]
 

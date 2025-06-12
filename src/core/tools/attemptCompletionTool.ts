@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { Task } from "../task/Task"
 import {
 	ToolResponse,
@@ -12,8 +14,8 @@ import {
 	AskFinishSubTaskApproval,
 } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { type ExecuteCommandOptions, executeCommand } from "./executeCommandTool"
+import { EXPERIMENT_IDS, experiments, experimentDefault } from "../../shared/experiments"
 
 export async function attemptCompletionTool(
 	cline: Task,
@@ -45,7 +47,7 @@ export async function attemptCompletionTool(
 					// we have command string, which means we have the result as well, so finish it (doesnt have to exist yet)
 					await cline.say("completion_result", removeClosingTag("result", result), undefined, false)
 
-					telemetryService.captureTaskCompleted(cline.taskId)
+					TelemetryService.instance.captureTaskCompleted(cline.taskId)
 					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.toolUsage)
 
 					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
@@ -67,11 +69,19 @@ export async function attemptCompletionTool(
 
 			let commandResult: ToolResponse | undefined
 
-			if (command) {
+			// Check if command execution is disabled via experiment
+			const state = await cline.providerRef.deref()?.getState()
+			const experimentsConfig = state?.experiments ?? experimentDefault
+			const isCommandDisabled = experiments.isEnabled(
+				experimentsConfig,
+				EXPERIMENT_IDS.DISABLE_COMPLETION_COMMAND,
+			)
+
+			if (command && !isCommandDisabled) {
 				if (lastMessage && lastMessage.ask !== "command") {
 					// Haven't sent a command message yet so first send completion_result then command.
 					await cline.say("completion_result", result, undefined, false)
-					telemetryService.captureTaskCompleted(cline.taskId)
+					TelemetryService.instance.captureTaskCompleted(cline.taskId)
 					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.toolUsage)
 				}
 
@@ -96,7 +106,7 @@ export async function attemptCompletionTool(
 				commandResult = execCommandResult
 			} else {
 				await cline.say("completion_result", result, undefined, false)
-				telemetryService.captureTaskCompleted(cline.taskId)
+				TelemetryService.instance.captureTaskCompleted(cline.taskId)
 				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.toolUsage)
 			}
 

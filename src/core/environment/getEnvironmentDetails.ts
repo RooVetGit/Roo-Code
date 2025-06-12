@@ -5,7 +5,9 @@ import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
 import delay from "delay"
 
-import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../../shared/experiments"
+import type { ExperimentId } from "@roo-code/types"
+
+import { EXPERIMENT_IDS, experiments as Experiments } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { defaultModeSlug, getFullModeDetails, getModeBySlug, isToolAllowedForMode } from "../../shared/modes"
 import { getApiMetrics } from "../../shared/getApiMetrics"
@@ -151,7 +153,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		}
 	}
 
-	// console.log(`[Cline#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
+	// console.log(`[Task#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
 
 	// Add recently modified files section.
 	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearRecentlyModifiedFiles()

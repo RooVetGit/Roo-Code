@@ -22,6 +22,9 @@ jest.mock("vscode", () => ({
 		showErrorMessage: jest.fn(),
 		showInformationMessage: jest.fn(),
 		showWarningMessage: jest.fn(),
+		createTextEditorDecorationType: jest.fn().mockReturnValue({
+			dispose: jest.fn(),
+		}),
 	},
 	Disposable: {
 		from: jest.fn(),
@@ -128,6 +131,20 @@ describe("McpHub", () => {
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
+			// Set up mock connection without alwaysAllow
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					type: "stdio",
+					command: "node",
+					args: ["test.js"],
+					source: "global",
+				} as any,
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "new-tool", true)
 
 			// Verify the config was updated correctly
@@ -162,6 +179,21 @@ describe("McpHub", () => {
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					type: "stdio",
+					command: "node",
+					args: ["test.js"],
+					alwaysAllow: ["existing-tool"],
+					source: "global",
+				} as any,
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "existing-tool", false)
 
 			// Verify the config was updated correctly
@@ -195,6 +227,21 @@ describe("McpHub", () => {
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					type: "stdio",
+					command: "node",
+					args: ["test.js"],
+					alwaysAllow: [],
+					source: "global",
+				} as any,
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "new-tool", true)
 
 			// Verify the config was updated with initialized alwaysAllow
@@ -227,6 +274,21 @@ describe("McpHub", () => {
 
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					type: "stdio",
+					command: "node",
+					args: ["test.js"],
+					disabled: false,
+					source: "global",
+				} as any,
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
 
 			await mcpHub.toggleServerDisabled("test-server", true)
 
@@ -445,6 +507,21 @@ describe("McpHub", () => {
 				// Mock reading initial config
 				;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
+				// Set up mock connection
+				const mockConnection: McpConnection = {
+					server: {
+						name: "test-server",
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						timeout: 60,
+						source: "global",
+					} as any,
+					client: {} as any,
+					transport: {} as any,
+				}
+				mcpHub.connections = [mockConnection]
+
 				await mcpHub.updateServerTimeout("test-server", 120)
 
 				// Verify the config was updated correctly
@@ -475,6 +552,23 @@ describe("McpHub", () => {
 				// Mock initial read
 				;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
+				// Set up mock connection before updating
+				const mockConnectionInitial: McpConnection = {
+					server: {
+						name: "test-server",
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						timeout: 60,
+						source: "global",
+					} as any,
+					client: {
+						request: jest.fn().mockResolvedValue({ content: [] }),
+					} as any,
+					transport: {} as any,
+				}
+				mcpHub.connections = [mockConnectionInitial]
+
 				// Update with invalid timeout
 				await mcpHub.updateServerTimeout("test-server", 3601)
 
@@ -482,7 +576,7 @@ describe("McpHub", () => {
 				expect(fs.writeFile).toHaveBeenCalled()
 
 				// Setup connection with invalid timeout
-				const mockConnection: McpConnection = {
+				const mockConnectionInvalid: McpConnection = {
 					server: {
 						name: "test-server",
 						config: JSON.stringify({
@@ -499,13 +593,13 @@ describe("McpHub", () => {
 					transport: {} as any,
 				}
 
-				mcpHub.connections = [mockConnection]
+				mcpHub.connections = [mockConnectionInvalid]
 
 				// Call tool - should use default timeout
 				await mcpHub.callTool("test-server", "test-tool")
 
 				// Verify default timeout was used
-				expect(mockConnection.client.request).toHaveBeenCalledWith(
+				expect(mockConnectionInvalid.client.request).toHaveBeenCalledWith(
 					expect.anything(),
 					expect.anything(),
 					expect.objectContaining({ timeout: 60000 }), // Default 60 seconds
@@ -525,6 +619,21 @@ describe("McpHub", () => {
 				}
 
 				;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+				// Set up mock connection
+				const mockConnection: McpConnection = {
+					server: {
+						name: "test-server",
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						timeout: 60,
+						source: "global",
+					} as any,
+					client: {} as any,
+					transport: {} as any,
+				}
+				mcpHub.connections = [mockConnection]
 
 				// Test valid timeout values
 				const validTimeouts = [1, 60, 3600]
@@ -549,6 +658,21 @@ describe("McpHub", () => {
 				}
 
 				;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+				// Set up mock connection
+				const mockConnection: McpConnection = {
+					server: {
+						name: "test-server",
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						timeout: 60,
+						source: "global",
+					} as any,
+					client: {} as any,
+					transport: {} as any,
+				}
+				mcpHub.connections = [mockConnection]
 
 				await mcpHub.updateServerTimeout("test-server", 120)
 

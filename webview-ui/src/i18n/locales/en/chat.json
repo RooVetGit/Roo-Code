@@ -11,6 +11,7 @@
 		"contextWindow": "Context Length:",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
+		"share": "Share task",
 		"delete": "Delete Task (Shift + Click to skip confirmation)"
 	},
 	"unpin": "Unpin",
@@ -45,6 +46,14 @@
 		"title": "Approve",
 		"tooltip": "Approve this action"
 	},
+	"read-batch": {
+		"approve": {
+			"title": "Approve All"
+		},
+		"deny": {
+			"title": "Deny All"
+		}
+	},
 	"runCommand": {
 		"title": "Run Command",
 		"tooltip": "Execute this command"
@@ -70,7 +79,7 @@
 		"tooltip": "Cancel the current operation"
 	},
 	"scrollToBottom": "Scroll to bottom of chat",
-	"about": "Generate, refactor, and debug code with AI assistance.<br />Check out our <DocsLink>documentation</DocsLink> to learn more.",
+	"about": "Generate, refactor, and debug code with AI assistance. Check out our <DocsLink>documentation</DocsLink> to learn more.",
 	"onboarding": "Your task list in this workspace is empty.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -133,6 +142,7 @@
 	"contextCondense": {
 		"title": "Context Condensed",
 		"condensing": "Condensing context...",
+		"errorHeader": "Failed to condense context",
 		"tokens": "tokens"
 	},
 	"instructions": {
@@ -140,6 +150,8 @@
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo wants to read this file:",
+		"wantsToReadMultiple": "Roo wants to read multiple files:",
+		"wantsToReadAndXMore": "Roo wants to read this file and {{count}} more:",
 		"wantsToReadOutsideWorkspace": "Roo wants to read this file outside of the workspace:",
 		"didRead": "Roo read this file:",
 		"wantsToEdit": "Roo wants to edit this file:",
@@ -160,6 +172,11 @@
 		"didViewDefinitions": "Roo viewed source code definition names used in this directory:",
 		"wantsToSearch": "Roo wants to search this directory for <code>{{regex}}</code>:",
 		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo wants to search the codebase for <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wants to search the codebase for <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "Found {{count}} result(s) for <code>{{query}}</code>:"
 	},
 	"commandOutput": "Command Output",
 	"response": "Response",
@@ -204,9 +221,9 @@
 		"title": "🎉 Roo Code {{version}} Released",
 		"description": "Roo Code {{version}} brings powerful new features and improvements based on your feedback.",
 		"whatsNew": "What's New",
-		"feature1": "<bold>Gemini 2.5 Flash Preview Models</bold>: Access the latest Gemini Flash models for faster and more efficient responses",
-		"feature2": "<bold>Intelligent Context Condensing</bold>: New button in task header lets you intelligently condense content with visual feedback",
-		"feature3": "<bold>YAML Support for Mode Definitions</bold>: Create and customize modes more easily with YAML support",
+		"feature1": "<bold>Intelligent Context Condensing Enabled by Default</bold>: Context condensing is now enabled by default with configurable settings for when automatic condensing happens",
+		"feature2": "<bold>Manual Condensing Button</bold>: New button in the task header allows you to manually trigger context condensing at any time",
+		"feature3": "<bold>Enhanced Condensing Settings</bold>: Fine-tune when and how automatic condensing occurs through the <contextSettingsLink>Context Settings</contextSettingsLink>",
 		"hideButton": "Hide announcement",
 		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -249,6 +266,7 @@
 		}
 	},
 	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior.",
+	"profileViolationWarning": "The current profile violates your organization's settings",
 	"shellIntegration": {
 		"title": "Command Execution Warning",
 		"description": "Your command is being executed without VSCode terminal shell integration. To suppress this warning you can disable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Roo Code settings</settingsLink> or troubleshoot VSCode terminal integration using the link below.",

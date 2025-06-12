@@ -28,9 +28,43 @@
 		"notifications": "Notifiche",
 		"contextManagement": "Contesto",
 		"terminal": "Terminal",
+		"prompts": "Prompt",
 		"experimental": "Sperimentale",
 		"language": "Lingua",
 		"about": "Informazioni su Roo Code"
+	},
+	"prompts": {
+		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
+	},
+	"codeIndex": {
+		"title": "Indicizzazione del codice",
+		"enableLabel": "Abilita indicizzazione del codice",
+		"enableDescription": "<0>L'indicizzazione del codice</0> è una funzionalità sperimentale che crea un indice di ricerca semantica del tuo progetto utilizzando embedding AI. Questo permette a Roo Code di comprendere meglio e navigare grandi basi di codice trovando codice rilevante basato sul significato piuttosto che solo su parole chiave.",
+		"providerLabel": "Fornitore di embedding",
+		"selectProviderPlaceholder": "Seleziona fornitore",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Compatibile con OpenAI",
+		"openaiCompatibleBaseUrlLabel": "URL di base:",
+		"openaiCompatibleApiKeyLabel": "Chiave API:",
+		"openaiCompatibleModelDimensionLabel": "Dimensione Embedding:",
+		"openaiCompatibleModelDimensionPlaceholder": "es., 1536",
+		"openaiCompatibleModelDimensionDescription": "La dimensione dell'embedding (dimensione di output) per il tuo modello. Controlla la documentazione del tuo provider per questo valore. Valori comuni: 384, 768, 1536, 3072.",
+		"openaiKeyLabel": "Chiave OpenAI:",
+		"modelLabel": "Modello",
+		"selectModelPlaceholder": "Seleziona modello",
+		"ollamaUrlLabel": "URL Ollama:",
+		"qdrantUrlLabel": "URL Qdrant",
+		"qdrantKeyLabel": "Chiave Qdrant:",
+		"startIndexingButton": "Avvia indicizzazione",
+		"clearIndexDataButton": "Cancella dati indice",
+		"unsavedSettingsMessage": "Per favore salva le tue impostazioni prima di avviare il processo di indicizzazione.",
+		"clearDataDialog": {
+			"title": "Sei sicuro?",
+			"description": "Questa azione non può essere annullata. Eliminerà permanentemente i dati di indice del tuo codice.",
+			"cancelButton": "Annulla",
+			"confirmButton": "Cancella dati"
+		}
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
@@ -114,6 +148,7 @@
 		"glamaApiKey": "Chiave API Glama",
 		"getGlamaApiKey": "Ottieni chiave API Glama",
 		"useCustomBaseUrl": "Usa URL base personalizzato",
+		"useReasoning": "Abilita ragionamento",
 		"useHostHeader": "Usa intestazione Host personalizzata",
 		"useLegacyFormat": "Usa formato API OpenAI legacy",
 		"customHeaders": "Intestazioni personalizzate",
@@ -123,7 +158,10 @@
 		"requestyApiKey": "Chiave API Requesty",
 		"refreshModels": {
 			"label": "Aggiorna modelli",
-			"hint": "Riapri le impostazioni per vedere i modelli più recenti."
+			"hint": "Riapri le impostazioni per vedere i modelli più recenti.",
+			"loading": "Aggiornamento dell'elenco dei modelli...",
+			"success": "Elenco dei modelli aggiornato con successo!",
+			"error": "Impossibile aggiornare l'elenco dei modelli. Riprova."
 		},
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
@@ -139,6 +177,7 @@
 		"groqApiKey": "Chiave API Groq",
 		"getGeminiApiKey": "Ottieni chiave API Gemini",
 		"openAiApiKey": "Chiave API OpenAI",
+		"apiKey": "Chiave API",
 		"openAiBaseUrl": "URL base",
 		"getOpenAiApiKey": "Ottieni chiave API OpenAI",
 		"mistralApiKey": "Chiave API Mistral",
@@ -157,6 +196,11 @@
 		"awsSessionToken": "Token di sessione AWS",
 		"awsRegion": "Regione AWS",
 		"awsCrossRegion": "Usa inferenza cross-regione",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Usa endpoint VPC personalizzato",
+			"vpcEndpointUrlPlaceholder": "Inserisci URL endpoint VPC (opzionale)",
+			"examples": "Esempi:"
+		},
 		"enablePromptCaching": "Abilita cache dei prompt",
 		"enablePromptCachingTitle": "Abilita la cache dei prompt per migliorare le prestazioni e ridurre i costi per i modelli supportati.",
 		"cacheUsageNote": "Nota: Se non vedi l'utilizzo della cache, prova a selezionare un modello diverso e poi seleziona nuovamente il modello desiderato.",
@@ -305,6 +349,25 @@
 	},
 	"contextManagement": {
 		"description": "Controlla quali informazioni sono incluse nella finestra di contesto dell'IA, influenzando l'utilizzo di token e la qualità delle risposte",
+		"autoCondenseContextPercent": {
+			"label": "Soglia per attivare la condensazione intelligente del contesto",
+			"description": "Quando la finestra di contesto raggiunge questa soglia, Roo la condenserà automaticamente."
+		},
+		"condensingApiConfiguration": {
+			"label": "Configurazione API per la condensazione del contesto",
+			"description": "Seleziona quale configurazione API utilizzare per le operazioni di condensazione del contesto. Lascia deselezionato per utilizzare la configurazione attiva corrente.",
+			"useCurrentConfig": "Predefinito"
+		},
+		"customCondensingPrompt": {
+			"label": "Prompt personalizzato condensazione contesto",
+			"description": "Prompt di sistema personalizzato per la condensazione del contesto. Lascia vuoto per utilizzare il prompt predefinito.",
+			"placeholder": "Inserisci qui il tuo prompt di condensazione personalizzato...\n\nPuoi utilizzare la stessa struttura del prompt predefinito:\n- Conversazione precedente\n- Lavoro attuale\n- Concetti tecnici chiave\n- File e codice pertinenti\n- Risoluzione dei problemi\n- Attività in sospeso e prossimi passi",
+			"reset": "Ripristina predefinito",
+			"hint": "Vuoto = usa prompt predefinito"
+		},
+		"autoCondenseContext": {
+			"name": "Attiva automaticamente la condensazione intelligente del contesto"
+		},
 		"openTabs": {
 			"label": "Limite contesto schede aperte",
 			"description": "Numero massimo di schede VSCode aperte da includere nel contesto. Valori più alti forniscono più contesto ma aumentano l'utilizzo di token."
@@ -322,6 +385,10 @@
 			"description": "Roo legge questo numero di righe quando il modello omette i valori di inizio/fine. Se questo numero è inferiore al totale del file, Roo genera un indice dei numeri di riga delle definizioni di codice. Casi speciali: -1 indica a Roo di leggere l'intero file (senza indicizzazione), e 0 indica di non leggere righe e fornire solo indici di riga per un contesto minimo. Valori più bassi minimizzano l'utilizzo iniziale del contesto, permettendo successive letture precise di intervalli di righe. Le richieste con inizio/fine espliciti non sono limitate da questa impostazione.",
 			"lines": "righe",
 			"always_full_read": "Leggi sempre l'intero file"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Limite letture simultanee",
+			"description": "Numero massimo di file che lo strumento 'read_file' può elaborare contemporaneamente. Valori più alti possono velocizzare la lettura di più file piccoli ma aumentano l'utilizzo della memoria."
 		}
 	},
 	"terminal": {
@@ -402,15 +469,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
-		"autoCondenseContextPercent": {
-			"label": "Soglia per attivare la condensazione intelligente del contesto",
-			"description": "Quando la finestra di contesto raggiunge questa soglia, Roo la condenserà automaticamente."
-		},
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Attiva automaticamente la condensazione intelligente del contesto",
-			"description": "La condensazione intelligente del contesto utilizza una chiamata LLM per riassumere la conversazione precedente quando la finestra di contesto dell'attività raggiunge una soglia preimpostata, invece di eliminare i messaggi vecchi quando il contesto si riempie."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usa strategia diff unificata sperimentale",
 			"description": "Abilita la strategia diff unificata sperimentale. Questa strategia potrebbe ridurre il numero di tentativi causati da errori del modello, ma può causare comportamenti imprevisti o modifiche errate. Abilitala solo se comprendi i rischi e sei disposto a rivedere attentamente tutte le modifiche."
@@ -430,6 +488,18 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Usa strumento diff multi-blocco sperimentale",
 			"description": "Quando abilitato, Roo utilizzerà lo strumento diff multi-blocco. Questo tenterà di aggiornare più blocchi di codice nel file in una singola richiesta."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "Abilita lettura simultanea dei file",
+			"description": "Quando abilitato, Roo può leggere più file in una singola richiesta. Quando disabilitato, Roo deve leggere i file uno alla volta. Disabilitarlo può aiutare quando si lavora con modelli meno capaci o quando si desidera maggiore controllo sull'accesso ai file."
+		},
+		"MARKETPLACE": {
+			"name": "Abilita Marketplace",
+			"description": "Quando abilitato, puoi installare MCP e modalità personalizzate dal Marketplace."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Disabilita l'esecuzione dei comandi in attempt_completion",
+			"description": "Se abilitato, lo strumento attempt_completion non eseguirà comandi. Questa è una funzionalità sperimentale per preparare la futura deprecazione dell'esecuzione dei comandi al completamento dell'attività."
 		}
 	},
 	"promptCaching": {
@@ -498,7 +568,10 @@
 			"invalidFormat": "Formato ARN non valido. Verificare i requisiti del formato.",
 			"regionMismatch": "Attenzione: La regione nel tuo ARN ({{arnRegion}}) non corrisponde alla regione selezionata ({{region}}). Questo potrebbe causare problemi di accesso. Il provider utilizzerà la regione dall'ARN."
 		},
-		"modelAvailability": "L'ID modello ({{modelId}}) fornito non è disponibile. Seleziona un modello diverso."
+		"modelAvailability": "L'ID modello ({{modelId}}) fornito non è disponibile. Seleziona un modello diverso.",
+		"providerNotAllowed": "Il fornitore '{{provider}}' non è consentito dalla tua organizzazione",
+		"modelNotAllowed": "Il modello '{{model}}' non è consentito per il fornitore '{{provider}}' dalla tua organizzazione.",
+		"profileInvalid": "Questo profilo contiene un fornitore o un modello non consentito dalla tua organizzazione."
 	},
 	"placeholders": {
 		"apiKey": "Inserisci chiave API...",

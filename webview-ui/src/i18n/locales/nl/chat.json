@@ -11,7 +11,8 @@
 		"closeAndStart": "Taak sluiten en een nieuwe starten",
 		"export": "Taakgeschiedenis exporteren",
 		"delete": "Taak verwijderen (Shift + Klik om bevestiging over te slaan)",
-		"condenseContext": "Context intelligent samenvatten"
+		"condenseContext": "Context intelligent samenvatten",
+		"share": "Taak delen"
 	},
 	"unpin": "Losmaken",
 	"pin": "Vastmaken",
@@ -70,7 +71,7 @@
 		"tooltip": "Annuleer de huidige bewerking"
 	},
 	"scrollToBottom": "Scroll naar onderaan de chat",
-	"about": "Genereer, refactor en debug code met AI-assistentie.<br />Bekijk onze <DocsLink>documentatie</DocsLink> voor meer informatie.",
+	"about": "Genereer, refactor en debug code met AI-assistentie. Bekijk onze <DocsLink>documentatie</DocsLink> voor meer informatie.",
 	"onboarding": "Je takenlijst in deze werkruimte is leeg.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -144,7 +145,9 @@
 		"didSearchReplace": "Roo heeft zoeken en vervangen uitgevoerd op dit bestand:",
 		"wantsToInsert": "Roo wil inhoud invoegen in dit bestand:",
 		"wantsToInsertWithLineNumber": "Roo wil inhoud invoegen in dit bestand op regel {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:"
+		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:",
+		"wantsToReadAndXMore": "Roo wil dit bestand en nog {{count}} andere lezen:",
+		"wantsToReadMultiple": "Roo wil meerdere bestanden lezen:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wil de bovenliggende bestanden in deze map bekijken:",
@@ -198,9 +201,9 @@
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} uitgebracht",
 		"description": "Roo Code {{version}} brengt krachtige nieuwe functies en verbeteringen op basis van jouw feedback.",
-		"feature1": "<bold>Gemini 2.5 Flash preview-modellen</bold>: Toegang tot de nieuwste Gemini Flash-modellen voor snellere en efficiëntere antwoorden",
-		"feature2": "<bold>Intelligente contextcompressie</bold>: Nieuwe knop in de taakheader waarmee je content intelligent kunt comprimeren met visuele feedback",
-		"feature3": "<bold>YAML-ondersteuning voor modusdefinities</bold>: Maak en pas modi eenvoudiger aan met YAML-ondersteuning",
+		"feature1": "<bold>Intelligente Contextcompressie Standaard Ingeschakeld</bold>: Contextcompressie is nu standaard ingeschakeld met configureerbare instellingen voor wanneer automatische compressie plaatsvindt",
+		"feature2": "<bold>Handmatige Compressieknop</bold>: Nieuwe knop in de taakheader stelt je in staat om op elk moment handmatig contextcompressie te activeren",
+		"feature3": "<bold>Verbeterde Compressie-instellingen</bold>: Stel bij wanneer en hoe automatische compressie plaatsvindt via de <contextSettingsLink>Contextinstellingen</contextSettingsLink>",
 		"hideButton": "Aankondiging verbergen",
 		"detailsDiscussLinks": "Meer details en discussie in <discordLink>Discord</discordLink> en <redditLink>Reddit</redditLink> 🚀",
 		"whatsNew": "Wat is er nieuw"
@@ -212,6 +215,7 @@
 	"contextCondense": {
 		"title": "Context samengevat",
 		"condensing": "Context aan het samenvatten...",
+		"errorHeader": "Context samenvatten mislukt",
 		"tokens": "tokens"
 	},
 	"followUpSuggest": {
@@ -249,6 +253,7 @@
 		}
 	},
 	"systemPromptWarning": "WAARSCHUWING: Aangepaste systeemprompt actief. Dit kan de functionaliteit ernstig verstoren en onvoorspelbaar gedrag veroorzaken.",
+	"profileViolationWarning": "Het huidige profiel schendt de instellingen van uw organisatie",
 	"shellIntegration": {
 		"title": "Waarschuwing commando-uitvoering",
 		"description": "Je commando wordt uitgevoerd zonder VSCode-terminal shell-integratie. Om deze waarschuwing te onderdrukken kun je shell-integratie uitschakelen in het gedeelte <strong>Terminal</strong> van de <settingsLink>Roo Code-instellingen</settingsLink> of de VSCode-terminalintegratie oplossen via de onderstaande link.",
@@ -259,6 +264,19 @@
 			"title": "Limiet voor automatisch goedgekeurde verzoeken bereikt",
 			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-verzoek(en) bereikt. Wil je de teller resetten en doorgaan met de taak?",
 			"button": "Resetten en doorgaan"
+		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo wil de codebase doorzoeken op <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wil de codebase doorzoeken op <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "{{count}} resultaat/resultaten gevonden voor <code>{{query}}</code>:"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Alles goedkeuren"
+		},
+		"deny": {
+			"title": "Alles weigeren"
 		}
 	}
 }

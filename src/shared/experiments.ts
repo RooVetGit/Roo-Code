@@ -1,11 +1,10 @@
-import { ExperimentId } from "../schemas"
-import { AssertEqual, Equals, Keys, Values } from "../utils/type-fu"
-
-export type { ExperimentId }
+import type { AssertEqual, Equals, Keys, Values, ExperimentId } from "@roo-code/types"
 
 export const EXPERIMENT_IDS = {
+	MARKETPLACE: "marketplace",
+	CONCURRENT_FILE_READS: "concurrentFileReads",
+	DISABLE_COMPLETION_COMMAND: "disableCompletionCommand",
 	POWER_STEERING: "powerSteering",
-	AUTO_CONDENSE_CONTEXT: "autoCondenseContext",
 } as const satisfies Record<string, ExperimentId>
 
 type _AssertExperimentIds = AssertEqual<Equals<ExperimentId, Values<typeof EXPERIMENT_IDS>>>
@@ -17,8 +16,10 @@ interface ExperimentConfig {
 }
 
 export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
+	MARKETPLACE: { enabled: false },
+	CONCURRENT_FILE_READS: { enabled: false },
+	DISABLE_COMPLETION_COMMAND: { enabled: false },
 	POWER_STEERING: { enabled: false },
-	AUTO_CONDENSE_CONTEXT: { enabled: false }, // Keep this last, there is a slider below it in the UI
 }
 
 export const experimentDefault = Object.fromEntries(
