@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react"
-import { vscode } from "@src/utils/vscode"
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { MermaidActionButtons } from "./MermaidActionButtons"
@@ -16,7 +15,7 @@ export interface MermaidButtonProps {
 	children: React.ReactNode
 }
 
-export function MermaidButton({ containerRef, code, isLoading, svgToPng, children }: MermaidButtonProps) {
+export function MermaidButton({ containerRef, code, isLoading, children }: MermaidButtonProps) {
 	const [showModal, setShowModal] = useState(false)
 	const [zoomLevel, setZoomLevel] = useState(1)
 	const [copyFeedback, setCopyFeedback] = useState(false)
@@ -38,30 +37,19 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 	}
 
 	/**
-	 * Copies the diagram as PNG to clipboard
+	 * Copies the diagram text to clipboard
 	 */
 	const handleCopy = async (e: React.MouseEvent) => {
 		e.stopPropagation()
-		if (!containerRef.current) return
-		const svgEl = containerRef.current.querySelector("svg")
-		if (!svgEl) return
 
 		try {
-			const pngDataUrl = await svgToPng(svgEl)
-
-			// Send the image to the extension to handle copying
-			// Reuse the openImage message type with an additional parameter
-			vscode.postMessage({
-				type: "openImage",
-				text: pngDataUrl,
-				values: { action: "copy" }, // Add this parameter to indicate copy action
-			})
+			await copyWithFeedback(code, e)
 
 			// Show feedback
 			setCopyFeedback(true)
 			setTimeout(() => setCopyFeedback(false), 2000)
 		} catch (err) {
-			console.error("Error copying image:", err instanceof Error ? err.message : String(err))
+			console.error("Error copying text:", err instanceof Error ? err.message : String(err))
 		}
 	}
 
