@@ -1,9 +1,14 @@
-import { useState } from "react"
-import styled from "styled-components"
+import { useState, useCallback } from "react"
 import { vscode } from "@src/utils/vscode"
 import { useCopyToClipboard } from "@src/utils/clipboard"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { MermaidActionButtons } from "./MermaidActionButtons"
+import { Modal } from "./Modal"
+import { TabButton } from "./TabButton"
+import { IconButton } from "./IconButton"
+import { ZoomControls } from "./ZoomControls"
 
-export interface WeCodeMermaidButtonProps {
+export interface MermaidButtonProps {
 	containerRef: React.RefObject<HTMLDivElement>
 	code: string
 	isLoading: boolean
@@ -11,13 +16,14 @@ export interface WeCodeMermaidButtonProps {
 	children: React.ReactNode
 }
 
-export function MermaidButton({ containerRef, code, isLoading, svgToPng, children }: WeCodeMermaidButtonProps) {
+export function MermaidButton({ containerRef, code, isLoading, svgToPng, children }: MermaidButtonProps) {
 	const [showModal, setShowModal] = useState(false)
-	const [showCodeModal, setShowCodeModal] = useState(false)
 	const [zoomLevel, setZoomLevel] = useState(1)
 	const [copyFeedback, setCopyFeedback] = useState(false)
 	const [isHovering, setIsHovering] = useState(false)
+	const [modalViewMode, setModalViewMode] = useState<"diagram" | "code">("diagram")
 	const { copyWithFeedback } = useCopyToClipboard()
+	const { t } = useAppTranslation()
 
 	/**
 	 * Opens a modal with the diagram for zooming
@@ -26,6 +32,7 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 		e.stopPropagation()
 		setShowModal(true)
 		setZoomLevel(1)
+		setModalViewMode("diagram")
 	}
 
 	/**
@@ -52,7 +59,7 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 			setCopyFeedback(true)
 			setTimeout(() => setCopyFeedback(false), 2000)
 		} catch (err) {
-			console.error("Error copying image:", err)
+			console.error("Error copying image:", err instanceof Error ? err.message : String(err))
 		}
 	}
 
@@ -65,6 +72,19 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 			return Math.max(0.5, Math.min(3, newZoom))
 		})
 	}
+
+	/**
+	 * Handle wheel event for zooming with scroll wheel
+	 */
+	const handleWheel = useCallback((e: React.WheelEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+
+		// Determine zoom direction and amount
+		// Negative deltaY means scrolling up (zoom in), positive means scrolling down (zoom out)
+		const delta = e.deltaY > 0 ? -0.1 : 0.1
+		adjustZoom(delta)
+	}, [])
 
 	/**
 	 * Handle mouse enter event for diagram container
@@ -82,221 +102,106 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 
 	return (
 		<>
-			<DiagramContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+			<div className="relative w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
 				{children}
 				{!isLoading && isHovering && (
-					<ActionButtons>
-						<ActionButton onClick={handleZoom} title={"Zoom"}>
-							<span className="codicon codicon-zoom-in"></span>
-						</ActionButton>
-						<ActionButton onClick={handleCopy} title={"Copy"}>
-							<span className={`codicon codicon-${copyFeedback ? "check" : "copy"}`}></span>
-						</ActionButton>
-						<ActionButton
-							onClick={(e) => {
-								e.stopPropagation()
-								setShowCodeModal(true)
+					<div className="absolute bottom-2 right-2 flex gap-1 bg-black/70 rounded p-0.5 z-10 opacity-100 transition-opacity duration-200 ease-in-out">
+						<MermaidActionButtons
+							onZoom={handleZoom}
+							onCopy={handleCopy}
+							onViewCode={() => {
+								setShowModal(true)
+								setModalViewMode("code")
+								setZoomLevel(1)
 							}}
-							title={"show mermaid code"}>
-							<span className="codicon codicon-code"></span>
-						</ActionButton>
-					</ActionButtons>
+							copyFeedback={copyFeedback}
+						/>
+					</div>
 				)}
-			</DiagramContainer>
+			</div>
 
-			{showModal && (
-				<Modal onClick={() => setShowModal(false)}>
-					<ModalContent onClick={(e) => e.stopPropagation()}>
-						<ModalHeader>
-							<ZoomControls>
-								<ActionButton onClick={() => adjustZoom(-0.1)} title={"Zoom Out"}>
-									<span className="codicon codicon-zoom-out"></span>
-								</ActionButton>
-								<ZoomLevel>{Math.round(zoomLevel * 100)}%</ZoomLevel>
-								<ActionButton onClick={() => adjustZoom(0.1)} title={"Zoom In"}>
-									<span className="codicon codicon-zoom-in"></span>
-								</ActionButton>
-								<ActionButton onClick={handleCopy} title={"Copy"}>
-									<span className={`codicon codicon-${copyFeedback ? "check" : "copy"}`}></span>
-								</ActionButton>
-								<ActionButton
-									onClick={(e) => {
-										e.stopPropagation()
-										setShowCodeModal(true)
-									}}
-									title={"show mermaid code"}>
-									<span className="codicon codicon-code"></span>
-								</ActionButton>
-							</ZoomControls>
+			<Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+				<div className="flex justify-between items-center border-b border-vscode-editorGroup-border">
+					<div className="flex gap-0">
+						<TabButton
+							icon="graph"
+							label={t("common:mermaid.tabs.diagram")}
+							isActive={modalViewMode === "diagram"}
+							onClick={() => setModalViewMode("diagram")}
+						/>
+						<TabButton
+							icon="code"
+							label={t("common:mermaid.tabs.code")}
+							isActive={modalViewMode === "code"}
+							onClick={() => setModalViewMode("code")}
+						/>
+					</div>
 
-							<ActionButton onClick={() => setShowModal(false)} title={"Close"}>
-								<span className="codicon codicon-close"></span>
-							</ActionButton>
-						</ModalHeader>
-						<ModalBody>
+					<div className="pr-3">
+						<IconButton
+							icon="close"
+							onClick={() => setShowModal(false)}
+							title={t("common:mermaid.buttons.close")}
+						/>
+					</div>
+				</div>
+				<div
+					className="flex-1 p-4 pb-[60px] overflow-auto flex items-center justify-center"
+					onWheel={modalViewMode === "diagram" ? handleWheel : undefined}>
+					{modalViewMode === "diagram" ? (
+						<>
 							<div
 								style={{
 									transform: `scale(${zoomLevel})`,
-									transformOrigin: "top center",
+									transformOrigin: "center center",
 									transition: "transform 0.2s ease",
+									cursor: "grab",
 								}}>
 								{containerRef.current && containerRef.current.innerHTML && (
 									<div dangerouslySetInnerHTML={{ __html: containerRef.current.innerHTML }} />
 								)}
 							</div>
-						</ModalBody>
-					</ModalContent>
-				</Modal>
-			)}
-
-			{showCodeModal && (
-				<Modal onClick={() => setShowCodeModal(false)}>
-					<CodeModalContent onClick={(e) => e.stopPropagation()}>
-						<ModalHeader>
-							<div>Mermaid Code</div>
-							<div style={{ display: "flex", gap: "4px" }}>
-								<ActionButton
-									onClick={(e) => {
-										e.stopPropagation()
-										copyWithFeedback(code, e)
-									}}
-									title={"Copy"}>
-									<span className={`codicon codicon-${copyFeedback ? "check" : "copy"}`}></span>
-								</ActionButton>
-								<ActionButton onClick={() => setShowCodeModal(false)} title={"Close"}>
-									<span className="codicon codicon-close"></span>
-								</ActionButton>
+							<div className="absolute bottom-4 left-4 bg-vscode-editor-background border border-vscode-editorGroup-border rounded px-2 py-1 text-xs text-vscode-descriptionForeground pointer-events-none opacity-80">
+								{Math.round(zoomLevel * 100)}%
 							</div>
-						</ModalHeader>
-						<CodeModalBody>
-							<CodeTextArea readOnly value={code} />
-						</CodeModalBody>
-					</CodeModalContent>
-				</Modal>
-			)}
+						</>
+					) : (
+						<textarea
+							className="w-full min-h-[200px] bg-vscode-editor-background text-vscode-editor-foreground border border-vscode-editorGroup-border rounded-[3px] p-2 font-mono resize-y outline-none"
+							readOnly
+							value={code}
+							style={{ height: "100%", minHeight: "unset", fontSize: "var(--vscode-editor-font-size)" }}
+						/>
+					)}
+				</div>
+				<div className="absolute bottom-0 right-0 left-0 p-3 flex items-center justify-end gap-2 bg-vscode-editor-background border-t border-vscode-editorGroup-border rounded-b">
+					{modalViewMode === "diagram" ? (
+						<>
+							<ZoomControls
+								zoomLevel={zoomLevel}
+								onZoomIn={() => adjustZoom(0.1)}
+								onZoomOut={() => adjustZoom(-0.1)}
+								zoomInTitle={t("common:mermaid.buttons.zoomIn")}
+								zoomOutTitle={t("common:mermaid.buttons.zoomOut")}
+							/>
+							<IconButton
+								icon={copyFeedback ? "check" : "copy"}
+								onClick={handleCopy}
+								title={t("common:mermaid.buttons.copy")}
+							/>
+						</>
+					) : (
+						<IconButton
+							icon={copyFeedback ? "check" : "copy"}
+							onClick={(e) => {
+								e.stopPropagation()
+								copyWithFeedback(code, e)
+							}}
+							title={t("common:mermaid.buttons.copy")}
+						/>
+					)}
+				</div>
+			</Modal>
 		</>
 	)
 }
-
-export const DiagramContainer = styled.div`
-	position: relative;
-	width: 100%;
-`
-
-export const ActionButtons = styled.div`
-	position: absolute;
-	bottom: 8px;
-	right: 8px;
-	display: flex;
-	gap: 4px;
-	background-color: rgba(30, 30, 30, 0.7);
-	border-radius: 4px;
-	padding: 2px;
-	z-index: 10;
-	opacity: 1;
-	transition: opacity 0.2s ease;
-`
-
-export const ActionButton = styled.button`
-	width: 28px;
-	height: 28px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: transparent;
-	border: none;
-	color: var(--vscode-editor-foreground);
-	cursor: pointer;
-	border-radius: 3px;
-
-	&:hover {
-		background-color: var(--vscode-toolbar-hoverBackground);
-	}
-`
-
-export const Modal = styled.div`
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.7);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1000;
-`
-
-export const ModalContent = styled.div`
-	background-color: var(--vscode-editor-background);
-	border-radius: 4px;
-	width: 90%;
-	height: 90%;
-	max-width: 1200px;
-	display: flex;
-	flex-direction: column;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-	border: 1px solid var(--vscode-editorGroup-border);
-`
-
-export const ModalHeader = styled.div`
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--vscode-editorGroup-border);
-`
-
-export const CodeModalContent = styled.div`
-	background-color: var(--vscode-editor-background);
-	border-radius: 4px;
-	width: 90%;
-	max-width: 800px;
-	max-height: 90%;
-	display: flex;
-	flex-direction: column;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-	border: 1px solid var(--vscode-editorGroup-border);
-`
-
-export const CodeModalBody = styled.div`
-	padding: 16px;
-	overflow: auto;
-	max-height: 60vh;
-`
-
-export const CodeTextArea = styled.textarea`
-	width: 100%;
-	min-height: 200px;
-	background-color: var(--vscode-editor-background);
-	color: var(--vscode-editor-foreground);
-	border: 1px solid var(--vscode-editorGroup-border);
-	border-radius: 3px;
-	padding: 8px;
-	font-family: var(--vscode-editor-font-family, monospace);
-	font-size: var(--vscode-editor-font-size);
-	resize: vertical;
-	outline: none;
-`
-
-export const ModalBody = styled.div`
-	flex: 1;
-	padding: 16px;
-	overflow: auto;
-	display: flex;
-	align-items: flex-start;
-	justify-content: center;
-`
-
-export const ZoomControls = styled.div`
-	display: flex;
-	align-items: center;
-	gap: 8px;
-`
-
-export const ZoomLevel = styled.div`
-	font-size: 14px;
-	color: var(--vscode-editor-foreground);
-	min-width: 50px;
-	text-align: center;
-`
