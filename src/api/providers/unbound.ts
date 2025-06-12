@@ -40,7 +40,16 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			...convertToOpenAiMessages(messages),
 		]
 
-		if (modelId.startsWith("anthropic/claude-")) {
+		// Only apply caching to models that support it: Sonnet, Opus, and Haiku models
+		if (
+			modelId.startsWith("anthropic/claude-3-5-sonnet") ||
+			modelId.startsWith("anthropic/claude-3-7-sonnet") ||
+			modelId.startsWith("anthropic/claude-sonnet-4") ||
+			modelId.startsWith("anthropic/claude-3-opus") ||
+			modelId.startsWith("anthropic/claude-opus-4") ||
+			modelId.startsWith("anthropic/claude-3-haiku") ||
+			modelId.startsWith("anthropic/claude-3-5-haiku")
+		) {
 			addCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 

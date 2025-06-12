@@ -71,6 +71,32 @@ jest.mock("../fetchers/modelCache", () => ({
 				outputPrice: 15,
 				description: "GPT-4o",
 			},
+			"anthropic/claude-3-haiku-20240307": {
+				maxTokens: 4096,
+				contextWindow: 200000,
+				supportsImages: true,
+				supportsPromptCache: true, // Haiku supports caching but we shouldn't apply it via Unbound
+				inputPrice: 0.25,
+				outputPrice: 1.25,
+				cacheWritesPrice: 0.3,
+				cacheReadsPrice: 0.03,
+				description: "Claude 3 Haiku",
+				thinking: false,
+				supportsComputerUse: false,
+			},
+			"anthropic/claude-3-5-haiku-20241022": {
+				maxTokens: 8192,
+				contextWindow: 200000,
+				supportsImages: false,
+				supportsPromptCache: true, // 3.5 Haiku supports caching but we shouldn't apply it via Unbound
+				inputPrice: 0.8,
+				outputPrice: 4.0,
+				cacheWritesPrice: 1.0,
+				cacheReadsPrice: 0.08,
+				description: "Claude 3.5 Haiku",
+				thinking: false,
+				supportsComputerUse: false,
+			},
 			"openai/o3-mini": {
 				maxTokens: 4096,
 				contextWindow: 128000,
@@ -434,6 +460,78 @@ describe("UnboundHandler", () => {
 
 			mockCreate.mockClear()
 			const stream = claudeOpus4Handler.createMessage(systemPrompt, messages)
+			const chunks: Array<{ type: string } & Record<string, any>> = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that cache control was added to system message and user message
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: "system",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+					]),
+				}),
+				expect.any(Object),
+			)
+		})
+
+		it("should apply cache breakpoints for Claude 3 Haiku models", async () => {
+			const haikuHandler = new UnboundHandler({
+				...mockOptions,
+				unboundModelId: "anthropic/claude-3-haiku-20240307",
+			})
+
+			mockCreate.mockClear()
+			const stream = haikuHandler.createMessage(systemPrompt, messages)
+			const chunks: Array<{ type: string } & Record<string, any>> = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that cache control was added to system message and user message
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: "system",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+					]),
+				}),
+				expect.any(Object),
+			)
+		})
+
+		it("should apply cache breakpoints for Claude 3.5 Haiku models", async () => {
+			const haiku35Handler = new UnboundHandler({
+				...mockOptions,
+				unboundModelId: "anthropic/claude-3-5-haiku-20241022",
+			})
+
+			mockCreate.mockClear()
+			const stream = haiku35Handler.createMessage(systemPrompt, messages)
 			const chunks: Array<{ type: string } & Record<string, any>> = []
 
 			for await (const chunk of stream) {
