@@ -8,6 +8,7 @@ export type GroqModelId =
 	| "meta-llama/llama-4-maverick-17b-128e-instruct"
 	| "mistral-saba-24b"
 	| "qwen-qwq-32b"
+	| "qwen/qwen3-32b"
 	| "deepseek-r1-distill-llama-70b"
 
 export const groqDefaultModelId: GroqModelId = "llama-3.3-70b-versatile" // Defaulting to Llama3 70B Versatile
