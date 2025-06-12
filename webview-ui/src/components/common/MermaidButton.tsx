@@ -7,6 +7,9 @@ import { TabButton } from "./TabButton"
 import { IconButton } from "./IconButton"
 import { ZoomControls } from "./ZoomControls"
 
+const MIN_ZOOM = 0.5
+const MAX_ZOOM = 20
+
 export interface MermaidButtonProps {
 	containerRef: React.RefObject<HTMLDivElement>
 	code: string
@@ -59,7 +62,7 @@ export function MermaidButton({ containerRef, code, isLoading, children }: Merma
 	const adjustZoom = (amount: number) => {
 		setZoomLevel((prev) => {
 			const newZoom = prev + amount
-			return Math.max(0.5, Math.min(3, newZoom))
+			return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom))
 		})
 	}
 
