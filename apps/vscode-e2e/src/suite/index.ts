@@ -8,7 +8,7 @@ import type { RooCodeAPI } from "@roo-code/types"
 import { waitFor } from "./utils"
 
 export async function run() {
-	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
+	const extension = vscode.extensions.getExtension<RooCodeAPI>("CybrosysTechnologies.cybrosys-assista")
 
 	if (!extension) {
 		throw new Error("Extension not found")
@@ -22,7 +22,7 @@ export async function run() {
 		openRouterModelId: "openai/gpt-4.1",
 	})
 
-	await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+	await vscode.commands.executeCommand("cybrosys-assista.SidebarProvider.focus")
 	await waitFor(() => api.isReady())
 
 	globalThis.api = api

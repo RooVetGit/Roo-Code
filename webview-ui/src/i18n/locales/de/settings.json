@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Anbieter auswählen",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI-kompatibel",
+		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
+		"openaiCompatibleApiKeyLabel": "API-Schlüssel:",
+		"openaiCompatibleModelDimensionLabel": "Embedding-Dimension:",
+		"openaiCompatibleModelDimensionPlaceholder": "z.B. 1536",
+		"openaiCompatibleModelDimensionDescription": "Die Embedding-Dimension (Ausgabegröße) für Ihr Modell. Überprüfen Sie die Dokumentation Ihres Anbieters für diesen Wert. Übliche Werte: 384, 768, 1536, 3072.",
 		"openaiKeyLabel": "OpenAI-Schlüssel:",
 		"modelLabel": "Modell",
 		"selectModelPlaceholder": "Modell auswählen",
@@ -485,7 +491,15 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Gleichzeitiges Lesen von Dateien aktivieren",
-			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage lesen (bis zu 15 Dateien). Wenn deaktiviert, muss Roo Dateien nacheinander lesen. Das Deaktivieren kann helfen, wenn Sie mit weniger leistungsfähigen Modellen arbeiten oder mehr Kontrolle über den Dateizugriff wünschen."
+			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage lesen. Wenn deaktiviert, muss Roo Dateien nacheinander lesen. Das Deaktivieren kann helfen, wenn du mit weniger leistungsfähigen Modellen arbeitest oder mehr Kontrolle über den Dateizugriff möchtest."
+		},
+		"MARKETPLACE": {
+			"name": "Marketplace aktivieren",
+			"description": "Wenn aktiviert, kannst du MCP und benutzerdefinierte Modi aus dem Marketplace installieren und verwalten."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Befehlsausführung in attempt_completion deaktivieren",
+			"description": "Wenn aktiviert, führt das Tool attempt_completion keine Befehle aus. Dies ist eine experimentelle Funktion, um die Abschaffung der Befehlsausführung bei Aufgabenabschluss vorzubereiten."
 		}
 	},
 	"promptCaching": {

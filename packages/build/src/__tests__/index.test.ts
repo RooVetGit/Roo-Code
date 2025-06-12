@@ -9,7 +9,7 @@ describe("generatePackageJson", () => {
 				name: "roo-cline",
 				displayName: "%extension.displayName%",
 				description: "%extension.description%",
-				publisher: "RooVeterinaryInc",
+				publisher: "CybrosysTechnologies",
 				version: "3.17.2",
 				icon: "assets/icons/icon.png",
 				contributes: {
@@ -110,7 +110,7 @@ describe("generatePackageJson", () => {
 			overrideJson: {
 				name: "roo-code-nightly",
 				displayName: "Roo Code Nightly",
-				publisher: "RooVeterinaryInc",
+				publisher: "CybrosysTechnologies",
 				version: "0.0.1",
 				icon: "assets/icons/icon-nightly.png",
 				scripts: {},
@@ -122,7 +122,7 @@ describe("generatePackageJson", () => {
 			name: "roo-code-nightly",
 			displayName: "Roo Code Nightly",
 			description: "%extension.description%",
-			publisher: "RooVeterinaryInc",
+			publisher: "CybrosysTechnologies",
 			version: "0.0.1",
 			icon: "assets/icons/icon-nightly.png",
 			contributes: {

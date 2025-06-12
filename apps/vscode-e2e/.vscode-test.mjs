@@ -12,5 +12,5 @@ export default defineConfig({
 		ui: "tdd",
 		timeout: 60000,
 	},
-	launchArgs: ["--enable-proposed-api=RooVeterinaryInc.roo-cline", "--disable-extensions"],
+	launchArgs: ["--enable-proposed-api=CybrosysTechnologies.cybrosys-assista", "--disable-extensions"],
 })

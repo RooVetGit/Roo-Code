@@ -9,8 +9,12 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 import TaskItemHeader from "./TaskItemHeader"
 import TaskItemFooter from "./TaskItemFooter"
 
+interface DisplayHistoryItem extends HistoryItem {
+	highlight?: string
+}
+
 interface TaskItemProps {
-	item: HistoryItem
+	item: DisplayHistoryItem
 	variant: "compact" | "full"
 	showWorkspace?: boolean
 	isSelectionMode?: boolean
@@ -50,7 +54,7 @@ const TaskItem = ({
 				"cursor-pointer",
 				{
 					// Compact variant styling
-					"bg-vscode-editor-background rounded relative overflow-hidden border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60":
+					"group bg-vscode-editor-background rounded relative overflow-hidden border border-vscode-toolbar-hoverBackground/30 hover:border-vscode-toolbar-hoverBackground/60":
 						isCompact,
 					// Full variant styling
 					"bg-vscode-list-activeSelectionBackground": !isCompact && isSelectionMode && isSelected,
@@ -103,8 +107,8 @@ const TaskItem = ({
 							overflowWrap: "anywhere",
 						}}
 						data-testid={isCompact ? undefined : "task-content"}
-						{...(isCompact ? {} : { dangerouslySetInnerHTML: { __html: item.task } })}>
-						{isCompact ? item.task : undefined}
+						{...(item.highlight ? { dangerouslySetInnerHTML: { __html: item.highlight } } : {})}>
+						{item.highlight ? undefined : item.task}
 					</div>
 
 					{/* Task Item Footer */}

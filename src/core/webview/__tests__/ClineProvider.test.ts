@@ -146,6 +146,9 @@ jest.mock("vscode", () => ({
 		QuickFix: { value: "quickfix" },
 		RefactorRewrite: { value: "refactor.rewrite" },
 	},
+	commands: {
+		executeCommand: jest.fn().mockResolvedValue(undefined),
+	},
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
@@ -427,6 +430,8 @@ describe("ClineProvider", () => {
 			organizationAllowList: ORGANIZATION_ALLOW_ALL,
 			autoCondenseContext: true,
 			autoCondenseContextPercent: 100,
+			cloudIsAuthenticated: false,
+			sharingEnabled: false,
 		}
 
 		const message: ExtensionMessage = {

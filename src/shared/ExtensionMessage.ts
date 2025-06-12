@@ -16,6 +16,7 @@ import { GitCommit } from "../utils/git"
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
+import { MarketplaceItem } from "../services/marketplace/types"
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -35,7 +36,7 @@ export interface ExtensionMessage {
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
-		| "partialMessage"
+		| "messageUpdated"
 		| "mcpServers"
 		| "enhancedPrompt"
 		| "commitSearchResults"
@@ -73,16 +74,20 @@ export interface ExtensionMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "codebaseIndexConfig"
+		| "marketplaceInstallResult"
 	text?: string
+	payload?: any // Add a generic payload for now, can refine later
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "marketplaceButtonClicked"
 		| "accountButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
+		| "switchTab"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -92,7 +97,7 @@ export interface ExtensionMessage {
 		isActive: boolean
 		path?: string
 	}>
-	partialMessage?: ClineMessage
+	clineMessage?: ClineMessage
 	routerModels?: RouterModels
 	openAiModels?: string[]
 	ollamaModels?: string[]
@@ -112,8 +117,10 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	items?: MarketplaceItem[]
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
+	tab?: string
 }
 
 export type ExtensionState = Pick<
@@ -219,10 +226,14 @@ export type ExtensionState = Pick<
 	historyPreviewCollapsed?: boolean
 
 	cloudUserInfo: CloudUserInfo | null
+	cloudIsAuthenticated: boolean
+	sharingEnabled: boolean
 	organizationAllowList: OrganizationAllowList
 
 	autoCondenseContext: boolean
 	autoCondenseContextPercent: number
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 }
 
 export interface ClineSayTool {

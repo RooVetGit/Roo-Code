@@ -44,6 +44,12 @@
 		"selectProviderPlaceholder": "Seleccionar proveedor",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Compatible con OpenAI",
+		"openaiCompatibleBaseUrlLabel": "URL base:",
+		"openaiCompatibleApiKeyLabel": "Clave API:",
+		"openaiCompatibleModelDimensionLabel": "Dimensión de Embedding:",
+		"openaiCompatibleModelDimensionPlaceholder": "ej., 1536",
+		"openaiCompatibleModelDimensionDescription": "La dimensión de embedding (tamaño de salida) para tu modelo. Consulta la documentación de tu proveedor para este valor. Valores comunes: 384, 768, 1536, 3072.",
 		"openaiKeyLabel": "Clave de OpenAI:",
 		"modelLabel": "Modelo",
 		"selectModelPlaceholder": "Seleccionar modelo",
@@ -485,7 +491,15 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Habilitar lectura concurrente de archivos",
-			"description": "Cuando está habilitado, Roo puede leer múltiples archivos en una sola solicitud (hasta 15 archivos). Cuando está deshabilitado, Roo debe leer archivos uno a la vez. Deshabilitarlo puede ayudar cuando se trabaja con modelos menos capaces o cuando desea más control sobre el acceso a archivos."
+			"description": "Cuando está habilitado, Roo puede leer múltiples archivos en una sola solicitud. Cuando está deshabilitado, Roo debe leer archivos uno a la vez. Deshabilitarlo puede ayudar cuando se trabaja con modelos menos capaces o cuando deseas más control sobre el acceso a archivos."
+		},
+		"MARKETPLACE": {
+			"name": "Habilitar Marketplace",
+			"description": "Cuando está habilitado, puedes instalar MCP y modos personalizados del Marketplace."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Desactivar la ejecución de comandos en attempt_completion",
+			"description": "Cuando está activado, la herramienta attempt_completion no ejecutará comandos. Esta es una función experimental para preparar la futura eliminación de la ejecución de comandos en la finalización de tareas."
 		}
 	},
 	"promptCaching": {
