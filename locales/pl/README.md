@@ -55,7 +55,7 @@ Sprawdź [CHANGELOG](../../CHANGELOG.md), aby uzyskać szczegółowe informacje 
 Roo Code 3.20.0 wprowadza potężne nowe funkcje i usprawnienia na podstawie opinii użytkowników!
 
 - **Eksperymentalne marketplace dla trybów i MCP** - Odkrywaj i dziel się niestandardowymi trybami oraz integracjami MCP ze społecznością poprzez nasze nowe eksperymentalne marketplace.
-- **Ulepszone operacje na plikach** - Wiele równoczesnych operacji zapisu dostępnych w ustawieniach eksperymentalnych, plus wiele równoczesnych operacji czytania awansowanych do ustawień kontekstu dla lepszej wydajności.
+- **Ulepszone operacje na plikach** - Wiele równoczesnych operacji zapisu dostępnych w ustawieniach eksperymentalnych, plus wiele równoczesnych operacji czytania zaawansowanych do ustawień kontekstu dla lepszej wydajności.
 - **Ulepszenia MCP** - Ulepszone kontrolki Mermaid dla lepszej wizualizacji diagramów oraz nowe wsparcie Amazon Bedrock thinking dla bardziej zaawansowanych interakcji z AI.
 
 ---
