@@ -9,7 +9,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			vscode: path.resolve(__dirname, "./__mocks__/vitest-vscode-mock.js"),
+			vscode: path.resolve(__dirname, "./__mocks__/vscode.js"),
 		},
 	},
 })
