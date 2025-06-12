@@ -22,6 +22,8 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 	const [copyFeedback, setCopyFeedback] = useState(false)
 	const [isHovering, setIsHovering] = useState(false)
 	const [modalViewMode, setModalViewMode] = useState<"diagram" | "code">("diagram")
+	const [isDragging, setIsDragging] = useState(false)
+	const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 })
 	const { copyWithFeedback } = useCopyToClipboard()
 	const { t } = useAppTranslation()
 
@@ -82,7 +84,7 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 
 		// Determine zoom direction and amount
 		// Negative deltaY means scrolling up (zoom in), positive means scrolling down (zoom out)
-		const delta = e.deltaY > 0 ? -0.1 : 0.1
+		const delta = e.deltaY > 0 ? -0.25 : 0.25
 		adjustZoom(delta)
 	}, [])
 
@@ -152,11 +154,25 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 						<>
 							<div
 								style={{
-									transform: `scale(${zoomLevel})`,
+									transform: `scale(${zoomLevel}) translate(${dragPosition.x}px, ${dragPosition.y}px)`,
 									transformOrigin: "center center",
-									transition: "transform 0.2s ease",
-									cursor: "grab",
-								}}>
+									transition: isDragging ? "none" : "transform 0.1s ease",
+									cursor: isDragging ? "grabbing" : "grab",
+								}}
+								onMouseDown={(e) => {
+									setIsDragging(true)
+									e.preventDefault()
+								}}
+								onMouseMove={(e) => {
+									if (isDragging) {
+										setDragPosition((prev) => ({
+											x: prev.x + e.movementX / zoomLevel,
+											y: prev.y + e.movementY / zoomLevel,
+										}))
+									}
+								}}
+								onMouseUp={() => setIsDragging(false)}
+								onMouseLeave={() => setIsDragging(false)}>
 								{containerRef.current && containerRef.current.innerHTML && (
 									<div dangerouslySetInnerHTML={{ __html: containerRef.current.innerHTML }} />
 								)}
@@ -179,10 +195,12 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 						<>
 							<ZoomControls
 								zoomLevel={zoomLevel}
-								onZoomIn={() => adjustZoom(0.1)}
-								onZoomOut={() => adjustZoom(-0.1)}
 								zoomInTitle={t("common:mermaid.buttons.zoomIn")}
 								zoomOutTitle={t("common:mermaid.buttons.zoomOut")}
+								useContinuousZoom={true}
+								adjustZoom={adjustZoom}
+								zoomInStep={0.2}
+								zoomOutStep={-0.2}
 							/>
 							<IconButton
 								icon={copyFeedback ? "check" : "copy"}
