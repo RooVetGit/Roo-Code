@@ -8,6 +8,7 @@ interface MermaidActionButtonsProps {
 	onZoomIn?: () => void
 	onZoomOut?: () => void
 	onCopy: (e: React.MouseEvent) => void
+	onSave?: (e: React.MouseEvent) => void
 	onViewCode: () => void
 	onClose?: () => void
 	copyFeedback: boolean
@@ -20,6 +21,7 @@ export const MermaidActionButtons: React.FC<MermaidActionButtonsProps> = ({
 	onZoomIn,
 	onZoomOut,
 	onCopy,
+	onSave,
 	onViewCode,
 	onClose,
 	copyFeedback,
@@ -71,6 +73,7 @@ export const MermaidActionButtons: React.FC<MermaidActionButtonsProps> = ({
 				onClick={onCopy}
 				title={t("common:mermaid.buttons.copy")}
 			/>
+			{onSave && <IconButton icon="save" onClick={onSave} title={t("common:mermaid.buttons.save")} />}
 			{onClose && <IconButton icon="close" onClick={onClose} title={t("common:mermaid.buttons.close")} />}
 		</>
 	)

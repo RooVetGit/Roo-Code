@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react"
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { vscode } from "@src/utils/vscode"
 import { MermaidActionButtons } from "./MermaidActionButtons"
 import { Modal } from "./Modal"
 import { TabButton } from "./TabButton"
@@ -18,7 +19,7 @@ export interface MermaidButtonProps {
 	children: React.ReactNode
 }
 
-export function MermaidButton({ containerRef, code, isLoading, children }: MermaidButtonProps) {
+export function MermaidButton({ containerRef, code, isLoading, svgToPng, children }: MermaidButtonProps) {
 	const [showModal, setShowModal] = useState(false)
 	const [zoomLevel, setZoomLevel] = useState(1)
 	const [copyFeedback, setCopyFeedback] = useState(false)
@@ -53,6 +54,33 @@ export function MermaidButton({ containerRef, code, isLoading, children }: Merma
 			setTimeout(() => setCopyFeedback(false), 2000)
 		} catch (err) {
 			console.error("Error copying text:", err instanceof Error ? err.message : String(err))
+		}
+	}
+
+	/**
+	 * Saves the diagram as an image file
+	 */
+	const handleSave = async (e: React.MouseEvent) => {
+		e.stopPropagation()
+
+		// Get the SVG element from the container
+		const svgEl = containerRef.current?.querySelector("svg")
+		if (!svgEl) {
+			console.error("SVG element not found")
+			return
+		}
+
+		try {
+			// Convert SVG to PNG
+			const pngDataUrl = await svgToPng(svgEl)
+
+			// Send message to VSCode to save the image
+			vscode.postMessage({
+				type: "saveImage",
+				dataUri: pngDataUrl,
+			})
+		} catch (error) {
+			console.error("Error saving image:", error)
 		}
 	}
 
@@ -102,6 +130,7 @@ export function MermaidButton({ containerRef, code, isLoading, children }: Merma
 						<MermaidActionButtons
 							onZoom={handleZoom}
 							onCopy={handleCopy}
+							onSave={handleSave}
 							onViewCode={() => {
 								setShowModal(true)
 								setModalViewMode("code")
@@ -198,6 +227,7 @@ export function MermaidButton({ containerRef, code, isLoading, children }: Merma
 								onClick={handleCopy}
 								title={t("common:mermaid.buttons.copy")}
 							/>
+							<IconButton icon="save" onClick={handleSave} title={t("common:mermaid.buttons.save")} />
 						</>
 					) : (
 						<IconButton
