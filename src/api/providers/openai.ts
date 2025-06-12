@@ -309,8 +309,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				temperature: this.options.modelTemperature ?? 0,
 			}
 
-			// O3 family models do not support max_tokens parameter
-			// but they do support max_completion_tokens
+			// O3 family models do not support the deprecated max_tokens parameter
+			// but they do support max_completion_tokens (the modern OpenAI parameter)
+			// This allows O3 models to limit response length when includeMaxTokens is enabled
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const stream = await this.client.chat.completions.create(
@@ -333,8 +334,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				temperature: this.options.modelTemperature ?? 0,
 			}
 
-			// O3 family models do not support max_tokens parameter
-			// but they do support max_completion_tokens
+			// O3 family models do not support the deprecated max_tokens parameter
+			// but they do support max_completion_tokens (the modern OpenAI parameter)
+			// This allows O3 models to limit response length when includeMaxTokens is enabled
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 			const response = await this.client.chat.completions.create(
