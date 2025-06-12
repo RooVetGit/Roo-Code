@@ -154,7 +154,7 @@ export const ContextManagementSettings = ({
 						/>
 						<span className="w-10 text-sm">{Math.max(1, maxConcurrentFileReads ?? 5)}</span>
 					</div>
-					<div className="text-vscode-descriptionForeground text-sm mt-1">
+					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
 						{t("settings:contextManagement.maxConcurrentFileReads.description")}
 					</div>
 				</div>
@@ -168,7 +168,7 @@ export const ContextManagementSettings = ({
 							{t("settings:contextManagement.rooignore.label")}
 						</label>
 					</VSCodeCheckbox>
-					<div className="text-vscode-descriptionForeground text-sm mt-1">
+					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
 						{t("settings:contextManagement.rooignore.description")}
 					</div>
 				</div>
@@ -209,8 +209,7 @@ export const ContextManagementSettings = ({
 					</div>
 				</div>
 			</Section>
-
-			<Section>
+			<Section className="pt-2">
 				<VSCodeCheckbox
 					checked={autoCondenseContext}
 					onChange={(e: any) => setCachedStateField("autoCondenseContext", e.target.checked)}
