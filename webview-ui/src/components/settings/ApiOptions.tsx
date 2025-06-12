@@ -51,6 +51,7 @@ import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
+import { MaxContextWindowControl } from "./MaxContextWindowControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
@@ -461,6 +462,7 @@ const ApiOptions = ({
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
+						maxContextWindow={selectedProvider === "gemini" ? apiConfiguration.maxContextWindow : undefined}
 					/>
 				</>
 			)}
@@ -484,6 +486,15 @@ const ApiOptions = ({
 						onChange={handleInputChange("modelTemperature", noTransform)}
 						maxValue={2}
 					/>
+
+					{selectedProvider === "gemini" && (
+						<MaxContextWindowControl
+							value={apiConfiguration.maxContextWindow}
+							onChange={handleInputChange("maxContextWindow", noTransform)}
+							maxValue={1048576}
+						/>
+					)}
+
 					<RateLimitSecondsControl
 						value={apiConfiguration.rateLimitSeconds || 0}
 						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
