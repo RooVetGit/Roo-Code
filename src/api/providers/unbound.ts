@@ -40,7 +40,7 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			...convertToOpenAiMessages(messages),
 		]
 
-		if (modelId.startsWith("anthropic/claude-3")) {
+		if (modelId.startsWith("anthropic/claude-")) {
 			addCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 

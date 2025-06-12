@@ -36,6 +36,32 @@ jest.mock("../fetchers/modelCache", () => ({
 				thinking: false,
 				supportsComputerUse: true,
 			},
+			"anthropic/claude-sonnet-4-20250514": {
+				maxTokens: 8192,
+				contextWindow: 200000,
+				supportsImages: true,
+				supportsPromptCache: true,
+				inputPrice: 3,
+				outputPrice: 15,
+				cacheWritesPrice: 3.75,
+				cacheReadsPrice: 0.3,
+				description: "Claude Sonnet 4",
+				thinking: false,
+				supportsComputerUse: true,
+			},
+			"anthropic/claude-opus-4-20250514": {
+				maxTokens: 8192,
+				contextWindow: 200000,
+				supportsImages: true,
+				supportsPromptCache: true,
+				inputPrice: 15,
+				outputPrice: 75,
+				cacheWritesPrice: 18.75,
+				cacheReadsPrice: 1.5,
+				description: "Claude Opus 4",
+				thinking: false,
+				supportsComputerUse: true,
+			},
 			"openai/gpt-4o": {
 				maxTokens: 4096,
 				contextWindow: 128000,
@@ -316,6 +342,156 @@ describe("UnboundHandler", () => {
 			const modelInfo = await handlerWithInvalidModel.fetchModel()
 			expect(modelInfo.id).toBe("anthropic/claude-3-7-sonnet-20250219")
 			expect(modelInfo.info).toBeDefined()
+		})
+	})
+
+	describe("cache breakpoints", () => {
+		const systemPrompt = "You are a helpful assistant."
+		const messages: Anthropic.Messages.MessageParam[] = [
+			{
+				role: "user",
+				content: "Hello!",
+			},
+		]
+
+		it("should apply cache breakpoints for Claude 3 models", async () => {
+			const claude3Handler = new UnboundHandler({
+				...mockOptions,
+				unboundModelId: "anthropic/claude-3-5-sonnet-20241022",
+			})
+
+			mockCreate.mockClear()
+			const stream = claude3Handler.createMessage(systemPrompt, messages)
+			const chunks: Array<{ type: string } & Record<string, any>> = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that cache control was added to system message and user message
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: "system",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+					]),
+				}),
+				expect.any(Object),
+			)
+		})
+
+		it("should apply cache breakpoints for Claude 4 models", async () => {
+			const claude4Handler = new UnboundHandler({
+				...mockOptions,
+				unboundModelId: "anthropic/claude-sonnet-4-20250514",
+			})
+
+			mockCreate.mockClear()
+			const stream = claude4Handler.createMessage(systemPrompt, messages)
+			const chunks: Array<{ type: string } & Record<string, any>> = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that cache control was added to system message and user message
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: "system",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+					]),
+				}),
+				expect.any(Object),
+			)
+		})
+
+		it("should apply cache breakpoints for Claude Opus 4 models", async () => {
+			const claudeOpus4Handler = new UnboundHandler({
+				...mockOptions,
+				unboundModelId: "anthropic/claude-opus-4-20250514",
+			})
+
+			mockCreate.mockClear()
+			const stream = claudeOpus4Handler.createMessage(systemPrompt, messages)
+			const chunks: Array<{ type: string } & Record<string, any>> = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that cache control was added to system message and user message
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: "system",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: expect.arrayContaining([
+								expect.objectContaining({ cache_control: { type: "ephemeral" } }),
+							]),
+						}),
+					]),
+				}),
+				expect.any(Object),
+			)
+		})
+
+		it("should NOT apply cache breakpoints for non-Claude models", async () => {
+			const openaiHandler = new UnboundHandler({
+				...mockOptions,
+				unboundModelId: "openai/gpt-4o",
+			})
+
+			mockCreate.mockClear()
+			const stream = openaiHandler.createMessage(systemPrompt, messages)
+			const chunks: Array<{ type: string } & Record<string, any>> = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that cache control was NOT added - messages should be strings, not arrays with cache_control
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: "system",
+							content: systemPrompt, // Should be string, not array with cache_control
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: "Hello!", // Should be string, not array with cache_control
+						}),
+					]),
+				}),
+				expect.any(Object),
+			)
 		})
 	})
 })
