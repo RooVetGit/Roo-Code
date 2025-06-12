@@ -1,4 +1,3 @@
-import { vitest, describe, it, expect, beforeEach, afterAll } from "vitest"
 import { injectEnv } from "../config"
 
 describe("injectEnv", () => {

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest"
+// npx vitest services/marketplace/__tests__/optional-parameters.spec.ts
+
 import { mcpParameterSchema } from "../schemas"
 import { McpParameter } from "../types"
 

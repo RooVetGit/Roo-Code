@@ -40,6 +40,9 @@ export const workspace = {
 	workspaceFolders: [],
 	getWorkspaceFolder: () => null,
 	onDidChangeWorkspaceFolders: () => mockDisposable,
+	getConfiguration: () => ({
+		get: () => null,
+	}),
 	createFileSystemWatcher: () => ({
 		onDidCreate: () => mockDisposable,
 		onDidChange: () => mockDisposable,
@@ -66,6 +69,19 @@ export const window = {
 		show: () => {},
 		dispose: () => {},
 	}),
+	createTerminal: () => ({
+		exitStatus: undefined,
+		name: "Roo Code",
+		processId: Promise.resolve(123),
+		creationOptions: {},
+		state: { isInteractedWith: true },
+		dispose: () => {},
+		hide: () => {},
+		show: () => {},
+		sendText: () => {},
+	}),
+	onDidCloseTerminal: () => mockDisposable,
+	createTextEditorDecorationType: () => ({ dispose: () => {} }),
 }
 
 export const commands = {
@@ -95,6 +111,11 @@ export const Range = mockRange
 export const Position = mockPosition
 export const Selection = mockSelection
 export const Disposable = mockDisposable
+export const ThemeIcon = class {
+	constructor(id) {
+		this.id = id
+	}
+}
 
 export const FileType = {
 	File: 1,
@@ -116,6 +137,19 @@ export const OverviewRulerLane = {
 	Full: 7,
 }
 
+export const CodeAction = class {
+	constructor(title, kind) {
+		this.title = title
+		this.kind = kind
+		this.command = undefined
+	}
+}
+
+export const CodeActionKind = {
+	QuickFix: { value: "quickfix" },
+	RefactorRewrite: { value: "refactor.rewrite" },
+}
+
 export const EventEmitter = mockEventEmitter
 
 export default {
@@ -130,8 +164,11 @@ export default {
 	Position,
 	Selection,
 	Disposable,
+	ThemeIcon,
 	FileType,
 	DiagnosticSeverity,
 	OverviewRulerLane,
 	EventEmitter,
+	CodeAction,
+	CodeActionKind,
 }

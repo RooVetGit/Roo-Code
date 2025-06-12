@@ -1,6 +1,5 @@
 // npx vitest services/code-index/processors/__tests__/parser.spec.ts
 
-import { vi, describe, it, expect, beforeEach } from "vitest"
 import { CodeParser, codeParser } from "../parser"
 import Parser from "web-tree-sitter"
 import { loadRequiredLanguageParsers } from "../../../tree-sitter/languageParser"
