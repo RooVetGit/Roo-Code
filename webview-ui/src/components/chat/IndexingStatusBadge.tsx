@@ -84,6 +84,31 @@ export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigate
 		handleMouseLeave()
 	}
 
+	// Get status color classes based on status and hover state
+	const getStatusColorClass = () => {
+		const statusColors = {
+			Standby: {
+				default: "bg-vscode-descriptionForeground/40",
+				hover: "bg-vscode-descriptionForeground/60",
+			},
+			Indexing: {
+				default: "bg-yellow-500/40 animate-pulse",
+				hover: "bg-yellow-500 animate-pulse",
+			},
+			Indexed: {
+				default: "bg-green-500/40",
+				hover: "bg-green-500",
+			},
+			Error: {
+				default: "bg-red-500/40",
+				hover: "bg-red-500",
+			},
+		}
+
+		const colors = statusColors[indexingStatus.systemStatus as keyof typeof statusColors] || statusColors.Standby
+		return isHovered ? colors.hover : colors.default
+	}
+
 	return (
 		<div className={cn("relative inline-block", className)}>
 			<button
@@ -101,13 +126,7 @@ export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigate
 				<span
 					className={cn(
 						"inline-block w-2 h-2 rounded-full relative z-10 transition-colors duration-200",
-						// Default state - always show muted color
-						!isHovered && "bg-vscode-descriptionForeground/60",
-						// Hover states - show status colors
-						isHovered && indexingStatus.systemStatus === "Standby" && "bg-vscode-descriptionForeground/60",
-						isHovered && indexingStatus.systemStatus === "Indexing" && "bg-yellow-500 animate-pulse",
-						isHovered && indexingStatus.systemStatus === "Indexed" && "bg-green-500",
-						isHovered && indexingStatus.systemStatus === "Error" && "bg-red-500",
+						getStatusColorClass(),
 					)}
 				/>
 			</button>
