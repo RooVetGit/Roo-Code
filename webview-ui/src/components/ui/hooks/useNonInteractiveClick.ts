@@ -16,8 +16,10 @@ export function useAddNonInteractiveClickListener(handler: () => void) {
 			// Don't trigger for input elements to avoid disrupting typing
 			if (
 				target.tagName !== "INPUT" &&
-				target.tagName !== "TEXTAREA" &&
 				target.tagName !== "SELECT" &&
+				target.tagName !== "TEXTAREA" &&
+				target.tagName !== "VSCODE-TEXT-AREA" &&
+				target.tagName !== "VSCODE-TEXT-FIELD" &&
 				!target.isContentEditable
 			) {
 				handler()
