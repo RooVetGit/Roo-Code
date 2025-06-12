@@ -8,23 +8,14 @@
 
   <initialization_phase>
     <step number="1">
-      <title>Understand Documentation Scope</title>
+      <title>Understand Documentation Request</title>
       <actions>
-        <action>Identify the specific feature or component to document</action>
-        <action>Determine target audiences for the documentation</action>
-        <action>Establish documentation depth requirements</action>
+        <action>Parse the user's request to identify the feature or component</action>
+        <action>Default to user-friendly documentation unless technical docs are specifically requested</action>
+        <action>Focus on practical benefits and real-world usage</action>
+        <action>Note any specific aspects the user wants emphasized</action>
       </actions>
-      <tool_use><![CDATA[
-<ask_followup_question>
-<question>What specific feature or component should I extract documentation for?</question>
-<follow_up>
-<suggest>User authentication and authorization system</suggest>
-<suggest>API endpoints for a specific module</suggest>
-<suggest>Database schema and data models</suggest>
-<suggest>Frontend component library</suggest>
-</follow_up>
-</ask_followup_question>
-      ]]></tool_use>
+      <note>The user will specify what they want documented in their initial message - no need to ask</note>
     </step>
 
     <step number="2">
@@ -211,31 +202,46 @@
 
   <documentation_generation>
     <step number="1">
-      <title>Structure Documentation</title>
+      <title>Choose Documentation Style</title>
       <actions>
-        <action>Create comprehensive table of contents</action>
-        <action>Organize content by audience type</action>
-        <action>Establish cross-references and links</action>
+        <action>Default to user-focused template for end-user features</action>
+        <action>Use comprehensive template only for developer APIs or complex systems</action>
+        <action>Prioritize clarity and practical examples over exhaustive detail</action>
       </actions>
+      <decision_criteria>
+        <criterion>If feature is user-facing → Use user_focused_template</criterion>
+        <criterion>If feature is developer API → Consider comprehensive_template</criterion>
+        <criterion>If unclear → Ask user for preference</criterion>
+      </decision_criteria>
     </step>
 
     <step number="2">
-      <title>Generate Markdown Output</title>
+      <title>Structure Documentation</title>
       <actions>
-        <action>Create DOCS-TEMP-[feature].md file</action>
-        <action>Format content with proper markdown syntax</action>
-        <action>Include code examples and diagrams</action>
-        <action>Add metadata and version information</action>
+        <action>Start with clear problem statement and benefits</action>
+        <action>Use before/after examples when applicable</action>
+        <action>Keep technical details minimal unless essential</action>
+        <action>Focus on common use cases and questions</action>
       </actions>
     </step>
 
     <step number="3">
-      <title>Add Supporting Elements</title>
+      <title>Generate Markdown Output</title>
       <actions>
-        <action>Include troubleshooting guides</action>
-        <action>Add FAQ sections</action>
-        <action>Provide migration guides</action>
-        <action>Document best practices</action>
+        <action>Create DOCS-TEMP-[feature].md file</action>
+        <action>Use conversational tone and active voice</action>
+        <action>Include visual separators (---) between sections</action>
+        <action>Add practical examples and troubleshooting tips</action>
+      </actions>
+    </step>
+
+    <step number="4">
+      <title>Add User-Friendly Elements</title>
+      <actions>
+        <action>Include "Why This Matters" section with real scenarios</action>
+        <action>Add "Common Questions" in Q&A format</action>
+        <action>Provide clear troubleshooting steps</action>
+        <action>End with "Need Help?" section pointing to resources</action>
       </actions>
     </step>
   </documentation_generation>

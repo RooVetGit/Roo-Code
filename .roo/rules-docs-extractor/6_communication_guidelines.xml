@@ -5,18 +5,22 @@
   </overview>
 
   <user_interaction>
-    <initial_clarification>
+    <initial_understanding>
+      <principle>Users will specify what they want documented in their initial message</principle>
+      <principle>Start working immediately based on their request</principle>
+      <principle>Only ask for clarification if genuinely ambiguous</principle>
+    </initial_understanding>
+
+    <clarification_only_when_needed>
       <when_to_ask>
-        <scenario>Feature name is ambiguous</scenario>
-        <scenario>Multiple similar features exist</scenario>
-        <scenario>Documentation scope unclear</scenario>
-        <scenario>Target audience not specified</scenario>
+        <scenario>Multiple features with identical names found</scenario>
+        <scenario>Request is genuinely ambiguous (rare)</scenario>
+        <scenario>User explicitly asks for options</scenario>
       </when_to_ask>
       
-      <question_examples>
-        <example><![CDATA[
+      <question_example><![CDATA[
 <ask_followup_question>
-<question>I found multiple authentication-related features. Which one should I document?</question>
+<question>I found multiple authentication systems. Which one should I document?</question>
 <follow_up>
 <suggest>JWT-based authentication system (src/auth/jwt/*)</suggest>
 <suggest>OAuth2 integration (src/auth/oauth/*)</suggest>
@@ -24,21 +28,8 @@
 <suggest>All authentication features comprehensively</suggest>
 </follow_up>
 </ask_followup_question>
-        ]]></example>
-        
-        <example><![CDATA[
-<ask_followup_question>
-<question>What level of detail should the documentation include?</question>
-<follow_up>
-<suggest>High-level overview for all audiences with basic examples</suggest>
-<suggest>Deep technical documentation with implementation details</suggest>
-<suggest>API reference focused on integration</suggest>
-<suggest>Comprehensive coverage for all audience types</suggest>
-</follow_up>
-</ask_followup_question>
-        ]]></example>
-      </question_examples>
-    </initial_clarification>
+      ]]></question_example>
+    </clarification_only_when_needed>
 
     <progress_updates>
       <when_to_update>
@@ -173,16 +164,32 @@ Status: Stable
 
   <documentation_tone>
     <general_principles>
-      <principle>Be clear and concise</principle>
-      <principle>Use active voice</principle>
-      <principle>Avoid jargon when possible</principle>
-      <principle>Define technical terms on first use</principle>
-      <principle>Be consistent with terminology</principle>
+      <principle>Be conversational and approachable</principle>
+      <principle>Use active voice and "you" to address the reader</principle>
+      <principle>Lead with benefits, not features</principle>
+      <principle>Use concrete examples and scenarios</principle>
+      <principle>Keep paragraphs short and scannable</principle>
+      <principle>Avoid unnecessary technical details</principle>
     </general_principles>
 
+    <user_focused_tone>
+      <guideline>Write as if explaining to a colleague who isn't technical</guideline>
+      <guideline>Use analogies and comparisons to familiar concepts</guideline>
+      <guideline>Focus on "what" and "why" before "how"</guideline>
+      <guideline>Include practical examples users can relate to</guideline>
+      <guideline>Address common concerns and questions directly</guideline>
+    </user_focused_tone>
+
     <audience_specific_tone>
+      <audience type="default_user">
+        <tone>Friendly, helpful, encouraging</tone>
+        <vocabulary>Plain language, minimal jargon</vocabulary>
+        <examples>Real-world scenarios, before/after comparisons</examples>
+        <structure>Problem → Solution → Benefits → How to use</structure>
+      </audience>
+
       <audience type="developers">
-        <tone>Technical, precise, assumption of programming knowledge</tone>
+        <tone>Technical when needed, but still approachable</tone>
         <vocabulary>Use standard programming terminology</vocabulary>
         <examples>Include code snippets and implementation details</examples>
       </audience>

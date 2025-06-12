@@ -1,11 +1,85 @@
 <documentation_patterns>
   <overview>
     Standard patterns and templates for structuring extracted documentation
-    to serve multiple audiences effectively.
+    to serve end-users with clear, practical information.
   </overview>
 
   <output_structure>
-    <main_template><![CDATA[
+    <user_focused_template><![CDATA[
+# [Feature Name]
+
+[Brief, clear description of what the feature does and why it matters to users]
+
+### Key Features
+- [Feature 1 - written in user-friendly terms]
+- [Feature 2 - focus on benefits]
+- [Feature 3 - avoid technical jargon]
+
+---
+
+## Why This Matters
+
+[Explain the problem this solves with a real-world example, like:]
+
+**[Before scenario]**: [Description of the old/manual way]
+- [Pain point 1]
+- [Pain point 2]
+
+**[With this feature]**: [Description of the improved experience]
+
+## How it Works
+
+[Simple explanation of the feature's operation, avoiding implementation details]
+
+[Include visual representation if helpful - suggest where diagrams would help]
+
+---
+
+## Configuration
+
+[User-friendly explanation of settings]
+
+1. **[Setting Name]**:
+   - **Setting**: `[Technical name if needed]`
+   - **Description**: [What this does in plain language]
+   - **Default**: [Default value and what it means]
+
+2. **[Setting Name]**:
+   - **Setting**: `[Technical name if needed]`
+   - **Description**: [What this does in plain language]
+   - **Default**: [Default value and what it means]
+
+---
+
+## Benefits
+
+- **[Benefit 1]**: [Explanation of how this helps]
+- **[Benefit 2]**: [Explanation of how this helps]
+- **[Benefit 3]**: [Explanation of how this helps]
+
+## Common Questions
+
+**"[Common user question]"**
+- [Clear, helpful answer]
+- [Additional tips if relevant]
+
+**"[Common user question]"**
+- [Clear, helpful answer]
+- [Additional tips if relevant]
+
+**"[Common user question]"**
+- [Clear, helpful answer]
+- [Additional tips if relevant]
+
+## Need Help?
+
+If you run into issues:
+1. [First troubleshooting step]
+2. [Second troubleshooting step]
+3. [Where to get help - e.g., GitHub Issues link]
+    ]]></user_focused_template>
+
+    <comprehensive_template><![CDATA[
 # [Feature Name] Documentation
 
 ## Table of Contents
@@ -24,239 +98,86 @@
 13. [Changelog](#changelog)
 14. [References](#references)
 
----
+[Rest of comprehensive template remains available for technical documentation needs]
+    ]]></comprehensive_template>
+  </output_structure>
 
-## Overview
+  <user_friendly_patterns>
+    <before_after_examples>
+      <template><![CDATA[
+**Previously**: When Roo needed to understand your project, you'd see multiple requests like:
+- "Can I read `src/app.js`?" → You approve
+- "Now can I read `src/utils.js`?" → You approve
+- "And can I read `src/config.json`?" → You approve
 
-### Purpose
-[High-level description of what this feature does and why it exists]
+**Now**: Roo asks once to read all related files together, getting the full picture immediately.
+      ]]></template>
+    </before_after_examples>
 
-### Key Features
-- [Feature 1]
-- [Feature 2]
-- [Feature 3]
+    <visual_separators>
+      <use_case>Between major sections</use_case>
+      <format>---</format>
+      <purpose>Improve readability and scanning</purpose>
+    </visual_separators>
 
-### Target Audiences
-- **End Users**: [How they interact with this feature]
-- **Developers**: [How they integrate or extend this feature]
-- **Administrators**: [How they configure and maintain this feature]
-- **Stakeholders**: [Business value and impact]
+    <conversational_questions>
+      <template><![CDATA[
+## Common Questions
 
-### Version Information
-- **Current Version**: [version]
-- **Compatibility**: [supported versions/platforms]
-- **Dependencies**: [key dependencies]
-- **Last Updated**: [date]
+**"Why would I want to disable this feature?"**
+- You're using a less capable AI model that works better with single files
+- You want more control over which files are accessed
+- You're working with very large files that might exceed memory limits
 
----
+**"What happens if some files are blocked?"**
+- Roo will read the files you approve and work with those
+- Files blocked by `.rooignore` will be automatically excluded
+- You can still approve/deny individual files in the batch
+      ]]></template>
+    </conversational_questions>
 
-## Quick Start
+    <practical_examples>
+      <guideline>Show real tool output or interface elements</guideline>
+      <guideline>Use actual file paths and settings names</guideline>
+      <guideline>Include common error messages and solutions</guideline>
+    </practical_examples>
 
-### For Users
-[Simple steps to start using the feature]
+    <benefit_focused_lists>
+      <template><![CDATA[
+## Benefits
 
-### For Developers
-[Quick integration example]
+- **Faster Results**: Get answers in one step instead of multiple back-and-forth approvals
+- **Better Context**: Roo understands relationships between files immediately
+- **Less Interruption**: Approve once and let Roo work uninterrupted
+      ]]></template>
+    </benefit_focused_lists>
 
-### For Administrators
-[Basic setup instructions]
-
----
-
-## Architecture
-
-### System Overview
-[High-level architecture diagram or description]
-
-### Components
-[Detailed component breakdown]
-
-### Data Flow
-[How data moves through the system]
-
-### Design Patterns
-[Key patterns used in implementation]
-
----
-
-## API Reference
-
-### REST Endpoints
-[Detailed endpoint documentation]
-
-### GraphQL Schema
-[Schema definitions if applicable]
-
-### SDK/Library Methods
-[Public API methods and signatures]
-
-### Events and Webhooks
-[Event-driven interfaces]
-
----
-
-## Configuration
-
-### Environment Variables
-[All environment configuration options]
-
-### Configuration Files
-[File-based configuration options]
-
-### Feature Flags
-[Toggle-able features]
-
-### Default Values
-[Default configuration settings]
-
----
-
-## User Guide
-
-### Getting Started
-[Step-by-step user instructions]
-
-### Common Workflows
-[Typical user journeys]
-
-### Advanced Features
-[Power user capabilities]
-
-### Tips and Tricks
-[Productivity enhancers]
-
----
-
-## Developer Guide
-
-### Setup Development Environment
-[Local development setup]
-
-### Code Structure
-[Directory and file organization]
-
-### Contributing Guidelines
-[How to contribute code]
-
-### Testing
-[How to write and run tests]
-
-### Debugging
-[Common debugging techniques]
-
----
-
-## Administrator Guide
-
-### Installation
-[Production installation steps]
-
-### Configuration Management
-[Managing configurations]
-
-### Monitoring
-[Health checks and metrics]
-
-### Backup and Recovery
-[Data protection strategies]
-
-### Scaling
-[Performance optimization]
-
----
-
-## Security
-
-### Authentication
-[How users are authenticated]
-
-### Authorization
-[Access control mechanisms]
-
-### Data Protection
-[Encryption and privacy measures]
-
-### Security Best Practices
-[Recommendations for secure usage]
-
-### Known Vulnerabilities
-[Disclosed security issues and fixes]
-
----
-
-## Performance
-
-### Benchmarks
-[Performance metrics and baselines]
-
-### Optimization Tips
-[How to improve performance]
-
-### Resource Requirements
-[CPU, memory, storage needs]
-
-### Scaling Considerations
-[Horizontal and vertical scaling]
-
----
-
+    <troubleshooting_section>
+      <template><![CDATA[
 ## Troubleshooting
 
-### Common Issues
-[Frequently encountered problems and solutions]
+**"Roo is asking for too many files at once"**
+- Lower the concurrent file limit in settings
+- You can still approve or deny individual files in the batch dialog
 
-### Error Messages
-[Error code reference and meanings]
+**"The feature isn't working as expected"**
+- Check that "Enable concurrent file reads" is turned on in settings
+- Verify your concurrent file limit is set appropriately (default: 100)
+- Some AI models may not support this feature effectively
+      ]]></template>
+    </troubleshooting_section>
 
-### Debug Mode
-[How to enable detailed logging]
+    <help_section>
+      <template><![CDATA[
+## Need Help?
 
-### Support Channels
-[Where to get help]
-
----
-
-## FAQ
-
-### General Questions
-[Common questions and answers]
-
-### Technical Questions
-[Developer-focused Q&A]
-
-### Administrative Questions
-[Admin-focused Q&A]
-
----
-
-## Changelog
-
-### Version History
-[Major version changes and features]
-
-### Migration Guides
-[How to upgrade between versions]
-
-### Deprecation Notices
-[Features being phased out]
-
----
-
-## References
-
-### Related Documentation
-[Links to related features/components]
-
-### External Resources
-[Third-party documentation]
-
-### Glossary
-[Technical terms and definitions]
-
-### Index
-[Alphabetical index of key concepts]
-    ]]></main_template>
-  </output_structure>
+If you run into issues:
+1. Check the [FAQ section](/faq) for common solutions
+2. Report problems on [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+3. Include what you were trying to do and any error messages
+      ]]></template>
+    </help_section>
+  </user_friendly_patterns>
 
   <audience_specific_sections>
     <audience type="end_users">
