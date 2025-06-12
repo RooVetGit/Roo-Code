@@ -55,7 +55,7 @@ Consulta il [CHANGELOG](../../CHANGELOG.md) per aggiornamenti dettagliati e corr
 Roo Code 3.20 porta nuove funzionalità principali e miglioramenti basati sui vostri feedback!
 
 - **Marketplace Sperimentale** - Scopri e installa mode e MCP dal nuovo marketplace (abilita nelle Impostazioni Sperimentali).
-- **Operazioni su File Migliorate** - Scritture multiple simultanee di file ora disponibili nelle Impostazioni Sperimentali, e letture multiple simultanee si sono laureate dallo sperimentale e ora vivono nelle Impostazioni Contesto.
+- **Operazioni su File Migliorate** - Scritture multiple simultanee di file ora disponibili nelle Impostazioni Sperimentali, e letture multiple simultanee sono uscite dalla fase sperimentale e ora vivono nelle Impostazioni Contesto.
 - **Miglioramenti MCP e Altro** - Supporto MCP migliorato, più controlli Mermaid, supporto thinking in Amazon Bedrock, e molto altro!
 
 ---
