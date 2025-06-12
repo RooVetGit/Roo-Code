@@ -559,8 +559,8 @@ importers:
         specifier: ^0.10.2
         version: 0.10.4
       '@anthropic-ai/sdk':
-        specifier: ^0.37.0
-        version: 0.37.0
+        specifier: ^0.54.0
+        version: 0.54.0
       '@anthropic-ai/vertex-sdk':
         specifier: ^0.7.0
         version: 0.7.0
@@ -1132,8 +1132,9 @@ packages:
   '@anthropic-ai/bedrock-sdk@0.10.4':
     resolution: {integrity: sha512-szduEHbMli6XL934xrraYg5cFuKL/1oMyj/iZuEVjtddQ7eD5cXObzWobsv5mTLWijQmSzMfFD+JAUHDPHlQ/Q==}
 
-  '@anthropic-ai/sdk@0.37.0':
-    resolution: {integrity: sha512-tHjX2YbkUBwEgg0JZU3EFSSAQPoK4qQR/NFYa8Vtzd5UAyXzZksCw2In69Rml4R/TyHPBfRYaLK35XiOe33pjw==}
+  '@anthropic-ai/sdk@0.54.0':
+    resolution: {integrity: sha512-xyoCtHJnt/qg5GG6IgK+UJEndz8h8ljzt/caKXmq3LfBF81nC/BW6E4x2rOWCZcvsLyVW+e8U5mtIr6UCE/kJw==}
+    hasBin: true
 
   '@anthropic-ai/vertex-sdk@0.7.0':
     resolution: {integrity: sha512-zNm3hUXgYmYDTyveIxOyxbcnh5VXFkrLo4bSnG6LAfGzW7k3k2iCNDSVKtR9qZrK2BCid7JtVu7jsEKaZ/9dSw==}
@@ -10482,7 +10483,7 @@ snapshots:
 
   '@anthropic-ai/bedrock-sdk@0.10.4':
     dependencies:
-      '@anthropic-ai/sdk': 0.37.0
+      '@anthropic-ai/sdk': 0.54.0
       '@aws-crypto/sha256-js': 4.0.0
       '@aws-sdk/client-bedrock-runtime': 3.817.0
       '@aws-sdk/credential-providers': 3.817.0
@@ -10495,23 +10496,12 @@ snapshots:
       '@smithy/util-base64': 2.3.0
     transitivePeerDependencies:
       - aws-crt
-      - encoding
 
-  '@anthropic-ai/sdk@0.37.0':
-    dependencies:
-      '@types/node': 18.19.100
-      '@types/node-fetch': 2.6.12
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
+  '@anthropic-ai/sdk@0.54.0': {}
 
   '@anthropic-ai/vertex-sdk@0.7.0':
     dependencies:
-      '@anthropic-ai/sdk': 0.37.0
+      '@anthropic-ai/sdk': 0.54.0
       google-auth-library: 9.15.1
     transitivePeerDependencies:
       - encoding
