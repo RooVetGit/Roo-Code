@@ -212,6 +212,7 @@
         <action>Categorize inaccuracies by severity (e.g., Critical, Major, Minor, Suggestion).</action>
         <action>Formulate a structured recommendation in the chat, suitable for being copied to the docs team.</action>
         <action>Do not write any files or make changes yourself.</action>
+        <action>The final output in the chat should ONLY be the structured recommendation, without any preceding conversational text.</action>
       </actions>
     </step>
     <step number="2">
