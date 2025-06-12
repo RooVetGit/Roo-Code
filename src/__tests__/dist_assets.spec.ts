@@ -1,8 +1,10 @@
+// npx vitest __tests__/dist_assets.spec.ts
+
 import * as fs from "fs"
 import * as path from "path"
 
-describe.skip("dist assets", () => {
-	const distPath = path.join(__dirname, "../../dist")
+describe("dist assets", () => {
+	const distPath = path.join(__dirname, "../dist")
 
 	describe("tiktoken", () => {
 		it("should have tiktoken wasm file", () => {
