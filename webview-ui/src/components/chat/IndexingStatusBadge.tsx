@@ -13,6 +13,7 @@ interface IndexingStatusDotProps {
 export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigateToSettings, className }) => {
 	const { t } = useAppTranslation()
 	const { showTooltip, handleMouseEnter, handleMouseLeave, cleanup } = useTooltip({ delay: 300 })
+	const [isHovered, setIsHovered] = useState(false)
 
 	const [indexingStatus, setIndexingStatus] = useState<IndexingStatus>({
 		systemStatus: "Standby",
@@ -73,17 +74,22 @@ export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigate
 		}
 	}
 
-	// SVG circle parameters
-	const radius = 10
-	const circumference = 2 * Math.PI * radius
-	const strokeDashoffset = circumference - (progressPercentage / 100) * circumference
+	const handleMouseEnterButton = () => {
+		setIsHovered(true)
+		handleMouseEnter()
+	}
+
+	const handleMouseLeaveButton = () => {
+		setIsHovered(false)
+		handleMouseLeave()
+	}
 
 	return (
 		<div className={cn("relative inline-block", className)}>
 			<button
 				onClick={handleClick}
-				onMouseEnter={handleMouseEnter}
-				onMouseLeave={handleMouseLeave}
+				onMouseEnter={handleMouseEnterButton}
+				onMouseLeave={handleMouseLeaveButton}
 				className={cn(
 					"flex items-center justify-center w-7 h-7 rounded-md",
 					"bg-transparent hover:bg-vscode-list-hoverBackground",
@@ -91,42 +97,17 @@ export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigate
 					"opacity-85 hover:opacity-100 relative",
 				)}
 				aria-label={getTooltipText()}>
-				{/* Progress ring - only show during indexing */}
-				{indexingStatus.systemStatus === "Indexing" && (
-					<svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 24 24">
-						{/* Background circle */}
-						<circle
-							cx="12"
-							cy="12"
-							r={radius}
-							stroke="currentColor"
-							strokeWidth="1.5"
-							fill="none"
-							className="text-vscode-descriptionForeground/20"
-						/>
-						{/* Progress circle */}
-						<circle
-							cx="12"
-							cy="12"
-							r={radius}
-							stroke="currentColor"
-							strokeWidth="1.5"
-							fill="none"
-							className="text-yellow-500 transition-all duration-500 ease-out"
-							strokeDasharray={circumference}
-							strokeDashoffset={strokeDashoffset}
-							strokeLinecap="round"
-						/>
-					</svg>
-				)}
 				{/* Status dot */}
 				<span
 					className={cn(
-						"inline-block w-2 h-2 rounded-full relative z-10",
-						indexingStatus.systemStatus === "Standby" && "bg-vscode-descriptionForeground/60",
-						indexingStatus.systemStatus === "Indexing" && "bg-yellow-500", // Remove animate-pulse since ring provides animation
-						indexingStatus.systemStatus === "Indexed" && "bg-green-500",
-						indexingStatus.systemStatus === "Error" && "bg-red-500",
+						"inline-block w-2 h-2 rounded-full relative z-10 transition-colors duration-200",
+						// Default state - always show muted color
+						!isHovered && "bg-vscode-descriptionForeground/60",
+						// Hover states - show status colors
+						isHovered && indexingStatus.systemStatus === "Standby" && "bg-vscode-descriptionForeground/60",
+						isHovered && indexingStatus.systemStatus === "Indexing" && "bg-yellow-500 animate-pulse",
+						isHovered && indexingStatus.systemStatus === "Indexed" && "bg-green-500",
+						isHovered && indexingStatus.systemStatus === "Error" && "bg-red-500",
 					)}
 				/>
 			</button>
