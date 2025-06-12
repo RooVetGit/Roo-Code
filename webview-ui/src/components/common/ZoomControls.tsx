@@ -65,41 +65,27 @@ export function ZoomControls({
 		}
 	}, [])
 
-	// If using continuous zoom, render buttons with mouse down/up handlers
-	if (useContinuousZoom && adjustZoom) {
-		return (
-			<div className="flex items-center gap-2">
-				<button
-					className="w-7 h-7 flex items-center justify-center border-none text-vscode-editor-foreground cursor-pointer rounded-[3px] bg-transparent hover:bg-vscode-toolbar-hoverBackground"
-					onMouseDown={() => startContinuousZoom(zoomOutStep)}
-					onMouseUp={stopContinuousZoom}
-					onMouseLeave={stopContinuousZoom}
-					title={zoomOutTitle}>
-					<span className="codicon codicon-zoom-out"></span>
-				</button>
-				<div className="text-sm text-vscode-editor-foreground min-w-[50px] text-center">
-					{Math.round(zoomLevel * 100)}%
-				</div>
-				<button
-					className="w-7 h-7 flex items-center justify-center border-none text-vscode-editor-foreground cursor-pointer rounded-[3px] bg-transparent hover:bg-vscode-toolbar-hoverBackground"
-					onMouseDown={() => startContinuousZoom(zoomInStep)}
-					onMouseUp={stopContinuousZoom}
-					onMouseLeave={stopContinuousZoom}
-					title={zoomInTitle}>
-					<span className="codicon codicon-zoom-in"></span>
-				</button>
-			</div>
-		)
-	}
-
-	// Default rendering with simple click handlers
 	return (
 		<div className="flex items-center gap-2">
-			<IconButton icon="zoom-out" onClick={onZoomOut || (() => adjustZoom?.(zoomOutStep))} title={zoomOutTitle} />
+			<IconButton
+				icon="zoom-out"
+				title={zoomOutTitle}
+				onClick={!useContinuousZoom ? onZoomOut || (() => adjustZoom?.(zoomOutStep)) : undefined}
+				onMouseDown={useContinuousZoom && adjustZoom ? () => startContinuousZoom(zoomOutStep) : undefined}
+				onMouseUp={useContinuousZoom && adjustZoom ? stopContinuousZoom : undefined}
+				onMouseLeave={useContinuousZoom && adjustZoom ? stopContinuousZoom : undefined}
+			/>
 			<div className="text-sm text-vscode-editor-foreground min-w-[50px] text-center">
 				{Math.round(zoomLevel * 100)}%
 			</div>
-			<IconButton icon="zoom-in" onClick={onZoomIn || (() => adjustZoom?.(zoomInStep))} title={zoomInTitle} />
+			<IconButton
+				icon="zoom-in"
+				title={zoomInTitle}
+				onClick={!useContinuousZoom ? onZoomIn || (() => adjustZoom?.(zoomInStep)) : undefined}
+				onMouseDown={useContinuousZoom && adjustZoom ? () => startContinuousZoom(zoomInStep) : undefined}
+				onMouseUp={useContinuousZoom && adjustZoom ? stopContinuousZoom : undefined}
+				onMouseLeave={useContinuousZoom && adjustZoom ? stopContinuousZoom : undefined}
+			/>
 		</div>
 	)
 }

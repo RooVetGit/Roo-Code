@@ -84,7 +84,7 @@ export function MermaidButton({ containerRef, code, isLoading, svgToPng, childre
 
 		// Determine zoom direction and amount
 		// Negative deltaY means scrolling up (zoom in), positive means scrolling down (zoom out)
-		const delta = e.deltaY > 0 ? -0.25 : 0.25
+		const delta = e.deltaY > 0 ? -0.2 : 0.2
 		adjustZoom(delta)
 	}, [])
 
