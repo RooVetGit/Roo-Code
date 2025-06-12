@@ -1,27 +1,5 @@
 // npx vitest core/prompts/__tests__/system.spec.ts
 
-// Mock environment-specific values for consistent tests - MUST BE FIRST
-vi.mock("os", async () => {
-	const actual = await vi.importActual("os")
-	return {
-		...actual,
-		homedir: () => "/home/user",
-	}
-})
-
-vi.mock("default-shell", () => ({
-	default: "/bin/zsh",
-}))
-
-vi.mock("os-name", () => ({
-	default: () => "Linux",
-}))
-
-vi.mock("../../../utils/shell", () => ({
-	getShell: () => "/bin/zsh",
-}))
-
-// Mock the system info section
 vi.mock("../sections/system-info", () => ({
 	getSystemInfoSection: vi.fn().mockImplementation((cwd: string) => {
 		return `====
