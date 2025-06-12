@@ -2,11 +2,12 @@ import * as path from "path"
 import * as os from "os"
 import * as vscode from "vscode"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
+import { t } from "../../i18n"
 
 export async function openImage(dataUri: string, options?: { values?: { action?: string } }) {
 	const matches = dataUri.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
 	if (!matches) {
-		vscode.window.showErrorMessage("Invalid data URI format")
+		vscode.window.showErrorMessage(t("common:errors.invalid_data_uri"))
 		return
 	}
 	const [, format, base64Data] = matches
@@ -19,36 +20,35 @@ export async function openImage(dataUri: string, options?: { values?: { action?:
 		// Check if this is a copy action
 		if (options?.values?.action === "copy") {
 			try {
-				// Use different clipboard commands based on platform
-				let clipboardCmd: string
-				if (process.platform === "darwin") {
-					// macOS
-					clipboardCmd = `osascript -e 'set the clipboard to (POSIX file "${tempFilePath}")'`
-				} else if (process.platform === "win32") {
-					// Windows (using PowerShell)
-					clipboardCmd = `powershell -command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetImage([System.Drawing.Image]::FromFile('${tempFilePath}'))"`
-				} else {
-					// Linux (assuming xclip is installed)
-					clipboardCmd = `xclip -selection clipboard -t image/${format} -i "${tempFilePath}"`
-				}
+				// Read the image file
+				const imageData = await vscode.workspace.fs.readFile(vscode.Uri.file(tempFilePath))
 
-				// Execute the clipboard command
-				const cp = require("child_process")
-				cp.exec(clipboardCmd, (err: any) => {
-					if (err) {
-						vscode.window.showErrorMessage(`Error copying image: ${err.message}`)
-					} else {
-						vscode.window.showInformationMessage("Image copied to clipboard")
-					}
-				})
+				// Convert to base64 for clipboard
+				const base64Image = Buffer.from(imageData).toString("base64")
+				const dataUri = `data:image/${format};base64,${base64Image}`
+
+				// Use vscode.env.clipboard to copy the data URI
+				// Note: VSCode doesn't support copying binary image data directly to clipboard
+				// So we copy the data URI which can be pasted in many applications
+				await vscode.env.clipboard.writeText(dataUri)
+
+				vscode.window.showInformationMessage(t("common:info.image_copied_to_clipboard"))
 			} catch (error) {
-				vscode.window.showErrorMessage(`Error copying image: ${error}`)
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				vscode.window.showErrorMessage(t("common:errors.error_copying_image", { errorMessage }))
+			} finally {
+				// Clean up temp file
+				try {
+					await vscode.workspace.fs.delete(vscode.Uri.file(tempFilePath))
+				} catch {
+					// Ignore cleanup errors
+				}
 			}
 			return
 		}
 		await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(tempFilePath))
 	} catch (error) {
-		vscode.window.showErrorMessage(`Error opening image: ${error}`)
+		vscode.window.showErrorMessage(t("common:errors.error_opening_image", { error }))
 	}
 }
 
@@ -183,9 +183,9 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 		})
 	} catch (error) {
 		if (error instanceof Error) {
-			vscode.window.showErrorMessage(`Could not open file: ${error.message}`)
+			vscode.window.showErrorMessage(t("common:errors.could_not_open_file", { errorMessage: error.message }))
 		} else {
-			vscode.window.showErrorMessage(`Could not open file!`)
+			vscode.window.showErrorMessage(t("common:errors.could_not_open_file_generic"))
 		}
 	}
 }
