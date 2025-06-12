@@ -67,7 +67,13 @@ export const usePromptHistory = ({
 			return conversationPrompts.slice(-MAX_PROMPT_HISTORY_SIZE).reverse() // newest first for conversation messages
 		}
 
-		// Fall back to task history if no conversation messages
+		// If we have clineMessages array (meaning we're in an active task), don't fall back to task history
+		// Only use task history when starting fresh (no active conversation)
+		if (clineMessages && clineMessages.length > 0) {
+			return []
+		}
+
+		// Fall back to task history only when starting fresh (no active conversation)
 		if (!taskHistory || taskHistory.length === 0 || !cwd) {
 			return []
 		}
