@@ -30,6 +30,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		private readonly codeParser: ICodeParser,
 		private readonly cacheManager: CacheManager,
 		private readonly ignoreInstance: Ignore,
+		private readonly workspaceRoot?: string,
 	) {}
 
 	/**
@@ -53,8 +54,10 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Filter out directories (marked with trailing '/')
 		const filePaths = allPaths.filter((p) => !p.endsWith("/"))
 
-		// Initialize RooIgnoreController if not provided
-		const ignoreController = new RooIgnoreController(directoryPath)
+		// Initialize RooIgnoreController with workspace root (not the directory being scanned)
+		// This ensures .rooignore files are always looked for in the workspace root
+		const rooIgnoreWorkingDirectory = this.workspaceRoot || directoryPath
+		const ignoreController = new RooIgnoreController(rooIgnoreWorkingDirectory)
 
 		await ignoreController.initialize()
 

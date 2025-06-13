@@ -110,7 +110,14 @@ export class CodeIndexServiceFactory {
 		parser: ICodeParser,
 		ignoreInstance: Ignore,
 	): DirectoryScanner {
-		return new DirectoryScanner(embedder, vectorStore, parser, this.cacheManager, ignoreInstance)
+		return new DirectoryScanner(
+			embedder,
+			vectorStore,
+			parser,
+			this.cacheManager,
+			ignoreInstance,
+			this.workspacePath,
+		)
 	}
 
 	/**

@@ -102,6 +102,7 @@ describe("DirectoryScanner", () => {
 			mockCodeParser,
 			mockCacheManager,
 			mockIgnoreInstance,
+			"/mock/workspace", // Add workspace root parameter
 		)
 
 		// Mock default implementations - create proper Stats object
