@@ -354,7 +354,10 @@ export async function presentAssistantMessage(cline: Task) {
 				)
 			} catch (error) {
 				cline.consecutiveMistakeCount++
-				pushToolResult(formatResponse.toolError(error.message))
+				// Ensure we always have a proper error message, even if error.message is undefined
+				const errorMessage =
+					error instanceof Error && error.message ? error.message : JSON.stringify(serializeError(error))
+				pushToolResult(formatResponse.toolError(errorMessage))
 				break
 			}
 
