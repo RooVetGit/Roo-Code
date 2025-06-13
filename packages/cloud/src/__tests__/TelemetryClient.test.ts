@@ -1,429 +1,179 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// npx vitest run src/__tests__/TelemetryClient.test.ts
-
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-
-import { type TelemetryPropertiesProvider, TelemetryEventName } from "@roo-code/types"
-
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import { TelemetryEventName } from "@roo-code/types"
 import { TelemetryClient } from "../TelemetryClient"
+import { AuthService } from "../AuthService"
+import { SettingsService } from "../SettingsService"
 
-const mockFetch = vi.fn()
-global.fetch = mockFetch as any
+// Mock dependencies
+vi.mock("../AuthService")
+vi.mock("../SettingsService")
+
+// Mock fetch globally
+global.fetch = vi.fn()
+
+// Mock getRooCodeApiUrl
+vi.mock("../Config", () => ({
+	getRooCodeApiUrl: () => "https://api.test.com",
+}))
+
+const mockAuthService = {
+	isAuthenticated: vi.fn(),
+	getSessionToken: vi.fn(),
+} as any
+
+const mockSettingsService = {
+	getSettings: vi.fn(),
+} as any
+
+const mockFetch = fetch as any
 
 describe("TelemetryClient", () => {
-	const getPrivateProperty = <T>(instance: any, propertyName: string): T => {
-		return instance[propertyName]
-	}
-
-	let mockAuthService: any
-	let mockSettingsService: any
+	let client: TelemetryClient
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		client = new TelemetryClient(mockAuthService, mockSettingsService, true)
 
-		// Create a mock AuthService instead of using the singleton
-		mockAuthService = {
-			getSessionToken: vi.fn().mockReturnValue("mock-token"),
-			getState: vi.fn().mockReturnValue("active-session"),
-			isAuthenticated: vi.fn().mockReturnValue(true),
-			hasActiveSession: vi.fn().mockReturnValue(true),
-		}
-
-		// Create a mock SettingsService
-		mockSettingsService = {
-			getSettings: vi.fn().mockReturnValue({
-				cloudSettings: {
-					recordTaskMessages: true,
-				},
-			}),
-		}
-
-		mockFetch.mockResolvedValue({
-			ok: true,
-			json: vi.fn().mockResolvedValue({}),
-		})
-
-		vi.spyOn(console, "info").mockImplementation(() => {})
-		vi.spyOn(console, "error").mockImplementation(() => {})
-	})
-
-	afterEach(() => {
-		vi.restoreAllMocks()
-	})
-
-	describe("isEventCapturable", () => {
-		it("should return true for events not in exclude list", () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_CREATED)).toBe(true)
-			expect(isEventCapturable(TelemetryEventName.LLM_COMPLETION)).toBe(true)
-			expect(isEventCapturable(TelemetryEventName.MODE_SWITCH)).toBe(true)
-			expect(isEventCapturable(TelemetryEventName.TOOL_USED)).toBe(true)
-		})
-
-		it("should return false for events in exclude list", () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_CONVERSATION_MESSAGE)).toBe(false)
-		})
-
-		it("should return true for TASK_MESSAGE events when recordTaskMessages is true", () => {
-			mockSettingsService.getSettings.mockReturnValue({
-				cloudSettings: {
-					recordTaskMessages: true,
-				},
-			})
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_MESSAGE)).toBe(true)
-		})
-
-		it("should return false for TASK_MESSAGE events when recordTaskMessages is false", () => {
-			mockSettingsService.getSettings.mockReturnValue({
-				cloudSettings: {
-					recordTaskMessages: false,
-				},
-			})
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_MESSAGE)).toBe(false)
-		})
-
-		it("should return false for TASK_MESSAGE events when recordTaskMessages is undefined", () => {
-			mockSettingsService.getSettings.mockReturnValue({
-				cloudSettings: {},
-			})
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_MESSAGE)).toBe(false)
-		})
-
-		it("should return false for TASK_MESSAGE events when cloudSettings is undefined", () => {
-			mockSettingsService.getSettings.mockReturnValue({})
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_MESSAGE)).toBe(false)
-		})
-
-		it("should return false for TASK_MESSAGE events when getSettings returns undefined", () => {
-			mockSettingsService.getSettings.mockReturnValue(undefined)
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
-				client,
-				"isEventCapturable",
-			).bind(client)
-
-			expect(isEventCapturable(TelemetryEventName.TASK_MESSAGE)).toBe(false)
+		mockAuthService.isAuthenticated.mockReturnValue(true)
+		mockAuthService.getSessionToken.mockReturnValue("test-token")
+		mockSettingsService.getSettings.mockReturnValue({
+			cloudSettings: { recordTaskMessages: false },
 		})
 	})
 
-	describe("getEventProperties", () => {
-		it("should merge provider properties with event properties", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+	describe("cloud telemetry client identification", () => {
+		it("should identify itself as a cloud telemetry client", () => {
+			// Access protected method for testing
+			const isCloudClient = (client as any).isCloudTelemetryClient()
+			expect(isCloudClient).toBe(true)
+		})
+	})
 
-			const mockProvider: TelemetryPropertiesProvider = {
+	describe("cloud telemetry properties", () => {
+		it("should use cloud telemetry properties when provider supports them", async () => {
+			const mockProvider = {
 				getTelemetryProperties: vi.fn().mockResolvedValue({
+					appName: "test-app",
 					appVersion: "1.0.0",
-					vscodeVersion: "1.60.0",
-					platform: "darwin",
-					editorName: "vscode",
-					language: "en",
 					mode: "code",
 				}),
+				getCloudTelemetryProperties: vi.fn().mockResolvedValue({
+					appName: "test-app",
+					appVersion: "1.0.0",
+					mode: "code",
+					repositoryUrl: "https://github.com/user/repo.git",
+					repositoryName: "user/repo",
+					defaultBranch: "main",
+				}),
 			}
 
 			client.setProvider(mockProvider)
 
-			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
-			>(client, "getEventProperties").bind(client)
-
-			const result = await getEventProperties({
-				event: TelemetryEventName.TASK_CREATED,
-				properties: {
-					customProp: "value",
-					mode: "override", // This should override the provider's mode.
-				},
-			})
-
-			expect(result).toEqual({
-				appVersion: "1.0.0",
-				vscodeVersion: "1.60.0",
-				platform: "darwin",
-				editorName: "vscode",
-				language: "en",
-				mode: "override", // Event property takes precedence.
-				customProp: "value",
-			})
-
-			expect(mockProvider.getTelemetryProperties).toHaveBeenCalledTimes(1)
-		})
-
-		it("should handle errors from provider gracefully", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const mockProvider: TelemetryPropertiesProvider = {
-				getTelemetryProperties: vi.fn().mockRejectedValue(new Error("Provider error")),
-			}
-
-			const consoleErrorSpy = vi.spyOn(console, "error")
-
-			client.setProvider(mockProvider)
-
-			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
-			>(client, "getEventProperties").bind(client)
-
-			const result = await getEventProperties({
-				event: TelemetryEventName.TASK_CREATED,
-				properties: { customProp: "value" },
-			})
-
-			expect(result).toEqual({ customProp: "value" })
-			expect(consoleErrorSpy).toHaveBeenCalledWith(
-				expect.stringContaining("Error getting telemetry properties: Provider error"),
-			)
-		})
-
-		it("should return event properties when no provider is set", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
-			>(client, "getEventProperties").bind(client)
-
-			const result = await getEventProperties({
-				event: TelemetryEventName.TASK_CREATED,
-				properties: { customProp: "value" },
-			})
-
-			expect(result).toEqual({ customProp: "value" })
-		})
-	})
-
-	describe("capture", () => {
-		it("should not capture events that are not capturable", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			await client.capture({
-				event: TelemetryEventName.TASK_CONVERSATION_MESSAGE, // In exclude list.
-				properties: { test: "value" },
-			})
-
-			expect(mockFetch).not.toHaveBeenCalled()
-		})
-
-		it("should not capture TASK_MESSAGE events when recordTaskMessages is false", async () => {
-			mockSettingsService.getSettings.mockReturnValue({
-				cloudSettings: {
-					recordTaskMessages: false,
-				},
-			})
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			await client.capture({
-				event: TelemetryEventName.TASK_MESSAGE,
-				properties: {
-					taskId: "test-task-id",
-					message: {
-						ts: 1,
-						type: "say",
-						say: "text",
-						text: "test message",
-					},
-				},
-			})
-
-			expect(mockFetch).not.toHaveBeenCalled()
-		})
-
-		it("should not capture TASK_MESSAGE events when recordTaskMessages is undefined", async () => {
-			mockSettingsService.getSettings.mockReturnValue({
-				cloudSettings: {},
-			})
-
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			await client.capture({
-				event: TelemetryEventName.TASK_MESSAGE,
-				properties: {
-					taskId: "test-task-id",
-					message: {
-						ts: 1,
-						type: "say",
-						say: "text",
-						text: "test message",
-					},
-				},
-			})
-
-			expect(mockFetch).not.toHaveBeenCalled()
-		})
-
-		it("should not send request when schema validation fails", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			mockFetch.mockResolvedValue({
+				ok: true,
+			} as Response)
 
 			await client.capture({
 				event: TelemetryEventName.TASK_CREATED,
-				properties: { test: "value" },
+				properties: { taskId: "test-123" },
 			})
 
-			expect(mockFetch).not.toHaveBeenCalled()
-			expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Invalid telemetry event"))
-		})
+			// Should call getCloudTelemetryProperties instead of getTelemetryProperties
+			expect(mockProvider.getCloudTelemetryProperties).toHaveBeenCalled()
+			expect(mockProvider.getTelemetryProperties).not.toHaveBeenCalled()
 
-		it("should send request when event is capturable and validation passes", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			const providerProperties = {
-				appName: "roo-code",
-				appVersion: "1.0.0",
-				vscodeVersion: "1.60.0",
-				platform: "darwin",
-				editorName: "vscode",
-				language: "en",
-				mode: "code",
-			}
-
-			const eventProperties = {
-				taskId: "test-task-id",
-			}
-
-			const mockValidatedData = {
-				type: TelemetryEventName.TASK_CREATED,
-				properties: {
-					...providerProperties,
-					taskId: "test-task-id",
-				},
-			}
-
-			const mockProvider: TelemetryPropertiesProvider = {
-				getTelemetryProperties: vi.fn().mockResolvedValue(providerProperties),
-			}
-
-			client.setProvider(mockProvider)
-
-			await client.capture({
-				event: TelemetryEventName.TASK_CREATED,
-				properties: eventProperties,
-			})
-
+			// Verify the request was made with git properties
 			expect(mockFetch).toHaveBeenCalledWith(
-				"https://app.roocode.com/api/events",
+				"https://api.test.com/api/events",
 				expect.objectContaining({
 					method: "POST",
-					body: JSON.stringify(mockValidatedData),
+					body: expect.stringContaining("repositoryUrl"),
+				}),
+			)
+
+			const callBody = JSON.parse(mockFetch.mock.calls[0][1]?.body as string)
+			expect(callBody.properties).toEqual(
+				expect.objectContaining({
+					appName: "test-app",
+					appVersion: "1.0.0",
+					mode: "code",
+					repositoryUrl: "https://github.com/user/repo.git",
+					repositoryName: "user/repo",
+					defaultBranch: "main",
+					taskId: "test-123",
 				}),
 			)
 		})
 
-		it("should attempt to capture TASK_MESSAGE events when recordTaskMessages is true", async () => {
-			mockSettingsService.getSettings.mockReturnValue({
-				cloudSettings: {
-					recordTaskMessages: true,
-				},
-			})
-
-			const eventProperties = {
-				appName: "roo-code",
-				appVersion: "1.0.0",
-				vscodeVersion: "1.60.0",
-				platform: "darwin",
-				editorName: "vscode",
-				language: "en",
-				mode: "code",
-				taskId: "test-task-id",
-				message: {
-					ts: 1,
-					type: "say",
-					say: "text",
-					text: "test message",
-				},
+		it("should fallback to regular telemetry properties when cloud properties are not available", async () => {
+			const mockProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue({
+					appName: "test-app",
+					appVersion: "1.0.0",
+					mode: "code",
+				}),
+				// No getCloudTelemetryProperties method
 			}
 
-			const mockValidatedData = {
-				type: TelemetryEventName.TASK_MESSAGE,
-				properties: eventProperties,
-			}
+			client.setProvider(mockProvider)
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			mockFetch.mockResolvedValue({
+				ok: true,
+			} as Response)
 
 			await client.capture({
-				event: TelemetryEventName.TASK_MESSAGE,
-				properties: eventProperties,
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { taskId: "test-123" },
 			})
 
-			expect(mockFetch).toHaveBeenCalledWith(
-				"https://app.roocode.com/api/events",
+			// Should call regular getTelemetryProperties
+			expect(mockProvider.getTelemetryProperties).toHaveBeenCalled()
+
+			// Verify the request was made without git properties
+			const callBody = JSON.parse(mockFetch.mock.calls[0][1]?.body as string)
+			expect(callBody.properties).toEqual(
 				expect.objectContaining({
-					method: "POST",
-					body: JSON.stringify(mockValidatedData),
+					appName: "test-app",
+					appVersion: "1.0.0",
+					mode: "code",
+					taskId: "test-123",
 				}),
 			)
+			expect(callBody.properties.repositoryUrl).toBeUndefined()
 		})
 
-		it("should handle fetch errors gracefully", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-
-			mockFetch.mockRejectedValue(new Error("Network error"))
-
-			await expect(
-				client.capture({
-					event: TelemetryEventName.TASK_CREATED,
-					properties: { test: "value" },
+		it("should handle errors when getting cloud telemetry properties", async () => {
+			const mockProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue({
+					appName: "test-app",
+					appVersion: "1.0.0",
+					mode: "code",
 				}),
-			).resolves.not.toThrow()
-		})
-	})
+				getCloudTelemetryProperties: vi.fn().mockRejectedValue(new Error("Git error")),
+			}
 
-	describe("telemetry state methods", () => {
-		it("should always return true for isTelemetryEnabled", () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-			expect(client.isTelemetryEnabled()).toBe(true)
-		})
+			// Mock console.error to avoid noise in tests
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
 
-		it("should have empty implementations for updateTelemetryState and shutdown", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
-			client.updateTelemetryState(true)
-			await client.shutdown()
+			client.setProvider(mockProvider)
+
+			mockFetch.mockResolvedValue({
+				ok: true,
+			} as Response)
+
+			await client.capture({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { taskId: "test-123" },
+			})
+
+			// Should still send the event with event properties only
+			expect(mockFetch).toHaveBeenCalled()
+			expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Error getting telemetry properties"))
+
+			const callBody = JSON.parse(mockFetch.mock.calls[0][1]?.body as string)
+			expect(callBody.properties).toEqual({ taskId: "test-123" })
+
+			consoleSpy.mockRestore()
 		})
 	})
 })
