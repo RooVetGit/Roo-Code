@@ -6,11 +6,10 @@ import { useTooltip } from "@/hooks/useTooltip"
 import type { IndexingStatus, IndexingStatusUpdateMessage } from "@roo/ExtensionMessage"
 
 interface IndexingStatusDotProps {
-	onNavigateToSettings?: () => void
 	className?: string
 }
 
-export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigateToSettings, className }) => {
+export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ className }) => {
 	const { t } = useAppTranslation()
 	const { showTooltip, handleMouseEnter, handleMouseLeave, cleanup } = useTooltip({ delay: 300 })
 	const [isHovered, setIsHovered] = useState(false)
@@ -69,9 +68,14 @@ export const IndexingStatusDot: React.FC<IndexingStatusDotProps> = ({ onNavigate
 
 	// Navigate to settings when clicked
 	const handleClick = () => {
-		if (onNavigateToSettings) {
-			onNavigateToSettings()
-		}
+		window.postMessage(
+			{
+				type: "action",
+				action: "settingsButtonClicked",
+				values: { section: "experimental" },
+			},
+			"*",
+		)
 	}
 
 	const handleMouseEnterButton = () => {

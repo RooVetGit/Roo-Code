@@ -124,14 +124,25 @@ describe("IndexingStatusDot", () => {
 		expect(button).toHaveAttribute("aria-label", "Index ready")
 	})
 
-	it("calls onNavigateToSettings when clicked", () => {
-		const onNavigateToSettings = jest.fn()
-		renderComponent({ onNavigateToSettings })
+	it("posts settingsButtonClicked message when clicked", () => {
+		// Mock window.postMessage
+		const postMessageSpy = jest.spyOn(window, "postMessage")
+
+		renderComponent()
 
 		const button = screen.getByRole("button")
 		fireEvent.click(button)
 
-		expect(onNavigateToSettings).toHaveBeenCalled()
+		expect(postMessageSpy).toHaveBeenCalledWith(
+			{
+				type: "action",
+				action: "settingsButtonClicked",
+				values: { section: "experimental" },
+			},
+			"*",
+		)
+
+		postMessageSpy.mockRestore()
 	})
 
 	it("requests indexing status on mount", () => {
