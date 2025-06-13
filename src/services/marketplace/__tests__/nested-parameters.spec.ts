@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest"
+// npx vitest services/marketplace/__tests__/nested-parameters.spec.ts
+
 import { mcpInstallationMethodSchema, mcpMarketplaceItemYamlSchema } from "../schemas"
-import { McpInstallationMethod, McpMarketplaceItem } from "../types"
+import { McpInstallationMethod } from "../types"
 
 describe("Nested Parameters", () => {
 	describe("McpInstallationMethod Schema", () => {
