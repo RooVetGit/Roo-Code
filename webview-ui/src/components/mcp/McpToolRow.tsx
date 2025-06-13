@@ -44,13 +44,15 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 			}}>
 			<div
 				data-testid="tool-row-container"
-				style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+				className="flex items-center justify-between gap-4"
 				onClick={(e) => e.stopPropagation()}>
-				<div style={{ display: "flex", alignItems: "center" }}>
-					<span className="codicon codicon-symbol-method" style={{ marginRight: "6px" }}></span>
-					<span style={{ fontWeight: 500 }}>{tool.name}</span>
+				<div className="flex items-center min-w-0 flex-1">
+					<span className="codicon codicon-symbol-method mr-1.5 flex-shrink-0"></span>
+					<span className="font-medium truncate" title={tool.name}>
+						{tool.name}
+					</span>
 				</div>
-				<div className="flex items-center space-x-4">
+				<div className="flex items-center space-x-4 flex-shrink-0">
 					{" "}
 					{/* Wrapper for checkboxes */}
 					{serverName && (
