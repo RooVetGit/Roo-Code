@@ -24,9 +24,11 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		const timeoutMs = (this.options.ollamaApiTimeout ?? 10) * 60 * 1000
 		this.client = new OpenAI({
 			baseURL: (this.options.ollamaBaseUrl || "http://localhost:11434") + "/v1",
 			apiKey: "ollama",
+			timeout: timeoutMs,
 		})
 	}
 

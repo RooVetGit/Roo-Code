@@ -124,11 +124,13 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiStreamingEnabled: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
+	openAiApiTimeout: z.number().optional(),
 })
 
 const ollamaSchema = baseProviderSettingsSchema.extend({
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
+	ollamaApiTimeout: z.number().optional(),
 })
 
 const vsCodeLmSchema = baseProviderSettingsSchema.extend({
@@ -147,6 +149,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 	lmStudioBaseUrl: z.string().optional(),
 	lmStudioDraftModelId: z.string().optional(),
 	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
+	lmStudioApiTimeout: z.number().optional(),
 })
 
 const geminiSchema = apiModelIdProviderModelSchema.extend({
@@ -306,15 +309,18 @@ export const PROVIDER_SETTINGS_KEYS = keysOf<ProviderSettings>()([
 	"openAiStreamingEnabled",
 	"openAiHostHeader", // Keep temporarily for backward compatibility during migration.
 	"openAiHeaders",
+	"openAiApiTimeout",
 	// Ollama
 	"ollamaModelId",
 	"ollamaBaseUrl",
+	"ollamaApiTimeout",
 	// VS Code LM
 	"vsCodeLmModelSelector",
 	"lmStudioModelId",
 	"lmStudioBaseUrl",
 	"lmStudioDraftModelId",
 	"lmStudioSpeculativeDecodingEnabled",
+	"lmStudioApiTimeout",
 	// Gemini
 	"geminiApiKey",
 	"googleGeminiBaseUrl",
