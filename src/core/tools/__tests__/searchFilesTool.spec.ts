@@ -22,6 +22,15 @@ vi.mock("../../../utils/path", () => ({
 
 vi.mock("../../ignore/RooIgnoreController")
 
+vi.mock("../../../i18n", () => ({
+	t: vi.fn((key: string, params?: any) => {
+		if (key === "tools:searchFiles.workspaceBoundaryError") {
+			return `Cannot search outside workspace. Path '${params?.path}' is outside the current workspace.`
+		}
+		return key
+	}),
+}))
+
 const mockedIsPathOutsideWorkspace = isPathOutsideWorkspace as MockedFunction<typeof isPathOutsideWorkspace>
 const mockedRegexSearchFiles = regexSearchFiles as MockedFunction<typeof regexSearchFiles>
 
@@ -40,6 +49,7 @@ describe("searchFilesTool", () => {
 			consecutiveMistakeCount: 0,
 			recordToolError: vi.fn(),
 			sayAndCreateMissingParamError: vi.fn().mockResolvedValue("Missing parameter error"),
+			say: vi.fn().mockResolvedValue(undefined),
 			rooIgnoreController: new RooIgnoreController("/workspace"),
 		}
 
@@ -105,6 +115,10 @@ describe("searchFilesTool", () => {
 
 			expect(mockedIsPathOutsideWorkspace).toHaveBeenCalledWith(path.resolve("/workspace", "../external"))
 			expect(mockedRegexSearchFiles).not.toHaveBeenCalled()
+			expect(mockTask.say).toHaveBeenCalledWith(
+				"error",
+				"Cannot search outside workspace. Path '../external' is outside the current workspace.",
+			)
 			expect(mockPushToolResult).toHaveBeenCalledWith(
 				"Cannot search outside workspace. Path '../external' is outside the current workspace.",
 			)
@@ -136,6 +150,10 @@ describe("searchFilesTool", () => {
 
 			expect(mockedIsPathOutsideWorkspace).toHaveBeenCalledWith(path.resolve("/workspace", "/etc/passwd"))
 			expect(mockedRegexSearchFiles).not.toHaveBeenCalled()
+			expect(mockTask.say).toHaveBeenCalledWith(
+				"error",
+				"Cannot search outside workspace. Path '/etc/passwd' is outside the current workspace.",
+			)
 			expect(mockPushToolResult).toHaveBeenCalledWith(
 				"Cannot search outside workspace. Path '/etc/passwd' is outside the current workspace.",
 			)
@@ -165,6 +183,10 @@ describe("searchFilesTool", () => {
 
 			expect(mockedIsPathOutsideWorkspace).toHaveBeenCalledWith(path.resolve("/workspace", "../../.."))
 			expect(mockedRegexSearchFiles).not.toHaveBeenCalled()
+			expect(mockTask.say).toHaveBeenCalledWith(
+				"error",
+				"Cannot search outside workspace. Path '../../..' is outside the current workspace.",
+			)
 			expect(mockPushToolResult).toHaveBeenCalledWith(
 				"Cannot search outside workspace. Path '../../..' is outside the current workspace.",
 			)
