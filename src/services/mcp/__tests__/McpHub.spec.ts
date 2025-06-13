@@ -286,6 +286,19 @@ describe("McpHub", () => {
 				},
 			}
 
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: "test-server-config",
+					status: "connected",
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
@@ -320,6 +333,19 @@ describe("McpHub", () => {
 				},
 			}
 
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: "test-server-config",
+					status: "connected",
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
@@ -352,6 +378,19 @@ describe("McpHub", () => {
 					},
 				},
 			}
+
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: "test-server-config",
+					status: "connected",
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
 
 			// Mock reading initial config
 			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
