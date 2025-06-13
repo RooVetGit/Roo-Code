@@ -10,6 +10,7 @@ Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻�
 
 - [貢獻前須知](#貢獻前須知)
 - [尋找與規劃你的貢獻](#尋找與規劃你的貢獻)
+    - [功能請求 vs. 詳細功能提案](#功能請求-vs-詳細功能提案)
 - [開發與提交流程](#開發與提交流程)
 - [法律聲明](#法律聲明)
 
@@ -63,7 +64,7 @@ Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻�
 - **檢查現有 issue：** 搜尋 [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)。
 - **建立 issue：** 使用適當範本：
     - **Bug：** 「Bug Report」範本。
-    - **功能：** 「Detailed Feature Proposal」範本。開始前需獲得批准。
+    - **功能：** 「Detailed Feature Proposal」範本。開始前需獲得批准。（見下方[功能請求 vs. 詳細功能提案](#功能請求-vs-詳細功能提案)）
 - **認領 issue：** 留言並等待正式分配。
 
 **未關聯已批准 issue 的 PR 可能會被關閉。**
@@ -78,6 +79,46 @@ Roo Code 是一個由社群驅動的專案，我們深深重視每一份貢獻�
 - 先檢查是否已有相關報告。
 - 使用 [「Bug Report」範本](https://github.com/RooCodeInc/Roo-Code/issues/new/choose) 建立新 bug 報告。
 - **安全問題：** 透過 [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new) 私下回報。
+
+### 功能請求 vs. 詳細功能提案
+
+理解這兩種提交類型的差異對於選擇正確的方法至關重要：
+
+#### 功能請求（GitHub Discussions）
+
+**目的**：分享一般性想法或建議，無需詳細規劃。
+
+**如何提交**：
+
+- 導覽至 [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- 或在 issues 部分點擊「New Issue」按鈕時點擊「Feature Request」連結
+
+**使用場景**：
+
+- 你的想法尚未完全成型
+- 你希望獲得社群的意見或回饋
+- 你提出想法但沒有親自實施的計畫
+
+#### 詳細功能提案（GitHub Issues）
+
+**目的**：明確概述的功能，旨在獲得批准後立即實施。
+
+**如何提交**：
+
+- 導覽至 [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- 點擊「New Issue」並選擇「Detailed Feature Proposal」範本
+
+**使用場景**：
+
+- 你的功能已完全規劃並準備好接受批准
+- 你或其他人打算很快實施該功能
+- 開始開發前需要正式批准
+
+**注意**：詳細功能提案必須在開始實施前由維護者批准和分配，如上述 [Issue-First 方式](#issue-first-方式)部分所述。
+
+![Issue 範本選擇](placeholder-for-issue-template-selection-image)
+
+**重要**：選擇錯誤的範本可能導致你的提交被重新導向或關閉。不要將 Bug 報告用於功能想法。
 
 ## 開發與提交流程
 

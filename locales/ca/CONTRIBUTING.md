@@ -10,6 +10,7 @@ Roo Code és un projecte impulsat per la comunitat i valorem molt cada contribuc
 
 - [Abans de contribuir](#abans-de-contribuir)
 - [Trobar i planificar la teva contribució](#trobar-i-planificar-la-teva-contribució)
+    - [Sol·licituds de funcionalitats vs. Propostes detallades de funcionalitats](#sol·licituds-de-funcionalitats-vs-propostes-detallades-de-funcionalitats)
 - [Procés de desenvolupament i enviament](#procés-de-desenvolupament-i-enviament)
 - [Legal](#legal)
 
@@ -63,7 +64,7 @@ Totes les contribucions han de començar amb una Issue de GitHub.
 - **Revisar issues existents:** Cerca a [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Crear una issue:** Utilitza les plantilles adequades:
     - **Errors:** Plantilla "Bug Report".
-    - **Funcionalitats:** Plantilla "Detailed Feature Proposal". Es requereix aprovació abans de començar.
+    - **Funcionalitats:** Plantilla "Detailed Feature Proposal". Es requereix aprovació abans de començar. (Vegeu [Sol·licituds de funcionalitats vs. Propostes detallades de funcionalitats](#sol·licituds-de-funcionalitats-vs-propostes-detallades-de-funcionalitats) a continuació)
 - **Reclamar issues:** Comenta i espera l'assignació oficial.
 
 **Els PRs sense issues aprovades poden ser tancats.**
@@ -78,6 +79,46 @@ Totes les contribucions han de començar amb una Issue de GitHub.
 - Comprova primer els informes existents.
 - Crea nous informes d'errors utilitzant la [plantilla "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Vulnerabilitats de seguretat:** Informa de manera privada via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Sol·licituds de funcionalitats vs. Propostes detallades de funcionalitats
+
+Entendre la diferència entre aquests dos tipus d'enviament és crucial per triar l'enfocament correcte:
+
+#### Sol·licitud de funcionalitat (GitHub Discussions)
+
+**Propòsit**: Compartir idees o suggeriments generals sense una planificació detallada.
+
+**Com enviar**:
+
+- Navega a [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- O fes clic a l'enllaç "Feature Request" quan premis el botó "New Issue" a la secció d'issues
+
+**Utilitza això quan**:
+
+- La teva idea encara no està completament desenvolupada
+- Vols comentaris o feedback de la comunitat
+- Proposes idees sense plans d'implementar-les personalment
+
+#### Proposta detallada de funcionalitat (GitHub Issues)
+
+**Propòsit**: Funcionalitats clarament definides destinades a la implementació immediata després de l'aprovació.
+
+**Com enviar**:
+
+- Navega a [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Fes clic a "New Issue" i selecciona la plantilla "Detailed Feature Proposal"
+
+**Utilitza això quan**:
+
+- La teva funcionalitat està completament planificada i llesta per a l'aprovació
+- Tu o algú altre té la intenció d'implementar la funcionalitat aviat
+- Es necessita aprovació formal abans de començar el desenvolupament
+
+**Nota**: Les Propostes detallades de funcionalitats han de ser aprovades i assignades per un mantenidor abans de començar la implementació, com es menciona a la secció [Enfoc Issue-First](#enfoc-issue-first) anterior.
+
+![Selecció de plantilla d'Issue](placeholder-for-issue-template-selection-image)
+
+**Important**: Triar la plantilla incorrecta pot fer que el teu enviament sigui redirigit o tancat. No utilitzis Informes d'errors per a idees de funcionalitats.
 
 ## Procés de desenvolupament i enviament
 

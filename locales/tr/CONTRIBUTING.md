@@ -10,6 +10,7 @@ Roo Code, topluluk odaklı bir projedir ve her katkıyı çok önemsiyoruz. İş
 
 - [Katkıdan Önce](#katkıdan-önce)
 - [Katkı Bulma & Planlama](#katkı-bulma--planlama)
+    - [Özellik İstekleri vs. Detaylı Özellik Önerileri](#özellik-istekleri-vs-detaylı-özellik-önerileri)
 - [Geliştirme & Gönderim Süreci](#geliştirme--gönderim-süreci)
 - [Yasal](#yasal)
 
@@ -63,7 +64,7 @@ Tüm katkılar bir GitHub Issue ile başlamalıdır.
 - **Mevcut issue'ları kontrol et:** [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)'da ara.
 - **Issue oluştur:** Uygun şablonları kullan:
     - **Hatalar:** "Bug Report" şablonu.
-    - **Özellikler:** "Detailed Feature Proposal" şablonu. Başlamadan önce onay gerekir.
+    - **Özellikler:** "Detailed Feature Proposal" şablonu. Başlamadan önce onay gerekir. (Aşağıdaki [Özellik İstekleri vs. Detaylı Özellik Önerileri](#özellik-istekleri-vs-detaylı-özellik-önerileri) bölümüne bakın)
 - **Issue'ları sahiplen:** Yorum yap ve resmi atamayı bekle.
 
 **Onaylanmış issue'lara bağlı olmayan PR'lar kapatılabilir.**
@@ -78,6 +79,46 @@ Tüm katkılar bir GitHub Issue ile başlamalıdır.
 - Önce mevcut raporları kontrol et.
 - ["Bug Report" şablonu](https://github.com/RooCodeInc/Roo-Code/issues/new/choose) kullanarak yeni hata raporları oluştur.
 - **Güvenlik açıkları:** [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new) aracılığıyla özel olarak bildir.
+
+### Özellik İstekleri vs. Detaylı Özellik Önerileri
+
+Bu iki gönderim türü arasındaki farkı anlamak, doğru yaklaşımı seçmek için çok önemlidir:
+
+#### Özellik İsteği (GitHub Discussions)
+
+**Amaç**: Detaylı planlama olmadan genel fikirleri veya önerileri paylaşmak.
+
+**Nasıl gönderilir**:
+
+- [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)'e git
+- Veya issues bölümünde "New Issue" düğmesine bastığında "Feature Request" bağlantısına tıkla
+
+**Şu durumlarda kullan**:
+
+- Fikrin henüz tam olarak geliştirilmemiş
+- Topluluktan görüş veya geri bildirim istiyorsun
+- Kişisel olarak uygulamayı planlamadan fikirler öneriyorsun
+
+#### Detaylı Özellik Önerisi (GitHub Issues)
+
+**Amaç**: Onaydan sonra hemen uygulanması amaçlanan, açıkça tanımlanmış özellikler.
+
+**Nasıl gönderilir**:
+
+- [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)'a git
+- "New Issue"ya tıkla ve "Detailed Feature Proposal" şablonunu seç
+
+**Şu durumlarda kullan**:
+
+- Özelliğin tamamen planlanmış ve onay için hazır
+- Sen veya başka biri özelliği yakında uygulamayı planlıyor
+- Geliştirmeye başlamadan önce resmi onay gerekiyor
+
+**Not**: Detaylı Özellik Önerileri, yukarıdaki [Issue-First Yaklaşımı](#issue-first-yaklaşımı) bölümünde belirtildiği gibi, uygulamaya başlamadan önce bir maintainer tarafından onaylanmalı ve atanmalıdır.
+
+![Issue Şablon Seçimi](placeholder-for-issue-template-selection-image)
+
+**Önemli**: Yanlış şablonu seçmek, gönderimin yönlendirilmesine veya kapatılmasına neden olabilir. Özellik fikirleri için Hata Raporlarını kullanma.
 
 ## Geliştirme & Gönderim Süreci
 

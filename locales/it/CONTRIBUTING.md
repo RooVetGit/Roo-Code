@@ -10,6 +10,7 @@ Roo Code è un progetto guidato dalla community e apprezziamo molto ogni contrib
 
 - [Prima di contribuire](#prima-di-contribuire)
 - [Trovare e pianificare il tuo contributo](#trovare-e-pianificare-il-tuo-contributo)
+    - [Richieste di funzionalità vs. Proposte dettagliate di funzionalità](#richieste-di-funzionalità-vs-proposte-dettagliate-di-funzionalità)
 - [Processo di sviluppo e invio](#processo-di-sviluppo-e-invio)
 - [Legale](#legale)
 
@@ -63,7 +64,7 @@ Tutti i contributi devono iniziare con una Issue GitHub.
 - **Verificare le issue esistenti:** Cerca su [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Creare una issue:** Usa i template appropriati:
     - **Bug:** Template "Bug Report".
-    - **Funzionalità:** Template "Detailed Feature Proposal". Approvazione richiesta prima di iniziare.
+    - **Funzionalità:** Template "Detailed Feature Proposal". Approvazione richiesta prima di iniziare. (Vedi [Richieste di funzionalità vs. Proposte dettagliate di funzionalità](#richieste-di-funzionalità-vs-proposte-dettagliate-di-funzionalità) sotto)
 - **Reclamare issue:** Commenta e attendi l'assegnazione ufficiale.
 
 **Le PR senza issue approvate potrebbero essere chiuse.**
@@ -78,6 +79,46 @@ Tutti i contributi devono iniziare con una Issue GitHub.
 - Controlla prima i report esistenti.
 - Crea nuovi report di bug usando il [template "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Problemi di sicurezza:** Segnala privatamente tramite [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Richieste di funzionalità vs. Proposte dettagliate di funzionalità
+
+Comprendere la differenza tra questi due tipi di invio è cruciale per scegliere l'approccio giusto:
+
+#### Richiesta di funzionalità (GitHub Discussions)
+
+**Scopo**: Condividere idee o suggerimenti generali senza pianificazione dettagliata.
+
+**Come inviare**:
+
+- Naviga su [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- O clicca sul link "Feature Request" quando premi il pulsante "New Issue" nella sezione issue
+
+**Usa questo quando**:
+
+- La tua idea non è ancora completamente sviluppata
+- Vuoi input o feedback dalla community
+- Stai proponendo idee senza piani di implementarle personalmente
+
+#### Proposta dettagliata di funzionalità (GitHub Issues)
+
+**Scopo**: Funzionalità chiaramente delineate destinate all'implementazione immediata dopo l'approvazione.
+
+**Come inviare**:
+
+- Naviga su [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Clicca su "New Issue" e seleziona il template "Detailed Feature Proposal"
+
+**Usa questo quando**:
+
+- La tua funzionalità è completamente pianificata e pronta per l'approvazione
+- Tu o qualcun altro intende implementare la funzionalità presto
+- È necessaria l'approvazione formale prima di iniziare lo sviluppo
+
+**Nota**: Le Proposte dettagliate di funzionalità devono essere approvate e assegnate da un maintainer prima di iniziare l'implementazione, come menzionato nella sezione [Approccio Issue-First](#approccio-issue-first) sopra.
+
+![Selezione del template Issue](placeholder-for-issue-template-selection-image)
+
+**Importante**: Scegliere il template sbagliato potrebbe portare al reindirizzamento o alla chiusura del tuo invio. Non usare i Report di Bug per idee di funzionalità.
 
 ## Processo di sviluppo e invio
 

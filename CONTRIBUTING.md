@@ -10,6 +10,7 @@ Roo Code is a community-driven project, and we deeply value every contribution. 
 
 - [Before You Contribute](#before-you-contribute)
 - [Finding & Planning Your Contribution](#finding--planning-your-contribution)
+    - [Feature Requests vs. Detailed Feature Proposals](#feature-requests-vs-detailed-feature-proposals)
 - [Development & Submission Process](#development--submission-process)
 - [Legal](#legal)
 
@@ -63,7 +64,7 @@ All contributions must begin with a GitHub Issue.
 - **Check existing issues**: Search [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Create an issue**: Use appropriate templates:
     - **Bugs:** "Bug Report" template.
-    - **Features:** "Detailed Feature Proposal" template. Approval required before starting.
+    - **Features:** "Detailed Feature Proposal" template. Approval required before starting. (See [Feature Requests vs. Detailed Feature Proposals](#feature-requests-vs-detailed-feature-proposals) below)
 - **Claim issues**: Comment and await official assignment.
 
 **PRs without approved issues may be closed.**
@@ -78,6 +79,46 @@ All contributions must begin with a GitHub Issue.
 - Check for existing reports first.
 - Create new bugs using the ["Bug Report" template](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Security issues**: Report privately via [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Feature Requests vs. Detailed Feature Proposals
+
+Understanding the difference between these two submission types is crucial for choosing the right approach:
+
+#### Feature Request (GitHub Discussions)
+
+**Purpose**: Share general ideas or suggestions without detailed planning.
+
+**How to Submit**:
+
+- Navigate to [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Or click the "Feature Request" link when pressing the "New Issue" button in the issues section
+
+**Use this when**:
+
+- Your idea isn't fully developed yet
+- You'd like community input or feedback
+- You're proposing ideas without plans to implement them personally
+
+#### Detailed Feature Proposal (GitHub Issues)
+
+**Purpose**: Clearly outlined features intended for immediate implementation after approval.
+
+**How to Submit**:
+
+- Navigate to [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Click "New Issue" and select the "Detailed Feature Proposal" template
+
+**Use this when**:
+
+- Your feature is thoroughly planned and ready for approval
+- You or someone else intends to implement the feature soon
+- Formal approval is needed before starting development
+
+**Note**: Detailed Feature Proposals must be approved and assigned by a maintainer before beginning implementation, as mentioned in the [Issue-First Approach](#issue-first-approach) section above.
+
+![Issue Template Selection](placeholder-for-issue-template-selection-image)
+
+**Important**: Choosing the wrong template might lead to your submission being redirected or closed. Do not use Bug Reports for feature ideas.
 
 ## Development & Submission Process
 

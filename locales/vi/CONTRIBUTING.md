@@ -10,6 +10,7 @@ Roo Code là một dự án do cộng đồng dẫn dắt và chúng mình rất
 
 - [Trước khi đóng góp](#trước-khi-đóng-góp)
 - [Tìm kiếm & lên kế hoạch đóng góp](#tìm-kiếm--lên-kế-hoạch-đóng-góp)
+    - [Yêu cầu tính năng vs. Đề xuất tính năng chi tiết](#yêu-cầu-tính-năng-vs-đề-xuất-tính-năng-chi-tiết)
 - [Quy trình phát triển & gửi bài](#quy-trình-phát-triển--gửi-bài)
 - [Pháp lý](#pháp-lý)
 
@@ -63,7 +64,7 @@ Mọi đóng góp đều phải bắt đầu bằng một GitHub Issue.
 - **Kiểm tra issue hiện có:** Tìm kiếm trong [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues).
 - **Tạo issue mới:** Sử dụng mẫu phù hợp:
     - **Lỗi:** Mẫu "Bug Report".
-    - **Tính năng:** Mẫu "Detailed Feature Proposal". Cần được phê duyệt trước khi bắt đầu.
+    - **Tính năng:** Mẫu "Detailed Feature Proposal". Cần được phê duyệt trước khi bắt đầu. (Xem [Yêu cầu tính năng vs. Đề xuất tính năng chi tiết](#yêu-cầu-tính-năng-vs-đề-xuất-tính-năng-chi-tiết) bên dưới)
 - **Nhận issue:** Bình luận và chờ được gán chính thức.
 
 **PR không có issue đã duyệt có thể bị đóng.**
@@ -78,6 +79,46 @@ Mọi đóng góp đều phải bắt đầu bằng một GitHub Issue.
 - Kiểm tra báo cáo hiện có trước.
 - Tạo báo cáo lỗi mới bằng [mẫu "Bug Report"](https://github.com/RooCodeInc/Roo-Code/issues/new/choose).
 - **Lỗ hổng bảo mật:** Báo cáo riêng qua [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new).
+
+### Yêu cầu tính năng vs. Đề xuất tính năng chi tiết
+
+Hiểu rõ sự khác biệt giữa hai loại gửi bài này rất quan trọng để chọn cách tiếp cận đúng:
+
+#### Yêu cầu tính năng (GitHub Discussions)
+
+**Mục đích**: Chia sẻ ý tưởng hoặc đề xuất chung mà không cần lập kế hoạch chi tiết.
+
+**Cách gửi**:
+
+- Điều hướng đến [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)
+- Hoặc nhấp vào liên kết "Feature Request" khi nhấn nút "New Issue" trong phần issues
+
+**Sử dụng khi**:
+
+- Ý tưởng của bạn chưa được phát triển đầy đủ
+- Bạn muốn nhận ý kiến hoặc phản hồi từ cộng đồng
+- Bạn đang đề xuất ý tưởng mà không có kế hoạch tự mình thực hiện
+
+#### Đề xuất tính năng chi tiết (GitHub Issues)
+
+**Mục đích**: Các tính năng được phác thảo rõ ràng nhằm triển khai ngay sau khi được phê duyệt.
+
+**Cách gửi**:
+
+- Điều hướng đến [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)
+- Nhấp vào "New Issue" và chọn mẫu "Detailed Feature Proposal"
+
+**Sử dụng khi**:
+
+- Tính năng của bạn đã được lập kế hoạch đầy đủ và sẵn sàng để phê duyệt
+- Bạn hoặc người khác có ý định triển khai tính năng sớm
+- Cần phê duyệt chính thức trước khi bắt đầu phát triển
+
+**Lưu ý**: Đề xuất tính năng chi tiết phải được phê duyệt và gán bởi người duy trì trước khi bắt đầu triển khai, như đã đề cập trong phần [Cách tiếp cận Issue-First](#cách-tiếp-cận-issue-first) ở trên.
+
+![Lựa chọn mẫu Issue](placeholder-for-issue-template-selection-image)
+
+**Quan trọng**: Chọn sai mẫu có thể khiến bài gửi của bạn bị chuyển hướng hoặc đóng. Không sử dụng Báo cáo lỗi cho ý tưởng tính năng.
 
 ## Quy trình phát triển & gửi bài
 

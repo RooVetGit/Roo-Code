@@ -10,6 +10,7 @@ Roo Code는 커뮤니티 주도의 프로젝트이며, 모든 기여를 소중�
 
 - [기여 전 준비](#기여-전-준비)
 - [기여 내용 찾기 및 계획 세우기](#기여-내용-찾기-및-계획-세우기)
+    - [기능 요청 vs. 상세 기능 제안](#기능-요청-vs-상세-기능-제안)
 - [개발 및 제출 프로세스](#개발-및-제출-프로세스)
 - [법적 안내](#법적-안내)
 
@@ -63,7 +64,7 @@ PR에서 이러한 영역과의 연관성을 언급하세요.
 - **기존 Issue 확인:** [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)를 검색하세요.
 - **Issue 생성:** 적절한 템플릿 사용:
     - **버그:** "Bug Report" 템플릿.
-    - **기능:** "Detailed Feature Proposal" 템플릿. 시작 전 승인 필요.
+    - **기능:** "Detailed Feature Proposal" 템플릿. 시작 전 승인 필요. (아래 [기능 요청 vs. 상세 기능 제안](#기능-요청-vs-상세-기능-제안) 참조)
 - **Issue 담당:** 댓글을 달고 공식 할당을 기다리세요.
 
 **승인된 Issue 없는 PR은 닫힐 수 있습니다.**
@@ -78,6 +79,46 @@ PR에서 이러한 영역과의 연관성을 언급하세요.
 - 먼저 기존 신고를 확인하세요.
 - ["Bug Report" 템플릿](https://github.com/RooCodeInc/Roo-Code/issues/new/choose)을 사용하여 새 버그를 신고하세요.
 - **보안 문제:** [security advisories](https://github.com/RooCodeInc/Roo-Code/security/advisories/new)를 통해 비공개로 신고하세요.
+
+### 기능 요청 vs. 상세 기능 제안
+
+이 두 제출 유형의 차이를 이해하는 것은 올바른 접근 방식을 선택하는 데 중요합니다:
+
+#### 기능 요청 (GitHub Discussions)
+
+**목적**: 상세한 계획 없이 일반적인 아이디어나 제안을 공유합니다.
+
+**제출 방법**:
+
+- [GitHub Discussions - Feature Requests](https://github.com/RooCodeInc/Roo-Code/discussions/categories/feature-requests)로 이동
+- 또는 issues 섹션에서 "New Issue" 버튼을 누를 때 "Feature Request" 링크를 클릭
+
+**사용 시기**:
+
+- 아이디어가 아직 완전히 개발되지 않았을 때
+- 커뮤니티의 의견이나 피드백을 원할 때
+- 개인적으로 구현할 계획 없이 아이디어를 제안할 때
+
+#### 상세 기능 제안 (GitHub Issues)
+
+**목적**: 승인 후 즉시 구현을 위한 명확하게 개요가 작성된 기능입니다.
+
+**제출 방법**:
+
+- [GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues)로 이동
+- "New Issue"를 클릭하고 "Detailed Feature Proposal" 템플릿을 선택
+
+**사용 시기**:
+
+- 기능이 완전히 계획되고 승인 준비가 되었을 때
+- 본인이나 다른 사람이 곧 기능을 구현할 의도가 있을 때
+- 개발 시작 전에 공식 승인이 필요할 때
+
+**참고**: 상세 기능 제안은 위의 [Issue-First 접근법](#issue-first-접근법) 섹션에서 언급한 대로 구현을 시작하기 전에 메인테이너의 승인과 할당이 필요합니다.
+
+![Issue 템플릿 선택](placeholder-for-issue-template-selection-image)
+
+**중요**: 잘못된 템플릿을 선택하면 제출이 리디렉션되거나 닫힐 수 있습니다. 기능 아이디어에 버그 리포트를 사용하지 마세요.
 
 ## 개발 및 제출 프로세스
 
