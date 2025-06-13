@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import { PathLike } from "fs"
 
-import { loadRuleFiles, addCustomInstructions } from "../custom-instructions"
+import { loadRuleFiles as originalLoadRuleFiles, addCustomInstructions } from "../custom-instructions"
 
 // Mock fs/promises
 jest.mock("fs/promises")
@@ -18,13 +18,37 @@ fs.stat = statMock as any
 fs.readdir = readdirMock as any
 fs.readlink = readlinkMock as any
 
-// Mock path.resolve and path.join to be predictable in tests
-jest.mock("path", () => ({
-	...jest.requireActual("path"),
-	resolve: jest.fn().mockImplementation((...args) => args.join("/")),
-	join: jest.fn().mockImplementation((...args) => args.join("/")),
-	relative: jest.fn().mockImplementation((from, to) => to),
-}))
+const actualPath = jest.requireActual("path")
+
+// Create a wrapped version of loadRuleFiles that normalizes paths
+const loadRuleFiles = async (cwd: string): Promise<string> => {
+	return await originalLoadRuleFiles(expectedPath(cwd))
+}
+
+// Mock path module
+jest.mock("path", () => {
+	const pathActual = jest.requireActual("path")
+	return {
+		...pathActual, // Use actual implementations for most functions
+		join: jest.fn().mockImplementation((...args: string[]) => {
+			// Filter out undefined/null/empty strings
+			return args.filter((arg) => typeof arg === "string" && arg.length > 0).join(pathActual.sep)
+		}),
+		// resolve, parse, dirname, basename etc., will use actual implementations
+	}
+})
+
+function expectedPath(forwardSlashPath: string): string {
+	const path = jest.requireActual("path")
+	return path.resolve(forwardSlashPath)
+}
+
+// Simplified mock for LANGUAGES, as it's imported by the module under test
+const LANGUAGES = {
+	en: "English",
+	es: "Español",
+	fr: "Français",
+}
 
 // Mock process.cwd
 const originalCwd = process.cwd
@@ -36,9 +60,18 @@ afterAll(() => {
 	process.cwd = originalCwd
 })
 
+// Helper function to reset all mocks completely - use this in tests that are sensitive to mock state
+function resetAllMocks() {
+	jest.clearAllMocks()
+	readFileMock.mockReset()
+	statMock.mockReset()
+	readdirMock.mockReset()
+	readlinkMock.mockReset()
+}
+
 describe("loadRuleFiles", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		resetAllMocks()
 	})
 
 	it("should read and trim file content", async () => {
@@ -141,27 +174,28 @@ describe("loadRuleFiles", () => {
 		)
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules/file1.txt") {
+			const pathStr = filePath.toString()
+			if (pathStr === expectedPath("/fake/path/.roo/rules/file1.txt")) {
 				return Promise.resolve("content of file1")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/file2.txt") {
+			if (pathStr === expectedPath("/fake/path/.roo/rules/file2.txt")) {
 				return Promise.resolve("content of file2")
 			}
 			return Promise.reject({ code: "ENOENT" })
 		})
 
 		const result = await loadRuleFiles("/fake/path")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file1.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/file1.txt")}:`)
 		expect(result).toContain("content of file1")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file2.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/file2.txt")}:`)
 		expect(result).toContain("content of file2")
 
 		// We expect both checks because our new implementation checks the files again for validation
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file2.txt")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file1.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file2.txt", "utf-8")
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules"))
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/file1.txt"))
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/file2.txt"))
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/file1.txt"), "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/file2.txt"), "utf-8")
 	})
 
 	it("should fall back to .roorules when .roo/rules/ is empty", async () => {
@@ -258,14 +292,14 @@ describe("loadRuleFiles", () => {
 		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			const path = filePath.toString()
-			if (path === "/fake/path/.roo/rules/root.txt") {
+			const pathStr = filePath.toString()
+			if (pathStr === expectedPath("/fake/path/.roo/rules/root.txt")) {
 				return Promise.resolve("root file content")
 			}
-			if (path === "/fake/path/.roo/rules/subdir/nested1.txt") {
+			if (pathStr === expectedPath("/fake/path/.roo/rules/subdir/nested1.txt")) {
 				return Promise.resolve("nested file 1 content")
 			}
-			if (path === "/fake/path/.roo/rules/subdir/subdir2/nested2.txt") {
+			if (pathStr === expectedPath("/fake/path/.roo/rules/subdir/subdir2/nested2.txt")) {
 				return Promise.resolve("nested file 2 content")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -274,30 +308,33 @@ describe("loadRuleFiles", () => {
 		const result = await loadRuleFiles("/fake/path")
 
 		// Check root file content
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/root.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/root.txt")}:`)
 		expect(result).toContain("root file content")
 
 		// Check nested files content
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/subdir/nested1.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/subdir/nested1.txt")}:`)
 		expect(result).toContain("nested file 1 content")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/subdir/subdir2/nested2.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/subdir/subdir2/nested2.txt")}:`)
 		expect(result).toContain("nested file 2 content")
 
 		// Verify correct paths were checked
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/root.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/nested1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/subdir2/nested2.txt")
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/root.txt"))
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/subdir/nested1.txt"))
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/subdir/subdir2/nested2.txt"))
 
 		// Verify files were read with correct paths
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/root.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/nested1.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/subdir2/nested2.txt", "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/root.txt"), "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/subdir/nested1.txt"), "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(
+			expectedPath("/fake/path/.roo/rules/subdir/subdir2/nested2.txt"),
+			"utf-8",
+		)
 	})
 })
 
 describe("addCustomInstructions", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		resetAllMocks()
 	})
 
 	it("should combine all instruction types when provided", async () => {
@@ -435,10 +472,11 @@ describe("addCustomInstructions", () => {
 		)
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules-test-mode/rule1.txt") {
+			const pathStr = filePath.toString()
+			if (pathStr === expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt")) {
 				return Promise.resolve("mode specific rule 1")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules-test-mode/rule2.txt") {
+			if (pathStr === expectedPath("/fake/path/.roo/rules-test-mode/rule2.txt")) {
 				return Promise.resolve("mode specific rule 2")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -452,17 +490,17 @@ describe("addCustomInstructions", () => {
 			{ language: "es" },
 		)
 
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule1.txt:")
+		expect(result).toContain(expectedPath("/fake/path/.roo/rules-test-mode"))
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt")}:`)
 		expect(result).toContain("mode specific rule 1")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule2.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules-test-mode/rule2.txt")}:`)
 		expect(result).toContain("mode specific rule 2")
 
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule2.txt")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule1.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule2.txt", "utf-8")
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules-test-mode"))
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt"))
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules-test-mode/rule2.txt"))
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt"), "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules-test-mode/rule2.txt"), "utf-8")
 	})
 
 	it("should fall back to .roorules-test-mode when .roo/rules-test-mode/ does not exist", async () => {
@@ -534,7 +572,7 @@ describe("addCustomInstructions", () => {
 		let statCallCount = 0
 		statMock.mockImplementation((filePath) => {
 			statCallCount++
-			if (filePath === "/fake/path/.roo/rules-test-mode/rule1.txt") {
+			if (filePath === expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt")) {
 				return Promise.resolve({
 					isFile: jest.fn().mockReturnValue(true),
 					isDirectory: jest.fn().mockReturnValue(false),
@@ -547,7 +585,8 @@ describe("addCustomInstructions", () => {
 		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules-test-mode/rule1.txt") {
+			const pathStr = filePath.toString()
+			if (pathStr === expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt")) {
 				return Promise.resolve("mode specific rule content")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -560,8 +599,8 @@ describe("addCustomInstructions", () => {
 			"test-mode",
 		)
 
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule1.txt:")
+		expect(result).toContain(expectedPath("/fake/path/.roo/rules-test-mode"))
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules-test-mode/rule1.txt")}:`)
 		expect(result).toContain("mode specific rule content")
 
 		expect(statCallCount).toBeGreaterThan(0)
@@ -571,7 +610,7 @@ describe("addCustomInstructions", () => {
 // Test directory existence checks through loadRuleFiles
 describe("Directory existence checks", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		resetAllMocks()
 	})
 
 	it("should detect when directory exists", async () => {
@@ -589,7 +628,7 @@ describe("Directory existence checks", () => {
 		await loadRuleFiles("/fake/path")
 
 		// Verify stat was called to check directory existence
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules")
+		expect(statMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules"))
 	})
 
 	it("should handle when directory does not exist", async () => {
@@ -608,166 +647,228 @@ describe("Directory existence checks", () => {
 
 // Indirectly test readTextFilesFromDirectory and formatDirectoryContent through loadRuleFiles
 describe("Rules directory reading", () => {
+	beforeEach(() => {
+		resetAllMocks()
+	})
+
 	it("should follow symbolic links in the rules directory", async () => {
-		// Simulate .roo/rules directory exists
-		statMock.mockResolvedValueOnce({
-			isDirectory: jest.fn().mockReturnValue(true),
-		} as any)
-
-		// Simulate listing files including a symlink
-		readdirMock
-			.mockResolvedValueOnce([
-				{
-					name: "regular.txt",
-					isFile: () => true,
-					isSymbolicLink: () => false,
-					parentPath: "/fake/path/.roo/rules",
-				},
-				{
-					name: "link.txt",
-					isFile: () => false,
-					isSymbolicLink: () => true,
-					parentPath: "/fake/path/.roo/rules",
-				},
-				{
-					name: "link_dir",
-					isFile: () => false,
-					isSymbolicLink: () => true,
-					parentPath: "/fake/path/.roo/rules",
-				},
-				{
-					name: "nested_link.txt",
-					isFile: () => false,
-					isSymbolicLink: () => true,
-					parentPath: "/fake/path/.roo/rules",
-				},
-			] as any)
-			.mockResolvedValueOnce([
-				{ name: "subdir_link.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules/symlink-target-dir" },
-			] as any)
-
-		// Simulate readlink response
-		readlinkMock
-			.mockResolvedValueOnce("../symlink-target.txt")
-			.mockResolvedValueOnce("../symlink-target-dir")
-			.mockResolvedValueOnce("../nested-symlink")
-			.mockResolvedValueOnce("nested-symlink-target.txt")
-
-		// Reset and set up the stat mock with more granular control
-		statMock.mockReset()
+		// Set up stat mock with a consistent implementation
 		statMock.mockImplementation((path: string) => {
-			// For directory check
-			if (path === "/fake/path/.roo/rules" || path.endsWith("dir")) {
+			// For initial directory check and directories
+			if (
+				path === expectedPath("/fake/path/.roo/rules") ||
+				path === expectedPath("/fake/path/.roo/symlink-target-dir") ||
+				path === expectedPath("/fake/path/.roo/rules/symlink-target-dir")
+			) {
 				return Promise.resolve({
-					isDirectory: jest.fn().mockReturnValue(true),
-					isFile: jest.fn().mockReturnValue(false),
-				} as any)
+					isDirectory: () => true,
+					isFile: () => false,
+				})
 			}
 
-			// For symlink check
-			if (path.endsWith("symlink")) {
+			// For regular files
+			if (
+				path === expectedPath("/fake/path/.roo/rules/regular.txt") ||
+				path === expectedPath("/fake/path/.roo/symlink-target.txt") ||
+				path === expectedPath("/fake/path/.roo/nested-symlink-target.txt") ||
+				path === expectedPath("/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt")
+			) {
 				return Promise.resolve({
-					isDirectory: jest.fn().mockReturnValue(false),
-					isFile: jest.fn().mockReturnValue(false),
-					isSymbolicLink: jest.fn().mockReturnValue(true),
-				} as any)
+					isDirectory: () => false,
+					isFile: () => true,
+				})
 			}
 
-			// For all files
+			// For symlinks
+			if (
+				path === expectedPath("/fake/path/.roo/rules/link.txt") ||
+				path === expectedPath("/fake/path/.roo/rules/link_dir") ||
+				path === expectedPath("/fake/path/.roo/rules/nested_link.txt") ||
+				path === expectedPath("/fake/path/.roo/nested-symlink")
+			) {
+				return Promise.resolve({
+					isDirectory: () => false,
+					isFile: () => false,
+					isSymbolicLink: () => true,
+				})
+			}
+
+			// Default case - return file
 			return Promise.resolve({
-				isFile: jest.fn().mockReturnValue(true),
-				isDirectory: jest.fn().mockReturnValue(false),
-			} as any)
+				isDirectory: () => false,
+				isFile: () => true,
+			})
 		})
 
-		// Simulate file content reading
+		// Set up readdir mock with consistent file list
+		readdirMock.mockImplementation((path: string) => {
+			if (path === expectedPath("/fake/path/.roo/rules")) {
+				return Promise.resolve([
+					{
+						name: "regular.txt",
+						isFile: () => true,
+						isSymbolicLink: () => false,
+						parentPath: "/fake/path/.roo/rules",
+					},
+					{
+						name: "link.txt",
+						isFile: () => false,
+						isSymbolicLink: () => true,
+						parentPath: "/fake/path/.roo/rules",
+					},
+					{
+						name: "link_dir",
+						isFile: () => false,
+						isSymbolicLink: () => true,
+						parentPath: "/fake/path/.roo/rules",
+					},
+					{
+						name: "nested_link.txt",
+						isFile: () => false,
+						isSymbolicLink: () => true,
+						parentPath: "/fake/path/.roo/rules",
+					},
+				])
+			}
+
+			if (
+				path === expectedPath("/fake/path/.roo/symlink-target-dir") ||
+				path === expectedPath("/fake/path/.roo/rules/symlink-target-dir")
+			) {
+				return Promise.resolve([
+					{
+						name: "subdir_link.txt",
+						isFile: () => true,
+						isSymbolicLink: () => false,
+						parentPath: "/fake/path/.roo/rules/symlink-target-dir",
+					},
+				])
+			}
+
+			return Promise.resolve([])
+		})
+
+		// Set up readlink mock with a consistent implementation
+		readlinkMock.mockImplementation((path: string) => {
+			const pathMap = {
+				[expectedPath("/fake/path/.roo/rules/link.txt")]: "../symlink-target.txt",
+				[expectedPath("/fake/path/.roo/rules/link_dir")]: "../symlink-target-dir",
+				[expectedPath("/fake/path/.roo/rules/nested_link.txt")]: "../nested-symlink",
+				[expectedPath("/fake/path/.roo/nested-symlink")]: "nested-symlink-target.txt",
+			}
+
+			if (path in pathMap) {
+				return Promise.resolve(pathMap[path])
+			}
+
+			return Promise.reject(new Error(`Unexpected readlink call for path: ${path}`))
+		})
+
+		// Set up readFile mock with a consistent implementation
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules/regular.txt") {
-				return Promise.resolve("regular file content")
+			const pathStr = filePath.toString()
+			const fileContents = {
+				[expectedPath("/fake/path/.roo/rules/regular.txt")]: "regular file content",
+				[expectedPath("/fake/path/.roo/symlink-target.txt")]: "symlink target content",
+				[expectedPath("/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt")]:
+					"regular file content under symlink target dir",
+				[expectedPath("/fake/path/.roo/nested-symlink-target.txt")]: "nested symlink target content",
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/../symlink-target.txt") {
-				return Promise.resolve("symlink target content")
+
+			if (pathStr in fileContents) {
+				return Promise.resolve(fileContents[pathStr])
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt") {
-				return Promise.resolve("regular file content under symlink target dir")
-			}
-			if (filePath.toString() === "/fake/path/.roo/rules/../nested-symlink-target.txt") {
-				return Promise.resolve("nested symlink target content")
-			}
+
 			return Promise.reject({ code: "ENOENT" })
 		})
 
 		const result = await loadRuleFiles("/fake/path")
 
 		// Verify both regular file and symlink target content are included
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/regular.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/regular.txt")}:`)
 		expect(result).toContain("regular file content")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/../symlink-target.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/symlink-target.txt")}:`)
 		expect(result).toContain("symlink target content")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/symlink-target-dir/subdir_link.txt:")
+		expect(result).toContain(
+			`# Rules from ${expectedPath("/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt")}:`,
+		)
 		expect(result).toContain("regular file content under symlink target dir")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/../nested-symlink-target.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/nested-symlink-target.txt")}:`)
 		expect(result).toContain("nested symlink target content")
 
 		// Verify readlink was called with the symlink path
-		expect(readlinkMock).toHaveBeenCalledWith("/fake/path/.roo/rules/link.txt")
-		expect(readlinkMock).toHaveBeenCalledWith("/fake/path/.roo/rules/link_dir")
+		expect(readlinkMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/link.txt"))
+		expect(readlinkMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/link_dir"))
 
 		// Verify both files were read
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/regular.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/../symlink-target.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/../nested-symlink-target.txt", "utf-8")
-	})
-	beforeEach(() => {
-		jest.clearAllMocks()
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/rules/regular.txt"), "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/symlink-target.txt"), "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(
+			expectedPath("/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt"),
+			"utf-8",
+		)
+		expect(readFileMock).toHaveBeenCalledWith(expectedPath("/fake/path/.roo/nested-symlink-target.txt"), "utf-8")
 	})
 
 	it("should correctly format multiple files from directory", async () => {
-		// Simulate .roo/rules directory exists
-		statMock.mockResolvedValueOnce({
-			isDirectory: jest.fn().mockReturnValue(true),
-		} as any)
+		// Set up directory check first - use mockImplementation instead of mockResolvedValueOnce
+		// to handle multiple calls to the same function with the same arguments
+		statMock.mockImplementation((path) => {
+			// For directory check
+			if (path === expectedPath("/fake/path/.roo/rules")) {
+				return Promise.resolve({
+					isDirectory: () => true,
+					isFile: () => false,
+				})
+			}
+
+			// For file checks
+			if (
+				[
+					expectedPath("/fake/path/.roo/rules/file1.txt"),
+					expectedPath("/fake/path/.roo/rules/file2.txt"),
+					expectedPath("/fake/path/.roo/rules/file3.txt"),
+				].includes(path)
+			) {
+				return Promise.resolve({
+					isDirectory: () => false,
+					isFile: () => true,
+				})
+			}
+
+			// Default case for unknown paths
+			return Promise.reject({ code: "ENOENT" })
+		})
 
 		// Simulate listing files
-		readdirMock.mockResolvedValueOnce([
+		readdirMock.mockResolvedValue([
 			{ name: "file1.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules" },
 			{ name: "file2.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules" },
 			{ name: "file3.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules" },
 		] as any)
 
-		statMock.mockImplementation((path) => {
-			expect([
-				"/fake/path/.roo/rules/file1.txt",
-				"/fake/path/.roo/rules/file2.txt",
-				"/fake/path/.roo/rules/file3.txt",
-			]).toContain(path)
-
-			return Promise.resolve({
-				isFile: jest.fn().mockReturnValue(true),
-			}) as any
-		})
-
+		// Set up file content reading with a consistent implementation
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules/file1.txt") {
-				return Promise.resolve("content of file1")
+			const pathStr = filePath.toString()
+			const fileContents = {
+				[expectedPath("/fake/path/.roo/rules/file1.txt")]: "content of file1",
+				[expectedPath("/fake/path/.roo/rules/file2.txt")]: "content of file2",
+				[expectedPath("/fake/path/.roo/rules/file3.txt")]: "content of file3",
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/file2.txt") {
-				return Promise.resolve("content of file2")
-			}
-			if (filePath.toString() === "/fake/path/.roo/rules/file3.txt") {
-				return Promise.resolve("content of file3")
+
+			if (pathStr in fileContents) {
+				return Promise.resolve(fileContents[pathStr])
 			}
 			return Promise.reject({ code: "ENOENT" })
 		})
 
 		const result = await loadRuleFiles("/fake/path")
 
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file1.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/file1.txt")}:`)
 		expect(result).toContain("content of file1")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file2.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/file2.txt")}:`)
 		expect(result).toContain("content of file2")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file3.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath("/fake/path/.roo/rules/file3.txt")}:`)
 		expect(result).toContain("content of file3")
 	})
 
