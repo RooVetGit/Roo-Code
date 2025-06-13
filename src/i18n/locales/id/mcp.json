@@ -4,7 +4,8 @@
 		"invalid_settings_syntax": "Format JSON pengaturan MCP tidak valid. Periksa file pengaturan kamu untuk kesalahan sintaks.",
 		"invalid_settings_validation": "Format pengaturan MCP tidak valid: {{errorMessages}}",
 		"create_json": "Gagal membuat atau membuka .roo/mcp.json: {{error}}",
-		"failed_update_project": "Gagal memperbarui server MCP proyek"
+		"failed_update_project": "Gagal memperbarui server MCP proyek",
+		"invalidJsonArgument": "Roo mencoba menggunakan {{toolName}} dengan argumen JSON yang tidak valid. Mencoba lagi..."
 	},
 	"info": {
 		"server_restarting": "Merestart server MCP {{serverName}}...",

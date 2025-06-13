@@ -1,5 +1,5 @@
 {
-	"greeting": "Apa yang bisa Kilo Code lakukan untuk Anda?",
+	"greeting": "Selamat datang di Roo Code",
 	"task": {
 		"title": "Tugas",
 		"seeMore": "Lihat lebih banyak",
@@ -152,54 +152,55 @@
 		"tokens": "token"
 	},
 	"instructions": {
-		"wantsToFetch": "Kilo Code ingin mengambil instruksi detail untuk membantu tugas saat ini"
+		"wantsToFetch": "Roo ingin mengambil instruksi detail untuk membantu tugas saat ini"
 	},
 	"fileOperations": {
-		"wantsToRead": "Kilo Code ingin membaca file ini:",
-		"wantsToReadMultiple": "Kilo Code ingin membaca beberapa file:",
-		"wantsToReadAndXMore": "Kilo Code ingin membaca file ini dan {{count}} lainnya:",
-		"wantsToReadOutsideWorkspace": "Kilo Code ingin membaca file ini di luar workspace:",
-		"didRead": "Kilo Code membaca file ini:",
-		"wantsToEdit": "Kilo Code ingin mengedit file ini:",
-		"wantsToEditOutsideWorkspace": "Kilo Code ingin mengedit file ini di luar workspace:",
-		"wantsToCreate": "Kilo Code ingin membuat file baru:",
-		"wantsToSearchReplace": "Kilo Code ingin mencari dan mengganti di file ini:",
-		"didSearchReplace": "Kilo Code melakukan pencarian dan penggantian pada file ini:",
-		"wantsToInsert": "Kilo Code ingin menyisipkan konten ke file ini:",
-		"wantsToInsertWithLineNumber": "Kilo Code ingin menyisipkan konten ke file ini di baris {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Kilo Code ingin menambahkan konten ke akhir file ini:"
+		"wantsToRead": "Roo ingin membaca file ini:",
+		"wantsToReadMultiple": "Roo ingin membaca beberapa file:",
+		"wantsToReadAndXMore": "Roo ingin membaca file ini dan {{count}} lainnya:",
+		"wantsToReadOutsideWorkspace": "Roo ingin membaca file ini di luar workspace:",
+		"didRead": "Roo membaca file ini:",
+		"wantsToEdit": "Roo ingin mengedit file ini:",
+		"wantsToEditOutsideWorkspace": "Roo ingin mengedit file ini di luar workspace:",
+		"wantsToApplyBatchChanges": "Roo ingin menerapkan perubahan ke beberapa file:",
+		"wantsToCreate": "Roo ingin membuat file baru:",
+		"wantsToSearchReplace": "Roo ingin mencari dan mengganti di file ini:",
+		"didSearchReplace": "Roo melakukan pencarian dan penggantian pada file ini:",
+		"wantsToInsert": "Roo ingin menyisipkan konten ke file ini:",
+		"wantsToInsertWithLineNumber": "Roo ingin menyisipkan konten ke file ini di baris {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo ingin menambahkan konten ke akhir file ini:"
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "Kilo Code ingin melihat file tingkat atas di direktori ini:",
-		"didViewTopLevel": "Kilo Code melihat file tingkat atas di direktori ini:",
-		"wantsToViewRecursive": "Kilo Code ingin melihat semua file secara rekursif di direktori ini:",
-		"didViewRecursive": "Kilo Code melihat semua file secara rekursif di direktori ini:",
-		"wantsToViewDefinitions": "Kilo Code ingin melihat nama definisi source code yang digunakan di direktori ini:",
-		"didViewDefinitions": "Kilo Code melihat nama definisi source code yang digunakan di direktori ini:",
-		"wantsToSearch": "Kilo Code ingin mencari direktori ini untuk <code>{{regex}}</code>:",
-		"didSearch": "Kilo Code mencari direktori ini untuk <code>{{regex}}</code>:"
+		"wantsToViewTopLevel": "Roo ingin melihat file tingkat atas di direktori ini:",
+		"didViewTopLevel": "Roo melihat file tingkat atas di direktori ini:",
+		"wantsToViewRecursive": "Roo ingin melihat semua file secara rekursif di direktori ini:",
+		"didViewRecursive": "Roo melihat semua file secara rekursif di direktori ini:",
+		"wantsToViewDefinitions": "Roo ingin melihat nama definisi source code yang digunakan di direktori ini:",
+		"didViewDefinitions": "Roo melihat nama definisi source code yang digunakan di direktori ini:",
+		"wantsToSearch": "Roo ingin mencari direktori ini untuk <code>{{regex}}</code>:",
+		"didSearch": "Roo mencari direktori ini untuk <code>{{regex}}</code>:"
 	},
 	"codebaseSearch": {
-		"wantsToSearch": "Kilo Code ingin mencari codebase untuk <code>{{query}}</code>:",
-		"wantsToSearchWithPath": "Kilo Code ingin mencari codebase untuk <code>{{query}}</code> di <code>{{path}}</code>:",
+		"wantsToSearch": "Roo ingin mencari codebase untuk <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo ingin mencari codebase untuk <code>{{query}}</code> di <code>{{path}}</code>:",
 		"didSearch": "Ditemukan {{count}} hasil untuk <code>{{query}}</code>:"
 	},
 	"commandOutput": "Output Perintah",
 	"response": "Respons",
 	"arguments": "Argumen",
 	"mcp": {
-		"wantsToUseTool": "Kilo Code ingin menggunakan tool di server MCP {{serverName}}:",
-		"wantsToAccessResource": "Kilo Code ingin mengakses resource di server MCP {{serverName}}:"
+		"wantsToUseTool": "Roo ingin menggunakan tool di server MCP {{serverName}}:",
+		"wantsToAccessResource": "Roo ingin mengakses resource di server MCP {{serverName}}:"
 	},
 	"modes": {
-		"wantsToSwitch": "Kilo Code ingin beralih ke mode {{mode}}",
-		"wantsToSwitchWithReason": "Kilo Code ingin beralih ke mode {{mode}} karena: {{reason}}",
-		"didSwitch": "Kilo Code beralih ke mode {{mode}}",
-		"didSwitchWithReason": "Kilo Code beralih ke mode {{mode}} karena: {{reason}}"
+		"wantsToSwitch": "Roo ingin beralih ke mode {{mode}}",
+		"wantsToSwitchWithReason": "Roo ingin beralih ke mode {{mode}} karena: {{reason}}",
+		"didSwitch": "Roo beralih ke mode {{mode}}",
+		"didSwitchWithReason": "Roo beralih ke mode {{mode}} karena: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Kilo Code ingin membuat subtugas baru dalam mode {{mode}}:",
-		"wantsToFinish": "Kilo Code ingin menyelesaikan subtugas ini",
+		"wantsToCreate": "Roo ingin membuat subtugas baru dalam mode {{mode}}:",
+		"wantsToFinish": "Roo ingin menyelesaikan subtugas ini",
 		"newTaskContent": "Instruksi Subtugas",
 		"completionContent": "Subtugas Selesai",
 		"resultContent": "Hasil Subtugas",
@@ -207,21 +208,21 @@
 		"completionInstructions": "Subtugas selesai! Kamu bisa meninjau hasilnya dan menyarankan koreksi atau langkah selanjutnya. Jika semuanya terlihat baik, konfirmasi untuk mengembalikan hasil ke tugas induk."
 	},
 	"questions": {
-		"hasQuestion": "Kilo Code punya pertanyaan:"
+		"hasQuestion": "Roo punya pertanyaan:"
 	},
 	"taskCompleted": "Tugas Selesai",
 	"error": "Error",
 	"diffError": {
 		"title": "Edit Tidak Berhasil"
 	},
-	"troubleMessage": "Kilo Code mengalami masalah...",
+	"troubleMessage": "Roo mengalami masalah...",
 	"powershell": {
 		"issues": "Sepertinya kamu mengalami masalah Windows PowerShell, silakan lihat ini"
 	},
 	"autoApprove": {
 		"title": "Auto-approve:",
 		"none": "Tidak Ada",
-		"description": "Auto-approve memungkinkan Kilo Code melakukan aksi tanpa meminta izin. Hanya aktifkan untuk aksi yang benar-benar kamu percayai. Konfigurasi lebih detail tersedia di <settingsLink>Pengaturan</settingsLink>."
+		"description": "Auto-approve memungkinkan Roo Code melakukan aksi tanpa meminta izin. Hanya aktifkan untuk aksi yang benar-benar kamu percayai. Konfigurasi lebih detail tersedia di <settingsLink>Pengaturan</settingsLink>."
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Dirilis",
@@ -241,7 +242,7 @@
 		"copyToInput": "Salin ke input (sama dengan shift + klik)"
 	},
 	"browser": {
-		"rooWantsToUse": "Kilo Code ingin menggunakan browser:",
+		"rooWantsToUse": "Roo ingin menggunakan browser:",
 		"consoleLogs": "Log Konsol",
 		"noNewLogs": "(Tidak ada log baru)",
 		"screenshot": "Screenshot browser",
@@ -275,14 +276,21 @@
 	"profileViolationWarning": "Profil saat ini melanggar pengaturan organisasi kamu",
 	"shellIntegration": {
 		"title": "Peringatan Eksekusi Perintah",
-		"description": "Perintah kamu dijalankan tanpa integrasi shell terminal VSCode. Untuk menekan peringatan ini kamu bisa menonaktifkan integrasi shell di bagian <strong>Terminal</strong> dari <settingsLink>pengaturan Kilo Code</settingsLink> atau troubleshoot integrasi terminal VSCode menggunakan link di bawah.",
+		"description": "Perintah kamu dijalankan tanpa integrasi shell terminal VSCode. Untuk menekan peringatan ini kamu bisa menonaktifkan integrasi shell di bagian <strong>Terminal</strong> dari <settingsLink>pengaturan Roo Code</settingsLink> atau troubleshoot integrasi terminal VSCode menggunakan link di bawah.",
 		"troubleshooting": "Klik di sini untuk dokumentasi integrasi shell."
 	},
 	"ask": {
 		"autoApprovedRequestLimitReached": {
 			"title": "Batas Permintaan yang Disetujui Otomatis Tercapai",
-			"description": "Kilo Code telah mencapai batas {{count}} permintaan API yang disetujui otomatis. Apakah Anda ingin mengatur ulang hitungan dan melanjutkan tugas?",
+			"description": "Roo telah mencapai batas {{count}} permintaan API yang disetujui otomatis. Apakah kamu ingin mengatur ulang hitungan dan melanjutkan tugas?",
 			"button": "Atur Ulang dan Lanjutkan"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Indeks siap",
+		"indexing": "Mengindeks {{percentage}}%",
+		"indexed": "Terindeks",
+		"error": "Error indeks",
+		"status": "Status indeks"
 	}
 }

@@ -1,6 +1,6 @@
 {
-	"greeting": "Hai, saya Kilo Code!",
-	"introduction": "<strong>Kilo Code adalah agen coding otonom terdepan.</strong> Bersiaplah untuk merancang, coding, debug, dan meningkatkan produktivitas seperti yang belum pernah Anda lihat sebelumnya. Untuk melanjutkan, Kilo Code memerlukan API key.",
+	"greeting": "Hai, saya Roo Code!",
+	"introduction": "<strong>Roo Code adalah agen coding otonom terdepan.</strong> Bersiaplah untuk merancang, coding, debug, dan meningkatkan produktivitas seperti yang belum pernah Anda lihat sebelumnya. Untuk melanjutkan, Roo Code memerlukan API key.",
 	"notice": "Untuk memulai, ekstensi ini memerlukan provider API.",
 	"start": "Ayo mulai!",
 	"chooseProvider": "Pilih provider API untuk memulai:",
@@ -16,7 +16,7 @@
 	"startRouter": "Setup Ekspres Melalui Router",
 	"startCustom": "Bawa API Key Anda Sendiri",
 	"telemetry": {
-		"title": "Bantu Tingkatkan Kilo Code",
+		"title": "Bantu Tingkatkan Roo Code",
 		"anonymousTelemetry": "Kirim data error dan penggunaan anonim untuk membantu kami memperbaiki bug dan meningkatkan ekstensi. Tidak ada kode, prompt, atau informasi pribadi yang pernah dikirim.",
 		"changeSettings": "Anda selalu dapat mengubah ini di bagian bawah <settingsLink>pengaturan</settingsLink>",
 		"settings": "pengaturan",
