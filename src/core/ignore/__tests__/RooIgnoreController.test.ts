@@ -215,6 +215,33 @@ describe("RooIgnoreController", () => {
 			expect(emptyController.validateAccess("secrets/api-keys.json")).toBe(true)
 			expect(emptyController.validateAccess(".git/HEAD")).toBe(true)
 		})
+
+		/**
+		 * Tests the specific scenario from GitHub issue #4647
+		 * where .next folders should be properly ignored when specified in .rooignore
+		 */
+		it("should correctly ignore .next folders in nested projects (GitHub issue #4647)", async () => {
+			// Setup .rooignore content that matches the GitHub issue scenario
+			mockFileExists.mockResolvedValue(true)
+			mockReadFile.mockResolvedValue("example-nextjs/.next/")
+			await controller.initialize()
+
+			// Test files that should be ignored (in example-nextjs/.next/)
+			expect(controller.validateAccess("example-nextjs/.next/static/chunks/main.js")).toBe(false)
+			expect(controller.validateAccess("example-nextjs/.next/build-manifest.json")).toBe(false)
+			expect(controller.validateAccess("example-nextjs/.next/server/pages/index.js")).toBe(false)
+
+			// Test files that should be allowed
+			expect(controller.validateAccess("example-nextjs/src/app.js")).toBe(true)
+			expect(controller.validateAccess("example-nextjs/package.json")).toBe(true)
+			expect(controller.validateAccess("other-project/.next/file.js")).toBe(true)
+			expect(controller.validateAccess(".next/standalone-file.js")).toBe(true)
+
+			// Test that .git and .vscode are still handled by explicit ignore in listFiles
+			// (these should be allowed by RooIgnoreController since they're not in this .rooignore)
+			expect(controller.validateAccess(".git/config")).toBe(true)
+			expect(controller.validateAccess(".vscode/settings.json")).toBe(true)
+		})
 	})
 
 	describe("validateCommand", () => {
