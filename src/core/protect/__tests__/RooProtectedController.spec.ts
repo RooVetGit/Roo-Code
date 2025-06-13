@@ -20,10 +20,6 @@ describe("RooProtectedController", () => {
 			expect(controller.isWriteProtected(".roo/modes/custom.json")).toBe(true)
 		})
 
-		it("should protect roo.json file", () => {
-			expect(controller.isWriteProtected("roo.json")).toBe(true)
-		})
-
 		it("should protect .rooprotected file", () => {
 			expect(controller.isWriteProtected(".rooprotected")).toBe(true)
 		})
@@ -66,7 +62,7 @@ describe("RooProtectedController", () => {
 
 			const protectedFiles = controller.getProtectedFiles(files)
 
-			expect(protectedFiles).toEqual(new Set([".rooignore", ".roo/config.json", "roo.json"]))
+			expect(protectedFiles).toEqual(new Set([".rooignore", ".roo/config.json"]))
 		})
 
 		it("should return empty set when no files are protected", () => {
@@ -108,7 +104,6 @@ describe("RooProtectedController", () => {
 			expect(instructions).toContain("write-protected")
 			expect(instructions).toContain(".rooignore")
 			expect(instructions).toContain(".roo/**")
-			expect(instructions).toContain("roo.json")
 			expect(instructions).toContain("\u{1F6E1}") // Shield symbol
 		})
 	})
