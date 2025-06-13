@@ -11,6 +11,7 @@ import { ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
+import { createSafeContentUri } from "../../utils/uri"
 
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
@@ -277,12 +278,8 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 			mode === "full" ? "Changes since task started" : "Changes since previous checkpoint",
 			changes.map((change) => [
 				vscode.Uri.file(change.paths.absolute),
-				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${change.paths.relative}`).with({
-					query: Buffer.from(change.content.before ?? "").toString("base64"),
-				}),
-				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${change.paths.relative}`).with({
-					query: Buffer.from(change.content.after ?? "").toString("base64"),
-				}),
+				createSafeContentUri(DIFF_VIEW_URI_SCHEME, change.paths.relative, change.content.before ?? ""),
+				createSafeContentUri(DIFF_VIEW_URI_SCHEME, change.paths.relative, change.content.after ?? ""),
 			]),
 		)
 	} catch (err) {

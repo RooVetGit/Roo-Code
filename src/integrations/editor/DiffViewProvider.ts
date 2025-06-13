@@ -13,6 +13,7 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { Task } from "../../core/task/Task"
 
 import { DecorationController } from "./DecorationController"
+import { createSafeContentUri } from "../../utils/uri"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 
@@ -310,14 +311,14 @@ export class DiffViewProvider {
 			indentBy: "",
 			suppressEmptyNode: true,
 			processEntities: false,
-			tagValueProcessor: (name, value) => {
+			tagValueProcessor: (_name, value) => {
 				if (typeof value === "string") {
 					// Only escape <, >, and & characters
 					return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 				}
 				return value
 			},
-			attributeValueProcessor: (name, value) => {
+			attributeValueProcessor: (_name, value) => {
 				if (typeof value === "string") {
 					// Only escape <, >, and & characters
 					return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -444,9 +445,7 @@ export class DiffViewProvider {
 
 			vscode.commands.executeCommand(
 				"vscode.diff",
-				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-					query: Buffer.from(this.originalContent ?? "").toString("base64"),
-				}),
+				createSafeContentUri(DIFF_VIEW_URI_SCHEME, fileName, this.originalContent ?? ""),
 				uri,
 				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
 				{ preserveFocus: true },
