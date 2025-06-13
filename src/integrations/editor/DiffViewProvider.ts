@@ -394,7 +394,7 @@ export class DiffViewProvider {
 				vscode.window.tabGroups.close(tab).then(
 					() => undefined,
 					(err) => {
-						// Ignore errors when closing diff tabs - they may already be closed
+						console.error(`Failed to close diff tab ${tab.label}`, err)
 					},
 				),
 			)
@@ -404,7 +404,9 @@ export class DiffViewProvider {
 
 	private async openDiffEditor(): Promise<vscode.TextEditor> {
 		if (!this.relPath) {
-			throw new Error("No file path set")
+			throw new Error(
+				"No file path set for opening diff editor. Ensure open() was called before openDiffEditor()",
+			)
 		}
 
 		const uri = vscode.Uri.file(path.resolve(this.cwd, this.relPath))
@@ -428,86 +430,83 @@ export class DiffViewProvider {
 
 		// Open new diff editor.
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
-			;(async () => {
-				const fileName = path.basename(uri.fsPath)
-				const fileExists = this.editType === "modify"
-				let timeoutId: NodeJS.Timeout | undefined
+			const fileName = path.basename(uri.fsPath)
+			const fileExists = this.editType === "modify"
+			const DIFF_EDITOR_TIMEOUT = 10_000 // ms
 
-				const checkAndResolve = () => {
-					for (const group of vscode.window.tabGroups.all) {
-						for (const tab of group.tabs) {
-							if (
-								tab.input instanceof vscode.TabInputTextDiff &&
-								tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME &&
-								arePathsEqual(tab.input.modified.fsPath, uri.fsPath)
-							) {
-								// Found the diff editor, now try to show it to get the TextEditor instance
-								vscode.window.showTextDocument(tab.input.modified, { preserveFocus: true }).then(
-									(editor) => {
-										if (timeoutId) clearTimeout(timeoutId)
-										disposableTabGroup.dispose()
-										resolve(editor)
-									},
-									(err) => {
-										if (timeoutId) clearTimeout(timeoutId)
-										disposableTabGroup.dispose()
-										reject(
-											new Error(`Failed to show diff editor after finding tab: ${err.message}`),
-										)
-									},
-								)
-								return true
-							}
+			let timeoutId: NodeJS.Timeout | undefined
+			const disposables: vscode.Disposable[] = []
+
+			const cleanup = () => {
+				if (timeoutId) {
+					clearTimeout(timeoutId)
+					timeoutId = undefined
+				}
+				disposables.forEach((d) => d.dispose())
+				disposables.length = 0
+			}
+
+			// Set timeout for the entire operation
+			timeoutId = setTimeout(() => {
+				cleanup()
+				reject(
+					new Error(
+						`Failed to open diff editor for ${uri.fsPath} within ${DIFF_EDITOR_TIMEOUT / 1000} seconds. The editor may be blocked or VS Code may be unresponsive.`,
+					),
+				)
+			}, DIFF_EDITOR_TIMEOUT)
+
+			// Listen for document open events - more efficient than scanning all tabs
+			disposables.push(
+				vscode.workspace.onDidOpenTextDocument(async (document) => {
+					if (arePathsEqual(document.uri.fsPath, uri.fsPath)) {
+						// Wait a tick for the editor to be available
+						await new Promise((r) => setTimeout(r, 0))
+
+						// Find the editor for this document
+						const editor = vscode.window.visibleTextEditors.find((e) =>
+							arePathsEqual(e.document.uri.fsPath, uri.fsPath),
+						)
+
+						if (editor) {
+							cleanup()
+							resolve(editor)
 						}
 					}
-					return false
-				}
+				}),
+			)
 
-				// Listen for changes in tab groups, which includes tabs moving between windows
-				const disposableTabGroup = vscode.window.tabGroups.onDidChangeTabGroups(() => {
-					const found = checkAndResolve()
-					if (found) {
-						// Editor found and resolved, no need to continue listening
-						console.debug("Diff editor found via tab group change listener")
+			// Also listen for visible editor changes as a fallback
+			disposables.push(
+				vscode.window.onDidChangeVisibleTextEditors((editors) => {
+					const editor = editors.find((e) => arePathsEqual(e.document.uri.fsPath, uri.fsPath))
+					if (editor) {
+						cleanup()
+						resolve(editor)
 					}
-				})
+				}),
+			)
 
-				vscode.commands
-					.executeCommand(
-						"vscode.diff",
-						vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-							query: Buffer.from(this.originalContent ?? "").toString("base64"),
-						}),
-						uri,
-						`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
-						{ preserveFocus: true },
-					)
-					.then(
-						() => {
-							// Give a brief moment for the editor to appear in tab groups
-							setTimeout(() => {
-								const found = checkAndResolve()
-								if (!found) {
-									// If not found immediately, rely on tab group change listener
-									// and the 10-second timeout fallback to handle resolution
-									console.debug(
-										"Diff editor not found in initial check, waiting for tab group changes...",
-									)
-								}
-							}, 100)
-						},
-						(err) => {
-							if (timeoutId) clearTimeout(timeoutId)
-							disposableTabGroup.dispose()
-							reject(new Error(`Failed to open diff editor command: ${err.message}`))
-						},
-					)
-
-				timeoutId = setTimeout(() => {
-					disposableTabGroup.dispose()
-					reject(new Error("Failed to open diff editor, please try again..."))
-				}, 10_000)
-			})()
+			// Execute the diff command
+			vscode.commands
+				.executeCommand(
+					"vscode.diff",
+					vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+						query: Buffer.from(this.originalContent ?? "").toString("base64"),
+					}),
+					uri,
+					`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+					{ preserveFocus: true },
+				)
+				.then(
+					() => {
+						// Command executed successfully, now wait for the editor to appear
+					},
+					(err: any) => {
+						cleanup()
+						reject(new Error(`Failed to execute diff command for ${uri.fsPath}: ${err.message}`))
+					},
+				)
 		})
 	}
 
