@@ -18,11 +18,7 @@ customModes:
       - Ensuring instructions are well-organized with proper XML tags
       - Following established patterns from existing modes
     whenToUse: >-
-      Use this mode when you need to create a new custom mode for the Roo-Code project. This mode will guide you through:
-      - Defining the mode's configuration in .roomodes
-      - Creating structured XML instruction files in .roo/rules-[mode-slug]/
-      - Following best practices for XML tag usage and instruction organization
-      - Ensuring the mode integrates well with the existing mode ecosystem
+      Use this mode when you need to create a new custom mode for the Roo-Code project.
     groups:
       - read
       - - edit
