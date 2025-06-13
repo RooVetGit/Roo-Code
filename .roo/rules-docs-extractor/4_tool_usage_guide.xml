@@ -142,7 +142,16 @@
 
 ## Overview
 The authentication system provides secure user authentication using JWT tokens...
-<scenario>Multiple features with similar names exist</scenario>
+</content>
+<line_count>...</line_count>
+</write_to_file>
+      ]]></example>
+    </tool>
+    
+    <tool name="ask_followup_question">
+      <purpose>Clarify requirements when multiple interpretations exist</purpose>
+      <when_to_use>
+        <scenario>Multiple features with similar names exist</scenario>
         <scenario>Documentation depth needs clarification</scenario>
         <scenario>Target audience priorities need definition</scenario>
       </when_to_use>
