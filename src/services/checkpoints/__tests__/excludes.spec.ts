@@ -113,6 +113,8 @@ readme.md text
 			// Verify we have standard patterns but no LFS patterns
 			// Check for a few known patterns from different categories
 			expect(excludePatterns).toContain("node_modules/") // buildArtifact
+			expect(excludePatterns).toContain(".terraform/") // terraform cache
+			expect(excludePatterns).toContain(".terragrunt-cache/") // terragrunt cache
 			expect(excludePatterns).toContain("*.jpg") // media
 			expect(excludePatterns).toContain("*.tmp") // cache
 			expect(excludePatterns).toContain("*.env*") // config
@@ -144,6 +146,8 @@ readme.md text
 			// Verify we have standard patterns but no LFS patterns
 			// Check for a few known patterns from different categories
 			expect(excludePatterns).toContain("node_modules/") // buildArtifact
+			expect(excludePatterns).toContain(".terraform/") // terraform cache
+			expect(excludePatterns).toContain(".terragrunt-cache/") // terragrunt cache
 			expect(excludePatterns).toContain("*.jpg") // media
 			expect(excludePatterns).toContain("*.tmp") // cache
 			expect(excludePatterns).toContain("*.env*") // config
