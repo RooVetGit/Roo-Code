@@ -152,7 +152,8 @@
 		"wantsToInsert": "Roo möchte Inhalte in diese Datei einfügen:",
 		"wantsToInsertWithLineNumber": "Roo möchte Inhalte in diese Datei in Zeile {{lineNumber}} einfügen:",
 		"wantsToInsertAtEnd": "Roo möchte Inhalte am Ende dieser Datei anhängen:",
-		"wantsToReadMultiple": "Roo möchte mehrere Dateien lesen:"
+		"wantsToReadMultiple": "Roo möchte mehrere Dateien lesen:",
+		"wantsToApplyBatchChanges": "Roo möchte Änderungen an mehreren Dateien vornehmen:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo möchte die Dateien auf oberster Ebene in diesem Verzeichnis anzeigen:",
@@ -215,9 +216,9 @@
 		"title": "🎉 Roo Code {{version}} veröffentlicht",
 		"description": "Roo Code {{version}} bringt leistungsstarke neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
 		"whatsNew": "Was ist neu",
-		"feature1": "<bold>Intelligente Kontext-Kondensierung standardmäßig aktiviert</bold>: Kontext-Kondensierung ist jetzt standardmäßig aktiviert mit konfigurierbaren Einstellungen für automatische Kondensierung",
-		"feature2": "<bold>Manueller Kondensierungs-Button</bold>: Neuer Button im Task-Header ermöglicht es dir, Kontext-Kondensierung jederzeit manuell auszulösen",
-		"feature3": "<bold>Erweiterte Kondensierungs-Einstellungen</bold>: Feinabstimmung wann und wie automatische Kondensierung über die <contextSettingsLink>Kontext-Einstellungen</contextSettingsLink> erfolgt",
+		"feature1": "<bold>Experimenteller Marketplace</bold>: Entdecke und installiere Modi und MCPs im neuen Marketplace (aktivierbar in den <experimentalSettingsLink>Experimentellen Einstellungen</experimentalSettingsLink>)",
+		"feature2": "<bold>Verbesserte Dateioperationen</bold>: Mehrere gleichzeitige Dateischreibvorgänge in experimentellen Einstellungen und gleichzeitige Lesevorgänge jetzt in den <contextSettingsLink>Kontext-Einstellungen</contextSettingsLink>",
+		"feature3": "<bold>MCP-Verbesserungen & mehr</bold>: Erweiterte MCP-Unterstützung, Mermaid-Steuerungen, Amazon Bedrock Thinking-Unterstützung und vieles mehr!",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},

@@ -1,14 +1,5 @@
 # Roo Code Changelog
 
-## 3.19.8
-
-### Patch Changes
-
-- Always focus the panel when clicked to ensure menu buttons are available
-- Add "qwen/qwen3-32b" model for Groq
-- Add in/out price for all Groq models
-- Add "magistral-medium-latest" and "mistral-medium-latest" models for Mistral
-
 ## [3.19.7] - 2025-06-11
 
 - Fix McpHub sidebar focus behavior to prevent unwanted focus grabbing

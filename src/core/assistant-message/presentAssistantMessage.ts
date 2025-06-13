@@ -11,7 +11,7 @@ import { fetchInstructionsTool } from "../tools/fetchInstructionsTool"
 import { listFilesTool } from "../tools/listFilesTool"
 import { getReadFileToolDescription, readFileTool } from "../tools/readFileTool"
 import { writeToFileTool } from "../tools/writeToFileTool"
-import { applyDiffTool } from "../tools/applyDiffTool"
+import { applyDiffTool } from "../tools/multiApplyDiffTool"
 import { insertContentTool } from "../tools/insertContentTool"
 import { searchAndReplaceTool } from "../tools/searchAndReplaceTool"
 import { listCodeDefinitionNamesTool } from "../tools/listCodeDefinitionNamesTool"
@@ -31,6 +31,8 @@ import { formatResponse } from "../prompts/responses"
 import { validateToolUse } from "../tools/validateToolUse"
 import { Task } from "../task/Task"
 import { codebaseSearchTool } from "../tools/codebaseSearchTool"
+import { experiments, EXPERIMENT_IDS } from "../../shared/experiments"
+import { applyDiffToolLegacy } from "../tools/applyDiffTool"
 
 /**
  * Processes and presents assistant message content to the user interface.
@@ -159,7 +161,24 @@ export async function presentAssistantMessage(cline: Task) {
 					case "write_to_file":
 						return `[${block.name} for '${block.params.path}']`
 					case "apply_diff":
-						return `[${block.name} for '${block.params.path}']`
+						// Handle both legacy format and new multi-file format
+						if (block.params.path) {
+							return `[${block.name} for '${block.params.path}']`
+						} else if (block.params.args) {
+							// Try to extract first file path from args for display
+							const match = block.params.args.match(/<file>.*?<path>([^<]+)<\/path>/s)
+							if (match) {
+								const firstPath = match[1]
+								// Check if there are multiple files
+								const fileCount = (block.params.args.match(/<file>/g) || []).length
+								if (fileCount > 1) {
+									return `[${block.name} for '${firstPath}' and ${fileCount - 1} more file${fileCount > 2 ? "s" : ""}]`
+								} else {
+									return `[${block.name} for '${firstPath}']`
+								}
+							}
+						}
+						return `[${block.name}]`
 					case "search_files":
 						return `[${block.name} for '${block.params.regex}'${
 							block.params.file_pattern ? ` in '${block.params.file_pattern}'` : ""
@@ -384,9 +403,33 @@ export async function presentAssistantMessage(cline: Task) {
 				case "write_to_file":
 					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
-				case "apply_diff":
-					await applyDiffTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+				case "apply_diff": {
+					// Get the provider and state to check experiment settings
+					const provider = cline.providerRef.deref()
+					let isMultiFileApplyDiffEnabled = false
+
+					if (provider) {
+						const state = await provider.getState()
+						isMultiFileApplyDiffEnabled = experiments.isEnabled(
+							state.experiments ?? {},
+							EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
+						)
+					}
+
+					if (isMultiFileApplyDiffEnabled) {
+						await applyDiffTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					} else {
+						await applyDiffToolLegacy(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+					}
 					break
+				}
 				case "insert_content":
 					await insertContentTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break

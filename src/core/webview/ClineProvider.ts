@@ -106,7 +106,7 @@ export class ClineProvider
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "may-29-2025-3-19" // Update for v3.19.0 announcement
+	public readonly latestAnnouncementId = "dec-12-2025-3-20" // Update for v3.20.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -1436,7 +1436,7 @@ export class ClineProvider
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? -1,
-			maxConcurrentFileReads: maxConcurrentFileReads ?? 15,
+			maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
@@ -1586,12 +1586,7 @@ export class ClineProvider
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
-			maxConcurrentFileReads: experiments.isEnabled(
-				stateValues.experiments ?? experimentDefault,
-				EXPERIMENT_IDS.CONCURRENT_FILE_READS,
-			)
-				? (stateValues.maxConcurrentFileReads ?? 15)
-				: 1,
+			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 			cloudUserInfo,
 			cloudIsAuthenticated,

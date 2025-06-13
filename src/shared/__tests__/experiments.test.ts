@@ -14,13 +14,22 @@ describe("experiments", () => {
 		})
 	})
 
+	describe("MULTI_FILE_APPLY_DIFF", () => {
+		it("is configured correctly", () => {
+			expect(EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF).toBe("multiFileApplyDiff")
+			expect(experimentConfigsMap.MULTI_FILE_APPLY_DIFF).toMatchObject({
+				enabled: false,
+			})
+		})
+	})
+
 	describe("isEnabled", () => {
 		it("returns false when POWER_STEERING experiment is not enabled", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				marketplace: false,
-				concurrentFileReads: false,
 				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -29,8 +38,8 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: true,
 				marketplace: false,
-				concurrentFileReads: false,
 				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
 		})
@@ -39,30 +48,10 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				marketplace: false,
-				concurrentFileReads: false,
 				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
-		})
-
-		it("returns false when CONCURRENT_FILE_READS experiment is not enabled", () => {
-			const experiments: Record<ExperimentId, boolean> = {
-				powerSteering: false,
-				marketplace: false,
-				concurrentFileReads: false,
-				disableCompletionCommand: false,
-			}
-			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.CONCURRENT_FILE_READS)).toBe(false)
-		})
-
-		it("returns true when CONCURRENT_FILE_READS experiment is enabled", () => {
-			const experiments: Record<ExperimentId, boolean> = {
-				powerSteering: false,
-				marketplace: false,
-				concurrentFileReads: true,
-				disableCompletionCommand: false,
-			}
-			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.CONCURRENT_FILE_READS)).toBe(true)
 		})
 	})
 	describe("MARKETPLACE", () => {
@@ -79,8 +68,8 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				marketplace: false,
-				concurrentFileReads: false,
 				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(false)
 		})
@@ -89,8 +78,8 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				marketplace: true,
-				concurrentFileReads: false,
 				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(true)
 		})
@@ -98,7 +87,6 @@ describe("experiments", () => {
 		it("returns false when MARKETPLACE experiment is not present", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
-				concurrentFileReads: false,
 				// marketplace missing
 			} as any
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(false)
