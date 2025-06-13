@@ -14,9 +14,11 @@ export class RooProtectedController {
 	// Predefined list of protected Roo configuration patterns
 	private static readonly PROTECTED_PATTERNS = [
 		".rooignore",
+		".roomodes",
+		".roorules*",
+		".clinerules*",
 		".roo/**",
 		".rooprotected", // For future use
-		".roo*", // Any file starting with .roo
 	]
 
 	constructor(cwd: string) {

@@ -24,9 +24,23 @@ describe("RooProtectedController", () => {
 			expect(controller.isWriteProtected(".rooprotected")).toBe(true)
 		})
 
-		it("should protect files starting with .roo", () => {
-			expect(controller.isWriteProtected(".roosettings")).toBe(true)
-			expect(controller.isWriteProtected(".rooconfig")).toBe(true)
+		it("should protect .roomodes files", () => {
+			expect(controller.isWriteProtected(".roomodes")).toBe(true)
+		})
+
+		it("should protect .roorules* files", () => {
+			expect(controller.isWriteProtected(".roorules")).toBe(true)
+			expect(controller.isWriteProtected(".roorules.md")).toBe(true)
+		})
+
+		it("should protect .clinerules* files", () => {
+			expect(controller.isWriteProtected(".clinerules")).toBe(true)
+			expect(controller.isWriteProtected(".clinerules.md")).toBe(true)
+		})
+
+		it("should not protect other files starting with .roo", () => {
+			expect(controller.isWriteProtected(".roosettings")).toBe(false)
+			expect(controller.isWriteProtected(".rooconfig")).toBe(false)
 		})
 
 		it("should not protect regular files", () => {
@@ -41,8 +55,10 @@ describe("RooProtectedController", () => {
 		})
 
 		it("should handle nested paths correctly", () => {
-			expect(controller.isWriteProtected("src/.roo/config.json")).toBe(true) // .roo/** matches anywhere
+			expect(controller.isWriteProtected(".roo/config.json")).toBe(true) // .roo/** matches at root
 			expect(controller.isWriteProtected("nested/.rooignore")).toBe(true) // .rooignore matches anywhere by default
+			expect(controller.isWriteProtected("nested/.roomodes")).toBe(true) // .roomodes matches anywhere by default
+			expect(controller.isWriteProtected("nested/.roorules.md")).toBe(true) // .roorules* matches anywhere by default
 		})
 
 		it("should handle absolute paths by converting to relative", () => {
@@ -112,7 +128,14 @@ describe("RooProtectedController", () => {
 		it("should return the list of protected patterns", () => {
 			const patterns = RooProtectedController.getProtectedPatterns()
 
-			expect(patterns).toEqual([".rooignore", ".roo/**", ".rooprotected", ".roo*"])
+			expect(patterns).toEqual([
+				".rooignore",
+				".roomodes",
+				".roorules*",
+				".clinerules*",
+				".roo/**",
+				".rooprotected",
+			])
 		})
 	})
 })
