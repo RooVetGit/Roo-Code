@@ -39,7 +39,7 @@ services:
 
     redis:
         container_name: evals-redis
-        image: redis:7-alpine
+        image: redis:8-alpine
         # expose:
         #     - 6379
         ports:
