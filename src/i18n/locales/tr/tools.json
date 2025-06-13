@@ -2,7 +2,8 @@
 	"readFile": {
 		"linesRange": " (satır {{start}}-{{end}})",
 		"definitionsOnly": " (sadece tanımlar)",
-		"maxLines": " (maks. {{max}} satır)"
+		"maxLines": " (maks. {{max}} satır)",
+		"autoTruncateTooltip": "Bu limiti ayarlamak için, Roo-Code panelindeki '{{settings}}' simgesine (⚙️) tıklayın, ardından '{{context}}' seçeneğine tıklayın ve '{{threshold}}' seçeneğini bulun."
 	},
 	"toolRepetitionLimitReached": "Roo bir döngüye takılmış gibi görünüyor, aynı eylemi ({{toolName}}) tekrar tekrar deniyor. Bu, mevcut stratejisinde bir sorun olduğunu gösterebilir. Görevi yeniden ifade etmeyi, daha spesifik talimatlar vermeyi veya onu farklı bir yaklaşıma yönlendirmeyi düşünün.",
 	"codebaseSearch": {

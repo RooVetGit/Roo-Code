@@ -2,7 +2,8 @@
 	"readFile": {
 		"linesRange": " (第 {{start}}-{{end}} 行)",
 		"definitionsOnly": " (仅定义)",
-		"maxLines": " (最多 {{max}} 行)"
+		"maxLines": " (最多 {{max}} 行)",
+		"autoTruncateTooltip": "要调整此限制，请点击 Roo-Code 面板中的\"{{settings}}\"图标 (⚙️)，然后点击\"{{context}}\"并找到\"{{threshold}}\"选项。"
 	},
 	"toolRepetitionLimitReached": "Roo 似乎陷入循环，反复尝试同一操作 ({{toolName}})。这可能表明当前策略存在问题。请考虑重新描述任务、提供更具体的指示或引导其尝试不同的方法。",
 	"codebaseSearch": {

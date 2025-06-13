@@ -1,0 +1,11 @@
+{
+	"readFile": {
+		"linesRange": " (lines {{start}}-{{end}})",
+		"linesFromToEnd": " (lines {{start}}-end)",
+		"linesFromStartTo": " (lines 1-{{end}})",
+		"definitionsOnly": " (definitions only)",
+		"maxLines": " (max {{max}} lines)",
+		"autoTruncateTooltip": "To adjust this limit, click the '{{settings}}' icon (⚙️) in the Roo-Code panel, then click on '{{context}}' and find the '{{threshold}}' option."
+	},
+	"toolRepetitionLimitReached": "Roo appears to be stuck in a loop, attempting the same action ({{toolName}}) repeatedly. This might indicate a problem with its current strategy. Consider rephrasing the task, providing more specific instructions, or guiding it towards a different approach."
+}

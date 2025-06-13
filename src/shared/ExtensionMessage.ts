@@ -303,6 +303,7 @@ export interface ClineSayTool {
 		}>
 	}>
 	question?: string
+	wasAutoTruncated?: boolean
 }
 
 // Must keep in sync with system prompt.

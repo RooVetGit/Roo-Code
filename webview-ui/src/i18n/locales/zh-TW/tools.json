@@ -1,0 +1,11 @@
+{
+	"readFile": {
+		"linesRange": " (第 {{start}}-{{end}} 行)",
+		"linesFromToEnd": " (第 {{start}} 行至結尾)",
+		"linesFromStartTo": " (第 1-{{end}} 行)",
+		"definitionsOnly": " (僅定義)",
+		"maxLines": " (最多 {{max}} 行)",
+		"autoTruncateTooltip": "要調整此限制，請點擊 Roo-Code 面板中的\"{{settings}}\"圖示 (⚙️)，然後點擊\"{{context}}\"並找到\"{{threshold}}\"選項。"
+	},
+	"toolRepetitionLimitReached": "Roo 似乎陷入循環，反覆嘗試同一操作 ({{toolName}})。這可能表明目前策略存在問題。請考慮重新描述工作、提供更具體的指示或引導其嘗試不同的方法。"
+}

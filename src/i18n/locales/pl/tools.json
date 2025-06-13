@@ -2,7 +2,8 @@
 	"readFile": {
 		"linesRange": " (linie {{start}}-{{end}})",
 		"definitionsOnly": " (tylko definicje)",
-		"maxLines": " (maks. {{max}} linii)"
+		"maxLines": " (maks. {{max}} linii)",
+		"autoTruncateTooltip": "Aby dostosować ten limit, kliknij ikonę '{{settings}}' (⚙️) w panelu Roo-Code, następnie kliknij '{{context}}' i znajdź opcję '{{threshold}}'."
 	},
 	"toolRepetitionLimitReached": "Wygląda na to, że Roo utknął w pętli, wielokrotnie próbując wykonać tę samą akcję ({{toolName}}). Może to wskazywać na problem z jego obecną strategią. Rozważ przeformułowanie zadania, podanie bardziej szczegółowych instrukcji lub nakierowanie go na inne podejście.",
 	"codebaseSearch": {
