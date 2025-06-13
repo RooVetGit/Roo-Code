@@ -1,4 +1,5 @@
 import path from "path"
+import { describe, it, expect, beforeEach, vi, type Mock, type MockedFunction } from "vitest"
 import { searchFilesTool } from "../searchFilesTool"
 import { Task } from "../../task/Task"
 import { SearchFilesToolUse } from "../../../shared/tools"
@@ -7,45 +8,45 @@ import { regexSearchFiles } from "../../../services/ripgrep"
 import { RooIgnoreController } from "../../ignore/RooIgnoreController"
 
 // Mock dependencies
-jest.mock("../../../utils/pathUtils", () => ({
-	isPathOutsideWorkspace: jest.fn(),
+vi.mock("../../../utils/pathUtils", () => ({
+	isPathOutsideWorkspace: vi.fn(),
 }))
 
-jest.mock("../../../services/ripgrep", () => ({
-	regexSearchFiles: jest.fn(),
+vi.mock("../../../services/ripgrep", () => ({
+	regexSearchFiles: vi.fn(),
 }))
 
-jest.mock("../../../utils/path", () => ({
-	getReadablePath: jest.fn((cwd: string, relPath: string) => relPath),
+vi.mock("../../../utils/path", () => ({
+	getReadablePath: vi.fn((cwd: string, relPath: string) => relPath),
 }))
 
-jest.mock("../../ignore/RooIgnoreController")
+vi.mock("../../ignore/RooIgnoreController")
 
-const mockedIsPathOutsideWorkspace = isPathOutsideWorkspace as jest.MockedFunction<typeof isPathOutsideWorkspace>
-const mockedRegexSearchFiles = regexSearchFiles as jest.MockedFunction<typeof regexSearchFiles>
+const mockedIsPathOutsideWorkspace = isPathOutsideWorkspace as MockedFunction<typeof isPathOutsideWorkspace>
+const mockedRegexSearchFiles = regexSearchFiles as MockedFunction<typeof regexSearchFiles>
 
 describe("searchFilesTool", () => {
 	let mockTask: Partial<Task>
-	let mockAskApproval: jest.Mock
-	let mockHandleError: jest.Mock
-	let mockPushToolResult: jest.Mock
-	let mockRemoveClosingTag: jest.Mock
+	let mockAskApproval: Mock
+	let mockHandleError: Mock
+	let mockPushToolResult: Mock
+	let mockRemoveClosingTag: Mock
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 
 		mockTask = {
 			cwd: "/workspace",
 			consecutiveMistakeCount: 0,
-			recordToolError: jest.fn(),
-			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
+			recordToolError: vi.fn(),
+			sayAndCreateMissingParamError: vi.fn().mockResolvedValue("Missing parameter error"),
 			rooIgnoreController: new RooIgnoreController("/workspace"),
 		}
 
-		mockAskApproval = jest.fn().mockResolvedValue(true)
-		mockHandleError = jest.fn()
-		mockPushToolResult = jest.fn()
-		mockRemoveClosingTag = jest.fn((tag: string, value: string | undefined) => value || "")
+		mockAskApproval = vi.fn().mockResolvedValue(true)
+		mockHandleError = vi.fn()
+		mockPushToolResult = vi.fn()
+		mockRemoveClosingTag = vi.fn((tag: string, value: string | undefined) => value || "")
 
 		mockedRegexSearchFiles.mockResolvedValue("Search results")
 	})
@@ -232,7 +233,7 @@ describe("searchFilesTool", () => {
 				partial: true,
 			}
 
-			const mockAsk = jest.fn()
+			const mockAsk = vi.fn()
 			mockTask.ask = mockAsk
 
 			await searchFilesTool(
