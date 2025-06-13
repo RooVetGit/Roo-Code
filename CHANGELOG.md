@@ -1,5 +1,12 @@
 # Roo Code Changelog
 
+### Patch Changes
+
+- Always focus the panel when clicked to ensure menu buttons are available
+- Add "qwen/qwen3-32b" model for Groq
+- Add in/out price for all Groq models
+- Add "magistral-medium-latest" and "mistral-medium-latest" models for Mistral
+
 ## [3.20.0] - 2025-06-12
 
 - Add experimental Marketplace for extensions and modes (thanks @Smartsheet-JB-Brown, @elianiva, @monkeyDluffy6017, @NamesMT, @daniel-lxs, Cline, and more!)
