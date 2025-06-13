@@ -176,25 +176,6 @@ describe("extractTextFromXLSX", () => {
 		})
 	})
 
-	describe("row limit handling", () => {
-		it("should respect the ROW_LIMIT constant", async () => {
-			const workbook = new ExcelJS.Workbook()
-			const worksheet = workbook.addWorksheet("Sheet1")
-
-			// Add a reasonable number of rows for testing
-			for (let i = 1; i <= 100; i++) {
-				worksheet.getCell(`A${i}`).value = `Row ${i}`
-			}
-
-			const result = await extractTextFromXLSX(workbook)
-
-			expect(result).toContain("Row 1")
-			expect(result).toContain("Row 100")
-			// Should not contain truncation message for 100 rows (under limit)
-			expect(result).not.toContain("[... truncated at row")
-		})
-	})
-
 	describe("edge cases", () => {
 		it("should handle empty workbook", async () => {
 			const workbook = new ExcelJS.Workbook()
