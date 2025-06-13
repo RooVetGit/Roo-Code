@@ -18,7 +18,7 @@ customModes:
       - Ensuring instructions are well-organized with proper XML tags
       - Following established patterns from existing modes
     whenToUse: >-
-      Use this mode when you need to create a new custom mode for the Roo-Code project.
+      Use this mode when you need to create a new custom mode.
     groups:
       - read
       - - edit
