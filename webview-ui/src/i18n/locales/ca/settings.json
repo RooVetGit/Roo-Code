@@ -396,11 +396,13 @@
 			"description": "Nombre màxim de fitxers que l'eina 'read_file' pot processar simultàniament. Els valors més alts poden accelerar la lectura de múltiples fitxers petits però augmenten l'ús de memòria."
 		},
 		"condensingThreshold": {
-			"label": "Llindar de condensació de context",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "Llindar d'activació de condensació",
+			"selectProfile": "Configura el llindar per al perfil",
+			"defaultProfile": "Per defecte global (tots els perfils)",
+			"defaultDescription": "Quan el context arribi a aquest percentatge, es condensarà automàticament per a tots els perfils tret que tinguin configuracions personalitzades",
+			"profileDescription": "Llindar personalitzat només per a aquest perfil (substitueix el per defecte global)",
+			"inheritDescription": "Aquest perfil hereta el llindar per defecte global ({{threshold}}%)",
+			"usesGlobal": "(utilitza global {{threshold}}%)"
 		}
 	},
 	"terminal": {

@@ -400,7 +400,9 @@
 			"selectProfile": "Configure threshold for profile",
 			"defaultProfile": "Global Default (all profiles)",
 			"defaultDescription": "When context reaches this percentage, it will be automatically condensed for all profiles unless they have custom settings",
-			"profileDescription": "Custom threshold for this profile only (overrides global default)"
+			"profileDescription": "Custom threshold for this profile only (overrides global default)",
+			"inheritDescription": "This profile inherits the global default threshold ({{threshold}}%)",
+			"usesGlobal": "(uses global {{threshold}}%)"
 		}
 	},
 	"terminal": {

@@ -396,11 +396,13 @@
 			"description": "Số lượng file tối đa mà công cụ 'read_file' có thể xử lý cùng lúc. Giá trị cao hơn có thể tăng tốc độ đọc nhiều file nhỏ nhưng sẽ tăng mức sử dụng bộ nhớ."
 		},
 		"condensingThreshold": {
-			"label": "Ngưỡng nén ngữ cảnh",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "Ngưỡng kích hoạt nén",
+			"selectProfile": "Cấu hình ngưỡng cho hồ sơ",
+			"defaultProfile": "Mặc định toàn cục (tất cả hồ sơ)",
+			"defaultDescription": "Khi ngữ cảnh đạt đến tỷ lệ phần trăm này, nó sẽ được tự động nén cho tất cả hồ sơ trừ khi chúng có cài đặt tùy chỉnh",
+			"profileDescription": "Ngưỡng tùy chỉnh chỉ cho hồ sơ này (ghi đè mặc định toàn cục)",
+			"inheritDescription": "Hồ sơ này kế thừa ngưỡng mặc định toàn cục ({{threshold}}%)",
+			"usesGlobal": "(sử dụng toàn cục {{threshold}}%)"
 		}
 	},
 	"terminal": {

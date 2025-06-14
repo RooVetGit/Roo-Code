@@ -382,7 +382,9 @@
 			"selectProfile": "Konfigurasi ambang batas untuk profil",
 			"defaultProfile": "Default Global (semua profil)",
 			"defaultDescription": "Ketika konteks mencapai persentase ini, akan secara otomatis dikondensasi untuk semua profil kecuali mereka memiliki pengaturan kustom",
-			"profileDescription": "Ambang batas kustom untuk profil ini saja (menimpa default global)"
+			"profileDescription": "Ambang batas kustom untuk profil ini saja (menimpa default global)",
+			"inheritDescription": "Profil ini mewarisi ambang batas default global ({{threshold}}%)",
+			"usesGlobal": "(menggunakan global {{threshold}}%)"
 		},
 		"openTabs": {
 			"label": "Batas konteks tab terbuka",

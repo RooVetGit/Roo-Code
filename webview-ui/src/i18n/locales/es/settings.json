@@ -397,10 +397,12 @@
 		},
 		"condensingThreshold": {
 			"label": "Umbral de condensación de contexto",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"selectProfile": "Configurar umbral para perfil",
+			"defaultProfile": "Predeterminado global (todos los perfiles)",
+			"defaultDescription": "Cuando el contexto alcance este porcentaje, se condensará automáticamente para todos los perfiles a menos que tengan configuraciones personalizadas",
+			"profileDescription": "Umbral personalizado solo para este perfil (anula el predeterminado global)",
+			"inheritDescription": "Este perfil hereda el umbral predeterminado global ({{threshold}}%)",
+			"usesGlobal": "(usa global {{threshold}}%)"
 		}
 	},
 	"terminal": {

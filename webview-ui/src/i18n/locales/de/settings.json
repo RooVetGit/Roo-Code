@@ -397,10 +397,12 @@
 		},
 		"condensingThreshold": {
 			"label": "Schwellenwert für Kontextkomprimierung",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"selectProfile": "Profil für Schwellenwert konfigurieren",
+			"defaultProfile": "Globaler Standard (alle Profile)",
+			"defaultDescription": "Wenn der Kontext diesen Prozentsatz erreicht, wird er automatisch für alle Profile komprimiert, es sei denn, sie haben benutzerdefinierte Einstellungen",
+			"profileDescription": "Benutzerdefinierter Schwellenwert nur für dieses Profil (überschreibt globalen Standard)",
+			"inheritDescription": "Dieses Profil erbt den globalen Standard-Schwellenwert ({{threshold}}%)",
+			"usesGlobal": "(verwendet global {{threshold}}%)"
 		}
 	},
 	"terminal": {

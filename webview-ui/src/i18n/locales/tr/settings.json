@@ -396,11 +396,13 @@
 			"description": "'read_file' aracının aynı anda işleyebileceği maksimum dosya sayısı. Daha yüksek değerler birden çok küçük dosyanın okunmasını hızlandırabilir ancak bellek kullanımını artırır."
 		},
 		"condensingThreshold": {
-			"label": "Bağlam Sıkıştırma Eşiği",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "Sıkıştırma Tetikleme Eşiği",
+			"selectProfile": "Profil için eşik yapılandır",
+			"defaultProfile": "Küresel Varsayılan (tüm profiller)",
+			"defaultDescription": "Bağlam bu yüzdeye ulaştığında, özel ayarları olmadıkça tüm profiller için otomatik olarak sıkıştırılacak",
+			"profileDescription": "Sadece bu profil için özel eşik (küresel varsayılanı geçersiz kılar)",
+			"inheritDescription": "Bu profil küresel varsayılan eşiği miras alır ({{threshold}}%)",
+			"usesGlobal": "(küresel {{threshold}}% kullanır)"
 		}
 	},
 	"terminal": {

@@ -396,11 +396,13 @@
 			"description": "read_file ツールが同時に処理できるファイルの最大数。値を高くすると複数の小さなファイルの読み取りが速くなる可能性がありますが、メモリ使用量が増加します。"
 		},
 		"condensingThreshold": {
-			"label": "コンテキスト圧縮のしきい値",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "圧縮トリガーしきい値",
+			"selectProfile": "プロファイルのしきい値を設定",
+			"defaultProfile": "グローバルデフォルト（全プロファイル）",
+			"defaultDescription": "コンテキストがこの割合に達すると、カスタム設定がない限り、すべてのプロファイルで自動的に圧縮されます",
+			"profileDescription": "このプロファイルのみのカスタムしきい値（グローバルデフォルトを上書き）",
+			"inheritDescription": "このプロファイルはグローバルデフォルトしきい値を継承します（{{threshold}}%）",
+			"usesGlobal": "（グローバル {{threshold}}% を使用）"
 		}
 	},
 	"terminal": {

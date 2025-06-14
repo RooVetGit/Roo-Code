@@ -396,11 +396,13 @@
 			"description": "Максимальное количество файлов, которые инструмент 'read_file' может обрабатывать одновременно. Более высокие значения могут ускорить чтение нескольких небольших файлов, но увеличивают использование памяти."
 		},
 		"condensingThreshold": {
-			"label": "Порог сжатия контекста",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "Порог запуска сжатия",
+			"selectProfile": "Настроить порог для профиля",
+			"defaultProfile": "Глобальный по умолчанию (все профили)",
+			"defaultDescription": "Когда контекст достигнет этого процента, он будет автоматически сжат для всех профилей, если у них нет пользовательских настроек",
+			"profileDescription": "Пользовательский порог только для этого профиля (переопределяет глобальный по умолчанию)",
+			"inheritDescription": "Этот профиль наследует глобальный порог по умолчанию ({{threshold}}%)",
+			"usesGlobal": "(использует глобальный {{threshold}}%)"
 		}
 	},
 	"terminal": {

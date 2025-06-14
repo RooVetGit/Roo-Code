@@ -396,11 +396,13 @@
 			"description": "read_file 工具可以同時處理的最大檔案數。較高的值可能會加快讀取多個小檔案的速度，但會增加記憶體使用量。"
 		},
 		"condensingThreshold": {
-			"label": "上下文壓縮閾值",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "壓縮觸發閾值",
+			"selectProfile": "設定檔案閾值",
+			"defaultProfile": "全域預設（所有檔案）",
+			"defaultDescription": "當上下文達到此百分比時，將自動為所有檔案壓縮，除非它們有自訂設定",
+			"profileDescription": "僅此檔案的自訂閾值（覆蓋全域預設）",
+			"inheritDescription": "此檔案繼承全域預設閾值（{{threshold}}%）",
+			"usesGlobal": "（使用全域 {{threshold}}%）"
 		}
 	},
 	"terminal": {

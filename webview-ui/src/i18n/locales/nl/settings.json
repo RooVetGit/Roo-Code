@@ -396,11 +396,13 @@
 			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
 		},
 		"condensingThreshold": {
-			"label": "Drempelwaarde voor contextcompressie",
-			"selectProfile": "Select profile for threshold",
-			"defaultProfile": "Default (applies to all unconfigured profiles)",
-			"defaultDescription": "This threshold applies to all profiles unless overridden",
-			"profileDescription": "Custom threshold for this specific profile"
+			"label": "Compressie trigger drempelwaarde",
+			"selectProfile": "Drempelwaarde voor profiel configureren",
+			"defaultProfile": "Globale standaard (alle profielen)",
+			"defaultDescription": "Wanneer de context dit percentage bereikt, wordt het automatisch gecomprimeerd voor alle profielen tenzij ze aangepaste instellingen hebben",
+			"profileDescription": "Aangepaste drempelwaarde alleen voor dit profiel (overschrijft globale standaard)",
+			"inheritDescription": "Dit profiel erft de globale standaard drempelwaarde ({{threshold}}%)",
+			"usesGlobal": "(gebruikt globaal {{threshold}}%)"
 		}
 	},
 	"terminal": {
