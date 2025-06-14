@@ -3,8 +3,11 @@
 import { Terminal } from "../Terminal"
 import { TerminalRegistry } from "../TerminalRegistry"
 
+const PAGER = process.platform === "win32" ? "" : "cat"
+
 // Mock vscode.window.createTerminal
 const mockCreateTerminal = jest.fn()
+
 jest.mock("vscode", () => ({
 	window: {
 		createTerminal: (...args: any[]) => {
@@ -18,21 +21,25 @@ jest.mock("vscode", () => ({
 	ThemeIcon: jest.fn(),
 }))
 
+jest.mock("execa", () => ({
+	execa: jest.fn(),
+}))
+
 describe("TerminalRegistry", () => {
 	beforeEach(() => {
 		mockCreateTerminal.mockClear()
 	})
 
 	describe("createTerminal", () => {
-		it("creates terminal with PAGER set to cat", () => {
-			TerminalRegistry.createTerminal("/test/path")
+		it("creates terminal with PAGER set appropriately for platform", () => {
+			TerminalRegistry.createTerminal("/test/path", "vscode")
 
 			expect(mockCreateTerminal).toHaveBeenCalledWith({
 				cwd: "/test/path",
 				name: "Roo Code",
 				iconPath: expect.any(Object),
 				env: {
-					PAGER: "cat",
+					PAGER,
 					VTE_VERSION: "0",
 					PROMPT_EOL_MARK: "",
 				},
@@ -45,14 +52,14 @@ describe("TerminalRegistry", () => {
 			Terminal.setCommandDelay(50)
 
 			try {
-				TerminalRegistry.createTerminal("/test/path")
+				TerminalRegistry.createTerminal("/test/path", "vscode")
 
 				expect(mockCreateTerminal).toHaveBeenCalledWith({
 					cwd: "/test/path",
 					name: "Roo Code",
 					iconPath: expect.any(Object),
 					env: {
-						PAGER: "cat",
+						PAGER,
 						PROMPT_COMMAND: "sleep 0.05",
 						VTE_VERSION: "0",
 						PROMPT_EOL_MARK: "",
@@ -67,14 +74,14 @@ describe("TerminalRegistry", () => {
 		it("adds Oh My Zsh integration env var when enabled", () => {
 			Terminal.setTerminalZshOhMy(true)
 			try {
-				TerminalRegistry.createTerminal("/test/path")
+				TerminalRegistry.createTerminal("/test/path", "vscode")
 
 				expect(mockCreateTerminal).toHaveBeenCalledWith({
 					cwd: "/test/path",
 					name: "Roo Code",
 					iconPath: expect.any(Object),
 					env: {
-						PAGER: "cat",
+						PAGER,
 						VTE_VERSION: "0",
 						PROMPT_EOL_MARK: "",
 						ITERM_SHELL_INTEGRATION_INSTALLED: "Yes",
@@ -88,14 +95,14 @@ describe("TerminalRegistry", () => {
 		it("adds Powerlevel10k integration env var when enabled", () => {
 			Terminal.setTerminalZshP10k(true)
 			try {
-				TerminalRegistry.createTerminal("/test/path")
+				TerminalRegistry.createTerminal("/test/path", "vscode")
 
 				expect(mockCreateTerminal).toHaveBeenCalledWith({
 					cwd: "/test/path",
 					name: "Roo Code",
 					iconPath: expect.any(Object),
 					env: {
-						PAGER: "cat",
+						PAGER,
 						VTE_VERSION: "0",
 						PROMPT_EOL_MARK: "",
 						POWERLEVEL9K_TERM_SHELL_INTEGRATION: "true",

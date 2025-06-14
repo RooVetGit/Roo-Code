@@ -1,6 +1,6 @@
 import * as path from "path"
 import * as vscode from "vscode"
-import { getTaskDirectoryPath } from "../../shared/storagePathManager"
+import { getTaskDirectoryPath } from "../../utils/storage"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { fileExistsAtPath } from "../../utils/fs"
 import fs from "fs/promises"
@@ -181,6 +181,7 @@ export class FileContextTracker {
 					newEntry.roo_read_date = now
 					newEntry.roo_edit_date = now
 					this.checkpointPossibleFiles.add(filePath)
+					this.markFileAsEditedByRoo(filePath)
 					break
 
 				// read_tool/file_mentioned: Roo has read the file via a tool or file mention

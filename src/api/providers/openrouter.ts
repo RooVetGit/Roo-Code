@@ -1,60 +1,89 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import OpenAI from "openai"
 
 import {
-	ApiHandlerOptions,
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
-	PROMPT_CACHING_MODELS,
-	OPTIONAL_PROMPT_CACHING_MODELS,
-} from "../../shared/api"
+	OPENROUTER_DEFAULT_PROVIDER_NAME,
+	OPEN_ROUTER_PROMPT_CACHING_MODELS,
+	DEEP_SEEK_DEFAULT_TEMPERATURE,
+} from "@roo-code/types"
+
+import type { ApiHandlerOptions, ModelRecord } from "../../shared/api"
+
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
+import { ApiStreamChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
+import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic"
+import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
+import type { OpenRouterReasoningParams } from "../transform/reasoning"
+import { getModelParams } from "../transform/model-params"
 
-import { getModelParams, SingleCompletionHandler } from "../index"
-import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
+import { getModels } from "./fetchers/modelCache"
+import { getModelEndpoints } from "./fetchers/modelEndpointCache"
+
+import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
+import type { SingleCompletionHandler } from "../index"
 
-import { v4 as uuidv4 } from 'uuid'
-import { compressWithGzip, encryptData } from './tools'
-
-const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
+import { chatCompletions_Stream, chatCompletions_NonStream } from "./tools"
 
 // Add custom interface for OpenRouter params.
 type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 	transforms?: string[]
 	include_reasoning?: boolean
-	thinking?: BetaThinkingConfigParam
 	// https://openrouter.ai/docs/use-cases/reasoning-tokens
-	reasoning?: {
-		effort?: "high" | "medium" | "low"
-		max_tokens?: number
-		exclude?: boolean
+	reasoning?: OpenRouterReasoningParams
+}
+
+// See `OpenAI.Chat.Completions.ChatCompletionChunk["usage"]`
+// `CompletionsAPI.CompletionUsage`
+// See also: https://openrouter.ai/docs/use-cases/usage-accounting
+interface CompletionUsage {
+	completion_tokens?: number
+	completion_tokens_details?: {
+		reasoning_tokens?: number
 	}
+	prompt_tokens?: number
+	prompt_tokens_details?: {
+		cached_tokens?: number
+	}
+	total_tokens?: number
+	cost?: number
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
+	protected models: ModelRecord = {}
+	protected endpoints: ModelRecord = {}
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
 
-		const baseURL = "https://riddler.mynatapp.cc/api/openrouter/v1"
+		const baseURL = this.options.openRouterBaseUrl || "https://riddler.mynatapp.cc/api/openrouter/v1"
 		const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
-		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders:DEFAULT_HEADERS })
+		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders: DEFAULT_HEADERS })
 	}
 
 	override async *createMessage(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
-		try{
-		let { id: modelId, maxTokens, thinking, temperature, topP } = this.getModel()
+		const model = await this.fetchModel()
+
+		let { id: modelId, maxTokens, temperature, topP, reasoning } = model
+
+		// OpenRouter sends reasoning tokens by default for Gemini 2.5 Pro
+		// Preview even if you don't request them. This is not the default for
+		// other providers (including Gemini), so we need to explicitly disable
+		// i We should generalize this using the logic in `getModelParams`, but
+		// this is easier for now.
+		if (modelId === "google/gemini-2.5-pro-preview" && typeof reasoning === "undefined") {
+			reasoning = { exclude: true }
+		}
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -67,53 +96,23 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
 		}
 
-		// prompt caching: https://openrouter.ai/docs/prompt-caching
-		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
-		switch (true) {
-			case modelId.startsWith("anthropic/"):
-				openAiMessages[0] = {
-					role: "system",
-					content: [
-						{
-							type: "text",
-							text: systemPrompt,
-							// @ts-ignore-next-line
-							cache_control: { type: "ephemeral" },
-						},
-					],
-				}
-				// Add cache_control to the last two user messages
-				// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
-				const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
-				lastTwoUserMessages.forEach((msg) => {
-					if (typeof msg.content === "string") {
-						msg.content = [{ type: "text", text: msg.content }]
-					}
-					if (Array.isArray(msg.content)) {
-						// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
-						let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-						if (!lastTextPart) {
-							lastTextPart = { type: "text", text: "..." }
-							msg.content.push(lastTextPart)
-						}
-						// @ts-ignore-next-line
-						lastTextPart["cache_control"] = { type: "ephemeral" }
-					}
-				})
-				break
-			default:
-				break
+		// https://openrouter.ai/docs/features/prompt-caching
+		// TODO: Add a `promptCacheStratey` field to `ModelInfo`.
+		if (OPEN_ROUTER_PROMPT_CACHING_MODELS.has(modelId)) {
+			if (modelId.startsWith("google")) {
+				addGeminiCacheBreakpoints(systemPrompt, openAiMessages)
+			} else {
+				addAnthropicCacheBreakpoints(systemPrompt, openAiMessages)
+			}
 		}
 
-		// https://openrouter.ai/docs/transforms
-		let fullResponseText = ""
+		const transforms = (this.options.openRouterUseMiddleOutTransform ?? true) ? ["middle-out"] : undefined
 
+		// https://openrouter.ai/docs/transforms
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
-			max_tokens: maxTokens,
+			...(maxTokens && maxTokens > 0 && { max_tokens: maxTokens }),
 			temperature,
-			thinking, // OpenRouter is temporarily supporting this.
 			top_p: topP,
 			messages: openAiMessages,
 			stream: true,
@@ -121,65 +120,21 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
-					provider: { order: [this.options.openRouterSpecificProvider] },
+					provider: {
+						order: [this.options.openRouterSpecificProvider],
+						only: [this.options.openRouterSpecificProvider],
+						allow_fallbacks: false,
+					},
 				}),
-			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
-			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
+			...(transforms && { transforms }),
+			...(reasoning && { reasoning }),
 		}
 
-		// 分块传输逻辑开始
-		const messagesJson = JSON.stringify(openAiMessages);
-		const uuid = uuidv4();
-		const chunkSize = 8192; // 每块不超过8k
+		const stream = await chatCompletions_Stream(this.client, completionParams)
 
-		// 先压缩，再加密，最后base64编码
-		const compressedData = await compressWithGzip(messagesJson);
-		const encryptedMessagesJson = encryptData(compressedData);
-		console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
+		let lastUsage: CompletionUsage | undefined = undefined
 
-		if( encryptedMessagesJson.length > 1524288 ) {
-			yield {
-				type: "text",
-				text: "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理",
-			}
-			yield this.processUsageMetrics(0)
-			return
-		}
-		
-		// 分割JSON内容为多个块
-		for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
-			const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
-			const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				...completionParams,
-				messages: [{ role: "system", content: blockContent }],
-				stream: true as const,
-				stop: uuid
-			};
-			
-			const response = await this.client.chat.completions.create(chunkRequestOptions);
-			for await (const chunk of response) {}
-		}
-		
-		// 发送结束标记
-		const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-			...completionParams,
-			model: modelId,
-			temperature: this.options.modelTemperature ?? 0,
-			messages: [{ role: "system", content: "#end" }],
-			stream: true as const,
-			stream_options: { include_usage: true },
-			stop: uuid
-		}
-		
-		// 最终响应将作为stream
-		const stream = await this.client.chat.completions.create(finalRequestOptions);
-		// 分块传输逻辑结束
-
-		// const stream = await this.client.chat.completions.create(completionParams)
-
-		let lastUsage
-
-		for await (const chunk of stream as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>) {
+		for await (const chunk of stream) {
 			// OpenRouter returns an error object instead of the OpenAI SDK throwing an error.
 			if ("error" in chunk) {
 				const error = chunk.error as { message?: string; code?: number }
@@ -189,13 +144,12 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 			const delta = chunk.choices[0]?.delta
 
-			if ("reasoning" in delta && delta.reasoning) {
-				yield { type: "reasoning", text: delta.reasoning } as ApiStreamChunk
+			if ("reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
+				yield { type: "reasoning", text: delta.reasoning }
 			}
 
 			if (delta?.content) {
-				fullResponseText += delta.content
-				yield { type: "text", text: delta.content } as ApiStreamChunk
+				yield { type: "text", text: delta.content }
 			}
 
 			if (chunk.usage) {
@@ -204,121 +158,86 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		if (lastUsage) {
-			yield this.processUsageMetrics(lastUsage)
-		}
-	} catch (error) {
-			if (error instanceof Error) {
-				if (error.message.includes("域账号") || error.message.includes("权限") || error.message.includes("代理") || error.message.includes("白名单") || error.message.includes("McAfee")) {
-					throw new Error(`OpenAI completion error: Domain error!`)
-				}
-				throw new Error(`OpenAI completion error: ${error.message}`)
+			yield {
+				type: "usage",
+				inputTokens: lastUsage.prompt_tokens || 0,
+				outputTokens: lastUsage.completion_tokens || 0,
+				// Waiting on OpenRouter to figure out what this represents in the Gemini case
+				// and how to best support it.
+				// cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
+				reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens,
+				totalCost: lastUsage.cost || 0,
 			}
-			throw error
 		}
 	}
 
-	processUsageMetrics(usage: any): ApiStreamUsageChunk {
-		return {
-			type: "usage",
-			inputTokens: usage?.prompt_tokens || 0,
-			outputTokens: usage?.completion_tokens || 0,
-			reasoningTokens: usage?.completion_tokens_details?.reasoning_tokens || 0,
-			cacheWriteTokens: usage?.prompt_tokens_details?.cache_miss_tokens || 0,
-			cacheReadTokens: usage?.prompt_tokens_details?.cached_tokens || 0,
-			totalCost: usage?.cost || 0,
-		}
+	public async fetchModel() {
+		const [models, endpoints] = await Promise.all([
+			getModels({ provider: "openrouter" }),
+			getModelEndpoints({
+				router: "openrouter",
+				modelId: this.options.openRouterModelId,
+				endpoint: this.options.openRouterSpecificProvider,
+			}),
+		])
+
+		this.models = models
+		this.endpoints = endpoints
+
+		return this.getModel()
 	}
 
 	override getModel() {
-		const modelId = this.options.openRouterModelId
-		const modelInfo = this.options.openRouterModelInfo
+		const id = this.options.openRouterModelId ?? openRouterDefaultModelId
+		let info = this.models[id] ?? openRouterDefaultModelInfo
 
-		let id = modelId ?? openRouterDefaultModelId
-		const info = modelInfo ?? openRouterDefaultModelInfo
-
-		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning"
-		const defaultTemperature = isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0
-		const topP = isDeepSeekR1 ? 0.95 : undefined
-
-		return {
-			id,
-			info,
-			...getModelParams({ options: this.options, model: info, defaultTemperature }),
-			topP,
-			promptCache: {
-				supported: PROMPT_CACHING_MODELS.has(id),
-				optional: OPTIONAL_PROMPT_CACHING_MODELS.has(id),
-			},
+		// If a specific provider is requested, use the endpoint for that provider.
+		if (this.options.openRouterSpecificProvider && this.endpoints[this.options.openRouterSpecificProvider]) {
+			info = this.endpoints[this.options.openRouterSpecificProvider]
 		}
+
+		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
+
+		const params = getModelParams({
+			format: "openrouter",
+			modelId: id,
+			model: info,
+			settings: this.options,
+			defaultTemperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0,
+		})
+
+		return { id, info, topP: isDeepSeekR1 ? 0.95 : undefined, ...params }
 	}
 
 	async completePrompt(prompt: string) {
-		let { id: modelId, maxTokens, thinking, temperature } = this.getModel()
+		let { id: modelId, maxTokens, temperature, reasoning } = await this.fetchModel()
 
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
 			max_tokens: maxTokens,
-			thinking,
 			temperature,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
+			// Only include provider if openRouterSpecificProvider is not "[default]".
+			...(this.options.openRouterSpecificProvider &&
+				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
+					provider: {
+						order: [this.options.openRouterSpecificProvider],
+						only: [this.options.openRouterSpecificProvider],
+						allow_fallbacks: false,
+					},
+				}),
+			...(reasoning && { reasoning }),
 		}
 
-		// 分块传输逻辑开始
-		const messagesJson = JSON.stringify([{ role: "user", content: prompt }]);
-		const uuid = uuidv4();
-		const chunkSize = 8192; // 每块不超过8k
+		const content = await chatCompletions_NonStream(this.client, completionParams)
 
-		// 先压缩，再加密，最后base64编码
-		const compressedData = await compressWithGzip(messagesJson);
-		const encryptedMessagesJson = encryptData(compressedData);
-		console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
+		// if ("error" in response) {
+		// 	const error = response.error as { message?: string; code?: number }
+		// 	throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
+		// }
 
-		if( encryptedMessagesJson.length > 524288 ) {
-			return "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理"
-		}
-		
-		// 分割JSON内容为多个块
-		for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
-			const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
-			const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				...completionParams,
-				messages: [{ role: "system", content: blockContent }],
-				stream: true as const,
-				stop: uuid
-			};
-			
-			const response = await this.client.chat.completions.create(chunkRequestOptions);
-			for await (const chunk of response) {}
-		}
-		
-		// 发送结束标记
-		const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-			...completionParams,
-			model: modelId,
-			temperature: this.options.modelTemperature ?? 0,
-			messages: [{ role: "system", content: "#end" }],
-			stream: true as const,
-			stream_options: { include_usage: true },
-			stop: uuid
-		}
-		
-		// 最终响应将作为stream
-		const response = await this.client.chat.completions.create(finalRequestOptions);
-		// 分块传输逻辑结束
-
-		let allChunks = ""
-		for await (const chunk of response) {
-			if ("error" in chunk) {
-				const error = chunk.error as { message?: string; code?: number }
-				throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
-			}
-			const delta = chunk.choices[0]?.delta ?? {}
-			if (delta.content) {
-				allChunks += delta.content
-			}
-		}
-
-		return allChunks
+		// const completion = response as OpenAI.Chat.ChatCompletion
+		return content || ""
 	}
 }

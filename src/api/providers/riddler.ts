@@ -1,80 +1,98 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI, { AzureOpenAI } from "openai"
 import axios from "axios"
-import { v4 as uuidv4 } from 'uuid'
 
 import {
-	ApiHandlerOptions,
+	type ModelInfo,
 	azureOpenAiDefaultApiVersion,
-	ModelInfo,
 	openAiModelInfoSaneDefaults,
-} from "../../shared/api"
-import { SingleCompletionHandler } from "../index"
+	DEEP_SEEK_DEFAULT_TEMPERATURE,
+	OPENAI_AZURE_AI_INFERENCE_PATH,
+} from "@roo-code/types"
+
+import type { ApiHandlerOptions } from "../../shared/api"
+
+import { XmlMatcher } from "../../utils/xml-matcher"
+
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
 import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
+import { getModelParams } from "../transform/model-params"
+
+import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
-import { XmlMatcher } from "../../utils/xml-matcher"
-import { t } from "../../i18n"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
-import { compressWithGzip, encryptData } from './tools'
+import { chatCompletions_Stream, chatCompletions_NonStream } from "./tools"
 
-const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
-
-export const defaultHeaders = {
-	"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-	"X-Title": "Roo Code",
-}
-
-export interface RiddlerHandlerOptions extends ApiHandlerOptions {}
-
+// TODO: Rename this to OpenAICompatibleHandler. Also, I think the
+// `OpenAINativeHandler` can subclass from this, since it's obviously
+// compatible with the OpenAI API. We can also rename it to `OpenAIHandler`.
 export class RiddlerHandler extends BaseProvider implements SingleCompletionHandler {
-	protected options: RiddlerHandlerOptions
+	protected options: ApiHandlerOptions
 	private client: OpenAI
 
-	constructor(options: RiddlerHandlerOptions) {
+	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
 
-		const baseURL = this.options.openAiBaseUrl ?? "https://riddler.mynatapp.cc/api/openai/v1"
+		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
-		let urlHost: string
+		const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
+		const isAzureOpenAi = urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure
 
-		try {
-			urlHost = new URL(this.options.openAiBaseUrl ?? "").host
-		} catch (error) {
-			// Likely an invalid `openAiBaseUrl`; we're still working on
-			// proper settings validation.
-			urlHost = ""
+		const headers = {
+			...DEFAULT_HEADERS,
+			...(this.options.openAiHeaders || {}),
 		}
 
-		if (urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure) {
+		if (isAzureAiInference) {
+			// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
+			this.client = new OpenAI({
+				baseURL,
+				apiKey,
+				defaultHeaders: headers,
+				defaultQuery: { "api-version": this.options.azureApiVersion || "2024-05-01-preview" },
+			})
+		} else if (isAzureOpenAi) {
 			// Azure API shape slightly differs from the core API shape:
 			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
 			this.client = new AzureOpenAI({
 				baseURL,
 				apiKey,
 				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
-				defaultHeaders,
+				defaultHeaders: headers,
 			})
 		} else {
-			this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+			this.client = new OpenAI({
+				baseURL,
+				apiKey,
+				defaultHeaders: headers,
+			})
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[], extra_body?: any): ApiStream {
-		const modelInfo = this.getModel().info
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
+		const { info: modelInfo, reasoning } = this.getModel()
 		const modelUrl = this.options.openAiBaseUrl ?? ""
-		const modelId = this.getModel().id ?? ""
+		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
+		const enabledLegacyFormat = this.options.openAiLegacyFormat ?? false
+		const isAzureAiInference = this._isAzureAiInference(modelUrl)
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
-		if (modelId.startsWith("o3-mini")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
-			return
-		}
-		try{
+
+		// if (modelId.startsWith("o3-mini")) {
+		// 	yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+		// 	return
+		// }
+
 		if (this.options.openAiStreamingEnabled ?? true) {
 			let systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
 				role: "system",
@@ -82,9 +100,10 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			}
 
 			let convertedMessages
+
 			if (deepseekReasoner) {
 				convertedMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-			} else if (ark) {
+			} else if (ark || enabledLegacyFormat) {
 				convertedMessages = [systemMessage, ...convertToSimpleMessages(messages)]
 			} else {
 				if (modelInfo.supportsPromptCache) {
@@ -100,16 +119,20 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 						],
 					}
 				}
+
 				convertedMessages = [systemMessage, ...convertToOpenAiMessages(messages)]
+
 				if (modelInfo.supportsPromptCache) {
 					// Note: the following logic is copied from openrouter:
 					// Add cache_control to the last two user messages
 					// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
 					const lastTwoUserMessages = convertedMessages.filter((msg) => msg.role === "user").slice(-2)
+
 					lastTwoUserMessages.forEach((msg) => {
 						if (typeof msg.content === "string") {
 							msg.content = [{ type: "text", text: msg.content }]
 						}
+
 						if (Array.isArray(msg.content)) {
 							// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
 							let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
@@ -118,6 +141,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 								lastTextPart = { type: "text", text: "..." }
 								msg.content.push(lastTextPart)
 							}
+
 							// @ts-ignore-next-line
 							lastTextPart["cache_control"] = { type: "ephemeral" }
 						}
@@ -125,65 +149,28 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 				}
 			}
 
+			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
 				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				messages: convertedMessages,
 				stream: true as const,
-				stream_options: { include_usage: true },
+				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+				...(reasoning && reasoning),
 			}
+
+			// @TODO: Move this to the `getModelParams` function.
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
 			}
 
-			// 分块传输逻辑开始
-			const messagesJson = JSON.stringify(convertedMessages);
-			const uuid = uuidv4();
-			const chunkSize = 8192; // 每块不超过8k
+			// const stream = await this.client.chat.completions.create(
+			// 	requestOptions,
+			// 	isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+			// )
 
-			// 先压缩，再加密，最后base64编码
-			const compressedData = await compressWithGzip(messagesJson);
-			const encryptedMessagesJson = encryptData(compressedData);
-			console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
-
-			if( encryptedMessagesJson.length > 1524288 ) {
-				yield {
-					type: "text",
-					text: "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理",
-				}
-				yield this.processUsageMetrics(0, modelInfo)
-				return
-			}
-			
-			// 分割JSON内容为多个块
-			for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
-				const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
-				const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-					...requestOptions,
-					messages: [{ role: "system", content: blockContent }],
-					stream: true as const,
-					stop: uuid
-				};
-				
-				const response = await this.client.chat.completions.create(chunkRequestOptions);
-				for await (const chunk of response) {}
-			}
-			
-			// 发送结束标记
-			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				...requestOptions,
-				model: modelId,
-				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
-				messages: [{ role: "system", content: "#end" }],
-				stream: true as const,
-				stream_options: { include_usage: true },
-				stop: uuid,
-				...extra_body,
-			}
-			
-			// 最终响应将作为stream
-			const stream = await this.client.chat.completions.create(finalRequestOptions);
-			// 分块传输逻辑结束
+			const stream = await chatCompletions_Stream(this.client, requestOptions)
 
 			const matcher = new XmlMatcher(
 				"think",
@@ -215,6 +202,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 					lastUsage = chunk.usage
 				}
 			}
+
 			for (const chunk of matcher.final()) {
 				yield chunk
 			}
@@ -224,170 +212,132 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			}
 		} else {
 			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
-			// const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
-			// 	role: "user",
-			// 	content: systemPrompt,
-			// }
+			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
+				role: "user",
+				content: systemPrompt,
+			}
 
-			// const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-			// 	model: modelId,
-			// 	messages: deepseekReasoner
-			// 		? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-			// 		: [systemMessage, ...convertToOpenAiMessages(messages)],
-			// }
+			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+				model: modelId,
+				messages: deepseekReasoner
+					? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+					: enabledLegacyFormat
+						? [systemMessage, ...convertToSimpleMessages(messages)]
+						: [systemMessage, ...convertToOpenAiMessages(messages)],
+			}
 
-			// const response = await this.client.chat.completions.create(requestOptions)
+			// const response = await this.client.chat.completions.create(
+			// 	requestOptions,
+			// 	this._isAzureAiInference(modelUrl) ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+			// )
+			const content = await chatCompletions_NonStream(this.client, requestOptions)
 
-			// yield {
-			// 	type: "text",
-			// 	text: response.choices[0]?.message.content || "",
-			// }
-			// yield this.processUsageMetrics(response.usage, modelInfo)
 			yield {
 				type: "text",
-				text: "StreamingEnabled 发生异常，请重试...",
+				text: content || "",
 			}
-			yield this.processUsageMetrics(0, modelInfo)
-			return
-		}
-		} catch (error) {
-			if (error instanceof Error) {
-				if (error.message.includes("域账号") || error.message.includes("权限") || error.message.includes("代理") || error.message.includes("白名单") || error.message.includes("McAfee")) {
-					throw new Error(`OpenAI completion error: Domain error!`)
-				}
-				throw new Error(`OpenAI completion error: ${error.message}`)
-			}
-			throw error
+
+			// yield this.processUsageMetrics(response.usage, modelInfo)
 		}
 	}
 
-	protected processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
+	protected processUsageMetrics(usage: any, _modelInfo?: ModelInfo): ApiStreamUsageChunk {
 		return {
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,
 			outputTokens: usage?.completion_tokens || 0,
+			cacheWriteTokens: usage?.cache_creation_input_tokens || undefined,
+			cacheReadTokens: usage?.cache_read_input_tokens || undefined,
 		}
 	}
 
-	override getModel(): { id: string; info: ModelInfo } {
-		return {
-			id: this.options.openAiModelId ?? "",
-			info: this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults,
-		}
+	override getModel() {
+		const id = this.options.openAiModelId ?? ""
+		const info = this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults
+		const params = getModelParams({ format: "openai", modelId: id, model: info, settings: this.options })
+		return { id, info, ...params }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+
+			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
-				stream: true as const,
 			}
 
-			// 分块传输逻辑开始
-			const messagesJson = JSON.stringify(requestOptions);
-			const uuid = uuidv4();
-			const chunkSize = 8192; // 每块不超过8k
-
-			// 先压缩，再加密，最后base64编码
-			const compressedData = await compressWithGzip(messagesJson);
-			const encryptedMessagesJson = encryptData(compressedData);
-			console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
-
-			if( encryptedMessagesJson.length > 524288 ) {
-				return "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理"
-			}
+			// const response = await this.client.chat.completions.create(
+			// 	requestOptions,
+			// 	isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+			// )
 			
-			// 分割JSON内容为多个块
-			for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
-				const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
-				const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-					...requestOptions,
-					messages: [{ role: "system", content: blockContent }],
-					stop: uuid
-				};
-				
-				const response = await this.client.chat.completions.create(chunkRequestOptions);
-				for await (const chunk of response) {}
-			}
-			
-			// 发送结束标记
-			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				...requestOptions,
-				messages: [{ role: "system", content: "#end" }],
-				stop: uuid
-			}
-			
-			// 最终响应将作为stream
-			const response = await this.client.chat.completions.create(finalRequestOptions);
-			// 分块传输逻辑结束
+			const content = await chatCompletions_NonStream(this.client, requestOptions)
 
-			let allChunks = ""
-			for await (const chunk of response) {
-				const delta = chunk.choices[0]?.delta ?? {}
-				if (delta.content) {
-					allChunks += delta.content
-				}
-			}
-
-			return allChunks
+			return content || ""
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new Error(`OpenAI completion error: ${error.message}`)
 			}
+
 			throw error
 		}
 	}
 
-	private async *handleO3FamilyMessage(
-		modelId: string,
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-	): ApiStream {
-		const modelInfo = this.getModel().info
-		yield {
-			type: "text",
-			text: "handleO3FamilyMessage 发生异常，请重试...",
-		}
-		yield this.processUsageMetrics(0, modelInfo)
-		return
-		// if (this.options.openAiStreamingEnabled ?? true) {
-		// 	const stream = await this.client.chat.completions.create({
-		// 		model: modelId,
-		// 		messages: [
-		// 			{
-		// 				role: "developer",
-		// 				content: `Formatting re-enabled\n${systemPrompt}`,
-		// 			},
-		// 			...convertToOpenAiMessages(messages),
-		// 		],
-		// 		stream: true,
-		// 		stream_options: { include_usage: true },
-		// 		reasoning_effort: this.getModel().info.reasoningEffort,
-		// 	})
+	// private async *handleO3FamilyMessage(
+	// 	modelId: string,
+	// 	systemPrompt: string,
+	// 	messages: Anthropic.Messages.MessageParam[],
+	// ): ApiStream {
+	// 	if (this.options.openAiStreamingEnabled ?? true) {
+	// 		const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
-		// 	yield* this.handleStreamResponse(stream)
-		// } else {
-		// 	const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-		// 		model: modelId,
-		// 		messages: [
-		// 			{
-		// 				role: "developer",
-		// 				content: `Formatting re-enabled\n${systemPrompt}`,
-		// 			},
-		// 			...convertToOpenAiMessages(messages),
-		// 		],
-		// 	}
+	// 		const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
 
-		// 	const response = await this.client.chat.completions.create(requestOptions)
+	// 		const stream = await this.client.chat.completions.create(
+	// 			{
+	// 				model: modelId,
+	// 				messages: [
+	// 					{
+	// 						role: "developer",
+	// 						content: `Formatting re-enabled\n${systemPrompt}`,
+	// 					},
+	// 					...convertToOpenAiMessages(messages),
+	// 				],
+	// 				stream: true,
+	// 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+	// 				reasoning_effort: this.getModel().info.reasoningEffort,
+	// 			},
+	// 			methodIsAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+	// 		)
 
-		// 	yield {
-		// 		type: "text",
-		// 		text: response.choices[0]?.message.content || "",
-		// 	}
-		// 	yield this.processUsageMetrics(response.usage)
-		// }
-	}
+	// 		yield* this.handleStreamResponse(stream)
+	// 	} else {
+	// 		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+	// 			model: modelId,
+	// 			messages: [
+	// 				{
+	// 					role: "developer",
+	// 					content: `Formatting re-enabled\n${systemPrompt}`,
+	// 				},
+	// 				...convertToOpenAiMessages(messages),
+	// 			],
+	// 		}
+
+	// 		const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+
+	// 		const response = await this.client.chat.completions.create(
+	// 			requestOptions,
+	// 			methodIsAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+	// 		)
+
+	// 		yield {
+	// 			type: "text",
+	// 			text: response.choices[0]?.message.content || "",
+	// 		}
+	// 		yield this.processUsageMetrics(response.usage)
+	// 	}
+	// }
 
 	// private async *handleStreamResponse(stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream {
 	// 	for await (const chunk of stream) {
@@ -408,9 +358,27 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 	// 		}
 	// 	}
 	// }
+
+	private _getUrlHost(baseUrl?: string): string {
+		try {
+			return new URL(baseUrl ?? "").host
+		} catch (error) {
+			return ""
+		}
+	}
+
+	private _isGrokXAI(baseUrl?: string): boolean {
+		const urlHost = this._getUrlHost(baseUrl)
+		return urlHost.includes("x.ai")
+	}
+
+	private _isAzureAiInference(baseUrl?: string): boolean {
+		const urlHost = this._getUrlHost(baseUrl)
+		return urlHost.endsWith(".services.ai.azure.com")
+	}
 }
 
-export async function getRiddlerModels(baseUrl?: string, apiKey?: string) {
+export async function getOpenAiModels(baseUrl?: string, apiKey?: string, openAiHeaders?: Record<string, string>) {
 	try {
 		if (!baseUrl) {
 			return []
@@ -421,9 +389,17 @@ export async function getRiddlerModels(baseUrl?: string, apiKey?: string) {
 		}
 
 		const config: Record<string, any> = {}
+		const headers: Record<string, string> = {
+			...DEFAULT_HEADERS,
+			...(openAiHeaders || {}),
+		}
 
 		if (apiKey) {
-			config["headers"] = { Authorization: `Bearer ${apiKey}` }
+			headers["Authorization"] = `Bearer ${apiKey}`
+		}
+
+		if (Object.keys(headers).length > 0) {
+			config["headers"] = headers
 		}
 
 		const response = await axios.get(`${baseUrl}/models`, config)

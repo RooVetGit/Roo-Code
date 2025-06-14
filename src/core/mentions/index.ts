@@ -1,19 +1,25 @@
-import * as vscode from "vscode"
-import * as path from "path"
-import { openFile } from "../../integrations/misc/open-file"
-import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
-import { mentionRegexGlobal, formatGitSuggestion, type MentionSuggestion } from "../../shared/context-mentions"
 import fs from "fs/promises"
-import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
-import { isBinaryFile } from "isbinaryfile"
-import { diagnosticsToProblemsString } from "../../integrations/diagnostics"
-import { getCommitInfo, getWorkingState } from "../../utils/git"
-import { getLatestTerminalOutput } from "../../integrations/terminal/get-latest-output"
-import { getWorkspacePath } from "../../utils/path"
-import { FileContextTracker } from "../context-tracking/FileContextTracker"
-import { readLines } from "../../integrations/misc/read-lines"
+import * as path from "path"
 
-import { Cline } from "../Cline"
+import * as vscode from "vscode"
+import { isBinaryFile } from "isbinaryfile"
+
+import { mentionRegexGlobal, unescapeSpaces } from "../../shared/context-mentions"
+
+import { getCommitInfo, getWorkingState } from "../../utils/git"
+import { getWorkspacePath } from "../../utils/path"
+
+import { openFile } from "../../integrations/misc/open-file"
+import { extractTextFromFile } from "../../integrations/misc/extract-text"
+import { diagnosticsToProblemsString } from "../../integrations/diagnostics"
+
+import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
+
+import { FileContextTracker } from "../context-tracking/FileContextTracker"
+
+import { RooIgnoreController } from "../ignore/RooIgnoreController"
+
+import { Task } from "../task/Task"
 
 export async function openMention(mention?: string): Promise<void> {
 	if (!mention) {
@@ -26,7 +32,8 @@ export async function openMention(mention?: string): Promise<void> {
 	}
 
 	if (mention.startsWith("/")) {
-		const relPath = mention.slice(1)
+		// Slice off the leading slash and unescape any spaces in the path
+		const relPath = unescapeSpaces(mention.slice(1))
 		const absPath = path.resolve(cwd, relPath)
 		if (mention.endsWith("/")) {
 			vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(absPath))
@@ -47,7 +54,9 @@ export async function parseMentions(
 	cwd: string,
 	urlContentFetcher: UrlContentFetcher,
 	fileContextTracker?: FileContextTracker,
-	cline?:Cline,
+	rooIgnoreController?: RooIgnoreController,
+	showRooIgnoredFiles: boolean = true,
+	cline?:Task,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -68,8 +77,6 @@ export async function parseMentions(
 		} else if (mention === "terminal") {
 			return `Terminal Output (see below for output)`
 		} else if (mention === "codebase") {
-			return ""
-		} else if (mention === "thinking") {
 			return ""
 		} else if (mention.startsWith("summary")) {
 			if (mention.includes(":")) {
@@ -109,12 +116,11 @@ export async function parseMentions(
 		} else if (mention.startsWith("/")) {
 			const mentionPath = mention.slice(1)
 			try {
-				const content = await getFileOrFolderContent(mentionPath, cwd)
+				const content = await getFileOrFolderContent(mentionPath, cwd, rooIgnoreController, showRooIgnoredFiles)
 				if (mention.endsWith("/")) {
 					parsedText += `\n\n<folder_content path="${mentionPath}">\n${content}\n</folder_content>`
 				} else {
 					parsedText += `\n\n<file_content path="${mentionPath}">\n${content}\n</file_content>`
-					// Track that this file was mentioned and its content was included
 					if (fileContextTracker) {
 						await fileContextTracker.trackFileContext(mentionPath, "file_mentioned")
 					}
@@ -158,10 +164,6 @@ export async function parseMentions(
 			if (cline) {
 				cline.codebase_enable = true
 			}
-		} else if (mention === "thinking") {
-			if (cline) {
-				cline.thinking_enable = true
-			}
 		} else if (mention.startsWith("summary")) {
 			if (cline) {
 				cline.summary_enable = true
@@ -184,35 +186,24 @@ export async function parseMentions(
 	return parsedText
 }
 
-async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
-	let start_line:number | undefined = undefined
-	let end_line:number | undefined = undefined
-	if (mentionPath.includes(":")) {
-		const split = mentionPath.split(":")
-		mentionPath = split[0]
-		const lines = split[1]
-		if (lines.includes("-")){
-			start_line = parseInt(lines.split("-")[0]) || undefined
-			end_line = parseInt(lines.split("-")[1]) || undefined
-		}
-	}
-
-	const absPath = path.resolve(cwd, mentionPath)
+async function getFileOrFolderContent(
+	mentionPath: string,
+	cwd: string,
+	rooIgnoreController?: any,
+	showRooIgnoredFiles: boolean = true,
+): Promise<string> {
+	const unescapedPath = unescapeSpaces(mentionPath)
+	const absPath = path.resolve(cwd, unescapedPath)
 
 	try {
 		const stats = await fs.stat(absPath)
 
 		if (stats.isFile()) {
+			if (rooIgnoreController && !rooIgnoreController.validateAccess(absPath)) {
+				return `(File ${mentionPath} is ignored by .rooignore)`
+			}
 			try {
-				let content: string
-				if (start_line !== undefined && end_line !== undefined) {
-					// 使用 readLines 读取指定范围的行
-					content = await readLines(absPath, end_line-1, start_line-1)
-					// 添加行号
-					content = addLineNumbers(content, start_line)
-				} else {
-					content = await extractTextFromFile(absPath)
-				}
+				const content = await extractTextFromFile(absPath)
 				return content
 			} catch (error) {
 				return `(Failed to read contents of ${mentionPath}): ${error.message}`
@@ -221,33 +212,51 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 			const entries = await fs.readdir(absPath, { withFileTypes: true })
 			let folderContent = ""
 			const fileContentPromises: Promise<string | undefined>[] = []
-			entries.forEach((entry, index) => {
+			const LOCK_SYMBOL = "🔒"
+
+			for (let index = 0; index < entries.length; index++) {
+				const entry = entries[index]
 				const isLast = index === entries.length - 1
 				const linePrefix = isLast ? "└── " : "├── "
+				const entryPath = path.join(absPath, entry.name)
+
+				let isIgnored = false
+				if (rooIgnoreController) {
+					isIgnored = !rooIgnoreController.validateAccess(entryPath)
+				}
+
+				if (isIgnored && !showRooIgnoredFiles) {
+					continue
+				}
+
+				const displayName = isIgnored ? `${LOCK_SYMBOL} ${entry.name}` : entry.name
+
 				if (entry.isFile()) {
-					folderContent += `${linePrefix}${entry.name}\n`
-					const filePath = path.join(mentionPath, entry.name)
-					const absoluteFilePath = path.resolve(absPath, entry.name)
-					fileContentPromises.push(
-						(async () => {
-							try {
-								const isBinary = await isBinaryFile(absoluteFilePath).catch(() => false)
-								if (isBinary) {
+					folderContent += `${linePrefix}${displayName}\n`
+					if (!isIgnored) {
+						const filePath = path.join(mentionPath, entry.name)
+						const absoluteFilePath = path.resolve(absPath, entry.name)
+						fileContentPromises.push(
+							(async () => {
+								try {
+									const isBinary = await isBinaryFile(absoluteFilePath).catch(() => false)
+									if (isBinary) {
+										return undefined
+									}
+									const content = await extractTextFromFile(absoluteFilePath)
+									return `<file_content path="${filePath.toPosix()}">\n${content}\n</file_content>`
+								} catch (error) {
 									return undefined
 								}
-								const content = await extractTextFromFile(absoluteFilePath)
-								return `<file_content path="${filePath.toPosix()}">\n${content}\n</file_content>`
-							} catch (error) {
-								return undefined
-							}
-						})(),
-					)
+							})(),
+						)
+					}
 				} else if (entry.isDirectory()) {
-					folderContent += `${linePrefix}${entry.name}/\n`
+					folderContent += `${linePrefix}${displayName}/\n`
 				} else {
-					folderContent += `${linePrefix}${entry.name}\n`
+					folderContent += `${linePrefix}${displayName}\n`
 				}
-			})
+			}
 			const fileContents = (await Promise.all(fileContentPromises)).filter((content) => content)
 			return `${folderContent}\n${fileContents.join("\n\n")}`.trim()
 		} else {
@@ -270,3 +279,53 @@ async function getWorkspaceProblems(cwd: string): Promise<string> {
 	}
 	return result
 }
+
+/**
+ * Gets the contents of the active terminal
+ * @returns The terminal contents as a string
+ */
+export async function getLatestTerminalOutput(): Promise<string> {
+	// Store original clipboard content to restore later
+	const originalClipboard = await vscode.env.clipboard.readText()
+
+	try {
+		// Select terminal content
+		await vscode.commands.executeCommand("workbench.action.terminal.selectAll")
+
+		// Copy selection to clipboard
+		await vscode.commands.executeCommand("workbench.action.terminal.copySelection")
+
+		// Clear the selection
+		await vscode.commands.executeCommand("workbench.action.terminal.clearSelection")
+
+		// Get terminal contents from clipboard
+		let terminalContents = (await vscode.env.clipboard.readText()).trim()
+
+		// Check if there's actually a terminal open
+		if (terminalContents === originalClipboard) {
+			return ""
+		}
+
+		// Clean up command separation
+		const lines = terminalContents.split("\n")
+		const lastLine = lines.pop()?.trim()
+
+		if (lastLine) {
+			let i = lines.length - 1
+
+			while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+				i--
+			}
+
+			terminalContents = lines.slice(Math.max(i, 0)).join("\n")
+		}
+
+		return terminalContents
+	} finally {
+		// Restore original clipboard content
+		await vscode.env.clipboard.writeText(originalClipboard)
+	}
+}
+
+// Export processUserContentMentions from its own file
+export { processUserContentMentions } from "./processUserContentMentions"

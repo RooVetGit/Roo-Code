@@ -1,10 +1,10 @@
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
 
 export async function useMcpToolTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -90,7 +90,7 @@ export async function useMcpToolTool(
 								return item.text
 							}
 							if (item.type === "resource") {
-								const { blob, ...rest } = item.resource
+								const { blob: _, ...rest } = item.resource
 								return JSON.stringify(rest, null, 2)
 							}
 							return ""

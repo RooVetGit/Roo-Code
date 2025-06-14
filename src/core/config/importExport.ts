@@ -3,18 +3,27 @@ import * as path from "path"
 import fs from "fs/promises"
 
 import * as vscode from "vscode"
-import { z } from "zod"
+import { z, ZodError } from "zod"
 
-import { globalSettingsSchema } from "../../schemas"
+import { globalSettingsSchema } from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
+import { CustomModesManager } from "./CustomModesManager"
 
-type ImportExportOptions = {
+type ImportOptions = {
+	providerSettingsManager: ProviderSettingsManager
+	contextProxy: ContextProxy
+	customModesManager: CustomModesManager
+}
+
+type ExportOptions = {
 	providerSettingsManager: ProviderSettingsManager
 	contextProxy: ContextProxy
 }
 
-export const importSettings = async ({ providerSettingsManager, contextProxy }: ImportExportOptions) => {
+export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions) => {
 	const uris = await vscode.window.showOpenDialog({
 		filters: { JSON: ["json"] },
 		canSelectMany: false,
@@ -26,15 +35,14 @@ export const importSettings = async ({ providerSettingsManager, contextProxy }: 
 
 	const schema = z.object({
 		providerProfiles: providerProfilesSchema,
-		globalSettings: globalSettingsSchema,
+		globalSettings: globalSettingsSchema.optional(),
 	})
 
 	try {
 		const previousProviderProfiles = await providerSettingsManager.export()
 
-		const { providerProfiles: newProviderProfiles, globalSettings } = schema.parse(
-			JSON.parse(await fs.readFile(uris[0].fsPath, "utf-8")),
-		)
+		const data = JSON.parse(await fs.readFile(uris[0].fsPath, "utf-8"))
+		const { providerProfiles: newProviderProfiles, globalSettings = {} } = schema.parse(data)
 
 		const providerProfiles = {
 			currentApiConfigName: newProviderProfiles.currentApiConfigName,
@@ -48,19 +56,43 @@ export const importSettings = async ({ providerSettingsManager, contextProxy }: 
 			},
 		}
 
-		await providerSettingsManager.import(newProviderProfiles)
+		await Promise.all(
+			(globalSettings.customModes ?? []).map((mode) => customModesManager.updateCustomMode(mode.slug, mode)),
+		)
 
+		await providerSettingsManager.import(newProviderProfiles)
 		await contextProxy.setValues(globalSettings)
-		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
+
+		// Set the current provider.
+		const currentProviderName = providerProfiles.currentApiConfigName
+		const currentProvider = providerProfiles.apiConfigs[currentProviderName]
+		contextProxy.setValue("currentApiConfigName", currentProviderName)
+
+		// TODO: It seems like we don't need to have the provider settings in
+		// the proxy; we can just use providerSettingsManager as the source of
+		// truth.
+		if (currentProvider) {
+			contextProxy.setProviderSettings(currentProvider)
+		}
+
 		contextProxy.setValue("listApiConfigMeta", await providerSettingsManager.listConfig())
 
 		return { providerProfiles, globalSettings, success: true }
 	} catch (e) {
-		return { success: false }
+		let error = "Unknown error"
+
+		if (e instanceof ZodError) {
+			error = e.issues.map((issue) => `[${issue.path.join(".")}]: ${issue.message}`).join("\n")
+			TelemetryService.instance.captureSchemaValidationError({ schemaName: "ImportExport", error: e })
+		} else if (e instanceof Error) {
+			error = e.message
+		}
+
+		return { success: false, error }
 	}
 }
 
-export const exportSettings = async ({ providerSettingsManager, contextProxy }: ImportExportOptions) => {
+export const exportSettings = async ({ providerSettingsManager, contextProxy }: ExportOptions) => {
 	const uri = await vscode.window.showSaveDialog({
 		filters: { JSON: ["json"] },
 		defaultUri: vscode.Uri.file(path.join(os.homedir(), "Documents", "roo-code-settings.json")),
@@ -73,6 +105,14 @@ export const exportSettings = async ({ providerSettingsManager, contextProxy }: 
 	try {
 		const providerProfiles = await providerSettingsManager.export()
 		const globalSettings = await contextProxy.export()
+
+		// It's okay if there are no global settings, but if there are no
+		// provider profile configured then don't export. If we wanted to
+		// support this case then the `importSettings` function would need to
+		// be updated to handle the case where there are no provider profiles.
+		if (typeof providerProfiles === "undefined") {
+			return
+		}
 
 		const dirname = path.dirname(uri.fsPath)
 		await fs.mkdir(dirname, { recursive: true })

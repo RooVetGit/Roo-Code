@@ -1,6 +1,6 @@
 import {
-	ApiProvider,
-	ModelInfo,
+	type ProviderName,
+	type ModelInfo,
 	anthropicModels,
 	bedrockModels,
 	deepSeekModels,
@@ -9,11 +9,11 @@ import {
 	openAiNativeModels,
 	vertexModels,
 	xaiModels,
-} from "@roo/shared/api"
+	groqModels,
+	chutesModels,
+} from "@roo-code/types"
 
-export { REASONING_MODELS, PROMPT_CACHING_MODELS } from "@roo/shared/api"
-
-export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, ModelInfo>>> = {
+export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,
 	bedrock: bedrockModels,
 	deepseek: deepSeekModels,
@@ -22,6 +22,8 @@ export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, Mode
 	"openai-native": openAiNativeModels,
 	vertex: vertexModels,
 	xai: xaiModels,
+	groq: groqModels,
+	chutes: chutesModels,
 }
 
 export const PROVIDERS = [
@@ -41,13 +43,8 @@ export const PROVIDERS = [
 	// { value: "unbound", label: "Unbound" },
 	// { value: "requesty", label: "Requesty" },
 	// { value: "human-relay", label: "Human Relay" },
-	// { value: "xai", label: "xAI" },
+	// { value: "xai", label: "xAI (Grok)" },
+	// { value: "groq", label: "Groq" },
+	// { value: "chutes", label: "Chutes AI" },
+	// { value: "litellm", label: "LiteLLM" },
 ].sort((a, b) => a.label.localeCompare(b.label))
-
-export const VERTEX_REGIONS = [
-	{ value: "us-east5", label: "us-east5" },
-	{ value: "us-central1", label: "us-central1" },
-	{ value: "europe-west1", label: "europe-west1" },
-	{ value: "europe-west4", label: "europe-west4" },
-	{ value: "asia-southeast1", label: "asia-southeast1" },
-]

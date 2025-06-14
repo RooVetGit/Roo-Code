@@ -4,7 +4,9 @@
 		"done": "완료",
 		"cancel": "취소",
 		"reset": "초기화",
-		"select": "선택"
+		"select": "선택",
+		"add": "헤더 추가",
+		"remove": "삭제"
 	},
 	"header": {
 		"title": "설정",
@@ -21,16 +23,48 @@
 	"sections": {
 		"providers": "공급자",
 		"autoApprove": "자동 승인",
-		"browser": "브라우저 / 컴퓨터 사용",
+		"browser": "컴퓨터 접근",
 		"checkpoints": "체크포인트",
 		"notifications": "알림",
-		"contextManagement": "컨텍스트 관리",
+		"contextManagement": "컨텍스트",
 		"terminal": "터미널",
-		"advanced": "고급",
-		"experimental": "실험적 기능",
+		"prompts": "프롬프트",
+		"experimental": "실험적",
 		"language": "언어",
-		"about": "Roo Code 정보",
-		"interface": "인터페이스"
+		"about": "Roo Code 정보"
+	},
+	"prompts": {
+		"description": "프롬프트 향상, 코드 설명, 문제 해결과 같은 빠른 작업에 사용되는 지원 프롬프트를 구성합니다. 이러한 프롬프트는 Roo가 일반적인 개발 작업에 대해 더 나은 지원을 제공하는 데 도움이 됩니다."
+	},
+	"codeIndex": {
+		"title": "코드베이스 인덱싱",
+		"enableLabel": "코드베이스 인덱싱 활성화",
+		"enableDescription": "<0>코드베이스 인덱싱</0>은 AI 임베딩을 사용하여 프로젝트의 의미론적 검색 인덱스를 생성하는 실험적 기능입니다. 이를 통해 Roo Code는 단순한 키워드가 아닌 의미를 기반으로 관련 코드를 찾아 대규모 코드베이스를 더 잘 이해하고 탐색할 수 있습니다.",
+		"providerLabel": "임베딩 제공자",
+		"selectProviderPlaceholder": "제공자 선택",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI 호환",
+		"openaiCompatibleBaseUrlLabel": "기본 URL:",
+		"openaiCompatibleApiKeyLabel": "API 키:",
+		"openaiCompatibleModelDimensionLabel": "임베딩 차원:",
+		"openaiCompatibleModelDimensionPlaceholder": "예: 1536",
+		"openaiCompatibleModelDimensionDescription": "모델의 임베딩 차원(출력 크기)입니다. 이 값에 대해서는 제공업체의 문서를 확인하세요. 일반적인 값: 384, 768, 1536, 3072.",
+		"openaiKeyLabel": "OpenAI 키:",
+		"modelLabel": "모델",
+		"selectModelPlaceholder": "모델 선택",
+		"ollamaUrlLabel": "Ollama URL:",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant 키:",
+		"startIndexingButton": "인덱싱 시작",
+		"clearIndexDataButton": "인덱스 데이터 지우기",
+		"unsavedSettingsMessage": "인덱싱 프로세스를 시작하기 전에 설정을 저장해 주세요.",
+		"clearDataDialog": {
+			"title": "확실합니까?",
+			"description": "이 작업은 취소할 수 없습니다. 코드베이스 인덱스 데이터가 영구적으로 삭제됩니다.",
+			"cancelButton": "취소",
+			"confirmButton": "데이터 지우기"
+		}
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
@@ -79,11 +113,16 @@
 			"allowedCommandsDescription": "\"실행 작업 항상 승인\"이 활성화되었을 때 자동 실행될 수 있는 명령 접두사. 모든 명령을 허용하려면 * 추가(주의해서 사용)",
 			"commandPlaceholder": "명령 접두사 입력(예: 'git ')",
 			"addButton": "추가"
+		},
+		"apiRequestLimit": {
+			"title": "최대 요청 수",
+			"description": "작업을 계속하기 위한 승인을 요청하기 전에 자동으로 이 수의 API 요청을 수행합니다.",
+			"unlimited": "무제한"
 		}
 	},
 	"providers": {
-		"configProfile": "구성 프로필",
 		"providerDocumentation": "{{provider}} 문서",
+		"configProfile": "구성 프로필",
 		"description": "다양한 API 구성을 저장하여 제공자와 설정 간에 빠르게 전환할 수 있습니다.",
 		"apiProvider": "API 제공자",
 		"model": "모델",
@@ -109,18 +148,35 @@
 		"glamaApiKey": "Glama API 키",
 		"getGlamaApiKey": "Glama API 키 받기",
 		"useCustomBaseUrl": "사용자 정의 기본 URL 사용",
+		"useReasoning": "추론 활성화",
 		"useHostHeader": "사용자 정의 Host 헤더 사용",
 		"useLegacyFormat": "레거시 OpenAI API 형식 사용",
+		"customHeaders": "사용자 정의 헤더",
+		"headerName": "헤더 이름",
+		"headerValue": "헤더 값",
+		"noCustomHeaders": "정의된 사용자 정의 헤더가 없습니다. + 버튼을 클릭하여 추가하세요.",
 		"requestyApiKey": "Requesty API 키",
+		"refreshModels": {
+			"label": "모델 새로고침",
+			"hint": "최신 모델을 보려면 설정을 다시 열어주세요.",
+			"loading": "모델 목록 새로고침 중...",
+			"success": "모델 목록이 성공적으로 새로고침되었습니다!",
+			"error": "모델 목록 새로고침에 실패했습니다. 다시 시도해 주세요."
+		},
 		"getRequestyApiKey": "Requesty API 키 받기",
 		"openRouterTransformsText": "프롬프트와 메시지 체인을 컨텍스트 크기로 압축 (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
 		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
+		"chutesApiKey": "Chutes API 키",
+		"getChutesApiKey": "Chutes API 키 받기",
 		"deepSeekApiKey": "DeepSeek API 키",
 		"getDeepSeekApiKey": "DeepSeek API 키 받기",
 		"geminiApiKey": "Gemini API 키",
+		"getGroqApiKey": "Groq API 키 받기",
+		"groqApiKey": "Groq API 키",
 		"getGeminiApiKey": "Gemini API 키 받기",
+		"apiKey": "API 키",
 		"openAiApiKey": "OpenAI API 키",
 		"openAiBaseUrl": "기본 URL",
 		"getOpenAiApiKey": "OpenAI API 키 받기",
@@ -130,6 +186,8 @@
 		"codestralBaseUrlDesc": "Codestral 모델의 대체 URL을 설정합니다.",
 		"xaiApiKey": "xAI API 키",
 		"getXaiApiKey": "xAI API 키 받기",
+		"litellmApiKey": "LiteLLM API 키",
+		"litellmBaseUrl": "LiteLLM 기본 URL",
 		"awsCredentials": "AWS 자격 증명",
 		"awsProfile": "AWS 프로필",
 		"awsProfileName": "AWS 프로필 이름",
@@ -138,6 +196,11 @@
 		"awsSessionToken": "AWS 세션 토큰",
 		"awsRegion": "AWS 리전",
 		"awsCrossRegion": "교차 리전 추론 사용",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "사용자 지정 VPC 엔드포인트 사용",
+			"vpcEndpointUrlPlaceholder": "VPC 엔드포인트 URL 입력 (선택사항)",
+			"examples": "예시:"
+		},
 		"enablePromptCaching": "프롬프트 캐시 활성화",
 		"enablePromptCachingTitle": "지원되는 모델의 성능을 향상시키고 비용을 절감하기 위해 프롬프트 캐시를 활성화합니다.",
 		"cacheUsageNote": "참고: 캐시 사용이 표시되지 않는 경우, 다른 모델을 선택한 다음 원하는 모델을 다시 선택해 보세요.",
@@ -171,6 +234,8 @@
 		},
 		"unboundApiKey": "Unbound API 키",
 		"getUnboundApiKey": "Unbound API 키 받기",
+		"unboundRefreshModelsSuccess": "모델 목록이 업데이트되었습니다! 이제 최신 모델에서 선택할 수 있습니다.",
+		"unboundInvalidApiKey": "잘못된 API 키입니다. API 키를 확인하고 다시 시도해 주세요.",
 		"humanRelay": {
 			"description": "API 키가 필요하지 않지만, 사용자가 웹 채팅 AI에 정보를 복사하여 붙여넣어야 합니다.",
 			"instructions": "사용 중에 대화 상자가 나타나고 현재 메시지가 자동으로 클립보드에 복사됩니다. 이를 웹 버전 AI(예: ChatGPT 또는 Claude)에 붙여넣은 다음, AI의 응답을 대화 상자에 복사하고 확인 버튼을 클릭해야 합니다."
@@ -233,12 +298,13 @@
 			"high": "높음",
 			"medium": "중간",
 			"low": "낮음"
-		}
+		},
+		"setReasoningLevel": "추론 노력 활성화"
 	},
 	"browser": {
 		"enable": {
 			"label": "브라우저 도구 활성화",
-			"description": "활성화되면 Roo는 컴퓨터 사용을 지원하는 모델을 사용할 때 웹사이트와 상호 작용하기 위해 브라우저를 사용할 수 있습니다."
+			"description": "활성화되면 Roo는 컴퓨터 사용을 지원하는 모델을 사용할 때 웹사이트와 상호 작용하기 위해 브라우저를 사용할 수 있습니다. <0>더 알아보기</0>"
 		},
 		"viewport": {
 			"label": "뷰포트 크기",
@@ -266,7 +332,7 @@
 	"checkpoints": {
 		"enable": {
 			"label": "자동 체크포인트 활성화",
-			"description": "활성화되면 Roo는 작업 실행 중에 자동으로 체크포인트를 생성하여 변경 사항을 검토하거나 이전 상태로 되돌리기 쉽게 합니다."
+			"description": "활성화되면 Roo는 작업 실행 중에 자동으로 체크포인트를 생성하여 변경 사항을 검토하거나 이전 상태로 되돌리기 쉽게 합니다. <0>더 알아보기</0>"
 		}
 	},
 	"notifications": {
@@ -283,6 +349,25 @@
 	},
 	"contextManagement": {
 		"description": "AI의 컨텍스트 창에 포함되는 정보를 제어하여 token 사용량과 응답 품질에 영향을 미칩니다",
+		"autoCondenseContextPercent": {
+			"label": "지능적 컨텍스트 압축을 트리거하는 임계값",
+			"description": "컨텍스트 창이 이 임계값에 도달하면 Roo가 자동으로 압축합니다."
+		},
+		"condensingApiConfiguration": {
+			"label": "컨텍스트 압축을 위한 API 설정",
+			"description": "컨텍스트 압축 작업에 사용할 API 설정을 선택하세요. 선택하지 않으면 현재 활성화된 설정을 사용합니다.",
+			"useCurrentConfig": "기본값"
+		},
+		"customCondensingPrompt": {
+			"label": "사용자 지정 컨텍스트 압축 프롬프트",
+			"description": "컨텍스트 압축을 위한 사용자 지정 시스템 프롬프트입니다. 기본 프롬프트를 사용하려면 비워 두세요.",
+			"placeholder": "여기에 사용자 정의 압축 프롬프트를 입력하세요...\n\n기본 프롬프트와 동일한 구조를 사용할 수 있습니다:\n- 이전 대화\n- 현재 작업\n- 주요 기술 개념\n- 관련 파일 및 코드\n- 문제 해결\n- 보류 중인 작업 및 다음 단계",
+			"reset": "기본값으로 재설정",
+			"hint": "비어있음 = 기본 프롬프트 사용"
+		},
+		"autoCondenseContext": {
+			"name": "지능적 컨텍스트 압축 자동 트리거"
+		},
 		"openTabs": {
 			"label": "열린 탭 컨텍스트 제한",
 			"description": "컨텍스트에 포함할 VSCode 열린 탭의 최대 수. 높은 값은 더 많은 컨텍스트를 제공하지만 token 사용량이 증가합니다."
@@ -300,44 +385,64 @@
 			"description": "모델이 시작/끝 값을 지정하지 않을 때 Roo가 읽는 줄 수입니다. 이 수가 파일의 총 줄 수보다 적으면 Roo는 코드 정의의 줄 번호 인덱스를 생성합니다. 특수한 경우: -1은 Roo에게 전체 파일을 읽도록 지시하고(인덱싱 없이), 0은 줄을 읽지 않고 최소한의 컨텍스트를 위해 줄 인덱스만 제공하도록 지시합니다. 낮은 값은 초기 컨텍스트 사용을 최소화하고, 이후 정확한 줄 범위 읽기를 가능하게 합니다. 명시적 시작/끝 요청은 이 설정의 제한을 받지 않습니다.",
 			"lines": "줄",
 			"always_full_read": "항상 전체 파일 읽기"
+		},
+		"maxConcurrentFileReads": {
+			"label": "동시 파일 읽기 제한",
+			"description": "read_file 도구가 동시에 처리할 수 있는 최대 파일 수입니다. 높은 값은 여러 작은 파일을 읽는 속도를 높일 수 있지만 메모리 사용량이 증가합니다."
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "터미널 설정: 기본",
+			"description": "기본 터미널 설정"
+		},
+		"advanced": {
+			"label": "터미널 설정: 고급",
+			"description": "다음 옵션들은 설정을 적용하기 위해 터미널 재시작이 필요할 수 있습니다"
+		},
 		"outputLineLimit": {
 			"label": "터미널 출력 제한",
-			"description": "명령 실행 시 터미널 출력에 포함할 최대 라인 수. 초과 시 중간에서 라인이 제거되어 token이 절약됩니다."
+			"description": "명령 실행 시 터미널 출력에 포함할 최대 라인 수. 초과 시 중간에서 라인이 제거되어 token이 절약됩니다. <0>더 알아보기</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "터미널 쉘 통합 타임아웃",
-			"description": "명령을 실행하기 전에 쉘 통합이 초기화될 때까지 기다리는 최대 시간. 쉘 시작 시간이 긴 사용자의 경우, 터미널에서 \"Shell Integration Unavailable\" 오류가 표시되면 이 값을 늘려야 할 수 있습니다."
+			"description": "명령을 실행하기 전에 쉘 통합이 초기화될 때까지 기다리는 최대 시간. 쉘 시작 시간이 긴 사용자의 경우, 터미널에서 \"Shell Integration Unavailable\" 오류가 표시되면 이 값을 늘려야 할 수 있습니다. <0>더 알아보기</0>"
 		},
-		"compressProgressBar": {
-			"label": "진행 표시줄 출력 압축",
-			"description": "활성화하면 캐리지 리턴(\\r)이 포함된 터미널 출력을 처리하여 실제 터미널이 콘텐츠를 표시하는 방식을 시뮬레이션합니다. 이는 진행 표시줄의 중간 상태를 제거하고 최종 상태만 유지하여 더 관련성 있는 정보를 위한 컨텍스트 공간을 절약합니다."
-		},
-		"zdotdir": {
-			"label": "ZDOTDIR 처리 활성화",
-			"description": "활성화하면 zsh 셸 통합을 올바르게 처리하기 위한 ZDOTDIR용 임시 디렉터리를 생성합니다. 이를 통해 zsh 구성을 유지하면서 VSCode 셸 통합이 zsh와 올바르게 작동합니다. (실험적)"
+		"shellIntegrationDisabled": {
+			"label": "터미널 셸 통합 비활성화",
+			"description": "터미널 명령이 올바르게 작동하지 않거나 '셸 통합을 사용할 수 없음' 오류가 표시되는 경우 이 옵션을 활성화합니다. 이렇게 하면 일부 고급 터미널 기능을 우회하여 명령을 실행하는 더 간단한 방법을 사용합니다. <0>더 알아보기</0>"
 		},
 		"commandDelay": {
 			"label": "터미널 명령 지연",
-			"description": "명령 실행 후 추가할 지연 시간(밀리초). 기본값 0은 지연을 완전히 비활성화합니다. 이는 타이밍 문제가 있는 터미널에서 명령 출력을 완전히 캡처하는 데 도움이 될 수 있습니다. 대부분의 터미널에서는 `PROMPT_COMMAND='sleep N'`을 설정하여 구현되며, PowerShell은 각 명령 끝에 `start-sleep`을 추가합니다. 원래는 VSCode 버그#237208에 대한 해결책이었으며 필요하지 않을 수 있습니다."
+			"description": "명령 실행 후 추가할 지연 시간(밀리초). 기본값 0은 지연을 완전히 비활성화합니다. 이는 타이밍 문제가 있는 터미널에서 명령 출력을 완전히 캡처하는 데 도움이 될 수 있습니다. 대부분의 터미널에서는 `PROMPT_COMMAND='sleep N'`을 설정하여 구현되며, PowerShell은 각 명령 끝에 `start-sleep`을 추가합니다. 원래는 VSCode 버그#237208에 대한 해결책이었으며 필요하지 않을 수 있습니다. <0>더 알아보기</0>"
+		},
+		"compressProgressBar": {
+			"label": "진행 표시줄 출력 압축",
+			"description": "활성화하면 캐리지 리턴(\\r)이 포함된 터미널 출력을 처리하여 실제 터미널이 콘텐츠를 표시하는 방식을 시뮬레이션합니다. 이는 진행 표시줄의 중간 상태를 제거하고 최종 상태만 유지하여 더 관련성 있는 정보를 위한 컨텍스트 공간을 절약합니다. <0>더 알아보기</0>"
 		},
 		"powershellCounter": {
 			"label": "PowerShell 카운터 해결 방법 활성화",
-			"description": "활성화하면 PowerShell 명령에 카운터를 추가하여 명령이 올바르게 실행되도록 합니다. 이는 명령 출력 캡처에 문제가 있을 수 있는 PowerShell 터미널에서 도움이 됩니다."
+			"description": "활성화하면 PowerShell 명령에 카운터를 추가하여 명령이 올바르게 실행되도록 합니다. 이는 명령 출력 캡처에 문제가 있을 수 있는 PowerShell 터미널에서 도움이 됩니다. <0>더 알아보기</0>"
 		},
 		"zshClearEolMark": {
 			"label": "ZSH 줄 끝 표시 지우기",
-			"description": "활성화하면 PROMPT_EOL_MARK=''를 설정하여 ZSH 줄 끝 표시를 지웁니다. 이는 '%'와 같은 특수 문자로 끝나는 명령 출력 해석의 문제를 방지합니다."
+			"description": "활성화하면 PROMPT_EOL_MARK=''를 설정하여 ZSH 줄 끝 표시를 지웁니다. 이는 '%'와 같은 특수 문자로 끝나는 명령 출력 해석의 문제를 방지합니다. <0>더 알아보기</0>"
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh 통합 활성화",
-			"description": "활성화하면 ITERM_SHELL_INTEGRATION_INSTALLED=Yes를 설정하여 Oh My Zsh 셸 통합 기능을 활성화합니다. (실험적)"
+			"description": "활성화하면 ITERM_SHELL_INTEGRATION_INSTALLED=Yes를 설정하여 Oh My Zsh 셸 통합 기능을 활성화합니다. 이 설정을 적용하려면 IDE를 다시 시작해야 할 수 있습니다. <0>더 알아보기</0>"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k 통합 활성화",
-			"description": "활성화하면 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true를 설정하여 Powerlevel10k 셸 통합 기능을 활성화합니다. (실험적)"
+			"description": "활성화하면 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true를 설정하여 Powerlevel10k 셸 통합 기능을 활성화합니다. <0>더 알아보기</0>"
+		},
+		"zdotdir": {
+			"label": "ZDOTDIR 처리 활성화",
+			"description": "활성화하면 zsh 셸 통합을 올바르게 처리하기 위한 ZDOTDIR용 임시 디렉터리를 생성합니다. 이를 통해 zsh 구성을 유지하면서 VSCode 셸 통합이 zsh와 올바르게 작동합니다. <0>더 알아보기</0>"
+		},
+		"inheritEnv": {
+			"label": "환경 변수 상속",
+			"description": "활성화하면 터미널이 VSCode 부모 프로세스로부터 환경 변수를 상속받습니다. 사용자 프로필에 정의된 셸 통합 설정 등이 포함됩니다. 이는 VSCode 전역 설정 `terminal.integrated.inheritEnv`를 직접 전환합니다. <0>더 알아보기</0>"
 		}
 	},
 	"advanced": {
@@ -364,7 +469,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "실험적 통합 diff 전략 사용",
 			"description": "실험적 통합 diff 전략을 활성화합니다. 이 전략은 모델 오류로 인한 재시도 횟수를 줄일 수 있지만 예기치 않은 동작이나 잘못된 편집을 일으킬 수 있습니다. 위험을 이해하고 모든 변경 사항을 신중하게 검토할 의향이 있는 경우에만 활성화하십시오."
@@ -384,11 +488,19 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "실험적 다중 블록 diff 도구 사용",
 			"description": "활성화하면 Roo가 다중 블록 diff 도구를 사용합니다. 이것은 하나의 요청에서 파일의 여러 코드 블록을 업데이트하려고 시도합니다."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "동시 파일 읽기 활성화",
+			"description": "활성화하면 Roo가 한 번의 요청으로 여러 파일 을 읽을 수 있습니다. 비활성화하면 Roo는 파일을 하나씩 읽어야 합니다. 성능이 낮은 모델로 작업하거나 파일 액세스를 더 제어하려는 경우 비활성화하면 도움이 될 수 있습니다."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "attempt_completion에서 명령 실행 비활성화",
+			"description": "활성화하면 attempt_completion 도구가 명령을 실행하지 않습니다. 이는 작업 완료 시 명령 실행을 더 이상 사용하지 않도록 준비하기 위한 실험적 기능입니다."
 		}
 	},
 	"promptCaching": {
-		"label": "프롬프트 캐싱 활성화",
-		"description": "활성화하면 Roo는 비용 절감을 위해 프롬프트 캐싱을 켠 상태로 이 모델을 사용합니다."
+		"label": "프롬프트 캐싱 비활성화",
+		"description": "체크하면 Roo가 이 모델에 대해 프롬프트 캐싱을 사용하지 않습니다."
 	},
 	"temperature": {
 		"useCustom": "사용자 정의 온도 사용",
@@ -426,8 +538,7 @@
 		"useCustomModel": "사용자 정의 사용: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "질문이나 피드백이 있으시면 <githubLink>github.com/RooVetGit/Roo-Code</githubLink>에서 이슈를 열거나 <redditLink>reddit.com/r/RooCode</redditLink> 또는 <discordLink>discord.gg/roocode</discordLink>에 가입하세요",
-		"version": "Roo Code v{{version}}",
+		"feedback": "질문이나 피드백이 있으시면 <githubLink>github.com/RooCodeInc/Roo-Code</githubLink>에서 이슈를 열거나 <redditLink>reddit.com/r/RooCode</redditLink> 또는 <discordLink>discord.gg/roocode</discordLink>에 가입하세요",
 		"telemetry": {
 			"label": "익명 오류 및 사용 보고 허용",
 			"description": "익명 사용 데이터 및 오류 보고서를 보내 Roo Code 개선에 도움을 주세요. 코드, 프롬프트 또는 개인 정보는 절대 전송되지 않습니다. 자세한 내용은 개인정보 보호정책을 참조하세요."
@@ -453,7 +564,10 @@
 			"invalidFormat": "ARN 형식이 잘못되었습니다. 형식 요구사항을 확인하세요.",
 			"regionMismatch": "경고: ARN의 리전({{arnRegion}})이 선택한 리전({{region}})과 일치하지 않습니다. 접근 문제가 발생할 수 있습니다. 제공자는 ARN의 리전을 사용합니다."
 		},
-		"modelAvailability": "제공한 모델 ID({{modelId}})를 사용할 수 없습니다. 다른 모델을 선택하세요."
+		"modelAvailability": "제공한 모델 ID({{modelId}})를 사용할 수 없습니다. 다른 모델을 선택하세요.",
+		"providerNotAllowed": "제공자 '{{provider}}'는 조직에서 허용되지 않습니다",
+		"modelNotAllowed": "모델 '{{model}}'은 제공자 '{{provider}}'에 대해 조직에서 허용되지 않습니다",
+		"profileInvalid": "이 프로필에는 조직에서 허용되지 않는 제공자 또는 모델이 포함되어 있습니다"
 	},
 	"placeholders": {
 		"apiKey": "API 키 입력...",

@@ -3,16 +3,37 @@ import * as path from "path"
 import { listFiles } from "../glob/list-files"
 import { LanguageParser, loadRequiredLanguageParsers } from "./languageParser"
 import { fileExistsAtPath } from "../../utils/fs"
-import { parseMarkdown, formatMarkdownCaptures } from "./markdownParser"
+import { parseMarkdown } from "./markdownParser"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 
+// Private constant
+const DEFAULT_MIN_COMPONENT_LINES_VALUE = 4
+
+// Getter function for MIN_COMPONENT_LINES (for easier testing)
+let currentMinComponentLines = DEFAULT_MIN_COMPONENT_LINES_VALUE
+
+/**
+ * Get the current minimum number of lines for a component to be included
+ */
+export function getMinComponentLines(): number {
+	return currentMinComponentLines
+}
+
+/**
+ * Set the minimum number of lines for a component (for testing)
+ */
+export function setMinComponentLines(value: number): void {
+	currentMinComponentLines = value
+}
+
 const extensions = [
+	"tla",
 	"js",
 	"jsx",
 	"ts",
+	"vue",
 	"tsx",
 	"py",
-	"pyi",
 	// Rust
 	"rs",
 	"go",
@@ -22,7 +43,6 @@ const extensions = [
 	// C++
 	"cpp",
 	"hpp",
-	"cc",
 	// C#
 	"cs",
 	// Ruby
@@ -30,15 +50,47 @@ const extensions = [
 	"java",
 	"php",
 	"swift",
+	// Solidity
+	"sol",
 	// Kotlin
 	"kt",
 	"kts",
+	// Elixir
+	"ex",
+	"exs",
+	// Elisp
+	"el",
+	// HTML
+	"html",
+	"htm",
 	// Markdown
 	"md",
 	"markdown",
 	// JSON
 	"json",
+	// CSS
+	"css",
+	// SystemRDL
+	"rdl",
+	// OCaml
+	"ml",
+	"mli",
+	// Lua
+	"lua",
+	// Scala
+	"scala",
+	// TOML
+	"toml",
+	// Zig
+	"zig",
+	// Elm
+	"elm",
+	// Embedded Template
+	"ejs",
+	"erb",
 ].map((e) => `.${e}`)
+
+export { extensions }
 
 export async function parseSourceCodeDefinitionsForFile(
 	filePath: string,
@@ -74,7 +126,7 @@ export async function parseSourceCodeDefinitionsForFile(
 		const markdownCaptures = parseMarkdown(fileContent)
 
 		// Process the captures
-		const markdownDefinitions = processCaptures(markdownCaptures, lines, 4)
+		const markdownDefinitions = processCaptures(markdownCaptures, lines, "markdown")
 
 		if (markdownDefinitions) {
 			return `# ${path.basename(filePath)}\n${markdownDefinitions}`
@@ -111,7 +163,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 	let result = ""
 
 	// Separate files to parse and remaining files
-	const { filesToParse, remainingFiles } = separateFiles(allFiles)
+	const { filesToParse } = separateFiles(allFiles)
 
 	// Filter filepaths for access if controller is provided
 	const allowedFilesToParse = rooIgnoreController ? rooIgnoreController.filterPaths(filesToParse) : filesToParse
@@ -150,7 +202,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 			const markdownCaptures = parseMarkdown(fileContent)
 
 			// Process the captures
-			const markdownDefinitions = processCaptures(markdownCaptures, lines, 4)
+			const markdownDefinitions = processCaptures(markdownCaptures, lines, "markdown")
 
 			if (markdownDefinitions) {
 				result += `# ${path.relative(dirPath, file).toPosix()}\n${markdownDefinitions}\n`
@@ -210,9 +262,13 @@ This approach allows us to focus on the most relevant parts of the code (defined
  * @param minComponentLines - Minimum number of lines for a component to be included
  * @returns A formatted string with definitions
  */
-function processCaptures(captures: any[], lines: string[], minComponentLines: number = 4): string | null {
-	// Filter function to exclude HTML elements
+function processCaptures(captures: any[], lines: string[], language: string): string | null {
+	// Determine if HTML filtering is needed for this language
+	const needsHtmlFiltering = ["jsx", "tsx"].includes(language)
+
+	// Filter function to exclude HTML elements if needed
 	const isNotHtmlElement = (line: string): boolean => {
+		if (!needsHtmlFiltering) return true
 		// Common HTML elements pattern
 		const HTML_ELEMENTS = /^[^A-Z]*<\/?(?:div|span|button|input|h[1-6]|p|a|img|ul|li|form)\b/
 		const trimmedLine = line.trim()
@@ -228,9 +284,6 @@ function processCaptures(captures: any[], lines: string[], minComponentLines: nu
 
 	// Sort captures by their start position
 	captures.sort((a, b) => a.node.startPosition.row - b.node.startPosition.row)
-
-	// Keep track of the last line we've processed
-	let lastLine = -1
 
 	// Track already processed lines to avoid duplicates
 	const processedLines = new Set<string>()
@@ -254,7 +307,7 @@ function processCaptures(captures: any[], lines: string[], minComponentLines: nu
 		const lineCount = endLine - startLine + 1
 
 		// Skip components that don't span enough lines
-		if (lineCount < minComponentLines) {
+		if (lineCount < getMinComponentLines()) {
 			return
 		}
 
@@ -292,7 +345,7 @@ function processCaptures(captures: any[], lines: string[], minComponentLines: nu
 				const contextSpan = contextEnd - node.parent.startPosition.row + 1
 
 				// Only include context if it spans multiple lines
-				if (contextSpan >= minComponentLines) {
+				if (contextSpan >= getMinComponentLines()) {
 					// Add the full range first
 					const rangeKey = `${node.parent.startPosition.row}-${contextEnd}`
 					if (!processedLines.has(rangeKey)) {
@@ -302,13 +355,12 @@ function processCaptures(captures: any[], lines: string[], minComponentLines: nu
 				}
 			}
 		}
-
-		lastLine = endLine
 	})
 
 	if (formattedOutput.length > 0) {
 		return formattedOutput
 	}
+
 	return null
 }
 
@@ -325,9 +377,6 @@ async function parseFile(
 	languageParsers: LanguageParser,
 	rooIgnoreController?: RooIgnoreController,
 ): Promise<string | null> {
-	// Minimum number of lines for a component to be included
-	const MIN_COMPONENT_LINES = 4
-
 	// Check if we have permission to access this file
 	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
 		return null
@@ -335,10 +384,10 @@ async function parseFile(
 
 	// Read file content
 	const fileContent = await fs.readFile(filePath, "utf8")
-	const ext = path.extname(filePath).toLowerCase().slice(1)
+	const extLang = path.extname(filePath).toLowerCase().slice(1)
 
 	// Check if we have a parser for this file type
-	const { parser, query } = languageParsers[ext] || {}
+	const { parser, query } = languageParsers[extLang] || {}
 	if (!parser || !query) {
 		return `Unsupported file type: ${filePath}`
 	}
@@ -354,7 +403,7 @@ async function parseFile(
 		const lines = fileContent.split("\n")
 
 		// Process the captures
-		return processCaptures(captures, lines, MIN_COMPONENT_LINES)
+		return processCaptures(captures, lines, extLang)
 	} catch (error) {
 		console.log(`Error parsing file: ${error}\n`)
 		// Return null on parsing error to avoid showing error messages in the output

@@ -7,9 +7,11 @@
 		"tokens": "Tokens:",
 		"cache": "Cache:",
 		"apiCost": "API Cost:",
+		"condenseContext": "Intelligently condense context",
 		"contextWindow": "Context Length:",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
+		"share": "Share task",
 		"delete": "Delete Task (Shift + Click to skip confirmation)"
 	},
 	"unpin": "Unpin",
@@ -44,6 +46,14 @@
 		"title": "Approve",
 		"tooltip": "Approve this action"
 	},
+	"read-batch": {
+		"approve": {
+			"title": "Approve All"
+		},
+		"deny": {
+			"title": "Deny All"
+		}
+	},
 	"runCommand": {
 		"title": "Run Command",
 		"tooltip": "Execute this command"
@@ -51,6 +61,10 @@
 	"proceedWhileRunning": {
 		"title": "Proceed While Running",
 		"tooltip": "Continue despite warnings"
+	},
+	"killCommand": {
+		"title": "Kill Command",
+		"tooltip": "Kill the current command"
 	},
 	"resumeTask": {
 		"title": "Resume Task",
@@ -65,7 +79,26 @@
 		"tooltip": "Cancel the current operation"
 	},
 	"scrollToBottom": "Scroll to bottom of chat",
-	"onboarding": "<strong>Your task list in this workspace is empty.</strong> Start by typing in a task below. Not sure how to begin? Read more about what Roo can do for you in <DocsLink>the docs</DocsLink>.",
+	"about": "Generate, refactor, and debug code with AI assistance. Check out our <DocsLink>documentation</DocsLink> to learn more.",
+	"onboarding": "Your task list in this workspace is empty.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Boomerang Tasks",
+			"description": "Split tasks into smaller, manageable parts"
+		},
+		"stickyModels": {
+			"title": "Sticky Models",
+			"description": "Each mode remembers your last used model"
+		},
+		"tools": {
+			"title": "Tools",
+			"description": "Allow the AI to solve problems by browsing the web, running commands, and more"
+		},
+		"customizableModes": {
+			"title": "Customizable Modes",
+			"description": "Specialized personas with their own behaviors and assigned models"
+		}
+	},
 	"selectMode": "Select mode for interaction",
 	"selectApiConfig": "Select API configuration",
 	"enhancePrompt": "Enhance prompt with additional context",
@@ -106,11 +139,19 @@
 		},
 		"current": "Current"
 	},
+	"contextCondense": {
+		"title": "Context Condensed",
+		"condensing": "Condensing context...",
+		"errorHeader": "Failed to condense context",
+		"tokens": "tokens"
+	},
 	"instructions": {
 		"wantsToFetch": "Roo wants to fetch detailed instructions to assist with the current task"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo wants to read this file:",
+		"wantsToReadMultiple": "Roo wants to read multiple files:",
+		"wantsToReadAndXMore": "Roo wants to read this file and {{count}} more:",
 		"wantsToReadOutsideWorkspace": "Roo wants to read this file outside of the workspace:",
 		"didRead": "Roo read this file:",
 		"wantsToEdit": "Roo wants to edit this file:",
@@ -131,6 +172,11 @@
 		"didViewDefinitions": "Roo viewed source code definition names used in this directory:",
 		"wantsToSearch": "Roo wants to search this directory for <code>{{regex}}</code>:",
 		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo wants to search the codebase for <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wants to search the codebase for <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "Found {{count}} result(s) for <code>{{query}}</code>:"
 	},
 	"commandOutput": "Command Output",
 	"response": "Response",
@@ -163,13 +209,6 @@
 		"title": "Edit Unsuccessful"
 	},
 	"troubleMessage": "Roo is having trouble...",
-	"shellIntegration": {
-		"unavailable": "Shell Integration Unavailable",
-		"troubleshooting": "Still having trouble? Click here for shell integration documentation.",
-		"checkSettings": "Check terminal workarounds in the settings page",
-		"updateVSCode": "Update VSCode",
-		"supportedShell": "Make sure you're using a supported shell: zsh, bash, fish, or PowerShell"
-	},
 	"powershell": {
 		"issues": "It seems like you're having Windows PowerShell issues, please see this"
 	},
@@ -179,12 +218,12 @@
 		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 Released",
-		"description": "Roo Code 3.14 brings new features and improvements based on your feedback.",
+		"title": "🎉 Roo Code {{version}} Released",
+		"description": "Roo Code {{version}} brings powerful new features and improvements based on your feedback.",
 		"whatsNew": "What's New",
-		"feature1": "<bold>Improved Editing Tools</bold>: The <code>search_and_replace</code> and <code>insert_content</code> tools have been improved and graduated from experimental status",
-		"feature2": "<bold>Diff Apply Fixes</bold>: We continue to work on improving the <code>apply_diff</code> tool",
-		"feature3": "<bold>Tons of Other Improvements</bold>: Numerous fixes and enhancements throughout the extension",
+		"feature1": "<bold>Intelligent Context Condensing Enabled by Default</bold>: Context condensing is now enabled by default with configurable settings for when automatic condensing happens",
+		"feature2": "<bold>Manual Condensing Button</bold>: New button in the task header allows you to manually trigger context condensing at any time",
+		"feature3": "<bold>Enhanced Condensing Settings</bold>: Fine-tune when and how automatic condensing occurs through the <contextSettingsLink>Context Settings</contextSettingsLink>",
 		"hideButton": "Hide announcement",
 		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -217,5 +256,27 @@
 			"close": "Close browser"
 		}
 	},
-	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior."
+	"codeblock": {
+		"tooltips": {
+			"expand": "Expand code block",
+			"collapse": "Collapse code block",
+			"enable_wrap": "Enable word wrap",
+			"disable_wrap": "Disable word wrap",
+			"copy_code": "Copy code"
+		}
+	},
+	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior.",
+	"profileViolationWarning": "The current profile violates your organization's settings",
+	"shellIntegration": {
+		"title": "Command Execution Warning",
+		"description": "Your command is being executed without VSCode terminal shell integration. To suppress this warning you can disable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Roo Code settings</settingsLink> or troubleshoot VSCode terminal integration using the link below.",
+		"troubleshooting": "Click here for shell integration documentation."
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "Auto-Approved Request Limit Reached",
+			"description": "Roo has reached the auto-approved limit of {{count}} API request(s). Would you like to reset the count and proceed with the task?",
+			"button": "Reset and Continue"
+		}
+	}
 }

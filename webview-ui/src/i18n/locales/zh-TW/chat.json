@@ -10,7 +10,9 @@
 		"contextWindow": "上下文長度：",
 		"closeAndStart": "關閉現有工作並開始一項新的工作",
 		"export": "匯出工作紀錄",
-		"delete": "刪除工作（按住 Shift 並點選可跳過確認）"
+		"delete": "刪除工作（按住 Shift 並點選可跳過確認）",
+		"condenseContext": "智慧壓縮上下文",
+		"share": "分享工作"
 	},
 	"unpin": "取消置頂",
 	"pin": "置頂",
@@ -52,6 +54,10 @@
 		"title": "執行時繼續",
 		"tooltip": "儘管有警告仍繼續執行"
 	},
+	"killCommand": {
+		"title": "終止指令",
+		"tooltip": "終止目前的指令"
+	},
 	"resumeTask": {
 		"title": "繼續工作",
 		"tooltip": "繼續目前的工作"
@@ -65,9 +71,28 @@
 		"tooltip": "取消目前操作"
 	},
 	"scrollToBottom": "捲動至對話框底部",
+	"about": "透過 AI 輔助產生、重構和偵錯程式碼。查看我們的 <DocsLink>說明文件</DocsLink> 以瞭解更多資訊。",
 	"onboarding": "<strong>您在此工作區中的工作清單是空的。</strong> 請在下方輸入工作以開始。 不確定如何開始？ 在 <DocsLink>說明文件</DocsLink> 中閱讀更多關於 Roo 能為您做什麼的資訊。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任務拆分",
+			"description": "將任務拆分為更小、更易於管理的部分。"
+		},
+		"stickyModels": {
+			"title": "黏性模式",
+			"description": "每個模式都會記住您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允許 AI 透過瀏覽網路、執行命令等方式解決問題。"
+		},
+		"customizableModes": {
+			"title": "自訂模式",
+			"description": "具有專屬行為和指定模型的特定角色"
+		}
+	},
 	"selectMode": "選擇互動模式",
-	"selectApiConfig": "選擇 API 設定",
+	"selectApiConfig": "選取 API 設定",
 	"enhancePrompt": "使用額外內容增強提示",
 	"addImages": "新增圖片到訊息中",
 	"sendMessage": "傳送訊息",
@@ -125,7 +150,9 @@
 		"didSearchReplace": "Roo 已在此檔案執行搜尋和取代：",
 		"wantsToInsert": "Roo 想要在此檔案中插入內容：",
 		"wantsToInsertWithLineNumber": "Roo 想要在此檔案第 {{lineNumber}} 行插入內容：",
-		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容："
+		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容：",
+		"wantsToReadAndXMore": "Roo 想要讀取此檔案以及另外 {{count}} 個檔案：",
+		"wantsToReadMultiple": "Roo 想要讀取多個檔案："
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo 想要檢視此目錄中最上層的檔案：",
@@ -163,13 +190,6 @@
 		"hasQuestion": "Roo 有一個問題："
 	},
 	"taskCompleted": "工作完成",
-	"shellIntegration": {
-		"unavailable": "Shell 整合功能無法使用",
-		"troubleshooting": "仍有問題嗎？點擊此處查看 Shell 整合文件。",
-		"checkSettings": "檢查設定頁面中的終端解決方案",
-		"updateVSCode": "更新 VSCode",
-		"supportedShell": "確保使用支援的 shell：zsh、bash、fish 或 PowerShell"
-	},
 	"powershell": {
 		"issues": "看起來您遇到了 Windows PowerShell 的問題，請參考此處"
 	},
@@ -182,16 +202,22 @@
 		"thinking": "思考中",
 		"seconds": "{{count}}秒"
 	},
+	"contextCondense": {
+		"title": "上下文已壓縮",
+		"condensing": "正在壓縮上下文...",
+		"errorHeader": "上下文壓縮失敗",
+		"tokens": "tokens"
+	},
 	"followUpSuggest": {
 		"copyToInput": "複製到輸入框（或按住 Shift 並點選）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 已發布",
-		"description": "Roo Code 3.14 帶來基於您意見回饋的新功能與改進。",
+		"title": "🎉 Roo Code {{version}} 已發布",
+		"description": "Roo Code {{version}} 帶來基於您意見回饋的強大新功能與改進。",
 		"whatsNew": "新功能",
-		"feature1": "<bold>編輯工具增強</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已獲改進，並從實驗階段升級為正式功能",
-		"feature2": "<bold>差異更新修復</bold>: 我們持續改進 <code>apply_diff</code> 工具",
-		"feature3": "<bold>大量其他改進</bold>: 擴充套件中眾多的修復和增強功能",
+		"feature1": "<bold>智慧上下文壓縮預設啟用</bold>: 上下文壓縮現已預設啟用，並提供可設定的自動壓縮觸發設定",
+		"feature2": "<bold>手動壓縮按鈕</bold>: 工作標題中的新按鈕讓您隨時手動觸發上下文壓縮",
+		"feature3": "<bold>進階壓縮設定</bold>: 透過<contextSettingsLink>上下文設定</contextSettingsLink>精確控制自動壓縮的時機和方式",
 		"hideButton": "隱藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 取得更多詳細資訊並參與討論 🚀"
 	},
@@ -217,5 +243,40 @@
 			"close": "關閉瀏覽器"
 		}
 	},
-	"systemPromptWarning": "警告：自訂系統提示詞覆蓋已啟用。這可能嚴重破壞功能並導致不可預測的行為。"
+	"codeblock": {
+		"tooltips": {
+			"expand": "展開程式碼區塊",
+			"collapse": "摺疊程式碼區塊",
+			"enable_wrap": "啟用自動換行",
+			"disable_wrap": "停用自動換行",
+			"copy_code": "複製程式碼"
+		}
+	},
+	"systemPromptWarning": "警告：自訂系統提示詞覆蓋已啟用。這可能嚴重破壞功能並導致不可預測的行為。",
+	"profileViolationWarning": "目前設定檔違反了您的組織設定",
+	"shellIntegration": {
+		"title": "命令執行警告",
+		"description": "您的命令正在沒有 VSCode 終端機 shell 整合的情況下執行。要隱藏此警告，您可以在 <settingsLink>Roo Code 設定</settingsLink>的 <strong>Terminal</strong> 部分停用 shell 整合，或使用下方連結排查 VSCode 終端機整合問題。",
+		"troubleshooting": "點擊此處查看 shell 整合文件。"
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "已達自動核准請求限制",
+			"description": "Roo 已達到 {{count}} 次 API 請求的自動核准限制。您想要重設計數並繼續工作嗎？",
+			"button": "重設並繼續"
+		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo 想要搜尋程式碼庫：<code>{{query}}</code>",
+		"wantsToSearchWithPath": "Roo 想要在 <code>{{path}}</code> 中搜尋：<code>{{query}}</code>",
+		"didSearch": "找到 {{count}} 個結果：<code>{{query}}</code>"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "全部核准"
+		},
+		"deny": {
+			"title": "全部拒絕"
+		}
+	}
 }

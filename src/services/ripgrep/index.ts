@@ -1,8 +1,9 @@
-import * as vscode from "vscode"
 import * as childProcess from "child_process"
 import * as path from "path"
-import * as fs from "fs"
 import * as readline from "readline"
+
+import * as vscode from "vscode"
+
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 import { fileExistsAtPath } from "../../utils/fs"
 /*
@@ -47,7 +48,7 @@ rel/path/to/helper.ts
 │----
 */
 
-const isWindows = /^win/.test(process.platform)
+const isWindows = process.platform.startsWith("win")
 const binName = isWindows ? "rg.exe" : "rg"
 
 interface SearchFileResult {
@@ -160,7 +161,6 @@ export async function regexSearchFiles(
 	}
 
 	const results: SearchFileResult[] = []
-	let currentResult: Partial<SearchResult> | null = null
 	let currentFile: SearchFileResult | null = null
 
 	output.split("\n").forEach((line) => {

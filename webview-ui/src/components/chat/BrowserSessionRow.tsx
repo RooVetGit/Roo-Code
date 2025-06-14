@@ -1,13 +1,19 @@
-import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
-import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { BrowserAction, BrowserActionResult, ClineMessage, ClineSayBrowserAction } from "@roo/shared/ExtensionMessage"
-import { vscode } from "@src/utils/vscode"
-import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
-import { ChatRowContent, ProgressIndicator } from "./ChatRow"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import deepEqual from "fast-deep-equal"
 import { useTranslation } from "react-i18next"
+import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+
+import type { ClineMessage } from "@roo-code/types"
+
+import { BrowserAction, BrowserActionResult, ClineSayBrowserAction } from "@roo/ExtensionMessage"
+
+import { vscode } from "@src/utils/vscode"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+
+import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
+import { ChatRowContent } from "./ChatRow"
+import { ProgressIndicator } from "./ProgressIndicator"
 
 interface BrowserSessionRowProps {
 	messages: ClineMessage[]
@@ -353,9 +359,7 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 						<span style={{ fontSize: "0.8em" }}>{t("chat:browser.consoleLogs")}</span>
 					</div>
 					{consoleLogsExpanded && (
-						<CodeBlock
-							source={`${"```"}shell\n${displayState.consoleLogs || t("chat:browser.noNewLogs")}\n${"```"}`}
-						/>
+						<CodeBlock source={displayState.consoleLogs || t("chat:browser.noNewLogs")} language="shell" />
 					)}
 				</div>
 			</div>
@@ -429,6 +433,7 @@ const BrowserSessionRowContent = ({
 		alignItems: "center",
 		gap: "10px",
 		marginBottom: "10px",
+		wordBreak: "break-word",
 	}
 
 	switch (message.type) {
@@ -483,7 +488,7 @@ const BrowserSessionRowContent = ({
 									overflow: "hidden",
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
-								<CodeBlock source={`${"```"}shell\n${message.text}\n${"```"}`} forceWrap={true} />
+								<CodeBlock source={message.text} language="shell" />
 							</div>
 						</>
 					)

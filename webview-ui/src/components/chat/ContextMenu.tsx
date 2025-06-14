@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { getIconForFilePath, getIconUrlByName, getIconForDirectoryPath } from "vscode-material-icons"
+
+import type { ModeConfig } from "@roo-code/types"
+
 import {
 	ContextMenuOptionType,
 	ContextMenuQueryItem,
 	getContextMenuOptions,
 	SearchResult,
 } from "@src/utils/context-mentions"
-import { removeLeadingNonAlphanumeric } from "../common/CodeAccordian"
-import { ModeConfig } from "@roo/shared/modes"
+import { removeLeadingNonAlphanumeric } from "@src/utils/removeLeadingNonAlphanumeric"
 
 interface ContextMenuProps {
 	onSelect: (type: ContextMenuOptionType, value?: string) => void
@@ -19,8 +21,8 @@ interface ContextMenuProps {
 	selectedType: ContextMenuOptionType | null
 	queryItems: ContextMenuQueryItem[]
 	modes?: ModeConfig[]
-	loading?: boolean // New loading prop
-	dynamicSearchResults?: SearchResult[] // New dynamic search results prop
+	loading?: boolean
+	dynamicSearchResults?: SearchResult[]
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -33,7 +35,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	selectedType,
 	queryItems,
 	modes,
-	loading = false,
 	dynamicSearchResults = [],
 }) => {
 	const [materialIconsBaseUri, setMaterialIconsBaseUri] = useState("")
@@ -88,12 +89,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				)
 			case ContextMenuOptionType.Problems:
 				return <span>Problems</span>
-			case ContextMenuOptionType.CodeBase:
-				return <span>CodeBase</span>
+			case ContextMenuOptionType.Codebase:
+				return <span>Codebase</span>
 			case ContextMenuOptionType.Summary:
 				return <span>Summary</span>
-			case ContextMenuOptionType.Thinking:
-				return <span>Thinking</span>
 			case ContextMenuOptionType.Terminal:
 				return <span>Terminal</span>
 			case ContextMenuOptionType.URL:
@@ -173,15 +172,13 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 			case ContextMenuOptionType.File:
 				return "file"
 			case ContextMenuOptionType.Folder:
-				return "folder-opened"
+				return "folder"
 			case ContextMenuOptionType.Problems:
 				return "warning"
-			case ContextMenuOptionType.CodeBase:
-				return "notebook"
-			case ContextMenuOptionType.Summary:
+			case ContextMenuOptionType.Codebase:
 				return "library"
-			case ContextMenuOptionType.Thinking:
-				return "lightbulb"
+			case ContextMenuOptionType.Summary:
+				return "notebook"
 			case ContextMenuOptionType.Terminal:
 				return "terminal"
 			case ContextMenuOptionType.URL:

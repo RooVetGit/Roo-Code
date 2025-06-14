@@ -1,16 +1,17 @@
-// cd webview-ui && npx jest src/context/__tests__/ExtensionStateContext.test.tsx
+// npx jest src/context/__tests__/ExtensionStateContext.test.tsx
 
 import { render, screen, act } from "@testing-library/react"
 
-import { ExtensionState } from "@roo/shared/ExtensionMessage"
-import { ExtensionStateContextProvider, useExtensionState, mergeExtensionState } from "../ExtensionStateContext"
-import { ExperimentId } from "@roo/shared/experiments"
-import { ApiConfiguration } from "@roo/shared/api"
+import { ProviderSettings, ExperimentId } from "@roo-code/types"
 
-// Test component that consumes the context
+import { ExtensionState } from "@roo/ExtensionMessage"
+
+import { ExtensionStateContextProvider, useExtensionState, mergeExtensionState } from "../ExtensionStateContext"
+
 const TestComponent = () => {
 	const { allowedCommands, setAllowedCommands, soundEnabled, showRooIgnoredFiles, setShowRooIgnoredFiles } =
 		useExtensionState()
+
 	return (
 		<div>
 			<div data-testid="allowed-commands">{JSON.stringify(allowedCommands)}</div>
@@ -26,9 +27,9 @@ const TestComponent = () => {
 	)
 }
 
-// Test component for API configuration
 const ApiConfigTestComponent = () => {
 	const { apiConfiguration, setApiConfiguration } = useExtensionState()
+
 	return (
 		<div>
 			<div data-testid="api-configuration">{JSON.stringify(apiConfiguration)}</div>
@@ -197,11 +198,17 @@ describe("mergeExtensionState", () => {
 			customModes: [],
 			maxOpenTabsContext: 20,
 			maxWorkspaceFiles: 100,
-			apiConfiguration: { providerId: "openrouter" } as ApiConfiguration,
+			apiConfiguration: { providerId: "openrouter" } as ProviderSettings,
 			telemetrySetting: "unset",
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			cloudUserInfo: null,
+			organizationAllowList: { allowAll: true, providers: {} },
+			autoCondenseContext: true,
+			autoCondenseContextPercent: 100,
+			cloudIsAuthenticated: false,
+			sharingEnabled: false,
 		}
 
 		const prevState: ExtensionState = {
@@ -215,6 +222,9 @@ describe("mergeExtensionState", () => {
 			apiConfiguration: { modelMaxThinkingTokens: 456, modelTemperature: 0.3 },
 			experiments: {
 				powerSteering: true,
+				autoCondenseContext: true,
+				concurrentFileReads: true,
+				disableCompletionCommand: false,
 			} as Record<ExperimentId, boolean>,
 		}
 
@@ -227,6 +237,9 @@ describe("mergeExtensionState", () => {
 
 		expect(result.experiments).toEqual({
 			powerSteering: true,
+			autoCondenseContext: true,
+			concurrentFileReads: true,
+			disableCompletionCommand: false,
 		})
 	})
 })

@@ -1,10 +1,20 @@
-import axios from "axios"
-
-import { ModelInfo, requestyDefaultModelInfo, requestyDefaultModelId } from "../../shared/api"
-import { calculateApiCostOpenAI, parseApiPrice } from "../../utils/cost"
-import { ApiStreamUsageChunk } from "../transform/stream"
-import { OpenAiHandler, OpenAiHandlerOptions } from "./openai"
+import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+
+import { type ModelInfo, requestyDefaultModelId, requestyDefaultModelInfo } from "@roo-code/types"
+
+import type { ApiHandlerOptions, ModelRecord } from "../../shared/api"
+import { calculateApiCostOpenAI } from "../../shared/cost"
+
+import { convertToOpenAiMessages } from "../transform/openai-format"
+import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
+import { getModelParams } from "../transform/model-params"
+import { AnthropicReasoningParams } from "../transform/reasoning"
+
+import { DEFAULT_HEADERS } from "./constants"
+import { getModels } from "./fetchers/modelCache"
+import { BaseProvider } from "./base-provider"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 // Requesty usage includes an extra field for Anthropic use cases.
 // Safely cast the prompt token details section to the appropriate structure.
@@ -16,29 +26,53 @@ interface RequestyUsage extends OpenAI.CompletionUsage {
 	total_cost?: number
 }
 
-export class RequestyHandler extends OpenAiHandler {
-	constructor(options: OpenAiHandlerOptions) {
-		if (!options.requestyApiKey) {
-			throw new Error("Requesty API key is required. Please provide it in the settings.")
+type RequestyChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
+	requesty?: {
+		trace_id?: string
+		extra?: {
+			mode?: string
 		}
-		super({
-			...options,
-			openAiApiKey: options.requestyApiKey,
-			openAiModelId: options.requestyModelId ?? requestyDefaultModelId,
-			openAiBaseUrl: "https://router.requesty.ai/v1",
-			openAiCustomModelInfo: options.requestyModelInfo ?? requestyDefaultModelInfo,
+	}
+	thinking?: AnthropicReasoningParams
+}
+
+export class RequestyHandler extends BaseProvider implements SingleCompletionHandler {
+	protected options: ApiHandlerOptions
+	protected models: ModelRecord = {}
+	private client: OpenAI
+
+	constructor(options: ApiHandlerOptions) {
+		super()
+
+		this.options = options
+
+		this.client = new OpenAI({
+			baseURL: "https://router.requesty.ai/v1",
+			apiKey: this.options.requestyApiKey ?? "not-provided",
+			defaultHeaders: DEFAULT_HEADERS,
 		})
 	}
 
-	override getModel(): { id: string; info: ModelInfo } {
-		const modelId = this.options.requestyModelId ?? requestyDefaultModelId
-		return {
-			id: modelId,
-			info: this.options.requestyModelInfo ?? requestyDefaultModelInfo,
-		}
+	public async fetchModel() {
+		this.models = await getModels({ provider: "requesty" })
+		return this.getModel()
 	}
 
-	protected override processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
+	override getModel() {
+		const id = this.options.requestyModelId ?? requestyDefaultModelId
+		const info = this.models[id] ?? requestyDefaultModelInfo
+
+		const params = getModelParams({
+			format: "anthropic",
+			modelId: id,
+			model: info,
+			settings: this.options,
+		})
+
+		return { id, info, ...params }
+	}
+
+	protected processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
 		const requestyUsage = usage as RequestyUsage
 		const inputTokens = requestyUsage?.prompt_tokens || 0
 		const outputTokens = requestyUsage?.completion_tokens || 0
@@ -47,6 +81,7 @@ export class RequestyHandler extends OpenAiHandler {
 		const totalCost = modelInfo
 			? calculateApiCostOpenAI(modelInfo, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens)
 			: 0
+
 		return {
 			type: "usage",
 			inputTokens: inputTokens,
@@ -56,56 +91,75 @@ export class RequestyHandler extends OpenAiHandler {
 			totalCost: totalCost,
 		}
 	}
-}
 
-export async function getRequestyModels(apiKey?: string) {
-	const models: Record<string, ModelInfo> = {}
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
+		const {
+			id: model,
+			info,
+			maxTokens: max_tokens,
+			temperature,
+			reasoningEffort: reasoning_effort,
+			reasoning: thinking,
+		} = await this.fetchModel()
 
-	try {
-		const headers: Record<string, string> = {}
-		if (apiKey) {
-			headers["Authorization"] = `Bearer ${apiKey}`
+		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+			{ role: "system", content: systemPrompt },
+			...convertToOpenAiMessages(messages),
+		]
+
+		const completionParams: RequestyChatCompletionParams = {
+			messages: openAiMessages,
+			model,
+			max_tokens,
+			temperature,
+			...(reasoning_effort && { reasoning_effort }),
+			...(thinking && { thinking }),
+			stream: true,
+			stream_options: { include_usage: true },
+			requesty: { trace_id: metadata?.taskId, extra: { mode: metadata?.mode } },
 		}
 
-		const url = "https://router.requesty.ai/v1/models"
-		const response = await axios.get(url, { headers })
-		const rawModels = response.data.data
+		const stream = await this.client.chat.completions.create(completionParams)
+		let lastUsage: any = undefined
 
-		for (const rawModel of rawModels) {
-			// {
-			// 	id: "anthropic/claude-3-5-sonnet-20240620",
-			// 	object: "model",
-			// 	created: 1740552655,
-			// 	owned_by: "system",
-			// 	input_price: 0.0000028,
-			// 	caching_price: 0.00000375,
-			// 	cached_price: 3e-7,
-			// 	output_price: 0.000015,
-			// 	max_output_tokens: 8192,
-			// 	context_window: 200000,
-			// 	supports_caching: true,
-			// 	description:
-			// 		"Anthropic's previous most intelligent model. High level of intelligence and capability. Excells in coding.",
-			// }
+		for await (const chunk of stream) {
+			const delta = chunk.choices[0]?.delta
 
-			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.max_output_tokens,
-				contextWindow: rawModel.context_window,
-				supportsPromptCache: rawModel.supports_caching,
-				supportsImages: rawModel.supports_vision,
-				supportsComputerUse: rawModel.supports_computer_use,
-				inputPrice: parseApiPrice(rawModel.input_price),
-				outputPrice: parseApiPrice(rawModel.output_price),
-				description: rawModel.description,
-				cacheWritesPrice: parseApiPrice(rawModel.caching_price),
-				cacheReadsPrice: parseApiPrice(rawModel.cached_price),
+			if (delta?.content) {
+				yield { type: "text", text: delta.content }
 			}
 
-			models[rawModel.id] = modelInfo
+			if (delta && "reasoning_content" in delta && delta.reasoning_content) {
+				yield { type: "reasoning", text: (delta.reasoning_content as string | undefined) || "" }
+			}
+
+			if (chunk.usage) {
+				lastUsage = chunk.usage
+			}
 		}
-	} catch (error) {
-		console.error(`Error fetching Requesty models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+
+		if (lastUsage) {
+			yield this.processUsageMetrics(lastUsage, info)
+		}
 	}
 
-	return models
+	async completePrompt(prompt: string): Promise<string> {
+		const { id: model, maxTokens: max_tokens, temperature } = await this.fetchModel()
+
+		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [{ role: "system", content: prompt }]
+
+		const completionParams: RequestyChatCompletionParams = {
+			model,
+			max_tokens,
+			messages: openAiMessages,
+			temperature: temperature,
+		}
+
+		const response: OpenAI.Chat.ChatCompletion = await this.client.chat.completions.create(completionParams)
+		return response.choices[0]?.message.content || ""
+	}
 }

@@ -1,10 +1,9 @@
-import { MultiPointStrategy } from "../multi-point-strategy"
-import { CacheStrategy } from "../base-strategy"
-import { CacheStrategyConfig, ModelInfo, CachePointPlacement } from "../types"
-import { ContentBlock, SystemContentBlock } from "@aws-sdk/client-bedrock-runtime"
+import { ContentBlock, SystemContentBlock, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
 import { Anthropic } from "@anthropic-ai/sdk"
+
+import { MultiPointStrategy } from "../multi-point-strategy"
+import { CacheStrategyConfig, ModelInfo, CachePointPlacement } from "../types"
 import { AwsBedrockHandler } from "../../../providers/bedrock"
-import { BedrockRuntimeClient, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime"
 
 // Common test utilities
 const defaultModelInfo: ModelInfo = {
@@ -363,7 +362,7 @@ describe("Cache Strategy", () => {
 
 			// Call the method that uses convertToBedrockConverseMessages
 			const stream = handler.createMessage(systemPrompt, mockMessages)
-			for await (const chunk of stream) {
+			for await (const _chunk of stream) {
 				// Just consume the stream
 			}
 
@@ -404,7 +403,7 @@ describe("Cache Strategy", () => {
 
 			// Call the method that uses convertToBedrockConverseMessages
 			const stream = handler.createMessage(systemPrompt, mockMessages)
-			for await (const chunk of stream) {
+			for await (const _chunk of stream) {
 				// Just consume the stream
 			}
 
@@ -505,7 +504,7 @@ describe("Cache Strategy", () => {
 
 			// Call the method that uses convertToBedrockConverseMessages
 			const stream = handler.createMessage(systemPrompt, mockMessages)
-			for await (const chunk of stream) {
+			for await (const _chunk of stream) {
 				// Just consume the stream
 			}
 
@@ -555,7 +554,7 @@ describe("Cache Strategy", () => {
 
 			// Call the method that uses convertToBedrockConverseMessages
 			const stream = handler.createMessage(systemPrompt, mockMessages)
-			for await (const chunk of stream) {
+			for await (const _chunk of stream) {
 				// Just consume the stream
 			}
 
@@ -931,7 +930,7 @@ describe("Cache Strategy", () => {
 				// (260 tokens from messages 7-8 plus 400 tokens from the new messages)
 
 				// Create messages matching Example 5 from documentation
-				const messages = [
+				const _messages = [
 					createMessage("user", "Tell me about machine learning.", 100),
 					createMessage("assistant", "Machine learning is a field of study...", 200),
 					createMessage("user", "What about deep learning?", 100),
@@ -948,7 +947,7 @@ describe("Cache Strategy", () => {
 				]
 
 				// Previous cache point placements from Example 4
-				const previousCachePointPlacements: CachePointPlacement[] = [
+				const _previousCachePointPlacements: CachePointPlacement[] = [
 					{
 						index: 2, // After the second user message
 						type: "message",

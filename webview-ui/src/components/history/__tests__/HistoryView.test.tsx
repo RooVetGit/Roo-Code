@@ -8,6 +8,20 @@ import { vscode } from "@src/utils/vscode"
 jest.mock("@src/context/ExtensionStateContext")
 jest.mock("@src/utils/vscode")
 jest.mock("@src/i18n/TranslationContext")
+jest.mock("@/components/ui/checkbox", () => ({
+	Checkbox: jest.fn(({ checked, onCheckedChange, ...props }) => (
+		<input
+			type="checkbox"
+			data-testid={props["data-testid"] || "mock-checkbox"}
+			checked={checked}
+			onChange={(e) => onCheckedChange(e.target.checked)}
+			{...props}
+		/>
+	)),
+}))
+jest.mock("lucide-react", () => ({
+	DollarSign: () => <span data-testid="dollar-sign">$</span>,
+}))
 jest.mock("react-virtuoso", () => ({
 	Virtuoso: ({ data, itemContent }: any) => (
 		<div data-testid="virtuoso-container">
@@ -148,6 +162,23 @@ describe("HistoryView", () => {
 		})
 	})
 
+	it("handles selection mode clicks", async () => {
+		const onDone = jest.fn()
+		render(<HistoryView onDone={onDone} />)
+
+		// Go to selection mode
+		fireEvent.click(screen.getByTestId("toggle-selection-mode-button"))
+
+		const taskContainer = screen.getByTestId("task-item-1")
+
+		// Click anywhere in the task item
+		fireEvent.click(taskContainer)
+
+		// Check the box instead of sending a message to open the task
+		expect(within(taskContainer).getByRole("checkbox")).toBeChecked()
+		expect(vscode.postMessage).not.toHaveBeenCalled()
+	})
+
 	describe("task deletion", () => {
 		it("shows confirmation dialog on regular click", () => {
 			const onDone = jest.fn()
@@ -242,8 +273,22 @@ describe("HistoryView", () => {
 
 		// Find first task container and check date format
 		const taskContainer = screen.getByTestId("virtuoso-item-1")
-		const dateElement = within(taskContainer).getByText((content) => {
-			return content.includes("FEBRUARY 16") && content.includes("12:00 AM")
+		// Date is directly in TaskItemHeader, which is a child of TaskItem (rendered by virtuoso)
+		const dateElement = within(taskContainer).getByText((content, element) => {
+			if (!element) {
+				return false
+			}
+			const parent = element.parentElement
+			if (!parent) {
+				return false
+			}
+			return (
+				element.tagName.toLowerCase() === "span" &&
+				parent.classList.contains("flex") &&
+				parent.classList.contains("items-center") &&
+				content.includes("FEBRUARY 16") &&
+				content.includes("12:00 AM")
+			)
 		})
 		expect(dateElement).toBeInTheDocument()
 	})
@@ -255,10 +300,9 @@ describe("HistoryView", () => {
 		// Find first task container
 		const taskContainer = screen.getByTestId("virtuoso-item-1")
 
-		// Find token counts within the task container
-		const tokensContainer = within(taskContainer).getByTestId("tokens-container")
-		expect(within(tokensContainer).getByTestId("tokens-in")).toHaveTextContent("100")
-		expect(within(tokensContainer).getByTestId("tokens-out")).toHaveTextContent("50")
+		// Find token counts within the task container (TaskItem -> TaskItemFooter)
+		expect(within(taskContainer).getByTestId("tokens-in-footer-full")).toHaveTextContent("100")
+		expect(within(taskContainer).getByTestId("tokens-out-footer-full")).toHaveTextContent("50")
 	})
 
 	it("displays cache information when available", () => {
@@ -268,10 +312,9 @@ describe("HistoryView", () => {
 		// Find second task container
 		const taskContainer = screen.getByTestId("virtuoso-item-2")
 
-		// Find cache info within the task container
-		const cacheContainer = within(taskContainer).getByTestId("cache-container")
-		expect(within(cacheContainer).getByTestId("cache-writes")).toHaveTextContent("+50")
-		expect(within(cacheContainer).getByTestId("cache-reads")).toHaveTextContent("25")
+		// Find cache info within the task container (TaskItem -> TaskItemHeader)
+		expect(within(taskContainer).getByTestId("cache-writes")).toHaveTextContent("50") // No plus sign in formatLargeNumber
+		expect(within(taskContainer).getByTestId("cache-reads")).toHaveTextContent("25")
 	})
 
 	it("handles export functionality", () => {

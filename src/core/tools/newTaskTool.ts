@@ -1,12 +1,12 @@
 import delay from "delay"
 
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { formatResponse } from "../prompts/responses"
 
 export async function newTaskTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -67,6 +67,10 @@ export async function newTaskTool(
 
 			if (!provider) {
 				return
+			}
+
+			if (cline.enableCheckpoints) {
+				cline.checkpointSave(true)
 			}
 
 			// Preserve the current mode so we can resume with it later.

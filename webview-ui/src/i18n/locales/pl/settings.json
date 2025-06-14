@@ -4,7 +4,9 @@
 		"done": "Gotowe",
 		"cancel": "Anuluj",
 		"reset": "Resetuj",
-		"select": "Wybierz"
+		"select": "Wybierz",
+		"add": "Dodaj nagłówek",
+		"remove": "Usuń"
 	},
 	"header": {
 		"title": "Ustawienia",
@@ -20,17 +22,49 @@
 	},
 	"sections": {
 		"providers": "Dostawcy",
-		"autoApprove": "Automatyczne zatwierdzanie",
-		"browser": "Przeglądarka / Użycie komputera",
+		"autoApprove": "Auto-zatwierdzanie",
+		"browser": "Dostęp komputera",
 		"checkpoints": "Punkty kontrolne",
 		"notifications": "Powiadomienia",
-		"contextManagement": "Zarządzanie kontekstem",
+		"contextManagement": "Kontekst",
 		"terminal": "Terminal",
-		"advanced": "Zaawansowane",
-		"experimental": "Funkcje eksperymentalne",
+		"prompts": "Podpowiedzi",
+		"experimental": "Eksperymentalne",
 		"language": "Język",
-		"about": "O Roo Code",
-		"interface": "Interfejs"
+		"about": "O Roo Code"
+	},
+	"prompts": {
+		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."
+	},
+	"codeIndex": {
+		"title": "Indeksowanie kodu",
+		"enableLabel": "Włącz indeksowanie kodu",
+		"enableDescription": "<0>Indeksowanie kodu</0> to eksperymentalna funkcja, która tworzy semantyczny indeks wyszukiwania Twojego projektu przy użyciu osadzeń AI. Umożliwia to Roo Code lepsze zrozumienie i nawigację po dużych bazach kodu poprzez znajdowanie odpowiedniego kodu na podstawie znaczenia, a nie tylko słów kluczowych.",
+		"providerLabel": "Dostawca osadzania",
+		"selectProviderPlaceholder": "Wybierz dostawcę",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Kompatybilny z OpenAI",
+		"openaiCompatibleBaseUrlLabel": "Bazowy URL:",
+		"openaiCompatibleApiKeyLabel": "Klucz API:",
+		"openaiCompatibleModelDimensionLabel": "Wymiar Embeddingu:",
+		"openaiCompatibleModelDimensionPlaceholder": "np., 1536",
+		"openaiCompatibleModelDimensionDescription": "Wymiar embeddingu (rozmiar wyjściowy) dla twojego modelu. Sprawdź dokumentację swojego dostawcy, aby uzyskać tę wartość. Typowe wartości: 384, 768, 1536, 3072.",
+		"openaiKeyLabel": "Klucz OpenAI:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Wybierz model",
+		"ollamaUrlLabel": "URL Ollama:",
+		"qdrantUrlLabel": "URL Qdrant",
+		"qdrantKeyLabel": "Klucz Qdrant:",
+		"startIndexingButton": "Rozpocznij indeksowanie",
+		"clearIndexDataButton": "Wyczyść dane indeksu",
+		"unsavedSettingsMessage": "Zapisz swoje ustawienia przed rozpoczęciem procesu indeksowania.",
+		"clearDataDialog": {
+			"title": "Czy jesteś pewien?",
+			"description": "Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie danych indeksu Twojego kodu.",
+			"cancelButton": "Anuluj",
+			"confirmButton": "Wyczyść dane"
+		}
 	},
 	"autoApprove": {
 		"description": "Pozwól Roo na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
@@ -79,11 +113,16 @@
 			"allowedCommandsDescription": "Prefiksy poleceń, które mogą być automatycznie wykonywane, gdy \"Zawsze zatwierdzaj operacje wykonania\" jest włączone. Dodaj * aby zezwolić na wszystkie polecenia (używaj z ostrożnością).",
 			"commandPlaceholder": "Wprowadź prefiks polecenia (np. 'git ')",
 			"addButton": "Dodaj"
+		},
+		"apiRequestLimit": {
+			"title": "Maksymalna liczba żądań",
+			"description": "Automatycznie wykonaj tyle żądań API przed poproszeniem o zgodę na kontynuowanie zadania.",
+			"unlimited": "Bez limitu"
 		}
 	},
 	"providers": {
-		"configProfile": "Profil konfiguracji",
 		"providerDocumentation": "Dokumentacja {{provider}}",
+		"configProfile": "Profil konfiguracji",
 		"description": "Zapisz różne konfiguracje API, aby szybko przełączać się między dostawcami i ustawieniami.",
 		"apiProvider": "Dostawca API",
 		"model": "Model",
@@ -109,18 +148,35 @@
 		"glamaApiKey": "Klucz API Glama",
 		"getGlamaApiKey": "Uzyskaj klucz API Glama",
 		"useCustomBaseUrl": "Użyj niestandardowego URL bazowego",
+		"useReasoning": "Włącz rozumowanie",
 		"useHostHeader": "Użyj niestandardowego nagłówka Host",
 		"useLegacyFormat": "Użyj starszego formatu API OpenAI",
+		"customHeaders": "Niestandardowe nagłówki",
+		"headerName": "Nazwa nagłówka",
+		"headerValue": "Wartość nagłówka",
+		"noCustomHeaders": "Brak zdefiniowanych niestandardowych nagłówków. Kliknij przycisk +, aby dodać.",
 		"requestyApiKey": "Klucz API Requesty",
+		"refreshModels": {
+			"label": "Odśwież modele",
+			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele.",
+			"loading": "Odświeżanie listy modeli...",
+			"success": "Lista modeli została pomyślnie odświeżona!",
+			"error": "Nie udało się odświeżyć listy modeli. Spróbuj ponownie."
+		},
 		"getRequestyApiKey": "Uzyskaj klucz API Requesty",
 		"openRouterTransformsText": "Kompresuj podpowiedzi i łańcuchy wiadomości do rozmiaru kontekstu (<a>Transformacje OpenRouter</a>)",
 		"anthropicApiKey": "Klucz API Anthropic",
 		"getAnthropicApiKey": "Uzyskaj klucz API Anthropic",
 		"anthropicUseAuthToken": "Przekaż klucz API Anthropic jako nagłówek Authorization zamiast X-Api-Key",
+		"chutesApiKey": "Klucz API Chutes",
+		"getChutesApiKey": "Uzyskaj klucz API Chutes",
 		"deepSeekApiKey": "Klucz API DeepSeek",
 		"getDeepSeekApiKey": "Uzyskaj klucz API DeepSeek",
 		"geminiApiKey": "Klucz API Gemini",
+		"getGroqApiKey": "Uzyskaj klucz API Groq",
+		"groqApiKey": "Klucz API Groq",
 		"getGeminiApiKey": "Uzyskaj klucz API Gemini",
+		"apiKey": "Klucz API",
 		"openAiApiKey": "Klucz API OpenAI",
 		"openAiBaseUrl": "URL bazowy",
 		"getOpenAiApiKey": "Uzyskaj klucz API OpenAI",
@@ -130,6 +186,8 @@
 		"codestralBaseUrlDesc": "Ustaw opcjonalny URL dla modeli Codestral.",
 		"xaiApiKey": "Klucz API xAI",
 		"getXaiApiKey": "Uzyskaj klucz API xAI",
+		"litellmApiKey": "Klucz API LiteLLM",
+		"litellmBaseUrl": "URL bazowy LiteLLM",
 		"awsCredentials": "Poświadczenia AWS",
 		"awsProfile": "Profil AWS",
 		"awsProfileName": "Nazwa profilu AWS",
@@ -138,6 +196,11 @@
 		"awsSessionToken": "Token sesji AWS",
 		"awsRegion": "Region AWS",
 		"awsCrossRegion": "Użyj wnioskowania międzyregionalnego",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Użyj niestandardowego punktu końcowego VPC",
+			"vpcEndpointUrlPlaceholder": "Wprowadź URL punktu końcowego VPC (opcjonalnie)",
+			"examples": "Przykłady:"
+		},
 		"enablePromptCaching": "Włącz buforowanie podpowiedzi",
 		"enablePromptCachingTitle": "Włącz buforowanie podpowiedzi, aby poprawić wydajność i zmniejszyć koszty dla obsługiwanych modeli.",
 		"cacheUsageNote": "Uwaga: Jeśli nie widzisz użycia bufora, spróbuj wybrać inny model, a następnie ponownie wybrać żądany model.",
@@ -171,6 +234,8 @@
 		},
 		"unboundApiKey": "Klucz API Unbound",
 		"getUnboundApiKey": "Uzyskaj klucz API Unbound",
+		"unboundRefreshModelsSuccess": "Lista modeli zaktualizowana! Możesz teraz wybierać spośród najnowszych modeli.",
+		"unboundInvalidApiKey": "Nieprawidłowy klucz API. Sprawdź swój klucz API i spróbuj ponownie.",
 		"humanRelay": {
 			"description": "Nie jest wymagany klucz API, ale użytkownik będzie musiał pomóc w kopiowaniu i wklejaniu informacji do czatu internetowego AI.",
 			"instructions": "Podczas użytkowania pojawi się okno dialogowe, a bieżąca wiadomość zostanie automatycznie skopiowana do schowka. Będziesz musiał wkleić ją do internetowych wersji AI (takich jak ChatGPT lub Claude), a następnie skopiować odpowiedź AI z powrotem do okna dialogowego i kliknąć przycisk potwierdzenia."
@@ -233,12 +298,13 @@
 			"high": "Wysoki",
 			"medium": "Średni",
 			"low": "Niski"
-		}
+		},
+		"setReasoningLevel": "Włącz wysiłek rozumowania"
 	},
 	"browser": {
 		"enable": {
 			"label": "Włącz narzędzie przeglądarki",
-			"description": "Gdy włączone, Roo może używać przeglądarki do interakcji ze stronami internetowymi podczas korzystania z modeli obsługujących używanie komputera."
+			"description": "Gdy włączone, Roo może używać przeglądarki do interakcji ze stronami internetowymi podczas korzystania z modeli obsługujących używanie komputera. <0>Dowiedz się więcej</0>"
 		},
 		"viewport": {
 			"label": "Rozmiar viewportu",
@@ -266,7 +332,7 @@
 	"checkpoints": {
 		"enable": {
 			"label": "Włącz automatyczne punkty kontrolne",
-			"description": "Gdy włączone, Roo automatycznie utworzy punkty kontrolne podczas wykonywania zadań, ułatwiając przeglądanie zmian lub powrót do wcześniejszych stanów."
+			"description": "Gdy włączone, Roo automatycznie utworzy punkty kontrolne podczas wykonywania zadań, ułatwiając przeglądanie zmian lub powrót do wcześniejszych stanów. <0>Dowiedz się więcej</0>"
 		}
 	},
 	"notifications": {
@@ -283,6 +349,25 @@
 	},
 	"contextManagement": {
 		"description": "Kontroluj, jakie informacje są zawarte w oknie kontekstu AI, wpływając na zużycie token i jakość odpowiedzi",
+		"autoCondenseContextPercent": {
+			"label": "Próg wyzwalający inteligentną kondensację kontekstu",
+			"description": "Gdy okno kontekstu osiągnie ten próg, Roo automatycznie je skondensuje."
+		},
+		"condensingApiConfiguration": {
+			"label": "Konfiguracja API dla kondensacji kontekstu",
+			"description": "Wybierz, którą konfigurację API używać do operacji kondensacji kontekstu. Pozostaw niewybrane, aby użyć aktualnej aktywnej konfiguracji.",
+			"useCurrentConfig": "Domyślna"
+		},
+		"customCondensingPrompt": {
+			"label": "Niestandardowy monit kondensacji kontekstu",
+			"description": "Niestandardowy monit systemowy dla kondensacji kontekstu. Pozostaw puste, aby użyć domyślnego monitu.",
+			"placeholder": "Wprowadź tutaj swój niestandardowy monit kondensacji...\n\nMożesz użyć tej samej struktury co domyślny monit:\n- Poprzednia rozmowa\n- Aktualna praca\n- Kluczowe koncepcje techniczne\n- Istotne pliki i kod\n- Rozwiązywanie problemów\n- Oczekujące zadania i następne kroki",
+			"reset": "Przywróć domyślne",
+			"hint": "Puste = użyj domyślnego monitu"
+		},
+		"autoCondenseContext": {
+			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu"
+		},
 		"openTabs": {
 			"label": "Limit kontekstu otwartych kart",
 			"description": "Maksymalna liczba otwartych kart VSCode do uwzględnienia w kontekście. Wyższe wartości zapewniają więcej kontekstu, ale zwiększają zużycie token."
@@ -300,44 +385,64 @@
 			"description": "Roo odczytuje tę liczbę linii, gdy model nie określa wartości początkowej/końcowej. Jeśli ta liczba jest mniejsza niż całkowita liczba linii pliku, Roo generuje indeks numerów linii definicji kodu. Przypadki specjalne: -1 nakazuje Roo odczytać cały plik (bez indeksowania), a 0 nakazuje nie czytać żadnych linii i dostarczyć tylko indeksy linii dla minimalnego kontekstu. Niższe wartości minimalizują początkowe użycie kontekstu, umożliwiając późniejsze precyzyjne odczyty zakresów linii. Jawne żądania początku/końca nie są ograniczone tym ustawieniem.",
 			"lines": "linii",
 			"always_full_read": "Zawsze czytaj cały plik"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Limit jednoczesnych odczytów",
+			"description": "Maksymalna liczba plików, które narzędzie 'read_file' może przetwarzać jednocześnie. Wyższe wartości mogą przyspieszyć odczyt wielu małych plików, ale zwiększają zużycie pamięci."
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Ustawienia terminala: Podstawowe",
+			"description": "Podstawowe ustawienia terminala"
+		},
+		"advanced": {
+			"label": "Ustawienia terminala: Zaawansowane",
+			"description": "Poniższe opcje mogą wymagać ponownego uruchomienia terminala, aby zastosować ustawienie."
+		},
 		"outputLineLimit": {
 			"label": "Limit wyjścia terminala",
-			"description": "Maksymalna liczba linii do uwzględnienia w wyjściu terminala podczas wykonywania poleceń. Po przekroczeniu linie będą usuwane ze środka, oszczędzając token."
+			"description": "Maksymalna liczba linii do uwzględnienia w wyjściu terminala podczas wykonywania poleceń. Po przekroczeniu linie będą usuwane ze środka, oszczędzając token. <0>Dowiedz się więcej</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Limit czasu integracji powłoki terminala",
-			"description": "Maksymalny czas oczekiwania na inicjalizację integracji powłoki przed wykonaniem poleceń. Dla użytkowników z długim czasem uruchamiania powłoki, ta wartość może wymagać zwiększenia, jeśli widzisz błędy \"Shell Integration Unavailable\" w terminalu."
+			"description": "Maksymalny czas oczekiwania na inicjalizację integracji powłoki przed wykonaniem poleceń. Dla użytkowników z długim czasem uruchamiania powłoki, ta wartość może wymagać zwiększenia, jeśli widzisz błędy \"Shell Integration Unavailable\" w terminalu. <0>Dowiedz się więcej</0>"
 		},
-		"compressProgressBar": {
-			"label": "Kompresuj wyjście pasków postępu",
-			"description": "Po włączeniu, przetwarza wyjście terminala z powrotami karetki (\\r), aby symulować sposób wyświetlania treści przez prawdziwy terminal. Usuwa to pośrednie stany pasków postępu, zachowując tylko stan końcowy, co oszczędza przestrzeń kontekstową dla bardziej istotnych informacji."
-		},
-		"zdotdir": {
-			"label": "Włącz obsługę ZDOTDIR",
-			"description": "Po włączeniu tworzy tymczasowy katalog dla ZDOTDIR, aby poprawnie obsłużyć integrację powłoki zsh. Zapewnia to prawidłowe działanie integracji powłoki VSCode z zsh, zachowując twoją konfigurację zsh. (eksperymentalne)"
+		"shellIntegrationDisabled": {
+			"label": "Wyłącz integrację powłoki terminala",
+			"description": "Włącz tę opcję, jeśli polecenia terminala nie działają poprawnie lub widzisz błędy 'Shell Integration Unavailable'. Używa to prostszej metody uruchamiania poleceń, omijając niektóre zaawansowane funkcje terminala. <0>Dowiedz się więcej</0>"
 		},
 		"commandDelay": {
 			"label": "Opóźnienie poleceń terminala",
-			"description": "Opóźnienie w milisekundach dodawane po wykonaniu polecenia. Domyślne ustawienie 0 całkowicie wyłącza opóźnienie. Może to pomóc w zapewnieniu pełnego przechwytywania wyjścia poleceń w terminalach z problemami z synchronizacją. W większości terminali jest to implementowane przez ustawienie `PROMPT_COMMAND='sleep N'`, a PowerShell dodaje `start-sleep` na końcu każdego polecenia. Pierwotnie było to obejście błędu VSCode#237208 i może nie być potrzebne."
+			"description": "Opóźnienie w milisekundach dodawane po wykonaniu polecenia. Domyślne ustawienie 0 całkowicie wyłącza opóźnienie. Może to pomóc w zapewnieniu pełnego przechwytywania wyjścia poleceń w terminalach z problemami z synchronizacją. W większości terminali jest to implementowane przez ustawienie `PROMPT_COMMAND='sleep N'`, a PowerShell dodaje `start-sleep` na końcu każdego polecenia. Pierwotnie było to obejście błędu VSCode#237208 i może nie być potrzebne. <0>Dowiedz się więcej</0>"
+		},
+		"compressProgressBar": {
+			"label": "Kompresuj wyjście pasków postępu",
+			"description": "Po włączeniu, przetwarza wyjście terminala z powrotami karetki (\\r), aby symulować sposób wyświetlania treści przez prawdziwy terminal. Usuwa to pośrednie stany pasków postępu, zachowując tylko stan końcowy, co oszczędza przestrzeń kontekstową dla bardziej istotnych informacji. <0>Dowiedz się więcej</0>"
 		},
 		"powershellCounter": {
 			"label": "Włącz obejście licznika PowerShell",
-			"description": "Po włączeniu dodaje licznik do poleceń PowerShell, aby zapewnić prawidłowe wykonanie poleceń. Pomaga to w terminalach PowerShell, które mogą mieć problemy z przechwytywaniem wyjścia."
+			"description": "Po włączeniu dodaje licznik do poleceń PowerShell, aby zapewnić prawidłowe wykonanie poleceń. Pomaga to w terminalach PowerShell, które mogą mieć problemy z przechwytywaniem wyjścia. <0>Dowiedz się więcej</0>"
 		},
 		"zshClearEolMark": {
 			"label": "Wyczyść znacznik końca linii ZSH",
-			"description": "Po włączeniu czyści znacznik końca linii ZSH poprzez ustawienie PROMPT_EOL_MARK=''. Zapobiega to problemom z interpretacją wyjścia poleceń, gdy kończy się ono znakami specjalnymi jak '%'."
+			"description": "Po włączeniu czyści znacznik końca linii ZSH poprzez ustawienie PROMPT_EOL_MARK=''. Zapobiega to problemom z interpretacją wyjścia poleceń, gdy kończy się ono znakami specjalnymi jak '%'. <0>Dowiedz się więcej</0>"
 		},
 		"zshOhMy": {
 			"label": "Włącz integrację Oh My Zsh",
-			"description": "Po włączeniu ustawia ITERM_SHELL_INTEGRATION_INSTALLED=Yes, aby włączyć funkcje integracji powłoki Oh My Zsh. (eksperymentalne)"
+			"description": "Po włączeniu ustawia ITERM_SHELL_INTEGRATION_INSTALLED=Yes, aby włączyć funkcje integracji powłoki Oh My Zsh. Zastosowanie tego ustawienia może wymagać ponownego uruchomienia IDE. <0>Dowiedz się więcej</0>"
 		},
 		"zshP10k": {
 			"label": "Włącz integrację Powerlevel10k",
-			"description": "Po włączeniu ustawia POWERLEVEL9K_TERM_SHELL_INTEGRATION=true, aby włączyć funkcje integracji powłoki Powerlevel10k. (eksperymentalne)"
+			"description": "Po włączeniu ustawia POWERLEVEL9K_TERM_SHELL_INTEGRATION=true, aby włączyć funkcje integracji powłoki Powerlevel10k. <0>Dowiedz się więcej</0>"
+		},
+		"zdotdir": {
+			"label": "Włącz obsługę ZDOTDIR",
+			"description": "Po włączeniu tworzy tymczasowy katalog dla ZDOTDIR, aby poprawnie obsłużyć integrację powłoki zsh. Zapewnia to prawidłowe działanie integracji powłoki VSCode z zsh, zachowując twoją konfigurację zsh. <0>Dowiedz się więcej</0>"
+		},
+		"inheritEnv": {
+			"label": "Dziedzicz zmienne środowiskowe",
+			"description": "Po włączeniu terminal dziedziczy zmienne środowiskowe z procesu nadrzędnego VSCode, takie jak ustawienia integracji powłoki zdefiniowane w profilu użytkownika. Przełącza to bezpośrednio globalne ustawienie VSCode `terminal.integrated.inheritEnv`. <0>Dowiedz się więcej</0>"
 		}
 	},
 	"advanced": {
@@ -364,7 +469,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Użyj eksperymentalnej ujednoliconej strategii diff",
 			"description": "Włącz eksperymentalną ujednoliconą strategię diff. Ta strategia może zmniejszyć liczbę ponownych prób spowodowanych błędami modelu, ale może powodować nieoczekiwane zachowanie lub nieprawidłowe edycje. Włącz tylko jeśli rozumiesz ryzyko i jesteś gotów dokładnie przeglądać wszystkie zmiany."
@@ -384,11 +488,19 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
 			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "Włącz jednoczesne odczytywanie plików",
+			"description": "Po włączeniu Roo może odczytać wiele plików w jednym żądaniu. Po wyłączeniu Roo musi odczytywać pliki pojedynczo. Wyłączenie może pomóc podczas pracy z mniej wydajnymi modelami lub gdy chcesz mieć większą kontrolę nad dostępem do plików."
+		},
+		"DISABLE_COMPLETION_COMMAND": {
+			"name": "Wyłącz wykonywanie poleceń w attempt_completion",
+			"description": "Gdy włączone, narzędzie attempt_completion nie będzie wykonywać poleceń. Jest to funkcja eksperymentalna przygotowująca do przyszłego wycofania wykonywania poleceń po zakończeniu zadania."
 		}
 	},
 	"promptCaching": {
-		"label": "Włącz buforowanie podpowiedzi",
-		"description": "Po włączeniu, Roo będzie używać tego modelu z włączonym buforowaniem promptów w celu zmniejszenia kosztów."
+		"label": "Wyłącz buforowanie promptów",
+		"description": "Po zaznaczeniu, Roo nie będzie używać buforowania promptów dla tego modelu."
 	},
 	"temperature": {
 		"useCustom": "Użyj niestandardowej temperatury",
@@ -426,8 +538,7 @@
 		"useCustomModel": "Użyj niestandardowy: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Jeśli masz jakiekolwiek pytania lub opinie, śmiało otwórz zgłoszenie na <githubLink>github.com/RooVetGit/Roo-Code</githubLink> lub dołącz do <redditLink>reddit.com/r/RooCode</redditLink> lub <discordLink>discord.gg/roocode</discordLink>",
-		"version": "Roo Code v{{version}}",
+		"feedback": "Jeśli masz jakiekolwiek pytania lub opinie, śmiało otwórz zgłoszenie na <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> lub dołącz do <redditLink>reddit.com/r/RooCode</redditLink> lub <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Zezwól na anonimowe raportowanie błędów i użycia",
 			"description": "Pomóż ulepszyć Roo Code, wysyłając anonimowe dane o użytkowaniu i raporty o błędach. Nigdy nie są wysyłane kod, podpowiedzi ani informacje osobiste. Zobacz naszą politykę prywatności, aby uzyskać więcej szczegółów."
@@ -453,7 +564,10 @@
 			"invalidFormat": "Nieprawidłowy format ARN. Sprawdź wymagania dotyczące formatu.",
 			"regionMismatch": "Ostrzeżenie: Region w Twoim ARN ({{arnRegion}}) nie zgadza się z wybranym regionem ({{region}}). Może to powodować problemy z dostępem. Dostawca użyje regionu z ARN."
 		},
-		"modelAvailability": "Podane ID modelu ({{modelId}}) jest niedostępne. Wybierz inny model."
+		"modelAvailability": "Podane ID modelu ({{modelId}}) jest niedostępne. Wybierz inny model.",
+		"providerNotAllowed": "Dostawca '{{provider}}' nie jest dozwolony przez Twoją organizację",
+		"modelNotAllowed": "Model '{{model}}' nie jest dozwolony dla dostawcy '{{provider}}' przez Twoją organizację",
+		"profileInvalid": "Ten profil zawiera dostawcę lub model, który nie jest dozwolony przez Twoją organizację"
 	},
 	"placeholders": {
 		"apiKey": "Wprowadź klucz API...",

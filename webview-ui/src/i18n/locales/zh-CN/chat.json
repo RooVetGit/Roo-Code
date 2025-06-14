@@ -1,16 +1,18 @@
 {
-	"greeting": "Roo 能为您做什么？",
+	"greeting": "欢迎使用 Roo Code",
 	"task": {
-		"title": "📜任务",
-		"seeMore": "↓ 展开",
-		"seeLess": "↑ 收起",
+		"title": "任务",
+		"seeMore": "展开",
+		"seeLess": "收起",
 		"tokens": "Token 用量:",
 		"cache": "缓存:",
 		"apiCost": "API 费用:",
-		"contextWindow": "上下文窗口:",
+		"contextWindow": "上下文长度：",
 		"closeAndStart": "关闭任务并开始新任务",
 		"export": "导出任务历史",
-		"delete": "删除任务（Shift + 点击跳过确认）"
+		"delete": "删除任务（Shift + 点击跳过确认）",
+		"share": "分享任务",
+		"condenseContext": "智能压缩上下文"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",
@@ -52,6 +54,10 @@
 		"title": "强制继续",
 		"tooltip": "忽略运行中的命令并继续"
 	},
+	"killCommand": {
+		"title": "终止命令",
+		"tooltip": "终止当前命令"
+	},
 	"resumeTask": {
 		"title": "恢复任务",
 		"tooltip": "继续当前任务"
@@ -65,9 +71,28 @@
 		"tooltip": "取消当前操作"
 	},
 	"scrollToBottom": "滚动到聊天底部",
-	"aboutMe": "🚀让我们开始吧！",
+	"about": "通过 AI 辅助生成、重构和调试代码。查看我们的 <DocsLink>文档</DocsLink> 了解更多信息。",
+	"onboarding": "<strong>此工作区中的任务列表为空。</strong> 请在下方输入任务开始。 不确定如何开始？ 在 <DocsLink>文档</DocsLink> 中阅读更多关于 Roo 可以为您做什么的信息。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任务拆分",
+			"description": "将任务拆分为更小、更易于管理的部分。"
+		},
+		"stickyModels": {
+			"title": "粘性模式",
+			"description": "每个模式 都会记住 您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允许 AI 通过浏览网络、运行命令等方式解决问题。"
+		},
+		"customizableModes": {
+			"title": "自定义模式",
+			"description": "具有专属行为和指定模型的特定角色"
+		}
+	},
 	"selectMode": "选择交互模式",
-	"selectApiConfig": "选择API配置",
+	"selectApiConfig": "选择 API 配置",
 	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
@@ -80,7 +105,7 @@
 	"errorReadingFile": "读取文件时出错:",
 	"noValidImages": "没有处理有效图片",
 	"separator": "分隔符",
-	"edit": "✍编辑...",
+	"edit": "编辑...",
 	"forNextMode": "用于下一个模式",
 	"error": "错误",
 	"diffError": {
@@ -88,71 +113,73 @@
 	},
 	"troubleMessage": "Roo遇到问题...",
 	"apiRequest": {
-		"title": "🙂API请求",
-		"failed": "🫥API请求失败",
-		"streaming": "🤔API请求...",
-		"cancelled": "🫢API请求已取消",
+		"title": "API请求",
+		"failed": "API请求失败",
+		"streaming": "API请求...",
+		"cancelled": "API请求已取消",
 		"streamingFailed": "API流式传输失败"
 	},
 	"checkpoint": {
-		"initial": "📌初始检查点",
-		"regular": "📌检查点",
+		"initial": "初始检查点",
+		"regular": "检查点",
 		"initializingWarning": "正在初始化检查点...如果耗时过长，你可以在<settingsLink>设置</settingsLink>中禁用检查点并重新启动任务。",
 		"menu": {
-			"viewDiff": "📚查看差异",
-			"restore": "🔖恢复检查点",
-			"restoreFiles": "🔖恢复文件",
-			"restoreFilesDescription": "🔖将项目文件恢复到此检查点状态",
-			"restoreFilesAndTask": "🔖恢复文件和任务",
+			"viewDiff": "查看差异",
+			"restore": "恢复检查点",
+			"restoreFiles": "恢复文件",
+			"restoreFilesDescription": "将项目文件恢复到此检查点状态",
+			"restoreFilesAndTask": "恢复文件和任务",
 			"confirm": "确认",
 			"cancel": "取消",
-			"cannotUndo": "🚫此操作无法撤消。",
-			"restoreFilesAndTaskDescription": "🔖恢复文件至此时状态，并清除后续对话记录"
+			"cannotUndo": "此操作无法撤消。",
+			"restoreFilesAndTaskDescription": "恢复文件至此时状态，并清除后续对话记录"
 		},
-		"current": "📍当前"
+		"current": "当前"
 	},
 	"instructions": {
 		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务"
 	},
 	"fileOperations": {
-		"wantsToRead": "📘Roo想读取此文件:",
-		"wantsToReadOutsideWorkspace": "📘Roo想读取此工作区外的文件:",
-		"didRead": "📖Roo已读取此文件:",
-		"wantsToEdit": "✍Roo想编辑此文件:",
-		"wantsToEditOutsideWorkspace": "✍Roo想编辑此工作区外的文件:",
-		"wantsToCreate": "✍Roo想创建新文件:",
-		"wantsToSearchReplace": "想在此文件中搜索和替换:",
+		"wantsToRead": "需要读取文件:",
+		"wantsToReadOutsideWorkspace": "请求访问外部文件:",
+		"didRead": "已读取文件:",
+		"wantsToEdit": "需要编辑文件:",
+		"wantsToEditOutsideWorkspace": "需要编辑外部文件:",
+		"wantsToCreate": "需要新建文件:",
+		"wantsToSearchReplace": "需要在此文件中搜索和替换:",
 		"didSearchReplace": "已完成搜索和替换:",
-		"wantsToInsert": "想在此文件中插入内容:",
-		"wantsToInsertWithLineNumber": "想在第 {{lineNumber}} 行插入内容:",
-		"wantsToInsertAtEnd": "想在文件末尾添加内容:"
+		"wantsToInsert": "需要在此文件中插入内容:",
+		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
+		"wantsToInsertAtEnd": "需要在文件末尾添加内容:",
+		"wantsToReadAndXMore": "Roo 想读取此文件以及另外 {{count}} 个文件：",
+		"wantsToReadMultiple": "Roo 想要读取多个文件："
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "📁Roo想查看此目录中的顶层文件:",
-		"didViewTopLevel": "📂Roo已查看此目录中的顶层文件:",
-		"wantsToViewRecursive": "📁Roo想递归查看此目录中的所有文件:",
-		"didViewRecursive": "📂Roo已递归查看此目录中的所有文件:",
-		"wantsToViewDefinitions": "🔎Roo想查看此目录中使用的源代码定义名称:",
-		"didViewDefinitions": "🔎Roo已查看此目录中使用的源代码定义名称:",
-		"wantsToSearch": "🔎Roo想在此目录中搜索 <code>{{regex}}</code>:",
-		"didSearch": "🔎Roo已在此目录中搜索 <code>{{regex}}</code>:"
+		"wantsToViewTopLevel": "需要查看目录文件列表:",
+		"didViewTopLevel": "已查看目录文件列表:",
+		"wantsToViewRecursive": "需要查看目录所有文件:",
+		"didViewRecursive": "已查看目录所有文件:",
+		"wantsToViewDefinitions": "Roo想查看此目录中使用的源代码定义名称:",
+		"didViewDefinitions": "Roo已查看此目录中使用的源代码定义名称:",
+		"wantsToSearch": "需要搜索内容: {{regex}}",
+		"didSearch": "已完成内容搜索: {{regex}}"
 	},
 	"commandOutput": "命令输出",
 	"response": "响应",
 	"arguments": "参数",
 	"mcp": {
-		"wantsToUseTool": "🔧Roo想在{{serverName}} MCP服务器上使用工具:",
-		"wantsToAccessResource": "🔧Roo想访问{{serverName}} MCP服务器上的资源:"
+		"wantsToUseTool": "Roo想在{{serverName}} MCP上使用工具:",
+		"wantsToAccessResource": "Roo想访问{{serverName}} MCP服务上的资源:"
 	},
 	"modes": {
-		"wantsToSwitch": "Roo想切换到<code>{{mode}}</code>模式",
-		"wantsToSwitchWithReason": "Roo想切换到<code>{{mode}}</code>模式，原因: {{reason}}",
-		"didSwitch": "Roo已切换到<code>{{mode}}</code>模式",
-		"didSwitchWithReason": "Roo已切换到<code>{{mode}}</code>模式，原因: {{reason}}"
+		"wantsToSwitch": "即将切换至{{mode}}模式",
+		"wantsToSwitchWithReason": "即将切换至{{mode}}模式（原因：{{reason}}）",
+		"didSwitch": "已切换至{{mode}}模式",
+		"didSwitchWithReason": "已切换至{{mode}}模式（原因：{{reason}}）"
 	},
 	"subtasks": {
-		"wantsToCreate": "📑Roo想在<code>{{mode}}</code>模式下创建新子任务:",
-		"wantsToFinish": "📑Roo想完成此子任务",
+		"wantsToCreate": "Roo想在<code>{{mode}}</code>模式下创建新子任务:",
+		"wantsToFinish": "Roo想完成此子任务",
 		"newTaskContent": "子任务说明",
 		"completionContent": "子任务已完成",
 		"resultContent": "子任务结果",
@@ -160,38 +187,37 @@
 		"completionInstructions": "子任务已完成！您可以查看结果并提出修改或下一步建议。如果一切正常，请确认以将结果返回给主任务。"
 	},
 	"questions": {
-		"hasQuestion": "🤔Roo有一个问题:"
+		"hasQuestion": "Roo有一个问题:"
 	},
-	"taskCompleted": "🥳任务完成",
-	"shellIntegration": {
-		"unavailable": "Shell集成不可用",
-		"troubleshooting": "仍有问题吗？",
-		"checkSettings": "检查设置页面中的终端解决方案",
-		"updateVSCode": "更新VSCode",
-		"supportedShell": "确保使用受支持的shell：zsh、bash、fish或PowerShell"
-	},
+	"taskCompleted": "任务完成",
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
 	},
 	"autoApprove": {
 		"title": "自动批准:",
 		"none": "无",
-		"description": "允许Roo直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整"
+		"description": "允许直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整"
 	},
 	"reasoning": {
 		"thinking": "思考中",
 		"seconds": "{{count}}秒"
 	},
+	"contextCondense": {
+		"title": "上下文已压缩",
+		"condensing": "正在压缩上下文...",
+		"errorHeader": "上下文压缩失败",
+		"tokens": "tokens"
+	},
 	"followUpSuggest": {
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 已发布",
-		"description": "Roo Code 3.14 带来基于您反馈的新功能和改进。",
+		"title": "🎉 Roo Code {{version}} 已发布",
+		"description": "Roo Code {{version}} 带来基于您反馈的强大新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>编辑工具增强</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已得到改进，并从实验性状态毕业",
-		"feature2": "<bold>差异更新修复</bold>: 我们持续改进 <code>apply_diff</code> 工具",
-		"feature3": "<bold>海量其他改进</bold>: 扩展中众多的修复和增强功能",
+		"feature1": "<bold>智能上下文压缩默认启用</bold>: 上下文压缩现已默认启用，并提供可配置的自动压缩触发设置",
+		"feature2": "<bold>手动压缩按钮</bold>: 任务标题中的新按钮让您随时手动触发上下文压缩",
+		"feature3": "<bold>高级压缩设置</bold>: 通过<contextSettingsLink>上下文设置</contextSettingsLink>精确控制自动压缩的时机和方式",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
@@ -217,5 +243,40 @@
 			"close": "关闭浏览器"
 		}
 	},
-	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。"
+	"codeblock": {
+		"tooltips": {
+			"expand": "展开代码块",
+			"collapse": "收起代码块",
+			"enable_wrap": "启用自动换行",
+			"disable_wrap": "禁用自动换行",
+			"copy_code": "复制代码"
+		}
+	},
+	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
+	"profileViolationWarning": "当前配置文件违反了您的组织设置",
+	"shellIntegration": {
+		"title": "命令执行警告",
+		"description": "您的命令正在没有 VSCode 终端 shell 集成的情况下执行。要隐藏此警告，您可以在 <settingsLink>Roo Code 设置</settingsLink>的 <strong>Terminal</strong> 部分禁用 shell 集成，或使用下方链接排查 VSCode 终端集成问题。",
+		"troubleshooting": "点击此处查看 shell 集成文档。"
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "已达自动批准请求限制",
+			"description": "Roo 已达到 {{count}} 次 API 请求的自动批准限制。您想重置计数并继续任务吗？",
+			"button": "重置并继续"
+		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo 需要搜索代码库: <code>{{query}}</code>",
+		"wantsToSearchWithPath": "Roo 需要在 <code>{{path}}</code> 中搜索: <code>{{query}}</code>",
+		"didSearch": "找到 {{count}} 个结果: <code>{{query}}</code>"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "全部批准"
+		},
+		"deny": {
+			"title": "全部拒绝"
+		}
+	}
 }

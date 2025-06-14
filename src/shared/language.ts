@@ -1,9 +1,7 @@
-import { type Language, isLanguage } from "../schemas"
-
-export { type Language, isLanguage }
+import { type Language, isLanguage } from "@roo-code/types"
 
 /**
- * Language name mapping from ISO codes to full language names
+ * Language name mapping from ISO codes to full language names.
  */
 
 export const LANGUAGES: Record<Language, string> = {
@@ -16,6 +14,7 @@ export const LANGUAGES: Record<Language, string> = {
 	it: "Italiano",
 	ja: "日本語",
 	ko: "한국어",
+	nl: "Nederlands",
 	pl: "Polski",
 	"pt-BR": "Português",
 	ru: "Русский",

@@ -1,11 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk"
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { parseXml } from "../../utils/xml"
 
 export async function askFollowupQuestionTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -62,15 +61,10 @@ export async function askFollowupQuestionTool(
 				await cline.say("user_feedback", text ?? "", images)
 				pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
 			} else {
-				await cline.say("text", text ?? "", images)
-				const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
-				toolResults.push({
-					type: "text",
-					text: `The user has proposed a solution:\n<feedback>\n${text}\n</feedback>`,
-				})
-				toolResults.push(...formatResponse.imageBlocks(images))
-				cline.userMessageContent.push(...toolResults)
+				await cline.say("user_feedback", text ?? "", images)
+				pushToolResult(formatResponse.toolResult(`<feedback>\n${text}\n</feedback>`, images))
 			}
+
 			return
 		}
 	} catch (error) {

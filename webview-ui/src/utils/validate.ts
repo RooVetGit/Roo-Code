@@ -1,11 +1,31 @@
-import { ApiConfiguration, ModelInfo } from "@roo/shared/api"
 import i18next from "i18next"
 
-export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): string | undefined {
-	if (!apiConfiguration) {
-		return undefined
+import type { ProviderSettings, OrganizationAllowList } from "@roo-code/types"
+
+import { isRouterName, RouterModels } from "@roo/api"
+
+export function validateApiConfiguration(
+	apiConfiguration: ProviderSettings,
+	routerModels?: RouterModels,
+	organizationAllowList?: OrganizationAllowList,
+): string | undefined {
+	const keysAndIdsPresentErrorMessage = validateModelsAndKeysProvided(apiConfiguration)
+	if (keysAndIdsPresentErrorMessage) {
+		return keysAndIdsPresentErrorMessage
 	}
 
+	const organizationAllowListErrorMessage = validateProviderAgainstOrganizationSettings(
+		apiConfiguration,
+		organizationAllowList,
+	)
+	if (organizationAllowListErrorMessage) {
+		return organizationAllowListErrorMessage
+	}
+
+	return validateModelId(apiConfiguration, routerModels)
+}
+
+function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): string | undefined {
 	switch (apiConfiguration.apiProvider) {
 		case "openrouter":
 			if (!apiConfiguration.openRouterApiKey) {
@@ -24,6 +44,11 @@ export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): s
 			break
 		case "requesty":
 			if (!apiConfiguration.requestyApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			break
+		case "litellm":
+			if (!apiConfiguration.litellmApiKey) {
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
@@ -81,6 +106,59 @@ export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): s
 
 	return undefined
 }
+
+function validateProviderAgainstOrganizationSettings(
+	apiConfiguration: ProviderSettings,
+	organizationAllowList?: OrganizationAllowList,
+): string | undefined {
+	if (organizationAllowList && !organizationAllowList.allowAll) {
+		const provider = apiConfiguration.apiProvider
+		if (!provider) return undefined
+
+		const providerConfig = organizationAllowList.providers[provider]
+		if (!providerConfig) {
+			return i18next.t("settings:validation.providerNotAllowed", { provider })
+		}
+
+		if (!providerConfig.allowAll) {
+			const modelId = getModelIdForProvider(apiConfiguration, provider)
+			const allowedModels = providerConfig.models || []
+
+			if (modelId && !allowedModels.includes(modelId)) {
+				return i18next.t("settings:validation.modelNotAllowed", {
+					model: modelId,
+					provider,
+				})
+			}
+		}
+	}
+}
+
+function getModelIdForProvider(apiConfiguration: ProviderSettings, provider: string): string | undefined {
+	switch (provider) {
+		case "openrouter":
+			return apiConfiguration.openRouterModelId
+		case "glama":
+			return apiConfiguration.glamaModelId
+		case "unbound":
+			return apiConfiguration.unboundModelId
+		case "requesty":
+			return apiConfiguration.requestyModelId
+		case "litellm":
+			return apiConfiguration.litellmModelId
+		case "openai":
+			return apiConfiguration.openAiModelId
+		case "ollama":
+			return apiConfiguration.ollamaModelId
+		case "lmstudio":
+			return apiConfiguration.lmStudioModelId
+		case "vscode-lm":
+			// vsCodeLmModelSelector is an object, not a string
+			return apiConfiguration.vsCodeLmModelSelector?.id
+		default:
+			return apiConfiguration.apiModelId
+	}
+}
 /**
  * Validates an Amazon Bedrock ARN format and optionally checks if the region in the ARN matches the provided region
  * @param arn The ARN string to validate
@@ -113,92 +191,44 @@ export function validateBedrockArn(arn: string, region?: string) {
 	}
 
 	// ARN is valid and region matches (or no region was provided to check against)
-	return {
-		isValid: true,
-		arnRegion,
-		errorMessage: undefined,
-	}
+	return { isValid: true, arnRegion, errorMessage: undefined }
 }
 
-export function validateModelId(
-	apiConfiguration?: ApiConfiguration,
-	glamaModels?: Record<string, ModelInfo>,
-	openRouterModels?: Record<string, ModelInfo>,
-	unboundModels?: Record<string, ModelInfo>,
-	requestyModels?: Record<string, ModelInfo>,
-): string | undefined {
-	if (!apiConfiguration) {
+export function validateModelId(apiConfiguration: ProviderSettings, routerModels?: RouterModels): string | undefined {
+	const provider = apiConfiguration.apiProvider ?? ""
+
+	if (!isRouterName(provider)) {
 		return undefined
 	}
 
-	switch (apiConfiguration.apiProvider) {
+	let modelId: string | undefined
+
+	switch (provider) {
 		case "openrouter":
-			const modelId = apiConfiguration.openRouterModelId
-
-			if (!modelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				openRouterModels &&
-				Object.keys(openRouterModels).length > 1 &&
-				!Object.keys(openRouterModels).includes(modelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId })
-			}
-
+			modelId = apiConfiguration.openRouterModelId
 			break
-
 		case "glama":
-			const glamaModelId = apiConfiguration.glamaModelId
-
-			if (!glamaModelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				glamaModels &&
-				Object.keys(glamaModels).length > 1 &&
-				!Object.keys(glamaModels).includes(glamaModelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId: glamaModelId })
-			}
-
+			modelId = apiConfiguration.glamaModelId
 			break
-
 		case "unbound":
-			const unboundModelId = apiConfiguration.unboundModelId
-
-			if (!unboundModelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				unboundModels &&
-				Object.keys(unboundModels).length > 1 &&
-				!Object.keys(unboundModels).includes(unboundModelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId: unboundModelId })
-			}
-
+			modelId = apiConfiguration.unboundModelId
 			break
-
 		case "requesty":
-			const requestyModelId = apiConfiguration.requestyModelId
-
-			if (!requestyModelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				requestyModels &&
-				Object.keys(requestyModels).length > 1 &&
-				!Object.keys(requestyModels).includes(requestyModelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId: requestyModelId })
-			}
-
+			modelId = apiConfiguration.requestyModelId
 			break
+		case "litellm":
+			modelId = apiConfiguration.litellmModelId
+			break
+	}
+
+	if (!modelId) {
+		return i18next.t("settings:validation.modelId")
+	}
+
+	const models = routerModels?.[provider]
+
+	if (models && Object.keys(models).length > 1 && !Object.keys(models).includes(modelId)) {
+		return i18next.t("settings:validation.modelAvailability", { modelId })
 	}
 
 	return undefined

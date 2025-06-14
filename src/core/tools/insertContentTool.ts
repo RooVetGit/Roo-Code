@@ -3,7 +3,7 @@ import fs from "fs/promises"
 import path from "path"
 
 import { getReadablePath } from "../../utils/path"
-import { Cline } from "../Cline"
+import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -12,7 +12,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { insertGroups } from "../diff/insert-groups"
 
 export async function insertContentTool(
-	cline: Cline,
+	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -26,13 +26,13 @@ export async function insertContentTool(
 	const sharedMessageProps: ClineSayTool = {
 		tool: "insertContent",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		diff: content,
 		lineNumber: line ? parseInt(line, 10) : undefined,
 	}
 
 	try {
 		if (block.partial) {
-			const partialMessage = JSON.stringify(sharedMessageProps)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			await cline.ask("tool", JSON.stringify(sharedMessageProps), block.partial).catch(() => {})
 			return
 		}
 
@@ -55,6 +55,14 @@ export async function insertContentTool(
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("insert_content")
 			pushToolResult(await cline.sayAndCreateMissingParamError("insert_content", "content"))
+			return
+		}
+
+		const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+
+		if (!accessAllowed) {
+			await cline.say("rooignore_error", relPath)
+			pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
 			return
 		}
 
@@ -128,42 +136,24 @@ export async function insertContentTool(
 			return
 		}
 
-		const { newProblemsMessage, userEdits, finalContent } = await cline.diffViewProvider.saveChanges()
+		// Call saveChanges to update the DiffViewProvider properties
+		await cline.diffViewProvider.saveChanges()
 
 		// Track file edit operation
 		if (relPath) {
-			await cline.getFileContextTracker().trackFileContext(relPath, "roo_edited" as RecordSource)
+			await cline.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
 		}
 
 		cline.didEditFile = true
 
-		if (!userEdits) {
-			pushToolResult(
-				`The content was successfully inserted in ${relPath.toPosix()} at line ${lineNumber}.${newProblemsMessage}`,
-			)
-			await cline.diffViewProvider.reset()
-			return
-		}
-
-		const userFeedbackDiff = JSON.stringify({
-			tool: "insertContent",
-			path: getReadablePath(cline.cwd, relPath),
-			lineNumber: lineNumber,
-			diff: userEdits,
-		} satisfies ClineSayTool)
-
-		await cline.say("user_feedback_diff", userFeedbackDiff)
-
-		pushToolResult(
-			`The user made the following updates to your content:\n\n${userEdits}\n\n` +
-				`The updated content has been successfully saved to ${relPath.toPosix()}. Here is the full, updated content of the file:\n\n` +
-				`<final_file_content path="${relPath.toPosix()}">\n${finalContent}\n</final_file_content>\n\n` +
-				`Please note:\n` +
-				`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-				`2. Proceed with the task using this updated file content as the new baseline.\n` +
-				`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
-				`${newProblemsMessage}`,
+		// Get the formatted response message
+		const message = await cline.diffViewProvider.pushToolWriteResult(
+			cline,
+			cline.cwd,
+			false, // Always false for insert_content
 		)
+
+		pushToolResult(message)
 
 		await cline.diffViewProvider.reset()
 	} catch (error) {

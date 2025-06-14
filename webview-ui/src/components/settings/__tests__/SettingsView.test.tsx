@@ -1,5 +1,4 @@
-// npx jest src/components/settings/__tests__/SettingsView.test.ts
-
+import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -9,27 +8,7 @@ import { ExtensionStateContextProvider } from "@/context/ExtensionStateContext"
 import SettingsView from "../SettingsView"
 
 // Mock vscode API
-jest.mock("@src/utils/vscode", () => ({
-	vscode: {
-		postMessage: jest.fn(),
-	},
-}))
-
-// Mock all lucide-react icons with a proxy to handle any icon requested
-jest.mock("lucide-react", () => {
-	return new Proxy(
-		{},
-		{
-			get: function (obj, prop) {
-				// Return a component factory for any icon that's requested
-				if (prop === "__esModule") {
-					return true
-				}
-				return () => <div data-testid={`${String(prop)}-icon`}>{String(prop)}</div>
-			},
-		},
-	)
-})
+jest.mock("@src/utils/vscode", () => ({ vscode: { postMessage: jest.fn() } }))
 
 // Mock ApiConfigManager component
 jest.mock("../ApiConfigManager", () => ({
@@ -79,10 +58,51 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 		/>
 	),
 	VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
-	VSCodeRadio: ({ children, value, checked, onChange }: any) => (
+	VSCodeRadio: ({ value, checked, onChange }: any) => (
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
-	VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
+	VSCodeRadioGroup: ({ children, onChange }: any) => <div onChange={onChange}>{children}</div>,
+}))
+
+// Mock Tab components
+jest.mock("../../../components/common/Tab", () => ({
+	...jest.requireActual("../../../components/common/Tab"),
+	Tab: ({ children }: any) => <div data-testid="tab-container">{children}</div>,
+	TabHeader: ({ children }: any) => <div data-testid="tab-header">{children}</div>,
+	TabContent: ({ children }: any) => <div data-testid="tab-content">{children}</div>,
+	TabList: ({ children, value, onValueChange, "data-testid": dataTestId }: any) => {
+		// Store onValueChange in a global variable so TabTrigger can access it
+		;(window as any).__onValueChange = onValueChange
+		return (
+			<div data-testid={dataTestId} data-value={value}>
+				{children}
+			</div>
+		)
+	},
+	TabTrigger: ({ children, value, "data-testid": dataTestId, onClick, isSelected }: any) => {
+		// This function simulates clicking on a tab and making its content visible
+		const handleClick = () => {
+			if (onClick) onClick()
+			// Access onValueChange from the global variable
+			const onValueChange = (window as any).__onValueChange
+			if (onValueChange) onValueChange(value)
+			// Make all tab contents invisible
+			document.querySelectorAll("[data-tab-content]").forEach((el) => {
+				;(el as HTMLElement).style.display = "none"
+			})
+			// Make this tab's content visible
+			const tabContent = document.querySelector(`[data-tab-content="${value}"]`)
+			if (tabContent) {
+				;(tabContent as HTMLElement).style.display = "block"
+			}
+		}
+
+		return (
+			<button data-testid={dataTestId} data-value={value} data-selected={isSelected} onClick={handleClick}>
+				{children}
+			</button>
+		)
+	},
 }))
 
 // Mock Slider component
@@ -133,7 +153,7 @@ const renderSettingsView = () => {
 	const onDone = jest.fn()
 	const queryClient = new QueryClient()
 
-	render(
+	const result = render(
 		<ExtensionStateContextProvider>
 			<QueryClientProvider client={queryClient}>
 				<SettingsView onDone={onDone} />
@@ -144,7 +164,20 @@ const renderSettingsView = () => {
 	// Hydrate initial state.
 	mockPostMessage({})
 
-	return { onDone }
+	// Helper function to activate a tab and ensure its content is visible
+	const activateTab = (tabId: string) => {
+		// Skip trying to find and click the tab, just directly render with the target section
+		// This bypasses the actual tab clicking mechanism but ensures the content is shown
+		result.rerender(
+			<ExtensionStateContextProvider>
+				<QueryClientProvider client={queryClient}>
+					<SettingsView onDone={onDone} targetSection={tabId} />
+				</QueryClientProvider>
+			</ExtensionStateContextProvider>,
+		)
+	}
+
+	return { onDone, activateTab }
 }
 
 describe("SettingsView - Sound Settings", () => {
@@ -153,7 +186,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("initializes with tts disabled by default", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		expect(ttsCheckbox).not.toBeChecked()
@@ -163,7 +200,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("initializes with sound disabled by default", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 		expect(soundCheckbox).not.toBeChecked()
@@ -173,7 +214,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("toggles tts setting and sends message to VSCode", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 
@@ -194,7 +239,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("toggles sound setting and sends message to VSCode", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 
@@ -215,7 +264,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("shows tts slider when sound is enabled", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		// Enable tts
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
@@ -228,7 +281,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("shows volume slider when sound is enabled", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		// Enable sound
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
@@ -241,7 +298,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("updates speed and sends message to VSCode when slider changes", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		// Enable tts
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
@@ -263,7 +324,11 @@ describe("SettingsView - Sound Settings", () => {
 	})
 
 	it("updates volume and sends message to VSCode when slider changes", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the notifications tab
+		activateTab("notifications")
 
 		// Enable sound
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
@@ -273,9 +338,9 @@ describe("SettingsView - Sound Settings", () => {
 		const volumeSlider = screen.getByTestId("sound-volume-slider")
 		fireEvent.change(volumeSlider, { target: { value: "0.75" } })
 
-		// Click Save to save settings
-		const saveButton = screen.getByTestId("save-button")
-		fireEvent.click(saveButton)
+		// Click Save to save settings - use getAllByTestId to handle multiple elements
+		const saveButtons = screen.getAllByTestId("save-button")
+		fireEvent.click(saveButtons[0])
 
 		// Verify message sent to VSCode
 		expect(vscode.postMessage).toHaveBeenCalledWith({
@@ -303,7 +368,11 @@ describe("SettingsView - Allowed Commands", () => {
 	})
 
 	it("shows allowed commands section when alwaysAllowExecute is enabled", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the autoApprove tab
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -314,7 +383,11 @@ describe("SettingsView - Allowed Commands", () => {
 	})
 
 	it("adds new command to the list", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the autoApprove tab
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -338,7 +411,11 @@ describe("SettingsView - Allowed Commands", () => {
 	})
 
 	it("removes command from the list", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the autoApprove tab
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -364,8 +441,71 @@ describe("SettingsView - Allowed Commands", () => {
 		})
 	})
 
+	describe("SettingsView - Tab Navigation", () => {
+		beforeEach(() => {
+			jest.clearAllMocks()
+		})
+
+		it("renders with providers tab active by default", () => {
+			renderSettingsView()
+
+			// Check that the tab list is rendered
+			const tabList = screen.getByTestId("settings-tab-list")
+			expect(tabList).toBeInTheDocument()
+
+			// Check that providers content is visible
+			expect(screen.getByTestId("api-config-management")).toBeInTheDocument()
+		})
+
+		it("shows unsaved changes dialog when clicking Done with unsaved changes", () => {
+			// Render once and get the activateTab helper
+			const { activateTab } = renderSettingsView()
+
+			// Activate the notifications tab
+			activateTab("notifications")
+
+			// Make a change to create unsaved changes
+			const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
+			fireEvent.click(soundCheckbox)
+
+			// Click the Done button
+			const doneButton = screen.getByText("settings:common.done")
+			fireEvent.click(doneButton)
+
+			// Check that unsaved changes dialog is shown
+			expect(screen.getByText("settings:unsavedChangesDialog.title")).toBeInTheDocument()
+		})
+
+		it("renders with targetSection prop", () => {
+			// Render with a specific target section
+			render(
+				<ExtensionStateContextProvider>
+					<QueryClientProvider client={new QueryClient()}>
+						<SettingsView onDone={jest.fn()} targetSection="browser" />
+					</QueryClientProvider>
+				</ExtensionStateContextProvider>,
+			)
+
+			// Hydrate initial state
+			mockPostMessage({})
+
+			// Verify browser-related content is visible and API config is not
+			expect(screen.queryByTestId("api-config-management")).not.toBeInTheDocument()
+		})
+	})
+})
+
+describe("SettingsView - Duplicate Commands", () => {
+	beforeEach(() => {
+		jest.clearAllMocks()
+	})
+
 	it("prevents duplicate commands", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the autoApprove tab
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -389,7 +529,11 @@ describe("SettingsView - Allowed Commands", () => {
 	})
 
 	it("saves allowed commands when clicking Save", () => {
-		renderSettingsView()
+		// Render once and get the activateTab helper
+		const { activateTab } = renderSettingsView()
+
+		// Activate the autoApprove tab
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -401,9 +545,9 @@ describe("SettingsView - Allowed Commands", () => {
 		const addButton = screen.getByTestId("add-command-button")
 		fireEvent.click(addButton)
 
-		// Click Save
-		const saveButton = screen.getByTestId("save-button")
-		fireEvent.click(saveButton)
+		// Click Save - use getAllByTestId to handle multiple elements
+		const saveButtons = screen.getAllByTestId("save-button")
+		fireEvent.click(saveButtons[0])
 
 		// Verify VSCode messages were sent
 		expect(vscode.postMessage).toHaveBeenCalledWith(

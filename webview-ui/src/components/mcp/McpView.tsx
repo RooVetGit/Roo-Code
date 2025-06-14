@@ -1,6 +1,7 @@
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import React, { useState } from "react"
+import { Trans } from "react-i18next"
 import {
+	VSCodeButton,
 	VSCodeCheckbox,
 	VSCodeLink,
 	VSCodePanels,
@@ -8,18 +9,28 @@ import {
 	VSCodePanelView,
 } from "@vscode/webview-ui-toolkit/react"
 
-import { McpServer } from "@roo/shared/mcp"
+import { McpServer } from "@roo/mcp"
 
-import { vscode } from "@/utils/vscode"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui"
-
+import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { Trans } from "react-i18next"
+import {
+	Button,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+} from "@src/components/ui"
+import { buildDocLink } from "@src/utils/docLinks"
+
 import { Tab, TabContent, TabHeader } from "../common/Tab"
+
 import McpToolRow from "./McpToolRow"
 import McpResourceRow from "./McpResourceRow"
 import McpEnabledToggle from "./McpEnabledToggle"
+import { McpErrorRow } from "./McpErrorRow"
 
 type McpViewProps = {
 	onDone: () => void
@@ -33,6 +44,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 		enableMcpServerCreation,
 		setEnableMcpServerCreation,
 	} = useExtensionState()
+
 	const { t } = useAppTranslation()
 
 	return (
@@ -51,13 +63,10 @@ const McpView = ({ onDone }: McpViewProps) => {
 						marginTop: "5px",
 					}}>
 					<Trans i18nKey="mcp:description">
-						<VSCodeLink href="https://github.com/modelcontextprotocol" style={{ display: "inline" }}>
-							Model Context Protocol
-						</VSCodeLink>
 						<VSCodeLink
-							href="https://github.com/modelcontextprotocol/servers"
+							href={buildDocLink("features/mcp/using-mcp-in-roo", "mcp_settings")}
 							style={{ display: "inline" }}>
-							community-made servers
+							Learn More
 						</VSCodeLink>
 					</Trans>
 				</div>
@@ -75,14 +84,25 @@ const McpView = ({ onDone }: McpViewProps) => {
 								}}>
 								<span style={{ fontWeight: "500" }}>{t("mcp:enableServerCreation.title")}</span>
 							</VSCodeCheckbox>
-							<p
+							<div
 								style={{
 									fontSize: "12px",
 									marginTop: "5px",
 									color: "var(--vscode-descriptionForeground)",
 								}}>
-								{t("mcp:enableServerCreation.description")}
-							</p>
+								<Trans i18nKey="mcp:enableServerCreation.description">
+									<VSCodeLink
+										href={buildDocLink(
+											"features/mcp/using-mcp-in-roo#how-to-use-roo-to-create-an-mcp-server",
+											"mcp_server_creation",
+										)}
+										style={{ display: "inline" }}>
+										Learn about server creation
+									</VSCodeLink>
+									<strong>new</strong>
+								</Trans>
+								<p style={{ marginTop: "8px" }}>{t("mcp:enableServerCreation.hint")}</p>
+							</div>
 						</div>
 
 						{/* Server List */}
@@ -99,10 +119,17 @@ const McpView = ({ onDone }: McpViewProps) => {
 						)}
 
 						{/* Edit Settings Buttons */}
-						<div style={{ marginTop: "10px", width: "100%", display: "flex", gap: "10px" }}>
+						<div
+							style={{
+								marginTop: "10px",
+								width: "100%",
+								display: "flex",
+								flexWrap: "wrap",
+								gap: "10px",
+							}}>
 							<Button
 								variant="secondary"
-								style={{ flex: 1 }}
+								style={{ flex: "1 1 auto", minWidth: "120px" }}
 								onClick={() => {
 									vscode.postMessage({ type: "openMcpSettings" })
 								}}>
@@ -111,13 +138,37 @@ const McpView = ({ onDone }: McpViewProps) => {
 							</Button>
 							<Button
 								variant="secondary"
-								style={{ flex: 1 }}
+								style={{ flex: "1 1 auto", minWidth: "120px" }}
 								onClick={() => {
 									vscode.postMessage({ type: "openProjectMcpSettings" })
 								}}>
 								<span className="codicon codicon-edit" style={{ marginRight: "6px" }}></span>
 								{t("mcp:editProjectMCP")}
 							</Button>
+							<Button
+								variant="secondary"
+								style={{ flex: "1 1 auto", minWidth: "120px" }}
+								onClick={() => {
+									vscode.postMessage({ type: "refreshAllMcpServers" })
+								}}>
+								<span className="codicon codicon-refresh" style={{ marginRight: "6px" }}></span>
+								{t("mcp:refreshMCP")}
+							</Button>
+						</div>
+						<div
+							style={{
+								marginTop: "15px",
+								fontSize: "12px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							<VSCodeLink
+								href={buildDocLink(
+									"features/mcp/using-mcp-in-roo#editing-mcp-settings-files",
+									"mcp_edit_settings",
+								)}
+								style={{ display: "inline" }}>
+								{t("mcp:learnMoreEditingSettings")}
+							</VSCodeLink>
 						</div>
 					</>
 				)}
@@ -158,7 +209,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 	}
 
 	const handleRowClick = () => {
-		if (!server.error) {
+		if (server.status === "connected") {
 			setIsExpanded(!isExpanded)
 		}
 	}
@@ -199,12 +250,12 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 					alignItems: "center",
 					padding: "8px",
 					background: "var(--vscode-textCodeBlock-background)",
-					cursor: server.error ? "default" : "pointer",
-					borderRadius: isExpanded || server.error ? "4px 4px 0 0" : "4px",
+					cursor: server.status === "connected" ? "pointer" : "default",
+					borderRadius: isExpanded || server.status === "connected" ? "4px" : "4px 4px 0 0",
 					opacity: server.disabled ? 0.6 : 1,
 				}}
 				onClick={handleRowClick}>
-				{!server.error && (
+				{server.status === "connected" && (
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
 						style={{ marginRight: "8px" }}
@@ -304,35 +355,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 				/>
 			</div>
 
-			{server.error ? (
-				<div
-					style={{
-						fontSize: "13px",
-						background: "var(--vscode-textCodeBlock-background)",
-						borderRadius: "0 0 4px 4px",
-						width: "100%",
-					}}>
-					<div
-						style={{
-							color: "var(--vscode-testing-iconFailed)",
-							marginBottom: "8px",
-							padding: "0 10px",
-							overflowWrap: "break-word",
-							wordBreak: "break-word",
-						}}>
-						{server.error}
-					</div>
-					<Button
-						variant="secondary"
-						onClick={handleRestart}
-						disabled={server.status === "connecting"}
-						style={{ width: "calc(100% - 20px)", margin: "0 10px 10px 10px" }}>
-						{server.status === "connecting"
-							? t("mcp:serverStatus.retrying")
-							: t("mcp:serverStatus.retryConnection")}
-					</Button>
-				</div>
-			) : (
+			{server.status === "connected" ? (
 				isExpanded && (
 					<div
 						style={{
@@ -348,6 +371,12 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 							<VSCodePanelTab id="resources">
 								{t("mcp:tabs.resources")} (
 								{[...(server.resourceTemplates || []), ...(server.resources || [])].length || 0})
+							</VSCodePanelTab>
+							{server.instructions && (
+								<VSCodePanelTab id="instructions">{t("mcp:instructions")}</VSCodePanelTab>
+							)}
+							<VSCodePanelTab id="errors">
+								{t("mcp:tabs.errors")} ({server.errorHistory?.length || 0})
 							</VSCodePanelTab>
 
 							<VSCodePanelView id="tools-view">
@@ -388,6 +417,33 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 								) : (
 									<div style={{ padding: "10px 0", color: "var(--vscode-descriptionForeground)" }}>
 										{t("mcp:emptyState.noResources")}
+									</div>
+								)}
+							</VSCodePanelView>
+
+							{server.instructions && (
+								<VSCodePanelView id="instructions-view">
+									<div style={{ padding: "10px 0", fontSize: "12px" }}>
+										<div className="opacity-80 whitespace-pre-wrap break-words">
+											{server.instructions}
+										</div>
+									</div>
+								</VSCodePanelView>
+							)}
+
+							<VSCodePanelView id="errors-view">
+								{server.errorHistory && server.errorHistory.length > 0 ? (
+									<div
+										style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+										{[...server.errorHistory]
+											.sort((a, b) => b.timestamp - a.timestamp)
+											.map((error, index) => (
+												<McpErrorRow key={`${error.timestamp}-${index}`} error={error} />
+											))}
+									</div>
+								) : (
+									<div style={{ padding: "10px 0", color: "var(--vscode-descriptionForeground)" }}>
+										{t("mcp:emptyState.noErrors")}
 									</div>
 								)}
 							</VSCodePanelView>
@@ -434,6 +490,40 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 						</div>
 					</div>
 				)
+			) : (
+				<div
+					style={{
+						fontSize: "13px",
+						background: "var(--vscode-textCodeBlock-background)",
+						borderRadius: "0 0 4px 4px",
+						width: "100%",
+					}}>
+					<div
+						style={{
+							color: "var(--vscode-testing-iconFailed)",
+							marginBottom: "8px",
+							padding: "0 10px",
+							overflowWrap: "break-word",
+							wordBreak: "break-word",
+						}}>
+						{server.error &&
+							server.error.split("\n").map((item, index) => (
+								<React.Fragment key={index}>
+									{index > 0 && <br />}
+									{item}
+								</React.Fragment>
+							))}
+					</div>
+					<VSCodeButton
+						appearance="secondary"
+						onClick={handleRestart}
+						disabled={server.status === "connecting"}
+						style={{ width: "calc(100% - 20px)", margin: "0 10px 10px 10px" }}>
+						{server.status === "connecting"
+							? t("mcp:serverStatus.retrying")
+							: t("mcp:serverStatus.retryConnection")}
+					</VSCodeButton>
+				</div>
 			)}
 
 			{/* Delete Confirmation Dialog */}

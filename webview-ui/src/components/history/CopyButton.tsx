@@ -7,19 +7,34 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 
 type CopyButtonProps = {
 	itemTask: string
+	className?: string
 }
 
-export const CopyButton = ({ itemTask }: CopyButtonProps) => {
+/**
+ * Strips only history highlight spans from text while preserving other HTML
+ * Targets: <span class="history-item-highlight">content</span>
+ * @param text - Text that may contain highlight spans
+ * @returns Text with highlight spans removed but content preserved
+ */
+const stripHistoryHighlightSpans = (text: string): string => {
+	// Match opening tag, capture content until closing tag
+	// The [\s\S]*? pattern matches any character (including newlines) non-greedily,
+	// which properly handles content with < characters
+	return text.replace(/<span\s+class="history-item-highlight">([\s\S]*?)<\/span>/g, "$1")
+}
+
+export const CopyButton = ({ itemTask, className }: CopyButtonProps) => {
 	const { isCopied, copy } = useClipboard()
 	const { t } = useAppTranslation()
 
 	const onCopy = useCallback(
 		(e: React.MouseEvent) => {
 			e.stopPropagation()
-			const tempDiv = document.createElement("div")
-			tempDiv.innerHTML = itemTask
-			const text = tempDiv.textContent || tempDiv.innerText || ""
-			!isCopied && copy(text)
+			if (!isCopied) {
+				// Strip only history highlight spans before copying to clipboard
+				const cleanText = stripHistoryHighlightSpans(itemTask)
+				copy(cleanText)
+			}
 		},
 		[isCopied, copy, itemTask],
 	)
@@ -31,7 +46,7 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 			title={t("history:copyPrompt")}
 			onClick={onCopy}
 			data-testid="copy-prompt-button"
-			className="opacity-50 hover:opacity-100">
+			className={cn("opacity-50 hover:opacity-100", className)}>
 			<span className={cn("codicon scale-80", { "codicon-check": isCopied, "codicon-copy": !isCopied })} />
 		</Button>
 	)

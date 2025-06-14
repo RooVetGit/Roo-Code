@@ -1,25 +1,27 @@
-import { memo, useMemo, useRef, useState } from "react"
+import { memo, useRef, useState } from "react"
 import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
 import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
-import { CloudUpload, CloudDownload } from "lucide-react"
+import { CloudUpload, CloudDownload, FoldVertical } from "lucide-react"
 
-import { ClineMessage } from "@roo/shared/ExtensionMessage"
+import type { ClineMessage } from "@roo-code/types"
 
-import { getMaxTokensForModel } from "@src/utils/model-utils"
+import { getModelMaxOutputTokens } from "@roo/api"
+
 import { formatLargeNumber } from "@src/utils/format"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { normalizeApiConfiguration } from "@src/utils/normalizeApiConfiguration"
+import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 
 import Thumbnails from "../common/Thumbnails"
 
 import { TaskActions } from "./TaskActions"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
+import { Markdown } from "./Markdown"
 
-interface TaskHeaderProps {
+export interface TaskHeaderProps {
 	task: ClineMessage
 	tokensIn: number
 	tokensOut: number
@@ -28,6 +30,8 @@ interface TaskHeaderProps {
 	cacheReads?: number
 	totalCost: number
 	contextTokens: number
+	buttonsDisabled: boolean
+	handleCondenseContext: (taskId: string) => void
 	onClose: () => void
 }
 
@@ -40,25 +44,37 @@ const TaskHeader = ({
 	cacheReads,
 	totalCost,
 	contextTokens,
+	buttonsDisabled,
+	handleCondenseContext,
 	onClose,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
-	const { selectedModelInfo } = useMemo(() => normalizeApiConfiguration(apiConfiguration), [apiConfiguration])
+	const { id: modelId, info: model } = useSelectedModel(apiConfiguration)
 	const [isTaskExpanded, setIsTaskExpanded] = useState(false)
 
 	const textContainerRef = useRef<HTMLDivElement>(null)
 	const textRef = useRef<HTMLDivElement>(null)
-	const contextWindow = selectedModelInfo?.contextWindow || 1
+	const contextWindow = model?.contextWindow || 1
 
 	const { width: windowWidth } = useWindowSize()
+
+	const condenseButton = (
+		<button
+			title={t("chat:task.condenseContext")}
+			disabled={buttonsDisabled}
+			onClick={() => currentTaskItem && handleCondenseContext(currentTaskItem.id)}
+			className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer disabled:cursor-not-allowed opacity-85 hover:opacity-100 bg-transparent border-none rounded-md">
+			<FoldVertical size={16} />
+		</button>
+	)
 
 	return (
 		<div className="py-2 px-3">
 			<div
 				className={cn(
 					"rounded-xs p-2.5 flex flex-col gap-1.5 relative z-1 border",
-					!!isTaskExpanded
+					isTaskExpanded
 						? "border-vscode-panel-border text-vscode-foreground"
 						: "border-vscode-panel-border/80 text-vscode-foreground/80",
 				)}>
@@ -92,13 +108,18 @@ const TaskHeader = ({
 				</div>
 				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (
-					<div className={`w-full flex flex-row gap-1 h-auto`}>
+					<div className={`w-full flex flex-row items-center gap-1 h-auto`}>
 						<ContextWindowProgress
 							contextWindow={contextWindow}
 							contextTokens={contextTokens || 0}
-							maxTokens={getMaxTokensForModel(selectedModelInfo, apiConfiguration)}
+							maxTokens={
+								model
+									? getModelMaxOutputTokens({ modelId, model, settings: apiConfiguration })
+									: undefined
+							}
 						/>
-						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(3)}</VSCodeBadge>}
+						{condenseButton}
+						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -116,6 +137,7 @@ const TaskHeader = ({
 									WebkitBoxOrient: "vertical",
 								}}>
 								<Mention text={task.text} />
+								{/* <Markdown markdown={task.text} /> */}
 							</div>
 						</div>
 						{task.images && task.images.length > 0 && <Thumbnails images={task.images} />}
@@ -132,8 +154,17 @@ const TaskHeader = ({
 									<ContextWindowProgress
 										contextWindow={contextWindow}
 										contextTokens={contextTokens || 0}
-										maxTokens={getMaxTokensForModel(selectedModelInfo, apiConfiguration)}
+										maxTokens={
+											model
+												? getModelMaxOutputTokens({
+														modelId,
+														model,
+														settings: apiConfiguration,
+													})
+												: undefined
+										}
 									/>
+									{condenseButton}
 								</div>
 							)}
 							<div className="flex justify-between items-center h-[20px]">
@@ -152,7 +183,7 @@ const TaskHeader = ({
 										</span>
 									)}
 								</div>
-								{!totalCost && <TaskActions item={currentTaskItem} />}
+								{!totalCost && <TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />}
 							</div>
 
 							{doesModelSupportPromptCache &&
@@ -179,9 +210,9 @@ const TaskHeader = ({
 								<div className="flex justify-between items-center h-[20px]">
 									<div className="flex items-center gap-1">
 										<span className="font-bold">{t("chat:task.apiCost")}</span>
-										<span>${totalCost?.toFixed(3)}</span>
+										<span>${totalCost?.toFixed(2)}</span>
 									</div>
-									<TaskActions item={currentTaskItem} />
+									<TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />
 								</div>
 							)}
 						</div>

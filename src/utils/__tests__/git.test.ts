@@ -1,6 +1,10 @@
-import { jest } from "@jest/globals"
-import { searchCommits, getCommitInfo, getWorkingState, GitCommit } from "../git"
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+
 import { ExecException } from "child_process"
+
+import { jest } from "@jest/globals"
+
+import { searchCommits, getCommitInfo, getWorkingState } from "../git"
 
 type ExecFunction = (
 	command: string,
