@@ -13,32 +13,24 @@ export interface TaskItemFooterProps {
 }
 
 const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelectionMode = false }) => {
-	const metadataIconWithTextAdjustStyle: React.CSSProperties = {
-		fontSize: "12px",
-		color: "var(--vscode-descriptionForeground)",
-		verticalAlign: "middle",
-		marginBottom: "-2px",
-		fontWeight: "bold",
-	}
-
 	return (
 		<div className="text-xs text-vscode-descriptionForeground flex justify-between items-center mt-1">
 			<div className="flex gap-2">
-				{!!item.cacheWrites && (
-					<span className="flex items-center gap-px" data-testid="cache-compact">
-						<i className="codicon codicon-database" style={metadataIconWithTextAdjustStyle} />
-						{formatLargeNumber(item.cacheWrites || 0)}
-						<i className="codicon codicon-arrow-right" style={metadataIconWithTextAdjustStyle} />
-						{formatLargeNumber(item.cacheReads || 0)}
+				{!!(item.cacheReads || item.cacheWrites) && (
+					<span className="flex items-center" data-testid="cache-compact">
+						<i className="mr-1 codicon codicon-cloud-upload text-sm! text-vscode-descriptionForeground" />
+						<span className="inline-block mr-1">{formatLargeNumber(item.cacheWrites || 0)}</span>
+						<i className="mr-1 codicon codicon-cloud-download text-sm! text-vscode-descriptionForeground" />
+						<span>{formatLargeNumber(item.cacheReads || 0)}</span>
 					</span>
 				)}
 
 				{/* Full Tokens */}
-				{(item.tokensIn || item.tokensOut) && (
-					<>
+				{!!(item.tokensIn || item.tokensOut) && (
+					<span className="flex items-center gap-1">
 						<span data-testid="tokens-in-footer-compact">↑ {formatLargeNumber(item.tokensIn || 0)}</span>
 						<span data-testid="tokens-out-footer-compact">↓ {formatLargeNumber(item.tokensOut || 0)}</span>
-					</>
+					</span>
 				)}
 
 				{/* Full Cost */}

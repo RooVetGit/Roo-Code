@@ -94,7 +94,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 				</div>
 				<div className="flex flex-col gap-2">
 					<VSCodeTextField
-						style={{ width: "100%" }}
+						className="w-full"
 						placeholder={t("history:searchPlaceholder")}
 						value={searchQuery}
 						data-testid="history-search-input"
@@ -106,23 +106,13 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 								setSortOption("mostRelevant")
 							}
 						}}>
-						<div
-							slot="start"
-							className="codicon codicon-search"
-							style={{ fontSize: 13, marginTop: 2.5, opacity: 0.8 }}
-						/>
+						<div slot="start" className="codicon codicon-search mt-0.5 opacity-80 text-sm!" />
 						{searchQuery && (
 							<div
-								className="input-icon-button codicon codicon-close"
+								className="input-icon-button codicon codicon-close flex justify-center items-center h-full"
 								aria-label="Clear search"
 								onClick={() => setSearchQuery("")}
 								slot="end"
-								style={{
-									display: "flex",
-									justifyContent: "center",
-									alignItems: "center",
-									height: "100%",
-								}}
 							/>
 						)}
 					</VSCodeTextField>
@@ -223,10 +213,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 			<TabContent className="p-0">
 				<Virtuoso
-					style={{
-						flexGrow: 1,
-						overflowY: "scroll",
-					}}
+					className="flex-1 overflow-y-scroll"
 					data={tasks}
 					data-testid="virtuoso-container"
 					initialTopMostItemIndex={0}
