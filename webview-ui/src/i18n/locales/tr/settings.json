@@ -396,7 +396,7 @@
 			"description": "'read_file' aracının aynı anda işleyebileceği maksimum dosya sayısı. Daha yüksek değerler birden çok küçük dosyanın okunmasını hızlandırabilir ancak bellek kullanımını artırır."
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
+			"label": "Bağlam Sıkıştırma Eşiği",
 			"selectProfile": "Select profile for threshold",
 			"defaultProfile": "Default (applies to all unconfigured profiles)",
 			"defaultDescription": "This threshold applies to all profiles unless overridden",

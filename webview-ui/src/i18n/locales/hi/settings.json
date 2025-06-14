@@ -396,7 +396,7 @@
 			"description": "'read_file' टूल द्वारा एक साथ प्रोसेस की जा सकने वाली अधिकतम फ़ाइलों की संख्या। उच्च मान कई छोटी फ़ाइलों को पढ़ने की गति बढ़ा सकते हैं लेकिन मेमोरी उपयोग बढ़ा देते हैं।"
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
+			"label": "संदर्भ संघनन सीमा",
 			"selectProfile": "Select profile for threshold",
 			"defaultProfile": "Default (applies to all unconfigured profiles)",
 			"defaultDescription": "This threshold applies to all profiles unless overridden",

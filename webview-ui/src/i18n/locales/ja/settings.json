@@ -396,7 +396,7 @@
 			"description": "read_file ツールが同時に処理できるファイルの最大数。値を高くすると複数の小さなファイルの読み取りが速くなる可能性がありますが、メモリ使用量が増加します。"
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
+			"label": "コンテキスト圧縮のしきい値",
 			"selectProfile": "Select profile for threshold",
 			"defaultProfile": "Default (applies to all unconfigured profiles)",
 			"defaultDescription": "This threshold applies to all profiles unless overridden",

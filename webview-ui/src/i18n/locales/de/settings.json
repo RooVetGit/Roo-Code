@@ -396,7 +396,7 @@
 			"always_full_read": "Immer die gesamte Datei lesen"
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
+			"label": "Schwellenwert für Kontextkomprimierung",
 			"selectProfile": "Select profile for threshold",
 			"defaultProfile": "Default (applies to all unconfigured profiles)",
 			"defaultDescription": "This threshold applies to all profiles unless overridden",

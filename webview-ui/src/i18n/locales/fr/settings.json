@@ -396,7 +396,7 @@
 			"description": "Nombre maximum de fichiers que l'outil 'read_file' peut traiter simultanément. Des valeurs plus élevées peuvent accélérer la lecture de plusieurs petits fichiers mais augmentent l'utilisation de la mémoire."
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
+			"label": "Seuil de condensation du contexte",
 			"selectProfile": "Select profile for threshold",
 			"defaultProfile": "Default (applies to all unconfigured profiles)",
 			"defaultDescription": "This threshold applies to all profiles unless overridden",

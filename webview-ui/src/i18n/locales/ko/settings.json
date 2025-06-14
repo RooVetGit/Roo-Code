@@ -396,7 +396,7 @@
 			"description": "read_file 도구가 동시에 처리할 수 있는 최대 파일 수입니다. 높은 값은 여러 작은 파일을 읽는 속도를 높일 수 있지만 메모리 사용량이 증가합니다."
 		},
 		"condensingThreshold": {
-			"label": "Context Condensing Threshold",
+			"label": "컨텍스트 압축 임계값",
 			"selectProfile": "Select profile for threshold",
 			"defaultProfile": "Default (applies to all unconfigured profiles)",
 			"defaultDescription": "This threshold applies to all profiles unless overridden",
