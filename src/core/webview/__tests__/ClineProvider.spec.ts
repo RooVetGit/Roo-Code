@@ -2155,8 +2155,8 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
-				ollama: mockModels,
-				lmstudio: mockModels,
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})
@@ -2187,8 +2187,6 @@ describe("ClineProvider - Router Models", () => {
 			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty fail
 			.mockResolvedValueOnce(mockModels) // glama success
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound fail
-			.mockRejectedValueOnce(new Error("Ollama API error")) // ollama fail
-			.mockRejectedValueOnce(new Error("LMStudio API error")) // lmstudio fail
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm fail
 
 		await messageHandler({ type: "requestRouterModels" })
@@ -2225,16 +2223,10 @@ describe("ClineProvider - Router Models", () => {
 		expect(mockPostMessage).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
-			error: "Ollama API error",
-			values: { provider: "ollama" },
+			error: "Unbound API error",
+			values: { provider: "unbound" },
 		})
 
-		expect(mockPostMessage).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "LMStudio API error",
-			values: { provider: "lmstudio" },
-		})
 		expect(mockPostMessage).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
@@ -2318,8 +2310,8 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
-				ollama: mockModels,
-				lmstudio: mockModels,
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})

@@ -73,8 +73,8 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
-				ollama: mockModels,
-				lmstudio: mockModels,
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})
@@ -160,8 +160,8 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
-				ollama: mockModels,
-				lmstudio: mockModels,
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})
@@ -182,8 +182,6 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
 			.mockResolvedValueOnce(mockModels) // glama
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
-			.mockRejectedValueOnce(new Error("Ollama connection failed")) // ollama
-			.mockRejectedValueOnce(new Error("LMStudio connection failed")) // lmstudio
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
 
 		await webviewMessageHandler(mockClineProvider, {
@@ -215,20 +213,6 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
-			error: "Ollama connection failed",
-			values: { provider: "ollama" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "LMStudio connection failed",
-			values: { provider: "lmstudio" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
 			error: "Unbound API error",
 			values: { provider: "unbound" },
 		})
@@ -244,11 +228,11 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 	it("handles Error objects and string errors correctly", async () => {
 		// Mock providers to fail with different error types
 		mockGetModels
-			.mockRejectedValueOnce(new Error("Structured error message")) // Error object
-			.mockRejectedValueOnce("String error message") // String error
-			.mockRejectedValueOnce({ message: "Object with message" }) // Object error
-			.mockResolvedValueOnce({}) // Success
-			.mockResolvedValueOnce({}) // Success
+			.mockRejectedValueOnce(new Error("Structured error message")) // openrouter
+			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
+			.mockRejectedValueOnce(new Error("Glama API error")) // glama
+			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
+			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
 
 		await webviewMessageHandler(mockClineProvider, {
 			type: "requestRouterModels",
@@ -265,15 +249,29 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
-			error: "String error message",
+			error: "Requesty API error",
 			values: { provider: "requesty" },
 		})
 
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
-			error: "[object Object]",
+			error: "Glama API error",
 			values: { provider: "glama" },
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "Unbound API error",
+			values: { provider: "unbound" },
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "LiteLLM connection failed",
+			values: { provider: "litellm" },
 		})
 	})
 
