@@ -25,6 +25,17 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 		})
 	}
 
+	const handleEnabledForPromptChange = () => {
+		if (!serverName) return
+		vscode.postMessage({
+			type: "toggleToolEnabledForPrompt",
+			serverName,
+			source: serverSource || "global",
+			toolName: tool.name,
+			isEnabled: !tool.enabledForPrompt,
+		})
+	}
+
 	return (
 		<div
 			key={tool.name}
@@ -33,17 +44,52 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 			}}>
 			<div
 				data-testid="tool-row-container"
-				style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+				className="flex items-center justify-between gap-4"
 				onClick={(e) => e.stopPropagation()}>
-				<div style={{ display: "flex", alignItems: "center" }}>
-					<span className="codicon codicon-symbol-method" style={{ marginRight: "6px" }}></span>
-					<span style={{ fontWeight: 500 }}>{tool.name}</span>
+				<div className="flex items-center min-w-0 flex-1">
+					<span className="codicon codicon-symbol-method mr-1.5 flex-shrink-0"></span>
+					<span className="font-medium truncate" title={tool.name}>
+						{tool.name}
+					</span>
 				</div>
-				{serverName && alwaysAllowMcp && (
-					<VSCodeCheckbox checked={tool.alwaysAllow} onChange={handleAlwaysAllowChange} data-tool={tool.name}>
-						{t("mcp:tool.alwaysAllow")}
-					</VSCodeCheckbox>
-				)}
+				<div className="flex items-center space-x-4 flex-shrink-0">
+					{" "}
+					{/* Wrapper for checkboxes */}
+					{serverName && (
+						<div
+							role="switch"
+							aria-checked={tool.enabledForPrompt}
+							tabIndex={0}
+							className={`relative h-4 w-8 cursor-pointer rounded-full transition-colors ${
+								tool.enabledForPrompt
+									? "bg-vscode-button-background"
+									: "bg-vscode-titleBar-inactiveForeground"
+							} ${tool.enabledForPrompt ? "opacity-100" : "opacity-60"}`}
+							onClick={handleEnabledForPromptChange}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault()
+									handleEnabledForPromptChange()
+								}
+							}}
+							data-tool-prompt-toggle={tool.name}
+							title={t("mcp:tool.togglePromptInclusion")}>
+							<div
+								className={`absolute top-0.5 h-3 w-3 rounded-full bg-vscode-titleBar-activeForeground transition-all ${
+									tool.enabledForPrompt ? "left-[18px]" : "left-0.5"
+								}`}
+							/>
+						</div>
+					)}
+					{serverName && alwaysAllowMcp && (
+						<VSCodeCheckbox
+							checked={tool.alwaysAllow}
+							onChange={handleAlwaysAllowChange}
+							data-tool={tool.name}>
+							{t("mcp:tool.alwaysAllow")}
+						</VSCodeCheckbox>
+					)}
+				</div>
 			</div>
 			{tool.description && (
 				<div
