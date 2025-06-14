@@ -72,7 +72,7 @@ export interface ToolUse {
 	type: "tool_use"
 	name: ToolName
 	// params is a partial record, allowing only some or none of the possible parameters to be used
-	params: Partial<Record<ToolParamName, string>>
+	params: Partial<Record<ToolParamName, string | any>>
 	partial: boolean
 }
 
@@ -84,7 +84,7 @@ export interface ExecuteCommandToolUse extends ToolUse {
 
 export interface ReadFileToolUse extends ToolUse {
 	name: "read_file"
-	params: Partial<Pick<Record<ToolParamName, string>, "args" | "path" | "start_line" | "end_line">>
+	params: Partial<Pick<Record<ToolParamName, string | any>, "args" | "path" | "start_line" | "end_line">>
 }
 
 export interface FetchInstructionsToolUse extends ToolUse {

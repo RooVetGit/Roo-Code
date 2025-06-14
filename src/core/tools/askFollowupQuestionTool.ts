@@ -1,7 +1,6 @@
 import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
-import { parseXml } from "../../utils/xml"
 
 export async function askFollowupQuestionTool(
 	cline: Task,
@@ -12,7 +11,7 @@ export async function askFollowupQuestionTool(
 	removeClosingTag: RemoveClosingTag,
 ) {
 	const question: string | undefined = block.params.question
-	const follow_up: string | undefined = block.params.follow_up
+	const follow_up: Record<string, string[]> | undefined = block.params.follow_up
 
 	try {
 		if (block.partial) {
@@ -26,33 +25,13 @@ export async function askFollowupQuestionTool(
 				return
 			}
 
-			type Suggest = { answer: string }
-
 			let follow_up_json = {
 				question,
-				suggest: [] as Suggest[],
-			}
-
-			if (follow_up) {
-				let parsedSuggest: {
-					suggest: Suggest[] | Suggest
-				}
-
-				try {
-					parsedSuggest = parseXml(follow_up, ["suggest"]) as { suggest: Suggest[] | Suggest }
-				} catch (error) {
-					cline.consecutiveMistakeCount++
-					cline.recordToolError("ask_followup_question")
-					await cline.say("error", `Failed to parse operations: ${error.message}`)
-					pushToolResult(formatResponse.toolError("Invalid operations xml format"))
-					return
-				}
-
-				const normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
-					? parsedSuggest.suggest
-					: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
-
-				follow_up_json.suggest = normalizedSuggest
+				suggest: follow_up?.suggest
+					? Array.isArray(follow_up?.suggest)
+						? follow_up.suggest
+						: [follow_up.suggest]
+					: [],
 			}
 
 			cline.consecutiveMistakeCount = 0

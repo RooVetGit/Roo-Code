@@ -136,6 +136,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 		mockCline.recordToolUsage = jest.fn().mockReturnValue(undefined)
 		mockCline.recordToolError = jest.fn().mockReturnValue(undefined)
+		mockCline.sayAndCreateMissingParamError = jest.fn().mockResolvedValue("Missing required parameter")
 
 		toolResult = undefined
 	})
@@ -164,18 +165,31 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		// Reset the spy before each test
 		addLineNumbersMock.mockClear()
 
-		// Format args string based on params
-		let argsContent = `<file><path>${options.path || testFilePath}</path>`
-		if (options.start_line && options.end_line) {
-			argsContent += `<line_range>${options.start_line}-${options.end_line}</line_range>`
+		// Check if args are already provided in params
+		let finalParams = { ...params }
+
+		if (!params.args) {
+			// Format args object based on options
+			const fileObj: any = {
+				path: options.path || testFilePath,
+			}
+			if (options.start_line && options.end_line) {
+				fileObj.line_range = `${options.start_line}-${options.end_line}`
+			}
+
+			// Create pre-parsed args object
+			const argsContent = {
+				file: fileObj,
+			}
+
+			finalParams.args = argsContent
 		}
-		argsContent += `</file>`
 
 		// Create a tool use object
 		const toolUse: ReadFileToolUse = {
 			type: "tool_use",
 			name: "read_file",
-			params: { args: argsContent, ...params },
+			params: finalParams,
 			partial: false,
 		}
 
@@ -453,7 +467,7 @@ describe("read_file tool XML output structure", () => {
 	 */
 	async function executeReadFileTool(
 		params: {
-			args?: string
+			args?: any
 		} = {},
 		options: {
 			totalLines?: number
@@ -477,11 +491,17 @@ describe("read_file tool XML output structure", () => {
 		mockedIsBinaryFile.mockResolvedValue(isBinary)
 		mockCline.rooIgnoreController.validateAccess = jest.fn().mockReturnValue(validateAccess)
 
-		let argsContent = `<file><path>${options.path || testFilePath}</path>`
-		if (options.start_line && options.end_line) {
-			argsContent += `<line_range>${options.start_line}-${options.end_line}</line_range>`
+		// Create pre-parsed args object
+		const fileObj: any = {
+			path: options.path || testFilePath,
 		}
-		argsContent += `</file>`
+		if (options.start_line && options.end_line) {
+			fileObj.line_range = `${options.start_line}-${options.end_line}`
+		}
+
+		const argsContent = {
+			file: fileObj,
+		}
 
 		// Create a tool use object
 		const toolUse: ReadFileToolUse = {
@@ -698,9 +718,14 @@ describe("read_file tool XML output structure", () => {
 				return text
 			})
 			// Execute
-			const result = await executeReadFileTool({
-				args: `<file><path>${testFilePath}</path><line_range>${startLine}-${endLine}</line_range></file>`,
-			})
+			const result = await executeReadFileTool(
+				{},
+				{
+					path: testFilePath,
+					start_line: startLine.toString(),
+					end_line: endLine.toString(),
+				},
+			)
 
 			// Verify - don't check exact content, just check that it contains the right elements
 			expect(result).toContain(`<file><path>${testFilePath}</path>`)
@@ -721,9 +746,14 @@ describe("read_file tool XML output structure", () => {
 			)
 
 			// Execute
-			const result = await executeReadFileTool({
-				args: `<file><path>${testFilePath}</path><line_range>${startLine}-${endLine}</line_range></file>`,
-			})
+			const result = await executeReadFileTool(
+				{},
+				{
+					path: testFilePath,
+					start_line: startLine.toString(),
+					end_line: endLine.toString(),
+				},
+			)
 
 			// Verify error handling
 			expect(result).toBe(
@@ -927,9 +957,14 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockRejectedValue(new Error("Invalid start_line value"))
 
 			// Execute
-			const result = await executeReadFileTool({
-				args: `<file><path>${testFilePath}</path><line_range>invalid-10</line_range></file>`,
-			})
+			const result = await executeReadFileTool(
+				{},
+				{
+					path: testFilePath,
+					start_line: "invalid",
+					end_line: "10",
+				},
+			)
 
 			// Verify
 			expect(result).toBe(
@@ -943,9 +978,14 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockRejectedValue(new Error("Invalid end_line value"))
 
 			// Execute
-			const result = await executeReadFileTool({
-				args: `<file><path>${testFilePath}</path><line_range>1-invalid</line_range></file>`,
-			})
+			const result = await executeReadFileTool(
+				{},
+				{
+					path: testFilePath,
+					start_line: "1",
+					end_line: "invalid",
+				},
+			)
 
 			// Verify
 			expect(result).toBe(
@@ -1006,7 +1046,9 @@ describe("read_file tool XML output structure", () => {
 			// Execute
 			const result = await executeReadFileTool(
 				{
-					args: `<file><path>${file1Path}</path></file><file><path>${file2Path}</path></file>`,
+					args: {
+						file: [{ path: file1Path }, { path: file2Path }],
+					},
 				},
 				{ totalLines: 1 },
 			)
@@ -1094,7 +1136,9 @@ describe("read_file tool XML output structure", () => {
 				type: "tool_use",
 				name: "read_file",
 				params: {
-					args: `<file><path>${validPath}</path></file><file><path>${invalidPath}</path></file>`,
+					args: {
+						file: [{ path: validPath }, { path: invalidPath }],
+					},
 				},
 				partial: false,
 			}
@@ -1171,7 +1215,9 @@ describe("read_file tool XML output structure", () => {
 				type: "tool_use",
 				name: "read_file",
 				params: {
-					args: `<file><path>${textPath}</path></file><file><path>${binaryPath}</path></file>`,
+					args: {
+						file: [{ path: textPath }, { path: binaryPath }],
+					},
 				},
 				partial: false,
 			}
@@ -1211,7 +1257,11 @@ describe("read_file tool XML output structure", () => {
 				type: "tool_use",
 				name: "read_file",
 				params: {
-					args: `<file><path>${unsupportedBinaryPath}</path></file>`,
+					args: {
+						file: {
+							path: unsupportedBinaryPath,
+						},
+					},
 				},
 				partial: false,
 			}
@@ -1319,9 +1369,12 @@ describe("read_file tool XML output structure", () => {
 			const longPath = "very/long/path/".repeat(10) + "file.txt"
 
 			// Execute
-			const result = await executeReadFileTool({
-				args: `<file><path>${longPath}</path></file>`,
-			})
+			const result = await executeReadFileTool(
+				{},
+				{
+					path: longPath,
+				},
+			)
 
 			// Verify long path is handled correctly
 			expect(result).toContain(`<path>${longPath}</path>`)

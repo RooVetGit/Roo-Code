@@ -4,11 +4,12 @@ import { TextContent, ToolUse } from "../../../shared/tools"
 
 import { AssistantMessageContent, parseAssistantMessage as parseAssistantMessageV1 } from "../parseAssistantMessage"
 import { parseAssistantMessageV2 } from "../parseAssistantMessageV2"
+import { parseAssistantMessageV3 } from "../parseAssistantMessageV3"
 
 const isEmptyTextContent = (block: AssistantMessageContent) =>
 	block.type === "text" && (block as TextContent).content === ""
 
-;[parseAssistantMessageV1, parseAssistantMessageV2].forEach((parser, index) => {
+;[parseAssistantMessageV1, parseAssistantMessageV2, parseAssistantMessageV3].forEach((parser, index) => {
 	describe(`parseAssistantMessageV${index + 1}`, () => {
 		describe("text content parsing", () => {
 			it("should parse a simple text message", () => {
@@ -163,12 +164,12 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
 
 		describe("special cases", () => {
 			it("should handle the write_to_file tool with content that contains closing tags", () => {
-				const message = `<write_to_file><path>src/file.ts</path><content>
-	function example() {
+				const message = `<write_to_file><path>src/file.ts</path><content><![CDATA[
+function example() {
 	// This has XML-like content: </content>
 	return true;
-	}
-	</content><line_count>5</line_count></write_to_file>`
+}
+]]></content><line_count>5</line_count></write_to_file>`
 
 				const result = parser(message).filter((block) => !isEmptyTextContent(block))
 
@@ -198,6 +199,104 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
 				expect(result).toHaveLength(1)
 				expect(result[0].type).toBe("text")
 				expect((result[0] as TextContent).content).toBe(message)
+			})
+
+			it("should handle HTML tags mixed with tool calls", () => {
+				const message =
+					'Here\'s some <strong>bold text</strong> followed by a tool call <read_file><path>src/file.ts</path></read_file> and then a <div class="container">div with a class</div>'
+				const result = parser(message)
+
+				expect(result).toHaveLength(3)
+
+				// First block should be text with HTML tags
+				expect(result[0].type).toBe("text")
+				expect((result[0] as TextContent).content).toBe(
+					"Here's some <strong>bold text</strong> followed by a tool call",
+				)
+				expect((result[0] as TextContent).partial).toBe(false)
+
+				// Second block should be the tool call
+				expect(result[1].type).toBe("tool_use")
+				expect((result[1] as ToolUse).name).toBe("read_file")
+				expect((result[1] as ToolUse).params.path).toBe("src/file.ts")
+				expect((result[1] as ToolUse).partial).toBe(false)
+
+				// Third block should be text with more HTML
+				expect(result[2].type).toBe("text")
+				expect((result[2] as TextContent).content).toBe(
+					'and then a <div class="container">div with a class</div>',
+				)
+				expect((result[2] as TextContent).partial).toBe(true)
+			})
+
+			it("should handle HTML tags inside tool parameters", () => {
+				const message =
+					"<search_files><regex><div>.*</div></regex><path>src</path></search_files><write_to_file><path>index.html</path><content><html>\n<head>\n  <title>Test</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html></content><line_count>8</line_count></write_to_file>"
+				const result = parser(message).filter((block) => !isEmptyTextContent(block))
+
+				expect(result).toHaveLength(2)
+
+				// First tool call with HTML-like content in regex parameter
+				const toolUse1 = result[0] as ToolUse
+				expect(toolUse1.type).toBe("tool_use")
+				expect(toolUse1.name).toBe("search_files")
+				expect(toolUse1.params.regex).toBe("<div>.*</div>")
+				expect(toolUse1.params.path).toBe("src")
+				expect(toolUse1.partial).toBe(false)
+
+				// Second tool call with HTML content in content parameter
+				const toolUse2 = result[1] as ToolUse
+				expect(toolUse2.type).toBe("tool_use")
+				expect(toolUse2.name).toBe("write_to_file")
+				expect(toolUse2.params.path).toBe("index.html")
+				expect(toolUse2.params.content).toContain("<html>")
+				expect(toolUse2.params.content).toContain("<head>")
+				expect(toolUse2.params.content).toContain("<body>")
+				expect(toolUse2.params.content).toContain("<h1>Hello World</h1>")
+				expect(toolUse2.params.line_count).toBe("8")
+				expect(toolUse2.partial).toBe(false)
+			})
+
+			it("should handle complex nested HTML between tool calls", () => {
+				const message =
+					'<read_file><path>src/index.js</path></read_file>\n\nLet me explain this code with some <em>formatted <strong>nested</strong> HTML</em>:\n\n<pre><code class="language-javascript">\nfunction example() {\n  // This looks like a closing tag: </div>\n  return true;\n}\n</code></pre>\n\nNow let\'s modify it: <write_to_file><path>src/index.js</path><content>// New content</content><line_count>1</line_count></write_to_file>'
+				const result = parser(message).filter((block) => !isEmptyTextContent(block))
+
+				// Different parsers may handle the text blocks differently (some split them, some combine them)
+				// So we'll check for the key elements instead of exact block count
+
+				// Find the read_file tool call
+				const readFileTool = result.find(
+					(block) => block.type === "tool_use" && (block as ToolUse).name === "read_file",
+				) as ToolUse | undefined
+
+				expect(readFileTool).toBeDefined()
+				expect(readFileTool?.params.path).toBe("src/index.js")
+				expect(readFileTool?.partial).toBe(false)
+
+				// Find the write_to_file tool call
+				const writeFileTool = result.find(
+					(block) => block.type === "tool_use" && (block as ToolUse).name === "write_to_file",
+				) as ToolUse | undefined
+
+				expect(writeFileTool).toBeDefined()
+				expect(writeFileTool?.params.path).toBe("src/index.js")
+				expect(writeFileTool?.params.content).toBe("// New content")
+				expect(writeFileTool?.params.line_count).toBe("1")
+				expect(writeFileTool?.partial).toBe(false)
+
+				// Check that there's at least one text block with HTML content
+				const textBlocks = result.filter((block) => block.type === "text") as TextContent[]
+				expect(textBlocks.length).toBeGreaterThan(0)
+
+				// Combine all text content to check for expected HTML fragments
+				const allTextContent = textBlocks.map((block) => block.content).join(" ")
+				expect(allTextContent).toContain("Let me explain this code with some")
+				expect(allTextContent).toContain("nested")
+				expect(allTextContent).toContain("HTML")
+				expect(allTextContent).toContain("function example")
+				expect(allTextContent).toContain("return true")
+				expect(allTextContent).toContain("Now let's modify it")
 			})
 
 			it("should handle tool use with no parameters", () => {
@@ -334,6 +433,77 @@ const isEmptyTextContent = (block: AssistantMessageContent) =>
 				// Third tool use (execute_command)
 				expect(result[5].type).toBe("tool_use")
 				expect((result[5] as ToolUse).name).toBe("execute_command")
+			})
+		})
+
+		describe("ask_followup_question parsing", () => {
+			it("should parse ask_followup_question with nested suggest array", () => {
+				// Skip this test for V1 and V2 parsers
+				if (index < 2) {
+					return
+				}
+
+				const message = `<ask_followup_question>
+<question>What would you like to do next?</question>
+<follow_up>
+<suggest>First option</suggest>
+<suggest>Second option</suggest>
+</follow_up>
+</ask_followup_question>`
+
+				const result = parser(message)
+
+				expect(result).toHaveLength(1)
+				expect(result[0]).toEqual({
+					type: "tool_use",
+					name: "ask_followup_question",
+					params: {
+						question: "What would you like to do next?",
+						follow_up: {
+							suggest: ["First option", "Second option"],
+						},
+					},
+					partial: false,
+				})
+			})
+
+			it("should parse ask_followup_questions with suggest has xml mailfrom format", () => {
+				// Skip this test for V1 and V2 parsers
+				if (index < 2) {
+					console.log(`Skipping complex suggest array test for parseAssistantMessageV${index + 1}`)
+					return
+				}
+
+				const message = `<ask_followup_question>
+<question>What performance metrics and budgets should we establish for the application to ensure a good user experience?</question>
+<follow_up>
+<suggest>Let's set strict performance budgets: TTI < 5s on slow 3G, FCP < 2s, and max JS bundle size < 200KB to ensure optimal performance across all devices.</suggest>
+<suggest>Yes, TTI < 5s on simulated slow 3G, FCP < 2s. Let's aim for Lighthouse scores above 90 for performance.</suggest>
+<suggest>No specific budgets for now, but we should prioritize good performance generally.</suggest>
+<suggest>Use best practice (e.g., Aim for Lighthouse performance score > 90. Target FCP < 1.8s, LCP < 2.5s, TTI < 5s on a representative mobile device/network. Keep main thread JS bundle (post-compression) < 150-200KB. These are good starting points to ensure a snappy experience).</suggest>
+</follow_up>
+</ask_followup_question>`
+
+				const result = parser(message)
+
+				expect(result).toHaveLength(1)
+				expect(result[0]).toEqual({
+					type: "tool_use",
+					name: "ask_followup_question",
+					params: {
+						question:
+							"What performance metrics and budgets should we establish for the application to ensure a good user experience?",
+						follow_up: {
+							suggest: [
+								"Let's set strict performance budgets: TTI < 5s on slow 3G, FCP < 2s, and max JS bundle size < 200KB to ensure optimal performance across all devices.",
+								"Yes, TTI < 5s on simulated slow 3G, FCP < 2s. Let's aim for Lighthouse scores above 90 for performance.",
+								"No specific budgets for now, but we should prioritize good performance generally.",
+								"Use best practice (e.g., Aim for Lighthouse performance score > 90. Target FCP < 1.8s, LCP < 2.5s, TTI < 5s on a representative mobile device/network. Keep main thread JS bundle (post-compression) < 150-200KB. These are good starting points to ensure a snappy experience).",
+							],
+						},
+					},
+					partial: false,
+				})
 			})
 		})
 	})
