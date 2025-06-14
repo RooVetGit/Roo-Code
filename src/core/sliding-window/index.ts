@@ -3,7 +3,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { ApiHandler } from "../../api"
-import { summarizeConversation, SummarizeResponse } from "../condense"
+import { MAX_CONDENSE_THRESHOLD, MIN_CONDENSE_THRESHOLD, summarizeConversation, SummarizeResponse } from "../condense"
 import { ApiMessage } from "../task-persistence/apiMessages"
 
 /**
@@ -128,7 +128,7 @@ export async function truncateConversationIfNeeded({
 		if (profileThreshold === -1) {
 			// Special case: -1 means inherit from global setting
 			effectiveThreshold = autoCondenseContextPercent
-		} else if (profileThreshold >= 10 && profileThreshold <= 100) {
+		} else if (profileThreshold >= MIN_CONDENSE_THRESHOLD && profileThreshold <= MAX_CONDENSE_THRESHOLD) {
 			// Valid custom threshold
 			effectiveThreshold = profileThreshold
 		} else {
