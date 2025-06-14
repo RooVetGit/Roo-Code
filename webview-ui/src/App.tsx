@@ -43,6 +43,7 @@ const App = () => {
 		experiments,
 		cloudUserInfo,
 		cloudIsAuthenticated,
+		renderContext,
 	} = useExtensionState()
 
 	// Create a persistent state manager
@@ -136,11 +137,14 @@ const App = () => {
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
 
-	// Focus the WebView when non-interactive content is clicked
+	// Focus the WebView when non-interactive content is clicked (only in editor/tab mode)
 	useAddNonInteractiveClickListener(
 		useCallback(() => {
-			vscode.postMessage({ type: "focusPanelRequest" })
-		}, []),
+			// Only send focus request if we're in editor (tab) mode, not sidebar
+			if (renderContext === "editor") {
+				vscode.postMessage({ type: "focusPanelRequest" })
+			}
+		}, [renderContext]),
 	)
 
 	if (!didHydrateState) {
