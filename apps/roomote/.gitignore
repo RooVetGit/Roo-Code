@@ -1,0 +1,10 @@
+# Next.js
+.next
+
+# docker
+.docker/*
+!.docker/scripts
+!.docker/entrypoints
+
+# ENV
+!.env.example

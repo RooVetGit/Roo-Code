@@ -1,0 +1,27 @@
+FROM node:20-slim AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY scripts/bootstrap.mjs ./scripts/
+COPY packages/types/package.json ./packages/types/
+COPY packages/config-eslint/package.json ./packages/config-eslint/
+COPY packages/config-typescript/package.json ./packages/config-typescript/
+COPY apps/roomote/package.json ./apps/roomote/
+
+RUN pnpm install --filter @roo-code/roomote
+
+COPY packages/types ./packages/types/
+COPY packages/config-eslint ./packages/config-eslint/
+COPY packages/config-typescript ./packages/config-typescript/
+COPY apps/roomote ./apps/roomote/
+
+WORKDIR /app/apps/roomote
+
+EXPOSE 3002
+
+CMD ["pnpm", "dashboard"]
