@@ -26,7 +26,12 @@ const DIRS_TO_IGNORE = [
 	"deps",
 	"pkg",
 	"Pods",
-	".*",
+	".git",
+	".svn",
+	".hg",
+	".bzr",
+	".vscode",
+	".idea",
 ]
 
 /**
@@ -156,14 +161,9 @@ function buildNonRecursiveArgs(): string[] {
 
 	// Apply directory exclusions for non-recursive searches
 	for (const dir of DIRS_TO_IGNORE) {
-		if (dir === ".*") {
-			// For hidden files/dirs in non-recursive mode
-			args.push("-g", "!.*")
-		} else {
-			// Direct children only
-			args.push("-g", `!${dir}`)
-			args.push("-g", `!${dir}/**`)
-		}
+		// Direct children only
+		args.push("-g", `!${dir}`)
+		args.push("-g", `!${dir}/**`)
 	}
 
 	return args
@@ -237,11 +237,6 @@ async function listFilteredDirectories(
  * Determine if a directory should be included in results based on filters
  */
 function shouldIncludeDirectory(dirName: string, recursive: boolean, gitignorePatterns: string[]): boolean {
-	// Skip hidden directories if configured to ignore them
-	if (dirName.startsWith(".") && DIRS_TO_IGNORE.includes(".*")) {
-		return false
-	}
-
 	// Check against explicit ignore patterns
 	if (isDirectoryExplicitlyIgnored(dirName)) {
 		return false
