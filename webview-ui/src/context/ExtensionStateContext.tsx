@@ -348,6 +348,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		cloudIsAuthenticated: state.cloudIsAuthenticated ?? false,
 		marketplaceItems,
 		marketplaceInstalledMetadata,
+		profileThresholds: state.profileThresholds ?? {},
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration,
