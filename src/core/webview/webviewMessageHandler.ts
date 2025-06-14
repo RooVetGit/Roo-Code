@@ -40,6 +40,7 @@ import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 import { getCommand } from "../../utils/commands"
+import { isInAutomatedWorkflowFromProvider } from "../../utils/workflow-detection"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
@@ -434,7 +435,13 @@ export const webviewMessageHandler = async (
 			saveImage(message.dataUri!)
 			break
 		case "openFile":
-			openFile(message.text!, message.values as { create?: boolean; content?: string; line?: number })
+			// Check if we're in an automated workflow to preserve chat focus during AI processing
+			const shouldPreserveFocus = isInAutomatedWorkflowFromProvider(provider)
+
+			openFile(message.text!, {
+				...(message.values as { create?: boolean; content?: string; line?: number }),
+				preserveFocus: shouldPreserveFocus,
+			})
 			break
 		case "openMention":
 			openMention(message.text)
@@ -489,6 +496,7 @@ export const webviewMessageHandler = async (
 			const customModesFilePath = await provider.customModesManager.getCustomModesFilePath()
 
 			if (customModesFilePath) {
+				// User-initiated settings opening, keep focus
 				openFile(customModesFilePath)
 			}
 
@@ -498,6 +506,7 @@ export const webviewMessageHandler = async (
 			const mcpSettingsFilePath = await provider.getMcpHub()?.getMcpSettingsFilePath()
 
 			if (mcpSettingsFilePath) {
+				// User-initiated settings opening, keep focus
 				openFile(mcpSettingsFilePath)
 			}
 
@@ -521,6 +530,7 @@ export const webviewMessageHandler = async (
 					await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
 				}
 
+				// User-initiated settings opening, keep focus
 				await openFile(mcpPath)
 			} catch (error) {
 				vscode.window.showErrorMessage(t("mcp:errors.create_json", { error: `${error}` }))

@@ -99,6 +99,17 @@ jest.mock("../../../integrations/misc/open-file", () => ({
 }))
 import { openFile } from "../../../integrations/misc/open-file"
 
+jest.mock("../../webview/ClineProvider", () => ({
+	ClineProvider: {
+		getVisibleInstance: jest.fn().mockReturnValue({
+			getCurrentCline: jest.fn().mockReturnValue(null),
+			contextProxy: {
+				getValue: jest.fn().mockReturnValue(false),
+			},
+		}),
+	},
+}))
+
 jest.mock("../../../integrations/misc/extract-text", () => ({
 	extractTextFromFile: jest.fn(),
 }))
@@ -256,7 +267,7 @@ Detailed commit message with multiple lines
 
 			await openMention(mention)
 
-			expect(openFile).toHaveBeenCalledWith(expectedAbsPath)
+			expect(openFile).toHaveBeenCalledWith(expectedAbsPath, { preserveFocus: false })
 			expect(vscode.commands.executeCommand).not.toHaveBeenCalled()
 		})
 
