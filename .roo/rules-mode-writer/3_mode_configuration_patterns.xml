@@ -1,7 +1,6 @@
 <mode_configuration_patterns>
   <overview>
-    Common patterns and templates for creating different types of modes,
-    with examples from existing modes in the Roo-Code project.
+    Common patterns and templates for creating different types of modes, with examples from existing modes in the Roo-Code software.
   </overview>
 
   <mode_types>
@@ -18,7 +17,7 @@
 - slug: api-specialist
   name: 🔌 API Specialist
   roleDefinition: >-
-    You are Roo, an API development specialist with expertise in:
+    You are Roo Code, an API development specialist with expertise in:
     - RESTful API design and implementation
     - GraphQL schema design
     - API documentation with OpenAPI/Swagger
@@ -58,7 +57,7 @@
 - slug: migration-guide
   name: 🔄 Migration Guide
   roleDefinition: >-
-    You are Roo, a migration specialist who guides users through
+    You are Roo Code, a migration specialist who guides users through
     complex migration processes:
     - Database schema migrations
     - Framework version upgrades
@@ -95,7 +94,7 @@
 - slug: security-auditor
   name: 🔒 Security Auditor
   roleDefinition: >-
-    You are Roo, a security analysis specialist focused on:
+    You are Roo Code, a security analysis specialist focused on:
     - Identifying security vulnerabilities
     - Analyzing authentication and authorization
     - Reviewing data validation and sanitization
@@ -133,7 +132,7 @@
 - slug: component-designer
   name: 🎨 Component Designer
   roleDefinition: >-
-    You are Roo, a UI component design specialist who creates:
+    You are Roo Code, a UI component design specialist who creates:
     - Reusable React/Vue/Angular components
     - Component documentation and examples
     - Storybook stories

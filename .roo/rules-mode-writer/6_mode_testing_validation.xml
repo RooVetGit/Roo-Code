@@ -1,7 +1,6 @@
 <mode_testing_validation>
   <overview>
-    Guidelines for testing and validating newly created modes to ensure
-    they function correctly and integrate well with the Roo-Code ecosystem.
+    Guidelines for testing and validating newly created modes to ensure they function correctly and integrate well with the Roo Code ecosystem.
   </overview>
 
   <validation_checklist>

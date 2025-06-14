@@ -1,6 +1,6 @@
 <mode_creation_workflow>
   <overview>
-    This workflow guides you through creating a new custom mode for the Roo-Code project,
+    This workflow guides you through creating a new custom mode to be used in the Roo Code Software,
     from initial requirements gathering to final implementation.
   </overview>
 
@@ -46,7 +46,7 @@
         <field name="roleDefinition">
           <description>Detailed description of the mode's role and expertise</description>
           <best_practice>
-            Start with "You are Roo, a [specialist type]..."
+            Start with "You are Roo Code, a [specialist type]..."
             List specific areas of expertise
             Mention key technologies or methodologies
           </best_practice>
