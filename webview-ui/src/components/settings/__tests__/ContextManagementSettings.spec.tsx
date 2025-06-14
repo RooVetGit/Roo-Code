@@ -449,11 +449,14 @@ describe("ContextManagementSettings", () => {
 			}
 			render(<ContextManagementSettings {...propsWithoutAutoCondense} />)
 
-			// When auto condense is false, threshold slider should not be visible
+			// When auto condense is false, all condensing-related UI should not be visible
 			expect(screen.queryByTestId("condense-threshold-slider")).not.toBeInTheDocument()
-			// But API config and custom prompt are always visible
-			expect(screen.getByText("settings:contextManagement.condensingApiConfiguration.label")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.customCondensingPrompt.label")).toBeInTheDocument()
+			expect(
+				screen.queryByText("settings:contextManagement.condensingApiConfiguration.label"),
+			).not.toBeInTheDocument()
+			expect(
+				screen.queryByText("settings:contextManagement.customCondensingPrompt.label"),
+			).not.toBeInTheDocument()
 		})
 
 		it("renders max read file controls with default value when maxReadFileLine is undefined", () => {
