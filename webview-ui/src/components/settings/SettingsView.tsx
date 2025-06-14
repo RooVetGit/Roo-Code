@@ -647,7 +647,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							maxReadFileLine={maxReadFileLine}
 							maxConcurrentFileReads={maxConcurrentFileReads}
 							profileThresholds={profileThresholds}
-							currentProfileId={currentApiConfigName}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}
