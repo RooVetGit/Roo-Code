@@ -10,6 +10,7 @@ import { getCommitInfo, getWorkingState } from "../../utils/git"
 import { getWorkspacePath } from "../../utils/path"
 
 import { openFile } from "../../integrations/misc/open-file"
+import { isInAutomatedWorkflowFromVisibleProvider } from "../../utils/workflow-detection"
 import { extractTextFromFile } from "../../integrations/misc/extract-text"
 import { diagnosticsToProblemsString } from "../../integrations/diagnostics"
 
@@ -36,7 +37,10 @@ export async function openMention(mention?: string): Promise<void> {
 		if (mention.endsWith("/")) {
 			vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(absPath))
 		} else {
-			openFile(absPath)
+			// Check if we're in an automated workflow to preserve chat focus during AI processing
+			const shouldPreserveFocus = isInAutomatedWorkflowFromVisibleProvider()
+
+			openFile(absPath, { preserveFocus: shouldPreserveFocus })
 		}
 	} else if (mention === "problems") {
 		vscode.commands.executeCommand("workbench.actions.view.problems")
