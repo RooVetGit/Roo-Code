@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "Inclure les fichiers en dehors de l'espace de travail",
 				"description": "Permettre à Roo de créer et modifier des fichiers en dehors de l'espace de travail actuel sans nécessiter d'approbation."
+			},
+			"protected": {
+				"label": "Inclure les fichiers protégés",
+				"description": "Permettre à Roo de créer et modifier des fichiers protégés (comme .rooignore et les fichiers de configuration .roo/) sans nécessiter d'approbation."
 			}
 		},
 		"browser": {
@@ -491,11 +495,19 @@
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Activer la lecture simultanée de fichiers",
-			"description": "Lorsqu'activé, Roo peut lire plusieurs fichiers dans une seule requête (jusqu'à 15 fichiers). Lorsque désactivé, Roo doit lire les fichiers un par un. La désactivation peut aider lors du travail avec des modèles moins performants ou lorsque vous souhaitez plus de contrôle sur l'accès aux fichiers."
+			"description": "Lorsqu'activé, Roo peut lire plusieurs fichiers dans une seule requête. Lorsque désactivé, Roo doit lire les fichiers un par un. La désactivation peut aider lors du travail avec des modèles moins performants ou lorsque tu souhaites plus de contrôle sur l'accès aux fichiers."
+		},
+		"MARKETPLACE": {
+			"name": "Activer le Marketplace",
+			"description": "Lorsque cette option est activée, tu peux installer des MCP et des modes personnalisés depuis le Marketplace."
 		},
 		"DISABLE_COMPLETION_COMMAND": {
 			"name": "Désactiver l'exécution des commandes dans attempt_completion",
 			"description": "Lorsque cette option est activée, l'outil attempt_completion n'exécutera pas de commandes. Il s'agit d'une fonctionnalité expérimentale visant à préparer la dépréciation de l'exécution des commandes lors de la finalisation des tâches."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Activer les éditions de fichiers concurrentes",
+			"description": "Lorsque cette option est activée, Roo peut éditer plusieurs fichiers en une seule requête. Lorsqu'elle est désactivée, Roo doit éditer les fichiers un par un. Désactiver cette option peut aider lorsque tu travailles avec des modèles moins capables ou lorsque tu veux plus de contrôle sur les modifications de fichiers."
 		}
 	},
 	"promptCaching": {

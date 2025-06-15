@@ -1,4 +1,3 @@
-import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import fs from "fs/promises"
 import pWaitFor from "p-wait-for"
@@ -18,7 +17,8 @@ import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
-import { openFile, openImage } from "../../integrations/misc/open-file"
+import { openFile } from "../../integrations/misc/open-file"
+import { openImage, saveImage } from "../../integrations/misc/image-handler"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
@@ -43,7 +43,13 @@ import { getCommand } from "../../utils/commands"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
-export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
+import { MarketplaceManager, MarketplaceItemType } from "../../services/marketplace"
+
+export const webviewMessageHandler = async (
+	provider: ClineProvider,
+	message: WebviewMessage,
+	marketplaceManager?: MarketplaceManager,
+) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
@@ -147,6 +153,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "alwaysAllowWriteOutsideWorkspace":
 			await updateGlobalState("alwaysAllowWriteOutsideWorkspace", message.bool ?? undefined)
+			await provider.postStateToWebview()
+			break
+		case "alwaysAllowWriteProtected":
+			await updateGlobalState("alwaysAllowWriteProtected", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowExecute":
@@ -418,13 +428,21 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 			break
 		case "openImage":
-			openImage(message.text!)
+			openImage(message.text!, { values: message.values })
+			break
+		case "saveImage":
+			saveImage(message.dataUri!)
 			break
 		case "openFile":
 			openFile(message.text!, message.values as { create?: boolean; content?: string; line?: number })
 			break
 		case "openMention":
 			openMention(message.text)
+			break
+		case "openExternal":
+			if (message.url) {
+				vscode.env.openExternal(vscode.Uri.parse(message.url))
+			}
 			break
 		case "checkpointDiff":
 			const result = checkoutDiffPayloadSchema.safeParse(message.payload)
@@ -500,7 +518,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				const exists = await fileExistsAtPath(mcpPath)
 
 				if (!exists) {
-					await safeWriteJson(mcpPath, { mcpServers: {} })
+					await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
 				}
 
 				await openFile(mcpPath)
@@ -519,6 +537,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				provider.log(`Attempting to delete MCP server: ${message.serverName}`)
 				await provider.getMcpHub()?.deleteServer(message.serverName, message.source as "global" | "project")
 				provider.log(`Successfully deleted MCP server: ${message.serverName}`)
+
+				// Refresh the webview state
+				await provider.postStateToWebview()
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error)
 				provider.log(`Failed to delete MCP server: ${errorMessage}`)
@@ -1459,6 +1480,117 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						error: error instanceof Error ? error.message : String(error),
 					},
 				})
+			}
+			break
+		}
+		case "filterMarketplaceItems": {
+			// Check if marketplace is enabled before making API calls
+			const { experiments } = await provider.getState()
+			if (!experiments.marketplace) {
+				console.log("Marketplace: Feature disabled, skipping API call")
+				break
+			}
+
+			if (marketplaceManager && message.filters) {
+				try {
+					await marketplaceManager.updateWithFilteredItems({
+						type: message.filters.type as MarketplaceItemType | undefined,
+						search: message.filters.search,
+						tags: message.filters.tags,
+					})
+					await provider.postStateToWebview()
+				} catch (error) {
+					console.error("Marketplace: Error filtering items:", error)
+					vscode.window.showErrorMessage("Failed to filter marketplace items")
+				}
+			}
+			break
+		}
+
+		case "installMarketplaceItem": {
+			// Check if marketplace is enabled before installing
+			const { experiments } = await provider.getState()
+			if (!experiments.marketplace) {
+				console.log("Marketplace: Feature disabled, skipping installation")
+				break
+			}
+
+			if (marketplaceManager && message.mpItem && message.mpInstallOptions) {
+				try {
+					const configFilePath = await marketplaceManager.installMarketplaceItem(
+						message.mpItem,
+						message.mpInstallOptions,
+					)
+					await provider.postStateToWebview()
+					console.log(`Marketplace item installed and config file opened: ${configFilePath}`)
+					// Send success message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceInstallResult",
+						success: true,
+						slug: message.mpItem.id,
+					})
+				} catch (error) {
+					console.error(`Error installing marketplace item: ${error}`)
+					// Send error message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceInstallResult",
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+						slug: message.mpItem.id,
+					})
+				}
+			}
+			break
+		}
+
+		case "removeInstalledMarketplaceItem": {
+			// Check if marketplace is enabled before removing
+			const { experiments } = await provider.getState()
+			if (!experiments.marketplace) {
+				console.log("Marketplace: Feature disabled, skipping removal")
+				break
+			}
+
+			if (marketplaceManager && message.mpItem && message.mpInstallOptions) {
+				try {
+					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
+					await provider.postStateToWebview()
+				} catch (error) {
+					console.error(`Error removing marketplace item: ${error}`)
+				}
+			}
+			break
+		}
+
+		case "installMarketplaceItemWithParameters": {
+			// Check if marketplace is enabled before installing with parameters
+			const { experiments } = await provider.getState()
+			if (!experiments.marketplace) {
+				console.log("Marketplace: Feature disabled, skipping installation with parameters")
+				break
+			}
+
+			if (marketplaceManager && message.payload && "item" in message.payload && "parameters" in message.payload) {
+				try {
+					const configFilePath = await marketplaceManager.installMarketplaceItem(message.payload.item, {
+						parameters: message.payload.parameters,
+					})
+					await provider.postStateToWebview()
+					console.log(`Marketplace item with parameters installed and config file opened: ${configFilePath}`)
+				} catch (error) {
+					console.error(`Error installing marketplace item with parameters: ${error}`)
+					vscode.window.showErrorMessage(
+						`Failed to install marketplace item: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			}
+			break
+		}
+
+		case "switchTab": {
+			if (message.tab) {
+				// Send a message to the webview to switch to the specified tab
+				await provider.postMessageToWebview({ type: "action", action: "switchTab", tab: message.tab })
 			}
 			break
 		}

@@ -1,4 +1,3 @@
-import { safeWriteJson } from "../../utils/safeWriteJson"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport, getDefaultEnvironment } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
@@ -32,7 +31,7 @@ import {
 } from "../../shared/mcp"
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
-import { injectEnv } from "../../utils/config"
+import { injectVariables } from "../../utils/config"
 
 export type McpConnection = {
 	server: McpServer
@@ -580,8 +579,11 @@ export class McpHub {
 
 			let transport: StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
 
-			// Inject environment variables to the config
-			const configInjected = (await injectEnv(config)) as typeof config
+			// Inject variables to the config (environment, magic variables,...)
+			const configInjected = (await injectVariables(config, {
+				env: process.env,
+				workspaceFolder: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "",
+			})) as typeof config
 
 			if (configInjected.type === "stdio") {
 				transport = new StdioClientTransport({
@@ -1197,21 +1199,7 @@ export class McpHub {
 		})
 
 		// Send sorted servers to webview
-		// Try to get the currently visible ClineProvider instance first
-		let targetProvider: ClineProvider | undefined = undefined
-		try {
-			// ClineProvider.getInstance() can focus the view if not visible,
-			// and returns a Promise<ClineProvider | undefined>
-			const instancePromise = ClineProvider.getInstance()
-			if (instancePromise) {
-				targetProvider = await instancePromise
-			}
-		} catch (error) {}
-
-		// Fallback to the providerRef if getInstance didn't yield a provider
-		if (!targetProvider) {
-			targetProvider = this.providerRef.deref()
-		}
+		const targetProvider: ClineProvider | undefined = this.providerRef.deref()
 
 		if (targetProvider) {
 			const serversToSend = sortedConnections.map((connection) => connection.server)
@@ -1341,7 +1329,7 @@ export class McpHub {
 			mcpServers: config.mcpServers,
 		}
 
-		await safeWriteJson(configPath, updatedConfig)
+		await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
 	}
 
 	public async updateServerTimeout(
@@ -1419,7 +1407,7 @@ export class McpHub {
 					mcpServers: config.mcpServers,
 				}
 
-				await safeWriteJson(configPath, updatedConfig)
+				await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
 
 				// Update server connections with the correct source
 				await this.updateServerConnections(config.mcpServers, serverSource)
@@ -1561,7 +1549,7 @@ export class McpHub {
 			}
 
 			// Write updated config back to file
-			await safeWriteJson(normalizedPath, config)
+			await fs.writeFile(normalizedPath, JSON.stringify(config, null, 2))
 
 			// Update the tools list to reflect the change
 			if (connection) {
