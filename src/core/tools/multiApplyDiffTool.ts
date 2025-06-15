@@ -11,7 +11,6 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
-import { parseXml } from "../../utils/xml"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { applyDiffToolLegacy } from "./applyDiffTool"
 
@@ -73,7 +72,7 @@ export async function applyDiffTool(
 	}
 
 	// Otherwise, continue with new multi-file implementation
-	const argsXmlTag: string | undefined = block.params.args
+	const argsParam: any = block.params.args
 	const legacyPath: string | undefined = block.params.path
 	const legacyDiffContent: string | undefined = block.params.diff
 	const legacyStartLineStr: string | undefined = block.params.start_line
@@ -85,13 +84,13 @@ export async function applyDiffTool(
 	// Handle partial message first
 	if (block.partial) {
 		let filePath = ""
-		if (argsXmlTag) {
-			const match = argsXmlTag.match(/<file>.*?<path>([^<]+)<\/path>/s)
-			if (match) {
-				filePath = match[1]
+		if (argsParam && argsParam.file) {
+			const files = Array.isArray(argsParam.file) ? argsParam.file : [argsParam.file]
+			if (files.length > 0 && files[0].path) {
+				filePath = files[0].path
 			}
 		} else if (legacyPath) {
-			// Use legacy path if argsXmlTag is not present for partial messages
+			// Use legacy path if argsParam is not present for partial messages
 			filePath = legacyPath
 		}
 
@@ -104,13 +103,22 @@ export async function applyDiffTool(
 		return
 	}
 
-	if (argsXmlTag) {
-		// Parse file entries from XML (new way)
+	// Handle pre-parsed object only
+	if (argsParam) {
+		// Parse file entries from pre-parsed data
 		try {
-			const parsed = parseXml(argsXmlTag, ["file.diff.content"]) as ParsedXmlResult
-			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
+			// If argsParam is already the parsed structure with 'file' property
+			const files = argsParam.file
+				? Array.isArray(argsParam.file)
+					? argsParam.file
+					: [argsParam.file].filter(Boolean)
+				: // Otherwise treat argsParam itself as the file array/object
+					Array.isArray(argsParam)
+					? argsParam
+					: [argsParam].filter(Boolean)
 
 			for (const file of files) {
+				if (!file || typeof file !== "object") continue // Skip invalid entries
 				if (!file.path || !file.diff) continue
 
 				const filePath = file.path
@@ -142,23 +150,7 @@ export async function applyDiffTool(
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
-			const detailedError = `Failed to parse apply_diff XML. This usually means:
-1. The XML structure is malformed or incomplete
-2. Missing required <file>, <path>, or <diff> tags
-3. Invalid characters or encoding in the XML
-
-Expected structure:
-<args>
-  <file>
-    <path>relative/path/to/file.ext</path>
-    <diff>
-      <content>diff content here</content>
-      <start_line>optional line number</start_line>
-    </diff>
-  </file>
-</args>
-
-Original error: ${errorMessage}`
+			const detailedError = `Failed to parse apply_diff args: ${errorMessage}`
 			throw new Error(detailedError)
 		}
 	} else if (legacyPath && typeof legacyDiffContent === "string") {

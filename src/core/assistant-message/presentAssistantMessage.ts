@@ -162,23 +162,45 @@ export async function presentAssistantMessage(cline: Task) {
 						return `[${block.name} for '${block.params.path}']`
 					case "apply_diff":
 						// Handle both legacy format and new multi-file format
-						if (block.params.path) {
-							return `[${block.name} for '${block.params.path}']`
-						} else if (block.params.args) {
-							// Try to extract first file path from args for display
-							const match = block.params.args.match(/<file>.*?<path>([^<]+)<\/path>/s)
-							if (match) {
-								const firstPath = match[1]
-								// Check if there are multiple files
-								const fileCount = (block.params.args.match(/<file>/g) || []).length
-								if (fileCount > 1) {
-									return `[${block.name} for '${firstPath}' and ${fileCount - 1} more file${fileCount > 2 ? "s" : ""}]`
-								} else {
-									return `[${block.name} for '${firstPath}']`
+						if (block.params.args) {
+							try {
+								let files: any[]
+
+								// If args is already the parsed structure with 'file' property
+								files = block.params.args.file
+									? Array.isArray(block.params.args.file)
+										? block.params.args.file
+										: [block.params.args.file].filter(Boolean)
+									: // Otherwise treat args itself as the file array/object
+										Array.isArray(block.params.args)
+										? block.params.args
+										: [block.params.args].filter(Boolean)
+
+								const paths = files.map((f: any) => f?.path).filter(Boolean) as string[]
+
+								if (paths.length === 0) {
+									return `[${block.name} with no valid paths]`
 								}
+								if (paths.length === 1) {
+									return `[${block.name} for '${paths[0]}']`
+								}
+								if (paths.length <= 3) {
+									const pathList = paths.map((p) => `'${p}'`).join(", ")
+									return `[${block.name} for ${pathList}]`
+								}
+								return `[${block.name} for ${paths.length} files]`
+							} catch (error) {
+								console.error("Failed to parse apply_diff args for description:", error)
+								return `[${block.name} with unparseable args]`
 							}
 						}
-						return `[${block.name}]`
+
+						if (block.params.path) {
+							// Fallback for legacy single-path usage
+							return `[${block.name} for '${block.params.path}']`
+						}
+
+						return `[${block.name} with missing path/args]`
 					case "search_files":
 						return `[${block.name} for '${block.params.regex}'${
 							block.params.file_pattern ? ` in '${block.params.file_pattern}'` : ""

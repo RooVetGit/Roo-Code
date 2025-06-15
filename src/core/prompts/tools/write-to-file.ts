@@ -10,16 +10,16 @@ Parameters:
 Usage:
 <write_to_file>
 <path>File path here</path>
-<content>
+<content><![CDATA[
 Your file content here
-</content>
+]]></content>
 <line_count>total number of lines in the file, including empty lines</line_count>
 </write_to_file>
 
 Example: Requesting to write to frontend-config.json
 <write_to_file>
 <path>frontend-config.json</path>
-<content>
+<content><![CDATA[
 {
   "apiEndpoint": "https://api.example.com",
   "theme": {
@@ -34,7 +34,7 @@ Example: Requesting to write to frontend-config.json
   },
   "version": "1.0.0"
 }
-</content>
+]]></content>
 <line_count>14</line_count>
 </write_to_file>`
 }

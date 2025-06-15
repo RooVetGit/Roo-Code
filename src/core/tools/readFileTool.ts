@@ -13,14 +13,23 @@ import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
-import { parseXml } from "../../utils/xml"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
 	if (blockParams.args) {
 		try {
-			const parsed = parseXml(blockParams.args) as any
-			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
+			let files: any[]
+
+			// If args is already the parsed structure with 'file' property
+			files = blockParams.args.file
+				? Array.isArray(blockParams.args.file)
+					? blockParams.args.file
+					: [blockParams.args.file].filter(Boolean)
+				: // Otherwise treat args itself as the file array/object
+					Array.isArray(blockParams.args)
+					? blockParams.args
+					: [blockParams.args].filter(Boolean)
+
 			const paths = files.map((f: any) => f?.path).filter(Boolean) as string[]
 
 			if (paths.length === 0) {
@@ -35,7 +44,7 @@ export function getReadFileToolDescription(blockName: string, blockParams: any):
 				return `[${blockName} for ${paths.length} files]`
 			}
 		} catch (error) {
-			console.error("Failed to parse read_file args XML for description:", error)
+			console.error("Failed to parse read_file args for description:", error)
 			return `[${blockName} with unparseable args]`
 		}
 	} else if (blockParams.path) {
@@ -78,7 +87,7 @@ export async function readFileTool(
 	pushToolResult: PushToolResult,
 	_removeClosingTag: RemoveClosingTag,
 ) {
-	const argsXmlTag: string | undefined = block.params.args
+	const argsParam: any = block.params.args
 	const legacyPath: string | undefined = block.params.path
 	const legacyStartLineStr: string | undefined = block.params.start_line
 	const legacyEndLineStr: string | undefined = block.params.end_line
@@ -87,9 +96,11 @@ export async function readFileTool(
 	if (block.partial) {
 		let filePath = ""
 		// Prioritize args for partial, then legacy path
-		if (argsXmlTag) {
-			const match = argsXmlTag.match(/<file>.*?<path>([^<]+)<\/path>/s)
-			if (match) filePath = match[1]
+		if (argsParam && argsParam.file) {
+			const files = Array.isArray(argsParam.file) ? argsParam.file : [argsParam.file]
+			if (files.length > 0 && files[0].path) {
+				filePath = files[0].path
+			}
 		}
 		if (!filePath && legacyPath) {
 			// If args didn't yield a path, try legacy
@@ -112,13 +123,22 @@ export async function readFileTool(
 
 	const fileEntries: FileEntry[] = []
 
-	if (argsXmlTag) {
-		// Parse file entries from XML (new multi-file format)
+	// Handle pre-parsed object only
+	if (argsParam) {
+		// Parse file entries from pre-parsed data
 		try {
-			const parsed = parseXml(argsXmlTag) as any
-			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
+			// If argsParam is already the parsed structure with 'file' property
+			const files = argsParam.file
+				? Array.isArray(argsParam.file)
+					? argsParam.file
+					: [argsParam.file].filter(Boolean)
+				: // Otherwise treat argsParam itself as the file array/object
+					Array.isArray(argsParam)
+					? argsParam
+					: [argsParam].filter(Boolean)
 
 			for (const file of files) {
+				if (!file || typeof file !== "object") continue // Skip invalid entries
 				if (!file.path) continue // Skip if no path in a file entry
 
 				const fileEntry: FileEntry = {
@@ -141,7 +161,7 @@ export async function readFileTool(
 				fileEntries.push(fileEntry)
 			}
 		} catch (error) {
-			const errorMessage = `Failed to parse read_file XML args: ${error instanceof Error ? error.message : String(error)}`
+			const errorMessage = `Failed to parse read_file args: ${error instanceof Error ? error.message : String(error)}`
 			await handleError("parsing read_file args", new Error(errorMessage))
 			pushToolResult(`<files><error>${errorMessage}</error></files>`)
 			return
