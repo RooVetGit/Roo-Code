@@ -118,6 +118,12 @@ export interface ExtensionStateContextType extends ExtensionState {
 	autoCondenseContextPercent: number
 	setAutoCondenseContextPercent: (value: number) => void
 	routerModels?: RouterModels
+	includeDiagnostics: boolean
+	setIncludeDiagnostics: (value: boolean) => void
+	maxDiagnosticsCount: number
+	setMaxDiagnosticsCount: (value: number) => void
+	diagnosticsFilter: string[]
+	setDiagnosticsFilter: (value: string[]) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -206,6 +212,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderModelId: "",
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
+		includeDiagnostics: false,
+		maxDiagnosticsCount: 5,
+		diagnosticsFilter: ["error", "warning"],
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -403,6 +412,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCondensingApiConfigId: (value) => setState((prevState) => ({ ...prevState, condensingApiConfigId: value })),
 		setCustomCondensingPrompt: (value) =>
 			setState((prevState) => ({ ...prevState, customCondensingPrompt: value })),
+		setIncludeDiagnostics: (value) => setState((prevState) => ({ ...prevState, includeDiagnostics: value })),
+		setMaxDiagnosticsCount: (value) => setState((prevState) => ({ ...prevState, maxDiagnosticsCount: value })),
+		setDiagnosticsFilter: (value) => setState((prevState) => ({ ...prevState, diagnosticsFilter: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

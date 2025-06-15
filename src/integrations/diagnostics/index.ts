@@ -74,17 +74,62 @@ export async function diagnosticsToProblemsString(
 	diagnostics: [vscode.Uri, vscode.Diagnostic[]][],
 	severities: vscode.DiagnosticSeverity[],
 	cwd: string,
+	options?: {
+		includeDiagnostics?: boolean
+		maxDiagnosticsCount?: number
+		diagnosticsFilter?: string[]
+	},
 ): Promise<string> {
+	// Use provided options or fall back to VSCode configuration
+	const includeDiagnostics =
+		options?.includeDiagnostics ??
+		vscode.workspace.getConfiguration("roo-cline").get<boolean>("includeDiagnostics", false)
+
+	if (!includeDiagnostics) {
+		return ""
+	}
+
+	const maxDiagnosticsCount =
+		options?.maxDiagnosticsCount ??
+		vscode.workspace.getConfiguration("roo-cline").get<number>("maxDiagnosticsCount", 5)
+	const diagnosticsFilter =
+		options?.diagnosticsFilter ??
+		vscode.workspace.getConfiguration("roo-cline").get<string[]>("diagnosticsFilter", ["error", "warning"])
+
 	const documents = new Map<vscode.Uri, vscode.TextDocument>()
 	const fileStats = new Map<vscode.Uri, vscode.FileStat>()
 	let result = ""
+	let totalDiagnosticsCount = 0
+
 	for (const [uri, fileDiagnostics] of diagnostics) {
 		const problems = fileDiagnostics
 			.filter((d) => severities.includes(d.severity))
+			.filter((d) => {
+				// Apply diagnostics filter
+				if (diagnosticsFilter.length === 0) return true
+
+				const source = d.source || ""
+				const code = typeof d.code === "object" ? d.code.value : d.code
+				const filterKey = source ? `${source} ${code || ""}`.trim() : `${code || ""}`.trim()
+
+				// Check if this diagnostic should be filtered out
+				return !diagnosticsFilter.some((filter) => {
+					// Support partial matching
+					return filterKey.includes(filter) || d.message.includes(filter)
+				})
+			})
 			.sort((a, b) => a.range.start.line - b.range.start.line)
+
 		if (problems.length > 0) {
 			result += `\n\n${path.relative(cwd, uri.fsPath).toPosix()}`
+
 			for (const diagnostic of problems) {
+				// Check if we've reached the max count
+				if (maxDiagnosticsCount > 0 && totalDiagnosticsCount >= maxDiagnosticsCount) {
+					result += `\n... (${diagnostics.reduce((sum, [, diags]) => sum + diags.filter((d) => severities.includes(d.severity)).length, 0) - totalDiagnosticsCount} more diagnostics omitted)`
+					return result.trim()
+				}
+
 				let label: string
 				switch (diagnostic.severity) {
 					case vscode.DiagnosticSeverity.Error:
@@ -121,6 +166,8 @@ export async function diagnosticsToProblemsString(
 				} catch {
 					result += `\n- [${source}${label}] ${line} | (unavailable) : ${diagnostic.message}`
 				}
+
+				totalDiagnosticsCount++
 			}
 		}
 	}

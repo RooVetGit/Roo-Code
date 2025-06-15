@@ -995,6 +995,18 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
 			await provider.postStateToWebview()
 			break
+		case "includeDiagnostics":
+			await updateGlobalState("includeDiagnostics", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "maxDiagnosticsCount":
+			await updateGlobalState("maxDiagnosticsCount", message.value ?? 5)
+			await provider.postStateToWebview()
+			break
+		case "diagnosticsFilter":
+			await updateGlobalState("diagnosticsFilter", (message.values as string[]) ?? ["error", "warning"])
+			await provider.postStateToWebview()
+			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler
 			await updateGlobalState("historyPreviewCollapsed", message.bool ?? false)
 			// No need to call postStateToWebview here as the UI already updated optimistically

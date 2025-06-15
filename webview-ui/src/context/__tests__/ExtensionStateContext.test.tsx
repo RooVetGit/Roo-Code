@@ -209,6 +209,9 @@ describe("mergeExtensionState", () => {
 			autoCondenseContextPercent: 100,
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
+			includeDiagnostics: false,
+			maxDiagnosticsCount: 5,
+			diagnosticsFilter: ["error", "warning"],
 		}
 
 		const prevState: ExtensionState = {

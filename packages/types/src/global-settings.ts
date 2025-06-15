@@ -70,6 +70,10 @@ export const globalSettingsSchema = z.object({
 	showRooIgnoredFiles: z.boolean().optional(),
 	maxReadFileLine: z.number().optional(),
 
+	includeDiagnostics: z.boolean().optional(),
+	maxDiagnosticsCount: z.number().optional(),
+	diagnosticsFilter: z.array(z.string()).optional(),
+
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
 	terminalShellIntegrationDisabled: z.boolean().optional(),

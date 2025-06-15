@@ -177,6 +177,9 @@ export type ExtensionState = Pick<
 	// | "showRooIgnoredFiles" // Optional in GlobalSettings, required here.
 	// | "maxReadFileLine" // Optional in GlobalSettings, required here.
 	| "maxConcurrentFileReads" // Optional in GlobalSettings, required here.
+	| "includeDiagnostics"
+	| "maxDiagnosticsCount"
+	| "diagnosticsFilter"
 	| "terminalOutputLineLimit"
 	| "terminalShellIntegrationTimeout"
 	| "terminalShellIntegrationDisabled"
@@ -222,6 +225,10 @@ export type ExtensionState = Pick<
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
+
+	includeDiagnostics: boolean // Whether to include diagnostics in context
+	maxDiagnosticsCount: number // Maximum number of diagnostics to include
+	diagnosticsFilter: string[] // Filter for diagnostic severities
 
 	experiments: Experiments // Map of experiment IDs to their enabled state
 

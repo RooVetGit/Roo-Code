@@ -344,6 +344,25 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%settings.rooCodeCloudEnabled.description%"
+				},
+				"roo-cline.includeDiagnostics": {
+					"type": "boolean",
+					"default": true,
+					"description": "%settings.includeDiagnostics.description%"
+				},
+				"roo-cline.maxDiagnosticsCount": {
+					"type": "number",
+					"default": 50,
+					"minimum": 0,
+					"description": "%settings.maxDiagnosticsCount.description%"
+				},
+				"roo-cline.diagnosticsFilter": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "%settings.diagnosticsFilter.description%"
 				}
 			}
 		}
