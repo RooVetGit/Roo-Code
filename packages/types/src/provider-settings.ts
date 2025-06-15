@@ -56,6 +56,7 @@ const baseProviderSettingsSchema = z.object({
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
+	modelSeed: z.number().optional(),
 	rateLimitSeconds: z.number().optional(),
 
 	// Model reasoning.

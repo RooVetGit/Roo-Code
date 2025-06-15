@@ -116,6 +116,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			model: modelId,
 			...(maxTokens && maxTokens > 0 && { max_tokens: maxTokens }),
 			temperature,
+			seed: this.options.modelSeed,
 			top_p: topP,
 			messages: openAiMessages,
 			stream: true,
@@ -219,6 +220,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			model: modelId,
 			max_tokens: maxTokens,
 			temperature,
+			seed: this.options.modelSeed,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
 			// Only include provider if openRouterSpecificProvider is not "[default]".
