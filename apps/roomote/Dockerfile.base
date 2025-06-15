@@ -1,0 +1,31 @@
+# Shared base image for roomote controller and worker
+
+FROM node:20-slim AS base
+
+# Install pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# Install common system packages
+RUN apt update && \
+  apt install -y \
+  curl \
+  git \
+  vim \
+  jq \
+  netcat-openbsd \
+  apt-transport-https \
+  ca-certificates \
+  gnupg \
+  lsb-release \
+  wget \
+  gpg \
+  gh \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Docker cli
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+  && apt update && apt install -y docker-ce-cli \
+  && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,120 @@
+services:
+    base:
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.base
+        image: roomote-base
+
+    db:
+        container_name: roomote-db
+        image: postgres:17.5
+        ports:
+            - "5433:5432"
+        volumes:
+            - ./.docker/postgres:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=cloud_agents
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d cloud_agents"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+    redis:
+        container_name: roomote-redis
+        image: redis:7-alpine
+        ports:
+            - "6380:6379"
+        volumes:
+            - ./.docker/redis:/data
+        command: redis-server --appendonly yes
+
+    dashboard:
+        container_name: roomote-dashboard
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.dashboard
+        ports:
+            - "3002:3002"
+        environment:
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+        depends_on:
+            base:
+                condition: service_completed_successfully
+            redis:
+                condition: service_started
+
+    api:
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.api
+        ports:
+            - "3001:3001"
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        depends_on:
+            base:
+                condition: service_completed_successfully
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+
+    worker:
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.worker
+            args:
+                - GH_TOKEN=${GH_TOKEN}
+        env_file:
+            - .env
+        environment:
+            - HOST_EXECUTION_METHOD=docker
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /tmp/roomote:/var/log/roomote
+        stdin_open: true
+        tty: true
+        depends_on:
+            base:
+                condition: service_completed_successfully
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+
+    controller:
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.controller
+        env_file:
+            - .env
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+            - HOST_EXECUTION_METHOD=docker
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /tmp/roomote:/var/log/roomote
+        depends_on:
+            base:
+                condition: service_completed_successfully
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        restart: unless-stopped
+
+networks:
+    default:
+        name: roomote_default
+        driver: bridge

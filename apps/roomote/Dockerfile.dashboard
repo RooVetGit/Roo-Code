@@ -1,0 +1,25 @@
+# docker compose build dashboard
+
+FROM roomote-base AS base
+
+WORKDIR /roo
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/config-eslint/package.json ./packages/config-eslint/
+COPY packages/config-typescript/package.json ./packages/config-typescript/
+COPY packages/types/package.json ./packages/types/
+COPY packages/ipc/package.json ./packages/ipc/
+COPY apps/roomote/package.json ./apps/roomote/
+
+COPY scripts/bootstrap.mjs ./scripts/
+RUN pnpm install --filter @roo-code/roomote
+
+COPY apps/roomote ./apps/roomote/
+COPY packages/config-eslint ./packages/config-eslint/
+COPY packages/config-typescript ./packages/config-typescript/
+COPY packages/types ./packages/types/
+COPY packages/ipc ./packages/ipc/
+
+WORKDIR /roo/apps/roomote
+EXPOSE 3002
+CMD ["pnpm", "dashboard"]

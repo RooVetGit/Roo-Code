@@ -77,6 +77,7 @@ src/node_modules
 !pnpm-workspace.yaml
 !scripts/bootstrap.mjs
 !apps/web-evals/
+!apps/roomote/
 !src/
 !webview-ui/
 !packages/evals/.docker/entrypoints/runner.sh
