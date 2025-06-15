@@ -7,6 +7,7 @@ import Stringer from "stream-json/Stringer"
 
 /**
  * Safely writes JSON data to a file.
+ * - Creates parent directories if they don't exist
  * - Uses 'proper-lockfile' for inter-process advisory locking to prevent concurrent writes to the same path.
  * - Writes to a temporary file first.
  * - If the target file exists, it's backed up before being replaced.
@@ -21,11 +22,27 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 	const absoluteFilePath = path.resolve(filePath)
 	let releaseLock = async () => {} // Initialized to a no-op
 
+	// For directory creation
+	const dirPath = path.dirname(absoluteFilePath)
+
+	// Ensure directory structure exists with improved reliability
+	try {
+		// Create directory with recursive option
+		await fs.mkdir(dirPath, { recursive: true })
+
+		// Verify directory exists after creation attempt
+		await fs.access(dirPath)
+	} catch (dirError: any) {
+		console.error(`Failed to create or access directory for ${absoluteFilePath}:`, dirError)
+		throw dirError
+	}
+
 	// Acquire the lock before any file operations
 	try {
 		releaseLock = await lockfile.lock(absoluteFilePath, {
 			stale: 31000, // Stale after 31 seconds
 			update: 10000, // Update mtime every 10 seconds to prevent staleness if operation is long
+			realpath: false, // the file may not exist yet, which is acceptable
 			retries: {
 				// Configuration for retrying lock acquisition
 				retries: 5, // Number of retries after the initial attempt

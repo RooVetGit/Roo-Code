@@ -3,6 +3,7 @@ const originalFsPromisesRename = actualFsPromises.rename
 const originalFsPromisesUnlink = actualFsPromises.unlink
 const originalFsPromisesWriteFile = actualFsPromises.writeFile
 const _originalFsPromisesAccess = actualFsPromises.access
+const originalFsPromisesMkdir = actualFsPromises.mkdir
 
 jest.mock("fs/promises", () => {
 	const actual = jest.requireActual("fs/promises")
@@ -21,6 +22,7 @@ jest.mock("fs/promises", () => {
 	mockedFs.mkdtemp = jest.fn(actual.mkdtemp)
 	mockedFs.rm = jest.fn(actual.rm)
 	mockedFs.readdir = jest.fn(actual.readdir)
+	mockedFs.mkdir = jest.fn(actual.mkdir)
 	// fs.stat and fs.lstat will be available via { ...actual }
 
 	return mockedFs
@@ -44,6 +46,30 @@ import { safeWriteJson } from "../safeWriteJson"
 import { Writable } from "stream" // For typing mock stream
 
 describe("safeWriteJson", () => {
+	let originalConsoleError: typeof console.error
+
+	beforeAll(() => {
+		// Store original console.error
+		originalConsoleError = console.error
+
+		// Replace with filtered version that suppresses output from the module
+		console.error = function (...args) {
+			// Check if call originated from safeWriteJson.ts
+			if (new Error().stack?.includes("safeWriteJson.ts")) {
+				// Suppress output but allow spy recording
+				return
+			}
+
+			// Pass through all other calls (from tests)
+			return originalConsoleError.apply(console, args)
+		}
+	})
+
+	afterAll(() => {
+		// Restore original behavior
+		console.error = originalConsoleError
+	})
+
 	jest.useRealTimers() // Use real timers for this test suite
 
 	let tempTestDir: string = ""
@@ -77,6 +103,7 @@ describe("safeWriteJson", () => {
 		;(fs.mkdtemp as jest.Mock).mockImplementation(actualFsPromises.mkdtemp)
 		;(fs.rm as jest.Mock).mockImplementation(actualFsPromises.rm)
 		;(fs.readdir as jest.Mock).mockImplementation(actualFsPromises.readdir)
+		;(fs.mkdir as jest.Mock).mockImplementation(actualFsPromises.mkdir)
 		// Ensure all mocks are reset after each test
 		jest.restoreAllMocks()
 	})
@@ -199,11 +226,9 @@ describe("safeWriteJson", () => {
 			const oldPathStr = oldPath.toString()
 			const newPathStr = newPath.toString()
 			renameCallCountTest1++
-			console.log(`[TEST 1] fs.rename spy call #${renameCallCountTest1}: ${oldPathStr} -> ${newPathStr}`)
 
 			// First rename call by safeWriteJson (if target exists) is target -> .bak
 			if (renameCallCountTest1 === 1 && !oldPathStr.includes(".new_") && newPathStr.includes(".bak_")) {
-				console.log("[TEST 1] Spy: Call #1 (target->backup), executing original rename.")
 				return originalFsPromisesRename(oldPath, newPath)
 			}
 			// Second rename call by safeWriteJson is .new -> target
@@ -212,7 +237,6 @@ describe("safeWriteJson", () => {
 				oldPathStr.includes(".new_") &&
 				path.resolve(newPathStr) === path.resolve(currentTestFilePath)
 			) {
-				console.log("[TEST 1] Spy: Call #2 (.new->target), THROWING SIMULATED ERROR.")
 				throw new Error("Simulated FS Error: rename tempNewFilePath to filePath")
 			}
 			// Fallback for unexpected calls or if the target file didn't exist (only one rename: .new -> target)
@@ -223,14 +247,8 @@ describe("safeWriteJson", () => {
 			) {
 				// This case handles if the initial file didn't exist, so only one rename happens.
 				// For this specific test, we expect two renames.
-				console.warn(
-					"[TEST 1] Spy: Call #1 was .new->target, (unexpected for this test scenario, but handling)",
-				)
 				throw new Error("Simulated FS Error: rename tempNewFilePath to filePath")
 			}
-			console.warn(
-				`[TEST 1] Spy: Unexpected call #${renameCallCountTest1} or paths. Defaulting to original rename. ${oldPathStr} -> ${newPathStr}`,
-			)
 			return originalFsPromisesRename(oldPath, newPath)
 		})
 
@@ -249,6 +267,118 @@ describe("safeWriteJson", () => {
 		renameSpy.mockRestore()
 	})
 
+	// Tests for directory creation functionality
+	test("should create parent directory if it doesn't exist", async () => {
+		// Create a path in a non-existent subdirectory of the temp dir
+		const nonExistentDir = path.join(tempTestDir, "non-existent-dir")
+		const filePath = path.join(nonExistentDir, "test-data.json")
+		const data = { message: "Hello from new directory" }
+
+		// Verify the directory doesn't exist yet
+		const dirAccessError = await fs.access(nonExistentDir).catch((e) => e)
+		expect(dirAccessError).toBeDefined()
+		expect(dirAccessError.code).toBe("ENOENT")
+
+		// safeWriteJson should now create directories and initialize an empty file automatically
+
+		// safeWriteJson should write the file
+		await safeWriteJson(filePath, data)
+
+		// Verify file was written correctly
+		const writtenData = await readJsonFile(filePath)
+		expect(writtenData).toEqual(data)
+
+		// Verify no temp files remain
+		const tempFiles = await listTempFiles(nonExistentDir, "test-data.json")
+		expect(tempFiles.length).toBe(0)
+	})
+
+	test("should handle multi-level directory creation", async () => {
+		// Create a new non-existent subdirectory path with multiple levels
+		const newDir = path.join(tempTestDir, "new-test-dir", "subdir", "deeper")
+		const filePath = path.join(newDir, "new-file.json")
+		const data = { message: "New directory test" }
+
+		// Verify directories don't exist initially
+		const dirAccessError = await fs.access(newDir).catch((e) => e)
+		expect(dirAccessError).toBeDefined()
+		expect(dirAccessError.code).toBe("ENOENT")
+
+		// Don't create any directories - safeWriteJson should handle it all
+
+		// Call safeWriteJson - it should create all missing directories and the file
+		await safeWriteJson(filePath, data)
+
+		// Verify all directory levels now exist
+		const dirExists = await fs
+			.access(newDir)
+			.then(() => true)
+			.catch(() => false)
+		expect(dirExists).toBe(true)
+
+		// Verify file was written correctly
+		const writtenData = await readJsonFile(filePath)
+		expect(writtenData).toEqual(data)
+
+		// Check that no temp files remain
+		const tempFiles = await listTempFiles(newDir, "new-file.json")
+		expect(tempFiles.length).toBe(0)
+	})
+
+	test("should handle directory creation permission errors", async () => {
+		// Mock mkdir to simulate a permission error
+		const mkdirSpy = jest.spyOn(fs, "mkdir")
+		mkdirSpy.mockImplementationOnce(async () => {
+			const permError = new Error("EACCES: permission denied") as NodeJS.ErrnoException
+			permError.code = "EACCES"
+			throw permError
+		})
+
+		// Create test file path in a directory that will fail with permission error
+		const nonExistentDir = path.join(tempTestDir, "permission-denied-dir")
+		const filePath = path.join(nonExistentDir, "test-data.json")
+		const testData = { message: "Should not be written due to permission error" }
+
+		// Expect the function to fail with the permission error
+		await expect(safeWriteJson(filePath, testData)).rejects.toThrow(/EACCES/)
+
+		// Verify the file was not created
+		const fileExists = await fs
+			.access(filePath)
+			.then(() => true)
+			.catch(() => false)
+		expect(fileExists).toBe(false)
+
+		mkdirSpy.mockRestore()
+	})
+
+	test("should successfully write to a non-existent file in an existing directory", async () => {
+		// Create directory but not the file
+		const existingDir = path.join(tempTestDir, "existing-dir")
+		await fs.mkdir(existingDir, { recursive: true })
+
+		const filePath = path.join(existingDir, "non-existent-file.json")
+		const data = { message: "Creating new file" }
+
+		// Verify file doesn't exist before the operation
+		const accessError = await fs.access(filePath).catch((e) => e)
+		expect(accessError).toBeDefined()
+		expect(accessError.code).toBe("ENOENT")
+
+		// safeWriteJson should automatically create the empty file for lock acquisition
+
+		// Write to the file
+		await safeWriteJson(filePath, data)
+
+		// Verify file was created with correct content
+		const writtenData = await readJsonFile(filePath)
+		expect(writtenData).toEqual(data)
+
+		// Verify no temp files remain
+		const tempFiles = await listTempFiles(existingDir, "non-existent-file.json")
+		expect(tempFiles.length).toBe(0)
+	})
+
 	test("should handle failure when deleting tempBackupFilePath (filePath exists, all renames succeed)", async () => {
 		const initialData = { message: "Initial content" }
 		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData)) // Use mocked fs for setup
@@ -259,10 +389,8 @@ describe("safeWriteJson", () => {
 		unlinkSpy.mockImplementationOnce(async (filePath: any) => {
 			const filePathStr = filePath.toString()
 			if (filePathStr.includes(".bak_")) {
-				console.log("[TEST unlink bak] Mock: Simulating failure for unlink backup.")
 				throw new Error("Simulated FS Error: delete tempBackupFilePath")
 			}
-			console.log("[TEST unlink bak] Mock: Condition NOT MET. Using originalFsPromisesUnlink.")
 			return originalFsPromisesUnlink(filePath)
 		})
 
@@ -438,40 +566,26 @@ describe("safeWriteJson", () => {
 			const resolvedOldPath = path.resolve(oldPathStr)
 			const resolvedNewPath = path.resolve(newPathStr)
 			const resolvedCurrentTFP = path.resolve(currentTestFilePath)
-			console.log(
-				`[TEST 2] fs.promises.rename call #${renameCallCountTest2}: oldPath=${oldPathStr} (resolved: ${resolvedOldPath}), newPath=${newPathStr} (resolved: ${resolvedNewPath}), currentTFP (resolved: ${resolvedCurrentTFP})`,
-			)
 
 			if (renameCallCountTest2 === 1) {
 				// Call 1: Original -> Backup (Succeeds)
 				if (resolvedOldPath === resolvedCurrentTFP && newPathStr.includes(".bak_")) {
-					console.log("[TEST 2] Call #1 (Original->Backup): Condition MET. originalFsPromisesRename.")
 					return originalFsPromisesRename(oldPath, newPath)
 				}
-				console.error("[TEST 2] Call #1: UNEXPECTED args.")
 				throw new Error("Unexpected args for rename call #1 in test")
 			} else if (renameCallCountTest2 === 2) {
 				// Call 2: New -> Original (Fails - this is the "original error")
 				if (oldPathStr.includes(".new_") && resolvedNewPath === resolvedCurrentTFP) {
-					console.log(
-						'[TEST 2] Call #2 (New->Original): Condition MET. Throwing "Simulated FS Error: new to original".',
-					)
 					throw new Error("Simulated FS Error: new to original")
 				}
-				console.error("[TEST 2] Call #2: UNEXPECTED args.")
 				throw new Error("Unexpected args for rename call #2 in test")
 			} else if (renameCallCountTest2 === 3) {
 				// Call 3: Backup -> Original (Rollback attempt - Fails)
 				if (oldPathStr.includes(".bak_") && resolvedNewPath === resolvedCurrentTFP) {
-					console.log(
-						'[TEST 2] Call #3 (Backup->Original Rollback): Condition MET. Throwing "Simulated FS Error: backup to original (rollback)".',
-					)
 					throw new Error("Simulated FS Error: backup to original (rollback)")
 				}
-				console.error("[TEST 2] Call #3: UNEXPECTED args.")
 				throw new Error("Unexpected args for rename call #3 in test")
 			}
-			console.error(`[TEST 2] Unexpected fs.promises.rename call count: ${renameCallCountTest2}`)
 			return originalFsPromisesRename(oldPath, newPath)
 		})
 
