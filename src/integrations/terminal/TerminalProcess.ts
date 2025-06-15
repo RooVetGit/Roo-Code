@@ -16,6 +16,7 @@ import { Terminal } from "./Terminal"
 
 export class TerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<Terminal>
+	private executionMarker?: string
 
 	constructor(terminal: Terminal) {
 		super()
@@ -72,6 +73,10 @@ export class TerminalProcess extends BaseTerminalProcess {
 			return
 		}
 
+		// Generate a unique marker for this command execution
+		const executionId = `ROO_CMD_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+		this.executionMarker = executionId
+
 		// Create a promise that resolves when the stream becomes available
 		const streamAvailable = new Promise<AsyncIterable<string>>((resolve, reject) => {
 			const timeoutId = setTimeout(() => {
@@ -104,7 +109,7 @@ export class TerminalProcess extends BaseTerminalProcess {
 			this.once("shell_execution_complete", (details: ExitCodeDetails) => resolve(details))
 		})
 
-		// Execute command
+		// Execute command with our marker
 		const defaultWindowsShellProfile = vscode.workspace
 			.getConfiguration("terminal.integrated.defaultProfile")
 			.get("windows")
@@ -114,8 +119,12 @@ export class TerminalProcess extends BaseTerminalProcess {
 			(defaultWindowsShellProfile === null ||
 				(defaultWindowsShellProfile as string)?.toLowerCase().includes("powershell"))
 
+		let commandToExecute = command
+
+		// Add our execution marker at the end
 		if (isPowerShell) {
-			let commandToExecute = command
+			// PowerShell: Always echo the marker regardless of command success/failure
+			commandToExecute = `try { ${command} } finally { Write-Host "${executionId}" -NoNewline }`
 
 			// Only add the PowerShell counter workaround if enabled
 			if (Terminal.getPowershellCounter()) {
@@ -126,11 +135,13 @@ export class TerminalProcess extends BaseTerminalProcess {
 			if (Terminal.getCommandDelay() > 0) {
 				commandToExecute += ` ; start-sleep -milliseconds ${Terminal.getCommandDelay()}`
 			}
-
-			terminal.shellIntegration.executeCommand(commandToExecute)
 		} else {
-			terminal.shellIntegration.executeCommand(command)
+			// Bash/Zsh/other shells: Always echo the marker regardless of command success/failure
+			// Using ; instead of && ensures the marker is printed even if the command fails
+			commandToExecute += ` ; echo -n "${executionId}"`
 		}
+
+		terminal.shellIntegration.executeCommand(commandToExecute)
 
 		this.isHot = true
 
@@ -170,6 +181,7 @@ export class TerminalProcess extends BaseTerminalProcess {
 		 */
 
 		// Process stream data
+		let markerDetected = false
 		for await (let data of stream) {
 			// Check for command output start marker
 			if (!commandOutputStarted) {
@@ -192,6 +204,15 @@ export class TerminalProcess extends BaseTerminalProcess {
 			// and chunks may not be complete so you cannot rely on detecting or removing escape sequences mid-stream.
 			this.fullOutput += data
 
+			// Check if our execution marker is in the output
+			if (this.executionMarker && this.fullOutput.includes(this.executionMarker)) {
+				markerDetected = true
+				// Remove the marker from the output
+				this.fullOutput = this.fullOutput.replace(this.executionMarker, "")
+				// Break out of the loop as command has completed
+				break
+			}
+
 			// For non-immediately returning commands we want to show loading spinner
 			// right away but this wouldn't happen until it emits a line break, so
 			// as soon as we get any output we emit to let webview know to show spinner
@@ -208,7 +229,25 @@ export class TerminalProcess extends BaseTerminalProcess {
 		// Set streamClosed immediately after stream ends.
 		this.terminal.setActiveStream(undefined)
 
-		// Wait for shell execution to complete.
+		// If we detected our marker, we know the command completed
+		if (markerDetected) {
+			this.isHot = false
+
+			// Emit any remaining output before completing
+			this.emitRemainingBufferIfListening()
+
+			// Emit completion with success exit code
+			const exitDetails: ExitCodeDetails = { exitCode: 0 }
+			this.emit("shell_execution_complete", exitDetails)
+
+			// Clean up output and emit completion
+			this.stopHotTimer()
+			this.emit("completed", this.removeEscapeSequences(this.fullOutput))
+			this.emit("continue")
+			return
+		}
+
+		// Wait for shell execution to complete (fallback to VSCode's event)
 		await shellExecutionComplete
 
 		this.isHot = false
