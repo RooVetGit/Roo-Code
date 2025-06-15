@@ -6,6 +6,10 @@
 		"remove": "削除",
 		"keep": "保持"
 	},
+	"actions": {
+		"edit": "編集",
+		"delete": "削除"
+	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",

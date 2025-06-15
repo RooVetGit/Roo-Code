@@ -6,6 +6,10 @@
 		"remove": "Hapus",
 		"keep": "Simpan"
 	},
+	"actions": {
+		"edit": "Ubah",
+		"delete": "Hapus"
+	},
 	"number_format": {
 		"thousand_suffix": "rb",
 		"million_suffix": "jt",

@@ -36,6 +36,27 @@ const Thumbnails = ({ images, style, setImages, onHeightChange }: ThumbnailsProp
 		vscode.postMessage({ type: "openImage", text: image })
 	}
 
+	// Sanitize image URL to prevent XSS and malicious redirects
+	// Only allow data:image/ URLs since the backend openImage function only supports base64 data URIs
+	const sanitizeImageUrl = (url: string): string => {
+		try {
+			// Only allow data URLs (base64 images) - backend only supports these
+			if (url.startsWith("data:image/")) {
+				// Additional validation: ensure it's a proper data URI format
+				const dataUriRegex = /^data:image\/[a-zA-Z]+;base64,/
+				if (dataUriRegex.test(url)) {
+					return url
+				}
+			}
+
+			// Reject all other URLs (http, https, javascript, file, etc.)
+			return ""
+		} catch {
+			// Invalid URL, return empty string
+			return ""
+		}
+	}
+
 	return (
 		<div
 			ref={containerRef}
@@ -46,51 +67,59 @@ const Thumbnails = ({ images, style, setImages, onHeightChange }: ThumbnailsProp
 				rowGap: 3,
 				...style,
 			}}>
-			{images.map((image, index) => (
-				<div
-					key={index}
-					style={{ position: "relative" }}
-					onMouseEnter={() => setHoveredIndex(index)}
-					onMouseLeave={() => setHoveredIndex(null)}>
-					<img
-						src={image}
-						alt={`Thumbnail ${index + 1}`}
-						style={{
-							width: 34,
-							height: 34,
-							objectFit: "cover",
-							borderRadius: 4,
-							cursor: "pointer",
-						}}
-						onClick={() => handleImageClick(image)}
-					/>
-					{isDeletable && hoveredIndex === index && (
-						<div
-							onClick={() => handleDelete(index)}
+			{images.map((image, index) => {
+				const sanitizedUrl = sanitizeImageUrl(image)
+				// Skip rendering if URL is invalid/unsafe
+				if (!sanitizedUrl) {
+					return null
+				}
+
+				return (
+					<div
+						key={index}
+						style={{ position: "relative" }}
+						onMouseEnter={() => setHoveredIndex(index)}
+						onMouseLeave={() => setHoveredIndex(null)}>
+						<img
+							src={sanitizedUrl}
+							alt={`Thumbnail ${index + 1}`}
 							style={{
-								position: "absolute",
-								top: -4,
-								right: -4,
-								width: 13,
-								height: 13,
-								borderRadius: "50%",
-								backgroundColor: "var(--vscode-badge-background)",
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
+								width: 34,
+								height: 34,
+								objectFit: "cover",
+								borderRadius: 4,
 								cursor: "pointer",
-							}}>
-							<span
-								className="codicon codicon-close"
+							}}
+							onClick={() => handleImageClick(image)}
+						/>
+						{isDeletable && hoveredIndex === index && (
+							<div
+								onClick={() => handleDelete(index)}
 								style={{
-									color: "var(--vscode-foreground)",
-									fontSize: 10,
-									fontWeight: "bold",
-								}}></span>
-						</div>
-					)}
-				</div>
-			))}
+									position: "absolute",
+									top: -4,
+									right: -4,
+									width: 13,
+									height: 13,
+									borderRadius: "50%",
+									backgroundColor: "var(--vscode-badge-background)",
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									cursor: "pointer",
+								}}>
+								<span
+									className="codicon codicon-close"
+									style={{
+										color: "var(--vscode-foreground)",
+										fontSize: 10,
+										fontWeight: "bold",
+									}}></span>
+							</div>
+						)}
+					</div>
+				)
+			})}
 		</div>
 	)
 }

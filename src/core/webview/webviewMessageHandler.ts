@@ -3,7 +3,13 @@ import fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { type Language, type ProviderSettings, type GlobalState, TelemetryEventName } from "@roo-code/types"
+import {
+	type Language,
+	type ProviderSettings,
+	type GlobalState,
+	TelemetryEventName,
+	type ClineMessage,
+} from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 
@@ -28,6 +34,7 @@ import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettings } from "../config/importExport"
+import { checkpointRestore } from "../checkpoints"
 import { getOpenAiModels } from "../../api/providers/openai"
 import { getOllamaModels } from "../../api/providers/ollama"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
@@ -955,6 +962,179 @@ export const webviewMessageHandler = async (
 					}
 
 					await provider.initClineWithHistoryItem(historyItem)
+				}
+			}
+			break
+		}
+		case "editMessage": {
+			if (
+				provider.getCurrentCline() &&
+				typeof message.value === "number" &&
+				message.value &&
+				message.text !== undefined
+			) {
+				const timeCutoff = message.value - 1000 // 1 second buffer before the message to edit
+
+				const messageIndex = provider
+					.getCurrentCline()!
+					.clineMessages.findIndex((msg) => msg.ts && msg.ts >= timeCutoff)
+
+				const apiConversationHistoryIndex =
+					provider
+						.getCurrentCline()
+						?.apiConversationHistory.findIndex((msg) => msg.ts && msg.ts >= timeCutoff) ?? -1
+
+				if (messageIndex !== -1) {
+					// Check if there are subsequent messages that will be deleted
+					const totalMessages = provider.getCurrentCline()!.clineMessages.length
+					const hasSubsequentMessages = messageIndex < totalMessages - 1
+
+					// Check for checkpoints if enabled
+					const checkpointsEnabled = (await provider.getState()).enableCheckpoints
+					let affectedCheckpointsCount = 0
+					let closestPreviousCheckpoint: ClineMessage | undefined
+
+					if (checkpointsEnabled) {
+						const editMessageTimestamp = message.value
+						const checkpointMessages = provider
+							.getCurrentCline()!
+							.clineMessages.filter((msg) => msg.say === "checkpoint_saved")
+							.sort((a, b) => a.ts - b.ts)
+
+						// Find checkpoints that will be affected (those after the edited message)
+						affectedCheckpointsCount = checkpointMessages.filter(
+							(cp) => cp.ts > editMessageTimestamp,
+						).length
+
+						// Find the closest checkpoint before the edited message
+						closestPreviousCheckpoint = checkpointMessages
+							.reverse()
+							.find((cp) => cp.ts < editMessageTimestamp)
+					}
+
+					// Build confirmation message
+					let confirmationMessage = "Edit and delete subsequent messages?"
+
+					if (checkpointsEnabled && affectedCheckpointsCount > 0) {
+						confirmationMessage += `\n\n• ${affectedCheckpointsCount} checkpoint(s) will be removed`
+
+						if (closestPreviousCheckpoint) {
+							confirmationMessage += "\n• Files will restore to previous checkpoint"
+						}
+					}
+
+					// Show confirmation dialog if there are subsequent messages or affected checkpoints
+					if (hasSubsequentMessages || affectedCheckpointsCount > 0) {
+						const confirmation = await vscode.window.showWarningMessage(
+							confirmationMessage,
+							{ modal: true },
+							"Edit Message",
+						)
+
+						if (confirmation !== "Edit Message") {
+							// User cancelled, update the webview to show the original state
+							await provider.postStateToWebview()
+							break
+						}
+					}
+
+					const { historyItem } = await provider.getTaskWithId(provider.getCurrentCline()!.taskId)
+
+					// Get messages up to and including the edited message
+					const updatedClineMessages = [
+						...provider.getCurrentCline()!.clineMessages.slice(0, messageIndex + 1),
+					]
+					const messageToEdit = updatedClineMessages[messageIndex]
+
+					if (messageToEdit && messageToEdit.type === "say" && messageToEdit.say === "user_feedback") {
+						// Update the text content
+						messageToEdit.text = message.text
+
+						// Update images if provided
+						if (message.images) {
+							messageToEdit.images = message.images
+						}
+
+						// Overwrite with only messages up to and including the edited one
+						await provider.getCurrentCline()!.overwriteClineMessages(updatedClineMessages)
+
+						// Handle checkpoint restoration if checkpoints are enabled
+						if (checkpointsEnabled && closestPreviousCheckpoint) {
+							// Restore to the closest checkpoint before the edited message
+							const commitHash = closestPreviousCheckpoint.text // The commit hash is stored in the text field
+							if (commitHash) {
+								// Use "preview" mode to only restore files without affecting messages
+								// (we've already handled message cleanup above)
+								await checkpointRestore(provider.getCurrentCline()!, {
+									ts: closestPreviousCheckpoint.ts,
+									commitHash: commitHash,
+									mode: "preview",
+								})
+							}
+						}
+
+						// Update API conversation history if needed
+						if (apiConversationHistoryIndex !== -1) {
+							const updatedApiHistory = [
+								...provider
+									.getCurrentCline()!
+									.apiConversationHistory.slice(0, apiConversationHistoryIndex + 1),
+							]
+							const apiMessage = updatedApiHistory[apiConversationHistoryIndex]
+
+							if (apiMessage && apiMessage.role === "user") {
+								// Update the content in API history
+								if (typeof apiMessage.content === "string") {
+									apiMessage.content = message.text
+								} else if (Array.isArray(apiMessage.content)) {
+									// Find and update text content blocks
+									apiMessage.content = apiMessage.content.map((block: any) => {
+										if (block.type === "text") {
+											return { ...block, text: message.text }
+										}
+										return block
+									})
+
+									// Handle image updates if provided
+									if (message.images) {
+										// Remove existing image blocks
+										apiMessage.content = apiMessage.content.filter(
+											(block: any) => block.type !== "image",
+										)
+
+										// Add new image blocks
+										const imageBlocks = message.images.map((image) => ({
+											type: "image" as const,
+											source: {
+												type: "base64" as const,
+												media_type: (image.startsWith("data:image/png")
+													? "image/png"
+													: "image/jpeg") as
+													| "image/png"
+													| "image/jpeg"
+													| "image/gif"
+													| "image/webp",
+												data: image.split(",")[1] || image,
+											},
+										}))
+
+										// Add image blocks after text
+										apiMessage.content.push(...imageBlocks)
+									}
+								}
+
+								// Overwrite with only API messages up to and including the edited one
+								await provider.getCurrentCline()!.overwriteApiConversationHistory(updatedApiHistory)
+							}
+						}
+
+						await provider.initClineWithHistoryItem(historyItem)
+						// Force a state update to ensure the webview reflects the changes
+						await provider.postStateToWebview()
+
+						// Note: Removed auto-resume logic to prevent duplicate messages.
+						// The user will manually send the edited message when ready.
+					}
 				}
 			}
 			break

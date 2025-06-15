@@ -6,6 +6,10 @@
 		"remove": "Rimuovi",
 		"keep": "Mantieni"
 	},
+	"actions": {
+		"edit": "Modifica",
+		"delete": "Elimina"
+	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",

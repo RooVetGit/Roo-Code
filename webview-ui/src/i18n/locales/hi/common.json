@@ -6,6 +6,10 @@
 		"remove": "हटाएं",
 		"keep": "रखें"
 	},
+	"actions": {
+		"edit": "संपादित करें",
+		"delete": "हटाएं"
+	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",
