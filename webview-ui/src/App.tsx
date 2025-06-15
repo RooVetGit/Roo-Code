@@ -18,6 +18,7 @@ import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 import { AccountView } from "./components/account/AccountView"
+import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 
@@ -42,6 +43,7 @@ const App = () => {
 		experiments,
 		cloudUserInfo,
 		cloudIsAuthenticated,
+		renderContext,
 	} = useExtensionState()
 
 	// Create a persistent state manager
@@ -134,6 +136,16 @@ const App = () => {
 
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
+
+	// Focus the WebView when non-interactive content is clicked (only in editor/tab mode)
+	useAddNonInteractiveClickListener(
+		useCallback(() => {
+			// Only send focus request if we're in editor (tab) mode, not sidebar
+			if (renderContext === "editor") {
+				vscode.postMessage({ type: "focusPanelRequest" })
+			}
+		}, [renderContext]),
+	)
 
 	if (!didHydrateState) {
 		return null
