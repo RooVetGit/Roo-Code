@@ -31,12 +31,23 @@ vi.mock("vscode", () => ({
 vi.mock("fs/promises")
 vi.mock("../../../core/webview/ClineProvider")
 
+// Mock the MCP SDK modules
+jest.mock("@modelcontextprotocol/sdk/client/stdio", () => ({
+	StdioClientTransport: jest.fn(),
+	getDefaultEnvironment: jest.fn().mockReturnValue({ PATH: "/usr/bin" }),
+}))
+
+jest.mock("@modelcontextprotocol/sdk/client/index", () => ({
+	Client: jest.fn(),
+}))
+
 describe("McpHub", () => {
 	let mcpHub: McpHubType
 	let mockProvider: Partial<ClineProvider>
 
 	// Store original console methods
 	const originalConsoleError = console.error
+	const originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")
 
 	beforeEach(() => {
 		vi.clearAllMocks()
@@ -111,6 +122,10 @@ describe("McpHub", () => {
 	afterEach(() => {
 		// Restore original console methods
 		console.error = originalConsoleError
+		// Restore original platform
+		if (originalPlatform) {
+			Object.defineProperty(process, "platform", originalPlatform)
+		}
 	})
 
 	describe("toggleToolAlwaysAllow", () => {
@@ -680,6 +695,150 @@ describe("McpHub", () => {
 					}),
 				)
 			})
+		})
+	})
+
+	describe("Windows command wrapping", () => {
+		let StdioClientTransport: jest.Mock
+		let Client: jest.Mock
+
+		beforeEach(() => {
+			// Reset mocks
+			jest.clearAllMocks()
+
+			// Get references to the mocked constructors
+			StdioClientTransport = require("@modelcontextprotocol/sdk/client/stdio").StdioClientTransport as jest.Mock
+			Client = require("@modelcontextprotocol/sdk/client/index").Client as jest.Mock
+
+			// Mock Windows platform
+			Object.defineProperty(process, "platform", {
+				value: "win32",
+				writable: true,
+				enumerable: true,
+				configurable: true,
+			})
+		})
+
+		it("should wrap commands with cmd.exe on Windows", async () => {
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: jest.fn().mockResolvedValue(undefined),
+				close: jest.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: jest.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			StdioClientTransport.mockImplementation((config: any) => {
+				// Verify that cmd.exe wrapping is applied
+				expect(config.command).toBe("cmd.exe")
+				expect(config.args).toEqual([
+					"/c",
+					"npx",
+					"-y",
+					"@modelcontextprotocol/server-filesystem",
+					"/test/path",
+				])
+				return mockTransport
+			})
+
+			// Mock Client
+			Client.mockImplementation(() => ({
+				connect: jest.fn().mockResolvedValue(undefined),
+				close: jest.fn().mockResolvedValue(undefined),
+				getInstructions: jest.fn().mockReturnValue("test instructions"),
+				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}))
+
+			// Create a new McpHub instance
+			const mcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Mock the config file read
+			;(fs.readFile as jest.Mock).mockResolvedValue(
+				JSON.stringify({
+					mcpServers: {
+						"test-npx-server": {
+							command: "npx",
+							args: ["-y", "@modelcontextprotocol/server-filesystem", "/test/path"],
+						},
+					},
+				}),
+			)
+
+			// Initialize servers (this will trigger connectToServer)
+			await mcpHub["initializeGlobalMcpServers"]()
+
+			// Verify StdioClientTransport was called with wrapped command
+			expect(StdioClientTransport).toHaveBeenCalledWith(
+				expect.objectContaining({
+					command: "cmd.exe",
+					args: ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "/test/path"],
+				}),
+			)
+		})
+
+		it("should not wrap commands on non-Windows platforms", async () => {
+			// Mock non-Windows platform
+			Object.defineProperty(process, "platform", {
+				value: "darwin",
+				writable: true,
+				enumerable: true,
+				configurable: true,
+			})
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: jest.fn().mockResolvedValue(undefined),
+				close: jest.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: jest.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			StdioClientTransport.mockImplementation((config: any) => {
+				// Verify that no cmd.exe wrapping is applied
+				expect(config.command).toBe("npx")
+				expect(config.args).toEqual(["-y", "@modelcontextprotocol/server-filesystem", "/test/path"])
+				return mockTransport
+			})
+
+			// Mock Client
+			Client.mockImplementation(() => ({
+				connect: jest.fn().mockResolvedValue(undefined),
+				close: jest.fn().mockResolvedValue(undefined),
+				getInstructions: jest.fn().mockReturnValue("test instructions"),
+				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}))
+
+			// Create a new McpHub instance
+			const mcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Mock the config file read
+			;(fs.readFile as jest.Mock).mockResolvedValue(
+				JSON.stringify({
+					mcpServers: {
+						"test-npx-server": {
+							command: "npx",
+							args: ["-y", "@modelcontextprotocol/server-filesystem", "/test/path"],
+						},
+					},
+				}),
+			)
+
+			// Initialize servers (this will trigger connectToServer)
+			await mcpHub["initializeGlobalMcpServers"]()
+
+			// Verify StdioClientTransport was called without wrapping
+			expect(StdioClientTransport).toHaveBeenCalledWith(
+				expect.objectContaining({
+					command: "npx",
+					args: ["-y", "@modelcontextprotocol/server-filesystem", "/test/path"],
+				}),
+			)
 		})
 	})
 })

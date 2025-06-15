@@ -579,9 +579,16 @@ export class McpHub {
 			})) as typeof config
 
 			if (configInjected.type === "stdio") {
+				// On Windows, wrap commands with cmd.exe to handle non-exe executables like npx.ps1
+				const isWindows = process.platform === "win32"
+				const command = isWindows ? "cmd.exe" : configInjected.command
+				const args = isWindows
+					? ["/c", configInjected.command, ...(configInjected.args || [])]
+					: configInjected.args
+
 				transport = new StdioClientTransport({
-					command: configInjected.command,
-					args: configInjected.args,
+					command,
+					args,
 					cwd: configInjected.cwd,
 					env: {
 						...getDefaultEnvironment(),
