@@ -20,6 +20,13 @@ export class TelemetryClient extends BaseTelemetryClient {
 		)
 	}
 
+	/**
+	 * Mark this as a cloud telemetry client to receive extended properties including git info
+	 */
+	protected override isCloudTelemetryClient(): boolean {
+		return true
+	}
+
 	private async fetch(path: string, options: RequestInit) {
 		if (!this.authService.isAuthenticated()) {
 			return
