@@ -580,11 +580,20 @@ export class McpHub {
 
 			if (configInjected.type === "stdio") {
 				// On Windows, wrap commands with cmd.exe to handle non-exe executables like npx.ps1
+				// This is necessary for node version managers (fnm, nvm-windows, volta) that implement
+				// commands as PowerShell scripts rather than executables.
+				// Note: This adds a small overhead as commands go through an additional shell layer.
 				const isWindows = process.platform === "win32"
-				const command = isWindows ? "cmd.exe" : configInjected.command
-				const args = isWindows
-					? ["/c", configInjected.command, ...(configInjected.args || [])]
-					: configInjected.args
+
+				// Check if command is already cmd.exe to avoid double-wrapping
+				const isAlreadyWrapped =
+					configInjected.command.toLowerCase() === "cmd.exe" || configInjected.command.toLowerCase() === "cmd"
+
+				const command = isWindows && !isAlreadyWrapped ? "cmd.exe" : configInjected.command
+				const args =
+					isWindows && !isAlreadyWrapped
+						? ["/c", configInjected.command, ...(configInjected.args || [])]
+						: configInjected.args
 
 				transport = new StdioClientTransport({
 					command,
