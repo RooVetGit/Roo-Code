@@ -337,7 +337,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 		if (!success && lastError) {
 			console.error(`[DirectoryScanner] Failed to process batch after ${MAX_BATCH_RETRIES} attempts`)
 			if (onError) {
-				onError(new Error(`Failed to process batch after ${MAX_BATCH_RETRIES} attempts: ${lastError.message}`))
+				// Preserve the original error message from embedders which now have detailed i18n messages
+				const errorMessage = lastError.message || "Unknown error"
+
+				// For other errors, provide context
+				onError(new Error(`Failed to process batch after ${MAX_BATCH_RETRIES} attempts: ${errorMessage}`))
 			}
 		}
 	}
