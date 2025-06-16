@@ -24,7 +24,7 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param url Optional URL to the Qdrant server
 	 */
 	constructor(workspacePath: string, url: string, vectorSize: number, apiKey?: string) {
-		this.qdrantUrl = url
+		this.qdrantUrl = url || "http://localhost:6333"
 		this.client = new QdrantClient({
 			url: this.qdrantUrl,
 			apiKey,
