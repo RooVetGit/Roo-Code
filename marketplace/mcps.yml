@@ -1,0 +1,43 @@
+# Marketplace MCP Servers Configuration
+# This file contains the configuration for MCP servers available in the marketplace
+
+items:
+  - id: "daft-ie-mcp"
+    name: "Daft.ie MCP Server"
+    description: "An MCP server for searching rental properties on Daft.ie, Ireland's largest property website. Search for apartments, houses, and other rental properties with filters for location, price, property type, and more."
+    author: "amineremache"
+    authorUrl: "https://github.com/amineremache"
+    url: "https://github.com/amineremache/daft-ie-mcp"
+    tags: ["property", "rental", "ireland", "search", "real-estate"]
+    prerequisites: ["Node.js 18+", "npm or yarn"]
+    content:
+      - name: "NPM Installation"
+        content: |
+          {
+            "mcpServers": {
+              "daft-ie": {
+                "command": "npx",
+                "args": ["daft-ie-mcp"],
+                "env": {}
+              }
+            }
+          }
+        parameters: []
+        prerequisites: ["Node.js 18+", "npm"]
+      - name: "Local Development"
+        content: |
+          {
+            "mcpServers": {
+              "daft-ie": {
+                "command": "node",
+                "args": ["path/to/daft-ie-mcp/dist/index.js"],
+                "env": {}
+              }
+            }
+          }
+        parameters:
+          - name: "Installation Path"
+            key: "path"
+            placeholder: "/path/to/daft-ie-mcp"
+            optional: false
+        prerequisites: ["Node.js 18+", "Git", "Local clone of the repository"]
