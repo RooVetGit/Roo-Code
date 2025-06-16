@@ -153,23 +153,15 @@ export class CodeIndexOrchestrator {
 			// Check if any blocks were actually indexed successfully
 			// If no blocks were indexed but blocks were found, it means all batches failed
 			if (cumulativeBlocksIndexed === 0 && cumulativeBlocksFoundSoFar > 0) {
-				// Provide a more specific error message based on the batch errors
-				let errorMessage = "Indexing failed: No code blocks were successfully indexed."
-
 				if (batchErrors.length > 0) {
 					// Use the first batch error as it's likely representative of the main issue
 					const firstError = batchErrors[0]
-					if (firstError.message.includes("Failed to create embeddings")) {
-						// This is an embedder error with detailed i18n message, use it directly
-						errorMessage = `Indexing failed: ${firstError.message}`
-					} else {
-						errorMessage = `Indexing failed: ${firstError.message}. This usually indicates an embedder configuration issue.`
-					}
+					throw new Error(`Indexing failed: ${firstError.message}`)
 				} else {
-					errorMessage += " This usually indicates an embedder configuration issue."
+					throw new Error(
+						"Indexing failed: No code blocks were successfully indexed. This usually indicates an embedder configuration issue.",
+					)
 				}
-
-				throw new Error(errorMessage)
 			}
 
 			await this._startWatcher()
