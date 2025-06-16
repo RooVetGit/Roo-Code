@@ -38,11 +38,6 @@ export interface CloudOrganizationMembership {
 	updated_at?: number
 }
 
-export interface CloudOrganizationMembershipsResponse {
-	data: CloudOrganizationMembership[]
-	total_count?: number
-}
-
 /**
  * OrganizationAllowList
  */
