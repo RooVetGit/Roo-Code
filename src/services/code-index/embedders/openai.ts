@@ -22,7 +22,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	 */
 	constructor(options: ApiHandlerOptions & { openAiEmbeddingModelId?: string }) {
 		super(options)
-		const apiKey = this.options.openAiNativeApiKey || ""
+		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
 		this.embeddingsClient = new OpenAI({ apiKey })
 		this.defaultModelId = options.openAiEmbeddingModelId || "text-embedding-3-small"
 	}
@@ -119,24 +119,33 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				// Log the error for debugging
 				console.error(`OpenAI embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
-				if (!hasMoreAttempts) {
-					// Provide more context in the error message
-					const errorMessage = error?.message || error?.toString() || "Unknown error"
-					const statusCode = error?.status || error?.response?.status
-					if (statusCode === 401) {
-						throw new Error(
-							`Failed to create embeddings: Authentication failed. Please check your OpenAI API key.`,
-						)
-					} else if (statusCode) {
-						throw new Error(
-							`Failed to create embeddings after ${MAX_RETRIES} attempts: HTTP ${statusCode} - ${errorMessage}`,
-						)
-					} else {
-						throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts: ${errorMessage}`)
+				// Provide more context in the error message using robust error extraction
+				let errorMessage = "Unknown error"
+				if (error?.message) {
+					errorMessage = error.message
+				} else if (typeof error === "string") {
+					errorMessage = error
+				} else if (error && typeof error.toString === "function") {
+					try {
+						errorMessage = error.toString()
+					} catch {
+						errorMessage = "Unknown error"
 					}
 				}
 
-				throw error
+				const statusCode = error?.status || error?.response?.status
+
+				if (statusCode === 401) {
+					throw new Error(
+						`Failed to create embeddings: Authentication failed. Please check your OpenAI API key.`,
+					)
+				} else if (statusCode) {
+					throw new Error(
+						`Failed to create embeddings after ${MAX_RETRIES} attempts: HTTP ${statusCode} - ${errorMessage}`,
+					)
+				} else {
+					throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts: ${errorMessage}`)
+				}
 			}
 		}
 
