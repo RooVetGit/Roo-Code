@@ -469,10 +469,6 @@
 			"matchPrecision": {
 				"label": "Match precision",
 				"description": "This slider controls how precisely code sections must match when applying diffs. Lower values allow more flexible matching but increase the risk of incorrect replacements. Use values below 100% with extreme caution."
-			},
-			"disableVisualization": {
-				"label": "Disable diff visualization",
-				"description": "When enabled, files will open directly in the editor instead of showing a diff view. This can prevent LSP crashes with very large files. You can still see the changes in the chat window."
 			}
 		}
 	},
@@ -512,6 +508,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+		},
+		"DISABLE_DIFF_VISUALIZATION": {
+			"name": "Disable diff visualization for all edit tools",
+			"description": "When enabled, files will open directly in the editor instead of showing a diff view for all edit tools (write_to_file, apply_diff, insert_content, search_and_replace). This helps prevent LSP crashes with very large files. Changes are still visible in the chat window."
 		}
 	},
 	"promptCaching": {

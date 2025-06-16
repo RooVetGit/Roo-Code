@@ -28,7 +28,9 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				disableCompletionCommand: false,
+				marketplace: false,
 				multiFileApplyDiff: false,
+				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -37,7 +39,9 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: true,
 				disableCompletionCommand: false,
+				marketplace: false,
 				multiFileApplyDiff: false,
+				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
 		})
@@ -46,9 +50,51 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				disableCompletionCommand: false,
+				marketplace: false,
 				multiFileApplyDiff: false,
+				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
+		})
+	})
+	describe("MARKETPLACE", () => {
+		it("is configured correctly", () => {
+			expect(EXPERIMENT_IDS.MARKETPLACE).toBe("marketplace")
+			expect(experimentConfigsMap.MARKETPLACE).toMatchObject({
+				enabled: false,
+			})
+		})
+	})
+
+	describe("isEnabled for MARKETPLACE", () => {
+		it("returns false when MARKETPLACE experiment is not enabled", () => {
+			const experiments: Record<ExperimentId, boolean> = {
+				powerSteering: false,
+				marketplace: false,
+				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
+				disableDiffVisualization: false,
+			}
+			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(false)
+		})
+
+		it("returns true when MARKETPLACE experiment is enabled", () => {
+			const experiments: Record<ExperimentId, boolean> = {
+				powerSteering: false,
+				marketplace: true,
+				disableCompletionCommand: false,
+				multiFileApplyDiff: false,
+				disableDiffVisualization: false,
+			}
+			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(true)
+		})
+
+		it("returns false when MARKETPLACE experiment is not present", () => {
+			const experiments: Record<ExperimentId, boolean> = {
+				powerSteering: false,
+				// marketplace missing
+			} as any
+			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(false)
 		})
 	})
 })

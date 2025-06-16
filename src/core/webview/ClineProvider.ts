@@ -530,11 +530,12 @@ export class ClineProvider
 			apiConfiguration,
 			organizationAllowList,
 			diffEnabled: enableDiff,
-			disableDiffVisualization,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
+		const disableDiffVisualization = experiments.disableDiffVisualization ?? false
 
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
@@ -572,11 +573,12 @@ export class ClineProvider
 		const {
 			apiConfiguration,
 			diffEnabled: enableDiff,
-			disableDiffVisualization,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
+		const disableDiffVisualization = experiments.disableDiffVisualization ?? false
 
 		const cline = new Task({
 			provider: this,
@@ -1538,7 +1540,6 @@ export class ClineProvider
 			ttsEnabled: stateValues.ttsEnabled ?? false,
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
-			disableDiffVisualization: stateValues.disableDiffVisualization ?? false,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",

@@ -69,7 +69,6 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setTtsEnabled: (value: boolean) => void
 	setTtsSpeed: (value: number) => void
 	setDiffEnabled: (value: boolean) => void
-	setDisableDiffVisualization: (value: boolean) => void
 	setEnableCheckpoints: (value: boolean) => void
 	setBrowserViewportSize: (value: string) => void
 	setFuzzyMatchThreshold: (value: number) => void
@@ -156,7 +155,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		ttsEnabled: false,
 		ttsSpeed: 1.0,
 		diffEnabled: false,
-		disableDiffVisualization: false,
 		enableCheckpoints: true,
 		fuzzyMatchThreshold: 1.0,
 		language: "en", // Default language code
@@ -345,8 +343,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setTtsEnabled: (value) => setState((prevState) => ({ ...prevState, ttsEnabled: value })),
 		setTtsSpeed: (value) => setState((prevState) => ({ ...prevState, ttsSpeed: value })),
 		setDiffEnabled: (value) => setState((prevState) => ({ ...prevState, diffEnabled: value })),
-		setDisableDiffVisualization: (value) =>
-			setState((prevState) => ({ ...prevState, disableDiffVisualization: value })),
 		setEnableCheckpoints: (value) => setState((prevState) => ({ ...prevState, enableCheckpoints: value })),
 		setBrowserViewportSize: (value: string) =>
 			setState((prevState) => ({ ...prevState, browserViewportSize: value })),

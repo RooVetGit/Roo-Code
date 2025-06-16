@@ -83,7 +83,6 @@ export const globalSettingsSchema = z.object({
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
-	disableDiffVisualization: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -212,7 +211,6 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	terminalShellIntegrationDisabled: true,
 
 	diffEnabled: true,
-	disableDiffVisualization: false,
 	fuzzyMatchThreshold: 1,
 
 	enableCheckpoints: false,

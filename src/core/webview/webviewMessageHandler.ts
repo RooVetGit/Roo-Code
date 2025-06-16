@@ -645,11 +645,6 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
-		case "disableDiffVisualization":
-			const disableDiffVisualization = message.bool ?? false
-			await updateGlobalState("disableDiffVisualization", disableDiffVisualization)
-			await provider.postStateToWebview()
-			break
 		case "enableCheckpoints":
 			const enableCheckpoints = message.bool ?? true
 			await updateGlobalState("enableCheckpoints", enableCheckpoints)
