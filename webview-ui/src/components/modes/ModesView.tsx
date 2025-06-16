@@ -73,6 +73,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		customInstructions,
 		setCustomInstructions,
 		customModes,
+		parentRulesMaxDepth,
+		setParentRulesMaxDepth,
 	} = useExtensionState()
 
 	// Use a local state to track the visually active mode
@@ -1029,6 +1031,30 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}}
 							/>
 						</div>
+					</div>
+				</div>
+
+				{/* Parent Rules Max Depth Setting */}
+				<div className="mt-4 mb-4">
+					<div className="font-bold mb-1">{t("settings:prompts.parentRulesMaxDepth.label")}</div>
+					<div className="flex items-center gap-2 mt-1">
+						<input
+							type="number"
+							className="w-16 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded text-right disabled:opacity-50"
+							min="1"
+							value={parentRulesMaxDepth ?? 1}
+							onChange={(e) => {
+								const value = Math.max(1, parseInt(e.target.value) || 1)
+								setParentRulesMaxDepth(value)
+								vscode.postMessage({
+									type: "parentRulesMaxDepth",
+									value: value,
+								})
+							}}
+						/>
+					</div>
+					<div className="text-xs text-vscode-descriptionForeground mt-1">
+						{t("settings:prompts.parentRulesMaxDepth.description")}
 					</div>
 				</div>
 

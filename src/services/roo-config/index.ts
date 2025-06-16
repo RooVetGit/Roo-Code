@@ -1,6 +1,8 @@
 import * as path from "path"
 import * as os from "os"
 import fs from "fs/promises"
+import { string } from "zod"
+import { dir } from "console"
 
 /**
  * Gets the global .roo directory path based on the current platform
@@ -145,15 +147,48 @@ export async function readFileIfExists(filePath: string): Promise<string | null>
  * ```
  */
 export function getRooDirectoriesForCwd(cwd: string): string[] {
-	const directories: string[] = []
+	const directories: Set<string> = new Set<string>()
 
 	// Add global directory first
-	directories.push(getGlobalRooDirectory())
+	directories.add(getGlobalRooDirectory())
 
-	// Add project-local directory second
-	directories.push(getProjectRooDirectoryForCwd(cwd))
+	// Add project and any parent directories
+	let currentCwd = path.resolve(cwd)
+	const rootDir = path.parse(currentCwd).root
 
-	return directories
+	// Get parentRulesMaxDepth from global state
+	let maxDepth = 1
+	try {
+		const { ContextProxy } = require("../../core/config/ContextProxy")
+		maxDepth = ContextProxy.instance?.getValue("parentRulesMaxDepth") ?? 1
+		console.log("Using parentRulesMaxDepth:", maxDepth)
+	} catch (error) {
+		// In test environments, ContextProxy might not be initialized
+		// Fall back to default value of 1
+		console.error("Using default parentRulesMaxDepth: 1", error)
+	}
+
+	let currentDepth = 0
+
+	// Loop from initialCwd up to root or until max depth is reached
+	while (currentDepth < maxDepth) {
+		directories.add(getProjectRooDirectoryForCwd(currentCwd))
+
+		// Stop if we've reached the root directory
+		if (currentCwd === rootDir) {
+			break
+		}
+		const parentCwd = path.resolve(currentCwd, "..")
+
+		// Safety break if path.resolve doesn't change currentCwd (e.g., already at root)
+		if (parentCwd === currentCwd) {
+			break
+		}
+		currentCwd = parentCwd
+		currentDepth++
+	}
+
+	return Array.from(directories).sort()
 }
 
 /**

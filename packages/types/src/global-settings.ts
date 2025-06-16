@@ -48,6 +48,7 @@ export const globalSettingsSchema = z.object({
 	allowedCommands: z.array(z.string()).optional(),
 	allowedMaxRequests: z.number().nullish(),
 	autoCondenseContext: z.boolean().optional(),
+	parentRulesMaxDepth: z.number().min(1).optional(),
 	autoCondenseContextPercent: z.number().optional(),
 	maxConcurrentFileReads: z.number().optional(),
 
