@@ -10,6 +10,37 @@ export interface CloudUserInfo {
 	name?: string
 	email?: string
 	picture?: string
+	organizationId?: string
+	organizationName?: string
+	organizationRole?: string
+}
+
+/**
+ * Clerk Organization Membership Types
+ */
+
+export interface ClerkOrganization {
+	id: string
+	name: string
+	slug?: string
+	image_url?: string
+	has_image?: boolean
+	created_at?: number
+	updated_at?: number
+}
+
+export interface ClerkOrganizationMembership {
+	id: string
+	organization: ClerkOrganization
+	role: string
+	permissions?: string[]
+	created_at?: number
+	updated_at?: number
+}
+
+export interface ClerkOrganizationMembershipsResponse {
+	data: ClerkOrganizationMembership[]
+	total_count?: number
 }
 
 /**
