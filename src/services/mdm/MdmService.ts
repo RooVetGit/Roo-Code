@@ -150,7 +150,7 @@ export class MdmService {
 
 		switch (platform) {
 			case "win32": {
-				// Windows: %ProgramData%\RooCode\mdm.json or mcp.mdm.json
+				// Windows: %ProgramData%\RooCode\mdm.json or mdm.dev.json
 				const programData = process.env.PROGRAMDATA || "C:\\ProgramData"
 				return path.join(programData, "RooCode", configFileName)
 			}
