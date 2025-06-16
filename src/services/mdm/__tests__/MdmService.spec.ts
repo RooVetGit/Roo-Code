@@ -1,37 +1,36 @@
 import * as path from "path"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 
 // Mock dependencies
-jest.mock("fs", () => ({
-	existsSync: jest.fn(),
-	readFileSync: jest.fn(),
+vi.mock("fs", () => ({
+	existsSync: vi.fn(),
+	readFileSync: vi.fn(),
 }))
 
-const mockOs = {
-	platform: jest.fn(),
-}
+vi.mock("os", () => ({
+	platform: vi.fn(),
+}))
 
-jest.mock("os", () => mockOs)
-
-jest.mock("@roo-code/cloud", () => ({
+vi.mock("@roo-code/cloud", () => ({
 	CloudService: {
-		hasInstance: jest.fn(),
+		hasInstance: vi.fn(),
 		instance: {
-			hasActiveSession: jest.fn(),
-			getOrganizationId: jest.fn(),
+			hasActiveSession: vi.fn(),
+			getOrganizationId: vi.fn(),
 		},
 	},
 }))
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
 	workspace: {
-		getConfiguration: jest.fn(),
+		getConfiguration: vi.fn(),
 	},
 	ConfigurationTarget: {
 		Global: 1,
 	},
 }))
 
-jest.mock("../../../shared/package", () => ({
+vi.mock("../../../shared/package", () => ({
 	Package: {
 		publisher: "roo-code",
 		name: "roo-cline",
@@ -47,9 +46,10 @@ import * as vscode from "vscode"
 import { MdmService } from "../MdmService"
 import { CloudService } from "@roo-code/cloud"
 
-const mockFs = fs as jest.Mocked<typeof fs>
-const mockCloudService = CloudService as jest.Mocked<typeof CloudService>
-const mockVscode = vscode as jest.Mocked<typeof vscode>
+const mockFs = fs as any
+const mockOs = os as any
+const mockCloudService = CloudService as any
+const mockVscode = vscode as any
 
 describe("MdmService", () => {
 	let originalPlatform: string
@@ -66,13 +66,13 @@ describe("MdmService", () => {
 
 		// Setup VSCode mocks
 		const mockConfig = {
-			get: jest.fn().mockReturnValue(false),
-			update: jest.fn().mockResolvedValue(undefined),
+			get: vi.fn().mockReturnValue(false),
+			update: vi.fn().mockResolvedValue(undefined),
 		}
-		;(mockVscode.workspace.getConfiguration as jest.Mock).mockReturnValue(mockConfig)
+		mockVscode.workspace.getConfiguration.mockReturnValue(mockConfig)
 
 		// Reset mocks
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	afterEach(() => {
@@ -235,7 +235,7 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			mockCloudService.hasInstance.mockReturnValue(true)
-			;(mockCloudService.instance.hasActiveSession as jest.Mock).mockReturnValue(true)
+			mockCloudService.instance.hasActiveSession.mockReturnValue(true)
 
 			const service = await MdmService.createInstance()
 			const compliance = service.isCompliant()
@@ -268,8 +268,8 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			mockCloudService.hasInstance.mockReturnValue(true)
-			;(mockCloudService.instance.hasActiveSession as jest.Mock).mockReturnValue(true)
-			;(mockCloudService.instance.getOrganizationId as jest.Mock).mockReturnValue("different-org-456")
+			mockCloudService.instance.hasActiveSession.mockReturnValue(true)
+			mockCloudService.instance.getOrganizationId.mockReturnValue("different-org-456")
 
 			const service = await MdmService.createInstance()
 			const compliance = service.isCompliant()
@@ -289,8 +289,8 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			mockCloudService.hasInstance.mockReturnValue(true)
-			;(mockCloudService.instance.hasActiveSession as jest.Mock).mockReturnValue(true)
-			;(mockCloudService.instance.getOrganizationId as jest.Mock).mockReturnValue("correct-org-123")
+			mockCloudService.instance.hasActiveSession.mockReturnValue(true)
+			mockCloudService.instance.getOrganizationId.mockReturnValue("correct-org-123")
 
 			const service = await MdmService.createInstance()
 			const compliance = service.isCompliant()
@@ -310,10 +310,10 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			const mockVsCodeConfig = {
-				get: jest.fn().mockReturnValue(false), // rooCodeCloudEnabled is false
-				update: jest.fn().mockResolvedValue(undefined),
+				get: vi.fn().mockReturnValue(false), // rooCodeCloudEnabled is false
+				update: vi.fn().mockResolvedValue(undefined),
 			}
-			;(mockVscode.workspace.getConfiguration as jest.Mock).mockReturnValue(mockVsCodeConfig)
+			mockVscode.workspace.getConfiguration.mockReturnValue(mockVsCodeConfig)
 
 			await MdmService.createInstance()
 
@@ -332,10 +332,10 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			const mockVsCodeConfig = {
-				get: jest.fn().mockReturnValue(true), // rooCodeCloudEnabled is already true
-				update: jest.fn().mockResolvedValue(undefined),
+				get: vi.fn().mockReturnValue(true), // rooCodeCloudEnabled is already true
+				update: vi.fn().mockResolvedValue(undefined),
 			}
-			;(mockVscode.workspace.getConfiguration as jest.Mock).mockReturnValue(mockVsCodeConfig)
+			mockVscode.workspace.getConfiguration.mockReturnValue(mockVsCodeConfig)
 
 			await MdmService.createInstance()
 
@@ -352,10 +352,10 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			const mockVsCodeConfig = {
-				get: jest.fn().mockReturnValue(false),
-				update: jest.fn().mockResolvedValue(undefined),
+				get: vi.fn().mockReturnValue(false),
+				update: vi.fn().mockResolvedValue(undefined),
 			}
-			;(mockVscode.workspace.getConfiguration as jest.Mock).mockReturnValue(mockVsCodeConfig)
+			mockVscode.workspace.getConfiguration.mockReturnValue(mockVsCodeConfig)
 
 			await MdmService.createInstance()
 
@@ -366,10 +366,10 @@ describe("MdmService", () => {
 			mockFs.existsSync.mockReturnValue(false)
 
 			const mockVsCodeConfig = {
-				get: jest.fn().mockReturnValue(false),
-				update: jest.fn().mockResolvedValue(undefined),
+				get: vi.fn().mockReturnValue(false),
+				update: vi.fn().mockResolvedValue(undefined),
 			}
-			;(mockVscode.workspace.getConfiguration as jest.Mock).mockReturnValue(mockVsCodeConfig)
+			mockVscode.workspace.getConfiguration.mockReturnValue(mockVsCodeConfig)
 
 			await MdmService.createInstance()
 
@@ -385,10 +385,10 @@ describe("MdmService", () => {
 			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
 
 			const mockVsCodeConfig = {
-				get: jest.fn().mockReturnValue(false),
-				update: jest.fn().mockRejectedValue(new Error("Configuration update failed")),
+				get: vi.fn().mockReturnValue(false),
+				update: vi.fn().mockRejectedValue(new Error("Configuration update failed")),
 			}
-			;(mockVscode.workspace.getConfiguration as jest.Mock).mockReturnValue(mockVsCodeConfig)
+			mockVscode.workspace.getConfiguration.mockReturnValue(mockVsCodeConfig)
 
 			// Should not throw
 			await expect(MdmService.createInstance()).resolves.toBeInstanceOf(MdmService)
