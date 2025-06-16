@@ -1,0 +1,8 @@
+{
+	"authenticationFailed": "Gömülmeler oluşturulamadı: Kimlik doğrulama başarısız oldu. Lütfen API anahtarınızı kontrol edin.",
+	"failedWithStatus": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı: {{errorMessage}}",
+	"failedMaxAttempts": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı",
+	"textExceedsTokenLimit": "{{index}} dizinindeki metin maksimum jeton sınırını aşıyor ({{itemTokens}} > {{maxTokens}}). Atlanıyor.",
+	"rateLimitRetry": "Hız sınırına ulaşıldı, {{delayMs}}ms içinde yeniden deneniyor (deneme {{attempt}}/{{maxRetries}})"
+}

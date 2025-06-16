@@ -1,0 +1,8 @@
+{
+	"authenticationFailed": "Creazione degli embedding non riuscita: Autenticazione fallita. Controlla la tua chiave API.",
+	"failedWithStatus": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi: {{errorMessage}}",
+	"failedMaxAttempts": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi",
+	"textExceedsTokenLimit": "Il testo all'indice {{index}} supera il limite massimo di token ({{itemTokens}} > {{maxTokens}}). Saltato.",
+	"rateLimitRetry": "Limite di velocità raggiunto, nuovo tentativo tra {{delayMs}}ms (tentativo {{attempt}}/{{maxRetries}})"
+}

@@ -1,0 +1,8 @@
+{
+	"authenticationFailed": "建立內嵌失敗：驗證失敗。請檢查您的 API 金鑰。",
+	"failedWithStatus": "嘗試 {{attempts}} 次後建立內嵌失敗：HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "嘗試 {{attempts}} 次後建立內嵌失敗：{{errorMessage}}",
+	"failedMaxAttempts": "嘗試 {{attempts}} 次後建立內嵌失敗",
+	"textExceedsTokenLimit": "索引 {{index}} 處的文字超過最大權杖限制 ({{itemTokens}} > {{maxTokens}})。正在略過。",
+	"rateLimitRetry": "已達到速率限制，將在 {{delayMs}} 毫秒後重試（嘗試次數 {{attempt}}/{{maxRetries}}）"
+}

@@ -1,0 +1,8 @@
+{
+	"authenticationFailed": "No se pudieron crear las incrustaciones: Error de autenticación. Comprueba tu clave de API.",
+	"failedWithStatus": "No se pudieron crear las incrustaciones después de {{attempts}} intentos: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "No se pudieron crear las incrustaciones después de {{attempts}} intentos: {{errorMessage}}",
+	"failedMaxAttempts": "No se pudieron crear las incrustaciones después de {{attempts}} intentos",
+	"textExceedsTokenLimit": "El texto en el índice {{index}} supera el límite máximo de tokens ({{itemTokens}} > {{maxTokens}}). Omitiendo.",
+	"rateLimitRetry": "Límite de velocidad alcanzado, reintentando en {{delayMs}}ms (intento {{attempt}}/{{maxRetries}})"
+}

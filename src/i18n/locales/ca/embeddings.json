@@ -1,0 +1,8 @@
+{
+	"authenticationFailed": "No s'han pogut crear les incrustacions: ha fallat l'autenticació. Comproveu la vostra clau d'API.",
+	"failedWithStatus": "No s'han pogut crear les incrustacions després de {{attempts}} intents: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "No s'han pogut crear les incrustacions després de {{attempts}} intents: {{errorMessage}}",
+	"failedMaxAttempts": "No s'han pogut crear les incrustacions després de {{attempts}} intents",
+	"textExceedsTokenLimit": "El text a l'índex {{index}} supera el límit màxim de testimonis ({{itemTokens}} > {{maxTokens}}). S'està ometent.",
+	"rateLimitRetry": "S'ha assolit el límit de velocitat, es torna a intentar en {{delayMs}}ms (intent {{attempt}}/{{maxRetries}})"
+}
