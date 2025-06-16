@@ -1604,7 +1604,7 @@ export class McpHub {
 			const addToolToDisabledList = !isEnabled
 			await this.updateServerToolList(serverName, source, toolName, "disabledTools", addToolToDisabledList)
 		} catch (error) {
-			this.showErrorMessage(`Failed to update disabledForPromptTool settings for tool ${toolName}`, error)
+			this.showErrorMessage(`Failed to update settings for tool ${toolName}`, error)
 			throw error // Re-throw to ensure the error is properly handled
 		}
 	}
