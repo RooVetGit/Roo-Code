@@ -6,6 +6,22 @@ import { MAX_ITEM_TOKENS, INITIAL_RETRY_DELAY_MS } from "../../constants"
 // Mock the OpenAI SDK
 vitest.mock("openai")
 
+// Mock i18n
+vitest.mock("../../../../i18n", () => ({
+	t: (key: string, params?: Record<string, any>) => {
+		const translations: Record<string, string> = {
+			"embeddings:authenticationFailed":
+				"Failed to create embeddings: Authentication failed. Please check your API key.",
+			"embeddings:failedWithStatus": `Failed to create embeddings after ${params?.attempts} attempts: HTTP ${params?.statusCode} - ${params?.errorMessage}`,
+			"embeddings:failedWithError": `Failed to create embeddings after ${params?.attempts} attempts: ${params?.errorMessage}`,
+			"embeddings:failedMaxAttempts": `Failed to create embeddings after ${params?.attempts} attempts`,
+			"embeddings:textExceedsTokenLimit": `Text at index ${params?.index} exceeds maximum token limit (${params?.itemTokens} > ${params?.maxTokens}). Skipping.`,
+			"embeddings:rateLimitRetry": `Rate limit hit, retrying in ${params?.delayMs}ms (attempt ${params?.attempt}/${params?.maxRetries})`,
+		}
+		return translations[key] || key
+	},
+}))
+
 const MockedOpenAI = OpenAI as MockedClass<typeof OpenAI>
 
 describe("OpenAICompatibleEmbedder", () => {

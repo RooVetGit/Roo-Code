@@ -8,6 +8,7 @@ import {
 	MAX_BATCH_RETRIES as MAX_RETRIES,
 	INITIAL_RETRY_DELAY_MS as INITIAL_DELAY_MS,
 } from "../constants"
+import { t } from "../../../i18n"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -50,7 +51,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 
 				if (itemTokens > MAX_ITEM_TOKENS) {
 					console.warn(
-						`Text at index ${i} exceeds maximum token limit (${itemTokens} > ${MAX_ITEM_TOKENS}). Skipping.`,
+						t("embeddings:textExceedsTokenLimit", {
+							index: i,
+							itemTokens,
+							maxTokens: MAX_ITEM_TOKENS,
+						}),
 					)
 					processedIndices.push(i)
 					continue
@@ -111,7 +116,13 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 
 				if (isRateLimitError && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
-					console.warn(`Rate limit hit, retrying in ${delayMs}ms (attempt ${attempts + 1}/${MAX_RETRIES})`)
+					console.warn(
+						t("embeddings:rateLimitRetry", {
+							delayMs,
+							attempt: attempts + 1,
+							maxRetries: MAX_RETRIES,
+						}),
+					)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
 				}
@@ -136,20 +147,18 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				const statusCode = error?.status || error?.response?.status
 
 				if (statusCode === 401) {
-					throw new Error(
-						`Failed to create embeddings: Authentication failed. Please check your OpenAI API key.`,
-					)
+					throw new Error(t("embeddings:authenticationFailed"))
 				} else if (statusCode) {
 					throw new Error(
-						`Failed to create embeddings after ${MAX_RETRIES} attempts: HTTP ${statusCode} - ${errorMessage}`,
+						t("embeddings:failedWithStatus", { attempts: MAX_RETRIES, statusCode, errorMessage }),
 					)
 				} else {
-					throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts: ${errorMessage}`)
+					throw new Error(t("embeddings:failedWithError", { attempts: MAX_RETRIES, errorMessage }))
 				}
 			}
 		}
 
-		throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts`)
+		throw new Error(t("embeddings:failedMaxAttempts", { attempts: MAX_RETRIES }))
 	}
 
 	get embedderInfo(): EmbedderInfo {
