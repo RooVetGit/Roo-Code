@@ -16,10 +16,10 @@ export interface CloudUserInfo {
 }
 
 /**
- * Clerk Organization Membership Types
+ * CloudOrganization Types
  */
 
-export interface ClerkOrganization {
+export interface CloudOrganization {
 	id: string
 	name: string
 	slug?: string
@@ -29,17 +29,17 @@ export interface ClerkOrganization {
 	updated_at?: number
 }
 
-export interface ClerkOrganizationMembership {
+export interface CloudOrganizationMembership {
 	id: string
-	organization: ClerkOrganization
+	organization: CloudOrganization
 	role: string
 	permissions?: string[]
 	created_at?: number
 	updated_at?: number
 }
 
-export interface ClerkOrganizationMembershipsResponse {
-	data: ClerkOrganizationMembership[]
+export interface CloudOrganizationMembershipsResponse {
+	data: CloudOrganizationMembership[]
 	total_count?: number
 }
 

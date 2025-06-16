@@ -5,7 +5,7 @@ import axios from "axios"
 import * as vscode from "vscode"
 import { z } from "zod"
 
-import type { CloudUserInfo, ClerkOrganizationMembership } from "@roo-code/types"
+import type { CloudUserInfo, CloudOrganizationMembership } from "@roo-code/types"
 
 import { getClerkBaseUrl, getRooCodeApiUrl } from "./Config"
 import { RefreshTimer } from "./RefreshTimer"
@@ -443,7 +443,7 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		return userInfo
 	}
 
-	private async clerkGetOrganizationMemberships(): Promise<ClerkOrganizationMembership[]> {
+	private async clerkGetOrganizationMemberships(): Promise<CloudOrganizationMembership[]> {
 		const response = await axios.get(`${getClerkBaseUrl()}/v1/me/organization_memberships`, {
 			headers: {
 				Authorization: `Bearer ${this.credentials!.clientToken}`,
