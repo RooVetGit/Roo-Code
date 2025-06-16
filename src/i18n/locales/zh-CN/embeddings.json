@@ -1,8 +1,8 @@
 {
-	"authenticationFailed": "创建嵌入失败：身份验证失败。请检查您的 API 密钥。",
-	"failedWithStatus": "尝试 {{attempts}} 次后创建嵌入失败：HTTP {{statusCode}} - {{errorMessage}}",
-	"failedWithError": "尝试 {{attempts}} 次后创建嵌入失败：{{errorMessage}}",
-	"failedMaxAttempts": "尝试 {{attempts}} 次后创建嵌入失败",
-	"textExceedsTokenLimit": "索引 {{index}} 处的文本超过最大令牌限制 ({{itemTokens}} > {{maxTokens}})。正在跳过。",
-	"rateLimitRetry": "已达到速率限制，将在 {{delayMs}} 毫秒后重试（尝试次数 {{attempt}}/{{maxRetries}}）"
+	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
+	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",
+	"failedMaxAttempts": "Failed to create embeddings after {{attempts}} attempts",
+	"textExceedsTokenLimit": "Text at index {{index}} exceeds maximum token limit ({{itemTokens}} > {{maxTokens}}). Skipping.",
+	"rateLimitRetry": "Rate limit hit, retrying in {{delayMs}}ms (attempt {{attempt}}/{{maxRetries}})"
 }

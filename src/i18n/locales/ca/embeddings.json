@@ -1,8 +1,8 @@
 {
-	"authenticationFailed": "No s'han pogut crear les incrustacions: ha fallat l'autenticació. Comproveu la vostra clau d'API.",
-	"failedWithStatus": "No s'han pogut crear les incrustacions després de {{attempts}} intents: HTTP {{statusCode}} - {{errorMessage}}",
-	"failedWithError": "No s'han pogut crear les incrustacions després de {{attempts}} intents: {{errorMessage}}",
-	"failedMaxAttempts": "No s'han pogut crear les incrustacions després de {{attempts}} intents",
-	"textExceedsTokenLimit": "El text a l'índex {{index}} supera el límit màxim de testimonis ({{itemTokens}} > {{maxTokens}}). S'està ometent.",
-	"rateLimitRetry": "S'ha assolit el límit de velocitat, es torna a intentar en {{delayMs}}ms (intent {{attempt}}/{{maxRetries}})"
+	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
+	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",
+	"failedMaxAttempts": "Failed to create embeddings after {{attempts}} attempts",
+	"textExceedsTokenLimit": "Text at index {{index}} exceeds maximum token limit ({{itemTokens}} > {{maxTokens}}). Skipping.",
+	"rateLimitRetry": "Rate limit hit, retrying in {{delayMs}}ms (attempt {{attempt}}/{{maxRetries}})"
 }
