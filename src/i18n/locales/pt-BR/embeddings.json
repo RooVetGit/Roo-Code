@@ -1,8 +1,8 @@
 {
-	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
-	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
-	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",
-	"failedMaxAttempts": "Failed to create embeddings after {{attempts}} attempts",
-	"textExceedsTokenLimit": "Text at index {{index}} exceeds maximum token limit ({{itemTokens}} > {{maxTokens}}). Skipping.",
-	"rateLimitRetry": "Rate limit hit, retrying in {{delayMs}}ms (attempt {{attempt}}/{{maxRetries}})"
+	"authenticationFailed": "Falha ao criar embeddings: Falha na autenticação. Verifique sua chave de API.",
+	"failedWithStatus": "Falha ao criar embeddings após {{attempts}} tentativas: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "Falha ao criar embeddings após {{attempts}} tentativas: {{errorMessage}}",
+	"failedMaxAttempts": "Falha ao criar embeddings após {{attempts}} tentativas",
+	"textExceedsTokenLimit": "O texto no índice {{index}} excede o limite máximo de tokens ({{itemTokens}} > {{maxTokens}}). Ignorando.",
+	"rateLimitRetry": "Limite de taxa atingido, tentando novamente em {{delayMs}}ms (tentativa {{attempt}}/{{maxRetries}})"
 }

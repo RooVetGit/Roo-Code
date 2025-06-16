@@ -1,8 +1,8 @@
 {
-	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
-	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
-	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",
-	"failedMaxAttempts": "Failed to create embeddings after {{attempts}} attempts",
-	"textExceedsTokenLimit": "Text at index {{index}} exceeds maximum token limit ({{itemTokens}} > {{maxTokens}}). Skipping.",
-	"rateLimitRetry": "Rate limit hit, retrying in {{delayMs}}ms (attempt {{attempt}}/{{maxRetries}})"
+	"authenticationFailed": "Не удалось создать вложения: Ошибка аутентификации. Проверьте свой ключ API.",
+	"failedWithStatus": "Не удалось создать вложения после {{attempts}} попыток: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "Не удалось создать вложения после {{attempts}} попыток: {{errorMessage}}",
+	"failedMaxAttempts": "Не удалось создать вложения после {{attempts}} попыток",
+	"textExceedsTokenLimit": "Текст в индексе {{index}} превышает максимальный лимит токенов ({{itemTokens}} > {{maxTokens}}). Пропускается.",
+	"rateLimitRetry": "Достигнут лимит скорости, повторная попытка через {{delayMs}} мс (попытка {{attempt}}/{{maxRetries}})"
 }

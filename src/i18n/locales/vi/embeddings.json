@@ -1,8 +1,8 @@
 {
-	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
-	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
-	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",
-	"failedMaxAttempts": "Failed to create embeddings after {{attempts}} attempts",
-	"textExceedsTokenLimit": "Text at index {{index}} exceeds maximum token limit ({{itemTokens}} > {{maxTokens}}). Skipping.",
-	"rateLimitRetry": "Rate limit hit, retrying in {{delayMs}}ms (attempt {{attempt}}/{{maxRetries}})"
+	"authenticationFailed": "Không thể tạo nhúng: Xác thực không thành công. Vui lòng kiểm tra khóa API của bạn.",
+	"failedWithStatus": "Không thể tạo nhúng sau {{attempts}} lần thử: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "Không thể tạo nhúng sau {{attempts}} lần thử: {{errorMessage}}",
+	"failedMaxAttempts": "Không thể tạo nhúng sau {{attempts}} lần thử",
+	"textExceedsTokenLimit": "Văn bản tại chỉ mục {{index}} vượt quá giới hạn mã thông báo tối đa ({{itemTokens}} > {{maxTokens}}). Bỏ qua.",
+	"rateLimitRetry": "Đã đạt đến giới hạn tốc độ, thử lại sau {{delayMs}}ms (lần thử {{attempt}}/{{maxRetries}})"
 }
