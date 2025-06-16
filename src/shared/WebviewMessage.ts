@@ -99,6 +99,7 @@ export interface WebviewMessage {
 		| "enhancePrompt"
 		| "enhancedPrompt"
 		| "draggedImages"
+		| "parentRulesMaxDepth"
 		| "deleteMessage"
 		| "terminalOutputLineLimit"
 		| "terminalShellIntegrationTimeout"

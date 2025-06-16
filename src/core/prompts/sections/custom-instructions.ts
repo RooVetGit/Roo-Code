@@ -250,13 +250,28 @@ export async function addCustomInstructions(
 	let currentCwd = path.resolve(cwd)
 	const rootDir = path.parse(currentCwd).root
 
-	// Loop from initialCwd up to root
-	while (true) {
+	// Get parentRulesMaxDepth from global state
+	let maxDepth = 1
+	try {
+		const { ContextProxy } = require("../../../core/config/ContextProxy")
+		maxDepth = ContextProxy.instance?.getValue("parentRulesMaxDepth") ?? 1
+		console.log("Using parentRulesMaxDepth:", maxDepth)
+	} catch (error) {
+		// In test environments, ContextProxy might not be initialized
+		// Fall back to default value of 1
+		console.log("Using default parentRulesMaxDepth: 1")
+	}
+
+	let currentDepth = 0
+
+	// Loop from initialCwd up to root or until max depth is reached
+	while (currentDepth < maxDepth) {
 		const rulesFromLevel = await addSingleCustomInstructions(currentCwd, mode)
 		if (rulesFromLevel.trim()) {
 			rules.unshift(rulesFromLevel.trim()) // Prepend to get parent rules first
 		}
 
+		// Stop if we've reached the root directory
 		if (currentCwd === rootDir) {
 			break
 		}
@@ -267,6 +282,7 @@ export async function addCustomInstructions(
 			break
 		}
 		currentCwd = parentCwd
+		currentDepth++
 	}
 
 	const sections = []
