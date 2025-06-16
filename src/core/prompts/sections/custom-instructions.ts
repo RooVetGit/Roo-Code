@@ -161,6 +161,7 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 	// Check for .roo/rules/ directory
 	const rooRulesDir = path.join(cwd, ".roo", "rules")
 	if (await directoryExists(rooRulesDir)) {
+		console.log("[Roo Rules] Detected .roo/rules directory:", rooRulesDir)
 		const files = await readTextFilesFromDirectory(rooRulesDir)
 		if (files.length > 0) {
 			return formatDirectoryContent(rooRulesDir, files)
@@ -192,6 +193,7 @@ async function addSingleCustomInstructions(cwd: string, mode: string): Promise<s
 		// Check for .roo/rules-${mode}/ directory
 		const modeRulesDir = path.join(cwd, ".roo", `rules-${mode}`)
 		if (await directoryExists(modeRulesDir)) {
+			console.log(`[Roo Rules] Detected .roo/rules-${mode} directory:`, modeRulesDir)
 			const files = await readTextFilesFromDirectory(modeRulesDir)
 			if (files.length > 0) {
 				modeRuleContent = formatDirectoryContent(modeRulesDir, files)
@@ -255,11 +257,9 @@ export async function addCustomInstructions(
 	try {
 		const { ContextProxy } = require("../../../core/config/ContextProxy")
 		maxDepth = ContextProxy.instance?.getValue("parentRulesMaxDepth") ?? 1
-		console.log("Using parentRulesMaxDepth:", maxDepth)
 	} catch (error) {
 		// In test environments, ContextProxy might not be initialized
 		// Fall back to default value of 1
-		console.log("Using default parentRulesMaxDepth: 1")
 	}
 
 	let currentDepth = 0
