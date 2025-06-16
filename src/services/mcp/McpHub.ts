@@ -840,7 +840,7 @@ export class McpHub {
 
 			// Read from the appropriate config file based on the actual source
 			try {
-				let serverConfigData: any
+				let serverConfigData: Record<string, any> = {}
 				if (actualSource === "project") {
 					// Get project MCP config path
 					const projectMcpPath = await this.getProjectMcpPath()
