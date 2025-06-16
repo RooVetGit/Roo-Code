@@ -34,7 +34,11 @@
 		"about": "Roo Code Hakkında"
 	},
 	"prompts": {
-		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur."
+		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur.",
+		"parentRulesMaxDepth": {
+			"label": "Üst Kural Arama Seviyeleri",
+			"description": ".roo/rules için yukarı doğru aranacak maksimum dizin seviyesi. Varsayılan: 1 (sadece çalışma alanı dizini). Daha yüksek değerler, üst dizinlerden (özellik, depo, organizasyon, kullanıcı-global, vb.) hiyerarşik yüklemeyi etkinleştirir; büyük değerler dosya sistemi köküne kadar arar."
+		}
 	},
 	"codeIndex": {
 		"title": "Kod Tabanı İndeksleme",

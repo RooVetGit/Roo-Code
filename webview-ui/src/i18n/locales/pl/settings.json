@@ -34,7 +34,11 @@
 		"about": "O Roo Code"
 	},
 	"prompts": {
-		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."
+		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych.",
+		"parentRulesMaxDepth": {
+			"label": "Poziomy wyszukiwania reguł nadrzędnych",
+			"description": "Maksymalna liczba poziomów katalogów do przeszukiwania w górę dla plików .roo/rules. Domyślnie: 1 (tylko katalog obszaru roboczego). Wyższe wartości umożliwiają hierarchiczne ładowanie z katalogów nadrzędnych (funkcja, repozytorium, organizacja, globalne użytkownika itp.), gdzie duże wartości przeszukują aż do korzenia systemu plików."
+		}
 	},
 	"codeIndex": {
 		"title": "Indeksowanie kodu",
