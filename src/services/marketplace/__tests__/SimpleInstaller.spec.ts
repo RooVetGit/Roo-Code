@@ -4,7 +4,7 @@ import { SimpleInstaller } from "../SimpleInstaller"
 import * as fs from "fs/promises"
 import * as yaml from "yaml"
 import * as vscode from "vscode"
-import { MarketplaceItem } from "../types"
+import type { MarketplaceItem } from "@roo-code/types"
 import * as path from "path"
 
 vi.mock("fs/promises")
@@ -128,6 +128,7 @@ describe("SimpleInstaller", () => {
 			name: "Test MCP",
 			description: "A test MCP server for testing",
 			type: "mcp",
+			url: "https://example.com/mcp",
 			content: JSON.stringify({
 				command: "test-server",
 				args: ["--test"],

@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "Inclusief bestanden buiten werkruimte",
 				"description": "Sta Roo toe om bestanden buiten de huidige werkruimte aan te maken en te bewerken zonder goedkeuring."
+			},
+			"protected": {
+				"label": "Inclusief beschermde bestanden",
+				"description": "Sta Roo toe om beschermde bestanden (zoals .rooignore en .roo/ configuratiebestanden) aan te maken en te bewerken zonder goedkeuring."
 			}
 		},
 		"browser": {
@@ -609,5 +613,7 @@
 	"labels": {
 		"customArn": "Aangepaste ARN",
 		"useCustomArn": "Aangepaste ARN gebruiken..."
-	}
+	},
+	"includeMaxOutputTokens": "Maximale output tokens opnemen",
+	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet."
 }
