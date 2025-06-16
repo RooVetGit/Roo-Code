@@ -152,6 +152,9 @@ jest.mock("vscode", () => ({
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
+		createTextEditorDecorationType: jest.fn().mockReturnValue({
+			dispose: jest.fn(),
+		}),
 	},
 	workspace: {
 		getConfiguration: jest.fn().mockReturnValue({

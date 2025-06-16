@@ -6,6 +6,10 @@
 		"remove": "Kaldır",
 		"keep": "Tut"
 	},
+	"actions": {
+		"edit": "Düzenle",
+		"delete": "Sil"
+	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",

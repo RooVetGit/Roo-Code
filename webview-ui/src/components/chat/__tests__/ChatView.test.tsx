@@ -1072,3 +1072,33 @@ describe("ChatView - Focus Grabbing Tests", () => {
 		expect(mockFocus).toHaveBeenCalledTimes(FOCUS_CALLS_ON_INIT)
 	})
 })
+
+describe("ChatView - Message Edit Tests", () => {
+	beforeEach(() => jest.clearAllMocks())
+
+	it("renders ChatView component without errors", () => {
+		const { container } = renderChatView()
+
+		// Verify the component renders
+		expect(container).toBeInTheDocument()
+	})
+
+	it("accepts message state updates", () => {
+		renderChatView()
+
+		// Mock a user message state
+		mockPostMessage({
+			clineMessages: [
+				{
+					type: "say",
+					say: "user_feedback",
+					ts: 1234567890,
+					text: "Test message",
+				},
+			],
+		})
+
+		// Verify no errors occurred during state update
+		expect(vscode.postMessage).toHaveBeenCalled()
+	})
+})

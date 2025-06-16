@@ -11,6 +11,10 @@
 		"remove": "Remover",
 		"keep": "Manter"
 	},
+	"actions": {
+		"edit": "Editar",
+		"delete": "Excluir"
+	},
 	"ui": {
 		"search_placeholder": "Pesquisar..."
 	},

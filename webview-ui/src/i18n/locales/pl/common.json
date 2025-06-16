@@ -11,6 +11,10 @@
 		"remove": "Usuń",
 		"keep": "Zachowaj"
 	},
+	"actions": {
+		"edit": "Edytuj",
+		"delete": "Usuń"
+	},
 	"ui": {
 		"search_placeholder": "Szukaj..."
 	},

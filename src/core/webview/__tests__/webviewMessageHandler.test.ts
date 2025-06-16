@@ -2,9 +2,20 @@ import { webviewMessageHandler } from "../webviewMessageHandler"
 import { ClineProvider } from "../ClineProvider"
 import { getModels } from "../../../api/providers/fetchers/modelCache"
 import { ModelRecord } from "../../../shared/api"
+import type { ClineMessage } from "@roo-code/types"
+import * as vscode from "vscode"
 
 // Mock dependencies
 jest.mock("../../../api/providers/fetchers/modelCache")
+jest.mock("vscode", () => ({
+	window: {
+		showWarningMessage: jest.fn(),
+	},
+}))
+jest.mock("../../checkpoints", () => ({
+	checkpointRestore: jest.fn(),
+}))
+
 const mockGetModels = getModels as jest.MockedFunction<typeof getModels>
 
 // Mock ClineProvider
@@ -270,5 +281,95 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			apiKey: "litellm-key", // From config
 			baseUrl: "http://localhost:4000", // From config
 		})
+	})
+})
+
+describe("webviewMessageHandler - editMessage", () => {
+	let mockCline: any
+
+	beforeEach(() => {
+		jest.clearAllMocks()
+
+		// Mock Cline instance
+		mockCline = {
+			taskId: "test-task-id",
+			clineMessages: [
+				{ ts: 1000, type: "say", say: "user_feedback", text: "First message" },
+				{ ts: 2000, type: "say", say: "user_feedback", text: "Second message" },
+				{ ts: 3000, type: "say", say: "checkpoint_saved", text: "Checkpoint saved" },
+				{ ts: 4000, type: "say", say: "user_feedback", text: "Third message" },
+			] as ClineMessage[],
+			apiConversationHistory: [
+				{ ts: 1000, role: "user", content: "First message" },
+				{ ts: 2000, role: "user", content: "Second message" },
+				{ ts: 4000, role: "user", content: "Third message" },
+			],
+			overwriteClineMessages: jest.fn(),
+			overwriteApiConversationHistory: jest.fn(),
+		}
+
+		mockClineProvider.getCurrentCline = jest.fn().mockReturnValue(mockCline)
+		mockClineProvider.getState = jest.fn().mockResolvedValue({ enableCheckpoints: true })
+		mockClineProvider.getTaskWithId = jest.fn().mockResolvedValue({
+			historyItem: { clineMessages: mockCline.clineMessages },
+		})
+		mockClineProvider.postStateToWebview = jest.fn()
+		mockClineProvider.initClineWithHistoryItem = jest.fn()
+	})
+
+	it("handles basic message editing without confirmation", async () => {
+		// Mock no subsequent messages and no checkpoints
+		mockCline.clineMessages = [{ ts: 1000, type: "say", say: "user_feedback", text: "Only message" }]
+		mockClineProvider.getState = jest.fn().mockResolvedValue({ enableCheckpoints: false })
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "editMessage",
+			value: 1000,
+			text: "Edited message",
+		})
+
+		expect(mockClineProvider.initClineWithHistoryItem).toHaveBeenCalled()
+	})
+
+	it("shows confirmation dialog when editing affects subsequent messages", async () => {
+		const mockShowWarning = vscode.window.showWarningMessage as jest.Mock
+		mockShowWarning.mockResolvedValue("Edit Message")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "editMessage",
+			value: 2000, // Edit second message, affecting third message
+			text: "Edited second message",
+		})
+
+		expect(mockShowWarning).toHaveBeenCalledWith(
+			"Edit and delete subsequent messages?\n\n• 1 checkpoint(s) will be removed",
+			{ modal: true },
+			"Edit Message",
+		)
+		expect(mockClineProvider.initClineWithHistoryItem).toHaveBeenCalled()
+	})
+
+	it("cancels edit when user declines confirmation", async () => {
+		const mockShowWarning = vscode.window.showWarningMessage as jest.Mock
+		mockShowWarning.mockResolvedValue(undefined) // User cancelled
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "editMessage",
+			value: 2000,
+			text: "This edit should be cancelled",
+		})
+
+		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockClineProvider.initClineWithHistoryItem).not.toHaveBeenCalled()
+	})
+
+	it("handles invalid message parameters gracefully", async () => {
+		await webviewMessageHandler(mockClineProvider, {
+			type: "editMessage",
+			value: undefined, // Invalid value
+			text: "Should not process",
+		})
+
+		expect(mockClineProvider.initClineWithHistoryItem).not.toHaveBeenCalled()
 	})
 })

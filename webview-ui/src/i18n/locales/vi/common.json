@@ -6,6 +6,10 @@
 		"remove": "Xóa",
 		"keep": "Giữ"
 	},
+	"actions": {
+		"edit": "Chỉnh sửa",
+		"delete": "Xóa"
+	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",

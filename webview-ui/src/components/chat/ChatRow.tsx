@@ -107,10 +107,40 @@ export const ChatRowContent = ({
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
 	const { copyWithFeedback } = useCopyToClipboard()
 
+	// Edit mode state
+	const [isEditing, setIsEditing] = useState(false)
+	const [editValue, setEditValue] = useState(message.text || "")
+	const [editImages, setEditImages] = useState<string[]>(message.images || [])
+
 	// Memoized callback to prevent re-renders caused by inline arrow functions
 	const handleToggleExpand = useCallback(() => {
 		onToggleExpand(message.ts)
 	}, [onToggleExpand, message.ts])
+
+	// Edit mode handlers
+	const handleEditSave = useCallback(() => {
+		if (editValue.trim() || editImages.length > 0) {
+			vscode.postMessage({
+				type: "editMessage",
+				value: message.ts,
+				text: editValue.trim(),
+				images: editImages.length > 0 ? editImages : undefined,
+			})
+			setIsEditing(false)
+		}
+	}, [editValue, editImages, message.ts])
+
+	const handleEditCancel = useCallback(() => {
+		setEditValue(message.text || "")
+		setEditImages(message.images || [])
+		setIsEditing(false)
+	}, [message.text, message.images])
+
+	const handleStartEdit = useCallback(() => {
+		setEditValue(message.text || "")
+		setEditImages(message.images || [])
+		setIsEditing(true)
+	}, [message.text, message.images])
 
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
@@ -978,23 +1008,106 @@ export const ChatRowContent = ({
 						</div>
 					)
 				case "user_feedback":
-					return (
-						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
-							<div className="flex justify-between">
-								<div className="flex-grow px-2 py-1 wrap-anywhere">
-									<Mention text={message.text} withShadow />
+					if (isEditing) {
+						return (
+							<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden">
+								<div className="space-y-2 p-1">
+									<textarea
+										value={editValue}
+										onChange={(e) => setEditValue(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+												e.preventDefault()
+												handleEditSave()
+											} else if (e.key === "Escape") {
+												e.preventDefault()
+												handleEditCancel()
+											}
+										}}
+										className="w-full min-h-[60px] max-h-[200px] p-2 
+											bg-vscode-input-background 
+											text-vscode-input-foreground 
+											rounded-xs resize-none 
+											focus:outline-none focus:ring-1 focus:ring-vscode-focusBorder"
+										placeholder={t("chat:typeMessagePlaceholder")}
+										autoFocus
+									/>
+									{editImages.length > 0 && (
+										<Thumbnails
+											images={editImages}
+											style={{ marginTop: "4px" }}
+											setImages={setEditImages}
+										/>
+									)}
+									<div className="flex gap-2 justify-between">
+										<Button
+											variant="ghost"
+											size="icon"
+											title={t("chat:addImages")}
+											onClick={async (e) => {
+												e.stopPropagation()
+												vscode.postMessage({ type: "selectImages" })
+												// Wait for the response
+												const handleSelectedImages = (event: MessageEvent) => {
+													const message = event.data
+													if (message.type === "selectedImages" && message.images) {
+														setEditImages([...editImages, ...message.images])
+														window.removeEventListener("message", handleSelectedImages)
+													}
+												}
+												window.addEventListener("message", handleSelectedImages)
+											}}
+											disabled={editImages.length >= 20}>
+											<span className="codicon codicon-file-media" />
+										</Button>
+										<div className="flex gap-2">
+											<Button variant="secondary" size="sm" onClick={handleEditCancel}>
+												{t("chat:cancel.title")}
+											</Button>
+											<Button
+												variant="default"
+												size="sm"
+												onClick={handleEditSave}
+												disabled={!editValue.trim() && editImages.length === 0}>
+												{t("chat:save.title")}
+											</Button>
+										</div>
+									</div>
 								</div>
+							</div>
+						)
+					}
+
+					return (
+						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap relative group">
+							<div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
 								<Button
 									variant="ghost"
-									size="icon"
-									className="shrink-0"
+									size="sm"
+									className="h-4.5 w-4.5 p-0"
 									disabled={isStreaming}
+									title={t("common:actions.edit")}
+									onClick={(e) => {
+										e.stopPropagation()
+										handleStartEdit()
+									}}>
+									<span className="codicon codicon-edit" style={{ fontSize: "11px" }} />
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-4.5 w-4.5 p-0"
+									disabled={isStreaming}
+									title={t("common:actions.delete")}
 									onClick={(e) => {
 										e.stopPropagation()
 										vscode.postMessage({ type: "deleteMessage", value: message.ts })
 									}}>
-									<span className="codicon codicon-trash" />
+									<span className="codicon codicon-trash" style={{ fontSize: "11px" }} />
 								</Button>
+							</div>
+							<div className="px-2 py-1 wrap-anywhere">
+								<Mention text={message.text} withShadow />
 							</div>
 							{message.images && message.images.length > 0 && (
 								<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
