@@ -5,12 +5,14 @@ import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 
 interface DiffSettingsControlProps {
 	diffEnabled?: boolean
+	disableDiffVisualization?: boolean
 	fuzzyMatchThreshold?: number
-	onChange: (field: "diffEnabled" | "fuzzyMatchThreshold", value: any) => void
+	onChange: (field: "diffEnabled" | "disableDiffVisualization" | "fuzzyMatchThreshold", value: any) => void
 }
 
 export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 	diffEnabled = true,
+	disableDiffVisualization = false,
 	fuzzyMatchThreshold = 1.0,
 	onChange,
 }) => {
@@ -19,6 +21,13 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 	const handleDiffEnabledChange = useCallback(
 		(e: any) => {
 			onChange("diffEnabled", e.target.checked)
+		},
+		[onChange],
+	)
+
+	const handleDisableDiffVisualizationChange = useCallback(
+		(e: any) => {
+			onChange("disableDiffVisualization", e.target.checked)
 		},
 		[onChange],
 	)
@@ -59,6 +68,19 @@ export const DiffSettingsControl: React.FC<DiffSettingsControlProps> = ({
 						</div>
 						<div className="text-vscode-descriptionForeground text-sm mt-1">
 							{t("settings:advanced.diff.matchPrecision.description")}
+						</div>
+					</div>
+
+					<div>
+						<VSCodeCheckbox
+							checked={disableDiffVisualization}
+							onChange={handleDisableDiffVisualizationChange}>
+							<span className="font-medium">
+								{t("settings:advanced.diff.disableVisualization.label")}
+							</span>
+						</VSCodeCheckbox>
+						<div className="text-vscode-descriptionForeground text-sm">
+							{t("settings:advanced.diff.disableVisualization.description")}
 						</div>
 					</div>
 				</div>

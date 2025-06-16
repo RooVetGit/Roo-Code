@@ -104,6 +104,7 @@ export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
 	enableDiff?: boolean
+	disableDiffVisualization?: boolean
 	enableCheckpoints?: boolean
 	fuzzyMatchThreshold?: number
 	consecutiveMistakeLimit?: number
@@ -206,6 +207,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		provider,
 		apiConfiguration,
 		enableDiff = false,
+		disableDiffVisualization = false,
 		enableCheckpoints = true,
 		fuzzyMatchThreshold = 1.0,
 		consecutiveMistakeLimit = 3,
@@ -250,7 +252,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
-		this.diffViewProvider = new DiffViewProvider(this.cwd)
+		this.diffViewProvider = new DiffViewProvider(this.cwd, disableDiffVisualization)
 		this.enableCheckpoints = enableCheckpoints
 
 		this.rootTask = rootTask

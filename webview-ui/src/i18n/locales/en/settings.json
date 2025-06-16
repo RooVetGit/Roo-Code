@@ -469,6 +469,10 @@
 			"matchPrecision": {
 				"label": "Match precision",
 				"description": "This slider controls how precisely code sections must match when applying diffs. Lower values allow more flexible matching but increase the risk of incorrect replacements. Use values below 100% with extreme caution."
+			},
+			"disableVisualization": {
+				"label": "Disable diff visualization",
+				"description": "When enabled, files will open directly in the editor instead of showing a diff view. This can prevent LSP crashes with very large files. You can still see the changes in the chat window."
 			}
 		}
 	},
