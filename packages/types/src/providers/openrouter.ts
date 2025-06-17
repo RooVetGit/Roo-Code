@@ -70,8 +70,8 @@ export const OPEN_ROUTER_COMPUTER_USE_MODELS = new Set([
 // We should *not* be adding new models to this set.
 export const OPEN_ROUTER_REQUIRED_REASONING_BUDGET_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet:thinking",
+	"google/gemini-2.5-pro",
 	"google/gemini-2.5-flash-preview-05-20:thinking",
-	"google/gemini-2.5-flash-lite-preview-06-17:thinking",
 ])
 
 export const OPEN_ROUTER_REASONING_BUDGET_MODELS = new Set([
