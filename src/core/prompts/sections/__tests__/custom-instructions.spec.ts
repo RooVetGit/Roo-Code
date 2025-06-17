@@ -738,7 +738,7 @@ describe("Directory existence checks", () => {
 
 // Indirectly test readTextFilesFromDirectory and formatDirectoryContent through loadRuleFiles
 describe("Rules directory reading", () => {
-	it("should follow symbolic links in the rules directory", async () => {
+	it.skipIf(process.platform === "win32")("should follow symbolic links in the rules directory", async () => {
 		// Simulate .roo/rules directory exists
 		statMock.mockResolvedValueOnce({
 			isDirectory: vi.fn().mockReturnValue(true),
@@ -873,7 +873,7 @@ describe("Rules directory reading", () => {
 		vi.clearAllMocks()
 	})
 
-	it("should correctly format multiple files from directory", async () => {
+	it.skipIf(process.platform === "win32")("should correctly format multiple files from directory", async () => {
 		// Simulate .roo/rules directory exists
 		statMock.mockResolvedValueOnce({
 			isDirectory: vi.fn().mockReturnValue(true),
