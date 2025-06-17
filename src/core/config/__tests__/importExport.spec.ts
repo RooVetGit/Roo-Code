@@ -14,6 +14,11 @@ import { ContextProxy } from "../ContextProxy"
 import { CustomModesManager } from "../CustomModesManager"
 
 import type { Mock } from "vitest"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
+
+vi.mock("../../../utils/safeWriteJson", () => ({
+	safeWriteJson: vi.fn(),
+}))
 
 vi.mock("vscode", () => ({
 	window: {
@@ -384,11 +389,10 @@ describe("importExport", () => {
 			expect(mockContextProxy.export).toHaveBeenCalled()
 			expect(fs.mkdir).toHaveBeenCalledWith("/mock/path", { recursive: true })
 
-			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/mock/path/roo-code-settings.json",
-				JSON.stringify({ providerProfiles: mockProviderProfiles, globalSettings: mockGlobalSettings }, null, 2),
-				"utf-8",
-			)
+			expect(safeWriteJson).toHaveBeenCalledWith("/mock/path/roo-code-settings.json", {
+				providerProfiles: mockProviderProfiles,
+				globalSettings: mockGlobalSettings,
+			})
 		})
 
 		it("should include globalSettings when allowedMaxRequests is null", async () => {
@@ -417,11 +421,10 @@ describe("importExport", () => {
 				contextProxy: mockContextProxy,
 			})
 
-			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/mock/path/roo-code-settings.json",
-				JSON.stringify({ providerProfiles: mockProviderProfiles, globalSettings: mockGlobalSettings }, null, 2),
-				"utf-8",
-			)
+			expect(safeWriteJson).toHaveBeenCalledWith("/mock/path/roo-code-settings.json", {
+				providerProfiles: mockProviderProfiles,
+				globalSettings: mockGlobalSettings,
+			})
 		})
 
 		it("should handle errors during the export process", async () => {
@@ -447,7 +450,7 @@ describe("importExport", () => {
 			expect(mockProviderSettingsManager.export).toHaveBeenCalled()
 			expect(mockContextProxy.export).toHaveBeenCalled()
 			expect(fs.mkdir).toHaveBeenCalledWith("/mock/path", { recursive: true })
-			expect(fs.writeFile).toHaveBeenCalled()
+			expect(safeWriteJson).toHaveBeenCalled()
 			// The error is caught and the function exits silently.
 		})
 

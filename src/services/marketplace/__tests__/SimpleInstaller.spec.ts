@@ -6,8 +6,10 @@ import * as yaml from "yaml"
 import * as vscode from "vscode"
 import type { MarketplaceItem } from "@roo-code/types"
 import * as path from "path"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 vi.mock("fs/promises")
+vi.mock("../../../utils/safeWriteJson")
 vi.mock("vscode", () => ({
 	workspace: {
 		workspaceFolders: [
@@ -32,8 +34,11 @@ describe("SimpleInstaller", () => {
 		installer = new SimpleInstaller(mockContext)
 		vi.clearAllMocks()
 
-		// Mock mkdir to always succeed
+		// Mock filesystem operations to always succeed
 		mockFs.mkdir.mockResolvedValue(undefined as any)
+
+		// Mock safeWriteJson
+		vi.mocked(safeWriteJson).mockResolvedValue(undefined)
 	})
 
 	describe("installMode", () => {
@@ -144,11 +149,10 @@ describe("SimpleInstaller", () => {
 			const result = await installer.installItem(mockMcpItem, { target: "project" })
 
 			expect(result.filePath).toBe(path.join("/test/workspace", ".roo", "mcp.json"))
-			expect(mockFs.writeFile).toHaveBeenCalled()
+			expect(safeWriteJson).toHaveBeenCalled()
 
 			// Verify the written content contains the new server
-			const writtenContent = mockFs.writeFile.mock.calls[0][1] as string
-			const writtenData = JSON.parse(writtenContent)
+			const writtenData = vi.mocked(safeWriteJson).mock.calls[0][1] as any
 			expect(writtenData.mcpServers["test-mcp"]).toBeDefined()
 		})
 
@@ -162,7 +166,7 @@ describe("SimpleInstaller", () => {
 			)
 
 			// Should NOT write to file
-			expect(mockFs.writeFile).not.toHaveBeenCalled()
+			expect(safeWriteJson).not.toHaveBeenCalled()
 		})
 
 		it("should install MCP when mcp.json contains valid JSON", async () => {
@@ -177,8 +181,7 @@ describe("SimpleInstaller", () => {
 
 			await installer.installItem(mockMcpItem, { target: "project" })
 
-			const writtenContent = mockFs.writeFile.mock.calls[0][1] as string
-			const writtenData = JSON.parse(writtenContent)
+			const writtenData = vi.mocked(safeWriteJson).mock.calls[0][1] as any
 
 			// Should contain both existing and new server
 			expect(Object.keys(writtenData.mcpServers)).toHaveLength(2)
