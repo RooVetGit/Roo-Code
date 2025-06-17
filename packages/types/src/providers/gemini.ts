@@ -49,7 +49,7 @@ export const geminiModels = {
 		cacheWritesPrice: 1.0,
 	},
 	"gemini-2.5-flash": {
-		maxTokens: 65_535,
+		maxTokens: 64_000,
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
