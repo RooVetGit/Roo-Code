@@ -16,6 +16,11 @@ vi.mock("path", async () => ({
 		return args.join(separator)
 	}),
 	relative: vi.fn().mockImplementation((from, to) => to),
+	dirname: vi.fn().mockImplementation((path) => {
+		const separator = process.platform === "win32" ? "\\" : "/"
+		const parts = path.split(/[/\\]/)
+		return parts.slice(0, -1).join(separator)
+	}),
 }))
 
 import fs from "fs/promises"
@@ -142,18 +147,30 @@ describe("loadRuleFiles", () => {
 			{ name: "file2.txt", isFile: () => true, isSymbolicLink: () => false, parentPath: "/fake/path/.roo/rules" },
 		] as any)
 
-		statMock.mockImplementation(
-			(_path) =>
-				({
+		statMock.mockImplementation((path) => {
+			// Handle both Unix and Windows path separators
+			const normalizedPath = path.toString().replace(/\\/g, "/")
+			if (
+				normalizedPath.includes("/fake/path/.roo/rules/file1.txt") ||
+				normalizedPath.includes("/fake/path/.roo/rules/file2.txt")
+			) {
+				return Promise.resolve({
 					isFile: vi.fn().mockReturnValue(true),
-				}) as any,
-		)
+				}) as any
+			}
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(false),
+			}) as any
+		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules/file1.txt") {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules/file1.txt") {
 				return Promise.resolve("content of file1")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/file2.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules/file2.txt") {
 				return Promise.resolve("content of file2")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -170,11 +187,17 @@ describe("loadRuleFiles", () => {
 		expect(result).toContain("content of file2")
 
 		// We expect both checks because our new implementation checks the files again for validation
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file2.txt")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file1.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file2.txt", "utf-8")
+		const expectedRulesDir = process.platform === "win32" ? "\\fake\\path\\.roo\\rules" : "/fake/path/.roo/rules"
+		const expectedFile1Path =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file1.txt" : "/fake/path/.roo/rules/file1.txt"
+		const expectedFile2Path =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file2.txt" : "/fake/path/.roo/rules/file2.txt"
+
+		expect(statMock).toHaveBeenCalledWith(expectedRulesDir)
+		expect(statMock).toHaveBeenCalledWith(expectedFile1Path)
+		expect(statMock).toHaveBeenCalledWith(expectedFile2Path)
+		expect(readFileMock).toHaveBeenCalledWith(expectedFile1Path, "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedFile2Path, "utf-8")
 	})
 
 	it("should fall back to .roorules when .roo/rules/ is empty", async () => {
@@ -258,7 +281,9 @@ describe("loadRuleFiles", () => {
 		] as any)
 
 		statMock.mockImplementation((path: string) => {
-			if (path.endsWith("txt")) {
+			// Handle both Unix and Windows path separators
+			const normalizedPath = path.toString().replace(/\\/g, "/")
+			if (normalizedPath.endsWith("txt")) {
 				return Promise.resolve({
 					isFile: vi.fn().mockReturnValue(true),
 					isDirectory: vi.fn().mockReturnValue(false),
@@ -271,14 +296,16 @@ describe("loadRuleFiles", () => {
 		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			const path = filePath.toString()
-			if (path === "/fake/path/.roo/rules/root.txt") {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules/root.txt") {
 				return Promise.resolve("root file content")
 			}
-			if (path === "/fake/path/.roo/rules/subdir/nested1.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules/subdir/nested1.txt") {
 				return Promise.resolve("nested file 1 content")
 			}
-			if (path === "/fake/path/.roo/rules/subdir/subdir2/nested2.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules/subdir/subdir2/nested2.txt") {
 				return Promise.resolve("nested file 2 content")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -308,14 +335,25 @@ describe("loadRuleFiles", () => {
 		expect(result).toContain("nested file 2 content")
 
 		// Verify correct paths were checked
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/root.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/nested1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/subdir2/nested2.txt")
+		const expectedRootPath2 =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\root.txt" : "/fake/path/.roo/rules/root.txt"
+		const expectedNested1Path2 =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules\\subdir\\nested1.txt"
+				: "/fake/path/.roo/rules/subdir/nested1.txt"
+		const expectedNested2Path2 =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules\\subdir\\subdir2\\nested2.txt"
+				: "/fake/path/.roo/rules/subdir/subdir2/nested2.txt"
+
+		expect(statMock).toHaveBeenCalledWith(expectedRootPath2)
+		expect(statMock).toHaveBeenCalledWith(expectedNested1Path2)
+		expect(statMock).toHaveBeenCalledWith(expectedNested2Path2)
 
 		// Verify files were read with correct paths
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/root.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/nested1.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/subdir2/nested2.txt", "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedRootPath2, "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedNested1Path2, "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedNested2Path2, "utf-8")
 	})
 })
 
@@ -451,18 +489,30 @@ describe("addCustomInstructions", () => {
 			},
 		] as any)
 
-		statMock.mockImplementation(
-			(_path) =>
-				({
+		statMock.mockImplementation((path) => {
+			// Handle both Unix and Windows path separators
+			const normalizedPath = path.toString().replace(/\\/g, "/")
+			if (
+				normalizedPath.includes("/fake/path/.roo/rules-test-mode/rule1.txt") ||
+				normalizedPath.includes("/fake/path/.roo/rules-test-mode/rule2.txt")
+			) {
+				return Promise.resolve({
 					isFile: vi.fn().mockReturnValue(true),
-				}) as any,
-		)
+				}) as any
+			}
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(false),
+			}) as any
+		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules-test-mode/rule1.txt") {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules-test-mode/rule1.txt") {
 				return Promise.resolve("mode specific rule 1")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules-test-mode/rule2.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules-test-mode/rule2.txt") {
 				return Promise.resolve("mode specific rule 2")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -493,11 +543,22 @@ describe("addCustomInstructions", () => {
 		expect(result).toContain(`# Rules from ${expectedRule2Path}:`)
 		expect(result).toContain("mode specific rule 2")
 
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule2.txt")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule1.txt", "utf-8")
-		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule2.txt", "utf-8")
+		const expectedTestModeDir2 =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules-test-mode" : "/fake/path/.roo/rules-test-mode"
+		const expectedRule1Path2 =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules-test-mode\\rule1.txt"
+				: "/fake/path/.roo/rules-test-mode/rule1.txt"
+		const expectedRule2Path2 =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules-test-mode\\rule2.txt"
+				: "/fake/path/.roo/rules-test-mode/rule2.txt"
+
+		expect(statMock).toHaveBeenCalledWith(expectedTestModeDir2)
+		expect(statMock).toHaveBeenCalledWith(expectedRule1Path2)
+		expect(statMock).toHaveBeenCalledWith(expectedRule2Path2)
+		expect(readFileMock).toHaveBeenCalledWith(expectedRule1Path2, "utf-8")
+		expect(readFileMock).toHaveBeenCalledWith(expectedRule2Path2, "utf-8")
 	})
 
 	it("should fall back to .roorules-test-mode when .roo/rules-test-mode/ does not exist", async () => {
@@ -569,7 +630,9 @@ describe("addCustomInstructions", () => {
 		let statCallCount = 0
 		statMock.mockImplementation((filePath) => {
 			statCallCount++
-			if (filePath === "/fake/path/.roo/rules-test-mode/rule1.txt") {
+			// Handle both Unix and Windows path separators
+			const normalizedPath = filePath.toString().replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules-test-mode/rule1.txt") {
 				return Promise.resolve({
 					isFile: vi.fn().mockReturnValue(true),
 					isDirectory: vi.fn().mockReturnValue(false),
@@ -582,7 +645,10 @@ describe("addCustomInstructions", () => {
 		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules-test-mode/rule1.txt") {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules-test-mode/rule1.txt") {
 				return Promise.resolve("mode specific rule content")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -725,16 +791,19 @@ describe("Rules directory reading", () => {
 
 		// Simulate file content reading
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules/regular.txt") {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules/regular.txt") {
 				return Promise.resolve("regular file content")
 			}
-			if (filePath.toString() === "/fake/path/.roo/symlink-target.txt") {
+			if (normalizedPath === "/fake/path/.roo/symlink-target.txt") {
 				return Promise.resolve("symlink target content")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt") {
 				return Promise.resolve("regular file content under symlink target dir")
 			}
-			if (filePath.toString() === "/fake/path/.roo/nested-symlink-target.txt") {
+			if (normalizedPath === "/fake/path/.roo/nested-symlink-target.txt") {
 				return Promise.resolve("nested symlink target content")
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -797,11 +866,13 @@ describe("Rules directory reading", () => {
 		] as any)
 
 		statMock.mockImplementation((path) => {
+			// Handle both Unix and Windows path separators
+			const normalizedPath = path.toString().replace(/\\/g, "/")
 			expect([
 				"/fake/path/.roo/rules/file1.txt",
 				"/fake/path/.roo/rules/file2.txt",
 				"/fake/path/.roo/rules/file3.txt",
-			]).toContain(path)
+			]).toContain(normalizedPath)
 
 			return Promise.resolve({
 				isFile: vi.fn().mockReturnValue(true),
@@ -809,13 +880,16 @@ describe("Rules directory reading", () => {
 		})
 
 		readFileMock.mockImplementation((filePath: PathLike) => {
-			if (filePath.toString() === "/fake/path/.roo/rules/file1.txt") {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules/file1.txt") {
 				return Promise.resolve("content of file1")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/file2.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules/file2.txt") {
 				return Promise.resolve("content of file2")
 			}
-			if (filePath.toString() === "/fake/path/.roo/rules/file3.txt") {
+			if (normalizedPath === "/fake/path/.roo/rules/file3.txt") {
 				return Promise.resolve("content of file3")
 			}
 			return Promise.reject({ code: "ENOENT" })

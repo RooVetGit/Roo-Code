@@ -96,6 +96,16 @@ function createRealCommandStream(command: string): { stream: AsyncIterable<strin
 		}
 	}
 
+	// On Windows, cmd.exe often adds trailing spaces before line endings
+	// This is a known behavior difference between Windows and Unix shells
+	// We need to normalize this for consistent test behavior
+	if (process.platform === "win32") {
+		// Remove trailing spaces before \r\n line endings
+		realOutput = realOutput.replace(/ +\r\n/g, "\r\n")
+		// Remove trailing spaces at the end of the string
+		realOutput = realOutput.replace(/ +$/, "")
+	}
+
 	// Create an async iterator that yields the command output with proper markers
 	// and realistic chunking (not guaranteed to split on newlines)
 	const stream = {
