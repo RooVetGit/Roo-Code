@@ -70,7 +70,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const {
 		clineMessages: messages,
 		currentTaskItem,
-		taskHistory,
 		apiConfiguration,
 		organizationAllowList,
 		mcpServers,
@@ -1393,8 +1392,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} px-3.5 min-[370px]:px-10 pt-5 transition-all duration-300`}>
 						<RooHero />
 						{telemetrySetting === "unset" && <TelemetryBanner />}
-						{/* Show the task history preview if expanded and tasks exist */}
-						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
+						{/* Show the task history preview if expanded */}
+						{isExpanded && <HistoryPreview />}
 						<p className="text-vscode-editor-foreground leading-tight font-vscode-font-family text-center text-balance max-w-[380px] mx-auto">
 							<Trans
 								i18nKey="chat:about"
