@@ -1717,12 +1717,8 @@ export class ClineProvider
 		}
 	}
 
-	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
+	async updateTaskHistory(item: HistoryItem): Promise<void> {
 		await setHistoryItems([item])
-
-		// Return all history items for the current workspace
-		const { getHistoryItemsForSearch } = await import("../task-persistence/taskHistory")
-		return await getHistoryItemsForSearch({ workspacePath: this.cwd })
 	}
 
 	// ContextProxy
