@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest"
-import { vi } from "vitest"
+import { afterAll, vi } from "vitest"
 
 class MockResizeObserver {
 	observe() {}
@@ -21,4 +21,20 @@ Object.defineProperty(window, "matchMedia", {
 		removeEventListener: vi.fn(),
 		dispatchEvent: vi.fn(),
 	})),
+})
+
+// Suppress console.log during tests to reduce noise.
+// Keep console.error for actual errors.
+const originalConsoleLog = console.log
+const originalConsoleWarn = console.warn
+const originalConsoleInfo = console.info
+
+console.log = () => {}
+console.warn = () => {}
+console.info = () => {}
+
+afterAll(() => {
+	console.log = originalConsoleLog
+	console.warn = originalConsoleWarn
+	console.info = originalConsoleInfo
 })
