@@ -9,6 +9,25 @@ class MockResizeObserver {
 
 global.ResizeObserver = MockResizeObserver
 
+// Fix for Microsoft FAST Foundation compatibility with JSDOM
+// FAST Foundation tries to set HTMLElement.focus property, but it's read-only in JSDOM
+// The issue is that FAST Foundation's handleUnsupportedDelegatesFocus tries to set element.focus = originalFocus
+// but JSDOM's HTMLElement.focus is a getter-only property
+Object.defineProperty(HTMLElement.prototype, "focus", {
+	get: function () {
+		return (
+			this._focus ||
+			function () {
+				// Mock focus behavior for tests
+			}
+		)
+	},
+	set: function (value) {
+		this._focus = value
+	},
+	configurable: true,
+})
+
 Object.defineProperty(window, "matchMedia", {
 	writable: true,
 	value: vi.fn().mockImplementation((query) => ({
