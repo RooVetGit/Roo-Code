@@ -3,6 +3,7 @@ import type { ClineProvider } from "../../../core/webview/ClineProvider"
 import type { ExtensionContext, Uri } from "vscode"
 import { ServerConfigSchema, McpHub } from "../McpHub"
 import fs from "fs/promises"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 vi.mock("vscode", () => ({
 	workspace: {
@@ -29,6 +30,9 @@ vi.mock("vscode", () => ({
 	},
 }))
 vi.mock("fs/promises")
+vi.mock("../../../utils/safeWriteJson", () => ({
+	safeWriteJson: vi.fn(),
+}))
 vi.mock("../../../core/webview/ClineProvider")
 
 describe("McpHub", () => {
@@ -146,7 +150,7 @@ describe("McpHub", () => {
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "new-tool", true)
 
 			// Verify the config was updated correctly
-			const writeCalls = vi.mocked(fs.writeFile).mock.calls
+			const writeCalls = vi.mocked(safeWriteJson).mock.calls
 			expect(writeCalls.length).toBeGreaterThan(0)
 
 			// Find the write call
@@ -155,7 +159,7 @@ describe("McpHub", () => {
 
 			// The path might be normalized differently on different platforms,
 			// so we'll just check that we have a call with valid content
-			const writtenConfig = JSON.parse(callToUse[1] as string)
+			const writtenConfig = callToUse[1]
 			expect(writtenConfig.mcpServers).toBeDefined()
 			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
 			expect(Array.isArray(writtenConfig.mcpServers["test-server"].alwaysAllow)).toBe(true)
@@ -195,7 +199,7 @@ describe("McpHub", () => {
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "existing-tool", false)
 
 			// Verify the config was updated correctly
-			const writeCalls = vi.mocked(fs.writeFile).mock.calls
+			const writeCalls = vi.mocked(safeWriteJson).mock.calls
 			expect(writeCalls.length).toBeGreaterThan(0)
 
 			// Find the write call
@@ -204,7 +208,7 @@ describe("McpHub", () => {
 
 			// The path might be normalized differently on different platforms,
 			// so we'll just check that we have a call with valid content
-			const writtenConfig = JSON.parse(callToUse[1] as string)
+			const writtenConfig = callToUse[1]
 			expect(writtenConfig.mcpServers).toBeDefined()
 			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
 			expect(Array.isArray(writtenConfig.mcpServers["test-server"].alwaysAllow)).toBe(true)
@@ -245,13 +249,13 @@ describe("McpHub", () => {
 			// Verify the config was updated with initialized alwaysAllow
 			// Find the write call with the normalized path
 			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-			const writeCalls = vi.mocked(fs.writeFile).mock.calls
+			const writeCalls = vi.mocked(safeWriteJson).mock.calls
 
 			// Find the write call with the normalized path
 			const writeCall = writeCalls.find((call: any) => call[0] === normalizedSettingsPath)
 			const callToUse = writeCall || writeCalls[0]
 
-			const writtenConfig = JSON.parse(callToUse[1] as string)
+			const writtenConfig = callToUse[1]
 			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toBeDefined()
 			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toContain("new-tool")
 		})
@@ -293,13 +297,13 @@ describe("McpHub", () => {
 			// Verify the config was updated correctly
 			// Find the write call with the normalized path
 			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-			const writeCalls = vi.mocked(fs.writeFile).mock.calls
+			const writeCalls = vi.mocked(safeWriteJson).mock.calls
 
 			// Find the write call with the normalized path
 			const writeCall = writeCalls.find((call: any) => call[0] === normalizedSettingsPath)
 			const callToUse = writeCall || writeCalls[0]
 
-			const writtenConfig = JSON.parse(callToUse[1] as string)
+			const writtenConfig = callToUse[1]
 			expect(writtenConfig.mcpServers["test-server"].disabled).toBe(true)
 		})
 
@@ -525,13 +529,13 @@ describe("McpHub", () => {
 				// Verify the config was updated correctly
 				// Find the write call with the normalized path
 				const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-				const writeCalls = vi.mocked(fs.writeFile).mock.calls
+				const writeCalls = vi.mocked(safeWriteJson).mock.calls
 
 				// Find the write call with the normalized path
 				const writeCall = writeCalls.find((call: any) => call[0] === normalizedSettingsPath)
 				const callToUse = writeCall || writeCalls[0]
 
-				const writtenConfig = JSON.parse(callToUse[1] as string)
+				const writtenConfig = callToUse[1]
 				expect(writtenConfig.mcpServers["test-server"].timeout).toBe(120)
 			})
 
@@ -571,7 +575,7 @@ describe("McpHub", () => {
 				await mcpHub.updateServerTimeout("test-server", 3601)
 
 				// Config is written
-				expect(fs.writeFile).toHaveBeenCalled()
+				expect(safeWriteJson).toHaveBeenCalled()
 
 				// Setup connection with invalid timeout
 				const mockConnectionInvalid: McpConnection = {
@@ -637,7 +641,7 @@ describe("McpHub", () => {
 				const validTimeouts = [1, 60, 3600]
 				for (const timeout of validTimeouts) {
 					await mcpHub.updateServerTimeout("test-server", timeout)
-					expect(fs.writeFile).toHaveBeenCalled()
+					expect(safeWriteJson).toHaveBeenCalled()
 					vi.clearAllMocks() // Reset for next iteration
 					;(fs.readFile as any).mockResolvedValueOnce(JSON.stringify(mockConfig))
 				}
