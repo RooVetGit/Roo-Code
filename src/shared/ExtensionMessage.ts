@@ -55,6 +55,7 @@ export interface ExtensionMessage {
 		| "state"
 		| "selectedImages"
 		| "theme"
+		| "historyItems"
 		| "workspaceUpdated"
 		| "invoke"
 		| "messageUpdated"
@@ -148,7 +149,7 @@ export interface ExtensionMessage {
 	setting?: string
 	value?: any
 	hasContent?: boolean // For checkRulesDirectoryResult
-	items?: MarketplaceItem[]
+	items?: MarketplaceItem[] | HistoryItem[]
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
 	tab?: string

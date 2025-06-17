@@ -69,6 +69,7 @@ describe("HistoryPreview", () => {
 	it("renders nothing when no tasks are available", () => {
 		mockUseTaskSearch.mockReturnValue({
 			tasks: [],
+			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
 			sortOption: "newest",
@@ -89,6 +90,7 @@ describe("HistoryPreview", () => {
 	it("renders up to 3 tasks when tasks are available", () => {
 		mockUseTaskSearch.mockReturnValue({
 			tasks: mockTasks,
+			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
 			sortOption: "newest",
@@ -112,6 +114,7 @@ describe("HistoryPreview", () => {
 		const threeTasks = mockTasks.slice(0, 3)
 		mockUseTaskSearch.mockReturnValue({
 			tasks: threeTasks,
+			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
 			sortOption: "newest",
@@ -133,6 +136,7 @@ describe("HistoryPreview", () => {
 		const oneTask = mockTasks.slice(0, 1)
 		mockUseTaskSearch.mockReturnValue({
 			tasks: oneTask,
+			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
 			sortOption: "newest",
@@ -152,6 +156,7 @@ describe("HistoryPreview", () => {
 	it("passes correct props to TaskItem components", () => {
 		mockUseTaskSearch.mockReturnValue({
 			tasks: mockTasks.slice(0, 2),
+			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
 			sortOption: "newest",
@@ -184,6 +189,7 @@ describe("HistoryPreview", () => {
 	it("renders with correct container classes", () => {
 		mockUseTaskSearch.mockReturnValue({
 			tasks: mockTasks.slice(0, 1),
+			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
 			sortOption: "newest",

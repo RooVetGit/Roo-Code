@@ -12,7 +12,10 @@ import {
 	type GlobalState,
 	type ClineMessage,
 	TelemetryEventName,
+	HistorySearchOptions,
+	HistoryItem,
 } from "@roo-code/types"
+import { getHistoryItemsForSearch } from "../task-persistence/taskHistory"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 import { type ApiMessage } from "../task-persistence/apiMessages"
@@ -485,6 +488,10 @@ export const webviewMessageHandler = async (
 			break
 		case "deleteTaskWithId":
 			provider.deleteTaskWithId(message.text!)
+			break
+		case "getHistoryItems":
+			const historyItems = await getHistoryItemsForSearch(message.historySearchOptions || {})
+			provider.postMessageToWebview({ type: "historyItems", items: historyItems })
 			break
 		case "deleteMultipleTasksWithIds": {
 			const ids = message.ids
