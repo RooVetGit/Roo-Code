@@ -508,6 +508,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "启用并发文件编辑",
 			"description": "启用后 Roo 可在单个请求中编辑多个文件。禁用后 Roo 必须逐个编辑文件。禁用此功能有助于使用能力较弱的模型或需要更精确控制文件修改时。"
+		},
+		"DISABLE_DIFF_VISUALIZATION": {
+			"name": "禁用所有编辑工具的差异可视化",
+			"description": "启用后，文件将直接在编辑器中打开，而不是为所有编辑工具（write_to_file、apply_diff、insert_content、search_and_replace）显示差异视图。这有助于防止处理非常大的文件时LSP崩溃。更改在聊天窗口中仍然可见。"
 		}
 	},
 	"promptCaching": {

@@ -508,6 +508,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Bật chỉnh sửa tệp đồng thời",
 			"description": "Khi được bật, Roo có thể chỉnh sửa nhiều tệp trong một yêu cầu duy nhất. Khi bị tắt, Roo phải chỉnh sửa từng tệp một. Tắt tính năng này có thể hữu ích khi làm việc với các mô hình kém khả năng hơn hoặc khi bạn muốn kiểm soát nhiều hơn đối với các thay đổi tệp."
+		},
+		"DISABLE_DIFF_VISUALIZATION": {
+			"name": "Tắt trực quan hóa khác biệt cho tất cả các công cụ chỉnh sửa",
+			"description": "Khi được bật, các tệp sẽ mở trực tiếp trong trình chỉnh sửa thay vì hiển thị chế độ xem khác biệt cho tất cả các công cụ chỉnh sửa (write_to_file, apply_diff, insert_content, search_and_replace). Điều này giúp ngăn chặn sự cố LSP với các tệp rất lớn. Các thay đổi vẫn hiển thị trong cửa sổ trò chuyện."
 		}
 	},
 	"promptCaching": {

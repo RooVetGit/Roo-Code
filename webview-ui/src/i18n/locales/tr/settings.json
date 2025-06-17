@@ -508,6 +508,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Eşzamanlı dosya düzenlemelerini etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo tek bir istekte birden fazla dosyayı düzenleyebilir. Devre dışı bırakıldığında, Roo dosyaları tek tek düzenlemek zorundadır. Bunu devre dışı bırakmak, daha az yetenekli modellerle çalışırken veya dosya değişiklikleri üzerinde daha fazla kontrol istediğinde yardımcı olabilir."
+		},
+		"DISABLE_DIFF_VISUALIZATION": {
+			"name": "Tüm düzenleme araçları için fark görselleştirmesini devre dışı bırak",
+			"description": "Etkinleştirildiğinde, dosyalar tüm düzenleme araçları (write_to_file, apply_diff, insert_content, search_and_replace) için bir fark görünümü göstermek yerine doğrudan düzenleyicide açılır. Bu, çok büyük dosyalarda LSP çökmelerini önlemeye yardımcı olur. Değişiklikler sohbet penceresinde hala görülebilir."
 		}
 	},
 	"promptCaching": {

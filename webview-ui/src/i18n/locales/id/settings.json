@@ -537,6 +537,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Aktifkan edit file bersamaan",
 			"description": "Ketika diaktifkan, Roo dapat mengedit beberapa file dalam satu permintaan. Ketika dinonaktifkan, Roo harus mengedit file satu per satu. Menonaktifkan ini dapat membantu saat bekerja dengan model yang kurang mampu atau ketika kamu ingin kontrol lebih terhadap modifikasi file."
+		},
+		"DISABLE_DIFF_VISUALIZATION": {
+			"name": "Nonaktifkan visualisasi perbedaan untuk semua alat edit",
+			"description": "Saat diaktifkan, file akan terbuka langsung di editor alih-alih menampilkan tampilan perbedaan untuk semua alat edit (write_to_file, apply_diff, insert_content, search_and_replace). Ini membantu mencegah mogok LSP pada file yang sangat besar. Perubahan masih terlihat di jendela obrolan."
 		}
 	},
 	"promptCaching": {

@@ -508,6 +508,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gleichzeitige Dateibearbeitungen aktivieren",
 			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage bearbeiten. Wenn deaktiviert, muss Roo Dateien einzeln bearbeiten. Das Deaktivieren kann helfen, wenn du mit weniger fähigen Modellen arbeitest oder mehr Kontrolle über Dateiänderungen haben möchtest."
+		},
+		"DISABLE_DIFF_VISUALIZATION": {
+			"name": "Diff-Visualisierung für alle Bearbeitungswerkzeuge deaktivieren",
+			"description": "Wenn aktiviert, werden Dateien direkt im Editor geöffnet, anstatt eine Diff-Ansicht für alle Bearbeitungswerkzeuge (write_to_file, apply_diff, insert_content, search_and_replace) anzuzeigen. Dies hilft, LSP-Abstürze bei sehr großen Dateien zu vermeiden. Änderungen sind weiterhin im Chatfenster sichtbar."
 		}
 	},
 	"promptCaching": {
