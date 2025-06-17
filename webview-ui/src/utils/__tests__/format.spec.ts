@@ -1,4 +1,4 @@
-// npx jest src/utils/__tests__/format.test.ts
+// npx vitest src/utils/__tests__/format.spec.ts
 
 import { formatDate } from "../format"
 

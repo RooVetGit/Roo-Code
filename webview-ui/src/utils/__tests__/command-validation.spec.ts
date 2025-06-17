@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape */
 
-// npx jest src/utils/__tests__/command-validation.test.ts
+// npx vitest src/utils/__tests__/command-validation.spec.ts
 
 import { parseCommand, isAllowedSingleCommand, validateCommand } from "../command-validation"
 

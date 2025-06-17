@@ -1,4 +1,4 @@
-// npx jest src/components/prompts/__tests__/PromptsView.test.tsx
+// npx vitest src/components/modes/__tests__/ModesView.spec.tsx
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import ModesView from "../ModesView"
@@ -6,9 +6,9 @@ import { ExtensionStateContext } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 
 // Mock vscode API
-jest.mock("@src/utils/vscode", () => ({
+vitest.mock("@src/utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vitest.fn(),
 	},
 }))
 
@@ -19,17 +19,17 @@ const mockExtensionState = {
 		{ id: "config2", name: "Config 2" },
 	],
 	enhancementApiConfigId: "",
-	setEnhancementApiConfigId: jest.fn(),
+	setEnhancementApiConfigId: vitest.fn(),
 	mode: "code",
 	customModes: [],
 	customSupportPrompts: [],
 	currentApiConfigName: "",
 	customInstructions: "Initial instructions",
-	setCustomInstructions: jest.fn(),
+	setCustomInstructions: vitest.fn(),
 }
 
 const renderPromptsView = (props = {}) => {
-	const mockOnDone = jest.fn()
+	const mockOnDone = vitest.fn()
 	return render(
 		<ExtensionStateContext.Provider value={{ ...mockExtensionState, ...props } as any}>
 			<ModesView onDone={mockOnDone} />
@@ -45,11 +45,11 @@ class MockResizeObserver {
 
 global.ResizeObserver = MockResizeObserver
 
-Element.prototype.scrollIntoView = jest.fn()
+Element.prototype.scrollIntoView = vitest.fn()
 
 describe("PromptsView", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vitest.clearAllMocks()
 	})
 
 	it("displays the current mode name in the select trigger", () => {
@@ -105,9 +105,17 @@ describe("PromptsView", () => {
 
 		// Get the textarea
 		const textarea = await waitFor(() => screen.getByTestId("code-prompt-textarea"))
-		fireEvent.change(textarea, {
-			target: { value: "New prompt value" },
+
+		// Simulate VSCode TextArea change event
+		const changeEvent = new CustomEvent("change", {
+			detail: {
+				target: {
+					value: "New prompt value",
+				},
+			},
 		})
+
+		fireEvent(textarea, changeEvent)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "updatePrompt",
@@ -128,7 +136,7 @@ describe("PromptsView", () => {
 		const { unmount } = render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
-				<ModesView onDone={jest.fn()} />
+				<ModesView onDone={vitest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
 
@@ -151,7 +159,7 @@ describe("PromptsView", () => {
 		render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as any}>
-				<ModesView onDone={jest.fn()} />
+				<ModesView onDone={vitest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
 
@@ -160,7 +168,7 @@ describe("PromptsView", () => {
 	})
 
 	it("handles clearing custom instructions correctly", async () => {
-		const setCustomInstructions = jest.fn()
+		const setCustomInstructions = vitest.fn()
 		renderPromptsView({
 			...mockExtensionState,
 			customInstructions: "Initial instructions",
@@ -168,10 +176,20 @@ describe("PromptsView", () => {
 		})
 
 		const textarea = screen.getByTestId("global-custom-instructions-textarea")
-		fireEvent.change(textarea, {
-			target: { value: "" },
+
+		// Simulate VSCode TextArea change event with empty value
+		// We need to simulate both the CustomEvent format and regular event format
+		// since the component handles both
+		Object.defineProperty(textarea, "value", {
+			writable: true,
+			value: "",
 		})
 
+		const changeEvent = new Event("change", { bubbles: true })
+		fireEvent(textarea, changeEvent)
+
+		// The component calls setCustomInstructions with value || undefined
+		// Since empty string is falsy, it should be undefined
 		expect(setCustomInstructions).toHaveBeenCalledWith(undefined)
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "customInstructions",

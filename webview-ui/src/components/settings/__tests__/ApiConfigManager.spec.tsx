@@ -1,11 +1,11 @@
-// npx jest src/components/settings/__tests__/ApiConfigManager.test.tsx
+// npx vitest src/components/settings/__tests__/ApiConfigManager.spec.tsx
 
 import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import ApiConfigManager from "../ApiConfigManager"
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vitest.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeTextField: ({ value, onInput, placeholder, onKeyDown, "data-testid": dataTestId }: any) => (
 		<input
 			value={value}
@@ -18,8 +18,8 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 	),
 }))
 
-jest.mock("@/components/ui", () => ({
-	...jest.requireActual("@/components/ui"),
+vitest.mock("@/components/ui", () => ({
+	...vitest.importActual("@/components/ui"),
 	Dialog: ({ children, open }: any) => (
 		<div role="dialog" aria-modal="true" style={{ display: open ? "block" : "none" }} data-testid="dialog">
 			{children}
@@ -91,10 +91,10 @@ jest.mock("@/components/ui", () => ({
 }))
 
 describe("ApiConfigManager", () => {
-	const mockOnSelectConfig = jest.fn()
-	const mockOnDeleteConfig = jest.fn()
-	const mockOnRenameConfig = jest.fn()
-	const mockOnUpsertConfig = jest.fn()
+	const mockOnSelectConfig = vitest.fn()
+	const mockOnDeleteConfig = vitest.fn()
+	const mockOnRenameConfig = vitest.fn()
+	const mockOnUpsertConfig = vitest.fn()
 
 	const defaultProps = {
 		currentApiConfigName: "Default Config",
@@ -109,7 +109,7 @@ describe("ApiConfigManager", () => {
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vitest.clearAllMocks()
 	})
 
 	const getRenameForm = () => screen.getByTestId("rename-form")

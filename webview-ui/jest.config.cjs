@@ -5,7 +5,7 @@ module.exports = {
 	injectGlobals: true,
 	moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 	transform: { "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: { jsx: "react-jsx", module: "ESNext" } }] },
-	testMatch: ["<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}", "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"],
+	testMatch: ["<rootDir>/src/**/*.test.{js,jsx,ts,tsx}"],
 	setupFilesAfterEnv: ["<rootDir>/src/setupTests.tsx"],
 	moduleNameMapper: {
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy",

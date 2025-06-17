@@ -1,5 +1,3 @@
-// npx jest src/context/__tests__/ExtensionStateContext.test.tsx
-
 import { render, screen, act } from "@testing-library/react"
 
 import { ProviderSettings, ExperimentId } from "@roo-code/types"
@@ -106,7 +104,7 @@ describe("ExtensionStateContext", () => {
 
 	it("throws error when used outside provider", () => {
 		// Suppress console.error for this test since we expect an error
-		const consoleSpy = jest.spyOn(console, "error")
+		const consoleSpy = vi.spyOn(console, "error")
 		consoleSpy.mockImplementation(() => {})
 
 		expect(() => {

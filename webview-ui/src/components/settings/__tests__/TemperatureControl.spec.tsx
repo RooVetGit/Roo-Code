@@ -1,32 +1,51 @@
-// npx jest src/components/settings/__tests__/TemperatureControl.test.ts
+// npx vitest src/components/settings/__tests__/TemperatureControl.spec.tsx
 
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { TemperatureControl } from "../TemperatureControl"
 
-class MockResizeObserver {
-	observe() {}
-	unobserve() {}
-	disconnect() {}
-}
+// Mock translation hook to return the key as the translation
+vi.mock("@/i18n/TranslationContext", () => ({
+	useAppTranslation: () => ({
+		t: (key: string) => key,
+	}),
+}))
 
-global.ResizeObserver = MockResizeObserver
+// Mock VSCode components to behave like standard HTML elements
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
+	VSCodeCheckbox: ({ checked, onChange, children, "data-testid": dataTestId, ...props }: any) => (
+		<div>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={onChange}
+				data-testid={dataTestId}
+				aria-label={children?.props?.children || children}
+				role="checkbox"
+				aria-checked={checked}
+				{...props}
+			/>
+			{children}
+		</div>
+	),
+}))
 
-jest.mock("@/components/ui", () => ({
-	...jest.requireActual("@/components/ui"),
+vi.mock("@/components/ui", () => ({
+	...vi.importActual("@/components/ui"),
 	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
 		<input
 			type="range"
 			value={value[0]}
 			onChange={(e) => onValueChange([parseFloat(e.target.value)])}
 			data-testid={dataTestId}
+			role="slider"
 		/>
 	),
 }))
 
 describe("TemperatureControl", () => {
 	it("renders with default temperature disabled", () => {
-		const onChange = jest.fn()
+		const onChange = vi.fn()
 		render(<TemperatureControl value={undefined} onChange={onChange} />)
 
 		const checkbox = screen.getByRole("checkbox")
@@ -35,7 +54,7 @@ describe("TemperatureControl", () => {
 	})
 
 	it("renders with custom temperature enabled", () => {
-		const onChange = jest.fn()
+		const onChange = vi.fn()
 		render(<TemperatureControl value={0.7} onChange={onChange} />)
 
 		const checkbox = screen.getByRole("checkbox")
@@ -47,7 +66,7 @@ describe("TemperatureControl", () => {
 	})
 
 	it("updates when checkbox is toggled", async () => {
-		const onChange = jest.fn()
+		const onChange = vi.fn()
 		render(<TemperatureControl value={0.7} onChange={onChange} />)
 
 		const checkbox = screen.getByRole("checkbox")
@@ -68,7 +87,7 @@ describe("TemperatureControl", () => {
 	})
 
 	it("syncs checkbox state when value prop changes", () => {
-		const onChange = jest.fn()
+		const onChange = vi.fn()
 		const { rerender } = render(<TemperatureControl value={0.7} onChange={onChange} />)
 
 		// Initially checked.

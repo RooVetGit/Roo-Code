@@ -1,8 +1,9 @@
-// npx jest src/components/ui/hooks/__tests__/useSelectedModel.test.ts
+// npx vitest src/components/ui/hooks/__tests__/useSelectedModel.spec.ts
 
 import React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook } from "@testing-library/react"
+import type { Mock } from "vitest"
 
 import { ProviderSettings, ModelInfo } from "@roo-code/types"
 
@@ -10,13 +11,11 @@ import { useSelectedModel } from "../useSelectedModel"
 import { useRouterModels } from "../useRouterModels"
 import { useOpenRouterModelProviders } from "../useOpenRouterModelProviders"
 
-jest.mock("../useRouterModels")
-jest.mock("../useOpenRouterModelProviders")
+vi.mock("../useRouterModels")
+vi.mock("../useOpenRouterModelProviders")
 
-const mockUseRouterModels = useRouterModels as jest.MockedFunction<typeof useRouterModels>
-const mockUseOpenRouterModelProviders = useOpenRouterModelProviders as jest.MockedFunction<
-	typeof useOpenRouterModelProviders
->
+const mockUseRouterModels = useRouterModels as Mock<typeof useRouterModels>
+const mockUseOpenRouterModelProviders = useOpenRouterModelProviders as Mock<typeof useOpenRouterModelProviders>
 
 const createWrapper = () => {
 	const queryClient = new QueryClient({

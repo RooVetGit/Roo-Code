@@ -1,4 +1,4 @@
-// npx jest src/components/settings/__tests__/ThinkingBudget.test.tsx
+// npx vitest src/components/settings/__tests__/ThinkingBudget.spec.tsx
 
 import { render, screen, fireEvent } from "@testing-library/react"
 
@@ -6,7 +6,7 @@ import type { ModelInfo } from "@roo-code/types"
 
 import { ThinkingBudget } from "../ThinkingBudget"
 
-jest.mock("@/components/ui", () => ({
+vi.mock("@/components/ui", () => ({
 	Slider: ({ value, onValueChange, min, max }: any) => (
 		<input
 			type="range"
@@ -31,12 +31,12 @@ describe("ThinkingBudget", () => {
 
 	const defaultProps = {
 		apiConfiguration: {},
-		setApiConfigurationField: jest.fn(),
+		setApiConfigurationField: vi.fn(),
 		modelInfo: mockModelInfo,
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("should render nothing when model doesn't support thinking", () => {
@@ -64,7 +64,7 @@ describe("ThinkingBudget", () => {
 	})
 
 	it("should update modelMaxThinkingTokens", () => {
-		const setApiConfigurationField = jest.fn()
+		const setApiConfigurationField = vi.fn()
 
 		render(
 			<ThinkingBudget
@@ -81,7 +81,7 @@ describe("ThinkingBudget", () => {
 	})
 
 	it("should cap thinking tokens at 80% of max tokens", () => {
-		const setApiConfigurationField = jest.fn()
+		const setApiConfigurationField = vi.fn()
 
 		render(
 			<ThinkingBudget
@@ -111,7 +111,7 @@ describe("ThinkingBudget", () => {
 	})
 
 	it("should update max tokens when slider changes", () => {
-		const setApiConfigurationField = jest.fn()
+		const setApiConfigurationField = vi.fn()
 
 		render(
 			<ThinkingBudget

@@ -1,4 +1,4 @@
-// npx jest src/components/settings/__tests__/ModelPicker.test.ts
+// npx vitest src/components/settings/__tests__/ModelPicker.spec.tsx
 
 import { screen, fireEvent, render } from "@testing-library/react"
 import { act } from "react"
@@ -8,8 +8,8 @@ import { ModelInfo } from "@roo-code/types"
 
 import { ModelPicker } from "../ModelPicker"
 
-jest.mock("@src/context/ExtensionStateContext", () => ({
-	useExtensionState: jest.fn(),
+vi.mock("@src/context/ExtensionStateContext", () => ({
+	useExtensionState: vi.fn(),
 }))
 
 class MockResizeObserver {
@@ -20,10 +20,10 @@ class MockResizeObserver {
 
 global.ResizeObserver = MockResizeObserver
 
-Element.prototype.scrollIntoView = jest.fn()
+Element.prototype.scrollIntoView = vi.fn()
 
 describe("ModelPicker", () => {
-	const mockSetApiConfigurationField = jest.fn()
+	const mockSetApiConfigurationField = vi.fn()
 
 	const modelInfo: ModelInfo = {
 		maxTokens: 8192,
@@ -65,7 +65,7 @@ describe("ModelPicker", () => {
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("calls setApiConfigurationField when a model is selected", async () => {

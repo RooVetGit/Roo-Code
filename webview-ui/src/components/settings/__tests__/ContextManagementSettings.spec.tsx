@@ -1,20 +1,9 @@
-// npx jest src/components/settings/__tests__/ContextManagementSettings.test.ts
-
-import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { ContextManagementSettings } from "@src/components/settings/ContextManagementSettings"
 
-class MockResizeObserver {
-	observe() {}
-	unobserve() {}
-	disconnect() {}
-}
-
-global.ResizeObserver = MockResizeObserver
-
 // Mock translation hook to return the key as the translation
-jest.mock("@/i18n/TranslationContext", () => ({
+vitest.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => key,
 	}),
@@ -23,10 +12,32 @@ jest.mock("@/i18n/TranslationContext", () => ({
 // Mock vscode utilities - this is necessary since we're not in a VSCode environment
 import { vscode } from "@/utils/vscode"
 
-jest.mock("@/utils/vscode", () => ({
+vitest.mock("@/utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vitest.fn(),
 	},
+}))
+
+// Mock VSCode components to behave like standard HTML elements
+vitest.mock("@vscode/webview-ui-toolkit/react", () => ({
+	VSCodeCheckbox: ({ checked, onChange, children, "data-testid": dataTestId, ...props }: any) => (
+		<div>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={onChange}
+				data-testid={dataTestId}
+				aria-label={children?.props?.children || children}
+				role="checkbox"
+				aria-checked={checked}
+				{...props}
+			/>
+			{children}
+		</div>
+	),
+	VSCodeTextArea: ({ value, onChange, rows, className, ...props }: any) => (
+		<textarea value={value} onChange={onChange} rows={rows} className={className} role="textbox" {...props} />
+	),
 }))
 
 describe("ContextManagementSettings", () => {
@@ -37,11 +48,11 @@ describe("ContextManagementSettings", () => {
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
 		showRooIgnoredFiles: false,
-		setCachedStateField: jest.fn(),
+		setCachedStateField: vitest.fn(),
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vitest.clearAllMocks()
 	})
 
 	it("renders all controls", () => {
@@ -62,7 +73,7 @@ describe("ContextManagementSettings", () => {
 	})
 
 	it("updates open tabs context limit", () => {
-		const mockSetCachedStateField = jest.fn()
+		const mockSetCachedStateField = vitest.fn()
 		const props = { ...defaultProps, setCachedStateField: mockSetCachedStateField }
 		render(<ContextManagementSettings {...props} />)
 
@@ -81,7 +92,7 @@ describe("ContextManagementSettings", () => {
 	})
 
 	it("updates workspace files limit", () => {
-		const mockSetCachedStateField = jest.fn()
+		const mockSetCachedStateField = vitest.fn()
 		const props = { ...defaultProps, setCachedStateField: mockSetCachedStateField }
 		render(<ContextManagementSettings {...props} />)
 
@@ -194,7 +205,7 @@ describe("ContextManagementSettings", () => {
 		}
 
 		it("toggles auto condense context setting", () => {
-			const mockSetCachedStateField = jest.fn()
+			const mockSetCachedStateField = vitest.fn()
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
 			const { rerender } = render(<ContextManagementSettings {...props} />)
 
@@ -234,7 +245,7 @@ describe("ContextManagementSettings", () => {
 		})
 
 		it("updates auto condense context percent", () => {
-			const mockSetCachedStateField = jest.fn()
+			const mockSetCachedStateField = vitest.fn()
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
 			render(<ContextManagementSettings {...props} />)
 
@@ -254,9 +265,9 @@ describe("ContextManagementSettings", () => {
 		})
 
 		it("updates condensing API configuration", () => {
-			const mockSetCachedStateField = jest.fn()
-			const mockPostMessage = jest.fn()
-			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			const mockSetCachedStateField = vitest.fn()
+			const mockPostMessage = vitest.fn()
+			const postMessageSpy = vitest.spyOn(vscode, "postMessage")
 			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
@@ -276,9 +287,9 @@ describe("ContextManagementSettings", () => {
 		})
 
 		it("handles selecting default config option", () => {
-			const mockSetCachedStateField = jest.fn()
-			const mockPostMessage = jest.fn()
-			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			const mockSetCachedStateField = vitest.fn()
+			const mockPostMessage = vitest.fn()
+			const postMessageSpy = vitest.spyOn(vscode, "postMessage")
 			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
@@ -300,9 +311,9 @@ describe("ContextManagementSettings", () => {
 		})
 
 		it("updates custom condensing prompt", () => {
-			const mockSetCachedStateField = jest.fn()
-			const mockPostMessage = jest.fn()
-			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			const mockSetCachedStateField = vitest.fn()
+			const mockPostMessage = vitest.fn()
+			const postMessageSpy = vitest.spyOn(vscode, "postMessage")
 			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
@@ -320,9 +331,9 @@ describe("ContextManagementSettings", () => {
 		})
 
 		it("resets custom condensing prompt to default", () => {
-			const mockSetCachedStateField = jest.fn()
-			const mockPostMessage = jest.fn()
-			const postMessageSpy = jest.spyOn(vscode, "postMessage")
+			const mockSetCachedStateField = vitest.fn()
+			const mockPostMessage = vitest.fn()
+			const postMessageSpy = vitest.spyOn(vscode, "postMessage")
 			postMessageSpy.mockImplementation(mockPostMessage)
 
 			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
@@ -359,7 +370,7 @@ describe("ContextManagementSettings", () => {
 
 	describe("Edge cases and validation", () => {
 		it("handles invalid max read file line input", () => {
-			const mockSetCachedStateField = jest.fn()
+			const mockSetCachedStateField = vitest.fn()
 			const propsWithMaxReadFileLine = {
 				...defaultProps,
 				maxReadFileLine: 500,
@@ -390,7 +401,7 @@ describe("ContextManagementSettings", () => {
 			render(<ContextManagementSettings {...propsWithMaxReadFileLine} />)
 
 			const input = screen.getByTestId("max-read-file-line-input") as HTMLInputElement
-			const selectSpy = jest.spyOn(input, "select")
+			const selectSpy = vitest.spyOn(input, "select")
 
 			fireEvent.click(input)
 			expect(selectSpy).toHaveBeenCalled()
@@ -411,7 +422,7 @@ describe("ContextManagementSettings", () => {
 		})
 
 		it("handles boundary values for sliders", () => {
-			const mockSetCachedStateField = jest.fn()
+			const mockSetCachedStateField = vitest.fn()
 			const props = {
 				...defaultProps,
 				maxOpenTabsContext: 0,

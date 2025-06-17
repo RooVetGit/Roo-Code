@@ -1,4 +1,4 @@
-// npx jest src/utils/__tests__/model-utils.test.ts
+// npx vitest src/utils/__tests__/model-utils.spec.ts
 
 import { calculateTokenDistribution } from "../model-utils"
 

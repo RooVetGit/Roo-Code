@@ -1,4 +1,4 @@
-// npx jest src/components/settings/__tests__/ApiOptions.test.tsx
+// npx vitest src/components/settings/__tests__/ApiOptions.spec.tsx
 
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -10,7 +10,7 @@ import { ExtensionStateContextProvider } from "@src/context/ExtensionStateContex
 import ApiOptions, { ApiOptionsProps } from "../ApiOptions"
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeTextField: ({ children, value, onBlur }: any) => (
 		<div>
 			{children}
@@ -24,7 +24,7 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 }))
 
 // Mock other components
-jest.mock("vscrui", () => ({
+vi.mock("vscrui", () => ({
 	Checkbox: ({ children, checked, onChange }: any) => (
 		<label data-testid={`checkbox-${children?.toString().replace(/\s+/g, "-").toLowerCase()}`}>
 			<input
@@ -39,7 +39,7 @@ jest.mock("vscrui", () => ({
 }))
 
 // Mock @shadcn/ui components
-jest.mock("@/components/ui", () => ({
+vi.mock("@/components/ui", () => ({
 	Select: ({ children, value, onValueChange }: any) => (
 		<div className="select-mock">
 			<select value={value} onChange={(e) => onValueChange && onValueChange(e.target.value)}>
@@ -89,7 +89,7 @@ jest.mock("@/components/ui", () => ({
 	),
 }))
 
-jest.mock("../TemperatureControl", () => ({
+vi.mock("../TemperatureControl", () => ({
 	TemperatureControl: ({ value, onChange }: any) => (
 		<div data-testid="temperature-control">
 			<input
@@ -104,7 +104,7 @@ jest.mock("../TemperatureControl", () => ({
 	),
 }))
 
-jest.mock("../RateLimitSecondsControl", () => ({
+vi.mock("../RateLimitSecondsControl", () => ({
 	RateLimitSecondsControl: ({ value, onChange }: any) => (
 		<div data-testid="rate-limit-seconds-control">
 			<input
@@ -120,7 +120,7 @@ jest.mock("../RateLimitSecondsControl", () => ({
 }))
 
 // Mock DiffSettingsControl for tests
-jest.mock("../DiffSettingsControl", () => ({
+vi.mock("../DiffSettingsControl", () => ({
 	DiffSettingsControl: ({ diffEnabled, fuzzyMatchThreshold, onChange }: any) => (
 		<div data-testid="diff-settings-control">
 			<label>
@@ -147,7 +147,7 @@ jest.mock("../DiffSettingsControl", () => ({
 }))
 
 // Mock ThinkingBudget component
-jest.mock("../ThinkingBudget", () => ({
+vi.mock("../ThinkingBudget", () => ({
 	ThinkingBudget: ({ modelInfo }: any) => {
 		// Only render if model supports reasoning budget (thinking models)
 		if (modelInfo?.supportsReasoningBudget || modelInfo?.requiredReasoningBudget) {
@@ -163,7 +163,7 @@ jest.mock("../ThinkingBudget", () => ({
 }))
 
 // Mock LiteLLM provider for tests
-jest.mock("../providers/LiteLLM", () => ({
+vi.mock("../providers/LiteLLM", () => ({
 	LiteLLM: ({ apiConfiguration, setApiConfigurationField }: any) => (
 		<div data-testid="litellm-provider">
 			<input
@@ -185,8 +185,8 @@ jest.mock("../providers/LiteLLM", () => ({
 	),
 }))
 
-jest.mock("@src/components/ui/hooks/useSelectedModel", () => ({
-	useSelectedModel: jest.fn((apiConfiguration: ProviderSettings) => {
+vi.mock("@src/components/ui/hooks/useSelectedModel", () => ({
+	useSelectedModel: vi.fn((apiConfiguration: ProviderSettings) => {
 		if (apiConfiguration.apiModelId?.includes("thinking")) {
 			const info: ModelInfo = {
 				contextWindow: 4000,
@@ -293,7 +293,7 @@ describe("ApiOptions", () => {
 
 	describe("OpenAI provider tests", () => {
 		it("removes reasoningEffort from openAiCustomModelInfo when unchecked", () => {
-			const mockSetApiConfigurationField = jest.fn()
+			const mockSetApiConfigurationField = vi.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
 				enableReasoningEffort: true,
@@ -328,7 +328,7 @@ describe("ApiOptions", () => {
 			expect(updateCall).toBeDefined()
 
 			// 3. Check if reasoningEffort property is absent in the updated info
-			const updatedInfo = updateCall[1]
+			const updatedInfo = updateCall![1]
 			expect(updatedInfo).not.toHaveProperty("reasoningEffort")
 
 			// Optional: Check if other properties were preserved (example)
@@ -336,7 +336,7 @@ describe("ApiOptions", () => {
 		})
 
 		it("does not render ReasoningEffort component when initially disabled", () => {
-			const mockSetApiConfigurationField = jest.fn()
+			const mockSetApiConfigurationField = vi.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
 				enableReasoningEffort: false, // Initially disabled
@@ -355,7 +355,7 @@ describe("ApiOptions", () => {
 		})
 
 		it("renders ReasoningEffort component and sets flag when checkbox is checked", () => {
-			const mockSetApiConfigurationField = jest.fn()
+			const mockSetApiConfigurationField = vi.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
 				enableReasoningEffort: false, // Initially disabled
@@ -383,7 +383,7 @@ describe("ApiOptions", () => {
 		})
 
 		it.skip("updates reasoningEffort in openAiCustomModelInfo when select value changes", () => {
-			const mockSetApiConfigurationField = jest.fn()
+			const mockSetApiConfigurationField = vi.fn()
 			const initialConfig = {
 				apiProvider: "openai" as const,
 				enableReasoningEffort: true, // Initially enabled
@@ -444,7 +444,7 @@ describe("ApiOptions", () => {
 		})
 
 		it("calls setApiConfigurationField when LiteLLM inputs change", () => {
-			const mockSetApiConfigurationField = jest.fn()
+			const mockSetApiConfigurationField = vi.fn()
 			renderApiOptions({
 				apiConfiguration: {
 					apiProvider: "litellm",
