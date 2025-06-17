@@ -243,6 +243,7 @@ export const vertexModels = {
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
 		cacheWritesPrice: 1.0,
+		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
 	},
 } as const satisfies Record<string, ModelInfo>
