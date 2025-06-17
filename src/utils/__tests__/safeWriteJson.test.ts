@@ -1,52 +1,61 @@
-const actualFsPromises = jest.requireActual("fs/promises")
-const originalFsPromisesRename = actualFsPromises.rename
-const originalFsPromisesUnlink = actualFsPromises.unlink
-const originalFsPromisesWriteFile = actualFsPromises.writeFile
-const _originalFsPromisesAccess = actualFsPromises.access
-const originalFsPromisesMkdir = actualFsPromises.mkdir
+import { vi, describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest"
+import type { MockInstance, MockedObject } from "vitest"
+import { Writable } from "stream" // For typing mock stream
 
-jest.mock("fs/promises", () => {
-	const actual = jest.requireActual("fs/promises")
-	// Start with all actual implementations.
-	const mockedFs = { ...actual }
+// First import the original modules to use their types
+import * as fsPromisesOriginal from "fs/promises"
+import * as fsOriginal from "fs"
 
-	// Selectively wrap functions with jest.fn() if they are spied on
-	// or have their implementations changed in tests.
-	// This ensures that other fs.promises functions used by the SUT
-	// (like proper-lockfile's internals) will use their actual implementations.
-	mockedFs.writeFile = jest.fn(actual.writeFile)
-	mockedFs.readFile = jest.fn(actual.readFile)
-	mockedFs.rename = jest.fn(actual.rename)
-	mockedFs.unlink = jest.fn(actual.unlink)
-	mockedFs.access = jest.fn(actual.access)
-	mockedFs.mkdtemp = jest.fn(actual.mkdtemp)
-	mockedFs.rm = jest.fn(actual.rm)
-	mockedFs.readdir = jest.fn(actual.readdir)
-	mockedFs.mkdir = jest.fn(actual.mkdir)
-	// fs.stat and fs.lstat will be available via { ...actual }
+// Set up mocks before imports
+vi.mock("proper-lockfile", () => ({
+	lock: vi.fn(),
+	check: vi.fn(),
+	unlock: vi.fn(),
+}))
 
-	return mockedFs
-})
-
-// Mock the 'fs' module for fsSync.createWriteStream
-jest.mock("fs", () => {
-	const actualFs = jest.requireActual("fs")
+vi.mock("fs/promises", async () => {
+	const actual = await vi.importActual<typeof import("fs/promises")>("fs/promises")
 	return {
-		...actualFs, // Spread actual implementations
-		createWriteStream: jest.fn((...args: any[]) => actualFs.createWriteStream(...args)), // Default to actual, but mockable
+		...actual,
+		writeFile: vi.fn(actual.writeFile),
+		readFile: vi.fn(actual.readFile),
+		rename: vi.fn(actual.rename),
+		unlink: vi.fn(actual.unlink),
+		access: vi.fn(actual.access),
+		mkdtemp: vi.fn(actual.mkdtemp),
+		rm: vi.fn(actual.rm),
+		readdir: vi.fn(actual.readdir),
+		mkdir: vi.fn(actual.mkdir),
 	}
 })
 
-import * as fs from "fs/promises" // This will now be the mocked version
-import * as fsSyncActual from "fs" // This will now import the mocked 'fs'
+vi.mock("fs", async () => {
+	const actualFs = await vi.importActual<typeof import("fs")>("fs")
+	return {
+		...actualFs,
+		createWriteStream: vi.fn((path: string, options?: any) => actualFs.createWriteStream(path, options)),
+	}
+})
+
+// Now import the mocked versions
+import * as fs from "fs/promises"
+import * as fsSyncActual from "fs"
 import * as path from "path"
 import * as os from "os"
-// import * as lockfile from 'proper-lockfile' // No longer directly used in tests
 import { safeWriteJson } from "../safeWriteJson"
-import { Writable } from "stream" // For typing mock stream
+import * as properLockfile from "proper-lockfile"
+
+// Store original implementations for reference and restoration
+const originalFsPromisesRename = fsPromisesOriginal.rename
+const originalFsPromisesUnlink = fsPromisesOriginal.unlink
+const originalFsPromisesWriteFile = fsPromisesOriginal.writeFile
+const originalFsPromisesAccess = fsPromisesOriginal.access
+const originalFsPromisesMkdir = fsPromisesOriginal.mkdir
 
 describe("safeWriteJson", () => {
 	let originalConsoleError: typeof console.error
+	let tempTestDir: string = ""
+	let currentTestFilePath = ""
 
 	beforeAll(() => {
 		// Store original console.error
@@ -70,42 +79,30 @@ describe("safeWriteJson", () => {
 		console.error = originalConsoleError
 	})
 
-	jest.useRealTimers() // Use real timers for this test suite
-
-	let tempTestDir: string = ""
-	let currentTestFilePath = ""
+	vi.useRealTimers() // Use real timers for this test suite
 
 	beforeEach(async () => {
 		// Create a unique temporary directory for each test
 		const tempDirPrefix = path.join(os.tmpdir(), "safeWriteJson-test-")
 		tempTestDir = await fs.mkdtemp(tempDirPrefix)
 		currentTestFilePath = path.join(tempTestDir, "test-data.json")
-		// Ensure the file exists for locking purposes by default.
-		// Tests that need it to not exist must explicitly unlink it.
+
+		// Ensure the file exists for locking purposes by default
 		await fs.writeFile(currentTestFilePath, JSON.stringify({ initial: "content by beforeEach" }), "utf8")
 	})
 
 	afterEach(async () => {
 		if (tempTestDir) {
-			await fs.rm(tempTestDir, { recursive: true, force: true })
+			try {
+				await fs.rm(tempTestDir, { recursive: true, force: true })
+			} catch (err) {
+				console.error("Failed to clean up temp directory", err)
+			}
 			tempTestDir = ""
 		}
-		// activeLocks is no longer used
 
-		// Explicitly reset mock implementations to default (actual) behavior
-		// This helps prevent state leakage between tests if spy.mockRestore() isn't fully effective
-		// for functions on the module mock created by the factory.
-		;(fs.writeFile as jest.Mock).mockImplementation(actualFsPromises.writeFile)
-		;(fs.rename as jest.Mock).mockImplementation(actualFsPromises.rename)
-		;(fs.unlink as jest.Mock).mockImplementation(actualFsPromises.unlink)
-		;(fs.access as jest.Mock).mockImplementation(actualFsPromises.access)
-		;(fs.readFile as jest.Mock).mockImplementation(actualFsPromises.readFile)
-		;(fs.mkdtemp as jest.Mock).mockImplementation(actualFsPromises.mkdtemp)
-		;(fs.rm as jest.Mock).mockImplementation(actualFsPromises.rm)
-		;(fs.readdir as jest.Mock).mockImplementation(actualFsPromises.readdir)
-		;(fs.mkdir as jest.Mock).mockImplementation(actualFsPromises.mkdir)
-		// Ensure all mocks are reset after each test
-		jest.restoreAllMocks()
+		// Reset all mocks
+		vi.resetAllMocks()
 	})
 
 	const readJsonFile = async (filePath: string): Promise<any | null> => {
@@ -156,25 +153,27 @@ describe("safeWriteJson", () => {
 		// currentTestFilePath exists due to beforeEach, allowing lock acquisition.
 		const data = { message: "This should not be written" }
 
-		const mockErrorStream = new Writable() as jest.Mocked<Writable> & { _write?: any }
+		const mockErrorStream = new Writable() as MockedObject<Writable> & { _write?: any }
 		mockErrorStream._write = (_chunk: any, _encoding: any, callback: (error?: Error | null) => void) => {
 			// Simulate an error during write
 			callback(new Error("Simulated Stream Error: createWriteStream failed"))
 		}
 
 		// Mock createWriteStream to simulate a failure during the streaming of data to the temp file.
-		;(fsSyncActual.createWriteStream as jest.Mock).mockImplementationOnce((_path: any, _options: any) => {
-			const stream = new Writable({
-				write(_chunk, _encoding, cb) {
-					cb(new Error("Simulated Stream Error: createWriteStream failed"))
-				},
-				// Ensure destroy is handled to prevent unhandled rejections in stream internals
-				destroy(_error, cb) {
-					if (cb) cb(_error)
-				},
-			})
-			return stream as fsSyncActual.WriteStream
-		})
+		;(fsSyncActual.createWriteStream as ReturnType<typeof vi.fn>).mockImplementationOnce(
+			(_path: any, _options: any) => {
+				const stream = new Writable({
+					write(_chunk, _encoding, cb) {
+						cb(new Error("Simulated Stream Error: createWriteStream failed"))
+					},
+					// Ensure destroy is handled to prevent unhandled rejections in stream internals
+					destroy(_error, cb) {
+						if (cb) cb(_error)
+					},
+				})
+				return stream as fsSyncActual.WriteStream
+			},
+		)
 
 		await expect(safeWriteJson(currentTestFilePath, data)).rejects.toThrow(
 			"Simulated Stream Error: createWriteStream failed",
@@ -192,7 +191,7 @@ describe("safeWriteJson", () => {
 		await originalFsPromisesWriteFile(currentTestFilePath, JSON.stringify(initialData)) // Use original for setup
 
 		const newData = { message: "This should not be written" }
-		const renameSpy = jest.spyOn(fs, "rename")
+		const renameSpy = vi.spyOn(fs, "rename")
 		// First rename is target to backup
 		renameSpy.mockImplementationOnce(async (oldPath: any, newPath: any) => {
 			if (typeof newPath === "string" && newPath.includes(".bak_")) {
@@ -220,7 +219,7 @@ describe("safeWriteJson", () => {
 		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData)) // Use mocked fs for setup
 
 		const newData = { message: "This is in tempNewFilePath" }
-		const renameSpy = jest.spyOn(fs, "rename")
+		const renameSpy = vi.spyOn(fs, "rename")
 		let renameCallCountTest1 = 0
 		renameSpy.mockImplementation(async (oldPath: any, newPath: any) => {
 			const oldPathStr = oldPath.toString()
@@ -327,7 +326,7 @@ describe("safeWriteJson", () => {
 
 	test("should handle directory creation permission errors", async () => {
 		// Mock mkdir to simulate a permission error
-		const mkdirSpy = jest.spyOn(fs, "mkdir")
+		const mkdirSpy = vi.spyOn(fs, "mkdir")
 		mkdirSpy.mockImplementationOnce(async () => {
 			const permError = new Error("EACCES: permission denied") as NodeJS.ErrnoException
 			permError.code = "EACCES"
@@ -384,7 +383,7 @@ describe("safeWriteJson", () => {
 		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData)) // Use mocked fs for setup
 
 		const newData = { message: "This should be the final content" }
-		const unlinkSpy = jest.spyOn(fs, "unlink")
+		const unlinkSpy = vi.spyOn(fs, "unlink")
 		// The unlink that targets the backup file fails
 		unlinkSpy.mockImplementationOnce(async (filePath: any) => {
 			const filePathStr = filePath.toString()
@@ -400,7 +399,7 @@ describe("safeWriteJson", () => {
 		// However, the current implementation *does* re-throw. Let's test that behavior.
 		// If the desired behavior is to not re-throw on backup cleanup failure, the main function needs adjustment.
 		// The current safeWriteJson logic is to log the error and NOT reject.
-		const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {}) // Suppress console.error
+		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {}) // Suppress console.error
 
 		await expect(safeWriteJson(currentTestFilePath, newData)).resolves.toBeUndefined()
 
@@ -431,7 +430,7 @@ describe("safeWriteJson", () => {
 		// currentTestFilePath exists due to beforeEach.
 		// The original test unlinked it; we are removing that unlink to allow locking.
 		const data = { message: "This should not be written" }
-		const renameSpy = jest.spyOn(fs, "rename")
+		const renameSpy = vi.spyOn(fs, "rename")
 
 		// The rename from tempNew to target fails.
 		// The mock needs to correctly simulate failure for the "filePath exists" case.
@@ -469,7 +468,7 @@ describe("safeWriteJson", () => {
 		// After failure, the original content (from beforeEach or backup) should be there.
 		const writtenData = await readJsonFile(currentTestFilePath)
 		expect(writtenData).toEqual({ initial: "content by beforeEach" }) // Expect restored content
-		// The assertion `expect(writtenData).toBeNull()` was incorrect if rollback is successful.
+		// The assertion was incorrect if rollback is successful.
 		const tempFiles = await listTempFiles(tempTestDir, "test-data.json")
 		expect(tempFiles.length).toBe(0) // All temp files should be cleaned up
 
@@ -477,47 +476,42 @@ describe("safeWriteJson", () => {
 	})
 
 	test("should throw an error if an inter-process lock is already held for the filePath", async () => {
-		jest.resetModules() // Clear module cache to ensure fresh imports for this test
-
 		const data = { message: "test lock" }
-		// Ensure the resource file exists.
+
+		// Ensure the resource file exists
 		await fs.writeFile(currentTestFilePath, "{}", "utf8")
 
-		// Temporarily mock proper-lockfile for this test only
-		jest.doMock("proper-lockfile", () => ({
-			...jest.requireActual("proper-lockfile"),
-			lock: jest.fn().mockRejectedValueOnce(new Error("Failed to get lock.")),
-		}))
+		// Mock proper-lockfile to simulate a lock acquisition failure
+		const lockSpy = vi.spyOn(properLockfile, "lock").mockRejectedValueOnce(new Error("Failed to get lock."))
 
-		// Re-require safeWriteJson so it picks up the mocked proper-lockfile
-		const { safeWriteJson: safeWriteJsonWithMockedLock } =
-			require("../safeWriteJson") as typeof import("../safeWriteJson")
+		// Now test with our mock in place
+		await expect(safeWriteJson(currentTestFilePath, data)).rejects.toThrow(/Failed to get lock./)
 
-		try {
-			await expect(safeWriteJsonWithMockedLock(currentTestFilePath, data)).rejects.toThrow(
-				/Failed to get lock.|Lock file is already being held/i,
-			)
-		} finally {
-			jest.unmock("proper-lockfile") // Ensure the mock is removed after this test
-		}
+		// Verify the lock was attempted
+		expect(lockSpy).toHaveBeenCalledWith(expect.stringContaining(currentTestFilePath), expect.any(Object))
+
+		// Restore the original implementation
+		lockSpy.mockRestore()
 	})
 	test("should release lock even if an error occurs mid-operation", async () => {
 		const data = { message: "test lock release on error" }
 
 		// Mock createWriteStream to simulate a failure during the streaming of data,
 		// to test if the lock is released despite this mid-operation error.
-		;(fsSyncActual.createWriteStream as jest.Mock).mockImplementationOnce((_path: any, _options: any) => {
-			const stream = new Writable({
-				write(_chunk, _encoding, cb) {
-					cb(new Error("Simulated Stream Error during mid-operation write"))
-				},
-				// Ensure destroy is handled
-				destroy(_error, cb) {
-					if (cb) cb(_error)
-				},
-			})
-			return stream as fsSyncActual.WriteStream
-		})
+		;(fsSyncActual.createWriteStream as ReturnType<typeof vi.fn>).mockImplementationOnce(
+			(_path: any, _options: any) => {
+				const stream = new Writable({
+					write(_chunk, _encoding, cb) {
+						cb(new Error("Simulated Stream Error during mid-operation write"))
+					},
+					// Ensure destroy is handled
+					destroy(_error, cb) {
+						if (cb) cb(_error)
+					},
+				})
+				return stream as fsSyncActual.WriteStream
+			},
+		)
 
 		await expect(safeWriteJson(currentTestFilePath, data)).rejects.toThrow(
 			"Simulated Stream Error during mid-operation write",
@@ -530,7 +524,7 @@ describe("safeWriteJson", () => {
 
 	test("should handle fs.access error that is not ENOENT", async () => {
 		const data = { message: "access error test" }
-		const accessSpy = jest.spyOn(fs, "access").mockImplementationOnce(async () => {
+		const accessSpy = vi.spyOn(fs, "access").mockImplementationOnce(async () => {
 			const err = new Error("Simulated EACCES Error") as NodeJS.ErrnoException
 			err.code = "EACCES" // Simulate a permissions error, for example
 			throw err
@@ -555,8 +549,8 @@ describe("safeWriteJson", () => {
 		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData)) // Use mocked fs for setup
 		const newData = { message: "New data" }
 
-		const renameSpy = jest.spyOn(fs, "rename")
-		const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {}) // Suppress console.error
+		const renameSpy = vi.spyOn(fs, "rename")
+		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {}) // Suppress console.error
 		let renameCallCountTest2 = 0
 
 		renameSpy.mockImplementation(async (oldPath: any, newPath: any) => {
