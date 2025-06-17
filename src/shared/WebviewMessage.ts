@@ -6,6 +6,7 @@ import type {
 	ModeConfig,
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
+	HistorySearchOptions,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -22,6 +23,7 @@ export interface WebviewMessage {
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
+		| "getHistoryItems"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
@@ -204,6 +206,7 @@ export interface WebviewMessage {
 	mpItem?: MarketplaceItem
 	mpInstallOptions?: InstallMarketplaceItemOptions
 	config?: Record<string, any> // Add config to the payload
+	historySearchOptions?: HistorySearchOptions // For history search
 }
 
 export const checkoutDiffPayloadSchema = z.object({
