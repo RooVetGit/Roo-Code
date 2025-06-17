@@ -1,4 +1,5 @@
 {
+	"unknownError": "Unknown error",
 	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
 	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",

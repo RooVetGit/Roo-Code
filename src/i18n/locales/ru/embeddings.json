@@ -1,4 +1,5 @@
 {
+	"unknownError": "Неизвестная ошибка",
 	"authenticationFailed": "Не удалось создать вложения: Ошибка аутентификации. Проверьте свой ключ API.",
 	"failedWithStatus": "Не удалось создать вложения после {{attempts}} попыток: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Не удалось создать вложения после {{attempts}} попыток: {{errorMessage}}",

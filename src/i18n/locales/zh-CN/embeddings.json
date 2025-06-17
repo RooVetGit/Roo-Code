@@ -1,4 +1,5 @@
 {
+	"unknownError": "未知错误",
 	"authenticationFailed": "创建嵌入失败：身份验证失败。请检查您的 API 密钥。",
 	"failedWithStatus": "尝试 {{attempts}} 次后创建嵌入失败：HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "尝试 {{attempts}} 次后创建嵌入失败：{{errorMessage}}",

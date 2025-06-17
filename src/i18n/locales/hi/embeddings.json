@@ -1,4 +1,5 @@
 {
+	"unknownError": "अज्ञात त्रुटि",
 	"authenticationFailed": "एम्बेडिंग बनाने में विफल: प्रमाणीकरण विफल। कृपया अपनी एपीआई कुंजी जांचें।",
 	"failedWithStatus": "{{attempts}} प्रयासों के बाद एम्बेडिंग बनाने में विफल: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "{{attempts}} प्रयासों के बाद एम्बेडिंग बनाने में विफल: {{errorMessage}}",

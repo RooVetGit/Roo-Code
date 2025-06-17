@@ -1,4 +1,5 @@
 {
+	"unknownError": "Errore sconosciuto",
 	"authenticationFailed": "Creazione degli embedding non riuscita: Autenticazione fallita. Controlla la tua chiave API.",
 	"failedWithStatus": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi: {{errorMessage}}",

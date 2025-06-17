@@ -1,4 +1,5 @@
 {
+	"unknownError": "Onbekende fout",
 	"authenticationFailed": "Insluitingen maken mislukt: Authenticatie mislukt. Controleer je API-sleutel.",
 	"failedWithStatus": "Insluitingen maken mislukt na {{attempts}} pogingen: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Insluitingen maken mislukt na {{attempts}} pogingen: {{errorMessage}}",

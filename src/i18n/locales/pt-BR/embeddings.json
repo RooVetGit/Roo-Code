@@ -1,4 +1,5 @@
 {
+	"unknownError": "Erro desconhecido",
 	"authenticationFailed": "Falha ao criar embeddings: Falha na autenticação. Verifique sua chave de API.",
 	"failedWithStatus": "Falha ao criar embeddings após {{attempts}} tentativas: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Falha ao criar embeddings após {{attempts}} tentativas: {{errorMessage}}",

@@ -1,4 +1,5 @@
 {
+	"unknownError": "未知錯誤",
 	"authenticationFailed": "建立內嵌失敗：驗證失敗。請檢查您的 API 金鑰。",
 	"failedWithStatus": "嘗試 {{attempts}} 次後建立內嵌失敗：HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "嘗試 {{attempts}} 次後建立內嵌失敗：{{errorMessage}}",

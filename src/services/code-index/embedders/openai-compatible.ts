@@ -179,7 +179,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				console.error(`OpenAI Compatible embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
 				// Provide more context in the error message using robust error extraction
-				let errorMessage = "Unknown error"
+				let errorMessage = t("embeddings:unknownError")
 				if (error?.message) {
 					errorMessage = error.message
 				} else if (typeof error === "string") {
@@ -188,7 +188,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					try {
 						errorMessage = error.toString()
 					} catch {
-						errorMessage = "Unknown error"
+						errorMessage = t("embeddings:unknownError")
 					}
 				}
 

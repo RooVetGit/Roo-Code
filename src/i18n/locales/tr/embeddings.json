@@ -1,4 +1,5 @@
 {
+	"unknownError": "Bilinmeyen hata",
 	"authenticationFailed": "Gömülmeler oluşturulamadı: Kimlik doğrulama başarısız oldu. Lütfen API anahtarınızı kontrol edin.",
 	"failedWithStatus": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı: {{errorMessage}}",

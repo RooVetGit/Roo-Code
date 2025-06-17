@@ -1,4 +1,5 @@
 {
+	"unknownError": "Error tidak dikenal",
 	"authenticationFailed": "Gagal membuat embeddings: Autentikasi gagal. Silakan periksa API key Anda.",
 	"failedWithStatus": "Gagal membuat embeddings setelah {{attempts}} percobaan: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Gagal membuat embeddings setelah {{attempts}} percobaan: {{errorMessage}}",

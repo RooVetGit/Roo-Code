@@ -1,4 +1,5 @@
 {
+	"unknownError": "Lỗi không xác định",
 	"authenticationFailed": "Không thể tạo nhúng: Xác thực không thành công. Vui lòng kiểm tra khóa API của bạn.",
 	"failedWithStatus": "Không thể tạo nhúng sau {{attempts}} lần thử: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Không thể tạo nhúng sau {{attempts}} lần thử: {{errorMessage}}",
