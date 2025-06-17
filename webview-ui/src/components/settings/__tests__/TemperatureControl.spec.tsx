@@ -4,32 +4,6 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { TemperatureControl } from "../TemperatureControl"
 
-// Mock translation hook to return the key as the translation
-vi.mock("@/i18n/TranslationContext", () => ({
-	useAppTranslation: () => ({
-		t: (key: string) => key,
-	}),
-}))
-
-// Mock VSCode components to behave like standard HTML elements
-vi.mock("@vscode/webview-ui-toolkit/react", () => ({
-	VSCodeCheckbox: ({ checked, onChange, children, "data-testid": dataTestId, ...props }: any) => (
-		<div>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={onChange}
-				data-testid={dataTestId}
-				aria-label={children?.props?.children || children}
-				role="checkbox"
-				aria-checked={checked}
-				{...props}
-			/>
-			{children}
-		</div>
-	),
-}))
-
 vi.mock("@/components/ui", () => ({
 	...vi.importActual("@/components/ui"),
 	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
@@ -40,6 +14,22 @@ vi.mock("@/components/ui", () => ({
 			data-testid={dataTestId}
 			role="slider"
 		/>
+	),
+}))
+
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
+	VSCodeCheckbox: ({ children, onChange, checked, ...props }: any) => (
+		<label>
+			<input
+				type="checkbox"
+				role="checkbox"
+				checked={checked || false}
+				aria-checked={checked || false}
+				onChange={(e: any) => onChange?.({ target: { checked: e.target.checked } })}
+				{...props}
+			/>
+			{children}
+		</label>
 	),
 }))
 
