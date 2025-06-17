@@ -1437,3 +1437,4 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 ## [2.1.2]
 
 - Support for auto-approval of write operations and command execution
+- Support for .clinerules custom instructions
