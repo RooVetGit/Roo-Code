@@ -5,6 +5,7 @@ import * as yaml from "yaml"
 import type { MarketplaceItem, MarketplaceItemType, InstallMarketplaceItemOptions, McpParameter } from "@roo-code/types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
+import { safeWriteJson } from "../../utils/safeWriteJson"
 
 export interface InstallOptions extends InstallMarketplaceItemOptions {
 	target: "project" | "global"
@@ -211,14 +212,14 @@ export class SimpleInstaller {
 		// Add or update the single server
 		existingData.mcpServers[serverName] = mcpData
 
-		// Write back to file
-		await fs.mkdir(path.dirname(filePath), { recursive: true })
-		const jsonContent = JSON.stringify(existingData, null, 2)
-		await fs.writeFile(filePath, jsonContent, "utf-8")
+		// Write back to file using atomic safe write
+		await safeWriteJson(filePath, existingData)
 
 		// Calculate approximate line number where the new server was added
 		let line: number | undefined
 		if (serverName) {
+			// Get the content to calculate line number
+			const jsonContent = JSON.stringify(existingData, null, 2)
 			const lines = jsonContent.split("\n")
 			// Find the line containing the server name
 			const serverLineIndex = lines.findIndex((l) => l.includes(`"${serverName}"`))
@@ -313,8 +314,8 @@ export class SimpleInstaller {
 				const serverName = item.id
 				delete existingData.mcpServers[serverName]
 
-				// Always write back the file, even if empty
-				await fs.writeFile(filePath, JSON.stringify(existingData, null, 2), "utf-8")
+				// Always write back the file, even if empty, using atomic safe write
+				await safeWriteJson(filePath, existingData)
 			}
 		} catch (error) {
 			// File doesn't exist or other error, nothing to remove

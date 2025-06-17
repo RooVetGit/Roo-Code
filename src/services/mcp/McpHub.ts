@@ -435,14 +435,9 @@ export class McpHub {
 		)
 		const fileExists = await fileExistsAtPath(mcpSettingsFilePath)
 		if (!fileExists) {
-			await fs.writeFile(
-				mcpSettingsFilePath,
-				`{
-  "mcpServers": {
-
-  }
-}`,
-			)
+			await safeWriteJson(mcpSettingsFilePath, {
+				mcpServers: {},
+			})
 		}
 		return mcpSettingsFilePath
 	}
