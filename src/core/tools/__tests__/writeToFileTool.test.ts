@@ -401,37 +401,31 @@ describe("writeToFileTool", () => {
 	})
 
 	describe("parameter validation", () => {
-		it("returns early without error on missing path parameter", async () => {
+		it("errors and resets on missing path parameter", async () => {
 			await executeWriteFileTool({ path: undefined })
 
-			// With the new behavior, it should return early without errors
-			expect(mockCline.consecutiveMistakeCount).toBe(0)
-			expect(mockCline.recordToolError).not.toHaveBeenCalled()
-			expect(mockCline.sayAndCreateMissingParamError).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.reset).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
+			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("write_to_file", "path")
+			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
 		})
 
-		it("returns early without error on empty path parameter", async () => {
+		it("errors and resets on empty path parameter", async () => {
 			await executeWriteFileTool({ path: "" })
 
-			// Empty string is falsy in the context of !relPath check, so it returns early
-			expect(mockCline.consecutiveMistakeCount).toBe(0)
-			expect(mockCline.recordToolError).not.toHaveBeenCalled()
-			expect(mockCline.sayAndCreateMissingParamError).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.reset).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
+			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("write_to_file", "path")
+			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
 		})
 
-		it("returns early without error on missing content parameter", async () => {
+		it("errors and resets on missing content parameter", async () => {
 			await executeWriteFileTool({ content: undefined })
 
-			// With the new behavior, it should return early without errors
-			expect(mockCline.consecutiveMistakeCount).toBe(0)
-			expect(mockCline.recordToolError).not.toHaveBeenCalled()
-			expect(mockCline.sayAndCreateMissingParamError).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.reset).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
+			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("write_to_file", "content")
+			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
 		})
 	})
 })

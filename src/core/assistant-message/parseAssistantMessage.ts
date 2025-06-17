@@ -24,7 +24,10 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 			const paramClosingTag = `</${currentParamName}>`
 			if (currentParamValue.endsWith(paramClosingTag)) {
 				// End of param value.
-				currentToolUse.params[currentParamName] = currentParamValue.slice(0, -paramClosingTag.length).trim()
+				// Don't trim content parameters to preserve newlines
+				const paramValue = currentParamValue.slice(0, -paramClosingTag.length)
+				currentToolUse.params[currentParamName] =
+					currentParamName === "content" ? paramValue : paramValue.trim()
 				currentParamName = undefined
 				continue
 			} else {
@@ -72,9 +75,8 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 					const contentEndIndex = toolContent.lastIndexOf(contentEndTag)
 
 					if (contentStartIndex !== -1 && contentEndIndex !== -1 && contentEndIndex > contentStartIndex) {
-						currentToolUse.params[contentParamName] = toolContent
-							.slice(contentStartIndex, contentEndIndex)
-							.trim()
+						// Don't trim content to preserve newlines
+						currentToolUse.params[contentParamName] = toolContent.slice(contentStartIndex, contentEndIndex)
 					}
 				}
 
@@ -138,7 +140,9 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 		// Stream did not complete tool call, add it as partial.
 		if (currentParamName) {
 			// Tool call has a parameter that was not completed.
-			currentToolUse.params[currentParamName] = accumulator.slice(currentParamValueStartIndex).trim()
+			// Don't trim content parameters to preserve newlines
+			const paramValue = accumulator.slice(currentParamValueStartIndex)
+			currentToolUse.params[currentParamName] = currentParamName === "content" ? paramValue : paramValue.trim()
 		}
 
 		contentBlocks.push(currentToolUse)
