@@ -7,6 +7,7 @@ import type {
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
 	ShareVisibility,
+	HistorySearchOptions,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -23,6 +24,7 @@ export interface WebviewMessage {
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
+		| "getHistoryItems"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
@@ -222,6 +224,7 @@ export interface WebviewMessage {
 	config?: Record<string, any> // Add config to the payload
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
+	historySearchOptions?: HistorySearchOptions // For history search
 }
 
 export const checkoutDiffPayloadSchema = z.object({

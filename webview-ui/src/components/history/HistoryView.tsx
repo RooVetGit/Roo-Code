@@ -30,6 +30,7 @@ type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRe
 const HistoryView = ({ onDone }: HistoryViewProps) => {
 	const {
 		tasks,
+		loading,
 		searchQuery,
 		setSearchQuery,
 		sortOption,
@@ -223,30 +224,36 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 			</TabHeader>
 
 			<TabContent className="p-0">
-				<Virtuoso
-					className="flex-1 overflow-y-scroll"
-					data={tasks}
-					data-testid="virtuoso-container"
-					initialTopMostItemIndex={0}
-					components={{
-						List: React.forwardRef((props, ref) => (
-							<div {...props} ref={ref} data-testid="virtuoso-item-list" />
-						)),
-					}}
-					itemContent={(_index, item) => (
-						<TaskItem
-							key={item.id}
-							item={item}
-							variant="full"
-							showWorkspace={showAllWorkspaces}
-							isSelectionMode={isSelectionMode}
-							isSelected={selectedTaskIds.includes(item.id)}
-							onToggleSelection={toggleTaskSelection}
-							onDelete={setDeleteTaskId}
-							className="m-2 mr-0"
-						/>
-					)}
-				/>
+				{loading ? (
+					<div className="flex justify-center items-center h-64">
+						<div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-vscode-foreground"></div>
+					</div>
+				) : (
+					<Virtuoso
+						className="flex-1 overflow-y-scroll"
+						data={tasks}
+						data-testid="virtuoso-container"
+						initialTopMostItemIndex={0}
+						components={{
+							List: React.forwardRef((props, ref) => (
+								<div {...props} ref={ref} data-testid="virtuoso-item-list" />
+							)),
+						}}
+						itemContent={(_index, item) => (
+							<TaskItem
+								key={item.id}
+								item={item}
+								variant="full"
+								showWorkspace={showAllWorkspaces}
+								isSelectionMode={isSelectionMode}
+								isSelected={selectedTaskIds.includes(item.id)}
+								onToggleSelection={toggleTaskSelection}
+								onDelete={setDeleteTaskId}
+								className="m-2 mr-0"
+							/>
+						)}
+					/>
+				)}
 			</TabContent>
 
 			{/* Fixed action bar at bottom - only shown in selection mode with selected items */}

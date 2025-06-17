@@ -4,13 +4,13 @@ import { useTaskSearch } from "./useTaskSearch"
 import TaskItem from "./TaskItem"
 
 const HistoryPreview = () => {
-	const { tasks } = useTaskSearch()
+	const { tasks, loading } = useTaskSearch({ limit: 3 })
 
 	return (
 		<div className="flex flex-col gap-3">
-			{tasks.length !== 0 && (
+			{!loading && tasks.length !== 0 && (
 				<>
-					{tasks.slice(0, 3).map((item) => (
+					{tasks.map((item) => (
 						<TaskItem key={item.id} item={item} variant="compact" />
 					))}
 				</>
