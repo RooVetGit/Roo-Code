@@ -43,6 +43,7 @@ export const OPEN_ROUTER_PROMPT_CACHING_MODELS = new Set([
 	"google/gemini-2.5-flash-preview:thinking",
 	"google/gemini-2.5-flash-preview-05-20",
 	"google/gemini-2.5-flash-preview-05-20:thinking",
+	"google/gemini-2.5-flash",
 	"google/gemini-2.5-flash-lite-preview-06-17",
 	"google/gemini-2.5-flash-lite-preview-06-17:thinking",
 	"google/gemini-2.0-flash-001",
@@ -81,6 +82,7 @@ export const OPEN_ROUTER_REASONING_BUDGET_MODELS = new Set([
 	"google/gemini-2.5-pro-preview",
 	"google/gemini-2.5-pro",
 	"google/gemini-2.5-flash-preview-05-20",
+	"google/gemini-2.5-flash",
 	"google/gemini-2.5-flash-lite-preview-06-17",
 	// Also include the models that require the reasoning budget to be enabled
 	// even though `OPEN_ROUTER_REQUIRED_REASONING_BUDGET_MODELS` takes precedence.

@@ -25,6 +25,16 @@ export const vertexModels = {
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 	},
+	"gemini-2.5-flash": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.15,
+		outputPrice: 0.6,
+		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+	},
 	"gemini-2.5-flash-preview-04-17:thinking": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
