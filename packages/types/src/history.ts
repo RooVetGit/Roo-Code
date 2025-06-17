@@ -19,3 +19,15 @@ export const historyItemSchema = z.object({
 })
 
 export type HistoryItem = z.infer<typeof historyItemSchema>
+
+/**
+ * HistorySearchOptions
+ */
+export interface HistorySearchOptions {
+	searchQuery?: string
+	limit?: number
+	workspacePath?: string
+	sortOption?: "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
+	showAllWorkspaces?: boolean
+	dateRange?: { fromTs?: number; toTs?: number }
+}

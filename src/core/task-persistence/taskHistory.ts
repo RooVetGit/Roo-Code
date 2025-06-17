@@ -354,17 +354,23 @@ export async function getHistoryItemsForMonth(options: GetHistoryItemsForMonthOp
  * @param workspacePath - Optional workspace path to filter items by.
  * @returns A promise that resolves to an array of matching HistoryItem objects.
  */
-export async function getHistoryItemsForSearch(
-	searchQuery: string,
-	dateRange?: { fromTs?: Date; toTs?: Date },
-	limit?: number,
-	workspacePath?: string,
-): Promise<HistoryItem[]> {
+import { HistorySearchOptions } from "@roo-code/types"
+
+export async function getHistoryItemsForSearch(options: HistorySearchOptions): Promise<HistoryItem[]> {
+	const { searchQuery = "", dateRange, limit, workspacePath, sortOption } = options
 	const startTime = performance.now()
 	const limitStringForLog = limit !== undefined ? limit : "none"
 	console.log(
-		`[TaskHistory] [getHistoryItemsForSearch] starting: query="${searchQuery}", limit=${limitStringForLog}, workspace=${workspacePath || "all"}, hasDateRange=${!!dateRange}`,
+		`[TaskHistory] [getHistoryItemsForSearch] starting: query="${searchQuery}", limit=${limitStringForLog}, workspace=${workspacePath || "all"}, hasDateRange=${!!dateRange}, sortOption=${sortOption || "default"}`,
 	)
+
+	// Convert number timestamps to Date objects for internal processing if needed
+	const dateRangeWithDates = dateRange
+		? {
+				fromTs: dateRange.fromTs ? new Date(dateRange.fromTs) : undefined,
+				toTs: dateRange.toTs ? new Date(dateRange.toTs) : undefined,
+			}
+		: undefined
 
 	const resultItems: HistoryItem[] = []
 	const lowerCaseSearchQuery = searchQuery.trim().toLowerCase()
@@ -372,8 +378,8 @@ export async function getHistoryItemsForSearch(
 	// Get available months
 	const sortedMonthObjects = await getAvailableHistoryMonths()
 
-	const fromTsNum = dateRange?.fromTs?.getTime()
-	const toTsNum = dateRange?.toTs?.getTime()
+	const fromTsNum = dateRangeWithDates?.fromTs?.getTime()
+	const toTsNum = dateRangeWithDates?.toTs?.getTime()
 
 	let processedMonths = 0
 	let skippedMonths = 0
@@ -585,7 +591,7 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 	// This ensures that if migration runs multiple times, it considers what's already been migrated.
 	try {
 		console.log("[TaskHistory Migration] Reading existing items from new-format indexes...")
-		const allCurrentlyIndexedItems = await getHistoryItemsForSearch("", undefined, undefined, undefined)
+		const allCurrentlyIndexedItems = await getHistoryItemsForSearch({})
 		for (const item of allCurrentlyIndexedItems) {
 			if (item && item.id) {
 				// Basic validation
