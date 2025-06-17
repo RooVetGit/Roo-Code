@@ -1,4 +1,3 @@
-import { describe, it, expect } from "@jest/globals"
 import ExcelJS from "exceljs"
 import { extractTextFromXLSX } from "../extract-text-from-xlsx"
 
