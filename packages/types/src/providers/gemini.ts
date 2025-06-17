@@ -283,19 +283,6 @@ export const geminiModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 	},
-	"gemini-2.5-flash-lite-preview-06-17:thinking": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 0.1,
-		outputPrice: 0.4,
-		cacheReadsPrice: 0.025,
-		cacheWritesPrice: 1.0,
-		maxThinkingTokens: 24_576,
-		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
-	},
 	"gemini-2.5-flash-lite-preview-06-17": {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
@@ -305,5 +292,7 @@ export const geminiModels = {
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
 		cacheWritesPrice: 1.0,
+		supportsReasoningBudget: true,
+		maxThinkingTokens: 24_576,
 	},
 } as const satisfies Record<string, ModelInfo>
