@@ -17,6 +17,7 @@ vitest.mock("../../../../i18n", () => ({
 			"embeddings:failedMaxAttempts": `Failed to create embeddings after ${params?.attempts} attempts`,
 			"embeddings:textExceedsTokenLimit": `Text at index ${params?.index} exceeds maximum token limit (${params?.itemTokens} > ${params?.maxTokens}). Skipping.`,
 			"embeddings:rateLimitRetry": `Rate limit hit, retrying in ${params?.delayMs}ms (attempt ${params?.attempt}/${params?.maxRetries})`,
+			"embeddings:unknownError": "Unknown error",
 		}
 		return translations[key] || key
 	},
