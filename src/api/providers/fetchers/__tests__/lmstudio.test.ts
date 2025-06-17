@@ -1,30 +1,29 @@
 import axios from "axios"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 import { LMStudioClient, LLMInfo } from "@lmstudio/sdk" // LLMInfo is a type
 import { getLMStudioModels, parseLMStudioModel } from "../lmstudio"
 import { ModelInfo, lMStudioDefaultModelInfo } from "@roo-code/types" // ModelInfo is a type
 
 // Mock axios
-jest.mock("axios")
-const mockedAxios = axios as jest.Mocked<typeof axios>
+vi.mock("axios")
+const mockedAxios = axios as any
 
 // Mock @lmstudio/sdk
-const mockListDownloadedModels = jest.fn()
-jest.mock("@lmstudio/sdk", () => {
-	const originalModule = jest.requireActual("@lmstudio/sdk")
+const mockListDownloadedModels = vi.fn()
+vi.mock("@lmstudio/sdk", () => {
 	return {
-		...originalModule,
-		LMStudioClient: jest.fn().mockImplementation(() => ({
+		LMStudioClient: vi.fn().mockImplementation(() => ({
 			system: {
 				listDownloadedModels: mockListDownloadedModels,
 			},
 		})),
 	}
 })
-const MockedLMStudioClientConstructor = LMStudioClient as jest.MockedClass<typeof LMStudioClient>
+const MockedLMStudioClientConstructor = LMStudioClient as any
 
 describe("LMStudio Fetcher", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 		MockedLMStudioClientConstructor.mockClear()
 	})
 
@@ -133,7 +132,7 @@ describe("LMStudio Fetcher", () => {
 		})
 
 		it("should return an empty object and log error if axios.get fails with a generic error", async () => {
-			const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
 			const networkError = new Error("Network connection failed")
 			mockedAxios.get.mockRejectedValueOnce(networkError)
 
@@ -151,7 +150,7 @@ describe("LMStudio Fetcher", () => {
 		})
 
 		it("should return an empty object and log info if axios.get fails with ECONNREFUSED", async () => {
-			const consoleInfoSpy = jest.spyOn(console, "warn").mockImplementation(() => {})
+			const consoleInfoSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 			const econnrefusedError = new Error("Connection refused")
 			;(econnrefusedError as any).code = "ECONNREFUSED"
 			mockedAxios.get.mockRejectedValueOnce(econnrefusedError)
@@ -168,7 +167,7 @@ describe("LMStudio Fetcher", () => {
 		})
 
 		it("should return an empty object and log error if listDownloadedModels fails", async () => {
-			const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
 			const listError = new Error("LMStudio SDK internal error")
 
 			mockedAxios.get.mockResolvedValueOnce({ data: {} })

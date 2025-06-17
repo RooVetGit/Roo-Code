@@ -1,32 +1,35 @@
 import axios from "axios"
 import path from "path"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 import { getOllamaModels, parseOllamaModel } from "../ollama"
-import * as ollamaModelsData from "./fixtures/ollama-model-details.json"
+import ollamaModelsData from "./fixtures/ollama-model-details.json"
 
 // Mock axios
-jest.mock("axios")
-const mockedAxios = axios as jest.Mocked<typeof axios>
+vi.mock("axios")
+const mockedAxios = axios as any
 
 describe("Ollama Fetcher", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	describe("parseOllamaModel", () => {
-		const ollamaModels = ollamaModelsData as Record<string, any>
-		const parsedModel = parseOllamaModel(ollamaModels["qwen3-2to16:latest"])
+		it("should correctly parse Ollama model info", () => {
+			const modelData = ollamaModelsData["qwen3-2to16:latest"]
+			const parsedModel = parseOllamaModel(modelData)
 
-		expect(parsedModel).toEqual({
-			maxTokens: 40960,
-			contextWindow: 40960,
-			supportsImages: false,
-			supportsComputerUse: false,
-			supportsPromptCache: true,
-			inputPrice: 0,
-			outputPrice: 0,
-			cacheWritesPrice: 0,
-			cacheReadsPrice: 0,
-			description: "Family: qwen3, Context: 40960, Size: 32.8B",
+			expect(parsedModel).toEqual({
+				maxTokens: 40960,
+				contextWindow: 40960,
+				supportsImages: false,
+				supportsComputerUse: false,
+				supportsPromptCache: true,
+				inputPrice: 0,
+				outputPrice: 0,
+				cacheWritesPrice: 0,
+				cacheReadsPrice: 0,
+				description: "Family: qwen3, Context: 40960, Size: 32.8B",
+			})
 		})
 	})
 
@@ -98,7 +101,7 @@ describe("Ollama Fetcher", () => {
 		it("should return an empty list if the initial /api/tags call fails", async () => {
 			const baseUrl = "http://localhost:11434"
 			mockedAxios.get.mockRejectedValueOnce(new Error("Network error"))
-			const consoleInfoSpy = jest.spyOn(console, "error").mockImplementation(() => {}) // Spy and suppress output
+			const consoleInfoSpy = vi.spyOn(console, "error").mockImplementation(() => {}) // Spy and suppress output
 
 			const result = await getOllamaModels(baseUrl)
 
@@ -110,7 +113,7 @@ describe("Ollama Fetcher", () => {
 
 		it("should log an info message and return an empty object on ECONNREFUSED", async () => {
 			const baseUrl = "http://localhost:11434"
-			const consoleInfoSpy = jest.spyOn(console, "warn").mockImplementation(() => {}) // Spy and suppress output
+			const consoleInfoSpy = vi.spyOn(console, "warn").mockImplementation(() => {}) // Spy and suppress output
 
 			const econnrefusedError = new Error("Connection refused") as any
 			econnrefusedError.code = "ECONNREFUSED"
