@@ -223,7 +223,6 @@ describe("mergeExtensionState", () => {
 				marketplace: false,
 				disableCompletionCommand: false,
 				multiFileApplyDiff: true,
-				disableDiffVisualization: false,
 			} as Record<ExperimentId, boolean>,
 		}
 
@@ -239,7 +238,6 @@ describe("mergeExtensionState", () => {
 			marketplace: false,
 			disableCompletionCommand: false,
 			multiFileApplyDiff: true,
-			disableDiffVisualization: false,
 		})
 	})
 })

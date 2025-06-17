@@ -508,10 +508,6 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gelijktijdige bestandsbewerkingen inschakelen",
 			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek bewerken. Wanneer uitgeschakeld, moet Roo bestanden één voor één bewerken. Het uitschakelen hiervan kan helpen wanneer je werkt met minder capabele modellen of wanneer je meer controle wilt over bestandswijzigingen."
-		},
-		"DISABLE_DIFF_VISUALIZATION": {
-			"name": "Diff-visualisatie uitschakelen voor alle bewerkingstools",
-			"description": "Indien ingeschakeld, worden bestanden rechtstreeks in de editor geopend in plaats van een diff-weergave voor alle bewerkingstools (write_to_file, apply_diff, insert_content, search_and_replace). Dit helpt LSP-crashes met zeer grote bestanden te voorkomen. Wijzigingen zijn nog steeds zichtbaar in het chatvenster."
 		}
 	},
 	"promptCaching": {

@@ -508,10 +508,6 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "啟用並行檔案編輯",
 			"description": "啟用後 Roo 可在單個請求中編輯多個檔案。停用後 Roo 必須逐個編輯檔案。停用此功能有助於使用能力較弱的模型或需要更精確控制檔案修改時。"
-		},
-		"DISABLE_DIFF_VISUALIZATION": {
-			"name": "禁用所有編輯工具的差異可視化",
-			"description": "啟用後，檔案將直接在編輯器中開啟，而不是為所有編輯工具（write_to_file、apply_diff、insert_content、search_and_replace）顯示差異視圖。這有助於防止處理非常大的檔案時LSP崩潰。變更在聊天視窗中仍然可見。"
 		}
 	},
 	"promptCaching": {

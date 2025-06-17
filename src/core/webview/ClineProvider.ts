@@ -535,8 +535,6 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
-		const disableDiffVisualization = experiments.disableDiffVisualization ?? false
-
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
@@ -545,7 +543,6 @@ export class ClineProvider
 			provider: this,
 			apiConfiguration,
 			enableDiff,
-			disableDiffVisualization,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			task,
@@ -578,13 +575,10 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
-		const disableDiffVisualization = experiments.disableDiffVisualization ?? false
-
 		const cline = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
-			disableDiffVisualization,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			historyItem,

@@ -508,10 +508,6 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Abilita modifiche di file concorrenti",
 			"description": "Quando abilitato, Roo può modificare più file in una singola richiesta. Quando disabilitato, Roo deve modificare i file uno alla volta. Disabilitare questa opzione può aiutare quando lavori con modelli meno capaci o quando vuoi più controllo sulle modifiche dei file."
-		},
-		"DISABLE_DIFF_VISUALIZATION": {
-			"name": "Disabilita la visualizzazione delle differenze per tutti gli strumenti di modifica",
-			"description": "Quando abilitato, i file si apriranno direttamente nell'editor invece di mostrare una vista delle differenze per tutti gli strumenti di modifica (write_to_file, apply_diff, insert_content, search_and_replace). Ciò aiuta a prevenire arresti anomali del LSP con file di grandi dimensioni. Le modifiche sono ancora visibili nella finestra della chat."
 		}
 	},
 	"promptCaching": {

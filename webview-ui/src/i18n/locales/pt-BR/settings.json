@@ -508,10 +508,6 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilitar edições de arquivos concorrentes",
 			"description": "Quando habilitado, o Roo pode editar múltiplos arquivos em uma única solicitação. Quando desabilitado, o Roo deve editar arquivos um de cada vez. Desabilitar isso pode ajudar ao trabalhar com modelos menos capazes ou quando você quer mais controle sobre modificações de arquivos."
-		},
-		"DISABLE_DIFF_VISUALIZATION": {
-			"name": "Desativar a visualização de diferenças para todas as ferramentas de edição",
-			"description": "Quando ativado, os arquivos serão abertos diretamente no editor em vez de mostrar uma visualização de diferenças para todas as ferramentas de edição (write_to_file, apply_diff, insert_content, search_and_replace). Isso ajuda a evitar travamentos do LSP com arquivos muito grandes. As alterações ainda são visíveis na janela de bate-papo."
 		}
 	},
 	"promptCaching": {

@@ -34,10 +34,7 @@ export class DiffViewProvider {
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
 
-	constructor(
-		private cwd: string,
-		private disableDiffVisualization: boolean = false,
-	) {}
+	constructor(private cwd: string) {}
 
 	async open(relPath: string): Promise<void> {
 		this.relPath = relPath
@@ -95,13 +92,7 @@ export class DiffViewProvider {
 			this.documentWasOpen = true
 		}
 
-		// If diff visualization is disabled, open the file directly
-		if (this.disableDiffVisualization) {
-			const document = await vscode.workspace.openTextDocument(absolutePath)
-			this.activeDiffEditor = await vscode.window.showTextDocument(document, { preview: false })
-		} else {
-			this.activeDiffEditor = await this.openDiffEditor()
-		}
+		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
 		this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
 		// Apply faded overlay to all lines initially.

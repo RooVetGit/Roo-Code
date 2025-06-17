@@ -508,10 +508,6 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilita edicions de fitxers concurrents",
 			"description": "Quan està activat, Roo pot editar múltiples fitxers en una sola petició. Quan està desactivat, Roo ha d'editar fitxers d'un en un. Desactivar això pot ajudar quan es treballa amb models menys capaços o quan vols més control sobre les modificacions de fitxers."
-		},
-		"DISABLE_DIFF_VISUALIZATION": {
-			"name": "Desactivar la visualització de diferències per a totes les eines d'edició",
-			"description": "Quan estigui activat, els fitxers s'obriran directament a l'editor en lloc de mostrar una vista de diferències per a totes les eines d'edició (write_to_file, apply_diff, insert_content, search_and_replace). Això ajuda a prevenir bloquejos de LSP amb fitxers molt grans. Els canvis encara són visibles a la finestra de xat."
 		}
 	},
 	"promptCaching": {

@@ -30,7 +30,6 @@ describe("experiments", () => {
 				disableCompletionCommand: false,
 				marketplace: false,
 				multiFileApplyDiff: false,
-				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -41,7 +40,6 @@ describe("experiments", () => {
 				disableCompletionCommand: false,
 				marketplace: false,
 				multiFileApplyDiff: false,
-				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
 		})
@@ -52,7 +50,6 @@ describe("experiments", () => {
 				disableCompletionCommand: false,
 				marketplace: false,
 				multiFileApplyDiff: false,
-				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -73,7 +70,6 @@ describe("experiments", () => {
 				marketplace: false,
 				disableCompletionCommand: false,
 				multiFileApplyDiff: false,
-				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(false)
 		})
@@ -84,7 +80,6 @@ describe("experiments", () => {
 				marketplace: true,
 				disableCompletionCommand: false,
 				multiFileApplyDiff: false,
-				disableDiffVisualization: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.MARKETPLACE)).toBe(true)
 		})

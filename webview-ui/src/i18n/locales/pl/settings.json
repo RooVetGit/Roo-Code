@@ -508,10 +508,6 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Włącz równoczesne edycje plików",
 			"description": "Gdy włączone, Roo może edytować wiele plików w jednym żądaniu. Gdy wyłączone, Roo musi edytować pliki jeden po drugim. Wyłączenie tego może pomóc podczas pracy z mniej zdolnymi modelami lub gdy chcesz mieć większą kontrolę nad modyfikacjami plików."
-		},
-		"DISABLE_DIFF_VISUALIZATION": {
-			"name": "Wyłącz wizualizację różnic dla wszystkich narzędzi do edycji",
-			"description": "Po włączeniu pliki będą otwierane bezpośrednio w edytorze, zamiast pokazywać widok różnic dla wszystkich narzędzi do edycji (write_to_file, apply_diff, insert_content, search_and_replace). Pomaga to zapobiegać awariom LSP w przypadku bardzo dużych plików. Zmiany są nadal widoczne w oknie czatu."
 		}
 	},
 	"promptCaching": {
