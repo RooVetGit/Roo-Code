@@ -6,6 +6,8 @@ export default defineConfig({
 		globals: true,
 		setupFiles: ["./vitest.setup.ts"],
 		watch: false,
+		reporters: ["dot"],
+		silent: true,
 	},
 	resolve: {
 		alias: {
