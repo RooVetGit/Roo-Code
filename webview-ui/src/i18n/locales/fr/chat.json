@@ -142,6 +142,7 @@
 		"didRead": "Roo a lu ce fichier :",
 		"wantsToEdit": "Roo veut éditer ce fichier :",
 		"wantsToEditOutsideWorkspace": "Roo veut éditer ce fichier en dehors de l'espace de travail :",
+		"wantsToEditProtected": "Roo veut éditer un fichier de configuration protégé :",
 		"wantsToCreate": "Roo veut créer un nouveau fichier :",
 		"wantsToSearchReplace": "Roo veut effectuer une recherche et remplacement sur ce fichier :",
 		"didSearchReplace": "Roo a effectué une recherche et remplacement sur ce fichier :",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire :",
 		"didViewDefinitions": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire :",
 		"wantsToSearch": "Roo veut rechercher dans ce répertoire <code>{{regex}}</code> :",
-		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :"
+		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :",
+		"wantsToSearchOutsideWorkspace": "Roo veut rechercher dans ce répertoire (hors espace de travail) <code>{{regex}}</code> :",
+		"didSearchOutsideWorkspace": "Roo a recherché dans ce répertoire (hors espace de travail) <code>{{regex}}</code> :",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo veut voir les fichiers de premier niveau dans ce répertoire (hors espace de travail) :",
+		"didViewTopLevelOutsideWorkspace": "Roo a vu les fichiers de premier niveau dans ce répertoire (hors espace de travail) :",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo veut voir récursivement tous les fichiers dans ce répertoire (hors espace de travail) :",
+		"didViewRecursiveOutsideWorkspace": "Roo a vu récursivement tous les fichiers dans ce répertoire (hors espace de travail) :",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire (hors espace de travail) :",
+		"didViewDefinitionsOutsideWorkspace": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire (hors espace de travail) :"
 	},
 	"commandOutput": "Sortie de commande",
 	"response": "Réponse",
@@ -216,9 +225,9 @@
 		"title": "🎉 Roo Code {{version}} est sortie",
 		"description": "Roo Code {{version}} apporte de puissantes nouvelles fonctionnalités et améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "<bold>Condensation Intelligente du Contexte Activée par Défaut</bold> : La condensation du contexte est maintenant activée par défaut avec des paramètres configurables pour quand la condensation automatique se produit",
-		"feature2": "<bold>Bouton de Condensation Manuelle</bold> : Nouveau bouton dans l'en-tête des tâches qui te permet de déclencher manuellement la condensation du contexte à tout moment",
-		"feature3": "<bold>Paramètres de Condensation Améliorés</bold> : Ajuste quand et comment la condensation automatique se produit via les <contextSettingsLink>Paramètres de Contexte</contextSettingsLink>",
+		"feature1": "<bold>Marketplace Expérimental</bold> : Découvrez et installez des modes et des MCPs depuis le nouveau marketplace (à activer dans <experimentalSettingsLink>Paramètres Expérimentaux</experimentalSettingsLink>)",
+		"feature2": "<bold>Opérations de Fichiers Améliorées</bold> : Écritures de fichiers concurrentes multiples dans les paramètres expérimentaux, et lectures concurrentes maintenant dans <contextSettingsLink>Paramètres de Contexte</contextSettingsLink>",
+		"feature3": "<bold>Améliorations MCP et plus</bold> : Support MCP amélioré, contrôles Mermaid, support Amazon Bedrock thinking, et bien plus !",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "Tout refuser"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index prêt",
+		"indexing": "Indexation {{percentage}}%",
+		"indexed": "Indexé",
+		"error": "Erreur d'index",
+		"status": "Statut de l'index"
 	}
 }

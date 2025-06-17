@@ -31,7 +31,7 @@ import {
 } from "../../shared/mcp"
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
-import { injectEnv } from "../../utils/config"
+import { injectVariables } from "../../utils/config"
 
 export type McpConnection = {
 	server: McpServer
@@ -242,9 +242,10 @@ export class McpHub {
 
 	public setupWorkspaceFoldersWatcher(): void {
 		// Skip if test environment is detected
-		if (process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined) {
+		if (process.env.NODE_ENV === "test") {
 			return
 		}
+
 		this.disposables.push(
 			vscode.workspace.onDidChangeWorkspaceFolders(async () => {
 				await this.updateProjectMcpServers()
@@ -314,11 +315,7 @@ export class McpHub {
 
 	private async watchProjectMcpFile(): Promise<void> {
 		// Skip if test environment is detected or VSCode APIs are not available
-		if (
-			process.env.NODE_ENV === "test" ||
-			process.env.JEST_WORKER_ID !== undefined ||
-			!vscode.workspace.createFileSystemWatcher
-		) {
+		if (process.env.NODE_ENV === "test" || !vscode.workspace.createFileSystemWatcher) {
 			return
 		}
 
@@ -451,11 +448,7 @@ export class McpHub {
 
 	private async watchMcpSettingsFile(): Promise<void> {
 		// Skip if test environment is detected or VSCode APIs are not available
-		if (
-			process.env.NODE_ENV === "test" ||
-			process.env.JEST_WORKER_ID !== undefined ||
-			!vscode.workspace.createFileSystemWatcher
-		) {
+		if (process.env.NODE_ENV === "test" || !vscode.workspace.createFileSystemWatcher) {
 			return
 		}
 
@@ -579,8 +572,11 @@ export class McpHub {
 
 			let transport: StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
 
-			// Inject environment variables to the config
-			const configInjected = (await injectEnv(config)) as typeof config
+			// Inject variables to the config (environment, magic variables,...)
+			const configInjected = (await injectVariables(config, {
+				env: process.env,
+				workspaceFolder: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "",
+			})) as typeof config
 
 			if (configInjected.type === "stdio") {
 				transport = new StdioClientTransport({

@@ -1,5 +1,5 @@
 {
-	"title": "Marketplace",
+	"title": "Roo Marketplace",
 	"tabs": {
 		"installed": "Đã cài đặt",
 		"settings": "Cài đặt",
@@ -124,5 +124,8 @@
 			"emojiName": "Ký tự emoji có thể gây ra vấn đề hiển thị",
 			"maxSources": "Tối đa {{max}} nguồn được phép"
 		}
+	},
+	"footer": {
+		"issueText": "Bạn tìm thấy vấn đề với mục marketplace hoặc có đề xuất cho mục mới? <0>Mở issue GitHub</0> để cho chúng tôi biết!"
 	}
 }

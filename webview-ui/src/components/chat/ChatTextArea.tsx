@@ -26,6 +26,7 @@ import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { VolumeX, Pin, Check } from "lucide-react"
 import { IconButton } from "./IconButton"
+import { IndexingStatusDot } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
 
@@ -78,6 +79,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			togglePinnedApiConfig,
 			taskHistory,
 			clineMessages,
+			codebaseIndexConfig,
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -157,13 +159,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [isFocused, setIsFocused] = useState(false)
 
 		// Use custom hook for prompt history navigation
-		const {
-			inputValueWithCursor,
-			setInputValueWithCursor,
-			handleHistoryNavigation,
-			resetHistoryNavigation,
-			resetOnInputChange,
-		} = usePromptHistory({
+		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange } = usePromptHistory({
 			clineMessages,
 			taskHistory,
 			cwd,
@@ -463,27 +459,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setIntendedCursorPosition(null) // Reset the state.
 			}
 		}, [inputValue, intendedCursorPosition])
-
-		// Handle cursor positioning after history navigation
-		useLayoutEffect(() => {
-			if (!inputValueWithCursor.afterRender || !textAreaRef.current) return
-
-			if (inputValueWithCursor.afterRender === "SET_CURSOR_FIRST_LINE") {
-				const firstLineEnd =
-					inputValueWithCursor.value.indexOf("\n") === -1
-						? inputValueWithCursor.value.length
-						: inputValueWithCursor.value.indexOf("\n")
-				textAreaRef.current.setSelectionRange(firstLineEnd, firstLineEnd)
-			} else if (inputValueWithCursor.afterRender === "SET_CURSOR_LAST_LINE") {
-				const lines = inputValueWithCursor.value.split("\n")
-				const lastLineStart = inputValueWithCursor.value.length - lines[lines.length - 1].length
-				textAreaRef.current.setSelectionRange(lastLineStart, lastLineStart)
-			} else if (inputValueWithCursor.afterRender === "SET_CURSOR_START") {
-				textAreaRef.current.setSelectionRange(0, 0)
-			}
-
-			setInputValueWithCursor({ value: inputValueWithCursor.value })
-		}, [inputValueWithCursor, setInputValueWithCursor])
 
 		// Ref to store the search timeout.
 		const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -1171,6 +1146,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					</div>
 
 					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
+						{codebaseIndexConfig?.codebaseIndexEnabled && <IndexingStatusDot />}
 						<IconButton
 							iconClass={isEnhancingPrompt ? "codicon-loading" : "codicon-sparkle"}
 							title={t("chat:enhancePrompt")}

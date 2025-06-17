@@ -51,6 +51,7 @@ import { MarketplaceManager } from "../../services/marketplace"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import type { IndexProgressUpdate } from "../../services/code-index/interfaces/manager"
+import { MdmService } from "../../services/mdm/MdmService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
@@ -103,10 +104,11 @@ export class ClineProvider
 	}
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
+	private mdmService?: MdmService
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "may-29-2025-3-19" // Update for v3.19.0 announcement
+	public readonly latestAnnouncementId = "dec-12-2025-3-20" // Update for v3.20.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -116,6 +118,7 @@ export class ClineProvider
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 		public readonly contextProxy: ContextProxy,
 		public readonly codeIndexManager?: CodeIndexManager,
+		mdmService?: MdmService,
 	) {
 		super()
 
@@ -123,6 +126,7 @@ export class ClineProvider
 		ClineProvider.activeInstances.add(this)
 
 		this.codeIndexManager = codeIndexManager
+		this.mdmService = mdmService
 		this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
 
 		// Start configuration loading (which might trigger indexing) in the background.
@@ -497,9 +501,6 @@ export class ClineProvider
 
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()
-
-		// Set initial VSCode context for experiments
-		await this.updateVSCodeContext()
 
 		this.log("Webview view resolved")
 	}
@@ -1241,22 +1242,10 @@ export class ClineProvider
 		const state = await this.getStateToPostToWebview()
 		this.postMessageToWebview({ type: "state", state })
 
-		// Update VSCode context for experiments
-		await this.updateVSCodeContext()
-	}
-
-	/**
-	 * Updates VSCode context variables for experiments so they can be used in when clauses
-	 */
-	private async updateVSCodeContext() {
-		const { experiments } = await this.getState()
-
-		// Set context for marketplace experiment
-		await vscode.commands.executeCommand(
-			"setContext",
-			`${Package.name}.marketplaceEnabled`,
-			experiments.marketplace ?? false,
-		)
+		// Check MDM compliance and send user to account tab if not compliant
+		if (!this.checkMdmCompliance()) {
+			await this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
+		}
 	}
 
 	/**
@@ -1276,6 +1265,7 @@ export class ClineProvider
 			alwaysAllowReadOnlyOutsideWorkspace,
 			alwaysAllowWrite,
 			alwaysAllowWriteOutsideWorkspace,
+			alwaysAllowWriteProtected,
 			alwaysAllowExecute,
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
@@ -1346,14 +1336,12 @@ export class ClineProvider
 		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
-		// Only fetch marketplace data if the feature is enabled
+		// Fetch marketplace data
 		let marketplaceItems: any[] = []
 		let marketplaceInstalledMetadata: any = { project: {}, global: {} }
 
-		if (experiments.marketplace) {
-			marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
-			marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
-		}
+		marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
+		marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
 
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug
@@ -1369,6 +1357,7 @@ export class ClineProvider
 			alwaysAllowReadOnlyOutsideWorkspace: alwaysAllowReadOnlyOutsideWorkspace ?? false,
 			alwaysAllowWrite: alwaysAllowWrite ?? false,
 			alwaysAllowWriteOutsideWorkspace: alwaysAllowWriteOutsideWorkspace ?? false,
+			alwaysAllowWriteProtected: alwaysAllowWriteProtected ?? false,
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
@@ -1436,7 +1425,7 @@ export class ClineProvider
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? -1,
-			maxConcurrentFileReads: maxConcurrentFileReads ?? 15,
+			maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
@@ -1455,6 +1444,7 @@ export class ClineProvider
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",
 			},
+			mdmCompliant: this.checkMdmCompliance(),
 		}
 	}
 
@@ -1529,6 +1519,7 @@ export class ClineProvider
 			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,
 			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
 			alwaysAllowWriteOutsideWorkspace: stateValues.alwaysAllowWriteOutsideWorkspace ?? false,
+			alwaysAllowWriteProtected: stateValues.alwaysAllowWriteProtected ?? false,
 			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
@@ -1586,12 +1577,7 @@ export class ClineProvider
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
-			maxConcurrentFileReads: experiments.isEnabled(
-				stateValues.experiments ?? experimentDefault,
-				EXPERIMENT_IDS.CONCURRENT_FILE_READS,
-			)
-				? (stateValues.maxConcurrentFileReads ?? 15)
-				: 1,
+			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 			cloudUserInfo,
 			cloudIsAuthenticated,
@@ -1700,6 +1686,24 @@ export class ClineProvider
 	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+
+	/**
+	 * Check if the current state is compliant with MDM policy
+	 * @returns true if compliant, false if blocked
+	 */
+	public checkMdmCompliance(): boolean {
+		if (!this.mdmService) {
+			return true // No MDM service, allow operation
+		}
+
+		const compliance = this.mdmService.isCompliant()
+
+		if (!compliance.compliant) {
+			return false
+		}
+
+		return true
 	}
 
 	/**

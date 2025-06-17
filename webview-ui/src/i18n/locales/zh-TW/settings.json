@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "包含工作區外的檔案",
 				"description": "允許 Roo 在目前工作區外建立和編輯檔案，無需核准。"
+			},
+			"protected": {
+				"label": "包含受保護的檔案",
+				"description": "允許 Roo 建立和編輯受保護的檔案（如 .rooignore 和 .roo/ 設定檔），無需核准。"
 			}
 		},
 		"browser": {
@@ -609,5 +613,7 @@
 	"labels": {
 		"customArn": "自訂 ARN",
 		"useCustomArn": "使用自訂 ARN..."
-	}
+	},
+	"includeMaxOutputTokens": "包含最大輸出 Token 數",
+	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。"
 }

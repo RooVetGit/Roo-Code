@@ -1,8 +1,13 @@
 import { z } from "zod"
 
-import type { ProviderSettings, PromptComponent, ModeConfig } from "@roo-code/types"
-import { InstallMarketplaceItemOptions, MarketplaceItem } from "../services/marketplace/types"
-import { marketplaceItemSchema } from "../services/marketplace/schemas"
+import type {
+	ProviderSettings,
+	PromptComponent,
+	ModeConfig,
+	InstallMarketplaceItemOptions,
+	MarketplaceItem,
+} from "@roo-code/types"
+import { marketplaceItemSchema } from "@roo-code/types"
 
 import { Mode } from "./modes"
 
@@ -29,6 +34,7 @@ export interface WebviewMessage {
 		| "alwaysAllowReadOnlyOutsideWorkspace"
 		| "alwaysAllowWrite"
 		| "alwaysAllowWriteOutsideWorkspace"
+		| "alwaysAllowWriteProtected"
 		| "alwaysAllowExecute"
 		| "webviewDidLaunch"
 		| "newTask"
@@ -52,6 +58,7 @@ export interface WebviewMessage {
 		| "requestLmStudioModels"
 		| "requestVsCodeLmModels"
 		| "openImage"
+		| "saveImage"
 		| "openFile"
 		| "openMention"
 		| "cancelTask"
@@ -111,7 +118,6 @@ export interface WebviewMessage {
 		| "mode"
 		| "updatePrompt"
 		| "updateSupportPrompt"
-		| "resetSupportPrompt"
 		| "getSystemPrompt"
 		| "copySystemPrompt"
 		| "systemPrompt"
@@ -165,6 +171,7 @@ export interface WebviewMessage {
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
+	dataUri?: string
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ProviderSettings
 	images?: string[]
@@ -227,7 +234,7 @@ export interface IndexClearedPayload {
 }
 
 export const installMarketplaceItemWithParametersPayloadSchema = z.object({
-	item: marketplaceItemSchema.strict(),
+	item: marketplaceItemSchema,
 	parameters: z.record(z.string(), z.any()),
 })
 

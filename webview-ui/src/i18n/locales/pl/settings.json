@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "Uwzględnij pliki poza obszarem roboczym",
 				"description": "Pozwól Roo na tworzenie i edycję plików poza bieżącym obszarem roboczym bez konieczności zatwierdzania."
+			},
+			"protected": {
+				"label": "Uwzględnij pliki chronione",
+				"description": "Pozwól Roo na tworzenie i edycję plików chronionych (takich jak .rooignore i pliki konfiguracyjne .roo/) bez konieczności zatwierdzania."
 			}
 		},
 		"browser": {
@@ -609,5 +613,7 @@
 	"labels": {
 		"customArn": "Niestandardowy ARN",
 		"useCustomArn": "Użyj niestandardowego ARN..."
-	}
+	},
+	"includeMaxOutputTokens": "Uwzględnij maksymalne tokeny wyjściowe",
+	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać."
 }
