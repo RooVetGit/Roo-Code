@@ -3,6 +3,7 @@ import type { ClineProvider } from "../../../core/webview/ClineProvider"
 import type { ExtensionContext, Uri } from "vscode"
 import { ServerConfigSchema, McpHub } from "../McpHub"
 import fs from "fs/promises"
+import { vi, Mock } from "vitest"
 
 vi.mock("vscode", () => ({
 	workspace: {
@@ -300,12 +301,12 @@ describe("McpHub", () => {
 			mcpHub.connections = [mockConnection]
 
 			// Mock reading initial config
-			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			;(fs.readFile as Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
 			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "new-tool", false)
 
 			// Verify the config was updated correctly
-			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
+			const writeCalls = (fs.writeFile as Mock).mock.calls
 			expect(writeCalls.length).toBeGreaterThan(0)
 
 			// Find the write call
@@ -347,12 +348,12 @@ describe("McpHub", () => {
 			mcpHub.connections = [mockConnection]
 
 			// Mock reading initial config
-			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			;(fs.readFile as Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
 			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "existing-tool", true)
 
 			// Verify the config was updated correctly
-			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
+			const writeCalls = (fs.writeFile as Mock).mock.calls
 			expect(writeCalls.length).toBeGreaterThan(0)
 
 			// Find the write call
@@ -393,7 +394,7 @@ describe("McpHub", () => {
 			mcpHub.connections = [mockConnection]
 
 			// Mock reading initial config
-			;(fs.readFile as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			;(fs.readFile as Mock).mockResolvedValueOnce(JSON.stringify(mockConfig))
 
 			// Call with false because of "true" is default value
 			await mcpHub.toggleToolEnabledForPrompt("test-server", "global", "new-tool", false)
@@ -401,7 +402,7 @@ describe("McpHub", () => {
 			// Verify the config was updated with initialized disabledTools
 			// Find the write call with the normalized path
 			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-			const writeCalls = (fs.writeFile as jest.Mock).mock.calls
+			const writeCalls = (fs.writeFile as Mock).mock.calls
 
 			// Find the write call with the normalized path
 			const writeCall = writeCalls.find((call) => call[0] === normalizedSettingsPath)
