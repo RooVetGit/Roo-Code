@@ -1,16 +1,13 @@
-import React from "react"
 import { render } from "@testing-library/react"
-import { vi } from "vitest"
+
 import TranslationProvider, { useAppTranslation } from "../TranslationContext"
 
-// Mock the useExtensionState hook
 vi.mock("@/context/ExtensionStateContext", () => ({
 	useExtensionState: () => ({
 		language: "en",
 	}),
 }))
 
-// Mock react-i18next
 vi.mock("react-i18next", () => ({
 	useTranslation: () => ({
 		i18n: {
@@ -27,7 +24,6 @@ vi.mock("react-i18next", () => ({
 	}),
 }))
 
-// Mock the i18n setup
 vi.mock("../setup", () => ({
 	default: {
 		t: (key: string, options?: Record<string, any>) => {
@@ -43,7 +39,6 @@ vi.mock("../setup", () => ({
 	loadTranslations: vi.fn(),
 }))
 
-// Mock component that uses the translation context
 const TestComponent = () => {
 	const { t } = useAppTranslation()
 	return (

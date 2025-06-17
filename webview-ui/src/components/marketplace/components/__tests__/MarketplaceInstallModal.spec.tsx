@@ -1,10 +1,9 @@
-import React from "react"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { vi } from "vitest"
-import { MarketplaceInstallModal } from "../MarketplaceInstallModal"
+
 import { MarketplaceItem } from "@roo-code/types"
 
-// Mock the vscode module before importing the component
+import { MarketplaceInstallModal } from "../MarketplaceInstallModal"
+
 vi.mock("@/utils/vscode", () => ({
 	vscode: {
 		postMessage: vi.fn(),

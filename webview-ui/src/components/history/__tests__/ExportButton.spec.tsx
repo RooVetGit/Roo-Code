@@ -1,9 +1,11 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
-import { ExportButton } from "../ExportButton"
+
 import { vscode } from "@src/utils/vscode"
 
+import { ExportButton } from "../ExportButton"
+
 vi.mock("@src/utils/vscode")
+
 vi.mock("@src/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => key,

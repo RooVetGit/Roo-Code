@@ -1,17 +1,19 @@
 import { render, fireEvent, screen } from "@testing-library/react"
-import { vi } from "vitest"
-import ChatTextArea from "../ChatTextArea"
+
+import { defaultModeSlug } from "@roo/modes"
+
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
-import { defaultModeSlug } from "@roo/modes"
 import * as pathMentions from "@src/utils/path-mentions"
 
-// Mock modules
+import ChatTextArea from "../ChatTextArea"
+
 vi.mock("@src/utils/vscode", () => ({
 	vscode: {
 		postMessage: vi.fn(),
 	},
 }))
+
 vi.mock("@src/components/common/CodeBlock")
 vi.mock("@src/components/common/MarkdownBlock")
 vi.mock("@src/utils/path-mentions", () => ({

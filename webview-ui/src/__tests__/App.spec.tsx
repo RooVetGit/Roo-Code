@@ -2,7 +2,6 @@
 
 import React from "react"
 import { render, screen, act, cleanup } from "@testing-library/react"
-import { vi } from "vitest"
 
 import AppWithProviders from "../App"
 

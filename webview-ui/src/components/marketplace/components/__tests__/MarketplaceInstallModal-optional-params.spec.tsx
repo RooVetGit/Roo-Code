@@ -1,10 +1,9 @@
-import React from "react"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { vi } from "vitest"
-import { MarketplaceInstallModal } from "../MarketplaceInstallModal"
+
 import { MarketplaceItem } from "@roo-code/types"
 
-// Mock vscode
+import { MarketplaceInstallModal } from "../MarketplaceInstallModal"
+
 vi.mock("@/utils/vscode", () => ({
 	vscode: {
 		postMessage: vi.fn(),
@@ -14,7 +13,6 @@ vi.mock("@/utils/vscode", () => ({
 import { vscode } from "@/utils/vscode"
 const mockPostMessage = vscode.postMessage as any
 
-// Mock translation
 vi.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string, params?: any) => {

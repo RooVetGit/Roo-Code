@@ -1,11 +1,9 @@
-import React from "react"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { vi } from "vitest"
+
 import { MarketplaceView } from "../MarketplaceView"
 import { MarketplaceViewStateManager } from "../MarketplaceViewStateManager"
 
-// Mock all the dependencies to keep the test simple
 vi.mock("@/utils/vscode", () => ({
 	vscode: {
 		postMessage: vi.fn(),
@@ -50,14 +48,6 @@ vi.mock("@/components/common/Tab", () => ({
 	TabList: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 	TabTrigger: ({ children, ...props }: any) => <button {...props}>{children}</button>,
 }))
-
-// Mock ResizeObserver
-class MockResizeObserver {
-	observe() {}
-	unobserve() {}
-	disconnect() {}
-}
-global.ResizeObserver = MockResizeObserver
 
 describe("MarketplaceView", () => {
 	const mockOnDone = vi.fn()

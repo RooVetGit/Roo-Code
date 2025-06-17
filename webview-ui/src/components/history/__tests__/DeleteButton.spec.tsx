@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
+
 import { DeleteButton } from "../DeleteButton"
 
 vi.mock("@src/i18n/TranslationContext", () => ({

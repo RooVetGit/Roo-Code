@@ -1,7 +1,7 @@
 // npx vitest run src/components/common/__tests__/CodeBlock.spec.tsx
 
 import { render, screen, fireEvent, act } from "@testing-library/react"
-import { vi } from "vitest"
+
 import CodeBlock from "../CodeBlock"
 
 // Mock the translation context

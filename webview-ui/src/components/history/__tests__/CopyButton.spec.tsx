@@ -1,7 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
-import { CopyButton } from "../CopyButton"
+
 import { useClipboard } from "@/components/ui/hooks"
+
+import { CopyButton } from "../CopyButton"
 
 vi.mock("@/components/ui/hooks")
 vi.mock("@src/i18n/TranslationContext", () => ({

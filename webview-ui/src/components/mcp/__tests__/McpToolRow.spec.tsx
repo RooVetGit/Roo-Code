@@ -1,10 +1,10 @@
 import React from "react"
 import { render, fireEvent, screen } from "@testing-library/react"
-import { vi } from "vitest"
-import McpToolRow from "../McpToolRow"
+
 import { vscode } from "@src/utils/vscode"
 
-// Mock the translation hook
+import McpToolRow from "../McpToolRow"
+
 vi.mock("@src/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => {

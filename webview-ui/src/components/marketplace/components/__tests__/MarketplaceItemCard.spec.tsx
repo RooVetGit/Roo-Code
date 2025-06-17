@@ -1,18 +1,19 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { vi } from "vitest"
-import { MarketplaceItemCard } from "../MarketplaceItemCard"
-import { vscode } from "@/utils/vscode"
+
 import { MarketplaceItem } from "@roo-code/types"
+
+import { vscode } from "@/utils/vscode"
 import { TooltipProvider } from "@/components/ui/tooltip"
-// Mock vscode API
+
+import { MarketplaceItemCard } from "../MarketplaceItemCard"
+
 vi.mock("@/utils/vscode", () => ({
 	vscode: {
 		postMessage: vi.fn(),
 	},
 }))
 
-// Mock ExtensionStateContext
 vi.mock("@/context/ExtensionStateContext", () => ({
 	useExtensionState: () => ({
 		cwd: "/test/workspace",
@@ -20,7 +21,6 @@ vi.mock("@/context/ExtensionStateContext", () => ({
 	}),
 }))
 
-// Mock translation hook
 vi.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string, params?: any) => {

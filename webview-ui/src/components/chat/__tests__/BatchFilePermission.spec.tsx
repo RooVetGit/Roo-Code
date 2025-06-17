@@ -1,12 +1,11 @@
-import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
-import { BatchFilePermission } from "../BatchFilePermission"
+
 import { TranslationProvider } from "@/i18n/__mocks__/TranslationContext"
+
+import { BatchFilePermission } from "../BatchFilePermission"
 
 const mockVscodePostMessage = vi.fn()
 
-// Mock vscode API
 vi.mock("@src/utils/vscode", () => ({
 	vscode: {
 		postMessage: (...args: any[]) => mockVscodePostMessage(...args),

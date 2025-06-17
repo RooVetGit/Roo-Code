@@ -1,10 +1,12 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
-import HistoryView from "../HistoryView"
+
 import { useExtensionState } from "@src/context/ExtensionStateContext"
+
+import HistoryView from "../HistoryView"
 
 vi.mock("@src/context/ExtensionStateContext")
 vi.mock("@src/utils/vscode")
+
 vi.mock("@src/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => key,

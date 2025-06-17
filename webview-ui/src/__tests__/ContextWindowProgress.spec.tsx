@@ -2,7 +2,6 @@
 
 import { render, screen } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { describe, it, expect, beforeEach, vi } from "vitest"
 
 import TaskHeader from "@src/components/chat/TaskHeader"
 

@@ -37,14 +37,6 @@ const renderPromptsView = (props = {}) => {
 	)
 }
 
-class MockResizeObserver {
-	observe() {}
-	unobserve() {}
-	disconnect() {}
-}
-
-global.ResizeObserver = MockResizeObserver
-
 Element.prototype.scrollIntoView = vitest.fn()
 
 describe("PromptsView", () => {

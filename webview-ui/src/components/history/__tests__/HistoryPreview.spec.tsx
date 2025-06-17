@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react"
-import { vi } from "vitest"
-import HistoryPreview from "../HistoryPreview"
+
 import type { HistoryItem } from "@roo-code/types"
 
+import HistoryPreview from "../HistoryPreview"
+
 vi.mock("../useTaskSearch")
+
 vi.mock("../TaskItem", () => {
 	return {
 		default: vi.fn(({ item, variant }) => (

@@ -1,9 +1,11 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
-import { DeleteTaskDialog } from "../DeleteTaskDialog"
+
 import { vscode } from "@/utils/vscode"
 
+import { DeleteTaskDialog } from "../DeleteTaskDialog"
+
 vi.mock("@/utils/vscode")
+
 vi.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => {

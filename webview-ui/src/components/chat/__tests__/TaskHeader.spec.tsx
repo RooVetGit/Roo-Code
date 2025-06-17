@@ -3,7 +3,6 @@
 import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { vi } from "vitest"
 
 import type { ProviderSettings } from "@roo-code/types"
 

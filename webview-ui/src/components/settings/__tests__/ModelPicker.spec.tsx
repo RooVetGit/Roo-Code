@@ -12,14 +12,6 @@ vi.mock("@src/context/ExtensionStateContext", () => ({
 	useExtensionState: vi.fn(),
 }))
 
-class MockResizeObserver {
-	observe() {}
-	unobserve() {}
-	disconnect() {}
-}
-
-global.ResizeObserver = MockResizeObserver
-
 Element.prototype.scrollIntoView = vi.fn()
 
 describe("ModelPicker", () => {

@@ -1,17 +1,13 @@
-import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { vi } from "vitest"
 
 import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextProvider } from "@/context/ExtensionStateContext"
 
 import SettingsView from "../SettingsView"
 
-// Mock vscode API
 vi.mock("@src/utils/vscode", () => ({ vscode: { postMessage: vi.fn() } }))
 
-// Mock ApiConfigManager component
 vi.mock("../ApiConfigManager", () => ({
 	__esModule: true,
 	default: ({ currentApiConfigName }: any) => (
@@ -21,7 +17,6 @@ vi.mock("../ApiConfigManager", () => ({
 	),
 }))
 
-// Mock VSCode components
 vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeButton: ({ children, onClick, appearance, "data-testid": dataTestId }: any) =>
 		appearance === "icon" ? (
@@ -65,7 +60,6 @@ vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeRadioGroup: ({ children, onChange }: any) => <div onChange={onChange}>{children}</div>,
 }))
 
-// Mock Tab components
 vi.mock("../../../components/common/Tab", () => ({
 	...vi.importActual("../../../components/common/Tab"),
 	Tab: ({ children }: any) => <div data-testid="tab-container">{children}</div>,
@@ -106,7 +100,6 @@ vi.mock("../../../components/common/Tab", () => ({
 	},
 }))
 
-// Mock UI components
 vi.mock("@/components/ui", () => ({
 	...vi.importActual("@/components/ui"),
 	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
@@ -184,14 +177,6 @@ const mockPostMessage = (state: any) => {
 		"*",
 	)
 }
-
-class MockResizeObserver {
-	observe() {}
-	unobserve() {}
-	disconnect() {}
-}
-
-global.ResizeObserver = MockResizeObserver
 
 const renderSettingsView = () => {
 	const onDone = vi.fn()

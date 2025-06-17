@@ -1,36 +1,26 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
-import { vi } from "vitest"
+
 import RooTips from "../RooTips"
 
-// Mock the translation hook
 vi.mock("react-i18next", () => ({
 	useTranslation: () => ({
 		t: (key: string) => key, // Simple mock that returns the key
 	}),
-	// Mock Trans component if it were used directly, but it's not here
 }))
 
-// Mock VSCodeLink
 vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeLink: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
 }))
 
-// Mock clsx if complex class logic needs specific testing (optional)
-// vi.mock('clsx');
-
 describe("RooTips Component", () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
-		// Reset Math.random mock for consistent starting points if needed
-		// vi.spyOn(global.Math, 'random').mockReturnValue(0); // Example: always start with the first tip
 	})
 
 	afterEach(() => {
 		vi.runOnlyPendingTimers()
 		vi.useRealTimers()
-		// Restore Math.random if mocked
-		// vi.spyOn(global.Math, 'random').mockRestore();
 	})
 
 	describe("when cycle is false (default)", () => {

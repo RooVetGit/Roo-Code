@@ -1,10 +1,10 @@
 import React from "react"
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
-import { vi } from "vitest"
-import { IndexingStatusDot } from "../IndexingStatusBadge"
+
 import { vscode } from "@src/utils/vscode"
 
-// Mock i18n setup to prevent initialization errors
+import { IndexingStatusDot } from "../IndexingStatusBadge"
+
 vi.mock("@/i18n/setup", () => ({
 	__esModule: true,
 	default: {
@@ -17,7 +17,6 @@ vi.mock("@/i18n/setup", () => ({
 	loadTranslations: vi.fn(),
 }))
 
-// Mock react-i18next
 vi.mock("react-i18next", () => ({
 	useTranslation: () => ({
 		t: (key: string, params?: any) => {

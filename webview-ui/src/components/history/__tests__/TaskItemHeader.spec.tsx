@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react"
-import { vi } from "vitest"
+
 import TaskItemHeader from "../TaskItemHeader"
 
 vi.mock("@src/i18n/TranslationContext", () => ({

@@ -2,17 +2,15 @@
 
 import { ReactNode } from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
+
 import { SelectDropdown, DropdownOptionType } from "../select-dropdown"
 
-// Mock window.postMessage
 const postMessageMock = vi.fn()
 Object.defineProperty(window, "postMessage", {
 	writable: true,
 	value: postMessageMock,
 })
 
-// Mock the Radix UI Popover components
 vi.mock("@/components/ui", () => {
 	return {
 		Popover: ({

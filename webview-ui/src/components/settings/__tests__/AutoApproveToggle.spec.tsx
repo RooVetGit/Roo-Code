@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
+
+import { TranslationProvider } from "@/i18n/__mocks__/TranslationContext"
 
 import { AutoApproveToggle, autoApproveSettingsConfig } from "../AutoApproveToggle"
-import { TranslationProvider } from "@/i18n/__mocks__/TranslationContext"
 
 vi.mock("@/i18n/TranslationContext", () => {
 	const actual = vi.importActual("@/i18n/TranslationContext")

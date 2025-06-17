@@ -1,5 +1,5 @@
+import "@testing-library/jest-dom"
 import "@testing-library/jest-dom/vitest"
-import { afterAll, vi } from "vitest"
 
 class MockResizeObserver {
 	observe() {}

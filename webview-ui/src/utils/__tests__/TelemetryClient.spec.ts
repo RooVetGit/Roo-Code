@@ -1,11 +1,7 @@
-/**
- * Basic tests for TelemetryClient
- */
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { telemetryClient } from "../TelemetryClient"
 import posthog from "posthog-js"
 
-// Mock posthog-js
+import { telemetryClient } from "../TelemetryClient"
+
 vi.mock("posthog-js", () => ({
 	default: {
 		reset: vi.fn(),
@@ -16,7 +12,6 @@ vi.mock("posthog-js", () => ({
 }))
 
 describe("TelemetryClient", () => {
-	// Reset all mocks before each test
 	beforeEach(() => {
 		vi.clearAllMocks()
 	})

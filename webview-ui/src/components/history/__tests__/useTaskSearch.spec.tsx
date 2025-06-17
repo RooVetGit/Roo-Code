@@ -1,7 +1,8 @@
 import { renderHook, act } from "@testing-library/react"
-import { vi } from "vitest"
-import { useTaskSearch } from "../useTaskSearch"
+
 import type { HistoryItem } from "@roo-code/types"
+
+import { useTaskSearch } from "../useTaskSearch"
 
 vi.mock("@/context/ExtensionStateContext", () => ({
 	useExtensionState: vi.fn(),

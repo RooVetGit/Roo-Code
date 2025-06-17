@@ -1,12 +1,13 @@
 // npx vitest run src/components/marketplace/__tests__/MarketplaceListView.spec.tsx
 
-import { vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
-import { MarketplaceListView } from "../MarketplaceListView"
-import { ViewState } from "../MarketplaceViewStateManager"
 import userEvent from "@testing-library/user-event"
+
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ExtensionStateContextProvider } from "@/context/ExtensionStateContext"
+
+import { MarketplaceListView } from "../MarketplaceListView"
+import { ViewState } from "../MarketplaceViewStateManager"
 
 vi.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({

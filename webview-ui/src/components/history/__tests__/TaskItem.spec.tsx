@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import { vi } from "vitest"
+
 import TaskItem from "../TaskItem"
 
 vi.mock("@src/utils/vscode")
