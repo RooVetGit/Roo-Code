@@ -7,7 +7,6 @@ import {
 	providerSettingsEntrySchema,
 	providerSettingsSchema,
 } from "./provider-settings.js"
-import { historyItemSchema } from "./history.js"
 import { codebaseIndexModelsSchema, codebaseIndexConfigSchema } from "./codebase-index.js"
 import { experimentsSchema } from "./experiment.js"
 import { telemetrySettingsSchema } from "./telemetry.js"
@@ -26,8 +25,6 @@ export const globalSettingsSchema = z.object({
 
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
-	taskHistory: z.array(historyItemSchema).optional(),
-
 	condensingApiConfigId: z.string().optional(),
 	customCondensingPrompt: z.string().optional(),
 
