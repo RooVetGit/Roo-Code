@@ -15,7 +15,11 @@ vi.mock("path", async () => {
 	const originalPath = await vi.importActual("path")
 	return {
 		...originalPath,
-		resolve: vi.fn().mockImplementation((...args) => args.join("/")),
+		resolve: vi.fn().mockImplementation((...args) => {
+			// On Windows, use backslashes; on Unix, use forward slashes
+			const separator = process.platform === "win32" ? "\\" : "/"
+			return args.join(separator)
+		}),
 	}
 })
 
@@ -91,7 +95,7 @@ vi.mock("../../ignore/RooIgnoreController", () => ({
 describe("writeToFileTool", () => {
 	// Test data
 	const testFilePath = "test/file.txt"
-	const absoluteFilePath = "/test/file.txt"
+	const absoluteFilePath = process.platform === "win32" ? "C:\\test\\file.txt" : "/test/file.txt"
 	const testContent = "Line 1\nLine 2\nLine 3"
 	const testContentWithMarkdown = "```javascript\nLine 1\nLine 2\n```"
 

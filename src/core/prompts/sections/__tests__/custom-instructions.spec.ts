@@ -6,8 +6,15 @@ vi.mock("fs/promises")
 // Mock path.resolve and path.join to be predictable in tests
 vi.mock("path", async () => ({
 	...(await vi.importActual("path")),
-	resolve: vi.fn().mockImplementation((...args) => args.join("/")),
-	join: vi.fn().mockImplementation((...args) => args.join("/")),
+	resolve: vi.fn().mockImplementation((...args) => {
+		// On Windows, use backslashes; on Unix, use forward slashes
+		const separator = process.platform === "win32" ? "\\" : "/"
+		return args.join(separator)
+	}),
+	join: vi.fn().mockImplementation((...args) => {
+		const separator = process.platform === "win32" ? "\\" : "/"
+		return args.join(separator)
+	}),
 	relative: vi.fn().mockImplementation((from, to) => to),
 }))
 
@@ -153,9 +160,13 @@ describe("loadRuleFiles", () => {
 		})
 
 		const result = await loadRuleFiles("/fake/path")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file1.txt:")
+		const expectedPath1 =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file1.txt" : "/fake/path/.roo/rules/file1.txt"
+		const expectedPath2 =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file2.txt" : "/fake/path/.roo/rules/file2.txt"
+		expect(result).toContain(`# Rules from ${expectedPath1}:`)
 		expect(result).toContain("content of file1")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file2.txt:")
+		expect(result).toContain(`# Rules from ${expectedPath2}:`)
 		expect(result).toContain("content of file2")
 
 		// We expect both checks because our new implementation checks the files again for validation
@@ -276,13 +287,24 @@ describe("loadRuleFiles", () => {
 		const result = await loadRuleFiles("/fake/path")
 
 		// Check root file content
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/root.txt:")
+		const expectedRootPath =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\root.txt" : "/fake/path/.roo/rules/root.txt"
+		const expectedNested1Path =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules\\subdir\\nested1.txt"
+				: "/fake/path/.roo/rules/subdir/nested1.txt"
+		const expectedNested2Path =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules\\subdir\\subdir2\\nested2.txt"
+				: "/fake/path/.roo/rules/subdir/subdir2/nested2.txt"
+
+		expect(result).toContain(`# Rules from ${expectedRootPath}:`)
 		expect(result).toContain("root file content")
 
 		// Check nested files content
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/subdir/nested1.txt:")
+		expect(result).toContain(`# Rules from ${expectedNested1Path}:`)
 		expect(result).toContain("nested file 1 content")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/subdir/subdir2/nested2.txt:")
+		expect(result).toContain(`# Rules from ${expectedNested2Path}:`)
 		expect(result).toContain("nested file 2 content")
 
 		// Verify correct paths were checked
@@ -454,10 +476,21 @@ describe("addCustomInstructions", () => {
 			{ language: "es" },
 		)
 
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule1.txt:")
+		const expectedTestModeDir =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules-test-mode" : "/fake/path/.roo/rules-test-mode"
+		const expectedRule1Path =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules-test-mode\\rule1.txt"
+				: "/fake/path/.roo/rules-test-mode/rule1.txt"
+		const expectedRule2Path =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules-test-mode\\rule2.txt"
+				: "/fake/path/.roo/rules-test-mode/rule2.txt"
+
+		expect(result).toContain(`# Rules from ${expectedTestModeDir}`)
+		expect(result).toContain(`# Rules from ${expectedRule1Path}:`)
 		expect(result).toContain("mode specific rule 1")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule2.txt:")
+		expect(result).toContain(`# Rules from ${expectedRule2Path}:`)
 		expect(result).toContain("mode specific rule 2")
 
 		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode")
@@ -562,8 +595,15 @@ describe("addCustomInstructions", () => {
 			"test-mode",
 		)
 
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule1.txt:")
+		const expectedTestModeDir =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules-test-mode" : "/fake/path/.roo/rules-test-mode"
+		const expectedRule1Path =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules-test-mode\\rule1.txt"
+				: "/fake/path/.roo/rules-test-mode/rule1.txt"
+
+		expect(result).toContain(`# Rules from ${expectedTestModeDir}`)
+		expect(result).toContain(`# Rules from ${expectedRule1Path}:`)
 		expect(result).toContain("mode specific rule content")
 
 		expect(statCallCount).toBeGreaterThan(0)
@@ -591,7 +631,8 @@ describe("Directory existence checks", () => {
 		await loadRuleFiles("/fake/path")
 
 		// Verify stat was called to check directory existence
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules")
+		const expectedRulesDir = process.platform === "win32" ? "\\fake\\path\\.roo\\rules" : "/fake/path/.roo/rules"
+		expect(statMock).toHaveBeenCalledWith(expectedRulesDir)
 	})
 
 	it("should handle when directory does not exist", async () => {
@@ -702,13 +743,30 @@ describe("Rules directory reading", () => {
 		const result = await loadRuleFiles("/fake/path")
 
 		// Verify both regular file and symlink target content are included
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/regular.txt:")
+		const expectedRegularPath =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules\\regular.txt"
+				: "/fake/path/.roo/rules/regular.txt"
+		const expectedSymlinkPath =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\symlink-target.txt"
+				: "/fake/path/.roo/symlink-target.txt"
+		const expectedSubdirPath =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\rules\\symlink-target-dir\\subdir_link.txt"
+				: "/fake/path/.roo/rules/symlink-target-dir/subdir_link.txt"
+		const expectedNestedPath =
+			process.platform === "win32"
+				? "\\fake\\path\\.roo\\nested-symlink-target.txt"
+				: "/fake/path/.roo/nested-symlink-target.txt"
+
+		expect(result).toContain(`# Rules from ${expectedRegularPath}:`)
 		expect(result).toContain("regular file content")
-		expect(result).toContain("# Rules from /fake/path/.roo/symlink-target.txt:")
+		expect(result).toContain(`# Rules from ${expectedSymlinkPath}:`)
 		expect(result).toContain("symlink target content")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/symlink-target-dir/subdir_link.txt:")
+		expect(result).toContain(`# Rules from ${expectedSubdirPath}:`)
 		expect(result).toContain("regular file content under symlink target dir")
-		expect(result).toContain("# Rules from /fake/path/.roo/nested-symlink-target.txt:")
+		expect(result).toContain(`# Rules from ${expectedNestedPath}:`)
 		expect(result).toContain("nested symlink target content")
 
 		// Verify readlink was called with the symlink path
@@ -765,11 +823,18 @@ describe("Rules directory reading", () => {
 
 		const result = await loadRuleFiles("/fake/path")
 
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file1.txt:")
+		const expectedFile1Path =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file1.txt" : "/fake/path/.roo/rules/file1.txt"
+		const expectedFile2Path =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file2.txt" : "/fake/path/.roo/rules/file2.txt"
+		const expectedFile3Path =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\file3.txt" : "/fake/path/.roo/rules/file3.txt"
+
+		expect(result).toContain(`# Rules from ${expectedFile1Path}:`)
 		expect(result).toContain("content of file1")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file2.txt:")
+		expect(result).toContain(`# Rules from ${expectedFile2Path}:`)
 		expect(result).toContain("content of file2")
-		expect(result).toContain("# Rules from /fake/path/.roo/rules/file3.txt:")
+		expect(result).toContain(`# Rules from ${expectedFile3Path}:`)
 		expect(result).toContain("content of file3")
 	})
 
