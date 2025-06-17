@@ -9,11 +9,32 @@ vi.mock("path", async () => ({
 	resolve: vi.fn().mockImplementation((...args) => {
 		// On Windows, use backslashes; on Unix, use forward slashes
 		const separator = process.platform === "win32" ? "\\" : "/"
-		return args.join(separator)
+		// Filter out empty strings and normalize separators
+		const cleanArgs = args
+			.filter((arg) => arg && arg.trim() !== "")
+			.map((arg) => arg.toString().replace(/[/\\]+/g, separator))
+		// If first arg is absolute, use it as base, otherwise join all
+		if (cleanArgs.length === 0) return ""
+		if (cleanArgs[0].match(/^([a-zA-Z]:)?[/\\]/)) {
+			// First arg is absolute path
+			let result = cleanArgs[0]
+			for (let i = 1; i < cleanArgs.length; i++) {
+				if (!result.endsWith(separator)) result += separator
+				result += cleanArgs[i]
+			}
+			return result
+		} else {
+			// Relative path resolution
+			return cleanArgs.join(separator)
+		}
 	}),
 	join: vi.fn().mockImplementation((...args) => {
 		const separator = process.platform === "win32" ? "\\" : "/"
-		return args.join(separator)
+		// Filter out empty strings and normalize separators
+		const cleanArgs = args
+			.filter((arg) => arg && arg.trim() !== "")
+			.map((arg) => arg.toString().replace(/[/\\]+/g, separator))
+		return cleanArgs.join(separator)
 	}),
 	relative: vi.fn().mockImplementation((from, to) => to),
 	dirname: vi.fn().mockImplementation((path) => {
