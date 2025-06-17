@@ -28,6 +28,7 @@ import { McpServerManager } from "./services/mcp/McpServerManager"
 import { CodeIndexManager } from "./services/code-index/manager"
 import { MdmService } from "./services/mdm/MdmService"
 import { migrateSettings } from "./utils/migrateSettings"
+import { autoImportConfig } from "./utils/autoImportConfig"
 import { API } from "./extension/api"
 
 import {
@@ -112,6 +113,20 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	if (codeIndexManager) {
 		context.subscriptions.push(codeIndexManager)
+	}
+
+	// Auto-import configuration if specified in settings
+	try {
+		await autoImportConfig({
+			providerSettingsManager: provider.providerSettingsManager,
+			contextProxy,
+			customModesManager: provider.customModesManager,
+			outputChannel,
+		})
+	} catch (error) {
+		outputChannel.appendLine(
+			`[AutoImport] Error during auto-import: ${error instanceof Error ? error.message : String(error)}`,
+		)
 	}
 
 	context.subscriptions.push(
