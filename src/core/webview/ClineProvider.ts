@@ -46,6 +46,7 @@ import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
+import { getHistoryItem, setHistoryItems, deleteHistoryItem } from "../task-persistence/taskHistory"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { MarketplaceManager } from "../../services/marketplace"
@@ -1126,8 +1127,8 @@ export class ClineProvider
 		uiMessagesFilePath: string
 		apiConversationHistory: Anthropic.MessageParam[]
 	}> {
-		const history = this.getGlobalState("taskHistory") ?? []
-		const historyItem = history.find((item) => item.id === id)
+		// Get the history item from the file-based storage
+		const historyItem = await getHistoryItem(id)
 
 		if (historyItem) {
 			const { getTaskDirectoryPath } = await import("../../utils/storage")
@@ -1153,10 +1154,9 @@ export class ClineProvider
 			}
 		}
 
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
+		// If we tried to get a task that doesn't exist, delete it from storage
+		await deleteHistoryItem(id)
+		throw new Error(`Task not found, removed from index: ${id}`)
 	}
 
 	async showTaskWithId(id: string) {
@@ -1239,9 +1239,7 @@ export class ClineProvider
 	}
 
 	async deleteTaskFromState(id: string) {
-		const taskHistory = this.getGlobalState("taskHistory") ?? []
-		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
-		await this.updateGlobalState("taskHistory", updatedTaskHistory)
+		await deleteHistoryItem(id)
 		await this.postStateToWebview()
 	}
 
@@ -1360,7 +1358,6 @@ export class ClineProvider
 			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
-			taskHistory,
 			soundVolume,
 			browserViewportSize,
 			screenshotQuality,
@@ -1444,12 +1441,9 @@ export class ClineProvider
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
+				? await getHistoryItem(this.getCurrentCline()!.taskId)
 				: undefined,
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
-			taskHistory: (taskHistory || [])
-				.filter((item: HistoryItem) => item.ts && item.task)
-				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
@@ -1612,7 +1606,6 @@ export class ClineProvider
 			allowedMaxRequests: stateValues.allowedMaxRequests,
 			autoCondenseContext: stateValues.autoCondenseContext ?? true,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
-			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
 			ttsEnabled: stateValues.ttsEnabled ?? false,
@@ -1683,17 +1676,11 @@ export class ClineProvider
 	}
 
 	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = (this.getGlobalState("taskHistory") as HistoryItem[] | undefined) || []
-		const existingItemIndex = history.findIndex((h) => h.id === item.id)
+		await setHistoryItems([item])
 
-		if (existingItemIndex !== -1) {
-			history[existingItemIndex] = item
-		} else {
-			history.push(item)
-		}
-
-		await this.updateGlobalState("taskHistory", history)
-		return history
+		// Return all history items for the current workspace
+		const { getHistoryItemsForSearch } = await import("../task-persistence/taskHistory")
+		return await getHistoryItemsForSearch({ workspacePath: this.cwd })
 	}
 
 	// ContextProxy
