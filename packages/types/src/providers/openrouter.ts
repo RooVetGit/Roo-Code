@@ -45,7 +45,6 @@ export const OPEN_ROUTER_PROMPT_CACHING_MODELS = new Set([
 	"google/gemini-2.5-flash-preview-05-20:thinking",
 	"google/gemini-2.5-flash",
 	"google/gemini-2.5-flash-lite-preview-06-17",
-	"google/gemini-2.5-flash-lite-preview-06-17:thinking",
 	"google/gemini-2.0-flash-001",
 	"google/gemini-flash-1.5",
 	"google/gemini-flash-1.5-8b",
