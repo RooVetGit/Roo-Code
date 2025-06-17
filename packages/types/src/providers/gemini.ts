@@ -143,7 +143,7 @@ export const geminiModels = {
 		],
 	},
 	"gemini-2.5-pro": {
-		maxTokens: 65_535,
+		maxTokens: 64_000,
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
