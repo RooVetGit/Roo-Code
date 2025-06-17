@@ -89,6 +89,21 @@ export const vertexModels = {
 		outputPrice: 15,
 		maxThinkingTokens: 32_768,
 		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
+		tiers: [
+			{
+				contextWindow: 200_000,
+				inputPrice: 1.25,
+				outputPrice: 10,
+				cacheReadsPrice: 0.31,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 2.5,
+				outputPrice: 15,
+				cacheReadsPrice: 0.625,
+			},
+		],
 	},
 	"gemini-2.5-pro-exp-03-25": {
 		maxTokens: 65_535,
