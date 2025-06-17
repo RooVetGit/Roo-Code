@@ -86,7 +86,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const {
 		clineMessages: messages,
 		currentTaskItem,
-		taskHistory,
 		apiConfiguration,
 		organizationAllowList,
 		mcpServers,
@@ -1712,7 +1711,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							<RooTips cycle={false} />
 						</div>
 						{/* Show the task history preview if expanded and tasks exist */}
-						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
+						{ isExpanded && <HistoryPreview />}
 					</div>
 				</div>
 			)}

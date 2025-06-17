@@ -242,8 +242,6 @@ export type ExtensionState = Pick<
 	uriScheme?: string
 	shouldShowAnnouncement: boolean
 
-	taskHistory: HistoryItem[]
-
 	writeDelayMs: number
 	requestDelaySeconds: number
 
