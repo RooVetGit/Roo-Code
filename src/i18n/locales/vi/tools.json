@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Đang tìm kiếm '{{query}}' trong cơ sở mã..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "Không thể tìm kiếm bên ngoài không gian làm việc. Đường dẫn '{{path}}' nằm ngoài không gian làm việc hiện tại."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "Không thể tạo nhiệm vụ mới do hạn chế chính sách."
+		}
 	}
 }

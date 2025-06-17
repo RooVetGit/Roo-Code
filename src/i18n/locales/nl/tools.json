@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Zoeken naar '{{query}}' in codebase..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "Kan niet zoeken buiten de werkruimte. Pad '{{path}}' ligt buiten de huidige werkruimte."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "Kan geen nieuwe taak aanmaken vanwege beleidsbeperkingen."
+		}
 	}
 }

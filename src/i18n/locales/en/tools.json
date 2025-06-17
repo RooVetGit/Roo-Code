@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Searching for '{{query}}' in codebase..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "Cannot search outside workspace. Path '{{path}}' is outside the current workspace."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "Failed to create new task due to policy restrictions."
+		}
 	}
 }

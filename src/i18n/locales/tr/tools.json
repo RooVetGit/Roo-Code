@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Kod tabanında '{{query}}' aranıyor..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "Çalışma alanı dışında arama yapılamaz. '{{path}}' yolu mevcut çalışma alanının dışında."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "Politika kısıtlamaları nedeniyle yeni görev oluşturulamadı."
+		}
 	}
 }

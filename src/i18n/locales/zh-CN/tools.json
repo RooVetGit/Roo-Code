@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "正在搜索代码库中的 '{{query}}'..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "无法在工作区外搜索。路径 '{{path}}' 位于当前工作区外。"
+	"newTask": {
+		"errors": {
+			"policy_restriction": "由于策略限制，无法创建新任务。"
+		}
 	}
 }

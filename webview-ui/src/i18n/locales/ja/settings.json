@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "ワークスペース外のファイルを含める",
 				"description": "Rooが承認なしで現在のワークスペース外のファイルを作成・編集することを許可します。"
+			},
+			"protected": {
+				"label": "保護されたファイルを含める",
+				"description": "Rooが保護されたファイル（.rooignoreや.roo/設定ファイルなど）を承認なしで作成・編集することを許可します。"
 			}
 		},
 		"browser": {
@@ -609,5 +613,7 @@
 	"labels": {
 		"customArn": "カスタム ARN",
 		"useCustomArn": "カスタム ARN を使用..."
-	}
+	},
+	"includeMaxOutputTokens": "最大出力トークンを含める",
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
 }

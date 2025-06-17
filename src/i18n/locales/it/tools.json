@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Ricerca di '{{query}}' nella base di codice..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "Impossibile cercare al di fuori dell'area di lavoro. Il percorso '{{path}}' è al di fuori dell'area di lavoro corrente."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "Impossibile creare una nuova attività a causa di restrizioni di policy."
+		}
 	}
 }

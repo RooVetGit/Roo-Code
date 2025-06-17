@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "コードベースで '{{query}}' を検索中..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "ワークスペース外では検索できません。パス '{{path}}' は現在のワークスペース外にあります。"
+	"newTask": {
+		"errors": {
+			"policy_restriction": "ポリシー制限により新しいタスクを作成できませんでした。"
+		}
 	}
 }

@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Wyszukiwanie '{{query}}' w bazie kodu..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "Nie można wyszukiwać poza obszarem roboczym. Ścieżka '{{path}}' znajduje się poza bieżącym obszarem roboczym."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "Nie udało się utworzyć nowego zadania z powodu ograniczeń polityki."
+		}
 	}
 }

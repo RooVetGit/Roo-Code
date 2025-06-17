@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "코드베이스에서 '{{query}}' 검색 중..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "워크스페이스 외부에서는 검색할 수 없습니다. 경로 '{{path}}'는 현재 워크스페이스 외부에 있습니다."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "정책 제한으로 인해 새 작업을 생성하지 못했습니다."
+		}
 	}
 }

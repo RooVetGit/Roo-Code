@@ -8,7 +8,9 @@
 	"codebaseSearch": {
 		"approval": "Cercant '{{query}}' a la base de codi..."
 	},
-	"searchFiles": {
-		"workspaceBoundaryError": "No es pot cercar fora de l'espai de treball. El camí '{{path}}' està fora de l'espai de treball actual."
+	"newTask": {
+		"errors": {
+			"policy_restriction": "No s'ha pogut crear una nova tasca a causa de restriccions de política."
+		}
 	}
 }
