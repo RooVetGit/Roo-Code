@@ -145,6 +145,7 @@
 		"didRead": "Roo przeczytał ten plik:",
 		"wantsToEdit": "Roo chce edytować ten plik:",
 		"wantsToEditOutsideWorkspace": "Roo chce edytować ten plik poza obszarem roboczym:",
+		"wantsToEditProtected": "Roo chce edytować chroniony plik konfiguracyjny:",
 		"wantsToCreate": "Roo chce utworzyć nowy plik:",
 		"wantsToSearchReplace": "Roo chce wykonać wyszukiwanie i zamianę w tym pliku:",
 		"didSearchReplace": "Roo wykonał wyszukiwanie i zamianę w tym pliku:",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Roo chce zobaczyć nazwy definicji kodu źródłowego używane w tym katalogu:",
 		"didViewDefinitions": "Roo zobaczył nazwy definicji kodu źródłowego używane w tym katalogu:",
 		"wantsToSearch": "Roo chce przeszukać ten katalog w poszukiwaniu <code>{{regex}}</code>:",
-		"didSearch": "Roo przeszukał ten katalog w poszukiwaniu <code>{{regex}}</code>:"
+		"didSearch": "Roo przeszukał ten katalog w poszukiwaniu <code>{{regex}}</code>:",
+		"wantsToSearchOutsideWorkspace": "Roo chce przeszukać ten katalog (poza obszarem roboczym) w poszukiwaniu <code>{{regex}}</code>:",
+		"didSearchOutsideWorkspace": "Roo przeszukał ten katalog (poza obszarem roboczym) w poszukiwaniu <code>{{regex}}</code>:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu (poza obszarem roboczym):",
+		"didViewTopLevelOutsideWorkspace": "Roo zobaczył pliki najwyższego poziomu w tym katalogu (poza obszarem roboczym):",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo chce rekurencyjnie zobaczyć wszystkie pliki w tym katalogu (poza obszarem roboczym):",
+		"didViewRecursiveOutsideWorkspace": "Roo rekurencyjnie zobaczył wszystkie pliki w tym katalogu (poza obszarem roboczym):",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo chce zobaczyć nazwy definicji kodu źródłowego używane w tym katalogu (poza obszarem roboczym):",
+		"didViewDefinitionsOutsideWorkspace": "Roo zobaczył nazwy definicji kodu źródłowego używane w tym katalogu (poza obszarem roboczym):"
 	},
 	"commandOutput": "Wyjście polecenia",
 	"response": "Odpowiedź",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "Odrzuć wszystko"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Indeks gotowy",
+		"indexing": "Indeksowanie {{percentage}}%",
+		"indexed": "Zaindeksowane",
+		"error": "Błąd indeksu",
+		"status": "Status indeksu"
 	}
 }

@@ -16,7 +16,21 @@ import { GitCommit } from "../utils/git"
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
-import { MarketplaceItem } from "../services/marketplace/types"
+import type { MarketplaceItem } from "@roo-code/types"
+
+// Indexing status types
+export interface IndexingStatus {
+	systemStatus: string
+	message?: string
+	processedItems: number
+	totalItems: number
+	currentItemUnit?: string
+}
+
+export interface IndexingStatusUpdateMessage {
+	type: "indexingStatusUpdate"
+	values: IndexingStatus
+}
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -137,6 +151,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowReadOnlyOutsideWorkspace"
 	| "alwaysAllowWrite"
 	| "alwaysAllowWriteOutsideWorkspace"
+	| "alwaysAllowWriteProtected"
 	// | "writeDelayMs" // Optional in GlobalSettings, required here.
 	| "alwaysAllowBrowser"
 	| "alwaysApproveResubmit"
@@ -262,6 +277,7 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	isProtected?: boolean
 	additionalFileCount?: number // Number of additional files in the same read_file request
 	search?: string
 	replace?: string

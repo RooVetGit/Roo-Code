@@ -142,6 +142,7 @@
 		"didRead": "Roo a lu ce fichier :",
 		"wantsToEdit": "Roo veut éditer ce fichier :",
 		"wantsToEditOutsideWorkspace": "Roo veut éditer ce fichier en dehors de l'espace de travail :",
+		"wantsToEditProtected": "Roo veut éditer un fichier de configuration protégé :",
 		"wantsToCreate": "Roo veut créer un nouveau fichier :",
 		"wantsToSearchReplace": "Roo veut effectuer une recherche et remplacement sur ce fichier :",
 		"didSearchReplace": "Roo a effectué une recherche et remplacement sur ce fichier :",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire :",
 		"didViewDefinitions": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire :",
 		"wantsToSearch": "Roo veut rechercher dans ce répertoire <code>{{regex}}</code> :",
-		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :"
+		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :",
+		"wantsToSearchOutsideWorkspace": "Roo veut rechercher dans ce répertoire (hors espace de travail) <code>{{regex}}</code> :",
+		"didSearchOutsideWorkspace": "Roo a recherché dans ce répertoire (hors espace de travail) <code>{{regex}}</code> :",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo veut voir les fichiers de premier niveau dans ce répertoire (hors espace de travail) :",
+		"didViewTopLevelOutsideWorkspace": "Roo a vu les fichiers de premier niveau dans ce répertoire (hors espace de travail) :",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo veut voir récursivement tous les fichiers dans ce répertoire (hors espace de travail) :",
+		"didViewRecursiveOutsideWorkspace": "Roo a vu récursivement tous les fichiers dans ce répertoire (hors espace de travail) :",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire (hors espace de travail) :",
+		"didViewDefinitionsOutsideWorkspace": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire (hors espace de travail) :"
 	},
 	"commandOutput": "Sortie de commande",
 	"response": "Réponse",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "Tout refuser"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index prêt",
+		"indexing": "Indexation {{percentage}}%",
+		"indexed": "Indexé",
+		"error": "Erreur d'index",
+		"status": "Statut de l'index"
 	}
 }

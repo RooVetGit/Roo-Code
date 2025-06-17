@@ -145,6 +145,7 @@
 		"didRead": "Roo가 이 파일을 읽었습니다:",
 		"wantsToEdit": "Roo가 이 파일을 편집하고 싶어합니다:",
 		"wantsToEditOutsideWorkspace": "Roo가 워크스페이스 외부의 이 파일을 편집하고 싶어합니다:",
+		"wantsToEditProtected": "Roo가 보호된 설정 파일을 편집하고 싶어합니다:",
 		"wantsToCreate": "Roo가 새 파일을 만들고 싶어합니다:",
 		"wantsToSearchReplace": "Roo가 이 파일에서 검색 및 바꾸기를 수행하고 싶어합니다:",
 		"didSearchReplace": "Roo가 이 파일에서 검색 및 바꾸기를 수행했습니다:",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보고 싶어합니다:",
 		"didViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보았습니다:",
 		"wantsToSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색하고 싶어합니다:",
-		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:"
+		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:",
+		"wantsToSearchOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)에서 <code>{{regex}}</code>을(를) 검색하고 싶어합니다:",
+		"didSearchOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)에서 <code>{{regex}}</code>을(를) 검색했습니다:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)의 최상위 파일을 보고 싶어합니다:",
+		"didViewTopLevelOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)의 최상위 파일을 보았습니다:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)의 모든 파일을 재귀적으로 보고 싶어합니다:",
+		"didViewRecursiveOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)의 모든 파일을 재귀적으로 보았습니다:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)에서 사용된 소스 코드 정의 이름을 보고 싶어합니다:",
+		"didViewDefinitionsOutsideWorkspace": "Roo가 이 디렉토리(워크스페이스 외부)에서 사용된 소스 코드 정의 이름을 보았습니다:"
 	},
 	"commandOutput": "명령 출력",
 	"response": "응답",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "모두 거부"
 		}
+	},
+	"indexingStatus": {
+		"ready": "인덱스 준비됨",
+		"indexing": "인덱싱 중 {{percentage}}%",
+		"indexed": "인덱싱 완료",
+		"error": "인덱스 오류",
+		"status": "인덱스 상태"
 	}
 }

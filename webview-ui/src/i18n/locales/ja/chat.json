@@ -145,6 +145,7 @@
 		"didRead": "Rooはこのファイルを読みました:",
 		"wantsToEdit": "Rooはこのファイルを編集したい:",
 		"wantsToEditOutsideWorkspace": "Rooはワークスペース外のこのファイルを編集したい:",
+		"wantsToEditProtected": "Rooは保護された設定ファイルを編集したい:",
 		"wantsToCreate": "Rooは新しいファイルを作成したい:",
 		"wantsToSearchReplace": "Rooはこのファイルで検索と置換を行う:",
 		"didSearchReplace": "Rooはこのファイルで検索と置換を実行しました:",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示したい:",
 		"didViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示しました:",
 		"wantsToSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索したい:",
-		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:"
+		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:",
+		"wantsToSearchOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で <code>{{regex}}</code> を検索したい:",
+		"didSearchOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で <code>{{regex}}</code> を検索しました:",
+		"wantsToViewTopLevelOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のトップレベルファイルを表示したい:",
+		"didViewTopLevelOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のトップレベルファイルを表示しました:",
+		"wantsToViewRecursiveOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のすべてのファイルを再帰的に表示したい:",
+		"didViewRecursiveOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のすべてのファイルを再帰的に表示しました:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で使用されているソースコード定義名を表示したい:",
+		"didViewDefinitionsOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で使用されているソースコード定義名を表示しました:"
 	},
 	"commandOutput": "コマンド出力",
 	"response": "応答",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "すべて拒否"
 		}
+	},
+	"indexingStatus": {
+		"ready": "インデックス準備完了",
+		"indexing": "インデックス作成中 {{percentage}}%",
+		"indexed": "インデックス作成済み",
+		"error": "インデックスエラー",
+		"status": "インデックス状態"
 	}
 }

@@ -146,6 +146,7 @@
 		"didRead": "Roo hat diese Datei gelesen:",
 		"wantsToEdit": "Roo möchte diese Datei bearbeiten:",
 		"wantsToEditOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs bearbeiten:",
+		"wantsToEditProtected": "Roo möchte eine geschützte Konfigurationsdatei bearbeiten:",
 		"wantsToCreate": "Roo möchte eine neue Datei erstellen:",
 		"wantsToSearchReplace": "Roo möchte in dieser Datei suchen und ersetzen:",
 		"didSearchReplace": "Roo hat Suchen und Ersetzen in dieser Datei durchgeführt:",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Roo möchte Quellcode-Definitionsnamen in diesem Verzeichnis anzeigen:",
 		"didViewDefinitions": "Roo hat Quellcode-Definitionsnamen in diesem Verzeichnis angezeigt:",
 		"wantsToSearch": "Roo möchte dieses Verzeichnis nach <code>{{regex}}</code> durchsuchen:",
-		"didSearch": "Roo hat dieses Verzeichnis nach <code>{{regex}}</code> durchsucht:"
+		"didSearch": "Roo hat dieses Verzeichnis nach <code>{{regex}}</code> durchsucht:",
+		"wantsToSearchOutsideWorkspace": "Roo möchte dieses Verzeichnis (außerhalb des Arbeitsbereichs) nach <code>{{regex}}</code> durchsuchen:",
+		"didSearchOutsideWorkspace": "Roo hat dieses Verzeichnis (außerhalb des Arbeitsbereichs) nach <code>{{regex}}</code> durchsucht:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo möchte die Dateien auf oberster Ebene in diesem Verzeichnis (außerhalb des Arbeitsbereichs) anzeigen:",
+		"didViewTopLevelOutsideWorkspace": "Roo hat die Dateien auf oberster Ebene in diesem Verzeichnis (außerhalb des Arbeitsbereichs) angezeigt:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo möchte rekursiv alle Dateien in diesem Verzeichnis (außerhalb des Arbeitsbereichs) anzeigen:",
+		"didViewRecursiveOutsideWorkspace": "Roo hat rekursiv alle Dateien in diesem Verzeichnis (außerhalb des Arbeitsbereichs) angezeigt:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo möchte Quellcode-Definitionsnamen in diesem Verzeichnis (außerhalb des Arbeitsbereichs) anzeigen:",
+		"didViewDefinitionsOutsideWorkspace": "Roo hat Quellcode-Definitionsnamen in diesem Verzeichnis (außerhalb des Arbeitsbereichs) angezeigt:"
 	},
 	"commandOutput": "Befehlsausgabe",
 	"response": "Antwort",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "Alle ablehnen"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index bereit",
+		"indexing": "Indizierung {{percentage}}%",
+		"indexed": "Indiziert",
+		"error": "Index-Fehler",
+		"status": "Index-Status"
 	}
 }

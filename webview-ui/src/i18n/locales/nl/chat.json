@@ -140,6 +140,7 @@
 		"didRead": "Roo heeft dit bestand gelezen:",
 		"wantsToEdit": "Roo wil dit bestand bewerken:",
 		"wantsToEditOutsideWorkspace": "Roo wil dit bestand buiten de werkruimte bewerken:",
+		"wantsToEditProtected": "Roo wil een beveiligd configuratiebestand bewerken:",
 		"wantsToCreate": "Roo wil een nieuw bestand aanmaken:",
 		"wantsToSearchReplace": "Roo wil zoeken en vervangen in dit bestand:",
 		"didSearchReplace": "Roo heeft zoeken en vervangen uitgevoerd op dit bestand:",
@@ -158,7 +159,15 @@
 		"wantsToViewDefinitions": "Roo wil broncode-definitienamen bekijken die in deze map worden gebruikt:",
 		"didViewDefinitions": "Roo heeft broncode-definitienamen bekeken die in deze map worden gebruikt:",
 		"wantsToSearch": "Roo wil deze map doorzoeken op <code>{{regex}}</code>:",
-		"didSearch": "Roo heeft deze map doorzocht op <code>{{regex}}</code>:"
+		"didSearch": "Roo heeft deze map doorzocht op <code>{{regex}}</code>:",
+		"wantsToSearchOutsideWorkspace": "Roo wil deze map (buiten werkruimte) doorzoeken op <code>{{regex}}</code>:",
+		"didSearchOutsideWorkspace": "Roo heeft deze map (buiten werkruimte) doorzocht op <code>{{regex}}</code>:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo wil de bovenliggende bestanden in deze map (buiten werkruimte) bekijken:",
+		"didViewTopLevelOutsideWorkspace": "Roo heeft de bovenliggende bestanden in deze map (buiten werkruimte) bekeken:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo wil alle bestanden in deze map (buiten werkruimte) recursief bekijken:",
+		"didViewRecursiveOutsideWorkspace": "Roo heeft alle bestanden in deze map (buiten werkruimte) recursief bekeken:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo wil broncode-definitienamen bekijken die in deze map (buiten werkruimte) worden gebruikt:",
+		"didViewDefinitionsOutsideWorkspace": "Roo heeft broncode-definitienamen bekeken die in deze map (buiten werkruimte) worden gebruikt:"
 	},
 	"commandOutput": "Commando-uitvoer",
 	"response": "Antwoord",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "Alles weigeren"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index gereed",
+		"indexing": "Indexeren {{percentage}}%",
+		"indexed": "Geïndexeerd",
+		"error": "Index fout",
+		"status": "Index status"
 	}
 }

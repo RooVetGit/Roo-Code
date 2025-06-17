@@ -145,6 +145,7 @@
 		"didRead": "Roo ने इस फ़ाइल को पढ़ा:",
 		"wantsToEdit": "Roo इस फ़ाइल को संपादित करना चाहता है:",
 		"wantsToEditOutsideWorkspace": "Roo कार्यक्षेत्र के बाहर इस फ़ाइल को संपादित करना चाहता है:",
+		"wantsToEditProtected": "Roo एक सुरक्षित कॉन्फ़िगरेशन फ़ाइल को संपादित करना चाहता है:",
 		"wantsToCreate": "Roo एक नई फ़ाइल बनाना चाहता है:",
 		"wantsToSearchReplace": "Roo इस फ़ाइल में खोज और प्रतिस्थापन करना चाहता है:",
 		"didSearchReplace": "Roo ने इस फ़ाइल में खोज और प्रतिस्थापन किया:",
@@ -163,7 +164,15 @@
 		"wantsToViewDefinitions": "Roo इस निर्देशिका में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखना चाहता है:",
 		"didViewDefinitions": "Roo ने इस निर्देशिका में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखा:",
 		"wantsToSearch": "Roo इस निर्देशिका में <code>{{regex}}</code> के लिए खोज करना चाहता है:",
-		"didSearch": "Roo ने इस निर्देशिका में <code>{{regex}}</code> के लिए खोज की:"
+		"didSearch": "Roo ने इस निर्देशिका में <code>{{regex}}</code> के लिए खोज की:",
+		"wantsToSearchOutsideWorkspace": "Roo इस निर्देशिका (कार्यक्षेत्र के बाहर) में <code>{{regex}}</code> के लिए खोज करना चाहता है:",
+		"didSearchOutsideWorkspace": "Roo ने इस निर्देशिका (कार्यक्षेत्र के बाहर) में <code>{{regex}}</code> के लिए खोज की:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo इस निर्देशिका (कार्यक्षेत्र के बाहर) में शीर्ष स्तर की फ़ाइलें देखना चाहता है:",
+		"didViewTopLevelOutsideWorkspace": "Roo ने इस निर्देशिका (कार्यक्षेत्र के बाहर) में शीर्ष स्तर की फ़ाइलें देखीं:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo इस निर्देशिका (कार्यक्षेत्र के बाहर) में सभी फ़ाइलों को पुनरावर्ती रूप से देखना चाहता है:",
+		"didViewRecursiveOutsideWorkspace": "Roo ने इस निर्देशिका (कार्यक्षेत्र के बाहर) में सभी फ़ाइलों को पुनरावर्ती रूप से देखा:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo इस निर्देशिका (कार्यक्षेत्र के बाहर) में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखना चाहता है:",
+		"didViewDefinitionsOutsideWorkspace": "Roo ने इस निर्देशिका (कार्यक्षेत्र के बाहर) में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखा:"
 	},
 	"commandOutput": "कमांड आउटपुट",
 	"response": "प्रतिक्रिया",
@@ -279,5 +288,12 @@
 		"deny": {
 			"title": "सभी अस्वीकार करें"
 		}
+	},
+	"indexingStatus": {
+		"ready": "इंडेक्स तैयार",
+		"indexing": "इंडेक्सिंग {{percentage}}%",
+		"indexed": "इंडेक्स किया गया",
+		"error": "इंडेक्स त्रुटि",
+		"status": "इंडेक्स स्थिति"
 	}
 }

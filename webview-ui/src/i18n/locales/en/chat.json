@@ -156,6 +156,7 @@
 		"didRead": "Roo read this file:",
 		"wantsToEdit": "Roo wants to edit this file:",
 		"wantsToEditOutsideWorkspace": "Roo wants to edit this file outside of the workspace:",
+		"wantsToEditProtected": "Roo wants to edit a protected configuration file:",
 		"wantsToApplyBatchChanges": "Roo wants to apply changes to multiple files:",
 		"wantsToCreate": "Roo wants to create a new file:",
 		"wantsToSearchReplace": "Roo wants to search and replace in this file:",
@@ -167,12 +168,20 @@
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wants to view the top level files in this directory:",
 		"didViewTopLevel": "Roo viewed the top level files in this directory:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo wants to view the top level files in this directory (outside workspace):",
+		"didViewTopLevelOutsideWorkspace": "Roo viewed the top level files in this directory (outside workspace):",
 		"wantsToViewRecursive": "Roo wants to recursively view all files in this directory:",
 		"didViewRecursive": "Roo recursively viewed all files in this directory:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo wants to recursively view all files in this directory (outside workspace):",
+		"didViewRecursiveOutsideWorkspace": "Roo recursively viewed all files in this directory (outside workspace):",
 		"wantsToViewDefinitions": "Roo wants to view source code definition names used in this directory:",
 		"didViewDefinitions": "Roo viewed source code definition names used in this directory:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo wants to view source code definition names used in this directory (outside workspace):",
+		"didViewDefinitionsOutsideWorkspace": "Roo viewed source code definition names used in this directory (outside workspace):",
 		"wantsToSearch": "Roo wants to search this directory for <code>{{regex}}</code>:",
-		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
+		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:",
+		"wantsToSearchOutsideWorkspace": "Roo wants to search this directory (outside workspace) for <code>{{regex}}</code>:",
+		"didSearchOutsideWorkspace": "Roo searched this directory (outside workspace) for <code>{{regex}}</code>:"
 	},
 	"codebaseSearch": {
 		"wantsToSearch": "Roo wants to search the codebase for <code>{{query}}</code>:",
@@ -279,5 +288,12 @@
 			"description": "Roo has reached the auto-approved limit of {{count}} API request(s). Would you like to reset the count and proceed with the task?",
 			"button": "Reset and Continue"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index ready",
+		"indexing": "Indexing {{percentage}}%",
+		"indexed": "Indexed",
+		"error": "Index error",
+		"status": "Index status"
 	}
 }
