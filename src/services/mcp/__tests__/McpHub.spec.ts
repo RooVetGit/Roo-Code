@@ -4,6 +4,9 @@ import type { ExtensionContext, Uri } from "vscode"
 import { ServerConfigSchema, McpHub } from "../McpHub"
 import fs from "fs/promises"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
+import path from "path"
+
+const mockFileStore: Record<string, string> = {}
 
 vi.mock("vscode", () => ({
 	workspace: {
@@ -29,21 +32,150 @@ vi.mock("vscode", () => ({
 		from: vi.fn(),
 	},
 }))
-vi.mock("fs/promises")
+// Mock fs/promises
+vi.mock("fs/promises", () => {
+	const readFileMock = vi.fn()
+	const accessMock = vi.fn()
+
+	return {
+		readFile: readFileMock,
+		access: accessMock,
+		default: {
+			readFile: readFileMock,
+			access: accessMock,
+		},
+	}
+})
+
 vi.mock("../../../utils/safeWriteJson", () => ({
-	safeWriteJson: vi.fn(),
+	safeWriteJson: vi.fn((filePath: string, data: any) => {
+		// Match the normalization logic in toggleToolAlwaysAllow
+		let normalizedPath = path.normalize(filePath)
+		if (process.platform === "win32") {
+			normalizedPath = normalizedPath.replace(/\\/g, "/")
+		}
+		mockFileStore[normalizedPath] = JSON.stringify(data, null, 2)
+		return Promise.resolve()
+	}),
 }))
 vi.mock("../../../core/webview/ClineProvider")
+
+// Helper functions to reduce duplication in tests
+function createMockConnection(options: {
+	name?: string
+	source?: "global" | "project"
+	disabled?: boolean
+	timeout?: number
+	alwaysAllow?: string[]
+}): McpConnection {
+	const { name = "test-server", source = "global", disabled = false, timeout = 60, alwaysAllow = [] } = options
+
+	return {
+		server: {
+			name,
+			type: "stdio",
+			command: "node",
+			args: ["test.js"],
+			disabled,
+			timeout,
+			alwaysAllow,
+			source,
+		} as any,
+		client: {} as any,
+		transport: {} as any,
+	}
+}
+
+function setupMockFileSystem(options: {
+	serverName?: string
+	disabled?: boolean
+	timeout?: number
+	alwaysAllow?: string[]
+}) {
+	const { serverName = "test-server", disabled = false, timeout = 60, alwaysAllow = [] } = options
+
+	// Create a default config object
+	const config = {
+		mcpServers: {
+			[serverName]: {
+				type: "stdio",
+				command: "node",
+				args: ["test.js"],
+				disabled,
+				timeout,
+			},
+		},
+	}
+
+	// Add alwaysAllow if provided
+	if (alwaysAllow.length > 0) {
+		;(config.mcpServers[serverName] as any).alwaysAllow = alwaysAllow
+	}
+
+	// Mock fs.readFile to return this config
+	vi.mocked(fs.readFile).mockImplementation(() => {
+		return Promise.resolve(JSON.stringify(config))
+	})
+
+	return config
+}
+
+function verifyConfigUpdate(options: { serverName?: string; property: string; expectedValue: any }) {
+	const { serverName = "test-server", property, expectedValue } = options
+
+	// Verify safeWriteJson was called
+	expect(safeWriteJson).toHaveBeenCalled()
+
+	// Get the arguments passed to safeWriteJson
+	const writeArgs = vi.mocked(safeWriteJson).mock.calls[0]
+
+	// Verify the config was updated correctly
+	const updatedConfig = writeArgs[1]
+	expect(updatedConfig).toBeDefined()
+	expect(updatedConfig.mcpServers).toBeDefined()
+	expect(updatedConfig.mcpServers[serverName]).toBeDefined()
+
+	// Check the specific property that was updated
+	expect(updatedConfig.mcpServers[serverName][property]).toEqual(expectedValue)
+}
+
+/**
+ * Helper function to set up the mock file store with a normalized path
+ * @param config The configuration object to store
+ * @param settingsPath The base settings path
+ * @param filename The filename to use (defaults to "cline_mcp_settings.json")
+ */
+function setupMockFileStore(config: any, settingsPath: string, filename: string = "cline_mcp_settings.json") {
+	// Create the full path
+	let fullPath = path.join(settingsPath, filename)
+
+	// Normalize path consistently with our mock implementation
+	let normalizedPath = path.normalize(fullPath)
+	if (process.platform === "win32") {
+		normalizedPath = normalizedPath.replace(/\\/g, "/")
+	}
+
+	// Store the config in the mock file store
+	mockFileStore[normalizedPath] = JSON.stringify(config)
+
+	return normalizedPath
+}
 
 describe("McpHub", () => {
 	let mcpHub: McpHubType
 	let mockProvider: Partial<ClineProvider>
+	let mockSettingsPath: string
 
 	// Store original console methods
 	const originalConsoleError = console.error
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		// Clear the mock file store
+		for (const key in mockFileStore) {
+			delete mockFileStore[key]
+		}
+		mockSettingsPath = path.resolve("/mock/settings/path")
 
 		// Mock console.error to suppress error messages during tests
 		console.error = vi.fn()
@@ -60,8 +192,8 @@ describe("McpHub", () => {
 		}
 
 		mockProvider = {
-			ensureSettingsDirectoryExists: vi.fn().mockResolvedValue("/mock/settings/path"),
-			ensureMcpServersDirectoryExists: vi.fn().mockResolvedValue("/mock/settings/path"),
+			ensureSettingsDirectoryExists: vi.fn().mockResolvedValue(mockSettingsPath),
+			ensureMcpServersDirectoryExists: vi.fn().mockResolvedValue(mockSettingsPath),
 			postMessageToWebview: vi.fn(),
 			context: {
 				subscriptions: [],
@@ -95,20 +227,6 @@ describe("McpHub", () => {
 			} as ExtensionContext,
 		}
 
-		// Mock fs.readFile for initial settings
-		vi.mocked(fs.readFile).mockResolvedValue(
-			JSON.stringify({
-				mcpServers: {
-					"test-server": {
-						type: "stdio",
-						command: "node",
-						args: ["test.js"],
-						alwaysAllow: ["allowed-tool"],
-					},
-				},
-			}),
-		)
-
 		mcpHub = new McpHub(mockProvider as ClineProvider)
 	})
 
@@ -118,105 +236,61 @@ describe("McpHub", () => {
 	})
 
 	describe("toggleToolAlwaysAllow", () => {
+		beforeEach(() => {
+			// Reset the mocks before each test
+			vi.mocked(safeWriteJson).mockClear()
+			vi.mocked(fs.readFile).mockClear()
+		})
+
 		it("should add tool to always allow list when enabling", async () => {
-			const mockConfig = {
-				mcpServers: {
-					"test-server": {
-						type: "stdio",
-						command: "node",
-						args: ["test.js"],
-						alwaysAllow: [],
-					},
-				},
-			}
+			// Setup mock file system
+			setupMockFileSystem({ alwaysAllow: [] })
 
-			// Mock reading initial config
-			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			// Set up mock connection
+			mcpHub.connections = [createMockConnection({})]
 
-			// Set up mock connection without alwaysAllow
-			const mockConnection: McpConnection = {
-				server: {
-					name: "test-server",
-					type: "stdio",
-					command: "node",
-					args: ["test.js"],
-					source: "global",
-				} as any,
-				client: {} as any,
-				transport: {} as any,
-			}
-			mcpHub.connections = [mockConnection]
+			// Create a spy on the method
+			const toggleSpy = vi.spyOn(mcpHub, "toggleToolAlwaysAllow")
 
+			// Call the method
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "new-tool", true)
 
+			// Verify the method was called with the correct arguments
+			expect(toggleSpy).toHaveBeenCalledWith("test-server", "global", "new-tool", true)
+
 			// Verify the config was updated correctly
-			const writeCalls = vi.mocked(safeWriteJson).mock.calls
-			expect(writeCalls.length).toBeGreaterThan(0)
-
-			// Find the write call
-			const callToUse = writeCalls[writeCalls.length - 1]
-			expect(callToUse).toBeTruthy()
-
-			// The path might be normalized differently on different platforms,
-			// so we'll just check that we have a call with valid content
-			const writtenConfig = callToUse[1]
-			expect(writtenConfig.mcpServers).toBeDefined()
-			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
-			expect(Array.isArray(writtenConfig.mcpServers["test-server"].alwaysAllow)).toBe(true)
-			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toContain("new-tool")
+			verifyConfigUpdate({
+				property: "alwaysAllow",
+				expectedValue: expect.arrayContaining(["new-tool"]),
+			})
 		})
 
 		it("should remove tool from always allow list when disabling", async () => {
-			const mockConfig = {
-				mcpServers: {
-					"test-server": {
-						type: "stdio",
-						command: "node",
-						args: ["test.js"],
-						alwaysAllow: ["existing-tool"],
-					},
-				},
-			}
-
-			// Mock reading initial config
-			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			// Setup mock file system with existing tool
+			setupMockFileSystem({ alwaysAllow: ["existing-tool"] })
 
 			// Set up mock connection
-			const mockConnection: McpConnection = {
-				server: {
-					name: "test-server",
-					type: "stdio",
-					command: "node",
-					args: ["test.js"],
-					alwaysAllow: ["existing-tool"],
-					source: "global",
-				} as any,
-				client: {} as any,
-				transport: {} as any,
-			}
-			mcpHub.connections = [mockConnection]
+			mcpHub.connections = [createMockConnection({ alwaysAllow: ["existing-tool"] })]
 
+			// Create a spy on the method
+			const toggleSpy = vi.spyOn(mcpHub, "toggleToolAlwaysAllow")
+
+			// Call the method
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "existing-tool", false)
 
+			// Verify the method was called with the correct arguments
+			expect(toggleSpy).toHaveBeenCalledWith("test-server", "global", "existing-tool", false)
+
 			// Verify the config was updated correctly
-			const writeCalls = vi.mocked(safeWriteJson).mock.calls
-			expect(writeCalls.length).toBeGreaterThan(0)
-
-			// Find the write call
-			const callToUse = writeCalls[writeCalls.length - 1]
-			expect(callToUse).toBeTruthy()
-
-			// The path might be normalized differently on different platforms,
-			// so we'll just check that we have a call with valid content
-			const writtenConfig = callToUse[1]
-			expect(writtenConfig.mcpServers).toBeDefined()
-			expect(writtenConfig.mcpServers["test-server"]).toBeDefined()
-			expect(Array.isArray(writtenConfig.mcpServers["test-server"].alwaysAllow)).toBe(true)
-			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).not.toContain("existing-tool")
+			verifyConfigUpdate({
+				property: "alwaysAllow",
+				expectedValue: expect.not.arrayContaining(["existing-tool"]),
+			})
 		})
 
 		it("should initialize alwaysAllow if it does not exist", async () => {
-			const mockConfig = {
+			// Setup mock file system without alwaysAllow
+			const config = {
 				mcpServers: {
 					"test-server": {
 						type: "stdio",
@@ -226,85 +300,58 @@ describe("McpHub", () => {
 				},
 			}
 
-			// Mock reading initial config
-			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			vi.mocked(fs.readFile).mockImplementation(() => {
+				return Promise.resolve(JSON.stringify(config))
+			})
 
 			// Set up mock connection
-			const mockConnection: McpConnection = {
-				server: {
-					name: "test-server",
-					type: "stdio",
-					command: "node",
-					args: ["test.js"],
-					alwaysAllow: [],
-					source: "global",
-				} as any,
-				client: {} as any,
-				transport: {} as any,
-			}
-			mcpHub.connections = [mockConnection]
+			mcpHub.connections = [createMockConnection({})]
 
+			// Create a spy on the method
+			const toggleSpy = vi.spyOn(mcpHub, "toggleToolAlwaysAllow")
+
+			// Call the method
 			await mcpHub.toggleToolAlwaysAllow("test-server", "global", "new-tool", true)
 
-			// Verify the config was updated with initialized alwaysAllow
-			// Find the write call with the normalized path
-			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-			const writeCalls = vi.mocked(safeWriteJson).mock.calls
+			// Verify the method was called with the correct arguments
+			expect(toggleSpy).toHaveBeenCalledWith("test-server", "global", "new-tool", true)
 
-			// Find the write call with the normalized path
-			const writeCall = writeCalls.find((call: any) => call[0] === normalizedSettingsPath)
-			const callToUse = writeCall || writeCalls[0]
-
-			const writtenConfig = callToUse[1]
-			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toBeDefined()
-			expect(writtenConfig.mcpServers["test-server"].alwaysAllow).toContain("new-tool")
+			// Verify the config was updated correctly
+			verifyConfigUpdate({
+				property: "alwaysAllow",
+				expectedValue: expect.arrayContaining(["new-tool"]),
+			})
 		})
 	})
 
 	describe("server disabled state", () => {
-		it("should toggle server disabled state", async () => {
-			const mockConfig = {
-				mcpServers: {
-					"test-server": {
-						type: "stdio",
-						command: "node",
-						args: ["test.js"],
-						disabled: false,
-					},
-				},
-			}
+		beforeEach(() => {
+			// Reset the mocks before each test
+			vi.mocked(safeWriteJson).mockClear()
+			vi.mocked(fs.readFile).mockClear()
+		})
 
-			// Mock reading initial config
-			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+		it("should toggle server disabled state", async () => {
+			// Setup mock file system
+			setupMockFileSystem({ disabled: false })
 
 			// Set up mock connection
-			const mockConnection: McpConnection = {
-				server: {
-					name: "test-server",
-					type: "stdio",
-					command: "node",
-					args: ["test.js"],
-					disabled: false,
-					source: "global",
-				} as any,
-				client: {} as any,
-				transport: {} as any,
-			}
-			mcpHub.connections = [mockConnection]
+			mcpHub.connections = [createMockConnection({ disabled: false })]
 
+			// Create a spy on the method
+			const toggleSpy = vi.spyOn(mcpHub, "toggleServerDisabled")
+
+			// Call the method
 			await mcpHub.toggleServerDisabled("test-server", true)
 
+			// Verify the method was called with the correct arguments
+			expect(toggleSpy).toHaveBeenCalledWith("test-server", true)
+
 			// Verify the config was updated correctly
-			// Find the write call with the normalized path
-			const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-			const writeCalls = vi.mocked(safeWriteJson).mock.calls
-
-			// Find the write call with the normalized path
-			const writeCall = writeCalls.find((call: any) => call[0] === normalizedSettingsPath)
-			const callToUse = writeCall || writeCalls[0]
-
-			const writtenConfig = callToUse[1]
-			expect(writtenConfig.mcpServers["test-server"].disabled).toBe(true)
+			verifyConfigUpdate({
+				property: "disabled",
+				expectedValue: true,
+			})
 		})
 
 		it("should filter out disabled servers from getServers", () => {
@@ -494,49 +541,33 @@ describe("McpHub", () => {
 		})
 
 		describe("updateServerTimeout", () => {
-			it("should update server timeout in settings file", async () => {
-				const mockConfig = {
-					mcpServers: {
-						"test-server": {
-							type: "stdio",
-							command: "node",
-							args: ["test.js"],
-							timeout: 60,
-						},
-					},
-				}
+			beforeEach(() => {
+				// Reset the mocks before each test
+				vi.mocked(safeWriteJson).mockClear()
+				vi.mocked(fs.readFile).mockClear()
+			})
 
-				// Mock reading initial config
-				vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+			it("should update server timeout in settings file", async () => {
+				// Setup mock file system
+				setupMockFileSystem({ timeout: 60 })
 
 				// Set up mock connection
-				const mockConnection: McpConnection = {
-					server: {
-						name: "test-server",
-						type: "stdio",
-						command: "node",
-						args: ["test.js"],
-						timeout: 60,
-						source: "global",
-					} as any,
-					client: {} as any,
-					transport: {} as any,
-				}
-				mcpHub.connections = [mockConnection]
+				mcpHub.connections = [createMockConnection({ timeout: 60 })]
 
+				// Create a spy on the method
+				const updateSpy = vi.spyOn(mcpHub, "updateServerTimeout")
+
+				// Call the method
 				await mcpHub.updateServerTimeout("test-server", 120)
 
+				// Verify the method was called with the correct arguments
+				expect(updateSpy).toHaveBeenCalledWith("test-server", 120)
+
 				// Verify the config was updated correctly
-				// Find the write call with the normalized path
-				const normalizedSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
-				const writeCalls = vi.mocked(safeWriteJson).mock.calls
-
-				// Find the write call with the normalized path
-				const writeCall = writeCalls.find((call: any) => call[0] === normalizedSettingsPath)
-				const callToUse = writeCall || writeCalls[0]
-
-				const writtenConfig = callToUse[1]
-				expect(writtenConfig.mcpServers["test-server"].timeout).toBe(120)
+				verifyConfigUpdate({
+					property: "timeout",
+					expectedValue: 120,
+				})
 			})
 
 			it("should fallback to default timeout when config has invalid timeout", async () => {
@@ -551,8 +582,8 @@ describe("McpHub", () => {
 					},
 				}
 
-				// Mock initial read
-				vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+				// Setup mock file store
+				setupMockFileStore(mockConfig, mockSettingsPath)
 
 				// Set up mock connection before updating
 				const mockConnectionInitial: McpConnection = {
@@ -620,7 +651,8 @@ describe("McpHub", () => {
 					},
 				}
 
-				vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+				// Setup mock file store
+				setupMockFileStore(mockConfig, mockSettingsPath)
 
 				// Set up mock connection
 				const mockConnection: McpConnection = {
@@ -643,7 +675,8 @@ describe("McpHub", () => {
 					await mcpHub.updateServerTimeout("test-server", timeout)
 					expect(safeWriteJson).toHaveBeenCalled()
 					vi.clearAllMocks() // Reset for next iteration
-					;(fs.readFile as any).mockResolvedValueOnce(JSON.stringify(mockConfig))
+					// Setup mock file store
+					setupMockFileStore(mockConfig, mockSettingsPath)
 				}
 			})
 
@@ -659,7 +692,8 @@ describe("McpHub", () => {
 					},
 				}
 
-				vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+				// Setup mock file store
+				setupMockFileStore(mockConfig, mockSettingsPath)
 
 				// Set up mock connection
 				const mockConnection: McpConnection = {
