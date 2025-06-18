@@ -3,6 +3,7 @@ import {
 	type ModelInfo,
 	anthropicModels,
 	bedrockModels,
+	claudeCodeModels,
 	deepSeekModels,
 	geminiModels,
 	mistralModels,
@@ -16,6 +17,7 @@ import {
 export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,
 	bedrock: bedrockModels,
+	"claude-code": claudeCodeModels,
 	deepseek: deepSeekModels,
 	gemini: geminiModels,
 	mistral: mistralModels,
@@ -47,4 +49,5 @@ export const PROVIDERS = [
 	{ value: "groq", label: "Groq" },
 	{ value: "chutes", label: "Chutes AI" },
 	{ value: "litellm", label: "LiteLLM" },
+	{ value: "claude-code", label: "Claude Code" },
 ].sort((a, b) => a.label.localeCompare(b.label))
