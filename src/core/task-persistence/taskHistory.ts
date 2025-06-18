@@ -1,24 +1,43 @@
 import * as path from "path"
 import * as fs from "fs/promises"
-import { safeWriteJson } from "../../utils/safeWriteJson"
+import { safeWriteJson, safeReadJson } from "../../utils/safeWriteJson"
 import { HistoryItem, HistorySortOption, HistorySearchOptions, HistorySearchResults } from "@roo-code/types"
 import { getExtensionContext } from "../../extension"
 import { taskHistorySearch } from "./taskHistorySearch"
 
 const TASK_HISTORY_MONTH_INDEX_PREFIX = "task_history-"
-const TASK_HISTORY_DIR_NAME = "tasks"
+const TASK_DIR_NAME = "tasks"
+const TASK_HISTORY_DIR_NAME = "taskHistory"
 const TASK_HISTORY_VERSION_KEY = "taskHistoryVersion"
-const CURRENT_TASK_HISTORY_VERSION = 2 // Version 1: old array, Version 2: new file-based
+const CURRENT_TASK_HISTORY_VERSION = 2 // Version 1: old array, Version 2: new file-based, Version 3: file-based indexes, Version 4: separate directories
 
 const itemObjectCache = new Map<string, HistoryItem>()
 
 /**
- * Gets the base path for task history storage.
- * @returns The base path string.
+ * Gets the base path for task HistoryItem storage in tasks/<id>/history_item.json
+ * @returns The base path string for task items.
  */
-function _getBasePath(): string {
+function _getTasksBasePath(): string {
+	const context = getExtensionContext()
+	return path.join(context.globalStorageUri.fsPath, TASK_DIR_NAME)
+}
+
+/**
+ * Gets the base path for monthly index storage.
+ * @returns The base path string for monthly indexes.
+ */
+function _getHistoryIndexesBasePath(): string {
 	const context = getExtensionContext()
 	return path.join(context.globalStorageUri.fsPath, TASK_HISTORY_DIR_NAME)
+}
+
+/**
+ * Gets the base path for backup files.
+ * @returns The base path string for backup files.
+ */
+function _getBackupBasePath(): string {
+	const context = getExtensionContext()
+	return context.globalStorageUri.fsPath
 }
 
 /**
@@ -34,27 +53,14 @@ function _getYearMonthFromTs(timestamp: number): { year: string; month: string }
 }
 
 /**
- * Generates the globalState key for a given year and month.
+ * Gets the path for a month's index file.
  * @param year - YYYY string.
  * @param month - MM string.
- * @returns The globalState key string.
+ * @returns The file path string.
  */
-function _getGlobalStateMonthKey(year: string, month: string): string {
-	return `${TASK_HISTORY_MONTH_INDEX_PREFIX}${year}-${month}`
-}
-
-/**
- * Parses year and month from a globalState month key.
- * @param key - The globalState key string (e.g., "task_history-YYYY-MM").
- * @returns Object with year and month strings, or null if key format is invalid.
- */
-function _parseGlobalStateMonthKey(key: string): { year: string; month: string } | null {
-	const monthKeyRegex = new RegExp(`^${TASK_HISTORY_MONTH_INDEX_PREFIX}(\\d{4})-(\\d{2})$`)
-	const match = key.match(monthKeyRegex)
-	if (match && match.length === 3) {
-		return { year: match[1], month: match[2] }
-	}
-	return null
+function _getMonthIndexFilePath(year: string, month: string): string {
+	const basePath = _getHistoryIndexesBasePath()
+	return path.join(basePath, `${year}-${month}.index.json`)
 }
 
 /**
@@ -63,47 +69,52 @@ function _parseGlobalStateMonthKey(key: string): { year: string; month: string }
  * @returns Full path to the history item's JSON file.
  */
 function _getHistoryItemPath(taskId: string): string {
-	const currentBasePath = _getBasePath()
-	return path.join(currentBasePath, taskId, "history_item.json")
+	const tasksBasePath = _getTasksBasePath()
+	return path.join(tasksBasePath, taskId, "history_item.json")
 }
 
 /**
- * Reads the index object for a given month from globalState.
+ * Reads the index object for a given month from a JSON file.
  * The object maps workspacePath to an inner object, which maps taskId to its timestamp.
  * e.g., { "workspace/path": { "task-id-1": 12345, "task-id-2": 67890 } }
  * @param year - YYYY string.
  * @param month - MM string.
  * @returns The Record of {workspacePath: {[taskId: string]: timestamp}}, or an empty object if not found.
  */
-async function _readGlobalStateMonthIndex(
+async function _readTaskHistoryMonthIndex(
 	year: string,
 	month: string,
 ): Promise<Record<string, Record<string, number>>> {
-	const context = getExtensionContext()
-	const monthKey = _getGlobalStateMonthKey(year, month)
-	const storedData = context.globalState.get<Record<string, Record<string, number>>>(monthKey)
-
-	if (storedData && typeof storedData === "object" && !Array.isArray(storedData)) {
-		return storedData
+	const indexPath = _getMonthIndexFilePath(year, month)
+	try {
+		const data = await safeReadJson(indexPath)
+		if (data && typeof data === "object" && !Array.isArray(data)) {
+			return data
+		}
+	} catch (error) {
+		console.error(`[TaskHistory] Error reading month index file for ${year}-${month}:`, error)
 	}
 	return {}
 }
 
 /**
- * Writes the index object for a given month to globalState.
+ * Writes the index object for a given month to a JSON file.
  * @param year - YYYY string.
  * @param month - MM string.
  * @param indexData - The Record of {workspacePath: {[taskId: string]: timestamp}} to write.
  */
-async function _writeGlobalStateMonthIndex(
+async function _writeTaskHistoryMonthIndex(
 	year: string,
 	month: string,
 	indexData: Record<string, Record<string, number>>,
 ): Promise<void> {
-	const context = getExtensionContext()
-	const monthKey = _getGlobalStateMonthKey(year, month)
-	// The indexData is already in the correct Record format to be stored.
-	await context.globalState.update(monthKey, indexData)
+	const indexPath = _getMonthIndexFilePath(year, month)
+	try {
+		await safeWriteJson(indexPath, indexData)
+	} catch (error) {
+		console.error(`[TaskHistory] Error writing month index file for ${year}-${month}:`, error)
+		throw error
+	}
 }
 
 /**
@@ -231,7 +242,7 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 			if (affectedMonthIndexes.has(monthKeyString)) {
 				currentMonthData = affectedMonthIndexes.get(monthKeyString)!
 			} else {
-				currentMonthData = await _readGlobalStateMonthIndex(year, month)
+				currentMonthData = await _readTaskHistoryMonthIndex(year, month)
 			}
 
 			if (!currentMonthData[workspacePathForIndex]) {
@@ -247,9 +258,9 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 	for (const [monthKeyString, monthMap] of affectedMonthIndexes.entries()) {
 		const [year, month] = monthKeyString.split("-")
 		try {
-			await _writeGlobalStateMonthIndex(year, month, monthMap)
+			await _writeTaskHistoryMonthIndex(year, month, monthMap)
 		} catch (error) {
-			console.error(`[TaskHistory Migration] Error writing globalState index for ${monthKeyString}:`, error)
+			console.error(`[TaskHistory Migration] Error writing month index file for ${monthKeyString}:`, error)
 		}
 	}
 }
@@ -317,7 +328,7 @@ export async function deleteHistoryItem(taskId: string): Promise<void> {
 	const availableMonths = await getAvailableHistoryMonths()
 
 	for (const { year, month } of availableMonths) {
-		const monthData = await _readGlobalStateMonthIndex(year, month) // monthData is Record<string, Record<string, number>>
+		const monthData = await _readTaskHistoryMonthIndex(year, month) // monthData is Record<string, Record<string, number>>
 		let updatedInThisMonth = false
 		for (const workspacePath in monthData) {
 			if (Object.prototype.hasOwnProperty.call(monthData, workspacePath)) {
@@ -333,8 +344,9 @@ export async function deleteHistoryItem(taskId: string): Promise<void> {
 				}
 			}
 		}
+
 		if (updatedInThisMonth) {
-			await _writeGlobalStateMonthIndex(year, month, monthData)
+			await _writeTaskHistoryMonthIndex(year, month, monthData)
 		}
 	}
 }
@@ -425,7 +437,7 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 			continue
 		}
 
-		const monthDataByWorkspace = await _readGlobalStateMonthIndex(year, month)
+		const monthDataByWorkspace = await _readTaskHistoryMonthIndex(year, month)
 		if (Object.keys(monthDataByWorkspace).length === 0) {
 			continue
 		}
@@ -507,19 +519,28 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 export async function getAvailableHistoryMonths(
 	sortOption?: HistorySortOption,
 ): Promise<Array<{ year: string; month: string; monthStartTs: number; monthEndTs: number }>> {
-	const context = getExtensionContext()
-	const allGlobalStateKeys = await context.globalState.keys()
+	const basePath = _getHistoryIndexesBasePath()
 	const monthObjects: Array<{ year: string; month: string; monthStartTs: number; monthEndTs: number }> = []
 
-	for (const key of allGlobalStateKeys) {
-		const parsed = _parseGlobalStateMonthKey(key)
-		if (parsed) {
-			const yearNum = parseInt(parsed.year, 10)
-			const monthNum = parseInt(parsed.month, 10)
-			const monthStartTs = new Date(yearNum, monthNum - 1, 1, 0, 0, 0, 0).getTime()
-			const monthEndTs = new Date(yearNum, monthNum, 0, 23, 59, 59, 999).getTime()
-			monthObjects.push({ ...parsed, monthStartTs, monthEndTs })
+	try {
+		const files = await fs.readdir(basePath)
+		const indexFileRegex = /^(\d{4})-(\d{2})\.index\.json$/
+
+		for (const file of files) {
+			const match = file.match(indexFileRegex)
+			if (match) {
+				const year = match[1]
+				const month = match[2]
+				const yearNum = parseInt(year, 10)
+				const monthNum = parseInt(month, 10)
+				const monthStartTs = new Date(yearNum, monthNum - 1, 1, 0, 0, 0, 0).getTime()
+				const monthEndTs = new Date(yearNum, monthNum, 0, 23, 59, 59, 999).getTime()
+				monthObjects.push({ year, month, monthStartTs, monthEndTs })
+			}
 		}
+	} catch (error) {
+		console.error(`[TaskHistory] Error reading month index files:`, error)
+		// Return empty array on error
 	}
 
 	// Sort months based on sortOption
@@ -551,7 +572,7 @@ export async function getAvailableHistoryMonths(
  */
 export async function migrateTaskHistoryStorage(): Promise<void> {
 	const context = getExtensionContext()
-	const currentBasePath = _getBasePath()
+	const tasksBasePath = _getTasksBasePath()
 	console.log("[TaskHistory Migration] Checking task history storage version...")
 
 	const storedVersion = context.globalState.get<number>(TASK_HISTORY_VERSION_KEY)
@@ -566,28 +587,6 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 	console.log(
 		`[TaskHistory Migration] Task history storage version is ${storedVersion === undefined ? "not set (pre-versioning)" : storedVersion}. Current version is ${CURRENT_TASK_HISTORY_VERSION}. Migration check required.`,
 	)
-
-	// This specific cleanup for YYYY-named directories might be from very old test versions.
-	// The primary storage is now under a "tasks" directory.
-	try {
-		const entries = await fs.readdir(currentBasePath, { withFileTypes: true })
-		for (const entry of entries) {
-			if (entry.isDirectory() && /^\d{4}$/.test(entry.name)) {
-				const yearPath = path.join(currentBasePath, entry.name)
-				console.log(
-					`[TaskHistory Migration] Found old-style year artifact directory: ${yearPath}. Attempting to remove.`,
-				)
-				await fs.rm(yearPath, { recursive: true, force: true })
-			}
-		}
-	} catch (error: any) {
-		if (error.code !== "ENOENT") {
-			console.warn(
-				`[TaskHistory Migration] Error during cleanup of old-style year artifact directories in ${currentBasePath}:`,
-				error,
-			)
-		}
-	}
 
 	// This migration handles transitioning from the old flat "taskHistory" array
 	// and potentially existing new-format monthly indexes to a consistent state.
@@ -627,9 +626,11 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 		const now = new Date()
 		const timestampString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now.getHours().toString().padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`
 		const backupFileName = `${timestampString}-backup_globalState_taskHistory_array.json`
-		const backupPath = path.join(currentBasePath, backupFileName)
+		const backupBasePath = _getBackupBasePath()
+		const backupPath = path.join(backupBasePath, backupFileName)
 		try {
-			await fs.mkdir(currentBasePath, { recursive: true })
+			// Ensure the backup directory exists
+			await fs.mkdir(backupBasePath, { recursive: true })
 			await safeWriteJson(backupPath, oldHistoryArrayFromGlobalState)
 			console.log(`[TaskHistory Migration] Successfully backed up old task history array to: ${backupPath}`)
 		} catch (backupError: any) {
