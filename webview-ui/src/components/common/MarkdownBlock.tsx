@@ -34,14 +34,19 @@ const remarkUrlToLink = () => {
 
 			const parts = node.value.split(urlRegex)
 			const children: any[] = []
+			const cleanedMatches = matches.map((url: string) => url.replace(/[.,;:!?'"]+$/, ""))
 
 			parts.forEach((part: string, i: number) => {
 				if (part) {
 					children.push({ type: "text", value: part })
 				}
 
-				if (matches[i]) {
-					children.push({ type: "link", url: matches[i], children: [{ type: "text", value: matches[i] }] })
+				if (cleanedMatches[i]) {
+					children.push({
+						type: "link",
+						url: cleanedMatches[i],
+						children: [{ type: "text", value: cleanedMatches[i] }],
+					})
 				}
 			})
 
