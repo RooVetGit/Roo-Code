@@ -284,7 +284,9 @@ export const webviewMessageHandler = async (
 			provider.condenseTaskContext(message.text!)
 			break
 		case "deleteTaskWithId":
-			provider.deleteTaskWithId(message.text!)
+			await provider.deleteTaskWithId(message.text!)
+			// Send confirmation message back to webview
+			provider.postMessageToWebview({ type: "taskDeletedConfirmation", text: message.text })
 			break
 		case "getHistoryItems":
 			const historyResults = await getHistoryItemsForSearch(message.historySearchOptions || {})
@@ -331,6 +333,9 @@ export const webviewMessageHandler = async (
 				console.log(
 					`Batch deletion completed: ${successCount}/${ids.length} tasks successful, ${failCount} tasks failed`,
 				)
+
+				// Send confirmation message back to webview
+				provider.postMessageToWebview({ type: "taskDeletedConfirmation", text: "batch" })
 			}
 			break
 		}
