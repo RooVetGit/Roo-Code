@@ -4,6 +4,9 @@ import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { highlightFzfMatch } from "@/utils/highlight"
 
+// Static counter for generating unique request IDs
+let nextRequestId = 1
+
 export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 	const { cwd } = useExtensionState()
 	const [tasks, setTasks] = useState<(HistoryItem & { highlight?: string })[]>([])
@@ -15,6 +18,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 	const [sortOption, setSortOption] = useState<HistorySortOption>(options.sortOption || "newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<HistorySortOption | null>("newest")
 	const [showAllWorkspaces, setShowAllWorkspaces] = useState(options.showAllWorkspaces || false)
+	const currentRequestId = useRef<string>("")
 
 	// Debounced search query setter
 	const debouncedSetSearchQuery = useCallback((query: string) => {
@@ -51,7 +55,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 
 		const handler = (event: MessageEvent) => {
 			const message = event.data
-			if (message.type === "historyItems") {
+			if (message.type === "historyItems" && message.requestId === currentRequestId.current) {
 				// Process the items to add highlight HTML based on match positions
 				const processedItems = (message.items || []).map((item: HistorySearchResultItem) => {
 					if (item.match?.positions) {
@@ -78,6 +82,10 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 				console.log("Task deletion confirmed, refreshing list...")
 
 				// Refresh the task list without showing loading state
+				// Generate a new request ID for this search
+				const refreshRequestId = `search_${nextRequestId++}`
+				currentRequestId.current = refreshRequestId
+
 				vscode.postMessage({
 					type: "getHistoryItems",
 					historySearchOptions: {
@@ -86,6 +94,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 						workspacePath: showAllWorkspaces ? undefined : cwd,
 						limit: options.limit,
 					},
+					requestId: refreshRequestId,
 				})
 			}
 		}
@@ -101,9 +110,14 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 			limit: options.limit,
 		}
 
+		// Generate a new request ID for this search
+		const requestId = `search_${nextRequestId++}`
+		currentRequestId.current = requestId
+
 		vscode.postMessage({
 			type: "getHistoryItems",
 			historySearchOptions: searchOptions,
+			requestId,
 		})
 
 		return () => {
