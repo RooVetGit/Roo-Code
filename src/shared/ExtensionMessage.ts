@@ -91,6 +91,7 @@ export interface ExtensionMessage {
 		| "indexCleared"
 		| "codebaseIndexConfig"
 		| "marketplaceInstallResult"
+		| "taskDeletedConfirmation"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:

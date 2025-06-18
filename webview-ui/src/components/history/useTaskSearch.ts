@@ -66,11 +66,31 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 				// Atomic update - no flickering
 				setTasks(processedItems)
 				setLoading(false)
-				window.removeEventListener("message", handler)
 			}
 		}
 
 		window.addEventListener("message", handler)
+
+		// Listen for task deletion confirmation and refresh the list
+		const deletionHandler = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "taskDeletedConfirmation") {
+				console.log("Task deletion confirmed, refreshing list...")
+
+				// Refresh the task list without showing loading state
+				vscode.postMessage({
+					type: "getHistoryItems",
+					historySearchOptions: {
+						searchQuery,
+						sortOption,
+						workspacePath: showAllWorkspaces ? undefined : cwd,
+						limit: options.limit,
+					},
+				})
+			}
+		}
+
+		window.addEventListener("message", deletionHandler)
 
 		// Always send the initial request
 		// Construct search options
@@ -88,6 +108,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 
 		return () => {
 			window.removeEventListener("message", handler)
+			window.removeEventListener("message", deletionHandler)
 		}
 		// Intentionally excluding tasks from deps to prevent infinite loop and flickering
 		// eslint-disable-next-line react-hooks/exhaustive-deps
