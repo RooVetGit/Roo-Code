@@ -19,9 +19,10 @@ import { vscode } from "@/utils/vscode"
 
 interface DeleteTaskDialogProps extends AlertDialogProps {
 	taskId: string
+	onDeleteStart?: () => void
 }
 
-export const DeleteTaskDialog = ({ taskId, ...props }: DeleteTaskDialogProps) => {
+export const DeleteTaskDialog = ({ taskId, onDeleteStart, ...props }: DeleteTaskDialogProps) => {
 	const { t } = useAppTranslation()
 	const [isEnterPressed] = useKeyPress("Enter")
 
@@ -29,10 +30,12 @@ export const DeleteTaskDialog = ({ taskId, ...props }: DeleteTaskDialogProps) =>
 
 	const onDelete = useCallback(() => {
 		if (taskId) {
+			// Signal that deletion is starting
+			onDeleteStart?.()
 			vscode.postMessage({ type: "deleteTaskWithId", text: taskId })
 			onOpenChange?.(false)
 		}
-	}, [taskId, onOpenChange])
+	}, [taskId, onOpenChange, onDeleteStart])
 
 	useEffect(() => {
 		if (taskId && isEnterPressed) {
