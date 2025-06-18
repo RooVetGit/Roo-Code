@@ -32,7 +32,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		let errorOutput = ""
 		let exitCode: number | null = null
 
-		claudeProcess.stdout.on("data", (data) => {
+		claudeProcess.stdout.on("data", (data: Buffer) => {
 			const output = data.toString()
 			const lines = output.split("\n").filter((line: string) => line.trim() !== "")
 
@@ -41,15 +41,15 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 			}
 		})
 
-		claudeProcess.stderr.on("data", (data) => {
+		claudeProcess.stderr.on("data", (data: Buffer) => {
 			errorOutput += data.toString()
 		})
 
-		claudeProcess.on("close", (code) => {
+		claudeProcess.on("close", (code: number | null) => {
 			exitCode = code
 		})
 
-		claudeProcess.on("error", (error) => {
+		claudeProcess.on("error", (error: Error) => {
 			processError = error
 		})
 
@@ -156,12 +156,24 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		}
 	}
 
-	// TODO: Validate instead of parsing
+	/**
+	 * Attempts to parse a JSON chunk from Claude Code CLI output
+	 * @param data Raw string data from Claude Code CLI
+	 * @returns Parsed ClaudeCodeMessage or null if parsing fails
+	 */
 	private attemptParseChunk(data: string): ClaudeCodeMessage | null {
 		try {
-			return JSON.parse(data)
+			const parsed = JSON.parse(data)
+			// Basic validation to ensure it's a valid Claude Code message
+			if (typeof parsed === "object" && parsed !== null && "type" in parsed) {
+				return parsed as ClaudeCodeMessage
+			}
+			return null
 		} catch (error) {
-			console.error("Error parsing chunk:", error)
+			// Only log if it looks like it should be JSON (starts with { or [)
+			if (data.trim().startsWith("{") || data.trim().startsWith("[")) {
+				console.warn("Failed to parse potential JSON chunk from Claude Code:", error)
+			}
 			return null
 		}
 	}
