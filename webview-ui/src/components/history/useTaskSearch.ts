@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react"
-import { HistoryItem, HistorySearchOptions } from "@roo-code/types"
+import { HistoryItem, HistorySearchOptions, HistorySortOption } from "@roo-code/types"
 import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
-
-type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
 export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 	const { cwd } = useExtensionState()
 	const [tasks, setTasks] = useState<HistoryItem[]>([])
 	const [loading, setLoading] = useState(true)
 	const [searchQuery, setSearchQuery] = useState(options.searchQuery || "")
-	const [sortOption, setSortOption] = useState<SortOption>((options.sortOption as SortOption) || "newest")
-	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
+	const [sortOption, setSortOption] = useState<HistorySortOption>(options.sortOption || "newest")
+	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<HistorySortOption | null>("newest")
 	const [showAllWorkspaces, setShowAllWorkspaces] = useState(options.showAllWorkspaces || false)
 
 	useEffect(() => {
