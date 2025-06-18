@@ -1440,19 +1440,21 @@ export class Task extends EventEmitter<ClineEvents> {
 				this.isStreaming = false
 			}
 
-			if (
-				inputTokens > 0 ||
-				outputTokens > 0 ||
-				cacheWriteTokens > 0 ||
-				cacheReadTokens > 0 ||
-				typeof totalCost !== "undefined"
-			) {
+			if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
 				TelemetryService.instance.captureLlmCompletion(this.taskId, {
 					inputTokens,
 					outputTokens,
 					cacheWriteTokens,
 					cacheReadTokens,
-					cost: totalCost,
+					cost:
+						totalCost ??
+						calculateApiCostAnthropic(
+							this.api.getModel().info,
+							inputTokens,
+							outputTokens,
+							cacheWriteTokens,
+							cacheReadTokens,
+						),
 				})
 			}
 
