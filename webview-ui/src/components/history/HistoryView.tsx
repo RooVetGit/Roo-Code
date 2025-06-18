@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react"
+import React, { memo, useState, useEffect } from "react"
 import { DeleteTaskDialog } from "./DeleteTaskDialog"
 import { BatchDeleteTaskDialog } from "./BatchDeleteTaskDialog"
 import { Virtuoso } from "react-virtuoso"
@@ -18,6 +18,7 @@ import {
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import { Tab, TabContent, TabHeader } from "../common/Tab"
+import SpinnerOverlay from "../common/SpinnerOverlay"
 import { useTaskSearch } from "./useTaskSearch"
 import TaskItem from "./TaskItem"
 
@@ -45,6 +46,23 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 	const [isSelectionMode, setIsSelectionMode] = useState(false)
 	const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
 	const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState<boolean>(false)
+	const [isDeletingInProgress, setIsDeletingInProgress] = useState<boolean>(false)
+
+	// Listen for task deletion confirmation to hide the spinner
+	useEffect(() => {
+		const deletionHandler = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "taskDeletedConfirmation") {
+				setIsDeletingInProgress(false)
+			}
+		}
+
+		window.addEventListener("message", deletionHandler)
+
+		return () => {
+			window.removeEventListener("message", deletionHandler)
+		}
+	}, [])
 
 	// Toggle selection mode
 	const toggleSelectionMode = () => {
@@ -275,7 +293,12 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 			{/* Delete dialog */}
 			{deleteTaskId && (
-				<DeleteTaskDialog taskId={deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)} open />
+				<DeleteTaskDialog
+					taskId={deleteTaskId}
+					onOpenChange={(open) => !open && setDeleteTaskId(null)}
+					onDeleteStart={() => setIsDeletingInProgress(true)}
+					open
+				/>
 			)}
 
 			{/* Batch delete dialog */}
@@ -283,6 +306,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 				<BatchDeleteTaskDialog
 					taskIds={selectedTaskIds}
 					open={showBatchDeleteDialog}
+					onDeleteStart={() => setIsDeletingInProgress(true)}
 					onOpenChange={(open) => {
 						if (!open) {
 							setShowBatchDeleteDialog(false)
@@ -292,6 +316,9 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 					}}
 				/>
 			)}
+
+			{/* Spinner overlay for deletion in progress */}
+			<SpinnerOverlay isVisible={isDeletingInProgress} message="Deleting..." />
 		</Tab>
 	)
 }
