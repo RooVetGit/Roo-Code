@@ -512,8 +512,8 @@ importers:
         specifier: workspace:^
         version: link:../types
       posthog-node:
-        specifier: ^4.7.0
-        version: 4.17.2
+        specifier: ^5.0.0
+        version: 5.1.1
       zod:
         specifier: ^3.25.61
         version: 3.25.61
@@ -8050,9 +8050,9 @@ packages:
       rrweb-snapshot:
         optional: true
 
-  posthog-node@4.17.2:
-    resolution: {integrity: sha512-bFmwOTk4QdYavopeHVXtyFGQ9vyLMVaNWkWocwjix+0n6sQgv7Zq5nYjYulz7ThmK18zsvNJ337ahuMLv3ulow==}
-    engines: {node: '>=15.0.0'}
+  posthog-node@5.1.1:
+    resolution: {integrity: sha512-6VISkNdxO24ehXiDA4dugyCSIV7lpGVaEu5kn/dlAj+SJ1lgcDru9PQ8p/+GSXsXVxohd1t7kHL2JKc9NoGb0w==}
+    engines: {node: '>=20'}
 
   preact@10.26.6:
     resolution: {integrity: sha512-5SRRBinwpwkaD+OqlBDeITlRgvd8I8QlxHJw9AxSdMNV6O+LodN9nUyYGpSF7sadHjs6RzeFShMexC6DbtWr9g==}
@@ -13473,7 +13473,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.3(@types/debug@4.1.12)(@types/node@20.17.57)(@vitest/ui@3.2.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.19.4)(yaml@2.8.0)
+      vitest: 3.2.3(@types/debug@4.1.12)(@types/node@22.15.29)(@vitest/ui@3.2.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.19.4)(yaml@2.8.0)
 
   '@vitest/utils@3.2.3':
     dependencies:
@@ -17858,11 +17858,7 @@ snapshots:
       preact: 10.26.6
       web-vitals: 4.2.4
 
-  posthog-node@4.17.2:
-    dependencies:
-      axios: 1.9.0
-    transitivePeerDependencies:
-      - debug
+  posthog-node@5.1.1: {}
 
   preact@10.26.6: {}
 
