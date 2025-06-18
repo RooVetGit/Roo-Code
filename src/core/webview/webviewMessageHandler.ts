@@ -493,7 +493,11 @@ export const webviewMessageHandler = async (
 			break
 		case "getHistoryItems":
 			const historyResults = await getHistoryItemsForSearch(message.historySearchOptions || {})
-			provider.postMessageToWebview({ type: "historyItems", items: historyResults.items })
+			provider.postMessageToWebview({
+				type: "historyItems",
+				items: historyResults.items,
+				requestId: message.requestId, // Pass the requestId back in the response
+			})
 			break
 		case "deleteMultipleTasksWithIds": {
 			const ids = message.ids
