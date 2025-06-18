@@ -6,6 +6,34 @@ import Disassembler from "stream-json/Disassembler"
 import Stringer from "stream-json/Stringer"
 
 /**
+ * Acquires a lock on a file.
+ *
+ * @param {string} filePath - The path to the file to lock
+ * @param {lockfile.LockOptions} [options] - Optional lock options
+ * @returns {Promise<() => Promise<void>>} - The lock release function
+ */
+export async function _acquireLock(filePath: string, options?: lockfile.LockOptions): Promise<() => Promise<void>> {
+	const absoluteFilePath = path.resolve(filePath)
+
+	return await lockfile.lock(absoluteFilePath, {
+		stale: 31000, // Stale after 31 seconds
+		update: 10000, // Update mtime every 10 seconds
+		realpath: false, // The file may not exist yet
+		retries: {
+			retries: 5,
+			factor: 2,
+			minTimeout: 100,
+			maxTimeout: 1000,
+		},
+		onCompromised: (err) => {
+			console.error(`Lock at ${absoluteFilePath} was compromised:`, err)
+			throw err
+		},
+		...options,
+	})
+}
+
+/**
  * Safely writes JSON data to a file.
  * - Creates parent directories if they don't exist
  * - Uses 'proper-lockfile' for inter-process advisory locking to prevent concurrent writes to the same path.
@@ -39,22 +67,7 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 
 	// Acquire the lock before any file operations
 	try {
-		releaseLock = await lockfile.lock(absoluteFilePath, {
-			stale: 31000, // Stale after 31 seconds
-			update: 10000, // Update mtime every 10 seconds to prevent staleness if operation is long
-			realpath: false, // the file may not exist yet, which is acceptable
-			retries: {
-				// Configuration for retrying lock acquisition
-				retries: 5, // Number of retries after the initial attempt
-				factor: 2, // Exponential backoff factor (e.g., 100ms, 200ms, 400ms, ...)
-				minTimeout: 100, // Minimum time to wait before the first retry (in ms)
-				maxTimeout: 1000, // Maximum time to wait for any single retry (in ms)
-			},
-			onCompromised: (err) => {
-				console.error(`Lock at ${absoluteFilePath} was compromised:`, err)
-				throw err
-			},
-		})
+		releaseLock = await _acquireLock(absoluteFilePath)
 	} catch (lockError) {
 		// If lock acquisition fails, we throw immediately.
 		// The releaseLock remains a no-op, so the finally block in the main file operations
