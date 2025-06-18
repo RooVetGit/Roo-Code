@@ -1,8 +1,9 @@
 import * as path from "path"
 import * as fs from "fs/promises"
 import { safeWriteJson } from "../../utils/safeWriteJson"
-import { HistoryItem, HistorySortOption, HistorySearchOptions } from "@roo-code/types"
+import { HistoryItem, HistorySortOption, HistorySearchOptions, HistorySearchResults } from "@roo-code/types"
 import { getExtensionContext } from "../../extension"
+import { taskHistorySearch } from "./taskHistorySearch"
 
 const TASK_HISTORY_MONTH_INDEX_PREFIX = "task_history-"
 const TASK_HISTORY_DIR_NAME = "tasks"
@@ -375,11 +376,11 @@ function _sortHistoryItems(items: HistoryItem[], sortOption: HistorySortOption):
  * @param search - The search options.
  * @returns A promise that resolves to an array of matching HistoryItem objects.
  */
-export async function getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistoryItem[]> {
+export async function getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistorySearchResults> {
 	const { searchQuery = "", dateRange, limit, workspacePath, sortOption = "newest" } = search
 	const startTime = performance.now()
 	const limitStringForLog = limit !== undefined ? limit : "none"
-	console.log(
+	console.debug(
 		`[TaskHistory] [getHistoryItemsForSearch] starting: query="${searchQuery}", limit=${limitStringForLog}, workspace=${workspacePath || "all"}, hasDateRange=${!!dateRange}, sortOption=${sortOption || "default"}`,
 	)
 
@@ -460,10 +461,7 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 
 			processedItems++
 
-			// Search Query
-			if (lowerCaseSearchQuery && !(item.task && item.task.toLowerCase().includes(lowerCaseSearchQuery))) {
-				continue
-			}
+			// We no longer filter by search query here - we'll use fzf later
 
 			// Workspace filtering is handled by the selection from monthDataByWorkspace.
 			// No need to re-check item.workspace against the search.
@@ -484,7 +482,7 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 	}
 
 	const endTime = performance.now()
-	console.log(
+	console.debug(
 		`[TaskHistory] [getHistoryItemsForSearch] completed in ${(endTime - startTime).toFixed(2)}ms: ` +
 			`processed ${processedMonths}/${sortedMonthObjects.length} months, ` +
 			`skipped ${skippedMonths} months, ` +
@@ -493,7 +491,10 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 	)
 
 	// Apply final sorting if needed (for non-timestamp based sorts)
-	return _sortHistoryItems(resultItems, sortOption)
+	const sortedItems = _sortHistoryItems(resultItems, sortOption)
+
+	// Use fzf for search and highlighting
+	return taskHistorySearch(sortedItems, searchQuery)
 }
 
 /**
@@ -602,7 +603,7 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 	try {
 		console.log("[TaskHistory Migration] Reading existing items from new-format indexes...")
 		const allCurrentlyIndexedItems = await getHistoryItemsForSearch({})
-		for (const item of allCurrentlyIndexedItems) {
+		for (const item of allCurrentlyIndexedItems.items) {
 			if (item && item.id) {
 				// Basic validation
 				finalItemSet.set(item.id, item)

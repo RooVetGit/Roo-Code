@@ -21,6 +21,28 @@ export const historyItemSchema = z.object({
 export type HistoryItem = z.infer<typeof historyItemSchema>
 
 /**
+ * HistorySearchResultItem - extends HistoryItem with match positions from fzf
+ */
+export const historySearchResultItemSchema = historyItemSchema.extend({
+	match: z
+		.object({
+			positions: z.array(z.number()),
+		})
+		.optional(),
+})
+
+export type HistorySearchResultItem = z.infer<typeof historySearchResultItemSchema>
+
+/**
+ * HistorySearchResults - contains a list of search results with match information
+ */
+export const historySearchResultsSchema = z.object({
+	items: z.array(historySearchResultItemSchema),
+})
+
+export type HistorySearchResults = z.infer<typeof historySearchResultsSchema>
+
+/**
  * Sort options for history items
  */
 export type HistorySortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
