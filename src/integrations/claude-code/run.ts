@@ -2,7 +2,15 @@ import * as vscode from "vscode"
 import Anthropic from "@anthropic-ai/sdk"
 import { execa } from "execa"
 
-const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+// Safely get the workspace folder, handling test environments
+const getCwd = () => {
+	try {
+		return vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+	} catch {
+		// In test environments, vscode.workspace might not be available
+		return undefined
+	}
+}
 
 export function runClaudeCode({
 	systemPrompt,
@@ -40,6 +48,6 @@ export function runClaudeCode({
 		stdout: "pipe",
 		stderr: "pipe",
 		env: process.env,
-		cwd,
+		cwd: getCwd(),
 	})
 }
