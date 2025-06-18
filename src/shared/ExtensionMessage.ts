@@ -106,6 +106,7 @@ export interface ExtensionMessage {
 		| "shareTaskSuccess"
 		| "codeIndexSettingsSaved"
 		| "codeIndexSecretStatus"
+		| "taskDeletedConfirmation"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
