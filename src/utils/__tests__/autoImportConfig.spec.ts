@@ -38,11 +38,9 @@ vi.mock("../fs", () => ({
 vi.mock("../../core/config/ProviderSettingsManager", async (importOriginal) => {
 	const originalModule = await importOriginal()
 	return {
-		// @ts-expect-error - we are overriding the type with a partial mock
 		__esModule: true,
 		// We need to mock the class constructor and its methods,
 		// but keep other exports (like schemas) as their original values.
-		// @ts-expect-error - we are overriding the type with a partial mock
 		...(originalModule || {}), // Spread original exports
 		ProviderSettingsManager: vi.fn().mockImplementation(() => ({
 			// Mock the class
