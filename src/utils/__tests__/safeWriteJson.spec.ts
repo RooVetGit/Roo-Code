@@ -612,4 +612,89 @@ describe("safeWriteJson", () => {
 		renameSpy.mockRestore()
 		consoleErrorSpy.mockRestore()
 	})
+
+	test("should support atomic read-modify-write transactions", async () => {
+		// Create initial data
+		const initialData = { counter: 5 }
+		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData), "utf8")
+
+		// Perform a read-modify-write transaction
+		await safeWriteJson(currentTestFilePath, undefined, async (data) => {
+			// Increment the counter
+			data.counter += 1
+		})
+
+		// Verify the data was modified correctly
+		const finalContent = await fs.readFile(currentTestFilePath, "utf8")
+		const finalData = JSON.parse(finalContent)
+		expect(finalData).toEqual({ counter: 6 })
+
+		// Verify no temp files remain
+		const tempFiles = await listTempFiles(tempTestDir, "test-data.json")
+		expect(tempFiles.length).toBe(0)
+	})
+
+	test("should handle errors in read-modify-write transactions", async () => {
+		// Create initial data
+		const initialData = { counter: 5 }
+		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData), "utf8")
+
+		// Attempt a transaction that modifies data but then throws an error
+		await expect(
+			safeWriteJson(currentTestFilePath, undefined, async (data) => {
+				// Modify the data first
+				data.counter += 10
+				// Then throw an error
+				throw new Error("Transaction error")
+			}),
+		).rejects.toThrow("Transaction error")
+
+		// Verify the data was not modified
+		const finalContent = await fs.readFile(currentTestFilePath, "utf8")
+		const finalData = JSON.parse(finalContent)
+		expect(finalData).toEqual(initialData)
+
+		// Verify no temp files remain
+		const tempFiles = await listTempFiles(tempTestDir, "test-data.json")
+		expect(tempFiles.length).toBe(0)
+	})
+
+	// Tests for parameter validation
+	test("should throw error when readModifyFn is provided and data is not undefined", async () => {
+		// Test with null data
+		await expect(
+			safeWriteJson(currentTestFilePath, null, async (data) => {
+				data.counter = 1
+			}),
+		).rejects.toThrow("When using readModifyFn, data must be undefined")
+
+		// Test with object data
+		await expect(
+			safeWriteJson(currentTestFilePath, { test: "value" }, async (data) => {
+				data.counter = 1
+			}),
+		).rejects.toThrow("When using readModifyFn, data must be undefined")
+	})
+
+	test("should throw error when readModifyFn is not provided and data is undefined", async () => {
+		await expect(safeWriteJson(currentTestFilePath, undefined)).rejects.toThrow(
+			"When not using readModifyFn, data must be provided (null is allowed)",
+		)
+	})
+
+	test("should allow undefined data when readModifyFn is provided", async () => {
+		// Create initial data
+		const initialData = { counter: 5 }
+		await fs.writeFile(currentTestFilePath, JSON.stringify(initialData), "utf8")
+
+		// Use undefined data with readModifyFn
+		await safeWriteJson(currentTestFilePath, undefined, async (data) => {
+			data.counter += 1
+		})
+
+		// Verify the data was modified correctly
+		const finalContent = await fs.readFile(currentTestFilePath, "utf8")
+		const finalData = JSON.parse(finalContent)
+		expect(finalData).toEqual({ counter: 6 })
+	})
 })
