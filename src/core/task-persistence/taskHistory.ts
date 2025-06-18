@@ -1,7 +1,7 @@
 import * as path from "path"
 import * as fs from "fs/promises"
 import { safeWriteJson } from "../../utils/safeWriteJson"
-import { HistoryItem } from "@roo-code/types"
+import { HistoryItem, HistorySortOption, HistorySearchOptions } from "@roo-code/types"
 import { getExtensionContext } from "../../extension"
 
 const TASK_HISTORY_MONTH_INDEX_PREFIX = "task_history-"
@@ -105,6 +105,88 @@ async function _writeGlobalStateMonthIndex(
 	await context.globalState.update(monthKey, indexData)
 }
 
+/**
+ * Extracts task references from month data, optionally filtering by workspace.
+ * @param monthDataByWorkspace - The month data indexed by workspace.
+ * @param workspacePath - Optional workspace path to filter by.
+ * @returns Array of task references with id and timestamp.
+ */
+function _getTasksByWorkspace(
+	monthDataByWorkspace: Record<string, Record<string, number>>,
+	workspacePath?: string,
+): Array<{ id: string; ts: number }> {
+	const tasksToFetch: Array<{ id: string; ts: number }> = []
+
+	if (workspacePath !== undefined) {
+		// Filter by single workspace
+		const tasksInWorkspace = monthDataByWorkspace[workspacePath]
+		if (tasksInWorkspace) {
+			for (const id in tasksInWorkspace) {
+				if (Object.prototype.hasOwnProperty.call(tasksInWorkspace, id)) {
+					tasksToFetch.push({ id, ts: tasksInWorkspace[id] })
+				}
+			}
+		}
+	} else {
+		// All workspaces for the month
+		for (const wsPathKey in monthDataByWorkspace) {
+			const tasksInCurrentWorkspace = monthDataByWorkspace[wsPathKey]
+			if (tasksInCurrentWorkspace) {
+				for (const id in tasksInCurrentWorkspace) {
+					if (Object.prototype.hasOwnProperty.call(tasksInCurrentWorkspace, id)) {
+						tasksToFetch.push({ id, ts: tasksInCurrentWorkspace[id] })
+					}
+				}
+			}
+		}
+	}
+
+	return tasksToFetch
+}
+
+/**
+ * Prepares task references for processing by filtering by date range and sorting.
+ * We consider this "fast" because it does not read the history item from disk,
+ * so it is a preliminary sort-filter.
+ *
+ * @param tasks - Array of task references with id and timestamp.
+ * @param dateRange - Optional date range to filter by.
+ * @param sortOption - Optional sort option (defaults to "newest").
+ * @returns Filtered and sorted array of task references.
+ */
+function _fastSortFilterTasks(
+	tasks: Array<{ id: string; ts: number }>,
+	dateRange?: { fromTs?: number; toTs?: number },
+	sortOption: HistorySortOption = "newest",
+): Array<{ id: string; ts: number }> {
+	const fromTsNum = dateRange?.fromTs
+	const toTsNum = dateRange?.toTs
+
+	// Filter by date range
+	let filteredTasks = tasks
+	if (fromTsNum || toTsNum) {
+		filteredTasks = tasks.filter((taskRef) => {
+			if (fromTsNum && taskRef.ts < fromTsNum) {
+				return false
+			}
+			if (toTsNum && taskRef.ts > toTsNum) {
+				return false
+			}
+			return true
+		})
+	}
+
+	// Sort by timestamp based on sortOption
+	if (sortOption === "oldest") {
+		return filteredTasks.sort((a, b) => a.ts - b.ts)
+	} else {
+		// Default to "newest" for all other sort options at this stage
+		// Other sort options (mostExpensive, mostTokens, mostRelevant) require the full HistoryItem
+		// and will be handled by _sortHistoryItems after fetching the items
+		return filteredTasks.sort((a, b) => b.ts - a.ts)
+	}
+}
+
 // Public API Functions
 
 /**
@@ -190,13 +272,11 @@ export async function getHistoryItem(taskId: string): Promise<HistoryItem | unde
 		const historyItem: HistoryItem = JSON.parse(fileContent)
 		itemObjectCache.set(taskId, historyItem)
 
-		// Removed verbose cache miss timing log
 		return historyItem
 	} catch (error: any) {
 		if (error.code !== "ENOENT") {
 			console.error(`[TaskHistory] [getHistoryItem] [${taskId}] error reading file ${itemPath}:`, error)
 		}
-		// Removed verbose not found timing log
 		return undefined
 	}
 }
@@ -259,136 +339,76 @@ export async function deleteHistoryItem(taskId: string): Promise<void> {
 }
 
 /**
- * Retrieves history items for a specific year and month, with optional date range filtering and limit.
- * Items are sorted by timestamp descending.
- * @param yearParam - The year (e.g., 2025).
- * @param monthParam - The month (1-12).
- * @param dateRange - Optional date range using Date objects.
- *   @param dateRange.fromTs - Optional start of the date range (inclusive).
- *   @param dateRange.toTs - Optional end of the date range (inclusive).
- * @param limit - Optional maximum number of items to return.
- * @returns A promise that resolves to an array of HistoryItem objects.
+ * Sorts history items based on the specified sort option.
+ * @param items - The array of history items to sort.
+ * @param sortOption - The sort option to apply.
+ * @returns The sorted array of history items.
  */
-
-export interface GetHistoryItemsForMonthOptions {
-	year: number
-	month: number
-	dateRange?: { fromTs?: Date; toTs?: Date }
-	limit?: number
-	workspacePath?: string
-}
-
-export async function getHistoryItemsForMonth(options: GetHistoryItemsForMonthOptions): Promise<HistoryItem[]> {
-	// Removed verbose start log for getHistoryItemsForMonth
-	const { year, month, dateRange, limit, workspacePath } = options
-	const yearStr = year.toString()
-	const monthStr = month.toString().padStart(2, "0")
-
-	const fromTsNum = dateRange?.fromTs?.getTime()
-	const toTsNum = dateRange?.toTs?.getTime()
-
-	const monthDataByWorkspace = await _readGlobalStateMonthIndex(yearStr, monthStr) // Record<string, Record<string, number>>
-	let tasksToFetch: Array<{ id: string; ts: number }> = []
-
-	if (workspacePath !== undefined) {
-		// if filtering by single workspace:
-		const tasksInWorkspace = monthDataByWorkspace[workspacePath] //  Record<string, number>
-		if (tasksInWorkspace) {
-			// Check if tasksInWorkspace is not undefined
-			for (const id in tasksInWorkspace) {
-				if (Object.prototype.hasOwnProperty.call(tasksInWorkspace, id)) {
-					tasksToFetch.push({ id, ts: tasksInWorkspace[id] }) // Create {id, ts} objects for the intermediate array
-				}
-			}
-		}
-	} else {
-		// All workspaces for the month
-		for (const wsPathKey in monthDataByWorkspace) {
-			if (Object.prototype.hasOwnProperty.call(monthDataByWorkspace, wsPathKey)) {
-				const tasksInCurrentWorkspace = monthDataByWorkspace[wsPathKey] // Record<string, number>
-				if (tasksInCurrentWorkspace) {
-					for (const id in tasksInCurrentWorkspace) {
-						if (Object.prototype.hasOwnProperty.call(tasksInCurrentWorkspace, id)) {
-							tasksToFetch.push({ id, ts: tasksInCurrentWorkspace[id] }) // Create {id, ts} objects
-						}
-					}
-				}
-			}
-		}
+function _sortHistoryItems(items: HistoryItem[], sortOption: HistorySortOption): HistoryItem[] {
+	if (!items.length) {
+		return items
 	}
 
-	tasksToFetch.sort((a, b) => b.ts - a.ts)
-
-	const results: HistoryItem[] = []
-	for (const taskRef of tasksToFetch) {
-		const item = await getHistoryItem(taskRef.id)
-		if (item) {
-			// Apply date range filtering if provided
-			if (fromTsNum && item.ts < fromTsNum) {
-				continue
-			}
-			if (toTsNum && item.ts > toTsNum) {
-				continue
-			}
-
-			// Workspace filtering is handled by the selection from monthDataByWorkspace.
-			// No need to re-check item.workspace here.
-
-			results.push(item)
-			if (limit !== undefined && results.length >= limit) {
-				break
-			}
-		}
+	switch (sortOption) {
+		case "newest":
+			return items.sort((a, b) => b.ts - a.ts)
+		case "oldest":
+			return items.sort((a, b) => a.ts - b.ts)
+		case "mostExpensive":
+			return items.sort((a, b) => b.totalCost - a.totalCost)
+		case "mostTokens":
+			// Sort by total tokens (in + out)
+			return items.sort((a, b) => b.tokensIn + b.tokensOut - (a.tokensIn + a.tokensOut))
+		case "mostRelevant":
+			// For now, "mostRelevant" is the same as "newest"
+			// This could be enhanced in the future with more sophisticated relevance scoring
+			return items.sort((a, b) => b.ts - a.ts)
+		default:
+			// Default to newest
+			return items.sort((a, b) => b.ts - a.ts)
 	}
-	return results
 }
 
 /**
  * Retrieves history items based on a search query, optional date range, and optional limit.
- * Items are sorted by timestamp descending (newest first).
- * @param searchQuery - The string to search for in task descriptions.
- * @param dateRange - Optional date range using Date objects.
- *   @param dateRange.fromTs - Optional start of the date range (inclusive).
- *   @param dateRange.toTs - Optional end of the date range (inclusive).
- * @param limit - Optional maximum number of items to return.
- * @param workspacePath - Optional workspace path to filter items by.
+ * Items are sorted according to the sortOption parameter (defaults to "newest").
+ * @param search - The search options.
  * @returns A promise that resolves to an array of matching HistoryItem objects.
  */
-import { HistorySearchOptions } from "@roo-code/types"
-
-export async function getHistoryItemsForSearch(options: HistorySearchOptions): Promise<HistoryItem[]> {
-	const { searchQuery = "", dateRange, limit, workspacePath, sortOption } = options
+export async function getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistoryItem[]> {
+	const { searchQuery = "", dateRange, limit, workspacePath, sortOption = "newest" } = search
 	const startTime = performance.now()
 	const limitStringForLog = limit !== undefined ? limit : "none"
 	console.log(
 		`[TaskHistory] [getHistoryItemsForSearch] starting: query="${searchQuery}", limit=${limitStringForLog}, workspace=${workspacePath || "all"}, hasDateRange=${!!dateRange}, sortOption=${sortOption || "default"}`,
 	)
 
-	// Convert number timestamps to Date objects for internal processing if needed
-	const dateRangeWithDates = dateRange
-		? {
-				fromTs: dateRange.fromTs ? new Date(dateRange.fromTs) : undefined,
-				toTs: dateRange.toTs ? new Date(dateRange.toTs) : undefined,
-			}
-		: undefined
+	// Extract timestamp values directly
+	const fromTsNum = dateRange?.fromTs
+	const toTsNum = dateRange?.toTs
 
 	const resultItems: HistoryItem[] = []
+
+	// Track task IDs that have already been added to results
+	// to prevent duplicate items, which can happen if the same
+	// task ID appears in multiple months or workspaces; this is expected
+	// because the indexes are lazy for better performance.
+	const processedIds = new Set<string>()
+
 	const lowerCaseSearchQuery = searchQuery.trim().toLowerCase()
 
-	// Get available months
-	const sortedMonthObjects = await getAvailableHistoryMonths()
-
-	const fromTsNum = dateRangeWithDates?.fromTs?.getTime()
-	const toTsNum = dateRangeWithDates?.toTs?.getTime()
+	// Get available months in the appropriate order based on sortOption
+	const sortedMonthObjects = await getAvailableHistoryMonths(sortOption)
 
 	let processedMonths = 0
 	let skippedMonths = 0
 	let processedItems = 0
 	let matchedItems = 0
 
-	// for each task_history-YYYY-MM keyed object:
+	// Process each month in the sorted order
 	for (const { year, month, monthStartTs, monthEndTs } of sortedMonthObjects) {
-		// Removed unused year and month from destructuring
+		// If we've already collected enough results to meet the limit,
+		// count remaining months as skipped and exit the loop
 		if (limit !== undefined && resultItems.length >= limit) {
 			skippedMonths += sortedMonthObjects.length - processedMonths
 			break
@@ -411,53 +431,26 @@ export async function getHistoryItemsForSearch(options: HistorySearchOptions): P
 
 		processedMonths++
 
-		let tasksInMonthToConsider: Array<{ id: string; ts: number }> = []
+		// Get all tasks, or limit by workspace if defined:
+		let tasksInMonthToConsider = _getTasksByWorkspace(monthDataByWorkspace, workspacePath)
 
-		if (workspacePath !== undefined) {
-			// Filter by single workspace. workspacePath can be "" for items with undefined workspace.
-			const tasksInWorkspace = monthDataByWorkspace[workspacePath] // Record<string, number>
-			if (tasksInWorkspace) {
-				// Check if tasksInWorkspace is not undefined
-				for (const id in tasksInWorkspace) {
-					if (Object.prototype.hasOwnProperty.call(tasksInWorkspace, id)) {
-						tasksInMonthToConsider.push({ id, ts: tasksInWorkspace[id] })
-					}
-				}
-			}
-		} else {
-			// All workspaces for the month
-			for (const wsPathKey in monthDataByWorkspace) {
-				const tasksInCurrentWorkspace = monthDataByWorkspace[wsPathKey] // Record<string, number>
-				if (tasksInCurrentWorkspace) {
-					for (const id in tasksInCurrentWorkspace) {
-						if (Object.prototype.hasOwnProperty.call(tasksInCurrentWorkspace, id)) {
-							tasksInMonthToConsider.push({ id, ts: tasksInCurrentWorkspace[id] })
-						}
-					}
-				}
-			}
-		}
+		// Filter by date range and sort by timestamp
+		tasksInMonthToConsider = _fastSortFilterTasks(
+			tasksInMonthToConsider,
+			{ fromTs: fromTsNum, toTs: toTsNum },
+			sortOption,
+		)
 
-		tasksInMonthToConsider.sort((a, b) => b.ts - a.ts)
-
-		// Pre-filter tasksInMonthToConsider by dateRange using taskRef.ts
-		// This avoids fetching items that will be immediately filtered out.
-		if (fromTsNum || toTsNum) {
-			tasksInMonthToConsider = tasksInMonthToConsider.filter((taskRef) => {
-				if (fromTsNum && taskRef.ts < fromTsNum) {
-					return false
-				}
-				if (toTsNum && taskRef.ts > toTsNum) {
-					return false
-				}
-				return true
-			})
-		}
-
+		// This is where we actually load HistoryItems from disk
+		// taskRef is {id: string, ts: number}
 		for (const taskRef of tasksInMonthToConsider) {
-			// taskRef is {id: string, ts: number}
 			if (limit !== undefined && resultItems.length >= limit) {
 				break
+			}
+
+			// Skip if we've already processed this item
+			if (processedIds.has(taskRef.id)) {
+				continue
 			}
 
 			const item = await getHistoryItem(taskRef.id)
@@ -473,9 +466,10 @@ export async function getHistoryItemsForSearch(options: HistorySearchOptions): P
 			}
 
 			// Workspace filtering is handled by the selection from monthDataByWorkspace.
-			// No need to re-check item.workspace here.
+			// No need to re-check item.workspace against the search.
 
 			resultItems.push(item)
+			processedIds.add(item.id) // Add ID to the processed set
 			matchedItems++
 
 			if (limit !== undefined && resultItems.length >= limit) {
@@ -488,6 +482,7 @@ export async function getHistoryItemsForSearch(options: HistorySearchOptions): P
 			break
 		}
 	}
+
 	const endTime = performance.now()
 	console.log(
 		`[TaskHistory] [getHistoryItemsForSearch] completed in ${(endTime - startTime).toFixed(2)}ms: ` +
@@ -496,18 +491,21 @@ export async function getHistoryItemsForSearch(options: HistorySearchOptions): P
 			`processed ${processedItems} items, ` +
 			`matched ${matchedItems} items`,
 	)
-	return resultItems
+
+	// Apply final sorting if needed (for non-timestamp based sorts)
+	return _sortHistoryItems(resultItems, sortOption)
 }
 
 /**
  * Retrieves a sorted list of available year/month objects from globalState keys,
  * including pre-calculated month start and end timestamps (numeric, Unix ms).
- * The list is sorted with the newest month first.
+ * The list is sorted according to the sortOption parameter.
+ * @param sortOption - Optional sort order (defaults to "newest").
  * @returns A promise that resolves to an array of { year: string, month: string, monthStartTs: number, monthEndTs: number } objects.
  */
-export async function getAvailableHistoryMonths(): Promise<
-	Array<{ year: string; month: string; monthStartTs: number; monthEndTs: number }>
-> {
+export async function getAvailableHistoryMonths(
+	sortOption?: HistorySortOption,
+): Promise<Array<{ year: string; month: string; monthStartTs: number; monthEndTs: number }>> {
 	const context = getExtensionContext()
 	const allGlobalStateKeys = await context.globalState.keys()
 	const monthObjects: Array<{ year: string; month: string; monthStartTs: number; monthEndTs: number }> = []
@@ -523,12 +521,24 @@ export async function getAvailableHistoryMonths(): Promise<
 		}
 	}
 
-	monthObjects.sort((a, b) => {
-		if (a.year !== b.year) {
-			return b.year.localeCompare(a.year)
-		}
-		return b.month.localeCompare(a.month)
-	})
+	// Sort months based on sortOption
+	if (sortOption === "oldest") {
+		// Oldest first
+		monthObjects.sort((a, b) => {
+			if (a.year !== b.year) {
+				return a.year.localeCompare(b.year)
+			}
+			return a.month.localeCompare(b.month)
+		})
+	} else {
+		// Default to newest first for all other sort options
+		monthObjects.sort((a, b) => {
+			if (a.year !== b.year) {
+				return b.year.localeCompare(a.year)
+			}
+			return b.month.localeCompare(a.month)
+		})
+	}
 
 	return monthObjects
 }
