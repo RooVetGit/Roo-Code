@@ -877,7 +877,7 @@ describe("Sliding Window", () => {
 				newContextTokens: 100,
 			}
 
-			const summarizeSpy = jest
+			const summarizeSpy = vi
 				.spyOn(condenseModule, "summarizeConversation")
 				.mockResolvedValue(mockSummarizeResponse)
 
@@ -943,7 +943,7 @@ describe("Sliding Window", () => {
 				newContextTokens: 120,
 			}
 
-			const summarizeSpy = jest
+			const summarizeSpy = vi
 				.spyOn(condenseModule, "summarizeConversation")
 				.mockResolvedValue(mockSummarizeResponse)
 
@@ -998,8 +998,8 @@ describe("Sliding Window", () => {
 			]
 
 			// Reset any previous mock calls
-			jest.clearAllMocks()
-			const summarizeSpy = jest.spyOn(condenseModule, "summarizeConversation")
+			vi.clearAllMocks()
+			const summarizeSpy = vi.spyOn(condenseModule, "summarizeConversation")
 
 			const result = await truncateConversationIfNeeded({
 				messages: messagesWithSmallContent,

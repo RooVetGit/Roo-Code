@@ -1584,9 +1584,5 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
-		case "profileThresholds":
-			await updateGlobalState("profileThresholds", message.values as Record<string, number>)
-			await provider.postStateToWebview()
-			break
 	}
 }
