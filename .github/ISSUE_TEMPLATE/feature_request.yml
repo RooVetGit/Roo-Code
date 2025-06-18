@@ -1,4 +1,4 @@
-name: Feature Request
+name: Detailed Feature Proposal
 description: Report a specific problem that needs solving in Roo Code
 labels: ["proposal", "enhancement"]
 body:
