@@ -14,11 +14,9 @@ vi.mock("vscode", () => ({
 vi.mock("fs/promises", () => ({
 	__esModule: true,
 	default: {
-		readFile: vi.fn(), // This will be fs.default.readFile for the test
-		// If other default export properties are used by SUT, mock them here
+		readFile: vi.fn(),
 	},
-	// If SUT or tests use named exports from "fs/promises" (e.g. import { stat } from "fs/promises")
-	readFile: vi.fn(), // Example for a named export
+	readFile: vi.fn(),
 }))
 
 vi.mock("path", () => ({
@@ -51,12 +49,7 @@ vi.mock("../../core/config/ProviderSettingsManager", async (importOriginal) => {
 			}),
 			import: vi.fn().mockResolvedValue({ success: true }),
 			listConfig: vi.fn().mockResolvedValue([]),
-			// Add other methods of ProviderSettingsManager here if they are called
 		})),
-		// Ensure providerProfilesSchema is the actual schema, not a mock fn
-		// If providerProfilesSchema is exported from this module, it will be retained by the spread.
-		// If it's a named export and you want to be explicit:
-		// providerProfilesSchema: (originalModule as any).providerProfilesSchema,
 	}
 })
 vi.mock("../../core/config/ContextProxy")
@@ -64,7 +57,7 @@ vi.mock("../../core/config/CustomModesManager")
 
 import { autoImportConfig } from "../autoImportConfig"
 import * as vscode from "vscode"
-import fsPromises from "fs/promises" // Changed from * as fs
+import fsPromises from "fs/promises"
 import { fileExistsAtPath } from "../fs"
 
 describe("autoImportConfig", () => {
@@ -90,7 +83,7 @@ describe("autoImportConfig", () => {
 				modeApiConfigs: {},
 				currentApiConfigName: "default",
 			}),
-			import: vi.fn().mockResolvedValue({ success: true }), // Changed to return an object
+			import: vi.fn().mockResolvedValue({ success: true }),
 			listConfig: vi.fn().mockResolvedValue([]),
 		}
 
@@ -109,10 +102,9 @@ describe("autoImportConfig", () => {
 		// mockProvider must be initialized AFTER its dependencies
 		mockProvider = {
 			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy, // Now mockContextProxy is defined
-			upsertProviderProfile: vi.fn().mockResolvedValue({ success: true }), // Return an object
-			postStateToWebview: vi.fn().mockResolvedValue({ success: true }), // Return an object
-			// settingsImportedAt will be set directly by the SUT
+			contextProxy: mockContextProxy,
+			upsertProviderProfile: vi.fn().mockResolvedValue({ success: true }),
+			postStateToWebview: vi.fn().mockResolvedValue({ success: true }),
 		}
 
 		// Reset fs mock
@@ -192,8 +184,7 @@ describe("autoImportConfig", () => {
 				customInstructions: "Test instructions",
 			},
 		}
-		// The SUT uses `import fs from "fs/promises"`, then `fs.readFile`.
-		// In the test, `import * as fs` means this is `fs.default.readFile`.
+
 		vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(mockConfig) as any)
 
 		await autoImportConfig({
