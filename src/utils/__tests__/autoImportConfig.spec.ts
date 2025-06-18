@@ -12,10 +12,13 @@ vi.mock("vscode", () => ({
 }))
 
 vi.mock("fs/promises", () => ({
+	__esModule: true,
 	default: {
-		readFile: vi.fn(),
+		readFile: vi.fn(), // This will be fs.default.readFile for the test
+		// If other default export properties are used by SUT, mock them here
 	},
-	readFile: vi.fn(),
+	// If SUT or tests use named exports from "fs/promises" (e.g. import { stat } from "fs/promises")
+	readFile: vi.fn(), // Example for a named export
 }))
 
 vi.mock("path", () => ({
@@ -32,13 +35,38 @@ vi.mock("../fs", () => ({
 	fileExistsAtPath: vi.fn(),
 }))
 
-vi.mock("../../core/config/ProviderSettingsManager")
+vi.mock("../../core/config/ProviderSettingsManager", async (importOriginal) => {
+	const originalModule = await importOriginal()
+	return {
+		// @ts-expect-error - we are overriding the type with a partial mock
+		__esModule: true,
+		// We need to mock the class constructor and its methods,
+		// but keep other exports (like schemas) as their original values.
+		// @ts-expect-error - we are overriding the type with a partial mock
+		...(originalModule || {}), // Spread original exports
+		ProviderSettingsManager: vi.fn().mockImplementation(() => ({
+			// Mock the class
+			export: vi.fn().mockResolvedValue({
+				apiConfigs: {},
+				modeApiConfigs: {},
+				currentApiConfigName: "default",
+			}),
+			import: vi.fn().mockResolvedValue({ success: true }),
+			listConfig: vi.fn().mockResolvedValue([]),
+			// Add other methods of ProviderSettingsManager here if they are called
+		})),
+		// Ensure providerProfilesSchema is the actual schema, not a mock fn
+		// If providerProfilesSchema is exported from this module, it will be retained by the spread.
+		// If it's a named export and you want to be explicit:
+		// providerProfilesSchema: (originalModule as any).providerProfilesSchema,
+	}
+})
 vi.mock("../../core/config/ContextProxy")
 vi.mock("../../core/config/CustomModesManager")
 
 import { autoImportConfig } from "../autoImportConfig"
 import * as vscode from "vscode"
-import * as fs from "fs/promises"
+import fsPromises from "fs/promises" // Changed from * as fs
 import { fileExistsAtPath } from "../fs"
 
 describe("autoImportConfig", () => {
@@ -46,6 +74,7 @@ describe("autoImportConfig", () => {
 	let mockContextProxy: any
 	let mockCustomModesManager: any
 	let mockOutputChannel: any
+	let mockProvider: any
 
 	beforeEach(() => {
 		// Reset all mocks
@@ -63,7 +92,7 @@ describe("autoImportConfig", () => {
 				modeApiConfigs: {},
 				currentApiConfigName: "default",
 			}),
-			import: vi.fn().mockResolvedValue(undefined),
+			import: vi.fn().mockResolvedValue({ success: true }), // Changed to return an object
 			listConfig: vi.fn().mockResolvedValue([]),
 		}
 
@@ -79,8 +108,17 @@ describe("autoImportConfig", () => {
 			updateCustomMode: vi.fn().mockResolvedValue(undefined),
 		}
 
+		// mockProvider must be initialized AFTER its dependencies
+		mockProvider = {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy, // Now mockContextProxy is defined
+			upsertProviderProfile: vi.fn().mockResolvedValue({ success: true }), // Return an object
+			postStateToWebview: vi.fn().mockResolvedValue({ success: true }), // Return an object
+			// settingsImportedAt will be set directly by the SUT
+		}
+
 		// Reset fs mock
-		vi.mocked(fs.readFile).mockReset()
+		vi.mocked(fsPromises.readFile).mockReset()
 		vi.mocked(fileExistsAtPath).mockReset()
 		vi.mocked(vscode.workspace.getConfiguration).mockReset()
 		vi.mocked(vscode.window.showInformationMessage).mockReset()
@@ -97,8 +135,7 @@ describe("autoImportConfig", () => {
 		} as any)
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})
@@ -119,8 +156,7 @@ describe("autoImportConfig", () => {
 		vi.mocked(fileExistsAtPath).mockResolvedValue(false)
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})
@@ -153,17 +189,17 @@ describe("autoImportConfig", () => {
 						anthropicApiKey: "test-key",
 					},
 				},
-				modeApiConfigs: {},
 			},
 			globalSettings: {
 				customInstructions: "Test instructions",
 			},
 		}
-		vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig) as any)
+		// The SUT uses `import fs from "fs/promises"`, then `fs.readFile`.
+		// In the test, `import * as fs` means this is `fs.default.readFile`.
+		vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(mockConfig) as any)
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})
@@ -191,11 +227,10 @@ describe("autoImportConfig", () => {
 		vi.mocked(fileExistsAtPath).mockResolvedValue(true)
 
 		// Mock fs.readFile to return invalid JSON
-		vi.mocked(fs.readFile).mockResolvedValue("invalid json" as any)
+		vi.mocked(fsPromises.readFile).mockResolvedValue("invalid json" as any)
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})
@@ -219,8 +254,7 @@ describe("autoImportConfig", () => {
 		vi.mocked(fileExistsAtPath).mockResolvedValue(false)
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})
@@ -240,8 +274,7 @@ describe("autoImportConfig", () => {
 		vi.mocked(fileExistsAtPath).mockResolvedValue(false)
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})
@@ -261,8 +294,7 @@ describe("autoImportConfig", () => {
 		vi.mocked(fileExistsAtPath).mockRejectedValue(new Error("File system error"))
 
 		await autoImportConfig({
-			providerSettingsManager: mockProviderSettingsManager,
-			contextProxy: mockContextProxy,
+			provider: mockProvider,
 			customModesManager: mockCustomModesManager,
 			outputChannel: mockOutputChannel,
 		})

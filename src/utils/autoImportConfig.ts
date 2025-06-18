@@ -7,14 +7,15 @@ import { z, ZodError } from "zod"
 import { globalSettingsSchema } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
-import { ProviderSettingsManager, providerProfilesSchema } from "../core/config/ProviderSettingsManager"
-import { ContextProxy } from "../core/config/ContextProxy"
+import { Package } from "../shared/package"
+import { ClineProvider } from "../core/webview/ClineProvider"
+
+import { providerProfilesSchema } from "../core/config/ProviderSettingsManager"
 import { CustomModesManager } from "../core/config/CustomModesManager"
 import { fileExistsAtPath } from "./fs"
 
 type AutoImportOptions = {
-	providerSettingsManager: ProviderSettingsManager
-	contextProxy: ContextProxy
+	provider: ClineProvider
 	customModesManager: CustomModesManager
 	outputChannel: vscode.OutputChannel
 }
@@ -25,14 +26,13 @@ type AutoImportOptions = {
  * their settings by placing a config file at a predefined location.
  */
 export async function autoImportConfig({
-	providerSettingsManager,
-	contextProxy,
+	provider,
 	customModesManager,
 	outputChannel,
 }: AutoImportOptions): Promise<void> {
 	try {
 		// Get the auto-import config path from VSCode settings
-		const configPath = vscode.workspace.getConfiguration("roo-cline").get<string>("autoImportConfigPath")
+		const configPath = vscode.workspace.getConfiguration(Package.name).get<string>("autoImportConfigPath")
 
 		if (!configPath || configPath.trim() === "") {
 			outputChannel.appendLine("[AutoImport] No auto-import config path specified, skipping auto-import")
@@ -51,8 +51,7 @@ export async function autoImportConfig({
 
 		// Attempt to import the configuration
 		const result = await importConfigFromPath(resolvedPath, {
-			providerSettingsManager,
-			contextProxy,
+			provider,
 			customModesManager,
 		})
 
@@ -103,18 +102,21 @@ function resolvePath(configPath: string): string {
  */
 async function importConfigFromPath(
 	filePath: string,
-	{ providerSettingsManager, contextProxy, customModesManager }: Omit<AutoImportOptions, "outputChannel">,
+	{ provider, customModesManager }: Omit<AutoImportOptions, "outputChannel">,
 ): Promise<{ success: boolean; error?: string }> {
-	const schema = z.object({
-		providerProfiles: providerProfilesSchema,
-		globalSettings: globalSettingsSchema.optional(),
-	})
-
 	try {
+		const { providerSettingsManager, contextProxy } = provider
+
+		const schema = z.object({
+			providerProfiles: providerProfilesSchema,
+			globalSettings: globalSettingsSchema,
+		})
+
 		const previousProviderProfiles = await providerSettingsManager.export()
 
-		const data = JSON.parse(await fs.readFile(filePath, "utf-8"))
-		const { providerProfiles: newProviderProfiles, globalSettings = {} } = schema.parse(data)
+		const { providerProfiles: newProviderProfiles, globalSettings } = schema.parse(
+			JSON.parse(await fs.readFile(filePath, "utf-8")),
+		)
 
 		const providerProfiles = {
 			currentApiConfigName: newProviderProfiles.currentApiConfigName,
@@ -135,16 +137,15 @@ async function importConfigFromPath(
 		await providerSettingsManager.import(newProviderProfiles)
 		await contextProxy.setValues(globalSettings)
 
-		// Set the current provider
-		const currentProviderName = providerProfiles.currentApiConfigName
-		const currentProvider = providerProfiles.apiConfigs[currentProviderName]
-		contextProxy.setValue("currentApiConfigName", currentProviderName)
+		const listApiConfigMetaResult = await providerSettingsManager.listConfig()
+		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
+		contextProxy.setValue("listApiConfigMeta", listApiConfigMetaResult)
 
-		if (currentProvider) {
-			contextProxy.setProviderSettings(currentProvider)
-		}
+		const apiConfiguration = newProviderProfiles.apiConfigs[newProviderProfiles.currentApiConfigName]
+		await provider.upsertProviderProfile(newProviderProfiles.currentApiConfigName, apiConfiguration)
 
-		contextProxy.setValue("listApiConfigMeta", await providerSettingsManager.listConfig())
+		provider.settingsImportedAt = Date.now()
+		await provider.postStateToWebview()
 
 		return { success: true }
 	} catch (e) {
