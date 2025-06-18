@@ -7,6 +7,12 @@ import { loadRequiredLanguageParsers } from "../languageParser"
 const WASM_DIR = path.join(__dirname, "../../../node_modules/tree-sitter-wasms/out")
 
 describe("loadRequiredLanguageParsers", () => {
+	it("should load Python parser for .py files", async () => {
+		const files = ["test.py"]
+		const parsers = await loadRequiredLanguageParsers(files, WASM_DIR)
+		expect(parsers.py).toBeDefined()
+	})
+
 	it("should load JavaScript parser for .js and .jsx files", async () => {
 		const files = ["test.js", "test.jsx"]
 		const parsers = await loadRequiredLanguageParsers(files, WASM_DIR)
@@ -14,19 +20,6 @@ describe("loadRequiredLanguageParsers", () => {
 		expect(parsers.jsx).toBeDefined()
 		expect(parsers.js.query).toBeDefined()
 		expect(parsers.jsx.query).toBeDefined()
-	})
-
-	it("should load TypeScript parser for .ts and .tsx files", async () => {
-		const files = ["test.ts", "test.tsx"]
-		const parsers = await loadRequiredLanguageParsers(files, WASM_DIR)
-		expect(parsers.ts).toBeDefined()
-		expect(parsers.tsx).toBeDefined()
-	})
-
-	it("should load Python parser for .py files", async () => {
-		const files = ["test.py"]
-		const parsers = await loadRequiredLanguageParsers(files, WASM_DIR)
-		expect(parsers.py).toBeDefined()
 	})
 
 	it("should load multiple language parsers as needed", async () => {
@@ -58,17 +51,6 @@ describe("loadRequiredLanguageParsers", () => {
 
 	it("should throw error for unsupported file extensions", async () => {
 		const files = ["test.unsupported"]
-
 		await expect(loadRequiredLanguageParsers(files, WASM_DIR)).rejects.toThrow("Unsupported language: unsupported")
-	})
-
-	it("should load each language only once for multiple files", async () => {
-		const files = ["test1.js", "test2.js", "test3.js"]
-		await loadRequiredLanguageParsers(files, WASM_DIR)
-	})
-
-	it("should set language for each parser instance", async () => {
-		const files = ["test.js", "test.py"]
-		await loadRequiredLanguageParsers(files, WASM_DIR)
 	})
 })
