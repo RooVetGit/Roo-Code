@@ -1439,6 +1439,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			} finally {
 				this.isStreaming = false
 			}
+
 			if (
 				inputTokens > 0 ||
 				outputTokens > 0 ||
