@@ -45,7 +45,7 @@ const remarkUrlToLink = () => {
 					children.push({
 						type: "link",
 						url: cleanedMatches[i],
-						children: [{ type: "text", value: cleanedMatches[i] }],
+						children: [{ type: "text", value: matches[i] }],
 					})
 				}
 			})
