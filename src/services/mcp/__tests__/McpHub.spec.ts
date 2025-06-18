@@ -32,13 +32,13 @@ vi.mock("fs/promises")
 vi.mock("../../../core/webview/ClineProvider")
 
 // Mock the MCP SDK modules
-jest.mock("@modelcontextprotocol/sdk/client/stdio", () => ({
-	StdioClientTransport: jest.fn(),
-	getDefaultEnvironment: jest.fn().mockReturnValue({ PATH: "/usr/bin" }),
+vi.mock("@modelcontextprotocol/sdk/client/stdio.js", () => ({
+	StdioClientTransport: vi.fn(),
+	getDefaultEnvironment: vi.fn().mockReturnValue({ PATH: "/usr/bin" }),
 }))
 
-jest.mock("@modelcontextprotocol/sdk/client/index", () => ({
-	Client: jest.fn(),
+vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
+	Client: vi.fn(),
 }))
 
 describe("McpHub", () => {
@@ -699,16 +699,18 @@ describe("McpHub", () => {
 	})
 
 	describe("Windows command wrapping", () => {
-		let StdioClientTransport: jest.Mock
-		let Client: jest.Mock
+		let StdioClientTransport: ReturnType<typeof vi.fn>
+		let Client: ReturnType<typeof vi.fn>
 
-		beforeEach(() => {
+		beforeEach(async () => {
 			// Reset mocks
-			jest.clearAllMocks()
+			vi.clearAllMocks()
 
 			// Get references to the mocked constructors
-			StdioClientTransport = require("@modelcontextprotocol/sdk/client/stdio").StdioClientTransport as jest.Mock
-			Client = require("@modelcontextprotocol/sdk/client/index").Client as jest.Mock
+			const stdioModule = await import("@modelcontextprotocol/sdk/client/stdio.js")
+			const clientModule = await import("@modelcontextprotocol/sdk/client/index.js")
+			StdioClientTransport = stdioModule.StdioClientTransport as ReturnType<typeof vi.fn>
+			Client = clientModule.Client as ReturnType<typeof vi.fn>
 
 			// Mock Windows platform
 			Object.defineProperty(process, "platform", {
@@ -722,10 +724,10 @@ describe("McpHub", () => {
 		it("should wrap commands with cmd.exe on Windows", async () => {
 			// Mock StdioClientTransport
 			const mockTransport = {
-				start: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
 				stderr: {
-					on: jest.fn(),
+					on: vi.fn(),
 				},
 				onerror: null,
 				onclose: null,
@@ -746,17 +748,17 @@ describe("McpHub", () => {
 
 			// Mock Client
 			Client.mockImplementation(() => ({
-				connect: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
-				getInstructions: jest.fn().mockReturnValue("test instructions"),
-				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
 			}))
 
 			// Create a new McpHub instance
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
 
 			// Mock the config file read
-			;(fs.readFile as jest.Mock).mockResolvedValue(
+			vi.mocked(fs.readFile).mockResolvedValue(
 				JSON.stringify({
 					mcpServers: {
 						"test-npx-server": {
@@ -790,10 +792,10 @@ describe("McpHub", () => {
 
 			// Mock StdioClientTransport
 			const mockTransport = {
-				start: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
 				stderr: {
-					on: jest.fn(),
+					on: vi.fn(),
 				},
 				onerror: null,
 				onclose: null,
@@ -808,17 +810,17 @@ describe("McpHub", () => {
 
 			// Mock Client
 			Client.mockImplementation(() => ({
-				connect: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
-				getInstructions: jest.fn().mockReturnValue("test instructions"),
-				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
 			}))
 
 			// Create a new McpHub instance
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
 
 			// Mock the config file read
-			;(fs.readFile as jest.Mock).mockResolvedValue(
+			vi.mocked(fs.readFile).mockResolvedValue(
 				JSON.stringify({
 					mcpServers: {
 						"test-npx-server": {
@@ -852,10 +854,10 @@ describe("McpHub", () => {
 
 			// Mock StdioClientTransport
 			const mockTransport = {
-				start: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
 				stderr: {
-					on: jest.fn(),
+					on: vi.fn(),
 				},
 				onerror: null,
 				onclose: null,
@@ -870,17 +872,17 @@ describe("McpHub", () => {
 
 			// Mock Client
 			Client.mockImplementation(() => ({
-				connect: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
-				getInstructions: jest.fn().mockReturnValue("test instructions"),
-				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
 			}))
 
 			// Create a new McpHub instance
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
 
 			// Mock the config file read with cmd.exe already as command
-			;(fs.readFile as jest.Mock).mockResolvedValue(
+			vi.mocked(fs.readFile).mockResolvedValue(
 				JSON.stringify({
 					mcpServers: {
 						"test-cmd-server": {
@@ -914,10 +916,10 @@ describe("McpHub", () => {
 
 			// Mock StdioClientTransport to simulate the ENOENT error without wrapping
 			const mockTransport = {
-				start: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
 				stderr: {
-					on: jest.fn(),
+					on: vi.fn(),
 				},
 				onerror: null,
 				onclose: null,
@@ -939,17 +941,17 @@ describe("McpHub", () => {
 
 			// Mock Client
 			Client.mockImplementation(() => ({
-				connect: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
-				getInstructions: jest.fn().mockReturnValue("test instructions"),
-				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
 			}))
 
 			// Create a new McpHub instance
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
 
 			// Mock the config file read - simulating fnm/nvm-windows scenario
-			;(fs.readFile as jest.Mock).mockResolvedValue(
+			vi.mocked(fs.readFile).mockResolvedValue(
 				JSON.stringify({
 					mcpServers: {
 						"test-fnm-npx-server": {
@@ -994,10 +996,10 @@ describe("McpHub", () => {
 
 			// Mock StdioClientTransport
 			const mockTransport = {
-				start: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
 				stderr: {
-					on: jest.fn(),
+					on: vi.fn(),
 				},
 				onerror: null,
 				onclose: null,
@@ -1012,17 +1014,17 @@ describe("McpHub", () => {
 
 			// Mock Client
 			Client.mockImplementation(() => ({
-				connect: jest.fn().mockResolvedValue(undefined),
-				close: jest.fn().mockResolvedValue(undefined),
-				getInstructions: jest.fn().mockReturnValue("test instructions"),
-				request: jest.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
 			}))
 
 			// Create a new McpHub instance
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
 
 			// Mock the config file read with CMD (uppercase) as command
-			;(fs.readFile as jest.Mock).mockResolvedValue(
+			vi.mocked(fs.readFile).mockResolvedValue(
 				JSON.stringify({
 					mcpServers: {
 						"test-cmd-uppercase-server": {
