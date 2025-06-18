@@ -24,11 +24,11 @@ type GeminiHandlerOptions = ApiHandlerOptions & {
 }
 
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
-	protected options: ApiHandlerOptions
+	protected options: GeminiHandlerOptions
 
 	private client: GoogleGenAI
 
-	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
+	constructor(options: GeminiHandlerOptions) {
 		super()
 
 		this.options = options
@@ -53,7 +53,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 						location,
 						googleAuthOptions: { keyFile: this.options.vertexKeyFile },
 					})
-				: isVertex
+				: this.options.isVertex
 					? new GoogleGenAI({ vertexai: true, project, location })
 					: new GoogleGenAI({ apiKey })
 	}
@@ -69,7 +69,13 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 		const config: GenerateContentConfig = {
 			systemInstruction,
-			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
+			httpOptions: this.options.isVertex
+				? this.options.vertexBaseUrl
+					? { baseUrl: this.options.vertexBaseUrl }
+					: undefined
+				: this.options.googleGeminiBaseUrl
+					? { baseUrl: this.options.googleGeminiBaseUrl }
+					: undefined,
 			thinkingConfig,
 			maxOutputTokens: this.options.modelMaxTokens ?? maxTokens ?? undefined,
 			temperature: this.options.modelTemperature ?? 0,
@@ -150,9 +156,13 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				model,
 				contents: [{ role: "user", parts: [{ text: prompt }] }],
 				config: {
-					httpOptions: this.options.googleGeminiBaseUrl
-						? { baseUrl: this.options.googleGeminiBaseUrl }
-						: undefined,
+					httpOptions: this.options.isVertex
+						? this.options.vertexBaseUrl
+							? { baseUrl: this.options.vertexBaseUrl }
+							: undefined
+						: this.options.googleGeminiBaseUrl
+							? { baseUrl: this.options.googleGeminiBaseUrl }
+							: undefined,
 					temperature: this.options.modelTemperature ?? 0,
 				},
 			})

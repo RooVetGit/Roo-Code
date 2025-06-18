@@ -608,7 +608,8 @@
 	"defaults": {
 		"ollamaUrl": "預設：http://localhost:11434",
 		"lmStudioUrl": "預設：http://localhost:1234",
-		"geminiUrl": "預設：https://generativelanguage.googleapis.com"
+		"geminiUrl": "預設：https://generativelanguage.googleapis.com",
+		"vertexUrl": "預設：http://localhost:1234"
 	},
 	"labels": {
 		"customArn": "自訂 ARN",

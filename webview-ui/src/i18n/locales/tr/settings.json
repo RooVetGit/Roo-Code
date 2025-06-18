@@ -608,7 +608,8 @@
 	"defaults": {
 		"ollamaUrl": "Varsayılan: http://localhost:11434",
 		"lmStudioUrl": "Varsayılan: http://localhost:1234",
-		"geminiUrl": "Varsayılan: https://generativelanguage.googleapis.com"
+		"geminiUrl": "Varsayılan: https://generativelanguage.googleapis.com",
+		"vertexUrl": "Varsayılan: http://localhost:1234"
 	},
 	"labels": {
 		"customArn": "Özel ARN",

@@ -608,7 +608,8 @@
 	"defaults": {
 		"ollamaUrl": "Mặc định: http://localhost:11434",
 		"lmStudioUrl": "Mặc định: http://localhost:1234",
-		"geminiUrl": "Mặc định: https://generativelanguage.googleapis.com"
+		"geminiUrl": "Mặc định: https://generativelanguage.googleapis.com",
+		"vertexUrl": "Mặc định: http://localhost:1234"
 	},
 	"labels": {
 		"customArn": "ARN tùy chỉnh",

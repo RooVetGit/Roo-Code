@@ -608,7 +608,8 @@
 	"defaults": {
 		"ollamaUrl": "डिफ़ॉल्ट: http://localhost:11434",
 		"lmStudioUrl": "डिफ़ॉल्ट: http://localhost:1234",
-		"geminiUrl": "डिफ़ॉल्ट: https://generativelanguage.googleapis.com"
+		"geminiUrl": "डिफ़ॉल्ट: https://generativelanguage.googleapis.com",
+		"vertexUrl": "डिफ़ॉल्ट: http://localhost:1234"
 	},
 	"labels": {
 		"customArn": "कस्टम ARN",

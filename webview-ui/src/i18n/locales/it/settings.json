@@ -608,7 +608,8 @@
 	"defaults": {
 		"ollamaUrl": "Predefinito: http://localhost:11434",
 		"lmStudioUrl": "Predefinito: http://localhost:1234",
-		"geminiUrl": "Predefinito: https://generativelanguage.googleapis.com"
+		"geminiUrl": "Predefinito: https://generativelanguage.googleapis.com",
+		"vertexUrl": "Predefinito: http://localhost:1234"
 	},
 	"labels": {
 		"customArn": "ARN personalizzato",

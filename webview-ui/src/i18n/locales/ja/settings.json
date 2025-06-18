@@ -608,7 +608,8 @@
 	"defaults": {
 		"ollamaUrl": "デフォルト：http://localhost:11434",
 		"lmStudioUrl": "デフォルト：http://localhost:1234",
-		"geminiUrl": "デフォルト：https://generativelanguage.googleapis.com"
+		"geminiUrl": "デフォルト：https://generativelanguage.googleapis.com",
+		"vertexUrl": "デフォルト：http://localhost:1234"
 	},
 	"labels": {
 		"customArn": "カスタム ARN",
