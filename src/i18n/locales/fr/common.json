@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Clé API Groq",
-			"getGroqApiKey": "Obtenir la clé API Groq"
+			"getGroqApiKey": "Obtenir la clé API Groq",
+			"claudeCode": {
+				"pathLabel": "Chemin de Claude Code",
+				"description": "Chemin optionnel vers votre CLI Claude Code. Par défaut 'claude' si non défini.",
+				"placeholder": "Par défaut : claude"
+			}
 		}
 	},
 	"mdm": {

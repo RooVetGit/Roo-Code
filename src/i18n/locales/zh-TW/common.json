@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API 金鑰",
-			"getGroqApiKey": "取得 Groq API 金鑰"
+			"getGroqApiKey": "取得 Groq API 金鑰",
+			"claudeCode": {
+				"pathLabel": "Claude Code 路徑",
+				"description": "Claude Code CLI 的選用路徑。如果未設定，預設為 'claude'。",
+				"placeholder": "預設: claude"
+			}
 		}
 	},
 	"mdm": {

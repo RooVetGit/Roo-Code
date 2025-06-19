@@ -102,6 +102,17 @@
 		"task_prompt": "Apa yang harus Roo lakukan?",
 		"task_placeholder": "Ketik tugas kamu di sini"
 	},
+	"settings": {
+		"providers": {
+			"groqApiKey": "Kunci API Groq",
+			"getGroqApiKey": "Dapatkan Kunci API Groq",
+			"claudeCode": {
+				"pathLabel": "Jalur Claude Code",
+				"description": "Jalur opsional ke CLI Claude Code Anda. Defaultnya 'claude' jika tidak diatur.",
+				"placeholder": "Default: claude"
+			}
+		}
+	},
 	"mdm": {
 		"errors": {
 			"cloud_auth_required": "Organisasi kamu memerlukan autentikasi Roo Code Cloud. Silakan masuk untuk melanjutkan.",

@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "ग्रोक एपीआई कुंजी",
-			"getGroqApiKey": "ग्रोक एपीआई कुंजी प्राप्त करें"
+			"getGroqApiKey": "ग्रोक एपीआई कुंजी प्राप्त करें",
+			"claudeCode": {
+				"pathLabel": "क्लाउड कोड पाथ",
+				"description": "आपके क्लाउड कोड CLI का वैकल्पिक पाथ। सेट न होने पर डिफ़ॉल्ट रूप से 'claude'。",
+				"placeholder": "डिफ़ॉल्ट: claude"
+			}
 		}
 	},
 	"mdm": {

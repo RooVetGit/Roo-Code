@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq APIキー",
-			"getGroqApiKey": "Groq APIキーを取得"
+			"getGroqApiKey": "Groq APIキーを取得",
+			"claudeCode": {
+				"pathLabel": "Claude Code パス",
+				"description": "Claude Code CLI へのオプションのパス。設定されていない場合は、デフォルトで「claude」になります。",
+				"placeholder": "デフォルト: claude"
+			}
 		}
 	},
 	"mdm": {

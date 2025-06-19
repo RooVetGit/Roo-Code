@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Khóa API Groq",
-			"getGroqApiKey": "Lấy khóa API Groq"
+			"getGroqApiKey": "Lấy khóa API Groq",
+			"claudeCode": {
+				"pathLabel": "Đường dẫn Claude Code",
+				"description": "Đường dẫn tùy chọn đến CLI Claude Code của bạn. Mặc định là 'claude' nếu không được đặt.",
+				"placeholder": "Mặc định: claude"
+			}
 		}
 	},
 	"mdm": {

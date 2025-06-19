@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Ключ API Groq",
-			"getGroqApiKey": "Получить ключ API Groq"
+			"getGroqApiKey": "Получить ключ API Groq",
+			"claudeCode": {
+				"pathLabel": "Путь к Claude Code",
+				"description": "Необязательный путь к вашему CLI Claude Code. По умолчанию 'claude', если не установлено.",
+				"placeholder": "По умолчанию: claude"
+			}
 		}
 	},
 	"mdm": {

@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API Anahtarı",
-			"getGroqApiKey": "Groq API Anahtarı Al"
+			"getGroqApiKey": "Groq API Anahtarı Al",
+			"claudeCode": {
+				"pathLabel": "Claude Code Yolu",
+				"description": "Claude Code CLI'nizin isteğe bağlı yolu. Ayarlanmazsa varsayılan olarak 'claude' olur.",
+				"placeholder": "Varsayılan: claude"
+			}
 		}
 	},
 	"mdm": {

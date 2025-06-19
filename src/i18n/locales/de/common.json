@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API-Schlüssel",
-			"getGroqApiKey": "Groq API-Schlüssel erhalten"
+			"getGroqApiKey": "Groq API-Schlüssel erhalten",
+			"claudeCode": {
+				"pathLabel": "Claude Code Pfad",
+				"description": "Optionaler Pfad zu deiner Claude Code CLI. Standardmäßig 'claude', falls nicht festgelegt.",
+				"placeholder": "Standard: claude"
+			}
 		}
 	},
 	"mdm": {

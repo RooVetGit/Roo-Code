@@ -105,7 +105,12 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API 키",
-			"getGroqApiKey": "Groq API 키 받기"
+			"getGroqApiKey": "Groq API 키 받기",
+			"claudeCode": {
+				"pathLabel": "Claude Code 경로",
+				"description": "Claude Code CLI의 선택적 경로입니다. 설정되지 않은 경우 기본값은 'claude'입니다.",
+				"placeholder": "기본값: claude"
+			}
 		}
 	},
 	"mdm": {

@@ -102,6 +102,17 @@
 		"task_prompt": "Wat moet Roo doen?",
 		"task_placeholder": "Typ hier je taak"
 	},
+	"settings": {
+		"providers": {
+			"groqApiKey": "Groq API-sleutel",
+			"getGroqApiKey": "Groq API-sleutel ophalen",
+			"claudeCode": {
+				"pathLabel": "Claude Code Pad",
+				"description": "Optioneel pad naar je Claude Code CLI. Standaard 'claude' indien niet ingesteld.",
+				"placeholder": "Standaard: claude"
+			}
+		}
+	},
 	"mdm": {
 		"errors": {
 			"cloud_auth_required": "Je organisatie vereist Roo Code Cloud-authenticatie. Log in om door te gaan.",
