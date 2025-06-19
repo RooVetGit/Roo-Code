@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from "vitest"
+import * as path from "path"
 
 // Mock ripgrep to avoid filesystem dependencies
 vi.mock("../../ripgrep", () => ({
@@ -73,7 +74,10 @@ describe("list-files symlink support", () => {
 		expect(args).toContain("--files")
 		expect(args).toContain("--hidden")
 		expect(args).toContain("--follow") // This is the critical assertion - the fix should add this flag
-		expect(args[args.length - 1]).toContain("/test/dir") // Last argument should be the directory
+
+		// Platform-agnostic path check - verify the last argument is the resolved path
+		const expectedPath = path.resolve("/test/dir")
+		expect(args[args.length - 1]).toBe(expectedPath)
 	})
 
 	it("should include --follow flag for recursive listings too", async () => {
@@ -111,6 +115,9 @@ describe("list-files symlink support", () => {
 		expect(args).toContain("--files")
 		expect(args).toContain("--hidden")
 		expect(args).toContain("--follow") // This should be present in recursive mode too
-		expect(args[args.length - 1]).toContain("/test/dir") // Last argument should be the directory
+
+		// Platform-agnostic path check - verify the last argument is the resolved path
+		const expectedPath = path.resolve("/test/dir")
+		expect(args[args.length - 1]).toBe(expectedPath)
 	})
 })
