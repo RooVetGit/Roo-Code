@@ -1,8 +1,12 @@
-import { type ModelInfo, type ProviderSettings, ANTHROPIC_DEFAULT_MAX_TOKENS } from "@roo-code/types"
+import {
+	type ModelInfo,
+	type ProviderSettings,
+	ANTHROPIC_DEFAULT_MAX_TOKENS,
+	type ApiHandlerOptions,
+} from "@roo-code/types"
 
-// ApiHandlerOptions
-
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
+// Re-export ApiHandlerOptions for backward compatibility
+export type { ApiHandlerOptions }
 
 // RouterName
 

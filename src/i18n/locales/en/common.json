@@ -108,5 +108,14 @@
 			"organization_mismatch": "You must be authenticated with your organization's Roo Code Cloud account.",
 			"verification_failed": "Unable to verify organization authentication."
 		}
+	},
+	"settings": {
+		"providers": {
+			"claudeCode": {
+				"pathLabel": "Claude Code Path",
+				"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+				"placeholder": "Default: claude"
+			}
+		}
 	}
 }

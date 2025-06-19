@@ -3,6 +3,10 @@ import type { Socket } from "net"
 
 import type { RooCodeSettings } from "./global-settings.js"
 import type { ProviderSettingsEntry, ProviderSettings } from "./provider-settings.js"
+
+// ApiHandlerOptions
+
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
 import type { ClineMessage, TokenUsage } from "./message.js"
 import type { ToolUsage, ToolName } from "./tool.js"
 import type { IpcMessage, IpcServerEvents, IsSubtask } from "./ipc.js"
