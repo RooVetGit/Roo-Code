@@ -174,8 +174,6 @@
 		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
 		"claudeCodePath": "Claude Code CLI Path",
 		"claudeCodePathDescription": "Path to Claude Code CLI executable. Default: claude",
-		"claudeCodePath": "Claude Code CLI Path",
-		"claudeCodePathDescription": "Path to Claude Code CLI executable. Default: claude",
 		"chutesApiKey": "Chutes API Key",
 		"getChutesApiKey": "Get Chutes API Key",
 		"deepSeekApiKey": "DeepSeek API Key",

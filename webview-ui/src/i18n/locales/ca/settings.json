@@ -174,8 +174,6 @@
 		"anthropicUseAuthToken": "Passar la clau API d'Anthropic com a capçalera d'autorització en lloc de X-Api-Key",
 		"claudeCodePath": "Ruta de l'CLI de Claude Code",
 		"claudeCodePathDescription": "Ruta a l'executable de l'CLI de Claude Code. Per defecte: claude",
-		"claudeCodePath": "Ruta de l'CLI de Claude Code",
-		"claudeCodePathDescription": "Ruta a l'executable de l'CLI de Claude Code. Per defecte: claude",
 		"chutesApiKey": "Clau API de Chutes",
 		"getChutesApiKey": "Obtenir clau API de Chutes",
 		"deepSeekApiKey": "Clau API de DeepSeek",
