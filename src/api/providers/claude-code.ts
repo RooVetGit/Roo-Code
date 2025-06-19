@@ -63,7 +63,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 			cacheWriteTokens: 0,
 		}
 
-		while (exitCode !== 0 || dataQueue.length > 0) {
+		while (exitCode === null || dataQueue.length > 0) {
 			if (dataQueue.length === 0) {
 				await new Promise((resolve) => setImmediate(resolve))
 			}
