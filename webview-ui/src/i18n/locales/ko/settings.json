@@ -172,6 +172,8 @@
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
 		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
+		"claudeCodePath": "Claude Code CLI 경로",
+		"claudeCodePathDescription": "Claude Code CLI 실행 파일 경로. 기본값: claude",
 		"chutesApiKey": "Chutes API 키",
 		"getChutesApiKey": "Chutes API 키 받기",
 		"deepSeekApiKey": "DeepSeek API 키",
