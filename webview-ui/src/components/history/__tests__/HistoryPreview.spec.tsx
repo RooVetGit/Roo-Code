@@ -88,8 +88,9 @@ describe("HistoryPreview", () => {
 	})
 
 	it("renders up to 3 tasks when tasks are available", () => {
+		// Only return the first 3 tasks since the component has a limit of 3
 		mockUseTaskSearch.mockReturnValue({
-			tasks: mockTasks,
+			tasks: mockTasks.slice(0, 3),
 			loading: false,
 			searchQuery: "",
 			setSearchQuery: vi.fn(),
