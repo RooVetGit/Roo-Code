@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "Activer l'effort de raisonnement",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "Chemin du code Claude",
+			"description": "Chemin facultatif vers votre CLI Claude Code. La valeur par défaut est 'claude' si non défini.",
+			"placeholder": "Défaut : claude"
 		}
 	},
 	"browser": {

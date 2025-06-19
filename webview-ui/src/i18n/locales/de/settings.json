@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "Denkaufwand aktivieren",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "Claude-Code-Pfad",
+			"description": "Optionaler Pfad zu Ihrer Claude Code CLI. Standard ist 'claude', wenn nicht festgelegt.",
+			"placeholder": "Standard: claude"
 		}
 	},
 	"browser": {

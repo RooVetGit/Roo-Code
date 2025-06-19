@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "Redeneervermogen inschakelen",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "Claude Code Pad",
+			"description": "Optioneel pad naar uw Claude Code CLI. Standaard 'claude' als niet ingesteld.",
+			"placeholder": "Standaard: claude"
 		}
 	},
 	"browser": {

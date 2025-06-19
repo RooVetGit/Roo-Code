@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "तर्क प्रयास सक्षम करें",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "क्लाउड कोड पथ",
+			"description": "आपके क्लाउड कोड सीएलआई का वैकल्पिक पथ। यदि सेट नहीं है तो डिफ़ॉल्ट 'claude' है।",
+			"placeholder": "डिफ़ॉल्ट: claude"
 		}
 	},
 	"browser": {

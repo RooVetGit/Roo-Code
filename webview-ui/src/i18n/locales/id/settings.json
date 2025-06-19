@@ -309,8 +309,8 @@
 		},
 		"setReasoningLevel": "Aktifkan Upaya Reasoning",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"pathLabel": "Jalur Kode Claude",
+			"description": "Jalur opsional ke Claude Code CLI Anda. Defaultnya adalah 'claude' jika tidak diatur.",
 			"placeholder": "Default: claude"
 		}
 	},

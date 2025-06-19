@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "Kích hoạt nỗ lực suy luận",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "Đường dẫn Claude Code",
+			"description": "Đường dẫn tùy chọn đến Claude Code CLI của bạn. Mặc định là 'claude' nếu không được đặt.",
+			"placeholder": "Mặc định: claude"
 		}
 	},
 	"browser": {

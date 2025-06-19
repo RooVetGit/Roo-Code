@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "啟用推理工作量",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "Claude Code 路徑",
+			"description": "可選的 Claude Code CLI 路徑。如果未設定，則預設為 'claude'。",
+			"placeholder": "預設：claude"
 		}
 	},
 	"browser": {

@@ -305,9 +305,9 @@
 		},
 		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir",
 		"claudeCode": {
-			"pathLabel": "Claude Code Path",
-			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"pathLabel": "Claude Code Yolu",
+			"description": "Claude Code CLI'nize isteğe bağlı yol. Ayarlanmazsa varsayılan olarak 'claude' kullanılır.",
+			"placeholder": "Varsayılan: claude"
 		}
 	},
 	"browser": {
