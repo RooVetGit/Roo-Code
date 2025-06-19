@@ -10,10 +10,17 @@ const MAX_SAMPLE_SCORES = 5 // Number of sample scores to log for debugging
  * Performs a fuzzy search on history items using fzf
  * @param items - Array of history items to search
  * @param searchQuery - The search query string
+ * @param preserveOrder - Whether to preserve the original order of items (default: true)
  * @returns HistorySearchResults containing items with match positions
  */
-export function taskHistorySearch(items: HistoryItem[], searchQuery: string): HistorySearchResults {
-	console.debug(`[TaskSearch] Starting search with query: "${searchQuery}" on ${items.length} items`)
+export function taskHistorySearch(
+	items: HistoryItem[],
+	searchQuery: string,
+	preserveOrder: boolean = true,
+): HistorySearchResults {
+	console.debug(
+		`[TaskSearch] Starting search with query: "${searchQuery}" on ${items.length} items, preserveOrder: ${preserveOrder}`,
+	)
 
 	if (!searchQuery.trim()) {
 		// If no search query, return all items without match information
@@ -21,6 +28,15 @@ export function taskHistorySearch(items: HistoryItem[], searchQuery: string): Hi
 		return {
 			items: items as HistorySearchResultItem[],
 		}
+	}
+
+	// Create a map of item IDs to their original indices if we need to preserve order
+	const originalIndices = preserveOrder ? new Map<string, number>() : null
+
+	if (preserveOrder) {
+		items.forEach((item, index) => {
+			originalIndices!.set(item.id, index)
+		})
 	}
 
 	// Initialize fzf with the items
@@ -91,6 +107,34 @@ export function taskHistorySearch(items: HistoryItem[], searchQuery: string): Hi
 			},
 		}
 	})
+
+	// If preserveOrder is true, reconstruct the results in original order
+	if (preserveOrder && originalIndices && resultItems.length > 0) {
+		// Create a map of item IDs to their corresponding result items
+		const resultItemsById = new Map<string, HistorySearchResultItem>()
+		for (const item of resultItems) {
+			resultItemsById.set(item.id, item)
+		}
+
+		// Create a new array in the original order, but only include items that are in the result set
+		const orderedResults: HistorySearchResultItem[] = []
+
+		// Loop through original items in order
+		for (let i = 0; i < items.length; i++) {
+			const originalItem = items[i]
+			const resultItem = resultItemsById.get(originalItem.id)
+
+			// Only include items that are in the result set
+			if (resultItem) {
+				orderedResults.push(resultItem)
+			}
+		}
+
+		// Replace the result items with the ordered ones
+		return {
+			items: orderedResults,
+		}
+	}
 
 	return {
 		items: resultItems,
