@@ -9,8 +9,8 @@ interface InstructionsDetail {
 	mcpHub?: McpHub
 	diffStrategy?: DiffStrategy
 	context?: vscode.ExtensionContext
-	error: string
-	code: string
+	error?: string
+	code?: string
 }
 
 export async function fetchInstructions(text: string, detail: InstructionsDetail): Promise<string> {
