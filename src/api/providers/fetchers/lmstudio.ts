@@ -1,15 +1,15 @@
 import { ModelInfo, lMStudioDefaultModelInfo } from "@roo-code/types"
-import { LLMInfo, LMStudioClient } from "@lmstudio/sdk"
+import { LLM, LLMInfo, LLMInstanceInfo, LMStudioClient } from "@lmstudio/sdk"
 import axios from "axios"
 
-export const parseLMStudioModel = (rawModel: LLMInfo): ModelInfo => {
+export const parseLMStudioModel = (rawModel: LLMInstanceInfo): ModelInfo => {
 	const modelInfo: ModelInfo = Object.assign({}, lMStudioDefaultModelInfo, {
-		description: `${rawModel.displayName} - ${rawModel.paramsString} - ${rawModel.path}`,
-		contextWindow: rawModel.maxContextLength,
+		description: `${rawModel.displayName} - ${rawModel} - ${rawModel.path}`,
+		contextWindow: rawModel.contextLength,
 		supportsPromptCache: true,
 		supportsImages: rawModel.vision,
 		supportsComputerUse: false,
-		maxTokens: rawModel.maxContextLength,
+		maxTokens: rawModel.contextLength,
 	})
 
 	return modelInfo
@@ -33,7 +33,9 @@ export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Prom
 		await axios.get(`${baseUrl}/v1/models`)
 
 		const client = new LMStudioClient({ baseUrl: lmsUrl })
-		const response = (await client.system.listDownloadedModels()) as Array<LLMInfo>
+		const response = (await client.llm.listLoaded().then((models: LLM[]) => {
+			return Promise.all(models.map((m) => m.getModelInfo()))
+		})) as Array<LLMInstanceInfo>
 
 		for (const lmstudioModel of response) {
 			models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)

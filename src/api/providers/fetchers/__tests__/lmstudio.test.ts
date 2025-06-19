@@ -1,6 +1,6 @@
 import axios from "axios"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import { LMStudioClient, LLMInfo } from "@lmstudio/sdk" // LLMInfo is a type
+import { LMStudioClient, LLMInfo, LLMInstanceInfo } from "@lmstudio/sdk" // LLMInfo is a type
 import { getLMStudioModels, parseLMStudioModel } from "../lmstudio"
 import { ModelInfo, lMStudioDefaultModelInfo } from "@roo-code/types" // ModelInfo is a type
 
@@ -29,28 +29,30 @@ describe("LMStudio Fetcher", () => {
 
 	describe("parseLMStudioModel", () => {
 		it("should correctly parse raw LLMInfo to ModelInfo", () => {
-			const rawModel: LLMInfo = {
-				architecture: "llama",
-				modelKey: "mistral-7b-instruct-v0.2.Q4_K_M.gguf",
-				path: "/Users/username/.cache/lm-studio/models/Mistral AI/Mistral-7B-Instruct-v0.2/mistral-7b-instruct-v0.2.Q4_K_M.gguf",
+			const rawModel: LLMInstanceInfo = {
 				type: "llm",
-				displayName: "Mistral-7B-Instruct-v0.2-Q4_K_M",
-				maxContextLength: 8192,
-				paramsString: "7B params, 8k context",
+				modelKey: "mistralai/devstral-small-2505",
+				format: "safetensors",
+				displayName: "Devstral Small 2505",
+				path: "mistralai/devstral-small-2505",
+				sizeBytes: 13277565112,
+				architecture: "mistral",
+				identifier: "mistralai/devstral-small-2505",
+				instanceReference: "RAP5qbeHVjJgBiGFQ6STCuTJ",
 				vision: false,
-				format: "gguf",
-				sizeBytes: 4080000000,
-				trainedForToolUse: false, // Added
+				trainedForToolUse: false,
+				maxContextLength: 131072,
+				contextLength: 7161,
 			}
 
 			const expectedModelInfo: ModelInfo = {
 				...lMStudioDefaultModelInfo,
 				description: `${rawModel.displayName} - ${rawModel.paramsString} - ${rawModel.path}`,
-				contextWindow: rawModel.maxContextLength,
+				contextWindow: rawModel.contextLength,
 				supportsPromptCache: true,
 				supportsImages: rawModel.vision,
 				supportsComputerUse: false,
-				maxTokens: rawModel.maxContextLength,
+				maxTokens: rawModel.contextLength,
 				inputPrice: 0,
 				outputPrice: 0,
 				cacheWritesPrice: 0,
@@ -66,13 +68,16 @@ describe("LMStudio Fetcher", () => {
 		const baseUrl = "http://localhost:1234"
 		const lmsUrl = "ws://localhost:1234"
 
-		const mockRawModel: LLMInfo = {
+		const mockRawModel: LLMInstanceInfo = {
 			architecture: "test-arch",
+			identifier: "mistralai/devstral-small-2505",
+			instanceReference: "RAP5qbeHVjJgBiGFQ6STCuTJ",
 			modelKey: "test-model-key-1",
 			path: "/path/to/test-model-1",
 			type: "llm",
 			displayName: "Test Model One",
 			maxContextLength: 2048,
+			contextLength: 7161,
 			paramsString: "1B params, 2k context",
 			vision: true,
 			format: "gguf",
@@ -81,7 +86,7 @@ describe("LMStudio Fetcher", () => {
 		}
 
 		it("should fetch and parse models successfully", async () => {
-			const mockApiResponse: LLMInfo[] = [mockRawModel]
+			const mockApiResponse: LLMInstanceInfo[] = [mockRawModel]
 			mockedAxios.get.mockResolvedValueOnce({ data: { status: "ok" } })
 			mockListDownloadedModels.mockResolvedValueOnce(mockApiResponse)
 
