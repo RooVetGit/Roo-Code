@@ -1,6 +1,6 @@
 import axios from "axios"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import { LMStudioClient, LLMInfo, LLMInstanceInfo } from "@lmstudio/sdk" // LLMInfo is a type
+import { LMStudioClient, LLM, LLMInstanceInfo } from "@lmstudio/sdk" // LLMInfo is a type
 import { getLMStudioModels, parseLMStudioModel } from "../lmstudio"
 import { ModelInfo, lMStudioDefaultModelInfo } from "@roo-code/types" // ModelInfo is a type
 
@@ -9,12 +9,13 @@ vi.mock("axios")
 const mockedAxios = axios as any
 
 // Mock @lmstudio/sdk
-const mockListDownloadedModels = vi.fn()
+const mockGetModelInfo = vi.fn()
+const mockListLoaded = vi.fn()
 vi.mock("@lmstudio/sdk", () => {
 	return {
 		LMStudioClient: vi.fn().mockImplementation(() => ({
-			system: {
-				listDownloadedModels: mockListDownloadedModels,
+			llm: {
+				listLoaded: mockListLoaded,
 			},
 		})),
 	}
@@ -25,6 +26,8 @@ describe("LMStudio Fetcher", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		MockedLMStudioClientConstructor.mockClear()
+		mockListLoaded.mockClear()
+		mockGetModelInfo.mockClear()
 	})
 
 	describe("parseLMStudioModel", () => {
@@ -86,9 +89,9 @@ describe("LMStudio Fetcher", () => {
 		}
 
 		it("should fetch and parse models successfully", async () => {
-			const mockApiResponse: LLMInstanceInfo[] = [mockRawModel]
 			mockedAxios.get.mockResolvedValueOnce({ data: { status: "ok" } })
-			mockListDownloadedModels.mockResolvedValueOnce(mockApiResponse)
+			mockListLoaded.mockResolvedValueOnce([{ getModelInfo: mockGetModelInfo }])
+			mockGetModelInfo.mockResolvedValueOnce(mockRawModel)
 
 			const result = await getLMStudioModels(baseUrl)
 
@@ -96,7 +99,7 @@ describe("LMStudio Fetcher", () => {
 			expect(mockedAxios.get).toHaveBeenCalledWith(`${baseUrl}/v1/models`)
 			expect(MockedLMStudioClientConstructor).toHaveBeenCalledTimes(1)
 			expect(MockedLMStudioClientConstructor).toHaveBeenCalledWith({ baseUrl: lmsUrl })
-			expect(mockListDownloadedModels).toHaveBeenCalledTimes(1)
+			expect(mockListLoaded).toHaveBeenCalledTimes(1)
 
 			const expectedParsedModel = parseLMStudioModel(mockRawModel)
 			expect(result).toEqual({ [mockRawModel.modelKey]: expectedParsedModel })
@@ -106,7 +109,7 @@ describe("LMStudio Fetcher", () => {
 			const defaultBaseUrl = "http://localhost:1234"
 			const defaultLmsUrl = "ws://localhost:1234"
 			mockedAxios.get.mockResolvedValueOnce({ data: {} })
-			mockListDownloadedModels.mockResolvedValueOnce([])
+			mockListLoaded.mockResolvedValueOnce([])
 
 			await getLMStudioModels("")
 
@@ -118,7 +121,7 @@ describe("LMStudio Fetcher", () => {
 			const httpsBaseUrl = "https://securehost:4321"
 			const wssLmsUrl = "wss://securehost:4321"
 			mockedAxios.get.mockResolvedValueOnce({ data: {} })
-			mockListDownloadedModels.mockResolvedValueOnce([])
+			mockListLoaded.mockResolvedValueOnce([])
 
 			await getLMStudioModels(httpsBaseUrl)
 
@@ -146,7 +149,7 @@ describe("LMStudio Fetcher", () => {
 			expect(mockedAxios.get).toHaveBeenCalledTimes(1)
 			expect(mockedAxios.get).toHaveBeenCalledWith(`${baseUrl}/v1/models`)
 			expect(MockedLMStudioClientConstructor).not.toHaveBeenCalled()
-			expect(mockListDownloadedModels).not.toHaveBeenCalled()
+			expect(mockListLoaded).not.toHaveBeenCalled()
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
 				`Error fetching LMStudio models: ${JSON.stringify(networkError, Object.getOwnPropertyNames(networkError), 2)}`,
 			)
@@ -165,7 +168,7 @@ describe("LMStudio Fetcher", () => {
 			expect(mockedAxios.get).toHaveBeenCalledTimes(1)
 			expect(mockedAxios.get).toHaveBeenCalledWith(`${baseUrl}/v1/models`)
 			expect(MockedLMStudioClientConstructor).not.toHaveBeenCalled()
-			expect(mockListDownloadedModels).not.toHaveBeenCalled()
+			expect(mockListLoaded).not.toHaveBeenCalled()
 			expect(consoleInfoSpy).toHaveBeenCalledWith(`Error connecting to LMStudio at ${baseUrl}`)
 			expect(result).toEqual({})
 			consoleInfoSpy.mockRestore()
@@ -176,14 +179,14 @@ describe("LMStudio Fetcher", () => {
 			const listError = new Error("LMStudio SDK internal error")
 
 			mockedAxios.get.mockResolvedValueOnce({ data: {} })
-			mockListDownloadedModels.mockRejectedValueOnce(listError)
+			mockListLoaded.mockRejectedValueOnce(listError)
 
 			const result = await getLMStudioModels(baseUrl)
 
 			expect(mockedAxios.get).toHaveBeenCalledTimes(1)
 			expect(MockedLMStudioClientConstructor).toHaveBeenCalledTimes(1)
 			expect(MockedLMStudioClientConstructor).toHaveBeenCalledWith({ baseUrl: lmsUrl })
-			expect(mockListDownloadedModels).toHaveBeenCalledTimes(1)
+			expect(mockListLoaded).toHaveBeenCalledTimes(1)
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
 				`Error fetching LMStudio models: ${JSON.stringify(listError, Object.getOwnPropertyNames(listError), 2)}`,
 			)
