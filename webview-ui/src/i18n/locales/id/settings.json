@@ -187,6 +187,8 @@
 		"openAiApiKey": "OpenAI API Key",
 		"apiKey": "API Key",
 		"openAiBaseUrl": "Base URL",
+		"openAiApiTimeout": "Batas waktu (menit)",
+		"openAiApiTimeoutDescription": "Batas waktu untuk permintaan API ke Provider (minimal 5 menit). Jika tidak ada respons dalam periode ini, permintaan akan dicoba lagi. Tingkatkan untuk model yang lebih lambat.",
 		"getOpenAiApiKey": "Dapatkan OpenAI API Key",
 		"mistralApiKey": "Mistral API Key",
 		"getMistralApiKey": "Dapatkan Mistral / Codestral API Key",
