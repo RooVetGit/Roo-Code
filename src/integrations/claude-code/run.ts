@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import Anthropic from "@anthropic-ai/sdk"
 import { execa } from "execa"
+import { randomUUID } from "crypto"
 
 /**
  * Validates that a string doesn't contain shell escape sequences or dangerous characters
@@ -59,6 +60,45 @@ const getCwd = () => {
 	}
 }
 
+/**
+ * Session manager for Claude Code CLI sessions per workspace
+ */
+class SessionManager {
+	private static sessions = new Map<string, string>()
+
+	/**
+	 * Get or create a session ID for the current workspace
+	 */
+	static getSessionId(workspacePath?: string): string {
+		const workspaceKey = workspacePath || "default"
+
+		let sessionId = this.sessions.get(workspaceKey)
+		if (!sessionId) {
+			sessionId = randomUUID()
+			this.sessions.set(workspaceKey, sessionId)
+		}
+
+		return sessionId
+	}
+
+	/**
+	 * Clear session for a specific workspace
+	 */
+	static clearSession(workspacePath?: string): void {
+		const workspaceKey = workspacePath || "default"
+		this.sessions.delete(workspaceKey)
+	}
+
+	/**
+	 * Clear all sessions
+	 */
+	static clearAllSessions(): void {
+		this.sessions.clear()
+	}
+}
+
+export { SessionManager }
+
 export function runClaudeCode({
 	systemPrompt,
 	messages,
@@ -71,8 +111,9 @@ export function runClaudeCode({
 	modelId?: string
 }) {
 	const claudePath = path || "claude"
+	const workspacePath = getCwd()
+	const sessionId = SessionManager.getSessionId(workspacePath)
 
-	// TODO: Is it worth using sessions? Where do we store the session ID?
 	const args = [
 		"-p",
 		safeSerializeMessages(messages),
@@ -85,6 +126,9 @@ export function runClaudeCode({
 		"--max-turns",
 		"1",
 	]
+
+	// Add session ID to maintain context across calls
+	args.push("--session-id", sessionId)
 
 	if (modelId) {
 		args.push("--model", modelId)
