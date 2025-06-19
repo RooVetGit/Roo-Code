@@ -25,7 +25,8 @@
 			"save": "Simpan Gambar",
 			"viewCode": "Lihat Kode",
 			"viewDiagram": "Lihat Diagram",
-			"close": "Tutup"
+			"close": "Tutup",
+			"retry":"Coba Lagi"
 		},
 		"modal": {
 			"codeTitle": "Kode Mermaid"
