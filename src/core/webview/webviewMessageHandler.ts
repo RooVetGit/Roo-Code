@@ -40,6 +40,7 @@ import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 import { getCommand } from "../../utils/commands"
+import { fetchInstructions } from "../prompts/instructions/instructions"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
@@ -185,6 +186,15 @@ export const webviewMessageHandler = async (
 			break
 		case "askResponse":
 			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+			break
+		case "fixMermaidChart":
+			const customInstruction = await fetchInstructions(
+				"fix_mermaid",
+				message.values as { error: string; code: string },
+			)
+			provider
+				.getCurrentCline()
+				?.handleWebviewAskResponse(message.askResponse!, customInstruction, message.images)
 			break
 		case "autoCondenseContext":
 			await updateGlobalState("autoCondenseContext", message.bool)

@@ -25,7 +25,8 @@
 			"save": "儲存圖片",
 			"viewCode": "檢視程式碼",
 			"viewDiagram": "檢視圖表",
-			"close": "關閉"
+			"close": "關閉",
+			"retry": "重試"
 		},
 		"modal": {
 			"codeTitle": "Mermaid 程式碼"

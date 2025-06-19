@@ -25,7 +25,8 @@
 			"save": "Resmi kaydet",
 			"viewCode": "Kodu görüntüle",
 			"viewDiagram": "Diyagramı görüntüle",
-			"close": "Kapat"
+			"close": "Kapat",
+			"retry": "Yeniden Dene"
 		},
 		"modal": {
 			"codeTitle": "Mermaid Kodu"

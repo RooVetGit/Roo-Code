@@ -25,7 +25,8 @@
 			"save": "Lưu hình ảnh",
 			"viewCode": "Xem mã",
 			"viewDiagram": "Xem biểu đồ",
-			"close": "Đóng"
+			"close": "Đóng",
+			"retry": "Thử lại"
 		},
 		"modal": {
 			"codeTitle": "Mã Mermaid"

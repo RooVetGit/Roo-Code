@@ -25,7 +25,8 @@
 			"save": "Guardar imagen",
 			"viewCode": "Ver código",
 			"viewDiagram": "Ver diagrama",
-			"close": "Cerrar"
+			"close": "Cerrar",
+			"retry": "Reintentar"
 		},
 		"modal": {
 			"codeTitle": "Código Mermaid"

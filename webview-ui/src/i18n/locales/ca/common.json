@@ -25,7 +25,8 @@
 			"save": "Desar imatge",
 			"viewCode": "Veure codi",
 			"viewDiagram": "Veure diagrama",
-			"close": "Tancar"
+			"close": "Tancar",
+			"retry": "Tornar a intentar"
 		},
 		"modal": {
 			"codeTitle": "Codi Mermaid"
