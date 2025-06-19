@@ -22,7 +22,7 @@ export async function fetchInstructions(text: string, detail: InstructionsDetail
 			return await createModeInstructions(detail.context)
 		}
 		case "fix_mermaid": {
-			return await createMermaidFixInstructions(detail.error, detail.code)
+			return await createMermaidFixInstructions(detail.error || "", detail.code || "")
 		}
 		default: {
 			return ""
