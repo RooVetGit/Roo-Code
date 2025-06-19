@@ -2,6 +2,7 @@ import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
+import remarkGfm from "remark-gfm"
 
 import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
@@ -119,12 +120,79 @@ const StyledMarkdown = styled.div`
 			text-decoration-color: var(--vscode-textLink-activeForeground);
 		}
 	}
+
+	/* Table styles for markdown tables */
+	table {
+		border-collapse: collapse;
+		margin: 1em 0;
+		width: 100%;
+		overflow-x: auto;
+		display: block;
+		white-space: nowrap;
+	}
+
+	table tbody {
+		display: table;
+		width: 100%;
+	}
+
+	table thead {
+		display: table-header-group;
+	}
+
+	table tr {
+		border-top: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, #454545));
+		display: table-row;
+	}
+
+	table tr:nth-child(2n) {
+		background-color: var(--vscode-editor-background);
+	}
+
+	table th,
+	table td {
+		border: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, #454545));
+		padding: 6px 13px;
+		display: table-cell;
+		text-align: left;
+		vertical-align: top;
+	}
+
+	table th {
+		font-weight: 600;
+		background-color: var(--vscode-editor-background);
+		color: var(--vscode-foreground);
+	}
+
+	table td {
+		color: var(--vscode-foreground);
+	}
+
+	/* Handle table overflow for responsive design */
+	table {
+		display: table;
+		width: 100%;
+		overflow-x: auto;
+		white-space: nowrap;
+	}
+
+	@media (max-width: 600px) {
+		table {
+			font-size: 0.875em;
+		}
+
+		table th,
+		table td {
+			padding: 4px 8px;
+		}
+	}
 `
 
 const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 	const { theme } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
 		remarkPlugins: [
+			remarkGfm, // Enable GitHub Flavored Markdown (includes tables)
 			remarkUrlToLink,
 			() => {
 				return (tree) => {
