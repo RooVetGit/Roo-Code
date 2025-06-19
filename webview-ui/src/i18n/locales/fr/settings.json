@@ -303,7 +303,12 @@
 			"medium": "Moyen",
 			"low": "Faible"
 		},
-		"setReasoningLevel": "Activer l'effort de raisonnement"
+		"setReasoningLevel": "Activer l'effort de raisonnement",
+		"claudeCode": {
+			"pathLabel": "Claude Code Path",
+			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"placeholder": "Default: claude"
+		}
 	},
 	"browser": {
 		"enable": {

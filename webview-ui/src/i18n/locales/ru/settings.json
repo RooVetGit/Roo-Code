@@ -303,7 +303,12 @@
 			"medium": "Средние",
 			"low": "Низкие"
 		},
-		"setReasoningLevel": "Включить усилие рассуждения"
+		"setReasoningLevel": "Включить усилие рассуждения",
+		"claudeCode": {
+			"pathLabel": "Claude Code Path",
+			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"placeholder": "Default: claude"
+		}
 	},
 	"browser": {
 		"enable": {

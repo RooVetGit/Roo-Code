@@ -303,7 +303,12 @@
 			"medium": "중간",
 			"low": "낮음"
 		},
-		"setReasoningLevel": "추론 노력 활성화"
+		"setReasoningLevel": "추론 노력 활성화",
+		"claudeCode": {
+			"pathLabel": "Claude Code Path",
+			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"placeholder": "Default: claude"
+		}
 	},
 	"browser": {
 		"enable": {

@@ -303,7 +303,12 @@
 			"medium": "中",
 			"low": "低"
 		},
-		"setReasoningLevel": "推論労力を有効にする"
+		"setReasoningLevel": "推論労力を有効にする",
+		"claudeCode": {
+			"pathLabel": "Claude Code Path",
+			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"placeholder": "Default: claude"
+		}
 	},
 	"browser": {
 		"enable": {

@@ -307,7 +307,12 @@
 			"medium": "Sedang",
 			"low": "Rendah"
 		},
-		"setReasoningLevel": "Aktifkan Upaya Reasoning"
+		"setReasoningLevel": "Aktifkan Upaya Reasoning",
+		"claudeCode": {
+			"pathLabel": "Claude Code Path",
+			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"placeholder": "Default: claude"
+		}
 	},
 	"browser": {
 		"enable": {

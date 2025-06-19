@@ -303,7 +303,12 @@
 			"medium": "Mitjà",
 			"low": "Baix"
 		},
-		"setReasoningLevel": "Activa l'esforç de raonament"
+		"setReasoningLevel": "Activa l'esforç de raonament",
+		"claudeCode": {
+			"pathLabel": "Claude Code Path",
+			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
+			"placeholder": "Default: claude"
+		}
 	},
 	"browser": {
 		"enable": {
