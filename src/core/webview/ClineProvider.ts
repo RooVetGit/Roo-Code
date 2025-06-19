@@ -235,7 +235,6 @@ export class ClineProvider
 	// Clear the current task without treating it as a subtask
 	// This is used when the user cancels a task that is not a subtask
 	async clearTask() {
-		console.log(`[clearTask] clearing current task`)
 		await this.removeClineFromStack()
 	}
 
