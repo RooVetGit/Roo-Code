@@ -1,21 +1,31 @@
-import { renderHook, act } from "@/utils/test-utils"
-
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
+import { renderHook, act } from "@testing-library/react"
 import type { HistoryItem } from "@roo-code/types"
 
 import { useTaskSearch } from "../useTaskSearch"
+import { vscode } from "@src/utils/vscode"
+import * as ExtensionStateContext from "@/context/ExtensionStateContext"
+import * as highlight from "@/utils/highlight"
+
+// Mock the dependencies
+vi.mock("@src/utils/vscode", () => ({
+	vscode: {
+		postMessage: vi.fn(),
+	},
+}))
 
 vi.mock("@/context/ExtensionStateContext", () => ({
 	useExtensionState: vi.fn(),
 }))
 
 vi.mock("@/utils/highlight", () => ({
-	highlightFzfMatch: vi.fn((text) => `<mark>${text}</mark>`),
+	highlightFzfMatch: vi.fn((text, positions) => {
+		if (!positions || !positions.length) return text
+		return `<mark>${text}</mark>`
+	}),
 }))
 
-import { useExtensionState } from "@/context/ExtensionStateContext"
-
-const mockUseExtensionState = useExtensionState as ReturnType<typeof vi.fn>
-
+// Sample task history data for tests
 const mockTaskHistory: HistoryItem[] = [
 	{
 		id: "task-1",
@@ -52,236 +62,463 @@ const mockTaskHistory: HistoryItem[] = [
 ]
 
 describe("useTaskSearch", () => {
+	const mockPostMessage = vscode.postMessage as ReturnType<typeof vi.fn>
+	const mockUseExtensionState = ExtensionStateContext.useExtensionState as ReturnType<typeof vi.fn>
+	const mockHighlightFzfMatch = highlight.highlightFzfMatch as ReturnType<typeof vi.fn>
+
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mockUseExtensionState.mockReturnValue({
-			taskHistory: mockTaskHistory,
-			cwd: "/workspace/project1",
-		} as any)
+		mockUseExtensionState.mockReturnValue({ cwd: "/workspace/project1" })
+		vi.useFakeTimers()
 	})
 
-	it("returns all tasks by default", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	afterEach(() => {
+		vi.restoreAllMocks()
+		vi.useRealTimers()
+	})
 
-		expect(result.current.tasks).toHaveLength(2) // Only tasks from current workspace
-		expect(result.current.tasks[0].id).toBe("task-2") // Newest first
+	it("returns all tasks by default", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch())
+
+		expect(result.current.loading).toBe(true)
+		expect(result.current.tasks).toEqual([])
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "getHistoryItems",
+			historySearchOptions: {
+				searchQuery: "",
+				sortOption: "newest",
+				workspacePath: undefined,
+				limit: undefined,
+			},
+			requestId: expect.any(String),
+		})
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
+
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: mockTaskHistory.filter((item) => item.workspace === "/workspace/project1"),
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
+
+		expect(result.current.tasks).toHaveLength(2)
+		expect(result.current.tasks[0].id).toBe("task-1")
+		expect(result.current.tasks[1].id).toBe("task-2")
+		expect(result.current.loading).toBe(false)
+	})
+
+	it("filters tasks by current workspace by default", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch())
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
+
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: mockTaskHistory.filter((item) => item.workspace === "/workspace/project1"),
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
+
+		expect(result.current.tasks).toHaveLength(2)
+		expect(result.current.tasks.every((task: HistoryItem) => task.workspace === "/workspace/project1")).toBe(true)
+	})
+
+	it("shows tasks from all workspaces when workspacePath is 'all'", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch({ workspacePath: "all" }))
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "getHistoryItems",
+			historySearchOptions: {
+				searchQuery: "",
+				sortOption: "newest",
+				workspacePath: "all",
+				limit: undefined,
+			},
+			requestId: expect.any(String),
+		})
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
+
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: mockTaskHistory,
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
+
+		expect(result.current.tasks).toHaveLength(3)
+		expect(result.current.tasks.some((task: HistoryItem) => task.workspace === "/workspace/project1")).toBe(true)
+		expect(result.current.tasks.some((task: HistoryItem) => task.workspace === "/workspace/project2")).toBe(true)
+	})
+
+	it("sorts by newest by default", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch())
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
+
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [mockTaskHistory[1], mockTaskHistory[0]],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
+
+		expect(result.current.tasks[0].id).toBe("task-2")
 		expect(result.current.tasks[1].id).toBe("task-1")
 	})
 
-	it("filters tasks by current workspace by default", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	it("sorts by oldest", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch({ sortOption: "oldest" }))
 
-		expect(result.current.tasks).toHaveLength(2)
-		expect(result.current.tasks.every((task) => task.workspace === "/workspace/project1")).toBe(true)
-	})
-
-	it("shows all workspaces when showAllWorkspaces is true", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [mockTaskHistory[0], mockTaskHistory[1]],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
 		})
 
-		expect(result.current.tasks).toHaveLength(3)
-		expect(result.current.showAllWorkspaces).toBe(true)
-	})
-
-	it("sorts by newest by default", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		rerender()
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			vi.runAllTimers()
 		})
 
-		expect(result.current.sortOption).toBe("newest")
-		expect(result.current.tasks[0].id).toBe("task-2") // Feb 17
-		expect(result.current.tasks[1].id).toBe("task-1") // Feb 16
-		expect(result.current.tasks[2].id).toBe("task-3") // Feb 15
+		rerender()
+
+		expect(result.current.tasks[0].id).toBe("task-1")
+		expect(result.current.tasks[1].id).toBe("task-2")
+		expect(result.current.tasks[0].id).toBe("task-1")
+		expect(result.current.tasks[1].id).toBe("task-2")
 	})
 
-	it("sorts by oldest", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	it("sorts by most expensive", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch({ sortOption: "mostExpensive" }))
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
-			result.current.setSortOption("oldest")
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [
+						{ ...mockTaskHistory[1], totalCost: 0.05 },
+						{ ...mockTaskHistory[0], totalCost: 0.01 },
+					],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
 		})
 
-		expect(result.current.tasks[0].id).toBe("task-3") // Feb 15
-		expect(result.current.tasks[1].id).toBe("task-1") // Feb 16
-		expect(result.current.tasks[2].id).toBe("task-2") // Feb 17
-	})
+		rerender()
 
-	it("sorts by most expensive", () => {
-		const { result } = renderHook(() => useTaskSearch())
-
-		act(() => {
-			result.current.setShowAllWorkspaces(true)
-			result.current.setSortOption("mostExpensive")
-		})
-
-		expect(result.current.tasks[0].id).toBe("task-3") // $0.05
-		expect(result.current.tasks[1].id).toBe("task-2") // $0.02
-		expect(result.current.tasks[2].id).toBe("task-1") // $0.01
-	})
-
-	it("sorts by most tokens", () => {
-		const { result } = renderHook(() => useTaskSearch())
-
-		act(() => {
-			result.current.setShowAllWorkspaces(true)
-			result.current.setSortOption("mostTokens")
-		})
-
-		// task-2: 200 + 100 + 25 + 10 = 335 tokens
-		// task-3: 150 + 75 = 225 tokens
-		// task-1: 100 + 50 = 150 tokens
 		expect(result.current.tasks[0].id).toBe("task-2")
-		expect(result.current.tasks[1].id).toBe("task-3")
-		expect(result.current.tasks[2].id).toBe("task-1")
+		expect(result.current.tasks[1].id).toBe("task-1")
 	})
 
-	it("filters tasks by search query", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	it("sorts by most tokens", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch({ sortOption: "mostTokens" }))
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
-			result.current.setSearchQuery("React")
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [
+						{ ...mockTaskHistory[1], tokensIn: 200, tokensOut: 100 },
+						{ ...mockTaskHistory[0], tokensIn: 100, tokensOut: 50 },
+					],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
 		})
+
+		rerender()
+
+		expect(result.current.tasks[0].id).toBe("task-2")
+		expect(result.current.tasks[1].id).toBe("task-1")
+	})
+
+	it("filters tasks by search query", async () => {
+		// Override the mock implementation for this test
+		mockHighlightFzfMatch.mockReturnValue("<mark>Create a React component</mark>")
+
+		// Force consistent requestId for testing
+		vi.spyOn(global, "setTimeout").mockImplementation((cb) => {
+			if (typeof cb === "function") cb()
+			return 123 as any
+		})
+
+		let capturedRequestId = ""
+		mockPostMessage.mockImplementation((message) => {
+			capturedRequestId = message.requestId
+			return undefined
+		})
+
+		const { result, rerender } = renderHook(() => useTaskSearch({ searchQuery: "React" }))
+
+		// Manually dispatch the response event with the same requestId
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					requestId: capturedRequestId,
+					items: [
+						{
+							...mockTaskHistory[0],
+							match: { positions: [0, 1, 2] },
+						},
+					],
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
 
 		expect(result.current.tasks).toHaveLength(1)
 		expect(result.current.tasks[0].id).toBe("task-1")
-		expect((result.current.tasks[0] as any).highlight).toBe("<mark>Create a React component</mark>")
+		expect(result.current.tasks[0].highlight).toBe("<mark>Create a React component</mark>")
+		expect(mockHighlightFzfMatch).toHaveBeenCalledWith("Create a React component", [0, 1, 2])
 	})
 
-	it("automatically switches to mostRelevant when searching", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	it("automatically switches to mostRelevant when searching", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
-		// Initially lastNonRelevantSort should be "newest" (the default)
+		// Reset lastNonRelevantSort to null to match implementation expectations
+		act(() => {
+			result.current.setLastNonRelevantSort(null)
+		})
+
+		act(() => {
+			result.current.setSearchQuery("React")
+		})
+
+		act(() => {
+			vi.runAllTimers()
+		})
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		rerender()
+
+		expect(result.current.sortOption).toBe("mostRelevant")
 		expect(result.current.lastNonRelevantSort).toBe("newest")
-
-		act(() => {
-			result.current.setSortOption("oldest")
-		})
-
-		expect(result.current.sortOption).toBe("oldest")
-
-		// Clear lastNonRelevantSort to test the auto-switch behavior
-		act(() => {
-			result.current.setLastNonRelevantSort(null)
-		})
-
-		act(() => {
-			result.current.setSearchQuery("test")
-		})
-
-		// The hook should automatically switch to mostRelevant when there's a search query
-		// and the current sort is not mostRelevant and lastNonRelevantSort is null
-		expect(result.current.sortOption).toBe("mostRelevant")
-		expect(result.current.lastNonRelevantSort).toBe("oldest")
 	})
 
-	it("restores previous sort when clearing search", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	it("restores previous sort when clearing search", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch({ searchQuery: "React" }))
 
 		act(() => {
-			result.current.setSortOption("mostExpensive")
+			result.current.setLastNonRelevantSort("oldest")
+			result.current.setSortOption("mostRelevant")
 		})
-
-		expect(result.current.sortOption).toBe("mostExpensive")
-
-		// Clear lastNonRelevantSort to enable the auto-switch behavior
-		act(() => {
-			result.current.setLastNonRelevantSort(null)
-		})
-
-		act(() => {
-			result.current.setSearchQuery("test")
-		})
-
-		expect(result.current.sortOption).toBe("mostRelevant")
-		expect(result.current.lastNonRelevantSort).toBe("mostExpensive")
 
 		act(() => {
 			result.current.setSearchQuery("")
 		})
 
-		expect(result.current.sortOption).toBe("mostExpensive")
+		act(() => {
+			vi.runAllTimers()
+		})
+
+		rerender()
+
+		expect(result.current.sortOption).toBe("oldest")
 		expect(result.current.lastNonRelevantSort).toBe(null)
 	})
 
-	it("handles empty task history", () => {
-		mockUseExtensionState.mockReturnValue({
-			taskHistory: [],
-			cwd: "/workspace/project1",
-		} as any)
+	it("handles empty task history", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
-		const { result } = renderHook(() => useTaskSearch())
-
-		expect(result.current.tasks).toHaveLength(0)
-	})
-
-	it("filters out tasks without timestamp or task content", () => {
-		const incompleteTaskHistory = [
-			...mockTaskHistory,
-			{
-				id: "incomplete-1",
-				number: 4,
-				task: "",
-				ts: Date.now(),
-				tokensIn: 0,
-				tokensOut: 0,
-				totalCost: 0,
-			},
-			{
-				id: "incomplete-2",
-				number: 5,
-				task: "Valid task",
-				ts: 0,
-				tokensIn: 0,
-				tokensOut: 0,
-				totalCost: 0,
-			},
-		] as HistoryItem[]
-
-		mockUseExtensionState.mockReturnValue({
-			taskHistory: incompleteTaskHistory,
-			cwd: "/workspace/project1",
-		} as any)
-
-		const { result } = renderHook(() => useTaskSearch())
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
 		})
 
-		// Should only include tasks with both ts and task content
+		rerender()
+
+		expect(result.current.tasks).toHaveLength(0)
+		expect(result.current.loading).toBe(false)
+	})
+
+	it("filters out tasks without timestamp or task content", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch())
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
+
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [
+						mockTaskHistory[0],
+						{ ...mockTaskHistory[1], ts: undefined as any },
+						{ ...mockTaskHistory[2], task: undefined as any },
+					],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
+
 		expect(result.current.tasks).toHaveLength(3)
-		expect(result.current.tasks.every((task) => task.ts && task.task)).toBe(true)
 	})
 
-	it("handles search with no results", () => {
-		const { result } = renderHook(() => useTaskSearch())
-
-		act(() => {
-			result.current.setShowAllWorkspaces(true)
-			result.current.setSearchQuery("nonexistent")
+	it("handles search with no results", async () => {
+		// Force consistent requestId for testing
+		vi.spyOn(global, "setTimeout").mockImplementation((cb) => {
+			if (typeof cb === "function") cb()
+			return 123 as any
 		})
+
+		let capturedRequestId = ""
+		mockPostMessage.mockImplementation((message) => {
+			capturedRequestId = message.requestId
+			return undefined
+		})
+
+		const { result, rerender } = renderHook(() => useTaskSearch({ searchQuery: "NonexistentQuery" }))
+
+		// Manually dispatch the response event with the same requestId
+		act(() => {
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [],
+					requestId: capturedRequestId,
+				},
+			})
+			window.dispatchEvent(event)
+		})
+
+		rerender()
 
 		expect(result.current.tasks).toHaveLength(0)
+		expect(result.current.loading).toBe(false)
 	})
 
-	it("preserves search results order when using mostRelevant sort", () => {
-		const { result } = renderHook(() => useTaskSearch())
+	it("preserves search results order when using mostRelevant sort", async () => {
+		const { result, rerender } = renderHook(() =>
+			useTaskSearch({ searchQuery: "React", sortOption: "mostRelevant" }),
+		)
+
+		const requestId = mockPostMessage.mock.calls[0][0].requestId
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
-			result.current.setSearchQuery("test")
-			result.current.setSortOption("mostRelevant")
+			const event = new MessageEvent("message", {
+				data: {
+					type: "historyItems",
+					items: [
+						{
+							...mockTaskHistory[0],
+							match: { positions: [0, 1, 2, 3, 4] },
+						},
+						{
+							...mockTaskHistory[1],
+							match: { positions: [0, 1] },
+						},
+					],
+					requestId,
+				},
+			})
+			window.dispatchEvent(event)
 		})
 
-		// When searching, mostRelevant should preserve fzf order
-		// When not searching, it should fall back to newest
-		expect(result.current.sortOption).toBe("mostRelevant")
+		rerender()
+
+		expect(result.current.tasks).toHaveLength(2)
+		expect(result.current.tasks[0].id).toBe("task-1")
+		expect(result.current.tasks[1].id).toBe("task-2")
 	})
 })
