@@ -47,7 +47,7 @@ describe("LMStudio Fetcher", () => {
 
 			const expectedModelInfo: ModelInfo = {
 				...lMStudioDefaultModelInfo,
-				description: `${rawModel.displayName} - ${rawModel.paramsString} - ${rawModel.path}`,
+				description: `${rawModel.displayName} - ${rawModel.path}`,
 				contextWindow: rawModel.contextLength,
 				supportsPromptCache: true,
 				supportsImages: rawModel.vision,

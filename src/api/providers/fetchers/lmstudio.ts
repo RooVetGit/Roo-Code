@@ -4,7 +4,7 @@ import axios from "axios"
 
 export const parseLMStudioModel = (rawModel: LLMInstanceInfo): ModelInfo => {
 	const modelInfo: ModelInfo = Object.assign({}, lMStudioDefaultModelInfo, {
-		description: `${rawModel.displayName} - ${rawModel} - ${rawModel.path}`,
+		description: `${rawModel.displayName} - ${rawModel.path}`,
 		contextWindow: rawModel.contextLength,
 		supportsPromptCache: true,
 		supportsImages: rawModel.vision,
