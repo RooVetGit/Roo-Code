@@ -35,4 +35,10 @@ const getRouterModels = async () =>
 		vscode.postMessage({ type: "requestRouterModels" })
 	})
 
-export const useRouterModels = () => useQuery({ queryKey: ["routerModels"], queryFn: getRouterModels })
+type RouterModelsQueryKey = {
+	openRouterBaseUrl?: string
+	openRouterApiKey?: string
+}
+
+export const useRouterModels = (queryKey: RouterModelsQueryKey) =>
+	useQuery({ queryKey: ["routerModels", queryKey], queryFn: getRouterModels })

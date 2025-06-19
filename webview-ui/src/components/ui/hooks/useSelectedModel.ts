@@ -41,8 +41,15 @@ export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 	const provider = apiConfiguration?.apiProvider || "anthropic"
 	const openRouterModelId = provider === "openrouter" ? apiConfiguration?.openRouterModelId : undefined
 
-	const routerModels = useRouterModels()
-	const openRouterModelProviders = useOpenRouterModelProviders(openRouterModelId)
+	const routerModels = useRouterModels({
+		openRouterBaseUrl: apiConfiguration?.openRouterBaseUrl,
+		openRouterApiKey: apiConfiguration?.apiKey,
+	})
+	const openRouterModelProviders = useOpenRouterModelProviders(
+		openRouterModelId,
+		apiConfiguration?.openRouterBaseUrl,
+		apiConfiguration?.apiKey,
+	)
 
 	const { id, info } =
 		apiConfiguration &&
