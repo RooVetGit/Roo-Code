@@ -89,7 +89,7 @@ tasklist | findstr claude
 Run the integration test:
 
 ```bash
-node test-claude-code-integration.js
+npm test -- claude-code.spec.ts
 ```
 
 ## Troubleshooting
