@@ -39,7 +39,8 @@ type OllamaModelInfoResponse = z.infer<typeof OllamaModelInfoResponseSchema>
 
 export const parseOllamaModel = (rawModel: OllamaModelInfoResponse): ModelInfo => {
 	const contextKey = Object.keys(rawModel.model_info).find((k) => k.includes("context_length"))
-	const contextWindow = contextKey ? rawModel.model_info[contextKey] : undefined
+	const contextWindow =
+		contextKey && typeof rawModel.model_info[contextKey] === "number" ? rawModel.model_info[contextKey] : undefined
 
 	const modelInfo: ModelInfo = Object.assign({}, ollamaDefaultModelInfo, {
 		description: `Family: ${rawModel.details.family}, Context: ${contextWindow}, Size: ${rawModel.details.parameter_size}`,
