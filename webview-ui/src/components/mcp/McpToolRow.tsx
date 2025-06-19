@@ -66,30 +66,25 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 							</VSCodeCheckbox>
 						)}
 
-						{/* Enabled switch */}
-						<div
-							role="switch"
-							aria-checked={tool.enabledForPrompt}
+						{/* Enabled eye button */}
+						<button
+							role="button"
+							aria-pressed={tool.enabledForPrompt}
 							aria-label={t("mcp:tool.togglePromptInclusion")}
-							tabIndex={0}
-							className={`relative h-5 w-9 cursor-pointer rounded-full transition-colors ${
-								tool.enabledForPrompt ? "bg-vscode-button-background" : "bg-vscode-input-background"
+							className={`p-1 rounded hover:bg-vscode-toolbar-hoverBackground transition-colors ${
+								tool.enabledForPrompt
+									? "text-vscode-foreground"
+									: "text-vscode-descriptionForeground opacity-60"
 							}`}
 							onClick={handleEnabledForPromptChange}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" || e.key === " ") {
-									e.preventDefault()
-									handleEnabledForPromptChange()
-								}
-							}}
 							data-tool-prompt-toggle={tool.name}
 							title={t("mcp:tool.togglePromptInclusion")}>
-							<div
-								className={`absolute top-0.5 h-4 w-4 rounded-full bg-vscode-button-foreground shadow-sm transition-transform ${
-									tool.enabledForPrompt ? "translate-x-4" : "translate-x-0.5"
-								}`}
+							<span
+								className={`codicon ${
+									tool.enabledForPrompt ? "codicon-eye" : "codicon-eye-closed"
+								} text-base`}
 							/>
-						</div>
+						</button>
 					</div>
 				)}
 			</div>
