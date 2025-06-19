@@ -20,6 +20,7 @@ export type {
 	SwitchModeToolDirective,
 	NewTaskToolDirective,
 	SearchAndReplaceToolDirective,
+	FetchInstructionsToolDirective,
 } from "./tool-directives"
 export { type LogDirective, logLevels } from "./LogDirective"
 

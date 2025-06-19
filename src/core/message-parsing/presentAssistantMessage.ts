@@ -23,6 +23,7 @@ import type {
 	NewTaskToolDirective,
 	AttemptCompletionToolDirective,
 	BrowserActionToolDirective,
+	FetchInstructionsToolDirective,
 } from "./directives"
 
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
@@ -497,7 +498,13 @@ export async function presentAssistantMessage(cline: Task) {
 
 					break
 				case "fetch_instructions":
-					await fetchInstructionsTool(cline, block, askApproval, handleError, pushToolResult)
+					await fetchInstructionsTool(
+						cline,
+						block as FetchInstructionsToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+					)
 					break
 				case "list_files":
 					await listFilesTool(
