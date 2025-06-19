@@ -10,7 +10,6 @@ import { ApiStreamUsageChunk, type ApiStream } from "../transform/stream"
 import { runClaudeCode } from "../../integrations/claude-code/run"
 import { ClaudeCodeMessage } from "../../integrations/claude-code/types"
 import { BaseProvider } from "./base-provider"
-import { calculateApiCostAnthropic } from "../../shared/cost"
 
 export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 	private options: ApiHandlerOptions
@@ -133,20 +132,9 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 			}
 
 			if (chunk.type === "result" && "result" in chunk) {
-				// Use the cost from the CLI if available, otherwise calculate it
-				if (chunk.cost_usd !== undefined && chunk.cost_usd !== null) {
-					usage.totalCost = chunk.cost_usd
-				} else {
-					// Calculate cost based on token usage and model pricing
-					const modelInfo = this.getModel().info
-					usage.totalCost = calculateApiCostAnthropic(
-						modelInfo,
-						usage.inputTokens,
-						usage.outputTokens,
-						usage.cacheWriteTokens,
-						usage.cacheReadTokens,
-					)
-				}
+				// Only use the cost from the CLI if provided
+				// Don't calculate cost as it may be $0 for subscription users
+				usage.totalCost = chunk.cost_usd ?? 0
 
 				yield usage
 			}
