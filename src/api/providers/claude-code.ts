@@ -156,7 +156,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		}
 	}
 
-	// TOOD: Validate instead of parsing
+	// TODO: Validate instead of parsing
 	private attemptParseChunk(data: string): ClaudeCodeMessage | null {
 		try {
 			return JSON.parse(data)
