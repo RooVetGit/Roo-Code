@@ -143,6 +143,7 @@ vi.mock("vscode", () => ({
 	window: {
 		showInformationMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
+		createTextEditorDecorationType: vi.fn().mockReturnValue({}),
 	},
 	workspace: {
 		getConfiguration: vi.fn().mockReturnValue({
@@ -475,7 +476,6 @@ describe("ClineProvider", () => {
 		const mockState: ExtensionState = {
 			version: "1.0.0",
 			clineMessages: [],
-			taskHistory: [],
 			shouldShowAnnouncement: false,
 			apiConfiguration: {
 				apiProvider: "openrouter",
@@ -597,7 +597,7 @@ describe("ClineProvider", () => {
 		expect(state).toHaveProperty("alwaysAllowWrite")
 		expect(state).toHaveProperty("alwaysAllowExecute")
 		expect(state).toHaveProperty("alwaysAllowBrowser")
-		expect(state).toHaveProperty("taskHistory")
+		// taskHistory has been deprecated and removed from the global state
 		expect(state).toHaveProperty("soundEnabled")
 		expect(state).toHaveProperty("ttsEnabled")
 		expect(state).toHaveProperty("diffEnabled")
