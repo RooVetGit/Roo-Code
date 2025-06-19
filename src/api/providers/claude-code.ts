@@ -15,11 +15,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		this.options = options
 	}
 
-	async *createMessage(
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-		metadata?: ApiHandlerCreateMessageMetadata,
-	): ApiStream {
+	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const claudeProcess = runClaudeCode({
 			systemPrompt,
 			messages,
