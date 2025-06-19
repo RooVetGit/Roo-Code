@@ -577,8 +577,7 @@ describe("ClineProvider", () => {
 		test("calls clearTask when there is no parent task", async () => {
 			// Setup a single task without parent
 			const mockCline = new Task(defaultTaskOptions)
-			// Ensure no parentTask property
-			mockCline.parentTask = undefined
+			// No need to set parentTask - it's undefined by default
 
 			// Mock the provider methods
 			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
@@ -605,9 +604,10 @@ describe("ClineProvider", () => {
 			const parentTask = new Task(defaultTaskOptions)
 			const childTask = new Task(defaultTaskOptions)
 
-			// Set up parent-child relationship
-			childTask.parentTask = parentTask
-			childTask.rootTask = parentTask
+			// Set up parent-child relationship by setting the parentTask property
+			// The mock allows us to set properties directly
+			;(childTask as any).parentTask = parentTask
+			;(childTask as any).rootTask = parentTask
 
 			// Mock the provider methods
 			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
@@ -656,9 +656,7 @@ describe("ClineProvider", () => {
 			// where canceling during API retry was incorrectly treating a single task as a subtask
 
 			const mockCline = new Task(defaultTaskOptions)
-			// Explicitly set no parent task
-			mockCline.parentTask = undefined
-			mockCline.rootTask = undefined
+			// No parent task by default - no need to explicitly set
 
 			// Mock the provider methods
 			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
