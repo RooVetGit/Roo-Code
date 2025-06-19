@@ -39,9 +39,16 @@ vi.mock("vscode", () => ({
 	window: {
 		showInformationMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
+		createTextEditorDecorationType: vi.fn(() => ({
+			key: "mock-decoration-type",
+		})),
 	},
 	workspace: {
 		workspaceFolders: [{ uri: { fsPath: "/mock/workspace" } }],
+	},
+	CodeActionKind: {
+		QuickFix: "QuickFix",
+		RefactorRewrite: "RefactorRewrite",
 	},
 }))
 

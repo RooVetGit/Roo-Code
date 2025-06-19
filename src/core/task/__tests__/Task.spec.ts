@@ -198,22 +198,6 @@ describe("Cline", () => {
 		mockExtensionContext = {
 			globalState: {
 				get: vi.fn().mockImplementation((key: keyof GlobalState) => {
-					if (key === "taskHistory") {
-						return [
-							{
-								id: "123",
-								number: 0,
-								ts: Date.now(),
-								task: "historical task",
-								tokensIn: 100,
-								tokensOut: 200,
-								cacheWrites: 0,
-								cacheReads: 0,
-								totalCost: 0.001,
-							},
-						]
-					}
-
 					return undefined
 				}),
 				update: vi.fn().mockImplementation((_key, _value) => Promise.resolve()),

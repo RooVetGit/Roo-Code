@@ -5,6 +5,7 @@ import { defaultModeSlug } from "@roo/modes"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 import * as pathMentions from "@src/utils/path-mentions"
+import { useTaskSearch } from "@src/components/history/useTaskSearch"
 
 import ChatTextArea from "../ChatTextArea"
 
@@ -16,6 +17,12 @@ vi.mock("@src/utils/vscode", () => ({
 
 vi.mock("@src/components/common/CodeBlock")
 vi.mock("@src/components/common/MarkdownBlock")
+vi.mock("@src/components/history/useTaskSearch", () => ({
+	useTaskSearch: vi.fn().mockReturnValue({
+		tasks: [],
+		loading: false,
+	}),
+}))
 vi.mock("@src/utils/path-mentions", () => ({
 	convertToMentionPath: vi.fn((path, cwd) => {
 		// Simple mock implementation that mimics the real function's behavior
@@ -674,19 +681,23 @@ describe("ChatTextArea", () => {
 			})
 
 			it("should use task history (oldest first) when no conversation messages exist", () => {
-				const mockTaskHistory = [
-					{ task: "First task", workspace: "/test/workspace" },
-					{ task: "Second task", workspace: "/test/workspace" },
-					{ task: "Third task", workspace: "/test/workspace" },
+				const mockTaskItems = [
+					{ id: "1", task: "First task", workspace: "/test/workspace", ts: 1000 },
+					{ id: "2", task: "Second task", workspace: "/test/workspace", ts: 2000 },
+					{ id: "3", task: "Third task", workspace: "/test/workspace", ts: 3000 },
 				]
 
+				// Mock useTaskSearch to return the task items
+				vi.mocked(useTaskSearch).mockReturnValue({
+					tasks: mockTaskItems,
+					loading: false,
+				} as any)
 				;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 					filePaths: [],
 					openedTabs: [],
 					apiConfiguration: {
 						apiProvider: "anthropic",
 					},
-					taskHistory: mockTaskHistory,
 					clineMessages: [], // No conversation messages
 					cwd: "/test/workspace",
 				})
@@ -714,16 +725,20 @@ describe("ChatTextArea", () => {
 				)
 
 				// Start with task history
+				// Mock useTaskSearch to return the task items
+				vi.mocked(useTaskSearch).mockReturnValue({
+					tasks: [
+						{ id: "1", task: "Task 1", workspace: "/test/workspace", ts: 1000 },
+						{ id: "2", task: "Task 2", workspace: "/test/workspace", ts: 2000 },
+					],
+					loading: false,
+				} as any)
 				;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 					filePaths: [],
 					openedTabs: [],
 					apiConfiguration: {
 						apiProvider: "anthropic",
 					},
-					taskHistory: [
-						{ task: "Task 1", workspace: "/test/workspace" },
-						{ task: "Task 2", workspace: "/test/workspace" },
-					],
 					clineMessages: [],
 					cwd: "/test/workspace",
 				})
@@ -737,6 +752,11 @@ describe("ChatTextArea", () => {
 				expect(setInputValue).toHaveBeenCalledWith("Task 1")
 
 				// Switch to conversation messages
+				// Reset the useTaskSearch mock
+				vi.mocked(useTaskSearch).mockReturnValue({
+					tasks: [],
+					loading: false,
+				} as any)
 				;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 					filePaths: [],
 					openedTabs: [],

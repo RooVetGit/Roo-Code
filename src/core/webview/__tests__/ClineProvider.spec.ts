@@ -1,5 +1,6 @@
 // npx vitest core/webview/__tests__/ClineProvider.spec.ts
 
+import { describe, test, expect, beforeEach, afterEach, afterAll, vi, it } from "vitest"
 import Anthropic from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 import axios from "axios"
@@ -19,6 +20,20 @@ import { ClineProvider } from "../ClineProvider"
 
 // Mock setup must come before imports
 vi.mock("../../prompts/sections/custom-instructions")
+
+// Mock extension context
+vi.mock("../../../extension", () => ({
+	getExtensionContext: vi.fn().mockReturnValue({
+		globalStorageUri: { fsPath: "/mock/storage/path" },
+	}),
+}))
+
+// Mock task history module
+vi.mock("../../task-persistence/taskHistory", () => ({
+	getHistoryItem: vi.fn().mockResolvedValue(undefined),
+	setHistoryItems: vi.fn().mockResolvedValue(undefined),
+	deleteHistoryItem: vi.fn().mockResolvedValue(undefined),
+}))
 
 vi.mock("vscode")
 
@@ -147,6 +162,7 @@ vi.mock("vscode", () => ({
 		showInformationMessage: vi.fn(),
 		showWarningMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
+		createTextEditorDecorationType: vi.fn().mockReturnValue({}),
 	},
 	workspace: {
 		getConfiguration: vi.fn().mockReturnValue({
@@ -500,7 +516,6 @@ describe("ClineProvider", () => {
 		const mockState: ExtensionState = {
 			version: "1.0.0",
 			clineMessages: [],
-			taskHistory: [],
 			shouldShowAnnouncement: false,
 			apiConfiguration: {
 				apiProvider: "openrouter",
@@ -735,7 +750,7 @@ describe("ClineProvider", () => {
 		expect(state).toHaveProperty("alwaysAllowWrite")
 		expect(state).toHaveProperty("alwaysAllowExecute")
 		expect(state).toHaveProperty("alwaysAllowBrowser")
-		expect(state).toHaveProperty("taskHistory")
+		// taskHistory has been deprecated and removed from the global state
 		expect(state).toHaveProperty("soundEnabled")
 		expect(state).toHaveProperty("ttsEnabled")
 		expect(state).toHaveProperty("diffEnabled")
