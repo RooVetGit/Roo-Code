@@ -110,4 +110,139 @@ describe("runClaudeCode", () => {
 		const args = execaCall[1]
 		expect(args).not.toContain("--model")
 	})
+
+	describe("Security validation", () => {
+		it("should reject messages with ANSI escape sequences", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [{ role: "user" as const, content: "Hello \x1b[31mred text\x1b[0m" }],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should reject messages with command substitution", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [{ role: "user" as const, content: "Hello $(rm -rf /)" }],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should reject messages with backticks", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [{ role: "user" as const, content: "Hello `whoami`" }],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should reject messages with command chaining", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [{ role: "user" as const, content: "Hello && rm -rf /" }],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should reject messages with logical OR chaining", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [{ role: "user" as const, content: "Hello || rm -rf /" }],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should reject messages with command separators", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [{ role: "user" as const, content: "Hello; rm -rf /" }],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should handle complex message content with text blocks", () => {
+			// Arrange
+			const mockProcess = { stdout: "test output", stderr: "" }
+			mockExeca.mockReturnValue(mockProcess as any)
+
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [
+					{
+						role: "user" as const,
+						content: [
+							{
+								type: "text" as const,
+								text: "This is safe content",
+							},
+						],
+					},
+				],
+			}
+
+			// Act
+			const result = runClaudeCode(params)
+
+			// Assert
+			expect(mockExeca).toHaveBeenCalled()
+			expect(result).toBe(mockProcess)
+		})
+
+		it("should reject complex message content with dangerous text blocks", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [
+					{
+						role: "user" as const,
+						content: [
+							{
+								type: "text" as const,
+								text: "Safe content",
+							},
+							{
+								type: "text" as const,
+								text: "Dangerous $(rm -rf /) content",
+							},
+						],
+					},
+				],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+	})
 })
