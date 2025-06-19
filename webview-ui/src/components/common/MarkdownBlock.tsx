@@ -100,9 +100,6 @@ const StyledMarkdown = styled.div`
 
 	.katex-error {
 		color: var(--vscode-errorForeground);
-		border: 1px solid var(--vscode-inputValidation-errorBorder);
-		padding: 8px;
-		border-radius: 3px;
 	}
 
 	font-family:
