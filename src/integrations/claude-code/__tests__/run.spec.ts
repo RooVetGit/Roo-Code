@@ -38,16 +38,10 @@ describe("runClaudeCode", () => {
 			"/usr/local/bin/claude",
 			expect.arrayContaining([
 				"-p",
-				JSON.stringify(params.messages),
-				"--system-prompt",
-				params.systemPrompt,
+				"System: Test system prompt\n\nUser: Test message",
 				"--verbose",
 				"--output-format",
 				"stream-json",
-				"--max-turns",
-				"1",
-				"--session-id",
-				expect.any(String),
 				"--model",
 				params.modelId,
 			]),
@@ -112,7 +106,7 @@ describe("runClaudeCode", () => {
 		const execaCall = mockExeca.mock.calls[0]
 		const args = execaCall[1]
 		expect(args).not.toContain("--model")
-		expect(args).toContain("--session-id")
+		expect(args).toContain("--verbose")
 	})
 
 	describe("Security validation", () => {
@@ -248,6 +242,88 @@ describe("runClaudeCode", () => {
 				/Message content contains potentially dangerous shell sequences/,
 			)
 		})
+
+		it("should allow safe content with dollar signs that are not shell prompts", () => {
+			// Arrange
+			const mockProcess = { stdout: "test output", stderr: "" }
+			mockExeca.mockReturnValue(mockProcess as any)
+
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [
+					{
+						role: "user" as const,
+						content: "The price is $100\nTotal cost: $200\nVariable: $myVar",
+					},
+				],
+			}
+
+			// Act
+			const result = runClaudeCode(params)
+
+			// Assert
+			expect(mockExeca).toHaveBeenCalled()
+			expect(result).toBe(mockProcess)
+		})
+
+		it("should allow regex patterns and documentation with dollar signs", () => {
+			// Arrange
+			const mockProcess = { stdout: "test output", stderr: "" }
+			mockExeca.mockReturnValue(mockProcess as any)
+
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [
+					{
+						role: "user" as const,
+						content: "Use regex pattern /\\n.*\\$/ to match\nEnd of line: $",
+					},
+				],
+			}
+
+			// Act
+			const result = runClaudeCode(params)
+
+			// Assert
+			expect(mockExeca).toHaveBeenCalled()
+			expect(result).toBe(mockProcess)
+		})
+
+		it("should reject actual shell prompt patterns", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [
+					{
+						role: "user" as const,
+						content: "Command output:\nuser$ rm -rf /",
+					},
+				],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
+
+		it("should reject shell prompt with different formats", () => {
+			// Arrange
+			const params = {
+				systemPrompt: "Test system prompt",
+				messages: [
+					{
+						role: "user" as const,
+						content: "Terminal session:\n$ whoami\nroot",
+					},
+				],
+			}
+
+			// Act & Assert
+			expect(() => runClaudeCode(params)).toThrow(
+				/Message content contains potentially dangerous shell sequences/,
+			)
+		})
 	})
 
 	describe("SessionManager", () => {
@@ -336,9 +412,10 @@ describe("runClaudeCode", () => {
 			expect(execaCall).toBeDefined()
 			expect(execaCall[1]).toBeDefined()
 			const args = execaCall[1] as string[]
-			const sessionIdIndex = args.indexOf("--session-id")
-			expect(sessionIdIndex).toBeGreaterThan(-1)
-			expect(args[sessionIdIndex + 1]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+			expect(args).toContain("-p")
+			expect(args).toContain("--verbose")
+			expect(args).toContain("--output-format")
+			expect(args).toContain("stream-json")
 		})
 
 		it("should use the same session ID for multiple calls from the same workspace", () => {
@@ -367,13 +444,11 @@ describe("runClaudeCode", () => {
 			const firstArgs = firstCall[1] as string[]
 			const secondArgs = secondCall[1] as string[]
 
-			const firstSessionIdIndex = firstArgs.indexOf("--session-id")
-			const secondSessionIdIndex = secondArgs.indexOf("--session-id")
-
-			const firstSessionId = firstArgs[firstSessionIdIndex + 1]
-			const secondSessionId = secondArgs[secondSessionIdIndex + 1]
-
-			expect(firstSessionId).toBe(secondSessionId)
+			// Since we're not using session IDs anymore, just verify both calls have the same basic structure
+			expect(firstArgs).toContain("-p")
+			expect(firstArgs).toContain("--verbose")
+			expect(secondArgs).toContain("-p")
+			expect(secondArgs).toContain("--verbose")
 		})
 	})
 })

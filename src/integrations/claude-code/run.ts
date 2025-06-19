@@ -17,7 +17,7 @@ function validateMessageContent(content: string): void {
 		/\|\|/, // Logical OR that could chain commands
 		/&&/, // Logical AND that could chain commands
 		/;/, // Command separator
-		/\n.*\$/, // Newline followed by shell prompt-like patterns
+		/\n\s*[\w-]*\$\s/, // Newline followed by shell prompt patterns (e.g., "user$ ", "$ ")
 	]
 
 	for (const pattern of dangerousPatterns) {
@@ -114,25 +114,44 @@ export function runClaudeCode({
 	const workspacePath = getCwd()
 	const sessionId = SessionManager.getSessionId(workspacePath)
 
-	const args = [
-		"-p",
-		safeSerializeMessages(messages),
-		"--system-prompt",
-		systemPrompt,
-		"--verbose",
-		"--output-format",
-		"stream-json",
-		// Cline will handle recursive calls
-		"--max-turns",
-		"1",
-	]
+	// Convert messages to a simple text prompt since Claude CLI doesn't accept JSON messages
+	let promptText = ""
 
-	// Add session ID to maintain context across calls
-	args.push("--session-id", sessionId)
+	// Add system prompt if provided
+	if (systemPrompt) {
+		promptText += `System: ${systemPrompt}\n\n`
+	}
 
+	// Convert messages to text format
+	for (const message of messages) {
+		const role = message.role === "user" ? "User" : "Assistant"
+		let content = ""
+
+		if (typeof message.content === "string") {
+			content = message.content
+		} else if (Array.isArray(message.content)) {
+			// Extract text from content blocks
+			content = message.content
+				.filter((block) => block.type === "text")
+				.map((block) => (block as any).text)
+				.join("\n")
+		}
+
+		// Validate the content for security
+		validateMessageContent(content)
+
+		promptText += `${role}: ${content}\n\n`
+	}
+
+	const args = ["-p", promptText.trim(), "--verbose", "--output-format", "stream-json"]
+
+	// Add model if specified
 	if (modelId) {
 		args.push("--model", modelId)
 	}
+
+	// Note: Removed -r option as it requires an existing session ID from Claude CLI
+	// Each call will be treated as a new conversation for now
 
 	try {
 		return execa(claudePath, args, {
