@@ -37,6 +37,7 @@ export interface SingleCompletionHandler {
 export interface ApiHandlerCreateMessageMetadata {
 	mode?: string
 	taskId: string
+	signal?: AbortSignal
 }
 
 export interface ApiHandler {

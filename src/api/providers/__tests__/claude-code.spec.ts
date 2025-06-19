@@ -9,6 +9,7 @@ vi.mock("../../../integrations/claude-code/run", () => ({
 const createMockClaudeProcess = () => {
 	const eventHandlers: Record<string, any> = {}
 	let hasEnded = false
+	let isKilled = false
 
 	const mockProcess = {
 		stdout: {
@@ -25,6 +26,13 @@ const createMockClaudeProcess = () => {
 			eventHandlers[event] = handler
 		}),
 		pid: 12345,
+		killed: false,
+		kill: vi.fn((signal?: string) => {
+			isKilled = true
+			mockProcess.killed = true
+			hasEnded = true
+			return true
+		}),
 		_eventHandlers: eventHandlers,
 		_simulateStdout: (data: string) => {
 			if (eventHandlers.stdout_data && !hasEnded) {
@@ -227,6 +235,49 @@ describe("ClaudeCodeHandler", () => {
 				"Invalid model name: not-supported-model\n\nAPI keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
 			)
 		})
+
+		it("should handle AbortSignal and kill process when aborted", async () => {
+			const abortController = new AbortController()
+			const messageGenerator = handler.createMessage(systemPrompt, messages, {
+				taskId: "test-task",
+				signal: abortController.signal,
+			})
+			const iterator = messageGenerator[Symbol.asyncIterator]()
+
+			// Start the generator
+			const nextPromise = iterator.next()
+
+			// Wait a bit then abort
+			setTimeout(() => {
+				abortController.abort()
+			}, 5)
+
+			// Simulate some output before abort
+			setImmediate(() => {
+				mockProcess._simulateStdout('{"type":"system","subtype":"init","session_id":"test"}\n')
+			})
+
+			await expect(nextPromise).rejects.toThrow("Request was aborted")
+			expect(mockProcess.kill).toHaveBeenCalledWith("SIGTERM")
+		})
+
+		it("should kill process in finally block even on error", async () => {
+			const messageGenerator = handler.createMessage(systemPrompt, messages)
+
+			setImmediate(() => {
+				mockProcess._simulateError(new Error("Process error"))
+				// Also simulate close to end the while loop
+				mockProcess._simulateClose(1)
+			})
+
+			await expect(async () => {
+				for await (const chunk of messageGenerator) {
+					// Should throw due to process error or exit code
+				}
+			}).rejects.toThrow("Claude Code process exited with code 1")
+
+			expect(mockProcess.kill).toHaveBeenCalledWith("SIGTERM")
+		}, 10000)
 	})
 
 	describe("getModel", () => {
