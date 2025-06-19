@@ -42,11 +42,19 @@ const remarkUrlToLink = () => {
 				}
 
 				if (cleanedMatches[i]) {
+					const originalUrl = matches[i]
+					const cleanedUrl = cleanedMatches[i]
+					const removedPunctuation = originalUrl.substring(cleanedUrl.length)
+					
 					children.push({
 						type: "link",
-						url: cleanedMatches[i],
-						children: [{ type: "text", value: matches[i] }],
+						url: cleanedUrl,
+						children: [{ type: "text", value: cleanedUrl }],
 					})
+					
+					if (removedPunctuation) {
+						children.push({ type: "text", value: removedPunctuation })
+					}
 				}
 			})
 
