@@ -505,8 +505,13 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 	// Apply final sorting if needed (for non-timestamp based sorts)
 	const sortedItems = _sortHistoryItems(resultItems, sortOption)
 
+	// Determine whether to preserve order based on sort option
+	// For "mostRelevant", we want to use the fuzzy search order
+	// For all other sort options, we want to preserve the original order
+	const preserveOrder = sortOption !== "mostRelevant"
+
 	// Use fzf for search and highlighting
-	return taskHistorySearch(sortedItems, searchQuery)
+	return taskHistorySearch(sortedItems, searchQuery, preserveOrder)
 }
 
 /**
