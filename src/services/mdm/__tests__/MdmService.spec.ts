@@ -16,6 +16,8 @@ vi.mock("@roo-code/cloud", () => ({
 		hasInstance: vi.fn(),
 		instance: {
 			hasActiveSession: vi.fn(),
+			isRefreshingSession: vi.fn(),
+			isAuthenticated: vi.fn(),
 			getOrganizationId: vi.fn(),
 		},
 	},
@@ -244,6 +246,8 @@ describe("MdmService", () => {
 
 			mockCloudService.hasInstance.mockReturnValue(true)
 			mockCloudService.instance.hasActiveSession.mockReturnValue(true)
+			mockCloudService.instance.isRefreshingSession.mockReturnValue(false)
+			mockCloudService.instance.isAuthenticated.mockReturnValue(true)
 
 			const service = await MdmService.createInstance()
 			const compliance = service.isCompliant()
@@ -279,6 +283,8 @@ describe("MdmService", () => {
 			// Mock CloudService to have instance and active session but wrong org
 			mockCloudService.hasInstance.mockReturnValue(true)
 			mockCloudService.instance.hasActiveSession.mockReturnValue(true)
+			mockCloudService.instance.isRefreshingSession.mockReturnValue(false)
+			mockCloudService.instance.isAuthenticated.mockReturnValue(true)
 			mockCloudService.instance.getOrganizationId.mockReturnValue("different-org-456")
 
 			const service = await MdmService.createInstance()
@@ -300,12 +306,68 @@ describe("MdmService", () => {
 
 			mockCloudService.hasInstance.mockReturnValue(true)
 			mockCloudService.instance.hasActiveSession.mockReturnValue(true)
+			mockCloudService.instance.isRefreshingSession.mockReturnValue(false)
+			mockCloudService.instance.isAuthenticated.mockReturnValue(true)
 			mockCloudService.instance.getOrganizationId.mockReturnValue("correct-org-123")
 
 			const service = await MdmService.createInstance()
 			const compliance = service.isCompliant()
 
 			expect(compliance.compliant).toBe(true)
+		})
+
+		it("should be compliant when refreshing session", async () => {
+			const mockConfig = { requireCloudAuth: true }
+			mockFs.existsSync.mockReturnValue(true)
+			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
+
+			mockCloudService.hasInstance.mockReturnValue(true)
+			mockCloudService.instance.hasActiveSession.mockReturnValue(false)
+			mockCloudService.instance.isRefreshingSession.mockReturnValue(true)
+			mockCloudService.instance.isAuthenticated.mockReturnValue(true)
+
+			const service = await MdmService.createInstance()
+			const compliance = service.isCompliant()
+
+			expect(compliance.compliant).toBe(true)
+		})
+
+		it("should be non-compliant when authenticated but not active or refreshing", async () => {
+			const mockConfig = { requireCloudAuth: true }
+			mockFs.existsSync.mockReturnValue(true)
+			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
+
+			mockCloudService.hasInstance.mockReturnValue(true)
+			mockCloudService.instance.hasActiveSession.mockReturnValue(false)
+			mockCloudService.instance.isRefreshingSession.mockReturnValue(false)
+			mockCloudService.instance.isAuthenticated.mockReturnValue(true)
+
+			const service = await MdmService.createInstance()
+			const compliance = service.isCompliant()
+
+			expect(compliance.compliant).toBe(false)
+			if (!compliance.compliant) {
+				expect(compliance.reason).toContain("requires Roo Code Cloud authentication")
+			}
+		})
+
+		it("should be non-compliant when not authenticated, not active, and not refreshing", async () => {
+			const mockConfig = { requireCloudAuth: true }
+			mockFs.existsSync.mockReturnValue(true)
+			mockFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig))
+
+			mockCloudService.hasInstance.mockReturnValue(true)
+			mockCloudService.instance.hasActiveSession.mockReturnValue(false)
+			mockCloudService.instance.isRefreshingSession.mockReturnValue(false)
+			mockCloudService.instance.isAuthenticated.mockReturnValue(false)
+
+			const service = await MdmService.createInstance()
+			const compliance = service.isCompliant()
+
+			expect(compliance.compliant).toBe(false)
+			if (!compliance.compliant) {
+				expect(compliance.reason).toContain("requires Roo Code Cloud authentication")
+			}
 		})
 	})
 

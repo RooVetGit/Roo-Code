@@ -42,6 +42,7 @@ export class CloudService {
 
 			this.authService.on("inactive-session", this.authListener)
 			this.authService.on("active-session", this.authListener)
+			this.authService.on("refreshing-session", this.authListener)
 			this.authService.on("logged-out", this.authListener)
 			this.authService.on("user-info", this.authListener)
 
@@ -87,6 +88,11 @@ export class CloudService {
 	public hasActiveSession(): boolean {
 		this.ensureInitialized()
 		return this.authService!.hasActiveSession()
+	}
+
+	public isRefreshingSession(): boolean {
+		this.ensureInitialized()
+		return this.authService!.isRefreshingSession()
 	}
 
 	public getUserInfo(): CloudUserInfo | null {
@@ -152,7 +158,9 @@ export class CloudService {
 
 	public dispose(): void {
 		if (this.authService) {
+			this.authService.off("inactive-session", this.authListener)
 			this.authService.off("active-session", this.authListener)
+			this.authService.off("refreshing-session", this.authListener)
 			this.authService.off("logged-out", this.authListener)
 			this.authService.off("user-info", this.authListener)
 		}

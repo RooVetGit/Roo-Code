@@ -13,6 +13,7 @@ import { getUserAgent } from "./utils"
 export interface AuthServiceEvents {
 	"inactive-session": [data: { previousState: AuthState }]
 	"active-session": [data: { previousState: AuthState }]
+	"refreshing-session": [data: { previousState: AuthState }]
 	"logged-out": [data: { previousState: AuthState }]
 	"user-info": [data: { userInfo: CloudUserInfo }]
 }
@@ -27,7 +28,7 @@ type AuthCredentials = z.infer<typeof authCredentialsSchema>
 const AUTH_CREDENTIALS_KEY = "clerk-auth-credentials"
 const AUTH_STATE_KEY = "clerk-auth-state"
 
-type AuthState = "initializing" | "logged-out" | "active-session" | "inactive-session"
+type AuthState = "initializing" | "logged-out" | "active-session" | "inactive-session" | "refreshing-session"
 
 const clerkSignInResponseSchema = z.object({
 	response: z.object({
@@ -331,6 +332,10 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		return this.state === "active-session"
 	}
 
+	public isRefreshingSession(): boolean {
+		return this.state === "refreshing-session"
+	}
+
 	/**
 	 * Refresh the session
 	 *
@@ -344,14 +349,20 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 		try {
 			const previousState = this.state
+
+			// Transition to refreshing state
+			if (this.state !== "refreshing-session") {
+				this.state = "refreshing-session"
+				this.emit("refreshing-session", { previousState })
+				this.log("[auth] Transitioned to refreshing-session state")
+			}
+
 			this.sessionToken = await this.clerkCreateSessionToken()
 			this.state = "active-session"
 
-			if (previousState !== "active-session") {
-				this.log("[auth] Transitioned to active-session state")
-				this.emit("active-session", { previousState })
-				this.fetchUserInfo()
-			}
+			this.log("[auth] Transitioned to active-session state")
+			this.emit("active-session", { previousState: "refreshing-session" })
+			this.fetchUserInfo()
 		} catch (error) {
 			if (error instanceof InvalidClientTokenError) {
 				this.log("[auth] Invalid/Expired client token: clearing credentials")

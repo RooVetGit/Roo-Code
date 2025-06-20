@@ -36,6 +36,7 @@ describe("CloudService", () => {
 		logout: ReturnType<typeof vi.fn>
 		isAuthenticated: ReturnType<typeof vi.fn>
 		hasActiveSession: ReturnType<typeof vi.fn>
+		isRefreshingSession: ReturnType<typeof vi.fn>
 		getUserInfo: ReturnType<typeof vi.fn>
 		getState: ReturnType<typeof vi.fn>
 		getSessionToken: ReturnType<typeof vi.fn>
@@ -84,6 +85,7 @@ describe("CloudService", () => {
 			logout: vi.fn(),
 			isAuthenticated: vi.fn().mockReturnValue(false),
 			hasActiveSession: vi.fn().mockReturnValue(false),
+			isRefreshingSession: vi.fn().mockReturnValue(false),
 			getUserInfo: vi.fn(),
 			getState: vi.fn().mockReturnValue("logged-out"),
 			getSessionToken: vi.fn(),
@@ -173,6 +175,12 @@ describe("CloudService", () => {
 		it("should delegate hasActiveSession to AuthService", () => {
 			const result = cloudService.hasActiveSession()
 			expect(mockAuthService.hasActiveSession).toHaveBeenCalled()
+			expect(result).toBe(false)
+		})
+
+		it("should delegate isRefreshingSession to AuthService", () => {
+			const result = cloudService.isRefreshingSession()
+			expect(mockAuthService.isRefreshingSession).toHaveBeenCalled()
 			expect(result).toBe(false)
 		})
 
