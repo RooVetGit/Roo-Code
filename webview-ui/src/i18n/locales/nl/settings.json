@@ -183,6 +183,8 @@
 		"apiKey": "API-sleutel",
 		"openAiApiKey": "OpenAI API-sleutel",
 		"openAiBaseUrl": "Basis-URL",
+		"openAiApiTimeout": "Timeout (minuten)",
+		"openAiApiTimeoutDescription": "Timeout voor API-verzoeken aan de provider (min. 5 min). Als er binnen deze periode geen antwoord is, wordt het verzoek opnieuw geprobeerd. Verhoog deze waarde voor tragere modellen.",
 		"getOpenAiApiKey": "OpenAI API-sleutel ophalen",
 		"mistralApiKey": "Mistral API-sleutel",
 		"getMistralApiKey": "Mistral / Codestral API-sleutel ophalen",

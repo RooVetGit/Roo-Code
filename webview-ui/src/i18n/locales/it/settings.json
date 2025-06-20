@@ -183,6 +183,8 @@
 		"openAiApiKey": "Chiave API OpenAI",
 		"apiKey": "Chiave API",
 		"openAiBaseUrl": "URL base",
+		"openAiApiTimeout": "Timeout (minuti)",
+		"openAiApiTimeoutDescription": "Timeout per le richieste API al provider (min. 5 min). Se non c'è risposta entro questo periodo, la richiesta viene ripetuta. Aumentare per modelli più lenti.",
 		"getOpenAiApiKey": "Ottieni chiave API OpenAI",
 		"mistralApiKey": "Chiave API Mistral",
 		"getMistralApiKey": "Ottieni chiave API Mistral / Codestral",

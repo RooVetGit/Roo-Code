@@ -183,6 +183,8 @@
 		"openAiApiKey": "OpenAI API Anahtarı",
 		"apiKey": "API Anahtarı",
 		"openAiBaseUrl": "Temel URL",
+		"openAiApiTimeout": "Zaman aşımı (dakika)",
+		"openAiApiTimeoutDescription": "Sağlayıcıya yapılan API istekleri için zaman aşımı (min. 5 dk). Bu süre içinde yanıt yoksa, istek yeniden denenir. Daha yavaş modeller için bu değeri artırın.",
 		"getOpenAiApiKey": "OpenAI API Anahtarı Al",
 		"mistralApiKey": "Mistral API Anahtarı",
 		"getMistralApiKey": "Mistral / Codestral API Anahtarı Al",

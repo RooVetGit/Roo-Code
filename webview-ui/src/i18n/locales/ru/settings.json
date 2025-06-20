@@ -183,6 +183,8 @@
 		"apiKey": "API-ключ",
 		"openAiApiKey": "OpenAI API-ключ",
 		"openAiBaseUrl": "Базовый URL",
+		"openAiApiTimeout": "Таймаут (минуты)",
+		"openAiApiTimeoutDescription": "Таймаут для запросов к провайдеру API (минимум 5 мин). Если нет ответа за это время, запрос будет повторён. Увеличьте значение для медленных моделей.",
 		"getOpenAiApiKey": "Получить OpenAI API-ключ",
 		"mistralApiKey": "Mistral API-ключ",
 		"getMistralApiKey": "Получить Mistral / Codestral API-ключ",

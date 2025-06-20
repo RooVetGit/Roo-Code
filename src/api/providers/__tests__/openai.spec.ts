@@ -101,6 +101,7 @@ describe("OpenAiHandler", () => {
 			expect(vi.mocked(OpenAI)).toHaveBeenCalledWith({
 				baseURL: expect.any(String),
 				apiKey: expect.any(String),
+				timeout: expect.any(Number),
 				defaultHeaders: {
 					"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
 					"X-Title": "Roo Code",

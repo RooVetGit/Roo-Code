@@ -184,6 +184,8 @@
 		"apiKey": "Clau API",
 		"openAiBaseUrl": "URL base",
 		"getOpenAiApiKey": "Obtenir clau API d'OpenAI",
+		"openAiApiTimeout": "Temps d'espera (minuts)",
+		"openAiApiTimeoutDescription": "Temps d'espera per a sol·licituds d'API al proveïdor (mín. 5 min). Si no hi ha resposta en aquest període, la sol·licitud es reintenta. Augmenta el valor per a models més lents.",
 		"mistralApiKey": "Clau API de Mistral",
 		"getMistralApiKey": "Obtenir clau API de Mistral / Codestral",
 		"codestralBaseUrl": "URL base de Codestral (opcional)",

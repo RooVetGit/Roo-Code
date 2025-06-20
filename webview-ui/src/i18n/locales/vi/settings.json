@@ -183,6 +183,8 @@
 		"openAiApiKey": "Khóa API OpenAI",
 		"apiKey": "Khóa API",
 		"openAiBaseUrl": "URL cơ sở",
+		"openAiApiTimeout": "Thời gian chờ (phút)",
+		"openAiApiTimeoutDescription": "Thời gian chờ cho các yêu cầu API đến nhà cung cấp (tối thiểu 5 phút). Nếu không có phản hồi trong khoảng thời gian này, yêu cầu sẽ được thử lại. Tăng giá trị này cho các mô hình chậm hơn.",
 		"getOpenAiApiKey": "Lấy khóa API OpenAI",
 		"mistralApiKey": "Khóa API Mistral",
 		"getMistralApiKey": "Lấy khóa API Mistral / Codestral",

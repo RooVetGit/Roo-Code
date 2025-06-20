@@ -184,6 +184,8 @@
 		"apiKey": "APIキー",
 		"openAiBaseUrl": "ベースURL",
 		"getOpenAiApiKey": "OpenAI APIキーを取得",
+		"openAiApiTimeout": "タイムアウト（分）",
+		"openAiApiTimeoutDescription": "プロバイダーへのAPIリクエストのタイムアウト（最小5分）。この期間内に応答がない場合、リクエストが再試行されます。遅いモデルの場合は値を増やしてください。",
 		"mistralApiKey": "Mistral APIキー",
 		"getMistralApiKey": "Mistral / Codestral APIキーを取得",
 		"codestralBaseUrl": "Codestral ベースURL（オプション）",

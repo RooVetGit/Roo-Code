@@ -123,11 +123,13 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiStreamingEnabled: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
+	openAiApiTimeout: z.number().optional(),
 })
 
 const ollamaSchema = baseProviderSettingsSchema.extend({
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
+	ollamaApiTimeout: z.number().optional(),
 })
 
 const vsCodeLmSchema = baseProviderSettingsSchema.extend({
@@ -146,6 +148,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 	lmStudioBaseUrl: z.string().optional(),
 	lmStudioDraftModelId: z.string().optional(),
 	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
+	lmStudioApiTimeout: z.number().optional(),
 })
 
 const geminiSchema = apiModelIdProviderModelSchema.extend({
@@ -265,9 +268,12 @@ export const MODEL_ID_KEYS: Partial<keyof ProviderSettings>[] = [
 	"glamaModelId",
 	"openRouterModelId",
 	"openAiModelId",
+	"openAiApiTimeout",
 	"ollamaModelId",
+	"ollamaApiTimeout",
 	"lmStudioModelId",
 	"lmStudioDraftModelId",
+	"lmStudioApiTimeout",
 	"unboundModelId",
 	"requestyModelId",
 	"litellmModelId",
