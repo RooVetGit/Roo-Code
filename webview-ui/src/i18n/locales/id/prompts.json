@@ -27,7 +27,18 @@
 			"command": "Jalankan Perintah",
 			"mcp": "Gunakan MCP"
 		},
-		"noTools": "Tidak Ada"
+		"selectMcpServers": "Pilih server MCP",
+		"searchMcpServers": "Cari server MCP",
+		"allowedMcpList": "Server MCP diizinkan",
+		"deniedMcpList": "Server MCP diblokir",
+		"noMcpServers": "Tidak ada server MCP ditemukan",
+		"noMatchFound": "Tidak ada hasil cocok",
+		"noTools": "Tidak Ada",
+		"mcpAll": "Semua",
+		"mcpSelectedCount": "Aktif {{allowed}} / Nonaktif {{denied}}",
+		"buttons": {
+			"save": "Simpan"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definisi Peran",

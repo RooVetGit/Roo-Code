@@ -27,7 +27,18 @@
 			"command": "Exécuter des commandes",
 			"mcp": "Utiliser MCP"
 		},
-		"noTools": "Aucun"
+		"selectMcpServers": "Sélectionner les serveurs MCP",
+		"searchMcpServers": "Rechercher les serveurs MCP",
+		"allowedMcpList": "Serveurs MCP autorisés",
+		"deniedMcpList": "Serveurs MCP refusés",
+		"noMcpServers": "Aucun serveur MCP trouvé",
+		"noMatchFound": "Aucune correspondance trouvée",
+		"noTools": "Aucun",
+		"mcpAll": "Tous",
+		"mcpSelectedCount": "Activés {{allowed}} / Désactivés {{denied}}",
+		"buttons": {
+			"save": "Enregistrer"
+		}
 	},
 	"roleDefinition": {
 		"title": "Définition du rôle",

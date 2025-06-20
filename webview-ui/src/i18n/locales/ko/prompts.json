@@ -27,7 +27,18 @@
 			"command": "명령 실행",
 			"mcp": "MCP 사용"
 		},
-		"noTools": "없음"
+		"selectMcpServers": "MCP 서버 선택",
+		"searchMcpServers": "MCP 서버 검색",
+		"allowedMcpList": "허용된 MCP 서버",
+		"deniedMcpList": "차단된 MCP 서버",
+		"noMcpServers": "MCP 서버를 찾을 수 없음",
+		"noMatchFound": "일치하는 항목 없음",
+		"noTools": "없음",
+		"mcpAll": "전체",
+		"mcpSelectedCount": "활성화 {{allowed}} / 비활성화 {{denied}}",
+		"buttons": {
+			"save": "저장"
+		}
 	},
 	"roleDefinition": {
 		"title": "역할 정의",

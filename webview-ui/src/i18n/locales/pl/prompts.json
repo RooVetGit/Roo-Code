@@ -27,7 +27,18 @@
 			"command": "Uruchamiaj polecenia",
 			"mcp": "Używaj MCP"
 		},
-		"noTools": "Brak"
+		"selectMcpServers": "Wybierz serwery MCP",
+		"searchMcpServers": "Szukaj serwerów MCP",
+		"allowedMcpList": "Dozwolone serwery MCP",
+		"deniedMcpList": "Zabronione serwery MCP",
+		"noMcpServers": "Nie znaleziono serwerów MCP",
+		"noMatchFound": "Brak pasujących wyników",
+		"noTools": "Brak",
+		"mcpAll": "Wszystkie",
+		"mcpSelectedCount": "Włączone {{allowed}} / Wyłączone {{denied}}",
+		"buttons": {
+			"save": "Zapisz"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definicja roli",

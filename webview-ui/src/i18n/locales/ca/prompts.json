@@ -27,7 +27,18 @@
 			"command": "Executar comandes",
 			"mcp": "Utilitzar MCP"
 		},
-		"noTools": "Cap"
+		"selectMcpServers": "Selecciona servidors MCP",
+		"searchMcpServers": "Cerca servidors MCP",
+		"allowedMcpList": "Servidors MCP permesos",
+		"deniedMcpList": "Servidors MCP denegats",
+		"noMcpServers": "No s'han trobat servidors MCP",
+		"noMatchFound": "No s'ha trobat cap coincidència",
+		"noTools": "Cap",
+		"mcpAll": "Tots",
+		"mcpSelectedCount": "Actius {{allowed}} / Inactius {{denied}}",
+		"buttons": {
+			"save": "Desa"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definició de rol",
