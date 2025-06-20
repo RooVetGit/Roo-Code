@@ -199,10 +199,8 @@ export class BrowserSession {
 				await this.browser.disconnect().catch(() => {})
 			} else {
 				await this.browser?.close().catch(() => {})
-				this.resetBrowserState()
 			}
-
-			// this.resetBrowserState()
+			this.resetBrowserState()
 		}
 		return {}
 	}
