@@ -13,6 +13,7 @@ export enum DropdownOptionType {
 	SEPARATOR = "separator",
 	SHORTCUT = "shortcut",
 	ACTION = "action",
+	COMPONENT = "component",
 }
 
 export interface DropdownOption {
@@ -21,6 +22,7 @@ export interface DropdownOption {
 	disabled?: boolean
 	type?: DropdownOptionType
 	pinned?: boolean
+	component?: React.ReactNode
 }
 
 export interface SelectDropdownProps {
@@ -37,6 +39,7 @@ export interface SelectDropdownProps {
 	placeholder?: string
 	shortcutText?: string
 	renderItem?: (option: DropdownOption) => React.ReactNode
+	disableSearch?: boolean
 }
 
 export const SelectDropdown = React.memo(
@@ -56,6 +59,7 @@ export const SelectDropdown = React.memo(
 				placeholder = "",
 				shortcutText = "",
 				renderItem,
+				disableSearch = false,
 			},
 			ref,
 		) => {
@@ -100,7 +104,10 @@ export const SelectDropdown = React.memo(
 				return options
 					.filter(
 						(option) =>
-							option.type !== DropdownOptionType.SEPARATOR && option.type !== DropdownOptionType.SHORTCUT,
+							option.type !== DropdownOptionType.SEPARATOR &&
+							option.type !== DropdownOptionType.SHORTCUT &&
+							// Only include COMPONENT type if it has a label or value to search by
+							!(option.type === DropdownOptionType.COMPONENT && !option.label && !option.value),
 					)
 					.map((option) => ({
 						original: option,
@@ -117,22 +124,26 @@ export const SelectDropdown = React.memo(
 
 			// Filter options based on search value using memoized Fzf instance
 			const filteredOptions = React.useMemo(() => {
-				// If no search value, return all options without filtering
-				if (!searchValue) return options
+				// If search is disabled or no search value, return all options without filtering
+				if (disableSearch || !searchValue) return options
 
 				// Get fuzzy matching items - only perform search if we have a search value
 				const matchingItems = fzfInstance.find(searchValue).map((result) => result.item.original)
 
-				// Always include separators and shortcuts
+				// Always include separators, shortcuts, and components without searchable text
 				return options.filter((option) => {
-					if (option.type === DropdownOptionType.SEPARATOR || option.type === DropdownOptionType.SHORTCUT) {
+					if (
+						option.type === DropdownOptionType.SEPARATOR ||
+						option.type === DropdownOptionType.SHORTCUT ||
+						(option.type === DropdownOptionType.COMPONENT && !option.label && !option.value)
+					) {
 						return true
 					}
 
 					// Include if it's in the matching items
 					return matchingItems.some((item) => item.value === option.value)
 				})
-			}, [options, searchValue, fzfInstance])
+			}, [options, searchValue, fzfInstance, disableSearch])
 
 			// Group options by type and handle separators
 			const groupedOptions = React.useMemo(() => {
@@ -209,24 +220,26 @@ export const SelectDropdown = React.memo(
 						className={cn("p-0 overflow-hidden", contentClassName)}>
 						<div className="flex flex-col w-full">
 							{/* Search input */}
-							<div className="relative p-2 border-b border-vscode-dropdown-border">
-								<input
-									aria-label="Search"
-									ref={searchInputRef}
-									value={searchValue}
-									onChange={(e) => setSearchValue(e.target.value)}
-									placeholder={t("common:ui.search_placeholder")}
-									className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
-								/>
-								{searchValue.length > 0 && (
-									<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
-										<X
-											className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
-											onClick={onClearSearch}
-										/>
-									</div>
-								)}
-							</div>
+							{!disableSearch && (
+								<div className="relative p-2 border-b border-vscode-dropdown-border">
+									<input
+										aria-label="Search"
+										ref={searchInputRef}
+										value={searchValue}
+										onChange={(e) => setSearchValue(e.target.value)}
+										placeholder={t("common:ui.search_placeholder")}
+										className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
+									/>
+									{searchValue.length > 0 && (
+										<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
+											<X
+												className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+												onClick={onClearSearch}
+											/>
+										</div>
+									)}
+								</div>
+							)}
 
 							{/* Dropdown items - Use windowing for large lists */}
 							<div className="max-h-[300px] overflow-y-auto">
@@ -255,6 +268,27 @@ export const SelectDropdown = React.memo(
 														key={`label-${index}`}
 														className="px-3 py-1.5 text-sm opacity-50">
 														{option.label}
+													</div>
+												)
+											}
+
+											if (option.type === DropdownOptionType.COMPONENT && option.component) {
+												return (
+													<div
+														key={`component-${index}`}
+														onClick={() => !option.disabled && handleSelect(option.value)}
+														className={cn(
+															"px-3 py-1.5 text-sm cursor-pointer",
+															option.disabled
+																? "opacity-50 cursor-not-allowed"
+																: "hover:bg-vscode-list-hoverBackground",
+															option.value === value
+																? "bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground"
+																: "",
+															itemClassName,
+														)}
+														data-testid="dropdown-component-item">
+														{option.component}
 													</div>
 												)
 											}
