@@ -6,6 +6,9 @@ on:
             - main
         paths:
             - 'apps/web-roo-code/**'
+    pull_request:
+        paths:
+            - 'apps/web-roo-code/**'
     workflow_dispatch:
 
 env:
