@@ -19,7 +19,7 @@ type AssistantMessage = {
 		role: "assistant"
 		model: string
 		content: ClaudeCodeContent[]
-		stop_reason: null
+		stop_reason: string | null
 		stop_sequence: null
 		usage: {
 			input_tokens: number
