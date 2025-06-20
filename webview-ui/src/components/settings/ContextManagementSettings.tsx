@@ -309,7 +309,7 @@ export const ContextManagementSettings = ({
 									step={1}
 									value={[getCurrentThresholdValue()]}
 									onValueChange={([value]) => handleThresholdChange(value)}
-									data-testid="auto-condense-percent-slider"
+									data-testid="condense-threshold-slider"
 								/>
 								<span className="w-20">{getCurrentThresholdValue()}%</span>
 							</div>
