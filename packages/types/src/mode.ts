@@ -26,6 +26,23 @@ export const groupOptionsSchema = z.object({
 			{ message: "Invalid regular expression pattern" },
 		),
 	description: z.string().optional(),
+	mcp: z
+		.object({
+			included: z.array(
+				z.union([
+					z.string(),
+					z.record(
+						z.string(),
+						z.object({
+							allowedTools: z.array(z.string()).optional(), // not used yet
+							disallowedTools: z.array(z.string()).optional(), // not used yet
+						}),
+					),
+				]),
+			),
+			description: z.string().optional(),
+		})
+		.optional(),
 })
 
 export type GroupOptions = z.infer<typeof groupOptionsSchema>

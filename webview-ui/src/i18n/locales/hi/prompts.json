@@ -29,7 +29,19 @@
 			"command": "कमांड्स चलाएँ",
 			"mcp": "MCP का उपयोग करें"
 		},
-		"noTools": "कोई नहीं"
+		"selectMcpServers": "MCP सर्वर चुनें",
+		"searchMcpServers": "MCP सर्वर खोजें",
+		"requiredMcpList": "आवश्यक MCP सर्वर",
+		"noMcpServers": "कोई MCP सर्वर नहीं मिला",
+		"noMatchFound": "कोई मिलान नहीं मिला",
+		"noTools": "कोई नहीं",
+		"mcpAll": "सभी",
+		"mcpSelectedCount": "{{included}} शामिल",
+		"mcpDefaultDescription": "यदि कोई MCP सर्वर चयनित नहीं है, तो सभी डिफ़ॉल्ट रूप से सक्षम होंगे।",
+		"buttons": {
+			"save": "सहेजें",
+			"clearAll": "सभी साफ़ करें"
+		}
 	},
 	"roleDefinition": {
 		"title": "भूमिका परिभाषा",
