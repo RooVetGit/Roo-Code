@@ -135,7 +135,10 @@ const ApiOptions = ({
 		info: selectedModelInfo,
 	} = useSelectedModel(apiConfiguration)
 
-	const { data: routerModels, refetch: refetchRouterModels } = useRouterModels()
+	const { data: routerModels, refetch: refetchRouterModels } = useRouterModels({
+		openRouterBaseUrl: apiConfiguration?.openRouterBaseUrl,
+		openRouterApiKey: apiConfiguration?.openRouterApiKey,
+	})
 
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
