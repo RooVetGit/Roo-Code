@@ -156,6 +156,7 @@
 		"didRead": "Roo read this file:",
 		"wantsToEdit": "Roo wants to edit this file:",
 		"wantsToEditOutsideWorkspace": "Roo wants to edit this file outside of the workspace:",
+		"wantsToEditProtected": "Roo wants to edit a protected configuration file:",
 		"wantsToApplyBatchChanges": "Roo wants to apply changes to multiple files:",
 		"wantsToCreate": "Roo wants to create a new file:",
 		"wantsToSearchReplace": "Roo wants to search and replace in this file:",
@@ -167,12 +168,20 @@
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wants to view the top level files in this directory:",
 		"didViewTopLevel": "Roo viewed the top level files in this directory:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo wants to view the top level files in this directory (outside workspace):",
+		"didViewTopLevelOutsideWorkspace": "Roo viewed the top level files in this directory (outside workspace):",
 		"wantsToViewRecursive": "Roo wants to recursively view all files in this directory:",
 		"didViewRecursive": "Roo recursively viewed all files in this directory:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo wants to recursively view all files in this directory (outside workspace):",
+		"didViewRecursiveOutsideWorkspace": "Roo recursively viewed all files in this directory (outside workspace):",
 		"wantsToViewDefinitions": "Roo wants to view source code definition names used in this directory:",
 		"didViewDefinitions": "Roo viewed source code definition names used in this directory:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo wants to view source code definition names used in this directory (outside workspace):",
+		"didViewDefinitionsOutsideWorkspace": "Roo viewed source code definition names used in this directory (outside workspace):",
 		"wantsToSearch": "Roo wants to search this directory for <code>{{regex}}</code>:",
-		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
+		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:",
+		"wantsToSearchOutsideWorkspace": "Roo wants to search this directory (outside workspace) for <code>{{regex}}</code>:",
+		"didSearchOutsideWorkspace": "Roo searched this directory (outside workspace) for <code>{{regex}}</code>:"
 	},
 	"codebaseSearch": {
 		"wantsToSearch": "Roo wants to search the codebase for <code>{{query}}</code>:",
@@ -222,9 +231,9 @@
 		"title": "🎉 Roo Code {{version}} Released",
 		"description": "Roo Code {{version}} brings major new features and improvements based on your feedback.",
 		"whatsNew": "What's New",
-		"feature1": "<bold>Experimental Marketplace</bold>: Discover and install modes and MCPs from the new marketplace (enable in <experimentalSettingsLink>Experimental Settings</experimentalSettingsLink>)",
-		"feature2": "<bold>Enhanced File Operations</bold>: Multiple concurrent file writes in experimental settings, and concurrent reads now in <contextSettingsLink>Context Settings</contextSettingsLink>",
-		"feature3": "<bold>MCP Improvements & More</bold>: Enhanced MCP support, Mermaid controls, Amazon Bedrock thinking support, and much more!",
+		"feature1": "<bold>Roo Marketplace Launch</bold>: The marketplace is now live! Discover and install modes and MCPs easier than ever before.",
+		"feature2": "<bold>Gemini 2.5 Models</bold>: Added support for new Gemini 2.5 Pro, Flash, and Flash Lite models.",
+		"feature3": "<bold>Excel File Support & More</bold>: Added Excel (.xlsx) file support and numerous bug fixes and improvements!",
 		"hideButton": "Hide announcement",
 		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},

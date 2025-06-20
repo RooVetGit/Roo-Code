@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "Include files outside workspace",
 				"description": "Allow Roo to create and edit files outside the current workspace without requiring approval."
+			},
+			"protected": {
+				"label": "Include protected files",
+				"description": "Allow Roo to create and edit protected files (like .rooignore and .roo/ configuration files) without requiring approval."
 			}
 		},
 		"browser": {
@@ -609,5 +613,7 @@
 	"labels": {
 		"customArn": "Custom ARN",
 		"useCustomArn": "Use custom ARN..."
-	}
+	},
+	"includeMaxOutputTokens": "Include max output tokens",
+	"includeMaxOutputTokensDescription": "Send max output tokens parameter in API requests. Some providers may not support this."
 }

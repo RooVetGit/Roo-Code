@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react"
-import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
+import { MarketplaceItem, TelemetryEventName } from "@roo-code/types"
 import { vscode } from "@/utils/vscode"
+import { telemetryClient } from "@/utils/TelemetryClient"
 import { ViewState } from "../MarketplaceViewStateManager"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { isValidUrl } from "../../../utils/url"
@@ -43,6 +44,13 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 	const isInstalled = isInstalledGlobally || isInstalledInProject
 
 	const handleInstallClick = () => {
+		// Send telemetry for install button click
+		telemetryClient.capture(TelemetryEventName.MARKETPLACE_INSTALL_BUTTON_CLICKED, {
+			itemId: item.id,
+			itemType: item.type,
+			itemName: item.name,
+		})
+
 		// Show modal for all item types (MCP and modes)
 		setShowInstallModal(true)
 	}
@@ -54,7 +62,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 					<div className="flex gap-2 items-start">
 						<div>
 							<h3 className="text-lg font-semibold text-vscode-foreground mt-0 mb-1 leading-none">
-								{item.url && isValidUrl(item.url) ? (
+								{item.type === "mcp" && item.url && isValidUrl(item.url) ? (
 									<Button
 										variant="link"
 										className="p-0 h-auto text-lg font-semibold text-vscode-foreground hover:underline"
@@ -114,10 +122,10 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 
 				{/* Installation status badges and tags in the same row */}
 				{(isInstalled || (item.tags && item.tags.length > 0)) && (
-					<div className="relative flex gap-1 my-2 overflow-x-auto scrollbar-hide">
+					<div className="relative flex flex-wrap gap-1 my-2">
 						{/* Installation status badge on the left */}
 						{isInstalled && (
-							<span className="text-xs px-2 py-0.5 rounded-sm h-5 flex items-center bg-green-600/20 text-green-400 border border-green-600/30">
+							<span className="text-xs px-2 py-0.5 rounded-sm h-5 flex items-center bg-green-600/20 text-green-400 border border-green-600/30 shrink-0">
 								{t("marketplace:items.card.installed")}
 							</span>
 						)}

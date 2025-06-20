@@ -14,14 +14,12 @@ import { RefreshTimer } from "./RefreshTimer"
 const ORGANIZATION_SETTINGS_CACHE_KEY = "organization-settings"
 
 export class SettingsService {
-	private static _instance: SettingsService | null = null
-
 	private context: vscode.ExtensionContext
 	private authService: AuthService
 	private settings: OrganizationSettings | undefined = undefined
 	private timer: RefreshTimer
 
-	private constructor(context: vscode.ExtensionContext, authService: AuthService, callback: () => void) {
+	constructor(context: vscode.ExtensionContext, authService: AuthService, callback: () => void) {
 		this.context = context
 		this.authService = authService
 
@@ -120,23 +118,5 @@ export class SettingsService {
 
 	public dispose(): void {
 		this.timer.stop()
-	}
-
-	static get instance() {
-		if (!this._instance) {
-			throw new Error("SettingsService not initialized")
-		}
-
-		return this._instance
-	}
-
-	static async createInstance(context: vscode.ExtensionContext, callback: () => void) {
-		if (this._instance) {
-			throw new Error("SettingsService instance already created")
-		}
-
-		this._instance = new SettingsService(context, AuthService.instance, callback)
-		this._instance.initialize()
-		return this._instance
 	}
 }

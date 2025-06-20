@@ -67,6 +67,9 @@ export async function insertContentTool(
 			return
 		}
 
+		// Check if file is write-protected
+		const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
+
 		const absolutePath = path.resolve(cline.cwd, relPath)
 		const fileExists = await fileExistsAtPath(absolutePath)
 
@@ -125,10 +128,11 @@ export async function insertContentTool(
 			...sharedMessageProps,
 			diff,
 			lineNumber: lineNumber,
+			isProtected: isWriteProtected,
 		} satisfies ClineSayTool)
 
 		const didApprove = await cline
-			.ask("tool", completeMessage, false)
+			.ask("tool", completeMessage, isWriteProtected)
 			.then((response) => response.response === "yesButtonClicked")
 
 		if (!didApprove) {

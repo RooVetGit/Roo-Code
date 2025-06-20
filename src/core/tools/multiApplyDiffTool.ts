@@ -154,7 +154,7 @@ Expected structure:
     <path>relative/path/to/file.ext</path>
     <diff>
       <content>diff content here</content>
-      <start_line>optional line number</start_line>
+      <start_line>line number</start_line>
     </diff>
   </file>
 </args>
@@ -221,6 +221,7 @@ Original error: ${errorMessage}`
 	try {
 		// First validate all files and prepare for batch approval
 		const operationsToApprove: OperationResult[] = []
+		const allDiffErrors: string[] = [] // Collect all diff errors
 
 		for (const operation of operations) {
 			const { path: relPath, diff: diffItems } = operation
@@ -235,6 +236,9 @@ Original error: ${errorMessage}`
 				})
 				continue
 			}
+
+			// Check if file is write-protected
+			const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
 
 			// Verify file exists
 			const absolutePath = path.resolve(cline.cwd, relPath)
@@ -258,6 +262,11 @@ Original error: ${errorMessage}`
 
 		// Handle batch approval if there are multiple files
 		if (operationsToApprove.length > 1) {
+			// Check if any files are write-protected
+			const hasProtectedFiles = operationsToApprove.some(
+				(opResult) => cline.rooProtectedController?.isWriteProtected(opResult.path) || false,
+			)
+
 			// Prepare batch diff data
 			const batchDiffs = operationsToApprove.map((opResult) => {
 				const readablePath = getReadablePath(cline.cwd, opResult.path)
@@ -279,9 +288,10 @@ Original error: ${errorMessage}`
 			const completeMessage = JSON.stringify({
 				tool: "appliedDiff",
 				batchDiffs,
+				isProtected: hasProtectedFiles,
 			} satisfies ClineSayTool)
 
-			const { response, text, images } = await cline.ask("tool", completeMessage, false)
+			const { response, text, images } = await cline.ask("tool", completeMessage, hasProtectedFiles)
 
 			// Process batch response
 			if (response === "yesButtonClicked") {
@@ -427,6 +437,9 @@ Original error: ${errorMessage}`
 								continue
 							}
 
+							// Collect error for later reporting
+							allDiffErrors.push(`${relPath} - Diff ${i + 1}: ${failPart.error}`)
+
 							const errorDetails = failPart.details ? JSON.stringify(failPart.details, null, 2) : ""
 							formattedError += `<error_details>
 Diff ${i + 1} failed for file: ${relPath}
@@ -471,6 +484,17 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 						}
 						cline.recordToolError("apply_diff", formattedError)
 						results.push(formattedError)
+
+						// For single file operations, we need to send a complete message to stop the spinner
+						if (operationsToApprove.length === 1) {
+							const sharedMessageProps: ClineSayTool = {
+								tool: "appliedDiff",
+								path: getReadablePath(cline.cwd, relPath),
+								diff: diffItems.map((item) => item.content).join("\n\n"),
+							}
+							// Send a complete message (partial: false) to update the UI and stop the spinner
+							await cline.ask("tool", JSON.stringify(sharedMessageProps), false).catch(() => {})
+						}
 					}
 					continue
 				}
@@ -485,9 +509,11 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				await cline.diffViewProvider.scrollToFirstDiff()
 
 				// For batch operations, we've already gotten approval
+				const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
 				const sharedMessageProps: ClineSayTool = {
 					tool: "appliedDiff",
 					path: getReadablePath(cline.cwd, relPath),
+					isProtected: isWriteProtected,
 				}
 
 				// If single file, ask for approval
@@ -511,7 +537,9 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 						)
 					}
 
-					didApprove = await askApproval("tool", operationMessage, toolProgressStatus)
+					// Check if file is write-protected
+					const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
+					didApprove = await askApproval("tool", operationMessage, toolProgressStatus, isWriteProtected)
 				}
 
 				if (!didApprove) {
@@ -557,6 +585,11 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 		// Add filtered operation errors to results
 		if (filteredOperationErrors.length > 0) {
 			results.push(...filteredOperationErrors)
+		}
+
+		// Report all diff errors at once if any
+		if (allDiffErrors.length > 0) {
+			await cline.say("diff_error", allDiffErrors.join("\n"))
 		}
 
 		// Push the final result combining all operation results
