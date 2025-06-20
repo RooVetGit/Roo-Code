@@ -11,6 +11,9 @@ const TASK_HISTORY_DIR_NAME = "taskHistory"
 const TASK_HISTORY_VERSION_KEY = "taskHistoryVersion"
 const CURRENT_TASK_HISTORY_VERSION = 2 // Version 1: old array, Version 2: new file-based, Version 3: file-based indexes, Version 4: separate directories
 
+// Configuration for batch processing; empirically, a value of 20 seems to perform best:
+const BATCH_SIZE = 20
+
 const itemObjectCache = new Map<string, HistoryItem>()
 
 /**
@@ -95,26 +98,6 @@ async function _readTaskHistoryMonthIndex(
 		console.error(`[TaskHistory] Error reading month index file for ${year}-${month}:`, error)
 	}
 	return {}
-}
-
-/**
- * Writes the index object for a given month to a JSON file.
- * @param year - YYYY string.
- * @param month - MM string.
- * @param indexData - The Record of {workspacePath: {[taskId: string]: timestamp}} to write.
- */
-async function _writeTaskHistoryMonthIndex(
-	year: string,
-	month: string,
-	indexData: Record<string, Record<string, number>>,
-): Promise<void> {
-	const indexPath = _getMonthIndexFilePath(year, month)
-	try {
-		await safeWriteJson(indexPath, indexData)
-	} catch (error) {
-		console.error(`[TaskHistory] Error writing month index file for ${year}-${month}:`, error)
-		throw error
-	}
 }
 
 /**
@@ -211,58 +194,112 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 		throw new Error("Invalid argument: items must be an array.")
 	}
 
-	const affectedMonthIndexes = new Map<string, Record<string, Record<string, number>>>()
+	// Return early if there's nothing to set
+	if (items.length === 0) {
+		return
+	}
 
+	// Group items by month for efficient processing
+	const itemsByMonth = new Map<string, Map<string, HistoryItem>>()
+
+	// First pass: group items by month
 	for (const item of items) {
 		if (!item || !item.id || typeof item.ts !== "number" || typeof item.task !== "string") {
 			console.warn(
-				`[TaskHistory Migration] Invalid HistoryItem skipped (missing id, ts, or task): ${JSON.stringify(item)}`,
+				`[setHistoryItems] Invalid HistoryItem skipped (missing id, ts, or task): ${JSON.stringify(item)}`,
 			)
 			continue
 		}
 
-		const itemPath = _getHistoryItemPath(item.id)
-		const dirPath = path.dirname(itemPath)
+		// Group by month for index updates
+		const { year, month } = _getYearMonthFromTs(item.ts)
+		const monthKey = `${year}-${month}`
 
-		try {
-			await fs.mkdir(dirPath, { recursive: true })
+		if (!itemsByMonth.has(monthKey)) {
+			itemsByMonth.set(monthKey, new Map<string, HistoryItem>())
+		}
+		itemsByMonth.get(monthKey)!.set(item.id, item)
+	}
 
-			// Save and cache the item
-			await safeWriteJson(itemPath, item)
-			itemObjectCache.set(item.id, item)
+	// Second pass: save individual item files with max 100 in flight
+	for (const [monthKey, itemsInMonth] of itemsByMonth.entries()) {
+		const count = itemsInMonth.size
+		if (count > 1) {
+			console.debug(`[setHistoryItems] Processing ${itemsInMonth.size} items for month ${monthKey}`)
+		}
 
-			const { year, month } = _getYearMonthFromTs(item.ts)
-			const monthKeyString = `${year}-${month}`
+		// Use a Set to track pending promises
+		const pendingPromises = new Set<Promise<any>>()
 
-			// Use "" as the index key if item.workspace is undefined, otherwise use item.workspace.
-			// The item.workspace property itself on the 'item' object is not modified.
-			const workspacePathForIndex = item.workspace === undefined ? "" : item.workspace
-
-			let currentMonthData: Record<string, Record<string, number>>
-			if (affectedMonthIndexes.has(monthKeyString)) {
-				currentMonthData = affectedMonthIndexes.get(monthKeyString)!
-			} else {
-				currentMonthData = await _readTaskHistoryMonthIndex(year, month)
+		// Process all items in the month
+		for (const [itemId, item] of itemsInMonth.entries()) {
+			// Wait if we've reached the maximum in-flight operations
+			if (pendingPromises.size >= BATCH_SIZE) {
+				// Wait for any operation to complete
+				await Promise.race(pendingPromises)
 			}
 
-			if (!currentMonthData[workspacePathForIndex]) {
-				currentMonthData[workspacePathForIndex] = {}
-			}
-			currentMonthData[workspacePathForIndex][item.id] = item.ts
-			affectedMonthIndexes.set(monthKeyString, currentMonthData)
-		} catch (error) {
-			console.error(`[TaskHistory Migration] Error processing history item ${item.id}:`, error)
+			// Start a new operation
+			const itemPath = _getHistoryItemPath(item.id)
+			const promise = safeWriteJson(itemPath, item)
+				.then(() => {
+					// Cache the item after successful save
+					itemObjectCache.set(item.id, item)
+					// Remove this promise from the pending set
+					pendingPromises.delete(promise)
+					return item.id
+				})
+				.catch((error) => {
+					console.error(`[setHistoryItems] Error processing history item ${item.id}:`, error)
+					// Remove this promise from the pending set
+					pendingPromises.delete(promise)
+					return undefined
+				})
+
+			// Add to pending set
+			pendingPromises.add(promise)
+		}
+
+		// Wait for all remaining operations to complete
+		if (pendingPromises.size > 0) {
+			await Promise.all(pendingPromises)
 		}
 	}
 
-	for (const [monthKeyString, monthMap] of affectedMonthIndexes.entries()) {
-		const [year, month] = monthKeyString.split("-")
-		try {
-			await _writeTaskHistoryMonthIndex(year, month, monthMap)
-		} catch (error) {
-			console.error(`[TaskHistory Migration] Error writing month index file for ${monthKeyString}:`, error)
-		}
+	// Third pass: update month indexes atomically - all in parallel
+	const monthUpdatePromises: Promise<void>[] = []
+
+	for (const [monthKey, itemsInMonth] of itemsByMonth.entries()) {
+		const [year, month] = monthKey.split("-")
+		const indexPath = _getMonthIndexFilePath(year, month)
+
+		// Create a promise for this month's update using .then/.catch
+		const monthUpdatePromise = safeWriteJson(indexPath, {}, async (currentMonthData) => {
+			// Update each item in this month
+			for (const [itemId, item] of itemsInMonth.entries()) {
+				// Use "" as the index key if item.workspace is undefined
+				const workspacePathForIndex = item.workspace === undefined ? "" : item.workspace
+
+				// Initialize workspace if needed - TypeScript requires explicit initialization
+				if (!currentMonthData[workspacePathForIndex]) {
+					currentMonthData[workspacePathForIndex] = {}
+				}
+
+				// Update the item reference
+				currentMonthData[workspacePathForIndex][itemId] = item.ts
+			}
+
+			return true // Return true to write
+		}).catch((error) => {
+			console.error(`[setHistoryItems] Error updating month index for ${monthKey}:`, error)
+		})
+
+		// Add to the collection of promises
+		monthUpdatePromises.push(monthUpdatePromise)
 	}
+
+	// Wait for all month updates to complete in parallel
+	await Promise.all(monthUpdatePromises)
 }
 
 /**
@@ -277,18 +314,16 @@ export async function getHistoryItem(taskId: string): Promise<HistoryItem | unde
 		return itemObjectCache.get(taskId)
 	}
 
-	// Cache miss - read from file
+	// Cache miss - read from file using safeReadJson
 	const itemPath = _getHistoryItemPath(taskId)
 	try {
-		const fileContent = await fs.readFile(itemPath, "utf8")
-		const historyItem: HistoryItem = JSON.parse(fileContent)
-		itemObjectCache.set(taskId, historyItem)
-
-		return historyItem
-	} catch (error: any) {
-		if (error.code !== "ENOENT") {
-			console.error(`[TaskHistory] [getHistoryItem] [${taskId}] error reading file ${itemPath}:`, error)
+		const historyItem = await safeReadJson(itemPath)
+		if (historyItem) {
+			itemObjectCache.set(taskId, historyItem)
 		}
+		return historyItem
+	} catch (error) {
+		console.error(`[TaskHistory] [getHistoryItem] [${taskId}] error reading file ${itemPath}:`, error)
 		return undefined
 	}
 }
@@ -328,25 +363,41 @@ export async function deleteHistoryItem(taskId: string): Promise<void> {
 	const availableMonths = await getAvailableHistoryMonths()
 
 	for (const { year, month } of availableMonths) {
-		const monthData = await _readTaskHistoryMonthIndex(year, month) // monthData is Record<string, Record<string, number>>
-		let updatedInThisMonth = false
-		for (const workspacePath in monthData) {
-			if (Object.prototype.hasOwnProperty.call(monthData, workspacePath)) {
-				const tasksInWorkspace = monthData[workspacePath]
-				// Ensure tasksInWorkspace exists and then check for taskId
-				if (tasksInWorkspace && tasksInWorkspace[taskId] !== undefined) {
-					delete tasksInWorkspace[taskId]
-					// If the workspacePath entry becomes empty after deleting the task, remove the workspacePath key itself
-					if (Object.keys(tasksInWorkspace).length === 0) {
-						delete monthData[workspacePath]
-					}
-					updatedInThisMonth = true
-				}
-			}
-		}
+		const indexPath = _getMonthIndexFilePath(year, month)
 
-		if (updatedInThisMonth) {
-			await _writeTaskHistoryMonthIndex(year, month, monthData)
+		try {
+			// Atomic read-modify-write operation for each month
+			await safeWriteJson(indexPath, {}, async (monthData) => {
+				let updatedInThisMonth = false
+
+				for (const workspacePath in monthData) {
+					if (Object.prototype.hasOwnProperty.call(monthData, workspacePath)) {
+						const tasksInWorkspace = monthData[workspacePath]
+
+						// Ensure tasksInWorkspace exists and then check for taskId
+						if (tasksInWorkspace && tasksInWorkspace[taskId] !== undefined) {
+							delete tasksInWorkspace[taskId]
+
+							// If the workspacePath entry becomes empty after deleting the task,
+							// remove the workspacePath key itself
+							if (Object.keys(tasksInWorkspace).length === 0) {
+								delete monthData[workspacePath]
+							}
+
+							updatedInThisMonth = true
+						}
+					}
+				}
+
+				// Return true only if changes were made, false otherwise
+				// This prevents unnecessary file writes when nothing changed
+				return updatedInThisMonth
+			})
+		} catch (error) {
+			console.error(
+				`[TaskHistory] Error updating month index for ${year}-${month} when deleting task ${taskId}:`,
+				error,
+			)
 		}
 	}
 }
@@ -576,15 +627,29 @@ export async function getAvailableHistoryMonths(
  * It also cleans up any old date-organized directory structures if they exist from testing.
  */
 export async function migrateTaskHistoryStorage(): Promise<void> {
+	const migrationStartTime = performance.now()
 	const context = getExtensionContext()
 	const tasksBasePath = _getTasksBasePath()
-	console.log("[TaskHistory Migration] Checking task history storage version...")
+	const historyIndexesBasePath = _getHistoryIndexesBasePath()
+	console.log("[TaskHistory Migration] Checking task history storage version and directory...")
 
 	const storedVersion = context.globalState.get<number>(TASK_HISTORY_VERSION_KEY)
 
-	if (storedVersion && storedVersion >= CURRENT_TASK_HISTORY_VERSION) {
+	// Check if the taskHistory directory exists
+	let directoryExists = false
+	try {
+		await fs.access(historyIndexesBasePath)
+		directoryExists = true
+	} catch (error) {
 		console.log(
-			`[TaskHistory Migration] Task history storage is up to date (version ${storedVersion}). No migration needed.`,
+			`[TaskHistory Migration] taskHistory directory does not exist at ${historyIndexesBasePath}; will force migration.`,
+		)
+	}
+
+	// Force migration if directory doesn't exist or version mismatch
+	if (directoryExists && storedVersion && storedVersion >= CURRENT_TASK_HISTORY_VERSION) {
+		console.log(
+			`[TaskHistory Migration] Task history storage is up to date (version ${storedVersion}) and directory exists. No migration needed.`,
 		)
 		return
 	}
@@ -605,6 +670,7 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 	// Step 1: Populate finalItemSet with items currently indexed in the new-format monthly indexes.
 	// This ensures that if migration runs multiple times, it considers what's already been migrated.
 	try {
+		const step1StartTime = performance.now()
 		console.log("[TaskHistory Migration] Reading existing items from new-format indexes...")
 		const allCurrentlyIndexedItems = await getHistoryItemsForSearch({})
 		for (const item of allCurrentlyIndexedItems.items) {
@@ -613,13 +679,17 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 				finalItemSet.set(item.id, item)
 			}
 		}
-		console.log(`[TaskHistory Migration] Found ${finalItemSet.size} items in existing new-format indexes.`)
+		const step1Time = (performance.now() - step1StartTime) / 1000
+		console.log(
+			`[TaskHistory Migration] Found ${finalItemSet.size} items in existing new-format indexes. (${step1Time.toFixed(2)}s)`,
+		)
 	} catch (err) {
 		console.warn("[TaskHistory Migration] Error reading existing new-format indexes (may be first run):", err)
 		// Continue, as this might be the first time migration is running.
 	}
 
 	// Step 2: Merge items from the old "taskHistory" flat array, preferring newer timestamps.
+	const step2StartTime = performance.now()
 	const oldHistoryArrayFromGlobalState = context.globalState.get<HistoryItem[]>("taskHistory") || []
 	if (oldHistoryArrayFromGlobalState.length > 0) {
 		console.log(
@@ -655,7 +725,10 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 				finalItemSet.set(oldItem.id, oldItem)
 			}
 		}
-		console.log(`[TaskHistory Migration] Merged items from old 'taskHistory'. Total items: ${finalItemSet.size}.`)
+		const step2Time = (performance.now() - step2StartTime) / 1000
+		console.log(
+			`[TaskHistory Migration] Merged items from old 'taskHistory'. Total items: ${finalItemSet.size}. (${step2Time.toFixed(2)}s)`,
+		)
 		// The old "taskHistory" array in globalState is intentionally not modified or deleted here.
 		// It's left as a backup.
 	} else {
@@ -666,10 +739,15 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 	// setHistoryItems will write each item to its file and rebuild all monthly indexes in the new format.
 	const itemsToPassToSetHistory: HistoryItem[] = Array.from(finalItemSet.values())
 	if (itemsToPassToSetHistory.length > 0) {
+		const step3StartTime = performance.now()
 		console.log(`[TaskHistory Migration] Calling setHistoryItems with ${itemsToPassToSetHistory.length} items...`)
 		await setHistoryItems(itemsToPassToSetHistory)
 		migrationPerformed = true
-		console.log("[TaskHistory Migration] setHistoryItems completed.")
+		const step3Time = (performance.now() - step3StartTime) / 1000
+		const itemsPerSecond = itemsToPassToSetHistory.length / step3Time
+		console.log(
+			`[TaskHistory Migration] setHistoryItems completed. (${step3Time.toFixed(2)}s, ${itemsPerSecond.toFixed(2)} items/sec)`,
+		)
 	} else if (migrationPerformed) {
 		// This case means oldHistoryArray was processed but resulted in no items to set (e.g., all were older)
 		// or new-format indexes were empty and oldHistoryArray was empty/invalid.
@@ -688,4 +766,12 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 			console.error(`[TaskHistory Migration] Error updating task history version in globalState:`, error)
 		}
 	}
+
+	const migrationEndTime = performance.now()
+	const totalMigrationTime = (migrationEndTime - migrationStartTime) / 1000
+	const totalItems = itemsToPassToSetHistory.length
+	const overallItemsPerSecond = totalItems > 0 ? totalItems / totalMigrationTime : 0
+	console.log(
+		`[TaskHistory Migration] Migration process completed in ${totalMigrationTime.toFixed(2)}s (${overallItemsPerSecond.toFixed(2)} items/sec)`,
+	)
 }
