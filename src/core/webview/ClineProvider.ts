@@ -1255,6 +1255,33 @@ export class ClineProvider
 	}
 
 	/**
+	 * Fetches marketplace data on demand to avoid blocking main state updates
+	 */
+	async fetchMarketplaceData() {
+		try {
+			const [marketplaceItems, marketplaceInstalledMetadata] = await Promise.all([
+				this.marketplaceManager.getCurrentItems().catch(() => []),
+				this.marketplaceManager.getInstallationMetadata().catch(() => ({ project: {}, global: {} })),
+			])
+
+			// Send marketplace data separately
+			this.postMessageToWebview({
+				type: "marketplaceData",
+				marketplaceItems: marketplaceItems || [],
+				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
+			})
+		} catch (error) {
+			console.error("Failed to fetch marketplace data:", error)
+			// Send empty data on error to prevent UI from hanging
+			this.postMessageToWebview({
+				type: "marketplaceData",
+				marketplaceItems: [],
+				marketplaceInstalledMetadata: { project: {}, global: {} },
+			})
+		}
+	}
+
+	/**
 	 * Checks if there is a file-based system prompt override for the given mode
 	 */
 	async hasFileBasedSystemPromptOverride(mode: Mode): Promise<boolean> {
@@ -1342,12 +1369,9 @@ export class ClineProvider
 		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
-		// Fetch marketplace data
+		// Initialize marketplace data as empty - will be fetched on demand
 		let marketplaceItems: any[] = []
 		let marketplaceInstalledMetadata: any = { project: {}, global: {} }
-
-		marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
-		marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
 
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug

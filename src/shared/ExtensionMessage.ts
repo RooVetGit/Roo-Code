@@ -90,6 +90,7 @@ export interface ExtensionMessage {
 		| "indexCleared"
 		| "codebaseIndexConfig"
 		| "marketplaceInstallResult"
+		| "marketplaceData"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -136,6 +137,8 @@ export interface ExtensionMessage {
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
 	tab?: string
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 }
 
 export type ExtensionState = Pick<

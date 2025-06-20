@@ -341,5 +341,28 @@ export class MarketplaceViewStateManager {
 				void this.transition({ type: "FETCH_ITEMS" })
 			}
 		}
+
+		// Handle marketplace data updates (fetched on demand)
+		if (message.type === "marketplaceData") {
+			const marketplaceItems = message.marketplaceItems
+
+			if (marketplaceItems !== undefined) {
+				// Always use the marketplace items from the extension when they're provided
+				// This ensures fresh data is always displayed
+				const items = [...marketplaceItems]
+				const newDisplayItems = this.isFilterActive() ? this.filterItems(items) : items
+
+				// Update state in a single operation
+				this.state = {
+					...this.state,
+					isFetching: false,
+					allItems: items,
+					displayItems: newDisplayItems,
+				}
+			}
+
+			// Notify state change
+			this.notifyStateChange()
+		}
 	}
 }

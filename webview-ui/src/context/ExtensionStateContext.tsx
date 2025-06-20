@@ -42,6 +42,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setCondensingApiConfigId: (value: string) => void
 	customCondensingPrompt?: string
 	setCustomCondensingPrompt: (value: string) => void
+	marketplaceItems?: any[]
+	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	setApiConfiguration: (config: ProviderSettings) => void
 	setCustomInstructions: (value?: string) => void
 	setAlwaysAllowReadOnly: (value: boolean) => void
@@ -217,6 +219,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
 	const [currentCheckpoint, setCurrentCheckpoint] = useState<string>()
 	const [extensionRouterModels, setExtensionRouterModels] = useState<RouterModels | undefined>(undefined)
+	const [marketplaceItems, setMarketplaceItems] = useState<any[]>([])
+	const [marketplaceInstalledMetadata, setMarketplaceInstalledMetadata] = useState<{
+		project: Record<string, any>
+		global: Record<string, any>
+	}>({ project: {}, global: {} })
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -242,6 +249,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					setState((prevState) => mergeExtensionState(prevState, newState))
 					setShowWelcome(!checkExistKey(newState.apiConfiguration))
 					setDidHydrateState(true)
+					// Handle marketplace data if present in state message
+					if (newState.marketplaceItems !== undefined) {
+						setMarketplaceItems(newState.marketplaceItems)
+					}
+					if (newState.marketplaceInstalledMetadata !== undefined) {
+						setMarketplaceInstalledMetadata(newState.marketplaceInstalledMetadata)
+					}
 					break
 				}
 				case "theme": {
@@ -288,6 +302,15 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					setExtensionRouterModels(message.routerModels)
 					break
 				}
+				case "marketplaceData": {
+					if (message.marketplaceItems !== undefined) {
+						setMarketplaceItems(message.marketplaceItems)
+					}
+					if (message.marketplaceInstalledMetadata !== undefined) {
+						setMarketplaceInstalledMetadata(message.marketplaceInstalledMetadata)
+					}
+					break
+				}
 			}
 		},
 		[setListApiConfigMeta],
@@ -320,6 +343,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		screenshotQuality: state.screenshotQuality,
 		routerModels: extensionRouterModels,
 		cloudIsAuthenticated: state.cloudIsAuthenticated ?? false,
+		marketplaceItems,
+		marketplaceInstalledMetadata,
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration,
