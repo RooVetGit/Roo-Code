@@ -23,6 +23,7 @@ import {
 	type TerminalActionPromptType,
 	type HistoryItem,
 	type CloudUserInfo,
+	type MarketplaceItem,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
@@ -37,7 +38,7 @@ import { Package } from "../../shared/package"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ExtensionMessage, MarketplaceInstalledMetadata } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
@@ -1260,8 +1261,14 @@ export class ClineProvider
 	async fetchMarketplaceData() {
 		try {
 			const [marketplaceItems, marketplaceInstalledMetadata] = await Promise.all([
-				this.marketplaceManager.getCurrentItems().catch(() => []),
-				this.marketplaceManager.getInstallationMetadata().catch(() => ({ project: {}, global: {} })),
+				this.marketplaceManager.getCurrentItems().catch((error) => {
+					console.error("Failed to fetch marketplace items:", error)
+					return [] as MarketplaceItem[]
+				}),
+				this.marketplaceManager.getInstallationMetadata().catch((error) => {
+					console.error("Failed to fetch installation metadata:", error)
+					return { project: {}, global: {} } as MarketplaceInstalledMetadata
+				}),
 			])
 
 			// Send marketplace data separately
@@ -1278,6 +1285,13 @@ export class ClineProvider
 				marketplaceItems: [],
 				marketplaceInstalledMetadata: { project: {}, global: {} },
 			})
+
+			// Show user-friendly error notification for network issues
+			if (error instanceof Error && error.message.includes("timeout")) {
+				vscode.window.showWarningMessage(
+					"Marketplace data could not be loaded due to network restrictions. Core functionality remains available.",
+				)
+			}
 		}
 	}
 
@@ -1369,18 +1383,12 @@ export class ClineProvider
 		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
-		// Initialize marketplace data as empty - will be fetched on demand
-		let marketplaceItems: any[] = []
-		let marketplaceInstalledMetadata: any = { project: {}, global: {} }
-
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
-			marketplaceItems,
-			marketplaceInstalledMetadata,
 			apiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,

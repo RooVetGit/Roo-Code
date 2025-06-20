@@ -55,7 +55,7 @@ export class MarketplaceViewStateManager {
 		return {
 			allItems: [],
 			displayItems: [], // Always initialize as empty array, not undefined
-			isFetching: false,
+			isFetching: true, // Start with loading state for initial load
 			activeTab: "mcp",
 			filters: {
 				type: "",
@@ -148,8 +148,12 @@ export class MarketplaceViewStateManager {
 	public async transition(transition: ViewStateTransition): Promise<void> {
 		switch (transition.type) {
 			case "FETCH_ITEMS": {
-				// Fetch functionality removed - data comes automatically from extension
-				// No manual fetching needed since we removed caching
+				// Set fetching state to show loading indicator
+				this.state = {
+					...this.state,
+					isFetching: true,
+				}
+				this.notifyStateChange()
 				break
 			}
 
@@ -225,10 +229,19 @@ export class MarketplaceViewStateManager {
 					tags: filters.tags !== undefined ? filters.tags : this.state.filters.tags,
 				}
 
-				// Update state
+				// Update filters first
 				this.state = {
 					...this.state,
 					filters: updatedFilters,
+				}
+
+				// Apply filters to displayItems with the updated filters
+				const newDisplayItems = this.filterItems(this.state.allItems)
+
+				// Update state with filtered items
+				this.state = {
+					...this.state,
+					displayItems: newDisplayItems,
 				}
 
 				// Send filter message

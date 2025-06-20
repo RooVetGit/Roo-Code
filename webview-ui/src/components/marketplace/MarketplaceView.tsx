@@ -34,6 +34,7 @@ export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) 
 		// send back the full state including all marketplace items.
 		if (!hasReceivedInitialState && state.allItems.length === 0) {
 			// Fetch marketplace data on demand
+			// Note: isFetching is already true by default for initial load
 			vscode.postMessage({
 				type: "fetchMarketplaceData",
 			})

@@ -18,6 +18,12 @@ import { Mode } from "./modes"
 import { RouterModels } from "./api"
 import type { MarketplaceItem } from "@roo-code/types"
 
+// Type for marketplace installed metadata
+export interface MarketplaceInstalledMetadata {
+	project: Record<string, { type: string }>
+	global: Record<string, { type: string }>
+}
+
 // Indexing status types
 export interface IndexingStatus {
 	systemStatus: string
@@ -138,7 +144,7 @@ export interface ExtensionMessage {
 	organizationAllowList?: OrganizationAllowList
 	tab?: string
 	marketplaceItems?: MarketplaceItem[]
-	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
+	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 }
 
 export type ExtensionState = Pick<

@@ -10,7 +10,7 @@ import {
 	ORGANIZATION_ALLOW_ALL,
 } from "@roo-code/types"
 
-import { ExtensionMessage, ExtensionState } from "@roo/ExtensionMessage"
+import { ExtensionMessage, ExtensionState, MarketplaceInstalledMetadata } from "@roo/ExtensionMessage"
 import { findLastIndex } from "@roo/array"
 import { McpServer } from "@roo/mcp"
 import { checkExistKey } from "@roo/checkExistApiConfig"
@@ -43,7 +43,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	customCondensingPrompt?: string
 	setCustomCondensingPrompt: (value: string) => void
 	marketplaceItems?: any[]
-	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
+	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 	setApiConfiguration: (config: ProviderSettings) => void
 	setCustomInstructions: (value?: string) => void
 	setAlwaysAllowReadOnly: (value: boolean) => void
@@ -220,10 +220,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [currentCheckpoint, setCurrentCheckpoint] = useState<string>()
 	const [extensionRouterModels, setExtensionRouterModels] = useState<RouterModels | undefined>(undefined)
 	const [marketplaceItems, setMarketplaceItems] = useState<any[]>([])
-	const [marketplaceInstalledMetadata, setMarketplaceInstalledMetadata] = useState<{
-		project: Record<string, any>
-		global: Record<string, any>
-	}>({ project: {}, global: {} })
+	const [marketplaceInstalledMetadata, setMarketplaceInstalledMetadata] = useState<MarketplaceInstalledMetadata>({
+		project: {},
+		global: {},
+	})
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
