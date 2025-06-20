@@ -1,4 +1,5 @@
 import { LogManager } from "../LogManager"
+import { vi } from "vitest"
 
 describe("LogManager", () => {
 	let mockProvider: any
@@ -6,7 +7,7 @@ describe("LogManager", () => {
 
 	beforeEach(() => {
 		mockProvider = {
-			log: jest.fn(),
+			log: vi.fn(),
 		}
 		logManager = new LogManager(mockProvider as any)
 	})
@@ -15,7 +16,7 @@ describe("LogManager", () => {
 		it("should format and log messages with timestamp and level", () => {
 			// Mock Date.toISOString to return a fixed timestamp
 			const mockDate = new Date("2023-01-01T12:00:00Z")
-			jest.spyOn(global, "Date").mockImplementation(() => mockDate as any)
+			vi.spyOn(global, "Date").mockImplementation(() => mockDate as any)
 
 			logManager.log("Test message", "info")
 
@@ -24,7 +25,7 @@ describe("LogManager", () => {
 
 		it("should use 'info' as default log level", () => {
 			const mockDate = new Date("2023-01-01T12:00:00Z")
-			jest.spyOn(global, "Date").mockImplementation(() => mockDate as any)
+			vi.spyOn(global, "Date").mockImplementation(() => mockDate as any)
 
 			logManager.log("Test message")
 
@@ -34,7 +35,7 @@ describe("LogManager", () => {
 
 	describe("processLogEntry", () => {
 		it("should log complete entries", () => {
-			const spy = jest.spyOn(logManager, "log")
+			const spy = vi.spyOn(logManager, "log")
 
 			const result = logManager.processLogEntry("Test log entry", "debug", false)
 
@@ -43,7 +44,7 @@ describe("LogManager", () => {
 		})
 
 		it("should not log partial entries", () => {
-			const spy = jest.spyOn(logManager, "log")
+			const spy = vi.spyOn(logManager, "log")
 
 			const result = logManager.processLogEntry("Partial log entry", "warn", true)
 
