@@ -62,7 +62,13 @@
 		"share_no_active_task": "Tidak ada tugas aktif untuk dibagikan",
 		"share_auth_required": "Autentikasi diperlukan. Silakan masuk untuk berbagi tugas.",
 		"share_not_enabled": "Berbagi tugas tidak diaktifkan untuk organisasi ini.",
-		"share_task_not_found": "Tugas tidak ditemukan atau akses ditolak."
+		"share_task_not_found": "Tugas tidak ditemukan atau akses ditolak.",
+		"claudeCode": {
+			"processExited": "Proses Claude Code keluar dengan kode {{exitCode}}.",
+			"errorOutput": "Output error: {{output}}",
+			"stoppedWithReason": "Claude Code berhenti karena alasan: {{reason}}",
+			"apiKeyModelPlanMismatch": "Kunci API dan paket berlangganan memungkinkan model yang berbeda. Pastikan model yang dipilih termasuk dalam paket Anda."
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "Tidak ada konten terminal yang dipilih",

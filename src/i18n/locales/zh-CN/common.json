@@ -67,7 +67,13 @@
 		"share_no_active_task": "没有活跃任务可分享",
 		"share_auth_required": "需要身份验证。请登录以分享任务。",
 		"share_not_enabled": "此组织未启用任务分享功能。",
-		"share_task_not_found": "未找到任务或访问被拒绝。"
+		"share_task_not_found": "未找到任务或访问被拒绝。",
+		"claudeCode": {
+			"processExited": "Claude Code 进程退出，退出码：{{exitCode}}。",
+			"errorOutput": "错误输出：{{output}}",
+			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
+			"apiKeyModelPlanMismatch": "API 密钥和订阅计划支持不同的模型。请确保所选模型包含在您的计划中。"
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "没有选择终端内容",
