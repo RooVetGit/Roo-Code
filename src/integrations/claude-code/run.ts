@@ -114,36 +114,18 @@ export function runClaudeCode({
 	const workspacePath = getCwd()
 	const sessionId = SessionManager.getSessionId(workspacePath)
 
-	// Convert messages to a simple text prompt since Claude CLI doesn't accept JSON messages
-	let promptText = ""
+	// Serialize messages to JSON format for Claude CLI
+	const serializedMessages = safeSerializeMessages(messages)
 
-	// Add system prompt if provided
-	if (systemPrompt) {
-		promptText += `System: ${systemPrompt}\n\n`
-	}
-
-	// Convert messages to text format
-	for (const message of messages) {
-		const role = message.role === "user" ? "User" : "Assistant"
-		let content = ""
-
-		if (typeof message.content === "string") {
-			content = message.content
-		} else if (Array.isArray(message.content)) {
-			// Extract text from content blocks
-			content = message.content
-				.filter((block) => block.type === "text")
-				.map((block) => (block as any).text)
-				.join("\n")
-		}
-
-		// Validate the content for security
-		validateMessageContent(content)
-
-		promptText += `${role}: ${content}\n\n`
-	}
-
-	const args = ["-p", promptText.trim(), "--verbose", "--output-format", "stream-json"]
+	const args = [
+		"-p",
+		serializedMessages,
+		"--system-prompt",
+		systemPrompt,
+		"--verbose",
+		"--output-format",
+		"stream-json",
+	]
 
 	// Add model if specified
 	if (modelId) {
