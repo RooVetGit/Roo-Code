@@ -1,7 +1,13 @@
 import * as path from "path"
 import * as fs from "fs/promises"
 import { safeWriteJson, safeReadJson } from "../../utils/safeWriteJson"
-import { HistoryItem, HistorySortOption, HistorySearchOptions, HistorySearchResults } from "@roo-code/types"
+import {
+	HistoryItem,
+	HistorySortOption,
+	HistorySearchOptions,
+	HistorySearchResults,
+	HistorySearchResultItem,
+} from "@roo-code/types"
 import { getExtensionContext } from "../../extension"
 import { taskHistorySearch } from "./taskHistorySearch"
 
@@ -433,13 +439,27 @@ function _sortHistoryItems(items: HistoryItem[], sortOption: HistorySortOption):
 	}
 }
 
+// Queue for serializing calls to getHistoryItemsForSearch
+let historySearchQueue: Promise<HistorySearchResults> = Promise.resolve({ items: [] })
+
 /**
  * Retrieves history items based on a search query, optional date range, and optional limit.
  * Items are sorted according to the sortOption parameter (defaults to "newest").
+ * Calls are serialized to allow the cache to heat up from the first request.
  * @param search - The search options.
  * @returns A promise that resolves to an array of matching HistoryItem objects.
  */
 export async function getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistorySearchResults> {
+	// Serialize calls to allow cache to heat up
+	return (historySearchQueue = historySearchQueue.then(() => _getHistoryItemsForSearch(search)))
+}
+
+/**
+ * Internal implementation of getHistoryItemsForSearch that does the actual work.
+ * @param search - The search options.
+ * @returns A promise that resolves to an array of matching HistoryItem objects.
+ */
+async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistorySearchResults> {
 	const { searchQuery = "", dateRange, limit, workspacePath, sortOption = "newest" } = search
 	const startTime = performance.now()
 	const limitStringForLog = limit !== undefined ? limit : "none"
@@ -561,8 +581,18 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
 	// For all other sort options, we want to preserve the original order
 	const preserveOrder = sortOption !== "mostRelevant"
 
-	// Use fzf for search and highlighting
-	return taskHistorySearch(sortedItems, searchQuery, preserveOrder)
+	let result: HistorySearchResults
+	if (!searchQuery.trim()) {
+		// Skip taskHistorySearch if search query is empty
+		result = {
+			items: sortedItems as HistorySearchResultItem[],
+		}
+	} else {
+		// Use fzf for search and highlighting
+		result = taskHistorySearch(sortedItems, searchQuery, preserveOrder)
+	}
+
+	return result
 }
 
 /**
