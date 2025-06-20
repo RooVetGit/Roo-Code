@@ -12,7 +12,11 @@
 		"export": "导出任务历史",
 		"delete": "删除任务（Shift + 点击跳过确认）",
 		"share": "分享任务",
-		"condenseContext": "智能压缩上下文"
+		"condenseContext": "智能压缩上下文",
+		"shareWithOrganization": "与组织分享",
+		"shareWithOrganizationDescription": "仅组织成员可访问",
+		"sharePublicly": "公开分享",
+		"sharePubliclyDescription": "任何拥有链接的人都可访问"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",
@@ -75,7 +79,7 @@
 	"onboarding": "<strong>此工作区中的任务列表为空。</strong> 请在下方输入任务开始。 不确定如何开始？ 在 <DocsLink>文档</DocsLink> 中阅读更多关于 Roo 可以为您做什么的信息。",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "任务拆分",
+			"title": "任务编排",
 			"description": "将任务拆分为更小、更易于管理的部分。"
 		},
 		"stickyModels": {
@@ -223,11 +227,11 @@
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} 已发布",
-		"description": "Roo Code {{version}} 带来基于您反馈的强大新功能和改进。",
+		"description": "Roo Code {{version}} 带来基于您反馈的重要新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>实验性市场</bold>: 从新市场发现和安装模式及 MCP（在<experimentalSettingsLink>实验性设置</experimentalSettingsLink>中启用）",
-		"feature2": "<bold>增强文件操作</bold>: 实验性设置中的多个并发文件写入，并发读取现在在<contextSettingsLink>上下文设置</contextSettingsLink>中",
-		"feature3": "<bold>MCP 改进及更多</bold>: 增强的 MCP 支持、Mermaid 控制、Amazon Bedrock 思考支持等等！",
+		"feature1": "<bold>Roo 市场正式上线</bold>: 市场现已上线！比以往更轻松地发现和安装模式及 MCP。",
+		"feature2": "<bold>Gemini 2.5 模型</bold>: 新增对新版 Gemini 2.5 Pro、Flash 和 Flash Lite 模型的支持。",
+		"feature3": "<bold>Excel 文件支持及更多</bold>: 新增 Excel (.xlsx) 文件支持以及大量错误修复和改进！",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},

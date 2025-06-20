@@ -12,7 +12,11 @@
 		"export": "Exportar historial de tasques",
 		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
 		"condenseContext": "Condensar context de forma intel·ligent",
-		"share": "Compartir tasca"
+		"share": "Compartir tasca",
+		"shareWithOrganization": "Compartir amb l'organització",
+		"shareWithOrganizationDescription": "Només els membres de la teva organització poden accedir",
+		"sharePublicly": "Compartir públicament",
+		"sharePubliclyDescription": "Qualsevol amb l'enllaç pot accedir"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -75,7 +79,7 @@
 	"onboarding": "<strong> La vostra llista de tasques en aquest espai de treball està buida. </strong> Comença escrivint una tasca a continuació. \nNo esteu segur per on començar? \nMés informació sobre què pot fer Roo als documents.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tasques Boomerang",
+			"title": "Orquestració de Tasques",
 			"description": "Divideix les tasques en parts més petites i manejables."
 		},
 		"stickyModels": {
@@ -225,9 +229,9 @@
 		"title": "🎉 Roo Code {{version}} publicat",
 		"description": "Roo Code {{version}} porta noves funcionalitats potents i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
-		"feature1": "<bold>Marketplace Experimental</bold>: Descobreix i instal·la modes i MCP del nou marketplace (activa'l a la <experimentalSettingsLink>Configuració Experimental</experimentalSettingsLink>)",
-		"feature2": "<bold>Operacions de fitxer millorades</bold>: Operacions d'escriptura multi-concurrent experimentals i lectura concurrent ara disponibles a la <contextSettingsLink>Configuració de Context</contextSettingsLink>",
-		"feature3": "<bold>Millores MCP i més</bold>: Suport MCP millorat, controls Mermaid, suport Amazon Bedrock thinking, i més!",
+		"feature1": "<bold>Llançament del Marketplace Roo</bold> - El marketplace ja està en funcionament! Descobreix i instal·la modes i MCP més fàcilment que mai.",
+		"feature2": "<bold>Models Gemini 2.5</bold> - S'ha afegit suport per als nous models Gemini 2.5 Pro, Flash i Flash Lite.",
+		"feature3": "<bold>Suport per a fitxers Excel i més</bold> - S'ha afegit suport per a fitxers Excel (.xlsx) i nombroses correccions d'errors i millores!",
 		"hideButton": "Amagar anunci",
 		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},

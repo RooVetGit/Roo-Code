@@ -12,7 +12,11 @@
 		"export": "Exportar histórico de tarefas",
 		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
 		"condenseContext": "Condensar contexto de forma inteligente",
-		"share": "Compartilhar tarefa"
+		"share": "Compartilhar tarefa",
+		"shareWithOrganization": "Compartilhar com organização",
+		"shareWithOrganizationDescription": "Apenas membros da sua organização podem acessar",
+		"sharePublicly": "Compartilhar publicamente",
+		"sharePubliclyDescription": "Qualquer pessoa com o link pode acessar"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -75,7 +79,7 @@
 	"onboarding": "<strong>Sua lista de tarefas neste espaço de trabalho está vazia.</strong> Comece digitando uma tarefa abaixo. Não sabe como começar? Leia mais sobre o que o Roo pode fazer por você nos <DocsLink>documentos</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tarefas Bumerangue",
+			"title": "Orquestração de Tarefas",
 			"description": "Divida as tarefas em partes menores e gerenciáveis."
 		},
 		"stickyModels": {
@@ -223,11 +227,11 @@
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Lançado",
-		"description": "Roo Code {{version}} traz poderosos novos recursos e melhorias baseados no seu feedback.",
+		"description": "Roo Code {{version}} traz importantes novos recursos e melhorias baseados no seu feedback.",
 		"whatsNew": "O que há de novo",
-		"feature1": "<bold>Marketplace Experimental</bold>: Descubra e instale modos e MCPs do novo marketplace (ativar em <experimentalSettingsLink>Configurações Experimentais</experimentalSettingsLink>)",
-		"feature2": "<bold>Operações de Arquivo Aprimoradas</bold>: Operações de escrita de arquivo multi-concorrente experimentais, e leitura concorrente agora disponível em <contextSettingsLink>Configurações de Contexto</contextSettingsLink>",
-		"feature3": "<bold>Melhorias MCP e Mais</bold>: Suporte MCP aprimorado, controles Mermaid, suporte Amazon Bedrock thinking e muito mais!",
+		"feature1": "<bold>Lançamento do Marketplace Roo</bold>: O marketplace está agora no ar! Descubra e instale modos e MCPs mais facilmente do que nunca.",
+		"feature2": "<bold>Modelos Gemini 2.5</bold>: Adicionado suporte para novos modelos Gemini 2.5 Pro, Flash e Flash Lite.",
+		"feature3": "<bold>Suporte a Arquivos Excel e Mais</bold>: Adicionado suporte a arquivos Excel (.xlsx) e numerosas correções de bugs e melhorias!",
 		"hideButton": "Ocultar anúncio",
 		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},

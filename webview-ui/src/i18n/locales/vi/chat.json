@@ -12,7 +12,11 @@
 		"export": "Xuất lịch sử nhiệm vụ",
 		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)",
 		"condenseContext": "Cô đọng ngữ cảnh thông minh",
-		"share": "Chia sẻ nhiệm vụ"
+		"share": "Chia sẻ nhiệm vụ",
+		"shareWithOrganization": "Chia sẻ với tổ chức",
+		"shareWithOrganizationDescription": "Chỉ thành viên tổ chức của bạn mới có thể truy cập",
+		"sharePublicly": "Chia sẻ công khai",
+		"sharePubliclyDescription": "Bất kỳ ai có liên kết đều có thể truy cập"
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",
@@ -75,7 +79,7 @@
 	"onboarding": "<strong>Danh sách nhiệm vụ của bạn trong không gian làm việc này trống.</strong> Bắt đầu bằng cách nhập nhiệm vụ bên dưới. Bạn không chắc chắn nên bắt đầu như thế nào? Đọc thêm về những gì Roo có thể làm cho bạn trong <DocsLink>tài liệu</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Nhiệm vụ Boomerang",
+			"title": "Điều phối Nhiệm vụ",
 			"description": "Chia nhỏ các nhiệm vụ thành các phần nhỏ hơn, dễ quản lý hơn."
 		},
 		"stickyModels": {
@@ -225,9 +229,9 @@
 		"title": "🎉 Roo Code {{version}} Đã phát hành",
 		"description": "Roo Code {{version}} mang đến các tính năng mạnh mẽ và cải tiến mới dựa trên phản hồi của bạn.",
 		"whatsNew": "Có gì mới",
-		"feature1": "<bold>Marketplace Thử nghiệm</bold>: Khám phá và cài đặt các chế độ và MCP từ marketplace mới (kích hoạt trong <experimentalSettingsLink>Cài đặt Thử nghiệm</experimentalSettingsLink>)",
-		"feature2": "<bold>Cải tiến thao tác tệp</bold>: Thao tác ghi tệp đa luồng thử nghiệm, và đọc đồng thời hiện có sẵn trong <contextSettingsLink>Cài đặt Ngữ cảnh</contextSettingsLink>",
-		"feature3": "<bold>Cải tiến MCP và nhiều hơn nữa</bold>: Hỗ trợ MCP nâng cao, điều khiển Mermaid, hỗ trợ Amazon Bedrock thinking và nhiều hơn nữa!",
+		"feature1": "<bold>Ra mắt Roo Marketplace</bold> - Marketplace hiện đã hoạt động! Khám phá và cài đặt các chế độ và MCP dễ dàng hơn bao giờ hết.",
+		"feature2": "<bold>Các mô hình Gemini 2.5</bold> - Đã thêm hỗ trợ cho các mô hình Gemini 2.5 Pro, Flash và Flash Lite mới.",
+		"feature3": "<bold>Hỗ trợ tệp Excel & Nhiều hơn nữa</bold> - Đã thêm hỗ trợ tệp Excel (.xlsx) và vô số sửa lỗi cùng cải tiến!",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},

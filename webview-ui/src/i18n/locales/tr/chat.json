@@ -12,7 +12,11 @@
 		"export": "Görev geçmişini dışa aktar",
 		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
 		"condenseContext": "Bağlamı akıllıca yoğunlaştır",
-		"share": "Görevi paylaş"
+		"share": "Görevi paylaş",
+		"shareWithOrganization": "Kuruluşla paylaş",
+		"shareWithOrganizationDescription": "Sadece kuruluşunuzun üyeleri erişebilir",
+		"sharePublicly": "Herkese açık paylaş",
+		"sharePubliclyDescription": "Bağlantıya sahip herkes erişebilir"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
@@ -75,7 +79,7 @@
 	"onboarding": "<strong>Bu çalışma alanındaki görev listeniz boş.</strong> Aşağıya bir görev yazarak başlayın. Nasıl başlayacağınızdan emin değil misiniz? Roo'nun sizin için neler yapabileceği hakkında daha fazla bilgiyi <DocsLink>belgelerde</DocsLink> okuyun.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Bumerang Görevleri",
+			"title": "Görev Orkestrasyonu",
 			"description": "Görevleri daha küçük, yönetilebilir parçalara ayırın."
 		},
 		"stickyModels": {
@@ -225,9 +229,9 @@
 		"title": "🎉 Roo Code {{version}} Yayınlandı",
 		"description": "Roo Code {{version}} geri bildirimlerinize dayalı güçlü yeni özellikler ve iyileştirmeler getiriyor.",
 		"whatsNew": "Yenilikler",
-		"feature1": "<bold>Deneysel Marketplace</bold>: Yeni marketplaceden modları ve MCP'leri keşfedin ve kurun (<experimentalSettingsLink>Deneysel Ayarlar</experimentalSettingsLink>'da etkinleştirin)",
-		"feature2": "<bold>Gelişmiş Dosya İşlemleri</bold>: Deneysel çoklu eşzamanlı dosya yazma işlemleri ve eşzamanlı okuma artık <contextSettingsLink>Bağlam Ayarları</contextSettingsLink>'nda mevcut",
-		"feature3": "<bold>MCP İyileştirmeleri ve Daha Fazlası</bold>: Gelişmiş MCP desteği, Mermaid kontrolleri, Amazon Bedrock thinking desteği ve daha fazlası!",
+		"feature1": "<bold>Roo Marketplace Lansmanı</bold> - Marketplace artık canlı! Modları ve MCP'leri her zamankinden daha kolay keşfedin ve kurun.",
+		"feature2": "<bold>Gemini 2.5 Modelleri</bold> - Yeni Gemini 2.5 Pro, Flash ve Flash Lite modelleri için destek eklendi.",
+		"feature3": "<bold>Excel Dosya Desteği ve Daha Fazlası</bold> - Excel (.xlsx) dosya desteği eklendi ve sayısız hata düzeltmesi ve iyileştirme!",
 		"hideButton": "Duyuruyu gizle",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
 	},

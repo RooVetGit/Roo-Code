@@ -201,7 +201,14 @@ export const webviewMessageHandler = async (
 			break
 		case "clearTask":
 			// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
-			await provider.finishSubTask(t("common:tasks.canceled"))
+			// Check if the current task actually has a parent task
+			const currentTask = provider.getCurrentCline()
+			if (currentTask && currentTask.parentTask) {
+				await provider.finishSubTask(t("common:tasks.canceled"))
+			} else {
+				// Regular task - just clear it
+				await provider.clearTask()
+			}
 			await provider.postStateToWebview()
 			break
 		case "didShowAnnouncement":
@@ -226,16 +233,31 @@ export const webviewMessageHandler = async (
 			}
 
 			try {
-				const success = await CloudService.instance.shareTask(shareTaskId)
-				if (success) {
-					// Show success message
-					vscode.window.showInformationMessage(t("common:info.share_link_copied"))
+				const visibility = message.visibility || "organization"
+				const result = await CloudService.instance.shareTask(shareTaskId, visibility)
+
+				if (result.success && result.shareUrl) {
+					// Show success notification
+					const messageKey =
+						visibility === "public"
+							? "common:info.public_share_link_copied"
+							: "common:info.organization_share_link_copied"
+					vscode.window.showInformationMessage(t(messageKey))
 				} else {
-					// Show generic failure message
-					vscode.window.showErrorMessage(t("common:errors.share_task_failed"))
+					// Handle error
+					const errorMessage = result.error || "Failed to create share link"
+					if (errorMessage.includes("Authentication")) {
+						vscode.window.showErrorMessage(t("common:errors.share_auth_required"))
+					} else if (errorMessage.includes("sharing is not enabled")) {
+						vscode.window.showErrorMessage(t("common:errors.share_not_enabled"))
+					} else if (errorMessage.includes("not found")) {
+						vscode.window.showErrorMessage(t("common:errors.share_task_not_found"))
+					} else {
+						vscode.window.showErrorMessage(errorMessage)
+					}
 				}
 			} catch (error) {
-				// Show generic failure message
+				provider.log(`[shareCurrentTask] Unexpected error: ${error}`)
 				vscode.window.showErrorMessage(t("common:errors.share_task_failed"))
 			}
 			break
@@ -570,6 +592,23 @@ export const webviewMessageHandler = async (
 			} catch (error) {
 				provider.log(
 					`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+				)
+			}
+			break
+		}
+		case "toggleToolEnabledForPrompt": {
+			try {
+				await provider
+					.getMcpHub()
+					?.toggleToolEnabledForPrompt(
+						message.serverName!,
+						message.source as "global" | "project",
+						message.toolName!,
+						Boolean(message.isEnabled),
+					)
+			} catch (error) {
+				provider.log(
+					`Failed to toggle enabled for prompt for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 				)
 			}
 			break
@@ -1464,14 +1503,12 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "focusPanelRequest": {
+			// Execute the focusPanel command to focus the WebView
+			await vscode.commands.executeCommand(getCommand("focusPanel"))
+			break
+		}
 		case "filterMarketplaceItems": {
-			// Check if marketplace is enabled before making API calls
-			const { experiments } = await provider.getState()
-			if (!experiments.marketplace) {
-				console.log("Marketplace: Feature disabled, skipping API call")
-				break
-			}
-
 			if (marketplaceManager && message.filters) {
 				try {
 					await marketplaceManager.updateWithFilteredItems({
@@ -1488,14 +1525,13 @@ export const webviewMessageHandler = async (
 			break
 		}
 
-		case "installMarketplaceItem": {
-			// Check if marketplace is enabled before installing
-			const { experiments } = await provider.getState()
-			if (!experiments.marketplace) {
-				console.log("Marketplace: Feature disabled, skipping installation")
-				break
-			}
+		case "fetchMarketplaceData": {
+			// Fetch marketplace data on demand
+			await provider.fetchMarketplaceData()
+			break
+		}
 
+		case "installMarketplaceItem": {
 			if (marketplaceManager && message.mpItem && message.mpInstallOptions) {
 				try {
 					const configFilePath = await marketplaceManager.installMarketplaceItem(
@@ -1525,13 +1561,6 @@ export const webviewMessageHandler = async (
 		}
 
 		case "removeInstalledMarketplaceItem": {
-			// Check if marketplace is enabled before removing
-			const { experiments } = await provider.getState()
-			if (!experiments.marketplace) {
-				console.log("Marketplace: Feature disabled, skipping removal")
-				break
-			}
-
 			if (marketplaceManager && message.mpItem && message.mpInstallOptions) {
 				try {
 					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
@@ -1544,13 +1573,6 @@ export const webviewMessageHandler = async (
 		}
 
 		case "installMarketplaceItemWithParameters": {
-			// Check if marketplace is enabled before installing with parameters
-			const { experiments } = await provider.getState()
-			if (!experiments.marketplace) {
-				console.log("Marketplace: Feature disabled, skipping installation with parameters")
-				break
-			}
-
 			if (marketplaceManager && message.payload && "item" in message.payload && "parameters" in message.payload) {
 				try {
 					const configFilePath = await marketplaceManager.installMarketplaceItem(message.payload.item, {

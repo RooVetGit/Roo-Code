@@ -12,7 +12,11 @@
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)",
 		"condenseContext": "Condenser intelligemment le contexte",
-		"share": "Partager la tâche"
+		"share": "Partager la tâche",
+		"shareWithOrganization": "Partager avec l'organisation",
+		"shareWithOrganizationDescription": "Seuls les membres de ton organisation peuvent accéder",
+		"sharePublicly": "Partager publiquement",
+		"sharePubliclyDescription": "Toute personne avec le lien peut accéder"
 	},
 	"unpin": "Désépingler",
 	"pin": "Épingler",
@@ -75,7 +79,7 @@
 	"onboarding": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tâches Boomerang",
+			"title": "Orchestration de Tâches",
 			"description": "Divisez les tâches en parties plus petites et gérables."
 		},
 		"stickyModels": {
@@ -223,11 +227,11 @@
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} est sortie",
-		"description": "Roo Code {{version}} apporte de puissantes nouvelles fonctionnalités et améliorations basées sur vos retours.",
+		"description": "Roo Code {{version}} apporte de nouvelles fonctionnalités majeures et des améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "<bold>Marketplace Expérimental</bold> : Découvrez et installez des modes et des MCPs depuis le nouveau marketplace (à activer dans <experimentalSettingsLink>Paramètres Expérimentaux</experimentalSettingsLink>)",
-		"feature2": "<bold>Opérations de Fichiers Améliorées</bold> : Écritures de fichiers concurrentes multiples dans les paramètres expérimentaux, et lectures concurrentes maintenant dans <contextSettingsLink>Paramètres de Contexte</contextSettingsLink>",
-		"feature3": "<bold>Améliorations MCP et plus</bold> : Support MCP amélioré, contrôles Mermaid, support Amazon Bedrock thinking, et bien plus !",
+		"feature1": "<bold>Lancement du Marketplace Roo</bold> : Le marketplace est maintenant en ligne ! Découvrez et installez des modes et des MCPs plus facilement que jamais.",
+		"feature2": "<bold>Modèles Gemini 2.5</bold> : Ajout du support pour les nouveaux modèles Gemini 2.5 Pro, Flash et Flash Lite.",
+		"feature3": "<bold>Support des fichiers Excel et plus</bold> : Ajout du support des fichiers Excel (.xlsx) et de nombreuses corrections de bugs et améliorations !",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},

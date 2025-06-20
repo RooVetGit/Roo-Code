@@ -12,7 +12,11 @@
 		"export": "Aufgabenverlauf exportieren",
 		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
 		"share": "Aufgabe teilen",
-		"condenseContext": "Kontext intelligent komprimieren"
+		"condenseContext": "Kontext intelligent komprimieren",
+		"shareWithOrganization": "Mit Organisation teilen",
+		"shareWithOrganizationDescription": "Nur Mitglieder deiner Organisation können zugreifen",
+		"sharePublicly": "Öffentlich teilen",
+		"sharePubliclyDescription": "Jeder mit dem Link kann zugreifen"
 	},
 	"unpin": "Lösen von oben",
 	"pin": "Anheften",
@@ -75,7 +79,7 @@
 	"onboarding": "<strong>Deine Aufgabenliste in diesem Arbeitsbereich ist leer.</strong> Beginne mit der Eingabe einer Aufgabe unten. Du bist dir nicht sicher, wie du anfangen sollst? Lies mehr darüber, was Roo für dich tun kann, in <DocsLink>den Dokumenten</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Bumerang-Aufgaben",
+			"title": "Aufgaben-Orchestrierung",
 			"description": "Teile Aufgaben in kleinere, überschaubare Teile auf."
 		},
 		"stickyModels": {
@@ -223,11 +227,11 @@
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} veröffentlicht",
-		"description": "Roo Code {{version}} bringt leistungsstarke neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
+		"description": "Roo Code {{version}} bringt wichtige neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
 		"whatsNew": "Was ist neu",
-		"feature1": "<bold>Experimenteller Marketplace</bold>: Entdecke und installiere Modi und MCPs im neuen Marketplace (aktivierbar in den <experimentalSettingsLink>Experimentellen Einstellungen</experimentalSettingsLink>)",
-		"feature2": "<bold>Verbesserte Dateioperationen</bold>: Mehrere gleichzeitige Dateischreibvorgänge in experimentellen Einstellungen und gleichzeitige Lesevorgänge jetzt in den <contextSettingsLink>Kontext-Einstellungen</contextSettingsLink>",
-		"feature3": "<bold>MCP-Verbesserungen & mehr</bold>: Erweiterte MCP-Unterstützung, Mermaid-Steuerungen, Amazon Bedrock Thinking-Unterstützung und vieles mehr!",
+		"feature1": "<bold>Roo Marketplace Launch</bold>: Der Marketplace ist jetzt live! Entdecke und installiere Modi und MCPs einfacher denn je.",
+		"feature2": "<bold>Gemini 2.5 Modelle</bold>: Unterstützung für neue Gemini 2.5 Pro, Flash und Flash Lite Modelle hinzugefügt.",
+		"feature3": "<bold>Excel-Datei-Unterstützung & mehr</bold>: Excel (.xlsx) Datei-Unterstützung hinzugefügt sowie zahlreiche Fehlerbehebungen und Verbesserungen!",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},
