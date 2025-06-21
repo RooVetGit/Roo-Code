@@ -5,7 +5,7 @@ import * as path from "path"
 
 import { countFileLines } from "../../../integrations/misc/line-counter"
 import { readLines } from "../../../integrations/misc/read-lines"
-import { extractTextFromFile } from "../../../integrations/misc/extract-text"
+import { extractTextFromFile, addLineNumbers } from "../../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
 import {
@@ -16,10 +16,11 @@ import {
 import { readFileTool } from "../readFileTool"
 import { formatResponse } from "../../prompts/responses"
 
-vi.mock("path", () => {
-	const originalPath = vi.importActual("path")
+vi.mock("path", async () => {
+	const originalPath = await vi.importActual("path")
 	return {
 		...originalPath,
+		default: originalPath,
 		resolve: vi.fn().mockImplementation((...args) => args.join("/")),
 	}
 })
@@ -33,31 +34,24 @@ vi.mock("fs/promises", () => ({
 vi.mock("isbinaryfile")
 
 vi.mock("../../../integrations/misc/line-counter")
-vi.mock("../../../integrations/misc/read-lines")
+vi.mock("../../../integrations/misc/read-lines", () => ({
+	readLines: vi.fn().mockResolvedValue("Line 1\nLine 2\nLine 3"),
+}))
 
 // Mock input content for tests
 let mockInputContent = ""
 
-// First create all the mocks
-vi.mock("../../../integrations/misc/extract-text")
+// First create all the mocks with proper implementations
+vi.mock("../../../integrations/misc/extract-text", () => ({
+	extractTextFromFile: vi.fn(),
+	addLineNumbers: vi.fn().mockImplementation((text, startLine = 1) => {
+		if (!text) return ""
+		const lines = typeof text === "string" ? text.split("\n") : [text]
+		return lines.map((line, i) => `${startLine + i} | ${line}`).join("\n")
+	}),
+	getSupportedBinaryFormats: vi.fn(() => [".pdf", ".docx", ".ipynb"]),
+}))
 vi.mock("../../../services/tree-sitter")
-
-// Then create the mock functions
-const addLineNumbersMock = vi.fn().mockImplementation((text, startLine = 1) => {
-	if (!text) return ""
-	const lines = typeof text === "string" ? text.split("\n") : [text]
-	return lines.map((line, i) => `${startLine + i} | ${line}`).join("\n")
-})
-
-const extractTextFromFileMock = vi.fn()
-const getSupportedBinaryFormatsMock = vi.fn(() => [".pdf", ".docx", ".ipynb"])
-
-// Now assign the mocks to the module
-const extractTextModule = {
-	extractTextFromFile: extractTextFromFileMock,
-	addLineNumbers: addLineNumbersMock,
-	getSupportedBinaryFormats: getSupportedBinaryFormatsMock,
-}
 
 vi.mock("../../ignore/RooIgnoreController", () => ({
 	RooIgnoreController: class {
@@ -74,23 +68,24 @@ vi.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: vi.fn().mockReturnValue(true),
 }))
 
+// Test data - shared across all test suites
+const testFilePath = "test/file.txt"
+const absoluteFilePath = "/test/file.txt"
+const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5\n"
+const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
+
+// Mocked functions with correct types - shared across all test suites
+const mockedCountFileLines = countFileLines as any
+const mockedReadLines = readLines as any
+const mockedExtractTextFromFile = extractTextFromFile as any
+const mockedAddLineNumbers = addLineNumbers as any
+const mockedParseSourceCodeDefinitionsForFile = parseSourceCodeDefinitionsForFile as any
+
+const mockedIsBinaryFile = isBinaryFile as any
+const mockedPathResolve = path.resolve as any
+
 describe("read_file tool with maxReadFileLine setting", () => {
-	// Test data
-	const testFilePath = "test/file.txt"
-	const absoluteFilePath = "/test/file.txt"
-	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
-	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5\n"
-	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
-
-	// Mocked functions with correct types
-	const mockedCountFileLines = countFileLines as any
-	const mockedReadLines = readLines as any
-	const mockedExtractTextFromFile = extractTextFromFile as any
-	const mockedParseSourceCodeDefinitionsForFile = parseSourceCodeDefinitionsForFile as any
-
-	const mockedIsBinaryFile = isBinaryFile as any
-	const mockedPathResolve = path.resolve as any
-
 	const mockCline: any = {}
 	let mockProvider: any
 	let toolResult: ToolResponse | undefined
@@ -105,12 +100,12 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 		// Setup the extractTextFromFile mock implementation with the current mockInputContent
 		// Reset the spy before each test
-		addLineNumbersMock.mockClear()
+		mockedAddLineNumbers.mockClear()
 
 		// Setup the extractTextFromFile mock to call our spy
 		mockedExtractTextFromFile.mockImplementation((_filePath: string) => {
 			// Call the spy and return its result
-			return Promise.resolve(addLineNumbersMock(mockInputContent))
+			return Promise.resolve(mockedAddLineNumbers(mockInputContent))
 		})
 
 		// No need to setup the extractTextFromFile mock implementation here
@@ -166,7 +161,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockedCountFileLines.mockResolvedValue(totalLines)
 
 		// Reset the spy before each test
-		addLineNumbersMock.mockClear()
+		mockedAddLineNumbers.mockClear()
 
 		// Format args string based on params
 		let argsContent = `<file><path>${options.path || testFilePath}</path>`
@@ -334,12 +329,12 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Create a special mock implementation for binary files
 			mockedExtractTextFromFile.mockImplementation(() => {
 				// We still need to call the spy to register the call
-				addLineNumbersMock(mockInputContent)
+				mockedAddLineNumbers(mockInputContent)
 				return Promise.resolve(numberedFileContent)
 			})
 
 			// Reset the spy to clear any previous calls
-			addLineNumbersMock.mockClear()
+			mockedAddLineNumbers.mockClear()
 
 			// Make sure mockCline.ask returns approval
 			mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
@@ -415,9 +410,9 @@ describe("read_file tool XML output structure", () => {
 
 		// Set default implementation for extractTextFromFile
 		mockedExtractTextFromFile.mockImplementation((filePath: string) => {
-			// Call addLineNumbersMock to register the call
-			addLineNumbersMock(mockInputContent)
-			return Promise.resolve(addLineNumbersMock(mockInputContent))
+			// Call mockedAddLineNumbers to register the call
+			mockedAddLineNumbers(mockInputContent)
+			return Promise.resolve(mockedAddLineNumbers(mockInputContent))
 		})
 
 		mockInputContent = fileContent
@@ -547,7 +542,7 @@ describe("read_file tool XML output structure", () => {
 			const numberedContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
 			// For XML structure test
 			mockedExtractTextFromFile.mockImplementation(() => {
-				addLineNumbersMock(mockInputContent)
+				mockedAddLineNumbers(mockInputContent)
 				return Promise.resolve(numberedContent)
 			})
 			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
@@ -620,7 +615,7 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockResolvedValue(content)
 
 			// Mock addLineNumbers to return the numbered content
-			addLineNumbersMock.mockImplementation((_text?: any, start?: any) => {
+			mockedAddLineNumbers.mockImplementation((_text?: any, start?: any) => {
 				if (start === 2) {
 					return numberedContent
 				}
@@ -655,7 +650,7 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockResolvedValue(content)
 
 			// Mock addLineNumbers to return the numbered content
-			addLineNumbersMock.mockImplementation((_text?: any, start?: any) => {
+			mockedAddLineNumbers.mockImplementation((_text?: any, start?: any) => {
 				if (start === 1) {
 					return numberedContent
 				}
@@ -693,7 +688,7 @@ describe("read_file tool XML output structure", () => {
 			mockedCountFileLines.mockResolvedValue(endLine)
 			mockInputContent = fileContent
 			// Set up the mock to return properly formatted content
-			addLineNumbersMock.mockImplementation((text, start) => {
+			mockedAddLineNumbers.mockImplementation((text, start) => {
 				if (start === 2) {
 					return "2 | Line 2\n3 | Line 3\n4 | Line 4"
 				}
@@ -744,7 +739,7 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockResolvedValue(content)
 
 			// Mock addLineNumbers to return the numbered content
-			addLineNumbersMock.mockImplementation((_text?: any, start?: any) => {
+			mockedAddLineNumbers.mockImplementation((_text?: any, start?: any) => {
 				if (start === 3) {
 					return numberedContent
 				}
@@ -834,7 +829,7 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockResolvedValue(content)
 			mockInputContent = content
 			// Set up the mock to return properly formatted content
-			addLineNumbersMock.mockImplementation((text, start) => {
+			mockedAddLineNumbers.mockImplementation((text, start) => {
 				if (start === 1) {
 					return "1 | Line 1\n2 | Line 2\n3 | Line 3"
 				}
@@ -1088,7 +1083,6 @@ describe("read_file tool XML output structure", () => {
 				.mockResolvedValueOnce({ response: "noButtonClicked" }) // Second file denied
 
 			// Execute - Skip the default validateAccess mock
-			const { readFileTool } = require("../readFileTool")
 			let toolResult: string | undefined
 
 			// Create a tool use object
