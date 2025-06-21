@@ -37,7 +37,6 @@ export const toolParamNames = [
 	"start_line",
 	"end_line",
 	"query",
-	"args",
 ] as const
 
 /**
