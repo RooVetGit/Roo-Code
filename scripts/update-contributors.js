@@ -184,8 +184,13 @@ async function readReadme() {
  * @returns {string} HTML for contributors section
  */
 function formatContributorsSection(contributors) {
-	// Filter out GitHub Actions bot
-	const filteredContributors = contributors.filter((c) => !c.login.includes("[bot]") && !c.login.includes("R00-B0T"))
+	// Filter out GitHub Actions bot, cursor, and roomote
+	const filteredContributors = contributors.filter((c) => 
+		!c.login.includes("[bot]") && 
+		!c.login.includes("R00-B0T") && 
+		c.login !== "cursor" && 
+		c.login !== "roomote"
+	)
 
 	// Start building with Markdown table format
 	let markdown = `${START_MARKER}
