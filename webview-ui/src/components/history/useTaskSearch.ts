@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { HistoryItem, HistorySearchOptions, HistorySortOption, HistorySearchResultItem } from "@roo-code/types"
+import {
+	HistoryItem,
+	HistorySearchOptions,
+	HistorySortOption,
+	HistorySearchResultItem,
+	HistoryWorkspaceItem,
+} from "@roo-code/types"
 import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { highlightFzfMatch } from "@/utils/highlight"
@@ -11,14 +17,27 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 	const { cwd } = useExtensionState()
 	const [tasks, setTasks] = useState<(HistoryItem & { highlight?: string })[]>([])
 	const [loading, setLoading] = useState(true)
+	const [isSearching, setIsSearching] = useState(false) // New state for tracking search in progress
 	const [searchQuery, setSearchQuery] = useState(options.searchQuery || "")
 	const [pendingSearchQuery, setPendingSearchQuery] = useState(options.searchQuery || "")
 	const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const previousTasksRef = useRef<(HistoryItem & { highlight?: string })[]>([])
 	const [sortOption, setSortOption] = useState<HistorySortOption>(options.sortOption || "newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<HistorySortOption | null>("newest")
-	const [showAllWorkspaces, setShowAllWorkspaces] = useState(options.showAllWorkspaces || false)
+	const [workspaceItems, setWorkspaceItems] = useState<HistoryWorkspaceItem[]>([])
+	const [workspacePath, setWorkspacePath] = useState<string | undefined>(options.workspacePath)
 	const currentRequestId = useRef<string>("")
+
+	// Wrap setWorkspacePath to set loading state when workspace changes
+	const setWorkspacePathWithLoading = useCallback(
+		(path: string) => {
+			if (path !== workspacePath) {
+				setLoading(true)
+			}
+			setWorkspacePath(path)
+		},
+		[workspacePath],
+	)
 
 	// Debounced search query setter
 	const debouncedSetSearchQuery = useCallback((query: string) => {
@@ -29,6 +48,9 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		setPendingSearchQuery(query)
 
 		searchTimeoutRef.current = setTimeout(() => {
+			if (query) {
+				setIsSearching(true) // Set searching to true when a new search query is submitted
+			}
 			setSearchQuery(query)
 		}, 125) // 125ms debounce
 	}, [])
@@ -44,9 +66,9 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		}
 	}, [searchQuery, sortOption, lastNonRelevantSort])
 	useEffect(() => {
-		// Always set loading to true on initial render
+		// Set loading to true on initial render
 		// or if we've never fetched results before
-		if (tasks.length === 0) {
+		if (tasks.length === 0 && !loading) {
 			setLoading(true)
 		}
 
@@ -67,9 +89,17 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 					return item
 				})
 
+				// Update workspace items if provided
+				if (message.workspaceItems && Array.isArray(message.workspaceItems)) {
+					setWorkspaceItems(message.workspaceItems)
+				} else {
+					console.error("No workspaceItems in message:", message)
+				}
+
 				// Atomic update - no flickering
 				setTasks(processedItems)
 				setLoading(false)
+				setIsSearching(false) // Set searching to false when results are received
 			}
 		}
 
@@ -91,7 +121,9 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 					historySearchOptions: {
 						searchQuery,
 						sortOption,
-						workspacePath: showAllWorkspaces ? undefined : cwd,
+						// If workspacePath is undefined, show all workspaces
+						// Otherwise, use the specified workspacePath (which could be empty string for "(unknown)")
+						workspacePath,
 						limit: options.limit,
 					},
 					requestId: refreshRequestId,
@@ -106,7 +138,9 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		const searchOptions: HistorySearchOptions = {
 			searchQuery,
 			sortOption,
-			workspacePath: showAllWorkspaces ? undefined : cwd,
+			// If workspacePath is undefined, show all workspaces
+			// Otherwise, use the specified workspacePath (which could be empty string for "(unknown)")
+			workspacePath,
 			limit: options.limit,
 		}
 
@@ -126,18 +160,20 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		}
 		// Intentionally excluding tasks from deps to prevent infinite loop and flickering
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [searchQuery, sortOption, showAllWorkspaces, cwd, options.limit])
+	}, [searchQuery, sortOption, workspacePath, cwd, options.limit])
 
 	return {
 		tasks,
 		loading,
+		isSearching,
 		searchQuery: pendingSearchQuery, // Return the pending query for immediate UI feedback
 		setSearchQuery: debouncedSetSearchQuery,
 		sortOption,
 		setSortOption,
 		lastNonRelevantSort,
 		setLastNonRelevantSort,
-		showAllWorkspaces,
-		setShowAllWorkspaces,
+		workspaceItems,
+		workspacePath,
+		setWorkspacePath: setWorkspacePathWithLoading,
 	}
 }

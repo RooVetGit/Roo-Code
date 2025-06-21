@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Workspace:",
 		"current": "Current",
-		"all": "All"
+		"all": "All",
+		"unknown": "Unknown",
+		"available": "Available Workspaces",
+		"recent": "Recent Workspaces",
+		"filterPlaceholder": "Filter workspaces..."
 	},
 	"sort": {
 		"prefix": "Sort:",
@@ -42,4 +46,5 @@
 		"mostRelevant": "Most Relevant"
 	},
 	"viewAllHistory": "View all tasks"
+	"noItemsFound": "No items found"
 }

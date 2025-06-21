@@ -453,7 +453,7 @@ export const webviewMessageHandler = async (
 			const historyResults = await getHistoryItemsForSearch(message.historySearchOptions || {})
 			provider.postMessageToWebview({
 				type: "historyItems",
-				items: historyResults.items,
+				...historyResults,
 				requestId: message.requestId, // Pass the requestId back in the response
 			})
 			break
