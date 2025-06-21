@@ -19,7 +19,7 @@ importers:
         version: 2.29.4
       '@dotenvx/dotenvx':
         specifier: ^1.34.0
-        version: 1.44.2
+        version: 1.45.1
       '@vscode/vsce':
         specifier: 3.3.2
         version: 3.3.2
@@ -1524,8 +1524,8 @@ packages:
     resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
     engines: {node: '>=18'}
 
-  '@dotenvx/dotenvx@1.44.2':
-    resolution: {integrity: sha512-2C44+G2dch4cB6zw7+oGQ9VcFQuuVhc5xOzfVvY7iUEj2PRhiVMIB6SpNMK1V5TvpdqrAqCYFjclK18Mh9vwNQ==}
+  '@dotenvx/dotenvx@1.45.1':
+    resolution: {integrity: sha512-wKHPD+/NMMJVBPg3i98uD9jsURDy+Ck6RQRiWf39TlOAzC+Ge1FkmDk3sgeljYZxA3qF6E7SJmvRqC70XQuuVA==}
     hasBin: true
 
   '@drizzle-team/brocli@0.10.2':
@@ -10604,7 +10604,7 @@ snapshots:
 
   '@csstools/css-tokenizer@3.0.4': {}
 
-  '@dotenvx/dotenvx@1.44.2':
+  '@dotenvx/dotenvx@1.45.1':
     dependencies:
       commander: 11.1.0
       dotenv: 16.5.0
