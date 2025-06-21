@@ -43,6 +43,7 @@ import CodebaseSearchResultsDisplay from "./CodebaseSearchResultsDisplay"
 interface ChatRowProps {
 	message: ClineMessage
 	lastModifiedMessage?: ClineMessage
+	modifiedMessages: ClineMessage[]
 	isExpanded: boolean
 	isLast: boolean
 	isStreaming: boolean
@@ -93,6 +94,7 @@ export default ChatRow
 export const ChatRowContent = ({
 	message,
 	lastModifiedMessage,
+	modifiedMessages,
 	isExpanded,
 	isLast,
 	isStreaming,
@@ -129,10 +131,43 @@ export const ChatRowContent = ({
 			? lastModifiedMessage?.text
 			: undefined
 
-	const isCommandExecuting =
-		isLast && lastModifiedMessage?.ask === "command" && lastModifiedMessage?.text?.includes(COMMAND_OUTPUT_STRING)
+	const isCommandExecuting = useMemo(() => {
+		if (
+			!isLast ||
+			lastModifiedMessage?.ask !== "command" ||
+			!lastModifiedMessage?.text?.includes(COMMAND_OUTPUT_STRING)
+		) {
+			return false
+		}
 
-	const isMcpServerResponding = isLast && lastModifiedMessage?.say === "mcp_server_request_started"
+		// Check if there's a subsequent message indicating command completion
+		// Look for any message after the command that would indicate it's finished
+		const commandTs = lastModifiedMessage.ts
+		const hasCompletionMessage = modifiedMessages.some(
+			(msg) =>
+				msg.ts > commandTs &&
+				(msg.say === "api_req_finished" ||
+					msg.say === "completion_result" ||
+					msg.ask === "completion_result" ||
+					(msg.say === "command_output" && !msg.partial)),
+		)
+
+		return !hasCompletionMessage
+	}, [isLast, lastModifiedMessage, modifiedMessages])
+
+	const isMcpServerResponding = useMemo(() => {
+		if (!isLast || lastModifiedMessage?.say !== "mcp_server_request_started") {
+			return false
+		}
+
+		// Check if there's a subsequent MCP response message
+		const mcpRequestTs = lastModifiedMessage.ts
+		const hasMcpResponse = modifiedMessages.some(
+			(msg) => msg.ts > mcpRequestTs && msg.say === "mcp_server_response",
+		)
+
+		return !hasMcpResponse
+	}, [isLast, lastModifiedMessage, modifiedMessages])
 
 	const type = message.type === "ask" ? message.ask : message.say
 
@@ -212,21 +247,31 @@ export const ChatRowContent = ({
 						/>
 					</div>
 				)
+				// Check if this API request has actually finished by looking for completion indicators
+				const apiRequestFinished = cost !== null && cost !== undefined
+				const apiRequestCancelled = apiReqCancelReason !== null && apiReqCancelReason !== undefined
+				const apiRequestFailed = apiRequestFailedMessage !== undefined
+
+				// Only show spinner if the request is truly still in progress
+				const shouldShowSpinner = !apiRequestFinished && !apiRequestCancelled && !apiRequestFailed
+
 				return [
-					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
+					apiRequestCancelled ? (
 						apiReqCancelReason === "user_cancelled" ? (
 							getIconSpan("error", cancelledColor)
 						) : (
 							getIconSpan("error", errorColor)
 						)
-					) : cost !== null && cost !== undefined ? (
+					) : apiRequestFinished ? (
 						getIconSpan("check", successColor)
-					) : apiRequestFailedMessage ? (
+					) : apiRequestFailed ? (
 						getIconSpan("error", errorColor)
-					) : (
+					) : shouldShowSpinner ? (
 						<ProgressIndicator />
+					) : (
+						getIconSpan("check", successColor)
 					),
-					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
+					apiRequestCancelled ? (
 						apiReqCancelReason === "user_cancelled" ? (
 							<span style={{ color: normalColor, fontWeight: "bold" }}>
 								{t("chat:apiRequest.cancelled")}
@@ -236,12 +281,14 @@ export const ChatRowContent = ({
 								{t("chat:apiRequest.streamingFailed")}
 							</span>
 						)
-					) : cost !== null && cost !== undefined ? (
+					) : apiRequestFinished ? (
 						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.title")}</span>
-					) : apiRequestFailedMessage ? (
+					) : apiRequestFailed ? (
 						<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:apiRequest.failed")}</span>
-					) : (
+					) : shouldShowSpinner ? (
 						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.streaming")}</span>
+					) : (
+						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.title")}</span>
 					),
 				]
 			case "followup":

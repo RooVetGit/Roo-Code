@@ -1197,6 +1197,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						messages={messageOrGroup}
 						isLast={index === groupedMessages.length - 1}
 						lastModifiedMessage={modifiedMessages.at(-1)}
+						modifiedMessages={modifiedMessages}
 						onHeightChange={handleRowHeightChange}
 						isStreaming={isStreaming}
 						isExpanded={(messageTs: number) => expandedRows[messageTs] ?? false}
@@ -1218,6 +1219,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					isExpanded={expandedRows[messageOrGroup.ts] || false}
 					onToggleExpand={toggleRowExpansion} // This was already stabilized
 					lastModifiedMessage={modifiedMessages.at(-1)} // Original direct access
+					modifiedMessages={modifiedMessages}
 					isLast={index === groupedMessages.length - 1} // Original direct access
 					onHeightChange={handleRowHeightChange}
 					isStreaming={isStreaming}

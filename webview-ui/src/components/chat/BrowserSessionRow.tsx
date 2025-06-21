@@ -20,6 +20,7 @@ interface BrowserSessionRowProps {
 	isExpanded: (messageTs: number) => boolean
 	onToggleExpand: (messageTs: number) => void
 	lastModifiedMessage?: ClineMessage
+	modifiedMessages: ClineMessage[]
 	isLast: boolean
 	onHeightChange: (isTaller: boolean) => void
 	isStreaming: boolean
@@ -423,6 +424,7 @@ const BrowserSessionRowContent = ({
 	isExpanded,
 	onToggleExpand,
 	lastModifiedMessage,
+	modifiedMessages,
 	isLast,
 	setMaxActionHeight,
 	isStreaming,
@@ -453,6 +455,7 @@ const BrowserSessionRowContent = ({
 									onToggleExpand(message.ts)
 								}}
 								lastModifiedMessage={lastModifiedMessage}
+								modifiedMessages={modifiedMessages}
 								isLast={isLast}
 								isStreaming={isStreaming}
 							/>
