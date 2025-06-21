@@ -67,7 +67,7 @@ export class ToolRepetitionDetector {
 	 * Serializes a ToolDirective object into a canonical JSON string for comparison
 	 *
 	 * @param ToolDirective The ToolDirective object to serialize
-	 * @returns JSON string representation of the tool use with sorted parameter keys
+	 * @returns JSON string representation of the tool directive with sorted parameter keys
 	 */
 	private serializeToolDirective(ToolDirective: ToolDirective): string {
 		// Create a new parameters object with alphabetically sorted keys
