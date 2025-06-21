@@ -21,6 +21,7 @@ import {
 	BEDROCK_MAX_TOKENS,
 	BEDROCK_DEFAULT_CONTEXT,
 	BEDROCK_REGION_INFO,
+	AWS_INFERENCE_PROFILE_MAPPING,
 } from "@roo-code/types"
 
 import { ApiStream } from "../transform/stream"
@@ -900,14 +901,12 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			//a model was selected from the drop down
 			modelConfig = this.getModelById(this.options.apiModelId as string)
 
-			if (this.options.awsUseCrossRegionInference) {
-				// Get the current region
-				const region = this.options.awsRegion || ""
-				// Use the helper method to get the appropriate prefix for this region
-				const prefix = AwsBedrockHandler.getPrefixForRegion(region)
-
-				// Apply the prefix if one was found, otherwise use the model ID as is
-				modelConfig.id = prefix ? `${prefix}${modelConfig.id}` : modelConfig.id
+			// Add cross-region inference prefix if enabled
+			if (this.options.awsUseCrossRegionInference && this.options.awsRegion) {
+				const prefix = AwsBedrockHandler.getPrefixForRegion(this.options.awsRegion)
+				if (prefix) {
+					modelConfig.id = `${prefix}${modelConfig.id}`
+				}
 			}
 		}
 
@@ -978,11 +977,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	private static getPrefixForRegion(region: string): string | undefined {
-		for (const [prefix, info] of Object.entries(BEDROCK_REGION_INFO)) {
-			if (info.pattern && region.startsWith(info.pattern)) {
-				return prefix
+		// Use AWS recommended inference profile prefixes
+		// Sort by prefix length (descending) to ensure more specific prefixes match first (e.g., us-gov- before us-)
+		const sortedMappings = Object.entries(AWS_INFERENCE_PROFILE_MAPPING).sort(([a], [b]) => b.length - a.length)
+
+		for (const [regionPattern, inferenceProfile] of sortedMappings) {
+			if (region.startsWith(regionPattern)) {
+				return inferenceProfile
 			}
 		}
+
 		return undefined
 	}
 

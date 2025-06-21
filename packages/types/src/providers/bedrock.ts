@@ -360,6 +360,24 @@ export const BEDROCK_MAX_TOKENS = 4096
 
 export const BEDROCK_DEFAULT_CONTEXT = 128_000
 
+// AWS Bedrock Inference Profile mapping based on official documentation
+// https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html
+// This mapping prioritizes AWS's recommended inference profiles for optimal cross-region support
+export const AWS_INFERENCE_PROFILE_MAPPING: Record<string, string> = {
+	// Americas regions → us. inference profile
+	"us-": "us.",
+	// Europe regions → eu. inference profile
+	"eu-": "eu.",
+	// Asia Pacific regions → apac. inference profile (updated per AWS documentation)
+	"ap-": "apac.",
+	// Canada regions → ca. inference profile
+	"ca-": "ca.",
+	// South America regions → sa. inference profile
+	"sa-": "sa.",
+	// US Government Cloud → ug. inference profile
+	"us-gov-": "ug.",
+}
+
 export const BEDROCK_REGION_INFO: Record<
 	string,
 	{
