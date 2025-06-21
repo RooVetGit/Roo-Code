@@ -36,8 +36,8 @@
 		"next": "^15.2.5",
 		"next-themes": "^0.4.6",
 		"p-map": "^7.0.3",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
 		"react-hook-form": "^7.57.0",
 		"react-use": "^17.6.0",
 		"redis": "^5.5.5",
@@ -52,8 +52,8 @@
 		"@roo-code/config-typescript": "workspace:^",
 		"@tailwindcss/postcss": "^4",
 		"@types/ps-tree": "^1.1.6",
-		"@types/react": "^18.3.23",
-		"@types/react-dom": "^18.3.5",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
 		"tailwindcss": "^4",
 		"vitest": "^3.2.3"
 	}
