@@ -25,7 +25,8 @@
 			"save": "Afbeelding opslaan",
 			"viewCode": "Code bekijken",
 			"viewDiagram": "Diagram bekijken",
-			"close": "Sluiten"
+			"close": "Sluiten",
+			"retry": "Opnieuw proberen"
 		},
 		"modal": {
 			"codeTitle": "Mermaid-code"
