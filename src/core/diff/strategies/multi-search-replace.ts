@@ -1,5 +1,3 @@
-/* eslint-disable no-irregular-whitespace */
-
 import { distance } from "fastest-levenshtein"
 
 import { ToolProgressStatus } from "@roo-code/types"
@@ -7,6 +5,7 @@ import { ToolProgressStatus } from "@roo-code/types"
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
+import { parseWithTimeout, parseWithOriginalRegex } from "./timeout-utils"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
 
@@ -77,17 +76,19 @@ function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, e
 export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
 	private fuzzyThreshold: number
 	private bufferLines: number
+	private parseTimeoutMs: number
 
 	getName(): string {
 		return "MultiSearchReplace"
 	}
 
-	constructor(fuzzyThreshold?: number, bufferLines?: number) {
+	constructor(fuzzyThreshold?: number, bufferLines?: number, parseTimeoutMs?: number) {
 		// Use provided threshold or default to exact matching (1.0)
 		// Note: fuzzyThreshold is inverted in UI (0% = 1.0, 10% = 0.9)
 		// so we use it directly here
 		this.fuzzyThreshold = fuzzyThreshold ?? 1.0
 		this.bufferLines = bufferLines ?? BUFFER_LINES
+		this.parseTimeoutMs = parseTimeoutMs ?? 30000 // Default 30 seconds
 	}
 
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
@@ -182,27 +183,30 @@ Only use a single line of '=======' between search and replacement content, beca
 
 	private unescapeMarkers(content: string): string {
 		return content
-			.replace(/^\\<<<<<<</gm, "<<<<<<<")
-			.replace(/^\\=======/gm, "=======")
-			.replace(/^\\>>>>>>>/gm, ">>>>>>>")
-			.replace(/^\\-------/gm, "-------")
-			.replace(/^\\:end_line:/gm, ":end_line:")
-			.replace(/^\\:start_line:/gm, ":start_line:")
+			.replace(/^(\s*)\\<<<<<<</gm, "$1<<<<<<<")
+			.replace(/^(\s*)\\=======/gm, "$1=======")
+			.replace(/^(\s*)\\>>>>>>>/gm, "$1>>>>>>>")
+			.replace(/^(\s*)\\-------/gm, "$1-------")
+			.replace(/^(\s*)\\:end_line:/gm, "$1:end_line:")
+			.replace(/^(\s*)\\:start_line:/gm, "$1:start_line:")
 	}
 
 	private validateMarkerSequencing(diffContent: string): { success: boolean; error?: string } {
 		enum State {
 			START,
 			AFTER_SEARCH,
+			IN_SEARCH_CONTENT,
 			AFTER_SEPARATOR,
+			IN_REPLACE_CONTENT,
 		}
+
 		const state = { current: State.START, line: 0 }
 
 		const SEARCH = "<<<<<<< SEARCH"
 		const SEP = "======="
 		const REPLACE = ">>>>>>> REPLACE"
-		const SEARCH_PREFIX = "<<<<<<<"
-		const REPLACE_PREFIX = ">>>>>>>"
+		const SEARCH_PREFIX = "<<<<<<< "
+		const REPLACE_PREFIX = ">>>>>>> "
 
 		const reportMergeConflictError = (found: string, _expected: string) => ({
 			success: false,
@@ -215,7 +219,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				"CORRECT FORMAT:\n\n" +
 				"<<<<<<< SEARCH\n" +
 				"content before\n" +
-				`\\${found}    <-- Note the backslash here in this example\n` +
+				`\\${found} <-- Note the backslash here in this example\n` +
 				"content after\n" +
 				"=======\n" +
 				"replacement content\n" +
@@ -269,7 +273,7 @@ Only use a single line of '=======' between search and replacement content, beca
 
 		const lines = diffContent.split("\n")
 		const searchCount = lines.filter((l) => l.trim() === SEARCH).length
-		const sepCount = lines.filter((l) => l.trim() === SEP).length
+		const sepCount = lines.filter((l) => l.trim() === SEP && !l.startsWith("\\")).length
 		const replaceCount = lines.filter((l) => l.trim() === REPLACE).length
 
 		const likelyBadStructure = searchCount !== replaceCount || sepCount < searchCount
@@ -277,46 +281,69 @@ Only use a single line of '=======' between search and replacement content, beca
 		for (const line of diffContent.split("\n")) {
 			state.line++
 			const marker = line.trim()
+			const isEscaped = line.trim().startsWith("\\")
 
 			// Check for line markers in REPLACE sections (but allow escaped ones)
-			if (state.current === State.AFTER_SEPARATOR) {
-				if (marker.startsWith(":start_line:") && !line.trim().startsWith("\\:start_line:")) {
+			if (state.current === State.IN_REPLACE_CONTENT) {
+				if (marker.startsWith(":start_line:") && !isEscaped) {
 					return reportLineMarkerInReplaceError(":start_line:")
 				}
-				if (marker.startsWith(":end_line:") && !line.trim().startsWith("\\:end_line:")) {
+				if (marker.startsWith(":end_line:") && !isEscaped) {
 					return reportLineMarkerInReplaceError(":end_line:")
 				}
 			}
 
 			switch (state.current) {
 				case State.START:
-					if (marker === SEP)
+					if (marker === SEP && !isEscaped)
 						return likelyBadStructure
 							? reportInvalidDiffError(SEP, SEARCH)
 							: reportMergeConflictError(SEP, SEARCH)
-					if (marker === REPLACE) return reportInvalidDiffError(REPLACE, SEARCH)
-					if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, SEARCH)
-					if (marker === SEARCH) state.current = State.AFTER_SEARCH
-					else if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, SEARCH)
+					if (marker === REPLACE && !isEscaped) return reportInvalidDiffError(REPLACE, SEARCH)
+					if (marker.startsWith(REPLACE_PREFIX) && !isEscaped) return reportMergeConflictError(marker, SEARCH)
+					if (marker === SEARCH && !isEscaped) state.current = State.AFTER_SEARCH
+					else if (marker.startsWith(SEARCH_PREFIX) && !isEscaped)
+						return reportMergeConflictError(marker, SEARCH)
 					break
 
 				case State.AFTER_SEARCH:
-					if (marker === SEARCH) return reportInvalidDiffError(SEARCH, SEP)
-					if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, SEARCH)
-					if (marker === REPLACE) return reportInvalidDiffError(REPLACE, SEP)
-					if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, SEARCH)
-					if (marker === SEP) state.current = State.AFTER_SEPARATOR
+					if (marker === SEARCH && !isEscaped) return reportInvalidDiffError(SEARCH, SEP)
+					if (marker.startsWith(SEARCH_PREFIX) && !isEscaped) return reportMergeConflictError(marker, SEARCH)
+					if (marker === REPLACE && !isEscaped) return reportInvalidDiffError(REPLACE, SEP)
+					if (marker.startsWith(REPLACE_PREFIX) && !isEscaped) return reportMergeConflictError(marker, SEARCH)
+					if (marker === SEP && !isEscaped) state.current = State.IN_REPLACE_CONTENT
+					else if (
+						marker === "-------" ||
+						marker.startsWith(":start_line:") ||
+						marker.startsWith(":end_line:")
+					) {
+						// Allow header lines, transition to search content after headers
+						if (marker === "-------") state.current = State.IN_SEARCH_CONTENT
+					} else {
+						// Any other content means we're in search content
+						state.current = State.IN_SEARCH_CONTENT
+					}
 					break
 
-				case State.AFTER_SEPARATOR:
-					if (marker === SEARCH) return reportInvalidDiffError(SEARCH, REPLACE)
-					if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, REPLACE)
-					if (marker === SEP)
+				case State.IN_SEARCH_CONTENT:
+					// In search content, only check for unescaped structural markers
+					if (marker === SEARCH && !isEscaped) return reportInvalidDiffError(SEARCH, SEP)
+					if (marker === REPLACE && !isEscaped) return reportInvalidDiffError(REPLACE, SEP)
+					if ((marker.startsWith(REPLACE_PREFIX) || marker.startsWith(">>>>>>>")) && !isEscaped)
+						return reportMergeConflictError(marker, SEP)
+					if (marker === SEP && !isEscaped) state.current = State.IN_REPLACE_CONTENT
+					// Allow escaped markers and any other content in search section
+					break
+
+				case State.IN_REPLACE_CONTENT:
+					// In replace content, only check for unescaped structural markers
+					if (marker === SEARCH && !isEscaped) return reportInvalidDiffError(SEARCH, REPLACE)
+					if (marker === SEP && !isEscaped)
 						return likelyBadStructure
 							? reportInvalidDiffError(SEP, REPLACE)
 							: reportMergeConflictError(SEP, REPLACE)
-					if (marker === REPLACE) state.current = State.START
-					else if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, REPLACE)
+					if (marker === REPLACE && !isEscaped) state.current = State.START
+					// Allow escaped markers and any other content in replace section
 					break
 			}
 		}
@@ -326,7 +353,9 @@ Only use a single line of '=======' between search and replacement content, beca
 			: {
 					success: false,
 					error: `ERROR: Unexpected end of sequence: Expected '${
-						state.current === State.AFTER_SEARCH ? "=======" : ">>>>>>> REPLACE"
+						state.current === State.AFTER_SEARCH || state.current === State.IN_SEARCH_CONTENT
+							? "======="
+							: ">>>>>>> REPLACE"
 					}' was not found.`,
 				}
 	}
@@ -345,42 +374,20 @@ Only use a single line of '=======' between search and replacement content, beca
 			}
 		}
 
-		/*
-			Regex parts:
-			
-			1. (?:^|\n)  
-			  Ensures the first marker starts at the beginning of the file or right after a newline.
-
-			2. (?<!\\)<<<<<<< SEARCH\s*\n  
-			  Matches the line “<<<<<<< SEARCH” (ignoring any trailing spaces) – the negative lookbehind makes sure it isn’t escaped.
-
-			3. ((?:\:start_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
-
-			4. ((?:\:end_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
-
-			5. ((?<!\\)-------\s*\n)?  
-			  Optionally matches the “-------” marker line (group 5).
-
-			6. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “search content” (group 6) up to the next marker.
-
-			7. (?:(?<=\n)(?<!\\)=======\s*\n)  
-			  Matches the “=======” marker on its own line.
-
-			8. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “replace content” (group 7).
-
-			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
-			  Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
-		*/
-
-		let matches = [
-			...diffContent.matchAll(
-				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
-			),
-		]
+		// Parse diff blocks with timeout protection to prevent hangs on complex content
+		let matches: RegExpMatchArray[]
+		try {
+			matches = await parseWithTimeout(
+				diffContent,
+				() => parseWithOriginalRegex(diffContent),
+				this.parseTimeoutMs,
+			)
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to parse diff content: ${error instanceof Error ? error.message : String(error)}. This may be due to complex content causing regex timeout. Consider breaking the diff into smaller blocks or simplifying the content structure.`,
+			}
+		}
 
 		if (matches.length === 0) {
 			return {
@@ -396,9 +403,13 @@ Only use a single line of '=======' between search and replacement content, beca
 		let appliedCount = 0
 		const replacements = matches
 			.map((match) => ({
-				startLine: Number(match[2] ?? 0),
-				searchContent: match[6],
-				replaceContent: match[7],
+				// Regex capture groups:
+				// [3] = start line number from (:start_line:(\d+))
+				// [7] = search content
+				// [8] = replace content
+				startLine: Number(match[3] ?? 0),
+				searchContent: match[7].replace(/^\n/, ""),
+				replaceContent: match[8].replace(/^\n/, ""),
 			}))
 			.sort((a, b) => a.startLine - b.startLine)
 
@@ -406,8 +417,16 @@ Only use a single line of '=======' between search and replacement content, beca
 			let { searchContent, replaceContent } = replacement
 			let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
 
-			// First unescape any escaped markers in the content
-			searchContent = this.unescapeMarkers(searchContent)
+			// Check if search content contains escaped structural diff markers that we should preserve
+			const hasEscapedStructuralMarkers = /^(\s*)\\(<<<<<<< SEARCH|=======$|>>>>>>> REPLACE)/m.test(searchContent)
+
+			// If search content has escaped structural diff markers, don't unescape it (it should match exactly)
+			// Otherwise, unescape it for normal operation
+			if (!hasEscapedStructuralMarkers) {
+				searchContent = this.unescapeMarkers(searchContent)
+			}
+
+			// Always unescape replace content to produce the final result
 			replaceContent = this.unescapeMarkers(replaceContent)
 
 			// Strip line numbers from search and replace content if every line starts with a line number
