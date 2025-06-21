@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Workspace:",
 		"current": "Current",
-		"all": "All"
+		"all": "All",
+		"unknown": "Unknown",
+		"available": "Available Workspaces",
+		"recent": "Recent Workspaces",
+		"filterPlaceholder": "Filter workspaces..."
 	},
 	"sort": {
 		"prefix": "Sort:",
@@ -40,5 +44,6 @@
 		"mostExpensive": "Most Expensive",
 		"mostTokens": "Most Tokens",
 		"mostRelevant": "Most Relevant"
-	}
+	},
+	"noItemsFound": "No items found"
 }

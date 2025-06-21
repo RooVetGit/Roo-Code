@@ -1,12 +1,14 @@
 import * as path from "path"
 import * as fs from "fs/promises"
 import { safeWriteJson, safeReadJson } from "../../utils/safeWriteJson"
+import { getWorkspacePath } from "../../utils/path"
 import {
 	HistoryItem,
 	HistorySortOption,
 	HistorySearchOptions,
 	HistorySearchResults,
 	HistorySearchResultItem,
+	HistoryWorkspaceItem,
 } from "@roo-code/types"
 import { getExtensionContext } from "../../extension"
 import { taskHistorySearch } from "./taskHistorySearch"
@@ -15,10 +17,11 @@ const TASK_HISTORY_MONTH_INDEX_PREFIX = "task_history-"
 const TASK_DIR_NAME = "tasks"
 const TASK_HISTORY_DIR_NAME = "taskHistory"
 const TASK_HISTORY_VERSION_KEY = "taskHistoryVersion"
-const CURRENT_TASK_HISTORY_VERSION = 2 // Version 1: old array, Version 2: new file-based, Version 3: file-based indexes, Version 4: separate directories
+const CURRENT_TASK_HISTORY_VERSION = 2 // Version 1: old array, Version 2: new file-based
+const WORKSPACES_INDEX_FILE = "workspaces.index.json"
 
-// Configuration for batch processing; empirically, a value of 20 seems to perform best:
-const BATCH_SIZE = 20
+// Configuration for batch processing; empirically, a value of 16 seems to perform best:
+const BATCH_SIZE = 16
 
 const itemObjectCache = new Map<string, HistoryItem>()
 
@@ -73,6 +76,15 @@ function _getMonthIndexFilePath(year: string, month: string): string {
 }
 
 /**
+ * Gets the path for the workspaces index file.
+ * @returns The file path string.
+ */
+function _getWorkspacesIndexFilePath(): string {
+	const basePath = _getHistoryIndexesBasePath()
+	return path.join(basePath, WORKSPACES_INDEX_FILE)
+}
+
+/**
  * Constructs the full file path for a history item.
  * @param taskId - The ID of the task.
  * @returns Full path to the history item's JSON file.
@@ -118,17 +130,18 @@ function _getTasksByWorkspace(
 ): Array<{ id: string; ts: number }> {
 	const tasksToFetch: Array<{ id: string; ts: number }> = []
 
-	if (workspacePath !== undefined) {
-		// Filter by single workspace
-		const tasksInWorkspace = monthDataByWorkspace[workspacePath]
-		if (tasksInWorkspace) {
-			for (const id in tasksInWorkspace) {
-				if (Object.prototype.hasOwnProperty.call(tasksInWorkspace, id)) {
-					tasksToFetch.push({ id, ts: tasksInWorkspace[id] })
-				}
-			}
-		}
-	} else {
+	// Handle special paths
+	let effectiveWorkspacePath = workspacePath
+
+	if (workspacePath === "all") {
+		effectiveWorkspacePath = "all"
+	} else if (workspacePath === "current" || workspacePath === undefined || workspacePath === "") {
+		// Get the current workspace path from VSCode
+		effectiveWorkspacePath = getWorkspacePath()
+	}
+
+	// If effectiveWorkspacePath is undefined, show all workspaces
+	if (effectiveWorkspacePath === "all") {
 		// All workspaces for the month
 		for (const wsPathKey in monthDataByWorkspace) {
 			const tasksInCurrentWorkspace = monthDataByWorkspace[wsPathKey]
@@ -137,6 +150,16 @@ function _getTasksByWorkspace(
 					if (Object.prototype.hasOwnProperty.call(tasksInCurrentWorkspace, id)) {
 						tasksToFetch.push({ id, ts: tasksInCurrentWorkspace[id] })
 					}
+				}
+			}
+		}
+	} else if (effectiveWorkspacePath !== undefined) {
+		// Filter by single workspace
+		const tasksInWorkspace = monthDataByWorkspace[effectiveWorkspacePath]
+		if (tasksInWorkspace) {
+			for (const id in tasksInWorkspace) {
+				if (Object.prototype.hasOwnProperty.call(tasksInWorkspace, id)) {
+					tasksToFetch.push({ id, ts: tasksInWorkspace[id] })
 				}
 			}
 		}
@@ -217,6 +240,11 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 			continue
 		}
 
+		// workspace updates - use "unknown" instead of empty string
+		if (item.workspace === undefined || item.workspace === "") {
+			item.workspace = "unknown"
+		}
+
 		// Group by month for index updates
 		const { year, month } = _getYearMonthFromTs(item.ts)
 		const monthKey = `${year}-${month}`
@@ -227,27 +255,35 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 		itemsByMonth.get(monthKey)!.set(item.id, item)
 	}
 
-	// Second pass: save individual item files with max 100 in flight
+	// Use a single set to track all pending promises with a maximum of BATCH_SIZE in flight
+	const pendingPromises = new Set<Promise<any>>()
+	const workspaceUpdates: Record<string, number> = {}
+
+	// Second pass: save individual item files
 	for (const [monthKey, itemsInMonth] of itemsByMonth.entries()) {
 		const count = itemsInMonth.size
 		if (count > 1) {
 			console.debug(`[setHistoryItems] Processing ${itemsInMonth.size} items for month ${monthKey}`)
 		}
 
-		// Use a Set to track pending promises
-		const pendingPromises = new Set<Promise<any>>()
-
 		// Process all items in the month
 		for (const [itemId, item] of itemsInMonth.entries()) {
-			// Wait if we've reached the maximum in-flight operations
-			if (pendingPromises.size >= BATCH_SIZE) {
-				// Wait for any operation to complete
-				await Promise.race(pendingPromises)
+			// Collect workspace updates; item.workspace is guaranteed to be defined in the first pass:
+			const workspacePathForIndex = item.workspace!
+
+			if (!workspaceUpdates[workspacePathForIndex] || item.ts > workspaceUpdates[workspacePathForIndex]) {
+				workspaceUpdates[workspacePathForIndex] = item.ts
 			}
 
 			// Start a new operation
 			const itemPath = _getHistoryItemPath(item.id)
 			const promise = safeWriteJson(itemPath, item)
+
+			// Add to pending set first
+			pendingPromises.add(promise)
+
+			// Then attach the cleanup handlers to prevent any possible races
+			promise
 				.then(() => {
 					// Cache the item after successful save
 					itemObjectCache.set(item.id, item)
@@ -262,29 +298,29 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 					return undefined
 				})
 
-			// Add to pending set
-			pendingPromises.add(promise)
-		}
-
-		// Wait for all remaining operations to complete
-		if (pendingPromises.size > 0) {
-			await Promise.all(pendingPromises)
+			// Wait while we've reached the maximum in-flight operations
+			while (pendingPromises.size >= BATCH_SIZE) {
+				await Promise.race(pendingPromises)
+			}
 		}
 	}
 
-	// Third pass: update month indexes atomically - all in parallel
-	const monthUpdatePromises: Promise<void>[] = []
-
+	// Third pass: update month indexes
 	for (const [monthKey, itemsInMonth] of itemsByMonth.entries()) {
 		const [year, month] = monthKey.split("-")
 		const indexPath = _getMonthIndexFilePath(year, month)
 
-		// Create a promise for this month's update using .then/.catch
+		// Create a promise for this month's update
 		const monthUpdatePromise = safeWriteJson(indexPath, {}, async (currentMonthData) => {
 			// Update each item in this month
 			for (const [itemId, item] of itemsInMonth.entries()) {
-				// Use "" as the index key if item.workspace is undefined
-				const workspacePathForIndex = item.workspace === undefined ? "" : item.workspace
+				// Use "unknown" as the index key if item.workspace is undefined or empty
+				let workspacePathForIndex
+				if (item.workspace === undefined || item.workspace === "") {
+					workspacePathForIndex = "unknown"
+				} else {
+					workspacePathForIndex = item.workspace
+				}
 
 				// Initialize workspace if needed - TypeScript requires explicit initialization
 				if (!currentMonthData[workspacePathForIndex]) {
@@ -296,16 +332,53 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 			}
 
 			return true // Return true to write
-		}).catch((error) => {
-			console.error(`[setHistoryItems] Error updating month index for ${monthKey}:`, error)
 		})
 
-		// Add to the collection of promises
-		monthUpdatePromises.push(monthUpdatePromise)
+		// Add to the collection of promises first
+		pendingPromises.add(monthUpdatePromise)
+
+		// Then attach the cleanup handlers to prevent any possible races
+		monthUpdatePromise
+			.then(() => {
+				pendingPromises.delete(monthUpdatePromise)
+			})
+			.catch((error) => {
+				console.error(`[setHistoryItems] Error updating month index for ${monthKey}:`, error)
+				pendingPromises.delete(monthUpdatePromise)
+			})
 	}
 
-	// Wait for all month updates to complete in parallel
-	await Promise.all(monthUpdatePromises)
+	// Add workspaces index update
+	const workspacesIndexPath = _getWorkspacesIndexFilePath()
+	const workspacesUpdatePromise = safeWriteJson(workspacesIndexPath, {}, async (currentWorkspacesData) => {
+		// Update each workspace timestamp from the collected data
+		for (const [workspacePath, timestamp] of Object.entries(workspaceUpdates)) {
+			// Update the workspace timestamp if it's newer
+			if (!currentWorkspacesData[workspacePath] || timestamp > currentWorkspacesData[workspacePath]) {
+				currentWorkspacesData[workspacePath] = timestamp
+			}
+		}
+
+		return true // Return true to write
+	})
+
+	// Add to the collection of promises first
+	pendingPromises.add(workspacesUpdatePromise)
+
+	// Then attach the cleanup handlers to prevent any possible races
+	workspacesUpdatePromise
+		.then(() => {
+			pendingPromises.delete(workspacesUpdatePromise)
+		})
+		.catch((error) => {
+			console.error(`[setHistoryItems] Error updating workspaces index:`, error)
+			pendingPromises.delete(workspacesUpdatePromise)
+		})
+
+	// Wait for all remaining operations to complete
+	if (pendingPromises.size > 0) {
+		await Promise.all(pendingPromises)
+	}
 }
 
 /**
@@ -464,7 +537,7 @@ async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<
 	const startTime = performance.now()
 	const limitStringForLog = limit !== undefined ? limit : "none"
 	console.debug(
-		`[TaskHistory] [getHistoryItemsForSearch] starting: query="${searchQuery}", limit=${limitStringForLog}, workspace=${workspacePath || "all"}, hasDateRange=${!!dateRange}, sortOption=${sortOption || "default"}`,
+		`[TaskHistory] [getHistoryItemsForSearch] starting: query="${searchQuery}", limit=${limitStringForLog}, workspace=${workspacePath === undefined ? "(undefined)" : workspacePath}, hasDateRange=${!!dateRange}, sortOption=${sortOption || "default"}`,
 	)
 
 	// Extract timestamp values directly
@@ -472,6 +545,9 @@ async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<
 	const toTsNum = dateRange?.toTs
 
 	const resultItems: HistoryItem[] = []
+
+	// Set to collect unique workspaces encountered during traversal
+	const uniqueWorkspaces = new Set<string>()
 
 	// Track task IDs that have already been added to results
 	// to prevent duplicate items, which can happen if the same
@@ -514,6 +590,13 @@ async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<
 		}
 
 		processedMonths++
+
+		// Collect all workspace paths from this month's data
+		// Always collect workspaces regardless of whether we're filtering by a specific workspace
+		// This allows users to see what other workspaces are available to select
+		Object.keys(monthDataByWorkspace).forEach((wsPath) => {
+			uniqueWorkspaces.add(wsPath)
+		})
 
 		// Get all tasks, or limit by workspace if defined:
 		let tasksInMonthToConsider = _getTasksByWorkspace(monthDataByWorkspace, workspacePath)
@@ -592,6 +675,13 @@ async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<
 		result = taskHistorySearch(sortedItems, searchQuery, preserveOrder)
 	}
 
+	// Add sorted workspaces to the result
+	result.workspaces = Array.from(uniqueWorkspaces).sort()
+
+	// Add workspace items
+	const workspaceItems = await _getAllWorkspaces()
+	result.workspaceItems = workspaceItems
+
 	return result
 }
 
@@ -652,6 +742,72 @@ export async function getAvailableHistoryMonths(
 }
 
 /**
+ * Gets all workspaces with their metadata.
+ * @returns A promise that resolves to an array of HistoryWorkspaceItem objects.
+ */
+async function _getAllWorkspaces(): Promise<HistoryWorkspaceItem[]> {
+	const workspacesIndexPath = _getWorkspacesIndexFilePath()
+	const workspaceItems: HistoryWorkspaceItem[] = []
+	const homeDir = process.env.HOME || process.env.USERPROFILE || ""
+
+	try {
+		// Read the workspaces index, defaulting to empty object if file doesn't exist
+		let workspacesData = {}
+		try {
+			workspacesData = (await safeReadJson(workspacesIndexPath)) || {}
+		} catch (error: any) {
+			if (error.code !== "ENOENT") {
+				// Only log if it's not a "file not found" error
+				console.error(`[TaskHistory] Error reading workspaces index:`, error)
+			}
+			// Use empty object as default if file doesn't exist
+		}
+
+		// Convert to HistoryWorkspaceItem array
+		for (const [path, ts] of Object.entries(workspacesData)) {
+			// Special case handling
+			let name
+
+			// Handle special paths
+			if (path === "unknown") {
+				name = "(unknown)"
+			} else {
+				// Replace home directory with ~
+				if (homeDir && path.startsWith(homeDir)) {
+					name = path.replace(homeDir, "~")
+				} else {
+					name = path
+				}
+			}
+
+			// Check if the workspace directory exists
+			let missing = false
+			if (path !== "unknown") {
+				try {
+					await fs.access(path)
+				} catch (error) {
+					missing = true
+				}
+			}
+
+			workspaceItems.push({
+				path,
+				name,
+				missing,
+				ts: ts as number,
+			})
+		}
+
+		// Sort by timestamp (newest first)
+		workspaceItems.sort((a, b) => b.ts - a.ts)
+	} catch (error) {
+		console.error(`[TaskHistory] Error reading workspaces index:`, error)
+	}
+
+	return workspaceItems
+}
+
+/**
  * Migrates task history from the old globalState array format to the new
  * file-based storage with globalState Map indexes.
  * It also cleans up any old date-organized directory structures if they exist from testing.
@@ -702,7 +858,7 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 	try {
 		const step1StartTime = performance.now()
 		console.log("[TaskHistory Migration] Reading existing items from new-format indexes...")
-		const allCurrentlyIndexedItems = await getHistoryItemsForSearch({})
+		const allCurrentlyIndexedItems = await _getHistoryItemsForSearch({ workspacePath: "all" })
 		for (const item of allCurrentlyIndexedItems.items) {
 			if (item && item.id) {
 				// Basic validation
