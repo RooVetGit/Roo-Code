@@ -561,16 +561,47 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			// Clear timeout on error
 			clearTimeout(timeoutId)
 
-			// Use the extracted error handling method for all errors
+			// Check if this is a throttling error that should trigger retry logic
+			const errorType = this.getErrorType(error)
+
+			// For throttling errors, throw immediately without yielding chunks
+			// This allows the retry mechanism in attemptApiRequest() to catch and handle it
+			// The retry logic in Task.ts (around line 1817) expects errors to be thrown
+			// on the first chunk for proper exponential backoff behavior
+			if (errorType === "THROTTLING") {
+				if (error instanceof Error) {
+					throw error
+				} else {
+					throw new Error("Throttling error occurred")
+				}
+			}
+
+			// For non-throttling errors, use the standard error handling with chunks
 			const errorChunks = this.handleBedrockError(error, true) // true for streaming context
 			// Yield each chunk individually to ensure type compatibility
 			for (const chunk of errorChunks) {
 				yield chunk as any // Cast to any to bypass type checking since we know the structure is correct
 			}
 
-			// Re-throw the error
+			// Re-throw with enhanced error message so retry system shows verbose details
+			const enhancedErrorMessage = this.formatErrorMessage(error, this.getErrorType(error), true)
 			if (error instanceof Error) {
-				throw error
+				const enhancedError = new Error(enhancedErrorMessage)
+				// Preserve important properties from the original error
+				enhancedError.name = error.name
+				// Validate and preserve status property
+				if ("status" in error && typeof (error as any).status === "number") {
+					;(enhancedError as any).status = (error as any).status
+				}
+				// Validate and preserve $metadata property
+				if (
+					"$metadata" in error &&
+					typeof (error as any).$metadata === "object" &&
+					(error as any).$metadata !== null
+				) {
+					;(enhancedError as any).$metadata = (error as any).$metadata
+				}
+				throw enhancedError
 			} else {
 				throw new Error("An unknown error occurred")
 			}
@@ -638,7 +669,26 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			const errorResult = this.handleBedrockError(error, false) // false for non-streaming context
 			// Since we're in a non-streaming context, we know the result is a string
 			const errorMessage = errorResult as string
-			throw new Error(errorMessage)
+
+			// Create enhanced error with verbose details for retry system
+			const enhancedError = new Error(errorMessage)
+			if (error instanceof Error) {
+				// Preserve important properties from the original error
+				enhancedError.name = error.name
+				// Validate and preserve status property
+				if ("status" in error && typeof (error as any).status === "number") {
+					;(enhancedError as any).status = (error as any).status
+				}
+				// Validate and preserve $metadata property
+				if (
+					"$metadata" in error &&
+					typeof (error as any).$metadata === "object" &&
+					(error as any).$metadata !== null
+				) {
+					;(enhancedError as any).$metadata = (error as any).$metadata
+				}
+			}
+			throw enhancedError
 		}
 	}
 
@@ -1035,7 +1085,20 @@ Please verify:
 			logLevel: "error",
 		},
 		THROTTLING: {
-			patterns: ["throttl", "rate", "limit"],
+			patterns: [
+				"throttl",
+				"rate",
+				"limit",
+				"bedrock is unable to process your request", // AWS Bedrock specific message
+				"please wait",
+				"quota exceeded",
+				"service unavailable",
+				"busy",
+				"overloaded",
+				"too many requests",
+				"request limit",
+				"concurrent requests",
+			],
 			messageTemplate: `Request was throttled or rate limited. Please try:
 1. Reducing the frequency of requests
 2. If using a provisioned model, check its throughput settings
@@ -1047,7 +1110,7 @@ Please verify:
 			logLevel: "error",
 		},
 		TOO_MANY_TOKENS: {
-			patterns: ["too many tokens"],
+			patterns: ["too many tokens", "token limit exceeded", "context length", "maximum context length"],
 			messageTemplate: `"Too many tokens" error detected.
 Possible Causes:
 1. Input exceeds model's context window limit
@@ -1061,6 +1124,46 @@ Suggestions:
 3. Use a model with a larger context window
 4. If rate limited, reduce request frequency
 5. Check your Amazon Bedrock quotas and limits`,
+			logLevel: "error",
+		},
+		SERVICE_QUOTA_EXCEEDED: {
+			patterns: ["service quota exceeded", "quota exceeded", "exceeded quota", "limit exceeded"],
+			messageTemplate: `Service quota exceeded. This error indicates you've reached AWS service limits.
+
+Please try:
+1. Contact AWS support to request a quota increase
+2. Reduce request frequency temporarily
+3. Check your AWS Bedrock quotas in the AWS console
+4. Consider using a different model or region with available capacity
+
+{formattedErrorDetails}`,
+			logLevel: "error",
+		},
+		MODEL_NOT_READY: {
+			patterns: ["model not ready", "model is not ready", "provisioned throughput not ready", "model loading"],
+			messageTemplate: `Model is not ready or still loading. This can happen with:
+1. Provisioned throughput models that are still initializing
+2. Custom models that are being loaded
+3. Models that are temporarily unavailable
+
+Please try:
+1. Wait a few minutes and retry
+2. Check the model status in AWS Bedrock console
+3. Verify the model is properly provisioned
+
+{formattedErrorDetails}`,
+			logLevel: "error",
+		},
+		INTERNAL_SERVER_ERROR: {
+			patterns: ["internal server error", "internal error", "server error", "service error"],
+			messageTemplate: `AWS Bedrock internal server error. This is a temporary service issue.
+
+Please try:
+1. Retry the request after a brief delay
+2. If the error persists, check AWS service health
+3. Contact AWS support if the issue continues
+
+{formattedErrorDetails}`,
 			logLevel: "error",
 		},
 		ON_DEMAND_NOT_SUPPORTED: {
@@ -1119,6 +1222,16 @@ Please check:
 			return "GENERIC"
 		}
 
+		// Check for HTTP 429 status code (Too Many Requests)
+		if ((error as any).status === 429 || (error as any).$metadata?.httpStatusCode === 429) {
+			return "THROTTLING"
+		}
+
+		// Check for AWS Bedrock specific throttling exception names
+		if ((error as any).name === "ThrottlingException" || (error as any).__type === "ThrottlingException") {
+			return "THROTTLING"
+		}
+
 		const errorMessage = error.message.toLowerCase()
 		const errorName = error.name.toLowerCase()
 
@@ -1154,6 +1267,56 @@ Please check:
 			templateVars.modelId = modelConfig.id
 			templateVars.contextWindow = String(modelConfig.info.contextWindow || "unknown")
 
+			// Extract error codes and identifiers for verbose display
+			const errorCodes: string[] = []
+			const errorMeta: string[] = []
+
+			// HTTP Status Code
+			if ((error as any).status) {
+				errorCodes.push(`HTTP ${(error as any).status}`)
+			}
+			if ((error as any).$metadata?.httpStatusCode) {
+				errorCodes.push(`HTTP ${(error as any).$metadata.httpStatusCode}`)
+			}
+
+			// AWS Error Codes
+			if (error.name && error.name !== "Error") {
+				errorCodes.push(`AWS ${error.name}`)
+			}
+			if ((error as any).__type) {
+				errorCodes.push(`Type ${(error as any).__type}`)
+			}
+
+			// Request ID for debugging
+			if ((error as any).$metadata?.requestId) {
+				errorMeta.push(`Request ID: ${(error as any).$metadata.requestId}`)
+			}
+			if ((error as any).requestId) {
+				errorMeta.push(`Request ID: ${(error as any).requestId}`)
+			}
+
+			// Extended Request ID (S3/CloudFront style)
+			if ((error as any).$metadata?.extendedRequestId) {
+				errorMeta.push(`Extended Request ID: ${(error as any).$metadata.extendedRequestId}`)
+			}
+
+			// CF Request ID (CloudFront)
+			if ((error as any).$metadata?.cfId) {
+				errorMeta.push(`CloudFront ID: ${(error as any).$metadata.cfId}`)
+			}
+
+			// Build error code display - only include verbose details if enabled
+			const verboseErrorsEnabled = this.options.awsBedrockVerboseErrors ?? true // Default to true for backward compatibility
+
+			if (verboseErrorsEnabled) {
+				templateVars.errorCodes = errorCodes.length > 0 ? `[${errorCodes.join(", ")}]` : ""
+				templateVars.errorMetadata = errorMeta.length > 0 ? `\n\nDebug Info:\n${errorMeta.join("\n")}` : ""
+			} else {
+				// In non-verbose mode, only include essential error codes
+				templateVars.errorCodes = ""
+				templateVars.errorMetadata = ""
+			}
+
 			// Format error details
 			const errorDetails: Record<string, any> = {}
 			Object.getOwnPropertyNames(error).forEach((prop) => {
@@ -1163,27 +1326,32 @@ Please check:
 			})
 
 			// Safely stringify error details to avoid circular references
-			templateVars.formattedErrorDetails = Object.entries(errorDetails)
-				.map(([key, value]) => {
-					let valueStr
-					if (typeof value === "object" && value !== null) {
-						try {
-							// Use a replacer function to handle circular references
-							valueStr = JSON.stringify(value, (k, v) => {
-								if (k && typeof v === "object" && v !== null) {
-									return "[Object]"
-								}
-								return v
-							})
-						} catch (e) {
-							valueStr = "[Complex Object]"
+			if (verboseErrorsEnabled) {
+				templateVars.formattedErrorDetails = Object.entries(errorDetails)
+					.map(([key, value]) => {
+						let valueStr
+						if (typeof value === "object" && value !== null) {
+							try {
+								// Use a replacer function to handle circular references
+								valueStr = JSON.stringify(value, (k, v) => {
+									if (k && typeof v === "object" && v !== null) {
+										return "[Object]"
+									}
+									return v
+								})
+							} catch (e) {
+								valueStr = "[Complex Object]"
+							}
+						} else {
+							valueStr = String(value)
 						}
-					} else {
-						valueStr = String(value)
-					}
-					return `- ${key}: ${valueStr}`
-				})
-				.join("\n")
+						return `- ${key}: ${valueStr}`
+					})
+					.join("\n")
+			} else {
+				// In non-verbose mode, only include the error message
+				templateVars.formattedErrorDetails = ""
+			}
 		}
 
 		// Add context-specific template variables
@@ -1196,6 +1364,16 @@ Please check:
 		// Replace template variables
 		for (const [key, value] of Object.entries(templateVars)) {
 			template = template.replace(new RegExp(`{${key}}`, "g"), value || "")
+		}
+
+		// Add error codes at the beginning if available
+		if (templateVars.errorCodes) {
+			template = `${templateVars.errorCodes} ${template}`
+		}
+
+		// Add metadata at the end if available
+		if (templateVars.errorMetadata) {
+			template = `${template}${templateVars.errorMetadata}`
 		}
 
 		return template
