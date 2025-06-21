@@ -1020,6 +1020,14 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should handle errors in multiple file entries independently", async () => {
+			// Helper function to normalize paths for cross-platform compatibility
+			const normalizePath = (filePath: string): string => {
+				const normalized = filePath.replace(/\\/g, "/")
+				// Extract the relative path part (e.g., "test/valid.txt" from any absolute path)
+				const match = normalized.match(/test\/(valid|invalid)\.txt$/)
+				return match ? `test/${match[1]}.txt` : normalized
+			}
+
 			// Setup
 			const validPath = "test/valid.txt"
 			const invalidPath = "test/invalid.txt"
@@ -1030,8 +1038,9 @@ describe("read_file tool XML output structure", () => {
 			const normalizedInvalidPath = "/test/invalid.txt"
 
 			mockedPathResolve.mockImplementation((_: string, filePath: string) => {
-				if (filePath === validPath) return normalizedValidPath
-				if (filePath === invalidPath) return normalizedInvalidPath
+				const normalizedInput = normalizePath(filePath)
+				if (normalizedInput === validPath) return normalizedValidPath
+				if (normalizedInput === invalidPath) return normalizedInvalidPath
 				return filePath
 			})
 
@@ -1059,28 +1068,26 @@ describe("read_file tool XML output structure", () => {
 
 			// Mock file operations to track operation order
 			mockedCountFileLines.mockImplementation((filePath: string) => {
-				const normalizedPath = filePath.replace(/\\/g, "/")
-				const relPath = normalizedPath === normalizedValidPath ? validPath : invalidPath
-				validationOrder.push(`countLines:${relPath}`)
-				if (normalizedPath === normalizedValidPath || normalizedPath.endsWith(validPath)) {
+				const normalizedInput = normalizePath(filePath)
+				validationOrder.push(`countLines:${normalizedInput}`)
+				if (normalizedInput === validPath) {
 					return Promise.resolve(1)
 				}
 				throw new Error("File not found")
 			})
 
 			mockedIsBinaryFile.mockImplementation((filePath: string) => {
-				const normalizedPath = filePath.replace(/\\/g, "/")
-				const relPath = normalizedPath === normalizedValidPath ? validPath : invalidPath
-				validationOrder.push(`isBinary:${relPath}`)
-				if (normalizedPath === normalizedValidPath || normalizedPath.endsWith(validPath)) {
+				const normalizedInput = normalizePath(filePath)
+				validationOrder.push(`isBinary:${normalizedInput}`)
+				if (normalizedInput === validPath) {
 					return Promise.resolve(false)
 				}
 				throw new Error("File not found")
 			})
 
 			mockedExtractTextFromFile.mockImplementation((filePath: string) => {
-				const normalizedPath = filePath.replace(/\\/g, "/")
-				if (normalizedPath === normalizedValidPath || normalizedPath.endsWith(validPath)) {
+				const normalizedInput = normalizePath(filePath)
+				if (normalizedInput === validPath) {
 					validationOrder.push(`extract:${validPath}`)
 					return Promise.resolve(numberedContent)
 				}
