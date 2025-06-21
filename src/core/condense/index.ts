@@ -8,7 +8,7 @@ import { ApiMessage } from "../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
 export const N_MESSAGES_TO_KEEP = 3
-export const MIN_CONDENSE_THRESHOLD = 10 // Minimum percentage of context window to trigger condensing
+export const MIN_CONDENSE_THRESHOLD = 5 // Minimum percentage of context window to trigger condensing
 export const MAX_CONDENSE_THRESHOLD = 100 // Maximum percentage of context window to trigger condensing
 
 const SUMMARY_PROMPT = `\
