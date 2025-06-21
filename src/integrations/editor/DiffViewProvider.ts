@@ -384,12 +384,25 @@ export class DiffViewProvider {
 	private async closeAllDiffViews(): Promise<void> {
 		const closeOps = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
-			.filter(
-				(tab) =>
+			.filter((tab) => {
+				// Check for standard diff views with our URI scheme
+				if (
 					tab.input instanceof vscode.TabInputTextDiff &&
 					tab.input.original.scheme === DIFF_VIEW_URI_SCHEME &&
-					!tab.isDirty,
-			)
+					!tab.isDirty
+				) {
+					return true
+				}
+
+				// Also check by tab label for our specific diff views
+				// This catches cases where the diff view might be created differently
+				// when files are pre-opened as text documents
+				if (tab.label.includes("↔ Roo's Changes") && !tab.isDirty) {
+					return true
+				}
+
+				return false
+			})
 			.map((tab) =>
 				vscode.window.tabGroups.close(tab).then(
 					() => undefined,
@@ -487,17 +500,22 @@ export class DiffViewProvider {
 				}),
 			)
 
-			// Execute the diff command
-			vscode.commands
-				.executeCommand(
-					"vscode.diff",
-					vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-						query: Buffer.from(this.originalContent ?? "").toString("base64"),
-					}),
-					uri,
-					`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
-					{ preserveFocus: true },
-				)
+			// Pre-open the file as a text document to ensure it doesn't open in preview mode
+			// This fixes issues with files that have custom editor associations (like markdown preview)
+			vscode.window
+				.showTextDocument(uri, { preview: false, viewColumn: vscode.ViewColumn.Active })
+				.then(() => {
+					// Execute the diff command after ensuring the file is open as text
+					return vscode.commands.executeCommand(
+						"vscode.diff",
+						vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+							query: Buffer.from(this.originalContent ?? "").toString("base64"),
+						}),
+						uri,
+						`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+						{ preserveFocus: true },
+					)
+				})
 				.then(
 					() => {
 						// Command executed successfully, now wait for the editor to appear
