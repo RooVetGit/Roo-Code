@@ -304,10 +304,16 @@ export async function presentAssistantMessage(cline: Task) {
 			const handleError = async (action: string, error: Error) => {
 				const errorString = `Error ${action}: ${JSON.stringify(serializeError(error))}`
 
-				await cline.say(
-					"error",
-					`Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`,
-				)
+				// Enhanced error logging for debugging
+				console.error(`[Tool Error] ${block.name} - ${action}:`, error)
+
+				// More detailed error message for user
+				const userErrorMessage = `Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}\n\nTool: ${block.name}\nAction: ${action}`
+
+				await cline.say("error", userErrorMessage)
+
+				// Record the tool error for tracking
+				cline.recordToolError(block.name as ToolName, errorString)
 
 				pushToolResult(formatResponse.toolError(errorString))
 			}
@@ -406,27 +412,48 @@ export async function presentAssistantMessage(cline: Task) {
 				}
 			}
 
-			switch (block.name) {
-				case "write_to_file":
-					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "apply_diff": {
-					// Get the provider and state to check experiment settings
-					const provider = cline.providerRef.deref()
-					let isMultiFileApplyDiffEnabled = false
+			// Wrap tool execution in try-catch to ensure errors are properly handled
+			try {
+				switch (block.name) {
+					case "write_to_file":
+						await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "apply_diff": {
+						// Get the provider and state to check experiment settings
+						const provider = cline.providerRef.deref()
+						let isMultiFileApplyDiffEnabled = false
 
-					if (provider) {
-						const state = await provider.getState()
-						isMultiFileApplyDiffEnabled = experiments.isEnabled(
-							state.experiments ?? {},
-							EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
-						)
+						if (provider) {
+							const state = await provider.getState()
+							isMultiFileApplyDiffEnabled = experiments.isEnabled(
+								state.experiments ?? {},
+								EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
+							)
+						}
+
+						if (isMultiFileApplyDiffEnabled) {
+							await applyDiffTool(
+								cline,
+								block,
+								askApproval,
+								handleError,
+								pushToolResult,
+								removeClosingTag,
+							)
+						} else {
+							await applyDiffToolLegacy(
+								cline,
+								block,
+								askApproval,
+								handleError,
+								pushToolResult,
+								removeClosingTag,
+							)
+						}
+						break
 					}
-
-					if (isMultiFileApplyDiffEnabled) {
-						await applyDiffTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					} else {
-						await applyDiffToolLegacy(
+					case "insert_content":
+						await insertContentTool(
 							cline,
 							block,
 							askApproval,
@@ -434,88 +461,120 @@ export async function presentAssistantMessage(cline: Task) {
 							pushToolResult,
 							removeClosingTag,
 						)
-					}
-					break
+						break
+					case "search_and_replace":
+						await searchAndReplaceTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "read_file":
+						await readFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "fetch_instructions":
+						await fetchInstructionsTool(cline, block, askApproval, handleError, pushToolResult)
+						break
+					case "list_files":
+						await listFilesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "codebase_search":
+						await codebaseSearchTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "list_code_definition_names":
+						await listCodeDefinitionNamesTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "search_files":
+						await searchFilesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "browser_action":
+						await browserActionTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "execute_command":
+						await executeCommandTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "use_mcp_tool":
+						await useMcpToolTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "access_mcp_resource":
+						await accessMcpResourceTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "ask_followup_question":
+						await askFollowupQuestionTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "switch_mode":
+						await switchModeTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "new_task":
+						await newTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "attempt_completion":
+						await attemptCompletionTool(
+							cline,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+							toolDescription,
+							askFinishSubTaskApproval,
+						)
+						break
+					default:
+						// Handle unknown tool names
+						const unknownToolError = new Error(`Unknown tool: ${block.name}`)
+						await handleError(`executing unknown tool '${block.name}'`, unknownToolError)
+						break
 				}
-				case "insert_content":
-					await insertContentTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "search_and_replace":
-					await searchAndReplaceTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "read_file":
-					await readFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-
-					break
-				case "fetch_instructions":
-					await fetchInstructionsTool(cline, block, askApproval, handleError, pushToolResult)
-					break
-				case "list_files":
-					await listFilesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "codebase_search":
-					await codebaseSearchTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "list_code_definition_names":
-					await listCodeDefinitionNamesTool(
-						cline,
-						block,
-						askApproval,
-						handleError,
-						pushToolResult,
-						removeClosingTag,
-					)
-					break
-				case "search_files":
-					await searchFilesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "browser_action":
-					await browserActionTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "execute_command":
-					await executeCommandTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "use_mcp_tool":
-					await useMcpToolTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "access_mcp_resource":
-					await accessMcpResourceTool(
-						cline,
-						block,
-						askApproval,
-						handleError,
-						pushToolResult,
-						removeClosingTag,
-					)
-					break
-				case "ask_followup_question":
-					await askFollowupQuestionTool(
-						cline,
-						block,
-						askApproval,
-						handleError,
-						pushToolResult,
-						removeClosingTag,
-					)
-					break
-				case "switch_mode":
-					await switchModeTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "new_task":
-					await newTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
-				case "attempt_completion":
-					await attemptCompletionTool(
-						cline,
-						block,
-						askApproval,
-						handleError,
-						pushToolResult,
-						removeClosingTag,
-						toolDescription,
-						askFinishSubTaskApproval,
-					)
-					break
+			} catch (toolExecutionError) {
+				// Catch any unhandled errors during tool execution
+				console.error(`[Tool Execution Error] ${block.name}:`, toolExecutionError)
+				await handleError(`executing tool '${block.name}'`, toolExecutionError as Error)
 			}
 
 			break

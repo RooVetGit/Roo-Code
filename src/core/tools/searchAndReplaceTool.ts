@@ -201,13 +201,53 @@ export async function searchAndReplaceTool(
 		// Show changes in diff view
 		if (!cline.diffViewProvider.isEditing) {
 			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
-			await cline.diffViewProvider.open(validRelPath)
-			await cline.diffViewProvider.update(fileContent, false)
-			cline.diffViewProvider.scrollToFirstDiff()
-			await delay(200)
+
+			try {
+				await cline.diffViewProvider.open(validRelPath)
+			} catch (openError) {
+				console.error(`[searchAndReplaceTool] Failed to open diff view for '${validRelPath}':`, openError)
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("search_and_replace", `Failed to open diff view: ${openError.message}`)
+				pushToolResult(
+					formatResponse.toolError(`Failed to open file editor for '${validRelPath}': ${openError.message}`),
+				)
+				await cline.diffViewProvider.reset()
+				return
+			}
+
+			try {
+				await cline.diffViewProvider.update(fileContent, false)
+				cline.diffViewProvider.scrollToFirstDiff()
+				await delay(200)
+			} catch (updateError) {
+				console.error(`[searchAndReplaceTool] Failed to update diff view for '${validRelPath}':`, updateError)
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("search_and_replace", `Failed to update diff view: ${updateError.message}`)
+				pushToolResult(
+					formatResponse.toolError(
+						`Failed to update file editor for '${validRelPath}': ${updateError.message}`,
+					),
+				)
+				await cline.diffViewProvider.reset()
+				return
+			}
 		}
 
-		await cline.diffViewProvider.update(newContent, true)
+		try {
+			await cline.diffViewProvider.update(newContent, true)
+		} catch (updateError) {
+			console.error(
+				`[searchAndReplaceTool] Failed to update diff view with new content for '${validRelPath}':`,
+				updateError,
+			)
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("search_and_replace", `Failed to update diff view: ${updateError.message}`)
+			pushToolResult(
+				formatResponse.toolError(`Failed to update file editor for '${validRelPath}': ${updateError.message}`),
+			)
+			await cline.diffViewProvider.reset()
+			return
+		}
 
 		// Request user approval for changes
 		const completeMessage = JSON.stringify({

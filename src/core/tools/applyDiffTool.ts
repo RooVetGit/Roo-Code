@@ -143,9 +143,33 @@ export async function applyDiffToolLegacy(
 
 			// Show diff view before asking for approval
 			cline.diffViewProvider.editType = "modify"
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(diffResult.content, true)
-			await cline.diffViewProvider.scrollToFirstDiff()
+
+			try {
+				await cline.diffViewProvider.open(relPath)
+			} catch (openError) {
+				console.error(`[applyDiffTool] Failed to open diff view for '${relPath}':`, openError)
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("apply_diff", `Failed to open diff view: ${openError.message}`)
+				pushToolResult(
+					formatResponse.toolError(`Failed to open file editor for '${relPath}': ${openError.message}`),
+				)
+				await cline.diffViewProvider.reset()
+				return
+			}
+
+			try {
+				await cline.diffViewProvider.update(diffResult.content, true)
+				await cline.diffViewProvider.scrollToFirstDiff()
+			} catch (updateError) {
+				console.error(`[applyDiffTool] Failed to update diff view for '${relPath}':`, updateError)
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("apply_diff", `Failed to update diff view: ${updateError.message}`)
+				pushToolResult(
+					formatResponse.toolError(`Failed to update file editor for '${relPath}': ${updateError.message}`),
+				)
+				await cline.diffViewProvider.reset()
+				return
+			}
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,

@@ -107,11 +107,35 @@ export async function insertContentTool(
 		// Show changes in diff view
 		if (!cline.diffViewProvider.isEditing) {
 			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
-			// First open with original content
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(fileContent, false)
-			cline.diffViewProvider.scrollToFirstDiff()
-			await delay(200)
+
+			try {
+				// First open with original content
+				await cline.diffViewProvider.open(relPath)
+			} catch (openError) {
+				console.error(`[insertContentTool] Failed to open diff view for '${relPath}':`, openError)
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("insert_content", `Failed to open diff view: ${openError.message}`)
+				pushToolResult(
+					formatResponse.toolError(`Failed to open file editor for '${relPath}': ${openError.message}`),
+				)
+				await cline.diffViewProvider.reset()
+				return
+			}
+
+			try {
+				await cline.diffViewProvider.update(fileContent, false)
+				cline.diffViewProvider.scrollToFirstDiff()
+				await delay(200)
+			} catch (updateError) {
+				console.error(`[insertContentTool] Failed to update diff view for '${relPath}':`, updateError)
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("insert_content", `Failed to update diff view: ${updateError.message}`)
+				pushToolResult(
+					formatResponse.toolError(`Failed to update file editor for '${relPath}': ${updateError.message}`),
+				)
+				await cline.diffViewProvider.reset()
+				return
+			}
 		}
 
 		const diff = formatResponse.createPrettyPatch(relPath, fileContent, updatedContent)
@@ -121,7 +145,21 @@ export async function insertContentTool(
 			return
 		}
 
-		await cline.diffViewProvider.update(updatedContent, true)
+		try {
+			await cline.diffViewProvider.update(updatedContent, true)
+		} catch (updateError) {
+			console.error(
+				`[insertContentTool] Failed to update diff view with new content for '${relPath}':`,
+				updateError,
+			)
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("insert_content", `Failed to update diff view: ${updateError.message}`)
+			pushToolResult(
+				formatResponse.toolError(`Failed to update file editor for '${relPath}': ${updateError.message}`),
+			)
+			await cline.diffViewProvider.reset()
+			return
+		}
 
 		const completeMessage = JSON.stringify({
 			...sharedMessageProps,

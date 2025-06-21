@@ -104,15 +104,29 @@ export async function writeToFileTool(
 
 			// update editor
 			if (!cline.diffViewProvider.isEditing) {
-				// open the editor and prepare to stream content in
-				await cline.diffViewProvider.open(relPath)
+				try {
+					// open the editor and prepare to stream content in
+					await cline.diffViewProvider.open(relPath)
+				} catch (openError) {
+					console.error(`[writeToFileTool] Failed to open diff view for '${relPath}':`, openError)
+					await handleError("writing file", openError)
+					await cline.diffViewProvider.reset()
+					return
+				}
 			}
 
-			// editor is open, stream content in
-			await cline.diffViewProvider.update(
-				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
-				false,
-			)
+			try {
+				// editor is open, stream content in
+				await cline.diffViewProvider.update(
+					everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
+					false,
+				)
+			} catch (updateError) {
+				console.error(`[writeToFileTool] Failed to update diff view for '${relPath}':`, updateError)
+				await handleError("writing file", updateError)
+				await cline.diffViewProvider.reset()
+				return
+			}
 
 			return
 		} else {
@@ -155,13 +169,28 @@ export async function writeToFileTool(
 				// show gui message before showing edit animation
 				const partialMessage = JSON.stringify(sharedMessageProps)
 				await cline.ask("tool", partialMessage, true).catch(() => {}) // sending true for partial even though it's not a partial, cline shows the edit row before the content is streamed into the editor
-				await cline.diffViewProvider.open(relPath)
+
+				try {
+					await cline.diffViewProvider.open(relPath)
+				} catch (openError) {
+					console.error(`[writeToFileTool] Failed to open diff view for '${relPath}':`, openError)
+					await handleError("writing file", openError)
+					await cline.diffViewProvider.reset()
+					return
+				}
 			}
 
-			await cline.diffViewProvider.update(
-				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
-				true,
-			)
+			try {
+				await cline.diffViewProvider.update(
+					everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
+					true,
+				)
+			} catch (updateError) {
+				console.error(`[writeToFileTool] Failed to update diff view for '${relPath}':`, updateError)
+				await handleError("writing file", updateError)
+				await cline.diffViewProvider.reset()
+				return
+			}
 
 			await delay(300) // wait for diff view to update
 			cline.diffViewProvider.scrollToFirstDiff()

@@ -40,65 +40,93 @@ export class DiffViewProvider {
 		this.relPath = relPath
 		const fileExists = this.editType === "modify"
 		const absolutePath = path.resolve(this.cwd, relPath)
-		this.isEditing = true
 
-		// If the file is already open, ensure it's not dirty before getting its
-		// contents.
-		if (fileExists) {
-			const existingDocument = vscode.workspace.textDocuments.find((doc) =>
-				arePathsEqual(doc.uri.fsPath, absolutePath),
-			)
+		try {
+			this.isEditing = true
 
-			if (existingDocument && existingDocument.isDirty) {
-				await existingDocument.save()
+			// Validate the file path
+			if (!relPath || relPath.trim() === "") {
+				throw new Error("Invalid file path: path cannot be empty")
 			}
-		}
 
-		// Get diagnostics before editing the file, we'll compare to diagnostics
-		// after editing to see if cline needs to fix anything.
-		this.preDiagnostics = vscode.languages.getDiagnostics()
+			// If the file is already open, ensure it's not dirty before getting its
+			// contents.
+			if (fileExists) {
+				const existingDocument = vscode.workspace.textDocuments.find((doc) =>
+					arePathsEqual(doc.uri.fsPath, absolutePath),
+				)
 
-		if (fileExists) {
-			this.originalContent = await fs.readFile(absolutePath, "utf-8")
-		} else {
-			this.originalContent = ""
-		}
-
-		// For new files, create any necessary directories and keep track of new
-		// directories to delete if the user denies the operation.
-		this.createdDirs = await createDirectoriesForFile(absolutePath)
-
-		// Make sure the file exists before we open it.
-		if (!fileExists) {
-			await fs.writeFile(absolutePath, "")
-		}
-
-		// If the file was already open, close it (must happen after showing the
-		// diff view since if it's the only tab the column will close).
-		this.documentWasOpen = false
-
-		// Close the tab if it's open (it's already saved above).
-		const tabs = vscode.window.tabGroups.all
-			.map((tg) => tg.tabs)
-			.flat()
-			.filter(
-				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
-			)
-
-		for (const tab of tabs) {
-			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+				if (existingDocument && existingDocument.isDirty) {
+					await existingDocument.save()
+				}
 			}
-			this.documentWasOpen = true
-		}
 
-		this.activeDiffEditor = await this.openDiffEditor()
-		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
-		this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
-		// Apply faded overlay to all lines initially.
-		this.fadedOverlayController.addLines(0, this.activeDiffEditor.document.lineCount)
-		this.scrollEditorToLine(0) // Will this crash for new files?
-		this.streamedLines = []
+			// Get diagnostics before editing the file, we'll compare to diagnostics
+			// after editing to see if cline needs to fix anything.
+			this.preDiagnostics = vscode.languages.getDiagnostics()
+
+			if (fileExists) {
+				try {
+					this.originalContent = await fs.readFile(absolutePath, "utf-8")
+				} catch (readError) {
+					throw new Error(`Failed to read existing file '${relPath}': ${readError.message}`)
+				}
+			} else {
+				this.originalContent = ""
+			}
+
+			// For new files, create any necessary directories and keep track of new
+			// directories to delete if the user denies the operation.
+			try {
+				this.createdDirs = await createDirectoriesForFile(absolutePath)
+			} catch (dirError) {
+				throw new Error(`Failed to create directories for '${relPath}': ${dirError.message}`)
+			}
+
+			// Make sure the file exists before we open it.
+			if (!fileExists) {
+				try {
+					await fs.writeFile(absolutePath, "")
+				} catch (writeError) {
+					throw new Error(`Failed to create new file '${relPath}': ${writeError.message}`)
+				}
+			}
+
+			// If the file was already open, close it (must happen after showing the
+			// diff view since if it's the only tab the column will close).
+			this.documentWasOpen = false
+
+			// Close the tab if it's open (it's already saved above).
+			const tabs = vscode.window.tabGroups.all
+				.map((tg) => tg.tabs)
+				.flat()
+				.filter(
+					(tab) =>
+						tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
+				)
+
+			for (const tab of tabs) {
+				if (!tab.isDirty) {
+					await vscode.window.tabGroups.close(tab)
+				}
+				this.documentWasOpen = true
+			}
+
+			this.activeDiffEditor = await this.openDiffEditor()
+			this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
+			this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
+			// Apply faded overlay to all lines initially.
+			this.fadedOverlayController.addLines(0, this.activeDiffEditor.document.lineCount)
+			this.scrollEditorToLine(0) // Will this crash for new files?
+			this.streamedLines = []
+		} catch (error) {
+			// Reset state on error
+			this.isEditing = false
+			this.relPath = undefined
+			this.originalContent = undefined
+			this.createdDirs = []
+			throw error
+		}
 	}
 
 	async update(accumulatedContent: string, isFinal: boolean) {
