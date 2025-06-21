@@ -35,9 +35,24 @@ export type HistorySearchResultItem = z.infer<typeof historySearchResultItemSche
 
 /**
  * HistorySearchResults - contains a list of search results with match information
+ * and unique workspaces encountered during the search
  */
+/**
+ * HistoryWorkspaceItem - represents a workspace with metadata
+ */
+export const historyWorkspaceItemSchema = z.object({
+	path: z.string(),
+	name: z.string(),
+	missing: z.boolean(),
+	ts: z.number(),
+})
+
+export type HistoryWorkspaceItem = z.infer<typeof historyWorkspaceItemSchema>
+
 export const historySearchResultsSchema = z.object({
 	items: z.array(historySearchResultItemSchema),
+	workspaces: z.array(z.string()).optional(),
+	workspaceItems: z.array(historyWorkspaceItemSchema).optional(),
 })
 
 export type HistorySearchResults = z.infer<typeof historySearchResultsSchema>
@@ -55,6 +70,5 @@ export interface HistorySearchOptions {
 	limit?: number
 	workspacePath?: string
 	sortOption?: HistorySortOption
-	showAllWorkspaces?: boolean
 	dateRange?: { fromTs?: number; toTs?: number }
 }
