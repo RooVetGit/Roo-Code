@@ -53,6 +53,9 @@ export class CloudService {
 
 			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService)
 
+			// Initialize retry queue for cloud telemetry client
+			this.telemetryClient.initializeRetryQueue(this.context)
+
 			this.shareService = new ShareService(this.authService, this.settingsService, this.log)
 
 			try {

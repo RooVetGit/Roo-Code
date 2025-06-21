@@ -10,7 +10,7 @@ import {
 import { historyItemSchema } from "./history.js"
 import { codebaseIndexModelsSchema, codebaseIndexConfigSchema } from "./codebase-index.js"
 import { experimentsSchema } from "./experiment.js"
-import { telemetrySettingsSchema } from "./telemetry.js"
+import { telemetrySettingsSchema, telemetryRetrySettingsSchema } from "./telemetry.js"
 import { modeConfigSchema } from "./mode.js"
 import { customModePromptsSchema, customSupportPromptsSchema } from "./mode.js"
 import { languagesSchema } from "./vscode.js"
@@ -92,6 +92,7 @@ export const globalSettingsSchema = z.object({
 	language: languagesSchema.optional(),
 
 	telemetrySetting: telemetrySettingsSchema.optional(),
+	telemetryRetrySettings: telemetryRetrySettingsSchema.optional(),
 
 	mcpEnabled: z.boolean().optional(),
 	enableMcpServerCreation: z.boolean().optional(),

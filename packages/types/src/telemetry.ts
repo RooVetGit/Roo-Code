@@ -174,3 +174,29 @@ export interface TelemetryClient {
 	isTelemetryEnabled(): boolean
 	shutdown(): Promise<void>
 }
+
+/**
+ * TelemetryRetrySettings
+ */
+
+export const telemetryRetrySettingsSchema = z.object({
+	maxRetries: z.number().min(0).max(10).optional(),
+	baseDelayMs: z.number().min(100).max(10000).optional(),
+	maxDelayMs: z.number().min(1000).max(600000).optional(),
+	maxQueueSize: z.number().min(10).max(10000).optional(),
+	batchSize: z.number().min(1).max(100).optional(),
+	enableNotifications: z.boolean().optional(),
+	enableRetryQueue: z.boolean().optional(),
+})
+
+export type TelemetryRetrySettings = z.infer<typeof telemetryRetrySettingsSchema>
+
+export const DEFAULT_TELEMETRY_RETRY_SETTINGS: Required<TelemetryRetrySettings> = {
+	maxRetries: 5,
+	baseDelayMs: 1000,
+	maxDelayMs: 300000,
+	maxQueueSize: 1000,
+	batchSize: 10,
+	enableNotifications: true,
+	enableRetryQueue: true,
+}
