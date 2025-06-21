@@ -65,15 +65,27 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	): ApiStream {
 		const { id: model, info, reasoning: thinkingConfig, maxTokens } = this.getModel()
 
-		const contents = messages.map(convertAnthropicMessageToGemini)
+		const limitedMessages = this.options.contextLimit ? messages.slice(-this.options.contextLimit) : messages
+		const contents = limitedMessages.map(convertAnthropicMessageToGemini)
 
-		const config: GenerateContentConfig = {
+		const tools: Array<Record<string, object>> = []
+		if (this.options.enableUrlContext) {
+			tools.push({ urlContext: {} })
+		}
+		if (this.options.enableGrounding) {
+			tools.push({ googleSearch: {} })
+		}
+		const rawConfig = {
 			systemInstruction,
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
 			thinkingConfig,
-			maxOutputTokens: this.options.modelMaxTokens ?? maxTokens ?? undefined,
+			maxOutputTokens: this.options.maxOutputTokens ?? this.options.modelMaxTokens ?? maxTokens ?? undefined,
 			temperature: this.options.modelTemperature ?? 0,
+			topP: this.options.topP,
+			topK: this.options.topK,
+			...(tools.length > 0 ? { tools } : {}),
 		}
+		const config = rawConfig as unknown as GenerateContentConfig
 
 		const params: GenerateContentParameters = { model, contents, config }
 
@@ -146,15 +158,29 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			const { id: model } = this.getModel()
 
+			const tools: Array<Record<string, object>> = []
+			if (this.options.enableUrlContext) {
+				tools.push({ urlContext: {} })
+			}
+			if (this.options.enableGrounding) {
+				tools.push({ googleSearch: {} })
+			}
+			const rawPromptConfig = {
+				httpOptions: this.options.googleGeminiBaseUrl
+					? { baseUrl: this.options.googleGeminiBaseUrl }
+					: undefined,
+				temperature: this.options.modelTemperature ?? 0,
+				maxOutputTokens: this.options.maxOutputTokens ?? this.options.modelMaxTokens,
+				topP: this.options.topP,
+				topK: this.options.topK,
+				...(tools.length > 0 ? { tools } : {}),
+			}
+			const promptConfig = rawPromptConfig as unknown as GenerateContentConfig
+
 			const result = await this.client.models.generateContent({
 				model,
 				contents: [{ role: "user", parts: [{ text: prompt }] }],
-				config: {
-					httpOptions: this.options.googleGeminiBaseUrl
-						? { baseUrl: this.options.googleGeminiBaseUrl }
-						: undefined,
-					temperature: this.options.modelTemperature ?? 0,
-				},
+				config: promptConfig,
 			})
 
 			return result.text ?? ""
