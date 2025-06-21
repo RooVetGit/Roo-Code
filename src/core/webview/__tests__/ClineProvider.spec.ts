@@ -522,6 +522,7 @@ describe("ClineProvider", () => {
 			autoCondenseContextPercent: 100,
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
+			profileThresholds: {},
 		}
 
 		const message: ExtensionMessage = {
@@ -2266,6 +2267,8 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})
@@ -2308,6 +2311,8 @@ describe("ClineProvider - Router Models", () => {
 				requesty: {},
 				glama: mockModels,
 				unbound: {},
+				ollama: {},
+				lmstudio: {},
 				litellm: {},
 			},
 		})
@@ -2318,6 +2323,13 @@ describe("ClineProvider - Router Models", () => {
 			success: false,
 			error: "Requesty API error",
 			values: { provider: "requesty" },
+		})
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "Unbound API error",
+			values: { provider: "unbound" },
 		})
 
 		expect(mockPostMessage).toHaveBeenCalledWith({
@@ -2410,6 +2422,8 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})

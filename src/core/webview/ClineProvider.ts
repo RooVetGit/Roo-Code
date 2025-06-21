@@ -23,6 +23,7 @@ import {
 	type TerminalActionPromptType,
 	type HistoryItem,
 	type CloudUserInfo,
+	type MarketplaceItem,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
@@ -37,7 +38,7 @@ import { Package } from "../../shared/package"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ExtensionMessage, MarketplaceInstalledMetadata } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
@@ -671,7 +672,7 @@ export class ClineProvider
 
 		const csp = [
 			"default-src 'none'",
-			`font-src ${webview.cspSource}`,
+			`font-src ${webview.cspSource} data:`,
 			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
 			`img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:`,
 			`media-src ${webview.cspSource}`,
@@ -758,7 +759,7 @@ export class ClineProvider
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -1255,6 +1256,46 @@ export class ClineProvider
 	}
 
 	/**
+	 * Fetches marketplace data on demand to avoid blocking main state updates
+	 */
+	async fetchMarketplaceData() {
+		try {
+			const [marketplaceItems, marketplaceInstalledMetadata] = await Promise.all([
+				this.marketplaceManager.getCurrentItems().catch((error) => {
+					console.error("Failed to fetch marketplace items:", error)
+					return [] as MarketplaceItem[]
+				}),
+				this.marketplaceManager.getInstallationMetadata().catch((error) => {
+					console.error("Failed to fetch installation metadata:", error)
+					return { project: {}, global: {} } as MarketplaceInstalledMetadata
+				}),
+			])
+
+			// Send marketplace data separately
+			this.postMessageToWebview({
+				type: "marketplaceData",
+				marketplaceItems: marketplaceItems || [],
+				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
+			})
+		} catch (error) {
+			console.error("Failed to fetch marketplace data:", error)
+			// Send empty data on error to prevent UI from hanging
+			this.postMessageToWebview({
+				type: "marketplaceData",
+				marketplaceItems: [],
+				marketplaceInstalledMetadata: { project: {}, global: {} },
+			})
+
+			// Show user-friendly error notification for network issues
+			if (error instanceof Error && error.message.includes("timeout")) {
+				vscode.window.showWarningMessage(
+					"Marketplace data could not be loaded due to network restrictions. Core functionality remains available.",
+				)
+			}
+		}
+	}
+
+	/**
 	 * Checks if there is a file-based system prompt override for the given mode
 	 */
 	async hasFileBasedSystemPromptOverride(mode: Mode): Promise<boolean> {
@@ -1335,6 +1376,7 @@ export class ClineProvider
 			customCondensingPrompt,
 			codebaseIndexConfig,
 			codebaseIndexModels,
+			profileThresholds,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1342,21 +1384,12 @@ export class ClineProvider
 		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
-		// Fetch marketplace data
-		let marketplaceItems: any[] = []
-		let marketplaceInstalledMetadata: any = { project: {}, global: {} }
-
-		marketplaceItems = (await this.marketplaceManager.getCurrentItems()) || []
-		marketplaceInstalledMetadata = await this.marketplaceManager.getInstallationMetadata()
-
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
-			marketplaceItems,
-			marketplaceInstalledMetadata,
 			apiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
@@ -1451,6 +1484,7 @@ export class ClineProvider
 				codebaseIndexEmbedderModelId: "",
 			},
 			mdmCompliant: this.checkMdmCompliance(),
+			profileThresholds: profileThresholds ?? {},
 		}
 	}
 
@@ -1600,6 +1634,7 @@ export class ClineProvider
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",
 			},
+			profileThresholds: stateValues.profileThresholds ?? {},
 		}
 	}
 
