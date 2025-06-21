@@ -172,6 +172,8 @@
 		"anthropicApiKey": "Anthropic API Anahtarı",
 		"getAnthropicApiKey": "Anthropic API Anahtarı Al",
 		"anthropicUseAuthToken": "Anthropic API Anahtarını X-Api-Key yerine Authorization başlığı olarak geçir",
+		"claudeCodePath": "Claude Code CLI Yolu",
+		"claudeCodePathDescription": "Claude Code CLI yürütülebilir dosyasının yolu. Varsayılan: claude",
 		"chutesApiKey": "Chutes API Anahtarı",
 		"getChutesApiKey": "Chutes API Anahtarı Al",
 		"deepSeekApiKey": "DeepSeek API Anahtarı",

@@ -172,6 +172,8 @@
 		"anthropicApiKey": "Chave de API Anthropic",
 		"getAnthropicApiKey": "Obter chave de API Anthropic",
 		"anthropicUseAuthToken": "Passar a chave de API Anthropic como cabeçalho Authorization em vez de X-Api-Key",
+		"claudeCodePath": "Caminho da CLI Claude Code",
+		"claudeCodePathDescription": "Caminho para o executável da CLI Claude Code. Padrão: claude",
 		"chutesApiKey": "Chave de API Chutes",
 		"getChutesApiKey": "Obter chave de API Chutes",
 		"deepSeekApiKey": "Chave de API DeepSeek",

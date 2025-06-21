@@ -172,6 +172,8 @@
 		"anthropicApiKey": "Anthropic API कुंजी",
 		"getAnthropicApiKey": "Anthropic API कुंजी प्राप्त करें",
 		"anthropicUseAuthToken": "X-Api-Key के बजाय Anthropic API कुंजी को Authorization हेडर के रूप में पास करें",
+		"claudeCodePath": "क्लाउड कोड CLI पथ",
+		"claudeCodePathDescription": "क्लाउड कोड CLI निष्पादन योग्य का पथ। डिफ़ॉल्ट: claude",
 		"chutesApiKey": "Chutes API कुंजी",
 		"getChutesApiKey": "Chutes API कुंजी प्राप्त करें",
 		"deepSeekApiKey": "DeepSeek API कुंजी",

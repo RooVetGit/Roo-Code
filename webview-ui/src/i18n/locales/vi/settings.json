@@ -172,6 +172,8 @@
 		"anthropicApiKey": "Khóa API Anthropic",
 		"getAnthropicApiKey": "Lấy khóa API Anthropic",
 		"anthropicUseAuthToken": "Truyền khóa API Anthropic dưới dạng tiêu đề Authorization thay vì X-Api-Key",
+		"claudeCodePath": "Đường dẫn CLI Claude Code",
+		"claudeCodePathDescription": "Đường dẫn đến tệp thực thi CLI Claude Code. Mặc định: claude",
 		"chutesApiKey": "Khóa API Chutes",
 		"getChutesApiKey": "Lấy khóa API Chutes",
 		"deepSeekApiKey": "Khóa API DeepSeek",
