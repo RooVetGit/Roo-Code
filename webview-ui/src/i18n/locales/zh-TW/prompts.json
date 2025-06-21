@@ -27,7 +27,18 @@
 			"command": "執行命令",
 			"mcp": "使用 MCP"
 		},
-		"noTools": "無"
+		"selectMcpServers": "選擇 MCP 伺服器",
+		"searchMcpServers": "搜尋 MCP 伺服器",
+		"allowedMcpList": "允許的 MCP 伺服器",
+		"deniedMcpList": "禁止的 MCP 伺服器",
+		"noMcpServers": "未找到 MCP 伺服器",
+		"noMatchFound": "沒有符合的結果",
+		"noTools": "無",
+		"mcpAll": "全部",
+		"mcpSelectedCount": "啟用 {{allowed}} / 停用 {{denied}}",
+		"buttons": {
+			"save": "儲存"
+		}
 	},
 	"roleDefinition": {
 		"title": "角色定義",

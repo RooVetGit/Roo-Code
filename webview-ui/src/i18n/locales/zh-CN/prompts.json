@@ -27,7 +27,18 @@
 			"command": "运行命令",
 			"mcp": "MCP服务"
 		},
-		"noTools": "无"
+		"selectMcpServers": "选择 MCP 服务",
+		"searchMcpServers": "搜索 MCP 服务",
+		"allowedMcpList": "允许的 MCP 服务",
+		"deniedMcpList": "禁止的 MCP 服务",
+		"noMcpServers": "未发现 MCP 服务",
+		"noMatchFound": "无匹配结果",
+		"noTools": "无",
+		"mcpAll": "全部",
+		"mcpSelectedCount": "启用 {{allowed}} / 禁用 {{denied}}",
+		"buttons": {
+			"save": "保存"
+		}
 	},
 	"roleDefinition": {
 		"title": "角色定义",

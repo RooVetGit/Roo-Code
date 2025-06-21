@@ -27,7 +27,18 @@
 			"command": "コマンドを実行",
 			"mcp": "MCP を使用"
 		},
-		"noTools": "なし"
+		"selectMcpServers": "MCPサーバーを選択",
+		"searchMcpServers": "MCPサーバーを検索",
+		"allowedMcpList": "許可されたMCPサーバー",
+		"deniedMcpList": "拒否されたMCPサーバー",
+		"noMcpServers": "MCPサーバーが見つかりません",
+		"noMatchFound": "一致するものがありません",
+		"noTools": "なし",
+		"mcpAll": "すべて",
+		"mcpSelectedCount": "有効 {{allowed}} / 無効 {{denied}}",
+		"buttons": {
+			"save": "保存"
+		}
 	},
 	"roleDefinition": {
 		"title": "役割の定義",

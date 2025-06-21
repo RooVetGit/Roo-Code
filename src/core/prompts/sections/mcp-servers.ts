@@ -1,20 +1,71 @@
 import { DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
+import { GroupEntry, ModeConfig } from "@roo-code/types"
+import { getGroupName } from "../../../shared/modes"
 
 export async function getMcpServersSection(
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
 	enableMcpServerCreation?: boolean,
+	currentMode?: ModeConfig,
 ): Promise<string> {
 	if (!mcpHub) {
 		return ""
 	}
 
+	// Get MCP configuration for current mode
+	let allowedMcpList: string[] | undefined
+	let deniedMcpList: string[] | undefined
+
+	if (currentMode) {
+		// Find MCP group configuration
+		const mcpGroup = currentMode.groups.find((group: GroupEntry) => {
+			if (Array.isArray(group) && group.length === 2 && group[0] === "mcp") {
+				return true
+			}
+			return getGroupName(group) === "mcp"
+		})
+
+		// If MCP group configuration is found, get allowedMcpList and deniedMcpList
+		if (mcpGroup && Array.isArray(mcpGroup) && mcpGroup.length === 2) {
+			const options = mcpGroup[1]
+			allowedMcpList = options.allowedMcpList
+			deniedMcpList = options.deniedMcpList
+		}
+	}
+
+	// Filter servers based on allowedMcpList and deniedMcpList
+	const filteredServers = mcpHub.getServers().filter((server) => {
+		// First check if the server is connected
+		if (server.status !== "connected") {
+			return false
+		}
+
+		// If allowedMcpList and deniedMcpList are not set, all connected servers are available
+		if (!allowedMcpList && !deniedMcpList) {
+			return true
+		}
+
+		// If allowedMcpList is set, only servers in allowedMcpList are available
+		if (allowedMcpList && allowedMcpList.length > 0) {
+			if (!allowedMcpList.includes(server.name)) {
+				return false
+			}
+		}
+
+		// If deniedMcpList is set, servers in deniedMcpList are not available
+		if (deniedMcpList && deniedMcpList.length > 0) {
+			if (deniedMcpList.includes(server.name)) {
+				return false
+			}
+		}
+
+		return true
+	})
+
 	const connectedServers =
-		mcpHub.getServers().length > 0
-			? `${mcpHub
-					.getServers()
-					.filter((server) => server.status === "connected")
+		filteredServers.length > 0
+			? `${filteredServers
 					.map((server) => {
 						const tools = server.tools
 							?.filter((tool) => tool.enabledForPrompt !== false)

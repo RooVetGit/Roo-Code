@@ -27,7 +27,18 @@
 			"command": "Komutları Çalıştır",
 			"mcp": "MCP Kullan"
 		},
-		"noTools": "Yok"
+		"selectMcpServers": "MCP sunucularını seç",
+		"searchMcpServers": "MCP sunucularını ara",
+		"allowedMcpList": "İzin verilen MCP sunucuları",
+		"deniedMcpList": "Engellenen MCP sunucuları",
+		"noMcpServers": "MCP sunucusu bulunamadı",
+		"noMatchFound": "Eşleşme bulunamadı",
+		"noTools": "Yok",
+		"mcpAll": "Tümü",
+		"mcpSelectedCount": "Etkin {{allowed}} / Devre dışı {{denied}}",
+		"buttons": {
+			"save": "Kaydet"
+		}
 	},
 	"roleDefinition": {
 		"title": "Rol Tanımı",

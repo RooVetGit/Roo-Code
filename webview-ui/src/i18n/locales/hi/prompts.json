@@ -27,7 +27,18 @@
 			"command": "कमांड्स चलाएँ",
 			"mcp": "MCP का उपयोग करें"
 		},
-		"noTools": "कोई नहीं"
+		"selectMcpServers": "MCP सर्वर चुनें",
+		"searchMcpServers": "MCP सर्वर खोजें",
+		"allowedMcpList": "अनुमत MCP सर्वर",
+		"deniedMcpList": "अस्वीकृत MCP सर्वर",
+		"noMcpServers": "कोई MCP सर्वर नहीं मिला",
+		"noMatchFound": "कोई मिलान नहीं मिला",
+		"noTools": "कोई नहीं",
+		"mcpAll": "सभी",
+		"mcpSelectedCount": "सक्रिय {{allowed}} / निष्क्रिय {{denied}}",
+		"buttons": {
+			"save": "सहेजें"
+		}
 	},
 	"roleDefinition": {
 		"title": "भूमिका परिभाषा",

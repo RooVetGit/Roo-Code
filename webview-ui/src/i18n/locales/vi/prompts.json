@@ -27,7 +27,18 @@
 			"command": "Chạy lệnh",
 			"mcp": "Sử dụng MCP"
 		},
-		"noTools": "Không có"
+		"selectMcpServers": "Chọn máy chủ MCP",
+		"searchMcpServers": "Tìm kiếm máy chủ MCP",
+		"allowedMcpList": "Máy chủ MCP được phép",
+		"deniedMcpList": "Máy chủ MCP bị chặn",
+		"noMcpServers": "Không tìm thấy máy chủ MCP",
+		"noMatchFound": "Không tìm thấy kết quả phù hợp",
+		"noTools": "Không có",
+		"mcpAll": "Tất cả",
+		"mcpSelectedCount": "Đã bật {{allowed}} / Đã tắt {{denied}}",
+		"buttons": {
+			"save": "Lưu"
+		}
 	},
 	"roleDefinition": {
 		"title": "Định nghĩa vai trò",

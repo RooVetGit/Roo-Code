@@ -27,7 +27,18 @@
 			"command": "Commando's uitvoeren",
 			"mcp": "MCP gebruiken"
 		},
-		"noTools": "Geen"
+		"selectMcpServers": "Selecteer MCP-servers",
+		"searchMcpServers": "Zoek MCP-servers",
+		"allowedMcpList": "Toegestane MCP-servers",
+		"deniedMcpList": "Geblokkeerde MCP-servers",
+		"noMcpServers": "Geen MCP-servers gevonden",
+		"noMatchFound": "Geen overeenkomsten gevonden",
+		"noTools": "Geen",
+		"mcpAll": "Alle",
+		"mcpSelectedCount": "Ingeschakeld {{allowed}} / Uitgeschakeld {{denied}}",
+		"buttons": {
+			"save": "Opslaan"
+		}
 	},
 	"roleDefinition": {
 		"title": "Roldefinitie",
