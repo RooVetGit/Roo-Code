@@ -820,7 +820,27 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (lastClineMessage?.ask === "completion_result") {
 			askType = "resume_completed_task"
 		} else {
-			askType = "resume_task"
+			// Check if this is a completed subtask by looking for finishTask tool completion
+			const isCompletedSubtask = this.clineMessages
+				.slice()
+				.reverse()
+				.some((m) => {
+					if (m.type === "ask" && m.ask === "tool" && m.text) {
+						try {
+							const tool = JSON.parse(m.text)
+							return tool.tool === "finishTask"
+						} catch {
+							return false
+						}
+					}
+					return false
+				})
+
+			if (isCompletedSubtask && this.parentTask) {
+				askType = "resume_completed_task"
+			} else {
+				askType = "resume_task"
+			}
 		}
 
 		this.isInitialized = true
