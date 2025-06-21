@@ -328,7 +328,7 @@ describe("AuthService", () => {
 
 			expect(mockContext.secrets.store).toHaveBeenCalledWith(
 				"clerk-auth-credentials",
-				JSON.stringify({ clientToken: "Bearer token-123", sessionId: "session-123" }),
+				JSON.stringify({ clientToken: "Bearer token-123", sessionId: "session-123", organizationId: null }),
 			)
 			expect(mockShowInfo).toHaveBeenCalledWith("Successfully authenticated with Roo Code Cloud")
 		})

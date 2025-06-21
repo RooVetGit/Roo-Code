@@ -21,6 +21,7 @@ export interface AuthServiceEvents {
 const authCredentialsSchema = z.object({
 	clientToken: z.string().min(1, "Client token cannot be empty"),
 	sessionId: z.string().min(1, "Session ID cannot be empty"),
+	organizationId: z.string().nullable().optional(),
 })
 
 type AuthCredentials = z.infer<typeof authCredentialsSchema>
@@ -220,7 +221,16 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 		try {
 			const parsedJson = JSON.parse(credentialsJson)
-			return authCredentialsSchema.parse(parsedJson)
+			const credentials = authCredentialsSchema.parse(parsedJson)
+
+			// Migration: If no organizationId but we have userInfo, add it
+			if (credentials.organizationId === undefined && this.userInfo?.organizationId) {
+				credentials.organizationId = this.userInfo.organizationId
+				await this.storeCredentials(credentials)
+				this.log("[auth] Migrated credentials with organizationId")
+			}
+
+			return credentials
 		} catch (error) {
 			if (error instanceof z.ZodError) {
 				this.log("[auth] Invalid credentials format:", error.errors)
@@ -269,8 +279,13 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 	 *
 	 * @param code The authorization code from the callback
 	 * @param state The state parameter from the callback
+	 * @param organizationId The organization ID from the callback (null for personal accounts)
 	 */
-	public async handleCallback(code: string | null, state: string | null): Promise<void> {
+	public async handleCallback(
+		code: string | null,
+		state: string | null,
+		organizationId?: string | null,
+	): Promise<void> {
 		if (!code || !state) {
 			vscode.window.showInformationMessage("Invalid Roo Code Cloud sign in url")
 			return
@@ -286,6 +301,9 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			}
 
 			const credentials = await this.clerkSignIn(code)
+
+			// Set organizationId (null for personal accounts)
+			credentials.organizationId = organizationId || null
 
 			await this.storeCredentials(credentials)
 
@@ -417,6 +435,15 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		return this.userInfo
 	}
 
+	/**
+	 * Get the stored organization ID from credentials
+	 *
+	 * @returns The stored organization ID, null for personal accounts or if no credentials exist
+	 */
+	public getStoredOrganizationId(): string | null {
+		return this.credentials?.organizationId || null
+	}
+
 	private async clerkSignIn(ticket: string): Promise<AuthCredentials> {
 		const formData = new URLSearchParams()
 		formData.append("strategy", "ticket")
@@ -453,6 +480,12 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 	private async clerkCreateSessionToken(): Promise<string> {
 		const formData = new URLSearchParams()
 		formData.append("_is_native", "1")
+
+		// Only add organization_id if not null (personal accounts)
+		const organizationId = this.getStoredOrganizationId()
+		if (organizationId !== null) {
+			formData.append("organization_id", organizationId)
+		}
 
 		const response = await fetch(`${getClerkBaseUrl()}/v1/client/sessions/${this.credentials!.sessionId}/tokens`, {
 			method: "POST",
