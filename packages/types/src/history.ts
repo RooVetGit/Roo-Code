@@ -70,6 +70,5 @@ export interface HistorySearchOptions {
 	limit?: number
 	workspacePath?: string
 	sortOption?: HistorySortOption
-	showAllWorkspaces?: boolean
 	dateRange?: { fromTs?: number; toTs?: number }
 }
