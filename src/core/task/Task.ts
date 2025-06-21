@@ -717,7 +717,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				relPath ? ` for '${relPath.toPosix()}'` : ""
 			} without value for required parameter '${paramName}'. Retrying...`,
 		)
-		return formatResponse.toolError(formatResponse.missingToolParameterError(paramName))
+		const hasMcpTools = await this.hasMcpToolsAvailable()
+		return formatResponse.toolError(formatResponse.missingToolParameterError(paramName, hasMcpTools))
 	}
 
 	// Start / Abort / Resume
@@ -1136,7 +1137,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				// the user hits max requests and denies resetting the count.
 				break
 			} else {
-				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed() }]
+				const hasMcpTools = await this.hasMcpToolsAvailable()
+				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed(hasMcpTools) }]
 				this.consecutiveMistakeCount++
 			}
 		}
@@ -1528,7 +1530,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
 
 				if (!didToolUse) {
-					this.userMessageContent.push({ type: "text", text: formatResponse.noToolsUsed() })
+					const hasMcpTools = await this.hasMcpToolsAvailable()
+					this.userMessageContent.push({ type: "text", text: formatResponse.noToolsUsed(hasMcpTools) })
 					this.consecutiveMistakeCount++
 				}
 
@@ -1631,6 +1634,32 @@ export class Task extends EventEmitter<ClineEvents> {
 				},
 			)
 		})()
+	}
+
+	private async hasMcpToolsAvailable(): Promise<boolean> {
+		try {
+			const { mcpEnabled } = (await this.providerRef.deref()?.getState()) ?? {}
+			if (!(mcpEnabled ?? true)) {
+				return false
+			}
+
+			const provider = this.providerRef.deref()
+			if (!provider) {
+				return false
+			}
+
+			const mcpHub = await McpServerManager.getInstance(provider.context, provider)
+			if (!mcpHub) {
+				return false
+			}
+
+			// Check if there are any connected MCP servers with tools
+			const servers = mcpHub.getServers()
+			return servers.some((server) => server.tools && server.tools.length > 0)
+		} catch (error) {
+			console.error("Error checking MCP tools availability:", error)
+			return false
+		}
 	}
 
 	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
