@@ -980,10 +980,13 @@ describe("read_file tool XML output structure", () => {
 			const file1Numbered = "1 | File 1 content"
 			const file2Numbered = "1 | File 2 content"
 
-			// Mock path resolution
+			// Mock path resolution - normalize paths for cross-platform compatibility
+			const normalizedFile1Path = "/test/file1.txt"
+			const normalizedFile2Path = "/test/file2.txt"
+
 			mockedPathResolve.mockImplementation((_: string, filePath: string) => {
-				if (filePath === file1Path) return "/test/file1.txt"
-				if (filePath === file2Path) return "/test/file2.txt"
+				if (filePath === file1Path) return normalizedFile1Path
+				if (filePath === file2Path) return normalizedFile2Path
 				return filePath
 			})
 
@@ -991,13 +994,15 @@ describe("read_file tool XML output structure", () => {
 			mockedCountFileLines.mockResolvedValue(1)
 			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
 			mockedExtractTextFromFile.mockImplementation((filePath: string) => {
-				if (filePath === "/test/file1.txt") {
+				// Normalize path separators for cross-platform compatibility
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				if (normalizedPath === normalizedFile1Path || normalizedPath.endsWith("test/file1.txt")) {
 					return Promise.resolve(file1Numbered)
 				}
-				if (filePath === "/test/file2.txt") {
+				if (normalizedPath === normalizedFile2Path || normalizedPath.endsWith("test/file2.txt")) {
 					return Promise.resolve(file2Numbered)
 				}
-				throw new Error("Unexpected file path")
+				throw new Error(`Unexpected file path: ${filePath} (normalized: ${normalizedPath})`)
 			})
 
 			// Execute
@@ -1020,10 +1025,13 @@ describe("read_file tool XML output structure", () => {
 			const invalidPath = "test/invalid.txt"
 			const numberedContent = "1 | Valid file content"
 
-			// Mock path resolution
+			// Mock path resolution - normalize paths for cross-platform compatibility
+			const normalizedValidPath = "/test/valid.txt"
+			const normalizedInvalidPath = "/test/invalid.txt"
+
 			mockedPathResolve.mockImplementation((_: string, filePath: string) => {
-				if (filePath === validPath) return "/test/valid.txt"
-				if (filePath === invalidPath) return "/test/invalid.txt"
+				if (filePath === validPath) return normalizedValidPath
+				if (filePath === invalidPath) return normalizedInvalidPath
 				return filePath
 			})
 
@@ -1051,25 +1059,28 @@ describe("read_file tool XML output structure", () => {
 
 			// Mock file operations to track operation order
 			mockedCountFileLines.mockImplementation((filePath: string) => {
-				const relPath = filePath === "/test/valid.txt" ? validPath : invalidPath
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				const relPath = normalizedPath === normalizedValidPath ? validPath : invalidPath
 				validationOrder.push(`countLines:${relPath}`)
-				if (filePath.includes(validPath)) {
+				if (normalizedPath === normalizedValidPath || normalizedPath.endsWith(validPath)) {
 					return Promise.resolve(1)
 				}
 				throw new Error("File not found")
 			})
 
 			mockedIsBinaryFile.mockImplementation((filePath: string) => {
-				const relPath = filePath === "/test/valid.txt" ? validPath : invalidPath
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				const relPath = normalizedPath === normalizedValidPath ? validPath : invalidPath
 				validationOrder.push(`isBinary:${relPath}`)
-				if (filePath.includes(validPath)) {
+				if (normalizedPath === normalizedValidPath || normalizedPath.endsWith(validPath)) {
 					return Promise.resolve(false)
 				}
 				throw new Error("File not found")
 			})
 
 			mockedExtractTextFromFile.mockImplementation((filePath: string) => {
-				if (filePath === "/test/valid.txt") {
+				const normalizedPath = filePath.replace(/\\/g, "/")
+				if (normalizedPath === normalizedValidPath || normalizedPath.endsWith(validPath)) {
 					validationOrder.push(`extract:${validPath}`)
 					return Promise.resolve(numberedContent)
 				}
