@@ -14,6 +14,12 @@ import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { parseXml } from "../../utils/xml"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { applyDiffToolLegacy } from "./applyDiffTool"
+import {
+	isJupyterNotebook,
+	parseJupyterNotebook,
+	applyChangesToNotebook,
+	writeJupyterNotebook,
+} from "./jupyter-notebook-handler"
 
 interface DiffOperation {
 	path: string
@@ -401,7 +407,37 @@ Original error: ${errorMessage}`
 			const fileExists = opResult.fileExists!
 
 			try {
-				let originalContent: string | null = await fs.readFile(absolutePath, "utf-8")
+				// Handle Jupyter notebooks specially
+				let originalContent: string | null
+				let isNotebook = false
+				let notebookData: any = null
+
+				if (isJupyterNotebook(absolutePath)) {
+					try {
+						const parseResult = await parseJupyterNotebook(absolutePath)
+						if (parseResult.isNotebook && parseResult.extractedContent !== undefined) {
+							originalContent = parseResult.extractedContent
+							isNotebook = true
+							notebookData = {
+								originalJson: parseResult.originalJson,
+								cellBoundaries: parseResult.cellBoundaries,
+							}
+						} else {
+							// Fallback to raw file content if parsing fails
+							originalContent = await fs.readFile(absolutePath, "utf-8")
+						}
+					} catch (error) {
+						// If notebook parsing fails, treat as regular file but warn
+						console.warn(
+							`Failed to parse Jupyter notebook ${absolutePath}, treating as regular file:`,
+							error,
+						)
+						originalContent = await fs.readFile(absolutePath, "utf-8")
+					}
+				} else {
+					originalContent = await fs.readFile(absolutePath, "utf-8")
+				}
+
 				let successCount = 0
 				let formattedError = ""
 
@@ -417,6 +453,30 @@ Original error: ${errorMessage}`
 				const diffResult = (await cline.diffStrategy?.applyDiff(originalContent, processedDiffItems)) ?? {
 					success: false,
 					error: "No diff strategy available - please ensure a valid diff strategy is configured",
+				}
+
+				// Handle saving for Jupyter notebooks
+				if (diffResult.success && isNotebook && notebookData && diffResult.content) {
+					try {
+						// Apply changes back to the notebook structure
+						const updatedNotebook = applyChangesToNotebook(
+							notebookData.originalJson,
+							diffResult.content,
+							notebookData.cellBoundaries,
+						)
+
+						// Write the updated notebook
+						await writeJupyterNotebook(absolutePath, updatedNotebook)
+
+						// Update the diff result content to show the notebook JSON for display
+						diffResult.content = JSON.stringify(updatedNotebook, null, 2)
+					} catch (error) {
+						const errorMsg = `Failed to save Jupyter notebook: ${error instanceof Error ? error.message : String(error)}`
+						cline.consecutiveMistakeCount++
+						cline.recordToolError("apply_diff", errorMsg)
+						results.push(errorMsg)
+						continue
+					}
 				}
 
 				// Release the original content from memory as it's no longer needed

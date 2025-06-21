@@ -13,6 +13,13 @@ import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import {
+	isJupyterNotebook,
+	parseJupyterNotebook,
+	applyChangesToNotebook,
+	writeJupyterNotebook,
+	validateJupyterNotebookJson,
+} from "./jupyter-notebook-handler"
 
 export async function writeToFileTool(
 	cline: Task,
@@ -148,6 +155,68 @@ export async function writeToFileTool(
 
 			cline.consecutiveMistakeCount = 0
 
+			// Handle Jupyter notebooks specially
+			const absolutePath = path.resolve(cline.cwd, relPath)
+			let isNotebook = false
+			let notebookData: any = null
+			let processedContent = newContent
+
+			if (isJupyterNotebook(absolutePath)) {
+				// Check if the content is raw JSON (user is trying to edit the notebook structure directly)
+				const jsonValidation = validateJupyterNotebookJson(newContent)
+
+				if (jsonValidation.valid) {
+					// Content is valid notebook JSON, use it directly
+					processedContent = newContent
+					isNotebook = true
+				} else {
+					// Content is not valid JSON, treat as extracted content and convert back to notebook
+					try {
+						if (fileExists) {
+							const parseResult = await parseJupyterNotebook(absolutePath)
+							if (parseResult.isNotebook && parseResult.originalJson && parseResult.cellBoundaries) {
+								// Apply the extracted content changes back to the notebook structure
+								const updatedNotebook = applyChangesToNotebook(
+									parseResult.originalJson,
+									newContent,
+									parseResult.cellBoundaries,
+								)
+								processedContent = JSON.stringify(updatedNotebook, null, 2)
+								isNotebook = true
+								notebookData = {
+									originalJson: parseResult.originalJson,
+									cellBoundaries: parseResult.cellBoundaries,
+									wasExtractedContent: true,
+								}
+							}
+						} else {
+							// New notebook file - provide guidance
+							cline.consecutiveMistakeCount++
+							cline.recordToolError("write_to_file")
+
+							pushToolResult(
+								formatResponse.toolError(
+									`Cannot create new Jupyter notebook from extracted content. For new .ipynb files, please provide valid JSON in Jupyter notebook format, or use a different file extension for plain text content.`,
+								),
+							)
+							await cline.diffViewProvider.revertChanges()
+							return
+						}
+					} catch (error) {
+						cline.consecutiveMistakeCount++
+						cline.recordToolError("write_to_file")
+
+						pushToolResult(
+							formatResponse.toolError(
+								`Failed to process Jupyter notebook content: ${error instanceof Error ? error.message : String(error)}. Please ensure the content is either valid Jupyter notebook JSON or use apply_diff for targeted changes.`,
+							),
+						)
+						await cline.diffViewProvider.revertChanges()
+						return
+					}
+				}
+			}
+
 			// if isEditingFile false, that means we have the full contents of the file already.
 			// it's important to note how cline function works, you can't make the assumption that the block.partial conditional will always be called since it may immediately get complete, non-partial data. So cline part of the logic will always be called.
 			// in other words, you must always repeat the block.partial logic here
@@ -159,49 +228,65 @@ export async function writeToFileTool(
 			}
 
 			await cline.diffViewProvider.update(
-				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
+				everyLineHasLineNumbers(processedContent) ? stripLineNumbers(processedContent) : processedContent,
 				true,
 			)
 
 			await delay(300) // wait for diff view to update
 			cline.diffViewProvider.scrollToFirstDiff()
 
-			// Check for code omissions before proceeding
-			if (detectCodeOmission(cline.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {
-				if (cline.diffStrategy) {
-					await cline.diffViewProvider.revertChanges()
-
-					pushToolResult(
-						formatResponse.toolError(
-							`Content appears to be truncated (file has ${
-								newContent.split("\n").length
-							} lines but was predicted to have ${predictedLineCount} lines), and found comments indicating omitted code (e.g., '// rest of code unchanged', '/* previous code */'). Please provide the complete file content without any omissions if possible, or otherwise use the 'apply_diff' tool to apply the diff to the original file.`,
-						),
+			// Check for code omissions before proceeding (skip for notebooks with extracted content)
+			if (!isNotebook || !notebookData?.wasExtractedContent) {
+				if (
+					detectCodeOmission(
+						cline.diffViewProvider.originalContent || "",
+						processedContent,
+						predictedLineCount,
 					)
-					return
-				} else {
-					vscode.window
-						.showWarningMessage(
-							"Potential code truncation detected. cline happens when the AI reaches its max output limit.",
-							"Follow cline guide to fix the issue",
+				) {
+					if (cline.diffStrategy) {
+						await cline.diffViewProvider.revertChanges()
+
+						pushToolResult(
+							formatResponse.toolError(
+								`Content appears to be truncated (file has ${
+									processedContent.split("\n").length
+								} lines but was predicted to have ${predictedLineCount} lines), and found comments indicating omitted code (e.g., '// rest of code unchanged', '/* previous code */'). Please provide the complete file content without any omissions if possible, or otherwise use the 'apply_diff' tool to apply the diff to the original file.`,
+							),
 						)
-						.then((selection) => {
-							if (selection === "Follow cline guide to fix the issue") {
-								vscode.env.openExternal(
-									vscode.Uri.parse(
-										"https://github.com/cline/cline/wiki/Troubleshooting-%E2%80%90-Cline-Deleting-Code-with-%22Rest-of-Code-Here%22-Comments",
-									),
-								)
-							}
-						})
+						return
+					} else {
+						vscode.window
+							.showWarningMessage(
+								"Potential code truncation detected. cline happens when the AI reaches its max output limit.",
+								"Follow cline guide to fix the issue",
+							)
+							.then((selection) => {
+								if (selection === "Follow cline guide to fix the issue") {
+									vscode.env.openExternal(
+										vscode.Uri.parse(
+											"https://github.com/cline/cline/wiki/Troubleshooting-%E2%80%90-Cline-Deleting-Code-with-%22Rest-of-Code-Here%22-Comments",
+										),
+									)
+								}
+							})
+					}
 				}
 			}
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
-				content: fileExists ? undefined : newContent,
+				content: fileExists
+					? undefined
+					: isNotebook && notebookData?.wasExtractedContent
+						? newContent
+						: processedContent,
 				diff: fileExists
-					? formatResponse.createPrettyPatch(relPath, cline.diffViewProvider.originalContent, newContent)
+					? formatResponse.createPrettyPatch(
+							relPath,
+							cline.diffViewProvider.originalContent,
+							processedContent,
+						)
 					: undefined,
 			} satisfies ClineSayTool)
 

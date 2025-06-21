@@ -11,6 +11,12 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import {
+	isJupyterNotebook,
+	parseJupyterNotebook,
+	applyChangesToNotebook,
+	writeJupyterNotebook,
+} from "./jupyter-notebook-handler"
 
 export async function applyDiffToolLegacy(
 	cline: Task,
@@ -86,7 +92,33 @@ export async function applyDiffToolLegacy(
 				return
 			}
 
-			let originalContent: string | null = await fs.readFile(absolutePath, "utf-8")
+			let originalContent: string | null
+			let isNotebook = false
+			let notebookData: any = null
+
+			// Handle Jupyter notebooks specially
+			if (isJupyterNotebook(absolutePath)) {
+				try {
+					const parseResult = await parseJupyterNotebook(absolutePath)
+					if (parseResult.isNotebook && parseResult.extractedContent !== undefined) {
+						originalContent = parseResult.extractedContent
+						isNotebook = true
+						notebookData = {
+							originalJson: parseResult.originalJson,
+							cellBoundaries: parseResult.cellBoundaries,
+						}
+					} else {
+						// Fallback to raw file content if parsing fails
+						originalContent = await fs.readFile(absolutePath, "utf-8")
+					}
+				} catch (error) {
+					// If notebook parsing fails, treat as regular file but warn
+					console.warn(`Failed to parse Jupyter notebook ${absolutePath}, treating as regular file:`, error)
+					originalContent = await fs.readFile(absolutePath, "utf-8")
+				}
+			} else {
+				originalContent = await fs.readFile(absolutePath, "utf-8")
+			}
 
 			// Apply the diff to the original content
 			const diffResult = (await cline.diffStrategy?.applyDiff(
@@ -163,6 +195,31 @@ export async function applyDiffToolLegacy(
 			if (!didApprove) {
 				await cline.diffViewProvider.revertChanges() // Cline likely handles closing the diff view
 				return
+			}
+
+			// Handle saving for Jupyter notebooks
+			if (isNotebook && notebookData && diffResult.content) {
+				try {
+					// Apply changes back to the notebook structure
+					const updatedNotebook = applyChangesToNotebook(
+						notebookData.originalJson,
+						diffResult.content,
+						notebookData.cellBoundaries,
+					)
+
+					// Write the updated notebook
+					await writeJupyterNotebook(absolutePath, updatedNotebook)
+
+					// Update diff view with the notebook JSON for display
+					await cline.diffViewProvider.update(JSON.stringify(updatedNotebook, null, 2), true)
+				} catch (error) {
+					const errorMsg = `Failed to save Jupyter notebook: ${error instanceof Error ? error.message : String(error)}`
+					cline.consecutiveMistakeCount++
+					cline.recordToolError("apply_diff", errorMsg)
+					pushToolResult(errorMsg)
+					await cline.diffViewProvider.reset()
+					return
+				}
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties
