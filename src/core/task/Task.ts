@@ -758,6 +758,14 @@ export class Task extends EventEmitter<ClineEvents> {
 		// this is the result of what it has done  add the message to the chat
 		// history and to the webview ui.
 		try {
+			// Check if the task is aborted or abandoned before trying to add messages
+			if (this.abort || this.abandoned) {
+				this.providerRef
+					.deref()
+					?.log(`[subtasks] Parent task ${this.taskId} is aborted/abandoned, skipping resume message`)
+				return
+			}
+
 			await this.say("subtask_result", lastMessage)
 
 			await this.addToApiConversationHistory({
@@ -769,7 +777,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				.deref()
 				?.log(`Error failed to add reply from subtask into conversation of parent task, error: ${error}`)
 
-			throw error
+			// Don't throw the error - we still want the parent task to be unpaused
+			// even if we couldn't add the message
 		}
 	}
 

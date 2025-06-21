@@ -202,7 +202,21 @@ export const webviewMessageHandler = async (
 			// Check if the current task actually has a parent task
 			const currentTask = provider.getCurrentCline()
 			if (currentTask && currentTask.parentTask) {
-				await provider.finishSubTask(t("common:tasks.canceled"))
+				// For subtasks, we need to ensure the parent task is resumed even if the subtask is in an error state
+				try {
+					// First abort the current subtask if it's still running
+					if (currentTask.isStreaming || !currentTask.didFinishAbortingStream) {
+						currentTask.abortTask()
+						// Small delay to ensure abort signal is processed before cleanup
+						// This prevents race conditions where the stream might still be processing
+						await new Promise((resolve) => setTimeout(resolve, 100))
+					}
+					await provider.finishSubTask(t("common:tasks.canceled"))
+				} catch (error) {
+					// If there's an error, still try to resume the parent task
+					provider.log(`Error during subtask cancellation: ${error}`)
+					await provider.finishSubTask(t("common:tasks.canceled"))
+				}
 			} else {
 				// Regular task - just clear it
 				await provider.clearTask()
