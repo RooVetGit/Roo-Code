@@ -22,6 +22,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		let claudeProcess: ChildProcess | null = null
+		let retryWithoutSession = false
 
 		try {
 			claudeProcess = runClaudeCode({
@@ -29,6 +30,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 				messages,
 				path: this.options.claudeCodePath,
 				modelId: this.getModel().id,
+				taskId: retryWithoutSession ? undefined : metadata?.taskId,
 			})
 
 			// Listen for abort signal if provided
@@ -87,6 +89,61 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 				}
 
 				if (exitCode !== null && exitCode !== 0) {
+					// Detect session-related errors and execute fallback processing
+					if (
+						errorOutput.includes("No conversation found with session ID") &&
+						!retryWithoutSession &&
+						metadata?.taskId
+					) {
+						// Retry without session
+						retryWithoutSession = true
+						claudeProcess = runClaudeCode({
+							systemPrompt,
+							messages,
+							path: this.options.claudeCodePath,
+							modelId: this.getModel().id,
+							taskId: undefined,
+						})
+
+						// Reinitialize process
+						dataQueue.length = 0
+						errorOutput = ""
+						exitCode = null
+						processError = null
+
+						// Set up event listeners for the new process
+						claudeProcess.stdout?.on("data", (data: Buffer) => {
+							const output = data.toString()
+							const lines = output.split("\n").filter((line: string) => line.trim() !== "")
+							for (const line of lines) {
+								dataQueue.push(line)
+							}
+						})
+
+						claudeProcess.stderr?.on("data", (data: Buffer) => {
+							errorOutput += data.toString()
+						})
+
+						claudeProcess.on("close", (code: number | null) => {
+							exitCode = code
+						})
+
+						claudeProcess.on("error", (error: Error) => {
+							processError = error
+						})
+
+						// Reset abort signal
+						if (metadata?.signal) {
+							metadata.signal.addEventListener("abort", () => {
+								if (claudeProcess && !claudeProcess.killed) {
+									claudeProcess.kill("SIGTERM")
+								}
+							})
+						}
+
+						continue
+					}
+
 					throw new Error(
 						`Claude Code process exited with code ${exitCode}.${errorOutput ? ` Error output: ${errorOutput.trim()}` : ""}`,
 					)

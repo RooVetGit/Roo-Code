@@ -38,7 +38,9 @@ describe("runClaudeCode", () => {
 			"/usr/local/bin/claude",
 			expect.arrayContaining([
 				"-p",
-				"System: Test system prompt\n\nUser: Test message",
+				JSON.stringify(params.messages),
+				"--system-prompt",
+				params.systemPrompt,
 				"--verbose",
 				"--output-format",
 				"stream-json",

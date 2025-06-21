@@ -121,9 +121,30 @@ describe("ClaudeCodeHandler", () => {
 				messages,
 				path: mockOptions.claudeCodePath,
 				modelId: mockOptions.apiModelId,
+				taskId: undefined,
 			})
 		})
 
+		it("should call runClaudeCode with taskId from metadata", async () => {
+			const testTaskId = "test-task-123"
+			const messageGenerator = handler.createMessage(systemPrompt, messages, { taskId: testTaskId })
+			const iterator = messageGenerator[Symbol.asyncIterator]()
+
+			// Trigger close immediately to end the iteration
+			setImmediate(() => {
+				mockProcess._simulateClose(0)
+			})
+
+			await iterator.next()
+
+			expect(mockRunClaudeCode).toHaveBeenCalledWith({
+				systemPrompt,
+				messages,
+				path: mockOptions.claudeCodePath,
+				modelId: mockOptions.apiModelId,
+				taskId: testTaskId,
+			})
+		})
 		it("should handle successful Claude Code output", async () => {
 			const messageGenerator = handler.createMessage(systemPrompt, messages)
 			const chunks: any[] = []

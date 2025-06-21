@@ -14,9 +14,9 @@ function validateMessageContent(content: string): void {
 		/\x1b\[/, // ANSI escape sequences
 		/\$\(/, // Command substitution
 		/`/, // Backticks for command substitution
-		/\|\|/, // Logical OR that could chain commands
-		/&&/, // Logical AND that could chain commands
-		/;/, // Command separator
+		/\s\|\|\s/, // Logical OR that could chain commands (with spaces to avoid matching //)
+		/\s&&\s/, // Logical AND that could chain commands (with spaces)
+		/;\s*\w/, // Command separator followed by word character
 		/\n\s*[\w-]*\$\s/, // Newline followed by shell prompt patterns (e.g., "user$ ", "$ ")
 	]
 
@@ -104,15 +104,16 @@ export function runClaudeCode({
 	messages,
 	path,
 	modelId,
+	taskId,
 }: {
 	systemPrompt: string
 	messages: Anthropic.Messages.MessageParam[]
 	path?: string
 	modelId?: string
+	taskId?: string
 }) {
 	const claudePath = path || "claude"
 	const workspacePath = getCwd()
-	const sessionId = SessionManager.getSessionId(workspacePath)
 
 	// Serialize messages to JSON format for Claude CLI
 	const serializedMessages = safeSerializeMessages(messages)
@@ -132,8 +133,11 @@ export function runClaudeCode({
 		args.push("--model", modelId)
 	}
 
-	// Note: Removed -r option as it requires an existing session ID from Claude CLI
-	// Each call will be treated as a new conversation for now
+	// Add -r option for session continuity only if taskId is explicitly provided
+	// This avoids the "No conversation found" error for new sessions
+	if (taskId) {
+		args.push("-r", taskId)
+	}
 
 	try {
 		return execa(claudePath, args, {
