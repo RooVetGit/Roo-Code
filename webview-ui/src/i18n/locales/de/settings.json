@@ -34,7 +34,11 @@
 		"about": "Über Roo Code"
 	},
 	"prompts": {
-		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten."
+		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten.",
+		"parentRulesMaxDepth": {
+			"label": "Übergeordnete Regel-Suchebenen",
+			"description": "Maximale Verzeichnisebenen für die Aufwärtssuche nach .roo/rules. Standard: 1 (nur Arbeitsbereichsverzeichnis). Höhere Werte ermöglichen hierarchisches Laden aus übergeordneten Verzeichnissen (Feature, Repository, Organisation, Benutzer-Global usw.), wobei große Werte bis zum Dateisystem-Root suchen."
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase-Indexierung",

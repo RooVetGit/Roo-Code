@@ -34,7 +34,11 @@
 		"about": "Informazioni su Roo Code"
 	},
 	"prompts": {
-		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
+		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni.",
+		"parentRulesMaxDepth": {
+			"label": "Livelli di ricerca regole padre",
+			"description": "Numero massimo di livelli di directory per cercare verso l'alto i file .roo/rules. Predefinito: 1 (solo directory di lavoro). Valori più alti abilitano il caricamento gerarchico dalle directory padre (feature, repository, organizzazione, globale utente, ecc.), dove valori grandi cercano fino alla radice del filesystem."
+		}
 	},
 	"codeIndex": {
 		"title": "Indicizzazione del codice",

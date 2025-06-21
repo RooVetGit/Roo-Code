@@ -34,7 +34,11 @@
 		"about": "Sobre"
 	},
 	"prompts": {
-		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."
+		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento.",
+		"parentRulesMaxDepth": {
+			"label": "Níveis de busca de regras pai",
+			"description": "Número máximo de níveis de diretório para buscar arquivos .roo/rules. Padrão: 1 (apenas diretório do workspace). Valores mais altos permitem carregamento hierárquico de diretórios pai (feature, repositório, organização, global do usuário, etc.), onde valores grandes buscam até a raiz do sistema de arquivos."
+		}
 	},
 	"codeIndex": {
 		"title": "Indexação de Código",

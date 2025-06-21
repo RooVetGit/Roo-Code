@@ -34,7 +34,11 @@
 		"about": "Acerca de Roo Code"
 	},
 	"prompts": {
-		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo."
+		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo.",
+		"parentRulesMaxDepth": {
+			"label": "Niveles de búsqueda de reglas superiores",
+			"description": "Niveles máximos de directorios para buscar hacia arriba archivos .roo/rules. Predeterminado: 1 (solo directorio del espacio de trabajo). Valores más altos permiten la carga jerárquica desde directorios superiores (característica, repositorio, organización, global de usuario, etc.), donde valores grandes buscan hasta la raíz del sistema de archivos."
+		}
 	},
 	"codeIndex": {
 		"title": "Indexación de código",

@@ -34,7 +34,11 @@
 		"about": "About Roo Code"
 	},
 	"prompts": {
-		"description": "Configure support prompts that are used for quick actions like enhancing prompts, explaining code, and fixing issues. These prompts help Roo provide better assistance for common development tasks."
+		"description": "Configure support prompts that are used for quick actions like enhancing prompts, explaining code, and fixing issues. These prompts help Roo provide better assistance for common development tasks.",
+		"parentRulesMaxDepth": {
+			"label": "Parent Rule Search Levels",
+			"description": "Maximum directory levels to search upward for .roo/rules. Default: 1 (workspace directory only). Higher values enable hierarchical loading from parent directories (feature, repository, organization, user-global, etc, …), where large values search to the filesystem root."
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase Indexing",

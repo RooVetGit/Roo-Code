@@ -171,7 +171,8 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 	const ruleFiles = [".roorules", ".clinerules"]
 
 	for (const file of ruleFiles) {
-		const content = await safeReadFile(path.join(cwd, file))
+		const filePath = path.join(cwd, file)
+		const content = await safeReadFile(filePath)
 		if (content) {
 			return `\n# Rules from ${file}:\n${content}\n`
 		}
@@ -180,14 +181,8 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 	return ""
 }
 
-export async function addCustomInstructions(
-	modeCustomInstructions: string,
-	globalCustomInstructions: string,
-	cwd: string,
-	mode: string,
-	options: { language?: string; rooIgnoreInstructions?: string } = {},
-): Promise<string> {
-	const sections = []
+async function addSingleCustomInstructions(cwd: string, mode: string): Promise<string> {
+	const rulesFromCwd = []
 
 	// Load mode-specific rules if mode is provided
 	let modeRuleContent = ""
@@ -220,6 +215,76 @@ export async function addCustomInstructions(
 		}
 	}
 
+	if (modeRuleContent.trim()) {
+		// If modeRuleContent came from formatDirectoryContent, it's already fully formatted.
+		// If it came from a single file, we need to add the header.
+		// Also, if usedRuleFile points to a directory, the content is already formatted.
+		if (
+			usedRuleFile &&
+			!modeRuleContent.startsWith("# Rules from") &&
+			!usedRuleFile.includes(path.join(".roo", `rules-${mode}`))
+		) {
+			rulesFromCwd.push(`# Rules from ${usedRuleFile}:\n${modeRuleContent.trim()}`)
+		} else {
+			rulesFromCwd.push(modeRuleContent.trim())
+		}
+	}
+
+	// Add generic rules
+	const genericRuleContent = await loadRuleFiles(cwd) // loadRuleFiles already formats its content
+	if (genericRuleContent && genericRuleContent.trim()) {
+		rulesFromCwd.push(genericRuleContent.trim())
+	}
+
+	return rulesFromCwd.join("\n\n")
+}
+
+export async function addCustomInstructions(
+	modeCustomInstructions: string,
+	globalCustomInstructions: string,
+	cwd: string,
+	mode: string,
+	options: { language?: string; rooIgnoreInstructions?: string } = {},
+): Promise<string> {
+	const rules = []
+	let currentCwd = path.resolve(cwd)
+	const rootDir = path.parse(currentCwd).root
+
+	// Get parentRulesMaxDepth from global state
+	let maxDepth = 1
+	try {
+		const { ContextProxy } = await import("../../../core/config/ContextProxy")
+		maxDepth = ContextProxy.instance?.getValue("parentRulesMaxDepth") ?? 1
+	} catch (error) {
+		// In test environments, ContextProxy might not be initialized
+		// Fall back to default value of 1
+	}
+
+	let currentDepth = 0
+
+	// Loop from initialCwd up to root or until max depth is reached
+	while (currentDepth < maxDepth) {
+		const rulesFromLevel = await addSingleCustomInstructions(currentCwd, mode)
+		if (rulesFromLevel.trim()) {
+			rules.unshift(rulesFromLevel.trim()) // Prepend to get parent rules first
+		}
+
+		// Stop if we've reached the root directory
+		if (currentCwd === rootDir) {
+			break
+		}
+		const parentCwd = path.resolve(currentCwd, "..")
+
+		// Safety break if path.resolve doesn't change currentCwd (e.g., already at root)
+		if (parentCwd === currentCwd) {
+			break
+		}
+		currentCwd = parentCwd
+		currentDepth++
+	}
+
+	const sections = []
+
 	// Add language preference if provided
 	if (options.language) {
 		const languageName = isLanguage(options.language) ? LANGUAGES[options.language] : options.language
@@ -239,25 +304,8 @@ export async function addCustomInstructions(
 	}
 
 	// Add rules - include both mode-specific and generic rules if they exist
-	const rules = []
-
-	// Add mode-specific rules first if they exist
-	if (modeRuleContent && modeRuleContent.trim()) {
-		if (usedRuleFile.includes(path.join(".roo", `rules-${mode}`))) {
-			rules.push(modeRuleContent.trim())
-		} else {
-			rules.push(`# Rules from ${usedRuleFile}:\n${modeRuleContent}`)
-		}
-	}
-
-	if (options.rooIgnoreInstructions) {
-		rules.push(options.rooIgnoreInstructions)
-	}
-
-	// Add generic rules
-	const genericRuleContent = await loadRuleFiles(cwd)
-	if (genericRuleContent && genericRuleContent.trim()) {
-		rules.push(genericRuleContent.trim())
+	if (options.rooIgnoreInstructions && options.rooIgnoreInstructions.trim()) {
+		rules.push(options.rooIgnoreInstructions.trim())
 	}
 
 	if (rules.length > 0) {
