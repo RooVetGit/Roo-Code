@@ -605,6 +605,33 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 	}
 
+	private static async runBackgroundGC(
+		git: SimpleGit,
+		branchName: string,
+		log: (message: string) => void,
+	): Promise<void> {
+		try {
+			log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
+			// Using raw for --prune=now as simple-git's gc() doesn't directly support it.
+			// Fire-and-forget
+			git.raw(["gc", "--prune=now", "--quiet"])
+				.then(() => {
+					log(`[${this.name}#deleteBranch] Background gc --prune=now completed for branch ${branchName}`)
+				})
+				.catch((gcError) => {
+					log(
+						`[${this.name}#deleteBranch] ERROR: Background gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
+					)
+				})
+		} catch (e) {
+			// This catch is for synchronous errors in *initiating* the gc, not for gc runtime errors.
+			// Runtime errors of gc are handled by the .catch() above.
+			log(
+				`[${this.name}#deleteBranch] ERROR: Failed to initiate gc: ${e instanceof Error ? e.message : String(e)}`,
+			)
+		}
+	}
+
 	public static async deleteBranch(git: SimpleGit, branchName: string, log: (message: string) => void = console.log) {
 		const branches = await git.branchLocal()
 
@@ -635,28 +662,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 				await git.branch(["-D", branchName])
 				// --- STAGE 3: Run GC after deleting a branch ---
-				try {
-					log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
-					// Using raw for --prune=now as simple-git's gc() doesn't directly support it.
-					// Fire-and-forget
-					git.raw(["gc", "--prune=now", "--quiet"])
-						.then(() => {
-							log(
-								`[${this.name}#deleteBranch] Background gc --prune=now completed for branch ${branchName}`,
-							)
-						})
-						.catch((gcError) => {
-							log(
-								`[${this.name}#deleteBranch] ERROR: Background gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
-							)
-						})
-				} catch (e) {
-					// This catch is for synchronous errors in *initiating* the gc, not for gc runtime errors.
-					// Runtime errors of gc are handled by the .catch() above.
-					log(
-						`[${this.name}#deleteBranch] ERROR: Failed to initiate gc: ${e instanceof Error ? e.message : String(e)}`,
-					)
-				}
+				await this.runBackgroundGC(git, branchName, log)
 
 				return true
 			} catch (error) {
@@ -673,24 +679,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		} else {
 			await git.branch(["-D", branchName])
 			// --- STAGE 3: Run GC after deleting a branch ---
-			try {
-				log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
-				// Fire-and-forget
-				git.raw(["gc", "--prune=now", "--quiet"])
-					.then(() => {
-						log(`[${this.name}#deleteBranch] Background gc --prune=now completed for branch ${branchName}`)
-					})
-					.catch((gcError) => {
-						log(
-							`[${this.name}#deleteBranch] ERROR: Background gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
-						)
-					})
-			} catch (e) {
-				// This catch is for synchronous errors in *initiating* the gc.
-				log(
-					`[${this.name}#deleteBranch] ERROR: Failed to initiate gc: ${e instanceof Error ? e.message : String(e)}`,
-				)
-			}
+			await this.runBackgroundGC(git, branchName, log)
 
 			return true
 		}
