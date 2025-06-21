@@ -688,7 +688,7 @@ describe("read_file tool XML output structure", () => {
 			mockedCountFileLines.mockResolvedValue(endLine)
 			mockInputContent = fileContent
 			// Set up the mock to return properly formatted content
-			mockedAddLineNumbers.mockImplementation((text, start) => {
+			mockedAddLineNumbers.mockImplementation((text: any, start: any) => {
 				if (start === 2) {
 					return "2 | Line 2\n3 | Line 3\n4 | Line 4"
 				}
@@ -829,7 +829,7 @@ describe("read_file tool XML output structure", () => {
 			mockedReadLines.mockResolvedValue(content)
 			mockInputContent = content
 			// Set up the mock to return properly formatted content
-			mockedAddLineNumbers.mockImplementation((text, start) => {
+			mockedAddLineNumbers.mockImplementation((text: any, start: any) => {
 				if (start === 1) {
 					return "1 | Line 1\n2 | Line 2\n3 | Line 3"
 				}
@@ -1083,12 +1083,12 @@ describe("read_file tool XML output structure", () => {
 				.mockResolvedValueOnce({ response: "noButtonClicked" }) // Second file denied
 
 			// Execute - Skip the default validateAccess mock
-			let toolResult: string | undefined
+			let toolResult: ToolResponse | undefined
 
 			// Create a tool use object
-			const toolUse = {
+			const toolUse: ReadFileToolDirective = {
 				type: "tool_use",
-				name: "read_file",
+				name: "read_file" as const,
 				params: {
 					args: `<file><path>${validPath}</path></file><file><path>${invalidPath}</path></file>`,
 				},
@@ -1101,10 +1101,10 @@ describe("read_file tool XML output structure", () => {
 				toolUse,
 				mockCline.ask,
 				vi.fn(),
-				(result: string) => {
+				(result: ToolResponse) => {
 					toolResult = result
 				},
-				(param: string, value: string) => value,
+				(param: string, content?: string) => content || "",
 			)
 
 			const result = toolResult
