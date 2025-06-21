@@ -30,6 +30,39 @@ function getSimilarity(original: string, search: string): number {
 }
 
 /**
+ * Preserves Unicode characters from the original content when applying replacements.
+ * This function maps Unicode characters from the original to the replacement content
+ * when they have been normalized to ASCII equivalents.
+ */
+function preserveUnicodeCharacters(originalContent: string, searchContent: string, replaceContent: string): string {
+	// Create a mapping of ASCII characters to their Unicode equivalents from the original
+	const unicodeMap = new Map<string, string>()
+
+	// Check for Unicode quotes in the original content
+	const unicodeChars = ["\u201C", "\u201D", "\u2018", "\u2019"] // ""''
+	const asciiChars = ['"', '"', "'", "'"]
+
+	for (let i = 0; i < unicodeChars.length; i++) {
+		const unicodeChar = unicodeChars[i]
+		const asciiChar = asciiChars[i]
+
+		// If original contains Unicode character, map ASCII to Unicode
+		if (originalContent.includes(unicodeChar)) {
+			unicodeMap.set(asciiChar, unicodeChar)
+		}
+	}
+
+	// Apply the mapping to the replacement content
+	let result = replaceContent
+	for (const [ascii, unicode] of unicodeMap) {
+		// Use a more specific replacement to avoid replacing characters that shouldn't be replaced
+		result = result.replace(new RegExp(ascii.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), unicode)
+	}
+
+	return result
+}
+
+/**
  * Performs a "middle-out" search of `lines` (between [startIndex, endIndex]) to find
  * the slice that is most similar to `searchChunk`. Returns the best score, index, and matched text.
  */
@@ -650,6 +683,11 @@ Each file requires its own path, start_line, and diff elements.
 
 			// Get the matched lines from the original content
 			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
+			const originalMatchedContent = matchedLines.join("\n")
+
+			// Preserve Unicode characters from the original content in the replacement
+			replaceContent = preserveUnicodeCharacters(originalMatchedContent, searchContent, replaceContent)
+			replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
 
 			// Get the exact indentation (preserving tabs/spaces) of each line
 			const originalIndents = matchedLines.map((line) => {

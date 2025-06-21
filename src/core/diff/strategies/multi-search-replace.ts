@@ -16,7 +16,8 @@ function getSimilarity(original: string, search: string): number {
 		return 0
 	}
 
-	// Use the normalizeString utility to handle smart quotes and other special characters
+	// Use the normalizeString utility for comparison only, but preserve original characters
+	// This allows matching content with different quote styles without changing the actual content
 	const normalizedOriginal = normalizeString(original)
 	const normalizedSearch = normalizeString(search)
 
@@ -30,6 +31,39 @@ function getSimilarity(original: string, search: string): number {
 	// Calculate similarity ratio (0 to 1, where 1 is an exact match)
 	const maxLength = Math.max(normalizedOriginal.length, normalizedSearch.length)
 	return 1 - dist / maxLength
+}
+
+/**
+ * Preserves Unicode characters from the original content when applying replacements.
+ * This function maps Unicode characters from the original to the replacement content
+ * when they have been normalized to ASCII equivalents.
+ */
+function preserveUnicodeCharacters(originalContent: string, searchContent: string, replaceContent: string): string {
+	// Create a mapping of ASCII characters to their Unicode equivalents from the original
+	const unicodeMap = new Map<string, string>()
+
+	// Check for Unicode quotes in the original content
+	const unicodeChars = ["\u201C", "\u201D", "\u2018", "\u2019"] // ""''
+	const asciiChars = ['"', '"', "'", "'"]
+
+	for (let i = 0; i < unicodeChars.length; i++) {
+		const unicodeChar = unicodeChars[i]
+		const asciiChar = asciiChars[i]
+
+		// If original contains Unicode character, map ASCII to Unicode
+		if (originalContent.includes(unicodeChar)) {
+			unicodeMap.set(asciiChar, unicodeChar)
+		}
+	}
+
+	// Apply the mapping to the replacement content
+	let result = replaceContent
+	for (const [ascii, unicode] of unicodeMap) {
+		// Use a more specific replacement to avoid replacing characters that shouldn't be replaced
+		result = result.replace(new RegExp(ascii.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), unicode)
+	}
+
+	return result
 }
 
 /**
@@ -550,6 +584,11 @@ Only use a single line of '=======' between search and replacement content, beca
 
 			// Get the matched lines from the original content
 			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
+			const originalMatchedContent = matchedLines.join("\n")
+
+			// Preserve Unicode characters from the original content in the replacement
+			replaceContent = preserveUnicodeCharacters(originalMatchedContent, searchContent, replaceContent)
+			replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
 
 			// Get the exact indentation (preserving tabs/spaces) of each line
 			const originalIndents = matchedLines.map((line) => {
