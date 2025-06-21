@@ -1430,10 +1430,17 @@ export class Task extends EventEmitter<ClineEvents> {
 						error.message ?? JSON.stringify(serializeError(error), null, 2),
 					)
 
-					const history = await provider?.getTaskWithId(this.taskId)
+					// Check if this is a subtask - if so, return to parent instead of reinitializing
+					if (this.parentTask) {
+						// For subtasks, finish the subtask and return to parent
+						await provider?.finishSubTask(`API streaming error: ${error.message ?? "Unknown error"}`)
+					} else {
+						// For main tasks, reinitialize with history as before
+						const history = await provider?.getTaskWithId(this.taskId)
 
-					if (history) {
-						await provider?.initClineWithHistoryItem(history.historyItem)
+						if (history) {
+							await provider?.initClineWithHistoryItem(history.historyItem)
+						}
 					}
 				}
 			} finally {
