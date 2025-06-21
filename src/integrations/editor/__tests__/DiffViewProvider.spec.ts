@@ -1,4 +1,4 @@
-import { DiffViewProvider, DIFF_VIEW_URI_SCHEME } from "../DiffViewProvider"
+import { DiffViewProvider, DIFF_VIEW_URI_SCHEME, DIFF_VIEW_LABEL_SEPARATOR } from "../DiffViewProvider"
 import * as vscode from "vscode"
 import * as path from "path"
 
@@ -219,7 +219,7 @@ describe("DiffViewProvider", () => {
 				"vscode.diff",
 				expect.any(Object),
 				expect.any(Object),
-				"test.md: Original ↔ Roo's Changes (Editable)",
+				`test.md: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)`,
 				{ preserveFocus: true },
 			)
 		})
@@ -255,7 +255,7 @@ describe("DiffViewProvider", () => {
 						original: { scheme: DIFF_VIEW_URI_SCHEME },
 						modified: { fsPath: "/test/file1.ts" },
 					},
-					label: "file1.ts: Original ↔ Roo's Changes (Editable)",
+					label: `file1.ts: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)`,
 					isDirty: false,
 				},
 				// Diff view identified by label (for pre-opened files)
@@ -265,7 +265,7 @@ describe("DiffViewProvider", () => {
 						original: { scheme: "file" }, // Different scheme due to pre-opening
 						modified: { fsPath: "/test/file2.md" },
 					},
-					label: "file2.md: Original ↔ Roo's Changes (Editable)",
+					label: `file2.md: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)`,
 					isDirty: false,
 				},
 				// Regular file tab (should not be closed)
@@ -284,7 +284,7 @@ describe("DiffViewProvider", () => {
 						original: { scheme: DIFF_VIEW_URI_SCHEME },
 						modified: { fsPath: "/test/file4.ts" },
 					},
-					label: "file4.ts: Original ↔ Roo's Changes (Editable)",
+					label: `file4.ts: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)`,
 					isDirty: true,
 				},
 			]
@@ -317,13 +317,15 @@ describe("DiffViewProvider", () => {
 
 			// Verify that only the appropriate tabs were closed
 			expect(closedTabs).toHaveLength(2)
-			expect(closedTabs[0].label).toBe("file1.ts: Original ↔ Roo's Changes (Editable)")
-			expect(closedTabs[1].label).toBe("file2.md: Original ↔ Roo's Changes (Editable)")
+			expect(closedTabs[0].label).toBe(`file1.ts: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)`)
+			expect(closedTabs[1].label).toBe(`file2.md: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)`)
 
 			// Verify that the regular file and dirty diff were not closed
 			expect(closedTabs.find((t) => t.label === "file3.js")).toBeUndefined()
 			expect(
-				closedTabs.find((t) => t.label === "file4.ts: Original ↔ Roo's Changes (Editable)" && t.isDirty),
+				closedTabs.find(
+					(t) => t.label === `file4.ts: Original ${DIFF_VIEW_LABEL_SEPARATOR} (Editable)` && t.isDirty,
+				),
 			).toBeUndefined()
 		})
 	})

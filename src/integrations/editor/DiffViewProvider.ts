@@ -15,6 +15,7 @@ import { Task } from "../../core/task/Task"
 import { DecorationController } from "./DecorationController"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
+export const DIFF_VIEW_LABEL_SEPARATOR = "↔ Roo's Changes"
 
 // TODO: https://github.com/cline/cline/pull/3354
 export class DiffViewProvider {
@@ -397,7 +398,7 @@ export class DiffViewProvider {
 				// Also check by tab label for our specific diff views
 				// This catches cases where the diff view might be created differently
 				// when files are pre-opened as text documents
-				if (tab.label.includes("↔ Roo's Changes") && !tab.isDirty) {
+				if (tab.label.includes(DIFF_VIEW_LABEL_SEPARATOR) && !tab.isDirty) {
 					return true
 				}
 
@@ -512,7 +513,7 @@ export class DiffViewProvider {
 							query: Buffer.from(this.originalContent ?? "").toString("base64"),
 						}),
 						uri,
-						`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+						`${fileName}: ${fileExists ? `Original ${DIFF_VIEW_LABEL_SEPARATOR}` : "New File"} (Editable)`,
 						{ preserveFocus: true },
 					)
 				})
