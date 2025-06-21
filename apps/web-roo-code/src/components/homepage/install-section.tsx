@@ -17,7 +17,7 @@ export function InstallSection({ downloads }: InstallSectionProps) {
 			opacity: 1,
 			transition: {
 				duration: 1.2,
-				ease: [0.25, 0.46, 0.45, 0.94] as const,
+				ease: "easeOut",
 			},
 		},
 	}
