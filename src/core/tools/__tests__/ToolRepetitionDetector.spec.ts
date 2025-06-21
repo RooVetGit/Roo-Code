@@ -2,9 +2,8 @@
 
 import type { ToolName } from "@roo-code/types"
 
-import type { ToolUse } from "../../../shared/tools"
-
 import { ToolRepetitionDetector } from "../ToolRepetitionDetector"
+import { ToolDirective } from "../../message-parsing/directives"
 
 vitest.mock("../../../i18n", () => ({
 	t: vitest.fn((key, options) => {
@@ -16,7 +15,7 @@ vitest.mock("../../../i18n", () => ({
 	}),
 }))
 
-function createToolUse(name: string, displayName?: string, params: Record<string, string> = {}): ToolUse {
+function createToolDirective(name: string, displayName?: string, params: Record<string, string> = {}): ToolDirective {
 	return {
 		type: "tool_use",
 		name: (displayName || name) as ToolName,
@@ -33,15 +32,15 @@ describe("ToolRepetitionDetector", () => {
 			// We'll verify this through behavior in subsequent tests
 
 			// First call (counter = 1)
-			const result1 = detector.check(createToolUse("test", "test-tool"))
+			const result1 = detector.check(createToolDirective("test", "test-tool"))
 			expect(result1.allowExecution).toBe(true)
 
 			// Second identical call (counter = 2)
-			const result2 = detector.check(createToolUse("test", "test-tool"))
+			const result2 = detector.check(createToolDirective("test", "test-tool"))
 			expect(result2.allowExecution).toBe(true)
 
 			// Third identical call (counter = 3) reaches the default limit
-			const result3 = detector.check(createToolUse("test", "test-tool"))
+			const result3 = detector.check(createToolDirective("test", "test-tool"))
 			expect(result3.allowExecution).toBe(false)
 		})
 
@@ -50,11 +49,11 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(customLimit)
 
 			// First call (counter = 1)
-			const result1 = detector.check(createToolUse("test", "test-tool"))
+			const result1 = detector.check(createToolDirective("test", "test-tool"))
 			expect(result1.allowExecution).toBe(true)
 
 			// Second identical call (counter = 2) reaches the custom limit
-			const result2 = detector.check(createToolUse("test", "test-tool"))
+			const result2 = detector.check(createToolDirective("test", "test-tool"))
 			expect(result2.allowExecution).toBe(false)
 		})
 	})
@@ -64,15 +63,15 @@ describe("ToolRepetitionDetector", () => {
 		it("should allow execution for different tool calls", () => {
 			const detector = new ToolRepetitionDetector()
 
-			const result1 = detector.check(createToolUse("first", "first-tool"))
+			const result1 = detector.check(createToolDirective("first", "first-tool"))
 			expect(result1.allowExecution).toBe(true)
 			expect(result1.askUser).toBeUndefined()
 
-			const result2 = detector.check(createToolUse("second", "second-tool"))
+			const result2 = detector.check(createToolDirective("second", "second-tool"))
 			expect(result2.allowExecution).toBe(true)
 			expect(result2.askUser).toBeUndefined()
 
-			const result3 = detector.check(createToolUse("third", "third-tool"))
+			const result3 = detector.check(createToolDirective("third", "third-tool"))
 			expect(result3.allowExecution).toBe(true)
 			expect(result3.askUser).toBeUndefined()
 		})
@@ -81,13 +80,13 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// First call
-			detector.check(createToolUse("same", "same-tool"))
+			detector.check(createToolDirective("same", "same-tool"))
 
 			// Second identical call would reach limit of 2, but we'll make a different call
-			detector.check(createToolUse("different", "different-tool"))
+			detector.check(createToolDirective("different", "different-tool"))
 
 			// Back to the first tool - should be allowed since counter was reset
-			const result = detector.check(createToolUse("same", "same-tool"))
+			const result = detector.check(createToolDirective("same", "same-tool"))
 			expect(result.allowExecution).toBe(true)
 		})
 	})
@@ -98,15 +97,15 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(3)
 
 			// First call (counter = 1)
-			const result1 = detector.check(createToolUse("repeat", "repeat-tool"))
+			const result1 = detector.check(createToolDirective("repeat", "repeat-tool"))
 			expect(result1.allowExecution).toBe(true)
 
 			// Second identical call (counter = 2)
-			const result2 = detector.check(createToolUse("repeat", "repeat-tool"))
+			const result2 = detector.check(createToolDirective("repeat", "repeat-tool"))
 			expect(result2.allowExecution).toBe(true)
 
 			// Third identical call (counter = 3) reaches limit
-			const result3 = detector.check(createToolUse("repeat", "repeat-tool"))
+			const result3 = detector.check(createToolDirective("repeat", "repeat-tool"))
 			expect(result3.allowExecution).toBe(false)
 		})
 	})
@@ -117,13 +116,13 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(3)
 
 			// First call (counter = 1)
-			detector.check(createToolUse("repeat", "repeat-tool"))
+			detector.check(createToolDirective("repeat", "repeat-tool"))
 
 			// Second identical call (counter = 2)
-			detector.check(createToolUse("repeat", "repeat-tool"))
+			detector.check(createToolDirective("repeat", "repeat-tool"))
 
 			// Third identical call (counter = 3) - should reach limit
-			const result = detector.check(createToolUse("repeat", "repeat-tool"))
+			const result = detector.check(createToolDirective("repeat", "repeat-tool"))
 
 			expect(result.allowExecution).toBe(false)
 			expect(result.askUser).toBeDefined()
@@ -135,12 +134,12 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// Reach the limit
-			detector.check(createToolUse("repeat", "repeat-tool"))
-			const limitResult = detector.check(createToolUse("repeat", "repeat-tool")) // This reaches limit
+			detector.check(createToolDirective("repeat", "repeat-tool"))
+			const limitResult = detector.check(createToolDirective("repeat", "repeat-tool")) // This reaches limit
 			expect(limitResult.allowExecution).toBe(false)
 
 			// Use a new tool call - should be allowed since state was reset
-			const result = detector.check(createToolUse("new", "new-tool"))
+			const result = detector.check(createToolDirective("new", "new-tool"))
 			expect(result.allowExecution).toBe(true)
 		})
 	})
@@ -151,12 +150,12 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// Reach the limit with a specific tool
-			detector.check(createToolUse("problem", "problem-tool"))
-			const limitResult = detector.check(createToolUse("problem", "problem-tool")) // This reaches limit
+			detector.check(createToolDirective("problem", "problem-tool"))
+			const limitResult = detector.check(createToolDirective("problem", "problem-tool")) // This reaches limit
 			expect(limitResult.allowExecution).toBe(false)
 
 			// The same tool that previously caused problems should now be allowed
-			const result = detector.check(createToolUse("problem", "problem-tool"))
+			const result = detector.check(createToolDirective("problem", "problem-tool"))
 			expect(result.allowExecution).toBe(true)
 		})
 
@@ -164,15 +163,15 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// Reach the limit
-			detector.check(createToolUse("repeat", "repeat-tool"))
-			const limitResult = detector.check(createToolUse("repeat", "repeat-tool")) // This reaches limit
+			detector.check(createToolDirective("repeat", "repeat-tool"))
+			const limitResult = detector.check(createToolDirective("repeat", "repeat-tool")) // This reaches limit
 			expect(limitResult.allowExecution).toBe(false)
 
 			// First call after reset
-			detector.check(createToolUse("repeat", "repeat-tool"))
+			detector.check(createToolDirective("repeat", "repeat-tool"))
 
 			// Second identical call (counter = 2) should reach limit again
-			const result = detector.check(createToolUse("repeat", "repeat-tool"))
+			const result = detector.check(createToolDirective("repeat", "repeat-tool"))
 			expect(result.allowExecution).toBe(false)
 			expect(result.askUser).toBeDefined()
 		})
@@ -185,8 +184,8 @@ describe("ToolRepetitionDetector", () => {
 			const toolName = "special-tool-name"
 
 			// Reach the limit
-			detector.check(createToolUse("test", toolName))
-			const result = detector.check(createToolUse("test", toolName))
+			detector.check(createToolDirective("test", toolName))
+			const result = detector.check(createToolDirective("test", toolName))
 
 			expect(result.allowExecution).toBe(false)
 			expect(result.askUser?.messageDetail).toContain(toolName)
@@ -200,8 +199,8 @@ describe("ToolRepetitionDetector", () => {
 
 			// Create an empty tool call - a tool with no parameters
 			// Use the empty tool directly in the check calls
-			detector.check(createToolUse("empty-tool", "empty-tool"))
-			const result = detector.check(createToolUse("empty-tool"))
+			detector.check(createToolDirective("empty-tool", "empty-tool"))
+			const result = detector.check(createToolDirective("empty-tool"))
 
 			expect(result.allowExecution).toBe(false)
 			expect(result.askUser).toBeDefined()
@@ -211,28 +210,28 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// First, call with tool-name-1 twice to set up the counter
-			const toolUse1 = createToolUse("tool-name-1", "tool-name-1", { param: "value" })
-			detector.check(toolUse1)
+			const ToolDirective1 = createToolDirective("tool-name-1", "tool-name-1", { param: "value" })
+			detector.check(ToolDirective1)
 
-			// Create a tool that will serialize to the same JSON as toolUse1
-			// We need to mock the serializeToolUse method to return the same value
-			const toolUse2 = createToolUse("tool-name-2", "tool-name-2", { param: "value" })
+			// Create a tool that will serialize to the same JSON as ToolDirective1
+			// We need to mock the serializeToolDirective method to return the same value
+			const ToolDirective2 = createToolDirective("tool-name-2", "tool-name-2", { param: "value" })
 
 			// Override the private method to force identical serialization
-			const originalSerialize = (detector as any).serializeToolUse
-			;(detector as any).serializeToolUse = (tool: ToolUse) => {
+			const originalSerialize = (detector as any).serializeToolDirective
+			;(detector as any).serializeToolDirective = (tool: ToolDirective) => {
 				// Use string comparison for the name since it's technically an enum
 				if (String(tool.name) === "tool-name-2") {
-					return (detector as any).serializeToolUse(toolUse1) // Return the same JSON as toolUse1
+					return (detector as any).serializeToolDirective(ToolDirective1) // Return the same JSON as ToolDirective1
 				}
 				return originalSerialize(tool)
 			}
 
 			// This should detect as a repetition now
-			const result = detector.check(toolUse2)
+			const result = detector.check(ToolDirective2)
 
 			// Restore the original method
-			;(detector as any).serializeToolUse = originalSerialize
+			;(detector as any).serializeToolDirective = originalSerialize
 
 			// Since we're directly manipulating the internal state for testing,
 			// we still expect it to consider this a repetition
@@ -244,14 +243,14 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// First call with parameters in one order
-			const toolUse1 = createToolUse("same-tool", "same-tool", { a: "1", b: "2", c: "3" })
-			detector.check(toolUse1)
+			const ToolDirective1 = createToolDirective("same-tool", "same-tool", { a: "1", b: "2", c: "3" })
+			detector.check(ToolDirective1)
 
 			// Create tool with same parameters but in different order
-			const toolUse2 = createToolUse("same-tool", "same-tool", { c: "3", a: "1", b: "2" })
+			const ToolDirective2 = createToolDirective("same-tool", "same-tool", { c: "3", a: "1", b: "2" })
 
 			// This should still detect as a repetition due to canonical JSON with sorted keys
-			const result = detector.check(toolUse2)
+			const result = detector.check(ToolDirective2)
 
 			// Since parameters are sorted alphabetically in the serialized JSON,
 			// these should be considered identical
@@ -266,7 +265,7 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(1)
 
 			// First call (counter = 1) should be blocked
-			const result = detector.check(createToolUse("tool", "tool-name"))
+			const result = detector.check(createToolDirective("tool", "tool-name"))
 
 			expect(result.allowExecution).toBe(false)
 			expect(result.askUser).toBeDefined()
@@ -276,11 +275,11 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(2)
 
 			// First call (counter = 1)
-			const result1 = detector.check(createToolUse("tool", "tool-name"))
+			const result1 = detector.check(createToolDirective("tool", "tool-name"))
 			expect(result1.allowExecution).toBe(true)
 
 			// Second call (counter = 2) should be blocked
-			const result2 = detector.check(createToolUse("tool", "tool-name"))
+			const result2 = detector.check(createToolDirective("tool", "tool-name"))
 			expect(result2.allowExecution).toBe(false)
 			expect(result2.askUser).toBeDefined()
 		})
@@ -289,15 +288,15 @@ describe("ToolRepetitionDetector", () => {
 			const detector = new ToolRepetitionDetector(3)
 
 			// First call (counter = 1)
-			const result1 = detector.check(createToolUse("tool", "tool-name"))
+			const result1 = detector.check(createToolDirective("tool", "tool-name"))
 			expect(result1.allowExecution).toBe(true)
 
 			// Second call (counter = 2)
-			const result2 = detector.check(createToolUse("tool", "tool-name"))
+			const result2 = detector.check(createToolDirective("tool", "tool-name"))
 			expect(result2.allowExecution).toBe(true)
 
 			// Third call (counter = 3) should be blocked
-			const result3 = detector.check(createToolUse("tool", "tool-name"))
+			const result3 = detector.check(createToolDirective("tool", "tool-name"))
 			expect(result3.allowExecution).toBe(false)
 			expect(result3.askUser).toBeDefined()
 		})

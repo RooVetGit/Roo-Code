@@ -2,7 +2,7 @@
 
 import { useMcpToolTool } from "../useMcpToolTool"
 import { Task } from "../../task/Task"
-import { ToolUse } from "../../../shared/tools"
+import { UseMcpToolToolDirective } from "../../message-parsing/directives"
 
 // Mock dependencies
 vi.mock("../../prompts/responses", () => ({
@@ -58,7 +58,7 @@ describe("useMcpToolTool", () => {
 
 	describe("parameter validation", () => {
 		it("should handle missing server_name", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {
@@ -86,7 +86,7 @@ describe("useMcpToolTool", () => {
 		})
 
 		it("should handle missing tool_name", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {
@@ -114,7 +114,7 @@ describe("useMcpToolTool", () => {
 		})
 
 		it("should handle invalid JSON arguments", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {
@@ -143,7 +143,7 @@ describe("useMcpToolTool", () => {
 
 	describe("partial requests", () => {
 		it("should handle partial requests", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {
@@ -171,7 +171,7 @@ describe("useMcpToolTool", () => {
 
 	describe("successful execution", () => {
 		it("should execute tool successfully with valid parameters", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {
@@ -213,7 +213,7 @@ describe("useMcpToolTool", () => {
 		})
 
 		it("should handle user rejection", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {
@@ -242,7 +242,7 @@ describe("useMcpToolTool", () => {
 
 	describe("error handling", () => {
 		it("should handle unexpected errors", async () => {
-			const block: ToolUse = {
+			const block: UseMcpToolToolDirective = {
 				type: "tool_use",
 				name: "use_mcp_tool",
 				params: {

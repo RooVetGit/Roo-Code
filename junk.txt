@@ -1,0 +1,19 @@
+Some text with
+```
+<log_message>
+<message>This is an example message that should display in text because it is in a code block</message>
+<level>warn</level>
+</log_message>
+```
+More text
+<log_message>
+<message>This is a warning message that should be handled by the directive handler</message>
+<level>warn</level>
+</log_message>
+"
+
+
+Partials could have splits like
+1. Some text with\n`
+2. ``\n<log_
+3. message>\n<message>

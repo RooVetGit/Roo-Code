@@ -1,13 +1,14 @@
 import delay from "delay"
 
 import { Task } from "../task/Task"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { SwitchModeToolDirective } from "../message-parsing/directives"
 
 export async function switchModeTool(
 	cline: Task,
-	block: ToolUse,
+	block: SwitchModeToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,

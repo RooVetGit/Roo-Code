@@ -2,7 +2,8 @@ import { distance } from "fastest-levenshtein"
 import { ToolProgressStatus } from "@roo-code/types"
 
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
-import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
+import { DiffStrategy, DiffResult } from "../../../shared/tools"
+import { ToolDirective } from "../../message-parsing/directives/"
 import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
@@ -713,7 +714,7 @@ Each file requires its own path, start_line, and diff elements.
 		}
 	}
 
-	getProgressStatus(toolUse: ToolUse, result?: DiffResult): ToolProgressStatus {
+	getProgressStatus(toolUse: ToolDirective, result?: DiffResult): ToolProgressStatus {
 		const diffContent = toolUse.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"

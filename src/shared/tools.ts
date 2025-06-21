@@ -1,8 +1,6 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-
 import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "@roo-code/types"
-
-export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
+import { ToolDirective } from "../core/message-parsing/directives/"
+import { ToolResponse } from "../core/message-parsing/directives/tool-directives"
 
 export type AskApproval = (
 	type: ClineAsk,
@@ -277,5 +275,5 @@ export interface DiffStrategy {
 		endLine?: number,
 	): Promise<DiffResult>
 
-	getProgressStatus?(toolUse: ToolUse, result?: any): ToolProgressStatus
+	getProgressStatus?(ToolDirective: ToolDirective, result?: any): ToolProgressStatus
 }

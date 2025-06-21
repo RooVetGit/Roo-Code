@@ -4,8 +4,29 @@ import { serializeError } from "serialize-error"
 import type { ToolName, ClineAsk, ToolProgressStatus } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
+import type {
+	LogDirective,
+	ToolParamName,
+	ToolResponse,
+	ExecuteCommandToolDirective,
+	ListFilesToolDirective,
+	ReadFileToolDirective,
+	WriteToFileToolDirective,
+	InsertCodeBlockToolDirective,
+	SearchAndReplaceToolDirective,
+	SearchFilesToolDirective,
+	ListCodeDefinitionNamesToolDirective,
+	UseMcpToolToolDirective,
+	AccessMcpResourceToolDirective,
+	AskFollowupQuestionToolDirective,
+	SwitchModeToolDirective,
+	NewTaskToolDirective,
+	AttemptCompletionToolDirective,
+	BrowserActionToolDirective,
+	FetchInstructionsToolDirective,
+} from "./directives"
+
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
-import type { ToolParamName, ToolResponse } from "../../shared/tools"
 
 import { fetchInstructionsTool } from "../tools/fetchInstructionsTool"
 import { listFilesTool } from "../tools/listFilesTool"
@@ -149,7 +170,15 @@ export async function presentAssistantMessage(cline: Task) {
 			await cline.say("text", content, undefined, block.partial)
 			break
 		}
-		case "tool_use":
+		case "log_message": {
+			// Process log message using LogManager
+			const logBlock = block as LogDirective
+			if (logBlock.message && logBlock.level) {
+				cline.logManager.processLogEntry(logBlock.message, logBlock.level, logBlock.partial)
+			}
+			break
+		}
+		case "tool_use": {
 			const toolDescription = (): string => {
 				switch (block.name) {
 					case "execute_command":
@@ -408,7 +437,14 @@ export async function presentAssistantMessage(cline: Task) {
 
 			switch (block.name) {
 				case "write_to_file":
-					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await writeToFileTool(
+						cline,
+						block as WriteToFileToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "apply_diff": {
 					// Get the provider and state to check experiment settings
@@ -438,20 +474,54 @@ export async function presentAssistantMessage(cline: Task) {
 					break
 				}
 				case "insert_content":
-					await insertContentTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await insertContentTool(
+						cline,
+						block as InsertCodeBlockToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "search_and_replace":
-					await searchAndReplaceTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await searchAndReplaceTool(
+						cline,
+						block as SearchAndReplaceToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "read_file":
-					await readFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await readFileTool(
+						cline,
+						block as ReadFileToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 
 					break
 				case "fetch_instructions":
-					await fetchInstructionsTool(cline, block, askApproval, handleError, pushToolResult)
+					await fetchInstructionsTool(
+						cline,
+						block as FetchInstructionsToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+					)
 					break
 				case "list_files":
-					await listFilesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await listFilesTool(
+						cline,
+						block as ListFilesToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "codebase_search":
 					await codebaseSearchTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
@@ -459,7 +529,7 @@ export async function presentAssistantMessage(cline: Task) {
 				case "list_code_definition_names":
 					await listCodeDefinitionNamesTool(
 						cline,
-						block,
+						block as ListCodeDefinitionNamesToolDirective,
 						askApproval,
 						handleError,
 						pushToolResult,
@@ -467,21 +537,49 @@ export async function presentAssistantMessage(cline: Task) {
 					)
 					break
 				case "search_files":
-					await searchFilesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await searchFilesTool(
+						cline,
+						block as SearchFilesToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "browser_action":
-					await browserActionTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await browserActionTool(
+						cline,
+						block as BrowserActionToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "execute_command":
-					await executeCommandTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await executeCommandTool(
+						cline,
+						block as ExecuteCommandToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "use_mcp_tool":
-					await useMcpToolTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await useMcpToolTool(
+						cline,
+						block as UseMcpToolToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "access_mcp_resource":
 					await accessMcpResourceTool(
 						cline,
-						block,
+						block as AccessMcpResourceToolDirective,
 						askApproval,
 						handleError,
 						pushToolResult,
@@ -491,7 +589,7 @@ export async function presentAssistantMessage(cline: Task) {
 				case "ask_followup_question":
 					await askFollowupQuestionTool(
 						cline,
-						block,
+						block as AskFollowupQuestionToolDirective,
 						askApproval,
 						handleError,
 						pushToolResult,
@@ -499,15 +597,29 @@ export async function presentAssistantMessage(cline: Task) {
 					)
 					break
 				case "switch_mode":
-					await switchModeTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await switchModeTool(
+						cline,
+						block as SwitchModeToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "new_task":
-					await newTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					await newTaskTool(
+						cline,
+						block as NewTaskToolDirective,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
 					break
 				case "attempt_completion":
 					await attemptCompletionTool(
 						cline,
-						block,
+						block as AttemptCompletionToolDirective,
 						askApproval,
 						handleError,
 						pushToolResult,
@@ -519,6 +631,7 @@ export async function presentAssistantMessage(cline: Task) {
 			}
 
 			break
+		}
 	}
 
 	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearCheckpointPossibleFile()

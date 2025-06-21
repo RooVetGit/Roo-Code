@@ -4,8 +4,6 @@ import { TelemetryService } from "@roo-code/telemetry"
 
 import { Task } from "../task/Task"
 import {
-	ToolResponse,
-	ToolUse,
 	AskApproval,
 	HandleError,
 	PushToolResult,
@@ -14,10 +12,11 @@ import {
 	AskFinishSubTaskApproval,
 } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
+import { ToolResponse, AttemptCompletionToolDirective } from "../message-parsing/directives"
 
 export async function attemptCompletionTool(
 	cline: Task,
-	block: ToolUse,
+	block: AttemptCompletionToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,
