@@ -25,9 +25,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	protected readonly dotGitDir: string
 	protected git?: SimpleGit
 	protected readonly log: (message: string) => void
-	// Static logger for static methods
-	protected static log: (message: string) => void = console.log
-
 	// GC related properties
 	private gcCounter: number = 0
 	private readonly GC_CHECKPOINT_THRESHOLD: number = Number(process.env.GC_CHECKPOINT_THRESHOLD) || 20 // Run gc every 20 checkpoints
@@ -97,7 +94,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			this.log(`[${this.constructor.name}#initShadowGit] Existing shadow repo found. Running garbage collection.`)
 			const gcStartTime = Date.now()
 
-			const isWindows = process.platform === 'win32'
+			const isWindows = process.platform === "win32"
 			await this.tryRepack(git, isWindows, gcStartTime)
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
@@ -153,23 +150,28 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		// Define commands to try based on platform
 		const commands = isWindows
 			? [
-				 // Try the more thorough repack command on Git 2.49.0 for Windows
-				{ args: ["repack", "-a", "-d", "-f", "--path-walk", "--quiet"], desc: "advanced repack with --path-walk" },
-				{ args: ["repack", "-a", "-d", "-f", "--window=250", "--quiet"], desc: "repack with --window=250" }
-			]
-			: [
-				{ args: ["repack", "-a", "-d", "-f", "--window=250", "--quiet"], desc: "repack with --window=250" }
-			]
+					// Try the more thorough repack command on Git 2.49.0 for Windows
+					{
+						args: ["repack", "-a", "-d", "-f", "--path-walk", "--quiet"],
+						desc: "advanced repack with --path-walk",
+					},
+					{ args: ["repack", "-a", "-d", "-f", "--window=250", "--quiet"], desc: "repack with --window=250" },
+				]
+			: [{ args: ["repack", "-a", "-d", "-f", "--window=250", "--quiet"], desc: "repack with --window=250" }]
 
 		// Try each command until one succeeds
 		for (const command of commands) {
 			try {
 				this.log(`[${this.constructor.name}#initShadowGit] Running ${command.desc}...`)
 				await git.raw(command.args)
-				this.log(`[${this.constructor.name}#initShadowGit] Repository repack completed in ${Date.now() - gcStartTime}ms.`)
+				this.log(
+					`[${this.constructor.name}#initShadowGit] Repository repack completed in ${Date.now() - gcStartTime}ms.`,
+				)
 				return // Success - exit early
 			} catch (error) {
-				this.log(`[${this.constructor.name}#initShadowGit] ${command.desc} failed: ${error instanceof Error ? error.message : String(error)}`)
+				this.log(
+					`[${this.constructor.name}#initShadowGit] ${command.desc} failed: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 
@@ -565,10 +567,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		return crypto.createHash("sha256").update(workspaceDir).digest("hex").toString().slice(0, 8)
 	}
 
-	public static setStaticLogger(logger: (message: string) => void) {
-		ShadowCheckpointService.log = logger
-	}
-
 	protected static taskRepoDir({ taskId, globalStorageDir }: { taskId: string; globalStorageDir: string }) {
 		return path.join(globalStorageDir, "tasks", taskId, "checkpoints")
 	}
@@ -583,32 +581,35 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		return path.join(globalStorageDir, "checkpoints", this.hashWorkspaceDir(workspaceDir))
 	}
 
-	public static async deleteTask({
-		taskId,
-		globalStorageDir,
-		workspaceDir,
-	}: {
-		taskId: string
-		globalStorageDir: string
-		workspaceDir: string
-	}) {
+	public static async deleteTask(
+		{
+			taskId,
+			globalStorageDir,
+			workspaceDir,
+		}: {
+			taskId: string
+			globalStorageDir: string
+			workspaceDir: string
+		},
+		log: (message: string) => void = console.log,
+	) {
 		const workspaceRepoDir = this.workspaceRepoDir({ globalStorageDir, workspaceDir })
 		const branchName = `roo-${taskId}`
 		const git = simpleGit(workspaceRepoDir)
-		const success = await this.deleteBranch(git, branchName)
+		const success = await this.deleteBranch(git, branchName, log)
 
 		if (success) {
-			this.log(`[${this.name}#deleteTask.${taskId}] deleted branch ${branchName}`)
+			log(`[${this.name}#deleteTask.${taskId}] deleted branch ${branchName}`)
 		} else {
-			this.log(`[${this.name}#deleteTask.${taskId}] ERROR: failed to delete branch ${branchName}`)
+			log(`[${this.name}#deleteTask.${taskId}] ERROR: failed to delete branch ${branchName}`)
 		}
 	}
 
-	public static async deleteBranch(git: SimpleGit, branchName: string) {
+	public static async deleteBranch(git: SimpleGit, branchName: string, log: (message: string) => void = console.log) {
 		const branches = await git.branchLocal()
 
 		if (!branches.all.includes(branchName)) {
-			this.log(`[${this.name}#deleteBranch] ERROR: branch ${branchName} does not exist`)
+			log(`[${this.name}#deleteBranch] ERROR: branch ${branchName} does not exist`)
 			return false
 		}
 
@@ -635,31 +636,31 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				await git.branch(["-D", branchName])
 				// --- STAGE 3: Run GC after deleting a branch ---
 				try {
-					this.log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
+					log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
 					// Using raw for --prune=now as simple-git's gc() doesn't directly support it.
 					// Fire-and-forget
 					git.raw(["gc", "--prune=now", "--quiet"])
 						.then(() => {
-							this.log(
+							log(
 								`[${this.name}#deleteBranch] Background gc --prune=now completed for branch ${branchName}`,
 							)
 						})
 						.catch((gcError) => {
-							this.log(
+							log(
 								`[${this.name}#deleteBranch] ERROR: Background gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
 							)
 						})
 				} catch (e) {
 					// This catch is for synchronous errors in *initiating* the gc, not for gc runtime errors.
 					// Runtime errors of gc are handled by the .catch() above.
-					this.log(
+					log(
 						`[${this.name}#deleteBranch] ERROR: Failed to initiate gc: ${e instanceof Error ? e.message : String(e)}`,
 					)
 				}
 
 				return true
 			} catch (error) {
-				this.log(
+				log(
 					`[${this.name}#deleteBranch] ERROR: failed to delete branch ${branchName}: ${error instanceof Error ? error.message : String(error)}`,
 				)
 
@@ -673,22 +674,20 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.branch(["-D", branchName])
 			// --- STAGE 3: Run GC after deleting a branch ---
 			try {
-				this.log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
+				log(`[${this.name}#deleteBranch] Running gc --prune=now after deleting branch ${branchName}`)
 				// Fire-and-forget
 				git.raw(["gc", "--prune=now", "--quiet"])
 					.then(() => {
-						this.log(
-							`[${this.name}#deleteBranch] Background gc --prune=now completed for branch ${branchName}`,
-						)
+						log(`[${this.name}#deleteBranch] Background gc --prune=now completed for branch ${branchName}`)
 					})
 					.catch((gcError) => {
-						this.log(
+						log(
 							`[${this.name}#deleteBranch] ERROR: Background gc after deleting branch ${branchName} failed: ${gcError instanceof Error ? gcError.message : String(gcError)}`,
 						)
 					})
 			} catch (e) {
 				// This catch is for synchronous errors in *initiating* the gc.
-				this.log(
+				log(
 					`[${this.name}#deleteBranch] ERROR: Failed to initiate gc: ${e instanceof Error ? e.message : String(e)}`,
 				)
 			}
