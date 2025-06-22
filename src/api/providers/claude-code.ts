@@ -70,10 +70,15 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 			}
 
 			if (exitCode !== null && exitCode !== 0) {
-				throw new Error(
-					t("common:errors.claudeCode.processExited", { exitCode }) +
-						(errorOutput ? ` ${t("common:errors.claudeCode.errorOutput", { output: errorOutput.trim() })}` : ""),
-				)
+				if (errorOutput) {
+					throw new Error(
+						t("common:errors.claudeCode.processExitedWithError", {
+							exitCode,
+							output: errorOutput.trim(),
+						}),
+					)
+				}
+				throw new Error(t("common:errors.claudeCode.processExited", { exitCode }))
 			}
 
 			const data = dataQueue.shift()
@@ -103,7 +108,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 					const errorMessage =
 						message.content[0]?.text ||
 						t("common:errors.claudeCode.stoppedWithReason", { reason: message.stop_reason })
-	
+
 					if (errorMessage.includes("Invalid model name")) {
 						throw new Error(errorMessage + `\n\n${t("common:errors.claudeCode.apiKeyModelPlanMismatch")}`)
 					}

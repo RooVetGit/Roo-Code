@@ -66,6 +66,7 @@
 		"claudeCode": {
 			"processExited": "Proces Claude Code zakończył się kodem {{exitCode}}.",
 			"errorOutput": "Wyjście błędu: {{output}}",
+			"processExitedWithError": "Proces Claude Code zakończył się kodem {{exitCode}}. Wyjście błędu: {{output}}",
 			"stoppedWithReason": "Claude Code zatrzymał się z powodu: {{reason}}",
 			"apiKeyModelPlanMismatch": "Klucze API i plany subskrypcji pozwalają na różne modele. Upewnij się, że wybrany model jest zawarty w twoim planie."
 		}
