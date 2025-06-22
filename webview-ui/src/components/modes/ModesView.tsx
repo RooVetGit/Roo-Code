@@ -125,6 +125,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 
 	const updateCustomMode = useCallback((slug: string, modeConfig: ModeConfig) => {
 		const source = modeConfig.source || "global"
+
 		vscode.postMessage({
 			type: "updateCustomMode",
 			slug,
@@ -269,6 +270,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		const newMode: ModeConfig = {
 			slug: newModeSlug,
 			name: newModeName,
+			description: newModeDescription.trim() || undefined,
 			roleDefinition: newModeRoleDefinition.trim(),
 			whenToUse: newModeWhenToUse.trim() || undefined,
 			customInstructions: newModeCustomInstructions.trim() || undefined,
@@ -314,6 +316,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	}, [
 		newModeName,
 		newModeSlug,
+		newModeDescription,
 		newModeRoleDefinition,
 		newModeWhenToUse, // Add whenToUse dependency
 		newModeCustomInstructions,
@@ -361,6 +364,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 				}
 				if (customMode) {
 					const source = customMode.source || "global"
+
 					updateCustomMode(customMode.slug, {
 						...customMode,
 						groups: newGroups,
