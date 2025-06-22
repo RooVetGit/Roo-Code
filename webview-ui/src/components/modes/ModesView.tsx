@@ -386,7 +386,10 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		return () => window.removeEventListener("message", handler)
 	}, [])
 
-	const handleAgentReset = (modeSlug: string, type: "roleDefinition" | "whenToUse" | "customInstructions") => {
+	const handleAgentReset = (
+		modeSlug: string,
+		type: "roleDefinition" | "description" | "whenToUse" | "customInstructions",
+	) => {
 		// Only reset for built-in modes
 		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
 		const updatedPrompt = { ...existingPrompt }
@@ -702,6 +705,61 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							className="w-full"
 							rows={4}
 							data-testid={`${getCurrentMode()?.slug || "code"}-prompt-textarea`}
+						/>
+					</div>
+
+					{/* Description section */}
+					<div className="mb-4">
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">{t("prompts:description.title")}</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "description")
+										}
+									}}
+									title={t("prompts:description.resetToDefault")}
+									data-testid="description-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
+							)}
+						</div>
+						<div className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("prompts:description.description")}
+						</div>
+						<VSCodeTextArea
+							resize="vertical"
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return customMode?.description ?? prompt?.description ?? ""
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								const customMode = findModeBySlug(visualMode, customModes)
+								if (customMode) {
+									// For custom modes, update the JSON file
+									updateCustomMode(visualMode, {
+										...customMode,
+										description: value.trim() || undefined,
+										source: customMode.source || "global",
+									})
+								} else {
+									// For built-in modes, update the prompts
+									updateAgentPrompt(visualMode, {
+										description: value.trim() || undefined,
+									})
+								}
+							}}
+							className="w-full"
+							rows={2}
+							data-testid={`${getCurrentMode()?.slug || "code"}-description-textarea`}
 						/>
 					</div>
 

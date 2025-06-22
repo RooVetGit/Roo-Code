@@ -138,10 +138,13 @@ describe("PromptsView", () => {
 		await fireEvent.click(resetButton)
 
 		// Verify it only resets role definition
+		// When resetting a built-in mode's role definition, the field should be removed entirely
+		// from the customPrompt object, not set to undefined.
+		// This allows the default role definition from the built-in mode to be used instead.
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "updatePrompt",
 			promptMode: "code",
-			customPrompt: { roleDefinition: undefined },
+			customPrompt: {}, // Empty object because the role definition field is removed entirely
 		})
 
 		// Cleanup before testing custom mode
@@ -157,6 +160,53 @@ describe("PromptsView", () => {
 
 		// Verify reset button is not present for custom mode
 		expect(screen.queryByTestId("role-definition-reset")).not.toBeInTheDocument()
+	})
+
+	it("resets description only for built-in modes", async () => {
+		const customMode = {
+			slug: "custom-mode",
+			name: "Custom Mode",
+			roleDefinition: "Custom role",
+			description: "Custom description",
+			groups: [],
+		}
+
+		// Test with built-in mode (code)
+		const { unmount } = render(
+			<ExtensionStateContext.Provider
+				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
+				<ModesView onDone={vitest.fn()} />
+			</ExtensionStateContext.Provider>,
+		)
+
+		// Find and click the description reset button
+		const resetButton = screen.getByTestId("description-reset")
+		expect(resetButton).toBeInTheDocument()
+		await fireEvent.click(resetButton)
+
+		// Verify it only resets description
+		// When resetting a built-in mode's description, the field should be removed entirely
+		// from the customPrompt object, not set to undefined.
+		// This allows the default description from the built-in mode to be used instead.
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "code",
+			customPrompt: {}, // Empty object because the description field is removed entirely
+		})
+
+		// Cleanup before testing custom mode
+		unmount()
+
+		// Test with custom mode
+		render(
+			<ExtensionStateContext.Provider
+				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as any}>
+				<ModesView onDone={vitest.fn()} />
+			</ExtensionStateContext.Provider>,
+		)
+
+		// Verify reset button is not present for custom mode
+		expect(screen.queryByTestId("description-reset")).not.toBeInTheDocument()
 	})
 
 	it("handles clearing custom instructions correctly", async () => {

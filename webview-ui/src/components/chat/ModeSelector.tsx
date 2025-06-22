@@ -78,7 +78,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 				align="start"
 				sideOffset={4}
 				container={portalContainer}
-				className="p-0 overflow-hidden w-[320px]">
+				className="p-0 overflow-hidden min-w-80 max-w-9/10">
 				<div className="flex flex-col w-full">
 					<div className="p-3 border-b border-vscode-dropdown-border cursor-default">
 						<div className="flex flex-row items-center gap-1 p-0 mt-0 mb-1 w-full">
@@ -113,7 +113,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 								/>
 							</div>
 						</div>
-						<p className="my-0 text-sm">
+						<p className="my-0 pr-4 text-sm w-full">
 							{t("chat:modeSelector.description")}
 							<br />
 							{modeShortcutText}
@@ -137,15 +137,19 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 									setOpen(false)
 								}}
 								data-testid="mode-selector-item">
-								<div>
+								<div className="flex-grow">
 									<p className="m-0 mb-0 font-bold">{mode.name}</p>
 									{mode.description && (
-										<p className="m-0 py-0 pl-4 overflow-hidden h-4 flex-1 text-xs">
-											{mode.description}
+										<p className="m-0 py-0 pl-4 h-4 flex-1 text-xs overflow-hidden">
+											{mode.description || mode.whenToUse}
 										</p>
 									)}
 								</div>
-								{mode.slug === value && <Check className="ml-auto size-4 p-0.5 flex-1" />}
+								{mode.slug === value ? (
+									<Check className="m-0 size-4 p-0.5" />
+								) : (
+									<div className="size-4" />
+								)}
 							</div>
 						))}
 					</div>
