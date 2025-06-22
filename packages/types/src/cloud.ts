@@ -10,6 +10,33 @@ export interface CloudUserInfo {
 	name?: string
 	email?: string
 	picture?: string
+	organizationId?: string
+	organizationName?: string
+	organizationRole?: string
+	organizationImageUrl?: string
+}
+
+/**
+ * CloudOrganization Types
+ */
+
+export interface CloudOrganization {
+	id: string
+	name: string
+	slug?: string
+	image_url?: string
+	has_image?: boolean
+	created_at?: number
+	updated_at?: number
+}
+
+export interface CloudOrganizationMembership {
+	id: string
+	organization: CloudOrganization
+	role: string
+	permissions?: string[]
+	created_at?: number
+	updated_at?: number
 }
 
 /**
@@ -113,6 +140,8 @@ export const shareResponseSchema = z.object({
 	success: z.boolean(),
 	shareUrl: z.string().optional(),
 	error: z.string().optional(),
+	isNewShare: z.boolean().optional(),
+	manageUrl: z.string().optional(),
 })
 
 export type ShareResponse = z.infer<typeof shareResponseSchema>

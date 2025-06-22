@@ -103,7 +103,10 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		terminalDetails += "\n\n# Actively Running Terminals"
 
 		for (const busyTerminal of busyTerminals) {
-			terminalDetails += `\n## Original command: \`${busyTerminal.getLastCommand()}\``
+			const cwd = busyTerminal.getCurrentWorkingDirectory()
+			terminalDetails += `\n## Terminal ${busyTerminal.id} (Active)`
+			terminalDetails += `\n### Working Directory: \`${cwd}\``
+			terminalDetails += `\n### Original command: \`${busyTerminal.getLastCommand()}\``
 			let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id)
 
 			if (newOutput) {
@@ -145,7 +148,9 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 			// Add this terminal's outputs to the details.
 			if (terminalOutputs.length > 0) {
-				terminalDetails += `\n## Terminal ${inactiveTerminal.id}`
+				const cwd = inactiveTerminal.getCurrentWorkingDirectory()
+				terminalDetails += `\n## Terminal ${inactiveTerminal.id} (Inactive)`
+				terminalDetails += `\n### Working Directory: \`${cwd}\``
 				terminalOutputs.forEach((output) => {
 					terminalDetails += `\n### New Output\n${output}`
 				})
@@ -153,7 +158,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		}
 	}
 
-	// console.log(`[Cline#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
+	// console.log(`[Task#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
 
 	// Add recently modified files section.
 	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearRecentlyModifiedFiles()

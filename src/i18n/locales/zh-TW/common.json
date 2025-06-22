@@ -24,6 +24,11 @@
 	},
 	"errors": {
 		"invalid_data_uri": "資料 URI 格式無效",
+		"error_copying_image": "複製圖片時發生錯誤：{{errorMessage}}",
+		"error_saving_image": "儲存圖片時發生錯誤：{{errorMessage}}",
+		"error_opening_image": "開啟圖片時發生錯誤：{{error}}",
+		"could_not_open_file": "無法開啟檔案：{{errorMessage}}",
+		"could_not_open_file_generic": "無法開啟檔案！",
 		"checkpoint_timeout": "嘗試恢復檢查點時超時。",
 		"checkpoint_failed": "恢復檢查點失敗。",
 		"no_workspace": "請先開啟專案資料夾",
@@ -54,7 +59,10 @@
 		"condense_handler_invalid": "壓縮上下文的 API 處理程式無效",
 		"condense_context_grew": "壓縮過程中上下文大小增加；跳過此次嘗試",
 		"share_task_failed": "分享工作失敗。請重試。",
-		"share_no_active_task": "沒有活躍的工作可分享"
+		"share_no_active_task": "沒有活躍的工作可分享",
+		"share_auth_required": "需要身份驗證。請登入以分享工作。",
+		"share_not_enabled": "此組織未啟用工作分享功能。",
+		"share_task_not_found": "未找到工作或存取被拒絕。"
 	},
 	"warnings": {
 		"no_terminal_content": "沒有選擇終端機內容",
@@ -67,7 +75,11 @@
 		"custom_storage_path_set": "自訂儲存路徑已設定：{{path}}",
 		"default_storage_path": "已恢復使用預設儲存路徑",
 		"settings_imported": "設定已成功匯入。",
-		"share_link_copied": "分享連結已複製到剪貼簿"
+		"share_link_copied": "分享連結已複製到剪貼簿",
+		"image_copied_to_clipboard": "圖片資料 URI 已複製到剪貼簿",
+		"image_saved": "圖片已儲存至 {{path}}",
+		"organization_share_link_copied": "組織分享連結已複製到剪貼簿！",
+		"public_share_link_copied": "公開分享連結已複製到剪貼簿！"
 	},
 	"answers": {
 		"yes": "是",
@@ -94,6 +106,13 @@
 		"providers": {
 			"groqApiKey": "Groq API 金鑰",
 			"getGroqApiKey": "取得 Groq API 金鑰"
+		}
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "您的組織需要 Roo Code Cloud 身份驗證。請登入以繼續。",
+			"organization_mismatch": "您必須使用組織的 Roo Code Cloud 帳戶進行身份驗證。",
+			"verification_failed": "無法驗證組織身份驗證。"
 		}
 	}
 }

@@ -17,8 +17,9 @@
 	"learnMoreEditingSettings": "MCP設定ファイルの編集方法を詳しく見る",
 	"tool": {
 		"alwaysAllow": "常に許可",
-		"parameters": "パラメーター",
-		"noDescription": "説明なし"
+		"parameters": "パラメータ",
+		"noDescription": "説明なし",
+		"togglePromptInclusion": "プロンプトへの含有を切り替える"
 	},
 	"tabs": {
 		"tools": "ツール",
@@ -54,5 +55,10 @@
 		"retrying": "再試行中...",
 		"retryConnection": "再接続"
 	},
-	"refreshMCP": "MCPサーバーを更新"
+	"refreshMCP": "MCPサーバーを更新",
+	"execution": {
+		"running": "実行中",
+		"completed": "完了",
+		"error": "エラー"
+	}
 }

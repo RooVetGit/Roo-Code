@@ -33,6 +33,7 @@ export const commandIds = [
 	"promptsButtonClicked",
 	"mcpButtonClicked",
 	"historyButtonClicked",
+	"marketplaceButtonClicked",
 	"popoutButtonClicked",
 	"accountButtonClicked",
 	"settingsButtonClicked",
@@ -50,6 +51,7 @@ export const commandIds = [
 
 	"focusInput",
 	"acceptInput",
+	"focusPanel",
 ] as const
 
 export type CommandId = (typeof commandIds)[number]
@@ -65,6 +67,7 @@ export const languages = [
 	"es",
 	"fr",
 	"hi",
+	"id",
 	"it",
 	"ja",
 	"ko",

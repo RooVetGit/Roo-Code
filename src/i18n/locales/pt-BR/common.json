@@ -28,6 +28,11 @@
 	},
 	"errors": {
 		"invalid_data_uri": "Formato de URI de dados inválido",
+		"error_copying_image": "Erro ao copiar imagem: {{errorMessage}}",
+		"error_saving_image": "Erro ao salvar imagem: {{errorMessage}}",
+		"error_opening_image": "Erro ao abrir imagem: {{error}}",
+		"could_not_open_file": "Não foi possível abrir o arquivo: {{errorMessage}}",
+		"could_not_open_file_generic": "Não foi possível abrir o arquivo!",
 		"checkpoint_timeout": "Tempo esgotado ao tentar restaurar o ponto de verificação.",
 		"checkpoint_failed": "Falha ao restaurar o ponto de verificação.",
 		"no_workspace": "Por favor, abra primeiro uma pasta de projeto",
@@ -58,7 +63,10 @@
 		"condense_handler_invalid": "O manipulador de API para condensar o contexto é inválido",
 		"condense_context_grew": "O tamanho do contexto aumentou durante a condensação; pulando esta tentativa",
 		"share_task_failed": "Falha ao compartilhar tarefa",
-		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar"
+		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar",
+		"share_auth_required": "Autenticação necessária. Faça login para compartilhar tarefas.",
+		"share_not_enabled": "O compartilhamento de tarefas não está habilitado para esta organização.",
+		"share_task_not_found": "Tarefa não encontrada ou acesso negado."
 	},
 	"warnings": {
 		"no_terminal_content": "Nenhum conteúdo do terminal selecionado",
@@ -71,7 +79,11 @@
 		"custom_storage_path_set": "Caminho de armazenamento personalizado definido: {{path}}",
 		"default_storage_path": "Retornado ao caminho de armazenamento padrão",
 		"settings_imported": "Configurações importadas com sucesso.",
-		"share_link_copied": "Link de compartilhamento copiado para a área de transferência"
+		"share_link_copied": "Link de compartilhamento copiado para a área de transferência",
+		"image_copied_to_clipboard": "URI de dados da imagem copiada para a área de transferência",
+		"image_saved": "Imagem salva em {{path}}",
+		"organization_share_link_copied": "Link de compartilhamento da organização copiado para a área de transferência!",
+		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!"
 	},
 	"answers": {
 		"yes": "Sim",
@@ -94,6 +106,13 @@
 		"providers": {
 			"groqApiKey": "Chave de API Groq",
 			"getGroqApiKey": "Obter chave de API Groq"
+		}
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "Sua organização requer autenticação do Roo Code Cloud. Faça login para continuar.",
+			"organization_mismatch": "Você deve estar autenticado com a conta Roo Code Cloud da sua organização.",
+			"verification_failed": "Não foi possível verificar a autenticação da organização."
 		}
 	}
 }

@@ -18,7 +18,8 @@
 	"tool": {
 		"alwaysAllow": "Toujours autoriser",
 		"parameters": "Paramètres",
-		"noDescription": "Aucune description"
+		"noDescription": "Aucune description",
+		"togglePromptInclusion": "Basculer l'inclusion dans le prompt"
 	},
 	"tabs": {
 		"tools": "Outils",
@@ -54,5 +55,10 @@
 		"retrying": "Nouvelle tentative...",
 		"retryConnection": "Réessayer la connexion"
 	},
-	"refreshMCP": "Rafraîchir les serveurs MCP"
+	"refreshMCP": "Rafraîchir les serveurs MCP",
+	"execution": {
+		"running": "En cours",
+		"completed": "Terminé",
+		"error": "Erreur"
+	}
 }

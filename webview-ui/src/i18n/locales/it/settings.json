@@ -98,6 +98,10 @@
 			"outsideWorkspace": {
 				"label": "Includi file al di fuori dell'area di lavoro",
 				"description": "Permetti a Roo di creare e modificare file al di fuori dell'area di lavoro attuale senza richiedere approvazione."
+			},
+			"protected": {
+				"label": "Includi file protetti",
+				"description": "Permetti a Roo di creare e modificare file protetti (come .rooignore e file di configurazione .roo/) senza richiedere approvazione."
 			}
 		},
 		"browser": {
@@ -381,7 +385,8 @@
 			"hint": "Vuoto = usa prompt predefinito"
 		},
 		"autoCondenseContext": {
-			"name": "Attiva automaticamente la condensazione intelligente del contesto"
+			"name": "Attiva automaticamente la condensazione intelligente del contesto",
+			"description": "Quando abilitato, Roo condenserà automaticamente il contesto quando viene raggiunta la soglia. Quando disabilitato, puoi ancora attivare manualmente la condensazione del contesto."
 		},
 		"openTabs": {
 			"label": "Limite contesto schede aperte",
@@ -404,6 +409,15 @@
 		"maxConcurrentFileReads": {
 			"label": "Limite letture simultanee",
 			"description": "Numero massimo di file che lo strumento 'read_file' può elaborare contemporaneamente. Valori più alti possono velocizzare la lettura di più file piccoli ma aumentano l'utilizzo della memoria."
+		},
+		"condensingThreshold": {
+			"label": "Soglia di attivazione condensazione",
+			"selectProfile": "Configura soglia per profilo",
+			"defaultProfile": "Predefinito globale (tutti i profili)",
+			"defaultDescription": "Quando il contesto raggiunge questa percentuale, verrà automaticamente condensato per tutti i profili a meno che non abbiano impostazioni personalizzate",
+			"profileDescription": "Soglia personalizzata solo per questo profilo (sovrascrive il predefinito globale)",
+			"inheritDescription": "Questo profilo eredita la soglia predefinita globale ({{threshold}}%)",
+			"usesGlobal": "(usa globale {{threshold}}%)"
 		}
 	},
 	"terminal": {
@@ -508,9 +522,13 @@
 			"name": "Abilita lettura simultanea dei file",
 			"description": "Quando abilitato, Roo può leggere più file in una singola richiesta. Quando disabilitato, Roo deve leggere i file uno alla volta. Disabilitarlo può aiutare quando si lavora con modelli meno capaci o quando si desidera maggiore controllo sull'accesso ai file."
 		},
-		"DISABLE_COMPLETION_COMMAND": {
-			"name": "Disabilita l'esecuzione dei comandi in attempt_completion",
-			"description": "Se abilitato, lo strumento attempt_completion non eseguirà comandi. Questa è una funzionalità sperimentale per preparare la futura deprecazione dell'esecuzione dei comandi al completamento dell'attività."
+		"MARKETPLACE": {
+			"name": "Abilita Marketplace",
+			"description": "Quando abilitato, puoi installare MCP e modalità personalizzate dal Marketplace."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Abilita modifiche di file concorrenti",
+			"description": "Quando abilitato, Roo può modificare più file in una singola richiesta. Quando disabilitato, Roo deve modificare i file uno alla volta. Disabilitare questa opzione può aiutare quando lavori con modelli meno capaci o quando vuoi più controllo sulle modifiche dei file."
 		}
 	},
 	"promptCaching": {
@@ -616,5 +634,7 @@
 	"labels": {
 		"customArn": "ARN personalizzato",
 		"useCustomArn": "Usa ARN personalizzato..."
-	}
+	},
+	"includeMaxOutputTokens": "Includi token di output massimi",
+	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo."
 }

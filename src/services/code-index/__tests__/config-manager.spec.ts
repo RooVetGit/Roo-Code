@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
 import { CodeIndexConfigManager } from "../config-manager"
 
 describe("CodeIndexConfigManager", () => {
@@ -8,9 +7,9 @@ describe("CodeIndexConfigManager", () => {
 	beforeEach(() => {
 		// Setup mock ContextProxy
 		mockContextProxy = {
-			getGlobalState: vi.fn(),
-			getSecret: vi.fn().mockReturnValue(undefined),
-		} as unknown as any
+			getGlobalState: vitest.fn(),
+			getSecret: vitest.fn().mockReturnValue(undefined),
+		}
 
 		configManager = new CodeIndexConfigManager(mockContextProxy)
 	})

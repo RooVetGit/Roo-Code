@@ -98,6 +98,10 @@
 			"outsideWorkspace": {
 				"label": "包含工作区外的文件",
 				"description": "允许 Roo 创建和编辑当前工作区外的文件，无需批准。"
+			},
+			"protected": {
+				"label": "包含受保护的文件",
+				"description": "允许 Roo 创建和编辑受保护的文件（如 .rooignore 和 .roo/ 配置文件），无需批准。"
 			}
 		},
 		"browser": {
@@ -381,7 +385,8 @@
 			"hint": "留空 = 使用默认提示词"
 		},
 		"autoCondenseContext": {
-			"name": "自动触发智能上下文压缩"
+			"name": "自动触发智能上下文压缩",
+			"description": "启用时，Roo 将在达到阈值时自动压缩上下文。禁用时，您仍可以手动触发上下文压缩。"
 		},
 		"openTabs": {
 			"label": "标签页数量限制",
@@ -404,6 +409,15 @@
 		"maxConcurrentFileReads": {
 			"label": "并发文件读取限制",
 			"description": "read_file 工具可以同时处理的最大文件数。较高的值可能会加快读取多个小文件的速度，但会增加内存使用量。"
+		},
+		"condensingThreshold": {
+			"label": "压缩触发阈值",
+			"selectProfile": "配置配置文件阈值",
+			"defaultProfile": "全局默认（所有配置文件）",
+			"defaultDescription": "当上下文达到此百分比时，将自动为所有配置文件压缩，除非它们有自定义设置",
+			"profileDescription": "仅此配置文件的自定义阈值（覆盖全局默认）",
+			"inheritDescription": "此配置文件继承全局默认阈值（{{threshold}}%）",
+			"usesGlobal": "（使用全局 {{threshold}}%）"
 		}
 	},
 	"terminal": {
@@ -508,9 +522,13 @@
 			"name": "启用并发文件读取",
 			"description": "启用后，Roo 可以在单个请求中读取多个文件。禁用后，Roo 必须逐个读取文件。在使用能力较弱的模型或希望对文件访问有更多控制时，禁用此功能可能会有所帮助。"
 		},
-		"DISABLE_COMPLETION_COMMAND": {
-			"name": "禁用 attempt_completion 中的命令执行",
-			"description": "启用后，attempt_completion 工具将不会执行命令。这是一项实验性功能，旨在为将来弃用任务完成时的命令执行做准备。"
+		"MARKETPLACE": {
+			"name": "启用 Marketplace",
+			"description": "启用后，你可以从 Marketplace 安装 MCP 和自定义模式。"
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "启用并发文件编辑",
+			"description": "启用后 Roo 可在单个请求中编辑多个文件。禁用后 Roo 必须逐个编辑文件。禁用此功能有助于使用能力较弱的模型或需要更精确控制文件修改时。"
 		}
 	},
 	"promptCaching": {
@@ -616,5 +634,7 @@
 	"labels": {
 		"customArn": "自定义 ARN",
 		"useCustomArn": "使用自定义 ARN..."
-	}
+	},
+	"includeMaxOutputTokens": "包含最大输出 Token 数",
+	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。"
 }

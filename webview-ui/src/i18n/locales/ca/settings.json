@@ -98,6 +98,10 @@
 			"outsideWorkspace": {
 				"label": "Incloure fitxers fora de l'espai de treball",
 				"description": "Permetre a Roo crear i editar fitxers fora de l'espai de treball actual sense requerir aprovació."
+			},
+			"protected": {
+				"label": "Incloure fitxers protegits",
+				"description": "Permetre a Roo crear i editar fitxers protegits (com .rooignore i fitxers de configuració .roo/) sense requerir aprovació."
 			}
 		},
 		"browser": {
@@ -381,7 +385,8 @@
 			"hint": "Buit = utilitzar indicació per defecte"
 		},
 		"autoCondenseContext": {
-			"name": "Activar automàticament la condensació intel·ligent de context"
+			"name": "Activar automàticament la condensació intel·ligent de context",
+			"description": "Quan està activat, Roo condensarà automàticament el context quan s'assoleixi el llindar. Quan està desactivat, encara pots activar manualment la condensació de context."
 		},
 		"openTabs": {
 			"label": "Límit de context de pestanyes obertes",
@@ -404,6 +409,15 @@
 		"maxConcurrentFileReads": {
 			"label": "Límit de lectures simultànies",
 			"description": "Nombre màxim de fitxers que l'eina 'read_file' pot processar simultàniament. Els valors més alts poden accelerar la lectura de múltiples fitxers petits però augmenten l'ús de memòria."
+		},
+		"condensingThreshold": {
+			"label": "Llindar d'activació de condensació",
+			"selectProfile": "Configura el llindar per al perfil",
+			"defaultProfile": "Per defecte global (tots els perfils)",
+			"defaultDescription": "Quan el context arribi a aquest percentatge, es condensarà automàticament per a tots els perfils tret que tinguin configuracions personalitzades",
+			"profileDescription": "Llindar personalitzat només per a aquest perfil (substitueix el per defecte global)",
+			"inheritDescription": "Aquest perfil hereta el llindar per defecte global ({{threshold}}%)",
+			"usesGlobal": "(utilitza global {{threshold}}%)"
 		}
 	},
 	"terminal": {
@@ -508,9 +522,13 @@
 			"name": "Habilitar lectura concurrent de fitxers",
 			"description": "Quan està habilitat, Roo pot llegir múltiples fitxers en una sola sol·licitud. Quan està deshabilitat, Roo ha de llegir fitxers un per un. Deshabilitar-ho pot ajudar quan es treballa amb models menys capaços o quan voleu més control sobre l'accés als fitxers."
 		},
-		"DISABLE_COMPLETION_COMMAND": {
-			"name": "Desactivar l'execució de comandes a attempt_completion",
-			"description": "Quan està activat, l'eina attempt_completion no executarà comandes. Aquesta és una característica experimental per preparar la futura eliminació de l'execució de comandes en la finalització de tasques."
+		"MARKETPLACE": {
+			"name": "Habilitar Marketplace",
+			"description": "Quan està habilitat, pots instal·lar MCP i modes personalitzats del Marketplace."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Habilita edicions de fitxers concurrents",
+			"description": "Quan està activat, Roo pot editar múltiples fitxers en una sola petició. Quan està desactivat, Roo ha d'editar fitxers d'un en un. Desactivar això pot ajudar quan es treballa amb models menys capaços o quan vols més control sobre les modificacions de fitxers."
 		}
 	},
 	"promptCaching": {
@@ -616,5 +634,7 @@
 	"labels": {
 		"customArn": "ARN personalitzat",
 		"useCustomArn": "Utilitza ARN personalitzat..."
-	}
+	},
+	"includeMaxOutputTokens": "Incloure tokens màxims de sortida",
+	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això."
 }

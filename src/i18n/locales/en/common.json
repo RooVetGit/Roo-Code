@@ -24,6 +24,11 @@
 	},
 	"errors": {
 		"invalid_data_uri": "Invalid data URI format",
+		"error_copying_image": "Error copying image: {{errorMessage}}",
+		"error_opening_image": "Error opening image: {{error}}",
+		"error_saving_image": "Error saving image: {{errorMessage}}",
+		"could_not_open_file": "Could not open file: {{errorMessage}}",
+		"could_not_open_file_generic": "Could not open file!",
 		"checkpoint_timeout": "Timed out when attempting to restore checkpoint.",
 		"checkpoint_failed": "Failed to restore checkpoint.",
 		"no_workspace": "Please open a project folder first",
@@ -54,7 +59,10 @@
 		"condense_handler_invalid": "API handler for condensing context is invalid",
 		"condense_context_grew": "Context size increased during condensing; skipping this attempt",
 		"share_task_failed": "Failed to share task. Please try again.",
-		"share_no_active_task": "No active task to share"
+		"share_no_active_task": "No active task to share",
+		"share_auth_required": "Authentication required. Please sign in to share tasks.",
+		"share_not_enabled": "Task sharing is not enabled for this organization.",
+		"share_task_not_found": "Task not found or access denied."
 	},
 	"warnings": {
 		"no_terminal_content": "No terminal content selected",
@@ -67,7 +75,11 @@
 		"custom_storage_path_set": "Custom storage path set: {{path}}",
 		"default_storage_path": "Reverted to using default storage path",
 		"settings_imported": "Settings imported successfully.",
-		"share_link_copied": "Share link copied to clipboard"
+		"share_link_copied": "Share link copied to clipboard",
+		"organization_share_link_copied": "Organization share link copied to clipboard!",
+		"public_share_link_copied": "Public share link copied to clipboard!",
+		"image_copied_to_clipboard": "Image data URI copied to clipboard",
+		"image_saved": "Image saved to {{path}}"
 	},
 	"answers": {
 		"yes": "Yes",
@@ -89,5 +101,12 @@
 	"input": {
 		"task_prompt": "What should Roo do?",
 		"task_placeholder": "Type your task here"
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "Your organization requires Roo Code Cloud authentication. Please sign in to continue.",
+			"organization_mismatch": "You must be authenticated with your organization's Roo Code Cloud account.",
+			"verification_failed": "Unable to verify organization authentication."
+		}
 	}
 }

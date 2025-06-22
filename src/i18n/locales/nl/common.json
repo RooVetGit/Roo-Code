@@ -24,6 +24,11 @@
 	},
 	"errors": {
 		"invalid_data_uri": "Ongeldig data-URI-formaat",
+		"error_copying_image": "Fout bij kopiëren van afbeelding: {{errorMessage}}",
+		"error_saving_image": "Fout bij opslaan van afbeelding: {{errorMessage}}",
+		"error_opening_image": "Fout bij openen van afbeelding: {{error}}",
+		"could_not_open_file": "Kon bestand niet openen: {{errorMessage}}",
+		"could_not_open_file_generic": "Kon bestand niet openen!",
 		"checkpoint_timeout": "Time-out bij het herstellen van checkpoint.",
 		"checkpoint_failed": "Herstellen van checkpoint mislukt.",
 		"no_workspace": "Open eerst een projectmap",
@@ -54,7 +59,10 @@
 		"condense_handler_invalid": "API-handler voor het comprimeren van context is ongeldig",
 		"condense_context_grew": "Contextgrootte nam toe tijdens comprimeren; deze poging wordt overgeslagen",
 		"share_task_failed": "Delen van taak mislukt",
-		"share_no_active_task": "Geen actieve taak om te delen"
+		"share_no_active_task": "Geen actieve taak om te delen",
+		"share_auth_required": "Authenticatie vereist. Log in om taken te delen.",
+		"share_not_enabled": "Taken delen is niet ingeschakeld voor deze organisatie.",
+		"share_task_not_found": "Taak niet gevonden of toegang geweigerd."
 	},
 	"warnings": {
 		"no_terminal_content": "Geen terminalinhoud geselecteerd",
@@ -67,7 +75,11 @@
 		"custom_storage_path_set": "Aangepast opslagpad ingesteld: {{path}}",
 		"default_storage_path": "Terug naar standaard opslagpad",
 		"settings_imported": "Instellingen succesvol geïmporteerd.",
-		"share_link_copied": "Deellink gekopieerd naar klembord"
+		"share_link_copied": "Deellink gekopieerd naar klembord",
+		"image_copied_to_clipboard": "Afbeelding data-URI gekopieerd naar klembord",
+		"image_saved": "Afbeelding opgeslagen naar {{path}}",
+		"organization_share_link_copied": "Organisatie deel-link gekopieerd naar klembord!",
+		"public_share_link_copied": "Openbare deel-link gekopieerd naar klembord!"
 	},
 	"answers": {
 		"yes": "Ja",
@@ -89,5 +101,12 @@
 	"input": {
 		"task_prompt": "Wat moet Roo doen?",
 		"task_placeholder": "Typ hier je taak"
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "Je organisatie vereist Roo Code Cloud-authenticatie. Log in om door te gaan.",
+			"organization_mismatch": "Je moet geauthenticeerd zijn met het Roo Code Cloud-account van je organisatie.",
+			"verification_failed": "Kan organisatie-authenticatie niet verifiëren."
+		}
 	}
 }

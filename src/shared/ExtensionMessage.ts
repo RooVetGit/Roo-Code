@@ -5,7 +5,7 @@ import type {
 	HistoryItem,
 	ModeConfig,
 	TelemetrySetting,
-	ExperimentId,
+	Experiments,
 	ClineMessage,
 	OrganizationAllowList,
 	CloudUserInfo,
@@ -16,6 +16,27 @@ import { GitCommit } from "../utils/git"
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
+import type { MarketplaceItem } from "@roo-code/types"
+
+// Type for marketplace installed metadata
+export interface MarketplaceInstalledMetadata {
+	project: Record<string, { type: string }>
+	global: Record<string, { type: string }>
+}
+
+// Indexing status types
+export interface IndexingStatus {
+	systemStatus: string
+	message?: string
+	processedItems: number
+	totalItems: number
+	currentItemUnit?: string
+}
+
+export interface IndexingStatusUpdateMessage {
+	type: "indexingStatusUpdate"
+	values: IndexingStatus
+}
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -66,6 +87,7 @@ export interface ExtensionMessage {
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
+		| "mcpExecutionStatus"
 		| "vsCodeSetting"
 		| "authenticatedUser"
 		| "condenseTaskContextResponse"
@@ -73,16 +95,21 @@ export interface ExtensionMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "codebaseIndexConfig"
+		| "marketplaceInstallResult"
+		| "marketplaceData"
 	text?: string
+	payload?: any // Add a generic payload for now, can refine later
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "marketplaceButtonClicked"
 		| "accountButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
+		| "switchTab"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -112,8 +139,12 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	items?: MarketplaceItem[]
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
+	tab?: string
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 }
 
 export type ExtensionState = Pick<
@@ -129,6 +160,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowReadOnlyOutsideWorkspace"
 	| "alwaysAllowWrite"
 	| "alwaysAllowWriteOutsideWorkspace"
+	| "alwaysAllowWriteProtected"
 	// | "writeDelayMs" // Optional in GlobalSettings, required here.
 	| "alwaysAllowBrowser"
 	| "alwaysApproveResubmit"
@@ -181,6 +213,7 @@ export type ExtensionState = Pick<
 	| "customCondensingPrompt"
 	| "codebaseIndexConfig"
 	| "codebaseIndexModels"
+	| "profileThresholds"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -200,7 +233,7 @@ export type ExtensionState = Pick<
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 
-	experiments: Record<ExperimentId, boolean> // Map of experiment IDs to their enabled state
+	experiments: Experiments // Map of experiment IDs to their enabled state
 
 	mcpEnabled: boolean
 	enableMcpServerCreation: boolean
@@ -225,6 +258,9 @@ export type ExtensionState = Pick<
 
 	autoCondenseContext: boolean
 	autoCondenseContextPercent: number
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
+	profileThresholds: Record<string, number>
 }
 
 export interface ClineSayTool {
@@ -252,6 +288,7 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	isProtected?: boolean
 	additionalFileCount?: number // Number of additional files in the same read_file request
 	search?: string
 	replace?: string
@@ -266,6 +303,17 @@ export interface ClineSayTool {
 		lineSnippet: string
 		isOutsideWorkspace?: boolean
 		key: string
+		content?: string
+	}>
+	batchDiffs?: Array<{
+		path: string
+		changeCount: number
+		key: string
+		content: string
+		diffs?: Array<{
+			content: string
+			startLine?: number
+		}>
 	}>
 	question?: string
 }
@@ -304,6 +352,7 @@ export interface ClineAskUseMcpServer {
 	toolName?: string
 	arguments?: string
 	uri?: string
+	response?: string
 }
 
 export interface ClineApiReqInfo {

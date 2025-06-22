@@ -79,7 +79,7 @@ describe("CloudService", () => {
 		} as unknown as vscode.ExtensionContext
 
 		mockAuthService = {
-			initialize: vi.fn(),
+			initialize: vi.fn().mockResolvedValue(undefined),
 			login: vi.fn(),
 			logout: vi.fn(),
 			isAuthenticated: vi.fn().mockReturnValue(false),
@@ -108,11 +108,8 @@ describe("CloudService", () => {
 			},
 		}
 
-		vi.mocked(AuthService.createInstance).mockResolvedValue(mockAuthService as unknown as AuthService)
-		Object.defineProperty(AuthService, "instance", { get: () => mockAuthService, configurable: true })
-
-		vi.mocked(SettingsService.createInstance).mockResolvedValue(mockSettingsService as unknown as SettingsService)
-		Object.defineProperty(SettingsService, "instance", { get: () => mockSettingsService, configurable: true })
+		vi.mocked(AuthService).mockImplementation(() => mockAuthService as unknown as AuthService)
+		vi.mocked(SettingsService).mockImplementation(() => mockSettingsService as unknown as SettingsService)
 
 		vi.mocked(TelemetryService.hasInstance).mockReturnValue(true)
 		Object.defineProperty(TelemetryService, "instance", {
@@ -135,8 +132,8 @@ describe("CloudService", () => {
 			const cloudService = await CloudService.createInstance(mockContext, callbacks)
 
 			expect(cloudService).toBeInstanceOf(CloudService)
-			expect(AuthService.createInstance).toHaveBeenCalledWith(mockContext, expect.any(Function))
-			expect(SettingsService.createInstance).toHaveBeenCalledWith(mockContext, expect.any(Function))
+			expect(AuthService).toHaveBeenCalledWith(mockContext, expect.any(Function))
+			expect(SettingsService).toHaveBeenCalledWith(mockContext, mockAuthService, expect.any(Function))
 		})
 
 		it("should throw error if instance already exists", async () => {
@@ -182,6 +179,72 @@ describe("CloudService", () => {
 		it("should delegate getUserInfo to AuthService", async () => {
 			await cloudService.getUserInfo()
 			expect(mockAuthService.getUserInfo).toHaveBeenCalled()
+		})
+
+		it("should return organization ID from user info", () => {
+			const mockUserInfo = {
+				name: "Test User",
+				email: "test@example.com",
+				organizationId: "org_123",
+				organizationName: "Test Org",
+				organizationRole: "admin",
+			}
+			mockAuthService.getUserInfo.mockReturnValue(mockUserInfo)
+
+			const result = cloudService.getOrganizationId()
+			expect(mockAuthService.getUserInfo).toHaveBeenCalled()
+			expect(result).toBe("org_123")
+		})
+
+		it("should return null when no organization ID available", () => {
+			mockAuthService.getUserInfo.mockReturnValue(null)
+
+			const result = cloudService.getOrganizationId()
+			expect(result).toBe(null)
+		})
+
+		it("should return organization name from user info", () => {
+			const mockUserInfo = {
+				name: "Test User",
+				email: "test@example.com",
+				organizationId: "org_123",
+				organizationName: "Test Org",
+				organizationRole: "admin",
+			}
+			mockAuthService.getUserInfo.mockReturnValue(mockUserInfo)
+
+			const result = cloudService.getOrganizationName()
+			expect(mockAuthService.getUserInfo).toHaveBeenCalled()
+			expect(result).toBe("Test Org")
+		})
+
+		it("should return null when no organization name available", () => {
+			mockAuthService.getUserInfo.mockReturnValue(null)
+
+			const result = cloudService.getOrganizationName()
+			expect(result).toBe(null)
+		})
+
+		it("should return organization role from user info", () => {
+			const mockUserInfo = {
+				name: "Test User",
+				email: "test@example.com",
+				organizationId: "org_123",
+				organizationName: "Test Org",
+				organizationRole: "admin",
+			}
+			mockAuthService.getUserInfo.mockReturnValue(mockUserInfo)
+
+			const result = cloudService.getOrganizationRole()
+			expect(mockAuthService.getUserInfo).toHaveBeenCalled()
+			expect(result).toBe("admin")
+		})
+
+		it("should return null when no organization role available", () => {
+			mockAuthService.getUserInfo.mockReturnValue(null)
+
+			const result = cloudService.getOrganizationRole()
+			expect(result).toBe(null)
 		})
 
 		it("should delegate getAuthState to AuthService", () => {
