@@ -193,10 +193,12 @@ export function getModeSelection(mode: string, promptComponent?: PromptComponent
 
 	const roleDefinition = modeToUse?.roleDefinition || ""
 	const baseInstructions = modeToUse?.customInstructions || ""
+	const description = (customMode || builtInMode)?.description || ""
 
 	return {
 		roleDefinition,
 		baseInstructions,
+		description,
 	}
 }
 
@@ -287,6 +289,7 @@ export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 				roleDefinition: mode.roleDefinition,
 				whenToUse: mode.whenToUse,
 				customInstructions: mode.customInstructions,
+				// Note: description is not included here as it's not part of the PromptComponent interface
 			},
 		]),
 	),
@@ -303,6 +306,7 @@ export async function getAllModesWithPrompts(context: vscode.ExtensionContext): 
 		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
 		whenToUse: customModePrompts[mode.slug]?.whenToUse ?? mode.whenToUse,
 		customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
+		// description is not overridable via customModePrompts, so we keep the original
 	}))
 }
 
@@ -326,6 +330,8 @@ export async function getFullModeDetails(
 	// Get the base custom instructions
 	const baseCustomInstructions = promptComponent?.customInstructions || baseMode.customInstructions || ""
 	const baseWhenToUse = promptComponent?.whenToUse || baseMode.whenToUse || ""
+	// Description is not part of PromptComponent, so we use it directly from the mode
+	const baseDescription = baseMode.description || ""
 
 	// If we have cwd, load and combine all custom instructions
 	let fullCustomInstructions = baseCustomInstructions
@@ -344,6 +350,7 @@ export async function getFullModeDetails(
 		...baseMode,
 		roleDefinition: promptComponent?.roleDefinition || baseMode.roleDefinition,
 		whenToUse: baseWhenToUse,
+		description: baseDescription,
 		customInstructions: fullCustomInstructions,
 	}
 }
@@ -356,6 +363,16 @@ export function getRoleDefinition(modeSlug: string, customModes?: ModeConfig[]):
 		return ""
 	}
 	return mode.roleDefinition
+}
+
+// Helper function to safely get description
+export function getDescription(modeSlug: string, customModes?: ModeConfig[]): string {
+	const mode = getModeBySlug(modeSlug, customModes)
+	if (!mode) {
+		console.warn(`No mode found for slug: ${modeSlug}`)
+		return ""
+	}
+	return mode.description ?? ""
 }
 
 // Helper function to safely get whenToUse

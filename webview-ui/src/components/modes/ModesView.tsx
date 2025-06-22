@@ -15,6 +15,7 @@ import {
 	Mode,
 	getRoleDefinition,
 	getWhenToUse,
+	getDescription,
 	getCustomInstructions,
 	getAllModes,
 	findModeBySlug as findCustomModeBySlug,
@@ -736,7 +737,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							value={(() => {
 								const customMode = findModeBySlug(visualMode, customModes)
 								const prompt = customModePrompts?.[visualMode] as PromptComponent
-								return customMode?.description ?? prompt?.description ?? ""
+								return customMode?.description ?? prompt?.description ?? getDescription(visualMode)
 							})()}
 							onChange={(e) => {
 								const value =
