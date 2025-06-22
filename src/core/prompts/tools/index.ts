@@ -21,8 +21,127 @@ import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
+import { dispatchTaskToolDefinition } from "./dispatchTask"
+import { getTaskStatusToolDefinition } from "./getTaskStatus"
+import { consolidateResultsToolDefinition } from "./consolidateResults"
+import { cancelTaskToolDefinition } from "./cancelTask"
+import { releaseTasksToolDefinition } from "./releaseTasks"
+import { resumeParentTaskToolDefinition } from "./resumeParentTask"
+import { startConversationToolDefinition } from "./startConversation" // Import new definition
 import { getCodebaseSearchDescription } from "./codebase-search"
 import { CodeIndexManager } from "../../../services/code-index/manager"
+
+// Function for the new tool's description
+function getDispatchTaskDescription(): string {
+	return `<tool_description>
+	<tool_name>${dispatchTaskToolDefinition.name}</tool_name>
+	<description>${dispatchTaskToolDefinition.description}</description>
+	<parameters>
+		${dispatchTaskToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
+
+// Function for get_task_status tool's description
+function getGetTaskStatusDescription(): string {
+	return `<tool_description>
+	<tool_name>${getTaskStatusToolDefinition.name}</tool_name>
+	<description>${getTaskStatusToolDefinition.description}</description>
+	<parameters>
+		${getTaskStatusToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
+
+// Function for consolidate_results tool's description
+function getConsolidateResultsDescription(): string {
+	return `<tool_description>
+	<tool_name>${consolidateResultsToolDefinition.name}</tool_name>
+	<description>${consolidateResultsToolDefinition.description}</description>
+	<parameters>
+		${consolidateResultsToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
+
+// Function for cancel_task tool's description
+function getCancelTaskDescription(): string {
+	return `<tool_description>
+	<tool_name>${cancelTaskToolDefinition.name}</tool_name>
+	<description>${cancelTaskToolDefinition.description}</description>
+	<parameters>
+		${cancelTaskToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
+
+// Function for release_tasks tool's description
+function getReleaseTasksDescription(): string {
+	return `<tool_description>
+	<tool_name>${releaseTasksToolDefinition.name}</tool_name>
+	<description>${releaseTasksToolDefinition.description}</description>
+	<parameters>
+		${releaseTasksToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
+
+// Function for resume_parent_task tool's description
+function getResumeParentTaskDescription(): string {
+	return `<tool_description>
+	<tool_name>${resumeParentTaskToolDefinition.name}</tool_name>
+	<description>${resumeParentTaskToolDefinition.description}</description>
+	<parameters>
+		${resumeParentTaskToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
+
+// Function for start_conversation tool's description
+function getStartConversationDescription(): string {
+	return `<tool_description>
+	<tool_name>${startConversationToolDefinition.name}</tool_name>
+	<description>${startConversationToolDefinition.description}</description>
+	<parameters>
+		${startConversationToolDefinition.parameters
+			.map(
+				(param) =>
+					`<parameter>\n<name>${param.name}</name>\n<type>${param.type}</type>\n<description>${param.description}</description>\n</parameter>`,
+			)
+			.join("\n\t\t")}
+	</parameters>
+</tool_description>`
+}
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -41,6 +160,13 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	codebase_search: () => getCodebaseSearchDescription(),
 	switch_mode: () => getSwitchModeDescription(),
 	new_task: (args) => getNewTaskDescription(args),
+	dispatch_task: () => getDispatchTaskDescription(),
+	get_task_status: () => getGetTaskStatusDescription(),
+	consolidate_results: () => getConsolidateResultsDescription(),
+	cancel_task: () => getCancelTaskDescription(),
+	release_tasks: () => getReleaseTasksDescription(),
+	resume_parent_task: () => getResumeParentTaskDescription(),
+	start_conversation: () => getStartConversationDescription(), // Added start_conversation
 	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>

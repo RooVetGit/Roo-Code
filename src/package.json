@@ -344,6 +344,18 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%settings.rooCodeCloudEnabled.description%"
+				},
+				"roo-cline.taskCompletionMediatorModeEnabled": {
+					"type": "boolean",
+					"default": false,
+					"scope": "resource",
+					"description": "%settings.taskCompletionMediatorModeEnabled.description%"
+				},
+				"roo-cline.taskCompletionMediatorAgentMode": {
+					"type": "string",
+					"default": "mediator-agent",
+					"scope": "resource",
+					"description": "%settings.taskCompletionMediatorAgentMode.description%"
 				}
 			}
 		}

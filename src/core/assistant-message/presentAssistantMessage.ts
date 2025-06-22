@@ -24,6 +24,13 @@ import { askFollowupQuestionTool } from "../tools/askFollowupQuestionTool"
 import { switchModeTool } from "../tools/switchModeTool"
 import { attemptCompletionTool } from "../tools/attemptCompletionTool"
 import { newTaskTool } from "../tools/newTaskTool"
+import { dispatchTaskTool } from "../tools/dispatchTaskTool"
+import { getTaskStatusTool } from "../tools/getTaskStatusTool"
+import { consolidateResultsTool } from "../tools/consolidateResultsTool"
+import { cancelTaskTool } from "../tools/cancelTaskTool"
+import { releaseTasksTool } from "../tools/releaseTasksTool"
+import { resumeParentTaskTool } from "../tools/resumeParentTaskTool"
+import { startConversationTool } from "../tools/startConversationTool" // Added startConversationTool
 
 import { checkpointSave } from "../checkpoints"
 
@@ -211,6 +218,24 @@ export async function presentAssistantMessage(cline: Task) {
 						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 						return `[${block.name} in ${modeName} mode: '${message}']`
 					}
+					case "dispatch_task": { // Added for dispatch_task
+						const mode = block.params.mode ?? defaultModeSlug
+						const message = block.params.message ?? "(no message)"
+						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
+						return `[${block.name} in ${modeName} mode: '${message}']`
+					}
+					case "get_task_status":
+						return `[${block.name} for '${block.params.task_instance_ids}']`
+					case "consolidate_results":
+						return `[${block.name} for '${block.params.task_instance_ids}']`
+					case "cancel_task":
+						return `[${block.name} for task '${block.params.task_instance_id}']`
+					case "release_tasks":
+						return `[${block.name} for tasks '${block.params.task_instance_ids}']`
+					case "resume_parent_task":
+						return `[${block.name} for parent '${block.params.original_parent_id}']`
+					case "start_conversation": // Added for start_conversation
+						return `[${block.name} with initial prompt: '${block.params.initial_prompt}']`
 				}
 			}
 
@@ -503,6 +528,27 @@ export async function presentAssistantMessage(cline: Task) {
 					break
 				case "new_task":
 					await newTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "dispatch_task":
+					await dispatchTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag, toolDescription)
+					break
+				case "get_task_status":
+					await getTaskStatusTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "consolidate_results":
+					await consolidateResultsTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "cancel_task":
+					await cancelTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "release_tasks":
+					await releaseTasksTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "resume_parent_task":
+					await resumeParentTaskTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "start_conversation": // Added for start_conversation
+					await startConversationTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "attempt_completion":
 					await attemptCompletionTool(

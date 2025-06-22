@@ -229,8 +229,24 @@ export class ClineProvider
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+
+		const parentTask = this.getCurrentCline()
+		if (parentTask) {
+			// Check if this parent task was awaiting mediation and now has a result from the mediator.
+			if (parentTask.mediatedResultForResumption !== null) {
+				const resultToUse = parentTask.mediatedResultForResumption;
+				parentTask.mediatedResultForResumption = null; // Clear it after use
+				parentTask.isAwaitingMediation = false; // Ensure this is also cleared
+				this.log(`[Mediator] Parent task ${parentTask.taskId} resuming with mediated result.`);
+				await parentTask.resumePausedTask(resultToUse);
+			} else if (parentTask.isAwaitingMediation) {
+				// Still awaiting mediation, a mediator hasn't called resume_parent_task with a result yet.
+				this.log(`[Mediator] Parent task ${parentTask.taskId} is awaiting mediation. Not resuming immediately as mediated result is not yet available.`);
+			} else {
+				// Standard resumption logic
+				await parentTask.resumePausedTask(lastMessage);
+			}
+		}
 	}
 
 	// Clear the current task without treating it as a subtask
@@ -529,37 +545,44 @@ export class ClineProvider
 		options: Partial<
 			Pick<
 				TaskOptions,
-				"enableDiff" | "enableCheckpoints" | "fuzzyMatchThreshold" | "consecutiveMistakeLimit" | "experiments"
+				// Added systemPromptOverride to the pick
+				"enableDiff" | "enableCheckpoints" | "fuzzyMatchThreshold" | "consecutiveMistakeLimit" | "experiments" | "systemPromptOverride"
 			>
 		> = {},
 	) {
 		const {
 			apiConfiguration,
 			organizationAllowList,
-			diffEnabled: enableDiff,
-			enableCheckpoints,
-			fuzzyMatchThreshold,
-			experiments,
+			// Defaulting these from provider.getState() if not in options
+			diffEnabled: optionDiffEnabled,
+			enableCheckpoints: optionEnableCheckpoints,
+			fuzzyMatchThreshold: optionFuzzyMatchThreshold,
+			experiments: optionExperiments,
 		} = await this.getState()
 
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
+		const taskOptionsFromState = await this.getState();
+
+
 		const cline = new Task({
 			provider: this,
 			apiConfiguration,
-			enableDiff,
-			enableCheckpoints,
-			fuzzyMatchThreshold,
+			enableDiff: options.enableDiff ?? taskOptionsFromState.diffEnabled,
+			enableCheckpoints: options.enableCheckpoints ?? taskOptionsFromState.enableCheckpoints,
+			fuzzyMatchThreshold: options.fuzzyMatchThreshold ?? taskOptionsFromState.fuzzyMatchThreshold,
 			task,
 			images,
-			experiments,
+			experiments: options.experiments ?? taskOptionsFromState.experiments,
 			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
-			onCreated: (cline) => this.emit("clineCreated", cline),
-			...options,
+			onCreated: (cl) => this.emit("clineCreated", cl), // Renamed cline to cl to avoid shadow
+			systemPromptOverride: options.systemPromptOverride, // Pass it through
+			// Pass other options from the partial pick
+			consecutiveMistakeLimit: options.consecutiveMistakeLimit, // This was missing from options destructuring but present in TaskOptions
 		})
 
 		await this.addClineToStack(cline)
@@ -1549,9 +1572,16 @@ export class ClineProvider
 			)
 		}
 
+		// Read workspace specific configurations
+		const workspaceConfig = vscode.workspace.getConfiguration(Package.name)
+		const taskCompletionMediatorModeEnabled = workspaceConfig.get<boolean>("taskCompletionMediatorModeEnabled", false)
+		const taskCompletionMediatorAgentMode = workspaceConfig.get<string>("taskCompletionMediatorAgentMode", "mediator-agent")
+
 		// Return the same structure as before
 		return {
 			apiConfiguration: providerSettings,
+			taskCompletionMediatorModeEnabled, // Added new setting
+			taskCompletionMediatorAgentMode, // Added new setting
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
 			customInstructions: stateValues.customInstructions,
 			apiModelId: stateValues.apiModelId,

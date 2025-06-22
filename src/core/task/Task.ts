@@ -116,9 +116,12 @@ export type TaskOptions = {
 	parentTask?: Task
 	taskNumber?: number
 	onCreated?: (cline: Task) => void
+	systemPromptOverride?: string // Added for custom system prompts
 }
 
 export class Task extends EventEmitter<ClineEvents> {
+	static activeTasks: Map<string, Task> = new Map<string, Task>() // Added activeTasks map
+
 	readonly taskId: string
 	readonly instanceId: string
 
@@ -183,6 +186,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
 	toolUsage: ToolUsage = {}
+	dispatchedTaskIds: Set<string> = new Set<string>()
 
 	// Checkpoints
 	enableCheckpoints: boolean
@@ -192,6 +196,12 @@ export class Task extends EventEmitter<ClineEvents> {
 	// Streaming
 	isWaitingForFirstChunk = false
 	isStreaming = false
+	status: "pending" | "running" | "completed" | "failed" | "aborted" | "completed_pending_mediation" = "pending"
+	finalResult: string | null = null
+	isAwaitingMediation: boolean = false // Added for mediator pattern
+	mediatedResultForResumption: string | null = null // Added for mediator result passing
+	private systemPromptOverride?: string // Store the override
+
 	currentStreamingContentIndex = 0
 	assistantMessageContent: AssistantMessageContent[] = []
 	presentAssistantMessageLocked = false
@@ -217,8 +227,11 @@ export class Task extends EventEmitter<ClineEvents> {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		systemPromptOverride, // Destructure new option
 	}: TaskOptions) {
 		super()
+
+		this.systemPromptOverride = systemPromptOverride // Store it
 
 		if (startTask && !task && !images && !historyItem) {
 			throw new Error("Either historyItem or task/images must be provided")
@@ -284,6 +297,23 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
 
 		onCreated?.(this)
+
+		Task.activeTasks.set(this.taskId, this) // Add to activeTasks
+		this.status = "pending" // Set initial status
+
+		this.on("taskCompleted", (taskId, tokenUsage, toolUsage) => { // Event params might be useful later
+			this.status = "completed"
+			// Task remains in activeTasks until explicitly cleaned up or consolidated.
+			// finalResult will be set by attemptCompletionTool.
+		})
+
+		this.on("taskToolFailed", (taskId, toolName, error) => { // Event params might be useful later
+			this.status = "failed"
+			this.finalResult = `Tool '${toolName}' failed: ${error}`
+			// Task remains in activeTasks.
+		})
+
+		// The 'aborted' status is handled in abortTask method, which will also set a finalResult.
 
 		if (startTask) {
 			if (task || images) {
@@ -1072,6 +1102,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		this.abort = true
+		this.status = "aborted" // Set status
+		this.finalResult = "Task was aborted." // Set finalResult for aborted tasks
 		this.emit("taskAborted")
 
 		try {
@@ -1087,6 +1119,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			console.error(`Error saving messages during abort for task ${this.taskId}.${this.instanceId}:`, error)
 		}
+		// Task.activeTasks.delete(this.taskId) // Task remains in activeTasks
 	}
 
 	// Used when a sub-task is launched and the parent task is waiting for it to
@@ -1114,6 +1147,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		let nextUserContent = userContent
 		let includeFileDetails = true
 
+		this.status = "running" // Set status
 		this.emit("taskStarted")
 
 		while (!this.abort) {
@@ -1562,6 +1596,10 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async getSystemPrompt(): Promise<string> {
+		if (this.systemPromptOverride) {
+			return this.systemPromptOverride
+		}
+
 		const { mcpEnabled } = (await this.providerRef.deref()?.getState()) ?? {}
 		let mcpHub: McpHub | undefined
 		if (mcpEnabled ?? true) {

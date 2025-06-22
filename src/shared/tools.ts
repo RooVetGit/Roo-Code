@@ -157,6 +157,41 @@ export interface NewTaskToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
 }
 
+export interface DispatchTaskToolUse extends ToolUse { // Added DispatchTaskToolUse
+	name: "dispatch_task"
+	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
+}
+
+export interface GetTaskStatusToolUse extends ToolUse { // Added GetTaskStatusToolUse
+	name: "get_task_status"
+	params: Partial<Pick<Record<ToolParamName, string>, "task_instance_ids">>
+}
+
+export interface ConsolidateResultsToolUse extends ToolUse { // Added ConsolidateResultsToolUse
+	name: "consolidate_results"
+	params: Partial<Pick<Record<ToolParamName, string>, "task_instance_ids">>
+}
+
+export interface CancelTaskToolUse extends ToolUse { // Added CancelTaskToolUse
+	name: "cancel_task"
+	params: Partial<Pick<Record<ToolParamName, string>, "task_instance_id">>
+}
+
+export interface ReleaseTasksToolUse extends ToolUse { // Added ReleaseTasksToolUse
+	name: "release_tasks"
+	params: Partial<Pick<Record<ToolParamName, string>, "task_instance_ids">>
+}
+
+export interface ResumeParentTaskToolUse extends ToolUse { // Added ResumeParentTaskToolUse
+	name: "resume_parent_task"
+	params: Partial<Pick<Record<ToolParamName, string>, "original_parent_id" | "mediated_result">>
+}
+
+export interface StartConversationToolUse extends ToolUse { // Added StartConversationToolUse
+	name: "start_conversation"
+	params: Partial<Pick<Record<ToolParamName, string>, "participants" | "shared_context" | "initial_prompt" | "termination_condition">>
+}
+
 export interface SearchAndReplaceToolUse extends ToolUse {
 	name: "search_and_replace"
 	params: Required<Pick<Record<ToolParamName, string>, "path" | "search" | "replace">> &
@@ -185,6 +220,13 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
+	dispatch_task: "dispatch new task",
+	get_task_status: "get task status",
+	consolidate_results: "consolidate task results",
+	cancel_task: "cancel task",
+	release_tasks: "release task records",
+	resume_parent_task: "resume parent task",
+	start_conversation: "start conversation", // Added start_conversation
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
@@ -226,6 +268,13 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"dispatch_task",
+	"get_task_status",
+	"consolidate_results",
+	"cancel_task",
+	"release_tasks",
+	"resume_parent_task",
+	"start_conversation", // Added start_conversation
 ] as const
 
 export type DiffResult =

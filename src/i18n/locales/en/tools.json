@@ -12,5 +12,41 @@
 		"errors": {
 			"policy_restriction": "Failed to create new task due to policy restrictions."
 		}
+	},
+	"dispatchTask": {
+		"errors": {
+			"generic": "An error occurred while dispatching the task: {{error}}"
+		}
+	},
+	"getTaskStatus": {
+		"errors": {
+			"generic": "An error occurred while getting task status: {{error}}"
+		}
+	},
+	"consolidateResults": {
+		"errors": {
+			"generic": "An error occurred while consolidating task results: {{error}}"
+		}
+	},
+	"cancelTask": {
+		"errors": {
+			"generic": "An error occurred while cancelling the task: {{error}}"
+		}
+	},
+	"releaseTasks": {
+		"errors": {
+			"generic": "An error occurred while releasing tasks: {{error}}"
+		}
+	},
+	"resumeParentTask": {
+		"errors": {
+			"generic": "An error occurred while resuming the parent task: {{error}}"
+		}
+	},
+	"startConversation": {
+		"errors": {
+			"paramParseError": "Error parsing '{{param}}' parameter for start_conversation: {{error}}",
+			"generic": "An error occurred during the conversation: {{error}}"
+		}
 	}
 }
