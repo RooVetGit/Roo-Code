@@ -14,6 +14,11 @@ export interface EmbeddingModelProfile {
 	 * Optional maximum input tokens for the model.
 	 */
 	maxInputTokens?: number
+	/**
+	 * Whether the model supports the taskType parameter.
+	 * Only some Gemini models support this parameter.
+	 */
+	supportsTaskType?: boolean
 	// Add other model-specific properties if needed, e.g., context window size
 }
 
@@ -43,9 +48,14 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		"text-embedding-ada-002": { dimension: 1536 },
 	},
 	gemini: {
-		"gemini-embedding-exp-03-07": { dimension: 3072, supportDimensions: [3072, 1536, 768], maxInputTokens: 8192 },
-		"models/text-embedding-004": { dimension: 768, maxInputTokens: 2048 },
-		"models/embedding-001": { dimension: 768, maxInputTokens: 2048 },
+		"gemini-embedding-exp-03-07": {
+			dimension: 3072,
+			supportDimensions: [3072, 1536, 768],
+			maxInputTokens: 8192,
+			supportsTaskType: true,
+		},
+		"models/text-embedding-004": { dimension: 768, maxInputTokens: 2048, supportsTaskType: false },
+		"models/embedding-001": { dimension: 768, maxInputTokens: 2048, supportsTaskType: false },
 	},
 }
 

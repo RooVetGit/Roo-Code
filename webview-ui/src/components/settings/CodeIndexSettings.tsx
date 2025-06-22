@@ -160,7 +160,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			gemini: baseSchema.extend({
 				codebaseIndexEmbedderProvider: z.literal("gemini"),
 				geminiApiKey: z.string().min(1, "Gemini API key is required"),
-				geminiEmbeddingTaskType: z.string().min(1, "Gemini Task Type is required"),
+				geminiEmbeddingTaskType: z.string().optional(),
 				geminiEmbeddingDimension: z
 					.number()
 					.int()
@@ -460,51 +460,54 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										style={{ width: "100%" }}></VSCodeTextField>
 								</div>
 							</div>
-							<div className="flex flex-col gap-3">
-								<div className="flex items-center gap-4 font-bold">
-									<div>{t("settings:codeIndex.embeddingTaskType")}</div>
-								</div>
-								<div>
-									<div className="flex items-center gap-2">
-										<Select
-											value={
-												codebaseIndexConfig?.geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY"
-											}
-											onValueChange={(value) =>
-												setCachedStateField("codebaseIndexConfig", {
-													...codebaseIndexConfig,
-													geminiEmbeddingTaskType: value,
-												})
-											}>
-											<SelectTrigger className="w-full">
-												<SelectValue
-													placeholder={t("settings:codeIndex.selectTaskTypePlaceholder")}
-												/>
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="CODE_RETRIEVAL_QUERY">
-													{t("settings:codeIndex.selectTaskType.codeRetrievalQuery")}
-												</SelectItem>
-												<SelectItem value="RETRIEVAL_DOCUMENT">
-													{t("settings:codeIndex.selectTaskType.retrievalDocument")}
-												</SelectItem>
-												<SelectItem value="RETRIEVAL_QUERY">
-													{t("settings:codeIndex.selectTaskType.retrievalQuery")}
-												</SelectItem>
-												<SelectItem value="SEMANTIC_SIMILARITY">
-													{t("settings:codeIndex.selectTaskType.semanticSimilarity")}
-												</SelectItem>
-												<SelectItem value="CLASSIFICATION">
-													{t("settings:codeIndex.selectTaskType.classification")}
-												</SelectItem>
-												<SelectItem value="CLUSTERING">
-													{t("settings:codeIndex.selectTaskType.clustering")}
-												</SelectItem>
-											</SelectContent>
-										</Select>
+							{geminiModelProfileForDim?.supportsTaskType && (
+								<div className="flex flex-col gap-3">
+									<div className="flex items-center gap-4 font-bold">
+										<div>{t("settings:codeIndex.embeddingTaskType")}</div>
+									</div>
+									<div>
+										<div className="flex items-center gap-2">
+											<Select
+												value={
+													codebaseIndexConfig?.geminiEmbeddingTaskType ||
+													"CODE_RETRIEVAL_QUERY"
+												}
+												onValueChange={(value) =>
+													setCachedStateField("codebaseIndexConfig", {
+														...codebaseIndexConfig,
+														geminiEmbeddingTaskType: value,
+													})
+												}>
+												<SelectTrigger className="w-full">
+													<SelectValue
+														placeholder={t("settings:codeIndex.selectTaskTypePlaceholder")}
+													/>
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="CODE_RETRIEVAL_QUERY">
+														{t("settings:codeIndex.selectTaskType.codeRetrievalQuery")}
+													</SelectItem>
+													<SelectItem value="RETRIEVAL_DOCUMENT">
+														{t("settings:codeIndex.selectTaskType.retrievalDocument")}
+													</SelectItem>
+													<SelectItem value="RETRIEVAL_QUERY">
+														{t("settings:codeIndex.selectTaskType.retrievalQuery")}
+													</SelectItem>
+													<SelectItem value="SEMANTIC_SIMILARITY">
+														{t("settings:codeIndex.selectTaskType.semanticSimilarity")}
+													</SelectItem>
+													<SelectItem value="CLASSIFICATION">
+														{t("settings:codeIndex.selectTaskType.classification")}
+													</SelectItem>
+													<SelectItem value="CLUSTERING">
+														{t("settings:codeIndex.selectTaskType.clustering")}
+													</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
 									</div>
 								</div>
-							</div>
+							)}
 							{currentProvider === "gemini" &&
 								geminiModelProfileForDim &&
 								geminiSupportedDims &&

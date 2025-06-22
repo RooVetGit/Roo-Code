@@ -3,7 +3,7 @@ import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
 import { SEARCH_MIN_SCORE } from "./constants"
-import { getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
+import { getDefaultModelId, getModelDimension, EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 
 // Define a type for the raw config state from globalState
 interface RawCodebaseIndexConfigState {
@@ -52,7 +52,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
-			geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+			geminiEmbeddingTaskType: undefined,
 			geminiEmbeddingDimension: undefined,
 		}) as RawCodebaseIndexConfigState // Cast to our defined raw state type
 
@@ -112,7 +112,7 @@ export class CodeIndexConfigManager {
 
 		this.geminiOptions = {
 			geminiApiKey,
-			geminiEmbeddingTaskType: geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY",
+			geminiEmbeddingTaskType: geminiEmbeddingTaskType,
 			apiModelId: this.modelId,
 			geminiEmbeddingDimension,
 			rateLimitSeconds,
@@ -205,10 +205,19 @@ export class CodeIndexConfigManager {
 		if (this.embedderProvider === "gemini") {
 			// Gemini requires an API key and Qdrant URL
 			const geminiApiKey = this.geminiOptions?.geminiApiKey
-			const geminiEmbeddingTaskType = this.geminiOptions?.geminiEmbeddingTaskType
-
+			const modelId = this.modelId || getDefaultModelId("gemini")
 			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(geminiApiKey && geminiEmbeddingTaskType && qdrantUrl)
+
+			// Check if the model supports taskType
+			const geminiProfiles = EMBEDDING_MODEL_PROFILES.gemini || {}
+			const modelProfile = geminiProfiles[modelId]
+			const supportsTaskType = modelProfile?.supportsTaskType || false
+
+			// Only require taskType if the model supports it
+			const geminiEmbeddingTaskType = this.geminiOptions?.geminiEmbeddingTaskType
+			const taskTypeValid = !supportsTaskType || (supportsTaskType && !!geminiEmbeddingTaskType)
+
+			const isConfigured = !!(geminiApiKey && taskTypeValid && qdrantUrl)
 			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly

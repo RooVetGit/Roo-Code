@@ -11,7 +11,7 @@ import { RetryHandler } from "../../../utils/retry-handler"
  */
 export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder {
 	private readonly defaultModelId: string
-	private readonly defaultTaskType: string
+	private readonly defaultTaskType?: string
 	private readonly rateLimiter: SlidingWindowRateLimiter
 	private readonly retryHandler: RetryHandler
 
@@ -22,7 +22,7 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	constructor(options: ApiHandlerOptions) {
 		super(options)
 		this.defaultModelId = options.apiModelId || "gemini-embedding-exp-03-07"
-		this.defaultTaskType = options.geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY"
+		this.defaultTaskType = options.geminiEmbeddingTaskType
 
 		// Calculate rate limit parameters based on rateLimitSeconds or default
 		const rateLimitSeconds = options.rateLimitSeconds || GEMINI_RATE_LIMIT_DELAY_MS / 1000
@@ -49,7 +49,7 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
 		try {
 			const modelId = model || this.defaultModelId
-			const result = await this.embedWithTokenLimit(texts, modelId, this.defaultTaskType)
+			const result = await this.embedWithTokenLimit(texts, modelId, this.defaultTaskType || "")
 			return {
 				embeddings: result.embeddings,
 			}
@@ -72,7 +72,7 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	private async _processAndAggregateBatch(
 		batch: string[],
 		model: string,
-		taskType: string,
+		taskType: string = "",
 		allEmbeddings: number[][],
 		aggregatedUsage: { promptTokens: number; totalTokens: number },
 		isFinalBatch: boolean = false,
@@ -104,7 +104,7 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	private async embedWithTokenLimit(
 		texts: string[],
 		model: string,
-		taskType: string,
+		taskType: string = "",
 	): Promise<{
 		embeddings: number[][]
 		usage: { promptTokens: number; totalTokens: number }
@@ -161,7 +161,7 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	 *
 	 * @param batchTexts Array of texts to embed
 	 * @param modelId Model identifier to use for the API call
-	 * @param taskType The task type for the embedding
+	 * @param taskType The task type for the embedding (only used if the model supports it)
 	 * @returns Promise resolving to embeddings and usage statistics
 	 */
 	private async _callGeminiEmbeddingApi(
@@ -169,12 +169,21 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 		modelId: string,
 		taskType: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
+		// Check if the model supports taskType
+		const geminiProfiles = EMBEDDING_MODEL_PROFILES.gemini || {}
+		const modelProfile = geminiProfiles[modelId]
+		const supportsTaskType = modelProfile?.supportsTaskType || false
+
+		// Only include taskType in the config if the model supports it
+		const config: { taskType?: string } = {}
+		if (supportsTaskType) {
+			config.taskType = taskType
+		}
+
 		const response = await this.client.models.embedContent({
 			model: modelId,
 			contents: batchTexts,
-			config: {
-				taskType,
-			},
+			config,
 		})
 
 		if (!response.embeddings) {
@@ -204,7 +213,7 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	private async _embedBatch(
 		batchTexts: string[],
 		model: string,
-		taskType: string,
+		taskType: string = "",
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
 		const modelId = model || this.defaultModelId
 
