@@ -1,10 +1,12 @@
 import fs from "fs/promises"
 import path from "path"
+import * as os from "os"
 import { Dirent } from "fs"
 
 import { isLanguage } from "@roo-code/types"
 
 import { LANGUAGES } from "../../../shared/language"
+import { getRooDirectoriesForCwd } from "../../../services/roo-config"
 
 /**
  * Safely read a file and return its trimmed content
@@ -155,19 +157,33 @@ function formatDirectoryContent(dirPath: string, files: Array<{ filename: string
 }
 
 /**
- * Load rule files from the specified directory
+ * Load rule files from global and project-local directories
+ * Global rules are loaded first, then project-local rules which can override global ones
  */
 export async function loadRuleFiles(cwd: string): Promise<string> {
-	// Check for .roo/rules/ directory
-	const rooRulesDir = path.join(cwd, ".roo", "rules")
-	if (await directoryExists(rooRulesDir)) {
-		const files = await readTextFilesFromDirectory(rooRulesDir)
-		if (files.length > 0) {
-			return formatDirectoryContent(rooRulesDir, files)
+	const rules: string[] = []
+	const rooDirectories = getRooDirectoriesForCwd(cwd)
+
+	// Check for .roo/rules/ directories in order (global first, then project-local)
+	for (const rooDir of rooDirectories) {
+		const rulesDir = path.join(rooDir, "rules")
+		if (await directoryExists(rulesDir)) {
+			const files = await readTextFilesFromDirectory(rulesDir)
+			if (files.length > 0) {
+				const isGlobal = rooDir.includes(path.join(os.homedir(), ".roo"))
+				const prefix = isGlobal ? "# Global rules" : "# Project-specific rules"
+				const content = formatDirectoryContent(rulesDir, files)
+				rules.push(`${prefix}:\n${content}`)
+			}
 		}
 	}
 
-	// Fall back to existing behavior
+	// If we found rules in .roo/rules/ directories, return them
+	if (rules.length > 0) {
+		return "\n\n" + rules.join("\n\n")
+	}
+
+	// Fall back to existing behavior for legacy .roorules/.clinerules files
 	const ruleFiles = [".roorules", ".clinerules"]
 
 	for (const file of ruleFiles) {
@@ -194,18 +210,29 @@ export async function addCustomInstructions(
 	let usedRuleFile = ""
 
 	if (mode) {
-		// Check for .roo/rules-${mode}/ directory
-		const modeRulesDir = path.join(cwd, ".roo", `rules-${mode}`)
-		if (await directoryExists(modeRulesDir)) {
-			const files = await readTextFilesFromDirectory(modeRulesDir)
-			if (files.length > 0) {
-				modeRuleContent = formatDirectoryContent(modeRulesDir, files)
-				usedRuleFile = modeRulesDir
+		const modeRules: string[] = []
+		const rooDirectories = getRooDirectoriesForCwd(cwd)
+
+		// Check for .roo/rules-${mode}/ directories in order (global first, then project-local)
+		for (const rooDir of rooDirectories) {
+			const modeRulesDir = path.join(rooDir, `rules-${mode}`)
+			if (await directoryExists(modeRulesDir)) {
+				const files = await readTextFilesFromDirectory(modeRulesDir)
+				if (files.length > 0) {
+					const isGlobal = rooDir.includes(path.join(os.homedir(), ".roo"))
+					const prefix = isGlobal ? "# Global mode-specific rules" : "# Project-specific mode-specific rules"
+					const content = formatDirectoryContent(modeRulesDir, files)
+					modeRules.push(`${prefix}:\n${content}`)
+				}
 			}
 		}
 
-		// If no directory exists, fall back to existing behavior
-		if (!modeRuleContent) {
+		// If we found mode-specific rules in .roo/rules-${mode}/ directories, use them
+		if (modeRules.length > 0) {
+			modeRuleContent = "\n\n" + modeRules.join("\n\n")
+			usedRuleFile = `rules-${mode} directories`
+		} else {
+			// Fall back to existing behavior for legacy files
 			const rooModeRuleFile = `.roorules-${mode}`
 			modeRuleContent = await safeReadFile(path.join(cwd, rooModeRuleFile))
 			if (modeRuleContent) {
