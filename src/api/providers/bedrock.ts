@@ -1266,92 +1266,7 @@ Please check:
 			const modelConfig = this.getModel()
 			templateVars.modelId = modelConfig.id
 			templateVars.contextWindow = String(modelConfig.info.contextWindow || "unknown")
-
-			// Extract error codes and identifiers for verbose display
-			const errorCodes: string[] = []
-			const errorMeta: string[] = []
-
-			// HTTP Status Code
-			if ((error as any).status) {
-				errorCodes.push(`HTTP ${(error as any).status}`)
-			}
-			if ((error as any).$metadata?.httpStatusCode) {
-				errorCodes.push(`HTTP ${(error as any).$metadata.httpStatusCode}`)
-			}
-
-			// AWS Error Codes
-			if (error.name && error.name !== "Error") {
-				errorCodes.push(`AWS ${error.name}`)
-			}
-			if ((error as any).__type) {
-				errorCodes.push(`Type ${(error as any).__type}`)
-			}
-
-			// Request ID for debugging
-			if ((error as any).$metadata?.requestId) {
-				errorMeta.push(`Request ID: ${(error as any).$metadata.requestId}`)
-			}
-			if ((error as any).requestId) {
-				errorMeta.push(`Request ID: ${(error as any).requestId}`)
-			}
-
-			// Extended Request ID (S3/CloudFront style)
-			if ((error as any).$metadata?.extendedRequestId) {
-				errorMeta.push(`Extended Request ID: ${(error as any).$metadata.extendedRequestId}`)
-			}
-
-			// CF Request ID (CloudFront)
-			if ((error as any).$metadata?.cfId) {
-				errorMeta.push(`CloudFront ID: ${(error as any).$metadata.cfId}`)
-			}
-
-			// Build error code display - only include verbose details if enabled
-			const verboseErrorsEnabled = this.options.awsBedrockVerboseErrors ?? true // Default to true for backward compatibility
-
-			if (verboseErrorsEnabled) {
-				templateVars.errorCodes = errorCodes.length > 0 ? `[${errorCodes.join(", ")}]` : ""
-				templateVars.errorMetadata = errorMeta.length > 0 ? `\n\nDebug Info:\n${errorMeta.join("\n")}` : ""
-			} else {
-				// In non-verbose mode, only include essential error codes
-				templateVars.errorCodes = ""
-				templateVars.errorMetadata = ""
-			}
-
-			// Format error details
-			const errorDetails: Record<string, any> = {}
-			Object.getOwnPropertyNames(error).forEach((prop) => {
-				if (prop !== "stack") {
-					errorDetails[prop] = (error as any)[prop]
-				}
-			})
-
-			// Safely stringify error details to avoid circular references
-			if (verboseErrorsEnabled) {
-				templateVars.formattedErrorDetails = Object.entries(errorDetails)
-					.map(([key, value]) => {
-						let valueStr
-						if (typeof value === "object" && value !== null) {
-							try {
-								// Use a replacer function to handle circular references
-								valueStr = JSON.stringify(value, (k, v) => {
-									if (k && typeof v === "object" && v !== null) {
-										return "[Object]"
-									}
-									return v
-								})
-							} catch (e) {
-								valueStr = "[Complex Object]"
-							}
-						} else {
-							valueStr = String(value)
-						}
-						return `- ${key}: ${valueStr}`
-					})
-					.join("\n")
-			} else {
-				// In non-verbose mode, only include the error message
-				templateVars.formattedErrorDetails = ""
-			}
+			templateVars.formattedErrorDetails = ""
 		}
 
 		// Add context-specific template variables
@@ -1364,16 +1279,6 @@ Please check:
 		// Replace template variables
 		for (const [key, value] of Object.entries(templateVars)) {
 			template = template.replace(new RegExp(`{${key}}`, "g"), value || "")
-		}
-
-		// Add error codes at the beginning if available
-		if (templateVars.errorCodes) {
-			template = `${templateVars.errorCodes} ${template}`
-		}
-
-		// Add metadata at the end if available
-		if (templateVars.errorMetadata) {
-			template = `${template}${templateVars.errorMetadata}`
 		}
 
 		return template
