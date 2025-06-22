@@ -2,13 +2,19 @@ import { ApiHandlerOptions } from "../../../shared/api"
 import { EmbedderInfo, EmbeddingResponse, IEmbedder } from "../interfaces"
 import { GeminiHandler } from "../../../api/providers/gemini"
 import { EMBEDDING_MODEL_PROFILES } from "../../../shared/embeddingModels"
-import { GEMINI_RATE_LIMIT_DELAY_MS, MAX_BATCH_RETRIES, INITIAL_RETRY_DELAY_MS } from "../constants"
+import { GEMINI_RATE_LIMIT_DELAY_MS } from "../constants"
+import { SlidingWindowRateLimiter, SlidingWindowRateLimiterOptions } from "../../../utils/rate-limiter"
+import { RetryHandler } from "../../../utils/retry-handler"
+
 /**
  * Implements the IEmbedder interface using Google Gemini's embedding API.
  */
 export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder {
 	private readonly defaultModelId: string
 	private readonly defaultTaskType: string
+	private readonly rateLimiter: SlidingWindowRateLimiter
+	private readonly retryHandler: RetryHandler
+	private readonly id: string
 
 	/**
 	 * Creates a new Gemini embedder instance.
@@ -18,6 +24,26 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 		super(options)
 		this.defaultModelId = options.apiModelId || "gemini-embedding-exp-03-07"
 		this.defaultTaskType = options.geminiEmbeddingTaskType || "CODE_RETRIEVAL_QUERY"
+
+		// Calculate rate limit parameters based on rateLimitSeconds or default
+		const rateLimitSeconds = options.rateLimitSeconds || GEMINI_RATE_LIMIT_DELAY_MS / 1000
+
+		// Configure the rate limiter to use rateLimitSeconds for rate calculations
+		const limiterOptions: SlidingWindowRateLimiterOptions = {
+			rateLimitSeconds: rateLimitSeconds,
+		}
+
+		// Get the singleton rate limiter instance
+		this.rateLimiter = new SlidingWindowRateLimiter(limiterOptions)
+		// Initialize retry handler with default options
+		this.retryHandler = new RetryHandler({
+			initialDelay: rateLimitSeconds,
+		})
+		this.id = Math.random().toString()
+
+		console.log(
+			`Initialized Gemini rate limiter with id ${this.id} and ${rateLimitSeconds}s minimum delay between requests`,
+		)
 	}
 
 	/**
@@ -36,6 +62,38 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 		} catch (error: any) {
 			console.error("Error during Gemini embedding task execution in queue:", error.message)
 			throw error
+		}
+	}
+
+	/**
+	 * Processes a batch of texts and aggregates the embeddings and usage statistics.
+	 *
+	 * @param batch Array of texts to process
+	 * @param model Model identifier to use
+	 * @param taskType The task type for the embedding
+	 * @param allEmbeddings Array to store all embeddings
+	 * @param aggregatedUsage Object to track token usage
+	 * @param isFinalBatch Whether this is the final batch (affects error messages)
+	 */
+	private async _processAndAggregateBatch(
+		batch: string[],
+		model: string,
+		taskType: string,
+		allEmbeddings: number[][],
+		aggregatedUsage: { promptTokens: number; totalTokens: number },
+		isFinalBatch: boolean = false,
+	): Promise<void> {
+		if (batch.length === 0) return
+
+		try {
+			const batchResult = await this._embedBatch(batch, model, taskType)
+			allEmbeddings.push(...batchResult.embeddings)
+			aggregatedUsage.promptTokens += batchResult.usage.promptTokens
+			aggregatedUsage.totalTokens += batchResult.usage.totalTokens
+		} catch (error) {
+			const batchType = isFinalBatch ? "final batch" : "batch"
+			console.error(`Failed to process ${batchType} with retries:`, error)
+			throw new Error(`Failed to create embeddings for ${batchType}: ${(error as Error).message}`)
 		}
 	}
 
@@ -68,142 +126,131 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 		const allEmbeddings: number[][] = []
 		const aggregatedUsage = { promptTokens: 0, totalTokens: 0 }
 
-		// Process texts in batches
-		const remainingTexts = [...texts]
-		let isFirstBatch = true // Initialize isFirstBatch
+		// Initialize the current batch
+		let currentBatch: string[] = []
+		let currentBatchTokens = 0
 
-		while (remainingTexts.length > 0) {
-			const currentBatch: string[] = []
-			let currentBatchTokens = 0
-			const processedIndices: number[] = []
+		// Process each text sequentially with for...of loop
+		for (const text of texts) {
+			// Estimate tokens (similar to OpenAI's implementation)
+			const estimatedTokens = Math.ceil(text.length / 4)
 
-			// Simple token estimation (4 chars ≈ 1 token)
-			for (let i = 0; i < remainingTexts.length; i++) {
-				const text = remainingTexts[i]
-				// Estimate tokens (similar to OpenAI's implementation)
-				const estimatedTokens = Math.ceil(text.length / 4)
-
-				// Skip texts that exceed the max token limit for a single item
-				if (estimatedTokens > maxInputTokens) {
-					console.warn(
-						`Text at index ${i} exceeds maximum token limit (${estimatedTokens} > ${maxInputTokens}). Skipping.`,
-					)
-					processedIndices.push(i)
-					continue
-				}
-
-				// Add text to batch if it fits within the token limit
-				if (currentBatchTokens + estimatedTokens <= maxInputTokens) {
-					currentBatch.push(text)
-					currentBatchTokens += estimatedTokens
-					processedIndices.push(i)
-				} else {
-					// This text would exceed the limit, so process the current batch first
-					break
-				}
+			// Skip texts that exceed the max token limit for a single item
+			if (estimatedTokens > maxInputTokens) {
+				console.warn(`Text exceeds maximum token limit (${estimatedTokens} > ${maxInputTokens}). Skipping.`)
+				continue
 			}
 
-			// Remove processed texts from the remaining texts
-			for (let i = processedIndices.length - 1; i >= 0; i--) {
-				remainingTexts.splice(processedIndices[i], 1)
+			// If adding this text would exceed the token limit, process the current batch first
+			if (currentBatchTokens + estimatedTokens > maxInputTokens) {
+				// Process the current batch
+				await this._processAndAggregateBatch(currentBatch, model, taskType, allEmbeddings, aggregatedUsage)
+
+				// Reset the batch
+				currentBatch = []
+				currentBatchTokens = 0
 			}
 
-			// Process the current batch if not empty
-			if (currentBatch.length > 0) {
-				if (!isFirstBatch) {
-					const delayMs =
-						this.options.rateLimitSeconds !== undefined
-							? this.options.rateLimitSeconds * 1000
-							: GEMINI_RATE_LIMIT_DELAY_MS
-					console.log(`Adding proactive delay of ${delayMs}ms before Gemini batch`)
-					await new Promise((resolve) => setTimeout(resolve, delayMs))
-					isFirstBatch = false
-				}
-
-				try {
-					const batchResult = await this._embedBatchWithRetries(currentBatch, model, taskType)
-					allEmbeddings.push(...batchResult.embeddings)
-					aggregatedUsage.promptTokens += batchResult.usage.promptTokens
-					aggregatedUsage.totalTokens += batchResult.usage.totalTokens
-				} catch (error) {
-					console.error("Failed to process batch with retries:", error)
-					throw new Error(`Failed to create embeddings for batch: ${(error as Error).message}`)
-				}
-			}
+			// Add the current text to the batch
+			currentBatch.push(text)
+			currentBatchTokens += estimatedTokens
 		}
+
+		// Process any remaining texts in the final batch
+		await this._processAndAggregateBatch(currentBatch, model, taskType, allEmbeddings, aggregatedUsage, true)
 
 		return { embeddings: allEmbeddings, usage: aggregatedUsage }
 	}
 
 	/**
-	 * Helper method to handle batch embedding with retries and exponential backoff for Gemini.
+	 * Makes the actual API call to Gemini's embedding service and processes the response.
+	 *
+	 * @param batchTexts Array of texts to embed
+	 * @param modelId Model identifier to use for the API call
+	 * @param taskType The task type for the embedding
+	 * @returns Promise resolving to embeddings and usage statistics
+	 */
+	private async _callGeminiEmbeddingApi(
+		batchTexts: string[],
+		modelId: string,
+		taskType: string,
+	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
+		const now = new Date()
+		console.log(`_callGeminiEmbeddingApi ${now.toISOString()}`)
+		const response = await this.client.models.embedContent({
+			model: modelId,
+			contents: batchTexts,
+			config: {
+				taskType,
+			},
+		})
+
+		if (!response.embeddings) {
+			throw new Error("No embeddings returned from Gemini API")
+		}
+
+		const embeddings = response.embeddings
+			.map((embedding) => embedding?.values)
+			.filter((values) => values !== undefined && values.length > 0) as number[][]
+
+		// Gemini API for embeddings doesn't directly return token usage per call
+		return {
+			embeddings,
+			usage: { promptTokens: 0, totalTokens: 0 }, // Placeholder usage
+		}
+	}
+
+	/**
+	 * Creates embeddings for a batch of texts using the Gemini API.
+	 * Rate limiting is handled by the SlidingWindowRateLimiter.
+	 *
 	 * @param batchTexts Array of texts to embed in this batch
 	 * @param model Model identifier to use
 	 * @param taskType The task type for the embedding
 	 * @returns Promise resolving to embeddings and usage statistics
 	 */
-	private async _embedBatchWithRetries(
+	private async _embedBatch(
 		batchTexts: string[],
 		model: string,
 		taskType: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
 		const modelId = model || this.defaultModelId
-		let lastError: any = null
 
-		for (let attempts = 0; attempts < MAX_BATCH_RETRIES; attempts++) {
-			try {
-				const response = await this.client.models.embedContent({
-					model: modelId,
-					contents: batchTexts,
-					config: {
-						taskType,
-					},
-				})
+		// Determine if an error is retryable (429 Too Many Requests or specific API errors)
+		const shouldRetry = (error: any): boolean => {
+			const retryable =
+				error.status === 429 ||
+				error.message?.includes("RESOURCE_EXHAUSTED") ||
+				error.message?.includes("rate limit") ||
+				error.message?.includes("quota exceeded")
 
-				if (!response.embeddings) {
-					throw new Error("No embeddings returned from Gemini API")
-				}
-
-				const embeddings = response.embeddings
-					.map((embedding) => embedding?.values)
-					.filter((values) => values !== undefined && values.length > 0) as number[][]
-
-				// Gemini API for embeddings doesn't directly return token usage per call in the same way some others do.
-				// The `generateEmbeddings` in the original file didn't populate usage.
-				// If usage needs to be calculated, it would require a separate token counting call.
-				// For now, returning empty usage, consistent with the original generateEmbeddings.
-				return {
-					embeddings,
-					usage: { promptTokens: 0, totalTokens: 0 }, // Placeholder usage
-				}
-			} catch (error: any) {
-				lastError = error
-				// Basic check for retryable errors (e.g., rate limits)
-				// Gemini might use 429 or specific error messages like "RESOURCE_EXHAUSTED" or "rate limit exceeded"
-				const isRateLimitError =
-					error?.status === 429 ||
-					(error?.message &&
-						(error.message.includes("rate limit") || error.message.includes("RESOURCE_EXHAUSTED")))
-
-				const hasMoreAttempts = attempts < MAX_BATCH_RETRIES - 1
-
-				if (isRateLimitError && hasMoreAttempts) {
-					const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempts)
-					console.warn(
-						`Gemini embedding attempt ${attempts + 1} failed due to rate limit. Retrying in ${delayMs}ms...`,
-					)
-					await new Promise((resolve) => setTimeout(resolve, delayMs))
-					continue
-				}
-				// Non-retryable error or last attempt failed
-				console.error(`Gemini embedding failed on attempt ${attempts + 1}:`, error)
-				throw error // Re-throw the last error if not retryable or out of attempts
+			if (retryable) {
+				console.log(`Retryable error detected: ${error.message}`)
 			}
+
+			return retryable
 		}
-		// Should not be reached if throw error in loop works correctly, but as a fallback:
-		throw new Error(
-			`Failed to create embeddings for batch after ${MAX_BATCH_RETRIES} attempts. Last error: ${lastError?.message}`,
-		)
+
+		try {
+			// Execute the API call with retry logic
+			return await this.retryHandler.execute(async () => {
+				// Acquire a slot from the rate limiter before making the API call
+				// This ensures each retry attempt also respects rate limits
+				await this.rateLimiter.acquire()
+				return await this._callGeminiEmbeddingApi(batchTexts, modelId, taskType)
+			}, shouldRetry)
+		} catch (error: any) {
+			// Log the error with context
+			console.error(`Gemini embedding request failed after all retry attempts:`, {
+				error: error.message,
+				status: error.status,
+				modelId,
+				batchSize: batchTexts.length,
+			})
+
+			// Rethrow the error
+			throw error
+		}
 	}
 
 	get embedderInfo(): EmbedderInfo {
