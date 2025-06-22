@@ -538,23 +538,37 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 		userInfo.picture = userData.image_url
 
-		// Fetch organization memberships separately
+		// Fetch organization info separately - but only populate if user is in organization context
 		try {
-			const orgMemberships = await this.clerkGetOrganizationMemberships()
-			if (orgMemberships && orgMemberships.length > 0) {
-				// Get the first (or active) organization membership
-				const primaryOrgMembership = orgMemberships[0]
-				const organization = primaryOrgMembership?.organization
+			const storedOrgId = this.getStoredOrganizationId()
 
-				if (organization) {
-					userInfo.organizationId = organization.id
-					userInfo.organizationName = organization.name
-					userInfo.organizationRole = primaryOrgMembership.role
-					userInfo.organizationImageUrl = organization.image_url
+			if (storedOrgId !== null) {
+				// User is in organization context - fetch user's memberships and filter
+				const orgMemberships = await this.clerkGetOrganizationMemberships()
+
+				// Find the user's membership in this organization
+				const userMembership = orgMemberships?.find(
+					(membership: CloudOrganizationMembership) => membership.organization.id === storedOrgId,
+				)
+
+				if (userMembership) {
+					userInfo.organizationId = userMembership.organization.id
+					userInfo.organizationName = userMembership.organization.name
+					userInfo.organizationRole = userMembership.role
+					userInfo.organizationImageUrl = userMembership.organization.image_url
+					this.log("[auth] User in organization context:", {
+						id: userMembership.organization.id,
+						name: userMembership.organization.name,
+						role: userMembership.role,
+					})
+				} else {
+					this.log("[auth] Warning: User not found in stored organization:", storedOrgId)
 				}
+			} else {
+				this.log("[auth] User in personal account context - not setting organization info")
 			}
 		} catch (error) {
-			this.log("[auth] Failed to fetch organization memberships:", error)
+			this.log("[auth] Failed to fetch organization info:", error)
 			// Don't throw - organization info is optional
 		}
 
