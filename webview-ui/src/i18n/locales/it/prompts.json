@@ -34,6 +34,11 @@
 		"resetToDefault": "Ripristina predefiniti",
 		"description": "Definisci l'esperienza e la personalità di Roo per questa modalità. Questa descrizione modella come Roo si presenta e affronta i compiti."
 	},
+	"description": {
+		"title": "Descrizione breve (per umani)",
+		"resetToDefault": "Ripristina alla descrizione predefinita",
+		"description": "Una breve descrizione mostrata nel menu a discesa del selettore di modalità."
+	},
 	"whenToUse": {
 		"title": "Quando utilizzare (opzionale)",
 		"description": "Descrivi quando questa modalità dovrebbe essere utilizzata. Questo aiuta l'Orchestrator a scegliere la modalità giusta per un compito.",
