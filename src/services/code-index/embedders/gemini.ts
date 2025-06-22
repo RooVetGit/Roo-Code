@@ -175,8 +175,6 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 		modelId: string,
 		taskType: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
-		const now = new Date()
-		console.log(`_callGeminiEmbeddingApi ${now.toISOString()}`)
 		const response = await this.client.models.embedContent({
 			model: modelId,
 			contents: batchTexts,
