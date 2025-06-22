@@ -1,16 +1,12 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
-import {
-	type ApiHandlerOptions,
-	claudeCodeDefaultModelId,
-	type ClaudeCodeModelId,
-	claudeCodeModels,
-} from "@roo-code/types"
+import { claudeCodeDefaultModelId, type ClaudeCodeModelId, claudeCodeModels } from "@roo-code/types"
 import { type ApiHandler } from ".."
 import { ApiStreamUsageChunk, type ApiStream } from "../transform/stream"
 import { runClaudeCode } from "../../integrations/claude-code/run"
 import { ClaudeCodeMessage } from "../../integrations/claude-code/types"
 import { BaseProvider } from "./base-provider"
 import { t } from "../../i18n"
+import { ApiHandlerOptions } from "../../shared/api"
 
 export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 	private options: ApiHandlerOptions
