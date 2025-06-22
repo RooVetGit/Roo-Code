@@ -40,9 +40,10 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: undefined,
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: undefined,
 				},
+				openAiCompatibleOptions: undefined,
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
@@ -78,7 +79,7 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: "text-embedding-3-large",
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: {
 						codebaseIndexEnabled: true,
 						codebaseIndexQdrantUrl: "http://qdrant.local",
@@ -87,6 +88,7 @@ describe("CodeIndexConfigManager", () => {
 						codebaseIndexEmbedderModelId: "text-embedding-3-large",
 					},
 				},
+				openAiCompatibleOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
@@ -125,7 +127,7 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: "text-embedding-3-large",
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: undefined,
 				},
 				openAiCompatibleOptions: {
@@ -172,7 +174,7 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: "custom-model",
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: undefined,
 				},
 				openAiCompatibleOptions: {
@@ -219,7 +221,7 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: "custom-model",
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: undefined,
 				},
 				openAiCompatibleOptions: {
@@ -266,7 +268,7 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: "custom-model",
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: undefined,
 				},
 				openAiCompatibleOptions: {
@@ -994,7 +996,7 @@ describe("CodeIndexConfigManager", () => {
 					apiModelId: "text-embedding-3-large",
 					geminiApiKey: "",
 					geminiEmbeddingDimension: undefined,
-					geminiEmbeddingTaskType: "CODE_RETRIEVAL_QUERY",
+					geminiEmbeddingTaskType: undefined,
 					rateLimitSeconds: {
 						codebaseIndexEnabled: true,
 						codebaseIndexQdrantUrl: "http://qdrant.local",
