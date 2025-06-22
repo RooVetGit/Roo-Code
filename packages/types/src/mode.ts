@@ -107,6 +107,7 @@ export type CustomModesSettings = z.infer<typeof customModesSettingsSchema>
 export const promptComponentSchema = z.object({
 	roleDefinition: z.string().optional(),
 	whenToUse: z.string().optional(),
+	description: z.string().optional(),
 	customInstructions: z.string().optional(),
 })
 

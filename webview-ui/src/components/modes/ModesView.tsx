@@ -5,6 +5,7 @@ import {
 	VSCodeRadio,
 	VSCodeTextArea,
 	VSCodeLink,
+	VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
 import { ChevronDown, X } from "lucide-react"
@@ -106,6 +107,9 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			if (updatedPrompt.roleDefinition === getRoleDefinition(mode)) {
 				delete updatedPrompt.roleDefinition
 			}
+			if (updatedPrompt.description === getDescription(mode)) {
+				delete updatedPrompt.description
+			}
 			if (updatedPrompt.whenToUse === getWhenToUse(mode)) {
 				delete updatedPrompt.whenToUse
 			}
@@ -195,6 +199,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	// State for create mode dialog
 	const [newModeName, setNewModeName] = useState("")
 	const [newModeSlug, setNewModeSlug] = useState("")
+	const [newModeDescription, setNewModeDescription] = useState("")
 	const [newModeRoleDefinition, setNewModeRoleDefinition] = useState("")
 	const [newModeWhenToUse, setNewModeWhenToUse] = useState("")
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
@@ -212,6 +217,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		// Reset form fields
 		setNewModeName("")
 		setNewModeSlug("")
+		setNewModeDescription("")
 		setNewModeGroups(availableGroups)
 		setNewModeRoleDefinition("")
 		setNewModeWhenToUse("")
@@ -732,8 +738,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 						<div className="text-sm text-vscode-descriptionForeground mb-2">
 							{t("prompts:description.description")}
 						</div>
-						<VSCodeTextArea
-							resize="vertical"
+						<VSCodeTextField
 							value={(() => {
 								const customMode = findModeBySlug(visualMode, customModes)
 								const prompt = customModePrompts?.[visualMode] as PromptComponent
@@ -759,8 +764,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}
 							}}
 							className="w-full"
-							rows={1}
-							data-testid={`${getCurrentMode()?.slug || "code"}-description-textarea`}
+							data-testid={`${getCurrentMode()?.slug || "code"}-description-textfield`}
 						/>
 					</div>
 
@@ -1246,6 +1250,20 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 										{roleDefinitionError}
 									</div>
 								)}
+							</div>
+
+							<div className="mb-4">
+								<div className="font-bold mb-1">{t("prompts:createModeDialog.description.label")}</div>
+								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
+									{t("prompts:createModeDialog.description.description")}
+								</div>
+								<VSCodeTextField
+									value={newModeDescription}
+									onChange={(e) => {
+										setNewModeDescription((e.target as HTMLInputElement).value)
+									}}
+									className="w-full"
+								/>
 							</div>
 
 							<div className="mb-4">
