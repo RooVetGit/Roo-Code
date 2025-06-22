@@ -289,7 +289,7 @@ export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 				roleDefinition: mode.roleDefinition,
 				whenToUse: mode.whenToUse,
 				customInstructions: mode.customInstructions,
-				// Note: description is not included here as it's not part of the PromptComponent interface
+				description: mode.description,
 			},
 		]),
 	),
@@ -330,8 +330,7 @@ export async function getFullModeDetails(
 	// Get the base custom instructions
 	const baseCustomInstructions = promptComponent?.customInstructions || baseMode.customInstructions || ""
 	const baseWhenToUse = promptComponent?.whenToUse || baseMode.whenToUse || ""
-	// Description is not part of PromptComponent, so we use it directly from the mode
-	const baseDescription = baseMode.description || ""
+	const baseDescription = promptComponent?.description || baseMode.description || ""
 
 	// If we have cwd, load and combine all custom instructions
 	let fullCustomInstructions = baseCustomInstructions
