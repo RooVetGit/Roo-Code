@@ -14,7 +14,6 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 	private readonly defaultTaskType: string
 	private readonly rateLimiter: SlidingWindowRateLimiter
 	private readonly retryHandler: RetryHandler
-	private readonly id: string
 
 	/**
 	 * Creates a new Gemini embedder instance.
@@ -39,11 +38,6 @@ export class CodeIndexGeminiEmbedder extends GeminiHandler implements IEmbedder 
 		this.retryHandler = new RetryHandler({
 			initialDelay: rateLimitSeconds,
 		})
-		this.id = Math.random().toString()
-
-		console.log(
-			`Initialized Gemini rate limiter with id ${this.id} and ${rateLimitSeconds}s minimum delay between requests`,
-		)
 	}
 
 	/**
