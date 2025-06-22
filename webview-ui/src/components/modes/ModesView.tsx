@@ -7,7 +7,7 @@ import {
 	VSCodeLink,
 } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
-import { ChevronsUpDown, X } from "lucide-react"
+import { ChevronDown, X } from "lucide-react"
 
 import { ModeConfig, GroupEntry, PromptComponent, ToolGroup, modeConfigSchema } from "@roo-code/types"
 
@@ -496,10 +496,10 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									variant="combobox"
 									role="combobox"
 									aria-expanded={open}
-									className="grow justify-between"
+									className="justify-between w-60"
 									data-testid="mode-select-trigger">
 									<div>{getCurrentMode()?.name || t("prompts:modes.selectMode")}</div>
-									<ChevronsUpDown className="opacity-50" />
+									<ChevronDown className="opacity-50" />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
@@ -585,6 +585,9 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					{/* API Configuration - Moved Here */}
 					<div className="mb-3">
 						<div className="font-bold mb-1">{t("prompts:apiConfiguration.title")}</div>
+						<div className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("prompts:apiConfiguration.select")}
+						</div>
 						<div className="mb-2">
 							<Select
 								value={currentApiConfigName}
@@ -594,7 +597,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 										text: value,
 									})
 								}}>
-								<SelectTrigger className="w-full">
+								<SelectTrigger className="w-60">
 									<SelectValue placeholder={t("settings:common.select")} />
 								</SelectTrigger>
 								<SelectContent>
@@ -605,9 +608,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									))}
 								</SelectContent>
 							</Select>
-							<div className="text-xs mt-1.5 text-vscode-descriptionForeground">
-								{t("prompts:apiConfiguration.select")}
-							</div>
 						</div>
 					</div>
 				</div>
@@ -703,7 +703,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}
 							}}
 							className="w-full"
-							rows={4}
+							rows={5}
 							data-testid={`${getCurrentMode()?.slug || "code"}-prompt-textarea`}
 						/>
 					</div>
@@ -758,7 +758,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}
 							}}
 							className="w-full"
-							rows={2}
+							rows={1}
 							data-testid={`${getCurrentMode()?.slug || "code"}-description-textarea`}
 						/>
 					</div>
@@ -813,7 +813,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}
 							}}
 							className="w-full"
-							rows={3}
+							rows={4}
 							data-testid={`${getCurrentMode()?.slug || "code"}-when-to-use-textarea`}
 						/>
 					</div>
@@ -970,7 +970,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									})
 								}
 							}}
-							rows={4}
+							rows={10}
 							className="w-full"
 							data-testid={`${getCurrentMode()?.slug || "code"}-custom-instructions-textarea`}
 						/>
