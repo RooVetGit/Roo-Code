@@ -8,6 +8,7 @@ import {
 	GlamaHandler,
 	AnthropicHandler,
 	AwsBedrockHandler,
+	ClaudeCodeHandler,
 	OpenRouterHandler,
 	VertexHandler,
 	AnthropicVertexHandler,
@@ -64,6 +65,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 	switch (apiProvider) {
 		case "anthropic":
 			return new AnthropicHandler(options)
+		case "claude-code":
+			return new ClaudeCodeHandler(options)
 		case "glama":
 			return new GlamaHandler(options)
 		case "openrouter":
