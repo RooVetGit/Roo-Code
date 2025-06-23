@@ -8,6 +8,7 @@ import { IconButton } from "./IconButton"
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useAppTranslation } from "@/i18n/TranslationContext"
+import { ModeConfig } from "@roo-code/types"
 
 interface ModeSelectorProps {
 	value: Mode
@@ -16,7 +17,7 @@ interface ModeSelectorProps {
 	title?: string
 	triggerClassName?: string
 	modeShortcutText: string
-	customModes?: any[]
+	customModes?: ModeConfig[]
 }
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({
