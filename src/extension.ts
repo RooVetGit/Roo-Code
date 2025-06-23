@@ -115,6 +115,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		context.subscriptions.push(codeIndexManager)
 	}
 
+	context.subscriptions.push(
+		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
+			webviewOptions: { retainContextWhenHidden: true },
+		}),
+	)
+
 	// Auto-import configuration if specified in settings
 	try {
 		await autoImportSettings(outputChannel, {
@@ -127,12 +133,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			`[AutoImport] Error during auto-import: ${error instanceof Error ? error.message : String(error)}`,
 		)
 	}
-
-	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
-			webviewOptions: { retainContextWhenHidden: true },
-		}),
-	)
 
 	registerCommands({ context, outputChannel, provider })
 
