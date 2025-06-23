@@ -1,13 +1,13 @@
 import * as vscode from "vscode"
 
-import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList } from "@roo-code/types"
+import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList, ClineMessage } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { CloudServiceCallbacks } from "./types"
 import { AuthService } from "./AuthService"
 import { SettingsService } from "./SettingsService"
 import { TelemetryClient } from "./TelemetryClient"
-import { ShareService } from "./ShareService"
+import { ShareService, TaskNotFoundError } from "./ShareService"
 
 export class CloudService {
 	private static _instance: CloudService | null = null
@@ -158,9 +158,23 @@ export class CloudService {
 
 	// ShareService
 
-	public async shareTask(taskId: string, visibility: "organization" | "public" = "organization") {
+	public async shareTask(
+		taskId: string,
+		visibility: "organization" | "public" = "organization",
+		clineMessages?: ClineMessage[],
+	) {
 		this.ensureInitialized()
-		return this.shareService!.shareTask(taskId, visibility)
+
+		try {
+			return await this.shareService!.shareTask(taskId, visibility)
+		} catch (error) {
+			if (error instanceof TaskNotFoundError && clineMessages) {
+				// Backfill messages and retry
+				await this.telemetryClient!.backfillMessages(clineMessages, taskId)
+				return await this.shareService!.shareTask(taskId, visibility)
+			}
+			throw error
+		}
 	}
 
 	public async canShareTask(): Promise<boolean> {
