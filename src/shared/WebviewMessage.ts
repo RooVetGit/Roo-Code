@@ -51,6 +51,7 @@ export interface WebviewMessage {
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "taskDeletedConfirmation"
+		| "copyTask"
 		| "exportTaskWithId"
 		| "importSettings"
 		| "exportSettings"
