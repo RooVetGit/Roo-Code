@@ -26,9 +26,10 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<HistorySortOption | null>("newest")
 	const [workspaceItems, setWorkspaceItems] = useState<HistoryWorkspaceItem[]>([])
 	const [workspacePath, setWorkspacePath] = useState<string | undefined>(options.workspacePath)
+	const [resultLimit, setResultLimit] = useState<number | undefined>(options.limit)
 	const currentRequestId = useRef<string>("")
 
-	// Wrap setWorkspacePath to set loading state when workspace changes
+	// Wrap state setters to set loading state when values change
 	const setWorkspacePathWithLoading = useCallback(
 		(path: string) => {
 			if (path !== workspacePath) {
@@ -38,6 +39,11 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		},
 		[workspacePath],
 	)
+
+	const setResultLimitWithLoading = useCallback((limit: number | undefined) => {
+		setLoading(true)
+		setResultLimit(limit)
+	}, [])
 
 	// Debounced search query setter
 	const debouncedSetSearchQuery = useCallback((query: string) => {
@@ -118,14 +124,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 
 				vscode.postMessage({
 					type: "getHistoryItems",
-					historySearchOptions: {
-						searchQuery,
-						sortOption,
-						// If workspacePath is undefined, show all workspaces
-						// Otherwise, use the specified workspacePath (which could be empty string for "(unknown)")
-						workspacePath,
-						limit: options.limit,
-					},
+					historySearchOptions: searchOptions,
 					requestId: refreshRequestId,
 				})
 			}
@@ -138,10 +137,10 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		const searchOptions: HistorySearchOptions = {
 			searchQuery,
 			sortOption,
-			// If workspacePath is undefined, show all workspaces
-			// Otherwise, use the specified workspacePath (which could be empty string for "(unknown)")
+			// If workspacePath is undefined, so current workspace
+			// Otherwise, use the specified workspacePath
 			workspacePath,
-			limit: options.limit,
+			limit: resultLimit,
 		}
 
 		// Generate a new request ID for this search
@@ -160,7 +159,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		}
 		// Intentionally excluding tasks from deps to prevent infinite loop and flickering
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [searchQuery, sortOption, workspacePath, cwd, options.limit])
+	}, [searchQuery, sortOption, workspacePath, cwd, resultLimit])
 
 	return {
 		tasks,
@@ -175,5 +174,7 @@ export const useTaskSearch = (options: HistorySearchOptions = {}) => {
 		workspaceItems,
 		workspacePath,
 		setWorkspacePath: setWorkspacePathWithLoading,
+		resultLimit,
+		setResultLimit: setResultLimitWithLoading,
 	}
 }
