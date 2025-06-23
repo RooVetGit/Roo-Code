@@ -1,5 +1,5 @@
-import { ToolUse } from "../../shared/tools"
 import { t } from "../../i18n"
+import { ToolDirective } from "../message-parsing/directives"
 
 /**
  * Class for detecting consecutive identical tool calls
@@ -22,10 +22,10 @@ export class ToolRepetitionDetector {
 	 * Checks if the current tool call is identical to the previous one
 	 * and determines if execution should be allowed
 	 *
-	 * @param currentToolCallBlock ToolUse object representing the current tool call
+	 * @param currentToolCallBlock ToolDirective object representing the current tool call
 	 * @returns Object indicating if execution is allowed and a message to show if not
 	 */
-	public check(currentToolCallBlock: ToolUse): {
+	public check(currentToolCallBlock: ToolDirective): {
 		allowExecution: boolean
 		askUser?: {
 			messageKey: string
@@ -33,7 +33,7 @@ export class ToolRepetitionDetector {
 		}
 	} {
 		// Serialize the block to a canonical JSON string for comparison
-		const currentToolCallJson = this.serializeToolUse(currentToolCallBlock)
+		const currentToolCallJson = this.serializeToolDirective(currentToolCallBlock)
 
 		// Compare with previous tool call
 		if (this.previousToolCallJson === currentToolCallJson) {
@@ -64,28 +64,28 @@ export class ToolRepetitionDetector {
 	}
 
 	/**
-	 * Serializes a ToolUse object into a canonical JSON string for comparison
+	 * Serializes a ToolDirective object into a canonical JSON string for comparison
 	 *
-	 * @param toolUse The ToolUse object to serialize
-	 * @returns JSON string representation of the tool use with sorted parameter keys
+	 * @param ToolDirective The ToolDirective object to serialize
+	 * @returns JSON string representation of the tool directive with sorted parameter keys
 	 */
-	private serializeToolUse(toolUse: ToolUse): string {
+	private serializeToolDirective(ToolDirective: ToolDirective): string {
 		// Create a new parameters object with alphabetically sorted keys
 		const sortedParams: Record<string, unknown> = {}
 
 		// Get parameter keys and sort them alphabetically
-		const sortedKeys = Object.keys(toolUse.params).sort()
+		const sortedKeys = Object.keys(ToolDirective.params).sort()
 
 		// Populate the sorted parameters object in a type-safe way
 		for (const key of sortedKeys) {
-			if (Object.prototype.hasOwnProperty.call(toolUse.params, key)) {
-				sortedParams[key] = toolUse.params[key as keyof typeof toolUse.params]
+			if (Object.prototype.hasOwnProperty.call(ToolDirective.params, key)) {
+				sortedParams[key] = ToolDirective.params[key as keyof typeof ToolDirective.params]
 			}
 		}
 
 		// Create the object with the tool name and sorted parameters
 		const toolObject = {
-			name: toolUse.name,
+			name: ToolDirective.name,
 			parameters: sortedParams,
 		}
 

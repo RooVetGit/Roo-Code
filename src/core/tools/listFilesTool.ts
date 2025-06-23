@@ -5,8 +5,9 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
 import { listFiles } from "../../services/glob/list-files"
 import { getReadablePath } from "../../utils/path"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { ListFilesToolDirective } from "../message-parsing/directives"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 
 /**
  * Implements the list_files tool.
@@ -25,7 +26,7 @@ import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } f
 
 export async function listFilesTool(
 	cline: Task,
-	block: ToolUse,
+	block: ListFilesToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,

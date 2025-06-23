@@ -5,12 +5,13 @@ import delay from "delay"
 
 // Internal imports
 import { Task } from "../task/Task"
-import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
+import { SearchAndReplaceToolDirective } from "../message-parsing/directives"
 
 /**
  * Tool for performing search and replace operations on files
@@ -62,7 +63,7 @@ async function validateParams(
  */
 export async function searchAndReplaceTool(
 	cline: Task,
-	block: ToolUse,
+	block: SearchAndReplaceToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,

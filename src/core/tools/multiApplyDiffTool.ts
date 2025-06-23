@@ -6,7 +6,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { Task } from "../task/Task"
-import { ToolUse, RemoveClosingTag, AskApproval, HandleError, PushToolResult } from "../../shared/tools"
+import { RemoveClosingTag, AskApproval, HandleError, PushToolResult } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
@@ -14,6 +14,7 @@ import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { parseXml } from "../../utils/xml"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { applyDiffToolLegacy } from "./applyDiffTool"
+import { ToolDirective } from "../message-parsing/directives"
 
 interface DiffOperation {
 	path: string
@@ -51,7 +52,7 @@ interface ParsedXmlResult {
 
 export async function applyDiffTool(
 	cline: Task,
-	block: ToolUse,
+	block: ToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,

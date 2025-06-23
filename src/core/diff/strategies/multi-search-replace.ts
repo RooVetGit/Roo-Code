@@ -5,7 +5,8 @@ import { distance } from "fastest-levenshtein"
 import { ToolProgressStatus } from "@roo-code/types"
 
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
-import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
+import { DiffStrategy, DiffResult } from "../../../shared/tools"
+import { ToolDirective } from "../../message-parsing/directives/"
 import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
@@ -609,11 +610,11 @@ Only use a single line of '=======' between search and replacement content, beca
 		}
 	}
 
-	getProgressStatus(toolUse: ToolUse, result?: DiffResult): ToolProgressStatus {
-		const diffContent = toolUse.params.diff
+	getProgressStatus(ToolDirective: ToolDirective, result?: DiffResult): ToolProgressStatus {
+		const diffContent = ToolDirective.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"
-			if (toolUse.partial) {
+			if (ToolDirective.partial) {
 				if (Math.floor(diffContent.length / 10) % 10 === 0) {
 					const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 					return { icon, text: `${searchBlockCount}` }

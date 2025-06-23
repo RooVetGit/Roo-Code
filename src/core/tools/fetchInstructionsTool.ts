@@ -2,11 +2,12 @@ import { Task } from "../task/Task"
 import { fetchInstructions } from "../prompts/instructions/instructions"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
-import { ToolUse, AskApproval, HandleError, PushToolResult } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult } from "../../shared/tools"
+import { FetchInstructionsToolDirective } from "../message-parsing/directives"
 
 export async function fetchInstructionsTool(
 	cline: Task,
-	block: ToolUse,
+	block: FetchInstructionsToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,

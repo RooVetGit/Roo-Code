@@ -5,7 +5,7 @@ import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { getReadablePath } from "../../utils/path"
@@ -14,6 +14,7 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import { ReadFileToolDirective } from "../message-parsing/directives"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -72,7 +73,7 @@ interface FileResult {
 
 export async function readFileTool(
 	cline: Task,
-	block: ToolUse,
+	block: ReadFileToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,

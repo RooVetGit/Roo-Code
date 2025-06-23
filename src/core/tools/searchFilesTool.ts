@@ -1,15 +1,16 @@
 import path from "path"
 
 import { Task } from "../task/Task"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { regexSearchFiles } from "../../services/ripgrep"
+import { SearchFilesToolDirective } from "../message-parsing/directives"
 
 export async function searchFilesTool(
 	cline: Task,
-	block: ToolUse,
+	block: SearchFilesToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,
