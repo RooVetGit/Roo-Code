@@ -206,4 +206,25 @@ describe("ClaudeCodeHandler", () => {
 		// Should throw error with thinking content
 		await expect(streamGenerator.next()).rejects.toThrow("This is an error scenario")
 	})
+
+	test("should handle incomplete JSON in buffer on process close", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const streamGenerator = stream[Symbol.asyncIterator]()
+
+		// Simulate incomplete JSON data followed by process close
+		setImmediate(() => {
+			// Send incomplete JSON (missing closing brace)
+			mockProcess.stdout.emit("data", '{"type":"assistant","message":{"id":"msg_123"')
+			setImmediate(() => {
+				mockProcess.emit("close", 0)
+			})
+		})
+
+		// Should complete without throwing, incomplete JSON should be discarded
+		const result = await streamGenerator.next()
+		expect(result.done).toBe(true)
+	})
 })
