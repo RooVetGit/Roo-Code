@@ -552,17 +552,10 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 				if (storedOrgId !== null) {
 					// User is in organization context - fetch user's memberships and filter
 					const orgMemberships = await this.clerkGetOrganizationMemberships()
-
-					// Find the user's membership in this organization
-					const userMembership = orgMemberships?.find(
-						(membership: CloudOrganizationMembership) => membership.organization.id === storedOrgId,
-					)
+					const userMembership = this.findOrganizationMembership(orgMemberships, storedOrgId)
 
 					if (userMembership) {
-						userInfo.organizationId = userMembership.organization.id
-						userInfo.organizationName = userMembership.organization.name
-						userInfo.organizationRole = userMembership.role
-						userInfo.organizationImageUrl = userMembership.organization.image_url
+						this.setUserOrganizationInfo(userInfo, userMembership)
 						this.log("[auth] User in organization context:", {
 							id: userMembership.organization.id,
 							name: userMembership.organization.name,
@@ -577,22 +570,15 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 			} else {
 				// Old credentials without organization context - fetch organization info to determine context
 				const orgMemberships = await this.clerkGetOrganizationMemberships()
-				if (orgMemberships && orgMemberships.length > 0) {
-					// Get the first (or active) organization membership
-					const primaryOrgMembership = orgMemberships[0]
-					const organization = primaryOrgMembership?.organization
+				const primaryOrgMembership = this.findPrimaryOrganizationMembership(orgMemberships)
 
-					if (organization) {
-						userInfo.organizationId = organization.id
-						userInfo.organizationName = organization.name
-						userInfo.organizationRole = primaryOrgMembership.role
-						userInfo.organizationImageUrl = organization.image_url
-						this.log("[auth] Legacy credentials: Found organization membership:", {
-							id: organization.id,
-							name: organization.name,
-							role: primaryOrgMembership.role,
-						})
-					}
+				if (primaryOrgMembership) {
+					this.setUserOrganizationInfo(userInfo, primaryOrgMembership)
+					this.log("[auth] Legacy credentials: Found organization membership:", {
+						id: primaryOrgMembership.organization.id,
+						name: primaryOrgMembership.organization.name,
+						role: primaryOrgMembership.role,
+					})
 				} else {
 					this.log("[auth] Legacy credentials: No organization memberships found")
 				}
@@ -603,6 +589,26 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		}
 
 		return userInfo
+	}
+
+	private findOrganizationMembership(
+		memberships: CloudOrganizationMembership[],
+		organizationId: string,
+	): CloudOrganizationMembership | undefined {
+		return memberships?.find((membership) => membership.organization.id === organizationId)
+	}
+
+	private findPrimaryOrganizationMembership(
+		memberships: CloudOrganizationMembership[],
+	): CloudOrganizationMembership | undefined {
+		return memberships && memberships.length > 0 ? memberships[0] : undefined
+	}
+
+	private setUserOrganizationInfo(userInfo: CloudUserInfo, membership: CloudOrganizationMembership): void {
+		userInfo.organizationId = membership.organization.id
+		userInfo.organizationName = membership.organization.name
+		userInfo.organizationRole = membership.role
+		userInfo.organizationImageUrl = membership.organization.image_url
 	}
 
 	private async clerkGetOrganizationMemberships(): Promise<CloudOrganizationMembership[]> {
