@@ -39,8 +39,9 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 
 			// Process complete lines
 			for (const line of lines) {
-				if (line.trim() !== "") {
-					dataQueue.push(line.trim())
+				const trimmedLine = line.trim()
+				if (trimmedLine !== "") {
+					dataQueue.push(trimmedLine)
 				}
 			}
 		})
@@ -52,8 +53,9 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		claudeProcess.on("close", (code) => {
 			exitCode = code
 			// Process any remaining data in buffer
-			if (buffer.trim()) {
-				dataQueue.push(buffer.trim())
+			const trimmedBuffer = buffer.trim()
+			if (trimmedBuffer) {
+				dataQueue.push(trimmedBuffer)
 				buffer = ""
 			}
 		})
@@ -115,11 +117,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 				if (message.stop_reason !== null && message.stop_reason !== "tool_use") {
 					const firstContent = message.content[0]
 					const errorMessage =
-						(firstContent?.type === "text"
-							? firstContent.text
-							: firstContent?.type === "thinking"
-								? firstContent.thinking
-								: undefined) ||
+						this.getContentText(firstContent) ||
 						t("common:errors.claudeCode.stoppedWithReason", { reason: message.stop_reason })
 
 					if (errorMessage.includes("Invalid model name")) {
@@ -141,7 +139,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 							text: content.thinking,
 						}
 					} else {
-						console.warn("Unsupported content type:", (content as any).type)
+						console.warn("Unsupported content type:", content)
 					}
 				}
 
@@ -181,12 +179,29 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		}
 	}
 
+	private getContentText(content: any): string | undefined {
+		if (!content) return undefined
+		switch (content.type) {
+			case "text":
+				return content.text
+			case "thinking":
+				return content.thinking
+			default:
+				return undefined
+		}
+	}
+
 	// TODO: Validate instead of parsing
 	private attemptParseChunk(data: string): ClaudeCodeMessage | null {
 		try {
 			return JSON.parse(data)
 		} catch (error) {
-			console.error("Error parsing chunk:", error)
+			console.error(
+				"Error parsing chunk:",
+				error,
+				"Data:",
+				data.substring(0, 100) + (data.length > 100 ? "..." : ""),
+			)
 			return null
 		}
 	}

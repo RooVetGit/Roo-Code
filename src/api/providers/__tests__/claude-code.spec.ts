@@ -85,14 +85,12 @@ describe("ClaudeCodeHandler", () => {
 		}
 
 		// Emit the thinking response and wait for processing
-		setTimeout(() => {
+		setImmediate(() => {
 			mockProcess.stdout.emit("data", JSON.stringify(thinkingResponse) + "\n")
-		}, 10)
-
-		// Emit process close after data
-		setTimeout(() => {
-			mockProcess.emit("close", 0)
-		}, 50)
+			setImmediate(() => {
+				mockProcess.emit("close", 0)
+			})
+		})
 
 		// Get the result
 		const result = await streamGenerator.next()
@@ -141,14 +139,12 @@ describe("ClaudeCodeHandler", () => {
 		}
 
 		// Emit the mixed response and wait for processing
-		setTimeout(() => {
+		setImmediate(() => {
 			mockProcess.stdout.emit("data", JSON.stringify(mixedResponse) + "\n")
-		}, 10)
-
-		// Emit process close after data
-		setTimeout(() => {
-			mockProcess.emit("close", 0)
-		}, 50)
+			setImmediate(() => {
+				mockProcess.emit("close", 0)
+			})
+		})
 
 		// Get the first result (thinking)
 		const thinkingResult = await streamGenerator.next()
@@ -200,14 +196,12 @@ describe("ClaudeCodeHandler", () => {
 		}
 
 		// Emit the error response and wait for processing
-		setTimeout(() => {
+		setImmediate(() => {
 			mockProcess.stdout.emit("data", JSON.stringify(errorResponse) + "\n")
-		}, 10)
-
-		// Emit process close after data
-		setTimeout(() => {
-			mockProcess.emit("close", 0)
-		}, 50)
+			setImmediate(() => {
+				mockProcess.emit("close", 0)
+			})
+		})
 
 		// Should throw error with thinking content
 		await expect(streamGenerator.next()).rejects.toThrow("This is an error scenario")
