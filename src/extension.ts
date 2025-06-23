@@ -28,7 +28,7 @@ import { McpServerManager } from "./services/mcp/McpServerManager"
 import { CodeIndexManager } from "./services/code-index/manager"
 import { MdmService } from "./services/mdm/MdmService"
 import { migrateSettings } from "./utils/migrateSettings"
-import { autoImportConfig } from "./utils/autoImportConfig"
+import { autoImportSettings } from "./utils/autoImportSettings"
 import { API } from "./extension/api"
 
 import {
@@ -117,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Auto-import configuration if specified in settings
 	try {
-		await autoImportConfig(outputChannel, {
+		await autoImportSettings(outputChannel, {
 			providerSettingsManager: provider.providerSettingsManager,
 			contextProxy: provider.contextProxy,
 			customModesManager: provider.customModesManager,

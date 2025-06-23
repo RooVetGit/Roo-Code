@@ -334,10 +334,10 @@
 					"default": true,
 					"description": "%settings.enableCodeActions.description%"
 				},
-				"roo-cline.autoImportConfigPath": {
+				"roo-cline.autoImportSettingsPath": {
 					"type": "string",
 					"default": "",
-					"description": "%settings.autoImportConfigPath.description%"
+					"description": "%settings.autoImportSettingsPath.description%"
 				}
 			}
 		}
