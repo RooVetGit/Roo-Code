@@ -25,8 +25,7 @@ export class SettingsService {
 
 		this.timer = new RefreshTimer({
 			callback: async () => {
-				await this.fetchSettings(callback)
-				return true
+				return await this.fetchSettings(callback)
 			},
 			successInterval: 30000,
 			initialBackoffMs: 1000,
@@ -56,11 +55,11 @@ export class SettingsService {
 		}
 	}
 
-	private async fetchSettings(callback: () => void): Promise<void> {
+	private async fetchSettings(callback: () => void): Promise<boolean> {
 		const token = this.authService.getSessionToken()
 
 		if (!token) {
-			return
+			return false
 		}
 
 		try {
@@ -72,7 +71,7 @@ export class SettingsService {
 
 			if (!response.ok) {
 				console.error(`Failed to fetch organization settings: ${response.status} ${response.statusText}`)
-				return
+				return false
 			}
 
 			const data = await response.json()
@@ -80,7 +79,7 @@ export class SettingsService {
 
 			if (!result.success) {
 				console.error("Invalid organization settings format:", result.error)
-				return
+				return false
 			}
 
 			const newSettings = result.data
@@ -90,8 +89,11 @@ export class SettingsService {
 				await this.cacheSettings()
 				callback()
 			}
+
+			return true
 		} catch (error) {
 			console.error("Error fetching organization settings:", error)
+			return false
 		}
 	}
 
