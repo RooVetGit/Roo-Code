@@ -9,9 +9,6 @@ vi.mock("vscode", () => ({
 		showInformationMessage: vi.fn(),
 		showWarningMessage: vi.fn(),
 	},
-	Uri: {
-		file: vi.fn((path: string) => ({ fsPath: path })),
-	},
 }))
 
 vi.mock("fs/promises", () => ({
