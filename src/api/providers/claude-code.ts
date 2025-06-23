@@ -28,13 +28,20 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		let processError = null
 		let errorOutput = ""
 		let exitCode: number | null = null
+		let buffer = ""
 
 		claudeProcess.stdout.on("data", (data) => {
-			const output = data.toString()
-			const lines = output.split("\n").filter((line: string) => line.trim() !== "")
+			buffer += data.toString()
+			const lines = buffer.split("\n")
 
+			// Keep the last line in buffer as it might be incomplete
+			buffer = lines.pop() || ""
+
+			// Process complete lines
 			for (const line of lines) {
-				dataQueue.push(line)
+				if (line.trim() !== "") {
+					dataQueue.push(line.trim())
+				}
 			}
 		})
 
@@ -44,6 +51,11 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 
 		claudeProcess.on("close", (code) => {
 			exitCode = code
+			// Process any remaining data in buffer
+			if (buffer.trim()) {
+				dataQueue.push(buffer.trim())
+				buffer = ""
+			}
 		})
 
 		claudeProcess.on("error", (error) => {
@@ -101,8 +113,13 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 				const message = chunk.message
 
 				if (message.stop_reason !== null && message.stop_reason !== "tool_use") {
+					const firstContent = message.content[0]
 					const errorMessage =
-						message.content[0]?.text ||
+						(firstContent?.type === "text"
+							? firstContent.text
+							: firstContent?.type === "thinking"
+								? firstContent.thinking
+								: undefined) ||
 						t("common:errors.claudeCode.stoppedWithReason", { reason: message.stop_reason })
 
 					if (errorMessage.includes("Invalid model name")) {
@@ -118,8 +135,13 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 							type: "text",
 							text: content.text,
 						}
+					} else if (content.type === "thinking") {
+						yield {
+							type: "reasoning",
+							text: content.thinking,
+						}
 					} else {
-						console.warn("Unsupported content type:", content.type)
+						console.warn("Unsupported content type:", (content as any).type)
 					}
 				}
 
