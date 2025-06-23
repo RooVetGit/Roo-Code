@@ -344,6 +344,44 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%settings.rooCodeCloudEnabled.description%"
+				},
+				"roo-cline.telemetryRetryEnabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable automatic retry for failed telemetry events"
+				},
+				"roo-cline.telemetryRetryMaxRetries": {
+					"type": "number",
+					"default": 5,
+					"minimum": 0,
+					"maximum": 10,
+					"description": "Maximum number of retry attempts for failed telemetry events"
+				},
+				"roo-cline.telemetryRetryBaseDelay": {
+					"type": "number",
+					"default": 1000,
+					"minimum": 100,
+					"maximum": 10000,
+					"description": "Base delay in milliseconds between retry attempts (exponential backoff)"
+				},
+				"roo-cline.telemetryRetryMaxDelay": {
+					"type": "number",
+					"default": 300000,
+					"minimum": 1000,
+					"maximum": 600000,
+					"description": "Maximum delay in milliseconds between retry attempts (5 minutes default)"
+				},
+				"roo-cline.telemetryRetryQueueSize": {
+					"type": "number",
+					"default": 1000,
+					"minimum": 10,
+					"maximum": 10000,
+					"description": "Maximum number of telemetry events to queue for retry"
+				},
+				"roo-cline.telemetryRetryNotifications": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show notifications when telemetry connection issues are detected"
 				}
 			}
 		}

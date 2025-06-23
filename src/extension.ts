@@ -13,7 +13,7 @@ try {
 }
 
 import { CloudService } from "@roo-code/cloud"
-import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
+import { TelemetryService, PostHogTelemetryClient, ResilientTelemetryClient } from "@roo-code/telemetry"
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { createOutputChannelLogger, createDualLogger } from "./utils/outputChannelLogger"
@@ -65,9 +65,25 @@ export async function activate(context: vscode.ExtensionContext) {
 	const telemetryService = TelemetryService.createInstance()
 
 	try {
-		telemetryService.register(new PostHogTelemetryClient())
+		// Get telemetry retry settings from VSCode configuration
+		const config = vscode.workspace.getConfiguration("roo-cline")
+		const retryConfig = {
+			enableRetryQueue: config.get<boolean>("telemetryRetryEnabled", true),
+			maxRetries: config.get<number>("telemetryRetryMaxRetries", 5),
+			baseDelayMs: config.get<number>("telemetryRetryBaseDelay", 1000),
+			maxDelayMs: config.get<number>("telemetryRetryMaxDelay", 300000),
+			maxQueueSize: config.get<number>("telemetryRetryQueueSize", 1000),
+			enableNotifications: config.get<boolean>("telemetryRetryNotifications", true),
+			batchSize: 10, // Not configurable via UI, use default
+		}
+
+		// Create PostHog client and wrap it with resilient retry functionality
+		const postHogClient = new PostHogTelemetryClient()
+		const resilientClient = new ResilientTelemetryClient(postHogClient, context, retryConfig)
+
+		telemetryService.register(resilientClient)
 	} catch (error) {
-		console.warn("Failed to register PostHogTelemetryClient:", error)
+		console.warn("Failed to register ResilientTelemetryClient:", error)
 	}
 
 	// Create logger for cloud services
