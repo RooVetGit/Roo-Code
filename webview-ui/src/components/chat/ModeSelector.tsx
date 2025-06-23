@@ -142,7 +142,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 									<p className="m-0 mb-0 font-bold">{mode.name}</p>
 									{mode.description && (
 										<p className="m-0 py-0 pl-4 h-4 flex-1 text-xs overflow-hidden">
-											{mode.description || mode.whenToUse}
+											{mode.description}
 										</p>
 									)}
 								</div>
