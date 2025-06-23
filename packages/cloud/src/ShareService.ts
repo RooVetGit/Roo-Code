@@ -1,4 +1,3 @@
-import axios from "axios"
 import * as vscode from "vscode"
 
 import { shareResponseSchema } from "@roo-code/types"
@@ -31,19 +30,21 @@ export class ShareService {
 				throw new Error("Authentication required")
 			}
 
-			const response = await axios.post(
-				`${getRooCodeApiUrl()}/api/extension/share`,
-				{ taskId, visibility },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${sessionToken}`,
-						"User-Agent": getUserAgent(),
-					},
+			const response = await fetch(`${getRooCodeApiUrl()}/api/extension/share`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${sessionToken}`,
+					"User-Agent": getUserAgent(),
 				},
-			)
+				body: JSON.stringify({ taskId, visibility }),
+			})
 
-			const data = shareResponseSchema.parse(response.data)
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+			}
+
+			const data = shareResponseSchema.parse(await response.json())
 			this.log("[share] Share link created successfully:", data)
 
 			if (data.success && data.shareUrl) {

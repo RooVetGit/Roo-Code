@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { MockedFunction } from "vitest"
-import axios from "axios"
 import * as vscode from "vscode"
 
 import { ShareService } from "../ShareService"
 import type { AuthService } from "../AuthService"
 import type { SettingsService } from "../SettingsService"
 
-// Mock axios
-vi.mock("axios")
-const mockedAxios = axios as any
+// Mock fetch
+const mockFetch = vi.fn()
+global.fetch = mockFetch as any
 
 // Mock vscode
 vi.mock("vscode", () => ({
@@ -53,6 +52,7 @@ describe("ShareService", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mockFetch.mockClear()
 
 		mockLog = vi.fn()
 		mockAuthService = {
@@ -70,86 +70,96 @@ describe("ShareService", () => {
 
 	describe("shareTask", () => {
 		it("should share task with organization visibility and copy to clipboard", async () => {
-			const mockResponse = {
-				data: {
-					success: true,
-					shareUrl: "https://app.roocode.com/share/abc123",
-				},
+			const mockResponseData = {
+				success: true,
+				shareUrl: "https://app.roocode.com/share/abc123",
 			}
 
 			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
-			mockedAxios.post.mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: vi.fn().mockResolvedValue(mockResponseData),
+			})
 
 			const result = await shareService.shareTask("task-123", "organization")
 
 			expect(result.success).toBe(true)
 			expect(result.shareUrl).toBe("https://app.roocode.com/share/abc123")
-			expect(mockedAxios.post).toHaveBeenCalledWith(
-				"https://app.roocode.com/api/extension/share",
-				{ taskId: "task-123", visibility: "organization" },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: "Bearer session-token",
-						"User-Agent": "Roo-Code 1.0.0",
-					},
+			expect(mockFetch).toHaveBeenCalledWith("https://app.roocode.com/api/extension/share", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: "Bearer session-token",
+					"User-Agent": "Roo-Code 1.0.0",
 				},
-			)
+				body: JSON.stringify({ taskId: "task-123", visibility: "organization" }),
+			})
 			expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith("https://app.roocode.com/share/abc123")
 		})
 
 		it("should share task with public visibility", async () => {
-			const mockResponse = {
-				data: {
-					success: true,
-					shareUrl: "https://app.roocode.com/share/abc123",
-				},
+			const mockResponseData = {
+				success: true,
+				shareUrl: "https://app.roocode.com/share/abc123",
 			}
 
 			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
-			mockedAxios.post.mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: vi.fn().mockResolvedValue(mockResponseData),
+			})
 
 			const result = await shareService.shareTask("task-123", "public")
 
 			expect(result.success).toBe(true)
-			expect(mockedAxios.post).toHaveBeenCalledWith(
-				"https://app.roocode.com/api/extension/share",
-				{ taskId: "task-123", visibility: "public" },
-				expect.any(Object),
-			)
+			expect(mockFetch).toHaveBeenCalledWith("https://app.roocode.com/api/extension/share", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: "Bearer session-token",
+					"User-Agent": "Roo-Code 1.0.0",
+				},
+				body: JSON.stringify({ taskId: "task-123", visibility: "public" }),
+			})
 		})
 
 		it("should default to organization visibility when not specified", async () => {
-			const mockResponse = {
-				data: {
-					success: true,
-					shareUrl: "https://app.roocode.com/share/abc123",
-				},
+			const mockResponseData = {
+				success: true,
+				shareUrl: "https://app.roocode.com/share/abc123",
 			}
 
 			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
-			mockedAxios.post.mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: vi.fn().mockResolvedValue(mockResponseData),
+			})
 
 			const result = await shareService.shareTask("task-123")
 
 			expect(result.success).toBe(true)
-			expect(mockedAxios.post).toHaveBeenCalledWith(
-				"https://app.roocode.com/api/extension/share",
-				{ taskId: "task-123", visibility: "organization" },
-				expect.any(Object),
-			)
+			expect(mockFetch).toHaveBeenCalledWith("https://app.roocode.com/api/extension/share", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: "Bearer session-token",
+					"User-Agent": "Roo-Code 1.0.0",
+				},
+				body: JSON.stringify({ taskId: "task-123", visibility: "organization" }),
+			})
 		})
 
 		it("should handle API error response", async () => {
-			const mockResponse = {
-				data: {
-					success: false,
-					error: "Task not found",
-				},
+			const mockResponseData = {
+				success: false,
+				error: "Task not found",
 			}
 
 			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
-			mockedAxios.post.mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: vi.fn().mockResolvedValue(mockResponseData),
+			})
 
 			const result = await shareService.shareTask("task-123", "organization")
 
@@ -165,9 +175,20 @@ describe("ShareService", () => {
 
 		it("should handle unexpected errors", async () => {
 			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
-			mockedAxios.post.mockRejectedValue(new Error("Network error"))
+			mockFetch.mockRejectedValue(new Error("Network error"))
 
 			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow("Network error")
+		})
+
+		it("should handle HTTP error responses", async () => {
+			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 404,
+				statusText: "Not Found",
+			})
+
+			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow("HTTP 404: Not Found")
 		})
 	})
 
