@@ -1,35 +1,21 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as os from "os"
-import fs from "fs/promises"
-import { z, ZodError } from "zod"
-
-import { globalSettingsSchema } from "@roo-code/types"
-import { TelemetryService } from "@roo-code/telemetry"
 
 import { Package } from "../shared/package"
-import { ClineProvider } from "../core/webview/ClineProvider"
-
-import { providerProfilesSchema } from "../core/config/ProviderSettingsManager"
-import { CustomModesManager } from "../core/config/CustomModesManager"
 import { fileExistsAtPath } from "./fs"
 
-type AutoImportOptions = {
-	provider: ClineProvider
-	customModesManager: CustomModesManager
-	outputChannel: vscode.OutputChannel
-}
+import { importSettingsFromPath, ImportOptions } from "../core/config/importExport"
 
 /**
  * Automatically imports RooCode configuration from a specified path if it exists.
  * This function is called during extension activation to allow users to pre-configure
  * their settings by placing a config file at a predefined location.
  */
-export async function autoImportConfig({
-	provider,
-	customModesManager,
-	outputChannel,
-}: AutoImportOptions): Promise<void> {
+export async function autoImportConfig(
+	outputChannel: vscode.OutputChannel,
+	{ providerSettingsManager, contextProxy, customModesManager }: ImportOptions,
+): Promise<void> {
 	try {
 		// Get the auto-import config path from VSCode settings
 		const configPath = vscode.workspace.getConfiguration(Package.name).get<string>("autoImportConfigPath")
@@ -50,8 +36,9 @@ export async function autoImportConfig({
 		}
 
 		// Attempt to import the configuration
-		const result = await importConfigFromPath(resolvedPath, {
-			provider,
+		const result = await importSettingsFromPath(resolvedPath, {
+			providerSettingsManager,
+			contextProxy,
 			customModesManager,
 		})
 
@@ -93,71 +80,4 @@ function resolvePath(configPath: string): string {
 
 	// Handle relative paths (relative to home directory for safety)
 	return path.join(os.homedir(), configPath)
-}
-
-/**
- * Imports configuration from a specific file path
- * This is similar to the existing importSettings function but works with a file path
- * instead of showing a file dialog
- */
-async function importConfigFromPath(
-	filePath: string,
-	{ provider, customModesManager }: Omit<AutoImportOptions, "outputChannel">,
-): Promise<{ success: boolean; error?: string }> {
-	try {
-		const { providerSettingsManager, contextProxy } = provider
-
-		const schema = z.object({
-			providerProfiles: providerProfilesSchema,
-			globalSettings: globalSettingsSchema,
-		})
-
-		const previousProviderProfiles = await providerSettingsManager.export()
-
-		const { providerProfiles: newProviderProfiles, globalSettings } = schema.parse(
-			JSON.parse(await fs.readFile(filePath, "utf-8")),
-		)
-
-		const providerProfiles = {
-			currentApiConfigName: newProviderProfiles.currentApiConfigName,
-			apiConfigs: {
-				...previousProviderProfiles.apiConfigs,
-				...newProviderProfiles.apiConfigs,
-			},
-			modeApiConfigs: {
-				...previousProviderProfiles.modeApiConfigs,
-				...newProviderProfiles.modeApiConfigs,
-			},
-		}
-
-		await Promise.all(
-			(globalSettings.customModes ?? []).map((mode) => customModesManager.updateCustomMode(mode.slug, mode)),
-		)
-
-		await providerSettingsManager.import(newProviderProfiles)
-		await contextProxy.setValues(globalSettings)
-
-		const listApiConfigMetaResult = await providerSettingsManager.listConfig()
-		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
-		contextProxy.setValue("listApiConfigMeta", listApiConfigMetaResult)
-
-		const apiConfiguration = newProviderProfiles.apiConfigs[newProviderProfiles.currentApiConfigName]
-		await provider.upsertProviderProfile(newProviderProfiles.currentApiConfigName, apiConfiguration)
-
-		provider.settingsImportedAt = Date.now()
-		await provider.postStateToWebview()
-
-		return { success: true }
-	} catch (e) {
-		let error = "Unknown error"
-
-		if (e instanceof ZodError) {
-			error = e.issues.map((issue) => `[${issue.path.join(".")}]: ${issue.message}`).join("\n")
-			TelemetryService.instance.captureSchemaValidationError({ schemaName: "AutoImport", error: e })
-		} else if (e instanceof Error) {
-			error = e.message
-		}
-
-		return { success: false, error }
-	}
 }
