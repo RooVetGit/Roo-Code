@@ -3,7 +3,7 @@
 import type { MockedFunction } from "vitest"
 import * as vscode from "vscode"
 
-import { ShareService } from "../ShareService"
+import { ShareService, TaskNotFoundError } from "../ShareService"
 import type { AuthService } from "../AuthService"
 import type { SettingsService } from "../SettingsService"
 
@@ -180,7 +180,7 @@ describe("ShareService", () => {
 			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow("Network error")
 		})
 
-		it("should handle HTTP error responses", async () => {
+		it("should throw TaskNotFoundError for 404 responses", async () => {
 			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
 			mockFetch.mockResolvedValue({
 				ok: false,
@@ -188,7 +188,42 @@ describe("ShareService", () => {
 				statusText: "Not Found",
 			})
 
-			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow("HTTP 404: Not Found")
+			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow(TaskNotFoundError)
+			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow(
+				"Task 'task-123' not found",
+			)
+		})
+
+		it("should throw generic Error for non-404 HTTP errors", async () => {
+			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 500,
+				statusText: "Internal Server Error",
+			})
+
+			await expect(shareService.shareTask("task-123", "organization")).rejects.toThrow(
+				"HTTP 500: Internal Server Error",
+			)
+			await expect(shareService.shareTask("task-123", "organization")).rejects.not.toThrow(TaskNotFoundError)
+		})
+
+		it("should create TaskNotFoundError with correct properties", async () => {
+			;(mockAuthService.getSessionToken as any).mockReturnValue("session-token")
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 404,
+				statusText: "Not Found",
+			})
+
+			try {
+				await shareService.shareTask("task-123", "organization")
+				expect.fail("Expected TaskNotFoundError to be thrown")
+			} catch (error) {
+				expect(error).toBeInstanceOf(TaskNotFoundError)
+				expect(error).toBeInstanceOf(Error)
+				expect((error as TaskNotFoundError).message).toBe("Task 'task-123' not found")
+			}
 		})
 	})
 

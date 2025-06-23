@@ -8,6 +8,13 @@ import { getUserAgent } from "./utils"
 
 export type ShareVisibility = "organization" | "public"
 
+export class TaskNotFoundError extends Error {
+	constructor(taskId?: string) {
+		super(taskId ? `Task '${taskId}' not found` : "Task not found")
+		Object.setPrototypeOf(this, TaskNotFoundError.prototype)
+	}
+}
+
 export class ShareService {
 	private authService: AuthService
 	private settingsService: SettingsService
@@ -41,6 +48,9 @@ export class ShareService {
 			})
 
 			if (!response.ok) {
+				if (response.status === 404) {
+					throw new TaskNotFoundError(taskId)
+				}
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 			}
 
