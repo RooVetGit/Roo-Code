@@ -1,10 +1,13 @@
 import { render, screen, fireEvent } from "@/utils/test-utils"
-
-import { useClipboard } from "@/components/ui/hooks"
-
 import { CopyButton } from "../CopyButton"
+import { vscode } from "@/utils/vscode"
 
-vi.mock("@/components/ui/hooks")
+vi.mock("@/utils/vscode", () => ({
+	vscode: {
+		postMessage: vi.fn(),
+	},
+}))
+
 vi.mock("@src/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => key,
@@ -12,22 +15,19 @@ vi.mock("@src/i18n/TranslationContext", () => ({
 }))
 
 describe("CopyButton", () => {
-	const mockCopy = vi.fn()
-
 	beforeEach(() => {
 		vi.clearAllMocks()
-		;(useClipboard as any).mockReturnValue({
-			isCopied: false,
-			copy: mockCopy,
-		})
 	})
 
-	it("copies task content when clicked", () => {
-		render(<CopyButton itemTask="Test task content" />)
+	it("sends copy message with task ID when clicked", () => {
+		render(<CopyButton itemId="test-task-id" />)
 
 		const copyButton = screen.getByRole("button")
 		fireEvent.click(copyButton)
 
-		expect(mockCopy).toHaveBeenCalledWith("Test task content")
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "copyTask",
+			text: "test-task-id",
+		})
 	})
 })
