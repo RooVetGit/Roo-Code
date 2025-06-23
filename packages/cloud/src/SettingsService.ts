@@ -42,10 +42,6 @@ export class SettingsService {
 			this.removeSettings()
 		}
 
-		this.authService.on("attempting-session", () => {
-			this.timer.start()
-		})
-
 		this.authService.on("active-session", () => {
 			this.timer.start()
 		})
@@ -55,7 +51,7 @@ export class SettingsService {
 			this.removeSettings()
 		})
 
-		if (this.authService.hasOrIsAcquiringActiveSession()) {
+		if (this.authService.hasActiveSession()) {
 			this.timer.start()
 		}
 	}
