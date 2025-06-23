@@ -14,9 +14,12 @@ import {
 	TelemetryEventName,
 	HistorySearchOptions,
 	HistoryItem,
+	HistoryRebuildOptions,
+	HistoryScanResults,
 } from "@roo-code/types"
 import { getHistoryItemsForSearch } from "../task-persistence/taskHistory"
 import { isUpgradeNeeded, performUpgrade } from "../upgrade/upgrade"
+import { reindexHistoryItems, scanTaskHistory } from "../task-persistence/taskScanner"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 import { type ApiMessage } from "../task-persistence/apiMessages"
@@ -635,6 +638,132 @@ export const webviewMessageHandler = async (
 		case "resetState":
 			await provider.resetState()
 			break
+		case "scanTaskHistory":
+			await handleLoggingOperation<HistoryScanResults>(
+				"scanTaskHistory",
+				{
+					...(message.historyScanOptions || {}),
+					scanHistoryFiles:
+						message.historyScanOptions?.scanHistoryFiles !== undefined
+							? message.historyScanOptions.scanHistoryFiles
+							: false,
+					mode: message.historyScanOptions?.mode || "merge",
+					reconstructOrphans:
+						message.historyScanOptions?.reconstructOrphans !== undefined
+							? message.historyScanOptions.reconstructOrphans
+							: false,
+					mergeFromGlobal:
+						message.historyScanOptions?.mergeFromGlobal !== undefined
+							? message.historyScanOptions.mergeFromGlobal
+							: false,
+				},
+				async (options, logs) => {
+					const result = await scanTaskHistory(options.scanHistoryFiles, logs)
+					return result!
+				},
+				async (results) => {
+					const serializedResults = {
+						validCount: results.validCount,
+						tasks: {
+							tasksOnlyInGlobalState: Object.fromEntries(results.tasks.tasksOnlyInGlobalState),
+							tasksOnlyInTaskHistoryIndexes: Object.fromEntries(
+								results.tasks.tasksOnlyInTaskHistoryIndexes,
+							),
+							orphans: Object.fromEntries(results.tasks.orphans),
+							failedReconstructions: Array.from(results.tasks.failedReconstructions),
+						},
+					}
+
+					provider.postMessageToWebview({
+						type: "scanTaskHistoryResult" as any,
+						results: serializedResults,
+					})
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "loggingOperation" as any,
+						log: `[TaskHistory] Error during scan: ${error}`,
+					})
+
+					await vscode.window.showErrorMessage(
+						t("common:errors.history_scan_failed", { error: String(error) }),
+					)
+				},
+				"loggingOperation",
+			)
+			break
+
+		case "rebuildHistoryIndexes":
+			await handleLoggingOperation<HistoryScanResults>(
+				"rebuildHistoryIndexes",
+				{
+					...(message.historyScanOptions || {}),
+					mode: message.historyScanOptions?.mode || "merge",
+					mergeFromGlobal:
+						message.historyScanOptions?.mergeFromGlobal !== undefined
+							? message.historyScanOptions.mergeFromGlobal
+							: false,
+					mergeToGlobal:
+						message.historyScanOptions?.mergeToGlobal !== undefined
+							? message.historyScanOptions.mergeToGlobal
+							: false,
+					reconstructOrphans:
+						message.historyScanOptions?.reconstructOrphans !== undefined
+							? message.historyScanOptions.reconstructOrphans
+							: false,
+					scanHistoryFiles:
+						message.historyScanOptions?.scanHistoryFiles !== undefined
+							? message.historyScanOptions.scanHistoryFiles
+							: false,
+				},
+				async (options, logs) => {
+					options.logs = logs
+					const result = await reindexHistoryItems(options as HistoryRebuildOptions)
+					return result!
+				},
+				async (verificationScan) => {
+					if (verificationScan) {
+						const serializedResults = {
+							validCount: verificationScan.validCount,
+							tasks: {
+								tasksOnlyInGlobalState: Object.fromEntries(
+									verificationScan.tasks.tasksOnlyInGlobalState,
+								),
+								tasksOnlyInTaskHistoryIndexes: Object.fromEntries(
+									verificationScan.tasks.tasksOnlyInTaskHistoryIndexes,
+								),
+								orphans: Object.fromEntries(verificationScan.tasks.orphans),
+								failedReconstructions: Array.from(verificationScan.tasks.failedReconstructions),
+							},
+						}
+
+						provider.postMessageToWebview({
+							type: "scanTaskHistoryResult" as any,
+							results: serializedResults,
+						})
+					}
+
+					provider.postMessageToWebview({
+						type: "rebuildHistoryIndexesResult" as any,
+						success: true,
+					})
+
+					await vscode.window.showInformationMessage(t("common:info.history_reindexed"))
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "rebuildHistoryIndexesResult" as any,
+						success: false,
+					})
+
+					await vscode.window.showErrorMessage(
+						t("common:errors.history_reindex_failed", { error: String(error) }),
+					)
+				},
+				"loggingOperation",
+			)
+			break
+
 		case "flushRouterModels":
 			const routerNameFlush: RouterName = toRouterName(message.text)
 			await flushModels(routerNameFlush)

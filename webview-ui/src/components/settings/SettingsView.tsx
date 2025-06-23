@@ -65,6 +65,7 @@ import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
 import PromptsSettings from "./PromptsSettings"
+import { HistoryIndexTools } from "./HistoryIndexTools"
 import { cn } from "@/lib/utils"
 
 export const settingsTabsContainer = "flex flex-1 overflow-hidden [&.narrow_.tab-label]:hidden"
@@ -89,6 +90,7 @@ const sectionNames = [
 	"prompts",
 	"experimental",
 	"language",
+	"historyIndexTools",
 	"about",
 ] as const
 
@@ -400,6 +402,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "prompts", icon: MessageSquare },
 			{ id: "experimental", icon: FlaskConical },
 			{ id: "language", icon: Globe },
+			{ id: "historyIndexTools", icon: Database },
 			{ id: "about", icon: Info },
 		],
 		[], // No dependencies needed now
@@ -683,6 +686,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							setCustomSupportPrompts={setCustomSupportPromptsField}
 						/>
 					)}
+
+					{/* History Index Tools Section */}
+					{activeTab === "historyIndexTools" && <HistoryIndexTools />}
 
 					{/* Experimental Section */}
 					{activeTab === "experimental" && (

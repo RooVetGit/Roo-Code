@@ -1,15 +1,49 @@
 {
+	"advanced": "Advanced",
 	"answers": {
 		"yes": "Yes",
 		"no": "No",
 		"cancel": "Cancel",
 		"remove": "Remove",
-		"keep": "Keep"
+		"keep": "Keep",
+		"close": "Close"
+	},
+	"errors": {
+		"history_scan_failed": "Failed to scan task history: {{error}}",
+		"history_reindex_failed": "Failed to rebuild history indexes: {{error}}",
+		"share_no_active_task": "No active task to share",
+		"share_auth_required": "Authentication required to share task",
+		"share_not_enabled": "Sharing is not enabled for your account",
+		"share_task_not_found": "Task not found",
+		"share_task_failed": "Failed to share task",
+		"settings_import_failed": "Failed to import settings: {{error}}",
+		"update_support_prompt": "Failed to update support prompt",
+		"enhance_prompt": "Failed to enhance prompt",
+		"get_system_prompt": "Failed to get system prompt",
+		"search_commits": "Failed to search commits",
+		"save_api_config": "Failed to save API configuration",
+		"load_api_config": "Failed to load API configuration",
+		"rename_api_config": "Failed to rename API configuration",
+		"delete_api_config": "Failed to delete API configuration",
+		"list_api_config": "Failed to list API configurations",
+		"update_server_timeout": "Failed to update server timeout",
+		"no_workspace": "No workspace folder is open",
+		"checkpoint_timeout": "Timeout waiting for checkpoint",
+		"checkpoint_failed": "Failed to restore checkpoint"
+	},
+	"info": {
+		"history_reindexed": "History indexes rebuilt successfully",
+		"history_scanned": "Task history scan completed",
+		"settings_imported": "Settings imported successfully",
+		"clipboard_copy": "Copied to clipboard"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",
 		"billion_suffix": "b"
+	},
+	"confirmation": {
+		"reindex_history": "Warning: This will recreate taskHistory/*.json indexes by walking the task directories and legacy globalState[taskHistory] structures. This may undelete tasks that you had previously deleted and/or recover tasks that are corrupt. If token/cost counters are not recoverable they will be set to zero. Any tasks that are members of multiple workspaces will be reassigned to only the most recent workspace used by the task."
 	},
 	"ui": {
 		"search_placeholder": "Search..."

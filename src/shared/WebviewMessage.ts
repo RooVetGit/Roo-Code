@@ -8,6 +8,7 @@ import type {
 	MarketplaceItem,
 	ShareVisibility,
 	HistorySearchOptions,
+	HistoryRebuildOptions,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -32,6 +33,8 @@ export interface WebviewMessage {
 		| "getHistoryItems"
 		| "isUpgradeNeeded"
 		| "performUpgrade"
+		| "scanTaskHistory"
+		| "rebuildHistoryIndexes"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
@@ -183,6 +186,9 @@ export interface WebviewMessage {
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"
 		| "installMarketplaceItem"
+		| "loggingOperation"
+		| "scanTaskHistoryResult"
+		| "rebuildHistoryIndexesResult"
 		| "installMarketplaceItemWithParameters"
 		| "cancelMarketplaceInstall"
 		| "removeInstalledMarketplaceItem"
@@ -258,7 +264,8 @@ export interface WebviewMessage {
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
 	}
-	historySearchOptions?: HistorySearchOptions // For history search
+	historySearchOptions?: HistorySearchOptions
+	historyScanOptions?: HistoryRebuildOptions
 }
 
 export const checkoutDiffPayloadSchema = z.object({
