@@ -483,6 +483,11 @@ export const webviewMessageHandler = async (
 		case "showTaskWithId":
 			provider.showTaskWithId(message.text!)
 			break
+		case "copyTask":
+			if (message.text) {
+				provider.copyTaskToClipboard(message.text)
+			}
+			break
 		case "condenseTaskContextRequest":
 			provider.condenseTaskContext(message.text!)
 			break

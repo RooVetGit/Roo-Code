@@ -1174,6 +1174,19 @@ export class ClineProvider
 		await downloadTask(historyItem.ts, apiConversationHistory)
 	}
 
+	async copyTaskToClipboard(id: string) {
+		try {
+			const historyItem = await getHistoryItem(id)
+			if (historyItem) {
+				await vscode.env.clipboard.writeText(historyItem.task)
+				vscode.window.showInformationMessage(t("common:info.clipboard_copy"))
+			}
+		} catch (error) {
+			this.log(`Error copying task: ${error}`)
+			vscode.window.showErrorMessage(t("common:errors.copy_task_failed"))
+		}
+	}
+
 	/* Condenses a task's message history to use fewer tokens. */
 	async condenseTaskContext(taskId: string) {
 		let task: Task | undefined

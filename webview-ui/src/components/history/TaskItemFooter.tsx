@@ -52,7 +52,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 			{/* Action Buttons for non-compact view */}
 			{!isSelectionMode && (
 				<div className="flex flex-row gap-0 items-center opacity-50 hover:opacity-100">
-					<CopyButton itemTask={item.task} />
+					<CopyButton itemId={item.id} />
 					{variant === "full" && <ExportButton itemId={item.id} />}
 				</div>
 			)}
