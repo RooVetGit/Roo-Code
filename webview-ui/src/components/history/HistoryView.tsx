@@ -49,7 +49,9 @@ const HistoryView = memo(({ onDone }: HistoryViewProps) => {
 		workspaceItems,
 		workspacePath,
 		setWorkspacePath,
-	} = useTaskSearch({ workspacePath: WORKSPACE_CURRENT })
+		resultLimit,
+		setResultLimit,
+	} = useTaskSearch({ workspacePath: WORKSPACE_CURRENT, limit: 50 })
 	const { t } = useAppTranslation()
 
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
@@ -174,12 +176,15 @@ const HistoryView = memo(({ onDone }: HistoryViewProps) => {
 							setIsFilterActive={setIsFilterActive}
 							t={t}
 						/>
-						<SortSelector
-							sortOption={sortOption}
-							setSortOption={setSortOption}
-							searchQuery={searchQuery}
-							t={t}
-						/>
+						<div className="flex gap-2 flex-1">
+							<SortSelector
+								sortOption={sortOption}
+								setSortOption={setSortOption}
+								searchQuery={searchQuery}
+								t={t}
+							/>
+							<LimitSelector resultLimit={resultLimit} setResultLimit={setResultLimit} t={t} />
+						</div>
 					</div>
 
 					{/* Select all control in selection mode */}
@@ -581,6 +586,70 @@ const SortSelector = memo(
 						<div className="flex items-center gap-2">
 							<span className="codicon codicon-search" />
 							{t("history:mostRelevant")}
+						</div>
+					</SelectItem>
+				</SelectContent>
+			</Select>
+		)
+	},
+)
+
+// Memoized limit selector component
+const LimitSelector = memo(
+	({
+		resultLimit,
+		setResultLimit,
+		t,
+	}: {
+		resultLimit: number | undefined
+		setResultLimit: (value: number | undefined) => void
+		t: any
+	}) => {
+		return (
+			<Select
+				value={resultLimit?.toString() || "all"}
+				onValueChange={(value) => setResultLimit(value === "all" ? undefined : parseInt(value, 10))}>
+				<SelectTrigger className="flex-1">
+					<SelectValue>
+						{t("history:limit.prefix")}{" "}
+						{resultLimit ? t(`history:limit.${resultLimit}`) : t("history:limit.all")}
+					</SelectValue>
+				</SelectTrigger>
+				<SelectContent className="max-h-[80vh] overflow-auto">
+					<SelectItem value="50" data-testid="select-limit-50">
+						<div className="flex items-center gap-2">
+							<span className="codicon codicon-list-filter" />
+							{t("history:limit.50")}
+						</div>
+					</SelectItem>
+					<SelectItem value="100" data-testid="select-limit-100">
+						<div className="flex items-center gap-2">
+							<span className="codicon codicon-list-filter" />
+							{t("history:limit.100")}
+						</div>
+					</SelectItem>
+					<SelectItem value="200" data-testid="select-limit-200">
+						<div className="flex items-center gap-2">
+							<span className="codicon codicon-list-filter" />
+							{t("history:limit.200")}
+						</div>
+					</SelectItem>
+					<SelectItem value="500" data-testid="select-limit-500">
+						<div className="flex items-center gap-2">
+							<span className="codicon codicon-list-filter" />
+							{t("history:limit.500")}
+						</div>
+					</SelectItem>
+					<SelectItem value="1000" data-testid="select-limit-1000">
+						<div className="flex items-center gap-2">
+							<span className="codicon codicon-list-filter" />
+							{t("history:limit.1000")}
+						</div>
+					</SelectItem>
+					<SelectItem value="all" data-testid="select-limit-all">
+						<div className="flex items-center gap-2">
+							<span className="codicon codicon-list-unfiltered" />
+							{t("history:limit.all")}
 						</div>
 					</SelectItem>
 				</SelectContent>

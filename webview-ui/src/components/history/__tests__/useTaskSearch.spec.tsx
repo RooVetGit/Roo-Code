@@ -88,7 +88,7 @@ describe("useTaskSearch", () => {
 			historySearchOptions: {
 				searchQuery: "",
 				sortOption: "newest",
-				workspacePath: "/workspace/project1",
+				workspacePath: undefined,
 				limit: undefined,
 			},
 			requestId: expect.any(String),
@@ -137,15 +137,15 @@ describe("useTaskSearch", () => {
 		expect(result.current.tasks.every((task: HistoryItem) => task.workspace === "/workspace/project1")).toBe(true)
 	})
 
-	it("shows all workspaces when showAllWorkspaces is true", async () => {
-		const { result, rerender } = renderHook(() => useTaskSearch({ showAllWorkspaces: true }))
+	it("shows tasks from all workspaces when workspacePath is 'all'", async () => {
+		const { result, rerender } = renderHook(() => useTaskSearch({ workspacePath: "all" }))
 
 		expect(mockPostMessage).toHaveBeenCalledWith({
 			type: "getHistoryItems",
 			historySearchOptions: {
 				searchQuery: "",
 				sortOption: "newest",
-				workspacePath: undefined,
+				workspacePath: "all",
 				limit: undefined,
 			},
 			requestId: expect.any(String),
