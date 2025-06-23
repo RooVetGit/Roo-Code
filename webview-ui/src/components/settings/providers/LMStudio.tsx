@@ -52,15 +52,8 @@ export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudi
 
 	// Refresh models on mount
 	useEffect(() => {
-		// Flush cache first to ensure we get fresh models
-		vscode.postMessage({ type: "flushRouterModels", text: "lmstudio" })
-
-		// Request fresh LM Studio models after a small delay to ensure cache is flushed
-		const timer = setTimeout(() => {
-			vscode.postMessage({ type: "requestLmStudioModels" })
-		}, 100)
-
-		return () => clearTimeout(timer)
+		// Request fresh models - the handler now flushes cache automatically
+		vscode.postMessage({ type: "requestLmStudioModels" })
 	}, [])
 
 	// Check if the selected model exists in the fetched models
