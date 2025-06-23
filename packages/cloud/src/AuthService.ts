@@ -481,11 +481,16 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 		const formData = new URLSearchParams()
 		formData.append("_is_native", "1")
 
-		// Only add organization_id if not null (personal accounts)
+		// Handle 3 cases for organization_id:
+		// 1. Have an org id: organization_id=THE_ORG_ID
+		// 2. Have a personal account: organization_id= (empty string)
+		// 3. Don't know if you have an org id (old style credentials): don't send organization_id param at all
 		const organizationId = this.getStoredOrganizationId()
-		if (organizationId !== null) {
-			formData.append("organization_id", organizationId)
+		if (this.credentials?.organizationId !== undefined) {
+			// We have organization context info (either org id or personal account)
+			formData.append("organization_id", organizationId || "")
 		}
+		// If organizationId is undefined, don't send the param at all (old credentials)
 
 		const response = await fetch(`${getClerkBaseUrl()}/v1/client/sessions/${this.credentials!.sessionId}/tokens`, {
 			method: "POST",
@@ -538,34 +543,59 @@ export class AuthService extends EventEmitter<AuthServiceEvents> {
 
 		userInfo.picture = userData.image_url
 
-		// Fetch organization info separately - but only populate if user is in organization context
+		// Fetch organization info if user is in organization context
 		try {
 			const storedOrgId = this.getStoredOrganizationId()
 
-			if (storedOrgId !== null) {
-				// User is in organization context - fetch user's memberships and filter
-				const orgMemberships = await this.clerkGetOrganizationMemberships()
+			if (this.credentials?.organizationId !== undefined) {
+				// We have organization context info
+				if (storedOrgId !== null) {
+					// User is in organization context - fetch user's memberships and filter
+					const orgMemberships = await this.clerkGetOrganizationMemberships()
 
-				// Find the user's membership in this organization
-				const userMembership = orgMemberships?.find(
-					(membership: CloudOrganizationMembership) => membership.organization.id === storedOrgId,
-				)
+					// Find the user's membership in this organization
+					const userMembership = orgMemberships?.find(
+						(membership: CloudOrganizationMembership) => membership.organization.id === storedOrgId,
+					)
 
-				if (userMembership) {
-					userInfo.organizationId = userMembership.organization.id
-					userInfo.organizationName = userMembership.organization.name
-					userInfo.organizationRole = userMembership.role
-					userInfo.organizationImageUrl = userMembership.organization.image_url
-					this.log("[auth] User in organization context:", {
-						id: userMembership.organization.id,
-						name: userMembership.organization.name,
-						role: userMembership.role,
-					})
+					if (userMembership) {
+						userInfo.organizationId = userMembership.organization.id
+						userInfo.organizationName = userMembership.organization.name
+						userInfo.organizationRole = userMembership.role
+						userInfo.organizationImageUrl = userMembership.organization.image_url
+						this.log("[auth] User in organization context:", {
+							id: userMembership.organization.id,
+							name: userMembership.organization.name,
+							role: userMembership.role,
+						})
+					} else {
+						this.log("[auth] Warning: User not found in stored organization:", storedOrgId)
+					}
 				} else {
-					this.log("[auth] Warning: User not found in stored organization:", storedOrgId)
+					this.log("[auth] User in personal account context - not setting organization info")
 				}
 			} else {
-				this.log("[auth] User in personal account context - not setting organization info")
+				// Old credentials without organization context - fetch organization info to determine context
+				const orgMemberships = await this.clerkGetOrganizationMemberships()
+				if (orgMemberships && orgMemberships.length > 0) {
+					// Get the first (or active) organization membership
+					const primaryOrgMembership = orgMemberships[0]
+					const organization = primaryOrgMembership?.organization
+
+					if (organization) {
+						userInfo.organizationId = organization.id
+						userInfo.organizationName = organization.name
+						userInfo.organizationRole = primaryOrgMembership.role
+						userInfo.organizationImageUrl = organization.image_url
+						this.log("[auth] Legacy credentials: Found organization membership:", {
+							id: organization.id,
+							name: organization.name,
+							role: primaryOrgMembership.role,
+						})
+					}
+				} else {
+					this.log("[auth] Legacy credentials: No organization memberships found")
+				}
 			}
 		} catch (error) {
 			this.log("[auth] Failed to fetch organization info:", error)
