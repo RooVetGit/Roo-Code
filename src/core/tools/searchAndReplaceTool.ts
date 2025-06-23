@@ -220,7 +220,7 @@ export async function searchAndReplaceTool(
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties
-		await cline.diffViewProvider.saveChanges()
+		await cline.diffViewProvider.saveChanges(cline, "before_search_replace", "after_search_replace")
 
 		// Track file edit operation
 		if (relPath) {

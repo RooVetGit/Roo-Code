@@ -52,6 +52,7 @@ let extensionContext: vscode.ExtensionContext
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
+	console.log("Roo Code: Activating extension...")
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
@@ -103,6 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		)
 	}
 
+	console.log("Roo Code: Instantiating ClineProvider.")
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
 	TelemetryService.instance.setProvider(provider)
 

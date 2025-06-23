@@ -36,6 +36,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	organizationAllowList: OrganizationAllowList
 	cloudIsAuthenticated: boolean
 	sharingEnabled: boolean
+	currentFileChangeset?: import("@roo-code/types").FileChangeset
+	setCurrentFileChangeset: (changeset: import("@roo-code/types").FileChangeset | undefined) => void
 	maxConcurrentFileReads?: number
 	condensingApiConfigId?: string
 	setCondensingApiConfigId: (value: string) => void
@@ -223,6 +225,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
 	const [currentCheckpoint, setCurrentCheckpoint] = useState<string>()
 	const [extensionRouterModels, setExtensionRouterModels] = useState<RouterModels | undefined>(undefined)
+	const [currentFileChangeset, setCurrentFileChangeset] = useState<
+		import("@roo-code/types").FileChangeset | undefined
+	>(undefined)
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -292,6 +297,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				}
 				case "routerModels": {
 					setExtensionRouterModels(message.routerModels)
+					break
+				}
+				case "filesChanged": {
+					if (message.filesChanged) {
+						setCurrentFileChangeset(message.filesChanged)
+					} else {
+						setCurrentFileChangeset(undefined)
+					}
 					break
 				}
 			}
@@ -410,6 +423,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCondensingApiConfigId: (value) => setState((prevState) => ({ ...prevState, condensingApiConfigId: value })),
 		setCustomCondensingPrompt: (value) =>
 			setState((prevState) => ({ ...prevState, customCondensingPrompt: value })),
+		currentFileChangeset,
+		setCurrentFileChangeset,
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

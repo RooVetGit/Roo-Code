@@ -177,7 +177,7 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(): Promise<{
+	async saveChanges(task: Task): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
@@ -192,6 +192,11 @@ export class DiffViewProvider {
 
 		if (updatedDocument.isDirty) {
 			await updatedDocument.save()
+		}
+
+		if (task.checkpointService) {
+			const uri = vscode.Uri.file(absolutePath)
+			await task.checkpointService.syncFile(uri)
 		}
 
 		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })

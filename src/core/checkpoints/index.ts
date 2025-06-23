@@ -12,15 +12,21 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
+import { FileChangeManager } from "../file-changes/FileChangeManager"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
 export function getCheckpointService(cline: Task) {
-	if (!cline.enableCheckpoints) {
-		return undefined
+	if (cline.options.checkpointService) {
+		return cline.options.checkpointService
 	}
-
 	if (cline.checkpointService) {
 		return cline.checkpointService
+	}
+	console.log(
+		`[DEBUG] getCheckpointService called for task ${cline.taskId}. Service exists: ${!!cline.checkpointService}`,
+	)
+	if (!cline.enableCheckpoints) {
+		return undefined
 	}
 
 	if (cline.checkpointServiceInitializing) {
@@ -82,7 +88,7 @@ export function getCheckpointService(cline: Task) {
 
 				if (isCheckpointNeeded) {
 					log("[Cline#getCheckpointService] no checkpoints found, saving initial checkpoint")
-					checkpointSave(cline)
+					checkpointSave(cline, true)
 				}
 			} catch (err) {
 				log("[Cline#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
@@ -90,18 +96,62 @@ export function getCheckpointService(cline: Task) {
 			}
 		})
 
-		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
+		service.on("checkpointCreated", async ({ isFirst, fromHash, toHash }) => {
 			try {
-				provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
+				provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: toHash })
 
-				cline
-					.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }, undefined, {
+				await cline.say(
+					"checkpoint_saved",
+					toHash,
+					undefined,
+					undefined,
+					{ isFirst, from: fromHash, to: toHash },
+					undefined,
+					{
 						isNonInteractive: true,
+					},
+				)
+
+				if (isFirst && !cline.fileChangeManager) {
+					const provider = cline.providerRef.deref()
+					if (provider) {
+						cline.fileChangeManager = new FileChangeManager(
+							toHash,
+							cline.taskId,
+							provider.context.globalStorageUri.fsPath,
+						)
+					}
+				}
+				if (cline.fileChangeManager) {
+					const changes = await service.getDiff({ from: fromHash, to: toHash })
+					if (changes) {
+						for (const change of changes) {
+							const lineDiff = FileChangeManager.calculateLineDifferences(
+								change.content.before || "",
+								change.content.after || "",
+							)
+							cline.fileChangeManager.recordChange(
+								change.paths.relative,
+								change.type,
+								fromHash,
+								toHash,
+								lineDiff.linesAdded,
+								lineDiff.linesRemoved,
+							)
+						}
+					}
+
+					const changeset = cline.fileChangeManager.getChanges()
+					const serializableChangeset = {
+						...changeset,
+						files: Array.from(changeset.files.values()),
+					}
+
+					provider?.postMessageToWebview({
+						type: "filesChanged",
+						filesChanged: serializableChangeset,
 					})
-					.catch((err) => {
-						log("[Cline#getCheckpointService] caught unexpected error in say('checkpoint_saved')")
-						console.error(err)
-					})
+				}
 			} catch (err) {
 				log("[Cline#getCheckpointService] caught unexpected error in on('checkpoint'), disabling checkpoints")
 				console.error(err)
@@ -128,7 +178,7 @@ export function getCheckpointService(cline: Task) {
 	}
 }
 
-async function getInitializedCheckpointService(
+export async function getInitializedCheckpointService(
 	cline: Task,
 	{ interval = 250, timeout = 15_000 }: { interval?: number; timeout?: number } = {},
 ) {
@@ -153,7 +203,7 @@ async function getInitializedCheckpointService(
 	}
 }
 
-export async function checkpointSave(cline: Task, force = false) {
+export async function checkpointSave(cline: Task, force = false, files?: vscode.Uri[]) {
 	const service = getCheckpointService(cline)
 
 	if (!service) {
@@ -170,10 +220,12 @@ export async function checkpointSave(cline: Task, force = false) {
 	TelemetryService.instance.captureCheckpointCreated(cline.taskId)
 
 	// Start the checkpoint process in the background.
-	return service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force }).catch((err) => {
-		console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
-		cline.enableCheckpoints = false
-	})
+	return service
+		.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force, files })
+		.catch((err: any) => {
+			console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
+			cline.enableCheckpoints = false
+		})
 }
 
 export type CheckpointRestoreOptions = {
@@ -201,6 +253,10 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 		await service.restoreCheckpoint(commitHash)
 		TelemetryService.instance.captureCheckpointRestored(cline.taskId)
 		await provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
+
+		if (cline.fileChangeManager) {
+			await cline.fileChangeManager.updateBaseline(commitHash, (from, to) => service.getDiff({ from, to }))
+		}
 
 		if (mode === "restore") {
 			await cline.overwriteApiConversationHistory(cline.apiConversationHistory.filter((m) => !m.ts || m.ts < ts))
@@ -265,7 +321,7 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 			.sort((a, b) => b.ts - a.ts)
 			.find((message) => message.ts < ts)
 
-		previousCommitHash = previousCheckpoint?.text
+		previousCommitHash = previousCheckpoint?.text ?? service.baseHash
 	}
 
 	try {
@@ -279,7 +335,7 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 		await vscode.commands.executeCommand(
 			"vscode.changes",
 			mode === "full" ? "Changes since task started" : "Changes since previous checkpoint",
-			changes.map((change) => [
+			changes.map((change: any) => [
 				vscode.Uri.file(change.paths.absolute),
 				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${change.paths.relative}`).with({
 					query: Buffer.from(change.content.before ?? "").toString("base64"),

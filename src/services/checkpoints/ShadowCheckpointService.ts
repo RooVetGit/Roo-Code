@@ -3,14 +3,15 @@ import os from "os"
 import * as path from "path"
 import crypto from "crypto"
 import EventEmitter from "events"
+import vscode from "vscode"
+import fse from "fs-extra"
+import ignore from "ignore"
 
 import simpleGit, { SimpleGit } from "simple-git"
 import pWaitFor from "p-wait-for"
 
 import { fileExistsAtPath } from "../../utils/fs"
-import { executeRipgrep } from "../../services/search/file-search"
 
-import { GIT_DISABLED_SUFFIX } from "./constants"
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
 
@@ -25,7 +26,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	protected readonly dotGitDir: string
 	protected git?: SimpleGit
 	protected readonly log: (message: string) => void
-	protected shadowGitConfigWorktree?: string
 
 	public get baseHash() {
 		return this._baseHash
@@ -75,23 +75,18 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 		if (await fileExistsAtPath(this.dotGitDir)) {
 			this.log(`[${this.constructor.name}#initShadowGit] shadow git repo already exists at ${this.dotGitDir}`)
-			const worktree = await this.getShadowGitConfigWorktree(git)
-
-			if (worktree !== this.workspaceDir) {
-				throw new Error(
-					`Checkpoints can only be used in the original workspace: ${worktree} !== ${this.workspaceDir}`,
-				)
-			}
-
 			await this.writeExcludeFile()
 			this.baseHash = await git.revparse(["HEAD"])
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
-			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
+			await this.copyWorkspaceToShadow()
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
 			await git.addConfig("user.name", "Roo Code")
 			await git.addConfig("user.email", "noreply@example.com")
+			// Prevent LFS and submodule errors in shadow repo
+			await git.addConfig("filter.lfs.process", "cat")
+			await git.addConfig("submodule.recurse", "false")
 			await this.writeExcludeFile()
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
@@ -120,6 +115,45 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		return { created, duration }
 	}
 
+	private async copyWorkspaceToShadow() {
+		const ig = ignore()
+		const gitignorePath = path.join(this.workspaceDir, ".gitignore")
+		if (await fileExistsAtPath(gitignorePath)) {
+			const gitignore = await fs.readFile(gitignorePath, "utf-8")
+			ig.add(gitignore)
+		}
+
+		await fse.copy(this.workspaceDir, this.checkpointsDir, {
+			filter: (src: string) => {
+				const relativePath = path.relative(this.workspaceDir, src)
+				if (relativePath === "") {
+					return true
+				}
+				// Do not copy the shadow checkpoints directory if it's inside the workspace
+				if (src.startsWith(this.checkpointsDir)) {
+					return false
+				}
+				return !ig.ignores(relativePath)
+			},
+		})
+	}
+
+	public async syncFile(uri: vscode.Uri) {
+		if (!this.isInitialized) {
+			return
+		}
+		const relativePath = path.relative(this.workspaceDir, uri.fsPath)
+		const shadowPath = path.join(this.checkpointsDir, relativePath)
+		try {
+			await fse.copy(uri.fsPath, shadowPath)
+			this.log(`[${this.constructor.name}#syncFile] synced ${relativePath} to shadow copy`)
+		} catch (error) {
+			this.log(
+				`[${this.constructor.name}#syncFile] failed to sync ${relativePath}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+	}
+
 	// Add basic excludes directly in git config, while respecting any
 	// .gitignore in the workspace.
 	// .git/info/exclude is local to the shadow git repo, so it's not
@@ -132,91 +166,18 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	}
 
 	private async stageAll(git: SimpleGit) {
-		await this.renameNestedGitRepos(true)
-
 		try {
 			await git.add(".")
 		} catch (error) {
 			this.log(
 				`[${this.constructor.name}#stageAll] failed to add files to git: ${error instanceof Error ? error.message : String(error)}`,
 			)
-		} finally {
-			await this.renameNestedGitRepos(false)
 		}
-	}
-
-	// Since we use git to track checkpoints, we need to temporarily disable
-	// nested git repos to work around git's requirement of using submodules for
-	// nested repos.
-	private async renameNestedGitRepos(disable: boolean) {
-		try {
-			// Find all .git directories that are not at the root level.
-			const gitDir = ".git" + (disable ? "" : GIT_DISABLED_SUFFIX)
-			const args = ["--files", "--hidden", "--follow", "-g", `**/${gitDir}/HEAD`, this.workspaceDir]
-
-			const gitPaths = await (
-				await executeRipgrep({ args, workspacePath: this.workspaceDir })
-			).filter(({ type, path }) => type === "folder" && path.includes(".git") && !path.startsWith(".git"))
-
-			// For each nested .git directory, rename it based on operation.
-			for (const gitPath of gitPaths) {
-				if (gitPath.path.startsWith(".git")) {
-					continue
-				}
-
-				const currentPath = path.join(this.workspaceDir, gitPath.path)
-				let newPath: string
-
-				if (disable) {
-					newPath = !currentPath.endsWith(GIT_DISABLED_SUFFIX)
-						? currentPath + GIT_DISABLED_SUFFIX
-						: currentPath
-				} else {
-					newPath = currentPath.endsWith(GIT_DISABLED_SUFFIX)
-						? currentPath.slice(0, -GIT_DISABLED_SUFFIX.length)
-						: currentPath
-				}
-
-				if (currentPath === newPath) {
-					continue
-				}
-
-				try {
-					await fs.rename(currentPath, newPath)
-
-					this.log(
-						`[${this.constructor.name}#renameNestedGitRepos] ${disable ? "disabled" : "enabled"} nested git repo ${currentPath}`,
-					)
-				} catch (error) {
-					this.log(
-						`[${this.constructor.name}#renameNestedGitRepos] failed to ${disable ? "disable" : "enable"} nested git repo ${currentPath}: ${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
-			}
-		} catch (error) {
-			this.log(
-				`[${this.constructor.name}#renameNestedGitRepos] failed to ${disable ? "disable" : "enable"} nested git repos: ${error instanceof Error ? error.message : String(error)}`,
-			)
-		}
-	}
-
-	private async getShadowGitConfigWorktree(git: SimpleGit) {
-		if (!this.shadowGitConfigWorktree) {
-			try {
-				this.shadowGitConfigWorktree = (await git.getConfig("core.worktree")).value || undefined
-			} catch (error) {
-				this.log(
-					`[${this.constructor.name}#getShadowGitConfigWorktree] failed to get core.worktree: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
-		}
-
-		return this.shadowGitConfigWorktree
 	}
 
 	public async saveCheckpoint(
 		message: string,
-		options?: { allowEmpty?: boolean },
+		options?: { allowEmpty?: boolean; files?: vscode.Uri[] },
 	): Promise<CheckpointResult | undefined> {
 		try {
 			this.log(
@@ -227,8 +188,19 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				throw new Error("Shadow git repo not initialized")
 			}
 
+			if (options?.files) {
+				for (const file of options.files) {
+					await this.syncFile(file)
+				}
+			}
+
 			const startTime = Date.now()
-			await this.stageAll(this.git)
+			if (options?.files && options.files.length > 0) {
+				const filePaths = options.files.map((file) => path.relative(this.workspaceDir, file.fsPath))
+				await this.git.add(filePaths)
+			} else {
+				await this.stageAll(this.git)
+			}
 			const commitArgs = options?.allowEmpty ? { "--allow-empty": null } : undefined
 			const result = await this.git.commit(message, commitArgs)
 			const isFirst = this._checkpoints.length === 0
@@ -238,7 +210,14 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			const duration = Date.now() - startTime
 
 			if (isFirst || result.commit) {
-				this.emit("checkpoint", { type: "checkpoint", isFirst, fromHash, toHash, duration })
+				this.emit("checkpointCreated", {
+					type: "checkpointCreated",
+					message,
+					isFirst,
+					fromHash,
+					toHash,
+					duration,
+				})
 			}
 
 			if (result.commit) {
@@ -267,8 +246,18 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 
 			const start = Date.now()
-			await this.git.clean("f", ["-d", "-f"])
+			// Restore shadow
 			await this.git.reset(["--hard", commitHash])
+			await this.git.clean("f", ["-d", "-f"])
+
+			// Copy from shadow to workspace
+			await fse.copy(this.checkpointsDir, this.workspaceDir, {
+				overwrite: true,
+				filter: (src: string) => {
+					const relativePath = path.relative(this.checkpointsDir, src)
+					return relativePath !== ".git" && !relativePath.startsWith(".git/")
+				},
+			})
 
 			// Remove all checkpoints after the specified commitHash.
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)
@@ -305,21 +294,33 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		this.log(`[${this.constructor.name}#getDiff] diffing ${to ? `${from}..${to}` : `${from}..HEAD`}`)
 		const { files } = to ? await this.git.diffSummary([`${from}..${to}`]) : await this.git.diffSummary([from])
 
-		const cwdPath = (await this.getShadowGitConfigWorktree(this.git)) || this.workspaceDir || ""
-
 		for (const file of files) {
 			const relPath = file.file
-			const absPath = path.join(cwdPath, relPath)
+			const absPath = path.join(this.workspaceDir, relPath)
 			const before = await this.git.show([`${from}:${relPath}`]).catch(() => "")
+			const after = await this.git.show([`${to ?? "HEAD"}:${relPath}`]).catch(() => "")
 
-			const after = to
-				? await this.git.show([`${to}:${relPath}`]).catch(() => "")
-				: await fs.readFile(absPath, "utf8").catch(() => "")
+			let type: "create" | "delete" | "edit"
+			if (!before) {
+				type = "create"
+			} else if (!after) {
+				type = "delete"
+			} else {
+				type = "edit"
+			}
 
-			result.push({ paths: { relative: relPath, absolute: absPath }, content: { before, after } })
+			result.push({ paths: { relative: relPath, absolute: absPath }, content: { before, after }, type })
 		}
 
 		return result
+	}
+
+	public async getContent(commitHash: string, filePath: string): Promise<string> {
+		if (!this.git) {
+			throw new Error("Shadow git repo not initialized")
+		}
+		const relativePath = path.relative(this.workspaceDir, filePath)
+		return this.git.show([`${commitHash}:${relativePath}`])
 	}
 
 	/**
@@ -396,10 +397,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		const currentBranch = await git.revparse(["--abbrev-ref", "HEAD"])
 
 		if (currentBranch === branchName) {
-			const worktree = await git.getConfig("core.worktree")
-
 			try {
-				await git.raw(["config", "--unset", "core.worktree"])
 				await git.reset(["--hard"])
 				await git.clean("f", ["-d"])
 				const defaultBranch = branches.all.includes("main") ? "main" : "master"
@@ -421,10 +419,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				)
 
 				return false
-			} finally {
-				if (worktree.value) {
-					await git.addConfig("core.worktree", worktree.value)
-				}
 			}
 		} else {
 			await git.branch(["-D", branchName])

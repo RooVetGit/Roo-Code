@@ -41,6 +41,7 @@ import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import FilesChangedOverview from "./FilesChangedOverview"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -94,6 +95,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		historyPreviewCollapsed, // Added historyPreviewCollapsed
 		soundEnabled,
 		soundVolume,
+		currentFileChangeset,
 	} = useExtensionState()
 
 	const messagesRef = useRef(messages)
@@ -711,7 +713,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	useEvent("message", handleMessage)
 
 	// NOTE: the VSCode window needs to be focused for this to work.
-	useMount(() => textAreaRef.current?.focus())
+	useMount(() => {
+		vscode.postMessage({ type: "webviewReady" })
+		textAreaRef.current?.focus()
+	})
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -1204,11 +1209,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			}
 
 			// regular message
+			const message = messageOrGroup
 			return (
 				<ChatRow
-					key={messageOrGroup.ts}
-					message={messageOrGroup}
-					isExpanded={expandedRows[messageOrGroup.ts] || false}
+					key={message.ts}
+					message={message}
+					isExpanded={expandedRows[message.ts] || false}
 					onToggleExpand={toggleRowExpansion} // This was already stabilized
 					lastModifiedMessage={modifiedMessages.at(-1)} // Original direct access
 					isLast={index === groupedMessages.length - 1} // Original direct access
@@ -1364,6 +1370,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					{showCheckpointWarning && (
 						<div className="px-3">
 							<CheckpointWarning />
+						</div>
+					)}
+
+					{currentFileChangeset && currentFileChangeset.files && currentFileChangeset.files.length > 0 && (
+						<div className="px-3">
+							<FilesChangedOverview
+								changeset={currentFileChangeset}
+								onViewDiff={(uri) => vscode.postMessage({ type: "viewDiff", uri })}
+								onAcceptFile={(uri) => vscode.postMessage({ type: "acceptFileChange", uri })}
+								onRejectFile={(uri) => vscode.postMessage({ type: "rejectFileChange", uri })}
+								onAcceptAll={() => vscode.postMessage({ type: "acceptAllFileChanges" })}
+								onRejectAll={() => vscode.postMessage({ type: "rejectAllFileChanges" })}
+							/>
 						</div>
 					)}
 				</>

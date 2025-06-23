@@ -29,6 +29,7 @@ export interface WebviewMessage {
 		| "alwaysAllowWriteOutsideWorkspace"
 		| "alwaysAllowExecute"
 		| "webviewDidLaunch"
+		| "webviewReady"
 		| "newTask"
 		| "askResponse"
 		| "terminalOperation"
@@ -149,6 +150,11 @@ export interface WebviewMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "codebaseIndexConfig"
+		| "viewDiff"
+		| "acceptFileChange"
+		| "rejectFileChange"
+		| "acceptAllFileChanges"
+		| "rejectAllFileChanges"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -178,6 +184,14 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	command?: string // Added for new message types sent from webview
+	uri?: string // Added for file URIs in new message types
+}
+
+export interface Terminal {
+	pid: number
+	name: string
+	cwd: string
 }
 
 export const checkoutDiffPayloadSchema = z.object({
