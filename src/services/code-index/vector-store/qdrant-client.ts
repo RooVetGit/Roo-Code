@@ -57,7 +57,7 @@ export class QdrantVectorStore implements IVectorStore {
 				host: urlObj.hostname,
 				https: useHttps,
 				port: port,
-				prefix: urlObj.pathname === "/" ? undefined : urlObj.pathname,
+				prefix: urlObj.pathname === "/" ? undefined : urlObj.pathname.replace(/\/$/, ""),
 				apiKey,
 				headers: {
 					"User-Agent": "Roo-Code",
