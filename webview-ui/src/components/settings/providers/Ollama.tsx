@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { useEvent } from "react-use"
 import { VSCodeTextField, VSCodeRadioGroup, VSCodeRadio } from "@vscode/webview-ui-toolkit/react"
 
@@ -8,6 +8,7 @@ import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
+import { vscode } from "@src/utils/vscode"
 
 import { inputEventTransform } from "../transforms"
 
@@ -47,6 +48,21 @@ export const Ollama = ({ apiConfiguration, setApiConfigurationField }: OllamaPro
 	}, [])
 
 	useEvent("message", onMessage)
+
+	// Refresh models on mount
+	useEffect(() => {
+		// Request fresh models without flushing first
+		// This ensures cached models remain visible while new ones load
+		vscode.postMessage({ type: "requestRouterModels" })
+
+		// Optionally flush cache after a delay to ensure fresh data on next load
+		// This won't affect the current session since models are already being fetched
+		const timer = setTimeout(() => {
+			vscode.postMessage({ type: "flushRouterModels", text: "ollama" })
+		}, 1000)
+
+		return () => clearTimeout(timer)
+	}, [])
 
 	// Check if the selected model exists in the fetched models
 	const modelNotAvailable = useMemo(() => {
