@@ -32,7 +32,7 @@ export const ModelInfoView = ({
 			doesNotSupportLabel={t("settings:modelInfo.noImages")}
 		/>,
 		<ModelInfoSupportsItem
-			isSupported={modelInfo?.supportsComputerUse ?? false}
+			isSupported={modelInfo?.supportsImages ?? false}
 			supportsLabel={t("settings:modelInfo.supportsComputerUse")}
 			doesNotSupportLabel={t("settings:modelInfo.noComputerUse")}
 		/>,

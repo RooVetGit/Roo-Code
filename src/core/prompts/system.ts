@@ -29,7 +29,7 @@ import {
 async function generatePrompt(
 	context: vscode.ExtensionContext,
 	cwd: string,
-	supportsComputerUse: boolean,
+	supportsBrowserUse: boolean,
 	mode: Mode,
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
@@ -74,7 +74,7 @@ ${getSharedToolUseSection()}
 ${getToolDescriptionsForMode(
 	mode,
 	cwd,
-	supportsComputerUse,
+	supportsBrowserUse,
 	codeIndexManager,
 	effectiveDiffStrategy,
 	browserViewportSize,
@@ -89,11 +89,11 @@ ${getToolUseGuidelinesSection(codeIndexManager)}
 
 ${mcpServersSection}
 
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, codeIndexManager)}
+${getCapabilitiesSection(cwd, supportsBrowserUse, mcpHub, effectiveDiffStrategy, codeIndexManager)}
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, codeIndexManager)}
+${getRulesSection(cwd, supportsBrowserUse, effectiveDiffStrategy, codeIndexManager)}
 
 ${getSystemInfoSection(cwd)}
 
@@ -107,7 +107,7 @@ ${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", 
 export const SYSTEM_PROMPT = async (
 	context: vscode.ExtensionContext,
 	cwd: string,
-	supportsComputerUse: boolean,
+	supportsBrowserUse: boolean,
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
@@ -180,7 +180,7 @@ ${customInstructions}`
 	return generatePrompt(
 		context,
 		cwd,
-		supportsComputerUse,
+		supportsBrowserUse,
 		currentMode.slug,
 		mcpHub,
 		effectiveDiffStrategy,

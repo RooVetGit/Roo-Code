@@ -39,12 +39,12 @@ export async function getLiteLLMModels(apiKey: string, baseUrl: string): Promise
 				if (!modelName || !modelInfo || !litellmModelName) continue
 
 				// Use explicit supports_computer_use if available, otherwise fall back to hardcoded list
-				let supportsComputerUse: boolean
+				let supportsBrowserUse: boolean
 				if (modelInfo.supports_computer_use !== undefined) {
-					supportsComputerUse = Boolean(modelInfo.supports_computer_use)
+					supportsBrowserUse = Boolean(modelInfo.supports_computer_use)
 				} else {
 					// Fallback for older LiteLLM versions that don't have supports_computer_use field
-					supportsComputerUse = computerModels.some((computer_model) =>
+					supportsBrowserUse = computerModels.some((computer_model) =>
 						litellmModelName.endsWith(computer_model),
 					)
 				}
@@ -54,7 +54,7 @@ export async function getLiteLLMModels(apiKey: string, baseUrl: string): Promise
 					contextWindow: modelInfo.max_input_tokens || 200000,
 					supportsImages: Boolean(modelInfo.supports_vision),
 					// litellm_params.model may have a prefix like openrouter/
-					supportsComputerUse,
+					supportsBrowserUse,
 					supportsPromptCache: Boolean(modelInfo.supports_prompt_caching),
 					inputPrice: modelInfo.input_cost_per_token ? modelInfo.input_cost_per_token * 1000000 : undefined,
 					outputPrice: modelInfo.output_cost_per_token

@@ -396,11 +396,11 @@ export const OpenAICompatible = ({
 				<div>
 					<div className="flex items-center gap-1">
 						<Checkbox
-							checked={apiConfiguration?.openAiCustomModelInfo?.supportsComputerUse ?? false}
+							checked={apiConfiguration?.openAiCustomModelInfo?.supportsBrowserUse ?? false}
 							onChange={handleInputChange("openAiCustomModelInfo", (checked) => {
 								return {
 									...(apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults),
-									supportsComputerUse: checked,
+									supportsBrowserUse: checked,
 								}
 							})}>
 							<span className="font-medium">{t("settings:providers.customModel.computerUse.label")}</span>

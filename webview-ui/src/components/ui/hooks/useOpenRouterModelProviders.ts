@@ -75,7 +75,7 @@ async function getOpenRouterProvidersForModel(modelId: string) {
 			// main models endpoint.
 			switch (true) {
 				case modelId.startsWith("anthropic/claude-3.7-sonnet"):
-					modelInfo.supportsComputerUse = true
+					modelInfo.supportsBrowserUse = true
 					modelInfo.supportsPromptCache = true
 					modelInfo.cacheWritesPrice = 3.75
 					modelInfo.cacheReadsPrice = 0.3

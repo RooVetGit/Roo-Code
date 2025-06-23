@@ -32,7 +32,7 @@ export const modelInfoSchema = z.object({
 	maxThinkingTokens: z.number().nullish(),
 	contextWindow: z.number(),
 	supportsImages: z.boolean().optional(),
-	supportsComputerUse: z.boolean().optional(),
+	supportsBrowserUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
 	supportsReasoningBudget: z.boolean().optional(),
 	requiredReasoningBudget: z.boolean().optional(),

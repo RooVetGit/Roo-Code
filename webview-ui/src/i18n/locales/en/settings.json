@@ -91,7 +91,7 @@
 		},
 		"browser": {
 			"label": "Browser",
-			"description": "Automatically perform browser actions without requiring approval. Note: Only applies when the model supports computer use"
+			"description": "Automatically perform browser actions without requiring approval. Note: Only applies when the model supports browser use"
 		},
 		"retry": {
 			"label": "Retry",
@@ -266,7 +266,7 @@
 				"description": "Is this model capable of processing and understanding images?"
 			},
 			"computerUse": {
-				"label": "Computer Use",
+				"label": "Browser Use",
 				"description": "Is this model capable of interacting with a browser? (e.g. Claude 3.7 Sonnet)."
 			},
 			"promptCache": {
@@ -313,7 +313,7 @@
 	"browser": {
 		"enable": {
 			"label": "Enable browser tool",
-			"description": "When enabled, Roo can use a browser to interact with websites when using models that support computer use. <0>Learn more</0>"
+			"description": "When enabled, Roo can use a browser to interact with websites when using models that support browser use. <0>Learn more</0>"
 		},
 		"viewport": {
 			"label": "Viewport size",

@@ -1612,7 +1612,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			return SYSTEM_PROMPT(
 				provider.context,
 				this.cwd,
-				(this.api.getModel().info.supportsComputerUse ?? false) && (browserToolEnabled ?? true),
+				(this.api.getModel().info.supportsBrowserUse ?? false) && (browserToolEnabled ?? true),
 				mcpHub,
 				this.diffStrategy,
 				browserViewportSize,

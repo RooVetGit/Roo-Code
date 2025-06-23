@@ -4,7 +4,7 @@ describe("getAttemptCompletionDescription", () => {
 	it("should NOT include command parameter in the description", () => {
 		const args = {
 			cwd: "/test/path",
-			supportsComputerUse: false,
+			supportsBrowserUse: false,
 		}
 
 		const description = getAttemptCompletionDescription(args)
@@ -41,7 +41,7 @@ describe("getAttemptCompletionDescription", () => {
 	it("should show example without command", () => {
 		const args = {
 			cwd: "/test/path",
-			supportsComputerUse: false,
+			supportsBrowserUse: false,
 		}
 
 		const description = getAttemptCompletionDescription(args)

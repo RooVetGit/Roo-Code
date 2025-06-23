@@ -452,7 +452,7 @@ describe("Cline", () => {
 					info: {
 						supportsImages: true,
 						supportsPromptCache: true,
-						supportsComputerUse: true,
+						supportsBrowserUse: true,
 						contextWindow: 200000,
 						maxTokens: 4096,
 						inputPrice: 0.25,
@@ -475,7 +475,7 @@ describe("Cline", () => {
 					info: {
 						supportsImages: false,
 						supportsPromptCache: false,
-						supportsComputerUse: false,
+						supportsBrowserUse: false,
 						contextWindow: 16000,
 						maxTokens: 2048,
 						inputPrice: 0.1,

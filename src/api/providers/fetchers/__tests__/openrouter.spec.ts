@@ -50,7 +50,7 @@ describe("OpenRouter API", () => {
 
 			expect(
 				Object.entries(models)
-					.filter(([_, model]) => model.supportsComputerUse)
+					.filter(([_, model]) => model.supportsBrowserUse)
 					.map(([id, _]) => id)
 					.sort(),
 			).toEqual(Array.from(OPEN_ROUTER_COMPUTER_USE_MODELS).sort())
@@ -158,7 +158,7 @@ describe("OpenRouter API", () => {
 				cacheWritesPrice: 3.75,
 				cacheReadsPrice: 0.3,
 				description: expect.any(String),
-				supportsComputerUse: true,
+				supportsBrowserUse: true,
 				supportsReasoningBudget: false,
 				supportsReasoningEffort: false,
 				supportedParameters: ["max_tokens", "temperature", "reasoning", "include_reasoning"],
@@ -174,7 +174,7 @@ describe("OpenRouter API", () => {
 				cacheWritesPrice: 3.75,
 				cacheReadsPrice: 0.3,
 				description: expect.any(String),
-				supportsComputerUse: true,
+				supportsBrowserUse: true,
 				supportsReasoningBudget: true,
 				requiredReasoningBudget: true,
 				supportsReasoningEffort: true,

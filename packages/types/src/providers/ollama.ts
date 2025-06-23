@@ -7,7 +7,7 @@ export const ollamaDefaultModelInfo: ModelInfo = {
 	maxTokens: 4096,
 	contextWindow: 200_000,
 	supportsImages: true,
-	supportsComputerUse: true,
+	supportsBrowserUse: true,
 	supportsPromptCache: true,
 	inputPrice: 0,
 	outputPrice: 0,

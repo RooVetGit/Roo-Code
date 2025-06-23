@@ -26,7 +26,7 @@ vitest.mock("../fetchers/modelCache", () => ({
 				cacheReadsPrice: 0.3,
 				description: "Claude 3.7 Sonnet",
 				thinking: false,
-				supportsComputerUse: true,
+				supportsBrowserUse: true,
 			},
 			"anthropic/claude-3.7-sonnet:thinking": {
 				maxTokens: 128000,
@@ -38,7 +38,7 @@ vitest.mock("../fetchers/modelCache", () => ({
 				cacheWritesPrice: 3.75,
 				cacheReadsPrice: 0.3,
 				description: "Claude 3.7 Sonnet with thinking",
-				supportsComputerUse: true,
+				supportsBrowserUse: true,
 			},
 		})
 	}),

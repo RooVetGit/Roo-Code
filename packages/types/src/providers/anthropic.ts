@@ -10,7 +10,7 @@ export const anthropicModels = {
 		maxTokens: 64_000, // Overridden to 8k if `enableReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsComputerUse: true,
+		supportsBrowserUse: true,
 		supportsPromptCache: true,
 		inputPrice: 3.0, // $3 per million input tokens
 		outputPrice: 15.0, // $15 per million output tokens
@@ -22,7 +22,7 @@ export const anthropicModels = {
 		maxTokens: 32_000, // Overridden to 8k if `enableReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsComputerUse: true,
+		supportsBrowserUse: true,
 		supportsPromptCache: true,
 		inputPrice: 15.0, // $15 per million input tokens
 		outputPrice: 75.0, // $75 per million output tokens
@@ -34,7 +34,7 @@ export const anthropicModels = {
 		maxTokens: 128_000, // Unlocked by passing `beta` flag to the model. Otherwise, it's 64k.
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsComputerUse: true,
+		supportsBrowserUse: true,
 		supportsPromptCache: true,
 		inputPrice: 3.0, // $3 per million input tokens
 		outputPrice: 15.0, // $15 per million output tokens
@@ -47,7 +47,7 @@ export const anthropicModels = {
 		maxTokens: 8192, // Since we already have a `:thinking` virtual model we aren't setting `supportsReasoningBudget: true` here.
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsComputerUse: true,
+		supportsBrowserUse: true,
 		supportsPromptCache: true,
 		inputPrice: 3.0, // $3 per million input tokens
 		outputPrice: 15.0, // $15 per million output tokens
@@ -58,7 +58,7 @@ export const anthropicModels = {
 		maxTokens: 8192,
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsComputerUse: true,
+		supportsBrowserUse: true,
 		supportsPromptCache: true,
 		inputPrice: 3.0, // $3 per million input tokens
 		outputPrice: 15.0, // $15 per million output tokens

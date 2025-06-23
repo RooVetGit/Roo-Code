@@ -142,7 +142,7 @@ describe("useSelectedModel", () => {
 				contextWindow: 8192,
 				supportsImages: false,
 				supportsPromptCache: false,
-				supportsComputerUse: true,
+				supportsBrowserUse: true,
 				cacheWritesPrice: 0.1,
 				cacheReadsPrice: 0.01,
 			}
@@ -189,7 +189,7 @@ describe("useSelectedModel", () => {
 				// Fields from base model that provider doesn't have
 				contextWindow: 8192, // From base (provider doesn't override)
 				supportsPromptCache: false, // From base (provider doesn't override)
-				supportsComputerUse: true, // From base (provider doesn't have)
+				supportsBrowserUse: true, // From base (provider doesn't have)
 				cacheWritesPrice: 0.1, // From base (provider doesn't have)
 				cacheReadsPrice: 0.01, // From base (provider doesn't have)
 
@@ -251,7 +251,7 @@ describe("useSelectedModel", () => {
 							maxTokens: 8192,
 							contextWindow: 200_000,
 							supportsImages: true,
-							supportsComputerUse: true,
+							supportsBrowserUse: true,
 							supportsPromptCache: true,
 							inputPrice: 3.0,
 							outputPrice: 15.0,
