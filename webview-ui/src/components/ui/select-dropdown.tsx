@@ -13,7 +13,6 @@ export enum DropdownOptionType {
 	SEPARATOR = "separator",
 	SHORTCUT = "shortcut",
 	ACTION = "action",
-	COMPONENT = "component",
 }
 
 export interface DropdownOption {
@@ -22,7 +21,6 @@ export interface DropdownOption {
 	disabled?: boolean
 	type?: DropdownOptionType
 	pinned?: boolean
-	component?: React.ReactNode
 }
 
 export interface SelectDropdownProps {
@@ -104,10 +102,7 @@ export const SelectDropdown = React.memo(
 				return options
 					.filter(
 						(option) =>
-							option.type !== DropdownOptionType.SEPARATOR &&
-							option.type !== DropdownOptionType.SHORTCUT &&
-							// Only include COMPONENT type if it has a label or value to search by
-							!(option.type === DropdownOptionType.COMPONENT && !option.label && !option.value),
+							option.type !== DropdownOptionType.SEPARATOR && option.type !== DropdownOptionType.SHORTCUT,
 					)
 					.map((option) => ({
 						original: option,
@@ -130,13 +125,9 @@ export const SelectDropdown = React.memo(
 				// Get fuzzy matching items - only perform search if we have a search value
 				const matchingItems = fzfInstance.find(searchValue).map((result) => result.item.original)
 
-				// Always include separators, shortcuts, and components without searchable text
+				// Always include separators and shortcuts
 				return options.filter((option) => {
-					if (
-						option.type === DropdownOptionType.SEPARATOR ||
-						option.type === DropdownOptionType.SHORTCUT ||
-						(option.type === DropdownOptionType.COMPONENT && !option.label && !option.value)
-					) {
+					if (option.type === DropdownOptionType.SEPARATOR || option.type === DropdownOptionType.SHORTCUT) {
 						return true
 					}
 
@@ -268,27 +259,6 @@ export const SelectDropdown = React.memo(
 														key={`label-${index}`}
 														className="px-3 py-1.5 text-sm opacity-50">
 														{option.label}
-													</div>
-												)
-											}
-
-											if (option.type === DropdownOptionType.COMPONENT && option.component) {
-												return (
-													<div
-														key={`component-${index}`}
-														onClick={() => !option.disabled && handleSelect(option.value)}
-														className={cn(
-															"px-3 py-1.5 text-sm cursor-pointer",
-															option.disabled
-																? "opacity-50 cursor-not-allowed"
-																: "hover:bg-vscode-list-hoverBackground",
-															option.value === value
-																? "bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground"
-																: "",
-															itemClassName,
-														)}
-														data-testid="dropdown-component-item">
-														{option.component}
 													</div>
 												)
 											}
