@@ -51,15 +51,13 @@ export const Ollama = ({ apiConfiguration, setApiConfigurationField }: OllamaPro
 
 	// Refresh models on mount
 	useEffect(() => {
-		// Request fresh models without flushing first
-		// This ensures cached models remain visible while new ones load
-		vscode.postMessage({ type: "requestRouterModels" })
+		// Flush cache first to ensure we get fresh models
+		vscode.postMessage({ type: "flushRouterModels", text: "ollama" })
 
-		// Optionally flush cache after a delay to ensure fresh data on next load
-		// This won't affect the current session since models are already being fetched
+		// Request fresh Ollama models after a small delay to ensure cache is flushed
 		const timer = setTimeout(() => {
-			vscode.postMessage({ type: "flushRouterModels", text: "ollama" })
-		}, 1000)
+			vscode.postMessage({ type: "requestOllamaModels" })
+		}, 100)
 
 		return () => clearTimeout(timer)
 	}, [])
