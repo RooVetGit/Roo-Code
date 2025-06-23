@@ -420,6 +420,25 @@ describe("QdrantVectorStore", () => {
 			expect((vectorStoreWithTrailingSlash as any).qdrantUrl).toBe("http://localhost:6333/api/")
 		})
 
+		it("should normalize URL pathname by removing multiple trailing slashes for prefix", () => {
+			const vectorStoreWithMultipleTrailingSlashes = new QdrantVectorStore(
+				mockWorkspacePath,
+				"http://localhost:6333/api///",
+				mockVectorSize,
+			)
+			expect(QdrantClient).toHaveBeenLastCalledWith({
+				host: "localhost",
+				https: false,
+				port: 6333,
+				prefix: "/api", // All trailing slashes should be removed
+				apiKey: undefined,
+				headers: {
+					"User-Agent": "Roo-Code",
+				},
+			})
+			expect((vectorStoreWithMultipleTrailingSlashes as any).qdrantUrl).toBe("http://localhost:6333/api///")
+		})
+
 		it("should handle multiple path segments correctly for prefix", () => {
 			const vectorStoreWithMultiSegment = new QdrantVectorStore(
 				mockWorkspacePath,
@@ -438,14 +457,10 @@ describe("QdrantVectorStore", () => {
 			})
 			expect((vectorStoreWithMultiSegment as any).qdrantUrl).toBe("http://localhost:6333/api/v1/qdrant")
 		})
-		
-		it("should handle complex URL with multiple segments, trailing slash, query params, and fragment", () => {
-			const complexUrl = "https://example.com/ollama/api/v1/?key=value#pos"
-			const vectorStoreComplex = new QdrantVectorStore(
-				mockWorkspacePath,
-				complexUrl,
-				mockVectorSize,
-			)
+
+		it("should handle complex URL with multiple segments, multiple trailing slashes, query params, and fragment", () => {
+			const complexUrl = "https://example.com/ollama/api/v1///?key=value#pos"
+			const vectorStoreComplex = new QdrantVectorStore(mockWorkspacePath, complexUrl, mockVectorSize)
 			expect(QdrantClient).toHaveBeenLastCalledWith({
 				host: "example.com",
 				https: true,
