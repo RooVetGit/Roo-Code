@@ -99,8 +99,8 @@ describe("AuthService", () => {
 		}
 		vi.mocked(RefreshTimer).mockImplementation(() => mockTimer as unknown as RefreshTimer)
 
-		// Setup config mocks
-		vi.mocked(Config.getClerkBaseUrl).mockReturnValue("https://clerk.test.com")
+		// Setup config mocks - use production URL by default to maintain existing test behavior
+		vi.mocked(Config.getClerkBaseUrl).mockReturnValue("https://clerk.roocode.com")
 		vi.mocked(Config.getRooCodeApiUrl).mockReturnValue("https://api.test.com")
 
 		// Setup utils mock
@@ -173,17 +173,17 @@ describe("AuthService", () => {
 			expect(loggedOutSpy).toHaveBeenCalledWith({ previousState: "initializing" })
 		})
 
-		it("should transition to inactive-session when valid credentials exist", async () => {
+		it("should transition to attempting-session when valid credentials exist", async () => {
 			const credentials = { clientToken: "test-token", sessionId: "test-session" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 
-			const inactiveSessionSpy = vi.fn()
-			authService.on("inactive-session", inactiveSessionSpy)
+			const attemptingSessionSpy = vi.fn()
+			authService.on("attempting-session", attemptingSessionSpy)
 
 			await authService.initialize()
 
-			expect(authService.getState()).toBe("inactive-session")
-			expect(inactiveSessionSpy).toHaveBeenCalledWith({ previousState: "initializing" })
+			expect(authService.getState()).toBe("attempting-session")
+			expect(attemptingSessionSpy).toHaveBeenCalledWith({ previousState: "initializing" })
 			expect(mockTimer.start).toHaveBeenCalled()
 		})
 
@@ -213,13 +213,13 @@ describe("AuthService", () => {
 			const newCredentials = { clientToken: "new-token", sessionId: "new-session" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(newCredentials))
 
-			const inactiveSessionSpy = vi.fn()
-			authService.on("inactive-session", inactiveSessionSpy)
+			const attemptingSessionSpy = vi.fn()
+			authService.on("attempting-session", attemptingSessionSpy)
 
 			onDidChangeCallback!({ key: "clerk-auth-credentials" })
 			await new Promise((resolve) => setTimeout(resolve, 0)) // Wait for async handling
 
-			expect(inactiveSessionSpy).toHaveBeenCalled()
+			expect(attemptingSessionSpy).toHaveBeenCalled()
 		})
 	})
 
@@ -328,7 +328,7 @@ describe("AuthService", () => {
 
 			expect(mockContext.secrets.store).toHaveBeenCalledWith(
 				"clerk-auth-credentials",
-				JSON.stringify({ clientToken: "Bearer token-123", sessionId: "session-123" }),
+				JSON.stringify({ clientToken: "Bearer token-123", sessionId: "session-123", organizationId: null }),
 			)
 			expect(mockShowInfo).toHaveBeenCalledWith("Successfully authenticated with Roo Code Cloud")
 		})
@@ -377,7 +377,7 @@ describe("AuthService", () => {
 			expect(mockContext.secrets.delete).toHaveBeenCalledWith("clerk-auth-credentials")
 			expect(mockContext.globalState.update).toHaveBeenCalledWith("clerk-auth-state", undefined)
 			expect(mockFetch).toHaveBeenCalledWith(
-				"https://clerk.test.com/v1/client/sessions/test-session/remove",
+				"https://clerk.roocode.com/v1/client/sessions/test-session/remove",
 				expect.objectContaining({
 					method: "POST",
 					headers: expect.objectContaining({
@@ -451,6 +451,26 @@ describe("AuthService", () => {
 
 			expect(authService.getSessionToken()).toBe("test-jwt")
 		})
+
+		it("should return correct values for new methods", async () => {
+			await authService.initialize()
+			expect(authService.hasOrIsAcquiringActiveSession()).toBe(false)
+
+			// Create a new service instance with credentials (attempting-session)
+			const credentials = { clientToken: "test-token", sessionId: "test-session" }
+			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
+
+			const attemptingService = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			await attemptingService.initialize()
+
+			expect(attemptingService.hasOrIsAcquiringActiveSession()).toBe(true)
+			expect(attemptingService.hasActiveSession()).toBe(false)
+
+			// Manually set state to active-session for testing
+			attemptingService["state"] = "active-session"
+			expect(attemptingService.hasOrIsAcquiringActiveSession()).toBe(true)
+			expect(attemptingService.hasActiveSession()).toBe(true)
+		})
 	})
 
 	describe("session refresh", () => {
@@ -497,7 +517,7 @@ describe("AuthService", () => {
 			expect(authService.getState()).toBe("active-session")
 			expect(authService.hasActiveSession()).toBe(true)
 			expect(authService.getSessionToken()).toBe("new-jwt-token")
-			expect(activeSessionSpy).toHaveBeenCalledWith({ previousState: "inactive-session" })
+			expect(activeSessionSpy).toHaveBeenCalledWith({ previousState: "attempting-session" })
 			expect(userInfoSpy).toHaveBeenCalledWith({
 				userInfo: {
 					name: "John Doe",
@@ -530,6 +550,82 @@ describe("AuthService", () => {
 			await expect(timerCallback()).rejects.toThrow("Network error")
 			expect(mockLog).toHaveBeenCalledWith("[auth] Failed to refresh session", expect.any(Error))
 		})
+
+		it("should transition to inactive-session on first attempt failure", async () => {
+			// Mock failed token creation response
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 500,
+				statusText: "Internal Server Error",
+			})
+
+			const inactiveSessionSpy = vi.fn()
+			authService.on("inactive-session", inactiveSessionSpy)
+
+			// Verify we start in attempting-session state
+			expect(authService.getState()).toBe("attempting-session")
+			expect(authService["isFirstRefreshAttempt"]).toBe(true)
+
+			const timerCallback = vi.mocked(RefreshTimer).mock.calls[0][0].callback
+
+			await expect(timerCallback()).rejects.toThrow()
+
+			// Should transition to inactive-session after first failure
+			expect(authService.getState()).toBe("inactive-session")
+			expect(authService["isFirstRefreshAttempt"]).toBe(false)
+			expect(inactiveSessionSpy).toHaveBeenCalledWith({ previousState: "attempting-session" })
+		})
+
+		it("should not transition to inactive-session on subsequent failures", async () => {
+			// First, transition to inactive-session by failing the first attempt
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 500,
+				statusText: "Internal Server Error",
+			})
+
+			const timerCallback = vi.mocked(RefreshTimer).mock.calls[0][0].callback
+			await expect(timerCallback()).rejects.toThrow()
+
+			// Verify we're now in inactive-session
+			expect(authService.getState()).toBe("inactive-session")
+			expect(authService["isFirstRefreshAttempt"]).toBe(false)
+
+			const inactiveSessionSpy = vi.fn()
+			authService.on("inactive-session", inactiveSessionSpy)
+
+			// Subsequent failure should not trigger another transition
+			await expect(timerCallback()).rejects.toThrow()
+
+			expect(authService.getState()).toBe("inactive-session")
+			expect(inactiveSessionSpy).not.toHaveBeenCalled()
+		})
+
+		it("should clear credentials on 401 during first refresh attempt (bug fix)", async () => {
+			// Mock 401 response during first refresh attempt
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 401,
+				statusText: "Unauthorized",
+			})
+
+			const loggedOutSpy = vi.fn()
+			authService.on("logged-out", loggedOutSpy)
+
+			const timerCallback = vi.mocked(RefreshTimer).mock.calls[0][0].callback
+			await expect(timerCallback()).rejects.toThrow()
+
+			// Should clear credentials (not just transition to inactive-session)
+			expect(mockContext.secrets.delete).toHaveBeenCalledWith("clerk-auth-credentials")
+			expect(mockLog).toHaveBeenCalledWith("[auth] Invalid/Expired client token: clearing credentials")
+
+			// Simulate credentials cleared event
+			mockContext.secrets.get.mockResolvedValue(undefined)
+			await authService["handleCredentialsChange"]()
+
+			expect(authService.getState()).toBe("logged-out")
+			expect(loggedOutSpy).toHaveBeenCalledWith({ previousState: "attempting-session" })
+		})
 	})
 
 	describe("user info", () => {
@@ -537,9 +633,55 @@ describe("AuthService", () => {
 			expect(authService.getUserInfo()).toBeNull()
 		})
 
-		it("should parse user info correctly", async () => {
-			// Set up with credentials
-			const credentials = { clientToken: "test-token", sessionId: "test-session" }
+		it("should parse user info correctly for personal accounts", async () => {
+			// Set up with credentials for personal account (no organizationId)
+			const credentials = { clientToken: "test-token", sessionId: "test-session", organizationId: null }
+			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
+			await authService.initialize()
+
+			// Clear previous mock calls
+			mockFetch.mockClear()
+
+			// Mock successful responses
+			mockFetch
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => Promise.resolve({ jwt: "jwt-token" }),
+				})
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							response: {
+								first_name: "Jane",
+								last_name: "Smith",
+								image_url: "https://example.com/jane.jpg",
+								primary_email_address_id: "email-2",
+								email_addresses: [
+									{ id: "email-1", email_address: "jane.old@example.com" },
+									{ id: "email-2", email_address: "jane@example.com" },
+								],
+							},
+						}),
+				})
+
+			const timerCallback = vi.mocked(RefreshTimer).mock.calls[0][0].callback
+			await timerCallback()
+
+			// Wait for async operations to complete
+			await new Promise((resolve) => setTimeout(resolve, 0))
+
+			const userInfo = authService.getUserInfo()
+			expect(userInfo).toEqual({
+				name: "Jane Smith",
+				email: "jane@example.com",
+				picture: "https://example.com/jane.jpg",
+			})
+		})
+
+		it("should parse user info correctly for organization accounts", async () => {
+			// Set up with credentials for organization account
+			const credentials = { clientToken: "test-token", sessionId: "test-session", organizationId: "org_1" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 			await authService.initialize()
 
@@ -603,8 +745,8 @@ describe("AuthService", () => {
 		})
 
 		it("should handle missing user info fields", async () => {
-			// Set up with credentials
-			const credentials = { clientToken: "test-token", sessionId: "test-session" }
+			// Set up with credentials for personal account (no organizationId)
+			const credentials = { clientToken: "test-token", sessionId: "test-session", organizationId: null }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 			await authService.initialize()
 
@@ -654,16 +796,16 @@ describe("AuthService", () => {
 			expect(loggedOutSpy).toHaveBeenCalledWith({ previousState: "initializing" })
 		})
 
-		it("should emit inactive-session event", async () => {
+		it("should emit attempting-session event", async () => {
 			const credentials = { clientToken: "test-token", sessionId: "test-session" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 
-			const inactiveSessionSpy = vi.fn()
-			authService.on("inactive-session", inactiveSessionSpy)
+			const attemptingSessionSpy = vi.fn()
+			authService.on("attempting-session", attemptingSessionSpy)
 
 			await authService.initialize()
 
-			expect(inactiveSessionSpy).toHaveBeenCalledWith({ previousState: "initializing" })
+			expect(attemptingSessionSpy).toHaveBeenCalledWith({ previousState: "initializing" })
 		})
 
 		it("should emit active-session event", async () => {
@@ -701,7 +843,7 @@ describe("AuthService", () => {
 			// Wait for async operations to complete
 			await new Promise((resolve) => setTimeout(resolve, 0))
 
-			expect(activeSessionSpy).toHaveBeenCalledWith({ previousState: "inactive-session" })
+			expect(activeSessionSpy).toHaveBeenCalledWith({ previousState: "attempting-session" })
 		})
 
 		it("should emit user-info event", async () => {
@@ -803,13 +945,150 @@ describe("AuthService", () => {
 			expect(mockTimer.stop).toHaveBeenCalled()
 		})
 
-		it("should start timer on inactive-session transition", async () => {
+		it("should start timer on attempting-session transition", async () => {
 			const credentials = { clientToken: "test-token", sessionId: "test-session" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 
 			await authService.initialize()
 
 			expect(mockTimer.start).toHaveBeenCalled()
+		})
+	})
+
+	describe("auth credentials key scoping", () => {
+		it("should use default key when getClerkBaseUrl returns production URL", async () => {
+			// Mock getClerkBaseUrl to return production URL
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue("https://clerk.roocode.com")
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			const credentials = { clientToken: "test-token", sessionId: "test-session" }
+
+			await service.initialize()
+			await service["storeCredentials"](credentials)
+
+			expect(mockContext.secrets.store).toHaveBeenCalledWith(
+				"clerk-auth-credentials",
+				JSON.stringify(credentials),
+			)
+		})
+
+		it("should use scoped key when getClerkBaseUrl returns custom URL", async () => {
+			const customUrl = "https://custom.clerk.com"
+			// Mock getClerkBaseUrl to return custom URL
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue(customUrl)
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			const credentials = { clientToken: "test-token", sessionId: "test-session" }
+
+			await service.initialize()
+			await service["storeCredentials"](credentials)
+
+			expect(mockContext.secrets.store).toHaveBeenCalledWith(
+				`clerk-auth-credentials-${customUrl}`,
+				JSON.stringify(credentials),
+			)
+		})
+
+		it("should load credentials using scoped key", async () => {
+			const customUrl = "https://custom.clerk.com"
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue(customUrl)
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			const credentials = { clientToken: "test-token", sessionId: "test-session" }
+			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
+
+			await service.initialize()
+			const loadedCredentials = await service["loadCredentials"]()
+
+			expect(mockContext.secrets.get).toHaveBeenCalledWith(`clerk-auth-credentials-${customUrl}`)
+			expect(loadedCredentials).toEqual(credentials)
+		})
+
+		it("should clear credentials using scoped key", async () => {
+			const customUrl = "https://custom.clerk.com"
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue(customUrl)
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+
+			await service.initialize()
+			await service["clearCredentials"]()
+
+			expect(mockContext.secrets.delete).toHaveBeenCalledWith(`clerk-auth-credentials-${customUrl}`)
+		})
+
+		it("should listen for changes on scoped key", async () => {
+			const customUrl = "https://custom.clerk.com"
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue(customUrl)
+
+			let onDidChangeCallback: (e: { key: string }) => void
+
+			mockContext.secrets.onDidChange.mockImplementation((callback: (e: { key: string }) => void) => {
+				onDidChangeCallback = callback
+				return { dispose: vi.fn() }
+			})
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			await service.initialize()
+
+			// Simulate credentials change event with scoped key
+			const newCredentials = { clientToken: "new-token", sessionId: "new-session" }
+			mockContext.secrets.get.mockResolvedValue(JSON.stringify(newCredentials))
+
+			const attemptingSessionSpy = vi.fn()
+			service.on("attempting-session", attemptingSessionSpy)
+
+			onDidChangeCallback!({ key: `clerk-auth-credentials-${customUrl}` })
+			await new Promise((resolve) => setTimeout(resolve, 0)) // Wait for async handling
+
+			expect(attemptingSessionSpy).toHaveBeenCalled()
+		})
+
+		it("should not respond to changes on different scoped keys", async () => {
+			const customUrl = "https://custom.clerk.com"
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue(customUrl)
+
+			let onDidChangeCallback: (e: { key: string }) => void
+
+			mockContext.secrets.onDidChange.mockImplementation((callback: (e: { key: string }) => void) => {
+				onDidChangeCallback = callback
+				return { dispose: vi.fn() }
+			})
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			await service.initialize()
+
+			const inactiveSessionSpy = vi.fn()
+			service.on("inactive-session", inactiveSessionSpy)
+
+			// Simulate credentials change event with different scoped key
+			onDidChangeCallback!({ key: "clerk-auth-credentials-https://other.clerk.com" })
+			await new Promise((resolve) => setTimeout(resolve, 0)) // Wait for async handling
+
+			expect(inactiveSessionSpy).not.toHaveBeenCalled()
+		})
+
+		it("should not respond to changes on default key when using scoped key", async () => {
+			const customUrl = "https://custom.clerk.com"
+			vi.mocked(Config.getClerkBaseUrl).mockReturnValue(customUrl)
+
+			let onDidChangeCallback: (e: { key: string }) => void
+
+			mockContext.secrets.onDidChange.mockImplementation((callback: (e: { key: string }) => void) => {
+				onDidChangeCallback = callback
+				return { dispose: vi.fn() }
+			})
+
+			const service = new AuthService(mockContext as unknown as vscode.ExtensionContext, mockLog)
+			await service.initialize()
+
+			const inactiveSessionSpy = vi.fn()
+			service.on("inactive-session", inactiveSessionSpy)
+
+			// Simulate credentials change event with default key
+			onDidChangeCallback!({ key: "clerk-auth-credentials" })
+			await new Promise((resolve) => setTimeout(resolve, 0)) // Wait for async handling
+
+			expect(inactiveSessionSpy).not.toHaveBeenCalled()
 		})
 	})
 })

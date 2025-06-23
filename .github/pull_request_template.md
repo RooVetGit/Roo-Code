@@ -30,19 +30,6 @@ Detail the steps to test your changes. This helps reviewers verify your work.
 - Include relevant testing environment details if applicable.
 -->
 
-### Type of Change
-
-<!-- Mark all applicable boxes with an 'x'. -->
-
-- [ ] 🐛 **Bug Fix**: Non-breaking change that fixes an issue.
-- [ ] ✨ **New Feature**: Non-breaking change that adds functionality.
-- [ ] 💥 **Breaking Change**: Fix or feature that would cause existing functionality to not work as expected.
-- [ ] ♻️ **Refactor**: Code change that neither fixes a bug nor adds a feature.
-- [ ] 💅 **Style**: Changes that do not affect the meaning of the code (white-space, formatting, etc.).
-- [ ] 📚 **Documentation**: Updates to documentation files.
-- [ ] ⚙️ **Build/CI**: Changes to the build process or CI configuration.
-- [ ] 🧹 **Chore**: Other changes that don't modify `src` or test files.
-
 ### Pre-Submission Checklist
 
 <!-- Go through this checklist before marking your PR as ready for review. -->
@@ -50,17 +37,8 @@ Detail the steps to test your changes. This helps reviewers verify your work.
 - [ ] **Issue Linked**: This PR is linked to an approved GitHub Issue (see "Related GitHub Issue" above).
 - [ ] **Scope**: My changes are focused on the linked issue (one major feature/fix per PR).
 - [ ] **Self-Review**: I have performed a thorough self-review of my code.
-- [ ] **Code Quality**:
-    - [ ] My code adheres to the project's style guidelines.
-    - [ ] There are no new linting errors or warnings (`npm run lint`).
-    - [ ] All debug code (e.g., `console.log`) has been removed.
-- [ ] **Testing**:
-    - [ ] New and/or updated tests have been added to cover my changes.
-    - [ ] All tests pass locally (`npm test`).
-    - [ ] The application builds successfully with my changes.
-- [ ] **Branch Hygiene**: My branch is up-to-date (rebased) with the `main` branch.
+- [ ] **Testing**: New and/or updated tests have been added to cover my changes (if applicable).
 - [ ] **Documentation Impact**: I have considered if my changes require documentation updates (see "Documentation Updates" section below).
-- [ ] **Changeset**: A changeset has been created using `npm run changeset` if this PR includes user-facing changes or dependency updates.
 - [ ] **Contribution Guidelines**: I have read and agree to the [Contributor Guidelines](/CONTRIBUTING.md).
 
 ### Screenshots / Videos
