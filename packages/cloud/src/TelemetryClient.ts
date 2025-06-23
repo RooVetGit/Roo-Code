@@ -1,4 +1,9 @@
-import { TelemetryEventName, type TelemetryEvent, rooCodeTelemetryEventSchema } from "@roo-code/types"
+import {
+	TelemetryEventName,
+	type TelemetryEvent,
+	rooCodeTelemetryEventSchema,
+	type ClineMessage,
+} from "@roo-code/types"
 import { BaseTelemetryClient } from "@roo-code/telemetry"
 
 import { getRooCodeApiUrl } from "./Config"
@@ -76,6 +81,65 @@ export class TelemetryClient extends BaseTelemetryClient {
 			await this.fetch(`events`, { method: "POST", body: JSON.stringify(result.data) })
 		} catch (error) {
 			console.error(`[TelemetryClient#capture] Error sending telemetry event: ${error}`)
+		}
+	}
+
+	public async backfillMessages(messages: ClineMessage[], taskId: string): Promise<void> {
+		if (!this.authService.isAuthenticated()) {
+			if (this.debug) {
+				console.info(`[TelemetryClient#backfillMessages] Skipping: Not authenticated`)
+			}
+			return
+		}
+
+		const token = this.authService.getSessionToken()
+
+		if (!token) {
+			console.error(`[TelemetryClient#backfillMessages] Unauthorized: No session token available.`)
+			return
+		}
+
+		try {
+			// Create a mock event to leverage existing property merging logic
+			const mockEvent: TelemetryEvent = {
+				event: TelemetryEventName.TASK_MESSAGE,
+				properties: { taskId },
+			}
+
+			// Get merged properties using existing method
+			const mergedProperties = await this.getEventProperties(mockEvent)
+
+			// Create FormData for multipart upload
+			const formData = new FormData()
+			formData.append("taskId", taskId)
+			formData.append("properties", JSON.stringify(mergedProperties))
+			formData.append("messages.json", JSON.stringify(messages))
+
+			if (this.debug) {
+				console.info(
+					`[TelemetryClient#backfillMessages] Uploading ${messages.length} messages for task ${taskId}`,
+				)
+			}
+
+			// Custom fetch for multipart - don't set Content-Type header (let browser set it)
+			const response = await fetch(`${getRooCodeApiUrl()}/api/events/backfill`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					// Note: No Content-Type header - browser will set multipart/form-data with boundary
+				},
+				body: formData,
+			})
+
+			if (!response.ok) {
+				console.error(
+					`[TelemetryClient#backfillMessages] POST events/backfill -> ${response.status} ${response.statusText}`,
+				)
+			} else if (this.debug) {
+				console.info(`[TelemetryClient#backfillMessages] Successfully uploaded messages for task ${taskId}`)
+			}
+		} catch (error) {
+			console.error(`[TelemetryClient#backfillMessages] Error uploading messages: ${error}`)
 		}
 	}
 
