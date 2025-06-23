@@ -15,7 +15,7 @@ export function runClaudeCode({
 }) {
 	const claudePath = path || "claude"
 
-	// TODO: Is it worh using sessions? Where do we store the session ID?
+	// TODO: Is it worth using sessions? Where do we store the session ID?
 	const args = [
 		"-p",
 		JSON.stringify(messages),
