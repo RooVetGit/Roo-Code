@@ -25,6 +25,8 @@ export interface WebviewMessage {
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
 		| "getHistoryItems"
+		| "scanTaskHistory"
+		| "rebuildHistoryIndexes"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
@@ -173,6 +175,9 @@ export interface WebviewMessage {
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"
 		| "installMarketplaceItem"
+		| "loggingOperation"
+		| "scanTaskHistoryResult"
+		| "rebuildHistoryIndexesResult"
 		| "installMarketplaceItemWithParameters"
 		| "cancelMarketplaceInstall"
 		| "removeInstalledMarketplaceItem"
@@ -227,6 +232,14 @@ export interface WebviewMessage {
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
 	historySearchOptions?: HistorySearchOptions // For history search
+	historyScanOptions?: {
+		mode?: "merge" | "replace"
+		mergeGlobal?: boolean
+		reconstructOrphans?: boolean
+		scanHistoryFiles?: boolean
+		logs?: string[]
+		noVerify?: boolean
+	}
 }
 
 export const checkoutDiffPayloadSchema = z.object({

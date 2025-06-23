@@ -1,5 +1,6 @@
 import * as path from "path"
 import * as fs from "fs/promises"
+import getFolderSize from "get-folder-size"
 import { safeWriteJson, safeReadJson } from "../../utils/safeWriteJson"
 import { getWorkspacePath } from "../../utils/path"
 import {
@@ -9,6 +10,8 @@ import {
 	HistorySearchResults,
 	HistorySearchResultItem,
 	HistoryWorkspaceItem,
+	HistoryScanResults,
+	HistoryRebuildOptions,
 } from "@roo-code/types"
 import { getExtensionContext } from "../../extension"
 import { taskHistorySearch } from "./taskHistorySearch"
@@ -234,6 +237,7 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
 	// First pass: group items by month
 	for (const item of items) {
 		if (!item || !item.id || typeof item.ts !== "number" || typeof item.task !== "string") {
+			// Use console.warn for this since it's not part of the normal operation logs
 			console.warn(
 				`[setHistoryItems] Invalid HistoryItem skipped (missing id, ts, or task): ${JSON.stringify(item)}`,
 			)
@@ -387,9 +391,9 @@ export async function setHistoryItems(items: HistoryItem[]): Promise<void> {
  * @param taskId - The ID of the task to retrieve.
  * @returns The HistoryItem if found, otherwise undefined.
  */
-export async function getHistoryItem(taskId: string): Promise<HistoryItem | undefined> {
+export async function getHistoryItem(taskId: string, useCache: boolean = true): Promise<HistoryItem | undefined> {
 	// Check cache first (fast path)
-	if (itemObjectCache.has(taskId)) {
+	if (useCache && itemObjectCache.has(taskId)) {
 		return itemObjectCache.get(taskId)
 	}
 
@@ -397,12 +401,22 @@ export async function getHistoryItem(taskId: string): Promise<HistoryItem | unde
 	const itemPath = _getHistoryItemPath(taskId)
 	try {
 		const historyItem = await safeReadJson(itemPath)
-		if (historyItem) {
-			itemObjectCache.set(taskId, historyItem)
+
+		if (historyItem && historyItem.id && historyItem.ts !== undefined && historyItem.ts > 0) {
+			if (useCache) {
+				itemObjectCache.set(taskId, historyItem)
+			}
+
+			return historyItem
+		} else {
+			console.error(`[TaskHistory] [getHistoryItem] [${taskId}] ${itemPath} content is invalid:`, historyItem)
+			return undefined
 		}
-		return historyItem
-	} catch (error) {
-		console.error(`[TaskHistory] [getHistoryItem] [${taskId}] error reading file ${itemPath}:`, error)
+	} catch (error: any) {
+		// Suppress ENOENT (file not found) errors, but log other errors
+		if (error.code !== "ENOENT") {
+			console.error(`[TaskHistory] [getHistoryItem] [${taskId}] error reading file ${itemPath}:`, error)
+		}
 		return undefined
 	}
 }
@@ -479,6 +493,222 @@ export async function deleteHistoryItem(taskId: string): Promise<void> {
 			)
 		}
 	}
+}
+
+/**
+ * Generates a timestamp string in the format YYYY-MM-DD_HH-MM-SS
+ * @returns Formatted timestamp string
+ */
+function _getTimestampString(): string {
+	const now = new Date()
+	return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now.getHours().toString().padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}-${now.getSeconds().toString().padStart(2, "0")}`
+}
+
+/**
+ * Helper function to log a message both to console and to an array
+ * @param logs Array to accumulate logs
+ * @param message The message to log
+ * @returns The message (for convenience)
+ */
+/**
+ * Logs a message to both console and an array of logs.
+ * Tags in square brackets at the beginning of the message are shown
+ * in the console but omitted from the logs array.
+ */
+function logMessage(logs: string[], message: string): string {
+	// Display full message including tags in console
+	console.log(message)
+
+	// Extract tags and strip them from the message stored in logs array
+	const tagMatch = message.match(/^\[(.*?)\]\s*(.*)$/)
+
+	if (tagMatch) {
+		// If message has tags, only store the content part in logs array
+		logs.push(tagMatch[2])
+	} else {
+		// If no tags, store the whole message
+		logs.push(message)
+	}
+
+	return message
+}
+
+/**
+ * Rebuilds history indexes based on scan results and options.
+ * @param scan - The scan results from scanTaskHistory().
+ * @param options - Options for controlling the rebuild process.
+ * @returns Updated HistoryScanResults reflecting any changes made during rebuilding.
+ */
+export async function rebuildIndexes(scan: HistoryScanResults, options: HistoryRebuildOptions): Promise<void> {
+	const { mode, mergeGlobal = false, reconstructOrphans = false, logs = [] } = options
+	const historyIndexesBasePath = _getHistoryIndexesBasePath()
+
+	// Map to store the latest version of each task by ID
+	const latestItemsMap = new Map<string, HistoryItem>()
+
+	// Process valid items
+	if (scan.tasks.valid.size > 0) {
+		logMessage(logs, `[rebuildIndexes] Processing ${scan.tasks.valid.size} valid tasks`)
+		for (const item of scan.tasks.valid.values()) {
+			// Add or update only if this is a newer version
+			if (!latestItemsMap.has(item.id) || item.ts > latestItemsMap.get(item.id)!.ts) {
+				latestItemsMap.set(item.id, item)
+			}
+		}
+	}
+
+	// Process missing items from globalState if mergeGlobal is true
+	if (mergeGlobal && scan.tasks.tasksOnlyInGlobalState.size > 0) {
+		logMessage(
+			logs,
+			`[rebuildIndexes] Processing ${scan.tasks.tasksOnlyInGlobalState.size} missing tasks from globalState`,
+		)
+		for (const item of scan.tasks.tasksOnlyInGlobalState.values()) {
+			// Add or update only if this is a newer version
+			if (!latestItemsMap.has(item.id) || item.ts > latestItemsMap.get(item.id)!.ts) {
+				latestItemsMap.set(item.id, item)
+			}
+		}
+	}
+
+	// Process orphaned items if reconstructOrphans is true
+	if (reconstructOrphans && scan.tasks.orphans.size > 0) {
+		logMessage(logs, `[rebuildIndexes] Processing ${scan.tasks.orphans.size} orphaned tasks`)
+		for (const item of scan.tasks.orphans.values()) {
+			// Add or update only if this is a newer version
+			if (!latestItemsMap.has(item.id) || item.ts > latestItemsMap.get(item.id)!.ts) {
+				latestItemsMap.set(item.id, item)
+			}
+		}
+
+		// Note: Writing orphaned items to disk happens through setHistoryItems, not here
+		// This is consistent with how we handle valid and missing tasks
+	}
+
+	// Convert map to array for setHistoryItems
+	const itemsToSet = Array.from(latestItemsMap.values())
+
+	// Skip rebuilding indexes if there's nothing to do
+	if (itemsToSet.length === 0) {
+		logMessage(logs, `[rebuildIndexes] No items to index, skipping index rebuild`)
+		return
+	}
+
+	// Create backup of taskHistory directory before rebuilding indexes
+	const timestamp = _getTimestampString()
+	let backupPath = ""
+
+	if (mode === "replace") {
+		// In replace mode, we always create a backup
+		const backupDirName = `taskHistory-before-rebuild-${timestamp}`
+		backupPath = path.join(path.dirname(historyIndexesBasePath), backupDirName)
+
+		try {
+			// Check if taskHistory directory exists
+			try {
+				await fs.access(historyIndexesBasePath)
+				// Move existing taskHistory directory to backup
+				await fs.rename(historyIndexesBasePath, backupPath)
+				logMessage(logs, `[rebuildIndexes] Moved taskHistory to backup at ${backupPath}`)
+			} catch (error) {
+				// taskHistory directory doesn't exist, no backup needed
+				logMessage(logs, `[rebuildIndexes] No existing taskHistory directory to backup`)
+			}
+		} catch (backupError) {
+			logMessage(logs, `[rebuildIndexes] Error creating backup: ${backupError}`)
+			throw backupError
+		}
+	}
+
+	// Rebuild indexes
+	try {
+		await setHistoryItems(itemsToSet)
+		logMessage(logs, `[rebuildIndexes] Successfully indexed ${itemsToSet.length} tasks in ${mode} mode`)
+	} catch (error) {
+		logMessage(logs, `[rebuildIndexes] Error in setHistoryItems: ${error}`)
+
+		// If in replace mode and a backup was created, attempt to restore it
+		if (mode === "replace" && backupPath) {
+			try {
+				// If setHistoryItems created a new taskHistory directory, rename it
+				const brokenDirName = `taskHistory-broken-rebuild-${timestamp}`
+				const brokenPath = path.join(path.dirname(historyIndexesBasePath), brokenDirName)
+
+				try {
+					await fs.access(historyIndexesBasePath)
+					// Rename the potentially broken taskHistory directory
+					await fs.rename(historyIndexesBasePath, brokenPath)
+					logMessage(logs, `[rebuildIndexes] Renamed broken taskHistory to ${brokenPath}`)
+				} catch (accessError) {
+					logMessage(logs, `[rebuildIndexes] No taskHistory directory created during failed operation`)
+				}
+
+				// Check if backup exists and restore it
+				try {
+					await fs.access(backupPath)
+					await fs.rename(backupPath, historyIndexesBasePath)
+					logMessage(logs, `[rebuildIndexes] Restored backup from ${backupPath} to ${historyIndexesBasePath}`)
+				} catch (restoreError) {
+					logMessage(logs, `[rebuildIndexes] Could not restore backup: ${restoreError}`)
+				}
+			} catch (recoveryError) {
+				logMessage(logs, `[rebuildIndexes] Error during recovery: ${recoveryError}`)
+			}
+		}
+
+		throw error
+	}
+}
+
+/**
+ * Synchronizes history items between globalState and the filesystem.
+ * This function has been refactored to use scanTaskHistory and rebuildIndexes.
+ * @param options - Required options for controlling the rebuild process
+ * @returns A multi-line string containing all log messages
+ */
+export async function reindexHistoryItems(options: HistoryRebuildOptions): Promise<HistoryScanResults | undefined> {
+	// Use the logs array from options if provided, or create a new one
+	// We're using the original options object to ensure logs are shared with the caller
+	const logs = options.logs || []
+	let verificationScan: HistoryScanResults | undefined
+
+	try {
+		// Step 1: Scan the task history to get the current state
+		logMessage(logs, `[reindexHistoryItems] Starting task history scan...`)
+		const scan = await scanTaskHistory(options.scanHistoryFiles)
+
+		// Step 2: Rebuild indexes with the scan results
+		logMessage(logs, `[reindexHistoryItems] Rebuilding indexes in ${options.mode} mode...`)
+		await rebuildIndexes(scan, options)
+
+		// Step 3: Verify the results with another scan (unless noVerify is true)
+		if (!options.noVerify) {
+			logMessage(logs, `[reindexHistoryItems] Verifying results with another scan...`)
+			verificationScan = await scanTaskHistory(options.scanHistoryFiles)
+
+			// Log verification results
+			logMessage(logs, `[reindexHistoryItems] Verification scan completed:`)
+			logMessage(logs, `[reindexHistoryItems] - Valid tasks: ${verificationScan.tasks.valid.size}`)
+			logMessage(logs, `[reindexHistoryItems] - Orphaned tasks: ${verificationScan.tasks.orphans.size}`)
+			logMessage(
+				logs,
+				`[reindexHistoryItems] - Failed tasks: ${verificationScan.tasks.failedReconstructions.size}`,
+			)
+			logMessage(
+				logs,
+				`[reindexHistoryItems] - Missing tasks: ${verificationScan.tasks.tasksOnlyInGlobalState.size}`,
+			)
+		} else {
+			logMessage(logs, `[reindexHistoryItems] Verification scan skipped (noVerify=true)`)
+		}
+
+		logMessage(logs, `[reindexHistoryItems] Index rebuild completed successfully`)
+	} catch (error) {
+		logMessage(logs, `[reindexHistoryItems] Error during reindex operation: ${error}`)
+		throw error
+	}
+
+	return verificationScan
 }
 
 /**
@@ -844,51 +1074,19 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 		`[TaskHistory Migration] Task history storage version is ${storedVersion === undefined ? "not set (pre-versioning)" : storedVersion}. Current version is ${CURRENT_TASK_HISTORY_VERSION}. Migration check required.`,
 	)
 
-	// This migration handles transitioning from the old flat "taskHistory" array
-	// and potentially existing new-format monthly indexes to a consistent state.
-	// It ensures that for any given task ID, the latest version (by timestamp) is kept,
-	// and then uses setHistoryItems to persist these items and which will als rebuild
-	// all monthly indexes into the new format.
-
-	let migrationPerformed = false
-	const finalItemSet = new Map<string, HistoryItem>() // taskId -> HistoryItem
-
-	// Step 1: Populate finalItemSet with items currently indexed in the new-format monthly indexes.
-	// This ensures that if migration runs multiple times, it considers what's already been migrated.
-	try {
-		const step1StartTime = performance.now()
-		console.log("[TaskHistory Migration] Reading existing items from new-format indexes...")
-		const allCurrentlyIndexedItems = await _getHistoryItemsForSearch({ workspacePath: "all" })
-		for (const item of allCurrentlyIndexedItems.items) {
-			if (item && item.id) {
-				// Basic validation
-				finalItemSet.set(item.id, item)
-			}
-		}
-		const step1Time = (performance.now() - step1StartTime) / 1000
-		console.log(
-			`[TaskHistory Migration] Found ${finalItemSet.size} items in existing new-format indexes. (${step1Time.toFixed(2)}s)`,
-		)
-	} catch (err) {
-		console.warn("[TaskHistory Migration] Error reading existing new-format indexes (may be first run):", err)
-		// Continue, as this might be the first time migration is running.
-	}
-
-	// Step 2: Merge items from the old "taskHistory" flat array, preferring newer timestamps.
-	const step2StartTime = performance.now()
+	// Backup the old array before processing
 	const oldHistoryArrayFromGlobalState = context.globalState.get<HistoryItem[]>("taskHistory") || []
 	if (oldHistoryArrayFromGlobalState.length > 0) {
 		console.log(
-			`[TaskHistory Migration] Found ${oldHistoryArrayFromGlobalState.length} items in old 'taskHistory' globalState key. Merging...`,
+			`[TaskHistory Migration] Found ${oldHistoryArrayFromGlobalState.length} items in old 'taskHistory' globalState key. Creating backup...`,
 		)
-		migrationPerformed = true
 
-		// Backup the old array before processing
 		const now = new Date()
 		const timestampString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now.getHours().toString().padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`
 		const backupFileName = `${timestampString}-backup_globalState_taskHistory_array.json`
 		const backupBasePath = _getBackupBasePath()
 		const backupPath = path.join(backupBasePath, backupFileName)
+
 		try {
 			// Ensure the backup directory exists
 			await fs.mkdir(backupBasePath, { recursive: true })
@@ -897,67 +1095,391 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 		} catch (backupError: any) {
 			console.warn(`[TaskHistory Migration] Error backing up old task history array: ${backupError.message}`)
 		}
-
-		for (const oldItem of oldHistoryArrayFromGlobalState) {
-			if (!oldItem || !oldItem.id || typeof oldItem.ts !== "number") {
-				// Basic validation
-				console.warn(
-					`[TaskHistory Migration] Skipped invalid item from oldHistoryArray: ${JSON.stringify(oldItem)}`,
-				)
-				continue
-			}
-
-			if (!finalItemSet.has(oldItem.id) || oldItem.ts >= finalItemSet.get(oldItem.id)!.ts) {
-				finalItemSet.set(oldItem.id, oldItem)
-			}
-		}
-		const step2Time = (performance.now() - step2StartTime) / 1000
-		console.log(
-			`[TaskHistory Migration] Merged items from old 'taskHistory'. Total items: ${finalItemSet.size}. (${step2Time.toFixed(2)}s)`,
-		)
-		// The old "taskHistory" array in globalState is intentionally not modified or deleted here.
-		// It's left as a backup.
 	} else {
 		console.log("[TaskHistory Migration] No old task history data found in globalState key 'taskHistory'.")
 	}
 
-	// Step 3: Call setHistoryItems with the final list.
-	// setHistoryItems will write each item to its file and rebuild all monthly indexes in the new format.
-	const itemsToPassToSetHistory: HistoryItem[] = Array.from(finalItemSet.values())
-	if (itemsToPassToSetHistory.length > 0) {
-		const step3StartTime = performance.now()
-		console.log(`[TaskHistory Migration] Calling setHistoryItems with ${itemsToPassToSetHistory.length} items...`)
-		await setHistoryItems(itemsToPassToSetHistory)
-		migrationPerformed = true
-		const step3Time = (performance.now() - step3StartTime) / 1000
-		const itemsPerSecond = itemsToPassToSetHistory.length / step3Time
-		console.log(
-			`[TaskHistory Migration] setHistoryItems completed. (${step3Time.toFixed(2)}s, ${itemsPerSecond.toFixed(2)} items/sec)`,
-		)
-	} else if (migrationPerformed) {
-		// This case means oldHistoryArray was processed but resulted in no items to set (e.g., all were older)
-		// or new-format indexes were empty and oldHistoryArray was empty/invalid.
-		console.log("[TaskHistory Migration] No final items to pass to setHistoryItems after processing.")
-	}
+	// Use reindexHistoryItems with merge mode to handle the migration
+	try {
+		console.log("[TaskHistory Migration] Starting reindexing with merge mode...")
+		const logs: string[] = []
+		await reindexHistoryItems({
+			mode: "merge",
+			mergeGlobal: true,
+			reconstructOrphans: false,
+			scanHistoryFiles: false, // Use index-based approach for better performance
+			noVerify: true, // Skip verification for better migration performance
+			logs,
+		})
 
-	// Update the version in globalState if migration was performed or if it's a fresh setup without any old data.
-	// This ensures we don't re-run the migration check unnecessarily.
-	if (migrationPerformed || storedVersion === undefined || storedVersion < CURRENT_TASK_HISTORY_VERSION) {
-		try {
-			await context.globalState.update(TASK_HISTORY_VERSION_KEY, CURRENT_TASK_HISTORY_VERSION)
-			console.log(
-				`[TaskHistory Migration] Task history version updated to ${CURRENT_TASK_HISTORY_VERSION} in globalState.`,
-			)
-		} catch (error) {
-			console.error(`[TaskHistory Migration] Error updating task history version in globalState:`, error)
-		}
+		// Update the version in globalState
+		await context.globalState.update(TASK_HISTORY_VERSION_KEY, CURRENT_TASK_HISTORY_VERSION)
+		console.log(
+			`[TaskHistory Migration] Task history version updated to ${CURRENT_TASK_HISTORY_VERSION} in globalState.`,
+		)
+	} catch (error) {
+		console.error(`[TaskHistory Migration] Error during reindexing:`, error)
+		throw error
 	}
 
 	const migrationEndTime = performance.now()
 	const totalMigrationTime = (migrationEndTime - migrationStartTime) / 1000
-	const totalItems = itemsToPassToSetHistory.length
-	const overallItemsPerSecond = totalItems > 0 ? totalItems / totalMigrationTime : 0
-	console.log(
-		`[TaskHistory Migration] Migration process completed in ${totalMigrationTime.toFixed(2)}s (${overallItemsPerSecond.toFixed(2)} items/sec)`,
-	)
+	console.log(`[TaskHistory Migration] Migration process completed in ${totalMigrationTime.toFixed(2)}s`)
+}
+
+/**
+ * Reconstructs a task from its history item or UI messages.
+ * @param taskId - The ID of the task to reconstruct.
+ * @returns A promise that resolves to a HistoryItem if successful, otherwise undefined.
+ */
+export async function reconstructTask(taskId: string): Promise<HistoryItem | undefined> {
+	// First try to get the history item directly
+	const historyItem = await getHistoryItem(taskId, false)
+	if (historyItem) {
+		return historyItem
+	}
+
+	// If history item doesn't exist, try to reconstruct from UI messages
+	try {
+		const tasksBasePath = _getTasksBasePath()
+		const taskDir = path.join(tasksBasePath, taskId)
+		const uiMessagesPath = path.join(taskDir, "ui_messages.json")
+
+		const uiMessages = await safeReadJson(uiMessagesPath)
+		if (!uiMessages || !Array.isArray(uiMessages) || uiMessages.length === 0) {
+			console.error(`[Reconstruct Task] Invalid or empty UI messages for task ${taskId}`)
+			return undefined
+		}
+
+		const firstMessage = uiMessages[0]
+		const lastMessage = uiMessages[uiMessages.length - 1]
+
+		if (!firstMessage || !firstMessage.text || !lastMessage || !lastMessage.ts) {
+			console.error(`[Reconstruct Task] Missing required fields in UI messages for task ${taskId}`)
+			return undefined
+		}
+
+		// Calculate counters by summing values from api_req_started messages
+		let tokensIn = 0
+		let tokensOut = 0
+		let cacheWrites = 0
+		let cacheReads = 0
+		let totalCost = 0
+
+		for (const message of uiMessages) {
+			if (message.type === "say" && message.say === "api_req_started" && message.text) {
+				try {
+					const data = JSON.parse(message.text)
+					if (data && typeof data === "object") {
+						tokensIn += data.tokensIn || 0
+						tokensOut += data.tokensOut || 0
+						cacheWrites += data.cacheWrites || 0
+						cacheReads += data.cacheReads || 0
+						totalCost += data.cost || 0
+					}
+				} catch (parseError) {
+					// Skip invalid JSON
+					console.warn(`[Reconstruct Task] Could not parse message text for task ${taskId}:`, parseError)
+				}
+			}
+		}
+
+		// Calculate directory size
+		let size = 0
+		try {
+			size = await getFolderSize.loose(taskDir)
+		} catch (sizeError) {
+			console.warn(`[Reconstruct Task] Could not calculate size for task ${taskId}:`, sizeError)
+		}
+
+		const historyItem: HistoryItem = {
+			id: taskId,
+			number: 1, // Common default value as per user analysis
+			ts: lastMessage.ts,
+			task: firstMessage.text,
+			tokensIn,
+			tokensOut,
+			cacheWrites,
+			cacheReads,
+			totalCost,
+			size,
+			workspace: "unknown",
+		}
+
+		return historyItem
+	} catch (error) {
+		console.error(`[Reconstruct Task] Error reconstruct task ${taskId}:`, error)
+		return undefined
+	}
+}
+
+/**
+ * Scans the task history on disk and in global state without making any modifications.
+ * This function categorizes tasks into valid, tasks only in global state, orphaned, and failed reconstructions,
+ * providing a comprehensive overview of the task history state.
+ *
+ * Always uses the search function first, and then conditionally scans the filesystem
+ * if scanHistoryFiles is true to find additional tasks that are only in files.
+ *
+ * @param scanHistoryFiles - Whether to scan the filesystem for task directories (true) or use the index only (false)
+ * @param logs - Optional array to capture log messages
+ * @returns A promise that resolves to HistoryScanResults containing categorized tasks
+ */
+export async function scanTaskHistory(scanHistoryFiles = false, logs: string[] = []): Promise<HistoryScanResults> {
+	logMessage(logs, "[TaskHistory] Starting task history scan...")
+	logMessage(logs, `[TaskHistory] Using ${scanHistoryFiles ? "filesystem scan" : "index-based approach"}`)
+
+	// Flush the item object cache before scanning
+	itemObjectCache.clear()
+
+	// Initialize the scan results object with empty collections
+	const scan: HistoryScanResults = {
+		validCount: 0, // Initialize to 0, will be updated at the end
+		tasks: {
+			valid: new Map<string, HistoryItem>(),
+			tasksOnlyInGlobalState: new Map<string, HistoryItem>(),
+			orphans: new Map<string, HistoryItem>(),
+			failedReconstructions: new Set<string>(),
+		},
+	}
+
+	// Get the context for global state access
+	const context = getExtensionContext()
+
+	// Get the base path for tasks
+	const tasksBasePath = _getTasksBasePath()
+
+	try {
+		//////////////////////////////////////////////////////////////////////
+		// STEP 1: Load all items from globalState
+		logMessage(logs, "[TaskHistory] Loading items from globalState...")
+		const globalStateItems = context.globalState.get<HistoryItem[]>("taskHistory") || []
+
+		// Create a map of all globalState items, keeping only the latest version of each
+		const globalStateMap = new Map<string, HistoryItem>()
+
+		for (const item of globalStateItems) {
+			if (item && item.id) {
+				// Only add or update if this is a newer version
+				if (!globalStateMap.has(item.id) || item.ts > globalStateMap.get(item.id)!.ts) {
+					globalStateMap.set(item.id, item)
+				}
+			}
+		}
+
+		logMessage(logs, `[TaskHistory] Found ${globalStateMap.size} tasks in globalState`)
+
+		// Map to store all valid file items
+		const fileScanItemsMap = new Map<string, HistoryItem>()
+
+		// Set to track tasks that need reconstruction
+		const mayNeedReconstruction = new Set<string>()
+
+		// Map to store reconstructed items
+		const reconstructedItemsMap = new Map<string, HistoryItem>()
+
+		// Set to track failed tasks
+		const failedReconstruction = new Set<string>()
+
+		//////////////////////////////////////////////////////////////////////
+		// STEP 2: Always use the search function (index-based approach) first
+		logMessage(logs, "[TaskHistory] Using index-based approach to find tasks...")
+
+		// Get all items from the index
+		const searchResults = await _getHistoryItemsForSearch({ workspacePath: "all" })
+
+		// Create a taskIndexItemsMap from search results
+		const taskIndexItemsMap = new Map<string, HistoryItem>()
+
+		// Add all items to the taskIndexItemsMap - id is guaranteed to be valid
+		searchResults.items.map((item) => taskIndexItemsMap.set(item.id, item))
+
+		// Add all items from taskIndexItemsMap to fileItemsMap
+		for (const [id, item] of taskIndexItemsMap.entries()) {
+			fileScanItemsMap.set(id, item)
+		}
+
+		logMessage(logs, `[TaskHistory] Found ${taskIndexItemsMap.size} tasks from index`)
+
+		//////////////////////////////////////////////////////////////////////
+		// STEP 3A: Conditionally use file scans if requested
+		if (scanHistoryFiles) {
+			logMessage(logs, "[TaskHistory] Also using filesystem scan to find additional task directories...")
+			let taskDirs: string[] = []
+
+			// Get dirs, each dir is the task id:
+			try {
+				// Get all directories in the tasks folder
+				const entries = await fs.readdir(tasksBasePath, { withFileTypes: true })
+				taskDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+
+				logMessage(logs, `[TaskHistory] Found ${taskDirs.length} task directories on disk`)
+			} catch (error) {
+				logMessage(logs, `[TaskHistory] Error reading tasks directory: ${error}`)
+				// Continue with empty taskDirs
+			}
+
+			// Load all history items from filesystem
+			logMessage(logs, "[TaskHistory] Loading history items from filesystem...")
+
+			// Use a Set to track pending promises with a maximum batch size
+			const pendingPromises = new Set<Promise<any>>()
+
+			// Each dir is the task id:
+			for (const taskId of taskDirs) {
+				const historyItemPath = path.join(tasksBasePath, taskId, "history_item.json")
+
+				// Create a promise for this task
+				const promise = (async () => {
+					try {
+						// Check if history item exists - read and validate it
+						const historyItem = await getHistoryItem(taskId, false)
+
+						if (historyItem) {
+							fileScanItemsMap.set(taskId, historyItem)
+						} else {
+							// Invalid history item - mark for reconstruction
+							mayNeedReconstruction.add(taskId)
+						}
+					} catch (error: any) {
+						// Suppress ENOENT (file not found) errors, but log other errors
+						if (error.code !== "ENOENT") {
+							logMessage(logs, `[TaskHistory] Error processing task ${taskId}: ${error}`)
+						}
+
+						// Mark for reconstruction regardless of error type
+						mayNeedReconstruction.add(taskId)
+					}
+				})()
+
+				// Add to pending set
+				pendingPromises.add(promise)
+
+				// Attach cleanup handler
+				promise.finally(() => {
+					pendingPromises.delete(promise)
+				})
+
+				// Wait if we've reached the maximum in-flight operations
+				while (pendingPromises.size >= BATCH_SIZE) {
+					await Promise.race(pendingPromises)
+				}
+			}
+
+			// Wait for all remaining task processing to complete
+			if (pendingPromises.size > 0) {
+				await Promise.all(pendingPromises)
+			}
+
+			//////////////////////////////////////////////////////////////////////
+			// STEP 3B: Reconstructed items
+			logMessage(logs, `[TaskHistory] Reconstructing ${mayNeedReconstruction.size} tasks...`)
+
+			// Process reconstructions in batches
+			const reconstructionPromises = new Set<Promise<any>>()
+
+			for (const taskId of mayNeedReconstruction) {
+				// Skip reconstruction if task exists in globalState
+				if (globalStateMap.has(taskId)) {
+					continue
+				}
+
+				const promise = (async () => {
+					try {
+						const reconstructedItem = await reconstructTask(taskId)
+						if (reconstructedItem) {
+							reconstructedItemsMap.set(taskId, reconstructedItem)
+						} else {
+							failedReconstruction.add(taskId)
+						}
+					} catch (error) {
+						logMessage(logs, `[TaskHistory] Error reconstructing task ${taskId}: ${error}`)
+						failedReconstruction.add(taskId)
+					}
+				})()
+
+				// Add to pending set
+				reconstructionPromises.add(promise)
+
+				// Attach cleanup handler
+				promise.finally(() => {
+					reconstructionPromises.delete(promise)
+				})
+
+				// Wait if we've reached the maximum in-flight operations
+				while (reconstructionPromises.size >= BATCH_SIZE) {
+					await Promise.race(reconstructionPromises)
+				}
+			}
+
+			// Wait for all remaining reconstructions to complete
+			if (reconstructionPromises.size > 0) {
+				await Promise.all(reconstructionPromises)
+			}
+		}
+
+		// STEP 4: Populate the result sets based on the collected data
+		logMessage(logs, "[TaskHistory] Populating result sets...")
+
+		// Process all task IDs from all sources
+		const allTaskIds = new Set<string>([
+			...globalStateMap.keys(),
+			...taskIndexItemsMap.keys(),
+			...fileScanItemsMap.keys(),
+			...reconstructedItemsMap.keys(),
+			...failedReconstruction,
+		])
+
+		for (const taskId of allTaskIds) {
+			const taskIndexItem = taskIndexItemsMap.get(taskId)
+			const globalItem = globalStateMap.get(taskId)
+			const fileScanItem = fileScanItemsMap.get(taskId)
+			const reconstructedItem = reconstructedItemsMap.get(taskId)
+
+			// Simplified logic:
+			// 1. Valid if fileItem OR globalItem exists (use most recent if both)
+			// 2. Otherwise, it's a failed task
+
+			// Case 1: We have a valid item from taskHistory index or globalState
+			if (taskIndexItem && globalItem) {
+				// Both exist - use the newer one
+				const newerItem = globalItem.ts > taskIndexItem.ts ? globalItem : taskIndexItem
+				scan.tasks.valid.set(taskId, newerItem)
+			} else if (taskIndexItem) {
+				// Only taskIndexItem exists
+				scan.tasks.valid.set(taskId, taskIndexItem)
+			} else if (globalItem) {
+				// Only globalItem exists
+				scan.tasks.tasksOnlyInGlobalState.set(taskId, globalItem)
+			} else if (fileScanItem) {
+				// did not exist above, so needs re-indexed
+				scan.tasks.orphans.set(taskId, fileScanItem)
+			} else if (reconstructedItem) {
+				// did not exist above, so needs re-indexed
+				scan.tasks.orphans.set(taskId, reconstructedItem)
+			}
+		}
+
+		scan.tasks.failedReconstructions = failedReconstruction
+	} catch (error) {
+		logMessage(logs, `[TaskHistory] Error during task history scan: ${error}`)
+	}
+
+	// Update counters based on map sizes
+	const validCount = scan.tasks.valid.size
+	const orphanCount = scan.tasks.orphans.size
+	const failedCount = scan.tasks.failedReconstructions.size
+	const missingCount = scan.tasks.tasksOnlyInGlobalState.size
+
+	// Log summary
+	logMessage(logs, "[TaskHistory] Scan completed:")
+	logMessage(logs, `[TaskHistory]   - Valid tasks: ${validCount}`)
+	logMessage(logs, `[TaskHistory]   - Tasks in globalState only: ${missingCount}`)
+	logMessage(logs, `[TaskHistory]   - Orphaned tasks (reconstructed): ${orphanCount}`)
+	logMessage(logs, `[TaskHistory]   - Failed reconstructions: ${failedCount}`)
+
+	// Set the validCount field based on the size of the valid tasks map
+	scan.validCount = scan.tasks.valid.size
+
+	return scan
 }
