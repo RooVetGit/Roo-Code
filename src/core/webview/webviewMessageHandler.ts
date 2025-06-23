@@ -11,8 +11,10 @@ import {
 	TelemetryEventName,
 	HistorySearchOptions,
 	HistoryItem,
+	HistoryRebuildOptions,
+	HistoryScanResults,
 } from "@roo-code/types"
-import { getHistoryItemsForSearch } from "../task-persistence/taskHistory"
+import { getHistoryItemsForSearch, reindexHistoryItems, scanTaskHistory } from "../task-persistence/taskHistory"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 
@@ -61,6 +63,66 @@ export const webviewMessageHandler = async (
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
+
+	/**
+	 * Helper function to handle common functionality for task history operations
+	 * @param operationName Name of the operation for logging
+	 * @param options Options for the operation
+	 * @param operation The async function to perform
+	 * @param onSuccess Callback for successful operation
+	 * @param onError Callback for operation error
+	 * @param logMessageType Type of message to use when sending logs to UI
+	 */
+	async function handleLoggingOperation<T>(
+		operationName: string,
+		options: any,
+		operation: (options: any, logs: string[]) => Promise<T>,
+		onSuccess: (result: T) => Promise<void>,
+		onError: (error: any) => Promise<void>,
+		logMessageType: "loggingOperation",
+	): Promise<void> {
+		try {
+			// Create a logs array to capture messages
+			const logs: string[] = []
+
+			// Log the options for debugging
+			console.log(`[webviewMessageHandler] ${operationName} options:`, JSON.stringify(options, null, 2))
+
+			// Create a monitoring function to send logs to UI
+			const sendLogsToUI = () => {
+				if (logs.length > 0) {
+					const logsCopy = [...logs]
+					logs.length = 0 // Clear the array
+
+					// Send each log message to the webview
+					for (const log of logsCopy) {
+						provider.postMessageToWebview({
+							type: logMessageType,
+							log,
+						})
+					}
+				}
+			}
+
+			// Set up interval to forward logs during operation
+			const logInterval = setInterval(sendLogsToUI, 100)
+
+			// Perform the operation
+			const result = await operation(options, logs)
+
+			// Clear the interval
+			clearInterval(logInterval)
+
+			// Send any remaining logs
+			sendLogsToUI()
+
+			// Handle success
+			await onSuccess(result)
+		} catch (error) {
+			// Handle error
+			await onError(error)
+		}
+	}
 
 	switch (message.type) {
 		case "webviewDidLaunch":
@@ -370,6 +432,122 @@ export const webviewMessageHandler = async (
 		case "resetState":
 			await provider.resetState()
 			break
+		case "scanTaskHistory":
+			await handleLoggingOperation<HistoryScanResults>(
+				"scanTaskHistory",
+				{
+					...(message.historyScanOptions || {}),
+					scanHistoryFiles:
+						message.historyScanOptions?.scanHistoryFiles !== undefined
+							? message.historyScanOptions.scanHistoryFiles
+							: false,
+					mode: message.historyScanOptions?.mode || "merge",
+					reconstructOrphans:
+						message.historyScanOptions?.reconstructOrphans !== undefined
+							? message.historyScanOptions.reconstructOrphans
+							: false,
+					mergeGlobal:
+						message.historyScanOptions?.mergeGlobal !== undefined
+							? message.historyScanOptions.mergeGlobal
+							: false,
+				},
+				async (options, logs) => {
+					const result = await scanTaskHistory(options.scanHistoryFiles, logs)
+					return result!
+				},
+				async (results) => {
+					const serializedResults = {
+						validCount: results.validCount,
+						tasks: {
+							tasksOnlyInGlobalState: Object.fromEntries(results.tasks.tasksOnlyInGlobalState),
+							orphans: Object.fromEntries(results.tasks.orphans),
+							failedReconstructions: Array.from(results.tasks.failedReconstructions),
+						},
+					}
+
+					provider.postMessageToWebview({
+						type: "scanTaskHistoryResult" as any,
+						results: serializedResults,
+					})
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "loggingOperation" as any,
+						log: `[TaskHistory] Error during scan: ${error}`,
+					})
+
+					await vscode.window.showErrorMessage(
+						t("common:errors.history_scan_failed", { error: String(error) }),
+					)
+				},
+				"loggingOperation",
+			)
+			break
+
+		case "rebuildHistoryIndexes":
+			await handleLoggingOperation<HistoryScanResults>(
+				"rebuildHistoryIndexes",
+				{
+					...(message.historyScanOptions || {}),
+					mode: message.historyScanOptions?.mode || "merge",
+					mergeGlobal:
+						message.historyScanOptions?.mergeGlobal !== undefined
+							? message.historyScanOptions.mergeGlobal
+							: false,
+					reconstructOrphans:
+						message.historyScanOptions?.reconstructOrphans !== undefined
+							? message.historyScanOptions.reconstructOrphans
+							: false,
+					scanHistoryFiles:
+						message.historyScanOptions?.scanHistoryFiles !== undefined
+							? message.historyScanOptions.scanHistoryFiles
+							: false,
+				},
+				async (options, logs) => {
+					options.logs = logs
+					const result = await reindexHistoryItems(options as HistoryRebuildOptions)
+					return result!
+				},
+				async (verificationScan) => {
+					if (verificationScan) {
+						const serializedResults = {
+							validCount: verificationScan.validCount,
+							tasks: {
+								tasksOnlyInGlobalState: Object.fromEntries(
+									verificationScan.tasks.tasksOnlyInGlobalState,
+								),
+								orphans: Object.fromEntries(verificationScan.tasks.orphans),
+								failedReconstructions: Array.from(verificationScan.tasks.failedReconstructions),
+							},
+						}
+
+						provider.postMessageToWebview({
+							type: "scanTaskHistoryResult" as any,
+							results: serializedResults,
+						})
+					}
+
+					provider.postMessageToWebview({
+						type: "rebuildHistoryIndexesResult" as any,
+						success: true,
+					})
+
+					await vscode.window.showInformationMessage(t("common:info.history_reindexed"))
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "rebuildHistoryIndexesResult" as any,
+						success: false,
+					})
+
+					await vscode.window.showErrorMessage(
+						t("common:errors.history_reindex_failed", { error: String(error) }),
+					)
+				},
+				"loggingOperation",
+			)
+			break
+
 		case "flushRouterModels":
 			const routerNameFlush: RouterName = toRouterName(message.text)
 			await flushModels(routerNameFlush)
