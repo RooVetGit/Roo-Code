@@ -31,5 +31,5 @@
 	"settings.vsCodeLmModelSelector.family.description": "A família do modelo de linguagem (ex: gpt-4)",
 	"settings.customStoragePath.description": "Caminho de armazenamento personalizado. Deixe vazio para usar o local padrão. Suporta caminhos absolutos (ex: 'D:\\RooCodeStorage')",
 	"settings.rooCodeCloudEnabled.description": "Habilitar Roo Code Cloud.",
-	"settings.enableCodeActions.description": "Habilitar correções rápidas do Roo Code"
+	"settings.enableCodeActions.description": "Habilitar correções rápidas do Roo Code."
 }

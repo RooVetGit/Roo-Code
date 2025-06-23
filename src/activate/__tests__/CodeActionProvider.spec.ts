@@ -25,6 +25,11 @@ vi.mock("vscode", () => ({
 		Information: 2,
 		Hint: 3,
 	},
+	workspace: {
+		getConfiguration: vi.fn().mockReturnValue({
+			get: vi.fn().mockReturnValue(true),
+		}),
+	},
 }))
 
 vi.mock("../../integrations/editor/EditorUtils", () => ({

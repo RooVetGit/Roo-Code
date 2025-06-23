@@ -31,5 +31,5 @@
 	"settings.vsCodeLmModelSelector.family.description": "Семейство языковой модели (например, gpt-4)",
 	"settings.customStoragePath.description": "Пользовательский путь хранения. Оставьте пустым для использования пути по умолчанию. Поддерживает абсолютные пути (например, 'D:\\RooCodeStorage')",
 	"settings.rooCodeCloudEnabled.description": "Включить Roo Code Cloud.",
-	"settings.enableCodeActions.description": "Включить быстрые исправления Roo Code"
+	"settings.enableCodeActions.description": "Включить быстрые исправления Roo Code."
 }
