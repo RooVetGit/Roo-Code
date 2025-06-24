@@ -525,7 +525,15 @@ describe("TelemetryClient", () => {
 				taskId: "test-task-id",
 				...providerProperties,
 			})
-			expect(formData.get("messages.json")).toBe(JSON.stringify(messages))
+			// The messages are stored as a File object under the "file" key
+			const fileField = formData.get("file") as File
+			expect(fileField).toBeInstanceOf(File)
+			expect(fileField.name).toBe("task.json")
+			expect(fileField.type).toBe("application/json")
+
+			// Read the file content to verify the messages
+			const fileContent = await fileField.text()
+			expect(fileContent).toBe(JSON.stringify(messages))
 		})
 
 		it("should handle provider errors gracefully", async () => {
@@ -569,7 +577,15 @@ describe("TelemetryClient", () => {
 					taskId: "test-task-id",
 				}),
 			)
-			expect(formData.get("messages.json")).toBe(JSON.stringify(messages))
+			// The messages are stored as a File object under the "file" key
+			const fileField = formData.get("file") as File
+			expect(fileField).toBeInstanceOf(File)
+			expect(fileField.name).toBe("task.json")
+			expect(fileField.type).toBe("application/json")
+
+			// Read the file content to verify the messages
+			const fileContent = await fileField.text()
+			expect(fileContent).toBe(JSON.stringify(messages))
 		})
 
 		it("should work without provider set", async () => {
@@ -607,7 +623,15 @@ describe("TelemetryClient", () => {
 					taskId: "test-task-id",
 				}),
 			)
-			expect(formData.get("messages.json")).toBe(JSON.stringify(messages))
+			// The messages are stored as a File object under the "file" key
+			const fileField = formData.get("file") as File
+			expect(fileField).toBeInstanceOf(File)
+			expect(fileField.name).toBe("task.json")
+			expect(fileField.type).toBe("application/json")
+
+			// Read the file content to verify the messages
+			const fileContent = await fileField.text()
+			expect(fileContent).toBe(JSON.stringify(messages))
 		})
 
 		it("should handle fetch errors gracefully", async () => {
@@ -700,7 +724,15 @@ describe("TelemetryClient", () => {
 			const call = mockFetch.mock.calls[0]
 			const formData = call[1].body as FormData
 
-			expect(formData.get("messages.json")).toBe("[]")
+			// The messages are stored as a File object under the "file" key
+			const fileField = formData.get("file") as File
+			expect(fileField).toBeInstanceOf(File)
+			expect(fileField.name).toBe("task.json")
+			expect(fileField.type).toBe("application/json")
+
+			// Read the file content to verify the empty messages array
+			const fileContent = await fileField.text()
+			expect(fileContent).toBe("[]")
 		})
 	})
 })
