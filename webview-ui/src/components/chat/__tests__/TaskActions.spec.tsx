@@ -41,6 +41,12 @@ vi.mock("react-i18next", () => ({
 				"chat:task.connectToCloud": "Connect to Cloud",
 				"chat:task.connectToCloudDescription": "Sign in to Roo Code Cloud to share tasks",
 				"chat:task.sharingDisabledByOrganization": "Sharing disabled by organization",
+				"account:cloudBenefitsTitle": "Connect to Roo Code Cloud",
+				"account:cloudBenefitsSubtitle": "Sign in to Roo Code Cloud to share tasks",
+				"account:cloudBenefitHistory": "Access your task history from anywhere",
+				"account:cloudBenefitSharing": "Share tasks with your team",
+				"account:cloudBenefitMetrics": "Track usage and costs",
+				"account:connect": "Connect",
 			}
 			return translations[key] || key
 		},
@@ -181,8 +187,9 @@ describe("TaskActions", () => {
 			const shareButton = screen.getByTitle("Share task")
 			fireEvent.click(shareButton)
 
-			expect(screen.getByText("Connect to Cloud")).toBeInTheDocument()
+			expect(screen.getByText("Connect to Roo Code Cloud")).toBeInTheDocument()
 			expect(screen.getByText("Sign in to Roo Code Cloud to share tasks")).toBeInTheDocument()
+			expect(screen.getByText("Connect")).toBeInTheDocument()
 		})
 
 		it("does not show organization and public options when not authenticated", () => {
@@ -201,7 +208,7 @@ describe("TaskActions", () => {
 			const shareButton = screen.getByTitle("Share task")
 			fireEvent.click(shareButton)
 
-			const connectOption = screen.getByText("Connect to Cloud")
+			const connectOption = screen.getByText("Connect")
 			fireEvent.click(connectOption)
 
 			expect(mockPostMessage).toHaveBeenCalledWith({

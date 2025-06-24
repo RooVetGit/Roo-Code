@@ -16,6 +16,10 @@ import {
 	CommandList,
 	CommandItem,
 	CommandGroup,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
 } from "@/components/ui"
 
 interface ShareButtonProps {
@@ -25,6 +29,7 @@ interface ShareButtonProps {
 
 export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 	const [shareDropdownOpen, setShareDropdownOpen] = useState(false)
+	const [connectModalOpen, setConnectModalOpen] = useState(false)
 	const { t } = useTranslation()
 	const { sharingEnabled, cloudIsAuthenticated, cloudUserInfo } = useExtensionState()
 	const wasUnauthenticatedRef = useRef(false)
@@ -34,8 +39,9 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 		if (!cloudIsAuthenticated || !sharingEnabled) {
 			wasUnauthenticatedRef.current = true
 		} else if (wasUnauthenticatedRef.current && cloudIsAuthenticated && sharingEnabled) {
-			// User just authenticated, send telemetry and open the popover
+			// User just authenticated, send telemetry, close modal, and open the popover
 			telemetryClient.capture(TelemetryEventName.ACCOUNT_CONNECT_SUCCESS)
+			setConnectModalOpen(false)
 			setShareDropdownOpen(true)
 			wasUnauthenticatedRef.current = false
 		}
@@ -62,12 +68,20 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 
 		vscode.postMessage({ type: "rooCloudSignIn" })
 		setShareDropdownOpen(false)
+		setConnectModalOpen(false)
 	}
 
 	const handleShareButtonClick = () => {
 		// Send telemetry for share button click
 		telemetryClient.capture(TelemetryEventName.SHARE_BUTTON_CLICKED)
-		setShareDropdownOpen(true)
+
+		if (!cloudIsAuthenticated) {
+			// Show modal for unauthenticated users
+			setConnectModalOpen(true)
+		} else {
+			// Show popover for authenticated users
+			setShareDropdownOpen(true)
+		}
 	}
 
 	// Determine share button state
@@ -76,7 +90,7 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 			return {
 				disabled: false,
 				title: t("chat:task.share"),
-				showPopover: true,
+				showPopover: false, // We'll show modal instead
 			}
 		} else if (!sharingEnabled) {
 			return {
@@ -100,25 +114,25 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 		return null
 	}
 
-	return shareButtonState.showPopover ? (
-		<Popover open={shareDropdownOpen} onOpenChange={setShareDropdownOpen}>
-			<PopoverTrigger asChild>
-				<Button
-					variant="ghost"
-					size="icon"
-					disabled={disabled || shareButtonState.disabled}
-					className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
-					title={shareButtonState.title}
-					onClick={handleShareButtonClick}>
-					<span className="codicon codicon-link"></span>
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent className="w-56 p-0" align="start">
-				<Command>
-					<CommandList>
-						<CommandGroup>
-							{cloudIsAuthenticated && sharingEnabled ? (
-								<>
+	return (
+		<>
+			{shareButtonState.showPopover ? (
+				<Popover open={shareDropdownOpen} onOpenChange={setShareDropdownOpen}>
+					<PopoverTrigger asChild>
+						<Button
+							variant="ghost"
+							size="icon"
+							disabled={disabled || shareButtonState.disabled}
+							className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
+							title={shareButtonState.title}
+							onClick={handleShareButtonClick}>
+							<span className="codicon codicon-link"></span>
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="w-56 p-0" align="start">
+						<Command>
+							<CommandList>
+								<CommandGroup>
 									{cloudUserInfo?.organizationName && (
 										<CommandItem
 											onSelect={() => handleShare("organization")}
@@ -147,33 +161,61 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 											</div>
 										</div>
 									</CommandItem>
-								</>
-							) : (
-								<CommandItem onSelect={handleConnectToCloud} className="cursor-pointer">
-									<div className="flex items-center gap-2">
-										<span className="codicon codicon-account text-sm"></span>
-										<div className="flex flex-col">
-											<span className="text-sm">{t("chat:task.connectToCloud")}</span>
-											<span className="text-xs text-vscode-descriptionForeground">
-												{t("chat:task.connectToCloudDescription")}
-											</span>
-										</div>
-									</div>
-								</CommandItem>
-							)}
-						</CommandGroup>
-					</CommandList>
-				</Command>
-			</PopoverContent>
-		</Popover>
-	) : (
-		<Button
-			variant="ghost"
-			size="icon"
-			disabled={disabled || shareButtonState.disabled}
-			className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
-			title={shareButtonState.title}>
-			<span className="codicon codicon-link"></span>
-		</Button>
+								</CommandGroup>
+							</CommandList>
+						</Command>
+					</PopoverContent>
+				</Popover>
+			) : (
+				<Button
+					variant="ghost"
+					size="icon"
+					disabled={disabled || shareButtonState.disabled}
+					className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
+					title={shareButtonState.title}
+					onClick={handleShareButtonClick}>
+					<span className="codicon codicon-link"></span>
+				</Button>
+			)}
+
+			{/* Connect to Cloud Modal */}
+			<Dialog open={connectModalOpen} onOpenChange={setConnectModalOpen}>
+				<DialogContent className="max-w-sm">
+					<DialogHeader className="text-center">
+						<DialogTitle className="text-lg font-medium text-vscode-foreground">
+							{t("account:cloudBenefitsTitle")}
+						</DialogTitle>
+					</DialogHeader>
+
+					<div className="flex flex-col space-y-6">
+						<div>
+							<p className="text-md text-vscode-descriptionForeground mb-4">
+								{t("account:cloudBenefitsSubtitle")}
+							</p>
+							<ul className="text-sm text-vscode-descriptionForeground space-y-2">
+								<li className="flex items-start">
+									<span className="mr-2 text-vscode-foreground">•</span>
+									{t("account:cloudBenefitSharing")}
+								</li>
+								<li className="flex items-start">
+									<span className="mr-2 text-vscode-foreground">•</span>
+									{t("account:cloudBenefitHistory")}
+								</li>
+								<li className="flex items-start">
+									<span className="mr-2 text-vscode-foreground">•</span>
+									{t("account:cloudBenefitMetrics")}
+								</li>
+							</ul>
+						</div>
+
+						<div className="flex flex-col gap-4">
+							<Button onClick={handleConnectToCloud} className="w-full">
+								{t("account:connect")}
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
+		</>
 	)
 }
