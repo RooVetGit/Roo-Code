@@ -100,20 +100,21 @@ export class TelemetryClient extends BaseTelemetryClient {
 		}
 
 		try {
-			// Create a mock event to leverage existing property merging logic
-			const mockEvent: TelemetryEvent = {
+			const mergedProperties = await this.getEventProperties({
 				event: TelemetryEventName.TASK_MESSAGE,
 				properties: { taskId },
-			}
+			})
 
-			// Get merged properties using existing method
-			const mergedProperties = await this.getEventProperties(mockEvent)
-
-			// Create FormData for multipart upload
 			const formData = new FormData()
 			formData.append("taskId", taskId)
 			formData.append("properties", JSON.stringify(mergedProperties))
-			formData.append("messages.json", JSON.stringify(messages))
+
+			formData.append(
+				"file",
+				new File([JSON.stringify(messages)], "task.json", {
+					type: "application/json",
+				}),
+			)
 
 			if (this.debug) {
 				console.info(

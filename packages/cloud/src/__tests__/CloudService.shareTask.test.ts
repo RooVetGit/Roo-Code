@@ -1,12 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+// npx vitest run src/__tests__/CloudService.shareTask.test.ts
+
+import * as vscode from "vscode"
+import type { ClineMessage } from "@roo-code/types"
+
 import { CloudService } from "../CloudService"
 import { ShareService, TaskNotFoundError } from "../ShareService"
 import { TelemetryClient } from "../TelemetryClient"
 import { AuthService } from "../AuthService"
 import { SettingsService } from "../SettingsService"
-import type { ClineMessage } from "@roo-code/types"
 
-// Mock the dependencies
 vi.mock("../ShareService")
 vi.mock("../TelemetryClient")
 vi.mock("../AuthService")
@@ -14,10 +16,29 @@ vi.mock("../SettingsService")
 
 describe("CloudService.shareTask with ClineMessage retry logic", () => {
 	let cloudService: CloudService
-	let mockShareService: any
-	let mockTelemetryClient: any
-	let mockAuthService: any
-	let mockSettingsService: any
+	let mockShareService: {
+		shareTask: ReturnType<typeof vi.fn>
+		canShareTask: ReturnType<typeof vi.fn>
+	}
+	let mockTelemetryClient: {
+		backfillMessages: ReturnType<typeof vi.fn>
+	}
+	let mockAuthService: {
+		initialize: ReturnType<typeof vi.fn>
+		on: ReturnType<typeof vi.fn>
+		off: ReturnType<typeof vi.fn>
+		isAuthenticated: ReturnType<typeof vi.fn>
+		hasActiveSession: ReturnType<typeof vi.fn>
+		hasOrIsAcquiringActiveSession: ReturnType<typeof vi.fn>
+		getUserInfo: ReturnType<typeof vi.fn>
+		getStoredOrganizationId: ReturnType<typeof vi.fn>
+		getState: ReturnType<typeof vi.fn>
+	}
+	let mockSettingsService: {
+		initialize: ReturnType<typeof vi.fn>
+		dispose: ReturnType<typeof vi.fn>
+		getAllowList: ReturnType<typeof vi.fn>
+	}
 
 	beforeEach(async () => {
 		// Reset all mocks
@@ -55,13 +76,40 @@ describe("CloudService.shareTask with ClineMessage retry logic", () => {
 		}
 
 		// Mock the constructors
-		vi.mocked(ShareService).mockImplementation(() => mockShareService)
-		vi.mocked(TelemetryClient).mockImplementation(() => mockTelemetryClient)
-		vi.mocked(AuthService).mockImplementation(() => mockAuthService)
-		vi.mocked(SettingsService).mockImplementation(() => mockSettingsService)
+		vi.mocked(ShareService).mockImplementation(() => mockShareService as unknown as ShareService)
+		vi.mocked(TelemetryClient).mockImplementation(() => mockTelemetryClient as unknown as TelemetryClient)
+		vi.mocked(AuthService).mockImplementation(() => mockAuthService as unknown as AuthService)
+		vi.mocked(SettingsService).mockImplementation(() => mockSettingsService as unknown as SettingsService)
+
+		// Create a minimal mock ExtensionContext for testing
+		const mockContext = {
+			subscriptions: [],
+			workspaceState: {
+				get: vi.fn(),
+				update: vi.fn(),
+				keys: vi.fn().mockReturnValue([]),
+			},
+			globalState: {
+				get: vi.fn(),
+				update: vi.fn(),
+				setKeysForSync: vi.fn(),
+				keys: vi.fn().mockReturnValue([]),
+			},
+			extensionUri: { scheme: "file", path: "/mock/path" },
+			extensionPath: "/mock/path",
+			extensionMode: 1,
+			asAbsolutePath: vi.fn((relativePath: string) => `/mock/path/${relativePath}`),
+			storageUri: { scheme: "file", path: "/mock/storage" },
+			secrets: {
+				get: vi.fn(),
+				store: vi.fn(),
+				delete: vi.fn(),
+				onDidChange: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+			},
+		} as unknown as vscode.ExtensionContext
 
 		// Create CloudService instance using the factory method
-		cloudService = await CloudService.createInstance({} as any, {})
+		cloudService = await CloudService.createInstance(mockContext, {})
 	})
 
 	afterEach(() => {
