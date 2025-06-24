@@ -171,7 +171,7 @@ describe("PromptsView", () => {
 			groups: [],
 		}
 
-		// Test with built-in mode (code) - description section should not be shown
+		// Test with built-in mode (code) - description section should be shown with reset button
 		const { unmount } = render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
@@ -179,9 +179,9 @@ describe("PromptsView", () => {
 			</ExtensionStateContext.Provider>,
 		)
 
-		// Verify description reset button is not present for built-in modes
-		// because the description section is only shown for custom modes
-		expect(screen.queryByTestId("description-reset")).not.toBeInTheDocument()
+		// Verify description reset button IS present for built-in modes
+		// because built-in modes can have their descriptions customized and reset
+		expect(screen.queryByTestId("description-reset")).toBeInTheDocument()
 
 		// Cleanup before testing custom mode
 		unmount()
@@ -195,7 +195,7 @@ describe("PromptsView", () => {
 		)
 
 		// Verify description section is present for custom modes
-		// but reset button is not present (since it's only for built-in modes)
+		// but reset button is NOT present (since custom modes manage their own descriptions)
 		expect(screen.queryByTestId("description-reset")).not.toBeInTheDocument()
 
 		// Verify the description text field is present for custom modes
