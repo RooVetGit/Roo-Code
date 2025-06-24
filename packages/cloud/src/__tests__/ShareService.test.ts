@@ -93,6 +93,7 @@ describe("ShareService", () => {
 					"User-Agent": "Roo-Code 1.0.0",
 				},
 				body: JSON.stringify({ taskId: "task-123", visibility: "organization" }),
+				signal: expect.any(AbortSignal),
 			})
 			expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith("https://app.roocode.com/share/abc123")
 		})
@@ -120,6 +121,7 @@ describe("ShareService", () => {
 					"User-Agent": "Roo-Code 1.0.0",
 				},
 				body: JSON.stringify({ taskId: "task-123", visibility: "public" }),
+				signal: expect.any(AbortSignal),
 			})
 		})
 
@@ -146,6 +148,7 @@ describe("ShareService", () => {
 					"User-Agent": "Roo-Code 1.0.0",
 				},
 				body: JSON.stringify({ taskId: "task-123", visibility: "organization" }),
+				signal: expect.any(AbortSignal),
 			})
 		})
 
