@@ -202,7 +202,7 @@ describe("ShareButton", () => {
 	})
 
 	test("auto-hides success message after 5 seconds", async () => {
-		vi.useFakeTimers()
+		vi.useFakeTimers({ shouldAdvanceTime: true })
 
 		const mockAddEventListener = vi.fn()
 
@@ -219,7 +219,7 @@ describe("ShareButton", () => {
 		const button = screen.getByRole("button")
 		fireEvent.click(button)
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(screen.getByText("chat:task.shareWithOrganization")).toBeInTheDocument()
 		})
 
@@ -234,21 +234,23 @@ describe("ShareButton", () => {
 
 		messageListener(mockEvent)
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(screen.getByText("chat:task.shareSuccessOrganization")).toBeInTheDocument()
 		})
 
 		// Fast-forward 5 seconds
-		vi.advanceTimersByTime(5000)
+		await vi.advanceTimersByTimeAsync(5000)
 
-		await waitFor(() => {
-			expect(screen.queryByText("chat:task.shareSuccessOrganization")).not.toBeInTheDocument()
-		})
+		// The success message should be gone and the share options should be back
+		expect(screen.queryByText("chat:task.shareSuccessOrganization")).not.toBeInTheDocument()
+		expect(screen.queryByText("chat:task.shareWithOrganization")).not.toBeInTheDocument()
 
 		vi.useRealTimers()
 	})
 
 	test("clears previous success state when sharing again", async () => {
+		vi.useFakeTimers({ shouldAdvanceTime: true })
+
 		const mockAddEventListener = vi.fn()
 
 		Object.defineProperty(window, "addEventListener", {
@@ -264,9 +266,22 @@ describe("ShareButton", () => {
 		const button = screen.getByRole("button")
 		fireEvent.click(button)
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(screen.getByText("chat:task.shareWithOrganization")).toBeInTheDocument()
 		})
+
+		// Click organization share button first time
+		const orgButton = screen.getByText("chat:task.shareWithOrganization")
+		fireEvent.click(orgButton)
+
+		// Verify first share message was sent
+		expect(mockVscode.postMessage).toHaveBeenCalledWith({
+			type: "shareCurrentTask",
+			visibility: "organization",
+		})
+
+		// Clear mock to track new calls
+		mockVscode.postMessage.mockClear()
 
 		// Show success message
 		const mockEvent = {
@@ -279,15 +294,32 @@ describe("ShareButton", () => {
 
 		messageListener(mockEvent)
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(screen.getByText("chat:task.shareSuccessOrganization")).toBeInTheDocument()
 		})
 
-		// Click share again
-		const orgButton = screen.getByText("chat:task.shareWithOrganization")
-		fireEvent.click(orgButton)
+		// Wait for success message to auto-hide after 5 seconds
+		await vi.advanceTimersByTimeAsync(5000)
 
-		// Success message should be cleared
+		// Success message should be gone and popover should be closed
 		expect(screen.queryByText("chat:task.shareSuccessOrganization")).not.toBeInTheDocument()
+
+		// Open popover again
+		fireEvent.click(button)
+		await vi.waitFor(() => {
+			expect(screen.getByText("chat:task.shareWithOrganization")).toBeInTheDocument()
+		})
+
+		// Click share again
+		const orgButton2 = screen.getByText("chat:task.shareWithOrganization")
+		fireEvent.click(orgButton2)
+
+		// Verify the share message was sent again (no success message should be showing)
+		expect(mockVscode.postMessage).toHaveBeenCalledWith({
+			type: "shareCurrentTask",
+			visibility: "organization",
+		})
+
+		vi.useRealTimers()
 	})
 })
