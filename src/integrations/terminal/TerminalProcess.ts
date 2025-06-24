@@ -9,6 +9,7 @@
 import stripAnsi from "strip-ansi"
 import * as vscode from "vscode"
 import { inspect } from "util"
+import { TextEncoder } from "util"
 
 import type { ExitCodeDetails } from "./types"
 import { BaseTerminalProcess } from "./BaseTerminalProcess"
@@ -115,6 +116,12 @@ export class TerminalProcess extends BaseTerminalProcess {
 				(defaultWindowsShellProfile as string)?.toLowerCase().includes("powershell"))
 
 		if (isPowerShell) {
+			const syntaxError = await this.validatePowerShellSyntax(command)
+			if (syntaxError) {
+				this.emit("completed", syntaxError)
+				this.continue()
+				return
+			}
 			let commandToExecute = command
 
 			// Only add the PowerShell counter workaround if enabled
@@ -463,5 +470,39 @@ export class TerminalProcess extends BaseTerminalProcess {
 		}
 
 		return match133 !== undefined ? match133 : match633
+	}
+	private async validatePowerShellSyntax(command: string): Promise<string | null> {
+		const tempFileName = `temp_check_${Date.now()}.ps1`
+		const tempFileUri = vscode.Uri.joinPath(
+			vscode.Uri.file(this.terminal.getCurrentWorkingDirectory()),
+			tempFileName,
+		)
+		const encoder = new TextEncoder()
+
+		try {
+			await vscode.workspace.fs.writeFile(tempFileUri, encoder.encode(command))
+
+			// Wait for the PowerShell extension to analyze the file
+			await new Promise((resolve) => setTimeout(resolve, 500))
+
+			const diagnostics = vscode.languages.getDiagnostics(tempFileUri)
+			const errors = diagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Error)
+
+			if (errors.length > 0) {
+				const errorMessages = errors.map((e) => `- ${e.message}`).join("\n")
+				return `PowerShell Syntax Error Detected:\n${errorMessages}`
+			}
+
+			return null
+		} catch (e) {
+			console.error("Error during PowerShell syntax validation:", e)
+			// Don't block execution if validation fails
+			return null
+		} finally {
+			// Clean up the temporary file
+			await vscode.workspace.fs.delete(tempFileUri, { useTrash: false }).catch((e) => {
+				console.error(`Failed to delete temp file ${tempFileUri.fsPath}:`, e)
+			})
+		}
 	}
 }
