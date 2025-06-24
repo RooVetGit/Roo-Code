@@ -76,9 +76,9 @@ export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: 
 									</div>
 								)}
 							</div>
-							<h2 className="text-lg font-medium text-vscode-foreground mb-0">
-								{userInfo?.name || t("account:unknownUser")}
-							</h2>
+							{userInfo.name && (
+								<h2 className="text-lg font-medium text-vscode-foreground mb-0">{userInfo.name}</h2>
+							)}
 							{userInfo?.email && (
 								<p className="text-sm text-vscode-descriptionForeground">{userInfo?.email}</p>
 							)}

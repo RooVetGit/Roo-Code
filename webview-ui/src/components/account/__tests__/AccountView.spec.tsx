@@ -16,7 +16,6 @@ vi.mock("@src/i18n/TranslationContext", () => ({
 				"account:cloudBenefitSharing": "Sharing and collaboration features",
 				"account:cloudBenefitMetrics": "Task, token, and cost-based usage metrics",
 				"account:logOut": "Log out",
-				"account:unknownUser": "Unknown User",
 			}
 			return translations[key] || key
 		},
