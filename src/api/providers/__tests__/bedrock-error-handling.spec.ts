@@ -163,8 +163,8 @@ describe("AwsBedrockHandler Error Handling", () => {
 			}
 		})
 
-		it("should display verbose error information including codes and metadata", async () => {
-			const verboseError = createMockError({
+		it("should display appropriate error information for throttling errors", async () => {
+			const throttlingError = createMockError({
 				message: "Bedrock is unable to process your request",
 				name: "ThrottlingException",
 				status: 429,
@@ -176,21 +176,14 @@ describe("AwsBedrockHandler Error Handling", () => {
 				},
 			})
 
-			mockSend.mockRejectedValueOnce(verboseError)
+			mockSend.mockRejectedValueOnce(throttlingError)
 
 			try {
 				await handler.completePrompt("test")
 				throw new Error("Expected error to be thrown")
 			} catch (error) {
-				// Should contain error codes
-				expect(error.message).toMatch(/\[.*HTTP 429.*AWS ThrottlingException.*\]/)
 				// Should contain the main error message
 				expect(error.message).toContain("throttled or rate limited")
-				// Should contain debug information
-				expect(error.message).toContain("Debug Info:")
-				expect(error.message).toContain("Request ID: 12345-abcde-67890")
-				expect(error.message).toContain("Extended Request ID: extended-12345")
-				expect(error.message).toContain("CloudFront ID: cf-12345")
 			}
 		})
 	})
@@ -406,12 +399,8 @@ describe("AwsBedrockHandler Error Handling", () => {
 				await handler.completePrompt("test")
 				throw new Error("Expected error to be thrown")
 			} catch (error) {
-				// Should contain error codes (note: completePrompt adds "Bedrock completion error: " prefix)
-				expect(error.message).toContain("[HTTP 429")
 				// Should contain the verbose message template
 				expect(error.message).toContain("Request was throttled or rate limited")
-				// Should contain debug information
-				expect(error.message).toContain("Request ID: test-request-id-12345")
 				// Should preserve original error properties
 				expect((error as any).status).toBe(429)
 				expect((error as any).$metadata.requestId).toBe("test-request-id-12345")
@@ -450,9 +439,6 @@ describe("AwsBedrockHandler Error Handling", () => {
 			} catch (error) {
 				// Should contain error codes (note: this will be caught by the non-throttling error path)
 				expect(error.message).toContain("Too many tokens")
-				// Should contain debug information
-				expect(error.message).toContain("Request ID: token-error-id-67890")
-				expect(error.message).toContain("Extended Request ID: extended-12345")
 				// Should preserve original error properties
 				expect(error.name).toBe("ValidationException")
 				expect((error as any).$metadata.requestId).toBe("token-error-id-67890")

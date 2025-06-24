@@ -583,7 +583,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				yield chunk as any // Cast to any to bypass type checking since we know the structure is correct
 			}
 
-			// Re-throw with enhanced error message so retry system shows verbose details
+			// Re-throw with enhanced error message for retry system
 			const enhancedErrorMessage = this.formatErrorMessage(error, this.getErrorType(error), true)
 			if (error instanceof Error) {
 				const enhancedError = new Error(enhancedErrorMessage)
@@ -670,7 +670,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			// Since we're in a non-streaming context, we know the result is a string
 			const errorMessage = errorResult as string
 
-			// Create enhanced error with verbose details for retry system
+			// Create enhanced error for retry system
 			const enhancedError = new Error(errorMessage)
 			if (error instanceof Error) {
 				// Preserve important properties from the original error
@@ -1089,7 +1089,7 @@ Please verify:
 				"throttl",
 				"rate",
 				"limit",
-				"bedrock is unable to process your request", // AWS Bedrock specific message
+				"bedrock is unable to process your request", // AWS Bedrock specific throttling message
 				"please wait",
 				"quota exceeded",
 				"service unavailable",
@@ -1123,11 +1123,13 @@ Suggestions:
 2. Split your request into smaller chunks
 3. Use a model with a larger context window
 4. If rate limited, reduce request frequency
-5. Check your Amazon Bedrock quotas and limits`,
+5. Check your Amazon Bedrock quotas and limits
+
+{formattedErrorDetails}`,
 			logLevel: "error",
 		},
 		SERVICE_QUOTA_EXCEEDED: {
-			patterns: ["service quota exceeded", "quota exceeded", "exceeded quota", "limit exceeded"],
+			patterns: ["service quota exceeded", "service quota", "quota exceeded for model"],
 			messageTemplate: `Service quota exceeded. This error indicates you've reached AWS service limits.
 
 Please try:
@@ -1235,9 +1237,21 @@ Please check:
 		const errorMessage = error.message.toLowerCase()
 		const errorName = error.name.toLowerCase()
 
-		// Check each error type's patterns
-		for (const [errorType, definition] of Object.entries(AwsBedrockHandler.ERROR_TYPES)) {
-			if (errorType === "GENERIC") continue // Skip the generic type
+		// Check each error type's patterns in order of specificity (most specific first)
+		const errorTypeOrder = [
+			"SERVICE_QUOTA_EXCEEDED", // Most specific - check before THROTTLING
+			"MODEL_NOT_READY",
+			"TOO_MANY_TOKENS",
+			"INTERNAL_SERVER_ERROR",
+			"ON_DEMAND_NOT_SUPPORTED",
+			"NOT_FOUND",
+			"ACCESS_DENIED",
+			"THROTTLING", // Less specific - check after more specific patterns
+		]
+
+		for (const errorType of errorTypeOrder) {
+			const definition = AwsBedrockHandler.ERROR_TYPES[errorType]
+			if (!definition) continue
 
 			// If any pattern matches in either message or name, return this error type
 			if (definition.patterns.some((pattern) => errorMessage.includes(pattern) || errorName.includes(pattern))) {

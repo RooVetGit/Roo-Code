@@ -102,7 +102,6 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsModelContextWindow: z.number().optional(),
 	awsBedrockEndpointEnabled: z.boolean().optional(),
 	awsBedrockEndpoint: z.string().optional(),
-	awsBedrockVerboseErrors: z.boolean().optional(),
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({
