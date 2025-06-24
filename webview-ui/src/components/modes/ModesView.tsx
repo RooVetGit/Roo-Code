@@ -729,60 +729,57 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					</div>
 
 					{/* Description section */}
-					{/* Only show description for custom modes */}
-					{visualMode && findModeBySlug(visualMode, customModes) && (
-						<div className="mb-4">
-							<div className="flex justify-between items-center mb-1">
-								<div className="font-bold">{t("prompts:description.title")}</div>
-								{!findModeBySlug(visualMode, customModes) && (
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => {
-											const currentMode = getCurrentMode()
-											if (currentMode?.slug) {
-												handleAgentReset(currentMode.slug, "description")
-											}
-										}}
-										title={t("prompts:description.resetToDefault")}
-										data-testid="description-reset">
-										<span className="codicon codicon-discard"></span>
-									</Button>
-								)}
-							</div>
-							<div className="text-sm text-vscode-descriptionForeground mb-2">
-								{t("prompts:description.description")}
-							</div>
-							<VSCodeTextField
-								value={(() => {
-									const customMode = findModeBySlug(visualMode, customModes)
-									const prompt = customModePrompts?.[visualMode] as PromptComponent
-									return customMode?.description ?? prompt?.description ?? getDescription(visualMode)
-								})()}
-								onChange={(e) => {
-									const value =
-										(e as unknown as CustomEvent)?.detail?.target?.value ||
-										((e as any).target as HTMLTextAreaElement).value
-									const customMode = findModeBySlug(visualMode, customModes)
-									if (customMode) {
-										// For custom modes, update the JSON file
-										updateCustomMode(visualMode, {
-											...customMode,
-											description: value.trim() || undefined,
-											source: customMode.source || "global",
-										})
-									} else {
-										// For built-in modes, update the prompts
-										updateAgentPrompt(visualMode, {
-											description: value.trim() || undefined,
-										})
-									}
-								}}
-								className="w-full"
-								data-testid={`${getCurrentMode()?.slug || "code"}-description-textfield`}
-							/>
+					<div className="mb-4">
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">{t("prompts:description.title")}</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "description")
+										}
+									}}
+									title={t("prompts:description.resetToDefault")}
+									data-testid="description-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
+							)}
 						</div>
-					)}
+						<div className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("prompts:description.description")}
+						</div>
+						<VSCodeTextField
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return customMode?.description ?? prompt?.description ?? getDescription(visualMode)
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								const customMode = findModeBySlug(visualMode, customModes)
+								if (customMode) {
+									// For custom modes, update the JSON file
+									updateCustomMode(visualMode, {
+										...customMode,
+										description: value.trim() || undefined,
+										source: customMode.source || "global",
+									})
+								} else {
+									// For built-in modes, update the prompts
+									updateAgentPrompt(visualMode, {
+										description: value.trim() || undefined,
+									})
+								}
+							}}
+							className="w-full"
+							data-testid={`${getCurrentMode()?.slug || "code"}-description-textfield`}
+						/>
+					</div>
 
 					{/* When to Use section */}
 					<div className="mb-4">
