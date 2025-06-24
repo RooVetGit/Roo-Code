@@ -1,4 +1,12 @@
 {
+	"errorBoundary": {
+		"title": "Something went wrong",
+		"reportText": "Please help us improve by reporting this error on",
+		"githubText": "GitHub",
+		"copyInstructions": "Please copy and paste the following error message:",
+		"errorStack": "Error Stack:",
+		"componentStack": "Component Stack:"
+	},
 	"answers": {
 		"yes": "Yes",
 		"no": "No",

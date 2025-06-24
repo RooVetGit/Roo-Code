@@ -19,6 +19,7 @@ import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 import { DeleteMessageDialog, EditMessageDialog } from "./components/chat/MessageModificationConfirmationDialog"
+import ErrorBoundary from "./components/ErrorBoundary"
 import { AccountView } from "./components/account/AccountView"
 import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
 import { TooltipProvider } from "./components/ui/tooltip"
@@ -278,46 +279,6 @@ const App = () => {
 			/>
 		</>
 	)
-}
-
-type ErrorProps = {
-	children: React.ReactNode
-}
-
-type ErrorState = {
-	error?: string
-}
-
-class ErrorBoundary extends Component<ErrorProps, ErrorState> {
-	constructor(props: ErrorProps) {
-		super(props)
-		this.state = {}
-	}
-
-	static getDerivedStateFromError(error: unknown) {
-		return {
-			error: error instanceof Error ? (error.stack ?? error.message) : `${error}`,
-		}
-	}
-
-	render() {
-		if (!this.state.error) {
-			return this.props.children
-		}
-		return (
-			<div>
-				<h2 className="text-lg font-bold mt-0 mb-2">Something went wrong</h2>
-				<p className="mb-4">
-					Please help us improve by reporting this error on
-					<a href="https://github.com/RooCodeInc/Roo-Code/issues" target="_blank" rel="noreferrer">
-						Github
-					</a>
-				</p>
-				<p className="mb-2">Please copy and paste the following error message:</p>
-				<pre className="p-2 border rounded text-sm overflow-auto">{this.state.error}</pre>
-			</div>
-		)
-	}
 }
 
 const queryClient = new QueryClient()
