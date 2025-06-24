@@ -16,6 +16,9 @@
 		},
 		"watch:tsc": {
 			"cache": false
+		},
+		"playwright": {
+			"cache": false
 		}
 	}
 }
