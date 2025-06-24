@@ -30,7 +30,7 @@ import {
 	ORGANIZATION_ALLOW_ALL,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
-import { CloudService } from "@roo-code/cloud"
+import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
 
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
@@ -1485,6 +1485,7 @@ export class ClineProvider
 			},
 			mdmCompliant: this.checkMdmCompliance(),
 			profileThresholds: profileThresholds ?? {},
+			cloudApiUrl: getRooCodeApiUrl(),
 		}
 	}
 

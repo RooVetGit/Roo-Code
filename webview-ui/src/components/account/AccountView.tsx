@@ -11,10 +11,11 @@ import { telemetryClient } from "@src/utils/TelemetryClient"
 type AccountViewProps = {
 	userInfo: CloudUserInfo | null
 	isAuthenticated: boolean
+	cloudApiUrl?: string
 	onDone: () => void
 }
 
-export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewProps) => {
+export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: AccountViewProps) => {
 	const { t } = useAppTranslation()
 	const wasAuthenticatedRef = useRef(false)
 
@@ -41,6 +42,13 @@ export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewPr
 		// Send telemetry for account logout action
 		telemetryClient.capture(TelemetryEventName.ACCOUNT_LOGOUT_CLICKED)
 		vscode.postMessage({ type: "rooCloudSignOut" })
+	}
+
+	const handleVisitCloudWebsite = () => {
+		// Send telemetry for cloud website visit
+		telemetryClient.capture(TelemetryEventName.ACCOUNT_CONNECT_CLICKED)
+		const cloudUrl = cloudApiUrl || "https://app.roocode.com"
+		vscode.postMessage({ type: "openExternal", url: cloudUrl })
 	}
 
 	return (
@@ -89,6 +97,9 @@ export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewPr
 						</div>
 					)}
 					<div className="flex flex-col gap-2 mt-4">
+						<VSCodeButton appearance="secondary" onClick={handleVisitCloudWebsite} className="w-full">
+							{t("account:visitCloudWebsite")}
+						</VSCodeButton>
 						<VSCodeButton appearance="secondary" onClick={handleLogoutClick} className="w-full">
 							{t("account:logOut")}
 						</VSCodeButton>
@@ -96,8 +107,8 @@ export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewPr
 				</>
 			) : (
 				<>
-					<div className="flex flex-col items-center mb-4 text-center">
-						<div className="w-16 h-16 mb-4 flex items-center justify-center">
+					<div className="flex flex-col items-center mb-1 text-center">
+						<div className="w-16 h-16 mb-1 flex items-center justify-center">
 							<div
 								className="w-12 h-12 bg-vscode-foreground"
 								style={{
@@ -112,9 +123,33 @@ export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewPr
 							</div>
 						</div>
 					</div>
+
+					<div className="flex flex-col mb-6 text-center">
+						<h2 className="text-lg font-medium text-vscode-foreground mb-2">
+							{t("account:cloudBenefitsTitle")}
+						</h2>
+						<p className="text-md text-vscode-descriptionForeground mb-4">
+							{t("account:cloudBenefitsSubtitle")}
+						</p>
+						<ul className="text-sm text-vscode-descriptionForeground space-y-2 max-w-xs mx-auto">
+							<li className="flex items-start">
+								<span className="mr-2 text-vscode-foreground">•</span>
+								{t("account:cloudBenefitHistory")}
+							</li>
+							<li className="flex items-start">
+								<span className="mr-2 text-vscode-foreground">•</span>
+								{t("account:cloudBenefitSharing")}
+							</li>
+							<li className="flex items-start">
+								<span className="mr-2 text-vscode-foreground">•</span>
+								{t("account:cloudBenefitMetrics")}
+							</li>
+						</ul>
+					</div>
+
 					<div className="flex flex-col gap-4">
 						<VSCodeButton appearance="primary" onClick={handleConnectClick} className="w-full">
-							{t("account:signIn")}
+							{t("account:connect")}
 						</VSCodeButton>
 					</div>
 				</>
