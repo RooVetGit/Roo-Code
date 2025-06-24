@@ -1,9 +1,12 @@
+import { useEffect, useRef } from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import type { CloudUserInfo } from "@roo-code/types"
+import { TelemetryEventName } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { vscode } from "@src/utils/vscode"
+import { telemetryClient } from "@src/utils/TelemetryClient"
 
 type AccountViewProps = {
 	userInfo: CloudUserInfo | null
@@ -13,8 +16,32 @@ type AccountViewProps = {
 
 export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewProps) => {
 	const { t } = useAppTranslation()
+	const wasAuthenticatedRef = useRef(false)
 
 	const rooLogoUri = (window as any).IMAGES_BASE_URI + "/roo-logo.svg"
+
+	// Track authentication state changes to detect successful logout
+	useEffect(() => {
+		if (isAuthenticated) {
+			wasAuthenticatedRef.current = true
+		} else if (wasAuthenticatedRef.current && !isAuthenticated) {
+			// User just logged out successfully
+			telemetryClient.capture(TelemetryEventName.ACCOUNT_LOGOUT_SUCCESS)
+			wasAuthenticatedRef.current = false
+		}
+	}, [isAuthenticated])
+
+	const handleConnectClick = () => {
+		// Send telemetry for account connect action
+		telemetryClient.capture(TelemetryEventName.ACCOUNT_CONNECT_CLICKED)
+		vscode.postMessage({ type: "rooCloudSignIn" })
+	}
+
+	const handleLogoutClick = () => {
+		// Send telemetry for account logout action
+		telemetryClient.capture(TelemetryEventName.ACCOUNT_LOGOUT_CLICKED)
+		vscode.postMessage({ type: "rooCloudSignOut" })
+	}
 
 	return (
 		<div className="flex flex-col h-full p-4 bg-vscode-editor-background">
@@ -62,10 +89,7 @@ export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewPr
 						</div>
 					)}
 					<div className="flex flex-col gap-2 mt-4">
-						<VSCodeButton
-							appearance="secondary"
-							onClick={() => vscode.postMessage({ type: "rooCloudSignOut" })}
-							className="w-full">
+						<VSCodeButton appearance="secondary" onClick={handleLogoutClick} className="w-full">
 							{t("account:logOut")}
 						</VSCodeButton>
 					</div>
@@ -89,10 +113,7 @@ export const AccountView = ({ userInfo, isAuthenticated, onDone }: AccountViewPr
 						</div>
 					</div>
 					<div className="flex flex-col gap-4">
-						<VSCodeButton
-							appearance="primary"
-							onClick={() => vscode.postMessage({ type: "rooCloudSignIn" })}
-							className="w-full">
+						<VSCodeButton appearance="primary" onClick={handleConnectClick} className="w-full">
 							{t("account:signIn")}
 						</VSCodeButton>
 					</div>

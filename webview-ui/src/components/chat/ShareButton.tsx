@@ -34,7 +34,8 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 		if (!cloudIsAuthenticated || !sharingEnabled) {
 			wasUnauthenticatedRef.current = true
 		} else if (wasUnauthenticatedRef.current && cloudIsAuthenticated && sharingEnabled) {
-			// User just authenticated, open the popover
+			// User just authenticated, send telemetry and open the popover
+			telemetryClient.capture(TelemetryEventName.ACCOUNT_CONNECT_SUCCESS)
 			setShareDropdownOpen(true)
 			wasUnauthenticatedRef.current = false
 		}
