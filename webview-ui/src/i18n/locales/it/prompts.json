@@ -142,6 +142,10 @@
 			"label": "Definizione del ruolo",
 			"description": "Definisci l'esperienza e la personalità di Roo per questa modalità."
 		},
+		"description": {
+			"label": "Descrizione breve (per umani)",
+			"description": "Una breve descrizione mostrata nel menu a discesa del selettore di modalità."
+		},
 		"whenToUse": {
 			"label": "Quando utilizzare (opzionale)",
 			"description": "Fornisci una chiara descrizione di quando questa modalità è più efficace e per quali tipi di compiti eccelle."
