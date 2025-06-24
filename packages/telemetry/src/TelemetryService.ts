@@ -153,10 +153,11 @@ export class TelemetryService {
 	}
 
 	/**
-	 * Captures when the ModesView settings UI is shown
+	 * Captures when a tab is shown due to user action
+	 * @param tab The tab that was shown
 	 */
-	public captureModesViewShown(): void {
-		this.captureEvent(TelemetryEventName.MODE_SETTINGS_SHOWN)
+	public captureTabShown(tab: string): void {
+		this.captureEvent(TelemetryEventName.TAB_SHOWN, { tab })
 	}
 
 	/**

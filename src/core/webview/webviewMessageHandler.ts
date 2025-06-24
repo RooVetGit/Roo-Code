@@ -1703,9 +1703,9 @@ export const webviewMessageHandler = async (
 
 		case "switchTab": {
 			if (message.tab) {
-				// This could be more generic, but keeping it specific for now
-				if (message.tab === "modes" && TelemetryService.hasInstance()) {
-					TelemetryService.instance.captureModesViewShown()
+				// Capture tab shown event for all switchTab messages (which are user-initiated)
+				if (TelemetryService.hasInstance()) {
+					TelemetryService.instance.captureTabShown(message.tab)
 				}
 
 				await provider.postMessageToWebview({ type: "action", action: "switchTab", tab: message.tab })
