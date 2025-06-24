@@ -241,7 +241,7 @@ describe("ShareButton", () => {
 		// Fast-forward 5 seconds
 		await vi.advanceTimersByTimeAsync(5000)
 
-		// The success message should be gone and the share options should be back
+		// The success message and share options should both be gone (popover closed)
 		expect(screen.queryByText("chat:task.shareSuccessOrganization")).not.toBeInTheDocument()
 		expect(screen.queryByText("chat:task.shareWithOrganization")).not.toBeInTheDocument()
 
