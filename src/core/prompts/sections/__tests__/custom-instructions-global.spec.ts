@@ -1,9 +1,6 @@
 import * as path from "path"
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 
-// Access the original console.log that was saved in vitest.setup.ts
-const originalConsoleLog = (global as any).originalConsoleLog || console.error
-
 // Use vi.hoisted to ensure mocks are available during hoisting
 const { mockHomedir, mockStat, mockReadFile, mockReaddir, mockGetRooDirectoriesForCwd, mockGetGlobalRooDirectory } =
 	vi.hoisted(() => ({
@@ -77,14 +74,10 @@ describe("custom-instructions global .roo support", () => {
 
 			const result = await loadRuleFiles(mockCwd)
 
-			originalConsoleLog("Result:", result)
-			originalConsoleLog("mockStat calls:", mockStat.mock.calls)
-			originalConsoleLog("mockReaddir calls:", mockReaddir.mock.calls)
-			originalConsoleLog("mockReadFile calls:", mockReadFile.mock.calls)
-
-			expect(result).toContain("# Global rules:")
+			expect(result).toContain("# Rules from")
+			expect(result).toContain("rules.md:")
 			expect(result).toContain("global rule content")
-			expect(result).not.toContain("# Project-specific rules:")
+			expect(result).not.toContain("project rule content")
 		})
 
 		it("should load project rules only when global rules do not exist", async () => {
@@ -104,9 +97,10 @@ describe("custom-instructions global .roo support", () => {
 
 			const result = await loadRuleFiles(mockCwd)
 
-			expect(result).toContain("# Project-specific rules:")
+			expect(result).toContain("# Rules from")
+			expect(result).toContain("rules.md:")
 			expect(result).toContain("project rule content")
-			expect(result).not.toContain("# Global rules:")
+			expect(result).not.toContain("global rule content")
 		})
 
 		it("should merge global and project rules with project rules after global", async () => {
@@ -127,14 +121,15 @@ describe("custom-instructions global .roo support", () => {
 
 			const result = await loadRuleFiles(mockCwd)
 
-			expect(result).toContain("# Global rules:")
+			expect(result).toContain("# Rules from")
+			expect(result).toContain("global.md:")
 			expect(result).toContain("global rule content")
-			expect(result).toContain("# Project-specific rules:")
+			expect(result).toContain("project.md:")
 			expect(result).toContain("project rule content")
 
 			// Ensure project rules come after global rules
-			const globalIndex = result.indexOf("# Global rules:")
-			const projectIndex = result.indexOf("# Project-specific rules:")
+			const globalIndex = result.indexOf("global rule content")
+			const projectIndex = result.indexOf("project rule content")
 			expect(globalIndex).toBeLessThan(projectIndex)
 		})
 
@@ -203,9 +198,10 @@ describe("custom-instructions global .roo support", () => {
 
 			const result = await addCustomInstructions("", "", mockCwd, mode)
 
-			expect(result).toContain("# Global mode-specific rules:")
+			expect(result).toContain("# Rules from")
+			expect(result).toContain("global-mode.md:")
 			expect(result).toContain("global mode rule content")
-			expect(result).toContain("# Project-specific mode-specific rules:")
+			expect(result).toContain("project-mode.md:")
 			expect(result).toContain("project mode rule content")
 		})
 

@@ -146,14 +146,11 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 function formatDirectoryContent(dirPath: string, files: Array<{ filename: string; content: string }>): string {
 	if (files.length === 0) return ""
 
-	return (
-		"\n\n" +
-		files
-			.map((file) => {
-				return `# Rules from ${file.filename}:\n${file.content}`
-			})
-			.join("\n\n")
-	)
+	return files
+		.map((file) => {
+			return `# Rules from ${file.filename}:\n${file.content}`
+		})
+		.join("\n\n")
 }
 
 /**
@@ -170,17 +167,15 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 		if (await directoryExists(rulesDir)) {
 			const files = await readTextFilesFromDirectory(rulesDir)
 			if (files.length > 0) {
-				const isGlobal = path.resolve(rooDir) === path.resolve(getGlobalRooDirectory())
-				const prefix = isGlobal ? "# Global rules" : "# Project-specific rules"
 				const content = formatDirectoryContent(rulesDir, files)
-				rules.push(`${prefix}:\n${content}`)
+				rules.push(content)
 			}
 		}
 	}
 
 	// If we found rules in .roo/rules/ directories, return them
 	if (rules.length > 0) {
-		return "\n\n" + rules.join("\n\n")
+		return "\n" + rules.join("\n\n")
 	}
 
 	// Fall back to existing behavior for legacy .roorules/.clinerules files
@@ -219,17 +214,15 @@ export async function addCustomInstructions(
 			if (await directoryExists(modeRulesDir)) {
 				const files = await readTextFilesFromDirectory(modeRulesDir)
 				if (files.length > 0) {
-					const isGlobal = path.resolve(rooDir) === path.resolve(getGlobalRooDirectory())
-					const prefix = isGlobal ? "# Global mode-specific rules" : "# Project-specific mode-specific rules"
 					const content = formatDirectoryContent(modeRulesDir, files)
-					modeRules.push(`${prefix}:\n${content}`)
+					modeRules.push(content)
 				}
 			}
 		}
 
 		// If we found mode-specific rules in .roo/rules-${mode}/ directories, use them
 		if (modeRules.length > 0) {
-			modeRuleContent = "\n\n" + modeRules.join("\n\n")
+			modeRuleContent = "\n" + modeRules.join("\n\n")
 			usedRuleFile = `rules-${mode} directories`
 		} else {
 			// Fall back to existing behavior for legacy files
