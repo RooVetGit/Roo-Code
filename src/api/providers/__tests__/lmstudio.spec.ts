@@ -58,9 +58,9 @@ vi.mock("openai", () => {
 	}
 })
 
-// Mock LM Studio fetcher
-vi.mock("../fetchers/lmstudio", () => ({
-	getLMStudioModels: vi.fn(),
+// Mock model cache
+vi.mock("../fetchers/modelCache", () => ({
+	getModels: vi.fn(),
 }))
 
 import type { Anthropic } from "@anthropic-ai/sdk"
@@ -68,10 +68,10 @@ import type { ModelInfo } from "@roo-code/types"
 
 import { LmStudioHandler } from "../lm-studio"
 import type { ApiHandlerOptions } from "../../../shared/api"
-import { getLMStudioModels } from "../fetchers/lmstudio"
+import { getModels } from "../fetchers/modelCache"
 
 // Get the mocked function
-const mockGetLMStudioModels = vi.mocked(getLMStudioModels)
+const mockGetModels = vi.mocked(getModels)
 
 describe("LmStudioHandler", () => {
 	let handler: LmStudioHandler
@@ -98,7 +98,7 @@ describe("LmStudioHandler", () => {
 		}
 		handler = new LmStudioHandler(mockOptions)
 		mockCreate.mockClear()
-		mockGetLMStudioModels.mockClear()
+		mockGetModels.mockClear()
 	})
 
 	describe("constructor", () => {
@@ -190,7 +190,7 @@ describe("LmStudioHandler", () => {
 
 		it("should return fetched model info when available", async () => {
 			// Mock the fetched models
-			mockGetLMStudioModels.mockResolvedValueOnce({
+			mockGetModels.mockResolvedValueOnce({
 				"local-model": mockModelInfo,
 			})
 
@@ -204,7 +204,7 @@ describe("LmStudioHandler", () => {
 
 		it("should fallback to default when model not found in fetched models", async () => {
 			// Mock fetched models without our target model
-			mockGetLMStudioModels.mockResolvedValueOnce({
+			mockGetModels.mockResolvedValueOnce({
 				"other-model": mockModelInfo,
 			})
 
@@ -219,32 +219,21 @@ describe("LmStudioHandler", () => {
 
 	describe("fetchModel", () => {
 		it("should fetch models successfully", async () => {
-			mockGetLMStudioModels.mockResolvedValueOnce({
+			mockGetModels.mockResolvedValueOnce({
 				"local-model": mockModelInfo,
 			})
 
 			const result = await handler.fetchModel()
 
-			expect(mockGetLMStudioModels).toHaveBeenCalledWith(mockOptions.lmStudioBaseUrl)
+			expect(mockGetModels).toHaveBeenCalledWith({ provider: "lmstudio" })
 			expect(result.id).toBe(mockOptions.lmStudioModelId)
 			expect(result.info).toEqual(mockModelInfo)
 		})
 
 		it("should handle fetch errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-			mockGetLMStudioModels.mockRejectedValueOnce(new Error("Connection failed"))
+			mockGetModels.mockRejectedValueOnce(new Error("Connection failed"))
 
-			const result = await handler.fetchModel()
-
-			expect(consoleSpy).toHaveBeenCalledWith(
-				"Failed to fetch LM Studio models, using defaults:",
-				expect.any(Error),
-			)
-			expect(result.id).toBe(mockOptions.lmStudioModelId)
-			expect(result.info.maxTokens).toBe(-1)
-			expect(result.info.contextWindow).toBe(128_000)
-
-			consoleSpy.mockRestore()
+			await expect(handler.fetchModel()).rejects.toThrow("Connection failed")
 		})
 	})
 })

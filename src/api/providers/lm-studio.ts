@@ -1,10 +1,9 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import axios from "axios"
 
 import { type ModelInfo, openAiModelInfoSaneDefaults, LMSTUDIO_DEFAULT_TEMPERATURE } from "@roo-code/types"
 
-import type { ApiHandlerOptions } from "../../shared/api"
+import type { ApiHandlerOptions, ModelRecord } from "../../shared/api"
 
 import { XmlMatcher } from "../../utils/xml-matcher"
 
@@ -13,7 +12,7 @@ import { ApiStream } from "../transform/stream"
 
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
-import { getLMStudioModels } from "./fetchers/lmstudio"
+import { getModels } from "./fetchers/modelCache"
 
 export class LmStudioHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -75,8 +74,9 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		let assistantText = ""
 
 		try {
+			const modelInfo = await this.fetchModel()
 			const params: OpenAI.Chat.ChatCompletionCreateParamsStreaming & { draft_model?: string } = {
-				model: this.getModel().id,
+				model: modelInfo.id,
 				messages: openAiMessages,
 				temperature: this.options.modelTemperature ?? LMSTUDIO_DEFAULT_TEMPERATURE,
 				stream: true,
@@ -133,12 +133,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	}
 
 	public async fetchModel() {
-		try {
-			this.models = await getLMStudioModels(this.options.lmStudioBaseUrl)
-		} catch (error) {
-			console.warn("Failed to fetch LM Studio models, using defaults:", error)
-			this.models = {}
-		}
+		this.models = await getModels({ provider: "lmstudio" })
 		return this.getModel()
 	}
 
@@ -146,7 +141,24 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		const id = this.options.lmStudioModelId || ""
 
 		// Try to get the actual model info from fetched models
-		const info = this.models[id] || openAiModelInfoSaneDefaults
+		// The fetcher uses model.path or modelKey as keys, so try both
+		let info: ModelInfo | undefined = undefined
+
+		if (this.models && Object.keys(this.models).length > 0) {
+			info = this.models[id]
+
+			// If not found by exact ID, try to find by partial match (for model paths)
+			if (!info) {
+				const modelKeys = Object.keys(this.models)
+				const matchingKey = modelKeys.find((key) => key === id || key.includes(id) || id.includes(key))
+				if (matchingKey) {
+					info = this.models[matchingKey]
+				}
+			}
+		}
+
+		// Fall back to defaults if still not found
+		info = info || openAiModelInfoSaneDefaults
 
 		return {
 			id,
@@ -157,8 +169,9 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			// Create params object with optional draft model
+			const modelInfo = await this.fetchModel()
 			const params: any = {
-				model: this.getModel().id,
+				model: modelInfo.id,
 				messages: [{ role: "user", content: prompt }],
 				temperature: this.options.modelTemperature ?? LMSTUDIO_DEFAULT_TEMPERATURE,
 				stream: false,
@@ -176,19 +189,5 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Roo Code's prompts.",
 			)
 		}
-	}
-}
-
-export async function getLmStudioModels(baseUrl = "http://localhost:1234") {
-	try {
-		if (!URL.canParse(baseUrl)) {
-			return []
-		}
-
-		const response = await axios.get(`${baseUrl}/v1/models`)
-		const modelsArray = response.data?.data?.map((model: any) => model.id) || []
-		return [...new Set<string>(modelsArray)]
-	} catch (error) {
-		return []
 	}
 }
