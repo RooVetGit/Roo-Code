@@ -162,7 +162,7 @@ describe("PromptsView", () => {
 		expect(screen.queryByTestId("role-definition-reset")).not.toBeInTheDocument()
 	})
 
-	it("resets description only for built-in modes", async () => {
+	it("description section behavior for different mode types", async () => {
 		const customMode = {
 			slug: "custom-mode",
 			name: "Custom Mode",
@@ -171,7 +171,7 @@ describe("PromptsView", () => {
 			groups: [],
 		}
 
-		// Test with built-in mode (code)
+		// Test with built-in mode (code) - description section should not be shown
 		const { unmount } = render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
@@ -179,25 +179,14 @@ describe("PromptsView", () => {
 			</ExtensionStateContext.Provider>,
 		)
 
-		// Find and click the description reset button
-		const resetButton = screen.getByTestId("description-reset")
-		expect(resetButton).toBeInTheDocument()
-		await fireEvent.click(resetButton)
-
-		// Verify it only resets description
-		// When resetting a built-in mode's description, the field should be removed entirely
-		// from the customPrompt object, not set to undefined.
-		// This allows the default description from the built-in mode to be used instead.
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "updatePrompt",
-			promptMode: "code",
-			customPrompt: {}, // Empty object because the description field is removed entirely
-		})
+		// Verify description reset button is not present for built-in modes
+		// because the description section is only shown for custom modes
+		expect(screen.queryByTestId("description-reset")).not.toBeInTheDocument()
 
 		// Cleanup before testing custom mode
 		unmount()
 
-		// Test with custom mode
+		// Test with custom mode - description section should be shown
 		render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as any}>
@@ -205,8 +194,12 @@ describe("PromptsView", () => {
 			</ExtensionStateContext.Provider>,
 		)
 
-		// Verify reset button is not present for custom mode
+		// Verify description section is present for custom modes
+		// but reset button is not present (since it's only for built-in modes)
 		expect(screen.queryByTestId("description-reset")).not.toBeInTheDocument()
+
+		// Verify the description text field is present for custom modes
+		expect(screen.getByTestId("custom-mode-description-textfield")).toBeInTheDocument()
 	})
 
 	it("handles clearing custom instructions correctly", async () => {
