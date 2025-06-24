@@ -5,13 +5,15 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 const originalConsoleLog = (global as any).originalConsoleLog || console.error
 
 // Use vi.hoisted to ensure mocks are available during hoisting
-const { mockHomedir, mockStat, mockReadFile, mockReaddir, mockGetRooDirectoriesForCwd } = vi.hoisted(() => ({
-	mockHomedir: vi.fn(),
-	mockStat: vi.fn(),
-	mockReadFile: vi.fn(),
-	mockReaddir: vi.fn(),
-	mockGetRooDirectoriesForCwd: vi.fn(),
-}))
+const { mockHomedir, mockStat, mockReadFile, mockReaddir, mockGetRooDirectoriesForCwd, mockGetGlobalRooDirectory } =
+	vi.hoisted(() => ({
+		mockHomedir: vi.fn(),
+		mockStat: vi.fn(),
+		mockReadFile: vi.fn(),
+		mockReaddir: vi.fn(),
+		mockGetRooDirectoriesForCwd: vi.fn(),
+		mockGetGlobalRooDirectory: vi.fn(),
+	}))
 
 // Mock os module
 vi.mock("os", () => ({
@@ -33,6 +35,7 @@ vi.mock("fs/promises", () => ({
 // Mock the roo-config service
 vi.mock("../../../../services/roo-config", () => ({
 	getRooDirectoriesForCwd: mockGetRooDirectoriesForCwd,
+	getGlobalRooDirectory: mockGetGlobalRooDirectory,
 }))
 
 import { loadRuleFiles, addCustomInstructions } from "../custom-instructions"
@@ -47,6 +50,7 @@ describe("custom-instructions global .roo support", () => {
 		vi.clearAllMocks()
 		mockHomedir.mockReturnValue(mockHomeDir)
 		mockGetRooDirectoriesForCwd.mockReturnValue([globalRooDir, projectRooDir])
+		mockGetGlobalRooDirectory.mockReturnValue(globalRooDir)
 	})
 
 	afterEach(() => {

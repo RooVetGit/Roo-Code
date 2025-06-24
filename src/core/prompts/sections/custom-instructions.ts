@@ -6,7 +6,7 @@ import { Dirent } from "fs"
 import { isLanguage } from "@roo-code/types"
 
 import { LANGUAGES } from "../../../shared/language"
-import { getRooDirectoriesForCwd } from "../../../services/roo-config"
+import { getRooDirectoriesForCwd, getGlobalRooDirectory } from "../../../services/roo-config"
 
 /**
  * Safely read a file and return its trimmed content
@@ -170,7 +170,7 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 		if (await directoryExists(rulesDir)) {
 			const files = await readTextFilesFromDirectory(rulesDir)
 			if (files.length > 0) {
-				const isGlobal = rooDir.includes(path.join(os.homedir(), ".roo"))
+				const isGlobal = path.resolve(rooDir) === path.resolve(getGlobalRooDirectory())
 				const prefix = isGlobal ? "# Global rules" : "# Project-specific rules"
 				const content = formatDirectoryContent(rulesDir, files)
 				rules.push(`${prefix}:\n${content}`)
@@ -219,7 +219,7 @@ export async function addCustomInstructions(
 			if (await directoryExists(modeRulesDir)) {
 				const files = await readTextFilesFromDirectory(modeRulesDir)
 				if (files.length > 0) {
-					const isGlobal = rooDir.includes(path.join(os.homedir(), ".roo"))
+					const isGlobal = path.resolve(rooDir) === path.resolve(getGlobalRooDirectory())
 					const prefix = isGlobal ? "# Global mode-specific rules" : "# Project-specific mode-specific rules"
 					const content = formatDirectoryContent(modeRulesDir, files)
 					modeRules.push(`${prefix}:\n${content}`)
