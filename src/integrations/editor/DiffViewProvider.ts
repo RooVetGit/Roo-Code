@@ -194,10 +194,7 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		if (task.checkpointService) {
-			const uri = vscode.Uri.file(absolutePath)
-			await task.checkpointService.syncFile(uri)
-		}
+		// The new worktree architecture automatically handles file syncing.
 
 		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })
 		await this.closeAllDiffViews()

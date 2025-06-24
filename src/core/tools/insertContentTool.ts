@@ -137,7 +137,7 @@ export async function insertContentTool(
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties
-		await cline.diffViewProvider.saveChanges(cline, "before_insert", "after_insert")
+		await cline.diffViewProvider.saveChanges(cline)
 
 		// Track file edit operation
 		if (relPath) {

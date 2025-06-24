@@ -4,9 +4,6 @@ import * as path from "path"
 import crypto from "crypto"
 import EventEmitter from "events"
 import vscode from "vscode"
-import fse from "fs-extra"
-import ignore from "ignore"
-
 import simpleGit, { SimpleGit } from "simple-git"
 import pWaitFor from "p-wait-for"
 
@@ -80,13 +77,10 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
-			await this.copyWorkspaceToShadow()
+			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
 			await git.addConfig("user.name", "Roo Code")
 			await git.addConfig("user.email", "noreply@example.com")
-			// Prevent LFS and submodule errors in shadow repo
-			await git.addConfig("filter.lfs.process", "cat")
-			await git.addConfig("submodule.recurse", "false")
 			await this.writeExcludeFile()
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
@@ -113,45 +107,6 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		})
 
 		return { created, duration }
-	}
-
-	private async copyWorkspaceToShadow() {
-		const ig = ignore()
-		const gitignorePath = path.join(this.workspaceDir, ".gitignore")
-		if (await fileExistsAtPath(gitignorePath)) {
-			const gitignore = await fs.readFile(gitignorePath, "utf-8")
-			ig.add(gitignore)
-		}
-
-		await fse.copy(this.workspaceDir, this.checkpointsDir, {
-			filter: (src: string) => {
-				const relativePath = path.relative(this.workspaceDir, src)
-				if (relativePath === "") {
-					return true
-				}
-				// Do not copy the shadow checkpoints directory if it's inside the workspace
-				if (src.startsWith(this.checkpointsDir)) {
-					return false
-				}
-				return !ig.ignores(relativePath)
-			},
-		})
-	}
-
-	public async syncFile(uri: vscode.Uri) {
-		if (!this.isInitialized) {
-			return
-		}
-		const relativePath = path.relative(this.workspaceDir, uri.fsPath)
-		const shadowPath = path.join(this.checkpointsDir, relativePath)
-		try {
-			await fse.copy(uri.fsPath, shadowPath)
-			this.log(`[${this.constructor.name}#syncFile] synced ${relativePath} to shadow copy`)
-		} catch (error) {
-			this.log(
-				`[${this.constructor.name}#syncFile] failed to sync ${relativePath}: ${error instanceof Error ? error.message : String(error)}`,
-			)
-		}
 	}
 
 	// Add basic excludes directly in git config, while respecting any
@@ -188,19 +143,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				throw new Error("Shadow git repo not initialized")
 			}
 
-			if (options?.files) {
-				for (const file of options.files) {
-					await this.syncFile(file)
-				}
-			}
-
 			const startTime = Date.now()
-			if (options?.files && options.files.length > 0) {
-				const filePaths = options.files.map((file) => path.relative(this.workspaceDir, file.fsPath))
-				await this.git.add(filePaths)
-			} else {
-				await this.stageAll(this.git)
-			}
+			await this.stageAll(this.git)
 			const commitArgs = options?.allowEmpty ? { "--allow-empty": null } : undefined
 			const result = await this.git.commit(message, commitArgs)
 			const isFirst = this._checkpoints.length === 0
@@ -250,14 +194,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await this.git.reset(["--hard", commitHash])
 			await this.git.clean("f", ["-d", "-f"])
 
-			// Copy from shadow to workspace
-			await fse.copy(this.checkpointsDir, this.workspaceDir, {
-				overwrite: true,
-				filter: (src: string) => {
-					const relativePath = path.relative(this.checkpointsDir, src)
-					return relativePath !== ".git" && !relativePath.startsWith(".git/")
-				},
-			})
+			// With worktree, the workspace is already updated by the reset.
 
 			// Remove all checkpoints after the specified commitHash.
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)

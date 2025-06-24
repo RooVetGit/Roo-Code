@@ -991,9 +991,6 @@ importers:
       pretty-bytes:
         specifier: ^6.1.1
         version: 6.1.1
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -1113,7 +1110,7 @@ importers:
         specifier: ^1.57.5
         version: 1.57.5
       '@vitejs/plugin-react':
-        specifier: ^4.3.4
+        specifier: ^4.4.1
         version: 4.4.1(vite@6.3.5(@types/node@18.19.100)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)(yaml@2.8.0))
       identity-obj-proxy:
         specifier: ^3.0.0
@@ -1127,6 +1124,9 @@ importers:
       jest-simple-dot-reporter:
         specifier: ^1.0.5
         version: 1.0.5
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       storybook:
         specifier: ^8.5.6
         version: 8.6.12(prettier@3.5.3)

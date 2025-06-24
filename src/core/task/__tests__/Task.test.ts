@@ -312,11 +312,12 @@ describe("Cline", () => {
 		describe("API conversation handling", () => {
 			it("should clean conversation history before sending to API", async () => {
 				// Cline.create will now use our mocked getEnvironmentDetails
-				const [cline, task] = Task.create({
+				const cline = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
 				})
+				const task = Promise.resolve()
 
 				cline.abandoned = true
 				await task
@@ -420,11 +421,12 @@ describe("Cline", () => {
 				]
 
 				// Test with model that supports images
-				const [clineWithImages, taskWithImages] = Task.create({
+				const clineWithImages = new Task({
 					provider: mockProvider,
 					apiConfiguration: configWithImages,
 					task: "test task",
 				})
+				const taskWithImages = Promise.resolve()
 
 				// Mock the model info to indicate image support
 				jest.spyOn(clineWithImages.api, "getModel").mockReturnValue({
@@ -443,11 +445,12 @@ describe("Cline", () => {
 				clineWithImages.apiConversationHistory = conversationHistory
 
 				// Test with model that doesn't support images
-				const [clineWithoutImages, taskWithoutImages] = Task.create({
+				const clineWithoutImages = new Task({
 					provider: mockProvider,
 					apiConfiguration: configWithoutImages,
 					task: "test task",
 				})
+				const taskWithoutImages = Promise.resolve()
 
 				// Mock the model info to indicate no image support
 				jest.spyOn(clineWithoutImages.api, "getModel").mockReturnValue({
@@ -534,11 +537,12 @@ describe("Cline", () => {
 			})
 
 			it.skip("should handle API retry with countdown", async () => {
-				const [cline, task] = Task.create({
+				const cline = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
 				})
+				const task = Promise.resolve()
 
 				// Mock delay to track countdown timing
 				const mockDelay = jest.fn().mockResolvedValue(undefined)
@@ -649,7 +653,7 @@ describe("Cline", () => {
 				expect(mockDelay).toHaveBeenCalledWith(1000)
 
 				// Verify error message content
-				const errorMessage = saySpy.mock.calls.find((call) => call[1]?.includes(mockError.message))?.[1]
+				const errorMessage = saySpy.mock.calls.find((call: any) => call[1]?.includes(mockError.message))?.[1]
 				expect(errorMessage).toBe(
 					`${mockError.message}\n\nRetry attempt 1\nRetrying in ${baseDelay} seconds...`,
 				)
@@ -659,11 +663,12 @@ describe("Cline", () => {
 			})
 
 			it.skip("should not apply retry delay twice", async () => {
-				const [cline, task] = Task.create({
+				const cline = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
 				})
+				const task = Promise.resolve()
 
 				// Mock delay to track countdown timing
 				const mockDelay = jest.fn().mockResolvedValue(undefined)
@@ -756,7 +761,7 @@ describe("Cline", () => {
 
 				// Verify countdown messages were only shown once
 				const retryMessages = saySpy.mock.calls.filter(
-					(call) => call[0] === "api_req_retry_delayed" && call[1]?.includes("Retrying in"),
+					(call: any) => call[0] === "api_req_retry_delayed" && call[1]?.includes("Retrying in"),
 				)
 				expect(retryMessages).toHaveLength(baseDelay)
 
@@ -784,20 +789,21 @@ describe("Cline", () => {
 
 			describe("processUserContentMentions", () => {
 				it("should process mentions in task and feedback tags", async () => {
-					const [cline, task] = Task.create({
+					const cline = new Task({
 						provider: mockProvider,
 						apiConfiguration: mockApiConfig,
 						task: "test task",
 					})
+					const task = Promise.resolve()
 
 					const userContent = [
 						{
 							type: "text",
-							text: "Regular text with @/some/path",
+							text: "Regular text with 'some/path' (see below for file content)",
 						} as const,
 						{
 							type: "text",
-							text: "<task>Text with @/some/path in task tags</task>",
+							text: "<task>Text with 'some/path' (see below for file content) in task tags</task>",
 						} as const,
 						{
 							type: "tool_result",
@@ -805,7 +811,7 @@ describe("Cline", () => {
 							content: [
 								{
 									type: "text",
-									text: "<feedback>Check @/some/path</feedback>",
+									text: "<feedback>Check 'some/path</feedback>' (see below for file content)",
 								},
 							],
 						} as Anthropic.ToolResultBlockParam,
@@ -815,7 +821,7 @@ describe("Cline", () => {
 							content: [
 								{
 									type: "text",
-									text: "Regular tool result with @/path",
+									text: "Regular tool result with 'path' (see below for file content)",
 								},
 							],
 						} as Anthropic.ToolResultBlockParam,
@@ -829,12 +835,14 @@ describe("Cline", () => {
 					})
 
 					// Regular text should not be processed
-					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe("Regular text with @/some/path")
+					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe(
+						"Regular text with 'some/path' (see below for file content)",
+					)
 
 					// Text within task tags should be processed
 					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain("processed:")
 					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain(
-						"<task>Text with @/some/path in task tags</task>",
+						"<task>Text with 'some/path' (see below for file content) in task tags</task>",
 					)
 
 					// Feedback tag content should be processed
@@ -842,13 +850,15 @@ describe("Cline", () => {
 					const content1 = Array.isArray(toolResult1.content) ? toolResult1.content[0] : toolResult1.content
 					expect((content1 as Anthropic.TextBlockParam).text).toContain("processed:")
 					expect((content1 as Anthropic.TextBlockParam).text).toContain(
-						"<feedback>Check @/some/path</feedback>",
+						"<feedback>Check 'some/path</feedback>' (see below for file content)",
 					)
 
 					// Regular tool result should not be processed
 					const toolResult2 = processedContent[3] as Anthropic.ToolResultBlockParam
 					const content2 = Array.isArray(toolResult2.content) ? toolResult2.content[0] : toolResult2.content
-					expect((content2 as Anthropic.TextBlockParam).text).toBe("Regular tool result with @/path")
+					expect((content2 as Anthropic.TextBlockParam).text).toBe(
+						"Regular tool result with 'path' (see below for file content)",
+					)
 
 					await cline.abortTask(true)
 					await task.catch(() => {})
