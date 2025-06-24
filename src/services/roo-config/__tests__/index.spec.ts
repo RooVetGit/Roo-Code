@@ -73,11 +73,31 @@ describe("RooConfigService", () => {
 		})
 
 		it("should return false for non-existing path", async () => {
-			mockStat.mockRejectedValue(new Error("ENOENT"))
+			const error = new Error("ENOENT") as any
+			error.code = "ENOENT"
+			mockStat.mockRejectedValue(error)
 
 			const result = await directoryExists("/non/existing/path")
 
 			expect(result).toBe(false)
+		})
+
+		it("should return false for ENOTDIR error", async () => {
+			const error = new Error("ENOTDIR") as any
+			error.code = "ENOTDIR"
+			mockStat.mockRejectedValue(error)
+
+			const result = await directoryExists("/not/a/directory")
+
+			expect(result).toBe(false)
+		})
+
+		it("should throw unexpected errors", async () => {
+			const error = new Error("Permission denied") as any
+			error.code = "EACCES"
+			mockStat.mockRejectedValue(error)
+
+			await expect(directoryExists("/permission/denied")).rejects.toThrow("Permission denied")
 		})
 
 		it("should return false for files", async () => {
@@ -100,11 +120,31 @@ describe("RooConfigService", () => {
 		})
 
 		it("should return false for non-existing file", async () => {
-			mockStat.mockRejectedValue(new Error("ENOENT"))
+			const error = new Error("ENOENT") as any
+			error.code = "ENOENT"
+			mockStat.mockRejectedValue(error)
 
 			const result = await fileExists("/non/existing/file.txt")
 
 			expect(result).toBe(false)
+		})
+
+		it("should return false for ENOTDIR error", async () => {
+			const error = new Error("ENOTDIR") as any
+			error.code = "ENOTDIR"
+			mockStat.mockRejectedValue(error)
+
+			const result = await fileExists("/not/a/directory/file.txt")
+
+			expect(result).toBe(false)
+		})
+
+		it("should throw unexpected errors", async () => {
+			const error = new Error("Permission denied") as any
+			error.code = "EACCES"
+			mockStat.mockRejectedValue(error)
+
+			await expect(fileExists("/permission/denied/file.txt")).rejects.toThrow("Permission denied")
 		})
 
 		it("should return false for directories", async () => {
@@ -127,11 +167,41 @@ describe("RooConfigService", () => {
 		})
 
 		it("should return null for non-existing file", async () => {
-			mockReadFile.mockRejectedValue(new Error("ENOENT"))
+			const error = new Error("ENOENT") as any
+			error.code = "ENOENT"
+			mockReadFile.mockRejectedValue(error)
 
 			const result = await readFileIfExists("/non/existing/file.txt")
 
 			expect(result).toBe(null)
+		})
+
+		it("should return null for ENOTDIR error", async () => {
+			const error = new Error("ENOTDIR") as any
+			error.code = "ENOTDIR"
+			mockReadFile.mockRejectedValue(error)
+
+			const result = await readFileIfExists("/not/a/directory/file.txt")
+
+			expect(result).toBe(null)
+		})
+
+		it("should return null for EISDIR error", async () => {
+			const error = new Error("EISDIR") as any
+			error.code = "EISDIR"
+			mockReadFile.mockRejectedValue(error)
+
+			const result = await readFileIfExists("/is/a/directory")
+
+			expect(result).toBe(null)
+		})
+
+		it("should throw unexpected errors", async () => {
+			const error = new Error("Permission denied") as any
+			error.code = "EACCES"
+			mockReadFile.mockRejectedValue(error)
+
+			await expect(readFileIfExists("/permission/denied/file.txt")).rejects.toThrow("Permission denied")
 		})
 	})
 
@@ -147,7 +217,9 @@ describe("RooConfigService", () => {
 
 	describe("loadConfiguration", () => {
 		it("should load global configuration only when project does not exist", async () => {
-			mockReadFile.mockResolvedValueOnce("global content").mockRejectedValueOnce(new Error("ENOENT"))
+			const error = new Error("ENOENT") as any
+			error.code = "ENOENT"
+			mockReadFile.mockResolvedValueOnce("global content").mockRejectedValueOnce(error)
 
 			const result = await loadConfiguration("rules/rules.md", "/project/path")
 
@@ -159,7 +231,9 @@ describe("RooConfigService", () => {
 		})
 
 		it("should load project configuration only when global does not exist", async () => {
-			mockReadFile.mockRejectedValueOnce(new Error("ENOENT")).mockResolvedValueOnce("project content")
+			const error = new Error("ENOENT") as any
+			error.code = "ENOENT"
+			mockReadFile.mockRejectedValueOnce(error).mockResolvedValueOnce("project content")
 
 			const result = await loadConfiguration("rules/rules.md", "/project/path")
 
@@ -183,7 +257,9 @@ describe("RooConfigService", () => {
 		})
 
 		it("should return empty merged content when neither exists", async () => {
-			mockReadFile.mockRejectedValueOnce(new Error("ENOENT")).mockRejectedValueOnce(new Error("ENOENT"))
+			const error = new Error("ENOENT") as any
+			error.code = "ENOENT"
+			mockReadFile.mockRejectedValueOnce(error).mockRejectedValueOnce(error)
 
 			const result = await loadConfiguration("rules/rules.md", "/project/path")
 
@@ -192,6 +268,25 @@ describe("RooConfigService", () => {
 				project: null,
 				merged: "",
 			})
+		})
+
+		it("should propagate unexpected errors from global file read", async () => {
+			const error = new Error("Permission denied") as any
+			error.code = "EACCES"
+			mockReadFile.mockRejectedValueOnce(error)
+
+			await expect(loadConfiguration("rules/rules.md", "/project/path")).rejects.toThrow("Permission denied")
+		})
+
+		it("should propagate unexpected errors from project file read", async () => {
+			const globalError = new Error("ENOENT") as any
+			globalError.code = "ENOENT"
+			const projectError = new Error("Permission denied") as any
+			projectError.code = "EACCES"
+
+			mockReadFile.mockRejectedValueOnce(globalError).mockRejectedValueOnce(projectError)
+
+			await expect(loadConfiguration("rules/rules.md", "/project/path")).rejects.toThrow("Permission denied")
 		})
 
 		it("should use correct file paths", async () => {
