@@ -75,6 +75,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			currentApiConfigName,
 			listApiConfigMeta,
 			customModes,
+			customModePrompts,
 			cwd,
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
@@ -193,6 +194,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setInputValue(t("chat:enhancePromptDescription"))
 			}
 		}, [inputValue, sendingDisabled, setInputValue, t])
+
+		const allModes = useMemo(() => getAllModes(customModes), [customModes])
 
 		const queryItems = useMemo(() => {
 			return [
@@ -323,7 +326,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								selectedType,
 								queryItems,
 								fileSearchResults,
-								getAllModes(customModes),
+								allModes,
 							)
 							const optionsLength = options.length
 
@@ -360,7 +363,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							selectedType,
 							queryItems,
 							fileSearchResults,
-							getAllModes(customModes),
+							allModes,
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -447,7 +450,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setInputValue,
 				justDeletedSpaceAfterMention,
 				queryItems,
-				customModes,
+				allModes,
 				fileSearchResults,
 				handleHistoryNavigation,
 				resetHistoryNavigation,
@@ -846,7 +849,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									setSelectedIndex={setSelectedMenuIndex}
 									selectedType={selectedType}
 									queryItems={queryItems}
-									modes={getAllModes(customModes)}
+									modes={allModes}
 									loading={searchLoading}
 									dynamicSearchResults={fileSearchResults}
 								/>
@@ -1008,6 +1011,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								triggerClassName="w-full"
 								modeShortcutText={modeShortcutText}
 								customModes={customModes}
+								customModePrompts={customModePrompts}
 							/>
 						</div>
 

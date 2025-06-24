@@ -1,6 +1,5 @@
 import React from "react"
 import { ChevronUp, Check } from "lucide-react"
-import { Mode, getAllModes } from "@roo/modes"
 import { cn } from "@/lib/utils"
 import { useRooPortal } from "@/components/ui/hooks/useRooPortal"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui"
@@ -8,7 +7,8 @@ import { IconButton } from "./IconButton"
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { ModeConfig } from "@roo-code/types"
+import { Mode, getAllModes } from "@roo/modes"
+import { ModeConfig, CustomModePrompts } from "@roo-code/types"
 
 interface ModeSelectorProps {
 	value: Mode
@@ -18,9 +18,10 @@ interface ModeSelectorProps {
 	triggerClassName?: string
 	modeShortcutText: string
 	customModes?: ModeConfig[]
+	customModePrompts?: CustomModePrompts
 }
 
-export const ModeSelector: React.FC<ModeSelectorProps> = ({
+export const ModeSelector = ({
 	value,
 	onChange,
 	disabled = false,
@@ -28,7 +29,8 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 	triggerClassName = "",
 	modeShortcutText,
 	customModes,
-}) => {
+	customModePrompts,
+}: ModeSelectorProps) => {
 	const [open, setOpen] = React.useState(false)
 	const portalContainer = useRooPortal("roo-portal")
 	const { hasOpenedModeSelector, setHasOpenedModeSelector } = useExtensionState()
@@ -41,8 +43,14 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 		}
 	}
 
-	// Get all available modes
-	const modes = React.useMemo(() => getAllModes(customModes), [customModes])
+	// Get all modes including custom modes and merge custom prompt descriptions
+	const modes = React.useMemo(() => {
+		const allModes = getAllModes(customModes)
+		return allModes.map((mode) => ({
+			...mode,
+			description: customModePrompts?.[mode.slug]?.description ?? mode.description,
+		}))
+	}, [customModes, customModePrompts])
 
 	// Find the selected mode
 	const selectedMode = React.useMemo(() => modes.find((mode) => mode.slug === value), [modes, value])
