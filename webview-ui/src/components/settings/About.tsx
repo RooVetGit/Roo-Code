@@ -1,4 +1,4 @@
-import { HTMLAttributes } from "react"
+import { HTMLAttributes, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Trans } from "react-i18next"
 import { Info, Download, Upload, TriangleAlert } from "lucide-react"
@@ -22,9 +22,36 @@ type AboutProps = HTMLAttributes<HTMLDivElement> & {
 
 export const About = ({ telemetrySetting, setTelemetrySetting, className, ...props }: AboutProps) => {
 	const { t } = useAppTranslation()
+	const [shouldThrowError, setShouldThrowError] = useState(false)
+
+	// Function to trigger error for testing ErrorBoundary
+	const triggerTestError = () => {
+		setShouldThrowError(true)
+	}
+
+	// Test component that throws an error when shouldThrow is true
+	const ErrorThrower = ({ shouldThrow = false }) => {
+		if (shouldThrow) {
+			// Create a more realistic error with a proper stack trace
+			try {
+				// Intentionally cause a type error by accessing a property on undefined
+				// This will generate a stack trace with TypeScript source maps
+				const obj: any = undefined
+				obj.nonExistentMethod()
+			} catch (e) {
+				// Rethrow with a custom message but preserve the original stack trace
+				const error = new Error("Test error: Accessing property on undefined")
+				error.stack = e instanceof Error ? e.stack : undefined
+				throw error
+			}
+		}
+		return null
+	}
 
 	return (
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
+			{/* Test component that throws an error when shouldThrow is true */}
+			<ErrorThrower shouldThrow={shouldThrowError} />
 			<SectionHeader
 				description={
 					Package.sha
@@ -83,6 +110,12 @@ export const About = ({ telemetrySetting, setTelemetrySetting, className, ...pro
 						className="w-28">
 						<TriangleAlert className="p-0.5" />
 						{t("settings:footer.settings.reset")}
+					</Button>
+
+					{/* Test button for ErrorBoundary - only visible in development */}
+					<Button variant="destructive" onClick={triggerTestError} className="w-auto">
+						<TriangleAlert className="p-0.5" />
+						Test ErrorBoundary
 					</Button>
 				</div>
 			</Section>
