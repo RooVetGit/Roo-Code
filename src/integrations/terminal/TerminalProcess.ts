@@ -500,9 +500,11 @@ export class TerminalProcess extends BaseTerminalProcess {
 			return null
 		} finally {
 			// Clean up the temporary file
-			await vscode.workspace.fs.delete(tempFileUri, { useTrash: false }).catch((e) => {
+			try {
+				await vscode.workspace.fs.delete(tempFileUri, { useTrash: false })
+			} catch (e) {
 				console.error(`Failed to delete temp file ${tempFileUri.fsPath}:`, e)
-			})
+			}
 		}
 	}
 }
