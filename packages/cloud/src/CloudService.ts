@@ -1,6 +1,12 @@
 import * as vscode from "vscode"
 
-import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList, ClineMessage } from "@roo-code/types"
+import type {
+	CloudUserInfo,
+	TelemetryEvent,
+	OrganizationAllowList,
+	ClineMessage,
+	ShareVisibility,
+} from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { CloudServiceCallbacks } from "./types"
@@ -160,7 +166,7 @@ export class CloudService {
 
 	public async shareTask(
 		taskId: string,
-		visibility: "organization" | "public" = "organization",
+		visibility: ShareVisibility = "organization",
 		clineMessages?: ClineMessage[],
 	) {
 		this.ensureInitialized()
