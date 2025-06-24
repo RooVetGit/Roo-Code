@@ -45,6 +45,7 @@ export class ShareService {
 					"User-Agent": getUserAgent(),
 				},
 				body: JSON.stringify({ taskId, visibility }),
+				signal: AbortSignal.timeout(10000),
 			})
 
 			if (!response.ok) {
