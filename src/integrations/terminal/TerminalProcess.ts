@@ -478,12 +478,26 @@ export class TerminalProcess extends BaseTerminalProcess {
 			tempFileName,
 		)
 		const encoder = new TextEncoder()
+		let listener: vscode.Disposable
 
 		try {
 			await vscode.workspace.fs.writeFile(tempFileUri, encoder.encode(command))
 
 			// Wait for the PowerShell extension to analyze the file
-			await new Promise((resolve) => setTimeout(resolve, 500))
+			await new Promise<void>((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					listener.dispose()
+					reject(new Error("Timeout waiting for PowerShell diagnostics"))
+				}, 5000) // 5 second timeout
+
+				listener = vscode.languages.onDidChangeDiagnostics((e) => {
+					if (e.uris.some((uri) => uri.fsPath === tempFileUri.fsPath)) {
+						clearTimeout(timeout)
+						listener.dispose()
+						resolve()
+					}
+				})
+			})
 
 			const diagnostics = vscode.languages.getDiagnostics(tempFileUri)
 			const errors = diagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Error)
