@@ -8,6 +8,7 @@ import { combineCommandSequences } from "../../shared/combineCommandSequences"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { findLastIndex } from "../../shared/array"
 import { getTaskDirectoryPath } from "../../utils/storage"
+import { t } from "../../i18n"
 
 const taskSizeCache = new NodeCache({ stdTTL: 30, checkperiod: 5 * 60 })
 
@@ -28,64 +29,62 @@ export async function taskMetadata({
 }: TaskMetadataOptions) {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 
-	// Handle edge case where there are no messages at all
-	if (!messages || messages.length === 0) {
-		const historyItem: HistoryItem = {
-			id: taskId,
-			number: taskNumber,
-			ts: Date.now(),
-			task: `Task #${taskNumber} (No messages)`,
-			tokensIn: 0,
-			tokensOut: 0,
-			cacheWrites: 0,
-			cacheReads: 0,
+	// Determine message availability upfront
+	const hasMessages = messages && messages.length > 0
+
+	// Pre-calculate all values based on availability
+	let timestamp: number
+	let tokenUsage: ReturnType<typeof getApiMetrics>
+	let taskDirSize: number
+	let taskMessage: ClineMessage | undefined
+
+	if (!hasMessages) {
+		// Handle no messages case
+		timestamp = Date.now()
+		tokenUsage = {
+			totalTokensIn: 0,
+			totalTokensOut: 0,
+			totalCacheWrites: 0,
+			totalCacheReads: 0,
 			totalCost: 0,
-			size: 0,
-			workspace,
+			contextTokens: 0,
 		}
-		return {
-			historyItem,
-			tokenUsage: {
-				totalTokensIn: 0,
-				totalTokensOut: 0,
-				totalCacheWrites: 0,
-				totalCacheReads: 0,
-				totalCost: 0,
-				contextTokens: 0,
-			},
-		}
-	}
+		taskDirSize = 0
+	} else {
+		// Handle messages case
+		taskMessage = messages[0] // First message is always the task say.
 
-	const taskMessage = messages[0] // First message is always the task say.
+		const lastRelevantMessage =
+			messages[findLastIndex(messages, (m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"))] ||
+			taskMessage
 
-	const lastRelevantMessage =
-		messages[findLastIndex(messages, (m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"))] ||
-		messages[0]
+		timestamp = lastRelevantMessage.ts
 
-	let taskDirSize = taskSizeCache.get<number>(taskDir)
+		tokenUsage = getApiMetrics(combineApiRequests(combineCommandSequences(messages.slice(1))))
 
-	if (taskDirSize === undefined) {
-		try {
-			taskDirSize = await getFolderSize.loose(taskDir)
-			taskSizeCache.set<number>(taskDir, taskDirSize)
-		} catch (error) {
-			taskDirSize = 0
+		// Get task directory size
+		const cachedSize = taskSizeCache.get<number>(taskDir)
+
+		if (cachedSize === undefined) {
+			try {
+				taskDirSize = await getFolderSize.loose(taskDir)
+				taskSizeCache.set<number>(taskDir, taskDirSize)
+			} catch (error) {
+				taskDirSize = 0
+			}
+		} else {
+			taskDirSize = cachedSize
 		}
 	}
 
-	const tokenUsage = getApiMetrics(combineApiRequests(combineCommandSequences(messages.slice(1))))
-
-	// Ensure task name is never blank - provide fallback names
-	let taskName = taskMessage.text?.trim() || ""
-	if (!taskName) {
-		taskName = `Task #${taskNumber} (Incomplete)`
-	}
-
+	// Create historyItem once with pre-calculated values
 	const historyItem: HistoryItem = {
 		id: taskId,
 		number: taskNumber,
-		ts: lastRelevantMessage.ts,
-		task: taskName,
+		ts: timestamp,
+		task: hasMessages
+			? taskMessage!.text?.trim() || t("common:tasks.incomplete", { taskNumber })
+			: t("common:tasks.no_messages", { taskNumber }),
 		tokensIn: tokenUsage.totalTokensIn,
 		tokensOut: tokenUsage.totalTokensOut,
 		cacheWrites: tokenUsage.totalCacheWrites,
