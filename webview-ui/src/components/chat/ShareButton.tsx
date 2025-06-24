@@ -88,9 +88,9 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 					variant="ghost"
 					size="icon"
 					disabled={disabled || shareButtonState.disabled}
-					className="h-6 w-6 p-0 hover:bg-vscode-toolbar-hoverBackground"
+					className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 					title={shareButtonState.title}>
-					<span className="codicon codicon-link text-xs"></span>
+					<span className="codicon codicon-link"></span>
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-56 p-0" align="start">
@@ -151,9 +151,9 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 			variant="ghost"
 			size="icon"
 			disabled={disabled || shareButtonState.disabled}
-			className="h-6 w-6 p-0 hover:bg-vscode-toolbar-hoverBackground"
+			className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 			title={shareButtonState.title}>
-			<span className="codicon codicon-link text-xs"></span>
+			<span className="codicon codicon-link"></span>
 		</Button>
 	)
 }
