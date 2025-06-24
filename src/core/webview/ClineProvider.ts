@@ -1486,6 +1486,7 @@ export class ClineProvider
 			mdmCompliant: this.checkMdmCompliance(),
 			profileThresholds: profileThresholds ?? {},
 			cloudApiUrl: getRooCodeApiUrl(),
+			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
 		}
 	}
 

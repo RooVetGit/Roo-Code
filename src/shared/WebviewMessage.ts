@@ -149,6 +149,7 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "hasOpenedModeSelector"
 		| "accountButtonClicked"
 		| "rooCloudSignIn"
 		| "rooCloudSignOut"
