@@ -16,7 +16,10 @@
 		"shareWithOrganization": "Kuruluşla paylaş",
 		"shareWithOrganizationDescription": "Sadece kuruluşunuzun üyeleri erişebilir",
 		"sharePublicly": "Herkese açık paylaş",
-		"sharePubliclyDescription": "Bağlantıya sahip herkes erişebilir"
+		"sharePubliclyDescription": "Bağlantıya sahip herkes erişebilir",
+		"connectToCloud": "Buluta bağlan",
+		"connectToCloudDescription": "Görevleri paylaşmak için Roo Code Cloud'a giriş yap",
+		"sharingDisabledByOrganization": "Paylaşım organizasyon tarafından devre dışı bırakıldı"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
