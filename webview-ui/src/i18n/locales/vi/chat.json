@@ -19,7 +19,9 @@
 		"sharePubliclyDescription": "Bất kỳ ai có liên kết đều có thể truy cập",
 		"connectToCloud": "Kết nối với Cloud",
 		"connectToCloudDescription": "Đăng nhập vào Roo Code Cloud để chia sẻ tác vụ",
-		"sharingDisabledByOrganization": "Chia sẻ bị tổ chức vô hiệu hóa"
+		"sharingDisabledByOrganization": "Chia sẻ bị tổ chức vô hiệu hóa",
+		"shareSuccessOrganization": "Liên kết tổ chức đã được sao chép vào clipboard",
+		"shareSuccessPublic": "Liên kết công khai đã được sao chép vào clipboard"
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",

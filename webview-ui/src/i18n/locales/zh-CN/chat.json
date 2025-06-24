@@ -19,7 +19,9 @@
 		"sharePubliclyDescription": "任何拥有链接的人都可访问",
 		"connectToCloud": "连接到云端",
 		"connectToCloudDescription": "登录 Roo Code Cloud 以分享任务",
-		"sharingDisabledByOrganization": "组织已禁用分享功能"
+		"sharingDisabledByOrganization": "组织已禁用分享功能",
+		"shareSuccessOrganization": "组织链接已复制到剪贴板",
+		"shareSuccessPublic": "公开链接已复制到剪贴板"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",

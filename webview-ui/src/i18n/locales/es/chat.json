@@ -19,7 +19,9 @@
 		"sharePubliclyDescription": "Cualquiera con el enlace puede acceder",
 		"connectToCloud": "Conectar al Cloud",
 		"connectToCloudDescription": "Inicia sesión en Roo Code Cloud para compartir tareas",
-		"sharingDisabledByOrganization": "Compartir deshabilitado por la organización"
+		"sharingDisabledByOrganization": "Compartir deshabilitado por la organización",
+		"shareSuccessOrganization": "Enlace de organización copiado al portapapeles",
+		"shareSuccessPublic": "Enlace público copiado al portapapeles"
 	},
 	"unpin": "Desfijar",
 	"pin": "Fijar",

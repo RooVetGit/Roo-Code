@@ -19,7 +19,9 @@
 		"sharePubliclyDescription": "リンクを持つ誰でもアクセスできます",
 		"connectToCloud": "クラウドに接続",
 		"connectToCloudDescription": "タスクを共有するためにRoo Code Cloudにサインイン",
-		"sharingDisabledByOrganization": "組織により共有が無効化されています"
+		"sharingDisabledByOrganization": "組織により共有が無効化されています",
+		"shareSuccessOrganization": "組織リンクをクリップボードにコピーしました",
+		"shareSuccessPublic": "公開リンクをクリップボードにコピーしました"
 	},
 	"unpin": "ピン留めを解除",
 	"pin": "ピン留め",

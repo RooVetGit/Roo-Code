@@ -242,6 +242,13 @@ export const webviewMessageHandler = async (
 							? "common:info.public_share_link_copied"
 							: "common:info.organization_share_link_copied"
 					vscode.window.showInformationMessage(t(messageKey))
+
+					// Send success feedback to webview for inline display
+					await provider.postMessageToWebview({
+						type: "shareTaskSuccess",
+						visibility,
+						text: result.shareUrl,
+					})
 				} else {
 					// Handle error
 					const errorMessage = result.error || "Failed to create share link"
