@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { HistoryItem } from "@roo-code/types"
+import { TelemetryEventName } from "@roo-code/types"
 
 import { vscode } from "@/utils/vscode"
+import { telemetryClient } from "@/utils/TelemetryClient"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import {
 	Button,
@@ -39,6 +41,13 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 	}, [cloudIsAuthenticated, sharingEnabled])
 
 	const handleShare = (visibility: "organization" | "public") => {
+		// Send telemetry for share action
+		if (visibility === "organization") {
+			telemetryClient.capture(TelemetryEventName.SHARE_ORGANIZATION_CLICKED)
+		} else {
+			telemetryClient.capture(TelemetryEventName.SHARE_PUBLIC_CLICKED)
+		}
+
 		vscode.postMessage({
 			type: "shareCurrentTask",
 			visibility,
@@ -47,8 +56,17 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 	}
 
 	const handleConnectToCloud = () => {
+		// Send telemetry for connect to cloud action
+		telemetryClient.capture(TelemetryEventName.SHARE_CONNECT_TO_CLOUD_CLICKED)
+
 		vscode.postMessage({ type: "rooCloudSignIn" })
 		setShareDropdownOpen(false)
+	}
+
+	const handleShareButtonClick = () => {
+		// Send telemetry for share button click
+		telemetryClient.capture(TelemetryEventName.SHARE_BUTTON_CLICKED)
+		setShareDropdownOpen(true)
 	}
 
 	// Determine share button state
@@ -89,7 +107,8 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 					size="icon"
 					disabled={disabled || shareButtonState.disabled}
 					className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
-					title={shareButtonState.title}>
+					title={shareButtonState.title}
+					onClick={handleShareButtonClick}>
 					<span className="codicon codicon-link"></span>
 				</Button>
 			</PopoverTrigger>

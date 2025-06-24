@@ -1758,6 +1758,18 @@ export class ClineProvider
 
 		const packageJSON = this.context.extension?.packageJSON
 
+		// Get Roo Code Cloud authentication state
+		let cloudIsAuthenticated: boolean | undefined
+
+		try {
+			if (CloudService.hasInstance()) {
+				cloudIsAuthenticated = CloudService.instance.isAuthenticated()
+			}
+		} catch (error) {
+			// Silently handle errors to avoid breaking telemetry collection
+			this.log(`[getTelemetryProperties] Failed to get cloud auth state: ${error}`)
+		}
+
 		return {
 			appName: packageJSON?.name ?? Package.name,
 			appVersion: packageJSON?.version ?? Package.version,
@@ -1770,6 +1782,7 @@ export class ClineProvider
 			modelId: task?.api?.getModel().id,
 			diffStrategy: task?.diffStrategy?.getName(),
 			isSubtask: task ? !!task.parentTask : undefined,
+			cloudIsAuthenticated,
 		}
 	}
 }
