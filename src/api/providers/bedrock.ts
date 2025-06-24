@@ -1104,7 +1104,7 @@ Please verify:
 2. If using a provisioned model, check its throughput settings
 3. Contact AWS support to request a quota increase if needed
 
-{formattedErrorDetails}
+
 
 `,
 			logLevel: "error",
@@ -1125,7 +1125,7 @@ Suggestions:
 4. If rate limited, reduce request frequency
 5. Check your Amazon Bedrock quotas and limits
 
-{formattedErrorDetails}`,
+`,
 			logLevel: "error",
 		},
 		SERVICE_QUOTA_EXCEEDED: {
@@ -1138,7 +1138,7 @@ Please try:
 3. Check your AWS Bedrock quotas in the AWS console
 4. Consider using a different model or region with available capacity
 
-{formattedErrorDetails}`,
+`,
 			logLevel: "error",
 		},
 		MODEL_NOT_READY: {
@@ -1153,7 +1153,7 @@ Please try:
 2. Check the model status in AWS Bedrock console
 3. Verify the model is properly provisioned
 
-{formattedErrorDetails}`,
+`,
 			logLevel: "error",
 		},
 		INTERNAL_SERVER_ERROR: {
@@ -1165,7 +1165,7 @@ Please try:
 2. If the error persists, check AWS service health
 3. Contact AWS support if the issue continues
 
-{formattedErrorDetails}`,
+`,
 			logLevel: "error",
 		},
 		ON_DEMAND_NOT_SUPPORTED: {
@@ -1280,7 +1280,6 @@ Please check:
 			const modelConfig = this.getModel()
 			templateVars.modelId = modelConfig.id
 			templateVars.contextWindow = String(modelConfig.info.contextWindow || "unknown")
-			templateVars.formattedErrorDetails = ""
 		}
 
 		// Add context-specific template variables
