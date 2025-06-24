@@ -334,6 +334,47 @@ describe("importExport", () => {
 				expect(mockCustomModesManager.updateCustomMode).toHaveBeenCalledWith(mode.slug, mode)
 			})
 		})
+
+		it("should import settings from provided file path without showing dialog", async () => {
+			const filePath = "/mock/path/settings.json"
+			const mockFileContent = JSON.stringify({
+				providerProfiles: {
+					currentApiConfigName: "test",
+					apiConfigs: { test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" } },
+				},
+				globalSettings: { mode: "code", autoApprovalEnabled: true },
+			})
+
+			;(fs.readFile as Mock).mockResolvedValue(mockFileContent)
+
+			const previousProviderProfiles = {
+				currentApiConfigName: "default",
+				apiConfigs: { default: { apiProvider: "anthropic" as ProviderName, id: "default-id" } },
+			}
+
+			mockProviderSettingsManager.export.mockResolvedValue(previousProviderProfiles)
+			mockProviderSettingsManager.listConfig.mockResolvedValue([
+				{ name: "test", id: "test-id", apiProvider: "openai" as ProviderName },
+				{ name: "default", id: "default-id", apiProvider: "anthropic" as ProviderName },
+			])
+			mockContextProxy.export.mockResolvedValue({ mode: "code" })
+
+			const result = await importSettings({
+				providerSettingsManager: mockProviderSettingsManager,
+				contextProxy: mockContextProxy,
+				customModesManager: mockCustomModesManager,
+			}, filePath)
+
+			expect(vscode.window.showOpenDialog).not.toHaveBeenCalled()
+			expect(fs.readFile).toHaveBeenCalledWith(filePath, "utf-8")
+			expect(result.success).toBe(true)
+			expect(mockProviderSettingsManager.import).toHaveBeenCalledWith({
+				...previousProviderProfiles,
+				currentApiConfigName: "test",
+				apiConfigs: { test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" } },
+			})
+			expect(mockContextProxy.setValues).toHaveBeenCalledWith({ mode: "code", autoApprovalEnabled: true })
+		})
 	})
 
 	describe("exportSettings", () => {

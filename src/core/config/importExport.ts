@@ -23,13 +23,20 @@ type ExportOptions = {
 	contextProxy: ContextProxy
 }
 
-export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions) => {
-	const uris = await vscode.window.showOpenDialog({
-		filters: { JSON: ["json"] },
-		canSelectMany: false,
-	})
+export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions, filePath?: string) => {
+	let fileUri: vscode.Uri | undefined
 
-	if (!uris) {
+	if (filePath) {
+		fileUri = vscode.Uri.file(filePath)
+	} else {
+		const uris = await vscode.window.showOpenDialog({
+			filters: { JSON: ["json"] },
+			canSelectMany: false,
+		})
+		fileUri = uris?.[0]
+	}
+
+	if (!fileUri) {
 		return { success: false }
 	}
 
@@ -41,7 +48,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 	try {
 		const previousProviderProfiles = await providerSettingsManager.export()
 
-		const data = JSON.parse(await fs.readFile(uris[0].fsPath, "utf-8"))
+		const data = JSON.parse(await fs.readFile(fileUri.fsPath, "utf-8"))
 		const { providerProfiles: newProviderProfiles, globalSettings = {} } = schema.parse(data)
 
 		const providerProfiles = {
