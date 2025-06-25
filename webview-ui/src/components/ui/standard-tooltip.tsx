@@ -18,6 +18,8 @@ interface StandardTooltipProps {
 	className?: string
 	/** Whether the trigger should be rendered as a child */
 	asChild?: boolean
+	/** Maximum width of the tooltip content */
+	maxWidth?: number | string
 }
 
 /**
@@ -47,16 +49,19 @@ export function StandardTooltip({
 	sideOffset = 4,
 	className,
 	asChild = true,
+	maxWidth,
 }: StandardTooltipProps) {
 	// Don't render tooltip if content is empty
 	if (!content) {
 		return <>{children}</>
 	}
 
+	const style = maxWidth ? { maxWidth: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth } : undefined
+
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>
-			<TooltipContent side={side} align={align} sideOffset={sideOffset} className={className}>
+			<TooltipContent side={side} align={align} sideOffset={sideOffset} className={className} style={style}>
 				{content}
 			</TooltipContent>
 		</Tooltip>
