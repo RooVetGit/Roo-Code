@@ -37,6 +37,7 @@ interface StandardTooltipProps {
  *
  * @note This replaces native HTML title attributes for consistent timing.
  * @note Requires a TooltipProvider to be present in the component tree (typically at the app root).
+ * @note Do not nest StandardTooltip components as this can cause UI issues.
  */
 export function StandardTooltip({
 	children,
@@ -47,6 +48,11 @@ export function StandardTooltip({
 	className,
 	asChild = true,
 }: StandardTooltipProps) {
+	// Don't render tooltip if content is empty
+	if (!content) {
+		return <>{children}</>
+	}
+
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>

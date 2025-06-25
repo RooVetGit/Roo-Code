@@ -27,59 +27,66 @@ export const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens 
 	const safeContextWindow = Math.max(0, contextWindow)
 	const safeContextTokens = Math.max(0, contextTokens)
 
+	// Combine all tooltip content into a single tooltip
+	const tooltipContent = (
+		<div className="space-y-1">
+			<div>
+				{t("chat:tokenProgress.tokensUsed", {
+					used: formatLargeNumber(safeContextTokens),
+					total: formatLargeNumber(safeContextWindow),
+				})}
+			</div>
+			{reservedForOutput > 0 && (
+				<div>
+					{t("chat:tokenProgress.reservedForResponse", {
+						amount: formatLargeNumber(reservedForOutput),
+					})}
+				</div>
+			)}
+			{availableSize > 0 && (
+				<div>
+					{t("chat:tokenProgress.availableSpace", {
+						amount: formatLargeNumber(availableSize),
+					})}
+				</div>
+			)}
+		</div>
+	)
+
 	return (
 		<>
 			<div className="flex items-center gap-2 flex-1 whitespace-nowrap px-2">
 				<div data-testid="context-tokens-count">{formatLargeNumber(safeContextTokens)}</div>
-				<StandardTooltip
-					content={t("chat:tokenProgress.availableSpace", { amount: formatLargeNumber(availableSize) })}
-					side="top"
-					sideOffset={8}>
+				<StandardTooltip content={tooltipContent} side="top" sideOffset={8}>
 					<div className="flex-1 relative">
 						{/* Main progress bar container */}
 						<div className="flex items-center h-1 rounded-[2px] overflow-hidden w-full bg-[color-mix(in_srgb,var(--vscode-foreground)_20%,transparent)]">
 							{/* Current tokens container */}
-							<StandardTooltip
-								content={t("chat:tokenProgress.tokensUsed", {
-									used: formatLargeNumber(safeContextTokens),
-									total: formatLargeNumber(safeContextWindow),
-								})}
-								side="top"
-								sideOffset={8}
-								asChild>
-								<div className="relative h-full" style={{ width: `${currentPercent}%` }}>
-									{/* Current tokens used - darkest */}
-									<div className="h-full w-full bg-[var(--vscode-foreground)] transition-width duration-300 ease-out" />
-								</div>
-							</StandardTooltip>
+							<div
+								className="relative h-full"
+								style={{ width: `${currentPercent}%` }}
+								data-testid="context-tokens-used">
+								{/* Current tokens used - darkest */}
+								<div className="h-full w-full bg-[var(--vscode-foreground)] transition-width duration-300 ease-out" />
+							</div>
 
 							{/* Container for reserved tokens */}
-							<StandardTooltip
-								content={t("chat:tokenProgress.reservedForResponse", {
-									amount: formatLargeNumber(reservedForOutput),
-								})}
-								side="top"
-								sideOffset={8}
-								asChild>
-								<div className="relative h-full" style={{ width: `${reservedPercent}%` }}>
-									{/* Reserved for output section - medium gray */}
-									<div className="h-full w-full bg-[color-mix(in_srgb,var(--vscode-foreground)_30%,transparent)] transition-width duration-300 ease-out" />
-								</div>
-							</StandardTooltip>
+							<div
+								className="relative h-full"
+								style={{ width: `${reservedPercent}%` }}
+								data-testid="context-reserved-tokens">
+								{/* Reserved for output section - medium gray */}
+								<div className="h-full w-full bg-[color-mix(in_srgb,var(--vscode-foreground)_30%,transparent)] transition-width duration-300 ease-out" />
+							</div>
 
 							{/* Empty section (if any) */}
 							{availablePercent > 0 && (
-								<StandardTooltip
-									content={t("chat:tokenProgress.availableSpace", {
-										amount: formatLargeNumber(availableSize),
-									})}
-									side="top"
-									sideOffset={8}
-									asChild>
-									<div className="relative h-full" style={{ width: `${availablePercent}%` }}>
-										{/* Available space - transparent */}
-									</div>
-								</StandardTooltip>
+								<div
+									className="relative h-full"
+									style={{ width: `${availablePercent}%` }}
+									data-testid="context-available-space-section">
+									{/* Available space - transparent */}
+								</div>
 							)}
 						</div>
 					</div>
