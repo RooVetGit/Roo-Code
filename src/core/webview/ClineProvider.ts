@@ -16,6 +16,7 @@ import {
 	type RooCodeSettings,
 	type ProviderSettingsEntry,
 	type TelemetryProperties,
+	type CloudTelemetryProperties,
 	type TelemetryPropertiesProvider,
 	type CodeActionId,
 	type CodeActionName,
@@ -68,6 +69,7 @@ import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
+import { getWorkspaceGitInfo } from "../../utils/git"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -1785,6 +1787,24 @@ export class ClineProvider
 			diffStrategy: task?.diffStrategy?.getName(),
 			isSubtask: task ? !!task.parentTask : undefined,
 			cloudIsAuthenticated,
+		}
+	}
+
+	/**
+	 * Returns properties for cloud telemetry, including git repository information
+	 * This method is called by cloud telemetry clients to get extended context
+	 */
+	public async getCloudTelemetryProperties(): Promise<CloudTelemetryProperties> {
+		// Get base telemetry properties
+		const baseProperties = await this.getTelemetryProperties()
+
+		// Get git repository information
+		const gitInfo = await getWorkspaceGitInfo()
+
+		// Return combined properties
+		return {
+			...baseProperties,
+			...gitInfo, // Add Git information only for cloud telemetry events
 		}
 	}
 }

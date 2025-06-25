@@ -32,7 +32,12 @@ export abstract class BaseTelemetryClient implements TelemetryClient {
 		if (provider) {
 			try {
 				// Get the telemetry properties directly from the provider.
-				providerProperties = await provider.getTelemetryProperties()
+				// For cloud telemetry clients, use cloud-specific properties if available.
+				if (this.isCloudTelemetryClient() && provider.getCloudTelemetryProperties) {
+					providerProperties = await provider.getCloudTelemetryProperties()
+				} else {
+					providerProperties = await provider.getTelemetryProperties()
+				}
 			} catch (error) {
 				// Log error but continue with capturing the event.
 				console.error(
@@ -44,6 +49,14 @@ export abstract class BaseTelemetryClient implements TelemetryClient {
 		// Merge provider properties with event-specific properties.
 		// Event properties take precedence in case of conflicts.
 		return { ...providerProperties, ...(event.properties || {}) }
+	}
+
+	/**
+	 * Determines if this is a cloud telemetry client that should receive extended properties
+	 * Override in subclasses to identify cloud telemetry clients
+	 */
+	protected isCloudTelemetryClient(): boolean {
+		return false
 	}
 
 	public abstract capture(event: TelemetryEvent): Promise<void>
