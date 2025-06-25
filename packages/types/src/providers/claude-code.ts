@@ -31,11 +31,13 @@ export const claudeCodeModels = {
 		supportsImages: false,
 		supportsPromptCache: false,
 		supportsReasoningBudget: false,
+		requiredReasoningBudget: false,
 	},
 	"claude-3-5-haiku-20241022": {
 		...anthropicModels["claude-3-5-haiku-20241022"],
 		supportsImages: false,
 		supportsPromptCache: false,
 		supportsReasoningBudget: false,
+		requiredReasoningBudget: false,
 	},
 } as const satisfies Record<string, ModelInfo>

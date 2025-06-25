@@ -63,21 +63,10 @@ export async function* runClaudeCode(options: ClaudeCodeOptions): AsyncGenerator
 			}
 		}
 
-		// Handle any remaining partial data that could be a valid message
-		// This helps recover from truncated output and ensures we don't lose reasoning/thinking content
-		if (processState.partialData) {
-			// Try to parse the partial data as it might be a complete message
-			const partialChunk = attemptParseChunk(processState.partialData)
-			if (partialChunk) {
-				yield partialChunk
-			} else {
-				// If it's not parseable but looks like it could be a message, yield it as raw string
-				// The provider will handle string messages appropriately
-				const partialTrimmed = processState.partialData.trim()
-				if (partialTrimmed.startsWith('{"type":') && partialTrimmed.includes('"message"')) {
-					yield processState.partialData
-				}
-			}
+		// We rely on the assistant message. If the output was truncated, it's better having a poorly formatted message
+		// from which to extract something, than throwing an error/showing the model didn't return any messages.
+		if (processState.partialData && processState.partialData.startsWith(`{"type":"assistant"`)) {
+			yield processState.partialData
 		}
 
 		const { exitCode } = await process
@@ -180,24 +169,9 @@ function parseChunk(data: string, processState: ProcessState) {
 
 function attemptParseChunk(data: string): ClaudeCodeMessage | null {
 	try {
-		const parsed = JSON.parse(data)
-		// Log message types for debugging streaming issues
-		if (parsed?.type && process.env.DEBUG_CLAUDE_CODE) {
-			console.debug(`Claude Code message type: ${parsed.type}`, {
-				hasMessage: !!parsed.message,
-				contentTypes: parsed.message?.content?.map((c: any) => c.type) || [],
-			})
-		}
-		return parsed
+		return JSON.parse(data)
 	} catch (error) {
-		// Only log errors for non-empty data
-		if (data.trim()) {
-			console.error(
-				"Error parsing chunk:",
-				error,
-				`Length: ${data.length}, Preview: ${data.substring(0, 100)}...`,
-			)
-		}
+		console.error("Error parsing chunk:", error, data.length)
 		return null
 	}
 }
