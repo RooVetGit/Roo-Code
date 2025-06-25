@@ -374,4 +374,107 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 			expect(modes[0].roleDefinition).toContain("Режим русский")
 		})
 	})
+
+	describe("Additional edge cases", () => {
+		it("should handle mixed line endings (CRLF vs LF)", async () => {
+			// YAML with mixed line endings
+			const yamlWithMixedLineEndings =
+				"customModes:\r\n" +
+				'  - slug: "test-mode"\n' +
+				'    name: "Test Mode"\r\n' +
+				'    roleDefinition: "Test role with mixed line endings"\n' +
+				'    groups: ["read"]'
+
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithMixedLineEndings,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
+			})
+
+			const modes = await manager.getCustomModes()
+
+			expect(modes).toHaveLength(1)
+			expect(modes[0].slug).toBe("test-mode")
+			expect(modes[0].roleDefinition).toBe("Test role with mixed line endings")
+		})
+
+		it("should handle multiple BOMs in sequence", async () => {
+			// File with multiple BOMs (edge case from file concatenation)
+			const yamlWithMultipleBOMs =
+				"\uFEFF\uFEFF" +
+				yaml.stringify({
+					customModes: [
+						{
+							slug: "multi-bom-mode",
+							name: "Multi BOM Mode",
+							roleDefinition: "Test role",
+							groups: ["read"],
+						},
+					],
+				})
+
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithMultipleBOMs,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
+			})
+
+			const modes = await manager.getCustomModes()
+
+			expect(modes).toHaveLength(1)
+			expect(modes[0].slug).toBe("multi-bom-mode")
+		})
+
+		it("should handle deeply nested structures with edge case characters", async () => {
+			const yamlWithComplexNesting = yaml.stringify({
+				customModes: [
+					{
+						slug: "complex-mode",
+						name: "Complex\u00A0Mode\u2019s Name",
+						roleDefinition: "Complex role with \u201Cquotes\u201D and \u2014dashes\u2014",
+						groups: [
+							"read",
+							[
+								"edit",
+								{
+									fileRegex: "\\.md$",
+									description: "Markdown files with \u2018special\u2019 chars",
+								},
+							],
+							[
+								"browser",
+								{
+									fileRegex: "\\.html?$",
+									description: "HTML files\u00A0only",
+								},
+							],
+						],
+					},
+				],
+			})
+
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithComplexNesting,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
+			})
+
+			const modes = await manager.getCustomModes()
+
+			expect(modes).toHaveLength(1)
+			expect(modes[0].name).toBe("Complex Mode's Name")
+			expect(modes[0].roleDefinition).toBe('Complex role with "quotes" and -dashes-')
+			expect(modes[0].groups[1]).toEqual([
+				"edit",
+				{
+					fileRegex: "\\.md$",
+					description: "Markdown files with 'special' chars",
+				},
+			])
+			expect(modes[0].groups[2]).toEqual([
+				"browser",
+				{
+					fileRegex: "\\.html?$",
+					description: "HTML files only",
+				},
+			])
+		})
+	})
 })
