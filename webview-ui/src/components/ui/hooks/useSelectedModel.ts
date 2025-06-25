@@ -202,6 +202,7 @@ function getSelectedModel({
 			return { id, info: { ...openAiModelInfoSaneDefaults, ...info, supportsImages: false } } // VSCode LM API currently doesn't support images.
 		}
 		case "claude-code": {
+			// Claude Code models extend anthropic models but with images and prompt caching disabled
 			const id = apiConfiguration.apiModelId ?? claudeCodeDefaultModelId
 			const info = claudeCodeModels[id as keyof typeof claudeCodeModels]
 			return { id, info }
