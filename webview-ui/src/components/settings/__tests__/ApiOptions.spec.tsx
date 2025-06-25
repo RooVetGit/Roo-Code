@@ -61,6 +61,7 @@ vi.mock("@/components/ui", () => ({
 			{children}
 		</button>
 	),
+	StandardTooltip: ({ children, content }: any) => <div title={content}>{children}</div>,
 	// Add missing components used by ModelPicker
 	Command: ({ children }: any) => <div className="command-mock">{children}</div>,
 	CommandEmpty: ({ children }: any) => <div className="command-empty-mock">{children}</div>,

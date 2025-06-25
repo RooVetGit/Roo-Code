@@ -57,7 +57,7 @@ vi.mock("@/i18n/TranslationContext", () => ({
 }))
 
 const renderWithProviders = (ui: React.ReactElement) => {
-	return render(<TooltipProvider>{ui}</TooltipProvider>)
+	return render(<TooltipProvider delayDuration={300}>{ui}</TooltipProvider>)
 }
 
 describe("MarketplaceItemCard", () => {

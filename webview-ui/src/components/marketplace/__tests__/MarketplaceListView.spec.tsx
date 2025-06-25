@@ -49,7 +49,7 @@ describe("MarketplaceListView", () => {
 	const renderWithProviders = (props = {}) =>
 		render(
 			<ExtensionStateContextProvider>
-				<TooltipProvider>
+				<TooltipProvider delayDuration={300}>
 					<MarketplaceListView {...defaultProps} {...props} />
 				</TooltipProvider>
 			</ExtensionStateContextProvider>,
