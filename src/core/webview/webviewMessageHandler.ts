@@ -567,7 +567,7 @@ export const webviewMessageHandler = async (
 			await provider.cancelTask()
 			break
 		case "allowedCommands":
-			await provider.context.globalState.update("allowedCommands", message.commands)
+			await updateGlobalState("allowedCommands", message.commands ?? [])
 
 			// Also update workspace settings.
 			await vscode.workspace

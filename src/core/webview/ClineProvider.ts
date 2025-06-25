@@ -1314,6 +1314,7 @@ export class ClineProvider
 			alwaysAllowWriteOutsideWorkspace,
 			alwaysAllowWriteProtected,
 			alwaysAllowExecute,
+			allowedCommands,
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
@@ -1381,7 +1382,10 @@ export class ClineProvider
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
+		const allowedCommandsState = allowedCommands || []
+		const allowedCommandsWorkspace =
+			vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
+		const allowedCommandsCombined = [...new Set([...allowedCommandsState, ...allowedCommandsWorkspace])]
 		const cwd = this.cwd
 
 		// Check if there's a system prompt override for the current mode
@@ -1420,7 +1424,7 @@ export class ClineProvider
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
-			allowedCommands,
+			allowedCommands: allowedCommandsCombined,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
 			screenshotQuality: screenshotQuality ?? 75,
