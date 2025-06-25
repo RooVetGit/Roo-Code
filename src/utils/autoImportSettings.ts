@@ -6,7 +6,16 @@ import { Package } from "../shared/package"
 import { fileExistsAtPath } from "./fs"
 import { t } from "../i18n"
 
-import { importSettingsFromPath, ImportOptions } from "../core/config/importExport"
+import { importSettingsFromFile } from "../core/config/importExport"
+import { ProviderSettingsManager } from "../core/config/ProviderSettingsManager"
+import { ContextProxy } from "../core/config/ContextProxy"
+import { CustomModesManager } from "../core/config/CustomModesManager"
+
+type ImportOptions = {
+	providerSettingsManager: ProviderSettingsManager
+	contextProxy: ContextProxy
+	customModesManager: CustomModesManager
+}
 
 /**
  * Automatically imports RooCode settings from a specified path if it exists.
@@ -37,11 +46,15 @@ export async function autoImportSettings(
 		}
 
 		// Attempt to import the configuration
-		const result = await importSettingsFromPath(resolvedPath, {
-			providerSettingsManager,
-			contextProxy,
-			customModesManager,
-		})
+		const fileUri = vscode.Uri.file(resolvedPath)
+		const result = await importSettingsFromFile(
+			{
+				providerSettingsManager,
+				contextProxy,
+				customModesManager,
+			},
+			fileUri,
+		)
 
 		if (result.success) {
 			outputChannel.appendLine(`[AutoImport] Successfully imported settings from ${resolvedPath}`)
