@@ -29,21 +29,18 @@ export const About = ({ telemetrySetting, setTelemetrySetting, className, ...pro
 		setShouldThrowError(true)
 	}
 
+	// Named function to make it easier to identify in stack traces
+	function throwTestError() {
+		// Intentionally cause a type error by accessing a property on undefined
+		const obj: any = undefined
+		obj.nonExistentMethod()
+	}
+
 	// Test component that throws an error when shouldThrow is true
 	const ErrorThrower = ({ shouldThrow = false }) => {
 		if (shouldThrow) {
-			// Create a more realistic error with a proper stack trace
-			try {
-				// Intentionally cause a type error by accessing a property on undefined
-				// This will generate a stack trace with TypeScript source maps
-				const obj: any = undefined
-				obj.nonExistentMethod()
-			} catch (e) {
-				// Rethrow with a custom message but preserve the original stack trace
-				const error = new Error("Test error: Accessing property on undefined")
-				error.stack = e instanceof Error ? e.stack : undefined
-				throw error
-			}
+			// Use a named function to make it easier to identify in stack traces
+			throwTestError()
 		}
 		return null
 	}
