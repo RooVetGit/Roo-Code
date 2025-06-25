@@ -310,5 +310,8 @@
 		"indexed": "İndekslendi",
 		"error": "İndeks hatası",
 		"status": "İndeks durumu"
+	},
+	"versionIndicator": {
+		"ariaLabel": "Version {{version}} - Click to view release notes"
 	}
 }

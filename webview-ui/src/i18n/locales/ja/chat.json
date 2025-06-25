@@ -310,5 +310,8 @@
 		"indexed": "インデックス作成済み",
 		"error": "インデックスエラー",
 		"status": "インデックス状態"
+	},
+	"versionIndicator": {
+		"ariaLabel": "Version {{version}} - Click to view release notes"
 	}
 }

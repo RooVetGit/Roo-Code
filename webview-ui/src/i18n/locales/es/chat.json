@@ -310,5 +310,8 @@
 		"indexed": "Indexado",
 		"error": "Error de índice",
 		"status": "Estado del índice"
+	},
+	"versionIndicator": {
+		"ariaLabel": "Version {{version}} - Click to view release notes"
 	}
 }

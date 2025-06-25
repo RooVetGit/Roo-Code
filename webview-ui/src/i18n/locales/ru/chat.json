@@ -310,5 +310,8 @@
 		"indexed": "Проиндексировано",
 		"error": "Ошибка индекса",
 		"status": "Статус индекса"
+	},
+	"versionIndicator": {
+		"ariaLabel": "Version {{version}} - Click to view release notes"
 	}
 }
