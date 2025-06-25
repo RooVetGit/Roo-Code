@@ -86,32 +86,41 @@ export class CustomModesManager {
 	}
 
 	/**
+	 * Regex pattern for problematic characters that need to be cleaned from YAML content
+	 * Includes:
+	 * - \u00A0: Non-breaking space
+	 * - \u200B-\u200D: Zero-width spaces and joiners
+	 * - \u2010-\u2015, \u2212: Various dash characters
+	 * - \u2018-\u2019: Smart single quotes
+	 * - \u201C-\u201D: Smart double quotes
+	 */
+	private static readonly PROBLEMATIC_CHARS_REGEX =
+		// eslint-disable-next-line no-misleading-character-class
+		/[\u00A0\u200B\u200C\u200D\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u2018\u2019\u201C\u201D]/g
+
+	/**
 	 * Clean invisible and problematic characters from YAML content
 	 */
 	private cleanInvisibleCharacters(content: string): string {
 		// Single pass replacement for all problematic characters
-		return content.replace(
-			// eslint-disable-next-line no-misleading-character-class
-			/[\u00A0\u200B\u200C\u200D\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u2018\u2019\u201C\u201D]/g,
-			(match) => {
-				switch (match) {
-					case "\u00A0": // Non-breaking space
-						return " "
-					case "\u200B": // Zero-width space
-					case "\u200C": // Zero-width non-joiner
-					case "\u200D": // Zero-width joiner
-						return ""
-					case "\u2018": // Left single quotation mark
-					case "\u2019": // Right single quotation mark
-						return "'"
-					case "\u201C": // Left double quotation mark
-					case "\u201D": // Right double quotation mark
-						return '"'
-					default: // Dash characters (U+2010 through U+2015, U+2212)
-						return "-"
-				}
-			},
-		)
+		return content.replace(CustomModesManager.PROBLEMATIC_CHARS_REGEX, (match) => {
+			switch (match) {
+				case "\u00A0": // Non-breaking space
+					return " "
+				case "\u200B": // Zero-width space
+				case "\u200C": // Zero-width non-joiner
+				case "\u200D": // Zero-width joiner
+					return ""
+				case "\u2018": // Left single quotation mark
+				case "\u2019": // Right single quotation mark
+					return "'"
+				case "\u201C": // Left double quotation mark
+				case "\u201D": // Right double quotation mark
+					return '"'
+				default: // Dash characters (U+2010 through U+2015, U+2212)
+					return "-"
+			}
+		})
 	}
 
 	/**
