@@ -42,6 +42,14 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
 	const mockRoomodes = `${path.sep}mock${path.sep}workspace${path.sep}.roomodes`
 
+	// Helper function to reduce duplication in fs.readFile mocks
+	const mockFsReadFile = (files: Record<string, string>) => {
+		;(fs.readFile as Mock).mockImplementation(async (path: string) => {
+			if (files[path]) return files[path]
+			throw new Error("File not found")
+		})
+	}
+
 	beforeEach(() => {
 		mockOnUpdate = vi.fn()
 		mockContext = {
@@ -102,14 +110,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 					],
 				})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithBOM
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithBOM,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -119,9 +122,10 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 			expect(modes[0].name).toBe("Test Mode")
 		})
 
-		it("should handle UTF-16 LE BOM in YAML files", async () => {
+		it("should handle UTF-16 BOM in YAML files", async () => {
+			// When Node.js reads UTF-16 files, the BOM is correctly decoded as \uFEFF
 			const yamlWithBOM =
-				"\uFFFE" +
+				"\uFEFF" +
 				yaml.stringify({
 					customModes: [
 						{
@@ -133,14 +137,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 					],
 				})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithBOM
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithBOM,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -159,14 +158,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
     roleDefinition: "Test\u00A0role\u00A0with\u00A0non-breaking\u00A0spaces"
     groups: ["read"]`
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithNonBreakingSpaces
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithNonBreakingSpaces,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -184,14 +178,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
     roleDefinition: "Test\u200Drole"
     groups: ["read"]`
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithZeroWidth
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithZeroWidth,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -215,14 +204,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 				],
 			})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithFancyQuotes
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithFancyQuotes,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -252,14 +236,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 				],
 			})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithComplexFileRegex
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithComplexFileRegex,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -273,22 +252,17 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 		it("should handle invalid fileRegex syntax with clear error", async () => {
 			// This YAML has invalid structure that might cause parsing issues
 			const invalidYaml = `customModes:
-  - slug: "test-mode"
-    name: "Test Mode"
-    roleDefinition: "Test role"
-    groups:
-      - read
-      - ["edit", { fileRegex: "\\.md$" }]  # This line has invalid YAML syntax
-      - browser`
+	 - slug: "test-mode"
+	   name: "Test Mode"
+	   roleDefinition: "Test role"
+	   groups:
+	     - read
+	     - ["edit", { fileRegex: "\\.md$" }]  # This line has invalid YAML syntax
+	     - browser`
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return invalidYaml
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: invalidYaml,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -304,19 +278,14 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 	describe("Error messages", () => {
 		it("should provide detailed syntax error messages with context", async () => {
 			const invalidYaml = `customModes:
-  - slug: "test-mode"
-    name: "Test Mode"
-    roleDefinition: "Test role
-    groups: ["read"]` // Missing closing quote
+	 - slug: "test-mode"
+	   name: "Test Mode"
+	   roleDefinition: "Test role
+	   groups: ["read"]` // Missing closing quote
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return invalidYaml
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: invalidYaml,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -340,14 +309,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 				],
 			})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return invalidSchema
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: invalidSchema,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -373,14 +337,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 				],
 			})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithEmojis
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithEmojis,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()
@@ -402,14 +361,9 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 				],
 			})
 
-			;(fs.readFile as Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
-					return yamlWithInternational
-				}
-				if (path === mockSettingsPath) {
-					return yaml.stringify({ customModes: [] })
-				}
-				throw new Error("File not found")
+			mockFsReadFile({
+				[mockRoomodes]: yamlWithInternational,
+				[mockSettingsPath]: yaml.stringify({ customModes: [] }),
 			})
 
 			const modes = await manager.getCustomModes()

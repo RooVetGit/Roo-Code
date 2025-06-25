@@ -77,41 +77,41 @@ export class CustomModesManager {
 	 * Strip BOM (Byte Order Mark) from the beginning of a string
 	 */
 	private stripBOM(content: string): string {
-		// Common BOMs: UTF-8, UTF-16 BE, UTF-16 LE
-		const boms = [
-			"\uFEFF", // UTF-8 BOM
-			"\uFFFE", // UTF-16 LE BOM (reversed)
-		]
-
-		let result = content
-		for (const bom of boms) {
-			if (result.startsWith(bom)) {
-				result = result.slice(bom.length)
-			}
+		// When Node.js reads UTF-8 or UTF-16 files, it correctly decodes them
+		// and any BOM appears as \uFEFF at the start of the string
+		if (content.startsWith("\uFEFF")) {
+			return content.slice(1)
 		}
-
-		return result
+		return content
 	}
 
 	/**
 	 * Clean invisible and problematic characters from YAML content
 	 */
 	private cleanInvisibleCharacters(content: string): string {
-		// Replace non-breaking spaces with regular spaces
-		let cleaned = content.replace(/\u00A0/g, " ")
-
-		// Replace other invisible characters that can cause issues
-		// Zero-width space, zero-width non-joiner, zero-width joiner
-		cleaned = cleaned.replace(/[\u200B\u200C\u200D]/g, "")
-
-		// Replace various dash characters with standard hyphen
-		cleaned = cleaned.replace(/[\u2010-\u2015\u2212]/g, "-")
-
-		// Replace various quote characters with standard quotes
-		cleaned = cleaned.replace(/[\u2018\u2019]/g, "'")
-		cleaned = cleaned.replace(/[\u201C\u201D]/g, '"')
-
-		return cleaned
+		// Single pass replacement for all problematic characters
+		return content.replace(
+			// eslint-disable-next-line no-misleading-character-class
+			/[\u00A0\u200B\u200C\u200D\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u2018\u2019\u201C\u201D]/g,
+			(match) => {
+				switch (match) {
+					case "\u00A0": // Non-breaking space
+						return " "
+					case "\u200B": // Zero-width space
+					case "\u200C": // Zero-width non-joiner
+					case "\u200D": // Zero-width joiner
+						return ""
+					case "\u2018": // Left single quotation mark
+					case "\u2019": // Right single quotation mark
+						return "'"
+					case "\u201C": // Left double quotation mark
+					case "\u201D": // Right double quotation mark
+						return '"'
+					default: // Dash characters (U+2010 through U+2015, U+2212)
+						return "-"
+				}
+			},
+		)
 	}
 
 	/**
@@ -140,7 +140,10 @@ export class CustomModesManager {
 				)
 			}
 
-			throw error
+			// Re-throw with a flag to prevent duplicate error handling
+			const enhancedError = new Error(errorMsg)
+			;(enhancedError as any).alreadyHandled = true
+			throw enhancedError
 		}
 	}
 
@@ -172,8 +175,11 @@ export class CustomModesManager {
 			// Add source to each mode
 			return result.data.customModes.map((mode) => ({ ...mode, source }))
 		} catch (error) {
-			const errorMsg = `Failed to load modes from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
-			console.error(`[CustomModesManager] ${errorMsg}`)
+			// Only log if the error wasn't already handled in parseYamlSafely
+			if (!(error as any).alreadyHandled) {
+				const errorMsg = `Failed to load modes from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+				console.error(`[CustomModesManager] ${errorMsg}`)
+			}
 			return []
 		}
 	}
