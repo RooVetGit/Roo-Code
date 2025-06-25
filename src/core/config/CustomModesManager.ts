@@ -11,6 +11,7 @@ import { getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
+import { t } from "../../i18n"
 
 const ROOMODES_FILENAME = ".roomodes"
 
@@ -141,12 +142,7 @@ export class CustomModesManager {
 			if (filePath.endsWith(ROOMODES_FILENAME)) {
 				const lineMatch = errorMsg.match(/at line (\d+)/)
 				const line = lineMatch ? lineMatch[1] : "unknown"
-				vscode.window.showErrorMessage(
-					`Invalid YAML in .roomodes file at line ${line}. Please check for:\n` +
-						`• Proper indentation (use spaces, not tabs)\n` +
-						`• Matching quotes and brackets\n` +
-						`• Valid YAML syntax`,
-				)
+				vscode.window.showErrorMessage(t("common:customModes.errors.yamlParseError", { line }))
 			}
 
 			// Re-throw with a flag to prevent duplicate error handling
@@ -171,7 +167,7 @@ export class CustomModesManager {
 						.map((issue) => `• ${issue.path.join(".")}: ${issue.message}`)
 						.join("\n")
 
-					vscode.window.showErrorMessage(`Invalid custom modes format in .roomodes:\n${issues}`)
+					vscode.window.showErrorMessage(t("common:customModes.errors.schemaValidationError", { issues }))
 				}
 
 				return []
@@ -250,8 +246,7 @@ export class CustomModesManager {
 				await this.getCustomModesFilePath()
 				const content = await fs.readFile(settingsPath, "utf-8")
 
-				const errorMessage =
-					"Invalid custom modes format. Please ensure your settings follow the correct YAML format."
+				const errorMessage = t("common:customModes.errors.invalidFormat")
 
 				let config: any
 
@@ -387,7 +382,7 @@ export class CustomModesManager {
 
 				if (!workspaceFolders || workspaceFolders.length === 0) {
 					logger.error("Failed to update project mode: No workspace folder found", { slug })
-					throw new Error("No workspace folder found for project-specific mode")
+					throw new Error(t("common:customModes.errors.noWorkspaceForProject"))
 				}
 
 				const workspaceRoot = getWorkspacePath()
@@ -421,7 +416,7 @@ export class CustomModesManager {
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			logger.error("Failed to update custom mode", { slug, error: errorMessage })
-			vscode.window.showErrorMessage(`Failed to update custom mode: ${errorMessage}`)
+			vscode.window.showErrorMessage(t("common:customModes.errors.updateFailed", { error: errorMessage }))
 		}
 	}
 
@@ -476,7 +471,7 @@ export class CustomModesManager {
 			const globalMode = settingsModes.find((m) => m.slug === slug)
 
 			if (!projectMode && !globalMode) {
-				throw new Error("Write error: Mode not found")
+				throw new Error(t("common:customModes.errors.modeNotFound"))
 			}
 
 			await this.queueWrite(async () => {
@@ -495,9 +490,8 @@ export class CustomModesManager {
 				await this.refreshMergedState()
 			})
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to delete custom mode: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(t("common:customModes.errors.deleteFailed", { error: errorMessage }))
 		}
 	}
 
@@ -512,9 +506,8 @@ export class CustomModesManager {
 			this.clearCache()
 			await this.onUpdate()
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to reset custom modes: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(t("common:customModes.errors.resetFailed", { error: errorMessage }))
 		}
 	}
 
