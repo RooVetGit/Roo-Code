@@ -21,6 +21,7 @@ import { getApiMetrics } from "@roo/getApiMetrics"
 import { AudioType } from "@roo/WebviewMessage"
 import { getAllModes } from "@roo/modes"
 import { ProfileValidator } from "@roo/ProfileValidator"
+import { Package } from "@roo/package"
 
 import { vscode } from "@src/utils/vscode"
 import { validateCommand } from "@src/utils/command-validation"
@@ -150,6 +151,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
 	const [isCondensing, setIsCondensing] = useState<boolean>(false)
+	const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
 	const everVisibleMessagesTsRef = useRef<LRUCache<number, boolean>>(
 		new LRUCache({
 			max: 250,
@@ -730,7 +732,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			}
 		},
 		50,
-		[isHidden, sendingDisabled, enableButtons]
+		[isHidden, sendingDisabled, enableButtons],
 	)
 
 	const visibleMessages = useMemo(() => {
@@ -1095,8 +1097,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	useEffect(() => {
 		return () => {
-			if (scrollToBottomSmooth && typeof (scrollToBottomSmooth as any).cancel === 'function') {
-				(scrollToBottomSmooth as any).cancel()
+			if (scrollToBottomSmooth && typeof (scrollToBottomSmooth as any).cancel === "function") {
+				;(scrollToBottomSmooth as any).cancel()
 			}
 		}
 	}, [scrollToBottomSmooth])
@@ -1364,7 +1366,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	return (
 		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
+			{/* Version indicator in top-right corner */}
+			<button
+				onClick={() => setShowAnnouncementModal(true)}
+				className="absolute top-2 right-2 text-xs text-vscode-descriptionForeground hover:text-vscode-foreground transition-colors cursor-pointer px-2 py-1 rounded border border-vscode-panel-border hover:border-vscode-focusBorder z-10"
+				aria-label={t("chat:versionIndicator.ariaLabel", { version: Package.version })}>
+				v{Package.version}
+			</button>
+
 			{showAnnouncement && <Announcement hideAnnouncement={hideAnnouncement} />}
+			{showAnnouncementModal && <Announcement hideAnnouncement={() => setShowAnnouncementModal(false)} />}
 			{task ? (
 				<>
 					<TaskHeader
