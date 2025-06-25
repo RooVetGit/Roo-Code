@@ -10,6 +10,10 @@ import { ApiHandlerOptions } from "../../shared/api"
 import { Tiktoken } from "tiktoken/lite"
 import o200kBase from "tiktoken/encoders/o200k_base"
 
+// Conservative token estimate for images (even though Claude Code doesn't support them)
+// This matches the estimate used in src/utils/tiktoken.ts for consistency
+const IMAGE_TOKEN_ESTIMATE = 300
+
 export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 	private options: ApiHandlerOptions
 	private encoder: Tiktoken | null = null
@@ -176,8 +180,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 				}
 			} else if (block.type === "image") {
 				// Claude Code doesn't support images, but we handle them just in case
-				// Use a conservative estimate
-				totalTokens += 300
+				totalTokens += IMAGE_TOKEN_ESTIMATE
 			}
 		}
 

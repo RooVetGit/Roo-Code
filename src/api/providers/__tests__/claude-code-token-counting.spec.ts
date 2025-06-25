@@ -27,11 +27,9 @@ describe("ClaudeCodeHandler Token Counting", () => {
 
 			const tokenCount = await handler.countTokens(content)
 
-			// The text has approximately 13-15 tokens
-			// With no fudge factor, we expect the exact token count
-			// With the old 1.5x fudge factor, it would have been around 20-23 tokens
-			expect(tokenCount).toBeLessThan(16)
-			expect(tokenCount).toBeGreaterThan(12)
+			// The exact token count for this text using o200k_base tokenizer is 13
+			// With the old 1.5x fudge factor, it would have been 20 tokens
+			expect(tokenCount).toBe(13)
 		})
 
 		it("should handle empty content", async () => {
@@ -49,10 +47,9 @@ describe("ClaudeCodeHandler Token Counting", () => {
 
 			const tokenCount = await handler.countTokens(content)
 
-			// Each block is approximately 2-3 tokens, so 6-9 tokens total
-			// With no fudge factor, expect exact count
-			expect(tokenCount).toBeLessThan(10) // Would be ~15 with old 1.5x factor
-			expect(tokenCount).toBeGreaterThan(5)
+			// "First block" = 2 tokens, "Second block" = 2 tokens, "Third block" = 2 tokens
+			// Total: 6 tokens (would have been 9 with old 1.5x factor)
+			expect(tokenCount).toBe(6)
 		})
 
 		it("should handle image blocks with conservative estimate", async () => {
@@ -74,44 +71,52 @@ describe("ClaudeCodeHandler Token Counting", () => {
 		})
 
 		it("should provide accurate token counts for typical messages", async () => {
-			// Simulate a typical user message with environment details
+			// Use a simpler, predictable message for exact token counting
 			const content: Anthropic.Messages.ContentBlockParam[] = [
 				{
 					type: "text",
-					text: `Hi
-
-<environment_details>
-# VSCode Visible Files
-src/app.ts
-src/utils.ts
-
-# VSCode Open Tabs
-src/app.ts
-
-# Current Time
-2024-01-01 12:00:00 PM
-
-# Current Context Size (Tokens)
-1000 (5%)
-
-# Current Cost
-$0.05
-
-# Current Mode
-<slug>code</slug>
-<name>Code</name>
-<model>claude-3-5-sonnet-20241022</model>
-</environment_details>`,
+					text: "This is a simple test message with exactly predictable token count.",
 				},
 			]
 
 			const tokenCount = await handler.countTokens(content)
 
-			// This content is approximately 100-120 tokens
-			// With no fudge factor, expect exact count
-			// With old 1.5x factor, it would have been 150-180 tokens
-			expect(tokenCount).toBeLessThan(125)
-			expect(tokenCount).toBeGreaterThan(95)
+			// This specific text has exactly 12 tokens with o200k_base tokenizer
+			// With old 1.5x factor, it would have been 18 tokens
+			expect(tokenCount).toBe(12)
+		})
+
+		it("should handle mixed content types", async () => {
+			const content: Anthropic.Messages.ContentBlockParam[] = [
+				{ type: "text", text: "Hello world" }, // 2 tokens
+				{
+					type: "image",
+					source: {
+						type: "base64",
+						media_type: "image/jpeg",
+						data: "base64data",
+					},
+				}, // 300 tokens (IMAGE_TOKEN_ESTIMATE)
+				{ type: "text", text: "Goodbye" }, // 1 token
+			]
+
+			const tokenCount = await handler.countTokens(content)
+
+			// Total: 2 + 300 + 2 = 304 tokens ("Goodbye" is actually 2 tokens)
+			expect(tokenCount).toBe(304)
+		})
+
+		it("should handle empty text blocks", async () => {
+			const content: Anthropic.Messages.ContentBlockParam[] = [
+				{ type: "text", text: "" },
+				{ type: "text", text: "Hello" }, // 1 token
+				{ type: "text", text: "" },
+			]
+
+			const tokenCount = await handler.countTokens(content)
+
+			// Only "Hello" contributes tokens
+			expect(tokenCount).toBe(1)
 		})
 	})
 })
