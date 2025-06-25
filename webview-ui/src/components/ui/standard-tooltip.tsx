@@ -50,7 +50,13 @@ export function StandardTooltip({
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>
-			<TooltipContent side={side} align={align} sideOffset={sideOffset} className={className}>
+			<TooltipContent
+				side={side}
+				align={align}
+				sideOffset={sideOffset}
+				className={className}
+				collisionPadding={10}
+				avoidCollisions={true}>
 				{content}
 			</TooltipContent>
 		</Tooltip>
