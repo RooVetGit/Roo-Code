@@ -7,7 +7,7 @@ export const LMSTUDIO_DEFAULT_TEMPERATURE = 0
 export const lMStudioDefaultModelId = "mistralai/devstral-small-2505"
 export const lMStudioDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
-	contextWindow: 200_000,
+	contextWindow: 50_000,
 	supportsImages: true,
 	supportsComputerUse: true,
 	supportsPromptCache: true,
