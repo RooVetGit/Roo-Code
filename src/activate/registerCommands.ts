@@ -13,7 +13,7 @@ import { focusPanel } from "../utils/focusPanel"
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
 import { CodeIndexManager } from "../services/code-index/manager"
-import { importSettings } from "../core/config/importExport"
+import { importSettingsWithFeedback } from "../core/config/importExport"
 import { t } from "../i18n"
 
 /**
@@ -179,19 +179,15 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			return
 		}
 
-		const result = await importSettings({
-			providerSettingsManager: visibleProvider.providerSettingsManager,
-			contextProxy: visibleProvider.contextProxy,
-			customModesManager: visibleProvider.customModesManager,
-		}, filePath)
-
-		if (result.success) {
-			visibleProvider.settingsImportedAt = Date.now()
-			await visibleProvider.postStateToWebview()
-			await vscode.window.showInformationMessage(t("common:info.settings_imported"))
-		} else if (result.error) {
-			await vscode.window.showErrorMessage(t("common:errors.settings_import_failed", { error: result.error }))
-		}
+		await importSettingsWithFeedback(
+			{
+				providerSettingsManager: visibleProvider.providerSettingsManager,
+				contextProxy: visibleProvider.contextProxy,
+				customModesManager: visibleProvider.customModesManager,
+				provider: visibleProvider,
+			},
+			filePath,
+		)
 	},
 	focusInput: async () => {
 		try {

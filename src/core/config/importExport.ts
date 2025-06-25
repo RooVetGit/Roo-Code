@@ -11,6 +11,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
+import { t } from "../../i18n"
 
 type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
@@ -23,43 +24,41 @@ type ExportOptions = {
 	contextProxy: ContextProxy
 }
 
+type ImportWithProviderOptions = ImportOptions & {
+	provider: {
+		settingsImportedAt?: number
+		postStateToWebview: () => Promise<void>
+	}
+}
+
 /**
- * Import settings from a file
+ * Import settings from a file using a file dialog
  * @param options - Import options containing managers and proxy
- * @param filePath - Optional file path to import from. If not provided, a file dialog will be shown.
- *                   Should be an absolute path to a JSON file.
  * @returns Promise resolving to import result
  */
-export const importSettings = async (
+export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions) => {
+	const uris = await vscode.window.showOpenDialog({
+		filters: { JSON: ["json"] },
+		canSelectMany: false,
+	})
+
+	if (!uris) {
+		return { success: false, error: "User cancelled file selection" }
+	}
+
+	return await importSettingsFromFile({ providerSettingsManager, contextProxy, customModesManager }, uris[0])
+}
+
+/**
+ * Import settings from a specific file
+ * @param options - Import options containing managers and proxy
+ * @param fileUri - URI of the file to import from
+ * @returns Promise resolving to import result
+ */
+export const importSettingsFromFile = async (
 	{ providerSettingsManager, contextProxy, customModesManager }: ImportOptions,
-	filePath?: string,
+	fileUri: vscode.Uri,
 ) => {
-	let fileUri: vscode.Uri | undefined
-
-	if (filePath) {
-		// Validate file path and check if file exists
-		try {
-			fileUri = vscode.Uri.file(filePath)
-			// Check if file exists and is readable
-			await fs.access(fileUri.fsPath, fs.constants.F_OK | fs.constants.R_OK)
-		} catch (error) {
-			return {
-				success: false,
-				error: `Cannot access file at path "${filePath}": ${error instanceof Error ? error.message : "Unknown error"}`,
-			}
-		}
-	} else {
-		const uris = await vscode.window.showOpenDialog({
-			filters: { JSON: ["json"] },
-			canSelectMany: false,
-		})
-		fileUri = uris?.[0]
-	}
-
-	if (!fileUri) {
-		return { success: false }
-	}
-
 	const schema = z.object({
 		providerProfiles: providerProfilesSchema,
 		globalSettings: globalSettingsSchema.optional(),
@@ -145,4 +144,45 @@ export const exportSettings = async ({ providerSettingsManager, contextProxy }: 
 		await fs.mkdir(dirname, { recursive: true })
 		await fs.writeFile(uri.fsPath, JSON.stringify({ providerProfiles, globalSettings }, null, 2), "utf-8")
 	} catch (e) {}
+}
+
+/**
+ * Import settings with complete UI feedback and provider state updates
+ * @param options - Import options with provider instance
+ * @param filePath - Optional file path to import from. If not provided, a file dialog will be shown.
+ * @returns Promise that resolves when import is complete
+ */
+export const importSettingsWithFeedback = async (
+	{ providerSettingsManager, contextProxy, customModesManager, provider }: ImportWithProviderOptions,
+	filePath?: string,
+) => {
+	let result
+
+	if (filePath) {
+		// Validate file path and check if file exists
+		try {
+			const fileUri = vscode.Uri.file(filePath)
+			// Check if file exists and is readable
+			await fs.access(fileUri.fsPath, fs.constants.F_OK | fs.constants.R_OK)
+			result = await importSettingsFromFile(
+				{ providerSettingsManager, contextProxy, customModesManager },
+				fileUri,
+			)
+		} catch (error) {
+			result = {
+				success: false,
+				error: `Cannot access file at path "${filePath}": ${error instanceof Error ? error.message : "Unknown error"}`,
+			}
+		}
+	} else {
+		result = await importSettings({ providerSettingsManager, contextProxy, customModesManager })
+	}
+
+	if (result.success) {
+		provider.settingsImportedAt = Date.now()
+		await provider.postStateToWebview()
+		await vscode.window.showInformationMessage(t("common:info.settings_imported"))
+	} else if (result.error) {
+		await vscode.window.showErrorMessage(t("common:errors.settings_import_failed", { error: result.error }))
+	}
 }

@@ -8,7 +8,7 @@ import * as vscode from "vscode"
 import type { ProviderName } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
-import { importSettings, exportSettings } from "../importExport"
+import { importSettings, importSettingsFromFile, importSettingsWithFeedback, exportSettings } from "../importExport"
 import { ProviderSettingsManager } from "../ProviderSettingsManager"
 import { ContextProxy } from "../ContextProxy"
 import { CustomModesManager } from "../CustomModesManager"
@@ -19,6 +19,8 @@ vi.mock("vscode", () => ({
 	window: {
 		showOpenDialog: vi.fn(),
 		showSaveDialog: vi.fn(),
+		showErrorMessage: vi.fn(),
+		showInformationMessage: vi.fn(),
 	},
 	Uri: {
 		file: vi.fn((filePath) => ({ fsPath: filePath })),
@@ -103,7 +105,7 @@ describe("importExport", () => {
 				customModesManager: mockCustomModesManager,
 			})
 
-			expect(result).toEqual({ success: false })
+			expect(result).toEqual({ success: false, error: "User cancelled file selection" })
 
 			expect(vscode.window.showOpenDialog).toHaveBeenCalledWith({
 				filters: { JSON: ["json"] },
@@ -308,9 +310,11 @@ describe("importExport", () => {
 			})
 
 			expect(result.success).toBe(true)
-			expect(result.providerProfiles?.apiConfigs["openai"]).toBeDefined()
-			expect(result.providerProfiles?.apiConfigs["default"]).toBeDefined()
-			expect(result.providerProfiles?.apiConfigs["default"].apiProvider).toBe("anthropic")
+			if (result.success && "providerProfiles" in result) {
+				expect(result.providerProfiles?.apiConfigs["openai"]).toBeDefined()
+				expect(result.providerProfiles?.apiConfigs["default"]).toBeDefined()
+				expect(result.providerProfiles?.apiConfigs["default"].apiProvider).toBe("anthropic")
+			}
 		})
 
 		it("should call updateCustomMode for each custom mode in config", async () => {
@@ -374,17 +378,16 @@ describe("importExport", () => {
 			])
 			mockContextProxy.export.mockResolvedValue({ mode: "code" })
 
-			const result = await importSettings(
+			const result = await importSettingsFromFile(
 				{
 					providerSettingsManager: mockProviderSettingsManager,
 					contextProxy: mockContextProxy,
 					customModesManager: mockCustomModesManager,
 				},
-				filePath,
+				vscode.Uri.file(filePath),
 			)
 
 			expect(vscode.window.showOpenDialog).not.toHaveBeenCalled()
-			expect(fs.access).toHaveBeenCalledWith(filePath, fs.constants.F_OK | fs.constants.R_OK)
 			expect(fs.readFile).toHaveBeenCalledWith(filePath, "utf-8")
 			expect(result.success).toBe(true)
 			expect(mockProviderSettingsManager.import).toHaveBeenCalledWith({
@@ -404,11 +407,21 @@ describe("importExport", () => {
 
 			;(fs.access as Mock).mockRejectedValue(accessError)
 
-			const result = await importSettings(
+			// Create a mock provider for the test
+			const mockProvider = {
+				settingsImportedAt: 0,
+				postStateToWebview: vi.fn().mockResolvedValue(undefined),
+			}
+
+			// Mock the showErrorMessage to capture the error
+			const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined)
+
+			await importSettingsWithFeedback(
 				{
 					providerSettingsManager: mockProviderSettingsManager,
 					contextProxy: mockContextProxy,
 					customModesManager: mockCustomModesManager,
+					provider: mockProvider,
 				},
 				filePath,
 			)
@@ -416,9 +429,9 @@ describe("importExport", () => {
 			expect(vscode.window.showOpenDialog).not.toHaveBeenCalled()
 			expect(fs.access).toHaveBeenCalledWith(filePath, fs.constants.F_OK | fs.constants.R_OK)
 			expect(fs.readFile).not.toHaveBeenCalled()
-			expect(result.success).toBe(false)
-			expect(result.error).toContain(`Cannot access file at path "${filePath}"`)
-			expect(result.error).toContain("ENOENT: no such file or directory")
+			expect(showErrorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("errors.settings_import_failed"))
+
+			showErrorMessageSpy.mockRestore()
 		})
 	})
 
