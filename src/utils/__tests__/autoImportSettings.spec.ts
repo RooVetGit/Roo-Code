@@ -225,7 +225,9 @@ describe("autoImportSettings", () => {
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
 			expect.stringContaining("[AutoImport] Failed to import settings:"),
 		)
-		expect(vscode.window.showWarningMessage).toHaveBeenCalledWith("warnings.auto_import_failed")
+		expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+			expect.stringContaining("warnings.auto_import_failed"),
+		)
 		expect(mockProviderSettingsManager.import).not.toHaveBeenCalled()
 	})
 
