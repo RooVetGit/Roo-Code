@@ -20,7 +20,6 @@ import {
 	BEDROCK_DEFAULT_TEMPERATURE,
 	BEDROCK_MAX_TOKENS,
 	BEDROCK_DEFAULT_CONTEXT,
-	BEDROCK_REGION_INFO,
 	AWS_INFERENCE_PROFILE_MAPPING,
 } from "@roo-code/types"
 
@@ -483,7 +482,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				if (streamEvent.contentBlockStart) {
 					const cbStart = streamEvent.contentBlockStart
 
-					// Check if this is a reasoning block (official AWS SDK structure)
+					// Check if this is a reasoning block (AWS SDK structure)
 					if (cbStart.contentBlock?.reasoningContent) {
 						if (cbStart.contentBlockIndex && cbStart.contentBlockIndex > 0) {
 							yield { type: "reasoning", text: "\n" }
@@ -494,7 +493,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 						}
 					}
 					// Check for thinking block - handle both possible AWS SDK structures
-					// cbStart.contentBlock: newer/official structure
+					// cbStart.contentBlock: newer structure
 					// cbStart.content_block: alternative structure seen in some AWS SDK versions
 					else if (cbStart.contentBlock?.type === "thinking" || cbStart.content_block?.type === "thinking") {
 						const contentBlock = cbStart.contentBlock || cbStart.content_block
@@ -523,11 +522,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 					// Process reasoning and text content deltas
 					// Multiple structures are supported for AWS SDK compatibility:
-					// - delta.reasoningContent.text: official AWS docs structure for reasoning
+					// - delta.reasoningContent.text: AWS docs structure for reasoning
 					// - delta.thinking: alternative structure for thinking content
 					// - delta.text: standard text content
 					if (delta) {
-						// Check for reasoningContent property (official AWS SDK structure)
+						// Check for reasoningContent property (AWS SDK structure)
 						if (delta.reasoningContent?.text) {
 							yield {
 								type: "reasoning",
@@ -778,7 +777,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			if (originalModelId && result.modelId !== originalModelId) {
 				// If the model ID changed after parsing, it had a region prefix
 				let prefix = originalModelId.replace(result.modelId, "")
-				result.crossRegionInference = AwsBedrockHandler.prefixIsMultiRegion(prefix)
+				result.crossRegionInference = AwsBedrockHandler.isSystemInferenceProfile(prefix)
 			}
 
 			// Check if region in ARN matches provided region (if specified)
@@ -802,29 +801,21 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	//This strips any region prefix that used on cross-region model inference ARNs
-	private parseBaseModelId(modelId: string) {
+	private parseBaseModelId(modelId: string): string {
 		if (!modelId) {
 			return modelId
 		}
 
-		const knownRegionPrefixes = AwsBedrockHandler.getPrefixList()
-
-		// Find if the model ID starts with any known region prefix
-		const matchedPrefix = knownRegionPrefixes.find((prefix) => modelId.startsWith(prefix))
-
-		if (matchedPrefix) {
-			// Remove the region prefix from the model ID
-			return modelId.substring(matchedPrefix.length)
-		} else {
-			// If no known prefix was found, check for a generic pattern
-			// Look for a pattern where the first segment before a dot doesn't contain dots or colons
-			// and the remaining parts still contain at least one dot
-			const genericPrefixMatch = modelId.match(/^([^.:]+)\.(.+\..+)$/)
-
-			if (genericPrefixMatch) {
-				return genericPrefixMatch[2]
+		// Remove AWS cross-region inference profile prefixes
+		// as defined in AWS_INFERENCE_PROFILE_MAPPING
+		for (const [_, inferenceProfile] of AWS_INFERENCE_PROFILE_MAPPING) {
+			if (modelId.startsWith(inferenceProfile)) {
+				// Remove the inference profile prefix from the model ID
+				return modelId.substring(inferenceProfile.length)
 			}
 		}
+
+		// Return the model ID as-is for all other cases
 		return modelId
 	}
 
@@ -972,16 +963,10 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	 *
 	 *************************************************************************************/
 
-	private static getPrefixList(): string[] {
-		return Object.keys(BEDROCK_REGION_INFO)
-	}
-
 	private static getPrefixForRegion(region: string): string | undefined {
 		// Use AWS recommended inference profile prefixes
-		// Sort by prefix length (descending) to ensure more specific prefixes match first (e.g., us-gov- before us-)
-		const sortedMappings = Object.entries(AWS_INFERENCE_PROFILE_MAPPING).sort(([a], [b]) => b.length - a.length)
-
-		for (const [regionPattern, inferenceProfile] of sortedMappings) {
+		// Array is pre-sorted by pattern length (descending) to ensure more specific patterns match first
+		for (const [regionPattern, inferenceProfile] of AWS_INFERENCE_PROFILE_MAPPING) {
 			if (region.startsWith(regionPattern)) {
 				return inferenceProfile
 			}
@@ -990,11 +975,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		return undefined
 	}
 
-	private static prefixIsMultiRegion(arnPrefix: string): boolean {
-		for (const [prefix, info] of Object.entries(BEDROCK_REGION_INFO)) {
-			if (arnPrefix === prefix) {
-				if (info?.multiRegion) return info.multiRegion
-				else return false
+	private static isSystemInferenceProfile(prefix: string): boolean {
+		// Check if the prefix is defined in AWS_INFERENCE_PROFILE_MAPPING
+		for (const [_, inferenceProfile] of AWS_INFERENCE_PROFILE_MAPPING) {
+			if (prefix === inferenceProfile) {
+				return true
 			}
 		}
 		return false
