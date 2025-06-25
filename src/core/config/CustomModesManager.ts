@@ -73,12 +73,95 @@ export class CustomModesManager {
 		return exists ? roomodesPath : undefined
 	}
 
+	/**
+	 * Strip BOM (Byte Order Mark) from the beginning of a string
+	 */
+	private stripBOM(content: string): string {
+		// Common BOMs: UTF-8, UTF-16 BE, UTF-16 LE
+		const boms = [
+			"\uFEFF", // UTF-8 BOM
+			"\uFFFE", // UTF-16 LE BOM (reversed)
+		]
+
+		let result = content
+		for (const bom of boms) {
+			if (result.startsWith(bom)) {
+				result = result.slice(bom.length)
+			}
+		}
+
+		return result
+	}
+
+	/**
+	 * Clean invisible and problematic characters from YAML content
+	 */
+	private cleanInvisibleCharacters(content: string): string {
+		// Replace non-breaking spaces with regular spaces
+		let cleaned = content.replace(/\u00A0/g, " ")
+
+		// Replace other invisible characters that can cause issues
+		// Zero-width space, zero-width non-joiner, zero-width joiner
+		cleaned = cleaned.replace(/[\u200B\u200C\u200D]/g, "")
+
+		// Replace various dash characters with standard hyphen
+		cleaned = cleaned.replace(/[\u2010-\u2015\u2212]/g, "-")
+
+		// Replace various quote characters with standard quotes
+		cleaned = cleaned.replace(/[\u2018\u2019]/g, "'")
+		cleaned = cleaned.replace(/[\u201C\u201D]/g, '"')
+
+		return cleaned
+	}
+
+	/**
+	 * Parse YAML content with enhanced error handling and preprocessing
+	 */
+	private parseYamlSafely(content: string, filePath: string): any {
+		// Clean the content
+		let cleanedContent = this.stripBOM(content)
+		cleanedContent = this.cleanInvisibleCharacters(cleanedContent)
+
+		try {
+			return yaml.parse(cleanedContent)
+		} catch (error) {
+			const errorMsg = error instanceof Error ? error.message : String(error)
+			console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
+
+			// Show user-friendly error message for .roomodes files
+			if (filePath.endsWith(ROOMODES_FILENAME)) {
+				const lineMatch = errorMsg.match(/at line (\d+)/)
+				const line = lineMatch ? lineMatch[1] : "unknown"
+				vscode.window.showErrorMessage(
+					`Invalid YAML in .roomodes file at line ${line}. Please check for:\n` +
+						`• Proper indentation (use spaces, not tabs)\n` +
+						`• Matching quotes and brackets\n` +
+						`• Valid YAML syntax`,
+				)
+			}
+
+			throw error
+		}
+	}
+
 	private async loadModesFromFile(filePath: string): Promise<ModeConfig[]> {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
-			const settings = yaml.parse(content)
+			const settings = this.parseYamlSafely(content, filePath)
 			const result = customModesSettingsSchema.safeParse(settings)
+
 			if (!result.success) {
+				console.error(`[CustomModesManager] Schema validation failed for ${filePath}:`, result.error)
+
+				// Show user-friendly error for .roomodes files
+				if (filePath.endsWith(ROOMODES_FILENAME)) {
+					const issues = result.error.issues
+						.map((issue) => `• ${issue.path.join(".")}: ${issue.message}`)
+						.join("\n")
+
+					vscode.window.showErrorMessage(`Invalid custom modes format in .roomodes:\n${issues}`)
+				}
+
 				return []
 			}
 
@@ -153,7 +236,7 @@ export class CustomModesManager {
 				let config: any
 
 				try {
-					config = yaml.parse(content)
+					config = this.parseYamlSafely(content, settingsPath)
 				} catch (error) {
 					console.error(error)
 					vscode.window.showErrorMessage(errorMessage)
@@ -335,9 +418,9 @@ export class CustomModesManager {
 		let settings
 
 		try {
-			settings = yaml.parse(content)
+			settings = this.parseYamlSafely(content, filePath)
 		} catch (error) {
-			console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, error)
+			// Error already logged in parseYamlSafely
 			settings = { customModes: [] }
 		}
 
