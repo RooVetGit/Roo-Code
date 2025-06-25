@@ -213,7 +213,7 @@ export class CustomModesManager {
 		const fileExists = await fileExistsAtPath(filePath)
 
 		if (!fileExists) {
-			await this.queueWrite(() => fs.writeFile(filePath, yaml.stringify({ customModes: [] })))
+			await this.queueWrite(() => fs.writeFile(filePath, yaml.stringify({ customModes: [] }, { lineWidth: 0 })))
 		}
 
 		return filePath
@@ -418,7 +418,7 @@ export class CustomModesManager {
 			content = await fs.readFile(filePath, "utf-8")
 		} catch (error) {
 			// File might not exist yet.
-			content = yaml.stringify({ customModes: [] })
+			content = yaml.stringify({ customModes: [] }, { lineWidth: 0 })
 		}
 
 		let settings
@@ -431,7 +431,7 @@ export class CustomModesManager {
 		}
 
 		settings.customModes = operation(settings.customModes || [])
-		await fs.writeFile(filePath, yaml.stringify(settings), "utf-8")
+		await fs.writeFile(filePath, yaml.stringify(settings, { lineWidth: 0 }), "utf-8")
 	}
 
 	private async refreshMergedState(): Promise<void> {
@@ -490,7 +490,7 @@ export class CustomModesManager {
 	public async resetCustomModes(): Promise<void> {
 		try {
 			const filePath = await this.getCustomModesFilePath()
-			await fs.writeFile(filePath, yaml.stringify({ customModes: [] }))
+			await fs.writeFile(filePath, yaml.stringify({ customModes: [] }, { lineWidth: 0 }))
 			await this.context.globalState.update("customModes", [])
 			this.clearCache()
 			await this.onUpdate()
