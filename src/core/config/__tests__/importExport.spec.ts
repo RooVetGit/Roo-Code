@@ -30,10 +30,20 @@ vi.mock("fs/promises", () => ({
 		readFile: vi.fn(),
 		mkdir: vi.fn(),
 		writeFile: vi.fn(),
+		access: vi.fn(),
+		constants: {
+			F_OK: 0,
+			R_OK: 4,
+		},
 	},
 	readFile: vi.fn(),
 	mkdir: vi.fn(),
 	writeFile: vi.fn(),
+	access: vi.fn(),
+	constants: {
+		F_OK: 0,
+		R_OK: 4,
+	},
 }))
 
 vi.mock("os", () => ({
@@ -143,9 +153,12 @@ describe("importExport", () => {
 			expect(mockProviderSettingsManager.export).toHaveBeenCalled()
 
 			expect(mockProviderSettingsManager.import).toHaveBeenCalledWith({
-				...previousProviderProfiles,
 				currentApiConfigName: "test",
-				apiConfigs: { test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" } },
+				apiConfigs: {
+					default: { apiProvider: "anthropic" as ProviderName, id: "default-id" },
+					test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" },
+				},
+				modeApiConfigs: {},
 			})
 
 			expect(mockContextProxy.setValues).toHaveBeenCalledWith({ mode: "code", autoApprovalEnabled: true })
@@ -216,11 +229,12 @@ describe("importExport", () => {
 			expect(fs.readFile).toHaveBeenCalledWith("/mock/path/settings.json", "utf-8")
 			expect(mockProviderSettingsManager.export).toHaveBeenCalled()
 			expect(mockProviderSettingsManager.import).toHaveBeenCalledWith({
-				...previousProviderProfiles,
 				currentApiConfigName: "test",
 				apiConfigs: {
+					default: { apiProvider: "anthropic" as ProviderName, id: "default-id" },
 					test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" },
 				},
+				modeApiConfigs: {},
 			})
 
 			// Should call setValues with an empty object since globalSettings is missing.
@@ -346,6 +360,7 @@ describe("importExport", () => {
 			})
 
 			;(fs.readFile as Mock).mockResolvedValue(mockFileContent)
+			;(fs.access as Mock).mockResolvedValue(undefined) // File exists and is readable
 
 			const previousProviderProfiles = {
 				currentApiConfigName: "default",
@@ -359,21 +374,51 @@ describe("importExport", () => {
 			])
 			mockContextProxy.export.mockResolvedValue({ mode: "code" })
 
-			const result = await importSettings({
-				providerSettingsManager: mockProviderSettingsManager,
-				contextProxy: mockContextProxy,
-				customModesManager: mockCustomModesManager,
-			}, filePath)
+			const result = await importSettings(
+				{
+					providerSettingsManager: mockProviderSettingsManager,
+					contextProxy: mockContextProxy,
+					customModesManager: mockCustomModesManager,
+				},
+				filePath,
+			)
 
 			expect(vscode.window.showOpenDialog).not.toHaveBeenCalled()
+			expect(fs.access).toHaveBeenCalledWith(filePath, fs.constants.F_OK | fs.constants.R_OK)
 			expect(fs.readFile).toHaveBeenCalledWith(filePath, "utf-8")
 			expect(result.success).toBe(true)
 			expect(mockProviderSettingsManager.import).toHaveBeenCalledWith({
-				...previousProviderProfiles,
 				currentApiConfigName: "test",
-				apiConfigs: { test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" } },
+				apiConfigs: {
+					default: { apiProvider: "anthropic" as ProviderName, id: "default-id" },
+					test: { apiProvider: "openai" as ProviderName, apiKey: "test-key", id: "test-id" },
+				},
+				modeApiConfigs: {},
 			})
 			expect(mockContextProxy.setValues).toHaveBeenCalledWith({ mode: "code", autoApprovalEnabled: true })
+		})
+
+		it("should return error when provided file path does not exist", async () => {
+			const filePath = "/nonexistent/path/settings.json"
+			const accessError = new Error("ENOENT: no such file or directory")
+
+			;(fs.access as Mock).mockRejectedValue(accessError)
+
+			const result = await importSettings(
+				{
+					providerSettingsManager: mockProviderSettingsManager,
+					contextProxy: mockContextProxy,
+					customModesManager: mockCustomModesManager,
+				},
+				filePath,
+			)
+
+			expect(vscode.window.showOpenDialog).not.toHaveBeenCalled()
+			expect(fs.access).toHaveBeenCalledWith(filePath, fs.constants.F_OK | fs.constants.R_OK)
+			expect(fs.readFile).not.toHaveBeenCalled()
+			expect(result.success).toBe(false)
+			expect(result.error).toContain(`Cannot access file at path "${filePath}"`)
+			expect(result.error).toContain("ENOENT: no such file or directory")
 		})
 	})
 

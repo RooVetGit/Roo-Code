@@ -23,11 +23,31 @@ type ExportOptions = {
 	contextProxy: ContextProxy
 }
 
-export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions, filePath?: string) => {
+/**
+ * Import settings from a file
+ * @param options - Import options containing managers and proxy
+ * @param filePath - Optional file path to import from. If not provided, a file dialog will be shown.
+ *                   Should be an absolute path to a JSON file.
+ * @returns Promise resolving to import result
+ */
+export const importSettings = async (
+	{ providerSettingsManager, contextProxy, customModesManager }: ImportOptions,
+	filePath?: string,
+) => {
 	let fileUri: vscode.Uri | undefined
 
 	if (filePath) {
-		fileUri = vscode.Uri.file(filePath)
+		// Validate file path and check if file exists
+		try {
+			fileUri = vscode.Uri.file(filePath)
+			// Check if file exists and is readable
+			await fs.access(fileUri.fsPath, fs.constants.F_OK | fs.constants.R_OK)
+		} catch (error) {
+			return {
+				success: false,
+				error: `Cannot access file at path "${filePath}": ${error instanceof Error ? error.message : "Unknown error"}`,
+			}
+		}
 	} else {
 		const uris = await vscode.window.showOpenDialog({
 			filters: { JSON: ["json"] },
@@ -67,7 +87,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 			(globalSettings.customModes ?? []).map((mode) => customModesManager.updateCustomMode(mode.slug, mode)),
 		)
 
-		await providerSettingsManager.import(newProviderProfiles)
+		await providerSettingsManager.import(providerProfiles)
 		await contextProxy.setValues(globalSettings)
 
 		// Set the current provider.
