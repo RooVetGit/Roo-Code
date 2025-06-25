@@ -7,16 +7,9 @@ import { filterMessagesForClaudeCode } from "../../integrations/claude-code/mess
 import { BaseProvider } from "./base-provider"
 import { t } from "../../i18n"
 import { ApiHandlerOptions } from "../../shared/api"
-import { Tiktoken } from "tiktoken/lite"
-import o200kBase from "tiktoken/encoders/o200k_base"
-
-// Conservative token estimate for images (even though Claude Code doesn't support them)
-// This matches the estimate used in src/utils/tiktoken.ts for consistency
-const IMAGE_TOKEN_ESTIMATE = 300
 
 export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 	private options: ApiHandlerOptions
-	private encoder: Tiktoken | null = null
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -151,41 +144,5 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		} catch (err) {
 			return null
 		}
-	}
-
-	/**
-	 * Override the base provider's token counting to provide accurate counting for Claude Code.
-	 * Claude Code uses the same tokenizer as Anthropic, so we don't need any fudge factor.
-	 * The actual token counts are reported accurately in the API response.
-	 */
-	override async countTokens(content: Anthropic.Messages.ContentBlockParam[]): Promise<number> {
-		if (content.length === 0) {
-			return 0
-		}
-
-		let totalTokens = 0
-
-		// Lazily create and cache the encoder if it doesn't exist
-		if (!this.encoder) {
-			this.encoder = new Tiktoken(o200kBase.bpe_ranks, o200kBase.special_tokens, o200kBase.pat_str)
-		}
-
-		// Process each content block
-		for (const block of content) {
-			if (block.type === "text") {
-				const text = block.text || ""
-				if (text.length > 0) {
-					const tokens = this.encoder.encode(text)
-					totalTokens += tokens.length
-				}
-			} else if (block.type === "image") {
-				// Claude Code doesn't support images, but we handle them just in case
-				totalTokens += IMAGE_TOKEN_ESTIMATE
-			}
-		}
-
-		// No fudge factor needed - Claude Code uses the same tokenizer as Anthropic
-		// and reports accurate token counts in the API response
-		return totalTokens
 	}
 }
