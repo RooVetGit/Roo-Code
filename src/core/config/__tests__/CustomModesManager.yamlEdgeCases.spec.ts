@@ -269,9 +269,7 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 
 			// Should handle the error gracefully
 			expect(modes).toHaveLength(0)
-			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-				expect.stringContaining("Invalid YAML in .roomodes file"),
-			)
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("customModes.errors.yamlParseError")
 		})
 	})
 
@@ -292,9 +290,7 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 
 			// Should fallback to empty array and show detailed error
 			expect(modes).toHaveLength(0)
-			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-				expect.stringContaining("Invalid YAML in .roomodes file"),
-			)
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("customModes.errors.yamlParseError")
 		})
 
 		it("should provide schema validation error messages", async () => {
@@ -318,9 +314,7 @@ describe("CustomModesManager - YAML Edge Cases", () => {
 
 			// Should show schema validation error
 			expect(modes).toHaveLength(0)
-			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-				expect.stringContaining("Invalid custom modes format"),
-			)
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("customModes.errors.schemaValidationError")
 		})
 	})
 
