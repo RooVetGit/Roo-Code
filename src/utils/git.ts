@@ -93,7 +93,7 @@ export async function getGitRepositoryInfo(workspaceRoot: string): Promise<GitRe
  * @param url The original git URL
  * @returns Sanitized URL
  */
-function sanitizeGitUrl(url: string): string {
+export function sanitizeGitUrl(url: string): string {
 	try {
 		// Remove credentials from HTTPS URLs
 		if (url.startsWith("https://")) {
@@ -122,7 +122,7 @@ function sanitizeGitUrl(url: string): string {
  * @param url The git URL
  * @returns Repository name or undefined
  */
-function extractRepositoryName(url: string): string {
+export function extractRepositoryName(url: string): string {
 	try {
 		// Handle different URL formats
 		const patterns = [
