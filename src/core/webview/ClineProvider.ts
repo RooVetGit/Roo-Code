@@ -1303,6 +1303,38 @@ export class ClineProvider
 		return await fileExistsAtPath(promptFilePath)
 	}
 
+	/**
+	 * Merges allowed commands from global state and workspace configuration
+	 * with proper validation and deduplication
+	 */
+	private mergeAllowedCommands(globalStateCommands?: string[]): string[] {
+		try {
+			// Validate and sanitize global state commands
+			const validGlobalCommands = Array.isArray(globalStateCommands)
+				? globalStateCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			// Get workspace configuration commands
+			const workspaceCommands =
+				vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
+
+			// Validate and sanitize workspace commands
+			const validWorkspaceCommands = Array.isArray(workspaceCommands)
+				? workspaceCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			// Combine and deduplicate commands
+			// Global state takes precedence over workspace configuration
+			const mergedCommands = [...new Set([...validGlobalCommands, ...validWorkspaceCommands])]
+
+			return mergedCommands
+		} catch (error) {
+			console.error("Error merging allowed commands:", error)
+			// Return empty array as fallback to prevent crashes
+			return []
+		}
+	}
+
 	async getStateToPostToWebview() {
 		const {
 			apiConfiguration,
@@ -1382,10 +1414,7 @@ export class ClineProvider
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-		const allowedCommandsState = allowedCommands || []
-		const allowedCommandsWorkspace =
-			vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
-		const allowedCommandsCombined = [...new Set([...allowedCommandsState, ...allowedCommandsWorkspace])]
+		const mergedAllowedCommands = this.mergeAllowedCommands(allowedCommands)
 		const cwd = this.cwd
 
 		// Check if there's a system prompt override for the current mode
@@ -1424,7 +1453,7 @@ export class ClineProvider
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
-			allowedCommands: allowedCommandsCombined,
+			allowedCommands: mergedAllowedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
 			screenshotQuality: screenshotQuality ?? 75,
