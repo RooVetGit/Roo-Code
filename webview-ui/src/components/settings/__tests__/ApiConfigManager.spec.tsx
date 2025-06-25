@@ -1,6 +1,6 @@
 // npx vitest src/components/settings/__tests__/ApiConfigManager.spec.tsx
 
-import { render, screen, fireEvent, within } from "@testing-library/react"
+import { render, screen, fireEvent, within } from "@/utils/test-utils"
 
 import ApiConfigManager from "../ApiConfigManager"
 

@@ -1,6 +1,6 @@
 // npx vitest run src/components/marketplace/__tests__/MarketplaceListView.spec.tsx
 
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent } from "@/utils/test-utils"
 import userEvent from "@testing-library/user-event"
 
 import { TooltipProvider } from "@/components/ui/tooltip"

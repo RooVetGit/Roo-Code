@@ -1,6 +1,6 @@
 // npm run test ContextWindowProgress.spec.tsx
 
-import { render, screen } from "@testing-library/react"
+import { render, screen } from "@/utils/test-utils"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import TaskHeader from "@src/components/chat/TaskHeader"

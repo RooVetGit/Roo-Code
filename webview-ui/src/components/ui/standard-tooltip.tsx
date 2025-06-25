@@ -1,19 +1,42 @@
 import * as React from "react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
+
+export const STANDARD_TOOLTIP_DELAY = 300
 
 interface StandardTooltipProps {
+	/** The element(s) that trigger the tooltip */
 	children: React.ReactNode
+	/** The content to display in the tooltip */
 	content: React.ReactNode
+	/** The preferred side of the trigger to render the tooltip */
 	side?: "top" | "right" | "bottom" | "left"
+	/** The preferred alignment against the trigger */
 	align?: "start" | "center" | "end"
+	/** Distance in pixels from the trigger */
 	sideOffset?: number
+	/** Additional CSS classes for the tooltip content */
 	className?: string
+	/** Whether the trigger should be rendered as a child */
 	asChild?: boolean
 }
 
 /**
  * StandardTooltip component that enforces consistent 300ms delay across the application.
  * This component wraps the Radix UI tooltip with a standardized delay duration.
+ *
+ * @example
+ * // Basic usage
+ * <StandardTooltip content="Delete item">
+ *   <Button>Delete</Button>
+ * </StandardTooltip>
+ *
+ * // With custom positioning
+ * <StandardTooltip content="Long tooltip text" side="right" sideOffset={8}>
+ *   <IconButton icon="info" />
+ * </StandardTooltip>
+ *
+ * @note This replaces native HTML title attributes for consistent timing.
+ * @note Requires a TooltipProvider to be present in the component tree (typically at the app root).
  */
 export function StandardTooltip({
 	children,
@@ -25,13 +48,11 @@ export function StandardTooltip({
 	asChild = true,
 }: StandardTooltipProps) {
 	return (
-		<TooltipProvider delayDuration={300}>
-			<Tooltip>
-				<TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>
-				<TooltipContent side={side} align={align} sideOffset={sideOffset} className={className}>
-					{content}
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+		<Tooltip>
+			<TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>
+			<TooltipContent side={side} align={align} sideOffset={sideOffset} className={className}>
+				{content}
+			</TooltipContent>
+		</Tooltip>
 	)
 }

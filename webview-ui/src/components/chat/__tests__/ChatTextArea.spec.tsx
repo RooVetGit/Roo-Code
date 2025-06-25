@@ -1,4 +1,4 @@
-import { render, fireEvent, screen } from "@testing-library/react"
+import { render, fireEvent, screen } from "@/utils/test-utils"
 
 import { defaultModeSlug } from "@roo/modes"
 
