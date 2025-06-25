@@ -200,7 +200,6 @@ export type TelemetryEventSubscription =
 
 export interface TelemetryPropertiesProvider {
 	getTelemetryProperties(): Promise<TelemetryProperties>
-	getCloudTelemetryProperties?(): Promise<CloudTelemetryProperties>
 }
 
 /**
