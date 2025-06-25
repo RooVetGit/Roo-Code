@@ -3,6 +3,7 @@ import * as path from "path"
 import * as fs from "fs/promises"
 
 import * as yaml from "yaml"
+import stripBom from "strip-bom"
 
 import { type ModeConfig, customModesSettingsSchema } from "@roo-code/types"
 
@@ -75,18 +76,6 @@ export class CustomModesManager {
 	}
 
 	/**
-	 * Strip BOM (Byte Order Mark) from the beginning of a string
-	 */
-	private stripBOM(content: string): string {
-		// When Node.js reads UTF-8 or UTF-16 files, it correctly decodes them
-		// and any BOM appears as \uFEFF at the start of the string
-		if (content.startsWith("\uFEFF")) {
-			return content.slice(1)
-		}
-		return content
-	}
-
-	/**
 	 * Regex pattern for problematic characters that need to be cleaned from YAML content
 	 * Includes:
 	 * - \u00A0: Non-breaking space
@@ -129,7 +118,7 @@ export class CustomModesManager {
 	 */
 	private parseYamlSafely(content: string, filePath: string): any {
 		// Clean the content
-		let cleanedContent = this.stripBOM(content)
+		let cleanedContent = stripBom(content)
 		cleanedContent = this.cleanInvisibleCharacters(cleanedContent)
 
 		try {
@@ -145,10 +134,8 @@ export class CustomModesManager {
 				vscode.window.showErrorMessage(t("common:customModes.errors.yamlParseError", { line }))
 			}
 
-			// Re-throw with a flag to prevent duplicate error handling
-			const enhancedError = new Error(errorMsg)
-			;(enhancedError as any).alreadyHandled = true
-			throw enhancedError
+			// Return empty object to prevent duplicate error handling
+			return {}
 		}
 	}
 
