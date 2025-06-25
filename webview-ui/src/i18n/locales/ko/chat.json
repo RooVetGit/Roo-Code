@@ -312,6 +312,6 @@
 		"status": "인덱스 상태"
 	},
 	"versionIndicator": {
-		"ariaLabel": "Version {{version}} - Click to view release notes"
+		"ariaLabel": "버전 {{version}} - 릴리스 노트를 보려면 클릭하세요"
 	}
 }

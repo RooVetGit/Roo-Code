@@ -312,6 +312,6 @@
 		"status": "Stato indice"
 	},
 	"versionIndicator": {
-		"ariaLabel": "Version {{version}} - Click to view release notes"
+		"ariaLabel": "Versione {{version}} - Clicca per visualizzare le note di rilascio"
 	}
 }

@@ -312,6 +312,6 @@
 		"status": "索引狀態"
 	},
 	"versionIndicator": {
-		"ariaLabel": "Version {{version}} - Click to view release notes"
+		"ariaLabel": "版本 {{version}} - 點擊查看發布說明"
 	}
 }

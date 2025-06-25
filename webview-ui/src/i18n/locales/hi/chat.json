@@ -312,6 +312,6 @@
 		"status": "इंडेक्स स्थिति"
 	},
 	"versionIndicator": {
-		"ariaLabel": "Version {{version}} - Click to view release notes"
+		"ariaLabel": "संस्करण {{version}} - रिलीज़ नोट्स देखने के लिए क्लिक करें"
 	}
 }

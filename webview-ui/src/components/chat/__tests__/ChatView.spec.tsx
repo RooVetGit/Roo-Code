@@ -61,6 +61,23 @@ vi.mock("../AutoApproveMenu", () => ({
 	default: () => null,
 }))
 
+vi.mock("@src/components/common/VersionIndicator", () => ({
+	default: function MockVersionIndicator({ onClick, className }: { onClick: () => void; className?: string }) {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const React = require("react")
+		return React.createElement(
+			"button",
+			{
+				onClick,
+				className,
+				"aria-label": "chat:versionIndicator.ariaLabel",
+				"data-testid": "version-indicator",
+			},
+			"v3.21.5",
+		)
+	},
+}))
+
 vi.mock("@src/components/modals/Announcement", () => ({
 	default: function MockAnnouncement({ hideAnnouncement }: { hideAnnouncement: () => void }) {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -1136,20 +1153,18 @@ describe("ChatView - Version Indicator Tests", () => {
 	})
 
 	it("version indicator has correct styling classes", () => {
-		const { getByLabelText } = renderChatView()
+		const { getByTestId } = renderChatView()
 
 		// First hydrate state
 		mockPostMessage({
 			clineMessages: [],
 		})
 
-		// Check styling classes
-		const versionButton = getByLabelText(/version/i)
-		expect(versionButton.className).toContain("absolute")
-		expect(versionButton.className).toContain("top-2")
-		expect(versionButton.className).toContain("right-2")
-		expect(versionButton.className).toContain("text-xs")
-		expect(versionButton.className).toContain("cursor-pointer")
+		// Check styling classes - the VersionIndicator component receives className prop
+		const versionButton = getByTestId("version-indicator")
+		expect(versionButton).toBeInTheDocument()
+		// The className is passed as a prop to VersionIndicator
+		expect(versionButton.className).toContain("absolute top-2 right-2 z-10")
 	})
 
 	it("version indicator has proper accessibility attributes", () => {

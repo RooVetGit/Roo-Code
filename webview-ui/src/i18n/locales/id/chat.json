@@ -318,6 +318,6 @@
 		"status": "Status indeks"
 	},
 	"versionIndicator": {
-		"ariaLabel": "Version {{version}} - Click to view release notes"
+		"ariaLabel": "Versi {{version}} - Klik untuk melihat catatan rilis"
 	}
 }
