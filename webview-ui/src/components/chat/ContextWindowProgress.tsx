@@ -46,7 +46,7 @@ export const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens 
 								})}
 								side="top"
 								sideOffset={8}
-								asChild={false}>
+								asChild>
 								<div className="relative h-full" style={{ width: `${currentPercent}%` }}>
 									{/* Current tokens used - darkest */}
 									<div className="h-full w-full bg-[var(--vscode-foreground)] transition-width duration-300 ease-out" />
@@ -60,7 +60,7 @@ export const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens 
 								})}
 								side="top"
 								sideOffset={8}
-								asChild={false}>
+								asChild>
 								<div className="relative h-full" style={{ width: `${reservedPercent}%` }}>
 									{/* Reserved for output section - medium gray */}
 									<div className="h-full w-full bg-[color-mix(in_srgb,var(--vscode-foreground)_30%,transparent)] transition-width duration-300 ease-out" />
@@ -75,7 +75,7 @@ export const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens 
 									})}
 									side="top"
 									sideOffset={8}
-									asChild={false}>
+									asChild>
 									<div className="relative h-full" style={{ width: `${availablePercent}%` }}>
 										{/* Available space - transparent */}
 									</div>
