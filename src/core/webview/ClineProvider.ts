@@ -16,7 +16,6 @@ import {
 	type RooCodeSettings,
 	type ProviderSettingsEntry,
 	type TelemetryProperties,
-	type CloudTelemetryProperties,
 	type TelemetryPropertiesProvider,
 	type CodeActionId,
 	type CodeActionName,
