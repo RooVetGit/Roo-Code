@@ -12,7 +12,16 @@
 		"export": "Exportar historial de tasques",
 		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
 		"condenseContext": "Condensar context de forma intel·ligent",
-		"share": "Compartir tasca"
+		"share": "Compartir tasca",
+		"shareWithOrganization": "Compartir amb l'organització",
+		"shareWithOrganizationDescription": "Només els membres de la teva organització poden accedir",
+		"sharePublicly": "Compartir públicament",
+		"sharePubliclyDescription": "Qualsevol amb l'enllaç pot accedir",
+		"connectToCloud": "Connecta al núvol",
+		"connectToCloudDescription": "Inicia sessió a Roo Code Cloud per compartir tasques",
+		"sharingDisabledByOrganization": "Compartició deshabilitada per l'organització",
+		"shareSuccessOrganization": "Enllaç d'organització copiat al porta-retalls",
+		"shareSuccessPublic": "Enllaç públic copiat al porta-retalls"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -75,7 +84,7 @@
 	"onboarding": "<strong> La vostra llista de tasques en aquest espai de treball està buida. </strong> Comença escrivint una tasca a continuació. \nNo esteu segur per on començar? \nMés informació sobre què pot fer Roo als documents.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tasques Boomerang",
+			"title": "Orquestració de Tasques",
 			"description": "Divideix les tasques en parts més petites i manejables."
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "manté premut shift per arrossegar fitxers",
 	"dragFilesImages": "manté premut shift per arrossegar fitxers/imatges",
 	"enhancePromptDescription": "El botó 'Millora la sol·licitud' ajuda a millorar la teva sol·licitud proporcionant context addicional, aclariments o reformulacions. Prova d'escriure una sol·licitud aquí i fes clic al botó de nou per veure com funciona.",
+	"modeSelector": {
+		"title": "Modes",
+		"marketplace": "Marketplace de Modes",
+		"settings": "Configuració de Modes",
+		"description": "Personalitats especialitzades que adapten el comportament de Roo."
+	},
 	"errorReadingFile": "Error en llegir el fitxer:",
 	"noValidImages": "No s'ha processat cap imatge vàlida",
 	"separator": "Separador",

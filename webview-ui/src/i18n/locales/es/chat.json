@@ -12,7 +12,16 @@
 		"export": "Exportar historial de tareas",
 		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)",
 		"condenseContext": "Condensar contexto de forma inteligente",
-		"share": "Compartir tarea"
+		"share": "Compartir tarea",
+		"shareWithOrganization": "Compartir con organización",
+		"shareWithOrganizationDescription": "Solo los miembros de tu organización pueden acceder",
+		"sharePublicly": "Compartir públicamente",
+		"sharePubliclyDescription": "Cualquiera con el enlace puede acceder",
+		"connectToCloud": "Conectar al Cloud",
+		"connectToCloudDescription": "Inicia sesión en Roo Code Cloud para compartir tareas",
+		"sharingDisabledByOrganization": "Compartir deshabilitado por la organización",
+		"shareSuccessOrganization": "Enlace de organización copiado al portapapeles",
+		"shareSuccessPublic": "Enlace público copiado al portapapeles"
 	},
 	"unpin": "Desfijar",
 	"pin": "Fijar",
@@ -75,7 +84,7 @@
 	"onboarding": "<strong>Tu lista de tareas en este espacio de trabajo está vacía.</strong> Comienza escribiendo una tarea abajo. ¿No estás seguro cómo empezar? Lee más sobre lo que Roo puede hacer por ti en <DocsLink>la documentación</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tareas Boomerang",
+			"title": "Orquestación de Tareas",
 			"description": "Divide las tareas en partes más pequeñas y manejables."
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "mantén shift para arrastrar archivos",
 	"dragFilesImages": "mantén shift para arrastrar archivos/imágenes",
 	"enhancePromptDescription": "El botón 'Mejorar el mensaje' ayuda a mejorar tu petición proporcionando contexto adicional, aclaraciones o reformulaciones. Intenta escribir una petición aquí y haz clic en el botón nuevamente para ver cómo funciona.",
+	"modeSelector": {
+		"title": "Modos",
+		"marketplace": "Marketplace de Modos",
+		"settings": "Configuración de Modos",
+		"description": "Personalidades especializadas que adaptan el comportamiento de Roo."
+	},
 	"errorReadingFile": "Error al leer el archivo:",
 	"noValidImages": "No se procesaron imágenes válidas",
 	"separator": "Separador",

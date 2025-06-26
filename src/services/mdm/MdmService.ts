@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { CloudService, getClerkBaseUrl, PRODUCTION_CLERK_BASE_URL } from "@roo-code/cloud"
 import { Package } from "../../shared/package"
+import { t } from "../../i18n"
 
 // MDM Configuration Schema
 const mdmConfigSchema = z.object({
@@ -34,8 +35,6 @@ export class MdmService {
 			this.mdmConfig = await this.loadMdmConfig()
 			if (this.mdmConfig) {
 				this.log("[MDM] Loaded MDM configuration:", this.mdmConfig)
-				// Automatically enable Roo Code Cloud when MDM config is present
-				await this.ensureCloudEnabled()
 			} else {
 				this.log("[MDM] No MDM configuration found")
 			}
@@ -60,23 +59,6 @@ export class MdmService {
 	}
 
 	/**
-	 * Ensure Roo Code Cloud is enabled when MDM config is present
-	 */
-	private async ensureCloudEnabled(): Promise<void> {
-		try {
-			const config = vscode.workspace.getConfiguration(Package.name)
-			const currentValue = config.get<boolean>("rooCodeCloudEnabled", false)
-
-			if (!currentValue) {
-				this.log("[MDM] Enabling Roo Code Cloud due to MDM policy")
-				await config.update("rooCodeCloudEnabled", true, vscode.ConfigurationTarget.Global)
-			}
-		} catch (error) {
-			this.log("[MDM] Error enabling Roo Code Cloud:", error)
-		}
-	}
-
-	/**
 	 * Check if the current state is compliant with MDM policy
 	 */
 	public isCompliant(): ComplianceResult {
@@ -85,11 +67,11 @@ export class MdmService {
 			return { compliant: true }
 		}
 
-		// Check if cloud service is available and authenticated
-		if (!CloudService.hasInstance() || !CloudService.instance.hasActiveSession()) {
+		// Check if cloud service is available and has active or attempting session
+		if (!CloudService.hasInstance() || !CloudService.instance.hasOrIsAcquiringActiveSession()) {
 			return {
 				compliant: false,
-				reason: "Your organization requires Roo Code Cloud authentication. Please sign in to continue.",
+				reason: t("mdm.errors.cloud_auth_required"),
 			}
 		}
 
@@ -97,18 +79,35 @@ export class MdmService {
 		const requiredOrgId = this.getRequiredOrganizationId()
 		if (requiredOrgId) {
 			try {
-				const currentOrgId = CloudService.instance.getOrganizationId()
+				// First try to get from active session
+				let currentOrgId = CloudService.instance.getOrganizationId()
+
+				// If no active session, check stored credentials
+				if (!currentOrgId) {
+					const storedOrgId = CloudService.instance.getStoredOrganizationId()
+
+					// null means personal account, which is not compliant for org requirements
+					if (storedOrgId === null || storedOrgId !== requiredOrgId) {
+						return {
+							compliant: false,
+							reason: t("mdm.errors.organization_mismatch"),
+						}
+					}
+
+					currentOrgId = storedOrgId
+				}
+
 				if (currentOrgId !== requiredOrgId) {
 					return {
 						compliant: false,
-						reason: "You must be authenticated with your organization's Roo Code Cloud account.",
+						reason: t("mdm.errors.organization_mismatch"),
 					}
 				}
 			} catch (error) {
 				this.log("[MDM] Error checking organization ID:", error)
 				return {
 					compliant: false,
-					reason: "Unable to verify organization authentication.",
+					reason: t("mdm.errors.verification_failed"),
 				}
 			}
 		}

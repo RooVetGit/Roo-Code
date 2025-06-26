@@ -9,6 +9,7 @@
 	"command.openInNewTab.title": "In Neuem Tab Öffnen",
 	"command.focusInput.title": "Eingabefeld Fokussieren",
 	"command.setCustomStoragePath.title": "Benutzerdefinierten Speicherpfad Festlegen",
+	"command.importSettings.title": "Einstellungen Importieren",
 	"command.terminal.addToContext.title": "Terminal-Inhalt zum Kontext Hinzufügen",
 	"command.terminal.fixCommand.title": "Diesen Befehl Reparieren",
 	"command.terminal.explainCommand.title": "Diesen Befehl Erklären",
@@ -30,5 +31,5 @@
 	"settings.vsCodeLmModelSelector.vendor.description": "Der Anbieter des Sprachmodells (z.B. copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "Die Familie des Sprachmodells (z.B. gpt-4)",
 	"settings.customStoragePath.description": "Benutzerdefinierter Speicherpfad. Leer lassen, um den Standardspeicherort zu verwenden. Unterstützt absolute Pfade (z.B. 'D:\\RooCodeStorage')",
-	"settings.rooCodeCloudEnabled.description": "Aktiviere Roo Code Cloud."
+	"settings.enableCodeActions.description": "Roo Code Schnelle Problembehebung aktivieren."
 }

@@ -9,6 +9,7 @@
 	"command.openInNewTab.title": "Apri in Nuova Scheda",
 	"command.focusInput.title": "Focalizza Campo di Input",
 	"command.setCustomStoragePath.title": "Imposta Percorso di Archiviazione Personalizzato",
+	"command.importSettings.title": "Importa Impostazioni",
 	"command.terminal.addToContext.title": "Aggiungi Contenuto del Terminale al Contesto",
 	"command.terminal.fixCommand.title": "Correggi Questo Comando",
 	"command.terminal.explainCommand.title": "Spiega Questo Comando",
@@ -30,5 +31,5 @@
 	"settings.vsCodeLmModelSelector.vendor.description": "Il fornitore del modello linguistico (es. copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "La famiglia del modello linguistico (es. gpt-4)",
 	"settings.customStoragePath.description": "Percorso di archiviazione personalizzato. Lasciare vuoto per utilizzare la posizione predefinita. Supporta percorsi assoluti (es. 'D:\\RooCodeStorage')",
-	"settings.rooCodeCloudEnabled.description": "Abilita Roo Code Cloud."
+	"settings.enableCodeActions.description": "Abilita correzioni rapide di Roo Code."
 }

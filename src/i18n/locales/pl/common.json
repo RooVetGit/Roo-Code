@@ -59,7 +59,17 @@
 		"condense_handler_invalid": "Nieprawidłowy handler API do kondensowania kontekstu",
 		"condense_context_grew": "Rozmiar kontekstu wzrósł podczas kondensacji; pomijanie tej próby",
 		"share_task_failed": "Nie udało się udostępnić zadania",
-		"share_no_active_task": "Brak aktywnego zadania do udostępnienia"
+		"share_no_active_task": "Brak aktywnego zadania do udostępnienia",
+		"share_auth_required": "Wymagana autoryzacja. Zaloguj się, aby udostępniać zadania.",
+		"share_not_enabled": "Udostępnianie zadań nie jest włączone dla tej organizacji.",
+		"share_task_not_found": "Zadanie nie znalezione lub dostęp odmówiony.",
+		"claudeCode": {
+			"processExited": "Proces Claude Code zakończył się kodem {{exitCode}}.",
+			"errorOutput": "Wyjście błędu: {{output}}",
+			"processExitedWithError": "Proces Claude Code zakończył się kodem {{exitCode}}. Wyjście błędu: {{output}}",
+			"stoppedWithReason": "Claude Code zatrzymał się z powodu: {{reason}}",
+			"apiKeyModelPlanMismatch": "Klucze API i plany subskrypcji pozwalają na różne modele. Upewnij się, że wybrany model jest zawarty w twoim planie."
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "Nie wybrano zawartości terminala",
@@ -74,7 +84,9 @@
 		"settings_imported": "Ustawienia zaimportowane pomyślnie.",
 		"share_link_copied": "Link udostępniania skopiowany do schowka",
 		"image_copied_to_clipboard": "URI danych obrazu skopiowane do schowka",
-		"image_saved": "Obraz zapisany w {{path}}"
+		"image_saved": "Obraz zapisany w {{path}}",
+		"organization_share_link_copied": "Link udostępniania organizacji skopiowany do schowka!",
+		"public_share_link_copied": "Publiczny link udostępniania skopiowany do schowka!"
 	},
 	"answers": {
 		"yes": "Tak",
@@ -85,7 +97,9 @@
 	},
 	"tasks": {
 		"canceled": "Błąd zadania: Zostało zatrzymane i anulowane przez użytkownika.",
-		"deleted": "Niepowodzenie zadania: Zostało zatrzymane i usunięte przez użytkownika."
+		"deleted": "Niepowodzenie zadania: Zostało zatrzymane i usunięte przez użytkownika.",
+		"incomplete": "Zadanie #{{taskNumber}} (Niekompletne)",
+		"no_messages": "Zadanie #{{taskNumber}} (Brak wiadomości)"
 	},
 	"storage": {
 		"prompt_custom_path": "Wprowadź niestandardową ścieżkę przechowywania dla historii konwersacji lub pozostaw puste, aby użyć lokalizacji domyślnej",
@@ -100,7 +114,24 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Klucz API Groq",
-			"getGroqApiKey": "Uzyskaj klucz API Groq"
+			"getGroqApiKey": "Uzyskaj klucz API Groq",
+			"claudeCode": {
+				"pathLabel": "Ścieżka Claude Code",
+				"description": "Opcjonalna ścieżka do Twojego CLI Claude Code. Domyślnie 'claude', jeśli nie ustawiono.",
+				"placeholder": "Domyślnie: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": "Nieprawidłowy YAML w pliku .roomodes w linii {{line}}. Sprawdź:\n• Prawidłowe wcięcia (używaj spacji, nie tabulatorów)\n• Pasujące cudzysłowy i nawiasy\n• Prawidłową składnię YAML",
+			"schemaValidationError": "Nieprawidłowy format trybów niestandardowych w .roomodes:\n{{issues}}",
+			"invalidFormat": "Nieprawidłowy format trybów niestandardowych. Upewnij się, że twoje ustawienia są zgodne z prawidłowym formatem YAML.",
+			"updateFailed": "Aktualizacja trybu niestandardowego nie powiodła się: {{error}}",
+			"deleteFailed": "Usunięcie trybu niestandardowego nie powiodło się: {{error}}",
+			"resetFailed": "Resetowanie trybów niestandardowych nie powiodło się: {{error}}",
+			"modeNotFound": "Błąd zapisu: Tryb nie został znaleziony",
+			"noWorkspaceForProject": "Nie znaleziono folderu obszaru roboczego dla trybu specyficznego dla projektu"
 		}
 	},
 	"mdm": {

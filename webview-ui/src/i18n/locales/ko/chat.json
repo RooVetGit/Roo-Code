@@ -12,7 +12,16 @@
 		"export": "작업 기록 내보내기",
 		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)",
 		"condenseContext": "컨텍스트 지능적으로 압축",
-		"share": "작업 공유"
+		"share": "작업 공유",
+		"shareWithOrganization": "조직과 공유",
+		"shareWithOrganizationDescription": "조직 구성원만 액세스할 수 있습니다",
+		"sharePublicly": "공개적으로 공유",
+		"sharePubliclyDescription": "링크가 있는 누구나 액세스할 수 있습니다",
+		"connectToCloud": "클라우드에 연결",
+		"connectToCloudDescription": "작업을 공유하려면 Roo Code Cloud에 로그인하세요",
+		"sharingDisabledByOrganization": "조직에서 공유가 비활성화됨",
+		"shareSuccessOrganization": "조직 링크가 클립보드에 복사되었습니다",
+		"shareSuccessPublic": "공개 링크가 클립보드에 복사되었습니다"
 	},
 	"unpin": "고정 해제하기",
 	"pin": "고정하기",
@@ -75,7 +84,7 @@
 	"onboarding": "<strong>이 작업 공간의 작업 목록이 비어 있습니다.</strong> 아래에 작업을 입력하여 시작하세요. 어떻게 시작해야 할지 모르겠나요? Roo가 무엇을 할 수 있는지 <DocsLink>문서</DocsLink>에서 자세히 알아보세요.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "부메랑 작업",
+			"title": "작업 오케스트레이션",
 			"description": "작업을 더 작고 관리하기 쉬운 부분으로 나눕니다."
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "파일을 드래그하려면 shift 키 누르기",
 	"dragFilesImages": "파일/이미지를 드래그하려면 shift 키 누르기",
 	"enhancePromptDescription": "'프롬프트 향상' 버튼은 추가 컨텍스트, 명확화 또는 재구성을 제공하여 요청을 개선합니다. 여기에 요청을 입력한 다음 버튼을 다시 클릭하여 작동 방식을 확인해보세요.",
+	"modeSelector": {
+		"title": "모드",
+		"marketplace": "모드 마켓플레이스",
+		"settings": "모드 설정",
+		"description": "Roo의 행동을 맞춤화하는 전문화된 페르소나."
+	},
 	"errorReadingFile": "파일 읽기 오류:",
 	"noValidImages": "처리된 유효한 이미지가 없습니다",
 	"separator": "구분자",

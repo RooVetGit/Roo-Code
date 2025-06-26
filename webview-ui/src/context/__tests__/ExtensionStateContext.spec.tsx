@@ -207,6 +207,8 @@ describe("mergeExtensionState", () => {
 			autoCondenseContextPercent: 100,
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
+			profileThresholds: {},
+			hasOpenedModeSelector: false, // Add the new required property
 		}
 
 		const prevState: ExtensionState = {
@@ -221,8 +223,8 @@ describe("mergeExtensionState", () => {
 			experiments: {
 				powerSteering: true,
 				marketplace: false,
-				concurrentFileReads: true,
 				disableCompletionCommand: false,
+				concurrentFileReads: true,
 				multiFileApplyDiff: true,
 			} as Record<ExperimentId, boolean>,
 		}
@@ -237,8 +239,8 @@ describe("mergeExtensionState", () => {
 		expect(result.experiments).toEqual({
 			powerSteering: true,
 			marketplace: false,
-			concurrentFileReads: true,
 			disableCompletionCommand: false,
+			concurrentFileReads: true,
 			multiFileApplyDiff: true,
 		})
 	})

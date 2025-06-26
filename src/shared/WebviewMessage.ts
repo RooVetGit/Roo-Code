@@ -6,6 +6,7 @@ import type {
 	ModeConfig,
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
+	ShareVisibility,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -91,6 +92,7 @@ export interface WebviewMessage {
 		| "restartMcpServer"
 		| "refreshAllMcpServers"
 		| "toggleToolAlwaysAllow"
+		| "toggleToolEnabledForPrompt"
 		| "toggleMcpServer"
 		| "updateMcpTimeout"
 		| "fuzzyMatchThreshold"
@@ -147,6 +149,7 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "hasOpenedModeSelector"
 		| "accountButtonClicked"
 		| "rooCloudSignIn"
 		| "rooCloudSignOut"
@@ -158,6 +161,7 @@ export interface WebviewMessage {
 		| "indexCleared"
 		| "focusPanelRequest"
 		| "codebaseIndexConfig"
+		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
 		| "openExternal"
 		| "filterMarketplaceItems"
@@ -167,7 +171,10 @@ export interface WebviewMessage {
 		| "cancelMarketplaceInstall"
 		| "removeInstalledMarketplaceItem"
 		| "marketplaceInstallResult"
+		| "fetchMarketplaceData"
 		| "switchTab"
+		| "profileThresholds"
+		| "shareTaskSuccess"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
@@ -182,6 +189,7 @@ export interface WebviewMessage {
 	serverName?: string
 	toolName?: string
 	alwaysAllow?: boolean
+	isEnabled?: boolean
 	mode?: Mode
 	promptMode?: PromptMode
 	customPrompt?: PromptComponent
@@ -204,6 +212,7 @@ export interface WebviewMessage {
 	mpItem?: MarketplaceItem
 	mpInstallOptions?: InstallMarketplaceItemOptions
 	config?: Record<string, any> // Add config to the payload
+	visibility?: ShareVisibility // For share visibility
 }
 
 export const checkoutDiffPayloadSchema = z.object({

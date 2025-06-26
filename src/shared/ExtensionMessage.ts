@@ -9,6 +9,7 @@ import type {
 	ClineMessage,
 	OrganizationAllowList,
 	CloudUserInfo,
+	ShareVisibility,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -17,6 +18,12 @@ import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
 import type { MarketplaceItem } from "@roo-code/types"
+
+// Type for marketplace installed metadata
+export interface MarketplaceInstalledMetadata {
+	project: Record<string, { type: string }>
+	global: Record<string, { type: string }>
+}
 
 // Indexing status types
 export interface IndexingStatus {
@@ -90,6 +97,8 @@ export interface ExtensionMessage {
 		| "indexCleared"
 		| "codebaseIndexConfig"
 		| "marketplaceInstallResult"
+		| "marketplaceData"
+		| "shareTaskSuccess"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -136,6 +145,9 @@ export interface ExtensionMessage {
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
 	tab?: string
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
+	visibility?: ShareVisibility
 }
 
 export type ExtensionState = Pick<
@@ -204,6 +216,7 @@ export type ExtensionState = Pick<
 	| "customCondensingPrompt"
 	| "codebaseIndexConfig"
 	| "codebaseIndexModels"
+	| "profileThresholds"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -243,6 +256,7 @@ export type ExtensionState = Pick<
 
 	cloudUserInfo: CloudUserInfo | null
 	cloudIsAuthenticated: boolean
+	cloudApiUrl?: string
 	sharingEnabled: boolean
 	organizationAllowList: OrganizationAllowList
 
@@ -250,6 +264,8 @@ export type ExtensionState = Pick<
 	autoCondenseContextPercent: number
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
+	profileThresholds: Record<string, number>
+	hasOpenedModeSelector: boolean
 }
 
 export interface ClineSayTool {

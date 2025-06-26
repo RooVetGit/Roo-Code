@@ -12,7 +12,16 @@
 		"export": "Exportar histórico de tarefas",
 		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
 		"condenseContext": "Condensar contexto de forma inteligente",
-		"share": "Compartilhar tarefa"
+		"share": "Compartilhar tarefa",
+		"shareWithOrganization": "Compartilhar com organização",
+		"shareWithOrganizationDescription": "Apenas membros da sua organização podem acessar",
+		"sharePublicly": "Compartilhar publicamente",
+		"sharePubliclyDescription": "Qualquer pessoa com o link pode acessar",
+		"connectToCloud": "Conectar ao Cloud",
+		"connectToCloudDescription": "Entre no Roo Code Cloud para compartilhar tarefas",
+		"sharingDisabledByOrganization": "Compartilhamento desabilitado pela organização",
+		"shareSuccessOrganization": "Link da organização copiado para a área de transferência",
+		"shareSuccessPublic": "Link público copiado para a área de transferência"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -75,7 +84,7 @@
 	"onboarding": "<strong>Sua lista de tarefas neste espaço de trabalho está vazia.</strong> Comece digitando uma tarefa abaixo. Não sabe como começar? Leia mais sobre o que o Roo pode fazer por você nos <DocsLink>documentos</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tarefas Bumerangue",
+			"title": "Orquestração de Tarefas",
 			"description": "Divida as tarefas em partes menores e gerenciáveis."
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "segure shift para arrastar arquivos",
 	"dragFilesImages": "segure shift para arrastar arquivos/imagens",
 	"enhancePromptDescription": "O botão 'Aprimorar prompt' ajuda a melhorar seu pedido fornecendo contexto adicional, esclarecimentos ou reformulações. Tente digitar um pedido aqui e clique no botão novamente para ver como funciona.",
+	"modeSelector": {
+		"title": "Modos",
+		"marketplace": "Marketplace de Modos",
+		"settings": "Configurações de Modos",
+		"description": "Personas especializadas que adaptam o comportamento do Roo."
+	},
 	"errorReadingFile": "Erro ao ler arquivo:",
 	"noValidImages": "Nenhuma imagem válida foi processada",
 	"separator": "Separador",

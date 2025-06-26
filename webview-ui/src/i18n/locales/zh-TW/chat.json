@@ -12,7 +12,16 @@
 		"export": "匯出工作紀錄",
 		"delete": "刪除工作（按住 Shift 並點選可跳過確認）",
 		"condenseContext": "智慧壓縮上下文",
-		"share": "分享工作"
+		"share": "分享工作",
+		"shareWithOrganization": "與組織分享",
+		"shareWithOrganizationDescription": "僅組織成員可存取",
+		"sharePublicly": "公開分享",
+		"sharePubliclyDescription": "任何擁有連結的人都可存取",
+		"connectToCloud": "連接到雲端",
+		"connectToCloudDescription": "登入 Roo Code Cloud 以分享工作",
+		"sharingDisabledByOrganization": "組織已停用分享功能",
+		"shareSuccessOrganization": "組織連結已複製到剪貼簿",
+		"shareSuccessPublic": "公開連結已複製到剪貼簿"
 	},
 	"unpin": "取消置頂",
 	"pin": "置頂",
@@ -75,7 +84,7 @@
 	"onboarding": "<strong>您在此工作區中的工作清單是空的。</strong> 請在下方輸入工作以開始。 不確定如何開始？ 在 <DocsLink>說明文件</DocsLink> 中閱讀更多關於 Roo 能為您做什麼的資訊。",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "任務拆分",
+			"title": "任務編排",
 			"description": "將任務拆分為更小、更易於管理的部分。"
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "按住 Shift 鍵拖曳檔案",
 	"dragFilesImages": "按住 Shift 鍵拖曳檔案/圖片",
 	"enhancePromptDescription": "「增強提示」按鈕透過提供額外內容、說明或重新表述來幫助改進您的請求。嘗試在此處輸入請求，然後再次點選按鈕以了解其運作方式。",
+	"modeSelector": {
+		"title": "模式",
+		"marketplace": "模式市集",
+		"settings": "模式設定",
+		"description": "專門定制Roo行為的角色。"
+	},
 	"errorReadingFile": "讀取檔案時發生錯誤：",
 	"noValidImages": "未處理到任何有效圖片",
 	"separator": "分隔符號",

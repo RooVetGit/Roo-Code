@@ -12,7 +12,16 @@
 		"closeAndStart": "Tutup tugas dan mulai yang baru",
 		"export": "Ekspor riwayat tugas",
 		"share": "Bagikan tugas",
-		"delete": "Hapus Tugas (Shift + Klik untuk lewati konfirmasi)"
+		"delete": "Hapus Tugas (Shift + Klik untuk lewati konfirmasi)",
+		"shareWithOrganization": "Bagikan dengan organisasi",
+		"shareWithOrganizationDescription": "Hanya anggota organisasi Anda yang dapat mengakses",
+		"sharePublicly": "Bagikan secara publik",
+		"sharePubliclyDescription": "Siapa pun dengan tautan dapat mengakses",
+		"connectToCloud": "Hubungkan ke Cloud",
+		"connectToCloudDescription": "Masuk ke Roo Code Cloud untuk berbagi tugas",
+		"sharingDisabledByOrganization": "Berbagi dinonaktifkan oleh organisasi",
+		"shareSuccessOrganization": "Tautan organisasi disalin ke clipboard",
+		"shareSuccessPublic": "Tautan publik disalin ke clipboard"
 	},
 	"history": {
 		"title": "Riwayat"
@@ -89,7 +98,7 @@
 	"onboarding": "Daftar tugas di workspace ini kosong.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tugas Boomerang",
+			"title": "Orkestrasi Tugas",
 			"description": "Bagi tugas menjadi bagian-bagian kecil yang dapat dikelola"
 		},
 		"stickyModels": {
@@ -109,6 +118,12 @@
 	"selectApiConfig": "Pilih konfigurasi API",
 	"enhancePrompt": "Tingkatkan prompt dengan konteks tambahan",
 	"enhancePromptDescription": "Tombol 'Tingkatkan Prompt' membantu memperbaiki prompt kamu dengan memberikan konteks tambahan, klarifikasi, atau penyusunan ulang. Coba ketik prompt di sini dan klik tombol lagi untuk melihat cara kerjanya.",
+	"modeSelector": {
+		"title": "Mode",
+		"marketplace": "Marketplace Mode",
+		"settings": "Pengaturan Mode",
+		"description": "Persona khusus yang menyesuaikan perilaku Roo."
+	},
 	"addImages": "Tambahkan gambar ke pesan",
 	"sendMessage": "Kirim pesan",
 	"typeMessage": "Ketik pesan...",

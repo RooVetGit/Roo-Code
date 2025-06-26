@@ -13,6 +13,7 @@ import { experimentDefault } from "../../../shared/experiments"
 import { setTtsEnabled } from "../../../utils/tts"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task, TaskOptions } from "../../task/Task"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ClineProvider } from "../ClineProvider"
 
@@ -42,6 +43,8 @@ vi.mock("axios", () => ({
 	get: vi.fn().mockResolvedValue({ data: { data: [] } }),
 	post: vi.fn(),
 }))
+
+vi.mock("../../../utils/safeWriteJson")
 
 vi.mock("@modelcontextprotocol/sdk/types.js", () => ({
 	CallToolResultSchema: {},
@@ -308,6 +311,18 @@ vi.mock("../diff/strategies/multi-search-replace", () => ({
 	})),
 }))
 
+vi.mock("@roo-code/cloud", () => ({
+	CloudService: {
+		hasInstance: vi.fn().mockReturnValue(true),
+		get instance() {
+			return {
+				isAuthenticated: vi.fn().mockReturnValue(false),
+			}
+		},
+	},
+	getRooCodeApiUrl: vi.fn().mockReturnValue("https://app.roocode.com"),
+}))
+
 afterAll(() => {
 	vi.restoreAllMocks()
 })
@@ -522,6 +537,8 @@ describe("ClineProvider", () => {
 			autoCondenseContextPercent: 100,
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
+			profileThresholds: {},
+			hasOpenedModeSelector: false,
 		}
 
 		const message: ExtensionMessage = {
@@ -567,6 +584,117 @@ describe("ClineProvider", () => {
 
 		// check if the stack size was decreased
 		expect(stackSizeBeforeAbort - stackSizeAfterAbort).toBe(1)
+	})
+
+	describe("clearTask message handler", () => {
+		beforeEach(async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+		})
+
+		test("calls clearTask when there is no parent task", async () => {
+			// Setup a single task without parent
+			const mockCline = new Task(defaultTaskOptions)
+			// No need to set parentTask - it's undefined by default
+
+			// Mock the provider methods
+			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
+			const finishSubTaskSpy = vi.spyOn(provider, "finishSubTask").mockResolvedValue(undefined)
+			const postStateToWebviewSpy = vi.spyOn(provider, "postStateToWebview").mockResolvedValue(undefined)
+
+			// Add task to stack
+			await provider.addClineToStack(mockCline)
+
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+			// Trigger clearTask message
+			await messageHandler({ type: "clearTask" })
+
+			// Verify clearTask was called (not finishSubTask)
+			expect(clearTaskSpy).toHaveBeenCalled()
+			expect(finishSubTaskSpy).not.toHaveBeenCalled()
+			expect(postStateToWebviewSpy).toHaveBeenCalled()
+		})
+
+		test("calls finishSubTask when there is a parent task", async () => {
+			// Setup parent and child tasks
+			const parentTask = new Task(defaultTaskOptions)
+			const childTask = new Task(defaultTaskOptions)
+
+			// Set up parent-child relationship by setting the parentTask property
+			// The mock allows us to set properties directly
+			;(childTask as any).parentTask = parentTask
+			;(childTask as any).rootTask = parentTask
+
+			// Mock the provider methods
+			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
+			const finishSubTaskSpy = vi.spyOn(provider, "finishSubTask").mockResolvedValue(undefined)
+			const postStateToWebviewSpy = vi.spyOn(provider, "postStateToWebview").mockResolvedValue(undefined)
+
+			// Add both tasks to stack (parent first, then child)
+			await provider.addClineToStack(parentTask)
+			await provider.addClineToStack(childTask)
+
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+			// Trigger clearTask message
+			await messageHandler({ type: "clearTask" })
+
+			// Verify finishSubTask was called (not clearTask)
+			expect(finishSubTaskSpy).toHaveBeenCalledWith(expect.stringContaining("canceled"))
+			expect(clearTaskSpy).not.toHaveBeenCalled()
+			expect(postStateToWebviewSpy).toHaveBeenCalled()
+		})
+
+		test("handles case when no current task exists", async () => {
+			// Don't add any tasks to the stack
+
+			// Mock the provider methods
+			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
+			const finishSubTaskSpy = vi.spyOn(provider, "finishSubTask").mockResolvedValue(undefined)
+			const postStateToWebviewSpy = vi.spyOn(provider, "postStateToWebview").mockResolvedValue(undefined)
+
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+			// Trigger clearTask message
+			await messageHandler({ type: "clearTask" })
+
+			// When there's no current task, clearTask is still called (it handles the no-task case internally)
+			expect(clearTaskSpy).toHaveBeenCalled()
+			expect(finishSubTaskSpy).not.toHaveBeenCalled()
+			// State should still be posted
+			expect(postStateToWebviewSpy).toHaveBeenCalled()
+		})
+
+		test("correctly identifies subtask scenario for issue #4602", async () => {
+			// This test specifically validates the fix for issue #4602
+			// where canceling during API retry was incorrectly treating a single task as a subtask
+
+			const mockCline = new Task(defaultTaskOptions)
+			// No parent task by default - no need to explicitly set
+
+			// Mock the provider methods
+			const clearTaskSpy = vi.spyOn(provider, "clearTask").mockResolvedValue(undefined)
+			const finishSubTaskSpy = vi.spyOn(provider, "finishSubTask").mockResolvedValue(undefined)
+
+			// Add only one task to stack
+			await provider.addClineToStack(mockCline)
+
+			// Verify stack size is 1
+			expect(provider.getClineStackSize()).toBe(1)
+
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+			// Trigger clearTask message (simulating cancel during API retry)
+			await messageHandler({ type: "clearTask" })
+
+			// The fix ensures clearTask is called, not finishSubTask
+			expect(clearTaskSpy).toHaveBeenCalled()
+			expect(finishSubTaskSpy).not.toHaveBeenCalled()
+		})
 	})
 
 	test("addClineToStack adds multiple Cline instances to the stack", async () => {
@@ -1864,11 +1992,8 @@ describe("Project MCP Settings", () => {
 		// Check that fs.mkdir was called with the correct path
 		expect(mockedFs.mkdir).toHaveBeenCalledWith("/test/workspace/.roo", { recursive: true })
 
-		// Check that fs.writeFile was called with default content
-		expect(mockedFs.writeFile).toHaveBeenCalledWith(
-			"/test/workspace/.roo/mcp.json",
-			JSON.stringify({ mcpServers: {} }, null, 2),
-		)
+		// Verify file was created with default content
+		expect(safeWriteJson).toHaveBeenCalledWith("/test/workspace/.roo/mcp.json", { mcpServers: {} })
 
 		// Check that openFile was called
 		expect(openFileSpy).toHaveBeenCalledWith("/test/workspace/.roo/mcp.json")
@@ -1977,6 +2102,11 @@ describe("getTelemetryProperties", () => {
 		// Reset mocks
 		vi.clearAllMocks()
 
+		// Initialize TelemetryService if not already initialized
+		if (!TelemetryService.hasInstance()) {
+			TelemetryService.createInstance([])
+		}
+
 		// Setup basic mocks
 		mockContext = {
 			globalState: {
@@ -2029,6 +2159,96 @@ describe("getTelemetryProperties", () => {
 		const properties = await provider.getTelemetryProperties()
 
 		expect(properties).toHaveProperty("modelId", "claude-sonnet-4-20250514")
+	})
+
+	describe("cloud authentication telemetry", () => {
+		beforeEach(() => {
+			// Reset all mocks before each test
+			vi.clearAllMocks()
+		})
+
+		test("includes cloud authentication property when user is authenticated", async () => {
+			// Import the CloudService mock and update it
+			const { CloudService } = await import("@roo-code/cloud")
+			const mockCloudService = {
+				isAuthenticated: vi.fn().mockReturnValue(true),
+			}
+
+			// Update the existing mock
+			Object.defineProperty(CloudService, "instance", {
+				get: vi.fn().mockReturnValue(mockCloudService),
+				configurable: true,
+			})
+
+			const properties = await provider.getTelemetryProperties()
+
+			expect(properties).toHaveProperty("cloudIsAuthenticated", true)
+		})
+
+		test("includes cloud authentication property when user is not authenticated", async () => {
+			// Import the CloudService mock and update it
+			const { CloudService } = await import("@roo-code/cloud")
+			const mockCloudService = {
+				isAuthenticated: vi.fn().mockReturnValue(false),
+			}
+
+			// Update the existing mock
+			Object.defineProperty(CloudService, "instance", {
+				get: vi.fn().mockReturnValue(mockCloudService),
+				configurable: true,
+			})
+
+			const properties = await provider.getTelemetryProperties()
+
+			expect(properties).toHaveProperty("cloudIsAuthenticated", false)
+		})
+
+		test("handles CloudService errors gracefully", async () => {
+			// Import the CloudService mock and update it to throw an error
+			const { CloudService } = await import("@roo-code/cloud")
+			Object.defineProperty(CloudService, "instance", {
+				get: vi.fn().mockImplementation(() => {
+					throw new Error("CloudService not available")
+				}),
+				configurable: true,
+			})
+
+			const properties = await provider.getTelemetryProperties()
+
+			// Should still include basic telemetry properties
+			expect(properties).toHaveProperty("vscodeVersion")
+			expect(properties).toHaveProperty("platform")
+			expect(properties).toHaveProperty("appVersion", "1.0.0")
+
+			// Cloud property should be undefined when CloudService is not available
+			expect(properties).toHaveProperty("cloudIsAuthenticated", undefined)
+		})
+
+		test("handles CloudService method errors gracefully", async () => {
+			// Import the CloudService mock and update it
+			const { CloudService } = await import("@roo-code/cloud")
+			const mockCloudService = {
+				isAuthenticated: vi.fn().mockImplementation(() => {
+					throw new Error("Authentication check error")
+				}),
+			}
+
+			// Update the existing mock
+			Object.defineProperty(CloudService, "instance", {
+				get: vi.fn().mockReturnValue(mockCloudService),
+				configurable: true,
+			})
+
+			const properties = await provider.getTelemetryProperties()
+
+			// Should still include basic telemetry properties
+			expect(properties).toHaveProperty("vscodeVersion")
+			expect(properties).toHaveProperty("platform")
+			expect(properties).toHaveProperty("appVersion", "1.0.0")
+
+			// Property that errored should be undefined
+			expect(properties).toHaveProperty("cloudIsAuthenticated", undefined)
+		})
 	})
 })
 
@@ -2155,6 +2375,8 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})
@@ -2197,6 +2419,8 @@ describe("ClineProvider - Router Models", () => {
 				requesty: {},
 				glama: mockModels,
 				unbound: {},
+				ollama: {},
+				lmstudio: {},
 				litellm: {},
 			},
 		})
@@ -2207,6 +2431,13 @@ describe("ClineProvider - Router Models", () => {
 			success: false,
 			error: "Requesty API error",
 			values: { provider: "requesty" },
+		})
+
+		expect(mockPostMessage).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "Unbound API error",
+			values: { provider: "unbound" },
 		})
 
 		expect(mockPostMessage).toHaveBeenCalledWith({
@@ -2299,6 +2530,8 @@ describe("ClineProvider - Router Models", () => {
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
+				ollama: {},
+				lmstudio: {},
 			},
 		})
 	})

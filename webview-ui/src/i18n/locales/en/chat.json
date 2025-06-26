@@ -1,5 +1,5 @@
 {
-	"greeting": "Welcome to Roo Code",
+	"greeting": "Welcome to Roo Code!",
 	"task": {
 		"title": "Task",
 		"seeMore": "See more",
@@ -12,7 +12,16 @@
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
 		"share": "Share task",
-		"delete": "Delete Task (Shift + Click to skip confirmation)"
+		"delete": "Delete Task (Shift + Click to skip confirmation)",
+		"shareWithOrganization": "Share with Organization",
+		"shareWithOrganizationDescription": "Only members of your organization can access",
+		"sharePublicly": "Share Publicly",
+		"sharePubliclyDescription": "Anyone with the link can access",
+		"connectToCloud": "Connect to Cloud",
+		"connectToCloudDescription": "Sign in to Roo Code Cloud to share tasks",
+		"sharingDisabledByOrganization": "Sharing disabled by organization",
+		"shareSuccessOrganization": "Organization link copied to clipboard",
+		"shareSuccessPublic": "Public link copied to clipboard"
 	},
 	"unpin": "Unpin",
 	"pin": "Pin",
@@ -83,7 +92,7 @@
 	"onboarding": "Your task list in this workspace is empty.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Boomerang Tasks",
+			"title": "Task Orchestration",
 			"description": "Split tasks into smaller, manageable parts"
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"selectMode": "Select mode for interaction",
 	"selectApiConfig": "Select API configuration",
 	"enhancePrompt": "Enhance prompt with additional context",
+	"modeSelector": {
+		"title": "Modes",
+		"marketplace": "Mode Marketplace",
+		"settings": "Mode Settings",
+		"description": "Specialized personas that tailor Roo's behavior."
+	},
 	"enhancePromptDescription": "The 'Enhance Prompt' button helps improve your prompt by providing additional context, clarification, or rephrasing. Try typing a prompt in here and clicking the button again to see how it works.",
 	"addImages": "Add images to message",
 	"sendMessage": "Send message",

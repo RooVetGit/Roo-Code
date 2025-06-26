@@ -59,7 +59,17 @@
 		"condense_handler_invalid": "API handler for condensing context is invalid",
 		"condense_context_grew": "Context size increased during condensing; skipping this attempt",
 		"share_task_failed": "Failed to share task. Please try again.",
-		"share_no_active_task": "No active task to share"
+		"share_no_active_task": "No active task to share",
+		"share_auth_required": "Authentication required. Please sign in to share tasks.",
+		"share_not_enabled": "Task sharing is not enabled for this organization.",
+		"share_task_not_found": "Task not found or access denied.",
+		"claudeCode": {
+			"processExited": "Claude Code process exited with code {{exitCode}}.",
+			"errorOutput": "Error output: {{output}}",
+			"processExitedWithError": "Claude Code process exited with code {{exitCode}}. Error output: {{output}}",
+			"stoppedWithReason": "Claude Code stopped with reason: {{reason}}",
+			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan."
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "No terminal content selected",
@@ -73,6 +83,8 @@
 		"default_storage_path": "Reverted to using default storage path",
 		"settings_imported": "Settings imported successfully.",
 		"share_link_copied": "Share link copied to clipboard",
+		"organization_share_link_copied": "Organization share link copied to clipboard!",
+		"public_share_link_copied": "Public share link copied to clipboard!",
 		"image_copied_to_clipboard": "Image data URI copied to clipboard",
 		"image_saved": "Image saved to {{path}}"
 	},
@@ -85,7 +97,9 @@
 	},
 	"tasks": {
 		"canceled": "Task error: It was stopped and canceled by the user.",
-		"deleted": "Task failure: It was stopped and deleted by the user."
+		"deleted": "Task failure: It was stopped and deleted by the user.",
+		"incomplete": "Task #{{taskNumber}} (Incomplete)",
+		"no_messages": "Task #{{taskNumber}} (No messages)"
 	},
 	"storage": {
 		"prompt_custom_path": "Enter custom conversation history storage path, leave empty to use default location",
@@ -96,6 +110,18 @@
 	"input": {
 		"task_prompt": "What should Roo do?",
 		"task_placeholder": "Type your task here"
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": "Invalid YAML in .roomodes file at line {{line}}. Please check for:\n• Proper indentation (use spaces, not tabs)\n• Matching quotes and brackets\n• Valid YAML syntax",
+			"schemaValidationError": "Invalid custom modes format in .roomodes:\n{{issues}}",
+			"invalidFormat": "Invalid custom modes format. Please ensure your settings follow the correct YAML format.",
+			"updateFailed": "Failed to update custom mode: {{error}}",
+			"deleteFailed": "Failed to delete custom mode: {{error}}",
+			"resetFailed": "Failed to reset custom modes: {{error}}",
+			"modeNotFound": "Write error: Mode not found",
+			"noWorkspaceForProject": "No workspace folder found for project-specific mode"
+		}
 	},
 	"mdm": {
 		"errors": {

@@ -59,7 +59,17 @@
 		"condense_handler_invalid": "संदर्भ को संक्षिप्त करने के लिए API हैंडलर अमान्य है",
 		"condense_context_grew": "संक्षिप्तीकरण के दौरान संदर्भ का आकार बढ़ गया; इस प्रयास को छोड़ा जा रहा है",
 		"share_task_failed": "कार्य साझा करने में विफल। कृपया पुनः प्रयास करें।",
-		"share_no_active_task": "साझा करने के लिए कोई सक्रिय कार्य नहीं"
+		"share_no_active_task": "साझा करने के लिए कोई सक्रिय कार्य नहीं",
+		"share_auth_required": "प्रमाणीकरण आवश्यक है। कार्य साझा करने के लिए कृपया साइन इन करें।",
+		"share_not_enabled": "इस संगठन के लिए कार्य साझाकरण सक्षम नहीं है।",
+		"share_task_not_found": "कार्य नहीं मिला या पहुंच अस्वीकृत।",
+		"claudeCode": {
+			"processExited": "Claude Code प्रक्रिया कोड {{exitCode}} के साथ समाप्त हुई।",
+			"errorOutput": "त्रुटि आउटपुट: {{output}}",
+			"processExitedWithError": "Claude Code प्रक्रिया कोड {{exitCode}} के साथ समाप्त हुई। त्रुटि आउटपुट: {{output}}",
+			"stoppedWithReason": "Claude Code इस कारण से रुका: {{reason}}",
+			"apiKeyModelPlanMismatch": "API कुंजी और सब्सक्रिप्शन प्लान अलग-अलग मॉडल की अनुमति देते हैं। सुनिश्चित करें कि चयनित मॉडल आपकी योजना में शामिल है।"
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "कोई टर्मिनल सामग्री चयनित नहीं",
@@ -74,7 +84,9 @@
 		"settings_imported": "सेटिंग्स सफलतापूर्वक इम्पोर्ट की गईं।",
 		"share_link_copied": "साझा लिंक क्लिपबोर्ड पर कॉपी किया गया",
 		"image_copied_to_clipboard": "छवि डेटा URI क्लिपबोर्ड में कॉपी की गई",
-		"image_saved": "छवि {{path}} में सहेजी गई"
+		"image_saved": "छवि {{path}} में सहेजी गई",
+		"organization_share_link_copied": "संगठन साझाकरण लिंक क्लिपबोर्ड में कॉपी किया गया!",
+		"public_share_link_copied": "सार्वजनिक साझाकरण लिंक क्लिपबोर्ड में कॉपी किया गया!"
 	},
 	"answers": {
 		"yes": "हां",
@@ -85,7 +97,9 @@
 	},
 	"tasks": {
 		"canceled": "टास्क त्रुटि: इसे उपयोगकर्ता द्वारा रोका और रद्द किया गया था।",
-		"deleted": "टास्क विफलता: इसे उपयोगकर्ता द्वारा रोका और हटाया गया था।"
+		"deleted": "टास्क विफलता: इसे उपयोगकर्ता द्वारा रोका और हटाया गया था।",
+		"incomplete": "टास्क #{{taskNumber}} (अधूरा)",
+		"no_messages": "टास्क #{{taskNumber}} (कोई संदेश नहीं)"
 	},
 	"storage": {
 		"prompt_custom_path": "वार्तालाप इतिहास के लिए कस्टम स्टोरेज पाथ दर्ज करें, डिफ़ॉल्ट स्थान का उपयोग करने के लिए खाली छोड़ दें",
@@ -100,7 +114,24 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "ग्रोक एपीआई कुंजी",
-			"getGroqApiKey": "ग्रोक एपीआई कुंजी प्राप्त करें"
+			"getGroqApiKey": "ग्रोक एपीआई कुंजी प्राप्त करें",
+			"claudeCode": {
+				"pathLabel": "क्लाउड कोड पाथ",
+				"description": "आपके क्लाउड कोड CLI का वैकल्पिक पाथ। सेट न होने पर डिफ़ॉल्ट रूप से 'claude'。",
+				"placeholder": "डिफ़ॉल्ट: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": ".roomodes फ़ाइल में लाइन {{line}} पर अमान्य YAML। कृपया जांचें:\n• सही इंडेंटेशन (टैब नहीं, स्पेस का उपयोग करें)\n• मैचिंग कोट्स और ब्रैकेट्स\n• वैध YAML सिंटैक्स",
+			"schemaValidationError": ".roomodes में अमान्य कस्टम मोड फॉर्मेट:\n{{issues}}",
+			"invalidFormat": "अमान्य कस्टम मोड फॉर्मेट। कृपया सुनिश्चित करें कि आपकी सेटिंग्स सही YAML फॉर्मेट का पालन करती हैं।",
+			"updateFailed": "कस्टम मोड अपडेट विफल: {{error}}",
+			"deleteFailed": "कस्टम मोड डिलीट विफल: {{error}}",
+			"resetFailed": "कस्टम मोड रीसेट विफल: {{error}}",
+			"modeNotFound": "लेखन त्रुटि: मोड नहीं मिला",
+			"noWorkspaceForProject": "प्रोजेक्ट-विशिष्ट मोड के लिए वर्कस्पेस फ़ोल्डर नहीं मिला"
 		}
 	},
 	"mdm": {

@@ -30,6 +30,8 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	claudeCodeDefaultModelId,
+	claudeCodeModels,
 } from "@roo-code/types"
 
 import type { RouterModels } from "@roo/api"
@@ -177,13 +179,19 @@ function getSelectedModel({
 		}
 		case "ollama": {
 			const id = apiConfiguration.ollamaModelId ?? ""
-			const info = openAiModelInfoSaneDefaults
-			return { id, info }
+			const info = routerModels.ollama && routerModels.ollama[id]
+			return {
+				id,
+				info: info || undefined,
+			}
 		}
 		case "lmstudio": {
 			const id = apiConfiguration.lmStudioModelId ?? ""
-			const info = openAiModelInfoSaneDefaults
-			return { id, info }
+			const info = routerModels.lmstudio && routerModels.lmstudio[id]
+			return {
+				id,
+				info: info || undefined,
+			}
 		}
 		case "vscode-lm": {
 			const id = apiConfiguration?.vsCodeLmModelSelector
@@ -192,6 +200,12 @@ function getSelectedModel({
 			const modelFamily = apiConfiguration?.vsCodeLmModelSelector?.family ?? vscodeLlmDefaultModelId
 			const info = vscodeLlmModels[modelFamily as keyof typeof vscodeLlmModels]
 			return { id, info: { ...openAiModelInfoSaneDefaults, ...info, supportsImages: false } } // VSCode LM API currently doesn't support images.
+		}
+		case "claude-code": {
+			// Claude Code models extend anthropic models but with images and prompt caching disabled
+			const id = apiConfiguration.apiModelId ?? claudeCodeDefaultModelId
+			const info = claudeCodeModels[id as keyof typeof claudeCodeModels]
+			return { id, info: { ...openAiModelInfoSaneDefaults, ...info } }
 		}
 		// case "anthropic":
 		// case "human-relay":
