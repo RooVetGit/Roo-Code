@@ -109,28 +109,58 @@ const CLAUDE_CODE_TIMEOUT = 600000 // 10 minutes
 
 function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions) {
 	const claudePath = path || "claude"
-
-	const args = [
-		"-p",
-		JSON.stringify(messages),
-		"--system-prompt",
-		systemPrompt,
-		"--verbose",
-		"--output-format",
-		"stream-json",
-		"--disallowedTools",
-		claudeCodeTools,
-		// Roo Code will handle recursive calls
-		"--max-turns",
-		"1",
-	]
+	const isWindows = process.platform === "win32"
+	
+	// Prepare input data for stdin
+	const inputData = {
+		messages,
+		systemPrompt
+	}
+	
+	let actualClaudePath = claudePath
+	let args: string[]
+	
+	if (isWindows) {
+		// Use WSL to execute claude on Windows
+		actualClaudePath = "wsl.exe"
+		args = [
+			"--",
+			"claude",
+			"--print",
+			"--verbose",
+			"--input-format",
+			"stream-json",
+			"--output-format",
+			"stream-json",
+			"--disallowedTools",
+			claudeCodeTools,
+			// Roo Code will handle recursive calls
+			"--max-turns",
+			"1",
+		]
+	} else {
+		// Direct execution on Linux/Mac
+		args = [
+			"--print",
+			"--verbose",
+			"--input-format",
+			"stream-json",
+			"--output-format",
+			"stream-json",
+			"--disallowedTools",
+			claudeCodeTools,
+			// Roo Code will handle recursive calls
+			"--max-turns",
+			"1",
+		]
+	}
 
 	if (modelId) {
 		args.push("--model", modelId)
 	}
 
-	return execa(claudePath, args, {
-		stdin: "ignore",
+	const child = execa(actualClaudePath, args, {
+		stdin: "pipe",
 		stdout: "pipe",
 		stderr: "pipe",
 		env: {
@@ -142,6 +172,12 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 		maxBuffer: 1024 * 1024 * 1000,
 		timeout: CLAUDE_CODE_TIMEOUT,
 	})
+	
+	// Send input via stdin
+	child.stdin?.write(JSON.stringify(inputData))
+	child.stdin?.end()
+	
+	return child
 }
 
 function parseChunk(data: string, processState: ProcessState) {
