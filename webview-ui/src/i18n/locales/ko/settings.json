@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "재시도",
 			"description": "서버가 오류 응답을 반환할 때 자동으로 실패한 API 요청 재시도",
-			"delayLabel": "요청 재시도 전 지연"
+			"rangeLabel": "재시도 지연 범위 (최소 - 최대 초)"
 		},
 		"mcp": {
 			"label": "MCP",

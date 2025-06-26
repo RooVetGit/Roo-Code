@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Opnieuw proberen",
 			"description": "Automatisch mislukte API-verzoeken opnieuw proberen wanneer de server een foutmelding geeft",
-			"delayLabel": "Vertraging voordat het verzoek opnieuw wordt geprobeerd"
+			"rangeLabel": "Bereik van herhalingvertraging (min - max seconden)"
 		},
 		"mcp": {
 			"label": "MCP",

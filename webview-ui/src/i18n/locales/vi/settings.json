@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Thử lại",
 			"description": "Tự động thử lại các yêu cầu API thất bại khi máy chủ trả về phản hồi lỗi",
-			"delayLabel": "Trì hoãn trước khi thử lại yêu cầu"
+			"rangeLabel": "Phạm vi trì hoãn thử lại (tối thiểu - tối đa giây)"
 		},
 		"mcp": {
 			"label": "MCP",

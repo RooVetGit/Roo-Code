@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Tentar novamente",
 			"description": "Tentar novamente automaticamente requisições de API com falha quando o servidor retorna uma resposta de erro",
-			"delayLabel": "Atraso antes de tentar novamente a requisição"
+			"rangeLabel": "Faixa de atraso de nova tentativa (mín - máx segundos)"
 		},
 		"mcp": {
 			"label": "MCP",

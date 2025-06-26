@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Yeniden Dene",
 			"description": "Sunucu bir hata yanıtı döndürdüğünde başarısız API isteklerini otomatik olarak yeniden dene",
-			"delayLabel": "İsteği yeniden denemeden önce gecikme"
+			"rangeLabel": "Yeniden deneme gecikme aralığı (min - maks saniye)"
 		},
 		"mcp": {
 			"label": "MCP",

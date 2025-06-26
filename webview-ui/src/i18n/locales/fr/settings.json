@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Réessayer",
 			"description": "Réessayer automatiquement les requêtes API échouées lorsque le serveur renvoie une réponse d'erreur",
-			"delayLabel": "Délai avant de réessayer la requête"
+			"rangeLabel": "Plage de délai de nouvelle tentative (min - max secondes)"
 		},
 		"mcp": {
 			"label": "MCP",

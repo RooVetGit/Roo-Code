@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Riprova",
 			"description": "Riprova automaticamente le richieste API fallite quando il server restituisce una risposta di errore",
-			"delayLabel": "Ritardo prima di riprovare la richiesta"
+			"rangeLabel": "Intervallo di ritardo per i tentativi (min - max secondi)"
 		},
 		"mcp": {
 			"label": "MCP",

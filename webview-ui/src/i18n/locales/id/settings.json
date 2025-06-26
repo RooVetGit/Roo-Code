@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Coba Lagi",
 			"description": "Secara otomatis mencoba ulang permintaan API yang gagal ketika server mengembalikan respons error",
-			"delayLabel": "Delay sebelum mencoba ulang permintaan"
+			"rangeLabel": "Rentang delay percobaan ulang (min - maks detik)"
 		},
 		"mcp": {
 			"label": "MCP",

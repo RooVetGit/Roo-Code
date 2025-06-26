@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Ponów",
 			"description": "Automatycznie ponawiaj nieudane żądania API, gdy serwer zwraca odpowiedź z błędem",
-			"delayLabel": "Opóźnienie przed ponowieniem żądania"
+			"rangeLabel": "Zakres opóźnienia ponowienia (min - maks sekund)"
 		},
 		"mcp": {
 			"label": "MCP",
