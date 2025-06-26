@@ -163,6 +163,8 @@ export interface WebviewMessage {
 		| "codebaseIndexConfig"
 		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
+		| "fixMermaidSyntax"
+		| "mermaidFixResponse"
 		| "openExternal"
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"

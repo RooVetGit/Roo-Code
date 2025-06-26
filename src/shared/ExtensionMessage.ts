@@ -99,6 +99,7 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
+		| "mermaidFixResponse"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -148,6 +149,7 @@ export interface ExtensionMessage {
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 	visibility?: ShareVisibility
+	fixedCode?: string | null // For mermaidFixResponse
 }
 
 export type ExtensionState = Pick<
