@@ -4,6 +4,8 @@ import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage, ExtendedLanguage } from "@src/utils/highlighter"
 import { bundledLanguages } from "shiki"
 import type { ShikiTransformer } from "shiki"
+import { toJsxRuntime } from "hast-util-to-jsx-runtime"
+import { Fragment, jsx, jsxs } from "react/jsx-runtime"
 import { ChevronDown, ChevronUp, WrapText, AlignJustify, Copy, Check } from "lucide-react"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { StandardTooltip } from "@/components/ui"
@@ -226,7 +228,7 @@ const CodeBlock = memo(
 		const [windowShade, setWindowShade] = useState(initialWindowShade)
 		const [currentLanguage, setCurrentLanguage] = useState<ExtendedLanguage>(() => normalizeLanguage(language))
 		const userChangedLanguageRef = useRef(false)
-		const [highlightedCode, setHighlightedCode] = useState<string>("")
+		const [highlightedCode, setHighlightedCode] = useState<React.ReactNode>(null)
 		const [showCollapseButton, setShowCollapseButton] = useState(true)
 		const codeBlockRef = useRef<HTMLDivElement>(null)
 		const preRef = useRef<HTMLDivElement>(null)
@@ -266,7 +268,7 @@ const CodeBlock = memo(
 				const highlighter = await getHighlighter(currentLanguage)
 				if (!isMountedRef.current) return
 
-				const html = await highlighter.codeToHtml(source || "", {
+				const hast = await highlighter.codeToHast(source || "", {
 					lang: currentLanguage || "txt",
 					theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
 					transformers: [
@@ -290,8 +292,16 @@ const CodeBlock = memo(
 				})
 				if (!isMountedRef.current) return
 
+				// Convert HAST to React elements
+				const reactElement = toJsxRuntime(hast, {
+					Fragment,
+					jsx,
+					jsxs,
+					// Don't override components - let them render as-is to maintain exact output
+				})
+
 				if (isMountedRef.current) {
-					setHighlightedCode(html)
+					setHighlightedCode(reactElement)
 				}
 			}
 
@@ -783,7 +793,7 @@ const CodeBlock = memo(
 )
 
 // Memoized content component to prevent unnecessary re-renders of highlighted code
-const MemoizedCodeContent = memo(({ html }: { html: string }) => <div dangerouslySetInnerHTML={{ __html: html }} />)
+const MemoizedCodeContent = memo(({ children }: { children: React.ReactNode }) => <>{children}</>)
 
 // Memoized StyledPre component
 const MemoizedStyledPre = memo(
@@ -801,7 +811,7 @@ const MemoizedStyledPre = memo(
 		wordWrap: boolean
 		windowShade: boolean
 		collapsedHeight?: number
-		highlightedCode: string
+		highlightedCode: React.ReactNode
 		updateCodeBlockButtonPosition: (forceHide?: boolean) => void
 	}) => (
 		<StyledPre
@@ -812,7 +822,7 @@ const MemoizedStyledPre = memo(
 			collapsedHeight={collapsedHeight}
 			onMouseDown={() => updateCodeBlockButtonPosition(true)}
 			onMouseUp={() => updateCodeBlockButtonPosition(false)}>
-			<MemoizedCodeContent html={highlightedCode} />
+			<MemoizedCodeContent>{highlightedCode}</MemoizedCodeContent>
 		</StyledPre>
 	),
 )
