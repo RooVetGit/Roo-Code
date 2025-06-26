@@ -110,16 +110,26 @@ const CLAUDE_CODE_TIMEOUT = 600000 // 10 minutes
 function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions) {
 	const claudePath = path || "claude"
 	const isWindows = process.platform === "win32"
-	
-	// Prepare input data for stdin
-	const inputData = {
+
+	// Prepare input data for stdin in Claude Code SDK format
+	// We need to combine system prompt and messages into a single prompt
+	const prompt = JSON.stringify({
 		messages,
-		systemPrompt
+		systemPrompt,
+	})
+
+	const inputData = {
+		type: "user",
+		message: {
+			role: "user",
+			content: prompt,
+		},
+		session_id: `roo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
 	}
-	
+
 	let actualClaudePath = claudePath
 	let args: string[]
-	
+
 	if (isWindows) {
 		// Use WSL to execute claude on Windows
 		actualClaudePath = "wsl.exe"
@@ -172,11 +182,11 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 		maxBuffer: 1024 * 1024 * 1000,
 		timeout: CLAUDE_CODE_TIMEOUT,
 	})
-	
+
 	// Send input via stdin
 	child.stdin?.write(JSON.stringify(inputData))
 	child.stdin?.end()
-	
+
 	return child
 }
 
