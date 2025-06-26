@@ -689,12 +689,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						<ExperimentalSettings
 							setExperimentEnabled={setExperimentEnabled}
 							experiments={experiments}
-							setCachedStateField={setCachedStateField}
 							codebaseIndexModels={codebaseIndexModels}
 							codebaseIndexConfig={codebaseIndexConfig}
-							apiConfiguration={apiConfiguration}
-							setApiConfigurationField={setApiConfigurationField}
-							areSettingsCommitted={!isChangeDetected}
 						/>
 					)}
 

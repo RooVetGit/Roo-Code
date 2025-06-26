@@ -1,15 +1,14 @@
 import { HTMLAttributes } from "react"
 import { FlaskConical } from "lucide-react"
 
-import type { Experiments, CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
+import type { Experiments, CodebaseIndexConfig, CodebaseIndexModels } from "@roo-code/types"
 
 import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 
-import { ExtensionStateContextType } from "@src/context/ExtensionStateContext"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { cn } from "@src/lib/utils"
 
-import { SetCachedStateField, SetExperimentEnabled } from "./types"
+import { SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
@@ -18,24 +17,16 @@ import { CodeIndexSettings } from "./CodeIndexSettings"
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Experiments
 	setExperimentEnabled: SetExperimentEnabled
-	setCachedStateField: SetCachedStateField<"codebaseIndexConfig">
 	// CodeIndexSettings props
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
-	apiConfiguration: ProviderSettings
-	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
-	areSettingsCommitted: boolean
 }
 
 export const ExperimentalSettings = ({
 	experiments,
 	setExperimentEnabled,
-	setCachedStateField,
 	codebaseIndexModels,
 	codebaseIndexConfig,
-	apiConfiguration,
-	setApiConfigurationField,
-	areSettingsCommitted,
 	className,
 	...props
 }: ExperimentalSettingsProps) => {
@@ -84,10 +75,6 @@ export const ExperimentalSettings = ({
 				<CodeIndexSettings
 					codebaseIndexModels={codebaseIndexModels}
 					codebaseIndexConfig={codebaseIndexConfig}
-					apiConfiguration={apiConfiguration}
-					setCachedStateField={setCachedStateField as SetCachedStateField<keyof ExtensionStateContextType>}
-					setApiConfigurationField={setApiConfigurationField}
-					areSettingsCommitted={areSettingsCommitted}
 				/>
 			</Section>
 		</div>

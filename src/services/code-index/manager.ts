@@ -257,26 +257,68 @@ export class CodeIndexManager {
 	}
 
 	/**
+	 * Stores secrets using the config manager's async method
+	 */
+	public async storeSecretsAsync(secrets: {
+		openAiKey?: string
+		qdrantApiKey?: string
+		openAiCompatibleApiKey?: string
+	}): Promise<void> {
+		if (this._configManager) {
+			await this._configManager.storeSecretsAsync(secrets)
+		}
+	}
+
+	/**
+	 * Loads secrets using the config manager's async method
+	 */
+	public async loadSecretsAsync(): Promise<{
+		openAiKey?: string
+		qdrantApiKey?: string
+		openAiCompatibleApiKey?: string
+	}> {
+		if (this._configManager) {
+			return await this._configManager.loadSecretsAsync()
+		}
+		return {}
+	}
+
+	/**
 	 * Handles external settings changes by reloading configuration.
 	 * This method should be called when API provider settings are updated
 	 * to ensure the CodeIndexConfigManager picks up the new configuration.
 	 * If the configuration changes require a restart, the service will be restarted.
 	 */
 	public async handleExternalSettingsChange(): Promise<void> {
+		console.log(`[DEBUG Manager] handleExternalSettingsChange called`)
+
 		if (this._configManager) {
+			console.log(`[DEBUG Manager] Loading configuration...`)
 			const { requiresRestart } = await this._configManager.loadConfiguration()
 
 			const isFeatureEnabled = this.isFeatureEnabled
 			const isFeatureConfigured = this.isFeatureConfigured
 
+			console.log(
+				`[DEBUG Manager] After config reload: enabled=${isFeatureEnabled}, configured=${isFeatureConfigured}, requiresRestart=${requiresRestart}, isInitialized=${this.isInitialized}`,
+			)
+
 			// If configuration changes require a restart and the manager is initialized, restart the service
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
-				// Recreate services with new configuration
-				await this._recreateServices()
+				console.log(`[DEBUG Manager] Restarting indexing service due to configuration changes`)
+				this.stopWatcher()
 
-				// Start indexing with new services
-				await this.startIndexing()
+				// CRITICAL FIX: Re-initialize to recreate all services (including embedder) with new configuration
+				// This ensures the embedder gets the new API key instead of reusing the old one
+				console.log(`[DEBUG Manager] Re-initializing services with new configuration`)
+				await this.initialize(this._configManager.getContextProxy())
+
+				// startIndexing will be called by initialize() if conditions are met
+			} else {
+				console.log(`[DEBUG Manager] No restart needed or conditions not met`)
 			}
+		} else {
+			console.log(`[DEBUG Manager] No config manager available`)
 		}
 	}
 }

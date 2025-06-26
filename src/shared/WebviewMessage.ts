@@ -183,6 +183,7 @@ export interface WebviewMessage {
 		| "importModeResult"
 		| "checkRulesDirectory"
 		| "checkRulesDirectoryResult"
+		| "saveCodeIndexSettingsAtomic"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
@@ -223,6 +224,22 @@ export interface WebviewMessage {
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
 	checkOnly?: boolean // For deleteCustomMode check
+	codeIndexSettings?: {
+		// Global state settings
+		codebaseIndexEnabled: boolean
+		codebaseIndexQdrantUrl: string
+		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible" | "gemini"
+		codebaseIndexEmbedderBaseUrl?: string
+		codebaseIndexEmbedderModelId: string
+		codebaseIndexOpenAiCompatibleBaseUrl?: string
+		codebaseIndexOpenAiCompatibleModelDimension?: number
+
+		// Secret settings
+		codeIndexOpenAiKey?: string
+		codeIndexQdrantApiKey?: string
+		codebaseIndexOpenAiCompatibleApiKey?: string
+		codebaseIndexGeminiApiKey?: string
+	}
 }
 
 export const checkoutDiffPayloadSchema = z.object({

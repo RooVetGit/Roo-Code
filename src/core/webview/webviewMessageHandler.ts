@@ -1838,6 +1838,109 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		}
+
+		case "saveCodeIndexSettingsAtomic": {
+			if (!message.codeIndexSettings) {
+				break
+			}
+
+			const settings = message.codeIndexSettings
+
+			try {
+				console.log(`[DEBUG WebviewHandler] Starting atomic save for code index settings`)
+				console.log(`[DEBUG WebviewHandler] Settings received:`, {
+					enabled: settings.codebaseIndexEnabled,
+					provider: settings.codebaseIndexEmbedderProvider,
+					openAiKey: settings.codeIndexOpenAiKey
+						? `"${settings.codeIndexOpenAiKey.substring(0, 4)}..."`
+						: "undefined",
+				})
+
+				// Save global state settings atomically
+				const globalStateConfig = {
+					codebaseIndexEnabled: settings.codebaseIndexEnabled,
+					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
+					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
+					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
+					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
+					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
+					codebaseIndexOpenAiCompatibleModelDimension: settings.codebaseIndexOpenAiCompatibleModelDimension,
+				}
+
+				// Save global state first
+				await updateGlobalState("codebaseIndexConfig", globalStateConfig)
+
+				// Save secrets using the new async method from config manager
+				if (provider.codeIndexManager) {
+					const secretsToStore: any = {}
+
+					if (settings.codeIndexOpenAiKey !== undefined) {
+						console.log(
+							`[DEBUG WebviewHandler] Adding OpenAI key to secrets: "${settings.codeIndexOpenAiKey.substring(0, 4)}..."`,
+						)
+						secretsToStore.openAiKey = settings.codeIndexOpenAiKey
+					}
+					if (settings.codeIndexQdrantApiKey !== undefined) {
+						console.log(`[DEBUG WebviewHandler] Adding Qdrant API key to secrets`)
+						secretsToStore.qdrantApiKey = settings.codeIndexQdrantApiKey
+					}
+					if (settings.codebaseIndexOpenAiCompatibleApiKey !== undefined) {
+						secretsToStore.openAiCompatibleApiKey = settings.codebaseIndexOpenAiCompatibleApiKey
+					}
+
+					console.log(`[DEBUG WebviewHandler] Storing secrets using config manager async method`)
+					await provider.codeIndexManager.storeSecretsAsync(secretsToStore)
+				}
+
+				console.log(`[DEBUG WebviewHandler] Atomic save completed successfully`)
+
+				// Verify secrets are actually stored
+				const storedOpenAiKey = provider.contextProxy.getSecret("codeIndexOpenAiKey")
+				console.log(
+					`[DEBUG WebviewHandler] Verification - stored OpenAI key: ${storedOpenAiKey ? `"${storedOpenAiKey.substring(0, 4)}..."` : "undefined"}`,
+				)
+
+				// Notify code index manager of changes
+				if (provider.codeIndexManager) {
+					console.log(`[DEBUG WebviewHandler] Calling handleExternalSettingsChange`)
+					await provider.codeIndexManager.handleExternalSettingsChange()
+
+					// Auto-start indexing if now enabled and configured
+					console.log(
+						`[DEBUG WebviewHandler] Checking auto-start conditions: enabled=${provider.codeIndexManager.isFeatureEnabled}, configured=${provider.codeIndexManager.isFeatureConfigured}`,
+					)
+					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
+						if (!provider.codeIndexManager.isInitialized) {
+							console.log(`[DEBUG WebviewHandler] Initializing code index manager`)
+							await provider.codeIndexManager.initialize(provider.contextProxy)
+						}
+						console.log(`[DEBUG WebviewHandler] Starting indexing process`)
+						provider.codeIndexManager.startIndexing()
+					}
+				} else {
+					console.log(`[DEBUG WebviewHandler] No code index manager available`)
+				}
+
+				// Send success response
+				await provider.postMessageToWebview({
+					type: "codeIndexSettingsSaved",
+					success: true,
+					settings: globalStateConfig,
+				})
+
+				// Update webview state
+				await provider.postStateToWebview()
+			} catch (error) {
+				provider.log(`Error saving code index settings: ${error.message || error}`)
+				await provider.postMessageToWebview({
+					type: "codeIndexSettingsSaved",
+					success: false,
+					error: error.message || "Failed to save settings",
+				})
+			}
+			break
+		}
+
 		case "requestIndexingStatus": {
 			const status = provider.codeIndexManager!.getCurrentStatus()
 			provider.postMessageToWebview({

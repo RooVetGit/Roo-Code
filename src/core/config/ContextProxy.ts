@@ -134,17 +134,35 @@ export class ContextProxy {
 	 */
 
 	getSecret(key: SecretStateKey) {
-		return this.secretCache[key]
+		const value = this.secretCache[key]
+		console.log(`[DEBUG ContextProxy] getSecret(${key}): ${value ? `"${value.substring(0, 4)}..."` : "undefined"}`)
+		return value
 	}
 
 	storeSecret(key: SecretStateKey, value?: string) {
+		console.log(
+			`[DEBUG ContextProxy] storeSecret(${key}): ${value ? `"${value.substring(0, 4)}..."` : "undefined"}`,
+		)
+
 		// Update cache.
 		this.secretCache[key] = value
+		console.log(`[DEBUG ContextProxy] Updated cache for ${key}`)
 
 		// Write directly to context.
-		return value === undefined
-			? this.originalContext.secrets.delete(key)
-			: this.originalContext.secrets.store(key, value)
+		const result =
+			value === undefined
+				? this.originalContext.secrets.delete(key)
+				: this.originalContext.secrets.store(key, value)
+
+		console.log(`[DEBUG ContextProxy] VSCode secrets operation initiated for ${key}`)
+		return result
+	}
+
+	/**
+	 * Gets the VSCode extension context for direct secret access
+	 */
+	public getVSCodeContext(): vscode.ExtensionContext {
+		return this.originalContext
 	}
 
 	private getAllSecretState(): SecretState {
