@@ -116,7 +116,7 @@ describe("GeminiCliHandler", () => {
 
 			expect(handler["authClient"].refreshAccessToken).toHaveBeenCalled()
 			expect(fs.writeFile).toHaveBeenCalledWith(
-				expect.stringContaining(".gemini/oauth_creds.json"),
+				expect.stringMatching(/\.gemini[/\\]oauth_creds\.json$/),
 				expect.stringContaining("refreshed-token"),
 			)
 		})
