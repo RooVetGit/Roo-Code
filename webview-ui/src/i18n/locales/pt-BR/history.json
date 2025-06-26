@@ -28,7 +28,7 @@
 		"importLegacy": "Importar tarefas legadas",
 		"importLegacyDesc": "Importar tarefas encontradas no formato antigo globalState. Efeito colateral: Isso pode restaurar tarefas que foram excluídas após a migração inicial.",
 		"reconstructOrphans": "Reconstruir tarefas órfãs",
-		"reconstructOrphansDesc": "Criar arquivos history_item.json para tarefas órfãs reconstruindo-as a partir de logs de mensagens. Efeito colateral: Contadores de token e custo serão redefinidos para zero se não puderem ser totalmente reconstruídos.",
+		"reconstructOrphansDesc": "Criar arquivos history_item.json para tarefas órfãs reconstruindo-as a partir de logs de mensagens. Efeito colateral: Contadores de tokens e custo serão redefinidos para zero se não puderem ser totalmente reconstruídos.",
 		"useFilesystemScan": "Usar escaneamento do sistema de arquivos",
 		"useFilesystemScanDesc": "Escanear o sistema de arquivos diretamente em vez de usar o índice. Isso é mais lento, mas mais completo e pode encontrar tarefas órfãs que podem ser perdidas pela abordagem baseada em índice.",
 		"rebuildButton": "Reconstruir Índices",

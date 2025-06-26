@@ -11,7 +11,7 @@
 	"mostTokens": "最多 Token",
 	"mostRelevant": "最相關",
 	"indexTools": {
-		"description": "管理您的工作歷史資料。掃描問題，重建索引，復原孤立工作。",
+		"description": "管理您的工作歷史資料。掃描問題，重建索引，重建孤立工作。",
 		"scanButton": "掃描工作歷史",
 		"scanning": "正在掃描工作歷史...",
 		"scanResults": "掃描結果",

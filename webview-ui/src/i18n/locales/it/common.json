@@ -70,7 +70,7 @@
 		"clipboard_copy": "Copiato negli appunti"
 	},
 	"confirmation": {
-		"reindex_history": "Attenzione: Questo ricreerà gli indici taskHistory/*.json analizzando le directory delle attività e le strutture legacy globalState[taskHistory]. Questo potrebbe ripristinare attività che avevi precedentemente eliminato e/o recuperare attività corrotte. Se i contatori di token/costo non sono recuperabili, saranno impostati a zero. Qualsiasi attività che è membro di più aree di lavoro sarà riassegnata solo all'area di lavoro più recente utilizzata dall'attività."
+		"reindex_history": "Attenzione: Questo ricreerà gli indici taskHistory/*.json analizzando le directory delle attività e le strutture legacy globalState[taskHistory]. Questo potrebbe ripristinare attività che avevi precedentemente eliminata e/o recuperare attività corrotte. Se i contatori di token/costo non sono recuperabili, saranno impostati a zero. Qualsiasi attività che è membro di più aree di lavoro sarà riassegnata solo all'area di lavoro più recente utilizzata dall'attività."
 	},
 	"file": {
 		"errors": {
