@@ -114,8 +114,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		const transforms = (this.options.openRouterUseMiddleOutTransform ?? true) ? ["middle-out"] : undefined
 
-		const isGemini = modelId.startsWith("google/gemini")
-		const useStreaming = isGemini ? !this.options.geminiDisableStreaming : true
+		const isGoogle = modelId.startsWith("google/")
+		const useStreaming = isGoogle ? !this.options.geminiDisableStreaming : true
 
 		// https://openrouter.ai/docs/transforms
 		const completionParams: OpenRouterChatCompletionParams = {
