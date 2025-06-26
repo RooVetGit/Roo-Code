@@ -56,6 +56,12 @@ interface LocalCodeIndexSettings {
 	codebaseIndexGeminiApiKey?: string
 }
 
+interface SecretStatus {
+	hasOpenAiKey: boolean
+	hasQdrantApiKey: boolean
+	hasOpenAiCompatibleApiKey: boolean
+}
+
 export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIndexModels, codebaseIndexConfig }) => {
 	const { t } = useAppTranslation()
 	const DEFAULT_QDRANT_URL = "http://localhost:6333"
@@ -68,14 +74,23 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 		codebaseIndexEmbedderBaseUrl: codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl || "",
 		codebaseIndexEmbedderModelId: codebaseIndexConfig?.codebaseIndexEmbedderModelId || "",
 
-		// Secret settings (start empty, will be loaded separately)
-		codeIndexOpenAiKey: "",
-		codeIndexQdrantApiKey: "",
+		// Secret settings (start undefined to indicate no change)
+		codeIndexOpenAiKey: undefined,
+		codeIndexQdrantApiKey: undefined,
 		codebaseIndexOpenAiCompatibleBaseUrl: "",
-		codebaseIndexOpenAiCompatibleApiKey: "",
+		codebaseIndexOpenAiCompatibleApiKey: undefined,
 		codebaseIndexOpenAiCompatibleModelDimension: undefined,
 		codebaseIndexGeminiApiKey: "",
 	})
+
+	const [secretStatus, setSecretStatus] = useState<SecretStatus>({
+		hasOpenAiKey: false,
+		hasQdrantApiKey: false,
+		hasOpenAiCompatibleApiKey: false,
+	})
+
+	// Track which fields have been modified by the user
+	const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set())
 
 	const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle")
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -107,6 +122,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 	useEffect(() => {
 		// Request initial indexing status from extension host
 		vscode.postMessage({ type: "requestIndexingStatus" })
+		// Request secret status
+		vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 
 		const handleMessage = (event: MessageEvent) => {
 			const message = event.data
@@ -118,6 +135,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 					setTimeout(() => {
 						setSaveStatus("idle")
 					}, 3000)
+					// Request updated secret status after save
+					vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 				} else {
 					setSaveStatus("error")
 					// Clear error message after 5 seconds
@@ -133,6 +152,12 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 					totalItems: message.values.totalItems,
 					currentItemUnit: message.values.currentItemUnit || "items",
 				})
+			} else if (message.type === "codeIndexSecretStatus") {
+				setSecretStatus({
+					hasOpenAiKey: message.values.hasOpenAiKey || false,
+					hasQdrantApiKey: message.values.hasQdrantApiKey || false,
+					hasOpenAiCompatibleApiKey: message.values.hasOpenAiCompatibleApiKey || false,
+				})
 			}
 		}
 
@@ -142,6 +167,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 
 	const updateSetting = useCallback((field: keyof LocalCodeIndexSettings, value: any) => {
 		setLocalSettings((prev) => ({ ...prev, [field]: value }))
+		setModifiedFields((prev) => new Set(prev).add(field))
 		setHasUnsavedChanges(true)
 		setSaveStatus("idle") // Reset any previous success/error status
 	}, [])
@@ -150,11 +176,37 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 		setSaveStatus("saving")
 		setHasUnsavedChanges(false)
 
+		// Only send fields that have been modified
+		const settingsToSave: any = {
+			// Always include non-secret settings
+			codebaseIndexEnabled: localSettings.codebaseIndexEnabled,
+			codebaseIndexQdrantUrl: localSettings.codebaseIndexQdrantUrl,
+			codebaseIndexEmbedderProvider: localSettings.codebaseIndexEmbedderProvider,
+			codebaseIndexEmbedderBaseUrl: localSettings.codebaseIndexEmbedderBaseUrl,
+			codebaseIndexEmbedderModelId: localSettings.codebaseIndexEmbedderModelId,
+			codebaseIndexOpenAiCompatibleBaseUrl: localSettings.codebaseIndexOpenAiCompatibleBaseUrl,
+			codebaseIndexOpenAiCompatibleModelDimension: localSettings.codebaseIndexOpenAiCompatibleModelDimension,
+		}
+
+		// Only include secret fields if they were modified
+		if (modifiedFields.has("codeIndexOpenAiKey")) {
+			settingsToSave.codeIndexOpenAiKey = localSettings.codeIndexOpenAiKey
+		}
+		if (modifiedFields.has("codeIndexQdrantApiKey")) {
+			settingsToSave.codeIndexQdrantApiKey = localSettings.codeIndexQdrantApiKey
+		}
+		if (modifiedFields.has("codebaseIndexOpenAiCompatibleApiKey")) {
+			settingsToSave.codebaseIndexOpenAiCompatibleApiKey = localSettings.codebaseIndexOpenAiCompatibleApiKey
+		}
+
 		vscode.postMessage({
 			type: "saveCodeIndexSettingsAtomic",
-			codeIndexSettings: localSettings,
+			codeIndexSettings: settingsToSave,
 		})
-	}, [localSettings])
+
+		// Clear modified fields after save
+		setModifiedFields(new Set())
+	}, [localSettings, modifiedFields])
 
 	// Safely calculate available models for current provider
 	const currentProvider = localSettings.codebaseIndexEmbedderProvider
@@ -314,13 +366,15 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 							<div>
 								<VSCodeTextField
 									type="password"
-									value={localSettings.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => updateSetting("codeIndexOpenAiKey", e.target.value)}
-									placeholder={
-										localSettings.codeIndexOpenAiKey
-											? "••••••••••••••••"
-											: "Enter your OpenAI API key"
+									value={
+										modifiedFields.has("codeIndexOpenAiKey")
+											? localSettings.codeIndexOpenAiKey || ""
+											: secretStatus.hasOpenAiKey
+												? "••••••••••••••••"
+												: ""
 									}
+									onInput={(e: any) => updateSetting("codeIndexOpenAiKey", e.target.value)}
+									placeholder="Enter your OpenAI API key"
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
@@ -345,15 +399,17 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 							<div>
 								<VSCodeTextField
 									type="password"
-									value={localSettings.codebaseIndexOpenAiCompatibleApiKey || ""}
+									value={
+										modifiedFields.has("codebaseIndexOpenAiCompatibleApiKey")
+											? localSettings.codebaseIndexOpenAiCompatibleApiKey || ""
+											: secretStatus.hasOpenAiCompatibleApiKey
+												? "••••••••••••••••"
+												: ""
+									}
 									onInput={(e: any) =>
 										updateSetting("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
 									}
-									placeholder={
-										localSettings.codebaseIndexOpenAiCompatibleApiKey
-											? "••••••••••••••••"
-											: "Enter your API key"
-									}
+									placeholder="Enter your API key"
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
@@ -483,13 +539,15 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 						<div>
 							<VSCodeTextField
 								type="password"
-								value={localSettings.codeIndexQdrantApiKey || ""}
-								onInput={(e: any) => updateSetting("codeIndexQdrantApiKey", e.target.value)}
-								placeholder={
-									localSettings.codeIndexQdrantApiKey
-										? "••••••••••••••••"
-										: "Enter your Qdrant API key (optional)"
+								value={
+									modifiedFields.has("codeIndexQdrantApiKey")
+										? localSettings.codeIndexQdrantApiKey || ""
+										: secretStatus.hasQdrantApiKey
+											? "••••••••••••••••"
+											: ""
 								}
+								onInput={(e: any) => updateSetting("codeIndexQdrantApiKey", e.target.value)}
+								placeholder="Enter your Qdrant API key (optional)"
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
 					</div>

@@ -1876,7 +1876,7 @@ export const webviewMessageHandler = async (
 
 					if (settings.codeIndexOpenAiKey !== undefined) {
 						console.log(
-							`[DEBUG WebviewHandler] Adding OpenAI key to secrets: "${settings.codeIndexOpenAiKey.substring(0, 4)}..."`,
+							`[DEBUG WebviewHandler] Adding OpenAI key to secrets: ${settings.codeIndexOpenAiKey ? `"${settings.codeIndexOpenAiKey.substring(0, 4)}..."` : "(empty)"}`,
 						)
 						secretsToStore.openAiKey = settings.codeIndexOpenAiKey
 					}
@@ -1946,6 +1946,23 @@ export const webviewMessageHandler = async (
 			provider.postMessageToWebview({
 				type: "indexingStatusUpdate",
 				values: status,
+			})
+			break
+		}
+		case "requestCodeIndexSecretStatus": {
+			// Check if secrets are set using the VSCode context directly for async access
+			const vscodeContext = provider.contextProxy.getVSCodeContext()
+			const hasOpenAiKey = !!(await vscodeContext.secrets.get("codeIndexOpenAiKey"))
+			const hasQdrantApiKey = !!(await vscodeContext.secrets.get("codeIndexQdrantApiKey"))
+			const hasOpenAiCompatibleApiKey = !!(await vscodeContext.secrets.get("codebaseIndexOpenAiCompatibleApiKey"))
+
+			provider.postMessageToWebview({
+				type: "codeIndexSecretStatus",
+				values: {
+					hasOpenAiKey,
+					hasQdrantApiKey,
+					hasOpenAiCompatibleApiKey,
+				},
 			})
 			break
 		}

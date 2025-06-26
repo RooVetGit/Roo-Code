@@ -104,6 +104,7 @@ export interface ExtensionMessage {
 		| "marketplaceData"
 		| "shareTaskSuccess"
 		| "codeIndexSettingsSaved"
+		| "codeIndexSecretStatus"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:

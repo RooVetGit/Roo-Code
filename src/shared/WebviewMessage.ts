@@ -184,6 +184,7 @@ export interface WebviewMessage {
 		| "checkRulesDirectory"
 		| "checkRulesDirectoryResult"
 		| "saveCodeIndexSettingsAtomic"
+		| "requestCodeIndexSecretStatus"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
