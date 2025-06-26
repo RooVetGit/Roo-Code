@@ -93,7 +93,7 @@ describe("GeminiCliHandler", () => {
 	describe("OAuth authentication", () => {
 		it("should load OAuth credentials from default path", async () => {
 			await handler["loadOAuthCredentials"]()
-			expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining(".gemini/oauth_creds.json"), "utf-8")
+			expect(fs.readFile).toHaveBeenCalledWith(expect.stringMatching(/\.gemini[/\\]oauth_creds\.json$/), "utf-8")
 		})
 
 		it("should load OAuth credentials from custom path", async () => {
