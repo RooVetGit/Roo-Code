@@ -124,10 +124,10 @@ describe("autoImportConfig", () => {
 			get: vi.fn().mockReturnValue(""),
 		} as any)
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
@@ -145,10 +145,10 @@ describe("autoImportConfig", () => {
 		// Mock fileExistsAtPath to return false
 		vi.mocked(fileExistsAtPath).mockResolvedValue(false)
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
@@ -187,10 +187,10 @@ describe("autoImportConfig", () => {
 
 		vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(mockConfig) as any)
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
@@ -218,10 +218,10 @@ describe("autoImportConfig", () => {
 		// Mock fs.readFile to return invalid JSON
 		vi.mocked(fsPromises.readFile).mockResolvedValue("invalid json" as any)
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
@@ -242,10 +242,10 @@ describe("autoImportConfig", () => {
 		// Mock fileExistsAtPath to return false (so we can check the resolved path)
 		vi.mocked(fileExistsAtPath).mockResolvedValue(false)
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
@@ -262,10 +262,10 @@ describe("autoImportConfig", () => {
 		// Mock fileExistsAtPath to return false (so we can check the resolved path)
 		vi.mocked(fileExistsAtPath).mockResolvedValue(false)
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
@@ -282,10 +282,10 @@ describe("autoImportConfig", () => {
 		// Mock fileExistsAtPath to throw an error
 		vi.mocked(fileExistsAtPath).mockRejectedValue(new Error("File system error"))
 
-		await autoImportConfig({
-			provider: mockProvider,
+		await autoImportConfig(mockOutputChannel, {
+			providerSettingsManager: mockProviderSettingsManager,
+			contextProxy: mockContextProxy,
 			customModesManager: mockCustomModesManager,
-			outputChannel: mockOutputChannel,
 		})
 
 		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(

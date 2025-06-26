@@ -173,12 +173,6 @@ export const exportSettings = async ({ providerSettingsManager, contextProxy }: 
  * @param filePath - Optional file path to import from. If not provided, a file dialog will be shown.
  * @returns Promise that resolves when import is complete
  */
-/**
- * Import settings with complete UI feedback and provider state updates
- * @param options - Import options with provider instance
- * @param filePath - Optional file path to import from. If not provided, a file dialog will be shown.
- * @returns Promise that resolves when import is complete
- */
 export const importSettingsWithFeedback = async (
 	{ providerSettingsManager, contextProxy, customModesManager, provider }: ImportWithProviderOptions,
 	filePath?: string,
