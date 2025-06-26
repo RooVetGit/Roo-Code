@@ -520,7 +520,9 @@ function logMessage(logs: string[], message: string): string {
 	console.log(message)
 
 	// Extract tags and strip them from the message stored in logs array
-	const tagMatch = message.match(/^\[(.*?)\]\s*(.*)$/)
+	// Using a more specific regex pattern to avoid potential ReDoS vulnerability
+	// Original: /^\[(.*?)\]\s*(.*)$/
+	const tagMatch = message.match(/^\[([^\]]*)\]\s*(.*)$/)
 
 	if (tagMatch) {
 		// If message has tags, only store the content part in logs array
