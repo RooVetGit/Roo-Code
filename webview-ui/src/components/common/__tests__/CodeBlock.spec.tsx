@@ -37,6 +37,28 @@ vi.mock("../../../utils/highlighter", () => {
 			const theme = options.theme === "github-light" ? "light" : "dark"
 			return `<pre><code class="hljs language-${options.lang}">${code} [${theme}-theme]</code></pre>`
 		}),
+		codeToHast: vi.fn().mockImplementation((code, options) => {
+			const theme = options.theme === "github-light" ? "light" : "dark"
+			// Return a simple HAST node structure that includes the theme marker
+			return {
+				type: "element",
+				tagName: "pre",
+				properties: {},
+				children: [
+					{
+						type: "element",
+						tagName: "code",
+						properties: { className: [`hljs`, `language-${options.lang}`] },
+						children: [
+							{
+								type: "text",
+								value: `${code} [${theme}-theme]`,
+							},
+						],
+					},
+				],
+			}
+		}),
 	}
 
 	return {
