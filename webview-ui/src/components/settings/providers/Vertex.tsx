@@ -1,4 +1,5 @@
 import { useCallback } from "react"
+import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import { type ProviderSettings, VERTEX_REGIONS } from "@roo-code/types"
@@ -6,7 +7,7 @@ import { type ProviderSettings, VERTEX_REGIONS } from "@roo-code/types"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
 
-import { inputEventTransform } from "../transforms"
+import { inputEventTransform, noTransform } from "../transforms"
 
 type VertexProps = {
 	apiConfiguration: ProviderSettings
@@ -91,6 +92,18 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 					</SelectContent>
 				</Select>
 			</div>
+			<Checkbox
+				checked={apiConfiguration.geminiDisableStreaming ?? false}
+				onChange={handleInputChange("geminiDisableStreaming", noTransform)}>
+				<div className="flex items-center gap-1">
+					<span>Disable Streaming</span>
+					<i
+						className="codicon codicon-info text-vscode-descriptionForeground"
+						title="Disables streaming intermediate responses for Google Gemini models. This will not affect the quality of the end response."
+						style={{ fontSize: "12px" }}
+					/>
+				</div>
+			</Checkbox>
 		</>
 	)
 }

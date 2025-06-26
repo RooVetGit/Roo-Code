@@ -114,6 +114,9 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		const transforms = (this.options.openRouterUseMiddleOutTransform ?? true) ? ["middle-out"] : undefined
 
+		const isGemini = modelId.startsWith("google/gemini")
+		const useStreaming = isGemini ? !this.options.geminiDisableStreaming : true
+
 		// https://openrouter.ai/docs/transforms
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
@@ -121,8 +124,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			temperature,
 			top_p: topP,
 			messages: openAiMessages,
-			stream: true,
-			stream_options: { include_usage: true },
+			stream: useStreaming,
+			...(useStreaming && { stream_options: { include_usage: true } }),
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
@@ -136,8 +139,32 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			...(reasoning && { reasoning }),
 		}
 
-		const stream = await this.client.chat.completions.create(completionParams)
+		const response = await this.client.chat.completions.create(completionParams)
 
+		if (!useStreaming) {
+			const completion = response as OpenAI.Chat.ChatCompletion
+			if ("error" in completion) {
+				const error = completion.error as { message?: string; code?: number }
+				throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
+			}
+			const content = completion.choices[0]?.message?.content
+			if (content) {
+				yield { type: "text", text: content }
+			}
+			if (completion.usage) {
+				const usage = completion.usage as CompletionUsage
+				yield {
+					type: "usage",
+					inputTokens: usage.prompt_tokens || 0,
+					outputTokens: usage.completion_tokens || 0,
+					reasoningTokens: usage.completion_tokens_details?.reasoning_tokens,
+					totalCost: (usage.is_byok ? BYOK_COST_MULTIPLIER : 1) * (usage.cost || 0),
+				}
+			}
+			return
+		}
+
+		const stream = response as import("openai/streaming").Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
 		let lastUsage: CompletionUsage | undefined = undefined
 
 		for await (const chunk of stream) {
@@ -150,7 +177,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 			const delta = chunk.choices[0]?.delta
 
-			if ("reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
+			if (delta && "reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
 				yield { type: "reasoning", text: delta.reasoning }
 			}
 

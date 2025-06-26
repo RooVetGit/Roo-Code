@@ -139,6 +139,25 @@ export const OpenRouter = ({
 				organizationAllowList={organizationAllowList}
 				errorMessage={modelValidationError}
 			/>
+			{selectedModelId.startsWith("google/") && (
+				<>
+					<p className="mt-2 text-sm text-vscode-descriptionForeground">
+						For Google models, you may need a Google Cloud account with Vertex AI enabled.
+					</p>
+					<Checkbox
+						checked={apiConfiguration.geminiDisableStreaming ?? false}
+						onChange={handleInputChange("geminiDisableStreaming", noTransform)}>
+						<div className="flex items-center gap-1">
+							<span>Disable Streaming</span>
+							<i
+								className="codicon codicon-info text-vscode-descriptionForeground"
+								title="Disables streaming intermediate responses for Google Gemini models. This will not affect the quality of the end response."
+								style={{ fontSize: "12px" }}
+							/>
+						</div>
+					</Checkbox>
+				</>
+			)}
 			{openRouterModelProviders && Object.keys(openRouterModelProviders).length > 0 && (
 				<div>
 					<div className="flex items-center gap-1">

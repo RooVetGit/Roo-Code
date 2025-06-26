@@ -77,6 +77,32 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 		const params: GenerateContentParameters = { model, contents, config }
 
+		if (this.options.geminiDisableStreaming) {
+			const result = await this.client.models.generateContent(params)
+			const text = result.text
+			if (text) {
+				yield { type: "text", text }
+			}
+			if (result.usageMetadata) {
+				const { promptTokenCount, candidatesTokenCount, cachedContentTokenCount, thoughtsTokenCount } =
+					result.usageMetadata
+				const inputTokens = promptTokenCount ?? 0
+				const outputTokens = candidatesTokenCount ?? 0
+				const cacheReadTokens = cachedContentTokenCount
+				const reasoningTokens = thoughtsTokenCount
+
+				yield {
+					type: "usage",
+					inputTokens,
+					outputTokens,
+					cacheReadTokens,
+					reasoningTokens,
+					totalCost: this.calculateCost({ info, inputTokens, outputTokens, cacheReadTokens }),
+				}
+			}
+			return
+		}
+
 		const result = await this.client.models.generateContentStream(params)
 
 		let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined

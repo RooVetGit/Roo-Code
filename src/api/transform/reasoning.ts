@@ -59,5 +59,5 @@ export const getGeminiReasoning = ({
 	settings,
 }: GetModelReasoningOptions): GeminiReasoningParams | undefined =>
 	shouldUseReasoningBudget({ model, settings })
-		? { thinkingBudget: reasoningBudget!, includeThoughts: !settings.geminiDisableStreaming }
+		? { thinkingBudget: reasoningBudget!, includeThoughts: true }
 		: undefined

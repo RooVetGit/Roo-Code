@@ -7,7 +7,7 @@ import type { ProviderSettings } from "@roo-code/types"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
-import { inputEventTransform } from "../transforms"
+import { inputEventTransform, noTransform } from "../transforms"
 
 type GeminiProps = {
 	apiConfiguration: ProviderSettings
@@ -50,6 +50,18 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 					{t("settings:providers.getGeminiApiKey")}
 				</VSCodeButtonLink>
 			)}
+			<Checkbox
+				checked={apiConfiguration.geminiDisableStreaming ?? false}
+				onChange={handleInputChange("geminiDisableStreaming", noTransform)}>
+				<div className="flex items-center gap-1">
+					<span>Disable Streaming</span>
+					<i
+						className="codicon codicon-info text-vscode-descriptionForeground"
+						title="Disables streaming intermediate responses for Google Gemini models. This will not affect the quality of the end response."
+						style={{ fontSize: "12px" }}
+					/>
+				</div>
+			</Checkbox>
 			<div>
 				<Checkbox
 					checked={googleGeminiBaseUrlSelected}
