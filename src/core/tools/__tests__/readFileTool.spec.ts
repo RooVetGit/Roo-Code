@@ -20,16 +20,19 @@ vi.mock("path", async () => {
 	}
 })
 
-vi.mock("fs/promises", () => ({
-	mkdir: vi.fn().mockResolvedValue(undefined),
-	writeFile: vi.fn().mockResolvedValue(undefined),
-	readFile: vi.fn().mockResolvedValue("{}"),
-}))
+// Already mocked above with hoisted fsPromises
 
 vi.mock("isbinaryfile")
 
 vi.mock("../../../integrations/misc/line-counter")
 vi.mock("../../../integrations/misc/read-lines")
+
+// Mock fs/promises readFile for image tests
+const fsPromises = vi.hoisted(() => ({
+	readFile: vi.fn(),
+	stat: vi.fn().mockResolvedValue({ size: 1024 }),
+}))
+vi.mock("fs/promises", () => fsPromises)
 
 // Mock input content for tests
 let mockInputContent = ""
@@ -47,6 +50,53 @@ const addLineNumbersMock = vi.fn().mockImplementation((text, startLine = 1) => {
 
 const extractTextFromFileMock = vi.fn()
 const getSupportedBinaryFormatsMock = vi.fn(() => [".pdf", ".docx", ".ipynb"])
+
+// Mock formatResponse - use vi.hoisted to ensure mocks are available before vi.mock
+const { toolResultMock, imageBlocksMock } = vi.hoisted(() => {
+	const toolResultMock = vi.fn((text: string, images?: string[]) => {
+		if (images && images.length > 0) {
+			return [
+				{ type: "text", text },
+				...images.map((img) => {
+					const [header, data] = img.split(",")
+					const media_type = header.match(/:(.*?);/)?.[1] || "image/png"
+					return { type: "image", source: { type: "base64", media_type, data } }
+				}),
+			]
+		}
+		return text
+	})
+	const imageBlocksMock = vi.fn((images?: string[]) => {
+		return images
+			? images.map((img) => {
+					const [header, data] = img.split(",")
+					const media_type = header.match(/:(.*?);/)?.[1] || "image/png"
+					return { type: "image", source: { type: "base64", media_type, data } }
+				})
+			: []
+	})
+	return { toolResultMock, imageBlocksMock }
+})
+
+vi.mock("../../prompts/responses", () => ({
+	formatResponse: {
+		toolDenied: vi.fn(() => "The user denied this operation."),
+		toolDeniedWithFeedback: vi.fn(
+			(feedback?: string) =>
+				`The user denied this operation and provided the following feedback:\n<feedback>\n${feedback}\n</feedback>`,
+		),
+		toolApprovedWithFeedback: vi.fn(
+			(feedback?: string) =>
+				`The user approved this operation and provided the following context:\n<feedback>\n${feedback}\n</feedback>`,
+		),
+		rooIgnoreError: vi.fn(
+			(path: string) =>
+				`Access to ${path} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.`,
+		),
+		toolResult: toolResultMock,
+		imageBlocks: imageBlocksMock,
+	},
+}))
 
 vi.mock("../../ignore/RooIgnoreController", () => ({
 	RooIgnoreController: class {
@@ -517,6 +567,269 @@ describe("read_file tool XML output structure", () => {
 			expect(result).toBe(
 				`<files>\n<file><path>${testFilePath}</path><error>Access to ${testFilePath} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.</error></file>\n</files>`,
 			)
+		})
+	})
+})
+
+describe("read_file tool with image support", () => {
+	const testImagePath = "test/image.png"
+	const absoluteImagePath = "/test/image.png"
+	const base64ImageData =
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+	const imageBuffer = Buffer.from(base64ImageData, "base64")
+
+	const mockedCountFileLines = vi.mocked(countFileLines)
+	const mockedIsBinaryFile = vi.mocked(isBinaryFile)
+	const mockedPathResolve = vi.mocked(path.resolve)
+	const mockedFsReadFile = vi.mocked(fsPromises.readFile)
+	const mockedExtractTextFromFile = vi.mocked(extractTextFromFile)
+
+	const mockCline: any = {}
+	let mockProvider: any
+	let toolResult: ToolResponse | undefined
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+
+		mockedPathResolve.mockReturnValue(absoluteImagePath)
+		mockedIsBinaryFile.mockResolvedValue(true)
+		mockedCountFileLines.mockResolvedValue(0)
+		mockedFsReadFile.mockResolvedValue(imageBuffer)
+
+		mockProvider = {
+			getState: vi.fn().mockResolvedValue({ maxReadFileLine: -1 }),
+			deref: vi.fn().mockReturnThis(),
+		}
+
+		mockCline.cwd = "/"
+		mockCline.task = "Test"
+		mockCline.providerRef = mockProvider
+		mockCline.rooIgnoreController = {
+			validateAccess: vi.fn().mockReturnValue(true),
+		}
+		mockCline.say = vi.fn().mockResolvedValue(undefined)
+		mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+		mockCline.presentAssistantMessage = vi.fn()
+		mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+		mockCline.pushToolResult = vi.fn()
+		mockCline.removeClosingTag = vi.fn((tag, content) => content)
+
+		mockCline.fileContextTracker = {
+			trackFileContext: vi.fn().mockResolvedValue(undefined),
+		}
+
+		mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+
+		toolResult = undefined
+	})
+
+	async function executeReadImageTool(imagePath: string = testImagePath): Promise<ToolResponse | undefined> {
+		const argsContent = `<file><path>${imagePath}</path></file>`
+		const toolUse: ReadFileToolUse = {
+			type: "tool_use",
+			name: "read_file",
+			params: { args: argsContent },
+			partial: false,
+		}
+
+		await readFileTool(
+			mockCline,
+			toolUse,
+			mockCline.ask,
+			vi.fn(),
+			(result: ToolResponse) => {
+				toolResult = result
+			},
+			(_: ToolParamName, content?: string) => content ?? "",
+		)
+
+		return toolResult
+	}
+
+	describe("Image Format Detection", () => {
+		it.each([
+			[".png", "image.png", "image/png"],
+			[".jpg", "photo.jpg", "image/jpeg"],
+			[".jpeg", "picture.jpeg", "image/jpeg"],
+			[".gif", "animation.gif", "image/gif"],
+			[".bmp", "bitmap.bmp", "image/bmp"],
+			[".svg", "vector.svg", "image/svg+xml"],
+			[".webp", "modern.webp", "image/webp"],
+			[".ico", "favicon.ico", "image/x-icon"],
+			[".avif", "new-format.avif", "image/avif"],
+		])("should detect %s as an image format", async (ext, filename, expectedMimeType) => {
+			// Setup
+			const imagePath = `test/${filename}`
+			const absolutePath = `/test/${filename}`
+			mockedPathResolve.mockReturnValue(absolutePath)
+
+			// Execute
+			const result = await executeReadImageTool(imagePath)
+
+			// Verify result is a multi-part response
+			expect(Array.isArray(result)).toBe(true)
+			const textPart = (result as any[]).find((p) => p.type === "text")?.text
+			const imagePart = (result as any[]).find((p) => p.type === "image")
+
+			// Verify text part
+			expect(textPart).toContain(`<file><path>${imagePath}</path>`)
+			expect(textPart).not.toContain("<image_data>")
+			expect(textPart).toContain(`<notice>Image file`)
+
+			// Verify image part
+			expect(imagePart).toBeDefined()
+			expect(imagePart.source.media_type).toBe(expectedMimeType)
+			expect(imagePart.source.data).toBe(base64ImageData)
+		})
+	})
+
+	describe("Image Reading Functionality", () => {
+		it("should read image file and return a multi-part response", async () => {
+			// Execute
+			const result = await executeReadImageTool()
+
+			// Verify result is a multi-part response
+			expect(Array.isArray(result)).toBe(true)
+			const textPart = (result as any[]).find((p) => p.type === "text")?.text
+			const imagePart = (result as any[]).find((p) => p.type === "image")
+
+			// Verify text part
+			expect(textPart).toContain(`<file><path>${testImagePath}</path>`)
+			expect(textPart).not.toContain(`<image_data>`)
+			expect(textPart).toContain(`<notice>Image file`)
+
+			// Verify image part
+			expect(imagePart).toBeDefined()
+			expect(imagePart.source.media_type).toBe("image/png")
+			expect(imagePart.source.data).toBe(base64ImageData)
+		})
+
+		it("should call formatResponse.toolResult with text and image data", async () => {
+			// Execute
+			await executeReadImageTool()
+
+			// Verify toolResultMock was called correctly
+			expect(toolResultMock).toHaveBeenCalledTimes(1)
+			const callArgs = toolResultMock.mock.calls[0]
+			const textArg = callArgs[0]
+			const imagesArg = callArgs[1]
+
+			expect(textArg).toContain(`<file><path>${testImagePath}</path>`)
+			expect(imagesArg).toBeDefined()
+			expect(imagesArg).toBeInstanceOf(Array)
+			expect(imagesArg!.length).toBe(1)
+			expect(imagesArg![0]).toBe(`data:image/png;base64,${base64ImageData}`)
+		})
+
+		it("should handle large image files", async () => {
+			// Setup - simulate a large image
+			const largeBase64 = "A".repeat(1000000) // 1MB of base64 data
+			const largeBuffer = Buffer.from(largeBase64, "base64")
+			mockedFsReadFile.mockResolvedValue(largeBuffer)
+
+			// Execute
+			const result = await executeReadImageTool()
+
+			// Verify it still works with large data
+			expect(Array.isArray(result)).toBe(true)
+			const imagePart = (result as any[]).find((p) => p.type === "image")
+			expect(imagePart).toBeDefined()
+			expect(imagePart.source.media_type).toBe("image/png")
+			expect(imagePart.source.data).toBe(largeBase64)
+		})
+
+		it("should handle errors when reading image files", async () => {
+			// Setup - simulate read error
+			mockedFsReadFile.mockRejectedValue(new Error("Failed to read image"))
+
+			// Execute
+			const result = await executeReadImageTool()
+
+			// Verify error handling
+			expect(result).toContain("<error>Error reading image file: Failed to read image</error>")
+			expect(mockCline.handleError).toHaveBeenCalled()
+		})
+	})
+
+	describe("Binary File Handling", () => {
+		it("should not treat non-image binary files as images", async () => {
+			// Setup
+			const binaryPath = "test/document.pdf"
+			const absolutePath = "/test/document.pdf"
+			mockedPathResolve.mockReturnValue(absolutePath)
+			mockedExtractTextFromFile.mockResolvedValue("PDF content extracted")
+
+			// Execute
+			const result = await executeReadImageTool(binaryPath)
+
+			// Verify it uses extractTextFromFile instead
+			expect(result).not.toContain("<image_data>")
+			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absolutePath)
+		})
+
+		it("should handle unknown binary formats", async () => {
+			// Setup
+			const binaryPath = "test/unknown.bin"
+			const absolutePath = "/test/unknown.bin"
+			mockedPathResolve.mockReturnValue(absolutePath)
+			mockedExtractTextFromFile.mockResolvedValue("")
+
+			// Execute
+			const result = await executeReadImageTool(binaryPath)
+
+			// Verify
+			expect(result).not.toContain("<image_data>")
+			expect(result).toContain('<binary_file format="bin"')
+		})
+	})
+
+	describe("Edge Cases", () => {
+		it("should handle case-insensitive image extensions", async () => {
+			// Test uppercase extensions
+			const uppercasePath = "test/IMAGE.PNG"
+			const absolutePath = "/test/IMAGE.PNG"
+			mockedPathResolve.mockReturnValue(absolutePath)
+
+			// Execute
+			const result = await executeReadImageTool(uppercasePath)
+
+			// Verify
+			expect(Array.isArray(result)).toBe(true)
+			const imagePart = (result as any[]).find((p) => p.type === "image")
+			expect(imagePart).toBeDefined()
+			expect(imagePart.source.media_type).toBe("image/png")
+		})
+
+		it("should handle files with multiple dots in name", async () => {
+			// Setup
+			const complexPath = "test/my.photo.backup.png"
+			const absolutePath = "/test/my.photo.backup.png"
+			mockedPathResolve.mockReturnValue(absolutePath)
+
+			// Execute
+			const result = await executeReadImageTool(complexPath)
+
+			// Verify
+			expect(Array.isArray(result)).toBe(true)
+			const imagePart = (result as any[]).find((p) => p.type === "image")
+			expect(imagePart).toBeDefined()
+			expect(imagePart.source.media_type).toBe("image/png")
+		})
+
+		it("should handle empty image files", async () => {
+			// Setup - empty buffer
+			mockedFsReadFile.mockResolvedValue(Buffer.from(""))
+
+			// Execute
+			const result = await executeReadImageTool()
+
+			// Verify - should still create valid data URL
+			expect(Array.isArray(result)).toBe(true)
+			const imagePart = (result as any[]).find((p) => p.type === "image")
+			expect(imagePart).toBeDefined()
+			expect(imagePart.source.media_type).toBe("image/png")
+			expect(imagePart.source.data).toBe("")
 		})
 	})
 })
