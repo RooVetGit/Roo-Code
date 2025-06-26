@@ -20,6 +20,7 @@ import { TaskActions } from "./TaskActions"
 import { ShareButton } from "./ShareButton"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
+import { TodoListDisplay } from "./TodoListDisplay"
 
 export interface TaskHeaderProps {
 	task: ClineMessage
@@ -32,6 +33,7 @@ export interface TaskHeaderProps {
 	buttonsDisabled: boolean
 	handleCondenseContext: (taskId: string) => void
 	onClose: () => void
+	todos?: any[]
 }
 
 const TaskHeader = ({
@@ -45,6 +47,7 @@ const TaskHeader = ({
 	buttonsDisabled,
 	handleCondenseContext,
 	onClose,
+	todos,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
@@ -214,6 +217,7 @@ const TaskHeader = ({
 					</>
 				)}
 			</div>
+			<TodoListDisplay todos={todos ?? (task as any)?.tool?.todos ?? []} />
 		</div>
 	)
 }

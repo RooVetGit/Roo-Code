@@ -129,6 +129,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	autoCondenseContextPercent: number
 	setAutoCondenseContextPercent: (value: number) => void
 	routerModels?: RouterModels
+	alwaysAllowUpdateTodoList?: boolean
+	setAlwaysAllowUpdateTodoList: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -219,6 +221,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderModelId: "",
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
+		alwaysAllowUpdateTodoList: true,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -457,6 +460,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCustomCondensingPrompt: (value) =>
 			setState((prevState) => ({ ...prevState, customCondensingPrompt: value })),
 		setProfileThresholds: (value) => setState((prevState) => ({ ...prevState, profileThresholds: value })),
+		alwaysAllowUpdateTodoList: state.alwaysAllowUpdateTodoList,
+		setAlwaysAllowUpdateTodoList: (value) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowUpdateTodoList: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

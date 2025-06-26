@@ -103,6 +103,14 @@ export type ClineEvents = {
 	taskToolFailed: [taskId: string, tool: ToolName, error: string]
 }
 
+export type TodoStatus = "pending" | "in_progress" | "completed"
+
+export type TodoItem = {
+	id?: string
+	content: string
+	status: TodoStatus
+}
+
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
@@ -122,6 +130,7 @@ export type TaskOptions = {
 }
 
 export class Task extends EventEmitter<ClineEvents> {
+	todoList?: TodoItem[]
 	readonly taskId: string
 	readonly instanceId: string
 
@@ -299,6 +308,71 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
+	public addTodo(content: string, status: TodoStatus = "pending", id?: string): TodoItem {
+		const todo: TodoItem = {
+			id: id ?? crypto.randomUUID(),
+			content,
+			status,
+		}
+		this.todoList?.push(todo)
+		this.saveTodoList()
+		return todo
+	}
+
+	public updateTodoStatus(id: string, nextStatus: TodoStatus): boolean {
+		if (!this.todoList) return false
+		const idx = this.todoList?.findIndex((t) => t.id === id)
+		if (idx === -1) return false
+		const current = this.todoList[idx]
+		if (
+			(current.status === "pending" && nextStatus === "in_progress") ||
+			(current.status === "in_progress" && nextStatus === "completed") ||
+			current.status === nextStatus
+		) {
+			this.todoList[idx] = { ...current, status: nextStatus }
+			this.saveTodoList()
+			return true
+		}
+		return false
+	}
+
+	public removeTodo(id: string): boolean {
+		if (!this.todoList) return false
+		const idx = this.todoList.findIndex((t) => t.id === id)
+		if (idx === -1) return false
+		this.todoList.splice(idx, 1)
+		this.saveTodoList()
+		return true
+	}
+
+	public getTodoList(): TodoItem[] | undefined {
+		return this.todoList?.slice()
+	}
+
+	public async setTodoList(todos: TodoItem[]) {
+		this.todoList = Array.isArray(todos) ? todos : []
+		await this.saveTodoList()
+	}
+
+	private async saveTodoList() {
+		await this.saveClineMessages()
+	}
+
+	private restoreTodoList(todoList?: TodoItem[]) {
+		if (todoList) {
+			this.todoList = Array.isArray(todoList) ? todoList : []
+			return
+		}
+		const todoMsg = this.clineMessages.find(
+			(m) => (m as any).type === "todoList" && Array.isArray((m as any).todoList),
+		)
+		if (todoMsg && Array.isArray((todoMsg as any).todoList)) {
+			this.todoList = (todoMsg as any).todoList
+		} else {
+			this.todoList = []
+		}
+	}
+
 	static create(options: TaskOptions): [Task, Promise<void>] {
 		const instance = new Task({ ...options, startTask: false })
 		const { images, task, historyItem } = options
@@ -368,8 +442,11 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async overwriteClineMessages(newMessages: ClineMessage[]) {
+	public async overwriteClineMessages(newMessages: ClineMessage[], todoList?: TodoItem[]) {
 		this.clineMessages = newMessages
+		if (todoList) {
+			this.restoreTodoList(todoList)
+		}
 		await this.saveClineMessages()
 	}
 

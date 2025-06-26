@@ -1300,6 +1300,14 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "updateTodoList": {
+			const payload = message.payload as { todos?: any[] }
+			const todos = payload?.todos
+			if (Array.isArray(todos)) {
+				await provider.getCurrentCline()?.setTodoList(todos)
+			}
+			break
+		}
 		case "saveApiConfiguration":
 			if (message.text && message.apiConfiguration) {
 				try {
