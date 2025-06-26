@@ -35,7 +35,7 @@ export const PROVIDERS = [
 	{ value: "anthropic", label: "Anthropic" },
 	{ value: "claude-code", label: "Claude Code" },
 	{ value: "gemini", label: "Google Gemini" },
-	{ value: "gemini-cli", label: "Gemini CLI Provider" },
+	{ value: "gemini-cli", label: "Gemini CLI" },
 	{ value: "deepseek", label: "DeepSeek" },
 	{ value: "openai-native", label: "OpenAI" },
 	{ value: "openai", label: "OpenAI Compatible" },
