@@ -98,8 +98,24 @@ export async function parseMentions(
 					const markdown = await urlContentFetcher.urlToMarkdown(mention)
 					result = markdown
 				} catch (error) {
-					vscode.window.showErrorMessage(`Error fetching content for ${mention}: ${error.message}`)
-					result = `Error fetching content: ${error.message}`
+					console.error(`Error fetching URL ${mention}:`, error)
+
+					// Provide more helpful error messages based on error type
+					let errorMessage = error.message
+					if (error.message.includes("timeout")) {
+						errorMessage = `The website took too long to load (timeout). This could be due to a slow connection, heavy website, or the site being temporarily unavailable. You can try again later or check if the URL is correct.`
+					} else if (error.message.includes("net::ERR_NAME_NOT_RESOLVED")) {
+						errorMessage = `The website address could not be found. Please check if the URL is correct and try again.`
+					} else if (error.message.includes("net::ERR_INTERNET_DISCONNECTED")) {
+						errorMessage = `No internet connection. Please check your network connection and try again.`
+					} else if (error.message.includes("403") || error.message.includes("Forbidden")) {
+						errorMessage = `Access to this website is forbidden. The site may block automated access or require authentication.`
+					} else if (error.message.includes("404") || error.message.includes("Not Found")) {
+						errorMessage = `The page was not found. Please check if the URL is correct.`
+					}
+
+					vscode.window.showErrorMessage(`Error fetching content for ${mention}: ${errorMessage}`)
+					result = `Error fetching content: ${errorMessage}`
 				}
 			}
 			parsedText += `\n\n<url_content url="${mention}">\n${result}\n</url_content>`

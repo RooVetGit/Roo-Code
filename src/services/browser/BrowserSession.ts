@@ -320,7 +320,7 @@ export class BrowserSession {
 	 * Navigate to a URL with standard loading options
 	 */
 	private async navigatePageToUrl(page: Page, url: string): Promise<void> {
-		await page.goto(url, { timeout: 7_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+		await page.goto(url, { timeout: 15_000, waitUntil: ["domcontentloaded", "networkidle2"] })
 		await this.waitTillHTMLStable(page)
 	}
 
@@ -403,7 +403,7 @@ export class BrowserSession {
 				console.log(`Root domain: ${this.getRootDomain(currentUrl)}`)
 				console.log(`New URL: ${normalizedNewUrl}`)
 				return this.doAction(async (page) => {
-					await page.reload({ timeout: 7_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+					await page.reload({ timeout: 15_000, waitUntil: ["domcontentloaded", "networkidle2"] })
 					await this.waitTillHTMLStable(page)
 				})
 			}
@@ -476,7 +476,7 @@ export class BrowserSession {
 			await page
 				.waitForNavigation({
 					waitUntil: ["domcontentloaded", "networkidle2"],
-					timeout: 7000,
+					timeout: 15000,
 				})
 				.catch(() => {})
 			await this.waitTillHTMLStable(page)

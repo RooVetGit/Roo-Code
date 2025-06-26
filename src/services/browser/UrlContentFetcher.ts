@@ -48,11 +48,28 @@ export class UrlContentFetcher {
 		this.browser = await stats.puppeteer.launch({
 			args: [
 				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+				"--no-sandbox",
+				"--disable-setuid-sandbox",
+				"--disable-dev-shm-usage",
+				"--disable-accelerated-2d-canvas",
+				"--no-first-run",
+				"--no-zygote",
+				"--disable-gpu",
+				"--disable-web-security",
+				"--disable-features=VizDisplayCompositor",
 			],
 			executablePath: stats.executablePath,
 		})
 		// (latest version of puppeteer does not add headless to user agent)
 		this.page = await this.browser?.newPage()
+
+		// Set additional page configurations to improve loading success
+		if (this.page) {
+			await this.page.setViewport({ width: 1280, height: 720 })
+			await this.page.setExtraHTTPHeaders({
+				"Accept-Language": "en-US,en;q=0.9",
+			})
+		}
 	}
 
 	async closeBrowser(): Promise<void> {
@@ -71,7 +88,22 @@ export class UrlContentFetcher {
 		- domcontentloaded is when the basic DOM is loaded
 		this should be sufficient for most doc sites
 		*/
-		await this.page.goto(url, { timeout: 10_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+		try {
+			await this.page.goto(url, {
+				timeout: 30_000, // Increased from 10_000 to 30_000 (30 seconds)
+				waitUntil: ["domcontentloaded", "networkidle2"],
+			})
+		} catch (error) {
+			// If networkidle2 fails, try with just domcontentloaded as fallback
+			console.warn(
+				`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${error.message}`,
+			)
+			await this.page.goto(url, {
+				timeout: 20_000, // 20 seconds for fallback
+				waitUntil: ["domcontentloaded"],
+			})
+		}
+
 		const content = await this.page.content()
 
 		// use cheerio to parse and clean up the HTML
