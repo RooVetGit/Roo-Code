@@ -74,9 +74,21 @@ describe("CodeIndexManager - handleExternalSettingsChange regression", () => {
 		})
 
 		it("should work normally when manager is initialized", async () => {
-			// Mock a minimal config manager
+			// Mock a complete config manager with all required properties
 			const mockConfigManager = {
 				loadConfiguration: vitest.fn().mockResolvedValue({ requiresRestart: true }),
+				isFeatureConfigured: true,
+				isFeatureEnabled: true,
+				getConfig: vitest.fn().mockReturnValue({
+					isEnabled: true,
+					isConfigured: true,
+					embedderProvider: "openai",
+					modelId: "text-embedding-3-small",
+					openAiOptions: { openAiNativeApiKey: "test-key" },
+					qdrantUrl: "http://localhost:6333",
+					qdrantApiKey: "test-key",
+					searchMinScore: 0.4,
+				}),
 			}
 			;(manager as any)._configManager = mockConfigManager
 
@@ -100,6 +112,7 @@ describe("CodeIndexManager - handleExternalSettingsChange regression", () => {
 
 			// Verify that the restart sequence was called
 			expect(mockConfigManager.loadConfiguration).toHaveBeenCalled()
+			// stopWatcher is called inside _recreateServices, which we mocked
 			expect(recreateServicesSpy).toHaveBeenCalled()
 			expect(startIndexingSpy).toHaveBeenCalled()
 		})

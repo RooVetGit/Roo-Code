@@ -162,11 +162,17 @@ export class CodeIndexServiceFactory {
 		scanner: DirectoryScanner
 		fileWatcher: IFileWatcher
 	} {
+		console.log(`[DEBUG ServiceFactory] createServices called`)
+		console.log(`[DEBUG ServiceFactory] isFeatureConfigured: ${this.configManager.isFeatureConfigured}`)
+
 		if (!this.configManager.isFeatureConfigured) {
+			console.log(`[DEBUG ServiceFactory] ERROR: Code indexing is not properly configured`)
 			throw new Error("Cannot create services: Code indexing is not properly configured")
 		}
 
+		console.log(`[DEBUG ServiceFactory] Creating embedder...`)
 		const embedder = this.createEmbedder()
+		console.log(`[DEBUG ServiceFactory] Embedder created successfully`)
 		const vectorStore = this.createVectorStore()
 		const parser = codeParser
 		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser, ignoreInstance)

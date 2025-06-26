@@ -406,15 +406,27 @@ export class CodeIndexConfigManager {
 
 	/**
 	 * Determines if a configuration change requires restarting the indexing process.
+	 * Simplified logic: only restart for critical changes that affect service functionality.
+	 *
+	 * CRITICAL CHANGES (require restart):
+	 * - Provider changes (openai -> ollama, etc.)
+	 * - Authentication changes (API keys, base URLs)
+	 * - Vector dimension changes (model changes that affect embedding size)
+	 * - Qdrant connection changes (URL, API key)
+	 * - Feature enable/disable transitions
+	 *
+	 * MINOR CHANGES (no restart needed):
+	 * - Search minimum score adjustments
+	 * - UI-only settings
+	 * - Non-functional configuration tweaks
 	 */
 	doesConfigChangeRequireRestart(prev: PreviousConfigSnapshot): boolean {
 		const nowConfigured = this.isConfigured()
 
-		// Handle null/undefined values safely - use empty strings for consistency with loaded config
+		// Handle null/undefined values safely
 		const prevEnabled = prev?.enabled ?? false
 		const prevConfigured = prev?.configured ?? false
 		const prevProvider = prev?.embedderProvider ?? "openai"
-		const prevModelId = prev?.modelId ?? undefined
 		const prevOpenAiKey = prev?.openAiKey ?? ""
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
 		const prevOpenAiCompatibleBaseUrl = prev?.openAiCompatibleBaseUrl ?? ""
@@ -424,76 +436,89 @@ export class CodeIndexConfigManager {
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
+		console.log(
+			`[DEBUG ConfigManager] Restart check - prevEnabled: ${prevEnabled}, nowEnabled: ${this.isEnabled}, prevConfigured: ${prevConfigured}, nowConfigured: ${nowConfigured}`,
+		)
+
 		// 1. Transition from disabled/unconfigured to enabled+configured
 		if ((!prevEnabled || !prevConfigured) && this.isEnabled && nowConfigured) {
+			console.log(`[DEBUG ConfigManager] Restart required: transition to enabled+configured`)
 			return true
 		}
 
 		// 2. If was disabled and still is, no restart needed
 		if (!prevEnabled && !this.isEnabled) {
+			console.log(`[DEBUG ConfigManager] No restart needed: feature disabled`)
 			return false
 		}
 
 		// 3. If wasn't ready before and isn't ready now, no restart needed
 		if (!prevConfigured && !nowConfigured) {
+			console.log(`[DEBUG ConfigManager] No restart needed: feature not configured`)
 			return false
 		}
 
-		// 4. Check for changes in relevant settings if the feature is enabled (or was enabled)
+		// 4. CRITICAL CHANGES - Always restart for these
 		if (this.isEnabled || prevEnabled) {
 			// Provider change
 			if (prevProvider !== this.embedderProvider) {
+				console.log(
+					`[DEBUG ConfigManager] Restart required: provider changed from ${prevProvider} to ${this.embedderProvider}`,
+				)
 				return true
 			}
 
-			if (this._hasVectorDimensionChanged(prevProvider, prevModelId)) {
-				return true
-			}
-
-			// Authentication changes
-			if (this.embedderProvider === "openai") {
-				const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
-				if (prevOpenAiKey !== currentOpenAiKey) {
-					return true
-				}
-			}
-
-			if (this.embedderProvider === "ollama") {
-				const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
-				if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
-					return true
-				}
-			}
-
-			if (this.embedderProvider === "openai-compatible") {
-				const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
-				const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
-				const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
-				if (
-					prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
-					prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey ||
-					prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension
-				) {
-					return true
-				}
-			}
-
-			if (this.embedderProvider === "gemini") {
-				const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
-				if (prevGeminiApiKey !== currentGeminiApiKey) {
-					return true
-				}
-			}
-
-			// Qdrant configuration changes
+			// Authentication changes (API keys)
+			const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
+			const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
+			const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
+			const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
+			const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
+			const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
 			const currentQdrantUrl = this.qdrantUrl ?? ""
 			const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
+			if (prevOpenAiKey !== currentOpenAiKey) {
+				console.log(`[DEBUG ConfigManager] Restart required: OpenAI API key changed`)
+				return true
+			}
+
+			if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+				console.log(`[DEBUG ConfigManager] Restart required: Ollama base URL changed`)
+				return true
+			}
+
+			if (
+				prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
+				prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
+			) {
+				console.log(`[DEBUG ConfigManager] Restart required: OpenAI Compatible settings changed`)
+				return true
+			}
+
+			// Check for OpenAI Compatible modelDimension changes
+			if (this.embedderProvider === "openai-compatible" || prevProvider === "openai-compatible") {
+				if (prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension) {
+					console.log(
+						`[DEBUG ConfigManager] Restart required: OpenAI Compatible modelDimension changed from ${prevOpenAiCompatibleModelDimension} to ${currentOpenAiCompatibleModelDimension}`,
+					)
+					return true
+				}
+			}
+
 			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+				console.log(`[DEBUG ConfigManager] Restart required: Qdrant settings changed`)
+				return true
+			}
+
+			// Vector dimension changes (still important for compatibility)
+			if (this._hasVectorDimensionChanged(prevProvider, prev?.modelId)) {
+				console.log(`[DEBUG ConfigManager] Restart required: vector dimension changed`)
 				return true
 			}
 		}
 
+		console.log(`[DEBUG ConfigManager] No restart needed: no critical changes detected`)
 		return false
 	}
 
