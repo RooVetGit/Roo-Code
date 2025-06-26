@@ -124,7 +124,7 @@ describe("GeminiCliHandler", () => {
 		it("should throw error if credentials file not found", async () => {
 			;(fs.readFile as any).mockRejectedValueOnce(new Error("ENOENT"))
 
-			await expect(handler["loadOAuthCredentials"]()).rejects.toThrow("Failed to load OAuth credentials")
+			await expect(handler["loadOAuthCredentials"]()).rejects.toThrow("errors.geminiCli.oauthLoadFailed")
 		})
 	})
 
@@ -242,9 +242,7 @@ describe("GeminiCliHandler", () => {
 		it("should handle API errors", async () => {
 			handler["authClient"].request = vi.fn().mockRejectedValue(new Error("API Error"))
 
-			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
-				"Gemini CLI completion error: API Error",
-			)
+			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("errors.geminiCli.completionError")
 		})
 	})
 
@@ -314,7 +312,7 @@ describe("GeminiCliHandler", () => {
 				for await (const _chunk of stream) {
 					// Should throw before yielding
 				}
-			}).rejects.toThrow("Rate limit exceeded")
+			}).rejects.toThrow("errors.geminiCli.rateLimitExceeded")
 		})
 	})
 
