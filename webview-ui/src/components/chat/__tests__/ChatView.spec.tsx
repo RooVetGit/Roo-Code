@@ -1164,7 +1164,7 @@ describe("ChatView - Version Indicator Tests", () => {
 		const versionButton = getByTestId("version-indicator")
 		expect(versionButton).toBeInTheDocument()
 		// The className is passed as a prop to VersionIndicator
-		expect(versionButton.className).toContain("absolute top-2 right-2 z-10")
+		expect(versionButton.className).toContain("absolute top-2 right-3 z-10")
 	})
 
 	it("version indicator has proper accessibility attributes", () => {
