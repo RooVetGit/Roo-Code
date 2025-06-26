@@ -1241,8 +1241,8 @@ describe("CodeIndexConfigManager", () => {
 		})
 
 		it("should not require restart when settings are saved but code indexing config unchanged", async () => {
-			// This test simulates the original issue: handleExternalSettingsChange() being called
-			// when other settings are saved, but code indexing settings haven't changed
+			// This test simulates the scenario where handleSettingsChange() is called
+			// but code indexing settings haven't actually changed
 
 			// Setup initial state - enabled and configured
 			mockContextProxy.getGlobalState.mockReturnValue({

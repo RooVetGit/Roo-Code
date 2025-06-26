@@ -1806,38 +1806,6 @@ export const webviewMessageHandler = async (
 
 			break
 		}
-		case "codebaseIndexConfig": {
-			const codebaseIndexConfig = message.values ?? {
-				codebaseIndexEnabled: false,
-				codebaseIndexQdrantUrl: "http://localhost:6333",
-				codebaseIndexEmbedderProvider: "openai",
-				codebaseIndexEmbedderBaseUrl: "",
-				codebaseIndexEmbedderModelId: "",
-			}
-			await updateGlobalState("codebaseIndexConfig", codebaseIndexConfig)
-
-			try {
-				if (provider.codeIndexManager) {
-					await provider.codeIndexManager.handleExternalSettingsChange()
-
-					// If now configured and enabled, start indexing automatically
-					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
-						if (!provider.codeIndexManager.isInitialized) {
-							await provider.codeIndexManager.initialize(provider.contextProxy)
-						}
-						// Start indexing in background (no await)
-						provider.codeIndexManager.startIndexing()
-					}
-				}
-			} catch (error) {
-				provider.log(
-					`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
-				)
-			}
-
-			await provider.postStateToWebview()
-			break
-		}
 
 		case "saveCodeIndexSettingsAtomic": {
 			if (!message.codeIndexSettings) {
@@ -1902,8 +1870,8 @@ export const webviewMessageHandler = async (
 
 				// Notify code index manager of changes
 				if (provider.codeIndexManager) {
-					console.log(`[DEBUG WebviewHandler] Calling handleExternalSettingsChange`)
-					await provider.codeIndexManager.handleExternalSettingsChange()
+					console.log(`[DEBUG WebviewHandler] Calling handleSettingsChange`)
+					await provider.codeIndexManager.handleSettingsChange()
 
 					// Auto-start indexing if now enabled and configured
 					console.log(
