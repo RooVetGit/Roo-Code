@@ -51,8 +51,8 @@ export function StandardTooltip({
 	asChild = true,
 	maxWidth,
 }: StandardTooltipProps) {
-	// Don't render tooltip if content is empty
-	if (!content) {
+	// Don't render tooltip if content is empty or only whitespace
+	if (!content || (typeof content === "string" && !content.trim())) {
 		return <>{children}</>
 	}
 
