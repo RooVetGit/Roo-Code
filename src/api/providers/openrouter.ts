@@ -147,9 +147,17 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				const error = completion.error as { message?: string; code?: number }
 				throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
 			}
-			const content = completion.choices[0]?.message?.content
-			if (content) {
-				yield { type: "text", text: content }
+			const message = completion.choices[0]?.message
+			if (message) {
+				// Surface reasoning tokens ("thoughts") when OpenRouter returns them in the
+				// non-streaming response. The property is named `reasoning` and lives next
+				// to `content`.
+				if ("reasoning" in message && typeof (message as any).reasoning === "string") {
+					yield { type: "reasoning", text: (message as any).reasoning }
+				}
+				if (message.content) {
+					yield { type: "text", text: message.content }
+				}
 			}
 			if (completion.usage) {
 				const usage = completion.usage as CompletionUsage
