@@ -318,7 +318,7 @@ export class CodeIndexManager {
 				await this._recreateServices()
 
 				// Start indexing with new services
-				await this.startIndexing()
+				this.startIndexing()
 			} else {
 				console.log(`[DEBUG Manager] No restart needed or conditions not met`)
 			}
