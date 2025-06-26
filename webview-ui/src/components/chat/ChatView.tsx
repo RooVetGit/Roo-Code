@@ -1367,7 +1367,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	return (
 		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
 			{/* Version indicator in top-right corner */}
-			<VersionIndicator onClick={() => setShowAnnouncementModal(true)} className="absolute top-2 right-2 z-10" />
+			<VersionIndicator onClick={() => setShowAnnouncementModal(true)} className="absolute top-2 right-3 z-10" />
 
 			{(showAnnouncement || showAnnouncementModal) && (
 				<Announcement
