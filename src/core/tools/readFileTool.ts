@@ -14,6 +14,49 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import * as fs from "fs/promises"
+
+/**
+ * Supported image formats that can be displayed
+ */
+const SUPPORTED_IMAGE_FORMATS = [
+	".png",
+	".jpg",
+	".jpeg",
+	".gif",
+	".webp",
+	".svg",
+	".bmp",
+	".ico",
+	".tiff",
+	".tif",
+] as const
+
+/**
+ * Reads an image file and returns it as a base64 data URL
+ */
+async function readImageAsDataUrl(filePath: string): Promise<string> {
+	const fileBuffer = await fs.readFile(filePath)
+	const base64 = fileBuffer.toString("base64")
+	const ext = path.extname(filePath).toLowerCase()
+
+	// Map extensions to MIME types
+	const mimeTypes: Record<string, string> = {
+		".png": "image/png",
+		".jpg": "image/jpeg",
+		".jpeg": "image/jpeg",
+		".gif": "image/gif",
+		".webp": "image/webp",
+		".svg": "image/svg+xml",
+		".bmp": "image/bmp",
+		".ico": "image/x-icon",
+		".tiff": "image/tiff",
+		".tif": "image/tiff",
+	}
+
+	const mimeType = mimeTypes[ext] || "image/png"
+	return `data:${mimeType};base64,${base64}`
+}
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -66,6 +109,7 @@ interface FileResult {
 	notice?: string
 	lineRanges?: LineRange[]
 	xmlContent?: string // Final XML content for this file
+	imageDataUrl?: string // Image data URL for image files
 	feedbackText?: string // User feedback text from approval/denial
 	feedbackImages?: any[] // User feedback images from approval/denial
 }
@@ -440,6 +484,55 @@ export async function readFileTool(
 					const fileExtension = path.extname(relPath).toLowerCase()
 					const supportedBinaryFormats = getSupportedBinaryFormats()
 
+					// Check if it's a supported image format
+					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as any)) {
+						try {
+							const imageDataUrl = await readImageAsDataUrl(fullPath)
+							const imageStats = await fs.stat(fullPath)
+							const imageSizeInKB = Math.round(imageStats.size / 1024)
+
+							// For images, get dimensions if possible
+							let dimensionsInfo = ""
+							if (fileExtension === ".png") {
+								// Simple PNG dimension extraction (first 24 bytes contain width/height)
+								const buffer = await fs.readFile(fullPath)
+								if (buffer.length >= 24) {
+									const width = buffer.readUInt32BE(16)
+									const height = buffer.readUInt32BE(20)
+									if (width && height) {
+										dimensionsInfo = `${width}x${height} pixels`
+									}
+								}
+							}
+
+							// Track file read
+							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+							// Store image data URL separately - NOT in XML
+							const noticeText = dimensionsInfo
+								? `Image file (${dimensionsInfo}, ${imageSizeInKB} KB)`
+								: `Image file (${imageSizeInKB} KB)`
+
+							updateFileResult(relPath, {
+								xmlContent: `<file><path>${relPath}</path>\n<notice>${noticeText}</notice>\n</file>`,
+								imageDataUrl: imageDataUrl,
+							})
+							continue
+						} catch (error) {
+							const errorMsg = error instanceof Error ? error.message : String(error)
+							updateFileResult(relPath, {
+								status: "error",
+								error: `Error reading image file: ${errorMsg}`,
+								xmlContent: `<file><path>${relPath}</path><error>Error reading image file: ${errorMsg}</error></file>`,
+							})
+							await handleError(
+								`reading image file ${relPath}`,
+								error instanceof Error ? error : new Error(errorMsg),
+							)
+							continue
+						}
+					}
+
 					if (!supportedBinaryFormats.includes(fileExtension)) {
 						updateFileResult(relPath, {
 							notice: "Binary file",
@@ -546,6 +639,11 @@ export async function readFileTool(
 		const xmlResults = fileResults.filter((result) => result.xmlContent).map((result) => result.xmlContent)
 		const filesXml = `<files>\n${xmlResults.join("\n")}\n</files>`
 
+		// Collect all image data URLs from file results
+		const fileImageUrls = fileResults
+			.filter((result) => result.imageDataUrl)
+			.map((result) => result.imageDataUrl as string)
+
 		// Process all feedback in a unified way without branching
 		let statusMessage = ""
 		let feedbackImages: any[] = []
@@ -573,20 +671,26 @@ export async function readFileTool(
 			}
 		}
 
+		// Combine all images: feedback images first, then file images
+		const allImages = [...feedbackImages, ...fileImageUrls]
+
 		// Push the result with appropriate formatting
 		if (statusMessage) {
-			const result = formatResponse.toolResult(statusMessage, feedbackImages)
+			const result = formatResponse.toolResult(statusMessage, allImages)
 
 			// Handle different return types from toolResult
 			if (typeof result === "string") {
 				pushToolResult(`${result}\n${filesXml}`)
 			} else {
-				// For block-based results, we need to convert the filesXml to a text block and append it
+				// For block-based results, append the files XML as a text block
 				const textBlock = { type: "text" as const, text: filesXml }
 				pushToolResult([...result, textBlock])
 			}
+		} else if (allImages.length > 0) {
+			// If we have images but no status message, create blocks
+			pushToolResult([{ type: "text" as const, text: filesXml }, ...formatResponse.imageBlocks(allImages)])
 		} else {
-			// No status message, just push the files XML
+			// No images or status message, just push the files XML
 			pushToolResult(filesXml)
 		}
 	} catch (error) {
