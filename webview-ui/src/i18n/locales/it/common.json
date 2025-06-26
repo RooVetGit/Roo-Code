@@ -4,7 +4,8 @@
 		"no": "No",
 		"cancel": "Annulla",
 		"remove": "Rimuovi",
-		"keep": "Mantieni"
+		"keep": "Mantieni",
+		"close": "Chiudi"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -38,6 +39,38 @@
 			"imageCopied": "Immagine copiata negli appunti",
 			"copyError": "Errore nella copia dell'immagine"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "Scansione della cronologia delle attività fallita: {{error}}",
+		"history_reindex_failed": "Ricostruzione degli indici della cronologia fallita: {{error}}",
+		"share_no_active_task": "Nessuna attività attiva da condividere",
+		"share_auth_required": "Autenticazione richiesta per condividere l'attività",
+		"share_not_enabled": "La condivisione non è abilitata per il tuo account",
+		"share_task_not_found": "Attività non trovata",
+		"share_task_failed": "Condivisione dell'attività fallita",
+		"settings_import_failed": "Importazione delle impostazioni fallita: {{error}}",
+		"update_support_prompt": "Aggiornamento del prompt di supporto fallito",
+		"enhance_prompt": "Miglioramento del prompt fallito",
+		"get_system_prompt": "Recupero del prompt di sistema fallito",
+		"search_commits": "Ricerca dei commit fallita",
+		"save_api_config": "Salvataggio della configurazione API fallito",
+		"load_api_config": "Caricamento della configurazione API fallito",
+		"rename_api_config": "Ridenominazione della configurazione API fallita",
+		"delete_api_config": "Eliminazione della configurazione API fallita",
+		"list_api_config": "Elenco delle configurazioni API fallito",
+		"update_server_timeout": "Aggiornamento del timeout del server fallito",
+		"no_workspace": "Nessuna cartella di lavoro è aperta",
+		"checkpoint_timeout": "Timeout durante l'attesa del punto di controllo",
+		"checkpoint_failed": "Ripristino del punto di controllo fallito"
+	},
+	"info": {
+		"history_reindexed": "Indici della cronologia ricostruiti con successo",
+		"history_scanned": "Scansione della cronologia delle attività completata",
+		"settings_imported": "Impostazioni importate con successo",
+		"clipboard_copy": "Copiato negli appunti"
+	},
+	"confirmation": {
+		"reindex_history": "Attenzione: Questo ricreerà gli indici taskHistory/*.json analizzando le directory delle attività e le strutture legacy globalState[taskHistory]. Questo potrebbe ripristinare attività che avevi precedentemente eliminato e/o recuperare attività corrotte. Se i contatori di token/costo non sono recuperabili, saranno impostati a zero. Qualsiasi attività che è membro di più aree di lavoro sarà riassegnata solo all'area di lavoro più recente utilizzata dall'attività."
 	},
 	"file": {
 		"errors": {

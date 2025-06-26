@@ -26,6 +26,7 @@
 		"browser": "ब्राउज़र",
 		"checkpoints": "चेकपॉइंट",
 		"notifications": "सूचनाएँ",
+		"historyIndexTools": "इतिहास इंडेक्स टूल्स",
 		"contextManagement": "संदर्भ",
 		"terminal": "टर्मिनल",
 		"prompts": "प्रॉम्प्ट्स",
@@ -584,7 +585,8 @@
 		"settings": {
 			"import": "इम्पोर्ट",
 			"export": "एक्सपोर्ट",
-			"reset": "रीसेट करें"
+			"reset": "रीसेट करें",
+			"reindexHistory": "पुनः इंडेक्स करें"
 		}
 	},
 	"thinkingBudget": {

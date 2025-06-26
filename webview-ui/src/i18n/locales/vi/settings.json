@@ -31,6 +31,7 @@
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
+		"historyIndexTools": "Công cụ chỉ mục lịch sử",
 		"about": "Giới thiệu"
 	},
 	"prompts": {
@@ -584,7 +585,8 @@
 		"settings": {
 			"import": "Nhập",
 			"export": "Xuất",
-			"reset": "Đặt lại"
+			"reset": "Đặt lại",
+			"reindexHistory": "Tạo lại chỉ mục"
 		}
 	},
 	"thinkingBudget": {

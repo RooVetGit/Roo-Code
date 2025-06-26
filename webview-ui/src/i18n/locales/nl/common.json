@@ -4,12 +4,45 @@
 		"no": "Nee",
 		"cancel": "Annuleren",
 		"remove": "Verwijderen",
-		"keep": "Behouden"
+		"keep": "Behouden",
+		"close": "Sluiten"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",
 		"billion_suffix": "mrd"
+	},
+	"errors": {
+		"history_scan_failed": "Scannen van taakgeschiedenis mislukt: {{error}}",
+		"history_reindex_failed": "Opnieuw opbouwen van geschiedenisindexen mislukt: {{error}}",
+		"share_no_active_task": "Geen actieve taak om te delen",
+		"share_auth_required": "Authenticatie vereist om taak te delen",
+		"share_not_enabled": "Delen is niet ingeschakeld voor je account",
+		"share_task_not_found": "Taak niet gevonden",
+		"share_task_failed": "Delen van taak mislukt",
+		"settings_import_failed": "Importeren van instellingen mislukt: {{error}}",
+		"update_support_prompt": "Bijwerken van ondersteuningsprompt mislukt",
+		"enhance_prompt": "Verbeteren van prompt mislukt",
+		"get_system_prompt": "Ophalen van systeemprompt mislukt",
+		"search_commits": "Zoeken in commits mislukt",
+		"save_api_config": "Opslaan van API-configuratie mislukt",
+		"load_api_config": "Laden van API-configuratie mislukt",
+		"rename_api_config": "Hernoemen van API-configuratie mislukt",
+		"delete_api_config": "Verwijderen van API-configuratie mislukt",
+		"list_api_config": "Weergeven van API-configuraties mislukt",
+		"update_server_timeout": "Bijwerken van servertimeout mislukt",
+		"no_workspace": "Geen werkruimtemap is geopend",
+		"checkpoint_timeout": "Timeout tijdens wachten op checkpoint",
+		"checkpoint_failed": "Herstellen van checkpoint mislukt"
+	},
+	"info": {
+		"history_reindexed": "Geschiedenisindexen succesvol opnieuw opgebouwd",
+		"history_scanned": "Scan van taakgeschiedenis voltooid",
+		"settings_imported": "Instellingen succesvol geïmporteerd",
+		"clipboard_copy": "Gekopieerd naar klembord"
+	},
+	"confirmation": {
+		"reindex_history": "Waarschuwing: Dit zal de taskHistory/*.json indexen opnieuw aanmaken door de taakmappen en legacy globalState[taskHistory] structuren te doorlopen. Dit kan taken herstellen die je eerder had verwijderd en/of corrupte taken herstellen. Als token/kostentellers niet herstelbaar zijn, worden ze op nul gezet. Taken die lid zijn van meerdere werkruimtes worden alleen toegewezen aan de meest recente werkruimte die door de taak is gebruikt."
 	},
 	"ui": {
 		"search_placeholder": "Zoeken..."

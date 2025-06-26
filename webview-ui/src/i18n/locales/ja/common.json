@@ -4,7 +4,8 @@
 		"no": "いいえ",
 		"cancel": "キャンセル",
 		"remove": "削除",
-		"keep": "保持"
+		"keep": "保持",
+		"close": "閉じる"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -51,5 +52,37 @@
 		"success": {
 			"imageDataUriCopied": "画像データURIをクリップボードにコピーしました"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "タスク履歴のスキャンに失敗しました: {{error}}",
+		"history_reindex_failed": "履歴インデックスの再構築に失敗しました: {{error}}",
+		"share_no_active_task": "共有するアクティブなタスクがありません",
+		"share_auth_required": "タスクを共有するには認証が必要です",
+		"share_not_enabled": "あなたのアカウントでは共有が有効になっていません",
+		"share_task_not_found": "タスクが見つかりません",
+		"share_task_failed": "タスクの共有に失敗しました",
+		"settings_import_failed": "設定のインポートに失敗しました: {{error}}",
+		"update_support_prompt": "サポートプロンプトの更新に失敗しました",
+		"enhance_prompt": "プロンプトの強化に失敗しました",
+		"get_system_prompt": "システムプロンプトの取得に失敗しました",
+		"search_commits": "コミットの検索に失敗しました",
+		"save_api_config": "API設定の保存に失敗しました",
+		"load_api_config": "API設定の読み込みに失敗しました",
+		"rename_api_config": "API設定の名前変更に失敗しました",
+		"delete_api_config": "API設定の削除に失敗しました",
+		"list_api_config": "API設定の一覧取得に失敗しました",
+		"update_server_timeout": "サーバータイムアウトの更新に失敗しました",
+		"no_workspace": "開いているワークスペースフォルダがありません",
+		"checkpoint_timeout": "チェックポイントを待機中にタイムアウトしました",
+		"checkpoint_failed": "チェックポイントの復元に失敗しました"
+	},
+	"info": {
+		"history_reindexed": "履歴インデックスが正常に再構築されました",
+		"history_scanned": "タスク履歴のスキャンが完了しました",
+		"settings_imported": "設定が正常にインポートされました",
+		"clipboard_copy": "クリップボードにコピーしました"
+	},
+	"confirmation": {
+		"reindex_history": "警告: これにより、タスクディレクトリとレガシーglobalState[taskHistory]構造を走査して、taskHistory/*.jsonインデックスが再作成されます。以前に削除したタスクや破損したタスクが復元される可能性があります。トークン/コストカウンターが復元できない場合はゼロに設定されます。複数のワークスペースに属するタスクは、そのタスクで最後に使用されたワークスペースにのみ再割り当てされます。"
 	}
 }

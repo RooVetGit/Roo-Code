@@ -4,7 +4,8 @@
 		"no": "Hayır",
 		"cancel": "İptal",
 		"remove": "Kaldır",
-		"keep": "Tut"
+		"keep": "Tut",
+		"close": "Kapat"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -51,5 +52,37 @@
 		"success": {
 			"imageDataUriCopied": "Görsel veri URI'si panoya kopyalandı"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "Görev geçmişi taranamadı: {{error}}",
+		"history_reindex_failed": "Geçmiş dizinleri yeniden oluşturulamadı: {{error}}",
+		"share_no_active_task": "Paylaşılacak aktif görev yok",
+		"share_auth_required": "Görevi paylaşmak için kimlik doğrulama gerekli",
+		"share_not_enabled": "Paylaşım hesabınız için etkinleştirilmemiş",
+		"share_task_not_found": "Görev bulunamadı",
+		"share_task_failed": "Görev paylaşılamadı",
+		"settings_import_failed": "Ayarlar içe aktarılamadı: {{error}}",
+		"update_support_prompt": "Destek promptu güncellenemedi",
+		"enhance_prompt": "Prompt geliştirilemedi",
+		"get_system_prompt": "Sistem promptu alınamadı",
+		"search_commits": "Commit'ler aranamadı",
+		"save_api_config": "API yapılandırması kaydedilemedi",
+		"load_api_config": "API yapılandırması yüklenemedi",
+		"rename_api_config": "API yapılandırması yeniden adlandırılamadı",
+		"delete_api_config": "API yapılandırması silinemedi",
+		"list_api_config": "API yapılandırmaları listelenemedi",
+		"update_server_timeout": "Sunucu zaman aşımı güncellenemedi",
+		"no_workspace": "Açık çalışma alanı klasörü yok",
+		"checkpoint_timeout": "Kontrol noktası için zaman aşımı",
+		"checkpoint_failed": "Kontrol noktası geri yüklenemedi"
+	},
+	"info": {
+		"history_reindexed": "Geçmiş dizinleri başarıyla yeniden oluşturuldu",
+		"history_scanned": "Görev geçmişi taraması tamamlandı",
+		"settings_imported": "Ayarlar başarıyla içe aktarıldı",
+		"clipboard_copy": "Panoya kopyalandı"
+	},
+	"confirmation": {
+		"reindex_history": "Uyarı: Bu işlem, görev dizinlerini ve eski globalState[taskHistory] yapılarını tarayarak taskHistory/*.json dizinlerini yeniden oluşturacaktır. Bu, daha önce sildiğiniz görevleri geri getirebilir ve/veya bozuk görevleri kurtarabilir. Token/maliyet sayaçları kurtarılamazsa sıfıra ayarlanacaktır. Birden fazla çalışma alanının üyesi olan görevler, yalnızca görev tarafından en son kullanılan çalışma alanına yeniden atanacaktır."
 	}
 }

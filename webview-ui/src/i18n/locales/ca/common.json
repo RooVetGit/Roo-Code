@@ -6,10 +6,50 @@
 		"remove": "Eliminar",
 		"keep": "Mantenir"
 	},
+	"answers": {
+		"yes": "Sí",
+		"no": "No",
+		"cancel": "Cancel·lar",
+		"remove": "Eliminar",
+		"keep": "Mantenir",
+		"close": "Tancar"
+	},
+	"errors": {
+		"history_scan_failed": "Error en escanejar l'historial de tasques: {{error}}",
+		"history_reindex_failed": "Error en reconstruir els índexs d'historial: {{error}}",
+		"share_no_active_task": "No hi ha cap tasca activa per compartir",
+		"share_auth_required": "Es requereix autenticació per compartir la tasca",
+		"share_not_enabled": "El compartir no està habilitat per al teu compte",
+		"share_task_not_found": "Tasca no trobada",
+		"share_task_failed": "Error en compartir la tasca",
+		"settings_import_failed": "Error en importar la configuració: {{error}}",
+		"update_support_prompt": "Error en actualitzar el missatge de suport",
+		"enhance_prompt": "Error en millorar el missatge",
+		"get_system_prompt": "Error en obtenir el missatge del sistema",
+		"search_commits": "Error en cercar commits",
+		"save_api_config": "Error en desar la configuració de l'API",
+		"load_api_config": "Error en carregar la configuració de l'API",
+		"rename_api_config": "Error en canviar el nom de la configuració de l'API",
+		"delete_api_config": "Error en eliminar la configuració de l'API",
+		"list_api_config": "Error en llistar les configuracions de l'API",
+		"update_server_timeout": "Error en actualitzar el temps d'espera del servidor",
+		"no_workspace": "No hi ha cap carpeta de treball oberta",
+		"checkpoint_timeout": "Temps d'espera esgotat esperant el punt de control",
+		"checkpoint_failed": "Error en restaurar el punt de control"
+	},
+	"info": {
+		"history_reindexed": "Índexs d'historial reconstruïts amb èxit",
+		"history_scanned": "Escaneig d'historial de tasques completat",
+		"settings_imported": "Configuració importada amb èxit",
+		"clipboard_copy": "Copiat al porta-retalls"
+	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",
 		"billion_suffix": "b"
+	},
+	"confirmation": {
+		"reindex_history": "Avís: Això recrearà els índexs taskHistory/*.json recorrent els directoris de tasques i les estructures legacy globalState[taskHistory]. Això pot recuperar tasques que havies eliminat prèviament i/o recuperar tasques corruptes. Si els comptadors de tokens/cost no són recuperables, es posaran a zero. Qualsevol tasca que sigui membre de múltiples espais de treball serà reassignada només a l'espai de treball utilitzat més recentment."
 	},
 	"ui": {
 		"search_placeholder": "Cerca..."

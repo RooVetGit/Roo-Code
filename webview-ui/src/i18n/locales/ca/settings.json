@@ -28,6 +28,7 @@
 		"notifications": "Notificacions",
 		"contextManagement": "Context",
 		"terminal": "Terminal",
+		"historyIndexTools": "Eines d'índex d'historial",
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
@@ -584,7 +585,8 @@
 		"settings": {
 			"import": "Importar",
 			"export": "Exportar",
-			"reset": "Restablir"
+			"reset": "Restablir",
+			"reindexHistory": "Reindexar"
 		}
 	},
 	"thinkingBudget": {
