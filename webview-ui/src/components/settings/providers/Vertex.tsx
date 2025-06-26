@@ -99,7 +99,7 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 					<span>Disable Streaming</span>
 					<i
 						className="codicon codicon-info text-vscode-descriptionForeground"
-						title="Disables streaming intermediate responses for Google Gemini models. This will not affect the quality of the end response."
+						title="Disables streaming intermediate responses for Gemini models. This will not affect the quality of results."
 						style={{ fontSize: "12px" }}
 					/>
 				</div>
