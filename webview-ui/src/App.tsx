@@ -9,6 +9,7 @@ import { MarketplaceViewStateManager } from "./components/marketplace/Marketplac
 import { vscode } from "./utils/vscode"
 import { telemetryClient } from "./utils/TelemetryClient"
 import { TelemetryEventName } from "@roo-code/types"
+import { initializeSourceMaps, exposeSourceMapsForDebugging } from "./utils/sourceMapInitializer"
 import { ExtensionStateContextProvider, useExtensionState } from "./context/ExtensionStateContext"
 import ChatView, { ChatViewRef } from "./components/chat/ChatView"
 import HistoryView from "./components/history/HistoryView"
@@ -18,6 +19,7 @@ import McpView from "./components/mcp/McpView"
 import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
+import ErrorBoundary from "./components/ErrorBoundary"
 import { AccountView } from "./components/account/AccountView"
 import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
 
@@ -144,6 +146,20 @@ const App = () => {
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
 
+	// Initialize source map support for better error reporting
+	useEffect(() => {
+		// Initialize source maps for better error reporting in production
+		initializeSourceMaps()
+
+		// Expose source map debugging utilities in production
+		if (process.env.NODE_ENV === "production") {
+			exposeSourceMapsForDebugging()
+		}
+
+		// Log initialization for debugging
+		console.debug("App initialized with source map support")
+	}, [])
+
 	// Focus the WebView when non-interactive content is clicked (only in editor/tab mode)
 	useAddNonInteractiveClickListener(
 		useCallback(() => {
@@ -212,13 +228,15 @@ const App = () => {
 const queryClient = new QueryClient()
 
 const AppWithProviders = () => (
-	<ExtensionStateContextProvider>
-		<TranslationProvider>
-			<QueryClientProvider client={queryClient}>
-				<App />
-			</QueryClientProvider>
-		</TranslationProvider>
-	</ExtensionStateContextProvider>
+	<ErrorBoundary>
+		<ExtensionStateContextProvider>
+			<TranslationProvider>
+				<QueryClientProvider client={queryClient}>
+					<App />
+				</QueryClientProvider>
+			</TranslationProvider>
+		</ExtensionStateContextProvider>
+	</ErrorBoundary>
 )
 
 export default AppWithProviders
