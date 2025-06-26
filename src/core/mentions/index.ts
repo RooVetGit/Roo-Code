@@ -101,7 +101,7 @@ export async function parseMentions(
 					console.error(`Error fetching URL ${mention}:`, error)
 
 					// Provide more helpful error messages based on error type
-					let errorMessage = error.message
+					let errorMessage = error instanceof Error ? error.message : String(error)
 					if (error.message.includes("timeout")) {
 						errorMessage = `The website took too long to load (timeout). This could be due to a slow connection, heavy website, or the site being temporarily unavailable. You can try again later or check if the URL is correct.`
 					} else if (error.message.includes("net::ERR_NAME_NOT_RESOLVED")) {
