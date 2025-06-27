@@ -161,6 +161,7 @@ const geminiSchema = apiModelIdProviderModelSchema.extend({
 
 const geminiCliSchema = apiModelIdProviderModelSchema.extend({
 	geminiCliOAuthPath: z.string().optional(),
+	geminiCliDefaultProject: z.string().optional(),
 	geminiCliProjectId: z.string().optional(),
 })
 

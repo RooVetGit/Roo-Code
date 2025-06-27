@@ -311,6 +311,8 @@
 		},
 		"geminiCli": {
 			"description": "This provider uses OAuth authentication from the Gemini CLI tool and does not require API keys.",
+			"defaultProject": "Default Project (optional)",
+			"defaultProjectDescription": "Default Google Cloud Project Name (For paid Gemini Code Assist tiers, see https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/authentication.md)",
 			"oauthPath": "OAuth Credentials Path (optional)",
 			"oauthPathDescription": "Path to the OAuth credentials file. Leave empty to use the default location (~/.gemini/oauth_creds.json).",
 			"instructions": "If you haven't authenticated yet, please run",
