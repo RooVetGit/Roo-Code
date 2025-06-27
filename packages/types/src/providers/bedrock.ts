@@ -68,7 +68,7 @@ export const bedrockModels = {
 		cachableFields: ["system"],
 	},
 	"anthropic.claude-sonnet-4-20250514-v1:0": {
-		maxTokens: 8192,
+		maxTokens: 64000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -83,7 +83,7 @@ export const bedrockModels = {
 		cachableFields: ["system", "messages", "tools"],
 	},
 	"anthropic.claude-opus-4-20250514-v1:0": {
-		maxTokens: 8192,
+		maxTokens: 32000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -98,7 +98,7 @@ export const bedrockModels = {
 		cachableFields: ["system", "messages", "tools"],
 	},
 	"anthropic.claude-3-7-sonnet-20250219-v1:0": {
-		maxTokens: 8192,
+		maxTokens: 64000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
