@@ -52,14 +52,10 @@ export class UrlContentFetcher {
 		this.browser = await stats.puppeteer.launch({
 			args: [
 				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-				"--no-sandbox",
-				"--disable-setuid-sandbox",
 				"--disable-dev-shm-usage",
 				"--disable-accelerated-2d-canvas",
 				"--no-first-run",
-				"--no-zygote",
 				"--disable-gpu",
-				"--disable-web-security",
 				"--disable-features=VizDisplayCompositor",
 			],
 			executablePath: stats.executablePath,
