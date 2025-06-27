@@ -102,15 +102,15 @@ export async function parseMentions(
 
 					// Provide more helpful error messages based on error type
 					let errorMessage = error instanceof Error ? error.message : String(error)
-					if (error.message.includes("timeout")) {
+					if (errorMessage.includes("timeout")) {
 						errorMessage = `The website took too long to load (timeout). This could be due to a slow connection, heavy website, or the site being temporarily unavailable. You can try again later or check if the URL is correct.`
-					} else if (error.message.includes("net::ERR_NAME_NOT_RESOLVED")) {
+					} else if (errorMessage.includes("net::ERR_NAME_NOT_RESOLVED")) {
 						errorMessage = `The website address could not be found. Please check if the URL is correct and try again.`
-					} else if (error.message.includes("net::ERR_INTERNET_DISCONNECTED")) {
+					} else if (errorMessage.includes("net::ERR_INTERNET_DISCONNECTED")) {
 						errorMessage = `No internet connection. Please check your network connection and try again.`
-					} else if (error.message.includes("403") || error.message.includes("Forbidden")) {
+					} else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
 						errorMessage = `Access to this website is forbidden. The site may block automated access or require authentication.`
-					} else if (error.message.includes("404") || error.message.includes("Not Found")) {
+					} else if (errorMessage.includes("404") || errorMessage.includes("Not Found")) {
 						errorMessage = `The page was not found. Please check if the URL is correct.`
 					}
 
