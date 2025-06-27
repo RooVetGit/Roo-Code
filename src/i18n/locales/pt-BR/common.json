@@ -66,7 +66,14 @@
 		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar",
 		"share_auth_required": "Autenticação necessária. Faça login para compartilhar tarefas.",
 		"share_not_enabled": "O compartilhamento de tarefas não está habilitado para esta organização.",
-		"share_task_not_found": "Tarefa não encontrada ou acesso negado."
+		"share_task_not_found": "Tarefa não encontrada ou acesso negado.",
+		"claudeCode": {
+			"processExited": "O processo Claude Code saiu com código {{exitCode}}.",
+			"errorOutput": "Saída de erro: {{output}}",
+			"processExitedWithError": "O processo Claude Code saiu com código {{exitCode}}. Saída de erro: {{output}}",
+			"stoppedWithReason": "Claude Code parou pela razão: {{reason}}",
+			"apiKeyModelPlanMismatch": "Chaves de API e planos de assinatura permitem modelos diferentes. Certifique-se de que o modelo selecionado esteja incluído no seu plano."
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "Nenhum conteúdo do terminal selecionado",
@@ -94,7 +101,9 @@
 	},
 	"tasks": {
 		"canceled": "Erro na tarefa: Foi interrompida e cancelada pelo usuário.",
-		"deleted": "Falha na tarefa: Foi interrompida e excluída pelo usuário."
+		"deleted": "Falha na tarefa: Foi interrompida e excluída pelo usuário.",
+		"incomplete": "Tarefa #{{taskNumber}} (Incompleta)",
+		"no_messages": "Tarefa #{{taskNumber}} (Sem mensagens)"
 	},
 	"storage": {
 		"prompt_custom_path": "Digite o caminho de armazenamento personalizado para o histórico de conversas, deixe em branco para usar o local padrão",
@@ -105,7 +114,24 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Chave de API Groq",
-			"getGroqApiKey": "Obter chave de API Groq"
+			"getGroqApiKey": "Obter chave de API Groq",
+			"claudeCode": {
+				"pathLabel": "Caminho do Claude Code",
+				"description": "Caminho opcional para sua CLI do Claude Code. Padrão 'claude' se não for definido.",
+				"placeholder": "Padrão: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": "YAML inválido no arquivo .roomodes na linha {{line}}. Verifique:\n• Indentação correta (use espaços, não tabs)\n• Aspas e colchetes correspondentes\n• Sintaxe YAML válida",
+			"schemaValidationError": "Formato de modos personalizados inválido em .roomodes:\n{{issues}}",
+			"invalidFormat": "Formato de modos personalizados inválido. Certifique-se de que suas configurações seguem o formato YAML correto.",
+			"updateFailed": "Falha ao atualizar modo personalizado: {{error}}",
+			"deleteFailed": "Falha ao excluir modo personalizado: {{error}}",
+			"resetFailed": "Falha ao redefinir modos personalizados: {{error}}",
+			"modeNotFound": "Erro de escrita: Modo não encontrado",
+			"noWorkspaceForProject": "Nenhuma pasta de workspace encontrada para modo específico do projeto"
 		}
 	},
 	"mdm": {
@@ -113,6 +139,16 @@
 			"cloud_auth_required": "Sua organização requer autenticação do Roo Code Cloud. Faça login para continuar.",
 			"organization_mismatch": "Você deve estar autenticado com a conta Roo Code Cloud da sua organização.",
 			"verification_failed": "Não foi possível verificar a autenticação da organização."
+		},
+		"geminiCli": {
+			"oauthLoadFailed": "Falha ao carregar credenciais OAuth. Por favor, autentique-se primeiro: {{error}}",
+			"tokenRefreshFailed": "Falha ao atualizar token OAuth: {{error}}",
+			"onboardingTimeout": "A operação de integração expirou após 60 segundos. Tente novamente mais tarde.",
+			"projectDiscoveryFailed": "Não foi possível descobrir o ID do projeto. Certifique-se de estar autenticado com 'gemini auth'.",
+			"rateLimitExceeded": "Limite de taxa excedido. Os limites do nível gratuito foram atingidos.",
+			"badRequest": "Solicitação inválida: {{details}}",
+			"apiError": "Erro da API Gemini CLI: {{error}}",
+			"completionError": "Erro de conclusão do Gemini CLI: {{error}}"
 		}
 	}
 }

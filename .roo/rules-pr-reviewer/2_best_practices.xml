@@ -2,12 +2,15 @@
   - Always fetch and review the entire PR diff before commenting
   - Check for and review any associated issue for context
   - Check out the PR locally for better context understanding
-  - Review existing comments to avoid duplicate feedback
+  - Review existing comments and verify against the current code to avoid redundant feedback on already resolved issues
   - Focus on the changes made, not unrelated code
   - Ensure all changes are directly related to the linked issue
   - Use a friendly, curious tone in all comments
-  - Ask questions rather than making assumptions
+  - Ask questions rather than making assumptions - there may be intentions behind the code choices
   - Provide actionable feedback with specific suggestions
+  - Focus exclusively on issues and improvements - skip all praise or positive comments
+  - Use minimal markdown - avoid headings (###, ##) and excessive formatting
+  - Only use markdown for code blocks or when absolutely necessary for clarity
   - Consider the PR's scope - suggest breaking up large PRs
   - Verify proper i18n implementation for UI changes
   - Check for test coverage without executing tests

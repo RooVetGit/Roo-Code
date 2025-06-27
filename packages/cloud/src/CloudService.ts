@@ -1,13 +1,19 @@
 import * as vscode from "vscode"
 
-import type { CloudUserInfo, TelemetryEvent, OrganizationAllowList } from "@roo-code/types"
+import type {
+	CloudUserInfo,
+	TelemetryEvent,
+	OrganizationAllowList,
+	ClineMessage,
+	ShareVisibility,
+} from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { CloudServiceCallbacks } from "./types"
 import { AuthService } from "./AuthService"
 import { SettingsService } from "./SettingsService"
 import { TelemetryClient } from "./TelemetryClient"
-import { ShareService } from "./ShareService"
+import { ShareService, TaskNotFoundError } from "./ShareService"
 
 export class CloudService {
 	private static _instance: CloudService | null = null
@@ -46,8 +52,11 @@ export class CloudService {
 			this.authService.on("logged-out", this.authListener)
 			this.authService.on("user-info", this.authListener)
 
-			this.settingsService = new SettingsService(this.context, this.authService, () =>
-				this.callbacks.stateChanged?.(),
+			this.settingsService = new SettingsService(
+				this.context,
+				this.authService,
+				() => this.callbacks.stateChanged?.(),
+				this.log,
 			)
 			this.settingsService.initialize()
 
@@ -118,14 +127,28 @@ export class CloudService {
 		return userInfo?.organizationRole || null
 	}
 
+	public hasStoredOrganizationId(): boolean {
+		this.ensureInitialized()
+		return this.authService!.getStoredOrganizationId() !== null
+	}
+
+	public getStoredOrganizationId(): string | null {
+		this.ensureInitialized()
+		return this.authService!.getStoredOrganizationId()
+	}
+
 	public getAuthState(): string {
 		this.ensureInitialized()
 		return this.authService!.getState()
 	}
 
-	public async handleAuthCallback(code: string | null, state: string | null): Promise<void> {
+	public async handleAuthCallback(
+		code: string | null,
+		state: string | null,
+		organizationId?: string | null,
+	): Promise<void> {
 		this.ensureInitialized()
-		return this.authService!.handleCallback(code, state)
+		return this.authService!.handleCallback(code, state, organizationId)
 	}
 
 	// SettingsService
@@ -144,9 +167,23 @@ export class CloudService {
 
 	// ShareService
 
-	public async shareTask(taskId: string, visibility: "organization" | "public" = "organization") {
+	public async shareTask(
+		taskId: string,
+		visibility: ShareVisibility = "organization",
+		clineMessages?: ClineMessage[],
+	) {
 		this.ensureInitialized()
-		return this.shareService!.shareTask(taskId, visibility)
+
+		try {
+			return await this.shareService!.shareTask(taskId, visibility)
+		} catch (error) {
+			if (error instanceof TaskNotFoundError && clineMessages) {
+				// Backfill messages and retry
+				await this.telemetryClient!.backfillMessages(clineMessages, taskId)
+				return await this.shareService!.shareTask(taskId, visibility)
+			}
+			throw error
+		}
 	}
 
 	public async canShareTask(): Promise<boolean> {

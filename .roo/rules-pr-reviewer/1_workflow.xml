@@ -100,7 +100,7 @@
       </arguments>
       </use_mcp_tool>
       
-      Examine existing PR comments to understand the current state of discussion. Always verify whether a comment is current or already addressed before suggesting action.
+      Examine existing PR comments to understand the current state of discussion. When reading the comments and reviews, you must verify which are resolved by reading the files they refer to, since they might already be resolved. This prevents you from making redundant suggestions.
     </instructions>
   </step>
 
@@ -137,8 +137,8 @@
       Your suggestions should:
       - Use a **friendly, curious tone** — prefer asking: "Is this intentional?" or "Could we approach this differently to improve X?"
       - Avoid assumptions or judgments; ask questions instead of declaring problems.
-      - Skip unnecessary praise. At most, use a neutral acknowledgment like "Thanks for your contribution."
-      - Use Markdown **only when necessary for clarity** (e.g., links, code blocks). Avoid excessive formatting.
+      - Skip ALL praise and positive comments. Focus exclusively on issues that need attention.
+      - Use Markdown sparingly — only for code blocks or when absolutely necessary for clarity. Avoid markdown headings (###, ##, etc.) entirely.
       - Avoid including internal evaluation terminology (e.g., scores or internal tags) in public comments.
       
       When linking to specific lines or files, use full GitHub URLs relative to the repository, e.g.
@@ -163,12 +163,10 @@
       [Summary of findings organized by priority]
 
       Would you like me to:
-      1. Submit these as individual review comments
-      2. Create a comprehensive review with all comments
-      3. Modify any of the suggestions
-      4. Skip the review submission</question>
+      1. Create a comprehensive review with all comments
+      2. Modify any of the suggestions
+      3. Skip the review submission</question>
       <follow_up>
-      <suggest>Submit as individual review comments</suggest>
       <suggest>Create a comprehensive review</suggest>
       <suggest>Let me modify the suggestions first</suggest>
       <suggest>Skip submission - just wanted the analysis</suggest>
@@ -180,9 +178,22 @@
   <step number="9">
     <name>Submit Review</name>
     <instructions>
-      Based on user preference, submit the review:
+      Based on user preference, submit the review as a comprehensive review:
       
-      For individual comments:
+      1. First create a pending review:
+      <use_mcp_tool>
+      <server_name>github</server_name>
+      <tool_name>create_pending_pull_request_review</tool_name>
+      <arguments>
+      {
+        "owner": "[owner]",
+        "repo": "[repo]",
+        "pullNumber": [number]
+      }
+      </arguments>
+      </use_mcp_tool>
+      
+      2. Add comments to the pending review using:
       <use_mcp_tool>
       <server_name>github</server_name>
       <tool_name>add_pull_request_review_comment_to_pending_review</tool_name>
@@ -198,22 +209,6 @@
       }
       </arguments>
       </use_mcp_tool>
-      
-      For comprehensive review:
-      1. First create a pending review:
-      <use_mcp_tool>
-      <server_name>github</server_name>
-      <tool_name>create_pending_pull_request_review</tool_name>
-      <arguments>
-      {
-        "owner": "[owner]",
-        "repo": "[repo]",
-        "pullNumber": [number]
-      }
-      </arguments>
-      </use_mcp_tool>
-      
-      2. Add comments to the pending review
       
       3. Submit the review:
       <use_mcp_tool>

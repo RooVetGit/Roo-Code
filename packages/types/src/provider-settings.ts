@@ -9,6 +9,7 @@ import { codebaseIndexProviderSchema } from "./codebase-index.js"
 
 export const providerNames = [
 	"anthropic",
+	"claude-code",
 	"glama",
 	"openrouter",
 	"bedrock",
@@ -18,6 +19,7 @@ export const providerNames = [
 	"vscode-lm",
 	"lmstudio",
 	"gemini",
+	"gemini-cli",
 	"openai-native",
 	"mistral",
 	"deepseek",
@@ -74,6 +76,10 @@ const anthropicSchema = apiModelIdProviderModelSchema.extend({
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
 	anthropicUseAuthToken: z.boolean().optional(),
+})
+
+const claudeCodeSchema = apiModelIdProviderModelSchema.extend({
+	claudeCodePath: z.string().optional(),
 })
 
 const glamaSchema = baseProviderSettingsSchema.extend({
@@ -153,6 +159,11 @@ const geminiSchema = apiModelIdProviderModelSchema.extend({
 	googleGeminiBaseUrl: z.string().optional(),
 })
 
+const geminiCliSchema = apiModelIdProviderModelSchema.extend({
+	geminiCliOAuthPath: z.string().optional(),
+	geminiCliProjectId: z.string().optional(),
+})
+
 const openAiNativeSchema = apiModelIdProviderModelSchema.extend({
 	openAiNativeApiKey: z.string().optional(),
 	openAiNativeBaseUrl: z.string().optional(),
@@ -208,6 +219,7 @@ const defaultSchema = z.object({
 
 export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProvider", [
 	anthropicSchema.merge(z.object({ apiProvider: z.literal("anthropic") })),
+	claudeCodeSchema.merge(z.object({ apiProvider: z.literal("claude-code") })),
 	glamaSchema.merge(z.object({ apiProvider: z.literal("glama") })),
 	openRouterSchema.merge(z.object({ apiProvider: z.literal("openrouter") })),
 	bedrockSchema.merge(z.object({ apiProvider: z.literal("bedrock") })),
@@ -217,6 +229,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	vsCodeLmSchema.merge(z.object({ apiProvider: z.literal("vscode-lm") })),
 	lmStudioSchema.merge(z.object({ apiProvider: z.literal("lmstudio") })),
 	geminiSchema.merge(z.object({ apiProvider: z.literal("gemini") })),
+	geminiCliSchema.merge(z.object({ apiProvider: z.literal("gemini-cli") })),
 	openAiNativeSchema.merge(z.object({ apiProvider: z.literal("openai-native") })),
 	mistralSchema.merge(z.object({ apiProvider: z.literal("mistral") })),
 	deepSeekSchema.merge(z.object({ apiProvider: z.literal("deepseek") })),
@@ -234,6 +247,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 export const providerSettingsSchema = z.object({
 	apiProvider: providerNamesSchema.optional(),
 	...anthropicSchema.shape,
+	...claudeCodeSchema.shape,
 	...glamaSchema.shape,
 	...openRouterSchema.shape,
 	...bedrockSchema.shape,
@@ -243,6 +257,7 @@ export const providerSettingsSchema = z.object({
 	...vsCodeLmSchema.shape,
 	...lmStudioSchema.shape,
 	...geminiSchema.shape,
+	...geminiCliSchema.shape,
 	...openAiNativeSchema.shape,
 	...mistralSchema.shape,
 	...deepSeekSchema.shape,
