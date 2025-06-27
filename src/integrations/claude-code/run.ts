@@ -112,7 +112,8 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 
 	const args = [
 		"-p",
-		JSON.stringify(messages),
+		"--input-format",
+		"text",
 		"--system-prompt",
 		systemPrompt,
 		"--verbose",
@@ -129,8 +130,8 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 		args.push("--model", modelId)
 	}
 
-	return execa(claudePath, args, {
-		stdin: "ignore",
+	const child = execa(claudePath, args, {
+		stdin: "pipe",
 		stdout: "pipe",
 		stderr: "pipe",
 		env: {
@@ -142,6 +143,13 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 		maxBuffer: 1024 * 1024 * 1000,
 		timeout: CLAUDE_CODE_TIMEOUT,
 	})
+
+	// Stream the messages via stdin instead of command line argument
+	const messagesJson = JSON.stringify(messages)
+	child.stdin.write(messagesJson, "utf8")
+	child.stdin.end()
+
+	return child
 }
 
 function parseChunk(data: string, processState: ProcessState) {
