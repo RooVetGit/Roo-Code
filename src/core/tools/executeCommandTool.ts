@@ -35,12 +35,12 @@ export async function executeCommandTool(
 	const customCwd: string | undefined = block.params.cwd
 	const commandRisk: string | undefined = block.params.risk
 	const riskAnalysis: string | undefined = block.params.risk_analysis
-	const metadata = commandRisk ? { risk: commandRisk, risk_analysis: riskAnalysis } : undefined
+	const metadata = { risk: commandRisk || "", risk_analysis: riskAnalysis || "" }
 
 	try {
 		if (block.partial) {
 			await cline
-				.ask("command", removeClosingTag("command", command), block.partial, undefined)
+				.ask("command", removeClosingTag("command", command), block.partial, undefined, undefined, metadata)
 				.catch(() => {})
 			return
 		} else {
