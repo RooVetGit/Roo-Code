@@ -1792,7 +1792,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				}
 
 				const baseDelay = requestDelaySeconds || 5
-				let exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
+				let exponentialDelay = Math.min(Math.ceil(baseDelay * Math.pow(2, retryAttempt)), 600) // Cap at 10 minutes
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
 				if (error.status === 429) {
