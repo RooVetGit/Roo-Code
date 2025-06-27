@@ -167,8 +167,10 @@ describe("CodeIndexSettings", () => {
 	it("renders with default settings when no config provided", () => {
 		render(<CodeIndexSettings codebaseIndexModels={undefined} codebaseIndexConfig={undefined} />)
 
-		const enableCheckbox = screen.getByLabelText("Enable Code Index")
-		expect(enableCheckbox).not.toBeChecked()
+		// Should show disabled message when no config
+		expect(
+			screen.getByText("Code Index is disabled. Enable it in Experimental Settings to configure."),
+		).toBeInTheDocument()
 	})
 
 	it("renders with provided config settings", async () => {
@@ -181,12 +183,9 @@ describe("CodeIndexSettings", () => {
 
 		// Wait for the component to update with the provided config
 		await waitFor(() => {
-			const enableCheckbox = screen.getByLabelText("Enable Code Index")
-			expect(enableCheckbox).toBeChecked()
+			const qdrantUrl = screen.getByDisplayValue("http://localhost:6333")
+			expect(qdrantUrl).toBeInTheDocument()
 		})
-
-		const qdrantUrl = screen.getByDisplayValue("http://localhost:6333")
-		expect(qdrantUrl).toBeInTheDocument()
 	})
 
 	it("shows detailed settings when codebase indexing is enabled", () => {
@@ -201,10 +200,13 @@ describe("CodeIndexSettings", () => {
 		expect(screen.getByText("Qdrant URL")).toBeInTheDocument()
 	})
 
-	it("hides detailed settings when codebase indexing is disabled", () => {
+	it("shows disabled message when codebase indexing is disabled", () => {
 		const disabledConfig = { ...mockCodebaseIndexConfig, codebaseIndexEnabled: false }
 		render(<CodeIndexSettings codebaseIndexModels={mockCodebaseIndexModels} codebaseIndexConfig={disabledConfig} />)
 
+		expect(
+			screen.getByText("Code Index is disabled. Enable it in Experimental Settings to configure."),
+		).toBeInTheDocument()
 		expect(screen.queryByText("Provider")).not.toBeInTheDocument()
 		expect(screen.queryByText("Qdrant URL")).not.toBeInTheDocument()
 	})
@@ -269,13 +271,15 @@ describe("CodeIndexSettings", () => {
 		const saveButton = screen.getByText("Save Settings")
 		fireEvent.click(saveButton)
 
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "saveCodeIndexSettingsAtomic",
-			codeIndexSettings: expect.objectContaining({
-				codebaseIndexEnabled: true,
-				codebaseIndexQdrantUrl: "http://localhost:6334",
-				codebaseIndexEmbedderProvider: "openai",
-			}),
+		// The test needs to wait for the actual call with the correct data
+		await waitFor(() => {
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "saveCodeIndexSettingsAtomic",
+				codeIndexSettings: expect.objectContaining({
+					codebaseIndexQdrantUrl: "http://localhost:6334",
+					codebaseIndexEmbedderProvider: "openai",
+				}),
+			})
 		})
 	})
 

@@ -1935,10 +1935,11 @@ export const webviewMessageHandler = async (
 		}
 		case "requestCodeIndexSecretStatus": {
 			// Check if secrets are set using the VSCode context directly for async access
-			const vscodeContext = provider.contextProxy.getVSCodeContext()
-			const hasOpenAiKey = !!(await vscodeContext.secrets.get("codeIndexOpenAiKey"))
-			const hasQdrantApiKey = !!(await vscodeContext.secrets.get("codeIndexQdrantApiKey"))
-			const hasOpenAiCompatibleApiKey = !!(await vscodeContext.secrets.get("codebaseIndexOpenAiCompatibleApiKey"))
+			const hasOpenAiKey = !!(await provider.context.secrets.get("codeIndexOpenAiKey"))
+			const hasQdrantApiKey = !!(await provider.context.secrets.get("codeIndexQdrantApiKey"))
+			const hasOpenAiCompatibleApiKey = !!(await provider.context.secrets.get(
+				"codebaseIndexOpenAiCompatibleApiKey",
+			))
 
 			provider.postMessageToWebview({
 				type: "codeIndexSecretStatus",

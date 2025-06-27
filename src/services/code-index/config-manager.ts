@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
@@ -21,7 +22,10 @@ export class CodeIndexConfigManager {
 	private qdrantApiKey?: string
 	private searchMinScore?: number
 
-	constructor(private readonly contextProxy: ContextProxy) {
+	constructor(
+		private readonly contextProxy: ContextProxy,
+		private readonly extensionContext: vscode.ExtensionContext,
+	) {
 		// Initialize with current configuration to avoid false restart triggers
 		this._loadAndSetConfiguration()
 	}
@@ -38,9 +42,7 @@ export class CodeIndexConfigManager {
 	 */
 	private async getSecretAsync(key: string): Promise<string | undefined> {
 		try {
-			// Access VSCode context through ContextProxy
-			const context = this.contextProxy.getVSCodeContext()
-			const value = await context.secrets.get(key)
+			const value = await this.extensionContext.secrets.get(key)
 			console.log(
 				`[DEBUG ConfigManager] getSecretAsync(${key}): ${value ? `"${value.substring(0, 4)}..."` : "undefined"}`,
 			)
@@ -60,12 +62,11 @@ export class CodeIndexConfigManager {
 				`[DEBUG ConfigManager] storeSecretAsync(${key}): ${value ? `"${value.substring(0, 4)}..."` : "undefined"}`,
 			)
 
-			const context = this.contextProxy.getVSCodeContext()
 			if (value === undefined || value === "") {
-				await context.secrets.delete(key)
+				await this.extensionContext.secrets.delete(key)
 				console.log(`[DEBUG ConfigManager] Deleted secret ${key}`)
 			} else {
-				await context.secrets.store(key, value)
+				await this.extensionContext.secrets.store(key, value)
 				console.log(`[DEBUG ConfigManager] Stored secret ${key}`)
 			}
 		} catch (error) {

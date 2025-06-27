@@ -158,13 +158,6 @@ export class ContextProxy {
 		return result
 	}
 
-	/**
-	 * Gets the VSCode extension context for direct secret access
-	 */
-	public getVSCodeContext(): vscode.ExtensionContext {
-		return this.originalContext
-	}
-
 	private getAllSecretState(): SecretState {
 		return Object.fromEntries(SECRET_STATE_KEYS.map((key) => [key, this.getSecret(key)]))
 	}

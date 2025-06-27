@@ -2,14 +2,16 @@ import { CodeIndexConfigManager } from "../config-manager"
 
 describe("CodeIndexConfigManager", () => {
 	let mockContextProxy: any
+	let mockVSCodeContext: any
 	let configManager: CodeIndexConfigManager
 
 	beforeEach(() => {
 		// Setup mock VSCode context for async secret operations
-		const mockVSCodeContext = {
+		mockVSCodeContext = {
 			secrets: {
 				get: vitest.fn().mockResolvedValue(undefined),
 				store: vitest.fn().mockResolvedValue(undefined),
+				delete: vitest.fn().mockResolvedValue(undefined),
 			},
 		}
 
@@ -17,10 +19,9 @@ describe("CodeIndexConfigManager", () => {
 		mockContextProxy = {
 			getGlobalState: vitest.fn(),
 			getSecret: vitest.fn().mockReturnValue(undefined),
-			getVSCodeContext: vitest.fn().mockReturnValue(mockVSCodeContext),
 		}
 
-		configManager = new CodeIndexConfigManager(mockContextProxy)
+		configManager = new CodeIndexConfigManager(mockContextProxy, mockVSCodeContext)
 	})
 
 	// Helper function to setup both sync and async secret mocking
@@ -31,7 +32,6 @@ describe("CodeIndexConfigManager", () => {
 		})
 
 		// Mock async secret access (for new implementation)
-		const mockVSCodeContext = mockContextProxy.getVSCodeContext()
 		mockVSCodeContext.secrets.get.mockImplementation(async (key: string) => {
 			return secrets[key] || undefined
 		})
@@ -83,7 +83,6 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 
-			const mockVSCodeContext = mockContextProxy.getVSCodeContext()
 			mockVSCodeContext.secrets.get.mockImplementation(async (key: string) => {
 				if (key === "codeIndexOpenAiKey") return "test-openai-key"
 				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
@@ -1233,7 +1232,7 @@ describe("CodeIndexConfigManager", () => {
 			})
 
 			// Create a new config manager (simulating what happens in CodeIndexManager.initialize)
-			const newConfigManager = new CodeIndexConfigManager(mockContextProxy)
+			const newConfigManager = new CodeIndexConfigManager(mockContextProxy, mockVSCodeContext)
 
 			// Load configuration - should not require restart since the manager should be initialized with current config
 			const result = await newConfigManager.loadConfiguration()
