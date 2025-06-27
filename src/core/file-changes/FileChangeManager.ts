@@ -12,6 +12,8 @@ export class FileChangeManager {
 	private taskId: string
 	private globalStoragePath: string
 	private readonly instanceId: string
+	private persistenceInProgress = false
+	private pendingPersistence = false
 
 	constructor(baseCheckpoint: string, taskId?: string, globalStoragePath?: string) {
 		this.instanceId = crypto.randomUUID()
@@ -210,12 +212,21 @@ export class FileChangeManager {
 	}
 
 	/**
-	 * Persist file changes to disk
+	 * Persist file changes to disk with race condition prevention
 	 */
 	private async persistChanges(): Promise<void> {
 		if (!this.taskId || !this.globalStoragePath) {
 			return // No persistence if not configured
 		}
+
+		// Prevent concurrent persistence operations
+		if (this.persistenceInProgress) {
+			this.pendingPersistence = true
+			return
+		}
+
+		this.persistenceInProgress = true
+		this.pendingPersistence = false
 
 		try {
 			const filePath = this.getFileChangesFilePath()
@@ -230,9 +241,20 @@ export class FileChangeManager {
 				files: Array.from(this.changeset.files.values()),
 			}
 
-			await fs.writeFile(filePath, JSON.stringify(serializableChangeset, null, 2), "utf8")
+			// Write atomically using a temporary file
+			const tempFile = `${filePath}.tmp`
+			await fs.writeFile(tempFile, JSON.stringify(serializableChangeset, null, 2), "utf8")
+			await fs.rename(tempFile, filePath)
 		} catch (error) {
 			console.error(`Failed to persist file changes for task ${this.taskId}:`, error)
+			throw error
+		} finally {
+			this.persistenceInProgress = false
+
+			// Handle any pending persistence requests
+			if (this.pendingPersistence) {
+				setImmediate(() => this.persistChanges())
+			}
 		}
 	}
 
@@ -294,5 +316,12 @@ export class FileChangeManager {
 	 */
 	public getFileChangeCount(): number {
 		return this.changeset.files.size
+	}
+
+	/**
+	 * Dispose of the manager and clean up resources
+	 */
+	public dispose(): void {
+		this._onDidChange.dispose()
 	}
 }
