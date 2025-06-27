@@ -140,7 +140,7 @@ export class GeminiCliHandler extends BaseProvider implements SingleCompletionHa
 		}
 
 		// Start with a default project ID (can be anything for personal OAuth)
-		const initialProjectId = this.options.geminiCliDefaultProject
+		const initialProjectId = this.options.geminiCliDefaultProject || "default"
 
 		// Prepare client metadata
 		const clientMetadata = {
