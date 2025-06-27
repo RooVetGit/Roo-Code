@@ -112,8 +112,6 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 
 	const args = [
 		"-p",
-		"--input-format",
-		"text",
 		"--system-prompt",
 		systemPrompt,
 		"--verbose",

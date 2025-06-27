@@ -139,8 +139,6 @@ describe("runClaudeCode", () => {
 			"claude",
 			expect.arrayContaining([
 				"-p",
-				"--input-format",
-				"text",
 				"--system-prompt",
 				"You are a helpful assistant",
 				"--verbose",
