@@ -34,7 +34,7 @@ import { StandardTooltip } from "@src/components/ui"
 
 import TelemetryBanner from "../common/TelemetryBanner"
 import { useTaskSearch } from "../history/useTaskSearch"
-import { CommandRiskLevel } from "../../../../src/schemas"
+import { CommandRiskLevel } from "@roo-code/types"
 import { isValidRiskLevel, isRiskAllowed } from "../../utils/commandRiskUtils"
 import HistoryPreview from "../history/HistoryPreview"
 import Announcement from "./Announcement"
