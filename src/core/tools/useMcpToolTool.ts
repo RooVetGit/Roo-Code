@@ -89,24 +89,39 @@ async function sendExecutionStatus(cline: Task, status: McpExecutionStatus): Pro
 	})
 }
 
-function processToolContent(toolResult: any): string {
+function processToolContent(toolResult: any): { text: string; images: string[] } {
 	if (!toolResult?.content || toolResult.content.length === 0) {
-		return ""
+		return { text: "", images: [] }
 	}
 
-	return toolResult.content
-		.map((item: any) => {
-			if (item.type === "text") {
-				return item.text
+	const textParts: string[] = []
+	const images: string[] = []
+
+	toolResult.content.forEach((item: any) => {
+		if (item.type === "text") {
+			textParts.push(item.text)
+		} else if (item.type === "image") {
+			if (item.data && item.mimeType) {
+				const validImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"]
+				if (validImageTypes.includes(item.mimeType)) {
+					const dataUrl = `data:${item.mimeType};base64,${item.data}`
+					images.push(dataUrl)
+				} else {
+					console.warn(`Unsupported image MIME type: ${item.mimeType}`)
+				}
+			} else {
+				console.warn("Invalid MCP ImageContent: missing data or mimeType")
 			}
-			if (item.type === "resource") {
-				const { blob: _, ...rest } = item.resource
-				return JSON.stringify(rest, null, 2)
-			}
-			return ""
-		})
-		.filter(Boolean)
-		.join("\n\n")
+		} else if (item.type === "resource") {
+			const { blob: _, ...rest } = item.resource
+			textParts.push(JSON.stringify(rest, null, 2))
+		}
+	})
+
+	return {
+		text: textParts.filter(Boolean).join("\n\n"),
+		images,
+	}
 }
 
 async function executeToolAndProcessResult(
@@ -130,11 +145,13 @@ async function executeToolAndProcessResult(
 	const toolResult = await cline.providerRef.deref()?.getMcpHub()?.callTool(serverName, toolName, parsedArguments)
 
 	let toolResultPretty = "(No response)"
+	let images: string[] = []
 
 	if (toolResult) {
-		const outputText = processToolContent(toolResult)
+		const { text: outputText, images: outputImages } = processToolContent(toolResult)
+		images = outputImages
 
-		if (outputText) {
+		if (outputText || images.length > 0) {
 			await sendExecutionStatus(cline, {
 				executionId,
 				status: "output",
@@ -160,8 +177,8 @@ async function executeToolAndProcessResult(
 		})
 	}
 
-	await cline.say("mcp_server_response", toolResultPretty)
-	pushToolResult(formatResponse.toolResult(toolResultPretty))
+	await cline.say("mcp_server_response", toolResultPretty, images)
+	pushToolResult(formatResponse.toolResult(toolResultPretty, images))
 }
 
 export async function useMcpToolTool(

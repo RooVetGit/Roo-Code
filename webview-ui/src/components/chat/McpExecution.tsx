@@ -10,6 +10,7 @@ import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import CodeBlock from "../common/CodeBlock"
 import McpToolRow from "../mcp/McpToolRow"
+import Thumbnails from "../common/Thumbnails"
 import { Markdown } from "./Markdown"
 
 interface McpExecutionProps {
@@ -28,6 +29,7 @@ interface McpExecutionProps {
 	}
 	useMcpServer?: ClineAskUseMcpServer
 	alwaysAllowMcp?: boolean
+	images?: string[]
 }
 
 export const McpExecution = ({
@@ -39,6 +41,7 @@ export const McpExecution = ({
 	server,
 	useMcpServer,
 	alwaysAllowMcp = false,
+	images,
 }: McpExecutionProps) => {
 	const { t } = useTranslation("mcp")
 
@@ -212,15 +215,23 @@ export const McpExecution = ({
 								)}
 							</div>
 						)}
-						{responseText && responseText.length > 0 && (
-							<Button variant="ghost" size="icon" onClick={onToggleResponseExpand}>
-								<ChevronDown
-									className={cn("size-4 transition-transform duration-300", {
-										"rotate-180": isResponseExpanded,
-									})}
-								/>
-							</Button>
-						)}
+						{(responseText && responseText.length > 0) || (images && images.length > 0) ? (
+							<div className="flex items-center gap-1">
+								{images && images.length > 0 && (
+									<div className="flex items-center gap-1 text-xs text-vscode-descriptionForeground">
+										<span className="codicon codicon-file-media" />
+										<span>{images.length}</span>
+									</div>
+								)}
+								<Button variant="ghost" size="icon" onClick={onToggleResponseExpand}>
+									<ChevronDown
+										className={cn("size-4 transition-transform duration-300", {
+											"rotate-180": isResponseExpanded,
+										})}
+									/>
+								</Button>
+							</div>
+						) : null}
 					</div>
 				</div>
 			</div>
@@ -280,6 +291,7 @@ export const McpExecution = ({
 					isJson={responseIsJson}
 					hasArguments={!!(isArguments || useMcpServer?.arguments || argumentsText)}
 					isPartial={status ? status.status !== "completed" : false}
+					images={images}
 				/>
 			</div>
 		</>
@@ -294,15 +306,17 @@ const ResponseContainerInternal = ({
 	isJson,
 	hasArguments,
 	isPartial = false,
+	images,
 }: {
 	isExpanded: boolean
 	response: string
 	isJson: boolean
 	hasArguments?: boolean
 	isPartial?: boolean
+	images?: string[]
 }) => {
 	// Only render content when expanded to prevent performance issues with large responses
-	if (!isExpanded || response.length === 0) {
+	if (!isExpanded || (response.length === 0 && (!images || images.length === 0))) {
 		return (
 			<div
 				className={cn("overflow-hidden", {
@@ -312,17 +326,25 @@ const ResponseContainerInternal = ({
 		)
 	}
 
+	const shouldShowText = response.trim()
+
 	return (
 		<div
 			className={cn("overflow-hidden", {
 				"max-h-96 overflow-y-auto mt-1 pt-1 border-t border-border/25": hasArguments,
 				"max-h-96 overflow-y-auto mt-1 pt-1": !hasArguments,
 			})}>
-			{isJson ? (
-				<CodeBlock source={response} language="json" />
-			) : (
-				<Markdown markdown={response} partial={isPartial} />
+			{images && images.length > 0 && (
+				<div className="mb-2">
+					<Thumbnails images={images} />
+				</div>
 			)}
+			{shouldShowText &&
+				(isJson ? (
+					<CodeBlock source={response} language="json" />
+				) : (
+					<Markdown markdown={response} partial={isPartial} />
+				))}
 		</div>
 	)
 }
