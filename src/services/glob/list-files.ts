@@ -198,7 +198,6 @@ async function listFilteredDirectories(
 	gitignorePatterns: string[],
 ): Promise<string[]> {
 	const absolutePath = path.resolve(dirPath)
-	const targetDirPath = absolutePath // Store the explicitly targeted directory
 	const directories: string[] = []
 
 	async function scanDirectory(currentPath: string, isTargetDir: boolean = false): Promise<void> {
