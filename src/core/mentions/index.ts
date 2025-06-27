@@ -19,6 +19,32 @@ import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
 
+import { t } from "../../i18n"
+
+function getUrlErrorMessage(error: unknown): string {
+	const errorMessage = error instanceof Error ? error.message : String(error)
+
+	// Check for common error patterns and return appropriate message
+	if (errorMessage.includes("timeout")) {
+		return t("common:errors.url_timeout")
+	}
+	if (errorMessage.includes("net::ERR_NAME_NOT_RESOLVED")) {
+		return t("common:errors.url_not_found")
+	}
+	if (errorMessage.includes("net::ERR_INTERNET_DISCONNECTED")) {
+		return t("common:errors.no_internet")
+	}
+	if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
+		return t("common:errors.url_forbidden")
+	}
+	if (errorMessage.includes("404") || errorMessage.includes("Not Found")) {
+		return t("common:errors.url_page_not_found")
+	}
+
+	// Default error message
+	return t("common:errors.url_fetch_failed", { error: errorMessage })
+}
+
 export async function openMention(mention?: string): Promise<void> {
 	if (!mention) {
 		return
@@ -100,21 +126,12 @@ export async function parseMentions(
 				} catch (error) {
 					console.error(`Error fetching URL ${mention}:`, error)
 
-					// Provide more helpful error messages based on error type
-					let errorMessage = error instanceof Error ? error.message : String(error)
-					if (errorMessage.includes("timeout")) {
-						errorMessage = `The website took too long to load (timeout). This could be due to a slow connection, heavy website, or the site being temporarily unavailable. You can try again later or check if the URL is correct.`
-					} else if (errorMessage.includes("net::ERR_NAME_NOT_RESOLVED")) {
-						errorMessage = `The website address could not be found. Please check if the URL is correct and try again.`
-					} else if (errorMessage.includes("net::ERR_INTERNET_DISCONNECTED")) {
-						errorMessage = `No internet connection. Please check your network connection and try again.`
-					} else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
-						errorMessage = `Access to this website is forbidden. The site may block automated access or require authentication.`
-					} else if (errorMessage.includes("404") || errorMessage.includes("Not Found")) {
-						errorMessage = `The page was not found. Please check if the URL is correct.`
-					}
+					// Get user-friendly error message
+					const errorMessage = getUrlErrorMessage(error)
 
-					vscode.window.showErrorMessage(`Error fetching content for ${mention}: ${errorMessage}`)
+					vscode.window.showErrorMessage(
+						t("common:errors.url_fetch_error_with_url", { url: mention, error: errorMessage }),
+					)
 					result = `Error fetching content: ${errorMessage}`
 				}
 			}

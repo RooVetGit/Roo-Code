@@ -8,6 +8,10 @@ import TurndownService from "turndown"
 import PCR from "puppeteer-chromium-resolver"
 import { fileExistsAtPath } from "../../utils/fs"
 
+// Timeout constants
+const URL_FETCH_TIMEOUT = 30_000 // 30 seconds
+const URL_FETCH_FALLBACK_TIMEOUT = 20_000 // 20 seconds for fallback
+
 interface PCRStats {
 	puppeteer: { launch: typeof launch }
 	executablePath: string
@@ -90,7 +94,7 @@ export class UrlContentFetcher {
 		*/
 		try {
 			await this.page.goto(url, {
-				timeout: 30_000, // Increased from 10_000 to 30_000 (30 seconds)
+				timeout: URL_FETCH_TIMEOUT,
 				waitUntil: ["domcontentloaded", "networkidle2"],
 			})
 		} catch (error) {
@@ -99,7 +103,7 @@ export class UrlContentFetcher {
 				`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${error.message}`,
 			)
 			await this.page.goto(url, {
-				timeout: 20_000, // 20 seconds for fallback
+				timeout: URL_FETCH_FALLBACK_TIMEOUT,
 				waitUntil: ["domcontentloaded"],
 			})
 		}
