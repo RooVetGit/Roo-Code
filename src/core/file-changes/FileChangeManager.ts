@@ -84,48 +84,48 @@ export class FileChangeManager {
 		this._onDidChange.fire()
 	}
 
-	public acceptChange(uri: string): void {
+	public async acceptChange(uri: string): Promise<void> {
 		// For now, just remove from tracking - the changes are already applied
 		this.changeset.files.delete(uri)
-		this._onDidChange.fire()
-
-		// Persist changes after accepting
-		this.persistChanges().catch((error) => {
+		try {
+			await this.persistChanges()
+		} catch (error) {
 			console.warn(`Failed to persist file changes after accepting ${uri}:`, error)
-		})
+		}
+		this._onDidChange.fire()
 	}
 
-	public rejectChange(uri: string): void {
+	public async rejectChange(uri: string): Promise<void> {
 		// Remove from tracking - the actual revert will be handled by the caller
 		this.changeset.files.delete(uri)
-		this._onDidChange.fire()
-
-		// Persist changes after rejecting
-		this.persistChanges().catch((error) => {
+		try {
+			await this.persistChanges()
+		} catch (error) {
 			console.warn(`Failed to persist file changes after rejecting ${uri}:`, error)
-		})
+		}
+		this._onDidChange.fire()
 	}
 
-	public acceptAll(): void {
+	public async acceptAll(): Promise<void> {
 		// Accept all changes - they're already applied
 		this.changeset.files.clear()
-		this._onDidChange.fire()
-
-		// Clear persisted changes after accepting all
-		this.clearPersistedChanges().catch((error) => {
+		try {
+			await this.clearPersistedChanges()
+		} catch (error) {
 			console.warn(`Failed to clear persisted file changes after accepting all:`, error)
-		})
+		}
+		this._onDidChange.fire()
 	}
 
-	public rejectAll(): void {
+	public async rejectAll(): Promise<void> {
 		// Remove all from tracking - the actual revert will be handled by the caller
 		this.changeset.files.clear()
-		this._onDidChange.fire()
-
-		// Clear persisted changes after rejecting all
-		this.clearPersistedChanges().catch((error) => {
+		try {
+			await this.clearPersistedChanges()
+		} catch (error) {
 			console.warn(`Failed to clear persisted file changes after rejecting all:`, error)
-		})
+		}
+		this._onDidChange.fire()
 	}
 
 	public getFileChange(uri: string): FileChange | undefined {

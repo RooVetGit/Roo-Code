@@ -63,7 +63,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 
 		await fs.mkdir(this.checkpointsDir, { recursive: true })
-		const git = simpleGit(this.checkpointsDir)
+		const git = simpleGit(this.workspaceDir, { binary: "git" }).env("GIT_DIR", this.dotGitDir)
 		const gitVersion = await git.version()
 		this.log(`[${this.constructor.name}#create] git = ${gitVersion}`)
 

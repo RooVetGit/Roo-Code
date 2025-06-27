@@ -194,9 +194,9 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 									onClick={() => onAcceptFile(file.uri)}
 									title="Accept changes for this file"
 									style={{
-										backgroundColor: "var(--vscode-testing-iconPassed)",
-										color: "white",
-										border: "none",
+										backgroundColor: "var(--vscode-button-background)",
+										color: "var(--vscode-button-foreground)",
+										border: "1px solid var(--vscode-button-border)",
 										borderRadius: "3px",
 										padding: "2px 6px",
 										fontSize: "11px",
@@ -209,9 +209,9 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 									onClick={() => onRejectFile(file.uri)}
 									title="Reject changes for this file"
 									style={{
-										backgroundColor: "var(--vscode-testing-iconFailed)",
-										color: "white",
-										border: "none",
+										backgroundColor: "var(--vscode-button-secondaryBackground)",
+										color: "var(--vscode-button-secondaryForeground)",
+										border: "1px solid var(--vscode-button-border)",
 										borderRadius: "3px",
 										padding: "2px 6px",
 										fontSize: "11px",

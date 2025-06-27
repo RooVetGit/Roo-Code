@@ -925,7 +925,7 @@ export class ClineProvider
 				case "acceptFileChange":
 					if (message.uri && task.fileChangeManager) {
 						console.log(`ClineProvider: Handling acceptFileChange for URI: ${message.uri}`)
-						task.fileChangeManager.acceptChange(message.uri)
+						await task.fileChangeManager.acceptChange(message.uri)
 
 						// Send updated state
 						const updatedChangeset = task.fileChangeManager.getChanges()
@@ -979,7 +979,7 @@ export class ClineProvider
 						}
 
 						// Remove from tracking
-						task.fileChangeManager.rejectChange(message.uri)
+						await task.fileChangeManager.rejectChange(message.uri)
 
 						// Send updated state
 						const updatedChangeset = task.fileChangeManager.getChanges()
@@ -991,7 +991,7 @@ export class ClineProvider
 					break
 				case "acceptAllFileChanges":
 					console.log("ClineProvider: Handling acceptAllFileChanges.")
-					task.fileChangeManager?.acceptAll()
+					await task.fileChangeManager?.acceptAll()
 
 					// Clear state
 					this.postMessageToWebview({
@@ -1017,7 +1017,7 @@ export class ClineProvider
 						}
 
 						// Clear all tracking
-						task.fileChangeManager.rejectAll()
+						await task.fileChangeManager.rejectAll()
 
 						// Clear state
 						this.postMessageToWebview({
