@@ -121,56 +121,13 @@ export class CodeIndexManager {
 
 		// 4. Determine if Core Services Need Recreation
 		const needsServiceRecreation = !this._serviceFactory || requiresRestart
+		console.log(
+			`[DEBUG Manager] Service recreation check: needsServiceRecreation=${needsServiceRecreation}, serviceFactory exists=${!!this._serviceFactory}, requiresRestart=${requiresRestart}`,
+		)
 
 		if (needsServiceRecreation) {
-			// Stop watcher if it exists
-			if (this._orchestrator) {
-				this.stopWatcher()
-			}
-
-			// (Re)Initialize service factory
-			this._serviceFactory = new CodeIndexServiceFactory(
-				this._configManager,
-				this.workspacePath,
-				this._cacheManager,
-			)
-
-			const ignoreInstance = ignore()
-			const ignorePath = path.join(getWorkspacePath(), ".gitignore")
-			try {
-				const content = await fs.readFile(ignorePath, "utf8")
-				ignoreInstance.add(content)
-				ignoreInstance.add(".gitignore")
-			} catch (error) {
-				// Should never happen: reading file failed even though it exists
-				console.error("Unexpected error loading .gitignore:", error)
-			}
-
-			// (Re)Create shared service instances
-			const { embedder, vectorStore, scanner, fileWatcher } = this._serviceFactory.createServices(
-				this.context,
-				this._cacheManager,
-				ignoreInstance,
-			)
-
-			// (Re)Initialize orchestrator
-			this._orchestrator = new CodeIndexOrchestrator(
-				this._configManager,
-				this._stateManager,
-				this.workspacePath,
-				this._cacheManager,
-				vectorStore,
-				scanner,
-				fileWatcher,
-			)
-
-			// (Re)Initialize search service
-			this._searchService = new CodeIndexSearchService(
-				this._configManager,
-				this._stateManager,
-				embedder,
-				vectorStore,
-			)
+			console.log(`[DEBUG Manager] Recreating services due to restart requirement`)
+			await this._recreateServices()
 		}
 
 		// 5. Handle Indexing Start/Restart
@@ -249,23 +206,124 @@ export class CodeIndexManager {
 	}
 
 	/**
-	 * Handles external settings changes by reloading configuration.
-	 * This method should be called when API provider settings are updated
+	 * Stores secrets using the config manager's async method
+	 */
+	public async storeSecretsAsync(secrets: {
+		openAiKey?: string
+		qdrantApiKey?: string
+		openAiCompatibleApiKey?: string
+	}): Promise<void> {
+		if (this._configManager) {
+			await this._configManager.storeSecretsAsync(secrets)
+		}
+	}
+
+	/**
+	 * Loads secrets using the config manager's async method
+	 */
+	public async loadSecretsAsync(): Promise<{
+		openAiKey?: string
+		qdrantApiKey?: string
+		openAiCompatibleApiKey?: string
+	}> {
+		if (this._configManager) {
+			return await this._configManager.loadSecretsAsync()
+		}
+		return {}
+	}
+
+	/**
+	 * Private helper method to recreate services with current configuration.
+	 * Used by both initialize() and handleSettingsChange().
+	 */
+	private async _recreateServices(): Promise<void> {
+		// Stop watcher if it exists
+		if (this._orchestrator) {
+			this.stopWatcher()
+		}
+
+		// (Re)Initialize service factory
+		console.log(`[DEBUG Manager] Creating new service factory`)
+		this._serviceFactory = new CodeIndexServiceFactory(
+			this._configManager!,
+			this.workspacePath,
+			this._cacheManager!,
+		)
+
+		const ignoreInstance = ignore()
+		const ignorePath = path.join(getWorkspacePath(), ".gitignore")
+		try {
+			const content = await fs.readFile(ignorePath, "utf8")
+			ignoreInstance.add(content)
+			ignoreInstance.add(".gitignore")
+		} catch (error) {
+			// Should never happen: reading file failed even though it exists
+			console.error("Unexpected error loading .gitignore:", error)
+		}
+
+		// (Re)Create shared service instances
+		console.log(`[DEBUG Manager] Calling createServices to create new embedder and vector store`)
+		const { embedder, vectorStore, scanner, fileWatcher } = this._serviceFactory.createServices(
+			this.context,
+			this._cacheManager!,
+			ignoreInstance,
+		)
+		console.log(`[DEBUG Manager] Services created successfully`)
+
+		// (Re)Initialize orchestrator
+		this._orchestrator = new CodeIndexOrchestrator(
+			this._configManager!,
+			this._stateManager,
+			this.workspacePath,
+			this._cacheManager!,
+			vectorStore,
+			scanner,
+			fileWatcher,
+		)
+
+		// (Re)Initialize search service
+		this._searchService = new CodeIndexSearchService(
+			this._configManager!,
+			this._stateManager,
+			embedder,
+			vectorStore,
+		)
+	}
+
+	/**
+	 * Handle code index settings changes.
+	 * This method should be called when code index settings are updated
 	 * to ensure the CodeIndexConfigManager picks up the new configuration.
 	 * If the configuration changes require a restart, the service will be restarted.
 	 */
-	public async handleExternalSettingsChange(): Promise<void> {
+	public async handleSettingsChange(): Promise<void> {
+		console.log(`[DEBUG Manager] handleSettingsChange called`)
+
 		if (this._configManager) {
+			console.log(`[DEBUG Manager] Loading configuration...`)
 			const { requiresRestart } = await this._configManager.loadConfiguration()
 
 			const isFeatureEnabled = this.isFeatureEnabled
 			const isFeatureConfigured = this.isFeatureConfigured
 
+			console.log(
+				`[DEBUG Manager] After config reload: enabled=${isFeatureEnabled}, configured=${isFeatureConfigured}, requiresRestart=${requiresRestart}, isInitialized=${this.isInitialized}`,
+			)
+
 			// If configuration changes require a restart and the manager is initialized, restart the service
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
-				this.stopWatcher()
-				await this.startIndexing()
+				console.log(`[DEBUG Manager] Restarting indexing service due to configuration changes`)
+
+				// Recreate services with new configuration
+				await this._recreateServices()
+
+				// Start indexing with new services
+				this.startIndexing()
+			} else {
+				console.log(`[DEBUG Manager] No restart needed or conditions not met`)
 			}
+		} else {
+			console.log(`[DEBUG Manager] No config manager available`)
 		}
 	}
 }

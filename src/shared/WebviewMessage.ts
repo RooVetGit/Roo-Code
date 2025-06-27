@@ -138,6 +138,7 @@ export interface WebviewMessage {
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
+		| "codebaseIndexEnabled"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
 		| "testBrowserConnection"
@@ -160,7 +161,6 @@ export interface WebviewMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "focusPanelRequest"
-		| "codebaseIndexConfig"
 		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
 		| "openExternal"
@@ -175,6 +175,8 @@ export interface WebviewMessage {
 		| "switchTab"
 		| "profileThresholds"
 		| "shareTaskSuccess"
+		| "saveCodeIndexSettingsAtomic"
+		| "requestCodeIndexSecretStatus"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
@@ -213,6 +215,21 @@ export interface WebviewMessage {
 	mpInstallOptions?: InstallMarketplaceItemOptions
 	config?: Record<string, any> // Add config to the payload
 	visibility?: ShareVisibility // For share visibility
+	codeIndexSettings?: {
+		// Global state settings
+		codebaseIndexEnabled: boolean
+		codebaseIndexQdrantUrl: string
+		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible"
+		codebaseIndexEmbedderBaseUrl?: string
+		codebaseIndexEmbedderModelId: string
+		codebaseIndexOpenAiCompatibleBaseUrl?: string
+		codebaseIndexOpenAiCompatibleModelDimension?: number
+
+		// Secret settings
+		codeIndexOpenAiKey?: string
+		codeIndexQdrantApiKey?: string
+		codebaseIndexOpenAiCompatibleApiKey?: string
+	}
 }
 
 export const checkoutDiffPayloadSchema = z.object({

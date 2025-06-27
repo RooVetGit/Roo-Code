@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from "react"
-import { z } from "zod"
+import React, { useState, useCallback, useEffect } from "react"
+import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { VSCodeCheckbox, VSCodeTextField, VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
-import { Trans } from "react-i18next"
 
-import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
-
+import { CodebaseIndexConfig, CodebaseIndexModels } from "@roo-code/types"
 import { EmbedderProvider } from "@roo/embeddingModels"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { buildDocLink } from "@src/utils/docLinks"
 
 import {
 	Select,
@@ -29,28 +25,62 @@ import {
 	AlertDialogTrigger,
 } from "@src/components/ui"
 
-import { SetCachedStateField } from "./types"
-
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
-	apiConfiguration: ProviderSettings
-	setCachedStateField: SetCachedStateField<"codebaseIndexConfig">
-	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
-	areSettingsCommitted: boolean
 }
 
-import type { IndexingStatusUpdateMessage } from "@roo/ExtensionMessage"
+interface LocalCodeIndexSettings {
+	// Global state settings
+	codebaseIndexQdrantUrl: string
+	codebaseIndexEmbedderProvider: EmbedderProvider
+	codebaseIndexEmbedderBaseUrl?: string
+	codebaseIndexEmbedderModelId: string
 
-export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
-	codebaseIndexModels,
-	codebaseIndexConfig,
-	apiConfiguration,
-	setCachedStateField,
-	setApiConfigurationField,
-	areSettingsCommitted,
-}) => {
+	// Secret settings (start empty, will be loaded separately)
+	codeIndexOpenAiKey?: string
+	codeIndexQdrantApiKey?: string
+	codebaseIndexOpenAiCompatibleBaseUrl?: string
+	codebaseIndexOpenAiCompatibleApiKey?: string
+	codebaseIndexOpenAiCompatibleModelDimension?: number
+}
+
+interface SecretStatus {
+	hasOpenAiKey: boolean
+	hasQdrantApiKey: boolean
+	hasOpenAiCompatibleApiKey: boolean
+}
+
+export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIndexModels, codebaseIndexConfig }) => {
 	const { t } = useAppTranslation()
+
+	const [localSettings, setLocalSettings] = useState<LocalCodeIndexSettings>({
+		// Global state settings
+		codebaseIndexQdrantUrl: codebaseIndexConfig?.codebaseIndexQdrantUrl || "http://localhost:6333",
+		codebaseIndexEmbedderProvider: codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai",
+		codebaseIndexEmbedderBaseUrl: codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl || "",
+		codebaseIndexEmbedderModelId: codebaseIndexConfig?.codebaseIndexEmbedderModelId || "",
+
+		// Secret settings (start undefined to indicate no change)
+		codeIndexOpenAiKey: undefined,
+		codeIndexQdrantApiKey: undefined,
+		codebaseIndexOpenAiCompatibleBaseUrl: "",
+		codebaseIndexOpenAiCompatibleApiKey: undefined,
+		codebaseIndexOpenAiCompatibleModelDimension: undefined,
+	})
+
+	const [secretStatus, setSecretStatus] = useState<SecretStatus>({
+		hasOpenAiKey: false,
+		hasQdrantApiKey: false,
+		hasOpenAiCompatibleApiKey: false,
+	})
+
+	// Track which fields have been modified by the user
+	const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set())
+
+	const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle")
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
 		message: "",
@@ -59,40 +89,115 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		currentItemUnit: "items",
 	})
 
-	// Safely calculate available models for current provider
-	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
-	const modelsForProvider =
-		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "openai-compatible"
-			? codebaseIndexModels?.[currentProvider] || codebaseIndexModels?.openai
-			: codebaseIndexModels?.openai
-	const availableModelIds = Object.keys(modelsForProvider || {})
+	// Update local settings when props change
+	useEffect(() => {
+		if (codebaseIndexConfig) {
+			setLocalSettings((prev) => ({
+				...prev,
+				codebaseIndexQdrantUrl: codebaseIndexConfig.codebaseIndexQdrantUrl || "http://localhost:6333",
+				codebaseIndexEmbedderProvider: codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai",
+				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
+				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
+			}))
+		}
+	}, [codebaseIndexConfig])
 
+	// Listen for save response messages and indexing status updates
 	useEffect(() => {
 		// Request initial indexing status from extension host
 		vscode.postMessage({ type: "requestIndexingStatus" })
+		// Request secret status
+		vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 
-		// Set up interval for periodic status updates
-
-		// Set up message listener for status updates
-		const handleMessage = (event: MessageEvent<IndexingStatusUpdateMessage>) => {
-			if (event.data.type === "indexingStatusUpdate") {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "codeIndexSettingsSaved") {
+				if (message.success) {
+					setSaveStatus("success")
+					setHasUnsavedChanges(false)
+					// Clear success message after 3 seconds
+					setTimeout(() => {
+						setSaveStatus("idle")
+					}, 3000)
+					// Request updated secret status after save
+					vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
+				} else {
+					setSaveStatus("error")
+					// Clear error message after 5 seconds
+					setTimeout(() => {
+						setSaveStatus("idle")
+					}, 5000)
+				}
+			} else if (message.type === "indexingStatusUpdate") {
 				setIndexingStatus({
-					systemStatus: event.data.values.systemStatus,
-					message: event.data.values.message || "",
-					processedItems: event.data.values.processedItems,
-					totalItems: event.data.values.totalItems,
-					currentItemUnit: event.data.values.currentItemUnit || "items",
+					systemStatus: message.values.systemStatus,
+					message: message.values.message || "",
+					processedItems: message.values.processedItems,
+					totalItems: message.values.totalItems,
+					currentItemUnit: message.values.currentItemUnit || "items",
+				})
+			} else if (message.type === "codeIndexSecretStatus") {
+				setSecretStatus({
+					hasOpenAiKey: message.values.hasOpenAiKey || false,
+					hasQdrantApiKey: message.values.hasQdrantApiKey || false,
+					hasOpenAiCompatibleApiKey: message.values.hasOpenAiCompatibleApiKey || false,
 				})
 			}
 		}
 
 		window.addEventListener("message", handleMessage)
+		return () => window.removeEventListener("message", handleMessage)
+	}, [])
 
-		// Cleanup function
-		return () => {
-			window.removeEventListener("message", handleMessage)
+	const updateSetting = useCallback((field: keyof LocalCodeIndexSettings, value: any) => {
+		setLocalSettings((prev) => ({ ...prev, [field]: value }))
+		setModifiedFields((prev) => new Set(prev).add(field))
+		setHasUnsavedChanges(true)
+		setSaveStatus("idle") // Reset any previous success/error status
+	}, [])
+
+	const saveSettings = useCallback(async () => {
+		setSaveStatus("saving")
+		setHasUnsavedChanges(false)
+
+		// Only send fields that have been modified
+		const settingsToSave: any = {
+			// Always include non-secret settings
+			codebaseIndexQdrantUrl: localSettings.codebaseIndexQdrantUrl,
+			codebaseIndexEmbedderProvider: localSettings.codebaseIndexEmbedderProvider,
+			codebaseIndexEmbedderBaseUrl: localSettings.codebaseIndexEmbedderBaseUrl,
+			codebaseIndexEmbedderModelId: localSettings.codebaseIndexEmbedderModelId,
+			codebaseIndexOpenAiCompatibleBaseUrl: localSettings.codebaseIndexOpenAiCompatibleBaseUrl,
+			codebaseIndexOpenAiCompatibleModelDimension: localSettings.codebaseIndexOpenAiCompatibleModelDimension,
 		}
-	}, [codebaseIndexConfig, codebaseIndexModels])
+
+		// Only include secret fields if they were modified
+		if (modifiedFields.has("codeIndexOpenAiKey")) {
+			settingsToSave.codeIndexOpenAiKey = localSettings.codeIndexOpenAiKey
+		}
+		if (modifiedFields.has("codeIndexQdrantApiKey")) {
+			settingsToSave.codeIndexQdrantApiKey = localSettings.codeIndexQdrantApiKey
+		}
+		if (modifiedFields.has("codebaseIndexOpenAiCompatibleApiKey")) {
+			settingsToSave.codebaseIndexOpenAiCompatibleApiKey = localSettings.codebaseIndexOpenAiCompatibleApiKey
+		}
+
+		vscode.postMessage({
+			type: "saveCodeIndexSettingsAtomic",
+			codeIndexSettings: settingsToSave,
+		})
+
+		// Clear modified fields after save
+		setModifiedFields(new Set())
+	}, [localSettings, modifiedFields])
+
+	// Safely calculate available models for current provider
+	const currentProvider = localSettings.codebaseIndexEmbedderProvider
+	const modelsForProvider =
+		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "openai-compatible"
+			? codebaseIndexModels?.[currentProvider] || codebaseIndexModels?.openai
+			: codebaseIndexModels?.openai
+	const availableModelIds = Object.keys(modelsForProvider || {})
 
 	/**
 	 * Determines the appropriate model ID when changing providers
@@ -118,54 +223,16 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		return selectedModel
 	}
 
-	function validateIndexingConfig(config: CodebaseIndexConfig | undefined, apiConfig: ProviderSettings): boolean {
-		if (!config) return false
+	const handleProviderChange = (newProvider: EmbedderProvider) => {
+		const modelIdToUse = getModelIdForProvider(
+			newProvider,
+			currentProvider,
+			localSettings.codebaseIndexEmbedderModelId,
+			codebaseIndexModels,
+		)
 
-		const baseSchema = z.object({
-			codebaseIndexQdrantUrl: z.string().url("Qdrant URL must be a valid URL"),
-			codebaseIndexEmbedderModelId: z.string().min(1, "Model ID is required"),
-		})
-
-		const providerSchemas = {
-			openai: baseSchema.extend({
-				codebaseIndexEmbedderProvider: z.literal("openai"),
-				codeIndexOpenAiKey: z.string().min(1, "OpenAI key is required"),
-			}),
-			ollama: baseSchema.extend({
-				codebaseIndexEmbedderProvider: z.literal("ollama"),
-				codebaseIndexEmbedderBaseUrl: z.string().url("Ollama URL must be a valid URL"),
-			}),
-			"openai-compatible": baseSchema.extend({
-				codebaseIndexEmbedderProvider: z.literal("openai-compatible"),
-				codebaseIndexOpenAiCompatibleBaseUrl: z.string().url("Base URL must be a valid URL"),
-				codebaseIndexOpenAiCompatibleApiKey: z.string().min(1, "API key is required"),
-				codebaseIndexOpenAiCompatibleModelDimension: z
-					.number()
-					.int("Dimension must be an integer")
-					.positive("Dimension must be a positive number")
-					.optional(),
-			}),
-		}
-
-		try {
-			const schema =
-				config.codebaseIndexEmbedderProvider === "openai"
-					? providerSchemas.openai
-					: config.codebaseIndexEmbedderProvider === "ollama"
-						? providerSchemas.ollama
-						: providerSchemas["openai-compatible"]
-
-			schema.parse({
-				...config,
-				codeIndexOpenAiKey: apiConfig.codeIndexOpenAiKey,
-				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
-				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
-				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
-			})
-			return true
-		} catch {
-			return false
-		}
+		updateSetting("codebaseIndexEmbedderProvider", newProvider)
+		updateSetting("codebaseIndexEmbedderModelId", modelIdToUse)
 	}
 
 	const progressPercentage =
@@ -181,29 +248,30 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	return (
 		<>
 			<div>
-				<div className="flex items-center gap-2">
-					<VSCodeCheckbox
-						checked={codebaseIndexConfig?.codebaseIndexEnabled}
-						onChange={(e: any) =>
-							setCachedStateField("codebaseIndexConfig", {
-								...codebaseIndexConfig,
-								codebaseIndexEnabled: e.target.checked,
-							})
-						}>
-						<span className="font-medium">{t("settings:codeIndex.enableLabel")}</span>
-					</VSCodeCheckbox>
+				<div className="flex items-center justify-between mb-3">
+					<div className="flex items-center gap-2">
+						<h4 className="font-medium m-0">{t("settings:codeIndex.settingsTitle")}</h4>
+					</div>
+
+					{/* Save Settings Section */}
+					<div className="flex gap-2 items-center">
+						<VSCodeButton onClick={saveSettings} disabled={saveStatus === "saving" || !hasUnsavedChanges}>
+							{saveStatus === "saving" ? "Saving..." : "Save Settings"}
+						</VSCodeButton>
+
+						{saveStatus === "success" && <span className="text-green-500">✓ Settings saved</span>}
+
+						{saveStatus === "error" && <span className="text-red-500">✗ Failed to save</span>}
+
+						{hasUnsavedChanges && saveStatus === "idle" && (
+							<span className="text-yellow-500">• Unsaved changes</span>
+						)}
+					</div>
 				</div>
-				<p className="text-vscode-descriptionForeground text-sm mt-0">
-					<Trans i18nKey="settings:codeIndex.enableDescription">
-						<VSCodeLink
-							href={buildDocLink("features/experimental/codebase-indexing", "settings")}
-							style={{ display: "inline" }}></VSCodeLink>
-					</Trans>
-				</p>
 			</div>
 
 			{codebaseIndexConfig?.codebaseIndexEnabled && (
-				<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+				<div className="flex flex-col gap-3">
 					<div className="text-sm text-vscode-descriptionForeground">
 						<span
 							className={`
@@ -245,27 +313,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					<div>
 						<div className="flex items-center gap-2">
 							<Select
-								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
-								onValueChange={(value) => {
-									const newProvider = value as EmbedderProvider
-									const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
-									const currentModelId = codebaseIndexConfig?.codebaseIndexEmbedderModelId
-
-									const modelIdToUse = getModelIdForProvider(
-										newProvider,
-										currentProvider,
-										currentModelId,
-										codebaseIndexModels,
-									)
-
-									if (codebaseIndexConfig) {
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexEmbedderProvider: newProvider,
-											codebaseIndexEmbedderModelId: modelIdToUse,
-										})
-									}
-								}}>
+								value={localSettings.codebaseIndexEmbedderProvider}
+								onValueChange={handleProviderChange}>
 								<SelectTrigger className="w-full">
 									<SelectValue placeholder={t("settings:codeIndex.selectProviderPlaceholder")} />
 								</SelectTrigger>
@@ -280,7 +329,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 					</div>
 
-					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
+					{localSettings.codebaseIndexEmbedderProvider === "openai" && (
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-4 font-bold">
 								<div>{t("settings:codeIndex.openaiKeyLabel")}</div>
@@ -288,23 +337,30 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<div>
 								<VSCodeTextField
 									type="password"
-									value={apiConfiguration.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}
+									value={
+										modifiedFields.has("codeIndexOpenAiKey")
+											? localSettings.codeIndexOpenAiKey || ""
+											: secretStatus.hasOpenAiKey
+												? "••••••••••••••••"
+												: ""
+									}
+									onInput={(e: any) => updateSetting("codeIndexOpenAiKey", e.target.value)}
+									placeholder="Enter your OpenAI API key"
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
 					)}
 
-					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" && (
+					{localSettings.codebaseIndexEmbedderProvider === "openai-compatible" && (
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-4 font-bold">
 								<div>{t("settings:codeIndex.openaiCompatibleBaseUrlLabel")}</div>
 							</div>
 							<div>
 								<VSCodeTextField
-									value={apiConfiguration.codebaseIndexOpenAiCompatibleBaseUrl || ""}
+									value={localSettings.codebaseIndexOpenAiCompatibleBaseUrl || ""}
 									onInput={(e: any) =>
-										setApiConfigurationField("codebaseIndexOpenAiCompatibleBaseUrl", e.target.value)
+										updateSetting("codebaseIndexOpenAiCompatibleBaseUrl", e.target.value)
 									}
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
@@ -314,10 +370,17 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<div>
 								<VSCodeTextField
 									type="password"
-									value={apiConfiguration.codebaseIndexOpenAiCompatibleApiKey || ""}
-									onInput={(e: any) =>
-										setApiConfigurationField("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
+									value={
+										modifiedFields.has("codebaseIndexOpenAiCompatibleApiKey")
+											? localSettings.codebaseIndexOpenAiCompatibleApiKey || ""
+											: secretStatus.hasOpenAiCompatibleApiKey
+												? "••••••••••••••••"
+												: ""
 									}
+									onInput={(e: any) =>
+										updateSetting("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
+									}
+									placeholder="Enter your API key"
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
@@ -328,26 +391,16 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" ? (
+							{localSettings.codebaseIndexEmbedderProvider === "openai-compatible" ? (
 								<VSCodeTextField
-									value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-									onInput={(e: any) =>
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexEmbedderModelId: e.target.value,
-										})
-									}
+									value={localSettings.codebaseIndexEmbedderModelId || ""}
+									onInput={(e: any) => updateSetting("codebaseIndexEmbedderModelId", e.target.value)}
 									placeholder="Enter custom model ID"
 									style={{ width: "100%" }}></VSCodeTextField>
 							) : (
 								<Select
-									value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-									onValueChange={(value) =>
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexEmbedderModelId: value,
-										})
-									}>
+									value={localSettings.codebaseIndexEmbedderModelId || ""}
+									onValueChange={(value) => updateSetting("codebaseIndexEmbedderModelId", value)}>
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder={t("settings:codeIndex.selectModelPlaceholder")} />
 									</SelectTrigger>
@@ -363,7 +416,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 					</div>
 
-					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible" && (
+					{localSettings.codebaseIndexEmbedderProvider === "openai-compatible" && (
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-4 font-bold">
 								<div>{t("settings:codeIndex.openaiCompatibleModelDimensionLabel")}</div>
@@ -371,20 +424,15 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<div>
 								<VSCodeTextField
 									type="text"
-									value={
-										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
-									}
+									value={localSettings.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""}
 									onInput={(e: any) => {
 										const value = e.target.value
 										if (value === "") {
-											setApiConfigurationField(
-												"codebaseIndexOpenAiCompatibleModelDimension",
-												undefined,
-											)
+											updateSetting("codebaseIndexOpenAiCompatibleModelDimension", undefined)
 										} else {
 											const parsedValue = parseInt(value, 10)
 											if (!isNaN(parsedValue)) {
-												setApiConfigurationField(
+												updateSetting(
 													"codebaseIndexOpenAiCompatibleModelDimension",
 													parsedValue,
 												)
@@ -400,20 +448,15 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 					)}
 
-					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
+					{localSettings.codebaseIndexEmbedderProvider === "ollama" && (
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-4 font-bold">
 								<div>{t("settings:codeIndex.ollamaUrlLabel")}</div>
 							</div>
 							<div>
 								<VSCodeTextField
-									value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || ""}
-									onInput={(e: any) =>
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexEmbedderBaseUrl: e.target.value,
-										})
-									}
+									value={localSettings.codebaseIndexEmbedderBaseUrl || ""}
+									onInput={(e: any) => updateSetting("codebaseIndexEmbedderBaseUrl", e.target.value)}
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
@@ -425,13 +468,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 						<div>
 							<VSCodeTextField
-								value={codebaseIndexConfig.codebaseIndexQdrantUrl || "http://localhost:6333"}
-								onInput={(e: any) =>
-									setCachedStateField("codebaseIndexConfig", {
-										...codebaseIndexConfig,
-										codebaseIndexQdrantUrl: e.target.value,
-									})
-								}
+								value={localSettings.codebaseIndexQdrantUrl}
+								onInput={(e: any) => updateSetting("codebaseIndexQdrantUrl", e.target.value)}
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
 					</div>
@@ -443,26 +481,24 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						<div>
 							<VSCodeTextField
 								type="password"
-								value={apiConfiguration.codeIndexQdrantApiKey}
-								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
+								value={
+									modifiedFields.has("codeIndexQdrantApiKey")
+										? localSettings.codeIndexQdrantApiKey || ""
+										: secretStatus.hasQdrantApiKey
+											? "••••••••••••••••"
+											: ""
+								}
+								onInput={(e: any) => updateSetting("codeIndexQdrantApiKey", e.target.value)}
+								placeholder="Enter your Qdrant API key (optional)"
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
 					</div>
-
-					{(!areSettingsCommitted || !validateIndexingConfig(codebaseIndexConfig, apiConfiguration)) && (
-						<p className="text-sm text-vscode-descriptionForeground mb-2">
-							{t("settings:codeIndex.unsavedSettingsMessage")}
-						</p>
-					)}
 
 					<div className="flex gap-2">
 						{(indexingStatus.systemStatus === "Error" || indexingStatus.systemStatus === "Standby") && (
 							<VSCodeButton
 								onClick={() => vscode.postMessage({ type: "startIndexing" })}
-								disabled={
-									!areSettingsCommitted ||
-									!validateIndexingConfig(codebaseIndexConfig, apiConfiguration)
-								}>
+								disabled={saveStatus === "saving" || hasUnsavedChanges}>
 								{t("settings:codeIndex.startIndexingButton")}
 							</VSCodeButton>
 						)}
@@ -495,6 +531,18 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</AlertDialog>
 						)}
 					</div>
+
+					{hasUnsavedChanges && (
+						<p className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("settings:codeIndex.unsavedSettingsMessage")}
+						</p>
+					)}
+				</div>
+			)}
+
+			{!codebaseIndexConfig?.codebaseIndexEnabled && (
+				<div className="text-vscode-descriptionForeground text-sm">
+					<p>{t("settings:codeIndex.disabledMessage")}</p>
 				</div>
 			)}
 		</>
