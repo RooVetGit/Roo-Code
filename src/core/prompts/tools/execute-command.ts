@@ -14,7 +14,7 @@ Parameters:
 Risk level total ordering:
     readOnly < reversibleChanges < complexChanges < serviceInterruptingChanges < destructiveChanges
 
-S = (F ∪ P ∪ N ∪ H ∪ M ∪ Z ∪ E) × {local,remote}
+S = (F ∪ P ∪ N ∪ H ∪ M ∪ Z ∪ E) × {local,remote,api,web,cloud,virt}
     F = storage: files, databases, git repos, disks, …
     P = processes, services, VMs, containers, …
     N = network configs, …
@@ -101,11 +101,11 @@ You MUST evaluate HIGHEST risk and analyze the ENTIRE command sequence, eg \`c�
     r(C) = max{r(c₁), r(c₂), …, r(cₙ)}
 
 Examples by risk level
-    - readOnly: ls, git log, cat, ps, ip, lsblk, free, id, atq, date, dmesg, lsmod, last, iptables -L, SELECT
-    - reversibleChanges: mkdir, mv and cp (without overwrite), renice, ip addr add, swapon, groupadd, tar c, systemctl enable, chmod +x, mount, iptables -A, gzip, INSERT
-    - complexChanges: rsync, tar x, sed -i, taskset, firewall-cmd, fwupdmgr, numactl, chcon, update-alternatives, recursive operations, UPDATE
-    - serviceInterruptingChanges: stop, restart, ip link set down, eject, swapoff -a, kill -9, setenforce 1, systemctl mask, timedatectl set-time, iptables -F
-    - destructiveChanges: rm, dd of=, nft flush, mkfs, userdel -r, crontab -r, shred -u, overwrite or truncate operations (cp, mv, >file, …), DELETE
+    - readOnly: ls, git log, cat, ps, ip, lsblk, free, id, atq, date, dmesg, lsmod, last, iptables -L, gh [cmd] (view|diff|etc), SELECT, …
+    - reversibleChanges: mkdir, mv -n and cp -n (without overwrite), renice, ip addr add, swapon, groupadd, tar c, systemctl enable, chmod +x, mount, iptables -A, gzip, gh [cmd] (comment|close|etc), INSERT, …
+    - complexChanges: rsync, tar x, sed -i, taskset, firewall-cmd, fwupdmgr, numactl, chcon, update-alternatives, recursive operations, gh [cmd] (create|edit), UPDATE, …
+    - serviceInterruptingChanges: stop, restart, ip link set down, eject, swapoff -a, kill -9, setenforce 1, systemctl mask, timedatectl set-time, iptables -F, …
+    - destructiveChanges: rm, dd of=, nft flush, mkfs, userdel -r, crontab -r, shred -u, overwrite or truncate operations (cp, mv, >file, …), DELETE, DROP, …
 
 ### Usage:
 <execute_command>
