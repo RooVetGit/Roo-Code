@@ -255,7 +255,12 @@ const CodeBlock = memo(
 			// Set mounted state at the beginning of this effect
 			isMountedRef.current = true
 
-			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${currentLanguage || "txt"}">${source || ""}</code></pre>`
+			// Create a safe fallback using React elements instead of HTML string
+			const fallback = (
+				<pre style={{ padding: 0, margin: 0 }}>
+					<code className={`hljs language-${currentLanguage || "txt"}`}>{source || ""}</code>
+				</pre>
+			)
 
 			const highlight = async () => {
 				// Show plain text if language needs to be loaded.
@@ -292,16 +297,25 @@ const CodeBlock = memo(
 				})
 				if (!isMountedRef.current) return
 
-				// Convert HAST to React elements
-				const reactElement = toJsxRuntime(hast, {
-					Fragment,
-					jsx,
-					jsxs,
-					// Don't override components - let them render as-is to maintain exact output
-				})
+				// Convert HAST to React elements using hast-util-to-jsx-runtime
+				// This approach eliminates XSS vulnerabilities by avoiding dangerouslySetInnerHTML
+				// while maintaining the exact same visual output and syntax highlighting
+				try {
+					const reactElement = toJsxRuntime(hast, {
+						Fragment,
+						jsx,
+						jsxs,
+						// Don't override components - let them render as-is to maintain exact output
+					})
 
-				if (isMountedRef.current) {
-					setHighlightedCode(reactElement)
+					if (isMountedRef.current) {
+						setHighlightedCode(reactElement)
+					}
+				} catch (error) {
+					console.error("[CodeBlock] Error converting HAST to JSX:", error)
+					if (isMountedRef.current) {
+						setHighlightedCode(fallback)
+					}
 				}
 			}
 

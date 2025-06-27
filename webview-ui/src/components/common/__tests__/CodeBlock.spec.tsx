@@ -39,8 +39,9 @@ vi.mock("../../../utils/highlighter", () => {
 		}),
 		codeToHast: vi.fn().mockImplementation((code, options) => {
 			const theme = options.theme === "github-light" ? "light" : "dark"
-			// Return a simple HAST node structure that includes the theme marker
-			return {
+			// Return a comprehensive HAST node structure that matches Shiki's output
+			// Apply transformers if provided
+			const preNode = {
 				type: "element",
 				tagName: "pre",
 				properties: {},
@@ -58,6 +59,20 @@ vi.mock("../../../utils/highlighter", () => {
 					},
 				],
 			}
+
+			// Apply transformers if they exist
+			if (options.transformers) {
+				for (const transformer of options.transformers) {
+					if (transformer.pre) {
+						transformer.pre(preNode)
+					}
+					if (transformer.code && preNode.children[0]) {
+						transformer.code(preNode.children[0])
+					}
+				}
+			}
+
+			return preNode
 		}),
 	}
 
