@@ -16,7 +16,10 @@ vi.mock("vscode", () => ({
 // Mock execa to test stdin behavior
 const mockExeca = vi.fn()
 const mockStdin = {
-	write: vi.fn(),
+	write: vi.fn((data, encoding, callback) => {
+		// Simulate successful write
+		if (callback) callback(null)
+	}),
 	end: vi.fn(),
 }
 
@@ -87,6 +90,15 @@ describe("runClaudeCode", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mockExeca.mockReturnValue(createMockProcess())
+		// Mock setImmediate to run synchronously in tests
+		vi.spyOn(global, "setImmediate").mockImplementation((callback: any) => {
+			callback()
+			return {} as any
+		})
+	})
+
+	afterEach(() => {
+		vi.restoreAllMocks()
 	})
 
 	test("should export runClaudeCode function", async () => {
@@ -150,8 +162,8 @@ describe("runClaudeCode", () => {
 		const [, args] = mockExeca.mock.calls[0]
 		expect(args).not.toContain(JSON.stringify(messages))
 
-		// Verify messages were written to stdin
-		expect(mockStdin.write).toHaveBeenCalledWith(JSON.stringify(messages), "utf8")
+		// Verify messages were written to stdin with callback
+		expect(mockStdin.write).toHaveBeenCalledWith(JSON.stringify(messages), "utf8", expect.any(Function))
 		expect(mockStdin.end).toHaveBeenCalled()
 
 		// Verify we got the expected mock output
@@ -199,5 +211,82 @@ describe("runClaudeCode", () => {
 
 		const [claudePath] = mockExeca.mock.calls[0]
 		expect(claudePath).toBe("/custom/path/to/claude")
+	})
+
+	test("should handle stdin write errors gracefully", async () => {
+		const { runClaudeCode } = await import("../run")
+
+		// Create a mock process with stdin that fails
+		const mockProcessWithError = createMockProcess()
+		mockProcessWithError.stdin.write = vi.fn((data, encoding, callback) => {
+			// Simulate write error
+			if (callback) callback(new Error("EPIPE: broken pipe"))
+		})
+
+		// Mock console.error to verify error logging
+		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+		mockExeca.mockReturnValueOnce(mockProcessWithError)
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Try to consume the generator
+		try {
+			await generator.next()
+		} catch (error) {
+			// Expected to fail
+		}
+
+		// Verify error was logged
+		expect(consoleErrorSpy).toHaveBeenCalledWith("Error writing to Claude Code stdin:", expect.any(Error))
+
+		// Verify process was killed
+		expect(mockProcessWithError.kill).toHaveBeenCalled()
+
+		// Clean up
+		consoleErrorSpy.mockRestore()
+		await generator.return(undefined)
+	})
+
+	test("should handle stdin access errors gracefully", async () => {
+		const { runClaudeCode } = await import("../run")
+
+		// Create a mock process without stdin
+		const mockProcessWithoutStdin = createMockProcess()
+		mockProcessWithoutStdin.stdin = null as any
+
+		// Mock console.error to verify error logging
+		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+		mockExeca.mockReturnValueOnce(mockProcessWithoutStdin)
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Try to consume the generator
+		try {
+			await generator.next()
+		} catch (error) {
+			// Expected to fail
+		}
+
+		// Verify error was logged
+		expect(consoleErrorSpy).toHaveBeenCalledWith("Error accessing Claude Code stdin:", expect.any(Error))
+
+		// Verify process was killed
+		expect(mockProcessWithoutStdin.kill).toHaveBeenCalled()
+
+		// Clean up
+		consoleErrorSpy.mockRestore()
+		await generator.return(undefined)
 	})
 })
