@@ -94,14 +94,29 @@ export class UrlContentFetcher {
 				waitUntil: ["domcontentloaded", "networkidle2"],
 			})
 		} catch (error) {
-			// If networkidle2 fails, try with just domcontentloaded as fallback
-			console.warn(
-				`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${error.message}`,
-			)
-			await this.page.goto(url, {
-				timeout: URL_FETCH_FALLBACK_TIMEOUT,
-				waitUntil: ["domcontentloaded"],
-			})
+			const errorMessage = error instanceof Error ? error.message : String(error)
+
+			// Only retry for timeout or network-related errors
+			const shouldRetry =
+				errorMessage.includes("timeout") ||
+				errorMessage.includes("net::") ||
+				errorMessage.includes("NetworkError") ||
+				errorMessage.includes("ERR_") ||
+				(error instanceof Error && error.name === "TimeoutError")
+
+			if (shouldRetry) {
+				// If networkidle2 fails due to timeout/network issues, try with just domcontentloaded as fallback
+				console.warn(
+					`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${errorMessage}`,
+				)
+				await this.page.goto(url, {
+					timeout: URL_FETCH_FALLBACK_TIMEOUT,
+					waitUntil: ["domcontentloaded"],
+				})
+			} else {
+				// For other errors, throw them as-is
+				throw error
+			}
 		}
 
 		const content = await this.page.content()
