@@ -124,7 +124,10 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 			role: "user",
 			content: prompt,
 		},
-		session_id: `roo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+		session_id: `roo-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(4)))
+			.map((b) => b.toString(36))
+			.join("")
+			.substring(0, 7)}`,
 	}
 
 	let actualClaudePath = claudePath
