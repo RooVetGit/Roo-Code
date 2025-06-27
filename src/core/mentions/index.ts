@@ -119,7 +119,9 @@ export async function parseMentions(
 		if (mention.startsWith("http")) {
 			let result: string
 			if (launchBrowserError) {
-				result = `Error fetching content: ${launchBrowserError.message}`
+				const errorMessage =
+					launchBrowserError instanceof Error ? launchBrowserError.message : String(launchBrowserError)
+				result = `Error fetching content: ${errorMessage}`
 			} else {
 				try {
 					const markdown = await urlContentFetcher.urlToMarkdown(mention)

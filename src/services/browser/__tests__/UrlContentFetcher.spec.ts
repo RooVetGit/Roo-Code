@@ -27,18 +27,23 @@ vi.mock("../../../utils/fs", () => ({
 
 // Mock cheerio
 vi.mock("cheerio", () => ({
-	load: vi.fn(() => ({
-		html: vi.fn().mockReturnValue("<html><body>Test content</body></html>"),
-		remove: vi.fn().mockReturnThis(),
-	})),
+	load: vi.fn(() => {
+		const $ = vi.fn((selector) => ({
+			remove: vi.fn().mockReturnThis(),
+		})) as any
+		$.html = vi.fn().mockReturnValue("<html><body>Test content</body></html>")
+		return $
+	}),
 }))
 
 // Mock turndown
-vi.mock("turndown", () => ({
-	default: vi.fn().mockImplementation(() => ({
-		turndown: vi.fn().mockReturnValue("# Test content"),
-	})),
-}))
+vi.mock("turndown", () => {
+	return {
+		default: class MockTurndownService {
+			turndown = vi.fn().mockReturnValue("# Test content")
+		},
+	}
+})
 
 // Mock puppeteer-chromium-resolver
 vi.mock("puppeteer-chromium-resolver", () => ({

@@ -102,7 +102,9 @@ export class UrlContentFetcher {
 				errorMessage.includes("net::") ||
 				errorMessage.includes("NetworkError") ||
 				errorMessage.includes("ERR_") ||
-				(error instanceof Error && error.name === "TimeoutError")
+				(error instanceof Error && error.name === "TimeoutError") ||
+				// Retry for unknown error types (when we can't determine the error)
+				errorMessage === "[object Object]"
 
 			if (shouldRetry) {
 				// If networkidle2 fails due to timeout/network issues, try with just domcontentloaded as fallback
