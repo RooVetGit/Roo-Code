@@ -475,7 +475,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 					return Promise.resolve([])
 				})
 
-				const service = new klass(taskId, shadowDir, workspaceDir, () => {})
+				const service = klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
 
 				// Verify that initialization succeeds when no nested git repos are detected
 				await expect(service.initShadowGit()).resolves.not.toThrow()

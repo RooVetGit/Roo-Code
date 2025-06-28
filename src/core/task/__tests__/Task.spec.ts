@@ -330,15 +330,18 @@ describe("Cline", () => {
 	describe("getEnvironmentDetails", () => {
 		describe("API conversation handling", () => {
 			it.skip("should clean conversation history before sending to API", async () => {
-				// Cline.create will now use our mocked getEnvironmentDetails
-				const [cline, task] = Task.create({
+				// Create Task instance that starts automatically
+				const cline = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
+					startTask: true,
 				})
+				// Wait a bit for task to start
+				await new Promise((resolve) => setTimeout(resolve, 100))
 
 				cline.abandoned = true
-				await task
+				await cline.abortTask(true)
 
 				// Set up mock stream.
 				const mockStreamForClean = (async function* () {
@@ -440,11 +443,14 @@ describe("Cline", () => {
 				]
 
 				// Test with model that supports images
-				const [clineWithImages, taskWithImages] = Task.create({
+				const clineWithImages = new Task({
 					provider: mockProvider,
 					apiConfiguration: configWithImages,
 					task: "test task",
+					startTask: true,
 				})
+				// Wait a bit for task to start
+				await new Promise((resolve) => setTimeout(resolve, 100))
 
 				// Mock the model info to indicate image support
 				vi.spyOn(clineWithImages.api, "getModel").mockReturnValue({
@@ -463,11 +469,14 @@ describe("Cline", () => {
 				clineWithImages.apiConversationHistory = conversationHistory
 
 				// Test with model that doesn't support images
-				const [clineWithoutImages, taskWithoutImages] = Task.create({
+				const clineWithoutImages = new Task({
 					provider: mockProvider,
 					apiConfiguration: configWithoutImages,
 					task: "test task",
+					startTask: true,
 				})
+				// Wait a bit for task to start
+				await new Promise((resolve) => setTimeout(resolve, 100))
 
 				// Mock the model info to indicate no image support
 				vi.spyOn(clineWithoutImages.api, "getModel").mockReturnValue({
@@ -526,10 +535,10 @@ describe("Cline", () => {
 				]
 
 				clineWithImages.abandoned = true
-				await taskWithImages.catch(() => {})
+				await clineWithImages.abortTask(true)
 
 				clineWithoutImages.abandoned = true
-				await taskWithoutImages.catch(() => {})
+				await clineWithoutImages.abortTask(true)
 
 				// Trigger API requests
 				await clineWithImages.recursivelyMakeClineRequests([{ type: "text", text: "test request" }])
@@ -560,11 +569,14 @@ describe("Cline", () => {
 			})
 
 			it.skip("should handle API retry with countdown", async () => {
-				const [cline, task] = Task.create({
+				const cline = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
+					startTask: true,
 				})
+				// Wait a bit for task to start
+				await new Promise((resolve) => setTimeout(resolve, 100))
 
 				// Mock delay to track countdown timing
 				const mockDelay = vi.fn().mockResolvedValue(undefined)
@@ -675,21 +687,23 @@ describe("Cline", () => {
 				expect(mockDelay).toHaveBeenCalledWith(1000)
 
 				// Verify error message content
-				const errorMessage = saySpy.mock.calls.find((call) => call[1]?.includes(mockError.message))?.[1]
+				const errorMessage = saySpy.mock.calls.find((call: any) => call[1]?.includes(mockError.message))?.[1]
 				expect(errorMessage).toBe(
 					`${mockError.message}\n\nRetry attempt 1\nRetrying in ${baseDelay} seconds...`,
 				)
 
 				await cline.abortTask(true)
-				await task.catch(() => {})
 			})
 
 			it.skip("should not apply retry delay twice", async () => {
-				const [cline, task] = Task.create({
+				const cline = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
+					startTask: true,
 				})
+				// Wait a bit for task to start
+				await new Promise((resolve) => setTimeout(resolve, 100))
 
 				// Mock delay to track countdown timing
 				const mockDelay = vi.fn().mockResolvedValue(undefined)
@@ -782,7 +796,7 @@ describe("Cline", () => {
 
 				// Verify countdown messages were only shown once
 				const retryMessages = saySpy.mock.calls.filter(
-					(call) => call[0] === "api_req_retry_delayed" && call[1]?.includes("Retrying in"),
+					(call: any) => call[0] === "api_req_retry_delayed" && call[1]?.includes("Retrying in"),
 				)
 				expect(retryMessages).toHaveLength(baseDelay)
 
@@ -805,16 +819,18 @@ describe("Cline", () => {
 				)
 
 				await cline.abortTask(true)
-				await task.catch(() => {})
 			})
 
 			describe("processUserContentMentions", () => {
 				it("should process mentions in task and feedback tags", async () => {
-					const [cline, task] = Task.create({
+					const cline = new Task({
 						provider: mockProvider,
 						apiConfiguration: mockApiConfig,
 						task: "test task",
+						startTask: true,
 					})
+					// Wait a bit for task to start
+					await new Promise((resolve) => setTimeout(resolve, 100))
 
 					const userContent = [
 						{
@@ -881,7 +897,6 @@ describe("Cline", () => {
 					)
 
 					await cline.abortTask(true)
-					await task.catch(() => {})
 				})
 			})
 		})
