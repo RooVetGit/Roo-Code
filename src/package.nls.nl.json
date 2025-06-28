@@ -14,6 +14,7 @@
 	"command.settings.title": "Instellingen",
 	"command.documentation.title": "Documentatie",
 	"command.openInNewTab.title": "Openen in Nieuw Tabblad",
+	"command.git.generatingCommitMessage": "Commitbericht genereren met {0}...",
 	"command.git.generateCommitMessage.title": "Commitbericht genereren",
 	"command.explainCode.title": "Leg Code Uit",
 	"command.fixCode.title": "Repareer Code",

@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import { buildApiHandler } from "../../api"
+import { t } from "../../i18n"
 import { simpleGit, SimpleGit } from "simple-git"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { Anthropic } from "@anthropic-ai/sdk"
@@ -78,7 +79,7 @@ export async function generateCommitMessage(context: vscode.ExtensionContext) {
 	await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: `Generating commit message with ${modelName}...`,
+			title: t("command.git.generatingCommitMessage", { modelName }),
 			cancellable: false,
 		},
 		async () => {

@@ -14,6 +14,7 @@
 	"command.settings.title": "設定",
 	"command.documentation.title": "ドキュメント",
 	"command.openInNewTab.title": "新しいタブで開く",
+	"command.git.generatingCommitMessage": "{0}でコミットメッセージを生成しています...",
 	"command.git.generateCommitMessage.title": "コミットメッセージを生成",
 	"command.explainCode.title": "コードの説明",
 	"command.fixCode.title": "コードの修正",

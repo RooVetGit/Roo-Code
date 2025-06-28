@@ -14,6 +14,7 @@
 	"command.terminal.fixCommand.title": "Bu Komutu Düzelt",
 	"command.terminal.explainCommand.title": "Bu Komutu Açıkla",
 	"command.acceptInput.title": "Girişi/Öneriyi Kabul Et",
+	"command.git.generatingCommitMessage": "{0} ile commit mesajı oluşturuluyor...",
 	"command.git.generateCommitMessage.title": "Commit Mesajı Oluştur",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",

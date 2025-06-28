@@ -14,6 +14,7 @@
 	"command.terminal.fixCommand.title": "Corriger cette Commande",
 	"command.terminal.explainCommand.title": "Expliquer cette Commande",
 	"command.acceptInput.title": "Accepter l'Entrée/Suggestion",
+	"command.git.generatingCommitMessage": "Génération du message de commit avec {0}...",
 	"command.git.generateCommitMessage.title": "Générer le message de commit",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
