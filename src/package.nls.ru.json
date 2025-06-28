@@ -14,6 +14,7 @@
 	"command.settings.title": "Настройки",
 	"command.documentation.title": "Документация",
 	"command.openInNewTab.title": "Открыть в новой вкладке",
+	"command.git.generateCommitMessage.title": "Создать сообщение коммита",
 	"command.explainCode.title": "Объяснить код",
 	"command.fixCode.title": "Исправить код",
 	"command.improveCode.title": "Улучшить код",

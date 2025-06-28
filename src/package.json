@@ -169,6 +169,12 @@
 				"command": "roo-cline.acceptInput",
 				"title": "%command.acceptInput.title%",
 				"category": "%configuration.title%"
+			},
+			{
+				"command": "roo-cline.git.generateCommitMessage",
+				"title": "%command.git.generateCommitMessage.title%",
+				"category": "Roo Code",
+				"icon": "$(sparkle)"
 			}
 		],
 		"menus": {
@@ -279,6 +285,13 @@
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
+			],
+			"scm/title": [
+				{
+					"command": "roo-cline.git.generateCommitMessage",
+					"group": "navigation",
+					"when": "scmProvider == git"
 				}
 			]
 		},

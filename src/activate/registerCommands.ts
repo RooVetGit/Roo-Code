@@ -14,6 +14,7 @@ import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRe
 import { handleNewTask } from "./handleTask"
 import { CodeIndexManager } from "../services/code-index/manager"
 import { importSettingsWithFeedback } from "../core/config/importExport"
+import { generateCommitMessage } from "../integrations/git/generateCommitMessage"
 import { t } from "../i18n"
 
 /**
@@ -217,6 +218,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
 	},
+	"git.generateCommitMessage": () => generateCommitMessage(context),
 })
 
 export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
