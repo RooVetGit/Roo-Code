@@ -77,12 +77,13 @@ export class FileChangeManager {
 				linesAdded,
 				linesRemoved,
 			})
-
-			// Persist changes after recording
-			this.persistChanges().catch((error) => {
-				console.warn(`Failed to persist file changes for task ${this.taskId}:`, error)
-			})
 		}
+
+		// Always persist changes after recording (for both new and updated changes)
+		this.persistChanges().catch((error) => {
+			console.warn(`Failed to persist file changes for task ${this.taskId}:`, error)
+		})
+
 		this._onDidChange.fire()
 	}
 

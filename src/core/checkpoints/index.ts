@@ -122,35 +122,24 @@ export function getCheckpointService(cline: Task) {
 						)
 					}
 				}
+				// File change tracking is now handled at the time of LLM edits in saveChanges(),
+				// not during checkpoint creation. This prevents rejected files from reappearing
+				// when new checkpoints are created.
+
+				// Send current file changes to the webview (if any exist)
 				if (cline.fileChangeManager) {
-					const changes = await service.getDiff({ from: fromHash, to: toHash })
-					if (changes) {
-						for (const change of changes) {
-							const lineDiff = FileChangeManager.calculateLineDifferences(
-								change.content.before || "",
-								change.content.after || "",
-							)
-							cline.fileChangeManager.recordChange(
-								change.paths.relative,
-								change.type,
-								fromHash,
-								toHash,
-								lineDiff.linesAdded,
-								lineDiff.linesRemoved,
-							)
-						}
-					}
-
 					const changeset = cline.fileChangeManager.getChanges()
-					const serializableChangeset = {
-						...changeset,
-						files: Array.from(changeset.files.values()),
-					}
+					if (changeset.files.length > 0) {
+						const serializableChangeset = {
+							...changeset,
+							files: Array.from(changeset.files.values()),
+						}
 
-					provider?.postMessageToWebview({
-						type: "filesChanged",
-						filesChanged: serializableChangeset,
-					})
+						provider?.postMessageToWebview({
+							type: "filesChanged",
+							filesChanged: serializableChangeset,
+						})
+					}
 				}
 			} catch (err) {
 				log("[Task#getCheckpointService] caught unexpected error in on('checkpoint'), disabling checkpoints")
