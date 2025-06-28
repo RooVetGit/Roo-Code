@@ -318,6 +318,135 @@ describe("useMcpToolTool", () => {
 			expect(mockPushToolResult).toHaveBeenCalledWith("Tool result:  (with 1 images)")
 		})
 
+		it("should handle corrupted base64 image data gracefully", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Generated content with images:" },
+					{
+						type: "image",
+						data: "invalid@base64@data", // Invalid base64 characters
+						mimeType: "image/png",
+					},
+					{
+						type: "image",
+						data: "", // Empty base64 data
+						mimeType: "image/png",
+					},
+					{
+						type: "image",
+						data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU", // Valid base64
+						mimeType: "image/png",
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+			})
+
+			// Spy on console.warn to verify error logging
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should continue processing despite corrupted images
+			expect(mockTask.consecutiveMistakeCount).toBe(0)
+			expect(mockAskApproval).toHaveBeenCalled()
+			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_request_started")
+
+			// Should only include the valid image, not the corrupted ones
+			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_response", "Generated content with images:", [
+				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+			])
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Generated content with images: (with 1 images)",
+			)
+
+			// Should log warnings for corrupted images
+			expect(consoleSpy).toHaveBeenCalledWith("Invalid MCP ImageContent: base64 data contains invalid characters")
+			expect(consoleSpy).toHaveBeenCalledWith("Invalid MCP ImageContent: base64 data is not a valid string")
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should handle non-string base64 data", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Some text" },
+					{
+						type: "image",
+						data: 12345, // Non-string data
+						mimeType: "image/png",
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should process text content normally
+			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_response", "Some text", [])
+			expect(mockPushToolResult).toHaveBeenCalledWith("Tool result: Some text")
+
+			// Should log warning for invalid data type
+			expect(consoleSpy).toHaveBeenCalledWith("Invalid MCP ImageContent: base64 data is not a valid string")
+
+			consoleSpy.mockRestore()
+		})
+
 		it("should handle user rejection", async () => {
 			const block: ToolUse = {
 				type: "tool_use",

@@ -101,11 +101,29 @@ function processToolContent(toolResult: any): { text: string; images: string[] }
 		if (item.type === "text") {
 			textParts.push(item.text)
 		} else if (item.type === "image") {
-			if (item.data && item.mimeType) {
+			if (item.mimeType && item.data !== undefined && item.data !== null) {
 				const validImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"]
 				if (validImageTypes.includes(item.mimeType)) {
-					const dataUrl = `data:${item.mimeType};base64,${item.data}`
-					images.push(dataUrl)
+					try {
+						// Validate base64 data before constructing data URL
+						if (typeof item.data !== "string" || item.data.trim() === "") {
+							console.warn("Invalid MCP ImageContent: base64 data is not a valid string")
+							return
+						}
+
+						// Basic validation for base64 format
+						const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+						if (!base64Regex.test(item.data.replace(/\s/g, ""))) {
+							console.warn("Invalid MCP ImageContent: base64 data contains invalid characters")
+							return
+						}
+
+						const dataUrl = `data:${item.mimeType};base64,${item.data}`
+						images.push(dataUrl)
+					} catch (error) {
+						console.warn("Failed to process MCP image content:", error)
+						// Continue processing other content instead of failing entirely
+					}
 				} else {
 					console.warn(`Unsupported image MIME type: ${item.mimeType}`)
 				}

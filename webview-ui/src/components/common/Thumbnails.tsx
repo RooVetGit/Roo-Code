@@ -11,6 +11,7 @@ interface ThumbnailsProps {
 
 const Thumbnails = ({ images, style, setImages, onHeightChange }: ThumbnailsProps) => {
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+	const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
 	const containerRef = useRef<HTMLDivElement>(null)
 	const { width } = useWindowSize()
 
@@ -24,10 +25,17 @@ const Thumbnails = ({ images, style, setImages, onHeightChange }: ThumbnailsProp
 			onHeightChange?.(height)
 		}
 		setHoveredIndex(null)
+		// Reset failed images when images change
+		setFailedImages(new Set())
 	}, [images, width, onHeightChange])
 
 	const handleDelete = (index: number) => {
 		setImages?.((prevImages) => prevImages.filter((_, i) => i !== index))
+	}
+
+	const handleImageError = (index: number) => {
+		setFailedImages((prev) => new Set(prev).add(index))
+		console.warn(`Failed to load image at index ${index}`)
 	}
 
 	const isDeletable = setImages !== undefined
@@ -52,18 +60,43 @@ const Thumbnails = ({ images, style, setImages, onHeightChange }: ThumbnailsProp
 					style={{ position: "relative" }}
 					onMouseEnter={() => setHoveredIndex(index)}
 					onMouseLeave={() => setHoveredIndex(null)}>
-					<img
-						src={image}
-						alt={`Thumbnail ${index + 1}`}
-						style={{
-							width: 34,
-							height: 34,
-							objectFit: "cover",
-							borderRadius: 4,
-							cursor: "pointer",
-						}}
-						onClick={() => handleImageClick(image)}
-					/>
+					{failedImages.has(index) ? (
+						<div
+							style={{
+								width: 34,
+								height: 34,
+								borderRadius: 4,
+								backgroundColor: "var(--vscode-input-background)",
+								border: "1px solid var(--vscode-input-border)",
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								cursor: "pointer",
+							}}
+							onClick={() => handleImageClick(image)}
+							title="Failed to load image">
+							<span
+								className="codicon codicon-file-media"
+								style={{
+									color: "var(--vscode-descriptionForeground)",
+									fontSize: 16,
+								}}></span>
+						</div>
+					) : (
+						<img
+							src={image}
+							alt={`Thumbnail ${index + 1}`}
+							style={{
+								width: 34,
+								height: 34,
+								objectFit: "cover",
+								borderRadius: 4,
+								cursor: "pointer",
+							}}
+							onClick={() => handleImageClick(image)}
+							onError={() => handleImageError(index)}
+						/>
+					)}
 					{isDeletable && hoveredIndex === index && (
 						<div
 							onClick={() => handleDelete(index)}
