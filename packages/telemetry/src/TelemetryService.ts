@@ -153,6 +153,72 @@ export class TelemetryService {
 	}
 
 	/**
+	 * Captures when a tab is shown due to user action
+	 * @param tab The tab that was shown
+	 */
+	public captureTabShown(tab: string): void {
+		this.captureEvent(TelemetryEventName.TAB_SHOWN, { tab })
+	}
+
+	/**
+	 * Captures when a setting is changed in ModesView
+	 * @param settingName The name of the setting that was changed
+	 */
+	public captureModeSettingChanged(settingName: string): void {
+		this.captureEvent(TelemetryEventName.MODE_SETTINGS_CHANGED, { settingName })
+	}
+
+	/**
+	 * Captures when a user creates a new custom mode
+	 * @param modeSlug The slug of the custom mode
+	 * @param modeName The name of the custom mode
+	 */
+	public captureCustomModeCreated(modeSlug: string, modeName: string): void {
+		this.captureEvent(TelemetryEventName.CUSTOM_MODE_CREATED, { modeSlug, modeName })
+	}
+
+	/**
+	 * Captures a marketplace item installation event
+	 * @param itemId The unique identifier of the marketplace item
+	 * @param itemType The type of item (mode or mcp)
+	 * @param itemName The human-readable name of the item
+	 * @param target The installation target (project or global)
+	 * @param properties Additional properties like hasParameters, installationMethod
+	 */
+	public captureMarketplaceItemInstalled(
+		itemId: string,
+		itemType: string,
+		itemName: string,
+		target: string,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		properties?: Record<string, any>,
+	): void {
+		this.captureEvent(TelemetryEventName.MARKETPLACE_ITEM_INSTALLED, {
+			itemId,
+			itemType,
+			itemName,
+			target,
+			...(properties || {}),
+		})
+	}
+
+	/**
+	 * Captures a marketplace item removal event
+	 * @param itemId The unique identifier of the marketplace item
+	 * @param itemType The type of item (mode or mcp)
+	 * @param itemName The human-readable name of the item
+	 * @param target The removal target (project or global)
+	 */
+	public captureMarketplaceItemRemoved(itemId: string, itemType: string, itemName: string, target: string): void {
+		this.captureEvent(TelemetryEventName.MARKETPLACE_ITEM_REMOVED, {
+			itemId,
+			itemType,
+			itemName,
+			target,
+		})
+	}
+
+	/**
 	 * Captures a title button click event
 	 * @param button The button that was clicked
 	 */

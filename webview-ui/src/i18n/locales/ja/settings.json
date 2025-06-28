@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "ワークスペース外のファイルを含める",
 				"description": "Rooが承認なしで現在のワークスペース外のファイルを作成・編集することを許可します。"
+			},
+			"protected": {
+				"label": "保護されたファイルを含める",
+				"description": "Rooが保護されたファイル（.rooignoreや.roo/設定ファイルなど）を承認なしで作成・編集することを許可します。"
 			}
 		},
 		"browser": {
@@ -299,7 +303,27 @@
 			"medium": "中",
 			"low": "低"
 		},
-		"setReasoningLevel": "推論労力を有効にする"
+		"setReasoningLevel": "推論労力を有効にする",
+		"claudeCode": {
+			"pathLabel": "クロードコードパス",
+			"description": "Claude Code CLIへのオプションパス。設定されていない場合、デフォルトは「claude」です。",
+			"placeholder": "デフォルト：claude"
+		},
+		"geminiCli": {
+			"description": "このプロバイダーはGemini CLIツールからのOAuth認証を使用し、APIキーは必要ありません。",
+			"oauthPath": "OAuth認証情報パス（オプション）",
+			"oauthPathDescription": "OAuth認証情報ファイルへのパス。デフォルトの場所（~/.gemini/oauth_creds.json）を使用する場合は空のままにしてください。",
+			"instructions": "まだ認証していない場合は、まず",
+			"instructionsContinued": "をターミナルで実行してください。",
+			"setupLink": "Gemini CLI セットアップ手順",
+			"requirementsTitle": "重要な要件",
+			"requirement1": "まず、Gemini CLIツールをインストールする必要があります",
+			"requirement2": "次に、ターミナルでgeminiを実行し、Googleでログインすることを確認してください",
+			"requirement3": "個人のGoogleアカウントでのみ動作します（Google Workspaceアカウントは不可）",
+			"requirement4": "APIキーは使用しません - 認証はOAuthで処理されます",
+			"requirement5": "Gemini CLIツールが最初にインストールされ、認証されている必要があります",
+			"freeAccess": "OAuth認証による無料アクセス"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -366,7 +390,8 @@
 			"hint": "空 = デフォルトプロンプトを使用"
 		},
 		"autoCondenseContext": {
-			"name": "インテリジェントなコンテキスト圧縮を自動的にトリガーする"
+			"name": "インテリジェントなコンテキスト圧縮を自動的にトリガーする",
+			"description": "有効にすると、Rooは閾値に達したときに自動的にコンテキストを圧縮します。無効にすると、手動でコンテキスト圧縮をトリガーできます。"
 		},
 		"openTabs": {
 			"label": "オープンタブコンテキスト制限",
@@ -389,6 +414,15 @@
 		"maxConcurrentFileReads": {
 			"label": "同時ファイル読み取り制限",
 			"description": "read_file ツールが同時に処理できるファイルの最大数。値を高くすると複数の小さなファイルの読み取りが速くなる可能性がありますが、メモリ使用量が増加します。"
+		},
+		"condensingThreshold": {
+			"label": "圧縮トリガーしきい値",
+			"selectProfile": "プロファイルのしきい値を設定",
+			"defaultProfile": "グローバルデフォルト（全プロファイル）",
+			"defaultDescription": "コンテキストがこの割合に達すると、カスタム設定がない限り、すべてのプロファイルで自動的に圧縮されます",
+			"profileDescription": "このプロファイルのみのカスタムしきい値（グローバルデフォルトを上書き）",
+			"inheritDescription": "このプロファイルはグローバルデフォルトしきい値を継承します（{{threshold}}%）",
+			"usesGlobal": "（グローバル {{threshold}}% を使用）"
 		}
 	},
 	"terminal": {
@@ -505,9 +539,13 @@
 			"name": "並行ファイル読み取りを有効にする",
 			"description": "有効にすると、Rooは1回のリクエストで複数のファイル を読み取ることができます。無効にすると、Rooはファイルを1つずつ読み取る必要があります。能力の低いモデルで作業する場合や、ファイルアクセスをより細かく制御したい場合は、無効にすると役立ちます。"
 		},
-		"DISABLE_COMPLETION_COMMAND": {
-			"name": "attempt_completionでのコマンド実行を無効にする",
-			"description": "有効にすると、attempt_completionツールはコマンドを実行しません。これは、タスク完了時のコマンド実行の非推奨化に備えるための実験的な機能です。"
+		"MARKETPLACE": {
+			"name": "Marketplaceを有効にする",
+			"description": "有効にすると、MarketplaceからMCPとカスタムモードをインストールできます。"
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "同時ファイル編集を有効にする",
+			"description": "有効にすると、Rooは単一のリクエストで複数のファイルを編集できます。無効にすると、Rooはファイルを一つずつ編集する必要があります。これを無効にすることで、能力の低いモデルで作業する場合や、ファイル変更をより細かく制御したい場合に役立ちます。"
 		}
 	},
 	"promptCaching": {
@@ -613,5 +651,7 @@
 	"labels": {
 		"customArn": "カスタム ARN",
 		"useCustomArn": "カスタム ARN を使用..."
-	}
+	},
+	"includeMaxOutputTokens": "最大出力トークンを含める",
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
 }

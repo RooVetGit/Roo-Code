@@ -18,7 +18,8 @@
 	"tool": {
 		"alwaysAllow": "Immer erlauben",
 		"parameters": "Parameter",
-		"noDescription": "Keine Beschreibung"
+		"noDescription": "Keine Beschreibung",
+		"togglePromptInclusion": "Einbeziehung in Prompt umschalten"
 	},
 	"tabs": {
 		"tools": "Tools",
@@ -54,5 +55,10 @@
 		"retrying": "Wiederhole...",
 		"retryConnection": "Verbindung wiederholen"
 	},
-	"refreshMCP": "MCP-Server aktualisieren"
+	"refreshMCP": "MCP-Server aktualisieren",
+	"execution": {
+		"running": "Wird ausgeführt",
+		"completed": "Abgeschlossen",
+		"error": "Fehler"
+	}
 }

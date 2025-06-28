@@ -12,7 +12,16 @@
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)",
 		"condenseContext": "Condenser intelligemment le contexte",
-		"share": "Partager la tâche"
+		"share": "Partager la tâche",
+		"shareWithOrganization": "Partager avec l'organisation",
+		"shareWithOrganizationDescription": "Seuls les membres de ton organisation peuvent accéder",
+		"sharePublicly": "Partager publiquement",
+		"sharePubliclyDescription": "Toute personne avec le lien peut accéder",
+		"connectToCloud": "Se connecter au Cloud",
+		"connectToCloudDescription": "Connecte-toi à Roo Code Cloud pour partager des tâches",
+		"sharingDisabledByOrganization": "Partage désactivé par l'organisation",
+		"shareSuccessOrganization": "Lien d'organisation copié dans le presse-papiers",
+		"shareSuccessPublic": "Lien public copié dans le presse-papiers"
 	},
 	"unpin": "Désépingler",
 	"pin": "Épingler",
@@ -75,7 +84,7 @@
 	"onboarding": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Tâches Boomerang",
+			"title": "Orchestration de Tâches",
 			"description": "Divisez les tâches en parties plus petites et gérables."
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "maintenir Maj pour glisser des fichiers",
 	"dragFilesImages": "maintenir Maj pour glisser des fichiers/images",
 	"enhancePromptDescription": "Le bouton 'Améliorer la requête' aide à améliorer votre demande en fournissant un contexte supplémentaire, des clarifications ou des reformulations. Essayez de taper une demande ici et cliquez à nouveau sur le bouton pour voir comment cela fonctionne.",
+	"modeSelector": {
+		"title": "Modes",
+		"marketplace": "Marketplace de Modes",
+		"settings": "Paramètres des Modes",
+		"description": "Personas spécialisés qui adaptent le comportement de Roo."
+	},
 	"errorReadingFile": "Erreur lors de la lecture du fichier :",
 	"noValidImages": "Aucune image valide n'a été traitée",
 	"separator": "Séparateur",
@@ -142,6 +157,7 @@
 		"didRead": "Roo a lu ce fichier :",
 		"wantsToEdit": "Roo veut éditer ce fichier :",
 		"wantsToEditOutsideWorkspace": "Roo veut éditer ce fichier en dehors de l'espace de travail :",
+		"wantsToEditProtected": "Roo veut éditer un fichier de configuration protégé :",
 		"wantsToCreate": "Roo veut créer un nouveau fichier :",
 		"wantsToSearchReplace": "Roo veut effectuer une recherche et remplacement sur ce fichier :",
 		"didSearchReplace": "Roo a effectué une recherche et remplacement sur ce fichier :",
@@ -149,7 +165,8 @@
 		"wantsToInsertWithLineNumber": "Roo veut insérer du contenu dans ce fichier à la ligne {{lineNumber}} :",
 		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :",
 		"wantsToReadAndXMore": "Roo veut lire ce fichier et {{count}} de plus :",
-		"wantsToReadMultiple": "Roo souhaite lire plusieurs fichiers :"
+		"wantsToReadMultiple": "Roo souhaite lire plusieurs fichiers :",
+		"wantsToApplyBatchChanges": "Roo veut appliquer des modifications à plusieurs fichiers :"
 	},
 	"instructions": {
 		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"
@@ -162,7 +179,15 @@
 		"wantsToViewDefinitions": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire :",
 		"didViewDefinitions": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire :",
 		"wantsToSearch": "Roo veut rechercher dans ce répertoire <code>{{regex}}</code> :",
-		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :"
+		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :",
+		"wantsToSearchOutsideWorkspace": "Roo veut rechercher dans ce répertoire (hors espace de travail) <code>{{regex}}</code> :",
+		"didSearchOutsideWorkspace": "Roo a recherché dans ce répertoire (hors espace de travail) <code>{{regex}}</code> :",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo veut voir les fichiers de premier niveau dans ce répertoire (hors espace de travail) :",
+		"didViewTopLevelOutsideWorkspace": "Roo a vu les fichiers de premier niveau dans ce répertoire (hors espace de travail) :",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo veut voir récursivement tous les fichiers dans ce répertoire (hors espace de travail) :",
+		"didViewRecursiveOutsideWorkspace": "Roo a vu récursivement tous les fichiers dans ce répertoire (hors espace de travail) :",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire (hors espace de travail) :",
+		"didViewDefinitionsOutsideWorkspace": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire (hors espace de travail) :"
 	},
 	"commandOutput": "Sortie de commande",
 	"response": "Réponse",
@@ -213,11 +238,11 @@
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} est sortie",
-		"description": "Roo Code {{version}} apporte de puissantes nouvelles fonctionnalités et améliorations basées sur vos retours.",
+		"description": "Roo Code {{version}} apporte de nouvelles fonctionnalités majeures et des améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "<bold>Condensation Intelligente du Contexte Activée par Défaut</bold> : La condensation du contexte est maintenant activée par défaut avec des paramètres configurables pour quand la condensation automatique se produit",
-		"feature2": "<bold>Bouton de Condensation Manuelle</bold> : Nouveau bouton dans l'en-tête des tâches qui te permet de déclencher manuellement la condensation du contexte à tout moment",
-		"feature3": "<bold>Paramètres de Condensation Améliorés</bold> : Ajuste quand et comment la condensation automatique se produit via les <contextSettingsLink>Paramètres de Contexte</contextSettingsLink>",
+		"feature1": "<bold>Lancement du Marketplace Roo</bold> : Le marketplace est maintenant en ligne ! Découvrez et installez des modes et des MCPs plus facilement que jamais.",
+		"feature2": "<bold>Modèles Gemini 2.5</bold> : Ajout du support pour les nouveaux modèles Gemini 2.5 Pro, Flash et Flash Lite.",
+		"feature3": "<bold>Support des fichiers Excel et plus</bold> : Ajout du support des fichiers Excel (.xlsx) et de nombreuses corrections de bugs et améliorations !",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -278,5 +303,12 @@
 		"deny": {
 			"title": "Tout refuser"
 		}
+	},
+	"indexingStatus": {
+		"ready": "Index prêt",
+		"indexing": "Indexation {{percentage}}%",
+		"indexed": "Indexé",
+		"error": "Erreur d'index",
+		"status": "Statut de l'index"
 	}
 }

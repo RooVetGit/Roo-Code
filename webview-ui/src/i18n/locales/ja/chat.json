@@ -12,7 +12,16 @@
 		"export": "タスク履歴をエクスポート",
 		"delete": "タスクを削除（Shift + クリックで確認をスキップ）",
 		"condenseContext": "コンテキストをインテリジェントに圧縮",
-		"share": "タスクを共有"
+		"share": "タスクを共有",
+		"shareWithOrganization": "組織と共有",
+		"shareWithOrganizationDescription": "組織のメンバーのみがアクセスできます",
+		"sharePublicly": "公開で共有",
+		"sharePubliclyDescription": "リンクを持つ誰でもアクセスできます",
+		"connectToCloud": "クラウドに接続",
+		"connectToCloudDescription": "タスクを共有するためにRoo Code Cloudにサインイン",
+		"sharingDisabledByOrganization": "組織により共有が無効化されています",
+		"shareSuccessOrganization": "組織リンクをクリップボードにコピーしました",
+		"shareSuccessPublic": "公開リンクをクリップボードにコピーしました"
 	},
 	"unpin": "ピン留めを解除",
 	"pin": "ピン留め",
@@ -75,7 +84,7 @@
 	"onboarding": "最新のエージェント型コーディング能力の進歩により、複雑なソフトウェア開発タスクをステップバイステップで処理できます。ファイルの作成や編集、複雑なプロジェクトの探索、ブラウザの使用、ターミナルコマンドの実行（許可後）を可能にするツールにより、コード補完や技術サポート以上の方法であなたをサポートできます。MCPを使用して新しいツールを作成し、自分の能力を拡張することもできます。",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "ブーメランタスク",
+			"title": "タスクオーケストレーション",
 			"description": "タスクをより小さく、管理しやすい部分に分割します。"
 		},
 		"stickyModels": {
@@ -102,6 +111,12 @@
 	"dragFiles": "ファイルをドラッグするにはShiftキーを押したまま",
 	"dragFilesImages": "ファイル/画像をドラッグするにはShiftキーを押したまま",
 	"enhancePromptDescription": "「プロンプトを強化」ボタンは、追加コンテキスト、説明、または言い換えを提供することで、リクエストを改善します。ここにリクエストを入力し、ボタンを再度クリックして動作を確認してください。",
+	"modeSelector": {
+		"title": "モード",
+		"marketplace": "モードマーケットプレイス",
+		"settings": "モード設定",
+		"description": "Rooの動作をカスタマイズする専門的なペルソナ。"
+	},
 	"errorReadingFile": "ファイル読み込みエラー:",
 	"noValidImages": "有効な画像が処理されませんでした",
 	"separator": "区切り",
@@ -145,6 +160,7 @@
 		"didRead": "Rooはこのファイルを読みました:",
 		"wantsToEdit": "Rooはこのファイルを編集したい:",
 		"wantsToEditOutsideWorkspace": "Rooはワークスペース外のこのファイルを編集したい:",
+		"wantsToEditProtected": "Rooは保護された設定ファイルを編集したい:",
 		"wantsToCreate": "Rooは新しいファイルを作成したい:",
 		"wantsToSearchReplace": "Rooはこのファイルで検索と置換を行う:",
 		"didSearchReplace": "Rooはこのファイルで検索と置換を実行しました:",
@@ -152,7 +168,8 @@
 		"wantsToInsertWithLineNumber": "Rooはこのファイルの{{lineNumber}}行目にコンテンツを挿入したい:",
 		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:",
 		"wantsToReadAndXMore": "Roo はこのファイルと他に {{count}} 個のファイルを読み込もうとしています:",
-		"wantsToReadMultiple": "Rooは複数のファイルを読み取ろうとしています："
+		"wantsToReadMultiple": "Rooは複数のファイルを読み取ろうとしています：",
+		"wantsToApplyBatchChanges": "Rooは複数のファイルに変更を適用したい:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Rooはこのディレクトリのトップレベルファイルを表示したい:",
@@ -162,7 +179,15 @@
 		"wantsToViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示したい:",
 		"didViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示しました:",
 		"wantsToSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索したい:",
-		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:"
+		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:",
+		"wantsToSearchOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で <code>{{regex}}</code> を検索したい:",
+		"didSearchOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で <code>{{regex}}</code> を検索しました:",
+		"wantsToViewTopLevelOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のトップレベルファイルを表示したい:",
+		"didViewTopLevelOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のトップレベルファイルを表示しました:",
+		"wantsToViewRecursiveOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のすべてのファイルを再帰的に表示したい:",
+		"didViewRecursiveOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）のすべてのファイルを再帰的に表示しました:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で使用されているソースコード定義名を表示したい:",
+		"didViewDefinitionsOutsideWorkspace": "Rooはこのディレクトリ（ワークスペース外）で使用されているソースコード定義名を表示しました:"
 	},
 	"commandOutput": "コマンド出力",
 	"response": "応答",
@@ -213,11 +238,11 @@
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} リリース",
-		"description": "Roo Code {{version}}は、あなたのフィードバックに基づく強力な新機能と改善をもたらします。",
+		"description": "Roo Code {{version}}は、あなたのフィードバックに基づく重要な新機能と改善をもたらします。",
 		"whatsNew": "新機能",
-		"feature1": "<bold>インテリジェントコンテキスト圧縮がデフォルトで有効</bold>: コンテキスト圧縮がデフォルトで有効になり、自動圧縮が発生するタイミングを設定可能",
-		"feature2": "<bold>手動圧縮ボタン</bold>: タスクヘッダーの新しいボタンで、いつでも手動でコンテキスト圧縮をトリガー可能",
-		"feature3": "<bold>拡張された圧縮設定</bold>: <contextSettingsLink>コンテキスト設定</contextSettingsLink>で自動圧縮がいつどのように発生するかを細かく調整",
+		"feature1": "<bold>Roo マーケットプレイス開始</bold>: マーケットプレイスが開始されました！これまで以上に簡単にモードとMCPを発見・インストール。",
+		"feature2": "<bold>Gemini 2.5 モデル</bold>: 新しいGemini 2.5 Pro、Flash、Flash Liteモデルのサポートを追加。",
+		"feature3": "<bold>Excelファイルサポートなど</bold>: Excel (.xlsx) ファイルサポートと多数のバグ修正・改善を追加！",
 		"hideButton": "通知を非表示",
 		"detailsDiscussLinks": "詳細は<discordLink>Discord</discordLink>と<redditLink>Reddit</redditLink>でご確認・ディスカッションください 🚀"
 	},
@@ -278,5 +303,12 @@
 		"deny": {
 			"title": "すべて拒否"
 		}
+	},
+	"indexingStatus": {
+		"ready": "インデックス準備完了",
+		"indexing": "インデックス作成中 {{percentage}}%",
+		"indexed": "インデックス作成済み",
+		"error": "インデックスエラー",
+		"status": "インデックス状態"
 	}
 }

@@ -9,6 +9,7 @@
 	"command.mcpServers.title": "MCP Servers",
 	"command.prompts.title": "Modes",
 	"command.history.title": "History",
+	"command.marketplace.title": "Marketplace",
 	"command.openInEditor.title": "Open in Editor",
 	"command.settings.title": "Settings",
 	"command.documentation.title": "Documentation",
@@ -19,6 +20,7 @@
 	"command.addToContext.title": "Add To Context",
 	"command.focusInput.title": "Focus Input Field",
 	"command.setCustomStoragePath.title": "Set Custom Storage Path",
+	"command.importSettings.title": "Import Settings",
 	"command.terminal.addToContext.title": "Add Terminal Content to Context",
 	"command.terminal.fixCommand.title": "Fix This Command",
 	"command.terminal.explainCommand.title": "Explain This Command",
@@ -29,7 +31,7 @@
 	"settings.vsCodeLmModelSelector.vendor.description": "The vendor of the language model (e.g. copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "The family of the language model (e.g. gpt-4)",
 	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')",
-	"settings.rooCodeCloudEnabled.description": "Enable Roo Code Cloud.",
+	"settings.enableCodeActions.description": "Enable Roo Code quick fixes",
 	"roo-cline.autoCloseRooTabs.description": "When enabled, Roo will automatically close tabs for files that were newly created or were not already open before Roo modified them. Tabs for files that were already open will remain open.",
 	"roo-cline.autoCloseAllRooTabs.description": "When enabled (and 'Automatically close newly created or previously unopened Roo tabs' is also enabled), Roo will close all tabs it interacted with during a file modification task, including those that were already open before the task started."
 }

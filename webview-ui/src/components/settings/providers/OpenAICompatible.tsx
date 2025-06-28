@@ -15,7 +15,7 @@ import {
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { Button } from "@src/components/ui"
+import { Button, StandardTooltip } from "@src/components/ui"
 
 import { convertHeadersToObject } from "../utils/headers"
 import { inputEventTransform, noTransform } from "../transforms"
@@ -27,12 +27,14 @@ type OpenAICompatibleProps = {
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	organizationAllowList: OrganizationAllowList
+	modelValidationError?: string
 }
 
 export const OpenAICompatible = ({
 	apiConfiguration,
 	setApiConfigurationField,
 	organizationAllowList,
+	modelValidationError,
 }: OpenAICompatibleProps) => {
 	const { t } = useAppTranslation()
 
@@ -144,6 +146,7 @@ export const OpenAICompatible = ({
 				serviceName="OpenAI"
 				serviceUrl="https://platform.openai.com"
 				organizationAllowList={organizationAllowList}
+				errorMessage={modelValidationError}
 			/>
 			<R1FormatSetting
 				onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}
@@ -164,6 +167,16 @@ export const OpenAICompatible = ({
 				onChange={handleInputChange("openAiStreamingEnabled", noTransform)}>
 				{t("settings:modelInfo.enableStreaming")}
 			</Checkbox>
+			<div>
+				<Checkbox
+					checked={apiConfiguration?.includeMaxTokens ?? true}
+					onChange={handleInputChange("includeMaxTokens", noTransform)}>
+					{t("settings:includeMaxOutputTokens")}
+				</Checkbox>
+				<div className="text-sm text-vscode-descriptionForeground ml-6">
+					{t("settings:includeMaxOutputTokensDescription")}
+				</div>
+			</div>
 			<Checkbox
 				checked={apiConfiguration?.openAiUseAzure ?? false}
 				onChange={handleInputChange("openAiUseAzure", noTransform)}>
@@ -195,9 +208,11 @@ export const OpenAICompatible = ({
 			<div className="mb-4">
 				<div className="flex justify-between items-center mb-2">
 					<label className="block font-medium">{t("settings:providers.customHeaders")}</label>
-					<VSCodeButton appearance="icon" title={t("settings:common.add")} onClick={handleAddCustomHeader}>
-						<span className="codicon codicon-add"></span>
-					</VSCodeButton>
+					<StandardTooltip content={t("settings:common.add")}>
+						<VSCodeButton appearance="icon" onClick={handleAddCustomHeader}>
+							<span className="codicon codicon-add"></span>
+						</VSCodeButton>
+					</StandardTooltip>
 				</div>
 				{!customHeaders.length ? (
 					<div className="text-sm text-vscode-descriptionForeground">
@@ -218,12 +233,11 @@ export const OpenAICompatible = ({
 								placeholder={t("settings:providers.headerValue")}
 								onInput={(e: any) => handleUpdateHeaderValue(index, e.target.value)}
 							/>
-							<VSCodeButton
-								appearance="icon"
-								title={t("settings:common.remove")}
-								onClick={() => handleRemoveCustomHeader(index)}>
-								<span className="codicon codicon-trash"></span>
-							</VSCodeButton>
+							<StandardTooltip content={t("settings:common.remove")}>
+								<VSCodeButton appearance="icon" onClick={() => handleRemoveCustomHeader(index)}>
+									<span className="codicon codicon-trash"></span>
+								</VSCodeButton>
+							</StandardTooltip>
 						</div>
 					))
 				)}
@@ -292,7 +306,6 @@ export const OpenAICompatible = ({
 								return value > 0 ? "var(--vscode-charts-green)" : "var(--vscode-errorForeground)"
 							})(),
 						}}
-						title={t("settings:providers.customModel.maxTokens.description")}
 						onInput={handleInputChange("openAiCustomModelInfo", (e) => {
 							const value = parseInt((e.target as HTMLInputElement).value)
 
@@ -331,7 +344,6 @@ export const OpenAICompatible = ({
 								return value > 0 ? "var(--vscode-charts-green)" : "var(--vscode-errorForeground)"
 							})(),
 						}}
-						title={t("settings:providers.customModel.contextWindow.description")}
 						onInput={handleInputChange("openAiCustomModelInfo", (e) => {
 							const value = (e.target as HTMLInputElement).value
 							const parsed = parseInt(value)
@@ -369,11 +381,12 @@ export const OpenAICompatible = ({
 								{t("settings:providers.customModel.imageSupport.label")}
 							</span>
 						</Checkbox>
-						<i
-							className="codicon codicon-info text-vscode-descriptionForeground"
-							title={t("settings:providers.customModel.imageSupport.description")}
-							style={{ fontSize: "12px" }}
-						/>
+						<StandardTooltip content={t("settings:providers.customModel.imageSupport.description")}>
+							<i
+								className="codicon codicon-info text-vscode-descriptionForeground"
+								style={{ fontSize: "12px" }}
+							/>
+						</StandardTooltip>
 					</div>
 					<div className="text-sm text-vscode-descriptionForeground pt-1">
 						{t("settings:providers.customModel.imageSupport.description")}
@@ -392,11 +405,12 @@ export const OpenAICompatible = ({
 							})}>
 							<span className="font-medium">{t("settings:providers.customModel.computerUse.label")}</span>
 						</Checkbox>
-						<i
-							className="codicon codicon-info text-vscode-descriptionForeground"
-							title={t("settings:providers.customModel.computerUse.description")}
-							style={{ fontSize: "12px" }}
-						/>
+						<StandardTooltip content={t("settings:providers.customModel.computerUse.description")}>
+							<i
+								className="codicon codicon-info text-vscode-descriptionForeground"
+								style={{ fontSize: "12px" }}
+							/>
+						</StandardTooltip>
 					</div>
 					<div className="text-sm text-vscode-descriptionForeground pt-1">
 						{t("settings:providers.customModel.computerUse.description")}
@@ -415,11 +429,12 @@ export const OpenAICompatible = ({
 							})}>
 							<span className="font-medium">{t("settings:providers.customModel.promptCache.label")}</span>
 						</Checkbox>
-						<i
-							className="codicon codicon-info text-vscode-descriptionForeground"
-							title={t("settings:providers.customModel.promptCache.description")}
-							style={{ fontSize: "12px" }}
-						/>
+						<StandardTooltip content={t("settings:providers.customModel.promptCache.description")}>
+							<i
+								className="codicon codicon-info text-vscode-descriptionForeground"
+								style={{ fontSize: "12px" }}
+							/>
+						</StandardTooltip>
 					</div>
 					<div className="text-sm text-vscode-descriptionForeground pt-1">
 						{t("settings:providers.customModel.promptCache.description")}
@@ -460,11 +475,12 @@ export const OpenAICompatible = ({
 							<label className="block font-medium mb-1">
 								{t("settings:providers.customModel.pricing.input.label")}
 							</label>
-							<i
-								className="codicon codicon-info text-vscode-descriptionForeground"
-								title={t("settings:providers.customModel.pricing.input.description")}
-								style={{ fontSize: "12px" }}
-							/>
+							<StandardTooltip content={t("settings:providers.customModel.pricing.input.description")}>
+								<i
+									className="codicon codicon-info text-vscode-descriptionForeground"
+									style={{ fontSize: "12px" }}
+								/>
+							</StandardTooltip>
 						</div>
 					</VSCodeTextField>
 				</div>
@@ -503,11 +519,12 @@ export const OpenAICompatible = ({
 							<label className="block font-medium mb-1">
 								{t("settings:providers.customModel.pricing.output.label")}
 							</label>
-							<i
-								className="codicon codicon-info text-vscode-descriptionForeground"
-								title={t("settings:providers.customModel.pricing.output.description")}
-								style={{ fontSize: "12px" }}
-							/>
+							<StandardTooltip content={t("settings:providers.customModel.pricing.output.description")}>
+								<i
+									className="codicon codicon-info text-vscode-descriptionForeground"
+									style={{ fontSize: "12px" }}
+								/>
+							</StandardTooltip>
 						</div>
 					</VSCodeTextField>
 				</div>
@@ -546,11 +563,13 @@ export const OpenAICompatible = ({
 									<span className="font-medium">
 										{t("settings:providers.customModel.pricing.cacheReads.label")}
 									</span>
-									<i
-										className="codicon codicon-info text-vscode-descriptionForeground"
-										title={t("settings:providers.customModel.pricing.cacheReads.description")}
-										style={{ fontSize: "12px" }}
-									/>
+									<StandardTooltip
+										content={t("settings:providers.customModel.pricing.cacheReads.description")}>
+										<i
+											className="codicon codicon-info text-vscode-descriptionForeground"
+											style={{ fontSize: "12px" }}
+										/>
+									</StandardTooltip>
 								</div>
 							</VSCodeTextField>
 						</div>
@@ -586,11 +605,13 @@ export const OpenAICompatible = ({
 									<label className="block font-medium mb-1">
 										{t("settings:providers.customModel.pricing.cacheWrites.label")}
 									</label>
-									<i
-										className="codicon codicon-info text-vscode-descriptionForeground"
-										title={t("settings:providers.customModel.pricing.cacheWrites.description")}
-										style={{ fontSize: "12px" }}
-									/>
+									<StandardTooltip
+										content={t("settings:providers.customModel.pricing.cacheWrites.description")}>
+										<i
+											className="codicon codicon-info text-vscode-descriptionForeground"
+											style={{ fontSize: "12px" }}
+										/>
+									</StandardTooltip>
 								</div>
 							</VSCodeTextField>
 						</div>

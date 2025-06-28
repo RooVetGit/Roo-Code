@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "Uwzględnij pliki poza obszarem roboczym",
 				"description": "Pozwól Roo na tworzenie i edycję plików poza bieżącym obszarem roboczym bez konieczności zatwierdzania."
+			},
+			"protected": {
+				"label": "Uwzględnij pliki chronione",
+				"description": "Pozwól Roo na tworzenie i edycję plików chronionych (takich jak .rooignore i pliki konfiguracyjne .roo/) bez konieczności zatwierdzania."
 			}
 		},
 		"browser": {
@@ -299,7 +303,27 @@
 			"medium": "Średni",
 			"low": "Niski"
 		},
-		"setReasoningLevel": "Włącz wysiłek rozumowania"
+		"setReasoningLevel": "Włącz wysiłek rozumowania",
+		"claudeCode": {
+			"pathLabel": "Ścieżka Claude Code",
+			"description": "Opcjonalna ścieżka do Twojego CLI Claude Code. Domyślnie 'claude', jeśli nie ustawiono.",
+			"placeholder": "Domyślnie: claude"
+		},
+		"geminiCli": {
+			"description": "Ten dostawca używa uwierzytelniania OAuth z narzędzia Gemini CLI i nie wymaga kluczy API.",
+			"oauthPath": "Ścieżka danych uwierzytelniających OAuth (opcjonalne)",
+			"oauthPathDescription": "Ścieżka do pliku danych uwierzytelniających OAuth. Pozostaw puste, aby użyć domyślnej lokalizacji (~/.gemini/oauth_creds.json).",
+			"instructions": "Jeśli jeszcze się nie uwierzytelniłeś, uruchom najpierw",
+			"instructionsContinued": "w swoim terminalu.",
+			"setupLink": "Instrukcje konfiguracji Gemini CLI",
+			"requirementsTitle": "Ważne wymagania",
+			"requirement1": "Najpierw musisz zainstalować narzędzie Gemini CLI",
+			"requirement2": "Następnie uruchom gemini w swoim terminalu i upewnij się, że logujesz się przez Google",
+			"requirement3": "Działa tylko z osobistymi kontami Google (nie z kontami Google Workspace)",
+			"requirement4": "Nie używa kluczy API - uwierzytelnianie jest obsługiwane przez OAuth",
+			"requirement5": "Wymaga, aby narzędzie Gemini CLI było najpierw zainstalowane i uwierzytelnione",
+			"freeAccess": "Darmowy dostęp przez uwierzytelnianie OAuth"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -366,7 +390,8 @@
 			"hint": "Puste = użyj domyślnego monitu"
 		},
 		"autoCondenseContext": {
-			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu"
+			"name": "Automatycznie wyzwalaj inteligentną kondensację kontekstu",
+			"description": "Gdy włączone, Roo automatycznie skondensuje kontekst po osiągnięciu progu. Gdy wyłączone, nadal możesz ręcznie wyzwolić kondensację kontekstu."
 		},
 		"openTabs": {
 			"label": "Limit kontekstu otwartych kart",
@@ -389,6 +414,15 @@
 		"maxConcurrentFileReads": {
 			"label": "Limit jednoczesnych odczytów",
 			"description": "Maksymalna liczba plików, które narzędzie 'read_file' może przetwarzać jednocześnie. Wyższe wartości mogą przyspieszyć odczyt wielu małych plików, ale zwiększają zużycie pamięci."
+		},
+		"condensingThreshold": {
+			"label": "Próg wyzwalania kondensacji",
+			"selectProfile": "Skonfiguruj próg dla profilu",
+			"defaultProfile": "Globalny domyślny (wszystkie profile)",
+			"defaultDescription": "Gdy kontekst osiągnie ten procent, zostanie automatycznie skondensowany dla wszystkich profili, chyba że mają niestandardowe ustawienia",
+			"profileDescription": "Niestandardowy próg tylko dla tego profilu (zastępuje globalny domyślny)",
+			"inheritDescription": "Ten profil dziedziczy globalny domyślny próg ({{threshold}}%)",
+			"usesGlobal": "(używa globalnego {{threshold}}%)"
 		}
 	},
 	"terminal": {
@@ -505,9 +539,13 @@
 			"name": "Włącz jednoczesne odczytywanie plików",
 			"description": "Po włączeniu Roo może odczytać wiele plików w jednym żądaniu. Po wyłączeniu Roo musi odczytywać pliki pojedynczo. Wyłączenie może pomóc podczas pracy z mniej wydajnymi modelami lub gdy chcesz mieć większą kontrolę nad dostępem do plików."
 		},
-		"DISABLE_COMPLETION_COMMAND": {
-			"name": "Wyłącz wykonywanie poleceń w attempt_completion",
-			"description": "Gdy włączone, narzędzie attempt_completion nie będzie wykonywać poleceń. Jest to funkcja eksperymentalna przygotowująca do przyszłego wycofania wykonywania poleceń po zakończeniu zadania."
+		"MARKETPLACE": {
+			"name": "Włącz Marketplace",
+			"description": "Gdy włączone, możesz instalować MCP i niestandardowe tryby z Marketplace."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Włącz równoczesne edycje plików",
+			"description": "Gdy włączone, Roo może edytować wiele plików w jednym żądaniu. Gdy wyłączone, Roo musi edytować pliki jeden po drugim. Wyłączenie tego może pomóc podczas pracy z mniej zdolnymi modelami lub gdy chcesz mieć większą kontrolę nad modyfikacjami plików."
 		}
 	},
 	"promptCaching": {
@@ -613,5 +651,7 @@
 	"labels": {
 		"customArn": "Niestandardowy ARN",
 		"useCustomArn": "Użyj niestandardowego ARN..."
-	}
+	},
+	"includeMaxOutputTokens": "Uwzględnij maksymalne tokeny wyjściowe",
+	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać."
 }

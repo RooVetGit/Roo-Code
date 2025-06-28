@@ -7,6 +7,20 @@ import {
 	INITIAL_RETRY_DELAY_MS as INITIAL_DELAY_MS,
 } from "../constants"
 import { getDefaultModelId } from "../../../shared/embeddingModels"
+import { t } from "../../../i18n"
+
+interface EmbeddingItem {
+	embedding: string | number[]
+	[key: string]: any
+}
+
+interface OpenAIEmbeddingResponse {
+	data: EmbeddingItem[]
+	usage?: {
+		prompt_tokens?: number
+		total_tokens?: number
+	}
+}
 
 /**
  * OpenAI Compatible implementation of the embedder interface with batching and rate limiting.
@@ -60,7 +74,11 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 				if (itemTokens > MAX_ITEM_TOKENS) {
 					console.warn(
-						`Text at index ${i} exceeds maximum token limit (${itemTokens} > ${MAX_ITEM_TOKENS}). Skipping.`,
+						t("embeddings:textExceedsTokenLimit", {
+							index: i,
+							itemTokens,
+							maxTokens: MAX_ITEM_TOKENS,
+						}),
 					)
 					processedIndices.push(i)
 					continue
@@ -81,15 +99,10 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			}
 
 			if (currentBatch.length > 0) {
-				try {
-					const batchResult = await this._embedBatchWithRetries(currentBatch, modelToUse)
-					allEmbeddings.push(...batchResult.embeddings)
-					usage.promptTokens += batchResult.usage.promptTokens
-					usage.totalTokens += batchResult.usage.totalTokens
-				} catch (error) {
-					console.error("Failed to process batch:", error)
-					throw new Error("Failed to create embeddings: batch processing error")
-				}
+				const batchResult = await this._embedBatchWithRetries(currentBatch, modelToUse)
+				allEmbeddings.push(...batchResult.embeddings)
+				usage.promptTokens += batchResult.usage.promptTokens
+				usage.totalTokens += batchResult.usage.totalTokens
 			}
 		}
 
@@ -108,13 +121,38 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
-				const response = await this.embeddingsClient.embeddings.create({
+				const response = (await this.embeddingsClient.embeddings.create({
 					input: batchTexts,
 					model: model,
+					// OpenAI package (as of v4.78.1) has a parsing issue that truncates embedding dimensions to 256
+					// when processing numeric arrays, which breaks compatibility with models using larger dimensions.
+					// By requesting base64 encoding, we bypass the package's parser and handle decoding ourselves.
+					encoding_format: "base64",
+				})) as OpenAIEmbeddingResponse
+
+				// Convert base64 embeddings to float32 arrays
+				const processedEmbeddings = response.data.map((item: EmbeddingItem) => {
+					if (typeof item.embedding === "string") {
+						const buffer = Buffer.from(item.embedding, "base64")
+
+						// Create Float32Array view over the buffer
+						const float32Array = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4)
+
+						return {
+							...item,
+							embedding: Array.from(float32Array),
+						}
+					}
+					return item
 				})
 
+				// Replace the original data with processed embeddings
+				response.data = processedEmbeddings
+
+				const embeddings = response.data.map((item) => item.embedding as number[])
+
 				return {
-					embeddings: response.data.map((item) => item.embedding),
+					embeddings: embeddings,
 					usage: {
 						promptTokens: response.usage?.prompt_tokens || 0,
 						totalTokens: response.usage?.total_tokens || 0,
@@ -126,7 +164,13 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 				if (isRateLimitError && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
-					console.warn(`Rate limit hit, retrying in ${delayMs}ms (attempt ${attempts + 1}/${MAX_RETRIES})`)
+					console.warn(
+						t("embeddings:rateLimitRetry", {
+							delayMs,
+							attempt: attempts + 1,
+							maxRetries: MAX_RETRIES,
+						}),
+					)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
 				}
@@ -134,17 +178,35 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				// Log the error for debugging
 				console.error(`OpenAI Compatible embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
-				if (!hasMoreAttempts) {
-					throw new Error(
-						`Failed to create embeddings after ${MAX_RETRIES} attempts: ${error.message || error}`,
-					)
+				// Provide more context in the error message using robust error extraction
+				let errorMessage = t("embeddings:unknownError")
+				if (error?.message) {
+					errorMessage = error.message
+				} else if (typeof error === "string") {
+					errorMessage = error
+				} else if (error && typeof error.toString === "function") {
+					try {
+						errorMessage = error.toString()
+					} catch {
+						errorMessage = t("embeddings:unknownError")
+					}
 				}
 
-				throw error
+				const statusCode = error?.status || error?.response?.status
+
+				if (statusCode === 401) {
+					throw new Error(t("embeddings:authenticationFailed"))
+				} else if (statusCode) {
+					throw new Error(
+						t("embeddings:failedWithStatus", { attempts: MAX_RETRIES, statusCode, errorMessage }),
+					)
+				} else {
+					throw new Error(t("embeddings:failedWithError", { attempts: MAX_RETRIES, errorMessage }))
+				}
 			}
 		}
 
-		throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts`)
+		throw new Error(t("embeddings:failedMaxAttempts", { attempts: MAX_RETRIES }))
 	}
 
 	/**

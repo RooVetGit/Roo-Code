@@ -19,6 +19,7 @@ import { UserInteractionProvider } from "./UserInteractionProvider"
 import { PostDiffViewBehaviorUtils } from "./PostDiffViewBehaviorUtils"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
+export const DIFF_VIEW_LABEL_CHANGES = "Original ↔ Roo's Changes"
 
 interface DiffSettings {
 	autoFocus: boolean
@@ -353,8 +354,9 @@ export class DiffViewProvider {
 		const endLine = accumulatedLines.length
 		// Replace all content up to the current line with accumulated lines.
 		const edit = new vscode.WorkspaceEdit()
-		const rangeToReplace = new vscode.Range(0, 0, endLine + 1, 0)
-		const contentToReplace = accumulatedLines.slice(0, endLine + 1).join("\n") + "\n"
+		const rangeToReplace = new vscode.Range(0, 0, endLine, 0)
+		const contentToReplace =
+			accumulatedLines.slice(0, endLine).join("\n") + (accumulatedLines.length > 0 ? "\n" : "")
 		edit.replace(document.uri, rangeToReplace, this.stripAllBOMs(contentToReplace))
 		await vscode.workspace.applyEdit(edit)
 		// If autoFocus is disabled, explicitly clear the selection after applying edits
@@ -494,12 +496,11 @@ export class DiffViewProvider {
 		// show a diff with all the EOL differences.
 		const newContentEOL = this.newContent.includes("\r\n") ? "\r\n" : "\n"
 
-		// `trimEnd` to fix issue where editor adds in extra new line
-		// automatically.
-		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
+		// Normalize EOL characters without trimming content
+		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL)
 
 		// Just in case the new content has a mix of varying EOL characters.
-		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
+		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL)
 
 		if (normalizedEditedContent !== normalizedNewContent) {
 			// User made changes before approving edit.
@@ -614,10 +615,7 @@ export class DiffViewProvider {
 			// Remove only the directories we created, in reverse order.
 			for (let i = this.createdDirs.length - 1; i >= 0; i--) {
 				await fs.rmdir(this.createdDirs[i])
-				console.log(`Directory ${this.createdDirs[i]} has been deleted.`)
 			}
-
-			console.log(`File ${absolutePath} has been deleted.`)
 		} else {
 			// Revert document.
 			const edit = new vscode.WorkspaceEdit()
@@ -634,7 +632,6 @@ export class DiffViewProvider {
 			// changes and saved during the edit.
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
-			console.log(`File ${absolutePath} has been reverted to its original content.`)
 
 			if (this.documentWasOpen) {
 				await this.showTextDocumentSafe({ uri: vscode.Uri.file(absolutePath), options: { preview: false } })
@@ -655,7 +652,9 @@ export class DiffViewProvider {
 	 */
 	private async openDiffEditor(): Promise<vscode.TextEditor> {
 		if (!this.relPath) {
-			throw new Error("No file path set")
+			throw new Error(
+				"No file path set for opening diff editor. Ensure open() was called before openDiffEditor()",
+			)
 		}
 
 		const settings = await this._readDiffSettings() // Dynamically read settings
@@ -666,11 +665,15 @@ export class DiffViewProvider {
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
 			const fileName = path.basename(rightUri.fsPath)
 			const fileExists = this.editType === "modify"
+			const DIFF_EDITOR_TIMEOUT = 10_000 // ms
+
+			let timeoutId: NodeJS.Timeout | undefined
+			const disposables: vscode.Disposable[] = []
 
 			const leftUri = vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
 				query: Buffer.from(this.originalContent ?? "").toString("base64"),
 			})
-			const title = `${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`
+			const title = `${fileName}: ${fileExists ? DIFF_VIEW_LABEL_CHANGES : "New File"} (Editable)`
 			const textDocumentShowOptions: TextDocumentShowOptions = {
 				preview: false,
 				preserveFocus: !settings.autoFocus, // Use dynamically read autoFocus

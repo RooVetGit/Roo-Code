@@ -13,7 +13,7 @@ import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { ViewColumn } from "vscode"
 
-export async function applyDiffTool(
+export async function applyDiffToolLegacy(
 	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,

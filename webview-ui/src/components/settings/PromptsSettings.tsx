@@ -6,16 +6,27 @@ import { supportPrompt, SupportPromptType } from "@roo/support-prompt"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
+import {
+	Button,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	StandardTooltip,
+} from "@src/components/ui"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { MessageSquare } from "lucide-react"
 
-const PromptsSettings = () => {
-	const { t } = useAppTranslation()
+interface PromptsSettingsProps {
+	customSupportPrompts: Record<string, string | undefined>
+	setCustomSupportPrompts: (prompts: Record<string, string | undefined>) => void
+}
 
-	const { customSupportPrompts, listApiConfigMeta, enhancementApiConfigId, setEnhancementApiConfigId } =
-		useExtensionState()
+const PromptsSettings = ({ customSupportPrompts, setCustomSupportPrompts }: PromptsSettingsProps) => {
+	const { t } = useAppTranslation()
+	const { listApiConfigMeta, enhancementApiConfigId, setEnhancementApiConfigId } = useExtensionState()
 
 	const [testPrompt, setTestPrompt] = useState("")
 	const [isEnhancing, setIsEnhancing] = useState(false)
@@ -37,19 +48,14 @@ const PromptsSettings = () => {
 	}, [])
 
 	const updateSupportPrompt = (type: SupportPromptType, value: string | undefined) => {
-		vscode.postMessage({
-			type: "updateSupportPrompt",
-			values: {
-				[type]: value,
-			},
-		})
+		const updatedPrompts = { ...customSupportPrompts, [type]: value }
+		setCustomSupportPrompts(updatedPrompts)
 	}
 
 	const handleSupportReset = (type: SupportPromptType) => {
-		vscode.postMessage({
-			type: "resetSupportPrompt",
-			text: type,
-		})
+		const updatedPrompts = { ...customSupportPrompts }
+		delete updatedPrompts[type]
+		setCustomSupportPrompts(updatedPrompts)
 	}
 
 	const getSupportPromptValue = (type: SupportPromptType): string => {
@@ -99,15 +105,14 @@ const PromptsSettings = () => {
 				<div key={activeSupportOption} className="mt-4">
 					<div className="flex justify-between items-center mb-1">
 						<label className="block font-medium">{t("prompts:supportPrompts.prompt")}</label>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => handleSupportReset(activeSupportOption)}
-							title={t("prompts:supportPrompts.resetPrompt", {
+						<StandardTooltip
+							content={t("prompts:supportPrompts.resetPrompt", {
 								promptType: activeSupportOption,
 							})}>
-							<span className="codicon codicon-discard"></span>
-						</Button>
+							<Button variant="ghost" size="icon" onClick={() => handleSupportReset(activeSupportOption)}>
+								<span className="codicon codicon-discard"></span>
+							</Button>
+						</StandardTooltip>
 					</div>
 
 					<VSCodeTextArea
