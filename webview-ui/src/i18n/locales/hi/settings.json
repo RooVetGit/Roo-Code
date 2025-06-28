@@ -31,6 +31,8 @@
 		"prompts": "प्रॉम्प्ट्स",
 		"experimental": "प्रायोगिक",
 		"language": "भाषा",
+		"pluginLanguage": "प्लगइन भाषा",
+		"commitLanguage": "कमिट भाषा",
 		"about": "परिचय"
 	},
 	"prompts": {

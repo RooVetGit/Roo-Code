@@ -31,6 +31,8 @@
 		"prompts": "프롬프트",
 		"experimental": "실험적",
 		"language": "언어",
+		"pluginLanguage": "플러그인 언어",
+		"commitLanguage": "커밋 언어",
 		"about": "Roo Code 정보"
 	},
 	"prompts": {

@@ -31,6 +31,8 @@
 		"prompts": "Promptlar",
 		"experimental": "Deneysel",
 		"language": "Dil",
+		"pluginLanguage": "Eklenti Dili",
+		"commitLanguage": "Commit Dili",
 		"about": "Roo Code Hakkında"
 	},
 	"prompts": {

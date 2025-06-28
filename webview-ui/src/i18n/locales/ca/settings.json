@@ -31,6 +31,8 @@
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
+		"pluginLanguage": "Idioma del connector",
+		"commitLanguage": "Idioma del commit",
 		"about": "Sobre Roo Code"
 	},
 	"prompts": {

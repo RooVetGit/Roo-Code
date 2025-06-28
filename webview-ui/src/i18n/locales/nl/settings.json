@@ -31,6 +31,8 @@
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
 		"language": "Taal",
+		"pluginLanguage": "Plug-in taal",
+		"commitLanguage": "Commit-taal",
 		"about": "Over Roo Code"
 	},
 	"prompts": {

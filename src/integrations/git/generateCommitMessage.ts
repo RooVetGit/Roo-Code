@@ -36,8 +36,8 @@ async function getChanges(git: SimpleGit, repoPath: string): Promise<string> {
 	return `${trackedFilesDiff}\n${untrackedFilesContent}`.trim()
 }
 
-function createPrompt(diff: string): string {
-	return `Create a git commit message from the following diff:\n${diff}`
+function createPrompt(diff: string, language: string): string {
+	return `Create a git commit message in ${language} from the following diff:\n${diff}.Remember to print only commit messages text without any extra markdown or content that would require special tools to display. Adhere to best git commit message practices. Remmber to use ${language} in this commit message.`
 }
 
 export async function generateCommitMessage(context: vscode.ExtensionContext) {
@@ -68,7 +68,9 @@ export async function generateCommitMessage(context: vscode.ExtensionContext) {
 	}
 	const provider = buildApiHandler(providerSettings)
 	const modelName = provider.getModel().id
-	const prompt = createPrompt(diff)
+	const settings = contextProxy.getGlobalSettings()
+	const commitLanguage = settings.commitLanguage || settings.language || "en"
+	const prompt = createPrompt(diff, commitLanguage)
 	const messages: Anthropic.Messages.MessageParam[] = [
 		{
 			role: "user",
@@ -92,7 +94,7 @@ export async function generateCommitMessage(context: vscode.ExtensionContext) {
 				}
 			}
 
-			const finalMessage = commitMessage.replace(/```/g, "").trim()
+			const finalMessage = commitMessage.trim()
 			gitApi.repositories[0].inputBox.value = finalMessage
 		},
 	)

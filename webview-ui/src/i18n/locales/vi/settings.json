@@ -31,6 +31,8 @@
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
+		"pluginLanguage": "Ngôn ngữ plugin",
+		"commitLanguage": "Ngôn ngữ commit",
 		"about": "Giới thiệu"
 	},
 	"prompts": {

@@ -31,6 +31,8 @@
 		"prompts": "Podpowiedzi",
 		"experimental": "Eksperymentalne",
 		"language": "Język",
+		"pluginLanguage": "Język rozszerzenia",
+		"commitLanguage": "Język commita git",
 		"about": "O Roo Code"
 	},
 	"prompts": {

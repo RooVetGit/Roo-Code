@@ -1109,6 +1109,11 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("language", message.text as Language)
 			await provider.postStateToWebview()
 			break
+		case "commitLanguage":
+			changeLanguage(message.text ?? "en")
+			await updateGlobalState("commitLanguage", message.text as Language)
+			await provider.postStateToWebview()
+			break
 		case "showRooIgnoredFiles":
 			await updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 			await provider.postStateToWebview()

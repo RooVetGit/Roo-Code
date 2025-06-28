@@ -203,6 +203,7 @@ export type ExtensionState = Pick<
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.
 	| "language"
+	| "commitLanguage"
 	// | "telemetrySetting" // Optional in GlobalSettings, required here.
 	// | "mcpEnabled" // Optional in GlobalSettings, required here.
 	// | "enableMcpServerCreation" // Optional in GlobalSettings, required here.

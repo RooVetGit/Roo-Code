@@ -31,6 +31,8 @@
 		"prompts": "提示詞",
 		"experimental": "實驗性",
 		"language": "語言",
+		"pluginLanguage": "外掛語言",
+		"commitLanguage": "提交語言",
 		"about": "關於 Roo Code"
 	},
 	"prompts": {
