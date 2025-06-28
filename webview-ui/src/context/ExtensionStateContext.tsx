@@ -172,7 +172,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		fuzzyMatchThreshold: 1.0,
 		language: "en", // Default language code
 		writeDelayMs: 1000,
-		commandRiskLevel: "none",
+		commandRiskLevel: "disabled",
 		browserViewportSize: "900x600",
 		screenshotQuality: 75,
 		terminalOutputLineLimit: 500,
@@ -358,7 +358,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		theme,
 		mcpServers,
 		currentCheckpoint,
-		commandRiskLevel: state.commandRiskLevel ?? "none",
+		commandRiskLevel: state.commandRiskLevel ?? "disabled",
 		filePaths,
 		openedTabs,
 		soundVolume: state.soundVolume,

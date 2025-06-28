@@ -75,6 +75,8 @@
 		"commandRiskLevel": {
 			"label": "Allowed Auto-Execute Risk Level",
 			"description": "In addition to the statically allowed commands below, this setting controls the level of risk allowed for automatic command execution. The AI model evaluates the risk for each command being run, so you trust the AI to follow the formally-defined predicate logic rules that categorize risk levels in the system instructions. Each higher level includes all prior levels.",
+			"disabled": "Disabled",
+			"disabledDesc": "Risk analysis is disabled",
 			"none": "None",
 			"noneDesc": "No risk-evaluated execution is allowed",
 			"readOnly": "Read Only",

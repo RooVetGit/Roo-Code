@@ -414,9 +414,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Note that `partial` has three valid states true (partial message),
 	// false (completion of partial message), undefined (individual complete
-	// message). 
-	// 
-	// Metadata is used to pass additional arbitrary user data to the 
+	// message).
+	//
+	// Metadata is used to pass additional arbitrary user data to the
 	// webview as necessary.
 	async ask(
 		type: ClineAsk,
@@ -465,7 +465,15 @@ export class Task extends EventEmitter<ClineEvents> {
 					// state.
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial, isProtected, metadata })
+					await this.addToClineMessages({
+						ts: askTs,
+						type: "ask",
+						ask: type,
+						text,
+						partial,
+						isProtected,
+						metadata,
+					})
 					throw new Error("Current ask promise was ignored (#2)")
 				}
 			} else {
@@ -1614,6 +1622,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			language,
 			maxConcurrentFileReads,
 			maxReadFileLine,
+			commandRiskLevel,
 		} = state ?? {}
 
 		return await (async () => {
@@ -1642,6 +1651,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				maxReadFileLine !== -1,
 				{
 					maxConcurrentFileReads,
+					commandRiskLevel,
 				},
 			)
 		})()

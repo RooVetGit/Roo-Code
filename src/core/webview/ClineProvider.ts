@@ -1476,7 +1476,7 @@ export class ClineProvider
 			terminalZshP10k: terminalZshP10k ?? false,
 			terminalZdotdir: terminalZdotdir ?? false,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
-			commandRiskLevel: commandRiskLevel ?? "none",
+			commandRiskLevel: commandRiskLevel ?? "disabled",
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
@@ -1680,7 +1680,7 @@ export class ClineProvider
 				codebaseIndexEmbedderModelId: "",
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
-			commandRiskLevel: stateValues.commandRiskLevel ?? "none",
+			commandRiskLevel: stateValues.commandRiskLevel ?? "disabled",
 		}
 	}
 

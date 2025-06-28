@@ -1140,7 +1140,7 @@ export const webviewMessageHandler = async (
 			// No need to call postStateToWebview here as the UI already updated optimistically
 			break
 		case "commandRiskLevel":
-			const riskLevel = (message.text ?? "none") as CommandRiskLevel
+			const riskLevel = (message.text ?? "disabled") as CommandRiskLevel
 			await provider.contextProxy.updateGlobalState("commandRiskLevel", riskLevel)
 			await provider.postStateToWebview()
 			break

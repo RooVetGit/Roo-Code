@@ -48,14 +48,17 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowFollowupQuestions: z.boolean().optional(),
 	followupAutoApproveTimeoutMs: z.number().optional(),
 	allowedCommands: z.array(z.string()).optional(),
-	commandRiskLevel: z.enum([
-		"none",
-		"readOnly",
-		"reversibleChanges",
-		"complexChanges",
-		"serviceInterruptingChanges",
-		"destructiveChanges",
-	]).optional(),
+	commandRiskLevel: z
+		.enum([
+			"disabled",
+			"none",
+			"readOnly",
+			"reversibleChanges",
+			"complexChanges",
+			"serviceInterruptingChanges",
+			"destructiveChanges",
+		])
+		.optional(),
 	allowedMaxRequests: z.number().nullish(),
 	autoCondenseContext: z.boolean().optional(),
 	autoCondenseContextPercent: z.number().optional(),
@@ -202,6 +205,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowFollowupQuestions: true,
 	followupAutoApproveTimeoutMs: 0,
 	allowedCommands: ["*"],
+	commandRiskLevel: "disabled",
 
 	browserToolEnabled: false,
 	browserViewportSize: "900x600",
