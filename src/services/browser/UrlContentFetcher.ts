@@ -7,6 +7,7 @@ import TurndownService from "turndown"
 // @ts-ignore
 import PCR from "puppeteer-chromium-resolver"
 import { fileExistsAtPath } from "../../utils/fs"
+import { serializeError } from "serialize-error"
 
 // Timeout constants
 const URL_FETCH_TIMEOUT = 30_000 // 30 seconds
@@ -94,7 +95,10 @@ export class UrlContentFetcher {
 				waitUntil: ["domcontentloaded", "networkidle2"],
 			})
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error)
+			// Use serialize-error to safely extract error information
+			const serializedError = serializeError(error)
+			const errorMessage = serializedError.message || String(error)
+			const errorName = serializedError.name
 
 			// Only retry for timeout or network-related errors
 			const shouldRetry =
@@ -102,9 +106,7 @@ export class UrlContentFetcher {
 				errorMessage.includes("net::") ||
 				errorMessage.includes("NetworkError") ||
 				errorMessage.includes("ERR_") ||
-				(error instanceof Error && error.name === "TimeoutError") ||
-				// Retry for unknown error types (when we can't determine the error)
-				errorMessage === "[object Object]"
+				errorName === "TimeoutError"
 
 			if (shouldRetry) {
 				// If networkidle2 fails due to timeout/network issues, try with just domcontentloaded as fallback

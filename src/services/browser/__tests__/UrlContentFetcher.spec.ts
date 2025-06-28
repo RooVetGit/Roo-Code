@@ -64,6 +64,21 @@ vi.mock("puppeteer-chromium-resolver", () => ({
 	}),
 }))
 
+// Mock serialize-error
+vi.mock("serialize-error", () => ({
+	serializeError: vi.fn((error) => {
+		if (error instanceof Error) {
+			return { message: error.message, name: error.name }
+		} else if (typeof error === "string") {
+			return { message: error }
+		} else if (error && typeof error === "object" && "message" in error) {
+			return { message: String(error.message), name: "name" in error ? String(error.name) : undefined }
+		} else {
+			return { message: String(error) }
+		}
+	}),
+}))
+
 describe("UrlContentFetcher", () => {
 	let urlContentFetcher: UrlContentFetcher
 	let mockContext: any
@@ -221,13 +236,42 @@ describe("UrlContentFetcher", () => {
 
 		it("should handle errors without message property", async () => {
 			const errorWithoutMessage = { code: "UNKNOWN_ERROR" }
-			mockPage.goto.mockRejectedValueOnce(errorWithoutMessage).mockResolvedValueOnce(undefined)
+			mockPage.goto.mockRejectedValueOnce(errorWithoutMessage)
+
+			// serialize-error will convert this to a proper error with the object stringified
+			await expect(urlContentFetcher.urlToMarkdown("https://example.com")).rejects.toThrow()
+
+			// Should not retry for non-network errors
+			expect(mockPage.goto).toHaveBeenCalledTimes(1)
+		})
+
+		it("should handle error objects with message property", async () => {
+			const errorWithMessage = { message: "Custom error", code: "CUSTOM_ERROR" }
+			mockPage.goto.mockRejectedValueOnce(errorWithMessage)
+
+			await expect(urlContentFetcher.urlToMarkdown("https://example.com")).rejects.toThrow("Custom error")
+
+			// Should not retry for error objects with message property (they're treated as known errors)
+			expect(mockPage.goto).toHaveBeenCalledTimes(1)
+		})
+
+		it("should retry for error objects with network-related messages", async () => {
+			const errorWithNetworkMessage = { message: "net::ERR_CONNECTION_REFUSED", code: "NETWORK_ERROR" }
+			mockPage.goto.mockRejectedValueOnce(errorWithNetworkMessage).mockResolvedValueOnce(undefined)
 
 			const result = await urlContentFetcher.urlToMarkdown("https://example.com")
 
-			// Should still retry since it can't determine the error type
+			// Should retry for network-related errors even in non-Error objects
 			expect(mockPage.goto).toHaveBeenCalledTimes(2)
 			expect(result).toBe("# Test content")
+		})
+
+		it("should handle string errors", async () => {
+			const stringError = "Simple string error"
+			mockPage.goto.mockRejectedValueOnce(stringError)
+
+			await expect(urlContentFetcher.urlToMarkdown("https://example.com")).rejects.toThrow("Simple string error")
+			expect(mockPage.goto).toHaveBeenCalledTimes(1)
 		})
 	})
 
