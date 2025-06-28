@@ -14,7 +14,6 @@
 	"command.terminal.fixCommand.title": "यह कमांड ठीक करें",
 	"command.terminal.explainCommand.title": "यह कमांड समझाएं",
 	"command.acceptInput.title": "इनपुट/सुझाव स्वीकारें",
-	"command.git.generatingCommitMessage": "{0} के साथ कमिट संदेश बनाया जा रहा है...",
 	"command.git.generateCommitMessage.title": "कमिट संदेश उत्पन्न करें",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",

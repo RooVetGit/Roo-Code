@@ -22,6 +22,9 @@
 		"just_this_message": "Chỉ tin nhắn này",
 		"this_and_subsequent": "Tin nhắn này và tất cả tin nhắn tiếp theo"
 	},
+	"git": {
+		"generatingCommitMessage": "Đang tạo thông điệp commit với {{modelName}}..."
+	},
 	"errors": {
 		"invalid_data_uri": "Định dạng URI dữ liệu không hợp lệ",
 		"error_copying_image": "Lỗi khi sao chép hình ảnh: {{errorMessage}}",

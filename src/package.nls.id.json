@@ -14,7 +14,6 @@
 	"command.settings.title": "Pengaturan",
 	"command.documentation.title": "Dokumentasi",
 	"command.openInNewTab.title": "Buka di Tab Baru",
-	"command.git.generatingCommitMessage": "Menghasilkan pesan komit dengan {0}...",
 	"command.git.generateCommitMessage.title": "Hasilkan Pesan Komit",
 	"command.explainCode.title": "Jelaskan Kode",
 	"command.fixCode.title": "Perbaiki Kode",

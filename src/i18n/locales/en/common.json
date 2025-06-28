@@ -22,6 +22,9 @@
 		"just_this_message": "Just this message",
 		"this_and_subsequent": "This and all subsequent messages"
 	},
+	"git": {
+		"generatingCommitMessage": "Generating commit message with {{modelName}}..."
+	},
 	"errors": {
 		"invalid_data_uri": "Invalid data URI format",
 		"error_copying_image": "Error copying image: {{errorMessage}}",

@@ -14,7 +14,6 @@
 	"command.terminal.fixCommand.title": "Sửa Lệnh Này",
 	"command.terminal.explainCommand.title": "Giải Thích Lệnh Này",
 	"command.acceptInput.title": "Chấp Nhận Đầu Vào/Gợi Ý",
-	"command.git.generatingCommitMessage": "Đang tạo tin nhắn commit với {0}...",
 	"command.git.generateCommitMessage.title": "Tạo tin nhắn Commit",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",

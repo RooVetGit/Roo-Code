@@ -79,7 +79,7 @@ export async function generateCommitMessage(context: vscode.ExtensionContext) {
 	await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: t("command.git.generatingCommitMessage", { modelName }),
+			title: t("common:git.generatingCommitMessage", { modelName }),
 			cancellable: false,
 		},
 		async () => {
