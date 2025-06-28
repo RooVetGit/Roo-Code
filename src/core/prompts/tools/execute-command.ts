@@ -39,7 +39,7 @@ Example: Requesting to execute ls in a specific directory if directed
 	return (
 		baseDescription +
 		`
-- risk_analysis: (required) Write one plain-verbiage terse concise sentence, prove: R ⊆ Tm, readOnly ⟺ Tm=∅, prove why you chose r(C); this sentence must not mention neither the risk level and must be plain lay language.
+- risk_analysis: (required) Write one plain-verbiage terse concise sentence, prove: R ⊆ Tm, readOnly ⟺ Tm=∅, prove why you chose r(C); this sentence must not mention neither the risk level and must be plain language.
 - risk: (required) The risk level of the command. You must analyze each command to determine the appropriate risk level using the formal definitions below. Always select the most conservative applicable level.
 
 ### Risk Level Definitions:
