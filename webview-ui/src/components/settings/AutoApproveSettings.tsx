@@ -228,6 +228,9 @@ export const AutoApproveSettings = ({
 								</SelectTrigger>
 								<SelectContent>
 									<SelectGroup>
+										<SelectItem value="disabled">
+											{`${t("settings:autoApprove.commandRiskLevel.disabled")}: ${t("settings:autoApprove.commandRiskLevel.disabledDesc")}`}
+										</SelectItem>
 										<SelectItem value="none">
 											{`${t("settings:autoApprove.commandRiskLevel.none")}: ${t("settings:autoApprove.commandRiskLevel.noneDesc")}`}
 										</SelectItem>

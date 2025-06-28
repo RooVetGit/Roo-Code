@@ -1,5 +1,6 @@
 import { DiffStrategy } from "../../../shared/tools"
 import { CodeIndexManager } from "../../../services/code-index/manager"
+import { isRiskAnalysisEnabled } from "@roo-code/types"
 
 function getEditingInstructions(diffStrategy?: DiffStrategy): string {
 	const instructions: string[] = []
@@ -50,6 +51,7 @@ export function getRulesSection(
 	supportsComputerUse: boolean,
 	diffStrategy?: DiffStrategy,
 	codeIndexManager?: CodeIndexManager,
+	settings?: Record<string, any>,
 ): string {
 	const isCodebaseSearchAvailable =
 		codeIndexManager &&
@@ -79,15 +81,18 @@ ${getEditingInstructions(diffStrategy)}
 - When making changes to code, always consider the context in which the code is being used. Ensure that your changes are compatible with the existing codebase and that they follow the project's coding standards and best practices.
 - Do not ask for more information than necessary. Use the tools provided to accomplish the user's request efficiently and effectively. When you've completed your task, you must use the attempt_completion tool to present the result to the user. The user may provide feedback, which you can use to make improvements and try again.
 - You are only allowed to ask the user questions using the ask_followup_question tool. Use this tool only when you need additional details to complete a task, and be sure to use a clear and concise question that will help you move forward with the task. When you ask a question, provide the user with 2-4 suggested answers based on your question so they don't need to do so much typing. The suggestions should be specific, actionable, and directly related to the completed task. They should be ordered by priority or logical sequence. However if you can use the available tools to avoid having to ask the user questions, you should do so. For example, if the user mentions a file that may be in an outside directory like the Desktop, you should use the list_files tool to list the files in the Desktop and check if the file they are talking about is there, rather than asking the user to provide the file path themselves.
-- When executing commands, if you don't see the expected output, assume the terminal executed the command successfully and proceed with the task. The user's terminal may be unable to stream the output back properly. If you absolutely need to see the actual terminal output, use the ask_followup_question tool to request the user to copy and paste it back to you.
-- When using the execute_command tool, you must analyze each command to determine the appropriate risk level based on the formal definitions provided. You must:
+- When executing commands, if you don't see the expected output, assume the terminal executed the command successfully and proceed with the task. The user's terminal may be unable to stream the output back properly. If you absolutely need to see the actual terminal output, use the ask_followup_question tool to request the user to copy and paste it back to you.${
+		isRiskAnalysisEnabled(settings?.commandRiskLevel)
+			? `- When using the execute_command tool, you must analyze each command to determine the appropriate risk level based on the formal definitions provided. You must:
   * Apply the mathematical and plain language definitions to classify command operations
   * Always select the most conservative applicable risk level when in doubt
   * Specify the risk parameter for every command execution
   * Consider the full command context including all arguments and potential side effects
   * When executing commands that could potentially overwrite or delete files (like mv, cp, or any other), if you cannot definitively confirm the non-existence of target files, you must assume they exist and treat the operation as destructiveChanges. The burden of proof is on confirming non-existence, not on existence.
   * Use a command with the least risk level to accomplish the task. In some cases you may lawfully reduce the risk level with knowledge of the system state: for example, if the operation could overwrite, you can use a lower risk level by inspecting whether the destination exists or by passing an argument that would prevent overwrite; if the destination exists then it is destructive, but if it does not exist then it is reversible via deletion.
-  * Be especially careful with commands that might cause permanent data loss or service interruption
+  * Be especially careful with commands that might cause permanent data loss or service interruption`
+			: ""
+	}
 - The user may provide a file's contents directly in their message, in which case you shouldn't use the read_file tool to get the file contents again since you already have it.
 - Your goal is to try to accomplish the user's task, NOT engage in a back and forth conversation.${
 		supportsComputerUse
