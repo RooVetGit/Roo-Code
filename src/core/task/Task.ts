@@ -87,7 +87,7 @@ import { processUserContentMentions } from "../mentions/processUserContentMentio
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
-import { FileChangeManager } from "../file-changes/FileChangeManager"
+import { FileChangeManager } from "../../services/file-changes/FileChangeManager"
 import type { CheckpointEventMap } from "../../services/checkpoints/types"
 
 export type ClineEvents = {

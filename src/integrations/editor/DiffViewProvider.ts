@@ -209,7 +209,7 @@ export class DiffViewProvider {
 				if (currentCheckpoint) {
 					// Calculate line differences
 					const lineDiff = (
-						await import("../../core/file-changes/FileChangeManager")
+						await import("../../services/file-changes/FileChangeManager")
 					).FileChangeManager.calculateLineDifferences(this.originalContent || "", editedContent)
 
 					// Determine change type

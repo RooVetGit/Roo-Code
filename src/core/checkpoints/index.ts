@@ -12,7 +12,7 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
-import { FileChangeManager } from "../file-changes/FileChangeManager"
+import { FileChangeManager } from "../../services/file-changes/FileChangeManager"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
 export function getCheckpointService(cline: Task) {
