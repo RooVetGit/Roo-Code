@@ -71,6 +71,9 @@ importers:
       '@roo-code/config-typescript':
         specifier: workspace:^
         version: link:../../packages/config-typescript
+      '@roo-code/types':
+        specifier: workspace:^
+        version: link:../../packages/types
       '@types/node':
         specifier: ^22.15.29
         version: 22.15.29
@@ -86,6 +89,9 @@ importers:
       typescript:
         specifier: 5.8.3
         version: 5.8.3
+      vitest:
+        specifier: ^3.2.3
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.15.29)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.19.4)(yaml@2.8.0)
 
   apps/vscode-e2e:
     devDependencies:
