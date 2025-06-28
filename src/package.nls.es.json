@@ -9,6 +9,7 @@
 	"command.openInNewTab.title": "Abrir en Nueva Pestaña",
 	"command.focusInput.title": "Enfocar Campo de Entrada",
 	"command.setCustomStoragePath.title": "Establecer Ruta de Almacenamiento Personalizada",
+	"command.importSettings.title": "Importar Configuración",
 	"command.terminal.addToContext.title": "Añadir Contenido de Terminal al Contexto",
 	"command.terminal.fixCommand.title": "Corregir Este Comando",
 	"command.terminal.explainCommand.title": "Explicar Este Comando",
@@ -20,6 +21,7 @@
 	"command.mcpServers.title": "Servidores MCP",
 	"command.prompts.title": "Modos",
 	"command.history.title": "Historial",
+	"command.marketplace.title": "Mercado",
 	"command.openInEditor.title": "Abrir en Editor",
 	"command.settings.title": "Configuración",
 	"command.documentation.title": "Documentación",
@@ -29,5 +31,5 @@
 	"settings.vsCodeLmModelSelector.vendor.description": "El proveedor del modelo de lenguaje (ej. copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "La familia del modelo de lenguaje (ej. gpt-4)",
 	"settings.customStoragePath.description": "Ruta de almacenamiento personalizada. Dejar vacío para usar la ubicación predeterminada. Admite rutas absolutas (ej. 'D:\\RooCodeStorage')",
-	"settings.rooCodeCloudEnabled.description": "Habilitar Roo Code Cloud."
+	"settings.enableCodeActions.description": "Habilitar correcciones rápidas de Roo Code."
 }

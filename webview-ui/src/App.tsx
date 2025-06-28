@@ -1,23 +1,29 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, useMemo } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { ExtensionMessage } from "@roo/ExtensionMessage"
-
 import TranslationProvider from "./i18n/TranslationContext"
+import { MarketplaceViewStateManager } from "./components/marketplace/MarketplaceViewStateManager"
+
 import { vscode } from "./utils/vscode"
 import { telemetryClient } from "./utils/TelemetryClient"
+import { TelemetryEventName } from "@roo-code/types"
 import { ExtensionStateContextProvider, useExtensionState } from "./context/ExtensionStateContext"
 import ChatView, { ChatViewRef } from "./components/chat/ChatView"
 import HistoryView from "./components/history/HistoryView"
 import SettingsView, { SettingsViewRef } from "./components/settings/SettingsView"
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
+import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 import { AccountView } from "./components/account/AccountView"
+import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
+import { TooltipProvider } from "./components/ui/tooltip"
+import { STANDARD_TOOLTIP_DELAY } from "./components/ui/standard-tooltip"
 
-type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "account"
+type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
@@ -25,6 +31,7 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 	promptsButtonClicked: "modes",
 	mcpButtonClicked: "mcp",
 	historyButtonClicked: "history",
+	marketplaceButtonClicked: "marketplace",
 	accountButtonClicked: "account",
 }
 
@@ -38,7 +45,13 @@ const App = () => {
 		machineId,
 		cloudUserInfo,
 		cloudIsAuthenticated,
+		cloudApiUrl,
+		renderContext,
+		mdmCompliant,
 	} = useExtensionState()
+
+	// Create a persistent state manager
+	const marketplaceStateManager = useMemo(() => new MarketplaceViewStateManager(), [])
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
@@ -56,29 +69,50 @@ const App = () => {
 	const settingsRef = useRef<SettingsViewRef>(null)
 	const chatViewRef = useRef<ChatViewRef>(null)
 
-	const switchTab = useCallback((newTab: Tab) => {
-		setCurrentSection(undefined)
+	const switchTab = useCallback(
+		(newTab: Tab) => {
+			// Check MDM compliance before allowing tab switching
+			if (mdmCompliant === false && newTab !== "account") {
+				return
+			}
 
-		if (settingsRef.current?.checkUnsaveChanges) {
-			settingsRef.current.checkUnsaveChanges(() => setTab(newTab))
-		} else {
-			setTab(newTab)
-		}
-	}, [])
+			setCurrentSection(undefined)
+			setCurrentMarketplaceTab(undefined)
+
+			if (settingsRef.current?.checkUnsaveChanges) {
+				settingsRef.current.checkUnsaveChanges(() => setTab(newTab))
+			} else {
+				setTab(newTab)
+			}
+		},
+		[mdmCompliant],
+	)
 
 	const [currentSection, setCurrentSection] = useState<string | undefined>(undefined)
+	const [currentMarketplaceTab, setCurrentMarketplaceTab] = useState<string | undefined>(undefined)
 
 	const onMessage = useCallback(
 		(e: MessageEvent) => {
 			const message: ExtensionMessage = e.data
 
 			if (message.type === "action" && message.action) {
-				const newTab = tabsByMessageAction[message.action]
-				const section = message.values?.section as string | undefined
+				// Handle switchTab action with tab parameter
+				if (message.action === "switchTab" && message.tab) {
+					const targetTab = message.tab as Tab
+					switchTab(targetTab)
+					setCurrentSection(undefined)
+					setCurrentMarketplaceTab(undefined)
+				} else {
+					// Handle other actions using the mapping
+					const newTab = tabsByMessageAction[message.action]
+					const section = message.values?.section as string | undefined
+					const marketplaceTab = message.values?.marketplaceTab as string | undefined
 
-				if (newTab) {
-					switchTab(newTab)
-					setCurrentSection(section)
+					if (newTab) {
+						switchTab(newTab)
+						setCurrentSection(section)
+						setCurrentMarketplaceTab(marketplaceTab)
+					}
 				}
 			}
 
@@ -112,6 +146,22 @@ const App = () => {
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
 
+	// Focus the WebView when non-interactive content is clicked (only in editor/tab mode)
+	useAddNonInteractiveClickListener(
+		useCallback(() => {
+			// Only send focus request if we're in editor (tab) mode, not sidebar
+			if (renderContext === "editor") {
+				vscode.postMessage({ type: "focusPanelRequest" })
+			}
+		}, [renderContext]),
+	)
+	// Track marketplace tab views
+	useEffect(() => {
+		if (tab === "marketplace") {
+			telemetryClient.capture(TelemetryEventName.MARKETPLACE_TAB_VIEWED)
+		}
+	}, [tab])
+
 	if (!didHydrateState) {
 		return null
 	}
@@ -128,10 +178,18 @@ const App = () => {
 			{tab === "settings" && (
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
 			)}
+			{tab === "marketplace" && (
+				<MarketplaceView
+					stateManager={marketplaceStateManager}
+					onDone={() => switchTab("chat")}
+					targetTab={currentMarketplaceTab as "mcp" | "mode" | undefined}
+				/>
+			)}
 			{tab === "account" && (
 				<AccountView
 					userInfo={cloudUserInfo}
 					isAuthenticated={cloudIsAuthenticated}
+					cloudApiUrl={cloudApiUrl}
 					onDone={() => switchTab("chat")}
 				/>
 			)}
@@ -159,7 +217,9 @@ const AppWithProviders = () => (
 	<ExtensionStateContextProvider>
 		<TranslationProvider>
 			<QueryClientProvider client={queryClient}>
-				<App />
+				<TooltipProvider delayDuration={STANDARD_TOOLTIP_DELAY}>
+					<App />
+				</TooltipProvider>
 			</QueryClientProvider>
 		</TranslationProvider>
 	</ExtensionStateContextProvider>

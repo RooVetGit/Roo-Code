@@ -8,6 +8,7 @@ import simpleGit, { SimpleGit } from "simple-git"
 import pWaitFor from "p-wait-for"
 
 import { fileExistsAtPath } from "../../utils/fs"
+import { executeRipgrep } from "../../services/ripgrep"
 
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
@@ -23,6 +24,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	protected readonly dotGitDir: string
 	protected git?: SimpleGit
 	protected readonly log: (message: string) => void
+	private shadowGitConfigWorktree?: string
 
 	public get baseHash() {
 		return this._baseHash
@@ -60,6 +62,15 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	public async initShadowGit(onInit?: () => Promise<void>) {
 		if (this.git) {
 			throw new Error("Shadow git repo already initialized")
+		}
+
+		const hasNestedGitRepos = await this.hasNestedGitRepositories()
+
+		if (hasNestedGitRepos) {
+			throw new Error(
+				"Checkpoints are disabled because nested git repositories were detected in the workspace. " +
+					"Please remove or relocate nested git repositories to use the checkpoints feature.",
+			)
 		}
 
 		await fs.mkdir(this.checkpointsDir, { recursive: true })
@@ -130,6 +141,50 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 	}
 
+	private async hasNestedGitRepositories(): Promise<boolean> {
+		try {
+			// Find all .git directories that are not at the root level.
+			const args = ["--files", "--hidden", "--follow", "-g", "**/.git/HEAD", this.workspaceDir]
+
+			const gitPaths = await executeRipgrep({ args, workspacePath: this.workspaceDir })
+
+			// Filter to only include nested git directories (not the root .git).
+			const nestedGitPaths = gitPaths.filter(
+				({ type, path }) =>
+					type === "folder" && path.includes(".git") && !path.startsWith(".git") && path !== ".git",
+			)
+
+			if (nestedGitPaths.length > 0) {
+				this.log(
+					`[${this.constructor.name}#hasNestedGitRepositories] found ${nestedGitPaths.length} nested git repositories: ${nestedGitPaths.map((p) => p.path).join(", ")}`,
+				)
+				return true
+			}
+
+			return false
+		} catch (error) {
+			this.log(
+				`[${this.constructor.name}#hasNestedGitRepositories] failed to check for nested git repos: ${error instanceof Error ? error.message : String(error)}`,
+			)
+
+			// If we can't check, assume there are no nested repos to avoid blocking the feature.
+			return false
+		}
+	}
+
+	private async getShadowGitConfigWorktree(git: SimpleGit) {
+		if (!this.shadowGitConfigWorktree) {
+			try {
+				this.shadowGitConfigWorktree = (await git.getConfig("core.worktree")).value || undefined
+			} catch (error) {
+				this.log(
+					`[${this.constructor.name}#getShadowGitConfigWorktree] failed to get core.worktree: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+		}
+
+		return this.shadowGitConfigWorktree
+	}
 	public async saveCheckpoint(
 		message: string,
 		options?: { allowEmpty?: boolean; files?: vscode.Uri[] },

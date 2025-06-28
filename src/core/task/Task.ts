@@ -39,6 +39,7 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
+import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
@@ -65,10 +66,12 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
+import { RooProtectedController } from "../protect/RooProtectedController"
 import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
+import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
@@ -144,11 +147,20 @@ export class Task extends EventEmitter<ClineEvents> {
 	// API
 	readonly apiConfiguration: ProviderSettings
 	api: ApiHandler
-	private lastApiRequestTime?: number
+	private static lastGlobalApiRequestTime?: number
 	private consecutiveAutoApprovedRequestsCount: number = 0
+
+	/**
+	 * Reset the global API request timestamp. This should only be used for testing.
+	 * @internal
+	 */
+	static resetGlobalApiRequestTime(): void {
+		Task.lastGlobalApiRequestTime = undefined
+	}
 
 	toolRepetitionDetector: ToolRepetitionDetector
 	rooIgnoreController?: RooIgnoreController
+	rooProtectedController?: RooProtectedController
 	fileContextTracker: FileContextTracker
 	urlContentFetcher: UrlContentFetcher
 	terminalProcess?: RooTerminalProcess
@@ -261,6 +273,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.taskNumber = -1
 
 		this.rooIgnoreController = new RooIgnoreController(this.cwd)
+		this.rooProtectedController = new RooProtectedController(this.cwd)
 		this.fileContextTracker = new FileContextTracker(provider, this.taskId)
 
 		this.rooIgnoreController.initialize().catch((error) => {
@@ -293,7 +306,24 @@ export class Task extends EventEmitter<ClineEvents> {
 			TelemetryService.instance.captureTaskCreated(this.taskId)
 		}
 
-		this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
+		// Only set up diff strategy if diff is enabled
+		if (this.diffEnabled) {
+			// Default to old strategy, will be updated if experiment is enabled
+			this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
+
+			// Check experiment asynchronously and update strategy if needed
+			provider.getState().then((state) => {
+				const isMultiFileApplyDiffEnabled = experiments.isEnabled(
+					state.experiments ?? {},
+					EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
+				)
+
+				if (isMultiFileApplyDiffEnabled) {
+					this.diffStrategy = new MultiFileSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
+				}
+			})
+		}
+
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
 
 		onCreated?.(this)
@@ -415,6 +445,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		text?: string,
 		partial?: boolean,
 		progressStatus?: ToolProgressStatus,
+		isProtected?: boolean,
 	): Promise<{ response: ClineAskResponse; text?: string; images?: string[] }> {
 		// If this Cline instance was aborted by the provider, then the only
 		// thing keeping us alive is a promise still running in the background,
@@ -442,6 +473,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.text = text
 					lastMessage.partial = partial
 					lastMessage.progressStatus = progressStatus
+					lastMessage.isProtected = isProtected
 					// TODO: Be more efficient about saving and posting only new
 					// data or one whole message at a time so ignore partial for
 					// saves, and only post parts of partial message instead of
@@ -453,7 +485,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					// state.
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial })
+					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial, isProtected })
 					throw new Error("Current ask promise was ignored (#2)")
 				}
 			} else {
@@ -480,6 +512,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.text = text
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
+					lastMessage.isProtected = isProtected
 					await this.saveClineMessages()
 					this.updateClineMessage(lastMessage)
 				} else {
@@ -489,7 +522,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					this.askResponseImages = undefined
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, isProtected })
 				}
 			}
 		} else {
@@ -499,7 +532,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.askResponseImages = undefined
 			askTs = Date.now()
 			this.lastMessageTs = askTs
-			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, isProtected })
 		}
 
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
@@ -1442,19 +1475,22 @@ export class Task extends EventEmitter<ClineEvents> {
 			} finally {
 				this.isStreaming = false
 			}
-			if (
-				inputTokens > 0 ||
-				outputTokens > 0 ||
-				cacheWriteTokens > 0 ||
-				cacheReadTokens > 0 ||
-				typeof totalCost !== "undefined"
-			) {
+
+			if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
 				TelemetryService.instance.captureLlmCompletion(this.taskId, {
 					inputTokens,
 					outputTokens,
 					cacheWriteTokens,
 					cacheReadTokens,
-					cost: totalCost,
+					cost:
+						totalCost ??
+						calculateApiCostAnthropic(
+							this.api.getModel().info,
+							inputTokens,
+							outputTokens,
+							cacheWriteTokens,
+							cacheReadTokens,
+						),
 				})
 			}
 
@@ -1643,6 +1679,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			mode,
 			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
+			profileThresholds = {},
 		} = state ?? {}
 
 		// Get condensing configuration for automatic triggers
@@ -1668,10 +1705,11 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		let rateLimitDelay = 0
 
-		// Only apply rate limiting if this isn't the first request
-		if (this.lastApiRequestTime) {
+		// Use the shared timestamp so that subtasks respect the same rate-limit
+		// window as their parent tasks.
+		if (Task.lastGlobalApiRequestTime) {
 			const now = Date.now()
-			const timeSinceLastRequest = now - this.lastApiRequestTime
+			const timeSinceLastRequest = now - Task.lastGlobalApiRequestTime
 			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
 			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
 		}
@@ -1686,8 +1724,9 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Update last request time before making the request
-		this.lastApiRequestTime = Date.now()
+		// Update last request time before making the request so that subsequent
+		// requests — even from new subtasks — will honour the provider's rate-limit.
+		Task.lastGlobalApiRequestTime = Date.now()
 
 		const systemPrompt = await this.getSystemPrompt()
 		const { contextTokens } = this.getTokenUsage()
@@ -1717,6 +1756,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				taskId: this.taskId,
 				customCondensingPrompt,
 				condensingApiHandler,
+				profileThresholds,
+				currentProfileId: state?.currentApiConfigName || "default",
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)

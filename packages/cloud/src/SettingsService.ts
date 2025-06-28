@@ -14,21 +14,25 @@ import { RefreshTimer } from "./RefreshTimer"
 const ORGANIZATION_SETTINGS_CACHE_KEY = "organization-settings"
 
 export class SettingsService {
-	private static _instance: SettingsService | null = null
-
 	private context: vscode.ExtensionContext
 	private authService: AuthService
 	private settings: OrganizationSettings | undefined = undefined
 	private timer: RefreshTimer
+	private log: (...args: unknown[]) => void
 
-	private constructor(context: vscode.ExtensionContext, authService: AuthService, callback: () => void) {
+	constructor(
+		context: vscode.ExtensionContext,
+		authService: AuthService,
+		callback: () => void,
+		log?: (...args: unknown[]) => void,
+	) {
 		this.context = context
 		this.authService = authService
+		this.log = log || console.log
 
 		this.timer = new RefreshTimer({
 			callback: async () => {
-				await this.fetchSettings(callback)
-				return true
+				return await this.fetchSettings(callback)
 			},
 			successInterval: 30000,
 			initialBackoffMs: 1000,
@@ -58,11 +62,11 @@ export class SettingsService {
 		}
 	}
 
-	private async fetchSettings(callback: () => void): Promise<void> {
+	private async fetchSettings(callback: () => void): Promise<boolean> {
 		const token = this.authService.getSessionToken()
 
 		if (!token) {
-			return
+			return false
 		}
 
 		try {
@@ -73,16 +77,20 @@ export class SettingsService {
 			})
 
 			if (!response.ok) {
-				console.error(`Failed to fetch organization settings: ${response.status} ${response.statusText}`)
-				return
+				this.log(
+					"[cloud-settings] Failed to fetch organization settings:",
+					response.status,
+					response.statusText,
+				)
+				return false
 			}
 
 			const data = await response.json()
 			const result = organizationSettingsSchema.safeParse(data)
 
 			if (!result.success) {
-				console.error("Invalid organization settings format:", result.error)
-				return
+				this.log("[cloud-settings] Invalid organization settings format:", result.error)
+				return false
 			}
 
 			const newSettings = result.data
@@ -92,8 +100,11 @@ export class SettingsService {
 				await this.cacheSettings()
 				callback()
 			}
+
+			return true
 		} catch (error) {
-			console.error("Error fetching organization settings:", error)
+			this.log("[cloud-settings] Error fetching organization settings:", error)
+			return false
 		}
 	}
 
@@ -120,23 +131,5 @@ export class SettingsService {
 
 	public dispose(): void {
 		this.timer.stop()
-	}
-
-	static get instance() {
-		if (!this._instance) {
-			throw new Error("SettingsService not initialized")
-		}
-
-		return this._instance
-	}
-
-	static async createInstance(context: vscode.ExtensionContext, callback: () => void) {
-		if (this._instance) {
-			throw new Error("SettingsService instance already created")
-		}
-
-		this._instance = new SettingsService(context, AuthService.instance, callback)
-		this._instance.initialize()
-		return this._instance
 	}
 }

@@ -24,6 +24,11 @@
 	},
 	"errors": {
 		"invalid_data_uri": "データURIフォーマットが無効です",
+		"error_copying_image": "画像のコピー中にエラーが発生しました：{{errorMessage}}",
+		"error_saving_image": "画像の保存中にエラーが発生しました：{{errorMessage}}",
+		"error_opening_image": "画像を開く際にエラーが発生しました：{{error}}",
+		"could_not_open_file": "ファイルを開けませんでした：{{errorMessage}}",
+		"could_not_open_file_generic": "ファイルを開けませんでした！",
 		"checkpoint_timeout": "チェックポイントの復元を試みる際にタイムアウトしました。",
 		"checkpoint_failed": "チェックポイントの復元に失敗しました。",
 		"no_workspace": "まずプロジェクトフォルダを開いてください",
@@ -54,7 +59,27 @@
 		"condense_handler_invalid": "コンテキストを圧縮するためのAPIハンドラーが無効です",
 		"condense_context_grew": "圧縮中にコンテキストサイズが増加しました；この試行をスキップします",
 		"share_task_failed": "タスクの共有に失敗しました",
-		"share_no_active_task": "共有するアクティブなタスクがありません"
+		"share_no_active_task": "共有するアクティブなタスクがありません",
+		"share_auth_required": "認証が必要です。タスクを共有するにはサインインしてください。",
+		"share_not_enabled": "この組織ではタスク共有が有効になっていません。",
+		"share_task_not_found": "タスクが見つからないか、アクセスが拒否されました。",
+		"claudeCode": {
+			"processExited": "Claude Code プロセスがコード {{exitCode}} で終了しました。",
+			"errorOutput": "エラー出力：{{output}}",
+			"processExitedWithError": "Claude Code プロセスがコード {{exitCode}} で終了しました。エラー出力：{{output}}",
+			"stoppedWithReason": "Claude Code が理由により停止しました：{{reason}}",
+			"apiKeyModelPlanMismatch": "API キーとサブスクリプションプランでは異なるモデルが利用可能です。選択したモデルがプランに含まれていることを確認してください。"
+		},
+		"geminiCli": {
+			"oauthLoadFailed": "OAuth認証情報の読み込みに失敗しました。まず認証してください: {{error}}",
+			"tokenRefreshFailed": "OAuthトークンの更新に失敗しました: {{error}}",
+			"onboardingTimeout": "オンボーディング操作が60秒でタイムアウトしました。後でもう一度お試しください。",
+			"projectDiscoveryFailed": "プロジェクトIDを発見できませんでした。'gemini auth'で認証されていることを確認してください。",
+			"rateLimitExceeded": "レート制限を超過しました。無料プランの制限に達しています。",
+			"badRequest": "不正なリクエスト: {{details}}",
+			"apiError": "Gemini CLI APIエラー: {{error}}",
+			"completionError": "Gemini CLI補完エラー: {{error}}"
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "選択されたターミナルコンテンツがありません",
@@ -67,7 +92,11 @@
 		"custom_storage_path_set": "カスタムストレージパスが設定されました：{{path}}",
 		"default_storage_path": "デフォルトのストレージパスに戻りました",
 		"settings_imported": "設定が正常にインポートされました。",
-		"share_link_copied": "共有リンクがクリップボードにコピーされました"
+		"share_link_copied": "共有リンクがクリップボードにコピーされました",
+		"image_copied_to_clipboard": "画像データURIがクリップボードにコピーされました",
+		"image_saved": "画像を{{path}}に保存しました",
+		"organization_share_link_copied": "組織共有リンクがクリップボードにコピーされました！",
+		"public_share_link_copied": "公開共有リンクがクリップボードにコピーされました！"
 	},
 	"answers": {
 		"yes": "はい",
@@ -78,7 +107,9 @@
 	},
 	"tasks": {
 		"canceled": "タスクエラー：ユーザーによって停止およびキャンセルされました。",
-		"deleted": "タスク失敗：ユーザーによって停止および削除されました。"
+		"deleted": "タスク失敗：ユーザーによって停止および削除されました。",
+		"incomplete": "タスク #{{taskNumber}} (未完了)",
+		"no_messages": "タスク #{{taskNumber}} (メッセージなし)"
 	},
 	"storage": {
 		"prompt_custom_path": "会話履歴のカスタムストレージパスを入力してください。デフォルトの場所を使用する場合は空のままにしてください",
@@ -93,7 +124,31 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq APIキー",
-			"getGroqApiKey": "Groq APIキーを取得"
+			"getGroqApiKey": "Groq APIキーを取得",
+			"claudeCode": {
+				"pathLabel": "Claude Code パス",
+				"description": "Claude Code CLI へのオプションのパス。設定されていない場合は、デフォルトで「claude」になります。",
+				"placeholder": "デフォルト: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": ".roomodes ファイルの {{line}} 行目で無効な YAML です。以下を確認してください：\n• 正しいインデント（タブではなくスペースを使用）\n• 引用符と括弧の対応\n• 有効な YAML 構文",
+			"schemaValidationError": ".roomodes のカスタムモード形式が無効です：\n{{issues}}",
+			"invalidFormat": "カスタムモード形式が無効です。設定が正しい YAML 形式に従っていることを確認してください。",
+			"updateFailed": "カスタムモードの更新に失敗しました：{{error}}",
+			"deleteFailed": "カスタムモードの削除に失敗しました：{{error}}",
+			"resetFailed": "カスタムモードのリセットに失敗しました：{{error}}",
+			"modeNotFound": "書き込みエラー：モードが見つかりません",
+			"noWorkspaceForProject": "プロジェクト固有モード用のワークスペースフォルダーが見つかりません"
+		}
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "あなたの組織では Roo Code Cloud 認証が必要です。続行するにはサインインしてください。",
+			"organization_mismatch": "組織の Roo Code Cloud アカウントで認証する必要があります。",
+			"verification_failed": "組織認証の確認ができませんでした。"
 		}
 	}
 }

@@ -83,6 +83,10 @@
 			"outsideWorkspace": {
 				"label": "Çalışma alanı dışındaki dosyaları dahil et",
 				"description": "Roo'nun onay gerektirmeden mevcut çalışma alanı dışında dosya oluşturmasına ve düzenlemesine izin ver."
+			},
+			"protected": {
+				"label": "Korumalı dosyaları dahil et",
+				"description": "Roo'nun korumalı dosyaları (.rooignore ve .roo/ yapılandırma dosyaları gibi) onay gerektirmeden oluşturmasına ve düzenlemesine izin ver."
 			}
 		},
 		"browser": {
@@ -299,7 +303,27 @@
 			"medium": "Orta",
 			"low": "Düşük"
 		},
-		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir"
+		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir",
+		"claudeCode": {
+			"pathLabel": "Claude Code Yolu",
+			"description": "Claude Code CLI'nize isteğe bağlı yol. Ayarlanmazsa varsayılan olarak 'claude' kullanılır.",
+			"placeholder": "Varsayılan: claude"
+		},
+		"geminiCli": {
+			"description": "Bu sağlayıcı Gemini CLI aracından OAuth kimlik doğrulaması kullanır ve API anahtarları gerektirmez.",
+			"oauthPath": "OAuth Kimlik Bilgileri Yolu (isteğe bağlı)",
+			"oauthPathDescription": "OAuth kimlik bilgileri dosyasının yolu. Varsayılan konumu kullanmak için boş bırakın (~/.gemini/oauth_creds.json).",
+			"instructions": "Henüz kimlik doğrulaması yapmadıysanız, önce",
+			"instructionsContinued": "komutunu terminalinizde çalıştırın.",
+			"setupLink": "Gemini CLI Kurulum Talimatları",
+			"requirementsTitle": "Önemli Gereksinimler",
+			"requirement1": "Önce Gemini CLI aracını yüklemeniz gerekir",
+			"requirement2": "Sonra terminalinizde gemini çalıştırın ve Google ile giriş yaptığınızdan emin olun",
+			"requirement3": "Sadece kişisel Google hesaplarıyla çalışır (Google Workspace hesapları değil)",
+			"requirement4": "API anahtarları kullanmaz - kimlik doğrulama OAuth ile yapılır",
+			"requirement5": "Gemini CLI aracının önce yüklenmesi ve kimlik doğrulaması yapılması gerekir",
+			"freeAccess": "OAuth kimlik doğrulaması ile ücretsiz erişim"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -366,7 +390,8 @@
 			"hint": "Boş = varsayılan promptu kullan"
 		},
 		"autoCondenseContext": {
-			"name": "Akıllı bağlam sıkıştırmayı otomatik olarak tetikle"
+			"name": "Akıllı bağlam sıkıştırmayı otomatik olarak tetikle",
+			"description": "Etkinleştirildiğinde, Roo eşiğe ulaşıldığında bağlamı otomatik olarak sıkıştırır. Devre dışı bırakıldığında, bağlam sıkıştırmayı hala manuel olarak tetikleyebilirsiniz."
 		},
 		"openTabs": {
 			"label": "Açık sekmeler bağlam sınırı",
@@ -389,6 +414,15 @@
 		"maxConcurrentFileReads": {
 			"label": "Eşzamanlı dosya okuma sınırı",
 			"description": "'read_file' aracının aynı anda işleyebileceği maksimum dosya sayısı. Daha yüksek değerler birden çok küçük dosyanın okunmasını hızlandırabilir ancak bellek kullanımını artırır."
+		},
+		"condensingThreshold": {
+			"label": "Sıkıştırma Tetikleme Eşiği",
+			"selectProfile": "Profil için eşik yapılandır",
+			"defaultProfile": "Küresel Varsayılan (tüm profiller)",
+			"defaultDescription": "Bağlam bu yüzdeye ulaştığında, özel ayarları olmadıkça tüm profiller için otomatik olarak sıkıştırılacak",
+			"profileDescription": "Sadece bu profil için özel eşik (küresel varsayılanı geçersiz kılar)",
+			"inheritDescription": "Bu profil küresel varsayılan eşiği miras alır ({{threshold}}%)",
+			"usesGlobal": "(küresel {{threshold}}% kullanır)"
 		}
 	},
 	"terminal": {
@@ -493,9 +527,13 @@
 			"name": "Eşzamanlı dosya okumayı etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo tek bir istekte birden fazla dosya okuyabilir. Devre dışı bırakıldığında, Roo dosyaları birer birer okumalıdır. Daha az yetenekli modellerle çalışırken veya dosya erişimi üzerinde daha fazla kontrol istediğinizde devre dışı bırakmak yardımcı olabilir."
 		},
-		"DISABLE_COMPLETION_COMMAND": {
-			"name": "attempt_completion'da komut yürütmeyi devre dışı bırak",
-			"description": "Etkinleştirildiğinde, attempt_completion aracı komutları yürütmez. Bu, görev tamamlandığında komut yürütmenin kullanımdan kaldırılmasına hazırlanmak için deneysel bir özelliktir."
+		"MARKETPLACE": {
+			"name": "Marketplace'i Etkinleştir",
+			"description": "Etkinleştirildiğinde, Marketplace'ten MCP'leri ve özel modları yükleyebilirsiniz."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Eşzamanlı dosya düzenlemelerini etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo tek bir istekte birden fazla dosyayı düzenleyebilir. Devre dışı bırakıldığında, Roo dosyaları tek tek düzenlemek zorundadır. Bunu devre dışı bırakmak, daha az yetenekli modellerle çalışırken veya dosya değişiklikleri üzerinde daha fazla kontrol istediğinde yardımcı olabilir."
 		}
 	},
 	"promptCaching": {
@@ -601,5 +639,7 @@
 	"labels": {
 		"customArn": "Özel ARN",
 		"useCustomArn": "Özel ARN kullan..."
-	}
+	},
+	"includeMaxOutputTokens": "Maksimum çıktı tokenlerini dahil et",
+	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir."
 }

@@ -13,6 +13,8 @@ import { BaseTelemetryClient } from "./BaseTelemetryClient"
 export class PostHogTelemetryClient extends BaseTelemetryClient {
 	private client?: PostHog
 	private distinctId: string = vscode.env.machineId
+	// Git repository properties that should be filtered out
+	private readonly gitPropertyNames = ["repositoryUrl", "repositoryName", "defaultBranch"]
 
 	constructor(debug = false) {
 		super(
@@ -29,6 +31,19 @@ export class PostHogTelemetryClient extends BaseTelemetryClient {
 		} else {
 			console.warn("[PostHogTelemetryClient] POSTHOG_API_KEY is not set. Telemetry will be disabled.")
 		}
+	}
+
+	/**
+	 * Filter out git repository properties for PostHog telemetry
+	 * @param propertyName The property name to check
+	 * @returns Whether the property should be included in telemetry events
+	 */
+	protected override isPropertyCapturable(propertyName: string): boolean {
+		// Filter out git repository properties
+		if (this.gitPropertyNames.includes(propertyName)) {
+			return false
+		}
+		return true
 	}
 
 	public override async capture(event: TelemetryEvent): Promise<void> {

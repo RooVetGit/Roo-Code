@@ -15,6 +15,7 @@ import { Task } from "../../core/task/Task"
 import { DecorationController } from "./DecorationController"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
+export const DIFF_VIEW_LABEL_CHANGES = "Original ↔ Roo's Changes"
 
 // TODO: https://github.com/cline/cline/pull/3354
 export class DiffViewProvider {
@@ -129,7 +130,8 @@ export class DiffViewProvider {
 		// Replace all content up to the current line with accumulated lines.
 		const edit = new vscode.WorkspaceEdit()
 		const rangeToReplace = new vscode.Range(0, 0, endLine, 0)
-		const contentToReplace = accumulatedLines.slice(0, endLine + 1).join("\n") + "\n"
+		const contentToReplace =
+			accumulatedLines.slice(0, endLine).join("\n") + (accumulatedLines.length > 0 ? "\n" : "")
 		edit.replace(document.uri, rangeToReplace, this.stripAllBOMs(contentToReplace))
 		await vscode.workspace.applyEdit(edit)
 		// Update decorations.
@@ -231,12 +233,11 @@ export class DiffViewProvider {
 		// show a diff with all the EOL differences.
 		const newContentEOL = this.newContent.includes("\r\n") ? "\r\n" : "\n"
 
-		// `trimEnd` to fix issue where editor adds in extra new line
-		// automatically.
-		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
+		// Normalize EOL characters without trimming content
+		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL)
 
 		// Just in case the new content has a mix of varying EOL characters.
-		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
+		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL)
 
 		if (normalizedEditedContent !== normalizedNewContent) {
 			// User made changes before approving edit.
@@ -351,10 +352,7 @@ export class DiffViewProvider {
 			// Remove only the directories we created, in reverse order.
 			for (let i = this.createdDirs.length - 1; i >= 0; i--) {
 				await fs.rmdir(this.createdDirs[i])
-				console.log(`Directory ${this.createdDirs[i]} has been deleted.`)
 			}
-
-			console.log(`File ${absolutePath} has been deleted.`)
 		} else {
 			// Revert document.
 			const edit = new vscode.WorkspaceEdit()
@@ -371,7 +369,6 @@ export class DiffViewProvider {
 			// changes and saved during the edit.
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
-			console.log(`File ${absolutePath} has been reverted to its original content.`)
 
 			if (this.documentWasOpen) {
 				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
@@ -390,12 +387,25 @@ export class DiffViewProvider {
 	private async closeAllDiffViews(): Promise<void> {
 		const closeOps = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
-			.filter(
-				(tab) =>
+			.filter((tab) => {
+				// Check for standard diff views with our URI scheme
+				if (
 					tab.input instanceof vscode.TabInputTextDiff &&
 					tab.input.original.scheme === DIFF_VIEW_URI_SCHEME &&
-					!tab.isDirty,
-			)
+					!tab.isDirty
+				) {
+					return true
+				}
+
+				// Also check by tab label for our specific diff views
+				// This catches cases where the diff view might be created differently
+				// when files are pre-opened as text documents
+				if (tab.label.includes(DIFF_VIEW_LABEL_CHANGES) && !tab.isDirty) {
+					return true
+				}
+
+				return false
+			})
 			.map((tab) =>
 				vscode.window.tabGroups.close(tab).then(
 					() => undefined,
@@ -410,7 +420,9 @@ export class DiffViewProvider {
 
 	private async openDiffEditor(): Promise<vscode.TextEditor> {
 		if (!this.relPath) {
-			throw new Error("No file path set")
+			throw new Error(
+				"No file path set for opening diff editor. Ensure open() was called before openDiffEditor()",
+			)
 		}
 
 		const uri = vscode.Uri.file(path.resolve(this.cwd, this.relPath))
@@ -436,29 +448,86 @@ export class DiffViewProvider {
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
 			const fileName = path.basename(uri.fsPath)
 			const fileExists = this.editType === "modify"
+			const DIFF_EDITOR_TIMEOUT = 10_000 // ms
 
-			const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
-				if (editor && arePathsEqual(editor.document.uri.fsPath, uri.fsPath)) {
-					disposable.dispose()
-					resolve(editor)
+			let timeoutId: NodeJS.Timeout | undefined
+			const disposables: vscode.Disposable[] = []
+
+			const cleanup = () => {
+				if (timeoutId) {
+					clearTimeout(timeoutId)
+					timeoutId = undefined
 				}
-			})
+				disposables.forEach((d) => d.dispose())
+				disposables.length = 0
+			}
 
-			vscode.commands.executeCommand(
-				"vscode.diff",
-				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-					query: Buffer.from(this.originalContent ?? "").toString("base64"),
+			// Set timeout for the entire operation
+			timeoutId = setTimeout(() => {
+				cleanup()
+				reject(
+					new Error(
+						`Failed to open diff editor for ${uri.fsPath} within ${DIFF_EDITOR_TIMEOUT / 1000} seconds. The editor may be blocked or VS Code may be unresponsive.`,
+					),
+				)
+			}, DIFF_EDITOR_TIMEOUT)
+
+			// Listen for document open events - more efficient than scanning all tabs
+			disposables.push(
+				vscode.workspace.onDidOpenTextDocument(async (document) => {
+					if (arePathsEqual(document.uri.fsPath, uri.fsPath)) {
+						// Wait a tick for the editor to be available
+						await new Promise((r) => setTimeout(r, 0))
+
+						// Find the editor for this document
+						const editor = vscode.window.visibleTextEditors.find((e) =>
+							arePathsEqual(e.document.uri.fsPath, uri.fsPath),
+						)
+
+						if (editor) {
+							cleanup()
+							resolve(editor)
+						}
+					}
 				}),
-				uri,
-				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
-				{ preserveFocus: true },
 			)
 
-			// This may happen on very slow machines i.e. project idx.
-			setTimeout(() => {
-				disposable.dispose()
-				reject(new Error("Failed to open diff editor, please try again..."))
-			}, 10_000)
+			// Also listen for visible editor changes as a fallback
+			disposables.push(
+				vscode.window.onDidChangeVisibleTextEditors((editors) => {
+					const editor = editors.find((e) => arePathsEqual(e.document.uri.fsPath, uri.fsPath))
+					if (editor) {
+						cleanup()
+						resolve(editor)
+					}
+				}),
+			)
+
+			// Pre-open the file as a text document to ensure it doesn't open in preview mode
+			// This fixes issues with files that have custom editor associations (like markdown preview)
+			vscode.window
+				.showTextDocument(uri, { preview: false, viewColumn: vscode.ViewColumn.Active })
+				.then(() => {
+					// Execute the diff command after ensuring the file is open as text
+					return vscode.commands.executeCommand(
+						"vscode.diff",
+						vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+							query: Buffer.from(this.originalContent ?? "").toString("base64"),
+						}),
+						uri,
+						`${fileName}: ${fileExists ? `${DIFF_VIEW_LABEL_CHANGES}` : "New File"} (Editable)`,
+						{ preserveFocus: true },
+					)
+				})
+				.then(
+					() => {
+						// Command executed successfully, now wait for the editor to appear
+					},
+					(err: any) => {
+						cleanup()
+						reject(new Error(`Failed to execute diff command for ${uri.fsPath}: ${err.message}`))
+					},
+				)
 		})
 	}
 

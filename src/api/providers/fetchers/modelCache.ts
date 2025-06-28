@@ -2,6 +2,7 @@ import * as path from "path"
 import fs from "fs/promises"
 
 import NodeCache from "node-cache"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ContextProxy } from "../../../core/config/ContextProxy"
 import { getCacheDirectoryPath } from "../../../utils/storage"
@@ -14,12 +15,15 @@ import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
 import { getLiteLLMModels } from "./litellm"
 import { GetModelsOptions } from "../../../shared/api"
+import { getOllamaModels } from "./ollama"
+import { getLMStudioModels } from "./lmstudio"
+
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
 async function writeModels(router: RouterName, data: ModelRecord) {
 	const filename = `${router}_models.json`
 	const cacheDir = await getCacheDirectoryPath(ContextProxy.instance.globalStorageUri.fsPath)
-	await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
+	await safeWriteJson(path.join(cacheDir, filename), data)
 }
 
 async function readModels(router: RouterName): Promise<ModelRecord | undefined> {
@@ -67,6 +71,12 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 			case "litellm":
 				// Type safety ensures apiKey and baseUrl are always provided for litellm
 				models = await getLiteLLMModels(options.apiKey, options.baseUrl)
+				break
+			case "ollama":
+				models = await getOllamaModels(options.baseUrl)
+				break
+			case "lmstudio":
+				models = await getLMStudioModels(options.baseUrl)
 				break
 			default: {
 				// Ensures router is exhaustively checked if RouterName is a strict union

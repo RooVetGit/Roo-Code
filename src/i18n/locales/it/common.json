@@ -24,6 +24,11 @@
 	},
 	"errors": {
 		"invalid_data_uri": "Formato URI dati non valido",
+		"error_copying_image": "Errore durante la copia dell'immagine: {{errorMessage}}",
+		"error_saving_image": "Errore durante il salvataggio dell'immagine: {{errorMessage}}",
+		"error_opening_image": "Errore durante l'apertura dell'immagine: {{error}}",
+		"could_not_open_file": "Impossibile aprire il file: {{errorMessage}}",
+		"could_not_open_file_generic": "Impossibile aprire il file!",
 		"checkpoint_timeout": "Timeout durante il tentativo di ripristinare il checkpoint.",
 		"checkpoint_failed": "Impossibile ripristinare il checkpoint.",
 		"no_workspace": "Per favore, apri prima una cartella di progetto",
@@ -54,7 +59,27 @@
 		"condense_handler_invalid": "Il gestore API per condensare il contesto non è valido",
 		"condense_context_grew": "La dimensione del contesto è aumentata durante la condensazione; questo tentativo viene saltato",
 		"share_task_failed": "Condivisione dell'attività fallita. Riprova.",
-		"share_no_active_task": "Nessuna attività attiva da condividere"
+		"share_no_active_task": "Nessuna attività attiva da condividere",
+		"share_auth_required": "Autenticazione richiesta. Accedi per condividere le attività.",
+		"share_not_enabled": "La condivisione delle attività non è abilitata per questa organizzazione.",
+		"share_task_not_found": "Attività non trovata o accesso negato.",
+		"claudeCode": {
+			"processExited": "Il processo Claude Code è terminato con codice {{exitCode}}.",
+			"errorOutput": "Output di errore: {{output}}",
+			"processExitedWithError": "Il processo Claude Code è terminato con codice {{exitCode}}. Output di errore: {{output}}",
+			"stoppedWithReason": "Claude Code si è fermato per il motivo: {{reason}}",
+			"apiKeyModelPlanMismatch": "Le chiavi API e i piani di abbonamento consentono modelli diversi. Assicurati che il modello selezionato sia incluso nel tuo piano."
+		},
+		"geminiCli": {
+			"oauthLoadFailed": "Impossibile caricare le credenziali OAuth. Autenticati prima: {{error}}",
+			"tokenRefreshFailed": "Impossibile aggiornare il token OAuth: {{error}}",
+			"onboardingTimeout": "L'operazione di onboarding è scaduta dopo 60 secondi. Riprova più tardi.",
+			"projectDiscoveryFailed": "Impossibile scoprire l'ID del progetto. Assicurati di essere autenticato con 'gemini auth'.",
+			"rateLimitExceeded": "Limite di velocità superato. I limiti del livello gratuito sono stati raggiunti.",
+			"badRequest": "Richiesta non valida: {{details}}",
+			"apiError": "Errore API Gemini CLI: {{error}}",
+			"completionError": "Errore di completamento Gemini CLI: {{error}}"
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "Nessun contenuto del terminale selezionato",
@@ -67,7 +92,11 @@
 		"custom_storage_path_set": "Percorso di archiviazione personalizzato impostato: {{path}}",
 		"default_storage_path": "Tornato al percorso di archiviazione predefinito",
 		"settings_imported": "Impostazioni importate con successo.",
-		"share_link_copied": "Link di condivisione copiato negli appunti"
+		"share_link_copied": "Link di condivisione copiato negli appunti",
+		"image_copied_to_clipboard": "URI dati dell'immagine copiato negli appunti",
+		"image_saved": "Immagine salvata in {{path}}",
+		"organization_share_link_copied": "Link di condivisione organizzazione copiato negli appunti!",
+		"public_share_link_copied": "Link di condivisione pubblica copiato negli appunti!"
 	},
 	"answers": {
 		"yes": "Sì",
@@ -78,7 +107,9 @@
 	},
 	"tasks": {
 		"canceled": "Errore attività: È stata interrotta e annullata dall'utente.",
-		"deleted": "Fallimento attività: È stata interrotta ed eliminata dall'utente."
+		"deleted": "Fallimento attività: È stata interrotta ed eliminata dall'utente.",
+		"incomplete": "Attività #{{taskNumber}} (Incompleta)",
+		"no_messages": "Attività #{{taskNumber}} (Nessun messaggio)"
 	},
 	"storage": {
 		"prompt_custom_path": "Inserisci il percorso di archiviazione personalizzato per la cronologia delle conversazioni, lascia vuoto per utilizzare la posizione predefinita",
@@ -93,7 +124,31 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Chiave API Groq",
-			"getGroqApiKey": "Ottieni chiave API Groq"
+			"getGroqApiKey": "Ottieni chiave API Groq",
+			"claudeCode": {
+				"pathLabel": "Percorso Claude Code",
+				"description": "Percorso opzionale alla tua CLI Claude Code. Predefinito 'claude' se non impostato.",
+				"placeholder": "Predefinito: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": "YAML non valido nel file .roomodes alla riga {{line}}. Controlla:\n• Indentazione corretta (usa spazi, non tab)\n• Virgolette e parentesi corrispondenti\n• Sintassi YAML valida",
+			"schemaValidationError": "Formato modalità personalizzate non valido in .roomodes:\n{{issues}}",
+			"invalidFormat": "Formato modalità personalizzate non valido. Assicurati che le tue impostazioni seguano il formato YAML corretto.",
+			"updateFailed": "Aggiornamento modalità personalizzata fallito: {{error}}",
+			"deleteFailed": "Eliminazione modalità personalizzata fallita: {{error}}",
+			"resetFailed": "Reset modalità personalizzate fallito: {{error}}",
+			"modeNotFound": "Errore di scrittura: Modalità non trovata",
+			"noWorkspaceForProject": "Nessuna cartella workspace trovata per la modalità specifica del progetto"
+		}
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "La tua organizzazione richiede l'autenticazione Roo Code Cloud. Accedi per continuare.",
+			"organization_mismatch": "Devi essere autenticato con l'account Roo Code Cloud della tua organizzazione.",
+			"verification_failed": "Impossibile verificare l'autenticazione dell'organizzazione."
 		}
 	}
 }

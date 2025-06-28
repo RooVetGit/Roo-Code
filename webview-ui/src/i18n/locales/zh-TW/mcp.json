@@ -18,7 +18,8 @@
 	"tool": {
 		"alwaysAllow": "總是允許",
 		"parameters": "參數",
-		"noDescription": "無說明"
+		"noDescription": "無說明",
+		"togglePromptInclusion": "切換在提示中的包含"
 	},
 	"tabs": {
 		"tools": "工具",
@@ -54,5 +55,10 @@
 		"retrying": "重試中...",
 		"retryConnection": "重試連線"
 	},
-	"refreshMCP": "重新整理 MCP 伺服器"
+	"refreshMCP": "重新整理 MCP 伺服器",
+	"execution": {
+		"running": "執行中",
+		"completed": "已完成",
+		"error": "錯誤"
+	}
 }

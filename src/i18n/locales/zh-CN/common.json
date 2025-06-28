@@ -23,7 +23,17 @@
 		"this_and_subsequent": "此消息及所有后续消息"
 	},
 	"errors": {
-		"invalid_data_uri": "数据URI格式无效",
+		"invalid_mcp_config": "项目MCP配置格式无效",
+		"invalid_mcp_settings_format": "MCP设置JSON格式无效。请确保您的设置遵循正确的JSON格式。",
+		"invalid_mcp_settings_syntax": "MCP设置JSON格式无效。请检查您的设置文件是否有语法错误。",
+		"invalid_mcp_settings_validation": "MCP设置格式无效：{{errorMessages}}",
+		"failed_initialize_project_mcp": "初始化项目MCP服务器失败：{{error}}",
+		"invalid_data_uri": "数据 URI 格式无效",
+		"error_copying_image": "复制图片时出错：{{errorMessage}}",
+		"error_saving_image": "保存图片时出错：{{errorMessage}}",
+		"error_opening_image": "打开图片时出错：{{error}}",
+		"could_not_open_file": "无法打开文件：{{errorMessage}}",
+		"could_not_open_file_generic": "无法打开文件！",
 		"checkpoint_timeout": "尝试恢复检查点时超时。",
 		"checkpoint_failed": "恢复检查点失败。",
 		"no_workspace": "请先打开项目文件夹",
@@ -54,7 +64,27 @@
 		"condense_handler_invalid": "压缩上下文的API处理程序无效",
 		"condense_context_grew": "压缩过程中上下文大小增加；跳过此次尝试",
 		"share_task_failed": "分享任务失败。请重试。",
-		"share_no_active_task": "没有活跃任务可分享"
+		"share_no_active_task": "没有活跃任务可分享",
+		"share_auth_required": "需要身份验证。请登录以分享任务。",
+		"share_not_enabled": "此组织未启用任务分享功能。",
+		"share_task_not_found": "未找到任务或访问被拒绝。",
+		"claudeCode": {
+			"processExited": "Claude Code 进程退出，退出码：{{exitCode}}。",
+			"errorOutput": "错误输出：{{output}}",
+			"processExitedWithError": "Claude Code 进程退出，退出码：{{exitCode}}。错误输出：{{output}}",
+			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
+			"apiKeyModelPlanMismatch": "API 密钥和订阅计划支持不同的模型。请确保所选模型包含在您的计划中。"
+		},
+		"geminiCli": {
+			"oauthLoadFailed": "加载 OAuth 凭据失败。请先进行身份验证：{{error}}",
+			"tokenRefreshFailed": "刷新 OAuth Token 失败：{{error}}",
+			"onboardingTimeout": "入门操作在 60 秒后超时。请稍后重试。",
+			"projectDiscoveryFailed": "无法发现项目 ID。请确保已使用 'gemini auth' 进行身份验证。",
+			"rateLimitExceeded": "API 请求频率限制已超出。免费层级限制已达到。",
+			"badRequest": "请求错误：{{details}}",
+			"apiError": "Gemini CLI API 错误：{{error}}",
+			"completionError": "Gemini CLI 补全错误：{{error}}"
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "没有选择终端内容",
@@ -67,7 +97,11 @@
 		"custom_storage_path_set": "自定义存储路径已设置：{{path}}",
 		"default_storage_path": "已恢复使用默认存储路径",
 		"settings_imported": "设置已成功导入。",
-		"share_link_copied": "分享链接已复制到剪贴板"
+		"share_link_copied": "分享链接已复制到剪贴板",
+		"image_copied_to_clipboard": "图片数据 URI 已复制到剪贴板",
+		"image_saved": "图片已保存到 {{path}}",
+		"organization_share_link_copied": "组织分享链接已复制到剪贴板！",
+		"public_share_link_copied": "公开分享链接已复制到剪贴板！"
 	},
 	"answers": {
 		"yes": "是",
@@ -78,7 +112,9 @@
 	},
 	"tasks": {
 		"canceled": "任务错误：它已被用户停止并取消。",
-		"deleted": "任务失败：它已被用户停止并删除。"
+		"deleted": "任务失败：它已被用户停止并删除。",
+		"incomplete": "任务 #{{taskNumber}} (未完成)",
+		"no_messages": "任务 #{{taskNumber}} (无消息)"
 	},
 	"storage": {
 		"prompt_custom_path": "输入自定义会话历史存储路径，留空以使用默认位置",
@@ -93,7 +129,31 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API 密钥",
-			"getGroqApiKey": "获取 Groq API 密钥"
+			"getGroqApiKey": "获取 Groq API 密钥",
+			"claudeCode": {
+				"pathLabel": "Claude Code 路径",
+				"description": "Claude Code CLI 的可选路径。如果未设置，默认为 'claude'。",
+				"placeholder": "默认: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": ".roomodes 文件第 {{line}} 行 YAML 格式无效。请检查：\n• 正确的缩进（使用空格，不要使用制表符）\n• 匹配的引号和括号\n• 有效的 YAML 语法",
+			"schemaValidationError": ".roomodes 中自定义模式格式无效：\n{{issues}}",
+			"invalidFormat": "自定义模式格式无效。请确保你的设置遵循正确的 YAML 格式。",
+			"updateFailed": "更新自定义模式失败：{{error}}",
+			"deleteFailed": "删除自定义模式失败：{{error}}",
+			"resetFailed": "重置自定义模式失败：{{error}}",
+			"modeNotFound": "写入错误：未找到模式",
+			"noWorkspaceForProject": "未找到项目特定模式的工作区文件夹"
+		}
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "您的组织需要 Roo Code Cloud 身份验证。请登录以继续。",
+			"organization_mismatch": "您必须使用组织的 Roo Code Cloud 账户进行身份验证。",
+			"verification_failed": "无法验证组织身份验证。"
 		}
 	}
 }

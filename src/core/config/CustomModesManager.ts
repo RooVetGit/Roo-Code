@@ -3,13 +3,16 @@ import * as path from "path"
 import * as fs from "fs/promises"
 
 import * as yaml from "yaml"
+import stripBom from "strip-bom"
 
 import { type ModeConfig, customModesSettingsSchema } from "@roo-code/types"
 
 import { fileExistsAtPath } from "../../utils/fs"
-import { arePathsEqual, getWorkspacePath } from "../../utils/path"
+import { getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
+import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
+import { t } from "../../i18n"
 
 const ROOMODES_FILENAME = ".roomodes"
 
@@ -26,8 +29,9 @@ export class CustomModesManager {
 		private readonly context: vscode.ExtensionContext,
 		private readonly onUpdate: () => Promise<void>,
 	) {
-		// TODO: We really shouldn't have async methods in the constructor.
-		this.watchCustomModesFiles()
+		this.watchCustomModesFiles().catch((error) => {
+			console.error("[CustomModesManager] Failed to setup file watchers:", error)
+		})
 	}
 
 	private async queueWrite(operation: () => Promise<void>): Promise<void> {
@@ -71,12 +75,99 @@ export class CustomModesManager {
 		return exists ? roomodesPath : undefined
 	}
 
+	/**
+	 * Regex pattern for problematic characters that need to be cleaned from YAML content
+	 * Includes:
+	 * - \u00A0: Non-breaking space
+	 * - \u200B-\u200D: Zero-width spaces and joiners
+	 * - \u2010-\u2015, \u2212: Various dash characters
+	 * - \u2018-\u2019: Smart single quotes
+	 * - \u201C-\u201D: Smart double quotes
+	 */
+	private static readonly PROBLEMATIC_CHARS_REGEX =
+		// eslint-disable-next-line no-misleading-character-class
+		/[\u00A0\u200B\u200C\u200D\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u2018\u2019\u201C\u201D]/g
+
+	/**
+	 * Clean invisible and problematic characters from YAML content
+	 */
+	private cleanInvisibleCharacters(content: string): string {
+		// Single pass replacement for all problematic characters
+		return content.replace(CustomModesManager.PROBLEMATIC_CHARS_REGEX, (match) => {
+			switch (match) {
+				case "\u00A0": // Non-breaking space
+					return " "
+				case "\u200B": // Zero-width space
+				case "\u200C": // Zero-width non-joiner
+				case "\u200D": // Zero-width joiner
+					return ""
+				case "\u2018": // Left single quotation mark
+				case "\u2019": // Right single quotation mark
+					return "'"
+				case "\u201C": // Left double quotation mark
+				case "\u201D": // Right double quotation mark
+					return '"'
+				default: // Dash characters (U+2010 through U+2015, U+2212)
+					return "-"
+			}
+		})
+	}
+
+	/**
+	 * Parse YAML content with enhanced error handling and preprocessing
+	 */
+	private parseYamlSafely(content: string, filePath: string): any {
+		// Clean the content
+		let cleanedContent = stripBom(content)
+		cleanedContent = this.cleanInvisibleCharacters(cleanedContent)
+
+		try {
+			return yaml.parse(cleanedContent)
+		} catch (yamlError) {
+			// For .roomodes files, try JSON as fallback
+			if (filePath.endsWith(ROOMODES_FILENAME)) {
+				try {
+					// Try parsing the original content as JSON (not the cleaned content)
+					return JSON.parse(content)
+				} catch (jsonError) {
+					// JSON also failed, show the original YAML error
+					const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
+					console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
+
+					const lineMatch = errorMsg.match(/at line (\d+)/)
+					const line = lineMatch ? lineMatch[1] : "unknown"
+					vscode.window.showErrorMessage(t("common:customModes.errors.yamlParseError", { line }))
+
+					// Return empty object to prevent duplicate error handling
+					return {}
+				}
+			}
+
+			// For non-.roomodes files, just log and return empty object
+			const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
+			console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
+			return {}
+		}
+	}
+
 	private async loadModesFromFile(filePath: string): Promise<ModeConfig[]> {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
-			const settings = yaml.parse(content)
+			const settings = this.parseYamlSafely(content, filePath)
 			const result = customModesSettingsSchema.safeParse(settings)
+
 			if (!result.success) {
+				console.error(`[CustomModesManager] Schema validation failed for ${filePath}:`, result.error)
+
+				// Show user-friendly error for .roomodes files
+				if (filePath.endsWith(ROOMODES_FILENAME)) {
+					const issues = result.error.issues
+						.map((issue) => `• ${issue.path.join(".")}: ${issue.message}`)
+						.join("\n")
+
+					vscode.window.showErrorMessage(t("common:customModes.errors.schemaValidationError", { issues }))
+				}
+
 				return []
 			}
 
@@ -87,8 +178,11 @@ export class CustomModesManager {
 			// Add source to each mode
 			return result.data.customModes.map((mode) => ({ ...mode, source }))
 		} catch (error) {
-			const errorMsg = `Failed to load modes from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
-			console.error(`[CustomModesManager] ${errorMsg}`)
+			// Only log if the error wasn't already handled in parseYamlSafely
+			if (!(error as any).alreadyHandled) {
+				const errorMsg = `Failed to load modes from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+				console.error(`[CustomModesManager] ${errorMsg}`)
+			}
 			return []
 		}
 	}
@@ -117,76 +211,109 @@ export class CustomModesManager {
 	}
 
 	public async getCustomModesFilePath(): Promise<string> {
-		const settingsDir = await this.ensureSettingsDirectoryExists()
+		const settingsDir = await ensureSettingsDirectoryExists(this.context)
 		const filePath = path.join(settingsDir, GlobalFileNames.customModes)
 		const fileExists = await fileExistsAtPath(filePath)
 
 		if (!fileExists) {
-			await this.queueWrite(() => fs.writeFile(filePath, yaml.stringify({ customModes: [] })))
+			await this.queueWrite(() => fs.writeFile(filePath, yaml.stringify({ customModes: [] }, { lineWidth: 0 })))
 		}
 
 		return filePath
 	}
 
 	private async watchCustomModesFiles(): Promise<void> {
+		// Skip if test environment is detected
+		if (process.env.NODE_ENV === "test") {
+			return
+		}
+
 		const settingsPath = await this.getCustomModesFilePath()
 
 		// Watch settings file
-		this.disposables.push(
-			vscode.workspace.onDidSaveTextDocument(async (document) => {
-				if (arePathsEqual(document.uri.fsPath, settingsPath)) {
-					const content = await fs.readFile(settingsPath, "utf-8")
+		const settingsWatcher = vscode.workspace.createFileSystemWatcher(settingsPath)
 
-					const errorMessage =
-						"Invalid custom modes format. Please ensure your settings follow the correct YAML format."
+		const handleSettingsChange = async () => {
+			try {
+				// Ensure that the settings file exists (especially important for delete events)
+				await this.getCustomModesFilePath()
+				const content = await fs.readFile(settingsPath, "utf-8")
 
-					let config: any
+				const errorMessage = t("common:customModes.errors.invalidFormat")
 
-					try {
-						config = yaml.parse(content)
-					} catch (error) {
-						console.error(error)
-						vscode.window.showErrorMessage(errorMessage)
-						return
-					}
+				let config: any
 
-					const result = customModesSettingsSchema.safeParse(config)
+				try {
+					config = this.parseYamlSafely(content, settingsPath)
+				} catch (error) {
+					console.error(error)
+					vscode.window.showErrorMessage(errorMessage)
+					return
+				}
 
-					if (!result.success) {
-						vscode.window.showErrorMessage(errorMessage)
-						return
-					}
+				const result = customModesSettingsSchema.safeParse(config)
 
-					// Get modes from .roomodes if it exists (takes precedence)
-					const roomodesPath = await this.getWorkspaceRoomodes()
-					const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
+				if (!result.success) {
+					vscode.window.showErrorMessage(errorMessage)
+					return
+				}
 
-					// Merge modes from both sources (.roomodes takes precedence)
-					const mergedModes = await this.mergeCustomModes(roomodesModes, result.data.customModes)
+				// Get modes from .roomodes if it exists (takes precedence)
+				const roomodesPath = await this.getWorkspaceRoomodes()
+				const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
+
+				// Merge modes from both sources (.roomodes takes precedence)
+				const mergedModes = await this.mergeCustomModes(roomodesModes, result.data.customModes)
+				await this.context.globalState.update("customModes", mergedModes)
+				this.clearCache()
+				await this.onUpdate()
+			} catch (error) {
+				console.error(`[CustomModesManager] Error handling settings file change:`, error)
+			}
+		}
+
+		this.disposables.push(settingsWatcher.onDidChange(handleSettingsChange))
+		this.disposables.push(settingsWatcher.onDidCreate(handleSettingsChange))
+		this.disposables.push(settingsWatcher.onDidDelete(handleSettingsChange))
+		this.disposables.push(settingsWatcher)
+
+		// Watch .roomodes file - watch the path even if it doesn't exist yet
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		if (workspaceFolders && workspaceFolders.length > 0) {
+			const workspaceRoot = getWorkspacePath()
+			const roomodesPath = path.join(workspaceRoot, ROOMODES_FILENAME)
+			const roomodesWatcher = vscode.workspace.createFileSystemWatcher(roomodesPath)
+
+			const handleRoomodesChange = async () => {
+				try {
+					const settingsModes = await this.loadModesFromFile(settingsPath)
+					const roomodesModes = await this.loadModesFromFile(roomodesPath)
+					// .roomodes takes precedence
+					const mergedModes = await this.mergeCustomModes(roomodesModes, settingsModes)
 					await this.context.globalState.update("customModes", mergedModes)
 					this.clearCache()
 					await this.onUpdate()
+				} catch (error) {
+					console.error(`[CustomModesManager] Error handling .roomodes file change:`, error)
 				}
-			}),
-		)
+			}
 
-		// Watch .roomodes file if it exists
-		const roomodesPath = await this.getWorkspaceRoomodes()
-
-		if (roomodesPath) {
+			this.disposables.push(roomodesWatcher.onDidChange(handleRoomodesChange))
+			this.disposables.push(roomodesWatcher.onDidCreate(handleRoomodesChange))
 			this.disposables.push(
-				vscode.workspace.onDidSaveTextDocument(async (document) => {
-					if (arePathsEqual(document.uri.fsPath, roomodesPath)) {
+				roomodesWatcher.onDidDelete(async () => {
+					// When .roomodes is deleted, refresh with only settings modes
+					try {
 						const settingsModes = await this.loadModesFromFile(settingsPath)
-						const roomodesModes = await this.loadModesFromFile(roomodesPath)
-						// .roomodes takes precedence
-						const mergedModes = await this.mergeCustomModes(roomodesModes, settingsModes)
-						await this.context.globalState.update("customModes", mergedModes)
+						await this.context.globalState.update("customModes", settingsModes)
 						this.clearCache()
 						await this.onUpdate()
+					} catch (error) {
+						console.error(`[CustomModesManager] Error handling .roomodes file deletion:`, error)
 					}
 				}),
 			)
+			this.disposables.push(roomodesWatcher)
 		}
 	}
 
@@ -248,7 +375,7 @@ export class CustomModesManager {
 
 				if (!workspaceFolders || workspaceFolders.length === 0) {
 					logger.error("Failed to update project mode: No workspace folder found", { slug })
-					throw new Error("No workspace folder found for project-specific mode")
+					throw new Error(t("common:customModes.errors.noWorkspaceForProject"))
 				}
 
 				const workspaceRoot = getWorkspacePath()
@@ -282,7 +409,7 @@ export class CustomModesManager {
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			logger.error("Failed to update custom mode", { slug, error: errorMessage })
-			vscode.window.showErrorMessage(`Failed to update custom mode: ${errorMessage}`)
+			vscode.window.showErrorMessage(t("common:customModes.errors.updateFailed", { error: errorMessage }))
 		}
 	}
 
@@ -293,20 +420,20 @@ export class CustomModesManager {
 			content = await fs.readFile(filePath, "utf-8")
 		} catch (error) {
 			// File might not exist yet.
-			content = yaml.stringify({ customModes: [] })
+			content = yaml.stringify({ customModes: [] }, { lineWidth: 0 })
 		}
 
 		let settings
 
 		try {
-			settings = yaml.parse(content)
+			settings = this.parseYamlSafely(content, filePath)
 		} catch (error) {
-			console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, error)
+			// Error already logged in parseYamlSafely
 			settings = { customModes: [] }
 		}
 
 		settings.customModes = operation(settings.customModes || [])
-		await fs.writeFile(filePath, yaml.stringify(settings), "utf-8")
+		await fs.writeFile(filePath, yaml.stringify(settings, { lineWidth: 0 }), "utf-8")
 	}
 
 	private async refreshMergedState(): Promise<void> {
@@ -337,7 +464,7 @@ export class CustomModesManager {
 			const globalMode = settingsModes.find((m) => m.slug === slug)
 
 			if (!projectMode && !globalMode) {
-				throw new Error("Write error: Mode not found")
+				throw new Error(t("common:customModes.errors.modeNotFound"))
 			}
 
 			await this.queueWrite(async () => {
@@ -356,29 +483,21 @@ export class CustomModesManager {
 				await this.refreshMergedState()
 			})
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to delete custom mode: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(t("common:customModes.errors.deleteFailed", { error: errorMessage }))
 		}
-	}
-
-	private async ensureSettingsDirectoryExists(): Promise<string> {
-		const settingsDir = path.join(this.context.globalStorageUri.fsPath, "settings")
-		await fs.mkdir(settingsDir, { recursive: true })
-		return settingsDir
 	}
 
 	public async resetCustomModes(): Promise<void> {
 		try {
 			const filePath = await this.getCustomModesFilePath()
-			await fs.writeFile(filePath, yaml.stringify({ customModes: [] }))
+			await fs.writeFile(filePath, yaml.stringify({ customModes: [] }, { lineWidth: 0 }))
 			await this.context.globalState.update("customModes", [])
 			this.clearCache()
 			await this.onUpdate()
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to reset custom modes: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(t("common:customModes.errors.resetFailed", { error: errorMessage }))
 		}
 	}
 
