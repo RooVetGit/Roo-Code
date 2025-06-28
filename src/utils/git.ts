@@ -90,11 +90,6 @@ export async function getGitRepositoryInfo(workspaceRoot: string): Promise<GitRe
 }
 
 /**
- * Sanitizes a git URL to remove sensitive information like tokens
- * @param url The original git URL
- * @returns Sanitized URL
- */
-/**
  * Converts a git URL to HTTPS format
  * @param url The git URL to convert
  * @returns The URL in HTTPS format, or the original URL if conversion is not possible
