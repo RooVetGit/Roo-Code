@@ -96,7 +96,7 @@ function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
 	const args = ["--files", "--hidden", "--follow"]
 
 	if (recursive) {
-		return [...args, ...buildRecursiveArgs(), dirPath]
+		return [...args, ...buildRecursiveArgs(dirPath), dirPath]
 	} else {
 		return [...args, ...buildNonRecursiveArgs(), dirPath]
 	}
@@ -105,25 +105,31 @@ function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
 /**
  * Build ripgrep arguments for recursive directory traversal
  */
-function buildRecursiveArgs(): string[] {
+function buildRecursiveArgs(dirPath: string): string[] {
 	const args: string[] = []
 
 	// In recursive mode, respect .gitignore by default
 	// (ripgrep does this automatically)
 
+	// Check if we're explicitly targeting a hidden directory
+	const targetDirName = path.basename(dirPath)
+	const isTargetingHiddenDir = targetDirName.startsWith(".")
+
 	// Apply directory exclusions for recursive searches
 	for (const dir of DIRS_TO_IGNORE) {
 		// Special handling for hidden directories pattern
 		if (dir === ".*") {
-			// Don't exclude hidden directories at the ripgrep level for recursive mode
+			// Only exclude hidden directories if we're not explicitly targeting one
 			// This allows explicitly targeted hidden directories to be processed
-			// Hidden subdirectories will be filtered during directory traversal instead
+			// while excluding them from general recursive searches
+			if (!isTargetingHiddenDir) {
+				args.push("-g", `!**/.*/**`)
+			}
 			continue
 		}
 
 		args.push("-g", `!**/${dir}/**`)
 	}
-
 	return args
 }
 
@@ -218,7 +224,11 @@ async function listFilteredDirectories(
 						directories.push(formattedPath)
 
 						// If recursive mode and not a ignored directory, scan subdirectories
-						if (recursive && !isDirectoryExplicitlyIgnored(dirName)) {
+						// Don't recurse into hidden directories unless they are the explicit target
+						const isHiddenDir = dirName.startsWith(".")
+						const shouldRecurse =
+							recursive && !isDirectoryExplicitlyIgnored(dirName) && !(isHiddenDir && !isTargetDir)
+						if (shouldRecurse) {
 							await scanDirectory(fullDirPath, false) // Subdirectories are not target dirs
 						}
 					}
