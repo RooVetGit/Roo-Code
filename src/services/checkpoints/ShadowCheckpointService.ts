@@ -8,7 +8,7 @@ import simpleGit, { SimpleGit } from "simple-git"
 import pWaitFor from "p-wait-for"
 
 import { fileExistsAtPath } from "../../utils/fs"
-import { executeRipgrep } from "../../services/ripgrep"
+import { executeRipgrep } from "../../services/search/file-search"
 
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
