@@ -593,7 +593,7 @@ export class McpHub {
 				const command = isWindows && !isAlreadyWrapped ? "cmd.exe" : configInjected.command
 				const args =
 					isWindows && !isAlreadyWrapped
-						? ["/c", configInjected.command, ...(configInjected.args || [])]
+						? ["/c", `"${configInjected.command}"`, ...(configInjected.args || [])]
 						: configInjected.args
 
 				transport = new StdioClientTransport({
