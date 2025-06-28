@@ -521,6 +521,14 @@
 			"name": "Use experimental \"power steering\" mode",
 			"description": "When enabled, Roo will remind the model about the details of its current mode definition more frequently. This will lead to stronger adherence to role definitions and custom instructions, but will use more tokens per message."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Enable AI-powered commit messages",
+			"description": "When enabled, Roo will use AI to generate commit messages based on the changes in the current branch."
+		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Enable AI-powered commit messages",
+			"description": "When enabled, Roo will use AI to generate commit messages based on the changes in the current branch."
+		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Enable concurrent file reads",
 			"description": "When enabled, Roo can read multiple files in a single request. When disabled, Roo must read files one at a time. Disabling this can help when working with less capable models or when you want more control over file access."

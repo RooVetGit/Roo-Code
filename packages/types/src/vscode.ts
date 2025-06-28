@@ -53,7 +53,6 @@ export const commandIds = [
 	"focusInput",
 	"acceptInput",
 	"focusPanel",
-
 	"git.generateCommitMessage",
 ] as const
 

@@ -521,6 +521,10 @@
 			"name": "启用增强导向模式",
 			"description": "开启后，Roo 将更频繁地向模型推送当前模式定义的详细信息，从而强化对角色设定和自定义指令的遵循力度。注意：此模式会提升每条消息的 token 消耗量。"
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "启用 AI 辅助的提交信息",
+			"description": "启用后，Roo 将使用 AI 根据当前分支中的更改生成提交信息。"
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "允许批量搜索和替换",
 			"description": "启用后，Roo 将尝试在一个请求中进行批量搜索和替换。"

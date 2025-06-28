@@ -521,6 +521,10 @@
 			"name": "Utiliser le mode \"direction assistée\" expérimental",
 			"description": "Lorsqu'il est activé, Roo rappellera plus fréquemment au modèle les détails de sa définition de mode actuelle. Cela conduira à une adhérence plus forte aux définitions de rôles et aux instructions personnalisées, mais utilisera plus de tokens par message."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Activer les messages de commit assistés par l'IA",
+			"description": "Lorsque cette option est activée, Roo utilisera l'IA pour générer des messages de commit basés sur les modifications de la branche actuelle."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Utiliser l'outil diff multi-blocs expérimental",
 			"description": "Lorsqu'il est activé, Roo utilisera l'outil diff multi-blocs. Cela tentera de mettre à jour plusieurs blocs de code dans le fichier en une seule requête."

@@ -178,6 +178,12 @@
 			}
 		],
 		"menus": {
+			"commandPalette": [
+				{
+					"command": "roo-cline.git.generateCommitMessage",
+					"when": "roo-cline.aiCommitMessagesEnabled"
+				}
+			],
 			"editor/context": [
 				{
 					"submenu": "roo-cline.contextMenu",
@@ -291,7 +297,7 @@
 				{
 					"command": "roo-cline.git.generateCommitMessage",
 					"group": "navigation",
-					"when": "scmProvider == git"
+					"when": "scmProvider == git && roo-cline.aiCommitMessagesEnabled"
 				}
 			]
 		},
@@ -346,6 +352,19 @@
 					"type": "boolean",
 					"default": true,
 					"description": "%settings.enableCodeActions.description%"
+				},
+				"roo-cline.experiments": {
+					"type": "object",
+					"default": {
+						"aiCommitMessages": false
+					},
+					"properties": {
+						"aiCommitMessages": {
+							"type": "boolean",
+							"default": false,
+							"description": "Enable AI-powered commit messages"
+						}
+					}
 				}
 			}
 		}

@@ -521,6 +521,10 @@
 			"name": "Usa modalità \"servosterzo\" sperimentale",
 			"description": "Quando abilitato, Roo ricorderà al modello i dettagli della sua definizione di modalità corrente più frequentemente. Questo porterà a una maggiore aderenza alle definizioni dei ruoli e alle istruzioni personalizzate, ma utilizzerà più token per messaggio."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Abilita messaggi di commit potenziati dall'IA",
+			"description": "Quando abilitato, Roo utilizzerà l'IA per generare messaggi di commit basati sulle modifiche nel ramo corrente."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Usa strumento diff multi-blocco sperimentale",
 			"description": "Quando abilitato, Roo utilizzerà lo strumento diff multi-blocco. Questo tenterà di aggiornare più blocchi di codice nel file in una singola richiesta."

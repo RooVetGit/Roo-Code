@@ -546,6 +546,10 @@
 			"name": "Gunakan mode \"power steering\" eksperimental",
 			"description": "Ketika diaktifkan, Roo akan mengingatkan model tentang detail definisi mode saat ini lebih sering. Ini akan menghasilkan kepatuhan yang lebih kuat terhadap definisi peran dan instruksi kustom, tetapi akan menggunakan lebih banyak token per pesan."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Aktifkan pesan commit bertenaga AI",
+			"description": "Ketika diaktifkan, Roo akan menggunakan AI untuk menghasilkan pesan commit berdasarkan perubahan di cabang saat ini."
+		},
 		"AUTOCOMPLETE": {
 			"name": "Gunakan fitur \"autocomplete\" eksperimental",
 			"description": "Ketika diaktifkan, Roo akan memberikan saran kode inline saat kamu mengetik. Memerlukan Roo Code API Provider."

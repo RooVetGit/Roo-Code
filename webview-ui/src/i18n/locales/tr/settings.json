@@ -521,6 +521,10 @@
 			"name": "Deneysel \"güç direksiyon\" modunu kullan",
 			"description": "Etkinleştirildiğinde, Roo modele geçerli mod tanımının ayrıntılarını daha sık hatırlatacaktır. Bu, rol tanımlarına ve özel talimatlara daha güçlü uyum sağlayacak, ancak mesaj başına daha fazla token kullanacaktır."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Yapay Zeka Destekli Commit Mesajlarını Etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo mevcut daldaki değişikliklere göre commit mesajları oluşturmak için yapay zekayı kullanacaktır."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Deneysel çoklu blok diff aracını kullan",
 			"description": "Etkinleştirildiğinde, Roo çoklu blok diff aracını kullanacaktır. Bu, tek bir istekte dosyadaki birden fazla kod bloğunu güncellemeye çalışacaktır."

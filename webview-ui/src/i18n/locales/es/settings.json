@@ -521,6 +521,10 @@
 			"name": "Usar modo experimental de \"dirección asistida\"",
 			"description": "Cuando está habilitado, Roo recordará al modelo los detalles de su definición de modo actual con más frecuencia. Esto llevará a una mayor adherencia a las definiciones de roles e instrucciones personalizadas, pero usará más tokens por mensaje."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Habilitar mensajes de commit asistidos por IA",
+			"description": "Cuando esté habilitado, Roo usará IA para generar mensajes de commit basados en los cambios en la rama actual."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Usar herramienta experimental de diff de bloques múltiples",
 			"description": "Cuando está habilitado, Roo usará la herramienta de diff de bloques múltiples. Esto intentará actualizar múltiples bloques de código en el archivo en una sola solicitud."

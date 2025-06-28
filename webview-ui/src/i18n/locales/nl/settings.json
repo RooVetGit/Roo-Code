@@ -521,6 +521,10 @@
 			"name": "Experimentele 'power steering'-modus gebruiken",
 			"description": "Indien ingeschakeld, herinnert Roo het model vaker aan de details van de huidige modusdefinitie. Dit leidt tot sterkere naleving van roldefinities en aangepaste instructies, maar gebruikt meer tokens per bericht."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "AI-ondersteunde commit-berichten inschakelen",
+			"description": "Indien ingeschakeld, zal Roo AI gebruiken om commit-berichten te genereren op basis van de wijzigingen in de huidige branch."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentele multi-block diff-tool gebruiken",
 			"description": "Indien ingeschakeld, gebruikt Roo de multi-block diff-tool. Hiermee wordt geprobeerd meerdere codeblokken in het bestand in één verzoek bij te werken."

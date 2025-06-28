@@ -521,6 +521,10 @@
 			"name": "使用實驗性「動力輔助」模式",
 			"description": "啟用後，Roo 將更頻繁地提醒模型目前模式的詳細設定。這能讓模型更嚴格遵守角色定義和自訂指令，但每則訊息會使用更多 token。"
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "啟用 AI 輔助的提交訊息",
+			"description": "啟用後，Roo 將使用 AI 根據目前分支中的變更產生提交訊息。"
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "使用實驗性多區塊差異比對工具",
 			"description": "啟用後，Roo 將使用多區塊差異比對工具，嘗試在單一請求中更新檔案內的多個程式碼區塊。"

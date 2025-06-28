@@ -700,6 +700,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							language={language || "en"}
 							commitLanguage={commitLanguage || "en"}
 							setCachedStateField={setCachedStateField}
+							aiCommitMessagesEnabled={experiments?.aiCommitMessages}
 						/>
 					)}
 

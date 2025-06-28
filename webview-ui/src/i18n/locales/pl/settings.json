@@ -521,6 +521,10 @@
 			"name": "Użyj eksperymentalnego trybu \"wspomagania kierownicy\"",
 			"description": "Po włączeniu, Roo będzie częściej przypominać modelowi o szczegółach jego bieżącej definicji trybu. Doprowadzi to do silniejszego przestrzegania definicji ról i niestandardowych instrukcji, ale będzie używać więcej tokenów na wiadomość."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Włącz komunikaty commitów wspomagane przez AI",
+			"description": "Gdy włączone, Roo będzie używać AI do generowania komunikatów commitów na podstawie zmian w bieżącym branchu."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
 			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."

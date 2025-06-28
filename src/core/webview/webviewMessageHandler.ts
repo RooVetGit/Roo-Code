@@ -1428,6 +1428,19 @@ export const webviewMessageHandler = async (
 
 			await updateGlobalState("experiments", updatedExperiments)
 
+			// Also update workspace settings to trigger the context update.
+			await vscode.workspace
+				.getConfiguration(Package.name)
+				.update("experiments", updatedExperiments, vscode.ConfigurationTarget.Global)
+
+			if (message.values.aiCommitMessages !== undefined) {
+				await vscode.commands.executeCommand(
+					"setContext",
+					"roo-cline.aiCommitMessagesEnabled",
+					message.values.aiCommitMessages,
+				)
+			}
+
 			await provider.postStateToWebview()
 			break
 		}

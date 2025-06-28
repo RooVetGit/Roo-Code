@@ -521,6 +521,10 @@
 			"name": "Experimentellen \"Servolenkung\"-Modus verwenden",
 			"description": "Wenn aktiviert, wird Roo das Modell häufiger an die Details seiner aktuellen Modusdefinition erinnern. Dies führt zu einer stärkeren Einhaltung von Rollendefinitionen und benutzerdefinierten Anweisungen, verwendet aber mehr Tokens pro Nachricht."
 		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "KI-gestützte Commit-Nachrichten aktivieren",
+			"description": "Wenn aktiviert, verwendet Roo KI, um Commit-Nachrichten basierend auf den Änderungen im aktuellen Branch zu generieren."
+		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentelles Multi-Block-Diff-Werkzeug verwenden",
 			"description": "Wenn aktiviert, verwendet Roo das Multi-Block-Diff-Werkzeug. Dies versucht, mehrere Codeblöcke in der Datei in einer Anfrage zu aktualisieren."
