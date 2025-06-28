@@ -37,7 +37,7 @@ async function getChanges(git: SimpleGit, repoPath: string): Promise<string> {
 }
 
 function createPrompt(diff: string, language: string): string {
-	return `Create a git commit message in ${language} from the following diff:\n${diff}.Remember to print only commit messages text without any extra markdown or content that would require special tools to display. Adhere to best git commit message practices. Remmber to use ${language} in this commit message.`
+	return `Create a git commit message in ${language} from the following diff:\n${diff}.Remember to print only commit messages text without any extra markdown or content that would require special tools to display. Adhere to best git commit message practices. Remember to use ${language} in this commit message.`
 }
 
 export async function generateCommitMessage(context: vscode.ExtensionContext) {
