@@ -100,20 +100,6 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 					onClick={(e) => e.stopPropagation()} // Prevent collapse toggle when clicking buttons
 				>
 					<button
-						onClick={onAcceptAll}
-						style={{
-							backgroundColor: "var(--vscode-button-background)",
-							color: "var(--vscode-button-foreground)",
-							border: "none",
-							borderRadius: "3px",
-							padding: "4px 8px",
-							fontSize: "12px",
-							cursor: "pointer",
-						}}
-						title="Accept all changes">
-						Accept All
-					</button>
-					<button
 						onClick={onRejectAll}
 						style={{
 							backgroundColor: "var(--vscode-button-secondaryBackground)",
@@ -126,6 +112,20 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 						}}
 						title="Reject all changes">
 						Reject All
+					</button>
+					<button
+						onClick={onAcceptAll}
+						style={{
+							backgroundColor: "var(--vscode-button-background)",
+							color: "var(--vscode-button-foreground)",
+							border: "none",
+							borderRadius: "3px",
+							padding: "4px 8px",
+							fontSize: "12px",
+							cursor: "pointer",
+						}}
+						title="Accept all changes">
+						Accept All
 					</button>
 				</div>
 			</div>
@@ -191,21 +191,6 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 									Diff
 								</button>
 								<button
-									onClick={() => onAcceptFile(file.uri)}
-									title="Accept changes for this file"
-									style={{
-										backgroundColor: "var(--vscode-button-background)",
-										color: "var(--vscode-button-foreground)",
-										border: "1px solid var(--vscode-button-border)",
-										borderRadius: "3px",
-										padding: "2px 6px",
-										fontSize: "11px",
-										cursor: "pointer",
-										minWidth: "20px",
-									}}>
-									✓
-								</button>
-								<button
 									onClick={() => onRejectFile(file.uri)}
 									title="Reject changes for this file"
 									style={{
@@ -219,6 +204,21 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 										minWidth: "20px",
 									}}>
 									✗
+								</button>
+								<button
+									onClick={() => onAcceptFile(file.uri)}
+									title="Accept changes for this file"
+									style={{
+										backgroundColor: "var(--vscode-button-background)",
+										color: "var(--vscode-button-foreground)",
+										border: "1px solid var(--vscode-button-border)",
+										borderRadius: "3px",
+										padding: "2px 6px",
+										fontSize: "11px",
+										cursor: "pointer",
+										minWidth: "20px",
+									}}>
+									✓
 								</button>
 							</div>
 						</div>
