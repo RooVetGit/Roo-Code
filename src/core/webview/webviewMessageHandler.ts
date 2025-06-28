@@ -23,7 +23,7 @@ import { openImage, saveImage } from "../../integrations/misc/image-handler"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
-import { searchWorkspaceFiles } from "../../services/search/file-search"
+import { searchAllWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
@@ -33,7 +33,7 @@ import { getOpenAiModels } from "../../api/providers/openai"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
-import { getWorkspacePath } from "../../utils/path"
+import { getPrimaryWorkspaceFolder } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
@@ -600,7 +600,7 @@ export const webviewMessageHandler = async (
 				return
 			}
 
-			const workspaceFolder = vscode.workspace.workspaceFolders[0]
+			const workspaceFolder = getPrimaryWorkspaceFolder()
 			const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
 			const mcpPath = path.join(rooDir, "mcp.json")
 
@@ -1252,27 +1252,8 @@ export const webviewMessageHandler = async (
 			break
 		}
 		case "searchFiles": {
-			const workspacePath = getWorkspacePath()
-
-			if (!workspacePath) {
-				// Handle case where workspace path is not available
-				await provider.postMessageToWebview({
-					type: "fileSearchResults",
-					results: [],
-					requestId: message.requestId,
-					error: "No workspace path available",
-				})
-				break
-			}
 			try {
-				// Call file search service with query from message
-				const results = await searchWorkspaceFiles(
-					message.query || "",
-					workspacePath,
-					20, // Use default limit, as filtering is now done in the backend
-				)
-
-				// Send results back to webview
+				const results = await searchAllWorkspaceFiles(message.query || "", 20)
 				await provider.postMessageToWebview({
 					type: "fileSearchResults",
 					results,

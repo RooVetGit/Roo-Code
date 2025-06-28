@@ -1,9 +1,10 @@
+import * as vscode from "vscode"
 import path from "path"
 
 import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
-import { getReadablePath } from "../../utils/path"
+import { getAllWorkspacePaths, getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { regexSearchFiles } from "../../services/ripgrep"
 
@@ -52,9 +53,10 @@ export async function searchFilesTool(
 
 			cline.consecutiveMistakeCount = 0
 
+			const workspacePaths = getAllWorkspacePaths()
 			const results = await regexSearchFiles(
 				cline.cwd,
-				absolutePath,
+				workspacePaths,
 				regex,
 				filePattern,
 				cline.rooIgnoreController,

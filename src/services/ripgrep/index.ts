@@ -16,9 +16,10 @@ Key components:
 3. regexSearchFiles: The main function that performs regex searches on files.
    - Parameters:
      * cwd: The current working directory (for relative path calculation)
-     * directoryPath: The directory to search in
+     * directoryPaths: Array of workspace paths to search in
      * regex: The regular expression to search for (Rust regex syntax)
      * filePattern: Optional glob pattern to filter files (default: '*')
+     * rooIgnoreController: Optional ignore controller for filtering results
    - Returns: A formatted string containing search results with context
 
 The search results include:
@@ -27,7 +28,7 @@ The search results include:
 - Matches formatted with pipe characters for easy reading
 
 Usage example:
-const results = await regexSearchFiles('/path/to/cwd', '/path/to/search', 'TODO:', '*.ts');
+const results = await regexSearchFiles('/path/to/cwd', ['/path/to/workspace1', '/path/to/workspace2'], 'TODO:', '*.ts');
 
 rel/path/to/app.ts
 │----
@@ -138,11 +139,15 @@ async function execRipgrep(bin: string, args: string[]): Promise<string> {
 
 export async function regexSearchFiles(
 	cwd: string,
-	directoryPath: string,
+	directoryPaths: string[],
 	regex: string,
 	filePattern?: string,
 	rooIgnoreController?: RooIgnoreController,
 ): Promise<string> {
+	if (directoryPaths.length === 0) {
+		return "No workspace paths provided"
+	}
+
 	const vscodeAppRoot = vscode.env.appRoot
 	const rgPath = await getBinPath(vscodeAppRoot)
 
@@ -150,16 +155,32 @@ export async function regexSearchFiles(
 		throw new Error("Could not find ripgrep binary")
 	}
 
-	const args = ["--json", "-e", regex, "--glob", filePattern || "*", "--context", "1", directoryPath]
+	// Collect all results from all workspaces
+	const allResults: SearchFileResult[] = []
+	const searchPromises = directoryPaths.map(async (workspacePath) => {
+		const args = ["--json", "-e", regex, "--glob", filePattern || "*", "--context", "1", workspacePath]
 
-	let output: string
-	try {
-		output = await execRipgrep(rgPath, args)
-	} catch (error) {
-		console.error("Error executing ripgrep:", error)
+		try {
+			const output = await execRipgrep(rgPath, args)
+			const results = parseRipgrepOutput(output, rooIgnoreController)
+			return results
+		} catch (error) {
+			console.error(`Error searching path ${workspacePath}:`, error)
+			return []
+		}
+	})
+
+	const searchResults = await Promise.all(searchPromises)
+	searchResults.forEach((results) => allResults.push(...results))
+
+	if (allResults.length === 0) {
 		return "No results found"
 	}
 
+	return formatResults(allResults, cwd)
+}
+
+function parseRipgrepOutput(output: string, rooIgnoreController?: RooIgnoreController): SearchFileResult[] {
 	const results: SearchFileResult[] = []
 	let currentFile: SearchFileResult | null = null
 
@@ -210,14 +231,12 @@ export async function regexSearchFiles(
 		}
 	})
 
-	// console.log(results)
-
 	// Filter results using RooIgnoreController if provided
 	const filteredResults = rooIgnoreController
 		? results.filter((result) => rooIgnoreController.validateAccess(result.file))
 		: results
 
-	return formatResults(filteredResults, cwd)
+	return filteredResults
 }
 
 function formatResults(fileResults: SearchFileResult[], cwd: string): string {

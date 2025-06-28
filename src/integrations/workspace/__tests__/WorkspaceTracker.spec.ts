@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 import WorkspaceTracker from "../WorkspaceTracker"
 import { ClineProvider } from "../../../core/webview/ClineProvider"
 import { listFiles } from "../../../services/glob/list-files"
-import { getWorkspacePath } from "../../../utils/path"
+import { getWorkspacePath, getAllWorkspacePaths } from "../../../utils/path"
 
 // Mock functions - must be defined before vitest.mock calls
 const mockOnDidCreate = vitest.fn()
@@ -16,6 +16,10 @@ let registeredTabChangeCallback: (() => Promise<void>) | null = null
 // Mock workspace path
 vitest.mock("../../../utils/path", () => ({
 	getWorkspacePath: vitest.fn().mockReturnValue("/test/workspace"),
+	getAllWorkspacePaths: vitest.fn().mockReturnValue(["/test/workspace"]),
+	getPrimaryWorkspaceFolder: vitest
+		.fn()
+		.mockReturnValue({ uri: { fsPath: "/test/workspace" }, name: "test-workspace", index: 0 }),
 	toRelativePath: vitest.fn((path, cwd) => {
 		// Handle both Windows and POSIX paths by using path.relative
 		const relativePath = require("path").relative(cwd, path)
@@ -59,6 +63,9 @@ vitest.mock("vscode", () => ({
 		},
 	},
 	FileType: { File: 1, Directory: 2 },
+	RelativePattern: vitest.fn().mockImplementation((base, pattern) => ({ base, pattern })),
+	Uri: { file: vitest.fn((path) => ({ fsPath: path })) },
+	TabInputText: vitest.fn(),
 }))
 
 vitest.mock("../../../services/glob/list-files", () => ({
@@ -148,7 +155,7 @@ describe("WorkspaceTracker", () => {
 
 		expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "workspaceUpdated",
-			filePaths: expect.arrayContaining(["newdir"]),
+			filePaths: expect.arrayContaining(["newdir/"]),
 			openedTabs: [],
 		})
 		const lastCall = (mockProvider.postMessageToWebview as Mock).mock.calls.slice(-1)[0]
@@ -208,10 +215,6 @@ describe("WorkspaceTracker", () => {
 	it("should handle workspace path changes when tabs change", async () => {
 		expect(registeredTabChangeCallback).not.toBeNull()
 
-		// Set initial workspace path and create tracker
-		;(getWorkspacePath as Mock).mockReturnValue("/test/workspace")
-		workspaceTracker = new WorkspaceTracker(mockProvider)
-
 		// Clear any initialization calls
 		vitest.clearAllMocks()
 
@@ -221,6 +224,7 @@ describe("WorkspaceTracker", () => {
 
 		// Change workspace path
 		;(getWorkspacePath as Mock).mockReturnValue("/test/new-workspace")
+		;(getAllWorkspacePaths as Mock).mockReturnValue(["/test/new-workspace"])
 
 		// Simulate tab change event
 		await registeredTabChangeCallback!()

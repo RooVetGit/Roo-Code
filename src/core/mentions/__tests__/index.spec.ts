@@ -98,7 +98,7 @@ vi.mock("../../../integrations/misc/extract-text", () => ({
 import { parseMentions, openMention } from "../index"
 import { UrlContentFetcher } from "../../../services/browser/UrlContentFetcher"
 import * as git from "../../../utils/git"
-import { getWorkspacePath } from "../../../utils/path"
+import { getWorkspacePath, getAllWorkspacePaths } from "../../../utils/path"
 import fs from "fs/promises"
 import * as path from "path"
 import { openFile } from "../../../integrations/misc/open-file"
@@ -141,6 +141,7 @@ describe("mentions", () => {
 			mockUrlFetcher = new (UrlContentFetcher as any)()
 			;(fs.stat as Mock).mockResolvedValue({ isFile: () => true, isDirectory: () => false })
 			;(extractTextFromFile as Mock).mockResolvedValue("Mock file content")
+			;(getAllWorkspacePaths as Mock).mockReturnValue([mockCwd])
 		})
 
 		it("should parse git commit mentions", async () => {

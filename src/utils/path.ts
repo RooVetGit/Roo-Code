@@ -115,3 +115,17 @@ export const getWorkspacePath = (defaultCwdPath = "") => {
 	}
 	return cwdPath
 }
+
+export const getAllWorkspacePaths = (): string[] => {
+	return vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) || []
+}
+
+/**
+ * Gets the primary workspace folder object for accessing .roo config resources
+ */
+export const getPrimaryWorkspaceFolder = (): vscode.WorkspaceFolder => {
+	const workspacePath = getWorkspacePath()
+	const uri = vscode.Uri.file(workspacePath)
+	const name = path.basename(workspacePath)
+	return { uri, name, index: 0 }
+}
