@@ -74,7 +74,7 @@
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
 		"commandRiskLevel": {
 			"label": "Livello di rischio consentito per l'esecuzione automatica",
-			"description": "Oltre ai comandi consentiti staticamente qui sotto, questa impostazione controlla il livello di rischio consentito per l'esecuzione automatica dei comandi. Il modello di IA valuta il rischio per ogni comando eseguito, quindi ti fidi che l'IA segua le regole di logica dei predicati formalmente definite che categorizzano i livelli di rischio nelle istruzioni di sistema. Ogni livello superiore include tutti i livelli precedenti.",
+			"description": "Oltre ai comandi consentiti staticamente qui sotto, questa impostazione controlla il livello di rischio consentito per l'esecuzione automatica dei comandi. Il modello di IA valuta il rischio per ogni comando eseguito, quindi ti fidi che l'IA segua le regole di logica dei predicati formalmente definiti che categorizzano i livelli di rischio nelle istruzioni di sistema. Ogni livello superiore include tutti i livelli precedenti.",
 			"disabled": "Disabilitato",
 			"disabledDesc": "L'analisi del rischio è disabilitata",
 			"none": "Nessuno",
