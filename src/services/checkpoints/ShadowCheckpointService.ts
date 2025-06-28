@@ -149,10 +149,20 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			const gitPaths = await executeRipgrep({ args, workspacePath: this.workspaceDir })
 
 			// Filter to only include nested git directories (not the root .git).
-			const nestedGitPaths = gitPaths.filter(
-				({ type, path }) =>
-					type === "folder" && path.includes(".git") && !path.startsWith(".git") && path !== ".git",
-			)
+			const nestedGitPaths = gitPaths.filter(({ type, path }) => {
+				// Only include folders that contain .git
+				if (type !== "folder" || !path.includes(".git")) {
+					return false
+				}
+
+				// Exclude the root .git directory (both ".git" and "project-name/.git" patterns)
+				if (path === ".git" || path.endsWith("/.git")) {
+					return false
+				}
+
+				// Include actual nested git repositories (e.g., "submodule/.git", "nested/project/.git")
+				return true
+			})
 
 			if (nestedGitPaths.length > 0) {
 				this.log(
