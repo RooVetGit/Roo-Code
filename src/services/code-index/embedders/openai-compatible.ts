@@ -29,6 +29,8 @@ interface OpenAIEmbeddingResponse {
 export class OpenAICompatibleEmbedder implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
+	private readonly baseUrl: string
+	private readonly apiKey: string
 
 	/**
 	 * Creates a new OpenAI Compatible embedder
@@ -44,6 +46,8 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			throw new Error("API key is required for OpenAI Compatible embedder")
 		}
 
+		this.baseUrl = baseUrl
+		this.apiKey = apiKey
 		this.embeddingsClient = new OpenAI({
 			baseURL: baseUrl,
 			apiKey: apiKey,
@@ -110,6 +114,56 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	}
 
 	/**
+	 * Determines if the provided URL is a full endpoint URL (contains /embeddings or /deployments/)
+	 * or a base URL that needs the endpoint appended by the SDK
+	 * @param url The URL to check
+	 * @returns true if it's a full endpoint URL, false if it's a base URL
+	 */
+	private isFullEndpointUrl(url: string): boolean {
+		// Check if the URL contains common embedding endpoint patterns
+		return url.includes("/embeddings") || url.includes("/deployments/")
+	}
+
+	/**
+	 * Makes a direct HTTP request to the embeddings endpoint
+	 * Used when the user provides a full endpoint URL (e.g., Azure OpenAI with query parameters)
+	 * @param url The full endpoint URL
+	 * @param batchTexts Array of texts to embed
+	 * @param model Model identifier to use
+	 * @returns Promise resolving to OpenAI-compatible response
+	 */
+	private async makeDirectEmbeddingRequest(
+		url: string,
+		batchTexts: string[],
+		model: string,
+	): Promise<OpenAIEmbeddingResponse> {
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				// Azure OpenAI uses 'api-key' header, while OpenAI uses 'Authorization'
+				// We'll try 'api-key' first for Azure compatibility
+				"api-key": this.apiKey,
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+			body: JSON.stringify({
+				input: batchTexts,
+				model: model,
+				encoding_format: "base64",
+			}),
+		})
+
+		if (!response.ok) {
+			const errorText = await response.text()
+			const error: any = new Error(`HTTP ${response.status}: ${errorText}`)
+			error.status = response.status
+			throw error
+		}
+
+		return await response.json()
+	}
+
+	/**
 	 * Helper method to handle batch embedding with retries and exponential backoff
 	 * @param batchTexts Array of texts to embed in this batch
 	 * @param model Model identifier to use
@@ -119,16 +173,26 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		batchTexts: string[],
 		model: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
+		const isFullUrl = this.isFullEndpointUrl(this.baseUrl)
+
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
-				const response = (await this.embeddingsClient.embeddings.create({
-					input: batchTexts,
-					model: model,
-					// OpenAI package (as of v4.78.1) has a parsing issue that truncates embedding dimensions to 256
-					// when processing numeric arrays, which breaks compatibility with models using larger dimensions.
-					// By requesting base64 encoding, we bypass the package's parser and handle decoding ourselves.
-					encoding_format: "base64",
-				})) as OpenAIEmbeddingResponse
+				let response: OpenAIEmbeddingResponse
+
+				if (isFullUrl) {
+					// Use direct HTTP request for full endpoint URLs
+					response = await this.makeDirectEmbeddingRequest(this.baseUrl, batchTexts, model)
+				} else {
+					// Use OpenAI SDK for base URLs
+					response = (await this.embeddingsClient.embeddings.create({
+						input: batchTexts,
+						model: model,
+						// OpenAI package (as of v4.78.1) has a parsing issue that truncates embedding dimensions to 256
+						// when processing numeric arrays, which breaks compatibility with models using larger dimensions.
+						// By requesting base64 encoding, we bypass the package's parser and handle decoding ourselves.
+						encoding_format: "base64",
+					})) as OpenAIEmbeddingResponse
+				}
 
 				// Convert base64 embeddings to float32 arrays
 				const processedEmbeddings = response.data.map((item: EmbeddingItem) => {
