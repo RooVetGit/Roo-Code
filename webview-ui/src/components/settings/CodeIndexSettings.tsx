@@ -425,7 +425,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 						<div>
 							<VSCodeTextField
-								value={codebaseIndexConfig.codebaseIndexQdrantUrl || "http://localhost:6333"}
+								value={codebaseIndexConfig.codebaseIndexQdrantUrl || ""}
+								placeholder="http://localhost:6333"
 								onInput={(e: any) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
