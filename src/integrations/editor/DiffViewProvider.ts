@@ -528,6 +528,7 @@ export class DiffViewProvider {
 	/**
 	 * Formats a standardized XML response for file write operations
 	 *
+	 * @param task The current task context for sending user feedback
 	 * @param cwd Current working directory for path resolution
 	 * @param isNewFile Whether this is a new file or an existing file being modified
 	 * @returns Formatted message and say object for UI feedback
@@ -670,6 +671,25 @@ export class DiffViewProvider {
 			let timeoutId: NodeJS.Timeout | undefined
 			const disposables: vscode.Disposable[] = []
 
+			const cleanup = () => {
+				if (timeoutId) {
+					clearTimeout(timeoutId)
+					timeoutId = undefined
+				}
+				disposables.forEach((d) => d.dispose())
+				disposables.length = 0
+			}
+
+			// Set timeout for the entire operation
+			timeoutId = setTimeout(() => {
+				cleanup()
+				reject(
+					new Error(
+						`Failed to open diff editor for ${rightUri.fsPath} within ${DIFF_EDITOR_TIMEOUT / 1000} seconds. The editor may be blocked or VS Code may be unresponsive.`,
+					),
+				)
+			}, DIFF_EDITOR_TIMEOUT)
+
 			const leftUri = vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
 				query: Buffer.from(this.originalContent ?? "").toString("base64"),
 			})
@@ -683,58 +703,94 @@ export class DiffViewProvider {
 			this.suppressInteractionFlag = true
 			// Implement improved diff view placement logic
 			const previousEditor = vscode.window.activeTextEditor
+
 			this.prepareDiffViewPlacement(rightUri.fsPath).then(() => {
-				vscode.commands
-					.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
-					.then(async () => {
-						// set interaction flag to false to allow autoFocus to be triggered
-						this.suppressInteractionFlag = false
+				this.showTextDocumentSafe({
+					uri: rightUri,
+					options: {
+						...textDocumentShowOptions,
+						viewColumn: this.viewColumn, // Ensure we use the correct view column
+					},
+				}).then(
+					() => {
+						vscode.commands
+							.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
+							.then(
+								async () => {
+									// set interaction flag to false to allow autoFocus to be triggered
+									this.suppressInteractionFlag = false
 
-						// Get the active text editor, which should be the diff editor opened by vscode.diff
-						const diffEditor = vscode.window.activeTextEditor
+									// Get the active text editor, which should be the diff editor opened by vscode.diff
+									const diffEditor = vscode.window.activeTextEditor
 
-						// Ensure we have a valid editor and it's the one we expect (the right side of the diff)
-						if (!diffEditor || !arePathsEqual(diffEditor.document.uri.fsPath, rightUri.fsPath)) {
-							reject(new Error("Failed to get diff editor after opening."))
-							return
-						}
+									// Ensure we have a valid editor and it's the one we expect (the right side of the diff)
+									if (
+										!diffEditor ||
+										!arePathsEqual(diffEditor.document.uri.fsPath, rightUri.fsPath)
+									) {
+										cleanup()
+										reject(
+											new Error(
+												`Failed to execute diff command for ${rightUri.fsPath}: No active editor found.`,
+											),
+										)
+										return
+									}
 
-						this.activeDiffEditor = diffEditor // Assign to activeDiffEditor
+									this.activeDiffEditor = diffEditor // Assign to activeDiffEditor
 
-						// Ensure rightUri is tracked even if not explicitly shown again
-						this.rooOpenedTabs.add(rightUri.toString())
+									// Ensure rightUri is tracked even if not explicitly shown again
+									this.rooOpenedTabs.add(rightUri.toString())
 
-						// If autoFocus is disabled, explicitly clear the selection to prevent cursor focus.
-						if (!settings.autoFocus) {
-							// Use dynamically read autoFocus
-							// Add a small delay to allow VS Code to potentially set focus first,
-							// then clear it.
-							await new Promise((resolve) => setTimeout(resolve, 50))
-							const beginningOfDocument = new vscode.Position(0, 0)
-							diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
-						}
+									// If autoFocus is disabled, explicitly clear the selection to prevent cursor focus.
+									if (!settings.autoFocus) {
+										// Use dynamically read autoFocus
+										// Add a small delay to allow VS Code to potentially set focus first,
+										// then clear it.
+										await new Promise((resolve) => setTimeout(resolve, 50))
+										const beginningOfDocument = new vscode.Position(0, 0)
+										diffEditor.selection = new vscode.Selection(
+											beginningOfDocument,
+											beginningOfDocument,
+										)
+									}
 
-						// if this happens in a window different from the active one, we need to show the document
-						if (previousEditor) {
-							await this.showTextDocumentSafe({
-								textDocument: previousEditor.document,
-								options: {
-									preview: false,
-									preserveFocus: false,
-									selection: previousEditor.selection,
-									viewColumn: previousEditor.viewColumn,
+									// if this happens in a window different from the active one, we need to show the document
+									if (previousEditor) {
+										await this.showTextDocumentSafe({
+											textDocument: previousEditor.document,
+											options: {
+												preview: false,
+												preserveFocus: false,
+												selection: previousEditor.selection,
+												viewColumn: previousEditor.viewColumn,
+											},
+										})
+									}
+
+									cleanup()
+									resolve(diffEditor)
 								},
-							})
-						}
+								(err) => {
+									cleanup()
+									reject(
+										new Error(
+											`Failed to execute diff command for ${rightUri.fsPath}: ${err.message}`,
+										),
+									)
+								},
+							)
+					},
+					(err) => {
+						cleanup()
+						reject(new Error(`Failed to execute diff command for ${rightUri.fsPath}: ${err.message}`))
+					},
+				)
 
-						// Resolve the promise with the diff editor
-						resolve(diffEditor)
-					})
-				// Removed the second .then block that called getEditorFromDiffTab
-				// This may happen on very slow machines ie project idx
-				setTimeout(() => {
+				timeoutId = setTimeout(() => {
+					cleanup()
 					reject(new Error("Failed to open diff editor, please try again..."))
-				}, 10_000)
+				}, DIFF_EDITOR_TIMEOUT)
 			})
 		})
 	}

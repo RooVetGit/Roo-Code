@@ -114,7 +114,6 @@ describe("writeToFileTool", () => {
 	const mockCline: any = {}
 	let mockAskApproval: ReturnType<typeof vi.fn>
 	let mockHandleError: ReturnType<typeof vi.fn>
-	let mockPushToolResult: ReturnType<typeof vi.fn>
 	let mockRemoveClosingTag: ReturnType<typeof vi.fn>
 	let toolResult: ToolResponse | undefined
 
@@ -170,7 +169,7 @@ describe("writeToFileTool", () => {
 				}
 				return "Tool result message"
 			}),
-			resetWithListeners: jest.fn().mockResolvedValue(undefined),
+			resetWithListeners: vi.fn().mockResolvedValue(undefined),
 		}
 		mockCline.api = {
 			getModel: vi.fn().mockReturnValue({ id: "claude-3" }),

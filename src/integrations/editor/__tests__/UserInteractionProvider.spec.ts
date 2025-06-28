@@ -1,30 +1,31 @@
-// npx jest src/integrations/editor/__tests__/UserInteractionProvider.test.ts
+// npx vi src/integrations/editor/__tests__/UserInteractionProvider.test.ts
 
 import * as vscode from "vscode"
 import { UserInteractionProvider } from "../UserInteractionProvider"
+import { Mock } from "vitest"
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
 	window: {
 		tabGroups: {
-			onDidChangeTabs: jest.fn(),
-			onDidChangeTabGroups: jest.fn(),
+			onDidChangeTabs: vi.fn(),
+			onDidChangeTabGroups: vi.fn(),
 		},
-		onDidChangeActiveTextEditor: jest.fn(),
-		onDidChangeTextEditorSelection: jest.fn(),
+		onDidChangeActiveTextEditor: vi.fn(),
+		onDidChangeTextEditorSelection: vi.fn(),
 	},
 }))
 
 describe("UserInteractionProvider", () => {
 	let provider: UserInteractionProvider
-	let mockOnUserInteraction: jest.Mock
-	let mockGetSuppressFlag: jest.Mock
-	let mockDisposable: { dispose: jest.Mock }
+	let mockOnUserInteraction: Mock
+	let mockGetSuppressFlag: Mock
+	let mockDisposable: { dispose: Mock }
 
 	beforeEach(() => {
-		jest.clearAllMocks()
-		mockOnUserInteraction = jest.fn()
-		mockGetSuppressFlag = jest.fn().mockReturnValue(false)
-		mockDisposable = { dispose: jest.fn() }
+		vi.clearAllMocks()
+		mockOnUserInteraction = vi.fn()
+		mockGetSuppressFlag = vi.fn().mockReturnValue(false)
+		mockDisposable = { dispose: vi.fn() }
 
 		// Mock the event listeners to return disposables
 		;(vscode.window.onDidChangeTextEditorSelection as any).mockReturnValue(mockDisposable)
