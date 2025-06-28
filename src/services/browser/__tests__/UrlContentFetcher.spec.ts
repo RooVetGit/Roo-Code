@@ -3,6 +3,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { UrlContentFetcher } from "../UrlContentFetcher"
 import { fileExistsAtPath } from "../../../utils/fs"
+import * as path from "path"
 
 // Mock dependencies
 vi.mock("vscode", () => ({
@@ -113,7 +114,7 @@ describe("UrlContentFetcher", () => {
 			await urlContentFetcher.launchBrowser()
 
 			expect(vi.mocked(PCR)).toHaveBeenCalledWith({
-				downloadPath: "/test/storage/puppeteer",
+				downloadPath: path.join("/test/storage", "puppeteer"),
 			})
 
 			const stats = await vi.mocked(PCR).mock.results[0].value
