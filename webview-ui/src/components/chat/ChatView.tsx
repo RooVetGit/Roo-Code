@@ -44,7 +44,7 @@ import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
-import FilesChangedOverview from "./FilesChangedOverview"
+import FilesChangedOverview from "../file-changes/FilesChangedOverview"
 
 export interface ChatViewProps {
 	isHidden: boolean
