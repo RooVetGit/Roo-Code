@@ -267,6 +267,7 @@ export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) 
 				<MermaidButton containerRef={containerRef} code={code} isLoading={isLoading} svgToPng={svgToPng}>
 					<SvgContainer
 						onClick={handleClick}
+						ref={containerRef}
 						$isLoading={isLoading}
 						dangerouslySetInnerHTML={{ __html: svgContent }}
 					/>
