@@ -1,20 +1,79 @@
 import { DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
+import { GroupEntry, ModeConfig } from "@roo-code/types"
+import { getGroupName } from "../../../shared/modes"
+import { McpServer } from "../../../shared/mcp"
+
+let lastMcpHub: McpHub | undefined
+let lastMcpIncludedList: string[] | undefined
+let lastFilteredServers: McpServer[] = []
+
+function memoizeFilteredServers(mcpHub: McpHub, mcpIncludedList?: string[]): McpServer[] {
+	const mcpHubChanged = mcpHub !== lastMcpHub
+	const listChanged = !areArraysEqual(mcpIncludedList, lastMcpIncludedList)
+
+	if (!mcpHubChanged && !listChanged) {
+		return lastFilteredServers
+	}
+
+	lastMcpHub = mcpHub
+	lastMcpIncludedList = mcpIncludedList
+
+	lastFilteredServers = (
+		mcpIncludedList && mcpIncludedList.length > 0 ? mcpHub.getAllServers() : mcpHub.getServers()
+	).filter((server) => {
+		if (mcpIncludedList && mcpIncludedList.length > 0) {
+			return mcpIncludedList.includes(server.name) && server.status === "connected"
+		}
+		return server.status === "connected"
+	})
+
+	return lastFilteredServers
+}
+function areArraysEqual(arr1?: string[], arr2?: string[]): boolean {
+	if (!arr1 && !arr2) return true
+	if (!arr1 || !arr2) return false
+	if (arr1.length !== arr2.length) return false
+
+	return arr1.every((item, index) => item === arr2[index])
+}
 
 export async function getMcpServersSection(
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
 	enableMcpServerCreation?: boolean,
+	currentMode?: ModeConfig,
 ): Promise<string> {
 	if (!mcpHub) {
 		return ""
 	}
 
+	// Get MCP configuration for current mode
+	let mcpIncludedList: string[] | undefined
+
+	if (currentMode) {
+		// Find MCP group configuration
+		const mcpGroup = currentMode.groups.find((group: GroupEntry) => {
+			if (Array.isArray(group) && group.length === 2 && group[0] === "mcp") {
+				return true
+			}
+			return getGroupName(group) === "mcp"
+		})
+
+		// If MCP group configuration is found, get mcpIncludedList from mcp.included
+		if (mcpGroup && Array.isArray(mcpGroup) && mcpGroup.length === 2) {
+			const options = mcpGroup[1] as { mcp?: { included?: unknown[] } }
+			mcpIncludedList = Array.isArray(options.mcp?.included)
+				? options.mcp.included.filter((item: unknown): item is string => typeof item === "string")
+				: undefined
+		}
+	}
+
+	const filteredServers = memoizeFilteredServers(mcpHub, mcpIncludedList)
+
 	const connectedServers =
-		mcpHub.getServers().length > 0
-			? `${mcpHub
-					.getServers()
-					.filter((server) => server.status === "connected")
+		filteredServers.length > 0
+			? `${filteredServers
 					.map((server) => {
 						const tools = server.tools
 							?.filter((tool) => tool.enabledForPrompt !== false)
