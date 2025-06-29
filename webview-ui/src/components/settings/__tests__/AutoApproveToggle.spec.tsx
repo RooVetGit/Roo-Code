@@ -25,6 +25,7 @@ describe("AutoApproveToggle", () => {
 		alwaysAllowModeSwitch: true,
 		alwaysAllowSubtasks: false,
 		alwaysAllowExecute: true,
+		alwaysAllowUpdateTodoList: true,
 		onToggle: mockOnToggle,
 	}
 
