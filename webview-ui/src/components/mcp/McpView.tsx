@@ -7,6 +7,7 @@ import {
 	VSCodePanels,
 	VSCodePanelTab,
 	VSCodePanelView,
+	VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react"
 
 import { McpServer } from "@roo/mcp"
@@ -43,6 +44,10 @@ const McpView = ({ onDone }: McpViewProps) => {
 		mcpEnabled,
 		enableMcpServerCreation,
 		setEnableMcpServerCreation,
+		mcpMaxImagesPerResponse,
+		setMcpMaxImagesPerResponse,
+		mcpMaxImageSizeMB,
+		setMcpMaxImageSizeMB,
 	} = useExtensionState()
 
 	const { t } = useAppTranslation()
@@ -102,6 +107,52 @@ const McpView = ({ onDone }: McpViewProps) => {
 									<strong>new</strong>
 								</Trans>
 								<p style={{ marginTop: "8px" }}>{t("mcp:enableServerCreation.hint")}</p>
+							</div>
+						</div>
+
+						<div style={{ marginBottom: 15 }}>
+							<div style={{ marginBottom: 10 }}>
+								<VSCodeTextField
+									value={mcpMaxImagesPerResponse.toString()}
+									onChange={(e: any) => {
+										const value = parseInt(e.target.value) || 20
+										setMcpMaxImagesPerResponse(value)
+										vscode.postMessage({ type: "mcpMaxImagesPerResponse", value })
+									}}
+									style={{ width: "100px" }}>
+									Max Images Per Response
+								</VSCodeTextField>
+								<div
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									The maximum number of images that can be returned in a single MCP tool response.
+									Additional images will be ignored to prevent performance issues.
+								</div>
+							</div>
+
+							<div style={{ marginBottom: 10 }}>
+								<VSCodeTextField
+									value={mcpMaxImageSizeMB.toString()}
+									onChange={(e: any) => {
+										const value = parseFloat(e.target.value) || 10
+										setMcpMaxImageSizeMB(value)
+										vscode.postMessage({ type: "mcpMaxImageSizeMB", value })
+									}}
+									style={{ width: "100px" }}>
+									Max Image Size (MB)
+								</VSCodeTextField>
+								<div
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									The maximum size (in MB) for a single base64-encoded image from an MCP tool
+									response. Images exceeding this size will be ignored.
+								</div>
 							</div>
 						</div>
 

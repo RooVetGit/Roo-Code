@@ -95,6 +95,8 @@ export const globalSettingsSchema = z.object({
 
 	mcpEnabled: z.boolean().optional(),
 	enableMcpServerCreation: z.boolean().optional(),
+	mcpMaxImagesPerResponse: z.number().optional(),
+	mcpMaxImageSizeMB: z.number().optional(),
 
 	mode: z.string().optional(),
 	modeApiConfigs: z.record(z.string(), z.string()).optional(),

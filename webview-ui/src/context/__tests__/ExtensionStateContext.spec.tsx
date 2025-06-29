@@ -185,6 +185,8 @@ describe("mergeExtensionState", () => {
 			version: "",
 			mcpEnabled: false,
 			enableMcpServerCreation: false,
+			mcpMaxImagesPerResponse: 20,
+			mcpMaxImageSizeMB: 10,
 			clineMessages: [],
 			taskHistory: [],
 			shouldShowAnnouncement: false,
