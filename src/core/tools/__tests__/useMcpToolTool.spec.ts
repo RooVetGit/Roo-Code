@@ -47,6 +47,10 @@ describe("useMcpToolTool", () => {
 					callTool: vi.fn(),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
 			}),
 		}
 
@@ -199,6 +203,10 @@ describe("useMcpToolTool", () => {
 					callTool: vi.fn().mockResolvedValue(mockToolResult),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
 			})
 
 			await useMcpToolTool(
@@ -248,6 +256,10 @@ describe("useMcpToolTool", () => {
 					callTool: vi.fn().mockResolvedValue(mockToolResult),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
 			})
 
 			await useMcpToolTool(
@@ -298,6 +310,10 @@ describe("useMcpToolTool", () => {
 					callTool: vi.fn().mockResolvedValue(mockToolResult),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
 			})
 
 			await useMcpToolTool(
@@ -359,6 +375,10 @@ describe("useMcpToolTool", () => {
 					callTool: vi.fn().mockResolvedValue(mockToolResult),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
 			})
 
 			// Spy on console.warn to verify error logging
@@ -424,6 +444,10 @@ describe("useMcpToolTool", () => {
 					callTool: vi.fn().mockResolvedValue(mockToolResult),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
 			})
 
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
@@ -443,6 +467,275 @@ describe("useMcpToolTool", () => {
 
 			// Should log warning for invalid data type
 			expect(consoleSpy).toHaveBeenCalledWith("Invalid MCP ImageContent: base64 data is not a valid string")
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should limit the number of images to prevent performance issues", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			// Create more than 20 images (the current limit)
+			const imageContent = Array.from({ length: 25 }, (_, i) => ({
+				type: "image",
+				data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+				mimeType: "image/png",
+			}))
+
+			const mockToolResult = {
+				content: [{ type: "text", text: "Generated many images:" }, ...imageContent],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should only process first 20 images
+			expect(mockTask.say).toHaveBeenCalledWith(
+				"mcp_server_response",
+				"Generated many images:",
+				expect.arrayContaining([expect.stringMatching(/^data:image\/png;base64,/)]),
+			)
+
+			// Check that exactly 20 images were processed
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(20)
+
+			// Should log warning about exceeding limit
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"MCP response contains more than 20 images. Additional images will be ignored to prevent performance issues.",
+			)
+
+			expect(mockPushToolResult).toHaveBeenCalledWith("Tool result: Generated many images: (with 20 images)")
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should handle exactly the maximum number of images without warning", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			// Create exactly 20 images (the current limit)
+			const imageContent = Array.from({ length: 20 }, (_, i) => ({
+				type: "image",
+				data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+				mimeType: "image/png",
+			}))
+
+			const mockToolResult = {
+				content: [{ type: "text", text: "Generated exactly 20 images:" }, ...imageContent],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should process all 20 images
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(20)
+
+			// Should NOT log warning about exceeding limit
+			expect(consoleSpy).not.toHaveBeenCalledWith(
+				expect.stringContaining("MCP response contains more than 20 images"),
+			)
+
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Generated exactly 20 images: (with 20 images)",
+			)
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should respect custom maxImagesPerResponse setting", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			// Create 10 images (more than custom limit of 5)
+			const imageContent = Array.from({ length: 10 }, () => ({
+				type: "image",
+				data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+				mimeType: "image/png",
+			}))
+
+			const mockToolResult = {
+				content: [{ type: "text", text: "Generated many images:" }, ...imageContent],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 5,
+					mcpMaxImageSizeMB: 10,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should only process first 5 images (custom limit)
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(5)
+
+			// Should log warning about exceeding custom limit
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"MCP response contains more than 5 images. Additional images will be ignored to prevent performance issues.",
+			)
+
+			expect(mockPushToolResult).toHaveBeenCalledWith("Tool result: Generated many images: (with 5 images)")
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should reject images that exceed size limit", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			// Create a large base64 string (approximately 2MB when decoded)
+			const largeBase64 = "A".repeat((2 * 1024 * 1024 * 4) / 3) // Base64 is ~33% larger than original
+			const smallBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU"
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Generated images with different sizes:" },
+					{
+						type: "image",
+						data: largeBase64, // This should be rejected (too large)
+						mimeType: "image/png",
+					},
+					{
+						type: "image",
+						data: smallBase64, // This should be accepted
+						mimeType: "image/png",
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 1,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should only include the small image, not the large one
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(1)
+			expect(sayCall[2][0]).toContain(smallBase64)
+
+			// Should log warning about size exceeding limit
+			expect(consoleSpy).toHaveBeenCalledWith(
+				expect.stringMatching(/MCP image exceeds size limit: .* > 1MB\. Image will be ignored\./),
+			)
+
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Generated images with different sizes: (with 1 images)",
+			)
 
 			consoleSpy.mockRestore()
 		})

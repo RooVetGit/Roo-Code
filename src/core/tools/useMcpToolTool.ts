@@ -89,7 +89,16 @@ async function sendExecutionStatus(cline: Task, status: McpExecutionStatus): Pro
 	})
 }
 
-function processToolContent(toolResult: any): { text: string; images: string[] } {
+/**
+ * Calculate the approximate size of a base64 encoded image in MB
+ */
+function calculateImageSizeMB(base64Data: string): number {
+	// Base64 encoding increases size by ~33%, so actual bytes = base64Length * 0.75
+	const sizeInBytes = base64Data.length * 0.75
+	return sizeInBytes / (1024 * 1024) // Convert to MB
+}
+
+async function processToolContent(toolResult: any, cline: Task): Promise<{ text: string; images: string[] }> {
 	if (!toolResult?.content || toolResult.content.length === 0) {
 		return { text: "", images: [] }
 	}
@@ -97,10 +106,23 @@ function processToolContent(toolResult: any): { text: string; images: string[] }
 	const textParts: string[] = []
 	const images: string[] = []
 
+	// Get MCP settings from the extension's global state
+	const state = await cline.providerRef.deref()?.getState()
+	const maxImagesPerResponse = state?.mcpMaxImagesPerResponse ?? 20
+	const maxImageSizeMB = state?.mcpMaxImageSizeMB ?? 10
+
 	toolResult.content.forEach((item: any) => {
 		if (item.type === "text") {
 			textParts.push(item.text)
 		} else if (item.type === "image") {
+			// Check if we've exceeded the maximum number of images
+			if (images.length >= maxImagesPerResponse) {
+				console.warn(
+					`MCP response contains more than ${maxImagesPerResponse} images. Additional images will be ignored to prevent performance issues.`,
+				)
+				return // Skip processing additional images
+			}
+
 			if (item.mimeType && item.data !== undefined && item.data !== null) {
 				const validImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"]
 				if (validImageTypes.includes(item.mimeType)) {
@@ -115,6 +137,15 @@ function processToolContent(toolResult: any): { text: string; images: string[] }
 						const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
 						if (!base64Regex.test(item.data.replace(/\s/g, ""))) {
 							console.warn("Invalid MCP ImageContent: base64 data contains invalid characters")
+							return
+						}
+
+						// Check image size
+						const imageSizeMB = calculateImageSizeMB(item.data)
+						if (imageSizeMB > maxImageSizeMB) {
+							console.warn(
+								`MCP image exceeds size limit: ${imageSizeMB.toFixed(2)}MB > ${maxImageSizeMB}MB. Image will be ignored.`,
+							)
 							return
 						}
 
@@ -166,7 +197,7 @@ async function executeToolAndProcessResult(
 	let images: string[] = []
 
 	if (toolResult) {
-		const { text: outputText, images: outputImages } = processToolContent(toolResult)
+		const { text: outputText, images: outputImages } = await processToolContent(toolResult, cline)
 		images = outputImages
 
 		if (outputText || images.length > 0) {

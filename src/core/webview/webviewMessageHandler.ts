@@ -707,6 +707,14 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("enableMcpServerCreation", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "mcpMaxImagesPerResponse":
+			await updateGlobalState("mcpMaxImagesPerResponse", message.value ?? 20)
+			await provider.postStateToWebview()
+			break
+		case "mcpMaxImageSizeMB":
+			await updateGlobalState("mcpMaxImageSizeMB", message.value ?? 10)
+			await provider.postStateToWebview()
+			break
 		case "refreshAllMcpServers": {
 			const mcpHub = provider.getMcpHub()
 			if (mcpHub) {
