@@ -107,14 +107,30 @@ export async function executeRipgrepForFiles(
 	return executeRipgrep({ args, workspacePath, limit })
 }
 
+export async function searchAllWorkspaceFiles(query: string, limit: number = 20): Promise<FileResult[]> {
+	const workspaceFolders = vscode.workspace.workspaceFolders ?? []
+	const searchPromises = workspaceFolders.map(async (folder) => {
+		try {
+			const results = await searchWorkspaceFiles(query, folder.uri.fsPath, limit)
+			return results.map((result) => ({ ...result, workspaceName: folder.name }))
+		} catch (error) {
+			console.error(`Error searching workspace ${folder.name}:`, error)
+			return []
+		}
+	})
+
+	const allResults = await Promise.all(searchPromises)
+	return allResults.flat().slice(0, limit)
+}
+
 export async function searchWorkspaceFiles(
 	query: string,
-	workspacePath: string,
+	dirPath: string,
 	limit: number = 20,
 ): Promise<{ path: string; type: "file" | "folder"; label?: string }[]> {
 	try {
 		// Get all files and directories (from our modified function)
-		const allItems = await executeRipgrepForFiles(workspacePath, 5000)
+		const allItems = await executeRipgrepForFiles(dirPath, 5000)
 
 		// If no query, just return the top items
 		if (!query.trim()) {
@@ -140,7 +156,7 @@ export async function searchWorkspaceFiles(
 		// Verify types of the shortest results
 		const verifiedResults = await Promise.all(
 			fzfResults.map(async (result) => {
-				const fullPath = path.join(workspacePath, result.path)
+				const fullPath = path.join(dirPath, result.path)
 				// Verify if the path exists and is actually a directory
 				if (fs.existsSync(fullPath)) {
 					const isDirectory = fs.lstatSync(fullPath).isDirectory()

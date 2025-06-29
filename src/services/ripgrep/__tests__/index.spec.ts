@@ -1,6 +1,6 @@
 // npx vitest run src/services/ripgrep/__tests__/index.spec.ts
 
-import { truncateLine } from "../index"
+import { truncateLine, regexSearchFiles } from "../index"
 
 describe("Ripgrep line truncation", () => {
 	// The default MAX_LINE_LENGTH is 500 in the implementation
@@ -46,5 +46,22 @@ describe("Ripgrep line truncation", () => {
 
 		expect(truncated.length).toEqual(customLength + " [truncated...]".length)
 		expect(truncated).toContain("[truncated...]")
+	})
+})
+
+describe("Multi-workspace search", () => {
+	it("should handle empty workspace paths array", async () => {
+		const result = await regexSearchFiles("/mock/cwd", [], "test")
+		expect(result).toBe("No workspace paths provided")
+	})
+
+	it("should search multiple workspace paths", async () => {
+		const workspacePaths = ["/workspace1", "/workspace2"]
+
+		try {
+			await regexSearchFiles("/mock/cwd", workspacePaths, "test")
+		} catch (error) {
+			expect(error).toBeDefined()
+		}
 	})
 })

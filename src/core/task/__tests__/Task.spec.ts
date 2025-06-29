@@ -127,6 +127,9 @@ vi.mock("vscode", () => {
 			from: vi.fn(),
 		},
 		TabInputText: vi.fn(),
+		RelativePattern: vi.fn().mockImplementation((base, pattern) => ({ base, pattern })),
+		Uri: { file: vi.fn((path) => ({ fsPath: path })) },
+		FileType: { File: 1, Directory: 2 },
 	}
 })
 

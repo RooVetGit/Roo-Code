@@ -14,7 +14,7 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 import { listFiles } from "../../services/glob/list-files"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
-import { arePathsEqual } from "../../utils/path"
+import { arePathsEqual, getAllWorkspacePaths } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 
 import { Task } from "../task/Task"
@@ -249,27 +249,37 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 	if (includeFileDetails) {
 		details += `\n\n# Current Workspace Directory (${cline.cwd.toPosix()}) Files\n`
-		const isDesktop = arePathsEqual(cline.cwd, path.join(os.homedir(), "Desktop"))
 
-		if (isDesktop) {
+		const allWorkspacePaths = getAllWorkspacePaths()
+		const maxFilesPerWorkspace = Math.floor((maxWorkspaceFiles ?? 200) / allWorkspacePaths.length)
+
+		// Collect all files from all workspaces
+		let allFiles: string[] = []
+		let anyDidHitLimit = false
+
+		for (const workspacePath of allWorkspacePaths) {
+			const isDesktop = arePathsEqual(workspacePath, path.join(os.homedir(), "Desktop"))
 			// Don't want to immediately access desktop since it would show
 			// permission popup.
-			details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
-		} else {
-			const maxFiles = maxWorkspaceFiles ?? 200
-			const [files, didHitLimit] = await listFiles(cline.cwd, true, maxFiles)
-			const { showRooIgnoredFiles = true } = state ?? {}
+			if (isDesktop) {
+				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)\n"
+				continue
+			}
 
-			const result = formatResponse.formatFilesList(
-				cline.cwd,
-				files,
-				didHitLimit,
-				cline.rooIgnoreController,
-				showRooIgnoredFiles,
-			)
-
-			details += result
+			const [files, didHitLimit] = await listFiles(workspacePath, true, maxFilesPerWorkspace)
+			anyDidHitLimit = anyDidHitLimit || didHitLimit
+			allFiles.push(...files)
 		}
+
+		// Format all file paths relative to `cline.cwd`
+		const { showRooIgnoredFiles = true } = state ?? {}
+		details += formatResponse.formatFilesList(
+			cline.cwd,
+			allFiles,
+			anyDidHitLimit,
+			cline.rooIgnoreController,
+			showRooIgnoredFiles,
+		)
 	}
 
 	return `<environment_details>\n${details.trim()}\n</environment_details>`

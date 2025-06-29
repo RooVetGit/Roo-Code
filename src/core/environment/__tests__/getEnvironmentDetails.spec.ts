@@ -11,7 +11,7 @@ import { getApiMetrics } from "../../../shared/getApiMetrics"
 import { listFiles } from "../../../services/glob/list-files"
 import { TerminalRegistry } from "../../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../../integrations/terminal/Terminal"
-import { arePathsEqual } from "../../../utils/path"
+import { arePathsEqual, getAllWorkspacePaths } from "../../../utils/path"
 import { FileContextTracker } from "../../context-tracking/FileContextTracker"
 import { ApiHandler } from "../../../api/index"
 import { ClineProvider } from "../../webview/ClineProvider"
@@ -129,6 +129,7 @@ describe("getEnvironmentDetails", () => {
 		;(listFiles as Mock).mockResolvedValue([["file1.ts", "file2.ts"], false])
 		;(formatResponse.formatFilesList as Mock).mockReturnValue("file1.ts\nfile2.ts")
 		;(arePathsEqual as Mock).mockReturnValue(false)
+		;(getAllWorkspacePaths as Mock).mockReturnValue([mockCwd])
 		;(Terminal.compressTerminalOutput as Mock).mockImplementation((output: string) => output)
 		;(TerminalRegistry.getTerminals as Mock).mockReturnValue([])
 		;(TerminalRegistry.getBackgroundTerminals as Mock).mockReturnValue([])

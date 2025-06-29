@@ -3,7 +3,7 @@ import * as path from "path"
 
 import { listFiles } from "../../services/glob/list-files"
 import { ClineProvider } from "../../core/webview/ClineProvider"
-import { toRelativePath, getWorkspacePath } from "../../utils/path"
+import { toRelativePath, getWorkspacePath, getAllWorkspacePaths } from "../../utils/path"
 
 const MAX_INITIAL_FILES = 1_000
 
@@ -19,6 +19,7 @@ class WorkspaceTracker {
 	get cwd() {
 		return getWorkspacePath()
 	}
+
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
 		this.registerListeners()
@@ -30,17 +31,47 @@ class WorkspaceTracker {
 			return
 		}
 		const tempCwd = this.cwd
-		const [files, _] = await listFiles(tempCwd, true, MAX_INITIAL_FILES)
-		if (this.prevWorkSpacePath !== tempCwd) {
-			return
+		const allWorkspaces = getAllWorkspacePaths()
+
+		// Distribute file limit across all workspaces
+		const filesPerWorkspace = Math.ceil(MAX_INITIAL_FILES / allWorkspaces.length)
+		for (const workspacePath of allWorkspaces) {
+			const [files, _] = await listFiles(workspacePath, true, filesPerWorkspace)
+			if (this.prevWorkSpacePath !== tempCwd) {
+				return
+			}
+			files.slice(0, filesPerWorkspace).forEach((file) => {
+				const absolutePath = path.resolve(workspacePath, file)
+				this.filePaths.add(this.normalizeFilePath(absolutePath))
+			})
 		}
-		files.slice(0, MAX_INITIAL_FILES).forEach((file) => this.filePaths.add(this.normalizeFilePath(file)))
 		this.workspaceDidUpdate()
 	}
 
 	private registerListeners() {
-		const watcher = vscode.workspace.createFileSystemWatcher("**")
 		this.prevWorkSpacePath = this.cwd
+
+		const workspaceFolders = vscode.workspace.workspaceFolders ?? ["."]
+		workspaceFolders.forEach((folder) => {
+			const pattern = new vscode.RelativePattern(folder, "**")
+			const watcher = vscode.workspace.createFileSystemWatcher(pattern)
+			this.setupWatcherEvents(watcher)
+			this.disposables.push(watcher)
+		})
+
+		this.disposables.push(
+			vscode.window.tabGroups.onDidChangeTabs(() => {
+				// Reset if workspace path has changed
+				if (this.prevWorkSpacePath !== this.cwd) {
+					this.workspaceDidReset()
+				} else {
+					this.workspaceDidUpdate()
+				}
+			}),
+		)
+	}
+
+	private setupWatcherEvents(watcher: vscode.FileSystemWatcher) {
 		this.disposables.push(
 			watcher.onDidCreate(async (uri) => {
 				await this.addFilePath(uri.fsPath)
@@ -52,21 +83,6 @@ class WorkspaceTracker {
 		this.disposables.push(
 			watcher.onDidDelete(async (uri) => {
 				if (await this.removeFilePath(uri.fsPath)) {
-					this.workspaceDidUpdate()
-				}
-			}),
-		)
-
-		this.disposables.push(watcher)
-
-		// Listen for tab changes and call workspaceDidUpdate directly
-		this.disposables.push(
-			vscode.window.tabGroups.onDidChangeTabs(() => {
-				// Reset if workspace path has changed
-				if (this.prevWorkSpacePath !== this.cwd) {
-					this.workspaceDidReset()
-				} else {
-					// Otherwise just update
 					this.workspaceDidUpdate()
 				}
 			}),
