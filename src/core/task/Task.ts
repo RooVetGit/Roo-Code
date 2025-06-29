@@ -1908,6 +1908,39 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
+	// Task completion
+
+	public async finish() {
+		// Find any api_req_started messages that are still pending (no cost and no cancelReason)
+		// While theoretically only the last one should be unfinished, the UI checks all messages
+		const messages = [...this.clineMessages]
+		let hasUpdates = false
+
+		for (let i = 0; i < messages.length; i++) {
+			const message = messages[i]
+			if (message.type === "say" && message.say === "api_req_started") {
+				const apiReqInfo: ClineApiReqInfo = JSON.parse(message.text || "{}")
+
+				// Check if this message is still pending (no cost and no cancelReason)
+				if (apiReqInfo.cost === undefined && apiReqInfo.cancelReason === undefined) {
+					// Update the message to have a cost of 0 to indicate completion
+					apiReqInfo.cost = 0
+					messages[i] = {
+						...message,
+						text: JSON.stringify(apiReqInfo),
+					}
+					hasUpdates = true
+				}
+			}
+		}
+
+		// Save the updated messages if any were modified
+		if (hasUpdates) {
+			this.clineMessages = messages
+			await this.saveClineMessages()
+		}
+	}
+
 	// Getters
 
 	public get cwd() {
