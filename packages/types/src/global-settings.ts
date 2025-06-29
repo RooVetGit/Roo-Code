@@ -46,6 +46,17 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
+	commandRiskLevel: z
+		.enum([
+			"disabled",
+			"none",
+			"readOnly",
+			"reversibleChanges",
+			"complexChanges",
+			"serviceInterruptingChanges",
+			"destructiveChanges",
+		])
+		.optional(),
 	allowedMaxRequests: z.number().nullish(),
 	autoCondenseContext: z.boolean().optional(),
 	autoCondenseContextPercent: z.number().optional(),
@@ -190,6 +201,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowSubtasks: true,
 	alwaysAllowExecute: true,
 	allowedCommands: ["*"],
+	commandRiskLevel: "disabled",
 
 	browserToolEnabled: false,
 	browserViewportSize: "900x600",

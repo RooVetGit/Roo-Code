@@ -121,6 +121,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 	const {
 		alwaysAllowReadOnly,
+		commandRiskLevel,
 		alwaysAllowReadOnlyOutsideWorkspace,
 		allowedCommands,
 		allowedMaxRequests,
@@ -276,6 +277,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "allowedMaxRequests", value: allowedMaxRequests ?? undefined })
 			vscode.postMessage({ type: "autoCondenseContext", bool: autoCondenseContext })
 			vscode.postMessage({ type: "autoCondenseContextPercent", value: autoCondenseContextPercent })
+			vscode.postMessage({ type: "commandRiskLevel", text: commandRiskLevel ?? "disabled" })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
@@ -600,6 +602,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowSubtasks={alwaysAllowSubtasks}
 							alwaysAllowExecute={alwaysAllowExecute}
 							allowedCommands={allowedCommands}
+							commandRiskLevel={commandRiskLevel}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

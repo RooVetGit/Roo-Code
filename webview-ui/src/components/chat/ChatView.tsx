@@ -34,6 +34,7 @@ import { StandardTooltip } from "@src/components/ui"
 
 import TelemetryBanner from "../common/TelemetryBanner"
 import { useTaskSearch } from "../history/useTaskSearch"
+import { CommandRiskLevel, isValidRiskLevel, isRiskAllowed } from "@roo-code/types"
 import HistoryPreview from "../history/HistoryPreview"
 import Announcement from "./Announcement"
 import BrowserSessionRow from "./BrowserSessionRow"
@@ -86,6 +87,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowExecute,
 		alwaysAllowMcp,
 		allowedCommands,
+		commandRiskLevel,
 		writeDelayMs,
 		mode,
 		setMode,
@@ -866,9 +868,21 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const isAllowedCommand = useCallback(
 		(message: ClineMessage | undefined): boolean => {
 			if (message?.type !== "ask") return false
-			return validateCommand(message.text || "", allowedCommands || [])
+
+			// First check if command is allowed
+			if (validateCommand(message.text || "", allowedCommands || [])) {
+				return true
+			} else if (message.metadata?.risk) {
+				const risk = message.metadata?.risk as CommandRiskLevel
+				if (isValidRiskLevel(risk) && isRiskAllowed(commandRiskLevel as CommandRiskLevel, risk)) {
+					return true
+				}
+			}
+
+			// Default: If the command is not allowed, return false
+			return false
 		},
-		[allowedCommands],
+		[allowedCommands, commandRiskLevel],
 	)
 
 	const isAutoApproved = useCallback(

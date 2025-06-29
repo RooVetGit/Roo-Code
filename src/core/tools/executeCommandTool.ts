@@ -14,6 +14,12 @@ import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
+import { isRiskAnalysisEnabled, CommandRiskLevel, commandRiskLevels } from "@roo-code/types"
+
+// Local implementation of isValidRiskLevel to avoid importing from outside rootDir
+function isValidRiskLevel(risk: string): boolean {
+	return risk !== undefined && risk !== "none" && commandRiskLevels.includes(risk as CommandRiskLevel)
+}
 
 class ShellIntegrationError extends Error {}
 
@@ -27,10 +33,15 @@ export async function executeCommandTool(
 ) {
 	let command: string | undefined = block.params.command
 	const customCwd: string | undefined = block.params.cwd
+	const commandRisk: string | undefined = block.params.risk
+	const riskAnalysis: string | undefined = block.params.risk_analysis
+	const metadata = { risk: commandRisk || "", risk_analysis: riskAnalysis || "" }
 
 	try {
 		if (block.partial) {
-			await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
+			await cline
+				.ask("command", removeClosingTag("command", command), block.partial, undefined, undefined, metadata)
+				.catch(() => {})
 			return
 		} else {
 			if (!command) {
@@ -38,6 +49,27 @@ export async function executeCommandTool(
 				cline.recordToolError("execute_command")
 				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "command"))
 				return
+			}
+
+			// Get the current command risk level setting
+			const clineProvider = await cline.providerRef.deref()
+			const clineProviderState = await clineProvider?.getState()
+			const { commandRiskLevel = "none" } = clineProviderState ?? {}
+
+			// Only check for risk and risk_analysis if risk level is not disabled
+			// Risk analysis is enabled by default and only disabled when commandRiskLevel is explicitly "disabled"
+			if (isRiskAnalysisEnabled(commandRiskLevel)) {
+				if (!commandRisk) {
+					cline.consecutiveMistakeCount++
+					pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "risk"))
+					return
+				}
+
+				if (!riskAnalysis) {
+					cline.consecutiveMistakeCount++
+					pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "risk_analysis"))
+					return
+				}
 			}
 
 			const ignoredFileAttemptedToAccess = cline.rooIgnoreController?.validateCommand(command)
@@ -48,18 +80,23 @@ export async function executeCommandTool(
 				return
 			}
 
+			// Check if the risk level is valid (only if risk analysis is required)
+			if (isRiskAnalysisEnabled(commandRiskLevel) && commandRisk && !isValidRiskLevel(commandRisk)) {
+				const errorMessage = `Invalid risk level: "${commandRisk}". Valid risk levels are: ${commandRiskLevels.filter((r: CommandRiskLevel) => r !== "none").join(", ")}`
+				pushToolResult(formatResponse.toolError(errorMessage))
+				return
+			}
+
 			cline.consecutiveMistakeCount = 0
 
 			command = unescapeHtmlEntities(command) // Unescape HTML entities.
-			const didApprove = await askApproval("command", command)
+			const didApprove = await askApproval("command", command, undefined, undefined, metadata)
 
 			if (!didApprove) {
 				return
 			}
 
 			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
-			const clineProvider = await cline.providerRef.deref()
-			const clineProviderState = await clineProvider?.getState()
 			const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
 
 			const options: ExecuteCommandOptions = {

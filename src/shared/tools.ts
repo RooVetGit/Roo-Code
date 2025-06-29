@@ -9,6 +9,9 @@ export type AskApproval = (
 	partialMessage?: string,
 	progressStatus?: ToolProgressStatus,
 	forceApproval?: boolean,
+	
+	// metadata is used to pass additional arbitrary user data to the webview as necessary
+	metadata?: Record<string, unknown>,
 ) => Promise<boolean>
 
 export type HandleError = (action: string, error: Error) => Promise<void>
@@ -64,6 +67,8 @@ export const toolParamNames = [
 	"end_line",
 	"query",
 	"args",
+	"risk",
+	"risk_analysis",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -79,7 +84,7 @@ export interface ToolUse {
 export interface ExecuteCommandToolUse extends ToolUse {
 	name: "execute_command"
 	// Pick<Record<ToolParamName, string>, "command"> makes "command" required, but Partial<> makes it optional
-	params: Partial<Pick<Record<ToolParamName, string>, "command" | "cwd">>
+	params: Partial<Pick<Record<ToolParamName, string>, "command" | "cwd" | "risk" | "risk_analysis">>
 }
 
 export interface ReadFileToolUse extends ToolUse {

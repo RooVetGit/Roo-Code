@@ -154,6 +154,9 @@ export const clineMessageSchema = z.object({
 	progressStatus: toolProgressStatusSchema.optional(),
 	contextCondense: contextCondenseSchema.optional(),
 	isProtected: z.boolean().optional(),
+	
+	// metadata is used to pass additional arbitrary user data to the webview as necessary
+	metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 export type ClineMessage = z.infer<typeof clineMessageSchema>
