@@ -11,6 +11,7 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { ViewColumn } from "vscode"
 
 export async function applyDiffToolLegacy(
 	cline: Task,
@@ -143,7 +144,9 @@ export async function applyDiffToolLegacy(
 
 			// Show diff view before asking for approval
 			cline.diffViewProvider.editType = "modify"
-			await cline.diffViewProvider.open(relPath)
+			const clineRef = cline.providerRef.deref()
+			const viewColumn = clineRef?.getViewColumn() ?? ViewColumn.Active
+			await cline.diffViewProvider.open(relPath, viewColumn)
 			await cline.diffViewProvider.update(diffResult.content, true)
 			await cline.diffViewProvider.scrollToFirstDiff()
 
@@ -190,13 +193,13 @@ export async function applyDiffToolLegacy(
 				pushToolResult(message)
 			}
 
-			await cline.diffViewProvider.reset()
+			await cline.diffViewProvider.resetWithListeners()
 
 			return
 		}
 	} catch (error) {
 		await handleError("applying diff", error)
-		await cline.diffViewProvider.reset()
+		await cline.diffViewProvider.resetWithListeners()
 		return
 	}
 }
