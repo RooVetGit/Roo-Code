@@ -5,6 +5,8 @@ import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
 import { McpExecutionStatus } from "@roo-code/types"
 import { t } from "../../i18n"
 
+const SUPPORTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"]
+
 interface McpToolParams {
 	server_name?: string
 	tool_name?: string
@@ -124,8 +126,7 @@ async function processToolContent(toolResult: any, cline: Task): Promise<{ text:
 			}
 
 			if (item.mimeType && item.data !== undefined && item.data !== null) {
-				const validImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"]
-				if (validImageTypes.includes(item.mimeType)) {
+				if (SUPPORTED_IMAGE_TYPES.includes(item.mimeType)) {
 					try {
 						// Validate base64 data before constructing data URL
 						if (typeof item.data !== "string" || item.data.trim() === "") {
