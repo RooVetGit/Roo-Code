@@ -171,7 +171,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	apiProvider: "openrouter",
 	openRouterUseMiddleOutTransform: false,
 
-	lastShownAnnouncementId: "may-29-2025-3-19",
+	lastShownAnnouncementId: "jun-17-2025-3-21",
 
 	pinnedApiConfigs: {},
 
