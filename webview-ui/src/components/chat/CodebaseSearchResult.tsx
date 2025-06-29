@@ -24,7 +24,7 @@ const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({ filePath, s
 	}
 
 	return (
-		<StandardTooltip content={`Score: ${score.toFixed(2)}`}>
+		<StandardTooltip content={`Similarity score: ${score.toFixed(3)} (click to open file)`}>
 			<div
 				onClick={handleClick}
 				className="mb-1 p-2 border border-primary rounded cursor-pointer hover:bg-secondary hover:text-white">
@@ -34,6 +34,9 @@ const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({ filePath, s
 					</span>
 					<span className="text-gray-500 truncate min-w-0 flex-1">
 						{filePath.split("/").slice(0, -1).join("/")}
+					</span>
+					<span className="text-xs text-vscode-descriptionForeground bg-vscode-badge-background px-2 py-1 rounded whitespace-nowrap ml-auto">
+						{score.toFixed(3)}
 					</span>
 				</div>
 			</div>

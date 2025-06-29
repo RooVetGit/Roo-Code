@@ -7,6 +7,7 @@ import { Trans } from "react-i18next"
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
 import { EmbedderProvider } from "@roo/embeddingModels"
+import { SEARCH_MIN_SCORE } from "../../../../src/services/code-index/constants"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -27,6 +28,12 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
+	Slider,
+	Button,
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
 } from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
@@ -58,6 +65,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		totalItems: 0,
 		currentItemUnit: "items",
 	})
+	const [advancedExpanded, setAdvancedExpanded] = useState(false)
 
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
@@ -493,6 +501,87 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									</AlertDialogFooter>
 								</AlertDialogContent>
 							</AlertDialog>
+						)}
+					</div>
+
+					{/* Advanced Configuration Section */}
+					<div className="mt-6 pt-4 border-t border-vscode-widget-border">
+						<button
+							className="flex items-center justify-between w-full text-left group hover:bg-vscode-list-hoverBackground rounded p-2 -m-2"
+							onClick={() => setAdvancedExpanded(!advancedExpanded)}
+							aria-expanded={advancedExpanded}
+							aria-controls="advanced-config-section">
+							<div className="flex items-center gap-2 font-bold">
+								<div>{t("settings:codeIndex.advancedConfigLabel")}</div>
+							</div>
+							<svg
+								className={`w-4 h-4 text-vscode-foreground transition-transform duration-200 ${
+									advancedExpanded ? "rotate-90" : ""
+								}`}
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+							</svg>
+						</button>
+						{advancedExpanded && (
+							<div id="advanced-config-section" className="mt-4">
+								<div className="flex flex-col gap-3">
+									<div>
+										<span className="block font-medium mb-1">
+											{t("settings:codeIndex.searchMinScoreLabel")}
+										</span>
+										<div className="flex items-center gap-2">
+											<Slider
+												min={0}
+												max={1}
+												step={0.05}
+												value={[
+													codebaseIndexConfig.codebaseIndexSearchMinScore ?? SEARCH_MIN_SCORE,
+												]}
+												onValueChange={([value]) =>
+													setCachedStateField("codebaseIndexConfig", {
+														...codebaseIndexConfig,
+														codebaseIndexSearchMinScore: value,
+													})
+												}
+												data-testid="search-min-score-slider"
+												aria-label={t("settings:codeIndex.searchMinScoreLabel")}
+											/>
+											<span className="w-10">
+												{(
+													codebaseIndexConfig.codebaseIndexSearchMinScore ?? SEARCH_MIN_SCORE
+												).toFixed(2)}
+											</span>
+											<TooltipProvider>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() =>
+																setCachedStateField("codebaseIndexConfig", {
+																	...codebaseIndexConfig,
+																	codebaseIndexSearchMinScore: SEARCH_MIN_SCORE,
+																})
+															}
+															className="h-8 w-8 p-0"
+															data-testid="search-min-score-reset-button">
+															<span className="codicon codicon-debug-restart w-4 h-4" />
+														</Button>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>{t("settings:codeIndex.searchMinScoreResetTooltip")}</p>
+													</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
+										</div>
+										<div className="text-vscode-descriptionForeground text-sm mt-1">
+											{t("settings:codeIndex.searchMinScoreDescription")}
+										</div>
+									</div>
+								</div>
+							</div>
 						)}
 					</div>
 				</div>
