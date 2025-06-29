@@ -210,6 +210,52 @@
 		"cacheUsageNote": "提示：若未显示缓存使用情况，请切换模型后重新选择",
 		"vscodeLmModel": "VSCode LM 模型",
 		"vscodeLmWarning": "注意：这是一个非常实验性的集成，提供商支持会有所不同。如果您收到有关不支持模型的错误，则这是提供商方面的问题。",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "控制每个步骤要考虑的最高概率令牌数量。值越高，多样性越高；值越低，输出越集中和确定。"
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "控制要考虑的令牌的累积概率（核采样）。接近1.0的值增加多样性，而较低的值使输出更集中。"
+			},
+			"maxOutputTokens": {
+				"title": "最大输出令牌",
+				"description": "模型在单个响应中可以生成的最大令牌数。值越高，响应越长，但会增加令牌使用量和成本。"
+			},
+			"urlContext": {
+				"title": "启用URL上下文",
+				"description": "允许Gemini在生成响应时访问和处理URL以获取额外上下文。适用于需要网络内容分析的任务。"
+			},
+			"groundingSearch": {
+				"title": "启用Google搜索落地",
+				"description": "允许Gemini在Google中搜索最新信息，并在实时数据的基础上生成响应。适用于需要最新信息的查询。"
+			},
+			"contextLimit": {
+				"title": "上下文限制",
+				"description": "包括在上下文中的先前消息的最大数量。较低的值可减少令牌使用量和成本，但可能限制对话连续性。"
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "模型参数",
+			"advancedFeatures": "高级功能",
+			"geminiContextManagement": "Gemini 上下文管理"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "使用自定义上下文窗口限制",
+			"description": "覆盖模型的默认上下文窗口限制。当对话接近此限制时，Roo Code 会自动压缩较旧的消息。",
+			"modelDefault": "模型的默认上下文窗口限制",
+			"condensingThreshold": {
+				"tokens": "令牌",
+				"title": "上下文压缩阈值",
+				"description": "此 Gemini 配置文件的上下文压缩阈值。当上下文达到此百分比时，将自动压缩。",
+				"condensingtriggerAt": "压缩将在达到时触发",
+				"tokenLimitTriggered": "由于令牌限制触发，而非百分比",
+				"availableContext": "可用上下文窗口",
+				"tokenLimitTrigger": "令牌限制触发",
+				"actualTrigger": "实际触发"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "要使用 Google Cloud Vertex AI，您需要：",
 			"step1": "1. 注册Google Cloud账号并启用Vertex AI API",

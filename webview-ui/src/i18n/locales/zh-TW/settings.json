@@ -210,6 +210,52 @@
 		"cacheUsageNote": "注意：如果您沒有看到快取使用情況，請嘗試選擇其他模型，然後重新選擇您想要的模型。",
 		"vscodeLmModel": "語言模型",
 		"vscodeLmWarning": "注意：此整合功能仍處於實驗階段，各供應商的支援程度可能不同。如果出現模型不支援的錯誤，通常是供應商方面的問題。",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "控制要考慮的最高機率代幣數量。"
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "控制生成時累積機率閾值。"
+			},
+			"maxOutputTokens": {
+				"title": "最大輸出代幣",
+				"description": "控制模型可返回的最大代幣數量。"
+			},
+			"urlContext": {
+				"title": "啟用 URL 上下文",
+				"description": "允許在生成期間從提供的 URL 獲取頁面內容並將其包含在上下文中。"
+			},
+			"groundingSearch": {
+				"title": "啟用使用 Google 搜索進行基礎支持",
+				"description": "在生成期間使用 Google 搜索以獲取最新資訊並將其包含在上下文中。"
+			},
+			"contextLimit": {
+				"title": "上下文限制",
+				"description": "生成期間要包含的最大上下文大小（以代幣為單位）。"
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "模型參數",
+			"advancedFeatures": "進階功能",
+			"geminiContextManagement": "Gemini 上下文管理"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "使用自訂上下文視窗限制",
+			"description": "覆寫模型的預設上下文視窗限制。當對話接近此限制時，Roo Code 將自動濃縮較舊訊息。",
+			"modelDefault": "模型的預設上下文視窗限制",
+			"condensingThreshold": {
+				"tokens": "代幣",
+				"title": "上下文濃縮閾值",
+				"description": "此 Gemini 設定檔的上下文濃縮閾值。當上下文達到此百分比時，將自動濃縮。",
+				"condensingtriggerAt": "濃縮將在以下條件觸發",
+				"tokenLimitTriggered": "因代幣限制而非百分比",
+				"availableContext": "可用上下文視窗",
+				"tokenLimitTrigger": "代幣限制觸發",
+				"actualTrigger": "實際觸發"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "要使用 Google Cloud Vertex AI，您需要：",
 			"step1": "1. 建立 Google Cloud 帳戶，啟用 Vertex AI API 並啟用所需的 Claude 模型。",

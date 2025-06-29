@@ -210,6 +210,52 @@
 		"cacheUsageNote": "Hinweis: Wenn Sie keine Cache-Nutzung sehen, versuchen Sie ein anderes Modell auszuwählen und dann Ihr gewünschtes Modell erneut auszuwählen.",
 		"vscodeLmModel": "Sprachmodell",
 		"vscodeLmWarning": "Hinweis: Dies ist eine sehr experimentelle Integration und die Anbieterunterstützung variiert. Wenn Sie einen Fehler über ein nicht unterstütztes Modell erhalten, liegt das Problem auf Anbieterseite.",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "Steuert die Anzahl der wahrscheinlichsten Tokens, die in jedem Schritt berücksichtigt werden. Höhere Werte erhöhen die Vielfalt, niedrigere Werte sorgen für fokussiertere und deterministischere Ausgaben."
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "Steuert die kumulative Wahrscheinlichkeit der in Betracht zu ziehenden Tokens (Nucleus Sampling). Werte näher bei 1,0 erhöhen die Vielfalt, während niedrigere Werte die Ausgabe fokussierter machen."
+			},
+			"maxOutputTokens": {
+				"title": "Maximale Ausgabetokens",
+				"description": "Maximale Anzahl der Tokens, die das Modell in einer einzigen Antwort generieren kann. Höhere Werte ermöglichen längere Antworten, erhöhen jedoch den Tokenverbrauch und die Kosten."
+			},
+			"urlContext": {
+				"title": "URL-Kontext aktivieren",
+				"description": "Ermöglicht es Gemini, URLs für zusätzlichen Kontext bei der Generierung von Antworten zu verwenden und zu verarbeiten. Nützlich für Aufgaben, die eine Webinhaltsanalyse erfordern."
+			},
+			"groundingSearch": {
+				"title": "Grounding mit Google-Suche aktivieren",
+				"description": "Ermöglicht es Gemini, Google nach aktuellen Informationen zu durchsuchen und Antworten auf Echtzeitdaten zu stützen. Nützlich für Abfragen, die aktuelle Informationen erfordern."
+			},
+			"contextLimit": {
+				"title": "Kontextlimit",
+				"description": "Maximale Anzahl vorheriger Nachrichten, die in den Kontext einbezogen werden. Niedrigere Werte reduzieren den Tokenverbrauch und die Kosten, können jedoch die Kontinuität der Konversation einschränken."
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "Model Parameter",
+			"advancedFeatures": "Erweiterte Funktionen",
+			"geminiContextManagement": "Gemini-Kontextverwaltung"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "Benutzerdefiniertes Kontextfensterlimit verwenden",
+			"description": "Überschreibt das Standard-Kontextfenster des Modells. Wenn Konversationen dieses Limit erreichen, fasst Roo Code ältere Nachrichten automatisch zusammen.",
+			"modelDefault": "Standard-Kontextfenster des Modells",
+			"condensingThreshold": {
+				"tokens": "Tokens",
+				"title": "Schwellwert für Kontextverdichtung",
+				"description": "Kontextverdichtungs-Schwellenwert für dieses Gemini-Profil. Wenn der Kontext diesen Prozentsatz erreicht, wird automatisch verdichtet.",
+				"condensingtriggerAt": "Verdichtung wird ausgelöst bei",
+				"tokenLimitTriggered": "aufgrund der Token-Grenze, nicht des Prozentsatzes",
+				"availableContext": "Verfügbares Kontextfenster",
+				"tokenLimitTrigger": "Auslösung bei Token-Grenze",
+				"actualTrigger": "Tatsächliche Auslösung"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Um Google Cloud Vertex AI zu verwenden, müssen Sie:",
 			"step1": "1. Ein Google Cloud-Konto erstellen, die Vertex AI API aktivieren & die gewünschten Claude-Modelle aktivieren.",

@@ -214,6 +214,52 @@
 		"cacheUsageNote": "Catatan: Jika kamu tidak melihat penggunaan cache, coba pilih model yang berbeda lalu pilih model yang kamu inginkan lagi.",
 		"vscodeLmModel": "Model Bahasa",
 		"vscodeLmWarning": "Catatan: Ini adalah integrasi yang sangat eksperimental dan dukungan provider akan bervariasi. Jika kamu mendapat error tentang model yang tidak didukung, itu adalah masalah di sisi provider.",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "Mengontrol jumlah token dengan probabilitas tertinggi yang dipertimbangkan pada setiap langkah. Nilai lebih tinggi meningkatkan keberagaman, nilai lebih rendah membuat keluaran lebih terfokus dan deterministik."
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "Mengontrol probabilitas kumulatif token yang dipertimbangkan (pengambilan sampel nucleus). Nilai mendekati 1.0 meningkatkan keberagaman, sedangkan nilai lebih rendah membuat keluaran lebih terfokus."
+			},
+			"maxOutputTokens": {
+				"title": "Token Output Maksimum",
+				"description": "Jumlah maksimum token yang dapat dihasilkan model dalam satu respons. Nilai lebih tinggi memungkinkan respons lebih panjang tetapi meningkatkan penggunaan token dan biaya."
+			},
+			"urlContext": {
+				"title": "Aktifkan Konteks URL",
+				"description": "Memungkinkan Gemini mengakses dan memproses URL untuk konteks tambahan saat menghasilkan respons. Berguna untuk tugas yang memerlukan analisis konten web."
+			},
+			"groundingSearch": {
+				"title": "Aktifkan Grounding dengan Pencarian Google",
+				"description": "Memungkinkan Gemini mencari informasi terkini di Google dan mendasarkan respons pada data waktu nyata. Berguna untuk kueri yang memerlukan informasi terkini."
+			},
+			"contextLimit": {
+				"title": "Batas Konteks",
+				"description": "Jumlah maksimum pesan sebelumnya yang disertakan dalam konteks. Nilai lebih rendah mengurangi penggunaan token dan biaya tetapi dapat membatasi kelanjutan percakapan."
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "Parameter Model",
+			"advancedFeatures": "Fitur Lanjutan",
+			"geminiContextManagement": "Manajemen Konteks Gemini"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "Gunakan batas jendela konteks kustom",
+			"description": "Ganti jendela konteks default model. Ketika percakapan mendekati batas ini, Roo Code akan secara otomatis merangkum pesan yang lebih lama.",
+			"modelDefault": "Jendela konteks default model",
+			"condensingThreshold": {
+				"tokens": "token",
+				"title": "Ambang Pemadatan Konteks",
+				"description": "Ambang pemadatan konteks untuk profil Gemini ini. Ketika konteks mencapai persentase ini, akan dipadatkan secara otomatis.",
+				"condensingtriggerAt": "Pemadatan akan terjadi pada",
+				"tokenLimitTriggered": "karena batas token, bukan persentase",
+				"availableContext": "Jendela konteks tersedia",
+				"tokenLimitTrigger": "Pemicu batas token",
+				"actualTrigger": "Pemicu aktual"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Untuk menggunakan Google Cloud Vertex AI, kamu perlu:",
 			"step1": "1. Buat akun Google Cloud, aktifkan Vertex AI API & aktifkan model Claude yang diinginkan.",

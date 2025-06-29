@@ -210,6 +210,52 @@
 		"cacheUsageNote": "Remarque : Si vous ne voyez pas l'utilisation du cache, essayez de sélectionner un modèle différent puis de sélectionner à nouveau votre modèle souhaité.",
 		"vscodeLmModel": "Modèle de langage",
 		"vscodeLmWarning": "Remarque : Il s'agit d'une intégration très expérimentale et le support des fournisseurs variera. Si vous recevez une erreur concernant un modèle non pris en charge, c'est un problème du côté du fournisseur.",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "Contrôle le nombre de tokens les plus probables à considérer à chaque étape. Des valeurs plus élevées augmentent la diversité, des valeurs plus faibles rendent la sortie plus ciblée et déterministe."
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "Contrôle la probabilité cumulée des tokens à considérer (échantillonnage nucleus). Des valeurs proches de 1,0 augmentent la diversité, tandis que des valeurs plus faibles rendent la sortie plus ciblée."
+			},
+			"maxOutputTokens": {
+				"title": "Nombre maximal de tokens de sortie",
+				"description": "Nombre maximal de tokens que le modèle peut générer dans une seule réponse. Des valeurs plus élevées permettent des réponses plus longues mais augmentent l'utilisation des tokens et les coûts."
+			},
+			"urlContext": {
+				"title": "Activer le contexte d'URL",
+				"description": "Permet à Gemini d'accéder et de traiter les URL pour un contexte supplémentaire lors de la génération des réponses. Utile pour les tâches nécessitant l'analyse de contenu web."
+			},
+			"groundingSearch": {
+				"title": "Activer la mise en contexte via la recherche Google",
+				"description": "Permet à Gemini d'effectuer des recherches sur Google pour obtenir des informations actuelles et fonder les réponses sur des données en temps réel. Utile pour les requêtes nécessitant des informations à jour."
+			},
+			"contextLimit": {
+				"title": "Limite de contexte",
+				"description": "Nombre maximum de messages précédents à inclure dans le contexte. Des valeurs plus faibles réduisent l'utilisation des tokens et les coûts, mais peuvent limiter la continuité de la conversation."
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "Paramètres du modèle",
+			"advancedFeatures": "Fonctionnalités avancées",
+			"geminiContextManagement": "Gestion du contexte Gemini"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "Utiliser la limite de fenêtre de contexte personnalisée",
+			"description": "Remplace la fenêtre de contexte par défaut du modèle. Lorsque les conversations atteignent cette limite, Roo Code condensera automatiquement les anciens messages.",
+			"modelDefault": "Fenêtre de contexte par défaut du modèle",
+			"condensingThreshold": {
+				"tokens": "jetons",
+				"title": "Seuil de condensation du contexte",
+				"description": "Seuil de condensation du contexte pour ce profil Gemini. Lorsque le contexte atteint ce pourcentage, il sera automatiquement condensé.",
+				"condensingtriggerAt": "La condensation se déclenchera à",
+				"tokenLimitTriggered": "en raison de la limite de jetons, non du pourcentage",
+				"availableContext": "Fenêtre de contexte disponible",
+				"tokenLimitTrigger": "Déclencheur de limite de jetons",
+				"actualTrigger": "Déclenchement réel"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Pour utiliser Google Cloud Vertex AI, vous devez :",
 			"step1": "1. Créer un compte Google Cloud, activer l'API Vertex AI et activer les modèles Claude souhaités.",

@@ -210,6 +210,52 @@
 		"cacheUsageNote": "注意：キャッシュの使用が表示されない場合は、別のモデルを選択してから希望のモデルを再度選択してみてください。",
 		"vscodeLmModel": "言語モデル",
 		"vscodeLmWarning": "注意：これは非常に実験的な統合であり、プロバイダーのサポートは異なります。モデルがサポートされていないというエラーが表示された場合、それはプロバイダー側の問題です。",
+		"geminiParameters": {
+			"topK": {
+				"title": "トップK",
+				"description": "各ステップで考慮する最も確率の高いトークンの数を制御します。値を大きくすると多様性が増し、値を小さくすると出力がより集中して決定的になります。"
+			},
+			"topP": {
+				"title": "トップP",
+				"description": "考慮するトークンの累積確率を制御します（ニュークリアスサンプリング）。1.0に近い値は多様性を高め、低い値は出力をより集中させます。"
+			},
+			"maxOutputTokens": {
+				"title": "最大出力トークン数",
+				"description": "モデルが1つの応答で生成できる最大トークン数。値が大きいほど長い応答が可能になりますが、トークン使用量とコストが増加します。"
+			},
+			"urlContext": {
+				"title": "URLコンテキストを有効にする",
+				"description": "応答を生成する際に、追加のコンテキストとしてGeminiがURLにアクセスして処理できるようにします。Webコンテンツの分析を必要とするタスクに役立ちます。"
+			},
+			"groundingSearch": {
+				"title": "Google検索でのグラウンディングを有効にする",
+				"description": "GeminiがGoogleを検索して最新情報を取得し、リアルタイムデータに基づいて応答をグラウンディングできるようにします。最新情報が必要なクエリに便利です。"
+			},
+			"contextLimit": {
+				"title": "コンテキスト制限",
+				"description": "コンテキストに含める過去のメッセージの最大数。値を小さくするとトークン使用量とコストが削減されますが、会話の連続性が制限される場合があります。"
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "モデルパラメータ",
+			"advancedFeatures": "高度な機能",
+			"geminiContextManagement": "Gemini コンテキスト管理"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "カスタムコンテキストウィンドウ制限を使用",
+			"description": "モデルのデフォルトのコンテキストウィンドウを上書きします。この制限に近づくと、Roo Codeは古いメッセージを自動的に要約します。",
+			"modelDefault": "モデルのデフォルトのコンテキストウィンドウ",
+			"condensingThreshold": {
+				"tokens": "トークン",
+				"title": "コンテキスト圧縮しきい値",
+				"description": "このGeminiプロファイルのコンテキスト圧縮しきい値です。このパーセンテージに達すると、自動的に圧縮されます。",
+				"condensingtriggerAt": "圧縮は次の時にトリガーされます",
+				"tokenLimitTriggered": "トークン制限が原因で、パーセンテージではありません",
+				"availableContext": "利用可能なコンテキストウィンドウ",
+				"tokenLimitTrigger": "トークン制限トリガー",
+				"actualTrigger": "実際のトリガー"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AIを使用するには：",
 			"step1": "1. Google Cloudアカウントを作成し、Vertex AI APIを有効にして、希望するClaudeモデルを有効にします。",

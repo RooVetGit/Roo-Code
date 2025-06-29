@@ -210,6 +210,52 @@
 		"cacheUsageNote": "Nota: Si no veieu l'ús de la caché, proveu de seleccionar un model diferent i després tornar a seleccionar el model desitjat.",
 		"vscodeLmModel": "Model de llenguatge",
 		"vscodeLmWarning": "Nota: Aquesta és una integració molt experimental i el suport del proveïdor variarà. Si rebeu un error sobre un model no compatible, és un problema del proveïdor.",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "Controla el nombre de tokens amb més probabilitat a considerar en cada pas. Valors més alts augmenten la diversitat, valors més baixos fan que la sortida sigui més enfocada i determinista."
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "Controla la probabilitat acumulada dels tokens a considerar (mètode nucleus). Valors més propers a 1,0 augmenten la diversitat, mentre que valors més baixos fan que la sortida sigui més enfocada."
+			},
+			"maxOutputTokens": {
+				"title": "Tokens màxims de sortida",
+				"description": "Nombre màxim de tokens que el model pot generar en una sola resposta. Valors més alts permeten respostes més llargues, però augmenten l’ús de tokens i els costos."
+			},
+			"urlContext": {
+				"title": "Activa context d’URL",
+				"description": "Permet a Gemini accedir i processar URLs per obtenir context addicional durant la generació de respostes. Útil per a tasques que requereixen anàlisi de contingut web."
+			},
+			"groundingSearch": {
+				"title": "Activa grounding amb cerca de Google",
+				"description": "Permet a Gemini cercar informació actual a Google i fonamentar les respostes en dades en temps real. Útil per a consultes que requereixen informació actualitzada."
+			},
+			"contextLimit": {
+				"title": "Límit de context",
+				"description": "Nombre màxim de missatges anteriors a incloure en el context. Valors més baixos redueixen l’ús de tokens i els costos, però poden limitar la continuïtat de la conversa."
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "Paràmetres del model",
+			"advancedFeatures": "Funcions avançades",
+			"geminiContextManagement": "Gestió de context de Gemini"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "Utilitzar límit de finestra de context personalitzada",
+			"description": "Sobrescriviu la finestra de context predeterminada del model. Quan la conversa s'acosti a aquest límit, Roo Code condensarà automàticament els missatges més antics.",
+			"modelDefault": "Finestra de context predeterminada del model",
+			"condensingThreshold": {
+				"tokens": "tokens",
+				"title": "Umbral de condensació de context",
+				"description": "Umbral de condensació de context per a aquest perfil de Gemini. Quan el context arribi a aquest percentatge, es condensarà automàticament.",
+				"condensingtriggerAt": "La condensació s'activarà a",
+				"tokenLimitTriggered": "a causa del límit de tokens, no del percentatge",
+				"availableContext": "Finestra de context disponible",
+				"tokenLimitTrigger": "Activació per límit de tokens",
+				"actualTrigger": "Activació real"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Per utilitzar Google Cloud Vertex AI, necessiteu:",
 			"step1": "1. Crear un compte de Google Cloud, habilitar l'API de Vertex AI i habilitar els models Claude necessaris.",

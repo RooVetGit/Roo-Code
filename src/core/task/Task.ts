@@ -1706,7 +1706,10 @@ export class Task extends EventEmitter<ClineEvents> {
 				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
 				: modelInfo.maxTokens
 
-			const contextWindow = modelInfo.contextWindow
+			const contextWindow =
+				this.apiConfiguration.apiProvider === "gemini" && this.apiConfiguration.contextLimit
+					? this.apiConfiguration.contextLimit
+					: modelInfo.contextWindow
 
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,

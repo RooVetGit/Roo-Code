@@ -250,6 +250,30 @@ describe("Sliding Window", () => {
 			{ role: "assistant", content: "Fourth message" },
 			{ role: "user", content: "Fifth message" },
 		]
+		it("should use contextLimit as contextWindow when apiProvider is gemini", async () => {
+			const contextLimit = 2
+			const messages: ApiMessage[] = [
+				{ role: "user", content: "First message" },
+				{ role: "assistant", content: "Second message" },
+				{ role: "user", content: "Third message" },
+				{ role: "assistant", content: "Fourth message" },
+				{ role: "user", content: "" },
+			]
+			const result = await truncateConversationIfNeeded({
+				messages,
+				totalTokens: 2,
+				contextWindow: contextLimit,
+				maxTokens: null,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: false,
+				autoCondenseContextPercent: 100,
+				systemPrompt: "",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+			expect(result.messages).toEqual([messages[0], messages[3], messages[4]])
+		})
 
 		it("should not truncate if tokens are below max tokens threshold", async () => {
 			const modelInfo = createModelInfo(100000, 30000)
