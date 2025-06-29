@@ -740,6 +740,210 @@ describe("useMcpToolTool", () => {
 			consoleSpy.mockRestore()
 		})
 
+		it("should ignore images with unsupported MIME types", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Generated content with different image types:" },
+					{
+						type: "image",
+						data: "PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDAiLz48L3N2Zz4=",
+						mimeType: "image/svg+xml", // Unsupported MIME type
+					},
+					{
+						type: "image",
+						data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+						mimeType: "image/png", // Supported MIME type
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should only include the supported PNG image, not the SVG
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(1)
+			expect(sayCall[2][0]).toContain("data:image/png;base64,")
+
+			// Should log warning about unsupported MIME type
+			expect(consoleSpy).toHaveBeenCalledWith("Unsupported image MIME type: image/svg+xml")
+
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Generated content with different image types: (with 1 images)",
+			)
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should ignore malformed image content missing data property", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Generated content with malformed image:" },
+					{
+						type: "image",
+						// Missing data property
+						mimeType: "image/png",
+					},
+					{
+						type: "image",
+						data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+						mimeType: "image/png", // Valid image
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should only include the valid image, not the malformed one
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(1)
+			expect(sayCall[2][0]).toContain("data:image/png;base64,")
+
+			// Should log warning about missing data property
+			expect(consoleSpy).toHaveBeenCalledWith("Invalid MCP ImageContent: missing data or mimeType")
+
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Generated content with malformed image: (with 1 images)",
+			)
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should ignore malformed image content missing mimeType property", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "test_server",
+					tool_name: "test_tool",
+					arguments: '{"param": "value"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Generated content with malformed image:" },
+					{
+						type: "image",
+						data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+						// Missing mimeType property
+					},
+					{
+						type: "image",
+						data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+						mimeType: "image/png", // Valid image
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockResolvedValue({
+					mcpMaxImagesPerResponse: 20,
+					mcpMaxImageSizeMB: 10,
+				}),
+			})
+
+			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should only include the valid image, not the malformed one
+			const sayCall = (mockTask.say as any).mock.calls.find((call: any) => call[0] === "mcp_server_response")
+			expect(sayCall[2]).toHaveLength(1)
+			expect(sayCall[2][0]).toContain("data:image/png;base64,")
+
+			// Should log warning about missing mimeType property
+			expect(consoleSpy).toHaveBeenCalledWith("Invalid MCP ImageContent: missing data or mimeType")
+
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Generated content with malformed image: (with 1 images)",
+			)
+
+			consoleSpy.mockRestore()
+		})
+
 		it("should handle user rejection", async () => {
 			const block: ToolUse = {
 				type: "tool_use",
