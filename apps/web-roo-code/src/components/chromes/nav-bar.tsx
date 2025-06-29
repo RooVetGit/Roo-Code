@@ -61,6 +61,11 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
 						Enterprise
 					</Link>
+					<Link
+						href="/security"
+						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
+						Security
+					</Link>
 					<a
 						href={EXTERNAL_LINKS.DOCUMENTATION}
 						target="_blank"
@@ -141,6 +146,12 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
 						onClick={() => setIsMenuOpen(false)}>
 						Enterprise
+					</Link>
+					<Link
+						href="/security"
+						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
+						onClick={() => setIsMenuOpen(false)}>
+						Security
 					</Link>
 					<a
 						href={EXTERNAL_LINKS.DOCUMENTATION}

@@ -119,6 +119,13 @@ export function Footer() {
 										</Link>
 									</li>
 									<li>
+										<Link
+											href={INTERNAL_LINKS.SECURITY}
+											className="text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground">
+											Security
+										</Link>
+									</li>
+									<li>
 										<ScrollButton
 											targetId="testimonials"
 											className="text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground">
