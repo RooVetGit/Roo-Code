@@ -1334,5 +1334,52 @@ describe("Cline", () => {
 				expect(task.diffStrategy).toBeUndefined()
 			})
 		})
+
+		describe("checkpoint initialization timeout", () => {
+			it("should use default timeout when not specified", async () => {
+				const task = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					enableCheckpoints: true,
+					task: "test task",
+					startTask: false,
+				})
+
+				// Verify default timeout is set
+				expect(task.checkpointInitTimeoutMs).toBe(10000) // DEFAULT_CKPT_INIT_TIMEOUT_MS
+			})
+
+			it("should use custom timeout when specified", async () => {
+				const customTimeout = 5000
+				const task = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					enableCheckpoints: true,
+					checkpointInitTimeoutMs: customTimeout,
+					task: "test task",
+					startTask: false,
+				})
+
+				// Verify custom timeout is set
+				expect(task.checkpointInitTimeoutMs).toBe(customTimeout)
+			})
+
+			it("should disable checkpoints when not enabled", async () => {
+				const task = new Task({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					enableCheckpoints: false,
+					task: "test task",
+					startTask: false,
+				})
+
+				// Access private method through prototype
+				const ensureCheckpointInitialization = (task as any).ensureCheckpointInitialization.bind(task)
+				await ensureCheckpointInitialization()
+
+				// Should remain disabled
+				expect(task.enableCheckpoints).toBe(false)
+			})
+		})
 	})
 })

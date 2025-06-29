@@ -86,6 +86,9 @@ import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
+// Constants
+export const DEFAULT_CKPT_INIT_TIMEOUT_MS = 10000 // 10 seconds
+
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: []
@@ -105,6 +108,7 @@ export type TaskOptions = {
 	apiConfiguration: ProviderSettings
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
+	checkpointInitTimeoutMs?: number
 	fuzzyMatchThreshold?: number
 	consecutiveMistakeLimit?: number
 	task?: string
@@ -186,6 +190,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Checkpoints
 	enableCheckpoints: boolean
+	checkpointInitTimeoutMs: number
 	checkpointService?: RepoPerTaskCheckpointService
 	checkpointServiceInitializing = false
 
@@ -207,6 +212,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		apiConfiguration,
 		enableDiff = false,
 		enableCheckpoints = true,
+		checkpointInitTimeoutMs = DEFAULT_CKPT_INIT_TIMEOUT_MS,
 		fuzzyMatchThreshold = 1.0,
 		consecutiveMistakeLimit = 3,
 		task,
@@ -252,6 +258,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
+		this.checkpointInitTimeoutMs = checkpointInitTimeoutMs
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -1108,8 +1115,8 @@ export class Task extends EventEmitter<ClineEvents> {
 	// Task Loop
 
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
-		// Kicks off the checkpoints initialization process in the background.
-		getCheckpointService(this)
+		// Ensure checkpoint initialization completes before starting the main loop to prevent content duplication
+		await this.ensureCheckpointInitialization()
 
 		let nextUserContent = userContent
 		let includeFileDetails = true
@@ -1139,6 +1146,60 @@ export class Task extends EventEmitter<ClineEvents> {
 				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed() }]
 				this.consecutiveMistakeCount++
 			}
+		}
+	}
+
+	/**
+	 * Ensures checkpoint initialization completes before proceeding with task execution.
+	 * This prevents content duplication issues where checkpoint_saved messages arrive
+	 * after model streaming has already started.
+	 *
+	 * @param timeout - Configurable timeout in milliseconds (default: 10 seconds)
+	 */
+	private async ensureCheckpointInitialization(): Promise<void> {
+		if (!this.enableCheckpoints) {
+			return
+		}
+
+		const provider = this.providerRef.deref()
+		if (!provider) {
+			return
+		}
+
+		try {
+			// Start checkpoint service initialization
+			const service = getCheckpointService(this)
+			if (!service) {
+				return
+			}
+
+			// Wait for initialization to complete or timeout
+			await pWaitFor(
+				() => {
+					if (this.abort) {
+						return true // Exit early if task is aborted
+					}
+					return service.isInitialized || !this.enableCheckpoints
+				},
+				{
+					interval: 100,
+					timeout: this.checkpointInitTimeoutMs,
+				},
+			)
+
+			// If still initializing after timeout, disable checkpoints and continue
+			if (!service.isInitialized && this.enableCheckpoints) {
+				provider.log(
+					`[Task#ensureCheckpointInitialization] checkpoint initialization timed out after ${this.checkpointInitTimeoutMs}ms, disabling checkpoints`,
+				)
+				this.enableCheckpoints = false
+			}
+		} catch (error) {
+			// If checkpoint initialization fails, disable checkpoints and continue
+			provider?.log(
+				`[Task#ensureCheckpointInitialization] checkpoint initialization failed: ${error}, disabling checkpoints`,
+			)
+			this.enableCheckpoints = false
 		}
 	}
 
