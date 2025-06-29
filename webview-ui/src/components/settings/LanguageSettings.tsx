@@ -15,19 +15,10 @@ import { Section } from "./Section"
 
 type LanguageSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	language: string
-	commitLanguage: string
-	setCachedStateField: SetCachedStateField<"language" | "commitLanguage">
-	aiCommitMessagesEnabled?: boolean
+	setCachedStateField: SetCachedStateField<"language">
 }
 
-export const LanguageSettings = ({
-	language,
-	commitLanguage,
-	setCachedStateField,
-	aiCommitMessagesEnabled,
-	className,
-	...props
-}: LanguageSettingsProps) => {
+export const LanguageSettings = ({ language, setCachedStateField, className, ...props }: LanguageSettingsProps) => {
 	const { t } = useAppTranslation()
 
 	return (
@@ -56,30 +47,6 @@ export const LanguageSettings = ({
 						</SelectGroup>
 					</SelectContent>
 				</Select>
-				{aiCommitMessagesEnabled && (
-					<>
-						<div className="text-sm text-vscode-descriptionForeground">
-							{t("settings:sections.commitLanguage")}
-						</div>
-						<Select
-							value={commitLanguage}
-							onValueChange={(value) => setCachedStateField("commitLanguage", value as Language)}>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder={t("settings:common.select")} />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectGroup>
-									{Object.entries(LANGUAGES).map(([code, name]) => (
-										<SelectItem key={code} value={code}>
-											{name}
-											<span className="text-muted-foreground">({code})</span>
-										</SelectItem>
-									))}
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-					</>
-				)}
 			</Section>
 		</div>
 	)

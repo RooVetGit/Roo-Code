@@ -685,12 +685,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						<ExperimentalSettings
 							setExperimentEnabled={setExperimentEnabled}
 							experiments={experiments}
-							setCachedStateField={setCachedStateField}
+							setCachedStateField={
+								setCachedStateField as SetCachedStateField<"codebaseIndexConfig" | "commitLanguage">
+							}
 							codebaseIndexModels={codebaseIndexModels}
 							codebaseIndexConfig={codebaseIndexConfig}
 							apiConfiguration={apiConfiguration}
 							setApiConfigurationField={setApiConfigurationField}
 							areSettingsCommitted={!isChangeDetected}
+							commitLanguage={commitLanguage || "en"}
 						/>
 					)}
 
@@ -698,9 +701,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					{activeTab === "language" && (
 						<LanguageSettings
 							language={language || "en"}
-							commitLanguage={commitLanguage || "en"}
-							setCachedStateField={setCachedStateField}
-							aiCommitMessagesEnabled={experiments?.aiCommitMessages}
+							setCachedStateField={setCachedStateField as SetCachedStateField<"language">}
 						/>
 					)}
 
