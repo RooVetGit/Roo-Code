@@ -96,7 +96,7 @@ function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
 	const args = ["--files", "--hidden", "--follow"]
 
 	if (recursive) {
-		return [...args, ...buildRecursiveArgs(), dirPath]
+		return [...args, ...buildRecursiveArgs(dirPath), dirPath]
 	} else {
 		return [...args, ...buildNonRecursiveArgs(), dirPath]
 	}
@@ -105,17 +105,31 @@ function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
 /**
  * Build ripgrep arguments for recursive directory traversal
  */
-function buildRecursiveArgs(): string[] {
+function buildRecursiveArgs(dirPath: string): string[] {
 	const args: string[] = []
 
 	// In recursive mode, respect .gitignore by default
 	// (ripgrep does this automatically)
 
+	// Check if we're explicitly targeting a hidden directory
+	const targetDirName = path.basename(dirPath)
+	const isTargetingHiddenDir = targetDirName.startsWith(".")
+
 	// Apply directory exclusions for recursive searches
 	for (const dir of DIRS_TO_IGNORE) {
+		// Special handling for hidden directories pattern
+		if (dir === ".*") {
+			// Only exclude hidden directories if we're not explicitly targeting one
+			// This allows explicitly targeted hidden directories to be processed
+			// while excluding them from general recursive searches
+			if (!isTargetingHiddenDir) {
+				args.push("-g", `!**/.*/**`)
+			}
+			continue
+		}
+
 		args.push("-g", `!**/${dir}/**`)
 	}
-
 	return args
 }
 
@@ -192,7 +206,7 @@ async function listFilteredDirectories(
 	const absolutePath = path.resolve(dirPath)
 	const directories: string[] = []
 
-	async function scanDirectory(currentPath: string): Promise<void> {
+	async function scanDirectory(currentPath: string, isTargetDir: boolean = false): Promise<void> {
 		try {
 			// List all entries in the current directory
 			const entries = await fs.promises.readdir(currentPath, { withFileTypes: true })
@@ -204,14 +218,18 @@ async function listFilteredDirectories(
 					const fullDirPath = path.join(currentPath, dirName)
 
 					// Check if this directory should be included
-					if (shouldIncludeDirectory(dirName, recursive, gitignorePatterns)) {
+					if (shouldIncludeDirectory(dirName, recursive, gitignorePatterns, isTargetDir)) {
 						// Add the directory to our results (with trailing slash)
 						const formattedPath = fullDirPath.endsWith("/") ? fullDirPath : `${fullDirPath}/`
 						directories.push(formattedPath)
 
 						// If recursive mode and not a ignored directory, scan subdirectories
-						if (recursive && !isDirectoryExplicitlyIgnored(dirName)) {
-							await scanDirectory(fullDirPath)
+						// Don't recurse into hidden directories unless they are the explicit target
+						const isHiddenDir = dirName.startsWith(".")
+						const shouldRecurse =
+							recursive && !isDirectoryExplicitlyIgnored(dirName) && !(isHiddenDir && !isTargetDir)
+						if (shouldRecurse) {
+							await scanDirectory(fullDirPath, false) // Subdirectories are not target dirs
 						}
 					}
 				}
@@ -222,8 +240,8 @@ async function listFilteredDirectories(
 		}
 	}
 
-	// Start scanning from the root directory
-	await scanDirectory(absolutePath)
+	// Start scanning from the root directory - this is the explicitly targeted directory
+	await scanDirectory(absolutePath, true)
 
 	return directories
 }
@@ -231,7 +249,27 @@ async function listFilteredDirectories(
 /**
  * Determine if a directory should be included in results based on filters
  */
-function shouldIncludeDirectory(dirName: string, recursive: boolean, gitignorePatterns: string[]): boolean {
+function shouldIncludeDirectory(
+	dirName: string,
+	recursive: boolean,
+	gitignorePatterns: string[],
+	isTargetDir: boolean = false,
+): boolean {
+	// If this is the explicitly targeted directory, always include it
+	// (unless it's explicitly ignored by name, not by the .* pattern)
+	if (isTargetDir) {
+		// Only apply non-hidden-directory ignore rules to target directories
+		const nonHiddenIgnorePatterns = DIRS_TO_IGNORE.filter((pattern) => pattern !== ".*")
+		for (const pattern of nonHiddenIgnorePatterns) {
+			if (pattern === dirName || (pattern.includes("/") && pattern.split("/")[0] === dirName)) {
+				return false
+			}
+		}
+		return true
+	}
+
+	// For non-target directories (subdirectories found during traversal), apply all ignore rules
+
 	// Skip hidden directories if configured to ignore them
 	if (dirName.startsWith(".") && DIRS_TO_IGNORE.includes(".*")) {
 		return false
