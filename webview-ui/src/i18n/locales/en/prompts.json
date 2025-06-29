@@ -20,6 +20,11 @@
 		"editTools": "Edit tools",
 		"doneEditing": "Done editing",
 		"allowedFiles": "Allowed files:",
+		"fileRegex": "File Regex",
+		"description": "Description",
+		"save": "Save",
+		"cancel": "Cancel",
+		"editFileRegex": "Edit file regex",
 		"toolNames": {
 			"read": "Read Files",
 			"edit": "Edit Files",
