@@ -1,5 +1,6 @@
 import { OpenAICompatibleEmbedder } from "./openai-compatible"
 import { IEmbedder, EmbeddingResponse, EmbedderInfo } from "../interfaces/embedder"
+import { GEMINI_MAX_ITEM_TOKENS } from "../constants"
 
 /**
  * Gemini embedder implementation that wraps the OpenAI Compatible embedder
@@ -30,6 +31,7 @@ export class GeminiEmbedder implements IEmbedder {
 			GeminiEmbedder.GEMINI_BASE_URL,
 			apiKey,
 			GeminiEmbedder.GEMINI_MODEL,
+			GEMINI_MAX_ITEM_TOKENS,
 		)
 	}
 

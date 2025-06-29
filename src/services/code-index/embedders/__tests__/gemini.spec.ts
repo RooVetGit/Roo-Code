@@ -28,6 +28,7 @@ describe("GeminiEmbedder", () => {
 				"https://generativelanguage.googleapis.com/v1beta/openai/",
 				apiKey,
 				"text-embedding-004",
+				2048,
 			)
 		})
 
