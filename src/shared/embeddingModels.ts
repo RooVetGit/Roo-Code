@@ -2,7 +2,7 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
@@ -33,6 +33,9 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		"text-embedding-3-small": { dimension: 1536 },
 		"text-embedding-3-large": { dimension: 3072 },
 		"text-embedding-ada-002": { dimension: 1536 },
+	},
+	gemini: {
+		"text-embedding-004": { dimension: 768 },
 	},
 }
 
@@ -85,6 +88,10 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 			// Return a placeholder or throw an error, depending on desired behavior
 			return "unknown-default" // Placeholder specific model ID
 		}
+
+		case "gemini":
+			return "text-embedding-004"
+
 		default:
 			// Fallback for unknown providers
 			console.warn(`Unknown provider for default model ID: ${provider}. Falling back to OpenAI default.`)
