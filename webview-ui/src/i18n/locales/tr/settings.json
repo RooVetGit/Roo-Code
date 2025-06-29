@@ -31,6 +31,8 @@
 		"prompts": "Promptlar",
 		"experimental": "Deneysel",
 		"language": "Dil",
+		"pluginLanguage": "Eklenti Dili",
+		"commitLanguage": "Commit Dili",
 		"about": "Roo Code Hakkında"
 	},
 	"prompts": {
@@ -503,6 +505,10 @@
 		"POWER_STEERING": {
 			"name": "Deneysel \"güç direksiyon\" modunu kullan",
 			"description": "Etkinleştirildiğinde, Roo modele geçerli mod tanımının ayrıntılarını daha sık hatırlatacaktır. Bu, rol tanımlarına ve özel talimatlara daha güçlü uyum sağlayacak, ancak mesaj başına daha fazla token kullanacaktır."
+		},
+		"AI_COMMIT_MESSAGES": {
+			"name": "Yapay Zeka Destekli Commit Mesajlarını Etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo mevcut daldaki değişikliklere göre commit mesajları oluşturmak için yapay zekayı kullanacaktır."
 		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Deneysel çoklu blok diff aracını kullan",

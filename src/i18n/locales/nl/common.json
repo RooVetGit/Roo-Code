@@ -22,6 +22,9 @@
 		"just_this_message": "Alleen dit bericht",
 		"this_and_subsequent": "Dit en alle volgende berichten"
 	},
+	"git": {
+		"generatingCommitMessage": "Commitbericht genereren met {{modelName}}..."
+	},
 	"errors": {
 		"invalid_data_uri": "Ongeldig data-URI-formaat",
 		"error_copying_image": "Fout bij kopiëren van afbeelding: {{errorMessage}}",

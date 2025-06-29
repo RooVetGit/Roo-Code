@@ -208,7 +208,42 @@ describe("mergeExtensionState", () => {
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
 			profileThresholds: {},
-			hasOpenedModeSelector: false, // Add the new required property
+			hasOpenedModeSelector: false,
+			language: "en",
+			commitLanguage: "en",
+			soundVolume: 0.5,
+			ttsEnabled: false,
+			ttsSpeed: 1.0,
+			diffEnabled: false,
+			fuzzyMatchThreshold: 1.0,
+			browserViewportSize: "900x600",
+			screenshotQuality: 75,
+			terminalOutputLineLimit: 500,
+			terminalShellIntegrationTimeout: 4000,
+			currentApiConfigName: "default",
+			listApiConfigMeta: [],
+			customSupportPrompts: {},
+			enhancementApiConfigId: "",
+			condensingApiConfigId: "",
+			customCondensingPrompt: "",
+			autoApprovalEnabled: false,
+			cwd: "",
+			browserToolEnabled: true,
+			pinnedApiConfigs: {},
+			terminalZshOhMy: false,
+			maxConcurrentFileReads: 5,
+			terminalZshP10k: false,
+			terminalZdotdir: false,
+			terminalCompressProgressBar: true,
+			historyPreviewCollapsed: false,
+			codebaseIndexConfig: {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "http://localhost:6333",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
+			codebaseIndexModels: { ollama: {}, openai: {} },
 		}
 
 		const prevState: ExtensionState = {
@@ -226,15 +261,14 @@ describe("mergeExtensionState", () => {
 				disableCompletionCommand: false,
 				concurrentFileReads: true,
 				multiFileApplyDiff: true,
+				aiCommitMessages: false,
 			} as Record<ExperimentId, boolean>,
 		}
 
 		const result = mergeExtensionState(prevState, newState)
 
-		expect(result.apiConfiguration).toEqual({
-			modelMaxThinkingTokens: 456,
-			modelTemperature: 0.3,
-		})
+		// The entire apiConfiguration object should be replaced, not merged
+		expect(result.apiConfiguration).toEqual(newState.apiConfiguration)
 
 		expect(result.experiments).toEqual({
 			powerSteering: true,
@@ -242,6 +276,7 @@ describe("mergeExtensionState", () => {
 			disableCompletionCommand: false,
 			concurrentFileReads: true,
 			multiFileApplyDiff: true,
+			aiCommitMessages: false,
 		})
 	})
 })

@@ -22,6 +22,9 @@
 		"just_this_message": "सिर्फ यह संदेश",
 		"this_and_subsequent": "यह और सभी बाद के संदेश"
 	},
+	"git": {
+		"generatingCommitMessage": "{{modelName}} के साथ कमिट संदेश उत्पन्न हो रहा है..."
+	},
 	"errors": {
 		"invalid_data_uri": "अमान्य डेटा URI फॉर्मेट",
 		"error_copying_image": "छवि कॉपी करने में त्रुटि: {{errorMessage}}",

@@ -1,7 +1,7 @@
 import { HTMLAttributes } from "react"
 import { FlaskConical } from "lucide-react"
 
-import type { Experiments, CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
+import type { Experiments, CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings, Language } from "@roo-code/types"
 
 import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 
@@ -14,17 +14,19 @@ import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
 import { CodeIndexSettings } from "./CodeIndexSettings"
+import { CommitLanguageSettings } from "./CommitLanguageSettings"
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Experiments
 	setExperimentEnabled: SetExperimentEnabled
-	setCachedStateField: SetCachedStateField<"codebaseIndexConfig">
+	setCachedStateField: SetCachedStateField<"codebaseIndexConfig" | "commitLanguage"> // Combined the types
 	// CodeIndexSettings props
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 	areSettingsCommitted: boolean
+	commitLanguage: Language
 }
 
 export const ExperimentalSettings = ({
@@ -36,6 +38,7 @@ export const ExperimentalSettings = ({
 	apiConfiguration,
 	setApiConfigurationField,
 	areSettingsCommitted,
+	commitLanguage,
 	className,
 	...props
 }: ExperimentalSettingsProps) => {
@@ -64,6 +67,27 @@ export const ExperimentalSettings = ({
 										setExperimentEnabled(EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF, enabled)
 									}
 								/>
+							)
+						} else if (config[0] === "AI_COMMIT_MESSAGES") {
+							// Dodano warunek dla AI_COMMIT_MESSAGES
+							return (
+								<>
+									<ExperimentalFeature
+										key={config[0]}
+										experimentKey={config[0]}
+										enabled={experiments[EXPERIMENT_IDS.AI_COMMIT_MESSAGES] ?? false}
+										onChange={(enabled) =>
+											setExperimentEnabled(EXPERIMENT_IDS.AI_COMMIT_MESSAGES, enabled)
+										}
+									/>
+									<CommitLanguageSettings
+										commitLanguage={commitLanguage}
+										setCachedStateField={
+											setCachedStateField as SetCachedStateField<"commitLanguage">
+										}
+										aiCommitMessagesEnabled={experiments?.aiCommitMessages} // Przekazujemy prop
+									/>
+								</>
 							)
 						}
 						return (

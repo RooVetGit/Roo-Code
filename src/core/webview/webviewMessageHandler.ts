@@ -1109,6 +1109,11 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("language", message.text as Language)
 			await provider.postStateToWebview()
 			break
+		case "commitLanguage":
+			changeLanguage(message.text ?? "en")
+			await updateGlobalState("commitLanguage", message.text as Language)
+			await provider.postStateToWebview()
+			break
 		case "showRooIgnoredFiles":
 			await updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 			await provider.postStateToWebview()
@@ -1422,6 +1427,19 @@ export const webviewMessageHandler = async (
 			}
 
 			await updateGlobalState("experiments", updatedExperiments)
+
+			// Also update workspace settings to trigger the context update.
+			await vscode.workspace
+				.getConfiguration(Package.name)
+				.update("experiments", updatedExperiments, vscode.ConfigurationTarget.Global)
+
+			if (message.values.aiCommitMessages !== undefined) {
+				await vscode.commands.executeCommand(
+					"setContext",
+					"roo-cline.aiCommitMessagesEnabled",
+					message.values.aiCommitMessages,
+				)
+			}
 
 			await provider.postStateToWebview()
 			break

@@ -26,6 +26,9 @@
 		"just_this_message": "Només aquest missatge",
 		"this_and_subsequent": "Aquest i tots els missatges posteriors"
 	},
+	"git": {
+		"generatingCommitMessage": "Generant missatge de commit amb {{modelName}}..."
+	},
 	"errors": {
 		"invalid_data_uri": "Format d'URI de dades no vàlid",
 		"error_copying_image": "Error copiant la imatge: {{errorMessage}}",

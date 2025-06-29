@@ -22,6 +22,9 @@
 		"just_this_message": "이 메시지만",
 		"this_and_subsequent": "이 메시지와 모든 후속 메시지"
 	},
+	"git": {
+		"generatingCommitMessage": "{{modelName}}(으)로 커밋 메시지 생성 중..."
+	},
 	"errors": {
 		"invalid_data_uri": "잘못된 데이터 URI 형식",
 		"error_copying_image": "이미지 복사 중 오류 발생: {{errorMessage}}",

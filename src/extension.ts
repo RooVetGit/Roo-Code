@@ -99,6 +99,28 @@ export async function activate(context: vscode.ExtensionContext) {
 	const contextProxy = await ContextProxy.getInstance(context)
 	const codeIndexManager = CodeIndexManager.getInstance(context)
 
+	const setAiCommitMessagesContext = () => {
+		const config = vscode.workspace.getConfiguration(Package.name)
+		const experiments = config.get("experiments", {}) as { aiCommitMessages?: boolean }
+		vscode.commands.executeCommand(
+			"setContext",
+			"roo-cline.aiCommitMessagesEnabled",
+			!!experiments.aiCommitMessages,
+		)
+	}
+
+	// Set the initial context
+	setAiCommitMessagesContext()
+
+	// Update the context when the configuration changes
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration(`${Package.name}.experiments`)) {
+				setAiCommitMessagesContext()
+			}
+		}),
+	)
+
 	try {
 		await codeIndexManager?.initialize(contextProxy)
 	} catch (error) {

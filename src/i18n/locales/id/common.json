@@ -22,6 +22,9 @@
 		"just_this_message": "Hanya pesan ini",
 		"this_and_subsequent": "Ini dan semua pesan selanjutnya"
 	},
+	"git": {
+		"generatingCommitMessage": "Membuat pesan komit dengan {{modelName}}..."
+	},
 	"errors": {
 		"invalid_data_uri": "Format data URI tidak valid",
 		"error_copying_image": "Error menyalin gambar: {{errorMessage}}",

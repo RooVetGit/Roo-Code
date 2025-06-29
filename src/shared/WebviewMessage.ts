@@ -144,6 +144,7 @@ export interface WebviewMessage {
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
 		| "language"
+		| "commitLanguage"
 		| "maxReadFileLine"
 		| "maxConcurrentFileReads"
 		| "searchFiles"

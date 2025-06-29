@@ -22,6 +22,9 @@
 		"just_this_message": "僅這則訊息",
 		"this_and_subsequent": "這則訊息及所有後續訊息"
 	},
+	"git": {
+		"generatingCommitMessage": "正在使用 {{modelName}} 產生提交訊息..."
+	},
 	"errors": {
 		"invalid_data_uri": "資料 URI 格式無效",
 		"error_copying_image": "複製圖片時發生錯誤：{{errorMessage}}",

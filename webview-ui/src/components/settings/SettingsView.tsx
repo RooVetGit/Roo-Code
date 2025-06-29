@@ -125,6 +125,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		allowedCommands,
 		allowedMaxRequests,
 		language,
+		commitLanguage,
 		alwaysAllowBrowser,
 		alwaysAllowExecute,
 		alwaysAllowMcp,
@@ -261,6 +262,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const handleSubmit = () => {
 		if (isSettingValid) {
 			vscode.postMessage({ type: "language", text: language })
+			vscode.postMessage({ type: "commitLanguage", text: commitLanguage })
 			vscode.postMessage({ type: "alwaysAllowReadOnly", bool: alwaysAllowReadOnly })
 			vscode.postMessage({
 				type: "alwaysAllowReadOnlyOutsideWorkspace",
@@ -683,18 +685,24 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						<ExperimentalSettings
 							setExperimentEnabled={setExperimentEnabled}
 							experiments={experiments}
-							setCachedStateField={setCachedStateField}
+							setCachedStateField={
+								setCachedStateField as SetCachedStateField<"codebaseIndexConfig" | "commitLanguage">
+							}
 							codebaseIndexModels={codebaseIndexModels}
 							codebaseIndexConfig={codebaseIndexConfig}
 							apiConfiguration={apiConfiguration}
 							setApiConfigurationField={setApiConfigurationField}
 							areSettingsCommitted={!isChangeDetected}
+							commitLanguage={commitLanguage || "en"}
 						/>
 					)}
 
 					{/* Language Section */}
 					{activeTab === "language" && (
-						<LanguageSettings language={language || "en"} setCachedStateField={setCachedStateField} />
+						<LanguageSettings
+							language={language || "en"}
+							setCachedStateField={setCachedStateField as SetCachedStateField<"language">}
+						/>
 					)}
 
 					{/* About Section */}

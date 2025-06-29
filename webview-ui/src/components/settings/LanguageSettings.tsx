@@ -31,6 +31,7 @@ export const LanguageSettings = ({ language, setCachedStateField, className, ...
 			</SectionHeader>
 
 			<Section>
+				<div className="text-sm text-vscode-descriptionForeground">{t("settings:sections.pluginLanguage")}</div>
 				<Select value={language} onValueChange={(value) => setCachedStateField("language", value as Language)}>
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder={t("settings:common.select")} />

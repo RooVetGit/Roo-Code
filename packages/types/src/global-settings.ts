@@ -90,6 +90,7 @@ export const globalSettingsSchema = z.object({
 	codebaseIndexConfig: codebaseIndexConfigSchema.optional(),
 
 	language: languagesSchema.optional(),
+	commitLanguage: languagesSchema.optional(),
 
 	telemetrySetting: telemetrySettingsSchema.optional(),
 

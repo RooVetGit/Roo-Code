@@ -22,6 +22,9 @@
 		"just_this_message": "このメッセージのみ",
 		"this_and_subsequent": "これ以降のすべてのメッセージ"
 	},
+	"git": {
+		"generatingCommitMessage": "{{modelName}}でコミットメッセージを生成しています..."
+	},
 	"errors": {
 		"invalid_data_uri": "データURIフォーマットが無効です",
 		"error_copying_image": "画像のコピー中にエラーが発生しました：{{errorMessage}}",
