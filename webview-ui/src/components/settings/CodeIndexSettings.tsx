@@ -63,12 +63,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 	const modelsForProvider =
-		currentProvider === "openai" ||
-		currentProvider === "ollama" ||
-		currentProvider === "openai-compatible" ||
 		currentProvider === "gemini"
-			? codebaseIndexModels?.[currentProvider] || codebaseIndexModels?.openai
-			: codebaseIndexModels?.openai
+			? undefined // or an empty array, since Gemini has a fixed model
+			: currentProvider === "openai" || currentProvider === "openai-compatible"
+				? (codebaseIndexModels?.openai ?? codebaseIndexModels?.["openai-compatible"])
+				: codebaseIndexModels?.[currentProvider as keyof typeof codebaseIndexModels]
 	const availableModelIds = Object.keys(modelsForProvider || {})
 
 	useEffect(() => {

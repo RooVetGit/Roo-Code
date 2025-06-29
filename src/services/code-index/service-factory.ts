@@ -85,7 +85,7 @@ export class CodeIndexServiceFactory {
 				vectorSize = getModelDimension(provider, modelId)
 			}
 		} else if (provider === "gemini") {
-			// Gemini has a fixed dimension of 768
+			// Gemini's text-embedding-004 has a fixed dimension of 768
 			vectorSize = 768
 		} else {
 			vectorSize = getModelDimension(provider, modelId)
