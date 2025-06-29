@@ -278,6 +278,7 @@ export class QdrantVectorStore implements IVectorStore {
 		queryVector: number[],
 		directoryPrefix?: string,
 		minScore?: number,
+		maxResults?: number,
 	): Promise<VectorStoreSearchResult[]> {
 		try {
 			let filter = undefined
@@ -297,7 +298,7 @@ export class QdrantVectorStore implements IVectorStore {
 				query: queryVector,
 				filter,
 				score_threshold: SEARCH_MIN_SCORE,
-				limit: MAX_SEARCH_RESULTS,
+				limit: maxResults ?? MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
 					exact: false,

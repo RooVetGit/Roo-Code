@@ -27,6 +27,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
+	Slider,
 } from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
@@ -447,6 +448,34 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
+					</div>
+
+					<div className="flex flex-col gap-3">
+						<div className="flex items-center gap-4 font-bold">
+							<div>{t("settings:codeIndex.searchMaxResultsLabel")}</div>
+						</div>
+						<div className="flex items-center gap-4">
+							<Slider
+								value={[codebaseIndexConfig.codebaseIndexSearchMaxResults || 50]}
+								onValueChange={([value]) =>
+									setCachedStateField("codebaseIndexConfig", {
+										...codebaseIndexConfig,
+										codebaseIndexSearchMaxResults: value,
+									})
+								}
+								min={1}
+								max={500}
+								step={1}
+								className="flex-1"
+								data-testid="search-max-results-slider"
+							/>
+							<span className="text-sm text-vscode-descriptionForeground min-w-[3rem] text-right">
+								{codebaseIndexConfig.codebaseIndexSearchMaxResults || 50}
+							</span>
+						</div>
+						<p className="text-vscode-descriptionForeground text-sm mt-0">
+							{t("settings:codeIndex.searchMaxResultsDescription")}
+						</p>
 					</div>
 
 					{(!areSettingsCommitted || !validateIndexingConfig(codebaseIndexConfig, apiConfiguration)) && (

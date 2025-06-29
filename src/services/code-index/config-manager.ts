@@ -19,6 +19,7 @@ export class CodeIndexConfigManager {
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
+	private searchMaxResults?: number
 
 	constructor(private readonly contextProxy: ContextProxy) {
 		// Initialize with current configuration to avoid false restart triggers
@@ -35,6 +36,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexSearchMinScore: 0.4,
+			codebaseIndexSearchMaxResults: 50,
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -46,6 +48,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
+			codebaseIndexSearchMaxResults,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
@@ -62,6 +65,7 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 		this.searchMinScore = SEARCH_MIN_SCORE
+		this.searchMaxResults = codebaseIndexSearchMaxResults ?? 50
 
 		// Set embedder provider with support for openai-compatible
 		if (codebaseIndexEmbedderProvider === "ollama") {
@@ -104,6 +108,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
+			searchMaxResults?: number
 		}
 		requiresRestart: boolean
 	}> {
@@ -140,6 +145,7 @@ export class CodeIndexConfigManager {
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.searchMinScore,
+				searchMaxResults: this.searchMaxResults,
 			},
 			requiresRestart,
 		}
@@ -295,6 +301,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.searchMinScore,
+			searchMaxResults: this.searchMaxResults,
 		}
 	}
 
@@ -341,5 +348,12 @@ export class CodeIndexConfigManager {
 	 */
 	public get currentSearchMinScore(): number | undefined {
 		return this.searchMinScore
+	}
+
+	/**
+	 * Gets the configured maximum search results.
+	 */
+	public get currentSearchMaxResults(): number | undefined {
+		return this.searchMaxResults
 	}
 }
