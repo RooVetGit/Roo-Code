@@ -2,10 +2,23 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
+	/**
+	 * Specific dimensions supported by the model
+	 */
+	supportDimensions?: number[]
+	/**
+	 * Optional maximum input tokens for the model.
+	 */
+	maxInputTokens?: number
+	/**
+	 * Whether the model supports the taskType parameter.
+	 * Only some Gemini models support this parameter.
+	 */
+	supportsTaskType?: boolean
 	// Add other model-specific properties if needed, e.g., context window size
 }
 
@@ -34,15 +47,30 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 		"text-embedding-3-large": { dimension: 3072 },
 		"text-embedding-ada-002": { dimension: 1536 },
 	},
+	gemini: {
+		"gemini-embedding-exp-03-07": {
+			dimension: 3072,
+			supportDimensions: [3072, 1536, 768],
+			maxInputTokens: 8192,
+			supportsTaskType: true,
+		},
+		"models/text-embedding-004": { dimension: 768, maxInputTokens: 2048, supportsTaskType: false },
+		"models/embedding-001": { dimension: 768, maxInputTokens: 2048, supportsTaskType: false },
+	},
 }
 
 /**
  * Retrieves the embedding dimension for a given provider and model ID.
  * @param provider The embedder provider (e.g., "openai").
  * @param modelId The specific model ID (e.g., "text-embedding-3-small").
+ * @param requestedDimension Optional dimension requested by the user.
  * @returns The dimension size or undefined if the model is not found.
  */
-export function getModelDimension(provider: EmbedderProvider, modelId: string): number | undefined {
+export function getModelDimension(
+	provider: EmbedderProvider,
+	modelId: string,
+	requestedDimension?: number,
+): number | undefined {
 	const providerProfiles = EMBEDDING_MODEL_PROFILES[provider]
 	if (!providerProfiles) {
 		console.warn(`Provider not found in profiles: ${provider}`)
@@ -54,6 +82,14 @@ export function getModelDimension(provider: EmbedderProvider, modelId: string): 
 		// Don't warn here, as it might be a custom model ID not in our profiles
 		// console.warn(`Model not found for provider ${provider}: ${modelId}`)
 		return undefined // Or potentially return a default/fallback dimension?
+	}
+
+	if (
+		requestedDimension &&
+		modelProfile.supportDimensions &&
+		modelProfile.supportDimensions.includes(requestedDimension)
+	) {
+		return requestedDimension
 	}
 
 	return modelProfile.dimension
@@ -72,7 +108,8 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 		case "openai":
 		case "openai-compatible":
 			return "text-embedding-3-small"
-
+		case "gemini":
+			return "gemini-embedding-exp-03-07"
 		case "ollama": {
 			// Choose a sensible default for Ollama, e.g., the first one listed or a specific one
 			const ollamaModels = EMBEDDING_MODEL_PROFILES.ollama

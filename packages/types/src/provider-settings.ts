@@ -157,6 +157,8 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
+	geminiEmbeddingTaskType: z.string().optional(),
+	geminiEmbeddingDimension: z.number().optional(),
 })
 
 const geminiCliSchema = apiModelIdProviderModelSchema.extend({
@@ -273,6 +275,7 @@ export const providerSettingsSchema = z.object({
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
+
 export const PROVIDER_SETTINGS_KEYS = providerSettingsSchema.keyof().options
 
 export const MODEL_ID_KEYS: Partial<keyof ProviderSettings>[] = [

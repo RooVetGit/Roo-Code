@@ -183,14 +183,14 @@ async function readReadme() {
  * @param {Array} contributors Array of contributor objects from GitHub API
  * @returns {string} HTML for contributors section
  */
-const EXCLUDED_LOGIN_SUBSTRINGS = ['[bot]', 'R00-B0T'];
-const EXCLUDED_LOGIN_EXACTS = ['cursor', 'roomote'];
+const EXCLUDED_LOGIN_SUBSTRINGS = ["[bot]", "R00-B0T"]
+const EXCLUDED_LOGIN_EXACTS = ["cursor", "roomote"]
 
 function formatContributorsSection(contributors) {
 	// Filter out GitHub Actions bot, cursor, and roomote
-	const filteredContributors = contributors.filter((c) =>
-		!EXCLUDED_LOGIN_SUBSTRINGS.some(sub => c.login.includes(sub)) &&
-		!EXCLUDED_LOGIN_EXACTS.includes(c.login)
+	const filteredContributors = contributors.filter(
+		(c) =>
+			!EXCLUDED_LOGIN_SUBSTRINGS.some((sub) => c.login.includes(sub)) && !EXCLUDED_LOGIN_EXACTS.includes(c.login),
 	)
 
 	// Start building with Markdown table format

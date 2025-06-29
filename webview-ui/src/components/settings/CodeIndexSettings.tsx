@@ -6,7 +6,7 @@ import { Trans } from "react-i18next"
 
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
-import { EmbedderProvider } from "@roo/embeddingModels"
+import { EmbedderProvider, EMBEDDING_MODEL_PROFILES } from "@roo/embeddingModels"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -30,6 +30,7 @@ import {
 } from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
+import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
@@ -62,10 +63,21 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 	const modelsForProvider =
-		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "openai-compatible"
+		currentProvider === "openai" ||
+		currentProvider === "ollama" ||
+		currentProvider === "openai-compatible" ||
+		currentProvider === "gemini"
 			? codebaseIndexModels?.[currentProvider] || codebaseIndexModels?.openai
 			: codebaseIndexModels?.openai
 	const availableModelIds = Object.keys(modelsForProvider || {})
+
+	// Logic for Gemini dimension selector
+	const selectedModelIdForGeminiDim = codebaseIndexConfig?.codebaseIndexEmbedderModelId
+	const geminiModelProfileForDim =
+		currentProvider === "gemini" && selectedModelIdForGeminiDim
+			? EMBEDDING_MODEL_PROFILES.gemini?.[selectedModelIdForGeminiDim]
+			: undefined
+	const geminiSupportedDims = geminiModelProfileForDim?.supportDimensions
 
 	useEffect(() => {
 		// Request initial indexing status from extension host
@@ -145,6 +157,16 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					.positive("Dimension must be a positive number")
 					.optional(),
 			}),
+			gemini: baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("gemini"),
+				geminiApiKey: z.string().min(1, "Gemini API key is required"),
+				geminiEmbeddingTaskType: z.string().optional(),
+				geminiEmbeddingDimension: z
+					.number()
+					.int()
+					.positive("Embedding dimension must be a positive integer")
+					.optional(),
+			}),
 		}
 
 		try {
@@ -153,7 +175,9 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					? providerSchemas.openai
 					: config.codebaseIndexEmbedderProvider === "ollama"
 						? providerSchemas.ollama
-						: providerSchemas["openai-compatible"]
+						: config.codebaseIndexEmbedderProvider === "openai-compatible"
+							? providerSchemas["openai-compatible"]
+							: providerSchemas.gemini
 
 			schema.parse({
 				...config,
@@ -161,6 +185,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
 				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
+				geminiApiKey: apiConfig.geminiApiKey,
 			})
 			return true
 		} catch {
@@ -275,6 +300,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									<SelectItem value="openai-compatible">
 										{t("settings:codeIndex.openaiCompatibleProvider")}
 									</SelectItem>
+									<SelectItem value="gemini">{t("settings:codeIndex.geminiProvider")}</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -417,6 +443,118 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
 						</div>
+					)}
+
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "gemini" && (
+						<>
+							<div className="flex flex-col gap-3">
+								<div className="flex items-center gap-4 font-bold">
+									<div>{t("settings:codeIndex.geminiApiKey")}</div>
+								</div>
+								<div>
+									<VSCodeTextField
+										type="password"
+										value={apiConfiguration.geminiApiKey || ""}
+										onInput={(e: any) => setApiConfigurationField("geminiApiKey", e.target.value)}
+										placeholder={t("settings:codeIndex.apiKeyPlaceholder")}
+										style={{ width: "100%" }}></VSCodeTextField>
+								</div>
+							</div>
+							{geminiModelProfileForDim?.supportsTaskType && (
+								<div className="flex flex-col gap-3">
+									<div className="flex items-center gap-4 font-bold">
+										<div>{t("settings:codeIndex.embeddingTaskType")}</div>
+									</div>
+									<div>
+										<div className="flex items-center gap-2">
+											<Select
+												value={
+													codebaseIndexConfig?.geminiEmbeddingTaskType ||
+													"CODE_RETRIEVAL_QUERY"
+												}
+												onValueChange={(value) =>
+													setCachedStateField("codebaseIndexConfig", {
+														...codebaseIndexConfig,
+														geminiEmbeddingTaskType: value,
+													})
+												}>
+												<SelectTrigger className="w-full">
+													<SelectValue
+														placeholder={t("settings:codeIndex.selectTaskTypePlaceholder")}
+													/>
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="CODE_RETRIEVAL_QUERY">
+														{t("settings:codeIndex.selectTaskType.codeRetrievalQuery")}
+													</SelectItem>
+													<SelectItem value="RETRIEVAL_DOCUMENT">
+														{t("settings:codeIndex.selectTaskType.retrievalDocument")}
+													</SelectItem>
+													<SelectItem value="RETRIEVAL_QUERY">
+														{t("settings:codeIndex.selectTaskType.retrievalQuery")}
+													</SelectItem>
+													<SelectItem value="SEMANTIC_SIMILARITY">
+														{t("settings:codeIndex.selectTaskType.semanticSimilarity")}
+													</SelectItem>
+													<SelectItem value="CLASSIFICATION">
+														{t("settings:codeIndex.selectTaskType.classification")}
+													</SelectItem>
+													<SelectItem value="CLUSTERING">
+														{t("settings:codeIndex.selectTaskType.clustering")}
+													</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+								</div>
+							)}
+							{currentProvider === "gemini" &&
+								geminiModelProfileForDim &&
+								geminiSupportedDims &&
+								geminiSupportedDims.length > 0 && (
+									<div className="flex flex-col gap-3">
+										<div className="flex items-center gap-4 font-bold">
+											<div>{t("settings:codeIndex.embeddingDimension")}</div>
+										</div>
+										<div>
+											<div className="flex items-center gap-2">
+												<Select
+													value={codebaseIndexConfig?.geminiEmbeddingDimension?.toString()}
+													onValueChange={(dimStr) => {
+														const newDim = parseInt(dimStr, 10)
+														if (!isNaN(newDim)) {
+															setCachedStateField("codebaseIndexConfig", {
+																...codebaseIndexConfig,
+																geminiEmbeddingDimension: newDim,
+															})
+														}
+													}}>
+													<SelectTrigger className="w-full">
+														<SelectValue
+															placeholder={t(
+																"settings:codeIndex.selectDimensionPlaceholder",
+															)}
+														/>
+													</SelectTrigger>
+													<SelectContent>
+														{geminiSupportedDims.map((dim) => (
+															<SelectItem key={dim} value={dim.toString()}>
+																{dim}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+										</div>
+									</div>
+								)}
+							<div className="flex flex-col gap-3">
+								<RateLimitSecondsControl
+									value={apiConfiguration.rateLimitSeconds || 0}
+									onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+								/>
+							</div>
+						</>
 					)}
 
 					<div className="flex flex-col gap-3">
