@@ -212,6 +212,16 @@ export class FileRestrictionError extends Error {
 	}
 }
 
+// Custom error class for MCP server restrictions
+export class McpServerRestrictionError extends Error {
+	constructor(mode: string, allowedServers: string[], description: string | undefined, serverName: string) {
+		super(
+			`This mode (${mode}) can only use MCP servers: ${allowedServers.join(", ")}${description ? ` (${description})` : ""}. Got: ${serverName}`,
+		)
+		this.name = "McpServerRestrictionError"
+	}
+}
+
 export function isToolAllowedForMode(
 	tool: string,
 	modeSlug: string,
@@ -271,6 +281,19 @@ export function isToolAllowedForMode(
 				!doesFileMatchRegex(filePath, options.fileRegex)
 			) {
 				throw new FileRestrictionError(mode.name, options.fileRegex, options.description, filePath)
+			}
+		}
+
+		// For the mcp group, check allowed MCP servers if specified
+		if (groupName === "mcp" && options.allowedMcpServers) {
+			const serverName = toolParams?.server_name
+			if (serverName && !options.allowedMcpServers.includes(serverName)) {
+				throw new McpServerRestrictionError(
+					mode.name,
+					options.allowedMcpServers,
+					options.description,
+					serverName,
+				)
 			}
 		}
 

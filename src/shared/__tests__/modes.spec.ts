@@ -9,7 +9,14 @@ vi.mock("../../core/prompts/sections/custom-instructions", () => ({
 	addCustomInstructions: vi.fn().mockResolvedValue("Combined instructions"),
 }))
 
-import { isToolAllowedForMode, FileRestrictionError, getFullModeDetails, modes, getModeSelection } from "../modes"
+import {
+	isToolAllowedForMode,
+	FileRestrictionError,
+	McpServerRestrictionError,
+	getFullModeDetails,
+	modes,
+	getModeSelection,
+} from "../modes"
 import { addCustomInstructions } from "../../core/prompts/sections/custom-instructions"
 
 describe("isToolAllowedForMode", () => {
@@ -244,6 +251,164 @@ describe("isToolAllowedForMode", () => {
 			expect(isToolAllowedForMode("read_file", "architect", [])).toBe(true)
 			expect(isToolAllowedForMode("browser_action", "architect", [])).toBe(true)
 			expect(isToolAllowedForMode("use_mcp_tool", "architect", [])).toBe(true)
+		})
+	})
+
+	describe("MCP server restrictions", () => {
+		const customModesWithMcpRestrictions: ModeConfig[] = [
+			{
+				slug: "restricted-mcp-mode",
+				name: "Restricted MCP Mode",
+				roleDefinition: "You are a mode with MCP restrictions",
+				groups: [
+					"read",
+					[
+						"mcp",
+						{
+							allowedMcpServers: ["weather-server", "file-server"],
+							description: "Weather and file servers only",
+						},
+					],
+				],
+			},
+			{
+				slug: "unrestricted-mcp-mode",
+				name: "Unrestricted MCP Mode",
+				roleDefinition: "You are a mode without MCP restrictions",
+				groups: ["read", "mcp"],
+			},
+		]
+
+		it("allows using permitted MCP servers", () => {
+			// Should allow weather-server
+			expect(
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					server_name: "weather-server",
+					tool_name: "get_forecast",
+					arguments: '{"city": "San Francisco"}',
+				}),
+			).toBe(true)
+
+			// Should allow file-server
+			expect(
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					server_name: "file-server",
+					tool_name: "read_file",
+					arguments: '{"path": "test.txt"}',
+				}),
+			).toBe(true)
+
+			// Should allow access_mcp_resource with permitted servers
+			expect(
+				isToolAllowedForMode(
+					"access_mcp_resource",
+					"restricted-mcp-mode",
+					customModesWithMcpRestrictions,
+					undefined,
+					{
+						server_name: "weather-server",
+						uri: "weather://current",
+					},
+				),
+			).toBe(true)
+		})
+
+		it("rejects using non-permitted MCP servers", () => {
+			// Should reject database-server
+			expect(() =>
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					server_name: "database-server",
+					tool_name: "query",
+					arguments: '{"sql": "SELECT * FROM users"}',
+				}),
+			).toThrow(McpServerRestrictionError)
+			expect(() =>
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					server_name: "database-server",
+					tool_name: "query",
+					arguments: '{"sql": "SELECT * FROM users"}',
+				}),
+			).toThrow(/weather-server, file-server/)
+			expect(() =>
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					server_name: "database-server",
+					tool_name: "query",
+					arguments: '{"sql": "SELECT * FROM users"}',
+				}),
+			).toThrow(/Weather and file servers only/)
+
+			// Should reject access_mcp_resource with non-permitted servers
+			expect(() =>
+				isToolAllowedForMode(
+					"access_mcp_resource",
+					"restricted-mcp-mode",
+					customModesWithMcpRestrictions,
+					undefined,
+					{
+						server_name: "database-server",
+						uri: "database://users",
+					},
+				),
+			).toThrow(McpServerRestrictionError)
+		})
+
+		it("allows unrestricted modes to use any MCP server", () => {
+			// Should allow any server for unrestricted mode
+			expect(
+				isToolAllowedForMode(
+					"use_mcp_tool",
+					"unrestricted-mcp-mode",
+					customModesWithMcpRestrictions,
+					undefined,
+					{
+						server_name: "any-server",
+						tool_name: "any_tool",
+						arguments: "{}",
+					},
+				),
+			).toBe(true)
+
+			expect(
+				isToolAllowedForMode(
+					"access_mcp_resource",
+					"unrestricted-mcp-mode",
+					customModesWithMcpRestrictions,
+					undefined,
+					{
+						server_name: "any-server",
+						uri: "any://resource",
+					},
+				),
+			).toBe(true)
+		})
+
+		it("allows MCP tools without server_name parameter for partial requests", () => {
+			// Should allow partial MCP tool requests without server_name (streaming scenarios)
+			expect(
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					tool_name: "get_forecast",
+				}),
+			).toBe(true)
+
+			expect(
+				isToolAllowedForMode(
+					"use_mcp_tool",
+					"restricted-mcp-mode",
+					customModesWithMcpRestrictions,
+					undefined,
+					{},
+				),
+			).toBe(true)
+		})
+
+		it("uses description in MCP server restriction error", () => {
+			expect(() =>
+				isToolAllowedForMode("use_mcp_tool", "restricted-mcp-mode", customModesWithMcpRestrictions, undefined, {
+					server_name: "forbidden-server",
+					tool_name: "test",
+					arguments: "{}",
+				}),
+			).toThrow(/Weather and file servers only/)
 		})
 	})
 
