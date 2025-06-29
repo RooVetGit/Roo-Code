@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "重试",
 			"description": "当服务器返回错误响应时自动重试失败的 API 请求",
-			"delayLabel": "重试请求前的延迟"
+			"rangeLabel": "重试延迟范围（最小 - 最大秒数）"
 		},
 		"mcp": {
 			"label": "MCP",

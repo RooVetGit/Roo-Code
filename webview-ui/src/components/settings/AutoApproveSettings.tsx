@@ -21,6 +21,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowBrowser?: boolean
 	alwaysApproveResubmit?: boolean
 	requestDelaySeconds: number
+	maxRequestDelaySeconds: number
 	alwaysAllowMcp?: boolean
 	alwaysAllowModeSwitch?: boolean
 	alwaysAllowSubtasks?: boolean
@@ -36,6 +37,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysAllowBrowser"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
+		| "maxRequestDelaySeconds"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
 		| "alwaysAllowSubtasks"
@@ -54,6 +56,7 @@ export const AutoApproveSettings = ({
 	alwaysAllowBrowser,
 	alwaysApproveResubmit,
 	requestDelaySeconds,
+	maxRequestDelaySeconds,
 	alwaysAllowMcp,
 	alwaysAllowModeSwitch,
 	alwaysAllowSubtasks,
@@ -186,17 +189,25 @@ export const AutoApproveSettings = ({
 						<div>
 							<div className="flex items-center gap-2">
 								<Slider
-									min={5}
+									min={1}
 									max={100}
 									step={1}
-									value={[requestDelaySeconds]}
-									onValueChange={([value]) => setCachedStateField("requestDelaySeconds", value)}
-									data-testid="request-delay-slider"
+									value={[requestDelaySeconds, maxRequestDelaySeconds]}
+									onValueChange={([min, max]) => {
+										// Ensure min <= max
+										const actualMin = Math.min(min, max)
+										const actualMax = Math.max(min, max)
+										setCachedStateField("requestDelaySeconds", actualMin)
+										setCachedStateField("maxRequestDelaySeconds", actualMax)
+									}}
+									data-testid="retry-delay-range-slider"
 								/>
-								<span className="w-20">{requestDelaySeconds}s</span>
+								<span className="w-20">
+									{requestDelaySeconds}s - {maxRequestDelaySeconds}s
+								</span>
 							</div>
 							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:autoApprove.retry.delayLabel")}
+								{t("settings:autoApprove.retry.rangeLabel")}
 							</div>
 						</div>
 					</div>

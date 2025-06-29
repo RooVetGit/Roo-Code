@@ -521,6 +521,7 @@ describe("ClineProvider", () => {
 			mcpEnabled: true,
 			enableMcpServerCreation: false,
 			requestDelaySeconds: 5,
+			maxRequestDelaySeconds: 100,
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
@@ -800,7 +801,7 @@ describe("ClineProvider", () => {
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
-	test("requestDelaySeconds defaults to 10 seconds", async () => {
+	test("requestDelaySeconds defaults to 5 seconds", async () => {
 		// Mock globalState.get to return undefined for requestDelaySeconds
 		;(mockContext.globalState.get as any).mockImplementation((key: string) => {
 			if (key === "requestDelaySeconds") {
@@ -810,7 +811,20 @@ describe("ClineProvider", () => {
 		})
 
 		const state = await provider.getState()
-		expect(state.requestDelaySeconds).toBe(10)
+		expect(state.requestDelaySeconds).toBe(5)
+	})
+
+	test("maxRequestDelaySeconds defaults to 100 seconds", async () => {
+		// Mock globalState.get to return undefined for requestDelaySeconds
+		;(mockContext.globalState.get as any).mockImplementation((key: string) => {
+			if (key === "maxRequestDelaySeconds") {
+				return undefined
+			}
+			return null
+		})
+
+		const state = await provider.getState()
+		expect(state.maxRequestDelaySeconds).toBe(100)
 	})
 
 	test("alwaysApproveResubmit defaults to false", async () => {
@@ -1002,8 +1016,13 @@ describe("ClineProvider", () => {
 		expect(mockPostMessage).toHaveBeenCalled()
 
 		// Test requestDelaySeconds
-		await messageHandler({ type: "requestDelaySeconds", value: 10 })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("requestDelaySeconds", 10)
+		await messageHandler({ type: "requestDelaySeconds", value: 5 })
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("requestDelaySeconds", 5)
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Test maxRequestDelaySeconds
+		await messageHandler({ type: "maxRequestDelaySeconds", value: 100 })
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("maxRequestDelaySeconds", 100)
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 

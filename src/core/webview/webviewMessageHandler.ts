@@ -861,6 +861,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("requestDelaySeconds", message.value ?? 5)
 			await provider.postStateToWebview()
 			break
+		case "maxRequestDelaySeconds":
+			await updateGlobalState("maxRequestDelaySeconds", Math.max(1, message.value ?? 100))
+			await provider.postStateToWebview()
+			break
 		case "writeDelayMs":
 			await updateGlobalState("writeDelayMs", message.value)
 			await provider.postStateToWebview()

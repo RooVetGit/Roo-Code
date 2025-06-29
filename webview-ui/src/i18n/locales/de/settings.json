@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "Wiederholung",
 			"description": "Fehlgeschlagene API-Anfragen automatisch wiederholen, wenn der Server eine Fehlerantwort zurückgibt",
-			"delayLabel": "Verzögerung vor dem Wiederholen der Anfrage"
+			"rangeLabel": "Wiederholungsverzögerungsbereich (min - max Sekunden)"
 		},
 		"mcp": {
 			"label": "MCP",

@@ -96,7 +96,7 @@
 		"retry": {
 			"label": "再試行",
 			"description": "サーバーがエラーレスポンスを返した場合、自動的に失敗したAPIリクエストを再試行",
-			"delayLabel": "リクエスト再試行前の遅延"
+			"rangeLabel": "再試行遅延範囲（最小 - 最大秒）"
 		},
 		"mcp": {
 			"label": "MCP",
