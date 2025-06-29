@@ -68,6 +68,9 @@ vi.mock("execa", () => ({
 // Mock readline with proper interface simulation
 let mockReadlineInterface: any = null
 
+// Store original platform value
+let originalPlatform: string
+
 vi.mock("readline", () => ({
 	default: {
 		createInterface: vi.fn(() => {
@@ -95,10 +98,19 @@ describe("runClaudeCode", () => {
 			callback()
 			return {} as any
 		})
+
+		// Store original platform and mock it to ensure non-Windows code path is used
+		originalPlatform = process.platform
+		Object.defineProperty(process, "platform", { value: "linux" })
 	})
 
 	afterEach(() => {
 		vi.restoreAllMocks()
+
+		// Restore original platform
+		if (originalPlatform) {
+			Object.defineProperty(process, "platform", { value: originalPlatform })
+		}
 	})
 
 	test("should export runClaudeCode function", async () => {
