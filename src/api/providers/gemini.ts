@@ -77,6 +77,51 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 		const params: GenerateContentParameters = { model, contents, config }
 
+		if (this.options.geminiDisableStreaming) {
+			const result = await this.client.models.generateContent(params)
+
+			// Gemini returns the full response including possible reasoning parts in the
+			// `candidates[0].content.parts` array. Iterate through those parts so that we
+			// continue to surface reasoning separately from normal text even when we are
+			// NOT streaming.
+			if (result.candidates && result.candidates.length > 0) {
+				const candidate = result.candidates[0]
+				if (candidate.content && candidate.content.parts) {
+					for (const part of candidate.content.parts) {
+						if (part.thought) {
+							if (part.text) {
+								yield { type: "reasoning", text: part.text }
+							}
+						} else if (part.text) {
+							yield { type: "text", text: part.text }
+						}
+					}
+				}
+			} else if (result.text) {
+				// Fallback in case the response doesn't include structured parts.
+				yield { type: "text", text: result.text }
+			}
+
+			if (result.usageMetadata) {
+				const { promptTokenCount, candidatesTokenCount, cachedContentTokenCount, thoughtsTokenCount } =
+					result.usageMetadata
+				const inputTokens = promptTokenCount ?? 0
+				const outputTokens = candidatesTokenCount ?? 0
+				const cacheReadTokens = cachedContentTokenCount
+				const reasoningTokens = thoughtsTokenCount
+
+				yield {
+					type: "usage",
+					inputTokens,
+					outputTokens,
+					cacheReadTokens,
+					reasoningTokens,
+					totalCost: this.calculateCost({ info, inputTokens, outputTokens, cacheReadTokens }),
+				}
+			}
+			return
+		}
+
 		const result = await this.client.models.generateContentStream(params)
 
 		let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined
