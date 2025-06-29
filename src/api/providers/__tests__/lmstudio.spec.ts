@@ -58,14 +58,37 @@ vi.mock("openai", () => {
 	}
 })
 
+// Mock model cache
+vi.mock("../fetchers/modelCache", () => ({
+	getModels: vi.fn(),
+}))
+
 import type { Anthropic } from "@anthropic-ai/sdk"
+import type { ModelInfo } from "@roo-code/types"
 
 import { LmStudioHandler } from "../lm-studio"
 import type { ApiHandlerOptions } from "../../../shared/api"
+import { getModels } from "../fetchers/modelCache"
+
+// Get the mocked function
+const mockGetModels = vi.mocked(getModels)
 
 describe("LmStudioHandler", () => {
 	let handler: LmStudioHandler
 	let mockOptions: ApiHandlerOptions
+
+	const mockModelInfo: ModelInfo = {
+		maxTokens: 8192,
+		contextWindow: 32768,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: true,
+		inputPrice: 0,
+		outputPrice: 0,
+		cacheWritesPrice: 0,
+		cacheReadsPrice: 0,
+		description: "Test Model - local-model",
+	}
 
 	beforeEach(() => {
 		mockOptions = {
@@ -75,6 +98,7 @@ describe("LmStudioHandler", () => {
 		}
 		handler = new LmStudioHandler(mockOptions)
 		mockCreate.mockClear()
+		mockGetModels.mockClear()
 	})
 
 	describe("constructor", () => {
@@ -156,12 +180,60 @@ describe("LmStudioHandler", () => {
 	})
 
 	describe("getModel", () => {
-		it("should return model info", () => {
+		it("should return default model info when no models fetched", () => {
 			const modelInfo = handler.getModel()
 			expect(modelInfo.id).toBe(mockOptions.lmStudioModelId)
 			expect(modelInfo.info).toBeDefined()
 			expect(modelInfo.info.maxTokens).toBe(-1)
 			expect(modelInfo.info.contextWindow).toBe(128_000)
+		})
+
+		it("should return fetched model info when available", async () => {
+			// Mock the fetched models
+			mockGetModels.mockResolvedValueOnce({
+				"local-model": mockModelInfo,
+			})
+
+			await handler.fetchModel()
+			const modelInfo = handler.getModel()
+
+			expect(modelInfo.id).toBe(mockOptions.lmStudioModelId)
+			expect(modelInfo.info).toEqual(mockModelInfo)
+			expect(modelInfo.info.contextWindow).toBe(32768)
+		})
+
+		it("should fallback to default when model not found in fetched models", async () => {
+			// Mock fetched models without our target model
+			mockGetModels.mockResolvedValueOnce({
+				"other-model": mockModelInfo,
+			})
+
+			await handler.fetchModel()
+			const modelInfo = handler.getModel()
+
+			expect(modelInfo.id).toBe(mockOptions.lmStudioModelId)
+			expect(modelInfo.info.maxTokens).toBe(-1)
+			expect(modelInfo.info.contextWindow).toBe(128_000)
+		})
+	})
+
+	describe("fetchModel", () => {
+		it("should fetch models successfully", async () => {
+			mockGetModels.mockResolvedValueOnce({
+				"local-model": mockModelInfo,
+			})
+
+			const result = await handler.fetchModel()
+
+			expect(mockGetModels).toHaveBeenCalledWith({ provider: "lmstudio" })
+			expect(result.id).toBe(mockOptions.lmStudioModelId)
+			expect(result.info).toEqual(mockModelInfo)
+		})
+
+		it("should handle fetch errors gracefully", async () => {
+			mockGetModels.mockRejectedValueOnce(new Error("Connection failed"))
+
+			await expect(handler.fetchModel()).rejects.toThrow("Connection failed")
 		})
 	})
 })
