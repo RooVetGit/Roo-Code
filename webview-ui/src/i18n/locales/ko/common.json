@@ -4,7 +4,8 @@
 		"no": "아니오",
 		"cancel": "취소",
 		"remove": "삭제",
-		"keep": "유지"
+		"keep": "유지",
+		"close": "닫기"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -51,5 +52,37 @@
 		"success": {
 			"imageDataUriCopied": "이미지 데이터 URI가 클립보드에 복사됨"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "작업 기록 스캔 실패: {{error}}",
+		"history_reindex_failed": "기록 인덱스 재구축 실패: {{error}}",
+		"share_no_active_task": "공유할 활성 작업 없음",
+		"share_auth_required": "작업 공유를 위해 인증 필요",
+		"share_not_enabled": "계정에서 공유가 활성화되지 않음",
+		"share_task_not_found": "작업을 찾을 수 없음",
+		"share_task_failed": "작업 공유 실패",
+		"settings_import_failed": "설정 가져오기 실패: {{error}}",
+		"update_support_prompt": "지원 프롬프트 업데이트 실패",
+		"enhance_prompt": "프롬프트 향상 실패",
+		"get_system_prompt": "시스템 프롬프트 가져오기 실패",
+		"search_commits": "커밋 검색 실패",
+		"save_api_config": "API 구성 저장 실패",
+		"load_api_config": "API 구성 로드 실패",
+		"rename_api_config": "API 구성 이름 변경 실패",
+		"delete_api_config": "API 구성 삭제 실패",
+		"list_api_config": "API 구성 목록 가져오기 실패",
+		"update_server_timeout": "서버 타임아웃 업데이트 실패",
+		"no_workspace": "열린 워크스페이스 폴더가 없음",
+		"checkpoint_timeout": "체크포인트 대기 시간 초과",
+		"checkpoint_failed": "체크포인트 복원 실패"
+	},
+	"info": {
+		"history_reindexed": "기록 인덱스가 성공적으로 재구축됨",
+		"history_scanned": "작업 기록 스캔 완료",
+		"settings_imported": "설정을 성공적으로 가져옴",
+		"clipboard_copy": "클립보드에 복사됨"
+	},
+	"confirmation": {
+		"reindex_history": "경고: 이 작업은 작업 디렉토리와 레거시 globalState[taskHistory] 구조를 탐색하여 taskHistory/*.json 인덱스를 재생성합니다. 이전에 삭제한 작업을 복구하거나 손상된 작업을 복구할 수 있습니다. 토큰/비용 카운터를 복구할 수 없는 경우 0으로 설정됩니다. 여러 워크스페이스에 속한 작업은 해당 작업에서 가장 최근에 사용된 워크스페이스에만 재할당됩니다."
 	}
 }

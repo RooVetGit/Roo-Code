@@ -31,6 +31,7 @@
 		"prompts": "Invites",
 		"experimental": "Expérimental",
 		"language": "Langue",
+		"historyIndexTools": "Outils d'index d'historique",
 		"about": "À propos de Roo Code"
 	},
 	"prompts": {
@@ -570,7 +571,8 @@
 		"settings": {
 			"import": "Importer",
 			"export": "Exporter",
-			"reset": "Réinitialiser"
+			"reset": "Réinitialiser",
+			"reindexHistory": "Réindexer"
 		}
 	},
 	"thinkingBudget": {

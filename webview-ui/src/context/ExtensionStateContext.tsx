@@ -153,7 +153,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [state, setState] = useState<ExtensionState & { organizationAllowList?: OrganizationAllowList }>({
 		version: "",
 		clineMessages: [],
-		taskHistory: [],
 		shouldShowAnnouncement: false,
 		allowedCommands: [],
 		soundEnabled: false,

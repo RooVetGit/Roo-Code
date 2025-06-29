@@ -4,7 +4,8 @@
 		"no": "No",
 		"cancel": "Cancelar",
 		"remove": "Eliminar",
-		"keep": "Mantener"
+		"keep": "Mantener",
+		"close": "Cerrar"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -39,6 +40,41 @@
 			"copyError": "Error copiando la imagen"
 		}
 	},
+	"errors": {
+		"history_scan_failed": "Error al escanear el historial de tareas: {{error}}",
+		"history_reindex_failed": "Error al reconstruir los índices del historial: {{error}}",
+		"share_no_active_task": "No hay tarea activa para compartir",
+		"share_auth_required": "Se requiere autenticación para compartir la tarea",
+		"share_not_enabled": "El compartir no está habilitado para tu cuenta",
+		"share_task_not_found": "Tarea no encontrada",
+		"share_task_failed": "Error al compartir la tarea",
+		"settings_import_failed": "Error al importar configuración: {{error}}",
+		"update_support_prompt": "Error al actualizar el mensaje de soporte",
+		"enhance_prompt": "Error al mejorar el mensaje",
+		"get_system_prompt": "Error al obtener el mensaje del sistema",
+		"search_commits": "Error al buscar commits",
+		"save_api_config": "Error al guardar la configuración de API",
+		"load_api_config": "Error al cargar la configuración de API",
+		"rename_api_config": "Error al renombrar la configuración de API",
+		"delete_api_config": "Error al eliminar la configuración de API",
+		"list_api_config": "Error al listar las configuraciones de API",
+		"update_server_timeout": "Error al actualizar el tiempo de espera del servidor",
+		"no_workspace": "No hay carpeta de espacio de trabajo abierta",
+		"checkpoint_timeout": "Tiempo de espera agotado esperando el punto de control",
+		"checkpoint_failed": "Error al restaurar el punto de control"
+	},
+
+	"info": {
+		"history_reindexed": "Índices del historial reconstruidos correctamente",
+		"history_scanned": "Escaneo del historial de tareas completado",
+		"settings_imported": "Configuración importada correctamente",
+		"clipboard_copy": "Copiado al portapapeles"
+	},
+
+	"confirmation": {
+		"reindex_history": "Advertencia: Esto recreará los índices taskHistory/*.json recorriendo los directorios de tareas y las estructuras legacy globalState[taskHistory]. Esto puede recuperar tareas que hayas eliminado previamente y/o recuperar tareas corruptas. Si los contadores de tokens/costos no son recuperables, se establecerán en cero. Cualquier tarea que sea miembro de múltiples espacios de trabajo será reasignada solo al espacio de trabajo más reciente utilizado por la tarea."
+	},
+
 	"file": {
 		"errors": {
 			"invalidDataUri": "Formato de URI de datos inválido",

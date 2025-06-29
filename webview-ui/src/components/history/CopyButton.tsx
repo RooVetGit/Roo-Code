@@ -1,16 +1,16 @@
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 
-import { useClipboard } from "@/components/ui/hooks"
 import { Button, StandardTooltip } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { cn } from "@/lib/utils"
+import { vscode } from "@/utils/vscode"
 
 type CopyButtonProps = {
-	itemTask: string
+	itemId: string
 }
 
-export const CopyButton = ({ itemTask }: CopyButtonProps) => {
-	const { isCopied, copy } = useClipboard()
+export const CopyButton = ({ itemId }: CopyButtonProps) => {
+	const [isCopied, setIsCopied] = useState(false)
 	const { t } = useAppTranslation()
 
 	const onCopy = useCallback(
@@ -18,10 +18,12 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 			e.stopPropagation()
 
 			if (!isCopied) {
-				copy(itemTask)
+				vscode.postMessage({ type: "copyTask", text: itemId })
+				setIsCopied(true)
+				setTimeout(() => setIsCopied(false), 2000)
 			}
 		},
-		[isCopied, copy, itemTask],
+		[isCopied, itemId],
 	)
 
 	return (

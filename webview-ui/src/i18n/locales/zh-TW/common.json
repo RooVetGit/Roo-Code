@@ -4,7 +4,8 @@
 		"no": "否",
 		"cancel": "取消",
 		"remove": "移除",
-		"keep": "保留"
+		"keep": "保留",
+		"close": "關閉"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -13,6 +14,38 @@
 	},
 	"ui": {
 		"search_placeholder": "搜尋..."
+	},
+	"errors": {
+		"history_scan_failed": "掃描工作歷史失敗：{{error}}",
+		"history_reindex_failed": "重建歷史索引失敗：{{error}}",
+		"share_no_active_task": "沒有可分享的活動工作",
+		"share_auth_required": "分享工作需要身份驗證",
+		"share_not_enabled": "您的帳戶未啟用分享功能",
+		"share_task_not_found": "找不到工作",
+		"share_task_failed": "分享工作失敗",
+		"settings_import_failed": "匯入設定失敗：{{error}}",
+		"update_support_prompt": "更新支援提示詞失敗",
+		"enhance_prompt": "增強提示詞失敗",
+		"get_system_prompt": "取得系統提示詞失敗",
+		"search_commits": "搜尋提交記錄失敗",
+		"save_api_config": "儲存 API 設定失敗",
+		"load_api_config": "載入 API 設定失敗",
+		"rename_api_config": "重新命名 API 設定失敗",
+		"delete_api_config": "刪除 API 設定失敗",
+		"list_api_config": "列出 API 設定失敗",
+		"update_server_timeout": "更新伺服器逾時設定失敗",
+		"no_workspace": "未開啟工作區資料夾",
+		"checkpoint_timeout": "等待檢查點逾時",
+		"checkpoint_failed": "還原檢查點失敗"
+	},
+	"info": {
+		"history_reindexed": "歷史索引重建成功",
+		"history_scanned": "工作歷史掃描完成",
+		"settings_imported": "設定匯入成功",
+		"clipboard_copy": "已複製到剪貼簿"
+	},
+	"confirmation": {
+		"reindex_history": "警告：這將透過遍歷工作目錄和舊版 globalState[taskHistory] 結構重新建立 taskHistory/*.json 索引。這可能會還原您先前刪除的工作和/或復原損壞的工作。如果無法復原 token/費用計數器，它們將被設為零。屬於多個工作區的工作將僅分配給該工作最近使用的工作區。"
 	},
 	"mermaid": {
 		"loading": "產生 Mermaid 圖表中...",

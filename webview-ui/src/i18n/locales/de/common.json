@@ -4,7 +4,31 @@
 		"no": "Nein",
 		"cancel": "Abbrechen",
 		"remove": "Entfernen",
-		"keep": "Behalten"
+		"keep": "Behalten",
+		"close": "Schließen"
+	},
+	"errors": {
+		"history_scan_failed": "Fehler beim Scannen des Aufgabenverlaufs: {{error}}",
+		"history_reindex_failed": "Fehler beim Neuaufbau der Verlaufsindizes: {{error}}",
+		"share_no_active_task": "Keine aktive Aufgabe zum Teilen",
+		"share_auth_required": "Authentifizierung erforderlich, um Aufgabe zu teilen",
+		"share_not_enabled": "Teilen ist für dein Konto nicht aktiviert",
+		"share_task_not_found": "Aufgabe nicht gefunden",
+		"share_task_failed": "Fehler beim Teilen der Aufgabe",
+		"settings_import_failed": "Fehler beim Importieren der Einstellungen: {{error}}",
+		"update_support_prompt": "Fehler beim Aktualisieren der Support-Nachricht",
+		"enhance_prompt": "Fehler beim Verbessern der Nachricht",
+		"get_system_prompt": "Fehler beim Abrufen der Systemnachricht",
+		"search_commits": "Fehler beim Suchen von Commits",
+		"save_api_config": "Fehler beim Speichern der API-Konfiguration",
+		"load_api_config": "Fehler beim Laden der API-Konfiguration",
+		"rename_api_config": "Fehler beim Umbenennen der API-Konfiguration",
+		"delete_api_config": "Fehler beim Löschen der API-Konfiguration",
+		"list_api_config": "Fehler beim Abrufen der API-Konfigurationsliste",
+		"update_server_timeout": "Fehler beim Aktualisieren des Server-Timeouts",
+		"no_workspace": "Kein Arbeitsbereich-Ordner ist geöffnet",
+		"checkpoint_timeout": "Zeitüberschreitung beim Warten auf Checkpoint",
+		"checkpoint_failed": "Fehler beim Wiederherstellen des Checkpoints"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -51,5 +75,14 @@
 		"success": {
 			"imageDataUriCopied": "Bild-Daten-URI in die Zwischenablage kopiert"
 		}
+	},
+	"info": {
+		"history_reindexed": "Verlaufsindizes erfolgreich neu erstellt",
+		"history_scanned": "Aufgabenverlauf-Scan abgeschlossen",
+		"settings_imported": "Einstellungen erfolgreich importiert",
+		"clipboard_copy": "In die Zwischenablage kopiert"
+	},
+	"confirmation": {
+		"reindex_history": "Warnung: Dies wird die taskHistory/*.json-Indizes neu erstellen, indem die Aufgabenverzeichnisse und Legacy-globalState[taskHistory]-Strukturen durchlaufen werden. Dies kann Aufgaben wiederherstellen, die Sie zuvor gelöscht haben und/oder beschädigte Aufgaben wiederherstellen. Wenn Token/Kosten-Zähler nicht wiederherstellbar sind, werden sie auf Null gesetzt. Alle Aufgaben, die Mitglieder mehrerer Arbeitsbereiche sind, werden nur dem zuletzt verwendeten Arbeitsbereich zugewiesen."
 	}
 }

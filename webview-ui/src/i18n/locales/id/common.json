@@ -4,7 +4,8 @@
 		"no": "Tidak",
 		"cancel": "Batal",
 		"remove": "Hapus",
-		"keep": "Simpan"
+		"keep": "Simpan",
+		"close": "Tutup"
 	},
 	"number_format": {
 		"thousand_suffix": "rb",
@@ -51,5 +52,37 @@
 		"success": {
 			"imageDataUriCopied": "Data URI gambar disalin ke clipboard"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "Gagal memindai riwayat tugas: {{error}}",
+		"history_reindex_failed": "Gagal membangun ulang indeks riwayat: {{error}}",
+		"share_no_active_task": "Tidak ada tugas aktif untuk dibagikan",
+		"share_auth_required": "Autentikasi diperlukan untuk membagikan tugas",
+		"share_not_enabled": "Berbagi tidak diaktifkan untuk akun kamu",
+		"share_task_not_found": "Tugas tidak ditemukan",
+		"share_task_failed": "Gagal membagikan tugas",
+		"settings_import_failed": "Gagal mengimpor pengaturan: {{error}}",
+		"update_support_prompt": "Gagal memperbarui support prompt",
+		"enhance_prompt": "Gagal meningkatkan prompt",
+		"get_system_prompt": "Gagal mendapatkan system prompt",
+		"search_commits": "Gagal mencari commits",
+		"save_api_config": "Gagal menyimpan konfigurasi API",
+		"load_api_config": "Gagal memuat konfigurasi API",
+		"rename_api_config": "Gagal mengganti nama konfigurasi API",
+		"delete_api_config": "Gagal menghapus konfigurasi API",
+		"list_api_config": "Gagal membuat daftar konfigurasi API",
+		"update_server_timeout": "Gagal memperbarui timeout server",
+		"no_workspace": "Tidak ada folder workspace yang terbuka",
+		"checkpoint_timeout": "Timeout menunggu checkpoint",
+		"checkpoint_failed": "Gagal memulihkan checkpoint"
+	},
+	"info": {
+		"history_reindexed": "Indeks riwayat berhasil dibangun ulang",
+		"history_scanned": "Pemindaian riwayat tugas selesai",
+		"settings_imported": "Pengaturan berhasil diimpor",
+		"clipboard_copy": "Disalin ke clipboard"
+	},
+	"confirmation": {
+		"reindex_history": "Peringatan: Ini akan membuat ulang indeks taskHistory/*.json dengan menelusuri direktori tugas dan struktur legacy globalState[taskHistory]. Ini mungkin membatalkan penghapusan tugas yang sebelumnya kamu hapus dan/atau memulihkan tugas yang rusak. Jika penghitung token/biaya tidak dapat dipulihkan, akan diatur ke nol. Tugas yang menjadi anggota beberapa workspace akan ditetapkan kembali hanya ke workspace terbaru yang digunakan oleh tugas tersebut."
 	}
 }

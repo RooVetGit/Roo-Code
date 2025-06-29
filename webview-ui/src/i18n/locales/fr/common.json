@@ -4,7 +4,8 @@
 		"no": "Non",
 		"cancel": "Annuler",
 		"remove": "Supprimer",
-		"keep": "Conserver"
+		"keep": "Conserver",
+		"close": "Fermer"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -39,6 +40,41 @@
 			"copyError": "Erreur lors de la copie de l'image"
 		}
 	},
+	"errors": {
+		"history_scan_failed": "Échec de l'analyse de l'historique des tâches : {{error}}",
+		"history_reindex_failed": "Échec de la reconstruction des index d'historique : {{error}}",
+		"share_no_active_task": "Aucune tâche active à partager",
+		"share_auth_required": "Authentification requise pour partager la tâche",
+		"share_not_enabled": "Le partage n'est pas activé pour votre compte",
+		"share_task_not_found": "Tâche non trouvée",
+		"share_task_failed": "Échec du partage de la tâche",
+		"settings_import_failed": "Échec de l'importation des paramètres : {{error}}",
+		"update_support_prompt": "Échec de la mise à jour du message d'assistance",
+		"enhance_prompt": "Échec de l'amélioration du message",
+		"get_system_prompt": "Échec de l'obtention du message système",
+		"search_commits": "Échec de la recherche des commits",
+		"save_api_config": "Échec de l'enregistrement de la configuration API",
+		"load_api_config": "Échec du chargement de la configuration API",
+		"rename_api_config": "Échec du renommage de la configuration API",
+		"delete_api_config": "Échec de la suppression de la configuration API",
+		"list_api_config": "Échec de la liste des configurations API",
+		"update_server_timeout": "Échec de la mise à jour du délai d'attente du serveur",
+		"no_workspace": "Aucun dossier d'espace de travail n'est ouvert",
+		"checkpoint_timeout": "Délai d'attente dépassé pour le point de contrôle",
+		"checkpoint_failed": "Échec de la restauration du point de contrôle"
+	},
+
+	"info": {
+		"history_reindexed": "Index d'historique reconstruits avec succès",
+		"history_scanned": "Analyse de l'historique des tâches terminée",
+		"settings_imported": "Paramètres importés avec succès",
+		"clipboard_copy": "Copié dans le presse-papiers"
+	},
+
+	"confirmation": {
+		"reindex_history": "Avertissement : Cela recréera les index taskHistory/*.json en parcourant les répertoires de tâches et les structures legacy globalState[taskHistory]. Cela peut restaurer des tâches que vous avez précédemment supprimées et/ou récupérer des tâches corrompues. Si les compteurs de jetons/coûts ne sont pas récupérables, ils seront mis à zéro. Toutes les tâches qui sont membres de plusieurs espaces de travail seront réassignées uniquement à l'espace de travail le plus récemment utilisé par la tâche."
+	},
+
 	"file": {
 		"errors": {
 			"invalidDataUri": "Format d'URI de données invalide",

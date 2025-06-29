@@ -4,7 +4,8 @@
 		"no": "否",
 		"cancel": "取消",
 		"remove": "移除",
-		"keep": "保留"
+		"keep": "保留",
+		"close": "关闭"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -38,6 +39,38 @@
 			"imageCopied": "图片已复制到剪贴板",
 			"copyError": "复制图片时出错"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "扫描任务历史失败：{{error}}",
+		"history_reindex_failed": "重建历史索引失败：{{error}}",
+		"share_no_active_task": "没有可分享的活动任务",
+		"share_auth_required": "分享任务需要身份验证",
+		"share_not_enabled": "您的账户未启用分享功能",
+		"share_task_not_found": "未找到任务",
+		"share_task_failed": "分享任务失败",
+		"settings_import_failed": "导入设置失败：{{error}}",
+		"update_support_prompt": "更新支持提示词失败",
+		"enhance_prompt": "增强提示词失败",
+		"get_system_prompt": "获取系统提示词失败",
+		"search_commits": "搜索提交记录失败",
+		"save_api_config": "保存 API 配置失败",
+		"load_api_config": "加载 API 配置失败",
+		"rename_api_config": "重命名 API 配置失败",
+		"delete_api_config": "删除 API 配置失败",
+		"list_api_config": "列出 API 配置失败",
+		"update_server_timeout": "更新服务器超时设置失败",
+		"no_workspace": "未打开工作区文件夹",
+		"checkpoint_timeout": "等待存档点超时",
+		"checkpoint_failed": "恢复存档点失败"
+	},
+	"info": {
+		"history_reindexed": "历史索引重建成功",
+		"history_scanned": "任务历史扫描完成",
+		"settings_imported": "设置导入成功",
+		"clipboard_copy": "已复制到剪贴板"
+	},
+	"confirmation": {
+		"reindex_history": "警告：这将通过遍历任务目录和旧版 globalState[taskHistory] 结构重新创建 taskHistory/*.json 索引。这可能会恢复您之前删除的任务和/或恢复损坏的任务。如果无法恢复 token/成本计数器，它们将被设置为零。属于多个工作区的任务将仅分配给该任务最近使用的工作区。"
 	},
 	"file": {
 		"errors": {

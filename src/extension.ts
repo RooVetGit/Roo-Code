@@ -38,6 +38,18 @@ import {
 	CodeActionProvider,
 } from "./activate"
 import { initializeI18n } from "./i18n"
+import { migrateTaskHistoryStorage } from "./core/task-persistence/taskHistory"
+
+/**
+ * Returns the extension context.
+ * Throws an error if the context has not been initialized (i.e., activate has not been called).
+ */
+export function getExtensionContext(): vscode.ExtensionContext {
+	if (!_extensionContext) {
+		throw new Error("Extension context is not available. Activate function may not have been called.")
+	}
+	return _extensionContext
+}
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -48,15 +60,21 @@ import { initializeI18n } from "./i18n"
  */
 
 let outputChannel: vscode.OutputChannel
-let extensionContext: vscode.ExtensionContext
+let _extensionContext: vscode.ExtensionContext
 
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
-	extensionContext = context
+	_extensionContext = context
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
+
+	// Initialize and migrate task history storage
+	// (migrateTaskHistoryStorage also calls initializeTaskHistory internally)
+	outputChannel.appendLine("Starting task history data format check/migration...")
+	await migrateTaskHistoryStorage()
+	outputChannel.appendLine("Task history data format check/migration finished.")
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
@@ -200,7 +218,7 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated.
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
-	await McpServerManager.cleanup(extensionContext)
+	await McpServerManager.cleanup(_extensionContext)
 	TelemetryService.instance.shutdown()
 	TerminalRegistry.cleanup()
 }

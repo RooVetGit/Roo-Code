@@ -1,18 +1,67 @@
-import { useState, useEffect, useMemo } from "react"
-import { Fzf } from "fzf"
-
-import { highlightFzfMatch } from "@/utils/highlight"
+import { useState, useEffect, useRef, useCallback } from "react"
+import {
+	HistoryItem,
+	HistorySearchOptions,
+	HistorySortOption,
+	HistorySearchResultItem,
+	HistoryWorkspaceItem,
+} from "@roo-code/types"
+import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { highlightFzfMatch } from "@/utils/highlight"
 
-type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
+// Static counter for generating unique request IDs
+let nextRequestId = 1
 
-export const useTaskSearch = () => {
-	const { taskHistory, cwd } = useExtensionState()
-	const [searchQuery, setSearchQuery] = useState("")
-	const [sortOption, setSortOption] = useState<SortOption>("newest")
-	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
-	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false)
+export const useTaskSearch = (options: HistorySearchOptions = {}) => {
+	const { cwd } = useExtensionState()
+	const [tasks, setTasks] = useState<(HistoryItem & { highlight?: string })[]>([])
+	const [loading, setLoading] = useState(true)
+	const [isSearching, setIsSearching] = useState(false) // New state for tracking search in progress
+	const [searchQuery, setSearchQuery] = useState(options.searchQuery || "")
+	const [pendingSearchQuery, setPendingSearchQuery] = useState(options.searchQuery || "")
+	const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const previousTasksRef = useRef<(HistoryItem & { highlight?: string })[]>([])
+	const [sortOption, setSortOption] = useState<HistorySortOption>(options.sortOption || "newest")
+	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<HistorySortOption | null>("newest")
+	const [workspaceItems, setWorkspaceItems] = useState<HistoryWorkspaceItem[]>([])
+	const [workspacePath, setWorkspacePath] = useState<string | undefined>(options.workspacePath)
+	const [resultLimit, setResultLimit] = useState<number | undefined>(options.limit)
+	const currentRequestId = useRef<string>("")
 
+	// Wrap state setters to set loading state when values change
+	const setWorkspacePathWithLoading = useCallback(
+		(path: string) => {
+			if (path !== workspacePath) {
+				setLoading(true)
+			}
+			setWorkspacePath(path)
+		},
+		[workspacePath],
+	)
+
+	const setResultLimitWithLoading = useCallback((limit: number | undefined) => {
+		setLoading(true)
+		setResultLimit(limit)
+	}, [])
+
+	// Debounced search query setter
+	const debouncedSetSearchQuery = useCallback((query: string) => {
+		if (searchTimeoutRef.current) {
+			clearTimeout(searchTimeoutRef.current)
+		}
+
+		setPendingSearchQuery(query)
+
+		searchTimeoutRef.current = setTimeout(() => {
+			if (query) {
+				setIsSearching(true) // Set searching to true when a new search query is submitted
+			}
+			setSearchQuery(query)
+		}, 125) // 125ms debounce
+	}, [])
+
+	// Handle automatic sort switching for relevance
 	useEffect(() => {
 		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
 			setLastNonRelevantSort(sortOption)
@@ -22,71 +71,110 @@ export const useTaskSearch = () => {
 			setLastNonRelevantSort(null)
 		}
 	}, [searchQuery, sortOption, lastNonRelevantSort])
-
-	const presentableTasks = useMemo(() => {
-		let tasks = taskHistory.filter((item) => item.ts && item.task)
-		if (!showAllWorkspaces) {
-			tasks = tasks.filter((item) => item.workspace === cwd)
+	useEffect(() => {
+		// Set loading to true on initial render
+		// or if we've never fetched results before
+		if (tasks.length === 0 && !loading) {
+			setLoading(true)
 		}
-		return tasks
-	}, [taskHistory, showAllWorkspaces, cwd])
 
-	const fzf = useMemo(() => {
-		return new Fzf(presentableTasks, {
-			selector: (item) => item.task,
-		})
-	}, [presentableTasks])
+		// Store current tasks as previous
+		previousTasksRef.current = tasks
 
-	const tasks = useMemo(() => {
-		let results = presentableTasks
+		const handler = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "historyItems" && message.requestId === currentRequestId.current) {
+				// Process the items to add highlight HTML based on match positions
+				const processedItems = (message.items || []).map((item: HistorySearchResultItem) => {
+					if (item.match?.positions) {
+						return {
+							...item,
+							highlight: highlightFzfMatch(item.task, item.match.positions),
+						}
+					}
+					return item
+				})
 
-		if (searchQuery) {
-			const searchResults = fzf.find(searchQuery)
-			results = searchResults.map((result) => {
-				const positions = Array.from(result.positions)
-				const taskEndIndex = result.item.task.length
-
-				return {
-					...result.item,
-					highlight: highlightFzfMatch(
-						result.item.task,
-						positions.filter((p) => p < taskEndIndex),
-					),
-					workspace: result.item.workspace,
+				// Update workspace items if provided
+				if (message.workspaceItems && Array.isArray(message.workspaceItems)) {
+					setWorkspaceItems(message.workspaceItems)
+				} else {
+					console.error("No workspaceItems in message:", message)
 				}
-			})
+
+				// Atomic update - no flickering
+				setTasks(processedItems)
+				setLoading(false)
+				setIsSearching(false) // Set searching to false when results are received
+			}
 		}
 
-		// Then sort the results
-		return [...results].sort((a, b) => {
-			switch (sortOption) {
-				case "oldest":
-					return (a.ts || 0) - (b.ts || 0)
-				case "mostExpensive":
-					return (b.totalCost || 0) - (a.totalCost || 0)
-				case "mostTokens":
-					const aTokens = (a.tokensIn || 0) + (a.tokensOut || 0) + (a.cacheWrites || 0) + (a.cacheReads || 0)
-					const bTokens = (b.tokensIn || 0) + (b.tokensOut || 0) + (b.cacheWrites || 0) + (b.cacheReads || 0)
-					return bTokens - aTokens
-				case "mostRelevant":
-					// Keep fuse order if searching, otherwise sort by newest
-					return searchQuery ? 0 : (b.ts || 0) - (a.ts || 0)
-				case "newest":
-				default:
-					return (b.ts || 0) - (a.ts || 0)
+		window.addEventListener("message", handler)
+
+		// Listen for task deletion confirmation and refresh the list
+		const deletionHandler = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "taskDeletedConfirmation") {
+				console.log("Task deletion confirmed, refreshing list...")
+
+				// Refresh the task list without showing loading state
+				// Generate a new request ID for this search
+				const refreshRequestId = `search_${nextRequestId++}`
+				currentRequestId.current = refreshRequestId
+
+				vscode.postMessage({
+					type: "getHistoryItems",
+					historySearchOptions: searchOptions,
+					requestId: refreshRequestId,
+				})
 			}
+		}
+
+		window.addEventListener("message", deletionHandler)
+
+		// Always send the initial request
+		// Construct search options
+		const searchOptions: HistorySearchOptions = {
+			searchQuery,
+			sortOption,
+			// If workspacePath is undefined, so current workspace
+			// Otherwise, use the specified workspacePath
+			workspacePath,
+			limit: resultLimit,
+		}
+
+		// Generate a new request ID for this search
+		const requestId = `search_${nextRequestId++}`
+		currentRequestId.current = requestId
+
+		vscode.postMessage({
+			type: "getHistoryItems",
+			historySearchOptions: searchOptions,
+			requestId,
 		})
-	}, [presentableTasks, searchQuery, fzf, sortOption])
+
+		return () => {
+			window.removeEventListener("message", handler)
+			window.removeEventListener("message", deletionHandler)
+		}
+		// Intentionally excluding tasks from deps to prevent infinite loop and flickering
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [searchQuery, sortOption, workspacePath, cwd, resultLimit])
 
 	return {
 		tasks,
-		searchQuery,
-		setSearchQuery,
+		loading,
+		isSearching,
+		searchQuery: pendingSearchQuery, // Return the pending query for immediate UI feedback
+		setSearchQuery: debouncedSetSearchQuery,
 		sortOption,
 		setSortOption,
 		lastNonRelevantSort,
 		setLastNonRelevantSort,
-		showAllWorkspaces,
-		setShowAllWorkspaces,
+		workspaceItems,
+		workspacePath,
+		setWorkspacePath: setWorkspacePathWithLoading,
+		resultLimit,
+		setResultLimit: setResultLimitWithLoading,
 	}
 }

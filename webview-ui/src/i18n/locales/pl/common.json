@@ -9,7 +9,8 @@
 		"no": "Nie",
 		"cancel": "Anuluj",
 		"remove": "Usuń",
-		"keep": "Zachowaj"
+		"keep": "Zachowaj",
+		"close": "Zamknij"
 	},
 	"ui": {
 		"search_placeholder": "Szukaj..."
@@ -51,5 +52,37 @@
 		"success": {
 			"imageDataUriCopied": "URI danych obrazu skopiowane do schowka"
 		}
+	},
+	"errors": {
+		"history_scan_failed": "Nie udało się przeskanować historii zadań: {{error}}",
+		"history_reindex_failed": "Nie udało się przebudować indeksów historii: {{error}}",
+		"share_no_active_task": "Brak aktywnego zadania do udostępnienia",
+		"share_auth_required": "Wymagane uwierzytelnienie, aby udostępnić zadanie",
+		"share_not_enabled": "Udostępnianie nie jest włączone dla Twojego konta",
+		"share_task_not_found": "Nie znaleziono zadania",
+		"share_task_failed": "Nie udało się udostępnić zadania",
+		"settings_import_failed": "Nie udało się zaimportować ustawień: {{error}}",
+		"update_support_prompt": "Nie udało się zaktualizować podpowiedzi wsparcia",
+		"enhance_prompt": "Nie udało się ulepszyć podpowiedzi",
+		"get_system_prompt": "Nie udało się pobrać podpowiedzi systemowej",
+		"search_commits": "Nie udało się przeszukać commitów",
+		"save_api_config": "Nie udało się zapisać konfiguracji API",
+		"load_api_config": "Nie udało się załadować konfiguracji API",
+		"rename_api_config": "Nie udało się zmienić nazwy konfiguracji API",
+		"delete_api_config": "Nie udało się usunąć konfiguracji API",
+		"list_api_config": "Nie udało się wyświetlić konfiguracji API",
+		"update_server_timeout": "Nie udało się zaktualizować limitu czasu serwera",
+		"no_workspace": "Nie otwarto żadnego folderu obszaru roboczego",
+		"checkpoint_timeout": "Przekroczono limit czasu oczekiwania na punkt kontrolny",
+		"checkpoint_failed": "Nie udało się przywrócić punktu kontrolnego"
+	},
+	"info": {
+		"history_reindexed": "Indeksy historii zostały pomyślnie przebudowane",
+		"history_scanned": "Skanowanie historii zadań zakończone",
+		"settings_imported": "Ustawienia zostały pomyślnie zaimportowane",
+		"clipboard_copy": "Skopiowano do schowka"
+	},
+	"confirmation": {
+		"reindex_history": "Ostrzeżenie: Ta operacja odtworzy indeksy taskHistory/*.json poprzez przejrzenie katalogów zadań i struktur legacy globalState[taskHistory]. Może to przywrócić zadania, które wcześniej usunąłeś i/lub odzyskać uszkodzone zadania. Jeśli liczniki tokenów/kosztów nie będą możliwe do odzyskania, zostaną ustawione na zero. Wszelkie zadania, które są członkami wielu obszarów roboczych, zostaną przypisane tylko do ostatnio używanego obszaru roboczego."
 	}
 }

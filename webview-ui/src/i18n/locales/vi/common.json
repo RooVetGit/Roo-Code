@@ -4,12 +4,42 @@
 		"no": "Không",
 		"cancel": "Hủy",
 		"remove": "Xóa",
-		"keep": "Giữ"
+		"keep": "Giữ",
+		"close": "Đóng"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
 		"million_suffix": "m",
 		"billion_suffix": "b"
+	},
+	"errors": {
+		"history_scan_failed": "Không thể quét lịch sử nhiệm vụ: {{error}}",
+		"history_reindex_failed": "Không thể tạo lại chỉ mục lịch sử: {{error}}",
+		"share_no_active_task": "Không có nhiệm vụ đang hoạt động để chia sẻ",
+		"share_auth_required": "Yêu cầu xác thực để chia sẻ nhiệm vụ",
+		"share_not_enabled": "Tính năng chia sẻ không được kích hoạt cho tài khoản của bạn",
+		"share_task_not_found": "Không tìm thấy nhiệm vụ",
+		"share_task_failed": "Không thể chia sẻ nhiệm vụ",
+		"settings_import_failed": "Không thể nhập cài đặt: {{error}}",
+		"update_support_prompt": "Không thể cập nhật lời nhắc hỗ trợ",
+		"enhance_prompt": "Không thể nâng cao lời nhắc",
+		"get_system_prompt": "Không thể lấy lời nhắc hệ thống",
+		"search_commits": "Không thể tìm kiếm các commit",
+		"save_api_config": "Không thể lưu cấu hình API",
+		"load_api_config": "Không thể tải cấu hình API",
+		"rename_api_config": "Không thể đổi tên cấu hình API",
+		"delete_api_config": "Không thể xóa cấu hình API",
+		"list_api_config": "Không thể liệt kê cấu hình API",
+		"update_server_timeout": "Không thể cập nhật thời gian chờ máy chủ",
+		"no_workspace": "Không có thư mục không gian làm việc nào được mở",
+		"checkpoint_timeout": "Hết thời gian chờ điểm kiểm tra",
+		"checkpoint_failed": "Không thể khôi phục điểm kiểm tra"
+	},
+	"info": {
+		"history_reindexed": "Chỉ mục lịch sử đã được tạo lại thành công",
+		"history_scanned": "Quét lịch sử nhiệm vụ đã hoàn thành",
+		"settings_imported": "Cài đặt đã được nhập thành công",
+		"clipboard_copy": "Đã sao chép vào clipboard"
 	},
 	"ui": {
 		"search_placeholder": "Tìm kiếm..."
@@ -38,6 +68,9 @@
 			"imageCopied": "Hình ảnh đã được sao chép vào clipboard",
 			"copyError": "Lỗi sao chép hình ảnh"
 		}
+	},
+	"confirmation": {
+		"reindex_history": "Cảnh báo: Điều này sẽ tạo lại các chỉ mục taskHistory/*.json bằng cách duyệt qua các thư mục nhiệm vụ và cấu trúc globalState[taskHistory] cũ. Điều này có thể khôi phục các nhiệm vụ mà bạn đã xóa trước đó và/hoặc khôi phục các nhiệm vụ bị hỏng. Nếu bộ đếm token/chi phí không thể khôi phục, chúng sẽ được đặt về không. Bất kỳ nhiệm vụ nào là thành viên của nhiều không gian làm việc sẽ được gán lại cho không gian làm việc được sử dụng gần đây nhất bởi nhiệm vụ đó."
 	},
 	"file": {
 		"errors": {

@@ -31,6 +31,7 @@
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
 		"language": "Taal",
+		"historyIndexTools": "Geschiedenisindex-tools",
 		"about": "Over Roo Code"
 	},
 	"prompts": {
@@ -569,7 +570,8 @@
 		"settings": {
 			"import": "Importeren",
 			"export": "Exporteren",
-			"reset": "Resetten"
+			"reset": "Resetten",
+			"reindexHistory": "Herindexeren"
 		}
 	},
 	"thinkingBudget": {
