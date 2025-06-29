@@ -34,7 +34,11 @@
 		"about": "Sobre Roo Code"
 	},
 	"prompts": {
-		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
+		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament.",
+		"parentRulesMaxDepth": {
+			"label": "Nivells de cerca de regles pare",
+			"description": "Nombre màxim de nivells de directori per cercar cap amunt els fitxers .roo/rules. Predeterminat: 1 (només directori de l'espai de treball). Valors més alts permeten la càrrega jeràrquica des de directoris pare (característica, repositori, organització, global d'usuari, etc.), on valors grans cerquen fins a l'arrel del sistema de fitxers."
+		}
 	},
 	"codeIndex": {
 		"title": "Indexació de codi",

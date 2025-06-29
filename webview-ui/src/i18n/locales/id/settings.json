@@ -34,7 +34,11 @@
 		"about": "Tentang Roo Code"
 	},
 	"prompts": {
-		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
+		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum.",
+		"parentRulesMaxDepth": {
+			"label": "Level Pencarian Aturan Induk",
+			"description": "Jumlah maksimum level direktori untuk mencari ke atas file .roo/rules. Default: 1 (hanya direktori workspace). Nilai yang lebih tinggi memungkinkan pemuatan hierarkis dari direktori induk (fitur, repositori, organisasi, global-pengguna, dll.), di mana nilai besar mencari hingga ke root sistem file."
+		}
 	},
 	"codeIndex": {
 		"title": "Pengindeksan Codebase",

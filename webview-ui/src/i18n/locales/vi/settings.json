@@ -34,7 +34,11 @@
 		"about": "Giới thiệu"
 	},
 	"prompts": {
-		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến."
+		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến.",
+		"parentRulesMaxDepth": {
+			"label": "Cấp độ tìm kiếm quy tắc cha",
+			"description": "Số cấp thư mục tối đa để tìm kiếm lên trên cho các tệp .roo/rules. Mặc định: 1 (chỉ thư mục không gian làm việc). Giá trị cao hơn cho phép tải phân cấp từ các thư mục cha (tính năng, kho lưu trữ, tổ chức, toàn cục người dùng, v.v.), trong đó giá trị lớn sẽ tìm kiếm đến thư mục gốc của hệ thống tệp."
+		}
 	},
 	"codeIndex": {
 		"title": "Lập chỉ mục mã nguồn",

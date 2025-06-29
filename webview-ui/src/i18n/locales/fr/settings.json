@@ -34,7 +34,11 @@
 		"about": "À propos de Roo Code"
 	},
 	"prompts": {
-		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes."
+		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes.",
+		"parentRulesMaxDepth": {
+			"label": "Niveaux de recherche de règles parentes",
+			"description": "Nombre maximal de niveaux de répertoires pour rechercher vers le haut les fichiers .roo/rules. Par défaut : 1 (répertoire de l'espace de travail uniquement). Des valeurs plus élevées permettent le chargement hiérarchique à partir des répertoires parents (fonctionnalité, dépôt, organisation, global utilisateur, etc.), où des valeurs importantes recherchent jusqu'à la racine du système de fichiers."
+		}
 	},
 	"codeIndex": {
 		"title": "Indexation de la base de code",

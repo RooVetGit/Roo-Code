@@ -193,6 +193,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("autoCondenseContextPercent", message.value)
 			await provider.postStateToWebview()
 			break
+		case "parentRulesMaxDepth":
+			await updateGlobalState("parentRulesMaxDepth", Math.max(1, message.value ?? 1))
+			await provider.postStateToWebview()
+			break
 		case "terminalOperation":
 			if (message.terminalOperation) {
 				provider.getCurrentCline()?.handleTerminalOperation(message.terminalOperation)

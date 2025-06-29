@@ -34,7 +34,11 @@
 		"about": "Over Roo Code"
 	},
 	"prompts": {
-		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
+		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken.",
+		"parentRulesMaxDepth": {
+			"label": "Zoekdiepte voor bovenliggende regels",
+			"description": "Maximaal aantal directoryniveaus om omhoog te zoeken naar .roo/rules. Standaard: 1 (alleen werkruimtedirectory). Hogere waarden maken hiërarchisch laden mogelijk vanuit bovenliggende directories (feature, repository, organisatie, gebruiker-globaal, enz.), waarbij grote waarden tot aan de bestandssysteemroot zoeken."
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase indexering",

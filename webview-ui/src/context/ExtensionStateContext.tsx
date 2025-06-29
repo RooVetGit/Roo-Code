@@ -38,6 +38,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	sharingEnabled: boolean
 	maxConcurrentFileReads?: number
 	mdmCompliant?: boolean
+	parentRulesMaxDepth?: number
+	setParentRulesMaxDepth: (value: number) => void
 	hasOpenedModeSelector: boolean // New property to track if user has opened mode selector
 	setHasOpenedModeSelector: (value: boolean) => void // Setter for the new property
 	condensingApiConfigId?: string
@@ -205,6 +207,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		sharingEnabled: false,
 		organizationAllowList: ORGANIZATION_ALLOW_ALL,
 		autoCondenseContext: true,
+		parentRulesMaxDepth: 1, // Default value for parentRulesMaxDepth
 		autoCondenseContextPercent: 100,
 		profileThresholds: {},
 		codebaseIndexConfig: {
@@ -438,6 +441,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCustomCondensingPrompt: (value) =>
 			setState((prevState) => ({ ...prevState, customCondensingPrompt: value })),
 		setProfileThresholds: (value) => setState((prevState) => ({ ...prevState, profileThresholds: value })),
+		setParentRulesMaxDepth: (value: number) =>
+			setState((prevState) => ({ ...prevState, parentRulesMaxDepth: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>
