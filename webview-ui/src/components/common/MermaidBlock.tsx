@@ -94,6 +94,22 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { t } = useAppTranslation()
 
+	/**
+	 * Handles the "Fix Mermaid Diagram" button click.
+	 */
+	function handleFixMermaidDiagram(e: React.MouseEvent<HTMLButtonElement>) {
+		e.stopPropagation()
+		vscode.postMessage({
+			type: "fixMermaidChart",
+			askResponse: "messageResponse",
+			values: {
+				error,
+				code,
+			},
+			images: [],
+		})
+	}
+
 	// 1) Whenever `code` changes, mark that we need to re-render a new chart
 	useEffect(() => {
 		setIsLoading(true)
@@ -157,7 +173,7 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 			{isLoading && <LoadingMessage>{t("common:mermaid.loading")}</LoadingMessage>}
 
 			{error ? (
-				<div style={{ marginTop: "0px", overflow: "hidden", marginBottom: "8px" }}>
+				<div style={{ marginTop: "0px", overflow: "hidden", marginBottom: "8px", position: "relative" }}>
 					<div
 						style={{
 							borderBottom: isErrorExpanded ? "1px solid var(--vscode-editorGroup-border)" : "none",
@@ -187,8 +203,31 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 								}}></span>
 							<span style={{ fontWeight: "bold" }}>{t("common:mermaid.render_error")}</span>
 						</div>
-						<div style={{ display: "flex", alignItems: "center" }}>
+						<div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+							{/* Fix Mermaid Diagram Button */}
+							<button
+								style={{
+									background: "var(--vscode-button-background)",
+									color: "var(--vscode-button-foreground)",
+									border: "none",
+									borderRadius: "4px",
+									padding: "2px 8px",
+									fontSize: "12px",
+									cursor: "pointer",
+									boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+									marginRight: "0px",
+									display: "flex",
+									alignItems: "center",
+									height: "24px",
+								}}
+								aria-label={t("common:mermaid.buttons.retry")}
+								title={t("common:mermaid.buttons.retry")}
+								type="button"
+								onClick={handleFixMermaidDiagram}>
+								{t("common:mermaid.buttons.retry")}
+							</button>
 							<CopyButton
+								style={{ marginRight: 0, height: "24px" }}
 								onClick={(e) => {
 									e.stopPropagation()
 									const combinedContent = `Error: ${error}\n\n\`\`\`mermaid\n${code}\n\`\`\``

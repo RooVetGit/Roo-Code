@@ -40,6 +40,7 @@ export interface WebviewMessage {
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
+		| "fixMermaidChart"
 		| "terminalOperation"
 		| "clearTask"
 		| "didShowAnnouncement"

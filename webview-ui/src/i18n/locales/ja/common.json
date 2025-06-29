@@ -25,7 +25,8 @@
 			"save": "画像を保存",
 			"viewCode": "コードを表示",
 			"viewDiagram": "ダイアグラムを表示",
-			"close": "閉じる"
+			"close": "閉じる",
+			"retry": "再試行"
 		},
 		"modal": {
 			"codeTitle": "Mermaidコード"
