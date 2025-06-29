@@ -29,6 +29,7 @@ export enum RooCodeEventName {
 	TaskCompleted = "taskCompleted",
 	TaskTokenUsageUpdated = "taskTokenUsageUpdated",
 	TaskToolFailed = "taskToolFailed",
+	McpServersInitialized = "mcpServersInitialized",
 	EvalPass = "evalPass",
 	EvalFail = "evalFail",
 }
@@ -52,6 +53,7 @@ export const rooCodeEventsSchema = z.object({
 	[RooCodeEventName.TaskCompleted]: z.tuple([z.string(), tokenUsageSchema, toolUsageSchema, isSubtaskSchema]),
 	[RooCodeEventName.TaskTokenUsageUpdated]: z.tuple([z.string(), tokenUsageSchema]),
 	[RooCodeEventName.TaskToolFailed]: z.tuple([z.string(), toolNamesSchema, z.string()]),
+	[RooCodeEventName.McpServersInitialized]: z.tuple([]),
 })
 
 export type RooCodeEvents = z.infer<typeof rooCodeEventsSchema>
@@ -163,6 +165,11 @@ export const taskEventSchema = z.discriminatedUnion("eventName", [
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskToolFailed),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskToolFailed],
+		taskId: z.number().optional(),
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.McpServersInitialized),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.McpServersInitialized],
 		taskId: z.number().optional(),
 	}),
 	z.object({

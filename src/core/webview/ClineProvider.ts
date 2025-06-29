@@ -77,6 +77,7 @@ import { getWorkspaceGitInfo } from "../../utils/git"
 
 export type ClineProviderEvents = {
 	clineCreated: [cline: Task]
+	mcpServersInitialized: []
 }
 
 class OrganizationAllowListViolationError extends Error {

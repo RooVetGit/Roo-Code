@@ -21,6 +21,7 @@ export interface RooCodeAPIEvents {
 	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage, isSubtask: IsSubtask]
 	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
 	taskToolFailed: [taskId: string, toolName: ToolName, error: string]
+	mcpServersInitialized: []
 }
 
 export interface RooCodeAPI extends EventEmitter<RooCodeAPIEvents> {

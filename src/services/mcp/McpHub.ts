@@ -995,6 +995,11 @@ export class McpHub {
 		await this.notifyWebviewOfServerChanges()
 		if (manageConnectingState) {
 			this.isConnecting = false
+			// Emit MCP servers initialized event
+			const provider = this.providerRef.deref()
+			if (provider) {
+				provider.emit("mcpServersInitialized")
+			}
 		}
 	}
 

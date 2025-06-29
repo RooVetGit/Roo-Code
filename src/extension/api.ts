@@ -248,6 +248,11 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 			this.emit(RooCodeEventName.TaskCreated, cline.taskId)
 		})
+
+		// Listen for MCP servers initialized event
+		provider.on("mcpServersInitialized", () => {
+			this.emit(RooCodeEventName.McpServersInitialized)
+		})
 	}
 
 	// Logging
