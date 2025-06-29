@@ -66,10 +66,29 @@
 					"type": "webview",
 					"id": "roo-cline.SidebarProvider",
 					"name": "%views.sidebar.name%"
+				},
+				{
+					"type": "tree",
+					"id": "roo-tool-selection",
+					"name": "Tool Selection",
+					"icon": "$(tools)",
+					"visibility": "visible"
 				}
 			]
 		},
 		"commands": [
+			{
+				"command": "roo-cline.setManualApproval",
+				"title": "Switch to Manual Approval"
+			},
+			{
+				"command": "roo-cline.setAutoApproval",
+				"title": "Switch to Auto Approval"
+			},
+			{
+				"command": "roo-cline.addMoreTools",
+				"title": "+ Add More"
+			},
 			{
 				"command": "roo-cline.plusButtonClicked",
 				"title": "%command.newTask.title%",
@@ -214,6 +233,21 @@
 			],
 			"view/title": [
 				{
+					"command": "roo-cline.setManualApproval",
+					"group": "navigation@1",
+					"when": "view == roo-tool-selection && config.chat.tools.autoApprove == true"
+				},
+				{
+					"command": "roo-cline.setAutoApproval",
+					"group": "navigation@1",
+					"when": "view == roo-tool-selection && config.chat.tools.autoApprove != true"
+				},
+				{
+					"command": "roo-cline.addMoreTools",
+					"group": "navigation@2",
+					"when": "view == roo-tool-selection"
+				},
+				{
 					"command": "roo-cline.plusButtonClicked",
 					"group": "navigation@1",
 					"when": "view == roo-cline.SidebarProvider"
@@ -295,6 +329,11 @@
 		"configuration": {
 			"title": "%configuration.title%",
 			"properties": {
+				"chat.tools.autoApprove": {
+					"type": "boolean",
+					"default": false,
+					"description": "Automatically approve tool invocations in chat without manual confirmation"
+				},
 				"roo-cline.allowedCommands": {
 					"type": "array",
 					"items": {
