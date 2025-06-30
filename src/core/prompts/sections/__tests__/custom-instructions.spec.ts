@@ -4,6 +4,12 @@
 vi.mock("fs/promises")
 
 // Mock path.resolve and path.join to be predictable in tests
+// Mock os.homedir to return a consistent path
+vi.mock("os", async () => ({
+	...(await vi.importActual("os")),
+	homedir: vi.fn().mockReturnValue("/fake/path"),
+}))
+
 vi.mock("path", async () => ({
 	...(await vi.importActual("path")),
 	resolve: vi.fn().mockImplementation((...args) => {
