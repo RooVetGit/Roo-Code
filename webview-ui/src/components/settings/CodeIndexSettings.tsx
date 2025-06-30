@@ -145,6 +145,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					.int("Dimension must be an integer")
 					.positive("Dimension must be a positive number")
 					.optional(),
+				codebaseIndexOpenAiCompatibleApiVersion: z.string().optional(),
 			}),
 		}
 
@@ -162,6 +163,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
 				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
+				codebaseIndexOpenAiCompatibleApiVersion: apiConfig.codebaseIndexOpenAiCompatibleApiVersion,
 			})
 			return true
 		} catch {
@@ -320,6 +322,24 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										setApiConfigurationField("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
 									}
 									style={{ width: "100%" }}></VSCodeTextField>
+							</div>
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.openaiCompatibleApiVersionLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									value={apiConfiguration.codebaseIndexOpenAiCompatibleApiVersion || ""}
+									onInput={(e: any) =>
+										setApiConfigurationField(
+											"codebaseIndexOpenAiCompatibleApiVersion",
+											e.target.value,
+										)
+									}
+									placeholder="2023-05-15"
+									style={{ width: "100%" }}></VSCodeTextField>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:codeIndex.openaiCompatibleApiVersionDescription")}
+								</p>
 							</div>
 						</div>
 					)}

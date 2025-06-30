@@ -15,7 +15,7 @@ export class CodeIndexConfigManager {
 	private modelId?: string
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
-	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number }
+	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number; apiVersion?: string }
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -55,6 +55,8 @@ export class CodeIndexConfigManager {
 		const openAiCompatibleModelDimension = this.contextProxy?.getGlobalState(
 			"codebaseIndexOpenAiCompatibleModelDimension",
 		) as number | undefined
+		const openAiCompatibleApiVersion =
+			this.contextProxy?.getGlobalState("codebaseIndexOpenAiCompatibleApiVersion") ?? ""
 
 		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
@@ -84,6 +86,7 @@ export class CodeIndexConfigManager {
 						baseUrl: openAiCompatibleBaseUrl,
 						apiKey: openAiCompatibleApiKey,
 						modelDimension: openAiCompatibleModelDimension,
+						apiVersion: openAiCompatibleApiVersion || undefined,
 					}
 				: undefined
 	}
@@ -100,7 +103,7 @@ export class CodeIndexConfigManager {
 			modelId?: string
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
-			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
+			openAiCompatibleOptions?: { baseUrl: string; apiKey: string; apiVersion?: string }
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
@@ -118,6 +121,7 @@ export class CodeIndexConfigManager {
 			openAiCompatibleBaseUrl: this.openAiCompatibleOptions?.baseUrl ?? "",
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
 			openAiCompatibleModelDimension: this.openAiCompatibleOptions?.modelDimension,
+			openAiCompatibleApiVersion: this.openAiCompatibleOptions?.apiVersion ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
@@ -185,6 +189,7 @@ export class CodeIndexConfigManager {
 		const prevOpenAiCompatibleBaseUrl = prev?.openAiCompatibleBaseUrl ?? ""
 		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
 		const prevOpenAiCompatibleModelDimension = prev?.openAiCompatibleModelDimension
+		const prevOpenAiCompatibleApiVersion = prev?.openAiCompatibleApiVersion ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
@@ -233,10 +238,12 @@ export class CodeIndexConfigManager {
 				const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
 				const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
 				const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
+				const currentOpenAiCompatibleApiVersion = this.openAiCompatibleOptions?.apiVersion ?? ""
 				if (
 					prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
 					prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey ||
-					prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension
+					prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension ||
+					prevOpenAiCompatibleApiVersion !== currentOpenAiCompatibleApiVersion
 				) {
 					return true
 				}

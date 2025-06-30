@@ -48,6 +48,8 @@
 		"openaiKeyLabel": "OpenAI Key:",
 		"openaiCompatibleBaseUrlLabel": "Base URL:",
 		"openaiCompatibleApiKeyLabel": "API Key:",
+		"openaiCompatibleApiVersionLabel": "API Version:",
+		"openaiCompatibleApiVersionDescription": "Required for Azure OpenAI. Common values: 2023-05-15, 2024-02-01, 2024-06-01. Leave empty for other OpenAI-compatible providers.",
 		"openaiCompatibleModelDimensionLabel": "Embedding Dimension:",
 		"openaiCompatibleModelDimensionPlaceholder": "e.g., 1536",
 		"openaiCompatibleModelDimensionDescription": "The embedding dimension (output size) for your model. Check your provider's documentation for this value. Common values: 384, 768, 1536, 3072.",

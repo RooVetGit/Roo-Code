@@ -52,6 +52,7 @@ export class CodeIndexServiceFactory {
 				config.openAiCompatibleOptions.baseUrl,
 				config.openAiCompatibleOptions.apiKey,
 				config.modelId,
+				config.openAiCompatibleOptions.apiVersion,
 			)
 		}
 

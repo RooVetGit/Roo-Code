@@ -35,8 +35,9 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	 * @param baseUrl The base URL for the OpenAI-compatible API endpoint
 	 * @param apiKey The API key for authentication
 	 * @param modelId Optional model identifier (defaults to "text-embedding-3-small")
+	 * @param apiVersion Optional API version for Azure OpenAI compatibility
 	 */
-	constructor(baseUrl: string, apiKey: string, modelId?: string) {
+	constructor(baseUrl: string, apiKey: string, modelId?: string, apiVersion?: string) {
 		if (!baseUrl) {
 			throw new Error("Base URL is required for OpenAI Compatible embedder")
 		}
@@ -44,8 +45,15 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			throw new Error("API key is required for OpenAI Compatible embedder")
 		}
 
+		// For Azure OpenAI, we need to append the api-version query parameter to the baseURL
+		let finalBaseUrl = baseUrl
+		if (apiVersion) {
+			const separator = baseUrl.includes("?") ? "&" : "?"
+			finalBaseUrl = `${baseUrl}${separator}api-version=${apiVersion}`
+		}
+
 		this.embeddingsClient = new OpenAI({
-			baseURL: baseUrl,
+			baseURL: finalBaseUrl,
 			apiKey: apiKey,
 		})
 		this.defaultModelId = modelId || getDefaultModelId("openai-compatible")

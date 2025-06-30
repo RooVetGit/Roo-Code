@@ -92,6 +92,39 @@ describe("OpenAICompatibleEmbedder", () => {
 				"Base URL is required for OpenAI Compatible embedder",
 			)
 		})
+
+		it("should append api-version query parameter when provided", () => {
+			const apiVersion = "2023-05-15"
+			embedder = new OpenAICompatibleEmbedder(testBaseUrl, testApiKey, testModelId, apiVersion)
+
+			expect(MockedOpenAI).toHaveBeenCalledWith({
+				baseURL: `${testBaseUrl}?api-version=${apiVersion}`,
+				apiKey: testApiKey,
+			})
+			expect(embedder).toBeDefined()
+		})
+
+		it("should handle api-version with existing query parameters", () => {
+			const baseUrlWithParams = "https://api.example.com/v1?existing=param"
+			const apiVersion = "2023-05-15"
+			embedder = new OpenAICompatibleEmbedder(baseUrlWithParams, testApiKey, testModelId, apiVersion)
+
+			expect(MockedOpenAI).toHaveBeenCalledWith({
+				baseURL: `${baseUrlWithParams}&api-version=${apiVersion}`,
+				apiKey: testApiKey,
+			})
+			expect(embedder).toBeDefined()
+		})
+
+		it("should not modify baseURL when api-version is not provided", () => {
+			embedder = new OpenAICompatibleEmbedder(testBaseUrl, testApiKey, testModelId)
+
+			expect(MockedOpenAI).toHaveBeenCalledWith({
+				baseURL: testBaseUrl,
+				apiKey: testApiKey,
+			})
+			expect(embedder).toBeDefined()
+		})
 	})
 
 	describe("embedderInfo", () => {
