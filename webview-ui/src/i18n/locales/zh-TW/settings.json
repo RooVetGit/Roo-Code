@@ -31,7 +31,20 @@
 		"prompts": "提示詞",
 		"experimental": "實驗性",
 		"language": "語言",
-		"about": "關於 Roo Code"
+		"about": "關於 Roo Code",
+		"editingType": "編輯類型",
+		"diffSettings": "差異設定",
+		"diffViewAutoFocusBehavior": "差異檢視自動焦點",
+		"fileEditing": "檔案編輯"
+	},
+	"editingType": {
+		"description": "選擇您偏好的編輯工作流程。"
+	},
+	"diffSettings": {
+		"description": "配置編輯期間如何套用差異。"
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "控制顯示變更時差異檢視的行為。"
 	},
 	"prompts": {
 		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 為常見開發工作提供更好的支援。"
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "自動關閉所有 Roo 操作過的分頁",
 				"description": "啟用後（且上述設定也已啟用），Roo 將在涉及檔案修改的任務完成或復原時，自動關閉所有在此任務中互動過的分頁，包括任務開始前已開啟的分頁。"
-			}
+			},
+			"disabledNotice": "基於差異的編輯目前已停用。"
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "啟用基於檔案系統的編輯",
+				"description": "啟用後，Roo 將直接在檔案系統中編輯檔案，而不是使用差異檢視。這會停用所有其他編輯行為切換，以提供更簡單、更直接的編輯體驗。"
+			},
+			"correctTabGroup": {
+				"label": "在正確的分頁群組中開啟分頁",
+				"description": "啟用後，新分頁將在包含產生任務的 Roo Code 執行個體的分頁群組中開啟。"
+			},
+			"endOfTabList": {
+				"label": "在分頁清單末尾開啟分頁",
+				"description": "啟用後，新分頁將在分頁清單末尾開啟，而不是在目前使用中分頁旁邊。"
+			},
+			"exclusivityNotice": "基於檔案的編輯模式已啟用。所有其他編輯行為切換都已停用，以確保一致的體驗。"
 		}
 	},
 	"experimental": {

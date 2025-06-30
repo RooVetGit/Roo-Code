@@ -31,7 +31,20 @@
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
-		"about": "Giới thiệu"
+		"about": "Giới thiệu",
+		"editingType": "Loại chỉnh sửa",
+		"diffSettings": "Cài đặt khác biệt",
+		"diffViewAutoFocusBehavior": "Tự động tập trung chế độ xem khác biệt",
+		"fileEditing": "Chỉnh sửa tệp"
+	},
+	"editingType": {
+		"description": "Chọn quy trình làm việc chỉnh sửa ưa thích của bạn."
+	},
+	"diffSettings": {
+		"description": "Cấu hình cách áp dụng các khác biệt trong quá trình chỉnh sửa."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Kiểm soát cách chế độ xem khác biệt hoạt động khi hiển thị thay đổi."
 	},
 	"prompts": {
 		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến."
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Tự động đóng tất cả các tab mà Roo đã chạm vào",
 				"description": "Khi được bật (và cài đặt ở trên cũng được bật), Roo sẽ tự động đóng tất cả các tab mà nó đã tương tác trong quá trình sửa đổi tệp, bao gồm cả những tab đã mở trước khi tác vụ bắt đầu."
-			}
+			},
+			"disabledNotice": "Chỉnh sửa dựa trên khác biệt hiện đang bị tắt."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Bật chỉnh sửa dựa trên hệ thống tệp",
+				"description": "Khi được bật, Roo sẽ chỉnh sửa tệp trực tiếp trong hệ thống tệp thay vì sử dụng chế độ xem khác biệt. Điều này tắt tất cả các công tắc hành vi chỉnh sửa khác để có trải nghiệm chỉnh sửa đơn giản và trực tiếp hơn."
+			},
+			"correctTabGroup": {
+				"label": "Mở tab trong nhóm tab chính xác",
+				"description": "Khi được bật, các tab mới sẽ mở trong nhóm tab chứa phiên bản Roo Code đã tạo ra nhiệm vụ."
+			},
+			"endOfTabList": {
+				"label": "Mở tab ở cuối danh sách tab",
+				"description": "Khi được bật, các tab mới sẽ mở ở cuối danh sách tab thay vì bên cạnh tab hiện đang hoạt động."
+			},
+			"exclusivityNotice": "Chế độ chỉnh sửa dựa trên tệp đã được bật. Tất cả các công tắc hành vi chỉnh sửa khác đều bị tắt để đảm bảo trải nghiệm nhất quán."
 		}
 	},
 	"experimental": {

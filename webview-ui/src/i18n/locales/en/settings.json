@@ -31,10 +31,23 @@
 		"prompts": "Prompts",
 		"experimental": "Experimental",
 		"language": "Language",
-		"about": "About Roo Code"
+		"about": "About Roo Code",
+		"editingType": "Editing Type",
+		"diffSettings": "Diff Settings",
+		"diffViewAutoFocusBehavior": "Diff View Auto-Focus",
+		"fileEditing": "File Editing"
 	},
 	"prompts": {
 		"description": "Configure support prompts that are used for quick actions like enhancing prompts, explaining code, and fixing issues. These prompts help Roo provide better assistance for common development tasks."
+	},
+	"editingType": {
+		"description": "Choose your preferred editing workflow."
+	},
+	"diffSettings": {
+		"description": "Configure how diffs are applied during editing."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Control how the diff view behaves when showing changes."
 	},
 	"codeIndex": {
 		"title": "Codebase Indexing",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Automatically close all Roo-touched tabs",
 				"description": "When enabled (and the above setting is also enabled), Roo will close all tabs it interacted with during a file modification task, including those that were already open before the task started."
-			}
+			},
+			"disabledNotice": "Diff-based editing is currently disabled."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Enable file-system-based editing",
+				"description": "When enabled, Roo will edit files directly in the file system instead of using diff views. This disables all other editing behavior toggles for a simpler, more direct editing experience."
+			},
+			"correctTabGroup": {
+				"label": "Open tabs in correct tab group",
+				"description": "When enabled, new tabs will be opened in the tab group containing the Roo Code instance that spawned the task."
+			},
+			"endOfTabList": {
+				"label": "Open tabs at end of tab list",
+				"description": "When enabled, new tabs will be opened at the end of the tab list instead of next to the currently active tab."
+			},
+			"exclusivityNotice": "File-based editing mode is enabled. All other editing behavior toggles are disabled to ensure a consistent experience."
 		}
 	},
 	"experimental": {

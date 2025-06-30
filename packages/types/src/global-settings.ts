@@ -82,11 +82,16 @@ export const globalSettingsSchema = z.object({
 	terminalCompressProgressBar: z.boolean().optional(),
 
 	rateLimitSeconds: z.number().optional(),
+
 	diffEnabled: z.boolean().optional(),
 	diffViewAutoFocus: z.boolean().optional(),
 	autoCloseRooTabs: z.boolean().optional(),
 	autoCloseAllRooTabs: z.boolean().optional(),
+	fileBasedEditing: z.boolean().optional(),
+	openTabsInCorrectGroup: z.boolean().optional(),
+	openTabsAtEndOfList: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
+
 	experiments: experimentsSchema.optional(),
 
 	codebaseIndexModels: codebaseIndexModelsSchema.optional(),
@@ -216,6 +221,9 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	terminalShellIntegrationDisabled: true,
 
 	diffEnabled: true,
+	fileBasedEditing: false,
+	openTabsInCorrectGroup: false,
+	openTabsAtEndOfList: false,
 	fuzzyMatchThreshold: 1,
 
 	enableCheckpoints: false,

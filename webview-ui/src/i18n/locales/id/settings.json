@@ -31,7 +31,20 @@
 		"prompts": "Prompt",
 		"experimental": "Eksperimental",
 		"language": "Bahasa",
-		"about": "Tentang Roo Code"
+		"about": "Tentang Roo Code",
+		"editingType": "Tipe Editing",
+		"diffSettings": "Pengaturan Diff",
+		"diffViewAutoFocusBehavior": "Auto-Focus Tampilan Diff",
+		"fileEditing": "Editing File"
+	},
+	"editingType": {
+		"description": "Pilih workflow editing yang kamu sukai."
+	},
+	"diffSettings": {
+		"description": "Konfigurasi bagaimana diff diterapkan selama editing."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Kontrol bagaimana tampilan diff berperilaku saat menampilkan perubahan."
 	},
 	"prompts": {
 		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
@@ -503,7 +516,35 @@
 			"matchPrecision": {
 				"label": "Presisi pencocokan",
 				"description": "Slider ini mengontrol seberapa tepat bagian kode harus cocok saat menerapkan diff. Nilai yang lebih rendah memungkinkan pencocokan yang lebih fleksibel tetapi meningkatkan risiko penggantian yang salah. Gunakan nilai di bawah 100% dengan sangat hati-hati."
-			}
+			},
+			"autoFocus": {
+				"label": "Otomatis fokus tab diff saat menampilkan perubahan file",
+				"description": "Jika diaktifkan, tab diff akan otomatis mendapat fokus saat dibuka. Jika dinonaktifkan, akan terbuka di latar belakang. Auto-fokus dinonaktifkan jika Anda berinteraksi dengan editor lain atau jika persetujuan otomatis tidak diaktifkan."
+			},
+			"autoClose": {
+				"label": "Otomatis tutup tab Roo yang baru dibuat atau sebelumnya tidak terbuka",
+				"description": "Ketika diaktifkan, Roo akan otomatis menutup tab untuk file yang baru dibuat atau tidak terbuka sebelum Roo memodifikasinya. Tab untuk file yang sudah terbuka akan tetap terbuka."
+			},
+			"autoCloseAll": {
+				"label": "Otomatis tutup semua tab yang disentuh Roo",
+				"description": "Ketika diaktifkan (dan pengaturan di atas juga diaktifkan), Roo akan menutup semua tab yang berinteraksi dengannya selama tugas modifikasi file, termasuk yang sudah terbuka sebelum tugas dimulai."
+			},
+			"disabledNotice": "Editing berbasis diff saat ini dinonaktifkan."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Aktifkan editing berbasis sistem file",
+				"description": "Ketika diaktifkan, Roo akan mengedit file langsung di sistem file alih-alih menggunakan tampilan diff. Ini menonaktifkan semua toggle perilaku editing lainnya untuk pengalaman editing yang lebih sederhana dan langsung."
+			},
+			"correctTabGroup": {
+				"label": "Buka tab di grup tab yang benar",
+				"description": "Ketika diaktifkan, tab baru akan terbuka di grup tab yang berisi instance Roo Code yang menghasilkan tugas."
+			},
+			"endOfTabList": {
+				"label": "Buka tab di akhir daftar tab",
+				"description": "Ketika diaktifkan, tab baru akan terbuka di akhir daftar tab alih-alih di sebelah tab yang sedang aktif."
+			},
+			"exclusivityNotice": "Mode editing berbasis file diaktifkan. Semua toggle perilaku editing lainnya dinonaktifkan untuk memastikan pengalaman yang konsisten."
 		}
 	},
 	"experimental": {

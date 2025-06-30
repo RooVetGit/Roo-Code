@@ -31,7 +31,20 @@
 		"prompts": "Promptlar",
 		"experimental": "Deneysel",
 		"language": "Dil",
-		"about": "Roo Code Hakkında"
+		"about": "Roo Code Hakkında",
+		"editingType": "Düzenleme Türü",
+		"diffSettings": "Diff Ayarları",
+		"diffViewAutoFocusBehavior": "Diff Görünümü Otomatik Odak",
+		"fileEditing": "Dosya Düzenleme"
+	},
+	"editingType": {
+		"description": "Tercih ettiğiniz düzenleme iş akışını seçin."
+	},
+	"diffSettings": {
+		"description": "Düzenleme sırasında diff'lerin nasıl uygulandığını yapılandırın."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Değişiklikleri gösterirken diff görünümünün davranışını kontrol edin."
 	},
 	"prompts": {
 		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur."
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Roo'nun dokunduğu tüm sekmeleri otomatik kapat",
 				"description": "Etkinleştirildiğinde (ve yukarıdaki ayar da etkinleştirildiğinde), Roo bir dosya değiştirme görevi sırasında etkileşimde bulunduğu tüm sekmeleri (görev başlamadan önce zaten açık olanlar dahil) otomatik olarak kapatır."
-			}
+			},
+			"disabledNotice": "Diff tabanlı düzenleme şu anda devre dışı."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Dosya sistemi tabanlı düzenlemeyi etkinleştir",
+				"description": "Etkinleştirildiğinde, Roo diff görünümlerini kullanmak yerine dosya sisteminde doğrudan dosyaları düzenleyecektir. Bu, daha basit ve daha doğrudan düzenleme deneyimi için diğer tüm düzenleme davranış geçişlerini devre dışı bırakır."
+			},
+			"correctTabGroup": {
+				"label": "Sekmeleri doğru sekme grubunda aç",
+				"description": "Etkinleştirildiğinde, yeni sekmeler görevi oluşturan Roo Code örneğini içeren sekme grubunda açılacaktır."
+			},
+			"endOfTabList": {
+				"label": "Sekmeleri sekme listesinin sonunda aç",
+				"description": "Etkinleştirildiğinde, yeni sekmeler şu anda etkin olan sekmenin yanında değil, sekme listesinin sonunda açılacaktır."
+			},
+			"exclusivityNotice": "Dosya tabanlı düzenleme modu etkinleştirildi. Tutarlı bir deneyim sağlamak için diğer tüm düzenleme davranış geçişleri devre dışı bırakıldı."
 		}
 	},
 	"experimental": {

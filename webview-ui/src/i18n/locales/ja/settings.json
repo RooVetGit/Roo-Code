@@ -31,10 +31,23 @@
 		"prompts": "プロンプト",
 		"experimental": "実験的",
 		"language": "言語",
-		"about": "Roo Codeについて"
+		"about": "Roo Codeについて",
+		"editingType": "編集タイプ",
+		"diffSettings": "Diff設定",
+		"diffViewAutoFocusBehavior": "Diffビュー自動フォーカス",
+		"fileEditing": "ファイル編集"
 	},
 	"prompts": {
 		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Rooが一般的な開発タスクでより良いサポートを提供するのに役立ちます。"
+	},
+	"editingType": {
+		"description": "お好みの編集ワークフローを選択してください。"
+	},
+	"diffSettings": {
+		"description": "編集時にdiffがどのように適用されるかを設定します。"
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "変更を表示する際のdiffビューの動作を制御します。"
 	},
 	"codeIndex": {
 		"title": "コードベースのインデックス作成",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Rooが触れたすべてのタブを自動的に閉じる",
 				"description": "有効にすると（そして上記の設定も有効になっている場合）、Rooはファイル変更タスク中に操作したすべてのタブ（タスク開始前にすでに開いていたタブを含む）を自動的に閉じます。"
-			}
+			},
+			"disabledNotice": "Diffベースの編集は現在無効になっています。"
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "ファイルシステムベースの編集を有効化",
+				"description": "有効にすると、Rooはdiffビューを使用する代わりに、ファイルシステム内で直接ファイルを編集します。これにより、よりシンプルで直接的な編集体験のために、他のすべての編集動作トグルが無効になります。"
+			},
+			"correctTabGroup": {
+				"label": "正しいタブグループでタブを開く",
+				"description": "有効にすると、新しいタブはタスクを生成したRoo Codeインスタンスを含むタブグループで開かれます。"
+			},
+			"endOfTabList": {
+				"label": "タブリストの最後でタブを開く",
+				"description": "有効にすると、新しいタブは現在アクティブなタブの隣ではなく、タブリストの最後に開かれます。"
+			},
+			"exclusivityNotice": "ファイルベースの編集モードが有効です。一貫した体験を確保するため、他のすべての編集動作トグルは無効になっています。"
 		}
 	},
 	"experimental": {

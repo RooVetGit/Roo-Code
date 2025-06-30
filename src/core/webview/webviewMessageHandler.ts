@@ -779,7 +779,40 @@ export const webviewMessageHandler = async (
 			break
 		case "diffEnabled":
 			const diffEnabled = message.bool ?? true
+			await provider.context.globalState.update("diffEnabled", diffEnabled)
+			// Also update workspace settings
+			await vscode.workspace.getConfiguration("roo-cline").update("diffEnabled", diffEnabled, vscode.ConfigurationTarget.Global)
 			await updateGlobalState("diffEnabled", diffEnabled)
+			await provider.postStateToWebview()
+			break
+		case "fileBasedEditing":
+			const fileBasedEditing = message.bool ?? false
+			await provider.context.globalState.update("fileBasedEditing", fileBasedEditing)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("fileBasedEditing", fileBasedEditing, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("fileBasedEditing", fileBasedEditing)
+			await provider.postStateToWebview()
+			break
+		case "openTabsInCorrectGroup":
+			const openTabsInCorrectGroup = message.bool ?? false
+			await provider.context.globalState.update("openTabsInCorrectGroup", openTabsInCorrectGroup)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("openTabsInCorrectGroup", openTabsInCorrectGroup, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("openTabsInCorrectGroup", openTabsInCorrectGroup)
+			await provider.postStateToWebview()
+			break
+		case "openTabsAtEndOfList":
+			const openTabsAtEndOfList = message.bool ?? false
+			await provider.context.globalState.update("openTabsAtEndOfList", openTabsAtEndOfList)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("openTabsAtEndOfList", openTabsAtEndOfList, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("openTabsAtEndOfList", openTabsAtEndOfList)
 			await provider.postStateToWebview()
 			break
 		case "enableCheckpoints":

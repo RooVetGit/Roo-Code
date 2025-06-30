@@ -31,10 +31,23 @@
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
 		"language": "Taal",
-		"about": "Over Roo Code"
+		"about": "Over Roo Code",
+		"editingType": "Bewerkingstype",
+		"diffSettings": "Diff-instellingen",
+		"diffViewAutoFocusBehavior": "Diff-weergave auto-focus",
+		"fileEditing": "Bestandsbewerking"
 	},
 	"prompts": {
 		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
+	},
+	"editingType": {
+		"description": "Kies je voorkeursworkflow voor bewerken."
+	},
+	"diffSettings": {
+		"description": "Configureer hoe diffs worden toegepast tijdens het bewerken."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Bepaal hoe de diff-weergave zich gedraagt bij het tonen van wijzigingen."
 	},
 	"codeIndex": {
 		"title": "Codebase indexering",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Sluit automatisch alle tabbladen die door Roo zijn aangeraakt",
 				"description": "Indien ingeschakeld (en de bovenstaande instelling is ook ingeschakeld), sluit Roo automatisch alle tabbladen waarmee het heeft geïnterageerd tijdens een taak voor bestandsaanpassing, inclusief de tabbladen die al open waren voordat de taak begon."
-			}
+			},
+			"disabledNotice": "Diff-gebaseerde bewerking is momenteel uitgeschakeld."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Bestandssysteem-gebaseerde bewerking inschakelen",
+				"description": "Indien ingeschakeld, zal Roo bestanden direct in het bestandssysteem bewerken in plaats van diff-weergaven te gebruiken. Dit schakelt alle andere bewerkingsgedrag-schakelaars uit voor een eenvoudigere, directere bewerkingservaring."
+			},
+			"correctTabGroup": {
+				"label": "Tabbladen openen in de juiste tabbladgroep",
+				"description": "Indien ingeschakeld, worden nieuwe tabbladen geopend in de tabbladgroep die de Roo Code-instantie bevat die de taak heeft gegenereerd."
+			},
+			"endOfTabList": {
+				"label": "Tabbladen openen aan het einde van de tabbladlijst",
+				"description": "Indien ingeschakeld, worden nieuwe tabbladen geopend aan het einde van de tabbladlijst in plaats van naast het momenteel actieve tabblad."
+			},
+			"exclusivityNotice": "Bestandsgebaseerde bewerkingsmodus is ingeschakeld. Alle andere bewerkingsgedrag-schakelaars zijn uitgeschakeld om een consistente ervaring te garanderen."
 		}
 	},
 	"experimental": {

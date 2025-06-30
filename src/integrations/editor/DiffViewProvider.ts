@@ -17,6 +17,7 @@ import { DecorationController } from "./DecorationController"
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { UserInteractionProvider } from "./UserInteractionProvider"
 import { PostDiffViewBehaviorUtils } from "./PostDiffViewBehaviorUtils"
+import { IEditingProvider } from "./IEditingProvider"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 export const DIFF_VIEW_LABEL_CHANGES = "Original ↔ Roo's Changes"
@@ -25,10 +26,12 @@ interface DiffSettings {
 	autoFocus: boolean
 	autoCloseRooTabs: boolean
 	autoCloseAllRooTabs: boolean
+	openTabsAtEndOfList: boolean
+	openTabsInCorrectGroup: boolean
 }
 
 // TODO: https://github.com/cline/cline/pull/3354
-export class DiffViewProvider {
+export class DiffViewProvider implements IEditingProvider {
 	// Properties to store the results of saveChanges
 	newProblemsMessage?: string
 	userEdits?: string
@@ -49,7 +52,7 @@ export class DiffViewProvider {
 	private autoFocus: boolean | undefined = undefined
 	private autoCloseAllRooTabs: boolean = false // Added new setting
 	// have to set the default view column to -1 since we need to set it in the initialize method and during initialization the enum ViewColumn is undefined
-	private viewColumn: ViewColumn = -1 // ViewColumn.Active
+	private viewColumn: ViewColumn | undefined = -1 // ViewColumn.Active
 	private userInteractionProvider: UserInteractionProvider
 	private suppressInteractionFlag: boolean = false
 	private preDiffActiveEditor?: vscode.TextEditor // Store active editor before diff operation
@@ -98,6 +101,12 @@ export class DiffViewProvider {
 		this.postDiffBehaviorUtils.updateContext({
 			autoCloseAllRooTabs: this.autoCloseAllRooTabs,
 		})
+
+		//
+		if (!settings.openTabsInCorrectGroup) {
+			// If openTabsInCorrectGroup is false, we want to open the diff editor in the active group
+			this.viewColumn = undefined
+		}
 	}
 
 	private async _readDiffSettings(): Promise<DiffSettings> {
@@ -105,7 +114,9 @@ export class DiffViewProvider {
 		const autoFocus = config.get<boolean>("diffViewAutoFocus", true)
 		const autoCloseRooTabs = config.get<boolean>("autoCloseRooTabs", false)
 		const autoCloseAllRooTabs = config.get<boolean>("autoCloseAllRooTabs", false)
-		return { autoFocus, autoCloseRooTabs, autoCloseAllRooTabs }
+		const openTabsAtEndOfList = config.get<boolean>("openTabsAtEndOfList", false)
+		const openTabsInCorrectGroup = config.get<boolean>("openTabsInCorrectGroup", true)
+		return { autoFocus, autoCloseRooTabs, autoCloseAllRooTabs, openTabsAtEndOfList, openTabsInCorrectGroup }
 	}
 
 	private async showTextDocumentSafe({
@@ -152,11 +163,14 @@ export class DiffViewProvider {
 	 * @param relPath The relative file path to open.
 	 * @param viewColumn (Optional) The VSCode editor group to open the diff in.
 	 */
-	async open(relPath: string, viewColumn: ViewColumn): Promise<void> {
+	async open(relPath: string, viewColumn: ViewColumn = ViewColumn.Active): Promise<void> {
 		// Store the pre-diff active editor for potential focus restoration
 		this.preDiffActiveEditor = vscode.window.activeTextEditor
 
-		this.viewColumn = viewColumn
+		const settings = await this._readDiffSettings() // Dynamically read settings
+		if (settings.openTabsInCorrectGroup) {
+			this.viewColumn = viewColumn
+		}
 
 		// Update PostDiffviewBehaviorUtils context with current state
 		this.postDiffBehaviorUtils.updateContext({
@@ -247,6 +261,10 @@ export class DiffViewProvider {
 	 * For new/unopened files: Places at the end of the currently active editor group.
 	 */
 	private async prepareDiffViewPlacement(absolutePath: string): Promise<void> {
+		const { openTabsAtEndOfList, openTabsInCorrectGroup } = await this._readDiffSettings() // Dynamically read settings
+		if (!openTabsAtEndOfList || !openTabsInCorrectGroup) {
+			return
+		}
 		if (!this.documentWasOpen) {
 			// focus the last tab in the active group
 			const activeGroup = vscode.window.tabGroups.activeTabGroup
@@ -697,7 +715,7 @@ export class DiffViewProvider {
 			const textDocumentShowOptions: TextDocumentShowOptions = {
 				preview: false,
 				preserveFocus: !settings.autoFocus, // Use dynamically read autoFocus
-				viewColumn: this.viewColumn,
+				viewColumn: this.viewColumn ?? ViewColumn.Beside, // Use the viewColumn set during initialization
 			}
 			// set interaction flag to true to prevent autoFocus from being triggered
 			this.suppressInteractionFlag = true
@@ -705,87 +723,95 @@ export class DiffViewProvider {
 			const previousEditor = vscode.window.activeTextEditor
 
 			this.prepareDiffViewPlacement(rightUri.fsPath).then(() => {
-				this.showTextDocumentSafe({
-					uri: rightUri,
-					options: {
-						...textDocumentShowOptions,
-						viewColumn: this.viewColumn, // Ensure we use the correct view column
-					},
-				}).then(
-					() => {
-						vscode.commands
-							.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
-							.then(
-								async () => {
-									// set interaction flag to false to allow autoFocus to be triggered
-									this.suppressInteractionFlag = false
+				const vscodeDiffCommand = () => {
+					return vscode.commands
+						.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
+						.then(
+							async () => {
+								// set interaction flag to false to allow autoFocus to be triggered
+								this.suppressInteractionFlag = false
 
-									// Get the active text editor, which should be the diff editor opened by vscode.diff
-									const diffEditor = vscode.window.activeTextEditor
+								// Get the active text editor, which should be the diff editor opened by vscode.diff
+								const diffEditor = vscode.window.visibleTextEditors.find(
+									(editor) => editor.document.uri.fsPath === rightUri.fsPath,
+								)
 
-									// Ensure we have a valid editor and it's the one we expect (the right side of the diff)
-									if (
-										!diffEditor ||
-										!arePathsEqual(diffEditor.document.uri.fsPath, rightUri.fsPath)
-									) {
-										cleanup()
-										reject(
-											new Error(
-												`Failed to execute diff command for ${rightUri.fsPath}: No active editor found.`,
-											),
-										)
-										return
-									}
-
-									this.activeDiffEditor = diffEditor // Assign to activeDiffEditor
-
-									// Ensure rightUri is tracked even if not explicitly shown again
-									this.rooOpenedTabs.add(rightUri.toString())
-
-									// If autoFocus is disabled, explicitly clear the selection to prevent cursor focus.
-									if (!settings.autoFocus) {
-										// Use dynamically read autoFocus
-										// Add a small delay to allow VS Code to potentially set focus first,
-										// then clear it.
-										await new Promise((resolve) => setTimeout(resolve, 50))
-										const beginningOfDocument = new vscode.Position(0, 0)
-										diffEditor.selection = new vscode.Selection(
-											beginningOfDocument,
-											beginningOfDocument,
-										)
-									}
-
-									// if this happens in a window different from the active one, we need to show the document
-									if (previousEditor) {
-										await this.showTextDocumentSafe({
-											textDocument: previousEditor.document,
-											options: {
-												preview: false,
-												preserveFocus: false,
-												selection: previousEditor.selection,
-												viewColumn: previousEditor.viewColumn,
-											},
-										})
-									}
-
-									cleanup()
-									resolve(diffEditor)
-								},
-								(err) => {
+								// Ensure we have a valid editor and it's the one we expect (the right side of the diff)
+								if (!diffEditor || !arePathsEqual(diffEditor.document.uri.fsPath, rightUri.fsPath)) {
 									cleanup()
 									reject(
 										new Error(
-											`Failed to execute diff command for ${rightUri.fsPath}: ${err.message}`,
+											`Failed to execute diff command for ${rightUri.fsPath}: No active editor found.`,
 										),
 									)
-								},
-							)
-					},
-					(err) => {
+									return
+								}
+
+								this.activeDiffEditor = diffEditor // Assign to activeDiffEditor
+
+								// Ensure rightUri is tracked even if not explicitly shown again
+								this.rooOpenedTabs.add(rightUri.toString())
+
+								// If autoFocus is disabled, explicitly clear the selection to prevent cursor focus.
+								if (!settings.autoFocus) {
+									// Use dynamically read autoFocus
+									// Add a small delay to allow VS Code to potentially set focus first,
+									// then clear it.
+									await new Promise((resolve) => setTimeout(resolve, 50))
+									const beginningOfDocument = new vscode.Position(0, 0)
+									diffEditor.selection = new vscode.Selection(
+										beginningOfDocument,
+										beginningOfDocument,
+									)
+								}
+
+								// if this happens in a window different from the active one, we need to show the document
+								if (previousEditor && settings.openTabsInCorrectGroup) {
+									await this.showTextDocumentSafe({
+										textDocument: previousEditor.document,
+										options: {
+											preview: false,
+											preserveFocus: false,
+											selection: previousEditor.selection,
+											viewColumn: previousEditor.viewColumn,
+										},
+									})
+								}
+
+								cleanup()
+								resolve(diffEditor)
+							},
+							(err) => {
+								cleanup()
+								reject(
+									new Error(`Failed to execute diff command for ${rightUri.fsPath}: ${err.message}`),
+								)
+							},
+						)
+				}
+
+				if (!settings.openTabsInCorrectGroup) {
+					vscodeDiffCommand().then(
+						() => {
+							cleanup()
+						},
+						(err) => {
+							cleanup()
+							reject(new Error(`Failed to execute diff command for ${rightUri.fsPath}: ${err.message}`))
+						},
+					)
+				} else {
+					this.showTextDocumentSafe({
+						uri: rightUri,
+						options: {
+							...textDocumentShowOptions,
+							viewColumn: this.viewColumn, // Ensure we use the correct view column
+						},
+					}).then(vscodeDiffCommand, (err) => {
 						cleanup()
 						reject(new Error(`Failed to execute diff command for ${rightUri.fsPath}: ${err.message}`))
-					},
-				)
+					})
+				}
 
 				timeoutId = setTimeout(() => {
 					cleanup()

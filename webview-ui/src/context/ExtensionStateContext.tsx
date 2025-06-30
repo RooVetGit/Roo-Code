@@ -78,6 +78,9 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setDiffViewAutoFocus: (value: boolean) => void
 	setAutoCloseRooTabs: (value: boolean) => void
 	setAutoCloseAllRooTabs: (value: boolean) => void
+	setFileBasedEditing: (value: boolean) => void
+	setOpenTabsInCorrectGroup: (value: boolean) => void
+	setOpenTabsAtEndOfList: (value: boolean) => void
 	setEnableCheckpoints: (value: boolean) => void
 	setBrowserViewportSize: (value: string) => void
 	setFuzzyMatchThreshold: (value: number) => void
@@ -164,6 +167,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		ttsEnabled: false,
 		ttsSpeed: 1.0,
 		diffEnabled: false,
+		diffViewAutoFocus: true,
+		autoCloseRooTabs: false,
+		autoCloseAllRooTabs: false,
+		fileBasedEditing: false,
+		openTabsInCorrectGroup: false,
+		openTabsAtEndOfList: false,
 		enableCheckpoints: true,
 		fuzzyMatchThreshold: 1.0,
 		language: "en", // Default language code
@@ -377,10 +386,33 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setSoundVolume: (value) => setState((prevState) => ({ ...prevState, soundVolume: value })),
 		setTtsEnabled: (value) => setState((prevState) => ({ ...prevState, ttsEnabled: value })),
 		setTtsSpeed: (value) => setState((prevState) => ({ ...prevState, ttsSpeed: value })),
-		setDiffEnabled: (value) => setApiConfiguration({ diffEnabled: value }),
-		setDiffViewAutoFocus: (value) => setApiConfiguration({ diffViewAutoFocus: value }),
-		setAutoCloseRooTabs: (value) => setApiConfiguration({ autoCloseRooTabs: value }),
-		setAutoCloseAllRooTabs: (value) => setApiConfiguration({ autoCloseAllRooTabs: value }),
+		setDiffEnabled: (value) => setState((prevState) => ({ ...prevState, diffEnabled: value })),
+		setDiffViewAutoFocus: (value) => setState((prevState) => ({ ...prevState, diffViewAutoFocus: value })),
+		setAutoCloseRooTabs: (value) => {
+			setState((prevState) => ({
+				...prevState,
+				autoCloseRooTabs: value,
+			}))
+		},
+		setAutoCloseAllRooTabs: (value) => setState((prevState) => ({ ...prevState, autoCloseAllRooTabs: value })),
+		setFileBasedEditing: (value) => {
+			setState((prevState) => ({
+				...prevState,
+				fileBasedEditing: value,
+				// When file-based editing is enabled, disable all other edit toggles
+				...(value && {
+					diffEnabled: false,
+					diffViewAutoFocus: false,
+					autoCloseRooTabs: false,
+					autoCloseAllRooTabs: false,
+					openTabsInCorrectGroup: false,
+					openTabsAtEndOfList: false,
+				}),
+			}))
+		},
+		setOpenTabsInCorrectGroup: (value) =>
+			setState((prevState) => ({ ...prevState, openTabsInCorrectGroup: value })),
+		setOpenTabsAtEndOfList: (value) => setState((prevState) => ({ ...prevState, openTabsAtEndOfList: value })),
 		setEnableCheckpoints: (value) => setState((prevState) => ({ ...prevState, enableCheckpoints: value })),
 		setBrowserViewportSize: (value: string) =>
 			setState((prevState) => ({ ...prevState, browserViewportSize: value })),

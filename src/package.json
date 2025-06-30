@@ -334,6 +334,11 @@
 					"default": true,
 					"description": "%settings.enableCodeActions.description%"
 				},
+				"roo-cline.diffEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%settings.diffEnabled.description%"
+				},
 				"roo-cline.diffViewAutoFocus": {
 					"type": "boolean",
 					"default": false,
@@ -348,6 +353,21 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%roo-cline.autoCloseAllRooTabs.description%"
+				},
+				"roo-cline.fileBasedEditing": {
+					"type": "boolean",
+					"default": false,
+					"description": "%roo-cline.fileBasedEditing.description%"
+				},
+				"roo-cline.openTabsInCorrectGroup": {
+					"type": "boolean",
+					"default": false,
+					"description": "%roo-cline.openTabsInCorrectGroup.description%"
+				},
+				"roo-cline.openTabsAtEndOfList": {
+					"type": "boolean",
+					"default": false,
+					"description": "%roo-cline.openTabsAtEndOfList.description%"
 				}
 			}
 		}

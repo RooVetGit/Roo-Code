@@ -48,7 +48,8 @@ import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
 // integrations
-import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
+import { IEditingProvider } from "../../integrations/editor/IEditingProvider"
+import { EditingProviderFactory } from "../../integrations/editor/EditingProviderFactory"
 import { findToolName, formatContentBlockToMarkdown } from "../../integrations/misc/export-markdown"
 import { RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
@@ -162,7 +163,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	browserSession: BrowserSession
 
 	// Editing
-	diffViewProvider: DiffViewProvider
+	diffViewProvider: IEditingProvider
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
@@ -250,7 +251,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
-		this.diffViewProvider = new DiffViewProvider(this.cwd)
+		this.diffViewProvider = EditingProviderFactory.createEditingProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
 
 		this.rootTask = rootTask
@@ -1117,7 +1118,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		getCheckpointService(this)
 		// Lets track if the user is interacting with the editor after we start our task loop.
 		this.diffViewProvider.initialize()
-		this.diffViewProvider.disableAutoFocusAfterUserInteraction()
+		this.diffViewProvider.disableAutoFocusAfterUserInteraction?.()
 
 		let nextUserContent = userContent
 		let includeFileDetails = true

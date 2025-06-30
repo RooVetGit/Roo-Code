@@ -18,7 +18,7 @@ import {
 	Database,
 	SquareTerminal,
 	FlaskConical,
-	AlertTriangle,
+	Pencil,
 	Globe,
 	Info,
 	MessageSquare,
@@ -65,6 +65,7 @@ import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
 import PromptsSettings from "./PromptsSettings"
+import { FileEditingOptions } from "./FileEditingOptions"
 import { cn } from "@/lib/utils"
 
 export const settingsTabsContainer = "flex flex-1 overflow-hidden [&.narrow_.tab-label]:hidden"
@@ -80,6 +81,7 @@ export interface SettingsViewRef {
 
 const sectionNames = [
 	"providers",
+	"fileEditing",
 	"autoApprove",
 	"browser",
 	"checkpoints",
@@ -173,6 +175,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		codebaseIndexModels,
 		customSupportPrompts,
 		profileThresholds,
+		// File editing settings from root context
+		diffEnabled,
+		diffViewAutoFocus,
+		autoCloseRooTabs,
+		autoCloseAllRooTabs,
+		fileBasedEditing,
+		openTabsInCorrectGroup,
+		openTabsAtEndOfList,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -280,10 +290,13 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
 			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
-			vscode.postMessage({ type: "diffEnabled", bool: apiConfiguration.diffEnabled })
-			vscode.postMessage({ type: "diffViewAutoFocus", bool: apiConfiguration.diffViewAutoFocus })
-			vscode.postMessage({ type: "autoCloseRooTabs", bool: apiConfiguration.autoCloseRooTabs })
-			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: apiConfiguration.autoCloseAllRooTabs })
+			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
+			vscode.postMessage({ type: "diffViewAutoFocus", bool: diffViewAutoFocus })
+			vscode.postMessage({ type: "autoCloseRooTabs", bool: autoCloseRooTabs })
+			vscode.postMessage({ type: "autoCloseAllRooTabs", bool: autoCloseAllRooTabs })
+			vscode.postMessage({ type: "fileBasedEditing", bool: fileBasedEditing })
+			vscode.postMessage({ type: "openTabsInCorrectGroup", bool: openTabsInCorrectGroup })
+			vscode.postMessage({ type: "openTabsAtEndOfList", bool: openTabsAtEndOfList })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
 			vscode.postMessage({ type: "remoteBrowserHost", text: remoteBrowserHost })
@@ -390,6 +403,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
 			{ id: "providers", icon: Webhook },
+			{ id: "fileEditing", icon: Pencil },
 			{ id: "autoApprove", icon: CheckCheck },
 			{ id: "browser", icon: SquareMousePointer },
 			{ id: "checkpoints", icon: GitBranch },
@@ -585,6 +599,32 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						</div>
 					)}
 
+					{/* File Editing Section */}
+					{activeTab === "fileEditing" && (
+						<div>
+							<SectionHeader>
+								<div className="flex items-center gap-2">
+									<Pencil className="w-4" />
+									<div>{t("settings:sections.fileEditing")}</div>
+								</div>
+							</SectionHeader>
+
+							<Section>
+								<FileEditingOptions
+									diffEnabled={diffEnabled}
+									diffViewAutoFocus={diffViewAutoFocus}
+									autoCloseRooTabs={autoCloseRooTabs}
+									autoCloseAllRooTabs={autoCloseAllRooTabs}
+									fuzzyMatchThreshold={fuzzyMatchThreshold}
+									fileBasedEditing={fileBasedEditing}
+									openTabsInCorrectGroup={openTabsInCorrectGroup}
+									openTabsAtEndOfList={openTabsAtEndOfList}
+									onChange={setCachedStateField}
+								/>
+							</Section>
+						</div>
+					)}
+
 					{/* Auto-Approve Section */}
 					{activeTab === "autoApprove" && (
 						<AutoApproveSettings
@@ -710,7 +750,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							<AlertTriangle className="w-5 h-5 text-yellow-500" />
+							<Pencil className="w-5 h-5 text-yellow-500" />
 							{t("settings:unsavedChangesDialog.title")}
 						</AlertDialogTitle>
 						<AlertDialogDescription>

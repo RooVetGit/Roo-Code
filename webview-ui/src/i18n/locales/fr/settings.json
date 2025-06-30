@@ -31,10 +31,23 @@
 		"prompts": "Invites",
 		"experimental": "Expérimental",
 		"language": "Langue",
-		"about": "À propos de Roo Code"
+		"about": "À propos de Roo Code",
+		"editingType": "Type d'édition",
+		"diffSettings": "Paramètres de diff",
+		"diffViewAutoFocusBehavior": "Auto-focus de vue diff",
+		"fileEditing": "Édition de fichiers"
 	},
 	"prompts": {
 		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes."
+	},
+	"editingType": {
+		"description": "Choisissez votre flux de travail d'édition préféré."
+	},
+	"diffSettings": {
+		"description": "Configurez comment les diffs sont appliqués pendant l'édition."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Contrôlez comment la vue diff se comporte lors de l'affichage des changements."
 	},
 	"codeIndex": {
 		"title": "Indexation de la base de code",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Fermer automatiquement tous les onglets touchés par Roo",
 				"description": "Lorsqu'activé (et que le paramètre ci-dessus est également activé), Roo fermera tous les onglets avec lesquels il a interagi lors d'une tâche de modification de fichier, y compris ceux qui étaient déjà ouverts avant le début de la tâche."
-			}
+			},
+			"disabledNotice": "L'édition basée sur les diff est actuellement désactivée."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Activer l'édition basée sur le système de fichiers",
+				"description": "Lorsqu'activé, Roo éditera les fichiers directement dans le système de fichiers au lieu d'utiliser des vues de diff. Cela désactive tous les autres commutateurs de comportement d'édition pour une expérience d'édition plus simple et directe."
+			},
+			"correctTabGroup": {
+				"label": "Ouvrir les onglets dans le bon groupe d'onglets",
+				"description": "Lorsqu'activé, les nouveaux onglets seront ouverts dans le groupe d'onglets contenant l'instance Roo Code qui a généré la tâche."
+			},
+			"endOfTabList": {
+				"label": "Ouvrir les onglets à la fin de la liste d'onglets",
+				"description": "Lorsqu'activé, les nouveaux onglets seront ouverts à la fin de la liste d'onglets au lieu d'à côté de l'onglet actuellement actif."
+			},
+			"exclusivityNotice": "Le mode d'édition basé sur les fichiers est activé. Tous les autres commutateurs de comportement d'édition sont désactivés pour assurer une expérience cohérente."
 		}
 	},
 	"experimental": {

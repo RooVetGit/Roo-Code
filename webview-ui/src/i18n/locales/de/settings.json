@@ -31,10 +31,23 @@
 		"prompts": "Eingabeaufforderungen",
 		"experimental": "Experimentell",
 		"language": "Sprache",
-		"about": "Über Roo Code"
+		"about": "Über Roo Code",
+		"editingType": "Bearbeitungstyp",
+		"diffSettings": "Diff-Einstellungen",
+		"diffViewAutoFocusBehavior": "Diff-Ansicht Auto-Fokus",
+		"fileEditing": "Dateibearbeitung"
 	},
 	"prompts": {
 		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten."
+	},
+	"editingType": {
+		"description": "Wähle deinen bevorzugten Bearbeitungsworkflow."
+	},
+	"diffSettings": {
+		"description": "Konfiguriere, wie Diffs während der Bearbeitung angewendet werden."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Steuere, wie sich die Diff-Ansicht beim Anzeigen von Änderungen verhält."
 	},
 	"codeIndex": {
 		"title": "Codebase-Indexierung",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Alle von Roo berührten Tabs automatisch schließen",
 				"description": "Wenn aktiviert (und die obige Einstellung ebenfalls aktiviert ist), schließt Roo alle Tabs, mit denen es während einer Dateiänderungsaufgabe interagiert hat, einschließlich derjenigen, die bereits vor Beginn der Aufgabe geöffnet waren."
-			}
+			},
+			"disabledNotice": "Diff-basierte Bearbeitung ist derzeit deaktiviert."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Dateisystem-basierte Bearbeitung aktivieren",
+				"description": "Wenn aktiviert, bearbeitet Roo Dateien direkt im Dateisystem anstatt Diff-Ansichten zu verwenden. Dies deaktiviert alle anderen Bearbeitungsverhalten-Schalter für eine einfachere, direktere Bearbeitungserfahrung."
+			},
+			"correctTabGroup": {
+				"label": "Tabs in korrekter Tab-Gruppe öffnen",
+				"description": "Wenn aktiviert, werden neue Tabs in der Tab-Gruppe geöffnet, die die Roo Code-Instanz enthält, die die Aufgabe gestartet hat."
+			},
+			"endOfTabList": {
+				"label": "Tabs am Ende der Tab-Liste öffnen",
+				"description": "Wenn aktiviert, werden neue Tabs am Ende der Tab-Liste anstatt neben dem aktuell aktiven Tab geöffnet."
+			},
+			"exclusivityNotice": "Dateisystem-basierter Bearbeitungsmodus ist aktiviert. Alle anderen Bearbeitungsverhalten-Schalter sind deaktiviert, um eine konsistente Erfahrung zu gewährleisten."
 		}
 	},
 	"experimental": {

@@ -31,10 +31,23 @@
 		"prompts": "Prompts",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre"
+		"about": "Sobre",
+		"editingType": "Tipo de edição",
+		"diffSettings": "Configurações de diff",
+		"diffViewAutoFocusBehavior": "Auto-foco da visualização diff",
+		"fileEditing": "Edição de arquivos"
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."
+	},
+	"editingType": {
+		"description": "Escolha seu fluxo de trabalho de edição preferido."
+	},
+	"diffSettings": {
+		"description": "Configure como os diffs são aplicados durante a edição."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Controle como a visualização de diff se comporta ao mostrar alterações."
 	},
 	"codeIndex": {
 		"title": "Indexação de Código",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Fechar automaticamente todas as abas tocadas pelo Roo",
 				"description": "Quando ativado (e a configuração acima também está ativada), o Roo fechará automaticamente todas as abas com as quais interagiu durante uma tarefa de modificação de arquivo, incluindo aquelas que já estavam abertas antes do início da tarefa."
-			}
+			},
+			"disabledNotice": "A edição baseada em diff está atualmente desativada."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Ativar edição baseada em sistema de arquivos",
+				"description": "Quando ativado, o Roo editará arquivos diretamente no sistema de arquivos em vez de usar visualizações de diff. Isso desativa todos os outros alternadores de comportamento de edição para uma experiência de edição mais simples e direta."
+			},
+			"correctTabGroup": {
+				"label": "Abrir abas no grupo de abas correto",
+				"description": "Quando ativado, novas abas serão abertas no grupo de abas que contém a instância do Roo Code que gerou a tarefa."
+			},
+			"endOfTabList": {
+				"label": "Abrir abas no final da lista de abas",
+				"description": "Quando ativado, novas abas serão abertas no final da lista de abas em vez de ao lado da aba atualmente ativa."
+			},
+			"exclusivityNotice": "O modo de edição baseado em arquivo está ativado. Todos os outros alternadores de comportamento de edição estão desativados para garantir uma experiência consistente."
 		}
 	},
 	"experimental": {

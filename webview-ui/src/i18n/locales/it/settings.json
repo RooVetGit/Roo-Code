@@ -31,10 +31,23 @@
 		"prompts": "Prompt",
 		"experimental": "Sperimentale",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code"
+		"about": "Informazioni su Roo Code",
+		"editingType": "Tipo di modifica",
+		"diffSettings": "Impostazioni diff",
+		"diffViewAutoFocusBehavior": "Auto-focus vista diff",
+		"fileEditing": "Modifica file"
 	},
 	"prompts": {
 		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
+	},
+	"editingType": {
+		"description": "Scegli il tuo flusso di lavoro di modifica preferito."
+	},
+	"diffSettings": {
+		"description": "Configura come vengono applicati i diff durante la modifica."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Controlla come si comporta la vista diff quando mostra le modifiche."
 	},
 	"codeIndex": {
 		"title": "Indicizzazione del codice",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Chiudi automaticamente tutte le schede toccate da Roo",
 				"description": "Quando abilitato (e anche l'impostazione precedente è abilitata), Roo chiuderà tutte le schede con cui ha interagito durante un'attività di modifica dei file, incluse quelle che erano già aperte prima dell'inizio dell'attività."
-			}
+			},
+			"disabledNotice": "La modifica basata su diff è attualmente disabilitata."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Abilita modifica basata sul file system",
+				"description": "Quando abilitato, Roo modificherà i file direttamente nel file system invece di utilizzare viste diff. Questo disabilita tutti gli altri toggle di comportamento di modifica per un'esperienza di modifica più semplice e diretta."
+			},
+			"correctTabGroup": {
+				"label": "Apri schede nel gruppo di schede corretto",
+				"description": "Quando abilitato, le nuove schede verranno aperte nel gruppo di schede che contiene l'istanza di Roo Code che ha generato l'attività."
+			},
+			"endOfTabList": {
+				"label": "Apri schede alla fine dell'elenco schede",
+				"description": "Quando abilitato, le nuove schede verranno aperte alla fine dell'elenco schede invece che accanto alla scheda attualmente attiva."
+			},
+			"exclusivityNotice": "La modalità di modifica basata su file è abilitata. Tutti gli altri toggle di comportamento di modifica sono disabilitati per garantire un'esperienza coerente."
 		}
 	},
 	"experimental": {

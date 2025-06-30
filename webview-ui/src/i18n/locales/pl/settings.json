@@ -31,10 +31,23 @@
 		"prompts": "Podpowiedzi",
 		"experimental": "Eksperymentalne",
 		"language": "Język",
-		"about": "O Roo Code"
+		"about": "O Roo Code",
+		"editingType": "Typ edycji",
+		"diffSettings": "Ustawienia diff",
+		"diffViewAutoFocusBehavior": "Auto-focus widoku diff",
+		"fileEditing": "Edycja plików"
 	},
 	"prompts": {
 		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."
+	},
+	"editingType": {
+		"description": "Wybierz preferowany przepływ pracy edycji."
+	},
+	"diffSettings": {
+		"description": "Skonfiguruj, jak różnice są stosowane podczas edycji."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Kontroluj, jak zachowuje się widok różnic podczas pokazywania zmian."
 	},
 	"codeIndex": {
 		"title": "Indeksowanie kodu",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Automatycznie zamykaj wszystkie karty dotknięte przez Roo",
 				"description": "Gdy włączone (i powyższe ustawienie jest również włączone), Roo automatycznie zamknie wszystkie karty, z którymi wchodził w interakcję podczas zadania modyfikacji plików, w tym te, które były już otwarte przed rozpoczęciem zadania."
-			}
+			},
+			"disabledNotice": "Edycja oparta na różnicach jest obecnie wyłączona."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Włącz edycję opartą na systemie plików",
+				"description": "Gdy włączone, Roo będzie edytować pliki bezpośrednio w systemie plików zamiast korzystać z widoków różnic. To wyłącza wszystkie inne przełączniki zachowania edycji dla prostszego, bezpośredniego doświadczenia edycji."
+			},
+			"correctTabGroup": {
+				"label": "Otwórz karty w poprawnej grupie kart",
+				"description": "Gdy włączone, nowe karty będą otwierane w grupie kart zawierającej instancję Roo Code, która wygenerowała zadanie."
+			},
+			"endOfTabList": {
+				"label": "Otwórz karty na końcu listy kart",
+				"description": "Gdy włączone, nowe karty będą otwierane na końcu listy kart zamiast obok aktualnie aktywnej karty."
+			},
+			"exclusivityNotice": "Tryb edycji oparty na plikach jest włączony. Wszystkie inne przełączniki zachowania edycji są wyłączone, aby zapewnić spójne doświadczenie."
 		}
 	},
 	"experimental": {

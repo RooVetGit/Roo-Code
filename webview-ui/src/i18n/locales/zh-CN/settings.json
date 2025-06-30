@@ -31,10 +31,23 @@
 		"prompts": "提示词",
 		"experimental": "实验性",
 		"language": "语言",
-		"about": "关于 Roo Code"
+		"about": "关于 Roo Code",
+		"editingType": "编辑类型",
+		"diffSettings": "差异设置",
+		"diffViewAutoFocusBehavior": "差异视图自动焦点",
+		"fileEditing": "文件编辑"
 	},
 	"prompts": {
 		"description": "配置用于快速操作的支持提示词，如增强提示词、解释代码和修复问题。这些提示词帮助 Roo 为常见开发任务提供更好的支持。"
+	},
+	"editingType": {
+		"description": "选择您首选的编辑工作流程。"
+	},
+	"diffSettings": {
+		"description": "配置在编辑期间如何应用差异。"
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "控制显示更改时差异视图的行为。"
 	},
 	"codeIndex": {
 		"title": "代码库索引",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "自动关闭所有Roo操作过的标签页",
 				"description": "启用后（且上述设置也已启用），Roo将在涉及文件修改的任务完成或回滚时，自动关闭所有在此任务中交互过的标签页，包括任务开始前已打开的标签页。"
-			}
+			},
+			"disabledNotice": "基于差异的编辑当前已禁用。"
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "启用基于文件系统的编辑",
+				"description": "启用后，Roo将直接在文件系统中编辑文件，而不是使用差异视图。这将禁用所有其他编辑行为切换，以获得更简单、更直接的编辑体验。"
+			},
+			"correctTabGroup": {
+				"label": "在正确的标签组中打开标签",
+				"description": "启用后，新标签将在包含生成任务的Roo Code实例的标签组中打开。"
+			},
+			"endOfTabList": {
+				"label": "在标签列表末尾打开标签",
+				"description": "启用后，新标签将在标签列表末尾打开，而不是在当前活动标签旁边。"
+			},
+			"exclusivityNotice": "基于文件的编辑模式已启用。所有其他编辑行为切换都已禁用，以确保一致的体验。"
 		}
 	},
 	"experimental": {

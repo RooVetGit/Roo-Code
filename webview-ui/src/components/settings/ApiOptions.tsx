@@ -63,7 +63,6 @@ import { inputEventTransform, noTransform } from "./transforms"
 import { ModelInfoView } from "./ModelInfoView"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
-import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
@@ -534,14 +533,6 @@ const ApiOptions = ({
 
 			{!fromWelcomeView && (
 				<>
-					<DiffSettingsControl
-						diffEnabled={apiConfiguration.diffEnabled}
-						diffViewAutoFocus={apiConfiguration.diffViewAutoFocus}
-						autoCloseRooTabs={apiConfiguration.autoCloseRooTabs}
-						autoCloseAllRooTabs={apiConfiguration.autoCloseAllRooTabs}
-						fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
-						onChange={(field, value) => setApiConfigurationField(field, value)}
-					/>
 					<TemperatureControl
 						value={apiConfiguration.modelTemperature}
 						onChange={handleInputChange("modelTemperature", noTransform)}

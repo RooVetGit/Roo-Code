@@ -31,10 +31,23 @@
 		"prompts": "Indicaciones",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Acerca de Roo Code"
+		"about": "Acerca de Roo Code",
+		"editingType": "Tipo de edición",
+		"diffSettings": "Configuración de diff",
+		"diffViewAutoFocusBehavior": "Auto-enfoque de vista diff",
+		"fileEditing": "Edición de archivos"
 	},
 	"prompts": {
 		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo."
+	},
+	"editingType": {
+		"description": "Elige tu flujo de trabajo de edición preferido."
+	},
+	"diffSettings": {
+		"description": "Configura cómo se aplican los diffs durante la edición."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Controla cómo se comporta la vista de diff al mostrar cambios."
 	},
 	"codeIndex": {
 		"title": "Indexación de código",
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Cerrar automáticamente todas las pestañas tocadas por Roo",
 				"description": "Cuando está habilitado (y la configuración anterior también está habilitada), Roo cerrará todas las pestañas con las que interactuó durante una tarea de modificación de archivos, incluidas aquellas que ya estaban abiertas antes de que comenzara la tarea."
-			}
+			},
+			"disabledNotice": "La edición basada en diff está actualmente deshabilitada."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Habilitar edición basada en sistema de archivos",
+				"description": "Cuando está habilitado, Roo editará archivos directamente en el sistema de archivos en lugar de usar vistas de diff. Esto deshabilita todos los demás toggles de comportamiento de edición para una experiencia de edición más simple y directa."
+			},
+			"correctTabGroup": {
+				"label": "Abrir pestañas en el grupo de pestañas correcto",
+				"description": "Cuando está habilitado, las nuevas pestañas se abrirán en el grupo de pestañas que contiene la instancia de Roo Code que inició la tarea."
+			},
+			"endOfTabList": {
+				"label": "Abrir pestañas al final de la lista de pestañas",
+				"description": "Cuando está habilitado, las nuevas pestañas se abrirán al final de la lista de pestañas en lugar de junto a la pestaña actualmente activa."
+			},
+			"exclusivityNotice": "El modo de edición basado en archivos está habilitado. Todos los demás toggles de comportamiento de edición están deshabilitados para garantizar una experiencia consistente."
 		}
 	},
 	"experimental": {

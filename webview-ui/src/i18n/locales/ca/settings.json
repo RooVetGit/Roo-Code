@@ -31,7 +31,20 @@
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre Roo Code"
+		"about": "Sobre Roo Code",
+		"editingType": "Tipus d'edició",
+		"diffSettings": "Configuració de diferències",
+		"diffViewAutoFocusBehavior": "Enfocament automàtic de vista de diferències",
+		"fileEditing": "Edició d'arxius"
+	},
+	"editingType": {
+		"description": "Trieu el vostre flux de treball d'edició preferit."
+	},
+	"diffSettings": {
+		"description": "Configureu com s'apliquen les diferències durant l'edició."
+	},
+	"diffViewAutoFocusBehavior": {
+		"description": "Controleu com es comporta la vista de diferències en mostrar canvis."
 	},
 	"prompts": {
 		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
@@ -511,7 +524,23 @@
 			"autoCloseAll": {
 				"label": "Tancar automàticament totes les pestanyes tocades per Roo",
 				"description": "Quan està activat (i la configuració anterior també està activada), Roo tancarà totes les pestanyes amb les quals va interactuar durant una tasca de modificació de fitxers, incloses aquelles que ja estaven obertes abans que comencés la tasca."
-			}
+			},
+			"disabledNotice": "L'edició basada en diferències està actualment desactivada."
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Activar edició basada en sistema d'arxius",
+				"description": "Quan està activat, Roo editarà arxius directament al sistema d'arxius en lloc d'utilitzar vistes de diferències. Això desactiva tots els altres commutadors de comportament d'edició per a una experiència d'edició més simple i directa."
+			},
+			"correctTabGroup": {
+				"label": "Obrir pestanyes al grup de pestanyes correcte",
+				"description": "Quan està activat, les pestanyes noves s'obriran al grup de pestanyes que conté la instància de Roo Code que va generar la tasca."
+			},
+			"endOfTabList": {
+				"label": "Obrir pestanyes al final de la llista de pestanyes",
+				"description": "Quan està activat, les pestanyes noves s'obriran al final de la llista de pestanyes en lloc de al costat de la pestanya actualment activa."
+			},
+			"exclusivityNotice": "El mode d'edició basat en arxius està activat. Tots els altres commutadors de comportament d'edició estan desactivats per assegurar una experiència consistent."
 		}
 	},
 	"experimental": {
