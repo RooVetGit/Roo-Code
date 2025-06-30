@@ -53,7 +53,7 @@ export abstract class RouterProvider extends BaseProvider {
 				...(options.openAiHeaders || {}),
 				...DEFAULT_HEADERS
 			}
-		})	
+		})
 	}
 
 	public async fetchModel() {
