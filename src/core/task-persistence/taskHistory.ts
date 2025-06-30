@@ -519,14 +519,14 @@ function logMessage(logs: string[], message: string): string {
 	// Display full message including tags in console
 	console.log(message)
 
-	// Extract tags and strip them from the message stored in logs array
-	// Using a more specific regex pattern to avoid potential ReDoS vulnerability
-	// Original: /^\[(.*?)\]\s*(.*)$/
-	const tagMatch = message.match(/^\[([^\]]*)\]\s*(.*)$/)
+	// Extract content after the first closing bracket
+	// Use an index to appease CodeQL regarding ReDoS false positive
+	const closingBracketIndex = message.indexOf("]")
 
-	if (tagMatch) {
+	if (closingBracketIndex !== -1) {
 		// If message has tags, only store the content part in logs array
-		logs.push(tagMatch[2])
+		const content = message.substring(closingBracketIndex + 1).trim()
+		logs.push(content)
 	} else {
 		// If no tags, store the whole message
 		logs.push(message)
