@@ -98,6 +98,12 @@ export interface HistoryScanResults {
 		tasksOnlyInGlobalState: Map<string, HistoryItem>
 
 		/**
+		 * Tasks found in the <state>/taskHistory/ indexes but not in the globalState array.
+		 * Key: Task ID, Value: The corresponding HistoryItem from file indexes.
+		 */
+		tasksOnlyInTaskHistoryIndexes: Map<string, HistoryItem>
+
+		/**
 		 * Tasks found on the filesystem that are not in the index, but
 		 * successfully reconstructed in-memory from history_item.json or ui_messages.json
 		 * Key: Task ID, Value: The reconstructed HistoryItem.
@@ -127,7 +133,13 @@ export interface HistoryRebuildOptions {
 	 * Whether to merge items from globalState.
 	 * When true, moves globalState tasks to the rebuild process.
 	 */
-	mergeGlobal?: boolean
+	mergeFromGlobal?: boolean
+
+	/**
+	 * Whether to merge rebuilt items to globalState.
+	 * When true, updates context.globalState with the rebuilt history items.
+	 */
+	mergeToGlobal?: boolean
 
 	/**
 	 * Whether to scan for orphan history_item.json files during the rebuild process.

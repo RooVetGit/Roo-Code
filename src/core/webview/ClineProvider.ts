@@ -1155,7 +1155,7 @@ export class ClineProvider
 			}
 		}
 
-		// If we tried to get a task that doesn't exist, delete it from storage
+		// If we tried to get a task that doesn't exist, delete it from the index
 		await deleteHistoryItem(id)
 		throw new Error("Task not found")
 	}

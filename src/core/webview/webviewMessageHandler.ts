@@ -447,9 +447,9 @@ export const webviewMessageHandler = async (
 						message.historyScanOptions?.reconstructOrphans !== undefined
 							? message.historyScanOptions.reconstructOrphans
 							: false,
-					mergeGlobal:
-						message.historyScanOptions?.mergeGlobal !== undefined
-							? message.historyScanOptions.mergeGlobal
+					mergeFromGlobal:
+						message.historyScanOptions?.mergeFromGlobal !== undefined
+							? message.historyScanOptions.mergeFromGlobal
 							: false,
 				},
 				async (options, logs) => {
@@ -461,6 +461,9 @@ export const webviewMessageHandler = async (
 						validCount: results.validCount,
 						tasks: {
 							tasksOnlyInGlobalState: Object.fromEntries(results.tasks.tasksOnlyInGlobalState),
+							tasksOnlyInTaskHistoryIndexes: Object.fromEntries(
+								results.tasks.tasksOnlyInTaskHistoryIndexes,
+							),
 							orphans: Object.fromEntries(results.tasks.orphans),
 							failedReconstructions: Array.from(results.tasks.failedReconstructions),
 						},
@@ -491,9 +494,13 @@ export const webviewMessageHandler = async (
 				{
 					...(message.historyScanOptions || {}),
 					mode: message.historyScanOptions?.mode || "merge",
-					mergeGlobal:
-						message.historyScanOptions?.mergeGlobal !== undefined
-							? message.historyScanOptions.mergeGlobal
+					mergeFromGlobal:
+						message.historyScanOptions?.mergeFromGlobal !== undefined
+							? message.historyScanOptions.mergeFromGlobal
+							: false,
+					mergeToGlobal:
+						message.historyScanOptions?.mergeToGlobal !== undefined
+							? message.historyScanOptions.mergeToGlobal
 							: false,
 					reconstructOrphans:
 						message.historyScanOptions?.reconstructOrphans !== undefined
@@ -516,6 +523,9 @@ export const webviewMessageHandler = async (
 							tasks: {
 								tasksOnlyInGlobalState: Object.fromEntries(
 									verificationScan.tasks.tasksOnlyInGlobalState,
+								),
+								tasksOnlyInTaskHistoryIndexes: Object.fromEntries(
+									verificationScan.tasks.tasksOnlyInTaskHistoryIndexes,
 								),
 								orphans: Object.fromEntries(verificationScan.tasks.orphans),
 								failedReconstructions: Array.from(verificationScan.tasks.failedReconstructions),

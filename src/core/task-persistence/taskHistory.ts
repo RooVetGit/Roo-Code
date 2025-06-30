@@ -542,7 +542,7 @@ function logMessage(logs: string[], message: string): string {
  * @returns Updated HistoryScanResults reflecting any changes made during rebuilding.
  */
 export async function rebuildIndexes(scan: HistoryScanResults, options: HistoryRebuildOptions): Promise<void> {
-	const { mode, mergeGlobal = false, reconstructOrphans = false, logs = [] } = options
+	const { mode, mergeFromGlobal = false, mergeToGlobal = false, reconstructOrphans = false, logs = [] } = options
 	const historyIndexesBasePath = _getHistoryIndexesBasePath()
 
 	// Map to store the latest version of each task by ID
@@ -559,8 +559,8 @@ export async function rebuildIndexes(scan: HistoryScanResults, options: HistoryR
 		}
 	}
 
-	// Process missing items from globalState if mergeGlobal is true
-	if (mergeGlobal && scan.tasks.tasksOnlyInGlobalState.size > 0) {
+	// Process missing items from globalState if mergeFromGlobal is true
+	if (mergeFromGlobal && scan.tasks.tasksOnlyInGlobalState.size > 0) {
 		logMessage(
 			logs,
 			`[rebuildIndexes] Processing ${scan.tasks.tasksOnlyInGlobalState.size} missing tasks from globalState`,
@@ -626,6 +626,13 @@ export async function rebuildIndexes(scan: HistoryScanResults, options: HistoryR
 	try {
 		await setHistoryItems(itemsToSet)
 		logMessage(logs, `[rebuildIndexes] Successfully indexed ${itemsToSet.length} tasks in ${mode} mode`)
+
+		// Update globalState if mergeToGlobal is enabled
+		if (mergeToGlobal && itemsToSet.length > 0) {
+			const context = getExtensionContext()
+			await context.globalState.update("taskHistory", itemsToSet)
+			logMessage(logs, `[rebuildIndexes] Updated globalState with ${itemsToSet.length} history items`)
+		}
 	} catch (error) {
 		logMessage(logs, `[rebuildIndexes] Error in setHistoryItems: ${error}`)
 
@@ -764,7 +771,10 @@ export async function getHistoryItemsForSearch(search: HistorySearchOptions): Pr
  * @param search - The search options.
  * @returns A promise that resolves to an array of matching HistoryItem objects.
  */
-async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistorySearchResults> {
+async function _getHistoryItemsForSearch(
+	search: HistorySearchOptions,
+	useCache: boolean = true,
+): Promise<HistorySearchResults> {
 	const { searchQuery = "", dateRange, limit, workspacePath, sortOption = "newest" } = search
 	const startTime = performance.now()
 	const limitStringForLog = limit !== undefined ? limit : "none"
@@ -852,7 +862,7 @@ async function _getHistoryItemsForSearch(search: HistorySearchOptions): Promise<
 				continue
 			}
 
-			const item = await getHistoryItem(taskRef.id)
+			const item = await getHistoryItem(taskRef.id, useCache)
 			if (!item) {
 				continue
 			}
@@ -1107,7 +1117,8 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 		const logs: string[] = []
 		await reindexHistoryItems({
 			mode: "merge",
-			mergeGlobal: true,
+			mergeFromGlobal: true,
+			mergeToGlobal: false,
 			reconstructOrphans: false,
 			scanHistoryFiles: false, // Use index-based approach for better performance
 			noVerify: true, // Skip verification for better migration performance
@@ -1240,6 +1251,7 @@ export async function scanTaskHistory(scanHistoryFiles = false, logs: string[] =
 		tasks: {
 			valid: new Map<string, HistoryItem>(),
 			tasksOnlyInGlobalState: new Map<string, HistoryItem>(),
+			tasksOnlyInTaskHistoryIndexes: new Map<string, HistoryItem>(),
 			orphans: new Map<string, HistoryItem>(),
 			failedReconstructions: new Set<string>(),
 		},
@@ -1438,26 +1450,31 @@ export async function scanTaskHistory(scanHistoryFiles = false, logs: string[] =
 			const fileScanItem = fileScanItemsMap.get(taskId)
 			const reconstructedItem = reconstructedItemsMap.get(taskId)
 
-			// Simplified logic:
-			// 1. Valid if fileItem OR globalItem exists (use most recent if both)
-			// 2. Otherwise, it's a failed task
+			// Categorize tasks based on where they exist:
+			// 1. Valid if in both taskIndex and globalState (use most recent)
+			// 2. tasksOnlyInTaskHistoryIndexes if in taskIndex but not in globalState
+			// 3. tasksOnlyInGlobalState if in globalState but not in taskIndex
+			// 4. orphans if only in fileScan or reconstructed
+			// 5. failedReconstructions if reconstruction failed
 
-			// Case 1: We have a valid item from taskHistory index or globalState
 			if (taskIndexItem && globalItem) {
 				// Both exist - use the newer one
 				const newerItem = globalItem.ts > taskIndexItem.ts ? globalItem : taskIndexItem
 				scan.tasks.valid.set(taskId, newerItem)
 			} else if (taskIndexItem) {
-				// Only taskIndexItem exists
+				// Only in file indexes, not in globalState
+				scan.tasks.tasksOnlyInTaskHistoryIndexes.set(taskId, taskIndexItem)
+
+				// Also consider it valid since it's in the index
 				scan.tasks.valid.set(taskId, taskIndexItem)
 			} else if (globalItem) {
 				// Only globalItem exists
 				scan.tasks.tasksOnlyInGlobalState.set(taskId, globalItem)
 			} else if (fileScanItem) {
-				// did not exist above, so needs re-indexed
+				// Only found in filesystem scan, needs re-indexing
 				scan.tasks.orphans.set(taskId, fileScanItem)
 			} else if (reconstructedItem) {
-				// did not exist above, so needs re-indexed
+				// Only reconstructed from UI messages, needs re-indexing
 				scan.tasks.orphans.set(taskId, reconstructedItem)
 			}
 		}
@@ -1472,11 +1489,13 @@ export async function scanTaskHistory(scanHistoryFiles = false, logs: string[] =
 	const orphanCount = scan.tasks.orphans.size
 	const failedCount = scan.tasks.failedReconstructions.size
 	const missingCount = scan.tasks.tasksOnlyInGlobalState.size
+	const indexOnlyCount = scan.tasks.tasksOnlyInTaskHistoryIndexes.size
 
 	// Log summary
 	logMessage(logs, "[TaskHistory] Scan completed:")
 	logMessage(logs, `[TaskHistory]   - Valid tasks: ${validCount}`)
 	logMessage(logs, `[TaskHistory]   - Tasks in globalState only: ${missingCount}`)
+	logMessage(logs, `[TaskHistory]   - Tasks in fileIndexes only: ${indexOnlyCount}`)
 	logMessage(logs, `[TaskHistory]   - Orphaned tasks (reconstructed): ${orphanCount}`)
 	logMessage(logs, `[TaskHistory]   - Failed reconstructions: ${failedCount}`)
 

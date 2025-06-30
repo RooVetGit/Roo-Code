@@ -73,9 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Initialize and migrate task history storage
 	// (migrateTaskHistoryStorage also calls initializeTaskHistory internally)
-	outputChannel.appendLine("Starting task history data format check/migration...")
 	await migrateTaskHistoryStorage()
-	outputChannel.appendLine("Task history data format check/migration finished.")
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)

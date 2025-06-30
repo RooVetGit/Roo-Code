@@ -282,6 +282,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 					[sampleHistoryItem2.id, sampleHistoryItem2],
 				]),
 				tasksOnlyInGlobalState: new Map([[sampleHistoryItem3.id, sampleHistoryItem3]]),
+				tasksOnlyInTaskHistoryIndexes: new Map(),
 				orphans: new Map(),
 				failedReconstructions: new Set(),
 			},
@@ -297,6 +298,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 						[sampleHistoryItem2.id, sampleHistoryItem2],
 					]),
 					tasksOnlyInGlobalState: new Map(),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map(),
 					failedReconstructions: new Set(),
 				},
@@ -328,6 +330,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 						[sampleHistoryItem2.id, sampleHistoryItem2],
 					]),
 					tasksOnlyInGlobalState: new Map(),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map(),
 					failedReconstructions: new Set(),
 				},
@@ -372,6 +375,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 						[sampleHistoryItem2.id, sampleHistoryItem2],
 					]),
 					tasksOnlyInGlobalState: new Map([[sampleHistoryItem3.id, sampleHistoryItem3]]),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map([[orphanedTask.id, orphanedTask]]),
 					failedReconstructions: new Set(["task-failed"]),
 				},
@@ -400,6 +404,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				tasks: {
 					valid: new Map([[newerVersion.id, newerVersion]]),
 					tasksOnlyInGlobalState: new Map(),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map(),
 					failedReconstructions: new Set(),
 				},
@@ -442,6 +447,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				tasks: {
 					valid: new Map(),
 					tasksOnlyInGlobalState: new Map(),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map([[reconstructedTask.id, reconstructedTask]]),
 					failedReconstructions: new Set(),
 				},
@@ -474,6 +480,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				tasks: {
 					valid: new Map([[sampleHistoryItem1.id, sampleHistoryItem1]]),
 					tasksOnlyInGlobalState: new Map(),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map(),
 					failedReconstructions: new Set(),
 				},
@@ -512,6 +519,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 					[sampleHistoryItem2.id, sampleHistoryItem2],
 				]),
 				tasksOnlyInGlobalState: new Map([[sampleHistoryItem3.id, sampleHistoryItem3]]),
+				tasksOnlyInTaskHistoryIndexes: new Map(),
 				orphans: new Map([
 					[
 						"task-orphan",
@@ -606,21 +614,21 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			expect(vi.mocked(fs.rename)).not.toHaveBeenCalled()
 		})
 
-		test("should include globalState items when mergeGlobal=true", async () => {
+		test("should include globalState items when mergeFromGlobal=true", async () => {
 			// Setup scan results
 			const scanResults = createMockScanResults()
 
-			// Execute with mergeGlobal=true
+			// Execute with mergeFromGlobal=true
 			const options: HistoryRebuildOptions = {
 				mode: "merge",
-				mergeGlobal: true,
+				mergeFromGlobal: true,
 				logs: [],
 			}
 
-			// Mock rebuildIndexes to check mergeGlobal option
+			// Mock rebuildIndexes to check mergeFromGlobal option
 			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Simulate setHistoryItems call with appropriate items
-				if (opts.mergeGlobal) {
+				if (opts.mergeFromGlobal) {
 					const items = [
 						...Array.from(scan.tasks.valid.values()),
 						...Array.from(scan.tasks.tasksOnlyInGlobalState.values()),
@@ -751,6 +759,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				tasks: {
 					valid: new Map(),
 					tasksOnlyInGlobalState: new Map(),
+					tasksOnlyInTaskHistoryIndexes: new Map(),
 					orphans: new Map(),
 					failedReconstructions: new Set(),
 				},

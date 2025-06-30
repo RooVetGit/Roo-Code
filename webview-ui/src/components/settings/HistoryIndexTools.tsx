@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
-import { Database, AlertTriangle } from "lucide-react"
+import { Database, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react"
 import { VSCodeCheckbox, VSCodeRadio } from "@vscode/webview-ui-toolkit/react"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { vscode } from "@src/utils/vscode"
@@ -60,13 +60,15 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 
 	// State for scan and rebuild options
 	const [rebuildMode, setRebuildMode] = useState<"merge" | "replace">("merge")
-	const [mergeGlobal, setMergeGlobal] = useState(true)
+	const [mergeFromGlobal, setMergeFromGlobal] = useState(true)
+	const [mergeToGlobal, setMergeToGlobal] = useState(false)
+	const [showAdvanced, setShowAdvanced] = useState(false)
 	const [reconstructOrphans, setReconstructOrphans] = useState(true)
 	const [scanHistoryFiles, setScanHistoryFiles] = useState(true)
 
 	// State for task selection - initially set to orphans but will be updated based on scan results
 	const [selectedTaskType, setSelectedTaskType] = useState<
-		"tasksOnlyInGlobalState" | "orphans" | "failedReconstructions"
+		"tasksOnlyInGlobalState" | "tasksOnlyInTaskHistoryIndexes" | "orphans" | "failedReconstructions"
 	>("orphans")
 
 	// Handle scan button click
@@ -81,7 +83,7 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 				type: "scanTaskHistory" as any,
 				historyScanOptions: {
 					mode: "merge",
-					mergeGlobal: true,
+					mergeFromGlobal: true,
 					reconstructOrphans: true,
 					scanHistoryFiles: true,
 					logs: [],
@@ -94,7 +96,9 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 	}
 
 	// Handle task type selection
-	const handleTaskTypeChange = (type: "tasksOnlyInGlobalState" | "orphans" | "failedReconstructions") => {
+	const handleTaskTypeChange = (
+		type: "tasksOnlyInGlobalState" | "tasksOnlyInTaskHistoryIndexes" | "orphans" | "failedReconstructions",
+	) => {
 		setSelectedTaskType(type)
 	}
 
@@ -116,6 +120,8 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 
 		if (selectedTaskType === "tasksOnlyInGlobalState") {
 			return mapToArray(scanResults.tasks.tasksOnlyInGlobalState)
+		} else if (selectedTaskType === "tasksOnlyInTaskHistoryIndexes") {
+			return mapToArray(scanResults.tasks.tasksOnlyInTaskHistoryIndexes)
 		} else if (selectedTaskType === "orphans") {
 			return mapToArray(scanResults.tasks.orphans)
 		} else {
@@ -126,7 +132,6 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 	// Helper functions to get counts for different task types
 	const getValidTasksCount = useCallback(() => {
 		if (!scanResults) return 0
-		console.log("count", scanResults)
 		// Force display of validCount from scanResults
 		return scanResults.validCount || 0
 	}, [scanResults])
@@ -138,6 +143,16 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 			return scanResults.tasks.tasksOnlyInGlobalState.size
 		} else {
 			return Object.keys(scanResults.tasks.tasksOnlyInGlobalState || {}).length
+		}
+	}, [scanResults])
+
+	const getTaskHistoryOnlyCount = useCallback(() => {
+		if (!scanResults) return 0
+
+		if (scanResults.tasks.tasksOnlyInTaskHistoryIndexes instanceof Map) {
+			return scanResults.tasks.tasksOnlyInTaskHistoryIndexes.size
+		} else {
+			return Object.keys(scanResults.tasks.tasksOnlyInTaskHistoryIndexes || {}).length
 		}
 	}, [scanResults])
 
@@ -173,7 +188,8 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 			// Request rebuild from extension with options
 			const options: HistoryRebuildOptions = {
 				mode: rebuildMode,
-				mergeGlobal,
+				mergeFromGlobal,
+				mergeToGlobal,
 				reconstructOrphans,
 				scanHistoryFiles,
 				logs: [],
@@ -224,12 +240,17 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 						// Find the task type with the highest count
 						const counts = {
 							tasksOnlyInGlobalState: getMissingTasksCount(),
+							tasksOnlyInTaskHistoryIndexes: getTaskHistoryOnlyCount(),
 							orphans: getOrphanedTasksCount(),
 							failedReconstructions: getFailedTasksCount(),
 						}
 
 						// Get the task type with the highest count using reduce
-						type TaskType = "tasksOnlyInGlobalState" | "orphans" | "failedReconstructions"
+						type TaskType =
+							| "tasksOnlyInGlobalState"
+							| "tasksOnlyInTaskHistoryIndexes"
+							| "orphans"
+							| "failedReconstructions"
 						const entries = Object.entries(counts) as [TaskType, number][]
 
 						const maxEntry = entries.reduce((max, current) => (current[1] > max[1] ? current : max), [
@@ -258,7 +279,7 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 
 		window.addEventListener("message", handleMessage)
 		return () => window.removeEventListener("message", handleMessage)
-	}, [t, getFailedTasksCount, getMissingTasksCount, getOrphanedTasksCount])
+	}, [t, getFailedTasksCount, getMissingTasksCount, getOrphanedTasksCount, getTaskHistoryOnlyCount])
 
 	// Generate confirmation text based on selected options
 	const getConfirmationText = () => {
@@ -270,12 +291,16 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 			actions.push(t("history:indexTools.confirmMerge"))
 		}
 
-		if (mergeGlobal && getMissingTasksCount() > 0) {
+		if (mergeFromGlobal && getMissingTasksCount() > 0) {
 			actions.push(t("history:indexTools.confirmImport", { count: getMissingTasksCount() }))
 		}
 
 		if (reconstructOrphans && getOrphanedTasksCount() > 0) {
 			actions.push(t("history:indexTools.confirmReconstruct", { count: getOrphanedTasksCount() }))
+		}
+
+		if (mergeToGlobal && getTaskHistoryOnlyCount() > 0) {
+			actions.push(t("history:indexTools.confirmMergeToGlobal", { count: getTaskHistoryOnlyCount() }))
 		}
 
 		return actions
@@ -319,24 +344,28 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 						<div className="space-y-4">
 							<h2 className="text-base font-semibold mb-2">{t("history:indexTools.scanResults")}</h2>
 
-							<div className="grid grid-cols-2 gap-2 text-sm">
-								<div className="flex justify-between">
-									<span>{t("history:indexTools.validTasks")}</span>
-									<span className="font-medium">{getValidTasksCount()}</span>
-								</div>
-								<div className="flex justify-between">
-									<span>{t("history:indexTools.missingTasks")}</span>
-									<span className="font-medium">{getMissingTasksCount()}</span>
-								</div>
-								<div className="flex justify-between">
-									<span>{t("history:indexTools.orphanedTasks")}</span>
-									<span className="font-medium">{getOrphanedTasksCount()}</span>
-								</div>
-								<div className="flex justify-between">
-									<span>{t("history:indexTools.failedTasks")}</span>
-									<span className="font-medium">{getFailedTasksCount()}</span>
-								</div>
-							</div>
+							<ul className="space-y-2 text-sm list-none">
+								<li className="flex items-center">
+									<span className="mr-2">•</span>
+									<span>{t("history:indexTools.validTasks")}:</span>
+									<span className="ml-2 font-medium">{getValidTasksCount()}</span>
+								</li>
+								<li className="flex items-center">
+									<span className="mr-2">•</span>
+									<span>{t("history:indexTools.missingTasks")}:</span>
+									<span className="ml-2 font-medium">{getMissingTasksCount()}</span>
+								</li>
+								<li className="flex items-center">
+									<span className="mr-2">•</span>
+									<span>{t("history:indexTools.orphanedTasks")}:</span>
+									<span className="ml-2 font-medium">{getOrphanedTasksCount()}</span>
+								</li>
+								<li className="flex items-center">
+									<span className="mr-2">•</span>
+									<span>{t("history:indexTools.failedTasks")}:</span>
+									<span className="ml-2 font-medium">{getFailedTasksCount()}</span>
+								</li>
+							</ul>
 
 							{/* Optional actions - only visible after scan */}
 							<div className="pt-2 border-t border-vscode-sideBar-background">
@@ -347,10 +376,12 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 								{/* Import legacy tasks */}
 								<div>
 									<VSCodeCheckbox
-										id="mergeGlobal"
-										checked={mergeGlobal}
-										onChange={(e: any) => setMergeGlobal(e.target.checked)}>
-										<span className="font-medium">{t("history:indexTools.importLegacy")}</span>
+										id="mergeFromGlobal"
+										checked={mergeFromGlobal}
+										onChange={(e: any) => setMergeFromGlobal(e.target.checked)}>
+										<span className="font-medium">
+											{t("history:indexTools.importLegacy")} ({getMissingTasksCount()})
+										</span>
 									</VSCodeCheckbox>
 									<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
 										{t("history:indexTools.importLegacyDesc")}
@@ -364,7 +395,7 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 										checked={reconstructOrphans}
 										onChange={(e: any) => setReconstructOrphans(e.target.checked)}>
 										<span className="font-medium">
-											{t("history:indexTools.reconstructOrphans")}
+											{t("history:indexTools.reconstructOrphans")} ({getOrphanedTasksCount()})
 										</span>
 									</VSCodeCheckbox>
 									<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
@@ -383,6 +414,36 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 									<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
 										{t("history:indexTools.useFilesystemScanDesc")}
 									</div>
+								</div>
+
+								{/* Advanced section with chevron */}
+								<div className="mt-2 mb-2">
+									<button
+										className="flex items-center text-sm font-medium text-vscode-foreground hover:text-vscode-button-foreground focus:outline-none"
+										onClick={() => setShowAdvanced(!showAdvanced)}>
+										{showAdvanced ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+										<span className="ml-1">{t("common:advanced")}</span>
+									</button>
+
+									{showAdvanced && (
+										<div className="mt-2 pl-5">
+											{/* Update global state */}
+											<div>
+												<VSCodeCheckbox
+													id="mergeToGlobal"
+													checked={mergeToGlobal}
+													onChange={(e: any) => setMergeToGlobal(e.target.checked)}>
+													<span className="font-medium">
+														{t("history:indexTools.mergeToGlobal")} (
+														{getTaskHistoryOnlyCount()})
+													</span>
+												</VSCodeCheckbox>
+												<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+													{t("history:indexTools.mergeToGlobalDesc")}
+												</div>
+											</div>
+										</div>
+									)}
 								</div>
 							</div>
 
@@ -487,6 +548,24 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 													</span>
 												</VSCodeRadio>
 											</div>
+
+											{mergeToGlobal && (
+												<div>
+													<VSCodeRadio
+														name="taskType"
+														checked={selectedTaskType === "tasksOnlyInTaskHistoryIndexes"}
+														value="tasksOnlyInTaskHistoryIndexes"
+														id="file-index-only-tasks"
+														onClick={() =>
+															handleTaskTypeChange("tasksOnlyInTaskHistoryIndexes")
+														}>
+														<span className="font-medium">
+															{t("history:indexTools.fileIndexOnlyTasks")} (
+															{getTaskHistoryOnlyCount()})
+														</span>
+													</VSCodeRadio>
+												</div>
+											)}
 										</div>
 									</div>
 
@@ -505,7 +584,11 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 													{getCurrentTasks().map((task) => (
 														<div
 															key={task.id}
-															onClick={() => handleTaskClick(task)}
+															onClick={(e) => {
+																e.stopPropagation()
+																e.preventDefault()
+																handleTaskClick(task)
+															}}
 															className="cursor-pointer">
 															<TaskItem
 																key={task.id}
@@ -591,9 +674,11 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 							{t("history:indexTools.taskDetails")}:{" "}
 							{selectedTaskType === "tasksOnlyInGlobalState"
 								? t("history:indexTools.missingTasks")
-								: selectedTaskType === "orphans"
-									? t("history:indexTools.orphanedTasks")
-									: t("history:indexTools.failedTasks")}
+								: selectedTaskType === "tasksOnlyInTaskHistoryIndexes"
+									? t("history:indexTools.fileIndexOnlyTasks")
+									: selectedTaskType === "orphans"
+										? t("history:indexTools.orphanedTasks")
+										: t("history:indexTools.failedTasks")}
 						</AlertDialogTitle>
 						{selectedTaskForModal && (
 							<div className="text-sm font-normal text-vscode-descriptionForeground mt-0 mb-0 py-0">

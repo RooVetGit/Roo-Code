@@ -234,7 +234,8 @@ export interface WebviewMessage {
 	historySearchOptions?: HistorySearchOptions // For history search
 	historyScanOptions?: {
 		mode?: "merge" | "replace"
-		mergeGlobal?: boolean
+		mergeFromGlobal?: boolean
+		mergeToGlobal?: boolean
 		reconstructOrphans?: boolean
 		scanHistoryFiles?: boolean
 		logs?: string[]
