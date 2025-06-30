@@ -134,8 +134,23 @@ export class CustomModesManager {
 					const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
 					console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
 
-					const lineMatch = errorMsg.match(/at line (\d+)/)
-					const line = lineMatch ? lineMatch[1] : "unknown"
+					// Try multiple patterns to extract line number from YAML error messages
+					const linePatterns = [
+						/at line (\d+)/, // "at line X"
+						/line (\d+)/, // "line X"
+						/\((\d+):\d+\)/, // "(line:column)"
+						/(\d+):\d+/, // "line:column"
+					]
+
+					let line = "unknown"
+					for (const pattern of linePatterns) {
+						const match = errorMsg.match(pattern)
+						if (match) {
+							line = match[1]
+							break
+						}
+					}
+
 					vscode.window.showErrorMessage(t("common:customModes.errors.yamlParseError", { line }))
 
 					// Return empty object to prevent duplicate error handling
