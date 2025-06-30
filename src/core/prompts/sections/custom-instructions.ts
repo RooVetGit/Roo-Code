@@ -330,7 +330,7 @@ function shouldIncludeRuleFile(filename: string): boolean {
 		"*.swp",
 		"*.temp",
 		"*.tmp",
-		"*.Thumbs.db",
+		"Thumbs.db",
 	]
 
 	for (const pattern of cachePatterns) {
