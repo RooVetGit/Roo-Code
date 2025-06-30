@@ -60,6 +60,7 @@ export function getToolsForMode(groups: readonly GroupEntry[]): string[] {
 }
 
 // Main modes configuration as an ordered array
+// Note: The first mode in this array is the default mode for new installations
 export const modes: readonly ModeConfig[] = [
 	{
 		slug: "architect",
