@@ -52,6 +52,16 @@ describe("GroqHandler", () => {
 		expect(model.info).toEqual(groqModels[testModelId])
 	})
 
+	it("should return qwen/qwen3-32b model with correct maxTokens", () => {
+		const testModelId: GroqModelId = "qwen/qwen3-32b"
+		const handlerWithModel = new GroqHandler({ apiModelId: testModelId, groqApiKey: "test-groq-api-key" })
+		const model = handlerWithModel.getModel()
+		expect(model.id).toBe(testModelId)
+		expect(model.info).toEqual(groqModels[testModelId])
+		// Verify that maxTokens is set to 40960 as per Groq API documentation
+		expect(model.info.maxTokens).toBe(40960)
+	})
+
 	it("completePrompt method should return text from Groq API", async () => {
 		const expectedResponse = "This is a test response from Groq"
 		mockCreate.mockResolvedValueOnce({ choices: [{ message: { content: expectedResponse } }] })
