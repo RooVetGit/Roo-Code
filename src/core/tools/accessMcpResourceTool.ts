@@ -73,7 +73,11 @@ export async function accessMcpResourceTool(
 
 			resourceResult?.contents.forEach((item) => {
 				if (item.mimeType?.startsWith("image") && item.blob) {
-					images.push(`data:${item.mimeType};base64,` + item.blob)
+					if (item.mimeType.startsWith("data:")) {
+						images.push(item.blob)
+					} else {
+						images.push(`data:${item.mimeType};base64,` + item.blob)
+					}
 				}
 			})
 
