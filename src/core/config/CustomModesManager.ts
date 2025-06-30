@@ -16,6 +16,18 @@ import { t } from "../../i18n"
 
 const ROOMODES_FILENAME = ".roomodes"
 
+/**
+ * Creates a default .roomodes file content with proper structure
+ */
+function createDefaultRoomodesContent(): string {
+	return yaml.stringify(
+		{
+			customModes: [],
+		},
+		{ lineWidth: 0 },
+	)
+}
+
 export class CustomModesManager {
 	private static readonly cacheTTL = 10_000
 
@@ -121,21 +133,30 @@ export class CustomModesManager {
 		let cleanedContent = stripBom(content)
 		cleanedContent = this.cleanInvisibleCharacters(cleanedContent)
 
+		// Handle empty or whitespace-only content
+		if (!cleanedContent || cleanedContent.trim() === "") {
+			console.log(`[CustomModesManager] Empty content detected in ${filePath}`)
+			return {}
+		}
+
 		try {
-			return yaml.parse(cleanedContent)
+			const parsed = yaml.parse(cleanedContent)
+			// Handle null result from YAML parser (empty document)
+			return parsed === null ? {} : parsed
 		} catch (yamlError) {
 			// For .roomodes files, try JSON as fallback
 			if (filePath.endsWith(ROOMODES_FILENAME)) {
 				try {
 					// Try parsing the original content as JSON (not the cleaned content)
-					return JSON.parse(content)
+					const jsonParsed = JSON.parse(content)
+					return jsonParsed === null ? {} : jsonParsed
 				} catch (jsonError) {
 					// JSON also failed, show the original YAML error
 					const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
 					console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
 
 					const lineMatch = errorMsg.match(/at line (\d+)/)
-					const line = lineMatch ? lineMatch[1] : "unknown"
+					const line = lineMatch ? lineMatch[1] : "1"
 					vscode.window.showErrorMessage(t("common:customModes.errors.yamlParseError", { line }))
 
 					// Return empty object to prevent duplicate error handling
@@ -154,6 +175,20 @@ export class CustomModesManager {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
 			const settings = this.parseYamlSafely(content, filePath)
+
+			// Handle empty or null content gracefully
+			if (!settings || (typeof settings === "object" && Object.keys(settings).length === 0)) {
+				// For .roomodes files, create a default structure if empty
+				if (filePath.endsWith(ROOMODES_FILENAME)) {
+					console.log(
+						`[CustomModesManager] Empty .roomodes file detected, initializing with default structure`,
+					)
+					// Initialize the file with proper structure
+					await fs.writeFile(filePath, createDefaultRoomodesContent(), "utf-8")
+				}
+				return []
+			}
+
 			const result = customModesSettingsSchema.safeParse(settings)
 
 			if (!result.success) {
@@ -166,6 +201,17 @@ export class CustomModesManager {
 						.join("\n")
 
 					vscode.window.showErrorMessage(t("common:customModes.errors.schemaValidationError", { issues }))
+
+					// Try to fix common issues automatically
+					if (
+						result.error.issues.some(
+							(issue) => issue.path.includes("customModes") && issue.code === "invalid_type",
+						)
+					) {
+						console.log(`[CustomModesManager] Attempting to fix malformed .roomodes file`)
+						await fs.writeFile(filePath, createDefaultRoomodesContent(), "utf-8")
+						return []
+					}
 				}
 
 				return []
@@ -216,7 +262,7 @@ export class CustomModesManager {
 		const fileExists = await fileExistsAtPath(filePath)
 
 		if (!fileExists) {
-			await this.queueWrite(() => fs.writeFile(filePath, yaml.stringify({ customModes: [] }, { lineWidth: 0 })))
+			await this.queueWrite(() => fs.writeFile(filePath, createDefaultRoomodesContent()))
 		}
 
 		return filePath
@@ -420,7 +466,7 @@ export class CustomModesManager {
 			content = await fs.readFile(filePath, "utf-8")
 		} catch (error) {
 			// File might not exist yet.
-			content = yaml.stringify({ customModes: [] }, { lineWidth: 0 })
+			content = createDefaultRoomodesContent()
 		}
 
 		let settings
@@ -491,7 +537,7 @@ export class CustomModesManager {
 	public async resetCustomModes(): Promise<void> {
 		try {
 			const filePath = await this.getCustomModesFilePath()
-			await fs.writeFile(filePath, yaml.stringify({ customModes: [] }, { lineWidth: 0 }))
+			await fs.writeFile(filePath, createDefaultRoomodesContent())
 			await this.context.globalState.update("customModes", [])
 			this.clearCache()
 			await this.onUpdate()
