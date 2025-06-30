@@ -53,7 +53,8 @@ export abstract class RouterProvider extends BaseProvider {
 				...(options.openAiHeaders || {}),
 				...DEFAULT_HEADERS
 			}
-		})	}
+		})	
+	}
 
 	public async fetchModel() {
 		this.models = await getModels({ provider: this.name, apiKey: this.client.apiKey, baseUrl: this.client.baseURL })
