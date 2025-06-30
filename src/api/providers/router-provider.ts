@@ -50,8 +50,8 @@ export abstract class RouterProvider extends BaseProvider {
 			baseURL,
 			apiKey,
 			defaultHeaders: {
-				...DEFAULT_HEADERS,
-				...(options.openAiHeaders || {})
+				...(options.openAiHeaders || {}),
+				...DEFAULT_HEADERS
 			}
 		})	}
 

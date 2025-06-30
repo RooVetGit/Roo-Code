@@ -33,10 +33,8 @@ describe("getLiteLLMModels", () => {
 			headers: {
 				Authorization: "Bearer test-api-key",
 				"Content-Type": "application/json",
-								...DEFAULT_HEADERS,
-
+				...DEFAULT_HEADERS,
 			},
-			
 			timeout: 5000,
 		})
 	})
@@ -87,8 +85,7 @@ describe("getLiteLLMModels", () => {
 			headers: {
 				Authorization: "Bearer test-api-key",
 				"Content-Type": "application/json",
-								...DEFAULT_HEADERS,
-
+				...DEFAULT_HEADERS,
 			},
 			timeout: 5000,
 		})
@@ -131,8 +128,7 @@ describe("getLiteLLMModels", () => {
 		expect(mockedAxios.get).toHaveBeenCalledWith("http://localhost:4000/v1/model/info", {
 			headers: {
 				"Content-Type": "application/json",
-								...DEFAULT_HEADERS,
-
+				...DEFAULT_HEADERS,
 			},
 			timeout: 5000,
 		})

@@ -19,8 +19,7 @@ export async function getLiteLLMModels(apiKey: string, baseUrl: string): Promise
 	try {
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
-						...DEFAULT_HEADERS,
-
+			...DEFAULT_HEADERS
 		}
 
 		if (apiKey) {
