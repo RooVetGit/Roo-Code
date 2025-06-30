@@ -1115,20 +1115,24 @@ describe("ChatView - Focus Grabbing Tests", () => {
 describe("ChatView - Version Indicator Tests", () => {
 	beforeEach(() => vi.clearAllMocks())
 
-	it("displays version indicator button", () => {
-		// Temporarily override the mock for this test
-		mockVersionIndicator.mockImplementation((props?: { onClick?: () => void; className?: string }) => {
+	// Helper function to create a mock VersionIndicator implementation
+	const createMockVersionIndicator = (
+		ariaLabel: string = "chat:versionIndicator.ariaLabel",
+		version: string = "v3.21.5",
+	) => {
+		return (props?: { onClick?: () => void; className?: string }) => {
 			const { onClick, className } = props || {}
 			return (
-				<button
-					data-testid="version-indicator"
-					onClick={onClick}
-					className={className}
-					aria-label="chat:versionIndicator.ariaLabel">
-					v3.21.5
+				<button data-testid="version-indicator" onClick={onClick} className={className} aria-label={ariaLabel}>
+					{version}
 				</button>
 			)
-		})
+		}
+	}
+
+	it("displays version indicator button", () => {
+		// Temporarily override the mock for this test
+		mockVersionIndicator.mockImplementation(createMockVersionIndicator())
 
 		const { getByLabelText } = renderChatView()
 
@@ -1148,18 +1152,7 @@ describe("ChatView - Version Indicator Tests", () => {
 
 	it("opens announcement modal when version indicator is clicked", () => {
 		// Temporarily override the mock for this test
-		mockVersionIndicator.mockImplementation((props?: { onClick?: () => void; className?: string }) => {
-			const { onClick, className } = props || {}
-			return (
-				<button
-					data-testid="version-indicator"
-					onClick={onClick}
-					className={className}
-					aria-label="Version 3.22.5">
-					v3.22.5
-				</button>
-			)
-		})
+		mockVersionIndicator.mockImplementation(createMockVersionIndicator("Version 3.22.5", "v3.22.5"))
 
 		const { getByTestId } = renderChatView()
 
@@ -1182,18 +1175,7 @@ describe("ChatView - Version Indicator Tests", () => {
 
 	it("version indicator has correct styling classes", () => {
 		// Temporarily override the mock for this test
-		mockVersionIndicator.mockImplementation((props?: { onClick?: () => void; className?: string }) => {
-			const { onClick, className } = props || {}
-			return (
-				<button
-					data-testid="version-indicator"
-					onClick={onClick}
-					className={className}
-					aria-label="Version 3.22.5">
-					v3.22.5
-				</button>
-			)
-		})
+		mockVersionIndicator.mockImplementation(createMockVersionIndicator("Version 3.22.5", "v3.22.5"))
 
 		const { getByTestId } = renderChatView()
 
@@ -1214,18 +1196,7 @@ describe("ChatView - Version Indicator Tests", () => {
 
 	it("version indicator has proper accessibility attributes", () => {
 		// Temporarily override the mock for this test
-		mockVersionIndicator.mockImplementation((props?: { onClick?: () => void; className?: string }) => {
-			const { onClick, className } = props || {}
-			return (
-				<button
-					data-testid="version-indicator"
-					onClick={onClick}
-					className={className}
-					aria-label="Version 3.22.5">
-					v3.22.5
-				</button>
-			)
-		})
+		mockVersionIndicator.mockImplementation(createMockVersionIndicator("Version 3.22.5", "v3.22.5"))
 
 		const { getByTestId } = renderChatView()
 
@@ -1265,18 +1236,7 @@ describe("ChatView - Version Indicator Tests", () => {
 
 	it("displays version indicator only on welcome screen (no task)", () => {
 		// Temporarily override the mock for this test
-		mockVersionIndicator.mockImplementation((props?: { onClick?: () => void; className?: string }) => {
-			const { onClick, className } = props || {}
-			return (
-				<button
-					data-testid="version-indicator"
-					onClick={onClick}
-					className={className}
-					aria-label="Version 3.22.5">
-					v3.22.5
-				</button>
-			)
-		})
+		mockVersionIndicator.mockImplementation(createMockVersionIndicator("Version 3.22.5", "v3.22.5"))
 
 		const { queryByTestId, rerender } = renderChatView()
 
