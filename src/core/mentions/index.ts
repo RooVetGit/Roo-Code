@@ -129,13 +129,18 @@ export async function parseMentions(
 				} catch (error) {
 					console.error(`Error fetching URL ${mention}:`, error)
 
-					// Get user-friendly error message
-					const errorMessage = getUrlErrorMessage(error)
+					// Get raw error message for AI
+					const rawErrorMessage = error instanceof Error ? error.message : String(error)
+
+					// Get localized error message for UI notification
+					const localizedErrorMessage = getUrlErrorMessage(error)
 
 					vscode.window.showErrorMessage(
-						t("common:errors.url_fetch_error_with_url", { url: mention, error: errorMessage }),
+						t("common:errors.url_fetch_error_with_url", { url: mention, error: localizedErrorMessage }),
 					)
-					result = `Error fetching content: ${errorMessage}`
+
+					// Send raw error message to AI model
+					result = `Error fetching content: ${rawErrorMessage}`
 				}
 			}
 			parsedText += `\n\n<url_content url="${mention}">\n${result}\n</url_content>`
