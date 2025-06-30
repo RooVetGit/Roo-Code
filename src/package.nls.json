@@ -32,6 +32,7 @@
 	"settings.vsCodeLmModelSelector.family.description": "The family of the language model (e.g. gpt-4)",
 	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')",
 	"settings.enableCodeActions.description": "Enable Roo Code quick fixes",
+	"settings.autoImportSettingsPath.description": "Path to a RooCode configuration file to automatically import on extension startup. Supports absolute paths and paths relative to the home directory (e.g. '~/Documents/roo-code-settings.json'). Leave empty to disable auto-import.",
 	"roo-cline.autoCloseRooTabs.description": "When enabled, Roo will automatically close tabs for files that were newly created or were not already open before Roo modified them. Tabs for files that were already open will remain open.",
 	"roo-cline.autoCloseAllRooTabs.description": "When enabled (and 'Automatically close newly created or previously unopened Roo tabs' is also enabled), Roo will close all tabs it interacted with during a file modification task, including those that were already open before the task started."
 }
