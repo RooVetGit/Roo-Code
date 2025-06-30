@@ -48,7 +48,7 @@ export function getSupportedBinaryFormats(): string[] {
 	return Object.keys(SUPPORTED_BINARY_FORMATS)
 }
 
-export async function extractTextFromFile(filePath: string): Promise<string> {
+export async function extractTextFromFile(filePath: string, options?: { maxRows?: number }): Promise<string> {
 	try {
 		await fs.access(filePath)
 	} catch (error) {
@@ -60,6 +60,10 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 	// Check if we have a specific extractor for this format
 	const extractor = SUPPORTED_BINARY_FORMATS[fileExtension as keyof typeof SUPPORTED_BINARY_FORMATS]
 	if (extractor) {
+		// Pass options to Excel extractor, ignore for others
+		if (fileExtension === ".xlsx") {
+			return extractTextFromXLSX(filePath, options)
+		}
 		return extractor(filePath)
 	}
 

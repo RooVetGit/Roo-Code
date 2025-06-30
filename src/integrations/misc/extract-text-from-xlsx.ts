@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs"
 
-const ROW_LIMIT = 50000
+const DEFAULT_ROW_LIMIT = 50000
 
 function formatCellValue(cell: ExcelJS.Cell): string {
 	const value = cell.value
@@ -40,9 +40,13 @@ function formatCellValue(cell: ExcelJS.Cell): string {
 	return value.toString()
 }
 
-export async function extractTextFromXLSX(filePathOrWorkbook: string | ExcelJS.Workbook): Promise<string> {
+export async function extractTextFromXLSX(
+	filePathOrWorkbook: string | ExcelJS.Workbook,
+	options?: { maxRows?: number },
+): Promise<string> {
 	let workbook: ExcelJS.Workbook
 	let excelText = ""
+	const maxRows = options?.maxRows ?? DEFAULT_ROW_LIMIT
 
 	if (typeof filePathOrWorkbook === "string") {
 		workbook = new ExcelJS.Workbook()
@@ -51,16 +55,24 @@ export async function extractTextFromXLSX(filePathOrWorkbook: string | ExcelJS.W
 		workbook = filePathOrWorkbook
 	}
 
+	let totalRowsProcessed = 0
+	let truncated = false
+
 	workbook.eachSheet((worksheet, sheetId) => {
 		if (worksheet.state === "hidden" || worksheet.state === "veryHidden") {
 			return
 		}
 
+		if (truncated) {
+			return false // Stop processing sheets if we've already truncated
+		}
+
 		excelText += `--- Sheet: ${worksheet.name} ---\n`
 
 		worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-			if (rowNumber > ROW_LIMIT) {
-				excelText += `[... truncated at row ${rowNumber} ...]\n`
+			if (totalRowsProcessed >= maxRows) {
+				excelText += `[... truncated at ${totalRowsProcessed} total rows across all sheets ...]\n`
+				truncated = true
 				return false
 			}
 
@@ -77,12 +89,17 @@ export async function extractTextFromXLSX(filePathOrWorkbook: string | ExcelJS.W
 
 			if (hasContent) {
 				excelText += rowTexts.join("\t") + "\n"
+				totalRowsProcessed++
 			}
 
 			return true
 		})
 
-		excelText += "\n"
+		if (!truncated) {
+			excelText += "\n"
+		}
+
+		return true
 	})
 
 	return excelText.trim()

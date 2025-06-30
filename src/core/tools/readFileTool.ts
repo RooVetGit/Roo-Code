@@ -517,11 +517,28 @@ export async function readFileTool(
 				}
 
 				// Handle normal file read
-				const content = await extractTextFromFile(fullPath)
-				const lineRangeAttr = ` lines="1-${totalLines}"`
-				let xmlInfo = totalLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
+				const fileExtension = path.extname(relPath).toLowerCase()
+				let content: string
+				let actualLines = totalLines
 
-				if (totalLines === 0) {
+				// For Excel files, apply maxReadFileLine as row limit
+				if (fileExtension === ".xlsx" && maxReadFileLine > 0) {
+					content = await extractTextFromFile(fullPath, { maxRows: maxReadFileLine })
+					// Count actual lines in the extracted content to get accurate line count
+					actualLines = content.split("\n").length
+				} else {
+					content = await extractTextFromFile(fullPath)
+				}
+
+				const lineRangeAttr = ` lines="1-${actualLines}"`
+				let xmlInfo = actualLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
+
+				// Add truncation notice for Excel files if they were limited
+				if (fileExtension === ".xlsx" && maxReadFileLine > 0 && content.includes("[... truncated at")) {
+					xmlInfo += `<notice>Excel file truncated to ${maxReadFileLine} rows. Use line_range if you need to read more data</notice>\n`
+				}
+
+				if (actualLines === 0) {
 					xmlInfo += `<notice>File is empty</notice>\n`
 				}
 

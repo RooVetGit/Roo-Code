@@ -218,4 +218,98 @@ describe("extractTextFromXLSX", () => {
 			await expect(extractTextFromXLSX("/non/existent/file.xlsx")).rejects.toThrow()
 		})
 	})
+
+	describe("row limiting", () => {
+		it("should respect maxRows option", async () => {
+			const workbook = new ExcelJS.Workbook()
+			const worksheet = workbook.addWorksheet("Sheet1")
+
+			// Add 10 rows of data
+			for (let i = 1; i <= 10; i++) {
+				worksheet.getCell(`A${i}`).value = `Row ${i}`
+				worksheet.getCell(`B${i}`).value = `Data ${i}`
+			}
+
+			const result = await extractTextFromXLSX(workbook, { maxRows: 5 })
+
+			expect(result).toContain("Row 1")
+			expect(result).toContain("Row 5")
+			expect(result).not.toContain("Row 6")
+			expect(result).toContain("[... truncated at 5 total rows across all sheets ...]")
+		})
+
+		it("should not truncate when maxRows is not exceeded", async () => {
+			const workbook = new ExcelJS.Workbook()
+			const worksheet = workbook.addWorksheet("Sheet1")
+
+			// Add 3 rows of data
+			for (let i = 1; i <= 3; i++) {
+				worksheet.getCell(`A${i}`).value = `Row ${i}`
+			}
+
+			const result = await extractTextFromXLSX(workbook, { maxRows: 5 })
+
+			expect(result).toContain("Row 1")
+			expect(result).toContain("Row 3")
+			expect(result).not.toContain("truncated")
+		})
+
+		it("should handle maxRows across multiple sheets", async () => {
+			const workbook = new ExcelJS.Workbook()
+
+			const sheet1 = workbook.addWorksheet("Sheet1")
+			for (let i = 1; i <= 3; i++) {
+				sheet1.getCell(`A${i}`).value = `Sheet1 Row ${i}`
+			}
+
+			const sheet2 = workbook.addWorksheet("Sheet2")
+			for (let i = 1; i <= 3; i++) {
+				sheet2.getCell(`A${i}`).value = `Sheet2 Row ${i}`
+			}
+
+			const result = await extractTextFromXLSX(workbook, { maxRows: 4 })
+
+			expect(result).toContain("Sheet1 Row 1")
+			expect(result).toContain("Sheet1 Row 3")
+			expect(result).toContain("Sheet2 Row 1")
+			expect(result).not.toContain("Sheet2 Row 2")
+			expect(result).toContain("[... truncated at 4 total rows across all sheets ...]")
+		})
+
+		it("should use default limit when no maxRows specified", async () => {
+			const workbook = new ExcelJS.Workbook()
+			const worksheet = workbook.addWorksheet("Sheet1")
+
+			// Add a few rows
+			for (let i = 1; i <= 5; i++) {
+				worksheet.getCell(`A${i}`).value = `Row ${i}`
+			}
+
+			const result = await extractTextFromXLSX(workbook)
+
+			expect(result).toContain("Row 1")
+			expect(result).toContain("Row 5")
+			expect(result).not.toContain("truncated")
+		})
+
+		it("should handle empty rows correctly when counting towards limit", async () => {
+			const workbook = new ExcelJS.Workbook()
+			const worksheet = workbook.addWorksheet("Sheet1")
+
+			// Add rows with some empty ones
+			worksheet.getCell("A1").value = "Row 1"
+			// Row 2 is empty
+			worksheet.getCell("A3").value = "Row 3"
+			worksheet.getCell("A4").value = "Row 4"
+			worksheet.getCell("A5").value = "Row 5"
+
+			const result = await extractTextFromXLSX(workbook, { maxRows: 3 })
+
+			expect(result).toContain("Row 1")
+			expect(result).toContain("Row 3")
+			expect(result).toContain("Row 4")
+			expect(result).not.toContain("Row 5")
+			expect(result).toContain("[... truncated at 3 total rows across all sheets ...]")
+		})
+	})
 })
