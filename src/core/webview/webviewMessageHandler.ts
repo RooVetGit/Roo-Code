@@ -237,6 +237,9 @@ export const webviewMessageHandler = async (
 				const result = await CloudService.instance.shareTask(shareTaskId, visibility, clineMessages)
 
 				if (result.success && result.shareUrl) {
+					// Copy the share URL to clipboard
+					await vscode.env.clipboard.writeText(result.shareUrl)
+
 					// Show success notification
 					const messageKey =
 						visibility === "public"

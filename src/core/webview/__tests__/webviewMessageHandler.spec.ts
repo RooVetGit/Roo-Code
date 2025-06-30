@@ -1,12 +1,37 @@
 import type { Mock } from "vitest"
+import * as vscode from "vscode"
 
 // Mock dependencies - must come before imports
 vi.mock("../../../api/providers/fetchers/modelCache")
+vi.mock("@roo-code/cloud", () => ({
+	CloudService: {
+		instance: {
+			shareTask: vi.fn(),
+		},
+	},
+}))
+
+// Mock vscode module
+vi.mock("vscode", () => ({
+	window: {
+		showInformationMessage: vi.fn(),
+		showErrorMessage: vi.fn(),
+	},
+	env: {
+		clipboard: {
+			writeText: vi.fn(),
+		},
+	},
+	workspace: {
+		workspaceFolders: [],
+	},
+}))
 
 import { webviewMessageHandler } from "../webviewMessageHandler"
 import type { ClineProvider } from "../ClineProvider"
 import { getModels } from "../../../api/providers/fetchers/modelCache"
 import type { ModelRecord } from "../../../shared/api"
+import { CloudService } from "@roo-code/cloud"
 
 const mockGetModels = getModels as Mock<typeof getModels>
 
@@ -272,6 +297,141 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			success: false,
 			error: "LiteLLM connection failed",
 			values: { provider: "litellm" },
+		})
+	})
+
+	describe("webviewMessageHandler - shareCurrentTask", () => {
+		const mockShareClineProvider = {
+			getCurrentCline: vi.fn(),
+			postMessageToWebview: vi.fn(),
+			log: vi.fn(),
+		} as unknown as ClineProvider
+
+		beforeEach(() => {
+			vi.clearAllMocks()
+		})
+
+		it("copies share URL to clipboard on successful share", async () => {
+			const mockTaskId = "test-task-id"
+			const mockShareUrl = "https://roo-code.com/share/test-task-id"
+			const mockClineMessages = [{ type: "say", say: "user_feedback", text: "test message" }]
+
+			// Mock getCurrentCline to return a task with ID and messages
+			mockShareClineProvider.getCurrentCline = vi.fn().mockReturnValue({
+				taskId: mockTaskId,
+				clineMessages: mockClineMessages,
+			})
+
+			// Mock CloudService.instance.shareTask to return success
+			vi.mocked(CloudService.instance.shareTask).mockResolvedValue({
+				success: true,
+				shareUrl: mockShareUrl,
+			})
+
+			await webviewMessageHandler(mockShareClineProvider, {
+				type: "shareCurrentTask",
+				visibility: "organization",
+			})
+
+			// Verify clipboard.writeText was called with the share URL
+			expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith(mockShareUrl)
+
+			// Verify success notification was shown
+			expect(vscode.window.showInformationMessage).toHaveBeenCalled()
+
+			// Verify webview message was sent
+			expect(mockShareClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+				type: "shareTaskSuccess",
+				visibility: "organization",
+				text: mockShareUrl,
+			})
+
+			// Verify CloudService.shareTask was called with correct parameters
+			expect(CloudService.instance.shareTask).toHaveBeenCalledWith(mockTaskId, "organization", mockClineMessages)
+		})
+
+		it("does not copy to clipboard when share fails", async () => {
+			const mockTaskId = "test-task-id"
+			const mockClineMessages = [{ type: "say", say: "user_feedback", text: "test message" }]
+
+			// Mock getCurrentCline to return a task with ID and messages
+			mockShareClineProvider.getCurrentCline = vi.fn().mockReturnValue({
+				taskId: mockTaskId,
+				clineMessages: mockClineMessages,
+			})
+
+			// Mock CloudService.instance.shareTask to return failure
+			vi.mocked(CloudService.instance.shareTask).mockResolvedValue({
+				success: false,
+				error: "Authentication failed",
+			})
+
+			await webviewMessageHandler(mockShareClineProvider, {
+				type: "shareCurrentTask",
+				visibility: "public",
+			})
+
+			// Verify clipboard.writeText was NOT called
+			expect(vscode.env.clipboard.writeText).not.toHaveBeenCalled()
+
+			// Verify error notification was shown
+			expect(vscode.window.showErrorMessage).toHaveBeenCalled()
+
+			// Verify no success webview message was sent
+			expect(mockShareClineProvider.postMessageToWebview).not.toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "shareTaskSuccess",
+				}),
+			)
+		})
+
+		it("shows error when no active task", async () => {
+			// Mock getCurrentCline to return null (no active task)
+			mockShareClineProvider.getCurrentCline = vi.fn().mockReturnValue(null)
+
+			await webviewMessageHandler(mockShareClineProvider, {
+				type: "shareCurrentTask",
+				visibility: "organization",
+			})
+
+			// Verify clipboard.writeText was NOT called
+			expect(vscode.env.clipboard.writeText).not.toHaveBeenCalled()
+
+			// Verify error notification was shown
+			expect(vscode.window.showErrorMessage).toHaveBeenCalled()
+
+			// Verify CloudService.shareTask was NOT called
+			expect(CloudService.instance.shareTask).not.toHaveBeenCalled()
+		})
+
+		it("handles CloudService exceptions gracefully", async () => {
+			const mockTaskId = "test-task-id"
+			const mockClineMessages = [{ type: "say", say: "user_feedback", text: "test message" }]
+
+			// Mock getCurrentCline to return a task with ID and messages
+			mockShareClineProvider.getCurrentCline = vi.fn().mockReturnValue({
+				taskId: mockTaskId,
+				clineMessages: mockClineMessages,
+			})
+
+			// Mock CloudService.instance.shareTask to throw an exception
+			vi.mocked(CloudService.instance.shareTask).mockRejectedValue(new Error("Network error"))
+
+			await webviewMessageHandler(mockShareClineProvider, {
+				type: "shareCurrentTask",
+				visibility: "organization",
+			})
+
+			// Verify clipboard.writeText was NOT called
+			expect(vscode.env.clipboard.writeText).not.toHaveBeenCalled()
+
+			// Verify error notification was shown
+			expect(vscode.window.showErrorMessage).toHaveBeenCalled()
+
+			// Verify error was logged
+			expect(mockShareClineProvider.log).toHaveBeenCalledWith(
+				expect.stringContaining("[shareCurrentTask] Unexpected error:"),
+			)
 		})
 	})
 
