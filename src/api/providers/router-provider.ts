@@ -9,7 +9,6 @@ import { getModels } from "./fetchers/modelCache"
 
 import { DEFAULT_HEADERS } from "./constants"
 
-
 type RouterProviderOptions = {
 	name: RouterName
 	baseURL: string
@@ -50,9 +49,9 @@ export abstract class RouterProvider extends BaseProvider {
 			baseURL,
 			apiKey,
 			defaultHeaders: {
+				...DEFAULT_HEADERS,
 				...(options.openAiHeaders || {}),
-				...DEFAULT_HEADERS
-			}
+			},
 		})
 	}
 
