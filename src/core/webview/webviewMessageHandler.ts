@@ -1485,8 +1485,44 @@ export const webviewMessageHandler = async (
 			break
 		case "deleteCustomMode":
 			if (message.slug) {
+				// Get the mode details to determine source and name
+				const customModes = await provider.customModesManager.getCustomModes()
+				const modeToDelete = customModes.find((mode) => mode.slug === message.slug)
+
+				if (!modeToDelete) {
+					vscode.window.showErrorMessage(t("common:customModes.errors.modeNotFound"))
+					break
+				}
+
+				// Check if rules folder exists
+				const workspacePath = getWorkspacePath()
+				let hasRulesFolder = false
+
+				if (workspacePath) {
+					const rulesFolderPath = path.join(workspacePath, ".roo", `rules-${message.slug}`)
+					try {
+						hasRulesFolder = await fileExistsAtPath(rulesFolderPath)
+					} catch (error) {
+						// If we can't check the folder, fall back to standard confirmation
+						hasRulesFolder = false
+					}
+				}
+
+				// Show appropriate confirmation dialog
+				let confirmationMessage: string
+				if (hasRulesFolder) {
+					const sourceText = modeToDelete.source === "project" ? "PROJECT" : "GLOBAL"
+					confirmationMessage = t("common:confirmation.delete_custom_mode_with_rules", {
+						source: sourceText,
+						modeName: modeToDelete.name,
+						slug: message.slug,
+					})
+				} else {
+					confirmationMessage = t("common:confirmation.delete_custom_mode")
+				}
+
 				const answer = await vscode.window.showInformationMessage(
-					t("common:confirmation.delete_custom_mode"),
+					confirmationMessage,
 					{ modal: true },
 					t("common:answers.yes"),
 				)

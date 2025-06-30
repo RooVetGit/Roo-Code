@@ -2,11 +2,33 @@ import type { Mock } from "vitest"
 
 // Mock dependencies - must come before imports
 vi.mock("../../../api/providers/fetchers/modelCache")
+vi.mock("../../../utils/fs")
+vi.mock("../../../utils/path")
+vi.mock("../../../i18n", () => ({
+	t: vi.fn((key: string) => key), // Return the key as-is for testing
+}))
+vi.mock("vscode", () => ({
+	window: {
+		showInformationMessage: vi.fn(),
+		showErrorMessage: vi.fn(),
+	},
+	workspace: {
+		workspaceFolders: [],
+	},
+}))
 
 import { webviewMessageHandler } from "../webviewMessageHandler"
 import type { ClineProvider } from "../ClineProvider"
 import { getModels } from "../../../api/providers/fetchers/modelCache"
 import type { ModelRecord } from "../../../shared/api"
+import { fileExistsAtPath } from "../../../utils/fs"
+import { getWorkspacePath } from "../../../utils/path"
+import * as vscode from "vscode"
+
+const mockFileExistsAtPath = fileExistsAtPath as Mock<typeof fileExistsAtPath>
+const mockGetWorkspacePath = getWorkspacePath as Mock<typeof getWorkspacePath>
+const mockShowInformationMessage = vscode.window.showInformationMessage as Mock
+const mockShowErrorMessage = vscode.window.showErrorMessage as Mock
 
 const mockGetModels = getModels as Mock<typeof getModels>
 
@@ -272,6 +294,199 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			success: false,
 			error: "LiteLLM connection failed",
 			values: { provider: "litellm" },
+		})
+	})
+
+	describe("webviewMessageHandler - deleteCustomMode", () => {
+		const mockCustomModesManager = {
+			getCustomModes: vi.fn(),
+			deleteCustomMode: vi.fn(),
+		}
+
+		const mockContextProxy = {
+			setValue: vi.fn(),
+		}
+
+		const mockProvider = {
+			...mockClineProvider,
+			customModesManager: mockCustomModesManager,
+			contextProxy: mockContextProxy,
+			postStateToWebview: vi.fn(),
+		} as unknown as ClineProvider
+
+		beforeEach(() => {
+			vi.clearAllMocks()
+			mockGetWorkspacePath.mockReturnValue("/test/workspace")
+		})
+
+		it("shows enhanced warning when rules folder exists", async () => {
+			const testMode = {
+				slug: "test-mode",
+				name: "Test Mode",
+				source: "project" as const,
+			}
+
+			mockCustomModesManager.getCustomModes.mockResolvedValue([testMode])
+			mockFileExistsAtPath.mockResolvedValue(true)
+			mockShowInformationMessage.mockResolvedValue("common:answers.yes")
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "test-mode",
+			})
+
+			// Verify rules folder check was performed
+			expect(mockFileExistsAtPath).toHaveBeenCalledWith("/test/workspace/.roo/rules-test-mode")
+
+			// Verify enhanced warning message was shown
+			expect(mockShowInformationMessage).toHaveBeenCalledWith(
+				"common:confirmation.delete_custom_mode_with_rules",
+				{ modal: true },
+				"common:answers.yes",
+			)
+
+			// Verify deletion proceeded
+			expect(mockCustomModesManager.deleteCustomMode).toHaveBeenCalledWith("test-mode")
+		})
+
+		it("shows standard warning when rules folder does not exist", async () => {
+			const testMode = {
+				slug: "test-mode",
+				name: "Test Mode",
+				source: "global" as const,
+			}
+
+			mockCustomModesManager.getCustomModes.mockResolvedValue([testMode])
+			mockFileExistsAtPath.mockResolvedValue(false)
+			mockShowInformationMessage.mockResolvedValue("common:answers.yes")
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "test-mode",
+			})
+
+			// Verify standard warning message was shown
+			expect(mockShowInformationMessage).toHaveBeenCalledWith(
+				"common:confirmation.delete_custom_mode",
+				{ modal: true },
+				"common:answers.yes",
+			)
+
+			// Verify deletion proceeded
+			expect(mockCustomModesManager.deleteCustomMode).toHaveBeenCalledWith("test-mode")
+		})
+
+		it("shows standard warning when workspace path is not available", async () => {
+			const testMode = {
+				slug: "test-mode",
+				name: "Test Mode",
+				source: "project" as const,
+			}
+
+			mockCustomModesManager.getCustomModes.mockResolvedValue([testMode])
+			mockGetWorkspacePath.mockReturnValue("")
+			mockShowInformationMessage.mockResolvedValue("common:answers.yes")
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "test-mode",
+			})
+
+			// Verify file check was not performed
+			expect(mockFileExistsAtPath).not.toHaveBeenCalled()
+
+			// Verify standard warning message was shown
+			expect(mockShowInformationMessage).toHaveBeenCalledWith(
+				"common:confirmation.delete_custom_mode",
+				{ modal: true },
+				"common:answers.yes",
+			)
+		})
+
+		it("shows standard warning when file check fails", async () => {
+			const testMode = {
+				slug: "test-mode",
+				name: "Test Mode",
+				source: "project" as const,
+			}
+
+			mockCustomModesManager.getCustomModes.mockResolvedValue([testMode])
+			mockFileExistsAtPath.mockRejectedValue(new Error("File system error"))
+			mockShowInformationMessage.mockResolvedValue("common:answers.yes")
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "test-mode",
+			})
+
+			// Verify standard warning message was shown (fallback)
+			expect(mockShowInformationMessage).toHaveBeenCalledWith(
+				"common:confirmation.delete_custom_mode",
+				{ modal: true },
+				"common:answers.yes",
+			)
+
+			// Verify deletion still proceeded
+			expect(mockCustomModesManager.deleteCustomMode).toHaveBeenCalledWith("test-mode")
+		})
+
+		it("does not delete when user cancels", async () => {
+			const testMode = {
+				slug: "test-mode",
+				name: "Test Mode",
+				source: "project" as const,
+			}
+
+			mockCustomModesManager.getCustomModes.mockResolvedValue([testMode])
+			mockFileExistsAtPath.mockResolvedValue(true)
+			mockShowInformationMessage.mockResolvedValue(undefined) // User cancelled
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "test-mode",
+			})
+
+			// Verify deletion was not performed
+			expect(mockCustomModesManager.deleteCustomMode).not.toHaveBeenCalled()
+		})
+
+		it("shows error when mode is not found", async () => {
+			mockCustomModesManager.getCustomModes.mockResolvedValue([])
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "nonexistent-mode",
+			})
+
+			// Verify error message was shown
+			expect(mockShowErrorMessage).toHaveBeenCalledWith("common:customModes.errors.modeNotFound")
+
+			// Verify deletion was not attempted
+			expect(mockCustomModesManager.deleteCustomMode).not.toHaveBeenCalled()
+		})
+
+		it("correctly identifies GLOBAL mode source", async () => {
+			const testMode = {
+				slug: "global-mode",
+				name: "Global Mode",
+				source: "global" as const,
+			}
+
+			mockCustomModesManager.getCustomModes.mockResolvedValue([testMode])
+			mockFileExistsAtPath.mockResolvedValue(true)
+			mockShowInformationMessage.mockResolvedValue("common:answers.yes")
+
+			await webviewMessageHandler(mockProvider, {
+				type: "deleteCustomMode",
+				slug: "global-mode",
+			})
+
+			// Verify enhanced warning message shows GLOBAL
+			expect(mockShowInformationMessage).toHaveBeenCalledWith(
+				"common:confirmation.delete_custom_mode_with_rules",
+				{ modal: true },
+				"common:answers.yes",
+			)
 		})
 	})
 
