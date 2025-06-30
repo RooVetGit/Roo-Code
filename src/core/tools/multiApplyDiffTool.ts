@@ -301,6 +301,10 @@ Original error: ${errorMessage}`
 				operationsToApprove.forEach((opResult) => {
 					updateOperationResult(opResult.path, { status: "approved" })
 				})
+
+				if (cline.enableCheckpoints) {
+					await cline.checkpointSave()
+				}
 			} else if (response === "noButtonClicked") {
 				// Deny all files
 				if (text) {
@@ -321,12 +325,14 @@ Original error: ${errorMessage}`
 					if (parsedResponse.action === "applyDiff" && parsedResponse.approvedFiles) {
 						const approvedFiles = parsedResponse.approvedFiles
 						let hasAnyDenial = false
+						let hasAnyApproval = false
 
 						operationsToApprove.forEach((opResult) => {
 							const approved = approvedFiles[opResult.path] === true
 
 							if (approved) {
 								updateOperationResult(opResult.path, { status: "approved" })
+								hasAnyApproval = true
 							} else {
 								hasAnyDenial = true
 								updateOperationResult(opResult.path, {
@@ -339,10 +345,15 @@ Original error: ${errorMessage}`
 						if (hasAnyDenial) {
 							cline.didRejectTool = true
 						}
+
+						if (hasAnyApproval && cline.enableCheckpoints) {
+							await cline.checkpointSave()
+						}
 					} else {
 						// Legacy individual permissions format
 						const individualPermissions = parsedResponse
 						let hasAnyDenial = false
+						let hasAnyApproval = false
 
 						batchDiffs.forEach((batchDiff, index) => {
 							const opResult = operationsToApprove[index]
@@ -350,6 +361,7 @@ Original error: ${errorMessage}`
 
 							if (approved) {
 								updateOperationResult(opResult.path, { status: "approved" })
+								hasAnyApproval = true
 							} else {
 								hasAnyDenial = true
 								updateOperationResult(opResult.path, {
@@ -361,6 +373,10 @@ Original error: ${errorMessage}`
 
 						if (hasAnyDenial) {
 							cline.didRejectTool = true
+						}
+
+						if (hasAnyApproval && cline.enableCheckpoints) {
+							await cline.checkpointSave()
 						}
 					}
 				} catch (error) {

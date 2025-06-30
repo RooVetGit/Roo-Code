@@ -289,6 +289,17 @@ export async function presentAssistantMessage(cline: Task) {
 					pushToolResult(formatResponse.toolResult(formatResponse.toolApprovedWithFeedback(text), images))
 				}
 
+				// Create checkpoint BEFORE file modifications for file-editing tools (fixes #4827)
+				const isFileEditingTool = [
+					"write_to_file",
+					"apply_diff",
+					"insert_content",
+					"search_and_replace",
+				].includes(block.name)
+				if (isFileEditingTool && cline.enableCheckpoints) {
+					await cline.checkpointSave()
+				}
+
 				return true
 			}
 
@@ -521,13 +532,8 @@ export async function presentAssistantMessage(cline: Task) {
 			break
 	}
 
-	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearCheckpointPossibleFile()
-
-	if (recentlyModifiedFiles.length > 0) {
-		// TODO: We can track what file changes were made and only
-		// checkpoint those files, this will be save storage.
-		await checkpointSave(cline)
-	}
+	// Checkpoints are now created BEFORE file modifications in the askApproval function above
+	// No longer need to create checkpoints after file modifications
 
 	// Seeing out of bounds is fine, it means that the next too call is being
 	// built up and ready to add to assistantMessageContent to present.
