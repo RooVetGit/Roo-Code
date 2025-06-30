@@ -333,16 +333,12 @@ function shouldIncludeRuleFile(filename: string): boolean {
 		"Thumbs.db",
 	]
 
-	for (const pattern of cachePatterns) {
+	return !cachePatterns.some((pattern) => {
 		if (pattern.startsWith("*.")) {
 			const extension = pattern.slice(1)
-			if (basename.endsWith(extension)) {
-				return false
-			}
-		} else if (basename === pattern) {
-			return false
+			return basename.endsWith(extension)
+		} else {
+			return basename === pattern
 		}
-	}
-
-	return true
+	})
 }
