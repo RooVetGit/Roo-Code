@@ -64,6 +64,7 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1, o
 		suggestions,
 		followupAutoApproveTimeoutMs,
 		suggestionSelected,
+		onUnmount,
 	])
 	const handleSuggestionClick = useCallback(
 		(suggestion: string | SuggestionItem, event: React.MouseEvent) => {

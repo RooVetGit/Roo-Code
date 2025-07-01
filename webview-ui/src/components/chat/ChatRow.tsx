@@ -10,7 +10,7 @@ import type { ClineMessage } from "@roo-code/types"
 import { ClineApiReqInfo, ClineAskUseMcpServer, ClineSayTool } from "@roo/ExtensionMessage"
 import { COMMAND_OUTPUT_STRING } from "@roo/combineCommandSequences"
 import { safeJsonParse } from "@roo/safeJsonParse"
-import { FollowUpData, SuggestionItem } from "@roo-code/types"
+import { FollowUpData } from "@roo-code/types"
 
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
