@@ -1,4 +1,5 @@
 import React from "react"
+import { useTranslation } from "react-i18next"
 import { vscode } from "@src/utils/vscode"
 import { StandardTooltip } from "@/components/ui"
 
@@ -12,6 +13,8 @@ interface CodebaseSearchResultProps {
 }
 
 const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({ filePath, score, startLine, endLine }) => {
+	const { t } = useTranslation("chat")
+
 	const handleClick = () => {
 		console.log(filePath)
 		vscode.postMessage({
@@ -24,7 +27,7 @@ const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({ filePath, s
 	}
 
 	return (
-		<StandardTooltip content={`Similarity score: ${score.toFixed(3)} (click to open file)`}>
+		<StandardTooltip content={t("codebaseSearch.resultTooltip", { score: score.toFixed(3) })}>
 			<div
 				onClick={handleClick}
 				className="mb-1 p-2 border border-primary rounded cursor-pointer hover:bg-secondary hover:text-white">
