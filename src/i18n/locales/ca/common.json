@@ -74,6 +74,7 @@
 		"share_auth_required": "Es requereix autenticació. Si us plau, inicia sessió per compartir tasques.",
 		"share_not_enabled": "La compartició de tasques no està habilitada per a aquesta organització.",
 		"share_task_not_found": "Tasca no trobada o accés denegat.",
+		"delete_rules_folder_failed": "Error en eliminar la carpeta de regles: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "El procés Claude Code ha sortit amb codi {{exitCode}}.",
 			"errorOutput": "Sortida d'error: {{output}}",

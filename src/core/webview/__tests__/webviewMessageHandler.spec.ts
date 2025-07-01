@@ -466,6 +466,13 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 
 		expect(mockClineProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
 		expect(fs.rm).toHaveBeenCalledWith(rulesFolderPath, { recursive: true, force: true })
+		// Verify error message is shown to the user
+		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+			t("common:errors.delete_rules_folder_failed", {
+				rulesFolderPath,
+				error: error.message,
+			}),
+		)
 		// No error response is sent anymore - we just continue with deletion
 		expect(mockClineProvider.postMessageToWebview).not.toHaveBeenCalled()
 	})

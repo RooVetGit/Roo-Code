@@ -71,6 +71,7 @@
 		"share_not_enabled": "Aufgabenfreigabe ist für diese Organisation nicht aktiviert.",
 		"share_task_not_found": "Aufgabe nicht gefunden oder Zugriff verweigert.",
 		"mode_import_failed": "Fehler beim Importieren des Modus: {{error}}",
+		"delete_rules_folder_failed": "Fehler beim Löschen des Regelordners: {{rulesFolderPath}}. Fehler: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code Prozess wurde mit Code {{exitCode}} beendet.",
 			"errorOutput": "Fehlerausgabe: {{output}}",

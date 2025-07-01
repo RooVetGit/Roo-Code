@@ -1546,6 +1546,13 @@ export const webviewMessageHandler = async (
 						provider.log(`Deleted rules folder for mode ${message.slug}: ${rulesFolderPath}`)
 					} catch (error) {
 						provider.log(`Failed to delete rules folder for mode ${message.slug}: ${error}`)
+						// Notify the user about the failure
+						vscode.window.showErrorMessage(
+							t("common:errors.delete_rules_folder_failed", {
+								rulesFolderPath,
+								error: error instanceof Error ? error.message : String(error),
+							}),
+						)
 						// Continue with mode deletion even if folder deletion fails
 					}
 				}

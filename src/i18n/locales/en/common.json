@@ -71,6 +71,7 @@
 		"share_not_enabled": "Task sharing is not enabled for this organization.",
 		"share_task_not_found": "Task not found or access denied.",
 		"mode_import_failed": "Failed to import mode: {{error}}",
+		"delete_rules_folder_failed": "Failed to delete rules folder: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code process exited with code {{exitCode}}.",
 			"errorOutput": "Error output: {{output}}",

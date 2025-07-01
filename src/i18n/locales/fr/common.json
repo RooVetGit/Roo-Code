@@ -71,6 +71,7 @@
 		"share_not_enabled": "Le partage de tâches n'est pas activé pour cette organisation.",
 		"share_task_not_found": "Tâche non trouvée ou accès refusé.",
 		"mode_import_failed": "Échec de l'importation du mode : {{error}}",
+		"delete_rules_folder_failed": "Échec de la suppression du dossier de règles : {{rulesFolderPath}}. Erreur : {{error}}",
 		"claudeCode": {
 			"processExited": "Le processus Claude Code s'est terminé avec le code {{exitCode}}.",
 			"errorOutput": "Sortie d'erreur : {{output}}",

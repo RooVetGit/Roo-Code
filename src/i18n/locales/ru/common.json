@@ -71,6 +71,7 @@
 		"share_not_enabled": "Совместный доступ к задачам не включен для этой организации.",
 		"share_task_not_found": "Задача не найдена или доступ запрещен.",
 		"mode_import_failed": "Не удалось импортировать режим: {{error}}",
+		"delete_rules_folder_failed": "Не удалось удалить папку правил: {{rulesFolderPath}}. Ошибка: {{error}}",
 		"claudeCode": {
 			"processExited": "Процесс Claude Code завершился с кодом {{exitCode}}.",
 			"errorOutput": "Вывод ошибки: {{output}}",

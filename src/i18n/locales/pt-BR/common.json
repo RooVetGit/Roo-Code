@@ -75,6 +75,7 @@
 		"share_not_enabled": "O compartilhamento de tarefas não está habilitado para esta organização.",
 		"share_task_not_found": "Tarefa não encontrada ou acesso negado.",
 		"mode_import_failed": "Falha ao importar o modo: {{error}}",
+		"delete_rules_folder_failed": "Falha ao excluir pasta de regras: {{rulesFolderPath}}. Erro: {{error}}",
 		"claudeCode": {
 			"processExited": "O processo Claude Code saiu com código {{exitCode}}.",
 			"errorOutput": "Saída de erro: {{output}}",

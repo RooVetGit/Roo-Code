@@ -71,6 +71,7 @@
 		"share_not_enabled": "Taken delen is niet ingeschakeld voor deze organisatie.",
 		"share_task_not_found": "Taak niet gevonden of toegang geweigerd.",
 		"mode_import_failed": "Importeren van modus mislukt: {{error}}",
+		"delete_rules_folder_failed": "Kan regelmap niet verwijderen: {{rulesFolderPath}}. Fout: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code proces beëindigd met code {{exitCode}}.",
 			"errorOutput": "Foutuitvoer: {{output}}",

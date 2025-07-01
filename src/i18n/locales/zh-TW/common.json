@@ -70,6 +70,7 @@
 		"share_auth_required": "需要身份驗證。請登入以分享工作。",
 		"share_not_enabled": "此組織未啟用工作分享功能。",
 		"share_task_not_found": "未找到工作或存取被拒絕。",
+		"delete_rules_folder_failed": "刪除規則資料夾失敗: {{rulesFolderPath}}。錯誤: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code 程序退出，退出碼：{{exitCode}}。",
 			"errorOutput": "錯誤輸出：{{output}}",

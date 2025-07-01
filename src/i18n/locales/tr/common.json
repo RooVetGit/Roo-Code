@@ -71,6 +71,7 @@
 		"share_not_enabled": "Bu kuruluş için görev paylaşımı etkinleştirilmemiş.",
 		"share_task_not_found": "Görev bulunamadı veya erişim reddedildi.",
 		"mode_import_failed": "Mod içe aktarılamadı: {{error}}",
+		"delete_rules_folder_failed": "Kurallar klasörü silinemedi: {{rulesFolderPath}}. Hata: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code işlemi {{exitCode}} koduyla çıktı.",
 			"errorOutput": "Hata çıktısı: {{output}}",

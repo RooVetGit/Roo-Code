@@ -71,6 +71,7 @@
 		"share_not_enabled": "Berbagi tugas tidak diaktifkan untuk organisasi ini.",
 		"share_task_not_found": "Tugas tidak ditemukan atau akses ditolak.",
 		"mode_import_failed": "Gagal mengimpor mode: {{error}}",
+		"delete_rules_folder_failed": "Gagal menghapus folder aturan: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "Proses Claude Code keluar dengan kode {{exitCode}}.",
 			"errorOutput": "Output error: {{output}}",

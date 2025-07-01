@@ -71,6 +71,7 @@
 		"share_not_enabled": "La compartición de tareas no está habilitada para esta organización.",
 		"share_task_not_found": "Tarea no encontrada o acceso denegado.",
 		"mode_import_failed": "Error al importar el modo: {{error}}",
+		"delete_rules_folder_failed": "Error al eliminar la carpeta de reglas: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "El proceso de Claude Code terminó con código {{exitCode}}.",
 			"errorOutput": "Salida de error: {{output}}",
