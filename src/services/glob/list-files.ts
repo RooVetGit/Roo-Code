@@ -23,129 +23,108 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 		return specialResult
 	}
 
+	// Get ripgrep path
+	const rgPath = await getRipgrepPath()
+
 	if (!recursive) {
 		// For non-recursive, use the existing approach
-		const rgPath = await getRipgrepPath()
 		const files = await listFilesWithRipgrep(rgPath, dirPath, false, limit)
 		const gitignorePatterns = await parseGitignoreFile(dirPath, false)
 		const directories = await listFilteredDirectories(dirPath, false, gitignorePatterns)
 		return formatAndCombineResults(files, directories, limit)
 	}
 
-	// For recursive mode, use breadth-first approach
+	// For recursive mode, use the original approach but ensure first-level directories are included
+	const files = await listFilesWithRipgrep(rgPath, dirPath, true, limit)
 	const gitignorePatterns = await parseGitignoreFile(dirPath, true)
-	const results = await listFilesBreadthFirst(dirPath, gitignorePatterns, limit)
-	return results
+	const directories = await listFilteredDirectories(dirPath, true, gitignorePatterns)
+
+	// Combine and check if we hit the limit
+	const [results, limitReached] = formatAndCombineResults(files, directories, limit)
+
+	// If we hit the limit, ensure all first-level directories are included
+	if (limitReached) {
+		const firstLevelDirs = await getFirstLevelDirectories(dirPath, gitignorePatterns)
+		return ensureFirstLevelDirectoriesIncluded(results, firstLevelDirs, limit)
+	}
+
+	return [results, limitReached]
 }
 
 /**
- * List files using a breadth-first approach to ensure first-level directories are always included
- *
- * @param dirPath - Directory path to list files from
- * @param gitignorePatterns - Patterns from .gitignore to respect
- * @param limit - Maximum number of files to return
- * @returns Tuple of [file paths array, whether the limit was reached]
+ * Get only the first-level directories in a path
  */
-async function listFilesBreadthFirst(
-	dirPath: string,
-	gitignorePatterns: string[],
-	limit: number,
-): Promise<[string[], boolean]> {
+async function getFirstLevelDirectories(dirPath: string, gitignorePatterns: string[]): Promise<string[]> {
 	const absolutePath = path.resolve(dirPath)
-	const results: string[] = []
-	const processedDirs = new Set<string>()
+	const directories: string[] = []
 
-	// Queue for breadth-first traversal: [directory, depth]
-	const queue: [string, number][] = [[absolutePath, 0]]
+	try {
+		const entries = await fs.promises.readdir(absolutePath, { withFileTypes: true })
 
-	// Get ripgrep path once
-	const rgPath = await getRipgrepPath()
-
-	while (queue.length > 0 && results.length < limit) {
-		const [currentDir, depth] = queue.shift()!
-
-		// Skip if already processed
-		if (processedDirs.has(currentDir)) {
-			continue
-		}
-		processedDirs.add(currentDir)
-
-		try {
-			// Get all entries in current directory (non-recursive)
-			const entries = await fs.promises.readdir(currentDir, { withFileTypes: true })
-
-			// Separate directories and files
-			const directories: string[] = []
-			const files: string[] = []
-
-			for (const entry of entries) {
-				if (results.length >= limit) break
-
-				const entryPath = path.join(currentDir, entry.name)
-
-				if (entry.isDirectory() && !entry.isSymbolicLink()) {
-					// Check if directory should be included
-					if (shouldIncludeDirectory(entry.name, true, gitignorePatterns)) {
-						const formattedPath = entryPath.endsWith("/") ? entryPath : `${entryPath}/`
-						directories.push(formattedPath)
-
-						// Add to queue for further processing if not explicitly ignored
-						if (!isDirectoryExplicitlyIgnored(entry.name)) {
-							queue.push([entryPath, depth + 1])
-						}
-					}
-				} else if (entry.isFile()) {
-					// For files, we'll use ripgrep to check if they should be included
-					files.push(entryPath)
+		for (const entry of entries) {
+			if (entry.isDirectory() && !entry.isSymbolicLink()) {
+				if (shouldIncludeDirectory(entry.name, true, gitignorePatterns)) {
+					const fullDirPath = path.join(absolutePath, entry.name)
+					const formattedPath = fullDirPath.endsWith("/") ? fullDirPath : `${fullDirPath}/`
+					directories.push(formattedPath)
 				}
 			}
-
-			// Add directories first (breadth-first principle)
-			for (const dir of directories) {
-				if (results.length >= limit) break
-				results.push(dir)
-			}
-
-			// Use ripgrep to filter files (respects .gitignore automatically)
-			if (files.length > 0 && results.length < limit) {
-				const remainingLimit = limit - results.length
-				const filteredFiles = await filterFilesWithRipgrep(rgPath, currentDir, files, remainingLimit)
-				results.push(...filteredFiles)
-			}
-		} catch (err) {
-			console.warn(`Could not read directory ${currentDir}: ${err}`)
 		}
+	} catch (err) {
+		console.warn(`Could not read directory ${absolutePath}: ${err}`)
 	}
 
-	return [results.slice(0, limit), results.length >= limit]
+	return directories
 }
 
 /**
- * Filter files using ripgrep to respect .gitignore and other rules
+ * Ensure all first-level directories are included in the results
  */
-async function filterFilesWithRipgrep(
-	rgPath: string,
-	dirPath: string,
-	files: string[],
+function ensureFirstLevelDirectoriesIncluded(
+	results: string[],
+	firstLevelDirs: string[],
 	limit: number,
-): Promise<string[]> {
-	// Get all files in the directory using ripgrep (non-recursive)
-	const rgFiles = await listFilesWithRipgrep(rgPath, dirPath, false, limit + files.length)
+): [string[], boolean] {
+	// Create a set of existing paths for quick lookup
+	const existingPaths = new Set(results)
 
-	// Create a set of ripgrep-approved files for quick lookup
-	const rgFileSet = new Set(rgFiles.map((f) => path.resolve(f)))
+	// Find missing first-level directories
+	const missingDirs = firstLevelDirs.filter((dir) => !existingPaths.has(dir))
 
-	// Filter our files to only include those approved by ripgrep
-	const filtered: string[] = []
-	for (const file of files) {
-		if (filtered.length >= limit) break
-		const resolvedFile = path.resolve(file)
-		if (rgFileSet.has(resolvedFile)) {
-			filtered.push(file)
+	if (missingDirs.length === 0) {
+		// All first-level directories are already included
+		return [results, true]
+	}
+
+	// We need to make room for the missing directories
+	// Remove items from the end (which are likely deeper in the tree)
+	const itemsToRemove = Math.min(missingDirs.length, results.length)
+	const adjustedResults = results.slice(0, results.length - itemsToRemove)
+
+	// Add the missing directories at the beginning (after any existing first-level dirs)
+	// First, separate existing results into first-level and others
+	const resultPaths = adjustedResults.map((r) => path.resolve(r))
+	const basePath = path.resolve(firstLevelDirs[0]).split(path.sep).slice(0, -1).join(path.sep)
+
+	const firstLevelResults: string[] = []
+	const otherResults: string[] = []
+
+	for (let i = 0; i < adjustedResults.length; i++) {
+		const resolvedPath = resultPaths[i]
+		const relativePath = path.relative(basePath, resolvedPath)
+		const depth = relativePath.split(path.sep).length
+
+		if (depth === 1) {
+			firstLevelResults.push(adjustedResults[i])
+		} else {
+			otherResults.push(adjustedResults[i])
 		}
 	}
 
-	return filtered
+	// Combine: existing first-level dirs + missing first-level dirs + other results
+	const finalResults = [...firstLevelResults, ...missingDirs, ...otherResults].slice(0, limit)
+
+	return [finalResults, true]
 }
 
 /**
