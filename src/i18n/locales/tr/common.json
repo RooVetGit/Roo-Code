@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Uzantıdaki tüm durumları ve gizli depolamayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
 		"delete_config_profile": "Bu yapılandırma profilini silmek istediğinizden emin misiniz?",
-		"delete_custom_mode": "Bu özel modu silmek istediğinizden emin misiniz?",
+		"delete_custom_mode_with_rules": "Bu {scope} modunu silmek istediğinizden emin misiniz?\n\nBu işlem, ilişkili kurallar klasörünü de şu konumdan silecektir:\n{rulesFolderPath}",
 		"delete_message": "Neyi silmek istersiniz?",
 		"just_this_message": "Sadece bu mesajı",
 		"this_and_subsequent": "Bu ve sonraki tüm mesajları"
@@ -144,6 +144,10 @@
 			"resetFailed": "Özel modları sıfırlama başarısız: {{error}}",
 			"modeNotFound": "Yazma hatası: Mod bulunamadı",
 			"noWorkspaceForProject": "Proje özel modu için çalışma alanı klasörü bulunamadı"
+		},
+		"scope": {
+			"project": "proje",
+			"global": "küresel"
 		}
 	},
 	"mdm": {
@@ -151,6 +155,15 @@
 			"cloud_auth_required": "Kuruluşunuz Roo Code Cloud kimlik doğrulaması gerektiriyor. Devam etmek için giriş yapın.",
 			"organization_mismatch": "Kuruluşunuzun Roo Code Cloud hesabıyla kimlik doğrulaması yapmalısınız.",
 			"verification_failed": "Kuruluş kimlik doğrulaması doğrulanamıyor."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "Özel Modu Sil",
+			"description": "Bu {{scope}} modunu silmek istediğinizden emin misiniz? Bu, {{rulesFolderPath}} adresindeki ilişkili kurallar klasörünü de silecektir",
+			"descriptionNoRules": "Bu özel modu silmek istediğinizden emin misiniz?",
+			"cancel": "İptal",
+			"confirm": "Sil"
 		}
 	}
 }

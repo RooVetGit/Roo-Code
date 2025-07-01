@@ -46,6 +46,14 @@ import {
 	CommandGroup,
 	Input,
 	StandardTooltip,
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
 } from "@src/components/ui"
 
 // Get all available groups that should show in prompts view
@@ -96,6 +104,13 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	const [isImporting, setIsImporting] = useState(false)
 	const [showImportDialog, setShowImportDialog] = useState(false)
 	const [hasRulesToExport, setHasRulesToExport] = useState<Record<string, boolean>>({})
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+	const [modeToDelete, setModeToDelete] = useState<{
+		slug: string
+		name: string
+		source?: string
+		rulesFolderPath?: string
+	} | null>(null)
 
 	// State for mode selection popover and search
 	const [open, setOpen] = useState(false)
@@ -439,6 +454,15 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					...prev,
 					[message.slug]: message.hasContent,
 				}))
+			} else if (message.type === "deleteCustomModeCheck") {
+				// Handle the check response
+				if (message.slug && modeToDelete && modeToDelete.slug === message.slug) {
+					setModeToDelete({
+						...modeToDelete,
+						rulesFolderPath: message.rulesFolderPath,
+					})
+					setShowDeleteConfirm(true)
+				}
 			}
 		}
 
@@ -699,10 +723,20 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 											variant="ghost"
 											size="icon"
 											onClick={() => {
-												vscode.postMessage({
-													type: "deleteCustomMode",
-													slug: visualMode,
-												})
+												const customMode = findModeBySlug(visualMode, customModes)
+												if (customMode) {
+													setModeToDelete({
+														slug: customMode.slug,
+														name: customMode.name,
+														source: customMode.source || "global",
+													})
+													// First check if rules folder exists
+													vscode.postMessage({
+														type: "deleteCustomMode",
+														slug: customMode.slug,
+														checkOnly: true,
+													})
+												}
 											}}>
 											<span className="codicon codicon-trash"></span>
 										</Button>
@@ -1541,6 +1575,45 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					</div>
 				</div>
 			)}
+
+			{/* Delete Mode Confirmation Dialog */}
+			<AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>{t("prompts:deleteMode.title")}</AlertDialogTitle>
+						<AlertDialogDescription>
+							{modeToDelete && (
+								<>
+									{t("prompts:deleteMode.message", { modeName: modeToDelete.name })}
+									{modeToDelete.rulesFolderPath && (
+										<div className="mt-2">
+											{t("prompts:deleteMode.rulesFolder", {
+												folderPath: modeToDelete.rulesFolderPath,
+											})}
+										</div>
+									)}
+								</>
+							)}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>{t("prompts:deleteMode.cancel")}</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (modeToDelete) {
+									vscode.postMessage({
+										type: "deleteCustomMode",
+										slug: modeToDelete.slug,
+									})
+									setShowDeleteConfirm(false)
+									setModeToDelete(null)
+								}
+							}}>
+							{t("prompts:deleteMode.confirm")}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Tab>
 	)
 }

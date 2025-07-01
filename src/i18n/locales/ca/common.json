@@ -21,7 +21,7 @@
 	"confirmation": {
 		"reset_state": "Estàs segur que vols restablir tots els estats i emmagatzematge secret a l'extensió? Això no es pot desfer.",
 		"delete_config_profile": "Estàs segur que vols eliminar aquest perfil de configuració?",
-		"delete_custom_mode": "Estàs segur que vols eliminar aquest mode personalitzat?",
+		"delete_custom_mode_with_rules": "Esteu segur que voleu suprimir aquest mode {scope}?\n\nAixò també suprimirà la carpeta de regles associada a:\n{rulesFolderPath}",
 		"delete_message": "Què vols eliminar?",
 		"just_this_message": "Només aquest missatge",
 		"this_and_subsequent": "Aquest i tots els missatges posteriors"
@@ -144,6 +144,10 @@
 			"resetFailed": "Error en restablir els modes personalitzats: {{error}}",
 			"modeNotFound": "Error d'escriptura: Mode no trobat",
 			"noWorkspaceForProject": "No s'ha trobat cap carpeta d'espai de treball per al mode específic del projecte"
+		},
+		"scope": {
+			"project": "projecte",
+			"global": "global"
 		}
 	},
 	"mdm": {
@@ -151,6 +155,15 @@
 			"cloud_auth_required": "La teva organització requereix autenticació de Roo Code Cloud. Si us plau, inicia sessió per continuar.",
 			"organization_mismatch": "Has d'estar autenticat amb el compte de Roo Code Cloud de la teva organització.",
 			"verification_failed": "No s'ha pogut verificar l'autenticació de l'organització."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "Suprimeix el mode personalitzat",
+			"description": "Esteu segur que voleu suprimir aquest mode {{scope}}? Això també suprimirà la carpeta de regles associada a: {{rulesFolderPath}}",
+			"descriptionNoRules": "Esteu segur que voleu suprimir aquest mode personalitzat?",
+			"cancel": "Cancel·la",
+			"confirm": "Suprimeix"
 		}
 	}
 }

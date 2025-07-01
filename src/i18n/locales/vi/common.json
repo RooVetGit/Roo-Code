@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Bạn có chắc chắn muốn đặt lại tất cả trạng thái và lưu trữ bí mật trong tiện ích mở rộng không? Hành động này không thể hoàn tác.",
 		"delete_config_profile": "Bạn có chắc chắn muốn xóa hồ sơ cấu hình này không?",
-		"delete_custom_mode": "Bạn có chắc chắn muốn xóa chế độ tùy chỉnh này không?",
+		"delete_custom_mode_with_rules": "Bạn có chắc chắn muốn xóa chế độ {scope} này không?\n\nThao tác này cũng θα xóa thư mục quy tắc liên quan tại {{rulesFolderPath}}",
 		"delete_message": "Bạn muốn xóa gì?",
 		"just_this_message": "Chỉ tin nhắn này",
 		"this_and_subsequent": "Tin nhắn này và tất cả tin nhắn tiếp theo"
@@ -144,6 +144,10 @@
 			"resetFailed": "Đặt lại chế độ tùy chỉnh thất bại: {{error}}",
 			"modeNotFound": "Lỗi ghi: Không tìm thấy chế độ",
 			"noWorkspaceForProject": "Không tìm thấy thư mục workspace cho chế độ dành riêng cho dự án"
+		},
+		"scope": {
+			"project": "dự án",
+			"global": "toàn cầu"
 		}
 	},
 	"mdm": {
@@ -151,6 +155,15 @@
 			"cloud_auth_required": "Tổ chức của bạn yêu cầu xác thực Roo Code Cloud. Vui lòng đăng nhập để tiếp tục.",
 			"organization_mismatch": "Bạn phải được xác thực bằng tài khoản Roo Code Cloud của tổ chức.",
 			"verification_failed": "Không thể xác minh xác thực tổ chức."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "Xóa chế độ tùy chỉnh",
+			"description": "Bạn có chắc chắn muốn xóa chế độ {{scope}} này không? Thao tác này cũng θα xóa thư mục quy tắc liên quan tại {{rulesFolderPath}}",
+			"descriptionNoRules": "Bạn có chắc chắn muốn xóa chế độ tùy chỉnh này không?",
+			"cancel": "Hủy",
+			"confirm": "Xóa"
 		}
 	}
 }
