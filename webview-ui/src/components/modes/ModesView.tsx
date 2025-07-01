@@ -46,15 +46,8 @@ import {
 	CommandGroup,
 	Input,
 	StandardTooltip,
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
 } from "@src/components/ui"
+import { DeleteModeDialog } from "@src/components/modes/DeleteModeDialog"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -1577,43 +1570,21 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			)}
 
 			{/* Delete Mode Confirmation Dialog */}
-			<AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>{t("prompts:deleteMode.title")}</AlertDialogTitle>
-						<AlertDialogDescription>
-							{modeToDelete && (
-								<>
-									{t("prompts:deleteMode.message", { modeName: modeToDelete.name })}
-									{modeToDelete.rulesFolderPath && (
-										<div className="mt-2">
-											{t("prompts:deleteMode.rulesFolder", {
-												folderPath: modeToDelete.rulesFolderPath,
-											})}
-										</div>
-									)}
-								</>
-							)}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{t("prompts:deleteMode.cancel")}</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => {
-								if (modeToDelete) {
-									vscode.postMessage({
-										type: "deleteCustomMode",
-										slug: modeToDelete.slug,
-									})
-									setShowDeleteConfirm(false)
-									setModeToDelete(null)
-								}
-							}}>
-							{t("prompts:deleteMode.confirm")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteModeDialog
+				open={showDeleteConfirm}
+				onOpenChange={setShowDeleteConfirm}
+				modeToDelete={modeToDelete}
+				onConfirm={() => {
+					if (modeToDelete) {
+						vscode.postMessage({
+							type: "deleteCustomMode",
+							slug: modeToDelete.slug,
+						})
+						setShowDeleteConfirm(false)
+						setModeToDelete(null)
+					}
+				}}
+			/>
 		</Tab>
 	)
 }
