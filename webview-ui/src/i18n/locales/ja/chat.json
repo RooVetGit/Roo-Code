@@ -234,7 +234,9 @@
 		"tokens": "トークン"
 	},
 	"followUpSuggest": {
-		"copyToInput": "入力欄にコピー（またはShift + クリック）"
+		"copyToInput": "入力欄にコピー（またはShift + クリック）",
+		"autoSelectCountdown": "{{count}}秒後に自動選択します",
+		"countdownDisplay": "{{count}}秒"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} リリース",
@@ -294,7 +296,8 @@
 	"codebaseSearch": {
 		"wantsToSearch": "Rooはコードベースで <code>{{query}}</code> を検索したい:",
 		"wantsToSearchWithPath": "Rooは <code>{{path}}</code> 内のコードベースで <code>{{query}}</code> を検索したい:",
-		"didSearch": "<code>{{query}}</code> の検索結果: {{count}} 件"
+		"didSearch": "<code>{{query}}</code> の検索結果: {{count}} 件",
+		"resultTooltip": "類似度スコア: {{score}} (クリックしてファイルを開く)"
 	},
 	"read-batch": {
 		"approve": {

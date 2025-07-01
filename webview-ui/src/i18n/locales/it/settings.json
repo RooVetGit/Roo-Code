@@ -56,6 +56,10 @@
 		"ollamaUrlLabel": "URL Ollama:",
 		"qdrantUrlLabel": "URL Qdrant",
 		"qdrantKeyLabel": "Chiave Qdrant:",
+		"advancedConfigLabel": "Configurazione avanzata",
+		"searchMinScoreLabel": "Soglia punteggio di ricerca",
+		"searchMinScoreDescription": "Punteggio minimo di somiglianza (0.0-1.0) richiesto per i risultati della ricerca. Valori più bassi restituiscono più risultati ma potrebbero essere meno pertinenti. Valori più alti restituiscono meno risultati ma più pertinenti.",
+		"searchMinScoreResetTooltip": "Ripristina al valore predefinito (0.4)",
 		"startIndexingButton": "Avvia indicizzazione",
 		"clearIndexDataButton": "Cancella dati indice",
 		"unsavedSettingsMessage": "Per favore salva le tue impostazioni prima di avviare il processo di indicizzazione.",
@@ -109,6 +113,11 @@
 		"subtasks": {
 			"label": "Sottoattività",
 			"description": "Consenti la creazione e il completamento di attività secondarie senza richiedere approvazione"
+		},
+		"followupQuestions": {
+			"label": "Domanda",
+			"description": "Seleziona automaticamente la prima risposta suggerita per le domande di follow-up dopo il timeout configurato",
+			"timeoutLabel": "Tempo di attesa prima di selezionare automaticamente la prima risposta"
 		},
 		"execute": {
 			"label": "Esegui",

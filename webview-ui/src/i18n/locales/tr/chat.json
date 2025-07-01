@@ -234,7 +234,9 @@
 		"tokens": "token"
 	},
 	"followUpSuggest": {
-		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
+		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)",
+		"autoSelectCountdown": "{{count}}s içinde otomatik seçilecek",
+		"countdownDisplay": "{{count}}sn"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Yayınlandı",
@@ -294,7 +296,8 @@
 	"codebaseSearch": {
 		"wantsToSearch": "Roo kod tabanında <code>{{query}}</code> aramak istiyor:",
 		"wantsToSearchWithPath": "Roo <code>{{path}}</code> içinde kod tabanında <code>{{query}}</code> aramak istiyor:",
-		"didSearch": "<code>{{query}}</code> için {{count}} sonuç bulundu:"
+		"didSearch": "<code>{{query}}</code> için {{count}} sonuç bulundu:",
+		"resultTooltip": "Benzerlik puanı: {{score}} (dosyayı açmak için tıklayın)"
 	},
 	"read-batch": {
 		"approve": {

@@ -207,7 +207,8 @@
 	"codebaseSearch": {
 		"wantsToSearch": "Roo ingin mencari codebase untuk <code>{{query}}</code>:",
 		"wantsToSearchWithPath": "Roo ingin mencari codebase untuk <code>{{query}}</code> di <code>{{path}}</code>:",
-		"didSearch": "Ditemukan {{count}} hasil untuk <code>{{query}}</code>:"
+		"didSearch": "Ditemukan {{count}} hasil untuk <code>{{query}}</code>:",
+		"resultTooltip": "Skor kemiripan: {{score}} (klik untuk membuka file)"
 	},
 	"commandOutput": "Output Perintah",
 	"response": "Respons",
@@ -263,7 +264,9 @@
 		"seconds": "{{count}}d"
 	},
 	"followUpSuggest": {
-		"copyToInput": "Salin ke input (sama dengan shift + klik)"
+		"copyToInput": "Salin ke input (sama dengan shift + klik)",
+		"autoSelectCountdown": "Pemilihan otomatis dalam {{count}}dtk",
+		"countdownDisplay": "{{count}}dtk"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo ingin menggunakan browser:",

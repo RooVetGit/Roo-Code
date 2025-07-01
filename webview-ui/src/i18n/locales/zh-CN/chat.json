@@ -234,7 +234,9 @@
 		"tokens": "tokens"
 	},
 	"followUpSuggest": {
-		"copyToInput": "复制到输入框（或按住Shift点击）"
+		"copyToInput": "复制到输入框（或按住Shift点击）",
+		"autoSelectCountdown": "{{count}}秒后自动选择",
+		"countdownDisplay": "{{count}}秒"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} 已发布",
@@ -294,7 +296,8 @@
 	"codebaseSearch": {
 		"wantsToSearch": "Roo 需要搜索代码库: <code>{{query}}</code>",
 		"wantsToSearchWithPath": "Roo 需要在 <code>{{path}}</code> 中搜索: <code>{{query}}</code>",
-		"didSearch": "找到 {{count}} 个结果: <code>{{query}}</code>"
+		"didSearch": "找到 {{count}} 个结果: <code>{{query}}</code>",
+		"resultTooltip": "相似度评分: {{score}} (点击打开文件)"
 	},
 	"read-batch": {
 		"approve": {

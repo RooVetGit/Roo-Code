@@ -56,6 +56,10 @@
 		"ollamaUrlLabel": "Ollama-URL:",
 		"qdrantUrlLabel": "Qdrant-URL",
 		"qdrantKeyLabel": "Qdrant-Schlüssel:",
+		"advancedConfigLabel": "Erweiterte Konfiguration",
+		"searchMinScoreLabel": "Suchergebnis-Schwellenwert",
+		"searchMinScoreDescription": "Mindestähnlichkeitswert (0.0-1.0), der für Suchergebnisse erforderlich ist. Niedrigere Werte liefern mehr Ergebnisse, die jedoch möglicherweise weniger relevant sind. Höhere Werte liefern weniger, aber relevantere Ergebnisse.",
+		"searchMinScoreResetTooltip": "Auf Standardwert zurücksetzen (0.4)",
 		"startIndexingButton": "Indexierung starten",
 		"clearIndexDataButton": "Indexdaten löschen",
 		"unsavedSettingsMessage": "Bitte speichere deine Einstellungen, bevor du den Indexierungsprozess startest.",
@@ -109,6 +113,11 @@
 		"subtasks": {
 			"label": "Teilaufgaben",
 			"description": "Erstellung und Abschluss von Unteraufgaben ohne Genehmigung erlauben"
+		},
+		"followupQuestions": {
+			"label": "Frage",
+			"description": "Automatisch die erste vorgeschlagene Antwort für Folgefragen nach der konfigurierten Zeitüberschreitung auswählen",
+			"timeoutLabel": "Wartezeit vor der automatischen Auswahl der ersten Antwort"
 		},
 		"execute": {
 			"label": "Ausführen",

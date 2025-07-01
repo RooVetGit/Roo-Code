@@ -12,6 +12,7 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEmbedderModelId: z.string().optional(),
 	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
+	codebaseIndexSearchMinScore: z.number().min(0).max(1).optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
