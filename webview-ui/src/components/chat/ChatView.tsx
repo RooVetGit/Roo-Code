@@ -15,7 +15,7 @@ import type { ClineAsk, ClineMessage } from "@roo-code/types"
 import { ClineSayBrowserAction, ClineSayTool, ExtensionMessage } from "@roo/ExtensionMessage"
 import { McpServer, McpTool } from "@roo/mcp"
 import { findLast } from "@roo/array"
-import { FollowUpData } from "@roo-code/types"
+import { FollowUpData, SuggestionItem } from "@roo-code/types"
 import { combineApiRequests } from "@roo/combineApiRequests"
 import { combineCommandSequences } from "@roo/combineCommandSequences"
 import { getApiMetrics } from "@roo/getApiMetrics"
@@ -1197,18 +1197,43 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const placeholderText = task ? t("chat:typeMessage") : t("chat:typeTask")
 
+	// Function to switch to a specific mode
+	const switchToMode = useCallback(
+		(modeSlug: string): void => {
+			// Update local state and notify extension to sync mode change
+			setMode(modeSlug)
+
+			// Send the mode switch message
+			vscode.postMessage({
+				type: "mode",
+				text: modeSlug,
+			})
+		},
+		[setMode],
+	)
+
 	const handleSuggestionClickInRow = useCallback(
-		(answer: string, event?: React.MouseEvent) => {
+		(suggestion: SuggestionItem, event?: React.MouseEvent) => {
+			// Check if we need to switch modes
+			if (suggestion.mode) {
+				// Only switch modes if it's a manual click (event exists) or auto-approval is allowed
+				const isManualClick = !!event
+				if (isManualClick || alwaysAllowModeSwitch) {
+					// Switch mode without waiting
+					switchToMode(suggestion.mode)
+				}
+			}
+
 			if (event?.shiftKey) {
 				// Always append to existing text, don't overwrite
 				setInputValue((currentValue) => {
-					return currentValue !== "" ? `${currentValue} \n${answer}` : answer
+					return currentValue !== "" ? `${currentValue} \n${suggestion.answer}` : suggestion.answer
 				})
 			} else {
-				handleSendMessage(answer, [])
+				handleSendMessage(suggestion.answer, [])
 			}
 		},
-		[handleSendMessage, setInputValue], // setInputValue is stable, handleSendMessage depends on clineAsk
+		[handleSendMessage, setInputValue, switchToMode, alwaysAllowModeSwitch],
 	)
 
 	const handleBatchFileResponse = useCallback((response: { [key: string]: boolean }) => {
@@ -1308,11 +1333,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 						// Get the first suggestion
 						const firstSuggestion = followUpData.suggest[0]
-						const suggestionText =
-							typeof firstSuggestion === "string" ? firstSuggestion : firstSuggestion.answer
 
 						// Handle the suggestion click
-						handleSuggestionClickInRow(suggestionText)
+						handleSuggestionClickInRow(firstSuggestion)
 						return
 					}
 				} else if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
@@ -1365,12 +1388,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
 		const nextModeIndex = (currentModeIndex + 1) % allModes.length
 		// Update local state and notify extension to sync mode change
-		setMode(allModes[nextModeIndex].slug)
-		vscode.postMessage({
-			type: "mode",
-			text: allModes[nextModeIndex].slug,
-		})
-	}, [mode, setMode, customModes])
+		switchToMode(allModes[nextModeIndex].slug)
+	}, [mode, customModes, switchToMode])
 
 	// Add keyboard event handler
 	const handleKeyDown = useCallback(

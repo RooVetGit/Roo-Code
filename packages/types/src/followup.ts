@@ -9,7 +9,7 @@ export interface FollowUpData {
 	/** The question being asked by the LLM */
 	question?: string
 	/** Array of suggested answers that the user can select */
-	suggest?: Array<string | SuggestionItem>
+	suggest?: Array<SuggestionItem>
 }
 
 /**
@@ -35,7 +35,7 @@ export const suggestionItemSchema = z.object({
  */
 export const followUpDataSchema = z.object({
 	question: z.string().optional(),
-	suggest: z.array(z.union([z.string(), suggestionItemSchema])).optional(),
+	suggest: z.array(suggestionItemSchema).optional(),
 })
 
 export type FollowUpDataType = z.infer<typeof followUpDataSchema>
