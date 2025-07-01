@@ -39,9 +39,9 @@ const SUPPORTED_IMAGE_FORMATS = [
 ] as const
 
 /**
- * Reads an image file and returns it as a base64 data URL
+ * Reads an image file and returns both the data URL and buffer
  */
-async function readImageAsDataUrl(filePath: string): Promise<string> {
+async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ dataUrl: string; buffer: Buffer }> {
 	const fileBuffer = await fs.readFile(filePath)
 	const base64 = fileBuffer.toString("base64")
 	const ext = path.extname(filePath).toLowerCase()
@@ -62,7 +62,9 @@ async function readImageAsDataUrl(filePath: string): Promise<string> {
 	}
 
 	const mimeType = mimeTypes[ext] || "image/png"
-	return `data:${mimeType};base64,${base64}`
+	const dataUrl = `data:${mimeType};base64,${base64}`
+	
+	return { dataUrl, buffer: fileBuffer }
 }
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
@@ -492,14 +494,14 @@ export async function readFileTool(
 					const supportedBinaryFormats = getSupportedBinaryFormats()
 
 					// Check if it's a supported image format
-					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as any)) {
+					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as (typeof SUPPORTED_IMAGE_FORMATS)[number])) {
 						try {
 							const imageStats = await fs.stat(fullPath)
 
 							// Check if image file exceeds size limit
 							if (imageStats.size > MAX_IMAGE_FILE_SIZE_BYTES) {
 								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
-								const notice = `Image file is too large (${imageSizeInMB} MB). The maximum allowed size is 5 MB.`
+								const notice = t("tools:readFile.imageTooLarge", { size: imageSizeInMB, max: 5 })
 
 								// Track file read
 								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
@@ -510,14 +512,13 @@ export async function readFileTool(
 								continue
 							}
 
-							const imageDataUrl = await readImageAsDataUrl(fullPath)
+							const { dataUrl: imageDataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
 							const imageSizeInKB = Math.round(imageStats.size / 1024)
 
 							// For images, get dimensions if possible
 							let dimensionsInfo = ""
 							if (fileExtension === ".png") {
 								// Simple PNG dimension extraction (first 24 bytes contain width/height)
-								const buffer = await fs.readFile(fullPath)
 								if (buffer.length >= 24) {
 									const width = buffer.readUInt32BE(16)
 									const height = buffer.readUInt32BE(20)
