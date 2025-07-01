@@ -1,5 +1,6 @@
 import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
+import * as os from "os"
 import * as fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
@@ -1516,9 +1517,9 @@ export const webviewMessageHandler = async (
 						rulesFolderPath = path.join(".roo", `rules-${message.slug}`)
 					}
 				} else {
-					// Global scope - use VSCode's environment variables
-					const homeDir = vscode.env.userHome
-					rulesFolderPath = vscode.Uri.joinPath(homeDir, ".roo", `rules-${message.slug}`).fsPath
+					// Global scope - use OS home directory
+					const homeDir = os.homedir()
+					rulesFolderPath = path.join(homeDir, ".roo", `rules-${message.slug}`)
 				}
 
 				// Check if the rules folder exists
