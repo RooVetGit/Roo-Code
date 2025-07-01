@@ -1,6 +1,6 @@
-import { SECRET_STATE_KEYS, ProviderSettings } from "@roo-code/types"
+import { SECRET_STATE_KEYS, RooCodeSettings } from "@roo-code/types"
 
-export function checkExistKey(config: ProviderSettings | undefined) {
+export function checkExistKey(config: RooCodeSettings | undefined) {
 	if (!config) {
 		return false
 	}

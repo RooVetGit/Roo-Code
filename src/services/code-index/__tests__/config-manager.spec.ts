@@ -87,8 +87,8 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				if (key === "codebaseIndexOpenAiCompatibleApiKey") return "test-openai-compatible-key"
+				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				return undefined
 			})
 
@@ -126,8 +126,8 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				if (key === "codebaseIndexOpenAiCompatibleApiKey") return "test-openai-compatible-key"
+				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				return undefined
 			})
 
@@ -162,12 +162,11 @@ describe("CodeIndexConfigManager", () => {
 			mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 				if (key === "codebaseIndexConfig") return mockGlobalState
 				if (key === "codebaseIndexOpenAiCompatibleBaseUrl") return "https://api.example.com/v1"
-				if (key === "codebaseIndexOpenAiCompatibleModelDimension") return undefined
 				return undefined
 			})
 			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				if (key === "codebaseIndexOpenAiCompatibleApiKey") return "test-openai-compatible-key"
+				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				return undefined
 			})
 
@@ -205,8 +204,8 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				if (key === "codebaseIndexOpenAiCompatibleApiKey") return "test-openai-compatible-key"
+				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
 				return undefined
 			})
 
@@ -222,7 +221,7 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-openai-compatible-key",
-					modelDimension: "invalid-dimension",
+					modelDimension: "invalid-dimension" as any,
 				},
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
@@ -428,6 +427,7 @@ describe("CodeIndexConfigManager", () => {
 
 			it("should handle OpenAI Compatible configuration changes", async () => {
 				// Initial state
+				// Initial state
 				mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 					if (key === "codebaseIndexConfig") {
 						return {
@@ -467,6 +467,7 @@ describe("CodeIndexConfigManager", () => {
 
 			it("should handle OpenAI Compatible API key changes", async () => {
 				// Initial state
+				// Initial state
 				mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 					if (key === "codebaseIndexConfig") {
 						return {
@@ -497,6 +498,7 @@ describe("CodeIndexConfigManager", () => {
 			})
 
 			it("should handle OpenAI Compatible modelDimension changes", async () => {
+				// Initial state with modelDimension
 				// Initial state with modelDimension
 				mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 					if (key === "codebaseIndexConfig") {
@@ -581,6 +583,7 @@ describe("CodeIndexConfigManager", () => {
 
 			it("should require restart when modelDimension is added", async () => {
 				// Initial state without modelDimension
+				// Initial state without modelDimension
 				mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 					if (key === "codebaseIndexConfig") {
 						return {
@@ -621,6 +624,7 @@ describe("CodeIndexConfigManager", () => {
 			})
 
 			it("should require restart when modelDimension is removed", async () => {
+				// Initial state with modelDimension
 				// Initial state with modelDimension
 				mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 					if (key === "codebaseIndexConfig") {

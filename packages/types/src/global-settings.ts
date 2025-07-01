@@ -143,8 +143,9 @@ export const SECRET_STATE_KEYS = [
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
 	"codebaseIndexOpenAiCompatibleApiKey",
-] as const satisfies readonly (keyof ProviderSettings)[]
-export type SecretState = Pick<ProviderSettings, (typeof SECRET_STATE_KEYS)[number]>
+] as const satisfies readonly (keyof RooCodeSettings)[]
+
+export type SecretState = Partial<Record<(typeof SECRET_STATE_KEYS)[number], string | undefined>>
 
 export const isSecretStateKey = (key: string): key is Keys<SecretState> =>
 	SECRET_STATE_KEYS.includes(key as Keys<SecretState>)

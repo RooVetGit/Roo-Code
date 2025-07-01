@@ -265,8 +265,11 @@ describe("CodeIndexSettings", () => {
 			// Use fireEvent to trigger the change
 			fireEvent.change(baseUrlField!, { target: { value: "test" } })
 
-			// Check that setApiConfigurationField was called with the right parameter name (accepts any value)
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("codebaseIndexOpenAiCompatibleBaseUrl", "test")
+			// Check that setCachedStateField was called with the right parameter name (accepts any value)
+			expect(mockSetCachedStateField).toHaveBeenCalledWith("codebaseIndexConfig", {
+				...openAICompatibleProps.codebaseIndexConfig,
+				codebaseIndexOpenAiCompatibleBaseUrl: "test",
+			})
 		})
 
 		it("should call setApiConfigurationField when API key changes", async () => {
@@ -290,8 +293,8 @@ describe("CodeIndexSettings", () => {
 		it("should display current base URL value", () => {
 			const propsWithValues = {
 				...openAICompatibleProps,
-				apiConfiguration: {
-					...openAICompatibleProps.apiConfiguration,
+				codebaseIndexConfig: {
+					...openAICompatibleProps.codebaseIndexConfig,
 					codebaseIndexOpenAiCompatibleBaseUrl: "https://existing-api.example.com/v1",
 				},
 			}
@@ -339,7 +342,7 @@ describe("CodeIndexSettings", () => {
 			expect(screen.queryByText("Embedding Dimension")).not.toBeInTheDocument()
 		})
 
-		it("should call setApiConfigurationField when embedding dimension changes", async () => {
+		it("should call setCachedStateField when embedding dimension changes", async () => {
 			const propsWithOpenAICompatible = {
 				...defaultProps,
 				codebaseIndexConfig: {
@@ -357,11 +360,11 @@ describe("CodeIndexSettings", () => {
 			// Use fireEvent to trigger the change
 			fireEvent.change(dimensionField!, { target: { value: "1024" } })
 
-			// Check that setApiConfigurationField was called with the right parameter name
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith(
-				"codebaseIndexOpenAiCompatibleModelDimension",
-				1024,
-			)
+			// Check that setCachedStateField was called with the right parameter name
+			expect(mockSetCachedStateField).toHaveBeenCalledWith("codebaseIndexConfig", {
+				...propsWithOpenAICompatible.codebaseIndexConfig,
+				codebaseIndexOpenAiCompatibleModelDimension: 1024,
+			})
 		})
 
 		it("should display current embedding dimension value", () => {
@@ -370,9 +373,6 @@ describe("CodeIndexSettings", () => {
 				codebaseIndexConfig: {
 					...defaultProps.codebaseIndexConfig,
 					codebaseIndexEmbedderProvider: "openai-compatible" as const,
-				},
-				apiConfiguration: {
-					...defaultProps.apiConfiguration,
 					codebaseIndexOpenAiCompatibleModelDimension: 2048,
 				},
 			}
@@ -419,19 +419,21 @@ describe("CodeIndexSettings", () => {
 			// Test that the field is a text input (implementation uses text with validation logic)
 			expect(dimensionField).toHaveAttribute("type", "text")
 
-			// Test that invalid input (non-numeric) doesn't trigger setApiConfigurationField
+			// Test that invalid input (non-numeric) doesn't trigger setCachedStateField
 			fireEvent.change(dimensionField!, { target: { value: "invalid" } })
-
-			// The implementation only accepts valid numbers
-			// Verify that setApiConfigurationField was not called with invalid string values
-			expect(mockSetApiConfigurationField).not.toHaveBeenCalledWith(
-				"codebaseIndexOpenAiCompatibleModelDimension",
-				"invalid",
+			expect(mockSetCachedStateField).not.toHaveBeenCalledWith(
+				"codebaseIndexConfig",
+				expect.objectContaining({
+					codebaseIndexOpenAiCompatibleModelDimension: "invalid",
+				}),
 			)
 
 			// Test that numeric values (including negative) are accepted by the current implementation
 			fireEvent.change(dimensionField!, { target: { value: "-5" } })
-			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("codebaseIndexOpenAiCompatibleModelDimension", -5)
+			expect(mockSetCachedStateField).toHaveBeenCalledWith("codebaseIndexConfig", {
+				...propsWithOpenAICompatible.codebaseIndexConfig,
+				codebaseIndexOpenAiCompatibleModelDimension: -5,
+			})
 		})
 	})
 

@@ -10,6 +10,8 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama", "openai-compatible"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
+	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
+	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
@@ -33,9 +35,7 @@ export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
 export const codebaseIndexProviderSchema = z.object({
 	codeIndexOpenAiKey: z.string().optional(),
 	codeIndexQdrantApiKey: z.string().optional(),
-	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleApiKey: z.string().optional(),
-	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 })
 
 export type CodebaseIndexProvider = z.infer<typeof codebaseIndexProviderSchema>

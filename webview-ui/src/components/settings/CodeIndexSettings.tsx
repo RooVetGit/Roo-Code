@@ -34,8 +34,8 @@ import { SetCachedStateField } from "./types"
 interface CodeIndexSettingsProps {
 	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
-	apiConfiguration: ProviderSettings
 	setCachedStateField: SetCachedStateField<"codebaseIndexConfig">
+	apiConfiguration: ProviderSettings
 	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 	areSettingsCommitted: boolean
 }
@@ -45,8 +45,8 @@ import type { IndexingStatusUpdateMessage } from "@roo/ExtensionMessage"
 export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	codebaseIndexModels,
 	codebaseIndexConfig,
-	apiConfiguration,
 	setCachedStateField,
+	apiConfiguration,
 	setApiConfigurationField,
 	areSettingsCommitted,
 }) => {
@@ -71,8 +71,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	useEffect(() => {
 		// Request initial indexing status from extension host
 		vscode.postMessage({ type: "requestIndexingStatus" })
-
-		// Set up interval for periodic status updates
 
 		// Set up message listener for status updates
 		const handleMessage = (event: MessageEvent<IndexingStatusUpdateMessage>) => {
@@ -158,10 +156,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 			schema.parse({
 				...config,
-				codeIndexOpenAiKey: apiConfig.codeIndexOpenAiKey,
-				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
-				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
-				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
+				...apiConfig,
 			})
 			return true
 		} catch {
@@ -303,9 +298,12 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</div>
 							<div>
 								<VSCodeTextField
-									value={apiConfiguration.codebaseIndexOpenAiCompatibleBaseUrl || ""}
+									value={codebaseIndexConfig?.codebaseIndexOpenAiCompatibleBaseUrl || ""}
 									onInput={(e: any) =>
-										setApiConfigurationField("codebaseIndexOpenAiCompatibleBaseUrl", e.target.value)
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexOpenAiCompatibleBaseUrl: e.target.value,
+										})
 									}
 									style={{ width: "100%" }}></VSCodeTextField>
 							</div>
@@ -373,22 +371,23 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								<VSCodeTextField
 									type="text"
 									value={
-										apiConfiguration.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
+										codebaseIndexConfig?.codebaseIndexOpenAiCompatibleModelDimension?.toString() ||
+										""
 									}
 									onInput={(e: any) => {
 										const value = e.target.value
 										if (value === "") {
-											setApiConfigurationField(
-												"codebaseIndexOpenAiCompatibleModelDimension",
-												undefined,
-											)
+											setCachedStateField("codebaseIndexConfig", {
+												...codebaseIndexConfig,
+												codebaseIndexOpenAiCompatibleModelDimension: undefined,
+											})
 										} else {
 											const parsedValue = parseInt(value, 10)
 											if (!isNaN(parsedValue)) {
-												setApiConfigurationField(
-													"codebaseIndexOpenAiCompatibleModelDimension",
-													parsedValue,
-												)
+												setCachedStateField("codebaseIndexConfig", {
+													...codebaseIndexConfig,
+													codebaseIndexOpenAiCompatibleModelDimension: parsedValue,
+												})
 											}
 										}
 									}}

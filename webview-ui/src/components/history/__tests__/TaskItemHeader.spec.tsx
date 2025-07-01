@@ -30,6 +30,6 @@ describe("TaskItemHeader", () => {
 	it("shows delete button when not in selection mode", () => {
 		render(<TaskItemHeader item={mockItem} isSelectionMode={false} onDelete={vi.fn()} />)
 
-		expect(screen.getByRole("button")).toBeInTheDocument()
+		expect(screen.getByTestId("delete-task-button")).toBeInTheDocument()
 	})
 })

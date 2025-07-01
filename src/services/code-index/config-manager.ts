@@ -31,13 +31,15 @@ export class CodeIndexConfigManager {
 	 */
 	private _loadAndSetConfiguration(): void {
 		// Load configuration from storage
-		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
+		const codebaseIndexConfig = this.contextProxy.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexSearchMinScore: 0.4,
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
+			codebaseIndexOpenAiCompatibleBaseUrl: "",
+			codebaseIndexOpenAiCompatibleModelDimension: undefined,
 		}
 
 		const {
@@ -46,15 +48,16 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
+			codebaseIndexOpenAiCompatibleBaseUrl,
+			codebaseIndexOpenAiCompatibleModelDimension,
 		} = codebaseIndexConfig
 
-		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
-		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
-		const openAiCompatibleBaseUrl = this.contextProxy?.getGlobalState("codebaseIndexOpenAiCompatibleBaseUrl") ?? ""
-		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
-		const openAiCompatibleModelDimension = this.contextProxy?.getGlobalState(
-			"codebaseIndexOpenAiCompatibleModelDimension",
-		) as number | undefined
+		const openAiKey = this.contextProxy.getSecret("codeIndexOpenAiKey") ?? ""
+		const qdrantApiKey = this.contextProxy.getSecret("codeIndexQdrantApiKey") ?? ""
+		const openAiCompatibleApiKey = this.contextProxy.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
+
+		const openAiCompatibleBaseUrl = codebaseIndexOpenAiCompatibleBaseUrl ?? ""
+		const openAiCompatibleModelDimension = codebaseIndexOpenAiCompatibleModelDimension
 
 		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
