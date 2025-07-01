@@ -499,7 +499,6 @@ describe("CodeIndexConfigManager", () => {
 
 			it("should handle OpenAI Compatible modelDimension changes", async () => {
 				// Initial state with modelDimension
-				// Initial state with modelDimension
 				mockContextProxy.getGlobalState.mockImplementation((key: string) => {
 					if (key === "codebaseIndexConfig") {
 						return {
