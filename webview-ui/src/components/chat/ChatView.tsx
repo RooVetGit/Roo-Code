@@ -96,6 +96,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
+		systemPromptWarningDismissed,
 		historyPreviewCollapsed, // Added historyPreviewCollapsed
 		soundEnabled,
 		soundVolume,
@@ -1394,7 +1395,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						onClose={handleTaskCloseButtonClick}
 					/>
 
-					{hasSystemPromptOverride && (
+					{hasSystemPromptOverride && !systemPromptWarningDismissed && (
 						<div className="px-3">
 							<SystemPromptWarning />
 						</div>

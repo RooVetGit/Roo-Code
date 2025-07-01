@@ -217,6 +217,7 @@ export type ExtensionState = Pick<
 	| "codebaseIndexConfig"
 	| "codebaseIndexModels"
 	| "profileThresholds"
+	| "systemPromptWarningDismissed"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
