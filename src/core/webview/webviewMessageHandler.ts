@@ -1516,9 +1516,9 @@ export const webviewMessageHandler = async (
 						rulesFolderPath = path.join(".roo", `rules-${message.slug}`)
 					}
 				} else {
-					// Global scope - use home directory
-					const homeDir = process.env.HOME || process.env.USERPROFILE || ""
-					rulesFolderPath = path.join(homeDir, ".roo", `rules-${message.slug}`)
+					// Global scope - use VSCode's environment variables
+					const homeDir = vscode.env.userHome
+					rulesFolderPath = vscode.Uri.joinPath(homeDir, ".roo", `rules-${message.slug}`).fsPath
 				}
 
 				// Check if the rules folder exists

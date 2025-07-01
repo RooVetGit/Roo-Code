@@ -161,6 +161,13 @@
 		"deleteMode": {
 			"title": "Xóa chế độ tùy chỉnh",
 			"description": "Bạn có chắc chắn muốn xóa chế độ {{scope}} này không? Thao tác này cũng θα xóa thư mục quy tắc liên quan tại {{rulesFolderPath}}",
+			"translations": {
+				"title": "Xóa chế độ",
+				"description": "Bạn có chắc chắn muốn xóa chế độ này không?",
+				"deleteMessage": "Chỉ chế độ này",
+				"rulesFolderMessage": "Thư mục quy tắc cũng sẽ bị xóa nếu tồn tại.",
+				"deleteConfirmation": "Chắc chắn xóa chế độ này?"
+			},
 			"descriptionNoRules": "Bạn có chắc chắn muốn xóa chế độ tùy chỉnh này không?",
 			"cancel": "Hủy",
 			"confirm": "Xóa"
