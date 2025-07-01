@@ -235,7 +235,8 @@
 	},
 	"followUpSuggest": {
 		"copyToInput": "Copiar para entrada (ou Shift + clique)",
-		"autoSelectCountdown": "Seleção automática em {{count}}s"
+		"autoSelectCountdown": "Seleção automática em {{count}}s",
+		"countdownDisplay": "{{count}}s"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Lançado",

@@ -235,7 +235,8 @@
 	},
 	"followUpSuggest": {
 		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)",
-		"autoSelectCountdown": "Tự động chọn sau {{count}}s"
+		"autoSelectCountdown": "Tự động chọn sau {{count}}s",
+		"countdownDisplay": "{{count}}s"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Đã phát hành",

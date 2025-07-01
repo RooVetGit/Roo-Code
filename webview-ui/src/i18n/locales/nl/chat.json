@@ -245,7 +245,8 @@
 	},
 	"followUpSuggest": {
 		"copyToInput": "Kopiëren naar invoer (zelfde als shift + klik)",
-		"autoSelectCountdown": "Automatische selectie in {{count}}s"
+		"autoSelectCountdown": "Automatische selectie in {{count}}s",
+		"countdownDisplay": "{{count}}s"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo wil de browser gebruiken:",
