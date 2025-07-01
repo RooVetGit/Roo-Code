@@ -124,34 +124,26 @@ describe("list-files symlink support", () => {
 
 		mockSpawn.mockReturnValue(mockProcess as any)
 
-		// Mock readdir to return some test entries
-		vi.mocked(fs.promises.readdir).mockResolvedValue([
-			{ name: "test-file.txt", isDirectory: () => false, isSymbolicLink: () => false, isFile: () => true } as any,
-			{ name: "test-dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
-		])
-
 		// Call listFiles with recursive=true
 		await listFiles("/test/dir", true, 100)
 
-		// For breadth-first implementation, ripgrep is called for filtering files
-		// It should still include the --follow flag
-		expect(mockSpawn).toHaveBeenCalled()
-		const calls = mockSpawn.mock.calls
+		// Verify that spawn was called with --follow flag (the critical fix)
+		const [rgPath, args] = mockSpawn.mock.calls[0]
+		expect(rgPath).toBe("/mock/path/to/rg")
+		expect(args).toContain("--files")
+		expect(args).toContain("--hidden")
+		expect(args).toContain("--follow") // This should be present in recursive mode too
 
-		// Find a call that includes --follow flag
-		const hasFollowFlag = calls.some((call) => {
-			const [, args] = call
-			return args && args.includes("--follow")
-		})
-
-		expect(hasFollowFlag).toBe(true)
+		// Platform-agnostic path check - verify the last argument is the resolved path
+		const expectedPath = path.resolve("/test/dir")
+		expect(args[args.length - 1]).toBe(expectedPath)
 	})
 
 	it("should ensure first-level directories are included when limit is reached", async () => {
 		// Mock fs.promises.readdir to simulate a directory structure
 		const mockReaddir = vi.mocked(fs.promises.readdir)
 
-		// Root directory with many items
+		// Root directory with first-level directories
 		mockReaddir.mockResolvedValueOnce([
 			{ name: "a_dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
 			{ name: "b_dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
@@ -160,33 +152,28 @@ describe("list-files symlink support", () => {
 			{ name: "file2.txt", isDirectory: () => false, isSymbolicLink: () => false, isFile: () => true } as any,
 		])
 
-		// a_dir contents (many files to trigger limit)
-		const manyFiles = Array.from(
-			{ length: 50 },
-			(_, i) =>
-				({
-					name: `file_a_${i}.txt`,
-					isDirectory: () => false,
-					isSymbolicLink: () => false,
-					isFile: () => true,
-				}) as any,
-		)
-		mockReaddir.mockResolvedValueOnce(manyFiles)
-
-		// b_dir and c_dir won't be read due to limit
-
-		// Mock ripgrep to approve all files
+		// Mock ripgrep to return many files (simulating hitting the limit)
 		const mockSpawn = vi.mocked(childProcess.spawn)
 		const mockProcess = {
 			stdout: {
 				on: vi.fn((event, callback) => {
 					if (event === "data") {
-						// Return many file names
-						const fileNames =
-							Array.from({ length: 52 }, (_, i) =>
-								i < 2 ? `file${i + 1}.txt` : `file_a_${i - 2}.txt`,
-							).join("\n") + "\n"
-						setTimeout(() => callback(fileNames), 10)
+						// Return many file paths to trigger the limit
+						const paths =
+							[
+								"/test/dir/a_dir/",
+								"/test/dir/a_dir/subdir1/",
+								"/test/dir/a_dir/subdir1/file1.txt",
+								"/test/dir/a_dir/subdir1/file2.txt",
+								"/test/dir/a_dir/subdir2/",
+								"/test/dir/a_dir/subdir2/file3.txt",
+								"/test/dir/a_dir/file4.txt",
+								"/test/dir/a_dir/file5.txt",
+								"/test/dir/file1.txt",
+								"/test/dir/file2.txt",
+								// Note: b_dir and c_dir are missing from ripgrep output
+							].join("\n") + "\n"
+						setTimeout(() => callback(paths), 10)
 					}
 				}),
 			},
@@ -202,6 +189,9 @@ describe("list-files symlink support", () => {
 		}
 		mockSpawn.mockReturnValue(mockProcess as any)
 
+		// Mock fs.promises.access to simulate .gitignore doesn't exist
+		vi.mocked(fs.promises.access).mockRejectedValue(new Error("File not found"))
+
 		// Call listFiles with recursive=true and a small limit
 		const [results, limitReached] = await listFiles("/test/dir", true, 10)
 
@@ -212,8 +202,8 @@ describe("list-files symlink support", () => {
 		// Count directories in results
 		const directories = results.filter((r) => r.endsWith("/"))
 
-		// With breadth-first, we should have at least the 3 first-level directories
-		// even if we hit the limit while processing subdirectories
+		// We should have at least the 3 first-level directories
+		// even if ripgrep didn't return all of them
 		expect(directories.length).toBeGreaterThanOrEqual(3)
 
 		// Verify all first-level directories are included
