@@ -2,6 +2,7 @@ import * as path from "path"
 import os from "os"
 import crypto from "crypto"
 import EventEmitter from "events"
+import * as vscode from "vscode"
 
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
@@ -80,11 +81,14 @@ import {
 	checkpointSave,
 	checkpointRestore,
 	checkpointDiff,
+	getInitializedCheckpointService,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
+import { FileChangeManager } from "../../services/file-changes/FileChangeManager"
+import type { CheckpointEventMap } from "../../services/checkpoints/types"
 
 // Constants
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
@@ -119,6 +123,8 @@ export type TaskOptions = {
 	parentTask?: Task
 	taskNumber?: number
 	onCreated?: (cline: Task) => void
+	fileChangeManager?: FileChangeManager
+	checkpointService?: RepoPerTaskCheckpointService
 }
 
 export class Task extends EventEmitter<ClineEvents> {
@@ -132,6 +138,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
+	readonly options: TaskOptions
 	abort: boolean = false
 	didFinishAbortingStream = false
 	abandoned = false
@@ -160,6 +167,19 @@ export class Task extends EventEmitter<ClineEvents> {
 	fileContextTracker: FileContextTracker
 	urlContentFetcher: UrlContentFetcher
 	terminalProcess?: RooTerminalProcess
+	public fileChangeManager?: FileChangeManager
+
+	public async applyFileChanges(
+		isNewFile: boolean,
+		relPath: string,
+		finalContent: string,
+	): Promise<{
+		newProblemsMessage: string | undefined
+		userEdits: string | undefined
+		finalContent: string | undefined
+	}> {
+		return this.diffViewProvider.saveChanges(this)
+	}
 
 	// Computer User
 	browserSession: BrowserSession
@@ -220,6 +240,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		fileChangeManager,
+		checkpointService,
 	}: TaskOptions) {
 		super()
 
@@ -227,6 +249,24 @@ export class Task extends EventEmitter<ClineEvents> {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
 
+		this.options = {
+			provider,
+			apiConfiguration,
+			enableDiff,
+			enableCheckpoints,
+			fuzzyMatchThreshold,
+			consecutiveMistakeLimit,
+			task,
+			images,
+			historyItem,
+			startTask,
+			rootTask,
+			parentTask,
+			taskNumber,
+			onCreated,
+			fileChangeManager,
+			checkpointService,
+		}
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
 		// normal use-case is usually retry similar history task with new workspace
 		this.workspacePath = parentTask
@@ -255,6 +295,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
+
+		this.fileChangeManager = fileChangeManager
+		this.checkpointService = checkpointService
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -297,22 +340,6 @@ export class Task extends EventEmitter<ClineEvents> {
 				throw new Error("Either historyItem or task/images must be provided")
 			}
 		}
-	}
-
-	static create(options: TaskOptions): [Task, Promise<void>] {
-		const instance = new Task({ ...options, startTask: false })
-		const { images, task, historyItem } = options
-		let promise
-
-		if (images || task) {
-			promise = instance.startTask(task, images)
-		} else if (historyItem) {
-			promise = instance.resumeTaskFromHistory()
-		} else {
-			throw new Error("Either historyItem or task/images must be provided")
-		}
-
-		return [instance, promise]
 	}
 
 	// API Messages
@@ -402,6 +429,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
+				fileChangeCount: this.fileChangeManager?.getFileChangeCount() || 0,
 			})
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
@@ -828,6 +856,12 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.isInitialized = true
 
+		if (this.fileChangeManager && this.checkpointService) {
+			await this.fileChangeManager.updateBaseline(this.checkpointService.baseHash!, (from, to) =>
+				this.checkpointService!.getDiff({ from, to }),
+			)
+		}
+
 		const { response, text, images } = await this.ask(askType) // calls poststatetowebview
 		let responseText: string | undefined
 		let responseImages: string[] | undefined
@@ -1111,8 +1145,10 @@ export class Task extends EventEmitter<ClineEvents> {
 	// Task Loop
 
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
-		// Kicks off the checkpoints initialization process in the background.
-		getCheckpointService(this)
+		// Kicks off the checkpoints initialization process in the background if not already initialized.
+		if (!this.checkpointService) {
+			getCheckpointService(this)
+		}
 
 		let nextUserContent = userContent
 		let includeFileDetails = true

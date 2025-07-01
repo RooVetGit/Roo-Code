@@ -316,7 +316,12 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				await fs.writeFile(gitattributesPath, "*.lfs filter=lfs diff=lfs merge=lfs -text")
 
 				// Re-initialize the service to trigger a write to .git/info/exclude.
-				service = new klass(service.taskId, service.checkpointsDir, service.workspaceDir, () => {})
+				service = klass.create({
+					taskId: service.taskId,
+					shadowDir: service.checkpointsDir,
+					workspaceDir: service.workspaceDir,
+					log: () => {},
+				})
 				const excludesPath = path.join(service.checkpointsDir, ".git", "info", "exclude")
 				expect((await fs.readFile(excludesPath, "utf-8")).split("\n")).not.toContain("*.lfs")
 				await service.initShadowGit()
@@ -433,7 +438,8 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 					}
 				})
 
-				const service = new klass(taskId, shadowDir, workspaceDir, () => {})
+				const service = klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
+				await service.initShadowGit()
 
 				// Verify that initialization throws an error when nested git repos are detected
 				await expect(service.initShadowGit()).rejects.toThrow(
@@ -469,7 +475,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 					return Promise.resolve([])
 				})
 
-				const service = new klass(taskId, shadowDir, workspaceDir, () => {})
+				const service = klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
 
 				// Verify that initialization succeeds when no nested git repos are detected
 				await expect(service.initShadowGit()).resolves.not.toThrow()
@@ -536,7 +542,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 			it("emits checkpoint event when saving checkpoint", async () => {
 				const checkpointHandler = vitest.fn()
-				service.on("checkpoint", checkpointHandler)
+				service.on("checkpointCreated", checkpointHandler)
 
 				await fs.writeFile(testFile, "Changed content for checkpoint event test")
 				const result = await service.saveCheckpoint("Test checkpoint event")
@@ -544,7 +550,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 				expect(checkpointHandler).toHaveBeenCalledTimes(1)
 				const eventData = checkpointHandler.mock.calls[0][0]
-				expect(eventData.type).toBe("checkpoint")
+				expect(eventData.type).toBe("checkpointCreated")
 				expect(eventData.toHash).toBeDefined()
 				expect(eventData.toHash).toBe(result!.commit)
 				expect(typeof eventData.duration).toBe("number")
@@ -602,8 +608,8 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				const checkpointHandler1 = vitest.fn()
 				const checkpointHandler2 = vitest.fn()
 
-				service.on("checkpoint", checkpointHandler1)
-				service.on("checkpoint", checkpointHandler2)
+				service.on("checkpointCreated", checkpointHandler1)
+				service.on("checkpointCreated", checkpointHandler2)
 
 				await fs.writeFile(testFile, "Content for multiple listeners test")
 				const result = await service.saveCheckpoint("Testing multiple listeners")
@@ -616,7 +622,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				const eventData2 = checkpointHandler2.mock.calls[0][0]
 
 				expect(eventData1).toEqual(eventData2)
-				expect(eventData1.type).toBe("checkpoint")
+				expect(eventData1.type).toBe("checkpointCreated")
 				expect(eventData1.toHash).toBe(result?.commit)
 			})
 
@@ -624,7 +630,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				const checkpointHandler = vitest.fn()
 
 				// Add the listener.
-				service.on("checkpoint", checkpointHandler)
+				service.on("checkpointCreated", checkpointHandler)
 
 				// Make a change and save a checkpoint.
 				await fs.writeFile(testFile, "Content for remove listener test - part 1")
@@ -635,7 +641,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				checkpointHandler.mockClear()
 
 				// Remove the listener.
-				service.off("checkpoint", checkpointHandler)
+				service.off("checkpointCreated", checkpointHandler)
 
 				// Make another change and save a checkpoint.
 				await fs.writeFile(testFile, "Content for remove listener test - part 2")
@@ -684,13 +690,13 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 			it("emits checkpoint event for empty commits when allowEmpty=true", async () => {
 				const checkpointHandler = vitest.fn()
-				service.on("checkpoint", checkpointHandler)
+				service.on("checkpointCreated", checkpointHandler)
 
 				const result = await service.saveCheckpoint("Empty checkpoint event test", { allowEmpty: true })
 
 				expect(checkpointHandler).toHaveBeenCalledTimes(1)
 				const eventData = checkpointHandler.mock.calls[0][0]
-				expect(eventData.type).toBe("checkpoint")
+				expect(eventData.type).toBe("checkpointCreated")
 				expect(eventData.toHash).toBe(result?.commit)
 				expect(typeof eventData.duration).toBe("number")
 				expect(typeof eventData.isFirst).toBe("boolean") // Can be true or false depending on checkpoint history
@@ -707,7 +713,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 				// Now test with no changes and allowEmpty=false
 				const checkpointHandler = vitest.fn()
-				service.on("checkpoint", checkpointHandler)
+				service.on("checkpointCreated", checkpointHandler)
 
 				const result = await service.saveCheckpoint("No changes, no event", { allowEmpty: false })
 

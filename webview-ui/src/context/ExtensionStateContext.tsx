@@ -36,6 +36,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	organizationAllowList: OrganizationAllowList
 	cloudIsAuthenticated: boolean
 	sharingEnabled: boolean
+	currentFileChangeset?: import("@roo-code/types").FileChangeset
+	setCurrentFileChangeset: (changeset: import("@roo-code/types").FileChangeset | undefined) => void
 	maxConcurrentFileReads?: number
 	mdmCompliant?: boolean
 	hasOpenedModeSelector: boolean // New property to track if user has opened mode selector
@@ -225,6 +227,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
 	const [currentCheckpoint, setCurrentCheckpoint] = useState<string>()
 	const [extensionRouterModels, setExtensionRouterModels] = useState<RouterModels | undefined>(undefined)
+	const [currentFileChangeset, setCurrentFileChangeset] = useState<
+		import("@roo-code/types").FileChangeset | undefined
+	>(undefined)
 	const [marketplaceItems, setMarketplaceItems] = useState<any[]>([])
 	const [marketplaceInstalledMetadata, setMarketplaceInstalledMetadata] = useState<MarketplaceInstalledMetadata>({
 		project: {},
@@ -306,6 +311,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				}
 				case "routerModels": {
 					setExtensionRouterModels(message.routerModels)
+					break
+				}
+				case "filesChanged": {
+					if (message.filesChanged) {
+						setCurrentFileChangeset(message.filesChanged)
+					} else {
+						setCurrentFileChangeset(undefined)
+					}
 					break
 				}
 				case "marketplaceData": {
@@ -437,6 +450,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCondensingApiConfigId: (value) => setState((prevState) => ({ ...prevState, condensingApiConfigId: value })),
 		setCustomCondensingPrompt: (value) =>
 			setState((prevState) => ({ ...prevState, customCondensingPrompt: value })),
+		currentFileChangeset,
+		setCurrentFileChangeset,
 		setProfileThresholds: (value) => setState((prevState) => ({ ...prevState, profileThresholds: value })),
 	}
 

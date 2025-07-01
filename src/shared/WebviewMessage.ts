@@ -38,6 +38,7 @@ export interface WebviewMessage {
 		| "alwaysAllowWriteProtected"
 		| "alwaysAllowExecute"
 		| "webviewDidLaunch"
+		| "webviewReady"
 		| "newTask"
 		| "askResponse"
 		| "terminalOperation"
@@ -161,6 +162,11 @@ export interface WebviewMessage {
 		| "indexCleared"
 		| "focusPanelRequest"
 		| "codebaseIndexConfig"
+		| "viewDiff"
+		| "acceptFileChange"
+		| "rejectFileChange"
+		| "acceptAllFileChanges"
+		| "rejectAllFileChanges"
 		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
 		| "openExternal"
@@ -173,7 +179,6 @@ export interface WebviewMessage {
 		| "marketplaceInstallResult"
 		| "fetchMarketplaceData"
 		| "switchTab"
-		| "profileThresholds"
 		| "shareTaskSuccess"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
@@ -207,12 +212,20 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	command?: string // Added for new message types sent from webview
+	uri?: string // Added for file URIs in new message types
 	filters?: { type?: string; search?: string; tags?: string[] }
 	url?: string // For openExternal
 	mpItem?: MarketplaceItem
 	mpInstallOptions?: InstallMarketplaceItemOptions
 	config?: Record<string, any> // Add config to the payload
 	visibility?: ShareVisibility // For share visibility
+}
+
+export interface Terminal {
+	pid: number
+	name: string
+	cwd: string
 }
 
 export const checkoutDiffPayloadSchema = z.object({

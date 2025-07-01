@@ -212,8 +212,25 @@ export async function writeToFileTool(
 				return
 			}
 
-			// Call saveChanges to update the DiffViewProvider properties
-			await cline.diffViewProvider.saveChanges()
+			// Call saveChanges to update the DiffViewProvider properties, and leverage the new generateCheckpointsAndCallSaveChanges
+			// to handle checkpointing and file change recording.
+			console.log(`[writeToFileTool] Calling generateCheckpointsAndCallSaveChanges for ${relPath}`)
+			const {
+				newProblemsMessage: generatedProblems,
+				userEdits: generatedUserEdits,
+				finalContent: finalContentAfterSave,
+			} = await cline.applyFileChanges(
+				!fileExists, // isNewFile
+				relPath, // relPath
+				newContent, // finalContent (from tool's perspective)
+			)
+			console.log(
+				`[writeToFileTool] generateCheckpointsAndCallSaveChanges completed. newProblemsMessage: ${generatedProblems ? "yes" : "no"}, userEdits: ${generatedUserEdits ? "yes" : "no"}, finalContentAfterSave length: ${finalContentAfterSave?.length}`,
+			)
+
+			// Update the instance properties with the results from the new method
+			cline.diffViewProvider.newProblemsMessage = generatedProblems
+			cline.diffViewProvider.userEdits = generatedUserEdits
 
 			// Track file edit operation
 			if (relPath) {

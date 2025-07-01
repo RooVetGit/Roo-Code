@@ -12,15 +12,22 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
+import { FileChangeManager } from "../../services/file-changes/FileChangeManager"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
+import { CheckpointResult } from "../../services/checkpoints/types"
 
 export function getCheckpointService(cline: Task) {
-	if (!cline.enableCheckpoints) {
-		return undefined
+	if (cline.options.checkpointService) {
+		return cline.options.checkpointService
 	}
-
 	if (cline.checkpointService) {
 		return cline.checkpointService
+	}
+	console.log(
+		`[DEBUG] getCheckpointService called for task ${cline.taskId}. Service exists: ${!!cline.checkpointService}`,
+	)
+	if (!cline.enableCheckpoints) {
+		return undefined
 	}
 
 	if (cline.checkpointServiceInitializing) {
@@ -74,15 +81,57 @@ export function getCheckpointService(cline: Task) {
 			log("[Task#getCheckpointService] service initialized")
 
 			try {
+				// Debug logging to understand checkpoint detection
+				console.log("[DEBUG] Checkpoint detection - total messages:", cline.clineMessages.length)
+				console.log(
+					"[DEBUG] Checkpoint detection - message types:",
+					cline.clineMessages.map((m) => ({
+						ts: m.ts,
+						type: m.type,
+						say: m.say,
+						ask: m.ask,
+					})),
+				)
+
+				const checkpointMessages = cline.clineMessages.filter(({ say }) => say === "checkpoint_saved")
+				console.log(
+					"[DEBUG] Found checkpoint messages:",
+					checkpointMessages.length,
+					checkpointMessages.map((m) => ({ ts: m.ts, text: m.text })),
+				)
+
 				const isCheckpointNeeded =
 					typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
+
+				console.log("[DEBUG] isCheckpointNeeded result:", isCheckpointNeeded)
 
 				cline.checkpointService = service
 				cline.checkpointServiceInitializing = false
 
+				// Create FileChangeManager immediately after checkpoint service initialization
+				// This ensures it exists before any baseline update attempts in resumeTaskFromHistory()
+				if (!cline.fileChangeManager && provider) {
+					try {
+						const baseHash = service.baseHash || "HEAD"
+						cline.fileChangeManager = new FileChangeManager(
+							baseHash,
+							cline.taskId,
+							provider.context.globalStorageUri.fsPath,
+						)
+						log(`[Task#getCheckpointService] FileChangeManager created with baseline: ${baseHash}`)
+					} catch (error) {
+						log(`[Task#getCheckpointService] Failed to create FileChangeManager: ${error}`)
+						// Continue without FileChangeManager - checkpoint functionality will still work
+					}
+				} else if (cline.fileChangeManager) {
+					log("[Task#getCheckpointService] FileChangeManager already exists, skipping creation")
+				}
+
 				if (isCheckpointNeeded) {
 					log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
-					checkpointSave(cline)
+					checkpointSave(cline, true)
+				} else {
+					log("[Task#getCheckpointService] existing checkpoints found, skipping initial checkpoint")
 				}
 			} catch (err) {
 				log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
@@ -90,18 +139,43 @@ export function getCheckpointService(cline: Task) {
 			}
 		})
 
-		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
+		service.on("checkpointCreated", async ({ isFirst, fromHash, toHash }) => {
 			try {
-				provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
+				provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: toHash })
 
-				cline
-					.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }, undefined, {
+				await cline.say(
+					"checkpoint_saved",
+					toHash,
+					undefined,
+					undefined,
+					{ isFirst, from: fromHash, to: toHash },
+					undefined,
+					{
 						isNonInteractive: true,
-					})
-					.catch((err) => {
-						log("[Task#getCheckpointService] caught unexpected error in say('checkpoint_saved')")
-						console.error(err)
-					})
+					},
+				)
+
+				// FileChangeManager is now created during service initialization
+				// This ensures it exists before any baseline update attempts
+				// File change tracking is now handled at the time of LLM edits in saveChanges(),
+				// not during checkpoint creation. This prevents rejected files from reappearing
+				// when new checkpoints are created.
+
+				// Send current file changes to the webview (if any exist)
+				if (cline.fileChangeManager) {
+					const changeset = cline.fileChangeManager.getChanges()
+					if (changeset.files.length > 0) {
+						const serializableChangeset = {
+							...changeset,
+							files: Array.from(changeset.files.values()),
+						}
+
+						provider?.postMessageToWebview({
+							type: "filesChanged",
+							filesChanged: serializableChangeset,
+						})
+					}
+				}
 			} catch (err) {
 				log("[Task#getCheckpointService] caught unexpected error in on('checkpoint'), disabling checkpoints")
 				console.error(err)
@@ -124,7 +198,7 @@ export function getCheckpointService(cline: Task) {
 	}
 }
 
-async function getInitializedCheckpointService(
+export async function getInitializedCheckpointService(
 	cline: Task,
 	{ interval = 250, timeout = 15_000 }: { interval?: number; timeout?: number } = {},
 ) {
@@ -149,7 +223,10 @@ async function getInitializedCheckpointService(
 	}
 }
 
-export async function checkpointSave(cline: Task, force = false) {
+// Track ongoing checkpoint saves per task to prevent duplicates
+const ongoingCheckpointSaves = new Map<string, Promise<void | CheckpointResult | undefined>>()
+
+export async function checkpointSave(cline: Task, force = false, files?: vscode.Uri[]) {
 	const service = getCheckpointService(cline)
 
 	if (!service) {
@@ -163,13 +240,38 @@ export async function checkpointSave(cline: Task, force = false) {
 		return
 	}
 
+	// Create a unique key for this checkpoint save operation
+	const filesKey = files
+		? files
+				.map((f) => f.fsPath)
+				.sort()
+				.join("|")
+		: "all"
+	const saveKey = `${cline.taskId}-${force}-${filesKey}`
+
+	// If there's already an ongoing checkpoint save for this exact operation, return the existing promise
+	if (ongoingCheckpointSaves.has(saveKey)) {
+		const provider = cline.providerRef.deref()
+		provider?.log(`[checkpointSave] duplicate checkpoint save detected for ${saveKey}, using existing operation`)
+		return ongoingCheckpointSaves.get(saveKey)
+	}
+
 	TelemetryService.instance.captureCheckpointCreated(cline.taskId)
 
-	// Start the checkpoint process in the background.
-	return service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force }).catch((err) => {
-		console.error("[Task#checkpointSave] caught unexpected error, disabling checkpoints", err)
-		cline.enableCheckpoints = false
-	})
+	// Start the checkpoint process in the background and track it
+	const savePromise = service
+		.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force, files })
+		.catch((err: any) => {
+			console.error("[Task#checkpointSave] caught unexpected error, disabling checkpoints", err)
+			cline.enableCheckpoints = false
+		})
+		.finally(() => {
+			// Clean up the tracking once completed
+			ongoingCheckpointSaves.delete(saveKey)
+		})
+
+	ongoingCheckpointSaves.set(saveKey, savePromise)
+	return savePromise
 }
 
 export type CheckpointRestoreOptions = {
@@ -197,6 +299,10 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 		await service.restoreCheckpoint(commitHash)
 		TelemetryService.instance.captureCheckpointRestored(cline.taskId)
 		await provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
+
+		if (cline.fileChangeManager) {
+			await cline.fileChangeManager.updateBaseline(commitHash, (from, to) => service.getDiff({ from, to }))
+		}
 
 		if (mode === "restore") {
 			await cline.overwriteApiConversationHistory(cline.apiConversationHistory.filter((m) => !m.ts || m.ts < ts))
@@ -261,7 +367,7 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 			.sort((a, b) => b.ts - a.ts)
 			.find((message) => message.ts < ts)
 
-		previousCommitHash = previousCheckpoint?.text
+		previousCommitHash = previousCheckpoint?.text ?? service.baseHash
 	}
 
 	try {
@@ -275,7 +381,7 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 		await vscode.commands.executeCommand(
 			"vscode.changes",
 			mode === "full" ? "Changes since task started" : "Changes since previous checkpoint",
-			changes.map((change) => [
+			changes.map((change: any) => [
 				vscode.Uri.file(change.paths.absolute),
 				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${change.paths.relative}`).with({
 					query: Buffer.from(change.content.before ?? "").toString("base64"),

@@ -5,6 +5,7 @@
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"isolatedModules": true,
+		"jsx": "react-jsx",
 		"lib": ["es2022", "esnext.disposable", "DOM"],
 		"module": "esnext",
 		"moduleResolution": "Bundler",
@@ -22,5 +23,5 @@
 		"useUnknownInCatchVariables": false
 	},
 	"include": ["."],
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules", "webview-ui"]
 }

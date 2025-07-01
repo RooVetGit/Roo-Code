@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "Gewijzigde Bestanden",
+		"expand": "Bestandslijst uitklappen",
+		"collapse": "Bestandslijst inklappen"
+	},
+	"actions": {
+		"accept_all": "Alles Accepteren",
+		"reject_all": "Alles Afwijzen",
+		"accept_file": "Wijzigingen voor dit bestand accepteren",
+		"reject_file": "Wijzigingen voor dit bestand afwijzen",
+		"view_diff": "Verschillen Bekijken"
+	},
+	"file_types": {
+		"edit": "bewerken",
+		"create": "aanmaken",
+		"delete": "verwijderen"
+	},
+	"line_changes": {
+		"added": "+{{count}} regels",
+		"removed": "-{{count}} regels",
+		"added_removed": "+{{added}}, -{{removed}} regels",
+		"deleted": "verwijderd",
+		"modified": "gewijzigd"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) Gewijzigde Bestanden{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "Lijst van gewijzigde bestanden. {{count}} bestanden. {{state}}",
+		"expanded": "Uitgeklapt",
+		"collapsed": "Ingeklapt"
+	}
+}

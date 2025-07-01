@@ -18,6 +18,7 @@ export type TaskMetadataOptions = {
 	taskNumber: number
 	globalStoragePath: string
 	workspace: string
+	fileChangeCount?: number
 }
 
 export async function taskMetadata({
@@ -26,6 +27,7 @@ export async function taskMetadata({
 	taskNumber,
 	globalStoragePath,
 	workspace,
+	fileChangeCount,
 }: TaskMetadataOptions) {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 
@@ -92,6 +94,7 @@ export async function taskMetadata({
 		totalCost: tokenUsage.totalCost,
 		size: taskDirSize,
 		workspace,
+		filesChanged: fileChangeCount,
 	}
 
 	return { historyItem, tokenUsage }

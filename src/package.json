@@ -65,7 +65,8 @@
 				{
 					"type": "webview",
 					"id": "roo-cline.SidebarProvider",
-					"name": "%views.sidebar.name%"
+					"name": "%views.sidebar.name%",
+					"icon": "$(files)"
 				}
 			]
 		},
