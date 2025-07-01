@@ -58,8 +58,8 @@ body:
     attributes:
       label: Roo Code Task Links (Optional)
       description: |
-        If you used Roo Code to explore this issue or develop solutions, share the task links here.
-        This helps maintainers understand the context and any attempts you've made.
+        If you have any shared task links that demonstrate the issue, please share them here.
+        This helps maintainers understand the context.
         Example: https://app.roocode.com/share/task-id
       placeholder: Paste your Roo Code share links here, one per line
 
