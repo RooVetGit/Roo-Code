@@ -63,7 +63,7 @@ export const AutoApproveSettings = ({
 	alwaysAllowSubtasks,
 	alwaysAllowExecute,
 	alwaysAllowFollowupQuestions,
-	followupAutoApproveTimeoutMs = 10000,
+	followupAutoApproveTimeoutMs = 60000,
 	allowedCommands,
 	setCachedStateField,
 	...props
@@ -219,7 +219,7 @@ export const AutoApproveSettings = ({
 							<div className="flex items-center gap-2">
 								<Slider
 									min={1000}
-									max={30000}
+									max={300000}
 									step={1000}
 									value={[followupAutoApproveTimeoutMs]}
 									onValueChange={([value]) =>

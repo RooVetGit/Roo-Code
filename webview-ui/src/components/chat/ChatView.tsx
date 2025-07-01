@@ -15,6 +15,7 @@ import type { ClineAsk, ClineMessage } from "@roo-code/types"
 import { ClineSayBrowserAction, ClineSayTool, ExtensionMessage } from "@roo/ExtensionMessage"
 import { McpServer, McpTool } from "@roo/mcp"
 import { findLast } from "@roo/array"
+import { FollowUpData } from "@roo-code/types"
 import { combineApiRequests } from "@roo/combineApiRequests"
 import { combineCommandSequences } from "@roo/combineCommandSequences"
 import { getApiMetrics } from "@roo/getApiMetrics"
@@ -1215,6 +1216,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		vscode.postMessage({ type: "askResponse", askResponse: "objectResponse", text: JSON.stringify(response) })
 	}, [])
 
+	// Handler for when FollowUpSuggest component unmounts
+	const handleFollowUpUnmount = useCallback(() => {
+		// Clear the auto-approve timeout to prevent race conditions
+		if (autoApproveTimeoutRef.current) {
+			clearTimeout(autoApproveTimeoutRef.current)
+			autoApproveTimeoutRef.current = null
+		}
+	}, [])
+
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
 			// browser session group
@@ -1250,6 +1260,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					isStreaming={isStreaming}
 					onSuggestionClick={handleSuggestionClickInRow} // This was already stabilized
 					onBatchFileResponse={handleBatchFileResponse}
+					onFollowUpUnmount={handleFollowUpUnmount}
 				/>
 			)
 		},
@@ -1262,6 +1273,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isStreaming,
 			handleSuggestionClickInRow,
 			handleBatchFileResponse,
+			handleFollowUpUnmount,
 		],
 	)
 
@@ -1279,7 +1291,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
 				// Special handling for follow-up questions
 				if (lastMessage.ask === "followup") {
-					const followUpData = JSON.parse(lastMessage.text || "{}")
+					// Handle invalid JSON
+					let followUpData: FollowUpData = {}
+					try {
+						followUpData = JSON.parse(lastMessage.text || "{}") as FollowUpData
+					} catch (error) {
+						console.error("Failed to parse follow-up data:", error)
+						return
+					}
+
 					if (followUpData && followUpData.suggest && followUpData.suggest.length > 0) {
 						// Wait for the configured timeout before auto-selecting the first suggestion
 						await new Promise<void>((resolve) => {

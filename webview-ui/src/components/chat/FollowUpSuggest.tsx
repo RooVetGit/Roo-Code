@@ -6,19 +6,19 @@ import { vscode } from "@/utils/vscode"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { SuggestionItem } from "@roo-code/types"
 
-interface SuggestionItem {
-	answer: string
-	mode?: string
-}
+const DEFAULT_FOLLOWUP_TIMEOUT_MS = 60000
+const COUNTDOWN_INTERVAL_MS = 1000
 
 interface FollowUpSuggestProps {
 	suggestions?: (string | SuggestionItem)[]
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
 	ts: number
+	onUnmount?: () => void
 }
 
-export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: FollowUpSuggestProps) => {
+export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1, onUnmount }: FollowUpSuggestProps) => {
 	const { autoApprovalEnabled, alwaysAllowFollowupQuestions, followupAutoApproveTimeoutMs } = useExtensionState()
 	const [countdown, setCountdown] = useState<number | null>(null)
 	const [suggestionSelected, setSuggestionSelected] = useState(false)
@@ -32,7 +32,7 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }:
 			const timeoutMs =
 				typeof followupAutoApproveTimeoutMs === "number" && !isNaN(followupAutoApproveTimeoutMs)
 					? followupAutoApproveTimeoutMs
-					: 10000
+					: DEFAULT_FOLLOWUP_TIMEOUT_MS
 
 			// Convert milliseconds to seconds for the countdown
 			setCountdown(Math.floor(timeoutMs / 1000))
@@ -46,10 +46,15 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }:
 					}
 					return prevCountdown - 1
 				})
-			}, 1000)
+			}, COUNTDOWN_INTERVAL_MS)
 
-			// Clean up interval on unmount
-			return () => clearInterval(intervalId)
+			// Clean up interval on unmount and notify parent component
+			return () => {
+				clearInterval(intervalId)
+				// Notify parent component that this component is unmounting
+				// so it can clear any related timeouts
+				onUnmount?.()
+			}
 		} else {
 			setCountdown(null)
 		}
@@ -76,11 +81,14 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }:
 			// Mark a suggestion as selected if it's not a shift-click (which just copies to input)
 			if (!event.shiftKey) {
 				setSuggestionSelected(true)
+				// Also notify parent component to cancel auto-approval timeout
+				// This prevents race conditions between visual countdown and actual timeout
+				onUnmount?.()
 			}
 
 			onSuggestionClick?.(suggestionText, event)
 		},
-		[onSuggestionClick],
+		[onSuggestionClick, onUnmount],
 	)
 
 	// Don't render if there are no suggestions or no click handler.
