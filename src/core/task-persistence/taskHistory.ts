@@ -541,7 +541,7 @@ function logMessage(logs: string[], message: string): string {
  * @param options - Options for controlling the rebuild process.
  * @returns Updated HistoryScanResults reflecting any changes made during rebuilding.
  */
-export async function rebuildIndexes(scan: HistoryScanResults, options: HistoryRebuildOptions): Promise<void> {
+export async function _rebuildIndexes(scan: HistoryScanResults, options: HistoryRebuildOptions): Promise<void> {
 	const { mode, mergeFromGlobal = false, mergeToGlobal = false, reconstructOrphans = false, logs = [] } = options
 	const historyIndexesBasePath = _getHistoryIndexesBasePath()
 
@@ -688,7 +688,7 @@ export async function reindexHistoryItems(options: HistoryRebuildOptions): Promi
 
 		// Step 2: Rebuild indexes with the scan results
 		logMessage(logs, `[reindexHistoryItems] Rebuilding indexes in ${options.mode} mode...`)
-		await rebuildIndexes(scan, options)
+		await _rebuildIndexes(scan, options)
 
 		// Step 3: Verify the results with another scan (unless noVerify is true)
 		if (!options.noVerify) {

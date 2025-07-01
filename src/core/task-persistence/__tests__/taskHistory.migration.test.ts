@@ -33,7 +33,7 @@ vi.mock("../../../extension", () => ({
 import * as fs from "fs/promises"
 import getFolderSize from "get-folder-size"
 import * as taskHistoryModule from "../taskHistory"
-import { migrateTaskHistoryStorage, scanTaskHistory, rebuildIndexes, setHistoryItems } from "../taskHistory"
+import { migrateTaskHistoryStorage, scanTaskHistory, _rebuildIndexes, setHistoryItems } from "../taskHistory"
 import { safeWriteJson, safeReadJson } from "../../../utils/safeWriteJson"
 import { getWorkspacePath } from "../../../utils/path"
 import { getExtensionContext } from "../../../extension"
@@ -563,7 +563,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes to simulate backup creation
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Simulate rename for backup
 				if (opts.mode === "replace") {
 					vi.mocked(fs.rename).mockResolvedValueOnce(undefined)
@@ -578,10 +578,10 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				return
 			})
 
-			await rebuildIndexes(scanResults, options)
+			await _rebuildIndexes(scanResults, options)
 
 			// Verify rebuildIndexes was called with the right parameters
-			expect(vi.mocked(taskHistoryModule.rebuildIndexes)).toHaveBeenCalledWith(scanResults, options)
+			expect(vi.mocked(taskHistoryModule._rebuildIndexes)).toHaveBeenCalledWith(scanResults, options)
 		})
 
 		test("should preserve existing data in merge mode", async () => {
@@ -595,7 +595,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes for merge mode
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Add logs
 				if (opts.logs) {
 					opts.logs.push("Processing 2 valid tasks")
@@ -605,10 +605,10 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				return
 			})
 
-			await rebuildIndexes(scanResults, options)
+			await _rebuildIndexes(scanResults, options)
 
 			// Verify rebuildIndexes was called with the right parameters
-			expect(vi.mocked(taskHistoryModule.rebuildIndexes)).toHaveBeenCalledWith(scanResults, options)
+			expect(vi.mocked(taskHistoryModule._rebuildIndexes)).toHaveBeenCalledWith(scanResults, options)
 
 			// Verify no backup was created (rename not called)
 			expect(vi.mocked(fs.rename)).not.toHaveBeenCalled()
@@ -626,7 +626,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes to check mergeFromGlobal option
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Simulate setHistoryItems call with appropriate items
 				if (opts.mergeFromGlobal) {
 					const items = [
@@ -644,7 +644,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			// Spy on setHistoryItems to capture the items being set
 			const spy = vi.spyOn(taskHistoryModule, "setHistoryItems")
 
-			await rebuildIndexes(scanResults, options)
+			await _rebuildIndexes(scanResults, options)
 
 			// Verify setHistoryItems was called with both valid and globalState items
 			expect(spy).toHaveBeenCalled()
@@ -665,7 +665,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes to check reconstructOrphans option
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Simulate setHistoryItems call with appropriate items
 				const items = [...Array.from(scan.tasks.valid.values())]
 
@@ -680,7 +680,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			// Spy on setHistoryItems to capture the items being set
 			const spy = vi.spyOn(taskHistoryModule, "setHistoryItems")
 
-			await rebuildIndexes(scanResults, options)
+			await _rebuildIndexes(scanResults, options)
 
 			// Verify setHistoryItems was called with valid and orphaned items
 			expect(spy).toHaveBeenCalled()
@@ -706,7 +706,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes to simulate failure and backup restoration
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				if (opts.mode === "replace") {
 					// Simulate rename for backup
 					vi.mocked(fs.rename).mockResolvedValueOnce(undefined)
@@ -719,7 +719,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			})
 
 			// Should throw an error
-			await expect(rebuildIndexes(scanResults, options)).rejects.toThrow()
+			await expect(_rebuildIndexes(scanResults, options)).rejects.toThrow()
 		})
 
 		test("should generate log messages", async () => {
@@ -734,7 +734,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes to add log messages
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Add logs
 				if (opts.logs) {
 					opts.logs.push("Processing 2 valid tasks")
@@ -744,7 +744,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				return
 			})
 
-			await rebuildIndexes(scanResults, options)
+			await _rebuildIndexes(scanResults, options)
 
 			// Verify logs were generated
 			expect(logs.length).toBe(2)
@@ -773,7 +773,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 			}
 
 			// Mock rebuildIndexes to handle empty item set
-			vi.spyOn(taskHistoryModule, "rebuildIndexes").mockImplementation(async (scan, opts) => {
+			vi.spyOn(taskHistoryModule, "_rebuildIndexes").mockImplementation(async (scan, opts) => {
 				// Add logs
 				if (opts.logs) {
 					opts.logs.push("No items to index, skipping index rebuild")
@@ -782,7 +782,7 @@ describe("taskHistory.ts - Migration and Maintenance Functions", () => {
 				return
 			})
 
-			await rebuildIndexes(emptyScanResults, options)
+			await _rebuildIndexes(emptyScanResults, options)
 
 			// Verify no items were indexed
 			expect(logs.length).toBe(1)
