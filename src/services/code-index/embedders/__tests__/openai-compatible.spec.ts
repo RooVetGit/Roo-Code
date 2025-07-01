@@ -665,6 +665,53 @@ describe("OpenAICompatibleEmbedder", () => {
 					const isFullUrl = (embedder as any).isFullEndpointUrl(url)
 					expect(isFullUrl).toBe(expected)
 				})
+
+				// Edge cases where 'embeddings' or 'deployments' appear in non-endpoint contexts
+				it("should return false for URLs with 'embeddings' in non-endpoint contexts", () => {
+					const testUrls = [
+						"https://api.example.com/embeddings-service/v1",
+						"https://embeddings.example.com/api",
+						"https://api.example.com/v1/embeddings-api",
+						"https://my-embeddings-provider.com/v1",
+					]
+
+					testUrls.forEach((url) => {
+						const embedder = new OpenAICompatibleEmbedder(url, testApiKey, testModelId)
+						const isFullUrl = (embedder as any).isFullEndpointUrl(url)
+						expect(isFullUrl).toBe(false)
+					})
+				})
+
+				it("should return false for URLs with 'deployments' in non-endpoint contexts", () => {
+					const testUrls = [
+						"https://deployments.example.com/api",
+						"https://api.deployments.com/v1",
+						"https://my-deployments-service.com/api/v1",
+						"https://deployments-manager.example.com",
+					]
+
+					testUrls.forEach((url) => {
+						const embedder = new OpenAICompatibleEmbedder(url, testApiKey, testModelId)
+						const isFullUrl = (embedder as any).isFullEndpointUrl(url)
+						expect(isFullUrl).toBe(false)
+					})
+				})
+
+				it("should correctly identify actual endpoint URLs", () => {
+					const endpointUrls = [
+						"https://api.example.com/v1/embeddings",
+						"https://api.example.com/v1/embeddings?api-version=2024",
+						"https://myresource.openai.azure.com/openai/deployments/mymodel/embeddings",
+						"https://api.example.com/embed",
+						"https://api.example.com/embed?version=1",
+					]
+
+					endpointUrls.forEach((url) => {
+						const embedder = new OpenAICompatibleEmbedder(url, testApiKey, testModelId)
+						const isFullUrl = (embedder as any).isFullEndpointUrl(url)
+						expect(isFullUrl).toBe(true)
+					})
+				})
 			})
 
 			describe("direct HTTP requests", () => {
