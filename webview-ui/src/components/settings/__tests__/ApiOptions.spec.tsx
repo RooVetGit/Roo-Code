@@ -291,6 +291,37 @@ describe("ApiOptions", () => {
 		// since we have separate tests for that component. We just need to verify that
 		// it's included in the ApiOptions component when appropriate.
 	})
+	it("filters providers by search input and shows no match message when appropriate", () => {
+		renderApiOptions({
+			apiConfiguration: {},
+			setApiConfigurationField: () => {},
+		})
+
+		// Open the provider popover
+		const popoverTrigger = screen.getByTestId("provider-popover-trigger")
+		fireEvent.click(popoverTrigger)
+
+		// Find the search input (translation mock returns key as placeholder)
+		const searchInput = screen.getByPlaceholderText("settings:providers.searchProviderPlaceholder")
+
+		// Type a search string that matches a provider (e.g., "OpenAI")
+		fireEvent.change(searchInput, { target: { value: "OpenAI" } })
+
+		// Should show at least one provider option with "OpenAI" in the label
+		const openAiOption = screen.getByText("OpenAI")
+		expect(openAiOption).toBeInTheDocument()
+		expect(openAiOption.className).toContain("command-item-mock")
+
+		// Should not show unrelated providers
+		const unrelatedOption = screen.queryByText(/Anthropic/i)
+		expect(unrelatedOption).not.toBeInTheDocument()
+
+		// Type a string that matches nothing
+		fireEvent.change(searchInput, { target: { value: "zzzzzz" } })
+
+		// Should show "No providers found" message (translation mock returns key)
+		expect(screen.getByText("settings:providers.noProviderMatchFound")).toBeInTheDocument()
+	})
 
 	describe("OpenAI provider tests", () => {
 		it("removes reasoningEffort from openAiCustomModelInfo when unchecked", () => {
