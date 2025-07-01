@@ -30,6 +30,7 @@ const SUPPORTED_IMAGE_FORMATS = [
 	".ico",
 	".tiff",
 	".tif",
+	".avif",
 ] as const
 
 /**
@@ -52,6 +53,7 @@ async function readImageAsDataUrl(filePath: string): Promise<string> {
 		".ico": "image/x-icon",
 		".tiff": "image/tiff",
 		".tif": "image/tiff",
+		".avif": "image/avif",
 	}
 
 	const mimeType = mimeTypes[ext] || "image/png"
@@ -533,14 +535,19 @@ export async function readFileTool(
 						}
 					}
 
-					if (!supportedBinaryFormats.includes(fileExtension)) {
+					// Check if it's a supported binary format that can be processed
+					if (supportedBinaryFormats && supportedBinaryFormats.includes(fileExtension)) {
+						// For supported binary formats (.pdf, .docx, .ipynb), continue to extractTextFromFile
+						// Fall through to the normal extractTextFromFile processing below
+					} else {
+						// Handle unknown binary format
+						const fileFormat = fileExtension.slice(1) || "bin" // Remove the dot, fallback to "bin"
 						updateFileResult(relPath, {
-							notice: "Binary file",
-							xmlContent: `<file><path>${relPath}</path>\n<notice>Binary file</notice>\n</file>`,
+							notice: `Binary file format: ${fileFormat}`,
+							xmlContent: `<file><path>${relPath}</path>\n<binary_file format="${fileFormat}">Binary file - content not displayed</binary_file>\n</file>`,
 						})
 						continue
 					}
-					// For supported binary formats (.pdf, .docx, .ipynb), continue to extractTextFromFile
 				}
 
 				// Handle range reads (bypass maxReadFileLine)
@@ -675,20 +682,29 @@ export async function readFileTool(
 		const allImages = [...feedbackImages, ...fileImageUrls]
 
 		// Push the result with appropriate formatting
-		if (statusMessage) {
-			const result = formatResponse.toolResult(statusMessage, allImages)
+		if (statusMessage || allImages.length > 0) {
+			// Always use formatResponse.toolResult when we have a status message or images
+			const result = formatResponse.toolResult(
+				statusMessage || filesXml,
+				allImages.length > 0 ? allImages : undefined,
+			)
 
 			// Handle different return types from toolResult
 			if (typeof result === "string") {
-				pushToolResult(`${result}\n${filesXml}`)
+				if (statusMessage) {
+					pushToolResult(`${result}\n${filesXml}`)
+				} else {
+					pushToolResult(result)
+				}
 			} else {
-				// For block-based results, append the files XML as a text block
-				const textBlock = { type: "text" as const, text: filesXml }
-				pushToolResult([...result, textBlock])
+				// For block-based results, append the files XML as a text block if not already included
+				if (statusMessage) {
+					const textBlock = { type: "text" as const, text: filesXml }
+					pushToolResult([...result, textBlock])
+				} else {
+					pushToolResult(result)
+				}
 			}
-		} else if (allImages.length > 0) {
-			// If we have images but no status message, create blocks
-			pushToolResult([{ type: "text" as const, text: filesXml }, ...formatResponse.imageBlocks(allImages)])
 		} else {
 			// No images or status message, just push the files XML
 			pushToolResult(filesXml)
