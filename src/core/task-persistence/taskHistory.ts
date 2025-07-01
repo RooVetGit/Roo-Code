@@ -28,6 +28,37 @@ const BATCH_SIZE = 16
 
 const itemObjectCache = new Map<string, HistoryItem>()
 
+// Mutex for serializing history operations to prevent concurrent execution
+// This ensures that search and reindex operations don't run at the same time
+let historyOperationMutex: Promise<void> = Promise.resolve()
+
+/**
+ * Helper function to execute an operation with mutex protection.
+ * This ensures that operations are serialized and don't run concurrently.
+ * It also handles errors properly to prevent breaking the mutex chain.
+ * @param operation - The async operation to execute
+ * @returns The result of the operation
+ */
+async function _withMutex<T>(operation: () => Promise<T>): Promise<T> {
+	// Wait for any ongoing operations to complete
+	await historyOperationMutex
+
+	// Execute the operation
+	const operationPromise = operation()
+
+	// Update the mutex and ensure it always resolves, even if the operation fails
+	historyOperationMutex = operationPromise
+		.catch((err) => {
+			console.error(`[TaskHistory] Error in mutex-protected operation:`, err)
+			// Re-throw to propagate the error to the caller
+			throw err
+		})
+		.then(() => {})
+
+	// Return the result of the operation
+	return operationPromise
+}
+
 /**
  * Gets the base path for task HistoryItem storage in tasks/<id>/history_item.json
  * @returns The base path string for task items.
@@ -675,7 +706,23 @@ export async function _rebuildIndexes(scan: HistoryScanResults, options: History
  * @param options - Required options for controlling the rebuild process
  * @returns A multi-line string containing all log messages
  */
+
+/**
+ * Rebuilds history indexes based on scan results and options.
+ * This function holds the historySearchQueue so that search requests cannot proceed until indexing is complete.
+ * @param options - Options for controlling the rebuild process.
+ * @returns Updated HistoryScanResults reflecting any changes made during rebuilding.
+ */
 export async function reindexHistoryItems(options: HistoryRebuildOptions): Promise<HistoryScanResults | undefined> {
+	// Use the mutex helper to ensure this operation doesn't run concurrently with search operations
+	return _withMutex(() => _reindexHistoryItems(options))
+}
+
+/**
+ * Private implementation of reindexHistoryItems.
+ * This function contains the actual reindexing logic.
+ */
+async function _reindexHistoryItems(options: HistoryRebuildOptions): Promise<HistoryScanResults | undefined> {
 	// Use the logs array from options if provided, or create a new one
 	// We're using the original options object to ensure logs are shared with the caller
 	const logs = options.logs || []
@@ -751,9 +798,6 @@ function _sortHistoryItems(items: HistoryItem[], sortOption: HistorySortOption):
 	}
 }
 
-// Queue for serializing calls to getHistoryItemsForSearch
-let historySearchQueue: Promise<HistorySearchResults> = Promise.resolve({ items: [] })
-
 /**
  * Retrieves history items based on a search query, optional date range, and optional limit.
  * Items are sorted according to the sortOption parameter (defaults to "newest").
@@ -762,8 +806,8 @@ let historySearchQueue: Promise<HistorySearchResults> = Promise.resolve({ items:
  * @returns A promise that resolves to an array of matching HistoryItem objects.
  */
 export async function getHistoryItemsForSearch(search: HistorySearchOptions): Promise<HistorySearchResults> {
-	// Serialize calls to allow cache to heat up
-	return (historySearchQueue = historySearchQueue.then(() => _getHistoryItemsForSearch(search)))
+	// Use the mutex helper to ensure this operation doesn't run concurrently with reindex operations
+	return _withMutex(() => _getHistoryItemsForSearch(search))
 }
 
 /**
