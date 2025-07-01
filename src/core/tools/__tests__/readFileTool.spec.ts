@@ -38,7 +38,11 @@ vi.mock("fs/promises", () => fsPromises)
 let mockInputContent = ""
 
 // First create all the mocks
-vi.mock("../../../integrations/misc/extract-text")
+vi.mock("../../../integrations/misc/extract-text", () => ({
+	extractTextFromFile: vi.fn(),
+	addLineNumbers: vi.fn(),
+	getSupportedBinaryFormats: vi.fn(() => [".pdf", ".docx", ".ipynb"]),
+}))
 vi.mock("../../../services/tree-sitter")
 
 // Then create the mock functions
@@ -743,12 +747,32 @@ describe("read_file tool with image support", () => {
 			// Setup - simulate read error
 			mockedFsReadFile.mockRejectedValue(new Error("Failed to read image"))
 
-			// Execute
-			const result = await executeReadImageTool()
+			// Create a spy for handleError
+			const handleErrorSpy = vi.fn()
+
+			// Execute with the spy
+			const argsContent = `<file><path>${testImagePath}</path></file>`
+			const toolUse: ReadFileToolUse = {
+				type: "tool_use",
+				name: "read_file",
+				params: { args: argsContent },
+				partial: false,
+			}
+
+			await readFileTool(
+				mockCline,
+				toolUse,
+				mockCline.ask,
+				handleErrorSpy, // Use our spy here
+				(result: ToolResponse) => {
+					toolResult = result
+				},
+				(_: ToolParamName, content?: string) => content ?? "",
+			)
 
 			// Verify error handling
-			expect(result).toContain("<error>Error reading image file: Failed to read image</error>")
-			expect(mockCline.handleError).toHaveBeenCalled()
+			expect(toolResult).toContain("<error>Error reading image file: Failed to read image</error>")
+			expect(handleErrorSpy).toHaveBeenCalled()
 		})
 	})
 
