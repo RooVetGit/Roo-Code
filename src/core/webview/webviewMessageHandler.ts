@@ -55,6 +55,35 @@ export const webviewMessageHandler = async (
 		await provider.contextProxy.setValue(key, value)
 
 	switch (message.type) {
+		case "diffViewAutoFocus":
+			const diffViewAutoFocus = message.bool ?? true
+			await provider.context.globalState.update("diffViewAutoFocus", diffViewAutoFocus)
+			// Also update workspace settings
+			const currentConfig = vscode.workspace.getConfiguration("roo-cline")
+			await currentConfig.update("diffViewAutoFocus", diffViewAutoFocus, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("diffViewAutoFocus", diffViewAutoFocus)
+			await provider.postStateToWebview()
+			break
+		case "autoCloseRooTabs":
+			const autoCloseRooTabs = message.bool ?? false
+			await provider.context.globalState.update("autoCloseRooTabs", autoCloseRooTabs)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("autoCloseRooTabs", autoCloseRooTabs, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("autoCloseRooTabs", autoCloseRooTabs)
+			await provider.postStateToWebview()
+			break
+		case "autoCloseAllRooTabs":
+			const autoCloseAllRooTabs = message.bool ?? false
+			await provider.context.globalState.update("autoCloseAllRooTabs", autoCloseAllRooTabs)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("autoCloseAllRooTabs", autoCloseAllRooTabs, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("autoCloseAllRooTabs", autoCloseAllRooTabs)
+			await provider.postStateToWebview()
+			break
 		case "webviewDidLaunch":
 			// Load custom modes first
 			const customModes = await provider.customModesManager.getCustomModes()
@@ -750,7 +779,40 @@ export const webviewMessageHandler = async (
 			break
 		case "diffEnabled":
 			const diffEnabled = message.bool ?? true
+			await provider.context.globalState.update("diffEnabled", diffEnabled)
+			// Also update workspace settings
+			await vscode.workspace.getConfiguration("roo-cline").update("diffEnabled", diffEnabled, vscode.ConfigurationTarget.Global)
 			await updateGlobalState("diffEnabled", diffEnabled)
+			await provider.postStateToWebview()
+			break
+		case "fileBasedEditing":
+			const fileBasedEditing = message.bool ?? false
+			await provider.context.globalState.update("fileBasedEditing", fileBasedEditing)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("fileBasedEditing", fileBasedEditing, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("fileBasedEditing", fileBasedEditing)
+			await provider.postStateToWebview()
+			break
+		case "openTabsInCorrectGroup":
+			const openTabsInCorrectGroup = message.bool ?? false
+			await provider.context.globalState.update("openTabsInCorrectGroup", openTabsInCorrectGroup)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("openTabsInCorrectGroup", openTabsInCorrectGroup, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("openTabsInCorrectGroup", openTabsInCorrectGroup)
+			await provider.postStateToWebview()
+			break
+		case "openTabsAtEndOfList":
+			const openTabsAtEndOfList = message.bool ?? false
+			await provider.context.globalState.update("openTabsAtEndOfList", openTabsAtEndOfList)
+			// Also update workspace settings
+			await vscode.workspace
+				.getConfiguration("roo-cline")
+				.update("openTabsAtEndOfList", openTabsAtEndOfList, vscode.ConfigurationTarget.Global)
+			await updateGlobalState("openTabsAtEndOfList", openTabsAtEndOfList)
 			await provider.postStateToWebview()
 			break
 		case "enableCheckpoints":

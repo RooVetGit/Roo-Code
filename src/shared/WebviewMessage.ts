@@ -20,6 +20,10 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 
 export interface WebviewMessage {
 	type:
+		| "diffViewAutoFocus"
+		| "autoCloseRooTabs"
+		| "autoCloseAllRooTabs"
+		| "apiConfiguration"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
@@ -83,6 +87,9 @@ export interface WebviewMessage {
 		| "ttsSpeed"
 		| "soundVolume"
 		| "diffEnabled"
+		| "fileBasedEditing"
+		| "openTabsInCorrectGroup"
+		| "openTabsAtEndOfList"
 		| "enableCheckpoints"
 		| "browserViewportSize"
 		| "screenshotQuality"
