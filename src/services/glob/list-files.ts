@@ -39,8 +39,26 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 	const ignoreInstance = await createIgnoreInstance(dirPath)
 	const directories = await listFilteredDirectories(dirPath, recursive, ignoreInstance)
 
+	let allFiles = files
+	let allDirectories = directories
+	const limitReached = files.length + directories.length >= limit
+
+	// If limit is reached in recursive mode, fetch one more layer non-recursively and merge results
+	if (recursive && limitReached) {
+		// Get files and directories in one layer (non-recursive)
+		const filesNonRecursive = await listFilesWithRipgrep(rgPath, dirPath, false, limit)
+		const directoriesNonRecursive = await listFilteredDirectories(dirPath, false, [])
+
+		// Merge recursive and non-recursive results, deduplicate
+		const filesSet = new Set([...files, ...filesNonRecursive])
+		const directoriesSet = new Set([...directories, ...directoriesNonRecursive])
+
+		allFiles = Array.from(filesSet)
+		allDirectories = Array.from(directoriesSet)
+	}
+
 	// Combine and format the results
-	return formatAndCombineResults(files, directories, limit)
+	return formatAndCombineResults(allFiles, allDirectories, limit)
 }
 
 /**
@@ -326,6 +344,16 @@ function formatAndCombineResults(files: string[], directories: string[], limit: 
 
 	// Sort to ensure directories come first, followed by files
 	uniquePaths.sort((a: string, b: string) => {
+		// Remove trailing slash for depth calculation
+		const aPath = a.endsWith("/") ? a.slice(0, -1) : a
+		const bPath = b.endsWith("/") ? b.slice(0, -1) : b
+		const aDepth = aPath.split("/").length
+		const bDepth = bPath.split("/").length
+
+		if (aDepth !== bDepth) {
+			return aDepth - bDepth
+		}
+
 		const aIsDir = a.endsWith("/")
 		const bIsDir = b.endsWith("/")
 
