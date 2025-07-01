@@ -17,6 +17,11 @@ import { parseXml } from "../../utils/xml"
 import * as fs from "fs/promises"
 
 /**
+ * Maximum allowed image file size in bytes (5MB)
+ */
+const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024
+
+/**
  * Supported image formats that can be displayed
  */
 const SUPPORTED_IMAGE_FORMATS = [
@@ -489,8 +494,23 @@ export async function readFileTool(
 					// Check if it's a supported image format
 					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as any)) {
 						try {
-							const imageDataUrl = await readImageAsDataUrl(fullPath)
 							const imageStats = await fs.stat(fullPath)
+
+							// Check if image file exceeds size limit
+							if (imageStats.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
+								const notice = `Image file is too large (${imageSizeInMB} MB). The maximum allowed size is 5 MB.`
+
+								// Track file read
+								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+								updateFileResult(relPath, {
+									xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
+								})
+								continue
+							}
+
+							const imageDataUrl = await readImageAsDataUrl(fullPath)
 							const imageSizeInKB = Math.round(imageStats.size / 1024)
 
 							// For images, get dimensions if possible
