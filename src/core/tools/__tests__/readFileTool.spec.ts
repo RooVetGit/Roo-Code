@@ -789,7 +789,10 @@ describe("read_file tool with image support", () => {
 
 			// Verify it uses extractTextFromFile instead
 			expect(result).not.toContain("<image_data>")
-			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absolutePath)
+			// Make the test platform-agnostic by checking the call was made (path normalization can vary)
+			expect(mockedExtractTextFromFile).toHaveBeenCalledTimes(1)
+			const callArgs = mockedExtractTextFromFile.mock.calls[0]
+			expect(callArgs[0]).toMatch(/[\\\/]test[\\\/]document\.pdf$/)
 		})
 
 		it("should handle unknown binary formats", async () => {
