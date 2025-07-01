@@ -4,7 +4,7 @@
 	"modes": {
 		"title": "Modes",
 		"createNewMode": "Create new mode",
-		"importMode": "Import mode",
+		"importMode": "Import Mode",
 		"editModesConfig": "Edit modes configuration",
 		"editGlobalModes": "Edit Global Modes",
 		"editProjectModes": "Edit Project Modes (.roomodes)",
