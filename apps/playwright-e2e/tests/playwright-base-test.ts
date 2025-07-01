@@ -35,9 +35,10 @@ export const test = base.extend<TestFixtures>({
 				"--disable-workspace-trust",
 				"--disable-telemetry",
 				"--disable-crash-reporter",
-				"--headless",
 				"--disable-gpu",
 				"--disable-dev-shm-usage",
+				// Add CI-specific args for better Docker compatibility
+				...(process.env.CI ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
 				`--extensionDevelopmentPath=${path.resolve(__dirname, "..", "..", "..", "src")}`,
 				`--extensions-dir=${path.join(defaultCachePath, "extensions")}`,
 				`--user-data-dir=${path.join(defaultCachePath, "user-data")}`,
@@ -46,7 +47,26 @@ export const test = base.extend<TestFixtures>({
 			],
 		})
 
-		const workbox = await electronApp.firstWindow()
+		// Add better error handling and logging for firstWindow()
+		console.log("🔄 Attempting to get VS Code first window...")
+		let workbox: Page
+		try {
+			workbox = await electronApp.firstWindow()
+			console.log("✅ Successfully got VS Code first window")
+		} catch (error) {
+			console.error("❌ Failed to get VS Code first window:", error)
+			console.log("📊 Electron app context info:")
+			console.log("  - Process count:", electronApp.context().pages().length)
+
+			// Try to get any available window
+			const pages = electronApp.context().pages()
+			if (pages.length > 0) {
+				console.log("🔄 Using first available page instead...")
+				workbox = pages[0]
+			} else {
+				throw new Error(`No VS Code window available. Original error: ${error}`)
+			}
+		}
 		await workbox.waitForLoadState("domcontentloaded")
 
 		try {

@@ -20,6 +20,10 @@
 		},
 		"packages/{build,cloud,evals,ipc,telemetry,types}": {
 			"project": ["src/**/*.ts"]
+		},
+		"apps/playwright-e2e": {
+			"entry": ["playwright.globalSetup.ts", "tests/**/*.ts"],
+			"project": ["**/*.{ts,mts,mjs}"]
 		}
 	}
 }
