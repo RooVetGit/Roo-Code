@@ -89,14 +89,14 @@ interface MermaidBlockProps {
 	code: string
 }
 
-export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) {
+export default function MermaidBlock({ code }: MermaidBlockProps) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [isErrorExpanded, setIsErrorExpanded] = useState(false)
 	const [svgContent, setSvgContent] = useState<string>("")
 	const [isFixing, setIsFixing] = useState(false)
-	const [code, setCode] = useState("")
+	const [currentCode, setCurrentCode] = useState("")
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { t } = useAppTranslation()
 
@@ -104,19 +104,19 @@ export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) 
 	useEffect(() => {
 		setIsLoading(true)
 		setError(null)
-		setCode(originalCode)
+		setCurrentCode(code)
 		setIsFixing(false)
-	}, [originalCode])
+	}, [code])
 
 	const handleSyntaxFix = async () => {
 		if (isFixing) return
 
 		setIsLoading(true)
 		setIsFixing(true)
-		const result = await MermaidSyntaxFixer.autoFixSyntax(code)
+		const result = await MermaidSyntaxFixer.autoFixSyntax(currentCode)
 		if (result.fixedCode) {
 			// Use the improved code even if not completely successful
-			setCode(result.fixedCode)
+			setCurrentCode(result.fixedCode)
 		}
 
 		if (!result.success) {
@@ -135,10 +135,10 @@ export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) 
 			setIsLoading(true)
 
 			mermaid
-				.parse(code)
+				.parse(currentCode)
 				.then(() => {
 					const id = `mermaid-${Math.random().toString(36).substring(2)}`
-					return mermaid.render(id, code)
+					return mermaid.render(id, currentCode)
 				})
 				.then(({ svg }) => {
 					setError(null)
@@ -154,7 +154,7 @@ export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) 
 				})
 		},
 		500, // Delay 500ms
-		[code, isFixing, originalCode, t], // Dependencies for scheduling
+		[currentCode, isFixing, code, t], // Dependencies for scheduling
 	)
 
 	/**
@@ -233,7 +233,7 @@ export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) 
 							<CopyButton
 								onClick={(e) => {
 									e.stopPropagation()
-									const combinedContent = `Error: ${error}\n\n\`\`\`mermaid\n${code}\n\`\`\``
+									const combinedContent = `Error: ${error}\n\n\`\`\`mermaid\n${currentCode}\n\`\`\``
 									copyWithFeedback(combinedContent, e)
 								}}>
 								<span className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`}></span>
@@ -251,20 +251,20 @@ export default function MermaidBlock({ code: originalCode }: MermaidBlockProps) 
 							<div style={{ marginBottom: "8px", color: "var(--vscode-descriptionForeground)" }}>
 								{error}
 							</div>
-							<CodeBlock language="mermaid" source={code} />
-							{code !== originalCode && (
+							<CodeBlock language="mermaid" source={currentCode} />
+							{currentCode !== code && (
 								<div style={{ marginTop: "8px" }}>
 									<div style={{ marginBottom: "4px", fontSize: "0.9em", fontWeight: "bold" }}>
 										{t("common:mermaid.original_code")}
 									</div>
-									<CodeBlock language="mermaid" source={originalCode} />
+									<CodeBlock language="mermaid" source={code} />
 								</div>
 							)}
 						</div>
 					)}
 				</div>
 			) : (
-				<MermaidButton containerRef={containerRef} code={code} isLoading={isLoading} svgToPng={svgToPng}>
+				<MermaidButton containerRef={containerRef} code={currentCode} isLoading={isLoading} svgToPng={svgToPng}>
 					<SvgContainer
 						onClick={handleClick}
 						ref={containerRef}
