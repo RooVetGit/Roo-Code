@@ -74,6 +74,7 @@ vi.mock("fs/promises", () => ({
 
 import * as vscode from "vscode"
 import fs from "fs/promises"
+import * as os from "os"
 import * as fsUtils from "../../../utils/fs"
 import { getWorkspacePath } from "../../../utils/path"
 import { ensureSettingsDirectoryExists } from "../../../utils/globalContext"
@@ -397,7 +398,8 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 
 	it("should delete a global mode and its rules folder", async () => {
 		const slug = "test-global-mode"
-		const rulesFolderPath = `/Users/hrudolph/.roo/rules-${slug}`
+		const homeDir = os.homedir()
+		const rulesFolderPath = `${homeDir}/.roo/rules-${slug}`
 
 		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
 			{
