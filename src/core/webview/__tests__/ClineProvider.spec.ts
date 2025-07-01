@@ -521,6 +521,8 @@ describe("ClineProvider", () => {
 			mcpEnabled: true,
 			enableMcpServerCreation: false,
 			requestDelaySeconds: 5,
+			minRetryDelaySeconds: 5,
+			maxRetryDelaySeconds: 100,
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,

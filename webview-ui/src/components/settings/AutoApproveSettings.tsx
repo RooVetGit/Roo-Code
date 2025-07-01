@@ -21,6 +21,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowBrowser?: boolean
 	alwaysApproveResubmit?: boolean
 	requestDelaySeconds: number
+	minRetryDelaySeconds: number
+	maxRetryDelaySeconds: number
 	alwaysAllowMcp?: boolean
 	alwaysAllowModeSwitch?: boolean
 	alwaysAllowSubtasks?: boolean
@@ -36,6 +38,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysAllowBrowser"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
+		| "minRetryDelaySeconds"
+		| "maxRetryDelaySeconds"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
 		| "alwaysAllowSubtasks"
@@ -54,6 +58,8 @@ export const AutoApproveSettings = ({
 	alwaysAllowBrowser,
 	alwaysApproveResubmit,
 	requestDelaySeconds,
+	minRetryDelaySeconds,
+	maxRetryDelaySeconds,
 	alwaysAllowMcp,
 	alwaysAllowModeSwitch,
 	alwaysAllowSubtasks,
@@ -184,19 +190,43 @@ export const AutoApproveSettings = ({
 							<div>{t("settings:autoApprove.retry.label")}</div>
 						</div>
 						<div>
-							<div className="flex items-center gap-2">
-								<Slider
-									min={5}
-									max={100}
-									step={1}
-									value={[requestDelaySeconds]}
-									onValueChange={([value]) => setCachedStateField("requestDelaySeconds", value)}
-									data-testid="request-delay-slider"
-								/>
-								<span className="w-20">{requestDelaySeconds}s</span>
+							<div className="mb-3">
+								<label className="block font-medium mb-1">
+									{t("settings:autoApprove.retry.minDelayLabel")}
+								</label>
+								<div className="flex items-center gap-2">
+									<Slider
+										min={1}
+										max={60}
+										step={1}
+										value={[minRetryDelaySeconds]}
+										onValueChange={([value]) => setCachedStateField("minRetryDelaySeconds", value)}
+										data-testid="min-retry-delay-slider"
+									/>
+									<span className="w-20">{minRetryDelaySeconds}s</span>
+								</div>
+								<div className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:autoApprove.retry.minDelayDescription")}
+								</div>
 							</div>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:autoApprove.retry.delayLabel")}
+							<div>
+								<label className="block font-medium mb-1">
+									{t("settings:autoApprove.retry.maxDelayLabel")}
+								</label>
+								<div className="flex items-center gap-2">
+									<Slider
+										min={10}
+										max={300}
+										step={5}
+										value={[maxRetryDelaySeconds]}
+										onValueChange={([value]) => setCachedStateField("maxRetryDelaySeconds", value)}
+										data-testid="max-retry-delay-slider"
+									/>
+									<span className="w-20">{maxRetryDelaySeconds}s</span>
+								</div>
+								<div className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:autoApprove.retry.maxDelayDescription")}
+								</div>
 							</div>
 						</div>
 					</div>

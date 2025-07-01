@@ -1648,6 +1648,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			autoApprovalEnabled,
 			alwaysApproveResubmit,
 			requestDelaySeconds,
+			minRetryDelaySeconds = 5,
+			maxRetryDelaySeconds = 100,
 			mode,
 			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
@@ -1806,6 +1808,11 @@ export class Task extends EventEmitter<ClineEvents> {
 					Math.ceil(baseDelay * Math.pow(2, retryAttempt)),
 					MAX_EXPONENTIAL_BACKOFF_SECONDS,
 				)
+
+				// Apply min/max bounds to the exponential delay
+				const minDelay = minRetryDelaySeconds || 5
+				const maxDelay = maxRetryDelaySeconds || 100
+				exponentialDelay = Math.min(Math.max(exponentialDelay, minDelay), maxDelay)
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
 				if (error.status === 429) {

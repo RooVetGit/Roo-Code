@@ -116,6 +116,8 @@ export interface WebviewMessage {
 		| "searchCommits"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
+		| "minRetryDelaySeconds"
+		| "maxRetryDelaySeconds"
 		| "setApiConfigPassword"
 		| "mode"
 		| "updatePrompt"

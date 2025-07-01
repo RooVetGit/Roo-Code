@@ -1521,6 +1521,8 @@ export class ClineProvider
 			profileThresholds: profileThresholds ?? {},
 			cloudApiUrl: getRooCodeApiUrl(),
 			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
+			minRetryDelaySeconds: this.getGlobalState("minRetryDelaySeconds") ?? 5,
+			maxRetryDelaySeconds: this.getGlobalState("maxRetryDelaySeconds") ?? 100,
 		}
 	}
 
@@ -1671,6 +1673,8 @@ export class ClineProvider
 				codebaseIndexEmbedderModelId: "",
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
+			minRetryDelaySeconds: stateValues.minRetryDelaySeconds ?? 5,
+			maxRetryDelaySeconds: stateValues.maxRetryDelaySeconds ?? 100,
 		}
 	}
 

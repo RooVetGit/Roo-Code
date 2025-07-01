@@ -91,6 +91,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAlwaysApproveResubmit: (value: boolean) => void
 	requestDelaySeconds: number
 	setRequestDelaySeconds: (value: number) => void
+	minRetryDelaySeconds: number
+	setMinRetryDelaySeconds: (value: number) => void
+	maxRetryDelaySeconds: number
+	setMaxRetryDelaySeconds: (value: number) => void
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ProviderSettingsEntry[]) => void
 	mode: Mode
@@ -173,6 +177,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		enableMcpServerCreation: false,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
+		minRetryDelaySeconds: 5,
+		maxRetryDelaySeconds: 100,
 		currentApiConfigName: "default",
 		listApiConfigMeta: [],
 		mode: defaultModeSlug,
@@ -393,6 +399,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			setState((prevState) => ({ ...prevState, enableMcpServerCreation: value })),
 		setAlwaysApproveResubmit: (value) => setState((prevState) => ({ ...prevState, alwaysApproveResubmit: value })),
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
+		setMinRetryDelaySeconds: (value) => setState((prevState) => ({ ...prevState, minRetryDelaySeconds: value })),
+		setMaxRetryDelaySeconds: (value) => setState((prevState) => ({ ...prevState, maxRetryDelaySeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
 		setMode: (value: Mode) => setState((prevState) => ({ ...prevState, mode: value })),
