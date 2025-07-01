@@ -197,8 +197,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 	// Add context tokens information.
 	const { contextTokens, totalCost } = getApiMetrics(cline.clineMessages)
-	const { id: modelId, info: modelInfo } = cline.api.getModel()
-	const contextWindow = modelInfo.contextWindow
+	const { id: modelId } = cline.api.getModel()
 
 	details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
 
