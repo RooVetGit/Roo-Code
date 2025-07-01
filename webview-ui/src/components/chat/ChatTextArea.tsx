@@ -9,6 +9,7 @@ import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { useChatTextDraft } from "./hooks/useChatTextDraft"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	ContextMenuOptionType,
@@ -69,6 +70,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		ref,
 	) => {
 		const { t } = useAppTranslation()
+
+		// Chat draft persistence
+		const { handleSendAndClearDraft } = useChatTextDraft("chat_textarea_draft", inputValue, setInputValue, onSend)
+
 		const {
 			filePaths,
 			openedTabs,
@@ -389,7 +394,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					if (!sendingDisabled) {
 						// Reset history navigation state when sending
 						resetHistoryNavigation()
-						onSend()
+						handleSendAndClearDraft()
 					}
 				}
 
@@ -438,22 +443,22 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 			},
 			[
-				sendingDisabled,
-				onSend,
 				showContextMenu,
-				searchQuery,
-				selectedMenuIndex,
-				handleMentionSelect,
-				selectedType,
-				inputValue,
-				cursorPosition,
-				setInputValue,
-				justDeletedSpaceAfterMention,
-				queryItems,
-				allModes,
-				fileSearchResults,
 				handleHistoryNavigation,
+				selectedMenuIndex,
+				searchQuery,
+				inputValue,
+				selectedType,
+				queryItems,
+				fileSearchResults,
+				allModes,
+				handleMentionSelect,
+				sendingDisabled,
 				resetHistoryNavigation,
+				handleSendAndClearDraft,
+				cursorPosition,
+				justDeletedSpaceAfterMention,
+				setInputValue,
 			],
 		)
 
@@ -1151,7 +1156,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							iconClass="codicon-send"
 							title={t("chat:sendMessage")}
 							disabled={sendingDisabled}
-							onClick={onSend}
+							onClick={handleSendAndClearDraft}
 						/>
 					</div>
 				</div>
