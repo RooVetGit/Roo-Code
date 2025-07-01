@@ -146,8 +146,6 @@ describe("getEnvironmentDetails", () => {
 		expect(result).toContain("# VSCode Visible Files")
 		expect(result).toContain("# VSCode Open Tabs")
 		expect(result).toContain("# Current Time")
-		// Context size removed from model-facing output to prevent behavioral changes
-		// expect(result).toContain("# Current Context Size (Tokens)")
 		expect(result).toContain("# Current Cost")
 		expect(result).toContain("# Current Mode")
 		expect(result).toContain("<model>test-model</model>")
