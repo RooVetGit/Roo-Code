@@ -4,6 +4,32 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import { EventEmitter } from "vscode"
 
+// Error types for better error handling
+export enum FileChangeErrorType {
+	PERSISTENCE_FAILED = "PERSISTENCE_FAILED",
+	FILE_NOT_FOUND = "FILE_NOT_FOUND",
+	PERMISSION_DENIED = "PERMISSION_DENIED",
+	DISK_FULL = "DISK_FULL",
+	GENERIC_ERROR = "GENERIC_ERROR",
+}
+
+export class FileChangeError extends Error {
+	constructor(
+		public type: FileChangeErrorType,
+		public uri?: string,
+		message?: string,
+		public originalError?: Error,
+	) {
+		super(message || originalError?.message || "File change operation failed")
+		this.name = "FileChangeError"
+	}
+}
+
+// Callback interface for error notifications
+export interface FileChangeErrorHandler {
+	onError(error: FileChangeError): void
+}
+
 export class FileChangeManager {
 	private readonly _onDidChange = new EventEmitter<void>()
 	public readonly onDidChange = this._onDidChange.event
@@ -14,6 +40,7 @@ export class FileChangeManager {
 	private readonly instanceId: string
 	private persistenceInProgress = false
 	private pendingPersistence = false
+	private errorHandler?: FileChangeErrorHandler
 
 	constructor(baseCheckpoint: string, taskId?: string, globalStoragePath?: string) {
 		this.instanceId = crypto.randomUUID()
@@ -29,8 +56,47 @@ export class FileChangeManager {
 		// Load persisted changes if available
 		if (this.taskId && this.globalStoragePath) {
 			this.loadPersistedChanges().catch((error) => {
-				console.warn(`Failed to load persisted file changes for task ${this.taskId}:`, error)
+				const fileChangeError = this.createError(FileChangeErrorType.PERSISTENCE_FAILED, undefined, error)
+				this.handleError(fileChangeError, false) // Don't notify user for initialization errors
 			})
+		}
+	}
+
+	/**
+	 * Set error handler for user notifications
+	 */
+	public setErrorHandler(handler: FileChangeErrorHandler): void {
+		this.errorHandler = handler
+	}
+
+	/**
+	 * Create a FileChangeError from a generic error
+	 */
+	private createError(type: FileChangeErrorType, uri?: string, originalError?: Error): FileChangeError {
+		let message = originalError?.message || ""
+
+		// Categorize errors based on common patterns
+		if (message.includes("ENOENT") || message.includes("no such file")) {
+			type = FileChangeErrorType.FILE_NOT_FOUND
+		} else if (message.includes("EACCES") || message.includes("permission denied")) {
+			type = FileChangeErrorType.PERMISSION_DENIED
+		} else if (message.includes("ENOSPC") || message.includes("no space left")) {
+			type = FileChangeErrorType.DISK_FULL
+		}
+
+		return new FileChangeError(type, uri, message, originalError)
+	}
+
+	/**
+	 * Handle errors with optional user notification
+	 */
+	private handleError(error: FileChangeError, notifyUser: boolean = true): void {
+		// Always log to console for debugging
+		console.warn(`FileChangeManager error (${error.type}):`, error.message, error.originalError)
+
+		// Notify user if handler is set and notification is requested
+		if (notifyUser && this.errorHandler) {
+			this.errorHandler.onError(error)
 		}
 	}
 
@@ -81,54 +147,91 @@ export class FileChangeManager {
 
 		// Always persist changes after recording (for both new and updated changes)
 		this.persistChanges().catch((error) => {
-			console.warn(`Failed to persist file changes for task ${this.taskId}:`, error)
+			const fileChangeError = this.createError(FileChangeErrorType.PERSISTENCE_FAILED, uri, error)
+			this.handleError(fileChangeError, false) // Don't notify user for automatic persistence failures
 		})
 
 		this._onDidChange.fire()
 	}
 
 	public async acceptChange(uri: string): Promise<void> {
-		// For now, just remove from tracking - the changes are already applied
-		this.changeset.files.delete(uri)
-		try {
-			await this.persistChanges()
-		} catch (error) {
-			console.warn(`Failed to persist file changes after accepting ${uri}:`, error)
+		// Store the original file change in case we need to restore it
+		const originalChange = this.changeset.files.get(uri)
+		if (!originalChange) {
+			// Silently return if file is not tracked (already accepted/rejected)
+			return
 		}
-		this._onDidChange.fire()
+
+		try {
+			// Remove from tracking - the changes are already applied
+			this.changeset.files.delete(uri)
+			await this.persistChanges()
+			this._onDidChange.fire()
+		} catch (error) {
+			// Re-add file to tracking if persistence failed
+			this.changeset.files.set(uri, originalChange)
+			const fileChangeError = this.createError(FileChangeErrorType.PERSISTENCE_FAILED, uri, error as Error)
+			this.handleError(fileChangeError)
+			throw fileChangeError
+		}
 	}
 
 	public async rejectChange(uri: string): Promise<void> {
-		// Remove from tracking - the actual revert will be handled by the caller
-		this.changeset.files.delete(uri)
-		try {
-			await this.persistChanges()
-		} catch (error) {
-			console.warn(`Failed to persist file changes after rejecting ${uri}:`, error)
+		// Store the original file change in case we need to restore it
+		const originalChange = this.changeset.files.get(uri)
+		if (!originalChange) {
+			// Silently return if file is not tracked (already accepted/rejected)
+			return
 		}
-		this._onDidChange.fire()
+
+		try {
+			// Remove from tracking - the actual revert will be handled by the caller
+			this.changeset.files.delete(uri)
+			await this.persistChanges()
+			this._onDidChange.fire()
+		} catch (error) {
+			// Re-add file to tracking if persistence failed
+			this.changeset.files.set(uri, originalChange)
+			const fileChangeError = this.createError(FileChangeErrorType.PERSISTENCE_FAILED, uri, error as Error)
+			this.handleError(fileChangeError)
+			throw fileChangeError
+		}
 	}
 
 	public async acceptAll(): Promise<void> {
-		// Accept all changes - they're already applied
-		this.changeset.files.clear()
+		// Store all file changes in case we need to restore them
+		const originalChanges = new Map(this.changeset.files)
+
 		try {
+			// Accept all changes - they're already applied
+			this.changeset.files.clear()
 			await this.clearPersistedChanges()
+			this._onDidChange.fire()
 		} catch (error) {
-			console.warn(`Failed to clear persisted file changes after accepting all:`, error)
+			// Restore all changes if persistence failed
+			this.changeset.files = originalChanges
+			const fileChangeError = this.createError(FileChangeErrorType.PERSISTENCE_FAILED, undefined, error as Error)
+			this.handleError(fileChangeError)
+			throw fileChangeError
 		}
-		this._onDidChange.fire()
 	}
 
 	public async rejectAll(): Promise<void> {
-		// Remove all from tracking - the actual revert will be handled by the caller
-		this.changeset.files.clear()
+		// Store all file changes in case we need to restore them
+		const originalChanges = new Map(this.changeset.files)
+
 		try {
+			// Remove all from tracking - the actual revert will be handled by the caller
+			this.changeset.files.clear()
 			await this.clearPersistedChanges()
+			this._onDidChange.fire()
 		} catch (error) {
-			console.warn(`Failed to clear persisted file changes after rejecting all:`, error)
+			// Restore all changes if persistence failed
+			this.changeset.files = originalChanges
+			const fileChangeError = this.createError(FileChangeErrorType.PERSISTENCE_FAILED, undefined, error as Error)
+			this.handleError(fileChangeError)
+			throw fileChangeError
 		}
-		this._onDidChange.fire()
 	}
 
 	public getFileChange(uri: string): FileChange | undefined {

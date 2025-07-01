@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "Arquivos Modificados",
+		"expand": "Expandir lista de arquivos",
+		"collapse": "Recolher lista de arquivos"
+	},
+	"actions": {
+		"accept_all": "Aceitar Todos",
+		"reject_all": "Rejeitar Todos",
+		"accept_file": "Aceitar mudanças para este arquivo",
+		"reject_file": "Rejeitar mudanças para este arquivo",
+		"view_diff": "Ver Diferenças"
+	},
+	"file_types": {
+		"edit": "editar",
+		"create": "criar",
+		"delete": "excluir"
+	},
+	"line_changes": {
+		"added": "+{{count}} linhas",
+		"removed": "-{{count}} linhas",
+		"added_removed": "+{{added}}, -{{removed}} linhas",
+		"deleted": "excluído",
+		"modified": "modificado"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) Arquivos Modificados{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "Lista de arquivos modificados. {{count}} arquivos. {{state}}",
+		"expanded": "Expandido",
+		"collapsed": "Recolhido"
+	}
+}
