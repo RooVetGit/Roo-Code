@@ -26,11 +26,19 @@ interface OpenAIEmbeddingResponse {
  * OpenAI Compatible implementation of the embedder interface with batching and rate limiting.
  * This embedder allows using any OpenAI-compatible API endpoint by specifying a custom baseURL.
  */
+interface HttpError extends Error {
+	status?: number
+	response?: {
+		status?: number
+	}
+}
+
 export class OpenAICompatibleEmbedder implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
 	private readonly baseUrl: string
 	private readonly apiKey: string
+	private readonly isFullUrl: boolean
 
 	/**
 	 * Creates a new OpenAI Compatible embedder
@@ -53,6 +61,8 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			apiKey: apiKey,
 		})
 		this.defaultModelId = modelId || getDefaultModelId("openai-compatible")
+		// Cache the URL type check for performance
+		this.isFullUrl = this.isFullEndpointUrl(baseUrl)
 	}
 
 	/**
@@ -114,14 +124,23 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	}
 
 	/**
-	 * Determines if the provided URL is a full endpoint URL (contains /embeddings or /deployments/)
-	 * or a base URL that needs the endpoint appended by the SDK
+	 * Determines if the provided URL is a full endpoint URL or a base URL that needs the endpoint appended by the SDK.
+	 * Uses smart pattern matching for known providers while accepting we can't cover all possible patterns.
 	 * @param url The URL to check
 	 * @returns true if it's a full endpoint URL, false if it's a base URL
 	 */
 	private isFullEndpointUrl(url: string): boolean {
-		// Check if the URL contains common embedding endpoint patterns
-		return url.includes("/embeddings") || url.includes("/deployments/")
+		// Known patterns for major providers
+		const patterns = [
+			// Azure OpenAI: /deployments/{deployment-name}/embeddings
+			/\/deployments\/[^\/]+\/embeddings(\?|$)/,
+			// Direct endpoints: ends with /embeddings (before query params)
+			/\/embeddings(\?|$)/,
+			// Some providers use /embed instead of /embeddings
+			/\/embed(\?|$)/,
+		]
+
+		return patterns.some((pattern) => pattern.test(url))
 	}
 
 	/**
@@ -155,7 +174,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			const error: any = new Error(`HTTP ${response.status}: ${errorText}`)
+			const error = new Error(`HTTP ${response.status}: ${errorText}`) as HttpError
 			error.status = response.status
 			throw error
 		}
@@ -173,7 +192,8 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		batchTexts: string[],
 		model: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
-		const isFullUrl = this.isFullEndpointUrl(this.baseUrl)
+		// Use cached value for performance
+		const isFullUrl = this.isFullUrl
 
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
@@ -222,8 +242,9 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 						totalTokens: response.usage?.total_tokens || 0,
 					},
 				}
-			} catch (error: any) {
-				const isRateLimitError = error?.status === 429
+			} catch (error) {
+				const httpError = error as HttpError
+				const isRateLimitError = httpError?.status === 429
 				const hasMoreAttempts = attempts < MAX_RETRIES - 1
 
 				if (isRateLimitError && hasMoreAttempts) {
@@ -244,19 +265,19 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 				// Provide more context in the error message using robust error extraction
 				let errorMessage = t("embeddings:unknownError")
-				if (error?.message) {
-					errorMessage = error.message
+				if (httpError?.message) {
+					errorMessage = httpError.message
 				} else if (typeof error === "string") {
 					errorMessage = error
-				} else if (error && typeof error.toString === "function") {
+				} else if (error && typeof error === "object" && "toString" in error) {
 					try {
-						errorMessage = error.toString()
+						errorMessage = String(error)
 					} catch {
 						errorMessage = t("embeddings:unknownError")
 					}
 				}
 
-				const statusCode = error?.status || error?.response?.status
+				const statusCode = httpError?.status || httpError?.response?.status
 
 				if (statusCode === 401) {
 					throw new Error(t("embeddings:authenticationFailed"))

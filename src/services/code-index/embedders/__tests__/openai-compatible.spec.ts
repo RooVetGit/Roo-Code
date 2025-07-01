@@ -771,4 +771,68 @@ describe("OpenAICompatibleEmbedder", () => {
 			})
 		})
 	})
+
+	describe("URL detection", () => {
+		it("should detect Azure deployment URLs as full endpoints", async () => {
+			const embedder = new OpenAICompatibleEmbedder(
+				"https://myinstance.openai.azure.com/openai/deployments/my-deployment/embeddings?api-version=2023-05-15",
+				"test-key",
+			)
+
+			// The private method is tested indirectly through the createEmbeddings behavior
+			// If it's detected as a full URL, it will make a direct HTTP request
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					data: [{ embedding: [0.1, 0.2] }],
+					usage: { prompt_tokens: 10, total_tokens: 15 },
+				}),
+			})
+			global.fetch = mockFetch
+
+			await embedder.createEmbeddings(["test"])
+
+			// Should make direct HTTP request to the full URL
+			expect(mockFetch).toHaveBeenCalledWith(
+				"https://myinstance.openai.azure.com/openai/deployments/my-deployment/embeddings?api-version=2023-05-15",
+				expect.any(Object),
+			)
+		})
+
+		it("should detect /embed endpoints as full URLs", async () => {
+			const embedder = new OpenAICompatibleEmbedder("https://api.example.com/v1/embed", "test-key")
+
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					data: [{ embedding: [0.1, 0.2] }],
+					usage: { prompt_tokens: 10, total_tokens: 15 },
+				}),
+			})
+			global.fetch = mockFetch
+
+			await embedder.createEmbeddings(["test"])
+
+			// Should make direct HTTP request to the full URL
+			expect(mockFetch).toHaveBeenCalledWith("https://api.example.com/v1/embed", expect.any(Object))
+		})
+
+		it("should treat base URLs without endpoint patterns as SDK URLs", async () => {
+			const embedder = new OpenAICompatibleEmbedder("https://api.openai.com/v1", "test-key")
+
+			// Mock the OpenAI SDK's embeddings.create method
+			const mockCreate = vitest.fn().mockResolvedValue({
+				data: [{ embedding: [0.1, 0.2] }],
+				usage: { prompt_tokens: 10, total_tokens: 15 },
+			})
+			embedder["embeddingsClient"].embeddings = {
+				create: mockCreate,
+			} as any
+
+			await embedder.createEmbeddings(["test"])
+
+			// Should use SDK which will append /embeddings
+			expect(mockCreate).toHaveBeenCalled()
+		})
+	})
 })
