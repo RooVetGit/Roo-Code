@@ -22,6 +22,9 @@ vi.mock("fs", () => ({
 	},
 }))
 
+// Import fs to set up mocks
+import * as fs from "fs"
+
 vi.mock("child_process", () => ({
 	spawn: vi.fn(),
 }))
@@ -106,18 +109,105 @@ describe("list-files symlink support", () => {
 
 		mockSpawn.mockReturnValue(mockProcess as any)
 
+		// Mock readdir to return some test entries
+		vi.mocked(fs.promises.readdir).mockResolvedValue([
+			{ name: "test-file.txt", isDirectory: () => false, isSymbolicLink: () => false, isFile: () => true } as any,
+			{ name: "test-dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
+		])
+
 		// Call listFiles with recursive=true
 		await listFiles("/test/dir", true, 100)
 
-		// Verify that spawn was called with --follow flag (the critical fix)
-		const [rgPath, args] = mockSpawn.mock.calls[0]
-		expect(rgPath).toBe("/mock/path/to/rg")
-		expect(args).toContain("--files")
-		expect(args).toContain("--hidden")
-		expect(args).toContain("--follow") // This should be present in recursive mode too
+		// For breadth-first implementation, ripgrep is called for filtering files
+		// It should still include the --follow flag
+		expect(mockSpawn).toHaveBeenCalled()
+		const calls = mockSpawn.mock.calls
 
-		// Platform-agnostic path check - verify the last argument is the resolved path
-		const expectedPath = path.resolve("/test/dir")
-		expect(args[args.length - 1]).toBe(expectedPath)
+		// Find a call that includes --follow flag
+		const hasFollowFlag = calls.some((call) => {
+			const [, args] = call
+			return args && args.includes("--follow")
+		})
+
+		expect(hasFollowFlag).toBe(true)
+	})
+
+	it("should ensure first-level directories are included when limit is reached", async () => {
+		// Mock fs.promises.readdir to simulate a directory structure
+		const mockReaddir = vi.mocked(fs.promises.readdir)
+
+		// Root directory with many items
+		mockReaddir.mockResolvedValueOnce([
+			{ name: "a_dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
+			{ name: "b_dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
+			{ name: "c_dir", isDirectory: () => true, isSymbolicLink: () => false, isFile: () => false } as any,
+			{ name: "file1.txt", isDirectory: () => false, isSymbolicLink: () => false, isFile: () => true } as any,
+			{ name: "file2.txt", isDirectory: () => false, isSymbolicLink: () => false, isFile: () => true } as any,
+		])
+
+		// a_dir contents (many files to trigger limit)
+		const manyFiles = Array.from(
+			{ length: 50 },
+			(_, i) =>
+				({
+					name: `file_a_${i}.txt`,
+					isDirectory: () => false,
+					isSymbolicLink: () => false,
+					isFile: () => true,
+				}) as any,
+		)
+		mockReaddir.mockResolvedValueOnce(manyFiles)
+
+		// b_dir and c_dir won't be read due to limit
+
+		// Mock ripgrep to approve all files
+		const mockSpawn = vi.mocked(childProcess.spawn)
+		const mockProcess = {
+			stdout: {
+				on: vi.fn((event, callback) => {
+					if (event === "data") {
+						// Return many file names
+						const fileNames =
+							Array.from({ length: 52 }, (_, i) =>
+								i < 2 ? `file${i + 1}.txt` : `file_a_${i - 2}.txt`,
+							).join("\n") + "\n"
+						setTimeout(() => callback(fileNames), 10)
+					}
+				}),
+			},
+			stderr: {
+				on: vi.fn(),
+			},
+			on: vi.fn((event, callback) => {
+				if (event === "close") {
+					setTimeout(() => callback(0), 20)
+				}
+			}),
+			kill: vi.fn(),
+		}
+		mockSpawn.mockReturnValue(mockProcess as any)
+
+		// Call listFiles with recursive=true and a small limit
+		const [results, limitReached] = await listFiles("/test/dir", true, 10)
+
+		// Verify that we got results and hit the limit
+		expect(results.length).toBe(10)
+		expect(limitReached).toBe(true)
+
+		// Count directories in results
+		const directories = results.filter((r) => r.endsWith("/"))
+
+		// With breadth-first, we should have at least the 3 first-level directories
+		// even if we hit the limit while processing subdirectories
+		expect(directories.length).toBeGreaterThanOrEqual(3)
+
+		// Verify all first-level directories are included
+		const hasADir = results.some((r) => r.endsWith("a_dir/"))
+		const hasBDir = results.some((r) => r.endsWith("b_dir/"))
+		const hasCDir = results.some((r) => r.endsWith("c_dir/"))
+
+		expect(hasADir).toBe(true)
+		expect(hasBDir).toBe(true)
+		expect(hasCDir).toBe(true)
 	})
 })
