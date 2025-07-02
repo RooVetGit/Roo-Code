@@ -57,6 +57,8 @@ describe("useTaskSearch", () => {
 		mockUseExtensionState.mockReturnValue({
 			taskHistory: mockTaskHistory,
 			cwd: "/workspace/project1",
+			showAllWorkspacesTasks: false,
+			setShowAllWorkspacesTasks: vi.fn(),
 		} as any)
 	})
 
@@ -75,22 +77,22 @@ describe("useTaskSearch", () => {
 		expect(result.current.tasks.every((task) => task.workspace === "/workspace/project1")).toBe(true)
 	})
 
-	it("shows all workspaces when showAllWorkspaces is true", () => {
+	it("shows all workspaces when showAllWorkspacesTasks is true", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 		})
 
 		expect(result.current.tasks).toHaveLength(3)
-		expect(result.current.showAllWorkspaces).toBe(true)
+		expect(result.current.showAllWorkspacesTasks).toBe(true)
 	})
 
 	it("sorts by newest by default", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 		})
 
 		expect(result.current.sortOption).toBe("newest")
@@ -103,7 +105,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSortOption("oldest")
 		})
 
@@ -116,7 +118,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSortOption("mostExpensive")
 		})
 
@@ -129,7 +131,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSortOption("mostTokens")
 		})
 
@@ -145,7 +147,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSearchQuery("React")
 		})
 
@@ -252,7 +254,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 		})
 
 		// Should only include tasks with both ts and task content
@@ -264,7 +266,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSearchQuery("nonexistent")
 		})
 
@@ -275,7 +277,7 @@ describe("useTaskSearch", () => {
 		const { result } = renderHook(() => useTaskSearch())
 
 		act(() => {
-			result.current.setShowAllWorkspaces(true)
+			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSearchQuery("test")
 			result.current.setSortOption("mostRelevant")
 		})

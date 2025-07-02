@@ -102,6 +102,7 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
+		| "showAllWorkspacesTasks"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -270,6 +271,7 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	showAllWorkspacesTasks: boolean
 }
 
 export interface ClineSayTool {

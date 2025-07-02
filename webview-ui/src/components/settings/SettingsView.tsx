@@ -23,6 +23,7 @@ import {
 	Info,
 	MessageSquare,
 	LucideIcon,
+	Settings2,
 } from "lucide-react"
 
 import type { ProviderSettings, ExperimentId } from "@roo-code/types"
@@ -64,6 +65,7 @@ import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
+import { GeneralSettings } from "./GeneralSettings"
 import PromptsSettings from "./PromptsSettings"
 import { cn } from "@/lib/utils"
 
@@ -79,6 +81,7 @@ export interface SettingsViewRef {
 }
 
 const sectionNames = [
+	"general",
 	"providers",
 	"autoApprove",
 	"browser",
@@ -176,6 +179,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		profileThresholds,
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
+		showAllWorkspacesTasks,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -322,6 +326,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "codebaseIndexConfig", values: codebaseIndexConfig })
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
+			vscode.postMessage({ type: "showAllWorkspacesTasks", bool: showAllWorkspacesTasks })
 			setChangeDetected(false)
 		}
 	}
@@ -391,6 +396,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
+			{ id: "general", icon: Settings2 },
 			{ id: "providers", icon: Webhook },
 			{ id: "autoApprove", icon: CheckCheck },
 			{ id: "browser", icon: SquareMousePointer },
@@ -508,7 +514,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 								data-compact={isCompactMode}>
 								<div className={cn("flex items-center gap-2", isCompactMode && "justify-center")}>
 									<Icon className="w-4 h-4" />
-									<span className="tab-label">{t(`settings:sections.${id}`)}</span>
+									<span className="tab-label">
+										{id === "general" ? "General" : t(`settings:sections.${id}`)}
+									</span>
 								</div>
 							</TabTrigger>
 						)
@@ -523,7 +531,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 											{React.cloneElement(triggerComponent)}
 										</TooltipTrigger>
 										<TooltipContent side="right" className="text-base">
-											<p className="m-0">{t(`settings:sections.${id}`)}</p>
+											<p className="m-0">
+												{id === "general" ? "General" : t(`settings:sections.${id}`)}
+											</p>
 										</TooltipContent>
 									</Tooltip>
 								</TooltipProvider>
@@ -538,6 +548,22 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				{/* Content area */}
 				<TabContent className="p-0 flex-1 overflow-auto">
+					{activeTab === "general" && (
+						<div>
+							<SectionHeader>
+								<div className="flex items-center gap-2">
+									<Settings2 className="w-4" />
+									<div>General</div>
+								</div>
+							</SectionHeader>
+							<Section>
+								<GeneralSettings
+									showAllWorkspacesTasks={showAllWorkspacesTasks}
+									setCachedStateField={setCachedStateField}
+								/>
+							</Section>
+						</div>
+					)}
 					{/* Providers Section */}
 					{activeTab === "providers" && (
 						<div>
