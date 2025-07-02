@@ -1,10 +1,9 @@
+import { safeReadJson } from "../../utils/safeReadJson"
 import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import * as vscode from "vscode"
 import { getTaskDirectoryPath } from "../../utils/storage"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { fileExistsAtPath } from "../../utils/fs"
-import fs from "fs/promises"
 import { ContextProxy } from "../config/ContextProxy"
 import type { FileMetadataEntry, RecordSource, TaskMetadata } from "./FileContextTrackerTypes"
 import { ClineProvider } from "../webview/ClineProvider"
@@ -116,12 +115,14 @@ export class FileContextTracker {
 		const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 		const filePath = path.join(taskDir, GlobalFileNames.taskMetadata)
 		try {
-			if (await fileExistsAtPath(filePath)) {
-				return JSON.parse(await fs.readFile(filePath, "utf8"))
-			}
+			return await safeReadJson(filePath)
 		} catch (error) {
-			console.error("Failed to read task metadata:", error)
+			if (error.code !== "ENOENT") {
+				console.error("Failed to read task metadata:", error)
+			}
 		}
+
+		// On error, return default empty metadata
 		return { files_in_context: [] }
 	}
 
