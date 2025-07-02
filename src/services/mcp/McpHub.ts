@@ -18,6 +18,8 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
 import { t } from "../../i18n"
+import { safeReadJson } from "../../utils/safeReadJson"
+import { safeWriteJson } from "../../utils/safeWriteJson"
 
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { GlobalFileNames } from "../../shared/globalFileNames"
@@ -278,11 +280,9 @@ export class McpHub {
 
 	private async handleConfigFileChange(filePath: string, source: "global" | "project"): Promise<void> {
 		try {
-			const content = await fs.readFile(filePath, "utf-8")
 			let config: any
-
 			try {
-				config = JSON.parse(content)
+				config = await safeReadJson(filePath)
 			} catch (parseError) {
 				const errorMessage = t("mcp:errors.invalid_settings_syntax")
 				console.error(errorMessage, parseError)
@@ -364,11 +364,9 @@ export class McpHub {
 			const projectMcpPath = await this.getProjectMcpPath()
 			if (!projectMcpPath) return
 
-			const content = await fs.readFile(projectMcpPath, "utf-8")
 			let config: any
-
 			try {
-				config = JSON.parse(content)
+				config = await safeReadJson(projectMcpPath)
 			} catch (parseError) {
 				const errorMessage = t("mcp:errors.invalid_settings_syntax")
 				console.error(errorMessage, parseError)
@@ -492,8 +490,7 @@ export class McpHub {
 				return
 			}
 
-			const content = await fs.readFile(configPath, "utf-8")
-			const config = JSON.parse(content)
+			const config = await safeReadJson(configPath)
 			const result = McpSettingsSchema.safeParse(config)
 
 			if (result.success) {
@@ -846,14 +843,12 @@ export class McpHub {
 					const projectMcpPath = await this.getProjectMcpPath()
 					if (projectMcpPath) {
 						configPath = projectMcpPath
-						const content = await fs.readFile(configPath, "utf-8")
-						serverConfigData = JSON.parse(content)
+						serverConfigData = await safeReadJson(configPath)
 					}
 				} else {
 					// Get global MCP settings path
 					configPath = await this.getMcpSettingsFilePath()
-					const content = await fs.readFile(configPath, "utf-8")
-					serverConfigData = JSON.parse(content)
+					serverConfigData = await safeReadJson(configPath)
 				}
 				if (serverConfigData) {
 					alwaysAllowConfig = serverConfigData.mcpServers?.[serverName]?.alwaysAllow || []
@@ -1118,8 +1113,7 @@ export class McpHub {
 			const globalPath = await this.getMcpSettingsFilePath()
 			let globalServers: Record<string, any> = {}
 			try {
-				const globalContent = await fs.readFile(globalPath, "utf-8")
-				const globalConfig = JSON.parse(globalContent)
+				const globalConfig = await safeReadJson(globalPath)
 				globalServers = globalConfig.mcpServers || {}
 				const globalServerNames = Object.keys(globalServers)
 				vscode.window.showInformationMessage(
@@ -1135,8 +1129,7 @@ export class McpHub {
 			let projectServers: Record<string, any> = {}
 			if (projectPath) {
 				try {
-					const projectContent = await fs.readFile(projectPath, "utf-8")
-					const projectConfig = JSON.parse(projectContent)
+					const projectConfig = await safeReadJson(projectPath)
 					projectServers = projectConfig.mcpServers || {}
 					const projectServerNames = Object.keys(projectServers)
 					vscode.window.showInformationMessage(
@@ -1175,8 +1168,7 @@ export class McpHub {
 	private async notifyWebviewOfServerChanges(): Promise<void> {
 		// Get global server order from settings file
 		const settingsPath = await this.getMcpSettingsFilePath()
-		const content = await fs.readFile(settingsPath, "utf-8")
-		const config = JSON.parse(content)
+		const config = await safeReadJson(settingsPath)
 		const globalServerOrder = Object.keys(config.mcpServers || {})
 
 		// Get project server order if available
@@ -1184,8 +1176,7 @@ export class McpHub {
 		let projectServerOrder: string[] = []
 		if (projectMcpPath) {
 			try {
-				const projectContent = await fs.readFile(projectMcpPath, "utf-8")
-				const projectConfig = JSON.parse(projectContent)
+				const projectConfig = await safeReadJson(projectMcpPath)
 				projectServerOrder = Object.keys(projectConfig.mcpServers || {})
 			} catch (error) {
 				// Silently continue with empty project server order
@@ -1310,8 +1301,9 @@ export class McpHub {
 		}
 
 		// Read and parse the config file
-		const content = await fs.readFile(configPath, "utf-8")
-		const config = JSON.parse(content)
+		// This is a read-modify-write-operation, but we cannot
+		// use safeWriteJson because it does not (yet) support pretty printing.
+		const config = await safeReadJson(configPath)
 
 		// Validate the config structure
 		if (!config || typeof config !== "object") {
@@ -1401,8 +1393,9 @@ export class McpHub {
 				throw new Error("Settings file not accessible")
 			}
 
-			const content = await fs.readFile(configPath, "utf-8")
-			const config = JSON.parse(content)
+			// This is a read-modify-write-operation, but we cannot
+			// use safeWriteJson because it does not (yet) support pretty printing.
+			const config = await safeReadJson(configPath)
 
 			// Validate the config structure
 			if (!config || typeof config !== "object") {
@@ -1539,8 +1532,9 @@ export class McpHub {
 		const normalizedPath = process.platform === "win32" ? configPath.replace(/\\/g, "/") : configPath
 
 		// Read the appropriate config file
-		const content = await fs.readFile(normalizedPath, "utf-8")
-		const config = JSON.parse(content)
+		// This is a read-modify-write-operation, but we cannot
+		// use safeWriteJson because it does not (yet) support pretty printing.
+		const config = await safeReadJson(configPath)
 
 		if (!config.mcpServers) {
 			config.mcpServers = {}

@@ -2,12 +2,12 @@ import * as path from "path"
 import fs from "fs/promises"
 
 import NodeCache from "node-cache"
+import { safeReadJson } from "../../../utils/safeReadJson"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ContextProxy } from "../../../core/config/ContextProxy"
 import { getCacheDirectoryPath } from "../../../utils/storage"
 import { RouterName, ModelRecord } from "../../../shared/api"
-import { fileExistsAtPath } from "../../../utils/fs"
 
 import { getOpenRouterModels } from "./openrouter"
 import { getRequestyModels } from "./requesty"
@@ -30,8 +30,14 @@ async function readModels(router: RouterName): Promise<ModelRecord | undefined> 
 	const filename = `${router}_models.json`
 	const cacheDir = await getCacheDirectoryPath(ContextProxy.instance.globalStorageUri.fsPath)
 	const filePath = path.join(cacheDir, filename)
-	const exists = await fileExistsAtPath(filePath)
-	return exists ? JSON.parse(await fs.readFile(filePath, "utf8")) : undefined
+	try {
+		return await safeReadJson(filePath)
+	} catch (error: any) {
+		if (error.code === "ENOENT") {
+			return undefined
+		}
+		throw error
+	}
 }
 
 /**
