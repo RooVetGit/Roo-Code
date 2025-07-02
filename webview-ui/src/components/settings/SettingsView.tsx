@@ -19,7 +19,7 @@ import {
 	SquareTerminal,
 	FlaskConical,
 	AlertTriangle,
-	Globe,
+	Languages,
 	Info,
 	MessageSquare,
 	LucideIcon,
@@ -406,7 +406,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "terminal", icon: SquareTerminal },
 			{ id: "prompts", icon: MessageSquare },
 			{ id: "experimental", icon: FlaskConical },
-			{ id: "language", icon: Globe },
+			{ id: "language", icon: Languages },
 			{ id: "about", icon: Info },
 		],
 		[], // No dependencies needed now

@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { Globe } from "lucide-react"
+import { Languages } from "lucide-react"
 
 import type { Language } from "@roo-code/types"
 
@@ -25,7 +25,7 @@ export const LanguageSettings = ({ language, setCachedStateField, className, ...
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
 			<SectionHeader>
 				<div className="flex items-center gap-2">
-					<Globe className="w-4" />
+					<Languages className="w-4" />
 					<div>{t("settings:sections.language")}</div>
 				</div>
 			</SectionHeader>
