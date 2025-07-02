@@ -1,10 +1,8 @@
+import { safeReadJson } from "../../utils/safeReadJson"
 import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
-import * as fs from "fs/promises"
 
 import type { ClineMessage } from "@roo-code/types"
-
-import { fileExistsAtPath } from "../../utils/fs"
 
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { getTaskDirectoryPath } from "../../utils/storage"
@@ -20,13 +18,15 @@ export async function readTaskMessages({
 }: ReadTaskMessagesOptions): Promise<ClineMessage[]> {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 	const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
-	const fileExists = await fileExistsAtPath(filePath)
 
-	if (fileExists) {
-		return JSON.parse(await fs.readFile(filePath, "utf8"))
+	try {
+		return await safeReadJson(filePath)
+	} catch (error) {
+		if (error.code !== "ENOENT") {
+			console.error("Failed to read task messages:", error)
+		}
+		return []
 	}
-
-	return []
 }
 
 export type SaveTaskMessagesOptions = {
