@@ -176,6 +176,7 @@ export interface WebviewMessage {
 		| "fetchMarketplaceData"
 		| "switchTab"
 		| "profileThresholds"
+		| "showAllWorkspacesTasks"
 		| "shareTaskSuccess"
 		| "exportMode"
 		| "exportModeResult"

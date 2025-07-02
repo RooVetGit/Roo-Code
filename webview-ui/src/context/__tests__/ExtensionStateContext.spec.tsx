@@ -209,6 +209,7 @@ describe("mergeExtensionState", () => {
 			sharingEnabled: false,
 			profileThresholds: {},
 			hasOpenedModeSelector: false, // Add the new required property
+			showAllWorkspacesTasks: false,
 		}
 
 		const prevState: ExtensionState = {
