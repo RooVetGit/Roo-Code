@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "Image data URI copied to clipboard"
 		}
+	},
+	"upgrade": {
+		"title": "Task History Index Upgrade",
+		"description": "An upgrade is required to continue. This process will migrate your task history indexes to a faster and more memory-efficient format. Older versions of Roo will can still access the old format.",
+		"clickToStart": "Click the button below to begin the upgrade process.",
+		"startButton": "Start Upgrade",
+		"inProgress": "Upgrade in progress...",
+		"logs": "Upgrade Logs:",
+		"waitingForLogs": "Waiting for upgrade to start...",
+		"noLogs": "No logs available.",
+		"complete": "Upgrade Complete"
 	}
 }
