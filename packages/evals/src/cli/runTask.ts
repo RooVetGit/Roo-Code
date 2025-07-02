@@ -26,7 +26,7 @@ import {
 	createToolError,
 } from "../db/index.js"
 import { EVALS_REPO_PATH } from "../exercises/index.js"
-import { getRepoConfig } from "../config/repoConfig.js"
+import { getRepoConfig, REPO_CONFIGS } from "../config/repoConfig.js"
 
 import { Logger, getTag, isDockerContainer } from "./utils.js"
 import { redisClient, getPubSubKey, registerRunner, deregisterRunner } from "./redis.js"
@@ -169,14 +169,18 @@ export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) =>
 			// Continue execution even if git pull fails
 		}
 	} else {
-		// Fallback: try git pull in the workspace directory
-		logger.info(`performing git pull in workspace: ${workspacePath}`)
-		try {
-			const gitPullResult = await execa("git", ["pull"], { cwd: workspacePath })
-			logger.info(`git pull completed successfully: ${gitPullResult.stdout}`)
-		} catch (error) {
-			logger.warn(`git pull failed in workspace ${workspacePath}: ${error}`)
-			// Continue execution even if git pull fails
+		// If workspacePath doesn't exactly match a repo path, run git pull on all repos
+		logger.info(`workspace path ${workspacePath} doesn't match any repo config, performing git pull on all repos`)
+
+		for (const config of REPO_CONFIGS) {
+			logger.info(`performing git pull for repo: ${config.name} at ${config.path}`)
+			try {
+				const gitPullResult = await execa("git", ["pull"], { cwd: config.path })
+				logger.info(`git pull completed successfully for ${config.name}: ${gitPullResult.stdout}`)
+			} catch (error) {
+				logger.warn(`git pull failed for ${config.name}: ${error}`)
+				// Continue execution even if git pull fails
+			}
 		}
 	}
 
