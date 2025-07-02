@@ -24,10 +24,17 @@ export class MermaidSyntaxFixer {
 	 * Applies deterministic fixes for common LLM errors before validation
 	 */
 	static applyDeterministicFixes(code: string): string {
+		let cleanedCode = code // use variable to be able to add comments to each step
+
 		// Fix HTML entity encoding: --&gt; should be -->;
-		// surprisingly, this does most of the heavy lifting in the MermaidSyntaxFixer
-		// sometimes the llm prepends ```mermaid, remove that
-		return code.replace(/--&gt;/g, "-->").replace(/```mermaid/, "")
+		// surprisingly, this does most of the heavy lifting in fixing the Mermaid syntax
+		cleanedCode = cleanedCode.replace(/--&gt;/g, "-->")
+
+		// sometimes the llm wraps the respond in a code block, starting with  ```mermaid and ending with ```
+		// we remove those to get the actual code
+		cleanedCode = cleanedCode.replace(/^```mermaid/, "").replace(/```$/, "")
+
+		return cleanedCode
 	}
 
 	/**
