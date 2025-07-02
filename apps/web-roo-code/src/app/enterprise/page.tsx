@@ -1,9 +1,33 @@
 import { Code, CheckCircle, Shield, Users, Zap, Workflow } from "lucide-react"
+import type { Metadata } from "next"
 
 import { Button } from "@/components/ui"
 import { AnimatedText } from "@/components/animated-text"
 import { AnimatedBackground } from "@/components/homepage"
 import { ContactForm } from "@/components/enterprise/contact-form"
+
+export const metadata: Metadata = {
+	title: "Enterprise - Roo Code Cloud Control-Plane for Organizations",
+	description:
+		"Roo Code Cloud provides enterprise-grade control and visibility for AI-powered development. Centralized management, real-time usage tracking, and governance for your AI coding initiatives.",
+	alternates: {
+		canonical: "https://roocode.com/enterprise",
+	},
+	openGraph: {
+		title: "Enterprise - Roo Code Cloud Control-Plane",
+		description:
+			"Take control of your AI development with Roo Code Cloud. Enterprise-grade management, visibility, and governance for AI-powered software development.",
+		url: "https://roocode.com/enterprise",
+		siteName: "Roo Code",
+		type: "website",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "Enterprise - Roo Code Cloud Control-Plane",
+		description:
+			"Take control of your AI development with Roo Code Cloud. Enterprise-grade management, visibility, and governance.",
+	},
+}
 
 export default async function Enterprise() {
 	return (
