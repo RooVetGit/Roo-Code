@@ -134,28 +134,34 @@ export class ContextProxy {
 	 */
 
 	getSecret(key: SecretStateKey) {
-		const value = this.secretCache[key]
-		console.log(`[DEBUG ContextProxy] getSecret(${key}): ${value ? `"${value.substring(0, 4)}..."` : "undefined"}`)
-		return value
+		return this.secretCache[key]
 	}
 
 	storeSecret(key: SecretStateKey, value?: string) {
-		console.log(
-			`[DEBUG ContextProxy] storeSecret(${key}): ${value ? `"${value.substring(0, 4)}..."` : "undefined"}`,
-		)
-
 		// Update cache.
 		this.secretCache[key] = value
-		console.log(`[DEBUG ContextProxy] Updated cache for ${key}`)
 
 		// Write directly to context.
-		const result =
-			value === undefined
-				? this.originalContext.secrets.delete(key)
-				: this.originalContext.secrets.store(key, value)
+		return value === undefined
+			? this.originalContext.secrets.delete(key)
+			: this.originalContext.secrets.store(key, value)
+	}
 
-		console.log(`[DEBUG ContextProxy] VSCode secrets operation initiated for ${key}`)
-		return result
+	/**
+	 * Refresh secrets from storage and update cache
+	 * This is useful when you need to ensure the cache has the latest values
+	 */
+	async refreshSecrets(): Promise<void> {
+		const promises = SECRET_STATE_KEYS.map(async (key) => {
+			try {
+				this.secretCache[key] = await this.originalContext.secrets.get(key)
+			} catch (error) {
+				logger.error(
+					`Error refreshing secret ${key}: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+		})
+		await Promise.all(promises)
 	}
 
 	private getAllSecretState(): SecretState {

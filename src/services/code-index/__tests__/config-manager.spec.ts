@@ -2,38 +2,30 @@ import { CodeIndexConfigManager } from "../config-manager"
 
 describe("CodeIndexConfigManager", () => {
 	let mockContextProxy: any
-	let mockVSCodeContext: any
 	let configManager: CodeIndexConfigManager
 
 	beforeEach(() => {
-		// Setup mock VSCode context for async secret operations
-		mockVSCodeContext = {
-			secrets: {
-				get: vitest.fn().mockResolvedValue(undefined),
-				store: vitest.fn().mockResolvedValue(undefined),
-				delete: vitest.fn().mockResolvedValue(undefined),
-			},
-		}
-
 		// Setup mock ContextProxy
 		mockContextProxy = {
 			getGlobalState: vitest.fn(),
 			getSecret: vitest.fn().mockReturnValue(undefined),
+			refreshSecrets: vitest.fn().mockResolvedValue(undefined),
 		}
 
-		configManager = new CodeIndexConfigManager(mockContextProxy, mockVSCodeContext)
+		configManager = new CodeIndexConfigManager(mockContextProxy)
 	})
 
-	// Helper function to setup both sync and async secret mocking
+	// Helper function to setup secret mocking
 	const setupSecretMocks = (secrets: Record<string, string>) => {
-		// Mock sync secret access (for backward compatibility)
+		// Mock sync secret access
 		mockContextProxy.getSecret.mockImplementation((key: string) => {
 			return secrets[key] || undefined
 		})
 
-		// Mock async secret access (for new implementation)
-		mockVSCodeContext.secrets.get.mockImplementation(async (key: string) => {
-			return secrets[key] || undefined
+		// Mock refreshSecrets to update the getSecret mock with new values
+		mockContextProxy.refreshSecrets.mockImplementation(async () => {
+			// In real implementation, this would refresh from VSCode storage
+			// For tests, we just keep the existing mock behavior
 		})
 	}
 
@@ -77,16 +69,9 @@ describe("CodeIndexConfigManager", () => {
 			mockContextProxy.getGlobalState.mockReturnValue(mockGlobalState)
 
 			// Mock both sync and async secret access
-			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexOpenAiKey") return "test-openai-key"
-				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
-				return undefined
-			})
-
-			mockVSCodeContext.secrets.get.mockImplementation(async (key: string) => {
-				if (key === "codeIndexOpenAiKey") return "test-openai-key"
-				if (key === "codeIndexQdrantApiKey") return "test-qdrant-key"
-				return undefined
+			setupSecretMocks({
+				codeIndexOpenAiKey: "test-openai-key",
+				codeIndexQdrantApiKey: "test-qdrant-key",
 			})
 
 			const result = await configManager.loadConfiguration()
@@ -1232,7 +1217,7 @@ describe("CodeIndexConfigManager", () => {
 			})
 
 			// Create a new config manager (simulating what happens in CodeIndexManager.initialize)
-			const newConfigManager = new CodeIndexConfigManager(mockContextProxy, mockVSCodeContext)
+			const newConfigManager = new CodeIndexConfigManager(mockContextProxy)
 
 			// Load configuration - should not require restart since the manager should be initialized with current config
 			const result = await newConfigManager.loadConfiguration()

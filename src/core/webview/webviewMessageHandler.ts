@@ -1854,29 +1854,19 @@ export const webviewMessageHandler = async (
 				// Save global state first
 				await updateGlobalState("codebaseIndexConfig", globalStateConfig)
 
-				// Save secrets using the new async method from config manager
-				if (provider.codeIndexManager) {
-					const secretsToStore: any = {}
-
-					if (settings.codeIndexOpenAiKey !== undefined) {
-						console.log(
-							`[DEBUG WebviewHandler] Adding OpenAI key to secrets: ${settings.codeIndexOpenAiKey ? `"${settings.codeIndexOpenAiKey.substring(0, 4)}..."` : "(empty)"}`,
-						)
-						secretsToStore.openAiKey = settings.codeIndexOpenAiKey
-					}
-					if (settings.codeIndexQdrantApiKey !== undefined) {
-						console.log(`[DEBUG WebviewHandler] Adding Qdrant API key to secrets`)
-						secretsToStore.qdrantApiKey = settings.codeIndexQdrantApiKey
-					}
-					if (settings.codebaseIndexOpenAiCompatibleApiKey !== undefined) {
-						secretsToStore.openAiCompatibleApiKey = settings.codebaseIndexOpenAiCompatibleApiKey
-					}
-
-					console.log(`[DEBUG WebviewHandler] Storing secrets using config manager async method`)
-					await provider.codeIndexManager.storeSecretsAsync(secretsToStore)
+				// Save secrets directly using context proxy
+				if (settings.codeIndexOpenAiKey !== undefined) {
+					await provider.contextProxy.storeSecret("codeIndexOpenAiKey", settings.codeIndexOpenAiKey)
 				}
-
-				console.log(`[DEBUG WebviewHandler] Atomic save completed successfully`)
+				if (settings.codeIndexQdrantApiKey !== undefined) {
+					await provider.contextProxy.storeSecret("codeIndexQdrantApiKey", settings.codeIndexQdrantApiKey)
+				}
+				if (settings.codebaseIndexOpenAiCompatibleApiKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexOpenAiCompatibleApiKey",
+						settings.codebaseIndexOpenAiCompatibleApiKey,
+					)
+				}
 
 				// Verify secrets are actually stored
 				const storedOpenAiKey = provider.contextProxy.getSecret("codeIndexOpenAiKey")
@@ -1886,23 +1876,15 @@ export const webviewMessageHandler = async (
 
 				// Notify code index manager of changes
 				if (provider.codeIndexManager) {
-					console.log(`[DEBUG WebviewHandler] Calling handleSettingsChange`)
 					await provider.codeIndexManager.handleSettingsChange()
 
 					// Auto-start indexing if now enabled and configured
-					console.log(
-						`[DEBUG WebviewHandler] Checking auto-start conditions: enabled=${provider.codeIndexManager.isFeatureEnabled}, configured=${provider.codeIndexManager.isFeatureConfigured}`,
-					)
 					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
 						if (!provider.codeIndexManager.isInitialized) {
-							console.log(`[DEBUG WebviewHandler] Initializing code index manager`)
 							await provider.codeIndexManager.initialize(provider.contextProxy)
 						}
-						console.log(`[DEBUG WebviewHandler] Starting indexing process`)
 						provider.codeIndexManager.startIndexing()
 					}
-				} else {
-					console.log(`[DEBUG WebviewHandler] No code index manager available`)
 				}
 
 				// Send success response

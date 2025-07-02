@@ -100,7 +100,7 @@ export class CodeIndexManager {
 	public async initialize(contextProxy: ContextProxy): Promise<{ requiresRestart: boolean }> {
 		// 1. ConfigManager Initialization and Configuration Loading
 		if (!this._configManager) {
-			this._configManager = new CodeIndexConfigManager(contextProxy, this.context)
+			this._configManager = new CodeIndexConfigManager(contextProxy)
 		}
 		// Load configuration once to get current state and restart requirements
 		const { requiresRestart } = await this._configManager.loadConfiguration()
@@ -203,33 +203,6 @@ export class CodeIndexManager {
 		}
 		this.assertInitialized()
 		return this._searchService!.searchIndex(query, directoryPrefix)
-	}
-
-	/**
-	 * Stores secrets using the config manager's async method
-	 */
-	public async storeSecretsAsync(secrets: {
-		openAiKey?: string
-		qdrantApiKey?: string
-		openAiCompatibleApiKey?: string
-	}): Promise<void> {
-		if (this._configManager) {
-			await this._configManager.storeSecretsAsync(secrets)
-		}
-	}
-
-	/**
-	 * Loads secrets using the config manager's async method
-	 */
-	public async loadSecretsAsync(): Promise<{
-		openAiKey?: string
-		qdrantApiKey?: string
-		openAiCompatibleApiKey?: string
-	}> {
-		if (this._configManager) {
-			return await this._configManager.loadSecretsAsync()
-		}
-		return {}
 	}
 
 	/**
