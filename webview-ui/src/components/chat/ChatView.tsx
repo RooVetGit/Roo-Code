@@ -1531,7 +1531,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			//    but becomes scrollable when the viewport is too small
 			*/}
 			{!task && (
-				<div className="mb-[-2px] flex-initial min-h-0">
+				<div className="flex-shrink-0">
 					<AutoApproveMenu />
 				</div>
 			)}
@@ -1558,86 +1558,91 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							initialTopMostItemIndex={groupedMessages.length - 1}
 						/>
 					</div>
-					<AutoApproveMenu />
-					{showScrollToBottom ? (
-						<div className="flex px-[15px] pt-[10px]">
+					{/* Fixed positioning for AutoApproveMenu to prevent layout shifts */}
+					<div className="flex-shrink-0">
+						<AutoApproveMenu />
+					</div>
+
+					{/* Consistent spacing and styling for action buttons area */}
+					<div className="flex px-[15px] pt-[10px] pb-[5px] flex-shrink-0">
+						{showScrollToBottom ? (
 							<StandardTooltip content={t("chat:scrollToBottom")}>
-								<div
-									className="bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_55%,_transparent)] rounded-[3px] overflow-hidden cursor-pointer flex justify-center items-center flex-1 h-[25px] hover:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_90%,_transparent)] active:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_70%,_transparent)]"
+								<VSCodeButton
+									appearance="secondary"
+									className="flex-1 h-[25px] flex justify-center items-center"
 									onClick={() => {
 										scrollToBottomSmooth()
 										disableAutoScrollRef.current = false
 									}}>
-									<span className="codicon codicon-chevron-down text-[18px]"></span>
-								</div>
+									<span className="codicon codicon-chevron-down text-[16px]"></span>
+								</VSCodeButton>
 							</StandardTooltip>
-						</div>
-					) : (
-						<div
-							className={`flex ${
-								primaryButtonText || secondaryButtonText || isStreaming ? "px-[15px] pt-[10px]" : "p-0"
-							} ${
-								primaryButtonText || secondaryButtonText || isStreaming
-									? enableButtons || (isStreaming && !didClickCancel)
-										? "opacity-100"
-										: "opacity-50"
-									: "opacity-0"
-							}`}>
-							{primaryButtonText && !isStreaming && (
-								<StandardTooltip
-									content={
-										primaryButtonText === t("chat:retry.title")
-											? t("chat:retry.tooltip")
-											: primaryButtonText === t("chat:save.title")
-												? t("chat:save.tooltip")
-												: primaryButtonText === t("chat:approve.title")
-													? t("chat:approve.tooltip")
-													: primaryButtonText === t("chat:runCommand.title")
-														? t("chat:runCommand.tooltip")
-														: primaryButtonText === t("chat:startNewTask.title")
-															? t("chat:startNewTask.tooltip")
-															: primaryButtonText === t("chat:resumeTask.title")
-																? t("chat:resumeTask.tooltip")
-																: primaryButtonText === t("chat:proceedAnyways.title")
-																	? t("chat:proceedAnyways.tooltip")
+						) : (
+							<div
+								className={`flex w-full ${
+									primaryButtonText || secondaryButtonText || isStreaming
+										? enableButtons || (isStreaming && !didClickCancel)
+											? "opacity-100"
+											: "opacity-50"
+										: "opacity-0 pointer-events-none"
+								}`}>
+								{primaryButtonText && !isStreaming && (
+									<StandardTooltip
+										content={
+											primaryButtonText === t("chat:retry.title")
+												? t("chat:retry.tooltip")
+												: primaryButtonText === t("chat:save.title")
+													? t("chat:save.tooltip")
+													: primaryButtonText === t("chat:approve.title")
+														? t("chat:approve.tooltip")
+														: primaryButtonText === t("chat:runCommand.title")
+															? t("chat:runCommand.tooltip")
+															: primaryButtonText === t("chat:startNewTask.title")
+																? t("chat:startNewTask.tooltip")
+																: primaryButtonText === t("chat:resumeTask.title")
+																	? t("chat:resumeTask.tooltip")
 																	: primaryButtonText ===
-																		  t("chat:proceedWhileRunning.title")
-																		? t("chat:proceedWhileRunning.tooltip")
-																		: undefined
-									}>
-									<VSCodeButton
-										appearance="primary"
-										disabled={!enableButtons}
-										className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
-										onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
-										{primaryButtonText}
-									</VSCodeButton>
-								</StandardTooltip>
-							)}
-							{(secondaryButtonText || isStreaming) && (
-								<StandardTooltip
-									content={
-										isStreaming
-											? t("chat:cancel.tooltip")
-											: secondaryButtonText === t("chat:startNewTask.title")
-												? t("chat:startNewTask.tooltip")
-												: secondaryButtonText === t("chat:reject.title")
-													? t("chat:reject.tooltip")
-													: secondaryButtonText === t("chat:terminate.title")
-														? t("chat:terminate.tooltip")
-														: undefined
-									}>
-									<VSCodeButton
-										appearance="secondary"
-										disabled={!enableButtons && !(isStreaming && !didClickCancel)}
-										className={isStreaming ? "flex-[2] ml-0" : "flex-1 ml-[6px]"}
-										onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
-										{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
-									</VSCodeButton>
-								</StandardTooltip>
-							)}
-						</div>
-					)}
+																		  t("chat:proceedAnyways.title")
+																		? t("chat:proceedAnyways.tooltip")
+																		: primaryButtonText ===
+																			  t("chat:proceedWhileRunning.title")
+																			? t("chat:proceedWhileRunning.tooltip")
+																			: undefined
+										}>
+										<VSCodeButton
+											appearance="primary"
+											disabled={!enableButtons}
+											className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
+											onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
+											{primaryButtonText}
+										</VSCodeButton>
+									</StandardTooltip>
+								)}
+								{(secondaryButtonText || isStreaming) && (
+									<StandardTooltip
+										content={
+											isStreaming
+												? t("chat:cancel.tooltip")
+												: secondaryButtonText === t("chat:startNewTask.title")
+													? t("chat:startNewTask.tooltip")
+													: secondaryButtonText === t("chat:reject.title")
+														? t("chat:reject.tooltip")
+														: secondaryButtonText === t("chat:terminate.title")
+															? t("chat:terminate.tooltip")
+															: undefined
+										}>
+										<VSCodeButton
+											appearance="secondary"
+											disabled={!enableButtons && !(isStreaming && !didClickCancel)}
+											className={isStreaming ? "flex-[2] ml-0" : "flex-1 ml-[6px]"}
+											onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
+											{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
+										</VSCodeButton>
+									</StandardTooltip>
+								)}
+							</div>
+						)}
+					</div>
 				</>
 			)}
 
