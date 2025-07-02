@@ -30,6 +30,8 @@ export interface WebviewMessage {
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
 		| "getHistoryItems"
+		| "isUpgradeNeeded"
+		| "performUpgrade"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"

@@ -109,6 +109,9 @@ export interface ExtensionMessage {
 		| "showDeleteMessageDialog"
 		| "showEditMessageDialog"
 		| "taskDeletedConfirmation"
+		| "loggingOperation"
+		| "upgradeStatus"
+		| "upgradeComplete"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -153,6 +156,7 @@ export interface ExtensionMessage {
 	value?: any
 	hasContent?: boolean // For checkRulesDirectoryResult
 	items?: MarketplaceItem[] | HistoryItem[]
+	log?: string
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
 	tab?: string

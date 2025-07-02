@@ -16,6 +16,7 @@ import {
 	HistoryItem,
 } from "@roo-code/types"
 import { getHistoryItemsForSearch } from "../task-persistence/taskHistory"
+import { isUpgradeNeeded, performUpgrade } from "../upgrade/upgrade"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 import { type ApiMessage } from "../task-persistence/apiMessages"
@@ -67,6 +68,66 @@ export const webviewMessageHandler = async (
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
+	
+	/**
+	 * Helper function to handle common functionality for task history operations
+	 * @param operationName Name of the operation for logging
+	 * @param options Options for the operation
+	 * @param operation The async function to perform
+	 * @param onSuccess Callback for successful operation
+	 * @param onError Callback for operation error
+	 * @param logMessageType Type of message to use when sending logs to UI
+	 */
+	async function handleLoggingOperation<T>(
+		operationName: string,
+		options: any,
+		operation: (options: any, logs: string[]) => Promise<T>,
+		onSuccess: (result: T) => Promise<void>,
+		onError: (error: any) => Promise<void>,
+		logMessageType: "loggingOperation",
+	): Promise<void> {
+		try {
+			// Create a logs array to capture messages
+			const logs: string[] = []
+
+			// Log the options for debugging
+			console.log(`[webviewMessageHandler] ${operationName} options:`, JSON.stringify(options, null, 2))
+
+			// Create a monitoring function to send logs to UI
+			const sendLogsToUI = () => {
+				if (logs.length > 0) {
+					const logsCopy = [...logs]
+					logs.length = 0 // Clear the array
+
+					// Send each log message to the webview
+					for (const log of logsCopy) {
+						provider.postMessageToWebview({
+							type: logMessageType,
+							log,
+						})
+					}
+				}
+			}
+
+			// Set up interval to forward logs during operation
+			const logInterval = setInterval(sendLogsToUI, 100)
+
+			// Perform the operation
+			const result = await operation(options, logs)
+
+			// Clear the interval
+			clearInterval(logInterval)
+
+			// Send any remaining logs
+			sendLogsToUI()
+
+			// Handle success
+			await onSuccess(result)
+		} catch (error) {
+			// Handle error
+			await onError(error)
+		}
+	}
 
 	/**
 	 * Shared utility to find message indices based on timestamp
@@ -2212,6 +2273,65 @@ export const webviewMessageHandler = async (
 					)
 				}
 			}
+			break
+		}
+
+		case "isUpgradeNeeded": {
+			try {
+				const needed = await isUpgradeNeeded()
+				provider.postMessageToWebview({
+					type: "upgradeStatus" as any,
+					values: {
+						needed,
+					},
+				})
+			} catch (error) {
+				console.error(`[Upgrade] webviewMessageHandler: Error in isUpgradeNeeded:`, error)
+				provider.postMessageToWebview({
+					type: "upgradeStatus" as any,
+					values: {
+						needed: false,
+					},
+				})
+			}
+			break
+		}
+
+		case "performUpgrade": {
+			await handleLoggingOperation<{ success: boolean }>(
+				"performUpgrade",
+				{},
+				async (_, logs) => {
+					return { success: await performUpgrade(logs) }
+				},
+				async (result) => {
+					// Then send upgradeComplete message
+					provider.postMessageToWebview({
+						type: "upgradeComplete" as any,
+						values: {
+							success: result.success,
+						},
+					})
+
+					// Finally, send upgradeStatus with needed=false to indicate upgrade is no longer needed
+					provider.postMessageToWebview({
+						type: "upgradeStatus" as any,
+						values: {
+							needed: false,
+						},
+					})
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "upgradeComplete" as any,
+						values: {
+							success: false,
+							error: String(error),
+						},
+					})
+				},
+				"loggingOperation",
+			)
 			break
 		}
 

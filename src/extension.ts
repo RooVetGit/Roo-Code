@@ -71,10 +71,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
 
-	// Initialize and migrate task history storage
-	// (migrateTaskHistoryStorage also calls initializeTaskHistory internally)
-	await migrateTaskHistoryStorage()
-
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
