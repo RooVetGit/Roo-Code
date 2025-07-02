@@ -27,6 +27,8 @@ export interface WebviewMessage {
 		| "getHistoryItems"
 		| "scanTaskHistory"
 		| "rebuildHistoryIndexes"
+		| "isUpgradeNeeded"
+		| "performUpgrade"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"

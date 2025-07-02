@@ -107,6 +107,8 @@ export interface ExtensionMessage {
 		| "loggingOperation"
 		| "scanTaskHistoryResult"
 		| "rebuildHistoryIndexesResult"
+		| "upgradeStatus"
+		| "upgradeComplete"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:

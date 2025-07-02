@@ -16,6 +16,7 @@ import {
 	HistoryScanResults,
 } from "@roo-code/types"
 import { getHistoryItemsForSearch, reindexHistoryItems, scanTaskHistory } from "../task-persistence/taskHistory"
+import { isUpgradeNeeded, performUpgrade } from "../upgrade/upgrade"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 
@@ -2126,6 +2127,65 @@ export const webviewMessageHandler = async (
 					)
 				}
 			}
+			break
+		}
+
+		case "isUpgradeNeeded": {
+			try {
+				const needed = await isUpgradeNeeded()
+				provider.postMessageToWebview({
+					type: "upgradeStatus" as any,
+					values: {
+						needed,
+					},
+				})
+			} catch (error) {
+				console.error(`[Upgrade] webviewMessageHandler: Error in isUpgradeNeeded:`, error)
+				provider.postMessageToWebview({
+					type: "upgradeStatus" as any,
+					values: {
+						needed: false,
+					},
+				})
+			}
+			break
+		}
+
+		case "performUpgrade": {
+			await handleLoggingOperation<{ success: boolean }>(
+				"performUpgrade",
+				{},
+				async (_, logs) => {
+					return { success: await performUpgrade(logs) }
+				},
+				async (result) => {
+					// Then send upgradeComplete message
+					provider.postMessageToWebview({
+						type: "upgradeComplete" as any,
+						values: {
+							success: result.success,
+						},
+					})
+
+					// Finally, send upgradeStatus with needed=false to indicate upgrade is no longer needed
+					provider.postMessageToWebview({
+						type: "upgradeStatus" as any,
+						values: {
+							needed: false,
+						},
+					})
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "upgradeComplete" as any,
+						values: {
+							success: false,
+							error: String(error),
+						},
+					})
+				},
+				"loggingOperation",
+			)
 			break
 		}
 

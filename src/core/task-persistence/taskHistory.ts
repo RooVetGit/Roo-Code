@@ -1094,18 +1094,21 @@ async function _getAllWorkspaces(): Promise<HistoryWorkspaceItem[]> {
 }
 
 /**
- * Migrates task history from the old globalState array format to the new
- * file-based storage with globalState Map indexes.
- * It also cleans up any old date-organized directory structures if they exist from testing.
+ * Checks if task history migration is needed by comparing the stored version
+ * with the current version and verifying the existence of the taskHistory directory.
+ * @returns A promise that resolves to true if migration is needed, false otherwise.
  */
-export async function migrateTaskHistoryStorage(): Promise<void> {
-	const migrationStartTime = performance.now()
+export async function isTaskHistoryMigrationNeeded(): Promise<boolean> {
 	const context = getExtensionContext()
-	const tasksBasePath = _getTasksBasePath()
 	const historyIndexesBasePath = _getHistoryIndexesBasePath()
-	console.log("[TaskHistory Migration] Checking task history storage version and directory...")
 
 	const storedVersion = context.globalState.get<number>(TASK_HISTORY_VERSION_KEY)
+	const oldHistoryArray = context.globalState.get<HistoryItem[]>("taskHistory") || []
+
+	// If there are zero items in the history, no need to migrate
+	if (oldHistoryArray.length === 0) {
+		return false
+	}
 
 	// Check if the taskHistory directory exists
 	let directoryExists = false
@@ -1113,27 +1116,53 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 		await fs.access(historyIndexesBasePath)
 		directoryExists = true
 	} catch (error) {
-		console.log(
-			`[TaskHistory Migration] taskHistory directory does not exist at ${historyIndexesBasePath}; will force migration.`,
-		)
+		// Directory doesn't exist, migration is needed
 	}
 
 	// Force migration if directory doesn't exist or version mismatch
 	if (directoryExists && storedVersion && storedVersion >= CURRENT_TASK_HISTORY_VERSION) {
-		console.log(
+		return false
+	} else {
+		return true
+	}
+}
+
+/**
+ * Migrates task history from the old globalState array format to the new
+ * file-based storage with globalState Map indexes.
+ * It also cleans up any old date-organized directory structures if they exist from testing.
+ * @param logs - Optional array to capture log messages
+ */
+export async function migrateTaskHistoryStorage(logs: string[] = []): Promise<void> {
+	const migrationStartTime = performance.now()
+	const context = getExtensionContext()
+	const tasksBasePath = _getTasksBasePath()
+	const historyIndexesBasePath = _getHistoryIndexesBasePath()
+	logMessage(logs, "[TaskHistory Migration] Checking task history storage version and directory...")
+
+	// Get the stored version first
+	const storedVersion = context.globalState.get<number>(TASK_HISTORY_VERSION_KEY)
+
+	// Check if migration is needed
+	const migrationNeeded = await isTaskHistoryMigrationNeeded()
+	if (!migrationNeeded) {
+		logMessage(
+			logs,
 			`[TaskHistory Migration] Task history storage is up to date (version ${storedVersion}) and directory exists. No migration needed.`,
 		)
 		return
 	}
 
-	console.log(
+	logMessage(
+		logs,
 		`[TaskHistory Migration] Task history storage version is ${storedVersion === undefined ? "not set (pre-versioning)" : storedVersion}. Current version is ${CURRENT_TASK_HISTORY_VERSION}. Migration check required.`,
 	)
 
 	// Backup the old array before processing
 	const oldHistoryArrayFromGlobalState = context.globalState.get<HistoryItem[]>("taskHistory") || []
 	if (oldHistoryArrayFromGlobalState.length > 0) {
-		console.log(
+		logMessage(
+			logs,
 			`[TaskHistory Migration] Found ${oldHistoryArrayFromGlobalState.length} items in old 'taskHistory' globalState key. Creating backup...`,
 		)
 
@@ -1147,18 +1176,17 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 			// Ensure the backup directory exists
 			await fs.mkdir(backupBasePath, { recursive: true })
 			await safeWriteJson(backupPath, oldHistoryArrayFromGlobalState)
-			console.log(`[TaskHistory Migration] Successfully backed up old task history array to: ${backupPath}`)
+			logMessage(logs, `[TaskHistory Migration] Successfully backed up old task history array to: ${backupPath}`)
 		} catch (backupError: any) {
-			console.warn(`[TaskHistory Migration] Error backing up old task history array: ${backupError.message}`)
+			logMessage(logs, `[TaskHistory Migration] Error backing up old task history array: ${backupError.message}`)
 		}
 	} else {
-		console.log("[TaskHistory Migration] No old task history data found in globalState key 'taskHistory'.")
+		logMessage(logs, "[TaskHistory Migration] No old task history data found in globalState key 'taskHistory'.")
 	}
 
 	// Use reindexHistoryItems with merge mode to handle the migration
 	try {
-		console.log("[TaskHistory Migration] Starting reindexing with merge mode...")
-		const logs: string[] = []
+		logMessage(logs, "[TaskHistory Migration] Starting reindexing with merge mode...")
 		await reindexHistoryItems({
 			mode: "merge",
 			mergeFromGlobal: true,
@@ -1171,17 +1199,18 @@ export async function migrateTaskHistoryStorage(): Promise<void> {
 
 		// Update the version in globalState
 		await context.globalState.update(TASK_HISTORY_VERSION_KEY, CURRENT_TASK_HISTORY_VERSION)
-		console.log(
+		logMessage(
+			logs,
 			`[TaskHistory Migration] Task history version updated to ${CURRENT_TASK_HISTORY_VERSION} in globalState.`,
 		)
 	} catch (error) {
-		console.error(`[TaskHistory Migration] Error during reindexing:`, error)
+		logMessage(logs, `[TaskHistory Migration] Error during reindexing: ${error}`)
 		throw error
 	}
 
 	const migrationEndTime = performance.now()
 	const totalMigrationTime = (migrationEndTime - migrationStartTime) / 1000
-	console.log(`[TaskHistory Migration] Migration process completed in ${totalMigrationTime.toFixed(2)}s`)
+	logMessage(logs, `[TaskHistory Migration] Migration process completed in ${totalMigrationTime.toFixed(2)}s`)
 }
 
 /**
