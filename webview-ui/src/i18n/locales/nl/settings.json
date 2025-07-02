@@ -28,9 +28,47 @@
 		"notifications": "Meldingen",
 		"contextManagement": "Context",
 		"terminal": "Terminal",
+		"prompts": "Prompts",
 		"experimental": "Experimenteel",
 		"language": "Taal",
 		"about": "Over Roo Code"
+	},
+	"prompts": {
+		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
+	},
+	"codeIndex": {
+		"title": "Codebase indexering",
+		"enableLabel": "Codebase indexering inschakelen",
+		"enableDescription": "<0>Codebase indexering</0> is een experimentele functie die een semantische zoekindex van je project creëert met behulp van AI-embeddings. Dit stelt Roo Code in staat om grote codebases beter te begrijpen en te navigeren door relevante code te vinden op basis van betekenis in plaats van alleen trefwoorden.",
+		"providerLabel": "Embeddings provider",
+		"selectProviderPlaceholder": "Selecteer provider",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "OpenAI-compatibel",
+		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
+		"openaiCompatibleApiKeyLabel": "API-sleutel:",
+		"openaiCompatibleModelDimensionLabel": "Embedding Dimensie:",
+		"openaiCompatibleModelDimensionPlaceholder": "bijv., 1536",
+		"openaiCompatibleModelDimensionDescription": "De embedding dimensie (uitvoergrootte) voor uw model. Controleer de documentatie van uw provider voor deze waarde. Veelvoorkomende waarden: 384, 768, 1536, 3072.",
+		"openaiKeyLabel": "OpenAI-sleutel:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Selecteer model",
+		"ollamaUrlLabel": "Ollama URL:",
+		"qdrantUrlLabel": "Qdrant URL",
+		"qdrantKeyLabel": "Qdrant-sleutel:",
+		"advancedConfigLabel": "Geavanceerde configuratie",
+		"searchMinScoreLabel": "Zoekscore drempel",
+		"searchMinScoreDescription": "Minimale overeenkomstscore (0.0-1.0) vereist voor zoekresultaten. Lagere waarden leveren meer resultaten op, maar zijn mogelijk minder relevant. Hogere waarden leveren minder, maar relevantere resultaten op.",
+		"searchMinScoreResetTooltip": "Reset naar standaardwaarde (0.4)",
+		"startIndexingButton": "Indexering starten",
+		"clearIndexDataButton": "Indexgegevens wissen",
+		"unsavedSettingsMessage": "Sla je instellingen op voordat je het indexeringsproces start.",
+		"clearDataDialog": {
+			"title": "Weet je het zeker?",
+			"description": "Deze actie kan niet ongedaan worden gemaakt. Dit zal je codebase-indexgegevens permanent verwijderen.",
+			"cancelButton": "Annuleren",
+			"confirmButton": "Gegevens wissen"
+		}
 	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
@@ -49,6 +87,10 @@
 			"outsideWorkspace": {
 				"label": "Inclusief bestanden buiten werkruimte",
 				"description": "Sta Roo toe om bestanden buiten de huidige werkruimte aan te maken en te bewerken zonder goedkeuring."
+			},
+			"protected": {
+				"label": "Inclusief beschermde bestanden",
+				"description": "Sta Roo toe om beschermde bestanden (zoals .rooignore en .roo/ configuratiebestanden) aan te maken en te bewerken zonder goedkeuring."
 			}
 		},
 		"browser": {
@@ -71,6 +113,11 @@
 		"subtasks": {
 			"label": "Subtaken",
 			"description": "Subtaken aanmaken en afronden zonder goedkeuring"
+		},
+		"followupQuestions": {
+			"label": "Vraag",
+			"description": "Selecteer automatisch het eerste voorgestelde antwoord voor vervolgvragen na de geconfigureerde time-out",
+			"timeoutLabel": "Wachttijd voordat het eerste antwoord automatisch wordt geselecteerd"
 		},
 		"execute": {
 			"label": "Uitvoeren",
@@ -124,7 +171,10 @@
 		"requestyApiKey": "Requesty API-sleutel",
 		"refreshModels": {
 			"label": "Modellen verversen",
-			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien."
+			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien.",
+			"loading": "Modellenlijst wordt vernieuwd...",
+			"success": "Modellenlijst succesvol vernieuwd!",
+			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw."
 		},
 		"getRequestyApiKey": "Requesty API-sleutel ophalen",
 		"openRouterTransformsText": "Comprimeer prompts en berichtreeksen tot de contextgrootte (<a>OpenRouter Transforms</a>)",
@@ -139,6 +189,7 @@
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
 		"getGeminiApiKey": "Gemini API-sleutel ophalen",
+		"apiKey": "API-sleutel",
 		"openAiApiKey": "OpenAI API-sleutel",
 		"openAiBaseUrl": "Basis-URL",
 		"getOpenAiApiKey": "OpenAI API-sleutel ophalen",
@@ -158,6 +209,11 @@
 		"awsSessionToken": "AWS-sessietoken",
 		"awsRegion": "AWS-regio",
 		"awsCrossRegion": "Gebruik cross-region inference",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Aangepast VPC-eindpunt gebruiken",
+			"vpcEndpointUrlPlaceholder": "Voer VPC-eindpunt URL in (optioneel)",
+			"examples": "Voorbeelden:"
+		},
 		"enablePromptCaching": "Prompt caching inschakelen",
 		"enablePromptCachingTitle": "Schakel prompt caching in om de prestaties te verbeteren en de kosten te verlagen voor ondersteunde modellen.",
 		"cacheUsageNote": "Let op: als je geen cachegebruik ziet, probeer dan een ander model te selecteren en vervolgens weer je gewenste model.",
@@ -256,7 +312,12 @@
 			"medium": "Middel",
 			"low": "Laag"
 		},
-		"setReasoningLevel": "Redeneervermogen inschakelen"
+		"setReasoningLevel": "Redeneervermogen inschakelen",
+		"claudeCode": {
+			"pathLabel": "Claude Code Pad",
+			"description": "Optioneel pad naar uw Claude Code CLI. Standaard 'claude' als niet ingesteld.",
+			"placeholder": "Standaard: claude"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -306,6 +367,26 @@
 	},
 	"contextManagement": {
 		"description": "Bepaal welke informatie wordt opgenomen in het contextvenster van de AI, wat invloed heeft op tokengebruik en antwoordkwaliteit",
+		"autoCondenseContextPercent": {
+			"label": "Drempelwaarde om intelligente contextcompressie te activeren",
+			"description": "Wanneer het contextvenster deze drempelwaarde bereikt, zal Roo het automatisch comprimeren."
+		},
+		"condensingApiConfiguration": {
+			"label": "API-configuratie voor contextcondensatie",
+			"description": "Selecteer welke API-configuratie gebruikt moet worden voor contextcondensatie. Laat leeg om de huidige actieve configuratie te gebruiken.",
+			"useCurrentConfig": "Standaard"
+		},
+		"customCondensingPrompt": {
+			"label": "Aangepaste contextcondensatieprompt",
+			"description": "Aangepaste systeemprompt voor contextcondensatie. Laat leeg om de standaardprompt te gebruiken.",
+			"placeholder": "Voer hier je aangepaste condensatieprompt in...\n\nJe kunt dezelfde structuur gebruiken als de standaardprompt:\n- Vorig gesprek\n- Huidig werk\n- Belangrijke technische concepten\n- Relevante bestanden en code\n- Probleemoplossing\n- Openstaande taken en volgende stappen",
+			"reset": "Herstellen naar standaard",
+			"hint": "Leeg = gebruik standaardprompt"
+		},
+		"autoCondenseContext": {
+			"name": "Automatisch intelligente contextcompressie activeren",
+			"description": "Wanneer ingeschakeld, zal Roo automatisch de context comprimeren wanneer de drempel wordt bereikt. Wanneer uitgeschakeld, kun je nog steeds handmatig contextcompressie activeren."
+		},
 		"openTabs": {
 			"label": "Limiet geopende tabbladen in context",
 			"description": "Maximaal aantal geopende VSCode-tabbladen dat in de context wordt opgenomen. Hogere waarden geven meer context maar verhogen het tokengebruik."
@@ -323,6 +404,19 @@
 			"description": "Roo leest dit aantal regels wanneer het model geen begin/eindwaarden opgeeft. Als dit aantal lager is dan het totaal, genereert Roo een index van codelijnen. Speciale gevallen: -1 laat Roo het hele bestand lezen (zonder indexering), 0 leest geen regels en geeft alleen een minimale index. Lagere waarden minimaliseren het initiële contextgebruik en maken precieze vervolg-leesopdrachten mogelijk. Expliciete begin/eind-aanvragen worden niet door deze instelling beperkt.",
 			"lines": "regels",
 			"always_full_read": "Altijd volledig bestand lezen"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Limiet gelijktijdige bestandslezingen",
+			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
+		},
+		"condensingThreshold": {
+			"label": "Compressie trigger drempelwaarde",
+			"selectProfile": "Drempelwaarde voor profiel configureren",
+			"defaultProfile": "Globale standaard (alle profielen)",
+			"defaultDescription": "Wanneer de context dit percentage bereikt, wordt het automatisch gecomprimeerd voor alle profielen tenzij ze aangepaste instellingen hebben",
+			"profileDescription": "Aangepaste drempelwaarde alleen voor dit profiel (overschrijft globale standaard)",
+			"inheritDescription": "Dit profiel erft de globale standaard drempelwaarde ({{threshold}}%)",
+			"usesGlobal": "(gebruikt globaal {{threshold}}%)"
 		}
 	},
 	"terminal": {
@@ -403,27 +497,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
-		"condensingApiConfiguration": {
-			"label": "API Configuration for Context Condensing",
-			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
-			"useCurrentConfig": "Default"
-		},
-		"customCondensingPrompt": {
-			"label": "Aangepaste contextcondensatieprompt",
-			"description": "Aangepaste systeemprompt voor contextcondensatie. Laat leeg om de standaardprompt te gebruiken.",
-			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset to Default",
-			"hint": "Empty = use default prompt"
-		},
-		"autoCondenseContextPercent": {
-			"label": "Drempelwaarde om intelligente contextcompressie te activeren",
-			"description": "Wanneer het contextvenster deze drempelwaarde bereikt, zal Roo het automatisch comprimeren."
-		},
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Automatisch intelligente contextcompressie activeren",
-			"description": "Intelligente contextcompressie gebruikt een LLM-aanroep om eerdere gesprekken samen te vatten wanneer het contextvenster van de taak een vooraf ingestelde drempelwaarde bereikt, in plaats van oude berichten te verwijderen wanneer de context vol is."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Experimentele unified diff-strategie gebruiken",
 			"description": "Schakel de experimentele unified diff-strategie in. Deze strategie kan het aantal herhalingen door model fouten verminderen, maar kan onverwacht gedrag of onjuiste bewerkingen veroorzaken. Alleen inschakelen als je de risico's begrijpt en wijzigingen zorgvuldig wilt controleren."
@@ -443,6 +516,18 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Experimentele multi-block diff-tool gebruiken",
 			"description": "Indien ingeschakeld, gebruikt Roo de multi-block diff-tool. Hiermee wordt geprobeerd meerdere codeblokken in het bestand in één verzoek bij te werken."
+		},
+		"CONCURRENT_FILE_READS": {
+			"name": "Gelijktijdig lezen van bestanden inschakelen",
+			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek lezen. Wanneer uitgeschakeld, moet Roo bestanden één voor één lezen. Uitschakelen kan helpen bij het werken met minder capabele modellen of wanneer u meer controle over bestandstoegang wilt."
+		},
+		"MARKETPLACE": {
+			"name": "Marketplace inschakelen",
+			"description": "Wanneer ingeschakeld kun je MCP's en aangepaste modi uit de Marketplace installeren."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Gelijktijdige bestandsbewerkingen inschakelen",
+			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek bewerken. Wanneer uitgeschakeld, moet Roo bestanden één voor één bewerken. Het uitschakelen hiervan kan helpen wanneer je werkt met minder capabele modellen of wanneer je meer controle wilt over bestandswijzigingen."
 		}
 	},
 	"promptCaching": {
@@ -511,7 +596,10 @@
 			"invalidFormat": "Ongeldig ARN-formaat. Controleer de formaatvereisten.",
 			"regionMismatch": "Waarschuwing: De regio in je ARN ({{arnRegion}}) komt niet overeen met je geselecteerde regio ({{region}}). Dit kan toegangsfouten veroorzaken. De provider gebruikt de regio uit de ARN."
 		},
-		"modelAvailability": "Het opgegeven model-ID ({{modelId}}) is niet beschikbaar. Kies een ander model."
+		"modelAvailability": "Het opgegeven model-ID ({{modelId}}) is niet beschikbaar. Kies een ander model.",
+		"providerNotAllowed": "Provider '{{provider}}' is niet toegestaan door je organisatie",
+		"modelNotAllowed": "Model '{{model}}' is niet toegestaan voor provider '{{provider}}' door je organisatie",
+		"profileInvalid": "Dit profiel bevat een provider of model dat niet is toegestaan door je organisatie"
 	},
 	"placeholders": {
 		"apiKey": "Voer API-sleutel in...",
@@ -545,5 +633,7 @@
 	"labels": {
 		"customArn": "Aangepaste ARN",
 		"useCustomArn": "Aangepaste ARN gebruiken..."
-	}
+	},
+	"includeMaxOutputTokens": "Maximale output tokens opnemen",
+	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet."
 }

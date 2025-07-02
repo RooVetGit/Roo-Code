@@ -4,7 +4,9 @@ import { Checkbox } from "vscrui"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
-import { ProviderSettings, RouterModels, openRouterDefaultModelId } from "@roo/shared/api"
+import { type ProviderSettings, type OrganizationAllowList, openRouterDefaultModelId } from "@roo-code/types"
+
+import type { RouterModels } from "@roo/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { getOpenRouterAuthUrl } from "@src/oauth/urls"
@@ -27,6 +29,8 @@ type OpenRouterProps = {
 	selectedModelId: string
 	uriScheme: string | undefined
 	fromWelcomeView?: boolean
+	organizationAllowList: OrganizationAllowList
+	modelValidationError?: string
 }
 
 export const OpenRouter = ({
@@ -36,6 +40,8 @@ export const OpenRouter = ({
 	selectedModelId,
 	uriScheme,
 	fromWelcomeView,
+	organizationAllowList,
+	modelValidationError,
 }: OpenRouterProps) => {
 	const { t } = useAppTranslation()
 
@@ -130,6 +136,8 @@ export const OpenRouter = ({
 				modelIdKey="openRouterModelId"
 				serviceName="OpenRouter"
 				serviceUrl="https://openrouter.ai/models"
+				organizationAllowList={organizationAllowList}
+				errorMessage={modelValidationError}
 			/>
 			{openRouterModelProviders && Object.keys(openRouterModelProviders).length > 0 && (
 				<div>

@@ -1,0 +1,72 @@
+<workflow_instructions>
+  <mode_overview>
+    This mode is designed to help resolve issues in existing pull requests. It analyzes PR feedback from GitHub, checks for failing tests and merge conflicts, gathers context, and guides the user toward a solution.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <action>Understand the user's request</action>
+      <details>
+        Parse the user's input to identify the pull request URL or number. Extract the repository owner and name.
+      </details>
+    </step>
+    <step number="2">
+      <action>Gather PR context</action>
+      <tools>
+        <tool>use_mcp_tool (github): get_pull_request, get_pull_request_comments</tool>
+        <tool>gh cli: Check workflow status and logs for failing tests.</tool>
+        <tool>gh cli: Check for merge conflicts.</tool>
+      </tools>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="analysis">
+      <description>Analyze the gathered information to identify the core problems.</description>
+      <steps>
+        <step>Summarize review comments and requested changes.</step>
+        <step>Identify the root cause of failing tests by analyzing logs.</step>
+        <step>Determine if merge conflicts exist.</step>
+      </steps>
+    </phase>
+
+    <phase name="synthesis">
+      <description>Synthesize the findings and present them to the user.</description>
+      <steps>
+        <step>Present a summary of the issues found (reviews, failing tests, conflicts).</step>
+        <step>Use ask_followup_question to ask the user how they want to proceed with fixing the issues.</step>
+      </steps>
+    </phase>
+
+    <phase name="implementation">
+      <description>Execute the user's chosen course of action.</description>
+      <steps>
+        <step>Check out the PR branch locally using 'gh pr checkout --force'.</step>
+        <step>Determine if the PR is from a fork by checking 'gh pr view --json isCrossRepository'.</step>
+        <step>Apply code changes based on review feedback using file editing tools.</step>
+        <step>Fix failing tests by modifying test files or source code as needed.</step>
+        <step>For conflict resolution: Use GIT_EDITOR=true for non-interactive rebases, then resolve conflicts via file editing.</step>
+        <step>If changes affect user-facing content (i18n files, UI components, announcements), delegate translation updates using the new_task tool with translate mode.</step>
+        <step>Commit changes using git commands.</step>
+        <step>Push changes to the correct remote (origin for same-repo PRs, fork remote for cross-repo PRs) using 'git push --force-with-lease'.</step>
+      </steps>
+    </phase>
+
+    <phase name="validation">
+      <description>Verify that the pushed changes resolve the issues.</description>
+      <steps>
+        <step>Use 'gh pr checks --watch' to monitor check status in real-time until all checks complete.</step>
+        <step>If needed, check specific workflow runs with 'gh run list --pr' for detailed CI/CD pipeline status.</step>
+        <step>Verify that all translation updates (if any) have been completed and committed.</step>
+        <step>Confirm PR is ready for review by checking mergeable state with 'gh pr view --json'.</step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <completion_criteria>
+    <criterion>All actionable review comments have been addressed.</criterion>
+    <criterion>All tests are passing.</criterion>
+    <criterion>The PR is free of merge conflicts.</criterion>
+    <criterion>All required translations have been completed and committed (if changes affect user-facing content).</criterion>
+  </completion_criteria>
+</workflow_instructions>

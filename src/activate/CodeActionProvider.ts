@@ -1,6 +1,8 @@
 import * as vscode from "vscode"
 
-import { CodeActionName, CodeActionId } from "../schemas"
+import { CodeActionName, CodeActionId } from "@roo-code/types"
+import { Package } from "../shared/package"
+
 import { getCodeActionCommand } from "../utils/commands"
 import { EditorUtils } from "../integrations/editor/EditorUtils"
 
@@ -35,6 +37,10 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 		context: vscode.CodeActionContext,
 	): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {
 		try {
+			if (!vscode.workspace.getConfiguration(Package.name).get<boolean>("enableCodeActions", true)) {
+				return []
+			}
+
 			const effectiveRange = EditorUtils.getEffectiveRange(document, range)
 
 			if (!effectiveRange) {

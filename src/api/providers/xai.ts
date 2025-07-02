@@ -1,7 +1,9 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
-import { ApiHandlerOptions, XAIModelId, xaiDefaultModelId, xaiModels } from "../../shared/api"
+import { type XAIModelId, xaiDefaultModelId, xaiModels } from "@roo-code/types"
+
+import type { ApiHandlerOptions } from "../../shared/api"
 
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -9,7 +11,7 @@ import { getModelParams } from "../transform/model-params"
 
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
-import { type SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
 const XAI_DEFAULT_TEMPERATURE = 0
 
@@ -38,7 +40,11 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 		return { id, info, ...params }
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		const { id: modelId, info: modelInfo, reasoning } = this.getModel()
 
 		// Use the OpenAI-compatible API.
@@ -70,17 +76,21 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 			}
 
 			if (chunk.usage) {
+				// Extract detailed token information if available
+				// First check for prompt_tokens_details structure (real API response)
+				const promptDetails = "prompt_tokens_details" in chunk.usage ? chunk.usage.prompt_tokens_details : null;
+				const cachedTokens = promptDetails && "cached_tokens" in promptDetails ? promptDetails.cached_tokens : 0;
+
+				// Fall back to direct fields in usage (used in test mocks)
+				const readTokens = cachedTokens || ("cache_read_input_tokens" in chunk.usage ? (chunk.usage as any).cache_read_input_tokens : 0);
+				const writeTokens = "cache_creation_input_tokens" in chunk.usage ? (chunk.usage as any).cache_creation_input_tokens : 0;
+
 				yield {
 					type: "usage",
 					inputTokens: chunk.usage.prompt_tokens || 0,
 					outputTokens: chunk.usage.completion_tokens || 0,
-					// X.AI might include these fields in the future, handle them if present.
-					cacheReadTokens:
-						"cache_read_input_tokens" in chunk.usage ? (chunk.usage as any).cache_read_input_tokens : 0,
-					cacheWriteTokens:
-						"cache_creation_input_tokens" in chunk.usage
-							? (chunk.usage as any).cache_creation_input_tokens
-							: 0,
+					cacheReadTokens: readTokens,
+					cacheWriteTokens: writeTokens,
 				}
 			}
 		}

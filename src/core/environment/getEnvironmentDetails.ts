@@ -5,7 +5,9 @@ import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
 import delay from "delay"
 
-import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../../shared/experiments"
+import type { ExperimentId } from "@roo-code/types"
+
+import { EXPERIMENT_IDS, experiments as Experiments } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { defaultModeSlug, getFullModeDetails, getModeBySlug, isToolAllowedForMode } from "../../shared/modes"
 import { getApiMetrics } from "../../shared/getApiMetrics"
@@ -101,7 +103,10 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		terminalDetails += "\n\n# Actively Running Terminals"
 
 		for (const busyTerminal of busyTerminals) {
-			terminalDetails += `\n## Original command: \`${busyTerminal.getLastCommand()}\``
+			const cwd = busyTerminal.getCurrentWorkingDirectory()
+			terminalDetails += `\n## Terminal ${busyTerminal.id} (Active)`
+			terminalDetails += `\n### Working Directory: \`${cwd}\``
+			terminalDetails += `\n### Original command: \`${busyTerminal.getLastCommand()}\``
 			let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id)
 
 			if (newOutput) {
@@ -143,7 +148,9 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 			// Add this terminal's outputs to the details.
 			if (terminalOutputs.length > 0) {
-				terminalDetails += `\n## Terminal ${inactiveTerminal.id}`
+				const cwd = inactiveTerminal.getCurrentWorkingDirectory()
+				terminalDetails += `\n## Terminal ${inactiveTerminal.id} (Inactive)`
+				terminalDetails += `\n### Working Directory: \`${cwd}\``
 				terminalOutputs.forEach((output) => {
 					terminalDetails += `\n### New Output\n${output}`
 				})
@@ -151,7 +158,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		}
 	}
 
-	// console.log(`[Cline#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
+	// console.log(`[Task#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
 
 	// Add recently modified files section.
 	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearRecentlyModifiedFiles()
@@ -190,13 +197,8 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 	// Add context tokens information.
 	const { contextTokens, totalCost } = getApiMetrics(cline.clineMessages)
-	const { id: modelId, info: modelInfo } = cline.api.getModel()
-	const contextWindow = modelInfo.contextWindow
+	const { id: modelId } = cline.api.getModel()
 
-	const contextPercentage =
-		contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined
-
-	details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`
 	details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
 
 	// Add current mode and any mode-specific warnings.

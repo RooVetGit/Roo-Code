@@ -17,6 +17,7 @@ export type McpServer = {
 	timeout?: number
 	source?: "global" | "project"
 	projectPath?: string
+	instructions?: string
 }
 
 export type McpTool = {
@@ -24,6 +25,7 @@ export type McpTool = {
 	description?: string
 	inputSchema?: object
 	alwaysAllow?: boolean
+	enabledForPrompt?: boolean
 }
 
 export type McpResource = {

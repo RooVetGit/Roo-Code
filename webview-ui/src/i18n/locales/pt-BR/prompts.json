@@ -1,9 +1,11 @@
 {
-	"title": "Prompts",
+	"title": "Modos",
 	"done": "Concluído",
 	"modes": {
 		"title": "Modos",
 		"createNewMode": "Criar novo modo",
+		"importMode": "Importar modo",
+		"noMatchFound": "Nenhum modo encontrado",
 		"editModesConfig": "Editar configuração de modos",
 		"editGlobalModes": "Editar modos globais",
 		"editProjectModes": "Editar modos do projeto (.roomodes)",
@@ -34,6 +36,11 @@
 		"resetToDefault": "Restaurar para padrão",
 		"description": "Defina a expertise e personalidade do Roo para este modo. Esta descrição molda como o Roo se apresenta e aborda tarefas."
 	},
+	"description": {
+		"title": "Descrição curta (para humanos)",
+		"resetToDefault": "Redefinir para descrição padrão",
+		"description": "Uma breve descrição exibida no menu suspenso do seletor de modo."
+	},
 	"whenToUse": {
 		"title": "Quando usar (opcional)",
 		"description": "Descreva quando este modo deve ser usado. Isso ajuda o Orchestrator a escolher o modo certo para uma tarefa.",
@@ -44,6 +51,28 @@
 		"resetToDefault": "Restaurar para padrão",
 		"description": "Adicione diretrizes comportamentais específicas para o modo {{modeName}}.",
 		"loadFromFile": "Instruções personalizadas específicas para o modo {{mode}} também podem ser carregadas da pasta <span>.roo/rules-{{slug}}/</span> no seu espaço de trabalho (.roorules-{{slug}} e .clinerules-{{slug}} estão obsoletos e deixarão de funcionar em breve)."
+	},
+	"exportMode": {
+		"title": "Exportar modo",
+		"description": "Exporte este modo para um arquivo YAML com todas as regras incluídas para compartilhar facilmente com outros.",
+		"export": "Exportar modo",
+		"exporting": "Exportando..."
+	},
+	"importMode": {
+		"selectLevel": "Escolha onde importar este modo:",
+		"import": "Importar",
+		"importing": "Importando...",
+		"global": {
+			"label": "Nível global",
+			"description": "Disponível em todos os projetos. As regras serão mescladas nas instruções personalizadas."
+		},
+		"project": {
+			"label": "Nível do projeto",
+			"description": "Disponível apenas neste espaço de trabalho. Se o modo exportado continha arquivos de regras, eles serão recriados na pasta .roo/rules-{slug}/."
+		}
+	},
+	"advanced": {
+		"title": "Avançado"
 	},
 	"globalCustomInstructions": {
 		"title": "Instruções personalizadas para todos os modos",
@@ -64,7 +93,8 @@
 			"apiConfigDescription": "Você pode selecionar uma configuração de API para usar sempre para aprimorar prompts, ou simplesmente use o que está atualmente selecionado",
 			"useCurrentConfig": "Usar configuração de API atualmente selecionada",
 			"testPromptPlaceholder": "Digite um prompt para testar o aprimoramento",
-			"previewButton": "Visualizar aprimoramento do prompt"
+			"previewButton": "Visualizar aprimoramento do prompt",
+			"testEnhancement": "Testar aprimoramento"
 		},
 		"types": {
 			"ENHANCE": {
@@ -143,6 +173,10 @@
 		"tools": {
 			"label": "Ferramentas disponíveis",
 			"description": "Selecione quais ferramentas este modo pode usar."
+		},
+		"description": {
+			"label": "Descrição curta (para humanos)",
+			"description": "Uma breve descrição exibida no menu suspenso do seletor de modo."
 		},
 		"customInstructions": {
 			"label": "Instruções personalizadas (opcional)",

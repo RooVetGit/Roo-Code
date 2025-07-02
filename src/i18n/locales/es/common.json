@@ -23,12 +23,12 @@
 		"this_and_subsequent": "Este y todos los mensajes posteriores"
 	},
 	"errors": {
-		"invalid_mcp_config": "Formato de configuración MCP del proyecto no válido",
-		"invalid_mcp_settings_format": "Formato JSON de la configuración MCP no válido. Asegúrate de que tus ajustes sigan el formato JSON correcto.",
-		"invalid_mcp_settings_syntax": "Formato JSON de la configuración MCP no válido. Verifica si hay errores de sintaxis en tu archivo de configuración.",
-		"invalid_mcp_settings_validation": "Formato de configuración MCP no válido: {{errorMessages}}",
-		"failed_initialize_project_mcp": "Error al inicializar el servidor MCP del proyecto: {{error}}",
 		"invalid_data_uri": "Formato de URI de datos no válido",
+		"error_copying_image": "Error copiando la imagen: {{errorMessage}}",
+		"error_saving_image": "Error guardando la imagen: {{errorMessage}}",
+		"error_opening_image": "Error abriendo la imagen: {{error}}",
+		"could_not_open_file": "No se pudo abrir el archivo: {{errorMessage}}",
+		"could_not_open_file_generic": "¡No se pudo abrir el archivo!",
 		"checkpoint_timeout": "Se agotó el tiempo al intentar restaurar el punto de control.",
 		"checkpoint_failed": "Error al restaurar el punto de control.",
 		"no_workspace": "Por favor, abre primero una carpeta de proyecto",
@@ -44,31 +44,61 @@
 		"delete_api_config": "Error al eliminar la configuración de API",
 		"list_api_config": "Error al obtener la lista de configuraciones de API",
 		"update_server_timeout": "Error al actualizar el tiempo de espera del servidor",
-		"failed_update_project_mcp": "Error al actualizar los servidores MCP del proyecto",
-		"create_mcp_json": "Error al crear o abrir .roo/mcp.json: {{error}}",
 		"hmr_not_running": "El servidor de desarrollo local no está en ejecución, HMR no funcionará. Por favor, ejecuta 'npm run dev' antes de lanzar la extensión para habilitar HMR.",
 		"retrieve_current_mode": "Error al recuperar el modo actual del estado.",
 		"failed_delete_repo": "Error al eliminar el repositorio o rama asociada: {{error}}",
 		"failed_remove_directory": "Error al eliminar el directorio de tareas: {{error}}",
 		"custom_storage_path_unusable": "La ruta de almacenamiento personalizada \"{{path}}\" no es utilizable, se usará la ruta predeterminada",
 		"cannot_access_path": "No se puede acceder a la ruta {{path}}: {{error}}",
-		"settings_import_failed": "Error al importar la configuración: {{error}}."
+		"settings_import_failed": "Error al importar la configuración: {{error}}.",
+		"mistake_limit_guidance": "Esto puede indicar un fallo en el proceso de pensamiento del modelo o la incapacidad de usar una herramienta correctamente, lo cual puede mitigarse con orientación del usuario (ej. \"Intenta dividir la tarea en pasos más pequeños\").",
+		"violated_organization_allowlist": "Error al ejecutar la tarea: el perfil actual infringe la configuración de tu organización",
+		"condense_failed": "Error al condensar el contexto",
+		"condense_not_enough_messages": "No hay suficientes mensajes para condensar el contexto",
+		"condensed_recently": "El contexto se condensó recientemente; se omite este intento",
+		"condense_handler_invalid": "El manejador de API para condensar el contexto no es válido",
+		"condense_context_grew": "El tamaño del contexto aumentó durante la condensación; se omite este intento",
+		"url_timeout": "El sitio web tardó demasiado en cargar (timeout). Esto podría deberse a una conexión lenta, un sitio web pesado o que esté temporalmente no disponible. Puedes intentarlo más tarde o verificar si la URL es correcta.",
+		"url_not_found": "No se pudo encontrar la dirección del sitio web. Por favor verifica si la URL es correcta e inténtalo de nuevo.",
+		"no_internet": "Sin conexión a internet. Por favor verifica tu conexión de red e inténtalo de nuevo.",
+		"url_forbidden": "El acceso a este sitio web está prohibido. El sitio puede bloquear el acceso automatizado o requerir autenticación.",
+		"url_page_not_found": "La página no fue encontrada. Por favor verifica si la URL es correcta.",
+		"url_fetch_failed": "Error al obtener el contenido de la URL: {{error}}",
+		"url_fetch_error_with_url": "Error al obtener contenido para {{url}}: {{error}}",
+		"share_task_failed": "Error al compartir la tarea. Por favor, inténtalo de nuevo.",
+		"share_no_active_task": "No hay tarea activa para compartir",
+		"share_auth_required": "Se requiere autenticación. Por favor, inicia sesión para compartir tareas.",
+		"share_not_enabled": "La compartición de tareas no está habilitada para esta organización.",
+		"share_task_not_found": "Tarea no encontrada o acceso denegado.",
+		"mode_import_failed": "Error al importar el modo: {{error}}",
+		"claudeCode": {
+			"processExited": "El proceso de Claude Code terminó con código {{exitCode}}.",
+			"errorOutput": "Salida de error: {{output}}",
+			"processExitedWithError": "El proceso de Claude Code terminó con código {{exitCode}}. Salida de error: {{output}}",
+			"stoppedWithReason": "Claude Code se detuvo por la razón: {{reason}}",
+			"apiKeyModelPlanMismatch": "Las claves API y los planes de suscripción permiten diferentes modelos. Asegúrate de que el modelo seleccionado esté incluido en tu plan."
+		}
 	},
 	"warnings": {
 		"no_terminal_content": "No hay contenido de terminal seleccionado",
-		"missing_task_files": "Los archivos de esta tarea faltan. ¿Deseas eliminarla de la lista de tareas?"
+		"missing_task_files": "Los archivos de esta tarea faltan. ¿Deseas eliminarla de la lista de tareas?",
+		"auto_import_failed": "Error al importar automáticamente la configuración de RooCode: {{error}}"
 	},
 	"info": {
 		"no_changes": "No se encontraron cambios.",
 		"clipboard_copy": "Mensaje del sistema copiado correctamente al portapapeles",
 		"history_cleanup": "Se limpiaron {{count}} tarea(s) con archivos faltantes del historial.",
-		"mcp_server_restarting": "Reiniciando el servidor MCP {{serverName}}...",
-		"mcp_server_connected": "Servidor MCP {{serverName}} conectado",
-		"mcp_server_deleted": "Servidor MCP eliminado: {{serverName}}",
-		"mcp_server_not_found": "Servidor \"{{serverName}}\" no encontrado en la configuración",
 		"custom_storage_path_set": "Ruta de almacenamiento personalizada establecida: {{path}}",
 		"default_storage_path": "Se ha vuelto a usar la ruta de almacenamiento predeterminada",
-		"settings_imported": "Configuración importada correctamente."
+		"settings_imported": "Configuración importada correctamente.",
+		"auto_import_success": "Configuración de RooCode importada automáticamente desde {{filename}}",
+		"share_link_copied": "Enlace de compartir copiado al portapapeles",
+		"image_copied_to_clipboard": "URI de datos de imagen copiada al portapapeles",
+		"image_saved": "Imagen guardada en {{path}}",
+		"organization_share_link_copied": "¡Enlace de compartición de organización copiado al portapapeles!",
+		"public_share_link_copied": "¡Enlace de compartición pública copiado al portapapeles!",
+		"mode_exported": "Modo '{{mode}}' exportado correctamente",
+		"mode_imported": "Modo importado correctamente"
 	},
 	"answers": {
 		"yes": "Sí",
@@ -79,7 +109,9 @@
 	},
 	"tasks": {
 		"canceled": "Error de tarea: Fue detenida y cancelada por el usuario.",
-		"deleted": "Fallo de tarea: Fue detenida y eliminada por el usuario."
+		"deleted": "Fallo de tarea: Fue detenida y eliminada por el usuario.",
+		"incomplete": "Tarea #{{taskNumber}} (Incompleta)",
+		"no_messages": "Tarea #{{taskNumber}} (Sin mensajes)"
 	},
 	"storage": {
 		"prompt_custom_path": "Ingresa la ruta de almacenamiento personalizada para el historial de conversaciones, déjala vacía para usar la ubicación predeterminada",
@@ -94,7 +126,31 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Clave API de Groq",
-			"getGroqApiKey": "Obtener clave API de Groq"
+			"getGroqApiKey": "Obtener clave API de Groq",
+			"claudeCode": {
+				"pathLabel": "Ruta de Claude Code",
+				"description": "Ruta opcional a tu CLI de Claude Code. Por defecto 'claude' si no se establece.",
+				"placeholder": "Por defecto: claude"
+			}
+		}
+	},
+	"customModes": {
+		"errors": {
+			"yamlParseError": "YAML inválido en archivo .roomodes en línea {{line}}. Verifica:\n• Indentación correcta (usa espacios, no tabs)\n• Comillas y corchetes coincidentes\n• Sintaxis YAML válida",
+			"schemaValidationError": "Formato inválido de modos personalizados en .roomodes:\n{{issues}}",
+			"invalidFormat": "Formato inválido de modos personalizados. Asegúrate de que tu configuración siga el formato YAML correcto.",
+			"updateFailed": "Error al actualizar modo personalizado: {{error}}",
+			"deleteFailed": "Error al eliminar modo personalizado: {{error}}",
+			"resetFailed": "Error al restablecer modos personalizados: {{error}}",
+			"modeNotFound": "Error de escritura: Modo no encontrado",
+			"noWorkspaceForProject": "No se encontró carpeta de espacio de trabajo para modo específico del proyecto"
+		}
+	},
+	"mdm": {
+		"errors": {
+			"cloud_auth_required": "Tu organización requiere autenticación de Roo Code Cloud. Por favor, inicia sesión para continuar.",
+			"organization_mismatch": "Debes estar autenticado con la cuenta de Roo Code Cloud de tu organización.",
+			"verification_failed": "No se pudo verificar la autenticación de la organización."
 		}
 	}
 }

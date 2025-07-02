@@ -1,6 +1,8 @@
-import { mentionRegex } from "@roo/shared/context-mentions"
 import { Fzf } from "fzf"
-import { ModeConfig } from "@roo/shared/modes"
+
+import type { ModeConfig } from "@roo-code/types"
+
+import { mentionRegex } from "@roo/context-mentions"
 
 import { escapeSpaces } from "./path-mentions"
 
@@ -141,7 +143,7 @@ export function getContextMenuOptions(
 					type: ContextMenuOptionType.Mode,
 					value: mode.slug,
 					label: mode.name,
-					description: (mode.whenToUse || mode.roleDefinition).split("\n")[0],
+					description: (mode.description || mode.whenToUse || mode.roleDefinition).split("\n")[0],
 				}))
 
 		return matchingModes.length > 0 ? matchingModes : [{ type: ContextMenuOptionType.NoResults }]

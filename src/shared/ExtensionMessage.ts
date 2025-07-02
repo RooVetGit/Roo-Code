@@ -1,23 +1,43 @@
-import { GitCommit } from "../utils/git"
-
-import {
+import type {
 	GlobalSettings,
 	ProviderSettingsEntry,
 	ProviderSettings,
 	HistoryItem,
 	ModeConfig,
 	TelemetrySetting,
-	ExperimentId,
-	ClineAsk,
-	ClineSay,
-	ToolProgressStatus,
+	Experiments,
 	ClineMessage,
-} from "../schemas"
+	OrganizationAllowList,
+	CloudUserInfo,
+	ShareVisibility,
+} from "@roo-code/types"
+
+import { GitCommit } from "../utils/git"
+
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
+import type { MarketplaceItem } from "@roo-code/types"
 
-export type { ProviderSettingsEntry, ToolProgressStatus }
+// Type for marketplace installed metadata
+export interface MarketplaceInstalledMetadata {
+	project: Record<string, { type: string }>
+	global: Record<string, { type: string }>
+}
+
+// Indexing status types
+export interface IndexingStatus {
+	systemStatus: string
+	message?: string
+	processedItems: number
+	totalItems: number
+	currentItemUnit?: string
+}
+
+export interface IndexingStatusUpdateMessage {
+	type: "indexingStatusUpdate"
+	values: IndexingStatus
+}
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -37,7 +57,7 @@ export interface ExtensionMessage {
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
-		| "partialMessage"
+		| "messageUpdated"
 		| "mcpServers"
 		| "enhancedPrompt"
 		| "commitSearchResults"
@@ -53,6 +73,9 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "exportModeResult"
+		| "importModeResult"
+		| "checkRulesDirectoryResult"
 		| "currentCheckpointUpdated"
 		| "showHumanRelayDialog"
 		| "humanRelayResponse"
@@ -68,17 +91,30 @@ export interface ExtensionMessage {
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
+		| "mcpExecutionStatus"
 		| "vsCodeSetting"
+		| "authenticatedUser"
 		| "condenseTaskContextResponse"
+		| "singleRouterModelFetchResponse"
+		| "indexingStatusUpdate"
+		| "indexCleared"
+		| "codebaseIndexConfig"
+		| "marketplaceInstallResult"
+		| "marketplaceData"
+		| "shareTaskSuccess"
 	text?: string
+	payload?: any // Add a generic payload for now, can refine later
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "marketplaceButtonClicked"
+		| "accountButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
+		| "switchTab"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -88,7 +124,7 @@ export interface ExtensionMessage {
 		isActive: boolean
 		path?: string
 	}>
-	partialMessage?: ClineMessage
+	clineMessage?: ClineMessage
 	routerModels?: RouterModels
 	openAiModels?: string[]
 	ollamaModels?: string[]
@@ -108,6 +144,14 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	hasContent?: boolean // For checkRulesDirectoryResult
+	items?: MarketplaceItem[]
+	userInfo?: CloudUserInfo
+	organizationAllowList?: OrganizationAllowList
+	tab?: string
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
+	visibility?: ShareVisibility
 }
 
 export type ExtensionState = Pick<
@@ -123,6 +167,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowReadOnlyOutsideWorkspace"
 	| "alwaysAllowWrite"
 	| "alwaysAllowWriteOutsideWorkspace"
+	| "alwaysAllowWriteProtected"
 	// | "writeDelayMs" // Optional in GlobalSettings, required here.
 	| "alwaysAllowBrowser"
 	| "alwaysApproveResubmit"
@@ -147,6 +192,7 @@ export type ExtensionState = Pick<
 	// | "maxWorkspaceFiles" // Optional in GlobalSettings, required here.
 	// | "showRooIgnoredFiles" // Optional in GlobalSettings, required here.
 	// | "maxReadFileLine" // Optional in GlobalSettings, required here.
+	| "maxConcurrentFileReads" // Optional in GlobalSettings, required here.
 	| "terminalOutputLineLimit"
 	| "terminalShellIntegrationTimeout"
 	| "terminalShellIntegrationDisabled"
@@ -172,6 +218,9 @@ export type ExtensionState = Pick<
 	| "enhancementApiConfigId"
 	| "condensingApiConfigId"
 	| "customCondensingPrompt"
+	| "codebaseIndexConfig"
+	| "codebaseIndexModels"
+	| "profileThresholds"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -191,7 +240,7 @@ export type ExtensionState = Pick<
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 
-	experiments: Record<ExperimentId, boolean> // Map of experiment IDs to their enabled state
+	experiments: Experiments // Map of experiment IDs to their enabled state
 
 	mcpEnabled: boolean
 	enableMcpServerCreation: boolean
@@ -208,16 +257,27 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
-	autoCondenseContextPercent: number
-}
 
-export type { ClineMessage, ClineAsk, ClineSay }
+	cloudUserInfo: CloudUserInfo | null
+	cloudIsAuthenticated: boolean
+	cloudApiUrl?: string
+	sharingEnabled: boolean
+	organizationAllowList: OrganizationAllowList
+
+	autoCondenseContext: boolean
+	autoCondenseContextPercent: number
+	marketplaceItems?: MarketplaceItem[]
+	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
+	profileThresholds: Record<string, number>
+	hasOpenedModeSelector: boolean
+}
 
 export interface ClineSayTool {
 	tool:
 		| "editedExistingFile"
 		| "appliedDiff"
 		| "newFileCreated"
+		| "codebaseSearch"
 		| "readFile"
 		| "fetchInstructions"
 		| "listFilesTopLevel"
@@ -237,6 +297,8 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	isProtected?: boolean
+	additionalFileCount?: number // Number of additional files in the same read_file request
 	search?: string
 	replace?: string
 	useRegex?: boolean
@@ -244,6 +306,25 @@ export interface ClineSayTool {
 	startLine?: number
 	endLine?: number
 	lineNumber?: number
+	query?: string
+	batchFiles?: Array<{
+		path: string
+		lineSnippet: string
+		isOutsideWorkspace?: boolean
+		key: string
+		content?: string
+	}>
+	batchDiffs?: Array<{
+		path: string
+		changeCount: number
+		key: string
+		content: string
+		diffs?: Array<{
+			content: string
+			startLine?: number
+		}>
+	}>
+	question?: string
 }
 
 // Must keep in sync with system prompt.
@@ -280,6 +361,7 @@ export interface ClineAskUseMcpServer {
 	toolName?: string
 	arguments?: string
 	uri?: string
+	response?: string
 }
 
 export interface ClineApiReqInfo {

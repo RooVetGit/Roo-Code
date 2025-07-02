@@ -1,8 +1,10 @@
 import { Anthropic } from "@anthropic-ai/sdk"
+
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { ApiHandler } from "../../api"
-import { summarizeConversation, SummarizeResponse } from "../condense"
+import { MAX_CONDENSE_THRESHOLD, MIN_CONDENSE_THRESHOLD, summarizeConversation, SummarizeResponse } from "../condense"
 import { ApiMessage } from "../task-persistence/apiMessages"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 /**
  * Default percentage of the context window to use as a buffer when deciding when to truncate
@@ -36,7 +38,7 @@ export async function estimateTokenCount(
  * @returns {ApiMessage[]} The truncated conversation messages.
  */
 export function truncateConversation(messages: ApiMessage[], fracToRemove: number, taskId: string): ApiMessage[] {
-	telemetryService.captureSlidingWindowTruncation(taskId)
+	TelemetryService.instance.captureSlidingWindowTruncation(taskId)
 	const truncatedMessages = [messages[0]]
 	const rawMessagesToRemove = Math.floor((messages.length - 1) * fracToRemove)
 	const messagesToRemove = rawMessagesToRemove - (rawMessagesToRemove % 2)
@@ -72,6 +74,8 @@ type TruncateOptions = {
 	taskId: string
 	customCondensingPrompt?: string
 	condensingApiHandler?: ApiHandler
+	profileThresholds: Record<string, number>
+	currentProfileId: string
 }
 
 type TruncateResponse = SummarizeResponse & { prevContextTokens: number }
@@ -95,7 +99,11 @@ export async function truncateConversationIfNeeded({
 	taskId,
 	customCondensingPrompt,
 	condensingApiHandler,
+	profileThresholds,
+	currentProfileId,
 }: TruncateOptions): Promise<TruncateResponse> {
+	let error: string | undefined
+	let cost = 0
 	// Calculate the maximum tokens reserved for response
 	const reservedTokens = maxTokens || contextWindow * 0.2
 
@@ -113,20 +121,44 @@ export async function truncateConversationIfNeeded({
 	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window
 	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
+	// Determine the effective threshold to use
+	let effectiveThreshold = autoCondenseContextPercent
+	const profileThreshold = profileThresholds[currentProfileId]
+	if (profileThreshold !== undefined) {
+		if (profileThreshold === -1) {
+			// Special case: -1 means inherit from global setting
+			effectiveThreshold = autoCondenseContextPercent
+		} else if (profileThreshold >= MIN_CONDENSE_THRESHOLD && profileThreshold <= MAX_CONDENSE_THRESHOLD) {
+			// Valid custom threshold
+			effectiveThreshold = profileThreshold
+		} else {
+			// Invalid threshold value, fall back to global setting
+			console.warn(
+				`Invalid profile threshold ${profileThreshold} for profile "${currentProfileId}". Using global default of ${autoCondenseContextPercent}%`,
+			)
+			effectiveThreshold = autoCondenseContextPercent
+		}
+	}
+	// If no specific threshold is found for the profile, fall back to global setting
+
 	if (autoCondenseContext) {
 		const contextPercent = (100 * prevContextTokens) / contextWindow
-		if (contextPercent >= autoCondenseContextPercent || prevContextTokens > allowedTokens) {
+		if (contextPercent >= effectiveThreshold || prevContextTokens > allowedTokens) {
 			// Attempt to intelligently condense the context
 			const result = await summarizeConversation(
 				messages,
 				apiHandler,
 				systemPrompt,
 				taskId,
+				prevContextTokens,
 				true, // automatic trigger
 				customCondensingPrompt,
 				condensingApiHandler,
 			)
-			if (result.summary) {
+			if (result.error) {
+				error = result.error
+				cost = result.cost
+			} else {
 				return { ...result, prevContextTokens }
 			}
 		}
@@ -135,8 +167,8 @@ export async function truncateConversationIfNeeded({
 	// Fall back to sliding window truncation if needed
 	if (prevContextTokens > allowedTokens) {
 		const truncatedMessages = truncateConversation(messages, 0.5, taskId)
-		return { messages: truncatedMessages, prevContextTokens, summary: "", cost: 0 }
+		return { messages: truncatedMessages, prevContextTokens, summary: "", cost, error }
 	}
 	// No truncation or condensation needed
-	return { messages, summary: "", cost: 0, prevContextTokens }
+	return { messages, summary: "", cost, prevContextTokens, error }
 }

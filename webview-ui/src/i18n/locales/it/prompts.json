@@ -1,9 +1,11 @@
 {
-	"title": "Prompt",
+	"title": "Modi",
 	"done": "Fatto",
 	"modes": {
 		"title": "Modalità",
 		"createNewMode": "Crea nuova modalità",
+		"importMode": "Importa modalità",
+		"noMatchFound": "Nessuna modalità trovata",
 		"editModesConfig": "Modifica configurazione modalità",
 		"editGlobalModes": "Modifica modalità globali",
 		"editProjectModes": "Modifica modalità di progetto (.roomodes)",
@@ -34,6 +36,11 @@
 		"resetToDefault": "Ripristina predefiniti",
 		"description": "Definisci l'esperienza e la personalità di Roo per questa modalità. Questa descrizione modella come Roo si presenta e affronta i compiti."
 	},
+	"description": {
+		"title": "Descrizione breve (per umani)",
+		"resetToDefault": "Ripristina alla descrizione predefinita",
+		"description": "Una breve descrizione mostrata nel menu a discesa del selettore di modalità."
+	},
 	"whenToUse": {
 		"title": "Quando utilizzare (opzionale)",
 		"description": "Descrivi quando questa modalità dovrebbe essere utilizzata. Questo aiuta l'Orchestrator a scegliere la modalità giusta per un compito.",
@@ -44,6 +51,28 @@
 		"resetToDefault": "Ripristina predefiniti",
 		"description": "Aggiungi linee guida comportamentali specifiche per la modalità {{modeName}}.",
 		"loadFromFile": "Le istruzioni personalizzate specifiche per la modalità {{mode}} possono essere caricate anche dalla cartella <span>.roo/rules-{{slug}}/</span> nel tuo spazio di lavoro (.roorules-{{slug}} e .clinerules-{{slug}} sono obsoleti e smetteranno di funzionare presto)."
+	},
+	"exportMode": {
+		"title": "Esporta modalità",
+		"description": "Esporta questa modalità in un file YAML con tutte le regole incluse per una facile condivisione con altri.",
+		"export": "Esporta modalità",
+		"exporting": "Esportazione..."
+	},
+	"importMode": {
+		"selectLevel": "Scegli dove importare questa modalità:",
+		"import": "Importa",
+		"importing": "Importazione...",
+		"global": {
+			"label": "Livello globale",
+			"description": "Disponibile in tutti i progetti. Le regole verranno unite nelle istruzioni personalizzate."
+		},
+		"project": {
+			"label": "Livello di progetto",
+			"description": "Disponibile solo in questo spazio di lavoro. Se la modalità esportata conteneva file di regole, verranno ricreati nella cartella .roo/rules-{slug}/."
+		}
+	},
+	"advanced": {
+		"title": "Avanzato"
 	},
 	"globalCustomInstructions": {
 		"title": "Istruzioni personalizzate per tutte le modalità",
@@ -64,7 +93,8 @@
 			"apiConfigDescription": "Puoi selezionare una configurazione API da usare sempre per migliorare i prompt, o semplicemente usare quella attualmente selezionata",
 			"useCurrentConfig": "Usa la configurazione API attualmente selezionata",
 			"testPromptPlaceholder": "Inserisci un prompt per testare il miglioramento",
-			"previewButton": "Anteprima miglioramento prompt"
+			"previewButton": "Anteprima miglioramento prompt",
+			"testEnhancement": "Testa miglioramento"
 		},
 		"types": {
 			"ENHANCE": {
@@ -135,6 +165,10 @@
 		"roleDefinition": {
 			"label": "Definizione del ruolo",
 			"description": "Definisci l'esperienza e la personalità di Roo per questa modalità."
+		},
+		"description": {
+			"label": "Descrizione breve (per umani)",
+			"description": "Una breve descrizione mostrata nel menu a discesa del selettore di modalità."
 		},
 		"whenToUse": {
 			"label": "Quando utilizzare (opzionale)",

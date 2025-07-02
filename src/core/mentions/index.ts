@@ -17,6 +17,34 @@ import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
+import { RooIgnoreController } from "../ignore/RooIgnoreController"
+
+import { t } from "../../i18n"
+
+function getUrlErrorMessage(error: unknown): string {
+	const errorMessage = error instanceof Error ? error.message : String(error)
+
+	// Check for common error patterns and return appropriate message
+	if (errorMessage.includes("timeout")) {
+		return t("common:errors.url_timeout")
+	}
+	if (errorMessage.includes("net::ERR_NAME_NOT_RESOLVED")) {
+		return t("common:errors.url_not_found")
+	}
+	if (errorMessage.includes("net::ERR_INTERNET_DISCONNECTED")) {
+		return t("common:errors.no_internet")
+	}
+	if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
+		return t("common:errors.url_forbidden")
+	}
+	if (errorMessage.includes("404") || errorMessage.includes("Not Found")) {
+		return t("common:errors.url_page_not_found")
+	}
+
+	// Default error message
+	return t("common:errors.url_fetch_failed", { error: errorMessage })
+}
+
 export async function openMention(mention?: string): Promise<void> {
 	if (!mention) {
 		return
@@ -50,6 +78,8 @@ export async function parseMentions(
 	cwd: string,
 	urlContentFetcher: UrlContentFetcher,
 	fileContextTracker?: FileContextTracker,
+	rooIgnoreController?: RooIgnoreController,
+	showRooIgnoredFiles: boolean = true,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -80,7 +110,8 @@ export async function parseMentions(
 			await urlContentFetcher.launchBrowser()
 		} catch (error) {
 			launchBrowserError = error
-			vscode.window.showErrorMessage(`Error fetching content for ${urlMention}: ${error.message}`)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(`Error fetching content for ${urlMention}: ${errorMessage}`)
 		}
 	}
 
@@ -88,26 +119,39 @@ export async function parseMentions(
 		if (mention.startsWith("http")) {
 			let result: string
 			if (launchBrowserError) {
-				result = `Error fetching content: ${launchBrowserError.message}`
+				const errorMessage =
+					launchBrowserError instanceof Error ? launchBrowserError.message : String(launchBrowserError)
+				result = `Error fetching content: ${errorMessage}`
 			} else {
 				try {
 					const markdown = await urlContentFetcher.urlToMarkdown(mention)
 					result = markdown
 				} catch (error) {
-					vscode.window.showErrorMessage(`Error fetching content for ${mention}: ${error.message}`)
-					result = `Error fetching content: ${error.message}`
+					console.error(`Error fetching URL ${mention}:`, error)
+
+					// Get raw error message for AI
+					const rawErrorMessage = error instanceof Error ? error.message : String(error)
+
+					// Get localized error message for UI notification
+					const localizedErrorMessage = getUrlErrorMessage(error)
+
+					vscode.window.showErrorMessage(
+						t("common:errors.url_fetch_error_with_url", { url: mention, error: localizedErrorMessage }),
+					)
+
+					// Send raw error message to AI model
+					result = `Error fetching content: ${rawErrorMessage}`
 				}
 			}
 			parsedText += `\n\n<url_content url="${mention}">\n${result}\n</url_content>`
 		} else if (mention.startsWith("/")) {
 			const mentionPath = mention.slice(1)
 			try {
-				const content = await getFileOrFolderContent(mentionPath, cwd)
+				const content = await getFileOrFolderContent(mentionPath, cwd, rooIgnoreController, showRooIgnoredFiles)
 				if (mention.endsWith("/")) {
 					parsedText += `\n\n<folder_content path="${mentionPath}">\n${content}\n</folder_content>`
 				} else {
 					parsedText += `\n\n<file_content path="${mentionPath}">\n${content}\n</file_content>`
-					// Track that this file was mentioned and its content was included
 					if (fileContextTracker) {
 						await fileContextTracker.trackFileContext(mentionPath, "file_mentioned")
 					}
@@ -161,8 +205,12 @@ export async function parseMentions(
 	return parsedText
 }
 
-async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
-	// Unescape spaces in the path before resolving it
+async function getFileOrFolderContent(
+	mentionPath: string,
+	cwd: string,
+	rooIgnoreController?: any,
+	showRooIgnoredFiles: boolean = true,
+): Promise<string> {
 	const unescapedPath = unescapeSpaces(mentionPath)
 	const absPath = path.resolve(cwd, unescapedPath)
 
@@ -170,6 +218,9 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 		const stats = await fs.stat(absPath)
 
 		if (stats.isFile()) {
+			if (rooIgnoreController && !rooIgnoreController.validateAccess(absPath)) {
+				return `(File ${mentionPath} is ignored by .rooignore)`
+			}
 			try {
 				const content = await extractTextFromFile(absPath)
 				return content
@@ -180,33 +231,51 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 			const entries = await fs.readdir(absPath, { withFileTypes: true })
 			let folderContent = ""
 			const fileContentPromises: Promise<string | undefined>[] = []
-			entries.forEach((entry, index) => {
+			const LOCK_SYMBOL = "🔒"
+
+			for (let index = 0; index < entries.length; index++) {
+				const entry = entries[index]
 				const isLast = index === entries.length - 1
 				const linePrefix = isLast ? "└── " : "├── "
+				const entryPath = path.join(absPath, entry.name)
+
+				let isIgnored = false
+				if (rooIgnoreController) {
+					isIgnored = !rooIgnoreController.validateAccess(entryPath)
+				}
+
+				if (isIgnored && !showRooIgnoredFiles) {
+					continue
+				}
+
+				const displayName = isIgnored ? `${LOCK_SYMBOL} ${entry.name}` : entry.name
+
 				if (entry.isFile()) {
-					folderContent += `${linePrefix}${entry.name}\n`
-					const filePath = path.join(mentionPath, entry.name)
-					const absoluteFilePath = path.resolve(absPath, entry.name)
-					fileContentPromises.push(
-						(async () => {
-							try {
-								const isBinary = await isBinaryFile(absoluteFilePath).catch(() => false)
-								if (isBinary) {
+					folderContent += `${linePrefix}${displayName}\n`
+					if (!isIgnored) {
+						const filePath = path.join(mentionPath, entry.name)
+						const absoluteFilePath = path.resolve(absPath, entry.name)
+						fileContentPromises.push(
+							(async () => {
+								try {
+									const isBinary = await isBinaryFile(absoluteFilePath).catch(() => false)
+									if (isBinary) {
+										return undefined
+									}
+									const content = await extractTextFromFile(absoluteFilePath)
+									return `<file_content path="${filePath.toPosix()}">\n${content}\n</file_content>`
+								} catch (error) {
 									return undefined
 								}
-								const content = await extractTextFromFile(absoluteFilePath)
-								return `<file_content path="${filePath.toPosix()}">\n${content}\n</file_content>`
-							} catch (error) {
-								return undefined
-							}
-						})(),
-					)
+							})(),
+						)
+					}
 				} else if (entry.isDirectory()) {
-					folderContent += `${linePrefix}${entry.name}/\n`
+					folderContent += `${linePrefix}${displayName}/\n`
 				} else {
-					folderContent += `${linePrefix}${entry.name}\n`
+					folderContent += `${linePrefix}${displayName}\n`
 				}
-			})
+			}
 			const fileContents = (await Promise.all(fileContentPromises)).filter((content) => content)
 			return `${folderContent}\n${fileContents.join("\n\n")}`.trim()
 		} else {

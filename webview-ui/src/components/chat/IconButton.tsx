@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { StandardTooltip } from "@/components/ui"
 
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	iconClass: string
@@ -27,6 +28,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
 		"hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
 		"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
 		"active:bg-[rgba(255,255,255,0.1)]",
+		!disabled && "cursor-pointer",
 		disabled &&
 			"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
 		className,
@@ -34,15 +36,17 @@ export const IconButton: React.FC<IconButtonProps> = ({
 
 	const iconClasses = cn("codicon", iconClass, isLoading && "codicon-modifier-spin")
 
-	return (
+	const button = (
 		<button
 			aria-label={title}
-			title={title}
 			className={buttonClasses}
+			disabled={disabled}
 			onClick={!disabled ? onClick : undefined}
 			style={{ fontSize: 16.5, ...style }}
 			{...props}>
 			<span className={iconClasses} />
 		</button>
 	)
+
+	return <StandardTooltip content={title}>{button}</StandardTooltip>
 }

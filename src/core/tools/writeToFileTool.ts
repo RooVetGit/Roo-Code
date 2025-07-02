@@ -8,7 +8,7 @@ import { formatResponse } from "../prompts/responses"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath } from "../../utils/fs"
-import { addLineNumbers, stripLineNumbers, everyLineHasLineNumbers } from "../../integrations/misc/extract-text"
+import { stripLineNumbers, everyLineHasLineNumbers } from "../../integrations/misc/extract-text"
 import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
@@ -26,9 +26,25 @@ export async function writeToFileTool(
 	let newContent: string | undefined = block.params.content
 	let predictedLineCount: number | undefined = parseInt(block.params.line_count ?? "0")
 
-	if (!relPath || !newContent) {
+	if (block.partial && (!relPath || newContent === undefined)) {
 		// checking for newContent ensure relPath is complete
 		// wait so we can determine if it's a new file or editing an existing file
+		return
+	}
+
+	if (!relPath) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("write_to_file")
+		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
+		await cline.diffViewProvider.reset()
+		return
+	}
+
+	if (newContent === undefined) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("write_to_file")
+		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
+		await cline.diffViewProvider.reset()
 		return
 	}
 
@@ -39,6 +55,9 @@ export async function writeToFileTool(
 		pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
 		return
 	}
+
+	// Check if file is write-protected
+	const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
 
 	// Check if file exists using cached map or fs.access
 	let fileExists: boolean
@@ -54,11 +73,11 @@ export async function writeToFileTool(
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
 	if (newContent.startsWith("```")) {
 		// cline handles cases where it includes language specifiers like ```python ```js
-		newContent = newContent.split("\n").slice(1).join("\n").trim()
+		newContent = newContent.split("\n").slice(1).join("\n")
 	}
 
 	if (newContent.endsWith("```")) {
-		newContent = newContent.split("\n").slice(0, -1).join("\n").trim()
+		newContent = newContent.split("\n").slice(0, -1).join("\n")
 	}
 
 	if (!cline.api.getModel().id.includes("claude")) {
@@ -74,6 +93,7 @@ export async function writeToFileTool(
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
 		content: newContent,
 		isOutsideWorkspace,
+		isProtected: isWriteProtected,
 	}
 
 	try {
@@ -96,23 +116,7 @@ export async function writeToFileTool(
 
 			return
 		} else {
-			if (!relPath) {
-				cline.consecutiveMistakeCount++
-				cline.recordToolError("write_to_file")
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
-				await cline.diffViewProvider.reset()
-				return
-			}
-
-			if (!newContent) {
-				cline.consecutiveMistakeCount++
-				cline.recordToolError("write_to_file")
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
-				await cline.diffViewProvider.reset()
-				return
-			}
-
-			if (!predictedLineCount) {
+			if (predictedLineCount === undefined) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("write_to_file")
 
@@ -201,14 +205,15 @@ export async function writeToFileTool(
 					: undefined,
 			} satisfies ClineSayTool)
 
-			const didApprove = await askApproval("tool", completeMessage)
+			const didApprove = await askApproval("tool", completeMessage, undefined, isWriteProtected)
 
 			if (!didApprove) {
 				await cline.diffViewProvider.revertChanges()
 				return
 			}
 
-			const { newProblemsMessage, userEdits, finalContent } = await cline.diffViewProvider.saveChanges()
+			// Call saveChanges to update the DiffViewProvider properties
+			await cline.diffViewProvider.saveChanges()
 
 			// Track file edit operation
 			if (relPath) {
@@ -217,31 +222,10 @@ export async function writeToFileTool(
 
 			cline.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 
-			if (userEdits) {
-				await cline.say(
-					"user_feedback_diff",
-					JSON.stringify({
-						tool: fileExists ? "editedExistingFile" : "newFileCreated",
-						path: getReadablePath(cline.cwd, relPath),
-						diff: userEdits,
-					} satisfies ClineSayTool),
-				)
+			// Get the formatted response message
+			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
-				pushToolResult(
-					`The user made the following updates to your content:\n\n${userEdits}\n\n` +
-						`The updated content, which includes both your original modifications and the user's edits, has been successfully saved to ${relPath.toPosix()}. Here is the full, updated content of the file, including line numbers:\n\n` +
-						`<final_file_content path="${relPath.toPosix()}">\n${addLineNumbers(
-							finalContent || "",
-						)}\n</final_file_content>\n\n` +
-						`Please note:\n` +
-						`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-						`2. Proceed with the task using this updated file content as the new baseline.\n` +
-						`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
-						`${newProblemsMessage}`,
-				)
-			} else {
-				pushToolResult(`The content was successfully saved to ${relPath.toPosix()}.${newProblemsMessage}`)
-			}
+			pushToolResult(message)
 
 			await cline.diffViewProvider.reset()
 

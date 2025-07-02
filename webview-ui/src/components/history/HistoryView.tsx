@@ -1,21 +1,25 @@
 import React, { memo, useState } from "react"
 import { DeleteTaskDialog } from "./DeleteTaskDialog"
 import { BatchDeleteTaskDialog } from "./BatchDeleteTaskDialog"
-import prettyBytes from "pretty-bytes"
 import { Virtuoso } from "react-virtuoso"
 
-import { VSCodeTextField, VSCodeRadioGroup, VSCodeRadio } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { vscode } from "@/utils/vscode"
-import { formatLargeNumber, formatDate } from "@/utils/format"
-import { cn } from "@/lib/utils"
-import { Button, Checkbox } from "@/components/ui"
+import {
+	Button,
+	Checkbox,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	StandardTooltip,
+} from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import { Tab, TabContent, TabHeader } from "../common/Tab"
 import { useTaskSearch } from "./useTaskSearch"
-import { ExportButton } from "./ExportButton"
-import { CopyButton } from "./CopyButton"
+import TaskItem from "./TaskItem"
 
 type HistoryViewProps = {
 	onDone: () => void
@@ -80,26 +84,28 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 				<div className="flex justify-between items-center">
 					<h3 className="text-vscode-foreground m-0">{t("history:history")}</h3>
 					<div className="flex gap-2">
-						<Button
-							variant={isSelectionMode ? "default" : "secondary"}
-							onClick={toggleSelectionMode}
-							data-testid="toggle-selection-mode-button"
-							title={
+						<StandardTooltip
+							content={
 								isSelectionMode
 									? `${t("history:exitSelectionMode")}`
 									: `${t("history:enterSelectionMode")}`
 							}>
-							<span
-								className={`codicon ${isSelectionMode ? "codicon-check-all" : "codicon-checklist"} mr-1`}
-							/>
-							{isSelectionMode ? t("history:exitSelection") : t("history:selectionMode")}
-						</Button>
+							<Button
+								variant={isSelectionMode ? "default" : "secondary"}
+								onClick={toggleSelectionMode}
+								data-testid="toggle-selection-mode-button">
+								<span
+									className={`codicon ${isSelectionMode ? "codicon-check-all" : "codicon-checklist"} mr-1`}
+								/>
+								{isSelectionMode ? t("history:exitSelection") : t("history:selectionMode")}
+							</Button>
+						</StandardTooltip>
 						<Button onClick={onDone}>{t("history:done")}</Button>
 					</div>
 				</div>
 				<div className="flex flex-col gap-2">
 					<VSCodeTextField
-						style={{ width: "100%" }}
+						className="w-full"
 						placeholder={t("history:searchPlaceholder")}
 						value={searchQuery}
 						data-testid="history-search-input"
@@ -111,62 +117,83 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 								setSortOption("mostRelevant")
 							}
 						}}>
-						<div
-							slot="start"
-							className="codicon codicon-search"
-							style={{ fontSize: 13, marginTop: 2.5, opacity: 0.8 }}
-						/>
+						<div slot="start" className="codicon codicon-search mt-0.5 opacity-80 text-sm!" />
 						{searchQuery && (
 							<div
-								className="input-icon-button codicon codicon-close"
+								className="input-icon-button codicon codicon-close flex justify-center items-center h-full"
 								aria-label="Clear search"
 								onClick={() => setSearchQuery("")}
 								slot="end"
-								style={{
-									display: "flex",
-									justifyContent: "center",
-									alignItems: "center",
-									height: "100%",
-								}}
 							/>
 						)}
 					</VSCodeTextField>
-					<VSCodeRadioGroup
-						style={{ display: "flex", flexWrap: "wrap" }}
-						value={sortOption}
-						role="radiogroup"
-						onChange={(e) => setSortOption((e.target as HTMLInputElement).value as SortOption)}>
-						<VSCodeRadio value="newest" data-testid="radio-newest">
-							{t("history:newest")}
-						</VSCodeRadio>
-						<VSCodeRadio value="oldest" data-testid="radio-oldest">
-							{t("history:oldest")}
-						</VSCodeRadio>
-						<VSCodeRadio value="mostExpensive" data-testid="radio-most-expensive">
-							{t("history:mostExpensive")}
-						</VSCodeRadio>
-						<VSCodeRadio value="mostTokens" data-testid="radio-most-tokens">
-							{t("history:mostTokens")}
-						</VSCodeRadio>
-						<VSCodeRadio
-							value="mostRelevant"
-							disabled={!searchQuery}
-							data-testid="radio-most-relevant"
-							style={{ opacity: searchQuery ? 1 : 0.5 }}>
-							{t("history:mostRelevant")}
-						</VSCodeRadio>
-					</VSCodeRadioGroup>
-
-					<div className="flex items-center gap-2">
-						<Checkbox
-							id="show-all-workspaces-view"
-							checked={showAllWorkspaces}
-							onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
-							variant="description"
-						/>
-						<label htmlFor="show-all-workspaces-view" className="text-vscode-foreground cursor-pointer">
-							{t("history:showAllWorkspaces")}
-						</label>
+					<div className="flex gap-2">
+						<Select
+							value={showAllWorkspaces ? "all" : "current"}
+							onValueChange={(value) => setShowAllWorkspaces(value === "all")}>
+							<SelectTrigger className="flex-1">
+								<SelectValue>
+									{t("history:workspace.prefix")}{" "}
+									{t(`history:workspace.${showAllWorkspaces ? "all" : "current"}`)}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="current">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-folder" />
+										{t("history:workspace.current")}
+									</div>
+								</SelectItem>
+								<SelectItem value="all">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-folder-opened" />
+										{t("history:workspace.all")}
+									</div>
+								</SelectItem>
+							</SelectContent>
+						</Select>
+						<Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+							<SelectTrigger className="flex-1">
+								<SelectValue>
+									{t("history:sort.prefix")} {t(`history:sort.${sortOption}`)}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="newest" data-testid="select-newest">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-arrow-down" />
+										{t("history:newest")}
+									</div>
+								</SelectItem>
+								<SelectItem value="oldest" data-testid="select-oldest">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-arrow-up" />
+										{t("history:oldest")}
+									</div>
+								</SelectItem>
+								<SelectItem value="mostExpensive" data-testid="select-most-expensive">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-credit-card" />
+										{t("history:mostExpensive")}
+									</div>
+								</SelectItem>
+								<SelectItem value="mostTokens" data-testid="select-most-tokens">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-symbol-numeric" />
+										{t("history:mostTokens")}
+									</div>
+								</SelectItem>
+								<SelectItem
+									value="mostRelevant"
+									disabled={!searchQuery}
+									data-testid="select-most-relevant">
+									<div className="flex items-center gap-2">
+										<span className="codicon codicon-search" />
+										{t("history:mostRelevant")}
+									</div>
+								</SelectItem>
+							</SelectContent>
+						</Select>
 					</div>
 
 					{/* Select all control in selection mode */}
@@ -197,10 +224,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 			<TabContent className="p-0">
 				<Virtuoso
-					style={{
-						flexGrow: 1,
-						overflowY: "scroll",
-					}}
+					className="flex-1 overflow-y-scroll"
 					data={tasks}
 					data-testid="virtuoso-container"
 					initialTopMostItemIndex={0}
@@ -209,246 +233,18 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 							<div {...props} ref={ref} data-testid="virtuoso-item-list" />
 						)),
 					}}
-					itemContent={(index, item) => (
-						<div
-							data-testid={`task-item-${item.id}`}
+					itemContent={(_index, item) => (
+						<TaskItem
 							key={item.id}
-							className={cn("cursor-pointer", {
-								"border-b border-vscode-panel-border": index < tasks.length - 1,
-								"bg-vscode-list-activeSelectionBackground":
-									isSelectionMode && selectedTaskIds.includes(item.id),
-							})}
-							onClick={() => {
-								if (isSelectionMode) {
-									toggleTaskSelection(item.id, !selectedTaskIds.includes(item.id))
-								} else {
-									vscode.postMessage({ type: "showTaskWithId", text: item.id })
-								}
-							}}>
-							<div className="flex items-start p-3 gap-2 ml-2">
-								{/* Show checkbox in selection mode */}
-								{isSelectionMode && (
-									<div
-										className="task-checkbox mt-1"
-										onClick={(e) => {
-											e.stopPropagation()
-										}}>
-										<Checkbox
-											checked={selectedTaskIds.includes(item.id)}
-											onCheckedChange={(checked) =>
-												toggleTaskSelection(item.id, checked === true)
-											}
-											variant="description"
-										/>
-									</div>
-								)}
-
-								<div className="flex-1">
-									<div className="flex justify-between items-center">
-										<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
-											{formatDate(item.ts)}
-										</span>
-										<div className="flex flex-row">
-											{!isSelectionMode && (
-												<Button
-													variant="ghost"
-													size="sm"
-													title={t("history:deleteTaskTitle")}
-													data-testid="delete-task-button"
-													onClick={(e) => {
-														e.stopPropagation()
-
-														if (e.shiftKey) {
-															vscode.postMessage({
-																type: "deleteTaskWithId",
-																text: item.id,
-															})
-														} else {
-															setDeleteTaskId(item.id)
-														}
-													}}>
-													<span className="codicon codicon-trash" />
-													{item.size && prettyBytes(item.size)}
-												</Button>
-											)}
-										</div>
-									</div>
-									<div
-										style={{
-											fontSize: "var(--vscode-font-size)",
-											color: "var(--vscode-foreground)",
-											display: "-webkit-box",
-											WebkitLineClamp: 3,
-											WebkitBoxOrient: "vertical",
-											overflow: "hidden",
-											whiteSpace: "pre-wrap",
-											wordBreak: "break-word",
-											overflowWrap: "anywhere",
-										}}
-										data-testid="task-content"
-										dangerouslySetInnerHTML={{ __html: item.task }}
-									/>
-									<div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-										<div
-											data-testid="tokens-container"
-											style={{
-												display: "flex",
-												justifyContent: "space-between",
-												alignItems: "center",
-											}}>
-											<div
-												style={{
-													display: "flex",
-													alignItems: "center",
-													gap: "4px",
-													flexWrap: "wrap",
-												}}>
-												<span
-													style={{
-														fontWeight: 500,
-														color: "var(--vscode-descriptionForeground)",
-													}}>
-													{t("history:tokensLabel")}
-												</span>
-												<span
-													data-testid="tokens-in"
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: "3px",
-														color: "var(--vscode-descriptionForeground)",
-													}}>
-													<i
-														className="codicon codicon-arrow-up"
-														style={{
-															fontSize: "12px",
-															fontWeight: "bold",
-															marginBottom: "-2px",
-														}}
-													/>
-													{formatLargeNumber(item.tokensIn || 0)}
-												</span>
-												<span
-													data-testid="tokens-out"
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: "3px",
-														color: "var(--vscode-descriptionForeground)",
-													}}>
-													<i
-														className="codicon codicon-arrow-down"
-														style={{
-															fontSize: "12px",
-															fontWeight: "bold",
-															marginBottom: "-2px",
-														}}
-													/>
-													{formatLargeNumber(item.tokensOut || 0)}
-												</span>
-											</div>
-											{!item.totalCost && !isSelectionMode && (
-												<div className="flex flex-row gap-1">
-													<CopyButton itemTask={item.task} />
-													<ExportButton itemId={item.id} />
-												</div>
-											)}
-										</div>
-
-										{!!item.cacheWrites && (
-											<div
-												data-testid="cache-container"
-												style={{
-													display: "flex",
-													alignItems: "center",
-													gap: "4px",
-													flexWrap: "wrap",
-												}}>
-												<span
-													style={{
-														fontWeight: 500,
-														color: "var(--vscode-descriptionForeground)",
-													}}>
-													{t("history:cacheLabel")}
-												</span>
-												<span
-													data-testid="cache-writes"
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: "3px",
-														color: "var(--vscode-descriptionForeground)",
-													}}>
-													<i
-														className="codicon codicon-database"
-														style={{
-															fontSize: "12px",
-															fontWeight: "bold",
-															marginBottom: "-1px",
-														}}
-													/>
-													+{formatLargeNumber(item.cacheWrites || 0)}
-												</span>
-												<span
-													data-testid="cache-reads"
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: "3px",
-														color: "var(--vscode-descriptionForeground)",
-													}}>
-													<i
-														className="codicon codicon-arrow-right"
-														style={{
-															fontSize: "12px",
-															fontWeight: "bold",
-															marginBottom: 0,
-														}}
-													/>
-													{formatLargeNumber(item.cacheReads || 0)}
-												</span>
-											</div>
-										)}
-
-										{!!item.totalCost && (
-											<div
-												style={{
-													display: "flex",
-													justifyContent: "space-between",
-													alignItems: "center",
-													marginTop: -2,
-												}}>
-												<div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-													<span
-														style={{
-															fontWeight: 500,
-															color: "var(--vscode-descriptionForeground)",
-														}}>
-														{t("history:apiCostLabel")}
-													</span>
-													<span style={{ color: "var(--vscode-descriptionForeground)" }}>
-														${item.totalCost?.toFixed(4)}
-													</span>
-												</div>
-												{!isSelectionMode && (
-													<div className="flex flex-row gap-1">
-														<CopyButton itemTask={item.task} />
-														<ExportButton itemId={item.id} />
-													</div>
-												)}
-											</div>
-										)}
-
-										{showAllWorkspaces && item.workspace && (
-											<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs">
-												<span className="codicon codicon-folder scale-80" />
-												<span>{item.workspace}</span>
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
-						</div>
+							item={item}
+							variant="full"
+							showWorkspace={showAllWorkspaces}
+							isSelectionMode={isSelectionMode}
+							isSelected={selectedTaskIds.includes(item.id)}
+							onToggleSelection={toggleTaskSelection}
+							onDelete={setDeleteTaskId}
+							className="m-2 mr-0"
+						/>
 					)}
 				/>
 			</TabContent>

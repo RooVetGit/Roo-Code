@@ -5,8 +5,8 @@ import { Info, Download, Upload, TriangleAlert } from "lucide-react"
 
 import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
-import { Package } from "@roo/schemas"
-import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
+import { Package } from "@roo/package"
+import { TelemetrySetting } from "@roo/TelemetrySetting"
 
 import { vscode } from "@/utils/vscode"
 import { cn } from "@/lib/utils"
@@ -48,7 +48,12 @@ export const About = ({ telemetrySetting, setTelemetrySetting, className, ...pro
 						{t("settings:footer.telemetry.label")}
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						{t("settings:footer.telemetry.description")}
+						<Trans
+							i18nKey="settings:footer.telemetry.description"
+							components={{
+								privacyLink: <VSCodeLink href="https://roocode.com/privacy" />,
+							}}
+						/>
 					</p>
 				</div>
 

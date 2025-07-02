@@ -10,6 +10,9 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { BrowserActionResult } from "../../shared/ExtensionMessage"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "./browserDiscovery"
 
+// Timeout constants
+const BROWSER_NAVIGATION_TIMEOUT = 15_000 // 15 seconds
+
 interface PCRStats {
 	puppeteer: { launch: typeof launch }
 	executablePath: string
@@ -21,6 +24,7 @@ export class BrowserSession {
 	private page?: Page
 	private currentMousePosition?: string
 	private lastConnectionAttempt?: number
+	private isUsingRemoteBrowser: boolean = false
 
 	constructor(context: vscode.ExtensionContext) {
 		this.context = context
@@ -70,6 +74,7 @@ export class BrowserSession {
 			defaultViewport: this.getViewport(),
 			// headless: false,
 		})
+		this.isUsingRemoteBrowser = false
 	}
 
 	/**
@@ -86,6 +91,7 @@ export class BrowserSession {
 			console.log(`Connected to remote browser at ${chromeHostUrl}`)
 			this.context.globalState.update("cachedChromeHostUrl", chromeHostUrl)
 			this.lastConnectionAttempt = Date.now()
+			this.isUsingRemoteBrowser = true
 
 			return true
 		} catch (error) {
@@ -192,15 +198,12 @@ export class BrowserSession {
 		if (this.browser || this.page) {
 			console.log("closing browser...")
 
-			const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled") as boolean | undefined
-			if (remoteBrowserEnabled && this.browser) {
+			if (this.isUsingRemoteBrowser && this.browser) {
 				await this.browser.disconnect().catch(() => {})
 			} else {
 				await this.browser?.close().catch(() => {})
-				this.resetBrowserState()
 			}
-
-			// this.resetBrowserState()
+			this.resetBrowserState()
 		}
 		return {}
 	}
@@ -212,6 +215,7 @@ export class BrowserSession {
 		this.browser = undefined
 		this.page = undefined
 		this.currentMousePosition = undefined
+		this.isUsingRemoteBrowser = false
 	}
 
 	async doAction(action: (page: Page) => Promise<void>): Promise<BrowserActionResult> {
@@ -319,7 +323,7 @@ export class BrowserSession {
 	 * Navigate to a URL with standard loading options
 	 */
 	private async navigatePageToUrl(page: Page, url: string): Promise<void> {
-		await page.goto(url, { timeout: 7_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+		await page.goto(url, { timeout: BROWSER_NAVIGATION_TIMEOUT, waitUntil: ["domcontentloaded", "networkidle2"] })
 		await this.waitTillHTMLStable(page)
 	}
 
@@ -402,7 +406,10 @@ export class BrowserSession {
 				console.log(`Root domain: ${this.getRootDomain(currentUrl)}`)
 				console.log(`New URL: ${normalizedNewUrl}`)
 				return this.doAction(async (page) => {
-					await page.reload({ timeout: 7_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+					await page.reload({
+						timeout: BROWSER_NAVIGATION_TIMEOUT,
+						waitUntil: ["domcontentloaded", "networkidle2"],
+					})
 					await this.waitTillHTMLStable(page)
 				})
 			}
@@ -475,7 +482,7 @@ export class BrowserSession {
 			await page
 				.waitForNavigation({
 					waitUntil: ["domcontentloaded", "networkidle2"],
-					timeout: 7000,
+					timeout: BROWSER_NAVIGATION_TIMEOUT,
 				})
 				.catch(() => {})
 			await this.waitTillHTMLStable(page)

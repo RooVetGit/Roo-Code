@@ -1,8 +1,8 @@
 import { memo, useEffect, useRef, useState } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { ChevronsUpDown, Check, X } from "lucide-react"
+import { ChevronsUpDown, Check, X, AlertTriangle } from "lucide-react"
 
-import { ProviderSettingsEntry } from "@roo/shared/ExtensionMessage"
+import type { ProviderSettingsEntry, OrganizationAllowList } from "@roo-code/types"
 
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { cn } from "@/lib/utils"
@@ -21,11 +21,13 @@ import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
+	StandardTooltip,
 } from "@/components/ui"
 
 interface ApiConfigManagerProps {
 	currentApiConfigName?: string
 	listApiConfigMeta?: ProviderSettingsEntry[]
+	organizationAllowList?: OrganizationAllowList
 	onSelectConfig: (configName: string) => void
 	onDeleteConfig: (configName: string) => void
 	onRenameConfig: (oldName: string, newName: string) => void
@@ -35,6 +37,7 @@ interface ApiConfigManagerProps {
 const ApiConfigManager = ({
 	currentApiConfigName = "",
 	listApiConfigMeta = [],
+	organizationAllowList,
 	onSelectConfig,
 	onDeleteConfig,
 	onRenameConfig,
@@ -52,6 +55,27 @@ const ApiConfigManager = ({
 	const inputRef = useRef<any>(null)
 	const newProfileInputRef = useRef<any>(null)
 	const searchInputRef = useRef<HTMLInputElement>(null)
+	const searchResetTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+	// Check if a profile is valid based on the organization allow list
+	const isProfileValid = (profile: ProviderSettingsEntry): boolean => {
+		// If no organization allow list or allowAll is true, all profiles are valid
+		if (!organizationAllowList || organizationAllowList.allowAll) {
+			return true
+		}
+
+		// Check if the provider is allowed
+		const provider = profile.apiProvider
+		if (!provider) return true
+
+		const providerConfig = organizationAllowList.providers[provider]
+		if (!providerConfig) {
+			return false
+		}
+
+		// If provider allows all models, profile is valid
+		return !!providerConfig.allowAll || !!(providerConfig.models && providerConfig.models.length > 0)
+	}
 
 	const validateName = (name: string, isNewProfile: boolean): string | null => {
 		const trimmed = name.trim()
@@ -105,15 +129,29 @@ const ApiConfigManager = ({
 		resetCreateState()
 		resetRenameState()
 		// Reset search value when current profile changes
-		setTimeout(() => setSearchValue(""), 100)
+		const timeoutId = setTimeout(() => setSearchValue(""), 100)
+		return () => clearTimeout(timeoutId)
 	}, [currentApiConfigName])
+
+	// Cleanup timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (searchResetTimeoutRef.current) {
+				clearTimeout(searchResetTimeoutRef.current)
+			}
+		}
+	}, [])
 
 	const onOpenChange = (open: boolean) => {
 		setOpen(open)
 
 		// Reset search when closing the popover
 		if (!open) {
-			setTimeout(() => setSearchValue(""), 100)
+			// Clear any existing timeout
+			if (searchResetTimeoutRef.current) {
+				clearTimeout(searchResetTimeoutRef.current)
+			}
+			searchResetTimeoutRef.current = setTimeout(() => setSearchValue(""), 100)
 		}
 	}
 
@@ -211,23 +249,25 @@ const ApiConfigManager = ({
 							}}
 							className="grow"
 						/>
-						<Button
-							variant="ghost"
-							size="icon"
-							disabled={!inputValue.trim()}
-							onClick={handleSave}
-							title={t("settings:common.save")}
-							data-testid="save-rename-button">
-							<span className="codicon codicon-check" />
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={handleCancel}
-							title={t("settings:common.cancel")}
-							data-testid="cancel-rename-button">
-							<span className="codicon codicon-close" />
-						</Button>
+						<StandardTooltip content={t("settings:common.save")}>
+							<Button
+								variant="ghost"
+								size="icon"
+								disabled={!inputValue.trim()}
+								onClick={handleSave}
+								data-testid="save-rename-button">
+								<span className="codicon codicon-check" />
+							</Button>
+						</StandardTooltip>
+						<StandardTooltip content={t("settings:common.cancel")}>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={handleCancel}
+								data-testid="cancel-rename-button">
+								<span className="codicon codicon-close" />
+							</Button>
+						</StandardTooltip>
 					</div>
 					{error && (
 						<div className="text-vscode-descriptionForeground text-sm mt-1" data-testid="error-message">
@@ -286,59 +326,78 @@ const ApiConfigManager = ({
 														? config.name.toLowerCase().includes(searchValue.toLowerCase())
 														: true,
 												)
-												.map((config) => (
-													<CommandItem
-														key={config.name}
-														value={config.name}
-														onSelect={handleSelectConfig}
-														data-testid={`profile-option-${config.name}`}>
-														{config.name}
-														<Check
-															className={cn(
-																"size-4 p-0.5 ml-auto",
-																config.name === currentApiConfigName
-																	? "opacity-100"
-																	: "opacity-0",
-															)}
-														/>
-													</CommandItem>
-												))}
+												.map((config) => {
+													const valid = isProfileValid(config)
+													return (
+														<CommandItem
+															key={config.name}
+															value={config.name}
+															onSelect={handleSelectConfig}
+															data-testid={`profile-option-${config.name}`}
+															className={!valid ? "text-vscode-errorForeground" : ""}>
+															<div className="flex items-center">
+																{!valid && (
+																	<StandardTooltip
+																		content={t(
+																			"settings:validation.profileInvalid",
+																		)}>
+																		<span>
+																			<AlertTriangle
+																				size={16}
+																				className="mr-2 text-vscode-errorForeground"
+																			/>
+																		</span>
+																	</StandardTooltip>
+																)}
+																{config.name}
+															</div>
+															<Check
+																className={cn(
+																	"size-4 p-0.5 ml-auto",
+																	config.name === currentApiConfigName
+																		? "opacity-100"
+																		: "opacity-0",
+																)}
+															/>
+														</CommandItem>
+													)
+												})}
 										</CommandGroup>
 									</CommandList>
 								</Command>
 							</PopoverContent>
 						</Popover>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={handleAdd}
-							title={t("settings:providers.addProfile")}
-							data-testid="add-profile-button">
-							<span className="codicon codicon-add" />
-						</Button>
+						<StandardTooltip content={t("settings:providers.addProfile")}>
+							<Button variant="ghost" size="icon" onClick={handleAdd} data-testid="add-profile-button">
+								<span className="codicon codicon-add" />
+							</Button>
+						</StandardTooltip>
 						{currentApiConfigName && (
 							<>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={handleStartRename}
-									title={t("settings:providers.renameProfile")}
-									data-testid="rename-profile-button">
-									<span className="codicon codicon-edit" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={handleDelete}
-									title={
+								<StandardTooltip content={t("settings:providers.renameProfile")}>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={handleStartRename}
+										data-testid="rename-profile-button">
+										<span className="codicon codicon-edit" />
+									</Button>
+								</StandardTooltip>
+								<StandardTooltip
+									content={
 										isOnlyProfile
 											? t("settings:providers.cannotDeleteOnlyProfile")
 											: t("settings:providers.deleteProfile")
-									}
-									data-testid="delete-profile-button"
-									disabled={isOnlyProfile}>
-									<span className="codicon codicon-trash" />
-								</Button>
+									}>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={handleDelete}
+										data-testid="delete-profile-button"
+										disabled={isOnlyProfile}>
+										<span className="codicon codicon-trash" />
+									</Button>
+								</StandardTooltip>
 							</>
 						)}
 					</div>

@@ -1,0 +1,84 @@
+name: Preview roocode.com
+
+on:
+    push:
+        branches-ignore:
+            - main
+        paths:
+            - "apps/web-roo-code/**"
+    pull_request:
+        paths:
+            - "apps/web-roo-code/**"
+    workflow_dispatch:
+
+env:
+    VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+    check-secrets:
+        runs-on: ubuntu-latest
+        outputs:
+            has-vercel-token: ${{ steps.check.outputs.has-vercel-token }}
+        steps:
+            - name: Check if VERCEL_TOKEN exists
+              id: check
+              run: |
+                  if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+                    echo "has-vercel-token=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "has-vercel-token=false" >> $GITHUB_OUTPUT
+                  fi
+
+    preview:
+        runs-on: ubuntu-latest
+        needs: check-secrets
+        if: ${{ needs.check-secrets.outputs.has-vercel-token == 'true' }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Setup Node.js and pnpm
+              uses: ./.github/actions/setup-node-pnpm
+            - name: Install Vercel CLI
+              run: npm install --global vercel@canary
+            - name: Pull Vercel Environment Information
+              run: npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+            - name: Build Project Artifacts
+              run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+            - name: Deploy Project Artifacts to Vercel
+              id: deploy
+              run: |
+                  DEPLOYMENT_URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+                  echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+                  echo "Preview deployed to: $DEPLOYMENT_URL"
+
+            - name: Comment PR with preview link
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const deploymentUrl = '${{ steps.deploy.outputs.deployment_url }}';
+                      const commentIdentifier = '<!-- roo-preview-comment -->';
+
+                      const { data: comments } = await github.rest.issues.listComments({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.issue.number,
+                      });
+
+                      const existingComment = comments.find(comment =>
+                        comment.body.includes(commentIdentifier)
+                      );
+
+                      if (existingComment) {
+                        return;
+                      }
+
+                      const comment = commentIdentifier + '\n🚀 **Preview deployed!**\n\nYour changes have been deployed to Vercel:\n\n**Preview URL:** ' + deploymentUrl + '\n\nThis preview will be updated automatically when you push new commits to this PR.';
+
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.issue.number,
+                        body: comment
+                      });

@@ -11,7 +11,17 @@
 		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
 		"export": "Görev geçmişini dışa aktar",
 		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
-		"condenseContext": "Bağlamı akıllıca yoğunlaştır"
+		"condenseContext": "Bağlamı akıllıca yoğunlaştır",
+		"share": "Görevi paylaş",
+		"shareWithOrganization": "Kuruluşla paylaş",
+		"shareWithOrganizationDescription": "Sadece kuruluşunuzun üyeleri erişebilir",
+		"sharePublicly": "Herkese açık paylaş",
+		"sharePubliclyDescription": "Bağlantıya sahip herkes erişebilir",
+		"connectToCloud": "Buluta bağlan",
+		"connectToCloudDescription": "Görevleri paylaşmak için Roo Code Cloud'a giriş yap",
+		"sharingDisabledByOrganization": "Paylaşım kuruluş tarafından devre dışı bırakıldı",
+		"shareSuccessOrganization": "Organizasyon bağlantısı panoya kopyalandı",
+		"shareSuccessPublic": "Genel bağlantı panoya kopyalandı"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
@@ -70,11 +80,11 @@
 		"tooltip": "Mevcut işlemi iptal et"
 	},
 	"scrollToBottom": "Sohbetin altına kaydır",
-	"about": "AI yardımıyla kod oluşturun, yeniden düzenleyin ve hatalarını ayıklayın.<br />Daha fazla bilgi edinmek için <DocsLink>belgelerimize</DocsLink> göz atın.",
+	"about": "AI yardımıyla kod oluşturun, yeniden düzenleyin ve hatalarını ayıklayın. Daha fazla bilgi edinmek için <DocsLink>belgelerimize</DocsLink> göz atın.",
 	"onboarding": "<strong>Bu çalışma alanındaki görev listeniz boş.</strong> Aşağıya bir görev yazarak başlayın. Nasıl başlayacağınızdan emin değil misiniz? Roo'nun sizin için neler yapabileceği hakkında daha fazla bilgiyi <DocsLink>belgelerde</DocsLink> okuyun.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Bumerang Görevleri",
+			"title": "Görev Orkestrasyonu",
 			"description": "Görevleri daha küçük, yönetilebilir parçalara ayırın."
 		},
 		"stickyModels": {
@@ -101,6 +111,12 @@
 	"dragFiles": "dosyaları sürüklemek için shift tuşuna basılı tutun",
 	"dragFilesImages": "dosyaları/resimleri sürüklemek için shift tuşuna basılı tutun",
 	"enhancePromptDescription": "'İstemi geliştir' düğmesi, ek bağlam, açıklama veya yeniden ifade sağlayarak isteğinizi iyileştirmeye yardımcı olur. Buraya bir istek yazıp düğmeye tekrar tıklayarak nasıl çalıştığını görebilirsiniz.",
+	"modeSelector": {
+		"title": "Modlar",
+		"marketplace": "Mod Pazaryeri",
+		"settings": "Mod Ayarları",
+		"description": "Roo'nun davranışını özelleştiren uzmanlaşmış kişilikler."
+	},
 	"errorReadingFile": "Dosya okuma hatası:",
 	"noValidImages": "Hiçbir geçerli resim işlenmedi",
 	"separator": "Ayırıcı",
@@ -144,12 +160,16 @@
 		"didRead": "Roo bu dosyayı okudu:",
 		"wantsToEdit": "Roo bu dosyayı düzenlemek istiyor:",
 		"wantsToEditOutsideWorkspace": "Roo çalışma alanı dışındaki bu dosyayı düzenlemek istiyor:",
+		"wantsToEditProtected": "Roo korumalı bir yapılandırma dosyasını düzenlemek istiyor:",
 		"wantsToCreate": "Roo yeni bir dosya oluşturmak istiyor:",
 		"wantsToSearchReplace": "Roo bu dosyada arama ve değiştirme yapmak istiyor:",
 		"didSearchReplace": "Roo bu dosyada arama ve değiştirme yaptı:",
 		"wantsToInsert": "Roo bu dosyaya içerik eklemek istiyor:",
 		"wantsToInsertWithLineNumber": "Roo bu dosyanın {{lineNumber}}. satırına içerik eklemek istiyor:",
-		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:"
+		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:",
+		"wantsToReadAndXMore": "Roo bu dosyayı ve {{count}} tane daha okumak istiyor:",
+		"wantsToReadMultiple": "Roo birden fazla dosya okumak istiyor:",
+		"wantsToApplyBatchChanges": "Roo birden fazla dosyaya değişiklik uygulamak istiyor:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo bu dizindeki üst düzey dosyaları görüntülemek istiyor:",
@@ -159,7 +179,15 @@
 		"wantsToViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntülemek istiyor:",
 		"didViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntüledi:",
 		"wantsToSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yapmak istiyor:",
-		"didSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yaptı:"
+		"didSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yaptı:",
+		"wantsToSearchOutsideWorkspace": "Roo bu dizinde (çalışma alanı dışında) <code>{{regex}}</code> için arama yapmak istiyor:",
+		"didSearchOutsideWorkspace": "Roo bu dizinde (çalışma alanı dışında) <code>{{regex}}</code> için arama yaptı:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo bu dizindeki (çalışma alanı dışında) üst düzey dosyaları görüntülemek istiyor:",
+		"didViewTopLevelOutsideWorkspace": "Roo bu dizindeki (çalışma alanı dışında) üst düzey dosyaları görüntüledi:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo bu dizindeki (çalışma alanı dışında) tüm dosyaları özyinelemeli olarak görüntülemek istiyor:",
+		"didViewRecursiveOutsideWorkspace": "Roo bu dizindeki (çalışma alanı dışında) tüm dosyaları özyinelemeli olarak görüntüledi:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo bu dizinde (çalışma alanı dışında) kullanılan kaynak kod tanımlama isimlerini görüntülemek istiyor:",
+		"didViewDefinitionsOutsideWorkspace": "Roo bu dizinde (çalışma alanı dışında) kullanılan kaynak kod tanımlama isimlerini görüntüledi:"
 	},
 	"commandOutput": "Komut Çıktısı",
 	"response": "Yanıt",
@@ -202,18 +230,21 @@
 	"contextCondense": {
 		"title": "Bağlam Özetlendi",
 		"condensing": "Bağlam yoğunlaştırılıyor...",
+		"errorHeader": "Bağlam yoğunlaştırılamadı",
 		"tokens": "token"
 	},
 	"followUpSuggest": {
-		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
+		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)",
+		"autoSelectCountdown": "{{count}}s içinde otomatik seçilecek",
+		"countdownDisplay": "{{count}}sn"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Yayınlandı",
 		"description": "Roo Code {{version}} geri bildirimlerinize dayalı güçlü yeni özellikler ve iyileştirmeler getiriyor.",
 		"whatsNew": "Yenilikler",
-		"feature1": "<bold>Gemini 2.5 Flash Önizleme Modelleri</bold>: Daha hızlı ve verimli yanıtlar için en yeni Gemini Flash modellerine erişin",
-		"feature2": "<bold>Akıllı Bağlam Yoğunlaştırma</bold>: Görev başlığındaki yeni düğme, görsel geri bildirimle içeriği akıllıca yoğunlaştırmanızı sağlar",
-		"feature3": "<bold>Mod Tanımlamaları için YAML Desteği</bold>: YAML desteğiyle modları daha kolay oluşturun ve özelleştirin",
+		"feature1": "<bold>Roo Marketplace Lansmanı</bold> - Marketplace artık canlı! Modları ve MCP'leri her zamankinden daha kolay keşfedin ve kurun.",
+		"feature2": "<bold>Gemini 2.5 Modelleri</bold> - Yeni Gemini 2.5 Pro, Flash ve Flash Lite modelleri için destek eklendi.",
+		"feature3": "<bold>Excel Dosya Desteği ve Daha Fazlası</bold> - Excel (.xlsx) dosya desteği eklendi ve sayısız hata düzeltmesi ve iyileştirme!",
 		"hideButton": "Duyuruyu gizle",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
 	},
@@ -249,6 +280,7 @@
 		}
 	},
 	"systemPromptWarning": "UYARI: Özel sistem komut geçersiz kılma aktif. Bu işlevselliği ciddi şekilde bozabilir ve öngörülemeyen davranışlara neden olabilir.",
+	"profileViolationWarning": "Geçerli profil kuruluşunuzun ayarlarını ihlal ediyor",
 	"shellIntegration": {
 		"title": "Komut Çalıştırma Uyarısı",
 		"description": "Komutunuz VSCode terminal kabuk entegrasyonu olmadan çalıştırılıyor. Bu uyarıyı gizlemek için <settingsLink>Roo Code ayarları</settingsLink>'nın <strong>Terminal</strong> bölümünden kabuk entegrasyonunu devre dışı bırakabilir veya aşağıdaki bağlantıyı kullanarak VSCode terminal entegrasyonu sorunlarını giderebilirsiniz.",
@@ -260,5 +292,29 @@
 			"description": "Roo, {{count}} API isteği/istekleri için otomatik onaylanan limite ulaştı. Sayacı sıfırlamak ve göreve devam etmek istiyor musunuz?",
 			"button": "Sıfırla ve Devam Et"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo kod tabanında <code>{{query}}</code> aramak istiyor:",
+		"wantsToSearchWithPath": "Roo <code>{{path}}</code> içinde kod tabanında <code>{{query}}</code> aramak istiyor:",
+		"didSearch": "<code>{{query}}</code> için {{count}} sonuç bulundu:",
+		"resultTooltip": "Benzerlik puanı: {{score}} (dosyayı açmak için tıklayın)"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Tümünü Onayla"
+		},
+		"deny": {
+			"title": "Tümünü Reddet"
+		}
+	},
+	"indexingStatus": {
+		"ready": "İndeks hazır",
+		"indexing": "İndeksleniyor {{percentage}}%",
+		"indexed": "İndekslendi",
+		"error": "İndeks hatası",
+		"status": "İndeks durumu"
+	},
+	"versionIndicator": {
+		"ariaLabel": "Sürüm {{version}} - Sürüm notlarını görüntülemek için tıklayın"
 	}
 }

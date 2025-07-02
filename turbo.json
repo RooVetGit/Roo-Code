@@ -3,8 +3,19 @@
 	"tasks": {
 		"lint": {},
 		"check-types": {},
-		"test": {},
+		"test": {
+			"dependsOn": ["@roo-code/types#build"]
+		},
 		"format": {},
-		"clean": { "cache": false }
+		"clean": {
+			"cache": false
+		},
+		"build": {
+			"outputs": ["dist/**"],
+			"inputs": ["src/**", "package.json", "tsconfig.json", "tsup.config.ts", "vite.config.ts"]
+		},
+		"watch:tsc": {
+			"cache": false
+		}
 	}
 }

@@ -2,12 +2,14 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
 import {
-	ApiHandlerOptions,
-	ModelRecord,
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
-	PROMPT_CACHING_MODELS,
-} from "../../shared/api"
+	OPENROUTER_DEFAULT_PROVIDER_NAME,
+	OPEN_ROUTER_PROMPT_CACHING_MODELS,
+	DEEP_SEEK_DEFAULT_TEMPERATURE,
+} from "@roo-code/types"
+
+import type { ApiHandlerOptions, ModelRecord } from "../../shared/api"
 
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk } from "../transform/stream"
@@ -20,11 +22,9 @@ import { getModelParams } from "../transform/model-params"
 import { getModels } from "./fetchers/modelCache"
 import { getModelEndpoints } from "./fetchers/modelEndpointCache"
 
-import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
+import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler } from "../index"
-
-const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
 // Add custom interface for OpenRouter params.
 type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
@@ -48,6 +48,9 @@ interface CompletionUsage {
 	}
 	total_tokens?: number
 	cost?: number
+	cost_details?: {
+		upstream_inference_cost?: number
+	}
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
@@ -74,6 +77,18 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		let { id: modelId, maxTokens, temperature, topP, reasoning } = model
 
+		// OpenRouter sends reasoning tokens by default for Gemini 2.5 Pro
+		// Preview even if you don't request them. This is not the default for
+		// other providers (including Gemini), so we need to explicitly disable
+		// i We should generalize this using the logic in `getModelParams`, but
+		// this is easier for now.
+		if (
+			(modelId === "google/gemini-2.5-pro-preview" || modelId === "google/gemini-2.5-pro") &&
+			typeof reasoning === "undefined"
+		) {
+			reasoning = { exclude: true }
+		}
+
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
@@ -87,7 +102,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		// https://openrouter.ai/docs/features/prompt-caching
 		// TODO: Add a `promptCacheStratey` field to `ModelInfo`.
-		if (PROMPT_CACHING_MODELS.has(modelId)) {
+		if (OPEN_ROUTER_PROMPT_CACHING_MODELS.has(modelId)) {
 			if (modelId.startsWith("google")) {
 				addGeminiCacheBreakpoints(systemPrompt, openAiMessages)
 			} else {
@@ -151,18 +166,16 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				type: "usage",
 				inputTokens: lastUsage.prompt_tokens || 0,
 				outputTokens: lastUsage.completion_tokens || 0,
-				// Waiting on OpenRouter to figure out what this represents in the Gemini case
-				// and how to best support it.
-				// cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
+				cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
 				reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens,
-				totalCost: lastUsage.cost || 0,
+				totalCost: (lastUsage.cost_details?.upstream_inference_cost || 0) + (lastUsage.cost || 0),
 			}
 		}
 	}
 
 	public async fetchModel() {
 		const [models, endpoints] = await Promise.all([
-			getModels("openrouter"),
+			getModels({ provider: "openrouter" }),
 			getModelEndpoints({
 				router: "openrouter",
 				modelId: this.options.openRouterModelId,

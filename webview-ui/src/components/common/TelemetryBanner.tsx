@@ -1,10 +1,12 @@
-import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { memo, useState } from "react"
+import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import styled from "styled-components"
-import { vscode } from "@src/utils/vscode"
-import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
-import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Trans } from "react-i18next"
+
+import { TelemetrySetting } from "@roo/TelemetrySetting"
+
+import { vscode } from "@src/utils/vscode"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
 
 const BannerContainer = styled.div`
 	background-color: var(--vscode-banner-background);
@@ -43,7 +45,7 @@ const TelemetryBanner = () => {
 		window.postMessage({
 			type: "action",
 			action: "settingsButtonClicked",
-			values: { section: "advanced" }, // Link directly to advanced settings with telemetry controls
+			values: { section: "about" }, // Link directly to about settings with telemetry controls
 		})
 	}
 
@@ -52,7 +54,12 @@ const TelemetryBanner = () => {
 			<div>
 				<strong>{t("welcome:telemetry.title")}</strong>
 				<div className="mt-1">
-					{t("welcome:telemetry.anonymousTelemetry")}
+					<Trans
+						i18nKey="welcome:telemetry.anonymousTelemetry"
+						components={{
+							privacyLink: <VSCodeLink href="https://roocode.com/privacy" />,
+						}}
+					/>
 					<div className="mt-1">
 						<Trans
 							i18nKey="welcome:telemetry.changeSettings"

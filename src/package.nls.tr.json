@@ -9,6 +9,7 @@
 	"command.openInNewTab.title": "Yeni Sekmede Aç",
 	"command.focusInput.title": "Giriş Alanına Odaklan",
 	"command.setCustomStoragePath.title": "Özel Depolama Yolunu Ayarla",
+	"command.importSettings.title": "Ayarları İçe Aktar",
 	"command.terminal.addToContext.title": "Terminal İçeriğini Bağlama Ekle",
 	"command.terminal.fixCommand.title": "Bu Komutu Düzelt",
 	"command.terminal.explainCommand.title": "Bu Komutu Açıkla",
@@ -16,9 +17,11 @@
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
+	"views.sidebar.name": "Roo Code",
 	"command.mcpServers.title": "MCP Sunucuları",
-	"command.prompts.title": "Komut İstemleri",
+	"command.prompts.title": "Modlar",
 	"command.history.title": "Geçmiş",
+	"command.marketplace.title": "Marketplace",
 	"command.openInEditor.title": "Düzenleyicide Aç",
 	"command.settings.title": "Ayarlar",
 	"command.documentation.title": "Dokümantasyon",
@@ -27,5 +30,7 @@
 	"settings.vsCodeLmModelSelector.description": "VSCode dil modeli API'si için ayarlar",
 	"settings.vsCodeLmModelSelector.vendor.description": "Dil modelinin sağlayıcısı (örn: copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "Dil modelinin ailesi (örn: gpt-4)",
-	"settings.customStoragePath.description": "Özel depolama yolu. Varsayılan konumu kullanmak için boş bırakın. Mutlak yolları destekler (örn: 'D:\\RooCodeStorage')"
+	"settings.customStoragePath.description": "Özel depolama yolu. Varsayılan konumu kullanmak için boş bırakın. Mutlak yolları destekler (örn: 'D:\\RooCodeStorage')",
+	"settings.enableCodeActions.description": "Roo Code hızlı düzeltmeleri etkinleştir.",
+	"settings.autoImportSettingsPath.description": "Uzantı başlangıcında otomatik olarak içe aktarılacak bir RooCode yapılandırma dosyasının yolu. Mutlak yolları ve ana dizine göreli yolları destekler (ör. '~/Documents/roo-code-settings.json'). Otomatik içe aktarmayı devre dışı bırakmak için boş bırakın."
 }

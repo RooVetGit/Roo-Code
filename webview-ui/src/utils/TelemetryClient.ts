@@ -1,5 +1,6 @@
 import posthog from "posthog-js"
-import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
+
+import { TelemetrySetting } from "@roo/TelemetrySetting"
 
 class TelemetryClient {
 	private static instance: TelemetryClient
@@ -28,6 +29,7 @@ class TelemetryClient {
 		if (!TelemetryClient.instance) {
 			TelemetryClient.instance = new TelemetryClient()
 		}
+
 		return TelemetryClient.instance
 	}
 
@@ -35,8 +37,8 @@ class TelemetryClient {
 		if (TelemetryClient.telemetryEnabled) {
 			try {
 				posthog.capture(eventName, properties)
-			} catch (error) {
-				// Silently fail if there's an error capturing an event
+			} catch (_error) {
+				// Silently fail if there's an error capturing an event.
 			}
 		}
 	}

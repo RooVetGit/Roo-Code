@@ -1,4 +1,4 @@
-// npx vitest --globals run src/__tests__/index.test.ts
+// npx vitest run src/__tests__/index.test.ts
 
 import { generatePackageJson } from "../index.js"
 
@@ -64,6 +64,11 @@ describe("generatePackageJson", () => {
 							},
 							{
 								command: "roo-cline.settingsButtonClicked",
+								group: "navigation@6",
+								when: "activeWebviewPanelId == roo-cline.TabPanelProvider",
+							},
+							{
+								command: "roo-cline.accountButtonClicked",
 								group: "navigation@6",
 								when: "activeWebviewPanelId == roo-cline.TabPanelProvider",
 							},
@@ -172,6 +177,11 @@ describe("generatePackageJson", () => {
 						},
 						{
 							command: "roo-code-nightly.settingsButtonClicked",
+							group: "navigation@6",
+							when: "activeWebviewPanelId == roo-code-nightly.TabPanelProvider",
+						},
+						{
+							command: "roo-code-nightly.accountButtonClicked",
 							group: "navigation@6",
 							when: "activeWebviewPanelId == roo-code-nightly.TabPanelProvider",
 						},

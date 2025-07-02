@@ -11,19 +11,33 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
-} from "@roo/shared/api"
+	openAiNativeDefaultModelId,
+	anthropicDefaultModelId,
+	claudeCodeDefaultModelId,
+	geminiDefaultModelId,
+	deepSeekDefaultModelId,
+	mistralDefaultModelId,
+	xaiDefaultModelId,
+	groqDefaultModelId,
+	chutesDefaultModelId,
+	bedrockDefaultModelId,
+	vertexDefaultModelId,
+} from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
-import { validateApiConfiguration, validateModelId } from "@src/utils/validate"
+import { validateApiConfigurationExcludingModelErrors, getModelValidationError } from "@src/utils/validate"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { filterProviders, filterModels } from "./utils/organizationFilters"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
 
 import {
 	Anthropic,
 	Bedrock,
 	Chutes,
+	ClaudeCode,
 	DeepSeek,
 	Gemini,
 	Glama,
@@ -71,6 +85,7 @@ const ApiOptions = ({
 	setErrorMessage,
 }: ApiOptionsProps) => {
 	const { t } = useAppTranslation()
+	const { organizationAllowList } = useExtensionState()
 
 	const [customHeaders, setCustomHeaders] = useState<[string, string][]>(() => {
 		const headers = apiConfiguration?.openAiHeaders || {}
@@ -149,9 +164,9 @@ const ApiOptions = ({
 					},
 				})
 			} else if (selectedProvider === "ollama") {
-				vscode.postMessage({ type: "requestOllamaModels", text: apiConfiguration?.ollamaBaseUrl })
+				vscode.postMessage({ type: "requestOllamaModels" })
 			} else if (selectedProvider === "lmstudio") {
-				vscode.postMessage({ type: "requestLmStudioModels", text: apiConfiguration?.lmStudioBaseUrl })
+				vscode.postMessage({ type: "requestLmStudioModels" })
 			} else if (selectedProvider === "vscode-lm") {
 				vscode.postMessage({ type: "requestVsCodeLmModels" })
 			} else if (selectedProvider === "litellm") {
@@ -173,25 +188,34 @@ const ApiOptions = ({
 	)
 
 	useEffect(() => {
-		const apiValidationResult =
-			validateApiConfiguration(apiConfiguration) || validateModelId(apiConfiguration, routerModels)
-
+		const apiValidationResult = validateApiConfigurationExcludingModelErrors(
+			apiConfiguration,
+			routerModels,
+			organizationAllowList,
+		)
 		setErrorMessage(apiValidationResult)
-	}, [apiConfiguration, routerModels, setErrorMessage])
+	}, [apiConfiguration, routerModels, organizationAllowList, setErrorMessage])
 
-	const selectedProviderModels = useMemo(
-		() =>
-			MODELS_BY_PROVIDER[selectedProvider]
-				? Object.keys(MODELS_BY_PROVIDER[selectedProvider]).map((modelId) => ({
-						value: modelId,
-						label: modelId,
-					}))
-				: [],
-		[selectedProvider],
-	)
+	const selectedProviderModels = useMemo(() => {
+		const models = MODELS_BY_PROVIDER[selectedProvider]
+		if (!models) return []
+
+		const filteredModels = filterModels(models, selectedProvider, organizationAllowList)
+
+		const modelOptions = filteredModels
+			? Object.keys(filteredModels).map((modelId) => ({
+					value: modelId,
+					label: modelId,
+				}))
+			: []
+
+		return modelOptions
+	}, [selectedProvider, organizationAllowList])
 
 	const onProviderChange = useCallback(
 		(value: ProviderName) => {
+			setApiConfigurationField("apiProvider", value)
+
 			// It would be much easier to have a single attribute that stores
 			// the modelId, but we have a separate attribute for each of
 			// OpenRouter, Glama, Unbound, and Requesty.
@@ -199,45 +223,69 @@ const ApiOptions = ({
 			// modelId is not set then you immediately end up in an error state.
 			// To address that we set the modelId to the default value for th
 			// provider if it's not already set.
-			switch (value) {
-				case "openrouter":
-					if (!apiConfiguration.openRouterModelId) {
-						setApiConfigurationField("openRouterModelId", openRouterDefaultModelId)
-					}
-					break
-				case "glama":
-					if (!apiConfiguration.glamaModelId) {
-						setApiConfigurationField("glamaModelId", glamaDefaultModelId)
-					}
-					break
-				case "unbound":
-					if (!apiConfiguration.unboundModelId) {
-						setApiConfigurationField("unboundModelId", unboundDefaultModelId)
-					}
-					break
-				case "requesty":
-					if (!apiConfiguration.requestyModelId) {
-						setApiConfigurationField("requestyModelId", requestyDefaultModelId)
-					}
-					break
-				case "litellm":
-					if (!apiConfiguration.litellmModelId) {
-						setApiConfigurationField("litellmModelId", litellmDefaultModelId)
-					}
-					break
+			const validateAndResetModel = (
+				modelId: string | undefined,
+				field: keyof ProviderSettings,
+				defaultValue?: string,
+			) => {
+				// in case we haven't set a default value for a provider
+				if (!defaultValue) return
+
+				// only set default if no model is set, but don't reset invalid models
+				// let users see and decide what to do with invalid model selections
+				const shouldSetDefault = !modelId
+
+				if (shouldSetDefault) {
+					setApiConfigurationField(field, defaultValue)
+				}
 			}
 
-			setApiConfigurationField("apiProvider", value)
+			// Define a mapping object that associates each provider with its model configuration
+			const PROVIDER_MODEL_CONFIG: Partial<
+				Record<
+					ProviderName,
+					{
+						field: keyof ProviderSettings
+						default?: string
+					}
+				>
+			> = {
+				openrouter: { field: "openRouterModelId", default: openRouterDefaultModelId },
+				glama: { field: "glamaModelId", default: glamaDefaultModelId },
+				unbound: { field: "unboundModelId", default: unboundDefaultModelId },
+				requesty: { field: "requestyModelId", default: requestyDefaultModelId },
+				litellm: { field: "litellmModelId", default: litellmDefaultModelId },
+				anthropic: { field: "apiModelId", default: anthropicDefaultModelId },
+				"claude-code": { field: "apiModelId", default: claudeCodeDefaultModelId },
+				"openai-native": { field: "apiModelId", default: openAiNativeDefaultModelId },
+				gemini: { field: "apiModelId", default: geminiDefaultModelId },
+				deepseek: { field: "apiModelId", default: deepSeekDefaultModelId },
+				mistral: { field: "apiModelId", default: mistralDefaultModelId },
+				xai: { field: "apiModelId", default: xaiDefaultModelId },
+				groq: { field: "apiModelId", default: groqDefaultModelId },
+				chutes: { field: "apiModelId", default: chutesDefaultModelId },
+				bedrock: { field: "apiModelId", default: bedrockDefaultModelId },
+				vertex: { field: "apiModelId", default: vertexDefaultModelId },
+				openai: { field: "openAiModelId" },
+				ollama: { field: "ollamaModelId" },
+				lmstudio: { field: "lmStudioModelId" },
+			}
+
+			const config = PROVIDER_MODEL_CONFIG[value]
+			if (config) {
+				validateAndResetModel(
+					apiConfiguration[config.field] as string | undefined,
+					config.field,
+					config.default,
+				)
+			}
 		},
-		[
-			setApiConfigurationField,
-			apiConfiguration.openRouterModelId,
-			apiConfiguration.glamaModelId,
-			apiConfiguration.unboundModelId,
-			apiConfiguration.requestyModelId,
-			apiConfiguration.litellmModelId,
-		],
+		[setApiConfigurationField, apiConfiguration],
 	)
+
+	const modelValidationError = useMemo(() => {
+		return getModelValidationError(apiConfiguration, routerModels, organizationAllowList)
+	}, [apiConfiguration, routerModels, organizationAllowList])
 
 	const docs = useMemo(() => {
 		const provider = PROVIDERS.find(({ value }) => value === selectedProvider)
@@ -278,7 +326,7 @@ const ApiOptions = ({
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
 					<SelectContent>
-						{PROVIDERS.map(({ value, label }) => (
+						{filterProviders(PROVIDERS, organizationAllowList).map(({ value, label }) => (
 							<SelectItem key={value} value={value}>
 								{label}
 							</SelectItem>
@@ -297,6 +345,8 @@ const ApiOptions = ({
 					selectedModelId={selectedModelId}
 					uriScheme={uriScheme}
 					fromWelcomeView={fromWelcomeView}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -306,6 +356,8 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
 					refetchRouterModels={refetchRouterModels}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -315,6 +367,8 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
 					uriScheme={uriScheme}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -323,11 +377,17 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
 			{selectedProvider === "anthropic" && (
 				<Anthropic apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+			)}
+
+			{selectedProvider === "claude-code" && (
+				<ClaudeCode apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "openai-native" && (
@@ -358,6 +418,8 @@ const ApiOptions = ({
 				<OpenAICompatible
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 
@@ -393,7 +455,8 @@ const ApiOptions = ({
 				<LiteLLM
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
-					routerModels={routerModels}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
 				/>
 			)}
 

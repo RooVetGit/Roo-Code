@@ -1,7 +1,9 @@
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import OpenAI from "openai"
+import type { GenerateContentConfig } from "@google/genai"
 
-import { ModelInfo, ProviderSettings } from "../../schemas"
+import type { ModelInfo, ProviderSettings } from "@roo-code/types"
+
 import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
 
 type ReasoningEffort = "low" | "medium" | "high"
@@ -15,6 +17,8 @@ export type OpenRouterReasoningParams = {
 export type AnthropicReasoningParams = BetaThinkingConfigParam
 
 export type OpenAiReasoningParams = { reasoning_effort: OpenAI.Chat.ChatCompletionCreateParams["reasoning_effort"] }
+
+export type GeminiReasoningParams = GenerateContentConfig["thinkingConfig"]
 
 export type GetModelReasoningOptions = {
 	model: ModelInfo
@@ -48,3 +52,12 @@ export const getOpenAiReasoning = ({
 	settings,
 }: GetModelReasoningOptions): OpenAiReasoningParams | undefined =>
 	shouldUseReasoningEffort({ model, settings }) ? { reasoning_effort: reasoningEffort } : undefined
+
+export const getGeminiReasoning = ({
+	model,
+	reasoningBudget,
+	settings,
+}: GetModelReasoningOptions): GeminiReasoningParams | undefined =>
+	shouldUseReasoningBudget({ model, settings })
+		? { thinkingBudget: reasoningBudget!, includeThoughts: true }
+		: undefined

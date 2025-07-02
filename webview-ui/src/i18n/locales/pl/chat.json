@@ -11,7 +11,17 @@
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
 		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
-		"condenseContext": "Inteligentnie skondensuj kontekst"
+		"condenseContext": "Inteligentnie skondensuj kontekst",
+		"share": "Udostępnij zadanie",
+		"shareWithOrganization": "Udostępnij organizacji",
+		"shareWithOrganizationDescription": "Tylko członkowie twojej organizacji mogą uzyskać dostęp",
+		"sharePublicly": "Udostępnij publicznie",
+		"sharePubliclyDescription": "Każdy z linkiem może uzyskać dostęp",
+		"connectToCloud": "Połącz z chmurą",
+		"connectToCloudDescription": "Zaloguj się do Roo Code Cloud, aby udostępniać zadania",
+		"sharingDisabledByOrganization": "Udostępnianie wyłączone przez organizację",
+		"shareSuccessOrganization": "Link organizacji skopiowany do schowka",
+		"shareSuccessPublic": "Link publiczny skopiowany do schowka"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",
@@ -70,11 +80,11 @@
 		"tooltip": "Anuluj bieżącą operację"
 	},
 	"scrollToBottom": "Przewiń do dołu czatu",
-	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji.<br />Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
+	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji. Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
 	"onboarding": "<strong>Twoja lista zadań w tym obszarze roboczym jest pusta.</strong> Zacznij od wpisania zadania poniżej. Nie wiesz, jak zacząć? Przeczytaj więcej o tym, co Roo może dla Ciebie zrobić w <DocsLink>dokumentacji</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
-			"title": "Zadania bumerangowe",
+			"title": "Orkiestracja Zadań",
 			"description": "Podziel zadania na mniejsze, łatwiejsze do zarządzania części."
 		},
 		"stickyModels": {
@@ -101,6 +111,12 @@
 	"dragFiles": "przytrzymaj shift, aby przeciągnąć pliki",
 	"dragFilesImages": "przytrzymaj shift, aby przeciągnąć pliki/obrazy",
 	"enhancePromptDescription": "Przycisk 'Ulepsz podpowiedź' pomaga ulepszyć Twoją prośbę, dostarczając dodatkowy kontekst, wyjaśnienia lub przeformułowania. Spróbuj wpisać prośbę tutaj i kliknij przycisk ponownie, aby zobaczyć, jak to działa.",
+	"modeSelector": {
+		"title": "Tryby",
+		"marketplace": "Marketplace Trybów",
+		"settings": "Ustawienia Trybów",
+		"description": "Wyspecjalizowane persony, które dostosowują zachowanie Roo."
+	},
 	"errorReadingFile": "Błąd odczytu pliku:",
 	"noValidImages": "Nie przetworzono żadnych prawidłowych obrazów",
 	"separator": "Separator",
@@ -144,12 +160,16 @@
 		"didRead": "Roo przeczytał ten plik:",
 		"wantsToEdit": "Roo chce edytować ten plik:",
 		"wantsToEditOutsideWorkspace": "Roo chce edytować ten plik poza obszarem roboczym:",
+		"wantsToEditProtected": "Roo chce edytować chroniony plik konfiguracyjny:",
 		"wantsToCreate": "Roo chce utworzyć nowy plik:",
 		"wantsToSearchReplace": "Roo chce wykonać wyszukiwanie i zamianę w tym pliku:",
 		"didSearchReplace": "Roo wykonał wyszukiwanie i zamianę w tym pliku:",
 		"wantsToInsert": "Roo chce wstawić zawartość do tego pliku:",
 		"wantsToInsertWithLineNumber": "Roo chce wstawić zawartość do tego pliku w linii {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:"
+		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:",
+		"wantsToReadAndXMore": "Roo chce przeczytać ten plik i {{count}} więcej:",
+		"wantsToReadMultiple": "Roo chce odczytać wiele plików:",
+		"wantsToApplyBatchChanges": "Roo chce zastosować zmiany do wielu plików:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu:",
@@ -159,7 +179,15 @@
 		"wantsToViewDefinitions": "Roo chce zobaczyć nazwy definicji kodu źródłowego używane w tym katalogu:",
 		"didViewDefinitions": "Roo zobaczył nazwy definicji kodu źródłowego używane w tym katalogu:",
 		"wantsToSearch": "Roo chce przeszukać ten katalog w poszukiwaniu <code>{{regex}}</code>:",
-		"didSearch": "Roo przeszukał ten katalog w poszukiwaniu <code>{{regex}}</code>:"
+		"didSearch": "Roo przeszukał ten katalog w poszukiwaniu <code>{{regex}}</code>:",
+		"wantsToSearchOutsideWorkspace": "Roo chce przeszukać ten katalog (poza obszarem roboczym) w poszukiwaniu <code>{{regex}}</code>:",
+		"didSearchOutsideWorkspace": "Roo przeszukał ten katalog (poza obszarem roboczym) w poszukiwaniu <code>{{regex}}</code>:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu (poza obszarem roboczym):",
+		"didViewTopLevelOutsideWorkspace": "Roo zobaczył pliki najwyższego poziomu w tym katalogu (poza obszarem roboczym):",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo chce rekurencyjnie zobaczyć wszystkie pliki w tym katalogu (poza obszarem roboczym):",
+		"didViewRecursiveOutsideWorkspace": "Roo rekurencyjnie zobaczył wszystkie pliki w tym katalogu (poza obszarem roboczym):",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo chce zobaczyć nazwy definicji kodu źródłowego używane w tym katalogu (poza obszarem roboczym):",
+		"didViewDefinitionsOutsideWorkspace": "Roo zobaczył nazwy definicji kodu źródłowego używane w tym katalogu (poza obszarem roboczym):"
 	},
 	"commandOutput": "Wyjście polecenia",
 	"response": "Odpowiedź",
@@ -202,18 +230,21 @@
 	"contextCondense": {
 		"title": "Kontekst skondensowany",
 		"condensing": "Kondensowanie kontekstu...",
+		"errorHeader": "Nie udało się skondensować kontekstu",
 		"tokens": "tokeny"
 	},
 	"followUpSuggest": {
-		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
+		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)",
+		"autoSelectCountdown": "Automatyczny wybór za {{count}}s",
+		"countdownDisplay": "{{count}}s"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} wydany",
 		"description": "Roo Code {{version}} przynosi potężne nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
-		"feature1": "<bold>Modele podglądu Gemini 2.5 Flash</bold>: Uzyskaj dostęp do najnowszych modeli Gemini Flash zapewniających szybsze i bardziej efektywne odpowiedzi",
-		"feature2": "<bold>Inteligentne kondensowanie kontekstu</bold>: Nowy przycisk w nagłówku zadania pozwala na inteligentne kondensowanie treści z wizualną informacją zwrotną",
-		"feature3": "<bold>Wsparcie YAML dla definicji trybów</bold>: Twórz i dostosowuj tryby łatwiej dzięki wsparciu dla YAML",
+		"feature1": "<bold>Uruchomienie Roo Marketplace</bold> - Marketplace jest już dostępny! Odkrywaj i instaluj tryby oraz MCP łatwiej niż kiedykolwiek wcześniej.",
+		"feature2": "<bold>Modele Gemini 2.5</bold> - Dodano wsparcie dla nowych modeli Gemini 2.5 Pro, Flash i Flash Lite.",
+		"feature3": "<bold>Wsparcie dla plików Excel i więcej</bold> - Dodano wsparcie dla plików Excel (.xlsx) oraz liczne poprawki błędów i ulepszenia!",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -249,6 +280,7 @@
 		}
 	},
 	"systemPromptWarning": "OSTRZEŻENIE: Aktywne niestandardowe zastąpienie instrukcji systemowych. Może to poważnie zakłócić funkcjonalność i powodować nieprzewidywalne zachowanie.",
+	"profileViolationWarning": "Bieżący profil narusza ustawienia Twojej organizacji",
 	"shellIntegration": {
 		"title": "Ostrzeżenie wykonania polecenia",
 		"description": "Twoje polecenie jest wykonywane bez integracji powłoki terminala VSCode. Aby ukryć to ostrzeżenie, możesz wyłączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink> lub rozwiązać problemy z integracją terminala VSCode korzystając z poniższego linku.",
@@ -260,5 +292,29 @@
 			"description": "Roo osiągnął automatycznie zatwierdzony limit {{count}} żądania/żądań API. Czy chcesz zresetować licznik i kontynuować zadanie?",
 			"button": "Zresetuj i kontynuuj"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo chce przeszukać bazę kodu w poszukiwaniu <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo chce przeszukać bazę kodu w poszukiwaniu <code>{{query}}</code> w <code>{{path}}</code>:",
+		"didSearch": "Znaleziono {{count}} wynik(ów) dla <code>{{query}}</code>:",
+		"resultTooltip": "Wynik podobieństwa: {{score}} (kliknij, aby otworzyć plik)"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "Zatwierdź wszystko"
+		},
+		"deny": {
+			"title": "Odrzuć wszystko"
+		}
+	},
+	"indexingStatus": {
+		"ready": "Indeks gotowy",
+		"indexing": "Indeksowanie {{percentage}}%",
+		"indexed": "Zaindeksowane",
+		"error": "Błąd indeksu",
+		"status": "Status indeksu"
+	},
+	"versionIndicator": {
+		"ariaLabel": "Wersja {{version}} - Kliknij, aby wyświetlić informacje o wydaniu"
 	}
 }

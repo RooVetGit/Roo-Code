@@ -28,9 +28,47 @@
 		"notifications": "Notificacions",
 		"contextManagement": "Context",
 		"terminal": "Terminal",
+		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre Roo Code"
+	},
+	"prompts": {
+		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
+	},
+	"codeIndex": {
+		"title": "Indexació de codi",
+		"enableLabel": "Habilitar indexació de codi",
+		"enableDescription": "<0>Indexació de codi</0> és una característica experimental que crea un índex de cerca semàntica del vostre projecte utilitzant embeddings d'IA. Això permet a Roo Code entendre millor i navegar per grans bases de codi trobant codi rellevant basat en significat en lloc de només paraules clau.",
+		"providerLabel": "Proveïdor d'embeddings",
+		"selectProviderPlaceholder": "Seleccionar proveïdor",
+		"openaiProvider": "OpenAI",
+		"ollamaProvider": "Ollama",
+		"openaiCompatibleProvider": "Compatible amb OpenAI",
+		"openaiCompatibleBaseUrlLabel": "URL base:",
+		"openaiCompatibleApiKeyLabel": "Clau API:",
+		"openaiCompatibleModelDimensionLabel": "Dimensió d'Embedding:",
+		"openaiCompatibleModelDimensionPlaceholder": "p. ex., 1536",
+		"openaiCompatibleModelDimensionDescription": "La dimensió d'embedding (mida de sortida) per al teu model. Consulta la documentació del teu proveïdor per a aquest valor. Valors comuns: 384, 768, 1536, 3072.",
+		"openaiKeyLabel": "Clau OpenAI:",
+		"modelLabel": "Model",
+		"selectModelPlaceholder": "Seleccionar model",
+		"ollamaUrlLabel": "URL d'Ollama:",
+		"qdrantUrlLabel": "URL de Qdrant",
+		"qdrantKeyLabel": "Clau de Qdrant:",
+		"advancedConfigLabel": "Configuració avançada",
+		"searchMinScoreLabel": "Llindar de puntuació de cerca",
+		"searchMinScoreDescription": "Puntuació mínima de similitud (0.0-1.0) requerida per als resultats de la cerca. Valors més baixos retornen més resultats però poden ser menys rellevants. Valors més alts retornen menys resultats però més rellevants.",
+		"searchMinScoreResetTooltip": "Restablir al valor per defecte (0.4)",
+		"startIndexingButton": "Iniciar indexació",
+		"clearIndexDataButton": "Esborrar dades d'índex",
+		"unsavedSettingsMessage": "Si us plau, deseu la configuració abans d'iniciar el procés d'indexació.",
+		"clearDataDialog": {
+			"title": "Esteu segur?",
+			"description": "Aquesta acció no es pot desfer. Eliminarà permanentment les dades d'índex de la vostra base de codi.",
+			"cancelButton": "Cancel·lar",
+			"confirmButton": "Esborrar dades"
+		}
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
@@ -49,6 +87,10 @@
 			"outsideWorkspace": {
 				"label": "Incloure fitxers fora de l'espai de treball",
 				"description": "Permetre a Roo crear i editar fitxers fora de l'espai de treball actual sense requerir aprovació."
+			},
+			"protected": {
+				"label": "Incloure fitxers protegits",
+				"description": "Permetre a Roo crear i editar fitxers protegits (com .rooignore i fitxers de configuració .roo/) sense requerir aprovació."
 			}
 		},
 		"browser": {
@@ -71,6 +113,11 @@
 		"subtasks": {
 			"label": "Subtasques",
 			"description": "Permetre la creació i finalització de subtasques sense requerir aprovació"
+		},
+		"followupQuestions": {
+			"label": "Pregunta",
+			"description": "Seleccionar automàticament la primera resposta suggerida per a preguntes de seguiment després del temps d'espera configurat",
+			"timeoutLabel": "Temps d'espera abans de seleccionar automàticament la primera resposta"
 		},
 		"execute": {
 			"label": "Executar",
@@ -124,7 +171,10 @@
 		"requestyApiKey": "Clau API de Requesty",
 		"refreshModels": {
 			"label": "Actualitzar models",
-			"hint": "Si us plau, torneu a obrir la configuració per veure els models més recents."
+			"hint": "Si us plau, torneu a obrir la configuració per veure els models més recents.",
+			"loading": "Actualitzant la llista de models...",
+			"success": "Llista de models actualitzada correctament!",
+			"error": "No s'ha pogut actualitzar la llista de models. Si us plau, torneu-ho a provar."
 		},
 		"getRequestyApiKey": "Obtenir clau API de Requesty",
 		"openRouterTransformsText": "Comprimir prompts i cadenes de missatges a la mida del context (<a>Transformacions d'OpenRouter</a>)",
@@ -140,6 +190,7 @@
 		"groqApiKey": "Clau API de Groq",
 		"getGeminiApiKey": "Obtenir clau API de Gemini",
 		"openAiApiKey": "Clau API d'OpenAI",
+		"apiKey": "Clau API",
 		"openAiBaseUrl": "URL base",
 		"getOpenAiApiKey": "Obtenir clau API d'OpenAI",
 		"mistralApiKey": "Clau API de Mistral",
@@ -158,6 +209,11 @@
 		"awsSessionToken": "Token de sessió d'AWS",
 		"awsRegion": "Regió d'AWS",
 		"awsCrossRegion": "Utilitzar inferència entre regions",
+		"awsBedrockVpc": {
+			"useCustomVpcEndpoint": "Utilitzar punt final VPC personalitzat",
+			"vpcEndpointUrlPlaceholder": "Introduïu l'URL del punt final VPC (opcional)",
+			"examples": "Exemples:"
+		},
 		"enablePromptCaching": "Habilitar emmagatzematge en caché de prompts",
 		"enablePromptCachingTitle": "Habilitar l'emmagatzematge en caché de prompts per millorar el rendiment i reduir els costos per als models compatibles.",
 		"cacheUsageNote": "Nota: Si no veieu l'ús de la caché, proveu de seleccionar un model diferent i després tornar a seleccionar el model desitjat.",
@@ -256,7 +312,12 @@
 			"medium": "Mitjà",
 			"low": "Baix"
 		},
-		"setReasoningLevel": "Activa l'esforç de raonament"
+		"setReasoningLevel": "Activa l'esforç de raonament",
+		"claudeCode": {
+			"pathLabel": "Ruta del Codi Claude",
+			"description": "Ruta opcional al teu CLI de Claude Code. Per defecte, 'claude' si no s'estableix.",
+			"placeholder": "Per defecte: claude"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -306,6 +367,26 @@
 	},
 	"contextManagement": {
 		"description": "Controleu quina informació s'inclou a la finestra de context de la IA, afectant l'ús de token i la qualitat de resposta",
+		"autoCondenseContextPercent": {
+			"label": "Llindar per activar la condensació intel·ligent de context",
+			"description": "Quan la finestra de context assoleix aquest llindar, Roo la condensarà automàticament."
+		},
+		"condensingApiConfiguration": {
+			"label": "Configuració d'API per a la condensació de context",
+			"description": "Seleccioneu quina configuració d'API utilitzar per a les operacions de condensació de context. Deixeu-ho sense seleccionar per utilitzar la configuració activa actual.",
+			"useCurrentConfig": "Per defecte"
+		},
+		"customCondensingPrompt": {
+			"label": "Indicació personalitzada de condensació de context",
+			"description": "Personalitzeu la indicació del sistema utilitzada per a la condensació de context. Deixeu-ho buit per utilitzar la indicació per defecte.",
+			"placeholder": "Introduïu aquí la vostra indicació de condensació personalitzada...\n\nPodeu utilitzar la mateixa estructura que la indicació per defecte:\n- Conversa anterior\n- Treball actual\n- Conceptes tècnics clau\n- Fitxers i codi rellevants\n- Resolució de problemes\n- Tasques pendents i següents passos",
+			"reset": "Restablir als valors per defecte",
+			"hint": "Buit = utilitzar indicació per defecte"
+		},
+		"autoCondenseContext": {
+			"name": "Activar automàticament la condensació intel·ligent de context",
+			"description": "Quan està activat, Roo condensarà automàticament el context quan s'assoleixi el llindar. Quan està desactivat, encara pots activar manualment la condensació de context."
+		},
 		"openTabs": {
 			"label": "Límit de context de pestanyes obertes",
 			"description": "Nombre màxim de pestanyes obertes de VSCode a incloure al context. Valors més alts proporcionen més context però augmenten l'ús de token."
@@ -323,6 +404,19 @@
 			"description": "Roo llegeix aquest nombre de línies quan el model omet els valors d'inici/final. Si aquest nombre és menor que el total del fitxer, Roo genera un índex de números de línia de les definicions de codi. Casos especials: -1 indica a Roo que llegeixi tot el fitxer (sense indexació), i 0 indica que no llegeixi cap línia i proporcioni només índexs de línia per a un context mínim. Valors més baixos minimitzen l'ús inicial de context, permetent lectures posteriors de rangs de línies precisos. Les sol·licituds amb inici/final explícits no estan limitades per aquesta configuració.",
 			"lines": "línies",
 			"always_full_read": "Llegeix sempre el fitxer sencer"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Límit de lectures simultànies",
+			"description": "Nombre màxim de fitxers que l'eina 'read_file' pot processar simultàniament. Els valors més alts poden accelerar la lectura de múltiples fitxers petits però augmenten l'ús de memòria."
+		},
+		"condensingThreshold": {
+			"label": "Llindar d'activació de condensació",
+			"selectProfile": "Configura el llindar per al perfil",
+			"defaultProfile": "Per defecte global (tots els perfils)",
+			"defaultDescription": "Quan el context arribi a aquest percentatge, es condensarà automàticament per a tots els perfils tret que tinguin configuracions personalitzades",
+			"profileDescription": "Llindar personalitzat només per a aquest perfil (substitueix el per defecte global)",
+			"inheritDescription": "Aquest perfil hereta el llindar per defecte global ({{threshold}}%)",
+			"usesGlobal": "(utilitza global {{threshold}}%)"
 		}
 	},
 	"terminal": {
@@ -403,15 +497,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
-		"autoCondenseContextPercent": {
-			"label": "Llindar per activar la condensació intel·ligent de context",
-			"description": "Quan la finestra de context assoleix aquest llindar, Roo la condensarà automàticament."
-		},
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Activar automàticament la condensació intel·ligent de context",
-			"description": "La condensació intel·ligent de context utilitza una crida LLM per resumir la conversa anterior quan la finestra de context de la tasca assoleix un llindar predefinit, en lloc d'eliminar missatges antics quan el context s'omple."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Utilitzar estratègia diff unificada experimental",
 			"description": "Activar l'estratègia diff unificada experimental. Aquesta estratègia podria reduir el nombre de reintents causats per errors del model, però pot causar comportaments inesperats o edicions incorrectes. Activeu-la només si enteneu els riscos i esteu disposats a revisar acuradament tots els canvis."
@@ -432,17 +517,17 @@
 			"name": "Utilitzar eina diff de blocs múltiples experimental",
 			"description": "Quan està activat, Roo utilitzarà l'eina diff de blocs múltiples. Això intentarà actualitzar múltiples blocs de codi a l'arxiu en una sola petició."
 		},
-		"condensingApiConfiguration": {
-			"label": "API Configuration for Context Condensing",
-			"description": "Select which API configuration to use for context condensing operations. Leave unselected to use the current active configuration.",
-			"useCurrentConfig": "Default"
+		"CONCURRENT_FILE_READS": {
+			"name": "Habilitar lectura concurrent de fitxers",
+			"description": "Quan està habilitat, Roo pot llegir múltiples fitxers en una sola sol·licitud. Quan està deshabilitat, Roo ha de llegir fitxers un per un. Deshabilitar-ho pot ajudar quan es treballa amb models menys capaços o quan voleu més control sobre l'accés als fitxers."
 		},
-		"customCondensingPrompt": {
-			"label": "Custom Context Condensing Prompt",
-			"description": "Customize the system prompt used for context condensing. Leave empty to use the default prompt.",
-			"placeholder": "Enter your custom condensing prompt here...\n\nYou can use the same structure as the default prompt:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset to Default",
-			"hint": "Empty = use default prompt"
+		"MARKETPLACE": {
+			"name": "Habilitar Marketplace",
+			"description": "Quan està habilitat, pots instal·lar MCP i modes personalitzats del Marketplace."
+		},
+		"MULTI_FILE_APPLY_DIFF": {
+			"name": "Habilita edicions de fitxers concurrents",
+			"description": "Quan està activat, Roo pot editar múltiples fitxers en una sola petició. Quan està desactivat, Roo ha d'editar fitxers d'un en un. Desactivar això pot ajudar quan es treballa amb models menys capaços o quan vols més control sobre les modificacions de fitxers."
 		}
 	},
 	"promptCaching": {
@@ -511,7 +596,10 @@
 			"invalidFormat": "Format ARN no vàlid. Si us plau, comproveu els requisits del format.",
 			"regionMismatch": "Avís: La regió del vostre ARN ({{arnRegion}}) no coincideix amb la regió seleccionada ({{region}}). Això pot causar problemes d'accés. El proveïdor utilitzarà la regió de l'ARN."
 		},
-		"modelAvailability": "L'ID de model ({{modelId}}) que heu proporcionat no està disponible. Si us plau, trieu un altre model."
+		"modelAvailability": "L'ID de model ({{modelId}}) que heu proporcionat no està disponible. Si us plau, trieu un altre model.",
+		"providerNotAllowed": "El proveïdor '{{provider}}' no està permès per la vostra organització",
+		"modelNotAllowed": "El model '{{model}}' no està permès per al proveïdor '{{provider}}' per la vostra organització",
+		"profileInvalid": "Aquest perfil conté un proveïdor o model que no està permès per la vostra organització"
 	},
 	"placeholders": {
 		"apiKey": "Introduïu la clau API...",
@@ -545,5 +633,7 @@
 	"labels": {
 		"customArn": "ARN personalitzat",
 		"useCustomArn": "Utilitza ARN personalitzat..."
-	}
+	},
+	"includeMaxOutputTokens": "Incloure tokens màxims de sortida",
+	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això."
 }

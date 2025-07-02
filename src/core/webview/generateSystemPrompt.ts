@@ -1,9 +1,11 @@
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import { defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
 import { buildApiHandler } from "../../api"
+import { experiments as experimentsModule, EXPERIMENT_IDS } from "../../shared/experiments"
 
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
+import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
 
 import { ClineProvider } from "./ClineProvider"
 
@@ -20,9 +22,19 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		enableMcpServerCreation,
 		browserToolEnabled,
 		language,
+		maxReadFileLine,
+		maxConcurrentFileReads,
 	} = await provider.getState()
 
-	const diffStrategy = new MultiSearchReplaceDiffStrategy(fuzzyMatchThreshold)
+	// Check experiment to determine which diff strategy to use
+	const isMultiFileApplyDiffEnabled = experimentsModule.isEnabled(
+		experiments ?? {},
+		EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
+	)
+
+	const diffStrategy = isMultiFileApplyDiffEnabled
+		? new MultiFileSearchReplaceDiffStrategy(fuzzyMatchThreshold)
+		: new MultiSearchReplaceDiffStrategy(fuzzyMatchThreshold)
 
 	const cwd = provider.cwd
 
@@ -67,6 +79,10 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		enableMcpServerCreation,
 		language,
 		rooIgnoreInstructions,
+		maxReadFileLine !== -1,
+		{
+			maxConcurrentFileReads,
+		},
 	)
 
 	return systemPrompt

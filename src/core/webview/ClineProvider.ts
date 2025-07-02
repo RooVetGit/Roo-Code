@@ -10,27 +10,37 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import {
-	GlobalState,
-	ProviderName,
-	ProviderSettings,
-	RooCodeSettings,
-	ProviderSettingsEntry,
-	Package,
-	CodeActionId,
-	CodeActionName,
-	TerminalActionId,
-	TerminalActionPromptType,
-} from "../../schemas"
+	type GlobalState,
+	type ProviderName,
+	type ProviderSettings,
+	type RooCodeSettings,
+	type ProviderSettingsEntry,
+	type TelemetryProperties,
+	type TelemetryPropertiesProvider,
+	type CodeActionId,
+	type CodeActionName,
+	type TerminalActionId,
+	type TerminalActionPromptType,
+	type HistoryItem,
+	type CloudUserInfo,
+	type MarketplaceItem,
+	requestyDefaultModelId,
+	openRouterDefaultModelId,
+	glamaDefaultModelId,
+	ORGANIZATION_ALLOW_ALL,
+} from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
+
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
-import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
+import { Package } from "../../shared/package"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { HistoryItem } from "../../shared/HistoryItem"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ExtensionMessage, MarketplaceInstalledMetadata } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug } from "../../shared/modes"
-import { experimentDefault } from "../../shared/experiments"
+import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
@@ -38,7 +48,11 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { MarketplaceManager } from "../../services/marketplace"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
+import { CodeIndexManager } from "../../services/code-index/manager"
+import type { IndexProgressUpdate } from "../../services/code-index/interfaces/manager"
+import { MdmService } from "../../services/mdm/MdmService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
@@ -49,10 +63,12 @@ import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
+import { ProfileValidator } from "../../shared/ProfileValidator"
+import { getWorkspaceGitInfo } from "../../utils/git"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -63,7 +79,16 @@ export type ClineProviderEvents = {
 	clineCreated: [cline: Task]
 }
 
-export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
+class OrganizationAllowListViolationError extends Error {
+	constructor(message: string) {
+		super(message)
+	}
+}
+
+export class ClineProvider
+	extends EventEmitter<ClineProviderEvents>
+	implements vscode.WebviewViewProvider, TelemetryPropertiesProvider
+{
 	// Used in package.json as the view's id. This value cannot be changed due
 	// to how VSCode caches views based on their id, and updating the id would
 	// break existing instances of the extension.
@@ -71,17 +96,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public static readonly tabPanelId = `${Package.name}.TabPanelProvider`
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
+	private webviewDisposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
+	private codeIndexStatusSubscription?: vscode.Disposable
 	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
 	public get workspaceTracker(): WorkspaceTracker | undefined {
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
+	private marketplaceManager: MarketplaceManager
+	private mdmService?: MdmService
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
+	public readonly latestAnnouncementId = "jun-17-2025-3-21" // Update for v3.21.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -90,15 +119,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 		public readonly contextProxy: ContextProxy,
+		public readonly codeIndexManager?: CodeIndexManager,
+		mdmService?: MdmService,
 	) {
 		super()
 
 		this.log("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
 
+		this.codeIndexManager = codeIndexManager
+		this.mdmService = mdmService
+		this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
+
+		// Start configuration loading (which might trigger indexing) in the background.
+		// Don't await, allowing activation to continue immediately.
+
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
-		telemetryService.setProvider(this)
+		TelemetryService.instance.setProvider(this)
 
 		this._workspaceTracker = new WorkspaceTracker(this)
 
@@ -117,6 +155,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			.catch((error) => {
 				this.log(`Failed to initialize MCP Hub: ${error}`)
 			})
+
+		this.marketplaceManager = new MarketplaceManager(this.context)
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -194,11 +234,26 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.getCurrentCline()?.resumePausedTask(lastMessage)
 	}
 
+	// Clear the current task without treating it as a subtask
+	// This is used when the user cancels a task that is not a subtask
+	async clearTask() {
+		await this.removeClineFromStack()
+	}
+
 	/*
 	VSCode extensions use the disposable pattern to clean up resources when the sidebar/editor tab is closed by the user or system. This applies to event listening, commands, interacting with the UI, etc.
 	- https://vscode-docs.readthedocs.io/en/stable/extensions/patterns-and-principles/
 	- https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	*/
+	private clearWebviewResources() {
+		while (this.webviewDisposables.length) {
+			const x = this.webviewDisposables.pop()
+			if (x) {
+				x.dispose()
+			}
+		}
+	}
+
 	async dispose() {
 		this.log("Disposing ClineProvider...")
 		await this.removeClineFromStack()
@@ -208,6 +263,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			this.view.dispose()
 			this.log("Disposed webview")
 		}
+
+		this.clearWebviewResources()
 
 		while (this.disposables.length) {
 			const x = this.disposables.pop()
@@ -221,11 +278,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this._workspaceTracker = undefined
 		await this.mcpHub?.unregisterClient()
 		this.mcpHub = undefined
+		this.marketplaceManager?.cleanup()
 		this.customModesManager?.dispose()
 		this.log("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
-		// Unregister from McpServerManager
 		McpServerManager.unregisterProvider(this)
 	}
 
@@ -272,7 +329,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		params: Record<string, string | any[]>,
 	): Promise<void> {
 		// Capture telemetry for code action usage
-		telemetryService.captureCodeActionUsed(promptType)
+		TelemetryService.instance.captureCodeActionUsed(promptType)
 
 		const visibleProvider = await ClineProvider.getInstance()
 
@@ -298,7 +355,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		promptType: TerminalActionPromptType,
 		params: Record<string, string | any[]>,
 	): Promise<void> {
-		telemetryService.captureCodeActionUsed(promptType)
+		TelemetryService.instance.captureCodeActionUsed(promptType)
 
 		const visibleProvider = await ClineProvider.getInstance()
 
@@ -314,20 +371,25 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		await visibleProvider.initClineWithTask(prompt)
+		try {
+			await visibleProvider.initClineWithTask(prompt)
+		} catch (error) {
+			if (error instanceof OrganizationAllowListViolationError) {
+				// Errors from terminal commands seem to get swallowed / ignored.
+				vscode.window.showErrorMessage(error.message)
+			}
+			throw error
+		}
 	}
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
 
-		if (!this.contextProxy.isInitialized) {
-			await this.contextProxy.initialize()
-		}
-
 		this.view = webviewView
 
 		// Set panel reference according to webview type
-		if ("onDidChangeViewState" in webviewView) {
+		const inTabMode = "onDidChangeViewState" in webviewView
+		if (inTabMode) {
 			// Tag page type
 			setPanel(webviewView, "tab")
 		} else if ("onDidChangeVisibility" in webviewView) {
@@ -335,7 +397,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize out-of-scope variables that need to recieve persistent global state values
+		// Initialize out-of-scope variables that need to receive persistent global state values
 		this.getState().then(
 			({
 				terminalShellIntegrationTimeout = Terminal.defaultShellIntegrationTimeout,
@@ -380,8 +442,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				: this.getHtmlContent(webviewView.webview)
 
 		// Sets up an event listener to listen for messages passed from the webview view context
-		// and executes code based on the message that is recieved
+		// and executes code based on the message that is received
 		this.setWebviewMessageListener(webviewView.webview)
+
+		// Subscribe to code index status updates if the manager exists
+		if (this.codeIndexManager) {
+			this.codeIndexStatusSubscription = this.codeIndexManager.onProgressUpdate((update: IndexProgressUpdate) => {
+				this.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: update,
+				})
+			})
+			this.webviewDisposables.push(this.codeIndexStatusSubscription)
+		}
 
 		// Logs show up in bottom panel > Debug Console
 		//console.log("registering listener")
@@ -391,49 +464,48 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		if ("onDidChangeViewState" in webviewView) {
 			// WebviewView and WebviewPanel have all the same properties except for this visibility listener
 			// panel
-			webviewView.onDidChangeViewState(
-				() => {
-					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
-					}
-				},
-				null,
-				this.disposables,
-			)
+			const viewStateDisposable = webviewView.onDidChangeViewState(() => {
+				if (this.view?.visible) {
+					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+				}
+			})
+			this.webviewDisposables.push(viewStateDisposable)
 		} else if ("onDidChangeVisibility" in webviewView) {
 			// sidebar
-			webviewView.onDidChangeVisibility(
-				() => {
-					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
-					}
-				},
-				null,
-				this.disposables,
-			)
+			const visibilityDisposable = webviewView.onDidChangeVisibility(() => {
+				if (this.view?.visible) {
+					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+				}
+			})
+			this.webviewDisposables.push(visibilityDisposable)
 		}
 
 		// Listen for when the view is disposed
 		// This happens when the user closes the view or when the view is closed programmatically
 		webviewView.onDidDispose(
 			async () => {
-				await this.dispose()
+				if (inTabMode) {
+					this.log("Disposing ClineProvider instance for tab view")
+					await this.dispose()
+				} else {
+					this.log("Clearing webview resources for sidebar view")
+					this.clearWebviewResources()
+					this.codeIndexStatusSubscription?.dispose()
+					this.codeIndexStatusSubscription = undefined
+				}
 			},
 			null,
 			this.disposables,
 		)
 
 		// Listen for when color changes
-		vscode.workspace.onDidChangeConfiguration(
-			async (e) => {
-				if (e && e.affectsConfiguration("workbench.colorTheme")) {
-					// Sends latest theme name to webview
-					await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
-				}
-			},
-			null,
-			this.disposables,
-		)
+		const configDisposable = vscode.workspace.onDidChangeConfiguration(async (e) => {
+			if (e && e.affectsConfiguration("workbench.colorTheme")) {
+				// Sends latest theme name to webview
+				await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+			}
+		})
+		this.webviewDisposables.push(configDisposable)
 
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()
@@ -446,7 +518,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	// When initializing a new task, (not from history but from a tool command
-	// new_task) there is no need to remove the previouse task since the new
+	// new_task) there is no need to remove the previous task since the new
 	// task is a subtask of the previous one, and when it finishes it is removed
 	// from the stack and the caller is resumed in this way we can have a chain
 	// of tasks, each one being a sub task of the previous one until the main
@@ -464,11 +536,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	) {
 		const {
 			apiConfiguration,
+			organizationAllowList,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
+		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
+			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
+		}
 
 		const cline = new Task({
 			provider: this,
@@ -537,7 +614,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		try {
 			const fs = require("fs")
 			const path = require("path")
-			const portFilePath = path.resolve(__dirname, "../.vite-port")
+			const portFilePath = path.resolve(__dirname, "../../.vite-port")
 
 			if (fs.existsSync(portFilePath)) {
 				localPort = fs.readFileSync(portFilePath, "utf8").trim()
@@ -596,9 +673,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const csp = [
 			"default-src 'none'",
-			`font-src ${webview.cspSource}`,
+			`font-src ${webview.cspSource} data:`,
 			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
-			`img-src ${webview.cspSource} data:`,
+			`img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:`,
 			`media-src ${webview.cspSource}`,
 			`script-src 'unsafe-eval' ${webview.cspSource} https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
 			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
@@ -666,7 +743,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		/*
 		content security policy of your webview to only allow scripts that have a specific nonce
 		create a content security policy meta tag so that only loading scripts with a nonce is allowed
-		As your extension grows you will likely want to add custom styles, fonts, and/or images to your webview. If you do, you will need to update the content security policy meta tag to explicity allow for these resources. E.g.
+		As your extension grows you will likely want to add custom styles, fonts, and/or images to your webview. If you do, you will need to update the content security policy meta tag to explicitly allow for these resources. E.g.
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
 		- 'unsafe-inline' is required for styles due to vscode-webview-toolkit's dynamic style injection
 		- since we pass base64 images to the webview, we need to specify img-src ${webview.cspSource} data:;
@@ -683,7 +760,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -704,14 +781,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	/**
 	 * Sets up an event listener to listen for messages passed from the webview context and
-	 * executes code based on the message that is recieved.
+	 * executes code based on the message that is received.
 	 *
 	 * @param webview A reference to the extension webview
 	 */
 	private setWebviewMessageListener(webview: vscode.Webview) {
-		const onReceiveMessage = async (message: WebviewMessage) => webviewMessageHandler(this, message)
+		const onReceiveMessage = async (message: WebviewMessage) =>
+			webviewMessageHandler(this, message, this.marketplaceManager)
 
-		webview.onDidReceiveMessage(onReceiveMessage, null, this.disposables)
+		const messageDisposable = webview.onDidReceiveMessage(onReceiveMessage)
+		this.webviewDisposables.push(messageDisposable)
 	}
 
 	/**
@@ -722,7 +801,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const cline = this.getCurrentCline()
 
 		if (cline) {
-			telemetryService.captureModeSwitch(cline.taskId, newMode)
+			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
 		}
 
@@ -804,6 +883,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					this.providerSettingsManager.setModeConfig(mode, id),
 					this.contextProxy.setProviderSettings(providerSettings),
 				])
+
+				// Notify CodeIndexManager about the settings change
+				if (this.codeIndexManager) {
+					await this.codeIndexManager.handleExternalSettingsChange()
+				}
 
 				// Change the provider for the current task.
 				// TODO: We should rename `buildApiHandler` for clarity (e.g. `getProviderClient`).
@@ -1165,6 +1249,51 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async postStateToWebview() {
 		const state = await this.getStateToPostToWebview()
 		this.postMessageToWebview({ type: "state", state })
+
+		// Check MDM compliance and send user to account tab if not compliant
+		if (!this.checkMdmCompliance()) {
+			await this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
+		}
+	}
+
+	/**
+	 * Fetches marketplace data on demand to avoid blocking main state updates
+	 */
+	async fetchMarketplaceData() {
+		try {
+			const [marketplaceItems, marketplaceInstalledMetadata] = await Promise.all([
+				this.marketplaceManager.getCurrentItems().catch((error) => {
+					console.error("Failed to fetch marketplace items:", error)
+					return [] as MarketplaceItem[]
+				}),
+				this.marketplaceManager.getInstallationMetadata().catch((error) => {
+					console.error("Failed to fetch installation metadata:", error)
+					return { project: {}, global: {} } as MarketplaceInstalledMetadata
+				}),
+			])
+
+			// Send marketplace data separately
+			this.postMessageToWebview({
+				type: "marketplaceData",
+				marketplaceItems: marketplaceItems || [],
+				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
+			})
+		} catch (error) {
+			console.error("Failed to fetch marketplace data:", error)
+			// Send empty data on error to prevent UI from hanging
+			this.postMessageToWebview({
+				type: "marketplaceData",
+				marketplaceItems: [],
+				marketplaceInstalledMetadata: { project: {}, global: {} },
+			})
+
+			// Show user-friendly error notification for network issues
+			if (error instanceof Error && error.message.includes("timeout")) {
+				vscode.window.showWarningMessage(
+					"Marketplace data could not be loaded due to network restrictions. Core functionality remains available.",
+				)
+			}
+		}
 	}
 
 	/**
@@ -1173,6 +1302,38 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async hasFileBasedSystemPromptOverride(mode: Mode): Promise<boolean> {
 		const promptFilePath = getSystemPromptFilePath(this.cwd, mode)
 		return await fileExistsAtPath(promptFilePath)
+	}
+
+	/**
+	 * Merges allowed commands from global state and workspace configuration
+	 * with proper validation and deduplication
+	 */
+	private mergeAllowedCommands(globalStateCommands?: string[]): string[] {
+		try {
+			// Validate and sanitize global state commands
+			const validGlobalCommands = Array.isArray(globalStateCommands)
+				? globalStateCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			// Get workspace configuration commands
+			const workspaceCommands =
+				vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
+
+			// Validate and sanitize workspace commands
+			const validWorkspaceCommands = Array.isArray(workspaceCommands)
+				? workspaceCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			// Combine and deduplicate commands
+			// Global state takes precedence over workspace configuration
+			const mergedCommands = [...new Set([...validGlobalCommands, ...validWorkspaceCommands])]
+
+			return mergedCommands
+		} catch (error) {
+			console.error("Error merging allowed commands:", error)
+			// Return empty array as fallback to prevent crashes
+			return []
+		}
 	}
 
 	async getStateToPostToWebview() {
@@ -1184,12 +1345,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowReadOnlyOutsideWorkspace,
 			alwaysAllowWrite,
 			alwaysAllowWriteOutsideWorkspace,
+			alwaysAllowWriteProtected,
 			alwaysAllowExecute,
+			allowedCommands,
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			allowedMaxRequests,
+			autoCondenseContext,
 			autoCondenseContextPercent,
 			soundEnabled,
 			ttsEnabled,
@@ -1237,13 +1401,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
+			cloudUserInfo,
+			cloudIsAuthenticated,
+			sharingEnabled,
+			organizationAllowList,
+			maxConcurrentFileReads,
 			condensingApiConfigId,
 			customCondensingPrompt,
+			codebaseIndexConfig,
+			codebaseIndexModels,
+			profileThresholds,
+			alwaysAllowFollowupQuestions,
+			followupAutoApproveTimeoutMs,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-		const allowedCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
+		const mergedAllowedCommands = this.mergeAllowedCommands(allowedCommands)
 		const cwd = this.cwd
 
 		// Check if there's a system prompt override for the current mode
@@ -1258,12 +1432,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowReadOnlyOutsideWorkspace: alwaysAllowReadOnlyOutsideWorkspace ?? false,
 			alwaysAllowWrite: alwaysAllowWrite ?? false,
 			alwaysAllowWriteOutsideWorkspace: alwaysAllowWriteOutsideWorkspace ?? false,
+			alwaysAllowWriteProtected: alwaysAllowWriteProtected ?? false,
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			allowedMaxRequests,
+			autoCondenseContext: autoCondenseContext ?? true,
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
@@ -1280,7 +1456,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
-			allowedCommands,
+			allowedCommands: mergedAllowedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
 			screenshotQuality: screenshotQuality ?? 75,
@@ -1323,13 +1499,32 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
-			maxReadFileLine: maxReadFileLine ?? 500,
+			maxReadFileLine: maxReadFileLine ?? -1,
+			maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
+			cloudUserInfo,
+			cloudIsAuthenticated: cloudIsAuthenticated ?? false,
+			sharingEnabled: sharingEnabled ?? false,
+			organizationAllowList,
 			condensingApiConfigId,
 			customCondensingPrompt,
+			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
+			codebaseIndexConfig: codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "http://localhost:6333",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
+			mdmCompliant: this.checkMdmCompliance(),
+			profileThresholds: profileThresholds ?? {},
+			cloudApiUrl: getRooCodeApiUrl(),
+			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
+			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
+			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 		}
 	}
 
@@ -1354,6 +1549,46 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			providerSettings.apiProvider = apiProvider
 		}
 
+		let organizationAllowList = ORGANIZATION_ALLOW_ALL
+
+		try {
+			organizationAllowList = await CloudService.instance.getAllowList()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get organization allow list: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let cloudUserInfo: CloudUserInfo | null = null
+
+		try {
+			cloudUserInfo = CloudService.instance.getUserInfo()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get cloud user info: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let cloudIsAuthenticated: boolean = false
+
+		try {
+			cloudIsAuthenticated = CloudService.instance.isAuthenticated()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get cloud authentication state: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let sharingEnabled: boolean = false
+
+		try {
+			sharingEnabled = await CloudService.instance.canShareTask()
+		} catch (error) {
+			console.error(
+				`[getState] failed to get sharing enabled state: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
 		// Return the same structure as before
 		return {
 			apiConfiguration: providerSettings,
@@ -1364,12 +1599,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,
 			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
 			alwaysAllowWriteOutsideWorkspace: stateValues.alwaysAllowWriteOutsideWorkspace ?? false,
+			alwaysAllowWriteProtected: stateValues.alwaysAllowWriteProtected ?? false,
 			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
+			alwaysAllowFollowupQuestions: stateValues.alwaysAllowFollowupQuestions ?? false,
+			followupAutoApproveTimeoutMs: stateValues.followupAutoApproveTimeoutMs ?? 60000,
 			allowedMaxRequests: stateValues.allowedMaxRequests,
+			autoCondenseContext: stateValues.autoCondenseContext ?? true,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
@@ -1419,11 +1658,25 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
-			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
+			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
+			cloudUserInfo,
+			cloudIsAuthenticated,
+			sharingEnabled,
+			organizationAllowList,
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,
 			customCondensingPrompt: stateValues.customCondensingPrompt,
+			codebaseIndexModels: stateValues.codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
+			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "http://localhost:6333",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
+			profileThresholds: stateValues.profileThresholds ?? {},
 		}
 	}
 
@@ -1519,63 +1772,64 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	/**
+	 * Check if the current state is compliant with MDM policy
+	 * @returns true if compliant, false if blocked
+	 */
+	public checkMdmCompliance(): boolean {
+		if (!this.mdmService) {
+			return true // No MDM service, allow operation
+		}
+
+		const compliance = this.mdmService.isCompliant()
+
+		if (!compliance.compliant) {
+			return false
+		}
+
+		return true
+	}
+
+	/**
 	 * Returns properties to be included in every telemetry event
 	 * This method is called by the telemetry service to get context information
-	 * like the current mode, API provider, etc.
+	 * like the current mode, API provider, git repository information, etc.
 	 */
-	public async getTelemetryProperties(): Promise<Record<string, any>> {
+	public async getTelemetryProperties(): Promise<TelemetryProperties> {
 		const { mode, apiConfiguration, language } = await this.getState()
-		const appVersion = this.context.extension?.packageJSON?.version
-		const vscodeVersion = vscode.version
-		const platform = process.platform
-		const editorName = vscode.env.appName // Get the editor name (VS Code, Cursor, etc.)
+		const task = this.getCurrentCline()
 
-		const properties: Record<string, any> = {
-			vscodeVersion,
-			platform,
-			editorName,
-		}
+		const packageJSON = this.context.extension?.packageJSON
 
-		// Add extension version
-		if (appVersion) {
-			properties.appVersion = appVersion
-		}
+		// Get Roo Code Cloud authentication state
+		let cloudIsAuthenticated: boolean | undefined
 
-		// Add language
-		if (language) {
-			properties.language = language
-		}
-
-		// Add current mode
-		if (mode) {
-			properties.mode = mode
-		}
-
-		// Add API provider
-		if (apiConfiguration?.apiProvider) {
-			properties.apiProvider = apiConfiguration.apiProvider
-		}
-
-		// Add model ID if available
-		const currentCline = this.getCurrentCline()
-
-		if (currentCline?.api) {
-			const { id: modelId } = currentCline.api.getModel()
-
-			if (modelId) {
-				properties.modelId = modelId
+		try {
+			if (CloudService.hasInstance()) {
+				cloudIsAuthenticated = CloudService.instance.isAuthenticated()
 			}
+		} catch (error) {
+			// Silently handle errors to avoid breaking telemetry collection
+			this.log(`[getTelemetryProperties] Failed to get cloud auth state: ${error}`)
 		}
 
-		if (currentCline?.diffStrategy) {
-			properties.diffStrategy = currentCline.diffStrategy.getName()
-		}
+		// Get git repository information
+		const gitInfo = await getWorkspaceGitInfo()
 
-		// Add isSubtask property that indicates whether this task is a subtask
-		if (currentCline) {
-			properties.isSubtask = !!currentCline.parentTask
+		// Return all properties including git info - clients will filter as needed
+		return {
+			appName: packageJSON?.name ?? Package.name,
+			appVersion: packageJSON?.version ?? Package.version,
+			vscodeVersion: vscode.version,
+			platform: process.platform,
+			editorName: vscode.env.appName,
+			language,
+			mode,
+			apiProvider: apiConfiguration?.apiProvider,
+			modelId: task?.api?.getModel().id,
+			diffStrategy: task?.diffStrategy?.getName(),
+			isSubtask: task ? !!task.parentTask : undefined,
+			cloudIsAuthenticated,
+			...gitInfo,
 		}
-
-		return properties
 	}
 }

@@ -1,20 +1,33 @@
 import { useCallback, useState } from "react"
+import knuthShuffle from "knuth-shuffle-seeded"
+import { Trans } from "react-i18next"
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+
+import type { ProviderSettings } from "@roo-code/types"
+
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { validateApiConfiguration } from "@src/utils/validate"
 import { vscode } from "@src/utils/vscode"
-import ApiOptions from "../settings/ApiOptions"
-import { Tab, TabContent } from "../common/Tab"
-import { Trans } from "react-i18next"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { getRequestyAuthUrl, getOpenRouterAuthUrl } from "@src/oauth/urls"
+
+import ApiOptions from "../settings/ApiOptions"
+import { Tab, TabContent } from "../common/Tab"
+
 import RooHero from "./RooHero"
-import knuthShuffle from "knuth-shuffle-seeded"
 
 const WelcomeView = () => {
 	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme, machineId } = useExtensionState()
 	const { t } = useAppTranslation()
 	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+
+	// Memoize the setApiConfigurationField function to pass to ApiOptions
+	const setApiConfigurationFieldForApiOptions = useCallback(
+		<K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => {
+			setApiConfiguration({ [field]: value })
+		},
+		[setApiConfiguration], // setApiConfiguration from context is stable
+	)
 
 	const handleSubmit = useCallback(() => {
 		const error = apiConfiguration ? validateApiConfiguration(apiConfiguration) : undefined
@@ -36,18 +49,23 @@ const WelcomeView = () => {
 
 	return (
 		<Tab>
-			<TabContent className="flex flex-col gap-5">
+			<TabContent className="flex flex-col gap-5 p-16">
 				<RooHero />
-				<h2 className="mx-auto">{t("chat:greeting")}</h2>
+				<h2 className="mt-0 mb-0">{t("welcome:greeting")}</h2>
 
-				<div className="outline rounded p-4">
-					<Trans i18nKey="welcome:introduction" />
+				<div className="font-bold">
+					<p>
+						<Trans i18nKey="welcome:introduction" />
+					</p>
+					<p>
+						<Trans i18nKey="welcome:chooseProvider" />
+					</p>
 				</div>
 
 				<div className="mb-4">
-					<h4 className="mt-3 mb-2 text-center">{t("welcome:startRouter")}</h4>
+					<p className="font-bold mt-0">{t("welcome:startRouter")}</p>
 
-					<div className="flex gap-4">
+					<div>
 						{/* Define the providers */}
 						{(() => {
 							// Provider card configuration
@@ -76,37 +94,38 @@ const WelcomeView = () => {
 								<a
 									key={index}
 									href={provider.authUrl}
-									className="flex-1 border border-vscode-panel-border rounded p-4 flex flex-col items-center cursor-pointer transition-all  no-underline text-inherit"
+									className="flex-1 border border-vscode-panel-border hover:bg-secondary rounded-lg py-4 px-6 mb-2 flex flex-row gap-4 cursor-pointer transition-all no-underline text-inherit"
 									target="_blank"
 									rel="noopener noreferrer">
-									<div className="font-bold">{provider.name}</div>
-									<div className="w-16 h-16 flex items-center justify-center rounded m-2 overflow-hidden relative">
+									<div className="w-10 h-10">
 										<img
 											src={`${imagesBaseUri}/${provider.slug}.png`}
 											alt={provider.name}
-											className="w-full h-full object-contain p-2"
+											className="w-full h-full object-contain"
 										/>
 									</div>
-									<div className="text-center">
-										<div className="text-xs text-vscode-descriptionForeground">
-											{provider.description}
+									<div>
+										<div className="font-bold text-vscode-foreground">{provider.name}</div>
+										<div>
+											<div className="text-xs text-vscode-descriptionForeground">
+												{provider.description}
+											</div>
+											{provider.incentive && (
+												<div className="text-xs font-bold">{provider.incentive}</div>
+											)}
 										</div>
-										{provider.incentive && (
-											<div className="text-xs font-bold">{provider.incentive}</div>
-										)}
 									</div>
 								</a>
 							))
 						})()}
 					</div>
 
-					<div className="text-center my-4 text-xl uppercase font-bold">{t("welcome:or")}</div>
-					<h4 className="mt-3 mb-2 text-center">{t("welcome:startCustom")}</h4>
+					<p className="font-bold mt-8 mb-6">{t("welcome:startCustom")}</p>
 					<ApiOptions
 						fromWelcomeView
 						apiConfiguration={apiConfiguration || {}}
 						uriScheme={uriScheme}
-						setApiConfigurationField={(field, value) => setApiConfiguration({ [field]: value })}
+						setApiConfigurationField={setApiConfigurationFieldForApiOptions}
 						errorMessage={errorMessage}
 						setErrorMessage={setErrorMessage}
 					/>

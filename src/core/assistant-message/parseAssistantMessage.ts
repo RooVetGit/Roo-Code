@@ -1,5 +1,6 @@
+import { type ToolName, toolNames } from "@roo-code/types"
+
 import { TextContent, ToolUse, ToolParamName, toolParamNames } from "../../shared/tools"
-import { toolNames, ToolName } from "../../schemas"
 
 export type AssistantMessageContent = TextContent | ToolUse
 
@@ -23,7 +24,12 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 			const paramClosingTag = `</${currentParamName}>`
 			if (currentParamValue.endsWith(paramClosingTag)) {
 				// End of param value.
-				currentToolUse.params[currentParamName] = currentParamValue.slice(0, -paramClosingTag.length).trim()
+				// Don't trim content parameters to preserve newlines, but strip first and last newline only
+				const paramValue = currentParamValue.slice(0, -paramClosingTag.length)
+				currentToolUse.params[currentParamName] =
+					currentParamName === "content"
+						? paramValue.replace(/^\n/, "").replace(/\n$/, "")
+						: paramValue.trim()
 				currentParamName = undefined
 				continue
 			} else {
@@ -60,7 +66,7 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 				// contain the closing tag, in which case the param would have
 				// closed and we end up with the rest of the file contents here.
 				// To work around this, we get the string between the starting
-				// ontent tag and the LAST content tag.
+				// content tag and the LAST content tag.
 				const contentParamName: ToolParamName = "content"
 
 				if (currentToolUse.name === "write_to_file" && accumulator.endsWith(`</${contentParamName}>`)) {
@@ -71,9 +77,11 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 					const contentEndIndex = toolContent.lastIndexOf(contentEndTag)
 
 					if (contentStartIndex !== -1 && contentEndIndex !== -1 && contentEndIndex > contentStartIndex) {
+						// Don't trim content to preserve newlines, but strip first and last newline only
 						currentToolUse.params[contentParamName] = toolContent
 							.slice(contentStartIndex, contentEndIndex)
-							.trim()
+							.replace(/^\n/, "")
+							.replace(/\n$/, "")
 					}
 				}
 
@@ -137,7 +145,10 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 		// Stream did not complete tool call, add it as partial.
 		if (currentParamName) {
 			// Tool call has a parameter that was not completed.
-			currentToolUse.params[currentParamName] = accumulator.slice(currentParamValueStartIndex).trim()
+			// Don't trim content parameters to preserve newlines, but strip first and last newline only
+			const paramValue = accumulator.slice(currentParamValueStartIndex)
+			currentToolUse.params[currentParamName] =
+				currentParamName === "content" ? paramValue.replace(/^\n/, "").replace(/\n$/, "") : paramValue.trim()
 		}
 
 		contentBlocks.push(currentToolUse)

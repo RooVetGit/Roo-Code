@@ -1,3 +1,4 @@
+import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import * as vscode from "vscode"
 import { getTaskDirectoryPath } from "../../utils/storage"
@@ -130,7 +131,7 @@ export class FileContextTracker {
 			const globalStoragePath = this.getContextProxy()!.globalStorageUri.fsPath
 			const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 			const filePath = path.join(taskDir, GlobalFileNames.taskMetadata)
-			await fs.writeFile(filePath, JSON.stringify(metadata, null, 2))
+			await safeWriteJson(filePath, metadata)
 		} catch (error) {
 			console.error("Failed to save task metadata:", error)
 		}
@@ -181,6 +182,7 @@ export class FileContextTracker {
 					newEntry.roo_read_date = now
 					newEntry.roo_edit_date = now
 					this.checkpointPossibleFiles.add(filePath)
+					this.markFileAsEditedByRoo(filePath)
 					break
 
 				// read_tool/file_mentioned: Roo has read the file via a tool or file mention

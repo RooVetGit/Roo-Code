@@ -1,9 +1,11 @@
 {
-	"title": "提示詞",
+	"title": "模式",
 	"done": "完成",
 	"modes": {
 		"title": "模式",
 		"createNewMode": "建立新模式",
+		"importMode": "匯入模式",
+		"noMatchFound": "找不到任何模式",
 		"editModesConfig": "編輯模式設定",
 		"editGlobalModes": "編輯全域模式",
 		"editProjectModes": "編輯專案模式 (.roomodes)",
@@ -34,6 +36,11 @@
 		"resetToDefault": "重設為預設值",
 		"description": "定義此模式下 Roo 的專業知識和個性。此描述會形塑 Roo 如何展現自己並處理工作。"
 	},
+	"description": {
+		"title": "簡短描述（給人看的）",
+		"resetToDefault": "重置為預設描述",
+		"description": "在模式選擇下拉選單中顯示的簡短描述。"
+	},
 	"whenToUse": {
 		"title": "使用時機（選用）",
 		"description": "描述何時應使用此模式。這有助於 Orchestrator 為任務選擇適當的模式。",
@@ -44,6 +51,25 @@
 		"resetToDefault": "重設為預設值",
 		"description": "為 {{modeName}} 模式新增專屬的行為指南。",
 		"loadFromFile": "{{mode}} 模式的自訂指令也可以從工作區的 <span>.roo/rules-{{slug}}/</span> 資料夾載入（.roorules-{{slug}} 和 .clinerules-{{slug}} 已棄用並將很快停止運作）。"
+	},
+	"exportMode": {
+		"title": "匯出模式",
+		"description": "將此模式匯出為包含所有規則的 YAML 檔案，以便與他人輕鬆分享。",
+		"export": "匯出模式",
+		"exporting": "正在匯出..."
+	},
+	"importMode": {
+		"selectLevel": "選擇匯入模式的位置：",
+		"import": "匯入",
+		"importing": "匯入中...",
+		"global": {
+			"label": "全域",
+			"description": "適用於所有專案。規則將合併到自訂指令中。"
+		},
+		"project": {
+			"label": "專案級",
+			"description": "僅在此工作區可用。如果匯出的模式包含規則檔案，則將在 .roo/rules-{slug}/ 資料夾中重新建立這些檔案。"
+		}
 	},
 	"globalCustomInstructions": {
 		"title": "所有模式的自訂指令",
@@ -64,7 +90,8 @@
 			"apiConfigDescription": "您可以選擇一個固定的 API 設定用於增強提示詞，或使用目前選擇的設定",
 			"useCurrentConfig": "使用目前選擇的 API 設定",
 			"testPromptPlaceholder": "輸入提示詞以測試增強效果",
-			"previewButton": "預覽提示詞增強"
+			"previewButton": "預覽提示詞增強",
+			"testEnhancement": "測試增強"
 		},
 		"types": {
 			"ENHANCE": {
@@ -144,6 +171,10 @@
 			"label": "可用工具",
 			"description": "選擇此模式可使用的工具。"
 		},
+		"description": {
+			"label": "簡短描述（給人看的）",
+			"description": "在模式選擇下拉選單中顯示的簡短描述。"
+		},
 		"customInstructions": {
 			"label": "自訂指令（選用）",
 			"description": "為此模式新增特定的行為指南。"
@@ -154,5 +185,8 @@
 		},
 		"deleteMode": "刪除模式"
 	},
-	"allFiles": "所有檔案"
+	"allFiles": "所有檔案",
+	"advanced": {
+		"title": "進階"
+	}
 }

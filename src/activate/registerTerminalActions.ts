@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
-import { TerminalActionId, TerminalActionPromptType } from "../schemas"
+import { TerminalActionId, TerminalActionPromptType } from "@roo-code/types"
+
 import { getTerminalCommand } from "../utils/commands"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { Terminal } from "../integrations/terminal/Terminal"
@@ -19,7 +20,7 @@ const registerTerminalAction = (
 ) => {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(getTerminalCommand(command), async (args: any) => {
-			let content = args.selection
+			let content = args?.selection
 
 			if (!content || content === "") {
 				content = await Terminal.getTerminalContents(promptType === "TERMINAL_ADD_TO_CONTEXT" ? -1 : 1)

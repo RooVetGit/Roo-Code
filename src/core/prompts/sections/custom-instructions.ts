@@ -1,8 +1,12 @@
 import fs from "fs/promises"
 import path from "path"
-
-import { LANGUAGES, isLanguage } from "../../../shared/language"
+import * as os from "os"
 import { Dirent } from "fs"
+
+import { isLanguage } from "@roo-code/types"
+
+import { LANGUAGES } from "../../../shared/language"
+import { getRooDirectoriesForCwd, getGlobalRooDirectory } from "../../../services/roo-config"
 
 /**
  * Safely read a file and return its trimmed content
@@ -119,6 +123,10 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 					// Check if it's a file (not a directory)
 					const stats = await fs.stat(file)
 					if (stats.isFile()) {
+						// Filter out cache files and system files that shouldn't be in rules
+						if (!shouldIncludeRuleFile(file)) {
+							return null
+						}
 						const content = await safeReadFile(file)
 						return { filename: file, content }
 					}
@@ -129,7 +137,7 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 			}),
 		)
 
-		// Filter out null values (directories or failed reads)
+		// Filter out null values (directories, failed reads, or excluded files)
 		return fileContents.filter((item): item is { filename: string; content: string } => item !== null)
 	} catch (err) {
 		return []
@@ -142,30 +150,39 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 function formatDirectoryContent(dirPath: string, files: Array<{ filename: string; content: string }>): string {
 	if (files.length === 0) return ""
 
-	return (
-		"\n\n" +
-		files
-			.map((file) => {
-				return `# Rules from ${file.filename}:\n${file.content}`
-			})
-			.join("\n\n")
-	)
+	return files
+		.map((file) => {
+			return `# Rules from ${file.filename}:\n${file.content}`
+		})
+		.join("\n\n")
 }
 
 /**
- * Load rule files from the specified directory
+ * Load rule files from global and project-local directories
+ * Global rules are loaded first, then project-local rules which can override global ones
  */
 export async function loadRuleFiles(cwd: string): Promise<string> {
-	// Check for .roo/rules/ directory
-	const rooRulesDir = path.join(cwd, ".roo", "rules")
-	if (await directoryExists(rooRulesDir)) {
-		const files = await readTextFilesFromDirectory(rooRulesDir)
-		if (files.length > 0) {
-			return formatDirectoryContent(rooRulesDir, files)
+	const rules: string[] = []
+	const rooDirectories = getRooDirectoriesForCwd(cwd)
+
+	// Check for .roo/rules/ directories in order (global first, then project-local)
+	for (const rooDir of rooDirectories) {
+		const rulesDir = path.join(rooDir, "rules")
+		if (await directoryExists(rulesDir)) {
+			const files = await readTextFilesFromDirectory(rulesDir)
+			if (files.length > 0) {
+				const content = formatDirectoryContent(rulesDir, files)
+				rules.push(content)
+			}
 		}
 	}
 
-	// Fall back to existing behavior
+	// If we found rules in .roo/rules/ directories, return them
+	if (rules.length > 0) {
+		return "\n" + rules.join("\n\n")
+	}
+
+	// Fall back to existing behavior for legacy .roorules/.clinerules files
 	const ruleFiles = [".roorules", ".clinerules"]
 
 	for (const file of ruleFiles) {
@@ -192,18 +209,27 @@ export async function addCustomInstructions(
 	let usedRuleFile = ""
 
 	if (mode) {
-		// Check for .roo/rules-${mode}/ directory
-		const modeRulesDir = path.join(cwd, ".roo", `rules-${mode}`)
-		if (await directoryExists(modeRulesDir)) {
-			const files = await readTextFilesFromDirectory(modeRulesDir)
-			if (files.length > 0) {
-				modeRuleContent = formatDirectoryContent(modeRulesDir, files)
-				usedRuleFile = modeRulesDir
+		const modeRules: string[] = []
+		const rooDirectories = getRooDirectoriesForCwd(cwd)
+
+		// Check for .roo/rules-${mode}/ directories in order (global first, then project-local)
+		for (const rooDir of rooDirectories) {
+			const modeRulesDir = path.join(rooDir, `rules-${mode}`)
+			if (await directoryExists(modeRulesDir)) {
+				const files = await readTextFilesFromDirectory(modeRulesDir)
+				if (files.length > 0) {
+					const content = formatDirectoryContent(modeRulesDir, files)
+					modeRules.push(content)
+				}
 			}
 		}
 
-		// If no directory exists, fall back to existing behavior
-		if (!modeRuleContent) {
+		// If we found mode-specific rules in .roo/rules-${mode}/ directories, use them
+		if (modeRules.length > 0) {
+			modeRuleContent = "\n" + modeRules.join("\n\n")
+			usedRuleFile = `rules-${mode} directories`
+		} else {
+			// Fall back to existing behavior for legacy files
 			const rooModeRuleFile = `.roorules-${mode}`
 			modeRuleContent = await safeReadFile(path.join(cwd, rooModeRuleFile))
 			if (modeRuleContent) {
@@ -274,4 +300,45 @@ The following additional instructions are provided by the user, and should be fo
 
 ${joinedSections}`
 		: ""
+}
+
+/**
+ * Check if a file should be included in rule compilation.
+ * Excludes cache files and system files that shouldn't be processed as rules.
+ */
+function shouldIncludeRuleFile(filename: string): boolean {
+	const basename = path.basename(filename)
+
+	const cachePatterns = [
+		"*.DS_Store",
+		"*.bak",
+		"*.cache",
+		"*.crdownload",
+		"*.db",
+		"*.dmp",
+		"*.dump",
+		"*.eslintcache",
+		"*.lock",
+		"*.log",
+		"*.old",
+		"*.part",
+		"*.partial",
+		"*.pyc",
+		"*.pyo",
+		"*.stackdump",
+		"*.swo",
+		"*.swp",
+		"*.temp",
+		"*.tmp",
+		"Thumbs.db",
+	]
+
+	return !cachePatterns.some((pattern) => {
+		if (pattern.startsWith("*.")) {
+			const extension = pattern.slice(1)
+			return basename.endsWith(extension)
+		} else {
+			return basename === pattern
+		}
+	})
 }

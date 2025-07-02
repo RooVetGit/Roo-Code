@@ -1,11 +1,8 @@
-import { ExperimentId } from "../schemas"
-import { AssertEqual, Equals, Keys, Values } from "../utils/type-fu"
-
-export type { ExperimentId }
+import type { AssertEqual, Equals, Keys, Values, ExperimentId, Experiments } from "@roo-code/types"
 
 export const EXPERIMENT_IDS = {
+	MULTI_FILE_APPLY_DIFF: "multiFileApplyDiff",
 	POWER_STEERING: "powerSteering",
-	AUTO_CONDENSE_CONTEXT: "autoCondenseContext",
 } as const satisfies Record<string, ExperimentId>
 
 type _AssertExperimentIds = AssertEqual<Equals<ExperimentId, Values<typeof EXPERIMENT_IDS>>>
@@ -17,8 +14,8 @@ interface ExperimentConfig {
 }
 
 export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
+	MULTI_FILE_APPLY_DIFF: { enabled: false },
 	POWER_STEERING: { enabled: false },
-	AUTO_CONDENSE_CONTEXT: { enabled: false }, // Keep this last, there is a slider below it in the UI
 }
 
 export const experimentDefault = Object.fromEntries(
@@ -30,6 +27,5 @@ export const experimentDefault = Object.fromEntries(
 
 export const experiments = {
 	get: (id: ExperimentKey): ExperimentConfig | undefined => experimentConfigsMap[id],
-	isEnabled: (experimentsConfig: Record<ExperimentId, boolean>, id: ExperimentId) =>
-		experimentsConfig[id] ?? experimentDefault[id],
+	isEnabled: (experimentsConfig: Experiments, id: ExperimentId) => experimentsConfig[id] ?? experimentDefault[id],
 } as const

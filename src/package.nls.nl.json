@@ -4,10 +4,12 @@
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
 	"views.activitybar.title": "Roo Code",
+	"views.sidebar.name": "Roo Code",
 	"command.newTask.title": "Nieuwe Taak",
 	"command.mcpServers.title": "MCP Servers",
-	"command.prompts.title": "Prompts",
+	"command.prompts.title": "Modi",
 	"command.history.title": "Geschiedenis",
+	"command.marketplace.title": "Marktplaats",
 	"command.openInEditor.title": "Openen in Editor",
 	"command.settings.title": "Instellingen",
 	"command.documentation.title": "Documentatie",
@@ -18,6 +20,7 @@
 	"command.addToContext.title": "Toevoegen aan Context",
 	"command.focusInput.title": "Focus op Invoerveld",
 	"command.setCustomStoragePath.title": "Aangepast Opslagpad Instellen",
+	"command.importSettings.title": "Instellingen Importeren",
 	"command.terminal.addToContext.title": "Terminalinhoud aan Context Toevoegen",
 	"command.terminal.fixCommand.title": "Repareer Dit Commando",
 	"command.terminal.explainCommand.title": "Leg Dit Commando Uit",
@@ -27,5 +30,7 @@
 	"settings.vsCodeLmModelSelector.description": "Instellingen voor VSCode Language Model API",
 	"settings.vsCodeLmModelSelector.vendor.description": "De leverancier van het taalmodel (bijv. copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "De familie van het taalmodel (bijv. gpt-4)",
-	"settings.customStoragePath.description": "Aangepast opslagpad. Laat leeg om de standaardlocatie te gebruiken. Ondersteunt absolute paden (bijv. 'D:\\RooCodeStorage')"
+	"settings.customStoragePath.description": "Aangepast opslagpad. Laat leeg om de standaardlocatie te gebruiken. Ondersteunt absolute paden (bijv. 'D:\\RooCodeStorage')",
+	"settings.enableCodeActions.description": "Snelle correcties van Roo Code inschakelen.",
+	"settings.autoImportSettingsPath.description": "Pad naar een RooCode-configuratiebestand om automatisch te importeren bij het opstarten van de extensie. Ondersteunt absolute paden en paden ten opzichte van de thuismap (bijv. '~/Documents/roo-code-settings.json'). Laat leeg om automatisch importeren uit te schakelen."
 }

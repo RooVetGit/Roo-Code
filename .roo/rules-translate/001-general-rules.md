@@ -1,6 +1,6 @@
 # 1. SUPPORTED LANGUAGES AND LOCATION
 
-- Localize all strings into the following locale files: ca, de, en, es, fr, hi, it, ja, ko, nl, pl, pt-BR, ru, tr, vi, zh-CN, zh-TW
+- Localize all strings into the following locale files: ca, de, en, es, fr, hi, id, it, ja, ko, nl, pl, pt-BR, ru, tr, vi, zh-CN, zh-TW
 - The VSCode extension has two main areas that require localization:
     - Core Extension: src/i18n/locales/ (extension backend)
     - WebView UI: webview-ui/src/i18n/locales/ (user interface)
@@ -64,8 +64,10 @@
     1. Identify where the string appears in the UI/codebase
     2. Understand the context and purpose of the string
     3. Update English translation first
-    4. Create appropriate translations for all other supported languages
-    5. Validate your changes with the missing translations script
+    4. Use the `<search_files>` tool to find JSON keys that are near new keys in English translations but do not yet exist in the other language files for `<apply_diff>` SEARCH context
+    5. Create appropriate translations for all other supported languages utilizing the `search_files` result using `<apply_diff>` without reading every file.
+    6. Do not output the translated text into the chat, just modify the files.
+    7. Validate your changes with the missing translations script
 - Flag or comment if an English source string is incomplete ("please see this...") to avoid truncated or unclear translations
 - For UI elements, distinguish between:
     - Button labels: Use short imperative commands ("Save", "Cancel")

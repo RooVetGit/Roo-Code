@@ -1,10 +1,12 @@
+import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import * as fs from "fs/promises"
+
+import type { ClineMessage } from "@roo-code/types"
 
 import { fileExistsAtPath } from "../../utils/fs"
 
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { ClineMessage } from "../../shared/ExtensionMessage"
 import { getTaskDirectoryPath } from "../../utils/storage"
 
 export type ReadTaskMessagesOptions = {
@@ -36,5 +38,5 @@ export type SaveTaskMessagesOptions = {
 export async function saveTaskMessages({ messages, taskId, globalStoragePath }: SaveTaskMessagesOptions) {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 	const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
-	await fs.writeFile(filePath, JSON.stringify(messages))
+	await safeWriteJson(filePath, messages)
 }

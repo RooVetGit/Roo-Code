@@ -1,9 +1,14 @@
 import { ExtensionContext } from "vscode"
 import { z, ZodError } from "zod"
 
-import { providerSettingsSchema, ProviderSettingsEntry, providerSettingsSchemaDiscriminated } from "../../schemas"
+import {
+	type ProviderSettingsEntry,
+	providerSettingsSchema,
+	providerSettingsSchemaDiscriminated,
+} from "@roo-code/types"
+import { TelemetryService } from "@roo-code/telemetry"
+
 import { Mode, modes } from "../../shared/modes"
-import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
 const discriminatedProviderSettingsWithIdSchema = providerSettingsSchemaDiscriminated.and(
@@ -464,7 +469,10 @@ export class ProviderSettingsManager {
 			}
 		} catch (error) {
 			if (error instanceof ZodError) {
-				telemetryService.captureSchemaValidationError({ schemaName: "ProviderProfiles", error })
+				TelemetryService.instance.captureSchemaValidationError({
+					schemaName: "ProviderProfiles",
+					error,
+				})
 			}
 
 			throw new Error(`Failed to read provider profiles from secrets: ${error}`)
