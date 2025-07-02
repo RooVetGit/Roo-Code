@@ -26,6 +26,7 @@ import {
 	createToolError,
 } from "../db/index.js"
 import { EVALS_REPO_PATH } from "../exercises/index.js"
+import { getRepoConfig } from "../config/repoConfig.js"
 
 import { Logger, getTag, isDockerContainer } from "./utils.js"
 import { redisClient, getPubSubKey, registerRunner, deregisterRunner } from "./redis.js"
@@ -155,6 +156,29 @@ export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) =>
 	const controller = new AbortController()
 	const cancelSignal = controller.signal
 	const containerized = isDockerContainer()
+
+	// Perform git pull to ensure we have the latest version of the repo
+	const repoConfig = getRepoConfig(workspacePath)
+	if (repoConfig) {
+		logger.info(`performing git pull for repo: ${repoConfig.name} at ${repoConfig.path}`)
+		try {
+			const gitPullResult = await execa("git", ["pull"], { cwd: repoConfig.path })
+			logger.info(`git pull completed successfully: ${gitPullResult.stdout}`)
+		} catch (error) {
+			logger.warn(`git pull failed for ${repoConfig.name}: ${error}`)
+			// Continue execution even if git pull fails
+		}
+	} else {
+		// Fallback: try git pull in the workspace directory
+		logger.info(`performing git pull in workspace: ${workspacePath}`)
+		try {
+			const gitPullResult = await execa("git", ["pull"], { cwd: workspacePath })
+			logger.info(`git pull completed successfully: ${gitPullResult.stdout}`)
+		} catch (error) {
+			logger.warn(`git pull failed in workspace ${workspacePath}: ${error}`)
+			// Continue execution even if git pull fails
+		}
+	}
 
 	const codeCommand = containerized
 		? `xvfb-run --auto-servernum --server-num=1 code --wait --log trace --disable-workspace-trust --disable-gpu --disable-lcd-text --no-sandbox --user-data-dir /roo/.vscode --password-store="basic" -n ${workspacePath}`
