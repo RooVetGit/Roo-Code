@@ -179,13 +179,27 @@ Otherwise, if you have not completed the task and do not need additional informa
 const formatImagesIntoBlocks = (images?: string[]): Anthropic.ImageBlockParam[] => {
 	return images
 		? images.map((dataUrl) => {
-				// data:image/png;base64,base64string
-				const [rest, base64] = dataUrl.split(",")
-				const mimeType = rest.split(":")[1].split(";")[0]
-				return {
-					type: "image",
-					source: { type: "base64", media_type: mimeType, data: base64 },
-				} as Anthropic.ImageBlockParam
+				// Handle different image formats:
+				// 1. data:image/png;base64,base64string (standard data URI)
+				// 2. base64string (raw base64 data)
+				// 3. other formats that might be provided by MCP servers
+
+				if (dataUrl.startsWith("data:")) {
+					// Standard data URI format: data:image/png;base64,base64string
+					const [rest, base64] = dataUrl.split(",")
+					const mimeType = rest.split(":")[1].split(";")[0]
+					return {
+						type: "image",
+						source: { type: "base64", media_type: mimeType, data: base64 },
+					} as Anthropic.ImageBlockParam
+				} else {
+					// Assume it's raw base64 data, default to image/png
+					// This handles cases where MCP servers provide just the base64 string
+					return {
+						type: "image",
+						source: { type: "base64", media_type: "image/png", data: dataUrl },
+					} as Anthropic.ImageBlockParam
+				}
 			})
 		: []
 }

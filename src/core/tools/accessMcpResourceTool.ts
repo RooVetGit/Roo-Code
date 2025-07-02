@@ -73,7 +73,16 @@ export async function accessMcpResourceTool(
 
 			resourceResult?.contents.forEach((item) => {
 				if (item.mimeType?.startsWith("image") && item.blob) {
-					images.push(item.blob)
+					// Check if blob is already a data URI
+					if (item.blob.startsWith("data:")) {
+						// Already in data URI format, use as-is
+						images.push(item.blob)
+					} else {
+						// Assume it's raw base64 data, create proper data URI
+						const mimeType = item.mimeType || "image/png"
+						const dataUri = `data:${mimeType};base64,${item.blob}`
+						images.push(dataUri)
+					}
 				}
 			})
 
