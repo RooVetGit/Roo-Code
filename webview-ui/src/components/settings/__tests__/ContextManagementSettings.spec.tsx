@@ -10,7 +10,6 @@ vitest.mock("@/i18n/TranslationContext", () => ({
 }))
 
 // Mock vscode utilities - this is necessary since we're not in a VSCode environment
-import { vscode } from "@/utils/vscode"
 
 vitest.mock("@/utils/vscode", () => ({
 	vscode: {

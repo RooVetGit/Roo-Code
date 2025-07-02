@@ -1,11 +1,11 @@
 import { HTMLAttributes } from "react"
 import React from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeCheckbox, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { Database, FoldVertical } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider } from "@/components/ui"
+import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider } from "@/components/ui"
 
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
