@@ -97,6 +97,8 @@ Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/how-to
 
 MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
 
+Check out our [Community MCP Servers](COMMUNITY_MCP_SERVERS.md) for additional tools created by the community.
+
 ### Customization
 
 Make Roo Code work your way with:
