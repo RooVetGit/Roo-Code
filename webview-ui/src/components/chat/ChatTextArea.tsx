@@ -72,7 +72,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const { t } = useAppTranslation()
 
 		// Chat draft persistence
-		const { handleSendAndClearDraft } = useChatTextDraft("chat_textarea_draft", inputValue, setInputValue, onSend)
+		const { handleSendAndClearDraft } = useChatTextDraft(inputValue, setInputValue, onSend)
 
 		const {
 			filePaths,
