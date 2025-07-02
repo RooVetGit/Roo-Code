@@ -102,6 +102,11 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	const [searchValue, setSearchValue] = useState("")
 	const searchInputRef = useRef<HTMLInputElement>(null)
 
+	// State for editing file regex
+	const [editingFileRegex, setEditingFileRegex] = useState<string | null>(null)
+	const [fileRegexValue, setFileRegexValue] = useState("")
+	const [fileRegexDescription, setFileRegexDescription] = useState("")
+
 	// Direct update functions
 	const updateAgentPrompt = useCallback(
 		(mode: Mode, promptData: PromptComponent) => {
@@ -461,6 +466,82 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			customPrompt: updatedPrompt,
 		})
 	}
+
+	// File regex editing functions
+	const startEditingFileRegex = useCallback(
+		(modeSlug: string) => {
+			const currentMode = getCurrentMode()
+			if (!currentMode) return
+
+			const editGroup = currentMode.groups?.find((g: GroupEntry) => Array.isArray(g) && g[0] === "edit")
+
+			if (Array.isArray(editGroup)) {
+				setFileRegexValue(editGroup[1]?.fileRegex || "")
+				setFileRegexDescription(editGroup[1]?.description || "")
+			} else {
+				setFileRegexValue("")
+				setFileRegexDescription("")
+			}
+			setEditingFileRegex(modeSlug)
+		},
+		[getCurrentMode],
+	)
+
+	const saveFileRegex = useCallback(() => {
+		const currentMode = getCurrentMode()
+		if (!currentMode || !editingFileRegex) return
+
+		const isCustomMode = Boolean(findModeBySlug(editingFileRegex, customModes))
+		if (!isCustomMode) return
+
+		// Update the groups array with the new file regex
+		const newGroups: GroupEntry[] = currentMode.groups.map((group: GroupEntry) => {
+			if (Array.isArray(group) && group[0] === "edit") {
+				// Update existing edit group with options
+				return [
+					"edit",
+					{
+						...(group[1] || {}),
+						fileRegex: fileRegexValue.trim() || undefined,
+						description: fileRegexDescription.trim() || undefined,
+					},
+				] as GroupEntry
+			} else if (group === "edit") {
+				// Convert simple edit group to array with options
+				return [
+					"edit",
+					{
+						fileRegex: fileRegexValue.trim() || undefined,
+						description: fileRegexDescription.trim() || undefined,
+					},
+				] as GroupEntry
+			}
+			return group
+		})
+
+		updateCustomMode(editingFileRegex, {
+			...currentMode,
+			groups: newGroups,
+		})
+
+		setEditingFileRegex(null)
+		setFileRegexValue("")
+		setFileRegexDescription("")
+	}, [
+		getCurrentMode,
+		editingFileRegex,
+		fileRegexValue,
+		fileRegexDescription,
+		findModeBySlug,
+		customModes,
+		updateCustomMode,
+	])
+
+	const cancelEditingFileRegex = useCallback(() => {
+		setEditingFileRegex(null)
+		setFileRegexValue("")
+		setFileRegexDescription("")
+	}, [])
 
 	return (
 		<Tab>
@@ -930,20 +1011,86 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 												{group === "edit" && (
 													<div className="text-xs text-vscode-descriptionForeground mt-0.5">
 														{t("prompts:tools.allowedFiles")}{" "}
-														{(() => {
-															const currentMode = getCurrentMode()
-															const editGroup = currentMode?.groups?.find(
-																(g) =>
-																	Array.isArray(g) &&
-																	g[0] === "edit" &&
-																	g[1]?.fileRegex,
-															)
-															if (!Array.isArray(editGroup)) return t("prompts:allFiles")
-															return (
-																editGroup[1].description ||
-																`/${editGroup[1].fileRegex}/`
-															)
-														})()}
+														{editingFileRegex === visualMode ? (
+															<div className="mt-2 space-y-2">
+																<div>
+																	<label className="block text-xs font-medium mb-1">
+																		{t("prompts:tools.fileRegex")}
+																	</label>
+																	<Input
+																		type="text"
+																		value={fileRegexValue}
+																		onChange={(e) =>
+																			setFileRegexValue(e.target.value)
+																		}
+																		placeholder="e.g., .*\\.(js|ts|jsx|tsx)$"
+																		className="text-xs h-6"
+																	/>
+																</div>
+																<div>
+																	<label className="block text-xs font-medium mb-1">
+																		{t("prompts:tools.description")}
+																	</label>
+																	<Input
+																		type="text"
+																		value={fileRegexDescription}
+																		onChange={(e) =>
+																			setFileRegexDescription(e.target.value)
+																		}
+																		placeholder="e.g., JavaScript/TypeScript files"
+																		className="text-xs h-6"
+																	/>
+																</div>
+																<div className="flex gap-1">
+																	<Button
+																		variant="default"
+																		size="sm"
+																		onClick={saveFileRegex}
+																		className="text-xs px-2 py-1 h-6">
+																		{t("prompts:tools.save")}
+																	</Button>
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		onClick={cancelEditingFileRegex}
+																		className="text-xs px-2 py-1 h-6">
+																		{t("prompts:tools.cancel")}
+																	</Button>
+																</div>
+															</div>
+														) : (
+															<div className="flex items-center gap-1">
+																<span>
+																	{(() => {
+																		const currentMode = getCurrentMode()
+																		const editGroup = currentMode?.groups?.find(
+																			(g: GroupEntry) =>
+																				Array.isArray(g) &&
+																				g[0] === "edit" &&
+																				g[1]?.fileRegex,
+																		)
+																		if (!Array.isArray(editGroup))
+																			return t("prompts:allFiles")
+																		return (
+																			editGroup[1].description ||
+																			`/${editGroup[1].fileRegex}/`
+																		)
+																	})()}
+																</span>
+																{isCustomMode && (
+																	<Button
+																		variant="ghost"
+																		size="icon"
+																		onClick={() =>
+																			startEditingFileRegex(visualMode)
+																		}
+																		title={t("prompts:tools.editFileRegex")}
+																		className="h-4 w-4 p-0.5">
+																		<span className="codicon codicon-edit text-xs"></span>
+																	</Button>
+																)}
+															</div>
+														)}
 													</div>
 												)}
 											</VSCodeCheckbox>
