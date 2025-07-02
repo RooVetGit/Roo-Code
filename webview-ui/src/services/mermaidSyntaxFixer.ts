@@ -102,7 +102,6 @@ export class MermaidSyntaxFixer {
 		let finalError: string | undefined
 
 		while (true) {
-			console.info("attempt ", llmAttempts)
 			currentCode = this.applyDeterministicFixes(currentCode)
 
 			// Validate the current code
@@ -138,10 +137,6 @@ export class MermaidSyntaxFixer {
 			} else {
 				currentCode = result.fixedCode
 			}
-		}
-
-		if (finalError) {
-			console.info(finalError)
 		}
 
 		return {
