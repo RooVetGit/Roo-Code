@@ -1,0 +1,22 @@
+{
+	"errors": {
+		"invalid_settings_format": "অবৈধ MCP সেটিংস JSON ফর্ম্যাট। দয়া করে নিশ্চিত করুন যে আপনার সেটিংস সঠিক JSON ফর্ম্যাট অনুসরণ করে।",
+		"invalid_settings_syntax": "অবৈধ MCP সেটিংস JSON ফর্ম্যাট। দয়া করে আপনার সেটিংস ফাইলে সিনট্যাক্স ত্রুটি পরীক্ষা করুন।",
+		"invalid_settings_validation": "অবৈধ MCP সেটিংস ফর্ম্যাট: {{errorMessages}}",
+		"create_json": ".roo/mcp.json তৈরি বা খুলতে ব্যর্থ: {{error}}",
+		"failed_update_project": "প্রোজেক্ট MCP সার্ভার আপডেট করতে ব্যর্থ",
+		"invalidJsonArgument": "Roo একটি অবৈধ JSON আর্গুমেন্ট সহ {{toolName}} ব্যবহার করার চেষ্টা করেছে। আবার চেষ্টা করা হচ্ছে..."
+	},
+	"info": {
+		"server_restarting": "{{serverName}} MCP সার্ভার পুনরায় চালু হচ্ছে...",
+		"server_connected": "{{serverName}} MCP সার্ভার সংযুক্ত",
+		"server_deleted": "MCP সার্ভার মুছে ফেলা হয়েছে: {{serverName}}",
+		"server_not_found": "কনফিগারেশনে \"{{serverName}}\" সার্ভার খুঁজে পাওয়া যায়নি",
+		"global_servers_active": "সক্রিয় গ্লোবাল MCP সার্ভার: {{mcpServers}}",
+		"project_servers_active": "সক্রিয় প্রোজেক্ট MCP সার্ভার: {{mcpServers}}",
+		"already_refreshing": "MCP সার্ভারগুলি ইতিমধ্যেই রিফ্রেশ হচ্ছে।",
+		"refreshing_all": "সমস্ত MCP সার্ভার রিফ্রেশ করা হচ্ছে...",
+		"all_refreshed": "সমস্ত MCP সার্ভার রিফ্রেশ করা হয়েছে।",
+		"project_config_deleted": "প্রোজেক্ট MCP কনফিগারেশন ফাইল মুছে ফেলা হয়েছে। সমস্ত প্রোজেক্ট MCP সার্ভার সংযোগ বিচ্ছিন্ন করা হয়েছে।"
+	}
+}

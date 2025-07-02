@@ -21,6 +21,7 @@
 		"discardButton": "変更を破棄"
 	},
 	"sections": {
+		"general": "一般",
 		"providers": "プロバイダー",
 		"autoApprove": "自動承認",
 		"browser": "コンピューターアクセス",
@@ -32,6 +33,12 @@
 		"experimental": "実験的",
 		"language": "言語",
 		"about": "Roo Codeについて"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "すべてのタスクを表示",
+			"description": "現在のプロジェクトだけでなく、すべてのプロジェクトのタスクを表示します"
+		}
 	},
 	"prompts": {
 		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Rooが一般的な開発タスクでより良いサポートを提供するのに役立ちます。"

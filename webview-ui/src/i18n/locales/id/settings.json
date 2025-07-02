@@ -21,6 +21,7 @@
 		"discardButton": "Buang perubahan"
 	},
 	"sections": {
+		"general": "General",
 		"providers": "Provider",
 		"autoApprove": "Auto-Approve",
 		"browser": "Browser",
@@ -32,6 +33,12 @@
 		"experimental": "Eksperimental",
 		"language": "Bahasa",
 		"about": "Tentang Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Tampilkan Semua Tugas",
+			"description": "Tampilkan tugas dari semua proyek, bukan hanya yang sekarang"
+		}
 	},
 	"prompts": {
 		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."

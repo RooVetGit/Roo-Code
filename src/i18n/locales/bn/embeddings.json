@@ -1,0 +1,23 @@
+{
+	"unknownError": "অজানা ত্রুটি",
+	"authenticationFailed": "এম্বেডিং তৈরি করতে ব্যর্থ: প্রমাণীকরণ ব্যর্থ হয়েছে। আপনার API কী পরীক্ষা করুন।",
+	"failedWithStatus": "{{attempts}} বার চেষ্টার পর এম্বেডিং তৈরি করতে ব্যর্থ: HTTP {{statusCode}} - {{errorMessage}}",
+	"failedWithError": "{{attempts}} বার চেষ্টার পর এম্বেডিং তৈরি করতে ব্যর্থ: {{errorMessage}}",
+	"failedMaxAttempts": "{{attempts}} বার চেষ্টার পর এম্বেডিং তৈরি করতে ব্যর্থ",
+	"textExceedsTokenLimit": "ইনডেক্স {{index}} এ টেক্সট সর্বোচ্চ টোকেন সীমা ({{itemTokens}} > {{maxTokens}}) অতিক্রম করেছে। এড়িয়ে যাওয়া হচ্ছে।",
+	"rateLimitRetry": "রেট সীমা পৌঁছেছে, {{delayMs}}ms পরে আবার চেষ্টা করা হচ্ছে (চেষ্টা {{attempt}}/{{maxRetries}})",
+	"ollama": {
+		"couldNotReadErrorBody": "ত্রুটির বডি পড়া যায়নি",
+		"requestFailed": "Ollama API অনুরোধ {{status}} {{statusText}} স্ট্যাটাস সহ ব্যর্থ হয়েছে: {{errorBody}}",
+		"invalidResponseStructure": "Ollama API থেকে অবৈধ প্রতিক্রিয়া কাঠামো: \"embeddings\" অ্যারে পাওয়া যায়নি বা অ্যারে নয়।",
+		"embeddingFailed": "Ollama এম্বেডিং ব্যর্থ হয়েছে: {{message}}"
+	},
+	"scanner": {
+		"unknownErrorProcessingFile": "ফাইল {{filePath}} প্রক্রিয়াকরণে অজানা ত্রুটি",
+		"unknownErrorDeletingPoints": "{{filePath}} এর জন্য পয়েন্ট মুছে ফেলতে অজানা ত্রুটি",
+		"failedToProcessBatchWithError": "{{maxRetries}} বার চেষ্টার পর ব্যাচ প্রক্রিয়া করতে ব্যর্থ: {{errorMessage}}"
+	},
+	"vectorStore": {
+		"qdrantConnectionFailed": "Qdrant ভেক্টর ডাটাবেসের সাথে সংযোগ স্থাপন ব্যর্থ হয়েছে। দয়া করে নিশ্চিত করুন যে Qdrant চলছে এবং {{qdrantUrl}} এ অ্যাক্সেসযোগ্য। ত্রুটি: {{errorMessage}}"
+	}
+}

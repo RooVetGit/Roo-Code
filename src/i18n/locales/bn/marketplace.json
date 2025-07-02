@@ -1,0 +1,63 @@
+{
+	"type-group": {
+		"modes": "মোড",
+		"mcps": "MCP সার্ভার",
+		"match": "মিল"
+	},
+	"item-card": {
+		"type-mode": "মোড",
+		"type-mcp": "MCP সার্ভার",
+		"type-other": "অন্যান্য",
+		"by-author": "লিখেছেন {{author}}",
+		"authors-profile": "লেখকের প্রোফাইল",
+		"remove-tag-filter": "ট্যাগ ফিল্টার সরান: {{tag}}",
+		"filter-by-tag": "ট্যাগ দ্বারা ফিল্টার করুন: {{tag}}",
+		"component-details": "উপাদানের বিবরণ",
+		"view": "দেখুন",
+		"source": "উৎস"
+	},
+	"filters": {
+		"search": {
+			"placeholder": "মার্কেটপ্লেস অনুসন্ধান করুন..."
+		},
+		"type": {
+			"label": "প্রকার",
+			"all": "সমস্ত প্রকার",
+			"mode": "মোড",
+			"mcpServer": "MCP সার্ভার"
+		},
+		"sort": {
+			"label": "অনুযায়ী সাজান",
+			"name": "নাম",
+			"lastUpdated": "সর্বশেষ আপডেট"
+		},
+		"tags": {
+			"label": "ট্যাগ",
+			"clear": "ট্যাগ মুছে ফেলুন",
+			"placeholder": "ট্যাগ অনুসন্ধান করুন...",
+			"noResults": "কোনো ট্যাগ পাওয়া যায়নি।",
+			"selected": "নির্বাচিত ট্যাগগুলির যেকোনো একটি সহ আইটেমগুলি দেখানো হচ্ছে"
+		},
+		"title": "মার্কেটপ্লেস"
+	},
+	"done": "সম্পন্ন",
+	"tabs": {
+		"installed": "ইনস্টল করা হয়েছে",
+		"browse": "ব্রাউজ করুন",
+		"settings": "সেটিংস"
+	},
+	"items": {
+		"empty": {
+			"noItems": "কোনো মার্কেটপ্লেস আইটেম পাওয়া যায়নি।",
+			"emptyHint": "আপনার ফিল্টার বা অনুসন্ধান শর্তাবলী সামঞ্জস্য করার চেষ্টা করুন"
+		}
+	},
+	"installation": {
+		"installing": "আইটেম ইনস্টল করা হচ্ছে: \"{{itemName}}\"",
+		"installSuccess": "\"{{itemName}}\" সফলভাবে ইনস্টল করা হয়েছে",
+		"installError": "\"{{itemName}}\" ইনস্টল করতে ব্যর্থ: {{errorMessage}}",
+		"removing": "আইটেম সরানো হচ্ছে: \"{{itemName}}\"",
+		"removeSuccess": "\"{{itemName}}\" সফলভাবে সরানো হয়েছে",
+		"removeError": "\"{{itemName}}\" সরাতে ব্যর্থ: {{errorMessage}}"
+	}
+}

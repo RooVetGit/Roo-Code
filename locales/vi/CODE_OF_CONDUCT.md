@@ -6,7 +6,7 @@
 </sub>
 <sub>
 
-[한국어](../ko/CODE_OF_CONDUCT.md) • [Nederlands](../nl/CODE_OF_CONDUCT.md) • [Polski](../pl/CODE_OF_CONDUCT.md) • [Português (BR)](../pt-BR/CODE_OF_CONDUCT.md) • [Русский](../ru/CODE_OF_CONDUCT.md) • [Türkçe](../tr/CODE_OF_CONDUCT.md) • <b>Tiếng Việt</b> • [简体中文](../zh-CN/CODE_OF_CONDUCT.md) • [繁體中文](../zh-TW/CODE_OF_CONDUCT.md)
+[বাংলা](../bn/CODE_OF_CONDUCT.md) • [한국어](../ko/CODE_OF_CONDUCT.md) • [Nederlands](../nl/CODE_OF_CONDUCT.md) • [Polski](../pl/CODE_OF_CONDUCT.md) • [Português (BR)](../pt-BR/CODE_OF_CONDUCT.md) • [Русский](../ru/CODE_OF_CONDUCT.md) • [Türkçe](../tr/CODE_OF_CONDUCT.md) • <b>Tiếng Việt</b> • [简体中文](../zh-CN/CODE_OF_CONDUCT.md) • [繁體中文](../zh-TW/CODE_OF_CONDUCT.md)
 
 </sub>
 </div>

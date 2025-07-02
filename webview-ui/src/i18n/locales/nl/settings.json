@@ -21,6 +21,7 @@
 		"discardButton": "Wijzigingen negeren"
 	},
 	"sections": {
+		"general": "Algemeen",
 		"providers": "Providers",
 		"autoApprove": "Auto-goedkeuren",
 		"browser": "Browser",
@@ -32,6 +33,12 @@
 		"experimental": "Experimenteel",
 		"language": "Taal",
 		"about": "Over Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Toon alle taken",
+			"description": "Toon taken van alle projecten in plaats van alleen de huidige"
+		}
 	},
 	"prompts": {
 		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."

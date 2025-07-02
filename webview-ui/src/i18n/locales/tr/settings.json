@@ -21,6 +21,7 @@
 		"discardButton": "Değişiklikleri At"
 	},
 	"sections": {
+		"general": "Genel",
 		"providers": "Sağlayıcılar",
 		"autoApprove": "Oto-Onay",
 		"browser": "Bilgisayar Erişimi",
@@ -32,6 +33,12 @@
 		"experimental": "Deneysel",
 		"language": "Dil",
 		"about": "Roo Code Hakkında"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Tüm Görevleri Göster",
+			"description": "Yalnızca mevcut olan yerine tüm projelerden görevleri göster"
+		}
 	},
 	"prompts": {
 		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur."

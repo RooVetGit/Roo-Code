@@ -1,0 +1,55 @@
+{
+	"answers": {
+		"yes": "হ্যাঁ",
+		"no": "না",
+		"cancel": "বাতিল করুন",
+		"remove": "সরান",
+		"keep": "রাখুন"
+	},
+	"number_format": {
+		"thousand_suffix": "হাজার",
+		"million_suffix": "মিলিয়ন",
+		"billion_suffix": "বিলিয়ন"
+	},
+	"ui": {
+		"search_placeholder": "অনুসন্ধান..."
+	},
+	"mermaid": {
+		"loading": "মারমেইড ডায়াগ্রাম তৈরি হচ্ছে...",
+		"render_error": "ডায়াগ্রাম রেন্ডার করা যাচ্ছে না",
+		"buttons": {
+			"zoom": "জুম",
+			"zoomIn": "জুম ইন",
+			"zoomOut": "জুম আউট",
+			"copy": "অনুলিপি",
+			"save": "ছবি সংরক্ষণ করুন",
+			"viewCode": "কোড দেখুন",
+			"viewDiagram": "ডায়াগ্রাম দেখুন",
+			"close": "বন্ধ করুন"
+		},
+		"modal": {
+			"codeTitle": "মারমেইড কোড"
+		},
+		"tabs": {
+			"diagram": "ডায়াগ্রাম",
+			"code": "কোড"
+		},
+		"feedback": {
+			"imageCopied": "ছবি ক্লিপবোর্ডে অনুলিপি করা হয়েছে",
+			"copyError": "ছবি অনুলিপি করতে ত্রুটি"
+		}
+	},
+	"file": {
+		"errors": {
+			"invalidDataUri": "অবৈধ ডেটা URI ফরম্যাট",
+			"copyingImage": "ছবি অনুলিপি করতে ত্রুটি: {{error}}",
+			"openingImage": "ছবি খুলতে ত্রুটি: {{error}}",
+			"pathNotExists": "পথ বিদ্যমান নেই: {{path}}",
+			"couldNotOpen": "ফাইল খোলা যায়নি: {{error}}",
+			"couldNotOpenGeneric": "ফাইল খোলা যায়নি!"
+		},
+		"success": {
+			"imageDataUriCopied": "ছবির ডেটা URI ক্লিপবোর্ডে অনুলিপি করা হয়েছে"
+		}
+	}
+}
