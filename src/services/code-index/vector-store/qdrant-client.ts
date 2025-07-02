@@ -4,7 +4,7 @@ import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
 import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
-import { MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../constants"
+import { DEFAULT_MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../constants"
 import { t } from "../../../i18n"
 
 /**
@@ -271,13 +271,16 @@ export class QdrantVectorStore implements IVectorStore {
 	/**
 	 * Searches for similar vectors
 	 * @param queryVector Vector to search for
-	 * @param limit Maximum number of results to return
+	 * @param directoryPrefix Optional directory prefix to filter results
+	 * @param minScore Optional minimum score threshold
+	 * @param maxResults Optional maximum number of results to return
 	 * @returns Promise resolving to search results
 	 */
 	async search(
 		queryVector: number[],
 		directoryPrefix?: string,
 		minScore?: number,
+		maxResults?: number,
 	): Promise<VectorStoreSearchResult[]> {
 		try {
 			let filter = undefined
@@ -297,7 +300,7 @@ export class QdrantVectorStore implements IVectorStore {
 				query: queryVector,
 				filter,
 				score_threshold: SEARCH_MIN_SCORE,
-				limit: MAX_SEARCH_RESULTS,
+				limit: maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
 					exact: false,

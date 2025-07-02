@@ -3,7 +3,7 @@ import { createHash } from "crypto"
 
 import { QdrantVectorStore } from "../qdrant-client"
 import { getWorkspacePath } from "../../../../utils/path"
-import { MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../../constants"
+import { DEFAULT_MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../../constants"
 
 // Mocks
 vitest.mock("@qdrant/js-client-rest")
@@ -1006,7 +1006,7 @@ describe("QdrantVectorStore", () => {
 				query: queryVector,
 				filter: undefined,
 				score_threshold: SEARCH_MIN_SCORE,
-				limit: MAX_SEARCH_RESULTS,
+				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
 					exact: false,
@@ -1057,7 +1057,7 @@ describe("QdrantVectorStore", () => {
 					],
 				},
 				score_threshold: SEARCH_MIN_SCORE,
-				limit: MAX_SEARCH_RESULTS,
+				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
 					exact: false,
@@ -1083,7 +1083,7 @@ describe("QdrantVectorStore", () => {
 				query: queryVector,
 				filter: undefined,
 				score_threshold: customMinScore,
-				limit: MAX_SEARCH_RESULTS,
+				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
 					exact: false,
@@ -1230,7 +1230,7 @@ describe("QdrantVectorStore", () => {
 					],
 				},
 				score_threshold: SEARCH_MIN_SCORE,
-				limit: MAX_SEARCH_RESULTS,
+				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
 					exact: false,
@@ -1254,7 +1254,7 @@ describe("QdrantVectorStore", () => {
 			;(console.error as any).mockRestore()
 		})
 
-		it("should use constants MAX_SEARCH_RESULTS and SEARCH_MIN_SCORE correctly", async () => {
+		it("should use constants DEFAULT_MAX_SEARCH_RESULTS and SEARCH_MIN_SCORE correctly", async () => {
 			const queryVector = [0.1, 0.2, 0.3]
 			const mockQdrantResults = { points: [] }
 
@@ -1263,8 +1263,32 @@ describe("QdrantVectorStore", () => {
 			await vectorStore.search(queryVector)
 
 			const callArgs = mockQdrantClientInstance.query.mock.calls[0][1]
-			expect(callArgs.limit).toBe(MAX_SEARCH_RESULTS)
+			expect(callArgs.limit).toBe(DEFAULT_MAX_SEARCH_RESULTS)
 			expect(callArgs.score_threshold).toBe(SEARCH_MIN_SCORE)
+		})
+
+		it("should use custom maxResults when provided", async () => {
+			const queryVector = [0.1, 0.2, 0.3]
+			const customMaxResults = 100
+			const mockQdrantResults = { points: [] }
+
+			mockQdrantClientInstance.query.mockResolvedValue(mockQdrantResults)
+
+			await vectorStore.search(queryVector, undefined, undefined, customMaxResults)
+
+			expect(mockQdrantClientInstance.query).toHaveBeenCalledWith(expectedCollectionName, {
+				query: queryVector,
+				filter: undefined,
+				score_threshold: SEARCH_MIN_SCORE,
+				limit: customMaxResults,
+				params: {
+					hnsw_ef: 128,
+					exact: false,
+				},
+				with_payload: {
+					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
+				},
+			})
 		})
 	})
 })

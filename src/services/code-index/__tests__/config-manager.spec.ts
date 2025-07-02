@@ -54,6 +54,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 			expect(result.requiresRestart).toBe(false)
 		})
@@ -86,6 +87,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 		})
 
@@ -124,6 +126,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 		})
 
@@ -163,6 +166,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 		})
 
@@ -201,6 +205,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 		})
 
@@ -240,6 +245,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 		})
 
@@ -881,6 +887,40 @@ describe("CodeIndexConfigManager", () => {
 					expect(anotherManager.currentSearchMinScore).toBe(0.4) // Default
 				})
 			})
+
+			describe("currentSearchMaxResults", () => {
+				it("should return user-configured max results when set", async () => {
+					mockContextProxy.getGlobalState.mockReturnValue({
+						codebaseIndexEnabled: true,
+						codebaseIndexQdrantUrl: "http://qdrant.local",
+						codebaseIndexEmbedderProvider: "openai",
+						codebaseIndexSearchMaxResults: 100, // User setting
+					})
+					mockContextProxy.getSecret.mockImplementation((key: string) => {
+						if (key === "codeIndexOpenAiKey") return "test-key"
+						return undefined
+					})
+
+					await configManager.loadConfiguration()
+					expect(configManager.currentSearchMaxResults).toBe(100)
+				})
+
+				it("should return default when user setting is undefined", async () => {
+					mockContextProxy.getGlobalState.mockReturnValue({
+						codebaseIndexEnabled: true,
+						codebaseIndexQdrantUrl: "http://qdrant.local",
+						codebaseIndexEmbedderProvider: "openai",
+						// No codebaseIndexSearchMaxResults
+					})
+					mockContextProxy.getSecret.mockImplementation((key: string) => {
+						if (key === "codeIndexOpenAiKey") return "test-key"
+						return undefined
+					})
+
+					await configManager.loadConfiguration()
+					expect(configManager.currentSearchMaxResults).toBe(50) // DEFAULT_MAX_SEARCH_RESULTS
+				})
+			})
 		})
 
 		describe("empty/missing API key handling", () => {
@@ -1160,6 +1200,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchMaxResults: 50,
 			})
 		})
 

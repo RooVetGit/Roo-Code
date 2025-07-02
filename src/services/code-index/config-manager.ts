@@ -2,7 +2,7 @@ import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
-import { SEARCH_MIN_SCORE } from "./constants"
+import { SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
 import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "../../shared/embeddingModels"
 
 /**
@@ -20,6 +20,7 @@ export class CodeIndexConfigManager {
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
+	private searchMaxResults?: number
 
 	constructor(private readonly contextProxy: ContextProxy) {
 		// Initialize with current configuration to avoid false restart triggers
@@ -46,6 +47,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
 			codebaseIndexSearchMinScore: undefined,
+			codebaseIndexSearchMaxResults: undefined,
 		}
 
 		const {
@@ -55,6 +57,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
 			codebaseIndexSearchMinScore,
+			codebaseIndexSearchMaxResults,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
@@ -71,6 +74,7 @@ export class CodeIndexConfigManager {
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
+		this.searchMaxResults = codebaseIndexSearchMaxResults
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
 		// Set embedder provider with support for openai-compatible
@@ -119,6 +123,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
+			searchMaxResults?: number
 		}
 		requiresRestart: boolean
 	}> {
@@ -160,6 +165,7 @@ export class CodeIndexConfigManager {
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.currentSearchMinScore,
+				searchMaxResults: this.currentSearchMaxResults,
 			},
 			requiresRestart,
 		}
@@ -334,6 +340,7 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.currentSearchMinScore,
+			searchMaxResults: this.currentSearchMaxResults,
 		}
 	}
 
@@ -389,5 +396,13 @@ export class CodeIndexConfigManager {
 		const currentModelId = this.modelId ?? getDefaultModelId(this.embedderProvider)
 		const modelSpecificThreshold = getModelScoreThreshold(this.embedderProvider, currentModelId)
 		return modelSpecificThreshold ?? SEARCH_MIN_SCORE
+	}
+
+	/**
+	 * Gets the configured maximum search results based on user setting or default.
+	 * Priority: 1) User setting, 2) Default DEFAULT_MAX_SEARCH_RESULTS constant.
+	 */
+	public get currentSearchMaxResults(): number {
+		return this.searchMaxResults ?? DEFAULT_MAX_SEARCH_RESULTS
 	}
 }

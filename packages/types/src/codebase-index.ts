@@ -11,6 +11,7 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
 	codebaseIndexSearchMinScore: z.number().min(0).max(1).optional(),
+	codebaseIndexSearchMaxResults: z.number().min(10).max(200).optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>

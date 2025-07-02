@@ -6,7 +6,7 @@ export const MAX_CHARS_TOLERANCE_FACTOR = 1.15 // 15% tolerance for max chars
 
 /**Search */
 export const SEARCH_MIN_SCORE = 0.4
-export const MAX_SEARCH_RESULTS = 50 // Maximum number of search results to return
+export const DEFAULT_MAX_SEARCH_RESULTS = 50 // Default maximum number of search results to return
 
 /**File Watcher */
 export const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
