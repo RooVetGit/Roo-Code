@@ -2,6 +2,8 @@ import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
 import { ToolUse, RemoveClosingTag, AskApproval, HandleError, PushToolResult } from "../../shared/tools"
 import { Task } from "../task/Task"
 import { formatResponse } from "../prompts/responses"
+import { validateToolUse } from "./validateToolUse"
+import { defaultModeSlug } from "../../shared/modes"
 
 export async function accessMcpResourceTool(
 	cline: Task,
@@ -36,6 +38,37 @@ export async function accessMcpResourceTool(
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("access_mcp_resource")
 				pushToolResult(await cline.sayAndCreateMissingParamError("access_mcp_resource", "uri"))
+				return
+			}
+
+			// NEW: Validate against mode restrictions before execution
+			try {
+				const provider = await cline.providerRef.deref()
+				const { mode: currentMode, customModes } = (await provider?.getState()) ?? {}
+
+				// Get server configuration to check defaultEnabled setting
+				const mcpHub = provider?.getMcpHub()
+				const serverConfig = mcpHub?.getServerConfig(server_name)
+				const serverDefaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+
+				validateToolUse(
+					"access_mcp_resource",
+					currentMode ?? defaultModeSlug, // Use proper fallback
+					customModes ?? [],
+					undefined,
+					undefined,
+					{ serverName: server_name, toolName: undefined, serverDefaultEnabled }, // No specific tool for resource access
+				)
+			} catch (error) {
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("access_mcp_resource")
+
+				await cline.say("error", `Mode restriction: ${error instanceof Error ? error.message : String(error)}`)
+				pushToolResult(
+					formatResponse.toolError(
+						`Mode restriction: ${error instanceof Error ? error.message : String(error)}`,
+					),
+				)
 				return
 			}
 

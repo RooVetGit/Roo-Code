@@ -46,6 +46,7 @@ const BaseConfigSchema = z.object({
 	alwaysAllow: z.array(z.string()).default([]),
 	watchPaths: z.array(z.string()).optional(), // paths to watch for changes and restart server
 	disabledTools: z.array(z.string()).default([]),
+	defaultEnabled: z.boolean().optional().default(true), // NEW: Whether server is enabled by default in modes
 })
 
 // Custom error messages for better user feedback
@@ -413,6 +414,26 @@ export class McpHub {
 	getAllServers(): McpServer[] {
 		// Return all servers regardless of state
 		return this.connections.map((conn) => conn.server)
+	}
+
+	/**
+	 * Get server configuration including defaultEnabled setting
+	 * @param serverName Name of the server
+	 * @param source Optional source to filter by (global or project)
+	 * @returns Server configuration or undefined if not found
+	 */
+	getServerConfig(serverName: string, source?: "global" | "project"): z.infer<typeof ServerConfigSchema> | undefined {
+		const connection = this.findConnection(serverName, source)
+		if (!connection) {
+			return undefined
+		}
+
+		try {
+			return JSON.parse(connection.server.config)
+		} catch (error) {
+			console.error(`Failed to parse server config for ${serverName}:`, error)
+			return undefined
+		}
 	}
 
 	async getMcpServersPath(): Promise<string> {

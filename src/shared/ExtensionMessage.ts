@@ -59,6 +59,7 @@ export interface ExtensionMessage {
 		| "invoke"
 		| "messageUpdated"
 		| "mcpServers"
+		| "mcpServerConfigs"
 		| "enhancedPrompt"
 		| "commitSearchResults"
 		| "listApiConfig"
@@ -131,6 +132,12 @@ export interface ExtensionMessage {
 	lmStudioModels?: string[]
 	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	mcpServers?: McpServer[]
+	mcpServerConfigs?: Array<{
+		name: string
+		status: string
+		tools: Array<{ name: string; description?: string }>
+		defaultEnabled: boolean
+	}>
 	commits?: GitCommit[]
 	listApiConfig?: ProviderSettingsEntry[]
 	mode?: Mode

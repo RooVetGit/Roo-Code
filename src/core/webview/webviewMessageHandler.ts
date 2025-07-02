@@ -715,6 +715,33 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "getMcpServerConfigs": {
+			// Return MCP server configurations for mode restriction editing
+			const mcpHub = provider.getMcpHub()
+			if (mcpHub) {
+				const servers = mcpHub.getAllServers()
+				const serverConfigs = servers.map((server) => {
+					const config = mcpHub.getServerConfig(server.name)
+					return {
+						name: server.name,
+						status: server.status,
+						tools: server.tools || [],
+						defaultEnabled: config?.defaultEnabled !== false, // Default to true if not specified
+					}
+				})
+
+				provider.postMessageToWebview({
+					type: "mcpServerConfigs",
+					mcpServerConfigs: serverConfigs,
+				})
+			} else {
+				provider.postMessageToWebview({
+					type: "mcpServerConfigs",
+					mcpServerConfigs: [],
+				})
+			}
+			break
+		}
 		// playSound handler removed - now handled directly in the webview
 		case "soundEnabled":
 			const soundEnabled = message.bool ?? true

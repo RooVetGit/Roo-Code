@@ -10,7 +10,7 @@ import {
 import { Trans } from "react-i18next"
 import { ChevronDown, X, Upload, Download } from "lucide-react"
 
-import { ModeConfig, GroupEntry, PromptComponent, ToolGroup, modeConfigSchema } from "@roo-code/types"
+import { ModeConfig, GroupEntry, PromptComponent, ToolGroup, modeConfigSchema, McpRestrictions } from "@roo-code/types"
 
 import {
 	Mode,
@@ -47,6 +47,7 @@ import {
 	Input,
 	StandardTooltip,
 } from "@src/components/ui"
+import { McpRestrictionsEditor, McpServer } from "./McpRestrictionsEditor"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -73,6 +74,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		customInstructions,
 		setCustomInstructions,
 		customModes,
+		mcpServers,
 	} = useExtensionState()
 
 	// Use a local state to track the visually active mode
@@ -227,6 +229,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
 	const [newModeGroups, setNewModeGroups] = useState<GroupEntry[]>(availableGroups)
 	const [newModeSource, setNewModeSource] = useState<ModeSource>("global")
+	const [newModeRestrictions, setNewModeRestrictions] = useState<McpRestrictions | undefined>(undefined)
 
 	// Field-specific error states
 	const [nameError, setNameError] = useState<string>("")
@@ -246,6 +249,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		setNewModeWhenToUse("")
 		setNewModeCustomInstructions("")
 		setNewModeSource("global")
+		setNewModeRestrictions(undefined)
 		// Reset error states
 		setNameError("")
 		setSlugError("")
@@ -253,6 +257,45 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		setRoleDefinitionError("")
 		setGroupsError("")
 	}, [])
+
+	// Helper to convert mcpServers to McpServer format for the restrictions editor
+	const getAvailableMcpServers = useCallback((): McpServer[] => {
+		if (!mcpServers) return []
+
+		return mcpServers
+			.filter((server) => !server.disabled) // Only show enabled servers for restrictions UI
+			.map((server) => {
+				// Get the server configuration to access defaultEnabled setting
+				// Since we can't directly access McpHub.getServerConfig from the webview,
+				// we'll need to extract defaultEnabled from the config string if possible
+				let defaultEnabled = true // Default value
+				try {
+					if (server.config) {
+						const config = JSON.parse(server.config)
+						defaultEnabled = config.defaultEnabled !== false // Default to true if not specified
+					}
+				} catch (error) {
+					// If parsing fails, use default value
+					console.warn(`Failed to parse config for server ${server.name}:`, error)
+				}
+
+				return {
+					name: server.name,
+					status:
+						server.status === "connected"
+							? "connected"
+							: server.status === "disconnected"
+								? "disconnected"
+								: "error",
+					tools:
+						server.tools?.map((tool) => ({
+							name: tool.name,
+							description: tool.description,
+						})) || [],
+					defaultEnabled,
+				}
+			})
+	}, [mcpServers])
 
 	// Reset form fields when dialog opens
 	useEffect(() => {
@@ -297,6 +340,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			customInstructions: newModeCustomInstructions.trim() || undefined,
 			groups: newModeGroups,
 			source,
+			mcpRestrictions: newModeRestrictions,
 		}
 
 		// Validate the mode against the schema
@@ -979,6 +1023,27 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 						</div>
 					</>
 
+					{/* MCP Restrictions Section - only show for custom modes with MCP tools */}
+					{findModeBySlug(visualMode, customModes) &&
+						getCurrentMode()?.groups?.some((g) => getGroupName(g) === "mcp") && (
+							<div className="mb-4">
+								<McpRestrictionsEditor
+									restrictions={findModeBySlug(visualMode, customModes)?.mcpRestrictions}
+									availableServers={getAvailableMcpServers()}
+									onChange={(restrictions) => {
+										const customMode = findModeBySlug(visualMode, customModes)
+										if (customMode) {
+											updateCustomMode(visualMode, {
+												...customMode,
+												mcpRestrictions: restrictions,
+												source: customMode.source || "global",
+											})
+										}
+									}}
+								/>
+							</div>
+						)}
+
 					{/* Role definition for both built-in and custom modes */}
 					<div className="mb-2">
 						<div className="flex justify-between items-center mb-1">
@@ -1420,6 +1485,18 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									<div className="text-xs text-vscode-errorForeground mt-1">{groupsError}</div>
 								)}
 							</div>
+
+							{/* MCP Restrictions Section - only show if MCP tools are enabled */}
+							{newModeGroups.some((g) => getGroupName(g) === "mcp") && (
+								<div className="mb-4">
+									<McpRestrictionsEditor
+										restrictions={newModeRestrictions}
+										availableServers={getAvailableMcpServers()}
+										onChange={setNewModeRestrictions}
+									/>
+								</div>
+							)}
+
 							<div className="mb-4">
 								<div className="font-bold mb-1">
 									{t("prompts:createModeDialog.customInstructions.label")}

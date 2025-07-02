@@ -187,5 +187,81 @@
 		},
 		"deleteMode": "Delete mode"
 	},
-	"allFiles": "all files"
+	"allFiles": "all files",
+	"mcpRestrictions": {
+		"title": "MCP Server Restrictions",
+		"description": "Control which MCP servers and tools are available in this mode. Use patterns like '*' and '?' for flexible matching.",
+		"expand": "Configure MCP restrictions",
+		"collapse": "Hide MCP restrictions",
+		"clearAll": "Clear all restrictions",
+		"restrictionsConfigured": "{{count}} restriction(s) configured",
+		"noServersAvailable": "No MCP servers are currently available. Configure MCP servers in your settings to use this feature.",
+		"tabs": {
+			"servers": "Servers",
+			"tools": "Tools"
+		},
+		"servers": {
+			"description": "Control which MCP servers are available. If no servers are explicitly allowed, all servers (except those disallowed) will be available.",
+			"overview": "Overview",
+			"allow": "Allow",
+			"disallow": "Block",
+			"toolsCount": "tools",
+			"optIn": "opt-in required",
+			"allowedServers": "Allowed servers",
+			"disallowedServers": "Blocked servers",
+			"currentStatus": "Current Server Status",
+			"enabledCount": "{{count}} enabled: {{names}}",
+			"disabledCount": "{{count}} disabled: {{names}}",
+			"restrictedCount": "{{count}} with restrictions: {{names}}"
+		},
+		"tools": {
+			"description": "Control specific tools within servers. Use patterns like 'delete_*' to match multiple tools.",
+			"allowedTools": "Allowed Tools",
+			"disallowedTools": "Blocked Tools",
+			"addAllowed": "Add Allowed",
+			"addDisallowed": "Add Blocked",
+			"noAllowedTools": "All tools are allowed (unless specifically blocked below)",
+			"noDisallowedTools": "No tools are specifically blocked",
+			"serverName": "Server",
+			"toolName": "Tool",
+			"serverNamePlaceholder": "Server name or pattern (e.g., docs-*, *-admin)",
+			"toolNamePlaceholder": "Tool name or pattern (e.g., get_*, delete_*)",
+			"remove": "Remove restriction",
+			"advancedPatterns": "Pattern Matching Guide"
+		},
+		"patterns": {
+			"title": "Pattern Matching",
+			"wildcard": "Matches any sequence of characters",
+			"singleChar": "Matches exactly one character",
+			"examples": "Examples",
+			"example1": "Matches docs-api, docs-search, etc.",
+			"example2": "Matches server-admin, user-admin, etc.",
+			"example3": "Matches delete_file, delete_user, etc."
+		},
+		"status": {
+			"enabled": "ENABLED",
+			"disabled": "DISABLED",
+			"reason": "Reason",
+			"explicitlyAllowed": "Explicitly allowed by user",
+			"explicitlyDisallowed": "Explicitly disallowed by user",
+			"notInAllowList": "Not included in allowed servers list",
+			"defaultEnabled": "Enabled by default server configuration",
+			"defaultDisabled": "Disabled by default server configuration (opt-in required)"
+		},
+		"picker": {
+			"noServers": "No servers available",
+			"noTools": "No tools available for this server",
+			"selectServerFirst": "Please select a server first"
+		},
+		"serverGroups": {
+			"enabled": "Enabled Servers",
+			"disabled": "Disabled Servers",
+			"restricted": "Servers with Restrictions",
+			"expandGroup": "Expand group",
+			"collapseGroup": "Collapse group",
+			"allowAll": "Allow All",
+			"blockAll": "Block All",
+			"clearRestrictions": "Clear All Restrictions"
+		}
+	}
 }

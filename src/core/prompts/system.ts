@@ -59,7 +59,7 @@ async function generatePrompt(
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
 		modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "mcp")
-			? getMcpServersSection(mcpHub, effectiveDiffStrategy, enableMcpServerCreation)
+			? getMcpServersSection(mcpHub, effectiveDiffStrategy, enableMcpServerCreation, mode, customModeConfigs)
 			: Promise.resolve(""),
 	])
 

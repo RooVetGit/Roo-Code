@@ -39,6 +39,50 @@ export const groupEntrySchema = z.union([toolGroupsSchema, z.tuple([toolGroupsSc
 export type GroupEntry = z.infer<typeof groupEntrySchema>
 
 /**
+ * McpRestrictions
+ */
+
+export const mcpToolRestrictionSchema = z.object({
+	serverName: z.string(),
+	toolName: z.string(),
+})
+
+export type McpToolRestriction = z.infer<typeof mcpToolRestrictionSchema>
+
+export const mcpRestrictionsSchema = z
+	.object({
+		allowedServers: z.array(z.string()).optional(),
+		disallowedServers: z.array(z.string()).optional(),
+		allowedTools: z.array(mcpToolRestrictionSchema).optional(),
+		disallowedTools: z.array(mcpToolRestrictionSchema).optional(),
+	})
+	.refine(
+		(data) => {
+			// Cannot have both allowedServers and disallowedServers
+			if (data.allowedServers && data.disallowedServers) {
+				return false
+			}
+			// Cannot have both allowedTools and disallowedTools for same server/tool combination
+			if (data.allowedTools && data.disallowedTools) {
+				// Filter out empty entries before checking for conflicts
+				const allowedFiltered = data.allowedTools.filter((t) => t.serverName.trim() && t.toolName.trim())
+				const disallowedFiltered = data.disallowedTools.filter((t) => t.serverName.trim() && t.toolName.trim())
+
+				const allowedSet = new Set(allowedFiltered.map((t) => `${t.serverName}:${t.toolName}`))
+				const disallowedSet = new Set(disallowedFiltered.map((t) => `${t.serverName}:${t.toolName}`))
+				const intersection = Array.from(allowedSet).filter((x) => disallowedSet.has(x))
+				return intersection.length === 0
+			}
+			return true
+		},
+		{
+			message: "Cannot have conflicting allowed/disallowed server or tool restrictions",
+		},
+	)
+
+export type McpRestrictions = z.infer<typeof mcpRestrictionsSchema>
+
+/**
  * ModeConfig
  */
 
@@ -70,6 +114,7 @@ export const modeConfigSchema = z.object({
 	customInstructions: z.string().optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
+	mcpRestrictions: mcpRestrictionsSchema.optional(),
 })
 
 export type ModeConfig = z.infer<typeof modeConfigSchema>

@@ -1,32 +1,121 @@
 import { DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
+import { ModeConfig } from "@roo-code/types"
+import { getModeBySlug } from "../../../shared/modes"
+
+// Helper functions for MCP restriction checking (copied from use-mcp-tool.ts)
+function isServerAllowedForMode(serverName: string, restrictions: any, serverDefaultEnabled?: boolean): boolean {
+	// Handle defaultEnabled logic first
+	// If server has defaultEnabled: false, it must be explicitly allowed
+	if (serverDefaultEnabled === false) {
+		// Only allowed if explicitly in allowedServers list
+		return restrictions.allowedServers ? restrictions.allowedServers.includes(serverName) : false
+	}
+
+	// For defaultEnabled: true (default behavior)
+	// If allowedServers is defined, server must be in the list
+	if (restrictions.allowedServers && !restrictions.allowedServers.includes(serverName)) {
+		return false
+	}
+
+	// If disallowedServers is defined, server must not be in the list
+	if (restrictions.disallowedServers && restrictions.disallowedServers.includes(serverName)) {
+		return false
+	}
+
+	return true
+}
+
+function isToolAllowedForModeAndServer(serverName: string, toolName: string, restrictions: any): boolean {
+	// If allowedTools is defined, tool must be in the list
+	if (restrictions.allowedTools) {
+		// Filter out empty entries before checking
+		const validAllowedTools = restrictions.allowedTools.filter(
+			(t: any) => t.serverName?.trim() && t.toolName?.trim(),
+		)
+		if (validAllowedTools.length > 0) {
+			const isAllowed = validAllowedTools.some((t: any) => t.serverName === serverName && t.toolName === toolName)
+			if (!isAllowed) return false
+		}
+	}
+
+	// If disallowedTools is defined, tool must not be in the list
+	if (restrictions.disallowedTools) {
+		// Filter out empty entries before checking
+		const validDisallowedTools = restrictions.disallowedTools.filter(
+			(t: any) => t.serverName?.trim() && t.toolName?.trim(),
+		)
+		const isDisallowed = validDisallowedTools.some(
+			(t: any) => t.serverName === serverName && t.toolName === toolName,
+		)
+		if (isDisallowed) return false
+	}
+
+	return true
+}
 
 export async function getMcpServersSection(
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
 	enableMcpServerCreation?: boolean,
+	currentMode?: string,
+	customModes?: ModeConfig[],
 ): Promise<string> {
 	if (!mcpHub) {
 		return ""
 	}
 
+	let availableServers = mcpHub.getServers()
+
+	// Filter servers based on mode restrictions
+	if (currentMode && customModes) {
+		const mode = getModeBySlug(currentMode, customModes)
+		const restrictions = mode?.mcpRestrictions
+
+		if (restrictions || mode) {
+			// Always filter based on defaultEnabled, even if no explicit restrictions
+			availableServers = availableServers.filter((server) => {
+				// Get server configuration to check defaultEnabled setting
+				const serverConfig = mcpHub.getServerConfig(server.name)
+				const defaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+
+				return isServerAllowedForMode(server.name, restrictions || {}, defaultEnabled)
+			})
+		}
+	}
+
 	const connectedServers =
-		mcpHub.getServers().length > 0
-			? `${mcpHub
-					.getServers()
+		availableServers.length > 0
+			? `${availableServers
 					.filter((server) => server.status === "connected")
 					.map((server) => {
-						const tools = server.tools
-							?.filter((tool) => tool.enabledForPrompt !== false)
-							?.map((tool) => {
-								const schemaStr = tool.inputSchema
-									? `    Input Schema:
-		${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
-									: ""
+						let availableTools = server.tools?.filter((tool) => tool.enabledForPrompt !== false) || []
 
-								return `- ${tool.name}: ${tool.description}\n${schemaStr}`
-							})
-							.join("\n\n")
+						// Filter tools based on mode restrictions
+						if (currentMode && customModes) {
+							const mode = getModeBySlug(currentMode, customModes)
+							const restrictions = mode?.mcpRestrictions
+
+							if (restrictions) {
+								availableTools = availableTools.filter((tool) =>
+									isToolAllowedForModeAndServer(server.name, tool.name, restrictions),
+								)
+							}
+						}
+
+						const tools =
+							availableTools.length > 0
+								? availableTools
+										.map((tool) => {
+											const schemaStr = tool.inputSchema
+												? `    Input Schema:
+		${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
+												: ""
+
+											return `- ${tool.name}: ${tool.description}\n${schemaStr}`
+										})
+										.join("\n\n")
+								: null
 
 						const templates = server.resourceTemplates
 							?.map((template) => `- ${template.uriTemplate} (${template.name}): ${template.description}`)
@@ -47,7 +136,9 @@ export async function getMcpServersSection(
 						)
 					})
 					.join("\n\n")}`
-			: "(No MCP servers currently connected)"
+			: currentMode && customModes && getModeBySlug(currentMode, customModes)?.mcpRestrictions
+				? "(No MCP servers are available for the current mode due to restrictions)"
+				: "(No MCP servers currently connected)"
 
 	const baseSection = `MCP SERVERS
 

@@ -4,6 +4,8 @@ import { formatResponse } from "../prompts/responses"
 import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
 import { McpExecutionStatus } from "@roo-code/types"
 import { t } from "../../i18n"
+import { validateToolUse } from "./validateToolUse"
+import { defaultModeSlug } from "../../shared/modes"
 
 interface McpToolParams {
 	server_name?: string
@@ -192,6 +194,32 @@ export async function useMcpToolTool(
 		}
 
 		const { serverName, toolName, parsedArguments } = validation
+
+		// NEW: Validate against mode restrictions before execution
+		try {
+			const provider = await cline.providerRef.deref()
+			const { mode: currentMode, customModes } = (await provider?.getState()) ?? {}
+
+			// Get server configuration to check defaultEnabled setting
+			const mcpHub = provider?.getMcpHub()
+			const serverConfig = mcpHub?.getServerConfig(serverName)
+			const serverDefaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+
+			validateToolUse("use_mcp_tool", currentMode ?? defaultModeSlug, customModes ?? [], undefined, undefined, {
+				serverName,
+				toolName,
+				serverDefaultEnabled,
+			})
+		} catch (error) {
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("use_mcp_tool")
+
+			await cline.say("error", `Mode restriction: ${error instanceof Error ? error.message : String(error)}`)
+			pushToolResult(
+				formatResponse.toolError(`Mode restriction: ${error instanceof Error ? error.message : String(error)}`),
+			)
+			return
+		}
 
 		// Reset mistake count on successful validation
 		cline.consecutiveMistakeCount = 0
