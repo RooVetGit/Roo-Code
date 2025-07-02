@@ -434,6 +434,16 @@ export class Task extends EventEmitter<ClineEvents> {
 			throw new Error(`[RooCode#ask] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
+		// Check for auto-approval before proceeding with user interaction
+		const state = await this.providerRef.deref()?.getState()
+		if (state?.autoApprovalEnabled) {
+			const shouldAutoApprove = this.shouldAutoApprove(type, state)
+			if (shouldAutoApprove) {
+				// Return immediate approval without user interaction
+				return { response: "yesButtonClicked" }
+			}
+		}
+
 		let askTs: number
 
 		if (partial !== undefined) {
@@ -525,6 +535,25 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.askResponseImages = undefined
 		this.emit("taskAskResponded")
 		return result
+	}
+
+	/**
+	 * Determines if a request should be auto-approved based on the ask type and current settings
+	 */
+	private shouldAutoApprove(type: ClineAsk, state: any): boolean {
+		switch (type) {
+			case "use_mcp_server":
+				return state.alwaysAllowMcp === true
+			case "command":
+				return state.alwaysAllowExecute === true
+			case "browser_action_launch":
+				return state.alwaysAllowBrowser === true
+			case "tool":
+				// For general tool requests, check if read-only operations are always allowed
+				return state.alwaysAllowReadOnly === true
+			default:
+				return false
+		}
 	}
 
 	async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
