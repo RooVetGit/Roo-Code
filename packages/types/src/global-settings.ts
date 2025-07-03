@@ -27,6 +27,7 @@ export const globalSettingsSchema = z.object({
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
+	showAllWorkspacesTasks: z.boolean().optional(),
 
 	condensingApiConfigId: z.string().optional(),
 	customCondensingPrompt: z.string().optional(),
@@ -107,7 +108,6 @@ export const globalSettingsSchema = z.object({
 	historyPreviewCollapsed: z.boolean().optional(),
 	profileThresholds: z.record(z.string(), z.number()).optional(),
 	hasOpenedModeSelector: z.boolean().optional(),
-	showAllWorkspacesTasks: z.boolean().optional(),
 	lastModeExportPath: z.string().optional(),
 	lastModeImportPath: z.string().optional(),
 })

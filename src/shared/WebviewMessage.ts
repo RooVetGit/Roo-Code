@@ -184,6 +184,7 @@ export interface WebviewMessage {
 		| "importModeResult"
 		| "checkRulesDirectory"
 		| "checkRulesDirectoryResult"
+		| "showAllWorkspacesTasks"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
