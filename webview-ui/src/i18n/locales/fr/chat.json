@@ -59,6 +59,10 @@
 		"title": "Exécuter la commande",
 		"tooltip": "Exécuter cette commande"
 	},
+	"addAndRunCommand": {
+		"title": "Ajouter et exécuter",
+		"tooltip": "Ajouter le modèle de commande à la liste blanche et exécuter"
+	},
 	"proceedWhileRunning": {
 		"title": "Continuer pendant l'exécution",
 		"tooltip": "Continuer malgré les avertissements"

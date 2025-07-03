@@ -575,6 +575,9 @@ export const webviewMessageHandler = async (
 				.getConfiguration(Package.name)
 				.update("allowedCommands", validCommands, vscode.ConfigurationTarget.Global)
 
+			// Post state update to webview to reflect changes in UI
+			await provider.postStateToWebview()
+
 			break
 		}
 		case "openCustomModesSettings": {

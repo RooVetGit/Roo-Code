@@ -271,6 +271,41 @@ export async function presentAssistantMessage(cline: Task) {
 					isProtected || false,
 				)
 
+				// Handle "Add & Run" button for command approval
+				if (response === "addAndRunButtonClicked" && type === "command") {
+					// The text field contains the extracted command pattern when "Add & Run" is clicked
+					if (text) {
+						// Add the command pattern to allowed commands
+						const provider = cline.providerRef.deref()
+						if (provider) {
+							// Get current allowed commands
+							const currentState = await provider.getState()
+							const currentAllowedCommands = currentState.allowedCommands || []
+
+							// Add the new pattern if it's not already in the list
+							if (!currentAllowedCommands.includes(text)) {
+								const updatedCommands = [...currentAllowedCommands, text]
+
+								// Update global state using contextProxy
+								await provider.contextProxy.setValue("allowedCommands", updatedCommands)
+
+								// Also update workspace settings
+								const vscode = await import("vscode")
+								const { Package } = await import("../../shared/package")
+								await vscode.workspace
+									.getConfiguration(Package.name)
+									.update("allowedCommands", updatedCommands, vscode.ConfigurationTarget.Global)
+
+								// Post state update to webview
+								await provider.postStateToWebview()
+							}
+						}
+					}
+
+					// Return true to indicate approval and continue with command execution
+					return true
+				}
+
 				if (response !== "yesButtonClicked") {
 					// Handle both messageResponse and noButtonClicked with text.
 					if (text) {

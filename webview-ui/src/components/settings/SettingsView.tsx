@@ -200,6 +200,17 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		}
 	}, [settingsImportedAt, extensionState])
 
+	// Update cached state when allowedCommands changes from external sources (e.g., "Add & Run")
+	useEffect(() => {
+		// Only update if the allowedCommands have actually changed
+		if (JSON.stringify(cachedState.allowedCommands) !== JSON.stringify(extensionState.allowedCommands)) {
+			setCachedState((prevCachedState) => ({
+				...prevCachedState,
+				allowedCommands: extensionState.allowedCommands,
+			}))
+		}
+	}, [extensionState.allowedCommands, cachedState.allowedCommands])
+
 	const setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType> = useCallback((field, value) => {
 		setCachedState((prevState) => {
 			if (prevState[field] === value) {

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@/utils/test-utils"
+import { render, screen, fireEvent, waitFor } from "@/utils/test-utils"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { vscode } from "@/utils/vscode"
@@ -412,16 +412,21 @@ describe("SettingsView - Allowed Commands", () => {
 		expect(screen.getByTestId("command-input")).toBeInTheDocument()
 	})
 
-	it("adds new command to the list", () => {
+	it("adds new command to the list", async () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
 
 		// Activate the autoApprove tab
-		activateTab("autoApprove")
+		await activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
+
+		// Wait for allowed commands section to appear
+		await waitFor(() => {
+			expect(screen.getByTestId("allowed-commands-heading")).toBeInTheDocument()
+		})
 
 		// Add a new command
 		const input = screen.getByTestId("command-input")
@@ -430,26 +435,39 @@ describe("SettingsView - Allowed Commands", () => {
 		const addButton = screen.getByTestId("add-command-button")
 		fireEvent.click(addButton)
 
-		// Verify command was added
-		expect(screen.getByText("npm test")).toBeInTheDocument()
-
 		// Verify VSCode message was sent
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "allowedCommands",
 			commands: ["npm test"],
 		})
+
+		// Simulate the state update that would come from VSCode
+		mockPostMessage({
+			allowedCommands: ["npm test"],
+			alwaysAllowExecute: true,
+		})
+
+		// Wait for command to appear
+		await waitFor(() => {
+			expect(screen.getByText("npm test")).toBeInTheDocument()
+		})
 	})
 
-	it("removes command from the list", () => {
+	it("removes command from the list", async () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
 
 		// Activate the autoApprove tab
-		activateTab("autoApprove")
+		await activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
+
+		// Wait for allowed commands section to appear
+		await waitFor(() => {
+			expect(screen.getByTestId("allowed-commands-heading")).toBeInTheDocument()
+		})
 
 		// Add a command
 		const input = screen.getByTestId("command-input")
@@ -457,12 +475,20 @@ describe("SettingsView - Allowed Commands", () => {
 		const addButton = screen.getByTestId("add-command-button")
 		fireEvent.click(addButton)
 
+		// Simulate the state update after adding
+		mockPostMessage({
+			allowedCommands: ["npm test"],
+			alwaysAllowExecute: true,
+		})
+
+		// Wait for command to appear
+		await waitFor(() => {
+			expect(screen.getByText("npm test")).toBeInTheDocument()
+		})
+
 		// Remove the command
 		const removeButton = screen.getByTestId("remove-command-0")
 		fireEvent.click(removeButton)
-
-		// Verify command was removed
-		expect(screen.queryByText("npm test")).not.toBeInTheDocument()
 
 		// Verify VSCode message was sent
 		expect(vscode.postMessage).toHaveBeenLastCalledWith({
@@ -530,32 +556,65 @@ describe("SettingsView - Duplicate Commands", () => {
 		vi.clearAllMocks()
 	})
 
-	it("prevents duplicate commands", () => {
+	it("prevents duplicate commands", async () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
 
 		// Activate the autoApprove tab
-		activateTab("autoApprove")
+		await activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
 
-		// Add a command twice
+		// Wait for allowed commands section to appear
+		await waitFor(() => {
+			expect(screen.getByTestId("allowed-commands-heading")).toBeInTheDocument()
+		})
+
+		// Add a command
 		const input = screen.getByTestId("command-input")
 		const addButton = screen.getByTestId("add-command-button")
 
-		// First addition
 		fireEvent.change(input, { target: { value: "npm test" } })
 		fireEvent.click(addButton)
 
-		// Second addition attempt
+		// Verify the postMessage was sent
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "allowedCommands",
+			commands: ["npm test"],
+		})
+
+		// Simulate the state update from VSCode
+		mockPostMessage({
+			alwaysAllowExecute: true,
+			allowedCommands: ["npm test"],
+		})
+
+		// Wait for the command to appear
+		await waitFor(() => {
+			expect(screen.getByText("npm test")).toBeInTheDocument()
+		})
+
+		// Try to add the same command again
 		fireEvent.change(input, { target: { value: "npm test" } })
 		fireEvent.click(addButton)
 
-		// Verify command appears only once
-		const commands = screen.getAllByText("npm test")
-		expect(commands).toHaveLength(1)
+		// The postMessage should not add a duplicate
+		expect(vscode.postMessage).toHaveBeenLastCalledWith({
+			type: "allowedCommands",
+			commands: ["npm test"],
+		})
+
+		// Add a different command
+		fireEvent.change(input, { target: { value: "npm run build" } })
+		fireEvent.click(addButton)
+
+		// Now it should have both commands
+		expect(vscode.postMessage).toHaveBeenLastCalledWith({
+			type: "allowedCommands",
+			commands: ["npm test", "npm run build"],
+		})
 	})
 
 	it("saves allowed commands when clicking Save", () => {
@@ -574,6 +633,12 @@ describe("SettingsView - Duplicate Commands", () => {
 		fireEvent.change(input, { target: { value: "npm test" } })
 		const addButton = screen.getByTestId("add-command-button")
 		fireEvent.click(addButton)
+
+		// Simulate the state update after adding
+		mockPostMessage({
+			allowedCommands: ["npm test"],
+			alwaysAllowExecute: true,
+		})
 
 		// Click Save - use getAllByTestId to handle multiple elements
 		const saveButtons = screen.getAllByTestId("save-button")

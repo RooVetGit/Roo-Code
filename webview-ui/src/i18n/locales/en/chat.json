@@ -67,6 +67,10 @@
 		"title": "Run Command",
 		"tooltip": "Execute this command"
 	},
+	"addAndRunCommand": {
+		"title": "Add & Run",
+		"tooltip": "Add command pattern to whitelist and run"
+	},
 	"proceedWhileRunning": {
 		"title": "Proceed While Running",
 		"tooltip": "Continue despite warnings"

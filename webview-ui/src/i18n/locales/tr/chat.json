@@ -59,6 +59,10 @@
 		"title": "Komutu Çalıştır",
 		"tooltip": "Bu komutu çalıştır"
 	},
+	"addAndRunCommand": {
+		"title": "Ekle ve Çalıştır",
+		"tooltip": "Komut desenini beyaz listeye ekle ve çalıştır"
+	},
 	"proceedWhileRunning": {
 		"title": "Çalışırken Devam Et",
 		"tooltip": "Uyarılara rağmen devam et"

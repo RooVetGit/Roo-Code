@@ -59,6 +59,10 @@
 		"title": "Uruchom polecenie",
 		"tooltip": "Wykonaj to polecenie"
 	},
+	"addAndRunCommand": {
+		"title": "Dodaj i uruchom",
+		"tooltip": "Dodaj wzorzec polecenia do białej listy i uruchom"
+	},
 	"proceedWhileRunning": {
 		"title": "Kontynuuj podczas wykonywania",
 		"tooltip": "Kontynuuj pomimo ostrzeżeń"

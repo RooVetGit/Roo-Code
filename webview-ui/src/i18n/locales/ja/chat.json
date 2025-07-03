@@ -59,6 +59,10 @@
 		"title": "コマンド実行",
 		"tooltip": "このコマンドを実行"
 	},
+	"addAndRunCommand": {
+		"title": "追加して実行",
+		"tooltip": "コマンドパターンをホワイトリストに追加して実行します"
+	},
 	"proceedWhileRunning": {
 		"title": "実行中も続行",
 		"tooltip": "警告にもかかわらず続行"

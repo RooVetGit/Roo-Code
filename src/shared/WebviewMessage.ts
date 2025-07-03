@@ -12,7 +12,12 @@ import { marketplaceItemSchema } from "@roo-code/types"
 
 import { Mode } from "./modes"
 
-export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse" | "objectResponse"
+export type ClineAskResponse =
+	| "yesButtonClicked"
+	| "noButtonClicked"
+	| "addAndRunButtonClicked"
+	| "messageResponse"
+	| "objectResponse"
 
 export type PromptMode = Mode | "enhance"
 
@@ -222,6 +227,7 @@ export interface WebviewMessage {
 	config?: Record<string, any> // Add config to the payload
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
+	commandPattern?: string // For "Add & Run" button - the extracted command pattern to whitelist
 }
 
 export const checkoutDiffPayloadSchema = z.object({

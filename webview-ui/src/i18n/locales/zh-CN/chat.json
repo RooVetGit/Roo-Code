@@ -59,6 +59,10 @@
 		"title": "运行命令",
 		"tooltip": "执行此命令"
 	},
+	"addAndRunCommand": {
+		"title": "添加并运行",
+		"tooltip": "将命令模式添加到白名单并运行"
+	},
 	"proceedWhileRunning": {
 		"title": "强制继续",
 		"tooltip": "忽略运行中的命令并继续"

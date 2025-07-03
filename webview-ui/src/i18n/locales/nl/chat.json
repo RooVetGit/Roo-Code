@@ -59,6 +59,10 @@
 		"title": "Commando uitvoeren",
 		"tooltip": "Voer dit commando uit"
 	},
+	"addAndRunCommand": {
+		"title": "Toevoegen & uitvoeren",
+		"tooltip": "Commandopatroon toevoegen aan de witte lijst en uitvoeren"
+	},
 	"proceedWhileRunning": {
 		"title": "Doorgaan tijdens uitvoeren",
 		"tooltip": "Ga door ondanks waarschuwingen"

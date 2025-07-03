@@ -73,6 +73,10 @@
 		"title": "Jalankan Perintah",
 		"tooltip": "Eksekusi perintah ini"
 	},
+	"addAndRunCommand": {
+		"title": "Tambah & Jalankan",
+		"tooltip": "Tambahkan pola perintah ke daftar putih dan jalankan"
+	},
 	"proceedWhileRunning": {
 		"title": "Lanjutkan Saat Berjalan",
 		"tooltip": "Lanjutkan meskipun ada peringatan"

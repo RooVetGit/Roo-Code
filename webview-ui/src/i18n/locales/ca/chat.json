@@ -59,6 +59,10 @@
 		"title": "Executar ordre",
 		"tooltip": "Executa aquesta ordre"
 	},
+	"addAndRunCommand": {
+		"title": "Afegeix i executa",
+		"tooltip": "Afegeix el patró de comanda a la llista blanca i executa-la"
+	},
 	"proceedWhileRunning": {
 		"title": "Continuar mentre s'executa",
 		"tooltip": "Continua malgrat els advertiments"

@@ -59,6 +59,10 @@
 		"title": "Befehl ausführen",
 		"tooltip": "Diesen Befehl ausführen"
 	},
+	"addAndRunCommand": {
+		"title": "Hinzufügen & Ausführen",
+		"tooltip": "Befehlsmuster zur Whitelist hinzufügen und ausführen"
+	},
 	"proceedWhileRunning": {
 		"title": "Während Ausführung fortfahren",
 		"tooltip": "Trotz Warnungen fortfahren"

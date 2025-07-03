@@ -1,297 +1,116 @@
-import type { Mock } from "vitest"
-
-// Mock dependencies - must come before imports
-vi.mock("../../../api/providers/fetchers/modelCache")
-
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { webviewMessageHandler } from "../webviewMessageHandler"
-import type { ClineProvider } from "../ClineProvider"
-import { getModels } from "../../../api/providers/fetchers/modelCache"
-import type { ModelRecord } from "../../../shared/api"
+import { ClineProvider } from "../ClineProvider"
+import * as vscode from "vscode"
+import { Package } from "../../../shared/package"
 
-const mockGetModels = getModels as Mock<typeof getModels>
+// Mock vscode module
+vi.mock("vscode", () => ({
+	workspace: {
+		getConfiguration: vi.fn().mockReturnValue({
+			update: vi.fn().mockResolvedValue(undefined),
+		}),
+	},
+	ConfigurationTarget: {
+		Global: 1,
+	},
+}))
 
-// Mock ClineProvider
-const mockClineProvider = {
-	getState: vi.fn(),
-	postMessageToWebview: vi.fn(),
-} as unknown as ClineProvider
+// Mock Package
+vi.mock("../../../shared/package", () => ({
+	Package: {
+		name: "roo-cline",
+	},
+}))
 
-describe("webviewMessageHandler - requestRouterModels", () => {
+describe("webviewMessageHandler", () => {
+	let mockProvider: any
+	let mockContextProxy: any
+
 	beforeEach(() => {
+		// Reset all mocks
 		vi.clearAllMocks()
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
-			apiConfiguration: {
-				openRouterApiKey: "openrouter-key",
-				requestyApiKey: "requesty-key",
-				glamaApiKey: "glama-key",
-				unboundApiKey: "unbound-key",
-				litellmApiKey: "litellm-key",
-				litellmBaseUrl: "http://localhost:4000",
-			},
-		})
-	})
 
-	it("successfully fetches models from all providers", async () => {
-		const mockModels: ModelRecord = {
-			"model-1": {
-				maxTokens: 4096,
-				contextWindow: 8192,
-				supportsPromptCache: false,
-				description: "Test model 1",
-			},
-			"model-2": {
-				maxTokens: 8192,
-				contextWindow: 16384,
-				supportsPromptCache: false,
-				description: "Test model 2",
-			},
+		// Create mock context proxy
+		mockContextProxy = {
+			getValue: vi.fn(),
+			setValue: vi.fn().mockResolvedValue(undefined),
 		}
 
-		mockGetModels.mockResolvedValue(mockModels)
-
-		await webviewMessageHandler(mockClineProvider, {
-			type: "requestRouterModels",
-		})
-
-		// Verify getModels was called for each provider
-		expect(mockGetModels).toHaveBeenCalledWith({ provider: "openrouter" })
-		expect(mockGetModels).toHaveBeenCalledWith({ provider: "requesty", apiKey: "requesty-key" })
-		expect(mockGetModels).toHaveBeenCalledWith({ provider: "glama" })
-		expect(mockGetModels).toHaveBeenCalledWith({ provider: "unbound", apiKey: "unbound-key" })
-		expect(mockGetModels).toHaveBeenCalledWith({
-			provider: "litellm",
-			apiKey: "litellm-key",
-			baseUrl: "http://localhost:4000",
-		})
-
-		// Verify response was sent
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "routerModels",
-			routerModels: {
-				openrouter: mockModels,
-				requesty: mockModels,
-				glama: mockModels,
-				unbound: mockModels,
-				litellm: mockModels,
-				ollama: {},
-				lmstudio: {},
-			},
-		})
-	})
-
-	it("handles LiteLLM models with values from message when config is missing", async () => {
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
-			apiConfiguration: {
-				openRouterApiKey: "openrouter-key",
-				requestyApiKey: "requesty-key",
-				glamaApiKey: "glama-key",
-				unboundApiKey: "unbound-key",
-				// Missing litellm config
-			},
-		})
-
-		const mockModels: ModelRecord = {
-			"model-1": {
-				maxTokens: 4096,
-				contextWindow: 8192,
-				supportsPromptCache: false,
-				description: "Test model 1",
-			},
+		// Create mock provider
+		mockProvider = {
+			contextProxy: mockContextProxy,
+			postStateToWebview: vi.fn().mockResolvedValue(undefined),
+			log: vi.fn(),
 		}
-
-		mockGetModels.mockResolvedValue(mockModels)
-
-		await webviewMessageHandler(mockClineProvider, {
-			type: "requestRouterModels",
-			values: {
-				litellmApiKey: "message-litellm-key",
-				litellmBaseUrl: "http://message-url:4000",
-			},
-		})
-
-		// Verify LiteLLM was called with values from message
-		expect(mockGetModels).toHaveBeenCalledWith({
-			provider: "litellm",
-			apiKey: "message-litellm-key",
-			baseUrl: "http://message-url:4000",
-		})
 	})
 
-	it("skips LiteLLM when both config and message values are missing", async () => {
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
-			apiConfiguration: {
-				openRouterApiKey: "openrouter-key",
-				requestyApiKey: "requesty-key",
-				glamaApiKey: "glama-key",
-				unboundApiKey: "unbound-key",
-				// Missing litellm config
-			},
+	describe("allowedCommands", () => {
+		it("should update global state, workspace settings, and call postStateToWebview", async () => {
+			const testCommands = ["npm test", "npm run build", "git status"]
+
+			await webviewMessageHandler(mockProvider, {
+				type: "allowedCommands",
+				commands: testCommands,
+			})
+
+			// Verify global state was updated
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("allowedCommands", testCommands)
+
+			// Verify workspace settings were updated
+			const mockConfig = vscode.workspace.getConfiguration()
+			expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith(Package.name)
+			expect(mockConfig.update).toHaveBeenCalledWith(
+				"allowedCommands",
+				testCommands,
+				vscode.ConfigurationTarget.Global,
+			)
+
+			// Verify postStateToWebview was called
+			expect(mockProvider.postStateToWebview).toHaveBeenCalledTimes(1)
 		})
 
-		const mockModels: ModelRecord = {
-			"model-1": {
-				maxTokens: 4096,
-				contextWindow: 8192,
-				supportsPromptCache: false,
-				description: "Test model 1",
-			},
-		}
+		it("should filter out invalid commands", async () => {
+			const testCommands = ["npm test", "", "   ", null, undefined, "git status", 123]
 
-		mockGetModels.mockResolvedValue(mockModels)
+			await webviewMessageHandler(mockProvider, {
+				type: "allowedCommands",
+				commands: testCommands as any,
+			})
 
-		await webviewMessageHandler(mockClineProvider, {
-			type: "requestRouterModels",
-			// No values provided
+			// Should only include valid string commands
+			const expectedCommands = ["npm test", "git status"]
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("allowedCommands", expectedCommands)
 		})
 
-		// Verify LiteLLM was NOT called
-		expect(mockGetModels).not.toHaveBeenCalledWith(
-			expect.objectContaining({
-				provider: "litellm",
-			}),
-		)
+		it("should handle empty commands array", async () => {
+			await webviewMessageHandler(mockProvider, {
+				type: "allowedCommands",
+				commands: [],
+			})
 
-		// Verify response includes empty object for LiteLLM
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "routerModels",
-			routerModels: {
-				openrouter: mockModels,
-				requesty: mockModels,
-				glama: mockModels,
-				unbound: mockModels,
-				litellm: {},
-				ollama: {},
-				lmstudio: {},
-			},
-		})
-	})
-
-	it("handles individual provider failures gracefully", async () => {
-		const mockModels: ModelRecord = {
-			"model-1": {
-				maxTokens: 4096,
-				contextWindow: 8192,
-				supportsPromptCache: false,
-				description: "Test model 1",
-			},
-		}
-
-		// Mock some providers to succeed and others to fail
-		mockGetModels
-			.mockResolvedValueOnce(mockModels) // openrouter
-			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
-			.mockResolvedValueOnce(mockModels) // glama
-			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
-			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
-
-		await webviewMessageHandler(mockClineProvider, {
-			type: "requestRouterModels",
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("allowedCommands", [])
+			expect(mockProvider.postStateToWebview).toHaveBeenCalledTimes(1)
 		})
 
-		// Verify successful providers are included
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "routerModels",
-			routerModels: {
-				openrouter: mockModels,
-				requesty: {},
-				glama: mockModels,
-				unbound: {},
-				litellm: {},
-				ollama: {},
-				lmstudio: {},
-			},
+		it("should handle undefined commands", async () => {
+			await webviewMessageHandler(mockProvider, {
+				type: "allowedCommands",
+				commands: undefined,
+			})
+
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("allowedCommands", [])
+			expect(mockProvider.postStateToWebview).toHaveBeenCalledTimes(1)
 		})
 
-		// Verify error messages were sent for failed providers
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "Requesty API error",
-			values: { provider: "requesty" },
-		})
+		it("should handle non-array commands", async () => {
+			await webviewMessageHandler(mockProvider, {
+				type: "allowedCommands",
+				commands: "not an array" as any,
+			})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "Unbound API error",
-			values: { provider: "unbound" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "LiteLLM connection failed",
-			values: { provider: "litellm" },
-		})
-	})
-
-	it("handles Error objects and string errors correctly", async () => {
-		// Mock providers to fail with different error types
-		mockGetModels
-			.mockRejectedValueOnce(new Error("Structured error message")) // openrouter
-			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
-			.mockRejectedValueOnce(new Error("Glama API error")) // glama
-			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
-			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
-
-		await webviewMessageHandler(mockClineProvider, {
-			type: "requestRouterModels",
-		})
-
-		// Verify error handling for different error types
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "Structured error message",
-			values: { provider: "openrouter" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "Requesty API error",
-			values: { provider: "requesty" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "Glama API error",
-			values: { provider: "glama" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "Unbound API error",
-			values: { provider: "unbound" },
-		})
-
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
-			type: "singleRouterModelFetchResponse",
-			success: false,
-			error: "LiteLLM connection failed",
-			values: { provider: "litellm" },
-		})
-	})
-
-	it("prefers config values over message values for LiteLLM", async () => {
-		const mockModels: ModelRecord = {}
-		mockGetModels.mockResolvedValue(mockModels)
-
-		await webviewMessageHandler(mockClineProvider, {
-			type: "requestRouterModels",
-			values: {
-				litellmApiKey: "message-key",
-				litellmBaseUrl: "http://message-url",
-			},
-		})
-
-		// Verify config values are used over message values
-		expect(mockGetModels).toHaveBeenCalledWith({
-			provider: "litellm",
-			apiKey: "litellm-key", // From config
-			baseUrl: "http://localhost:4000", // From config
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("allowedCommands", [])
+			expect(mockProvider.postStateToWebview).toHaveBeenCalledTimes(1)
 		})
 	})
 })

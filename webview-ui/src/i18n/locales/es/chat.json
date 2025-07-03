@@ -59,6 +59,10 @@
 		"title": "Ejecutar comando",
 		"tooltip": "Ejecutar este comando"
 	},
+	"addAndRunCommand": {
+		"title": "Añadir y ejecutar",
+		"tooltip": "Añadir patrón de comando a la lista blanca y ejecutar"
+	},
 	"proceedWhileRunning": {
 		"title": "Continuar mientras se ejecuta",
 		"tooltip": "Continuar a pesar de las advertencias"

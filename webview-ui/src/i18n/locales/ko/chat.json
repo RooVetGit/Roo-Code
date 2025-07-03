@@ -59,6 +59,10 @@
 		"title": "명령 실행",
 		"tooltip": "이 명령 실행"
 	},
+	"addAndRunCommand": {
+		"title": "추가 및 실행",
+		"tooltip": "허용 목록에 명령 패턴을 추가하고 실행합니다."
+	},
 	"proceedWhileRunning": {
 		"title": "실행 중에도 계속",
 		"tooltip": "경고에도 불구하고 계속 진행"

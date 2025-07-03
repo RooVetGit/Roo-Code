@@ -59,6 +59,10 @@
 		"title": "Executar comando",
 		"tooltip": "Executar este comando"
 	},
+	"addAndRunCommand": {
+		"title": "Adicionar & Executar",
+		"tooltip": "Adicionar padrão de comando à lista de permissões e executar"
+	},
 	"proceedWhileRunning": {
 		"title": "Prosseguir durante execução",
 		"tooltip": "Continuar apesar dos avisos"
