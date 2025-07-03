@@ -208,16 +208,15 @@ export function getModeSelection(mode: string, promptComponent?: PromptComponent
 export function isServerAllowedForMode(
 	serverName: string,
 	restrictions: McpRestrictions,
-	serverDefaultEnabled?: boolean, // NEW: Server's defaultEnabled setting
+	allowedInModesByDefault?: boolean,
 ): boolean {
-	// NEW: Handle defaultEnabled logic first
-	// If server has defaultEnabled: false, it must be explicitly allowed
-	if (serverDefaultEnabled === false) {
+	// If server has allowedInModesByDefault: false, it must be explicitly allowed
+	if (allowedInModesByDefault === false) {
 		// Only allowed if explicitly in allowedServers list (with pattern support)
 		return restrictions.allowedServers ? matchesAnyPattern(serverName, restrictions.allowedServers) : false
 	}
 
-	// EXISTING LOGIC: For defaultEnabled: true (default behavior)
+	// EXISTING LOGIC: For allowedInModesByDefault: true (default behavior)
 	// If allowedServers is defined, server must match at least one pattern
 	if (restrictions.allowedServers && !matchesAnyPattern(serverName, restrictions.allowedServers)) {
 		return false
@@ -288,7 +287,7 @@ export function isToolAllowedForMode(
 	toolRequirements?: Record<string, boolean>,
 	toolParams?: Record<string, any>, // All tool parameters
 	experiments?: Record<string, boolean>,
-	mcpContext?: { serverName?: string; toolName?: string; serverDefaultEnabled?: boolean }, // NEW: Added serverDefaultEnabled
+	mcpContext?: { serverName?: string; toolName?: string; allowedInModesByDefault?: boolean },
 ): boolean {
 	// Always allow these tools
 	if (ALWAYS_AVAILABLE_TOOLS.includes(tool as any)) {
@@ -315,12 +314,11 @@ export function isToolAllowedForMode(
 		return false
 	}
 
-	// NEW: Check MCP restrictions for use_mcp_tool and access_mcp_resource
 	if ((tool === "use_mcp_tool" || tool === "access_mcp_resource") && mcpContext?.serverName) {
 		const restrictions = mode.mcpRestrictions || {} // Use empty object if no restrictions defined
 
-		// Always check defaultEnabled, even if no explicit restrictions
-		if (!isServerAllowedForMode(mcpContext.serverName, restrictions, mcpContext.serverDefaultEnabled)) {
+		// Always check allowedInModesByDefault, even if no explicit restrictions
+		if (!isServerAllowedForMode(mcpContext.serverName, restrictions, mcpContext.allowedInModesByDefault)) {
 			return false
 		}
 

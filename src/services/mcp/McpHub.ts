@@ -46,7 +46,7 @@ const BaseConfigSchema = z.object({
 	alwaysAllow: z.array(z.string()).default([]),
 	watchPaths: z.array(z.string()).optional(), // paths to watch for changes and restart server
 	disabledTools: z.array(z.string()).default([]),
-	defaultEnabled: z.boolean().optional().default(true), // NEW: Whether server is enabled by default in modes
+	allowedInModesByDefault: z.boolean().optional().default(true),
 })
 
 // Custom error messages for better user feedback
@@ -417,7 +417,7 @@ export class McpHub {
 	}
 
 	/**
-	 * Get server configuration including defaultEnabled setting
+	 * Get server configuration including allowedInModesByDefault setting
 	 * @param serverName Name of the server
 	 * @param source Optional source to filter by (global or project)
 	 * @returns Server configuration or undefined if not found

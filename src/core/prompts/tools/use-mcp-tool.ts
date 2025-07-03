@@ -8,18 +8,17 @@ export function getUseMcpToolDescription(args: ToolArgs): string | undefined {
 
 	let availableServers = args.mcpHub.getServers()
 
-	// NEW: Filter servers based on mode restrictions
 	if (args.currentMode && args.customModes) {
 		const mode = getModeBySlug(args.currentMode, args.customModes)
 		const restrictions = mode?.mcpRestrictions || {} // Use empty object if no restrictions defined
 
-		// Always filter based on defaultEnabled, even if no explicit restrictions
+		// Always filter based on allowedInModesByDefault, even if no explicit restrictions
 		availableServers = availableServers.filter((server) => {
-			// Get server configuration to check defaultEnabled setting
+			// Get server configuration to check allowedInModesByDefault setting
 			const serverConfig = args.mcpHub?.getServerConfig(server.name)
-			const defaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+			const allowedInModesByDefault = serverConfig?.allowedInModesByDefault ?? true // Default to true if not specified
 
-			return isServerAllowedForMode(server.name, restrictions, defaultEnabled)
+			return isServerAllowedForMode(server.name, restrictions, allowedInModesByDefault)
 		})
 	}
 

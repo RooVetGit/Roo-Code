@@ -12,6 +12,6 @@ export type ToolArgs = {
 	partialReadsEnabled?: boolean
 	settings?: Record<string, any>
 	experiments?: Record<string, boolean>
-	currentMode?: string // NEW: Current mode for restriction checking
-	customModes?: ModeConfig[] // NEW: Custom modes for restriction lookup
+	currentMode?: string
+	customModes?: ModeConfig[]
 }

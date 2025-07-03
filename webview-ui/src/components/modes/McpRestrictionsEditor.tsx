@@ -11,7 +11,7 @@ export interface McpServer {
 	name: string
 	status: "connected" | "disconnected" | "error"
 	tools: Array<{ name: string; description?: string }>
-	defaultEnabled?: boolean
+	allowedInModesByDefault?: boolean
 }
 
 interface McpRestrictionsEditorProps {
@@ -71,7 +71,7 @@ export function McpRestrictionsEditor({
 	const getServerStatus = (server: McpServer) => {
 		const isExplicitlyAllowed = allowedServers.includes(server.name)
 		const isExplicitlyDisallowed = disallowedServers.includes(server.name)
-		const defaultEnabled = server.defaultEnabled !== false // Default to true if not specified
+		const allowedInModesByDefault = server.allowedInModesByDefault !== false // Default to true if not specified
 
 		if (isExplicitlyAllowed) {
 			return {
@@ -98,18 +98,18 @@ export function McpRestrictionsEditor({
 			}
 		}
 
-		// No explicit restrictions, use defaultEnabled
-		if (defaultEnabled) {
+		// No explicit restrictions, use allowedInModesByDefault
+		if (allowedInModesByDefault) {
 			return {
 				enabled: true,
-				reason: "defaultEnabled" as const,
-				reasonText: t("prompts:mcpRestrictions.status.defaultEnabled"),
+				reason: "allowedInModesByDefault" as const,
+				reasonText: t("prompts:mcpRestrictions.status.allowedInModesByDefault"),
 			}
 		} else {
 			return {
 				enabled: false,
-				reason: "defaultDisabled" as const,
-				reasonText: t("prompts:mcpRestrictions.status.defaultDisabled"),
+				reason: "blockedInModesByDefault" as const,
+				reasonText: t("prompts:mcpRestrictions.status.blockedInModesByDefault"),
 			}
 		}
 	}
@@ -883,7 +883,7 @@ function CompactServerRow({
 					<div>
 						<strong>{t("prompts:mcpRestrictions.status.reason")}:</strong> {status.reasonText}
 					</div>
-					{server.defaultEnabled === false && (
+					{server.allowedInModesByDefault === false && (
 						<div className="mt-1 text-vscode-editorWarning-foreground">
 							{t("prompts:mcpRestrictions.servers.optIn")}
 						</div>

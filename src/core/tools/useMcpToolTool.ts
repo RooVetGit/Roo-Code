@@ -195,20 +195,19 @@ export async function useMcpToolTool(
 
 		const { serverName, toolName, parsedArguments } = validation
 
-		// NEW: Validate against mode restrictions before execution
 		try {
 			const provider = await cline.providerRef.deref()
 			const { mode: currentMode, customModes } = (await provider?.getState()) ?? {}
 
-			// Get server configuration to check defaultEnabled setting
+			// Get server configuration to check allowedInModesByDefault setting
 			const mcpHub = provider?.getMcpHub()
 			const serverConfig = mcpHub?.getServerConfig(serverName)
-			const serverDefaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+			const allowedInModesByDefault = serverConfig?.allowedInModesByDefault ?? true // Default to true if not specified
 
 			validateToolUse("use_mcp_tool", currentMode ?? defaultModeSlug, customModes ?? [], undefined, undefined, {
 				serverName,
 				toolName,
-				serverDefaultEnabled,
+				allowedInModesByDefault,
 			})
 		} catch (error) {
 			cline.consecutiveMistakeCount++

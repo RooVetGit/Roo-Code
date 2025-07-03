@@ -136,7 +136,7 @@ export interface ExtensionMessage {
 		name: string
 		status: string
 		tools: Array<{ name: string; description?: string }>
-		defaultEnabled: boolean
+		allowedInModesByDefault: boolean
 	}>
 	commits?: GitCommit[]
 	listApiConfig?: ProviderSettingsEntry[]

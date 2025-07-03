@@ -41,15 +41,14 @@ export async function accessMcpResourceTool(
 				return
 			}
 
-			// NEW: Validate against mode restrictions before execution
 			try {
 				const provider = await cline.providerRef.deref()
 				const { mode: currentMode, customModes } = (await provider?.getState()) ?? {}
 
-				// Get server configuration to check defaultEnabled setting
+				// Get server configuration to check allowedInModesByDefault setting
 				const mcpHub = provider?.getMcpHub()
 				const serverConfig = mcpHub?.getServerConfig(server_name)
-				const serverDefaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+				const allowedInModesByDefault = serverConfig?.allowedInModesByDefault ?? true // Default to true if not specified
 
 				validateToolUse(
 					"access_mcp_resource",
@@ -57,7 +56,7 @@ export async function accessMcpResourceTool(
 					customModes ?? [],
 					undefined,
 					undefined,
-					{ serverName: server_name, toolName: undefined, serverDefaultEnabled }, // No specific tool for resource access
+					{ serverName: server_name, toolName: undefined, allowedInModesByDefault }, // No specific tool for resource access
 				)
 			} catch (error) {
 				cline.consecutiveMistakeCount++

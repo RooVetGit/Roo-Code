@@ -726,7 +726,7 @@ export const webviewMessageHandler = async (
 						name: server.name,
 						status: server.status,
 						tools: server.tools || [],
-						defaultEnabled: config?.defaultEnabled !== false, // Default to true if not specified
+						allowedInModesByDefault: config?.allowedInModesByDefault !== false, // Default to true if not specified
 					}
 				})
 

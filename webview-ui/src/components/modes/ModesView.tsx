@@ -265,14 +265,14 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		return mcpServers
 			.filter((server) => !server.disabled) // Only show enabled servers for restrictions UI
 			.map((server) => {
-				// Get the server configuration to access defaultEnabled setting
+				// Get the server configuration to access allowedInModesByDefault setting
 				// Since we can't directly access McpHub.getServerConfig from the webview,
-				// we'll need to extract defaultEnabled from the config string if possible
-				let defaultEnabled = true // Default value
+				// we'll need to extract allowedInModesByDefault from the config string if possible
+				let allowedInModesByDefault = true // Default value
 				try {
 					if (server.config) {
 						const config = JSON.parse(server.config)
-						defaultEnabled = config.defaultEnabled !== false // Default to true if not specified
+						allowedInModesByDefault = config.allowedInModesByDefault !== false // Default to true if not specified
 					}
 				} catch (error) {
 					// If parsing fails, use default value
@@ -292,7 +292,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							name: tool.name,
 							description: tool.description,
 						})) || [],
-					defaultEnabled,
+					allowedInModesByDefault: allowedInModesByDefault,
 				}
 			})
 	}, [mcpServers])

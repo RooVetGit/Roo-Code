@@ -250,8 +250,8 @@
 			"explicitlyAllowed": "Explicitly allowed by user",
 			"explicitlyDisallowed": "Explicitly disallowed by user",
 			"notInAllowList": "Not included in allowed servers list",
-			"defaultEnabled": "Enabled by default server configuration",
-			"defaultDisabled": "Disabled by default server configuration (opt-in required)"
+			"allowedInModesByDefault": "Enabled by default for modes (custom and native)",
+			"blockedInModesByDefault": "Disabled by default server configuration (opt-in required)"
 		},
 		"picker": {
 			"noServers": "No servers available",

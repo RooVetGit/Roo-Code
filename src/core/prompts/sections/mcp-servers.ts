@@ -4,15 +4,15 @@ import { ModeConfig } from "@roo-code/types"
 import { getModeBySlug } from "../../../shared/modes"
 
 // Helper functions for MCP restriction checking (copied from use-mcp-tool.ts)
-function isServerAllowedForMode(serverName: string, restrictions: any, serverDefaultEnabled?: boolean): boolean {
-	// Handle defaultEnabled logic first
-	// If server has defaultEnabled: false, it must be explicitly allowed
-	if (serverDefaultEnabled === false) {
+function isServerAllowedForMode(serverName: string, restrictions: any, allowedInModesByDefault?: boolean): boolean {
+	// Handle allowedInModesByDefault logic first
+	// If server has allowedInModesByDefault: false, it must be explicitly allowed
+	if (allowedInModesByDefault === false) {
 		// Only allowed if explicitly in allowedServers list
 		return restrictions.allowedServers ? restrictions.allowedServers.includes(serverName) : false
 	}
 
-	// For defaultEnabled: true (default behavior)
+	// For allowedInModesByDefault: true (default behavior)
 	// If allowedServers is defined, server must be in the list
 	if (restrictions.allowedServers && !restrictions.allowedServers.includes(serverName)) {
 		return false
@@ -73,13 +73,13 @@ export async function getMcpServersSection(
 		const restrictions = mode?.mcpRestrictions
 
 		if (restrictions || mode) {
-			// Always filter based on defaultEnabled, even if no explicit restrictions
+			// Always filter based on allowedInModesByDefault, even if no explicit restrictions
 			availableServers = availableServers.filter((server) => {
-				// Get server configuration to check defaultEnabled setting
+				// Get server configuration to check allowedInModesByDefault setting
 				const serverConfig = mcpHub.getServerConfig(server.name)
-				const defaultEnabled = serverConfig?.defaultEnabled ?? true // Default to true if not specified
+				const allowedInModesByDefault = serverConfig?.allowedInModesByDefault ?? true // Default to true if not specified
 
-				return isServerAllowedForMode(server.name, restrictions || {}, defaultEnabled)
+				return isServerAllowedForMode(server.name, restrictions || {}, allowedInModesByDefault)
 			})
 		}
 	}
