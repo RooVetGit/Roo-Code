@@ -58,32 +58,31 @@
 		"condensed_recently": "Bağlam yakın zamanda sıkıştırıldı; bu deneme atlanıyor",
 		"condense_handler_invalid": "Bağlamı sıkıştırmak için API işleyicisi geçersiz",
 		"condense_context_grew": "Sıkıştırma sırasında bağlam boyutu arttı; bu deneme atlanıyor",
+		"url_timeout": "Web sitesi yüklenmesi çok uzun sürdü (zaman aşımı). Bu yavaş bağlantı, ağır web sitesi veya geçici olarak kullanılamama nedeniyle olabilir. Daha sonra tekrar deneyebilir veya URL'nin doğru olup olmadığını kontrol edebilirsin.",
+		"url_not_found": "Web sitesi adresi bulunamadı. URL'nin doğru olup olmadığını kontrol et ve tekrar dene.",
+		"no_internet": "İnternet bağlantısı yok. Ağ bağlantını kontrol et ve tekrar dene.",
+		"url_forbidden": "Bu web sitesine erişim yasak. Site otomatik erişimi engelliyor veya kimlik doğrulama gerektiriyor olabilir.",
+		"url_page_not_found": "Sayfa bulunamadı. URL'nin doğru olup olmadığını kontrol et.",
+		"url_fetch_failed": "URL içeriği getirme hatası: {{error}}",
+		"url_fetch_error_with_url": "{{url}} için içerik getirme hatası: {{error}}",
 		"share_task_failed": "Görev paylaşılamadı",
 		"share_no_active_task": "Paylaşılacak aktif görev yok",
 		"share_auth_required": "Kimlik doğrulama gerekli. Görevleri paylaşmak için lütfen giriş yapın.",
 		"share_not_enabled": "Bu kuruluş için görev paylaşımı etkinleştirilmemiş.",
 		"share_task_not_found": "Görev bulunamadı veya erişim reddedildi.",
+		"mode_import_failed": "Mod içe aktarılamadı: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code işlemi {{exitCode}} koduyla çıktı.",
 			"errorOutput": "Hata çıktısı: {{output}}",
 			"processExitedWithError": "Claude Code işlemi {{exitCode}} koduyla çıktı. Hata çıktısı: {{output}}",
 			"stoppedWithReason": "Claude Code şu nedenle durdu: {{reason}}",
 			"apiKeyModelPlanMismatch": "API anahtarları ve abonelik planları farklı modellere izin verir. Seçilen modelin planınıza dahil olduğundan emin olun."
-		},
-		"geminiCli": {
-			"oauthLoadFailed": "OAuth kimlik bilgileri yüklenemedi. Lütfen önce kimlik doğrulaması yapın: {{error}}",
-			"tokenRefreshFailed": "OAuth token yenilenemedi: {{error}}",
-			"onboardingTimeout": "Onboarding işlemi 60 saniye sonra zaman aşımına uğradı. Lütfen daha sonra tekrar deneyin.",
-			"projectDiscoveryFailed": "Proje ID'si keşfedilemedi. 'gemini auth' ile kimlik doğrulaması yaptığınızdan emin olun.",
-			"rateLimitExceeded": "Hız sınırı aşıldı. Ücretsiz seviye sınırlarına ulaşıldı.",
-			"badRequest": "Geçersiz istek: {{details}}",
-			"apiError": "Gemini CLI API hatası: {{error}}",
-			"completionError": "Gemini CLI tamamlama hatası: {{error}}"
 		}
 	},
 	"warnings": {
 		"no_terminal_content": "Seçili terminal içeriği yok",
-		"missing_task_files": "Bu görevin dosyaları eksik. Görev listesinden kaldırmak istiyor musunuz?"
+		"missing_task_files": "Bu görevin dosyaları eksik. Görev listesinden kaldırmak istiyor musunuz?",
+		"auto_import_failed": "RooCode ayarları otomatik olarak içe aktarılamadı: {{error}}"
 	},
 	"info": {
 		"no_changes": "Değişiklik bulunamadı.",
@@ -92,11 +91,14 @@
 		"custom_storage_path_set": "Özel depolama yolu ayarlandı: {{path}}",
 		"default_storage_path": "Varsayılan depolama yoluna geri dönüldü",
 		"settings_imported": "Ayarlar başarıyla içe aktarıldı.",
+		"auto_import_success": "RooCode ayarları {{filename}} dosyasından otomatik olarak içe aktarıldı",
 		"share_link_copied": "Paylaşım bağlantısı panoya kopyalandı",
 		"image_copied_to_clipboard": "Resim veri URI'si panoya kopyalandı",
 		"image_saved": "Resim {{path}} konumuna kaydedildi",
 		"organization_share_link_copied": "Kuruluş paylaşım bağlantısı panoya kopyalandı!",
-		"public_share_link_copied": "Herkese açık paylaşım bağlantısı panoya kopyalandı!"
+		"public_share_link_copied": "Herkese açık paylaşım bağlantısı panoya kopyalandı!",
+		"mode_exported": "'{{mode}}' modu başarıyla dışa aktarıldı",
+		"mode_imported": "Mod başarıyla içe aktarıldı"
 	},
 	"answers": {
 		"yes": "Evet",

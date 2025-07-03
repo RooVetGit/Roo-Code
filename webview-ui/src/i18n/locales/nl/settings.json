@@ -44,6 +44,9 @@
 		"selectProviderPlaceholder": "Selecteer provider",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"geminiProvider": "Gemini",
+		"geminiApiKeyLabel": "API-sleutel:",
+		"geminiApiKeyPlaceholder": "Voer uw Gemini API-sleutel in",
 		"openaiCompatibleProvider": "OpenAI-compatibel",
 		"openaiCompatibleBaseUrlLabel": "Basis-URL:",
 		"openaiCompatibleApiKeyLabel": "API-sleutel:",
@@ -56,6 +59,10 @@
 		"ollamaUrlLabel": "Ollama URL:",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant-sleutel:",
+		"advancedConfigLabel": "Geavanceerde configuratie",
+		"searchMinScoreLabel": "Zoekscore drempel",
+		"searchMinScoreDescription": "Minimale overeenkomstscore (0.0-1.0) vereist voor zoekresultaten. Lagere waarden leveren meer resultaten op, maar zijn mogelijk minder relevant. Hogere waarden leveren minder, maar relevantere resultaten op.",
+		"searchMinScoreResetTooltip": "Reset naar standaardwaarde (0.4)",
 		"startIndexingButton": "Indexering starten",
 		"clearIndexDataButton": "Indexgegevens wissen",
 		"unsavedSettingsMessage": "Sla je instellingen op voordat je het indexeringsproces start.",
@@ -109,6 +116,11 @@
 		"subtasks": {
 			"label": "Subtaken",
 			"description": "Subtaken aanmaken en afronden zonder goedkeuring"
+		},
+		"followupQuestions": {
+			"label": "Vraag",
+			"description": "Selecteer automatisch het eerste voorgestelde antwoord voor vervolgvragen na de geconfigureerde time-out",
+			"timeoutLabel": "Wachttijd voordat het eerste antwoord automatisch wordt geselecteerd"
 		},
 		"execute": {
 			"label": "Uitvoeren",
@@ -308,21 +320,6 @@
 			"pathLabel": "Claude Code Pad",
 			"description": "Optioneel pad naar uw Claude Code CLI. Standaard 'claude' als niet ingesteld.",
 			"placeholder": "Standaard: claude"
-		},
-		"geminiCli": {
-			"description": "Deze provider gebruikt OAuth-authenticatie van de Gemini CLI-tool en vereist geen API-sleutels.",
-			"oauthPath": "OAuth-referentiepad (optioneel)",
-			"oauthPathDescription": "Pad naar het OAuth-referentiebestand. Laat leeg om de standaardlocatie te gebruiken (~/.gemini/oauth_creds.json).",
-			"instructions": "Als je nog niet bent geauthenticeerd, voer dan eerst",
-			"instructionsContinued": "uit in je terminal.",
-			"setupLink": "Gemini CLI Setup-instructies",
-			"requirementsTitle": "Belangrijke vereisten",
-			"requirement1": "Eerst moet je de Gemini CLI-tool installeren",
-			"requirement2": "Voer vervolgens gemini uit in je terminal en zorg ervoor dat je inlogt met Google",
-			"requirement3": "Werkt alleen met persoonlijke Google-accounts (geen Google Workspace-accounts)",
-			"requirement4": "Gebruikt geen API-sleutels - authenticatie wordt afgehandeld via OAuth",
-			"requirement5": "Vereist dat de Gemini CLI-tool eerst wordt geïnstalleerd en geauthenticeerd",
-			"freeAccess": "Gratis toegang via OAuth-authenticatie"
 		}
 	},
 	"browser": {

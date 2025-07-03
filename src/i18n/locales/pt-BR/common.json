@@ -62,32 +62,31 @@
 		"condensed_recently": "O contexto foi condensado recentemente; pulando esta tentativa",
 		"condense_handler_invalid": "O manipulador de API para condensar o contexto é inválido",
 		"condense_context_grew": "O tamanho do contexto aumentou durante a condensação; pulando esta tentativa",
+		"url_timeout": "O site demorou muito para carregar (timeout). Isso pode ser devido a uma conexão lenta, site pesado ou temporariamente indisponível. Você pode tentar novamente mais tarde ou verificar se a URL está correta.",
+		"url_not_found": "O endereço do site não pôde ser encontrado. Verifique se a URL está correta e tente novamente.",
+		"no_internet": "Sem conexão com a internet. Verifique sua conexão de rede e tente novamente.",
+		"url_forbidden": "O acesso a este site está proibido. O site pode bloquear acesso automatizado ou exigir autenticação.",
+		"url_page_not_found": "A página não foi encontrada. Verifique se a URL está correta.",
+		"url_fetch_failed": "Falha ao buscar conteúdo da URL: {{error}}",
+		"url_fetch_error_with_url": "Erro ao buscar conteúdo para {{url}}: {{error}}",
 		"share_task_failed": "Falha ao compartilhar tarefa",
 		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar",
 		"share_auth_required": "Autenticação necessária. Faça login para compartilhar tarefas.",
 		"share_not_enabled": "O compartilhamento de tarefas não está habilitado para esta organização.",
 		"share_task_not_found": "Tarefa não encontrada ou acesso negado.",
+		"mode_import_failed": "Falha ao importar o modo: {{error}}",
 		"claudeCode": {
 			"processExited": "O processo Claude Code saiu com código {{exitCode}}.",
 			"errorOutput": "Saída de erro: {{output}}",
 			"processExitedWithError": "O processo Claude Code saiu com código {{exitCode}}. Saída de erro: {{output}}",
 			"stoppedWithReason": "Claude Code parou pela razão: {{reason}}",
 			"apiKeyModelPlanMismatch": "Chaves de API e planos de assinatura permitem modelos diferentes. Certifique-se de que o modelo selecionado esteja incluído no seu plano."
-		},
-		"geminiCli": {
-			"oauthLoadFailed": "Falha ao carregar credenciais OAuth. Por favor, autentique-se primeiro: {{error}}",
-			"tokenRefreshFailed": "Falha ao atualizar token OAuth: {{error}}",
-			"onboardingTimeout": "A operação de integração expirou após 60 segundos. Por favor, tente novamente mais tarde.",
-			"projectDiscoveryFailed": "Não foi possível descobrir o ID do projeto. Certifique-se de estar autenticado com 'gemini auth'.",
-			"rateLimitExceeded": "Limite de taxa excedido. Os limites do nível gratuito foram atingidos.",
-			"badRequest": "Solicitação inválida: {{details}}",
-			"apiError": "Erro da API Gemini CLI: {{error}}",
-			"completionError": "Erro de conclusão do Gemini CLI: {{error}}"
 		}
 	},
 	"warnings": {
 		"no_terminal_content": "Nenhum conteúdo do terminal selecionado",
-		"missing_task_files": "Os arquivos desta tarefa estão faltando. Deseja removê-la da lista de tarefas?"
+		"missing_task_files": "Os arquivos desta tarefa estão faltando. Deseja removê-la da lista de tarefas?",
+		"auto_import_failed": "Falha ao importar automaticamente as configurações do RooCode: {{error}}"
 	},
 	"info": {
 		"no_changes": "Nenhuma alteração encontrada.",
@@ -96,11 +95,14 @@
 		"custom_storage_path_set": "Caminho de armazenamento personalizado definido: {{path}}",
 		"default_storage_path": "Retornado ao caminho de armazenamento padrão",
 		"settings_imported": "Configurações importadas com sucesso.",
+		"auto_import_success": "Configurações do RooCode importadas automaticamente de {{filename}}",
 		"share_link_copied": "Link de compartilhamento copiado para a área de transferência",
 		"image_copied_to_clipboard": "URI de dados da imagem copiada para a área de transferência",
 		"image_saved": "Imagem salva em {{path}}",
 		"organization_share_link_copied": "Link de compartilhamento da organização copiado para a área de transferência!",
-		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!"
+		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!",
+		"mode_exported": "Modo '{{mode}}' exportado com sucesso",
+		"mode_imported": "Modo importado com sucesso"
 	},
 	"answers": {
 		"yes": "Sim",

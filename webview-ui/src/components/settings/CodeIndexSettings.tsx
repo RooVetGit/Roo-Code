@@ -7,6 +7,7 @@ import { Trans } from "react-i18next"
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
 import { EmbedderProvider } from "@roo/embeddingModels"
+import { SEARCH_MIN_SCORE } from "../../../../src/services/code-index/constants"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -27,6 +28,12 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
+	Slider,
+	Button,
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
 } from "@src/components/ui"
 
 import { SetCachedStateField } from "./types"
@@ -51,6 +58,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	areSettingsCommitted,
 }) => {
 	const { t } = useAppTranslation()
+	const DEFAULT_QDRANT_URL = "http://localhost:6333"
 	const [indexingStatus, setIndexingStatus] = useState({
 		systemStatus: "Standby",
 		message: "",
@@ -58,13 +66,14 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		totalItems: 0,
 		currentItemUnit: "items",
 	})
+	const [advancedExpanded, setAdvancedExpanded] = useState(false)
 
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
 	const modelsForProvider =
-		currentProvider === "openai" || currentProvider === "ollama" || currentProvider === "openai-compatible"
-			? codebaseIndexModels?.[currentProvider] || codebaseIndexModels?.openai
-			: codebaseIndexModels?.openai
+		currentProvider === "openai" || currentProvider === "openai-compatible"
+			? (codebaseIndexModels?.openai ?? codebaseIndexModels?.["openai-compatible"])
+			: codebaseIndexModels?.[currentProvider as keyof typeof codebaseIndexModels]
 	const availableModelIds = Object.keys(modelsForProvider || {})
 
 	useEffect(() => {
@@ -145,6 +154,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					.positive("Dimension must be a positive number")
 					.optional(),
 			}),
+			gemini: baseSchema.extend({
+				codebaseIndexEmbedderProvider: z.literal("gemini"),
+				codebaseIndexGeminiApiKey: z.string().min(1, "Gemini API key is required"),
+			}),
 		}
 
 		try {
@@ -153,7 +166,9 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					? providerSchemas.openai
 					: config.codebaseIndexEmbedderProvider === "ollama"
 						? providerSchemas.ollama
-						: providerSchemas["openai-compatible"]
+						: config.codebaseIndexEmbedderProvider === "gemini"
+							? providerSchemas.gemini
+							: providerSchemas["openai-compatible"]
 
 			schema.parse({
 				...config,
@@ -161,6 +176,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 				codebaseIndexOpenAiCompatibleBaseUrl: apiConfig.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexOpenAiCompatibleApiKey: apiConfig.codebaseIndexOpenAiCompatibleApiKey,
 				codebaseIndexOpenAiCompatibleModelDimension: apiConfig.codebaseIndexOpenAiCompatibleModelDimension,
+				codebaseIndexGeminiApiKey: apiConfig.codebaseIndexGeminiApiKey,
 			})
 			return true
 		} catch {
@@ -275,6 +291,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									<SelectItem value="openai-compatible">
 										{t("settings:codeIndex.openaiCompatibleProvider")}
 									</SelectItem>
+									<SelectItem value="gemini">{t("settings:codeIndex.geminiProvider")}</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -419,19 +436,47 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 					)}
 
+					{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "gemini" && (
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-4 font-bold">
+								<div>{t("settings:codeIndex.geminiApiKeyLabel")}</div>
+							</div>
+							<div>
+								<VSCodeTextField
+									type="password"
+									value={apiConfiguration.codebaseIndexGeminiApiKey || ""}
+									onInput={(e: any) =>
+										setApiConfigurationField("codebaseIndexGeminiApiKey", e.target.value)
+									}
+									placeholder={t("settings:codeIndex.geminiApiKeyPlaceholder")}
+									style={{ width: "100%" }}></VSCodeTextField>
+							</div>
+						</div>
+					)}
+
 					<div className="flex flex-col gap-3">
 						<div className="flex items-center gap-4 font-bold">
 							<div>{t("settings:codeIndex.qdrantUrlLabel")}</div>
 						</div>
 						<div>
 							<VSCodeTextField
-								value={codebaseIndexConfig.codebaseIndexQdrantUrl || "http://localhost:6333"}
+								value={codebaseIndexConfig.codebaseIndexQdrantUrl ?? DEFAULT_QDRANT_URL}
+								placeholder={DEFAULT_QDRANT_URL}
 								onInput={(e: any) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
 										codebaseIndexQdrantUrl: e.target.value,
 									})
 								}
+								onBlur={(e: any) => {
+									// Set default value if field is empty on blur
+									if (!e.target.value) {
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexQdrantUrl: DEFAULT_QDRANT_URL,
+										})
+									}
+								}}
 								style={{ width: "100%" }}></VSCodeTextField>
 						</div>
 					</div>
@@ -493,6 +538,78 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									</AlertDialogFooter>
 								</AlertDialogContent>
 							</AlertDialog>
+						)}
+					</div>
+
+					{/* Advanced Configuration Section */}
+					<div className="mt-4">
+						<button
+							onClick={() => setAdvancedExpanded(!advancedExpanded)}
+							className="flex items-center text-xs text-vscode-foreground hover:text-vscode-textLink-foreground focus:outline-none"
+							aria-expanded={advancedExpanded}>
+							<span
+								className={`codicon codicon-${advancedExpanded ? "chevron-down" : "chevron-right"} mr-1`}></span>
+							<span>{t("settings:codeIndex.advancedConfigLabel")}</span>
+						</button>
+
+						{advancedExpanded && (
+							<div className="text-xs text-vscode-descriptionForeground mt-2 ml-5">
+								<div className="flex flex-col gap-3">
+									<div>
+										<span className="block font-medium mb-1">
+											{t("settings:codeIndex.searchMinScoreLabel")}
+										</span>
+										<div className="flex items-center gap-2">
+											<Slider
+												min={0}
+												max={1}
+												step={0.05}
+												value={[
+													codebaseIndexConfig.codebaseIndexSearchMinScore ?? SEARCH_MIN_SCORE,
+												]}
+												onValueChange={([value]) =>
+													setCachedStateField("codebaseIndexConfig", {
+														...codebaseIndexConfig,
+														codebaseIndexSearchMinScore: value,
+													})
+												}
+												data-testid="search-min-score-slider"
+												aria-label={t("settings:codeIndex.searchMinScoreLabel")}
+											/>
+											<span className="w-10">
+												{(
+													codebaseIndexConfig.codebaseIndexSearchMinScore ?? SEARCH_MIN_SCORE
+												).toFixed(2)}
+											</span>
+											<TooltipProvider>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() =>
+																setCachedStateField("codebaseIndexConfig", {
+																	...codebaseIndexConfig,
+																	codebaseIndexSearchMinScore: SEARCH_MIN_SCORE,
+																})
+															}
+															className="h-8 w-8 p-0"
+															data-testid="search-min-score-reset-button">
+															<span className="codicon codicon-debug-restart w-4 h-4" />
+														</Button>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>{t("settings:codeIndex.searchMinScoreResetTooltip")}</p>
+													</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
+										</div>
+										<div className="text-vscode-descriptionForeground text-sm mt-1">
+											{t("settings:codeIndex.searchMinScoreDescription")}
+										</div>
+									</div>
+								</div>
+							</div>
 						)}
 					</div>
 				</div>

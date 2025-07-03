@@ -44,6 +44,9 @@
 		"selectProviderPlaceholder": "प्रदाता चुनें",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"geminiProvider": "Gemini",
+		"geminiApiKeyLabel": "API कुंजी:",
+		"geminiApiKeyPlaceholder": "अपना जेमिनी एपीआई कुंजी दर्ज करें",
 		"openaiCompatibleProvider": "OpenAI संगत",
 		"openaiCompatibleBaseUrlLabel": "आधार URL:",
 		"openaiCompatibleApiKeyLabel": "API कुंजी:",
@@ -56,6 +59,10 @@
 		"ollamaUrlLabel": "Ollama URL:",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant कुंजी:",
+		"advancedConfigLabel": "उन्नत कॉन्फ़िगरेशन",
+		"searchMinScoreLabel": "खोज स्कोर थ्रेसहोल्ड",
+		"searchMinScoreDescription": "खोज परिणामों के लिए आवश्यक न्यूनतम समानता स्कोर (0.0-1.0)। कम मान अधिक परिणाम लौटाते हैं लेकिन कम प्रासंगिक हो सकते हैं। उच्च मान कम लेकिन अधिक प्रासंगिक परिणाम लौटाते हैं।",
+		"searchMinScoreResetTooltip": "डिफ़ॉल्ट मान पर रीसेट करें (0.4)",
 		"startIndexingButton": "इंडेक्सिंग शुरू करें",
 		"clearIndexDataButton": "इंडेक्स डेटा साफ़ करें",
 		"unsavedSettingsMessage": "इंडेक्सिंग प्रक्रिया शुरू करने से पहले कृपया अपनी सेटिंग्स सहेजें।",
@@ -109,6 +116,11 @@
 		"subtasks": {
 			"label": "उप-कार्य",
 			"description": "अनुमोदन की आवश्यकता के बिना उप-कार्यों के निर्माण और पूर्णता की अनुमति दें"
+		},
+		"followupQuestions": {
+			"label": "प्रश्न",
+			"description": "कॉन्फ़िगर किए गए टाइमआउट के बाद अनुवर्ती प्रश्नों के लिए पहले सुझाए गए उत्तर को स्वचालित रूप से चुनें",
+			"timeoutLabel": "पहले उत्तर को स्वचालित रूप से चुनने से पहले प्रतीक्षा करने का समय"
 		},
 		"execute": {
 			"label": "निष्पादित करें",
@@ -308,21 +320,6 @@
 			"pathLabel": "क्लाउड कोड पथ",
 			"description": "आपके क्लाउड कोड सीएलआई का वैकल्पिक पथ। यदि सेट नहीं है तो डिफ़ॉल्ट 'claude' है।",
 			"placeholder": "डिफ़ॉल्ट: claude"
-		},
-		"geminiCli": {
-			"description": "यह प्रदाता Gemini CLI टूल से OAuth प्रमाणीकरण का उपयोग करता है और API कुंजियों की आवश्यकता नहीं है।",
-			"oauthPath": "OAuth क्रेडेंशियल पथ (वैकल्पिक)",
-			"oauthPathDescription": "OAuth क्रेडेंशियल फ़ाइल का पथ। डिफ़ॉल्ट स्थान (~/.gemini/oauth_creds.json) का उपयोग करने के लिए खाली छोड़ें।",
-			"instructions": "यदि आपने अभी तक प्रमाणीकरण नहीं किया है, तो कृपया पहले",
-			"instructionsContinued": "को अपने टर्मिनल में चलाएं।",
-			"setupLink": "Gemini CLI सेटअप निर्देश",
-			"requirementsTitle": "महत्वपूर्ण आवश्यकताएं",
-			"requirement1": "पहले, आपको Gemini CLI टूल इंस्टॉल करना होगा",
-			"requirement2": "फिर, अपने टर्मिनल में gemini चलाएं और सुनिश्चित करें कि आप Google से लॉग इन करें",
-			"requirement3": "केवल व्यक्तिगत Google खातों के साथ काम करता है (Google Workspace खाते नहीं)",
-			"requirement4": "API कुंजियों का उपयोग नहीं करता - प्रमाणीकरण OAuth के माध्यम से संभाला जाता है",
-			"requirement5": "Gemini CLI टूल को पहले इंस्टॉल और प्रमाणित करने की आवश्यकता है",
-			"freeAccess": "OAuth प्रमाणीकरण के माध्यम से मुफ्त पहुंच"
 		}
 	},
 	"browser": {

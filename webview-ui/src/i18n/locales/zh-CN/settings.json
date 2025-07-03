@@ -44,6 +44,9 @@
 		"selectProviderPlaceholder": "选择提供商",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"geminiProvider": "Gemini",
+		"geminiApiKeyLabel": "API 密钥：",
+		"geminiApiKeyPlaceholder": "输入您的Gemini API密钥",
 		"openaiCompatibleProvider": "OpenAI 兼容",
 		"openaiCompatibleBaseUrlLabel": "基础 URL：",
 		"openaiCompatibleApiKeyLabel": "API 密钥：",
@@ -56,6 +59,10 @@
 		"ollamaUrlLabel": "Ollama URL：",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant 密钥：",
+		"advancedConfigLabel": "高级配置",
+		"searchMinScoreLabel": "搜索分数阈值",
+		"searchMinScoreDescription": "搜索结果所需的最低相似度分数（0.0-1.0）。较低的值返回更多结果，但可能不太相关。较高的值返回较少但更相关的结果。",
+		"searchMinScoreResetTooltip": "恢复默认值 (0.4)",
 		"startIndexingButton": "开始索引",
 		"clearIndexDataButton": "清除索引数据",
 		"unsavedSettingsMessage": "请先保存设置再开始索引过程。",
@@ -109,6 +116,11 @@
 		"subtasks": {
 			"label": "子任务",
 			"description": "允许创建和完成子任务而无需批准"
+		},
+		"followupQuestions": {
+			"label": "问题",
+			"description": "在配置的超时时间后自动选择后续问题的第一个建议答案",
+			"timeoutLabel": "自动选择第一个答案前的等待时间"
 		},
 		"execute": {
 			"label": "执行",
@@ -308,21 +320,6 @@
 			"pathLabel": "Claude Code 路径",
 			"description": "您的 Claude Code CLI 的可选路径。如果未设置，则默认为 “claude”。",
 			"placeholder": "默认：claude"
-		},
-		"geminiCli": {
-			"description": "此提供商使用 Gemini CLI 工具的 OAuth 身份验证，不需要 API 密钥。",
-			"oauthPath": "OAuth 凭据路径（可选）",
-			"oauthPathDescription": "OAuth 凭据文件的路径。留空以使用默认位置（~/.gemini/oauth_creds.json）。",
-			"instructions": "如果您尚未进行身份验证，请先运行",
-			"instructionsContinued": "在您的终端中。",
-			"setupLink": "Gemini CLI 设置说明",
-			"requirementsTitle": "重要要求",
-			"requirement1": "首先，您需要安装 Gemini CLI 工具",
-			"requirement2": "然后，在终端中运行 gemini 并确保使用 Google 登录",
-			"requirement3": "仅适用于个人 Google 账户（不支持 Google Workspace 账户）",
-			"requirement4": "不使用 API 密钥 - 身份验证通过 OAuth 处理",
-			"requirement5": "需要先安装并验证 Gemini CLI 工具",
-			"freeAccess": "通过 OAuth 身份验证免费访问"
 		}
 	},
 	"browser": {

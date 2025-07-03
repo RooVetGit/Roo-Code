@@ -6,7 +6,7 @@ import {
 	MAX_BATCH_RETRIES as MAX_RETRIES,
 	INITIAL_RETRY_DELAY_MS as INITIAL_DELAY_MS,
 } from "../constants"
-import { getDefaultModelId } from "../../../shared/embeddingModels"
+import { getDefaultModelId, getModelQueryPrefix } from "../../../shared/embeddingModels"
 import { t } from "../../../i18n"
 
 interface EmbeddingItem {
@@ -39,14 +39,16 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	private readonly baseUrl: string
 	private readonly apiKey: string
 	private readonly isFullUrl: boolean
+	private readonly maxItemTokens: number
 
 	/**
 	 * Creates a new OpenAI Compatible embedder
 	 * @param baseUrl The base URL for the OpenAI-compatible API endpoint
 	 * @param apiKey The API key for authentication
 	 * @param modelId Optional model identifier (defaults to "text-embedding-3-small")
+	 * @param maxItemTokens Optional maximum tokens per item (defaults to MAX_ITEM_TOKENS)
 	 */
-	constructor(baseUrl: string, apiKey: string, modelId?: string) {
+	constructor(baseUrl: string, apiKey: string, modelId?: string, maxItemTokens?: number) {
 		if (!baseUrl) {
 			throw new Error("Base URL is required for OpenAI Compatible embedder")
 		}
@@ -63,6 +65,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		this.defaultModelId = modelId || getDefaultModelId("openai-compatible")
 		// Cache the URL type check for performance
 		this.isFullUrl = this.isFullEndpointUrl(baseUrl)
+		this.maxItemTokens = maxItemTokens || MAX_ITEM_TOKENS
 	}
 
 	/**
@@ -73,9 +76,35 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	 */
 	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
 		const modelToUse = model || this.defaultModelId
+
+		// Apply model-specific query prefix if required
+		const queryPrefix = getModelQueryPrefix("openai-compatible", modelToUse)
+		const processedTexts = queryPrefix
+			? texts.map((text, index) => {
+					// Prevent double-prefixing
+					if (text.startsWith(queryPrefix)) {
+						return text
+					}
+					const prefixedText = `${queryPrefix}${text}`
+					const estimatedTokens = Math.ceil(prefixedText.length / 4)
+					if (estimatedTokens > MAX_ITEM_TOKENS) {
+						console.warn(
+							t("embeddings:textWithPrefixExceedsTokenLimit", {
+								index,
+								estimatedTokens,
+								maxTokens: MAX_ITEM_TOKENS,
+							}),
+						)
+						// Return original text if adding prefix would exceed limit
+						return text
+					}
+					return prefixedText
+				})
+			: texts
+
 		const allEmbeddings: number[][] = []
 		const usage = { promptTokens: 0, totalTokens: 0 }
-		const remainingTexts = [...texts]
+		const remainingTexts = [...processedTexts]
 
 		while (remainingTexts.length > 0) {
 			const currentBatch: string[] = []
@@ -86,12 +115,12 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				const text = remainingTexts[i]
 				const itemTokens = Math.ceil(text.length / 4)
 
-				if (itemTokens > MAX_ITEM_TOKENS) {
+				if (itemTokens > this.maxItemTokens) {
 					console.warn(
 						t("embeddings:textExceedsTokenLimit", {
 							index: i,
 							itemTokens,
-							maxTokens: MAX_ITEM_TOKENS,
+							maxTokens: this.maxItemTokens,
 						}),
 					)
 					processedIndices.push(i)

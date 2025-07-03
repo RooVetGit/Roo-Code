@@ -58,32 +58,31 @@
 		"condensed_recently": "Kontext wurde kürzlich verdichtet; dieser Versuch wird übersprungen",
 		"condense_handler_invalid": "API-Handler zum Verdichten des Kontexts ist ungültig",
 		"condense_context_grew": "Kontextgröße ist während der Verdichtung gewachsen; dieser Versuch wird übersprungen",
+		"url_timeout": "Die Website hat zu lange zum Laden gebraucht (Timeout). Das könnte an einer langsamen Verbindung, einer schweren Website oder vorübergehender Nichtverfügbarkeit liegen. Du kannst es später nochmal versuchen oder prüfen, ob die URL korrekt ist.",
+		"url_not_found": "Die Website-Adresse konnte nicht gefunden werden. Bitte prüfe, ob die URL korrekt ist und versuche es erneut.",
+		"no_internet": "Keine Internetverbindung. Bitte prüfe deine Netzwerkverbindung und versuche es erneut.",
+		"url_forbidden": "Zugriff auf diese Website ist verboten. Die Seite könnte automatisierten Zugriff blockieren oder eine Authentifizierung erfordern.",
+		"url_page_not_found": "Die Seite wurde nicht gefunden. Bitte prüfe, ob die URL korrekt ist.",
+		"url_fetch_failed": "Fehler beim Abrufen des URL-Inhalts: {{error}}",
+		"url_fetch_error_with_url": "Fehler beim Abrufen des Inhalts für {{url}}: {{error}}",
 		"share_task_failed": "Teilen der Aufgabe fehlgeschlagen. Bitte versuche es erneut.",
 		"share_no_active_task": "Keine aktive Aufgabe zum Teilen",
 		"share_auth_required": "Authentifizierung erforderlich. Bitte melde dich an, um Aufgaben zu teilen.",
 		"share_not_enabled": "Aufgabenfreigabe ist für diese Organisation nicht aktiviert.",
 		"share_task_not_found": "Aufgabe nicht gefunden oder Zugriff verweigert.",
+		"mode_import_failed": "Fehler beim Importieren des Modus: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code Prozess wurde mit Code {{exitCode}} beendet.",
 			"errorOutput": "Fehlerausgabe: {{output}}",
 			"processExitedWithError": "Claude Code Prozess wurde mit Code {{exitCode}} beendet. Fehlerausgabe: {{output}}",
 			"stoppedWithReason": "Claude Code wurde mit Grund gestoppt: {{reason}}",
 			"apiKeyModelPlanMismatch": "API-Schlüssel und Abonnement-Pläne erlauben verschiedene Modelle. Stelle sicher, dass das ausgewählte Modell in deinem Plan enthalten ist."
-		},
-		"geminiCli": {
-			"oauthLoadFailed": "Fehler beim Laden der OAuth-Anmeldedaten. Bitte authentifiziere dich zuerst: {{error}}",
-			"tokenRefreshFailed": "Fehler beim Aktualisieren des OAuth-Tokens: {{error}}",
-			"onboardingTimeout": "Onboarding-Vorgang nach 60 Sekunden abgebrochen. Bitte versuche es später erneut.",
-			"projectDiscoveryFailed": "Projekt-ID konnte nicht ermittelt werden. Stelle sicher, dass du mit 'gemini auth' authentifiziert bist.",
-			"rateLimitExceeded": "Anfragenlimit überschritten. Die Limits des kostenlosen Tarifs wurden erreicht.",
-			"badRequest": "Ungültige Anfrage: {{details}}",
-			"apiError": "Gemini CLI API-Fehler: {{error}}",
-			"completionError": "Gemini CLI Vervollständigungsfehler: {{error}}"
 		}
 	},
 	"warnings": {
 		"no_terminal_content": "Kein Terminal-Inhalt ausgewählt",
-		"missing_task_files": "Die Dateien dieser Aufgabe fehlen. Möchtest du sie aus der Aufgabenliste entfernen?"
+		"missing_task_files": "Die Dateien dieser Aufgabe fehlen. Möchtest du sie aus der Aufgabenliste entfernen?",
+		"auto_import_failed": "Fehler beim automatischen Import der RooCode-Einstellungen: {{error}}"
 	},
 	"info": {
 		"no_changes": "Keine Änderungen gefunden.",
@@ -92,11 +91,14 @@
 		"custom_storage_path_set": "Benutzerdefinierter Speicherpfad festgelegt: {{path}}",
 		"default_storage_path": "Auf Standardspeicherpfad zurückgesetzt",
 		"settings_imported": "Einstellungen erfolgreich importiert.",
+		"auto_import_success": "RooCode-Einstellungen automatisch importiert aus {{filename}}",
 		"share_link_copied": "Share-Link in die Zwischenablage kopiert",
 		"image_copied_to_clipboard": "Bild-Daten-URI in die Zwischenablage kopiert",
 		"image_saved": "Bild gespeichert unter {{path}}",
 		"organization_share_link_copied": "Organisations-Freigabelink in die Zwischenablage kopiert!",
-		"public_share_link_copied": "Öffentlicher Freigabelink in die Zwischenablage kopiert!"
+		"public_share_link_copied": "Öffentlicher Freigabelink in die Zwischenablage kopiert!",
+		"mode_exported": "Modus '{{mode}}' erfolgreich exportiert",
+		"mode_imported": "Modus erfolgreich importiert"
 	},
 	"answers": {
 		"yes": "Ja",

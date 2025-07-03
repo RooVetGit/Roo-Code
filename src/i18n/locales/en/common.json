@@ -58,32 +58,31 @@
 		"condensed_recently": "Context was condensed recently; skipping this attempt",
 		"condense_handler_invalid": "API handler for condensing context is invalid",
 		"condense_context_grew": "Context size increased during condensing; skipping this attempt",
+		"url_timeout": "The website took too long to load (timeout). This could be due to a slow connection, heavy website, or the site being temporarily unavailable. You can try again later or check if the URL is correct.",
+		"url_not_found": "The website address could not be found. Please check if the URL is correct and try again.",
+		"no_internet": "No internet connection. Please check your network connection and try again.",
+		"url_forbidden": "Access to this website is forbidden. The site may block automated access or require authentication.",
+		"url_page_not_found": "The page was not found. Please check if the URL is correct.",
+		"url_fetch_failed": "Failed to fetch URL content: {{error}}",
+		"url_fetch_error_with_url": "Error fetching content for {{url}}: {{error}}",
 		"share_task_failed": "Failed to share task. Please try again.",
 		"share_no_active_task": "No active task to share",
 		"share_auth_required": "Authentication required. Please sign in to share tasks.",
 		"share_not_enabled": "Task sharing is not enabled for this organization.",
 		"share_task_not_found": "Task not found or access denied.",
+		"mode_import_failed": "Failed to import mode: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code process exited with code {{exitCode}}.",
 			"errorOutput": "Error output: {{output}}",
 			"processExitedWithError": "Claude Code process exited with code {{exitCode}}. Error output: {{output}}",
 			"stoppedWithReason": "Claude Code stopped with reason: {{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan."
-		},
-		"geminiCli": {
-			"oauthLoadFailed": "Failed to load OAuth credentials. Please authenticate first: {{error}}",
-			"tokenRefreshFailed": "Failed to refresh OAuth token: {{error}}",
-			"onboardingTimeout": "Onboarding operation timed out after 60 seconds. Please try again later.",
-			"projectDiscoveryFailed": "Could not discover project ID. Make sure you're authenticated with 'gemini auth'.",
-			"rateLimitExceeded": "Rate limit exceeded. Free tier limits have been reached.",
-			"badRequest": "Bad request: {{details}}",
-			"apiError": "Gemini CLI API error: {{error}}",
-			"completionError": "Gemini CLI completion error: {{error}}"
 		}
 	},
 	"warnings": {
 		"no_terminal_content": "No terminal content selected",
-		"missing_task_files": "This task's files are missing. Would you like to remove it from the task list?"
+		"missing_task_files": "This task's files are missing. Would you like to remove it from the task list?",
+		"auto_import_failed": "Failed to auto-import RooCode settings: {{error}}"
 	},
 	"info": {
 		"no_changes": "No changes found.",
@@ -92,11 +91,14 @@
 		"custom_storage_path_set": "Custom storage path set: {{path}}",
 		"default_storage_path": "Reverted to using default storage path",
 		"settings_imported": "Settings imported successfully.",
+		"auto_import_success": "RooCode settings automatically imported from {{filename}}",
 		"share_link_copied": "Share link copied to clipboard",
 		"organization_share_link_copied": "Organization share link copied to clipboard!",
 		"public_share_link_copied": "Public share link copied to clipboard!",
 		"image_copied_to_clipboard": "Image data URI copied to clipboard",
-		"image_saved": "Image saved to {{path}}"
+		"image_saved": "Image saved to {{path}}",
+		"mode_exported": "Mode '{{mode}}' exported successfully",
+		"mode_imported": "Mode imported successfully"
 	},
 	"answers": {
 		"yes": "Yes",
