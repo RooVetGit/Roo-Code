@@ -121,12 +121,8 @@ export class CodeIndexManager {
 
 		// 4. Determine if Core Services Need Recreation
 		const needsServiceRecreation = !this._serviceFactory || requiresRestart
-		console.log(
-			`[DEBUG Manager] Service recreation check: needsServiceRecreation=${needsServiceRecreation}, serviceFactory exists=${!!this._serviceFactory}, requiresRestart=${requiresRestart}`,
-		)
 
 		if (needsServiceRecreation) {
-			console.log(`[DEBUG Manager] Recreating services due to restart requirement`)
 			await this._recreateServices()
 		}
 
@@ -216,7 +212,6 @@ export class CodeIndexManager {
 		}
 
 		// (Re)Initialize service factory
-		console.log(`[DEBUG Manager] Creating new service factory`)
 		this._serviceFactory = new CodeIndexServiceFactory(
 			this._configManager!,
 			this.workspacePath,
@@ -235,13 +230,11 @@ export class CodeIndexManager {
 		}
 
 		// (Re)Create shared service instances
-		console.log(`[DEBUG Manager] Calling createServices to create new embedder and vector store`)
 		const { embedder, vectorStore, scanner, fileWatcher } = this._serviceFactory.createServices(
 			this.context,
 			this._cacheManager!,
 			ignoreInstance,
 		)
-		console.log(`[DEBUG Manager] Services created successfully`)
 
 		// (Re)Initialize orchestrator
 		this._orchestrator = new CodeIndexOrchestrator(
@@ -270,33 +263,20 @@ export class CodeIndexManager {
 	 * If the configuration changes require a restart, the service will be restarted.
 	 */
 	public async handleSettingsChange(): Promise<void> {
-		console.log(`[DEBUG Manager] handleSettingsChange called`)
-
 		if (this._configManager) {
-			console.log(`[DEBUG Manager] Loading configuration...`)
 			const { requiresRestart } = await this._configManager.loadConfiguration()
 
 			const isFeatureEnabled = this.isFeatureEnabled
 			const isFeatureConfigured = this.isFeatureConfigured
 
-			console.log(
-				`[DEBUG Manager] After config reload: enabled=${isFeatureEnabled}, configured=${isFeatureConfigured}, requiresRestart=${requiresRestart}, isInitialized=${this.isInitialized}`,
-			)
-
 			// If configuration changes require a restart and the manager is initialized, restart the service
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
-				console.log(`[DEBUG Manager] Restarting indexing service due to configuration changes`)
-
 				// Recreate services with new configuration
 				await this._recreateServices()
 
 				// Start indexing with new services
 				this.startIndexing()
-			} else {
-				console.log(`[DEBUG Manager] No restart needed or conditions not met`)
 			}
-		} else {
-			console.log(`[DEBUG Manager] No config manager available`)
 		}
 	}
 }

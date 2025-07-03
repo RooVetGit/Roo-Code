@@ -66,17 +66,6 @@ export class CodeIndexConfigManager {
 		) as number | undefined
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 
-		console.log(`[DEBUG ConfigManager] Loaded secrets from ContextProxy:`)
-		console.log(
-			`[DEBUG ConfigManager] - OpenAI key: ${openAiKey ? `"${openAiKey.substring(0, 4)}..."` : "undefined"}`,
-		)
-		console.log(
-			`[DEBUG ConfigManager] - Qdrant API key: ${qdrantApiKey ? `"${qdrantApiKey.substring(0, 4)}..."` : "undefined"}`,
-		)
-		console.log(
-			`[DEBUG ConfigManager] - OpenAI Compatible API key: ${openAiCompatibleApiKey ? `"${openAiCompatibleApiKey.substring(0, 4)}..."` : "undefined"}`,
-		)
-
 		// Update instance variables with configuration
 		this.isEnabled = codebaseIndexEnabled || false
 		this.qdrantUrl = codebaseIndexQdrantUrl
@@ -242,25 +231,18 @@ export class CodeIndexConfigManager {
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
-		console.log(
-			`[DEBUG ConfigManager] Restart check - prevEnabled: ${prevEnabled}, nowEnabled: ${this.isEnabled}, prevConfigured: ${prevConfigured}, nowConfigured: ${nowConfigured}`,
-		)
-
 		// 1. Transition from disabled/unconfigured to enabled+configured
 		if ((!prevEnabled || !prevConfigured) && this.isEnabled && nowConfigured) {
-			console.log(`[DEBUG ConfigManager] Restart required: transition to enabled+configured`)
 			return true
 		}
 
 		// 2. If was disabled and still is, no restart needed
 		if (!prevEnabled && !this.isEnabled) {
-			console.log(`[DEBUG ConfigManager] No restart needed: feature disabled`)
 			return false
 		}
 
 		// 3. If wasn't ready before and isn't ready now, no restart needed
 		if (!prevConfigured && !nowConfigured) {
-			console.log(`[DEBUG ConfigManager] No restart needed: feature not configured`)
 			return false
 		}
 
@@ -268,9 +250,6 @@ export class CodeIndexConfigManager {
 		if (this.isEnabled || prevEnabled) {
 			// Provider change
 			if (prevProvider !== this.embedderProvider) {
-				console.log(
-					`[DEBUG ConfigManager] Restart required: provider changed from ${prevProvider} to ${this.embedderProvider}`,
-				)
 				return true
 			}
 
@@ -285,12 +264,10 @@ export class CodeIndexConfigManager {
 			const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
 			if (prevOpenAiKey !== currentOpenAiKey) {
-				console.log(`[DEBUG ConfigManager] Restart required: OpenAI API key changed`)
 				return true
 			}
 
 			if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
-				console.log(`[DEBUG ConfigManager] Restart required: Ollama base URL changed`)
 				return true
 			}
 
@@ -298,33 +275,26 @@ export class CodeIndexConfigManager {
 				prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
 				prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
 			) {
-				console.log(`[DEBUG ConfigManager] Restart required: OpenAI Compatible settings changed`)
 				return true
 			}
 
 			// Check for OpenAI Compatible modelDimension changes
 			if (this.embedderProvider === "openai-compatible" || prevProvider === "openai-compatible") {
 				if (prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension) {
-					console.log(
-						`[DEBUG ConfigManager] Restart required: OpenAI Compatible modelDimension changed from ${prevOpenAiCompatibleModelDimension} to ${currentOpenAiCompatibleModelDimension}`,
-					)
 					return true
 				}
 			}
 
 			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
-				console.log(`[DEBUG ConfigManager] Restart required: Qdrant settings changed`)
 				return true
 			}
 
 			// Vector dimension changes (still important for compatibility)
 			if (this._hasVectorDimensionChanged(prevProvider, prev?.modelId)) {
-				console.log(`[DEBUG ConfigManager] Restart required: vector dimension changed`)
 				return true
 			}
 		}
 
-		console.log(`[DEBUG ConfigManager] No restart needed: no critical changes detected`)
 		return false
 	}
 

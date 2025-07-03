@@ -24,10 +24,6 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param url Optional URL to the Qdrant server
 	 */
 	constructor(workspacePath: string, url: string, vectorSize: number, apiKey?: string) {
-		console.log(
-			`[DEBUG QdrantVectorStore] Constructor called with API key: ${apiKey ? `"${apiKey.substring(0, 4)}..."` : "undefined"}`,
-		)
-
 		// Parse the URL to determine the appropriate QdrantClient configuration
 		const parsedUrl = this.parseQdrantUrl(url)
 

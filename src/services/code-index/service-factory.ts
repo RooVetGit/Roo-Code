@@ -26,20 +26,15 @@ export class CodeIndexServiceFactory {
 	 */
 	public createEmbedder(): IEmbedder {
 		const config = this.configManager.getConfig()
-		console.log(`[DEBUG ServiceFactory] Creating embedder for provider: ${config.embedderProvider}`)
 
 		const provider = config.embedderProvider as EmbedderProvider
 
 		if (provider === "openai") {
 			const apiKey = config.openAiOptions?.openAiNativeApiKey
-			console.log(
-				`[DEBUG ServiceFactory] OpenAI embedder - API key: ${apiKey ? `"${apiKey.substring(0, 4)}..."` : "undefined"}`,
-			)
 
 			if (!apiKey) {
 				throw new Error("OpenAI configuration missing for embedder creation")
 			}
-			console.log(`[DEBUG ServiceFactory] Creating OpenAI embedder with key: "${apiKey.substring(0, 4)}..."`)
 			return new OpenAiEmbedder({
 				...config.openAiOptions,
 				openAiEmbeddingModelId: config.modelId,
@@ -48,7 +43,6 @@ export class CodeIndexServiceFactory {
 			if (!config.ollamaOptions?.ollamaBaseUrl) {
 				throw new Error("Ollama configuration missing for embedder creation")
 			}
-			console.log(`[DEBUG ServiceFactory] Creating Ollama embedder`)
 			return new CodeIndexOllamaEmbedder({
 				...config.ollamaOptions,
 				ollamaModelId: config.modelId,
@@ -57,7 +51,6 @@ export class CodeIndexServiceFactory {
 			if (!config.openAiCompatibleOptions?.baseUrl || !config.openAiCompatibleOptions?.apiKey) {
 				throw new Error("OpenAI Compatible configuration missing for embedder creation")
 			}
-			console.log(`[DEBUG ServiceFactory] Creating OpenAI Compatible embedder`)
 			return new OpenAICompatibleEmbedder(
 				config.openAiCompatibleOptions.baseUrl,
 				config.openAiCompatibleOptions.apiKey,
@@ -116,9 +109,6 @@ export class CodeIndexServiceFactory {
 		}
 
 		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
-		console.log(
-			`[DEBUG ServiceFactory] Creating Qdrant vector store with API key: ${config.qdrantApiKey ? `"${config.qdrantApiKey.substring(0, 4)}..."` : "undefined"}`,
-		)
 		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
 	}
 
@@ -162,17 +152,11 @@ export class CodeIndexServiceFactory {
 		scanner: DirectoryScanner
 		fileWatcher: IFileWatcher
 	} {
-		console.log(`[DEBUG ServiceFactory] createServices called`)
-		console.log(`[DEBUG ServiceFactory] isFeatureConfigured: ${this.configManager.isFeatureConfigured}`)
-
 		if (!this.configManager.isFeatureConfigured) {
-			console.log(`[DEBUG ServiceFactory] ERROR: Code indexing is not properly configured`)
 			throw new Error("Cannot create services: Code indexing is not properly configured")
 		}
 
-		console.log(`[DEBUG ServiceFactory] Creating embedder...`)
 		const embedder = this.createEmbedder()
-		console.log(`[DEBUG ServiceFactory] Embedder created successfully`)
 		const vectorStore = this.createVectorStore()
 		const parser = codeParser
 		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser, ignoreInstance)
