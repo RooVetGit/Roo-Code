@@ -26,15 +26,22 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 	// Get ripgrep path
 	const rgPath = await getRipgrepPath()
 
-	// Get files using ripgrep
-	const files = await listFilesWithRipgrep(rgPath, dirPath, recursive, limit)
-
-	// Get directories with proper filtering
+	// Get directories with proper filtering first to ensure we capture the structure
 	const gitignorePatterns = await parseGitignoreFile(dirPath, recursive)
 	const directories = await listFilteredDirectories(dirPath, recursive, gitignorePatterns)
 
+	// Get files using ripgrep with a higher limit to avoid early termination
+	// We'll use a higher internal limit and then apply balanced sampling
+	const internalLimit = Math.max(limit * 3, 1000) // Use 3x the requested limit or 1000, whichever is higher
+	const files = await listFilesWithRipgrep(rgPath, dirPath, recursive, internalLimit)
+
+	// Apply balanced sampling to ensure fair representation across directories
+	// Reserve some space for directories in the limit
+	const filesLimit = Math.max(limit - directories.length, Math.floor(limit * 0.8))
+	const balancedFiles = applyBalancedSampling(files, directories, filesLimit)
+
 	// Combine and format the results
-	return formatAndCombineResults(files, directories, limit)
+	return formatAndCombineResults(balancedFiles, directories, limit)
 }
 
 /**
@@ -305,6 +312,91 @@ function isIgnoredByGitignore(dirName: string, gitignorePatterns: string[]): boo
 }
 
 /**
+ * Apply balanced sampling to ensure fair representation across directories
+ * This prevents one large directory from dominating the file list
+ */
+function applyBalancedSampling(files: string[], directories: string[], limit: number): string[] {
+	if (files.length <= limit) {
+		return files
+	}
+
+	// Group files by their parent directory
+	const filesByDirectory = new Map<string, string[]>()
+
+	for (const file of files) {
+		const dir = path.dirname(file)
+		if (!filesByDirectory.has(dir)) {
+			filesByDirectory.set(dir, [])
+		}
+		filesByDirectory.get(dir)!.push(file)
+	}
+
+	// Improved balanced sampling algorithm
+	const dirEntries = Array.from(filesByDirectory.entries())
+	dirEntries.sort(([a], [b]) => a.localeCompare(b))
+
+	const result: string[] = []
+	const dirCount = dirEntries.length
+
+	// Ensure each directory gets at least a minimum number of files
+	const minFilesPerDir = Math.max(3, Math.floor(limit / (dirCount * 4))) // At least 3 files per dir, or 1/4 of fair share
+	const maxFilesPerDir = Math.floor(limit / dirCount) + 10 // Allow some directories to have more files
+
+	// First pass: give each directory its minimum allocation
+	let remainingLimit = limit
+	const dirAllocations = new Map<string, number>()
+
+	for (const [dir, dirFiles] of dirEntries) {
+		const allocation = Math.min(minFilesPerDir, dirFiles.length, remainingLimit)
+		dirAllocations.set(dir, allocation)
+		remainingLimit -= allocation
+	}
+
+	// Second pass: distribute remaining slots proportionally to directory sizes
+	if (remainingLimit > 0) {
+		const totalFiles = dirEntries.reduce((sum, [, dirFiles]) => sum + dirFiles.length, 0)
+
+		for (const [dir, dirFiles] of dirEntries) {
+			const currentAllocation = dirAllocations.get(dir)!
+			const proportion = dirFiles.length / totalFiles
+			const additionalSlots = Math.min(
+				Math.floor(remainingLimit * proportion),
+				maxFilesPerDir - currentAllocation,
+				dirFiles.length - currentAllocation,
+			)
+
+			if (additionalSlots > 0) {
+				dirAllocations.set(dir, currentAllocation + additionalSlots)
+				remainingLimit -= additionalSlots
+			}
+		}
+	}
+
+	// Third pass: distribute any remaining slots to directories that can take them
+	for (const [dir, dirFiles] of dirEntries) {
+		if (remainingLimit <= 0) break
+
+		const currentAllocation = dirAllocations.get(dir)!
+		const canTakeMore = Math.min(remainingLimit, dirFiles.length - currentAllocation)
+
+		if (canTakeMore > 0) {
+			dirAllocations.set(dir, currentAllocation + canTakeMore)
+			remainingLimit -= canTakeMore
+		}
+	}
+
+	// Collect the files based on allocations
+	for (const [dir, dirFiles] of dirEntries) {
+		const allocation = dirAllocations.get(dir)!
+		dirFiles.sort() // Ensure consistent ordering
+		const selectedFiles = dirFiles.slice(0, allocation)
+		result.push(...selectedFiles)
+	}
+
+	return result
+}
+
+/**
  * Combine file and directory results and format them properly
  */
 function formatAndCombineResults(files: string[], directories: string[], limit: number): [string[], boolean] {
@@ -338,23 +430,20 @@ async function execRipgrep(rgPath: string, args: string[], limit: number): Promi
 		let output = ""
 		let results: string[] = []
 
-		// Set timeout to avoid hanging
+		// Set timeout to avoid hanging - increased to allow more complete traversal
 		const timeoutId = setTimeout(() => {
 			rgProcess.kill()
 			console.warn("ripgrep timed out, returning partial results")
-			resolve(results.slice(0, limit))
-		}, 10_000)
+			resolve(results) // Don't slice here either
+		}, 15_000)
 
 		// Process stdout data as it comes in
 		rgProcess.stdout.on("data", (data) => {
 			output += data.toString()
 			processRipgrepOutput()
 
-			// Kill the process if we've reached the limit
-			if (results.length >= limit) {
-				rgProcess.kill()
-				clearTimeout(timeoutId) // Clear the timeout when we kill the process due to reaching the limit
-			}
+			// Don't kill the process early - let it complete to get full directory structure
+			// The balanced sampling will be applied later in applyBalancedSampling
 		})
 
 		// Process stderr but don't fail on non-zero exit codes
@@ -375,7 +464,7 @@ async function execRipgrep(rgPath: string, args: string[], limit: number): Promi
 				console.warn(`ripgrep process exited with code ${code}, returning partial results`)
 			}
 
-			resolve(results.slice(0, limit))
+			resolve(results) // Don't slice here - let balanced sampling handle the limit
 		})
 
 		// Handle process errors
@@ -396,12 +485,10 @@ async function execRipgrep(rgPath: string, args: string[], limit: number): Promi
 				output = ""
 			}
 
-			// Process each complete line
+			// Process each complete line - don't limit here, let balanced sampling handle it
 			for (const line of lines) {
-				if (line.trim() && results.length < limit) {
+				if (line.trim()) {
 					results.push(line)
-				} else if (results.length >= limit) {
-					break
 				}
 			}
 		}
