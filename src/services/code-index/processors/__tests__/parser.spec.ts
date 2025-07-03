@@ -215,7 +215,7 @@ describe("CodeParser", () => {
 		it("should handle oversized lines by splitting them", async () => {
 			const longLine = "a".repeat(2000)
 			const lines = ["normal", longLine, "normal"]
-			const result = await parser["_chunkTextByLines"](lines, "test.js", "hash", "test_type", new Set())
+			const result = await parser["_chunkTextByLines"](lines, "test.js", "hash", "test_type", new Set(), 100)
 
 			const segments = result.filter((r) => r.type === "test_type_segment")
 			expect(segments.length).toBeGreaterThan(1)
@@ -225,7 +225,7 @@ describe("CodeParser", () => {
 			const lines = Array(100)
 				.fill("line with 10 chars")
 				.map((_, i) => `${i}: line`)
-			const result = await parser["_chunkTextByLines"](lines, "test.js", "hash", "test_type", new Set())
+			const result = await parser["_chunkTextByLines"](lines, "test.js", "hash", "test_type", new Set(), 100)
 
 			result.forEach((chunk) => {
 				expect(chunk.content.length).toBeGreaterThanOrEqual(100)
