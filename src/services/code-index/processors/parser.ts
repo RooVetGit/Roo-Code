@@ -3,6 +3,7 @@ import { createHash } from "crypto"
 import * as path from "path"
 import { Node } from "web-tree-sitter"
 import { LanguageParser, loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
+import { parseMarkdown } from "../../tree-sitter/markdownParser"
 import { ICodeParser, CodeBlock } from "../interfaces"
 import { scannerExtensions } from "../shared/supported-extensions"
 import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_TOLERANCE_FACTOR } from "../constants"
@@ -13,8 +14,8 @@ import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_
 export class CodeParser implements ICodeParser {
 	private loadedParsers: LanguageParser = {}
 	private pendingLoads: Map<string, Promise<LanguageParser>> = new Map()
-	// Markdown files are excluded because the current parser logic cannot effectively handle
-	// potentially large Markdown sections without a tree-sitter-like child node structure for chunking
+	// Markdown files are now supported using the custom markdown parser
+	// which extracts headers and sections for semantic indexing
 
 	/**
 	 * Parses a code file into code blocks
@@ -86,6 +87,11 @@ export class CodeParser implements ICodeParser {
 	private async parseContent(filePath: string, content: string, fileHash: string): Promise<CodeBlock[]> {
 		const ext = path.extname(filePath).slice(1).toLowerCase()
 		const seenSegmentHashes = new Set<string>()
+
+		// Handle markdown files specially
+		if (ext === "md" || ext === "markdown") {
+			return this.parseMarkdownContent(filePath, content, fileHash, seenSegmentHashes)
+		}
 
 		// Check if we already have the parser loaded
 		if (!this.loadedParsers[ext]) {
@@ -369,6 +375,67 @@ export class CodeParser implements ICodeParser {
 			seenSegmentHashes,
 			baseStartLine,
 		)
+	}
+
+	private parseMarkdownContent(
+		filePath: string,
+		content: string,
+		fileHash: string,
+		seenSegmentHashes: Set<string>,
+	): CodeBlock[] {
+		const lines = content.split("\n")
+		const markdownCaptures = parseMarkdown(content)
+
+		if (markdownCaptures.length === 0) {
+			// No headers found, treat as single block if large enough
+			if (content.length >= MIN_BLOCK_CHARS) {
+				return this._performFallbackChunking(filePath, content, fileHash, seenSegmentHashes)
+			}
+			return []
+		}
+
+		const results: CodeBlock[] = []
+
+		// Process markdown captures (headers and sections)
+		for (let i = 0; i < markdownCaptures.length; i += 2) {
+			const nameCapture = markdownCaptures[i]
+			const definitionCapture = markdownCaptures[i + 1]
+
+			if (!definitionCapture) continue
+
+			const startLine = definitionCapture.node.startPosition.row + 1
+			const endLine = definitionCapture.node.endPosition.row + 1
+			const sectionLines = lines.slice(startLine - 1, endLine)
+			const sectionContent = sectionLines.join("\n")
+
+			// Only include sections that meet minimum size requirements
+			if (sectionContent.length >= MIN_BLOCK_CHARS) {
+				const segmentHash = createHash("sha256")
+					.update(`${filePath}-${startLine}-${endLine}-${sectionContent}`)
+					.digest("hex")
+
+				if (!seenSegmentHashes.has(segmentHash)) {
+					seenSegmentHashes.add(segmentHash)
+
+					// Extract header level for type classification
+					const headerMatch = nameCapture.name.match(/\.h(\d)$/)
+					const headerLevel = headerMatch ? parseInt(headerMatch[1]) : 1
+
+					results.push({
+						file_path: filePath,
+						identifier: nameCapture.node.text,
+						type: `markdown_header_h${headerLevel}`,
+						start_line: startLine,
+						end_line: endLine,
+						content: sectionContent,
+						segmentHash,
+						fileHash,
+					})
+				}
+			}
+		}
+
+		return results
 	}
 }
 

@@ -2,6 +2,7 @@
 
 import { CodeParser, codeParser } from "../parser"
 import { loadRequiredLanguageParsers } from "../../../tree-sitter/languageParser"
+import { parseMarkdown } from "../../../tree-sitter/markdownParser"
 import { readFile } from "fs/promises"
 import { Node } from "web-tree-sitter"
 
@@ -23,6 +24,7 @@ vi.mock("fs/promises", () => ({
 }))
 
 vi.mock("../../../tree-sitter/languageParser")
+vi.mock("../../../tree-sitter/markdownParser")
 
 const mockLanguageParser = {
 	js: {
@@ -240,6 +242,276 @@ describe("CodeParser", () => {
 			const result2 = await codeParser.parseFile("test.js", { content: "const b = 2" })
 			expect(result1).toBeDefined()
 			expect(result2).toBeDefined()
+		})
+	})
+
+	describe("Markdown Support", () => {
+		beforeEach(() => {
+			vi.clearAllMocks()
+		})
+
+		it("should detect markdown files by extension", async () => {
+			const markdownContent = `# Header 1
+This is a long section with enough content to meet the minimum character requirements for indexing.
+It contains multiple lines and detailed information about the topic.
+This ensures the section will be included in the code blocks.
+
+## Header 2
+Another substantial section with comprehensive content that exceeds the minimum character threshold.
+This section provides detailed explanations and examples to ensure proper indexing.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 4 }, text: "Header 1" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 4 }, text: "Header 1" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 5 }, endPosition: { row: 7 }, text: "Header 2" },
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 5 }, endPosition: { row: 7 }, text: "Header 2" },
+					name: "definition.header.h2",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			expect(parseMarkdown).toHaveBeenCalledWith(markdownContent)
+			expect(result).toHaveLength(2)
+			expect(result[0].type).toBe("markdown_header_h1")
+			expect(result[1].type).toBe("markdown_header_h2")
+		})
+
+		it("should parse markdown headers into code blocks", async () => {
+			const markdownContent = `# Introduction
+This is a comprehensive introduction section that provides detailed background information.
+It contains multiple paragraphs with substantial content to ensure it meets the minimum character requirements.
+The section covers important concepts and sets the foundation for the rest of the document.
+
+## Getting Started
+This section provides step-by-step instructions for getting started with the project.
+It includes detailed explanations, code examples, and troubleshooting tips.
+The content is substantial enough to warrant inclusion in the search index.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 4 }, text: "Introduction" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 4 }, text: "Introduction" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 5 }, endPosition: { row: 8 }, text: "Getting Started" },
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 5 }, endPosition: { row: 8 }, text: "Getting Started" },
+					name: "definition.header.h2",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			expect(result).toHaveLength(2)
+			expect(result[0].identifier).toBe("Introduction")
+			expect(result[0].type).toBe("markdown_header_h1")
+			expect(result[0].start_line).toBe(1)
+			expect(result[0].end_line).toBe(5)
+
+			expect(result[1].identifier).toBe("Getting Started")
+			expect(result[1].type).toBe("markdown_header_h2")
+			expect(result[1].start_line).toBe(6)
+			expect(result[1].end_line).toBe(9)
+		})
+
+		it("should handle markdown files with no headers using fallback chunking", async () => {
+			const markdownContent = `This is a markdown file without any headers but with substantial content.
+It contains multiple paragraphs and detailed information that should be indexed.
+The content is long enough to meet the minimum character requirements for fallback chunking.
+This ensures that even headerless markdown files can be properly indexed and searched.
+Additional content to ensure we exceed the minimum block size requirements for proper indexing.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			expect(parseMarkdown).toHaveBeenCalledWith(markdownContent)
+			expect(result).toHaveLength(1)
+			expect(result[0].type).toBe("fallback_chunk")
+		})
+
+		it("should respect minimum block size requirements", async () => {
+			const markdownContent = `# Short
+Small content.
+
+## Another Short
+Also small.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 1 }, text: "Short" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 1 }, text: "Short" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 3 }, endPosition: { row: 4 }, text: "Another Short" },
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 3 }, endPosition: { row: 4 }, text: "Another Short" },
+					name: "definition.header.h2",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			expect(result).toHaveLength(0) // Both sections are too small
+		})
+
+		it("should generate unique segment hashes for markdown sections", async () => {
+			const markdownContent = `# Unique Section
+This is a unique section with substantial content that meets the minimum character requirements.
+It contains detailed information and multiple paragraphs to ensure proper indexing.
+The content is comprehensive and provides valuable information for search functionality.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "Unique Section" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "Unique Section" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			expect(result).toHaveLength(1)
+			expect(result[0].segmentHash).toMatch(/^[a-f0-9]{64}$/) // SHA-256 hex format
+			expect(result[0].fileHash).toMatch(/^[a-f0-9]{64}$/)
+		})
+
+		it("should handle .markdown extension", async () => {
+			const markdownContent = `# Documentation
+This is comprehensive documentation with substantial content for proper indexing.
+It includes detailed explanations, examples, and best practices.
+The content is designed to be searchable and useful for developers.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "Documentation" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "Documentation" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.markdown", { content: markdownContent })
+
+			expect(parseMarkdown).toHaveBeenCalledWith(markdownContent)
+			expect(result).toHaveLength(1)
+			expect(result[0].type).toBe("markdown_header_h1")
+		})
+
+		it("should handle empty markdown files", async () => {
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const result = await parser.parseFile("test.md", { content: "" })
+
+			expect(result).toHaveLength(0)
+		})
+
+		it("should handle markdown files with malformed content", async () => {
+			const malformedContent = "Some content without proper structure"
+
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const result = await parser.parseFile("test.md", { content: malformedContent })
+
+			expect(result).toHaveLength(0) // Too small for fallback chunking
+		})
+
+		it("should extract correct header levels", async () => {
+			const markdownContent = `# H1 Header
+Content for H1 with substantial text to meet minimum requirements.
+This section provides comprehensive information about the main topic.
+
+### H3 Header
+Content for H3 with detailed explanations and examples.
+This subsection covers specific aspects of the topic in depth.
+
+###### H6 Header
+Content for H6 with focused information on a particular detail.
+This section provides specific technical information for advanced users.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "H1 Header" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "H1 Header" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 4 }, endPosition: { row: 7 }, text: "H3 Header" },
+					name: "name.definition.header.h3",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 4 }, endPosition: { row: 7 }, text: "H3 Header" },
+					name: "definition.header.h3",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 8 }, endPosition: { row: 10 }, text: "H6 Header" },
+					name: "name.definition.header.h6",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 8 }, endPosition: { row: 10 }, text: "H6 Header" },
+					name: "definition.header.h6",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			expect(result).toHaveLength(3)
+			expect(result[0].type).toBe("markdown_header_h1")
+			expect(result[1].type).toBe("markdown_header_h3")
+			expect(result[2].type).toBe("markdown_header_h6")
 		})
 	})
 })

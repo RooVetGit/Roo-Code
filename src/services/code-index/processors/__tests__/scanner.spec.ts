@@ -241,5 +241,113 @@ describe("DirectoryScanner", () => {
 			// Verify the stats
 			expect(mockCodeParser.parseFile).toHaveBeenCalledTimes(2)
 		})
+
+		it("should process markdown files alongside code files", async () => {
+			const { listFiles } = await import("../../../glob/list-files")
+			vi.mocked(listFiles).mockResolvedValue([["test/README.md", "test/app.js", "docs/guide.markdown"], false])
+
+			const mockMarkdownBlocks: any[] = [
+				{
+					file_path: "test/README.md",
+					content: "# Introduction\nThis is a comprehensive guide...",
+					start_line: 1,
+					end_line: 10,
+					identifier: "Introduction",
+					type: "markdown_header_h1",
+					fileHash: "md-hash",
+					segmentHash: "md-segment-hash",
+				},
+			]
+
+			const mockJsBlocks: any[] = [
+				{
+					file_path: "test/app.js",
+					content: "function main() { return 'hello'; }",
+					start_line: 1,
+					end_line: 3,
+					identifier: "main",
+					type: "function",
+					fileHash: "js-hash",
+					segmentHash: "js-segment-hash",
+				},
+			]
+
+			const mockMarkdownBlocks2: any[] = [
+				{
+					file_path: "docs/guide.markdown",
+					content: "## Getting Started\nFollow these steps...",
+					start_line: 1,
+					end_line: 8,
+					identifier: "Getting Started",
+					type: "markdown_header_h2",
+					fileHash: "markdown-hash",
+					segmentHash: "markdown-segment-hash",
+				},
+			]
+
+			// Mock parseFile to return different blocks based on file extension
+			;(mockCodeParser.parseFile as any).mockImplementation((filePath: string) => {
+				if (filePath.endsWith(".md")) {
+					return mockMarkdownBlocks
+				} else if (filePath.endsWith(".markdown")) {
+					return mockMarkdownBlocks2
+				} else if (filePath.endsWith(".js")) {
+					return mockJsBlocks
+				}
+				return []
+			})
+
+			const result = await scanner.scanDirectory("/test")
+
+			// Verify all files were processed
+			expect(mockCodeParser.parseFile).toHaveBeenCalledTimes(3)
+			expect(mockCodeParser.parseFile).toHaveBeenCalledWith("test/README.md", expect.any(Object))
+			expect(mockCodeParser.parseFile).toHaveBeenCalledWith("test/app.js", expect.any(Object))
+			expect(mockCodeParser.parseFile).toHaveBeenCalledWith("docs/guide.markdown", expect.any(Object))
+
+			// Verify code blocks include both markdown and code content
+			expect(result.codeBlocks).toHaveLength(3)
+			expect(result.codeBlocks).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ type: "markdown_header_h1" }),
+					expect.objectContaining({ type: "function" }),
+					expect.objectContaining({ type: "markdown_header_h2" }),
+				]),
+			)
+
+			expect(result.stats.processed).toBe(3)
+		})
+
+		it("should handle large markdown documentation folders efficiently", async () => {
+			const { listFiles } = await import("../../../glob/list-files")
+
+			// Simulate a large documentation folder with many markdown files
+			const markdownFiles = Array.from({ length: 50 }, (_, i) => `docs/section-${i}.md`)
+			vi.mocked(listFiles).mockResolvedValue([markdownFiles, false])
+
+			const mockMarkdownBlock: any = {
+				file_path: "docs/section-0.md",
+				content: "# Section Header\nDetailed content...",
+				start_line: 1,
+				end_line: 5,
+				identifier: "Section Header",
+				type: "markdown_header_h1",
+				fileHash: "section-hash",
+				segmentHash: "section-segment-hash",
+			}
+
+			;(mockCodeParser.parseFile as any).mockResolvedValue([mockMarkdownBlock])
+
+			const result = await scanner.scanDirectory("/test")
+
+			// Verify all markdown files were processed
+			expect(mockCodeParser.parseFile).toHaveBeenCalledTimes(50)
+			expect(result.stats.processed).toBe(50)
+			expect(result.codeBlocks).toHaveLength(50)
+
+			// Verify embeddings were created for all markdown content
+			expect(mockEmbedder.createEmbeddings).toHaveBeenCalled()
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalled()
+		})
 	})
 })
