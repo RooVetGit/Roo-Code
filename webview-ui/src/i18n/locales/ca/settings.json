@@ -56,6 +56,10 @@
 		"ollamaUrlLabel": "URL d'Ollama:",
 		"qdrantUrlLabel": "URL de Qdrant",
 		"qdrantKeyLabel": "Clau de Qdrant:",
+		"advancedConfigLabel": "Configuració avançada",
+		"searchMinScoreLabel": "Llindar de puntuació de cerca",
+		"searchMinScoreDescription": "Puntuació mínima de similitud (0.0-1.0) requerida per als resultats de la cerca. Valors més baixos retornen més resultats però poden ser menys rellevants. Valors més alts retornen menys resultats però més rellevants.",
+		"searchMinScoreResetTooltip": "Restablir al valor per defecte (0.4)",
 		"startIndexingButton": "Iniciar indexació",
 		"clearIndexDataButton": "Esborrar dades d'índex",
 		"unsavedSettingsMessage": "Si us plau, deseu la configuració abans d'iniciar el procés d'indexació.",
@@ -109,6 +113,11 @@
 		"subtasks": {
 			"label": "Subtasques",
 			"description": "Permetre la creació i finalització de subtasques sense requerir aprovació"
+		},
+		"followupQuestions": {
+			"label": "Pregunta",
+			"description": "Seleccionar automàticament la primera resposta suggerida per a preguntes de seguiment després del temps d'espera configurat",
+			"timeoutLabel": "Temps d'espera abans de seleccionar automàticament la primera resposta"
 		},
 		"execute": {
 			"label": "Executar",
@@ -308,21 +317,6 @@
 			"pathLabel": "Ruta del Codi Claude",
 			"description": "Ruta opcional al teu CLI de Claude Code. Per defecte, 'claude' si no s'estableix.",
 			"placeholder": "Per defecte: claude"
-		},
-		"geminiCli": {
-			"description": "Aquest proveïdor utilitza l'autenticació OAuth de l'eina Gemini CLI i no requereix claus d'API.",
-			"oauthPath": "Ruta de Credencials OAuth (opcional)",
-			"oauthPathDescription": "Ruta al fitxer de credencials OAuth. Deixa buit per utilitzar la ubicació per defecte (~/.gemini/oauth_creds.json).",
-			"instructions": "Si encara no t'has autenticat, executa",
-			"instructionsContinued": "al teu terminal primer.",
-			"setupLink": "Instruccions de Configuració de Gemini CLI",
-			"requirementsTitle": "Requisits Importants",
-			"requirement1": "Primer, necessites instal·lar l'eina Gemini CLI",
-			"requirement2": "Després, executa gemini al teu terminal i assegura't d'iniciar sessió amb Google",
-			"requirement3": "Només funciona amb comptes personals de Google (no comptes de Google Workspace)",
-			"requirement4": "No utilitza claus d'API - l'autenticació es gestiona via OAuth",
-			"requirement5": "Requereix que l'eina Gemini CLI estigui instal·lada i autenticada primer",
-			"freeAccess": "Accés gratuït via autenticació OAuth"
 		}
 	},
 	"browser": {

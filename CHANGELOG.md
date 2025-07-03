@@ -1,5 +1,52 @@
 # Roo Code Changelog
 
+## [3.22.6] - 2025-07-02
+
+- Add timer-based auto approve for follow up questions (thanks @liwilliam2021!)
+- Add import/export modes functionality
+- Add persistent version indicator on chat screen
+- Add automatic configuration import on extension startup (thanks @takakoutso!)
+- Add user-configurable search score threshold slider for semantic search (thanks @hannesrudolph!)
+- Add default headers and testing for litellm fetcher (thanks @andrewshu2000!)
+- Fix consistent cancellation error messages for thinking vs streaming phases
+- Fix AWS Bedrock cross-region inference profile mapping (thanks @KevinZhao!)
+- Fix URL loading timeout issues in @ mentions (thanks @MuriloFP!)
+- Fix API retry exponential backoff capped at 10 minutes (thanks @MuriloFP!)
+- Fix Qdrant URL field auto-filling with default value (thanks @SannidhyaSah!)
+- Fix profile context condensation threshold (thanks @PaperBoardOfficial!)
+- Fix apply_diff tool documentation for multi-file capabilities
+- Fix cache files excluded from rules compilation (thanks @MuriloFP!)
+- Add streamlined extension installation and documentation (thanks @devxpain!)
+- Prevent Architect mode from providing time estimates
+- Remove context size from environment details
+- Change default mode to architect for new installations
+- Suppress Mermaid error rendering
+- Improve Mermaid buttons with light background in light mode (thanks @chrarnoldus!)
+- Add .vscode/ to write-protected files/directories
+- Update AWS Bedrock cross-region inference profile mapping (thanks @KevinZhao!)
+
+## [3.22.5] - 2025-06-28
+
+- Remove Gemini CLI provider while we work with Google on a better integration
+
+## [3.22.4] - 2025-06-27
+
+- Fix: resolve E2BIG error by passing large prompts via stdin to Claude CLI (thanks @Fovty!)
+- Add optional mode suggestions to follow-up questions
+- Fix: move StandardTooltip inside PopoverTrigger in ShareButton (thanks @daniel-lxs!)
+
+## [3.22.3] - 2025-06-27
+
+- Restore JSON backwards compatibility for .roomodes files (thanks @daniel-lxs!)
+
+## [3.22.2] - 2025-06-27
+
+- Fix: eliminate XSS vulnerability in CodeBlock component (thanks @KJ7LNW!)
+- Fix terminal keyboard shortcut error when adding content to context (thanks @MuriloFP!)
+- Fix checkpoint popover not opening due to StandardTooltip wrapper conflict (thanks @daniel-lxs!)
+- Fix(i18n): correct gemini cli error translation paths (thanks @daniel-lxs!)
+- Code Index (Qdrant) recreate services when change configurations (thanks @catrielmuller!)
+
 ## [3.22.1] - 2025-06-26
 
 - Add Gemini CLI provider (thanks Cline!)

@@ -86,6 +86,9 @@ import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 
+// Constants
+const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
+
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: []
@@ -1425,10 +1428,15 @@ export class Task extends EventEmitter<ClineEvents> {
 					// cancel task.
 					this.abortTask()
 
-					await abortStream(
-						"streaming_failed",
-						error.message ?? JSON.stringify(serializeError(error), null, 2),
-					)
+					// Check if this was a user-initiated cancellation
+					// If this.abort is true, it means the user clicked cancel, so we should
+					// treat this as "user_cancelled" rather than "streaming_failed"
+					const cancelReason = this.abort ? "user_cancelled" : "streaming_failed"
+					const streamingFailedMessage = this.abort
+						? undefined
+						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
+
+					await abortStream(cancelReason, streamingFailedMessage)
 
 					const history = await provider?.getTaskWithId(this.taskId)
 
@@ -1709,6 +1717,10 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
+			const currentProfileId =
+				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
+				"default"
+
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens: contextTokens,
@@ -1722,7 +1734,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				customCondensingPrompt,
 				condensingApiHandler,
 				profileThresholds,
-				currentProfileId: state?.currentApiConfigName || "default",
+				currentProfileId,
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
@@ -1793,7 +1805,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				}
 
 				const minDelay = requestDelaySeconds ?? 5
-				const maxDelay = maxRequestDelaySeconds ?? 100
+				const maxDelay = maxRequestDelaySeconds ?? MAX_EXPONENTIAL_BACKOFF_SECONDS
 
 				// Use the minimum delay as the base for exponential backoff
 				let exponentialDelay = Math.ceil(minDelay * Math.pow(2, retryAttempt))
