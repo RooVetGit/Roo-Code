@@ -70,6 +70,8 @@ export function getToolDescriptionsForMode(
 		partialReadsEnabled,
 		settings,
 		experiments,
+		currentMode: mode, // Pass current mode for MCP restriction checking
+		customModes, // Pass custom modes for restriction lookup
 	}
 
 	const tools = new Set<string>()

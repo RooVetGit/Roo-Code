@@ -8,9 +8,11 @@ import type {
 	ExperimentId,
 	ToolGroup,
 	PromptComponent,
+	McpRestrictions,
 } from "@roo-code/types"
 
 import { addCustomInstructions } from "../core/prompts/sections/custom-instructions"
+import { matchesGlobPattern, matchesAnyPattern } from "./pattern-matching"
 
 import { EXPERIMENT_IDS } from "./experiments"
 import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "./tools"
@@ -203,6 +205,70 @@ export function getModeSelection(mode: string, promptComponent?: PromptComponent
 	}
 }
 
+export function isServerAllowedForMode(
+	serverName: string,
+	restrictions: McpRestrictions,
+	allowedInModesByDefault?: boolean,
+): boolean {
+	// If server has allowedInModesByDefault: false, it must be explicitly allowed
+	if (allowedInModesByDefault === false) {
+		// Only allowed if explicitly in allowedServers list (with pattern support)
+		return restrictions.allowedServers ? matchesAnyPattern(serverName, restrictions.allowedServers) : false
+	}
+
+	// If allowedServers is defined, server must match at least one pattern
+	if (restrictions.allowedServers && !matchesAnyPattern(serverName, restrictions.allowedServers)) {
+		return false
+	}
+
+	// If disallowedServers is defined, server must not match any pattern
+	if (restrictions.disallowedServers && matchesAnyPattern(serverName, restrictions.disallowedServers)) {
+		return false
+	}
+
+	return true
+}
+
+export function isToolAllowedForModeAndServer(
+	serverName: string,
+	toolName: string,
+	restrictions: McpRestrictions,
+): boolean {
+	// If allowedTools is defined, tool must match at least one entry
+	if (restrictions.allowedTools) {
+		// Filter out empty entries before checking
+		const validAllowedTools = restrictions.allowedTools.filter((t) => t.serverName?.trim() && t.toolName?.trim())
+		if (validAllowedTools.length > 0) {
+			const isAllowed = validAllowedTools.some((t) => {
+				// Check if server name matches (with pattern support)
+				const serverMatches = matchesAnyPattern(serverName, [t.serverName])
+				// Check if tool name matches (with pattern support)
+				const toolMatches = matchesAnyPattern(toolName, [t.toolName])
+				return serverMatches && toolMatches
+			})
+			if (!isAllowed) return false
+		}
+	}
+
+	// If disallowedTools is defined, tool must not match any entry
+	if (restrictions.disallowedTools) {
+		// Filter out empty entries before checking
+		const validDisallowedTools = restrictions.disallowedTools.filter(
+			(t) => t.serverName?.trim() && t.toolName?.trim(),
+		)
+		const isDisallowed = validDisallowedTools.some((t) => {
+			// Check if server name matches (with pattern support)
+			const serverMatches = matchesAnyPattern(serverName, [t.serverName])
+			// Check if tool name matches (with pattern support)
+			const toolMatches = matchesAnyPattern(toolName, [t.toolName])
+			return serverMatches && toolMatches
+		})
+		if (isDisallowed) return false
+	}
+
+	return true
+}
+
 // Custom error class for file restrictions
 export class FileRestrictionError extends Error {
 	constructor(mode: string, pattern: string, description: string | undefined, filePath: string) {
@@ -220,6 +286,7 @@ export function isToolAllowedForMode(
 	toolRequirements?: Record<string, boolean>,
 	toolParams?: Record<string, any>, // All tool parameters
 	experiments?: Record<string, boolean>,
+	mcpContext?: { serverName?: string; toolName?: string; allowedInModesByDefault?: boolean },
 ): boolean {
 	// Always allow these tools
 	if (ALWAYS_AVAILABLE_TOOLS.includes(tool as any)) {
@@ -244,6 +311,25 @@ export function isToolAllowedForMode(
 	const mode = getModeBySlug(modeSlug, customModes)
 	if (!mode) {
 		return false
+	}
+
+	if ((tool === "use_mcp_tool" || tool === "access_mcp_resource") && mcpContext?.serverName) {
+		const restrictions = mode.mcpRestrictions || {} // Use empty object if no restrictions defined
+
+		// Always check allowedInModesByDefault, even if no explicit restrictions
+		if (!isServerAllowedForMode(mcpContext.serverName, restrictions, mcpContext.allowedInModesByDefault)) {
+			return false
+		}
+
+		// Check tool-level restrictions (only for use_mcp_tool and only if restrictions exist)
+		if (
+			tool === "use_mcp_tool" &&
+			mcpContext.toolName &&
+			mode.mcpRestrictions &&
+			!isToolAllowedForModeAndServer(mcpContext.serverName, mcpContext.toolName, restrictions)
+		) {
+			return false
+		}
 	}
 
 	// Check if tool is in any of the mode's groups and respects any group options

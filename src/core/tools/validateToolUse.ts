@@ -8,8 +8,10 @@ export function validateToolUse(
 	customModes?: ModeConfig[],
 	toolRequirements?: Record<string, boolean>,
 	toolParams?: Record<string, unknown>,
+	mcpContext?: { serverName?: string; toolName?: string; allowedInModesByDefault?: boolean },
 ): void {
-	if (!isToolAllowedForMode(toolName, mode, customModes ?? [], toolRequirements, toolParams)) {
-		throw new Error(`Tool "${toolName}" is not allowed in ${mode} mode.`)
+	if (!isToolAllowedForMode(toolName, mode, customModes ?? [], toolRequirements, toolParams, undefined, mcpContext)) {
+		const restriction = mcpContext ? ` (server: ${mcpContext.serverName}, tool: ${mcpContext.toolName})` : ""
+		throw new Error(`Tool "${toolName}" is not allowed in ${mode} mode${restriction}.`)
 	}
 }
