@@ -15,7 +15,6 @@ import { SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
-import { CodeIndexSettings } from "./CodeIndexSettings"
 import { SetCachedStateField } from "./types"
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
@@ -98,12 +97,6 @@ export const ExperimentalSettings = ({
 						</Trans>
 					</p>
 				</div>
-
-				{/* Code Index Settings - Only shown when enabled */}
-				<CodeIndexSettings
-					codebaseIndexModels={codebaseIndexModels}
-					codebaseIndexConfig={codebaseIndexConfig}
-				/>
 			</Section>
 		</div>
 	)
