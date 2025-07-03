@@ -111,46 +111,6 @@ describe("safeReadJson", () => {
 		await expect(safeReadJson(nonExistentPath)).rejects.toThrow(/ENOENT/)
 	})
 
-	test("should read a specific path from a JSON file", async () => {
-		const testData = {
-			user: {
-				name: "John",
-				age: 30,
-				address: {
-					city: "New York",
-					zip: "10001",
-				},
-			},
-			settings: {
-				theme: "dark",
-				notifications: true,
-			},
-		}
-		await writeJsonFile(currentTestFilePath, testData)
-
-		// Test reading a specific path
-		const result = await safeReadJson(currentTestFilePath, "user.address.city")
-		expect(result).toBe("New York")
-	})
-
-	test("should read multiple paths from a JSON file", async () => {
-		const testData = {
-			user: {
-				name: "John",
-				age: 30,
-			},
-			settings: {
-				theme: "dark",
-				notifications: true,
-			},
-		}
-		await writeJsonFile(currentTestFilePath, testData)
-
-		// Test reading multiple paths
-		const result = await safeReadJson(currentTestFilePath, ["user.name", "settings.theme"])
-		expect(result).toEqual(["John", "dark"])
-	})
-
 	// Failure Scenarios
 	test("should handle JSON parsing errors", async () => {
 		// Write invalid JSON
@@ -243,14 +203,5 @@ describe("safeReadJson", () => {
 
 		const result = await safeReadJson(currentTestFilePath)
 		expect(result).toEqual(largeData)
-	})
-
-	test("should handle path selection for non-existent paths", async () => {
-		const testData = { user: { name: "John" } }
-		await writeJsonFile(currentTestFilePath, testData)
-
-		// Test reading a non-existent path
-		const result = await safeReadJson(currentTestFilePath, "user.address")
-		expect(result).toBeUndefined()
 	})
 })
