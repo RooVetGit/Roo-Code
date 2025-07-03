@@ -29,7 +29,19 @@
 			"command": "執行命令",
 			"mcp": "使用 MCP"
 		},
-		"noTools": "無"
+		"selectMcpServers": "選擇 MCP 伺服器",
+		"searchMcpServers": "搜尋 MCP 伺服器",
+		"requiredMcpList": "所需 MCP 伺服器",
+		"noMcpServers": "未找到 MCP 伺服器",
+		"noMatchFound": "沒有符合的結果",
+		"noTools": "無",
+		"mcpAll": "全部",
+		"mcpSelectedCount": "{{included}} 已包含",
+		"mcpDefaultDescription": "若未選擇任何 MCP 伺服器，則預設啟用全部。",
+		"buttons": {
+			"save": "儲存",
+			"clearAll": "清除全部"
+		}
 	},
 	"roleDefinition": {
 		"title": "角色定義",

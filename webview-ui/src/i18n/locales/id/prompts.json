@@ -29,7 +29,19 @@
 			"command": "Jalankan Perintah",
 			"mcp": "Gunakan MCP"
 		},
-		"noTools": "Tidak Ada"
+		"selectMcpServers": "Pilih server MCP",
+		"searchMcpServers": "Cari server MCP",
+		"requiredMcpList": "Server MCP yang Diperlukan",
+		"noMcpServers": "Tidak ada server MCP ditemukan",
+		"noMatchFound": "Tidak ada hasil cocok",
+		"noTools": "Tidak Ada",
+		"mcpAll": "Semua",
+		"mcpSelectedCount": "{{included}} termasuk",
+		"mcpDefaultDescription": "Jika tidak ada server MCP yang dipilih, semua akan diaktifkan secara default.",
+		"buttons": {
+			"save": "Simpan",
+			"clearAll": "Bersihkan semua"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definisi Peran",

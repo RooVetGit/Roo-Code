@@ -29,7 +29,19 @@
 			"command": "명령 실행",
 			"mcp": "MCP 사용"
 		},
-		"noTools": "없음"
+		"selectMcpServers": "MCP 서버 선택",
+		"searchMcpServers": "MCP 서버 검색",
+		"requiredMcpList": "필수 MCP 서버",
+		"noMcpServers": "MCP 서버를 찾을 수 없음",
+		"noMatchFound": "일치하는 항목 없음",
+		"noTools": "없음",
+		"mcpAll": "전체",
+		"mcpSelectedCount": "{{included}} 포함됨",
+		"mcpDefaultDescription": "MCP 서버를 선택하지 않으면 전체가 기본적으로 활성화됩니다.",
+		"buttons": {
+			"save": "저장",
+			"clearAll": "전체 해제"
+		}
 	},
 	"roleDefinition": {
 		"title": "역할 정의",
