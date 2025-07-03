@@ -10,7 +10,6 @@ import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { cn } from "@src/lib/utils"
 import { buildDocLink } from "@src/utils/docLinks"
-import { vscode } from "@src/utils/vscode"
 
 import { SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
@@ -88,20 +87,12 @@ export const ExperimentalSettings = ({
 							checked={codebaseIndexEnabled || false}
 							onChange={(e: any) => {
 								const newEnabledState = e.target.checked
-
-								// Update the local cached state for immediate UI feedback
 								if (setCachedStateField && codebaseIndexConfig) {
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
 										codebaseIndexEnabled: newEnabledState,
 									})
 								}
-
-								// Send the message to update the backend state
-								vscode.postMessage({
-									type: "codebaseIndexEnabled",
-									bool: newEnabledState,
-								})
 							}}>
 							<span className="font-medium">{t("settings:codeIndex.enableLabel")}</span>
 						</VSCodeCheckbox>
