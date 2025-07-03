@@ -412,12 +412,12 @@
           </command>
           </execute_command>
       
-      4.  **Create PR**: Use the `gh` CLI to create the pull request.
+      5.  **Create PR**: Use the `gh` CLI to create the pull request.
           <execute_command>
           <command>gh pr create --repo [owner]/[repo] --base main --title "[PR Title from JSON]" --body "[PR Body from JSON]"</command>
           </execute_command>
           
-      5.  **Link to Issue**: Comment on the original issue with the PR link.
+      6.  **Link to Issue**: Comment on the original issue with the PR link.
           <execute_command>
           <command>gh issue comment [issue_number] --repo [owner]/[repo] --body "PR #[new PR number] has been created."</command>
           </execute_command>
