@@ -815,7 +815,7 @@ describe("ClineProvider", () => {
 	})
 
 	test("maxRequestDelaySeconds defaults to 600 seconds", async () => {
-		// Mock globalState.get to return undefined for requestDelaySeconds
+		// Mock globalState.get to return undefined for maxRequestDelaySeconds
 		;(mockContext.globalState.get as any).mockImplementation((key: string) => {
 			if (key === "maxRequestDelaySeconds") {
 				return undefined
