@@ -61,21 +61,18 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	children,
 	indexingStatus: externalIndexingStatus,
 }) => {
+	const SECRET_PLACEHOLDER = "••••••••••••••••"
 	const { t } = useAppTranslation()
 	const { codebaseIndexConfig, codebaseIndexModels } = useExtensionState()
 	const [open, setOpen] = useState(false)
 
 	const [indexingStatus, setIndexingStatus] = useState<IndexingStatus>(externalIndexingStatus)
 
-	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 	const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
 	const [saveError, setSaveError] = useState<string | null>(null)
 
-	// Track which fields have been modified by the user
-	const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set())
-
-	// Local state for all settings
-	const [localSettings, setLocalSettings] = useState<LocalCodeIndexSettings>({
+	// Default settings template
+	const getDefaultSettings = (): LocalCodeIndexSettings => ({
 		codebaseIndexEnabled: false,
 		codebaseIndexQdrantUrl: "",
 		codebaseIndexEmbedderProvider: "openai",
@@ -89,22 +86,38 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexGeminiApiKey: "",
 	})
 
+	// Initial settings state - stores the settings when popover opens
+	const [initialSettings, setInitialSettings] = useState<LocalCodeIndexSettings>(getDefaultSettings())
+
+	// Current settings state - tracks user changes
+	const [currentSettings, setCurrentSettings] = useState<LocalCodeIndexSettings>(getDefaultSettings())
+
 	// Update indexing status from parent
 	useEffect(() => {
 		setIndexingStatus(externalIndexingStatus)
 	}, [externalIndexingStatus])
 
-	// Initialize local settings from global state
+	// Initialize settings from global state
 	useEffect(() => {
 		if (codebaseIndexConfig) {
-			setLocalSettings((prev) => ({
-				...prev,
+			const settings = {
 				codebaseIndexEnabled: codebaseIndexConfig.codebaseIndexEnabled || false,
 				codebaseIndexQdrantUrl: codebaseIndexConfig.codebaseIndexQdrantUrl || "",
 				codebaseIndexEmbedderProvider: codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai",
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
-			}))
+				codeIndexOpenAiKey: "",
+				codeIndexQdrantApiKey: "",
+				codebaseIndexOpenAiCompatibleBaseUrl: "",
+				codebaseIndexOpenAiCompatibleApiKey: "",
+				codebaseIndexOpenAiCompatibleModelDimension: undefined,
+				codebaseIndexGeminiApiKey: "",
+			}
+			setInitialSettings(settings)
+			setCurrentSettings(settings)
+
+			// Request secret status to check if secrets exist
+			vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 		}
 	}, [codebaseIndexConfig])
 
@@ -130,9 +143,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			} else if (event.data.type === "codeIndexSettingsSaved") {
 				if (event.data.success) {
 					setSaveStatus("saved")
-					setHasUnsavedChanges(false)
-					// Clear modified fields after successful save
-					setModifiedFields(new Set())
+					// Don't update initial settings here - wait for the secret status response
 					// Request updated secret status after save
 					vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 					// Reset status after 3 seconds
@@ -159,93 +170,94 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
 			if (event.data.type === "codeIndexSecretStatus") {
-				// Update local settings to show placeholders for existing secrets
-				// Only update if the field hasn't been modified by the user
-				setLocalSettings((prev) => ({
-					...prev,
-					codeIndexOpenAiKey:
-						!modifiedFields.has("codeIndexOpenAiKey") && event.data.values.hasOpenAiKey
-							? "••••••••••••••••"
-							: prev.codeIndexOpenAiKey,
-					codeIndexQdrantApiKey:
-						!modifiedFields.has("codeIndexQdrantApiKey") && event.data.values.hasQdrantApiKey
-							? "••••••••••••••••"
-							: prev.codeIndexQdrantApiKey,
-					codebaseIndexOpenAiCompatibleApiKey:
-						!modifiedFields.has("codebaseIndexOpenAiCompatibleApiKey") &&
-						event.data.values.hasOpenAiCompatibleApiKey
-							? "••••••••••••••••"
-							: prev.codebaseIndexOpenAiCompatibleApiKey,
-					codebaseIndexGeminiApiKey:
-						!modifiedFields.has("codebaseIndexGeminiApiKey") && event.data.values.hasGeminiApiKey
-							? "••••••••••••••••"
-							: prev.codebaseIndexGeminiApiKey,
-				}))
+				// Update settings to show placeholders for existing secrets
+				const secretStatus = event.data.values
+
+				// Update both current and initial settings based on what secrets exist
+				const updateWithSecrets = (prev: LocalCodeIndexSettings): LocalCodeIndexSettings => {
+					const updated = { ...prev }
+
+					// Only update to placeholder if the field is currently empty or already a placeholder
+					// This preserves user input when they're actively editing
+					if (!prev.codeIndexOpenAiKey || prev.codeIndexOpenAiKey === SECRET_PLACEHOLDER) {
+						updated.codeIndexOpenAiKey = secretStatus.hasOpenAiKey ? SECRET_PLACEHOLDER : ""
+					}
+					if (!prev.codeIndexQdrantApiKey || prev.codeIndexQdrantApiKey === SECRET_PLACEHOLDER) {
+						updated.codeIndexQdrantApiKey = secretStatus.hasQdrantApiKey ? SECRET_PLACEHOLDER : ""
+					}
+					if (
+						!prev.codebaseIndexOpenAiCompatibleApiKey ||
+						prev.codebaseIndexOpenAiCompatibleApiKey === SECRET_PLACEHOLDER
+					) {
+						updated.codebaseIndexOpenAiCompatibleApiKey = secretStatus.hasOpenAiCompatibleApiKey
+							? SECRET_PLACEHOLDER
+							: ""
+					}
+					if (!prev.codebaseIndexGeminiApiKey || prev.codebaseIndexGeminiApiKey === SECRET_PLACEHOLDER) {
+						updated.codebaseIndexGeminiApiKey = secretStatus.hasGeminiApiKey ? SECRET_PLACEHOLDER : ""
+					}
+
+					return updated
+				}
+
+				setCurrentSettings(updateWithSecrets)
+				setInitialSettings(updateWithSecrets)
 			}
 		}
 
 		window.addEventListener("message", handleMessage)
 		return () => window.removeEventListener("message", handleMessage)
-	}, [modifiedFields])
+	}, [])
 
-	// Track changes
-	useEffect(() => {
-		if (!codebaseIndexConfig) return
+	// Generic comparison function that detects changes between initial and current settings
+	const hasUnsavedChanges = useMemo(() => {
+		// Get all keys from both objects to handle any field
+		const allKeys = [...Object.keys(initialSettings), ...Object.keys(currentSettings)] as Array<
+			keyof LocalCodeIndexSettings
+		>
 
-		const hasChanges =
-			localSettings.codebaseIndexEnabled !== codebaseIndexConfig.codebaseIndexEnabled ||
-			localSettings.codebaseIndexQdrantUrl !== (codebaseIndexConfig.codebaseIndexQdrantUrl || "") ||
-			localSettings.codebaseIndexEmbedderProvider !==
-				(codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai") ||
-			localSettings.codebaseIndexEmbedderBaseUrl !== (codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "") ||
-			localSettings.codebaseIndexEmbedderModelId !== (codebaseIndexConfig.codebaseIndexEmbedderModelId || "")
+		// Use a Set to ensure unique keys
+		const uniqueKeys = Array.from(new Set(allKeys))
 
-		setHasUnsavedChanges(hasChanges)
-	}, [localSettings, codebaseIndexConfig])
+		for (const key of uniqueKeys) {
+			const currentValue = currentSettings[key]
+			const initialValue = initialSettings[key]
 
-	const updateLocalSetting = (key: keyof LocalCodeIndexSettings, value: any) => {
-		setLocalSettings((prev) => ({ ...prev, [key]: value }))
-		// Mark field as modified when user changes it
-		if (
-			key === "codeIndexOpenAiKey" ||
-			key === "codeIndexQdrantApiKey" ||
-			key === "codebaseIndexOpenAiCompatibleApiKey" ||
-			key === "codebaseIndexGeminiApiKey"
-		) {
-			setModifiedFields((prev) => new Set(prev).add(key))
+			// For secret fields, check if the value has been modified from placeholder
+			if (currentValue === SECRET_PLACEHOLDER) {
+				// If it's still showing placeholder, no change
+				continue
+			}
+
+			// Compare values - handles all types including undefined
+			if (currentValue !== initialValue) {
+				return true
+			}
 		}
+
+		return false
+	}, [currentSettings, initialSettings])
+
+	const updateSetting = (key: keyof LocalCodeIndexSettings, value: any) => {
+		setCurrentSettings((prev) => ({ ...prev, [key]: value }))
 	}
 
 	const handleSaveSettings = () => {
 		setSaveStatus("saving")
 		setSaveError(null)
 
-		// Prepare settings to save
-		const settingsToSave: any = {
-			codebaseIndexEnabled: localSettings.codebaseIndexEnabled,
-			codebaseIndexQdrantUrl: localSettings.codebaseIndexQdrantUrl,
-			codebaseIndexEmbedderProvider: localSettings.codebaseIndexEmbedderProvider,
-			codebaseIndexEmbedderBaseUrl: localSettings.codebaseIndexEmbedderBaseUrl,
-			codebaseIndexEmbedderModelId: localSettings.codebaseIndexEmbedderModelId,
-			codebaseIndexOpenAiCompatibleBaseUrl: localSettings.codebaseIndexOpenAiCompatibleBaseUrl,
-			codebaseIndexOpenAiCompatibleModelDimension: localSettings.codebaseIndexOpenAiCompatibleModelDimension,
-		}
+		// Prepare settings to save - include all fields except secrets with placeholder values
+		const settingsToSave: any = {}
 
-		// Only include secret fields if they've been modified (not showing placeholder)
-		if (modifiedFields.has("codeIndexOpenAiKey") && localSettings.codeIndexOpenAiKey !== "••••••••••••••••") {
-			settingsToSave.codeIndexOpenAiKey = localSettings.codeIndexOpenAiKey
-		}
-		if (modifiedFields.has("codeIndexQdrantApiKey") && localSettings.codeIndexQdrantApiKey !== "••••••••••••••••") {
-			settingsToSave.codeIndexQdrantApiKey = localSettings.codeIndexQdrantApiKey
-		}
-		if (
-			modifiedFields.has("codebaseIndexOpenAiCompatibleApiKey") &&
-			localSettings.codebaseIndexOpenAiCompatibleApiKey !== "••••••••••••••••"
-		) {
-			settingsToSave.codebaseIndexOpenAiCompatibleApiKey = localSettings.codebaseIndexOpenAiCompatibleApiKey
-		}
-		if (modifiedFields.has("codebaseIndexGeminiApiKey") && localSettings.codebaseIndexGeminiApiKey !== "••••••••••••••••") {
-			settingsToSave.codebaseIndexGeminiApiKey = localSettings.codebaseIndexGeminiApiKey
+		// Iterate through all current settings
+		for (const [key, value] of Object.entries(currentSettings)) {
+			// Skip secret fields that still have placeholder value
+			if (value === SECRET_PLACEHOLDER) {
+				continue
+			}
+
+			// Include all other fields
+			settingsToSave[key] = value
 		}
 
 		// Save settings to backend
@@ -268,7 +280,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	const getAvailableModels = () => {
 		if (!codebaseIndexModels) return []
 
-		const models = codebaseIndexModels[localSettings.codebaseIndexEmbedderProvider]
+		const models = codebaseIndexModels[currentSettings.codebaseIndexEmbedderProvider]
 		return models ? Object.keys(models) : []
 	}
 
@@ -332,9 +344,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					<div className="space-y-2">
 						<label className="text-sm font-medium">{t("settings:codeIndex.embedderProviderLabel")}</label>
 						<Select
-							value={localSettings.codebaseIndexEmbedderProvider}
+							value={currentSettings.codebaseIndexEmbedderProvider}
 							onValueChange={(value: EmbedderProvider) =>
-								updateLocalSetting("codebaseIndexEmbedderProvider", value)
+								updateSetting("codebaseIndexEmbedderProvider", value)
 							}>
 							<SelectTrigger className="w-full">
 								<SelectValue />
@@ -351,14 +363,14 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					</div>
 
 					{/* Provider-specific settings */}
-					{localSettings.codebaseIndexEmbedderProvider === "openai" && (
+					{currentSettings.codebaseIndexEmbedderProvider === "openai" && (
 						<>
 							<div className="space-y-2">
 								<label className="text-sm font-medium">{t("settings:codeIndex.openAiKeyLabel")}</label>
 								<VSCodeTextField
 									type="password"
-									value={localSettings.codeIndexOpenAiKey || ""}
-									onInput={(e: any) => updateLocalSetting("codeIndexOpenAiKey", e.target.value)}
+									value={currentSettings.codeIndexOpenAiKey || ""}
+									onInput={(e: any) => updateSetting("codeIndexOpenAiKey", e.target.value)}
 									placeholder={t("settings:codeIndex.openAiKeyPlaceholder")}
 									className="w-full"
 								/>
@@ -367,15 +379,13 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 							<div className="space-y-2">
 								<label className="text-sm font-medium">{t("settings:codeIndex.modelLabel")}</label>
 								<VSCodeDropdown
-									value={localSettings.codebaseIndexEmbedderModelId}
-									onChange={(e: any) =>
-										updateLocalSetting("codebaseIndexEmbedderModelId", e.target.value)
-									}
+									value={currentSettings.codebaseIndexEmbedderModelId}
+									onChange={(e: any) => updateSetting("codebaseIndexEmbedderModelId", e.target.value)}
 									className="w-full">
 									<VSCodeOption value="">{t("settings:codeIndex.selectModel")}</VSCodeOption>
 									{getAvailableModels().map((modelId) => {
 										const model =
-											codebaseIndexModels?.[localSettings.codebaseIndexEmbedderProvider]?.[
+											codebaseIndexModels?.[currentSettings.codebaseIndexEmbedderProvider]?.[
 												modelId
 											]
 										return (
@@ -394,17 +404,15 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 						</>
 					)}
 
-					{localSettings.codebaseIndexEmbedderProvider === "ollama" && (
+					{currentSettings.codebaseIndexEmbedderProvider === "ollama" && (
 						<>
 							<div className="space-y-2">
 								<label className="text-sm font-medium">
 									{t("settings:codeIndex.ollamaBaseUrlLabel")}
 								</label>
 								<VSCodeTextField
-									value={localSettings.codebaseIndexEmbedderBaseUrl || ""}
-									onInput={(e: any) =>
-										updateLocalSetting("codebaseIndexEmbedderBaseUrl", e.target.value)
-									}
+									value={currentSettings.codebaseIndexEmbedderBaseUrl || ""}
+									onInput={(e: any) => updateSetting("codebaseIndexEmbedderBaseUrl", e.target.value)}
 									placeholder={t("settings:codeIndex.ollamaUrlPlaceholder")}
 									className="w-full"
 								/>
@@ -413,15 +421,13 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 							<div className="space-y-2">
 								<label className="text-sm font-medium">{t("settings:codeIndex.modelLabel")}</label>
 								<VSCodeDropdown
-									value={localSettings.codebaseIndexEmbedderModelId}
-									onChange={(e: any) =>
-										updateLocalSetting("codebaseIndexEmbedderModelId", e.target.value)
-									}
+									value={currentSettings.codebaseIndexEmbedderModelId}
+									onChange={(e: any) => updateSetting("codebaseIndexEmbedderModelId", e.target.value)}
 									className="w-full">
 									<VSCodeOption value="">{t("settings:codeIndex.selectModel")}</VSCodeOption>
 									{getAvailableModels().map((modelId) => {
 										const model =
-											codebaseIndexModels?.[localSettings.codebaseIndexEmbedderProvider]?.[
+											codebaseIndexModels?.[currentSettings.codebaseIndexEmbedderProvider]?.[
 												modelId
 											]
 										return (
@@ -440,16 +446,16 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 						</>
 					)}
 
-					{localSettings.codebaseIndexEmbedderProvider === "openai-compatible" && (
+					{currentSettings.codebaseIndexEmbedderProvider === "openai-compatible" && (
 						<>
 							<div className="space-y-2">
 								<label className="text-sm font-medium">
 									{t("settings:codeIndex.openAiCompatibleBaseUrlLabel")}
 								</label>
 								<VSCodeTextField
-									value={localSettings.codebaseIndexOpenAiCompatibleBaseUrl || ""}
+									value={currentSettings.codebaseIndexOpenAiCompatibleBaseUrl || ""}
 									onInput={(e: any) =>
-										updateLocalSetting("codebaseIndexOpenAiCompatibleBaseUrl", e.target.value)
+										updateSetting("codebaseIndexOpenAiCompatibleBaseUrl", e.target.value)
 									}
 									placeholder={t("settings:codeIndex.openAiCompatibleBaseUrlPlaceholder")}
 									className="w-full"
@@ -462,9 +468,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 								</label>
 								<VSCodeTextField
 									type="password"
-									value={localSettings.codebaseIndexOpenAiCompatibleApiKey || ""}
+									value={currentSettings.codebaseIndexOpenAiCompatibleApiKey || ""}
 									onInput={(e: any) =>
-										updateLocalSetting("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
+										updateSetting("codebaseIndexOpenAiCompatibleApiKey", e.target.value)
 									}
 									placeholder={t("settings:codeIndex.openAiCompatibleApiKeyPlaceholder")}
 									className="w-full"
@@ -474,10 +480,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 							<div className="space-y-2">
 								<label className="text-sm font-medium">{t("settings:codeIndex.modelLabel")}</label>
 								<VSCodeTextField
-									value={localSettings.codebaseIndexEmbedderModelId || ""}
-									onInput={(e: any) =>
-										updateLocalSetting("codebaseIndexEmbedderModelId", e.target.value)
-									}
+									value={currentSettings.codebaseIndexEmbedderModelId || ""}
+									onInput={(e: any) => updateSetting("codebaseIndexEmbedderModelId", e.target.value)}
 									placeholder={t("settings:codeIndex.modelPlaceholder")}
 									className="w-full"
 								/>
@@ -488,10 +492,12 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 									{t("settings:codeIndex.modelDimensionLabel")}
 								</label>
 								<VSCodeTextField
-									value={localSettings.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""}
+									value={
+										currentSettings.codebaseIndexOpenAiCompatibleModelDimension?.toString() || ""
+									}
 									onInput={(e: any) => {
 										const value = e.target.value ? parseInt(e.target.value) : undefined
-										updateLocalSetting("codebaseIndexOpenAiCompatibleModelDimension", value)
+										updateSetting("codebaseIndexOpenAiCompatibleModelDimension", value)
 									}}
 									placeholder={t("settings:codeIndex.modelDimensionPlaceholder")}
 									className="w-full"
@@ -500,14 +506,16 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 						</>
 					)}
 
-					{localSettings.codebaseIndexEmbedderProvider === "gemini" && (
+					{currentSettings.codebaseIndexEmbedderProvider === "gemini" && (
 						<>
 							<div className="space-y-2">
-								<label className="text-sm font-medium">{t("settings:codeIndex.geminiApiKeyLabel")}</label>
+								<label className="text-sm font-medium">
+									{t("settings:codeIndex.geminiApiKeyLabel")}
+								</label>
 								<VSCodeTextField
 									type="password"
-									value={localSettings.codebaseIndexGeminiApiKey || ""}
-									onInput={(e: any) => updateLocalSetting("codebaseIndexGeminiApiKey", e.target.value)}
+									value={currentSettings.codebaseIndexGeminiApiKey || ""}
+									onInput={(e: any) => updateSetting("codebaseIndexGeminiApiKey", e.target.value)}
 									placeholder={t("settings:codeIndex.geminiApiKeyPlaceholder")}
 									className="w-full"
 								/>
@@ -516,15 +524,13 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 							<div className="space-y-2">
 								<label className="text-sm font-medium">{t("settings:codeIndex.modelLabel")}</label>
 								<VSCodeDropdown
-									value={localSettings.codebaseIndexEmbedderModelId}
-									onChange={(e: any) =>
-										updateLocalSetting("codebaseIndexEmbedderModelId", e.target.value)
-									}
+									value={currentSettings.codebaseIndexEmbedderModelId}
+									onChange={(e: any) => updateSetting("codebaseIndexEmbedderModelId", e.target.value)}
 									className="w-full">
 									<VSCodeOption value="">{t("settings:codeIndex.selectModel")}</VSCodeOption>
 									{getAvailableModels().map((modelId) => {
 										const model =
-											codebaseIndexModels?.[localSettings.codebaseIndexEmbedderProvider]?.[
+											codebaseIndexModels?.[currentSettings.codebaseIndexEmbedderProvider]?.[
 												modelId
 											]
 										return (
@@ -547,8 +553,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					<div className="space-y-2">
 						<label className="text-sm font-medium">{t("settings:codeIndex.qdrantUrlLabel")}</label>
 						<VSCodeTextField
-							value={localSettings.codebaseIndexQdrantUrl || ""}
-							onInput={(e: any) => updateLocalSetting("codebaseIndexQdrantUrl", e.target.value)}
+							value={currentSettings.codebaseIndexQdrantUrl || ""}
+							onInput={(e: any) => updateSetting("codebaseIndexQdrantUrl", e.target.value)}
 							placeholder={t("settings:codeIndex.qdrantUrlPlaceholder")}
 							className="w-full"
 						/>
@@ -558,8 +564,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 						<label className="text-sm font-medium">{t("settings:codeIndex.qdrantApiKeyLabel")}</label>
 						<VSCodeTextField
 							type="password"
-							value={localSettings.codeIndexQdrantApiKey || ""}
-							onInput={(e: any) => updateLocalSetting("codeIndexQdrantApiKey", e.target.value)}
+							value={currentSettings.codeIndexQdrantApiKey || ""}
+							onInput={(e: any) => updateSetting("codeIndexQdrantApiKey", e.target.value)}
 							placeholder={t("settings:codeIndex.qdrantApiKeyPlaceholder")}
 							className="w-full"
 						/>
