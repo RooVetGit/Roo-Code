@@ -1,5 +1,6 @@
 // npx vitest services/marketplace/__tests__/SimpleInstaller.spec.ts
 
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
 import { SimpleInstaller } from "../SimpleInstaller"
 import * as fs from "fs/promises"
 import * as yaml from "yaml"
@@ -20,8 +21,16 @@ vi.mock("vscode", () => ({
 	},
 }))
 vi.mock("../../../utils/globalContext")
+vi.mock("../../../utils/safeReadJson")
+vi.mock("../../../utils/safeWriteJson")
+
+// Import the mocked functions
+import { safeReadJson } from "../../../utils/safeReadJson"
+import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 const mockFs = fs as any
+const mockSafeReadJson = vi.mocked(safeReadJson)
+const mockSafeWriteJson = vi.mocked(safeWriteJson)
 
 describe("SimpleInstaller", () => {
 	let installer: SimpleInstaller
@@ -189,10 +198,15 @@ describe("SimpleInstaller", () => {
 		}
 
 		it("should install MCP when mcp.json file does not exist", async () => {
-			const notFoundError = new Error("File not found") as any
-			notFoundError.code = "ENOENT"
-			mockFs.readFile.mockRejectedValueOnce(notFoundError)
-			mockFs.writeFile.mockResolvedValueOnce(undefined as any)
+			// Mock safeReadJson to return null for a non-existent file
+			mockSafeReadJson.mockResolvedValueOnce(null)
+
+			// Capture the data passed to fs.writeFile
+			let capturedData: any = null
+			mockFs.writeFile.mockImplementationOnce((path: string, content: string) => {
+				capturedData = JSON.parse(content)
+				return Promise.resolve(undefined)
+			})
 
 			const result = await installer.installItem(mockMcpItem, { target: "project" })
 
@@ -200,15 +214,15 @@ describe("SimpleInstaller", () => {
 			expect(mockFs.writeFile).toHaveBeenCalled()
 
 			// Verify the written content contains the new server
-			const writtenContent = mockFs.writeFile.mock.calls[0][1] as string
-			const writtenData = JSON.parse(writtenContent)
-			expect(writtenData.mcpServers["test-mcp"]).toBeDefined()
+			expect(capturedData.mcpServers["test-mcp"]).toBeDefined()
 		})
 
 		it("should throw error when mcp.json contains invalid JSON", async () => {
 			const invalidJson = '{ "mcpServers": { invalid json'
 
-			mockFs.readFile.mockResolvedValueOnce(invalidJson)
+			// Mock safeReadJson to return a SyntaxError
+			const syntaxError = new SyntaxError("Unexpected token i in JSON at position 17")
+			mockSafeReadJson.mockRejectedValueOnce(syntaxError)
 
 			await expect(installer.installItem(mockMcpItem, { target: "project" })).rejects.toThrow(
 				"Cannot install MCP server: The .roo/mcp.json file contains invalid JSON",
@@ -219,24 +233,28 @@ describe("SimpleInstaller", () => {
 		})
 
 		it("should install MCP when mcp.json contains valid JSON", async () => {
-			const existingContent = JSON.stringify({
+			const existingData = {
 				mcpServers: {
 					"existing-server": { command: "existing", args: [] },
 				},
-			})
+			}
 
-			mockFs.readFile.mockResolvedValueOnce(existingContent)
-			mockFs.writeFile.mockResolvedValueOnce(undefined as any)
+			// Mock safeReadJson to return the existing data
+			mockSafeReadJson.mockResolvedValueOnce(existingData)
+
+			// Capture the data passed to fs.writeFile
+			let capturedData: any = null
+			mockFs.writeFile.mockImplementationOnce((path: string, content: string) => {
+				capturedData = JSON.parse(content)
+				return Promise.resolve(undefined)
+			})
 
 			await installer.installItem(mockMcpItem, { target: "project" })
 
-			const writtenContent = mockFs.writeFile.mock.calls[0][1] as string
-			const writtenData = JSON.parse(writtenContent)
-
 			// Should contain both existing and new server
-			expect(Object.keys(writtenData.mcpServers)).toHaveLength(2)
-			expect(writtenData.mcpServers["existing-server"]).toBeDefined()
-			expect(writtenData.mcpServers["test-mcp"]).toBeDefined()
+			expect(Object.keys(capturedData.mcpServers)).toHaveLength(2)
+			expect(capturedData.mcpServers["existing-server"]).toBeDefined()
+			expect(capturedData.mcpServers["test-mcp"]).toBeDefined()
 		})
 	})
 
@@ -257,8 +275,11 @@ describe("SimpleInstaller", () => {
 		it("should throw error when .roomodes contains invalid YAML during removal", async () => {
 			const invalidYaml = "invalid: yaml: content: {"
 
+			// Mock readFile to return invalid YAML
+			// The removeMode method still uses fs.readFile directly for YAML files
 			mockFs.readFile.mockResolvedValueOnce(invalidYaml)
 
+			// The implementation will try to parse the YAML and throw an error
 			await expect(installer.removeItem(mockModeItem, { target: "project" })).rejects.toThrow(
 				"Cannot remove mode: The .roomodes file contains invalid YAML",
 			)
@@ -270,11 +291,15 @@ describe("SimpleInstaller", () => {
 		it("should do nothing when file does not exist", async () => {
 			const notFoundError = new Error("File not found") as any
 			notFoundError.code = "ENOENT"
+
+			// Mock readFile to simulate file not found
+			// The removeMode method still uses fs.readFile directly for YAML files
 			mockFs.readFile.mockRejectedValueOnce(notFoundError)
 
 			// Should not throw
 			await installer.removeItem(mockModeItem, { target: "project" })
 
+			// Should NOT write to file
 			expect(mockFs.writeFile).not.toHaveBeenCalled()
 		})
 
