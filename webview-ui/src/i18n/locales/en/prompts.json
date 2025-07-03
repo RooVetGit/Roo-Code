@@ -228,7 +228,11 @@
 			"serverNamePlaceholder": "Server name or pattern (e.g., docs-*, *-admin)",
 			"toolNamePlaceholder": "Tool name or pattern (e.g., get_*, delete_*)",
 			"remove": "Remove restriction",
-			"advancedPatterns": "Pattern Matching Guide"
+			"advancedPatterns": "Pattern Matching Guide",
+			"viewTools": "View server tools",
+			"hideTools": "Hide server tools",
+			"serverTools": "Tools for {{serverName}}",
+			"noTools": "No tools available for this server"
 		},
 		"patterns": {
 			"title": "Pattern Matching",

@@ -707,6 +707,7 @@ function CompactServerRow({
 }: CompactServerRowProps) {
 	const { t } = useAppTranslation()
 	const [showDetails, setShowDetails] = useState(false)
+	const [showTools, setShowTools] = useState(false)
 	const isAllowed = allowedServers.includes(server.name)
 	const isDisallowed = disallowedServers.includes(server.name)
 	const status = getServerStatus(server)
@@ -746,6 +747,49 @@ function CompactServerRow({
 	const enabledToolsCount = getEnabledToolsCount()
 	const totalToolsCount = server.tools.length
 
+	// Helper function to organize tools by enabled/disabled status
+	const getOrganizedTools = () => {
+		if (groupType === "disabled") {
+			// For disabled servers, all tools are disabled
+			return {
+				enabled: [],
+				disabled: server.tools.map((tool) => ({ ...tool, isEnabled: false })),
+			}
+		}
+
+		const serverAllowedTools = allowedTools.filter((t) => t.serverName === server.name)
+		const serverDisallowedTools = disallowedTools.filter((t) => t.serverName === server.name)
+
+		const enabledTools = []
+		const disabledTools = []
+
+		for (const tool of server.tools) {
+			let isEnabled = true
+
+			// Check if there are specific allowed tools for this server
+			if (serverAllowedTools.length > 0) {
+				isEnabled = serverAllowedTools.some((allowedTool) =>
+					patternMatching.matchesPattern(tool.name, allowedTool.toolName),
+				)
+			} else if (serverDisallowedTools.length > 0) {
+				// Check if tool is specifically disallowed
+				isEnabled = !serverDisallowedTools.some((disallowedTool) =>
+					patternMatching.matchesPattern(tool.name, disallowedTool.toolName),
+				)
+			}
+
+			if (isEnabled) {
+				enabledTools.push({ ...tool, isEnabled: true })
+			} else {
+				disabledTools.push({ ...tool, isEnabled: false })
+			}
+		}
+
+		return { enabled: enabledTools, disabled: disabledTools }
+	}
+
+	const organizedTools = getOrganizedTools()
+
 	return (
 		<div className="border border-vscode-panel-border rounded bg-vscode-editor-background">
 			{/* Compact Row */}
@@ -780,14 +824,32 @@ function CompactServerRow({
 						</div>
 					</div>
 
+					{/* View Tools button */}
+					<StandardTooltip
+						content={
+							showTools
+								? t("prompts:mcpRestrictions.tools.hideTools")
+								: t("prompts:mcpRestrictions.tools.viewTools")
+						}>
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={() => setShowTools(!showTools)}
+							className="h-6 w-6 flex-shrink-0">
+							<Wrench className="w-3 h-3" />
+						</Button>
+					</StandardTooltip>
+
 					{/* Expand details button */}
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => setShowDetails(!showDetails)}
-						className="h-6 w-6 flex-shrink-0">
-						<Info className="w-3 h-3" />
-					</Button>
+					<StandardTooltip content={t("prompts:mcpRestrictions.status.reason")}>
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={() => setShowDetails(!showDetails)}
+							className="h-6 w-6 flex-shrink-0">
+							<Info className="w-3 h-3" />
+						</Button>
+					</StandardTooltip>
 				</div>
 
 				{/* Action buttons */}
@@ -826,6 +888,69 @@ function CompactServerRow({
 							{t("prompts:mcpRestrictions.servers.optIn")}
 						</div>
 					)}
+				</div>
+			)}
+
+			{/* Tools list (expandable) */}
+			{showTools && (
+				<div className="border-t border-vscode-panel-border bg-vscode-textCodeBlock-background">
+					<div className="p-2">
+						<div className="text-xs font-medium text-vscode-foreground mb-2">
+							{t("prompts:mcpRestrictions.tools.serverTools", { serverName: server.name })}
+						</div>
+						<div className="max-h-48 overflow-y-auto space-y-1">
+							{/* Enabled tools first */}
+							{organizedTools.enabled.map((tool) => (
+								<div
+									key={`enabled-${tool.name}`}
+									className="flex items-center gap-2 p-1.5 rounded bg-vscode-editor-background">
+									<div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+									<div className="flex-1 min-w-0">
+										<div className="text-xs font-medium text-vscode-foreground truncate">
+											{tool.name}
+										</div>
+										{tool.description && (
+											<div className="text-xs text-vscode-descriptionForeground truncate mt-0.5">
+												{tool.description}
+											</div>
+										)}
+									</div>
+									<div className="text-xs text-green-300 bg-green-600/20 px-1.5 py-0.5 rounded flex-shrink-0">
+										{t("prompts:mcpRestrictions.status.enabled")}
+									</div>
+								</div>
+							))}
+
+							{/* Disabled tools after */}
+							{organizedTools.disabled.map((tool) => (
+								<div
+									key={`disabled-${tool.name}`}
+									className="flex items-center gap-2 p-1.5 rounded bg-vscode-editor-background opacity-50">
+									<div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+									<div className="flex-1 min-w-0">
+										<div className="text-xs font-medium text-vscode-descriptionForeground truncate">
+											{tool.name}
+										</div>
+										{tool.description && (
+											<div className="text-xs text-vscode-descriptionForeground truncate mt-0.5">
+												{tool.description}
+											</div>
+										)}
+									</div>
+									<div className="text-xs text-red-300 bg-red-600/20 px-1.5 py-0.5 rounded flex-shrink-0">
+										{t("prompts:mcpRestrictions.status.disabled")}
+									</div>
+								</div>
+							))}
+
+							{/* Show message if no tools */}
+							{organizedTools.enabled.length === 0 && organizedTools.disabled.length === 0 && (
+								<div className="text-xs text-vscode-descriptionForeground text-center py-4">
+									{t("prompts:mcpRestrictions.tools.noTools")}
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
 			)}
 		</div>
