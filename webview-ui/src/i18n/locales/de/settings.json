@@ -99,7 +99,11 @@
 			"indexed": "Indexiert",
 			"error": "Fehler"
 		},
-		"close": "Schließen"
+		"close": "Schließen",
+		"advancedConfigLabel": "Erweiterte Konfiguration",
+		"searchMinScoreLabel": "Suchergebnis-Schwellenwert",
+		"searchMinScoreDescription": "Mindestähnlichkeitswert (0.0-1.0), der für Suchergebnisse erforderlich ist. Niedrigere Werte liefern mehr Ergebnisse, die jedoch möglicherweise weniger relevant sind. Höhere Werte liefern weniger, aber relevantere Ergebnisse.",
+		"searchMinScoreResetTooltip": "Auf Standardwert zurücksetzen (0.4)"
 	},
 	"autoApprove": {
 		"description": "Erlaubt Roo, Operationen automatisch ohne Genehmigung durchzuführen. Aktiviere diese Einstellungen nur, wenn du der KI vollständig vertraust und die damit verbundenen Sicherheitsrisiken verstehst.",
@@ -556,7 +560,6 @@
 			"name": "Marketplace aktivieren",
 			"description": "Wenn aktiviert, kannst du MCP und benutzerdefinierte Modi aus dem Marketplace installieren und verwalten."
 		},
-
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gleichzeitige Dateibearbeitungen aktivieren",
 			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage bearbeiten. Wenn deaktiviert, muss Roo Dateien einzeln bearbeiten. Das Deaktivieren kann helfen, wenn du mit weniger fähigen Modellen arbeitest oder mehr Kontrolle über Dateiänderungen haben möchtest."
