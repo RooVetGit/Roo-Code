@@ -63,17 +63,22 @@ vi.mock("../../../i18n", () => ({
 	}),
 }))
 
-vi.mock("fs/promises", () => ({
-	default: {
-		rm: vi.fn().mockResolvedValue(undefined),
-		mkdir: vi.fn().mockResolvedValue(undefined),
-	},
-	rm: vi.fn().mockResolvedValue(undefined),
-	mkdir: vi.fn().mockResolvedValue(undefined),
-}))
+vi.mock("fs/promises", () => {
+	const mockRm = vi.fn().mockResolvedValue(undefined)
+	const mockMkdir = vi.fn().mockResolvedValue(undefined)
+
+	return {
+		default: {
+			rm: mockRm,
+			mkdir: mockMkdir,
+		},
+		rm: mockRm,
+		mkdir: mockMkdir,
+	}
+})
 
 import * as vscode from "vscode"
-import fs from "fs/promises"
+import * as fs from "fs/promises"
 import * as os from "os"
 import * as path from "path"
 import * as fsUtils from "../../../utils/fs"
