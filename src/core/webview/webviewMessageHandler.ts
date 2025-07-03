@@ -1830,15 +1830,6 @@ export const webviewMessageHandler = async (
 			const settings = message.codeIndexSettings
 
 			try {
-				console.log(`[DEBUG WebviewHandler] Starting atomic save for code index settings`)
-				console.log(`[DEBUG WebviewHandler] Settings received:`, {
-					enabled: settings.codebaseIndexEnabled,
-					provider: settings.codebaseIndexEmbedderProvider,
-					openAiKey: settings.codeIndexOpenAiKey
-						? `"${settings.codeIndexOpenAiKey.substring(0, 4)}..."`
-						: "undefined",
-				})
-
 				// Save global state settings atomically (without codebaseIndexEnabled which is now in global settings)
 				const currentConfig = getGlobalState("codebaseIndexConfig") || {}
 				const globalStateConfig = {
@@ -1867,12 +1858,15 @@ export const webviewMessageHandler = async (
 						settings.codebaseIndexOpenAiCompatibleApiKey,
 					)
 				}
+				if (settings.codebaseIndexGeminiApiKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexGeminiApiKey",
+						settings.codebaseIndexGeminiApiKey,
+					)
+				}
 
 				// Verify secrets are actually stored
 				const storedOpenAiKey = provider.contextProxy.getSecret("codeIndexOpenAiKey")
-				console.log(
-					`[DEBUG WebviewHandler] Verification - stored OpenAI key: ${storedOpenAiKey ? `"${storedOpenAiKey.substring(0, 4)}..."` : "undefined"}`,
-				)
 
 				// Notify code index manager of changes
 				if (provider.codeIndexManager) {
@@ -1922,6 +1916,7 @@ export const webviewMessageHandler = async (
 			const hasOpenAiCompatibleApiKey = !!(await provider.context.secrets.get(
 				"codebaseIndexOpenAiCompatibleApiKey",
 			))
+			const hasGeminiApiKey = !!(await provider.context.secrets.get("codebaseIndexGeminiApiKey"))
 
 			provider.postMessageToWebview({
 				type: "codeIndexSecretStatus",
@@ -1929,6 +1924,7 @@ export const webviewMessageHandler = async (
 					hasOpenAiKey,
 					hasQdrantApiKey,
 					hasOpenAiCompatibleApiKey,
+					hasGeminiApiKey,
 				},
 			})
 			break

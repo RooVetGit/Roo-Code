@@ -183,17 +183,11 @@ export class CodeIndexConfigManager {
 			const apiKey = this.openAiCompatibleOptions?.apiKey
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(baseUrl && apiKey && qdrantUrl)
-			console.log(
-				`[DEBUG ConfigManager] OpenAI Compatible config check: baseUrl=${baseUrl}, key=${apiKey ? `"${apiKey.substring(0, 4)}..."` : "undefined"}, url=${qdrantUrl}, configured=${isConfigured}`,
-			)
 			return isConfigured
 		} else if (this.embedderProvider === "gemini") {
 			const apiKey = this.geminiOptions?.apiKey
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(apiKey && qdrantUrl)
-			console.log(
-				`[DEBUG ConfigManager] Gemini config check: key=${apiKey ? `"${apiKey.substring(0, 4)}..."` : "undefined"}, url=${qdrantUrl}, configured=${isConfigured}`,
-			)
 			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly
