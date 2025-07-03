@@ -18,11 +18,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 
 	const handleToggleCodeIndex = (checked: boolean) => {
 		vscode.postMessage({
-			type: "saveCodeIndexSettingsAtomic",
-			values: {
-				...codebaseIndexConfig,
-				codebaseIndexEnabled: checked,
-			},
+			type: "codebaseIndexEnabled",
+			isEnabled: checked,
 		})
 	}
 
@@ -41,9 +38,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({ codebaseIn
 						href={buildDocLink("features/experimental/codebase-indexing", "settings")}
 						style={{ display: "inline" }}></VSCodeLink>
 				</Trans>
-			</p>
-			<p className="text-sm text-vscode-descriptionForeground ml-6">
-				{t("settings:codeIndex.clickIndicatorMessage")}
 			</p>
 		</div>
 	)

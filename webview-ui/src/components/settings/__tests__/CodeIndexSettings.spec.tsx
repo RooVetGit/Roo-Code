@@ -57,9 +57,6 @@ describe("CodeIndexSettings", () => {
 
 		// Should show enable label
 		expect(screen.getByText("settings:codeIndex.enableLabel")).toBeInTheDocument()
-
-		// Should show description
-		expect(screen.getByText("settings:codeIndex.clickIndicatorMessage")).toBeInTheDocument()
 	})
 
 	it("renders with provided config settings", () => {
@@ -91,11 +88,8 @@ describe("CodeIndexSettings", () => {
 		fireEvent.click(checkbox)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "saveCodeIndexSettingsAtomic",
-			values: {
-				...mockConfig,
-				codebaseIndexEnabled: true,
-			},
+			type: "codebaseIndexEnabled",
+			isEnabled: true,
 		})
 	})
 
@@ -106,10 +100,8 @@ describe("CodeIndexSettings", () => {
 		fireEvent.click(checkbox)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "saveCodeIndexSettingsAtomic",
-			values: {
-				codebaseIndexEnabled: true,
-			},
+			type: "codebaseIndexEnabled",
+			isEnabled: true,
 		})
 	})
 
