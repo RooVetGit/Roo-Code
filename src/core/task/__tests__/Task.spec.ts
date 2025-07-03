@@ -1334,5 +1334,184 @@ describe("Cline", () => {
 				expect(task.diffStrategy).toBeUndefined()
 			})
 		})
+
+		describe("finish method", () => {
+			it("should finalize all pending api_req_started messages with cost 0", async () => {
+				const [cline, task] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Mock saveClineMessages
+				const saveSpy = vi.spyOn(cline as any, "saveClineMessages").mockResolvedValue(undefined)
+
+				// Set up messages with multiple api_req_started messages
+				cline.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "text",
+						text: "Regular message",
+					},
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: JSON.stringify({
+							request: "test request 1",
+							tokensIn: 100,
+							tokensOut: 50,
+							// No cost - should be updated
+						}),
+					},
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: JSON.stringify({
+							request: "test request 2",
+							tokensIn: 200,
+							tokensOut: 100,
+							cost: 0.001, // Already has cost
+						}),
+					},
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "text",
+						text: "Another regular message",
+					},
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: JSON.stringify({
+							request: "test request 3",
+							tokensIn: 300,
+							tokensOut: 150,
+							// No cost or cancelReason - should be updated
+						}),
+					},
+				]
+
+				// Call finish
+				await cline.finish()
+
+				// Verify saveClineMessages was called
+				expect(saveSpy).toHaveBeenCalled()
+
+				// Verify the messages were updated correctly
+				const messages = cline.clineMessages
+
+				// First api_req_started (index 1) had no cost, should now have cost 0
+				const msg1 = JSON.parse(messages[1].text || "{}")
+				expect(msg1.cost).toBe(0)
+				expect(msg1.request).toBe("test request 1")
+
+				// Second api_req_started (index 2) already had cost, should be unchanged
+				const msg2 = JSON.parse(messages[2].text || "{}")
+				expect(msg2.cost).toBe(0.001)
+
+				// Last api_req_started (index 4) had no cost/cancelReason, should now have cost 0
+				const msg3 = JSON.parse(messages[4].text || "{}")
+				expect(msg3.cost).toBe(0)
+				expect(msg3.request).toBe("test request 3")
+
+				// Verify that ALL api_req_started messages now have either cost or cancelReason
+				const apiReqMessages = messages.filter((m) => m.type === "say" && m.say === "api_req_started")
+				for (const msg of apiReqMessages) {
+					const apiReqInfo = JSON.parse(msg.text || "{}")
+					const hasCost = apiReqInfo.cost !== undefined
+					const hasCancelReason = apiReqInfo.cancelReason !== undefined
+					expect(hasCost || hasCancelReason).toBe(true)
+				}
+
+				await cline.abortTask(true)
+				await task.catch(() => {})
+			})
+
+			it("should not save if no api_req_started messages need updating", async () => {
+				const [cline, task] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Mock saveClineMessages
+				const saveSpy = vi.spyOn(cline as any, "saveClineMessages").mockResolvedValue(undefined)
+
+				// Set up messages where all api_req_started already have cost or cancelReason
+				cline.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: JSON.stringify({
+							request: "test request 1",
+							tokensIn: 100,
+							tokensOut: 50,
+							cost: 0.001, // Has cost
+						}),
+					},
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: JSON.stringify({
+							request: "test request 2",
+							tokensIn: 200,
+							tokensOut: 100,
+							cancelReason: "User cancelled", // Has cancelReason
+						}),
+					},
+				]
+
+				// Clear any calls from setup
+				saveSpy.mockClear()
+
+				// Call finish
+				await cline.finish()
+
+				// Verify saveClineMessages was NOT called since no updates were needed
+				expect(saveSpy).not.toHaveBeenCalled()
+
+				await cline.abortTask(true)
+				await task.catch(() => {})
+			})
+
+			it("should handle case with no api_req_started messages", async () => {
+				const [cline, task] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Mock saveClineMessages
+				const saveSpy = vi.spyOn(cline as any, "saveClineMessages").mockResolvedValue(undefined)
+
+				// Set up messages with no api_req_started
+				cline.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "text",
+						text: "Just a regular message",
+					},
+				]
+
+				// Clear any calls from setup
+				saveSpy.mockClear()
+
+				// Call finish
+				await cline.finish()
+
+				// Verify saveClineMessages was NOT called
+				expect(saveSpy).not.toHaveBeenCalled()
+
+				await cline.abortTask(true)
+				await task.catch(() => {})
+			})
+		})
 	})
 })
