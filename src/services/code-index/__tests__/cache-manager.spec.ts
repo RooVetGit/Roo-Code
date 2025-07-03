@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vitest } from "vitest"
 import type { Mock } from "vitest"
 import * as vscode from "vscode"
 import { createHash } from "crypto"
@@ -5,11 +6,15 @@ import debounce from "lodash.debounce"
 import { CacheManager } from "../cache-manager"
 
 // Mock safeWriteJson utility
+vitest.mock("../../../utils/safeReadJson", () => ({
+	safeReadJson: vitest.fn(),
+}))
 vitest.mock("../../../utils/safeWriteJson", () => ({
 	safeWriteJson: vitest.fn().mockResolvedValue(undefined),
 }))
 
 // Import the mocked version
+import { safeReadJson } from "../../../utils/safeReadJson"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 // Mock vscode
@@ -71,17 +76,16 @@ describe("CacheManager", () => {
 	describe("initialize", () => {
 		it("should load existing cache file successfully", async () => {
 			const mockCache = { "file1.ts": "hash1", "file2.ts": "hash2" }
-			const mockBuffer = Buffer.from(JSON.stringify(mockCache))
-			;(vscode.workspace.fs.readFile as Mock).mockResolvedValue(mockBuffer)
+			;(safeReadJson as Mock).mockResolvedValue(mockCache)
 
 			await cacheManager.initialize()
 
-			expect(vscode.workspace.fs.readFile).toHaveBeenCalledWith(mockCachePath)
+			expect(safeReadJson).toHaveBeenCalledWith(mockCachePath.fsPath)
 			expect(cacheManager.getAllHashes()).toEqual(mockCache)
 		})
 
 		it("should handle missing cache file by creating empty cache", async () => {
-			;(vscode.workspace.fs.readFile as Mock).mockRejectedValue(new Error("File not found"))
+			;(safeReadJson as Mock).mockRejectedValue(new Error("File not found"))
 
 			await cacheManager.initialize()
 
