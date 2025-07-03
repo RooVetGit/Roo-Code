@@ -956,7 +956,7 @@ describe("McpHub", () => {
 			expect(StdioClientTransport).toHaveBeenCalledWith(
 				expect.objectContaining({
 					command: "cmd.exe",
-					args: ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "/test/path"],
+					args: ["/c", '"npx"', "-y", "@modelcontextprotocol/server-filesystem", "/test/path"],
 				}),
 			)
 		})
@@ -1155,7 +1155,7 @@ describe("McpHub", () => {
 			expect(StdioClientTransport).toHaveBeenCalledWith(
 				expect.objectContaining({
 					command: "cmd.exe",
-					args: ["/c", "npx", "-y", "@modelcontextprotocol/server-example"],
+					args: ["/c", '"npx"', "-y", "@modelcontextprotocol/server-example"],
 					env: expect.objectContaining({
 						FNM_DIR: "C:\\Users\\test\\.fnm",
 						FNM_NODE_DIST_MIRROR: "https://nodejs.org/dist",
@@ -1223,6 +1223,66 @@ describe("McpHub", () => {
 				expect.objectContaining({
 					command: "CMD",
 					args: ["/c", "echo", "test"],
+				}),
+			)
+		})
+
+		it("should properly quote commands with special characters like ampersand", async () => {
+			// Mock Windows platform
+			Object.defineProperty(process, "platform", {
+				value: "win32",
+				writable: true,
+				enumerable: true,
+				configurable: true,
+			})
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: vi.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			StdioClientTransport.mockImplementation((config: any) => {
+				// Store the config for verification
+				return mockTransport
+			})
+
+			// Mock Client
+			Client.mockImplementation(() => ({
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}))
+
+			// Create a new McpHub instance
+			const mcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Mock file system operations
+			vi.mocked(fs.readFile).mockResolvedValue(
+				JSON.stringify({
+					mcpServers: {
+						"test-server": {
+							command: "c:\\path with &\\mymcp\\mcp.exe",
+							args: ["--verbose"],
+						},
+					},
+				}),
+			)
+
+			// Initialize servers (this will trigger connectToServer)
+			await mcpHub["initializeGlobalMcpServers"]()
+
+			// Verify StdioClientTransport was called with properly quoted command
+			expect(StdioClientTransport).toHaveBeenCalledWith(
+				expect.objectContaining({
+					command: "cmd.exe",
+					args: ["/c", '"c:\\path with &\\mymcp\\mcp.exe"', "--verbose"],
 				}),
 			)
 		})
