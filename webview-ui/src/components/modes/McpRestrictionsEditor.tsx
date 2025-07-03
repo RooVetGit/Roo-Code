@@ -332,11 +332,8 @@ export function McpRestrictionsEditor({
 										<div className="w-2 h-2 rounded-full bg-green-500" />
 										<span>
 											{t("prompts:mcpRestrictions.servers.enabledCount", {
-												count: serverGroups.enabled.length + serverGroups.restricted.length,
-												names:
-													[...serverGroups.enabled, ...serverGroups.restricted]
-														.map((s) => s.name)
-														.join(", ") || "None",
+												count: serverGroups.enabled.length,
+												names: serverGroups.enabled.map((s) => s.name).join(", ") || "None",
 											})}
 										</span>
 									</div>
@@ -353,7 +350,7 @@ export function McpRestrictionsEditor({
 										<div className="flex items-center gap-2">
 											<div className="w-2 h-2 rounded-full bg-yellow-500" />
 											<span>
-												{t("prompts:mcpRestrictions.servers.restrictedCount", {
+												{t("prompts:mcpRestrictions.servers.enabledWithRestrictionsCount", {
 													count: serverGroups.restricted.length,
 													names: serverGroups.restricted.map((s) => s.name).join(", "),
 												})}
@@ -373,6 +370,8 @@ export function McpRestrictionsEditor({
 									onToggleExpanded={() => toggleGroupExpansion("enabled")}
 									allowedServers={allowedServers}
 									disallowedServers={disallowedServers}
+									allowedTools={allowedTools}
+									disallowedTools={disallowedTools}
 									getServerStatus={getServerStatus}
 									toggleServerInList={toggleServerInList}
 									disabled={disabled}
@@ -388,6 +387,8 @@ export function McpRestrictionsEditor({
 									onToggleExpanded={() => toggleGroupExpansion("disabled")}
 									allowedServers={allowedServers}
 									disallowedServers={disallowedServers}
+									allowedTools={allowedTools}
+									disallowedTools={disallowedTools}
 									getServerStatus={getServerStatus}
 									toggleServerInList={toggleServerInList}
 									disabled={disabled}
@@ -403,6 +404,8 @@ export function McpRestrictionsEditor({
 									onToggleExpanded={() => toggleGroupExpansion("restricted")}
 									allowedServers={allowedServers}
 									disallowedServers={disallowedServers}
+									allowedTools={allowedTools}
+									disallowedTools={disallowedTools}
 									getServerStatus={getServerStatus}
 									toggleServerInList={toggleServerInList}
 									disabled={disabled}
@@ -571,6 +574,8 @@ interface CollapsibleServerGroupProps {
 	onToggleExpanded: () => void
 	allowedServers: string[]
 	disallowedServers: string[]
+	allowedTools: McpToolRestriction[]
+	disallowedTools: McpToolRestriction[]
 	getServerStatus: (server: McpServer) => { enabled: boolean; reason: string; reasonText: string }
 	toggleServerInList: (serverName: string, listType: "allowed" | "disallowed") => void
 	disabled?: boolean
@@ -585,6 +590,8 @@ function CollapsibleServerGroup({
 	onToggleExpanded,
 	allowedServers,
 	disallowedServers,
+	allowedTools,
+	disallowedTools,
 	getServerStatus,
 	toggleServerInList,
 	disabled,
@@ -659,9 +666,12 @@ function CollapsibleServerGroup({
 								server={server}
 								allowedServers={allowedServers}
 								disallowedServers={disallowedServers}
+								allowedTools={allowedTools}
+								disallowedTools={disallowedTools}
 								getServerStatus={getServerStatus}
 								toggleServerInList={toggleServerInList}
 								disabled={disabled}
+								groupType={groupType}
 							/>
 						))}
 					</div>
@@ -676,24 +686,65 @@ interface CompactServerRowProps {
 	server: McpServer
 	allowedServers: string[]
 	disallowedServers: string[]
+	allowedTools: McpToolRestriction[]
+	disallowedTools: McpToolRestriction[]
 	getServerStatus: (server: McpServer) => { enabled: boolean; reason: string; reasonText: string }
 	toggleServerInList: (serverName: string, listType: "allowed" | "disallowed") => void
 	disabled?: boolean
+	groupType: "enabled" | "disabled" | "restricted"
 }
 
 function CompactServerRow({
 	server,
 	allowedServers,
 	disallowedServers,
+	allowedTools,
+	disallowedTools,
 	getServerStatus,
 	toggleServerInList,
 	disabled,
+	groupType,
 }: CompactServerRowProps) {
 	const { t } = useAppTranslation()
 	const [showDetails, setShowDetails] = useState(false)
 	const isAllowed = allowedServers.includes(server.name)
 	const isDisallowed = disallowedServers.includes(server.name)
 	const status = getServerStatus(server)
+
+	// Helper function to calculate enabled tools for restricted servers
+	const getEnabledToolsCount = () => {
+		if (groupType !== "restricted") {
+			return server.tools.length
+		}
+
+		// For restricted servers, calculate how many tools are actually enabled
+		const serverAllowedTools = allowedTools.filter((t) => t.serverName === server.name)
+		const serverDisallowedTools = disallowedTools.filter((t) => t.serverName === server.name)
+
+		// If there are allowed tools specified for this server, only those are enabled
+		if (serverAllowedTools.length > 0) {
+			return server.tools.filter((tool) => {
+				return serverAllowedTools.some((allowedTool) =>
+					patternMatching.matchesPattern(tool.name, allowedTool.toolName),
+				)
+			}).length
+		}
+
+		// If no allowed tools but there are disallowed tools, count enabled tools
+		if (serverDisallowedTools.length > 0) {
+			return server.tools.filter((tool) => {
+				return !serverDisallowedTools.some((disallowedTool) =>
+					patternMatching.matchesPattern(tool.name, disallowedTool.toolName),
+				)
+			}).length
+		}
+
+		// No tool restrictions for this server
+		return server.tools.length
+	}
+
+	const enabledToolsCount = getEnabledToolsCount()
+	const totalToolsCount = server.tools.length
 
 	return (
 		<div className="border border-vscode-panel-border rounded bg-vscode-editor-background">
@@ -713,7 +764,9 @@ function CompactServerRow({
 						<div className="flex items-center gap-2">
 							<span className="font-medium text-vscode-foreground truncate">{server.name}</span>
 							<span className="text-xs text-vscode-descriptionForeground">
-								({server.tools.length} tools)
+								{groupType === "restricted"
+									? `(${enabledToolsCount} out of ${totalToolsCount} tools)`
+									: `(${totalToolsCount} tools)`}
 							</span>
 							<span
 								className={cn("text-xs px-1.5 py-0.5 rounded", {

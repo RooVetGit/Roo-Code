@@ -212,7 +212,8 @@
 			"currentStatus": "Current Server Status",
 			"enabledCount": "{{count}} enabled: {{names}}",
 			"disabledCount": "{{count}} disabled: {{names}}",
-			"restrictedCount": "{{count}} with restrictions: {{names}}"
+			"restrictedCount": "{{count}} with restrictions: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} enabled with restrictions: {{names}}"
 		},
 		"tools": {
 			"description": "Control specific tools within servers. Use patterns like 'delete_*' to match multiple tools.",
