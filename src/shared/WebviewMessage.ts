@@ -7,6 +7,7 @@ import type {
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
 	ShareVisibility,
+	HistorySearchOptions,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -23,6 +24,11 @@ export interface WebviewMessage {
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
+		| "getHistoryItems"
+		| "scanTaskHistory"
+		| "rebuildHistoryIndexes"
+		| "isUpgradeNeeded"
+		| "performUpgrade"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
@@ -50,6 +56,8 @@ export interface WebviewMessage {
 		| "shareCurrentTask"
 		| "showTaskWithId"
 		| "deleteTaskWithId"
+		| "taskDeletedConfirmation"
+		| "copyTask"
 		| "exportTaskWithId"
 		| "importSettings"
 		| "exportSettings"
@@ -169,6 +177,9 @@ export interface WebviewMessage {
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"
 		| "installMarketplaceItem"
+		| "loggingOperation"
+		| "scanTaskHistoryResult"
+		| "rebuildHistoryIndexesResult"
 		| "installMarketplaceItemWithParameters"
 		| "cancelMarketplaceInstall"
 		| "removeInstalledMarketplaceItem"
@@ -222,6 +233,16 @@ export interface WebviewMessage {
 	config?: Record<string, any> // Add config to the payload
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
+	historySearchOptions?: HistorySearchOptions // For history search
+	historyScanOptions?: {
+		mode?: "merge" | "replace"
+		mergeFromGlobal?: boolean
+		mergeToGlobal?: boolean
+		reconstructOrphans?: boolean
+		scanHistoryFiles?: boolean
+		logs?: string[]
+		noVerify?: boolean
+	}
 }
 
 export const checkoutDiffPayloadSchema = z.object({

@@ -23,12 +23,11 @@ type GlobalStateKey = keyof GlobalState
 type SecretStateKey = keyof SecretState
 type RooCodeSettingsKey = keyof RooCodeSettings
 
-const PASS_THROUGH_STATE_KEYS = ["taskHistory"]
+const PASS_THROUGH_STATE_KEYS: string[] = []
 
 export const isPassThroughStateKey = (key: string) => PASS_THROUGH_STATE_KEYS.includes(key)
 
 const globalSettingsExportSchema = globalSettingsSchema.omit({
-	taskHistory: true,
 	listApiConfigMeta: true,
 	currentApiConfigName: true,
 })

@@ -3,6 +3,7 @@ import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { ExtensionMessage } from "@roo/ExtensionMessage"
+import UpgradeHandler, { useUpgradeCheck } from "./components/upgrade/UpgradeHandler"
 import TranslationProvider from "./i18n/TranslationContext"
 import { MarketplaceViewStateManager } from "./components/marketplace/MarketplaceViewStateManager"
 
@@ -55,6 +56,7 @@ const App = () => {
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
+	const { upgradeNeeded, clearUpgradeNeeded } = useUpgradeCheck()
 
 	const [humanRelayDialogState, setHumanRelayDialogState] = useState<{
 		isOpen: boolean
@@ -168,6 +170,20 @@ const App = () => {
 
 	// Do not conditionally load ChatView, it's expensive and there's state we
 	// don't want to lose (user input, disableInput, askResponse promise, etc.)
+
+	// Return early while checking for an upgrade because
+	// there may be structures that should not be accessed
+	// until the upgrade completes.
+	if (upgradeNeeded === null) {
+		return null
+	}
+
+	// If an upgrade is needed, show the upgrade UI
+	if (upgradeNeeded) {
+		return <UpgradeHandler onComplete={clearUpgradeNeeded} />
+	}
+
+	// Normal rendering when no upgrade is needed
 	return showWelcome ? (
 		<WelcomeView />
 	) : (

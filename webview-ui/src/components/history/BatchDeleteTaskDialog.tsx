@@ -16,18 +16,21 @@ import { AlertDialogProps } from "@radix-ui/react-alert-dialog"
 
 interface BatchDeleteTaskDialogProps extends AlertDialogProps {
 	taskIds: string[]
+	onDeleteStart?: () => void
 }
 
-export const BatchDeleteTaskDialog = ({ taskIds, ...props }: BatchDeleteTaskDialogProps) => {
+export const BatchDeleteTaskDialog = ({ taskIds, onDeleteStart, ...props }: BatchDeleteTaskDialogProps) => {
 	const { t } = useAppTranslation()
 	const { onOpenChange } = props
 
 	const onDelete = useCallback(() => {
 		if (taskIds.length > 0) {
+			// Signal that deletion is starting
+			onDeleteStart?.()
 			vscode.postMessage({ type: "deleteMultipleTasksWithIds", ids: taskIds })
 			onOpenChange?.(false)
 		}
-	}, [taskIds, onOpenChange])
+	}, [taskIds, onOpenChange, onDeleteStart])
 
 	return (
 		<AlertDialog {...props}>
