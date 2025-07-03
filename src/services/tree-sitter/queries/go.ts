@@ -44,15 +44,28 @@ export default `
 (method_declaration
   name: (field_identifier) @name.definition.method)
 
-; Channel operations
-(channel_type) @name.definition.channel
+; Functions containing goroutines (instead of capturing go statements)
+(function_declaration
+  name: (identifier) @name.definition.function
+  body: (block
+    (go_statement))) @definition.goroutine_function
 
-; Goroutine declarations
-(go_statement) @name.definition.goroutine
+; Functions containing defer statements
+(function_declaration
+  name: (identifier) @name.definition.function
+  body: (block
+    (defer_statement))) @definition.defer_function
 
-; Defer statements
-(defer_statement) @name.definition.defer
+; Functions containing select statements
+(function_declaration
+  name: (identifier) @name.definition.function
+  body: (block
+    (select_statement))) @definition.select_function
 
-; Select statements
-(select_statement) @name.definition.select
+; Functions with channel parameters or operations
+(function_declaration
+  name: (identifier) @name.definition.function
+  parameters: (parameter_list
+    (parameter_declaration
+      type: (channel_type)))) @definition.channel_function
 `
