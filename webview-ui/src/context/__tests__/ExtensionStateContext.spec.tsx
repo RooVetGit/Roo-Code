@@ -191,7 +191,7 @@ describe("mergeExtensionState", () => {
 			enableCheckpoints: true,
 			writeDelayMs: 1000,
 			requestDelaySeconds: 5,
-			maxRequestDelaySeconds: 100,
+			maxRequestDelaySeconds: 600,
 			mode: "default",
 			experiments: {} as Record<ExperimentId, boolean>,
 			customModes: [],

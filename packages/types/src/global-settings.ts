@@ -190,7 +190,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowBrowser: true,
 	alwaysApproveResubmit: true,
 	requestDelaySeconds: 5,
-	maxRequestDelaySeconds: 100,
+	maxRequestDelaySeconds: 600,
 	alwaysAllowMcp: true,
 	alwaysAllowModeSwitch: true,
 	alwaysAllowSubtasks: true,

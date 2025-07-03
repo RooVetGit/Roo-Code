@@ -521,7 +521,7 @@ describe("ClineProvider", () => {
 			mcpEnabled: true,
 			enableMcpServerCreation: false,
 			requestDelaySeconds: 5,
-			maxRequestDelaySeconds: 100,
+			maxRequestDelaySeconds: 600,
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
@@ -814,7 +814,7 @@ describe("ClineProvider", () => {
 		expect(state.requestDelaySeconds).toBe(5)
 	})
 
-	test("maxRequestDelaySeconds defaults to 100 seconds", async () => {
+	test("maxRequestDelaySeconds defaults to 600 seconds", async () => {
 		// Mock globalState.get to return undefined for requestDelaySeconds
 		;(mockContext.globalState.get as any).mockImplementation((key: string) => {
 			if (key === "maxRequestDelaySeconds") {
@@ -824,7 +824,7 @@ describe("ClineProvider", () => {
 		})
 
 		const state = await provider.getState()
-		expect(state.maxRequestDelaySeconds).toBe(100)
+		expect(state.maxRequestDelaySeconds).toBe(600)
 	})
 
 	test("alwaysApproveResubmit defaults to false", async () => {
@@ -1021,8 +1021,8 @@ describe("ClineProvider", () => {
 		expect(mockPostMessage).toHaveBeenCalled()
 
 		// Test maxRequestDelaySeconds
-		await messageHandler({ type: "maxRequestDelaySeconds", value: 100 })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("maxRequestDelaySeconds", 100)
+		await messageHandler({ type: "maxRequestDelaySeconds", value: 600 })
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("maxRequestDelaySeconds", 600)
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 

@@ -179,7 +179,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		enableMcpServerCreation: false,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
-		maxRequestDelaySeconds: 100,
+		maxRequestDelaySeconds: 600,
 		currentApiConfigName: "default",
 		listApiConfigMeta: [],
 		mode: defaultModeSlug,

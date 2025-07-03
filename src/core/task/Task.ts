@@ -1807,10 +1807,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				const minDelay = requestDelaySeconds ?? 5
 				const maxDelay = maxRequestDelaySeconds ?? MAX_EXPONENTIAL_BACKOFF_SECONDS
 
-				// Use the minimum delay as the base for exponential backoff
 				let exponentialDelay = Math.ceil(minDelay * Math.pow(2, retryAttempt))
 
-				// Clamp exponential delay to the configured range
 				exponentialDelay = Math.max(minDelay, Math.min(exponentialDelay, maxDelay))
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
