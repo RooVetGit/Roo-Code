@@ -2,6 +2,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest"
 import { AssistantMessageParser } from "../AssistantMessageParser"
+import { AssistantMessageContent } from "../parseAssistantMessage"
 import { TextContent, ToolUse } from "../../../shared/tools"
 import { toolNames } from "@roo-code/types"
 
@@ -11,17 +12,32 @@ import { toolNames } from "@roo-code/types"
 const isEmptyTextContent = (block: any) => block.type === "text" && (block as TextContent).content === ""
 
 /**
- * Helper to simulate streaming by feeding the parser random-sized chunks (1-10 chars).
+ * Helper to simulate streaming by feeding the parser deterministic "random"-sized chunks (1-10 chars).
+ * Uses a seeded pseudo-random number generator for deterministic chunking.
  */
+
+// Simple linear congruential generator (LCG) for deterministic pseudo-random numbers
+function createSeededRandom(seed: number) {
+	let state = seed
+	return {
+		next: () => {
+			// LCG parameters from Numerical Recipes
+			state = (state * 1664525 + 1013904223) % 0x100000000
+			return state / 0x100000000
+		},
+	}
+}
+
 function streamChunks(
 	parser: AssistantMessageParser,
 	message: string,
 ): ReturnType<AssistantMessageParser["getContentBlocks"]> {
-	let result: any[] = []
+	let result: AssistantMessageContent[] = []
 	let i = 0
+	const rng = createSeededRandom(42) // Fixed seed for deterministic tests
 	while (i < message.length) {
-		// Random chunk size between 1 and 10, but not exceeding message length
-		const chunkSize = Math.min(message.length - i, Math.floor(Math.random() * 10) + 1)
+		// Deterministic chunk size between 1 and 10, but not exceeding message length
+		const chunkSize = Math.min(message.length - i, Math.floor(rng.next() * 10) + 1)
 		const chunk = message.slice(i, i + chunkSize)
 		result = parser.processChunk(chunk)
 		i += chunkSize

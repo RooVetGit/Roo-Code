@@ -76,11 +76,7 @@ export class AssistantMessageParser {
 				} else {
 					// Partial param value is accumulating.
 					// Write the currently accumulated param content in real time
-					const partialValue = currentParamValue
-					this.currentToolUse.params[this.currentParamName] =
-						this.currentParamName === "content"
-							? partialValue.replace(/^\n/, "").replace(/\n$/, "")
-							: partialValue.trim()
+					this.currentToolUse.params[this.currentParamName] = currentParamValue
 					continue
 				}
 			}
@@ -167,6 +163,8 @@ export class AssistantMessageParser {
 							.slice(0, -toolUseOpeningTag.slice(0, -1).length)
 							.trim()
 
+						this.currentTextContent.content = this.currentTextContent.content.trim()
+
 						// No need to push, currentTextContent is already in contentBlocks
 						this.currentTextContent = undefined
 					}
@@ -193,7 +191,7 @@ export class AssistantMessageParser {
 					// Create a new text content block and add it to contentBlocks
 					this.currentTextContent = {
 						type: "text",
-						content: this.accumulator.slice(this.currentTextContentStartIndex).trim(),
+						content: this.accumulator.slice(this.currentTextContentStartIndex),
 						partial: true,
 					}
 
@@ -202,7 +200,7 @@ export class AssistantMessageParser {
 					this.contentBlocks.push(this.currentTextContent)
 				} else {
 					// Update the existing text content
-					this.currentTextContent.content = this.accumulator.slice(this.currentTextContentStartIndex).trim()
+					this.currentTextContent.content = this.accumulator.slice(this.currentTextContentStartIndex)
 				}
 			}
 		}
@@ -222,16 +220,9 @@ export class AssistantMessageParser {
 			if (block.partial) {
 				block.partial = false
 			}
+			if (block.type === "text" && typeof block.content === "string") {
+				block.content = block.content.trim()
+			}
 		}
-	}
-
-	/**
-	 * Process a complete message and return the parsed content blocks.
-	 * @param message The complete message to parse.
-	 * @returns The parsed content blocks.
-	 */
-	public parseCompleteMessage(message: string): AssistantMessageContent[] {
-		this.reset()
-		return this.processChunk(message)
 	}
 }
