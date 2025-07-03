@@ -183,6 +183,9 @@ export interface WebviewMessage {
 		| "importModeResult"
 		| "checkRulesDirectory"
 		| "checkRulesDirectoryResult"
+		| "getChatTextDraft"
+		| "updateChatTextDraft"
+		| "clearChatTextDraft"
 	text?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean

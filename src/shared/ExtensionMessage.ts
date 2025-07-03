@@ -102,6 +102,7 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
+		| "chatTextDraftValue"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
