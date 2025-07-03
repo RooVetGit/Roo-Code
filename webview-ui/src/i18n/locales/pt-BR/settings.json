@@ -527,6 +527,11 @@
 			"profileDescription": "Limite personalizado apenas para este perfil (substitui o padrão global)",
 			"inheritDescription": "Este perfil herda o limite padrão global ({{threshold}}%)",
 			"usesGlobal": "(usa global {{threshold}}%)"
+		},
+		"maxImageFileSize": {
+			"label": "Tamanho máximo do arquivo de imagem",
+			"mb": "MB",
+			"description": "Tamanho máximo (em MB) para arquivos de imagem que podem ser processados pela ferramenta de leitura de arquivos."
 		}
 	},
 	"terminal": {

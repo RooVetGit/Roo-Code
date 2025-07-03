@@ -20,6 +20,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxWorkspaceFiles: number
 	showRooIgnoredFiles?: boolean
 	maxReadFileLine?: number
+	maxImageFileSize?: number
 	maxConcurrentFileReads?: number
 	profileThresholds?: Record<string, number>
 	includeDiagnosticMessages?: boolean
@@ -32,6 +33,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "maxWorkspaceFiles"
 		| "showRooIgnoredFiles"
 		| "maxReadFileLine"
+		| "maxImageFileSize"
 		| "maxConcurrentFileReads"
 		| "profileThresholds"
 		| "includeDiagnosticMessages"
@@ -49,6 +51,7 @@ export const ContextManagementSettings = ({
 	showRooIgnoredFiles,
 	setCachedStateField,
 	maxReadFileLine,
+	maxImageFileSize,
 	maxConcurrentFileReads,
 	profileThresholds = {},
 	includeDiagnosticMessages,
@@ -203,6 +206,34 @@ export const ContextManagementSettings = ({
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-2">
 						{t("settings:contextManagement.maxReadFile.description")}
+					</div>
+				</div>
+
+				<div>
+					<div className="flex flex-col gap-2">
+						<span className="font-medium">{t("settings:contextManagement.maxImageFileSize.label")}</span>
+						<div className="flex items-center gap-4">
+							<Input
+								type="number"
+								pattern="[0-9]*"
+								className="w-24 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+								value={maxImageFileSize ?? 5}
+								min={1}
+								max={100}
+								onChange={(e) => {
+									const newValue = parseInt(e.target.value, 10)
+									if (!isNaN(newValue) && newValue >= 1 && newValue <= 100) {
+										setCachedStateField("maxImageFileSize", newValue)
+									}
+								}}
+								onClick={(e) => e.currentTarget.select()}
+								data-testid="max-image-file-size-input"
+							/>
+							<span>{t("settings:contextManagement.maxImageFileSize.mb")}</span>
+						</div>
+					</div>
+					<div className="text-vscode-descriptionForeground text-sm mt-2">
+						{t("settings:contextManagement.maxImageFileSize.description")}
 					</div>
 				</div>
 

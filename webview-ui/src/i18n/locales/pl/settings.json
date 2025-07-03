@@ -527,6 +527,11 @@
 			"profileDescription": "Niestandardowy próg tylko dla tego profilu (zastępuje globalny domyślny)",
 			"inheritDescription": "Ten profil dziedziczy globalny domyślny próg ({{threshold}}%)",
 			"usesGlobal": "(używa globalnego {{threshold}}%)"
+		},
+		"maxImageFileSize": {
+			"label": "Maksymalny rozmiar pliku obrazu",
+			"mb": "MB",
+			"description": "Maksymalny rozmiar (w MB) plików obrazów, które mogą być przetwarzane przez narzędzie do czytania plików."
 		}
 	},
 	"terminal": {

@@ -502,6 +502,11 @@
 			"label": "Limite de lectures simultanées",
 			"description": "Nombre maximum de fichiers que l'outil 'read_file' peut traiter simultanément. Des valeurs plus élevées peuvent accélérer la lecture de plusieurs petits fichiers mais augmentent l'utilisation de la mémoire."
 		},
+		"maxImageFileSize": {
+			"label": "Taille maximale des fichiers d'image",
+			"mb": "MB",
+			"description": "Taille maximale (en MB) pour les fichiers d'image qui peuvent être traités par l'outil de lecture de fichier."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Inclure automatiquement les diagnostics dans le contexte",

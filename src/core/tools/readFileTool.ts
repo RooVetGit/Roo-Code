@@ -17,9 +17,9 @@ import { parseXml } from "../../utils/xml"
 import * as fs from "fs/promises"
 
 /**
- * Maximum allowed image file size in bytes (5MB)
+ * Default maximum allowed image file size in bytes (5MB)
  */
-const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024
+const DEFAULT_MAX_IMAGE_FILE_SIZE_MB = 5
 
 /**
  * Supported image formats that can be displayed
@@ -482,7 +482,7 @@ export async function readFileTool(
 
 			const relPath = fileResult.path
 			const fullPath = path.resolve(cline.cwd, relPath)
-			const { maxReadFileLine = -1 } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const { maxReadFileLine = -1, maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB } = (await cline.providerRef.deref()?.getState()) ?? {}
 
 			// Process approved files
 			try {
@@ -499,9 +499,9 @@ export async function readFileTool(
 							const imageStats = await fs.stat(fullPath)
 
 							// Check if image file exceeds size limit
-							if (imageStats.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+							if (imageStats.size > maxImageFileSize * 1024 * 1024) {
 								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
-								const notice = t("tools:readFile.imageTooLarge", { size: imageSizeInMB, max: 5 })
+								const notice = t("tools:readFile.imageTooLarge", { size: imageSizeInMB, max: maxImageFileSize })
 
 								// Track file read
 								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)

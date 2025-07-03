@@ -502,6 +502,11 @@
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
 		},
+		"maxImageFileSize": {
+			"label": "Max image file size",
+			"mb": "MB",
+			"description": "Maximum size (in MB) for image files that can be processed by the read file tool."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Automatically include diagnostics in context",

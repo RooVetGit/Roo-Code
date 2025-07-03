@@ -527,6 +527,11 @@
 			"profileDescription": "이 프로필만을 위한 사용자 정의 임계값 (글로벌 기본값 재정의)",
 			"inheritDescription": "이 프로필은 글로벌 기본 임계값을 상속합니다 ({{threshold}}%)",
 			"usesGlobal": "(글로벌 {{threshold}}% 사용)"
+		},
+		"maxImageFileSize": {
+			"label": "최대 이미지 파일 크기",
+			"mb": "MB",
+			"description": "read file 도구로 처리할 수 있는 이미지 파일의 최대 크기(MB 단위)입니다."
 		}
 	},
 	"terminal": {

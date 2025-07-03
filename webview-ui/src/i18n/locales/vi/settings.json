@@ -527,6 +527,11 @@
 			"profileDescription": "Ngưỡng tùy chỉnh chỉ cho hồ sơ này (ghi đè mặc định toàn cục)",
 			"inheritDescription": "Hồ sơ này kế thừa ngưỡng mặc định toàn cục ({{threshold}}%)",
 			"usesGlobal": "(sử dụng toàn cục {{threshold}}%)"
+		},
+		"maxImageFileSize": {
+			"label": "Kích thước tối đa của tệp hình ảnh",
+			"mb": "MB",
+			"description": "Kích thước tối đa (tính bằng MB) cho các tệp hình ảnh có thể được xử lý bởi công cụ đọc tệp."
 		}
 	},
 	"terminal": {
