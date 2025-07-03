@@ -231,7 +231,7 @@
 			"advancedPatterns": "Pattern Matching Guide",
 			"viewTools": "View server tools",
 			"hideTools": "Hide server tools",
-			"serverTools": "Tools for {{serverName}}",
+			"serverTools": "Tools of {{serverName}}",
 			"noTools": "No tools available for this server"
 		},
 		"patterns": {
