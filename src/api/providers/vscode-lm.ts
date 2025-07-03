@@ -287,6 +287,60 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		}
 	}
 
+	private isContentFilteringError(error: Error): boolean {
+		const message = error.message.toLowerCase()
+		const name = error.name.toLowerCase()
+
+		// Common patterns that indicate content filtering
+		const filteringPatterns = [
+			"filtered",
+			"content policy",
+			"inappropriate",
+			"safety",
+			"blocked",
+			"restricted",
+			"content violation",
+			"policy violation",
+			"harmful content",
+			"unsafe content",
+		]
+
+		return filteringPatterns.some((pattern) => message.includes(pattern) || name.includes(pattern))
+	}
+
+	private isContentFilteringErrorObject(error: any): boolean {
+		if (!error || typeof error !== "object") {
+			return false
+		}
+
+		// Check various properties that might indicate content filtering
+		const checkProperties = ["message", "reason", "code", "type", "error", "description"]
+
+		for (const prop of checkProperties) {
+			if (error[prop] && typeof error[prop] === "string") {
+				const value = error[prop].toLowerCase()
+				const filteringPatterns = [
+					"filtered",
+					"content policy",
+					"inappropriate",
+					"safety",
+					"blocked",
+					"restricted",
+					"content violation",
+					"policy violation",
+					"harmful content",
+					"unsafe content",
+				]
+
+				if (filteringPatterns.some((pattern) => value.includes(pattern))) {
+					return true
+				}
+			}
+		}
+
+		return false
+	}
+
 	private async getClient(): Promise<vscode.LanguageModelChat> {
 		if (!this.client) {
 			console.debug("Roo Code <Language Model API>: Getting client with options:", {
@@ -467,12 +521,33 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 					name: error.name,
 				})
 
+				// Check for content filtering errors
+				if (this.isContentFilteringError(error)) {
+					throw new Error(
+						"Roo Code <Language Model API>: Response was filtered by VS Code's content policy. " +
+							"This may happen when the model's response contains content that VS Code considers inappropriate. " +
+							"Try rephrasing your request or using a different approach. " +
+							`Original error: ${error.message}`,
+					)
+				}
+
 				// Return original error if it's already an Error instance
 				throw error
 			} else if (typeof error === "object" && error !== null) {
 				// Handle error-like objects
 				const errorDetails = JSON.stringify(error, null, 2)
 				console.error("Roo Code <Language Model API>: Stream error object:", errorDetails)
+
+				// Check if the error object indicates content filtering
+				if (this.isContentFilteringErrorObject(error)) {
+					throw new Error(
+						"Roo Code <Language Model API>: Response was filtered by VS Code's content policy. " +
+							"This may happen when the model's response contains content that VS Code considers inappropriate. " +
+							"Try rephrasing your request or using a different approach. " +
+							`Original error: ${errorDetails}`,
+					)
+				}
+
 				throw new Error(`Roo Code <Language Model API>: Response stream error: ${errorDetails}`)
 			} else {
 				// Fallback for unknown error types
