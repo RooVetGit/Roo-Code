@@ -21,6 +21,7 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama", "openai-compatible", "gemini"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
+	codebaseIndexEmbedderModelDimension: z.number().optional(),
 	codebaseIndexSearchMinScore: z.number().min(0).max(1).optional(),
 	codebaseIndexSearchMaxResults: z
 		.number()
