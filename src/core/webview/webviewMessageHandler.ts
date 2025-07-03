@@ -1530,7 +1530,6 @@ export const webviewMessageHandler = async (
 					await provider.postMessageToWebview({
 						type: "deleteCustomModeCheck",
 						slug: message.slug,
-						rulesFolderExists,
 						rulesFolderPath: rulesFolderExists ? rulesFolderPath : undefined,
 					})
 					break

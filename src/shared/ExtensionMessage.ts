@@ -153,7 +153,6 @@ export interface ExtensionMessage {
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 	visibility?: ShareVisibility
-	rulesFolderExists?: boolean
 	rulesFolderPath?: string
 }
 
