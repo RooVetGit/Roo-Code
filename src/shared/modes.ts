@@ -216,7 +216,6 @@ export function isServerAllowedForMode(
 		return restrictions.allowedServers ? matchesAnyPattern(serverName, restrictions.allowedServers) : false
 	}
 
-	// EXISTING LOGIC: For allowedInModesByDefault: true (default behavior)
 	// If allowedServers is defined, server must match at least one pattern
 	if (restrictions.allowedServers && !matchesAnyPattern(serverName, restrictions.allowedServers)) {
 		return false
