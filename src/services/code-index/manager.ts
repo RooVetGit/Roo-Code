@@ -1,14 +1,12 @@
 import * as vscode from "vscode"
+import { Worker } from "worker_threads"
 import { getWorkspacePath } from "../../utils/path"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { VectorStoreSearchResult } from "./interfaces"
 import { IndexingState } from "./interfaces/manager"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager } from "./state-manager"
-import { CodeIndexServiceFactory } from "./service-factory"
-import { CodeIndexSearchService } from "./search-service"
-import { CodeIndexOrchestrator } from "./orchestrator"
-import { CacheManager } from "./cache-manager"
+import { WorkerCommand, WorkerResponse, WorkerMessage, WorkerInitConfig } from "./worker-messenger"
 import fs from "fs/promises"
 import ignore from "ignore"
 import path from "path"
@@ -20,15 +18,15 @@ export class CodeIndexManager {
 	// Specialized class instances
 	private _configManager: CodeIndexConfigManager | undefined
 	private readonly _stateManager: CodeIndexStateManager
-	private _serviceFactory: CodeIndexServiceFactory | undefined
-	private _orchestrator: CodeIndexOrchestrator | undefined
-	private _searchService: CodeIndexSearchService | undefined
-	private _cacheManager: CacheManager | undefined
+	private _worker: Worker | undefined
+	private _workerReady: boolean = false
+	private _messageId: number = 0
+	private _pendingMessages: Map<string, { resolve: (value: any) => void; reject: (error: any) => void }> = new Map()
 
 	public static getInstance(context: vscode.ExtensionContext): CodeIndexManager | undefined {
 		const workspacePath = getWorkspacePath() // Assumes single workspace for now
 
-		if (!workspacePath) {
+		if (!workspacePath || workspacePath.trim() === "") {
 			return undefined
 		}
 
@@ -38,9 +36,9 @@ export class CodeIndexManager {
 		return CodeIndexManager.instances.get(workspacePath)!
 	}
 
-	public static disposeAll(): void {
+	public static async disposeAll(): Promise<void> {
 		for (const instance of CodeIndexManager.instances.values()) {
-			instance.dispose()
+			await instance.dispose()
 		}
 		CodeIndexManager.instances.clear()
 	}
@@ -62,7 +60,7 @@ export class CodeIndexManager {
 	}
 
 	private assertInitialized() {
-		if (!this._configManager || !this._orchestrator || !this._searchService || !this._cacheManager) {
+		if (!this._configManager || !this._worker || !this._workerReady) {
 			throw new Error("CodeIndexManager not initialized. Call initialize() first.")
 		}
 	}
@@ -71,8 +69,7 @@ export class CodeIndexManager {
 		if (!this.isFeatureEnabled) {
 			return "Standby"
 		}
-		this.assertInitialized()
-		return this._orchestrator!.state
+		return this._stateManager.state
 	}
 
 	public get isFeatureEnabled(): boolean {
@@ -107,34 +104,25 @@ export class CodeIndexManager {
 
 		// 2. Check if feature is enabled
 		if (!this.isFeatureEnabled) {
-			if (this._orchestrator) {
-				this._orchestrator.stopWatcher()
+			if (this._worker) {
+				await this.stopWorker()
 			}
 			return { requiresRestart }
 		}
 
-		// 3. CacheManager Initialization
-		if (!this._cacheManager) {
-			this._cacheManager = new CacheManager(this.context, this.workspacePath)
-			await this._cacheManager.initialize()
+		// 3. Determine if Worker Needs Recreation
+		const needsWorkerRecreation = !this._worker || requiresRestart
+
+		if (needsWorkerRecreation) {
+			await this._recreateWorker()
 		}
 
-		// 4. Determine if Core Services Need Recreation
-		const needsServiceRecreation = !this._serviceFactory || requiresRestart
-
-		if (needsServiceRecreation) {
-			await this._recreateServices()
-		}
-
-		// 5. Handle Indexing Start/Restart
-		// The enhanced vectorStore.initialize() in startIndexing() now handles dimension changes automatically
-		// by detecting incompatible collections and recreating them, so we rely on that for dimension changes
+		// 4. Handle Indexing Start/Restart
 		const shouldStartOrRestartIndexing =
-			requiresRestart ||
-			(needsServiceRecreation && (!this._orchestrator || this._orchestrator.state !== "Indexing"))
+			requiresRestart || (needsWorkerRecreation && this._stateManager.state !== "Indexing")
 
 		if (shouldStartOrRestartIndexing) {
-			this._orchestrator?.startIndexing() // This method is async, but we don't await it here
+			await this.startIndexing()
 		}
 
 		return { requiresRestart }
@@ -149,28 +137,26 @@ export class CodeIndexManager {
 			return
 		}
 		this.assertInitialized()
-		await this._orchestrator!.startIndexing()
+		await this.sendWorkerCommand({ type: "start" })
 	}
 
 	/**
 	 * Stops the file watcher and potentially cleans up resources.
 	 */
-	public stopWatcher(): void {
+	public async stopWatcher(): Promise<void> {
 		if (!this.isFeatureEnabled) {
 			return
 		}
-		if (this._orchestrator) {
-			this._orchestrator.stopWatcher()
+		if (this._worker) {
+			await this.sendWorkerCommand({ type: "stop" })
 		}
 	}
 
 	/**
 	 * Cleans up the manager instance.
 	 */
-	public dispose(): void {
-		if (this._orchestrator) {
-			this.stopWatcher()
-		}
+	public async dispose(): Promise<void> {
+		await this.stopWorker()
 		this._stateManager.dispose()
 	}
 
@@ -183,8 +169,7 @@ export class CodeIndexManager {
 			return
 		}
 		this.assertInitialized()
-		await this._orchestrator!.clearIndexData()
-		await this._cacheManager!.clearCacheFile()
+		await this.sendWorkerCommand({ type: "clear" })
 	}
 
 	// --- Private Helpers ---
@@ -198,62 +183,167 @@ export class CodeIndexManager {
 			return []
 		}
 		this.assertInitialized()
-		return this._searchService!.searchIndex(query, directoryPrefix)
+		const response = await this.sendWorkerCommand({ type: "search", query, directoryPrefix })
+		if (response.type === "searchResult") {
+			return response.results
+		}
+		throw new Error("Unexpected response from worker")
 	}
 
 	/**
-	 * Private helper method to recreate services with current configuration.
+	 * Private helper method to recreate worker with current configuration.
 	 * Used by both initialize() and handleSettingsChange().
 	 */
-	private async _recreateServices(): Promise<void> {
-		// Stop watcher if it exists
-		if (this._orchestrator) {
-			this.stopWatcher()
+	private async _recreateWorker(): Promise<void> {
+		// Stop existing worker if it exists
+		await this.stopWorker()
+
+		// Create worker configuration
+		const config = this._configManager!.getConfig()
+		const workerConfig: WorkerInitConfig = {
+			workspacePath: this.workspacePath,
+			contextPath: this.context.globalStorageUri.fsPath,
+			isFeatureEnabled: this._configManager!.isFeatureEnabled,
+			isFeatureConfigured: this._configManager!.isFeatureConfigured,
+			qdrantUrl: config.qdrantUrl,
+			embedderProvider: config.embedderProvider,
+			embedderBaseUrl: config.openAiCompatibleOptions?.baseUrl,
+			embedderModelId: config.modelId,
+			embedderApiKey: this._getEmbedderApiKey(config),
+			searchMinScore: config.searchMinScore,
 		}
 
-		// (Re)Initialize service factory
-		this._serviceFactory = new CodeIndexServiceFactory(
-			this._configManager!,
-			this.workspacePath,
-			this._cacheManager!,
-		)
+		// Create new worker
+		// Use the extension path from context to ensure we get the correct path in both dev and production
+		const workerPath = path.join(this.context.extensionPath, "dist/workers/indexing-worker.js")
 
-		const ignoreInstance = ignore()
-		const ignorePath = path.join(getWorkspacePath(), ".gitignore")
 		try {
-			const content = await fs.readFile(ignorePath, "utf8")
-			ignoreInstance.add(content)
-			ignoreInstance.add(".gitignore")
+			this._worker = new Worker(workerPath)
 		} catch (error) {
-			// Should never happen: reading file failed even though it exists
-			console.error("Unexpected error loading .gitignore:", error)
+			console.error("[CodeIndexManager] Failed to create worker:", error)
+			throw error
 		}
 
-		// (Re)Create shared service instances
-		const { embedder, vectorStore, scanner, fileWatcher } = this._serviceFactory.createServices(
-			this.context,
-			this._cacheManager!,
-			ignoreInstance,
-		)
+		this._workerReady = false
 
-		// (Re)Initialize orchestrator
-		this._orchestrator = new CodeIndexOrchestrator(
-			this._configManager!,
-			this._stateManager,
-			this.workspacePath,
-			this._cacheManager!,
-			vectorStore,
-			scanner,
-			fileWatcher,
-		)
+		// Set up message handling
+		this._worker.on("message", this.handleWorkerMessage.bind(this))
+		this._worker.on("error", this.handleWorkerError.bind(this))
+		this._worker.on("exit", this.handleWorkerExit.bind(this))
 
-		// (Re)Initialize search service
-		this._searchService = new CodeIndexSearchService(
-			this._configManager!,
-			this._stateManager,
-			embedder,
-			vectorStore,
-		)
+		// Initialize the worker
+		const response = await this.sendWorkerCommand({ type: "initialize", config: workerConfig })
+
+		if (response.type === "initialized" && response.success) {
+			this._workerReady = true
+		} else {
+			throw new Error("Failed to initialize worker")
+		}
+	}
+
+	private _getEmbedderApiKey(config: any): string | undefined {
+		if (config.embedderProvider === "openai") {
+			return config.openAiOptions?.openAiNativeApiKey
+		} else if (config.embedderProvider === "openai-compatible") {
+			return config.openAiCompatibleOptions?.apiKey
+		}
+		return undefined
+	}
+
+	private async stopWorker(): Promise<void> {
+		if (this._worker) {
+			// Clear pending messages
+			for (const [, pending] of this._pendingMessages) {
+				pending.reject(new Error("Worker stopped"))
+			}
+			this._pendingMessages.clear()
+
+			// Terminate the worker
+			await this._worker.terminate()
+			this._worker = undefined
+			this._workerReady = false
+		}
+	}
+
+	private async sendWorkerCommand(command: WorkerCommand): Promise<WorkerResponse> {
+		if (!this._worker) {
+			throw new Error("Worker not initialized")
+		}
+
+		const id = `msg_${this._messageId++}`
+		const message: WorkerMessage<WorkerCommand> = { id, payload: command }
+
+		return new Promise((resolve, reject) => {
+			// Add a timeout to detect if the worker is not responding
+			const timeout = setTimeout(() => {
+				this._pendingMessages.delete(id)
+				reject(new Error(`Worker timeout for command: ${command.type}`))
+			}, 30000)
+
+			// Store the promise handlers with timeout cleanup
+			this._pendingMessages.set(id, {
+				resolve: (value) => {
+					clearTimeout(timeout)
+					resolve(value)
+				},
+				reject: (error) => {
+					clearTimeout(timeout)
+					reject(error)
+				},
+			})
+
+			this._worker!.postMessage(message)
+		})
+	}
+
+	private handleWorkerMessage(message: WorkerMessage<WorkerResponse>) {
+		const { id, payload } = message
+
+		// Handle responses to specific commands
+		const pending = this._pendingMessages.get(id)
+		if (pending) {
+			this._pendingMessages.delete(id)
+			if (payload.type === "error") {
+				pending.reject(new Error(payload.error))
+			} else {
+				pending.resolve(payload)
+			}
+			return
+		}
+
+		// Handle unsolicited messages (progress updates, status changes)
+		switch (payload.type) {
+			case "progress":
+				// File processing progress - no need to update state manager
+				// as it's already updated in the worker
+				break
+			case "blockProgress":
+				// Block indexing progress - no need to update state manager
+				// as it's already updated in the worker
+				break
+			case "status":
+				// Update local state manager to match worker state
+				this._stateManager.setSystemState(payload.state, payload.message)
+				break
+			case "error":
+				console.error("[CodeIndexManager] Worker error:", payload.error)
+				this._stateManager.setSystemState("Error", payload.error)
+				break
+		}
+	}
+
+	private handleWorkerError(error: Error) {
+		console.error("[CodeIndexManager] Worker error:", error)
+		this._stateManager.setSystemState("Error", `Worker error: ${error.message}`)
+	}
+
+	private handleWorkerExit(code: number) {
+		if (code !== 0) {
+			console.error(`[CodeIndexManager] Worker exited with code ${code}`)
+			this._stateManager.setSystemState("Error", `Worker exited unexpectedly with code ${code}`)
+		}
+		this._worker = undefined
+		this._workerReady = false
 	}
 
 	/**
@@ -271,11 +361,11 @@ export class CodeIndexManager {
 
 			// If configuration changes require a restart and the manager is initialized, restart the service
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
-				// Recreate services with new configuration
-				await this._recreateServices()
+				// Recreate worker with new configuration
+				await this._recreateWorker()
 
-				// Start indexing with new services
-				this.startIndexing()
+				// Start indexing with new worker
+				await this.startIndexing()
 			}
 		}
 	}

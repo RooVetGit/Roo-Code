@@ -98,14 +98,17 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
+
 	const codeIndexManager = CodeIndexManager.getInstance(context)
 
-	try {
-		await codeIndexManager?.initialize(contextProxy)
-	} catch (error) {
-		outputChannel.appendLine(
-			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
-		)
+	if (codeIndexManager) {
+		try {
+			await codeIndexManager.initialize(contextProxy)
+		} catch (error) {
+			outputChannel.appendLine(
+				`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
+			)
+		}
 	}
 
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager, mdmService)
@@ -215,6 +218,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
 	await McpServerManager.cleanup(extensionContext)
+	await CodeIndexManager.disposeAll()
 	TelemetryService.instance.shutdown()
 	TerminalRegistry.cleanup()
 }

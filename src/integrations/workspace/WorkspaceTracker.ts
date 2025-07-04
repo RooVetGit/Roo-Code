@@ -26,7 +26,7 @@ class WorkspaceTracker {
 
 	async initializeFilePaths() {
 		// should not auto get filepaths for desktop since it would immediately show permission popup before cline ever creates a file
-		if (!this.cwd) {
+		if (!this.cwd || this.cwd.trim() === "") {
 			return
 		}
 		const tempCwd = this.cwd
@@ -39,25 +39,29 @@ class WorkspaceTracker {
 	}
 
 	private registerListeners() {
-		const watcher = vscode.workspace.createFileSystemWatcher("**")
-		this.prevWorkSpacePath = this.cwd
-		this.disposables.push(
-			watcher.onDidCreate(async (uri) => {
-				await this.addFilePath(uri.fsPath)
-				this.workspaceDidUpdate()
-			}),
-		)
-
-		// Renaming files triggers a delete and create event
-		this.disposables.push(
-			watcher.onDidDelete(async (uri) => {
-				if (await this.removeFilePath(uri.fsPath)) {
+		// Only create file watcher if we have a valid workspace
+		if (this.cwd && this.cwd.trim() !== "") {
+			const watcher = vscode.workspace.createFileSystemWatcher("**")
+			this.disposables.push(
+				watcher.onDidCreate(async (uri) => {
+					await this.addFilePath(uri.fsPath)
 					this.workspaceDidUpdate()
-				}
-			}),
-		)
+				}),
+			)
 
-		this.disposables.push(watcher)
+			// Renaming files triggers a delete and create event
+			this.disposables.push(
+				watcher.onDidDelete(async (uri) => {
+					if (await this.removeFilePath(uri.fsPath)) {
+						this.workspaceDidUpdate()
+					}
+				}),
+			)
+
+			this.disposables.push(watcher)
+		}
+
+		this.prevWorkSpacePath = this.cwd
 
 		// Listen for tab changes and call workspaceDidUpdate directly
 		this.disposables.push(
@@ -114,7 +118,7 @@ class WorkspaceTracker {
 			clearTimeout(this.updateTimer)
 		}
 		this.updateTimer = setTimeout(() => {
-			if (!this.cwd) {
+			if (!this.cwd || this.cwd.trim() === "") {
 				return
 			}
 

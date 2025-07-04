@@ -9,7 +9,6 @@ import {
 	INITIAL_RETRY_DELAY_MS as INITIAL_DELAY_MS,
 } from "../constants"
 import { getModelQueryPrefix } from "../../../shared/embeddingModels"
-import { t } from "../../../i18n"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -50,11 +49,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					const estimatedTokens = Math.ceil(prefixedText.length / 4)
 					if (estimatedTokens > MAX_ITEM_TOKENS) {
 						console.warn(
-							t("embeddings:textWithPrefixExceedsTokenLimit", {
-								index,
-								estimatedTokens,
-								maxTokens: MAX_ITEM_TOKENS,
-							}),
+							`Text at index ${index} with prefix exceeds token limit (${estimatedTokens} > ${MAX_ITEM_TOKENS})`,
 						)
 						// Return original text if adding prefix would exceed limit
 						return text
@@ -77,13 +72,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				const itemTokens = Math.ceil(text.length / 4)
 
 				if (itemTokens > MAX_ITEM_TOKENS) {
-					console.warn(
-						t("embeddings:textExceedsTokenLimit", {
-							index: i,
-							itemTokens,
-							maxTokens: MAX_ITEM_TOKENS,
-						}),
-					)
+					console.warn(`Text at index ${i} exceeds token limit (${itemTokens} > ${MAX_ITEM_TOKENS})`)
 					processedIndices.push(i)
 					continue
 				}
@@ -143,13 +132,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 
 				if (isRateLimitError && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
-					console.warn(
-						t("embeddings:rateLimitRetry", {
-							delayMs,
-							attempt: attempts + 1,
-							maxRetries: MAX_RETRIES,
-						}),
-					)
+					console.warn(`Rate limit hit, retrying in ${delayMs}ms (attempt ${attempts + 1}/${MAX_RETRIES})`)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
 				}
@@ -174,18 +157,18 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				const statusCode = error?.status || error?.response?.status
 
 				if (statusCode === 401) {
-					throw new Error(t("embeddings:authenticationFailed"))
+					throw new Error("Authentication failed. Please check your API key.")
 				} else if (statusCode) {
 					throw new Error(
-						t("embeddings:failedWithStatus", { attempts: MAX_RETRIES, statusCode, errorMessage }),
+						`Failed to create embeddings after ${MAX_RETRIES} attempts. Status: ${statusCode}. Error: ${errorMessage}`,
 					)
 				} else {
-					throw new Error(t("embeddings:failedWithError", { attempts: MAX_RETRIES, errorMessage }))
+					throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts. Error: ${errorMessage}`)
 				}
 			}
 		}
 
-		throw new Error(t("embeddings:failedMaxAttempts", { attempts: MAX_RETRIES }))
+		throw new Error(`Failed to create embeddings after ${MAX_RETRIES} attempts`)
 	}
 
 	get embedderInfo(): EmbedderInfo {

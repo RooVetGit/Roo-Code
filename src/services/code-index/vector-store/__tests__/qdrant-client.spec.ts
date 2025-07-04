@@ -65,6 +65,7 @@ describe("QdrantVectorStore", () => {
 			headers: {
 				"User-Agent": "Roo-Code",
 			},
+			timeout: 30000, // Default timeout
 		})
 		expect(createHash).toHaveBeenCalledWith("sha256")
 		expect(mockCreateHashInstance.update).toHaveBeenCalledWith(mockWorkspacePath)
@@ -84,6 +85,7 @@ describe("QdrantVectorStore", () => {
 			headers: {
 				"User-Agent": "Roo-Code",
 			},
+			timeout: 30000, // Default timeout
 		})
 	})
 
@@ -98,6 +100,29 @@ describe("QdrantVectorStore", () => {
 			headers: {
 				"User-Agent": "Roo-Code",
 			},
+			timeout: 30000, // Default timeout
+		})
+	})
+
+	it("should handle constructor with custom timeout", () => {
+		const customTimeout = 60000 // 60 seconds
+		const vectorStoreWithTimeout = new QdrantVectorStore(
+			mockWorkspacePath,
+			mockQdrantUrl,
+			mockVectorSize,
+			mockApiKey,
+			customTimeout,
+		)
+
+		expect(QdrantClient).toHaveBeenLastCalledWith({
+			host: "mock-qdrant",
+			https: false,
+			port: 6333,
+			apiKey: mockApiKey,
+			headers: {
+				"User-Agent": "Roo-Code",
+			},
+			timeout: customTimeout,
 		})
 	})
 
@@ -118,6 +143,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("https://qdrant.ashbyfam.com")
 			})
@@ -133,6 +159,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("https://example.com:9000")
 			})
@@ -152,6 +179,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("https://example.com/api/v1?key=value")
 			})
@@ -169,6 +197,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://example.com")
 			})
@@ -184,6 +213,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://localhost:8080")
 			})
@@ -203,6 +233,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://example.com/api/v1?key=value")
 			})
@@ -219,6 +250,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://qdrant.example.com")
 			})
@@ -233,6 +265,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://localhost:6333")
 			})
@@ -247,6 +280,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://localhost:9000")
 			})
@@ -263,6 +297,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://192.168.1.100")
 			})
@@ -277,6 +312,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://192.168.1.100:6333")
 			})
@@ -293,6 +329,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://localhost:6333")
 			})
@@ -307,6 +344,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://localhost:6333")
 			})
@@ -321,6 +359,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://localhost:6333")
 			})
@@ -337,6 +376,7 @@ describe("QdrantVectorStore", () => {
 					headers: {
 						"User-Agent": "Roo-Code",
 					},
+					timeout: 30000, // Default timeout
 				})
 				expect((vectorStore as any).qdrantUrl).toBe("http://invalid-url-format")
 			})
@@ -359,6 +399,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithPrefix as any).qdrantUrl).toBe("http://localhost:6333/some/path")
 		})
@@ -378,6 +419,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithoutPrefix as any).qdrantUrl).toBe("http://localhost:6333/")
 		})
@@ -397,6 +439,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithHttpsPrefix as any).qdrantUrl).toBe("https://qdrant.ashbyfam.com/api")
 		})
@@ -416,6 +459,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithTrailingSlash as any).qdrantUrl).toBe("http://localhost:6333/api/")
 		})
@@ -435,6 +479,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithMultipleTrailingSlashes as any).qdrantUrl).toBe("http://localhost:6333/api///")
 		})
@@ -454,6 +499,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithMultiSegment as any).qdrantUrl).toBe("http://localhost:6333/api/v1/qdrant")
 		})
@@ -470,6 +516,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreComplex as any).qdrantUrl).toBe(complexUrl)
 		})
@@ -489,6 +536,7 @@ describe("QdrantVectorStore", () => {
 				headers: {
 					"User-Agent": "Roo-Code",
 				},
+				timeout: 30000, // Default timeout
 			})
 			expect((vectorStoreWithQueryParams as any).qdrantUrl).toBe(
 				"http://localhost:6333/api/path?key=value#fragment",
@@ -629,9 +677,7 @@ describe("QdrantVectorStore", () => {
 			vitest.spyOn(console, "error").mockImplementation(() => {}) // Suppress console.error
 
 			// The actual error message includes the URL and error details
-			await expect(vectorStore.initialize()).rejects.toThrow(
-				/Failed to connect to Qdrant vector database|vectorStore\.qdrantConnectionFailed/,
-			)
+			await expect(vectorStore.initialize()).rejects.toThrow(/Failed to connect to Qdrant at/)
 
 			expect(mockQdrantClientInstance.getCollection).toHaveBeenCalledTimes(1)
 			expect(mockQdrantClientInstance.createCollection).toHaveBeenCalledTimes(1)
@@ -692,9 +738,7 @@ describe("QdrantVectorStore", () => {
 			vitest.spyOn(console, "warn").mockImplementation(() => {})
 
 			// The actual error message includes the URL and error details
-			await expect(vectorStore.initialize()).rejects.toThrow(
-				/Failed to connect to Qdrant vector database|vectorStore\.qdrantConnectionFailed/,
-			)
+			await expect(vectorStore.initialize()).rejects.toThrow(/Failed to connect to Qdrant at/)
 
 			expect(mockQdrantClientInstance.getCollection).toHaveBeenCalledTimes(1)
 			expect(mockQdrantClientInstance.deleteCollection).toHaveBeenCalledTimes(1)
@@ -1265,6 +1309,133 @@ describe("QdrantVectorStore", () => {
 			const callArgs = mockQdrantClientInstance.query.mock.calls[0][1]
 			expect(callArgs.limit).toBe(MAX_SEARCH_RESULTS)
 			expect(callArgs.score_threshold).toBe(SEARCH_MIN_SCORE)
+		})
+	})
+
+	describe("Socket error retry logic", () => {
+		it("should retry on UND_ERR_SOCKET errors", async () => {
+			const socketError = new Error("Socket error")
+			;(socketError as any).code = "UND_ERR_SOCKET"
+
+			// First call fails with socket error, second succeeds
+			mockQdrantClientInstance.upsert.mockRejectedValueOnce(socketError).mockResolvedValueOnce({} as any)
+
+			const mockPoints = [
+				{
+					id: "test-id",
+					vector: [0.1, 0.2, 0.3],
+					payload: { filePath: "test.ts", content: "test", startLine: 1, endLine: 1 },
+				},
+			]
+
+			await vectorStore.upsertPoints(mockPoints)
+
+			expect(mockQdrantClientInstance.upsert).toHaveBeenCalledTimes(2)
+		})
+
+		it("should fail after max retries", async () => {
+			const socketError = new Error("Socket error")
+			;(socketError as any).code = "UND_ERR_SOCKET"
+
+			// All calls fail
+			mockQdrantClientInstance.upsert.mockRejectedValue(socketError)
+			vitest.spyOn(console, "error").mockImplementation(() => {})
+
+			const mockPoints = [
+				{
+					id: "test-id",
+					vector: [0.1, 0.2, 0.3],
+					payload: { filePath: "test.ts", content: "test", startLine: 1, endLine: 1 },
+				},
+			]
+
+			await expect(vectorStore.upsertPoints(mockPoints)).rejects.toThrow(socketError)
+
+			// Should retry 3 times (initial + 2 retries)
+			expect(mockQdrantClientInstance.upsert).toHaveBeenCalledTimes(3)
+			;(console.error as any).mockRestore()
+		})
+
+		it("should not retry on non-socket errors", async () => {
+			const otherError = new Error("Other error")
+			mockQdrantClientInstance.upsert.mockRejectedValue(otherError)
+			vitest.spyOn(console, "error").mockImplementation(() => {})
+
+			const mockPoints = [
+				{
+					id: "test-id",
+					vector: [0.1, 0.2, 0.3],
+					payload: { filePath: "test.ts", content: "test", startLine: 1, endLine: 1 },
+				},
+			]
+
+			await expect(vectorStore.upsertPoints(mockPoints)).rejects.toThrow(otherError)
+
+			// Should not retry
+			expect(mockQdrantClientInstance.upsert).toHaveBeenCalledTimes(1)
+			;(console.error as any).mockRestore()
+		})
+	})
+
+	describe("Payload chunking", () => {
+		it("should chunk large payloads", async () => {
+			// Create points that exceed MAX_PAYLOAD_SIZE_BYTES when combined
+			const largeContent = "x".repeat(5 * 1024 * 1024) // 5MB content
+			const mockPoints = [
+				{
+					id: "test-id-1",
+					vector: [0.1, 0.2, 0.3],
+					payload: { filePath: "test1.ts", content: largeContent, startLine: 1, endLine: 1 },
+				},
+				{
+					id: "test-id-2",
+					vector: [0.4, 0.5, 0.6],
+					payload: { filePath: "test2.ts", content: largeContent, startLine: 1, endLine: 1 },
+				},
+				{
+					id: "test-id-3",
+					vector: [0.7, 0.8, 0.9],
+					payload: { filePath: "test3.ts", content: largeContent, startLine: 1, endLine: 1 },
+				},
+			]
+
+			mockQdrantClientInstance.upsert.mockResolvedValue({} as any)
+
+			await vectorStore.upsertPoints(mockPoints)
+
+			// Should be called multiple times due to chunking
+			expect(mockQdrantClientInstance.upsert.mock.calls.length).toBeGreaterThan(1)
+
+			// Each call should have points that fit within MAX_PAYLOAD_SIZE_BYTES
+			for (const call of mockQdrantClientInstance.upsert.mock.calls) {
+				const points = call[1].points
+				const payloadSize = JSON.stringify(points).length
+				expect(payloadSize).toBeLessThanOrEqual(10 * 1024 * 1024) // MAX_PAYLOAD_SIZE_BYTES
+			}
+		})
+
+		it("should handle single large point that exceeds max size", async () => {
+			// Create a single point that exceeds MAX_PAYLOAD_SIZE_BYTES
+			const veryLargeContent = "x".repeat(11 * 1024 * 1024) // 11MB content
+			const mockPoints = [
+				{
+					id: "test-id-1",
+					vector: [0.1, 0.2, 0.3],
+					payload: { filePath: "test1.ts", content: veryLargeContent, startLine: 1, endLine: 1 },
+				},
+			]
+
+			mockQdrantClientInstance.upsert.mockResolvedValue({} as any)
+			vitest.spyOn(console, "warn").mockImplementation(() => {})
+
+			await vectorStore.upsertPoints(mockPoints)
+
+			// Should still attempt to upsert the oversized point
+			expect(mockQdrantClientInstance.upsert).toHaveBeenCalledTimes(1)
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("Single point exceeds maximum payload size"),
+			)
+			;(console.warn as any).mockRestore()
 		})
 	})
 })

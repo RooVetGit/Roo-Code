@@ -20,6 +20,7 @@ export class CodeIndexConfigManager {
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
+	private _qdrantTimeout?: number
 
 	constructor(private readonly contextProxy: ContextProxy) {
 		// Initialize with current configuration to avoid false restart triggers
@@ -359,12 +360,24 @@ export class CodeIndexConfigManager {
 	}
 
 	/**
+	 * Gets the Qdrant timeout configuration
+	 */
+	public get qdrantTimeout(): number {
+		if (this._qdrantTimeout === undefined) {
+			// Use a hardcoded default for now since we don't have a UI setting for this
+			this._qdrantTimeout = 30000 // 30 seconds default
+		}
+		return this._qdrantTimeout
+	}
+
+	/**
 	 * Gets the current Qdrant configuration
 	 */
-	public get qdrantConfig(): { url?: string; apiKey?: string } {
+	public get qdrantConfig(): { url?: string; apiKey?: string; timeout?: number } {
 		return {
 			url: this.qdrantUrl,
 			apiKey: this.qdrantApiKey,
+			timeout: this.qdrantTimeout,
 		}
 	}
 

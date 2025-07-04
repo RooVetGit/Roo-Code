@@ -108,8 +108,15 @@ export class CodeIndexServiceFactory {
 			throw new Error("Qdrant URL missing for vector store creation")
 		}
 
-		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
-		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
+		// Get the full qdrant config including timeout
+		const qdrantConfig = this.configManager.qdrantConfig
+		return new QdrantVectorStore(
+			this.workspacePath,
+			qdrantConfig.url!,
+			vectorSize,
+			qdrantConfig.apiKey,
+			qdrantConfig.timeout,
+		)
 	}
 
 	/**

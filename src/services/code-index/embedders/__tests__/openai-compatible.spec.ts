@@ -323,7 +323,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				await embedder.createEmbeddings(testTexts)
 
 				// Should warn about oversized text
-				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("exceeds maximum token limit"))
+				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("exceeds token limit"))
 
 				// Should only process normal texts (1 call for 2 normal texts batched together)
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -398,7 +398,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(authError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings: Authentication failed. Please check your API key.",
+					"Authentication failed. Please check your API key.",
 				)
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -413,7 +413,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(serverError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 500 - Internal server error",
+					"Failed to create embeddings after 3 attempts. Status: 500. Error: Internal server error",
 				)
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -431,7 +431,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(apiError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: API connection failed",
+					"Failed to create embeddings after 3 attempts. Error: API connection failed",
 				)
 
 				expect(console.error).toHaveBeenCalledWith(
@@ -447,7 +447,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(batchError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Batch processing failed",
+					"Failed to create embeddings after 3 attempts. Error: Batch processing failed",
 				)
 
 				expect(console.error).toHaveBeenCalledWith(
@@ -488,7 +488,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(authError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings: Authentication failed. Please check your API key.",
+					"Authentication failed. Please check your API key.",
 				)
 			})
 
@@ -500,7 +500,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(httpError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 400 - Bad request",
+					"Failed to create embeddings after 3 attempts. Status: 400. Error: Bad request",
 				)
 			})
 
@@ -511,7 +511,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(networkError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Network timeout",
+					"Failed to create embeddings after 3 attempts. Error: Network timeout",
 				)
 			})
 
@@ -522,7 +522,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(weirdError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Custom error object",
+					"Failed to create embeddings after 3 attempts. Error: Custom error object",
 				)
 			})
 
@@ -533,7 +533,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(unknownError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Unknown error",
+					"Failed to create embeddings after 3 attempts. Error: Unknown error",
 				)
 			})
 		})

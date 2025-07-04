@@ -192,7 +192,7 @@ describe("OpenAiEmbedder", () => {
 				const result = await embedder.createEmbeddings(testTexts)
 
 				// Verify warning was logged
-				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(`exceeds maximum token limit`))
+				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("exceeds token limit"))
 
 				// Verify only normal texts were processed
 				expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
@@ -300,7 +300,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(authError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings: Authentication failed. Please check your OpenAI API key.",
+					"Authentication failed. Please check your API key.",
 				)
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -315,7 +315,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(serverError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 500 - Internal server error",
+					"Failed to create embeddings after 3 attempts. Status: 500. Error: Internal server error",
 				)
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -333,7 +333,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(apiError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: API connection failed",
+					"Failed to create embeddings after 3 attempts. Error: API connection failed",
 				)
 
 				expect(console.error).toHaveBeenCalledWith(
@@ -374,7 +374,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(authError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings: Authentication failed. Please check your OpenAI API key.",
+					"Authentication failed. Please check your API key.",
 				)
 			})
 
@@ -386,7 +386,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(httpError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 400 - Bad request",
+					"Failed to create embeddings after 3 attempts. Status: 400. Error: Bad request",
 				)
 			})
 
@@ -397,7 +397,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(networkError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Network timeout",
+					"Failed to create embeddings after 3 attempts. Error: Network timeout",
 				)
 			})
 
@@ -408,7 +408,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(weirdError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Custom error object",
+					"Failed to create embeddings after 3 attempts. Error: Custom error object",
 				)
 			})
 
@@ -419,7 +419,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(unknownError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Unknown error",
+					"Failed to create embeddings after 3 attempts. Error: Unknown error",
 				)
 			})
 
@@ -430,7 +430,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(stringError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Something went wrong",
+					"Failed to create embeddings after 3 attempts. Error: Something went wrong",
 				)
 			})
 
@@ -445,7 +445,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(errorWithFailingToString)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Unknown error",
+					"Failed to create embeddings after 3 attempts. Error: Unknown error",
 				)
 			})
 
@@ -459,7 +459,7 @@ describe("OpenAiEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(errorWithResponseStatus)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 403 - Request failed",
+					"Failed to create embeddings after 3 attempts. Status: 403. Error: Request failed",
 				)
 			})
 		})

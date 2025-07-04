@@ -18,7 +18,7 @@
 	"devDependencies": {
 		"@roo-code/config-eslint": "workspace:^",
 		"@roo-code/config-typescript": "workspace:^",
-		"@types/node": "20.x",
+		"@types/node": "~20.17.57",
 		"vitest": "^3.2.3"
 	}
 }

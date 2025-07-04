@@ -16,6 +16,11 @@ import { DIRS_TO_IGNORE } from "./constants"
  * @returns Tuple of [file paths array, whether the limit was reached]
  */
 export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
+	// Handle empty directory path
+	if (!dirPath || dirPath.trim() === "") {
+		return [[], false]
+	}
+
 	// Handle special directories
 	const specialResult = await handleSpecialDirectories(dirPath)
 

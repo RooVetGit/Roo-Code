@@ -319,8 +319,13 @@ export class FileWatcher implements IFileWatcher {
 	): Promise<Error | undefined> {
 		if (pointsForBatchUpsert.length > 0 && this.vectorStore && !overallBatchError) {
 			try {
-				for (let i = 0; i < pointsForBatchUpsert.length; i += BATCH_SEGMENT_THRESHOLD) {
-					const batch = pointsForBatchUpsert.slice(i, i + BATCH_SEGMENT_THRESHOLD)
+				// Use adaptive batching based on payload size
+				const estimatedSize = JSON.stringify(pointsForBatchUpsert).length
+				const pointsPerMB = Math.max(1, Math.floor(pointsForBatchUpsert.length / (estimatedSize / 1024 / 1024)))
+				const adaptiveBatchSize = Math.min(BATCH_SEGMENT_THRESHOLD, pointsPerMB * 5) // Target 5MB batches
+
+				for (let i = 0; i < pointsForBatchUpsert.length; i += adaptiveBatchSize) {
+					const batch = pointsForBatchUpsert.slice(i, i + adaptiveBatchSize)
 					let retryCount = 0
 					let upsertError: Error | undefined
 

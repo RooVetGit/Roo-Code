@@ -6,6 +6,10 @@
 		"src/extension/api.ts",
 		"src/activate/**",
 		"src/workers/countTokens.ts",
+		"src/workers/indexing-worker.ts",
+		"src/services/code-index/worker-utils/**",
+		"src/services/code-index/orchestrator.ts",
+		"src/services/code-index/search-service.ts",
 		"src/extension.ts",
 		"scripts/**"
 	],

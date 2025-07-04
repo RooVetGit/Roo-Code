@@ -37,6 +37,17 @@ export async function listFilesTool(
 
 	// Calculate if the path is outside workspace
 	const absolutePath = relDirPath ? path.resolve(cline.cwd, relDirPath) : cline.cwd
+
+	// Check if cline.cwd is empty (no workspace open)
+	if (!cline.cwd || cline.cwd.trim() === "") {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("list_files")
+		pushToolResult(
+			await cline.sayAndCreateMissingParamError("list_files", "workspace", "No workspace folder is open"),
+		)
+		return
+	}
+
 	const isOutsideWorkspace = isPathOutsideWorkspace(absolutePath)
 
 	const sharedMessageProps: ClineSayTool = {

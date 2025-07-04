@@ -24,23 +24,18 @@ export function getCheckpointService(cline: Task) {
 	}
 
 	if (cline.checkpointServiceInitializing) {
-		console.log("[Task#getCheckpointService] checkpoint service is still initializing")
 		return undefined
 	}
 
 	const provider = cline.providerRef.deref()
 
 	const log = (message: string) => {
-		console.log(message)
-
 		try {
 			provider?.log(message)
 		} catch (err) {
 			// NO-OP
 		}
 	}
-
-	console.log("[Task#getCheckpointService] initializing checkpoints service")
 
 	try {
 		const workspaceDir = getWorkspacePath()
@@ -137,7 +132,6 @@ async function getInitializedCheckpointService(
 	try {
 		await pWaitFor(
 			() => {
-				console.log("[Task#getCheckpointService] waiting for service to initialize")
 				return service.isInitialized
 			},
 			{ interval, timeout },

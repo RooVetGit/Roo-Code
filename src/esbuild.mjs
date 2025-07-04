@@ -108,8 +108,9 @@ async function main() {
 	 */
 	const workerConfig = {
 		...buildOptions,
-		entryPoints: ["workers/countTokens.ts"],
+		entryPoints: ["workers/countTokens.ts", "workers/indexing-worker.ts"],
 		outdir: "dist/workers",
+		external: ["vscode"],
 	}
 
 	const [extensionCtx, workerCtx] = await Promise.all([

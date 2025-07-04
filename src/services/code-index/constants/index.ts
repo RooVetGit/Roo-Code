@@ -26,3 +26,7 @@ export const BATCH_PROCESSING_CONCURRENCY = 10
 
 /**Gemini Embedder */
 export const GEMINI_MAX_ITEM_TOKENS = 2048
+
+/**Qdrant */
+export const MAX_PAYLOAD_SIZE_BYTES = 10 * 1024 * 1024 // 10MB per request
+export const QDRANT_REQUEST_TIMEOUT_MS = 30000 // 30 seconds

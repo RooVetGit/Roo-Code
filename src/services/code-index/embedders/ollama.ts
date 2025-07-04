@@ -2,7 +2,6 @@ import { ApiHandlerOptions } from "../../../shared/api"
 import { EmbedderInfo, EmbeddingResponse, IEmbedder } from "../interfaces"
 import { getModelQueryPrefix } from "../../../shared/embeddingModels"
 import { MAX_ITEM_TOKENS } from "../constants"
-import { t } from "../../../i18n"
 
 /**
  * Implements the IEmbedder interface using a local Ollama instance.
@@ -39,11 +38,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 					const estimatedTokens = Math.ceil(prefixedText.length / 4)
 					if (estimatedTokens > MAX_ITEM_TOKENS) {
 						console.warn(
-							t("embeddings:textWithPrefixExceedsTokenLimit", {
-								index,
-								estimatedTokens,
-								maxTokens: MAX_ITEM_TOKENS,
-							}),
+							`Text at index ${index} with prefix exceeds token limit (${estimatedTokens} > ${MAX_ITEM_TOKENS})`,
 						)
 						// Return original text if adding prefix would exceed limit
 						return text
@@ -67,18 +62,14 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 			})
 
 			if (!response.ok) {
-				let errorBody = t("embeddings:ollama.couldNotReadErrorBody")
+				let errorBody = "Could not read error body"
 				try {
 					errorBody = await response.text()
 				} catch (e) {
 					// Ignore error reading body
 				}
 				throw new Error(
-					t("embeddings:ollama.requestFailed", {
-						status: response.status,
-						statusText: response.statusText,
-						errorBody,
-					}),
+					`Ollama request failed with status ${response.status} ${response.statusText}: ${errorBody}`,
 				)
 			}
 
@@ -87,7 +78,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 			// Extract embeddings using 'embeddings' key as requested
 			const embeddings = data.embeddings
 			if (!embeddings || !Array.isArray(embeddings)) {
-				throw new Error(t("embeddings:ollama.invalidResponseStructure"))
+				throw new Error("Invalid response structure: expected 'embeddings' array")
 			}
 
 			return {
@@ -97,7 +88,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 			// Log the original error for debugging purposes
 			console.error("Ollama embedding failed:", error)
 			// Re-throw a more specific error for the caller
-			throw new Error(t("embeddings:ollama.embeddingFailed", { message: error.message }))
+			throw new Error(`Ollama embedding failed: ${error.message}`)
 		}
 	}
 

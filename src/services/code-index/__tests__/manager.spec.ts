@@ -17,9 +17,9 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 	let mockContext: any
 	let manager: CodeIndexManager
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		// Clear all instances before each test
-		CodeIndexManager.disposeAll()
+		await CodeIndexManager.disposeAll()
 
 		mockContext = {
 			subscriptions: [],
@@ -44,8 +44,8 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 		manager = CodeIndexManager.getInstance(mockContext)!
 	})
 
-	afterEach(() => {
-		CodeIndexManager.disposeAll()
+	afterEach(async () => {
+		await CodeIndexManager.disposeAll()
 	})
 
 	describe("handleSettingsChange", () => {
@@ -93,15 +93,14 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			;(manager as any)._configManager = mockConfigManager
 
 			// Simulate an initialized manager by setting the required properties
-			;(manager as any)._orchestrator = { stopWatcher: vitest.fn() }
-			;(manager as any)._searchService = {}
-			;(manager as any)._cacheManager = {}
+			;(manager as any)._worker = { terminate: vitest.fn() }
+			;(manager as any)._workerReady = true
 
 			// Verify manager is considered initialized
 			expect(manager.isInitialized).toBe(true)
 
 			// Mock the methods that would be called during restart
-			const recreateServicesSpy = vitest.spyOn(manager as any, "_recreateServices").mockImplementation(() => {})
+			const recreateWorkerSpy = vitest.spyOn(manager as any, "_recreateWorker").mockResolvedValue(undefined)
 			const startIndexingSpy = vitest.spyOn(manager, "startIndexing").mockResolvedValue()
 
 			// Mock the feature state
@@ -112,8 +111,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 
 			// Verify that the restart sequence was called
 			expect(mockConfigManager.loadConfiguration).toHaveBeenCalled()
-			// stopWatcher is called inside _recreateServices, which we mocked
-			expect(recreateServicesSpy).toHaveBeenCalled()
+			expect(recreateWorkerSpy).toHaveBeenCalled()
 			expect(startIndexingSpy).toHaveBeenCalled()
 		})
 

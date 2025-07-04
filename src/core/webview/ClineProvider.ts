@@ -163,8 +163,6 @@ export class ClineProvider
 	// The instance is pushed to the top of the stack (LIFO order).
 	// When the task is completed, the top instance is removed, reactivating the previous task.
 	async addClineToStack(cline: Task) {
-		console.log(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
-
 		// Add this cline instance into the stack that represents the order of all the called tasks.
 		this.clineStack.push(cline)
 
@@ -187,8 +185,6 @@ export class ClineProvider
 		let cline = this.clineStack.pop()
 
 		if (cline) {
-			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
-
 			try {
 				// Abort the running task and set isAbandoned to true so
 				// all running promises will exit as well.
@@ -227,7 +223,6 @@ export class ClineProvider
 	// and resume the previous task/cline instance (if it exists)
 	// this is used when a sub task is finished and the parent task needs to be resumed
 	async finishSubTask(lastMessage: string) {
-		console.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
 		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)

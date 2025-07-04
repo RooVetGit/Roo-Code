@@ -143,6 +143,11 @@ export async function regexSearchFiles(
 	filePattern?: string,
 	rooIgnoreController?: RooIgnoreController,
 ): Promise<string> {
+	// Check for empty paths
+	if (!cwd || cwd.trim() === "" || !directoryPath || directoryPath.trim() === "") {
+		return "No results found"
+	}
+
 	const vscodeAppRoot = vscode.env.appRoot
 	const rgPath = await getBinPath(vscodeAppRoot)
 

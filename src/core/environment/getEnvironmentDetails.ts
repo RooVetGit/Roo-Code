@@ -250,7 +250,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 			// Don't want to immediately access desktop since it would show
 			// permission popup.
 			details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
-		} else {
+		} else if (cline.cwd && cline.cwd.trim() !== "") {
 			const maxFiles = maxWorkspaceFiles ?? 200
 			const [files, didHitLimit] = await listFiles(cline.cwd, true, maxFiles)
 			const { showRooIgnoredFiles = true } = state ?? {}
@@ -264,6 +264,8 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 			)
 
 			details += result
+		} else {
+			details += "(No workspace folder open - file listing not available)"
 		}
 	}
 

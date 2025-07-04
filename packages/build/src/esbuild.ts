@@ -143,6 +143,14 @@ export function copyWasms(srcDir: string, distDir: string): void {
 
 	console.log(`[copyWasms] Copied tree-sitter.wasm to ${distDir}`)
 
+	// Also copy tree-sitter.wasm to the workers directory.
+	fs.copyFileSync(
+		path.join(nodeModulesDir, "web-tree-sitter", "tree-sitter.wasm"),
+		path.join(workersDir, "tree-sitter.wasm"),
+	)
+
+	console.log(`[copyWasms] Copied tree-sitter.wasm to ${workersDir}`)
+
 	// Copy language-specific WASM files.
 	const languageWasmDir = path.join(nodeModulesDir, "tree-sitter-wasms", "out")
 
@@ -158,6 +166,13 @@ export function copyWasms(srcDir: string, distDir: string): void {
 	})
 
 	console.log(`[copyWasms] Copied ${wasmFiles.length} tree-sitter language wasms to ${distDir}`)
+
+	// Also copy language-specific WASM files to the workers directory.
+	wasmFiles.forEach((filename) => {
+		fs.copyFileSync(path.join(languageWasmDir, filename), path.join(workersDir, filename))
+	})
+
+	console.log(`[copyWasms] Copied ${wasmFiles.length} tree-sitter language wasms to ${workersDir}`)
 }
 
 export function copyLocales(srcDir: string, distDir: string): void {
