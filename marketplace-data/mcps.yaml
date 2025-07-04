@@ -1,0 +1,74 @@
+items:
+  - id: "voicevox-tts"
+    name: "VoiceVox Text-to-Speech Server"
+    description: "Japanese Text-to-Speech integration using VoiceVox engine with multiple voice characters and customizable playback settings"
+    author: "Sunwood AI Labs"
+    authorUrl: "https://github.com/Sunwood-ai-labs"
+    url: "https://github.com/Sunwood-ai-labs/mcp-voicevox"
+    tags:
+      - "text-to-speech"
+      - "japanese"
+      - "audio"
+      - "voice"
+      - "accessibility"
+      - "content-creation"
+    prerequisites:
+      - "VoiceVox Engine running (locally or remotely)"
+      - "Python 3.10+"
+    content:
+      - name: "uvx (Recommended)"
+        content: |
+          {
+            "voicevox": {
+              "command": "uvx",
+              "args": ["mcp-server-voicevox", "--voicevox-url=http://localhost:50021"]
+            }
+          }
+        parameters:
+          - name: "VoiceVox URL"
+            key: "voicevox-url"
+            placeholder: "http://localhost:50021"
+            optional: true
+        prerequisites:
+          - "uvx installed (pip install uvx)"
+          - "VoiceVox Engine running on specified URL"
+      - name: "pip install"
+        content: |
+          {
+            "voicevox": {
+              "command": "python",
+              "args": ["-m", "mcp_server_voicevox", "--voicevox-url=http://localhost:50021"]
+            }
+          }
+        parameters:
+          - name: "VoiceVox URL"
+            key: "voicevox-url"
+            placeholder: "http://localhost:50021"
+            optional: true
+        prerequisites:
+          - "pip install mcp-server-voicevox"
+          - "VoiceVox Engine running on specified URL"
+      - name: "Custom Configuration"
+        content: |
+          {
+            "voicevox": {
+              "command": "uvx",
+              "args": ["mcp-server-voicevox", "--voicevox-url={{voicevox-url}}", "--default-speaker={{default-speaker}}", "--speed={{speed}}"]
+            }
+          }
+        parameters:
+          - name: "VoiceVox URL"
+            key: "voicevox-url"
+            placeholder: "http://localhost:50021"
+            optional: false
+          - name: "Default Speaker ID"
+            key: "default-speaker"
+            placeholder: "1"
+            optional: true
+          - name: "Speech Speed"
+            key: "speed"
+            placeholder: "1.0"
+            optional: true
+        prerequisites:
+          - "uvx installed (pip install uvx)"
+          - "VoiceVox Engine running on specified URL"

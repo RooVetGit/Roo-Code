@@ -1,5 +1,7 @@
 import axios from "axios"
 import * as yaml from "yaml"
+import * as fs from "fs/promises"
+import * as path from "path"
 import { z } from "zod"
 import { getRooCodeApiUrl } from "@roo-code/cloud"
 import type { MarketplaceItem, MarketplaceItemType } from "@roo-code/types"
@@ -37,19 +39,24 @@ export class RemoteConfigLoader {
 		const cached = this.getFromCache(cacheKey)
 		if (cached) return cached
 
-		const data = await this.fetchWithRetry<string>(`${this.apiBaseUrl}/api/marketplace/modes`)
+		try {
+			const data = await this.fetchWithRetry<string>(`${this.apiBaseUrl}/api/marketplace/modes`)
 
-		// Parse and validate YAML response
-		const yamlData = yaml.parse(data)
-		const validated = modeMarketplaceResponse.parse(yamlData)
+			// Parse and validate YAML response
+			const yamlData = yaml.parse(data)
+			const validated = modeMarketplaceResponse.parse(yamlData)
 
-		const items: MarketplaceItem[] = validated.items.map((item) => ({
-			type: "mode" as const,
-			...item,
-		}))
+			const items: MarketplaceItem[] = validated.items.map((item) => ({
+				type: "mode" as const,
+				...item,
+			}))
 
-		this.setCache(cacheKey, items)
-		return items
+			this.setCache(cacheKey, items)
+			return items
+		} catch (error) {
+			console.warn("Failed to fetch modes from remote API, trying local fallback:", error)
+			return this.fetchLocalModes()
+		}
 	}
 
 	private async fetchMcps(): Promise<MarketplaceItem[]> {
@@ -57,19 +64,24 @@ export class RemoteConfigLoader {
 		const cached = this.getFromCache(cacheKey)
 		if (cached) return cached
 
-		const data = await this.fetchWithRetry<string>(`${this.apiBaseUrl}/api/marketplace/mcps`)
+		try {
+			const data = await this.fetchWithRetry<string>(`${this.apiBaseUrl}/api/marketplace/mcps`)
 
-		// Parse and validate YAML response
-		const yamlData = yaml.parse(data)
-		const validated = mcpMarketplaceResponse.parse(yamlData)
+			// Parse and validate YAML response
+			const yamlData = yaml.parse(data)
+			const validated = mcpMarketplaceResponse.parse(yamlData)
 
-		const items: MarketplaceItem[] = validated.items.map((item) => ({
-			type: "mcp" as const,
-			...item,
-		}))
+			const items: MarketplaceItem[] = validated.items.map((item) => ({
+				type: "mcp" as const,
+				...item,
+			}))
 
-		this.setCache(cacheKey, items)
-		return items
+			this.setCache(cacheKey, items)
+			return items
+		} catch (error) {
+			console.warn("Failed to fetch MCPs from remote API, trying local fallback:", error)
+			return this.fetchLocalMcps()
+		}
 	}
 
 	private async fetchWithRetry<T>(url: string, maxRetries = 3): Promise<T> {
@@ -125,5 +137,105 @@ export class RemoteConfigLoader {
 
 	clearCache(): void {
 		this.cache.clear()
+	}
+
+	/**
+	 * Fallback method to load MCPs from local marketplace data file
+	 */
+	private async fetchLocalMcps(): Promise<MarketplaceItem[]> {
+		try {
+			// Try to load from local marketplace-data directory
+			// Look for marketplace-data in current directory, parent directories, or relative to __dirname
+			const possiblePaths = [
+				path.join(process.cwd(), "marketplace-data", "mcps.yaml"),
+				path.join(process.cwd(), "..", "marketplace-data", "mcps.yaml"),
+				path.join(process.cwd(), "..", "..", "marketplace-data", "mcps.yaml"),
+				path.join(process.cwd(), "..", "..", "..", "marketplace-data", "mcps.yaml"),
+				path.join(__dirname, "..", "..", "..", "marketplace-data", "mcps.yaml"),
+			]
+
+			let data: string | null = null
+			let usedPath: string | null = null
+
+			for (const localMcpPath of possiblePaths) {
+				try {
+					data = await fs.readFile(localMcpPath, "utf-8")
+					usedPath = localMcpPath
+					break
+				} catch (error) {
+					// Continue to next path
+					continue
+				}
+			}
+
+			if (!data) {
+				throw new Error("Could not find mcps.yaml in any expected location")
+			}
+
+			// Parse and validate YAML response
+			const yamlData = yaml.parse(data)
+			const validated = mcpMarketplaceResponse.parse(yamlData)
+
+			const items: MarketplaceItem[] = validated.items.map((item) => ({
+				type: "mcp" as const,
+				...item,
+			}))
+
+			console.log(`Loaded ${items.length} MCP items from local marketplace data at ${usedPath}`)
+			return items
+		} catch (error) {
+			console.warn("Failed to load local MCP data:", error)
+			return []
+		}
+	}
+
+	/**
+	 * Fallback method to load modes from local marketplace data file
+	 */
+	private async fetchLocalModes(): Promise<MarketplaceItem[]> {
+		try {
+			// Try to load from local marketplace-data directory
+			// Look for marketplace-data in current directory, parent directories, or relative to __dirname
+			const possiblePaths = [
+				path.join(process.cwd(), "marketplace-data", "modes.yaml"),
+				path.join(process.cwd(), "..", "marketplace-data", "modes.yaml"),
+				path.join(process.cwd(), "..", "..", "marketplace-data", "modes.yaml"),
+				path.join(process.cwd(), "..", "..", "..", "marketplace-data", "modes.yaml"),
+				path.join(__dirname, "..", "..", "..", "marketplace-data", "modes.yaml"),
+			]
+
+			let data: string | null = null
+			let usedPath: string | null = null
+
+			for (const localModePath of possiblePaths) {
+				try {
+					data = await fs.readFile(localModePath, "utf-8")
+					usedPath = localModePath
+					break
+				} catch (error) {
+					// Continue to next path
+					continue
+				}
+			}
+
+			if (!data) {
+				throw new Error("Could not find modes.yaml in any expected location")
+			}
+
+			// Parse and validate YAML response
+			const yamlData = yaml.parse(data)
+			const validated = modeMarketplaceResponse.parse(yamlData)
+
+			const items: MarketplaceItem[] = validated.items.map((item) => ({
+				type: "mode" as const,
+				...item,
+			}))
+
+			console.log(`Loaded ${items.length} mode items from local marketplace data at ${usedPath}`)
+			return items
+		} catch (error) {
+			console.warn("Failed to load local mode data:", error)
+			return []
+		}
 	}
 }
