@@ -161,6 +161,7 @@ Expected structure:
 Original error: ${errorMessage}`
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("apply_diff")
+			TelemetryService.instance.captureDiffApplicationError(cline.taskId, cline.consecutiveMistakeCount)
 			await cline.say("diff_error", `Failed to parse apply_diff XML: ${errorMessage}`)
 			pushToolResult(detailedError)
 			return
