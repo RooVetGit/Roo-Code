@@ -406,6 +406,12 @@ export async function presentAssistantMessage(cline: Task) {
 				}
 			}
 
+			// Save checkpoint before any file-modifying tool is executed
+			const fileModifyingTools = ["write_to_file", "apply_diff", "insert_content", "search_and_replace"]
+			if (fileModifyingTools.includes(block.name)) {
+				await checkpointSave(cline)
+			}
+
 			switch (block.name) {
 				case "write_to_file":
 					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
@@ -521,13 +527,8 @@ export async function presentAssistantMessage(cline: Task) {
 			break
 	}
 
-	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearCheckpointPossibleFile()
-
-	if (recentlyModifiedFiles.length > 0) {
-		// TODO: We can track what file changes were made and only
-		// checkpoint those files, this will be save storage.
-		await checkpointSave(cline)
-	}
+	// Clear the checkpoint possible files since we now save checkpoints before tool execution
+	cline.fileContextTracker.getAndClearCheckpointPossibleFile()
 
 	// Seeing out of bounds is fine, it means that the next too call is being
 	// built up and ready to add to assistantMessageContent to present.
