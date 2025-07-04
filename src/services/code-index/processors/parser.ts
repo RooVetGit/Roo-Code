@@ -126,75 +126,84 @@ export class CodeParser implements ICodeParser {
 		// in the language object
 		const captures = tree ? language.query.captures(tree.rootNode) : []
 
-		// Check if captures are empty
-		if (captures.length === 0) {
-			if (content.length >= MIN_BLOCK_CHARS) {
-				// Perform fallback chunking if content is large enough
-				const blocks = this._performFallbackChunking(filePath, content, fileHash, seenSegmentHashes)
-				return blocks
-			} else {
-				// Return empty if content is too small for fallback
-				return []
-			}
-		}
-
 		const results: CodeBlock[] = []
 
-		// Process captures if not empty
-		const queue: Node[] = Array.from(captures).map((capture) => capture.node)
+		// Process captures to find function/class definitions
+		if (captures.length > 0) {
+			// Group captures by their definition nodes to avoid duplicates
+			const processedNodes = new Set<Node>()
 
-		while (queue.length > 0) {
-			const currentNode = queue.shift()!
-			// const lineSpan = currentNode.endPosition.row - currentNode.startPosition.row + 1 // Removed as per lint error
+			for (const capture of captures) {
+				const { node, name } = capture
 
-			// Check if the node meets the minimum character requirement
-			if (currentNode.text.length >= MIN_BLOCK_CHARS) {
-				// If it also exceeds the maximum character limit, try to break it down
-				if (currentNode.text.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
-					if (currentNode.children.filter((child) => child !== null).length > 0) {
-						// If it has children, process them instead
-						queue.push(...currentNode.children.filter((child) => child !== null))
-					} else {
-						// If it's a leaf node, chunk it (passing MIN_BLOCK_CHARS as per Task 1 Step 5)
-						// Note: _chunkLeafNodeByLines logic might need further adjustment later
+				// Find the definition node - this is the node that contains the full function/class
+				let definitionNode: Node | null = null
+
+				if (name.includes("definition.")) {
+					// This capture represents a definition (function, class, method, etc.)
+					definitionNode = node
+				} else if (name.includes("name.definition.")) {
+					// This capture represents the name of a definition, get the parent definition
+					definitionNode = node.parent
+				}
+
+				// Skip if we couldn't find a definition node or already processed it
+				if (!definitionNode || processedNodes.has(definitionNode)) {
+					continue
+				}
+
+				// Check if the definition meets the minimum character requirement
+				if (definitionNode.text.length >= MIN_BLOCK_CHARS) {
+					// If it exceeds the maximum character limit, chunk it by lines
+					if (definitionNode.text.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
 						const chunkedBlocks = this._chunkLeafNodeByLines(
-							currentNode,
+							definitionNode,
 							filePath,
 							fileHash,
 							seenSegmentHashes,
 						)
 						results.push(...chunkedBlocks)
-					}
-				} else {
-					// Node meets min chars and is within max chars, create a block
-					const identifier =
-						currentNode.childForFieldName("name")?.text ||
-						currentNode.children.find((c) => c?.type === "identifier")?.text ||
-						null
-					const type = currentNode.type
-					const start_line = currentNode.startPosition.row + 1
-					const end_line = currentNode.endPosition.row + 1
-					const content = currentNode.text
-					const segmentHash = createHash("sha256")
-						.update(`${filePath}-${start_line}-${end_line}-${content}`)
-						.digest("hex")
+					} else {
+						// Create a block for the entire definition
+						const identifier =
+							definitionNode.childForFieldName("name")?.text ||
+							definitionNode.children.find((c) => c?.type === "identifier")?.text ||
+							definitionNode.children.find((c) => c?.type === "property_identifier")?.text ||
+							definitionNode.children.find((c) => c?.type === "type_identifier")?.text ||
+							null
 
-					if (!seenSegmentHashes.has(segmentHash)) {
-						seenSegmentHashes.add(segmentHash)
-						results.push({
-							file_path: filePath,
-							identifier,
-							type,
-							start_line,
-							end_line,
-							content,
-							segmentHash,
-							fileHash,
-						})
+						const type = definitionNode.type
+						const start_line = definitionNode.startPosition.row + 1
+						const end_line = definitionNode.endPosition.row + 1
+						const content = definitionNode.text
+						const segmentHash = createHash("sha256")
+							.update(`${filePath}-${start_line}-${end_line}-${content}`)
+							.digest("hex")
+
+						if (!seenSegmentHashes.has(segmentHash)) {
+							seenSegmentHashes.add(segmentHash)
+							results.push({
+								file_path: filePath,
+								identifier,
+								type,
+								start_line,
+								end_line,
+								content,
+								segmentHash,
+								fileHash,
+							})
+						}
 					}
+
+					processedNodes.add(definitionNode)
 				}
 			}
-			// Nodes smaller than MIN_BLOCK_CHARS are ignored
+		}
+
+		// If no valid definitions were found, fall back to chunking
+		if (results.length === 0 && content.length >= MIN_BLOCK_CHARS) {
+			const blocks = this._performFallbackChunking(filePath, content, fileHash, seenSegmentHashes)
+			return blocks
 		}
 
 		return results
