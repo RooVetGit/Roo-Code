@@ -1,5 +1,6 @@
 import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
+import * as os from "os"
 import * as fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
@@ -35,6 +36,7 @@ import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
+import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
@@ -1113,6 +1115,21 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("browserToolEnabled", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "codebaseIndexEnabled":
+			// Update the codebaseIndexConfig with the new enabled state
+			const currentCodebaseConfig = getGlobalState("codebaseIndexConfig") || {}
+			await updateGlobalState("codebaseIndexConfig", {
+				...currentCodebaseConfig,
+				codebaseIndexEnabled: message.bool ?? false,
+			})
+
+			// Notify the code index manager about the change
+			if (provider.codeIndexManager) {
+				await provider.codeIndexManager.handleSettingsChange()
+			}
+
+			await provider.postStateToWebview()
+			break
 		case "language":
 			changeLanguage(message.text ?? "en")
 			await updateGlobalState("language", message.text as Language)
@@ -1494,17 +1511,66 @@ export const webviewMessageHandler = async (
 			break
 		case "deleteCustomMode":
 			if (message.slug) {
-				const answer = await vscode.window.showInformationMessage(
-					t("common:confirmation.delete_custom_mode"),
-					{ modal: true },
-					t("common:answers.yes"),
-				)
+				// Get the mode details to determine source and rules folder path
+				const customModes = await provider.customModesManager.getCustomModes()
+				const modeToDelete = customModes.find((mode) => mode.slug === message.slug)
 
-				if (answer !== t("common:answers.yes")) {
+				if (!modeToDelete) {
 					break
 				}
 
+				// Determine the scope based on source (project or global)
+				const scope = modeToDelete.source || "global"
+
+				// Determine the rules folder path
+				let rulesFolderPath: string
+				if (scope === "project") {
+					const workspacePath = getWorkspacePath()
+					if (workspacePath) {
+						rulesFolderPath = path.join(workspacePath, ".roo", `rules-${message.slug}`)
+					} else {
+						rulesFolderPath = path.join(".roo", `rules-${message.slug}`)
+					}
+				} else {
+					// Global scope - use OS home directory
+					const homeDir = os.homedir()
+					rulesFolderPath = path.join(homeDir, ".roo", `rules-${message.slug}`)
+				}
+
+				// Check if the rules folder exists
+				const rulesFolderExists = await fileExistsAtPath(rulesFolderPath)
+
+				// If this is a check request, send back the folder info
+				if (message.checkOnly) {
+					await provider.postMessageToWebview({
+						type: "deleteCustomModeCheck",
+						slug: message.slug,
+						rulesFolderPath: rulesFolderExists ? rulesFolderPath : undefined,
+					})
+					break
+				}
+
+				// Delete the mode
 				await provider.customModesManager.deleteCustomMode(message.slug)
+
+				// Delete the rules folder if it exists
+				if (rulesFolderExists) {
+					try {
+						await fs.rm(rulesFolderPath, { recursive: true, force: true })
+						provider.log(`Deleted rules folder for mode ${message.slug}: ${rulesFolderPath}`)
+					} catch (error) {
+						provider.log(`Failed to delete rules folder for mode ${message.slug}: ${error}`)
+						// Notify the user about the failure
+						vscode.window.showErrorMessage(
+							t("common:errors.delete_rules_folder_failed", {
+								rulesFolderPath,
+								error: error instanceof Error ? error.message : String(error),
+							}),
+						)
+						// Continue with mode deletion even if folder deletion fails
+					}
+				}
+
 				// Switch back to default mode after deletion
 				await updateGlobalState("mode", defaultModeSlug)
 				await provider.postStateToWebview()
@@ -1755,43 +1821,111 @@ export const webviewMessageHandler = async (
 
 			break
 		}
-		case "codebaseIndexConfig": {
-			const codebaseIndexConfig = message.values ?? {
-				codebaseIndexEnabled: false,
-				codebaseIndexQdrantUrl: "http://localhost:6333",
-				codebaseIndexEmbedderProvider: "openai",
-				codebaseIndexEmbedderBaseUrl: "",
-				codebaseIndexEmbedderModelId: "",
+
+		case "saveCodeIndexSettingsAtomic": {
+			if (!message.codeIndexSettings) {
+				break
 			}
-			await updateGlobalState("codebaseIndexConfig", codebaseIndexConfig)
+
+			const settings = message.codeIndexSettings
 
 			try {
-				if (provider.codeIndexManager) {
-					await provider.codeIndexManager.handleExternalSettingsChange()
+				// Save global state settings atomically (without codebaseIndexEnabled which is now in global settings)
+				const currentConfig = getGlobalState("codebaseIndexConfig") || {}
+				const globalStateConfig = {
+					...currentConfig,
+					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
+					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
+					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
+					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
+					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
+					codebaseIndexOpenAiCompatibleModelDimension: settings.codebaseIndexOpenAiCompatibleModelDimension,
+				}
 
-					// If now configured and enabled, start indexing automatically
+				// Save global state first
+				await updateGlobalState("codebaseIndexConfig", globalStateConfig)
+
+				// Save secrets directly using context proxy
+				if (settings.codeIndexOpenAiKey !== undefined) {
+					await provider.contextProxy.storeSecret("codeIndexOpenAiKey", settings.codeIndexOpenAiKey)
+				}
+				if (settings.codeIndexQdrantApiKey !== undefined) {
+					await provider.contextProxy.storeSecret("codeIndexQdrantApiKey", settings.codeIndexQdrantApiKey)
+				}
+				if (settings.codebaseIndexOpenAiCompatibleApiKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexOpenAiCompatibleApiKey",
+						settings.codebaseIndexOpenAiCompatibleApiKey,
+					)
+				}
+				if (settings.codebaseIndexGeminiApiKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexGeminiApiKey",
+						settings.codebaseIndexGeminiApiKey,
+					)
+				}
+
+				// Verify secrets are actually stored
+				const storedOpenAiKey = provider.contextProxy.getSecret("codeIndexOpenAiKey")
+
+				// Notify code index manager of changes
+				if (provider.codeIndexManager) {
+					await provider.codeIndexManager.handleSettingsChange()
+
+					// Auto-start indexing if now enabled and configured
 					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
 						if (!provider.codeIndexManager.isInitialized) {
 							await provider.codeIndexManager.initialize(provider.contextProxy)
 						}
-						// Start indexing in background (no await)
 						provider.codeIndexManager.startIndexing()
 					}
 				}
-			} catch (error) {
-				provider.log(
-					`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
-				)
-			}
 
-			await provider.postStateToWebview()
+				// Send success response
+				await provider.postMessageToWebview({
+					type: "codeIndexSettingsSaved",
+					success: true,
+					settings: globalStateConfig,
+				})
+
+				// Update webview state
+				await provider.postStateToWebview()
+			} catch (error) {
+				provider.log(`Error saving code index settings: ${error.message || error}`)
+				await provider.postMessageToWebview({
+					type: "codeIndexSettingsSaved",
+					success: false,
+					error: error.message || "Failed to save settings",
+				})
+			}
 			break
 		}
+
 		case "requestIndexingStatus": {
 			const status = provider.codeIndexManager!.getCurrentStatus()
 			provider.postMessageToWebview({
 				type: "indexingStatusUpdate",
 				values: status,
+			})
+			break
+		}
+		case "requestCodeIndexSecretStatus": {
+			// Check if secrets are set using the VSCode context directly for async access
+			const hasOpenAiKey = !!(await provider.context.secrets.get("codeIndexOpenAiKey"))
+			const hasQdrantApiKey = !!(await provider.context.secrets.get("codeIndexQdrantApiKey"))
+			const hasOpenAiCompatibleApiKey = !!(await provider.context.secrets.get(
+				"codebaseIndexOpenAiCompatibleApiKey",
+			))
+			const hasGeminiApiKey = !!(await provider.context.secrets.get("codebaseIndexGeminiApiKey"))
+
+			provider.postMessageToWebview({
+				type: "codeIndexSecretStatus",
+				values: {
+					hasOpenAiKey,
+					hasQdrantApiKey,
+					hasOpenAiCompatibleApiKey,
+					hasGeminiApiKey,
+				},
 			})
 			break
 		}
