@@ -7,7 +7,7 @@ import { Trans } from "react-i18next"
 import { CodebaseIndexConfig, CodebaseIndexModels, ProviderSettings } from "@roo-code/types"
 
 import { EmbedderProvider } from "@roo/embeddingModels"
-import { SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "../../../../src/services/code-index/constants"
+import { DEFAULT_SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "../../../../src/services/code-index/constants"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -539,7 +539,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 												max={1}
 												step={0.05}
 												value={[
-													codebaseIndexConfig.codebaseIndexSearchMinScore ?? SEARCH_MIN_SCORE,
+													codebaseIndexConfig.codebaseIndexSearchMinScore ??
+														DEFAULT_SEARCH_MIN_SCORE,
 												]}
 												onValueChange={([value]) =>
 													setCachedStateField("codebaseIndexConfig", {
@@ -552,7 +553,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 											/>
 											<span className="w-10">
 												{(
-													codebaseIndexConfig.codebaseIndexSearchMinScore ?? SEARCH_MIN_SCORE
+													codebaseIndexConfig.codebaseIndexSearchMinScore ??
+													DEFAULT_SEARCH_MIN_SCORE
 												).toFixed(2)}
 											</span>
 											<TooltipProvider>
@@ -564,7 +566,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 															onClick={() =>
 																setCachedStateField("codebaseIndexConfig", {
 																	...codebaseIndexConfig,
-																	codebaseIndexSearchMinScore: SEARCH_MIN_SCORE,
+																	codebaseIndexSearchMinScore:
+																		DEFAULT_SEARCH_MIN_SCORE,
 																})
 															}
 															className="h-8 w-8 p-0"
