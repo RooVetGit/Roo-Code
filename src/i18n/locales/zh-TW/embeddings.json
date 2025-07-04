@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "連接 Qdrant 向量資料庫失敗。請確保 Qdrant 正在執行並可在 {{qdrantUrl}} 存取。錯誤：{{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "驗證失敗。請在設定中檢查您的 API 金鑰。",
+		"connectionFailed": "連線至內嵌服務失敗。請檢查您的連線設定並確保服務正在執行。",
+		"modelNotAvailable": "指定的模型不可用。請檢查您的模型組態。",
+		"configurationError": "無效的內嵌程式組態。請檢閱您的設定。",
+		"serviceUnavailable": "內嵌服務不可用。請確保它正在執行且可存取。",
+		"invalidEndpoint": "無效的 API 端點。請檢查您的 URL 組態。"
 	}
 }

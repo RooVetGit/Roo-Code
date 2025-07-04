@@ -201,14 +201,31 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			}),
 		})
 
-		if (!response.ok) {
-			const errorText = await response.text()
-			const error = new Error(`HTTP ${response.status}: ${errorText}`) as HttpError
-			error.status = response.status
+		if (!response || !response.ok) {
+			const status = response?.status || 0
+			let errorText = "No response"
+			try {
+				if (response && typeof response.text === "function") {
+					errorText = await response.text()
+				} else if (response) {
+					errorText = `Error ${status}`
+				}
+			} catch {
+				// Ignore text parsing errors
+				errorText = `Error ${status}`
+			}
+			const error = new Error(`HTTP ${status}: ${errorText}`) as HttpError
+			error.status = status || response?.status || 0
 			throw error
 		}
 
-		return await response.json()
+		try {
+			return await response.json()
+		} catch (e) {
+			const error = new Error(`Failed to parse response JSON`) as HttpError
+			error.status = response.status
+			throw error
+		}
 	}
 
 	/**
@@ -321,6 +338,110 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		}
 
 		throw new Error(t("embeddings:failedMaxAttempts", { attempts: MAX_RETRIES }))
+	}
+
+	/**
+	 * Validates the OpenAI-compatible embedder configuration by testing endpoint connectivity and API key
+	 * @returns Promise resolving to validation result with success status and optional error message
+	 */
+	async validateConfiguration(): Promise<{ valid: boolean; error?: string }> {
+		try {
+			// Test with a minimal embedding request
+			const testTexts = ["test"]
+			const modelToUse = this.defaultModelId
+
+			let response: OpenAIEmbeddingResponse
+
+			if (this.isFullUrl) {
+				// Test direct HTTP request for full endpoint URLs
+				response = await this.makeDirectEmbeddingRequest(this.baseUrl, testTexts, modelToUse)
+			} else {
+				// Test using OpenAI SDK for base URLs
+				response = (await this.embeddingsClient.embeddings.create({
+					input: testTexts,
+					model: modelToUse,
+					encoding_format: "base64",
+				})) as OpenAIEmbeddingResponse
+			}
+
+			// Check if we got a valid response
+			if (!response?.data || response.data.length === 0) {
+				return {
+					valid: false,
+					error: "embeddings:validation.invalidResponse",
+				}
+			}
+
+			return { valid: true }
+		} catch (error) {
+			const httpError = error as HttpError
+			let statusCode = httpError?.status || httpError?.response?.status
+
+			// Extract status from error message if it's in the format "HTTP XXX:"
+			if (!statusCode && httpError?.message) {
+				const match = httpError.message.match(/HTTP (\d+):/)
+				if (match) {
+					statusCode = parseInt(match[1], 10)
+				}
+			}
+
+			// Handle specific error cases with translation keys
+			if (statusCode === 401) {
+				return {
+					valid: false,
+					error: "embeddings:validation.authenticationFailed",
+				}
+			} else if (statusCode === 403) {
+				return {
+					valid: false,
+					error: "embeddings:validation.authenticationFailed",
+				}
+			} else if (statusCode === 404) {
+				return {
+					valid: false,
+					error: "embeddings:validation.invalidEndpoint",
+				}
+			} else if (statusCode === 429) {
+				return {
+					valid: false,
+					error: "embeddings:validation.serviceUnavailable",
+				}
+			} else if (statusCode && statusCode >= 400 && statusCode < 600) {
+				// Other HTTP errors
+				return {
+					valid: false,
+					error: "embeddings:validation.configurationError",
+				}
+			} else if (httpError?.message?.includes("ENOTFOUND") || httpError?.message?.includes("ECONNREFUSED")) {
+				return {
+					valid: false,
+					error: "embeddings:validation.connectionFailed",
+				}
+			} else if (httpError?.message?.includes("ETIMEDOUT")) {
+				return {
+					valid: false,
+					error: "embeddings:validation.connectionFailed",
+				}
+			} else if (httpError?.message?.includes("Failed to parse response JSON")) {
+				// JSON parsing error - likely means the endpoint is not returning valid embedding response
+				return {
+					valid: false,
+					error: "embeddings:validation.invalidResponse",
+				}
+			} else if (httpError?.message?.includes("HTTP 0:") || statusCode === 0) {
+				// Handle the case where fetch failed completely (no response)
+				return {
+					valid: false,
+					error: "embeddings:validation.connectionFailed",
+				}
+			}
+
+			// Generic error fallback
+			return {
+				valid: false,
+				error: "embeddings:validation.configurationError",
+			}
+		}
 	}
 
 	/**
