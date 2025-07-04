@@ -11,8 +11,6 @@ on:
 jobs:
   publish-nightly:
     runs-on: ubuntu-latest
-    # Publish on every commit to main, regardless of QA workflow outcome
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run && github.event.workflow_run.head_branch == 'main') }}
 
     permissions:
       contents: read # No tags pushed → read is enough.
