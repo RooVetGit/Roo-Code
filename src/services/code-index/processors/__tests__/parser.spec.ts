@@ -186,6 +186,50 @@ describe("CodeParser", () => {
 			const result = await parser["_performFallbackChunking"]("test.js", shortContent, "hash", new Set())
 			expect(result).toEqual([])
 		})
+
+		it("should respect 50-character minimum threshold for all languages", async () => {
+			// Test content that is exactly 49 characters (should be filtered)
+			const shortContent = "function f() { return 1; } // Exactly 49 chars!!!"
+			expect(shortContent.length).toBe(49)
+
+			// Test content that is exactly 50 characters (should be included)
+			const minContent = "function g() { return 42; } // Exactly 50 chars!!!"
+			expect(minContent.length).toBe(50)
+
+			// Test content that is longer than 50 characters (should be included)
+			const longContent = "function calculate() { return 1 + 2 + 3; } // This is longer than 50 characters"
+			expect(longContent.length).toBeGreaterThan(50)
+
+			// Mock the language parser to return captures for our test content
+			const mockCapture = (content: string, startLine: number = 0) => ({
+				node: {
+					text: content,
+					startPosition: { row: startLine },
+					endPosition: { row: startLine },
+					type: "function_declaration",
+					childForFieldName: vi.fn().mockReturnValue(null),
+					children: [],
+				},
+				name: "definition.function",
+			})
+
+			// Test short content (49 chars) - should be filtered out
+			mockLanguageParser.js.query.captures.mockReturnValue([mockCapture(shortContent)])
+			const shortResult = await parser["parseContent"]("test.js", shortContent, "hash1")
+			expect(shortResult).toEqual([])
+
+			// Test minimum content (50 chars) - should be included
+			mockLanguageParser.js.query.captures.mockReturnValue([mockCapture(minContent)])
+			const minResult = await parser["parseContent"]("test.js", minContent, "hash2")
+			expect(minResult.length).toBe(1)
+			expect(minResult[0].content).toBe(minContent)
+
+			// Test longer content - should be included
+			mockLanguageParser.js.query.captures.mockReturnValue([mockCapture(longContent)])
+			const longResult = await parser["parseContent"]("test.js", longContent, "hash3")
+			expect(longResult.length).toBe(1)
+			expect(longResult[0].content).toBe(longContent)
+		})
 	})
 
 	describe("_chunkLeafNodeByLines", () => {
