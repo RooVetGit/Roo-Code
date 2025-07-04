@@ -11,6 +11,7 @@ import { formatResponse } from "../../core/prompts/responses"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { Task } from "../../core/task/Task"
+import { checkpointSave } from "../../core/checkpoints"
 
 import { DecorationController } from "./DecorationController"
 
@@ -204,9 +205,13 @@ export class DiffViewProvider {
 		// Track this file change in the FileChangeManager when LLM saves edits
 		if (task.fileChangeManager && task.checkpointService && this.relPath) {
 			try {
-				// Get the current checkpoint to use as the "to" checkpoint
-				const currentCheckpoint = task.checkpointService.baseHash
-				if (currentCheckpoint) {
+				// Create a checkpoint FIRST to capture the file changes
+				const fileUri = vscode.Uri.file(path.join(task.cwd, this.relPath))
+				await checkpointSave(task, false, [fileUri])
+
+				// Now get the newly created checkpoint
+				const newCheckpoint = task.checkpointService.getCurrentCheckpoint()
+				if (newCheckpoint) {
 					// Calculate line differences
 					const lineDiff = (
 						await import("../../services/file-changes/FileChangeManager")
@@ -224,7 +229,7 @@ export class DiffViewProvider {
 						this.relPath,
 						changeType,
 						fromCheckpoint,
-						currentCheckpoint,
+						newCheckpoint,
 						lineDiff.linesAdded,
 						lineDiff.linesRemoved,
 					)

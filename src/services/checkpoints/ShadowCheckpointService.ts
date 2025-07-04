@@ -37,6 +37,10 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		return !!this.git
 	}
 
+	public getCurrentCheckpoint(): string | undefined {
+		return this._checkpoints.length > 0 ? this._checkpoints[this._checkpoints.length - 1] : this.baseHash
+	}
+
 	constructor(taskId: string, checkpointsDir: string, workspaceDir: string, log: (message: string) => void) {
 		super()
 
@@ -74,7 +78,36 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		if (await fileExistsAtPath(this.dotGitDir)) {
 			this.log(`[${this.constructor.name}#initShadowGit] shadow git repo already exists at ${this.dotGitDir}`)
 			await this.writeExcludeFile()
-			this.baseHash = await git.revparse(["HEAD"])
+
+			// Restore checkpoint history from git log
+			try {
+				// Get the initial commit (first commit in the repo)
+				const initialCommit = await git
+					.raw(["rev-list", "--max-parents=0", "HEAD"])
+					.then((result) => result.trim())
+				this.baseHash = initialCommit
+
+				// Get all commits from initial commit to HEAD to restore checkpoint history
+				const logResult = await git.log({ from: initialCommit, to: "HEAD" })
+				if (logResult.all.length > 1) {
+					// Skip the first commit (baseHash) and get the rest as checkpoints
+					this._checkpoints = logResult.all
+						.slice(0, -1)
+						.map((commit) => commit.hash)
+						.reverse()
+					this.log(
+						`[${this.constructor.name}#initShadowGit] restored ${this._checkpoints.length} checkpoints from git history`,
+					)
+				} else {
+					this.baseHash = await git.revparse(["HEAD"])
+				}
+			} catch (error) {
+				this.log(
+					`[${this.constructor.name}#initShadowGit] failed to restore checkpoint history: ${error instanceof Error ? error.message : String(error)}`,
+				)
+				// Fallback to simple HEAD approach
+				this.baseHash = await git.revparse(["HEAD"])
+			}
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
