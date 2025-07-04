@@ -137,6 +137,18 @@ export async function loadRequiredLanguageParsers(filesToParse: string[], source
 				language = await loadLanguage("c_sharp", sourceDirectory)
 				query = new Query(language, csharpQuery)
 				break
+			case "vb":
+				// Visual Basic .NET - use C# parser as fallback since VB.NET has similar structure
+				language = await loadLanguage("c_sharp", sourceDirectory)
+				query = new Query(language, csharpQuery)
+				break
+			case "fs":
+			case "fsx":
+			case "fsi":
+				// F# - use OCaml parser since F# is based on OCaml
+				language = await loadLanguage("ocaml", sourceDirectory)
+				query = new Query(language, ocamlQuery)
+				break
 			case "rb":
 				language = await loadLanguage("ruby", sourceDirectory)
 				query = new Query(language, rubyQuery)
