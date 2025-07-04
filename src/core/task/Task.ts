@@ -1648,6 +1648,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			autoApprovalEnabled,
 			alwaysApproveResubmit,
 			requestDelaySeconds,
+			maxRequestDelaySeconds,
 			mode,
 			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
@@ -1716,7 +1717,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
-			const currentProfileId = state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ?? "default";
+			const currentProfileId =
+				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
+				"default"
 
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
@@ -1801,11 +1804,12 @@ export class Task extends EventEmitter<ClineEvents> {
 					errorMsg = "Unknown error"
 				}
 
-				const baseDelay = requestDelaySeconds || 5
-				let exponentialDelay = Math.min(
-					Math.ceil(baseDelay * Math.pow(2, retryAttempt)),
-					MAX_EXPONENTIAL_BACKOFF_SECONDS,
-				)
+				const minDelay = requestDelaySeconds ?? 5
+				const maxDelay = maxRequestDelaySeconds ?? MAX_EXPONENTIAL_BACKOFF_SECONDS
+
+				let exponentialDelay = Math.ceil(minDelay * Math.pow(2, retryAttempt))
+
+				exponentialDelay = Math.max(minDelay, Math.min(exponentialDelay, maxDelay))
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
 				if (error.status === 429) {

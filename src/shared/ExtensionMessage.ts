@@ -238,6 +238,7 @@ export type ExtensionState = Pick<
 
 	writeDelayMs: number
 	requestDelaySeconds: number
+	maxRequestDelaySeconds: number
 
 	enableCheckpoints: boolean
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
