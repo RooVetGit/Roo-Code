@@ -106,7 +106,7 @@ Parameters:
 Diff format:
 \`\`\`
 <<<<<<< SEARCH
-:start_line: (required) The line number of original content where the search block starts.
+:start_line: (optional) The line number of original content where the search block starts.
 -------
 [exact content to find including whitespace]
 =======
