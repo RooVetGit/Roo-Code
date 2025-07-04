@@ -319,6 +319,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 							codeChunk: block.content,
 							startLine: block.start_line,
 							endLine: block.end_line,
+							segmentHash: block.segmentHash,
 						},
 					}
 				})
