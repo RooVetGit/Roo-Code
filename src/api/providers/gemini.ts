@@ -89,7 +89,8 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					for (const part of candidate.content.parts) {
 						if (part.thought) {
 							// This is a thinking/reasoning part
-							if (part.text) {
+							// Only yield reasoning chunks if intermediate reasoning is not disabled
+							if (part.text && !this.options.geminiDisableIntermediateReasoning) {
 								yield { type: "reasoning", text: part.text }
 							}
 						} else {

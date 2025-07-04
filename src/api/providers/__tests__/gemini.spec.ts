@@ -89,6 +89,119 @@ describe("GeminiHandler", () => {
 			)
 		})
 
+		it("should handle reasoning chunks correctly when intermediate reasoning is enabled", async () => {
+			// Setup the mock implementation to return an async generator with reasoning chunks
+			;(handler["client"].models.generateContentStream as any).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ thought: true, text: "Let me think about this..." }, { text: "Hello" }],
+								},
+							},
+						],
+					}
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ thought: true, text: "I need to consider..." }, { text: " world!" }],
+								},
+							},
+						],
+					}
+					yield { usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 5, thoughtsTokenCount: 20 } }
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should have 6 chunks: 2 reasoning + 2 text + 2 reasoning + 2 text + usage
+			expect(chunks.length).toBe(5)
+			expect(chunks[0]).toEqual({ type: "reasoning", text: "Let me think about this..." })
+			expect(chunks[1]).toEqual({ type: "text", text: "Hello" })
+			expect(chunks[2]).toEqual({ type: "reasoning", text: "I need to consider..." })
+			expect(chunks[3]).toEqual({ type: "text", text: " world!" })
+			expect(chunks[4]).toEqual({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 5,
+				reasoningTokens: 20,
+			})
+		})
+
+		it("should suppress reasoning chunks when geminiDisableIntermediateReasoning is enabled", async () => {
+			// Create a new handler with the setting enabled
+			const handlerWithDisabledReasoning = new GeminiHandler({
+				apiKey: "test-key",
+				apiModelId: GEMINI_20_FLASH_THINKING_NAME,
+				geminiApiKey: "test-key",
+				geminiDisableIntermediateReasoning: true,
+			})
+
+			// Replace the client with our mock
+			handlerWithDisabledReasoning["client"] = {
+				models: {
+					generateContentStream: vitest.fn(),
+					generateContent: vitest.fn(),
+					getGenerativeModel: vitest.fn(),
+				},
+			} as any
+
+			// Setup the mock implementation to return an async generator with reasoning chunks
+			;(handlerWithDisabledReasoning["client"].models.generateContentStream as any).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ thought: true, text: "Let me think about this..." }, { text: "Hello" }],
+								},
+							},
+						],
+					}
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ thought: true, text: "I need to consider..." }, { text: " world!" }],
+								},
+							},
+						],
+					}
+					yield { usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 5, thoughtsTokenCount: 20 } }
+				},
+			})
+
+			const stream = handlerWithDisabledReasoning.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should have only 3 chunks: 2 text + usage (reasoning chunks should be suppressed)
+			expect(chunks.length).toBe(3)
+			expect(chunks[0]).toEqual({ type: "text", text: "Hello" })
+			expect(chunks[1]).toEqual({ type: "text", text: " world!" })
+			expect(chunks[2]).toEqual({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 5,
+				reasoningTokens: 20,
+			})
+
+			// Verify no reasoning chunks were yielded
+			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
+			expect(reasoningChunks.length).toBe(0)
+		})
+
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			;(handler["client"].models.generateContentStream as any).mockRejectedValue(mockError)
