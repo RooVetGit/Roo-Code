@@ -132,6 +132,27 @@
 	--color-vscode-textLink-foreground: var(--vscode-textLink-foreground);
 	--color-vscode-textCodeBlock-background: var(--vscode-textCodeBlock-background);
 	--color-vscode-button-hoverBackground: var(--vscode-button-hoverBackground);
+
+	/* Diff editor colors */
+	--color-vscode-diffEditor-insertedTextBackground: var(--vscode-diffEditor-insertedTextBackground);
+	--color-vscode-diffEditor-insertedTextForeground: var(
+		--vscode-diffEditor-insertedTextForeground,
+		var(--vscode-editor-foreground)
+	);
+	--color-vscode-diffEditor-removedTextBackground: var(--vscode-diffEditor-removedTextBackground);
+	--color-vscode-diffEditor-removedTextForeground: var(
+		--vscode-diffEditor-removedTextForeground,
+		var(--vscode-editor-foreground)
+	);
+
+	/* Editor group and tab colors */
+	--color-vscode-editorGroupHeader-tabsBackground: var(--vscode-editorGroupHeader-tabsBackground);
+	--color-vscode-tab-activeForeground: var(--vscode-tab-activeForeground);
+	--color-vscode-editorWidget-background: var(--vscode-editorWidget-background);
+	--color-vscode-editorLineNumber-foreground: var(--vscode-editorLineNumber-foreground);
+
+	/* Symbol icon colors */
+	--color-vscode-symbolIcon-fileForeground: var(--vscode-symbolIcon-fileForeground, var(--vscode-foreground));
 }
 
 @layer base {
