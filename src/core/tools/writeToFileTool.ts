@@ -164,7 +164,7 @@ export async function writeToFileTool(
 			)
 
 			await delay(300) // wait for diff view to update
-			await cline.diffViewProvider.scrollToFirstDiff()
+			cline.diffViewProvider.scrollToFirstDiff()
 
 			// Check for code omissions before proceeding
 			if (detectCodeOmission(cline.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {

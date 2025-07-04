@@ -145,7 +145,7 @@ export async function applyDiffToolLegacy(
 			cline.diffViewProvider.editType = "modify"
 			await cline.diffViewProvider.open(relPath)
 			await cline.diffViewProvider.update(diffResult.content, true)
-			await cline.diffViewProvider.scrollToFirstDiff()
+			cline.diffViewProvider.scrollToFirstDiff()
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,

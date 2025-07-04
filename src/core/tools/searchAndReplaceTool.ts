@@ -203,7 +203,7 @@ export async function searchAndReplaceTool(
 			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
 			await cline.diffViewProvider.open(validRelPath)
 			await cline.diffViewProvider.update(fileContent, false)
-			await cline.diffViewProvider.scrollToFirstDiff()
+			cline.diffViewProvider.scrollToFirstDiff()
 			await delay(200)
 		}
 

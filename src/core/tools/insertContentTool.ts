@@ -110,7 +110,7 @@ export async function insertContentTool(
 			// First open with original content
 			await cline.diffViewProvider.open(relPath)
 			await cline.diffViewProvider.update(fileContent, false)
-			await cline.diffViewProvider.scrollToFirstDiff()
+			cline.diffViewProvider.scrollToFirstDiff()
 			await delay(200)
 		}
 

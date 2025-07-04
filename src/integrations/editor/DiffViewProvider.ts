@@ -540,7 +540,7 @@ export class DiffViewProvider {
 		}
 	}
 
-	async scrollToFirstDiff() {
+	scrollToFirstDiff() {
 		if (!this.activeDiffEditor) {
 			return
 		}
