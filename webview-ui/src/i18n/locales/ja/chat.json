@@ -35,7 +35,7 @@
 		"tooltip": "操作を再試行"
 	},
 	"startNewTask": {
-		"title": "新しいタスクを開始",
+		"title": "タスクを開始",
 		"tooltip": "新しいタスクを開始"
 	},
 	"proceedAnyways": {

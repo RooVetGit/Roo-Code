@@ -35,7 +35,7 @@
 		"tooltip": "작업 다시 시도"
 	},
 	"startNewTask": {
-		"title": "새 작업 시작",
+		"title": "작업 시작",
 		"tooltip": "새 작업 시작하기"
 	},
 	"proceedAnyways": {

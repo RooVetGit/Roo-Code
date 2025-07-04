@@ -35,7 +35,7 @@
 		"tooltip": "Tentar a operação novamente"
 	},
 	"startNewTask": {
-		"title": "Iniciar nova tarefa",
+		"title": "Iniciar tarefa",
 		"tooltip": "Começar uma nova tarefa"
 	},
 	"proceedAnyways": {

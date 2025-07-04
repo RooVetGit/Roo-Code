@@ -26,9 +26,10 @@ import {
 interface ShareButtonProps {
 	item?: HistoryItem
 	disabled?: boolean
+	allowNoItem?: boolean // Allow sharing even when there's no current task
 }
 
-export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
+export const ShareButton = ({ item, disabled = false, allowNoItem = false }: ShareButtonProps) => {
 	const [shareDropdownOpen, setShareDropdownOpen] = useState(false)
 	const [connectModalOpen, setConnectModalOpen] = useState(false)
 	const [shareSuccess, setShareSuccess] = useState<{ visibility: ShareVisibility; url: string } | null>(null)
@@ -81,6 +82,8 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 			telemetryClient.capture(TelemetryEventName.SHARE_PUBLIC_CLICKED)
 		}
 
+		// If there's no current task but allowNoItem is true, we still try to share
+		// The extension will handle this case appropriately
 		vscode.postMessage({
 			type: "shareCurrentTask",
 			visibility,
@@ -135,8 +138,8 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 
 	const shareButtonState = getShareButtonState()
 
-	// Don't render if no item ID
-	if (!item?.id) {
+	// Don't render if no item ID unless allowNoItem is true
+	if (!item?.id && !allowNoItem) {
 		return null
 	}
 

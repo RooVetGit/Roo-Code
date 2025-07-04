@@ -30,7 +30,7 @@
 		"tooltip": "Try the operation again"
 	},
 	"startNewTask": {
-		"title": "Start New Task",
+		"title": "Start Task",
 		"tooltip": "Begin a new task"
 	},
 	"proceedAnyways": {

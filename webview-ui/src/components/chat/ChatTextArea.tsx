@@ -30,6 +30,7 @@ import { IconButton } from "./IconButton"
 import { IndexingStatusDot } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
+import { ShareButton } from "./ShareButton"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -1147,6 +1148,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							disabled={shouldDisableImages}
 							onClick={onSelectImages}
 						/>
+						<ShareButton allowNoItem={true} disabled={sendingDisabled} />
 						<IconButton
 							iconClass="codicon-send"
 							title={t("chat:sendMessage")}
