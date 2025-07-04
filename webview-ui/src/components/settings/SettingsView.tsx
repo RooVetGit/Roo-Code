@@ -282,6 +282,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "autoCondenseContextPercent", value: autoCondenseContextPercent })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
+			vscode.postMessage({ type: "filesChangedEnabled", bool: filesChangedEnabled })
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
 			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })

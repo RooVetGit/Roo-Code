@@ -4,6 +4,9 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import { EventEmitter } from "vscode"
 
+// Type imports for provider reference
+import type { ClineProvider } from "../../core/webview/ClineProvider"
+
 // Error types for better error handling
 export enum FileChangeErrorType {
 	PERSISTENCE_FAILED = "PERSISTENCE_FAILED",
@@ -41,8 +44,9 @@ export class FileChangeManager {
 	private persistenceInProgress = false
 	private pendingPersistence = false
 	private errorHandler?: FileChangeErrorHandler
+	private providerRef?: WeakRef<ClineProvider>
 
-	constructor(baseCheckpoint: string, taskId?: string, globalStoragePath?: string) {
+	constructor(baseCheckpoint: string, taskId?: string, globalStoragePath?: string, provider?: ClineProvider) {
 		this.instanceId = crypto.randomUUID()
 		this.changeset = {
 			baseCheckpoint,
@@ -50,6 +54,7 @@ export class FileChangeManager {
 		}
 		this.taskId = taskId || ""
 		this.globalStoragePath = globalStoragePath || ""
+		this.providerRef = provider ? new WeakRef(provider) : undefined
 
 		console.log(`[DEBUG] FileChangeManager created for task ${this.taskId}. Instance ID: ${this.instanceId}`)
 
@@ -67,6 +72,25 @@ export class FileChangeManager {
 	 */
 	public setErrorHandler(handler: FileChangeErrorHandler): void {
 		this.errorHandler = handler
+	}
+
+	/**
+	 * Check if file change tracking is enabled
+	 */
+	private isFileChangeTrackingEnabled(): boolean {
+		const provider = this.providerRef?.deref()
+		if (!provider) {
+			// If no provider reference, default to enabled for backward compatibility
+			return true
+		}
+
+		try {
+			return provider.getValue("filesChangedEnabled") ?? true
+		} catch (error) {
+			// If we can't get the state, default to enabled
+			console.warn("FileChangeManager: Could not check filesChangedEnabled setting, defaulting to enabled")
+			return true
+		}
 	}
 
 	/**
@@ -108,6 +132,12 @@ export class FileChangeManager {
 		linesAdded?: number,
 		linesRemoved?: number,
 	): void {
+		// Check if file change tracking is enabled
+		if (!this.isFileChangeTrackingEnabled()) {
+			console.log(`FileChangeManager: File change tracking is disabled, skipping recording for URI: ${uri}`)
+			return
+		}
+
 		console.log(
 			`FileChangeManager: Recording change for URI: ${uri}, Type: ${type}, From: ${fromCheckpoint}, To: ${toCheckpoint}`,
 		)

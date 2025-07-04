@@ -117,6 +117,7 @@ export function getCheckpointService(cline: Task) {
 							baseHash,
 							cline.taskId,
 							provider.context.globalStorageUri.fsPath,
+							provider,
 						)
 						log(`[Task#getCheckpointService] FileChangeManager created with baseline: ${baseHash}`)
 					} catch (error) {

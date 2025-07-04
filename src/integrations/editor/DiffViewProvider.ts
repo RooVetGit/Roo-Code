@@ -234,18 +234,21 @@ export class DiffViewProvider {
 						lineDiff.linesRemoved,
 					)
 
-					// Notify the webview about the file changes
-					const updatedChangeset = task.fileChangeManager.getChanges()
+					// Notify the webview about the file changes (only if tracking is enabled)
 					const provider = task.providerRef.deref()
-					if (provider && updatedChangeset.files.length > 0) {
-						const serializableChangeset = {
-							...updatedChangeset,
-							files: Array.from(updatedChangeset.files.values()),
+					const filesChangedEnabled = provider?.getValue("filesChangedEnabled") ?? true
+					if (provider && filesChangedEnabled) {
+						const updatedChangeset = task.fileChangeManager.getChanges()
+						if (updatedChangeset.files.length > 0) {
+							const serializableChangeset = {
+								...updatedChangeset,
+								files: Array.from(updatedChangeset.files.values()),
+							}
+							provider.postMessageToWebview({
+								type: "filesChanged",
+								filesChanged: serializableChangeset,
+							})
 						}
-						provider.postMessageToWebview({
-							type: "filesChanged",
-							filesChanged: serializableChangeset,
-						})
 					}
 
 					console.log(

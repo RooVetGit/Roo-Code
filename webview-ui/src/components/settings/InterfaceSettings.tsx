@@ -6,7 +6,6 @@ import { Monitor } from "lucide-react"
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
-import { vscode } from "@/utils/vscode"
 
 type InterfaceSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	filesChangedEnabled?: boolean
@@ -38,10 +37,6 @@ export const InterfaceSettings = ({ filesChangedEnabled, setCachedStateField, ..
 							checked={filesChangedEnabled ?? true}
 							onChange={(e: any) => {
 								setCachedStateField("filesChangedEnabled", e.target.checked)
-								vscode.postMessage({
-									type: "filesChangedEnabled",
-									bool: e.target.checked,
-								})
 							}}
 							data-testid="files-changed-enabled-checkbox">
 							{t("settings:interface.filesChanged.enabled.label")}
