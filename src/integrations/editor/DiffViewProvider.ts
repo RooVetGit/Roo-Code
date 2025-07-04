@@ -124,11 +124,7 @@ export class DiffViewProvider {
 		// Place cursor at the beginning of the diff editor to keep it out of
 		// the way of the stream animation, but do this without stealing focus
 		const beginningOfDocument = new vscode.Position(0, 0)
-		const currentActiveEditor = vscode.window.activeTextEditor
 		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
-
-		// Restore focus to the previously active editor if it changed
-		await this.restoreEditorFocus(currentActiveEditor)
 
 		const endLine = accumulatedLines.length
 		// Replace all content up to the current line with accumulated lines.
@@ -144,11 +140,7 @@ export class DiffViewProvider {
 		// Scroll to the current line without stealing focus.
 		const ranges = this.activeDiffEditor?.visibleRanges
 		if (ranges && ranges.length > 0 && ranges[0].start.line < endLine && ranges[0].end.line > endLine) {
-			const currentActiveEditor = vscode.window.activeTextEditor
 			this.scrollEditorToLine(endLine)
-
-			// Restore focus if scrolling stole it
-			await this.restoreEditorFocus(currentActiveEditor)
 		}
 
 		// Update the streamedLines with the new accumulated content.
@@ -561,14 +553,10 @@ export class DiffViewProvider {
 		for (const part of diffs) {
 			if (part.added || part.removed) {
 				// Found the first diff, scroll to it without stealing focus.
-				const currentActiveEditor = vscode.window.activeTextEditor
 				this.activeDiffEditor.revealRange(
 					new vscode.Range(lineCount, 0, lineCount, 0),
 					vscode.TextEditorRevealType.InCenter,
 				)
-
-				// Restore focus if scrolling stole it
-				await this.restoreEditorFocus(currentActiveEditor)
 
 				return
 			}
@@ -603,28 +591,5 @@ export class DiffViewProvider {
 		this.activeLineController = undefined
 		this.streamedLines = []
 		this.preDiagnostics = []
-	}
-
-	/**
-	 * Restores focus to the previously active editor if focus was stolen
-	 * @param previousEditor The editor that should have focus
-	 */
-	private async restoreEditorFocus(previousEditor: vscode.TextEditor | undefined): Promise<void> {
-		if (!previousEditor) {
-			return
-		}
-
-		try {
-			// Check if focus has changed
-			if (vscode.window.activeTextEditor !== previousEditor) {
-				await vscode.window.showTextDocument(previousEditor.document, {
-					preserveFocus: true,
-					viewColumn: previousEditor.viewColumn,
-				})
-			}
-		} catch (error) {
-			// Silently handle errors - focus restoration is a best-effort operation
-			console.debug("Failed to restore editor focus:", error)
-		}
 	}
 }
