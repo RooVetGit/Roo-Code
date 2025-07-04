@@ -7,6 +7,7 @@ import type {
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
 	ShareVisibility,
+	CodebaseIndexConfig,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -141,6 +142,7 @@ export interface WebviewMessage {
 		| "humanRelayCancel"
 		| "browserToolEnabled"
 		| "codebaseIndexEnabled"
+		| "updateCodebaseIndexConfig"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
 		| "testBrowserConnection"
@@ -225,6 +227,7 @@ export interface WebviewMessage {
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
 	checkOnly?: boolean // For deleteCustomMode check
+	codebaseIndexConfig?: CodebaseIndexConfig // For updateCodebaseIndexConfig
 	codeIndexSettings?: {
 		// Global state settings
 		codebaseIndexEnabled: boolean

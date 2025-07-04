@@ -28,9 +28,11 @@ const mockClineProvider = {
 			globalStorageUri: { fsPath: "/mock/global/storage" },
 		},
 		setValue: vi.fn(),
+		getValue: vi.fn(),
 	},
 	log: vi.fn(),
 	postStateToWebview: vi.fn(),
+	codeIndexManager: undefined as any,
 } as unknown as ClineProvider
 
 import { t } from "../../../i18n"
@@ -480,5 +482,146 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 		)
 		// No error response is sent anymore - we just continue with deletion
 		expect(mockClineProvider.postMessageToWebview).not.toHaveBeenCalled()
+	})
+})
+
+describe("webviewMessageHandler - updateCodebaseIndexConfig", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		// Reset getValue mock
+		vi.mocked(mockClineProvider.contextProxy.getValue).mockReset()
+		// Add codeIndexManager mock
+		;(mockClineProvider as any).codeIndexManager = {
+			handleSettingsChange: vi.fn().mockResolvedValue(undefined),
+		}
+	})
+
+	it("should update codebaseIndexConfig with all fields including codebaseIndexSearchMaxResults", async () => {
+		// Arrange
+		const existingConfig = {
+			codebaseIndexEnabled: true,
+			codebaseIndexQdrantUrl: "http://old-url.com",
+			codebaseIndexSearchMaxResults: 50,
+		}
+		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(existingConfig)
+
+		const message: any = {
+			type: "updateCodebaseIndexConfig",
+			codebaseIndexConfig: {
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://new-url.com",
+				codebaseIndexSearchMaxResults: 100, // This should be saved
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-ada-002",
+			},
+		}
+
+		// Act
+		await webviewMessageHandler(mockClineProvider, message)
+
+		// Assert
+		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("codebaseIndexConfig", {
+			codebaseIndexEnabled: true,
+			codebaseIndexQdrantUrl: "http://new-url.com",
+			codebaseIndexSearchMaxResults: 100, // Should be preserved
+			codebaseIndexEmbedderProvider: "openai",
+			codebaseIndexEmbedderModelId: "text-embedding-ada-002",
+		})
+		expect((mockClineProvider as any).codeIndexManager.handleSettingsChange).toHaveBeenCalled()
+		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+	})
+
+	it("should merge with existing config when updating", async () => {
+		// Arrange
+		const existingConfig = {
+			codebaseIndexEnabled: true,
+			codebaseIndexQdrantUrl: "http://existing.com",
+			codebaseIndexSearchMaxResults: 75,
+			codebaseIndexEmbedderProvider: "ollama",
+			codebaseIndexEmbedderModelId: "existing-model",
+		}
+		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(existingConfig)
+
+		const message: any = {
+			type: "updateCodebaseIndexConfig",
+			codebaseIndexConfig: {
+				codebaseIndexSearchMaxResults: 150, // Only updating this field
+			},
+		}
+
+		// Act
+		await webviewMessageHandler(mockClineProvider, message)
+
+		// Assert
+		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("codebaseIndexConfig", {
+			codebaseIndexEnabled: true,
+			codebaseIndexQdrantUrl: "http://existing.com",
+			codebaseIndexSearchMaxResults: 150, // Updated
+			codebaseIndexEmbedderProvider: "ollama",
+			codebaseIndexEmbedderModelId: "existing-model",
+		})
+	})
+
+	it("should handle when no existing config exists", async () => {
+		// Arrange
+		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(null)
+
+		const message: any = {
+			type: "updateCodebaseIndexConfig",
+			codebaseIndexConfig: {
+				codebaseIndexEnabled: false,
+				codebaseIndexSearchMaxResults: 200,
+			},
+		}
+
+		// Act
+		await webviewMessageHandler(mockClineProvider, message)
+
+		// Assert
+		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("codebaseIndexConfig", {
+			codebaseIndexEnabled: false,
+			codebaseIndexSearchMaxResults: 200,
+		})
+	})
+
+	it("should not update if codebaseIndexConfig is not provided", async () => {
+		// Arrange
+		const message: any = {
+			type: "updateCodebaseIndexConfig",
+			// No codebaseIndexConfig provided
+		}
+
+		// Act
+		await webviewMessageHandler(mockClineProvider, message)
+
+		// Assert
+		expect(mockClineProvider.contextProxy.setValue).not.toHaveBeenCalled()
+		expect((mockClineProvider as any).codeIndexManager?.handleSettingsChange).not.toHaveBeenCalled()
+		expect(mockClineProvider.postStateToWebview).not.toHaveBeenCalled()
+	})
+
+	it("should handle when codeIndexManager is not available", async () => {
+		// Arrange
+		;(mockClineProvider as any).codeIndexManager = undefined
+		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue({})
+
+		const message: any = {
+			type: "updateCodebaseIndexConfig",
+			codebaseIndexConfig: {
+				codebaseIndexEnabled: true,
+				codebaseIndexSearchMaxResults: 100,
+			},
+		}
+
+		// Act
+		await webviewMessageHandler(mockClineProvider, message)
+
+		// Assert
+		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("codebaseIndexConfig", {
+			codebaseIndexEnabled: true,
+			codebaseIndexSearchMaxResults: 100,
+		})
+		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		// Should not throw error when codeIndexManager is undefined
 	})
 })
