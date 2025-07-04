@@ -28,6 +28,9 @@ export const codebaseIndexConfigSchema = z.object({
 		.min(CODEBASE_INDEX_DEFAULTS.MIN_SEARCH_RESULTS)
 		.max(CODEBASE_INDEX_DEFAULTS.MAX_SEARCH_RESULTS)
 		.optional(),
+	// OpenAI Compatible specific fields
+	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
+	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>

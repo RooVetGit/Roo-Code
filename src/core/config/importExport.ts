@@ -68,48 +68,8 @@ export async function importSettingsFromPath(
 			(globalSettings.customModes ?? []).map((mode) => customModesManager.updateCustomMode(mode.slug, mode)),
 		)
 
-		// Handle OpenAI Compatible codebase indexing settings import
-		if (globalSettings.codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible") {
-			// Find the provider that should receive the OpenAI Compatible settings
-			// This should be the provider that already has OpenAI Compatible settings in the imported data,
-			// not necessarily the current provider
-			let targetProvider = null
-			let targetProviderName = null
-
-			// Look for a provider that has existing OpenAI Compatible settings
-			for (const [providerName, provider] of Object.entries(providerProfiles.apiConfigs)) {
-				if (
-					provider.codebaseIndexOpenAiCompatibleBaseUrl !== undefined ||
-					provider.codebaseIndexOpenAiCompatibleModelDimension !== undefined
-				) {
-					targetProvider = provider
-					targetProviderName = providerName
-					break
-				}
-			}
-
-			// If no provider with existing OpenAI Compatible settings is found,
-			// fall back to the current provider (for backward compatibility)
-			if (!targetProvider) {
-				const currentProviderName = providerProfiles.currentApiConfigName
-				targetProvider = providerProfiles.apiConfigs[currentProviderName]
-				targetProviderName = currentProviderName
-			}
-
-			if (targetProvider && globalSettings.codebaseIndexConfig) {
-				// Map the imported base URL back to the provider settings
-				if (globalSettings.codebaseIndexConfig.codebaseIndexEmbedderBaseUrl) {
-					targetProvider.codebaseIndexOpenAiCompatibleBaseUrl =
-						globalSettings.codebaseIndexConfig.codebaseIndexEmbedderBaseUrl
-				}
-
-				// Map the imported model dimension back to the provider settings
-				if (globalSettings.codebaseIndexConfig.codebaseIndexEmbedderModelDimension !== undefined) {
-					targetProvider.codebaseIndexOpenAiCompatibleModelDimension =
-						globalSettings.codebaseIndexConfig.codebaseIndexEmbedderModelDimension
-				}
-			}
-		}
+		// OpenAI Compatible settings are now correctly stored in codebaseIndexConfig
+		// They will be imported automatically with the config - no special handling needed
 
 		await providerSettingsManager.import(providerProfiles)
 		await contextProxy.setValues(globalSettings)
@@ -204,27 +164,16 @@ export const exportSettings = async ({ providerSettingsManager, contextProxy }: 
 			return
 		}
 
-		// Fix codebase indexing export for OpenAI Compatible provider
-		if (globalSettings?.codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai-compatible") {
-			// Read OpenAI Compatible settings from global state
-			const baseUrl = await contextProxy.getGlobalState("codebaseIndexOpenAiCompatibleBaseUrl")
-			const modelDimension = await contextProxy.getGlobalState("codebaseIndexOpenAiCompatibleModelDimension")
-
-			// Set the base URL in the exported config if it exists
-			if (baseUrl !== undefined) {
-				globalSettings.codebaseIndexConfig.codebaseIndexEmbedderBaseUrl = baseUrl
-			}
-
-			// Set the model dimension in the exported config if it exists
-			if (modelDimension !== undefined) {
-				globalSettings.codebaseIndexConfig.codebaseIndexEmbedderModelDimension = modelDimension
-			}
-		}
+		// OpenAI Compatible settings are now correctly stored in codebaseIndexConfig
+		// No workaround needed - they will be exported automatically with the config
 
 		const dirname = path.dirname(uri.fsPath)
 		await fs.mkdir(dirname, { recursive: true })
 		await safeWriteJson(uri.fsPath, { providerProfiles, globalSettings })
-	} catch (e) {}
+	} catch (e) {
+		console.error("Failed to export settings:", e)
+		// Don't re-throw - the UI will handle showing error messages
+	}
 }
 
 /**
