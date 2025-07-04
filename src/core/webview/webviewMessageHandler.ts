@@ -1130,23 +1130,6 @@ export const webviewMessageHandler = async (
 
 			await provider.postStateToWebview()
 			break
-		case "updateCodebaseIndexConfig":
-			// Update the entire codebaseIndexConfig with the provided configuration
-			if (message.codebaseIndexConfig) {
-				const currentConfig = getGlobalState("codebaseIndexConfig") || {}
-				await updateGlobalState("codebaseIndexConfig", {
-					...currentConfig,
-					...message.codebaseIndexConfig,
-				})
-
-				// Notify the code index manager about the change
-				if (provider.codeIndexManager) {
-					await provider.codeIndexManager.handleSettingsChange()
-				}
-
-				await provider.postStateToWebview()
-			}
-			break
 		case "language":
 			changeLanguage(message.text ?? "en")
 			await updateGlobalState("language", message.text as Language)
@@ -1857,6 +1840,7 @@ export const webviewMessageHandler = async (
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
 					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
 					codebaseIndexOpenAiCompatibleModelDimension: settings.codebaseIndexOpenAiCompatibleModelDimension,
+					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
 				}
 
 				// Save global state first
