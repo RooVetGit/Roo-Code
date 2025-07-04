@@ -321,7 +321,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			if (codebaseIndexConfig) {
-				vscode.postMessage({ type: "updateCodebaseIndexConfig", config: codebaseIndexConfig })
+				vscode.postMessage({ type: "updateCodebaseIndexConfig", codebaseIndexConfig: codebaseIndexConfig })
 			}
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
 			setChangeDetected(false)
