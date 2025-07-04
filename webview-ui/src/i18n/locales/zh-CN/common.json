@@ -25,7 +25,8 @@
 			"save": "保存图片",
 			"viewCode": "查看代码",
 			"viewDiagram": "查看图表",
-			"close": "关闭"
+			"close": "关闭",
+			"retry": "重试"
 		},
 		"modal": {
 			"codeTitle": "Mermaid 代码"

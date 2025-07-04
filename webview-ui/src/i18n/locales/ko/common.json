@@ -25,7 +25,8 @@
 			"save": "이미지 저장",
 			"viewCode": "코드 보기",
 			"viewDiagram": "다이어그램 보기",
-			"close": "닫기"
+			"close": "닫기",
+			"retry": "다시 시도"
 		},
 		"modal": {
 			"codeTitle": "머메이드 코드"
