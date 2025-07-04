@@ -32,12 +32,12 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 	onRejectAll,
 }) => {
 	const { t } = useTranslation()
-	const { filesChangedEnabled, filesChangedMaxDisplayFiles } = useExtensionState()
+	const { filesChangedEnabled } = useExtensionState()
 	const files = changeset.files
 	const [isCollapsed, setIsCollapsed] = React.useState(true)
 
 	// Performance optimization: Use virtualization for large file lists
-	const VIRTUALIZATION_THRESHOLD = filesChangedMaxDisplayFiles || 50
+	const VIRTUALIZATION_THRESHOLD = 50
 	const ITEM_HEIGHT = 60 // Approximate height of each file item
 	const MAX_VISIBLE_ITEMS = 10
 	const [scrollTop, setScrollTop] = React.useState(0)

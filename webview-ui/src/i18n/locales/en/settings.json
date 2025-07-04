@@ -418,10 +418,6 @@
 			"enabled": {
 				"label": "Show files changed overview",
 				"description": "Display an overview of files modified by the AI during conversation. When disabled, the files changed section will be hidden from the interface."
-			},
-			"maxDisplayFiles": {
-				"label": "Virtualization threshold",
-				"description": "Maximum number of files to display before enabling virtualization for performance. Higher values show more files at once but may impact performance with large file sets."
 			}
 		}
 	},

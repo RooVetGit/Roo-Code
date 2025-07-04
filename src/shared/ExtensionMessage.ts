@@ -273,7 +273,6 @@ export type ExtensionState = Pick<
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
 	filesChangedEnabled: boolean
-	filesChangedMaxDisplayFiles: number
 }
 
 export interface ClineSayTool {

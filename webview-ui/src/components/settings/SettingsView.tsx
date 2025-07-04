@@ -178,7 +178,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		customSupportPrompts,
 		profileThresholds,
 		filesChangedEnabled,
-		filesChangedMaxDisplayFiles,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -645,7 +644,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					{activeTab === "interface" && (
 						<InterfaceSettings
 							filesChangedEnabled={filesChangedEnabled}
-							filesChangedMaxDisplayFiles={filesChangedMaxDisplayFiles}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

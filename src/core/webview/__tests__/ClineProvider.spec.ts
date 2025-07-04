@@ -540,7 +540,6 @@ describe("ClineProvider", () => {
 			profileThresholds: {},
 			hasOpenedModeSelector: false,
 			filesChangedEnabled: true,
-			filesChangedMaxDisplayFiles: 50,
 		}
 
 		const message: ExtensionMessage = {
