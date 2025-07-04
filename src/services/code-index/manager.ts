@@ -241,6 +241,17 @@ export class CodeIndexManager {
 			ignoreInstance,
 		)
 
+		// Validate embedder configuration before proceeding
+		const validationResult = await this._serviceFactory.validateEmbedder(embedder)
+		if (!validationResult.valid) {
+			// Set error state with clear message
+			this._stateManager.setSystemState(
+				"Error",
+				validationResult.error || "Embedder configuration validation failed",
+			)
+			throw new Error(validationResult.error || "Invalid embedder configuration")
+		}
+
 		// (Re)Initialize orchestrator
 		this._orchestrator = new CodeIndexOrchestrator(
 			this._configManager!,
@@ -276,11 +287,16 @@ export class CodeIndexManager {
 
 			// If configuration changes require a restart and the manager is initialized, restart the service
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
-				// Recreate services with new configuration
-				await this._recreateServices()
+				try {
+					// Recreate services with new configuration
+					await this._recreateServices()
 
-				// Start indexing with new services
-				this.startIndexing()
+					// Start indexing with new services
+					this.startIndexing()
+				} catch (error) {
+					// Error state already set in _recreateServices
+					console.error("Failed to recreate services:", error)
+				}
 			}
 		}
 	}

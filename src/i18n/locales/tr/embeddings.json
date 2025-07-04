@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "Qdrant vektör veritabanına bağlanılamadı. Qdrant'ın çalıştığından ve {{qdrantUrl}} adresinde erişilebilir olduğundan emin olun. Hata: {{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "Kimlik doğrulama başarısız oldu. Lütfen ayarlardan API anahtarınızı kontrol edin.",
+		"connectionFailed": "Gömücü hizmetine bağlanılamadı. Lütfen bağlantı ayarlarınızı kontrol edin ve hizmetin çalıştığından emin olun.",
+		"modelNotAvailable": "Belirtilen model mevcut değil. Lütfen model yapılandırmanızı kontrol edin.",
+		"configurationError": "Geçersiz gömücü yapılandırması. Lütfen ayarlarınızı gözden geçirin.",
+		"serviceUnavailable": "Gömücü hizmeti mevcut değil. Lütfen çalıştığından ve erişilebilir olduğundan emin olun.",
+		"invalidEndpoint": "Geçersiz API uç noktası. Lütfen URL yapılandırmanızı kontrol edin."
 	}
 }

@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "Kan geen verbinding maken met Qdrant vectordatabase. Zorg ervoor dat Qdrant draait en toegankelijk is op {{qdrantUrl}}. Fout: {{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "Authenticatie mislukt. Controleer je API-sleutel in de instellingen.",
+		"connectionFailed": "Verbinding met de embedder-service mislukt. Controleer je verbindingsinstellingen en zorg ervoor dat de service draait.",
+		"modelNotAvailable": "Het opgegeven model is niet beschikbaar. Controleer je modelconfiguratie.",
+		"configurationError": "Ongeldige embedder-configuratie. Controleer je instellingen.",
+		"serviceUnavailable": "De embedder-service is niet beschikbaar. Zorg ervoor dat deze draait en toegankelijk is.",
+		"invalidEndpoint": "Ongeldig API-eindpunt. Controleer je URL-configuratie."
 	}
 }

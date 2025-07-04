@@ -188,6 +188,61 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 		throw new Error(t("embeddings:failedMaxAttempts", { attempts: MAX_RETRIES }))
 	}
 
+	/**
+	 * Validates the OpenAI embedder configuration by attempting a minimal embedding request
+	 * @returns Promise resolving to validation result with success status and optional error message
+	 */
+	async validateConfiguration(): Promise<{ valid: boolean; error?: string }> {
+		try {
+			// Test with a minimal embedding request
+			const response = await this.embeddingsClient.embeddings.create({
+				input: ["test"],
+				model: this.defaultModelId,
+			})
+
+			// Check if we got a valid response
+			if (!response.data || response.data.length === 0) {
+				return {
+					valid: false,
+					error: t("embeddings:openai.invalidResponseFormat"),
+				}
+			}
+
+			return { valid: true }
+		} catch (error: any) {
+			// Handle specific error cases
+			const statusCode = error?.status || error?.response?.status
+
+			if (statusCode === 401) {
+				return {
+					valid: false,
+					error: "embeddings:validation.authenticationFailed",
+				}
+			} else if (statusCode === 404) {
+				return {
+					valid: false,
+					error: "embeddings:validation.modelNotAvailable",
+				}
+			} else if (statusCode === 429) {
+				return {
+					valid: false,
+					error: "embeddings:validation.serviceUnavailable",
+				}
+			} else if (error?.message?.includes("ENOTFOUND") || error?.message?.includes("ECONNREFUSED")) {
+				return {
+					valid: false,
+					error: "embeddings:validation.connectionFailed",
+				}
+			}
+
+			// Generic error fallback
+			return {
+				valid: false,
+				error: "embeddings:validation.configurationError",
+			}
+		}
+	}
+
 	get embedderInfo(): EmbedderInfo {
 		return {
 			name: "openai",

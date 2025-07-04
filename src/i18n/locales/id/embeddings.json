@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "Gagal terhubung ke database vektor Qdrant. Pastikan Qdrant berjalan dan dapat diakses di {{qdrantUrl}}. Error: {{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "Autentikasi gagal. Silakan periksa kunci API Anda di pengaturan.",
+		"connectionFailed": "Gagal terhubung ke layanan embedder. Silakan periksa pengaturan koneksi Anda dan pastikan layanan berjalan.",
+		"modelNotAvailable": "Model yang ditentukan tidak tersedia. Silakan periksa konfigurasi model Anda.",
+		"configurationError": "Konfigurasi embedder tidak valid. Harap tinjau pengaturan Anda.",
+		"serviceUnavailable": "Layanan embedder tidak tersedia. Pastikan layanan tersebut berjalan dan dapat diakses.",
+		"invalidEndpoint": "Endpoint API tidak valid. Silakan periksa konfigurasi URL Anda."
 	}
 }

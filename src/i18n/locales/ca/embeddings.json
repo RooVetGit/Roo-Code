@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "No s'ha pogut connectar a la base de dades vectorial Qdrant. Assegura't que Qdrant estigui funcionant i sigui accessible a {{qdrantUrl}}. Error: {{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "Ha fallat l'autenticació. Comproveu la vostra clau d'API a la configuració.",
+		"connectionFailed": "No s'ha pogut connectar al servei d'incrustació. Comproveu la vostra configuració de connexió i assegureu-vos que el servei estigui funcionant.",
+		"modelNotAvailable": "El model especificat no està disponible. Comproveu la vostra configuració de model.",
+		"configurationError": "Configuració d'incrustació no vàlida. Reviseu la vostra configuració.",
+		"serviceUnavailable": "El servei d'incrustació no està disponible. Assegureu-vos que estigui funcionant i sigui accessible.",
+		"invalidEndpoint": "Punt final d'API no vàlid. Comproveu la vostra configuració d'URL."
 	}
 }

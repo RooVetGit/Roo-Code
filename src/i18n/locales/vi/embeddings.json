@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "Không thể kết nối với cơ sở dữ liệu vector Qdrant. Vui lòng đảm bảo Qdrant đang chạy và có thể truy cập tại {{qdrantUrl}}. Lỗi: {{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "Xác thực không thành công. Vui lòng kiểm tra khóa API của bạn trong cài đặt.",
+		"connectionFailed": "Không thể kết nối với dịch vụ nhúng. Vui lòng kiểm tra cài đặt kết nối của bạn và đảm bảo dịch vụ đang chạy.",
+		"modelNotAvailable": "Mô hình được chỉ định không có sẵn. Vui lòng kiểm tra cấu hình mô hình của bạn.",
+		"configurationError": "Cấu hình nhúng không hợp lệ. Vui lòng xem lại cài đặt của bạn.",
+		"serviceUnavailable": "Dịch vụ nhúng không có sẵn. Vui lòng đảm bảo nó đang chạy và có thể truy cập được.",
+		"invalidEndpoint": "Điểm cuối API không hợp lệ. Vui lòng kiểm tra cấu hình URL của bạn."
 	}
 }

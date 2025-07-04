@@ -19,5 +19,13 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "Error al conectar con la base de datos vectorial Qdrant. Asegúrate de que Qdrant esté funcionando y sea accesible en {{qdrantUrl}}. Error: {{errorMessage}}"
+	},
+	"validation": {
+		"authenticationFailed": "Error de autenticación. Comprueba tu clave de API en los ajustes.",
+		"connectionFailed": "Error al conectar con el servicio de embedder. Comprueba los ajustes de conexión y asegúrate de que el servicio esté funcionando.",
+		"modelNotAvailable": "El modelo especificado no está disponible. Comprueba la configuración de tu modelo.",
+		"configurationError": "Configuración de embedder no válida. Revisa tus ajustes.",
+		"serviceUnavailable": "El servicio de embedder no está disponible. Asegúrate de que esté funcionando y sea accesible.",
+		"invalidEndpoint": "Punto de conexión de API no válido. Comprueba la configuración de tu URL."
 	}
 }
