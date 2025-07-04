@@ -1693,6 +1693,9 @@ export class ClineProvider
 			profileThresholds,
 		} = await this.getState()
 
+		const filesChangedEnabled = this.getGlobalState("filesChangedEnabled")
+		const filesChangedMaxDisplayFiles = this.getGlobalState("filesChangedMaxDisplayFiles")
+
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
 		const mergedAllowedCommands = this.mergeAllowedCommands(allowedCommands)
@@ -1801,6 +1804,8 @@ export class ClineProvider
 			profileThresholds: profileThresholds ?? {},
 			cloudApiUrl: getRooCodeApiUrl(),
 			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
+			filesChangedEnabled: this.getGlobalState("filesChangedEnabled") ?? true,
+			filesChangedMaxDisplayFiles: this.getGlobalState("filesChangedMaxDisplayFiles") ?? 50,
 		}
 	}
 

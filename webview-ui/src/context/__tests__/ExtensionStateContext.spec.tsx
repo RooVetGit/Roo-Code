@@ -209,6 +209,8 @@ describe("mergeExtensionState", () => {
 			sharingEnabled: false,
 			profileThresholds: {},
 			hasOpenedModeSelector: false, // Add the new required property
+			filesChangedEnabled: true,
+			filesChangedMaxDisplayFiles: 50,
 		}
 
 		const prevState: ExtensionState = {

@@ -961,6 +961,8 @@ export const webviewMessageHandler = async (
 					...currentState,
 					customModePrompts: updatedPrompts,
 					hasOpenedModeSelector: currentState.hasOpenedModeSelector ?? false,
+					filesChangedEnabled: currentState.filesChangedEnabled ?? true,
+					filesChangedMaxDisplayFiles: currentState.filesChangedMaxDisplayFiles ?? 50,
 				}
 				provider.postMessageToWebview({ type: "state", state: stateWithPrompts })
 

@@ -1,6 +1,7 @@
 import React from "react"
 import { FileChangeset, FileChange } from "@roo-code/types"
 import { useTranslation } from "react-i18next"
+import { useExtensionState } from "@/context/ExtensionStateContext"
 
 interface FilesChangedOverviewProps {
 	changeset: FileChangeset
@@ -31,11 +32,12 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 	onRejectAll,
 }) => {
 	const { t } = useTranslation()
+	const { filesChangedEnabled, filesChangedMaxDisplayFiles } = useExtensionState()
 	const files = changeset.files
 	const [isCollapsed, setIsCollapsed] = React.useState(true)
 
 	// Performance optimization: Use virtualization for large file lists
-	const VIRTUALIZATION_THRESHOLD = 50
+	const VIRTUALIZATION_THRESHOLD = filesChangedMaxDisplayFiles || 50
 	const ITEM_HEIGHT = 60 // Approximate height of each file item
 	const MAX_VISIBLE_ITEMS = 10
 	const [scrollTop, setScrollTop] = React.useState(0)
@@ -125,6 +127,11 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 		if (totalRemoved > 0) parts.push(`-${totalRemoved}`)
 		return parts.length > 0 ? ` (${parts.join(", ")})` : ""
 	}, [files])
+
+	// Don't render if the feature is disabled
+	if (!filesChangedEnabled) {
+		return null
+	}
 
 	return (
 		<div

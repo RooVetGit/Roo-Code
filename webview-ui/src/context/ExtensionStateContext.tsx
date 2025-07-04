@@ -127,6 +127,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	autoCondenseContextPercent: number
 	setAutoCondenseContextPercent: (value: number) => void
 	routerModels?: RouterModels
+	filesChangedEnabled: boolean
+	setFilesChangedEnabled: (value: boolean) => void
+	filesChangedMaxDisplayFiles: number
+	setFilesChangedMaxDisplayFiles: (value: number) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -217,6 +221,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderModelId: "",
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
+		filesChangedEnabled: true,
+		filesChangedMaxDisplayFiles: 50,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -453,6 +459,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		currentFileChangeset,
 		setCurrentFileChangeset,
 		setProfileThresholds: (value) => setState((prevState) => ({ ...prevState, profileThresholds: value })),
+		setFilesChangedEnabled: (value: boolean) =>
+			setState((prevState) => ({ ...prevState, filesChangedEnabled: value })),
+		setFilesChangedMaxDisplayFiles: (value: number) =>
+			setState((prevState) => ({ ...prevState, filesChangedMaxDisplayFiles: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

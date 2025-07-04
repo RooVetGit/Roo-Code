@@ -105,6 +105,8 @@ export const globalSettingsSchema = z.object({
 	historyPreviewCollapsed: z.boolean().optional(),
 	profileThresholds: z.record(z.string(), z.number()).optional(),
 	hasOpenedModeSelector: z.boolean().optional(),
+	filesChangedEnabled: z.boolean().optional(),
+	filesChangedMaxDisplayFiles: z.number().optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>

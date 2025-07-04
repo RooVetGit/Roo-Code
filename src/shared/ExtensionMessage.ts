@@ -272,6 +272,8 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	filesChangedEnabled: boolean
+	filesChangedMaxDisplayFiles: number
 }
 
 export interface ClineSayTool {

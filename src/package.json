@@ -339,6 +339,18 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.autoImportSettingsPath.description%"
+				},
+				"roo-cline.filesChangedEnabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%settings.filesChangedEnabled.description%"
+				},
+				"roo-cline.filesChangedMaxDisplayFiles": {
+					"type": "number",
+					"default": 50,
+					"minimum": 10,
+					"maximum": 200,
+					"description": "%settings.filesChangedMaxDisplayFiles.description%"
 				}
 			}
 		}
