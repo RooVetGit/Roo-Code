@@ -339,7 +339,7 @@ The content is substantial enough to warrant inclusion in the search index.`
 			expect(result[1].end_line).toBe(9)
 		})
 
-		it("should handle markdown files with no headers using fallback chunking", async () => {
+		it("should handle markdown files with no headers as a single block", async () => {
 			const markdownContent = `This is a markdown file without any headers but with substantial content.
 It contains multiple paragraphs and detailed information that should be indexed.
 The content is long enough to meet the minimum character requirements for fallback chunking.
@@ -352,7 +352,38 @@ Additional content to ensure we exceed the minimum block size requirements for p
 
 			expect(parseMarkdown).toHaveBeenCalledWith(markdownContent)
 			expect(result).toHaveLength(1)
-			expect(result[0].type).toBe("fallback_chunk")
+			expect(result[0].type).toBe("markdown_content")
+			expect(result[0].content).toBe(markdownContent)
+			expect(result[0].start_line).toBe(1)
+		})
+
+		it("should chunk large markdown files with no headers", async () => {
+			// Create a large markdown file without headers (2000+ chars)
+			const lines = []
+			for (let i = 0; i < 80; i++) {
+				lines.push(`This is line ${i} with substantial content to ensure proper chunking behavior.`)
+			}
+			const largeMarkdownContent = lines.join("\n") // ~80 lines * ~78 chars = ~6240 chars
+
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const result = await parser.parseFile("test.md", { content: largeMarkdownContent })
+
+			expect(parseMarkdown).toHaveBeenCalledWith(largeMarkdownContent)
+			// Should have multiple chunks due to size
+			expect(result.length).toBeGreaterThan(1)
+			// All chunks should be of type markdown_content
+			result.forEach((block) => {
+				expect(block.type).toBe("markdown_content")
+				expect(block.identifier).toBeNull()
+				// Each chunk should respect MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR
+				expect(block.content.length).toBeLessThanOrEqual(1150)
+			})
+			// Verify chunks cover the entire content
+			const totalLines = result.reduce((acc, block) => {
+				return acc + (block.end_line - block.start_line + 1)
+			}, 0)
+			expect(totalLines).toBe(80)
 		})
 
 		it("should respect minimum block size requirements", async () => {
@@ -512,6 +543,625 @@ This section provides specific technical information for advanced users.`
 			expect(result[0].type).toBe("markdown_header_h1")
 			expect(result[1].type).toBe("markdown_header_h3")
 			expect(result[2].type).toBe("markdown_header_h6")
+		})
+
+		it("should chunk large markdown sections", async () => {
+			// Create content with multiple lines
+			const lines = []
+			// Add header
+			lines.push("# Large Section Header")
+			// Add 50 lines of content, each ~30 chars = ~1500 chars total
+			for (let i = 0; i < 50; i++) {
+				lines.push(`This is line ${i} with some content.`)
+			}
+			lines.push("")
+			lines.push("## Normal Section")
+			lines.push("This is a normal-sized section with just enough content to meet minimum requirements.")
+			lines.push("It contains multiple lines but stays within the maximum character limit.")
+
+			const markdownContent = lines.join("\n")
+
+			// The mock should return sections that span the actual content
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 51 }, // Header + 50 lines of content
+						text: "Large Section Header",
+					},
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 51 }, // Header + 50 lines of content
+						text: markdownContent.split("\n").slice(0, 52).join("\n"), // Full section content
+					},
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: {
+						startPosition: { row: 53 },
+						endPosition: { row: 55 }, // Normal section
+						text: "Normal Section",
+					},
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: {
+						startPosition: { row: 53 },
+						endPosition: { row: 55 }, // Normal section
+						text: markdownContent.split("\n").slice(53, 56).join("\n"), // Normal section content
+					},
+					name: "definition.header.h2",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Large section should be chunked into multiple blocks
+			const h1Blocks = result.filter((r) => r.type === "markdown_header_h1")
+			expect(h1Blocks.length).toBeGreaterThan(1)
+			// All chunks should preserve the header identifier
+			h1Blocks.forEach((block) => {
+				expect(block.identifier).toBe("Large Section Header")
+				// Each chunk should respect MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR
+				expect(block.content.length).toBeLessThanOrEqual(1150)
+			})
+
+			// Normal section should be a single block
+			const h2Blocks = result.filter((r) => r.type === "markdown_header_h2")
+			expect(h2Blocks.length).toBe(1)
+		})
+
+		it("should handle markdown with very long single lines with chunking", async () => {
+			const veryLongLine = "a".repeat(2000) // Single line exceeding max chars
+			const markdownContent = `# Section with Long Line
+Normal content here.
+${veryLongLine}
+More normal content.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: "Section with Long Line" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 3 }, text: markdownContent },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Should create multiple blocks due to chunking
+			expect(result.length).toBeGreaterThan(1)
+			// Should have segment blocks for the oversized line
+			const segmentBlocks = result.filter((r) => r.type === "markdown_header_h1_segment")
+			expect(segmentBlocks.length).toBeGreaterThan(0)
+			// All blocks should preserve the header identifier
+			result.forEach((block) => {
+				expect(block.identifier).toBe("Section with Long Line")
+			})
+		})
+
+		it("should preserve header information when chunking large sections", async () => {
+			const largeContent = Array(100).fill("Line with substantial content to ensure proper handling.").join("\n")
+			const markdownContent = `### Deep Header Level 3
+${largeContent}`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 100 }, text: "Deep Header Level 3" },
+					name: "name.definition.header.h3",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 100 }, text: markdownContent },
+					name: "definition.header.h3",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Should have multiple blocks due to chunking
+			expect(result.length).toBeGreaterThan(1)
+			// All blocks should have the same type and identifier
+			result.forEach((block) => {
+				expect(block.type).toBe("markdown_header_h3")
+				expect(block.identifier).toBe("Deep Header Level 3")
+			})
+		})
+
+		it("should handle mixed content with both large and small sections with chunking", async () => {
+			const largeSection = "Large paragraph content. ".repeat(60) // ~1500 chars
+			const markdownContent = `# Large Section
+${largeSection}
+
+## Small Section
+Too small.
+
+### Another Large Section
+${largeSection}
+
+#### Normal Section
+This section has just enough content to be indexed without chunking.
+It meets the minimum requirements but stays under the maximum limit.`
+
+			const lines = markdownContent.split("\n")
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 0 }, text: "Large Section" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 1 }, text: "Large Section" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 3 }, endPosition: { row: 3 }, text: "Small Section" },
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 3 }, endPosition: { row: 4 }, text: "Small Section" },
+					name: "definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 6 }, endPosition: { row: 6 }, text: "Another Large Section" },
+					name: "name.definition.header.h3",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 6 }, endPosition: { row: 7 }, text: "Another Large Section" },
+					name: "definition.header.h3",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 9 }, endPosition: { row: 9 }, text: "Normal Section" },
+					name: "name.definition.header.h4",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 9 }, endPosition: { row: 11 }, text: "Normal Section" },
+					name: "definition.header.h4",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Large sections should be chunked
+			const h1Blocks = result.filter(
+				(r) => r.type === "markdown_header_h1" || r.type === "markdown_header_h1_segment",
+			)
+			const h3Blocks = result.filter(
+				(r) => r.type === "markdown_header_h3" || r.type === "markdown_header_h3_segment",
+			)
+			expect(h1Blocks.length).toBeGreaterThan(1)
+			expect(h3Blocks.length).toBeGreaterThan(1)
+
+			// Small section should be excluded (too small)
+			const h2Blocks = result.filter((r) => r.type === "markdown_header_h2")
+			expect(h2Blocks.length).toBe(0)
+
+			// Normal section should be a single block
+			const h4Blocks = result.filter((r) => r.type === "markdown_header_h4")
+			expect(h4Blocks.length).toBe(1)
+		})
+
+		it("should handle markdown content before the first header", async () => {
+			const preHeaderContent = `This is content before any headers that contains substantial information.
+It has multiple lines and should be indexed because it meets the minimum size requirements.
+This content contains important documentation that would be lost without proper handling.
+We need to ensure that all content is captured, not just content within header sections.
+This paragraph continues with more details to ensure we exceed the minimum block size.`
+
+			const headerContent = `# First Header
+
+Content under the first header with enough text to be indexed properly.
+This section contains multiple lines to ensure it meets the minimum character requirements.
+We need at least 100 characters for a section to be included in the index.
+This additional content ensures the header section will be processed correctly.`
+
+			const markdownContent = `${preHeaderContent}
+
+${headerContent}`
+
+			// Mock the parseMarkdown function to return headers
+			// The header section spans from line 6 to line 10 (5 lines total)
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: {
+						startPosition: { row: 6 },
+						endPosition: { row: 10 },
+						text: "First Header",
+					},
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				} as any,
+				{
+					node: {
+						startPosition: { row: 6 },
+						endPosition: { row: 10 },
+						text: "First Header",
+					},
+					name: "definition.header.h1",
+					patternIndex: 0,
+				} as any,
+			])
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Should have exactly 2 blocks: pre-header content and header section
+			expect(result.length).toBe(2)
+
+			// First block should be the content before the header
+			expect(result[0]).toMatchObject({
+				file_path: "test.md",
+				type: "markdown_content",
+				start_line: 1,
+				end_line: 6, // Up to the header line
+			})
+			expect(result[0].content).toContain("This is content before any headers")
+
+			// Second block should be the header section
+			expect(result[1]).toMatchObject({
+				file_path: "test.md",
+				identifier: "First Header",
+				type: "markdown_header_h1",
+				start_line: 7,
+				end_line: 11,
+			})
+		})
+
+		it("should handle markdown content after the last header", async () => {
+			const markdownContent = `# Header
+
+Header content with enough text to meet the minimum requirements for proper indexing.
+This header section needs to have at least 100 characters to be included in the results.
+We're adding this extra line to ensure the header section meets the minimum size threshold.
+
+This is content after the last header that contains substantial documentation.
+It has multiple lines and should be indexed because it's important information.
+This content would be lost without proper handling of content outside header sections.
+We're adding more content here to ensure we meet the minimum block size requirements.
+This ensures that trailing content in markdown files is properly captured and indexed.`
+
+			// Mock the parseMarkdown function to return headers
+			// The header section spans from line 0 to line 4 (5 lines)
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 4 },
+						text: "Header",
+					},
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				} as any,
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 4 },
+						text: "Header",
+					},
+					name: "definition.header.h1",
+					patternIndex: 0,
+				} as any,
+			])
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Should have exactly 2 blocks: header section and post-header content
+			expect(result.length).toBe(2)
+
+			// First block should be the header section
+			expect(result[0]).toMatchObject({
+				file_path: "test.md",
+				identifier: "Header",
+				type: "markdown_header_h1",
+				start_line: 1,
+				end_line: 5,
+			})
+
+			// Second block should be the content after the header
+			expect(result[1]).toMatchObject({
+				file_path: "test.md",
+				type: "markdown_content",
+				start_line: 6,
+			})
+			expect(result[1].content).toContain("This is content after the last header")
+		})
+
+		it("should handle very long paragraphs with chunking", async () => {
+			// Create a very long paragraph
+			const longParagraph = "This is a very long paragraph that contains substantial content. ".repeat(50)
+			const markdownContent = `# Introduction
+
+Some intro text.
+
+${longParagraph}
+
+## Conclusion
+
+Final thoughts that need to be long enough to meet the minimum character requirement.
+This conclusion section contains multiple lines to ensure it exceeds 100 characters.`
+
+			const lines = markdownContent.split("\n")
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 0 },
+						text: "Introduction",
+					},
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				} as any,
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 4 },
+						text: "Introduction",
+					},
+					name: "definition.header.h1",
+					patternIndex: 0,
+				} as any,
+				{
+					node: {
+						startPosition: { row: 6 },
+						endPosition: { row: 6 },
+						text: "Conclusion",
+					},
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				} as any,
+				{
+					node: {
+						startPosition: { row: 6 },
+						endPosition: { row: 9 },
+						text: "Conclusion",
+					},
+					name: "definition.header.h2",
+					patternIndex: 0,
+				} as any,
+			])
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// The introduction section should be chunked
+			const h1Blocks = result.filter(
+				(r) => r.type === "markdown_header_h1" || r.type === "markdown_header_h1_segment",
+			)
+			expect(h1Blocks.length).toBeGreaterThan(1)
+			// All chunks should preserve the identifier
+			h1Blocks.forEach((block) => {
+				expect(block.identifier).toBe("Introduction")
+			})
+
+			// Conclusion should be a single block
+			const h2Blocks = result.filter((r) => r.type === "markdown_header_h2")
+			expect(h2Blocks.length).toBe(1)
+		})
+
+		it("should continue processing after encountering a very long line", async () => {
+			// Create a markdown file with a very long single line followed by more content
+			const veryLongLine = "a".repeat(5000) // 5000 characters - exceeds MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR
+
+			// Create content that will be chunked
+			const markdownContent = `This is content before the very long line that should be properly indexed.
+It contains multiple lines to ensure it meets the minimum character requirements.
+We need enough content here to trigger the chunking behavior.
+
+${veryLongLine}
+
+This is content after the very long line that must also be properly indexed.
+It's critical that this content is not ignored due to the oversized line bug.
+We need to ensure all content is processed, not just content before the long line.
+Adding more content to ensure we meet minimum block requirements.`
+
+			// Mock parseMarkdown to return no headers (testing fallback chunking)
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// The content should be chunked due to the oversized line
+			expect(result.length).toBeGreaterThan(1)
+
+			// Should have segment blocks for the oversized line
+			const segmentBlocks = result.filter((r) => r.type.includes("_segment"))
+			expect(segmentBlocks.length).toBeGreaterThan(0)
+
+			// Verify that content after the long line is included
+			const lastBlock = result[result.length - 1]
+			expect(lastBlock.content).toContain("content after the very long line")
+
+			// Verify all segments are from the oversized line
+			segmentBlocks.forEach((block) => {
+				expect(block.content).toMatch(/^a+$/)
+			})
+		})
+
+		it("should handle multiple oversized lines in sequence", async () => {
+			// Test with multiple consecutive oversized lines
+			const longLine1 = "x".repeat(3000)
+			const longLine2 = "y".repeat(3000)
+			const longLine3 = "z".repeat(3000)
+
+			const markdownContent = `# Test Multiple Long Lines
+Normal content before the long lines.
+${longLine1}
+${longLine2}
+${longLine3}
+Normal content after the long lines that must be indexed.
+This content verifies that processing continues after multiple oversized lines.`
+
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 6 },
+						text: "Test Multiple Long Lines",
+					},
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				} as any,
+				{
+					node: {
+						startPosition: { row: 0 },
+						endPosition: { row: 6 },
+						text: "Test Multiple Long Lines",
+					},
+					name: "definition.header.h1",
+					patternIndex: 0,
+				} as any,
+			])
+
+			const result = await parser.parseFile("test.md", { content: markdownContent })
+
+			// Should have multiple segment blocks
+			const segmentBlocks = result.filter((r) => r.type === "markdown_header_h1_segment")
+			expect(segmentBlocks.length).toBeGreaterThan(6) // At least 3 segments per long line
+
+			// Should also have regular blocks for the normal content
+			const regularBlocks = result.filter((r) => r.type === "markdown_header_h1" && !r.type.includes("_segment"))
+			expect(regularBlocks.length).toBeGreaterThan(0)
+
+			// Verify the last block includes content after the long lines
+			const lastRegularBlock = regularBlocks[regularBlocks.length - 1]
+			expect(lastRegularBlock.content).toContain("Normal content after the long lines")
+		})
+	})
+
+	describe("Edge case: Single oversized line in markdown", () => {
+		beforeEach(() => {
+			vi.clearAllMocks()
+		})
+
+		it("should properly chunk a markdown file with a single very long line", async () => {
+			const parser = new CodeParser()
+			const veryLongLine = "x".repeat(5000) // 5000 chars in a single line
+
+			// Mock parseMarkdown to return empty array (no headers)
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const results = await parser["parseContent"]("test.md", veryLongLine, "test-hash")
+
+			// Should create multiple segments
+			expect(results.length).toBeGreaterThan(1)
+			expect(results.length).toBe(5) // 5000 / 1000 = 5 segments
+
+			// All chunks should be segments
+			const segments = results.filter((r) => r.type === "markdown_content_segment")
+			expect(segments.length).toBe(5)
+
+			// Verify content is preserved
+			const reconstructed = results.map((r) => r.content).join("")
+			expect(reconstructed).toBe(veryLongLine)
+
+			// Each segment (except possibly the last) should be MAX_BLOCK_CHARS (1000)
+			for (let i = 0; i < segments.length - 1; i++) {
+				expect(segments[i].content.length).toBe(1000)
+			}
+
+			// Last segment should have the remainder
+			expect(segments[segments.length - 1].content.length).toBe(1000)
+		})
+
+		it("should handle markdown with headers followed by oversized lines", async () => {
+			const parser = new CodeParser()
+			const longLineA = "a".repeat(2000)
+			const longLineB = "b".repeat(3000)
+			const content = `# Header 1\n\n${longLineA}\n\n## Header 2\n\n${longLineB}`
+
+			// Mock parseMarkdown to return headers
+			vi.mocked(parseMarkdown).mockReturnValue([
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 2 }, text: "Header 1" },
+					name: "name.definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 0 }, endPosition: { row: 2 }, text: "Header 1" },
+					name: "definition.header.h1",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 4 }, endPosition: { row: 6 }, text: "Header 2" },
+					name: "name.definition.header.h2",
+					patternIndex: 0,
+				},
+				{
+					node: { startPosition: { row: 4 }, endPosition: { row: 6 }, text: "Header 2" },
+					name: "definition.header.h2",
+					patternIndex: 0,
+				},
+			] as any)
+
+			const results = await parser["parseContent"]("test.md", content, "test-hash")
+
+			// Should create multiple chunks
+			expect(results.length).toBeGreaterThan(2)
+
+			// Should have both header chunks and segments
+			const headers = results.filter((r) => r.type.startsWith("markdown_header"))
+			const segments = results.filter((r) => r.type.includes("_segment"))
+
+			expect(headers.length).toBeGreaterThan(0)
+			expect(segments.length).toBeGreaterThan(0)
+
+			// Verify segments were created for oversized lines
+			// 2000 chars = 2 segments, 3000 chars = 3 segments
+			expect(segments.length).toBeGreaterThanOrEqual(5)
+		})
+
+		it("should not chunk markdown files with lines under the threshold", async () => {
+			const parser = new CodeParser()
+			const normalContent = "This is a normal line.\n".repeat(50) // Multiple normal lines
+			const totalLength = normalContent.length
+
+			// Mock parseMarkdown to return empty array (no headers)
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const results = await parser["parseContent"]("test.md", normalContent, "test-hash")
+
+			// Since total content is 1150 chars (23 * 50), it's just over the threshold
+			// But no individual line is oversized, so it depends on total length
+			if (totalLength > 1150) {
+				// Content exceeds threshold, should be chunked
+				expect(results.length).toBeGreaterThan(1)
+			} else {
+				// Content is under threshold, should be single chunk
+				expect(results.length).toBe(1)
+				expect(results[0].type).toBe("markdown_content")
+			}
+		})
+
+		it("should return empty array for markdown content below MIN_BLOCK_CHARS threshold", async () => {
+			const parser = new CodeParser()
+			const smallContent = "This is a small markdown file.\nWith just a few lines.\nNothing special."
+
+			// Mock parseMarkdown to return empty array (no headers)
+			vi.mocked(parseMarkdown).mockReturnValue([])
+
+			const results = await parser["parseContent"]("test.md", smallContent, "test-hash")
+
+			// Should return empty array since content (71 chars) is below MIN_BLOCK_CHARS (100)
+			expect(results.length).toBe(0)
+			expect(smallContent.length).toBeLessThan(100) // Verify our test assumption
 		})
 	})
 })

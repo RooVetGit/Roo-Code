@@ -293,6 +293,8 @@ export class CodeParser implements ICodeParser {
 					createSegmentBlock(segment, originalLineNumber, currentSegmentStartChar)
 					currentSegmentStartChar += MAX_BLOCK_CHARS
 				}
+				// Update chunkStartLineIndex to continue processing from the next line
+				chunkStartLineIndex = i + 1
 				continue
 			}
 
@@ -384,17 +386,121 @@ export class CodeParser implements ICodeParser {
 		seenSegmentHashes: Set<string>,
 	): CodeBlock[] {
 		const lines = content.split("\n")
-		const markdownCaptures = parseMarkdown(content)
+		const markdownCaptures = parseMarkdown(content) || []
 
 		if (markdownCaptures.length === 0) {
-			// No headers found, treat as single block if large enough
+			// No headers found, check if content needs chunking
 			if (content.length >= MIN_BLOCK_CHARS) {
-				return this._performFallbackChunking(filePath, content, fileHash, seenSegmentHashes)
+				// Check if content exceeds maximum size and needs chunking
+				if (content.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
+					// Apply chunking for large header-less markdown files
+					return this._chunkTextByLines(lines, filePath, fileHash, "markdown_content", seenSegmentHashes, 1)
+				} else {
+					// Check if any individual line is oversized before creating a single block
+					const hasOversizedLine = lines.some(
+						(line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR,
+					)
+
+					if (hasOversizedLine) {
+						// Apply chunking if there's an oversized line
+						return this._chunkTextByLines(
+							lines,
+							filePath,
+							fileHash,
+							"markdown_content",
+							seenSegmentHashes,
+							1,
+						)
+					} else {
+						// Create a single block for normal-sized content with no oversized lines
+						const segmentHash = createHash("sha256")
+							.update(`${filePath}-1-${lines.length}-${content}`)
+							.digest("hex")
+
+						if (!seenSegmentHashes.has(segmentHash)) {
+							seenSegmentHashes.add(segmentHash)
+							return [
+								{
+									file_path: filePath,
+									identifier: null,
+									type: "markdown_content",
+									start_line: 1,
+									end_line: lines.length,
+									content: content,
+									segmentHash,
+									fileHash,
+								},
+							]
+						}
+					}
+				}
 			}
 			return []
 		}
 
 		const results: CodeBlock[] = []
+		let lastProcessedLine = 0
+
+		// Process content before the first header
+		if (markdownCaptures.length > 0) {
+			const firstHeaderLine = markdownCaptures[0].node.startPosition.row
+			if (firstHeaderLine > 0) {
+				const preHeaderLines = lines.slice(0, firstHeaderLine)
+				const preHeaderContent = preHeaderLines.join("\n")
+				if (preHeaderContent.trim().length >= MIN_BLOCK_CHARS) {
+					// Check if content exceeds maximum size and needs chunking
+					if (preHeaderContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
+						// Apply chunking for large pre-header content
+						const chunks = this._chunkTextByLines(
+							preHeaderLines,
+							filePath,
+							fileHash,
+							"markdown_content",
+							seenSegmentHashes,
+							1,
+						)
+						results.push(...chunks)
+					} else {
+						// Check if any individual line is oversized before creating a single block
+						const hasOversizedLine = preHeaderLines.some(
+							(line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR,
+						)
+
+						if (hasOversizedLine) {
+							// Apply chunking if there's an oversized line
+							const chunks = this._chunkTextByLines(
+								preHeaderLines,
+								filePath,
+								fileHash,
+								"markdown_content",
+								seenSegmentHashes,
+								1,
+							)
+							results.push(...chunks)
+						} else {
+							// Create a single block for normal-sized pre-header content with no oversized lines
+							const segmentHash = createHash("sha256")
+								.update(`${filePath}-1-${firstHeaderLine}-${preHeaderContent}`)
+								.digest("hex")
+
+							if (!seenSegmentHashes.has(segmentHash)) {
+								seenSegmentHashes.add(segmentHash)
+								results.push({
+									file_path: filePath,
+									identifier: null,
+									type: "markdown_content",
+									start_line: 1,
+									end_line: firstHeaderLine,
+									content: preHeaderContent,
+									segmentHash,
+									fileHash,
+								})
+							}
+						}
+					}
+				}
+			}
+		}
 
 		// Process markdown captures (headers and sections)
 		for (let i = 0; i < markdownCaptures.length; i += 2) {
@@ -408,29 +514,109 @@ export class CodeParser implements ICodeParser {
 			const sectionLines = lines.slice(startLine - 1, endLine)
 			const sectionContent = sectionLines.join("\n")
 
-			// Only include sections that meet minimum size requirements
+			// Extract header level for type classification
+			const headerMatch = nameCapture.name.match(/\.h(\d)$/)
+			const headerLevel = headerMatch ? parseInt(headerMatch[1]) : 1
+			const headerText = nameCapture.node.text
+
+			// Check if section needs chunking
 			if (sectionContent.length >= MIN_BLOCK_CHARS) {
-				const segmentHash = createHash("sha256")
-					.update(`${filePath}-${startLine}-${endLine}-${sectionContent}`)
-					.digest("hex")
-
-				if (!seenSegmentHashes.has(segmentHash)) {
-					seenSegmentHashes.add(segmentHash)
-
-					// Extract header level for type classification
-					const headerMatch = nameCapture.name.match(/\.h(\d)$/)
-					const headerLevel = headerMatch ? parseInt(headerMatch[1]) : 1
-
-					results.push({
-						file_path: filePath,
-						identifier: nameCapture.node.text,
-						type: `markdown_header_h${headerLevel}`,
-						start_line: startLine,
-						end_line: endLine,
-						content: sectionContent,
-						segmentHash,
+				if (sectionContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
+					// Apply chunking for large sections
+					const chunks = this._chunkTextByLines(
+						sectionLines,
+						filePath,
 						fileHash,
+						`markdown_header_h${headerLevel}`,
+						seenSegmentHashes,
+						startLine,
+					)
+					// Preserve header information in all chunks
+					chunks.forEach((chunk) => {
+						chunk.identifier = headerText
 					})
+					results.push(...chunks)
+				} else {
+					// Create a single block for normal-sized sections
+					const segmentHash = createHash("sha256")
+						.update(`${filePath}-${startLine}-${endLine}-${sectionContent}`)
+						.digest("hex")
+
+					if (!seenSegmentHashes.has(segmentHash)) {
+						seenSegmentHashes.add(segmentHash)
+
+						results.push({
+							file_path: filePath,
+							identifier: headerText,
+							type: `markdown_header_h${headerLevel}`,
+							start_line: startLine,
+							end_line: endLine,
+							content: sectionContent,
+							segmentHash,
+							fileHash,
+						})
+					}
+				}
+			}
+			// Sections smaller than MIN_BLOCK_CHARS are ignored
+
+			lastProcessedLine = endLine
+		}
+
+		// Process any remaining content after the last header section
+		if (lastProcessedLine < lines.length) {
+			const remainingLines = lines.slice(lastProcessedLine)
+			const remainingContent = remainingLines.join("\n")
+			if (remainingContent.trim().length >= MIN_BLOCK_CHARS) {
+				// Check if content exceeds maximum size and needs chunking
+				if (remainingContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
+					// Apply chunking for large post-header content
+					const chunks = this._chunkTextByLines(
+						remainingLines,
+						filePath,
+						fileHash,
+						"markdown_content",
+						seenSegmentHashes,
+						lastProcessedLine + 1,
+					)
+					results.push(...chunks)
+				} else {
+					// Check if any individual line is oversized before creating a single block
+					const hasOversizedLine = remainingLines.some(
+						(line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR,
+					)
+
+					if (hasOversizedLine) {
+						// Apply chunking if there's an oversized line
+						const chunks = this._chunkTextByLines(
+							remainingLines,
+							filePath,
+							fileHash,
+							"markdown_content",
+							seenSegmentHashes,
+							lastProcessedLine + 1,
+						)
+						results.push(...chunks)
+					} else {
+						// Create a single block for normal-sized post-header content with no oversized lines
+						const segmentHash = createHash("sha256")
+							.update(`${filePath}-${lastProcessedLine + 1}-${lines.length}-${remainingContent}`)
+							.digest("hex")
+
+						if (!seenSegmentHashes.has(segmentHash)) {
+							seenSegmentHashes.add(segmentHash)
+							results.push({
+								file_path: filePath,
+								identifier: null,
+								type: "markdown_content",
+								start_line: lastProcessedLine + 1,
+								end_line: lines.length,
+								content: remainingContent,
+								segmentHash,
+								fileHash,
+							})
+						}
+					}
 				}
 			}
 		}
