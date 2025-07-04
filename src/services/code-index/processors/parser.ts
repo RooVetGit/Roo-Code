@@ -181,8 +181,9 @@ export class CodeParser implements ICodeParser {
 					const start_line = currentNode.startPosition.row + 1
 					const end_line = currentNode.endPosition.row + 1
 					const content = currentNode.text
+					const contentPreview = content.slice(0, 100)
 					const segmentHash = createHash("sha256")
-						.update(`${filePath}-${start_line}-${end_line}-${content}`)
+						.update(`${filePath}-${start_line}-${end_line}-${content.length}-${contentPreview}`)
 						.digest("hex")
 
 					if (!seenSegmentHashes.has(segmentHash)) {
@@ -229,8 +230,9 @@ export class CodeParser implements ICodeParser {
 				const chunkContent = currentChunkLines.join("\n")
 				const startLine = baseStartLine + chunkStartLineIndex
 				const endLine = baseStartLine + endLineIndex
+				const contentPreview = chunkContent.slice(0, 100)
 				const segmentHash = createHash("sha256")
-					.update(`${filePath}-${startLine}-${endLine}-${chunkContent}`)
+					.update(`${filePath}-${startLine}-${endLine}-${chunkContent.length}-${contentPreview}`)
 					.digest("hex")
 
 				if (!seenSegmentHashes.has(segmentHash)) {
@@ -253,8 +255,11 @@ export class CodeParser implements ICodeParser {
 		}
 
 		const createSegmentBlock = (segment: string, originalLineNumber: number, startCharIndex: number) => {
+			const segmentPreview = segment.slice(0, 100)
 			const segmentHash = createHash("sha256")
-				.update(`${filePath}-${originalLineNumber}-${originalLineNumber}-${startCharIndex}-${segment}`)
+				.update(
+					`${filePath}-${originalLineNumber}-${originalLineNumber}-${startCharIndex}-${segment.length}-${segmentPreview}`,
+				)
 				.digest("hex")
 
 			if (!seenSegmentHashes.has(segmentHash)) {
@@ -379,6 +384,67 @@ export class CodeParser implements ICodeParser {
 		)
 	}
 
+	/**
+	 * Helper method to process markdown content sections with consistent chunking logic
+	 */
+	private processMarkdownSection(
+		lines: string[],
+		filePath: string,
+		fileHash: string,
+		type: string,
+		seenSegmentHashes: Set<string>,
+		startLine: number,
+		identifier: string | null = null,
+	): CodeBlock[] {
+		const content = lines.join("\n")
+
+		if (content.trim().length < MIN_BLOCK_CHARS) {
+			return []
+		}
+
+		// Check if content needs chunking (either total size or individual line size)
+		const needsChunking =
+			content.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR ||
+			lines.some((line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR)
+
+		if (needsChunking) {
+			// Apply chunking for large content or oversized lines
+			const chunks = this._chunkTextByLines(lines, filePath, fileHash, type, seenSegmentHashes, startLine)
+			// Preserve identifier in all chunks if provided
+			if (identifier) {
+				chunks.forEach((chunk) => {
+					chunk.identifier = identifier
+				})
+			}
+			return chunks
+		}
+
+		// Create a single block for normal-sized content with no oversized lines
+		const endLine = startLine + lines.length - 1
+		const contentPreview = content.slice(0, 100)
+		const segmentHash = createHash("sha256")
+			.update(`${filePath}-${startLine}-${endLine}-${content.length}-${contentPreview}`)
+			.digest("hex")
+
+		if (!seenSegmentHashes.has(segmentHash)) {
+			seenSegmentHashes.add(segmentHash)
+			return [
+				{
+					file_path: filePath,
+					identifier,
+					type,
+					start_line: startLine,
+					end_line: endLine,
+					content,
+					segmentHash,
+					fileHash,
+				},
+			]
+		}
+
+		return []
+	}
+
 	private parseMarkdownContent(
 		filePath: string,
 		content: string,
@@ -389,53 +455,8 @@ export class CodeParser implements ICodeParser {
 		const markdownCaptures = parseMarkdown(content) || []
 
 		if (markdownCaptures.length === 0) {
-			// No headers found, check if content needs chunking
-			if (content.length >= MIN_BLOCK_CHARS) {
-				// Check if content exceeds maximum size and needs chunking
-				if (content.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
-					// Apply chunking for large header-less markdown files
-					return this._chunkTextByLines(lines, filePath, fileHash, "markdown_content", seenSegmentHashes, 1)
-				} else {
-					// Check if any individual line is oversized before creating a single block
-					const hasOversizedLine = lines.some(
-						(line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR,
-					)
-
-					if (hasOversizedLine) {
-						// Apply chunking if there's an oversized line
-						return this._chunkTextByLines(
-							lines,
-							filePath,
-							fileHash,
-							"markdown_content",
-							seenSegmentHashes,
-							1,
-						)
-					} else {
-						// Create a single block for normal-sized content with no oversized lines
-						const segmentHash = createHash("sha256")
-							.update(`${filePath}-1-${lines.length}-${content}`)
-							.digest("hex")
-
-						if (!seenSegmentHashes.has(segmentHash)) {
-							seenSegmentHashes.add(segmentHash)
-							return [
-								{
-									file_path: filePath,
-									identifier: null,
-									type: "markdown_content",
-									start_line: 1,
-									end_line: lines.length,
-									content: content,
-									segmentHash,
-									fileHash,
-								},
-							]
-						}
-					}
-				}
-			}
-			return []
+			// No headers found, process entire content
+			return this.processMarkdownSection(lines, filePath, fileHash, "markdown_content", seenSegmentHashes, 1)
 		}
 
 		const results: CodeBlock[] = []
@@ -446,65 +467,23 @@ export class CodeParser implements ICodeParser {
 			const firstHeaderLine = markdownCaptures[0].node.startPosition.row
 			if (firstHeaderLine > 0) {
 				const preHeaderLines = lines.slice(0, firstHeaderLine)
-				const preHeaderContent = preHeaderLines.join("\n")
-				if (preHeaderContent.trim().length >= MIN_BLOCK_CHARS) {
-					// Check if content exceeds maximum size and needs chunking
-					if (preHeaderContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
-						// Apply chunking for large pre-header content
-						const chunks = this._chunkTextByLines(
-							preHeaderLines,
-							filePath,
-							fileHash,
-							"markdown_content",
-							seenSegmentHashes,
-							1,
-						)
-						results.push(...chunks)
-					} else {
-						// Check if any individual line is oversized before creating a single block
-						const hasOversizedLine = preHeaderLines.some(
-							(line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR,
-						)
-
-						if (hasOversizedLine) {
-							// Apply chunking if there's an oversized line
-							const chunks = this._chunkTextByLines(
-								preHeaderLines,
-								filePath,
-								fileHash,
-								"markdown_content",
-								seenSegmentHashes,
-								1,
-							)
-							results.push(...chunks)
-						} else {
-							// Create a single block for normal-sized pre-header content with no oversized lines
-							const segmentHash = createHash("sha256")
-								.update(`${filePath}-1-${firstHeaderLine}-${preHeaderContent}`)
-								.digest("hex")
-
-							if (!seenSegmentHashes.has(segmentHash)) {
-								seenSegmentHashes.add(segmentHash)
-								results.push({
-									file_path: filePath,
-									identifier: null,
-									type: "markdown_content",
-									start_line: 1,
-									end_line: firstHeaderLine,
-									content: preHeaderContent,
-									segmentHash,
-									fileHash,
-								})
-							}
-						}
-					}
-				}
+				const preHeaderBlocks = this.processMarkdownSection(
+					preHeaderLines,
+					filePath,
+					fileHash,
+					"markdown_content",
+					seenSegmentHashes,
+					1,
+				)
+				results.push(...preHeaderBlocks)
 			}
 		}
 
 		// Process markdown captures (headers and sections)
 		for (let i = 0; i < markdownCaptures.length; i += 2) {
 			const nameCapture = markdownCaptures[i]
+			// Ensure we don't go out of bounds when accessing the next capture
+			if (i + 1 >= markdownCaptures.length) break
 			const definitionCapture = markdownCaptures[i + 1]
 
 			if (!definitionCapture) continue
@@ -512,53 +491,22 @@ export class CodeParser implements ICodeParser {
 			const startLine = definitionCapture.node.startPosition.row + 1
 			const endLine = definitionCapture.node.endPosition.row + 1
 			const sectionLines = lines.slice(startLine - 1, endLine)
-			const sectionContent = sectionLines.join("\n")
 
 			// Extract header level for type classification
 			const headerMatch = nameCapture.name.match(/\.h(\d)$/)
 			const headerLevel = headerMatch ? parseInt(headerMatch[1]) : 1
 			const headerText = nameCapture.node.text
 
-			// Check if section needs chunking
-			if (sectionContent.length >= MIN_BLOCK_CHARS) {
-				if (sectionContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
-					// Apply chunking for large sections
-					const chunks = this._chunkTextByLines(
-						sectionLines,
-						filePath,
-						fileHash,
-						`markdown_header_h${headerLevel}`,
-						seenSegmentHashes,
-						startLine,
-					)
-					// Preserve header information in all chunks
-					chunks.forEach((chunk) => {
-						chunk.identifier = headerText
-					})
-					results.push(...chunks)
-				} else {
-					// Create a single block for normal-sized sections
-					const segmentHash = createHash("sha256")
-						.update(`${filePath}-${startLine}-${endLine}-${sectionContent}`)
-						.digest("hex")
-
-					if (!seenSegmentHashes.has(segmentHash)) {
-						seenSegmentHashes.add(segmentHash)
-
-						results.push({
-							file_path: filePath,
-							identifier: headerText,
-							type: `markdown_header_h${headerLevel}`,
-							start_line: startLine,
-							end_line: endLine,
-							content: sectionContent,
-							segmentHash,
-							fileHash,
-						})
-					}
-				}
-			}
-			// Sections smaller than MIN_BLOCK_CHARS are ignored
+			const sectionBlocks = this.processMarkdownSection(
+				sectionLines,
+				filePath,
+				fileHash,
+				`markdown_header_h${headerLevel}`,
+				seenSegmentHashes,
+				startLine,
+				headerText,
+			)
+			results.push(...sectionBlocks)
 
 			lastProcessedLine = endLine
 		}
@@ -566,59 +514,15 @@ export class CodeParser implements ICodeParser {
 		// Process any remaining content after the last header section
 		if (lastProcessedLine < lines.length) {
 			const remainingLines = lines.slice(lastProcessedLine)
-			const remainingContent = remainingLines.join("\n")
-			if (remainingContent.trim().length >= MIN_BLOCK_CHARS) {
-				// Check if content exceeds maximum size and needs chunking
-				if (remainingContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
-					// Apply chunking for large post-header content
-					const chunks = this._chunkTextByLines(
-						remainingLines,
-						filePath,
-						fileHash,
-						"markdown_content",
-						seenSegmentHashes,
-						lastProcessedLine + 1,
-					)
-					results.push(...chunks)
-				} else {
-					// Check if any individual line is oversized before creating a single block
-					const hasOversizedLine = remainingLines.some(
-						(line) => line.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR,
-					)
-
-					if (hasOversizedLine) {
-						// Apply chunking if there's an oversized line
-						const chunks = this._chunkTextByLines(
-							remainingLines,
-							filePath,
-							fileHash,
-							"markdown_content",
-							seenSegmentHashes,
-							lastProcessedLine + 1,
-						)
-						results.push(...chunks)
-					} else {
-						// Create a single block for normal-sized post-header content with no oversized lines
-						const segmentHash = createHash("sha256")
-							.update(`${filePath}-${lastProcessedLine + 1}-${lines.length}-${remainingContent}`)
-							.digest("hex")
-
-						if (!seenSegmentHashes.has(segmentHash)) {
-							seenSegmentHashes.add(segmentHash)
-							results.push({
-								file_path: filePath,
-								identifier: null,
-								type: "markdown_content",
-								start_line: lastProcessedLine + 1,
-								end_line: lines.length,
-								content: remainingContent,
-								segmentHash,
-								fileHash,
-							})
-						}
-					}
-				}
-			}
+			const remainingBlocks = this.processMarkdownSection(
+				remainingLines,
+				filePath,
+				fileHash,
+				"markdown_content",
+				seenSegmentHashes,
+				lastProcessedLine + 1,
+			)
+			results.push(...remainingBlocks)
 		}
 
 		return results
