@@ -100,7 +100,10 @@
 		"advancedConfigLabel": "Cấu hình nâng cao",
 		"searchMinScoreLabel": "Ngưỡng điểm tìm kiếm",
 		"searchMinScoreDescription": "Điểm tương đồng tối thiểu (0.0-1.0) cần thiết cho kết quả tìm kiếm. Giá trị thấp hơn trả về nhiều kết quả hơn nhưng có thể kém liên quan hơn. Giá trị cao hơn trả về ít kết quả hơn nhưng có liên quan hơn.",
-		"searchMinScoreResetTooltip": "Đặt lại về giá trị mặc định (0.4)"
+		"searchMinScoreResetTooltip": "Đặt lại về giá trị mặc định (0.4)",
+		"lmstudioProvider": "LM Studio",
+		"lmstudioUrlLabel": "LM Studio URL:",
+		"lmstudioUrlPlaceholder": "http://localhost:1234"
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",

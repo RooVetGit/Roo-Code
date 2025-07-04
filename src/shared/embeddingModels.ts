@@ -2,7 +2,7 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" | "lmstudio" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
@@ -48,6 +48,11 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 	},
 	gemini: {
 		"text-embedding-004": { dimension: 768 },
+	},
+	lmstudio: {
+		"text-embedding-nomic-embed-text-v1.5@f16": { dimension: 768 },
+		"text-embedding-nomic-embed-text-v1.5@f32": { dimension: 768 },
+		"text-embedding-mxbai-embed-large-v1": { dimension: 1024 },
 	},
 }
 
@@ -135,6 +140,19 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 
 		case "gemini":
 			return "text-embedding-004"
+
+		case "lmstudio": {
+			// Choose a sensible default for LM Studio, e.g., the first one listed or a specific one
+			const lmStudioModels = EMBEDDING_MODEL_PROFILES.lmstudio
+			const defaultLmStudioModel = lmStudioModels && Object.keys(lmStudioModels)[0]
+			if (defaultLmStudioModel) {
+				return defaultLmStudioModel
+			}
+			// Fallback if no LM Studio models are defined (shouldn't happen with the constant)
+			console.warn("No default LM Studio model found in profiles.")
+			// Return a placeholder or throw an error, depending on desired behavior
+			return "unknown-default" // Placeholder specific model ID
+		}
 
 		default:
 			// Fallback for unknown providers

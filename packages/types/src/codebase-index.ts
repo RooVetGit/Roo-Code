@@ -7,7 +7,7 @@ import { z } from "zod"
 export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEnabled: z.boolean().optional(),
 	codebaseIndexQdrantUrl: z.string().optional(),
-	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama", "openai-compatible", "gemini"]).optional(),
+	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama", "openai-compatible", "gemini", "lmstudio"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
 	codebaseIndexSearchMinScore: z.number().min(0).max(1).optional(),
@@ -24,6 +24,7 @@ export const codebaseIndexModelsSchema = z.object({
 	ollama: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 	"openai-compatible": z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 	gemini: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+	lmstudio: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
 })
 
 export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
@@ -39,6 +40,7 @@ export const codebaseIndexProviderSchema = z.object({
 	codebaseIndexOpenAiCompatibleApiKey: z.string().optional(),
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 	codebaseIndexGeminiApiKey: z.string().optional(),
+	codebaseIndexLmStudioBaseUrl: z.string().optional(),
 })
 
 export type CodebaseIndexProvider = z.infer<typeof codebaseIndexProviderSchema>

@@ -3,6 +3,7 @@ import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
 import { OpenAICompatibleEmbedder } from "./embedders/openai-compatible"
 import { GeminiEmbedder } from "./embedders/gemini"
+import { CodeIndexLmStudioEmbedder } from "./embedders/lmstudio"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
@@ -61,6 +62,14 @@ export class CodeIndexServiceFactory {
 				throw new Error("Gemini configuration missing for embedder creation")
 			}
 			return new GeminiEmbedder(config.geminiOptions.apiKey)
+		} else if (provider === "lmstudio") {
+			if (!config.lmStudioOptions?.lmStudioBaseUrl) {
+				throw new Error("LM Studio configuration missing for embedder creation")
+			}
+			return new CodeIndexLmStudioEmbedder({
+				...config.lmStudioOptions,
+				embeddingModelId: config.modelId,
+			})
 		}
 
 		throw new Error(`Invalid embedder type configured: ${config.embedderProvider}`)

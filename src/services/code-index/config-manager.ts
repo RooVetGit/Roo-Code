@@ -17,6 +17,7 @@ export class CodeIndexConfigManager {
 	private ollamaOptions?: ApiHandlerOptions
 	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number }
 	private geminiOptions?: { apiKey: string }
+	private lmStudioOptions?: ApiHandlerOptions
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -73,13 +74,15 @@ export class CodeIndexConfigManager {
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
-		// Set embedder provider with support for openai-compatible
+		// Set embedder provider with support for all providers
 		if (codebaseIndexEmbedderProvider === "ollama") {
 			this.embedderProvider = "ollama"
 		} else if (codebaseIndexEmbedderProvider === "openai-compatible") {
 			this.embedderProvider = "openai-compatible"
 		} else if (codebaseIndexEmbedderProvider === "gemini") {
 			this.embedderProvider = "gemini"
+		} else if (codebaseIndexEmbedderProvider === "lmstudio") {
+			this.embedderProvider = "lmstudio"
 		} else {
 			this.embedderProvider = "openai"
 		}
@@ -100,6 +103,10 @@ export class CodeIndexConfigManager {
 				: undefined
 
 		this.geminiOptions = geminiApiKey ? { apiKey: geminiApiKey } : undefined
+
+		this.lmStudioOptions = {
+			lmStudioBaseUrl: codebaseIndexEmbedderBaseUrl,
+		}
 	}
 
 	/**
@@ -116,6 +123,7 @@ export class CodeIndexConfigManager {
 			ollamaOptions?: ApiHandlerOptions
 			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 			geminiOptions?: { apiKey: string }
+			lmStudioOptions?: ApiHandlerOptions
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
@@ -134,6 +142,7 @@ export class CodeIndexConfigManager {
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
 			openAiCompatibleModelDimension: this.openAiCompatibleOptions?.modelDimension,
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
+			lmStudioBaseUrl: this.lmStudioOptions?.lmStudioBaseUrl ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
@@ -157,6 +166,7 @@ export class CodeIndexConfigManager {
 				ollamaOptions: this.ollamaOptions,
 				openAiCompatibleOptions: this.openAiCompatibleOptions,
 				geminiOptions: this.geminiOptions,
+				lmStudioOptions: this.lmStudioOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.currentSearchMinScore,
@@ -188,6 +198,12 @@ export class CodeIndexConfigManager {
 			const apiKey = this.geminiOptions?.apiKey
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(apiKey && qdrantUrl)
+			return isConfigured
+		} else if (this.embedderProvider === "lmstudio") {
+			// Lm Studio model ID has a default, so only base URL is strictly required for config
+			const lmStudioBaseUrl = this.lmStudioOptions?.lmStudioBaseUrl
+			const qdrantUrl = this.qdrantUrl
+			const isConfigured = !!(lmStudioBaseUrl && qdrantUrl)
 			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly
@@ -222,6 +238,7 @@ export class CodeIndexConfigManager {
 		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
 		const prevOpenAiCompatibleModelDimension = prev?.openAiCompatibleModelDimension
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
+		const prevLmStudioBaseUrl = prev?.lmStudioBaseUrl ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
@@ -254,6 +271,7 @@ export class CodeIndexConfigManager {
 			const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
 			const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
 			const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
+			const currentLmStudioBaseUrl = this.lmStudioOptions?.lmStudioBaseUrl ?? ""
 			const currentQdrantUrl = this.qdrantUrl ?? ""
 			const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
@@ -277,6 +295,14 @@ export class CodeIndexConfigManager {
 				if (prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension) {
 					return true
 				}
+			}
+
+			if (prevGeminiApiKey !== currentGeminiApiKey) {
+				return true
+			}
+
+			if (prevLmStudioBaseUrl !== currentLmStudioBaseUrl) {
+				return true
 			}
 
 			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
@@ -331,6 +357,7 @@ export class CodeIndexConfigManager {
 			ollamaOptions: this.ollamaOptions,
 			openAiCompatibleOptions: this.openAiCompatibleOptions,
 			geminiOptions: this.geminiOptions,
+			lmStudioOptions: this.lmStudioOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.currentSearchMinScore,

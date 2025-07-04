@@ -70,7 +70,15 @@ export interface ICodeIndexManager {
 }
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
-export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini"
+
+/**
+ * Supported embedder providers for code indexing.
+ * To add a new provider:
+ * 1. Add the provider name to this union type
+ * 2. Update the switch statements in CodeIndexConfigManager
+ * 3. Add provider-specific configuration options
+ */
+export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" | "lmstudio"
 
 export interface IndexProgressUpdate {
 	systemStatus: IndexingState
