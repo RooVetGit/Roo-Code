@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react"
 import { FlaskConical } from "lucide-react"
-import { VSCodeCheckbox, VSCodeLink, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
 
 import type { Experiments, CodebaseIndexConfig, CodebaseIndexModels } from "@roo-code/types"
@@ -10,16 +10,12 @@ import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { cn } from "@src/lib/utils"
 import { buildDocLink } from "@src/utils/docLinks"
-import { Slider } from "@src/components/ui"
 
 import { SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
 import { SetCachedStateField } from "./types"
-
-// Import the constant from the backend
-const DEFAULT_MAX_SEARCH_RESULTS = 50
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Experiments
@@ -109,57 +105,6 @@ export const ExperimentalSettings = ({
 						</Trans>
 					</p>
 				</div>
-
-				{/* Max Search Results Slider */}
-				{codebaseIndexEnabled && (
-					<div className="mt-4 ml-6">
-						<div className="flex flex-col gap-2">
-							<span className="block font-medium mb-1">
-								{t("settings:codeIndex.searchMaxResultsLabel")}
-							</span>
-							<div className="flex items-center gap-4">
-								<Slider
-									min={10}
-									max={200}
-									step={10}
-									value={[
-										codebaseIndexConfig?.codebaseIndexSearchMaxResults ??
-											DEFAULT_MAX_SEARCH_RESULTS,
-									]}
-									onValueChange={([value]) =>
-										setCachedStateField &&
-										codebaseIndexConfig &&
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexSearchMaxResults: value,
-										})
-									}
-									data-testid="search-max-results-slider"
-									aria-label={t("settings:codeIndex.searchMaxResultsLabel")}
-								/>
-								<span className="w-10">
-									{codebaseIndexConfig?.codebaseIndexSearchMaxResults ?? DEFAULT_MAX_SEARCH_RESULTS}
-								</span>
-								<VSCodeButton
-									appearance="icon"
-									onClick={() =>
-										setCachedStateField &&
-										codebaseIndexConfig &&
-										setCachedStateField("codebaseIndexConfig", {
-											...codebaseIndexConfig,
-											codebaseIndexSearchMaxResults: DEFAULT_MAX_SEARCH_RESULTS,
-										})
-									}
-									title={t("settings:codeIndex.resetToDefault")}>
-									<span className="codicon codicon-discard"></span>
-								</VSCodeButton>
-							</div>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:codeIndex.searchMaxResultsDescription")}
-							</div>
-						</div>
-					</div>
-				)}
 			</Section>
 		</div>
 	)
