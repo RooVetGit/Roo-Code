@@ -1,5 +1,18 @@
 import { CodeIndexManager } from "../manager"
 
+// Mock vscode module
+vitest.mock("vscode", () => ({
+	workspace: {
+		workspaceFolders: [
+			{
+				uri: { fsPath: "/test/workspace" },
+				name: "test",
+				index: 0,
+			},
+		],
+	},
+}))
+
 // Mock only the essential dependencies
 vitest.mock("../../../utils/path", () => ({
 	getWorkspacePath: vitest.fn(() => "/test/workspace"),

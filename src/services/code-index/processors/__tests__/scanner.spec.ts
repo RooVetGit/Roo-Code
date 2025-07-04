@@ -241,5 +241,141 @@ describe("DirectoryScanner", () => {
 			// Verify the stats
 			expect(mockCodeParser.parseFile).toHaveBeenCalledTimes(2)
 		})
+
+		it("should handle multi-workspace scenarios with consistent workspace context", async () => {
+			const { listFiles } = await import("../../../glob/list-files")
+			// Mock a multi-workspace scenario where listFiles returns paths from different workspaces
+			vi.mocked(listFiles).mockResolvedValue([
+				["/workspace1/src/file1.js", "/workspace2/admin/.prettierrc.json"],
+				false,
+			])
+
+			// Mock vscode to simulate multi-workspace
+			const vscode = await import("vscode")
+			vi.mocked(vscode.workspace.getWorkspaceFolder).mockImplementation((uri: any) => {
+				if (uri && uri.includes("/workspace1")) {
+					return { uri: { fsPath: "/workspace1" } } as any
+				}
+				if (uri && uri.includes("/workspace2")) {
+					return { uri: { fsPath: "/workspace2" } } as any
+				}
+				return null
+			})
+
+			const mockBlocks: any[] = [
+				{
+					file_path: "/workspace1/src/file1.js",
+					content: "test content",
+					start_line: 1,
+					end_line: 5,
+					identifier: "test",
+					type: "function",
+					fileHash: "hash1",
+					segmentHash: "segment-hash1",
+				},
+			]
+			;(mockCodeParser.parseFile as any).mockResolvedValue(mockBlocks)
+
+			// This should not throw the "path should be a 'path.relative()'d string" error
+			const result = await scanner.scanDirectory("/workspace1")
+			expect(result.stats.processed).toBeGreaterThan(0)
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalled()
+		})
+
+		it("should handle workspace switching during indexing without errors", async () => {
+			const { listFiles } = await import("../../../glob/list-files")
+			// Mock files from multiple workspaces
+			vi.mocked(listFiles).mockResolvedValue([
+				[
+					"/workspace1/src/file1.js",
+					"/workspace1/src/file2.js",
+					"/workspace2/admin/config.json",
+					"/workspace2/admin/.prettierrc.json",
+					"/workspace3/lib/utils.ts",
+				],
+				false,
+			])
+
+			// Mock vscode to simulate workspace switching during indexing
+			const vscode = await import("vscode")
+			let callCount = 0
+			vi.mocked(vscode.workspace.getWorkspaceFolder).mockImplementation((uri: any) => {
+				callCount++
+				// Simulate active workspace changing during scan
+				if (callCount < 3) {
+					// First few calls return workspace1
+					if (uri && uri.includes("/workspace1")) {
+						return { uri: { fsPath: "/workspace1" } } as any
+					}
+				} else if (callCount < 5) {
+					// Next calls simulate switch to workspace2
+					if (uri && uri.includes("/workspace2")) {
+						return { uri: { fsPath: "/workspace2" } } as any
+					}
+				} else {
+					// Final calls simulate switch to workspace3
+					if (uri && uri.includes("/workspace3")) {
+						return { uri: { fsPath: "/workspace3" } } as any
+					}
+				}
+				// Handle specific workspace resolution
+				if (uri && uri.includes("/workspace1")) {
+					return { uri: { fsPath: "/workspace1" } } as any
+				}
+				if (uri && uri.includes("/workspace2")) {
+					return { uri: { fsPath: "/workspace2" } } as any
+				}
+				if (uri && uri.includes("/workspace3")) {
+					return { uri: { fsPath: "/workspace3" } } as any
+				}
+				return null
+			})
+
+			// Mock code blocks for processed files
+			const mockBlocks: any[] = [
+				{
+					file_path: "src/file1.js",
+					content: "test content 1",
+					start_line: 1,
+					end_line: 5,
+					identifier: "test1",
+					type: "function",
+					fileHash: "hash1",
+					segmentHash: "segment-hash1",
+				},
+			]
+			;(mockCodeParser.parseFile as any).mockResolvedValue(mockBlocks)
+
+			// Mock embedding creation with multiple embeddings
+			mockEmbedder.createEmbeddings.mockResolvedValue({
+				embeddings: [
+					[0.1, 0.2, 0.3],
+					[0.2, 0.3, 0.4],
+					[0.3, 0.4, 0.5],
+					[0.4, 0.5, 0.6],
+					[0.5, 0.6, 0.7],
+				],
+			})
+
+			// Run scan from workspace1
+			const result = await scanner.scanDirectory("/workspace1")
+
+			// Verify no errors occurred despite workspace switching
+			expect(result.stats.processed).toBeGreaterThan(0)
+			expect(mockVectorStore.upsertPoints).toHaveBeenCalled()
+
+			// Verify that points were created with proper relative paths
+			const upsertCalls = mockVectorStore.upsertPoints.mock.calls
+			expect(upsertCalls.length).toBeGreaterThan(0)
+
+			// Check that all paths in the upserted points are properly relative
+			const allPoints = upsertCalls.flatMap((call: any[]) => call[0])
+			allPoints.forEach((point: any) => {
+				// Ensure no paths start with ../ (which would indicate wrong workspace context)
+				expect(point.payload.filePath).not.toMatch(/^\.\.\//)
+				// Ensure paths don't contain absolute paths
+				expect(point.payload.filePath).not.toMatch(/^\//)
+			})
+		})
 	})
 })
