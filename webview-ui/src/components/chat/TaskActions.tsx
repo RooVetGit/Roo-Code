@@ -34,7 +34,7 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 				<IconButton
 					iconClass={showCopyFeedback ? "codicon-check" : "codicon-copy"}
 					title={t("history:copyPrompt")}
-					disabled={buttonsDisabled || !item}
+					disabled={buttonsDisabled}
 					onClick={(e) => copyWithFeedback(item.task, e)}
 				/>
 			)}
