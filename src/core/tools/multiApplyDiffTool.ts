@@ -159,7 +159,11 @@ Expected structure:
 </args>
 
 Original error: ${errorMessage}`
-			throw new Error(detailedError)
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("apply_diff")
+			await cline.say("diff_error", detailedError)
+			pushToolResult(detailedError)
+			return
 		}
 	} else if (legacyPath && typeof legacyDiffContent === "string") {
 		// Handle legacy parameters (old way)
