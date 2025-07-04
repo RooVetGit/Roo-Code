@@ -1,5 +1,6 @@
 import path from "path"
 import { isBinaryFile } from "isbinaryfile"
+import fs from "fs/promises"
 
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -14,6 +15,67 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+
+// Supported image formats for reading as base64
+const SUPPORTED_IMAGE_FORMATS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".ico", ".tiff", ".svg"]
+
+// Maximum file size for images (10MB) to prevent memory issues
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+
+/**
+ * Checks if a file is a supported image format
+ */
+function isSupportedImageFile(filePath: string): boolean {
+	const ext = path.extname(filePath).toLowerCase()
+	return SUPPORTED_IMAGE_FORMATS.includes(ext)
+}
+
+/**
+ * Gets the MIME type for an image file
+ */
+function getImageMimeType(filePath: string): string {
+	const ext = path.extname(filePath).toLowerCase()
+	switch (ext) {
+		case ".png":
+			return "image/png"
+		case ".jpg":
+		case ".jpeg":
+			return "image/jpeg"
+		case ".webp":
+			return "image/webp"
+		case ".gif":
+			return "image/gif"
+		case ".bmp":
+			return "image/bmp"
+		case ".ico":
+			return "image/x-icon"
+		case ".tiff":
+			return "image/tiff"
+		case ".svg":
+			return "image/svg+xml"
+		default:
+			return "application/octet-stream"
+	}
+}
+
+/**
+ * Reads an image file as base64 with size validation
+ */
+async function readImageAsBase64(filePath: string): Promise<{ base64: string; mimeType: string; size: number }> {
+	const stats = await fs.stat(filePath)
+
+	if (stats.size > MAX_IMAGE_SIZE) {
+		throw new Error(
+			`Image file is too large (${Math.round(stats.size / 1024 / 1024)}MB). Maximum allowed size is ${MAX_IMAGE_SIZE / 1024 / 1024}MB.`,
+		)
+	}
+
+	const buffer = await fs.readFile(filePath)
+	const base64 = buffer.toString("base64")
+	const mimeType = getImageMimeType(filePath)
+
+	return { base64, mimeType, size: stats.size }
+}
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -68,6 +130,8 @@ interface FileResult {
 	xmlContent?: string // Final XML content for this file
 	feedbackText?: string // User feedback text from approval/denial
 	feedbackImages?: any[] // User feedback images from approval/denial
+	imageData?: string // Base64 encoded image data for supported image files
+	mimeType?: string // MIME type of the image file
 }
 
 export async function readFileTool(
@@ -439,6 +503,35 @@ export async function readFileTool(
 				if (isBinary) {
 					const fileExtension = path.extname(relPath).toLowerCase()
 					const supportedBinaryFormats = getSupportedBinaryFormats()
+
+					// Check if it's a supported image file
+					if (isSupportedImageFile(relPath)) {
+						try {
+							const { base64, mimeType, size } = await readImageAsBase64(fullPath)
+
+							// Track file read
+							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+							updateFileResult(relPath, {
+								imageData: base64,
+								mimeType,
+								xmlContent: `<file><path>${relPath}</path>\n<image_data mime_type="${mimeType}" size="${size}">${base64}</image_data>\n</file>`,
+							})
+							continue
+						} catch (error) {
+							const errorMsg = error instanceof Error ? error.message : String(error)
+							updateFileResult(relPath, {
+								status: "error",
+								error: `Error reading image file: ${errorMsg}`,
+								xmlContent: `<file><path>${relPath}</path><error>Error reading image file: ${errorMsg}</error></file>`,
+							})
+							await handleError(
+								`reading image file ${relPath}`,
+								error instanceof Error ? error : new Error(errorMsg),
+							)
+							continue
+						}
+					}
 
 					if (!supportedBinaryFormats.includes(fileExtension)) {
 						updateFileResult(relPath, {
