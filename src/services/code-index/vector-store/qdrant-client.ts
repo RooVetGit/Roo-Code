@@ -4,7 +4,7 @@ import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
 import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
-import { DEFAULT_MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../constants"
+import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
 import { t } from "../../../i18n"
 
 /**
@@ -299,7 +299,7 @@ export class QdrantVectorStore implements IVectorStore {
 			const searchRequest = {
 				query: queryVector,
 				filter,
-				score_threshold: SEARCH_MIN_SCORE,
+				score_threshold: minScore ?? DEFAULT_SEARCH_MIN_SCORE,
 				limit: maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
@@ -308,10 +308,6 @@ export class QdrantVectorStore implements IVectorStore {
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
 				},
-			}
-
-			if (minScore !== undefined) {
-				searchRequest.score_threshold = minScore
 			}
 
 			const operationResult = await this.client.query(this.collectionName, searchRequest)

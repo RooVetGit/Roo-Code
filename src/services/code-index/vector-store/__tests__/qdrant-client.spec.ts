@@ -3,7 +3,7 @@ import { createHash } from "crypto"
 
 import { QdrantVectorStore } from "../qdrant-client"
 import { getWorkspacePath } from "../../../../utils/path"
-import { DEFAULT_MAX_SEARCH_RESULTS, SEARCH_MIN_SCORE } from "../../constants"
+import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../../constants"
 
 // Mocks
 vitest.mock("@qdrant/js-client-rest")
@@ -1005,7 +1005,7 @@ describe("QdrantVectorStore", () => {
 			expect(mockQdrantClientInstance.query).toHaveBeenCalledWith(expectedCollectionName, {
 				query: queryVector,
 				filter: undefined,
-				score_threshold: SEARCH_MIN_SCORE,
+				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
@@ -1056,7 +1056,7 @@ describe("QdrantVectorStore", () => {
 						},
 					],
 				},
-				score_threshold: SEARCH_MIN_SCORE,
+				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
@@ -1229,7 +1229,7 @@ describe("QdrantVectorStore", () => {
 						},
 					],
 				},
-				score_threshold: SEARCH_MIN_SCORE,
+				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
 					hnsw_ef: 128,
@@ -1254,7 +1254,7 @@ describe("QdrantVectorStore", () => {
 			;(console.error as any).mockRestore()
 		})
 
-		it("should use constants DEFAULT_MAX_SEARCH_RESULTS and SEARCH_MIN_SCORE correctly", async () => {
+		it("should use constants DEFAULT_MAX_SEARCH_RESULTS and DEFAULT_SEARCH_MIN_SCORE correctly", async () => {
 			const queryVector = [0.1, 0.2, 0.3]
 			const mockQdrantResults = { points: [] }
 
@@ -1264,7 +1264,7 @@ describe("QdrantVectorStore", () => {
 
 			const callArgs = mockQdrantClientInstance.query.mock.calls[0][1]
 			expect(callArgs.limit).toBe(DEFAULT_MAX_SEARCH_RESULTS)
-			expect(callArgs.score_threshold).toBe(SEARCH_MIN_SCORE)
+			expect(callArgs.score_threshold).toBe(DEFAULT_SEARCH_MIN_SCORE)
 		})
 
 		it("should use custom maxResults when provided", async () => {
@@ -1279,7 +1279,7 @@ describe("QdrantVectorStore", () => {
 			expect(mockQdrantClientInstance.query).toHaveBeenCalledWith(expectedCollectionName, {
 				query: queryVector,
 				filter: undefined,
-				score_threshold: SEARCH_MIN_SCORE,
+				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: customMaxResults,
 				params: {
 					hnsw_ef: 128,

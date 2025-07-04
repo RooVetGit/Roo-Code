@@ -5,7 +5,7 @@ export const MIN_CHUNK_REMAINDER_CHARS = 200 // Minimum characters for the *next
 export const MAX_CHARS_TOLERANCE_FACTOR = 1.15 // 15% tolerance for max chars
 
 /**Search */
-export const SEARCH_MIN_SCORE = 0.4
+export const DEFAULT_SEARCH_MIN_SCORE = 0.4 // Default minimum similarity score for search results
 export const DEFAULT_MAX_SEARCH_RESULTS = 50 // Default maximum number of search results to return
 
 /**File Watcher */

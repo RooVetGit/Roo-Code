@@ -2,7 +2,7 @@ import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
-import { SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
+import { DEFAULT_SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
 import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "../../shared/embeddingModels"
 
 /**
@@ -384,7 +384,7 @@ export class CodeIndexConfigManager {
 
 	/**
 	 * Gets the configured minimum search score based on user setting, model-specific threshold, or fallback.
-	 * Priority: 1) User setting, 2) Model-specific threshold, 3) Default SEARCH_MIN_SCORE constant.
+	 * Priority: 1) User setting, 2) Model-specific threshold, 3) Default DEFAULT_SEARCH_MIN_SCORE constant.
 	 */
 	public get currentSearchMinScore(): number {
 		// First check if user has configured a custom score threshold
@@ -395,7 +395,7 @@ export class CodeIndexConfigManager {
 		// Fall back to model-specific threshold
 		const currentModelId = this.modelId ?? getDefaultModelId(this.embedderProvider)
 		const modelSpecificThreshold = getModelScoreThreshold(this.embedderProvider, currentModelId)
-		return modelSpecificThreshold ?? SEARCH_MIN_SCORE
+		return modelSpecificThreshold ?? DEFAULT_SEARCH_MIN_SCORE
 	}
 
 	/**

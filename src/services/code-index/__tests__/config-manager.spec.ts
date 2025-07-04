@@ -773,7 +773,7 @@ describe("CodeIndexConfigManager", () => {
 					expect(configManager.currentSearchMinScore).toBe(0.15)
 				})
 
-				it("should fall back to default SEARCH_MIN_SCORE when neither user setting nor model threshold exists", async () => {
+				it("should fall back to default DEFAULT_SEARCH_MIN_SCORE when neither user setting nor model threshold exists", async () => {
 					mockContextProxy.getGlobalState.mockReturnValue({
 						codebaseIndexEnabled: true,
 						codebaseIndexQdrantUrl: "http://qdrant.local",
@@ -787,7 +787,7 @@ describe("CodeIndexConfigManager", () => {
 					})
 
 					await configManager.loadConfiguration()
-					// Should fall back to default SEARCH_MIN_SCORE (0.4)
+					// Should fall back to default DEFAULT_SEARCH_MIN_SCORE (0.4)
 					expect(configManager.currentSearchMinScore).toBe(0.4)
 				})
 
