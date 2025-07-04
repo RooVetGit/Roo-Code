@@ -161,7 +161,7 @@ Expected structure:
 Original error: ${errorMessage}`
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("apply_diff")
-			await cline.say("diff_error", detailedError)
+			await cline.say("diff_error", `Failed to parse apply_diff XML: ${errorMessage}`)
 			pushToolResult(detailedError)
 			return
 		}
