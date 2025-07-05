@@ -1,18 +1,29 @@
 // npx vitest run integrations/terminal/__tests__/ExecaTerminalProcess.spec.ts
 
-const mockPid = 12345
-
 vitest.mock("execa", () => {
+	const mockPid = 12345
 	const mockKill = vitest.fn()
+
 	const execa = vitest.fn((options: any) => {
-		return (_template: TemplateStringsArray, ...args: any[]) => ({
-			pid: mockPid,
-			iterable: (_opts: any) =>
-				(async function* () {
-					yield "test output\n"
-				})(),
-			kill: mockKill,
-		})
+		return (_template: TemplateStringsArray, ...args: any[]) => {
+			const mockSubprocess = {
+				pid: mockPid,
+				iterable: vitest.fn((_opts: any) =>
+					(async function* () {
+						yield "test output\n"
+					})(),
+				),
+				kill: mockKill,
+				// Add Promise-like behavior to simulate successful completion
+				then: vitest.fn((resolve) => {
+					// Simulate successful completion
+					resolve({ exitCode: 0 })
+					return Promise.resolve({ exitCode: 0 })
+				}),
+				catch: vitest.fn(),
+			}
+			return mockSubprocess
+		}
 	})
 	return { execa, ExecaError: class extends Error {} }
 })
@@ -21,11 +32,26 @@ vitest.mock("ps-tree", () => ({
 	default: vitest.fn((_: number, cb: any) => cb(null, [])),
 }))
 
+vitest.mock("vscode", () => ({
+	debug: {
+		activeDebugSession: undefined,
+	},
+}))
+
+vitest.mock("../../core/process/ProcessRegistry", () => ({
+	processRegistry: {
+		register: vitest.fn(),
+		unregister: vitest.fn(),
+		killProcess: vitest.fn().mockResolvedValue(undefined),
+	},
+}))
+
 import { execa } from "execa"
 import { ExecaTerminalProcess } from "../ExecaTerminalProcess"
 import type { RooTerminal } from "../types"
 
 describe("ExecaTerminalProcess", () => {
+	const mockPid = 12345
 	let mockTerminal: RooTerminal
 	let terminalProcess: ExecaTerminalProcess
 	let originalEnv: NodeJS.ProcessEnv

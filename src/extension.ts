@@ -30,6 +30,7 @@ import { MdmService } from "./services/mdm/MdmService"
 import { migrateSettings } from "./utils/migrateSettings"
 import { autoImportSettings } from "./utils/autoImportSettings"
 import { API } from "./extension/api"
+import { processRegistry } from "./core/process/ProcessRegistry"
 
 import {
 	handleUri,
@@ -214,6 +215,17 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated.
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
+
+	// Clean up all tracked processes first to prevent leaks
+	try {
+		outputChannel.appendLine("Cleaning up tracked processes...")
+		await processRegistry.killAllProcesses()
+		processRegistry.dispose()
+		outputChannel.appendLine("Process cleanup completed")
+	} catch (error) {
+		outputChannel.appendLine(`Error during process cleanup: ${error}`)
+	}
+
 	await McpServerManager.cleanup(extensionContext)
 	TelemetryService.instance.shutdown()
 	TerminalRegistry.cleanup()

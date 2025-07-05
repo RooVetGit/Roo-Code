@@ -1,14 +1,17 @@
 import { execa, ExecaError } from "execa"
 import psTree from "ps-tree"
 import process from "process"
+import * as vscode from "vscode"
 
 import type { RooTerminal } from "./types"
 import { BaseTerminalProcess } from "./BaseTerminalProcess"
+import { processRegistry } from "../../core/process/ProcessRegistry"
 
 export class ExecaTerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<RooTerminal>
 	private aborted = false
 	private pid?: number
+	private processId?: string
 
 	constructor(terminal: RooTerminal) {
 		super()
@@ -49,6 +52,22 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 			})`${command}`
 
 			this.pid = subprocess.pid
+
+			// Register the process with the ProcessRegistry for cleanup tracking
+			if (subprocess.pid) {
+				this.processId = `execa-${subprocess.pid}-${Date.now()}`
+				try {
+					const currentDebugSession = vscode.debug.activeDebugSession
+					processRegistry.register(subprocess, this.processId, {
+						description: `Terminal command: ${command}`,
+						debugSessionId: currentDebugSession?.id,
+					})
+				} catch (error) {
+					// In test environment, vscode.debug might not be available
+					console.warn(`[ExecaTerminalProcess] Failed to register process: ${error}`)
+				}
+			}
+
 			const stream = subprocess.iterable({ from: "all", preserveNewlines: true })
 			this.terminal.setActiveStream(stream, subprocess.pid)
 
@@ -111,6 +130,13 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		this.terminal.setActiveStream(undefined)
 		this.emitRemainingBufferIfListening()
 		this.stopHotTimer()
+
+		// Unregister the process from the ProcessRegistry
+		if (this.processId) {
+			processRegistry.unregister(this.processId)
+			this.processId = undefined
+		}
+
 		this.emit("completed", this.fullOutput)
 		this.emit("continue")
 	}
@@ -124,7 +150,13 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 	public override abort() {
 		this.aborted = true
 
-		if (this.pid) {
+		// Use ProcessRegistry for cleanup if available, otherwise fall back to manual cleanup
+		if (this.processId) {
+			processRegistry.killProcess(this.processId, "SIGINT").catch((error) => {
+				console.warn(`[ExecaTerminalProcess] Failed to kill process via registry: ${error}`)
+			})
+		} else if (this.pid) {
+			// Fallback to manual cleanup for processes not registered
 			psTree(this.pid, async (err, children) => {
 				if (!err) {
 					const pids = children.map((p) => parseInt(p.PID))

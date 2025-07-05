@@ -32,11 +32,13 @@ import {
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
 import { injectVariables } from "../../utils/config"
+import { processRegistry } from "../../core/process/ProcessRegistry"
 
 export type McpConnection = {
 	server: McpServer
 	client: Client
 	transport: StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
+	processId?: string // Track process ID for cleanup
 }
 
 // Base configuration schema for common settings
@@ -748,6 +750,21 @@ export class McpHub {
 			}
 			this.connections.push(connection)
 
+			// Register the MCP server process with ProcessRegistry for cleanup tracking (stdio only)
+			if (configInjected.type === "stdio") {
+				const childProcess = (transport as any).process
+				if (childProcess && childProcess.pid) {
+					const processId = `mcp-${name}-${childProcess.pid}-${Date.now()}`
+					const currentDebugSession = vscode.debug.activeDebugSession
+					processRegistry.register(childProcess, processId, {
+						description: `MCP Server: ${name}`,
+						debugSessionId: currentDebugSession?.id,
+					})
+					// Store the process ID in the connection for cleanup
+					connection.processId = processId
+				}
+			}
+
 			// Connect (this will automatically start the transport)
 			await client.connect(transport)
 			connection.server.status = "connected"
@@ -920,6 +937,11 @@ export class McpHub {
 
 		for (const connection of connections) {
 			try {
+				// Unregister the process from ProcessRegistry if it was registered
+				if (connection.processId) {
+					processRegistry.unregister(connection.processId)
+				}
+
 				await connection.transport.close()
 				await connection.client.close()
 			} catch (error) {
@@ -1627,6 +1649,10 @@ export class McpHub {
 		this.removeAllFileWatchers()
 		for (const connection of this.connections) {
 			try {
+				// Ensure process cleanup happens during disposal
+				if (connection.processId) {
+					await processRegistry.killProcess(connection.processId)
+				}
 				await this.deleteConnection(connection.server.name, connection.server.source)
 			} catch (error) {
 				console.error(`Failed to close connection for ${connection.server.name}:`, error)

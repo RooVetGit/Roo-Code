@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
 import { arePathsEqual } from "../../utils/path"
+import { processRegistry } from "../../core/process/ProcessRegistry"
 
 import { RooTerminal, RooTerminalProvider } from "./types"
 import { TerminalProcess } from "./TerminalProcess"
@@ -34,12 +35,18 @@ export class TerminalRegistry {
 		// should probably live elsewhere.
 
 		// Register handler for terminal close events to clean up temporary
-		// directories.
+		// directories and processes.
 		const closeDisposable = vscode.window.onDidCloseTerminal((vsceTerminal) => {
 			const terminal = this.getTerminalByVSCETerminal(vsceTerminal)
 
 			if (terminal) {
 				ShellIntegrationManager.zshCleanupTmpDir(terminal.id)
+
+				// Clean up any processes associated with this terminal
+				// For ExecaTerminal processes, we need to abort them which will handle cleanup
+				if (terminal.process) {
+					terminal.process.abort()
+				}
 			}
 		})
 
@@ -280,6 +287,14 @@ export class TerminalRegistry {
 	public static cleanup() {
 		// Clean up all temporary directories.
 		ShellIntegrationManager.clear()
+
+		// Clean up all terminal processes
+		this.terminals.forEach((terminal) => {
+			if (terminal.process) {
+				terminal.process.abort()
+			}
+		})
+
 		this.disposables.forEach((disposable) => disposable.dispose())
 		this.disposables = []
 	}

@@ -62,6 +62,22 @@ vi.mock("vscode", () => ({
 			dispose: vi.fn(),
 		}),
 	},
+	Uri: {
+		file: vi.fn().mockImplementation((path: string) => ({
+			scheme: "file",
+			authority: "",
+			path: path,
+			query: "",
+			fragment: "",
+			fsPath: path,
+			with: vi.fn(),
+			toJSON: vi.fn(),
+		})),
+	},
+	RelativePattern: vi.fn().mockImplementation((base: string, pattern: string) => ({
+		base,
+		pattern,
+	})),
 	Disposable: {
 		from: vi.fn(),
 	},
@@ -92,7 +108,6 @@ describe("McpHub", () => {
 
 		// Mock console.error to suppress error messages during tests
 		console.error = vi.fn()
-
 
 		const mockUri: Uri = {
 			scheme: "file",
