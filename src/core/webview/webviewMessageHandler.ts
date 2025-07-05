@@ -2060,5 +2060,10 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+
+		case "showAllWorkspacesTasks":
+			await updateGlobalState("showAllWorkspacesTasks", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
 	}
 }

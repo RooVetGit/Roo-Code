@@ -27,6 +27,7 @@ export const globalSettingsSchema = z.object({
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
+	showAllWorkspacesTasks: z.boolean().optional(),
 
 	condensingApiConfigId: z.string().optional(),
 	customCondensingPrompt: z.string().optional(),

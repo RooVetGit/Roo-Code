@@ -21,6 +21,7 @@
 		"discardButton": "Scarta modifiche"
 	},
 	"sections": {
+		"general": "Generale",
 		"providers": "Fornitori",
 		"autoApprove": "Auto-approvazione",
 		"browser": "Accesso computer",
@@ -32,6 +33,12 @@
 		"experimental": "Sperimentale",
 		"language": "Lingua",
 		"about": "Informazioni su Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Mostra tutte le attività",
+			"description": "Mostra le attività di tutti i progetti invece del solo progetto corrente"
+		}
 	},
 	"prompts": {
 		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
