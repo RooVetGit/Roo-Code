@@ -563,6 +563,10 @@ export class ClineProvider
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
+		if (!parentTask) {
+			this.logger?.startNewSession()
+		}
+
 		const cline = new Task({
 			provider: this,
 			apiConfiguration,
@@ -800,14 +804,6 @@ export class ClineProvider
 	 * Handle incoming webview messages with logging
 	 */
 	private async handleWebviewMessage(message: WebviewMessage) {
-		// Log user messages
-		if (message.type === "newTask" && this.logger) {
-			const { mode } = await this.getState()
-			await this.logger.logUserMessage(message.text || "", mode, {
-				images: message.images,
-			})
-		}
-
 		// Continue with existing message handling
 		return webviewMessageHandler(this, message, this.marketplaceManager)
 	}

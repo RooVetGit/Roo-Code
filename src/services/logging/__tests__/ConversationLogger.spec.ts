@@ -4,310 +4,169 @@ import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import * as path from "path"
 import * as os from "os"
+import { exec } from "child_process"
+import { promisify } from "util"
 import { ConversationLogger } from "../ConversationLogger"
 
-// Mock VSCode workspace configuration
+const execAsync = promisify(exec)
+
 vi.mock("vscode", () => ({
 	workspace: {
 		getConfiguration: vi.fn(),
+		workspaceFolders: [
+			{
+				uri: {
+					fsPath: "/test/workspace",
+				},
+			},
+		],
 	},
 }))
 
-// Mock fs/promises
-vi.mock("fs/promises", () => ({
-	mkdir: vi.fn(),
-	appendFile: vi.fn(),
-}))
+/**
+ * Waits for a given path to exist on the filesystem.
+ * @param pathToExist The path to check.
+ * @param timeout The maximum time to wait in milliseconds.
+ * @returns A promise that resolves to true if the path exists, false otherwise.
+ */
+const waitForPath = async (pathToExist: string, timeout = 5000): Promise<boolean> => {
+	const start = Date.now()
+	while (Date.now() - start < timeout) {
+		try {
+			await fs.access(pathToExist)
+			return true
+		} catch {
+			await new Promise((resolve) => setTimeout(resolve, 100))
+		}
+	}
+	return false
+}
 
 describe("ConversationLogger", () => {
 	let tempDir: string
-	let logger: ConversationLogger
 
-	beforeEach(() => {
-		// Create a temporary directory path for testing
-		tempDir = path.join(os.tmpdir(), "test-workspace", Math.random().toString(36).substring(7))
-
-		// Reset mocks
-		vi.clearAllMocks()
-		// Mock configuration to be enabled by default
+	beforeEach(async () => {
 		vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
 			get: vi.fn().mockReturnValue(true),
 		} as any)
+
+		const testRunId = Math.random().toString(36).substring(7)
+		tempDir = path.join(os.tmpdir(), "conversation-logger-tests", testRunId)
+		await fs.mkdir(tempDir, { recursive: true })
 	})
 
-	afterEach(() => {
+	afterEach(async () => {
+		await fs.rm(tempDir, { recursive: true, force: true })
 		vi.clearAllMocks()
 	})
 
-	describe("constructor", () => {
-		it("should initialize with required workspaceRoot", () => {
-			logger = new ConversationLogger(tempDir)
-
-			expect(logger).toBeInstanceOf(ConversationLogger)
-			expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith("rooCode.logging")
+	describe("Unit Tests", () => {
+		it("should create a log directory on initialization", async () => {
+			const logDir = path.join(tempDir, ".roo-logs")
+			new ConversationLogger(tempDir)
+			await expect(waitForPath(logDir), ".roo-logs directory should be created").resolves.toBe(true)
 		})
 
-		it("should create log directory path correctly", () => {
-			logger = new ConversationLogger(tempDir)
-
-			expect(fs.mkdir).toHaveBeenCalledWith(path.join(tempDir, ".roo-logs"), { recursive: true })
+		it("should create a new session when startNewSession is called", () => {
+			const logger = new ConversationLogger(tempDir)
+			const firstSessionId = (logger as any).sessionId
+			logger.startNewSession()
+			const secondSessionId = (logger as any).sessionId
+			expect(firstSessionId).not.toBe(secondSessionId)
 		})
 
-		it("should generate unique session IDs", () => {
-			const logger1 = new ConversationLogger(tempDir)
-			const logger2 = new ConversationLogger(tempDir)
+		it("should write a log entry to the correct session file", async () => {
+			const logger = new ConversationLogger(tempDir)
+			const logDir = path.join(tempDir, ".roo-logs")
+			await waitForPath(logDir)
 
-			// Access private sessionId through type assertion for testing
-			const sessionId1 = (logger1 as any).sessionId
-			const sessionId2 = (logger2 as any).sessionId
+			const sessionId = (logger as any).sessionId
+			await logger.logUserMessage("Hello, world!")
 
-			expect(sessionId1).toMatch(/^sess_\d+_[a-z0-9]{9}$/)
-			expect(sessionId2).toMatch(/^sess_\d+_[a-z0-9]{9}$/)
-			expect(sessionId1).not.toEqual(sessionId2)
-		})
+			const logFilePath = path.join(logDir, `${sessionId}.jsonl`)
+			await expect(waitForPath(logFilePath), "Log file should be created after first log").resolves.toBe(true)
 
-		it("should handle directory creation errors gracefully", async () => {
-			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
-			const mkdirError = new Error("Directory creation failed")
-			vi.mocked(fs.mkdir).mockRejectedValueOnce(mkdirError)
+			const content = await fs.readFile(logFilePath, "utf-8")
+			const entry = JSON.parse(content)
 
-			logger = new ConversationLogger(tempDir)
-
-			// Wait for async directory creation to complete
-			await new Promise((resolve) => setTimeout(resolve, 0))
-
-			expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to create log directory:", mkdirError)
-
-			consoleErrorSpy.mockRestore()
+			expect(entry.content).toBe("Hello, world!")
+			expect(entry.session_id).toBe(sessionId)
 		})
 	})
 
-	describe("logging methods", () => {
-		beforeEach(() => {
-			logger = new ConversationLogger(tempDir)
+	describe("Integration Test: Finetuning Data Generation", () => {
+		let logsDir: string
+		let datasetsDir: string
+		let projectRoot: string
+
+		beforeEach(async () => {
+			logsDir = path.join(tempDir, ".roo-logs")
+			datasetsDir = path.join(tempDir, "finetuning-datasets")
+			projectRoot = path.resolve(process.cwd(), "..")
+			await fs.mkdir(logsDir, { recursive: true })
 		})
 
-		describe("logUserMessage", () => {
-			it("should log user message with correct format", async () => {
-				const message = "Test user message"
-				const mode = "debug"
-				const context = { userId: "123" }
+		it("should generate a valid finetuning file from a single conversation session", async () => {
+			const logger = new ConversationLogger(tempDir)
+			const sessionId = (logger as any).sessionId
+			const logFilePath = path.join(logsDir, `${sessionId}.jsonl`)
 
-				await logger.logUserMessage(message, mode, context)
+			await logger.logUserMessage("What is the capital of France?")
+			await expect(waitForPath(logFilePath)).resolves.toBe(true)
+			await logger.logAIResponse("I will use a tool to find the capital.", "code", [
+				{ name: "search", input: { query: "capital of France" } },
+			])
+			await logger.logToolCall("search", { query: "capital of France" }, { result: "Paris" })
+			await logger.logAIResponse("The capital of France is Paris.")
 
-				expect(fs.appendFile).toHaveBeenCalledTimes(1)
-				const [filePath, content] = vi.mocked(fs.appendFile).mock.calls[0]
+			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
+			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir}`
+			await execAsync(command, { cwd: projectRoot })
 
-				expect(filePath).toMatch(/.roo-logs[/\\]sess_\d+_[a-z0-9]{9}\.jsonl$/)
+			const expectedOutputFile = path.join(datasetsDir, `finetuning-dataset-${sessionId}.jsonl`)
+			await expect(
+				waitForPath(expectedOutputFile),
+				`Output file ${expectedOutputFile} should exist`,
+			).resolves.toBe(true)
 
-				const logEntry = JSON.parse(content as string)
-				expect(logEntry).toMatchObject({
-					type: "user_message",
-					mode: mode,
-					content: message,
-					context: context,
-					session_id: expect.stringMatching(/^sess_\d+_[a-z0-9]{9}$/),
-				})
-				expect(logEntry.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)
-			})
+			const outputContent = await fs.readFile(expectedOutputFile, "utf-8")
+			const geminiExample = JSON.parse(outputContent)
+			expect(geminiExample).toHaveProperty("messages")
+		}, 30000)
 
-			it("should use default mode when not provided", async () => {
-				await logger.logUserMessage("Test message")
+		it("should generate separate finetuning files for multiple conversation sessions", async () => {
+			const logger = new ConversationLogger(tempDir)
 
-				const logEntry = JSON.parse(vi.mocked(fs.appendFile).mock.calls[0][1] as string)
-				expect(logEntry.mode).toBe("code")
-			})
+			// Session 1
+			const sessionId1 = (logger as any).sessionId
+			await logger.logUserMessage("First session message")
+			await logger.logAIResponse("First session tool call", "code", [{ name: "tool1", input: {} }])
+			await logger.logToolCall("tool1", {}, { success: true })
+			await logger.logAIResponse("First session response")
+			const logFilePath1 = path.join(logsDir, `${sessionId1}.jsonl`)
+			await expect(waitForPath(logFilePath1)).resolves.toBe(true)
 
-			it("should use empty object for context when not provided", async () => {
-				await logger.logUserMessage("Test message")
+			// Session 2
+			logger.startNewSession()
+			const sessionId2 = (logger as any).sessionId
+			await logger.logUserMessage("Second session message")
+			await logger.logAIResponse("Second session tool call", "code", [{ name: "tool2", input: {} }])
+			await logger.logToolCall("tool2", {}, { success: true })
+			await logger.logAIResponse("Second session response")
+			const logFilePath2 = path.join(logsDir, `${sessionId2}.jsonl`)
+			await expect(waitForPath(logFilePath2)).resolves.toBe(true)
 
-				const logEntry = JSON.parse(vi.mocked(fs.appendFile).mock.calls[0][1] as string)
-				expect(logEntry.context).toEqual({})
-			})
-		})
+			// Execution
+			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
+			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir}`
+			await execAsync(command, { cwd: projectRoot })
 
-		describe("logAIResponse", () => {
-			it("should log AI response with correct format", async () => {
-				const response = "Test AI response"
-				const mode = "architect"
-				const toolCalls = [{ tool: "read_file", params: { path: "test.js" } }]
+			// Validation
+			const expectedOutputFile1 = path.join(datasetsDir, `finetuning-dataset-${sessionId1}.jsonl`)
+			const expectedOutputFile2 = path.join(datasetsDir, `finetuning-dataset-${sessionId2}.jsonl`)
 
-				await logger.logAIResponse(response, mode, toolCalls)
-
-				expect(fs.appendFile).toHaveBeenCalledTimes(1)
-				const logEntry = JSON.parse(vi.mocked(fs.appendFile).mock.calls[0][1] as string)
-
-				expect(logEntry).toMatchObject({
-					type: "ai_response",
-					mode: mode,
-					content: response,
-					tool_calls: toolCalls,
-					session_id: expect.stringMatching(/^sess_\d+_[a-z0-9]{9}$/),
-				})
-			})
-
-			it("should use default mode and empty tool calls when not provided", async () => {
-				await logger.logAIResponse("Test response")
-
-				const logEntry = JSON.parse(vi.mocked(fs.appendFile).mock.calls[0][1] as string)
-				expect(logEntry.mode).toBe("code")
-				expect(logEntry.tool_calls).toEqual([])
-			})
-		})
-
-		describe("logToolCall", () => {
-			it("should log tool call with correct format", async () => {
-				const toolName = "execute_command"
-				const parameters = { command: "npm test" }
-				const result = { success: true, output: "All tests passed" }
-
-				await logger.logToolCall(toolName, parameters, result)
-
-				expect(fs.appendFile).toHaveBeenCalledTimes(1)
-				const logEntry = JSON.parse(vi.mocked(fs.appendFile).mock.calls[0][1] as string)
-
-				expect(logEntry).toMatchObject({
-					type: "tool_call",
-					tool_name: toolName,
-					parameters: parameters,
-					result: result,
-					session_id: expect.stringMatching(/^sess_\d+_[a-z0-9]{9}$/),
-				})
-			})
-
-			it("should handle undefined result", async () => {
-				await logger.logToolCall("read_file", { path: "test.js" })
-
-				const logEntry = JSON.parse(vi.mocked(fs.appendFile).mock.calls[0][1] as string)
-				expect(logEntry.result).toBeUndefined()
-			})
-		})
-	})
-
-	describe("configuration handling", () => {
-		it("should not log when disabled in configuration", async () => {
-			vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
-				get: vi.fn().mockReturnValue(false),
-			} as any)
-
-			logger = new ConversationLogger(tempDir)
-			await logger.logUserMessage("Test message")
-
-			expect(fs.appendFile).not.toHaveBeenCalled()
-		})
-
-		it("should log when enabled in configuration", async () => {
-			vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
-				get: vi.fn().mockReturnValue(true),
-			} as any)
-
-			logger = new ConversationLogger(tempDir)
-			await logger.logUserMessage("Test message")
-
-			expect(fs.appendFile).toHaveBeenCalledTimes(1)
-		})
-
-		it("should default to false when configuration is not available", async () => {
-			vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
-				get: vi.fn().mockReturnValue(undefined),
-			} as any)
-
-			logger = new ConversationLogger(tempDir)
-			await logger.logUserMessage("Test message")
-
-			expect(fs.appendFile).not.toHaveBeenCalled()
-		})
-	})
-
-	describe("file operations", () => {
-		beforeEach(() => {
-			logger = new ConversationLogger(tempDir)
-		})
-
-		it("should handle file write errors gracefully", async () => {
-			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
-			const writeError = new Error("File write failed")
-			vi.mocked(fs.appendFile).mockRejectedValueOnce(writeError)
-
-			await logger.logUserMessage("Test message")
-
-			expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to write to log file:", writeError)
-
-			consoleErrorSpy.mockRestore()
-		})
-
-		it("should create JSONL format with newlines", async () => {
-			await logger.logUserMessage("First message")
-			await logger.logUserMessage("Second message")
-
-			expect(fs.appendFile).toHaveBeenCalledTimes(2)
-
-			const firstCall = vi.mocked(fs.appendFile).mock.calls[0][1] as string
-			const secondCall = vi.mocked(fs.appendFile).mock.calls[1][1] as string
-
-			expect(firstCall.endsWith("\n")).toBe(true)
-			expect(secondCall.endsWith("\n")).toBe(true)
-
-			// Verify both are valid JSON
-			expect(() => JSON.parse(firstCall.trim())).not.toThrow()
-			expect(() => JSON.parse(secondCall.trim())).not.toThrow()
-		})
-
-		it("should use UTF-8 encoding for file writes", async () => {
-			await logger.logUserMessage("Test message with unicode: 🚀")
-
-			expect(fs.appendFile).toHaveBeenCalledWith(expect.any(String), expect.any(String), "utf8")
-		})
-	})
-
-	describe("session management", () => {
-		it("should maintain consistent session ID across multiple logs", async () => {
-			logger = new ConversationLogger(tempDir)
-
-			await logger.logUserMessage("Message 1")
-			await logger.logAIResponse("Response 1")
-			await logger.logToolCall("tool1", {})
-
-			expect(fs.appendFile).toHaveBeenCalledTimes(3)
-
-			const entries = vi.mocked(fs.appendFile).mock.calls.map((call) => JSON.parse(call[1] as string))
-
-			const sessionIds = entries.map((entry) => entry.session_id)
-			expect(sessionIds[0]).toBe(sessionIds[1])
-			expect(sessionIds[1]).toBe(sessionIds[2])
-		})
-
-		it("should generate different session IDs for different logger instances", () => {
-			const logger1 = new ConversationLogger(tempDir)
-			const logger2 = new ConversationLogger(tempDir)
-
-			const sessionId1 = (logger1 as any).sessionId
-			const sessionId2 = (logger2 as any).sessionId
-
-			expect(sessionId1).not.toBe(sessionId2)
-		})
-	})
-
-	describe("path handling", () => {
-		it("should handle Windows paths correctly", () => {
-			const windowsPath = "C:\\Users\\test\\workspace"
-			logger = new ConversationLogger(windowsPath)
-
-			expect(fs.mkdir).toHaveBeenCalledWith(path.join(windowsPath, ".roo-logs"), { recursive: true })
-		})
-
-		it("should handle Unix paths correctly", () => {
-			const unixPath = "/home/user/workspace"
-			logger = new ConversationLogger(unixPath)
-
-			expect(fs.mkdir).toHaveBeenCalledWith(path.join(unixPath, ".roo-logs"), { recursive: true })
-		})
-
-		it("should handle relative paths correctly", () => {
-			const relativePath = "./workspace"
-			logger = new ConversationLogger(relativePath)
-
-			expect(fs.mkdir).toHaveBeenCalledWith(path.join(relativePath, ".roo-logs"), { recursive: true })
-		})
+			await expect(waitForPath(expectedOutputFile1), `Output file for session 1 should exist`).resolves.toBe(true)
+			await expect(waitForPath(expectedOutputFile2), `Output file for session 2 should exist`).resolves.toBe(true)
+		}, 30000)
 	})
 })

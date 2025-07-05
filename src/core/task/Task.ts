@@ -269,6 +269,13 @@ export class Task extends EventEmitter<ClineEvents> {
 			TelemetryService.instance.captureTaskRestarted(this.taskId)
 		} else {
 			TelemetryService.instance.captureTaskCreated(this.taskId)
+			if (this.logger && (task || images)) {
+				provider.getState().then(({ mode }) => {
+					this.logger?.logUserMessage(task || "", mode, {
+						images,
+					})
+				})
+			}
 		}
 
 		// Only set up diff strategy if diff is enabled
