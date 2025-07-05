@@ -31,7 +31,22 @@ import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { filterProviders, filterModels } from "./utils/organizationFilters"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
+import {
+	Select,
+	SelectTrigger,
+	SelectValue,
+	SelectContent,
+	SelectItem,
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+	Command,
+	CommandInput,
+	CommandList,
+	CommandEmpty,
+	CommandGroup,
+	CommandItem,
+} from "@src/components/ui"
 
 import {
 	Anthropic,
@@ -308,6 +323,11 @@ const ApiOptions = ({
 		}
 	}, [selectedProvider])
 
+	// State for provider search
+	const [searchValue, setSearchValue] = useState("")
+	// State for provider popover open/close
+	const [isProviderPopoverOpen, setIsProviderPopoverOpen] = useState(false)
+
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex flex-col gap-1 relative">
@@ -321,18 +341,106 @@ const ApiOptions = ({
 						</div>
 					)}
 				</div>
-				<Select value={selectedProvider} onValueChange={(value) => onProviderChange(value as ProviderName)}>
-					<SelectTrigger className="w-full">
-						<SelectValue placeholder={t("settings:common.select")} />
-					</SelectTrigger>
-					<SelectContent>
-						{filterProviders(PROVIDERS, organizationAllowList).map(({ value, label }) => (
-							<SelectItem key={value} value={value}>
-								{label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+				<Popover open={isProviderPopoverOpen} onOpenChange={setIsProviderPopoverOpen}>
+					<PopoverTrigger asChild>
+						<button
+							type="button"
+							className="w-72 h-9 flex items-center justify-between rounded-md border border-vscode-input-border bg-vscode-input-background px-3 py-2 text-sm text-vscode-input-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-vscode-focusBorder"
+							aria-haspopup="listbox"
+							data-testid="provider-popover-trigger"
+							onClick={() => setIsProviderPopoverOpen((open) => !open)}>
+							<span className="truncate">
+								{filterProviders(PROVIDERS, organizationAllowList).find(
+									(p) => p.value === selectedProvider,
+								)?.label || t("settings:common.select")}
+							</span>
+							<svg className="ml-2 h-4 w-4 opacity-50" viewBox="0 0 20 20" fill="none">
+								<path
+									d="M7 7l3-3 3 3M7 13l3 3 3-3"
+									stroke="currentColor"
+									strokeWidth="1.5"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								/>
+							</svg>
+						</button>
+					</PopoverTrigger>
+					<PopoverContent className="p-0 w-72">
+						<Command>
+							<div className="relative">
+								<CommandInput
+									value={searchValue}
+									onValueChange={setSearchValue}
+									placeholder={
+										t("settings:providers.searchProviderPlaceholder") || "Search providers..."
+									}
+									className="h-9 mr-4"
+									data-testid="provider-search-input"
+								/>
+								{searchValue?.length > 0 && (
+									<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
+										<svg
+											className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+											onClick={() => setSearchValue("")}
+											viewBox="0 0 20 20"
+											fill="none">
+											<path
+												d="M6 6l8 8M6 14L14 6"
+												stroke="currentColor"
+												strokeWidth="1.5"
+												strokeLinecap="round"
+											/>
+										</svg>
+									</div>
+								)}
+							</div>
+							<CommandList>
+								<CommandEmpty>
+									{searchValue && (
+										<div className="py-2 px-1 text-sm">
+											{t("settings:providers.noProviderMatchFound") || "No providers found"}
+										</div>
+									)}
+								</CommandEmpty>
+								<CommandGroup>
+									{filterProviders(PROVIDERS, organizationAllowList)
+										.filter(({ label }) =>
+											searchValue
+												? label.toLowerCase().includes(searchValue.toLowerCase())
+												: true,
+										)
+										.map(({ value, label }) => (
+											<CommandItem
+												key={value}
+												value={label}
+												onSelect={() => {
+													onProviderChange(value as ProviderName)
+													setSearchValue("")
+													setIsProviderPopoverOpen(false)
+												}}
+												data-testid={`provider-option-${value}`}>
+												{label}
+												{selectedProvider === value && (
+													<svg
+														className="ml-auto h-4 w-4 text-vscode-input-foreground"
+														fill="none"
+														viewBox="0 0 20 20">
+														<path
+															d="M6 10l3 3 5-5"
+															stroke="currentColor"
+															strokeWidth="1.5"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+														/>
+													</svg>
+												)}
+											</CommandItem>
+										))}
+								</CommandGroup>
+							</CommandList>
+						</Command>
+					</PopoverContent>
+				</Popover>
 			</div>
 
 			{errorMessage && <ApiErrorMessage errorMessage={errorMessage} />}
