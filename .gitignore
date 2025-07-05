@@ -18,6 +18,9 @@ bin/
 # Local prompts and rules
 /local-prompts
 
+# Roo temp files
+.roo/temp/
+
 # Test environment
 .test_env
 .vscode-test/
