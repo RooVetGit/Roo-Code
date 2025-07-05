@@ -3,8 +3,10 @@
 	"authenticationFailed": "Erstellung von Einbettungen fehlgeschlagen: Authentifizierung fehlgeschlagen. Bitte überprüfe deinen API-Schlüssel.",
 	"failedWithStatus": "Erstellung von Einbettungen nach {{attempts}} Versuchen fehlgeschlagen: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Erstellung von Einbettungen nach {{attempts}} Versuchen fehlgeschlagen: {{errorMessage}}",
+	"insufficientQuota": "Erstellung von Einbettungen fehlgeschlagen: Unzureichendes Kontingent. Bitte überprüfen Sie Ihr OpenAI-Kontoguthaben und fügen Sie Credits hinzu, um fortzufahren.",
 	"failedMaxAttempts": "Erstellung von Einbettungen nach {{attempts}} Versuchen fehlgeschlagen",
 	"textExceedsTokenLimit": "Text bei Index {{index}} überschreitet das maximale Token-Limit ({{itemTokens}} > {{maxTokens}}). Wird übersprungen.",
+	"textWithPrefixExceedsTokenLimit": "Text bei Index {{index}} mit Präfix überschreitet das maximale Token-Limit ({{estimatedTokens}} > {{maxTokens}}). Präfix wird nicht hinzugefügt.",
 	"rateLimitRetry": "Ratenlimit erreicht, Wiederholung in {{delayMs}}ms (Versuch {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Fehlerinhalt konnte nicht gelesen werden",

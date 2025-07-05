@@ -8,6 +8,7 @@ import {
 } from "../constants"
 import { getDefaultModelId, getModelQueryPrefix } from "../../../shared/embeddingModels"
 import { t } from "../../../i18n"
+import { isInsufficientQuotaError } from "./utils/quota-detection"
 
 interface EmbeddingItem {
 	embedding: string | number[]
@@ -276,7 +277,10 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				const isRateLimitError = httpError?.status === 429
 				const hasMoreAttempts = attempts < MAX_RETRIES - 1
 
-				if (isRateLimitError && hasMoreAttempts) {
+				// Add quota detection
+				const isQuotaError = isInsufficientQuotaError(error)
+
+				if (isRateLimitError && !isQuotaError && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
 					console.warn(
 						t("embeddings:rateLimitRetry", {
@@ -287,6 +291,9 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
+				} else if (isQuotaError) {
+					// Throw specific quota error immediately
+					throw new Error(t("embeddings:insufficientQuota"))
 				}
 
 				// Log the error for debugging

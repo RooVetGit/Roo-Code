@@ -21,6 +21,8 @@ vitest.mock("../../../../i18n", () => ({
 			"embeddings:textExceedsTokenLimit": `Text at index ${params?.index} exceeds maximum token limit (${params?.itemTokens} > ${params?.maxTokens}). Skipping.`,
 			"embeddings:rateLimitRetry": `Rate limit hit, retrying in ${params?.delayMs}ms (attempt ${params?.attempt}/${params?.maxRetries})`,
 			"embeddings:unknownError": "Unknown error",
+			"embeddings:insufficientQuota":
+				"Failed to create embeddings: Insufficient quota. Please check your OpenAI account balance and add credits to continue.",
 		}
 		return translations[key] || key
 	},
@@ -403,6 +405,48 @@ describe("OpenAICompatibleEmbedder", () => {
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
 				expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("Rate limit hit"))
+			})
+
+			it("should not retry on insufficient quota errors", async () => {
+				const testTexts = ["Hello world"]
+				const quotaError = new Error(
+					"You exceeded your current quota, please check your plan and billing details.",
+				)
+				;(quotaError as any).status = 429
+
+				mockEmbeddingsCreate.mockRejectedValue(quotaError)
+
+				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
+					"Failed to create embeddings: Insufficient quota. Please check your OpenAI account balance and add credits to continue.",
+				)
+
+				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
+				expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("Rate limit hit"))
+			})
+
+			it("should retry on regular rate limit errors", async () => {
+				const testTexts = ["Hello world"]
+				const rateLimitError = new Error("Rate limit exceeded")
+				;(rateLimitError as any).status = 429
+
+				// Create base64 encoded embedding for successful response
+				const testEmbedding = new Float32Array([0.25, 0.5, 0.75])
+				const base64String = Buffer.from(testEmbedding.buffer).toString("base64")
+
+				mockEmbeddingsCreate.mockRejectedValueOnce(rateLimitError).mockResolvedValueOnce({
+					data: [{ embedding: base64String }],
+					usage: { prompt_tokens: 10, total_tokens: 15 },
+				})
+
+				const resultPromise = embedder.createEmbeddings(testTexts)
+				await vitest.advanceTimersByTimeAsync(INITIAL_RETRY_DELAY_MS)
+				const result = await resultPromise
+
+				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(2)
+				expect(result).toEqual({
+					embeddings: [[0.25, 0.5, 0.75]],
+					usage: { promptTokens: 10, totalTokens: 15 },
+				})
 			})
 
 			it("should throw error immediately on non-retryable errors", async () => {

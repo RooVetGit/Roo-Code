@@ -3,8 +3,10 @@
 	"authenticationFailed": "No s'han pogut crear les incrustacions: ha fallat l'autenticació. Comproveu la vostra clau d'API.",
 	"failedWithStatus": "No s'han pogut crear les incrustacions després de {{attempts}} intents: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "No s'han pogut crear les incrustacions després de {{attempts}} intents: {{errorMessage}}",
+	"insufficientQuota": "No s'han pogut crear les incrustacions: Quota insuficient. Comproveu el saldo del vostre compte OpenAI i afegiu crèdits per continuar.",
 	"failedMaxAttempts": "No s'han pogut crear les incrustacions després de {{attempts}} intents",
 	"textExceedsTokenLimit": "El text a l'índex {{index}} supera el límit màxim de testimonis ({{itemTokens}} > {{maxTokens}}). S'està ometent.",
+	"textWithPrefixExceedsTokenLimit": "El text a l'índex {{index}} amb prefix supera el límit màxim de tokens ({{estimatedTokens}} > {{maxTokens}}). No s'afegirà el prefix.",
 	"rateLimitRetry": "S'ha assolit el límit de velocitat, es torna a intentar en {{delayMs}}ms (intent {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "No s'ha pogut llegir el cos de l'error",

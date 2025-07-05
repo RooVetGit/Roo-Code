@@ -3,8 +3,10 @@
 	"authenticationFailed": "Gömülmeler oluşturulamadı: Kimlik doğrulama başarısız oldu. Lütfen API anahtarınızı kontrol edin.",
 	"failedWithStatus": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı: {{errorMessage}}",
+	"insufficientQuota": "Gömülmeler oluşturulamadı: Yetersiz kota. Lütfen OpenAI hesap bakiyenizi kontrol edin ve devam etmek için kredi ekleyin.",
 	"failedMaxAttempts": "{{attempts}} denemeden sonra gömülmeler oluşturulamadı",
 	"textExceedsTokenLimit": "{{index}} dizinindeki metin maksimum jeton sınırını aşıyor ({{itemTokens}} > {{maxTokens}}). Atlanıyor.",
+	"textWithPrefixExceedsTokenLimit": "{{index}} dizinindeki önekli metin maksimum jeton sınırını aşıyor ({{estimatedTokens}} > {{maxTokens}}). Önek eklenmiyor.",
 	"rateLimitRetry": "Hız sınırına ulaşıldı, {{delayMs}}ms içinde yeniden deneniyor (deneme {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Hata gövdesi okunamadı",

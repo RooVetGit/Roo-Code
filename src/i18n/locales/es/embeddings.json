@@ -3,8 +3,10 @@
 	"authenticationFailed": "No se pudieron crear las incrustaciones: Error de autenticación. Comprueba tu clave de API.",
 	"failedWithStatus": "No se pudieron crear las incrustaciones después de {{attempts}} intentos: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "No se pudieron crear las incrustaciones después de {{attempts}} intentos: {{errorMessage}}",
+	"insufficientQuota": "No se pudieron crear las incrustaciones: Cuota insuficiente. Por favor, verifique el saldo de su cuenta OpenAI y agregue créditos para continuar.",
 	"failedMaxAttempts": "No se pudieron crear las incrustaciones después de {{attempts}} intentos",
 	"textExceedsTokenLimit": "El texto en el índice {{index}} supera el límite máximo de tokens ({{itemTokens}} > {{maxTokens}}). Omitiendo.",
+	"textWithPrefixExceedsTokenLimit": "El texto en el índice {{index}} con prefijo excede el límite máximo de tokens ({{estimatedTokens}} > {{maxTokens}}). No se agrega el prefijo.",
 	"rateLimitRetry": "Límite de velocidad alcanzado, reintentando en {{delayMs}}ms (intento {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "No se pudo leer el cuerpo del error",

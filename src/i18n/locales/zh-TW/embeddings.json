@@ -3,8 +3,10 @@
 	"authenticationFailed": "建立內嵌失敗：驗證失敗。請檢查您的 API 金鑰。",
 	"failedWithStatus": "嘗試 {{attempts}} 次後建立內嵌失敗：HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "嘗試 {{attempts}} 次後建立內嵌失敗：{{errorMessage}}",
+	"insufficientQuota": "建立內嵌失敗：額度不足。請檢查您的 OpenAI 帳戶餘額並新增點數以繼續。",
 	"failedMaxAttempts": "嘗試 {{attempts}} 次後建立內嵌失敗",
 	"textExceedsTokenLimit": "索引 {{index}} 處的文字超過最大權杖限制 ({{itemTokens}} > {{maxTokens}})。正在略過。",
+	"textWithPrefixExceedsTokenLimit": "索引 {{index}} 處帶前綴的文本超過了最大權杖限制 ({{estimatedTokens}} > {{maxTokens}})。不添加前綴。",
 	"rateLimitRetry": "已達到速率限制，將在 {{delayMs}} 毫秒後重試（嘗試次數 {{attempt}}/{{maxRetries}}）",
 	"ollama": {
 		"couldNotReadErrorBody": "無法讀取錯誤內容",

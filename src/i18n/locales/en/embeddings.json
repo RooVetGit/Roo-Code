@@ -3,8 +3,10 @@
 	"authenticationFailed": "Failed to create embeddings: Authentication failed. Please check your API key.",
 	"failedWithStatus": "Failed to create embeddings after {{attempts}} attempts: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Failed to create embeddings after {{attempts}} attempts: {{errorMessage}}",
+	"insufficientQuota": "Failed to create embeddings: Insufficient quota. Please check your OpenAI account balance and add credits to continue.",
 	"failedMaxAttempts": "Failed to create embeddings after {{attempts}} attempts",
 	"textExceedsTokenLimit": "Text at index {{index}} exceeds maximum token limit ({{itemTokens}} > {{maxTokens}}). Skipping.",
+	"textWithPrefixExceedsTokenLimit": "Text at index {{index}} with prefix exceeds maximum token limit ({{estimatedTokens}} > {{maxTokens}}). Not adding prefix.",
 	"rateLimitRetry": "Rate limit hit, retrying in {{delayMs}}ms (attempt {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Could not read error body",

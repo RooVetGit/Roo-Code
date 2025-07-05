@@ -3,8 +3,10 @@
 	"authenticationFailed": "Creazione degli embedding non riuscita: Autenticazione fallita. Controlla la tua chiave API.",
 	"failedWithStatus": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi: {{errorMessage}}",
+	"insufficientQuota": "Creazione degli embedding non riuscita: Quota insufficiente. Controlla il saldo del tuo account OpenAI e aggiungi crediti per continuare.",
 	"failedMaxAttempts": "Creazione degli embedding non riuscita dopo {{attempts}} tentativi",
 	"textExceedsTokenLimit": "Il testo all'indice {{index}} supera il limite massimo di token ({{itemTokens}} > {{maxTokens}}). Saltato.",
+	"textWithPrefixExceedsTokenLimit": "Il testo all'indice {{index}} con prefisso supera il limite massimo di token ({{estimatedTokens}} > {{maxTokens}}). Non aggiungo il prefisso.",
 	"rateLimitRetry": "Limite di velocità raggiunto, nuovo tentativo tra {{delayMs}}ms (tentativo {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Impossibile leggere il corpo dell'errore",

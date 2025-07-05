@@ -3,8 +3,10 @@
 	"authenticationFailed": "Не удалось создать вложения: Ошибка аутентификации. Проверьте свой ключ API.",
 	"failedWithStatus": "Не удалось создать вложения после {{attempts}} попыток: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Не удалось создать вложения после {{attempts}} попыток: {{errorMessage}}",
+	"insufficientQuota": "Не удалось создать вложения: Недостаточно квоты. Пожалуйста, проверьте баланс вашей учетной записи OpenAI и добавьте кредиты, чтобы продолжить.",
 	"failedMaxAttempts": "Не удалось создать вложения после {{attempts}} попыток",
 	"textExceedsTokenLimit": "Текст в индексе {{index}} превышает максимальный лимит токенов ({{itemTokens}} > {{maxTokens}}). Пропускается.",
+	"textWithPrefixExceedsTokenLimit": "Текст по индексу {{index}} с префиксом превышает максимальный лимит токенов ({{estimatedTokens}} > {{maxTokens}}). Не добавляю префикс.",
 	"rateLimitRetry": "Достигнут лимит скорости, повторная попытка через {{delayMs}} мс (попытка {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Не удалось прочитать тело ошибки",

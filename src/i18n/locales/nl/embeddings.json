@@ -3,8 +3,10 @@
 	"authenticationFailed": "Insluitingen maken mislukt: Authenticatie mislukt. Controleer je API-sleutel.",
 	"failedWithStatus": "Insluitingen maken mislukt na {{attempts}} pogingen: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Insluitingen maken mislukt na {{attempts}} pogingen: {{errorMessage}}",
+	"insufficientQuota": "Kan geen embeddings maken: Onvoldoende quota. Controleer uw OpenAI-accountsaldo en voeg tegoeden toe om door te gaan.",
 	"failedMaxAttempts": "Insluitingen maken mislukt na {{attempts}} pogingen",
 	"textExceedsTokenLimit": "Tekst op index {{index}} overschrijdt de maximale tokenlimiet ({{itemTokens}} > {{maxTokens}}). Wordt overgeslagen.",
+	"textWithPrefixExceedsTokenLimit": "Tekst op index {{index}} met prefix overschrijdt de maximale tokenlimiet ({{estimatedTokens}} > {{maxTokens}}). Prefix wordt niet toegevoegd.",
 	"rateLimitRetry": "Snelheidslimiet bereikt, opnieuw proberen over {{delayMs}}ms (poging {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Kon foutinhoud niet lezen",

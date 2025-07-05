@@ -3,8 +3,10 @@
 	"authenticationFailed": "创建嵌入失败：身份验证失败。请检查您的 API 密钥。",
 	"failedWithStatus": "尝试 {{attempts}} 次后创建嵌入失败：HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "尝试 {{attempts}} 次后创建嵌入失败：{{errorMessage}}",
+	"insufficientQuota": "创建嵌入失败：配额不足。请检查您的 OpenAI 帐户余额并添加积分以继续。",
 	"failedMaxAttempts": "尝试 {{attempts}} 次后创建嵌入失败",
 	"textExceedsTokenLimit": "索引 {{index}} 处的文本超过最大令牌限制 ({{itemTokens}} > {{maxTokens}})。正在跳过。",
+	"textWithPrefixExceedsTokenLimit": "索引 {{index}} 处带前缀的文本超过了最大令牌限制 ({{estimatedTokens}} > {{maxTokens}})。不添加前缀。",
 	"rateLimitRetry": "已达到速率限制，将在 {{delayMs}} 毫秒后重试（尝试次数 {{attempt}}/{{maxRetries}}）",
 	"ollama": {
 		"couldNotReadErrorBody": "无法读取错误内容",

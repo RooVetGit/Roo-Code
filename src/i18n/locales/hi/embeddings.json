@@ -3,8 +3,10 @@
 	"authenticationFailed": "एम्बेडिंग बनाने में विफल: प्रमाणीकरण विफल। कृपया अपनी एपीआई कुंजी जांचें।",
 	"failedWithStatus": "{{attempts}} प्रयासों के बाद एम्बेडिंग बनाने में विफल: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "{{attempts}} प्रयासों के बाद एम्बेडिंग बनाने में विफल: {{errorMessage}}",
+	"insufficientQuota": "एम्बेडिंग बनाने में विफल: अपर्याप्त कोटा। कृपया अपने OpenAI खाते की शेष राशि जांचें और जारी रखने के लिए क्रेडिट जोड़ें।",
 	"failedMaxAttempts": "{{attempts}} प्रयासों के बाद एम्बेडिंग बनाने में विफल",
 	"textExceedsTokenLimit": "अनुक्रमणिका {{index}} पर पाठ अधिकतम टोकन सीमा ({{itemTokens}} > {{maxTokens}}) से अधिक है। छोड़ा जा रहा है।",
+	"textWithPrefixExceedsTokenLimit": "उपसर्ग के साथ इंडेक्स {{index}} पर टेक्स्ट अधिकतम टोकन सीमा ({{estimatedTokens}} > {{maxTokens}}) से अधिक है। उपसर्ग नहीं जोड़ा जा रहा है।",
 	"rateLimitRetry": "दर सीमा समाप्त, {{delayMs}}ms में पुन: प्रयास किया जा रहा है (प्रयास {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "त्रुटि सामग्री पढ़ नहीं सका",

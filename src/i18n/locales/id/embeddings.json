@@ -3,8 +3,10 @@
 	"authenticationFailed": "Gagal membuat embeddings: Autentikasi gagal. Silakan periksa API key Anda.",
 	"failedWithStatus": "Gagal membuat embeddings setelah {{attempts}} percobaan: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Gagal membuat embeddings setelah {{attempts}} percobaan: {{errorMessage}}",
+	"insufficientQuota": "Gagal membuat embeddings: Kuota tidak mencukupi. Silakan periksa saldo akun OpenAI Anda dan tambahkan kredit untuk melanjutkan.",
 	"failedMaxAttempts": "Gagal membuat embeddings setelah {{attempts}} percobaan",
 	"textExceedsTokenLimit": "Teks pada indeks {{index}} melebihi batas maksimum token ({{itemTokens}} > {{maxTokens}}). Dilewati.",
+	"textWithPrefixExceedsTokenLimit": "Teks di indeks {{index}} dengan awalan melebihi batas token maksimum ({{estimatedTokens}} > {{maxTokens}}). Tidak menambahkan awalan.",
 	"rateLimitRetry": "Batas rate tercapai, mencoba lagi dalam {{delayMs}}ms (percobaan {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Tidak dapat membaca body error",

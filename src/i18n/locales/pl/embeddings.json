@@ -3,8 +3,10 @@
 	"authenticationFailed": "Nie udało się utworzyć osadzeń: Uwierzytelnianie nie powiodło się. Sprawdź swój klucz API.",
 	"failedWithStatus": "Nie udało się utworzyć osadzeń po {{attempts}} próbach: HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "Nie udało się utworzyć osadzeń po {{attempts}} próbach: {{errorMessage}}",
+	"insufficientQuota": "Nie udało się utworzyć osadzeń: Niewystarczający limit. Sprawdź saldo konta OpenAI i dodaj środki, aby kontynuować.",
 	"failedMaxAttempts": "Nie udało się utworzyć osadzeń po {{attempts}} próbach",
 	"textExceedsTokenLimit": "Tekst w indeksie {{index}} przekracza maksymalny limit tokenów ({{itemTokens}} > {{maxTokens}}). Pomijanie.",
+	"textWithPrefixExceedsTokenLimit": "Tekst w indeksie {{index}} z prefiksem przekracza maksymalny limit tokenów ({{estimatedTokens}} > {{maxTokens}}). Nie dodaję prefiksu.",
 	"rateLimitRetry": "Osiągnięto limit szybkości, ponawianie za {{delayMs}}ms (próba {{attempt}}/{{maxRetries}})",
 	"ollama": {
 		"couldNotReadErrorBody": "Nie można odczytać treści błędu",

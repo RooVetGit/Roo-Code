@@ -3,8 +3,10 @@
 	"authenticationFailed": "埋め込みの作成に失敗しました：認証に失敗しました。APIキーを確認してください。",
 	"failedWithStatus": "{{attempts}}回試行しましたが、埋め込みの作成に失敗しました：HTTP {{statusCode}} - {{errorMessage}}",
 	"failedWithError": "{{attempts}}回試行しましたが、埋め込みの作成に失敗しました：{{errorMessage}}",
+	"insufficientQuota": "埋め込みの作成に失敗しました：クォータが不足しています。OpenAIアカウントの残高を確認し、続行するためにクレジットを追加してください。",
 	"failedMaxAttempts": "{{attempts}}回試行しましたが、埋め込みの作成に失敗しました",
 	"textExceedsTokenLimit": "インデックス{{index}}のテキストが最大トークン制限を超えています（{{itemTokens}}> {{maxTokens}}）。スキップします。",
+	"textWithPrefixExceedsTokenLimit": "インデックス {{index}} のプレフィックス付きテキストが最大トークン制限 ({{estimatedTokens}} > {{maxTokens}}) を超えています。プレフィिक्सを追加しません。",
 	"rateLimitRetry": "レート制限に達しました。{{delayMs}}ミリ秒後に再試行します（試行{{attempt}}/{{maxRetries}}）",
 	"ollama": {
 		"couldNotReadErrorBody": "エラー本文を読み取れませんでした",
