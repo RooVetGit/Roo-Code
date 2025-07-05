@@ -90,9 +90,28 @@ jobs:
               working-directory: apps/vscode-e2e
               run: xvfb-run -a pnpm test:ci
 
+    playwright-e2e-test:
+        runs-on: ubuntu-latest
+        needs: [check-openrouter-api-key]
+        if: needs.check-openrouter-api-key.outputs.exists == 'true'
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Setup Node.js and pnpm
+              uses: ./.github/actions/setup-node-pnpm
+            - name: Install Playwright browsers
+              working-directory: apps/playwright-e2e
+              run: npx playwright install --with-deps
+            - name: Create .env.local file
+              working-directory: apps/playwright-e2e
+              run: echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" > .env.local
+            - name: Run Playwright E2E tests
+              working-directory: apps/playwright-e2e
+              run: xvfb-run -a pnpm test:ci
+
     notify-slack-on-failure:
         runs-on: ubuntu-latest
-        needs: [check-translations, knip, compile, unit-test, integration-test]
+        needs: [check-translations, knip, compile, unit-test, integration-test, playwright-e2e-test]
         if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(needs.*.result, 'failure') }}
         steps:
             - name: Checkout code
