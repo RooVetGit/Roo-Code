@@ -181,6 +181,149 @@ describe("OpenRouterHandler", () => {
 			)
 		})
 
+		it("calculates cost using upstream_inference_cost for BYOK", async () => {
+			const handler = new OpenRouterHandler(mockOptions)
+
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield {
+						id: "test-id",
+						choices: [{ delta: { content: "test response" } }],
+					}
+					yield {
+						id: "test-id",
+						choices: [{ delta: {} }],
+						usage: {
+							prompt_tokens: 100,
+							completion_tokens: 50,
+							cost: 0.002, // OpenRouter's cost
+							cost_details: {
+								upstream_inference_cost: 0.008, // Upstream provider cost
+							},
+							prompt_tokens_details: {
+								cached_tokens: 20, // Cached tokens
+							},
+						},
+					}
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = {
+				completions: { create: mockCreate },
+			} as any
+
+			const generator = handler.createMessage("test", [])
+			const chunks = []
+
+			for await (const chunk of generator) {
+				chunks.push(chunk)
+			}
+
+			// Verify that totalCost includes both cost and upstream_inference_cost
+			expect(chunks).toHaveLength(2)
+			expect(chunks[1]).toEqual({
+				type: "usage",
+				inputTokens: 100,
+				outputTokens: 50,
+				cacheReadTokens: 20,
+				totalCost: 0.01, // 0.002 + 0.008
+			})
+		})
+
+		it("handles missing upstream_inference_cost gracefully", async () => {
+			const handler = new OpenRouterHandler(mockOptions)
+
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield {
+						id: "test-id",
+						choices: [{ delta: { content: "test response" } }],
+					}
+					yield {
+						id: "test-id",
+						choices: [{ delta: {} }],
+						usage: {
+							prompt_tokens: 100,
+							completion_tokens: 50,
+							cost: 0.005, // Only OpenRouter cost, no upstream cost
+						},
+					}
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = {
+				completions: { create: mockCreate },
+			} as any
+
+			const generator = handler.createMessage("test", [])
+			const chunks = []
+
+			for await (const chunk of generator) {
+				chunks.push(chunk)
+			}
+
+			// Verify that totalCost falls back to just the cost field
+			expect(chunks).toHaveLength(2)
+			expect(chunks[1]).toEqual({
+				type: "usage",
+				inputTokens: 100,
+				outputTokens: 50,
+				totalCost: 0.005, // Just the cost field
+			})
+		})
+
+		it("includes reasoning tokens when present", async () => {
+			const handler = new OpenRouterHandler(mockOptions)
+
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield {
+						id: "test-id",
+						choices: [{ delta: { content: "test response" } }],
+					}
+					yield {
+						id: "test-id",
+						choices: [{ delta: {} }],
+						usage: {
+							prompt_tokens: 100,
+							completion_tokens: 50,
+							completion_tokens_details: {
+								reasoning_tokens: 30,
+							},
+							cost: 0.003,
+							cost_details: {
+								upstream_inference_cost: 0.007,
+							},
+						},
+					}
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = {
+				completions: { create: mockCreate },
+			} as any
+
+			const generator = handler.createMessage("test", [])
+			const chunks = []
+
+			for await (const chunk of generator) {
+				chunks.push(chunk)
+			}
+
+			// Verify reasoning tokens are included
+			expect(chunks).toHaveLength(2)
+			expect(chunks[1]).toEqual({
+				type: "usage",
+				inputTokens: 100,
+				outputTokens: 50,
+				reasoningTokens: 30,
+				totalCost: 0.01, // 0.003 + 0.007
+			})
+		})
+
 		it("supports the middle-out transform", async () => {
 			const handler = new OpenRouterHandler({
 				...mockOptions,
