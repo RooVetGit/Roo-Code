@@ -5,7 +5,63 @@ import * as childProcess from "child_process"
 import * as vscode from "vscode"
 import { arePathsEqual } from "../../utils/path"
 import { getBinPath } from "../../services/ripgrep"
-import { DIRS_TO_IGNORE } from "./constants"
+import { DIRS_TO_IGNORE, GITIGNORE_WHITELIST } from "./constants"
+
+/**
+ * Check if a path is whitelisted or is a parent of a whitelisted path
+ */
+function isPathWhitelisted(absolutePath: string): boolean {
+	const normalizedPath = path.normalize(absolutePath)
+
+	for (const whitelistedDir of GITIGNORE_WHITELIST) {
+		const whitelistedPath = path.normalize(whitelistedDir)
+
+		// Check if this is the whitelisted path or a parent of it
+		if (normalizedPath === whitelistedPath || whitelistedPath.startsWith(path.join(normalizedPath, path.sep))) {
+			return true
+		}
+	}
+
+	return false
+}
+
+/**
+ * Check if a directory might contain whitelisted paths
+ */
+function mightContainWhitelistedPaths(dirPath: string): boolean {
+	const normalizedDirPath = path.normalize(dirPath)
+
+	for (const whitelistedDir of GITIGNORE_WHITELIST) {
+		const whitelistedPath = path.normalize(whitelistedDir)
+
+		// Check if the whitelisted path is under this directory
+		if (
+			whitelistedPath.startsWith(path.join(normalizedDirPath, path.sep)) ||
+			whitelistedPath === normalizedDirPath
+		) {
+			return true
+		}
+
+		// Also check if this directory is under the whitelisted path
+		if (normalizedDirPath.startsWith(path.join(whitelistedPath, path.sep))) {
+			return true
+		}
+	}
+
+	return false
+}
+
+/**
+ * Special check for .roo directory
+ */
+function isRooPath(dirPath: string): boolean {
+	const normalizedPath = path.normalize(dirPath)
+	const dirName = path.basename(normalizedPath)
+
+	// Check if this is .roo or under .roo using path segments
+	const segments = normalizedPath.split(path.sep)
+	return dirName === ".roo" || segments.includes(".roo")
+}
 
 /**
  * List files in a directory, with optional recursive traversal
@@ -101,7 +157,7 @@ function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
 	const args = ["--files", "--hidden", "--follow"]
 
 	if (recursive) {
-		return [...args, ...buildRecursiveArgs(), dirPath]
+		return [...args, ...buildRecursiveArgs(dirPath), dirPath]
 	} else {
 		return [...args, ...buildNonRecursiveArgs(), dirPath]
 	}
@@ -110,14 +166,26 @@ function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
 /**
  * Build ripgrep arguments for recursive directory traversal
  */
-function buildRecursiveArgs(): string[] {
+function buildRecursiveArgs(dirPath?: string): string[] {
 	const args: string[] = []
 
-	// In recursive mode, respect .gitignore by default
-	// (ripgrep does this automatically)
+	// Check if this path is whitelisted (with defensive null check)
+	const isWhitelisted = dirPath ? isPathWhitelisted(dirPath) : false
+
+	if (isWhitelisted) {
+		// For whitelisted paths, don't respect .gitignore
+		args.push("--no-ignore-vcs")
+	}
+	// Otherwise, ripgrep respects .gitignore by default
 
 	// Apply directory exclusions for recursive searches
+	// But be more selective about hidden directories
 	for (const dir of DIRS_TO_IGNORE) {
+		if (dir === ".*") {
+			// Don't use the broad .* pattern
+			// Instead, we'll handle hidden directories in shouldIncludeDirectory
+			continue
+		}
 		args.push("-g", `!**/${dir}/**`)
 	}
 
@@ -209,7 +277,7 @@ async function listFilteredDirectories(
 					const fullDirPath = path.join(currentPath, dirName)
 
 					// Check if this directory should be included
-					if (shouldIncludeDirectory(dirName, recursive, gitignorePatterns)) {
+					if (shouldIncludeDirectory(dirName, recursive, gitignorePatterns, fullDirPath)) {
 						// Add the directory to our results (with trailing slash)
 						const formattedPath = fullDirPath.endsWith("/") ? fullDirPath : `${fullDirPath}/`
 						directories.push(formattedPath)
@@ -236,20 +304,43 @@ async function listFilteredDirectories(
 /**
  * Determine if a directory should be included in results based on filters
  */
-function shouldIncludeDirectory(dirName: string, recursive: boolean, gitignorePatterns: string[]): boolean {
-	// Skip hidden directories if configured to ignore them
+function shouldIncludeDirectory(
+	dirName: string,
+	recursive: boolean,
+	gitignorePatterns: string[],
+	fullPath: string,
+): boolean {
+	// Always include whitelisted paths
+	if (isPathWhitelisted(fullPath)) {
+		return true
+	}
+
+	// Special handling for hidden directories
 	if (dirName.startsWith(".") && DIRS_TO_IGNORE.includes(".*")) {
+		// Check if this hidden directory might contain whitelisted paths
+		if (mightContainWhitelistedPaths(fullPath)) {
+			// Only allow if it's actually part of a whitelisted path
+			// This ensures we don't accidentally include similar-named directories
+			return true
+		}
+		// Block all other hidden directories
 		return false
 	}
 
 	// Check against explicit ignore patterns
 	if (isDirectoryExplicitlyIgnored(dirName)) {
-		return false
+		// But allow if it might contain whitelisted paths
+		if (!mightContainWhitelistedPaths(fullPath)) {
+			return false
+		}
 	}
 
 	// Check against gitignore patterns in recursive mode
 	if (recursive && gitignorePatterns.length > 0 && isIgnoredByGitignore(dirName, gitignorePatterns)) {
-		return false
+		// But allow if it might contain whitelisted paths
+		if (!mightContainWhitelistedPaths(fullPath)) {
+			return false
+		}
 	}
 
 	return true

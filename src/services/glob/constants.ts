@@ -22,3 +22,10 @@ export const DIRS_TO_IGNORE = [
 	"Pods",
 	".*",
 ]
+
+/**
+ * List of directories that should always be visible in file listings,
+ * even if they are included in .gitignore or are hidden directories.
+ * This is necessary for directories that contain workflow files used by various modes.
+ */
+export const GITIGNORE_WHITELIST = [".roo/temp"]
