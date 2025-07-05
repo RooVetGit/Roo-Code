@@ -7,6 +7,10 @@ import simpleGit from "simple-git"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { isPathInIgnoredDirectory } from "./ignore-utils"
 
+function normalizePath(p: string): string {
+	return p.replace(/\\/g, "/")
+}
+
 /**
  * List files and directories in a given path, with options for recursion and limits.
  * This function respects .gitignore rules and a hardcoded list of ignored directory names.
@@ -17,29 +21,34 @@ import { isPathInIgnoredDirectory } from "./ignore-utils"
  * @returns A tuple containing an array of file paths and a boolean indicating if the limit was reached.
  */
 export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
+	const workspacePath = getWorkspacePath()
 	const specialResult = await handleSpecialDirectories(dirPath)
 	if (specialResult) {
-		return specialResult
+		const relativePaths = specialResult[0].map((p) => normalizePath(path.relative(workspacePath, p)))
+		return [relativePaths, specialResult[1]]
 	}
 
-	const workspacePath = getWorkspacePath()
 	const git = simpleGit(workspacePath)
 	const absoluteDirPath = path.resolve(dirPath)
 
-	let allPaths: string[]
+	let allAbsolutePaths: string[]
 	if (recursive) {
-		allPaths = await listAllFilesRecursively(absoluteDirPath, git, workspacePath)
+		allAbsolutePaths = await listAllFilesRecursively(absoluteDirPath, git, workspacePath)
 	} else {
 		// For non-recursive, we still need to filter
 		const topLevelPaths = await listTopLevelFilesAndDirs(absoluteDirPath)
 		const relPaths = topLevelPaths.map((p) => path.relative(workspacePath, p))
 		const ignored = await git.checkIgnore(relPaths)
 		const ignoredSet = new Set(ignored || [])
-		allPaths = topLevelPaths.filter((p, i) => !ignoredSet.has(relPaths[i]) && !isPathInIgnoredDirectory(p))
+		allAbsolutePaths = topLevelPaths.filter((p, i) => !ignoredSet.has(relPaths[i]) && !isPathInIgnoredDirectory(p))
 	}
 
-	const trimmed = allPaths.slice(0, limit)
-	return [trimmed, allPaths.length > limit]
+	const allRelativePaths = allAbsolutePaths
+		.map((p) => normalizePath(path.relative(workspacePath, p)))
+		.filter((p) => p) // Filter out empty strings from root listing
+
+	const trimmed = allRelativePaths.slice(0, limit)
+	return [trimmed, allRelativePaths.length > limit]
 }
 
 /**
@@ -55,8 +64,7 @@ async function handleSpecialDirectories(dirPath: string): Promise<[string[], boo
 
 	// Do not allow listing files in home directory
 	const homeDir = os.homedir()
-	const isHomeDir = arePathsEqual(absolutePath, homeDir)
-	if (isHomeDir) {
+	if (arePathsEqual(absolutePath, homeDir)) {
 		return [[homeDir], false]
 	}
 
@@ -71,7 +79,7 @@ import type { SimpleGit } from "simple-git"
 async function listAllFilesRecursively(dir: string, git: SimpleGit, workspacePath: string): Promise<string[]> {
 	const result: string[] = []
 	const queue: string[] = [dir]
-	const ignoredSet = new Set<string>()
+	const ignoredSet = new Set<string>() // This set will accumulate all ignored paths relative to workspacePath
 
 	while (queue.length > 0) {
 		const current = queue.shift()!
@@ -87,17 +95,23 @@ async function listAllFilesRecursively(dir: string, git: SimpleGit, workspacePat
 			continue
 		}
 
-		const fullPaths = entries.map((e) => path.join(current, e.name.toString()))
-		const relPaths = fullPaths.map((p) => path.relative(workspacePath, p))
+		// Paths relative to the *current* directory for checkIgnore
+		const currentDirEntryNames = entries.map((e) => e.name.toString())
 
-		// Check which paths are git-ignored
-		const gitIgnored = await git.checkIgnore(relPaths)
-		gitIgnored.forEach((p) => ignoredSet.add(p))
+		// Create a new simple-git instance for the current directory
+		const currentGit = simpleGit(current)
+		const gitIgnoredInCurrentContext = await currentGit.checkIgnore(currentDirEntryNames)
+
+		// Convert ignored paths back to workspace-relative paths and add to the global ignoredSet
+		gitIgnoredInCurrentContext.forEach((ignoredName) => {
+			const fullIgnoredPath = path.join(current, ignoredName)
+			ignoredSet.add(normalizePath(path.relative(workspacePath, fullIgnoredPath)))
+		})
 
 		for (let i = 0; i < entries.length; i++) {
 			const entry = entries[i]
-			const fullPath = fullPaths[i]
-			const relPath = relPaths[i]
+			const fullPath = path.join(current, entry.name.toString())
+			const relPath = normalizePath(path.relative(workspacePath, fullPath))
 
 			if (ignoredSet.has(relPath) || isPathInIgnoredDirectory(fullPath)) {
 				continue

@@ -26,6 +26,10 @@ vi.mock("../../../utils/path", () => ({
 	arePathsEqual: vi.fn(),
 }))
 
+function normalizePath(p: string): string {
+	return p.replace(/\\/g, "/")
+}
+
 describe("listFiles", () => {
 	const workspacePath = path.join(os.tmpdir(), "test-workspace")
 
@@ -59,7 +63,8 @@ describe("listFiles", () => {
 			vi.mocked(arePathsEqual).mockImplementation((a, b) => a === b)
 
 			const [files, limitReached] = await listFiles(root, true, 100)
-			expect(files).toEqual([root])
+			const expected = [normalizePath(path.relative(workspacePath, path.resolve(root)))]
+			expect(files).toEqual(expected)
 			expect(limitReached).toBe(false)
 		})
 
@@ -72,7 +77,8 @@ describe("listFiles", () => {
 			mockReaddir.mockResolvedValue([])
 
 			const [files, limitReached] = await listFiles(root, true, 100)
-			expect(files).toEqual([path.resolve(root)])
+			const expected = [normalizePath(path.relative(workspacePath, path.resolve(root)))]
+			expect(files).toEqual(expected)
 			expect(limitReached).toBe(false)
 			expect(mockReaddir).not.toHaveBeenCalled()
 		})
@@ -83,7 +89,8 @@ describe("listFiles", () => {
 			vi.mocked(arePathsEqual).mockReturnValueOnce(true) // Home
 
 			const [files, limitReached] = await listFiles(home, true, 100)
-			expect(files).toEqual([home])
+			const expected = [normalizePath(path.relative(workspacePath, home))]
+			expect(files).toEqual(expected)
 			expect(limitReached).toBe(false)
 		})
 
@@ -97,7 +104,7 @@ describe("listFiles", () => {
 			mockCheckIgnore.mockResolvedValue([])
 
 			const [files] = await listFiles(dirPath, true, 100)
-			expect(files.some((f) => f.endsWith("regular.js"))).toBe(true)
+			expect(files).toContain("test-dir/regular.js")
 			expect(files.some((f) => f.includes("node_modules"))).toBe(false)
 			// Verify readdir was not called on the ignored directory
 			expect(mockReaddir).toHaveBeenCalledTimes(1)
@@ -115,7 +122,7 @@ describe("listFiles", () => {
 			mockCheckIgnore.mockResolvedValue([])
 
 			const [files, limitReached] = await listFiles(dirPath, false, 100)
-			expect(files).toEqual([path.join(dirPath, "file1.txt"), path.join(dirPath, "dir1")])
+			expect(files).toEqual(["test-dir/file1.txt", "test-dir/dir1"])
 			expect(limitReached).toBe(false)
 		})
 
@@ -132,11 +139,7 @@ describe("listFiles", () => {
 			mockCheckIgnore.mockResolvedValue([])
 
 			const [files, limitReached] = await listFiles(dirPath, true, 100)
-			expect(files).toEqual([
-				path.join(dirPath, "file1.txt"),
-				path.join(dirPath, "subdir"),
-				path.join(dirPath, "subdir", "file2.txt"),
-			])
+			expect(files.sort()).toEqual(["test-dir/file1.txt", "test-dir/subdir", "test-dir/subdir/file2.txt"].sort())
 			expect(limitReached).toBe(false)
 		})
 
@@ -151,7 +154,7 @@ describe("listFiles", () => {
 			mockCheckIgnore.mockResolvedValue([path.join("test-dir", "ignored.txt")])
 
 			const [files, limitReached] = await listFiles(dirPath, false, 100)
-			expect(files).toEqual([path.join(dirPath, "file1.txt")])
+			expect(files).toEqual(["test-dir/file1.txt"])
 			expect(limitReached).toBe(false)
 		})
 
@@ -201,9 +204,20 @@ describe("listFiles", () => {
 
 			const [files] = await listFiles(dirPath, true, 100)
 
-			expect(files).toEqual([path.join(dirPath, "file.txt")])
+			expect(files).toEqual(["test-dir/file.txt"])
 			// Check that readdir was only called for the top-level directory
 			expect(mockReaddir).toHaveBeenCalledTimes(1)
+		})
+
+		it("should return paths with forward slashes, relative to workspace", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [{ name: "file.txt", isDirectory: () => false }]
+			mockReaddir.mockResolvedValue(entries as any)
+			mockCheckIgnore.mockResolvedValue([])
+
+			const [files] = await listFiles(dirPath, false, 100)
+
+			expect(files).toEqual(["test-dir/file.txt"])
 		})
 	})
 
@@ -222,7 +236,7 @@ describe("listFiles", () => {
 			const [files] = await listFiles(dirPath, true, 100)
 
 			// Should still return the readable file
-			expect(files).toEqual([path.join(dirPath, "unreadable"), path.join(dirPath, "file.txt")])
+			expect(files.sort()).toEqual(["test-dir/unreadable", "test-dir/file.txt"].sort())
 			// Should have tried to read both directories
 			expect(mockReaddir).toHaveBeenCalledTimes(2)
 		})
