@@ -28,11 +28,9 @@ const mockClineProvider = {
 			globalStorageUri: { fsPath: "/mock/global/storage" },
 		},
 		setValue: vi.fn(),
-		getValue: vi.fn(),
 	},
 	log: vi.fn(),
 	postStateToWebview: vi.fn(),
-	codeIndexManager: undefined as any,
 } as unknown as ClineProvider
 
 import { t } from "../../../i18n"
