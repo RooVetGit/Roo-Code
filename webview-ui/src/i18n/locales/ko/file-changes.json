@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "변경된 파일",
+		"expand": "파일 목록 펼치기",
+		"collapse": "파일 목록 접기"
+	},
+	"actions": {
+		"accept_all": "모두 승인",
+		"reject_all": "모두 거부",
+		"accept_file": "이 파일의 변경사항 승인",
+		"reject_file": "이 파일의 변경사항 거부",
+		"view_diff": "차이점 보기"
+	},
+	"file_types": {
+		"edit": "편집",
+		"create": "생성",
+		"delete": "삭제"
+	},
+	"line_changes": {
+		"added": "+{{count}}줄",
+		"removed": "-{{count}}줄",
+		"added_removed": "+{{added}}, -{{removed}}줄",
+		"deleted": "삭제됨",
+		"modified": "수정됨"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) 변경된 파일{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "변경된 파일 목록. {{count}}개 파일. {{state}}",
+		"expanded": "펼쳐짐",
+		"collapsed": "접혀짐"
+	}
+}

@@ -11,7 +11,7 @@ import { BaseTelemetryClient } from "./BaseTelemetryClient"
  * Respects user privacy settings and VSCode's global telemetry configuration.
  */
 export class PostHogTelemetryClient extends BaseTelemetryClient {
-	private client: PostHog
+	private client?: PostHog
 	private distinctId: string = vscode.env.machineId
 	// Git repository properties that should be filtered out
 	private readonly gitPropertyNames = ["repositoryUrl", "repositoryName", "defaultBranch"]
@@ -25,7 +25,12 @@ export class PostHogTelemetryClient extends BaseTelemetryClient {
 			debug,
 		)
 
-		this.client = new PostHog(process.env.POSTHOG_API_KEY || "", { host: "https://us.i.posthog.com" })
+		const apiKey = process.env.POSTHOG_API_KEY
+		if (apiKey) {
+			this.client = new PostHog(apiKey, { host: "https://us.i.posthog.com" })
+		} else {
+			console.warn("[PostHogTelemetryClient] POSTHOG_API_KEY is not set. Telemetry will be disabled.")
+		}
 	}
 
 	/**
@@ -42,11 +47,10 @@ export class PostHogTelemetryClient extends BaseTelemetryClient {
 	}
 
 	public override async capture(event: TelemetryEvent): Promise<void> {
-		if (!this.isTelemetryEnabled() || !this.isEventCapturable(event.event)) {
-			if (this.debug) {
+		if (!this.client || !this.isTelemetryEnabled() || !this.isEventCapturable(event.event)) {
+			if (this.debug && this.client) {
 				console.info(`[PostHogTelemetryClient#capture] Skipping event: ${event.event}`)
 			}
-
 			return
 		}
 
@@ -80,6 +84,9 @@ export class PostHogTelemetryClient extends BaseTelemetryClient {
 		}
 
 		// Update PostHog client state based on telemetry preference.
+		if (!this.client) {
+			return
+		}
 		if (this.telemetryEnabled) {
 			this.client.optIn()
 		} else {
@@ -88,6 +95,8 @@ export class PostHogTelemetryClient extends BaseTelemetryClient {
 	}
 
 	public override async shutdown(): Promise<void> {
-		await this.client.shutdown()
+		if (this.client) {
+			await this.client.shutdown()
+		}
 	}
 }

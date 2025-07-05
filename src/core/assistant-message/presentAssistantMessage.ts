@@ -1,5 +1,7 @@
 import cloneDeep from "clone-deep"
 import { serializeError } from "serialize-error"
+import * as vscode from "vscode"
+import * as path from "path"
 
 import type { ToolName, ClineAsk, ToolProgressStatus } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -524,9 +526,8 @@ export async function presentAssistantMessage(cline: Task) {
 	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearCheckpointPossibleFile()
 
 	if (recentlyModifiedFiles.length > 0) {
-		// TODO: We can track what file changes were made and only
-		// checkpoint those files, this will be save storage.
-		await checkpointSave(cline)
+		const fileUris = recentlyModifiedFiles.map((p) => vscode.Uri.file(path.join(cline.cwd, p)))
+		await checkpointSave(cline, false, fileUris)
 	}
 
 	// Seeing out of bounds is fine, it means that the next too call is being

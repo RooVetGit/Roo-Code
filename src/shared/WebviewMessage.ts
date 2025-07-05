@@ -40,6 +40,7 @@ export interface WebviewMessage {
 		| "alwaysAllowFollowupQuestions"
 		| "followupAutoApproveTimeoutMs"
 		| "webviewDidLaunch"
+		| "webviewReady"
 		| "newTask"
 		| "askResponse"
 		| "terminalOperation"
@@ -163,6 +164,12 @@ export interface WebviewMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "focusPanelRequest"
+		| "codebaseIndexConfig"
+		| "viewDiff"
+		| "acceptFileChange"
+		| "rejectFileChange"
+		| "acceptAllFileChanges"
+		| "rejectAllFileChanges"
 		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
 		| "openExternal"
@@ -175,8 +182,8 @@ export interface WebviewMessage {
 		| "marketplaceInstallResult"
 		| "fetchMarketplaceData"
 		| "switchTab"
-		| "profileThresholds"
 		| "shareTaskSuccess"
+		| "filesChangedEnabled"
 		| "exportMode"
 		| "exportModeResult"
 		| "importMode"
@@ -217,6 +224,8 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	command?: string // Added for new message types sent from webview
+	uri?: string // Added for file URIs in new message types
 	filters?: { type?: string; search?: string; tags?: string[] }
 	url?: string // For openExternal
 	mpItem?: MarketplaceItem
@@ -243,6 +252,12 @@ export interface WebviewMessage {
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
 	}
+}
+
+export interface Terminal {
+	pid: number
+	name: string
+	cwd: string
 }
 
 export const checkoutDiffPayloadSchema = z.object({

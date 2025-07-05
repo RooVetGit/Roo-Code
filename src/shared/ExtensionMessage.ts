@@ -49,6 +49,8 @@ export interface LanguageModelChatSelector {
 // Represents JSON data that is sent from extension to webview, called
 // ExtensionMessage and has 'type' enum which can be 'plusButtonClicked' or
 // 'settingsButtonClicked' or 'hello'. Webview will hold state.
+import type { ClineSay, FileChangeset } from "@roo-code/types"
+
 export interface ExtensionMessage {
 	type:
 		| "action"
@@ -100,6 +102,8 @@ export interface ExtensionMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "codebaseIndexConfig"
+		| "filesChanged"
+		| "say" // Added 'say' type here
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
@@ -151,6 +155,8 @@ export interface ExtensionMessage {
 	items?: MarketplaceItem[]
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
+	filesChanged?: FileChangeset // Added filesChanged property
+	say?: ClineSay // Added say property
 	tab?: string
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
@@ -275,6 +281,7 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	filesChangedEnabled: boolean
 }
 
 export interface ClineSayTool {

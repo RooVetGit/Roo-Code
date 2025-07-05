@@ -15,6 +15,7 @@ import {
 	Webhook,
 	GitBranch,
 	Bell,
+	Monitor,
 	Database,
 	SquareTerminal,
 	FlaskConical,
@@ -58,6 +59,7 @@ import { AutoApproveSettings } from "./AutoApproveSettings"
 import { BrowserSettings } from "./BrowserSettings"
 import { CheckpointSettings } from "./CheckpointSettings"
 import { NotificationSettings } from "./NotificationSettings"
+import { InterfaceSettings } from "./InterfaceSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
 import { TerminalSettings } from "./TerminalSettings"
 import { ExperimentalSettings } from "./ExperimentalSettings"
@@ -84,6 +86,7 @@ const sectionNames = [
 	"browser",
 	"checkpoints",
 	"notifications",
+	"interface",
 	"contextManagement",
 	"terminal",
 	"prompts",
@@ -174,6 +177,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		codebaseIndexModels,
 		customSupportPrompts,
 		profileThresholds,
+		filesChangedEnabled,
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
 	} = cachedState
@@ -280,6 +284,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "autoCondenseContextPercent", value: autoCondenseContextPercent })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
+			vscode.postMessage({ type: "filesChangedEnabled", bool: filesChangedEnabled })
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
 			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
@@ -398,6 +403,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "browser", icon: SquareMousePointer },
 			{ id: "checkpoints", icon: GitBranch },
 			{ id: "notifications", icon: Bell },
+			{ id: "interface", icon: Monitor },
 			{ id: "contextManagement", icon: Database },
 			{ id: "terminal", icon: SquareTerminal },
 			{ id: "prompts", icon: MessageSquare },
@@ -639,6 +645,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							ttsSpeed={ttsSpeed}
 							soundEnabled={soundEnabled}
 							soundVolume={soundVolume}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
+
+					{/* Interface Section */}
+					{activeTab === "interface" && (
+						<InterfaceSettings
+							filesChangedEnabled={filesChangedEnabled}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

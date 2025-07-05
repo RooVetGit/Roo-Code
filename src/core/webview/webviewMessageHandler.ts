@@ -723,6 +723,11 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("soundEnabled", soundEnabled)
 			await provider.postStateToWebview()
 			break
+		case "filesChangedEnabled":
+			const filesChangedEnabled = message.bool ?? true
+			await updateGlobalState("filesChangedEnabled", filesChangedEnabled)
+			await provider.postStateToWebview()
+			break
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
 			await updateGlobalState("soundVolume", soundVolume)
@@ -964,6 +969,7 @@ export const webviewMessageHandler = async (
 					...currentState,
 					customModePrompts: updatedPrompts,
 					hasOpenedModeSelector: currentState.hasOpenedModeSelector ?? false,
+					filesChangedEnabled: currentState.filesChangedEnabled ?? true,
 				}
 				provider.postMessageToWebview({ type: "state", state: stateWithPrompts })
 

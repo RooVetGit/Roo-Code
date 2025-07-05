@@ -539,6 +539,7 @@ describe("ClineProvider", () => {
 			sharingEnabled: false,
 			profileThresholds: {},
 			hasOpenedModeSelector: false,
+			filesChangedEnabled: true,
 		}
 
 		const message: ExtensionMessage = {

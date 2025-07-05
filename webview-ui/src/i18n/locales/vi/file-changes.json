@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "Tệp Đã Thay Đổi",
+		"expand": "Mở rộng danh sách tệp",
+		"collapse": "Thu gọn danh sách tệp"
+	},
+	"actions": {
+		"accept_all": "Chấp Nhận Tất Cả",
+		"reject_all": "Từ Chối Tất Cả",
+		"accept_file": "Chấp nhận thay đổi cho tệp này",
+		"reject_file": "Từ chối thay đổi cho tệp này",
+		"view_diff": "Xem Sự Khác Biệt"
+	},
+	"file_types": {
+		"edit": "chỉnh sửa",
+		"create": "tạo",
+		"delete": "xóa"
+	},
+	"line_changes": {
+		"added": "+{{count}} dòng",
+		"removed": "-{{count}} dòng",
+		"added_removed": "+{{added}}, -{{removed}} dòng",
+		"deleted": "đã xóa",
+		"modified": "đã sửa đổi"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) Tệp Đã Thay Đổi{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "Danh sách tệp đã thay đổi. {{count}} tệp. {{state}}",
+		"expanded": "Đã mở rộng",
+		"collapsed": "Đã thu gọn"
+	}
+}
