@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
 import { OpenAICompatibleEmbedder } from "./embedders/openai-compatible"
+import { GeminiEmbedder } from "./embedders/gemini"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
@@ -29,7 +30,9 @@ export class CodeIndexServiceFactory {
 		const provider = config.embedderProvider as EmbedderProvider
 
 		if (provider === "openai") {
-			if (!config.openAiOptions?.openAiNativeApiKey) {
+			const apiKey = config.openAiOptions?.openAiNativeApiKey
+
+			if (!apiKey) {
 				throw new Error("OpenAI configuration missing for embedder creation")
 			}
 			return new OpenAiEmbedder({
@@ -53,6 +56,11 @@ export class CodeIndexServiceFactory {
 				config.openAiCompatibleOptions.apiKey,
 				config.modelId,
 			)
+		} else if (provider === "gemini") {
+			if (!config.geminiOptions?.apiKey) {
+				throw new Error("Gemini configuration missing for embedder creation")
+			}
+			return new GeminiEmbedder(config.geminiOptions.apiKey)
 		}
 
 		throw new Error(`Invalid embedder type configured: ${config.embedderProvider}`)
@@ -78,6 +86,9 @@ export class CodeIndexServiceFactory {
 				// Fallback if not provided or invalid in openAiCompatibleOptions
 				vectorSize = getModelDimension(provider, modelId)
 			}
+		} else if (provider === "gemini") {
+			// Gemini's text-embedding-004 has a fixed dimension of 768
+			vectorSize = 768
 		} else {
 			vectorSize = getModelDimension(provider, modelId)
 		}
