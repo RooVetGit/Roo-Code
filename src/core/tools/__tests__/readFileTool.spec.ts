@@ -181,6 +181,13 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
 		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
 
+		// Setup default API handler that supports images
+		mockCline.api = {
+			getModel: vi.fn().mockReturnValue({
+				info: { supportsImages: true }
+			})
+		}
+
 		toolResult = undefined
 	})
 
@@ -437,6 +444,13 @@ describe("read_file tool XML output structure", () => {
 		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
 		mockCline.didRejectTool = false
 
+		// Mock the API handler - required for image support check
+		mockCline.api = {
+			getModel: vi.fn().mockReturnValue({
+				info: { supportsImages: true }
+			})
+		}
+
 		toolResult = undefined
 	})
 
@@ -625,6 +639,13 @@ describe("read_file tool with image support", () => {
 		mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
 		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
 
+		// Setup default API handler that supports images
+		mockCline.api = {
+			getModel: vi.fn().mockReturnValue({
+				info: { supportsImages: true }
+			})
+		}
+
 		toolResult = undefined
 	})
 
@@ -777,6 +798,66 @@ describe("read_file tool with image support", () => {
 			expect(imagePart).toBeDefined()
 			expect(imagePart.source.media_type).toBe("image/png")
 			expect(imagePart.source.data).toBe(largeBase64)
+		})
+
+		it("should exclude images when model does not support images", async () => {
+			// Setup - mock API handler that doesn't support images
+			mockCline.api = {
+				getModel: vi.fn().mockReturnValue({
+					info: { supportsImages: false }
+				})
+			}
+
+			// Execute
+			const result = await executeReadImageTool()
+
+			// When images are not supported, the tool should return just XML (not call formatResponse.toolResult)
+			expect(toolResultMock).not.toHaveBeenCalled()
+			expect(typeof result).toBe("string")
+			expect(result).toContain(`<file><path>${testImagePath}</path>`)
+			expect(result).toContain(`<notice>Image file`)
+		})
+
+		it("should include images when model supports images", async () => {
+			// Setup - mock API handler that supports images
+			mockCline.api = {
+				getModel: vi.fn().mockReturnValue({
+					info: { supportsImages: true }
+				})
+			}
+
+			// Execute
+			const result = await executeReadImageTool()
+
+			// Verify toolResultMock was called with images
+			expect(toolResultMock).toHaveBeenCalledTimes(1)
+			const callArgs = toolResultMock.mock.calls[0]
+			const textArg = callArgs[0]
+			const imagesArg = callArgs[1]
+
+			expect(textArg).toContain(`<file><path>${testImagePath}</path>`)
+			expect(imagesArg).toBeDefined() // Images should be included
+			expect(imagesArg).toBeInstanceOf(Array)
+			expect(imagesArg!.length).toBe(1)
+			expect(imagesArg![0]).toBe(`data:image/png;base64,${base64ImageData}`)
+		})
+
+		it("should handle undefined supportsImages gracefully", async () => {
+			// Setup - mock API handler with undefined supportsImages
+			mockCline.api = {
+				getModel: vi.fn().mockReturnValue({
+					info: { supportsImages: undefined }
+				})
+			}
+
+			// Execute
+			const result = await executeReadImageTool()
+
+			// When supportsImages is undefined, should default to false and return just XML
+			expect(toolResultMock).not.toHaveBeenCalled()
+			expect(typeof result).toBe("string")
+			expect(result).toContain(`<file><path>${testImagePath}</path>`)
+			expect(result).toContain(`<notice>Image file`)
 		})
 
 		it("should handle errors when reading image files", async () => {

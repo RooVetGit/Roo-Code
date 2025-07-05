@@ -702,12 +702,16 @@ export async function readFileTool(
 		// Combine all images: feedback images first, then file images
 		const allImages = [...feedbackImages, ...fileImageUrls]
 
+		// Check if the current model supports images before including them
+		const supportsImages = cline.api.getModel().info.supportsImages ?? false
+		const imagesToInclude = supportsImages ? allImages : []
+
 		// Push the result with appropriate formatting
-		if (statusMessage || allImages.length > 0) {
+		if (statusMessage || imagesToInclude.length > 0) {
 			// Always use formatResponse.toolResult when we have a status message or images
 			const result = formatResponse.toolResult(
 				statusMessage || filesXml,
-				allImages.length > 0 ? allImages : undefined,
+				imagesToInclude.length > 0 ? imagesToInclude : undefined,
 			)
 
 			// Handle different return types from toolResult
