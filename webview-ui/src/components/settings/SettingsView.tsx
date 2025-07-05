@@ -178,7 +178,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		profileThresholds,
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
-		// File editing settings from root context
 		diffEnabled,
 		diffViewAutoFocus,
 		autoCloseRooTabs,
