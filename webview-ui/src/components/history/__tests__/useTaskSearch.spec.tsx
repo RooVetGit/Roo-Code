@@ -52,14 +52,20 @@ const mockTaskHistory: HistoryItem[] = [
 ]
 
 describe("useTaskSearch", () => {
+	let showAllWorkspacesTasks = false
+	const setShowAllWorkspacesTasks = vi.fn().mockImplementation((value) => {
+		showAllWorkspacesTasks = value
+	})
+
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mockUseExtensionState.mockReturnValue({
+		showAllWorkspacesTasks = false
+		mockUseExtensionState.mockImplementation(() => ({
 			taskHistory: mockTaskHistory,
 			cwd: "/workspace/project1",
-			showAllWorkspacesTasks: false,
-			setShowAllWorkspacesTasks: vi.fn(),
-		} as any)
+			showAllWorkspacesTasks,
+			setShowAllWorkspacesTasks,
+		}))
 	})
 
 	it("returns all tasks by default", () => {
@@ -78,22 +84,24 @@ describe("useTaskSearch", () => {
 	})
 
 	it("shows all workspaces when showAllWorkspacesTasks is true", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
 		act(() => {
 			result.current.setShowAllWorkspacesTasks(true)
 		})
+		rerender()
 
 		expect(result.current.tasks).toHaveLength(3)
 		expect(result.current.showAllWorkspacesTasks).toBe(true)
 	})
 
 	it("sorts by newest by default", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
 		act(() => {
 			result.current.setShowAllWorkspacesTasks(true)
 		})
+		rerender()
 
 		expect(result.current.sortOption).toBe("newest")
 		expect(result.current.tasks[0].id).toBe("task-2") // Feb 17
@@ -102,12 +110,13 @@ describe("useTaskSearch", () => {
 	})
 
 	it("sorts by oldest", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
 		act(() => {
 			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSortOption("oldest")
 		})
+		rerender()
 
 		expect(result.current.tasks[0].id).toBe("task-3") // Feb 15
 		expect(result.current.tasks[1].id).toBe("task-1") // Feb 16
@@ -115,12 +124,13 @@ describe("useTaskSearch", () => {
 	})
 
 	it("sorts by most expensive", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
 		act(() => {
 			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSortOption("mostExpensive")
 		})
+		rerender()
 
 		expect(result.current.tasks[0].id).toBe("task-3") // $0.05
 		expect(result.current.tasks[1].id).toBe("task-2") // $0.02
@@ -128,12 +138,13 @@ describe("useTaskSearch", () => {
 	})
 
 	it("sorts by most tokens", () => {
-		const { result } = renderHook(() => useTaskSearch())
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
 		act(() => {
 			result.current.setShowAllWorkspacesTasks(true)
 			result.current.setSortOption("mostTokens")
 		})
+		rerender()
 
 		// task-2: 200 + 100 + 25 + 10 = 335 tokens
 		// task-3: 150 + 75 = 225 tokens
@@ -246,16 +257,19 @@ describe("useTaskSearch", () => {
 			},
 		] as HistoryItem[]
 
-		mockUseExtensionState.mockReturnValue({
+		mockUseExtensionState.mockImplementation(() => ({
 			taskHistory: incompleteTaskHistory,
 			cwd: "/workspace/project1",
-		} as any)
+			showAllWorkspacesTasks,
+			setShowAllWorkspacesTasks,
+		}))
 
-		const { result } = renderHook(() => useTaskSearch())
+		const { result, rerender } = renderHook(() => useTaskSearch())
 
 		act(() => {
 			result.current.setShowAllWorkspacesTasks(true)
 		})
+		rerender()
 
 		// Should only include tasks with both ts and task content
 		expect(result.current.tasks).toHaveLength(3)
