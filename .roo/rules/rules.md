@@ -1,6 +1,7 @@
 # Code Quality Rules
 
 1. Test Coverage:
+
     - Before attempting completion, always make sure that any code changes have test coverage
     - Ensure all tests pass before submitting changes
     - The vitest framework is used for testing; the `describe`, `test`, `it`, etc functions are defined by default in `tsconfig.json` and therefore don't need to be imported
@@ -13,6 +14,7 @@
     - Example: For `src/tests/user.test.ts`, run `cd src && npx vitest tests/user.test.ts` NOT `npx vitest src/tests/user.test.ts`
 
 2. Lint Rules:
+
     - Never disable any lint rules without explicit user approval
 
 3. Styling Guidelines:
