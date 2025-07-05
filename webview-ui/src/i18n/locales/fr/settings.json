@@ -254,6 +254,52 @@
 		"cacheUsageNote": "Remarque : Si vous ne voyez pas l'utilisation du cache, essayez de sélectionner un modèle différent puis de sélectionner à nouveau votre modèle souhaité.",
 		"vscodeLmModel": "Modèle de langage",
 		"vscodeLmWarning": "Remarque : Il s'agit d'une intégration très expérimentale et le support des fournisseurs variera. Si vous recevez une erreur concernant un modèle non pris en charge, c'est un problème du côté du fournisseur.",
+		"geminiParameters": {
+			"topK": {
+				"title": "Top K",
+				"description": "Contrôle le nombre de tokens les plus probables à considérer à chaque étape. Des valeurs plus élevées augmentent la diversité, des valeurs plus faibles rendent la sortie plus ciblée et déterministe."
+			},
+			"topP": {
+				"title": "Top P",
+				"description": "Contrôle la probabilité cumulée des tokens à considérer (échantillonnage nucleus). Des valeurs proches de 1,0 augmentent la diversité, tandis que des valeurs plus faibles rendent la sortie plus ciblée."
+			},
+			"maxOutputTokens": {
+				"title": "Nombre maximal de tokens de sortie",
+				"description": "Nombre maximal de tokens que le modèle peut générer dans une seule réponse. Des valeurs plus élevées permettent des réponses plus longues mais augmentent l'utilisation des tokens et les coûts."
+			},
+			"urlContext": {
+				"title": "Activer le contexte d'URL",
+				"description": "Permet à Gemini d'accéder et de traiter les URL pour un contexte supplémentaire lors de la génération des réponses. Utile pour les tâches nécessitant l'analyse de contenu web."
+			},
+			"groundingSearch": {
+				"title": "Activer la mise en contexte via la recherche Google",
+				"description": "Permet à Gemini d'effectuer des recherches sur Google pour obtenir des informations actuelles et fonder les réponses sur des données en temps réel. Utile pour les requêtes nécessitant des informations à jour."
+			},
+			"contextLimit": {
+				"title": "Limite de contexte",
+				"description": "Nombre maximum de messages précédents à inclure dans le contexte. Des valeurs plus faibles réduisent l'utilisation des tokens et les coûts, mais peuvent limiter la continuité de la conversation."
+			}
+		},
+		"geminiSections": {
+			"modelParameters": "Paramètres du modèle",
+			"advancedFeatures": "Fonctionnalités avancées",
+			"geminiTokentManagement": "Gestion des jetons"
+		},
+		"geminiTokentManagement": {
+			"useCustomContextWindow": "Use custom context window limit",
+			"description": "Override the model's default context window.",
+			"modelDefault": "Model's default context window",
+			"condensingThreshold": {
+				"tokens": "tokens",
+				"title": "Context Condensing Threshold",
+				"description": "Set the percentage of context window usage that triggers automatic condensing. Note: If the calculated token limit (after reserving space for output and safety buffers) is lower than this percentage, the token limit will trigger condensing instead.",
+				"condensingtriggerAt": "Condensing will trigger at",
+				"tokenLimitTriggered": "due to token limit, not percentage",
+				"availableContext": "Available context window",
+				"tokenLimitTrigger": "Token limit trigger (after reserving output tokens and safety buffer)",
+				"actualTrigger": "Actual trigger (minimum of percentage and token limit)"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Pour utiliser Google Cloud Vertex AI, vous devez :",
 			"step1": "1. Créer un compte Google Cloud, activer l'API Vertex AI et activer les modèles Claude souhaités.",
@@ -352,6 +398,21 @@
 			"pathLabel": "Chemin du code Claude",
 			"description": "Chemin facultatif vers votre CLI Claude Code. La valeur par défaut est 'claude' si non défini.",
 			"placeholder": "Défaut : claude"
+		},
+		"geminiContextManagement": {
+			"useCustomContextWindow": "Use custom context window limit",
+			"description": "Override the model's default context window.",
+			"modelDefault": "Model's default context window",
+			"condensingThreshold": {
+				"tokens": "tokens",
+				"title": "Context Condensing Threshold",
+				"description": "Set the percentage of context window usage that triggers automatic condensing. Note: If the calculated token limit (after reserving space for output and safety buffers) is lower than this percentage, the token limit will trigger condensing instead.",
+				"condensingtriggerAt": "Condensing will trigger at",
+				"tokenLimitTriggered": "due to token limit, not percentage",
+				"availableContext": "Available context window",
+				"tokenLimitTrigger": "Token limit trigger (after reserving output tokens and safety buffer)",
+				"actualTrigger": "Actual trigger (minimum of percentage and token limit)"
+			}
 		}
 	},
 	"browser": {
