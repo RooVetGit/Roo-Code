@@ -1916,7 +1916,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		return getApiMetrics(this.combineMessages(this.clineMessages.slice(1)))
 	}
 
-	public recordToolUsage(toolName: ToolName, parameters: any, result: any) {
+	public recordToolUsage(toolName: ToolName, parameters: any, result?: any) {
 		if (!this.toolUsage[toolName]) {
 			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
 		}
@@ -1924,13 +1924,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.logger?.logToolCall(toolName, parameters, result)
 	}
 
-	public recordToolError(toolName: ToolName, parameters: any, error?: string) {
+	public recordToolError(toolName: ToolName, parameters: any, error?: any) {
 		if (!this.toolUsage[toolName]) {
 			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
 		}
 
 		this.toolUsage[toolName].failures++
-		this.logger?.logToolCall(toolName, parameters, { error })
+		this.logger?.logToolCall(toolName, parameters, error)
 
 		if (error) {
 			this.emit("taskToolFailed", this.taskId, toolName, error)

@@ -40,7 +40,8 @@
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",
 		"turbo": "^2.5.3",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+		"@types/node": "^20.11.25"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,css,md}": [

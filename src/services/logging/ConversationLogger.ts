@@ -75,7 +75,7 @@ export class ConversationLogger {
 			type: "tool_call",
 			tool_name: toolName,
 			parameters: parameters,
-			result: result,
+			result: typeof result === "string" ? result : JSON.stringify(result),
 		}
 		await this.appendToLog(entry)
 	}
