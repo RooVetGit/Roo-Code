@@ -96,6 +96,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
 		alwaysAllowFollowupQuestions,
+		alwaysAllowUpdateTodoList,
 		customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
@@ -127,6 +128,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// task, then the extension is in a bad state and needs to be debugged (see
 	// Cline.abort).
 	const task = useMemo(() => messages.at(0), [messages])
+
+	const latestTodos = useMemo(() => {
+		for (let i = messages.length - 1; i >= 0; i--) {
+			const msg = messages[i]
+			if (msg.type === "ask" && msg.ask === "tool" && msg.text) {
+				const tool = JSON.parse(msg.text)
+				if (tool.tool === "updateTodoList" && Array.isArray(tool.todos)) {
+					return tool.todos
+				}
+			}
+		}
+		return []
+	}, [messages])
 
 	const modifiedMessages = useMemo(() => combineApiRequests(combineCommandSequences(messages.slice(1))), [messages])
 
@@ -907,6 +921,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					return false
 				}
 
+				if (tool?.tool === "updateTodoList") {
+					return alwaysAllowUpdateTodoList
+				}
+
 				if (tool?.tool === "fetchInstructions") {
 					if (tool.content === "create_mode") {
 						return alwaysAllowModeSwitch
@@ -960,6 +978,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			alwaysAllowModeSwitch,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowSubtasks,
+			alwaysAllowUpdateTodoList,
 		],
 	)
 
@@ -1280,6 +1299,24 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					onSuggestionClick={handleSuggestionClickInRow} // This was already stabilized
 					onBatchFileResponse={handleBatchFileResponse}
 					onFollowUpUnmount={handleFollowUpUnmount}
+					editable={
+						messageOrGroup.type === "ask" &&
+						messageOrGroup.ask === "tool" &&
+						(() => {
+							let tool: any = {}
+							try {
+								tool = JSON.parse(messageOrGroup.text || "{}")
+							} catch (_) {
+								if (messageOrGroup.text?.includes("updateTodoList")) {
+									tool = { tool: "updateTodoList" }
+								}
+							}
+							if (tool.tool === "updateTodoList" && alwaysAllowUpdateTodoList) {
+								return false
+							}
+							return tool.tool === "updateTodoList" && enableButtons && !!primaryButtonText
+						})()
+					}
 				/>
 			)
 		},
@@ -1293,6 +1330,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			handleSuggestionClickInRow,
 			handleBatchFileResponse,
 			handleFollowUpUnmount,
+			alwaysAllowUpdateTodoList,
+			enableButtons,
+			primaryButtonText,
 		],
 	)
 
@@ -1453,6 +1493,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						buttonsDisabled={sendingDisabled}
 						handleCondenseContext={handleCondenseContext}
 						onClose={handleTaskCloseButtonClick}
+						todos={latestTodos}
 					/>
 
 					{hasSystemPromptOverride && (
