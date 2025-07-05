@@ -169,22 +169,23 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
 		try {
-			const { id: model } = this.getModel()
-
-			const response = await this.client.models.countTokens({
-				model,
-				contents: convertAnthropicContentToGemini(content),
-			})
-
-			if (response.totalTokens === undefined) {
-				console.warn("Gemini token counting returned undefined, using fallback")
-				return super.countTokens(content)
-			}
-
-			return response.totalTokens
+			return await super.countTokens(content)
 		} catch (error) {
-			console.warn("Gemini token counting failed, using fallback", error)
-			return super.countTokens(content)
+			console.warn("Gemini local token counting failed, falling back to remote API", error)
+			try {
+				const { id: model } = this.getModel()
+				const response = await this.client.models.countTokens({
+					model,
+					contents: convertAnthropicContentToGemini(content),
+				})
+				if (response.totalTokens !== undefined) {
+					return response.totalTokens
+				}
+				console.warn("Gemini remote token counting returned undefined, falling back to 0")
+			} catch (remoteError) {
+				console.warn("Gemini remote token counting failed, falling back to 0", remoteError)
+			}
+			return 0
 		}
 	}
 
