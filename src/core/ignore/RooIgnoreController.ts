@@ -3,6 +3,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import fs from "fs/promises"
 import ignore, { Ignore } from "ignore"
 import * as vscode from "vscode"
+import { GITIGNORE_WHITELIST } from "../../services/glob/constants"
 
 export const LOCK_TEXT_SYMBOL = "\u{1F512}"
 
@@ -14,7 +15,9 @@ export const LOCK_TEXT_SYMBOL = "\u{1F512}"
 export class RooIgnoreController {
 	private cwd: string
 	private ignoreInstance: Ignore
+	private gitignoreInstance: Ignore | null = null
 	private disposables: vscode.Disposable[] = []
+	private whitelist = GITIGNORE_WHITELIST
 	rooIgnoreContent: string | undefined
 
 	constructor(cwd: string) {
@@ -31,6 +34,7 @@ export class RooIgnoreController {
 	 */
 	async initialize(): Promise<void> {
 		await this.loadRooIgnore()
+		await this.loadGitignore()
 	}
 
 	/**
@@ -76,6 +80,75 @@ export class RooIgnoreController {
 		} catch (error) {
 			// Should never happen: reading file failed even though it exists
 			console.error("Unexpected error loading .rooignore:", error)
+		}
+	}
+
+	/**
+	 * Load patterns from .gitignore if it exists
+	 */
+	async loadGitignore(): Promise<void> {
+		try {
+			this.gitignoreInstance = ignore()
+			const gitignorePath = path.join(this.cwd, ".gitignore")
+			if (await fileExistsAtPath(gitignorePath)) {
+				const content = await fs.readFile(gitignorePath, "utf8")
+				this.gitignoreInstance.add(content)
+			}
+		} catch (error) {
+			console.error("Error loading .gitignore:", error)
+			this.gitignoreInstance = null
+		}
+	}
+
+	/**
+	 * Check if a path is whitelisted
+	 * @param filePath - Path to check (relative to cwd)
+	 * @returns true if path is whitelisted
+	 */
+	isWhitelisted(filePath: string): boolean {
+		// Convert to relative path if absolute
+		let relativePath: string
+		if (path.isAbsolute(filePath)) {
+			relativePath = path.relative(this.cwd, filePath)
+		} else {
+			relativePath = filePath
+		}
+
+		// Normalize the path
+		const normalizedPath = path.normalize(relativePath).replace(/\\/g, "/")
+
+		return this.whitelist.some((pattern) => {
+			const normalizedPattern = path.normalize(pattern).replace(/\\/g, "/")
+			// Check if this is the whitelisted path or under it
+			return (
+				normalizedPath === normalizedPattern ||
+				normalizedPath.startsWith(normalizedPattern + "/") ||
+				// Check if this is a parent of the whitelisted path
+				normalizedPattern.startsWith(normalizedPath + "/")
+			)
+		})
+	}
+
+	/**
+	 * Check if a path is ignored by gitignore (considering whitelist)
+	 * @param filePath - Path to check (relative to cwd)
+	 * @returns true if path is ignored by gitignore and not whitelisted
+	 */
+	isGitignored(filePath: string): boolean {
+		if (!this.gitignoreInstance) {
+			return false
+		}
+
+		// Check whitelist first
+		if (this.isWhitelisted(filePath)) {
+			return false
+		}
+
+		try {
+			const relativePath = path.relative(this.cwd, path.resolve(this.cwd, filePath)).replace(/\\/g, "/")
+			return this.gitignoreInstance.ignores(relativePath)
+		} catch (error) {
+			return false
 		}
 	}
 
