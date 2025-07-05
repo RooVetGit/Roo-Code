@@ -68,6 +68,7 @@ describe("FilesChangedOverview", () => {
 		organizationAllowList: [],
 		cloudIsAuthenticated: false,
 		sharingEnabled: false,
+		filesChangedEnabled: true,
 		hasOpenedModeSelector: false,
 		setHasOpenedModeSelector: () => {},
 		condensingApiConfigId: "",

@@ -26,6 +26,7 @@
 		"browser": "Browser",
 		"checkpoints": "Checkpoint",
 		"notifications": "Notifikasi",
+		"interface": "Antarmuka",
 		"contextManagement": "Konteks",
 		"terminal": "Terminal",
 		"prompts": "Prompt",
@@ -696,5 +697,15 @@
 		"useCustomArn": "Gunakan ARN kustom..."
 	},
 	"includeMaxOutputTokens": "Sertakan token output maksimum",
-	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini."
+	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini.",
+	"interface": {
+		"description": "Kontrol tampilan dan perilaku elemen antarmuka pengguna",
+		"filesChanged": {
+			"title": "Ikhtisar File yang Diubah",
+			"enabled": {
+				"label": "Tampilkan ikhtisar file yang diubah",
+				"description": "Menampilkan ikhtisar file yang dimodifikasi oleh AI selama percakapan. Saat dinonaktifkan, bagian file yang diubah akan disembunyikan dari antarmuka."
+			}
+		}
+	}
 }

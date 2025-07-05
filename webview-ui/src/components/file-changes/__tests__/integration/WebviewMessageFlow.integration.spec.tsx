@@ -123,6 +123,7 @@ describe("FilesChangedOverview Webview Message Flow Integration", () => {
 			organizationAllowList: [],
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
+			filesChangedEnabled: true,
 			hasOpenedModeSelector: false,
 			setHasOpenedModeSelector: () => {},
 			condensingApiConfigId: "",

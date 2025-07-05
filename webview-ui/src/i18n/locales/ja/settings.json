@@ -26,6 +26,7 @@
 		"browser": "コンピューターアクセス",
 		"checkpoints": "チェックポイント",
 		"notifications": "通知",
+		"interface": "インターフェース",
 		"contextManagement": "コンテキスト",
 		"terminal": "ターミナル",
 		"prompts": "プロンプト",
@@ -667,5 +668,15 @@
 		"useCustomArn": "カスタム ARN を使用..."
 	},
 	"includeMaxOutputTokens": "最大出力トークンを含める",
-	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。",
+	"interface": {
+		"description": "ユーザーインターフェース要素の外観と動作を制御します",
+		"filesChanged": {
+			"title": "変更されたファイルの概要",
+			"enabled": {
+				"label": "変更されたファイルの概要を表示",
+				"description": "会話中にAIによって変更されたファイルの概要を表示します。無効にすると、変更されたファイルセクションがインターフェースから非表示になります。"
+			}
+		}
+	}
 }

@@ -26,6 +26,7 @@
 		"browser": "Accesso computer",
 		"checkpoints": "Punti di controllo",
 		"notifications": "Notifiche",
+		"interface": "Interfaccia",
 		"contextManagement": "Contesto",
 		"terminal": "Terminal",
 		"prompts": "Prompt",
@@ -667,5 +668,15 @@
 		"useCustomArn": "Usa ARN personalizzato..."
 	},
 	"includeMaxOutputTokens": "Includi token di output massimi",
-	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo."
+	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo.",
+	"interface": {
+		"description": "Controlla l'aspetto e il comportamento degli elementi dell'interfaccia utente",
+		"filesChanged": {
+			"title": "Panoramica File Modificati",
+			"enabled": {
+				"label": "Mostra panoramica dei file modificati",
+				"description": "Visualizza una panoramica dei file modificati dall'IA durante la conversazione. Quando disabilitato, la sezione file modificati sarà nascosta dall'interfaccia."
+			}
+		}
+	}
 }

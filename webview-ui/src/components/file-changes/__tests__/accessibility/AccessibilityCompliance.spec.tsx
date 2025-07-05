@@ -66,6 +66,7 @@ describe("FilesChangedOverview Accessibility Compliance", () => {
 		organizationAllowList: [],
 		cloudIsAuthenticated: false,
 		sharingEnabled: false,
+		filesChangedEnabled: true,
 		hasOpenedModeSelector: false,
 		setHasOpenedModeSelector: () => {},
 		condensingApiConfigId: "",

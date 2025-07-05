@@ -26,6 +26,7 @@
 		"browser": "计算机交互",
 		"checkpoints": "存档点",
 		"notifications": "通知",
+		"interface": "界面",
 		"contextManagement": "上下文",
 		"terminal": "终端",
 		"prompts": "提示词",
@@ -667,5 +668,15 @@
 		"useCustomArn": "使用自定义 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大输出 Token 数",
-	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。"
+	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。",
+	"interface": {
+		"description": "控制用户界面元素的外观和行为",
+		"filesChanged": {
+			"title": "已更改文件概览",
+			"enabled": {
+				"label": "显示已更改文件概览",
+				"description": "显示对话期间AI修改的文件概览。禁用时，已更改文件部分将从界面中隐藏。"
+			}
+		}
+	}
 }

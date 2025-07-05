@@ -26,6 +26,7 @@
 		"browser": "Trình duyệt",
 		"checkpoints": "Điểm kiểm tra",
 		"notifications": "Thông báo",
+		"interface": "Giao diện",
 		"contextManagement": "Ngữ cảnh",
 		"terminal": "Terminal",
 		"prompts": "Lời nhắc",
@@ -667,5 +668,15 @@
 		"useCustomArn": "Sử dụng ARN tùy chỉnh..."
 	},
 	"includeMaxOutputTokens": "Bao gồm token đầu ra tối đa",
-	"includeMaxOutputTokensDescription": "Gửi tham số token đầu ra tối đa trong các yêu cầu API. Một số nhà cung cấp có thể không hỗ trợ điều này."
+	"includeMaxOutputTokensDescription": "Gửi tham số token đầu ra tối đa trong các yêu cầu API. Một số nhà cung cấp có thể không hỗ trợ điều này.",
+	"interface": {
+		"description": "Kiểm soát giao diện và hành vi của các phần tử giao diện người dùng",
+		"filesChanged": {
+			"title": "Tổng quan Tệp Đã Thay đổi",
+			"enabled": {
+				"label": "Hiển thị tổng quan tệp đã thay đổi",
+				"description": "Hiển thị tổng quan về các tệp được AI sửa đổi trong cuộc trò chuyện. Khi bị vô hiệu hóa, phần tệp đã thay đổi sẽ bị ẩn khỏi giao diện."
+			}
+		}
+	}
 }

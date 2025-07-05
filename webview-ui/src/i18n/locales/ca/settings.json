@@ -26,6 +26,7 @@
 		"browser": "Accés a l'ordinador",
 		"checkpoints": "Punts de control",
 		"notifications": "Notificacions",
+		"interface": "Interfície",
 		"contextManagement": "Context",
 		"terminal": "Terminal",
 		"prompts": "Indicacions",
@@ -667,5 +668,15 @@
 		"useCustomArn": "Utilitza ARN personalitzat..."
 	},
 	"includeMaxOutputTokens": "Incloure tokens màxims de sortida",
-	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això."
+	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això.",
+	"interface": {
+		"description": "Controla l'aparença i el comportament dels elements de la interfície d'usuari",
+		"filesChanged": {
+			"title": "Resum d'Arxius Canviats",
+			"enabled": {
+				"label": "Mostra el resum d'arxius canviats",
+				"description": "Mostra un resum dels arxius modificats per la IA durant la conversa. Quan estigui desactivat, la secció d'arxius canviats s'ocultarà de la interfície."
+			}
+		}
+	}
 }

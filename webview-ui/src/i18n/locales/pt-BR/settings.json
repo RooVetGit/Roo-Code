@@ -26,6 +26,7 @@
 		"browser": "Navegador",
 		"checkpoints": "Checkpoints",
 		"notifications": "Notificações",
+		"interface": "Interface",
 		"contextManagement": "Contexto",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
@@ -667,5 +668,15 @@
 		"useCustomArn": "Usar ARN personalizado..."
 	},
 	"includeMaxOutputTokens": "Incluir tokens máximos de saída",
-	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso."
+	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso.",
+	"interface": {
+		"description": "Controle a aparência e o comportamento dos elementos da interface do usuário",
+		"filesChanged": {
+			"title": "Resumo de Arquivos Alterados",
+			"enabled": {
+				"label": "Mostrar resumo de arquivos alterados",
+				"description": "Exibe um resumo dos arquivos modificados pela IA durante a conversa. Quando desabilitado, a seção de arquivos alterados ficará oculta da interface."
+			}
+		}
+	}
 }

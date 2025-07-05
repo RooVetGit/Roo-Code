@@ -26,6 +26,7 @@
 		"browser": "電腦存取",
 		"checkpoints": "檢查點",
 		"notifications": "通知",
+		"interface": "介面",
 		"contextManagement": "上下文",
 		"terminal": "終端機",
 		"prompts": "提示詞",
@@ -667,5 +668,15 @@
 		"useCustomArn": "使用自訂 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大輸出 Token 數",
-	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。"
+	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。",
+	"interface": {
+		"description": "控制使用者介面元素的外觀和行為",
+		"filesChanged": {
+			"title": "已變更檔案概覽",
+			"enabled": {
+				"label": "顯示已變更檔案概覽",
+				"description": "顯示對話期間AI修改的檔案概覽。停用時，已變更檔案部分將從介面中隱藏。"
+			}
+		}
+	}
 }

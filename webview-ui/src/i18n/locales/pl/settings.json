@@ -26,6 +26,7 @@
 		"browser": "Dostęp komputera",
 		"checkpoints": "Punkty kontrolne",
 		"notifications": "Powiadomienia",
+		"interface": "Interfejs",
 		"contextManagement": "Kontekst",
 		"terminal": "Terminal",
 		"prompts": "Podpowiedzi",
@@ -667,5 +668,15 @@
 		"useCustomArn": "Użyj niestandardowego ARN..."
 	},
 	"includeMaxOutputTokens": "Uwzględnij maksymalne tokeny wyjściowe",
-	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać."
+	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać.",
+	"interface": {
+		"description": "Kontroluj wygląd i zachowanie elementów interfejsu użytkownika",
+		"filesChanged": {
+			"title": "Przegląd Zmienionych Plików",
+			"enabled": {
+				"label": "Pokaż przegląd zmienionych plików",
+				"description": "Wyświetla przegląd plików zmodyfikowanych przez AI podczas rozmowy. Po wyłączeniu sekcja zmienionych plików zostanie ukryta w interfejsie."
+			}
+		}
+	}
 }

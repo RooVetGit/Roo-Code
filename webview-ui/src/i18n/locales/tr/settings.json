@@ -26,6 +26,7 @@
 		"browser": "Bilgisayar Erişimi",
 		"checkpoints": "Kontrol Noktaları",
 		"notifications": "Bildirimler",
+		"interface": "Arayüz",
 		"contextManagement": "Bağlam",
 		"terminal": "Terminal",
 		"prompts": "Promptlar",
@@ -667,5 +668,15 @@
 		"useCustomArn": "Özel ARN kullan..."
 	},
 	"includeMaxOutputTokens": "Maksimum çıktı tokenlerini dahil et",
-	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir."
+	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir.",
+	"interface": {
+		"description": "Kullanıcı arayüzü öğelerinin görünümünü ve davranışını kontrol edin",
+		"filesChanged": {
+			"title": "Değiştirilen Dosyalar Özeti",
+			"enabled": {
+				"label": "Değiştirilen dosyalar özetini göster",
+				"description": "Konuşma sırasında AI tarafından değiştirilen dosyaların bir özetini görüntüler. Devre dışı bırakıldığında, değiştirilen dosyalar bölümü arayüzden gizlenir."
+			}
+		}
+	}
 }

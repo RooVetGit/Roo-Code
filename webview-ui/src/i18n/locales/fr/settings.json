@@ -26,6 +26,7 @@
 		"browser": "Accès ordinateur",
 		"checkpoints": "Points de contrôle",
 		"notifications": "Notifications",
+		"interface": "Interface",
 		"contextManagement": "Contexte",
 		"terminal": "Terminal",
 		"prompts": "Invites",
@@ -665,6 +666,16 @@
 	"labels": {
 		"customArn": "ARN personnalisé",
 		"useCustomArn": "Utiliser un ARN personnalisé..."
+	},
+	"interface": {
+		"description": "Contrôlez l'apparence et le comportement des éléments de l'interface utilisateur",
+		"filesChanged": {
+			"title": "Aperçu des Fichiers Modifiés",
+			"enabled": {
+				"label": "Afficher l'aperçu des fichiers modifiés",
+				"description": "Affiche un aperçu des fichiers modifiés par l'IA pendant la conversation. Lorsque désactivé, la section des fichiers modifiés sera masquée de l'interface."
+			}
+		}
 	},
 	"includeMaxOutputTokens": "Inclure les tokens de sortie maximum",
 	"includeMaxOutputTokensDescription": "Envoyer le paramètre de tokens de sortie maximum dans les requêtes API. Certains fournisseurs peuvent ne pas supporter cela."

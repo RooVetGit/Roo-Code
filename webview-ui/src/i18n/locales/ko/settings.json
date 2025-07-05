@@ -26,6 +26,7 @@
 		"browser": "컴퓨터 접근",
 		"checkpoints": "체크포인트",
 		"notifications": "알림",
+		"interface": "인터페이스",
 		"contextManagement": "컨텍스트",
 		"terminal": "터미널",
 		"prompts": "프롬프트",
@@ -667,5 +668,15 @@
 		"useCustomArn": "사용자 지정 ARN 사용..."
 	},
 	"includeMaxOutputTokens": "최대 출력 토큰 포함",
-	"includeMaxOutputTokensDescription": "API 요청에서 최대 출력 토큰 매개변수를 전송합니다. 일부 제공업체는 이를 지원하지 않을 수 있습니다."
+	"includeMaxOutputTokensDescription": "API 요청에서 최대 출력 토큰 매개변수를 전송합니다. 일부 제공업체는 이를 지원하지 않을 수 있습니다.",
+	"interface": {
+		"description": "사용자 인터페이스 요소의 모양과 동작을 제어합니다",
+		"filesChanged": {
+			"title": "변경된 파일 개요",
+			"enabled": {
+				"label": "변경된 파일 개요 표시",
+				"description": "대화 중 AI에 의해 수정된 파일의 개요를 표시합니다. 비활성화하면 변경된 파일 섹션이 인터페이스에서 숨겨집니다."
+			}
+		}
+	}
 }

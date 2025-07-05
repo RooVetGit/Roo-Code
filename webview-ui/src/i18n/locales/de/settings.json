@@ -26,6 +26,7 @@
 		"browser": "Computerzugriff",
 		"checkpoints": "Kontrollpunkte",
 		"notifications": "Benachrichtigungen",
+		"interface": "Benutzeroberfläche",
 		"contextManagement": "Kontext",
 		"terminal": "Terminal",
 		"prompts": "Eingabeaufforderungen",
@@ -665,6 +666,16 @@
 	"labels": {
 		"customArn": "Benutzerdefinierte ARN",
 		"useCustomArn": "Benutzerdefinierte ARN verwenden..."
+	},
+	"interface": {
+		"description": "Steuere das Aussehen und Verhalten der Benutzeroberflächen-Elemente",
+		"filesChanged": {
+			"title": "Übersicht geänderter Dateien",
+			"enabled": {
+				"label": "Übersicht geänderter Dateien anzeigen",
+				"description": "Zeige eine Übersicht der von der KI während der Unterhaltung geänderten Dateien an. Wenn deaktiviert, wird der Bereich für geänderte Dateien in der Benutzeroberfläche ausgeblendet."
+			}
+		}
 	},
 	"includeMaxOutputTokens": "Maximale Ausgabe-Tokens einbeziehen",
 	"includeMaxOutputTokensDescription": "Sende den Parameter für maximale Ausgabe-Tokens in API-Anfragen. Einige Anbieter unterstützen dies möglicherweise nicht."

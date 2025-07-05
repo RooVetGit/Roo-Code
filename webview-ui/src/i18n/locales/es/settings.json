@@ -26,6 +26,7 @@
 		"browser": "Acceso al ordenador",
 		"checkpoints": "Puntos de control",
 		"notifications": "Notificaciones",
+		"interface": "Interfaz",
 		"contextManagement": "Contexto",
 		"terminal": "Terminal",
 		"prompts": "Indicaciones",
@@ -665,6 +666,16 @@
 	"labels": {
 		"customArn": "ARN personalizado",
 		"useCustomArn": "Usar ARN personalizado..."
+	},
+	"interface": {
+		"description": "Controla la apariencia y el comportamiento de los elementos de la interfaz de usuario",
+		"filesChanged": {
+			"title": "Resumen de Archivos Modificados",
+			"enabled": {
+				"label": "Mostrar resumen de archivos modificados",
+				"description": "Muestra un resumen de los archivos modificados por la IA durante la conversación. Cuando esté deshabilitado, la sección de archivos modificados se ocultará de la interfaz."
+			}
+		}
 	},
 	"includeMaxOutputTokens": "Incluir tokens máximos de salida",
 	"includeMaxOutputTokensDescription": "Enviar parámetro de tokens máximos de salida en solicitudes API. Algunos proveedores pueden no soportar esto."
