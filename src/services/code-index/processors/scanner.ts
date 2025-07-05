@@ -23,7 +23,7 @@ import {
 	PARSING_CONCURRENCY,
 	BATCH_PROCESSING_CONCURRENCY,
 } from "../constants"
-import { isPathInIgnoredDirectory } from "../../glob/ignore-utils"
+import { DIRS_TO_IGNORE } from "../../glob/constants"
 
 export class DirectoryScanner implements IDirectoryScanner {
 	constructor(
@@ -68,8 +68,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 			const ext = path.extname(filePath).toLowerCase()
 			const relativeFilePath = generateRelativeFilePath(filePath)
 
-			// Check if file is in an ignored directory using the shared helper
-			if (isPathInIgnoredDirectory(filePath)) {
+			// Check if file is in an ignored directory
+			if (this.isPathInIgnoredDirectory(filePath)) {
 				return false
 			}
 
@@ -361,5 +361,24 @@ export class DirectoryScanner implements IDirectoryScanner {
 				)
 			}
 		}
+	}
+
+	/**
+	 * Check if a path is within an ignored directory
+	 */
+	private isPathInIgnoredDirectory(filePath: string): boolean {
+		const normalizedPath = path.normalize(filePath)
+		const pathParts = normalizedPath.split(path.sep)
+
+		return pathParts.some((part) => {
+			// Check if any part of the path matches an ignored directory
+			return DIRS_TO_IGNORE.some((dir) => {
+				if (dir === ".*") {
+					// Special case for hidden directories (starting with .)
+					return part.startsWith(".") && part !== "."
+				}
+				return part === dir
+			})
+		})
 	}
 }
