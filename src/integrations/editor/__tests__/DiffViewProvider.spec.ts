@@ -219,7 +219,7 @@ describe("DiffViewProvider", () => {
 				if (Object.keys(uri).length > 0) {
 					return mockEditor as any
 				}
-				expect(options).toEqual({ preview: false, preserveFocus: false, viewColumn: vscode.ViewColumn.Active })
+				expect(options).toEqual({ preview: false, viewColumn: vscode.ViewColumn.Active, preserveFocus: true })
 				return mockEditor as any
 			})
 
@@ -251,10 +251,10 @@ describe("DiffViewProvider", () => {
 			// Verify that showTextDocument was called before executeCommand
 			expect(callOrder).toEqual(["showTextDocument", "executeCommand", "showTextDocument"])
 
-			// Verify that showTextDocument was called with preview: false
+			// Verify that showTextDocument was called with preview: false and preserveFocus: true
 			expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
 				expect.objectContaining({ fsPath: `${mockCwd}/test.md` }),
-				{ preview: false, preserveFocus: false, viewColumn: vscode.ViewColumn.Active },
+				{ preview: false, viewColumn: vscode.ViewColumn.Active, preserveFocus: true },
 			)
 
 			// Verify that the diff command was executed

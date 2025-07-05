@@ -146,7 +146,6 @@ describe("getEnvironmentDetails", () => {
 		expect(result).toContain("# VSCode Visible Files")
 		expect(result).toContain("# VSCode Open Tabs")
 		expect(result).toContain("# Current Time")
-		expect(result).toContain("# Current Context Size (Tokens)")
 		expect(result).toContain("# Current Cost")
 		expect(result).toContain("# Current Mode")
 		expect(result).toContain("<model>test-model</model>")
@@ -189,6 +188,19 @@ describe("getEnvironmentDetails", () => {
 		const result = await getEnvironmentDetails(mockCline as Task, true)
 		expect(result).toContain("Desktop files not shown automatically")
 		expect(listFiles).not.toHaveBeenCalled()
+	})
+
+	it("should skip file listing when maxWorkspaceFiles is 0", async () => {
+		mockProvider.getState.mockResolvedValue({
+			...mockState,
+			maxWorkspaceFiles: 0,
+		})
+
+		const result = await getEnvironmentDetails(mockCline as Task, true)
+
+		expect(listFiles).not.toHaveBeenCalled()
+		expect(result).toContain("Workspace files context disabled")
+		expect(formatResponse.formatFilesList).not.toHaveBeenCalled()
 	})
 
 	it("should include recently modified files if any", async () => {

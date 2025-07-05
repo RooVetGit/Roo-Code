@@ -1,0 +1,3713 @@
+{
+    "evals/packages/types/src/exercises.ts": {
+        "functions": [
+            "isExerciseLanguage(value:string): valueisExerciseLanguage"
+        ]
+    },
+    "evals/packages/types/src/ipc.ts": {
+        "enums": [
+            {
+                "name": "TaskCommandName"
+            },
+            {
+                "name": "EvalEventName"
+            },
+            {
+                "name": "IpcMessageType"
+            },
+            {
+                "name": "IpcOrigin"
+            }
+        ]
+    },
+    "evals/packages/types/src/roo-code.ts": {
+        "functions": [
+            "isCheckpointStorage(value:string): valueisCheckpointStorage",
+            "isLanguage(value:string): valueisLanguage",
+            "isSecretStateKey(key:string): keyisKeys<SecretState>",
+            "isGlobalStateKey(key:string): keyisKeys<GlobalState>"
+        ],
+        "enums": [
+            {
+                "name": "RooCodeEventName"
+            }
+        ]
+    },
+    "evals/packages/lib/src/in-chunks-of.ts": {
+        "functions": [
+            "inChunksOf(ary:T[],perChunk=2)"
+        ]
+    },
+    "evals/packages/db/src/queries/runs.ts": {
+        "functions": [
+            "findRun(id:number)",
+            "createRun(args:InsertRun)",
+            "updateRun(id:number,values:UpdateRun)",
+            "getRuns()",
+            "finishRun(runId:number)",
+            "deleteRun(runId:number)"
+        ]
+    },
+    "evals/packages/db/src/queries/errors.ts": {
+        "classes": [
+            {
+                "name": "RecordNotFoundError"
+            },
+            {
+                "name": "RecordNotCreatedError"
+            }
+        ]
+    },
+    "evals/packages/db/src/queries/toolErrors.ts": {
+        "functions": [
+            "createToolError(args:InsertToolError)"
+        ]
+    },
+    "evals/packages/db/src/queries/taskMetrics.ts": {
+        "functions": [
+            "findTaskMetrics(id:number)",
+            "createTaskMetrics(args:InsertTaskMetrics)",
+            "updateTaskMetrics(id:number,values:UpdateTaskMetrics)"
+        ]
+    },
+    "evals/packages/db/src/queries/tasks.ts": {
+        "functions": [
+            "findTask(id:number)",
+            "createTask(args:InsertTask)",
+            "updateTask(id:number,values:UpdateTask)",
+            "getTask({runId,language,exercise}:GetTask)",
+            "getTasks(runId:number)"
+        ]
+    },
+    "evals/packages/ipc/src/client.ts": {
+        "classes": [
+            {
+                "name": "IpcClient"
+            }
+        ],
+        "functions": [
+            "constructor(socketPath:string,log=console.log)",
+            "onConnect()",
+            "onDisconnect()",
+            "onMessage(data:unknown)",
+            "log(...args:unknown[])",
+            "sendMessage(message:IpcMessage)",
+            "disconnect()",
+            "socketPath()",
+            "clientId()",
+            "isConnected()",
+            "isReady()"
+        ]
+    },
+    "evals/packages/ipc/src/server.ts": {
+        "classes": [
+            {
+                "name": "IpcServer"
+            }
+        ],
+        "functions": [
+            "constructor(socketPath:string,log=console.log)",
+            "listen()",
+            "onConnect(socket:Socket)",
+            "onDisconnect(destroyedSocket:Socket)",
+            "onMessage(data:unknown)",
+            "log(...args:unknown[])",
+            "broadcast(message:IpcMessage)",
+            "send(client:string|Socket,message:IpcMessage)",
+            "socketPath()",
+            "isListening()"
+        ]
+    },
+    "evals/apps/web/src/app/home.tsx": {
+        "functions": [
+            "Home({runs}:{runs:(Run&{taskMetrics:TaskMetrics|null})[]})"
+        ]
+    },
+    "evals/apps/web/src/app/layout.tsx": {
+        "functions": [
+            "RootLayout({\tchildren,}:Readonly<{\tchildren:React.ReactNode}>)"
+        ]
+    },
+    "evals/apps/web/src/app/page.tsx": {
+        "functions": [
+            "Page()"
+        ]
+    },
+    "evals/apps/web/src/app/api/tasks/route.ts": {
+        "functions": [
+            "POST(request:Request)"
+        ]
+    },
+    "evals/apps/web/src/app/api/runs/route.ts": {
+        "functions": [
+            "POST(request:Request)"
+        ]
+    },
+    "evals/apps/web/src/app/api/runs/[id]/stream/route.ts": {
+        "functions": [
+            "GET(request:NextRequest,{params}:{params:Promise<{id:string}>})",
+            "write(data:string|object)"
+        ]
+    },
+    "evals/apps/web/src/app/runs/new/new-run.tsx": {
+        "functions": [
+            "NewRun()"
+        ]
+    },
+    "evals/apps/web/src/app/runs/new/settings-diff.tsx": {
+        "functions": [
+            "SettingsDiff({\tcustomSettings:{experiments:customExperiments,...customSettings},\tdefaultSettings:{experiments:defaultExperiments,...defaultSettings},\tclassName,\t...props}:SettingsDiffProps)",
+            "SettingDiff({name,defaultValue,customValue,...props}:SettingDiffProps)"
+        ]
+    },
+    "evals/apps/web/src/app/runs/new/page.tsx": {
+        "functions": [
+            "Page()"
+        ]
+    },
+    "evals/apps/web/src/app/runs/[id]/run.tsx": {
+        "functions": [
+            "Run({run}:{run:db.Run})"
+        ]
+    },
+    "evals/apps/web/src/app/runs/[id]/page.tsx": {
+        "functions": [
+            "Page({params}:{params:Promise<{id:string}>})"
+        ]
+    },
+    "evals/apps/web/src/app/runs/[id]/connection-status.tsx": {
+        "functions": [
+            "ConnectionStatus(connectionStatus:ConnectionStatusProps)"
+        ]
+    },
+    "evals/apps/web/src/app/runs/[id]/task-status.tsx": {
+        "functions": [
+            "TaskStatus({task,running}:TaskStatusProps)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/alert-dialog.tsx": {
+        "functions": [
+            "AlertDialog({...props}:React.ComponentProps<typeofAlertDialogPrimitive.Root>)",
+            "AlertDialogTrigger({...props}:React.ComponentProps<typeofAlertDialogPrimitive.Trigger>)",
+            "AlertDialogPortal({...props}:React.ComponentProps<typeofAlertDialogPrimitive.Portal>)",
+            "AlertDialogOverlay({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Overlay>)",
+            "AlertDialogContent({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Content>)",
+            "AlertDialogHeader({className,...props}:React.ComponentProps<\"div\">)",
+            "AlertDialogFooter({className,...props}:React.ComponentProps<\"div\">)",
+            "AlertDialogTitle({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Title>)",
+            "AlertDialogDescription({\tclassName,\t...props}:React.ComponentProps<typeofAlertDialogPrimitive.Description>)",
+            "AlertDialogAction({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Action>)",
+            "AlertDialogCancel({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Cancel>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/slider.tsx": {
+        "functions": [
+            "Slider({\tclassName,\tdefaultValue,\tvalue,\tmin=0,\tmax=100,\t...props}:React.ComponentProps<typeofSliderPrimitive.Root>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/popover.tsx": {
+        "functions": [
+            "Popover({...props}:React.ComponentProps<typeofPopoverPrimitive.Root>)",
+            "PopoverTrigger({...props}:React.ComponentProps<typeofPopoverPrimitive.Trigger>)",
+            "PopoverContent({\tclassName,\talign=\"center\",\tsideOffset=4,\t...props}:React.ComponentProps<typeofPopoverPrimitive.Content>)",
+            "PopoverAnchor({...props}:React.ComponentProps<typeofPopoverPrimitive.Anchor>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/scroll-area.tsx": {
+        "functions": [
+            "ScrollArea({className,children,viewportRef,...props}:ScrollAreaProps)",
+            "ScrollBar({\tclassName,\torientation=\"vertical\",\t...props}:React.ComponentProps<typeofScrollAreaPrimitive.ScrollAreaScrollbar>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/label.tsx": {
+        "functions": [
+            "Label({className,...props}:React.ComponentProps<typeofLabelPrimitive.Root>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/sonner.tsx": {
+        "functions": [
+            "Toaster({...props}:ToasterProps)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/drawer.tsx": {
+        "functions": [
+            "Drawer({...props}:React.ComponentProps<typeofDrawerPrimitive.Root>)",
+            "DrawerTrigger({...props}:React.ComponentProps<typeofDrawerPrimitive.Trigger>)",
+            "DrawerPortal({...props}:React.ComponentProps<typeofDrawerPrimitive.Portal>)",
+            "DrawerClose({...props}:React.ComponentProps<typeofDrawerPrimitive.Close>)",
+            "DrawerOverlay({className,...props}:React.ComponentProps<typeofDrawerPrimitive.Overlay>)",
+            "DrawerContent({className,children,...props}:React.ComponentProps<typeofDrawerPrimitive.Content>)",
+            "DrawerHeader({className,...props}:React.ComponentProps<\"div\">)",
+            "DrawerFooter({className,...props}:React.ComponentProps<\"div\">)",
+            "DrawerTitle({className,...props}:React.ComponentProps<typeofDrawerPrimitive.Title>)",
+            "DrawerDescription({className,...props}:React.ComponentProps<typeofDrawerPrimitive.Description>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/tooltip.tsx": {
+        "functions": [
+            "TooltipProvider({delayDuration=0,...props}:React.ComponentProps<typeofTooltipPrimitive.Provider>)",
+            "Tooltip({...props}:React.ComponentProps<typeofTooltipPrimitive.Root>)",
+            "TooltipTrigger({...props}:React.ComponentProps<typeofTooltipPrimitive.Trigger>)",
+            "TooltipContent({\tclassName,\tsideOffset=0,\tchildren,\t...props}:React.ComponentProps<typeofTooltipPrimitive.Content>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/command.tsx": {
+        "functions": [
+            "Command({className,...props}:React.ComponentProps<typeofCommandPrimitive>)",
+            "CommandDialog({\ttitle=\"CommandPalette\",\tdescription=\"Searchforacommandtorun...\",\tchildren,\t...props}:React.ComponentProps<typeofDialog>&{\ttitle?:string\tdescription?:string})",
+            "CommandInput({className,...props}:React.ComponentProps<typeofCommandPrimitive.Input>)",
+            "CommandList({className,...props}:React.ComponentProps<typeofCommandPrimitive.List>)",
+            "CommandEmpty({...props}:React.ComponentProps<typeofCommandPrimitive.Empty>)",
+            "CommandGroup({className,...props}:React.ComponentProps<typeofCommandPrimitive.Group>)",
+            "CommandSeparator({className,...props}:React.ComponentProps<typeofCommandPrimitive.Separator>)",
+            "CommandItem({className,...props}:React.ComponentProps<typeofCommandPrimitive.Item>)",
+            "CommandShortcut({className,...props}:React.ComponentProps<\"span\">)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/multi-select.tsx": {
+        "interfaces": [
+            "MultiSelectProps"
+        ],
+        "functions": [
+            "handleInputKeyDown(event:React.KeyboardEvent<HTMLInputElement>)",
+            "toggleOption(option:string)",
+            "handleTogglePopover()",
+            "clearExtraOptions()",
+            "onSelectAll()"
+        ]
+    },
+    "evals/apps/web/src/components/ui/dialog.tsx": {
+        "functions": [
+            "Dialog({...props}:React.ComponentProps<typeofDialogPrimitive.Root>)",
+            "DialogTrigger({...props}:React.ComponentProps<typeofDialogPrimitive.Trigger>)",
+            "DialogPortal({...props}:React.ComponentProps<typeofDialogPrimitive.Portal>)",
+            "DialogClose({...props}:React.ComponentProps<typeofDialogPrimitive.Close>)",
+            "DialogOverlay({className,...props}:React.ComponentProps<typeofDialogPrimitive.Overlay>)",
+            "DialogContent({className,children,...props}:React.ComponentProps<typeofDialogPrimitive.Content>)",
+            "DialogHeader({className,...props}:React.ComponentProps<\"div\">)",
+            "DialogFooter({className,...props}:React.ComponentProps<\"div\">)",
+            "DialogTitle({className,...props}:React.ComponentProps<typeofDialogPrimitive.Title>)",
+            "DialogDescription({className,...props}:React.ComponentProps<typeofDialogPrimitive.Description>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/badge.tsx": {
+        "functions": [
+            "Badge({\tclassName,\tvariant,\tasChild=false,\t...props}:React.ComponentProps<\"span\">&VariantProps<typeofbadgeVariants>&{asChild?:boolean})"
+        ]
+    },
+    "evals/apps/web/src/components/ui/table.tsx": {
+        "functions": [
+            "Table({className,...props}:React.ComponentProps<\"table\">)",
+            "TableHeader({className,...props}:React.ComponentProps<\"thead\">)",
+            "TableBody({className,...props}:React.ComponentProps<\"tbody\">)",
+            "TableFooter({className,...props}:React.ComponentProps<\"tfoot\">)",
+            "TableRow({className,...props}:React.ComponentProps<\"tr\">)",
+            "TableHead({className,...props}:React.ComponentProps<\"th\">)",
+            "TableCell({className,...props}:React.ComponentProps<\"td\">)",
+            "TableCaption({className,...props}:React.ComponentProps<\"caption\">)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/separator.tsx": {
+        "functions": [
+            "Separator({\tclassName,\torientation=\"horizontal\",\tdecorative=true,\t...props}:React.ComponentProps<typeofSeparatorPrimitive.Root>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/button.tsx": {
+        "functions": [
+            "Button({\tclassName,\tvariant,\tsize,\tasChild=false,\t...props}:React.ComponentProps<\"button\">&\tVariantProps<typeofbuttonVariants>&{\t\tasChild?:boolean\t})"
+        ]
+    },
+    "evals/apps/web/src/components/ui/dropdown-menu.tsx": {
+        "functions": [
+            "DropdownMenu({...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Root>)",
+            "DropdownMenuPortal({...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Portal>)",
+            "DropdownMenuTrigger({...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Trigger>)",
+            "DropdownMenuContent({\tclassName,\tsideOffset=4,\t...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Content>)",
+            "DropdownMenuGroup({...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Group>)",
+            "DropdownMenuItem({\tclassName,\tinset,\tvariant=\"default\",\t...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Item>&{\tinset?:boolean\tvariant?:\"default\"|\"destructive\"})",
+            "DropdownMenuCheckboxItem({\tclassName,\tchildren,\tchecked,\t...props}:React.ComponentProps<typeofDropdownMenuPrimitive.CheckboxItem>)",
+            "DropdownMenuRadioGroup({...props}:React.ComponentProps<typeofDropdownMenuPrimitive.RadioGroup>)",
+            "DropdownMenuRadioItem({\tclassName,\tchildren,\t...props}:React.ComponentProps<typeofDropdownMenuPrimitive.RadioItem>)",
+            "DropdownMenuLabel({\tclassName,\tinset,\t...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Label>&{\tinset?:boolean})",
+            "DropdownMenuSeparator({className,...props}:React.ComponentProps<typeofDropdownMenuPrimitive.Separator>)",
+            "DropdownMenuShortcut({className,...props}:React.ComponentProps<\"span\">)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/select.tsx": {
+        "functions": [
+            "Select({...props}:React.ComponentProps<typeofSelectPrimitive.Root>)",
+            "SelectGroup({...props}:React.ComponentProps<typeofSelectPrimitive.Group>)",
+            "SelectValue({...props}:React.ComponentProps<typeofSelectPrimitive.Value>)",
+            "SelectTrigger({\tclassName,\tsize=\"default\",\tchildren,\t...props}:React.ComponentProps<typeofSelectPrimitive.Trigger>&{\tsize?:\"sm\"|\"default\"})",
+            "SelectContent({\tclassName,\tchildren,\tposition=\"popper\",\t...props}:React.ComponentProps<typeofSelectPrimitive.Content>)",
+            "SelectLabel({className,...props}:React.ComponentProps<typeofSelectPrimitive.Label>)",
+            "SelectItem({className,children,...props}:React.ComponentProps<typeofSelectPrimitive.Item>)",
+            "SelectSeparator({className,...props}:React.ComponentProps<typeofSelectPrimitive.Separator>)",
+            "SelectScrollUpButton({className,...props}:React.ComponentProps<typeofSelectPrimitive.ScrollUpButton>)",
+            "SelectScrollDownButton({\tclassName,\t...props}:React.ComponentProps<typeofSelectPrimitive.ScrollDownButton>)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/textarea.tsx": {
+        "functions": [
+            "Textarea({className,...props}:React.ComponentProps<\"textarea\">)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/input.tsx": {
+        "functions": [
+            "Input({className,type,...props}:React.ComponentProps<\"input\">)"
+        ]
+    },
+    "evals/apps/web/src/components/ui/form.tsx": {
+        "functions": [
+            "FormField",
+            "useFormField()",
+            "FormItem({className,...props}:React.ComponentProps<\"div\">)",
+            "FormLabel({className,...props}:React.ComponentProps<typeofLabelPrimitive.Root>)",
+            "FormControl({...props}:React.ComponentProps<typeofSlot>)",
+            "FormDescription({className,...props}:React.ComponentProps<\"p\">)",
+            "FormMessage({className,...props}:React.ComponentProps<\"p\">)"
+        ]
+    },
+    "evals/apps/web/src/components/layout/logo.tsx": {
+        "functions": [
+            "Logo({width=50,height=32,fill=\"#fff\",className,...props}:LogoProps)",
+            "HoppingLogo(props:LogoProps)",
+            "onAnimationEnd()"
+        ]
+    },
+    "evals/apps/web/src/components/layout/header.tsx": {
+        "functions": [
+            "Header()"
+        ]
+    },
+    "evals/apps/web/src/components/providers/theme-provider.tsx": {
+        "functions": [
+            "ThemeProvider({children,...props}:ThemeProviderProps)"
+        ]
+    },
+    "evals/apps/web/src/components/providers/react-query-provider.tsx": {
+        "functions": [
+            "ReactQueryProvider({children}:{children:React.ReactNode})"
+        ]
+    },
+    "evals/apps/web/src/hooks/use-event-source.ts": {
+        "functions": [
+            "useEventSource({url,withCredentials,onMessage}:UseEventSourceOptions)"
+        ]
+    },
+    "evals/apps/web/src/hooks/use-process-tree.ts": {
+        "functions": [
+            "useProcessList(pid:number|null)"
+        ]
+    },
+    "evals/apps/web/src/hooks/use-run-status.ts": {
+        "functions": [
+            "useRunStatus(run:Run)"
+        ]
+    },
+    "evals/apps/web/src/hooks/use-exercises.ts": {
+        "functions": [
+            "useExercises()"
+        ]
+    },
+    "evals/apps/web/src/hooks/use-open-router-models.ts": {
+        "functions": [
+            "parsePrice(price?:string)",
+            "getOpenRouterModels(): Promise<OpenRouterModel[]>",
+            "useOpenRouterModels()"
+        ]
+    },
+    "evals/apps/web/src/lib/utils.ts": {
+        "functions": [
+            "cn(...inputs:ClassValue[])"
+        ]
+    },
+    "evals/apps/web/src/lib/formatters.ts": {
+        "functions": [
+            "formatCurrency(amount:number)",
+            "formatDuration(durationMs:number)",
+            "formatTokens(tokens:number)",
+            "formatToolUsageSuccessRate(usage:{attempts:number;failures:number})"
+        ]
+    },
+    "evals/apps/web/src/lib/server/sse-stream.ts": {
+        "classes": [
+            {
+                "name": "SSEStream"
+            }
+        ],
+        "functions": [
+            "constructor()",
+            "write(data:string|object)",
+            "close()",
+            "getResponse()"
+        ]
+    },
+    "evals/apps/web/src/lib/server/exercises.ts": {
+        "functions": [
+            "listDirectories(relativePath:string)",
+            "getExercises()",
+            "getExercisesForLanguage(language:ExerciseLanguage)"
+        ]
+    },
+    "evals/apps/web/src/lib/server/runs.ts": {
+        "functions": [
+            "createRun({suite,exercises=[],...values}:CreateRun)",
+            "deleteRun(runId:number)"
+        ]
+    },
+    "evals/apps/web/src/lib/server/processes.ts": {
+        "functions": [
+            "asyncExec(command:string): Promise<{stdout:string;stderr:string}>",
+            "getProcessList(pid:number)",
+            "killProcessTree(pid:number)"
+        ]
+    },
+    "evals/apps/web/src/lib/server/tasks.ts": {
+        "functions": [
+            "getTasks(runId:number)"
+        ]
+    },
+    "evals/apps/cli/src/exercises.ts": {
+        "functions": [
+            "getExercises()",
+            "getLanguageExercises(language:ExerciseLanguage)"
+        ]
+    },
+    "evals/apps/cli/src/index.ts": {
+        "functions": [
+            "run(toolbox:GluegunToolbox)",
+            "processTask(task:Task,delay=0)",
+            "processTaskResult(task:Task,promise:TaskPromise)",
+            "runExercise({run,task,server}:{run:Run;task:Task;server:IpcServer}): TaskPromise",
+            "runUnitTest({task}:{task:Task})",
+            "askLanguage(prompt:GluegunPrompt)",
+            "askExercise(prompt:GluegunPrompt,language:ExerciseLanguage)",
+            "main()"
+        ]
+    },
+    "webview-ui/vite.config.ts": {
+        "functions": [
+            "writePortToFile()",
+            "configureServer(server)"
+        ]
+    },
+    "webview-ui/src/App.tsx": {
+        "functions": [
+            "App()",
+            "AppWithProviders()"
+        ]
+    },
+    "webview-ui/src/__mocks__/lucide-react.ts": {
+        "functions": [
+            "Check()",
+            "ChevronsUpDown()",
+            "Loader()",
+            "X()",
+            "Edit()",
+            "Database(props:any)"
+        ]
+    },
+    "webview-ui/src/__mocks__/vscrui.ts": {
+        "functions": [
+            "Checkbox({children,onChange}:any)",
+            "Dropdown({children,onChange}:any)",
+            "Pane({children}:any)",
+            "Button({children,...props}:any)"
+        ]
+    },
+    "webview-ui/src/__mocks__/@vscode/webview-ui-toolkit/react.ts": {
+        "interfaces": [
+            "VSCodeProps"
+        ],
+        "functions": [
+            "VSCodeButton({children,onClick,appearance,className,...props})",
+            "VSCodeCheckbox({children,onChange,checked,...props})",
+            "VSCodeTextField({children,value,onInput,placeholder,...props})",
+            "VSCodeTextArea({value,onChange,...props})",
+            "VSCodeLink({children,href,...props})",
+            "VSCodeDropdown({children,value,onChange,...props})",
+            "VSCodeOption({children,value,...props})",
+            "VSCodeRadio({children,value,checked,onChange,...props})",
+            "VSCodeRadioGroup({children,onChange,...props})"
+        ]
+    },
+    "webview-ui/src/__mocks__/components/chat/TaskHeader.tsx": {
+        "functions": [
+            "TaskHeader()"
+        ]
+    },
+    "webview-ui/src/__mocks__/i18n/TranslationContext.tsx": {
+        "functions": [
+            "TranslationProvider({children})",
+            "useAppTranslation()"
+        ]
+    },
+    "webview-ui/src/__mocks__/i18n/setup.ts": {
+        "functions": [
+            "loadTranslations()",
+            "addTranslation(language:string,namespace:string,resources:any)"
+        ]
+    },
+    "webview-ui/src/context/ExtensionStateContext.tsx": {
+        "interfaces": [
+            "ExtensionStateContextType"
+        ],
+        "functions": [
+            "mergeExtensionState(prevState:ExtensionState,newState:ExtensionState)",
+            "ExtensionStateContextProvider({children})",
+            "useExtensionState()"
+        ]
+    },
+    "webview-ui/src/oauth/urls.ts": {
+        "functions": [
+            "getCallbackUrl(provider:string,uriScheme?:string)",
+            "getGlamaAuthUrl(uriScheme?:string)",
+            "getOpenRouterAuthUrl(uriScheme?:string)",
+            "getRequestyAuthUrl(uriScheme?:string)"
+        ]
+    },
+    "webview-ui/src/utils/getLanguageFromPath.ts": {
+        "functions": [
+            "getLanguageFromPath(path:string): string|undefined"
+        ]
+    },
+    "webview-ui/src/utils/json.ts": {
+        "functions": [
+            "safeJsonParse(jsonString:string|null|undefined,defaultValue?:T): T|undefined"
+        ]
+    },
+    "webview-ui/src/utils/clipboard.ts": {
+        "interfaces": [
+            "CopyOptions"
+        ],
+        "functions": [
+            "copyToClipboard(text:string,options?:CopyOptions): Promise<boolean>",
+            "useCopyToClipboard(feedbackDuration=2000)"
+        ]
+    },
+    "webview-ui/src/utils/normalizeApiConfiguration.ts": {
+        "functions": [
+            "normalizeApiConfiguration(apiConfiguration?:ApiConfiguration)",
+            "getProviderData(models:Record<string,ModelInfo>,defaultId:string)"
+        ]
+    },
+    "webview-ui/src/utils/highlight.ts": {
+        "functions": [
+            "highlightFzfMatch(\ttext:string,\tpositions:number[],\thighlightClassName:string=\"history-item-highlight\",)"
+        ]
+    },
+    "webview-ui/src/utils/command-validation.ts": {
+        "functions": [
+            "parseCommand(command:string): string[]",
+            "isAllowedSingleCommand(command:string,allowedCommands:string[]): boolean",
+            "validateCommand(command:string,allowedCommands:string[]): boolean"
+        ]
+    },
+    "webview-ui/src/utils/mcp.ts": {
+        "functions": [
+            "findMatchingTemplate(\turi:string,\ttemplates:McpResourceTemplate[]=[],)",
+            "findMatchingResourceOrTemplate(\turi:string,\tresources:McpResource[]=[],\ttemplates:McpResourceTemplate[]=[],)"
+        ]
+    },
+    "webview-ui/src/utils/model-utils.ts": {
+        "interfaces": [
+            "ModelInfo",
+            "ApiConfig",
+            "TokenDistributionResult"
+        ],
+        "functions": [
+            "getMaxTokensForModel(\tmodelInfo:ModelInfo|undefined,\tapiConfig:ApiConfig|undefined,)",
+            "calculateTokenDistribution(\tcontextWindow:number,\tcontextTokens:number,\tmaxTokens?:number,)"
+        ]
+    },
+    "webview-ui/src/utils/validate.ts": {
+        "functions": [
+            "validateApiConfiguration(apiConfiguration?:ApiConfiguration): string|undefined",
+            "validateBedrockArn(arn:string,region?:string)",
+            "validateModelId(\tapiConfiguration?:ApiConfiguration,\tglamaModels?:Record<string,ModelInfo>,\topenRouterModels?:Record<string,ModelInfo>,\tunboundModels?:Record<string,ModelInfo>,\trequestyModels?:Record<string,ModelInfo>,)"
+        ]
+    },
+    "webview-ui/src/utils/TelemetryClient.ts": {
+        "classes": [
+            {
+                "name": "TelemetryClient"
+            }
+        ],
+        "functions": [
+            "updateTelemetryState(telemetrySetting:TelemetrySetting,apiKey?:string,distinctId?:string)",
+            "getInstance(): TelemetryClient",
+            "capture(eventName:string,properties?:Record<string,any>)"
+        ]
+    },
+    "webview-ui/src/utils/vscode.ts": {
+        "classes": [
+            {
+                "name": "VSCodeAPIWrapper"
+            }
+        ],
+        "functions": [
+            "constructor()",
+            "postMessage(message:WebviewMessage)",
+            "getState(): unknown|undefined",
+            "setState(newState:T): T"
+        ]
+    },
+    "webview-ui/src/utils/useDebounceEffect.ts": {
+        "functions": [
+            "useDebounceEffect(effect:VoidFn,delay:number,deps:any[])"
+        ]
+    },
+    "webview-ui/src/utils/format.ts": {
+        "functions": [
+            "formatLargeNumber(num:number): string",
+            "formatDate(timestamp:number)"
+        ]
+    },
+    "webview-ui/src/utils/textMateToHljs.ts": {
+        "functions": [
+            "constructTheme(tmTheme:FullColorTheme): Record<string,string>",
+            "fallbackTheme()",
+            "convertTextMateToHljs(fullColorTheme:any)",
+            "parseHexColor(hexColor:string): {\tr:number\tg:number\tb:number}"
+        ]
+    },
+    "webview-ui/src/utils/path-mentions.ts": {
+        "functions": [
+            "convertToMentionPath(path:string,cwd?:string): string"
+        ]
+    },
+    "webview-ui/src/utils/context-mentions.ts": {
+        "interfaces": [
+            "SearchResult",
+            "ContextMenuQueryItem"
+        ],
+        "functions": [
+            "insertMention(\ttext:string,\tposition:number,\tvalue:string,)",
+            "removeMention(text:string,position:number): {newText:string;newPosition:number}",
+            "getContextMenuOptions(\tquery:string,\tinputValue:string,\tselectedType:ContextMenuOptionType|null=null,\tqueryItems:ContextMenuQueryItem[],\tdynamicSearchResults:SearchResult[]=[],\tmodes?:ModeConfig[],)",
+            "shouldShowContextMenu(text:string,position:number): boolean"
+        ],
+        "enums": [
+            {
+                "name": "ContextMenuOptionType"
+            }
+        ]
+    },
+    "webview-ui/src/utils/formatPrice.ts": {
+        "functions": [
+            "formatPrice(price:number)"
+        ]
+    },
+    "webview-ui/src/components/ui/alert-dialog.tsx": {
+        "functions": [
+            "AlertDialog({...props}:React.ComponentProps<typeofAlertDialogPrimitive.Root>)",
+            "AlertDialogTrigger({...props}:React.ComponentProps<typeofAlertDialogPrimitive.Trigger>)",
+            "AlertDialogPortal({...props}:React.ComponentProps<typeofAlertDialogPrimitive.Portal>)",
+            "AlertDialogOverlay({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Overlay>)",
+            "AlertDialogContent({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Content>)",
+            "AlertDialogHeader({className,...props}:React.ComponentProps<\"div\">)",
+            "AlertDialogFooter({className,...props}:React.ComponentProps<\"div\">)",
+            "AlertDialogTitle({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Title>)",
+            "AlertDialogDescription({\tclassName,\t...props}:React.ComponentProps<typeofAlertDialogPrimitive.Description>)",
+            "AlertDialogAction({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Action>)",
+            "AlertDialogCancel({className,...props}:React.ComponentProps<typeofAlertDialogPrimitive.Cancel>)"
+        ]
+    },
+    "webview-ui/src/components/ui/autosize-textarea.tsx": {
+        "interfaces": [
+            "UseAutosizeTextAreaProps"
+        ],
+        "functions": [
+            "useAutosizeTextArea({\ttextAreaRef,\ttriggerAutoSize,\tmaxHeight=Number.MAX_SAFE_INTEGER,\tminHeight=0,}:UseAutosizeTextAreaProps)"
+        ]
+    },
+    "webview-ui/src/components/ui/select-dropdown.tsx": {
+        "interfaces": [
+            "DropdownOption",
+            "SelectDropdownProps"
+        ],
+        "enums": [
+            {
+                "name": "DropdownOptionType"
+            }
+        ]
+    },
+    "webview-ui/src/components/ui/command.tsx": {
+        "functions": [
+            "CommandDialog({children,...props}:DialogProps)",
+            "CommandShortcut({className,...props}:React.HTMLAttributes<HTMLSpanElement>)"
+        ]
+    },
+    "webview-ui/src/components/ui/dialog.tsx": {
+        "functions": [
+            "Dialog({...props}:React.ComponentProps<typeofDialogPrimitive.Root>)",
+            "DialogTrigger({...props}:React.ComponentProps<typeofDialogPrimitive.Trigger>)",
+            "DialogPortal({...props}:React.ComponentProps<typeofDialogPrimitive.Portal>)",
+            "DialogClose({...props}:React.ComponentProps<typeofDialogPrimitive.Close>)",
+            "DialogOverlay({className,...props}:React.ComponentProps<typeofDialogPrimitive.Overlay>)",
+            "DialogContent({className,children,...props}:React.ComponentProps<typeofDialogPrimitive.Content>)",
+            "DialogHeader({className,...props}:React.ComponentProps<\"div\">)",
+            "DialogFooter({className,...props}:React.ComponentProps<\"div\">)",
+            "DialogTitle({className,...props}:React.ComponentProps<typeofDialogPrimitive.Title>)",
+            "DialogDescription({className,...props}:React.ComponentProps<typeofDialogPrimitive.Description>)"
+        ]
+    },
+    "webview-ui/src/components/ui/badge.tsx": {
+        "interfaces": [
+            "BadgeProps"
+        ],
+        "functions": [
+            "Badge({className,variant,...props}:BadgeProps)"
+        ]
+    },
+    "webview-ui/src/components/ui/button.tsx": {
+        "interfaces": [
+            "ButtonProps",
+            ""
+        ]
+    },
+    "webview-ui/src/components/ui/checkbox.tsx": {
+        "interfaces": [
+            "CheckboxProps",
+            ""
+        ]
+    },
+    "webview-ui/src/components/ui/dropdown-menu.tsx": {
+        "functions": [
+            "DropdownMenuShortcut({className,...props}:React.HTMLAttributes<HTMLSpanElement>)"
+        ]
+    },
+    "webview-ui/src/components/ui/select.tsx": {
+        "functions": [
+            "Select({...props}:React.ComponentProps<typeofSelectPrimitive.Root>)",
+            "SelectGroup({...props}:React.ComponentProps<typeofSelectPrimitive.Group>)",
+            "SelectValue({...props}:React.ComponentProps<typeofSelectPrimitive.Value>)",
+            "SelectTrigger({className,children,...props}:React.ComponentProps<typeofSelectPrimitive.Trigger>)",
+            "SelectContent({\tclassName,\tchildren,\tposition=\"popper\",\tcontainer,\t...props}:React.ComponentProps<typeofSelectPrimitive.Content>&Pick<PortalProps,\"container\">)",
+            "SelectLabel({className,...props}:React.ComponentProps<typeofSelectPrimitive.Label>)",
+            "SelectItem({className,children,...props}:React.ComponentProps<typeofSelectPrimitive.Item>)",
+            "SelectSeparator({className,...props}:React.ComponentProps<typeofSelectPrimitive.Separator>)",
+            "SelectScrollUpButton({className,...props}:React.ComponentProps<typeofSelectPrimitive.ScrollUpButton>)",
+            "SelectScrollDownButton({\tclassName,\t...props}:React.ComponentProps<typeofSelectPrimitive.ScrollDownButton>)"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/ChatMessages.tsx": {
+        "functions": [
+            "ChatMessages()"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/ChatInputProvider.ts": {
+        "interfaces": [
+            "ChatInputContext"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/useChatUI.ts": {
+        "functions": [
+            "useChatUI()"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/types.ts": {
+        "interfaces": [
+            "Message"
+        ],
+        "enums": [
+            {
+                "name": "MessageAnnotationType"
+            }
+        ]
+    },
+    "webview-ui/src/components/ui/chat/useChatInput.ts": {
+        "functions": [
+            "useChatInput()"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/Chat.tsx": {
+        "functions": [
+            "Chat({assistantName,handler,...props}:ChatProps)",
+            "InnerChat({className,children,...props}:InnerChatProps)"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/ChatMessage.tsx": {
+        "interfaces": [
+            "ChatMessageProps",
+            "ChatMessageHeaderProps",
+            "ChatMessageContentProps"
+        ],
+        "functions": [
+            "ChatMessage({message,isLast,isHeaderVisible,isLoading,append}:ChatMessageProps)",
+            "ChatMessageHeader({badges}:ChatMessageHeaderProps)",
+            "ChatMessageAvatar()",
+            "ChatMessageContent({isHeaderVisible}:ChatMessageContentProps)",
+            "ChatMessageActions()"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/ChatInput.tsx": {
+        "interfaces": [
+            "ChatInputFieldProps"
+        ],
+        "functions": [
+            "ChatInput()",
+            "submit()",
+            "handleSubmit(e:React.FormEvent<HTMLFormElement>)",
+            "handleKeyDown(e:React.KeyboardEvent<HTMLTextAreaElement>)",
+            "ChatInputForm()",
+            "ChatInputField({placeholder=\"Chat\"}:ChatInputFieldProps)",
+            "ChatInputSubmit()"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/ChatMessageProvider.ts": {
+        "interfaces": [
+            "ChatMessageContext"
+        ]
+    },
+    "webview-ui/src/components/ui/chat/useChatMessage.ts": {
+        "functions": [
+            "useChatMessage()"
+        ]
+    },
+    "webview-ui/src/components/ui/markdown/Blockquote.tsx": {
+        "functions": [
+            "Blockquote({children}:{children:React.ReactNode})"
+        ]
+    },
+    "webview-ui/src/components/ui/markdown/Markdown.tsx": {
+        "functions": [
+            "Markdown({content}:{content:string})",
+            "p({children})",
+            "hr()",
+            "ol({children})",
+            "ul({children})",
+            "blockquote({children})",
+            "code({className,children,...props})",
+            "a({href,children})"
+        ]
+    },
+    "webview-ui/src/components/ui/markdown/CodeBlock.tsx": {
+        "interfaces": [
+            "CodeBlockProps"
+        ],
+        "functions": [
+            "highlight()",
+            "pre(node)",
+            "code(node)"
+        ]
+    },
+    "webview-ui/src/components/ui/hooks/useRooPortal.ts": {
+        "functions": [
+            "useRooPortal(id:string)"
+        ]
+    },
+    "webview-ui/src/components/ui/hooks/useRequestyKeyInfo.ts": {
+        "functions": [
+            "getRequestyKeyInfo(apiKey?:string)",
+            "useRequestyKeyInfo(apiKey?:string,options?:UseRequestyKeyInfoOptions)"
+        ]
+    },
+    "webview-ui/src/components/ui/hooks/useClipboard.ts": {
+        "interfaces": [
+            "UseClipboardProps"
+        ],
+        "functions": [
+            "useClipboard({timeout=2000}:UseClipboardProps={})",
+            "copy(value:string)"
+        ]
+    },
+    "webview-ui/src/components/ui/hooks/useOpenRouterModelProviders.ts": {
+        "functions": [
+            "getOpenRouterProvidersForModel(modelId:string)",
+            "useOpenRouterModelProviders(modelId?:string,options?:UseOpenRouterModelProvidersOptions)"
+        ]
+    },
+    "webview-ui/src/components/ui/hooks/useOpenRouterKeyInfo.ts": {
+        "functions": [
+            "getOpenRouterKeyInfo(apiKey?:string,baseUrl?:string)",
+            "useOpenRouterKeyInfo(apiKey?:string,baseUrl?:string,options?:UseOpenRouterKeyInfoOptions)"
+        ]
+    },
+    "webview-ui/src/components/settings/RequestyBalanceDisplay.tsx": {
+        "functions": [
+            "RequestyBalanceDisplay({apiKey}:{apiKey:string})"
+        ]
+    },
+    "webview-ui/src/components/settings/ApiErrorMessage.tsx": {
+        "interfaces": [
+            "ApiErrorMessageProps"
+        ],
+        "functions": [
+            "ApiErrorMessage({errorMessage,children}:ApiErrorMessageProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/TerminalSettings.tsx": {
+        "functions": [
+            "TerminalSettings({\tterminalOutputLineLimit,\tterminalShellIntegrationTimeout,\tterminalCommandDelay,\tterminalPowershellCounter,\tterminalZshClearEolMark,\tterminalZshOhMy,\tterminalZshP10k,\tterminalZdotdir,\tterminalCompressProgressBar,\tsetCachedStateField,\tclassName,\t...props}:TerminalSettingsProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/NotificationSettings.tsx": {
+        "functions": [
+            "NotificationSettings({\tttsEnabled,\tttsSpeed,\tsoundEnabled,\tsoundVolume,\tsetCachedStateField,\t...props}:NotificationSettingsProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/ApiConfigManager.tsx": {
+        "interfaces": [
+            "ApiConfigManagerProps"
+        ],
+        "functions": [
+            "ApiConfigManager({\tcurrentApiConfigName=\"\",\tlistApiConfigMeta=[],\tonSelectConfig,\tonDeleteConfig,\tonRenameConfig,\tonUpsertConfig,}:ApiConfigManagerProps)",
+            "validateName(name:string,isNewProfile:boolean): string|null",
+            "resetCreateState()",
+            "resetRenameState()",
+            "onOpenChange(open:boolean)",
+            "onClearSearch()",
+            "handleSelectConfig(configName:string)",
+            "handleAdd()",
+            "handleStartRename()",
+            "handleCancel()",
+            "handleSave()",
+            "handleNewProfileSave()",
+            "handleDelete()"
+        ]
+    },
+    "webview-ui/src/components/settings/BrowserSettings.tsx": {
+        "functions": [
+            "BrowserSettings({\tbrowserToolEnabled,\tbrowserViewportSize,\tscreenshotQuality,\tremoteBrowserHost,\tremoteBrowserEnabled,\tsetCachedStateField,\t...props}:BrowserSettingsProps)",
+            "handleMessage(event:MessageEvent)",
+            "testConnection()"
+        ]
+    },
+    "webview-ui/src/components/settings/ReasoningEffort.tsx": {
+        "interfaces": [
+            "ReasoningEffortProps"
+        ],
+        "functions": [
+            "ReasoningEffort({apiConfiguration,setApiConfigurationField}:ReasoningEffortProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/SettingsView.tsx": {
+        "interfaces": [
+            "SettingsViewRef"
+        ],
+        "functions": [
+            "handleSubmit()",
+            "scrollToSection(ref:React.RefObject<HTMLDivElement>)"
+        ]
+    },
+    "webview-ui/src/components/settings/Section.tsx": {
+        "functions": [
+            "Section({className,...props}:SectionProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/ModelPicker.tsx": {
+        "interfaces": [
+            "ModelPickerProps"
+        ],
+        "functions": [
+            "ModelPicker({\tdefaultModelId,\tmodels,\tmodelIdKey,\tmodelInfoKey,\tserviceName,\tserviceUrl,\tapiConfiguration,\tsetApiConfigurationField,\tdefaultModelInfo,}:ModelPickerProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/R1FormatSetting.tsx": {
+        "interfaces": [
+            "R1FormatSettingProps"
+        ],
+        "functions": [
+            "R1FormatSetting({onChange,openAiR1FormatEnabled}:R1FormatSettingProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/RateLimitSecondsControl.tsx": {
+        "interfaces": [
+            "RateLimitSecondsControlProps"
+        ],
+        "functions": [
+            "RateLimitSecondsControl({value,onChange})"
+        ]
+    },
+    "webview-ui/src/components/settings/ThinkingBudget.tsx": {
+        "interfaces": [
+            "ThinkingBudgetProps"
+        ],
+        "functions": [
+            "ThinkingBudget({apiConfiguration,setApiConfigurationField,modelInfo}:ThinkingBudgetProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/ApiOptions.tsx": {
+        "interfaces": [
+            "ApiOptionsProps"
+        ],
+        "functions": [
+            "ApiOptions({\turiScheme,\tapiConfiguration,\tsetApiConfigurationField,\tfromWelcomeView,\terrorMessage,\tsetErrorMessage,}:ApiOptionsProps)",
+            "noTransform(value:T)",
+            "inputEventTransform(event:E)",
+            "getProviderDisplayName(providerKey:string): string|undefined",
+            "getSelectedProviderDocUrl(): {url:string;name:string}|undefined"
+        ]
+    },
+    "webview-ui/src/components/settings/ExperimentalFeature.tsx": {
+        "interfaces": [
+            "ExperimentalFeatureProps"
+        ],
+        "functions": [
+            "ExperimentalFeature({enabled,onChange,experimentKey}:ExperimentalFeatureProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/SectionHeader.tsx": {
+        "functions": [
+            "SectionHeader({description,children,className,...props}:SectionHeaderProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/OpenRouterBalanceDisplay.tsx": {
+        "functions": [
+            "OpenRouterBalanceDisplay({apiKey,baseUrl}:{apiKey:string;baseUrl?:string})"
+        ]
+    },
+    "webview-ui/src/components/settings/DiffSettingsControl.tsx": {
+        "interfaces": [
+            "DiffSettingsControlProps"
+        ],
+        "functions": [
+            "DiffSettingsControl({\tdiffEnabled=true,\tfuzzyMatchThreshold=1.0,\tonChange,})"
+        ]
+    },
+    "webview-ui/src/components/settings/ContextManagementSettings.tsx": {
+        "functions": [
+            "ContextManagementSettings({\tmaxOpenTabsContext,\tmaxWorkspaceFiles,\tshowRooIgnoredFiles,\tsetCachedStateField,\tmaxReadFileLine,\tclassName,\t...props}:ContextManagementSettingsProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/ModelInfoView.tsx": {
+        "functions": [
+            "ModelInfoView({\tapiProvider,\tselectedModelId,\tmodelInfo,\tisDescriptionExpanded,\tsetIsDescriptionExpanded,}:ModelInfoViewProps)",
+            "ModelInfoSupportsItem({\tisSupported,\tsupportsLabel,\tdoesNotSupportLabel,}:{\tisSupported:boolean\tsupportsLabel:string\tdoesNotSupportLabel:string})"
+        ]
+    },
+    "webview-ui/src/components/settings/LanguageSettings.tsx": {
+        "functions": [
+            "LanguageSettings({language,setCachedStateField,className,...props}:LanguageSettingsProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/AutoApproveToggle.tsx": {
+        "functions": [
+            "AutoApproveToggle({onToggle,...props}:AutoApproveToggleProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/ExperimentalSettings.tsx": {
+        "functions": [
+            "ExperimentalSettings({\tsetCachedStateField,\texperiments,\tsetExperimentEnabled,\tclassName,\t...props}:ExperimentalSettingsProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/AutoApproveSettings.tsx": {
+        "functions": [
+            "AutoApproveSettings({\talwaysAllowReadOnly,\talwaysAllowReadOnlyOutsideWorkspace,\talwaysAllowWrite,\talwaysAllowWriteOutsideWorkspace,\twriteDelayMs,\talwaysAllowBrowser,\talwaysApproveResubmit,\trequestDelaySeconds,\talwaysAllowMcp,\talwaysAllowModeSwitch,\talwaysAllowSubtasks,\talwaysAllowExecute,\tallowedCommands,\tsetCachedStateField,\tclassName,\t...props}:AutoApproveSettingsProps)",
+            "handleAddCommand()"
+        ]
+    },
+    "webview-ui/src/components/settings/TemperatureControl.tsx": {
+        "interfaces": [
+            "TemperatureControlProps"
+        ],
+        "functions": [
+            "TemperatureControl({value,onChange,maxValue=1}:TemperatureControlProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/PromptCachingControl.tsx": {
+        "interfaces": [
+            "PromptCachingControlProps"
+        ],
+        "functions": [
+            "PromptCachingControl({apiConfiguration,setApiConfigurationField}:PromptCachingControlProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/About.tsx": {
+        "functions": [
+            "About({version,telemetrySetting,setTelemetrySetting,className,...props}:AboutProps)"
+        ]
+    },
+    "webview-ui/src/components/settings/CheckpointSettings.tsx": {
+        "functions": [
+            "CheckpointSettings({enableCheckpoints,setCachedStateField,...props}:CheckpointSettingsProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/ContextWindowProgress.tsx": {
+        "interfaces": [
+            "ContextWindowProgressProps"
+        ],
+        "functions": [
+            "ContextWindowProgress({contextWindow,contextTokens,maxTokens}:ContextWindowProgressProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/ChatTextArea.tsx": {
+        "interfaces": [
+            "ChatTextAreaProps"
+        ],
+        "functions": [
+            "handleClickOutside(event:MouseEvent)",
+            "messageHandler(event:MessageEvent)",
+            "handleClickOutside(event:MouseEvent)"
+        ]
+    },
+    "webview-ui/src/components/chat/TaskHeader.tsx": {
+        "interfaces": [
+            "TaskHeaderProps"
+        ],
+        "functions": [
+            "TaskHeader({\ttask,\ttokensIn,\ttokensOut,\tdoesModelSupportPromptCache,\tcacheWrites,\tcacheReads,\ttotalCost,\tcontextTokens,\tonClose,}:TaskHeaderProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/AutoApproveMenu.tsx": {
+        "interfaces": [
+            "AutoApproveMenuProps"
+        ],
+        "functions": [
+            "AutoApproveMenu({style}:AutoApproveMenuProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/ChatRow.tsx": {
+        "interfaces": [
+            "ChatRowProps",
+            "ChatRowContentProps"
+        ],
+        "functions": [
+            "ChatRowContent({\tmessage,\tlastModifiedMessage,\tisExpanded,\tisLast,\tisStreaming,\tonToggleExpand,\tonSuggestionClick,}:ChatRowContentProps)",
+            "getIconSpan(iconName:string,color:string)",
+            "toolIcon(name:string)",
+            "splitMessage(text:string)",
+            "ProgressIndicator()"
+        ]
+    },
+    "webview-ui/src/components/chat/FollowUpSuggest.tsx": {
+        "interfaces": [
+            "FollowUpSuggestProps"
+        ],
+        "functions": [
+            "FollowUpSuggest({suggestions=[],onSuggestionClick,ts=1}:FollowUpSuggestProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/TaskActions.tsx": {
+        "functions": [
+            "TaskActions({item}:{item:HistoryItem|undefined})"
+        ]
+    },
+    "webview-ui/src/components/chat/BrowserSessionRow.tsx": {
+        "interfaces": [
+            "BrowserSessionRowProps",
+            "BrowserSessionRowContentProps"
+        ],
+        "functions": [
+            "BrowserSessionRowContent({\tmessage,\tisExpanded,\tonToggleExpand,\tlastModifiedMessage,\tisLast,\tsetMaxActionHeight,\tisStreaming,}:BrowserSessionRowContentProps)",
+            "BrowserActionBox({\taction,\tcoordinate,\ttext,}:{\taction:BrowserAction\tcoordinate?:string\ttext?:string})",
+            "getBrowserActionText(action:BrowserAction,coordinate?:string,text?:string)",
+            "BrowserCursor({style})"
+        ]
+    },
+    "webview-ui/src/components/chat/ChatView.tsx": {
+        "interfaces": [
+            "ChatViewProps",
+            "ChatViewRef"
+        ],
+        "functions": [
+            "ChatViewComponent(\t{isHidden,showAnnouncement,hideAnnouncement,showHistoryView},\tref,)",
+            "playSound(audioType:AudioType)",
+            "playTts(text:string)",
+            "isBrowserSessionMessage(message:ClineMessage): boolean",
+            "endBrowserSession()",
+            "autoApprove()"
+        ]
+    },
+    "webview-ui/src/components/chat/ContextMenu.tsx": {
+        "interfaces": [
+            "ContextMenuProps"
+        ],
+        "functions": [
+            "ContextMenu({\tonSelect,\tsearchQuery,\tinputValue,\tonMouseDown,\tselectedIndex,\tsetSelectedIndex,\tselectedType,\tqueryItems,\tmodes,\tloading=false,\tdynamicSearchResults=[],})",
+            "renderOptionContent(option:ContextMenuQueryItem)",
+            "getIconForOption(option:ContextMenuQueryItem): string",
+            "getMaterialIconForOption(option:ContextMenuQueryItem): string",
+            "isOptionSelectable(option:ContextMenuQueryItem): boolean"
+        ]
+    },
+    "webview-ui/src/components/chat/Announcement.tsx": {
+        "interfaces": [
+            "AnnouncementProps"
+        ],
+        "functions": [
+            "Announcement({version,hideAnnouncement}:AnnouncementProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/Mention.tsx": {
+        "interfaces": [
+            "MentionProps"
+        ],
+        "functions": [
+            "Mention({text,withShadow=false}:MentionProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/IconButton.tsx": {
+        "interfaces": [
+            "IconButtonProps"
+        ],
+        "functions": [
+            "IconButton({\ticonClass,\ttitle,\tclassName,\tdisabled,\tisLoading,\tonClick,\tstyle,\t...props})"
+        ]
+    },
+    "webview-ui/src/components/chat/ReasoningBlock.tsx": {
+        "interfaces": [
+            "ReasoningBlockProps"
+        ],
+        "functions": [
+            "ReasoningBlock({content,elapsed,isCollapsed=false,onToggleCollapse}:ReasoningBlockProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/SystemPromptWarning.tsx": {
+        "functions": [
+            "SystemPromptWarning()"
+        ]
+    },
+    "webview-ui/src/components/chat/checkpoints/CheckpointSaved.tsx": {
+        "functions": [
+            "CheckpointSaved({checkpoint,...props}:CheckpointSavedProps)"
+        ]
+    },
+    "webview-ui/src/components/chat/checkpoints/CheckpointMenu.tsx": {
+        "functions": [
+            "CheckpointMenu({ts,commitHash,currentHash,checkpoint}:CheckpointMenuProps)"
+        ]
+    },
+    "webview-ui/src/components/mcp/McpView.tsx": {
+        "functions": [
+            "McpView({onDone}:McpViewProps)",
+            "ServerRow({server,alwaysAllowMcp}:{server:McpServer;alwaysAllowMcp?:boolean})",
+            "getStatusColor()",
+            "handleRowClick()",
+            "handleRestart()",
+            "handleTimeoutChange(event:React.ChangeEvent<HTMLSelectElement>)",
+            "handleDelete()"
+        ]
+    },
+    "webview-ui/src/components/mcp/McpToolRow.tsx": {
+        "functions": [
+            "McpToolRow({tool,serverName,serverSource,alwaysAllowMcp}:McpToolRowProps)",
+            "handleAlwaysAllowChange()"
+        ]
+    },
+    "webview-ui/src/components/mcp/McpResourceRow.tsx": {
+        "functions": [
+            "McpResourceRow({item}:McpResourceRowProps)"
+        ]
+    },
+    "webview-ui/src/components/mcp/McpEnabledToggle.tsx": {
+        "functions": [
+            "McpEnabledToggle()",
+            "handleChange(e:Event|FormEvent<HTMLElement>)"
+        ]
+    },
+    "webview-ui/src/components/welcome/RooHero.tsx": {
+        "functions": [
+            "WelcomeView()"
+        ]
+    },
+    "webview-ui/src/components/welcome/WelcomeView.tsx": {
+        "functions": [
+            "WelcomeView()"
+        ]
+    },
+    "webview-ui/src/components/common/MermaidBlock.tsx": {
+        "interfaces": [
+            "MermaidBlockProps",
+            "SvgContainerProps"
+        ],
+        "functions": [
+            "MermaidBlock({code}:MermaidBlockProps)",
+            "handleClick()",
+            "svgToPng(svgEl:SVGElement): Promise<string>"
+        ]
+    },
+    "webview-ui/src/components/common/Tab.tsx": {
+        "functions": [
+            "Tab({className,children,...props}:TabProps)",
+            "TabHeader({className,children,...props}:TabProps)",
+            "TabContent({className,children,...props}:TabProps)"
+        ]
+    },
+    "webview-ui/src/components/common/TelemetryBanner.tsx": {
+        "functions": [
+            "TelemetryBanner()",
+            "handleAllow()",
+            "handleDeny()",
+            "handleOpenSettings()"
+        ]
+    },
+    "webview-ui/src/components/common/CodeAccordian.tsx": {
+        "interfaces": [
+            "CodeAccordianProps"
+        ],
+        "functions": [
+            "removeLeadingNonAlphanumeric(path:string): string",
+            "CodeAccordian({\tcode,\tdiff,\tlanguage,\tpath,\tisFeedback,\tisConsoleLogs,\tisExpanded,\tonToggleExpand,\tisLoading,\tprogressStatus,\tforceWrap,}:CodeAccordianProps)"
+        ]
+    },
+    "webview-ui/src/components/common/Thumbnails.tsx": {
+        "interfaces": [
+            "ThumbnailsProps"
+        ],
+        "functions": [
+            "Thumbnails({images,style,setImages,onHeightChange}:ThumbnailsProps)",
+            "handleDelete(index:number)",
+            "handleImageClick(image:string)"
+        ]
+    },
+    "webview-ui/src/components/common/VSCodeButtonLink.tsx": {
+        "interfaces": [
+            "VSCodeButtonLinkProps"
+        ],
+        "functions": [
+            "VSCodeButtonLink({href,children,...props}:VSCodeButtonLinkProps)"
+        ]
+    },
+    "webview-ui/src/components/common/MarkdownBlock.tsx": {
+        "interfaces": [
+            "MarkdownBlockProps"
+        ],
+        "functions": [
+            "remarkUrlToLink()"
+        ]
+    },
+    "webview-ui/src/components/common/CommandOutputViewer.tsx": {
+        "interfaces": [
+            "CommandOutputViewerProps"
+        ]
+    },
+    "webview-ui/src/components/common/CodeBlock.tsx": {
+        "interfaces": [
+            "CodeBlockProps"
+        ]
+    },
+    "webview-ui/src/components/common/__mocks__/MarkdownBlock.tsx": {
+        "interfaces": [
+            "MarkdownBlockProps"
+        ],
+        "functions": [
+            "MarkdownBlock({content})"
+        ]
+    },
+    "webview-ui/src/components/common/__mocks__/CodeBlock.tsx": {
+        "interfaces": [
+            "CodeBlockProps"
+        ],
+        "functions": [
+            "CodeBlock()"
+        ]
+    },
+    "webview-ui/src/components/history/ExportButton.tsx": {
+        "functions": [
+            "ExportButton({itemId}:{itemId:string})"
+        ]
+    },
+    "webview-ui/src/components/history/HistoryView.tsx": {
+        "functions": [
+            "HistoryView({onDone}:HistoryViewProps)",
+            "toggleSelectionMode()",
+            "toggleTaskSelection(taskId:string,isSelected:boolean)",
+            "toggleSelectAll(selectAll:boolean)",
+            "handleBatchDelete()"
+        ]
+    },
+    "webview-ui/src/components/history/HistoryPreview.tsx": {
+        "functions": [
+            "HistoryPreview({showHistoryView}:HistoryPreviewProps)"
+        ]
+    },
+    "webview-ui/src/components/history/DeleteTaskDialog.tsx": {
+        "interfaces": [
+            "DeleteTaskDialogProps"
+        ],
+        "functions": [
+            "DeleteTaskDialog({taskId,...props}:DeleteTaskDialogProps)"
+        ]
+    },
+    "webview-ui/src/components/history/CopyButton.tsx": {
+        "functions": [
+            "CopyButton({itemTask}:CopyButtonProps)"
+        ]
+    },
+    "webview-ui/src/components/history/BatchDeleteTaskDialog.tsx": {
+        "interfaces": [
+            "BatchDeleteTaskDialogProps"
+        ],
+        "functions": [
+            "BatchDeleteTaskDialog({taskIds,...props}:BatchDeleteTaskDialogProps)"
+        ]
+    },
+    "webview-ui/src/components/history/useTaskSearch.ts": {
+        "functions": [
+            "useTaskSearch()"
+        ]
+    },
+    "webview-ui/src/components/prompts/PromptsView.tsx": {
+        "functions": [
+            "getGroupName(group:GroupEntry): ToolGroup",
+            "PromptsView({onDone}:PromptsViewProps)",
+            "isModeWithSlug(mode:ModeConfig): modeisModeConfig",
+            "findMode(m:ModeConfig): boolean",
+            "getModeProperty(\t\tmode:ModeConfig|undefined,\t\tproperty:T,\t)",
+            "handleClickOutside(event:MouseEvent)",
+            "handler(event:MessageEvent)",
+            "updateSupportPrompt(type:SupportPromptType,value:string|undefined)",
+            "handleAgentReset(modeSlug:string,type:\"roleDefinition\"|\"customInstructions\")",
+            "handleSupportReset(type:SupportPromptType)",
+            "getSupportPromptValue(type:SupportPromptType): string",
+            "handleTestEnhancement()"
+        ]
+    },
+    "webview-ui/src/components/human-relay/HumanRelayDialog.tsx": {
+        "interfaces": [
+            "HumanRelayDialogProps"
+        ],
+        "functions": [
+            "HumanRelayDialog({\tisOpen,\tonClose,\trequestId,\tpromptText,\tonSubmit,\tonCancel,})",
+            "handleCopy()",
+            "handleSubmit(e:React.FormEvent)",
+            "handleCancel()"
+        ]
+    },
+    "webview-ui/src/stories/Chat.stories.tsx": {
+        "functions": [
+            "useStorybookChat(): ChatHandler",
+            "append(message:Message,options?:{data?:any})"
+        ]
+    },
+    "webview-ui/src/stories/DropdownMenu.stories.tsx": {
+        "functions": [
+            "DropdownMenuVariant({side=\"bottom\",align=\"center\",children}:DropdownMenuVariantProps)"
+        ]
+    },
+    "webview-ui/src/stories/Collapsible.stories.tsx": {
+        "functions": [
+            "CollapsibleDemo()"
+        ]
+    },
+    "webview-ui/src/stories/Combobox.stories.tsx": {
+        "functions": [
+            "Combobox()"
+        ]
+    },
+    "webview-ui/src/lib/utils.ts": {
+        "functions": [
+            "cn(...inputs:ClassValue[])"
+        ]
+    },
+    "webview-ui/src/i18n/TranslationContext.tsx": {
+        "functions": [
+            "TranslationProvider({children})",
+            "useAppTranslation()"
+        ]
+    },
+    "webview-ui/src/i18n/setup.ts": {
+        "functions": [
+            "loadTranslations()"
+        ]
+    },
+    "webview-ui/src/i18n/test-utils.ts": {
+        "functions": [
+            "setupI18nForTests()"
+        ]
+    },
+    "webview-ui/src/i18n/__mocks__/TranslationContext.tsx": {
+        "functions": [
+            "mockTranslate(key:string,options?:Record<string,any>): string",
+            "TranslationProvider({children})",
+            "useAppTranslation()"
+        ]
+    },
+    ".github/scripts/parse_changeset_changelog.py": {
+        "py_functions": [
+            "parse_changelog_section(content: str) -> None"
+        ],
+        "py_imports": [
+            "import sys",
+            "import os",
+            "import subprocess"
+        ]
+    },
+    ".github/scripts/release-notes-prompt.py": {
+        "py_functions": [
+            "extract_description_section(pr_body) -> None",
+            "extract_ellipsis_important(pr_body) -> None",
+            "extract_coderabbit_summary(pr_body) -> None",
+            "num_tokens_from_string(string: str, model_name: str) -> int",
+            "truncate_to_token_limit(text, max_tokens, model_name) -> None"
+        ],
+        "py_imports": [
+            "import os",
+            "import subprocess",
+            "import json",
+            "import re",
+            "import tiktoken",
+            "from datetime import datetime",
+            "from pytz import timezone"
+        ]
+    },
+    ".github/scripts/ai-release-notes.py": {
+        "py_functions": [
+            "num_tokens_from_string(string: str, model_name: str) -> int",
+            "truncate_to_token_limit(text, max_tokens, model_name) -> None",
+            "generate_release_notes(model_name) -> None"
+        ],
+        "py_imports": [
+            "import os",
+            "import requests",
+            "import json",
+            "import tiktoken"
+        ]
+    },
+    ".github/scripts/overwrite_changeset_changelog.py": {
+        "py_functions": [
+            "overwrite_changelog_section(changelog_text: str, new_content: str) -> None"
+        ],
+        "py_imports": [
+            "import os"
+        ]
+    },
+    ".github/scripts/get_prev_version_refs.py": {
+        "py_functions": [
+            "run_git_command(command) -> None",
+            "parse_merge_commit(line) -> None",
+            "get_version_refs() -> None"
+        ],
+        "py_imports": [
+            "import os",
+            "import re",
+            "import subprocess"
+        ]
+    },
+    "e2e/src/runTest.ts": {
+        "functions": [
+            "main()"
+        ]
+    },
+    "e2e/src/suite/utils.ts": {
+        "functions": [
+            "waitFor(\tcondition:(()=>Promise<boolean>)|(()=>boolean),\t{timeout=30_000,interval=250}:WaitForOptions={},)",
+            "check()",
+            "waitUntilAborted({api,taskId,...options}:WaitUntilAbortedOptions)",
+            "waitUntilCompleted({api,taskId,...options}:WaitUntilCompletedOptions)",
+            "sleep(ms:number)"
+        ]
+    },
+    "e2e/src/suite/index.ts": {
+        "functions": [
+            "run()"
+        ]
+    },
+    "src/extension.ts": {
+        "functions": [
+            "activate(context:vscode.ExtensionContext)",
+            "provideTextDocumentContent(uri:vscode.Uri): string",
+            "deactivate()"
+        ]
+    },
+    "src/__mocks__/McpHub.ts": {
+        "classes": [
+            {
+                "name": "McpHub"
+            }
+        ],
+        "functions": [
+            "constructor()",
+            "toggleToolAlwaysAllow(serverName:string,toolName:string,shouldAllow:boolean): Promise<void>",
+            "callTool(serverName:string,toolName:string,toolArguments?:Record<string,unknown>): Promise<any>"
+        ]
+    },
+    "src/__mocks__/jest.setup.ts": {
+        "interfaces": [
+            "String"
+        ],
+        "functions": [
+            "toPosixPath(p:string)"
+        ]
+    },
+    "src/__mocks__/fs/promises.ts": {
+        "functions": [
+            "formatInstructions(sections:string[]): string",
+            "formatRuleContent(ruleFile:string,content:string): string",
+            "ensureDirectoryExists(path:string)"
+        ]
+    },
+    "src/core/mode-validator.ts": {
+        "functions": [
+            "validateToolUse(\ttoolName:ToolName,\tmode:Mode,\tcustomModes?:ModeConfig[],\ttoolRequirements?:Record<string,boolean>,\ttoolParams?:Record<string,unknown>,)"
+        ]
+    },
+    "src/core/Cline.ts": {
+        "classes": [
+            {
+                "name": "Cline"
+            }
+        ],
+        "functions": [
+            "constructor({\t\tprovider,\t\tapiConfiguration,\t\tcustomInstructions,\t\tenableDiff=false,\t\tenableCheckpoints=true,\t\tfuzzyMatchThreshold=1.0,\t\tconsecutiveMistakeLimit=3,\t\ttask,\t\timages,\t\thistoryItem,\t\tstartTask=true,\t\trootTask,\t\tparentTask,\t\ttaskNumber=-1,\t\tonCreated,\t}:ClineOptions)",
+            "create(options:ClineOptions): [Cline,Promise<void>]",
+            "cwd()",
+            "getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]>",
+            "addToApiConversationHistory(message:Anthropic.MessageParam)",
+            "overwriteApiConversationHistory(newHistory:Anthropic.MessageParam[])",
+            "saveApiConversationHistory()",
+            "getSavedClineMessages(): Promise<ClineMessage[]>",
+            "addToClineMessages(message:ClineMessage)",
+            "overwriteClineMessages(newMessages:ClineMessage[])",
+            "updateClineMessage(partialMessage:ClineMessage)",
+            "saveClineMessages()",
+            "ask(\t\ttype:ClineAsk,\t\ttext?:string,\t\tpartial?:boolean,\t\tprogressStatus?:ToolProgressStatus,\t)",
+            "handleWebviewAskResponse(askResponse:ClineAskResponse,text?:string,images?:string[])",
+            "say(\t\ttype:ClineSay,\t\ttext?:string,\t\timages?:string[],\t\tpartial?:boolean,\t\tcheckpoint?:Record<string,unknown>,\t\tprogressStatus?:ToolProgressStatus,\t)",
+            "sayAndCreateMissingParamError(toolName:ToolName,paramName:string,relPath?:string)",
+            "startTask(task?:string,images?:string[]): Promise<void>",
+            "resumePausedTask(lastMessage:string)",
+            "resumeTaskFromHistory()",
+            "initiateTaskLoop(userContent:UserContent): Promise<void>",
+            "abortTask(isAbandoned=false)",
+            "attemptApiRequest(previousApiReqIndex:number,retryAttempt:number=0): ApiStream",
+            "presentAssistantMessage()",
+            "toolDescription(): string",
+            "pushToolResult(content:ToolResponse)",
+            "askApproval(\t\t\t\t\ttype:ClineAsk,\t\t\t\t\tpartialMessage?:string,\t\t\t\t\tprogressStatus?:ToolProgressStatus,\t\t\t\t)",
+            "askFinishSubTaskApproval()",
+            "handleError(action:string,error:Error)",
+            "removeClosingTag(tag:ToolParamName,text?:string): string",
+            "waitForResume()",
+            "recursivelyMakeClineRequests(\t\tuserContent:UserContent,\t\tincludeFileDetails:boolean=false,\t)",
+            "updateApiReqMsg(cancelReason?:ClineApiReqCancelReason,streamingFailedMessage?:string)",
+            "abortStream(cancelReason:ClineApiReqCancelReason,streamingFailedMessage?:string)",
+            "loadContext(userContent:UserContent,includeFileDetails:boolean=false)",
+            "shouldProcessMentions(text:string)",
+            "getEnvironmentDetails(includeFileDetails:boolean=false)",
+            "getCheckpointService()",
+            "log(message:string)",
+            "getInitializedCheckpointService({\t\tinterval=250,\t\ttimeout=15_000,\t}:{interval?:number;timeout?:number}={})",
+            "checkpointDiff({\t\tts,\t\tpreviousCommitHash,\t\tcommitHash,\t\tmode,\t}:{\t\tts:number\t\tpreviousCommitHash?:string\t\tcommitHash:string\t\tmode:\"full\"|\"checkpoint\"\t})",
+            "checkpointSave()",
+            "checkpointRestore({\t\tts,\t\tcommitHash,\t\tmode,\t}:{\t\tts:number\t\tcommitHash:string\t\tmode:\"preview\"|\"restore\"\t})",
+            "getFileContextTracker(): FileContextTracker",
+            "getTokenUsage()",
+            "recordToolUsage(toolName:ToolName)",
+            "recordToolError(toolName:ToolName,error?:string)",
+            "getToolUsage()"
+        ]
+    },
+    "src/core/CodeActionProvider.ts": {
+        "classes": [
+            {
+                "name": "CodeActionProvider"
+            }
+        ],
+        "functions": [
+            "createAction(title:string,kind:vscode.CodeActionKind,command:string,args:any[]): vscode.CodeAction",
+            "createActionPair(\t\tbaseTitle:string,\t\tkind:vscode.CodeActionKind,\t\tbaseCommand:string,\t\targs:any[],\t)",
+            "provideCodeActions(\t\tdocument:vscode.TextDocument,\t\trange:vscode.Range|vscode.Selection,\t\tcontext:vscode.CodeActionContext,\t)"
+        ]
+    },
+    "src/core/EditorUtils.ts": {
+        "classes": [
+            {
+                "name": "EditorUtils"
+            }
+        ],
+        "interfaces": [
+            "EffectiveRange",
+            "DiagnosticData",
+            "EditorContext"
+        ],
+        "functions": [
+            "getEffectiveRange(\t\tdocument:vscode.TextDocument,\t\trange:vscode.Range|vscode.Selection,\t)",
+            "getFilePath(document:vscode.TextDocument): string",
+            "createDiagnosticData(diagnostic:vscode.Diagnostic): DiagnosticData",
+            "hasIntersectingRange(range1:vscode.Range,range2:vscode.Range): boolean",
+            "getEditorContext(editor?:vscode.TextEditor): EditorContext|null"
+        ]
+    },
+    "src/core/task-persistence/taskMessages.ts": {
+        "functions": [
+            "readTaskMessages({\ttaskId,\tglobalStoragePath,}:ReadTaskMessagesOptions)",
+            "saveTaskMessages({messages,taskId,globalStoragePath}:SaveTaskMessagesOptions)"
+        ]
+    },
+    "src/core/task-persistence/apiMessages.ts": {
+        "functions": [
+            "readApiMessages({\ttaskId,\tglobalStoragePath,}:{\ttaskId:string\tglobalStoragePath:string})",
+            "saveApiMessages({\tmessages,\ttaskId,\tglobalStoragePath,}:{\tmessages:ApiMessage[]\ttaskId:string\tglobalStoragePath:string})"
+        ]
+    },
+    "src/core/task-persistence/taskMetadata.ts": {
+        "functions": [
+            "taskMetadata({\tmessages,\ttaskId,\ttaskNumber,\tglobalStoragePath,\tworkspace,}:TaskMetadataOptions)"
+        ]
+    },
+    "src/core/tools/insertContentTool.ts": {
+        "functions": [
+            "insertContentTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/attemptCompletionTool.ts": {
+        "functions": [
+            "attemptCompletionTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,\ttoolDescription:ToolDescription,\taskFinishSubTaskApproval:AskFinishSubTaskApproval,)"
+        ]
+    },
+    "src/core/tools/listFilesTool.ts": {
+        "functions": [
+            "listFilesTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/useMcpToolTool.ts": {
+        "functions": [
+            "useMcpToolTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/searchAndReplaceTool.ts": {
+        "functions": [
+            "validateParams(\tcline:Cline,\trelPath:string|undefined,\tsearch:string|undefined,\treplace:string|undefined,\tpushToolResult:PushToolResult,)",
+            "searchAndReplaceTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)",
+            "escapeRegExp(input:string): string"
+        ]
+    },
+    "src/core/tools/searchFilesTool.ts": {
+        "functions": [
+            "searchFilesTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/newTaskTool.ts": {
+        "functions": [
+            "newTaskTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/listCodeDefinitionNamesTool.ts": {
+        "functions": [
+            "listCodeDefinitionNamesTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/applyDiffTool.ts": {
+        "functions": [
+            "applyDiffTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/fetchInstructionsTool.ts": {
+        "functions": [
+            "fetchInstructionsTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,)"
+        ]
+    },
+    "src/core/tools/accessMcpResourceTool.ts": {
+        "functions": [
+            "accessMcpResourceTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/switchModeTool.ts": {
+        "functions": [
+            "switchModeTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/readFileTool.ts": {
+        "functions": [
+            "readFileTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/writeToFileTool.ts": {
+        "functions": [
+            "writeToFileTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/browserActionTool.ts": {
+        "functions": [
+            "browserActionTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/askFollowupQuestionTool.ts": {
+        "functions": [
+            "askFollowupQuestionTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)"
+        ]
+    },
+    "src/core/tools/executeCommandTool.ts": {
+        "functions": [
+            "executeCommandTool(\tcline:Cline,\tblock:ToolUse,\taskApproval:AskApproval,\thandleError:HandleError,\tpushToolResult:PushToolResult,\tremoveClosingTag:RemoveClosingTag,)",
+            "executeCommand(\tcline:Cline,\tcommand:string,\tcustomCwd?:string,)",
+            "sendCommandOutput(line:string,terminalProcess:TerminalProcess): Promise<void>"
+        ]
+    },
+    "src/core/sliding-window/index.ts": {
+        "functions": [
+            "estimateTokenCount(\tcontent:Array<Anthropic.Messages.ContentBlockParam>,\tapiHandler:ApiHandler,)",
+            "truncateConversation(\tmessages:Anthropic.Messages.MessageParam[],\tfracToRemove:number,)",
+            "truncateConversationIfNeeded({\tmessages,\ttotalTokens,\tcontextWindow,\tmaxTokens,\tapiHandler,}:TruncateOptions)"
+        ]
+    },
+    "src/core/config/CustomModesManager.ts": {
+        "classes": [
+            {
+                "name": "CustomModesManager"
+            }
+        ],
+        "functions": [
+            "constructor(\t\tprivatereadonlycontext:vscode.ExtensionContext,\t\tprivatereadonlyonUpdate:()=>Promise<void>,\t)",
+            "queueWrite(operation:()=>Promise<void>): Promise<void>",
+            "processWriteQueue(): Promise<void>",
+            "getWorkspaceRoomodes(): Promise<string|undefined>",
+            "loadModesFromFile(filePath:string): Promise<ModeConfig[]>",
+            "mergeCustomModes(projectModes:ModeConfig[],globalModes:ModeConfig[]): Promise<ModeConfig[]>",
+            "getCustomModesFilePath(): Promise<string>",
+            "watchCustomModesFiles(): Promise<void>",
+            "getCustomModes(): Promise<ModeConfig[]>",
+            "updateCustomMode(slug:string,config:ModeConfig): Promise<void>",
+            "updateModesInFile(filePath:string,operation:(modes:ModeConfig[])=>ModeConfig[]): Promise<void>",
+            "refreshMergedState(): Promise<void>",
+            "deleteCustomMode(slug:string): Promise<void>",
+            "ensureSettingsDirectoryExists(): Promise<string>",
+            "resetCustomModes(): Promise<void>",
+            "dispose(): void"
+        ]
+    },
+    "src/core/config/ContextProxy.ts": {
+        "classes": [
+            {
+                "name": "ContextProxy"
+            }
+        ],
+        "functions": [
+            "isPassThroughStateKey(key:string)",
+            "constructor(context:vscode.ExtensionContext)",
+            "isInitialized()",
+            "initialize()",
+            "extensionUri()",
+            "extensionPath()",
+            "globalStorageUri()",
+            "logUri()",
+            "extension()",
+            "extensionMode()",
+            "getGlobalState(key:K,defaultValue?:GlobalState[K]): GlobalState[K]",
+            "updateGlobalState(key:K,value:GlobalState[K])",
+            "getAllGlobalState(): GlobalState",
+            "getSecret(key:SecretStateKey)",
+            "storeSecret(key:SecretStateKey,value?:string)",
+            "getAllSecretState(): SecretState",
+            "getGlobalSettings(): GlobalSettings",
+            "getProviderSettings(): ProviderSettings",
+            "setProviderSettings(values:ProviderSettings)",
+            "setValue(key:K,value:RooCodeSettings[K])",
+            "getValue(key:K): RooCodeSettings[K]",
+            "getValues(): RooCodeSettings",
+            "setValues(values:RooCodeSettings)",
+            "export(): Promise<GlobalSettings|undefined>",
+            "resetAllState()"
+        ]
+    },
+    "src/core/config/importExport.ts": {
+        "functions": [
+            "importSettings({providerSettingsManager,contextProxy}:ImportExportOptions)",
+            "exportSettings({providerSettingsManager,contextProxy}:ImportExportOptions)"
+        ]
+    },
+    "src/core/config/ProviderSettingsManager.ts": {
+        "classes": [
+            {
+                "name": "ProviderSettingsManager"
+            }
+        ],
+        "functions": [
+            "constructor(context:ExtensionContext)",
+            "generateId()",
+            "lock(cb:()=>Promise<T>)",
+            "initialize()",
+            "migrateRateLimitSeconds(providerProfiles:ProviderProfiles)",
+            "migrateDiffSettings(providerProfiles:ProviderProfiles)",
+            "listConfig(): Promise<ApiConfigMeta[]>",
+            "saveConfig(name:string,config:ProviderSettingsWithId)",
+            "loadConfig(name:string)",
+            "loadConfigById(id:string)",
+            "deleteConfig(name:string)",
+            "hasConfig(name:string)",
+            "setModeConfig(mode:Mode,configId:string)",
+            "getModeConfigId(mode:Mode)",
+            "export()",
+            "import(providerProfiles:ProviderProfiles)",
+            "resetAllConfigs()",
+            "secretsKey()",
+            "load(): Promise<ProviderProfiles>",
+            "store(providerProfiles:ProviderProfiles)"
+        ]
+    },
+    "src/core/ignore/RooIgnoreController.ts": {
+        "classes": [
+            {
+                "name": "RooIgnoreController"
+            }
+        ],
+        "functions": [
+            "constructor(cwd:string)",
+            "initialize(): Promise<void>",
+            "setupFileWatcher(): void",
+            "loadRooIgnore(): Promise<void>",
+            "validateAccess(filePath:string): boolean",
+            "validateCommand(command:string): string|undefined",
+            "filterPaths(paths:string[]): string[]",
+            "dispose(): void",
+            "getInstructions(): string|undefined"
+        ]
+    },
+    "src/core/ignore/__mocks__/RooIgnoreController.ts": {
+        "classes": [
+            {
+                "name": "RooIgnoreController"
+            }
+        ],
+        "functions": [
+            "constructor(cwd:string)",
+            "initialize(): Promise<void>",
+            "validateAccess(filePath:string): boolean",
+            "validateCommand(command:string): string|undefined",
+            "filterPaths(paths:string[]): string[]",
+            "dispose(): void",
+            "getInstructions(): string|undefined"
+        ]
+    },
+    "src/core/webview/webviewMessageHandler.ts": {
+        "functions": [
+            "webviewMessageHandler(provider:ClineProvider,message:WebviewMessage)",
+            "getGlobalState(key:K)",
+            "updateGlobalState(key:K,value:GlobalState[K])",
+            "generateSystemPrompt(provider:ClineProvider,message:WebviewMessage)"
+        ]
+    },
+    "src/core/webview/getNonce.ts": {
+        "functions": [
+            "getNonce()"
+        ]
+    },
+    "src/core/webview/ClineProvider.ts": {
+        "classes": [
+            {
+                "name": "ClineProvider"
+            }
+        ],
+        "functions": [
+            "workspaceTracker(): WorkspaceTracker|undefined",
+            "constructor(\t\treadonlycontext:vscode.ExtensionContext,\t\tprivatereadonlyoutputChannel:vscode.OutputChannel,\t\tprivatereadonlyrenderContext:\"sidebar\"|\"editor\"=\"sidebar\",\t)",
+            "addClineToStack(cline:Cline)",
+            "removeClineFromStack()",
+            "getCurrentCline(): Cline|undefined",
+            "getClineStackSize(): number",
+            "getCurrentTaskStack(): string[]",
+            "finishSubTask(lastMessage:string)",
+            "dispose()",
+            "getVisibleInstance(): ClineProvider|undefined",
+            "getInstance(): Promise<ClineProvider|undefined>",
+            "isActiveTask(): Promise<boolean>",
+            "handleCodeAction(\t\tcommand:string,\t\tpromptType:keyoftypeofACTION_NAMES,\t\tparams:Record<string,string|any[]>,\t)",
+            "handleTerminalAction(\t\tcommand:string,\t\tpromptType:\"TERMINAL_ADD_TO_CONTEXT\"|\"TERMINAL_FIX\"|\"TERMINAL_EXPLAIN\",\t\tparams:Record<string,string|any[]>,\t)",
+            "resolveWebviewView(webviewView:vscode.WebviewView|vscode.WebviewPanel)",
+            "initClineWithSubTask(parent:Cline,task?:string,images?:string[])",
+            "initClineWithTask(\t\ttask?:string,\t\timages?:string[],\t\tparentTask?:Cline,\t\toptions:Partial<\t\t\tPick<\t\t\t\tClineOptions,\t\t\t\t|\"customInstructions\"\t\t\t\t|\"enableDiff\"\t\t\t\t|\"enableCheckpoints\"\t\t\t\t|\"fuzzyMatchThreshold\"\t\t\t\t|\"consecutiveMistakeLimit\"\t\t\t\t|\"experiments\"\t\t\t>\t\t>={},\t)",
+            "initClineWithHistoryItem(historyItem:HistoryItem&{rootTask?:Cline;parentTask?:Cline})",
+            "postMessageToWebview(message:ExtensionMessage)",
+            "getHMRHtmlContent(webview:vscode.Webview): Promise<string>",
+            "getHtmlContent(webview:vscode.Webview): string",
+            "setWebviewMessageListener(webview:vscode.Webview)",
+            "onReceiveMessage(message:WebviewMessage)",
+            "handleModeSwitch(newMode:Mode)",
+            "updateApiConfiguration(providerSettings:ProviderSettings)",
+            "cancelTask()",
+            "updateCustomInstructions(instructions?:string)",
+            "ensureMcpServersDirectoryExists(): Promise<string>",
+            "ensureSettingsDirectoryExists(): Promise<string>",
+            "ensureCacheDirectoryExists()",
+            "writeModelsToCache(filename:string,data:T)",
+            "readModelsFromCache(filename:string): Promise<Record<string,ModelInfo>|undefined>",
+            "handleOpenRouterCallback(code:string)",
+            "handleGlamaCallback(code:string)",
+            "handleRequestyCallback(code:string)",
+            "upsertApiConfiguration(configName:string,apiConfiguration:ApiConfiguration)",
+            "getTaskWithId(id:string): Promise<{\t\thistoryItem:HistoryItem\t\ttaskDirPath:string\t\tapiConversationHistoryFilePath:string\t\tuiMessagesFilePath:string\t\tapiConversationHistory:Anthropic.MessageParam[]\t}>",
+            "showTaskWithId(id:string)",
+            "exportTaskWithId(id:string)",
+            "deleteTaskWithId(id:string)",
+            "deleteTaskFromState(id:string)",
+            "postStateToWebview()",
+            "hasFileBasedSystemPromptOverride(mode:Mode): Promise<boolean>",
+            "getStateToPostToWebview()",
+            "getState()",
+            "updateTaskHistory(item:HistoryItem): Promise<HistoryItem[]>",
+            "updateGlobalState(key:K,value:GlobalState[K])",
+            "getGlobalState(key:K)",
+            "setValue(key:K,value:RooCodeSettings[K])",
+            "getValue(key:K)",
+            "getValues()",
+            "setValues(values:RooCodeSettings)",
+            "cwd()",
+            "resetState()",
+            "log(message:string)",
+            "viewLaunched()",
+            "messages()",
+            "getMcpHub(): McpHub|undefined",
+            "getTelemetryProperties(): Promise<Record<string,any>>"
+        ]
+    },
+    "src/core/webview/getUri.ts": {
+        "functions": [
+            "getUri(webview:Webview,extensionUri:Uri,pathList:string[])"
+        ]
+    },
+    "src/core/assistant-message/parse-assistant-message.ts": {
+        "functions": [
+            "parseAssistantMessage(assistantMessage:string)"
+        ]
+    },
+    "src/core/diff/insert-groups.ts": {
+        "interfaces": [
+            "InsertGroup"
+        ],
+        "functions": [
+            "insertGroups(original:string[],insertGroups:InsertGroup[]): string[]"
+        ]
+    },
+    "src/core/diff/strategies/multi-search-replace.ts": {
+        "classes": [
+            {
+                "name": "MultiSearchReplaceDiffStrategy"
+            }
+        ],
+        "functions": [
+            "getSimilarity(original:string,search:string): number",
+            "fuzzySearch(lines:string[],searchChunk:string,startIndex:number,endIndex:number)",
+            "getName(): string",
+            "constructor(fuzzyThreshold?:number,bufferLines?:number)",
+            "getToolDescription(args:{cwd:string;toolOptions?:{[key:string]:string}}): string",
+            "unescapeMarkers(content:string): string",
+            "validateMarkerSequencing(diffContent:string): {success:boolean;error?:string}",
+            "reportMergeConflictError(found:string,expected:string)",
+            "reportInvalidDiffError(found:string,expected:string)",
+            "applyDiff(\t\toriginalContent:string,\t\tdiffContent:string,\t\t_paramStartLine?:number,\t\t_paramEndLine?:number,\t)",
+            "getProgressStatus(toolUse:ToolUse,result?:DiffResult): ToolProgressStatus"
+        ],
+        "enums": [
+            {
+                "name": "State"
+            }
+        ]
+    },
+    "src/core/mentions/index.ts": {
+        "functions": [
+            "openMention(mention?:string): Promise<void>",
+            "parseMentions(\ttext:string,\tcwd:string,\turlContentFetcher:UrlContentFetcher,\tfileContextTracker?:FileContextTracker,)",
+            "getFileOrFolderContent(mentionPath:string,cwd:string): Promise<string>",
+            "getWorkspaceProblems(cwd:string): Promise<string>"
+        ]
+    },
+    "src/core/prompts/system.ts": {
+        "functions": [
+            "generatePrompt(\tcontext:vscode.ExtensionContext,\tcwd:string,\tsupportsComputerUse:boolean,\tmode:Mode,\tmcpHub?:McpHub,\tdiffStrategy?:DiffStrategy,\tbrowserViewportSize?:string,\tpromptComponent?:PromptComponent,\tcustomModeConfigs?:ModeConfig[],\tglobalCustomInstructions?:string,\tdiffEnabled?:boolean,\texperiments?:Record<string,boolean>,\tenableMcpServerCreation?:boolean,\tlanguage?:string,\trooIgnoreInstructions?:string,)",
+            "SYSTEM_PROMPT(\tcontext:vscode.ExtensionContext,\tcwd:string,\tsupportsComputerUse:boolean,\tmcpHub?:McpHub,\tdiffStrategy?:DiffStrategy,\tbrowserViewportSize?:string,\tmode:Mode=defaultModeSlug,\tcustomModePrompts?:CustomModePrompts,\tcustomModes?:ModeConfig[],\tglobalCustomInstructions?:string,\tdiffEnabled?:boolean,\texperiments?:Record<string,boolean>,\tenableMcpServerCreation?:boolean,\tlanguage?:string,\trooIgnoreInstructions?:string,)",
+            "getPromptComponent(value:unknown)"
+        ]
+    },
+    "src/core/prompts/responses.ts": {
+        "functions": [
+            "formatImagesIntoBlocks(images?:string[]): Anthropic.ImageBlockParam[]"
+        ]
+    },
+    "src/core/prompts/instructions/create-mode.ts": {
+        "functions": [
+            "createModeInstructions(context:vscode.ExtensionContext|undefined): Promise<string>"
+        ]
+    },
+    "src/core/prompts/instructions/instructions.ts": {
+        "interfaces": [
+            "InstructionsDetail"
+        ],
+        "functions": [
+            "fetchInstructions(text:string,detail:InstructionsDetail): Promise<string>"
+        ]
+    },
+    "src/core/prompts/instructions/create-mcp-server.ts": {
+        "functions": [
+            "createMCPServerInstructions(\tmcpHub:McpHub|undefined,\tdiffStrategy:DiffStrategy|undefined,)"
+        ]
+    },
+    "src/core/prompts/sections/tool-use.ts": {
+        "functions": [
+            "getSharedToolUseSection(): string"
+        ]
+    },
+    "src/core/prompts/sections/capabilities.ts": {
+        "functions": [
+            "getCapabilitiesSection(\tcwd:string,\tsupportsComputerUse:boolean,\tmcpHub?:McpHub,\tdiffStrategy?:DiffStrategy,)"
+        ]
+    },
+    "src/core/prompts/sections/modes.ts": {
+        "functions": [
+            "getModesSection(context:vscode.ExtensionContext): Promise<string>"
+        ]
+    },
+    "src/core/prompts/sections/tool-use-guidelines.ts": {
+        "functions": [
+            "getToolUseGuidelinesSection(): string"
+        ]
+    },
+    "src/core/prompts/sections/mcp-servers.ts": {
+        "functions": [
+            "getMcpServersSection(\tmcpHub?:McpHub,\tdiffStrategy?:DiffStrategy,\tenableMcpServerCreation?:boolean,)"
+        ]
+    },
+    "src/core/prompts/sections/rules.ts": {
+        "functions": [
+            "getEditingInstructions(diffStrategy?:DiffStrategy,experiments?:Record<string,boolean>): string",
+            "getRulesSection(\tcwd:string,\tsupportsComputerUse:boolean,\tdiffStrategy?:DiffStrategy,\texperiments?:Record<string,boolean>|undefined,)"
+        ]
+    },
+    "src/core/prompts/sections/custom-system-prompt.ts": {
+        "functions": [
+            "interpolatePromptContent(content:string,variables:PromptVariables): string",
+            "safeReadFile(filePath:string): Promise<string>",
+            "getSystemPromptFilePath(cwd:string,mode:Mode): string",
+            "loadSystemPromptFile(cwd:string,mode:Mode,variables:PromptVariables): Promise<string>",
+            "ensureRooDirectory(cwd:string): Promise<void>"
+        ]
+    },
+    "src/core/prompts/sections/custom-instructions.ts": {
+        "functions": [
+            "safeReadFile(filePath:string): Promise<string>",
+            "directoryExists(dirPath:string): Promise<boolean>",
+            "resolveDirectoryEntry(\tentry:Dirent,\tdirPath:string,\tfilePaths:string[],\tdepth:number,)",
+            "resolveSymLink(fullPath:string,filePaths:string[],depth:number): Promise<void>",
+            "readTextFilesFromDirectory(dirPath:string): Promise<Array<{filename:string;content:string}>>",
+            "formatDirectoryContent(dirPath:string,files:Array<{filename:string;content:string}>): string",
+            "loadRuleFiles(cwd:string): Promise<string>",
+            "addCustomInstructions(\tmodeCustomInstructions:string,\tglobalCustomInstructions:string,\tcwd:string,\tmode:string,\toptions:{language?:string;rooIgnoreInstructions?:string}={},)"
+        ]
+    },
+    "src/core/prompts/sections/objective.ts": {
+        "functions": [
+            "getObjectiveSection(): string"
+        ]
+    },
+    "src/core/prompts/sections/system-info.ts": {
+        "functions": [
+            "getSystemInfoSection(cwd:string,currentMode:Mode,customModes?:ModeConfig[]): string",
+            "findModeBySlug(slug:string,modes?:ModeConfig[])"
+        ]
+    },
+    "src/core/prompts/tools/execute-command.ts": {
+        "functions": [
+            "getExecuteCommandDescription(args:ToolArgs): string|undefined"
+        ]
+    },
+    "src/core/prompts/tools/search-files.ts": {
+        "functions": [
+            "getSearchFilesDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/attempt-completion.ts": {
+        "functions": [
+            "getAttemptCompletionDescription(): string"
+        ]
+    },
+    "src/core/prompts/tools/use-mcp-tool.ts": {
+        "functions": [
+            "getUseMcpToolDescription(args:ToolArgs): string|undefined"
+        ]
+    },
+    "src/core/prompts/tools/search-and-replace.ts": {
+        "functions": [
+            "getSearchAndReplaceDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/switch-mode.ts": {
+        "functions": [
+            "getSwitchModeDescription(): string"
+        ]
+    },
+    "src/core/prompts/tools/read-file.ts": {
+        "functions": [
+            "getReadFileDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/access-mcp-resource.ts": {
+        "functions": [
+            "getAccessMcpResourceDescription(args:ToolArgs): string|undefined"
+        ]
+    },
+    "src/core/prompts/tools/insert-content.ts": {
+        "functions": [
+            "getInsertContentDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/fetch-instructions.ts": {
+        "functions": [
+            "getFetchInstructionsDescription(): string"
+        ]
+    },
+    "src/core/prompts/tools/list-files.ts": {
+        "functions": [
+            "getListFilesDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/index.ts": {
+        "functions": [
+            "getToolDescriptionsForMode(\tmode:Mode,\tcwd:string,\tsupportsComputerUse:boolean,\tdiffStrategy?:DiffStrategy,\tbrowserViewportSize?:string,\tmcpHub?:McpHub,\tcustomModes?:ModeConfig[],\texperiments?:Record<string,boolean>,)"
+        ]
+    },
+    "src/core/prompts/tools/write-to-file.ts": {
+        "functions": [
+            "getWriteToFileDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/browser-action.ts": {
+        "functions": [
+            "getBrowserActionDescription(args:ToolArgs): string|undefined"
+        ]
+    },
+    "src/core/prompts/tools/ask-followup-question.ts": {
+        "functions": [
+            "getAskFollowupQuestionDescription(): string"
+        ]
+    },
+    "src/core/prompts/tools/new-task.ts": {
+        "functions": [
+            "getNewTaskDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/prompts/tools/list-code-definition-names.ts": {
+        "functions": [
+            "getListCodeDefinitionNamesDescription(args:ToolArgs): string"
+        ]
+    },
+    "src/core/context-tracking/FileContextTracker.ts": {
+        "classes": [
+            {
+                "name": "FileContextTracker"
+            }
+        ],
+        "functions": [
+            "constructor(provider:ClineProvider,taskId:string)",
+            "getCwd(): string|undefined",
+            "setupFileWatcher(filePath:string)",
+            "trackFileContext(filePath:string,operation:RecordSource)",
+            "getContextProxy(): ContextProxy|undefined",
+            "getTaskMetadata(taskId:string): Promise<TaskMetadata>",
+            "saveTaskMetadata(taskId:string,metadata:TaskMetadata)",
+            "addFileToFileContextTracker(taskId:string,filePath:string,source:RecordSource)",
+            "getLatestDateForField(path:string,field:keyofFileMetadataEntry): number|null",
+            "getAndClearRecentlyModifiedFiles(): string[]",
+            "getAndClearCheckpointPossibleFile(): string[]",
+            "markFileAsEditedByRoo(filePath:string): void",
+            "dispose(): void"
+        ]
+    },
+    "src/utils/xml-matcher.ts": {
+        "classes": [
+            {
+                "name": "XmlMatcher"
+            }
+        ],
+        "interfaces": [
+            "XmlMatcherResult"
+        ],
+        "functions": [
+            "constructor(\t\treadonlytagName:string,\t\treadonlytransform?:(chunks:XmlMatcherResult)=>Result,\t\treadonlyposition=0,\t)",
+            "collect()",
+            "pop()",
+            "_update(chunk:string)",
+            "final(chunk?:string)",
+            "update(chunk:string)"
+        ]
+    },
+    "src/utils/path.ts": {
+        "interfaces": [
+            "String"
+        ],
+        "functions": [
+            "toPosixPath(p:string)",
+            "arePathsEqual(path1?:string,path2?:string): boolean",
+            "normalizePath(p:string): string",
+            "getReadablePath(cwd:string,relPath?:string): string",
+            "toRelativePath(filePath:string,cwd:string)",
+            "getWorkspacePath(defaultCwdPath=\"\")"
+        ]
+    },
+    "src/utils/cost.ts": {
+        "functions": [
+            "calculateApiCostInternal(\tmodelInfo:ModelInfo,\tinputTokens:number,\toutputTokens:number,\tcacheCreationInputTokens:number,\tcacheReadInputTokens:number,)",
+            "calculateApiCostAnthropic(\tmodelInfo:ModelInfo,\tinputTokens:number,\toutputTokens:number,\tcacheCreationInputTokens?:number,\tcacheReadInputTokens?:number,)",
+            "calculateApiCostOpenAI(\tmodelInfo:ModelInfo,\tinputTokens:number,\toutputTokens:number,\tcacheCreationInputTokens?:number,\tcacheReadInputTokens?:number,)",
+            "parseApiPrice(price:any)"
+        ]
+    },
+    "src/utils/fs.ts": {
+        "functions": [
+            "createDirectoriesForFile(filePath:string): Promise<string[]>",
+            "fileExistsAtPath(filePath:string): Promise<boolean>"
+        ]
+    },
+    "src/utils/tts.ts": {
+        "interfaces": [
+            "Say"
+        ],
+        "functions": [
+            "setTtsEnabled(enabled:boolean)",
+            "setTtsSpeed(newSpeed:number)",
+            "playTts(message:string,options:PlayTtsOptions={})",
+            "stopTts()",
+            "processQueue(): Promise<void>"
+        ]
+    },
+    "src/utils/xml.ts": {
+        "functions": [
+            "parseXml(xmlString:string,stopNodes?:string[]): unknown"
+        ]
+    },
+    "src/utils/shell.ts": {
+        "interfaces": [
+            "MacTerminalProfile",
+            "WindowsTerminalProfile",
+            "LinuxTerminalProfile"
+        ],
+        "functions": [
+            "getWindowsTerminalConfig()",
+            "getMacTerminalConfig()",
+            "getLinuxTerminalConfig()",
+            "getWindowsShellFromVSCode(): string|null",
+            "getMacShellFromVSCode(): string|null",
+            "getLinuxShellFromVSCode(): string|null",
+            "getShellFromUserInfo(): string|null",
+            "getShellFromEnv(): string|null",
+            "getShell(): string"
+        ]
+    },
+    "src/utils/config.ts": {
+        "functions": [
+            "injectEnv(config:string|Record<PropertyKey,any>,notFoundValue:any=\"\")"
+        ]
+    },
+    "src/utils/text-normalization.ts": {
+        "interfaces": [
+            "NormalizeOptions"
+        ],
+        "functions": [
+            "normalizeString(str:string,options:NormalizeOptions=DEFAULT_OPTIONS): string",
+            "unescapeHtmlEntities(text:string): string"
+        ]
+    },
+    "src/utils/git.ts": {
+        "interfaces": [
+            "GitCommit"
+        ],
+        "functions": [
+            "checkGitRepo(cwd:string): Promise<boolean>",
+            "checkGitInstalled(): Promise<boolean>",
+            "searchCommits(query:string,cwd:string): Promise<GitCommit[]>",
+            "getCommitInfo(hash:string,cwd:string): Promise<string>",
+            "getWorkingState(cwd:string): Promise<string>"
+        ]
+    },
+    "src/utils/single-completion-handler.ts": {
+        "functions": [
+            "singleCompletionHandler(apiConfiguration:ApiConfiguration,promptText:string): Promise<string>"
+        ]
+    },
+    "src/utils/migrateSettings.ts": {
+        "functions": [
+            "migrateSettings(\tcontext:vscode.ExtensionContext,\toutputChannel:vscode.OutputChannel,)"
+        ]
+    },
+    "src/utils/pathUtils.ts": {
+        "functions": [
+            "isPathOutsideWorkspace(filePath:string): boolean"
+        ]
+    },
+    "src/utils/sound.ts": {
+        "functions": [
+            "isWAV(filepath:string): boolean",
+            "setSoundEnabled(enabled:boolean): void",
+            "setSoundVolume(newVolume:number): void",
+            "playSound(filepath:string): void"
+        ]
+    },
+    "src/utils/logging/CompactLogger.ts": {
+        "classes": [
+            {
+                "name": "CompactLogger"
+            }
+        ],
+        "functions": [
+            "constructor(transport?:CompactTransport,parentMeta?:LogMeta)",
+            "debug(message:string,meta?:LogMeta): void",
+            "info(message:string,meta?:LogMeta): void",
+            "warn(message:string,meta?:LogMeta): void",
+            "error(message:string|Error,meta?:LogMeta): void",
+            "fatal(message:string|Error,meta?:LogMeta): void",
+            "child(meta:LogMeta): ILogger",
+            "close(): void",
+            "handleErrorLog(level:\"error\"|\"fatal\",message:string|Error,meta?:LogMeta): void",
+            "combineMeta(meta?:LogMeta): LogMeta|undefined",
+            "log(level:LogLevel,message:string,meta?:LogMeta): void"
+        ]
+    },
+    "src/utils/logging/types.ts": {
+        "interfaces": [
+            "CompactLogEntry",
+            "LogMeta",
+            "CompactTransportConfig",
+            "ICompactTransport",
+            "ILogger"
+        ]
+    },
+    "src/utils/logging/CompactTransport.ts": {
+        "classes": [
+            {
+                "name": "CompactTransport"
+            }
+        ],
+        "functions": [
+            "isLevelEnabled(configLevel:LogLevel,entryLevel:string): boolean",
+            "constructor(readonlyconfig:CompactTransportConfig=DEFAULT_CONFIG)",
+            "ensureInitialized(): void",
+            "write(entry:CompactLogEntry): void",
+            "close(): void"
+        ]
+    },
+    "src/shared/WebviewMessage.ts": {
+        "interfaces": [
+            "WebviewMessage"
+        ]
+    },
+    "src/shared/ExtensionMessage.ts": {
+        "interfaces": [
+            "LanguageModelChatSelector",
+            "ExtensionMessage",
+            "ClineSayTool",
+            "ClineSayBrowserAction",
+            "ClineAskUseMcpServer",
+            "ClineApiReqInfo"
+        ]
+    },
+    "src/shared/array.ts": {
+        "functions": [
+            "findLastIndex(array:Array<T>,predicate:(value:T,index:number,obj:T[])=>boolean): number",
+            "findLast(array:Array<T>,predicate:(value:T,index:number,obj:T[])=>boolean): T|undefined"
+        ]
+    },
+    "src/shared/getApiMetrics.ts": {
+        "functions": [
+            "getApiMetrics(messages:ClineMessage[])",
+            "getTotalTokensFromMessage(message:ClineMessage): number"
+        ]
+    },
+    "src/shared/support-prompt.ts": {
+        "interfaces": [
+            "SupportPromptConfig"
+        ],
+        "functions": [
+            "generateDiagnosticText(diagnostics?:any[])",
+            "createPrompt(template:string,params:PromptParams): string"
+        ]
+    },
+    "src/shared/language.ts": {
+        "functions": [
+            "formatLanguage(vscodeLocale:string): Language"
+        ]
+    },
+    "src/shared/experiments.ts": {
+        "interfaces": [
+            "ExperimentConfig"
+        ]
+    },
+    "src/shared/api.ts": {
+        "interfaces": [
+            "MessageContent"
+        ]
+    },
+    "src/shared/checkExistApiConfig.ts": {
+        "functions": [
+            "checkExistKey(config:ProviderSettings|undefined)"
+        ]
+    },
+    "src/shared/modes.ts": {
+        "classes": [
+            {
+                "name": "FileRestrictionError"
+            }
+        ],
+        "functions": [
+            "getGroupName(group:GroupEntry): ToolGroup",
+            "getGroupOptions(group:GroupEntry): GroupOptions|undefined",
+            "doesFileMatchRegex(filePath:string,pattern:string): boolean",
+            "getToolsForMode(groups:readonlyGroupEntry[]): string[]",
+            "getModeBySlug(slug:string,customModes?:ModeConfig[]): ModeConfig|undefined",
+            "getModeConfig(slug:string,customModes?:ModeConfig[]): ModeConfig",
+            "getAllModes(customModes?:ModeConfig[]): ModeConfig[]",
+            "isCustomMode(slug:string,customModes?:ModeConfig[]): boolean",
+            "constructor(mode:string,pattern:string,description:string|undefined,filePath:string)",
+            "isToolAllowedForMode(\ttool:string,\tmodeSlug:string,\tcustomModes:ModeConfig[],\ttoolRequirements?:Record<string,boolean>,\ttoolParams?:Record<string,any>,//Alltoolparameters\texperiments?:Record<string,boolean>,)",
+            "getAllModesWithPrompts(context:vscode.ExtensionContext): Promise<ModeConfig[]>",
+            "getFullModeDetails(\tmodeSlug:string,\tcustomModes?:ModeConfig[],\tcustomModePrompts?:CustomModePrompts,\toptions?:{\t\tcwd?:string\t\tglobalCustomInstructions?:string\t\tlanguage?:string\t},)",
+            "getRoleDefinition(modeSlug:string,customModes?:ModeConfig[]): string",
+            "getCustomInstructions(modeSlug:string,customModes?:ModeConfig[]): string"
+        ]
+    },
+    "src/shared/storagePathManager.ts": {
+        "functions": [
+            "getStorageBasePath(defaultPath:string): Promise<string>",
+            "getTaskDirectoryPath(globalStoragePath:string,taskId:string): Promise<string>",
+            "getSettingsDirectoryPath(globalStoragePath:string): Promise<string>",
+            "getCacheDirectoryPath(globalStoragePath:string): Promise<string>",
+            "promptForCustomStoragePath(): Promise<void>"
+        ]
+    },
+    "src/shared/vsCodeSelectorUtils.ts": {
+        "functions": [
+            "stringifyVsCodeLmModelSelector(selector:LanguageModelChatSelector): string"
+        ]
+    },
+    "src/shared/tools.ts": {
+        "interfaces": [
+            "TextContent",
+            "ToolUse",
+            "ExecuteCommandToolUse",
+            "ReadFileToolUse",
+            "FetchInstructionsToolUse",
+            "WriteToFileToolUse",
+            "InsertCodeBlockToolUse",
+            "SearchFilesToolUse",
+            "ListFilesToolUse",
+            "ListCodeDefinitionNamesToolUse",
+            "BrowserActionToolUse",
+            "UseMcpToolToolUse",
+            "AccessMcpResourceToolUse",
+            "AskFollowupQuestionToolUse",
+            "AttemptCompletionToolUse",
+            "SwitchModeToolUse",
+            "NewTaskToolUse",
+            "SearchAndReplaceToolUse",
+            "DiffStrategy"
+        ]
+    },
+    "src/shared/context-mentions.ts": {
+        "interfaces": [
+            "MentionSuggestion",
+            "GitMentionSuggestion"
+        ],
+        "functions": [
+            "formatGitSuggestion(commit:{\thash:string\tshortHash:string\tsubject:string\tauthor:string\tdate:string})"
+        ]
+    },
+    "src/shared/combineApiRequests.ts": {
+        "functions": [
+            "combineApiRequests(messages:ClineMessage[]): ClineMessage[]"
+        ]
+    },
+    "src/shared/combineCommandSequences.ts": {
+        "functions": [
+            "combineCommandSequences(messages:ClineMessage[]): ClineMessage[]"
+        ]
+    },
+    "src/schemas/ipc.ts": {
+        "enums": [
+            {
+                "name": "TaskCommandName"
+            },
+            {
+                "name": "IpcMessageType"
+            },
+            {
+                "name": "IpcOrigin"
+            }
+        ]
+    },
+    "src/schemas/index.ts": {
+        "functions": [
+            "isLanguage(value:string): valueisLanguage",
+            "isSecretStateKey(key:string): keyisKeys<SecretState>",
+            "isGlobalStateKey(key:string): keyisKeys<GlobalState>"
+        ],
+        "enums": [
+            {
+                "name": "RooCodeEventName"
+            }
+        ]
+    },
+    "src/exports/roo-code.d.ts": {
+        "interfaces": [
+            "RooCodeAPI"
+        ],
+        "enums": [
+            {
+                "name": "RooCodeEventName"
+            }
+        ]
+    },
+    "src/exports/api.ts": {
+        "classes": [
+            {
+                "name": "API"
+            }
+        ],
+        "functions": [
+            "constructor(\t\toutputChannel:vscode.OutputChannel,\t\tprovider:ClineProvider,\t\tsocketPath?:string,\t\tenableLogging=false,\t)",
+            "emit(\t\teventName:K,\t\t...args:KextendskeyofRooCodeEvents?RooCodeEvents[K]:never\t)",
+            "startNewTask({\t\tconfiguration,\t\ttext,\t\timages,\t\tnewTab,\t}:{\t\tconfiguration:RooCodeSettings\t\ttext?:string\t\timages?:string[]\t\tnewTab?:boolean\t})",
+            "resumeTask(taskId:string): Promise<void>",
+            "isTaskInHistory(taskId:string): Promise<boolean>",
+            "getCurrentTaskStack()",
+            "clearCurrentTask(lastMessage?:string)",
+            "cancelCurrentTask()",
+            "cancelTask(taskId:string)",
+            "sendMessage(text?:string,images?:string[])",
+            "pressPrimaryButton()",
+            "pressSecondaryButton()",
+            "getConfiguration()",
+            "setConfiguration(values:RooCodeSettings)",
+            "createProfile(name:string)",
+            "getProfiles()",
+            "setActiveProfile(name:string)",
+            "getActiveProfile()",
+            "deleteProfile(name:string)",
+            "isReady()",
+            "registerListeners(provider:ClineProvider)",
+            "fileLog(message:string)"
+        ]
+    },
+    "src/exports/interface.ts": {
+        "interfaces": [
+            "RooCodeAPI"
+        ]
+    },
+    "src/exports/ipc.ts": {
+        "classes": [
+            {
+                "name": "IpcServer"
+            }
+        ],
+        "functions": [
+            "constructor(socketPath:string,log=console.log)",
+            "listen()",
+            "onConnect(socket:Socket)",
+            "onDisconnect(destroyedSocket:Socket)",
+            "onMessage(data:unknown)",
+            "log(...args:unknown[])",
+            "broadcast(message:IpcMessage)",
+            "send(client:string|Socket,message:IpcMessage)",
+            "socketPath()",
+            "isListening()"
+        ]
+    },
+    "src/exports/log.ts": {
+        "functions": [
+            "outputChannelLog(outputChannel:vscode.OutputChannel,...args:unknown[])"
+        ]
+    },
+    "src/integrations/misc/extract-text.ts": {
+        "functions": [
+            "extractTextFromFile(filePath:string): Promise<string>",
+            "extractTextFromPDF(filePath:string): Promise<string>",
+            "extractTextFromDOCX(filePath:string): Promise<string>",
+            "extractTextFromIPYNB(filePath:string): Promise<string>",
+            "addLineNumbers(content:string,startLine:number=1): string",
+            "everyLineHasLineNumbers(content:string): boolean",
+            "stripLineNumbers(content:string,aggressive:boolean=false): string",
+            "truncateOutput(content:string,lineLimit?:number): string",
+            "applyRunLengthEncoding(content:string): string",
+            "processCarriageReturns(input:string): string",
+            "processBackspaces(input:string): string",
+            "processLineWithCarriageReturns(\tinput:string,\tinitialLine:string,\tinitialCrPos:number,\tlineEnd:number,)"
+        ]
+    },
+    "src/integrations/misc/process-images.ts": {
+        "functions": [
+            "selectImages(): Promise<string[]>",
+            "getMimeType(filePath:string): string"
+        ]
+    },
+    "src/integrations/misc/open-file.ts": {
+        "interfaces": [
+            "OpenFileOptions"
+        ],
+        "functions": [
+            "openImage(dataUri:string)",
+            "openFile(filePath:string,options:OpenFileOptions={})"
+        ]
+    },
+    "src/integrations/misc/line-counter.ts": {
+        "functions": [
+            "countFileLines(filePath:string): Promise<number>"
+        ]
+    },
+    "src/integrations/misc/read-lines.ts": {
+        "functions": [
+            "outOfRangeError(filepath:string,n:number)",
+            "readLines(filepath:string,endLine?:number,startLine?:number): Promise<string>"
+        ]
+    },
+    "src/integrations/misc/export-markdown.ts": {
+        "functions": [
+            "downloadTask(dateTs:number,conversationHistory:Anthropic.MessageParam[])",
+            "formatContentBlockToMarkdown(block:Anthropic.Messages.ContentBlockParam): string",
+            "findToolName(toolCallId:string,messages:Anthropic.MessageParam[]): string"
+        ]
+    },
+    "src/integrations/workspace/WorkspaceTracker.ts": {
+        "classes": [
+            {
+                "name": "WorkspaceTracker"
+            }
+        ],
+        "functions": [
+            "cwd()",
+            "constructor(provider:ClineProvider)",
+            "initializeFilePaths()",
+            "registerListeners()",
+            "getOpenedTabsInfo()",
+            "workspaceDidReset()",
+            "workspaceDidUpdate()",
+            "normalizeFilePath(filePath:string): string",
+            "addFilePath(filePath:string): Promise<string>",
+            "removeFilePath(filePath:string): Promise<boolean>",
+            "dispose()"
+        ]
+    },
+    "src/integrations/terminal/get-latest-output.ts": {
+        "functions": [
+            "getLatestTerminalOutput(): Promise<string>"
+        ]
+    },
+    "src/integrations/terminal/TerminalRegistry.ts": {
+        "classes": [
+            {
+                "name": "TerminalRegistry"
+            }
+        ],
+        "functions": [
+            "initialize()",
+            "createTerminal(cwd:string|vscode.Uri): Terminal",
+            "getTerminal(id:number): Terminal|undefined",
+            "updateTerminal(id:number,updates:Partial<Terminal>)",
+            "getTerminalByVSCETerminal(terminal:vscode.Terminal): Terminal|undefined",
+            "removeTerminal(id:number)",
+            "getAllTerminals(): Terminal[]",
+            "isTerminalClosed(terminal:vscode.Terminal): boolean",
+            "getUnretrievedOutput(terminalId:number): string",
+            "isProcessHot(terminalId:number): boolean",
+            "getTerminals(busy:boolean,taskId?:string): Terminal[]",
+            "getBackgroundTerminals(busy?:boolean): Terminal[]",
+            "cleanup()",
+            "getShellIntegrationPath(shell:\"bash\"|\"pwsh\"|\"zsh\"|\"fish\"): string",
+            "zshInitTmpDir(env:Record<string,string>): string",
+            "zshCleanupTmpDir(terminalId:number): boolean",
+            "releaseTerminalsForTask(taskId?:string): void",
+            "getOrCreateTerminal(cwd:string,requiredCwd:boolean=false,taskId?:string): Promise<Terminal>"
+        ]
+    },
+    "src/integrations/terminal/TerminalProcess.ts": {
+        "classes": [
+            {
+                "name": "TerminalProcess"
+            }
+        ],
+        "interfaces": [
+            "ExitCodeDetails",
+            "TerminalProcessEvents"
+        ],
+        "functions": [
+            "constructor(terminal:Terminal)",
+            "interpretExitCode(exitCode:number|undefined): ExitCodeDetails",
+            "run(command:string)",
+            "emitRemainingBufferIfListening()",
+            "continue()",
+            "hasUnretrievedOutput(): boolean",
+            "getUnretrievedOutput(): string",
+            "stringIndexMatch(\t\tdata:string,\t\tprefix?:string,\t\tsuffix?:string,\t\tbell:string=\"\\x07\",\t)",
+            "removeEscapeSequences(str:string): string",
+            "matchAfterVsceStartMarkers(data:string): string|undefined",
+            "matchBeforeVsceEndMarkers(data:string): string|undefined",
+            "matchVsceMarkers(\t\tdata:string,\t\tprefix633:string|undefined,\t\tprefix133:string|undefined,\t\tsuffix633:string|undefined,\t\tsuffix133:string|undefined,\t)",
+            "mergePromise(process:TerminalProcess,promise:Promise<void>): TerminalProcessResultPromise"
+        ]
+    },
+    "src/integrations/terminal/Terminal.ts": {
+        "classes": [
+            {
+                "name": "Terminal"
+            }
+        ],
+        "interfaces": [
+            "CommandCallbacks"
+        ],
+        "functions": [
+            "constructor(id:number,terminal:vscode.Terminal,cwd:string)",
+            "getCurrentWorkingDirectory(): string",
+            "isStreamClosed(): boolean",
+            "setActiveStream(stream:AsyncIterable<string>|undefined): void",
+            "shellExecutionComplete(exitDetails:ExitCodeDetails): void",
+            "getLastCommand(): string",
+            "cleanCompletedProcessQueue(): void",
+            "getProcessesWithOutput(): TerminalProcess[]",
+            "getUnretrievedOutput(): string",
+            "runCommand(command:string,callbacks?:CommandCallbacks): TerminalProcessResultPromise",
+            "getTerminalContents(commands=-1): Promise<string>",
+            "compressTerminalOutput(input:string,lineLimit:number): string",
+            "setCommandDelay(delayMs:number): void",
+            "getCommandDelay(): number",
+            "setPowershellCounter(enabled:boolean): void",
+            "getPowershellCounter(): boolean",
+            "setTerminalZshClearEolMark(enabled:boolean): void",
+            "getTerminalZshClearEolMark(): boolean",
+            "setTerminalZshOhMy(enabled:boolean): void",
+            "getTerminalZshOhMy(): boolean",
+            "setTerminalZshP10k(enabled:boolean): void",
+            "getTerminalZshP10k(): boolean",
+            "setTerminalZdotdir(enabled:boolean): void",
+            "getTerminalZdotdir(): boolean",
+            "setCompressProgressBar(enabled:boolean): void",
+            "getCompressProgressBar(): boolean",
+            "setShellIntegrationTimeout(timeoutMs:number): void",
+            "getShellIntegrationTimeout(): number"
+        ]
+    },
+    "src/integrations/theme/getTheme.ts": {
+        "functions": [
+            "parseThemeString(themeString:string|undefined): any",
+            "getTheme()",
+            "mergeJson(\tfirst:JsonObject,\tsecond:JsonObject,\tmergeBehavior?:\"merge\"|\"overwrite\",\tmergeKeys?:{[key:string]:(a:any,b:any)=>boolean},)",
+            "getExtensionUri(): vscode.Uri"
+        ]
+    },
+    "src/integrations/diagnostics/index.ts": {
+        "functions": [
+            "getNewDiagnostics(\toldDiagnostics:[vscode.Uri,vscode.Diagnostic[]][],\tnewDiagnostics:[vscode.Uri,vscode.Diagnostic[]][],)",
+            "diagnosticsToProblemsString(\tdiagnostics:[vscode.Uri,vscode.Diagnostic[]][],\tseverities:vscode.DiagnosticSeverity[],\tcwd:string,)"
+        ]
+    },
+    "src/integrations/editor/detect-omission.ts": {
+        "functions": [
+            "detectCodeOmission(\toriginalFileContent:string,\tnewFileContent:string,\tpredictedLineCount:number,)"
+        ]
+    },
+    "src/integrations/editor/DiffViewProvider.ts": {
+        "classes": [
+            {
+                "name": "DiffViewProvider"
+            }
+        ],
+        "functions": [
+            "constructor(privatecwd:string)",
+            "open(relPath:string): Promise<void>",
+            "update(accumulatedContent:string,isFinal:boolean)",
+            "saveChanges(): Promise<{\t\tnewProblemsMessage:string|undefined\t\tuserEdits:string|undefined\t\tfinalContent:string|undefined\t}>",
+            "revertChanges(): Promise<void>",
+            "closeAllDiffViews()",
+            "openDiffEditor(): Promise<vscode.TextEditor>",
+            "scrollEditorToLine(line:number)",
+            "scrollToFirstDiff()",
+            "stripAllBOMs(input:string): string",
+            "reset()"
+        ]
+    },
+    "src/integrations/editor/DecorationController.ts": {
+        "classes": [
+            {
+                "name": "DecorationController"
+            }
+        ],
+        "functions": [
+            "constructor(decorationType:DecorationType,editor:vscode.TextEditor)",
+            "getDecoration()",
+            "addLines(startIndex:number,numLines:number)",
+            "clear()",
+            "updateOverlayAfterLine(line:number,totalLines:number)",
+            "setActiveLine(line:number)"
+        ]
+    },
+    "src/api/index.ts": {
+        "interfaces": [
+            "SingleCompletionHandler",
+            "ApiHandler"
+        ],
+        "functions": [
+            "buildApiHandler(configuration:ApiConfiguration): ApiHandler",
+            "getModelParams({\toptions,\tmodel,\tdefaultMaxTokens,\tdefaultTemperature=0,\tdefaultReasoningEffort,}:{\toptions:ApiHandlerOptions\tmodel:ModelInfo\tdefaultMaxTokens?:number\tdefaultTemperature?:number\tdefaultReasoningEffort?:\"low\"|\"medium\"|\"high\"})"
+        ]
+    },
+    "src/api/providers/base-provider.ts": {
+        "functions": [
+            "countTokens(content:Array<Anthropic.Messages.ContentBlockParam>): Promise<number>"
+        ]
+    },
+    "src/api/providers/bedrock.ts": {
+        "classes": [
+            {
+                "name": "AwsBedrockHandler"
+            }
+        ],
+        "interfaces": [
+            "BedrockInferenceConfig",
+            "StreamEvent"
+        ],
+        "functions": [
+            "constructor(options:ProviderSettings)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "completePrompt(prompt:string): Promise<string>",
+            "convertToBedrockConverseMessages(\t\tanthropicMessages:Anthropic.Messages.MessageParam[]|{role:string;content:string}[],\t\tsystemMessage?:string,\t\tusePromptCache:boolean=false,\t\tmodelInfo?:any,\t\tconversationId?:string,//OptionalconversationIDtotrackcachepointsacrossmessages\t)",
+            "parseArn(arn:string,region?:string)",
+            "parseBaseModelId(modelId:string)",
+            "getModelById(modelId:string,modelType?:string): {id:BedrockModelId|string;info:SharedModelInfo}",
+            "getModel(): {id:BedrockModelId|string;info:SharedModelInfo}",
+            "supportsAwsPromptCache(modelConfig:{\t\tid:BedrockModelId|string\t\tinfo:SharedModelInfo\t})",
+            "removeCachePoints(content:any): any",
+            "getPrefixList(): string[]",
+            "getPrefixForRegion(region:string): string|undefined",
+            "prefixIsMultiRegion(arnPrefix:string): boolean",
+            "getErrorType(error:unknown): string",
+            "formatErrorMessage(error:unknown,errorType:string,isStreamContext:boolean): string",
+            "handleBedrockError(\t\terror:unknown,\t\tisStreamContext:boolean,\t)"
+        ]
+    },
+    "src/api/providers/ollama.ts": {
+        "classes": [
+            {
+                "name": "OllamaHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:string;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>",
+            "getOllamaModels(baseUrl=\"http://localhost:11434\")"
+        ]
+    },
+    "src/api/providers/human-relay.ts": {
+        "classes": [
+            {
+                "name": "HumanRelayHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "countTokens(content:Array<Anthropic.Messages.ContentBlockParam>): Promise<number>",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:string;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>",
+            "getMessageContent(message:Anthropic.Messages.MessageParam): string",
+            "showHumanRelayDialog(promptText:string): Promise<string|undefined>"
+        ]
+    },
+    "src/api/providers/openai-native.ts": {
+        "classes": [
+            {
+                "name": "OpenAiNativeHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "handleO1FamilyMessage(\t\tmodel:OpenAiNativeModel,\t\tsystemPrompt:string,\t\tmessages:Anthropic.Messages.MessageParam[],\t)",
+            "handleReasonerMessage(\t\tmodel:OpenAiNativeModel,\t\tfamily:\"o3-mini\"|\"o3\"|\"o4-mini\",\t\tsystemPrompt:string,\t\tmessages:Anthropic.Messages.MessageParam[],\t)",
+            "handleDefaultModelMessage(\t\tmodel:OpenAiNativeModel,\t\tsystemPrompt:string,\t\tmessages:Anthropic.Messages.MessageParam[],\t)",
+            "yieldResponseData(response:OpenAI.Chat.Completions.ChatCompletion): ApiStream",
+            "handleStreamResponse(\t\tstream:AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,\t\tmodel:OpenAiNativeModel,\t)",
+            "yieldUsage(info:ModelInfo,usage:OpenAI.Completions.CompletionUsage|undefined): ApiStream",
+            "getModel(): OpenAiNativeModel",
+            "completePrompt(prompt:string): Promise<string>",
+            "getO1CompletionOptions(\t\tmodel:OpenAiNativeModel,\t\tprompt:string,\t)",
+            "getO3CompletionOptions(\t\tmodel:OpenAiNativeModel,\t\tprompt:string,\t)",
+            "getDefaultCompletionOptions(\t\tmodel:OpenAiNativeModel,\t\tprompt:string,\t)"
+        ]
+    },
+    "src/api/providers/anthropic.ts": {
+        "classes": [
+            {
+                "name": "AnthropicHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel()",
+            "completePrompt(prompt:string)",
+            "countTokens(content:Array<Anthropic.Messages.ContentBlockParam>): Promise<number>"
+        ]
+    },
+    "src/api/providers/xai.ts": {
+        "classes": [
+            {
+                "name": "XAIHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "getModel()",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "completePrompt(prompt:string): Promise<string>"
+        ]
+    },
+    "src/api/providers/deepseek.ts": {
+        "classes": [
+            {
+                "name": "DeepSeekHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:OpenAiHandlerOptions)",
+            "getModel(): {id:string;info:ModelInfo}",
+            "processUsageMetrics(usage:any): ApiStreamUsageChunk"
+        ]
+    },
+    "src/api/providers/openai.ts": {
+        "classes": [
+            {
+                "name": "OpenAiHandler"
+            }
+        ],
+        "interfaces": [
+            "OpenAiHandlerOptions"
+        ],
+        "functions": [
+            "constructor(options:OpenAiHandlerOptions)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "processUsageMetrics(usage:any,modelInfo?:ModelInfo): ApiStreamUsageChunk",
+            "getModel(): {id:string;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>",
+            "handleO3FamilyMessage(\t\tmodelId:string,\t\tsystemPrompt:string,\t\tmessages:Anthropic.Messages.MessageParam[],\t)",
+            "handleStreamResponse(stream:AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream",
+            "_getUrlHost(baseUrl?:string): string",
+            "_isGrokXAI(baseUrl?:string): boolean",
+            "_isAzureAiInference(baseUrl?:string): boolean",
+            "getOpenAiModels(baseUrl?:string,apiKey?:string,hostHeader?:string)"
+        ]
+    },
+    "src/api/providers/requesty.ts": {
+        "classes": [
+            {
+                "name": "RequestyHandler"
+            }
+        ],
+        "interfaces": [
+            "RequestyUsage"
+        ],
+        "functions": [
+            "constructor(options:OpenAiHandlerOptions)",
+            "getModel(): {id:string;info:ModelInfo}",
+            "processUsageMetrics(usage:any,modelInfo?:ModelInfo): ApiStreamUsageChunk",
+            "getRequestyModels(apiKey?:string)"
+        ]
+    },
+    "src/api/providers/fake-ai.ts": {
+        "classes": [
+            {
+                "name": "FakeAIHandler"
+            }
+        ],
+        "interfaces": [
+            "FakeAI"
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:string;info:ModelInfo}",
+            "countTokens(content:Array<Anthropic.Messages.ContentBlockParam>): Promise<number>",
+            "completePrompt(prompt:string): Promise<string>"
+        ]
+    },
+    "src/api/providers/vertex.ts": {
+        "classes": [
+            {
+                "name": "VertexHandler"
+            }
+        ],
+        "interfaces": [
+            "VertexTextBlock",
+            "VertexImageBlock",
+            "VertexUsage",
+            "VertexMessage",
+            "VertexMessageCreateParams",
+            "VertexMessageResponse",
+            "VertexMessageStreamEvent"
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "formatMessageForCache(message:Anthropic.Messages.MessageParam,shouldCache:boolean): VertexMessage",
+            "createGeminiMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "createClaudeMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel()",
+            "completePromptGemini(prompt:string)",
+            "completePromptClaude(prompt:string)",
+            "completePrompt(prompt:string)"
+        ]
+    },
+    "src/api/providers/gemini.ts": {
+        "classes": [
+            {
+                "name": "GeminiHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(\t\tsystemInstruction:string,\t\tmessages:Anthropic.Messages.MessageParam[],\t\tcacheKey?:string,\t)",
+            "getModel()",
+            "completePrompt(prompt:string): Promise<string>",
+            "countTokens(content:Array<Anthropic.Messages.ContentBlockParam>): Promise<number>",
+            "calculateCost({\t\tinfo,\t\tinputTokens,\t\toutputTokens,\t\tcacheWriteTokens=0,\t\tcacheReadTokens=0,\t}:{\t\tinfo:ModelInfo\t\tinputTokens:number\t\toutputTokens:number\t\tcacheWriteTokens?:number\t\tcacheReadTokens?:number\t})"
+        ]
+    },
+    "src/api/providers/glama.ts": {
+        "classes": [
+            {
+                "name": "GlamaHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "supportsTemperature(): boolean",
+            "getModel(): {id:string;info:ModelInfo}",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "delay(ms:number)",
+            "completePrompt(prompt:string): Promise<string>",
+            "getGlamaModels()"
+        ]
+    },
+    "src/api/providers/openrouter.ts": {
+        "classes": [
+            {
+                "name": "OpenRouterHandler"
+            }
+        ],
+        "interfaces": [
+            "CompletionUsage"
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(\t\tsystemPrompt:string,\t\tmessages:Anthropic.Messages.MessageParam[],\t)",
+            "getModel()",
+            "completePrompt(prompt:string)"
+        ]
+    },
+    "src/api/providers/lmstudio.ts": {
+        "classes": [
+            {
+                "name": "LmStudioHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:string;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>",
+            "getLmStudioModels(baseUrl=\"http://localhost:1234\")"
+        ]
+    },
+    "src/api/providers/mistral.ts": {
+        "classes": [
+            {
+                "name": "MistralHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "getBaseUrl(): string",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:MistralModelId;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>"
+        ]
+    },
+    "src/api/providers/vscode-lm.ts": {
+        "classes": [
+            {
+                "name": "VsCodeLmHandler"
+            }
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "initializeClient(): Promise<void>",
+            "createClient(selector:vscode.LanguageModelChatSelector): Promise<vscode.LanguageModelChat>",
+            "dispose(): void",
+            "countTokens(content:Array<Anthropic.Messages.ContentBlockParam>): Promise<number>",
+            "internalCountTokens(text:string|vscode.LanguageModelChatMessage): Promise<number>",
+            "calculateTotalInputTokens(\t\tsystemPrompt:string,\t\tvsCodeLmMessages:vscode.LanguageModelChatMessage[],\t)",
+            "ensureCleanState(): void",
+            "getClient(): Promise<vscode.LanguageModelChat>",
+            "cleanMessageContent(content:any): any",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:string;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>",
+            "getVsCodeLmModels()"
+        ]
+    },
+    "src/api/providers/unbound.ts": {
+        "classes": [
+            {
+                "name": "UnboundHandler"
+            }
+        ],
+        "interfaces": [
+            "UnboundUsage"
+        ],
+        "functions": [
+            "constructor(options:ApiHandlerOptions)",
+            "supportsTemperature(): boolean",
+            "createMessage(systemPrompt:string,messages:Anthropic.Messages.MessageParam[]): ApiStream",
+            "getModel(): {id:string;info:ModelInfo}",
+            "completePrompt(prompt:string): Promise<string>",
+            "getUnboundModels()"
+        ]
+    },
+    "src/api/providers/fetchers/openrouter.ts": {
+        "functions": [
+            "getOpenRouterModels(options?:ApiHandlerOptions)"
+        ]
+    },
+    "src/api/transform/gemini-format.ts": {
+        "functions": [
+            "convertAnthropicContentToGemini(content:string|Anthropic.ContentBlockParam[]): Part[]",
+            "convertAnthropicMessageToGemini(message:Anthropic.Messages.MessageParam): Content",
+            "getContentLength({parts}:Content): number",
+            "getMessagesLength(contents:Content[]): number"
+        ]
+    },
+    "src/api/transform/simple-format.ts": {
+        "functions": [
+            "convertToSimpleContent(content:Anthropic.Messages.MessageParam[\"content\"]): string",
+            "convertToSimpleMessages(\tmessages:Anthropic.Messages.MessageParam[],)"
+        ]
+    },
+    "src/api/transform/vscode-lm-format.ts": {
+        "functions": [
+            "asObjectSafe(value:any): object",
+            "convertToVsCodeLmMessages(\tanthropicMessages:Anthropic.Messages.MessageParam[],)",
+            "convertToAnthropicRole(vsCodeLmMessageRole:vscode.LanguageModelChatMessageRole): string|null"
+        ]
+    },
+    "src/api/transform/bedrock-converse-format.ts": {
+        "functions": [
+            "convertToBedrockConverseMessages(anthropicMessages:Anthropic.Messages.MessageParam[]): Message[]"
+        ]
+    },
+    "src/api/transform/openai-format.ts": {
+        "functions": [
+            "convertToOpenAiMessages(\tanthropicMessages:Anthropic.Messages.MessageParam[],)"
+        ]
+    },
+    "src/api/transform/stream.ts": {
+        "interfaces": [
+            "ApiStreamTextChunk",
+            "ApiStreamReasoningChunk",
+            "ApiStreamUsageChunk"
+        ]
+    },
+    "src/api/transform/r1-format.ts": {
+        "functions": [
+            "convertToR1Format(messages:AnthropicMessage[]): Message[]"
+        ]
+    },
+    "src/api/transform/mistral-format.ts": {
+        "functions": [
+            "convertToMistralMessages(anthropicMessages:Anthropic.Messages.MessageParam[]): MistralMessage[]"
+        ]
+    },
+    "src/api/transform/vertex-gemini-format.ts": {
+        "functions": [
+            "convertAnthropicContentToVertexGemini(content:Anthropic.Messages.MessageParam[\"content\"]): Part[]",
+            "convertAnthropicMessageToVertexGemini(message:Anthropic.Messages.MessageParam): Content"
+        ]
+    },
+    "src/api/transform/cache-strategy/multi-point-strategy.ts": {
+        "classes": [
+            {
+                "name": "MultiPointStrategy"
+            }
+        ],
+        "functions": [
+            "determineOptimalCachePoints(): CacheResult",
+            "determineMessageCachePoints(\t\tminTokensPerPoint:number,\t\tremainingCachePoints:number,\t)",
+            "findOptimalPlacementForRange(\t\tstartIndex:number,\t\tendIndex:number,\t\tminTokensPerPoint:number,\t)",
+            "formatWithoutCachePoints(): CacheResult"
+        ]
+    },
+    "src/api/transform/cache-strategy/base-strategy.ts": {
+        "functions": [
+            "constructor(config:CacheStrategyConfig)",
+            "initializeMessageGroups(): void",
+            "calculateSystemTokens(): void",
+            "createCachePoint(): ContentBlock",
+            "messagesToContentBlocks(messages:Anthropic.Messages.MessageParam[]): Message[]",
+            "meetsMinTokenThreshold(tokenCount:number): boolean",
+            "estimateTokenCount(message:Anthropic.Messages.MessageParam): number",
+            "applyCachePoints(messages:Message[],placements:CachePointPlacement[]): Message[]",
+            "formatResult(systemBlocks:SystemContentBlock[]=[],messages:Message[]): CacheResult"
+        ]
+    },
+    "src/api/transform/cache-strategy/types.ts": {
+        "interfaces": [
+            "ModelInfo",
+            "CachePoint",
+            "CacheResult",
+            "CachePointPlacement",
+            "CacheStrategyConfig"
+        ]
+    },
+    "src/activate/humanRelay.ts": {
+        "functions": [
+            "registerHumanRelayCallback(requestId:string,callback:(response:string|undefined)=>void)",
+            "unregisterHumanRelayCallback(requestId:string)",
+            "handleHumanRelayResponse(response:{requestId:string;text?:string;cancelled?:boolean})"
+        ]
+    },
+    "src/activate/handleTask.ts": {
+        "functions": [
+            "handleNewTask(params:{prompt?:string}|null|undefined)"
+        ]
+    },
+    "src/activate/registerTerminalActions.ts": {
+        "functions": [
+            "registerTerminalActions(context:vscode.ExtensionContext)",
+            "registerTerminalAction(\tcontext:vscode.ExtensionContext,\tcommand:string,\tpromptType:\"TERMINAL_ADD_TO_CONTEXT\"|\"TERMINAL_FIX\"|\"TERMINAL_EXPLAIN\",\tinputPrompt?:string,)",
+            "registerTerminalActionPair(\tcontext:vscode.ExtensionContext,\tbaseCommand:string,\tpromptType:\"TERMINAL_ADD_TO_CONTEXT\"|\"TERMINAL_FIX\"|\"TERMINAL_EXPLAIN\",\tinputPrompt?:string,)"
+        ]
+    },
+    "src/activate/handleUri.ts": {
+        "functions": [
+            "handleUri(uri:vscode.Uri)"
+        ]
+    },
+    "src/activate/registerCommands.ts": {
+        "functions": [
+            "getVisibleProviderOrLog(outputChannel:vscode.OutputChannel): ClineProvider|undefined",
+            "getPanel(): vscode.WebviewPanel|vscode.WebviewView|undefined",
+            "setPanel(\tnewPanel:vscode.WebviewPanel|vscode.WebviewView|undefined,\ttype:\"sidebar\"|\"tab\",)",
+            "registerCommands(options:RegisterCommandOptions)",
+            "getCommandsMap({context,outputChannel,provider}:RegisterCommandOptions)",
+            "openClineInNewTab({context,outputChannel}:Omit<RegisterCommandOptions,\"provider\">)"
+        ]
+    },
+    "src/activate/registerCodeActions.ts": {
+        "functions": [
+            "registerCodeActions(context:vscode.ExtensionContext)",
+            "registerCodeAction(\tcontext:vscode.ExtensionContext,\tcommand:string,\tpromptType:keyoftypeofACTION_NAMES,\tinputPrompt?:string,\tinputPlaceholder?:string,)",
+            "registerCodeActionPair(\tcontext:vscode.ExtensionContext,\tbaseCommand:string,\tpromptType:keyoftypeofACTION_NAMES,\tinputPrompt?:string,\tinputPlaceholder?:string,)"
+        ]
+    },
+    "src/i18n/setup.ts": {
+        "interfaces": [
+            "VSCodeProcess"
+        ]
+    },
+    "src/i18n/index.ts": {
+        "functions": [
+            "initializeI18n(language:string): void",
+            "getCurrentLanguage(): string",
+            "changeLanguage(language:string): void",
+            "t(key:string,options?:Record<string,any>): string"
+        ]
+    },
+    "src/services/tree-sitter/markdownParser.ts": {
+        "interfaces": [
+            "MockNode",
+            "MockCapture"
+        ],
+        "functions": [
+            "parseMarkdown(content:string): MockCapture[]",
+            "formatMarkdownCaptures(captures:MockCapture[],minSectionLines:number=4): string|null"
+        ]
+    },
+    "src/services/tree-sitter/languageParser.ts": {
+        "interfaces": [
+            "LanguageParser"
+        ],
+        "functions": [
+            "loadLanguage(langName:string)",
+            "initializeParser()",
+            "loadRequiredLanguageParsers(filesToParse:string[]): Promise<LanguageParser>"
+        ]
+    },
+    "src/services/tree-sitter/index.ts": {
+        "functions": [
+            "parseSourceCodeDefinitionsForFile(\tfilePath:string,\trooIgnoreController?:RooIgnoreController,)",
+            "parseSourceCodeForDefinitionsTopLevel(\tdirPath:string,\trooIgnoreController?:RooIgnoreController,)",
+            "separateFiles(allFiles:string[]): {filesToParse:string[];remainingFiles:string[]}",
+            "processCaptures(captures:any[],lines:string[],minComponentLines:number=4): string|null",
+            "isNotHtmlElement(line:string): boolean",
+            "parseFile(\tfilePath:string,\tlanguageParsers:LanguageParser,\trooIgnoreController?:RooIgnoreController,)"
+        ]
+    },
+    "src/services/checkpoints/RepoPerTaskCheckpointService.ts": {
+        "classes": [
+            {
+                "name": "RepoPerTaskCheckpointService"
+            }
+        ],
+        "functions": [
+            "create({taskId,workspaceDir,shadowDir,log=console.log}:CheckpointServiceOptions)"
+        ]
+    },
+    "src/services/checkpoints/excludes.ts": {
+        "functions": [
+            "getBuildArtifactPatterns()",
+            "getMediaFilePatterns()",
+            "getCacheFilePatterns()",
+            "getConfigFilePatterns()",
+            "getLargeDataFilePatterns()",
+            "getDatabaseFilePatterns()",
+            "getGeospatialPatterns()",
+            "getLogFilePatterns()",
+            "getLfsPatterns(workspacePath:string)",
+            "getExcludePatterns(workspacePath:string)"
+        ]
+    },
+    "src/services/checkpoints/types.ts": {
+        "interfaces": [
+            "CheckpointServiceOptions",
+            "CheckpointEventMap"
+        ]
+    },
+    "src/services/checkpoints/ShadowCheckpointService.ts": {
+        "functions": [
+            "baseHash()",
+            "baseHash(value:string|undefined)",
+            "isInitialized()",
+            "constructor(taskId:string,checkpointsDir:string,workspaceDir:string,log:(message:string)=>void)",
+            "initShadowGit(onInit?:()=>Promise<void>)",
+            "writeExcludeFile()",
+            "stageAll(git:SimpleGit)",
+            "renameNestedGitRepos(disable:boolean)",
+            "getShadowGitConfigWorktree(git:SimpleGit)",
+            "saveCheckpoint(message:string): Promise<CheckpointResult|undefined>",
+            "restoreCheckpoint(commitHash:string)",
+            "getDiff({from,to}:{from?:string;to?:string}): Promise<CheckpointDiff[]>",
+            "emit(event:K,data:CheckpointEventMap[K])",
+            "on(event:K,listener:(data:CheckpointEventMap[K])=>void)",
+            "off(event:K,listener:(data:CheckpointEventMap[K])=>void)",
+            "once(event:K,listener:(data:CheckpointEventMap[K])=>void)",
+            "hashWorkspaceDir(workspaceDir:string)",
+            "taskRepoDir({taskId,globalStorageDir}:{taskId:string;globalStorageDir:string})",
+            "workspaceRepoDir({\t\tglobalStorageDir,\t\tworkspaceDir,\t}:{\t\tglobalStorageDir:string\t\tworkspaceDir:string\t})",
+            "deleteTask({\t\ttaskId,\t\tglobalStorageDir,\t\tworkspaceDir,\t}:{\t\ttaskId:string\t\tglobalStorageDir:string\t\tworkspaceDir:string\t})",
+            "deleteBranch(git:SimpleGit,branchName:string)"
+        ]
+    },
+    "src/services/mcp/McpHub.ts": {
+        "classes": [
+            {
+                "name": "McpHub"
+            }
+        ],
+        "functions": [
+            "createServerTypeSchema()",
+            "constructor(provider:ClineProvider)",
+            "registerClient(): void",
+            "unregisterClient(): Promise<void>",
+            "validateServerConfig(config:any,serverName?:string): z.infer<typeofServerConfigSchema>",
+            "showErrorMessage(message:string,error:unknown): void",
+            "setupWorkspaceFoldersWatcher(): void",
+            "handleConfigFileChange(filePath:string,source:\"global\"|\"project\"): Promise<void>",
+            "watchProjectMcpFile(): void",
+            "updateProjectMcpServers(): Promise<void>",
+            "cleanupProjectMcpServers(): Promise<void>",
+            "getServers(): McpServer[]",
+            "getAllServers(): McpServer[]",
+            "getMcpServersPath(): Promise<string>",
+            "getMcpSettingsFilePath(): Promise<string>",
+            "watchMcpSettingsFile(): Promise<void>",
+            "initializeMcpServers(source:\"global\"|\"project\"): Promise<void>",
+            "initializeGlobalMcpServers(): Promise<void>",
+            "getProjectMcpPath(): Promise<string|null>",
+            "initializeProjectMcpServers(): Promise<void>",
+            "connectToServer(\t\tname:string,\t\tconfig:z.infer<typeofServerConfigSchema>,\t\tsource:\"global\"|\"project\"=\"global\",\t)",
+            "appendErrorMessage(connection:McpConnection,error:string)",
+            "findConnection(serverName:string,source?:\"global\"|\"project\"): McpConnection|undefined",
+            "fetchToolsList(serverName:string,source?:\"global\"|\"project\"): Promise<McpTool[]>",
+            "fetchResourcesList(serverName:string,source?:\"global\"|\"project\"): Promise<McpResource[]>",
+            "fetchResourceTemplatesList(\t\tserverName:string,\t\tsource?:\"global\"|\"project\",\t)",
+            "deleteConnection(name:string,source?:\"global\"|\"project\"): Promise<void>",
+            "updateServerConnections(\t\tnewServers:Record<string,any>,\t\tsource:\"global\"|\"project\"=\"global\",\t)",
+            "setupFileWatcher(\t\tname:string,\t\tconfig:z.infer<typeofServerConfigSchema>,\t\tsource:\"global\"|\"project\"=\"global\",\t)",
+            "removeAllFileWatchers()",
+            "restartConnection(serverName:string,source?:\"global\"|\"project\"): Promise<void>",
+            "notifyWebviewOfServerChanges(): Promise<void>",
+            "toggleServerDisabled(\t\tserverName:string,\t\tdisabled:boolean,\t\tsource?:\"global\"|\"project\",\t)",
+            "updateServerConfig(\t\tserverName:string,\t\tconfigUpdate:Record<string,any>,\t\tsource:\"global\"|\"project\"=\"global\",\t)",
+            "updateServerTimeout(\t\tserverName:string,\t\ttimeout:number,\t\tsource?:\"global\"|\"project\",\t)",
+            "deleteServer(serverName:string,source?:\"global\"|\"project\"): Promise<void>",
+            "readResource(serverName:string,uri:string,source?:\"global\"|\"project\"): Promise<McpResourceResponse>",
+            "callTool(\t\tserverName:string,\t\ttoolName:string,\t\ttoolArguments?:Record<string,unknown>,\t\tsource?:\"global\"|\"project\",\t)",
+            "toggleToolAlwaysAllow(\t\tserverName:string,\t\tsource:\"global\"|\"project\",\t\ttoolName:string,\t\tshouldAllow:boolean,\t)",
+            "dispose(): Promise<void>"
+        ]
+    },
+    "src/services/mcp/McpServerManager.ts": {
+        "classes": [
+            {
+                "name": "McpServerManager"
+            }
+        ],
+        "functions": [
+            "getInstance(context:vscode.ExtensionContext,provider:ClineProvider): Promise<McpHub>",
+            "unregisterProvider(provider:ClineProvider): void",
+            "notifyProviders(message:any): void",
+            "cleanup(context:vscode.ExtensionContext): Promise<void>"
+        ]
+    },
+    "src/services/search/file-search.ts": {
+        "functions": [
+            "executeRipgrep({\targs,\tworkspacePath,\tlimit=500,}:{\targs:string[]\tworkspacePath:string\tlimit?:number})",
+            "executeRipgrepForFiles(\tworkspacePath:string,\tlimit:number=5000,)",
+            "searchWorkspaceFiles(\tquery:string,\tworkspacePath:string,\tlimit:number=20,)"
+        ]
+    },
+    "src/services/browser/BrowserSession.ts": {
+        "classes": [
+            {
+                "name": "BrowserSession"
+            }
+        ],
+        "interfaces": [
+            "PCRStats"
+        ],
+        "functions": [
+            "constructor(context:vscode.ExtensionContext)",
+            "ensureChromiumExists(): Promise<PCRStats>",
+            "getViewport()",
+            "launchLocalBrowser(): Promise<void>",
+            "connectWithChromeHostUrl(chromeHostUrl:string): Promise<boolean>",
+            "connectToRemoteBrowser(): Promise<boolean>",
+            "launchBrowser(): Promise<void>",
+            "closeBrowser(): Promise<BrowserActionResult>",
+            "resetBrowserState(): void",
+            "doAction(action:(page:Page)=>Promise<void>): Promise<BrowserActionResult>",
+            "consoleListener(msg:any)",
+            "errorListener(err:Error)",
+            "getRootDomain(url:string): string",
+            "navigatePageToUrl(page:Page,url:string): Promise<void>",
+            "createNewTab(url:string): Promise<BrowserActionResult>",
+            "navigateToUrl(url:string): Promise<BrowserActionResult>",
+            "waitTillHTMLStable(page:Page,timeout=5_000)",
+            "handleMouseInteraction(\t\tpage:Page,\t\tcoordinate:string,\t\taction:(x:number,y:number)=>Promise<void>,\t)",
+            "requestListener()",
+            "click(coordinate:string): Promise<BrowserActionResult>",
+            "type(text:string): Promise<BrowserActionResult>",
+            "scrollPage(page:Page,direction:\"up\"|\"down\"): Promise<void>",
+            "scrollDown(): Promise<BrowserActionResult>",
+            "scrollUp(): Promise<BrowserActionResult>",
+            "hover(coordinate:string): Promise<BrowserActionResult>",
+            "resize(size:string): Promise<BrowserActionResult>"
+        ]
+    },
+    "src/services/browser/browserDiscovery.ts": {
+        "functions": [
+            "isPortOpen(host:string,port:number,timeout=1000): Promise<boolean>",
+            "tryChromeHostUrl(chromeHostUrl:string): Promise<boolean>",
+            "getDockerHostIP(): Promise<string|null>",
+            "scanNetworkForChrome(baseIP:string,port:number): Promise<string|null>",
+            "discoverChromeHosts(port:number): Promise<string|null>",
+            "discoverChromeHostUrl(port:number=9222): Promise<string|null>"
+        ]
+    },
+    "src/services/browser/UrlContentFetcher.ts": {
+        "classes": [
+            {
+                "name": "UrlContentFetcher"
+            }
+        ],
+        "interfaces": [
+            "PCRStats"
+        ],
+        "functions": [
+            "constructor(context:vscode.ExtensionContext)",
+            "ensureChromiumExists(): Promise<PCRStats>",
+            "launchBrowser(): Promise<void>",
+            "closeBrowser(): Promise<void>",
+            "urlToMarkdown(url:string): Promise<string>"
+        ]
+    },
+    "src/services/glob/list-files.ts": {
+        "functions": [
+            "listFiles(dirPath:string,recursive:boolean,limit:number): Promise<[string[],boolean]>",
+            "handleSpecialDirectories(dirPath:string): Promise<[string[],boolean]|null>",
+            "getRipgrepPath(): Promise<string>",
+            "listFilesWithRipgrep(\trgPath:string,\tdirPath:string,\trecursive:boolean,\tlimit:number,)",
+            "buildRipgrepArgs(dirPath:string,recursive:boolean): string[]",
+            "buildRecursiveArgs(): string[]",
+            "buildNonRecursiveArgs(): string[]",
+            "parseGitignoreFile(dirPath:string,recursive:boolean): Promise<string[]>",
+            "listFilteredDirectories(\tdirPath:string,\trecursive:boolean,\tgitignorePatterns:string[],)",
+            "shouldIncludeDirectory(dirName:string,recursive:boolean,gitignorePatterns:string[]): boolean",
+            "isDirectoryExplicitlyIgnored(dirName:string): boolean",
+            "isIgnoredByGitignore(dirName:string,gitignorePatterns:string[]): boolean",
+            "formatAndCombineResults(files:string[],directories:string[],limit:number): [string[],boolean]",
+            "execRipgrep(rgPath:string,args:string[],limit:number): Promise<string[]>",
+            "processRipgrepOutput(isFinal=false)"
+        ]
+    },
+    "src/services/glob/__mocks__/list-files.ts": {
+        "functions": [
+            "mockResolve(dirPath:string): string",
+            "mockArePathsEqual(path1:string,path2:string): boolean"
+        ]
+    },
+    "src/services/telemetry/TelemetryService.ts": {
+        "classes": [
+            {
+                "name": "TelemetryService"
+            }
+        ],
+        "functions": [
+            "initialize(): void",
+            "setProvider(provider:ClineProviderInterface): void",
+            "isReady(): boolean",
+            "updateTelemetryState(didUserOptIn:boolean): void",
+            "capture(event:{event:string;properties?:any}): void",
+            "captureEvent(eventName:string,properties?:any): void",
+            "captureTaskCreated(taskId:string): void",
+            "captureTaskRestarted(taskId:string): void",
+            "captureTaskCompleted(taskId:string): void",
+            "captureConversationMessage(taskId:string,source:\"user\"|\"assistant\"): void",
+            "captureModeSwitch(taskId:string,newMode:string): void",
+            "captureToolUsage(taskId:string,tool:string): void",
+            "captureCheckpointCreated(taskId:string): void",
+            "captureCheckpointDiffed(taskId:string): void",
+            "captureCheckpointRestored(taskId:string): void",
+            "captureCodeActionUsed(actionType:string): void",
+            "capturePromptEnhanced(taskId?:string): void",
+            "captureSchemaValidationError({schemaName,error}:{schemaName:string;error:ZodError}): void",
+            "captureDiffApplicationError(taskId:string,consecutiveMistakeCount:number): void",
+            "captureShellIntegrationError(taskId:string): void",
+            "captureConsecutiveMistakeError(taskId:string): void",
+            "isTelemetryEnabled(): boolean",
+            "shutdown(): Promise<void>"
+        ]
+    },
+    "src/services/telemetry/PostHogClient.ts": {
+        "classes": [
+            {
+                "name": "PostHogClient"
+            }
+        ],
+        "interfaces": [
+            "ClineProviderInterface"
+        ],
+        "functions": [
+            "constructor()",
+            "updateTelemetryState(didUserOptIn:boolean): void",
+            "getInstance(): PostHogClient",
+            "setProvider(provider:ClineProviderInterface): void",
+            "capture(event:{event:string;properties?:any}): Promise<void>",
+            "isTelemetryEnabled(): boolean",
+            "shutdown(): Promise<void>"
+        ]
+    },
+    "src/services/ripgrep/index.ts": {
+        "interfaces": [
+            "SearchFileResult",
+            "SearchResult",
+            "SearchLineResult"
+        ],
+        "functions": [
+            "truncateLine(line:string,maxLength:number=MAX_LINE_LENGTH): string",
+            "getBinPath(vscodeAppRoot:string): Promise<string|undefined>",
+            "checkPath(pkgFolder:string)",
+            "execRipgrep(bin:string,args:string[]): Promise<string>",
+            "regexSearchFiles(\tcwd:string,\tdirectoryPath:string,\tregex:string,\tfilePattern?:string,\trooIgnoreController?:RooIgnoreController,)",
+            "formatResults(fileResults:SearchFileResult[],cwd:string): string"
+        ]
+    }
+}
