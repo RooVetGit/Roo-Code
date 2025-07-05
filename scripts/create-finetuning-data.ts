@@ -101,35 +101,37 @@ async function processLogFile(filePath: string): Promise<GeminiExample[]> {
 
 	while (i < logEntries.length) {
 		const currentEntry = logEntries[i]
-		if (currentEntry && currentEntry.type === "user_message") {
-			let turn: LogEntry[] = [currentEntry]
-			i++
-
-			while (i < logEntries.length) {
-				const nextEntry = logEntries[i]
-				if (nextEntry && nextEntry.type !== "user_message") {
-					turn.push(nextEntry)
-					i++
-				} else {
-					break
+		if (currentEntry?.type === "user_message") {
+			const turn: LogEntry[] = []
+			let j = i
+			// Collect all entries until the next user message
+			while (j < logEntries.length && (j === i || logEntries[j]?.type !== "user_message")) {
+				const entry = logEntries[j]
+				if (entry) {
+					turn.push(entry)
 				}
+				j++
 			}
 
+			// Process the collected turn
 			const messages: GeminiMessage[] = []
-			let hasToolCall = false
-
 			const firstMessage = turn[0]
-			if (firstMessage) {
-				messages.push({ role: "user", parts: [{ text: firstMessage.content ?? "" }] })
+			if (!firstMessage) {
+				i = j
+				continue
 			}
 
-			let modelResponseParts: ({ text: string } | { tool_code: any })[] = []
+			messages.push({ role: "user", parts: [{ text: firstMessage.content ?? "" }] })
 
-			for (let j = 1; j < turn.length; j++) {
-				const entry = turn[j]
+			const modelResponses: GeminiMessage[] = []
+			const toolResults: GeminiMessage[] = []
+
+			for (let k = 1; k < turn.length; k++) {
+				const entry = turn[k]
 				if (!entry) continue
 
 				if (entry.type === "ai_response") {
+					const modelResponseParts: ({ text: string } | { tool_code: any })[] = []
 					if (entry.content) {
 						modelResponseParts.push({ text: entry.content })
 					}
@@ -137,38 +139,36 @@ async function processLogFile(filePath: string): Promise<GeminiExample[]> {
 						modelResponseParts.push(
 							...entry.tool_calls.map((tc) => ({ tool_code: { name: tc.name, args: tc.input } })),
 						)
-						hasToolCall = true
+					}
+					if (modelResponseParts.length > 0) {
+						modelResponses.push({ role: "model", parts: modelResponseParts })
 					}
 				} else if (entry.type === "tool_call") {
-					if (modelResponseParts.length > 0) {
-						messages.push({ role: "model", parts: modelResponseParts })
-						modelResponseParts = []
-					}
-
 					let toolOutput = entry.result
 					try {
 						toolOutput = JSON.parse(entry.result)
 					} catch (e) {
 						/* Do nothing, use as raw string */
 					}
-
-					messages.push({
+					toolResults.push({
 						role: "tool",
 						parts: [{ tool_result: { name: entry.tool_name!, response: toolOutput } }],
 					})
 				}
 			}
 
-			if (modelResponseParts.length > 0) {
-				messages.push({ role: "model", parts: modelResponseParts })
-			}
+			// Re-order the messages to ensure the model's tool call comes before the tool result.
+			const modelResponsesWithToolCalls = modelResponses.filter((m) => m.parts.some((p) => "tool_code" in p))
+			const modelSummaries = modelResponses.filter((m) => !m.parts.some((p) => "tool_code" in p))
 
-			if (hasToolCall) {
+			if (modelResponsesWithToolCalls.length > 0 && toolResults.length > 0) {
+				messages.push(...modelResponsesWithToolCalls)
+				messages.push(...toolResults)
+				messages.push(...modelSummaries)
+
 				examples.push({ messages })
 			}
-			if (hasToolCall) {
-				examples.push({ messages })
-			}
+			i = j
 		} else {
 			i++
 		}
