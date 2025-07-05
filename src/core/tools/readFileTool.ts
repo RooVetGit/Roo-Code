@@ -14,6 +14,58 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import * as fs from "fs/promises"
+
+/**
+ * Default maximum allowed image file size in bytes (5MB)
+ */
+const DEFAULT_MAX_IMAGE_FILE_SIZE_MB = 5
+
+/**
+ * Supported image formats that can be displayed
+ */
+const SUPPORTED_IMAGE_FORMATS = [
+	".png",
+	".jpg",
+	".jpeg",
+	".gif",
+	".webp",
+	".svg",
+	".bmp",
+	".ico",
+	".tiff",
+	".tif",
+	".avif",
+] as const
+
+/**
+ * Reads an image file and returns both the data URL and buffer
+ */
+async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ dataUrl: string; buffer: Buffer }> {
+	const fileBuffer = await fs.readFile(filePath)
+	const base64 = fileBuffer.toString("base64")
+	const ext = path.extname(filePath).toLowerCase()
+
+	// Map extensions to MIME types
+	const mimeTypes: Record<string, string> = {
+		".png": "image/png",
+		".jpg": "image/jpeg",
+		".jpeg": "image/jpeg",
+		".gif": "image/gif",
+		".webp": "image/webp",
+		".svg": "image/svg+xml",
+		".bmp": "image/bmp",
+		".ico": "image/x-icon",
+		".tiff": "image/tiff",
+		".tif": "image/tiff",
+		".avif": "image/avif",
+	}
+
+	const mimeType = mimeTypes[ext] || "image/png"
+	const dataUrl = `data:${mimeType};base64,${base64}`
+	
+	return { dataUrl, buffer: fileBuffer }
+}
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -66,6 +118,7 @@ interface FileResult {
 	notice?: string
 	lineRanges?: LineRange[]
 	xmlContent?: string // Final XML content for this file
+	imageDataUrl?: string // Image data URL for image files
 	feedbackText?: string // User feedback text from approval/denial
 	feedbackImages?: any[] // User feedback images from approval/denial
 }
@@ -429,7 +482,7 @@ export async function readFileTool(
 
 			const relPath = fileResult.path
 			const fullPath = path.resolve(cline.cwd, relPath)
-			const { maxReadFileLine = -1 } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const { maxReadFileLine = -1, maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB } = (await cline.providerRef.deref()?.getState()) ?? {}
 
 			// Process approved files
 			try {
@@ -440,14 +493,82 @@ export async function readFileTool(
 					const fileExtension = path.extname(relPath).toLowerCase()
 					const supportedBinaryFormats = getSupportedBinaryFormats()
 
-					if (!supportedBinaryFormats.includes(fileExtension)) {
+					// Check if it's a supported image format
+					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as (typeof SUPPORTED_IMAGE_FORMATS)[number])) {
+						try {
+							const imageStats = await fs.stat(fullPath)
+
+							// Check if image file exceeds size limit
+							if (imageStats.size > maxImageFileSize * 1024 * 1024) {
+								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
+								const notice = t("tools:readFile.imageTooLarge", { size: imageSizeInMB, max: maxImageFileSize })
+
+								// Track file read
+								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+								updateFileResult(relPath, {
+									xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
+								})
+								continue
+							}
+
+							const { dataUrl: imageDataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
+							const imageSizeInKB = Math.round(imageStats.size / 1024)
+
+							// For images, get dimensions if possible
+							let dimensionsInfo = ""
+							if (fileExtension === ".png") {
+								// Simple PNG dimension extraction (first 24 bytes contain width/height)
+								if (buffer.length >= 24) {
+									const width = buffer.readUInt32BE(16)
+									const height = buffer.readUInt32BE(20)
+									if (width && height) {
+										dimensionsInfo = `${width}x${height} pixels`
+									}
+								}
+							}
+
+							// Track file read
+							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+							// Store image data URL separately - NOT in XML
+							const noticeText = dimensionsInfo
+								? `Image file (${dimensionsInfo}, ${imageSizeInKB} KB)`
+								: `Image file (${imageSizeInKB} KB)`
+
+							updateFileResult(relPath, {
+								xmlContent: `<file><path>${relPath}</path>\n<notice>${noticeText}</notice>\n</file>`,
+								imageDataUrl: imageDataUrl,
+							})
+							continue
+						} catch (error) {
+							const errorMsg = error instanceof Error ? error.message : String(error)
+							updateFileResult(relPath, {
+								status: "error",
+								error: `Error reading image file: ${errorMsg}`,
+								xmlContent: `<file><path>${relPath}</path><error>Error reading image file: ${errorMsg}</error></file>`,
+							})
+							await handleError(
+								`reading image file ${relPath}`,
+								error instanceof Error ? error : new Error(errorMsg),
+							)
+							continue
+						}
+					}
+
+					// Check if it's a supported binary format that can be processed
+					if (supportedBinaryFormats && supportedBinaryFormats.includes(fileExtension)) {
+						// For supported binary formats (.pdf, .docx, .ipynb), continue to extractTextFromFile
+						// Fall through to the normal extractTextFromFile processing below
+					} else {
+						// Handle unknown binary format
+						const fileFormat = fileExtension.slice(1) || "bin" // Remove the dot, fallback to "bin"
 						updateFileResult(relPath, {
-							notice: "Binary file",
-							xmlContent: `<file><path>${relPath}</path>\n<notice>Binary file</notice>\n</file>`,
+							notice: `Binary file format: ${fileFormat}`,
+							xmlContent: `<file><path>${relPath}</path>\n<binary_file format="${fileFormat}">Binary file - content not displayed</binary_file>\n</file>`,
 						})
 						continue
 					}
-					// For supported binary formats (.pdf, .docx, .ipynb), continue to extractTextFromFile
 				}
 
 				// Handle range reads (bypass maxReadFileLine)
@@ -546,6 +667,11 @@ export async function readFileTool(
 		const xmlResults = fileResults.filter((result) => result.xmlContent).map((result) => result.xmlContent)
 		const filesXml = `<files>\n${xmlResults.join("\n")}\n</files>`
 
+		// Collect all image data URLs from file results
+		const fileImageUrls = fileResults
+			.filter((result) => result.imageDataUrl)
+			.map((result) => result.imageDataUrl as string)
+
 		// Process all feedback in a unified way without branching
 		let statusMessage = ""
 		let feedbackImages: any[] = []
@@ -573,20 +699,35 @@ export async function readFileTool(
 			}
 		}
 
+		// Combine all images: feedback images first, then file images
+		const allImages = [...feedbackImages, ...fileImageUrls]
+
 		// Push the result with appropriate formatting
-		if (statusMessage) {
-			const result = formatResponse.toolResult(statusMessage, feedbackImages)
+		if (statusMessage || allImages.length > 0) {
+			// Always use formatResponse.toolResult when we have a status message or images
+			const result = formatResponse.toolResult(
+				statusMessage || filesXml,
+				allImages.length > 0 ? allImages : undefined,
+			)
 
 			// Handle different return types from toolResult
 			if (typeof result === "string") {
-				pushToolResult(`${result}\n${filesXml}`)
+				if (statusMessage) {
+					pushToolResult(`${result}\n${filesXml}`)
+				} else {
+					pushToolResult(result)
+				}
 			} else {
-				// For block-based results, we need to convert the filesXml to a text block and append it
-				const textBlock = { type: "text" as const, text: filesXml }
-				pushToolResult([...result, textBlock])
+				// For block-based results, append the files XML as a text block if not already included
+				if (statusMessage) {
+					const textBlock = { type: "text" as const, text: filesXml }
+					pushToolResult([...result, textBlock])
+				} else {
+					pushToolResult(result)
+				}
 			}
 		} else {
-			// No status message, just push the files XML
+			// No images or status message, just push the files XML
 			pushToolResult(filesXml)
 		}
 	} catch (error) {
