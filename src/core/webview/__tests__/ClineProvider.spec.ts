@@ -16,6 +16,7 @@ import { Task, TaskOptions } from "../../task/Task"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ClineProvider } from "../ClineProvider"
+import { ConversationLogger } from "../../../services/logging/ConversationLogger"
 
 // Mock setup must come before imports
 vi.mock("../../prompts/sections/custom-instructions")
@@ -45,6 +46,8 @@ vi.mock("axios", () => ({
 }))
 
 vi.mock("../../../utils/safeWriteJson")
+
+vi.mock("../../../services/logging/ConversationLogger")
 
 vi.mock("@modelcontextprotocol/sdk/types.js", () => ({
 	CallToolResultSchema: {},
@@ -2534,5 +2537,161 @@ describe("ClineProvider - Router Models", () => {
 				lmstudio: {},
 			},
 		})
+	})
+})
+
+describe("ConversationLogger integration", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: any
+	let mockLogger: any
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+
+		// Mock workspace folders for logger initialization
+		;(vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: "/test/workspace" } }]
+
+		// Mock ConversationLogger
+		mockLogger = {
+			logUserMessage: vi.fn().mockResolvedValue(undefined),
+			logAIResponse: vi.fn().mockResolvedValue(undefined),
+			logToolCall: vi.fn().mockResolvedValue(undefined),
+		}
+		vi.mocked(ConversationLogger).mockImplementation(() => mockLogger)
+
+		const globalState: Record<string, string | undefined> = {}
+		const secrets: Record<string, string | undefined> = {}
+
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: vi.fn().mockImplementation((key: string) => globalState[key]),
+				update: vi
+					.fn()
+					.mockImplementation((key: string, value: string | undefined) => (globalState[key] = value)),
+				keys: vi.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: {
+				get: vi.fn().mockImplementation((key: string) => secrets[key]),
+				store: vi.fn().mockImplementation((key: string, value: string | undefined) => (secrets[key] = value)),
+				delete: vi.fn().mockImplementation((key: string) => delete secrets[key]),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: vi.fn(),
+			clear: vi.fn(),
+			dispose: vi.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = vi.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: vi.fn(),
+				asWebviewUri: vi.fn(),
+			},
+			visible: true,
+			onDidDispose: vi.fn().mockImplementation((callback) => {
+				callback()
+				return { dispose: vi.fn() }
+			}),
+			onDidChangeVisibility: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+		} as unknown as vscode.WebviewView
+
+		if (!TelemetryService.hasInstance()) {
+			TelemetryService.createInstance([])
+		}
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+	})
+
+	test("initializes logger when workspace is available", () => {
+		// ConversationLogger should be instantiated with workspace root
+		expect(ConversationLogger).toHaveBeenCalledWith("/test/workspace")
+	})
+
+	test("does not initialize logger when no workspace is available", () => {
+		// Create provider without workspace folders
+		;(vscode.workspace as any).workspaceFolders = []
+
+		vi.clearAllMocks()
+		const providerWithoutWorkspace = new ClineProvider(
+			mockContext,
+			mockOutputChannel,
+			"sidebar",
+			new ContextProxy(mockContext),
+		)
+
+		// ConversationLogger should not be called when no workspace
+		expect(ConversationLogger).not.toHaveBeenCalled()
+	})
+
+	test("logs user messages on newTask", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+		// Mock the logger property to exist
+		;(provider as any).logger = mockLogger
+
+		// Simulate newTask message
+		await messageHandler({
+			type: "newTask",
+			text: "Test user message",
+			images: ["image1.png", "image2.png"],
+		})
+
+		// Verify user message was logged
+		expect(mockLogger.logUserMessage).toHaveBeenCalledWith("Test user message", "code", {
+			images: ["image1.png", "image2.png"],
+		})
+	})
+
+	test("handles empty text in newTask message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+		;(provider as any).logger = mockLogger
+
+		// Simulate newTask message without text
+		await messageHandler({
+			type: "newTask",
+			images: [],
+		})
+
+		// Should log empty string for text
+		expect(mockLogger.logUserMessage).toHaveBeenCalledWith("", "code", {
+			images: [],
+		})
+	})
+
+	test("does not log when logger is not initialized", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+		// Ensure logger is not set
+		;(provider as any).logger = undefined
+
+		// Simulate newTask message
+		await messageHandler({
+			type: "newTask",
+			text: "Test message",
+		})
+
+		// Should not attempt to log
+		expect(mockLogger.logUserMessage).not.toHaveBeenCalled()
 	})
 })

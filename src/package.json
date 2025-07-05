@@ -51,6 +51,21 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
+		"rooCode.logging.enabled": {
+			"type": "boolean",
+			"default": false,
+			"description": "Enable conversation logging for fine-tuning datasets"
+		},
+		"rooCode.logging.includeToolCalls": {
+			"type": "boolean",
+			"default": true,
+			"description": "Include tool calls in conversation logs"
+		},
+		"rooCode.logging.logDirectory": {
+			"type": "string",
+			"default": ".roo-logs",
+			"description": "Directory to store conversation logs"
+		},
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -63,6 +78,7 @@
 		"views": {
 			"roo-cline-ActivityBar": [
 				{
+					"icon": "default",
 					"type": "webview",
 					"id": "roo-cline.SidebarProvider",
 					"name": "%views.sidebar.name%"

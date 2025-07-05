@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import * as dotenvx from "@dotenvx/dotenvx"
 import * as path from "path"
+import { ConversationLogger } from "./services/logging/ConversationLogger"
 
 // Load environment variables from .env file
 try {
@@ -88,6 +89,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Initialize terminal shell execution handlers.
 	TerminalRegistry.initialize()
+
+	// Initialize conversation logger
+	const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+	if (workspaceRoot) {
+		const logger = new ConversationLogger(workspaceRoot)
+		context.globalState.update("conversationLogger", logger)
+	}
 
 	// Get default commands from configuration.
 	const defaultCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []

@@ -64,6 +64,7 @@ import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
 import { getWorkspacePath } from "../../utils/path"
+import { ConversationLogger } from "../../services/logging/ConversationLogger"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
@@ -107,6 +108,7 @@ export class ClineProvider
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
 	private mdmService?: MdmService
+	private logger?: ConversationLogger
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -157,6 +159,12 @@ export class ClineProvider
 			})
 
 		this.marketplaceManager = new MarketplaceManager(this.context)
+
+		// Initialize logger
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+		if (workspaceRoot) {
+			this.logger = new ConversationLogger(workspaceRoot)
+		}
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -780,14 +788,32 @@ export class ClineProvider
 	}
 
 	/**
+	 * Handle incoming webview messages with logging
+	 */
+	private async handleWebviewMessage(message: WebviewMessage) {
+		// Log user messages
+		if (message.type === "newTask" && this.logger) {
+			await this.logger.logUserMessage(
+				message.text || "",
+				"code", // You might want to get the actual mode from the message
+				{
+					images: message.images,
+				},
+			)
+		}
+
+		// Continue with existing message handling
+		return webviewMessageHandler(this, message, this.marketplaceManager)
+	}
+
+	/**
 	 * Sets up an event listener to listen for messages passed from the webview context and
 	 * executes code based on the message that is received.
 	 *
 	 * @param webview A reference to the extension webview
 	 */
 	private setWebviewMessageListener(webview: vscode.Webview) {
-		const onReceiveMessage = async (message: WebviewMessage) =>
-			webviewMessageHandler(this, message, this.marketplaceManager)
+		const onReceiveMessage = async (message: WebviewMessage) => this.handleWebviewMessage(message)
 
 		const messageDisposable = webview.onDidReceiveMessage(onReceiveMessage)
 		this.webviewDisposables.push(messageDisposable)
