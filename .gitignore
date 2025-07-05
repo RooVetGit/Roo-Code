@@ -47,4 +47,4 @@ logs
 .vercel
 .roo/mcp.json
 **/.roo-logs/*
-finetuning-dataset.jsonl
+**/finetuning-datasets/
