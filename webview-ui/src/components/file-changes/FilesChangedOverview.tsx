@@ -61,6 +61,16 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 
 	// Simple double-click prevention
 	const [isProcessing, setIsProcessing] = React.useState(false)
+	const timeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+
+	// Cleanup timeout on unmount
+	React.useEffect(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current)
+			}
+		}
+	}, [])
 
 	const handleWithDebounce = React.useCallback(
 		async (operation: () => void) => {
@@ -73,7 +83,10 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 				// Debug logging removed for production
 			}
 			// Brief delay to prevent double-clicks
-			setTimeout(() => setIsProcessing(false), 300)
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current)
+			}
+			timeoutRef.current = setTimeout(() => setIsProcessing(false), 300)
 		},
 		[isProcessing],
 	)
@@ -136,6 +149,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 	return (
 		<div
 			className="files-changed-overview"
+			data-testid="files-changed-overview"
 			style={{
 				border: "1px solid var(--vscode-panel-border)",
 				borderRadius: "4px",
@@ -180,7 +194,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 							transition: "transform 0.2s ease",
 						}}
 					/>
-					<h3 style={{ margin: 0, fontSize: "14px", fontWeight: "bold" }}>
+					<h3 style={{ margin: 0, fontSize: "14px", fontWeight: "bold" }} data-testid="files-changed-header">
 						{t("file-changes:summary.count_with_changes", {
 							count: files.length,
 							changes: totalChanges,
@@ -197,6 +211,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 						onClick={() => handleWithDebounce(onRejectAll)}
 						disabled={isProcessing}
 						tabIndex={0}
+						data-testid="reject-all-button"
 						style={{
 							backgroundColor: "var(--vscode-button-secondaryBackground)",
 							color: "var(--vscode-button-secondaryForeground)",
@@ -214,6 +229,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = ({
 						onClick={() => handleWithDebounce(onAcceptAll)}
 						disabled={isProcessing}
 						tabIndex={0}
+						data-testid="accept-all-button"
 						style={{
 							backgroundColor: "var(--vscode-button-background)",
 							color: "var(--vscode-button-foreground)",

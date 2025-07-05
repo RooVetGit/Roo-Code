@@ -9,7 +9,6 @@ import { ExtensionStateContext } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 import { FileChangeType } from "@roo-code/types"
 import FilesChangedOverview from "../../FilesChangedOverview"
-import FilesChangedOverviewWrapper from "../../FilesChangedOverviewWrapper"
 
 // Mock vscode API
 vi.mock("@src/utils/vscode", () => ({
@@ -200,14 +199,21 @@ describe("FilesChangedOverview Webview Message Flow Integration", () => {
 				currentFileChangeset: { baseCheckpoint: "abc123", files: [] },
 			}
 
-			const { container } = render(
+			render(
 				<ExtensionStateContext.Provider value={emptyState as any}>
-					<FilesChangedOverviewWrapper />
+					<FilesChangedOverview
+						changeset={{ baseCheckpoint: "abc123", files: [] }}
+						onViewDiff={(uri) => vscode.postMessage({ type: "viewDiff", uri })}
+						onAcceptFile={(uri) => vscode.postMessage({ type: "acceptFileChange", uri })}
+						onRejectFile={(uri) => vscode.postMessage({ type: "rejectFileChange", uri })}
+						onAcceptAll={() => vscode.postMessage({ type: "acceptAllFileChanges" })}
+						onRejectAll={() => vscode.postMessage({ type: "rejectAllFileChanges" })}
+					/>
 				</ExtensionStateContext.Provider>,
 			)
 
-			// Wrapper returns null for empty states, so container should be empty
-			expect(container.firstChild).toBeNull()
+			// Component should show empty state header
+			expect(screen.getByTestId("files-changed-header")).toBeInTheDocument()
 		})
 	})
 
