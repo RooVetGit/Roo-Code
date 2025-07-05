@@ -94,8 +94,8 @@ export async function insertContentTool(
 
 		// Read the file
 		const fileContent = await fs.readFile(absolutePath, "utf8")
-		cline.diffViewProvider.editType = "modify"
-		cline.diffViewProvider.originalContent = fileContent
+		cline.editingProvider.editType = "modify"
+		cline.editingProvider.originalContent = fileContent
 		const lines = fileContent.split("\n")
 
 		const updatedContent = insertGroups(lines, [
@@ -106,14 +106,14 @@ export async function insertContentTool(
 		]).join("\n")
 
 		// Show changes in diff view
-		if (!cline.diffViewProvider.isEditing) {
+		if (!cline.editingProvider.isEditing) {
 			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
 			// First open with original content
 			const clineRef = cline.providerRef.deref()
 			const viewColumn = clineRef?.getViewColumn() ?? ViewColumn.Active
-			await cline.diffViewProvider.open(relPath, viewColumn)
-			await cline.diffViewProvider.update(fileContent, false)
-			cline.diffViewProvider.scrollToFirstDiff()
+			await cline.editingProvider.open(relPath, viewColumn)
+			await cline.editingProvider.update(fileContent, false)
+			cline.editingProvider.scrollToFirstDiff()
 			await delay(200)
 		}
 
@@ -124,7 +124,7 @@ export async function insertContentTool(
 			return
 		}
 
-		await cline.diffViewProvider.update(updatedContent, true)
+		await cline.editingProvider.update(updatedContent, true)
 
 		const completeMessage = JSON.stringify({
 			...sharedMessageProps,
@@ -138,13 +138,13 @@ export async function insertContentTool(
 			.then((response) => response.response === "yesButtonClicked")
 
 		if (!didApprove) {
-			await cline.diffViewProvider.revertChanges()
+			await cline.editingProvider.revertChanges()
 			pushToolResult("Changes were rejected by the user.")
 			return
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties
-		await cline.diffViewProvider.saveChanges()
+		await cline.editingProvider.saveChanges()
 
 		// Track file edit operation
 		if (relPath) {
@@ -154,7 +154,7 @@ export async function insertContentTool(
 		cline.didEditFile = true
 
 		// Get the formatted response message
-		const message = await cline.diffViewProvider.pushToolWriteResult(
+		const message = await cline.editingProvider.pushToolWriteResult(
 			cline,
 			cline.cwd,
 			false, // Always false for insert_content
@@ -162,9 +162,9 @@ export async function insertContentTool(
 
 		pushToolResult(message)
 
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 	} catch (error) {
 		handleError("insert content", error)
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 	}
 }

@@ -23,6 +23,18 @@ export class EditingProviderFactory {
 		}
 	}
 
+	static resetAndCreateNewEditingProvider(cwd: string, editingProvider: IEditingProvider): IEditingProvider {
+		// Reset the current editing provider
+		if (editingProvider instanceof DiffViewProvider) {
+			editingProvider.resetWithListeners()
+		} else if (editingProvider instanceof FileWriter) {
+			editingProvider.resetWithListeners()
+		}
+
+		// Create a new instance of the appropriate provider
+		return this.createEditingProvider(cwd)
+	}
+
 	/**
 	 * Checks if file-based editing is currently enabled
 	 * @returns True if file-based editing is enabled, false otherwise

@@ -262,6 +262,7 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 			// if diffEnabled is checked, uncheck fileBasedEditing
 			if (e.target.checked) {
 				onChange("fileBasedEditing", false)
+				onChange("openTabsInCorrectGroup", true)
 			}
 		},
 		[onChange],

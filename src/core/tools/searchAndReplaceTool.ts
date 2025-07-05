@@ -188,29 +188,29 @@ export async function searchAndReplaceTool(
 		}
 
 		// Initialize diff view
-		cline.diffViewProvider.editType = "modify"
-		cline.diffViewProvider.originalContent = fileContent
+		cline.editingProvider.editType = "modify"
+		cline.editingProvider.originalContent = fileContent
 
 		// Generate and validate diff
 		const diff = formatResponse.createPrettyPatch(validRelPath, fileContent, newContent)
 		if (!diff) {
 			pushToolResult(`No changes needed for '${relPath}'`)
-			await cline.diffViewProvider.resetWithListeners()
+			await cline.editingProvider.resetWithListeners()
 			return
 		}
 
 		// Show changes in diff view
-		if (!cline.diffViewProvider.isEditing) {
+		if (!cline.editingProvider.isEditing) {
 			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
 			const clineRef = cline.providerRef.deref()
 			const viewColumn = clineRef?.getViewColumn() ?? ViewColumn.Active
-			await cline.diffViewProvider.open(validRelPath, viewColumn)
-			await cline.diffViewProvider.update(fileContent, false)
-			cline.diffViewProvider.scrollToFirstDiff()
+			await cline.editingProvider.open(validRelPath, viewColumn)
+			await cline.editingProvider.update(fileContent, false)
+			cline.editingProvider.scrollToFirstDiff()
 			await delay(200)
 		}
 
-		await cline.diffViewProvider.update(newContent, true)
+		await cline.editingProvider.update(newContent, true)
 
 		// Request user approval for changes
 		const completeMessage = JSON.stringify({
@@ -223,14 +223,14 @@ export async function searchAndReplaceTool(
 			.then((response) => response.response === "yesButtonClicked")
 
 		if (!didApprove) {
-			await cline.diffViewProvider.revertChanges()
+			await cline.editingProvider.revertChanges()
 			pushToolResult("Changes were rejected by the user.")
-			await cline.diffViewProvider.resetWithListeners()
+			await cline.editingProvider.resetWithListeners()
 			return
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties
-		await cline.diffViewProvider.saveChanges()
+		await cline.editingProvider.saveChanges()
 
 		// Track file edit operation
 		if (relPath) {
@@ -240,7 +240,7 @@ export async function searchAndReplaceTool(
 		cline.didEditFile = true
 
 		// Get the formatted response message
-		const message = await cline.diffViewProvider.pushToolWriteResult(
+		const message = await cline.editingProvider.pushToolWriteResult(
 			cline,
 			cline.cwd,
 			false, // Always false for search_and_replace
@@ -250,10 +250,10 @@ export async function searchAndReplaceTool(
 
 		// Record successful tool usage and cleanup
 		cline.recordToolUsage("search_and_replace")
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 	} catch (error) {
 		handleError("search and replace", error)
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 	}
 }
 

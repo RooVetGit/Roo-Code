@@ -36,7 +36,7 @@ export async function writeToFileTool(
 		cline.consecutiveMistakeCount++
 		cline.recordToolError("write_to_file")
 		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 		return
 	}
 
@@ -44,7 +44,7 @@ export async function writeToFileTool(
 		cline.consecutiveMistakeCount++
 		cline.recordToolError("write_to_file")
 		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 		return
 	}
 
@@ -62,12 +62,12 @@ export async function writeToFileTool(
 	// Check if file exists using cached map or fs.access
 	let fileExists: boolean
 
-	if (cline.diffViewProvider.editType !== undefined) {
-		fileExists = cline.diffViewProvider.editType === "modify"
+	if (cline.editingProvider.editType !== undefined) {
+		fileExists = cline.editingProvider.editType === "modify"
 	} else {
 		const absolutePath = path.resolve(cline.cwd, relPath)
 		fileExists = await fileExistsAtPath(absolutePath)
-		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
+		cline.editingProvider.editType = fileExists ? "modify" : "create"
 	}
 
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
@@ -103,15 +103,15 @@ export async function writeToFileTool(
 			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
 
 			// update editor
-			if (!cline.diffViewProvider.isEditing) {
+			if (!cline.editingProvider.isEditing) {
 				// open the editor and prepare to stream content in
 				const clineRef = cline.providerRef.deref()
 				const viewColumn = clineRef?.getViewColumn() ?? vscode.ViewColumn.Active
-				await cline.diffViewProvider.open(relPath, viewColumn)
+				await cline.editingProvider.open(relPath, viewColumn)
 			}
 
 			// editor is open, stream content in
-			await cline.diffViewProvider.update(
+			await cline.editingProvider.update(
 				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
 				false,
 			)
@@ -144,7 +144,7 @@ export async function writeToFileTool(
 						formatResponse.lineCountTruncationError(actualLineCount, isNewFile, diffStrategyEnabled),
 					),
 				)
-				await cline.diffViewProvider.revertChanges()
+				await cline.editingProvider.revertChanges()
 				return
 			}
 
@@ -153,27 +153,27 @@ export async function writeToFileTool(
 			// if isEditingFile false, that means we have the full contents of the file already.
 			// it's important to note how cline function works, you can't make the assumption that the block.partial conditional will always be called since it may immediately get complete, non-partial data. So cline part of the logic will always be called.
 			// in other words, you must always repeat the block.partial logic here
-			if (!cline.diffViewProvider.isEditing) {
+			if (!cline.editingProvider.isEditing) {
 				// show gui message before showing edit animation
 				const partialMessage = JSON.stringify(sharedMessageProps)
 				await cline.ask("tool", partialMessage, true).catch(() => {}) // sending true for partial even though it's not a partial, cline shows the edit row before the content is streamed into the editor
 				const clineRef = cline.providerRef.deref()
 				const viewColumn = clineRef?.getViewColumn() ?? vscode.ViewColumn.Active
-				await cline.diffViewProvider.open(relPath, viewColumn)
+				await cline.editingProvider.open(relPath, viewColumn)
 			}
 
-			await cline.diffViewProvider.update(
+			await cline.editingProvider.update(
 				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
 				true,
 			)
 
 			await delay(300) // wait for diff view to update
-			cline.diffViewProvider.scrollToFirstDiff()
+			cline.editingProvider.scrollToFirstDiff()
 
 			// Check for code omissions before proceeding
-			if (detectCodeOmission(cline.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {
+			if (detectCodeOmission(cline.editingProvider.originalContent || "", newContent, predictedLineCount)) {
 				if (cline.diffStrategy) {
-					await cline.diffViewProvider.revertChanges()
+					await cline.editingProvider.revertChanges()
 
 					pushToolResult(
 						formatResponse.toolError(
@@ -205,19 +205,19 @@ export async function writeToFileTool(
 				...sharedMessageProps,
 				content: fileExists ? undefined : newContent,
 				diff: fileExists
-					? formatResponse.createPrettyPatch(relPath, cline.diffViewProvider.originalContent, newContent)
+					? formatResponse.createPrettyPatch(relPath, cline.editingProvider.originalContent, newContent)
 					: undefined,
 			} satisfies ClineSayTool)
 
 			const didApprove = await askApproval("tool", completeMessage, undefined, isWriteProtected)
 
 			if (!didApprove) {
-				await cline.diffViewProvider.revertChanges()
+				await cline.editingProvider.revertChanges()
 				return
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties
-			await cline.diffViewProvider.saveChanges()
+			await cline.editingProvider.saveChanges()
 
 			// Track file edit operation
 			if (relPath) {
@@ -227,17 +227,17 @@ export async function writeToFileTool(
 			cline.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 
 			// Get the formatted response message
-			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
+			const message = await cline.editingProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
 			pushToolResult(message)
 
-			await cline.diffViewProvider.resetWithListeners()
+			await cline.editingProvider.resetWithListeners()
 
 			return
 		}
 	} catch (error) {
 		await handleError("writing file", error)
-		await cline.diffViewProvider.resetWithListeners()
+		await cline.editingProvider.resetWithListeners()
 		return
 	}
 }

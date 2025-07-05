@@ -166,7 +166,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	browserSession: BrowserSession
 
 	// Editing
-	diffViewProvider: IEditingProvider
+	editingProvider: IEditingProvider
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
@@ -254,7 +254,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
-		this.diffViewProvider = EditingProviderFactory.createEditingProvider(this.cwd)
+		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
 
 		this.rootTask = rootTask
@@ -755,6 +755,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public async resumePausedTask(lastMessage: string) {
 		// Release this Cline instance from paused state.
+		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd)
 		this.isPaused = false
 		this.emit("taskUnpaused")
 
@@ -1059,8 +1060,8 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		try {
 			// If we're not streaming then `abortStream` won't be called
-			if (this.isStreaming && this.diffViewProvider.isEditing) {
-				this.diffViewProvider.revertChanges().catch(console.error)
+			if (this.isStreaming && this.editingProvider.isEditing) {
+				this.editingProvider.revertChanges().catch(console.error)
 			}
 		} catch (error) {
 			console.error("Error reverting diff changes:", error)
@@ -1115,8 +1116,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		// Kicks off the checkpoints initialization process in the background.
 		getCheckpointService(this)
 		// Lets track if the user is interacting with the editor after we start our task loop.
-		this.diffViewProvider.initialize()
-		this.diffViewProvider.disableAutoFocusAfterUserInteraction?.()
+		this.editingProvider.initialize()
+		this.editingProvider.disableAutoFocusAfterUserInteraction?.()
 
 		let nextUserContent = userContent
 		let includeFileDetails = true
@@ -1156,6 +1157,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (this.abort) {
 			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
+
+		this.editingProvider = EditingProviderFactory.resetAndCreateNewEditingProvider(this.cwd, this.editingProvider)
 
 		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(
@@ -1284,8 +1287,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 
 			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
-				if (this.diffViewProvider.isEditing) {
-					await this.diffViewProvider.revertChanges() // closes diff view
+				if (this.editingProvider.isEditing) {
+					await this.editingProvider.revertChanges() // closes diff view
 				}
 
 				// if last message is a partial we need to update and save it
@@ -1337,7 +1340,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.presentAssistantMessageLocked = false
 			this.presentAssistantMessageHasPendingUpdates = false
 
-			await this.diffViewProvider.reset()
+			await this.editingProvider.reset()
 
 			// Yields only if the first chunk is successful, otherwise will
 			// allow the user to retry the request (most likely due to rate
