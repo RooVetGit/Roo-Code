@@ -21,6 +21,7 @@
 		"discardButton": "Descartar alterações"
 	},
 	"sections": {
+		"general": "Geral",
 		"providers": "Provedores",
 		"autoApprove": "Aprovação",
 		"browser": "Navegador",
@@ -32,6 +33,12 @@
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Mostrar todas as tarefas",
+			"description": "Mostrar tarefas de todos os projetos em vez de apenas o atual"
+		}
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."

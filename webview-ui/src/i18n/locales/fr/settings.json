@@ -21,6 +21,7 @@
 		"discardButton": "Ignorer les modifications"
 	},
 	"sections": {
+		"general": "Général",
 		"providers": "Fournisseurs",
 		"autoApprove": "Auto-approbation",
 		"browser": "Accès ordinateur",
@@ -32,6 +33,12 @@
 		"experimental": "Expérimental",
 		"language": "Langue",
 		"about": "À propos de Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Afficher toutes les tâches",
+			"description": "Afficher les tâches de tous les projets au lieu de seulement celles du projet actuel"
+		}
 	},
 	"prompts": {
 		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes."

@@ -5,6 +5,7 @@ import { type Language, isLanguage } from "@roo-code/types"
  */
 
 export const LANGUAGES: Record<Language, string> = {
+	bn: "বাংলা",
 	ca: "Català",
 	de: "Deutsch",
 	en: "English",

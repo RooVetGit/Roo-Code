@@ -1,7 +1,7 @@
 <div align="center">
 <sub>
 
-<b>English</b> • [Català](locales/ca/CODE_OF_CONDUCT.md) • [Deutsch](locales/de/CODE_OF_CONDUCT.md) • [Español](locales/es/CODE_OF_CONDUCT.md) • [Français](locales/fr/CODE_OF_CONDUCT.md) • [हिंदी](locales/hi/CODE_OF_CONDUCT.md) • [Bahasa Indonesia](locales/id/CODE_OF_CONDUCT.md) • [Italiano](locales/it/CODE_OF_CONDUCT.md) • [日本語](locales/ja/CODE_OF_CONDUCT.md)
+<b>English</b> • [বাংলা](locales/bn/CODE_OF_CONDUCT.md) • [Català](locales/ca/CODE_OF_CONDUCT.md) • [Deutsch](locales/de/CODE_OF_CONDUCT.md) • [Español](locales/es/CODE_OF_CONDUCT.md) • [Français](locales/fr/CODE_OF_CONDUCT.md) • [हिंदी](locales/hi/CODE_OF_CONDUCT.md) • [Bahasa Indonesia](locales/id/CODE_OF_CONDUCT.md) • [Italiano](locales/it/CODE_OF_CONDUCT.md) • [日本語](locales/ja/CODE_OF_CONDUCT.md)
 
 </sub>
 <sub>

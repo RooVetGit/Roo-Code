@@ -19,10 +19,11 @@ import {
 	SquareTerminal,
 	FlaskConical,
 	AlertTriangle,
-	Globe,
+	Languages,
 	Info,
 	MessageSquare,
 	LucideIcon,
+	Settings2,
 } from "lucide-react"
 
 import type { ProviderSettings, ExperimentId } from "@roo-code/types"
@@ -64,6 +65,7 @@ import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
+import { GeneralSettings } from "./GeneralSettings"
 import PromptsSettings from "./PromptsSettings"
 import { cn } from "@/lib/utils"
 
@@ -79,6 +81,7 @@ export interface SettingsViewRef {
 }
 
 const sectionNames = [
+	"general",
 	"providers",
 	"autoApprove",
 	"browser",
@@ -176,6 +179,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		profileThresholds,
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
+		showAllWorkspacesTasks,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -324,6 +328,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				vscode.postMessage({ type: "codebaseIndexEnabled", bool: codebaseIndexConfig.codebaseIndexEnabled })
 			}
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
+			vscode.postMessage({ type: "showAllWorkspacesTasks", bool: showAllWorkspacesTasks })
 			setChangeDetected(false)
 		}
 	}
@@ -393,6 +398,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
+			{ id: "general", icon: Settings2 },
 			{ id: "providers", icon: Webhook },
 			{ id: "autoApprove", icon: CheckCheck },
 			{ id: "browser", icon: SquareMousePointer },
@@ -402,7 +408,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "terminal", icon: SquareTerminal },
 			{ id: "prompts", icon: MessageSquare },
 			{ id: "experimental", icon: FlaskConical },
-			{ id: "language", icon: Globe },
+			{ id: "language", icon: Languages },
 			{ id: "about", icon: Info },
 		],
 		[], // No dependencies needed now
@@ -540,6 +546,22 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				{/* Content area */}
 				<TabContent className="p-0 flex-1 overflow-auto">
+					{activeTab === "general" && (
+						<div>
+							<SectionHeader>
+								<div className="flex items-center gap-2">
+									<Settings2 className="w-4" />
+									<div>{t("settings:sections.general")}</div>
+								</div>
+							</SectionHeader>
+							<Section>
+								<GeneralSettings
+									showAllWorkspacesTasks={showAllWorkspacesTasks}
+									setCachedStateField={setCachedStateField}
+								/>
+							</Section>
+						</div>
+					)}
 					{/* Providers Section */}
 					{activeTab === "providers" && (
 						<div>

@@ -1,4 +1,6 @@
 import React, { memo, useState } from "react"
+
+import { vscode } from "@/utils/vscode"
 import { DeleteTaskDialog } from "./DeleteTaskDialog"
 import { BatchDeleteTaskDialog } from "./BatchDeleteTaskDialog"
 import { Virtuoso } from "react-virtuoso"
@@ -35,8 +37,8 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		sortOption,
 		setSortOption,
 		setLastNonRelevantSort,
-		showAllWorkspaces,
-		setShowAllWorkspaces,
+		showAllWorkspacesTasks,
+		setShowAllWorkspacesTasks,
 	} = useTaskSearch()
 	const { t } = useAppTranslation()
 
@@ -129,12 +131,19 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 					</VSCodeTextField>
 					<div className="flex gap-2">
 						<Select
-							value={showAllWorkspaces ? "all" : "current"}
-							onValueChange={(value) => setShowAllWorkspaces(value === "all")}>
+							value={showAllWorkspacesTasks ? "all" : "current"}
+							onValueChange={(value) => {
+								const showAll = value === "all"
+								setShowAllWorkspacesTasks(showAll)
+								vscode.postMessage({
+									type: "showAllWorkspacesTasks",
+									bool: showAll,
+								})
+							}}>
 							<SelectTrigger className="flex-1">
 								<SelectValue>
 									{t("history:workspace.prefix")}{" "}
-									{t(`history:workspace.${showAllWorkspaces ? "all" : "current"}`)}
+									{t(`history:workspace.${showAllWorkspacesTasks ? "all" : "current"}`)}
 								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
@@ -238,7 +247,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 							key={item.id}
 							item={item}
 							variant="full"
-							showWorkspace={showAllWorkspaces}
+							showWorkspace={showAllWorkspacesTasks}
 							isSelectionMode={isSelectionMode}
 							isSelected={selectedTaskIds.includes(item.id)}
 							onToggleSelection={toggleTaskSelection}

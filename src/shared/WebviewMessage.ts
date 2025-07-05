@@ -176,6 +176,7 @@ export interface WebviewMessage {
 		| "fetchMarketplaceData"
 		| "switchTab"
 		| "profileThresholds"
+		| "showAllWorkspacesTasks"
 		| "shareTaskSuccess"
 		| "exportMode"
 		| "exportModeResult"
@@ -183,6 +184,7 @@ export interface WebviewMessage {
 		| "importModeResult"
 		| "checkRulesDirectory"
 		| "checkRulesDirectoryResult"
+		| "showAllWorkspacesTasks"
 		| "saveCodeIndexSettingsAtomic"
 		| "requestCodeIndexSecretStatus"
 	text?: string

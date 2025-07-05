@@ -103,6 +103,7 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
+		| "showAllWorkspacesTasks"
 		| "codeIndexSettingsSaved"
 		| "codeIndexSecretStatus"
 	text?: string
@@ -275,6 +276,7 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	showAllWorkspacesTasks: boolean
 }
 
 export interface ClineSayTool {

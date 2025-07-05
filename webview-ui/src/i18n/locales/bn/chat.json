@@ -1,0 +1,320 @@
+{
+	"greeting": "রু কোড-এ স্বাগতম!",
+	"task": {
+		"title": "কার্য",
+		"seeMore": "আরও দেখুন",
+		"seeLess": "কম দেখুন",
+		"tokens": "টোকেন:",
+		"cache": "ক্যাশে:",
+		"apiCost": "API খরচ:",
+		"condenseContext": "বুদ্ধিমত্তার সাথে কনটেক্সট সংক্ষিপ্ত করুন",
+		"contextWindow": "কনটেক্সট দৈর্ঘ্য:",
+		"closeAndStart": "কার্য বন্ধ করুন এবং একটি নতুন কার্য শুরু করুন",
+		"export": "কার্যের ইতিহাস এক্সপোর্ট করুন",
+		"share": "কার্য শেয়ার করুন",
+		"delete": "কার্য মুছুন (নিশ্চিতকরণ এড়িয়ে যেতে Shift + ক্লিক করুন)",
+		"shareWithOrganization": "প্রতিষ্ঠানের সাথে শেয়ার করুন",
+		"shareWithOrganizationDescription": "শুধুমাত্র আপনার প্রতিষ্ঠানের সদস্যরা অ্যাক্সেস করতে পারবেন",
+		"sharePublicly": "সবার সাথে শেয়ার করুন",
+		"sharePubliclyDescription": "লিঙ্ক এর সাহায্যে যে কেউ অ্যাক্সেস করতে পারবেন",
+		"connectToCloud": "ক্লাউডের সাথে সংযোগ করুন",
+		"connectToCloudDescription": "কার্য শেয়ার করতে রু কোড ক্লাউডে সাইন ইন করুন",
+		"sharingDisabledByOrganization": "প্রতিষ্ঠান দ্বারা শেয়ারিং অক্ষম করা হয়েছে",
+		"shareSuccessOrganization": "প্রতিষ্ঠানের লিঙ্ক ক্লিপবোর্ডে অনুলিপি করা হয়েছে",
+		"shareSuccessPublic": "সর্বজনীন লিঙ্ক ক্লিপবোর্ডে অনুলিপি করা হয়েছে"
+	},
+	"unpin": "আনপিন করুন",
+	"pin": "পিন করুন",
+	"retry": {
+		"title": "পুনরায় চেষ্টা করুন",
+		"tooltip": "অপারেশনটি আবার চেষ্টা করুন"
+	},
+	"startNewTask": {
+		"title": "নতুন কার্য শুরু করুন",
+		"tooltip": "একটি নতুন কার্য শুরু করুন"
+	},
+	"proceedAnyways": {
+		"title": "এগিয়ে যান",
+		"tooltip": "কমান্ড কার্যকর করার সময় চালিয়ে যান"
+	},
+	"save": {
+		"title": "সংরক্ষণ করুন",
+		"tooltip": "ফাইলের পরিবর্তনগুলি সংরক্ষণ করুন"
+	},
+	"tokenProgress": {
+		"availableSpace": "উপলব্ধ স্থান: {{amount}} টোকেন",
+		"tokensUsed": "{{total}} এর মধ্যে {{used}} টোকেন ব্যবহৃত হয়েছে",
+		"reservedForResponse": "মডেল প্রতিক্রিয়ার জন্য সংরক্ষিত: {{amount}} টোকেন"
+	},
+	"reject": {
+		"title": "প্রত্যাখ্যান করুন",
+		"tooltip": "এই ক্রিয়াটি প্রত্যাখ্যান করুন"
+	},
+	"completeSubtaskAndReturn": "অনুকার্য সম্পূর্ণ করুন এবং ফিরে আসুন",
+	"approve": {
+		"title": "অনুমোদন করুন",
+		"tooltip": "এই ক্রিয়াটি অনুমোদন করুন"
+	},
+	"read-batch": {
+		"approve": {
+			"title": "সব অনুমোদন করুন"
+		},
+		"deny": {
+			"title": "সব বাদ দিন"
+		}
+	},
+	"runCommand": {
+		"title": "কমান্ড চালান",
+		"tooltip": "এই কমান্ডটি চালান"
+	},
+	"proceedWhileRunning": {
+		"title": "চলমান অবস্থায় এগিয়ে যান",
+		"tooltip": "সতর্কতা সত্ত্বেও চালিয়ে যান"
+	},
+	"killCommand": {
+		"title": "কমান্ড বন্ধ করুন",
+		"tooltip": "বর্তমান কমান্ডটি বন্ধ করুন"
+	},
+	"resumeTask": {
+		"title": "কার্য পুনরায় শুরু করুন",
+		"tooltip": "বর্তমান কার্যটি চালিয়ে যান"
+	},
+	"terminate": {
+		"title": "সমাপ্ত করুন",
+		"tooltip": "বর্তমান কার্যটি শেষ করুন"
+	},
+	"cancel": {
+		"title": "বাতিল করুন",
+		"tooltip": "বর্তমান অপারেশনটি বাতিল করুন"
+	},
+	"scrollToBottom": "চ্যাটের নীচে স্ক্রোল করুন",
+	"about": "কৃত্রিম বুদ্ধিমত্তার সাহায্যে কোড তৈরি, রিফ্যাক্টর এবং ভুল সংশোধন করুন। আরও জানতে আমাদের <DocsLink>ডকুমেন্টেশন</DocsLink> দেখুন।",
+	"onboarding": "এই কর্মক্ষেত্রে আপনার কার্য তালিকা খালি।",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "কার্য অর্কেস্ট্রেশন",
+			"description": "কার্যগুলিকে ছোট, পরিচালনাযোগ্য অংশে বিভক্ত করুন"
+		},
+		"stickyModels": {
+			"title": "স্টিকি মডেল",
+			"description": "প্রতিটি মোড আপনার শেষ ব্যবহৃত মডেল মনে রাখে"
+		},
+		"tools": {
+			"title": "সরঞ্জাম",
+			"description": "AI-কে ওয়েব ব্রাউজ করে, কমান্ড চালিয়ে এবং আরও অনেক কিছুর মাধ্যমে সমস্যার সমাধান করার অনুমতি দিন"
+		},
+		"customizableModes": {
+			"title": "নিজস্ব মোড",
+			"description": "বিশেষায়িত চরিত্র যাদের নির্ধারিত আচরণ এবং নির্ধারিত মডেল রয়েছে"
+		}
+	},
+	"selectMode": "মিথস্ক্রিয়ার জন্য মোড নির্বাচন করুন",
+	"selectApiConfig": "API কনফিগারেশন নির্বাচন করুন",
+	"enhancePrompt": "অতিরিক্ত কনটেক্সট দিয়ে প্রম্পট উন্নত করুন",
+	"modeSelector": {
+		"title": "মোড",
+		"marketplace": "মোড মার্কেটপ্লেস",
+		"settings": "মোড সেটিংস",
+		"description": "বিশেষায়িত চরিত্র যা Roo-এর আচরণকে উপযোগী করে।"
+	},
+	"enhancePromptDescription": "'প্রম্পট উন্নত করুন' বোতামটি অতিরিক্ত কনটেক্সট, স্পষ্টীকরণ বা পুনর্লিখন প্রদান করে আপনার প্রম্পট উন্নত করতে সহায়তা করে। এখানে একটি প্রম্পট টাইপ করে আবার বোতামটি ক্লিক করে দেখুন এটি কীভাবে কাজ করে।",
+	"addImages": "বার্তায় ছবি যোগ করুন",
+	"sendMessage": "বার্তা পাঠান",
+	"typeMessage": "একটি বার্তা টাইপ করুন...",
+	"typeTask": "আপনার কার্য এখানে টাইপ করুন...",
+	"addContext": "কনটেক্সট যোগ করতে @, মোড পরিবর্তন করতে /",
+	"dragFiles": "ফাইল ড্র্যাগ করতে শিফট ধরে রাখুন",
+	"dragFilesImages": "ফাইল/ছবি ড্র্যাগ করতে শিফট ধরে রাখুন",
+	"errorReadingFile": "ফাইল পড়তে ত্রুটি:",
+	"noValidImages": "কোনো বৈধ ছবি প্রক্রিয়া করা হয়নি",
+	"separator": "বিভাজক",
+	"edit": "সম্পাদনা করুন...",
+	"forNextMode": "পরবর্তী মোডের জন্য",
+	"apiRequest": {
+		"title": "API অনুরোধ",
+		"failed": "API অনুরোধ ব্যর্থ হয়েছে",
+		"streaming": "API অনুরোধ...",
+		"cancelled": "API অনুরোধ বাতিল করা হয়েছে",
+		"streamingFailed": "API স্ট্রিমিং ব্যর্থ হয়েছে"
+	},
+	"checkpoint": {
+		"initial": "প্রাথমিক চেকপয়েন্ট",
+		"regular": "চেকপয়েন্ট",
+		"initializingWarning": "এখনও চেকপয়েন্ট শুরু হচ্ছে... যদি এটি খুব বেশি সময় নেয়, আপনি <settingsLink>সেটিংসে</settingsLink> চেকপয়েন্ট অক্ষম করতে এবং আপনার কার্য পুনরায় শুরু করতে পারেন।",
+		"menu": {
+			"viewDiff": "পার্থক্য দেখুন",
+			"restore": "চেকপয়েন্ট পুনরুদ্ধার করুন",
+			"restoreFiles": "ফাইল পুনরুদ্ধার করুন",
+			"restoreFilesDescription": "এই সময়ে তোলা একটি স্ন্যাপশটে আপনার প্রকল্পের ফাইলগুলি পুনরুদ্ধার করে।",
+			"restoreFilesAndTask": "ফাইল এবং কার্য পুনরুদ্ধার করুন",
+			"confirm": "নিশ্চিত করুন",
+			"cancel": "বাতিল করুন",
+			"cannotUndo": "এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।",
+			"restoreFilesAndTaskDescription": "এই সময়ে তোলা একটি স্ন্যাপশটে আপনার প্রকল্পের ফাইলগুলি পুনরুদ্ধার করে এবং এই বিন্দুর পরে সমস্ত বার্তা মুছে দেয়।"
+		},
+		"current": "বর্তমান"
+	},
+	"contextCondense": {
+		"title": "কনটেক্সট সংক্ষিপ্ত করা হয়েছে",
+		"condensing": "কনটেক্সট সংক্ষিপ্ত করা হচ্ছে...",
+		"errorHeader": "কনটেক্সট সংক্ষিপ্ত করতে ব্যর্থ",
+		"tokens": "টোকেন"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo বর্তমান কার্যে সহায়তা করার জন্য বিস্তারিত নির্দেশাবলী আনতে চায়"
+	},
+	"fileOperations": {
+		"wantsToRead": "Roo এই ফাইলটি পড়তে চায়:",
+		"wantsToReadMultiple": "Roo একাধিক ফাইল পড়তে চায়:",
+		"wantsToReadAndXMore": "Roo এই ফাইলটি এবং আরও {{count}}টি ফাইল পড়তে চায়:",
+		"wantsToReadOutsideWorkspace": "Roo কর্মক্ষেত্রের বাইরের এই ফাইলটি পড়তে চায়:",
+		"didRead": "Roo এই ফাইলটি পড়েছে:",
+		"wantsToEdit": "Roo এই ফাইলটি সম্পাদনা করতে চায়:",
+		"wantsToEditOutsideWorkspace": "Roo কর্মক্ষেত্রের বাইরের এই ফাইলটি সম্পাদনা করতে চায়:",
+		"wantsToEditProtected": "Roo একটি সুরক্ষিত কনফিগারেশন ফাইল সম্পাদনা করতে চায়:",
+		"wantsToApplyBatchChanges": "Roo একাধিক ফাইলে পরিবর্তন প্রয়োগ করতে চায়:",
+		"wantsToCreate": "Roo একটি নতুন ফাইল তৈরি করতে চায়:",
+		"wantsToSearchReplace": "Roo এই ফাইলে অনুসন্ধান এবং প্রতিস্থাপন করতে চায়:",
+		"didSearchReplace": "Roo এই ফাইলে অনুসন্ধান এবং প্রতিস্থাপন করেছে:",
+		"wantsToInsert": "Roo এই ফাইলে বিষয়বস্তু সন্নিবেশ করতে চায়:",
+		"wantsToInsertWithLineNumber": "Roo এই ফাইলের {{lineNumber}} লাইনে বিষয়বস্তু সন্নিবেশ করতে চায়:",
+		"wantsToInsertAtEnd": "Roo এই ফাইলের শেষে বিষয়বস্তু যুক্ত করতে চায়:"
+	},
+	"directoryOperations": {
+		"wantsToViewTopLevel": "Roo এই ডিরেক্টরির শীর্ষ স্তরের ফাইলগুলি দেখতে চায়:",
+		"didViewTopLevel": "Roo এই ডিরেক্টরির শীর্ষ স্তরের ফাইলগুলি দেখেছে:",
+		"wantsToViewTopLevelOutsideWorkspace": "Roo এই ডিরেক্টরির (কর্মক্ষেত্রের বাইরে) শীর্ষ স্তরের ফাইলগুলি দেখতে চায়:",
+		"didViewTopLevelOutsideWorkspace": "Roo এই ডিরেক্টরির (কর্মক্ষেত্রের বাইরে) শীর্ষ স্তরের ফাইলগুলি দেখেছে:",
+		"wantsToViewRecursive": "Roo এই ডিরেক্টরির সমস্ত ফাইল পুনরাবৃত্তিমূলকভাবে দেখতে চায়:",
+		"didViewRecursive": "Roo এই ডিরেক্টরির সমস্ত ফাইল পুনরাবৃত্তিমূলকভাবে দেখেছে:",
+		"wantsToViewRecursiveOutsideWorkspace": "Roo এই ডিরেক্টরির (কর্মক্ষেত্রের বাইরে) সমস্ত ফাইল পুনরাবৃত্তিমূলকভাবে দেখতে চায়:",
+		"didViewRecursiveOutsideWorkspace": "Roo এই ডিরেক্টরির (কর্মক্ষেত্রের বাইরে) সমস্ত ফাইল পুনরাবৃত্তিমূলকভাবে দেখেছে:",
+		"wantsToViewDefinitions": "Roo এই ডিরেক্টরিতে ব্যবহৃত সোর্স কোড সংজ্ঞা নাম দেখতে চায়:",
+		"didViewDefinitions": "Roo এই ডিরেক্টরিতে ব্যবহৃত সোর্স কোড সংজ্ঞা নাম দেখেছে:",
+		"wantsToViewDefinitionsOutsideWorkspace": "Roo এই ডিরেক্টরিতে (কর্মক্ষেত্রের বাইরে) ব্যবহৃত সোর্স কোড সংজ্ঞা নাম দেখতে চায়:",
+		"didViewDefinitionsOutsideWorkspace": "Roo এই ডিরেক্টরিতে (কর্মক্ষেত্রের বাইরে) ব্যবহৃত সোর্স কোড সংজ্ঞা নাম দেখেছে:",
+		"wantsToSearch": "Roo এই ডিরেক্টরিতে <code>{{regex}}</code> অনুসন্ধান করতে চায়:",
+		"didSearch": "Roo এই ডিরেক্টরিতে <code>{{regex}}</code> অনুসন্ধান করেছে:",
+		"wantsToSearchOutsideWorkspace": "Roo এই ডিরেক্টরিতে (কর্মক্ষেত্রের বাইরে) <code>{{regex}}</code> অনুসন্ধান করতে চায়:",
+		"didSearchOutsideWorkspace": "Roo এই ডিরেক্টরিতে (কর্মক্ষেত্রের বাইরে) <code>{{regex}}</code> অনুসন্ধান করেছে:"
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo কোডবেসে <code>{{query}}</code> অনুসন্ধান করতে চায়:",
+		"wantsToSearchWithPath": "Roo কোডবেসে <code>{{path}}</code>-এ <code>{{query}}</code> অনুসন্ধান করতে চায়:",
+		"didSearch": "<code>{{query}}</code>-এর জন্য {{count}}টি ফলাফল পাওয়া গেছে:",
+		"resultTooltip": "সাদৃশ্য স্কোর: {{score}} (ফাইল খুলতে ক্লিক করুন)"
+	},
+	"commandOutput": "কমান্ড আউটপুট",
+	"response": "প্রতিক্রিয়া",
+	"arguments": "আর্গুমেন্ট",
+	"mcp": {
+		"wantsToUseTool": "Roo {{serverName}} MCP সার্ভারে একটি সরঞ্জাম ব্যবহার করতে চায়:",
+		"wantsToAccessResource": "Roo {{serverName}} MCP সার্ভারে একটি রিসোর্স অ্যাক্সেস করতে চায়:"
+	},
+	"modes": {
+		"wantsToSwitch": "Roo {{mode}} মোডে স্যুইচ করতে চায়",
+		"wantsToSwitchWithReason": "Roo {{mode}} মোডে স্যুইচ করতে চায় কারণ: {{reason}}",
+		"didSwitch": "Roo {{mode}} মোডে স্যুইচ করেছে",
+		"didSwitchWithReason": "Roo {{mode}} মোডে স্যুইচ করেছে কারণ: {{reason}}"
+	},
+	"subtasks": {
+		"wantsToCreate": "Roo {{mode}} মোডে একটি নতুন অনুকার্য তৈরি করতে চায়:",
+		"wantsToFinish": "Roo এই অনুকার্যটি শেষ করতে চায়",
+		"newTaskContent": "অনুকার্য নির্দেশাবলী",
+		"completionContent": "অনুকার্য সম্পন্ন হয়েছে",
+		"resultContent": "অনুকার্যের ফলাফল",
+		"defaultResult": "অনুগ্রহ করে পরবর্তী কার্যে এগিয়ে যান।",
+		"completionInstructions": "অনুকার্য সম্পন্ন হয়েছে! আপনি ফলাফল পর্যালোচনা করতে এবং কোনো সংশোধন বা পরবর্তী পদক্ষেপের পরামর্শ দিতে পারেন। যদি সবকিছু ঠিকঠাক দেখায়, তাহলে মূল কার্যে ফলাফল ফেরত পাঠাতে নিশ্চিত করুন।"
+	},
+	"questions": {
+		"hasQuestion": "Roo-এর একটি প্রশ্ন আছে:"
+	},
+	"taskCompleted": "কার্য সম্পন্ন হয়েছে",
+	"error": "ত্রুটি",
+	"diffError": {
+		"title": "সম্পাদনা অসফল"
+	},
+	"troubleMessage": "Roo সমস্যায় পড়েছে...",
+	"powershell": {
+		"issues": "মনে হচ্ছে আপনার উইন্ডোজ পাওয়ারশেল সমস্যা হচ্ছে, অনুগ্রহ করে এটি দেখুন"
+	},
+	"autoApprove": {
+		"title": "স্বয়ংক্রিয়-অনুমোদন:",
+		"none": "কোনোটিই নয়",
+		"description": "স্বয়ংক্রিয়-অনুমোদন রু কোড-কে অনুমতি ছাড়াই ক্রিয়া সম্পাদন করতে দেয়। শুধুমাত্র সেই ক্রিয়াগুলির জন্য সক্ষম করুন যা আপনি সম্পূর্ণরূপে বিশ্বাস করেন। আরও বিস্তারিত কনফিগারেশন <settingsLink>সেটিংসে</settingsLink> উপলব্ধ।"
+	},
+	"announcement": {
+		"title": "🎉 রু কোড {{version}} প্রকাশিত হয়েছে",
+		"description": "রু কোড {{version}} আপনার প্রতিক্রিয়ার উপর ভিত্তি করে প্রধান নতুন বৈশিষ্ট্য এবং উন্নতি নিয়ে এসেছে।",
+		"whatsNew": "নতুন কী আছে",
+		"feature1": "<bold>Roo মার্কেটপ্লেস লঞ্চ</bold>: মার্কেটপ্লেস এখন লাইভ! আগের চেয়ে সহজে মোড এবং MCP আবিষ্কার এবং ইনস্টল করুন।",
+		"feature2": "<bold>Gemini 2.5 মডেল</bold>: নতুন Gemini 2.5 Pro, Flash, এবং Flash Lite মডেলের জন্য সমর্থন যোগ করা হয়েছে।",
+		"feature3": "<bold>এক্সেল ফাইল সমর্থন এবং আরও অনেক কিছু</bold>: এক্সেল (.xlsx) ফাইল সমর্থন এবং অসংখ্য বাগ ফিক্স এবং উন্নতি যোগ করা হয়েছে!",
+		"hideButton": "ঘোষণা লুকান",
+		"detailsDiscussLinks": "আরও বিস্তারিত জানুন এবং <discordLink>ডিসকর্ড</discordLink> এবং <redditLink>রেডিটে</redditLink> আলোচনা করুন 🚀"
+	},
+	"reasoning": {
+		"thinking": "চিন্তা করছি",
+		"seconds": "{{count}} সেকেন্ড"
+	},
+	"followUpSuggest": {
+		"copyToInput": "ইনপুটে অনুলিপি করুন (শিফট + ক্লিকের মতো)",
+		"autoSelectCountdown": "{{count}} সেকেন্ডের মধ্যে স্বয়ংক্রিয়ভাবে নির্বাচন করা হচ্ছে",
+		"countdownDisplay": "{{count}} সেকেন্ড"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo ব্রাউজার ব্যবহার করতে চায়:",
+		"consoleLogs": "কনসোল লগ",
+		"noNewLogs": "(কোনো নতুন লগ নেই)",
+		"screenshot": "ব্রাউজার স্ক্রিনশট",
+		"cursor": "কার্সার",
+		"navigation": {
+			"step": "{{total}} এর মধ্যে ধাপ {{current}}",
+			"previous": "পূর্ববর্তী",
+			"next": "পরবর্তী"
+		},
+		"sessionStarted": "ব্রাউজার সেশন শুরু হয়েছে",
+		"actions": {
+			"title": "ব্রাউজ অ্যাকশন: ",
+			"launch": "{{url}}-এ ব্রাউজার চালু করুন",
+			"click": "ক্লিক করুন ({{coordinate}})",
+			"type": "\"{{text}}\" টাইপ করুন",
+			"scrollDown": "নিচে স্ক্রোল করুন",
+			"scrollUp": "উপরে স্ক্রোল করুন",
+			"close": "ব্রাউজার বন্ধ করুন"
+		}
+	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "কোড ব্লক প্রসারিত করুন",
+			"collapse": "কোড ব্লক সঙ্কুচিত করুন",
+			"enable_wrap": "শব্দ মোড়ানো সক্ষম করুন",
+			"disable_wrap": "শব্দ মোড়ানো অক্ষম করুন",
+			"copy_code": "কোড অনুলিপি করুন"
+		}
+	},
+	"systemPromptWarning": "সতর্কতা: নিজস্ব সিস্টেম প্রম্পট ওভাররাইড সক্রিয়। এটি কার্যকারিতা মারাত্মকভাবে ব্যাহত করতে পারে এবং অপ্রত্যাশিত আচরণের কারণ হতে পারে।",
+	"profileViolationWarning": "বর্তমান প্রোফাইল আপনার প্রতিষ্ঠানের সেটিংস লঙ্ঘন করে",
+	"shellIntegration": {
+		"title": "কমান্ড এক্সিকিউশন সতর্কতা",
+		"description": "আপনার কমান্ডটি ভিএসকোড টার্মিনাল শেল ইন্টিগ্রেশন ছাড়াই কার্যকর করা হচ্ছে। এই সতর্কতাটি দমন করতে আপনি <settingsLink>রু কোড সেটিংসের</settingsLink> <strong>টার্মিনাল</strong> বিভাগে শেল ইন্টিগ্রেশন অক্ষম করতে পারেন অথবা নীচের লিঙ্কটি ব্যবহার করে ভিএসকোড টার্মিনাল ইন্টিগ্রেশন সমস্যা সমাধান করতে পারেন।",
+		"troubleshooting": "শেল ইন্টিগ্রেশন ডকুমেন্টেশনের জন্য এখানে ক্লিক করুন।"
+	},
+	"ask": {
+		"autoApprovedRequestLimitReached": {
+			"title": "স্বয়ংক্রিয়-অনুমোদিত অনুরোধের সীমা পৌঁছেছে",
+			"description": "Roo {{count}}টি API অনুরোধের স্বয়ংক্রিয়-অনুমোদিত সীমা পৌঁছেছে। আপনি কি গণনা পুনরায় সেট করতে এবং কার্যটি নিয়ে এগিয়ে যেতে চান?",
+			"button": "পুনরায় সেট করুন এবং চালিয়ে যান"
+		}
+	},
+	"indexingStatus": {
+		"ready": "ইনডেক্স প্রস্তুত",
+		"indexing": "ইনডেক্সিং {{percentage}}%",
+		"indexed": "ইনডেক্স করা হয়েছে",
+		"error": "ইনডেক্স ত্রুটি",
+		"status": "ইনডেক্স স্থিতি"
+	},
+	"versionIndicator": {
+		"ariaLabel": "সংস্করণ {{version}} - রিলিজ নোট দেখতে ক্লিক করুন"
+	}
+}

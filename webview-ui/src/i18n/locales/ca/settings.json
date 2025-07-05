@@ -21,6 +21,7 @@
 		"discardButton": "Descartar canvis"
 	},
 	"sections": {
+		"general": "General",
 		"providers": "Proveïdors",
 		"autoApprove": "Auto-aprovació",
 		"browser": "Accés a l'ordinador",
@@ -32,6 +33,12 @@
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Mostra totes les tasques",
+			"description": "Mostra les tasques de tots els projectes en lloc de només l'actual"
+		}
 	},
 	"prompts": {
 		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
