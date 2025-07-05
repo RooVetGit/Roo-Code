@@ -64,6 +64,9 @@ export const toolParamNames = [
 	"end_line",
 	"query",
 	"args",
+	"todo_action",
+	"todo_item",
+	"item_id",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -163,6 +166,11 @@ export interface SearchAndReplaceToolUse extends ToolUse {
 		Partial<Pick<Record<ToolParamName, string>, "use_regex" | "ignore_case" | "start_line" | "end_line">>
 }
 
+export interface ManageTodoListToolUse extends ToolUse {
+	name: "manage_todo_list"
+	params: Partial<Pick<Record<ToolParamName, string>, "todo_action" | "todo_item" | "item_id">>
+}
+
 // Define tool group configuration
 export type ToolGroupConfig = {
 	tools: readonly string[]
@@ -188,6 +196,7 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
+	manage_todo_list: "manage todo list",
 } as const
 
 // Define available tool groups.
@@ -226,6 +235,7 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"manage_todo_list",
 ] as const
 
 export type DiffResult =

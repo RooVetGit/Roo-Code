@@ -187,6 +187,15 @@ export class Task extends EventEmitter<ClineEvents> {
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
 	toolUsage: ToolUsage = {}
 
+	// Todo List
+	todoList: Array<{
+		id: number
+		description: string
+		completed: boolean
+		createdAt: Date
+	}> = []
+	nextTodoId: number = 1
+
 	// Checkpoints
 	enableCheckpoints: boolean
 	checkpointService?: RepoPerTaskCheckpointService
