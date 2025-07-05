@@ -21,6 +21,7 @@
 		"discardButton": "Descartar cambios"
 	},
 	"sections": {
+		"general": "General",
 		"providers": "Proveedores",
 		"autoApprove": "Auto-aprobación",
 		"browser": "Acceso al ordenador",
@@ -32,6 +33,12 @@
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Acerca de Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Mostrar todas las tareas",
+			"description": "Mostrar tareas de todos los proyectos en lugar de solo el actual"
+		}
 	},
 	"prompts": {
 		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo."

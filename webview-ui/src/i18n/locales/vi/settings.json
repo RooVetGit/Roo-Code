@@ -21,6 +21,7 @@
 		"discardButton": "Hủy thay đổi"
 	},
 	"sections": {
+		"general": "Chung",
 		"providers": "Nhà cung cấp",
 		"autoApprove": "Phê duyệt",
 		"browser": "Trình duyệt",
@@ -32,6 +33,12 @@
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
 		"about": "Giới thiệu"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Hiển thị tất cả các tác vụ",
+			"description": "Hiển thị tác vụ từ tất cả các dự án thay vì chỉ dự án hiện tại"
+		}
 	},
 	"prompts": {
 		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến."

@@ -21,6 +21,7 @@
 		"discardButton": "Discard changes"
 	},
 	"sections": {
+		"general": "General",
 		"providers": "Providers",
 		"autoApprove": "Auto-Approve",
 		"browser": "Browser",
@@ -32,6 +33,12 @@
 		"experimental": "Experimental",
 		"language": "Language",
 		"about": "About Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Show All Tasks",
+			"description": "Show tasks from all projects instead of only the current one"
+		}
 	},
 	"prompts": {
 		"description": "Configure support prompts that are used for quick actions like enhancing prompts, explaining code, and fixing issues. These prompts help Roo provide better assistance for common development tasks."

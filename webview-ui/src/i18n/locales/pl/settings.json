@@ -21,6 +21,7 @@
 		"discardButton": "Odrzuć zmiany"
 	},
 	"sections": {
+		"general": "Ogólne",
 		"providers": "Dostawcy",
 		"autoApprove": "Auto-zatwierdzanie",
 		"browser": "Dostęp komputera",
@@ -32,6 +33,12 @@
 		"experimental": "Eksperymentalne",
 		"language": "Język",
 		"about": "O Roo Code"
+	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "Pokaż wszystkie zadania",
+			"description": "Pokaż zadania ze wszystkich projektów, zamiast tylko bieżącego"
+		}
 	},
 	"prompts": {
 		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."

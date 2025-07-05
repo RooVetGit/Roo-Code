@@ -21,6 +21,7 @@
 		"discardButton": "取消變更"
 	},
 	"sections": {
+		"general": "一般",
 		"providers": "供應商",
 		"autoApprove": "自動核准",
 		"browser": "電腦存取",
@@ -33,8 +34,14 @@
 		"language": "語言",
 		"about": "關於 Roo Code"
 	},
+	"general": {
+		"showAllWorkspacesTasks": {
+			"label": "顯示所有任務",
+			"description": "顯示所有專案的任務，而非僅限目前專案"
+		}
+	},
 	"prompts": {
-		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 為常見開發工作提供更好的支援。"
+		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 提供支援更好的支援，以協助處理常見的開發任務。"
 	},
 	"codeIndex": {
 		"title": "程式碼庫索引",

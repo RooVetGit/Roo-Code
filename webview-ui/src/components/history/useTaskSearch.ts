@@ -7,11 +7,10 @@ import { useExtensionState } from "@/context/ExtensionStateContext"
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
 export const useTaskSearch = () => {
-	const { taskHistory, cwd } = useExtensionState()
+	const { taskHistory, cwd, showAllWorkspacesTasks, setShowAllWorkspacesTasks } = useExtensionState()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
-	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false)
 
 	useEffect(() => {
 		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
@@ -25,11 +24,11 @@ export const useTaskSearch = () => {
 
 	const presentableTasks = useMemo(() => {
 		let tasks = taskHistory.filter((item) => item.ts && item.task)
-		if (!showAllWorkspaces) {
+		if (!showAllWorkspacesTasks) {
 			tasks = tasks.filter((item) => item.workspace === cwd)
 		}
 		return tasks
-	}, [taskHistory, showAllWorkspaces, cwd])
+	}, [taskHistory, showAllWorkspacesTasks, cwd])
 
 	const fzf = useMemo(() => {
 		return new Fzf(presentableTasks, {
@@ -86,7 +85,7 @@ export const useTaskSearch = () => {
 		setSortOption,
 		lastNonRelevantSort,
 		setLastNonRelevantSort,
-		showAllWorkspaces,
-		setShowAllWorkspaces,
+		showAllWorkspacesTasks,
+		setShowAllWorkspacesTasks,
 	}
 }
