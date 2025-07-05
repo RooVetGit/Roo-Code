@@ -15,9 +15,16 @@ interface FollowUpSuggestProps {
 	onSuggestionClick?: (suggestion: SuggestionItem, event?: React.MouseEvent) => void
 	ts: number
 	onUnmount?: () => void
+	isAnswered?: boolean
 }
 
-export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1, onUnmount }: FollowUpSuggestProps) => {
+export const FollowUpSuggest = ({
+	suggestions = [],
+	onSuggestionClick,
+	ts = 1,
+	onUnmount,
+	isAnswered = false,
+}: FollowUpSuggestProps) => {
 	const { autoApprovalEnabled, alwaysAllowFollowupQuestions, followupAutoApproveTimeoutMs } = useExtensionState()
 	const [countdown, setCountdown] = useState<number | null>(null)
 	const [suggestionSelected, setSuggestionSelected] = useState(false)
@@ -26,7 +33,14 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1, o
 	// Start countdown timer when auto-approval is enabled for follow-up questions
 	useEffect(() => {
 		// Only start countdown if auto-approval is enabled for follow-up questions and no suggestion has been selected
-		if (autoApprovalEnabled && alwaysAllowFollowupQuestions && suggestions.length > 0 && !suggestionSelected) {
+		// Also stop countdown if the question has been answered
+		if (
+			autoApprovalEnabled &&
+			alwaysAllowFollowupQuestions &&
+			suggestions.length > 0 &&
+			!suggestionSelected &&
+			!isAnswered
+		) {
 			// Start with the configured timeout in seconds
 			const timeoutMs =
 				typeof followupAutoApproveTimeoutMs === "number" && !isNaN(followupAutoApproveTimeoutMs)
@@ -64,6 +78,7 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1, o
 		followupAutoApproveTimeoutMs,
 		suggestionSelected,
 		onUnmount,
+		isAnswered,
 	])
 	const handleSuggestionClick = useCallback(
 		(suggestion: SuggestionItem, event: React.MouseEvent) => {
@@ -100,7 +115,7 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1, o
 							onClick={(event) => handleSuggestionClick(suggestion, event)}
 							aria-label={suggestion.answer}>
 							{suggestion.answer}
-							{isFirstSuggestion && countdown !== null && !suggestionSelected && (
+							{isFirstSuggestion && countdown !== null && !suggestionSelected && !isAnswered && (
 								<span
 									className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-vscode-badge-background text-vscode-badge-foreground"
 									title={t("chat:followUpSuggest.autoSelectCountdown", { count: countdown })}>

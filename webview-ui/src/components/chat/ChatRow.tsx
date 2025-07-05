@@ -52,6 +52,7 @@ interface ChatRowProps {
 	onSuggestionClick?: (suggestion: SuggestionItem, event?: React.MouseEvent) => void
 	onBatchFileResponse?: (response: { [key: string]: boolean }) => void
 	onFollowUpUnmount?: () => void
+	isFollowUpAnswered?: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -102,6 +103,7 @@ export const ChatRowContent = ({
 	onSuggestionClick,
 	onFollowUpUnmount,
 	onBatchFileResponse,
+	isFollowUpAnswered,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
@@ -1219,6 +1221,7 @@ export const ChatRowContent = ({
 								onSuggestionClick={onSuggestionClick}
 								ts={message?.ts}
 								onUnmount={onFollowUpUnmount}
+								isAnswered={isFollowUpAnswered}
 							/>
 						</>
 					)
