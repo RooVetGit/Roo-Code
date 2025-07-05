@@ -46,4 +46,4 @@ logs
 .qodo/
 .vercel
 .roo/mcp.json
-.roo-logs/*
+**/.roo-logs/*
