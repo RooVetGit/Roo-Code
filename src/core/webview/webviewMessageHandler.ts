@@ -1877,9 +1877,26 @@ export const webviewMessageHandler = async (
 					// Auto-start indexing if now enabled and configured
 					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
 						if (!provider.codeIndexManager.isInitialized) {
-							await provider.codeIndexManager.initialize(provider.contextProxy)
+							try {
+								// Initialize will validate embedder configuration
+								const { requiresRestart } = await provider.codeIndexManager.initialize(
+									provider.contextProxy,
+								)
+
+								// If initialization succeeded (no exception thrown), start indexing
+								provider.codeIndexManager.startIndexing()
+							} catch (error) {
+								// Log the specific validation error for debugging
+								provider.log(
+									`Code index initialization failed during settings save: ${error instanceof Error ? error.message : String(error)}`,
+								)
+								// Re-throw to maintain existing error handling behavior
+								throw error
+							}
+						} else {
+							// Already initialized, just start indexing
+							provider.codeIndexManager.startIndexing()
 						}
-						provider.codeIndexManager.startIndexing()
 					}
 				}
 
