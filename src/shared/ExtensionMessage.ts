@@ -73,6 +73,10 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "exportModeResult"
+		| "importModeResult"
+		| "checkRulesDirectoryResult"
+		| "deleteCustomModeCheck"
 		| "currentCheckpointUpdated"
 		| "showHumanRelayDialog"
 		| "humanRelayResponse"
@@ -99,6 +103,8 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
+		| "codeIndexSettingsSaved"
+		| "codeIndexSecretStatus"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -141,6 +147,7 @@ export interface ExtensionMessage {
 	error?: string
 	setting?: string
 	value?: any
+	hasContent?: boolean // For checkRulesDirectoryResult
 	items?: MarketplaceItem[]
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
@@ -148,6 +155,8 @@ export interface ExtensionMessage {
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 	visibility?: ShareVisibility
+	rulesFolderPath?: string
+	settings?: any
 }
 
 export type ExtensionState = Pick<

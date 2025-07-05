@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "확장 프로그램의 모든 상태와 보안 저장소를 재설정하시겠습니까? 이 작업은 취소할 수 없습니다.",
 		"delete_config_profile": "이 구성 프로필을 삭제하시겠습니까?",
-		"delete_custom_mode": "이 사용자 지정 모드를 삭제하시겠습니까?",
+		"delete_custom_mode_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}",
 		"delete_message": "무엇을 삭제하시겠습니까?",
 		"just_this_message": "이 메시지만",
 		"this_and_subsequent": "이 메시지와 모든 후속 메시지"
@@ -58,11 +58,20 @@
 		"condensed_recently": "컨텍스트가 최근 압축되었습니다; 이 시도를 건너뜁니다",
 		"condense_handler_invalid": "컨텍스트 압축을 위한 API 핸들러가 유효하지 않습니다",
 		"condense_context_grew": "압축 중 컨텍스트 크기가 증가했습니다; 이 시도를 건너뜁니다",
+		"url_timeout": "웹사이트 로딩이 너무 오래 걸렸습니다(타임아웃). 느린 연결, 무거운 웹사이트 또는 일시적으로 사용할 수 없는 상태일 수 있습니다. 나중에 다시 시도하거나 URL이 올바른지 확인해 주세요.",
+		"url_not_found": "웹사이트 주소를 찾을 수 없습니다. URL이 올바른지 확인하고 다시 시도해 주세요.",
+		"no_internet": "인터넷 연결이 없습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.",
+		"url_forbidden": "이 웹사이트에 대한 접근이 금지되었습니다. 사이트가 자동 접근을 차단하거나 인증이 필요할 수 있습니다.",
+		"url_page_not_found": "페이지를 찾을 수 없습니다. URL이 올바른지 확인해 주세요.",
+		"url_fetch_failed": "URL 콘텐츠 가져오기 실패: {{error}}",
+		"url_fetch_error_with_url": "{{url}} 콘텐츠 가져오기 오류: {{error}}",
 		"share_task_failed": "작업 공유에 실패했습니다",
 		"share_no_active_task": "공유할 활성 작업이 없습니다",
 		"share_auth_required": "인증이 필요합니다. 작업을 공유하려면 로그인하세요.",
 		"share_not_enabled": "이 조직에서는 작업 공유가 활성화되지 않았습니다.",
 		"share_task_not_found": "작업을 찾을 수 없거나 액세스가 거부되었습니다.",
+		"mode_import_failed": "모드 가져오기 실패: {{error}}",
+		"delete_rules_folder_failed": "규칙 폴더 삭제 실패: {{rulesFolderPath}}. 오류: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다.",
 			"errorOutput": "오류 출력: {{output}}",
@@ -73,7 +82,8 @@
 	},
 	"warnings": {
 		"no_terminal_content": "선택된 터미널 내용이 없습니다",
-		"missing_task_files": "이 작업의 파일이 누락되었습니다. 작업 목록에서 제거하시겠습니까?"
+		"missing_task_files": "이 작업의 파일이 누락되었습니다. 작업 목록에서 제거하시겠습니까?",
+		"auto_import_failed": "RooCode 설정 자동 가져오기 실패: {{error}}"
 	},
 	"info": {
 		"no_changes": "변경 사항이 없습니다.",
@@ -82,11 +92,14 @@
 		"custom_storage_path_set": "사용자 지정 저장 경로 설정됨: {{path}}",
 		"default_storage_path": "기본 저장 경로로 되돌아갔습니다",
 		"settings_imported": "설정이 성공적으로 가져와졌습니다.",
+		"auto_import_success": "{{filename}}에서 RooCode 설정을 자동으로 가져왔습니다",
 		"share_link_copied": "공유 링크가 클립보드에 복사되었습니다",
 		"image_copied_to_clipboard": "이미지 데이터 URI가 클립보드에 복사되었습니다",
 		"image_saved": "이미지가 {{path}}에 저장되었습니다",
 		"organization_share_link_copied": "조직 공유 링크가 클립보드에 복사되었습니다!",
-		"public_share_link_copied": "공개 공유 링크가 클립보드에 복사되었습니다!"
+		"public_share_link_copied": "공개 공유 링크가 클립보드에 복사되었습니다!",
+		"mode_exported": "'{{mode}}' 모드가 성공적으로 내보내졌습니다",
+		"mode_imported": "모드를 성공적으로 가져왔습니다"
 	},
 	"answers": {
 		"yes": "예",
@@ -132,6 +145,10 @@
 			"resetFailed": "사용자 정의 모드 재설정 실패: {{error}}",
 			"modeNotFound": "쓰기 오류: 모드를 찾을 수 없습니다",
 			"noWorkspaceForProject": "프로젝트별 모드용 작업 공간 폴더를 찾을 수 없습니다"
+		},
+		"scope": {
+			"project": "프로젝트",
+			"global": "글로벌"
 		}
 	},
 	"mdm": {
@@ -139,6 +156,15 @@
 			"cloud_auth_required": "조직에서 Roo Code Cloud 인증이 필요합니다. 계속하려면 로그인하세요.",
 			"organization_mismatch": "조직의 Roo Code Cloud 계정으로 인증해야 합니다.",
 			"verification_failed": "조직 인증을 확인할 수 없습니다."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "사용자 정의 모드 삭제",
+			"description": "이 {{scope}} 모드를 삭제하시겠습니까? 이렇게 하면 {{rulesFolderPath}}의 관련 규칙 폴더도 삭제됩니다.",
+			"descriptionNoRules": "이 사용자 정의 모드를 삭제하시겠습니까?",
+			"cancel": "취소",
+			"confirm": "삭제"
 		}
 	}
 }

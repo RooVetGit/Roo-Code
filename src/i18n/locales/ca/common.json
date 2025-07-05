@@ -21,7 +21,7 @@
 	"confirmation": {
 		"reset_state": "Estàs segur que vols restablir tots els estats i emmagatzematge secret a l'extensió? Això no es pot desfer.",
 		"delete_config_profile": "Estàs segur que vols eliminar aquest perfil de configuració?",
-		"delete_custom_mode": "Estàs segur que vols eliminar aquest mode personalitzat?",
+		"delete_custom_mode_with_rules": "Esteu segur que voleu suprimir aquest mode {scope}?\n\nAixò també suprimirà la carpeta de regles associada a:\n{rulesFolderPath}",
 		"delete_message": "Què vols eliminar?",
 		"just_this_message": "Només aquest missatge",
 		"this_and_subsequent": "Aquest i tots els missatges posteriors"
@@ -62,22 +62,32 @@
 		"condensed_recently": "El context s'ha condensat recentment; s'omet aquest intent",
 		"condense_handler_invalid": "El gestor de l'API per condensar el context no és vàlid",
 		"condense_context_grew": "La mida del context ha augmentat durant la condensació; s'omet aquest intent",
+		"url_timeout": "El lloc web ha trigat massa a carregar (timeout). Això pot ser degut a una connexió lenta, un lloc web pesat o temporalment no disponible. Pots tornar-ho a provar més tard o comprovar si la URL és correcta.",
+		"url_not_found": "No s'ha pogut trobar l'adreça del lloc web. Comprova si la URL és correcta i torna-ho a provar.",
+		"no_internet": "No hi ha connexió a internet. Comprova la teva connexió de xarxa i torna-ho a provar.",
+		"url_forbidden": "L'accés a aquest lloc web està prohibit. El lloc pot bloquejar l'accés automatitzat o requerir autenticació.",
+		"url_page_not_found": "No s'ha trobat la pàgina. Comprova si la URL és correcta.",
+		"url_fetch_failed": "Error en obtenir el contingut de la URL: {{error}}",
+		"url_fetch_error_with_url": "Error en obtenir contingut per {{url}}: {{error}}",
 		"share_task_failed": "Ha fallat compartir la tasca. Si us plau, torna-ho a provar.",
 		"share_no_active_task": "No hi ha cap tasca activa per compartir",
 		"share_auth_required": "Es requereix autenticació. Si us plau, inicia sessió per compartir tasques.",
 		"share_not_enabled": "La compartició de tasques no està habilitada per a aquesta organització.",
 		"share_task_not_found": "Tasca no trobada o accés denegat.",
+		"delete_rules_folder_failed": "Error en eliminar la carpeta de regles: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "El procés Claude Code ha sortit amb codi {{exitCode}}.",
 			"errorOutput": "Sortida d'error: {{output}}",
 			"processExitedWithError": "El procés Claude Code ha sortit amb codi {{exitCode}}. Sortida d'error: {{output}}",
 			"stoppedWithReason": "Claude Code s'ha aturat per la raó: {{reason}}",
 			"apiKeyModelPlanMismatch": "Les claus API i els plans de subscripció permeten models diferents. Assegura't que el model seleccionat estigui inclòs al teu pla."
-		}
+		},
+		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "No s'ha seleccionat contingut de terminal",
-		"missing_task_files": "Els fitxers d'aquesta tasca falten. Vols eliminar-la de la llista de tasques?"
+		"missing_task_files": "Els fitxers d'aquesta tasca falten. Vols eliminar-la de la llista de tasques?",
+		"auto_import_failed": "Ha fallat la importació automàtica de la configuració de RooCode: {{error}}"
 	},
 	"info": {
 		"no_changes": "No s'han trobat canvis.",
@@ -86,11 +96,14 @@
 		"custom_storage_path_set": "Ruta d'emmagatzematge personalitzada establerta: {{path}}",
 		"default_storage_path": "S'ha reprès l'ús de la ruta d'emmagatzematge predeterminada",
 		"settings_imported": "Configuració importada correctament.",
+		"auto_import_success": "Configuració de RooCode importada automàticament des de {{filename}}",
 		"share_link_copied": "Enllaç de compartició copiat al portapapers",
 		"image_copied_to_clipboard": "URI de dades de la imatge copiada al portapapers",
 		"image_saved": "Imatge desada a {{path}}",
 		"organization_share_link_copied": "Enllaç de compartició d'organització copiat al porta-retalls!",
-		"public_share_link_copied": "Enllaç de compartició pública copiat al porta-retalls!"
+		"public_share_link_copied": "Enllaç de compartició pública copiat al porta-retalls!",
+		"mode_exported": "Mode '{{mode}}' exportat correctament",
+		"mode_imported": "Mode importat correctament"
 	},
 	"answers": {
 		"yes": "Sí",
@@ -132,6 +145,10 @@
 			"resetFailed": "Error en restablir els modes personalitzats: {{error}}",
 			"modeNotFound": "Error d'escriptura: Mode no trobat",
 			"noWorkspaceForProject": "No s'ha trobat cap carpeta d'espai de treball per al mode específic del projecte"
+		},
+		"scope": {
+			"project": "projecte",
+			"global": "global"
 		}
 	},
 	"mdm": {
@@ -139,6 +156,15 @@
 			"cloud_auth_required": "La teva organització requereix autenticació de Roo Code Cloud. Si us plau, inicia sessió per continuar.",
 			"organization_mismatch": "Has d'estar autenticat amb el compte de Roo Code Cloud de la teva organització.",
 			"verification_failed": "No s'ha pogut verificar l'autenticació de l'organització."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "Suprimeix el mode personalitzat",
+			"description": "Esteu segur que voleu suprimir aquest mode {{scope}}? Això també suprimirà la carpeta de regles associada a: {{rulesFolderPath}}",
+			"descriptionNoRules": "Esteu segur que voleu suprimir aquest mode personalitzat?",
+			"cancel": "Cancel·la",
+			"confirm": "Suprimeix"
 		}
 	}
 }
