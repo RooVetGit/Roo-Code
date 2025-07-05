@@ -176,6 +176,67 @@ describe("CustomModeSchema", () => {
 		})
 	})
 
+	describe("allowedMcpServers", () => {
+		it("validates a mode with MCP server restrictions", () => {
+			const modeWithMcpRestrictions = {
+				slug: "weather-mode",
+				name: "Weather Mode",
+				roleDefinition: "Weather analysis mode",
+				groups: ["read", ["mcp", { allowedMcpServers: ["weather-server", "climate-server"] }]],
+			}
+
+			const modeWithDescription = {
+				slug: "data-mode",
+				name: "Data Mode",
+				roleDefinition: "Data analysis mode",
+				groups: [
+					"read",
+					["mcp", { allowedMcpServers: ["database-server"], description: "Database server only" }],
+				],
+			}
+
+			expect(() => modeConfigSchema.parse(modeWithMcpRestrictions)).not.toThrow()
+			expect(() => modeConfigSchema.parse(modeWithDescription)).not.toThrow()
+		})
+
+		it("accepts empty allowedMcpServers array", () => {
+			const modeWithEmptyMcpList = {
+				slug: "no-mcp-mode",
+				name: "No MCP Mode",
+				roleDefinition: "Mode without MCP access",
+				groups: ["read", ["mcp", { allowedMcpServers: [] }]],
+			}
+
+			expect(() => modeConfigSchema.parse(modeWithEmptyMcpList)).not.toThrow()
+		})
+
+		it("validates that allowedMcpServers contains only strings", () => {
+			const modeWithInvalidMcpList = {
+				slug: "invalid-mode",
+				name: "Invalid Mode",
+				roleDefinition: "Invalid mode",
+				groups: ["read", ["mcp", { allowedMcpServers: ["valid-server", 123, "another-server"] }]],
+			}
+
+			expect(() => modeConfigSchema.parse(modeWithInvalidMcpList)).toThrow()
+		})
+
+		it("allows combining fileRegex and allowedMcpServers in different groups", () => {
+			const modeWithBothRestrictions = {
+				slug: "restricted-mode",
+				name: "Restricted Mode",
+				roleDefinition: "Mode with multiple restrictions",
+				groups: [
+					"read",
+					["edit", { fileRegex: "\\.md$", description: "Markdown files only" }],
+					["mcp", { allowedMcpServers: ["weather-server"], description: "Weather server only" }],
+				],
+			}
+
+			expect(() => modeConfigSchema.parse(modeWithBothRestrictions)).not.toThrow()
+		})
+	})
+
 	const validBaseMode = {
 		slug: "123e4567-e89b-12d3-a456-426614174000",
 		name: "Test Mode",
