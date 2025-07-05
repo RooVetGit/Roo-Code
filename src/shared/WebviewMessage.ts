@@ -236,6 +236,7 @@ export interface WebviewMessage {
 		codebaseIndexEmbedderModelId: string
 		codebaseIndexOpenAiCompatibleBaseUrl?: string
 		codebaseIndexOpenAiCompatibleModelDimension?: number
+		codebaseIndexSearchMaxResults?: number
 
 		// Secret settings
 		codeIndexOpenAiKey?: string
