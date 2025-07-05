@@ -4,6 +4,7 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { SectionHeader } from "@/components/settings/SectionHeader"
 import { Section } from "@/components/settings/Section"
+import { FileDiff, ScanSearch, Settings2 } from "lucide-react"
 
 type FileEditingOptionsField =
 	| "diffEnabled"
@@ -242,6 +243,8 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 	const isDiffDisabled = fileBasedEditing
 	// When file-based editing is enabled, other tab behavior toggles should be disabled
 	const otherTogglesDisabled = fileBasedEditing
+	const isCorrectControlGroupSettingDisabled = otherTogglesDisabled || diffViewAutoFocus
+	const isEndOfListSettingDisabled = otherTogglesDisabled || diffViewAutoFocus || !openTabsInCorrectGroup
 
 	const resetAllButFileBasedEditing = useCallback(() => {
 		onChange("diffEnabled", false)
@@ -274,6 +277,11 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 	const handleDiffViewAutoFocusChange = useCallback(
 		(e: any) => {
 			onChange("diffViewAutoFocus", e.target.checked)
+			// If diffViewAutoFocus is unchecked, also uncheck openTabsInCorrectGroup and openTabsAtEndOfList
+			if (e.target.checked) {
+				onChange("openTabsInCorrectGroup", false)
+				onChange("openTabsAtEndOfList", false)
+			}
 		},
 		[onChange],
 	)
@@ -312,6 +320,10 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 	const handleOpenTabsInCorrectGroupChange = useCallback(
 		(e: any) => {
 			onChange("openTabsInCorrectGroup", e.target.checked)
+			// If openTabsInCorrectGroup is unchecked, also uncheck openTabsAtEndOfList
+			if (!e.target.checked) {
+				onChange("openTabsAtEndOfList", false)
+			}
 		},
 		[onChange],
 	)
@@ -328,7 +340,7 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 			{/* File editing options section */}
 			<SectionHeader description={t("settings:editingType.description")}>
 				<div className="flex items-center gap-2">
-					<span className="codicon codicon-check w-4" />
+					<Settings2 className={"w-4"} />
 					<div>{t("settings:sections.editingType")}</div>
 				</div>
 			</SectionHeader>
@@ -353,7 +365,7 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 			{/* Diff settings section */}
 			<SectionHeader description={t("settings:diffSettings.description")}>
 				<div className="flex items-center gap-2">
-					<span className="codicon codicon-check w-4" />
+					<FileDiff className={"w-4"} />
 					<div>{t("settings:sections.diffSettings")}</div>
 				</div>
 			</SectionHeader>
@@ -396,7 +408,7 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 			{/* DiffView Behavior Preferences */}
 			<SectionHeader description={t("settings:diffViewAutoFocusBehavior.description")}>
 				<div className="flex items-center gap-2">
-					<span className="codicon codicon-check w-4" />
+					<ScanSearch className={"w-4"} />
 					<div>{t("settings:sections.diffViewAutoFocusBehavior")}</div>
 				</div>
 			</SectionHeader>
@@ -412,12 +424,12 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 							/>
 							<OpenTabsInCorrectGroupControl
 								openTabsInCorrectGroup={openTabsInCorrectGroup}
-								disabled={otherTogglesDisabled}
+								disabled={isCorrectControlGroupSettingDisabled}
 								onChange={handleOpenTabsInCorrectGroupChange}
 							/>
 							<OpenTabsAtEndOfListControl
 								openTabsAtEndOfList={openTabsAtEndOfList}
-								disabled={otherTogglesDisabled}
+								disabled={isEndOfListSettingDisabled}
 								onChange={handleOpenTabsAtEndOfListChange}
 							/>
 						</>

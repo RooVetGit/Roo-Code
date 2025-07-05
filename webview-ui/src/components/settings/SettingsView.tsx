@@ -616,19 +616,17 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 								</div>
 							</SectionHeader>
 
-							<Section>
-								<FileEditingOptions
-									diffEnabled={diffEnabled}
-									diffViewAutoFocus={diffViewAutoFocus}
-									autoCloseRooTabs={autoCloseRooTabs}
-									autoCloseAllRooTabs={autoCloseAllRooTabs}
-									fuzzyMatchThreshold={fuzzyMatchThreshold}
-									fileBasedEditing={fileBasedEditing}
-									openTabsInCorrectGroup={openTabsInCorrectGroup}
-									openTabsAtEndOfList={openTabsAtEndOfList}
-									onChange={setCachedStateField}
-								/>
-							</Section>
+							<FileEditingOptions
+								diffEnabled={diffEnabled}
+								diffViewAutoFocus={diffViewAutoFocus}
+								autoCloseRooTabs={autoCloseRooTabs}
+								autoCloseAllRooTabs={autoCloseAllRooTabs}
+								fuzzyMatchThreshold={fuzzyMatchThreshold}
+								fileBasedEditing={fileBasedEditing}
+								openTabsInCorrectGroup={openTabsInCorrectGroup}
+								openTabsAtEndOfList={openTabsAtEndOfList}
+								onChange={setCachedStateField}
+							/>
 						</div>
 					)}
 
