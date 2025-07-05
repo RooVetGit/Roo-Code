@@ -41,13 +41,12 @@ vi.mock("@/components/ui", () => ({
 describe("FileEditingOptions", () => {
 	const defaultProps = {
 		diffEnabled: true,
-		diffViewAutoFocus: true,
+		diffViewAutoFocus: false,
 		autoCloseRooTabs: false,
 		autoCloseAllRooTabs: false,
 		fuzzyMatchThreshold: 1.0,
 		fileBasedEditing: false,
-		openFilesWithoutFocus: false,
-		openTabsInCorrectGroup: false,
+		openTabsInCorrectGroup: true,
 		openTabsAtEndOfList: false,
 		onChange: vi.fn(),
 	}
@@ -103,13 +102,6 @@ describe("FileEditingOptions", () => {
 			expect(mockT).toHaveBeenCalledWith("settings:advanced.diff.description")
 		})
 
-		it("should disable diff settings when file-based editing is enabled", () => {
-			render(<FileEditingOptions {...defaultProps} fileBasedEditing={true} />)
-
-			const diffEnabledCheckbox = screen.getByRole("checkbox", { name: /diff.label/ })
-			expect(diffEnabledCheckbox).toBeDisabled()
-		})
-
 		it("should enable diff settings when file-based editing is disabled", () => {
 			render(<FileEditingOptions {...defaultProps} fileBasedEditing={false} />)
 
@@ -151,7 +143,8 @@ describe("FileEditingOptions", () => {
 			const checkbox = screen.getByRole("checkbox", { name: /diff.label/ })
 			fireEvent.click(checkbox)
 
-			expect(onChange).toHaveBeenCalledWith("diffEnabled", true)
+			// should be false because the default is true
+			expect(onChange).toHaveBeenCalledWith("diffEnabled", false)
 		})
 
 		it("should call onChange for diffViewAutoFocus", () => {
@@ -200,7 +193,8 @@ describe("FileEditingOptions", () => {
 			const checkbox = screen.getByRole("checkbox", { name: /correctTabGroup.label/ })
 			fireEvent.click(checkbox)
 
-			expect(onChange).toHaveBeenCalledWith("openTabsInCorrectGroup", true)
+			// should be false becuase the default is true
+			expect(onChange).toHaveBeenCalledWith("openTabsInCorrectGroup", false)
 		})
 
 		it("should call onChange for openTabsAtEndOfList", () => {

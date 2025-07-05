@@ -228,12 +228,12 @@ const OpenTabsAtEndOfListControl: React.FC<OpenTabsAtEndOfListControlProps> = ({
  */
 export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 	diffEnabled = true,
-	diffViewAutoFocus = true,
+	diffViewAutoFocus = false,
 	autoCloseRooTabs = false,
 	autoCloseAllRooTabs = false,
 	fuzzyMatchThreshold = 1.0,
 	fileBasedEditing = false,
-	openTabsInCorrectGroup = false,
+	openTabsInCorrectGroup = true,
 	openTabsAtEndOfList = false,
 	onChange,
 }) => {
@@ -243,7 +243,7 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 	const isDiffDisabled = fileBasedEditing
 	// When file-based editing is enabled, other tab behavior toggles should be disabled
 	const otherTogglesDisabled = fileBasedEditing
-	const isCorrectControlGroupSettingDisabled = otherTogglesDisabled || diffViewAutoFocus
+	const isCorrectControlGroupSettingDisabled = otherTogglesDisabled
 	const isEndOfListSettingDisabled = otherTogglesDisabled || diffViewAutoFocus || !openTabsInCorrectGroup
 
 	const resetAllButFileBasedEditing = useCallback(() => {
@@ -279,7 +279,6 @@ export const FileEditingOptions: React.FC<FileEditingOptionsProps> = ({
 			onChange("diffViewAutoFocus", e.target.checked)
 			// If diffViewAutoFocus is unchecked, also uncheck openTabsInCorrectGroup and openTabsAtEndOfList
 			if (e.target.checked) {
-				onChange("openTabsInCorrectGroup", false)
 				onChange("openTabsAtEndOfList", false)
 			}
 		},

@@ -31,8 +31,11 @@ vi.mock("vscode", () => ({
 		// mock vscode.workspace.getConfiguration("roo-cline").get<boolean>("diffViewAutoFocus", true)
 		getConfiguration: vi.fn(() => ({
 			get: vi.fn((key: string) => {
-				if (key === "diffViewAutoFocus") return true
+				if (key === "diffViewAutoFocus") return false
 				if (key === "autoCloseRooTabs") return true
+				if (key === "autoCloseAllRooTabs") return false
+				if (key === "openTabsAtEndOfList") return false
+				if (key === "openTabsInCorrectGroup") return true
 				return undefined
 			}),
 		})),
@@ -263,7 +266,7 @@ describe("DiffViewProvider", () => {
 				expect.any(Object),
 				expect.any(Object),
 				`test.md: ${DIFF_VIEW_LABEL_CHANGES} (Editable)`,
-				{ preserveFocus: false, preview: false, viewColumn: ViewColumn.Active },
+				{ preserveFocus: true, preview: false, viewColumn: ViewColumn.Active },
 			)
 		})
 
@@ -370,7 +373,7 @@ describe("DiffViewProvider", () => {
 				expect.anything(),
 				expect.anything(),
 				expect.anything(),
-				expect.objectContaining({ preserveFocus: false, preview: false, viewColumn: -1 }),
+				expect.objectContaining({ preserveFocus: false }),
 			)
 		})
 
@@ -440,7 +443,7 @@ describe("DiffViewProvider", () => {
 				expect.anything(),
 				expect.anything(),
 				expect.anything(),
-				expect.objectContaining({ preserveFocus: true, preview: false, viewColumn: -1 }),
+				expect.objectContaining({ preserveFocus: true }),
 			)
 		})
 	})

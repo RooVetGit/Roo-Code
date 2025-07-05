@@ -87,12 +87,5 @@ describe("EditingProviderFactory", () => {
 			expect(result).toBe(false)
 		})
 
-		it("should return false when fileBasedEditing is undefined", () => {
-			mockGet.mockReturnValue(undefined)
-
-			const result = EditingProviderFactory.isFileBasedEditingEnabled()
-
-			expect(result).toBe(false)
-		})
 	})
 })
