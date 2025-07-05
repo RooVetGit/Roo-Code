@@ -35,7 +35,7 @@ export async function executeCommandTool(
 		} else {
 			if (!command) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("execute_command")
+				cline.recordToolError("execute_command", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "command"))
 				return
 			}

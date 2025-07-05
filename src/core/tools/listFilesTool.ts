@@ -53,7 +53,7 @@ export async function listFilesTool(
 		} else {
 			if (!relDirPath) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("list_files")
+				cline.recordToolError("list_files", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("list_files", "path"))
 				return
 			}

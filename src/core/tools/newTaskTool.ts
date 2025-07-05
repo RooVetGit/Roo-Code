@@ -30,14 +30,14 @@ export async function newTaskTool(
 		} else {
 			if (!mode) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("new_task")
+				cline.recordToolError("new_task", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("new_task", "mode"))
 				return
 			}
 
 			if (!message) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("new_task")
+				cline.recordToolError("new_task", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("new_task", "message"))
 				return
 			}

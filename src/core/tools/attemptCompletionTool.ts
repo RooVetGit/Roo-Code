@@ -58,7 +58,7 @@ export async function attemptCompletionTool(
 		} else {
 			if (!result) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("attempt_completion")
+				cline.recordToolError("attempt_completion", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("attempt_completion", "result"))
 				return
 			}

@@ -37,7 +37,7 @@ export async function listCodeDefinitionNamesTool(
 		} else {
 			if (!relPath) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("list_code_definition_names")
+				cline.recordToolError("list_code_definition_names", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("list_code_definition_names", "path"))
 				return
 			}

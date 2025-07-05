@@ -29,7 +29,7 @@ export async function switchModeTool(
 		} else {
 			if (!mode_slug) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("switch_mode")
+				cline.recordToolError("switch_mode", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("switch_mode", "mode_slug"))
 				return
 			}
@@ -40,7 +40,7 @@ export async function switchModeTool(
 			const targetMode = getModeBySlug(mode_slug, (await cline.providerRef.deref()?.getState())?.customModes)
 
 			if (!targetMode) {
-				cline.recordToolError("switch_mode")
+				cline.recordToolError("switch_mode", {})
 				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode_slug}`))
 				return
 			}
@@ -49,7 +49,7 @@ export async function switchModeTool(
 			const currentMode = (await cline.providerRef.deref()?.getState())?.mode ?? defaultModeSlug
 
 			if (currentMode === mode_slug) {
-				cline.recordToolError("switch_mode")
+				cline.recordToolError("switch_mode", {})
 				pushToolResult(`Already in ${targetMode.name} mode.`)
 				return
 			}

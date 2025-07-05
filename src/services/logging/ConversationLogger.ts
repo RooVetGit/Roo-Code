@@ -9,11 +9,16 @@ export class ConversationLogger {
 
 	constructor(workspaceRoot: string) {
 		this.sessionId = this.generateSessionId()
-		this.isEnabled = vscode.workspace.getConfiguration("rooCode.logging").get("enabled", false)
+		this.isEnabled = vscode.workspace.getConfiguration("roo-cline.logging").get("enabled", false)
 
 		const logDir = path.join(workspaceRoot, ".roo-logs")
 		this.logFilePath = path.join(logDir, `${this.sessionId}.jsonl`)
 		this.ensureLogDirectory(logDir)
+	}
+
+	public onConfigurationChanged(): void {
+		this.isEnabled = vscode.workspace.getConfiguration("roo-cline.logging").get("enabled", false)
+		console.log(`[ConversationLogger] Logging enabled: ${this.isEnabled}`)
 	}
 
 	private generateSessionId(): string {

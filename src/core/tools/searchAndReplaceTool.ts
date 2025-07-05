@@ -29,21 +29,21 @@ async function validateParams(
 ): Promise<boolean> {
 	if (!relPath) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("search_and_replace")
+		cline.recordToolError("search_and_replace", {})
 		pushToolResult(await cline.sayAndCreateMissingParamError("search_and_replace", "path"))
 		return false
 	}
 
 	if (!search) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("search_and_replace")
+		cline.recordToolError("search_and_replace", {})
 		pushToolResult(await cline.sayAndCreateMissingParamError("search_and_replace", "search"))
 		return false
 	}
 
 	if (replace === undefined) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("search_and_replace")
+		cline.recordToolError("search_and_replace", {})
 		pushToolResult(await cline.sayAndCreateMissingParamError("search_and_replace", "replace"))
 		return false
 	}
@@ -131,7 +131,7 @@ export async function searchAndReplaceTool(
 
 		if (!fileExists) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("search_and_replace")
+			cline.recordToolError("search_and_replace", {})
 			const formattedError = formatResponse.toolError(
 				`File does not exist at path: ${absolutePath}\nThe specified file could not be found. Please verify the file path and try again.`,
 			)
@@ -149,7 +149,7 @@ export async function searchAndReplaceTool(
 			fileContent = await fs.readFile(absolutePath, "utf-8")
 		} catch (error) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("search_and_replace")
+			cline.recordToolError("search_and_replace", {})
 			const errorMessage = `Error reading file: ${absolutePath}\nFailed to read the file content: ${
 				error instanceof Error ? error.message : String(error)
 			}\nPlease verify file permissions and try again.`
@@ -246,7 +246,7 @@ export async function searchAndReplaceTool(
 		pushToolResult(message)
 
 		// Record successful tool usage and cleanup
-		cline.recordToolUsage("search_and_replace")
+		cline.recordToolUsage("search_and_replace", {}, {})
 		await cline.diffViewProvider.reset()
 	} catch (error) {
 		handleError("search and replace", error)

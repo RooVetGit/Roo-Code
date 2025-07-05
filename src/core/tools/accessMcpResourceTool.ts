@@ -27,14 +27,14 @@ export async function accessMcpResourceTool(
 		} else {
 			if (!server_name) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("access_mcp_resource")
+				cline.recordToolError("access_mcp_resource", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("access_mcp_resource", "server_name"))
 				return
 			}
 
 			if (!uri) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("access_mcp_resource")
+				cline.recordToolError("access_mcp_resource", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("access_mcp_resource", "uri"))
 				return
 			}

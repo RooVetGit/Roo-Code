@@ -22,7 +22,7 @@ export async function fetchInstructionsTool(
 		} else {
 			if (!task) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("fetch_instructions")
+				cline.recordToolError("fetch_instructions", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("fetch_instructions", "task"))
 				return
 			}

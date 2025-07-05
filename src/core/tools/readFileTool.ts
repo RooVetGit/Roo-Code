@@ -172,7 +172,7 @@ export async function readFileTool(
 	// If, after trying both new and legacy, no valid file entries are found.
 	if (fileEntries.length === 0) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("read_file")
+		cline.recordToolError("read_file", {})
 		const errorMsg = await cline.sayAndCreateMissingParamError("read_file", "args (containing valid file paths)")
 		pushToolResult(`<files><error>${errorMsg}</error></files>`)
 		return

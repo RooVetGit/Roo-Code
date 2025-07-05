@@ -160,7 +160,7 @@ Expected structure:
 
 Original error: ${errorMessage}`
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("apply_diff")
+			cline.recordToolError("apply_diff", {})
 			TelemetryService.instance.captureDiffApplicationError(cline.taskId, cline.consecutiveMistakeCount)
 			await cline.say("diff_error", `Failed to parse apply_diff XML: ${errorMessage}`)
 			pushToolResult(detailedError)
@@ -181,7 +181,7 @@ Original error: ${errorMessage}`
 	} else {
 		// Neither new XML args nor old path/diff params are sufficient
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("apply_diff")
+		cline.recordToolError("apply_diff", {})
 		const errorMsg = await cline.sayAndCreateMissingParamError(
 			"apply_diff",
 			"args (or legacy 'path' and 'diff' parameters)",
@@ -193,7 +193,7 @@ Original error: ${errorMessage}`
 	// If no operations were extracted, bail out
 	if (Object.keys(operationsMap).length === 0) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("apply_diff")
+		cline.recordToolError("apply_diff", {})
 		pushToolResult(
 			await cline.sayAndCreateMissingParamError(
 				"apply_diff",

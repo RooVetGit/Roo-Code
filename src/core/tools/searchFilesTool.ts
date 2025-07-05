@@ -38,14 +38,14 @@ export async function searchFilesTool(
 		} else {
 			if (!relDirPath) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("search_files")
+				cline.recordToolError("search_files", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("search_files", "path"))
 				return
 			}
 
 			if (!regex) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("search_files")
+				cline.recordToolError("search_files", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("search_files", "regex"))
 				return
 			}

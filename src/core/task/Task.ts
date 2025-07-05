@@ -29,6 +29,7 @@ import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "..
 import { ApiStream } from "../../api/transform/stream"
 
 // shared
+// shared
 import { findLastIndex } from "../../shared/array"
 import { combineApiRequests } from "../../shared/combineApiRequests"
 import { combineCommandSequences } from "../../shared/combineCommandSequences"
@@ -37,9 +38,8 @@ import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/Extension
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
-import { DiffStrategy } from "../../shared/tools"
+import { DiffStrategy, ToolUse } from "../../shared/tools"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
-
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 import { BrowserSession } from "../../services/browser/BrowserSession"
@@ -56,6 +56,7 @@ import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 // utils
 import { calculateApiCostAnthropic } from "../../shared/cost"
 import { getWorkspacePath } from "../../utils/path"
+import { ConversationLogger } from "../../services/logging/ConversationLogger"
 
 // prompts
 import { formatResponse } from "../prompts/responses"
@@ -118,6 +119,7 @@ export type TaskOptions = {
 	rootTask?: Task
 	parentTask?: Task
 	taskNumber?: number
+	logger?: ConversationLogger
 	onCreated?: (cline: Task) => void
 }
 
@@ -139,6 +141,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
+	private logger?: ConversationLogger
 
 	// API
 	readonly apiConfiguration: ProviderSettings
@@ -220,6 +223,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		logger,
 	}: TaskOptions) {
 		super()
 
@@ -259,6 +263,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.rootTask = rootTask
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
+		this.logger = logger
 
 		if (historyItem) {
 			TelemetryService.instance.captureTaskRestarted(this.taskId)
@@ -1506,6 +1511,14 @@ export class Task extends EventEmitter<ClineEvents> {
 			let didEndLoop = false
 
 			if (assistantMessage.length > 0) {
+				const assistantContent = parseAssistantMessage(assistantMessage)
+				if (this.logger) {
+					const { mode } = (await this.providerRef.deref()?.getState()) ?? {}
+					const toolCalls = assistantContent
+						.filter((item): item is ToolUse => item.type === "tool_use")
+						.map((item) => ({ name: item.name, input: item.params }))
+					this.logger.logAIResponse(assistantMessage, mode, toolCalls)
+				}
 				await this.addToApiConversationHistory({
 					role: "assistant",
 					content: [{ type: "text", text: assistantMessage }],
@@ -1716,7 +1729,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
-			const currentProfileId = state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ?? "default";
+			const currentProfileId =
+				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
+				"default"
 
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
@@ -1901,20 +1916,21 @@ export class Task extends EventEmitter<ClineEvents> {
 		return getApiMetrics(this.combineMessages(this.clineMessages.slice(1)))
 	}
 
-	public recordToolUsage(toolName: ToolName) {
+	public recordToolUsage(toolName: ToolName, parameters: any, result: any) {
 		if (!this.toolUsage[toolName]) {
 			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
 		}
-
 		this.toolUsage[toolName].attempts++
+		this.logger?.logToolCall(toolName, parameters, result)
 	}
 
-	public recordToolError(toolName: ToolName, error?: string) {
+	public recordToolError(toolName: ToolName, parameters: any, error?: string) {
 		if (!this.toolUsage[toolName]) {
 			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
 		}
 
 		this.toolUsage[toolName].failures++
+		this.logger?.logToolCall(toolName, parameters, { error })
 
 		if (error) {
 			this.emit("taskToolFailed", this.taskId, toolName, error)

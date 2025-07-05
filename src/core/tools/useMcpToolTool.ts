@@ -42,14 +42,14 @@ async function validateParams(
 ): Promise<ValidationResult> {
 	if (!params.server_name) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("use_mcp_tool")
+		cline.recordToolError("use_mcp_tool", {})
 		pushToolResult(await cline.sayAndCreateMissingParamError("use_mcp_tool", "server_name"))
 		return { isValid: false }
 	}
 
 	if (!params.tool_name) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("use_mcp_tool")
+		cline.recordToolError("use_mcp_tool", {})
 		pushToolResult(await cline.sayAndCreateMissingParamError("use_mcp_tool", "tool_name"))
 		return { isValid: false }
 	}
@@ -61,7 +61,7 @@ async function validateParams(
 			parsedArguments = JSON.parse(params.arguments)
 		} catch (error) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("use_mcp_tool")
+			cline.recordToolError("use_mcp_tool", {})
 			await cline.say("error", t("mcp:errors.invalidJsonArgument", { toolName: params.tool_name }))
 
 			pushToolResult(

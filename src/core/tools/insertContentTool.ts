@@ -39,21 +39,21 @@ export async function insertContentTool(
 		// Validate required parameters
 		if (!relPath) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("insert_content")
+			cline.recordToolError("insert_content", {})
 			pushToolResult(await cline.sayAndCreateMissingParamError("insert_content", "path"))
 			return
 		}
 
 		if (!line) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("insert_content")
+			cline.recordToolError("insert_content", {})
 			pushToolResult(await cline.sayAndCreateMissingParamError("insert_content", "line"))
 			return
 		}
 
 		if (!content) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("insert_content")
+			cline.recordToolError("insert_content", {})
 			pushToolResult(await cline.sayAndCreateMissingParamError("insert_content", "content"))
 			return
 		}
@@ -74,7 +74,7 @@ export async function insertContentTool(
 
 		if (!fileExists) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("insert_content")
+			cline.recordToolError("insert_content", {})
 			const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
 			await cline.say("error", formattedError)
 			pushToolResult(formattedError)
@@ -84,7 +84,7 @@ export async function insertContentTool(
 		const lineNumber = parseInt(line, 10)
 		if (isNaN(lineNumber) || lineNumber < 0) {
 			cline.consecutiveMistakeCount++
-			cline.recordToolError("insert_content")
+			cline.recordToolError("insert_content", {})
 			pushToolResult(formatResponse.toolError("Invalid line number. Must be a non-negative integer."))
 			return
 		}

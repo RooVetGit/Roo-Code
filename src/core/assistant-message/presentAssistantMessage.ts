@@ -344,7 +344,7 @@ export async function presentAssistantMessage(cline: Task) {
 			}
 
 			if (!block.partial) {
-				cline.recordToolUsage(block.name)
+				cline.recordToolUsage(block.name, block.params, "tool use recorded")
 				TelemetryService.instance.captureToolUsage(cline.taskId, block.name)
 			}
 

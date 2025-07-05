@@ -51,21 +51,6 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
-		"rooCode.logging.enabled": {
-			"type": "boolean",
-			"default": false,
-			"description": "Enable conversation logging for fine-tuning datasets"
-		},
-		"rooCode.logging.includeToolCalls": {
-			"type": "boolean",
-			"default": true,
-			"description": "Include tool calls in conversation logs"
-		},
-		"rooCode.logging.logDirectory": {
-			"type": "string",
-			"default": ".roo-logs",
-			"description": "Directory to store conversation logs"
-		},
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -354,12 +339,27 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.autoImportSettingsPath.description%"
+				},
+				"roo-cline.logging.enabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable conversation logging for fine-tuning datasets"
+				},
+				"roo-cline.logging.includeToolCalls": {
+					"type": "boolean",
+					"default": true,
+					"description": "Include tool calls in conversation logs"
+				},
+				"roo-cline.logging.logDirectory": {
+					"type": "string",
+					"default": ".roo-logs",
+					"description": "Directory to store conversation logs"
 				}
 			}
 		}
 	},
 	"scripts": {
-		"lint": "eslint . --ext=ts --max-warnings=0",
+		"lint": "eslint . --ext .ts,.tsx",
 		"check-types": "tsc --noEmit",
 		"pretest": "turbo run bundle --cwd ..",
 		"test": "vitest run",

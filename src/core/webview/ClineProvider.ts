@@ -164,6 +164,14 @@ export class ClineProvider
 		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 		if (workspaceRoot) {
 			this.logger = new ConversationLogger(workspaceRoot)
+			// Listen for configuration changes
+			this.disposables.push(
+				vscode.workspace.onDidChangeConfiguration((e) => {
+					if (e.affectsConfiguration("roo-cline.logging")) {
+						this.logger?.onConfigurationChanged()
+					}
+				}),
+			)
 		}
 	}
 
@@ -531,7 +539,7 @@ export class ClineProvider
 	// from the stack and the caller is resumed in this way we can have a chain
 	// of tasks, each one being a sub task of the previous one until the main
 	// task is finished.
-	public async initClineWithTask(
+	async initClineWithTask(
 		task?: string,
 		images?: string[],
 		parentTask?: Task,
@@ -568,6 +576,7 @@ export class ClineProvider
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			logger: this.logger,
 			...options,
 		})
 
@@ -579,7 +588,6 @@ export class ClineProvider
 
 		return cline
 	}
-
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
@@ -603,6 +611,7 @@ export class ClineProvider
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			logger: this.logger,
 		})
 
 		await this.addClineToStack(cline)
@@ -793,13 +802,10 @@ export class ClineProvider
 	private async handleWebviewMessage(message: WebviewMessage) {
 		// Log user messages
 		if (message.type === "newTask" && this.logger) {
-			await this.logger.logUserMessage(
-				message.text || "",
-				"code", // You might want to get the actual mode from the message
-				{
-					images: message.images,
-				},
-			)
+			const { mode } = await this.getState()
+			await this.logger.logUserMessage(message.text || "", mode, {
+				images: message.images,
+			})
 		}
 
 		// Continue with existing message handling

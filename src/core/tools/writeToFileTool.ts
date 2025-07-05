@@ -34,7 +34,7 @@ export async function writeToFileTool(
 
 	if (!relPath) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("write_to_file")
+		cline.recordToolError("write_to_file", block.params)
 		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
 		await cline.diffViewProvider.reset()
 		return
@@ -42,7 +42,7 @@ export async function writeToFileTool(
 
 	if (newContent === undefined) {
 		cline.consecutiveMistakeCount++
-		cline.recordToolError("write_to_file")
+		cline.recordToolError("write_to_file", block.params)
 		pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
 		await cline.diffViewProvider.reset()
 		return
@@ -118,7 +118,7 @@ export async function writeToFileTool(
 		} else {
 			if (predictedLineCount === undefined) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("write_to_file")
+				cline.recordToolError("write_to_file", block.params)
 
 				// Calculate the actual number of lines in the content
 				const actualLineCount = newContent.split("\n").length

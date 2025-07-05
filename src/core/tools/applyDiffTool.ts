@@ -54,14 +54,14 @@ export async function applyDiffToolLegacy(
 		} else {
 			if (!relPath) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("apply_diff")
+				cline.recordToolError("apply_diff", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("apply_diff", "path"))
 				return
 			}
 
 			if (!diffContent) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("apply_diff")
+				cline.recordToolError("apply_diff", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("apply_diff", "diff"))
 				return
 			}
@@ -79,7 +79,7 @@ export async function applyDiffToolLegacy(
 
 			if (!fileExists) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("apply_diff")
+				cline.recordToolError("apply_diff", {})
 				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
 				await cline.say("error", formattedError)
 				pushToolResult(formattedError)

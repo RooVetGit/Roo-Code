@@ -21,7 +21,7 @@ export async function askFollowupQuestionTool(
 		} else {
 			if (!question) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("ask_followup_question")
+				cline.recordToolError("ask_followup_question", {})
 				pushToolResult(await cline.sayAndCreateMissingParamError("ask_followup_question", "question"))
 				return
 			}
@@ -47,7 +47,7 @@ export async function askFollowupQuestionTool(
 					}
 				} catch (error) {
 					cline.consecutiveMistakeCount++
-					cline.recordToolError("ask_followup_question")
+					cline.recordToolError("ask_followup_question", {})
 					await cline.say("error", `Failed to parse operations: ${error.message}`)
 					pushToolResult(formatResponse.toolError("Invalid operations xml format"))
 					return
