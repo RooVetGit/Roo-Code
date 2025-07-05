@@ -89,6 +89,48 @@ describe("combineCommandSequences", () => {
 			})
 		})
 
+		it("should preserve images from mcp_server_response messages", () => {
+			const messages: ClineMessage[] = [
+				{
+					type: "ask",
+					ask: "use_mcp_server",
+					text: JSON.stringify({
+						serverName: "test-server",
+						toolName: "test-tool",
+						arguments: { param: "value" },
+					}),
+					ts: 1625097600000,
+				},
+				{
+					type: "say",
+					say: "mcp_server_response",
+					text: "Generated 1 image",
+					images: [
+						"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+					],
+					ts: 1625097601000,
+				},
+			]
+
+			const result = combineCommandSequences(messages)
+
+			expect(result).toHaveLength(1)
+			expect(result[0]).toEqual({
+				type: "ask",
+				ask: "use_mcp_server",
+				text: JSON.stringify({
+					serverName: "test-server",
+					toolName: "test-tool",
+					arguments: { param: "value" },
+					response: "Generated 1 image",
+				}),
+				images: [
+					"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU",
+				],
+				ts: 1625097600000,
+			})
+		})
+
 		it("should handle multiple MCP server requests", () => {
 			const messages: ClineMessage[] = [
 				{

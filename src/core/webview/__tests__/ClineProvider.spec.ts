@@ -539,6 +539,8 @@ describe("ClineProvider", () => {
 			sharingEnabled: false,
 			profileThresholds: {},
 			hasOpenedModeSelector: false,
+			mcpMaxImagesPerResponse: 10,
+			mcpMaxImageSizeMB: 10,
 		}
 
 		const message: ExtensionMessage = {

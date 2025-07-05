@@ -77,10 +77,16 @@ Otherwise, if you have not completed the task and do not need additional informa
 		images?: string[],
 	): string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> => {
 		if (images && images.length > 0) {
-			const textBlock: Anthropic.TextBlockParam = { type: "text", text }
 			const imageBlocks: Anthropic.ImageBlockParam[] = formatImagesIntoBlocks(images)
-			// Placing images after text leads to better results
-			return [textBlock, ...imageBlocks]
+
+			if (text.trim()) {
+				const textBlock: Anthropic.TextBlockParam = { type: "text", text }
+				// Placing images after text leads to better results
+				return [textBlock, ...imageBlocks]
+			} else {
+				// For image-only responses, return only image blocks
+				return imageBlocks
+			}
 		} else {
 			return text
 		}
