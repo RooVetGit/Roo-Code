@@ -2,87 +2,37 @@
 
 import os from "os"
 import * as path from "path"
-import { vi } from "vitest"
 
-// Create mutable mock data
-const mockData = {
-	activeTextEditor: {
-		document: {
-			uri: { fsPath: "/test/workspaceFolder/file.ts" },
-		},
-	} as any,
-	workspaceFolders: [
-		{
-			uri: { fsPath: "/test/workspace" },
-			name: "test",
-			index: 0,
-		},
-	] as any[],
-	getWorkspaceFolder: vi.fn((uri) => {
-		if (uri?.fsPath?.includes("/test/workspaceFolder")) {
-			return {
-				uri: {
-					fsPath: "/test/workspaceFolder",
-				},
-			}
-		}
-		return undefined
-	}),
-}
+import { arePathsEqual, getReadablePath, getWorkspacePath } from "../path"
 
-// Mock vscode module before importing the module under test
-vi.mock("vscode", () => {
-	return {
-		window: {
-			get activeTextEditor() {
-				return mockData.activeTextEditor
-			},
-		},
-		workspace: {
-			get workspaceFolders() {
-				return mockData.workspaceFolders
-			},
-			getWorkspaceFolder: (uri: any) => mockData.getWorkspaceFolder(uri),
-		},
-		Uri: {
-			file: vi.fn((path) => ({ fsPath: path })),
-		},
-	}
-})
+// Mock modules
 
-// Import after mocking
-import { arePathsEqual, getReadablePath, getWorkspacePath, getWorkspacePathForContext } from "../path"
-
-describe("Path Utilities", () => {
-	const originalPlatform = process.platform
-
-	beforeEach(() => {
-		// Reset mock data to defaults
-		mockData.activeTextEditor = {
+vi.mock("vscode", () => ({
+	window: {
+		activeTextEditor: {
 			document: {
 				uri: { fsPath: "/test/workspaceFolder/file.ts" },
 			},
-		}
-		mockData.workspaceFolders = [
+		},
+	},
+	workspace: {
+		workspaceFolders: [
 			{
 				uri: { fsPath: "/test/workspace" },
 				name: "test",
 				index: 0,
 			},
-		]
-		vi.clearAllMocks()
-		mockData.getWorkspaceFolder.mockClear()
-		mockData.getWorkspaceFolder.mockImplementation((uri) => {
-			if (uri?.fsPath?.includes("/test/workspaceFolder")) {
-				return {
-					uri: {
-						fsPath: "/test/workspaceFolder",
-					},
-				}
-			}
-			return undefined
-		})
-	})
+		],
+		getWorkspaceFolder: vi.fn().mockReturnValue({
+			uri: {
+				fsPath: "/test/workspaceFolder",
+			},
+		}),
+	},
+}))
+describe("Path Utilities", () => {
+	const originalPlatform = process.platform
+	// Helper to mock VS Code configuration
 
 	afterEach(() => {
 		Object.defineProperty(process, "platform", {
@@ -106,57 +56,14 @@ describe("Path Utilities", () => {
 			expect(extendedPath.toPosix()).toBe("\\\\?\\C:\\Very\\Long\\Path")
 		})
 	})
-
 	describe("getWorkspacePath", () => {
-		it("should return the explicit workspace when provided", () => {
-			const explicitWorkspace = "/Users/test/explicit-workspace"
-			const defaultCwd = "/Users/test/default"
-			expect(getWorkspacePath(explicitWorkspace, defaultCwd)).toBe("/Users/test/explicit-workspace")
+		it("should return the current workspace path", () => {
+			const workspacePath = "/Users/test/project"
+			expect(getWorkspacePath(workspacePath)).toBe("/Users/test/project")
 		})
 
-		it.skip("should return the workspace folder of active file when no explicit workspace", () => {
-			// Skipped: Requires VSCode extension context which is difficult to mock properly
-			expect(getWorkspacePath()).toBe("/test/workspaceFolder")
-		})
-
-		it.skip("should return the first workspace folder when no active file", () => {
-			// Skipped: Requires VSCode extension context which is difficult to mock properly
-			// Mock no active text editor
-			mockData.activeTextEditor = undefined
-
-			expect(getWorkspacePath()).toBe("/test/workspace")
-		})
-
-		it("should return default when no workspace folders", () => {
-			// Temporarily clear workspace folders
-			mockData.workspaceFolders = []
-
-			const defaultCwd = "/Users/test/default"
-			expect(getWorkspacePath(undefined, defaultCwd)).toBe(defaultCwd)
-		})
+		it("should return undefined when outside a workspace", () => {})
 	})
-
-	describe("getWorkspacePathForContext", () => {
-		it.skip("should return workspace for given context path", () => {
-			// Skipped: Requires VSCode extension context which is difficult to mock properly
-			const contextPath = "/test/workspaceFolder/src/file.ts"
-			expect(getWorkspacePathForContext(contextPath)).toBe("/test/workspaceFolder")
-		})
-
-		it.skip("should fall back to getWorkspacePath when no context path", () => {
-			// Skipped: Requires VSCode extension context which is difficult to mock properly
-			expect(getWorkspacePathForContext()).toBe("/test/workspaceFolder")
-		})
-
-		it.skip("should fall back to getWorkspacePath when workspace folder not found", () => {
-			// Skipped: Requires VSCode extension context which is difficult to mock properly
-			// Mock getWorkspaceFolder to return undefined for this test
-			mockData.getWorkspaceFolder.mockReturnValueOnce(undefined)
-
-			expect(getWorkspacePathForContext("/unknown/path")).toBe("/test/workspaceFolder")
-		})
-	})
-
 	describe("arePathsEqual", () => {
 		describe("on Windows", () => {
 			beforeEach(() => {

@@ -106,11 +106,7 @@ export const toRelativePath = (filePath: string, cwd: string) => {
 	return filePath.endsWith("/") ? relativePath + "/" : relativePath
 }
 
-export const getWorkspacePath = (explicitWorkspace?: string, defaultCwdPath = "") => {
-	if (explicitWorkspace) {
-		return explicitWorkspace
-	}
-
+export const getWorkspacePath = (defaultCwdPath = "") => {
 	const cwdPath = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || defaultCwdPath
 	const currentFileUri = vscode.window.activeTextEditor?.document.uri
 	if (currentFileUri) {

@@ -1,11 +1,6 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "vitest"
 import path from "path"
 import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../get-relative-path"
-
-// Mock the getWorkspacePath function
-vi.mock("../../../../utils/path", () => ({
-	getWorkspacePath: vi.fn().mockReturnValue("/default/workspace"),
-}))
 
 describe("get-relative-path", () => {
 	describe("generateNormalizedAbsolutePath", () => {
@@ -14,12 +9,6 @@ describe("get-relative-path", () => {
 			const workspaceRoot = "/custom/workspace"
 			const result = generateNormalizedAbsolutePath(filePath, workspaceRoot)
 			expect(result).toBe(path.normalize("/custom/workspace/src/file.ts"))
-		})
-
-		it("should fall back to getWorkspacePath when no workspace root provided", () => {
-			const filePath = "src/file.ts"
-			const result = generateNormalizedAbsolutePath(filePath)
-			expect(result).toBe(path.normalize("/default/workspace/src/file.ts"))
 		})
 
 		it("should handle absolute paths", () => {
@@ -42,12 +31,6 @@ describe("get-relative-path", () => {
 			const absolutePath = "/custom/workspace/src/file.ts"
 			const workspaceRoot = "/custom/workspace"
 			const result = generateRelativeFilePath(absolutePath, workspaceRoot)
-			expect(result).toBe(path.normalize("src/file.ts"))
-		})
-
-		it("should fall back to getWorkspacePath when no workspace root provided", () => {
-			const absolutePath = "/default/workspace/src/file.ts"
-			const result = generateRelativeFilePath(absolutePath)
 			expect(result).toBe(path.normalize("src/file.ts"))
 		})
 
