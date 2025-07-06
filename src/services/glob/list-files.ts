@@ -21,6 +21,11 @@ function normalizePath(p: string): string {
  * @returns A tuple containing an array of file paths and a boolean indicating if the limit was reached.
  */
 export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
+	// Early return for limit of 0 - no need to scan anything
+	if (limit === 0) {
+		return [[], false]
+	}
+
 	const workspacePath = getWorkspacePath()
 	const absoluteDirPath = path.resolve(dirPath)
 

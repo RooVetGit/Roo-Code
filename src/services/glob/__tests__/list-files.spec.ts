@@ -292,3 +292,11 @@ describe("listFiles", () => {
 		})
 	})
 })
+
+describe("listFiles", () => {
+	it("should return empty array immediately when limit is 0", async () => {
+		const result = await listFiles("/test/path", true, 0)
+
+		expect(result).toEqual([[], false])
+	})
+})
