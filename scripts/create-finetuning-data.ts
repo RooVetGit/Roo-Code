@@ -340,22 +340,26 @@ async function processLogFileForOpenAI(filePath: string): Promise<OpenAIExample[
 /**
  * Main function to run the script.
  */
-async function main() {
-	const { input, output, provider, sessionId, depth } = parseArguments(process.argv.slice(2))
-	const workspaceRoot = process.cwd()
-	const inputDir = path.resolve(workspaceRoot, input)
-	const outputDir = path.resolve(workspaceRoot, output)
+export async function main(argv: string[]) {
+	const { input, output, provider, sessionId, depth } = parseArguments(argv)
+
+	// When running from tests, the paths might be absolute. Otherwise, resolve from cwd.
+	const inputDir = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input)
+	const outputDir = path.isAbsolute(output) ? output : path.resolve(process.cwd(), output)
 
 	await fs.mkdir(outputDir, { recursive: true })
 
-	console.log(`Starting conversion for ${provider}...`)
-	console.log(`Input directory: ${inputDir}`)
-	console.log(`Output directory: ${outputDir}`)
+	// Suppress console logs during tests, but not during normal execution.
+	const log = process.env.VITEST ? () => {} : console.log
+
+	log(`Starting conversion for ${provider}...`)
+	log(`Input directory: ${inputDir}`)
+	log(`Output directory: ${outputDir}`)
 	if (sessionId) {
-		console.log(`Processing only session: ${sessionId}`)
+		log(`Processing only session: ${sessionId}`)
 	}
 	if (depth) {
-		console.log(`Processing up to ${depth} most recent log files.`)
+		log(`Processing up to ${depth} most recent log files.`)
 	}
 
 	let logFiles = await findLogFiles(inputDir)
@@ -363,7 +367,10 @@ async function main() {
 	if (sessionId) {
 		logFiles = logFiles.filter((file) => path.basename(file, ".jsonl") === sessionId)
 		if (logFiles.length === 0) {
-			console.warn(`No log file found for session ID: ${sessionId}`)
+			// Suppress console logs during tests
+			if (!process.env.VITEST) {
+				console.warn(`No log file found for session ID: ${sessionId}`)
+			}
 			return
 		}
 	} else {
@@ -384,7 +391,7 @@ async function main() {
 	}
 
 	if (logFiles.length === 0) {
-		console.log("No .jsonl log files found. Exiting.")
+		log("No .jsonl log files found. Exiting.")
 		return
 	}
 
@@ -400,7 +407,7 @@ async function main() {
 		if (examples.length > 0) {
 			const outputContent = examples.map((ex) => JSON.stringify(ex)).join(EOL)
 			await fs.writeFile(outputFile, outputContent, "utf-8")
-			console.log(
+			log(
 				`Successfully created ${provider} fine-tuning dataset for session ${currentSessionId} with ${examples.length} examples at ${outputFile}`,
 			)
 			totalExamples += examples.length
@@ -408,13 +415,16 @@ async function main() {
 	}
 
 	if (totalExamples > 0) {
-		console.log(`\nFinished. Total examples generated: ${totalExamples}.`)
+		log(`\nFinished. Total examples generated: ${totalExamples}.`)
 	} else {
-		console.log("No valid training examples could be generated from the logs.")
+		log("No valid training examples could be be generated from the logs.")
 	}
 }
 
-main().catch((error) => {
-	console.error("An unexpected error occurred:", error)
-	process.exit(1)
-})
+// This allows the script to be run directly from the command line
+if (require.main === module) {
+	main(process.argv.slice(2)).catch((error) => {
+		console.error("An unexpected error occurred:", error)
+		process.exit(1)
+	})
+}

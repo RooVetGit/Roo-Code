@@ -4,11 +4,8 @@ import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import * as path from "path"
 import * as os from "os"
-import { exec } from "child_process"
-import { promisify } from "util"
+import { spawn } from "child_process"
 import { ConversationLogger } from "../ConversationLogger"
-
-const execAsync = promisify(exec)
 
 vi.mock("vscode", () => ({
 	workspace: {
@@ -20,6 +17,12 @@ vi.mock("vscode", () => ({
 				},
 			},
 		],
+	},
+	ProgressLocation: {
+		Notification: 15,
+	},
+	window: {
+		withProgress: vi.fn(),
 	},
 }))
 
@@ -40,6 +43,49 @@ const waitForPath = async (pathToExist: string, timeout = 5000): Promise<boolean
 		}
 	}
 	return false
+}
+
+/**
+ * Executes the create-finetuning-data.ts script in a separate process.
+ * @param args - An array of command-line arguments.
+ * @param cwd - The working directory for the script.
+ * @returns A promise that resolves when the script finishes.
+ */
+function runFinetuningScript(args: string[], cwd: string): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const scriptPath = path.resolve(cwd, "scripts/create-finetuning-data.ts")
+		const command = "npx"
+		const spawnArgs = ["ts-node", scriptPath, ...args]
+
+		const child = spawn(command, spawnArgs, {
+			cwd,
+			stdio: "pipe",
+			shell: process.platform === "win32",
+		})
+
+		let stdout = ""
+		let stderr = ""
+
+		child.stdout.on("data", (data) => {
+			stdout += data.toString()
+		})
+
+		child.stderr.on("data", (data) => {
+			stderr += data.toString()
+		})
+
+		child.on("close", (code) => {
+			if (code === 0) {
+				resolve()
+			} else {
+				reject(new Error(`Script failed with code ${code}:\n${stderr}`))
+			}
+		})
+
+		child.on("error", (err) => {
+			reject(err)
+		})
+	})
 }
 
 describe("ConversationLogger", () => {
@@ -119,9 +165,7 @@ describe("ConversationLogger", () => {
 			await logger.logToolCall("search", { query: "capital of France" }, { result: "Paris" })
 			await logger.logAIResponse("The capital of France is Paris.")
 
-			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
-			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir}`
-			await execAsync(command, { cwd: projectRoot })
+			await runFinetuningScript([`--input`, logsDir, `--output`, datasetsDir], projectRoot)
 
 			const expectedOutputFile = path.join(datasetsDir, `sft-dataset-gemini-${sessionId}.jsonl`)
 			await expect(
@@ -145,9 +189,7 @@ describe("ConversationLogger", () => {
 			await logger.logToolCall("weather", { city: "London" }, { temp: "15C", condition: "Cloudy" })
 			await logger.logAIResponse("It is 15C and cloudy in London.")
 
-			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
-			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir} --openai`
-			await execAsync(command, { cwd: projectRoot })
+			await runFinetuningScript([`--input`, logsDir, `--output`, datasetsDir, "--openai"], projectRoot)
 
 			const expectedOutputFile = path.join(datasetsDir, `sft-dataset-openai-${sessionId}.jsonl`)
 			await expect(
@@ -177,9 +219,10 @@ describe("ConversationLogger", () => {
 			await logger.logUserMessage("Second session message")
 			await logger.logAIResponse("Second session response")
 
-			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
-			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir} --sessionId ${sessionId1}`
-			await execAsync(command, { cwd: projectRoot })
+			await runFinetuningScript(
+				[`--input`, logsDir, `--output`, datasetsDir, "--sessionId", sessionId1],
+				projectRoot,
+			)
 
 			const expectedOutputFile1 = path.join(datasetsDir, `sft-dataset-gemini-${sessionId1}.jsonl`)
 			const unexpectedOutputFile2 = path.join(datasetsDir, `sft-dataset-gemini-${sessionId2}.jsonl`)
@@ -206,9 +249,7 @@ describe("ConversationLogger", () => {
 			await logger.logUserMessage("Newer message")
 			await logger.logAIResponse("Newer response")
 
-			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
-			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir} --depth 1`
-			await execAsync(command, { cwd: projectRoot })
+			await runFinetuningScript([`--input`, logsDir, `--output`, datasetsDir, "--depth", "1"], projectRoot)
 
 			const expectedOutputFile = path.join(datasetsDir, `sft-dataset-gemini-${sessionId2}.jsonl`)
 			const unexpectedOutputFile = path.join(datasetsDir, `sft-dataset-gemini-${sessionId1}.jsonl`)
