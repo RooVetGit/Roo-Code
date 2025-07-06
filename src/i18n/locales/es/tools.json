@@ -3,7 +3,9 @@
 		"linesRange": " (líneas {{start}}-{{end}})",
 		"definitionsOnly": " (solo definiciones)",
 		"maxLines": " (máximo {{max}} líneas)",
-		"imageTooLarge": "El archivo de imagen es demasiado grande ({{size}} MB). El tamaño máximo permitido es {{max}} MB."
+		"imageTooLarge": "El archivo de imagen es demasiado grande ({{size}} MB). El tamaño máximo permitido es {{max}} MB.",
+		"imageWithDimensions": "Archivo de imagen ({{dimensions}}, {{size}} KB)",
+		"imageWithSize": "Archivo de imagen ({{size}} KB)"
 	},
 	"toolRepetitionLimitReached": "Roo parece estar atrapado en un bucle, intentando la misma acción ({{toolName}}) repetidamente. Esto podría indicar un problema con su estrategia actual. Considera reformular la tarea, proporcionar instrucciones más específicas o guiarlo hacia un enfoque diferente.",
 	"codebaseSearch": {

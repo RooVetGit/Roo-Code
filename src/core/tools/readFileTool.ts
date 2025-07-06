@@ -533,8 +533,8 @@ export async function readFileTool(
 
 							// Store image data URL separately - NOT in XML
 							const noticeText = dimensionsInfo
-								? `Image file (${dimensionsInfo}, ${imageSizeInKB} KB)`
-								: `Image file (${imageSizeInKB} KB)`
+								? t("tools:readFile.imageWithDimensions", { dimensions: dimensionsInfo, size: imageSizeInKB })
+								: t("tools:readFile.imageWithSize", { size: imageSizeInKB })
 
 							updateFileResult(relPath, {
 								xmlContent: `<file><path>${relPath}</path>\n<notice>${noticeText}</notice>\n</file>`,
