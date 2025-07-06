@@ -58,6 +58,9 @@ import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 // utils
 import { calculateApiCostAnthropic } from "../../shared/cost"
 import { getWorkspacePath } from "../../utils/path"
+import { safeWriteJson } from "../../utils/safeWriteJson"
+import { getTaskDirectoryPath } from "../../utils/storage"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 
 // prompts
 import { formatResponse } from "../prompts/responses"
@@ -73,7 +76,7 @@ import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
-import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
+import { readApiMessages, readTaskMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
 	type CheckpointDiffOptions,
@@ -326,27 +329,34 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const messageWithTs = { ...message, ts: Date.now() }
-		this.apiConversationHistory.push(messageWithTs)
-		await this.saveApiConversationHistory()
+		await this.modifyApiConversationHistory(async (history) => {
+			const messageWithTs = { ...message, ts: Date.now() }
+			history.push(messageWithTs)
+			return history
+		})
 	}
 
-	async overwriteApiConversationHistory(newHistory: ApiMessage[]) {
-		this.apiConversationHistory = newHistory
-		await this.saveApiConversationHistory()
-	}
+	// say() and ask() are not safe to call within modifyFn because they may
+	// try to lock the same file, which would lead to a deadlock
+	async modifyApiConversationHistory(modifyFn: (history: ApiMessage[]) => Promise<ApiMessage[] | undefined>) {
+		const taskDir = await getTaskDirectoryPath(this.globalStoragePath, this.taskId)
+		const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
 
-	private async saveApiConversationHistory() {
-		try {
-			await saveApiMessages({
-				messages: this.apiConversationHistory,
-				taskId: this.taskId,
-				globalStoragePath: this.globalStoragePath,
-			})
-		} catch (error) {
-			// In the off chance this fails, we don't want to stop the task.
-			console.error("Failed to save API conversation history:", error)
-		}
+		await safeWriteJson(filePath, [], async (data) => {
+			// Use the existing data or an empty array if the file doesn't exist yet
+			const result = await modifyFn(data)
+
+			if (result === undefined) {
+				// Abort transaction
+				return undefined
+			}
+
+			// Update the instance variable within the critical section
+			this.apiConversationHistory = result
+
+			// Return the modified data
+			return result
+		})
 	}
 
 	// Cline Messages
@@ -356,11 +366,14 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToClineMessages(message: ClineMessage) {
-		this.clineMessages.push(message)
+		await this.modifyClineMessages(async (messages) => {
+			messages.push(message)
+			return messages
+		})
+
 		const provider = this.providerRef.deref()
 		await provider?.postStateToWebview()
 		this.emit("message", { action: "created", message })
-		await this.saveClineMessages()
 
 		const shouldCaptureMessage = message.partial !== true && CloudService.isEnabled()
 
@@ -370,12 +383,6 @@ export class Task extends EventEmitter<ClineEvents> {
 				properties: { taskId: this.taskId, message },
 			})
 		}
-	}
-
-	public async overwriteClineMessages(newMessages: ClineMessage[]) {
-		this.clineMessages = newMessages
-		restoreTodoListForTask(this)
-		await this.saveClineMessages()
 	}
 
 	private async updateClineMessage(message: ClineMessage) {
@@ -393,28 +400,107 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	private async saveClineMessages() {
-		try {
-			await saveTaskMessages({
-				messages: this.clineMessages,
-				taskId: this.taskId,
-				globalStoragePath: this.globalStoragePath,
+	// say() and ask() are not safe to call within modifyFn because they may
+	// try to lock the same file, which would lead to a deadlock
+	public async modifyClineMessages(modifyFn: (messages: ClineMessage[]) => Promise<ClineMessage[] | undefined>) {
+		const taskDir = await getTaskDirectoryPath(this.globalStoragePath, this.taskId)
+		const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
+
+		await safeWriteJson(filePath, [], async (data) => {
+			// Use the existing data or an empty array if the file doesn't exist yet
+			const result = await modifyFn(data)
+
+			if (result === undefined) {
+				// Abort transaction
+				return undefined
+			}
+
+			// Update the instance variable within the critical section
+			this.clineMessages = result
+
+			// Update task metadata within the same critical section
+			try {
+				const { historyItem, tokenUsage } = await taskMetadata({
+					messages: this.clineMessages,
+					taskId: this.taskId,
+					taskNumber: this.taskNumber,
+					globalStoragePath: this.globalStoragePath,
+					workspace: this.cwd,
+				})
+
+				this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
+
+				await this.providerRef.deref()?.updateTaskHistory(historyItem)
+			} catch (error) {
+				console.error("Failed to save Roo messages:", error)
+			}
+
+			restoreTodoListForTask(this)
+
+			// Return the modified data or the original reference
+			return this.clineMessages
+		})
+	}
+
+	/**
+	 * Atomically modifies both clineMessages and apiConversationHistory in a single transaction.
+	 * This ensures that both arrays are updated together or neither is updated.
+	 *
+	 * say() and ask() are not safe to call within modifyFn because they may
+	 * try to lock the same file, which would lead to a deadlock 
+
+	 * @param modifyFn A function that receives the current messages and history arrays and returns
+	 *                 the modified versions of both. Return undefined to abort the transaction.
+	 */
+	public async modifyConversation(
+		modifyFn: (
+			messages: ClineMessage[],
+			history: ApiMessage[],
+		) => Promise<[ClineMessage[], ApiMessage[]] | undefined>,
+	) {
+		// Use the existing modifyClineMessages as the outer transaction
+		await this.modifyClineMessages(async (messages) => {
+			// We need a variable to store the result of modifyFn
+			// This will be initialized in the inner function
+			let modifiedMessages: ClineMessage[] | undefined
+			let modifiedApiHistory: ApiMessage[] | undefined
+			let abortTransaction = false
+
+			// Use modifyApiConversationHistory as the inner transaction
+			await this.modifyApiConversationHistory(async (history) => {
+				// Call modifyFn in the innermost function with both arrays
+				const result = await modifyFn(messages, history)
+
+				// If undefined is returned, abort the transaction
+				if (result === undefined) {
+					abortTransaction = true
+					return undefined
+				}
+
+				// Destructure the result
+				;[modifiedMessages, modifiedApiHistory] = result
+
+				// Check if any of the results are undefined
+				if (modifiedMessages === undefined || modifiedApiHistory === undefined) {
+					throw new Error("modifyConversation: modifyFn must return arrays for both messages and history")
+				}
+
+				// Return the modified history for the inner transaction
+				return modifiedApiHistory
 			})
 
-			const { historyItem, tokenUsage } = await taskMetadata({
-				messages: this.clineMessages,
-				taskId: this.taskId,
-				taskNumber: this.taskNumber,
-				globalStoragePath: this.globalStoragePath,
-				workspace: this.cwd,
-			})
+			if (abortTransaction) {
+				return undefined
+			}
 
-			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
+			// Check if modifiedMessages is still undefined after the inner function
+			if (modifiedMessages === undefined) {
+				throw new Error("modifyConversation: modifiedMessages is undefined after inner transaction")
+			}
 
-			await this.providerRef.deref()?.updateTaskHistory(historyItem)
-		} catch (error) {
-			console.error("Failed to save Roo messages:", error)
-		}
+			// Return the modified messages for the outer transaction
+			return modifiedMessages
+		})
 	}
 
 	// Note that `partial` has three valid states true (partial message),
@@ -493,7 +579,11 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
 					lastMessage.isProtected = isProtected
-					await this.saveClineMessages()
+
+					await this.modifyClineMessages(async () => {
+						return this.clineMessages
+					})
+
 					this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new and complete message, so add it like normal.
@@ -601,7 +691,11 @@ export class Task extends EventEmitter<ClineEvents> {
 			)
 			return
 		}
-		await this.overwriteApiConversationHistory(messages)
+
+		await this.modifyApiConversationHistory(async () => {
+			return messages
+		})
+
 		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
 		await this.say(
 			"condense_context",
@@ -679,7 +773,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 					// Instead of streaming partialMessage events, we do a save
 					// and post like normal to persist to disk.
-					await this.saveClineMessages()
+					await this.modifyClineMessages(async () => {
+						return this.clineMessages
+					})
 
 					// More performant than an entire `postStateToWebview`.
 					this.updateClineMessage(lastMessage)
@@ -808,8 +904,9 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		await this.overwriteClineMessages(modifiedClineMessages)
-		this.clineMessages = await this.getSavedClineMessages()
+		await this.modifyClineMessages(async () => {
+			return modifiedClineMessages
+		})
 
 		// Now present the cline messages to the user and ask if they want to
 		// resume (NOTE: we ran into a bug before where the
@@ -1011,7 +1108,9 @@ export class Task extends EventEmitter<ClineEvents> {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
 		}
 
-		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
+		await this.modifyApiConversationHistory(async () => {
+			return modifiedApiConversationHistory
+		})
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
 
@@ -1090,8 +1189,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 		// Save the countdown message in the automatic retry or other content.
 		try {
-			// Save the countdown message in the automatic retry or other content.
-			await this.saveClineMessages()
+			await this.modifyClineMessages(async () => {
+				return this.clineMessages
+			})
 		} catch (error) {
 			console.error(`Error saving messages during abort for task ${this.taskId}.${this.instanceId}:`, error)
 		}
@@ -1252,7 +1352,10 @@ export class Task extends EventEmitter<ClineEvents> {
 			apiProtocol,
 		} satisfies ClineApiReqInfo)
 
-		await this.saveClineMessages()
+		await this.modifyClineMessages(async () => {
+			return this.clineMessages
+		})
+
 		await provider?.postStateToWebview()
 
 		try {
@@ -1327,7 +1430,10 @@ export class Task extends EventEmitter<ClineEvents> {
 				// Update `api_req_started` to have cancelled and cost, so that
 				// we can display the cost of the partial stream.
 				updateApiReqMsg(cancelReason, streamingFailedMessage)
-				await this.saveClineMessages()
+
+				await this.modifyClineMessages(async () => {
+					return this.clineMessages
+				})
 
 				// Signals to provider that it can retrieve the saved messages
 				// from disk, as abortTask can not be awaited on in nature.
@@ -1508,7 +1614,11 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 
 			updateApiReqMsg()
-			await this.saveClineMessages()
+
+			await this.modifyClineMessages(async () => {
+				return this.clineMessages
+			})
+
 			await this.providerRef.deref()?.postStateToWebview()
 
 			// Now add to apiConversationHistory.
@@ -1748,7 +1858,9 @@ export class Task extends EventEmitter<ClineEvents> {
 				currentProfileId,
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(truncateResult.messages)
+				await this.modifyApiConversationHistory(async () => {
+					return truncateResult.messages
+				})
 			}
 			if (truncateResult.error) {
 				await this.say("condense_context_error", truncateResult.error)
