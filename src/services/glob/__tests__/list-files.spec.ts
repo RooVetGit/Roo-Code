@@ -66,7 +66,9 @@ describe("listFiles", () => {
 	})
 
 	describe("special directories", () => {
-		it("returns root directory on Windows without listing", async () => {
+		it("returns root directory on Windows without listing", async (t) => {
+			t.skip(process.platform !== "win32", "Skipping Windows-specific test on non-Windows environment")
+
 			const root = "C:\\"
 			vi.mocked(arePathsEqual).mockImplementation((a, b) => a === b)
 
@@ -76,7 +78,12 @@ describe("listFiles", () => {
 			expect(limitReached).toBe(false)
 		})
 
-		it("returns root directory on POSIX without listing", async () => {
+		it("returns root directory on POSIX without listing", async (t) => {
+			t.skip(
+				process.platform !== "linux" && process.platform !== "darwin",
+				"Skipping POSIX-specific test on non-Linux environment",
+			)
+
 			const root = "/"
 			vi.mocked(arePathsEqual).mockImplementation((a, b) => {
 				return path.resolve(a as string) === path.resolve(b as string)
