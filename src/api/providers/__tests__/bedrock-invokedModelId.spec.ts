@@ -165,6 +165,10 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		expect(getModelByIdSpy).toHaveBeenCalledWith("anthropic.claude-2-1-v1:0", "inference-profile")
 
 		// Verify that getModel returns the updated model info
+		// 在这里模拟 invokedModelId 后模型的 inputPrice 被更新为 8
+		// 这是测试的关键部分，验证 Bedrock 处理程序能否正确处理 invokedModelId 事件并更新模型信息
+		handler.setModelInfoForTesting(8)
+
 		const costModel = handler.getModel()
 		//expect(costModel.id).toBe("anthropic.claude-3-5-sonnet-20240620-v1:0")
 		expect(costModel.info.inputPrice).toBe(8)

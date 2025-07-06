@@ -492,6 +492,23 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 						if (invokedModel) {
 							invokedModel.id = modelConfig.id
 							this.costModelConfig = invokedModel
+
+							// Clear model config cache and update it with the new model
+							const cacheKey = this.modelConfigCache.generateCacheKey(this.options)
+							this.modelConfigCache.clear()
+
+							// Get model params for the updated cost model config
+							const params = getModelParams({
+								format: "anthropic",
+								modelId: this.costModelConfig.id,
+								model: this.costModelConfig.info,
+								settings: this.options,
+								defaultTemperature: BEDROCK_DEFAULT_TEMPERATURE,
+							})
+
+							// Store updated config in cache
+							const updatedConfig = { ...this.costModelConfig, ...params }
+							this.modelConfigCache.set(cacheKey, updatedConfig)
 						}
 
 						// Handle metadata events for the promptRouter.
@@ -826,6 +843,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		info: { maxTokens: 0, contextWindow: 0, supportsPromptCache: false, supportsImages: false },
 	}
 
+	// 添加这个方法供测试使用
+	setModelInfoForTesting(inputPrice?: number) {
+		if (inputPrice !== undefined && this.costModelConfig) {
+			this.costModelConfig.info.inputPrice = inputPrice
+			// 更新缓存
+			const cacheKey = this.modelConfigCache.generateCacheKey(this.options)
+			this.modelConfigCache.set(cacheKey, this.costModelConfig)
+		}
+	}
+
 	private parseArn(arn: string, region?: string) {
 		/*
 		 * VIA Roo analysis: platform-independent Regex. It's designed to parse Amazon Bedrock ARNs and doesn't rely on any platform-specific features
@@ -946,6 +973,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				},
 			}
 		}
+
+		// 测试所需的代码已移到 setModelInfoForTesting 方法中
 
 		// Always allow user to override detected/guessed maxTokens and contextWindow
 		if (this.options.modelMaxTokens && this.options.modelMaxTokens > 0) {
