@@ -43,7 +43,7 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 	if (recursive) {
 		allAbsolutePaths = await listAllFilesRecursively(absoluteDirPath, git, workspacePath, limit + 1)
 	} else {
-		allAbsolutePaths = await listNonRecursive(absoluteDirPath, git, workspacePath)
+		allAbsolutePaths = await listNonRecursive(absoluteDirPath, git, workspacePath, limit + 1)
 	}
 
 	// Filter out any empty strings and apply the custom ignore list as a final pass.
@@ -218,12 +218,12 @@ function createGitignoreFilter(rootDir: string) {
  * List only top-level files and directories, filtering out ignored ones.
  * Uses ripgrep for performance and consistency with recursive listing.
  */
-async function listNonRecursive(dir: string, _git: SimpleGit, workspacePath: string): Promise<string[]> {
+async function listNonRecursive(dir: string, _git: SimpleGit, workspacePath: string, limit: number): Promise<string[]> {
 	const ig = createGitignoreFilter(workspacePath)
 
 	let files: string[] = []
 	try {
-		files = await listFilesWithRipgrep(dir, false, 10000)
+		files = await listFilesWithRipgrep(dir, false, limit)
 	} catch (err) {
 		console.warn("listFilesWithRipgrep (non-recursive) failed:", err)
 	}
@@ -257,6 +257,6 @@ async function listNonRecursive(dir: string, _git: SimpleGit, workspacePath: str
 	}
 
 	// Enforce limit after combining files and directories
-	const combined = [...filtered.map((rel) => path.join(workspacePath, rel)), ...dirEntries]
-	return combined.slice(0, 10000) // 10000 is the same as above, will be sliced by caller
+	const combined = [...dirEntries, ...filtered.map((rel) => path.join(workspacePath, rel))]
+	return combined.slice(0, limit)
 }
