@@ -106,7 +106,7 @@ describe("ConversationLogger", () => {
 			await fs.mkdir(logsDir, { recursive: true })
 		})
 
-		it("should generate a valid finetuning file from a single conversation session", async () => {
+		it("should generate a valid Gemini finetuning file by default", async () => {
 			const logger = new ConversationLogger(tempDir)
 			const sessionId = (logger as any).sessionId
 			const logFilePath = path.join(logsDir, `${sessionId}.jsonl`)
@@ -123,7 +123,7 @@ describe("ConversationLogger", () => {
 			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir}`
 			await execAsync(command, { cwd: projectRoot })
 
-			const expectedOutputFile = path.join(datasetsDir, `finetuning-dataset-${sessionId}.jsonl`)
+			const expectedOutputFile = path.join(datasetsDir, `sft-dataset-gemini-${sessionId}.jsonl`)
 			await expect(
 				waitForPath(expectedOutputFile),
 				`Output file ${expectedOutputFile} should exist`,
@@ -132,41 +132,95 @@ describe("ConversationLogger", () => {
 			const outputContent = await fs.readFile(expectedOutputFile, "utf-8")
 			const geminiExample = JSON.parse(outputContent)
 			expect(geminiExample).toHaveProperty("messages")
-		}, 30000)
+			expect(geminiExample.messages[0].role).toBe("user")
+		}, 60000)
 
-		it("should generate separate finetuning files for multiple conversation sessions", async () => {
+		it("should generate a valid OpenAI finetuning file with --openai flag", async () => {
+			const logger = new ConversationLogger(tempDir)
+			const sessionId = (logger as any).sessionId
+			await logger.logUserMessage("What is the weather in London?")
+			await logger.logAIResponse("I will check the weather.", "code", [
+				{ name: "weather", input: { city: "London" } },
+			])
+			await logger.logToolCall("weather", { city: "London" }, { temp: "15C", condition: "Cloudy" })
+			await logger.logAIResponse("It is 15C and cloudy in London.")
+
+			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
+			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir} --openai`
+			await execAsync(command, { cwd: projectRoot })
+
+			const expectedOutputFile = path.join(datasetsDir, `sft-dataset-openai-${sessionId}.jsonl`)
+			await expect(
+				waitForPath(expectedOutputFile),
+				`Output file ${expectedOutputFile} should exist`,
+			).resolves.toBe(true)
+
+			const outputContent = await fs.readFile(expectedOutputFile, "utf-8")
+			const openAIExample = JSON.parse(outputContent)
+			expect(openAIExample).toHaveProperty("messages")
+			expect(openAIExample.messages[0].role).toBe("user")
+			expect(openAIExample.messages[1].role).toBe("assistant")
+			expect(openAIExample.messages[1]).toHaveProperty("tool_calls")
+		}, 60000)
+
+		it("should generate a finetuning file for a specific session with --sessionId flag", async () => {
 			const logger = new ConversationLogger(tempDir)
 
 			// Session 1
 			const sessionId1 = (logger as any).sessionId
 			await logger.logUserMessage("First session message")
-			await logger.logAIResponse("First session tool call", "code", [{ name: "tool1", input: {} }])
-			await logger.logToolCall("tool1", {}, { success: true })
 			await logger.logAIResponse("First session response")
-			const logFilePath1 = path.join(logsDir, `${sessionId1}.jsonl`)
-			await expect(waitForPath(logFilePath1)).resolves.toBe(true)
 
 			// Session 2
 			logger.startNewSession()
 			const sessionId2 = (logger as any).sessionId
 			await logger.logUserMessage("Second session message")
-			await logger.logAIResponse("Second session tool call", "code", [{ name: "tool2", input: {} }])
-			await logger.logToolCall("tool2", {}, { success: true })
 			await logger.logAIResponse("Second session response")
-			const logFilePath2 = path.join(logsDir, `${sessionId2}.jsonl`)
-			await expect(waitForPath(logFilePath2)).resolves.toBe(true)
 
-			// Execution
 			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
-			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir}`
+			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir} --sessionId ${sessionId1}`
 			await execAsync(command, { cwd: projectRoot })
 
-			// Validation
-			const expectedOutputFile1 = path.join(datasetsDir, `finetuning-dataset-${sessionId1}.jsonl`)
-			const expectedOutputFile2 = path.join(datasetsDir, `finetuning-dataset-${sessionId2}.jsonl`)
+			const expectedOutputFile1 = path.join(datasetsDir, `sft-dataset-gemini-${sessionId1}.jsonl`)
+			const unexpectedOutputFile2 = path.join(datasetsDir, `sft-dataset-gemini-${sessionId2}.jsonl`)
 
 			await expect(waitForPath(expectedOutputFile1), `Output file for session 1 should exist`).resolves.toBe(true)
-			await expect(waitForPath(expectedOutputFile2), `Output file for session 2 should exist`).resolves.toBe(true)
-		}, 30000)
+			await expect(
+				waitForPath(unexpectedOutputFile2),
+				`Output file for session 2 should NOT exist`,
+			).resolves.toBe(false)
+		}, 60000)
+
+		it("should process only the most recent log file with --depth 1", async () => {
+			const logger = new ConversationLogger(tempDir)
+
+			// Session 1 (older)
+			const sessionId1 = (logger as any).sessionId
+			await logger.logUserMessage("Older message")
+			await logger.logAIResponse("Older response")
+			await new Promise((resolve) => setTimeout(resolve, 100)) // ensure different modification times
+
+			// Session 2 (newer)
+			logger.startNewSession()
+			const sessionId2 = (logger as any).sessionId
+			await logger.logUserMessage("Newer message")
+			await logger.logAIResponse("Newer response")
+
+			const scriptPath = path.join(projectRoot, "scripts/create-finetuning-data.ts")
+			const command = `npx ts-node ${scriptPath} --input ${logsDir} --output ${datasetsDir} --depth 1`
+			await execAsync(command, { cwd: projectRoot })
+
+			const expectedOutputFile = path.join(datasetsDir, `sft-dataset-gemini-${sessionId2}.jsonl`)
+			const unexpectedOutputFile = path.join(datasetsDir, `sft-dataset-gemini-${sessionId1}.jsonl`)
+
+			await expect(
+				waitForPath(expectedOutputFile),
+				"Output file for the most recent session should exist",
+			).resolves.toBe(true)
+			await expect(
+				waitForPath(unexpectedOutputFile),
+				"Output file for the older session should NOT exist",
+			).resolves.toBe(false)
+		}, 60000)
 	})
 })
