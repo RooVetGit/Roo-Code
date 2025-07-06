@@ -28,15 +28,3 @@ export async function readTaskMessages({
 		return []
 	}
 }
-
-export type SaveTaskMessagesOptions = {
-	messages: ClineMessage[]
-	taskId: string
-	globalStoragePath: string
-}
-
-export async function saveTaskMessages({ messages, taskId, globalStoragePath }: SaveTaskMessagesOptions) {
-	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
-	const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
-	await safeWriteJson(filePath, messages)
-}

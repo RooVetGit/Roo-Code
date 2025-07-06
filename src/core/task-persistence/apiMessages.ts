@@ -68,17 +68,3 @@ export async function readApiMessages({
 		}
 	}
 }
-
-export async function saveApiMessages({
-	messages,
-	taskId,
-	globalStoragePath,
-}: {
-	messages: ApiMessage[]
-	taskId: string
-	globalStoragePath: string
-}) {
-	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
-	const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
-	await safeWriteJson(filePath, messages)
-}

@@ -199,7 +199,9 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 		await provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
 
 		if (mode === "restore") {
-			await cline.overwriteApiConversationHistory(cline.apiConversationHistory.filter((m) => !m.ts || m.ts < ts))
+			await cline.modifyApiConversationHistory(async (history) => {
+				return history.filter((m) => !m.ts || m.ts < ts)
+			})
 
 			const deletedMessages = cline.clineMessages.slice(index + 1)
 
@@ -207,7 +209,9 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 				cline.combineMessages(deletedMessages),
 			)
 
-			await cline.overwriteClineMessages(cline.clineMessages.slice(0, index + 1))
+			await cline.modifyClineMessages(async (messages) => {
+				return messages.slice(0, index + 1)
+			})
 
 			// TODO: Verify that this is working as expected.
 			await cline.say(
