@@ -23,7 +23,7 @@ export class StaticSettingsService implements SettingsService {
 			return organizationSettingsSchema.parse(parsedJson)
 		} catch (error) {
 			this.log(`[StaticSettingsService] failed to parse static settings: ${error.message}`, error)
-			throw new Error("Failed to parse static settings", error)
+			throw new Error("Failed to parse static settings", { cause: error })
 		}
 	}
 
