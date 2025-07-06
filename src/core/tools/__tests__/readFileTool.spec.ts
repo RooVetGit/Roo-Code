@@ -117,6 +117,32 @@ vi.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: vi.fn().mockReturnValue(true),
 }))
 
+// Mock i18n translation function
+vi.mock("../../../i18n", () => ({
+	t: vi.fn((key: string, params?: Record<string, any>) => {
+		// Map translation keys to English text
+		const translations: Record<string, string> = {
+			"tools:readFile.imageWithDimensions": "Image file ({{dimensions}}, {{size}} KB)",
+			"tools:readFile.imageWithSize": "Image file ({{size}} KB)",
+			"tools:readFile.imageTooLarge": "Image file is too large ({{size}} MB). The maximum allowed size is {{max}} MB.",
+			"tools:readFile.linesRange": " (lines {{start}}-{{end}})",
+			"tools:readFile.definitionsOnly": " (definitions only)",
+			"tools:readFile.maxLines": " (max {{max}} lines)",
+		}
+		
+		let result = translations[key] || key
+		
+		// Simple template replacement
+		if (params) {
+			Object.entries(params).forEach(([param, value]) => {
+				result = result.replace(new RegExp(`{{${param}}}`, 'g'), String(value))
+			})
+		}
+		
+		return result
+	}),
+}))
+
 describe("read_file tool with maxReadFileLine setting", () => {
 	// Test data
 	const testFilePath = "test/file.txt"
