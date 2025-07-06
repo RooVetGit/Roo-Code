@@ -68,10 +68,14 @@ export const webviewMessageHandler = async (
 	/**
 	 * Shared utility to find message indices based on timestamp
 	 */
-	const findMessageIndices = (messageTs: number, currentCline: any) => {
+	const findMessageIndices = (
+		messageTs: number,
+		clineMessages: ClineMessage[],
+		apiConversationHistory: ApiMessage[],
+	) => {
 		const timeCutoff = messageTs - 1000 // 1 second buffer before the message
-		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
-		const apiConversationHistoryIndex = currentCline.apiConversationHistory.findIndex(
+		const messageIndex = clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
+		const apiConversationHistoryIndex = apiConversationHistory.findIndex(
 			(msg: ApiMessage) => msg.ts && msg.ts >= timeCutoff,
 		)
 		return { messageIndex, apiConversationHistoryIndex }
@@ -80,68 +84,82 @@ export const webviewMessageHandler = async (
 	/**
 	 * Removes just the target message, preserving messages after the next user message
 	 */
-	const removeMessagesJustThis = async (
-		currentCline: any,
-		messageIndex: number,
-		apiConversationHistoryIndex: number,
-	) => {
-		// Find the next user message first
-		const nextUserMessage = currentCline.clineMessages
-			.slice(messageIndex + 1)
-			.find((msg: ClineMessage) => msg.type === "say" && msg.say === "user_feedback")
-
-		// Handle UI messages
-		if (nextUserMessage) {
-			// Find absolute index of next user message
-			const nextUserMessageIndex = currentCline.clineMessages.findIndex(
-				(msg: ClineMessage) => msg === nextUserMessage,
-			)
-
-			// Keep messages before current message and after next user message
-			await currentCline.overwriteClineMessages([
-				...currentCline.clineMessages.slice(0, messageIndex),
-				...currentCline.clineMessages.slice(nextUserMessageIndex),
-			])
-		} else {
-			// If no next user message, keep only messages before current message
-			await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
-		}
-
-		// Handle API messages
-		if (apiConversationHistoryIndex !== -1) {
-			if (nextUserMessage && nextUserMessage.ts) {
-				// Keep messages before current API message and after next user message
-				await currentCline.overwriteApiConversationHistory([
-					...currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-					...currentCline.apiConversationHistory.filter(
-						(msg: ApiMessage) => msg.ts && msg.ts >= nextUserMessage.ts,
-					),
-				])
-			} else {
-				// If no next user message, keep only messages before current API message
-				await currentCline.overwriteApiConversationHistory(
-					currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+	const removeMessagesJustThis = async (currentCline: any, messageTs: number) => {
+		await currentCline.modifyConversation(
+			async (clineMessages: ClineMessage[], apiConversationHistory: ApiMessage[]) => {
+				const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(
+					messageTs,
+					clineMessages,
+					apiConversationHistory,
 				)
-			}
-		}
+
+				if (messageIndex === -1) {
+					// Abort transaction
+					return undefined
+				}
+
+				// Find the next user message first
+				const nextUserMessage = clineMessages
+					.slice(messageIndex + 1)
+					.find((msg: ClineMessage) => msg.type === "say" && msg.say === "user_feedback")
+
+				if (nextUserMessage) {
+					// Find absolute index of next user message
+					const nextUserMessageIndex = clineMessages.findIndex((msg: ClineMessage) => msg === nextUserMessage)
+					// Keep messages before current message and after next user message
+					clineMessages.splice(messageIndex, nextUserMessageIndex - messageIndex)
+				} else {
+					// If no next user message, keep only messages before current message
+					clineMessages.splice(messageIndex)
+				}
+
+				// Handle API messages
+				if (apiConversationHistoryIndex !== -1) {
+					if (nextUserMessage && nextUserMessage.ts) {
+						// Keep messages before current API message and after next user message
+						apiConversationHistory = [
+							...apiConversationHistory.slice(0, apiConversationHistoryIndex),
+							...apiConversationHistory.filter(
+								(msg: ApiMessage) => msg.ts && msg.ts >= nextUserMessage.ts,
+							),
+						]
+					} else {
+						// If no next user message, keep only messages before current API message
+						apiConversationHistory.splice(apiConversationHistoryIndex)
+					}
+				}
+
+				return [clineMessages, apiConversationHistory]
+			},
+		)
 	}
 
 	/**
 	 * Removes the target message and all subsequent messages
 	 */
-	const removeMessagesThisAndSubsequent = async (
-		currentCline: any,
-		messageIndex: number,
-		apiConversationHistoryIndex: number,
-	) => {
-		// Delete this message and all that follow
-		await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
+	const removeMessagesThisAndSubsequent = async (currentCline: any, messageTs: number) => {
+		await currentCline.modifyConversation(
+			async (clineMessages: ClineMessage[], apiConversationHistory: ApiMessage[]) => {
+				const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(
+					messageTs,
+					clineMessages,
+					apiConversationHistory,
+				)
 
-		if (apiConversationHistoryIndex !== -1) {
-			await currentCline.overwriteApiConversationHistory(
-				currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-			)
-		}
+				if (messageIndex === -1) {
+					// Abort transaction
+					return undefined
+				}
+
+				clineMessages.splice(messageIndex)
+
+				if (apiConversationHistoryIndex !== -1) {
+					apiConversationHistory.splice(apiConversationHistoryIndex)
+				}
+
+				return [clineMessages, apiConversationHistory]
+			},
+		)
 	}
 
 	/**
@@ -162,29 +180,25 @@ export const webviewMessageHandler = async (
 		// Only proceed if user selected one of the options and we have a current cline
 		if (answer && options.includes(answer) && provider.getCurrentCline()) {
 			const currentCline = provider.getCurrentCline()!
-			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
+			try {
+				const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
 
-			if (messageIndex !== -1) {
-				try {
-					const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
-
-					// Check which option the user selected
-					if (answer === options[0]) {
-						// Delete just this message
-						await removeMessagesJustThis(currentCline, messageIndex, apiConversationHistoryIndex)
-					} else if (answer === options[1]) {
-						// Delete this message and all subsequent
-						await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
-					}
-
-					// Initialize with history item after deletion
-					await provider.initClineWithHistoryItem(historyItem)
-				} catch (error) {
-					console.error("Error in delete message:", error)
-					vscode.window.showErrorMessage(
-						`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
-					)
+				// Check which option the user selected
+				if (answer === options[0]) {
+					// Delete just this message
+					await removeMessagesJustThis(currentCline, messageTs)
+				} else if (answer === options[1]) {
+					// Delete this message and all subsequent
+					await removeMessagesThisAndSubsequent(currentCline, messageTs)
 				}
+
+				// Initialize with history item after deletion
+				await provider.initClineWithHistoryItem(historyItem)
+			} catch (error) {
+				console.error("Error in delete message:", error)
+				vscode.window.showErrorMessage(
+					`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 	}
@@ -203,30 +217,25 @@ export const webviewMessageHandler = async (
 		if (answer === t("common:confirmation.proceed") && provider.getCurrentCline()) {
 			const currentCline = provider.getCurrentCline()!
 
-			// Use findMessageIndices to find messages based on timestamp
-			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
+			try {
+				// Edit this message and delete subsequent
+				await removeMessagesThisAndSubsequent(currentCline, messageTs)
 
-			if (messageIndex !== -1) {
-				try {
-					// Edit this message and delete subsequent
-					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
+				// Process the edited message as a regular user message
+				// This will add it to the conversation and trigger an AI response
+				webviewMessageHandler(provider, {
+					type: "askResponse",
+					askResponse: "messageResponse",
+					text: editedContent,
+				})
 
-					// Process the edited message as a regular user message
-					// This will add it to the conversation and trigger an AI response
-					webviewMessageHandler(provider, {
-						type: "askResponse",
-						askResponse: "messageResponse",
-						text: editedContent,
-					})
-
-					// Don't initialize with history item for edit operations
-					// The webviewMessageHandler will handle the conversation state
-				} catch (error) {
-					console.error("Error in edit message:", error)
-					vscode.window.showErrorMessage(
-						`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
+				// Don't initialize with history item for edit operations
+				// The webviewMessageHandler will handle the conversation state
+			} catch (error) {
+				console.error("Error in edit message:", error)
+				vscode.window.showErrorMessage(
+					`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 	}
