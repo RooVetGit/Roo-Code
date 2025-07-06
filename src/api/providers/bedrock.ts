@@ -33,6 +33,47 @@ import { getModelParams } from "../transform/model-params"
 import { shouldUseReasoningBudget } from "../../shared/api"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
+// Type for model configuration result
+type ModelConfigResult = {
+	id: BedrockModelId | string
+	info: ModelInfo
+	maxTokens?: number
+	temperature?: number
+	reasoning?: any
+	reasoningBudget?: number
+}
+
+// Simple cache class for model configurations
+class ModelConfigCache {
+	private cache = new Map<string, ModelConfigResult>()
+
+	get(key: string): ModelConfigResult | null {
+		return this.cache.get(key) || null
+	}
+
+	set(key: string, config: ModelConfigResult): void {
+		this.cache.set(key, config)
+	}
+
+	generateCacheKey(options: ProviderSettings): string {
+		return JSON.stringify({
+			modelId: options.apiModelId,
+			customArn: options.awsCustomArn,
+			region: options.awsRegion,
+			crossRegion: options.awsUseCrossRegionInference,
+			overrides: {
+				maxTokens: options.modelMaxTokens,
+				contextWindow: options.awsModelContextWindow,
+				temperature: options.modelTemperature,
+			},
+		})
+	}
+
+	clear(): void {
+		this.cache.clear()
+	}
+}
+
 /************************************************************************************
  *
  *     TYPES
@@ -165,6 +206,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	protected options: ProviderSettings
 	private client: BedrockRuntimeClient
 	private arnInfo: any
+	private modelConfigCache = new ModelConfigCache()
 
 	constructor(options: ProviderSettings) {
 		super()
@@ -238,6 +280,14 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		this.client = new BedrockRuntimeClient(clientConfig)
+
+		// Clear cache if configuration changes are detected
+		this.clearCacheIfNeeded()
+	}
+
+	// Clear cache when configuration changes are detected
+	private clearCacheIfNeeded(): void {
+		this.modelConfigCache.clear()
 	}
 
 	// Helper to guess model info from custom modelId string if not in bedrockModels
@@ -908,14 +958,31 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		return model
 	}
 
-	override getModel(): {
-		id: BedrockModelId | string
-		info: ModelInfo
-		maxTokens?: number
-		temperature?: number
-		reasoning?: any
-		reasoningBudget?: number
-	} {
+	override getModel(): ModelConfigResult {
+		// Generate cache key
+		const cacheKey = this.modelConfigCache.generateCacheKey(this.options)
+
+		// Try to get from cache first
+		const cached = this.modelConfigCache.get(cacheKey)
+		if (cached) {
+			return cached
+		}
+
+		// Cache miss, compute new configuration
+		const config = this.computeModelConfig()
+
+		// Store in cache
+		this.modelConfigCache.set(cacheKey, config)
+
+		logger.debug("Computed and cached new model config", {
+			ctx: "bedrock",
+			modelId: config.id,
+		})
+
+		return config
+	}
+
+	private computeModelConfig(): ModelConfigResult {
 		if (this.costModelConfig?.id?.trim().length > 0) {
 			// Get model params for cost model config
 			const params = getModelParams({
@@ -961,14 +1028,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		})
 
 		// Don't override maxTokens/contextWindow here; handled in getModelById (and includes user overrides)
-		return { ...modelConfig, ...params } as {
-			id: BedrockModelId | string
-			info: ModelInfo
-			maxTokens?: number
-			temperature?: number
-			reasoning?: any
-			reasoningBudget?: number
-		}
+		return { ...modelConfig, ...params } as ModelConfigResult
 	}
 
 	/************************************************************************************
