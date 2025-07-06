@@ -1,123 +1,294 @@
-import { vi, describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import os from "os"
 import * as path from "path"
-
-// Mock ripgrep to avoid filesystem dependencies
-vi.mock("../../ripgrep", () => ({
-	getBinPath: vi.fn().mockResolvedValue("/mock/path/to/rg"),
-}))
-
-// Mock vscode
-vi.mock("vscode", () => ({
-	env: {
-		appRoot: "/mock/app/root",
-	},
-}))
-
-// Mock filesystem operations
-vi.mock("fs", () => ({
-	promises: {
-		access: vi.fn().mockRejectedValue(new Error("Not found")),
-		readFile: vi.fn().mockResolvedValue(""),
-		readdir: vi.fn().mockResolvedValue([]),
-	},
-}))
-
-vi.mock("child_process", () => ({
-	spawn: vi.fn(),
-}))
-
-vi.mock("../../path", () => ({
-	arePathsEqual: vi.fn().mockReturnValue(false),
-}))
+import simpleGit from "simple-git"
+import * as fs from "fs"
 
 import { listFiles } from "../list-files"
-import * as childProcess from "child_process"
+import { getWorkspacePath, arePathsEqual } from "../../../utils/path"
 
-describe("list-files symlink support", () => {
+// Mock modules
+vi.mock("simple-git", () => ({
+	__esModule: true,
+	default: vi.fn(() => ({
+		checkIgnore: vi.fn(),
+	})),
+}))
+
+vi.mock("fs", () => {
+	return {
+		promises: {
+			readdir: vi.fn(),
+		},
+		existsSync: vi.fn(),
+		readFileSync: vi.fn(),
+	}
+})
+
+vi.mock("../../../utils/path", () => ({
+	getWorkspacePath: vi.fn(),
+	arePathsEqual: vi.fn(),
+}))
+
+function normalizePath(p: string): string {
+	return p.replace(/\\/g, "/")
+}
+
+describe("listFiles", () => {
+	const workspacePath = path.join(os.tmpdir(), "test-workspace")
+
+	// Get references to the mocked functions
+	const mockReaddir = vi.mocked(fs.promises.readdir)
+	const mockSimpleGit = vi.mocked(simpleGit)
+	const mockCheckIgnore = vi.fn()
+
 	beforeEach(() => {
+		// Setup mocks
+		vi.mocked(getWorkspacePath).mockReturnValue(workspacePath)
+		mockSimpleGit.mockReturnValue({
+			checkIgnore: mockCheckIgnore,
+		} as any)
+
+		// Default: no .gitignore exists
+		vi.mocked(fs.existsSync).mockImplementation((p) => false)
+		vi.mocked(fs.readFileSync).mockImplementation((p) => "")
+
+		// Clear mocks
+		mockSimpleGit.mockClear()
+		vi.mocked(getWorkspacePath).mockClear()
+		vi.mocked(arePathsEqual).mockClear()
+		mockCheckIgnore.mockClear()
+		mockReaddir.mockClear()
+	})
+
+	afterEach(() => {
 		vi.clearAllMocks()
 	})
 
-	it("should include --follow flag in ripgrep arguments", async () => {
-		const mockSpawn = vi.mocked(childProcess.spawn)
-		const mockProcess = {
-			stdout: {
-				on: vi.fn((event, callback) => {
-					if (event === "data") {
-						// Simulate some output to complete the process
-						setTimeout(() => callback("test-file.txt\n"), 10)
-					}
-				}),
-			},
-			stderr: {
-				on: vi.fn(),
-			},
-			on: vi.fn((event, callback) => {
-				if (event === "close") {
-					setTimeout(() => callback(0), 20)
-				}
-				if (event === "error") {
-					// No error simulation
-				}
-			}),
-			kill: vi.fn(),
-		}
+	describe("special directories", () => {
+		it("returns root directory on Windows without listing", async () => {
+			const root = "C:\\"
+			vi.mocked(arePathsEqual).mockImplementation((a, b) => a === b)
 
-		mockSpawn.mockReturnValue(mockProcess as any)
+			const [files, limitReached] = await listFiles(root, true, 100)
+			const expected = [normalizePath(path.resolve(root))]
+			expect(files).toEqual(expected)
+			expect(limitReached).toBe(false)
+		})
 
-		// Call listFiles to trigger ripgrep execution
-		await listFiles("/test/dir", false, 100)
+		it("returns root directory on POSIX without listing", async () => {
+			const root = "/"
+			vi.mocked(arePathsEqual).mockImplementation((a, b) => {
+				return path.resolve(a as string) === path.resolve(b as string)
+			})
+			// Ensure readdir is not called for root
+			mockReaddir.mockResolvedValue([])
 
-		// Verify that spawn was called with --follow flag (the critical fix)
-		const [rgPath, args] = mockSpawn.mock.calls[0]
-		expect(rgPath).toBe("/mock/path/to/rg")
-		expect(args).toContain("--files")
-		expect(args).toContain("--hidden")
-		expect(args).toContain("--follow") // This is the critical assertion - the fix should add this flag
+			const [files, limitReached] = await listFiles(root, true, 100)
+			const expected = [normalizePath(path.resolve(root))]
+			expect(files).toEqual(expected)
+			expect(limitReached).toBe(false)
+			expect(mockReaddir).not.toHaveBeenCalled()
+		})
 
-		// Platform-agnostic path check - verify the last argument is the resolved path
-		const expectedPath = path.resolve("/test/dir")
-		expect(args[args.length - 1]).toBe(expectedPath)
+		it("returns home directory without listing", async () => {
+			const home = os.homedir()
+			vi.mocked(arePathsEqual).mockReturnValueOnce(false) // Not root
+			vi.mocked(arePathsEqual).mockReturnValueOnce(true) // Home
+
+			const [files, limitReached] = await listFiles(home, true, 100)
+			const expected = [normalizePath(path.resolve(home))]
+			expect(files).toEqual(expected)
+			expect(limitReached).toBe(false)
+		})
+
+		it("should ignore files in directories specified by DIRS_TO_IGNORE", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [
+				{ name: "node_modules", isDirectory: () => true },
+				{ name: "regular.js", isDirectory: () => false },
+			]
+			mockReaddir.mockResolvedValueOnce(entries as any)
+			mockCheckIgnore.mockResolvedValue([])
+
+			const [files] = await listFiles(dirPath, true, 100)
+			expect(files).toContain(normalizePath(path.join(dirPath, "regular.js")))
+			expect(files.some((f) => f.includes("node_modules"))).toBe(false)
+			// Verify readdir was not called on the ignored directory
+			expect(mockReaddir).toHaveBeenCalledTimes(1)
+		})
 	})
 
-	it("should include --follow flag for recursive listings too", async () => {
-		const mockSpawn = vi.mocked(childProcess.spawn)
-		const mockProcess = {
-			stdout: {
-				on: vi.fn((event, callback) => {
-					if (event === "data") {
-						setTimeout(() => callback("test-file.txt\n"), 10)
-					}
-				}),
-			},
-			stderr: {
-				on: vi.fn(),
-			},
-			on: vi.fn((event, callback) => {
-				if (event === "close") {
-					setTimeout(() => callback(0), 20)
+	describe("non-special directories", () => {
+		it("lists top-level files and directories non-recursively", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [
+				{ name: "file1.txt", isDirectory: () => false },
+				{ name: "dir1", isDirectory: () => true },
+			]
+			mockReaddir.mockResolvedValue(entries as any)
+			mockCheckIgnore.mockResolvedValue([])
+
+			const [files, limitReached] = await listFiles(dirPath, false, 100)
+			expect(files).toEqual([
+				normalizePath(path.join(dirPath, "file1.txt")),
+				normalizePath(path.join(dirPath, "dir1")),
+			])
+			expect(limitReached).toBe(false)
+		})
+
+		it("lists files recursively", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [
+				{ name: "file1.txt", isDirectory: () => false },
+				{ name: "subdir", isDirectory: () => true },
+			]
+			const subEntries = [{ name: "file2.txt", isDirectory: () => false }]
+			mockReaddir
+				.mockResolvedValueOnce(entries as any) // Top level
+				.mockResolvedValueOnce(subEntries as any) // subdir
+			mockCheckIgnore.mockResolvedValue([])
+
+			const [files, limitReached] = await listFiles(dirPath, true, 100)
+			expect(files.sort()).toEqual(
+				[
+					normalizePath(path.join(dirPath, "file1.txt")),
+					normalizePath(path.join(dirPath, "subdir", "file2.txt")),
+				].sort(),
+			)
+			expect(limitReached).toBe(false)
+		})
+
+		it("filters git-ignored files", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [
+				{ name: "file1.txt", isDirectory: () => false },
+				{ name: "ignored.txt", isDirectory: () => false },
+			]
+			mockReaddir.mockResolvedValue(entries as any)
+			mockCheckIgnore.mockResolvedValue([path.join("test-dir", "ignored.txt")])
+
+			// Simulate .gitignore exists and ignores ignored.txt
+			vi.mocked(fs.existsSync).mockImplementation((p) => {
+				return p.toString().endsWith(".gitignore")
+			})
+			vi.mocked(fs.readFileSync).mockImplementation((p) => {
+				if (p.toString().endsWith(".gitignore")) {
+					return "ignored.txt"
 				}
-				if (event === "error") {
-					// No error simulation
+				return ""
+			})
+
+			const [files, limitReached] = await listFiles(dirPath, false, 100)
+			expect(files).toEqual([normalizePath(path.join(dirPath, "file1.txt"))])
+			expect(limitReached).toBe(false)
+		})
+
+		it("respects the limit", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = Array(10)
+				.fill(0)
+				.map((_, i) => ({
+					name: `file${i}.txt`,
+					isDirectory: () => false,
+				}))
+			mockReaddir.mockResolvedValue(entries as any)
+			mockCheckIgnore.mockResolvedValue([])
+
+			const [files, limitReached] = await listFiles(dirPath, false, 5)
+			expect(files.every((f) => path.isAbsolute(f))).toBe(true)
+			expect(files).toHaveLength(5)
+			expect(limitReached).toBe(true)
+		})
+
+		it("handles empty directories", async () => {
+			const dirPath = path.join(workspacePath, "empty-dir")
+			mockReaddir.mockResolvedValue([])
+			mockCheckIgnore.mockResolvedValue([])
+			const [files, limitReached] = await listFiles(dirPath, true, 100)
+			expect(files).toEqual([])
+			expect(limitReached).toBe(false)
+		})
+
+		it("handles directory with only ignored files", async () => {
+			const dirPath = path.join(workspacePath, "ignored-only")
+			const entries = [{ name: "ignored.txt", isDirectory: () => false }]
+			mockReaddir.mockResolvedValue(entries as any)
+			mockCheckIgnore.mockResolvedValue([path.join("ignored-only", "ignored.txt")])
+
+			// Simulate .gitignore exists and ignores ignored.txt
+			vi.mocked(fs.existsSync).mockImplementation((p) => {
+				return p.toString().endsWith(".gitignore")
+			})
+			vi.mocked(fs.readFileSync).mockImplementation((p) => {
+				if (p.toString().endsWith(".gitignore")) {
+					return "ignored.txt"
 				}
-			}),
-			kill: vi.fn(),
-		}
+				return ""
+			})
 
-		mockSpawn.mockReturnValue(mockProcess as any)
+			const [files, limitReached] = await listFiles(dirPath, false, 100)
+			expect(files).toEqual([])
+			expect(limitReached).toBe(false)
+		})
 
-		// Call listFiles with recursive=true
-		await listFiles("/test/dir", true, 100)
+		it("does not traverse into git-ignored directories for performance", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [
+				{ name: "dist", isDirectory: () => true },
+				{ name: "file.txt", isDirectory: () => false },
+			]
+			mockReaddir.mockResolvedValueOnce(entries as any)
+			mockCheckIgnore.mockResolvedValue([path.join("test-dir", "dist")])
 
-		// Verify that spawn was called with --follow flag (the critical fix)
-		const [rgPath, args] = mockSpawn.mock.calls[0]
-		expect(rgPath).toBe("/mock/path/to/rg")
-		expect(args).toContain("--files")
-		expect(args).toContain("--hidden")
-		expect(args).toContain("--follow") // This should be present in recursive mode too
+			const [files] = await listFiles(dirPath, true, 100)
 
-		// Platform-agnostic path check - verify the last argument is the resolved path
-		const expectedPath = path.resolve("/test/dir")
-		expect(args[args.length - 1]).toBe(expectedPath)
+			expect(files).toEqual([normalizePath(path.join(dirPath, "file.txt"))])
+			// Check that readdir was only called for the top-level directory
+			expect(mockReaddir).toHaveBeenCalledTimes(1)
+		})
+
+		it("should return paths with forward slashes, relative to workspace", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [{ name: "file.txt", isDirectory: () => false }]
+			mockReaddir.mockResolvedValue(entries as any)
+			mockCheckIgnore.mockResolvedValue([])
+
+			const [files] = await listFiles(dirPath, false, 100)
+
+			expect(files).toEqual([normalizePath(path.join(dirPath, "file.txt"))])
+		})
+	})
+
+	describe("error handling", () => {
+		it("skips unreadable directories during recursion", async () => {
+			const dirPath = path.join(workspacePath, "test-dir")
+			const entries = [
+				{ name: "unreadable", isDirectory: () => true },
+				{ name: "file.txt", isDirectory: () => false },
+			]
+			mockReaddir.mockResolvedValueOnce(entries as any)
+			// Mock the error for the unreadable directory
+			mockReaddir.mockRejectedValueOnce(new Error("Permission denied"))
+			mockCheckIgnore.mockResolvedValue([])
+
+			// Simulate .gitignore exists but does not ignore anything
+			vi.mocked(fs.existsSync).mockImplementation((p) => {
+				return p.toString().endsWith(".gitignore")
+			})
+			vi.mocked(fs.readFileSync).mockImplementation((p) => {
+				if (p.toString().endsWith(".gitignore")) {
+					return ""
+				}
+				return ""
+			})
+
+			const [files] = await listFiles(dirPath, true, 100)
+
+			// Should still return the readable file (not the unreadable directory)
+			expect(files.sort()).toEqual([normalizePath(path.join(dirPath, "file.txt"))].sort())
+			// Should have tried to read both directories
+			expect(mockReaddir).toHaveBeenCalledTimes(2)
+		})
 	})
 })

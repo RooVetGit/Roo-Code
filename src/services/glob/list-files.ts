@@ -1,59 +1,65 @@
 import os from "os"
 import * as path from "path"
 import * as fs from "fs"
-import * as childProcess from "child_process"
-import * as vscode from "vscode"
-import { arePathsEqual } from "../../utils/path"
-import { getBinPath } from "../../services/ripgrep"
-import { DIRS_TO_IGNORE } from "./constants"
+import simpleGit, { SimpleGit } from "simple-git"
+import { globSync } from "glob"
+import ignore from "ignore"
+import { arePathsEqual, getWorkspacePath } from "../../utils/path"
+import { isPathInIgnoredDirectory } from "./ignore-utils"
 
-/**
- * List files in a directory, with optional recursive traversal
- *
- * @param dirPath - Directory path to list files from
- * @param recursive - Whether to recursively list files in subdirectories
- * @param limit - Maximum number of files to return
- * @returns Tuple of [file paths array, whether the limit was reached]
- */
-export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
-	// Handle special directories
-	const specialResult = await handleSpecialDirectories(dirPath)
-
-	if (specialResult) {
-		return specialResult
-	}
-
-	// Get ripgrep path
-	const rgPath = await getRipgrepPath()
-
-	// Get files using ripgrep
-	const files = await listFilesWithRipgrep(rgPath, dirPath, recursive, limit)
-
-	// Get directories with proper filtering
-	const gitignorePatterns = await parseGitignoreFile(dirPath, recursive)
-	const directories = await listFilteredDirectories(dirPath, recursive, gitignorePatterns)
-
-	// Combine and format the results
-	return formatAndCombineResults(files, directories, limit)
+function normalizePath(p: string): string {
+	return p.replace(/\\/g, "/")
 }
 
 /**
- * Handle special directories (root, home) that should not be fully listed
+ * List files and directories in a given path, with options for recursion and limits.
+ * This function respects .gitignore rules and a hardcoded list of ignored directory names.
+ *
+ * @param dirPath - Directory path to list files from.
+ * @param recursive - Whether to recursively list files in subdirectories.
+ * @param limit - Maximum number of files to return.
+ * @returns A tuple containing an array of file paths and a boolean indicating if the limit was reached.
  */
-async function handleSpecialDirectories(dirPath: string): Promise<[string[], boolean] | null> {
-	const absolutePath = path.resolve(dirPath)
+export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
+	const workspacePath = getWorkspacePath()
+	const absoluteDirPath = path.resolve(dirPath)
 
+	const specialResult = handleSpecialDirectories(absoluteDirPath)
+	if (specialResult) {
+		// Normalizing path for consistency before returning.
+		const normalizedPaths = specialResult[0].map(normalizePath)
+		return [normalizedPaths, specialResult[1]]
+	}
+
+	const git = simpleGit(workspacePath)
+	let allAbsolutePaths: string[]
+
+	if (recursive) {
+		allAbsolutePaths = await listAllFilesRecursively(absoluteDirPath, git, workspacePath, limit + 1)
+	} else {
+		allAbsolutePaths = await listNonRecursive(absoluteDirPath, git, workspacePath)
+	}
+
+	// Filter out any empty strings and apply the custom ignore list as a final pass.
+	const finalPaths = allAbsolutePaths.filter((p) => p && !isPathInIgnoredDirectory(p)).map(normalizePath)
+
+	const trimmed = finalPaths.slice(0, limit)
+	return [trimmed, finalPaths.length > limit]
+}
+
+/**
+ * Handle special directories (root, home) that should not be fully listed.
+ * This is a synchronous function as it doesn't perform I/O.
+ */
+function handleSpecialDirectories(absolutePath: string): [string[], boolean] | null {
 	// Do not allow listing files in root directory
-	const root = process.platform === "win32" ? path.parse(absolutePath).root : "/"
-	const isRoot = arePathsEqual(absolutePath, root)
-	if (isRoot) {
-		return [[root], false]
+	if (arePathsEqual(path.dirname(absolutePath), absolutePath)) {
+		return [[absolutePath], false]
 	}
 
 	// Do not allow listing files in home directory
 	const homeDir = os.homedir()
-	const isHomeDir = arePathsEqual(absolutePath, homeDir)
-	if (isHomeDir) {
+	if (arePathsEqual(absolutePath, homeDir)) {
 		return [[homeDir], false]
 	}
 
@@ -61,349 +67,162 @@ async function handleSpecialDirectories(dirPath: string): Promise<[string[], boo
 }
 
 /**
- * Get the path to the ripgrep binary
+ * Recursively lists all files using the highly optimized `git ls-files` command.
+ * Falls back to a manual filesystem walk if the git command fails.
  */
-async function getRipgrepPath(): Promise<string> {
-	const vscodeAppRoot = vscode.env.appRoot
-	const rgPath = await getBinPath(vscodeAppRoot)
-
-	if (!rgPath) {
-		throw new Error("Could not find ripgrep binary")
-	}
-
-	return rgPath
-}
-
-/**
- * List files using ripgrep with appropriate arguments
- */
-async function listFilesWithRipgrep(
-	rgPath: string,
-	dirPath: string,
-	recursive: boolean,
+async function listAllFilesRecursively(
+	dir: string,
+	git: SimpleGit,
+	workspacePath: string,
 	limit: number,
 ): Promise<string[]> {
-	const absolutePath = path.resolve(dirPath)
-	const rgArgs = buildRipgrepArgs(absolutePath, recursive)
-	return execRipgrep(rgPath, rgArgs, limit)
-}
-
-/**
- * Build appropriate ripgrep arguments based on whether we're doing a recursive search
- */
-function buildRipgrepArgs(dirPath: string, recursive: boolean): string[] {
-	// Base arguments to list files
-	const args = ["--files", "--hidden", "--follow"]
-
-	if (recursive) {
-		return [...args, ...buildRecursiveArgs(), dirPath]
-	} else {
-		return [...args, ...buildNonRecursiveArgs(), dirPath]
-	}
-}
-
-/**
- * Build ripgrep arguments for recursive directory traversal
- */
-function buildRecursiveArgs(): string[] {
-	const args: string[] = []
-
-	// In recursive mode, respect .gitignore by default
-	// (ripgrep does this automatically)
-
-	// Apply directory exclusions for recursive searches
-	for (const dir of DIRS_TO_IGNORE) {
-		args.push("-g", `!**/${dir}/**`)
-	}
-
-	return args
-}
-
-/**
- * Build ripgrep arguments for non-recursive directory listing
- */
-function buildNonRecursiveArgs(): string[] {
-	const args: string[] = []
-
-	// For non-recursive, limit to the current directory level
-	args.push("-g", "*")
-	args.push("--maxdepth", "1") // ripgrep uses maxdepth, not max-depth
-
-	// Don't respect .gitignore in non-recursive mode (consistent with original behavior)
-	args.push("--no-ignore-vcs")
-
-	// Apply directory exclusions for non-recursive searches
-	for (const dir of DIRS_TO_IGNORE) {
-		if (dir === ".*") {
-			// For hidden files/dirs in non-recursive mode
-			args.push("-g", "!.*")
-		} else {
-			// Direct children only
-			args.push("-g", `!${dir}`)
-			args.push("-g", `!${dir}/**`)
-		}
-	}
-
-	return args
-}
-
-/**
- * Parse the .gitignore file if it exists and is relevant
- */
-async function parseGitignoreFile(dirPath: string, recursive: boolean): Promise<string[]> {
-	if (!recursive) {
-		return [] // Only needed for recursive mode
-	}
-
-	const absolutePath = path.resolve(dirPath)
-	const gitignorePath = path.join(absolutePath, ".gitignore")
-
 	try {
-		// Check if .gitignore exists
-		const exists = await fs.promises
-			.access(gitignorePath)
-			.then(() => true)
-			.catch(() => false)
-
-		if (!exists) {
-			return []
+		// Use git ls-files for a massive performance boost.
+		// --cached: All files tracked by git.
+		// --others: All untracked files.
+		// --exclude-standard: Respects .gitignore, .git/info/exclude, and global git config.
+		const relativeDir = path.relative(workspacePath, dir)
+		const args = ["ls-files", "--cached", "--others", "--exclude-standard"]
+		// Scope the search to the target directory for efficiency
+		if (relativeDir) {
+			args.push(relativeDir)
 		}
 
-		// Read and parse .gitignore file
-		const content = await fs.promises.readFile(gitignorePath, "utf8")
-		return content
+		const result = await git.raw(args)
+
+		if (!result) return []
+
+		return result
 			.split("\n")
-			.map((line) => line.trim())
-			.filter((line) => line && !line.startsWith("#"))
-	} catch (err) {
-		console.warn(`Error reading .gitignore: ${err}`)
-		return [] // Continue without gitignore patterns on error
+			.filter(Boolean) // Filter out empty lines
+			.map((p) => path.join(workspacePath, p))
+	} catch (error) {
+		// Fallback to the manual method if git ls-files fails
+		// (e.g., not a git repo, or an error with the command).
+		console.warn("`git ls-files` failed, falling back to manual file search:", error)
+		return listAllFilesRecursivelyWithFs(dir, git, workspacePath, limit)
 	}
 }
 
 /**
- * List directories with appropriate filtering
+ * A fallback recursive file lister that manually walks the filesystem.
+ * This is slower but works if Git is not available or fails.
  */
-async function listFilteredDirectories(
-	dirPath: string,
-	recursive: boolean,
-	gitignorePatterns: string[],
+async function listAllFilesRecursivelyWithFs(
+	dir: string,
+	_git: SimpleGit,
+	workspacePath: string,
+	limit: number,
 ): Promise<string[]> {
-	const absolutePath = path.resolve(dirPath)
-	const directories: string[] = []
+	const result: string[] = []
+	const queue: string[] = [dir]
 
-	async function scanDirectory(currentPath: string): Promise<void> {
+	// Create ignore instance using all .gitignore files in the workspace
+	const ig = createGitignoreFilter(workspacePath)
+
+	while (queue.length > 0 && result.length < limit) {
+		const currentDir = queue.shift()!
+
+		// Pre-check if the directory itself is ignored by custom ignore logic
+		if (isPathInIgnoredDirectory(currentDir)) {
+			continue
+		}
+
+		let entries: fs.Dirent[]
 		try {
-			// List all entries in the current directory
-			const entries = await fs.promises.readdir(currentPath, { withFileTypes: true })
-
-			// Filter for directories only, excluding symbolic links to prevent circular traversal
-			for (const entry of entries) {
-				if (entry.isDirectory() && !entry.isSymbolicLink()) {
-					const dirName = entry.name
-					const fullDirPath = path.join(currentPath, dirName)
-
-					// Check if this directory should be included
-					if (shouldIncludeDirectory(dirName, recursive, gitignorePatterns)) {
-						// Add the directory to our results (with trailing slash)
-						const formattedPath = fullDirPath.endsWith("/") ? fullDirPath : `${fullDirPath}/`
-						directories.push(formattedPath)
-
-						// If recursive mode and not a ignored directory, scan subdirectories
-						if (recursive && !isDirectoryExplicitlyIgnored(dirName)) {
-							await scanDirectory(fullDirPath)
-						}
-					}
-				}
-			}
+			entries = await fs.promises.readdir(currentDir, { withFileTypes: true })
 		} catch (err) {
-			// Silently continue if we can't read a directory
-			console.warn(`Could not read directory ${currentPath}: ${err}`)
-		}
-	}
-
-	// Start scanning from the root directory
-	await scanDirectory(absolutePath)
-
-	return directories
-}
-
-/**
- * Determine if a directory should be included in results based on filters
- */
-function shouldIncludeDirectory(dirName: string, recursive: boolean, gitignorePatterns: string[]): boolean {
-	// Skip hidden directories if configured to ignore them
-	if (dirName.startsWith(".") && DIRS_TO_IGNORE.includes(".*")) {
-		return false
-	}
-
-	// Check against explicit ignore patterns
-	if (isDirectoryExplicitlyIgnored(dirName)) {
-		return false
-	}
-
-	// Check against gitignore patterns in recursive mode
-	if (recursive && gitignorePatterns.length > 0 && isIgnoredByGitignore(dirName, gitignorePatterns)) {
-		return false
-	}
-
-	return true
-}
-
-/**
- * Check if a directory is in our explicit ignore list
- */
-function isDirectoryExplicitlyIgnored(dirName: string): boolean {
-	for (const pattern of DIRS_TO_IGNORE) {
-		// Exact name matching
-		if (pattern === dirName) {
-			return true
+			continue // Skip unreadable directories
 		}
 
-		// Path patterns that contain /
-		if (pattern.includes("/")) {
-			const pathParts = pattern.split("/")
-			if (pathParts[0] === dirName) {
-				return true
+		for (const entry of entries) {
+			const fullPath = path.join(currentDir, entry.name)
+			const relPath = path.relative(workspacePath, fullPath).replace(/\\/g, "/")
+			if (ig.ignores(relPath)) {
+				if (entry.isDirectory()) {
+					// Still need to recurse into subdirectories to find non-ignored children
+					continue
+				}
+				continue
 			}
-		}
-	}
-
-	return false
-}
-
-/**
- * Check if a directory matches any gitignore patterns
- */
-function isIgnoredByGitignore(dirName: string, gitignorePatterns: string[]): boolean {
-	for (const pattern of gitignorePatterns) {
-		// Directory patterns (ending with /)
-		if (pattern.endsWith("/")) {
-			const dirPattern = pattern.slice(0, -1)
-			if (dirName === dirPattern) {
-				return true
-			}
-			if (pattern.startsWith("**/") && dirName === dirPattern.slice(3)) {
-				return true
-			}
-		}
-		// Simple name patterns
-		else if (dirName === pattern) {
-			return true
-		}
-		// Wildcard patterns
-		else if (pattern.includes("*")) {
-			const regexPattern = pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")
-			const regex = new RegExp(`^${regexPattern}$`)
-			if (regex.test(dirName)) {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-/**
- * Combine file and directory results and format them properly
- */
-function formatAndCombineResults(files: string[], directories: string[], limit: number): [string[], boolean] {
-	// Combine file paths with directory paths
-	const allPaths = [...directories, ...files]
-
-	// Deduplicate paths (a directory might appear in both lists)
-	const uniquePathsSet = new Set(allPaths)
-	const uniquePaths = Array.from(uniquePathsSet)
-
-	// Sort to ensure directories come first, followed by files
-	uniquePaths.sort((a: string, b: string) => {
-		const aIsDir = a.endsWith("/")
-		const bIsDir = b.endsWith("/")
-
-		if (aIsDir && !bIsDir) return -1
-		if (!aIsDir && bIsDir) return 1
-		return a.localeCompare(b)
-	})
-
-	const trimmedPaths = uniquePaths.slice(0, limit)
-	return [trimmedPaths, trimmedPaths.length >= limit]
-}
-
-/**
- * Execute ripgrep command and return list of files
- */
-async function execRipgrep(rgPath: string, args: string[], limit: number): Promise<string[]> {
-	return new Promise((resolve, reject) => {
-		const rgProcess = childProcess.spawn(rgPath, args)
-		let output = ""
-		let results: string[] = []
-
-		// Set timeout to avoid hanging
-		const timeoutId = setTimeout(() => {
-			rgProcess.kill()
-			console.warn("ripgrep timed out, returning partial results")
-			resolve(results.slice(0, limit))
-		}, 10_000)
-
-		// Process stdout data as it comes in
-		rgProcess.stdout.on("data", (data) => {
-			output += data.toString()
-			processRipgrepOutput()
-
-			// Kill the process if we've reached the limit
-			if (results.length >= limit) {
-				rgProcess.kill()
-				clearTimeout(timeoutId) // Clear the timeout when we kill the process due to reaching the limit
-			}
-		})
-
-		// Process stderr but don't fail on non-zero exit codes
-		rgProcess.stderr.on("data", (data) => {
-			console.error(`ripgrep stderr: ${data}`)
-		})
-
-		// Handle process completion
-		rgProcess.on("close", (code) => {
-			// Clear the timeout to avoid memory leaks
-			clearTimeout(timeoutId)
-
-			// Process any remaining output
-			processRipgrepOutput(true)
-
-			// Log non-zero exit codes but don't fail
-			if (code !== 0 && code !== null && code !== 143 /* SIGTERM */) {
-				console.warn(`ripgrep process exited with code ${code}, returning partial results`)
-			}
-
-			resolve(results.slice(0, limit))
-		})
-
-		// Handle process errors
-		rgProcess.on("error", (error) => {
-			// Clear the timeout to avoid memory leaks
-			clearTimeout(timeoutId)
-			reject(new Error(`ripgrep process error: ${error.message}`))
-		})
-
-		// Helper function to process output buffer
-		function processRipgrepOutput(isFinal = false) {
-			const lines = output.split("\n")
-
-			// Keep the last incomplete line unless this is the final processing
-			if (!isFinal) {
-				output = lines.pop() || ""
+			if (entry.isDirectory()) {
+				queue.push(fullPath)
 			} else {
-				output = ""
-			}
-
-			// Process each complete line
-			for (const line of lines) {
-				if (line.trim() && results.length < limit) {
-					results.push(line)
-				} else if (results.length >= limit) {
+				result.push(fullPath)
+				if (result.length >= limit) {
 					break
 				}
 			}
 		}
+	}
+	return result
+}
+
+/**
+ * Creates a filter function that respects nested .gitignore files.
+ * @param {string} rootDir - The root directory to start scanning from.
+ * @returns {import('ignore').Ignore} An ignore instance pre-populated with rules.
+ */
+function createGitignoreFilter(rootDir: string) {
+	const ig = ignore()
+
+	// Find all .gitignore files recursively
+	const gitignoreFiles = globSync("**/.gitignore", {
+		cwd: rootDir,
+		dot: true,
+		ignore: ["**/node_modules/**"],
 	})
+
+	// Add rules from the root .gitignore first, if it exists
+	const rootGitignorePath = path.join(rootDir, ".gitignore")
+	if (fs.existsSync(rootGitignorePath)) {
+		const rootGitignoreContent = fs.readFileSync(rootGitignorePath, "utf8")
+		ig.add(rootGitignoreContent)
+	}
+
+	// Process nested .gitignore files
+	for (const gitignorePath of gitignoreFiles) {
+		// We already handled the root one
+		if (path.normalize(gitignorePath) === ".gitignore") {
+			continue
+		}
+
+		const gitignoreContent = fs.readFileSync(path.join(rootDir, gitignorePath), "utf8")
+		const gitignoreDir = path.dirname(gitignorePath)
+
+		// Parse lines and make patterns relative to the rootDir
+		const patterns = gitignoreContent
+			.split(/\r?\n/)
+			.filter((line) => line.trim() !== "" && !line.startsWith("#"))
+			.map((pattern) => {
+				const isNegated = pattern.startsWith("!")
+				if (isNegated) {
+					pattern = pattern.slice(1)
+				}
+				const fullPattern = path.join(gitignoreDir, pattern).replace(/\\/g, "/")
+				return isNegated ? `!${fullPattern}` : fullPattern
+			})
+
+		ig.add(patterns)
+	}
+
+	return ig
+}
+
+/**
+ * List only top-level files and directories, filtering out ignored ones.
+ */
+async function listNonRecursive(dir: string, _git: SimpleGit, workspacePath: string): Promise<string[]> {
+	const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+	const ig = createGitignoreFilter(workspacePath)
+
+	const result: string[] = []
+	for (const entry of entries) {
+		const fullPath = path.join(dir, entry.name)
+		const relPath = path.relative(workspacePath, fullPath).replace(/\\/g, "/")
+		if (!ig.ignores(relPath) && !isPathInIgnoredDirectory(fullPath)) {
+			result.push(fullPath)
+		}
+	}
+	return result
 }
