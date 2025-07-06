@@ -531,6 +531,11 @@
 			"label": "Mida màxima d'arxiu d'imatge",
 			"mb": "MB",
 			"description": "Mida màxima (en MB) per a arxius d'imatge que poden ser processats per l'eina de lectura d'arxius."
+		},
+		"maxTotalImageMemory": {
+			"label": "Memòria total màxima per a imatges",
+			"mb": "MB",
+			"description": "Memòria total màxima (en MB) per a totes les imatges en una sola operació de lectura. Prevé problemes de memòria en llegir múltiples imatges grans simultàniament."
 		}
 	},
 	"terminal": {

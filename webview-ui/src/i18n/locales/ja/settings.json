@@ -532,6 +532,11 @@
 			"label": "最大画像ファイルサイズ",
 			"mb": "MB",
 			"description": "read fileツールで処理できる画像ファイルの最大サイズ（MB単位）。"
+		},
+		"maxTotalImageMemory": {
+			"label": "画像の最大合計メモリ",
+			"mb": "MB",
+			"description": "単一の読み取り操作ですべての画像に使用できる最大合計メモリ（MB単位）。複数の大きな画像を同時に読み取る際のメモリ問題を防ぎます。"
 		}
 	},
 	"terminal": {

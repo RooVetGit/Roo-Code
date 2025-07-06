@@ -532,6 +532,11 @@
 			"label": "最大圖像檔案大小",
 			"mb": "MB",
 			"description": "read file工具可以處理的圖像檔案的最大大小（以MB為單位）。"
+		},
+		"maxTotalImageMemory": {
+			"label": "圖像最大總記憶體",
+			"mb": "MB",
+			"description": "單次讀取操作中所有圖像的最大總記憶體（以MB為單位）。防止同時讀取多個大圖像時出現記憶體問題。"
 		}
 	},
 	"terminal": {

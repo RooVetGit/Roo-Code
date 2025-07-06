@@ -536,6 +536,11 @@
 			"label": "Ukuran file gambar maksimum",
 			"mb": "MB",
 			"description": "Ukuran maksimum (dalam MB) untuk file gambar yang dapat diproses oleh alat baca file."
+		},
+		"maxTotalImageMemory": {
+			"label": "Total memori maksimum untuk gambar",
+			"mb": "MB",
+			"description": "Total memori maksimum (dalam MB) untuk semua gambar dalam satu operasi baca. Mencegah masalah memori saat membaca beberapa gambar besar secara bersamaan."
 		}
 	},
 	"terminal": {

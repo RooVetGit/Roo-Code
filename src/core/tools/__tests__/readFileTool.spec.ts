@@ -117,6 +117,37 @@ vi.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: vi.fn().mockReturnValue(true),
 }))
 
+// Global beforeEach to ensure clean mock state between all test suites
+beforeEach(() => {
+	// NOTE: Removed vi.clearAllMocks() to prevent interference with setImageSupport calls
+	// Instead, individual suites clear their specific mocks to maintain isolation
+	
+	// Explicitly reset the hoisted mock implementations to prevent cross-suite pollution
+	toolResultMock.mockImplementation((text: string, images?: string[]) => {
+		if (images && images.length > 0) {
+			return [
+				{ type: "text", text },
+				...images.map((img) => {
+					const [header, data] = img.split(",")
+					const media_type = header.match(/:(.*?);/)?.[1] || "image/png"
+					return { type: "image", source: { type: "base64", media_type, data } }
+				}),
+			]
+		}
+		return text
+	})
+	
+	imageBlocksMock.mockImplementation((images?: string[]) => {
+		return images
+			? images.map((img) => {
+					const [header, data] = img.split(",")
+					const media_type = header.match(/:(.*?);/)?.[1] || "image/png"
+					return { type: "image", source: { type: "base64", media_type, data } }
+				})
+			: []
+	})
+})
+
 // Mock i18n translation function
 vi.mock("../../../i18n", () => ({
 	t: vi.fn((key: string, params?: Record<string, any>) => {
@@ -143,6 +174,52 @@ vi.mock("../../../i18n", () => ({
 	}),
 }))
 
+// Shared mock setup function to ensure consistent state across all test suites
+function createMockCline(): any {
+	const mockProvider = {
+		getState: vi.fn(),
+		deref: vi.fn().mockReturnThis(),
+	}
+
+	const mockCline: any = {
+		cwd: "/",
+		task: "Test",
+		providerRef: mockProvider,
+		rooIgnoreController: {
+			validateAccess: vi.fn().mockReturnValue(true),
+		},
+		say: vi.fn().mockResolvedValue(undefined),
+		ask: vi.fn().mockResolvedValue({ response: "yesButtonClicked" }),
+		presentAssistantMessage: vi.fn(),
+		handleError: vi.fn().mockResolvedValue(undefined),
+		pushToolResult: vi.fn(),
+		removeClosingTag: vi.fn((tag, content) => content),
+		fileContextTracker: {
+			trackFileContext: vi.fn().mockResolvedValue(undefined),
+		},
+		recordToolUsage: vi.fn().mockReturnValue(undefined),
+		recordToolError: vi.fn().mockReturnValue(undefined),
+		didRejectTool: false,
+		// CRITICAL: Always ensure image support is enabled
+		api: {
+			getModel: vi.fn().mockReturnValue({
+				info: { supportsImages: true }
+			})
+		}
+	}
+
+	return { mockCline, mockProvider }
+}
+
+// Helper function to set image support without affecting shared state
+function setImageSupport(mockCline: any, supportsImages: boolean | undefined): void {
+	mockCline.api = {
+		getModel: vi.fn().mockReturnValue({
+			info: { supportsImages }
+		})
+	}
+}
+
 describe("read_file tool with maxReadFileLine setting", () => {
 	// Test data
 	const testFilePath = "test/file.txt"
@@ -160,12 +237,27 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const mockedIsBinaryFile = vi.mocked(isBinaryFile)
 	const mockedPathResolve = vi.mocked(path.resolve)
 
-	const mockCline: any = {}
+	let mockCline: any
 	let mockProvider: any
 	let toolResult: ToolResponse | undefined
 
 	beforeEach(() => {
-		vi.clearAllMocks()
+		// Clear specific mocks (not all mocks to preserve shared state)
+		mockedCountFileLines.mockClear()
+		mockedExtractTextFromFile.mockClear()
+		mockedIsBinaryFile.mockClear()
+		mockedPathResolve.mockClear()
+		addLineNumbersMock.mockClear()
+		extractTextFromFileMock.mockClear()
+		toolResultMock.mockClear()
+
+		// Use shared mock setup function
+		const mocks = createMockCline()
+		mockCline = mocks.mockCline
+		mockProvider = mocks.mockProvider
+
+		// Explicitly disable image support for text file tests to prevent cross-suite pollution
+		setImageSupport(mockCline, false)
 
 		mockedPathResolve.mockReturnValue(absoluteFilePath)
 		mockedIsBinaryFile.mockResolvedValue(false)
@@ -181,38 +273,6 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Call the spy and return its result
 			return Promise.resolve(addLineNumbersMock(mockInputContent))
 		})
-
-		mockProvider = {
-			getState: vi.fn(),
-			deref: vi.fn().mockReturnThis(),
-		}
-
-		mockCline.cwd = "/"
-		mockCline.task = "Test"
-		mockCline.providerRef = mockProvider
-		mockCline.rooIgnoreController = {
-			validateAccess: vi.fn().mockReturnValue(true),
-		}
-		mockCline.say = vi.fn().mockResolvedValue(undefined)
-		mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
-		mockCline.presentAssistantMessage = vi.fn()
-		mockCline.handleError = vi.fn().mockResolvedValue(undefined)
-		mockCline.pushToolResult = vi.fn()
-		mockCline.removeClosingTag = vi.fn((tag, content) => content)
-
-		mockCline.fileContextTracker = {
-			trackFileContext: vi.fn().mockResolvedValue(undefined),
-		}
-
-		mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
-		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
-
-		// Setup default API handler that supports images
-		mockCline.api = {
-			getModel: vi.fn().mockReturnValue({
-				info: { supportsImages: true }
-			})
-		}
 
 		toolResult = undefined
 	})
@@ -235,7 +295,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		const maxReadFileLine = options.maxReadFileLine ?? 500
 		const totalLines = options.totalLines ?? 5
 
-		mockProvider.getState.mockResolvedValue({ maxReadFileLine })
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine, maxImageFileSize: 20, maxTotalImageMemory: 20 })
 		mockedCountFileLines.mockResolvedValue(totalLines)
 
 		// Reset the spy before each test
@@ -428,12 +488,32 @@ describe("read_file tool XML output structure", () => {
 	const mockedIsBinaryFile = vi.mocked(isBinaryFile)
 	const mockedPathResolve = vi.mocked(path.resolve)
 
-	const mockCline: any = {}
+	let mockCline: any
 	let mockProvider: any
 	let toolResult: ToolResponse | undefined
 
 	beforeEach(() => {
-		vi.clearAllMocks()
+		// Clear specific mocks (not all mocks to preserve shared state)
+		mockedCountFileLines.mockClear()
+		mockedExtractTextFromFile.mockClear()
+		mockedIsBinaryFile.mockClear()
+		mockedPathResolve.mockClear()
+		addLineNumbersMock.mockClear()
+		extractTextFromFileMock.mockClear()
+		toolResultMock.mockClear()
+
+		// CRITICAL: Reset fsPromises mocks to prevent cross-test contamination
+		fsPromises.stat.mockClear()
+		fsPromises.stat.mockResolvedValue({ size: 1024 })
+		fsPromises.readFile.mockClear()
+
+		// Use shared mock setup function
+		const mocks = createMockCline()
+		mockCline = mocks.mockCline
+		mockProvider = mocks.mockProvider
+
+		// Explicitly enable image support for this test suite (contains image memory tests)
+		setImageSupport(mockCline, true)
 
 		mockedPathResolve.mockReturnValue(absoluteFilePath)
 		mockedIsBinaryFile.mockResolvedValue(false)
@@ -446,36 +526,10 @@ describe("read_file tool XML output structure", () => {
 		mockInputContent = fileContent
 
 		// Setup mock provider with default maxReadFileLine
-		mockProvider = {
-			getState: vi.fn().mockResolvedValue({ maxReadFileLine: -1 }), // Default to full file read
-			deref: vi.fn().mockReturnThis(),
-		}
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 }) // Default to full file read
 
-		mockCline.cwd = "/"
-		mockCline.task = "Test"
-		mockCline.providerRef = mockProvider
-		mockCline.rooIgnoreController = {
-			validateAccess: vi.fn().mockReturnValue(true),
-		}
-		mockCline.say = vi.fn().mockResolvedValue(undefined)
-		mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
-		mockCline.presentAssistantMessage = vi.fn()
+		// Add additional properties needed for XML tests
 		mockCline.sayAndCreateMissingParamError = vi.fn().mockResolvedValue("Missing required parameter")
-
-		mockCline.fileContextTracker = {
-			trackFileContext: vi.fn().mockResolvedValue(undefined),
-		}
-
-		mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
-		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
-		mockCline.didRejectTool = false
-
-		// Mock the API handler - required for image support check
-		mockCline.api = {
-			getModel: vi.fn().mockReturnValue({
-				info: { supportsImages: true }
-			})
-		}
 
 		toolResult = undefined
 	})
@@ -497,7 +551,7 @@ describe("read_file tool XML output structure", () => {
 		const isBinary = options.isBinary ?? false
 		const validateAccess = options.validateAccess ?? true
 
-		mockProvider.getState.mockResolvedValue({ maxReadFileLine })
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine, maxImageFileSize: 20, maxTotalImageMemory: 20 })
 		mockedCountFileLines.mockResolvedValue(totalLines)
 		mockedIsBinaryFile.mockResolvedValue(isBinary)
 		mockCline.rooIgnoreController.validateAccess = vi.fn().mockReturnValue(validateAccess)
@@ -536,7 +590,7 @@ describe("read_file tool XML output structure", () => {
 				addLineNumbersMock(mockInputContent)
 				return Promise.resolve(numberedContent)
 			})
-			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
+			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 }) // Allow up to 20MB per image and total memory
 
 			// Execute
 			const result = await executeReadFileTool()
@@ -565,7 +619,7 @@ describe("read_file tool XML output structure", () => {
 			// Setup
 			mockedCountFileLines.mockResolvedValue(0)
 			mockedExtractTextFromFile.mockResolvedValue("")
-			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
+			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 }) // Allow up to 20MB per image and total memory
 
 			// Execute
 			const result = await executeReadFileTool({}, { totalLines: 0 })
@@ -574,6 +628,424 @@ describe("read_file tool XML output structure", () => {
 			expect(result).toBe(
 				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
 			)
+		})
+	
+		describe("Total Image Memory Limit", () => {
+			const testImages = [
+				{ path: "test/image1.png", sizeKB: 5120 }, // 5MB
+				{ path: "test/image2.jpg", sizeKB: 10240 }, // 10MB
+				{ path: "test/image3.gif", sizeKB: 8192 }, // 8MB
+			]
+
+			beforeEach(() => {
+				// CRITICAL: Reset fsPromises mocks to prevent cross-test contamination within this suite
+				fsPromises.stat.mockClear()
+				fsPromises.readFile.mockClear()
+			})
+
+			async function executeReadMultipleImagesTool(imagePaths: string[]): Promise<ToolResponse | undefined> {
+				// Ensure image support is enabled before calling the tool
+				setImageSupport(mockCline, true)
+				
+				// Create args content for multiple files
+				const filesXml = imagePaths.map(path => `<file><path>${path}</path></file>`).join('')
+				const argsContent = filesXml
+	
+				const toolUse: ReadFileToolUse = {
+					type: "tool_use",
+					name: "read_file",
+					params: { args: argsContent },
+					partial: false,
+				}
+	
+				let localResult: ToolResponse | undefined
+				await readFileTool(
+					mockCline,
+					toolUse,
+					mockCline.ask,
+					vi.fn(),
+					(result: ToolResponse) => {
+						localResult = result
+					},
+					(_: ToolParamName, content?: string) => content ?? "",
+				)
+	
+				return localResult
+			}
+	
+			it("should allow multiple images under the total memory limit", async () => {
+				// Setup required mocks (don't clear all mocks - preserve API setup)
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				
+				// Setup mockProvider
+				mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 }) // Allow up to 20MB per image and total memory
+				
+				// Setup mockCline properties (preserve existing API)
+				mockCline.cwd = "/"
+				mockCline.task = "Test"
+				mockCline.providerRef = mockProvider
+				mockCline.rooIgnoreController = {
+					validateAccess: vi.fn().mockReturnValue(true),
+				}
+				mockCline.say = vi.fn().mockResolvedValue(undefined)
+				mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+				mockCline.presentAssistantMessage = vi.fn()
+				mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+				mockCline.pushToolResult = vi.fn()
+				mockCline.removeClosingTag = vi.fn((tag, content) => content)
+				mockCline.fileContextTracker = {
+					trackFileContext: vi.fn().mockResolvedValue(undefined),
+				}
+				mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+				mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+				setImageSupport(mockCline, true)
+				
+				// Setup - images that fit within 20MB limit
+				const smallImages = [
+					{ path: "test/small1.png", sizeKB: 2048 }, // 2MB
+					{ path: "test/small2.jpg", sizeKB: 3072 }, // 3MB
+					{ path: "test/small3.gif", sizeKB: 4096 }, // 4MB
+				] // Total: 9MB (under 20MB limit)
+	
+				// Mock file stats for each image
+				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
+					const fileName = filePath.split('/').pop()
+					const image = smallImages.find(img => img.path.includes(fileName.split('.')[0]))
+					return Promise.resolve({ size: (image?.sizeKB || 1024) * 1024 })
+				})
+	
+				// Mock path.resolve for each image
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+	
+				// Execute
+				const result = await executeReadMultipleImagesTool(smallImages.map(img => img.path))
+	
+				// Verify all images were processed (should be a multi-part response)
+				expect(Array.isArray(result)).toBe(true)
+				const parts = result as any[]
+				
+				// Should have text part and 3 image parts
+				const textPart = parts.find(p => p.type === "text")?.text
+				const imageParts = parts.filter(p => p.type === "image")
+				
+				expect(textPart).toBeDefined()
+				expect(imageParts).toHaveLength(3)
+				
+				// Verify no memory limit notices
+				expect(textPart).not.toContain("Total image memory would exceed")
+			})
+	
+			it("should skip images that would exceed the total memory limit", async () => {
+				// Setup required mocks (don't clear all mocks)
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				
+				// Setup mockProvider
+				mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 15, maxTotalImageMemory: 20 }) // Allow up to 15MB per image and 20MB total memory
+				
+				// Setup mockCline properties
+				mockCline.cwd = "/"
+				mockCline.task = "Test"
+				mockCline.providerRef = mockProvider
+				mockCline.rooIgnoreController = {
+					validateAccess: vi.fn().mockReturnValue(true),
+				}
+				mockCline.say = vi.fn().mockResolvedValue(undefined)
+				mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+				mockCline.presentAssistantMessage = vi.fn()
+				mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+				mockCline.pushToolResult = vi.fn()
+				mockCline.removeClosingTag = vi.fn((tag, content) => content)
+				mockCline.fileContextTracker = {
+					trackFileContext: vi.fn().mockResolvedValue(undefined),
+				}
+				mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+				mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+				setImageSupport(mockCline, true)
+				
+				// Setup - images where later ones would exceed 20MB total limit
+				// Each must be under 5MB per-file limit (5120KB)
+				const largeImages = [
+					{ path: "test/large1.png", sizeKB: 5017 }, // ~4.9MB
+					{ path: "test/large2.jpg", sizeKB: 5017 }, // ~4.9MB
+					{ path: "test/large3.gif", sizeKB: 5017 }, // ~4.9MB
+					{ path: "test/large4.png", sizeKB: 5017 }, // ~4.9MB
+					{ path: "test/large5.jpg", sizeKB: 5017 }, // ~4.9MB - This should be skipped (total would be ~24.5MB > 20MB)
+				]
+	
+				// Mock file stats for each image
+				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
+					const fileName = path.basename(filePath)
+					const baseName = path.parse(fileName).name
+					const image = largeImages.find(img => img.path.includes(baseName))
+					return Promise.resolve({ size: (image?.sizeKB || 1024) * 1024 })
+				})
+	
+				// Mock path.resolve for each image
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+	
+				// Execute
+				const result = await executeReadMultipleImagesTool(largeImages.map(img => img.path))
+	
+				// Verify result structure - should be a mix of successful images and skipped notices
+				expect(Array.isArray(result)).toBe(true)
+				const parts = result as any[]
+				
+				const textPart = parts.find(p => p.type === "text")?.text
+				const imageParts = parts.filter(p => p.type === "image")
+				
+				expect(textPart).toBeDefined()
+				
+				// Debug: Show what we actually got vs expected
+				if (imageParts.length !== 4) {
+					throw new Error(`Expected 4 images, got ${imageParts.length}. Full result: ${JSON.stringify(result, null, 2)}. Text part: ${textPart}`)
+				}
+				expect(imageParts).toHaveLength(4) // First 4 images should be included (~19.6MB total)
+				
+				// Verify memory limit notice for the fifth image
+				expect(textPart).toContain("Total image memory would exceed 20MB limit")
+				expect(textPart).toContain("current: 19.6MB") // 4 * 4.9MB
+				expect(textPart).toContain("this file: 4.9MB")
+			})
+	
+			it("should track memory usage correctly across multiple images", async () => {
+				// Setup mocks (don't clear all mocks)
+				
+				// Setup required mocks
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				
+				// Setup mockProvider
+				mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 15, maxTotalImageMemory: 20 }) // Allow up to 15MB per image and 20MB total memory
+				
+				// Setup mockCline properties
+				mockCline.cwd = "/"
+				mockCline.task = "Test"
+				mockCline.providerRef = mockProvider
+				mockCline.rooIgnoreController = {
+					validateAccess: vi.fn().mockReturnValue(true),
+				}
+				mockCline.say = vi.fn().mockResolvedValue(undefined)
+				mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+				mockCline.presentAssistantMessage = vi.fn()
+				mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+				mockCline.pushToolResult = vi.fn()
+				mockCline.removeClosingTag = vi.fn((tag, content) => content)
+				mockCline.fileContextTracker = {
+					trackFileContext: vi.fn().mockResolvedValue(undefined),
+				}
+				mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+				mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+				setImageSupport(mockCline, true)
+				
+				// Setup - images that exactly reach the limit
+				const exactLimitImages = [
+					{ path: "test/exact1.png", sizeKB: 10240 }, // 10MB
+					{ path: "test/exact2.jpg", sizeKB: 10240 }, // 10MB - Total exactly 20MB
+					{ path: "test/exact3.gif", sizeKB: 1024 }, // 1MB - This should be skipped
+				]
+	
+				// Mock file stats with simpler logic
+				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
+					if (filePath.includes('exact1')) {
+						return Promise.resolve({ size: 10240 * 1024 }) // 10MB
+					} else if (filePath.includes('exact2')) {
+						return Promise.resolve({ size: 10240 * 1024 }) // 10MB
+					} else if (filePath.includes('exact3')) {
+						return Promise.resolve({ size: 1024 * 1024 }) // 1MB
+					}
+					return Promise.resolve({ size: 1024 * 1024 }) // Default 1MB
+				})
+	
+				// Mock path.resolve
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+	
+				// Execute
+				const result = await executeReadMultipleImagesTool(exactLimitImages.map(img => img.path))
+	
+				// Verify
+				expect(Array.isArray(result)).toBe(true)
+				const parts = result as any[]
+				
+				const textPart = parts.find(p => p.type === "text")?.text
+				const imageParts = parts.filter(p => p.type === "image")
+				
+				expect(imageParts).toHaveLength(2) // First 2 images should fit
+				expect(textPart).toContain("Total image memory would exceed 20MB limit")
+				expect(textPart).toContain("current: 20.0MB") // Should show exactly 20MB used
+			})
+	
+			it("should handle individual image size limit and total memory limit together", async () => {
+				// Setup mocks (don't clear all mocks)
+				
+				// Setup required mocks
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				
+				// Setup mockProvider
+				mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 }) // Allow up to 20MB per image and total memory
+				
+				// Setup mockCline properties (complete setup)
+				mockCline.cwd = "/"
+				mockCline.task = "Test"
+				mockCline.providerRef = mockProvider
+				mockCline.rooIgnoreController = {
+					validateAccess: vi.fn().mockReturnValue(true),
+				}
+				mockCline.say = vi.fn().mockResolvedValue(undefined)
+				mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+				mockCline.presentAssistantMessage = vi.fn()
+				mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+				mockCline.pushToolResult = vi.fn()
+				mockCline.removeClosingTag = vi.fn((tag, content) => content)
+				mockCline.fileContextTracker = {
+					trackFileContext: vi.fn().mockResolvedValue(undefined),
+				}
+				mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+				mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+				setImageSupport(mockCline, true)
+	
+				// Setup - mix of images with individual size violations and total memory issues
+				const mixedImages = [
+					{ path: "test/ok.png", sizeKB: 3072 }, // 3MB - OK
+					{ path: "test/too-big.jpg", sizeKB: 6144 }, // 6MB - Exceeds individual 5MB limit
+					{ path: "test/ok2.gif", sizeKB: 4096 }, // 4MB - OK individually but might exceed total
+				]
+	
+				// Mock file stats
+				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
+					const fileName = path.basename(filePath)
+					const baseName = path.parse(fileName).name
+					const image = mixedImages.find(img => img.path.includes(baseName))
+					return Promise.resolve({ size: (image?.sizeKB || 1024) * 1024 })
+				})
+	
+				// Mock provider state with 5MB individual limit
+				mockProvider.getState.mockResolvedValue({
+					maxReadFileLine: -1,
+					maxImageFileSize: 5,
+					maxTotalImageMemory: 20
+				})
+	
+				// Mock path.resolve
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+	
+				// Execute
+				const result = await executeReadMultipleImagesTool(mixedImages.map(img => img.path))
+	
+				// Verify
+				expect(Array.isArray(result)).toBe(true)
+				const parts = result as any[]
+				
+				const textPart = parts.find(p => p.type === "text")?.text
+				const imageParts = parts.filter(p => p.type === "image")
+				
+				// Should have 2 images (ok.png and ok2.gif)
+				expect(imageParts).toHaveLength(2)
+				
+				// Should show individual size limit violation
+				expect(textPart).toContain("Image file is too large (6.0 MB). The maximum allowed size is 5 MB.")
+			})
+	
+			it("should reset total memory tracking for each tool invocation", async () => {
+				// Setup mocks (don't clear all mocks)
+				
+				// Setup required mocks for first batch
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				
+				// Setup mockProvider
+				mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 })
+				
+				// Setup mockCline properties (complete setup)
+				mockCline.cwd = "/"
+				mockCline.task = "Test"
+				mockCline.providerRef = mockProvider
+				mockCline.rooIgnoreController = {
+					validateAccess: vi.fn().mockReturnValue(true),
+				}
+				mockCline.say = vi.fn().mockResolvedValue(undefined)
+				mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+				mockCline.presentAssistantMessage = vi.fn()
+				mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+				mockCline.pushToolResult = vi.fn()
+				mockCline.removeClosingTag = vi.fn((tag, content) => content)
+				mockCline.fileContextTracker = {
+					trackFileContext: vi.fn().mockResolvedValue(undefined),
+				}
+				mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+				mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+				setImageSupport(mockCline, true)
+				
+				// Setup - first call with images that use memory
+				const firstBatch = [{ path: "test/first.png", sizeKB: 10240 }] // 10MB
+	
+				fsPromises.stat = vi.fn().mockResolvedValue({ size: 10240 * 1024 })
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+	
+				// Execute first batch
+				await executeReadMultipleImagesTool(firstBatch.map(img => img.path))
+	
+				// Setup second batch (don't clear all mocks)
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 })
+				
+				// Reset path resolving for second batch
+				mockedPathResolve.mockClear()
+				
+				// Re-setup mockCline properties for second batch (complete setup)
+				mockCline.cwd = "/"
+				mockCline.task = "Test"
+				mockCline.providerRef = mockProvider
+				mockCline.rooIgnoreController = {
+					validateAccess: vi.fn().mockReturnValue(true),
+				}
+				mockCline.say = vi.fn().mockResolvedValue(undefined)
+				mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
+				mockCline.presentAssistantMessage = vi.fn()
+				mockCline.handleError = vi.fn().mockResolvedValue(undefined)
+				mockCline.pushToolResult = vi.fn()
+				mockCline.removeClosingTag = vi.fn((tag, content) => content)
+				mockCline.fileContextTracker = {
+					trackFileContext: vi.fn().mockResolvedValue(undefined),
+				}
+				mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
+				mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
+				setImageSupport(mockCline, true)
+				
+				const secondBatch = [{ path: "test/second.png", sizeKB: 15360 }] // 15MB
+	
+				// Clear and reset file system mocks for second batch
+				fsPromises.stat.mockClear()
+				fsPromises.readFile.mockClear()
+				mockedIsBinaryFile.mockClear()
+				mockedCountFileLines.mockClear()
+				
+				// Reset mocks for second batch
+				fsPromises.stat = vi.fn().mockResolvedValue({ size: 15360 * 1024 })
+				fsPromises.readFile.mockResolvedValue(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"))
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+	
+				// Execute second batch
+				const result = await executeReadMultipleImagesTool(secondBatch.map(img => img.path))
+	
+				// Verify second batch is processed successfully (memory tracking was reset)
+				expect(Array.isArray(result)).toBe(true)
+				const parts = result as any[]
+				const imageParts = parts.filter(p => p.type === "image")
+				
+				expect(imageParts).toHaveLength(1) // Second image should be processed
+			})
 		})
 	})
 
@@ -628,49 +1100,38 @@ describe("read_file tool with image support", () => {
 	const mockedFsReadFile = vi.mocked(fsPromises.readFile)
 	const mockedExtractTextFromFile = vi.mocked(extractTextFromFile)
 
-	const mockCline: any = {}
-	let mockProvider: any
+	let localMockCline: any
+	let localMockProvider: any
 	let toolResult: ToolResponse | undefined
 
 	beforeEach(() => {
-		vi.clearAllMocks()
+		// Clear specific mocks (not all mocks to preserve shared state)
+		mockedPathResolve.mockClear()
+		mockedIsBinaryFile.mockClear()
+		mockedCountFileLines.mockClear()
+		mockedFsReadFile.mockClear()
+		mockedExtractTextFromFile.mockClear()
+		toolResultMock.mockClear()
+
+		// CRITICAL: Reset fsPromises.stat to prevent cross-test contamination
+		fsPromises.stat.mockClear()
+		fsPromises.stat.mockResolvedValue({ size: 1024 })
+
+		// Use shared mock setup function with local variables
+		const mocks = createMockCline()
+		localMockCline = mocks.mockCline
+		localMockProvider = mocks.mockProvider
+
+		// CRITICAL: Explicitly ensure image support is enabled for all tests in this suite
+		setImageSupport(localMockCline, true)
 
 		mockedPathResolve.mockReturnValue(absoluteImagePath)
 		mockedIsBinaryFile.mockResolvedValue(true)
 		mockedCountFileLines.mockResolvedValue(0)
 		mockedFsReadFile.mockResolvedValue(imageBuffer)
 
-		mockProvider = {
-			getState: vi.fn().mockResolvedValue({ maxReadFileLine: -1 }),
-			deref: vi.fn().mockReturnThis(),
-		}
-
-		mockCline.cwd = "/"
-		mockCline.task = "Test"
-		mockCline.providerRef = mockProvider
-		mockCline.rooIgnoreController = {
-			validateAccess: vi.fn().mockReturnValue(true),
-		}
-		mockCline.say = vi.fn().mockResolvedValue(undefined)
-		mockCline.ask = vi.fn().mockResolvedValue({ response: "yesButtonClicked" })
-		mockCline.presentAssistantMessage = vi.fn()
-		mockCline.handleError = vi.fn().mockResolvedValue(undefined)
-		mockCline.pushToolResult = vi.fn()
-		mockCline.removeClosingTag = vi.fn((tag, content) => content)
-
-		mockCline.fileContextTracker = {
-			trackFileContext: vi.fn().mockResolvedValue(undefined),
-		}
-
-		mockCline.recordToolUsage = vi.fn().mockReturnValue(undefined)
-		mockCline.recordToolError = vi.fn().mockReturnValue(undefined)
-
-		// Setup default API handler that supports images
-		mockCline.api = {
-			getModel: vi.fn().mockReturnValue({
-				info: { supportsImages: true }
-			})
-		}
+		// Setup mock provider with default maxReadFileLine
+		localMockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
 
 		toolResult = undefined
 	})
@@ -684,16 +1145,23 @@ describe("read_file tool with image support", () => {
 			partial: false,
 		}
 
+		// Debug: Check if mock is working
+		console.log("Mock API:", localMockCline.api)
+		console.log("Supports images:", localMockCline.api?.getModel?.()?.info?.supportsImages)
+
 		await readFileTool(
-			mockCline,
+			localMockCline,
 			toolUse,
-			mockCline.ask,
+			localMockCline.ask,
 			vi.fn(),
 			(result: ToolResponse) => {
 				toolResult = result
 			},
 			(_: ToolParamName, content?: string) => content ?? "",
 		)
+
+		console.log("Result type:", Array.isArray(toolResult) ? "array" : typeof toolResult)
+		console.log("Result:", toolResult)
 
 		return toolResult
 	}
@@ -714,6 +1182,9 @@ describe("read_file tool with image support", () => {
 			const imagePath = `test/${filename}`
 			const absolutePath = `/test/${filename}`
 			mockedPathResolve.mockReturnValue(absolutePath)
+
+			// Ensure API mock supports images
+			setImageSupport(localMockCline, true)
 
 			// Execute
 			const result = await executeReadImageTool(imagePath)
@@ -828,11 +1299,7 @@ describe("read_file tool with image support", () => {
 
 		it("should exclude images when model does not support images", async () => {
 			// Setup - mock API handler that doesn't support images
-			mockCline.api = {
-				getModel: vi.fn().mockReturnValue({
-					info: { supportsImages: false }
-				})
-			}
+			setImageSupport(localMockCline, false)
 
 			// Execute
 			const result = await executeReadImageTool()
@@ -846,11 +1313,7 @@ describe("read_file tool with image support", () => {
 
 		it("should include images when model supports images", async () => {
 			// Setup - mock API handler that supports images
-			mockCline.api = {
-				getModel: vi.fn().mockReturnValue({
-					info: { supportsImages: true }
-				})
-			}
+			setImageSupport(localMockCline, true)
 
 			// Execute
 			const result = await executeReadImageTool()
@@ -870,11 +1333,7 @@ describe("read_file tool with image support", () => {
 
 		it("should handle undefined supportsImages gracefully", async () => {
 			// Setup - mock API handler with undefined supportsImages
-			mockCline.api = {
-				getModel: vi.fn().mockReturnValue({
-					info: { supportsImages: undefined }
-				})
-			}
+			setImageSupport(localMockCline, undefined)
 
 			// Execute
 			const result = await executeReadImageTool()
@@ -903,9 +1362,9 @@ describe("read_file tool with image support", () => {
 			}
 
 			await readFileTool(
-				mockCline,
+				localMockCline,
 				toolUse,
-				mockCline.ask,
+				localMockCline.ask,
 				handleErrorSpy, // Use our spy here
 				(result: ToolResponse) => {
 					toolResult = result

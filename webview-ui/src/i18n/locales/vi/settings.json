@@ -532,6 +532,11 @@
 			"label": "Kích thước tối đa của tệp hình ảnh",
 			"mb": "MB",
 			"description": "Kích thước tối đa (tính bằng MB) cho các tệp hình ảnh có thể được xử lý bởi công cụ đọc tệp."
+		},
+		"maxTotalImageMemory": {
+			"label": "Bộ nhớ tổng tối đa cho hình ảnh",
+			"mb": "MB",
+			"description": "Bộ nhớ tổng tối đa (tính bằng MB) cho tất cả hình ảnh trong một hoạt động đọc. Ngăn ngừa vấn đề bộ nhớ khi đọc đồng thời nhiều hình ảnh lớn."
 		}
 	},
 	"terminal": {

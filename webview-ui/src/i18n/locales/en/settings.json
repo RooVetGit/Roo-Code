@@ -507,6 +507,11 @@
 			"mb": "MB",
 			"description": "Maximum size (in MB) for image files that can be processed by the read file tool."
 		},
+		"maxTotalImageMemory": {
+			"label": "Max total image memory",
+			"mb": "MB",
+			"description": "Maximum total memory (in MB) for all images in a single read operation. Prevents memory issues when reading multiple large images simultaneously."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Automatically include diagnostics in context",

@@ -22,6 +22,12 @@ import * as fs from "fs/promises"
 const DEFAULT_MAX_IMAGE_FILE_SIZE_MB = 5
 
 /**
+ * Default maximum total memory usage for all images in a single read operation (20MB)
+ * This prevents memory issues when reading multiple large images simultaneously
+ */
+const DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB = 20
+
+/**
  * Supported image formats that can be displayed
  */
 const SUPPORTED_IMAGE_FORMATS = [
@@ -135,6 +141,10 @@ export async function readFileTool(
 	const legacyPath: string | undefined = block.params.path
 	const legacyStartLineStr: string | undefined = block.params.start_line
 	const legacyEndLineStr: string | undefined = block.params.end_line
+
+	// Check if the current model supports images at the beginning
+	const modelInfo = cline.api.getModel().info
+	const supportsImages = modelInfo.supportsImages ?? false
 
 	// Handle partial message first
 	if (block.partial) {
@@ -473,6 +483,11 @@ export async function readFileTool(
 			}
 		}
 
+		// Track total image memory usage across all files
+		let totalImageMemoryUsed = 0
+		const state = await cline.providerRef.deref()?.getState()
+		const { maxReadFileLine = -1, maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB, maxTotalImageMemory = DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB } = state ?? {}
+
 		// Then process only approved files
 		for (const fileResult of fileResults) {
 			// Skip files that weren't approved
@@ -482,7 +497,6 @@ export async function readFileTool(
 
 			const relPath = fileResult.path
 			const fullPath = path.resolve(cline.cwd, relPath)
-			const { maxReadFileLine = -1, maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB } = (await cline.providerRef.deref()?.getState()) ?? {}
 
 			// Process approved files
 			try {
@@ -495,10 +509,23 @@ export async function readFileTool(
 
 					// Check if it's a supported image format
 					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as (typeof SUPPORTED_IMAGE_FORMATS)[number])) {
+						// Skip image processing if model doesn't support images
+						if (!supportsImages) {
+							const notice = "Image file detected but current model does not support images. Skipping image processing."
+							
+							// Track file read
+							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+							updateFileResult(relPath, {
+								xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
+							})
+							continue
+						}
+
 						try {
 							const imageStats = await fs.stat(fullPath)
 
-							// Check if image file exceeds size limit
+							// Check if image file exceeds individual size limit
 							if (imageStats.size > maxImageFileSize * 1024 * 1024) {
 								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
 								const notice = t("tools:readFile.imageTooLarge", { size: imageSizeInMB, max: maxImageFileSize })
@@ -511,6 +538,23 @@ export async function readFileTool(
 								})
 								continue
 							}
+
+							// Check if adding this image would exceed total memory limit
+							const imageSizeInMB = imageStats.size / (1024 * 1024)
+							if (totalImageMemoryUsed + imageSizeInMB > maxTotalImageMemory) {
+								const notice = `Image skipped to prevent memory issues. Total image memory would exceed ${maxTotalImageMemory}MB limit (current: ${totalImageMemoryUsed.toFixed(1)}MB, this file: ${imageSizeInMB.toFixed(1)}MB). Consider reading fewer images at once or reducing image sizes.`
+
+								// Track file read
+								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
+
+								updateFileResult(relPath, {
+									xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
+								})
+								continue
+							}
+
+							// Track memory usage for this image
+							totalImageMemoryUsed += imageSizeInMB
 
 							const { dataUrl: imageDataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
 							const imageSizeInKB = Math.round(imageStats.size / 1024)
@@ -702,8 +746,7 @@ export async function readFileTool(
 		// Combine all images: feedback images first, then file images
 		const allImages = [...feedbackImages, ...fileImageUrls]
 
-		// Check if the current model supports images before including them
-		const supportsImages = cline.api.getModel().info.supportsImages ?? false
+		// Use the supportsImages check from the beginning of the function
 		const imagesToInclude = supportsImages ? allImages : []
 
 		// Push the result with appropriate formatting

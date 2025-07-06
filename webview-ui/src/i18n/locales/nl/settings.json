@@ -507,6 +507,11 @@
 			"mb": "MB",
 			"description": "Maximale grootte (in MB) voor afbeeldingsbestanden die kunnen worden verwerkt door de read file tool."
 		},
+		"maxTotalImageMemory": {
+			"label": "Maximaal totaal afbeeldingsgeheugen",
+			"mb": "MB",
+			"description": "Maximaal totaal geheugen (in MB) voor alle afbeeldingen in één leesbewerking. Voorkomt geheugenproblemen bij het gelijktijdig lezen van meerdere grote afbeeldingen."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Automatisch diagnostiek opnemen in context",

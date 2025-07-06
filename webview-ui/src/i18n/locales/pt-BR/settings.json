@@ -532,6 +532,11 @@
 			"label": "Tamanho máximo do arquivo de imagem",
 			"mb": "MB",
 			"description": "Tamanho máximo (em MB) para arquivos de imagem que podem ser processados pela ferramenta de leitura de arquivos."
+		},
+		"maxTotalImageMemory": {
+			"label": "Memória total máxima para imagens",
+			"mb": "MB",
+			"description": "Memória total máxima (em MB) para todas as imagens em uma única operação de leitura. Evita problemas de memória ao ler múltiplas imagens grandes simultaneamente."
 		}
 	},
 	"terminal": {
