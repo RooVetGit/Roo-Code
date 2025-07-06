@@ -5,6 +5,7 @@ import * as fs from "fs"
 import simpleGit from "simple-git"
 import { listFiles } from "../list-files"
 import { getWorkspacePath } from "../../../utils/path"
+import { randomInt } from "crypto"
 
 vi.mock("../../../utils/path", () => ({
 	getWorkspacePath: vi.fn(),
@@ -14,7 +15,7 @@ vi.mock("../../../utils/path", () => ({
 describe("listFiles integration tests", () => {
 	let testRepoPath: string
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		// Create a temporary directory for the Git repo
 		testRepoPath = path.join(os.tmpdir(), `test-repo-${Date.now()}`)
 		await fs.promises.mkdir(testRepoPath, { recursive: true })
@@ -44,7 +45,7 @@ describe("listFiles integration tests", () => {
 		await fs.promises.writeFile(path.join(testRepoPath, "ignored_in_root"), "content")
 	})
 
-	afterAll(async () => {
+	afterEach(async () => {
 		// Cleanup the temporary directory
 		await fs.promises.rm(testRepoPath, { recursive: true, force: true })
 	})
@@ -106,7 +107,7 @@ describe("listFiles in non-Git repository", () => {
 
 	beforeAll(async () => {
 		// Create a temporary directory that is NOT a Git repo
-		testRepoPath = path.join(os.tmpdir(), `test-non-git-repo-${Date.now()}`)
+		testRepoPath = path.join(os.tmpdir(), `test-non-git-repo-${Date.now()}${randomInt(256).toString(16)}`)
 		await fs.promises.mkdir(testRepoPath, { recursive: true })
 
 		// Create files and directories

@@ -46,7 +46,9 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 	}
 
 	// Filter out any empty strings and apply the custom ignore list as a final pass.
-	const finalPaths = allAbsolutePaths.filter((p) => p && !isPathInIgnoredDirectory(p)).map(normalizePath)
+	const finalPaths = allAbsolutePaths
+		.filter((p) => p && !isPathInIgnoredDirectory(path.relative(workspacePath, p)))
+		.map(normalizePath)
 
 	const trimmed = finalPaths.slice(0, limit)
 	return [trimmed, finalPaths.length > limit]
@@ -129,7 +131,7 @@ async function listAllFilesRecursivelyWithFs(
 		const currentDir = queue.shift()!
 
 		// Pre-check if the directory itself is ignored by custom ignore logic
-		if (isPathInIgnoredDirectory(currentDir)) {
+		if (isPathInIgnoredDirectory(path.relative(workspacePath, currentDir))) {
 			continue
 		}
 
@@ -225,7 +227,7 @@ async function listNonRecursive(dir: string, _git: SimpleGit, workspacePath: str
 	for (const entry of entries) {
 		const fullPath = path.join(dir, entry.name)
 		const relPath = path.relative(workspacePath, fullPath).replace(/\\/g, "/")
-		if (!ig.ignores(relPath) && !isPathInIgnoredDirectory(fullPath)) {
+		if (!ig.ignores(relPath) && !isPathInIgnoredDirectory(relPath)) {
 			result.push(fullPath)
 		}
 	}
