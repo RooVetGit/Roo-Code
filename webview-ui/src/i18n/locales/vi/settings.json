@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "Khóa API DeepSeek",
 		"getDeepSeekApiKey": "Lấy khóa API DeepSeek",
 		"geminiApiKey": "Khóa API Gemini",
+		"geminiEnableGoogleSearch": {
+			"label": "Bật Google Tìm kiếm",
+			"description": "Cho phép mô hình sử dụng Google Tìm kiếm để trả lời các câu hỏi về các sự kiện gần đây. Điều này có thể phát sinh thêm chi phí và loại trừ lẫn nhau với tính năng 'suy nghĩ'."
+		},
 		"getGroqApiKey": "Lấy khóa API Groq",
 		"groqApiKey": "Khóa API Groq",
 		"getGeminiApiKey": "Lấy khóa API Gemini",

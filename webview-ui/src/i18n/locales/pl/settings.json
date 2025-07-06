@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "Klucz API DeepSeek",
 		"getDeepSeekApiKey": "Uzyskaj klucz API DeepSeek",
 		"geminiApiKey": "Klucz API Gemini",
+		"geminiEnableGoogleSearch": {
+			"label": "Włącz wyszukiwarkę Google",
+			"description": "Pozwala modelowi korzystać z wyszukiwarki Google do odpowiadania na pytania dotyczące ostatnich wydarzeń. Może to wiązać się z dodatkowymi kosztami i jest wzajemnie wykluczające się z funkcją 'myślenia'."
+		},
 		"getGroqApiKey": "Uzyskaj klucz API Groq",
 		"groqApiKey": "Klucz API Groq",
 		"getGeminiApiKey": "Uzyskaj klucz API Gemini",

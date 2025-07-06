@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "DeepSeek API-sleutel",
 		"getDeepSeekApiKey": "DeepSeek API-sleutel ophalen",
 		"geminiApiKey": "Gemini API-sleutel",
+		"geminiEnableGoogleSearch": {
+			"label": "Google Zoeken inschakelen",
+			"description": "Staat het model toe om Google Zoeken te gebruiken om vragen over recente gebeurtenissen te beantwoorden. Dit kan extra kosten met zich meebrengen en is wederzijds exclusief met de 'denk'-functie."
+		},
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
 		"getGeminiApiKey": "Gemini API-sleutel ophalen",

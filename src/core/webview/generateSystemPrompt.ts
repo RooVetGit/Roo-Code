@@ -82,6 +82,7 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		maxReadFileLine !== -1,
 		{
 			maxConcurrentFileReads,
+			...apiConfiguration,
 		},
 	)
 

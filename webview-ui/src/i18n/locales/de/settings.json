@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "DeepSeek API-Schlüssel",
 		"getDeepSeekApiKey": "DeepSeek API-Schlüssel erhalten",
 		"geminiApiKey": "Gemini API-Schlüssel",
+		"geminiEnableGoogleSearch": {
+			"label": "Google Suche aktivieren",
+			"description": "Ermöglicht dem Modell, die Google-Suche zu verwenden, um Fragen zu aktuellen Ereignissen zu beantworten. Dies kann zusätzliche Kosten verursachen und ist mit der 'Denk'-Funktion nicht kompatibel."
+		},
 		"getGroqApiKey": "Groq API-Schlüssel erhalten",
 		"groqApiKey": "Groq API-Schlüssel",
 		"getGeminiApiKey": "Gemini API-Schlüssel erhalten",

@@ -1636,6 +1636,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				maxReadFileLine !== -1,
 				{
 					maxConcurrentFileReads,
+					...this.apiConfiguration,
 				},
 			)
 		})()
@@ -1716,7 +1717,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			const contextWindow = modelInfo.contextWindow
 
-			const currentProfileId = state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ?? "default";
+			const currentProfileId =
+				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
+				"default"
 
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,

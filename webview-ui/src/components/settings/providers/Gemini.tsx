@@ -50,6 +50,18 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 					{t("settings:providers.getGeminiApiKey")}
 				</VSCodeButtonLink>
 			)}
+			<Checkbox
+				checked={!!apiConfiguration.geminiEnableGoogleSearch}
+				onChange={(checked: boolean) => {
+					setApiConfigurationField("geminiEnableGoogleSearch", checked)
+				}}>
+				<div className="flex flex-col">
+					<span className="font-medium">{t("settings:providers.geminiEnableGoogleSearch.label")}</span>
+					<span className="text-sm text-vscode-descriptionForeground">
+						{t("settings:providers.geminiEnableGoogleSearch.description")}
+					</span>
+				</div>
+			</Checkbox>
 			<div>
 				<Checkbox
 					checked={googleGeminiBaseUrlSelected}

@@ -58,6 +58,6 @@ export const getGeminiReasoning = ({
 	reasoningBudget,
 	settings,
 }: GetModelReasoningOptions): GeminiReasoningParams | undefined =>
-	shouldUseReasoningBudget({ model, settings })
+	shouldUseReasoningBudget({ model, settings }) && !settings.geminiEnableGoogleSearch
 		? { thinkingBudget: reasoningBudget!, includeThoughts: true }
 		: undefined

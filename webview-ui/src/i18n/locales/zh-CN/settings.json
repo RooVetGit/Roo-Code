@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "DeepSeek API 密钥",
 		"getDeepSeekApiKey": "获取 DeepSeek API 密钥",
 		"geminiApiKey": "Gemini API 密钥",
+		"geminiEnableGoogleSearch": {
+			"label": "启用 Google 搜索",
+			"description": "允许模型使用 Google 搜索回答有关最近事件的问题。这可能会产生额外费用，并且与“思考”功能互斥。"
+		},
 		"getGroqApiKey": "获取 Groq API 密钥",
 		"groqApiKey": "Groq API 密钥",
 		"getGeminiApiKey": "获取 Gemini API 密钥",

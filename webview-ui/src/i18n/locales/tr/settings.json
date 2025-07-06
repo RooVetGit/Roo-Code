@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "DeepSeek API Anahtarı",
 		"getDeepSeekApiKey": "DeepSeek API Anahtarı Al",
 		"geminiApiKey": "Gemini API Anahtarı",
+		"geminiEnableGoogleSearch": {
+			"label": "Google Aramayı Etkinleştir",
+			"description": "Modelin son olaylarla ilgili soruları yanıtlamak için Google Aramayı kullanmasına izin verir. Bu ek maliyetlere neden olabilir ve 'düşünme' özelliği ile karşılıklı olarak dışlayıcıdır."
+		},
 		"getGroqApiKey": "Groq API Anahtarı Al",
 		"groqApiKey": "Groq API Anahtarı",
 		"getGeminiApiKey": "Gemini API Anahtarı Al",

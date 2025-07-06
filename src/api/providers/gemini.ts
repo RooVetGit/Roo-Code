@@ -66,9 +66,9 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const { id: model, info, reasoning: thinkingConfig, maxTokens } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
-
 		const config: GenerateContentConfig = {
 			systemInstruction,
+			...(this.options.geminiEnableGoogleSearch && { tools: [{ googleSearch: {} }] }),
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
 			thinkingConfig,
 			maxOutputTokens: this.options.modelMaxTokens ?? maxTokens ?? undefined,
@@ -144,12 +144,13 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
-			const { id: model } = this.getModel()
-
+			const { id: model, reasoning: thinkingConfig } = this.getModel()
 			const result = await this.client.models.generateContent({
 				model,
 				contents: [{ role: "user", parts: [{ text: prompt }] }],
 				config: {
+					thinkingConfig,
+					...(this.options.geminiEnableGoogleSearch && { tools: [{ googleSearch: {} }] }),
 					httpOptions: this.options.googleGeminiBaseUrl
 						? { baseUrl: this.options.googleGeminiBaseUrl }
 						: undefined,
@@ -157,7 +158,38 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				},
 			})
 
-			return result.text ?? ""
+			let text = result.text ?? ""
+			const candidate = result.candidates?.[0]
+			const supports = candidate?.groundingMetadata?.groundingSupports
+			const chunks = candidate?.groundingMetadata?.groundingChunks
+
+			if (text && supports && chunks) {
+				// Sort supports by end index in descending order to avoid shifting issues when inserting.
+				const sortedSupports = [...supports].sort(
+					(a, b) => (b.segment?.endIndex ?? 0) - (a.segment?.endIndex ?? 0),
+				)
+
+				for (const support of sortedSupports) {
+					const endIndex = support.segment?.endIndex
+					if (endIndex === undefined || !support.groundingChunkIndices?.length) {
+						continue
+					}
+
+					const citationLinks = support.groundingChunkIndices
+						.map((i: number) => {
+							const uri = chunks[i]?.web?.uri
+							return uri ? `[${i + 1}](${uri})` : null
+						})
+						.filter(Boolean)
+
+					if (citationLinks.length > 0) {
+						const citationString = " " + citationLinks.join(" ")
+						text = text.slice(0, endIndex) + citationString + text.slice(endIndex)
+					}
+				}
+			}
+
+			return text
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new Error(`Gemini completion error: ${error.message}`)

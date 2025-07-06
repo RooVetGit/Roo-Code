@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "Clau API de DeepSeek",
 		"getDeepSeekApiKey": "Obtenir clau API de DeepSeek",
 		"geminiApiKey": "Clau API de Gemini",
+		"geminiEnableGoogleSearch": {
+			"label": "Activa la Cerca de Google",
+			"description": "Permet al model utilitzar la Cerca de Google per respondre preguntes sobre esdeveniments recents. Això pot comportar costos addicionals i és mútuament excloent amb la funció de 'pensament'."
+		},
 		"getGroqApiKey": "Obtenir clau API de Groq",
 		"groqApiKey": "Clau API de Groq",
 		"getGeminiApiKey": "Obtenir clau API de Gemini",

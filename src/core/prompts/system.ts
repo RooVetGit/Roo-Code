@@ -166,10 +166,28 @@ export const SYSTEM_PROMPT = async (
 			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
 		)
 
-		// For file-based prompts, don't include the tool sections
+		const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
+		const codeIndexManager = CodeIndexManager.getInstance(context)
+		const toolDescriptions = getToolDescriptionsForMode(
+			mode,
+			cwd,
+			supportsComputerUse,
+			codeIndexManager,
+			effectiveDiffStrategy,
+			browserViewportSize,
+			mcpHub,
+			customModes,
+			experiments,
+			partialReadsEnabled,
+			settings,
+		)
+
+		// For file-based prompts, include the tool sections
 		return `${roleDefinition}
 
 ${fileCustomSystemPrompt}
+
+${toolDescriptions}
 
 ${customInstructions}`
 	}

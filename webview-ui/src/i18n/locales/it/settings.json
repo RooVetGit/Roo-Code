@@ -221,6 +221,10 @@
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
 		"geminiApiKey": "Chiave API Gemini",
+		"geminiEnableGoogleSearch": {
+			"label": "Abilita Ricerca Google",
+			"description": "Consente al modello di utilizzare la Ricerca Google per rispondere a domande su eventi recenti. Ciò potrebbe comportare costi aggiuntivi ed è reciprocamente esclusivo con la funzione 'pensiero'."
+		},
 		"getGroqApiKey": "Ottieni chiave API Groq",
 		"groqApiKey": "Chiave API Groq",
 		"getGeminiApiKey": "Ottieni chiave API Gemini",

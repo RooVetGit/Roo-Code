@@ -225,6 +225,10 @@
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Dapatkan DeepSeek API Key",
 		"geminiApiKey": "Gemini API Key",
+		"geminiEnableGoogleSearch": {
+			"label": "Aktifkan Google Search",
+			"description": "Memungkinkan model untuk menggunakan Google Search untuk menjawab pertanyaan tentang peristiwa terkini. Ini mungkin dikenakan biaya tambahan dan saling eksklusif dengan fitur 'berpikir'."
+		},
 		"getGroqApiKey": "Dapatkan Groq API Key",
 		"groqApiKey": "Groq API Key",
 		"getGeminiApiKey": "Dapatkan Gemini API Key",
