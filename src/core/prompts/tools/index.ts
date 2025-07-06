@@ -15,6 +15,7 @@ import { getInsertContentDescription } from "./insert-content"
 import { getSearchAndReplaceDescription } from "./search-and-replace"
 import { getListCodeDefinitionNamesDescription } from "./list-code-definition-names"
 import { getGoogleSearchDescription } from "./google-search"
+import { getUrlContextDescription } from "./url-context"
 import { getBrowserActionDescription } from "./browser-action"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
@@ -45,6 +46,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	google_search: (args) => getGoogleSearchDescription(args),
+	url_context: (args) => getUrlContextDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -111,6 +113,9 @@ export function getToolDescriptionsForMode(
 
 	if (settings?.geminiEnableGoogleSearch) {
 		tools.add("google_search")
+	}
+	if (settings?.geminiEnableUrlContext) {
+		tools.add("url_context")
 	}
 
 	// Map tool descriptions for allowed tools

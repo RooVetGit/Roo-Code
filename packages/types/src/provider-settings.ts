@@ -158,6 +158,7 @@ const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
 	geminiEnableGoogleSearch: z.boolean().optional(),
+	geminiEnableUrlContext: z.boolean().optional(),
 })
 
 const geminiCliSchema = apiModelIdProviderModelSchema.extend({

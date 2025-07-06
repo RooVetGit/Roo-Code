@@ -225,6 +225,10 @@
 			"label": "Włącz wyszukiwarkę Google",
 			"description": "Pozwala modelowi korzystać z wyszukiwarki Google do odpowiadania na pytania dotyczące ostatnich wydarzeń. Może to wiązać się z dodatkowymi kosztami i jest wzajemnie wykluczające się z funkcją 'myślenia'."
 		},
+		"geminiEnableUrlContext": {
+			"label": "Włącz kontekst URL",
+			"description": "Pozwala modelowi na pobieranie treści z adresów URL podanych w monicie w celu poinformowania swojej odpowiedzi."
+		},
 		"getGroqApiKey": "Uzyskaj klucz API Groq",
 		"groqApiKey": "Klucz API Groq",
 		"getGeminiApiKey": "Uzyskaj klucz API Gemini",

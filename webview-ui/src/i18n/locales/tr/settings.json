@@ -225,6 +225,10 @@
 			"label": "Google Aramayı Etkinleştir",
 			"description": "Modelin son olaylarla ilgili soruları yanıtlamak için Google Aramayı kullanmasına izin verir. Bu ek maliyetlere neden olabilir ve 'düşünme' özelliği ile karşılıklı olarak dışlayıcıdır."
 		},
+		"geminiEnableUrlContext": {
+			"label": "URL Bağlamını Etkinleştir",
+			"description": "Modelin yanıtını bilgilendirmek için komut isteminde sağlanan URL'lerden içerik almasına izin verir."
+		},
 		"getGroqApiKey": "Groq API Anahtarı Al",
 		"groqApiKey": "Groq API Anahtarı",
 		"getGeminiApiKey": "Gemini API Anahtarı Al",

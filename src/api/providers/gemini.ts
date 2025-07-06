@@ -66,9 +66,17 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const { id: model, info, reasoning: thinkingConfig, maxTokens } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
+		const tools: GenerateContentConfig["tools"] = []
+		if (this.options.geminiEnableGoogleSearch) {
+			tools.push({ googleSearch: {} })
+		}
+		if (this.options.geminiEnableUrlContext) {
+			tools.push({ urlContext: {} })
+		}
+
 		const config: GenerateContentConfig = {
 			systemInstruction,
-			...(this.options.geminiEnableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+			...(tools.length > 0 && { tools }),
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
 			thinkingConfig,
 			maxOutputTokens: this.options.modelMaxTokens ?? maxTokens ?? undefined,
@@ -145,12 +153,19 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const { id: model, reasoning: thinkingConfig } = this.getModel()
+			const tools: GenerateContentConfig["tools"] = []
+			if (this.options.geminiEnableGoogleSearch) {
+				tools.push({ googleSearch: {} })
+			}
+			if (this.options.geminiEnableUrlContext) {
+				tools.push({ urlContext: {} })
+			}
 			const result = await this.client.models.generateContent({
 				model,
 				contents: [{ role: "user", parts: [{ text: prompt }] }],
 				config: {
 					thinkingConfig,
-					...(this.options.geminiEnableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+					...(tools.length > 0 && { tools }),
 					httpOptions: this.options.googleGeminiBaseUrl
 						? { baseUrl: this.options.googleGeminiBaseUrl }
 						: undefined,

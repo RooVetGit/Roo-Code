@@ -225,6 +225,10 @@
 			"label": "Activer la recherche Google",
 			"description": "Permet au modèle d'utiliser la recherche Google pour répondre aux questions sur les événements récents. Cela peut entraîner des coûts supplémentaires et est mutuellement exclusif avec la fonction de 'réflexion'."
 		},
+		"geminiEnableUrlContext": {
+			"label": "Activer le contexte d'URL",
+			"description": "Permet au modèle de récupérer le contenu des URL fournies dans l'invite pour éclairer sa réponse."
+		},
 		"getGroqApiKey": "Obtenir la clé API Groq",
 		"groqApiKey": "Clé API Groq",
 		"getGeminiApiKey": "Obtenir la clé API Gemini",

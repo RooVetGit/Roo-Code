@@ -225,6 +225,10 @@
 			"label": "Google Zoeken inschakelen",
 			"description": "Staat het model toe om Google Zoeken te gebruiken om vragen over recente gebeurtenissen te beantwoorden. Dit kan extra kosten met zich meebrengen en is wederzijds exclusief met de 'denk'-functie."
 		},
+		"geminiEnableUrlContext": {
+			"label": "URL-context inschakelen",
+			"description": "Staat het model toe om inhoud op te halen van URL's die in de prompt zijn opgegeven om zijn antwoord te informeren."
+		},
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
 		"getGeminiApiKey": "Gemini API-sleutel ophalen",

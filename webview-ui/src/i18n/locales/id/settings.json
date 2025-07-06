@@ -229,6 +229,10 @@
 			"label": "Aktifkan Google Search",
 			"description": "Memungkinkan model untuk menggunakan Google Search untuk menjawab pertanyaan tentang peristiwa terkini. Ini mungkin dikenakan biaya tambahan dan saling eksklusif dengan fitur 'berpikir'."
 		},
+		"geminiEnableUrlContext": {
+			"label": "Aktifkan Konteks URL",
+			"description": "Memungkinkan model untuk mengambil konten dari URL yang disediakan dalam prompt untuk menginformasikan responsnya."
+		},
 		"getGroqApiKey": "Dapatkan Groq API Key",
 		"groqApiKey": "Groq API Key",
 		"getGeminiApiKey": "Dapatkan Gemini API Key",

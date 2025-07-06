@@ -62,6 +62,18 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 					</span>
 				</div>
 			</Checkbox>
+			<Checkbox
+				checked={!!apiConfiguration.geminiEnableUrlContext}
+				onChange={(checked: boolean) => {
+					setApiConfigurationField("geminiEnableUrlContext", checked)
+				}}>
+				<div className="flex flex-col">
+					<span className="font-medium">{t("settings:providers.geminiEnableUrlContext.label")}</span>
+					<span className="text-sm text-vscode-descriptionForeground">
+						{t("settings:providers.geminiEnableUrlContext.description")}
+					</span>
+				</div>
+			</Checkbox>
 			<div>
 				<Checkbox
 					checked={googleGeminiBaseUrlSelected}

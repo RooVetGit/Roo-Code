@@ -225,6 +225,10 @@
 			"label": "Google Suche aktivieren",
 			"description": "Ermöglicht dem Modell, die Google-Suche zu verwenden, um Fragen zu aktuellen Ereignissen zu beantworten. Dies kann zusätzliche Kosten verursachen und ist mit der 'Denk'-Funktion nicht kompatibel."
 		},
+		"geminiEnableUrlContext": {
+			"label": "URL-Kontext aktivieren",
+			"description": "Ermöglicht dem Modell, Inhalte von in der Eingabeaufforderung bereitgestellten URLs abzurufen, um seine Antwort zu informieren."
+		},
 		"getGroqApiKey": "Groq API-Schlüssel erhalten",
 		"groqApiKey": "Groq API-Schlüssel",
 		"getGeminiApiKey": "Gemini API-Schlüssel erhalten",

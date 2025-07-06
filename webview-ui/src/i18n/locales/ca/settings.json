@@ -225,6 +225,10 @@
 			"label": "Activa la Cerca de Google",
 			"description": "Permet al model utilitzar la Cerca de Google per respondre preguntes sobre esdeveniments recents. Això pot comportar costos addicionals i és mútuament excloent amb la funció de 'pensament'."
 		},
+		"geminiEnableUrlContext": {
+			"label": "Enable URL Context",
+			"description": "Allows the model to retrieve content from URLs provided in the prompt to inform its response."
+		},
 		"getGroqApiKey": "Obtenir clau API de Groq",
 		"groqApiKey": "Clau API de Groq",
 		"getGeminiApiKey": "Obtenir clau API de Gemini",

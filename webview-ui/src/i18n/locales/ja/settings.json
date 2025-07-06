@@ -225,6 +225,10 @@
 			"label": "Google検索を有効にする",
 			"description": "モデルが最近のイベントに関する質問に答えるためにGoogle検索を使用できるようにします。これには追加料金がかかる場合があり、「思考」機能とは相互に排他的です。"
 		},
+		"geminiEnableUrlContext": {
+			"label": "URLコンテキストを有効にする",
+			"description": "モデルがプロンプトで提供されたURLからコンテンツを取得して応答を通知できるようにします。"
+		},
 		"getGroqApiKey": "Groq APIキーを取得",
 		"groqApiKey": "Groq APIキー",
 		"getGeminiApiKey": "Gemini APIキーを取得",
