@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Le modèle spécifié n'est pas disponible. Veuillez vérifier la configuration de votre modèle.",
 		"configurationError": "Configuration de l'embedder invalide. Veuillez vérifier vos paramètres.",
 		"serviceUnavailable": "Le service d'embedding n'est pas disponible. Veuillez vous assurer qu'il est en cours d'exécution and accessible.",
-		"invalidEndpoint": "Point de terminaison d'API invalide. Veuillez vérifier votre configuration d'URL."
+		"invalidEndpoint": "Point de terminaison d'API invalide. Veuillez vérifier votre configuration d'URL.",
+		"invalidEmbedderConfig": "Configuration de l'embedder invalide. Veuillez vérifier vos paramètres.",
+		"invalidApiKey": "Clé API invalide. Veuillez vérifier votre configuration de clé API.",
+		"invalidBaseUrl": "URL de base invalide. Veuillez vérifier votre configuration d'URL.",
+		"invalidModel": "Modèle invalide. Veuillez vérifier votre configuration de modèle."
 	}
 }

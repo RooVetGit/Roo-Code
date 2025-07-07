@@ -1840,8 +1840,6 @@ export const webviewMessageHandler = async (
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
 					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
 					codebaseIndexOpenAiCompatibleModelDimension: settings.codebaseIndexOpenAiCompatibleModelDimension,
-					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
-					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
 				}
 
 				// Save global state first
@@ -1870,7 +1868,17 @@ export const webviewMessageHandler = async (
 				// Verify secrets are actually stored
 				const storedOpenAiKey = provider.contextProxy.getSecret("codeIndexOpenAiKey")
 
-				// Notify code index manager of changes
+				// Send success response first - settings are saved regardless of validation
+				await provider.postMessageToWebview({
+					type: "codeIndexSettingsSaved",
+					success: true,
+					settings: globalStateConfig,
+				})
+
+				// Update webview state
+				await provider.postStateToWebview()
+
+				// Then handle validation and initialization
 				if (provider.codeIndexManager) {
 					await provider.codeIndexManager.handleSettingsChange()
 
@@ -1890,8 +1898,7 @@ export const webviewMessageHandler = async (
 								provider.log(
 									`Code index initialization failed during settings save: ${error instanceof Error ? error.message : String(error)}`,
 								)
-								// Re-throw to maintain existing error handling behavior
-								throw error
+								// Don't re-throw - settings are already saved successfully
 							}
 						} else {
 							// Already initialized, just start indexing
@@ -1899,16 +1906,6 @@ export const webviewMessageHandler = async (
 						}
 					}
 				}
-
-				// Send success response
-				await provider.postMessageToWebview({
-					type: "codeIndexSettingsSaved",
-					success: true,
-					settings: globalStateConfig,
-				})
-
-				// Update webview state
-				await provider.postStateToWebview()
 			} catch (error) {
 				provider.log(`Error saving code index settings: ${error.message || error}`)
 				await provider.postMessageToWebview({

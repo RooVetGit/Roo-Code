@@ -26,6 +26,10 @@
 		"modelNotAvailable": "指定的模型不可用。請檢查您的模型組態。",
 		"configurationError": "無效的內嵌程式組態。請檢閱您的設定。",
 		"serviceUnavailable": "內嵌服務不可用。請確保它正在執行且可存取。",
-		"invalidEndpoint": "無效的 API 端點。請檢查您的 URL 組態。"
+		"invalidEndpoint": "無效的 API 端點。請檢查您的 URL 組態。",
+		"invalidEmbedderConfig": "無效的內嵌程式組態。請檢查您的設定。",
+		"invalidApiKey": "無效的 API 金鑰。請檢查您的 API 金鑰組態。",
+		"invalidBaseUrl": "無效的基礎 URL。請檢查您的 URL 組態。",
+		"invalidModel": "無效的模型。請檢查您的模型組態。"
 	}
 }

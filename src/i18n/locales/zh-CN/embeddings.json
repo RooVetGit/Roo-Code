@@ -26,6 +26,10 @@
 		"modelNotAvailable": "指定的模型不可用。请检查您的模型配置。",
 		"configurationError": "嵌入器配置无效。请查看您的设置。",
 		"serviceUnavailable": "嵌入器服务不可用。请确保它正在运行且可访问。",
-		"invalidEndpoint": "API 端点无效。请检查您的 URL 配置。"
+		"invalidEndpoint": "API 端点无效。请检查您的 URL 配置。",
+		"invalidEmbedderConfig": "嵌入器配置无效。请检查您的设置。",
+		"invalidApiKey": "API 密钥无效。请检查您的 API 密钥配置。",
+		"invalidBaseUrl": "基础 URL 无效。请检查您的 URL 配置。",
+		"invalidModel": "模型无效。请检查您的模型配置。"
 	}
 }

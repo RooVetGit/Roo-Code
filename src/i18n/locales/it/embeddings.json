@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Il modello specificato non è disponibile. Controlla la configurazione del tuo modello.",
 		"configurationError": "Configurazione dell'embedder non valida. Rivedi le tue impostazioni.",
 		"serviceUnavailable": "Il servizio di embedder non è disponibile. Assicurati che sia in esecuzione e accessibile.",
-		"invalidEndpoint": "Endpoint API non valido. Controlla la configurazione del tuo URL."
+		"invalidEndpoint": "Endpoint API non valido. Controlla la configurazione del tuo URL.",
+		"invalidEmbedderConfig": "Configurazione dell'embedder non valida. Controlla le tue impostazioni.",
+		"invalidApiKey": "Chiave API non valida. Controlla la configurazione della tua chiave API.",
+		"invalidBaseUrl": "URL di base non valido. Controlla la configurazione del tuo URL.",
+		"invalidModel": "Modello non valido. Controlla la configurazione del tuo modello."
 	}
 }

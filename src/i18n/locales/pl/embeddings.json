@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Określony model jest niedostępny. Sprawdź konfigurację modelu.",
 		"configurationError": "Nieprawidłowa konfiguracja embeddera. Sprawdź swoje ustawienia.",
 		"serviceUnavailable": "Usługa embeddera jest niedostępna. Upewnij się, że jest uruchomiona i dostępna.",
-		"invalidEndpoint": "Nieprawidłowy punkt końcowy API. Sprawdź konfigurację adresu URL."
+		"invalidEndpoint": "Nieprawidłowy punkt końcowy API. Sprawdź konfigurację adresu URL.",
+		"invalidEmbedderConfig": "Nieprawidłowa konfiguracja embeddera. Sprawdź swoje ustawienia.",
+		"invalidApiKey": "Nieprawidłowy klucz API. Sprawdź konfigurację klucza API.",
+		"invalidBaseUrl": "Nieprawidłowy podstawowy adres URL. Sprawdź konfigurację adresu URL.",
+		"invalidModel": "Nieprawidłowy model. Sprawdź konfigurację modelu."
 	}
 }

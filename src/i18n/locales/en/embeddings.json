@@ -31,6 +31,10 @@
 		"modelNotAvailable": "The specified model is not available. Please check your model configuration.",
 		"configurationError": "Invalid embedder configuration. Please review your settings.",
 		"serviceUnavailable": "The embedder service is not available. Please ensure it is running and accessible.",
-		"invalidEndpoint": "Invalid API endpoint. Please check your URL configuration."
+		"invalidEndpoint": "Invalid API endpoint. Please check your URL configuration.",
+		"invalidEmbedderConfig": "Invalid embedder configuration. Please check your settings.",
+		"invalidApiKey": "Invalid API key. Please check your API key configuration.",
+		"invalidBaseUrl": "Invalid base URL. Please check your URL configuration.",
+		"invalidModel": "Invalid model. Please check your model configuration."
 	}
 }

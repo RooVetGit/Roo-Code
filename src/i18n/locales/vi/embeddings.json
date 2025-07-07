@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Mô hình được chỉ định không có sẵn. Vui lòng kiểm tra cấu hình mô hình của bạn.",
 		"configurationError": "Cấu hình nhúng không hợp lệ. Vui lòng xem lại cài đặt của bạn.",
 		"serviceUnavailable": "Dịch vụ nhúng không có sẵn. Vui lòng đảm bảo nó đang chạy và có thể truy cập được.",
-		"invalidEndpoint": "Điểm cuối API không hợp lệ. Vui lòng kiểm tra cấu hình URL của bạn."
+		"invalidEndpoint": "Điểm cuối API không hợp lệ. Vui lòng kiểm tra cấu hình URL của bạn.",
+		"invalidEmbedderConfig": "Cấu hình nhúng không hợp lệ. Vui lòng kiểm tra cài đặt của bạn.",
+		"invalidApiKey": "Khóa API không hợp lệ. Vui lòng kiểm tra cấu hình khóa API của bạn.",
+		"invalidBaseUrl": "URL cơ sở không hợp lệ. Vui lòng kiểm tra cấu hình URL của bạn.",
+		"invalidModel": "Mô hình không hợp lệ. Vui lòng kiểm tra cấu hình mô hình của bạn."
 	}
 }

@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Das angegebene Modell ist nicht verfügbar. Bitte überprüfe deine Modellkonfiguration.",
 		"configurationError": "Ungültige Embedder-Konfiguration. Bitte überprüfe deine Einstellungen.",
 		"serviceUnavailable": "Der Embedder-Dienst ist nicht verfügbar. Bitte stelle sicher, dass er läuft und erreichbar ist.",
-		"invalidEndpoint": "Ungültiger API-Endpunkt. Bitte überprüfe deine URL-Konfiguration."
+		"invalidEndpoint": "Ungültiger API-Endpunkt. Bitte überprüfe deine URL-Konfiguration.",
+		"invalidEmbedderConfig": "Ungültige Embedder-Konfiguration. Bitte überprüfe deine Einstellungen.",
+		"invalidApiKey": "Ungültiger API-Schlüssel. Bitte überprüfe deine API-Schlüssel-Konfiguration.",
+		"invalidBaseUrl": "Ungültige Basis-URL. Bitte überprüfe deine URL-Konfiguration.",
+		"invalidModel": "Ungültiges Modell. Bitte überprüfe deine Modellkonfiguration."
 	}
 }

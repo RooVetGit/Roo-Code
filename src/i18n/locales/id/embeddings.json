@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Model yang ditentukan tidak tersedia. Silakan periksa konfigurasi model Anda.",
 		"configurationError": "Konfigurasi embedder tidak valid. Harap tinjau pengaturan Anda.",
 		"serviceUnavailable": "Layanan embedder tidak tersedia. Pastikan layanan tersebut berjalan dan dapat diakses.",
-		"invalidEndpoint": "Endpoint API tidak valid. Silakan periksa konfigurasi URL Anda."
+		"invalidEndpoint": "Endpoint API tidak valid. Silakan periksa konfigurasi URL Anda.",
+		"invalidEmbedderConfig": "Konfigurasi embedder tidak valid. Silakan periksa pengaturan Anda.",
+		"invalidApiKey": "Kunci API tidak valid. Silakan periksa konfigurasi kunci API Anda.",
+		"invalidBaseUrl": "URL dasar tidak valid. Silakan periksa konfigurasi URL Anda.",
+		"invalidModel": "Model tidak valid. Silakan periksa konfigurasi model Anda."
 	}
 }

@@ -26,6 +26,10 @@
 		"modelNotAvailable": "지정된 모델을 사용할 수 없습니다. 모델 구성을 확인하세요.",
 		"configurationError": "잘못된 임베더 구성입니다. 설정을 검토하세요.",
 		"serviceUnavailable": "임베더 서비스를 사용할 수 없습니다. 실행 중이고 액세스 가능한지 확인하세요.",
-		"invalidEndpoint": "잘못된 API 엔드포인트입니다. URL 구성을 확인하세요."
+		"invalidEndpoint": "잘못된 API 엔드포인트입니다. URL 구성을 확인하세요.",
+		"invalidEmbedderConfig": "잘못된 임베더 구성입니다. 설정을 확인하세요.",
+		"invalidApiKey": "잘못된 API 키입니다. API 키 구성을 확인하세요.",
+		"invalidBaseUrl": "잘못된 기본 URL입니다. URL 구성을 확인하세요.",
+		"invalidModel": "잘못된 모델입니다. 모델 구성을 확인하세요."
 	}
 }

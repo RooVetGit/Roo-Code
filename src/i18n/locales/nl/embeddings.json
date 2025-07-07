@@ -26,6 +26,10 @@
 		"modelNotAvailable": "Het opgegeven model is niet beschikbaar. Controleer je modelconfiguratie.",
 		"configurationError": "Ongeldige embedder-configuratie. Controleer je instellingen.",
 		"serviceUnavailable": "De embedder-service is niet beschikbaar. Zorg ervoor dat deze draait en toegankelijk is.",
-		"invalidEndpoint": "Ongeldig API-eindpunt. Controleer je URL-configuratie."
+		"invalidEndpoint": "Ongeldig API-eindpunt. Controleer je URL-configuratie.",
+		"invalidEmbedderConfig": "Ongeldige embedder-configuratie. Controleer je instellingen.",
+		"invalidApiKey": "Ongeldige API-sleutel. Controleer je API-sleutelconfiguratie.",
+		"invalidBaseUrl": "Ongeldige basis-URL. Controleer je URL-configuratie.",
+		"invalidModel": "Ongeldig model. Controleer je modelconfiguratie."
 	}
 }
