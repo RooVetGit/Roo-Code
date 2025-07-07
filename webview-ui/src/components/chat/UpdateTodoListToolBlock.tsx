@@ -215,94 +215,44 @@ const UpdateTodoListToolBlock: React.FC<UpdateTodoListToolBlockProps> = ({
 										<span
 											style={{
 												display: "inline-block",
-												width: 14,
-												height: 14,
+												width: 8,
+												height: 8,
 												borderRadius: "50%",
-												border: "2px solid var(--vscode-charts-green)",
 												background: "var(--vscode-charts-green)",
-												verticalAlign: "middle",
 												marginRight: 6,
-												position: "relative",
-											}}>
-											<svg
-												width="10"
-												height="10"
-												viewBox="0 0 14 14"
-												style={{
-													position: "absolute",
-													top: 1,
-													left: 1,
-												}}>
-												<polyline
-													points="2,7 6,11 12,3"
-													style={{
-														fill: "none",
-														stroke: "#fff",
-														strokeWidth: 2,
-														strokeLinecap: "round",
-														strokeLinejoin: "round",
-													}}
-												/>
-											</svg>
-										</span>
+												marginTop: 7,
+												flexShrink: 0,
+											}}
+										/>
 									)
 								} else if (todo.status === "in_progress") {
 									icon = (
 										<span
 											style={{
 												display: "inline-block",
-												width: 14,
-												height: 14,
+												width: 8,
+												height: 8,
 												borderRadius: "50%",
-												border: "2px solid var(--vscode-charts-yellow)",
-												background: "rgba(255, 221, 51, 0.15)",
-												verticalAlign: "middle",
+												background: "var(--vscode-charts-yellow)",
 												marginRight: 6,
-												position: "relative",
-											}}>
-											<svg
-												width="10"
-												height="10"
-												viewBox="0 0 14 14"
-												style={{
-													position: "absolute",
-													top: 1,
-													left: 1,
-												}}>
-												<circle
-													cx="7"
-													cy="7"
-													r="5"
-													stroke="var(--vscode-charts-yellow)"
-													strokeWidth="2"
-													fill="none"
-												/>
-												<polyline
-													points="3,7 6,10 11,4"
-													style={{
-														fill: "none",
-														stroke: "var(--vscode-charts-yellow)",
-														strokeWidth: 2,
-														strokeLinecap: "round",
-														strokeLinejoin: "round",
-														opacity: 0.7,
-													}}
-												/>
-											</svg>
-										</span>
+												marginTop: 7,
+												flexShrink: 0,
+											}}
+										/>
 									)
 								} else {
 									icon = (
 										<span
 											style={{
 												display: "inline-block",
-												width: 14,
-												height: 14,
+												width: 8,
+												height: 8,
 												borderRadius: "50%",
-												border: "2px solid #bbb",
+												border: "1px solid var(--vscode-descriptionForeground)",
 												background: "transparent",
-												verticalAlign: "middle",
 												marginRight: 6,
+												marginTop: 7,
+												flexShrink: 0,
 											}}
 										/>
 									)
@@ -313,7 +263,7 @@ const UpdateTodoListToolBlock: React.FC<UpdateTodoListToolBlockProps> = ({
 										style={{
 											marginBottom: 2,
 											display: "flex",
-											alignItems: "center",
+											alignItems: "flex-start",
 											minHeight: 20,
 										}}>
 										{icon}

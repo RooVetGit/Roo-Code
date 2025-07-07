@@ -44,37 +44,15 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 				<span
 					style={{
 						display: "inline-block",
-						width: 14,
-						height: 14,
+						width: 8,
+						height: 8,
 						borderRadius: "50%",
-						border: "2px solid var(--vscode-charts-green)",
 						background: "var(--vscode-charts-green)",
-						verticalAlign: "middle",
 						marginRight: 8,
-						position: "relative",
+						marginLeft: 2,
 						flexShrink: 0,
-					}}>
-					<svg
-						width="10"
-						height="10"
-						viewBox="0 0 14 14"
-						style={{
-							position: "absolute",
-							top: 1,
-							left: 1,
-						}}>
-						<polyline
-							points="2,7 6,11 12,3"
-							style={{
-								fill: "none",
-								stroke: "#fff",
-								strokeWidth: 2,
-								strokeLinecap: "round",
-								strokeLinejoin: "round",
-							}}
-						/>
-					</svg>
-				</span>
+					}}
+				/>
 			)
 		}
 
@@ -85,6 +63,25 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 					style={{
 						color: "var(--vscode-foreground)",
 						marginRight: 8,
+						marginLeft: 2,
+						flexShrink: 0,
+						fontSize: 14,
+					}}
+				/>
+			)
+		}
+
+		if (mostImportantTodo.status === "completed") {
+			return (
+				<span
+					style={{
+						display: "inline-block",
+						width: 8,
+						height: 8,
+						borderRadius: "50%",
+						background: "var(--vscode-charts-green)",
+						marginRight: 8,
+						marginLeft: 2,
 						flexShrink: 0,
 					}}
 				/>
@@ -96,39 +93,15 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 				<span
 					style={{
 						display: "inline-block",
-						width: 14,
-						height: 14,
+						width: 8,
+						height: 8,
 						borderRadius: "50%",
-						border: "2px solid var(--vscode-charts-yellow)",
-						background: "rgba(255, 221, 51, 0.15)",
-						verticalAlign: "middle",
+						background: "var(--vscode-charts-yellow)",
 						marginRight: 8,
-						position: "relative",
+						marginLeft: 2,
 						flexShrink: 0,
-					}}>
-					<svg
-						width="10"
-						height="10"
-						viewBox="0 0 14 14"
-						style={{
-							position: "absolute",
-							top: 1,
-							left: 1,
-						}}>
-						<circle cx="7" cy="7" r="5" stroke="var(--vscode-charts-yellow)" strokeWidth="2" fill="none" />
-						<polyline
-							points="3,7 6,10 11,4"
-							style={{
-								fill: "none",
-								stroke: "var(--vscode-charts-yellow)",
-								strokeWidth: 2,
-								strokeLinecap: "round",
-								strokeLinejoin: "round",
-								opacity: 0.7,
-							}}
-						/>
-					</svg>
-				</span>
+					}}
+				/>
 			)
 		}
 
@@ -137,13 +110,13 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 			<span
 				style={{
 					display: "inline-block",
-					width: 14,
-					height: 14,
+					width: 8,
+					height: 8,
 					borderRadius: "50%",
-					border: "2px solid #bbb",
+					border: "1px solid var(--vscode-descriptionForeground)",
 					background: "transparent",
-					verticalAlign: "middle",
 					marginRight: 8,
+					marginLeft: 2,
 					flexShrink: 0,
 				}}
 			/>
@@ -163,7 +136,7 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 				style={{
 					display: "flex",
 					alignItems: "center",
-					gap: 6,
+					gap: 2,
 					marginBottom: 0,
 					cursor: "pointer",
 					userSelect: "none",
@@ -302,96 +275,43 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 										<span
 											style={{
 												display: "inline-block",
-												width: 14,
-												height: 14,
+												width: 8,
+												height: 8,
 												borderRadius: "50%",
-												border: "2px solid var(--vscode-charts-green)",
 												background: "var(--vscode-charts-green)",
-												verticalAlign: "middle",
 												marginRight: 8,
-												position: "relative",
+												marginTop: 7,
 												flexShrink: 0,
-											}}>
-											<svg
-												width="10"
-												height="10"
-												viewBox="0 0 14 14"
-												style={{
-													position: "absolute",
-													top: 1,
-													left: 1,
-												}}>
-												<polyline
-													points="2,7 6,11 12,3"
-													style={{
-														fill: "none",
-														stroke: "#fff",
-														strokeWidth: 2,
-														strokeLinecap: "round",
-														strokeLinejoin: "round",
-													}}
-												/>
-											</svg>
-										</span>
+											}}
+										/>
 									)
 								} else if (todo.status === "in_progress") {
 									icon = (
 										<span
 											style={{
 												display: "inline-block",
-												width: 14,
-												height: 14,
+												width: 8,
+												height: 8,
 												borderRadius: "50%",
-												border: "2px solid var(--vscode-charts-yellow)",
-												background: "rgba(255, 221, 51, 0.15)",
-												verticalAlign: "middle",
+												background: "var(--vscode-charts-yellow)",
 												marginRight: 8,
-												position: "relative",
+												marginTop: 7,
 												flexShrink: 0,
-											}}>
-											<svg
-												width="10"
-												height="10"
-												viewBox="0 0 14 14"
-												style={{
-													position: "absolute",
-													top: 1,
-													left: 1,
-												}}>
-												<circle
-													cx="7"
-													cy="7"
-													r="5"
-													stroke="var(--vscode-charts-yellow)"
-													strokeWidth="2"
-													fill="none"
-												/>
-												<polyline
-													points="3,7 6,10 11,4"
-													style={{
-														fill: "none",
-														stroke: "var(--vscode-charts-yellow)",
-														strokeWidth: 2,
-														strokeLinecap: "round",
-														strokeLinejoin: "round",
-														opacity: 0.7,
-													}}
-												/>
-											</svg>
-										</span>
+											}}
+										/>
 									)
 								} else {
 									icon = (
 										<span
 											style={{
 												display: "inline-block",
-												width: 14,
-												height: 14,
+												width: 8,
+												height: 8,
 												borderRadius: "50%",
-												border: "2px solid #bbb",
+												border: "1px solid var(--vscode-descriptionForeground)",
 												background: "transparent",
-												verticalAlign: "middle",
 												marginRight: 8,
+												marginTop: 7,
 												flexShrink: 0,
 											}}
 										/>
