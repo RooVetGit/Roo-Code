@@ -272,10 +272,32 @@ export function isToolAllowedForMode(
 				toolParams?.content ||
 				toolParams?.operations ||
 				toolParams?.search ||
-				toolParams?.replace
+				toolParams?.replace ||
+				toolParams?.args
 			)
+
+			// Handle single file path validation
 			if (filePath && isEditOperation && !doesFileMatchRegex(filePath, options.fileRegex)) {
 				throw new FileRestrictionError(mode.name, options.fileRegex, options.description, filePath)
+			}
+
+			// Handle XML args parameter (used by MULTI_FILE_APPLY_DIFF experiment)
+			if (toolParams?.args && typeof toolParams.args === "string") {
+				// Extract file paths from XML args
+				const filePathMatches = toolParams.args.match(/<path>([^<]+)<\/path>/g)
+				if (filePathMatches) {
+					for (const match of filePathMatches) {
+						const extractedPath = match.replace(/<\/?path>/g, "")
+						if (!doesFileMatchRegex(extractedPath, options.fileRegex)) {
+							throw new FileRestrictionError(
+								mode.name,
+								options.fileRegex,
+								options.description,
+								extractedPath,
+							)
+						}
+					}
+				}
 			}
 		}
 

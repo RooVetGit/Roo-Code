@@ -297,6 +297,60 @@ describe("isToolAllowedForMode", () => {
 				}),
 			).toThrow(/Markdown files only/)
 		})
+
+		it("applies restrictions to apply_diff with concurrent file edits (MULTI_FILE_APPLY_DIFF experiment)", () => {
+			// Test apply_diff with args parameter (used when MULTI_FILE_APPLY_DIFF experiment is enabled)
+			// This simulates concurrent/batch file editing
+			const xmlArgs =
+				"<args><file><path>test.md</path><diff><content>- old content\\n+ new content</content></diff></file></args>"
+
+			// Should allow markdown files in architect mode
+			expect(
+				isToolAllowedForMode("apply_diff", "architect", [], undefined, {
+					args: xmlArgs,
+				}),
+			).toBe(true)
+
+			// Test with non-markdown file - should throw error
+			const xmlArgsNonMd =
+				"<args><file><path>test.py</path><diff><content>- old content\\n+ new content</content></diff></file></args>"
+
+			expect(() =>
+				isToolAllowedForMode("apply_diff", "architect", [], undefined, {
+					args: xmlArgsNonMd,
+				}),
+			).toThrow(FileRestrictionError)
+			expect(() =>
+				isToolAllowedForMode("apply_diff", "architect", [], undefined, {
+					args: xmlArgsNonMd,
+				}),
+			).toThrow(/Markdown files only/)
+
+			// Test with multiple files - should allow only markdown files
+			const xmlArgsMultiple =
+				"<args><file><path>readme.md</path><diff><content>- old content\\n+ new content</content></diff></file><file><path>docs.md</path><diff><content>- old content\\n+ new content</content></diff></file></args>"
+
+			expect(
+				isToolAllowedForMode("apply_diff", "architect", [], undefined, {
+					args: xmlArgsMultiple,
+				}),
+			).toBe(true)
+
+			// Test with mixed file types - should throw error for non-markdown
+			const xmlArgsMixed =
+				"<args><file><path>readme.md</path><diff><content>- old content\\n+ new content</content></diff></file><file><path>script.py</path><diff><content>- old content\\n+ new content</content></diff></file></args>"
+
+			expect(() =>
+				isToolAllowedForMode("apply_diff", "architect", [], undefined, {
+					args: xmlArgsMixed,
+				}),
+			).toThrow(FileRestrictionError)
+			expect(() =>
+				isToolAllowedForMode("apply_diff", "architect", [], undefined, {
+					args: xmlArgsMixed,
+				}),
+			).toThrow(/Markdown files only/)
+		})
 	})
 
 	it("handles non-existent modes", () => {
