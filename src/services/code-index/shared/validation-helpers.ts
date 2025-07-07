@@ -1,4 +1,5 @@
 import { t } from "../../../i18n"
+import { serializeError } from "serialize-error"
 
 /**
  * HTTP error interface for embedder errors
@@ -43,31 +44,6 @@ export function getErrorMessageForStatus(status: number | undefined, embedderTyp
 }
 
 /**
- * Maps connection error messages to appropriate error messages
- */
-export function getErrorMessageForConnectionError(errorMessage: string | undefined): string | undefined {
-	if (!errorMessage) return undefined
-
-	if (errorMessage.includes("ENOTFOUND") || errorMessage.includes("ECONNREFUSED")) {
-		return "embeddings:validation.connectionFailed"
-	}
-
-	if (errorMessage.includes("ETIMEDOUT") || errorMessage === "AbortError") {
-		return "embeddings:validation.connectionFailed"
-	}
-
-	if (errorMessage.includes("Failed to parse response JSON")) {
-		return "embeddings:validation.invalidResponse"
-	}
-
-	if (errorMessage.includes("HTTP 0:") || errorMessage === "No response") {
-		return "embeddings:validation.connectionFailed"
-	}
-
-	return undefined
-}
-
-/**
  * Extracts status code from various error formats
  */
 export function extractStatusCode(error: any): number | undefined {
@@ -84,6 +60,11 @@ export function extractStatusCode(error: any): number | undefined {
 			return parseInt(match[1], 10)
 		}
 	}
+
+	// Use serialize-error as fallback for complex objects
+	const serialized = serializeError(error)
+	if (serialized?.status) return serialized.status
+	if (serialized?.response?.status) return serialized.response.status
 
 	return undefined
 }
@@ -108,6 +89,12 @@ export function extractErrorMessage(error: any): string {
 		}
 	}
 
+	// Use serialize-error as fallback for complex objects
+	const serialized = serializeError(error)
+	if (serialized?.message) {
+		return serialized.message
+	}
+
 	return "Unknown error"
 }
 
@@ -122,15 +109,18 @@ export function handleValidationError(
 		beforeStandardHandling?: (error: any) => { valid: boolean; error: string } | undefined
 	},
 ): { valid: boolean; error: string } {
-	// Allow custom handling first
+	// Serialize the error to ensure we have access to all properties
+	const serializedError = serializeError(error)
+
+	// Allow custom handling first (pass original error for backward compatibility)
 	if (customHandlers?.beforeStandardHandling) {
 		const customResult = customHandlers.beforeStandardHandling(error)
 		if (customResult) return customResult
 	}
 
-	// Extract status code and error message
-	const statusCode = extractStatusCode(error)
-	const errorMessage = extractErrorMessage(error)
+	// Extract status code and error message from serialized error
+	const statusCode = extractStatusCode(serializedError)
+	const errorMessage = extractErrorMessage(serializedError)
 
 	// Check for status-based errors first
 	const statusError = getErrorMessageForStatus(statusCode, embedderType)
@@ -139,9 +129,21 @@ export function handleValidationError(
 	}
 
 	// Check for connection errors
-	const connectionError = getErrorMessageForConnectionError(errorMessage)
-	if (connectionError) {
-		return { valid: false, error: connectionError }
+	if (errorMessage) {
+		if (
+			errorMessage.includes("ENOTFOUND") ||
+			errorMessage.includes("ECONNREFUSED") ||
+			errorMessage.includes("ETIMEDOUT") ||
+			errorMessage === "AbortError" ||
+			errorMessage.includes("HTTP 0:") ||
+			errorMessage === "No response"
+		) {
+			return { valid: false, error: "embeddings:validation.connectionFailed" }
+		}
+
+		if (errorMessage.includes("Failed to parse response JSON")) {
+			return { valid: false, error: "embeddings:validation.invalidResponse" }
+		}
 	}
 
 	// For generic errors, preserve the original error message if it's not a standard one
@@ -182,32 +184,4 @@ export function formatEmbeddingError(error: any, maxRetries: number): Error {
 	} else {
 		return new Error(t("embeddings:failedWithError", { attempts: maxRetries, errorMessage }))
 	}
-}
-
-/**
- * Checks if an error is a rate limit error
- */
-export function isRateLimitError(error: any): boolean {
-	const httpError = error as HttpError
-	return httpError?.status === 429
-}
-
-/**
- * Logs retry attempt for rate limit errors
- */
-export function logRateLimitRetry(delayMs: number, attempt: number, maxRetries: number): void {
-	console.warn(
-		t("embeddings:rateLimitRetry", {
-			delayMs,
-			attempt,
-			maxRetries,
-		}),
-	)
-}
-
-/**
- * Logs embedding error with context
- */
-export function logEmbeddingError(embedderName: string, error: any, attempt: number, maxRetries: number): void {
-	console.error(`${embedderName} embedder error (attempt ${attempt}/${maxRetries}):`, error)
 }

@@ -10,13 +10,7 @@ import {
 } from "../constants"
 import { getModelQueryPrefix } from "../../../shared/embeddingModels"
 import { t } from "../../../i18n"
-import {
-	withValidationErrorHandling,
-	formatEmbeddingError,
-	isRateLimitError,
-	logRateLimitRetry,
-	logEmbeddingError,
-} from "../shared/validation-helpers"
+import { withValidationErrorHandling, formatEmbeddingError, HttpError } from "../shared/validation-helpers"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -147,15 +141,23 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 			} catch (error: any) {
 				const hasMoreAttempts = attempts < MAX_RETRIES - 1
 
-				if (isRateLimitError(error) && hasMoreAttempts) {
+				// Check if it's a rate limit error
+				const httpError = error as HttpError
+				if (httpError?.status === 429 && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
-					logRateLimitRetry(delayMs, attempts + 1, MAX_RETRIES)
+					console.warn(
+						t("embeddings:rateLimitRetry", {
+							delayMs,
+							attempt: attempts + 1,
+							maxRetries: MAX_RETRIES,
+						}),
+					)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
 				}
 
 				// Log the error for debugging
-				logEmbeddingError("OpenAI", error, attempts + 1, MAX_RETRIES)
+				console.error(`OpenAI embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
 				// Format and throw the error
 				throw formatEmbeddingError(error, MAX_RETRIES)
