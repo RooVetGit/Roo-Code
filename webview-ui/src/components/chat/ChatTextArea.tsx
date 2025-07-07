@@ -985,8 +985,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 							{!inputValue && (
 								<div
-									className="absolute left-2 bottom-1.5 text-xs z-30 pr-9"
-									style={{ color: "var(--vscode-tab-inactiveForeground)" }}>
+									className="absolute left-2 z-30 pr-9 flex items-center h-8"
+									style={{ bottom: "0.25rem", color: "var(--vscode-tab-inactiveForeground)" }}>
 									{placeholderBottomText}
 								</div>
 							)}
