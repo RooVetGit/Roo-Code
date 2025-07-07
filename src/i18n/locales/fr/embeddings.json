@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "Impossible de lire le corps de l'erreur",
 		"requestFailed": "Échec de la requête API Ollama avec le statut {{status}} {{statusText}} : {{errorBody}}",
 		"invalidResponseStructure": "Structure de réponse invalide de l'API Ollama : tableau \"embeddings\" non trouvé ou n'est pas un tableau.",
-		"embeddingFailed": "Échec de l'embedding Ollama : {{message}}"
+		"embeddingFailed": "Échec de l'embedding Ollama : {{message}}",
+		"serviceNotRunning": "Le service Ollama n'est pas en cours d'exécution sur {{baseUrl}}",
+		"serviceUnavailable": "Le service Ollama est indisponible (statut : {{status}})",
+		"modelNotFound": "Modèle Ollama introuvable : {{modelId}}",
+		"modelNotEmbeddingCapable": "Le modèle Ollama n'est pas capable d'intégrer : {{modelId}}",
+		"hostNotFound": "Hôte Ollama introuvable : {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Erreur inconnue lors du traitement du fichier {{filePath}}",

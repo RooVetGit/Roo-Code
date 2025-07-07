@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "त्रुटि सामग्री पढ़ नहीं सका",
 		"requestFailed": "Ollama API अनुरोध स्थिति {{status}} {{statusText}} के साथ विफल: {{errorBody}}",
 		"invalidResponseStructure": "Ollama API से अमान्य प्रतिक्रिया संरचना: \"embeddings\" सरणी नहीं मिली या सरणी नहीं है।",
-		"embeddingFailed": "Ollama एम्बेडिंग विफल: {{message}}"
+		"embeddingFailed": "Ollama एम्बेडिंग विफल: {{message}}",
+		"serviceNotRunning": "ओलामा सेवा {{baseUrl}} पर नहीं चल रही है",
+		"serviceUnavailable": "ओलामा सेवा अनुपलब्ध है (स्थिति: {{status}})",
+		"modelNotFound": "ओलामा मॉडल नहीं मिला: {{modelId}}",
+		"modelNotEmbeddingCapable": "ओलामा मॉडल एम्बेडिंग में सक्षम नहीं है: {{modelId}}",
+		"hostNotFound": "ओलामा होस्ट नहीं मिला: {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "फ़ाइल {{filePath}} प्रसंस्करण में अज्ञात त्रुटि",

@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "Не удалось прочитать тело ошибки",
 		"requestFailed": "Запрос к API Ollama не удался со статусом {{status}} {{statusText}}: {{errorBody}}",
 		"invalidResponseStructure": "Неверная структура ответа от API Ollama: массив \"embeddings\" не найден или не является массивом.",
-		"embeddingFailed": "Вложение Ollama не удалось: {{message}}"
+		"embeddingFailed": "Вложение Ollama не удалось: {{message}}",
+		"serviceNotRunning": "Сервис Ollama не запущен по адресу {{baseUrl}}",
+		"serviceUnavailable": "Сервис Ollama недоступен (статус: {{status}})",
+		"modelNotFound": "Модель Ollama не найдена: {{modelId}}",
+		"modelNotEmbeddingCapable": "Модель Ollama не способна к вложению: {{modelId}}",
+		"hostNotFound": "Хост Ollama не найден: {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Неизвестная ошибка при обработке файла {{filePath}}",

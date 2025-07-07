@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "Não foi possível ler o corpo do erro",
 		"requestFailed": "Solicitação da API Ollama falhou com status {{status}} {{statusText}}: {{errorBody}}",
 		"invalidResponseStructure": "Estrutura de resposta inválida da API Ollama: array \"embeddings\" não encontrado ou não é um array.",
-		"embeddingFailed": "Embedding Ollama falhou: {{message}}"
+		"embeddingFailed": "Embedding Ollama falhou: {{message}}",
+		"serviceNotRunning": "O serviço Ollama não está em execução em {{baseUrl}}",
+		"serviceUnavailable": "O serviço Ollama não está disponível (status: {{status}})",
+		"modelNotFound": "Modelo Ollama não encontrado: {{modelId}}",
+		"modelNotEmbeddingCapable": "O modelo Ollama não é capaz de embedding: {{modelId}}",
+		"hostNotFound": "Host Ollama não encontrado: {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Erro desconhecido ao processar arquivo {{filePath}}",

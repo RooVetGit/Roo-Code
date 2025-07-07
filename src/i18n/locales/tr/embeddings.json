@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "Hata gövdesi okunamadı",
 		"requestFailed": "Ollama API isteği {{status}} {{statusText}} durumuyla başarısız oldu: {{errorBody}}",
 		"invalidResponseStructure": "Ollama API'den geçersiz yanıt yapısı: \"embeddings\" dizisi bulunamadı veya dizi değil.",
-		"embeddingFailed": "Ollama gömülmesi başarısız oldu: {{message}}"
+		"embeddingFailed": "Ollama gömülmesi başarısız oldu: {{message}}",
+		"serviceNotRunning": "Ollama hizmeti {{baseUrl}} adresinde çalışmıyor",
+		"serviceUnavailable": "Ollama hizmeti kullanılamıyor (durum: {{status}})",
+		"modelNotFound": "Ollama modeli bulunamadı: {{modelId}}",
+		"modelNotEmbeddingCapable": "Ollama modeli gömme yeteneğine sahip değil: {{modelId}}",
+		"hostNotFound": "Ollama ana bilgisayarı bulunamadı: {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "{{filePath}} dosyası işlenirken bilinmeyen hata",

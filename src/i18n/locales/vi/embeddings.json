@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "Không thể đọc nội dung lỗi",
 		"requestFailed": "Yêu cầu API Ollama thất bại với trạng thái {{status}} {{statusText}}: {{errorBody}}",
 		"invalidResponseStructure": "Cấu trúc phản hồi không hợp lệ từ API Ollama: không tìm thấy mảng \"embeddings\" hoặc không phải là mảng.",
-		"embeddingFailed": "Nhúng Ollama thất bại: {{message}}"
+		"embeddingFailed": "Nhúng Ollama thất bại: {{message}}",
+		"serviceNotRunning": "Dịch vụ Ollama không chạy tại {{baseUrl}}",
+		"serviceUnavailable": "Dịch vụ Ollama không khả dụng (trạng thái: {{status}})",
+		"modelNotFound": "Không tìm thấy mô hình Ollama: {{modelId}}",
+		"modelNotEmbeddingCapable": "Mô hình Ollama không có khả năng nhúng: {{modelId}}",
+		"hostNotFound": "Không tìm thấy máy chủ Ollama: {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Lỗi không xác định khi xử lý tệp {{filePath}}",

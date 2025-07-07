@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "无法读取错误内容",
 		"requestFailed": "Ollama API 请求失败，状态码 {{status}} {{statusText}}：{{errorBody}}",
 		"invalidResponseStructure": "Ollama API 响应结构无效：未找到 \"embeddings\" 数组或不是数组。",
-		"embeddingFailed": "Ollama 嵌入失败：{{message}}"
+		"embeddingFailed": "Ollama 嵌入失败：{{message}}",
+		"serviceNotRunning": "Ollama 服务未在 {{baseUrl}} 运行",
+		"serviceUnavailable": "Ollama 服务不可用（状态：{{status}}）",
+		"modelNotFound": "未找到 Ollama 模型：{{modelId}}",
+		"modelNotEmbeddingCapable": "Ollama 模型不具备嵌入能力：{{modelId}}",
+		"hostNotFound": "未找到 Ollama 主机：{{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "处理文件 {{filePath}} 时出现未知错误",

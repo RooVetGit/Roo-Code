@@ -10,7 +10,12 @@
 		"couldNotReadErrorBody": "Nie można odczytać treści błędu",
 		"requestFailed": "Żądanie API Ollama nie powiodło się ze statusem {{status}} {{statusText}}: {{errorBody}}",
 		"invalidResponseStructure": "Nieprawidłowa struktura odpowiedzi z API Ollama: tablica \"embeddings\" nie została znaleziona lub nie jest tablicą.",
-		"embeddingFailed": "Osadzenie Ollama nie powiodło się: {{message}}"
+		"embeddingFailed": "Osadzenie Ollama nie powiodło się: {{message}}",
+		"serviceNotRunning": "Usługa Ollama nie jest uruchomiona pod adresem {{baseUrl}}",
+		"serviceUnavailable": "Usługa Ollama jest niedostępna (status: {{status}})",
+		"modelNotFound": "Nie znaleziono modelu Ollama: {{modelId}}",
+		"modelNotEmbeddingCapable": "Model Ollama nie jest zdolny do osadzania: {{modelId}}",
+		"hostNotFound": "Nie znaleziono hosta Ollama: {{baseUrl}}"
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Nieznany błąd podczas przetwarzania pliku {{filePath}}",
