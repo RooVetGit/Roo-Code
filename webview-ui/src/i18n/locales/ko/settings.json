@@ -100,7 +100,10 @@
 		"advancedConfigLabel": "고급 구성",
 		"searchMinScoreLabel": "검색 점수 임계값",
 		"searchMinScoreDescription": "검색 결과에 필요한 최소 유사도 점수(0.0-1.0). 값이 낮을수록 더 많은 결과가 반환되지만 관련성이 떨어질 수 있습니다. 값이 높을수록 결과는 적지만 관련성이 높은 결과가 반환됩니다.",
-		"searchMinScoreResetTooltip": "기본값(0.4)으로 재설정"
+		"searchMinScoreResetTooltip": "기본값(0.4)으로 재설정",
+		"searchMaxResultsLabel": "최대 검색 결과",
+		"searchMaxResultsDescription": "코드베이스 인덱스를 쿼리할 때 반환할 최대 검색 결과 수입니다. 값이 높을수록 더 많은 컨텍스트를 제공하지만 관련성이 낮은 결과가 포함될 수 있습니다.",
+		"resetToDefault": "기본값으로 재설정"
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
@@ -158,6 +161,10 @@
 			"allowedCommandsDescription": "\"실행 작업 항상 승인\"이 활성화되었을 때 자동 실행될 수 있는 명령 접두사. 모든 명령을 허용하려면 * 추가(주의해서 사용)",
 			"commandPlaceholder": "명령 접두사 입력(예: 'git ')",
 			"addButton": "추가"
+		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "승인 없이 자동으로 할 일 목록이 업데이트됩니다"
 		},
 		"apiRequestLimit": {
 			"title": "최대 요청 수",

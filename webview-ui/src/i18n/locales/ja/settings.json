@@ -100,7 +100,10 @@
 		"advancedConfigLabel": "詳細設定",
 		"searchMinScoreLabel": "検索スコアのしきい値",
 		"searchMinScoreDescription": "検索結果に必要な最小類似度スコア（0.0-1.0）。値を低くするとより多くの結果が返されますが、関連性が低くなる可能性があります。値を高くすると返される結果は少なくなりますが、より関連性が高くなります。",
-		"searchMinScoreResetTooltip": "デフォルト値（0.4）にリセット"
+		"searchMinScoreResetTooltip": "デフォルト値（0.4）にリセット",
+		"searchMaxResultsLabel": "最大検索結果数",
+		"searchMaxResultsDescription": "コードベースインデックスをクエリする際に返される検索結果の最大数。値を高くするとより多くのコンテキストが提供されますが、関連性の低い結果が含まれる可能性があります。",
+		"resetToDefault": "デフォルトにリセット"
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
@@ -158,6 +161,10 @@
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"addButton": "追加"
+		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "承認なしで自動的にToDoリストを更新"
 		},
 		"apiRequestLimit": {
 			"title": "最大リクエスト数",

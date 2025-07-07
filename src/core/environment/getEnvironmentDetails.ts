@@ -18,6 +18,7 @@ import { arePathsEqual } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 
 import { Task } from "../task/Task"
+import { formatReminderSection } from "./reminder"
 
 export async function getEnvironmentDetails(cline: Task, includeFileDetails: boolean = false) {
 	let details = ""
@@ -252,20 +253,27 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 			details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
 		} else {
 			const maxFiles = maxWorkspaceFiles ?? 200
-			const [files, didHitLimit] = await listFiles(cline.cwd, true, maxFiles)
-			const { showRooIgnoredFiles = true } = state ?? {}
 
-			const result = formatResponse.formatFilesList(
-				cline.cwd,
-				files,
-				didHitLimit,
-				cline.rooIgnoreController,
-				showRooIgnoredFiles,
-			)
+			// Early return for limit of 0
+			if (maxFiles === 0) {
+				details += "(Workspace files context disabled. Use list_files to explore if needed.)"
+			} else {
+				const [files, didHitLimit] = await listFiles(cline.cwd, true, maxFiles)
+				const { showRooIgnoredFiles = true } = state ?? {}
 
-			details += result
+				const result = formatResponse.formatFilesList(
+					cline.cwd,
+					files,
+					didHitLimit,
+					cline.rooIgnoreController,
+					showRooIgnoredFiles,
+				)
+
+				details += result
+			}
 		}
 	}
 
-	return `<environment_details>\n${details.trim()}\n</environment_details>`
+	const reminderSection = formatReminderSection(cline.todoList)
+	return `<environment_details>\n${details.trim()}\n${reminderSection}\n</environment_details>`
 }
