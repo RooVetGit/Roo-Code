@@ -296,6 +296,8 @@ export class CodeIndexManager {
 				} catch (error) {
 					// Error state already set in _recreateServices
 					console.error("Failed to recreate services:", error)
+					// Re-throw the error so the caller knows validation failed
+					throw error
 				}
 			}
 		}

@@ -1830,8 +1830,12 @@ export const webviewMessageHandler = async (
 			const settings = message.codeIndexSettings
 
 			try {
-				// Save global state settings atomically (without codebaseIndexEnabled which is now in global settings)
+				// Check if embedder provider has changed
 				const currentConfig = getGlobalState("codebaseIndexConfig") || {}
+				const embedderProviderChanged =
+					currentConfig.codebaseIndexEmbedderProvider !== settings.codebaseIndexEmbedderProvider
+
+				// Save global state settings atomically (without codebaseIndexEnabled which is now in global settings)
 				const globalStateConfig = {
 					...currentConfig,
 					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
@@ -1880,7 +1884,28 @@ export const webviewMessageHandler = async (
 
 				// Then handle validation and initialization
 				if (provider.codeIndexManager) {
-					await provider.codeIndexManager.handleSettingsChange()
+					// If embedder provider changed, perform proactive validation
+					if (embedderProviderChanged) {
+						try {
+							// Force handleSettingsChange which will trigger validation
+							await provider.codeIndexManager.handleSettingsChange()
+						} catch (error) {
+							// Validation failed - the error state is already set by handleSettingsChange
+							provider.log(
+								`Embedder validation failed after provider change: ${error instanceof Error ? error.message : String(error)}`,
+							)
+							// Send validation error to webview
+							await provider.postMessageToWebview({
+								type: "indexingStatusUpdate",
+								values: provider.codeIndexManager.getCurrentStatus(),
+							})
+							// Exit early - don't try to start indexing with invalid configuration
+							break
+						}
+					} else {
+						// No provider change, just handle settings normally
+						await provider.codeIndexManager.handleSettingsChange()
+					}
 
 					// Auto-start indexing if now enabled and configured
 					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
@@ -1898,6 +1923,11 @@ export const webviewMessageHandler = async (
 								provider.log(
 									`Code index initialization failed during settings save: ${error instanceof Error ? error.message : String(error)}`,
 								)
+								// Send error status to webview
+								await provider.postMessageToWebview({
+									type: "indexingStatusUpdate",
+									values: provider.codeIndexManager.getCurrentStatus(),
+								})
 								// Don't re-throw - settings are already saved successfully
 							}
 						} else {
