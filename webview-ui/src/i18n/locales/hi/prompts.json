@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "मोड हटाएँ"
 	},
-	"allFiles": "सभी फाइलें"
+	"allFiles": "सभी फाइलें",
+	"mcpRestrictions": {
+		"title": "MCP सर्वर प्रतिबंध",
+		"description": "नियंत्रित करें कि इस मोड में कौन से MCP सर्वर और टूल उपलब्ध हैं। लचीले मिलान के लिए '*' और '?' जैसे पैटर्न का उपयोग करें।",
+		"expand": "MCP प्रतिबंध कॉन्फ़िगर करें",
+		"collapse": "MCP प्रतिबंध छुपाएं",
+		"clearAll": "सभी प्रतिबंध साफ़ करें",
+		"restrictionsConfigured": "{{count}} प्रतिबंध कॉन्फ़िगर किए गए",
+		"noServersAvailable": "वर्तमान में कोई MCP सर्वर उपलब्ध नहीं हैं। इस सुविधा का उपयोग करने के लिए अपनी सेटिंग्स में MCP सर्वर कॉन्फ़िगर करें।",
+		"tabs": {
+			"servers": "सर्वर",
+			"tools": "टूल"
+		},
+		"servers": {
+			"description": "नियंत्रित करें कि कौन से MCP सर्वर उपलब्ध हैं। यदि कोई सर्वर स्पष्ट रूप से अनुमतित नहीं हैं, तो सभी सर्वर (अनुमति न दिए गए को छोड़कर) उपलब्ध होंगे।",
+			"overview": "अवलोकन",
+			"allow": "अनुमति दें",
+			"disallow": "ब्लॉक करें",
+			"toolsCount": "टूल",
+			"optIn": "ऑप्ट-इन आवश्यक",
+			"allowedServers": "अनुमतित सर्वर",
+			"disallowedServers": "ब्लॉक किए गए सर्वर",
+			"currentStatus": "वर्तमान सर्वर स्थिति",
+			"enabledCount": "{{count}} सक्षम: {{names}}",
+			"disabledCount": "{{count}} अक्षम: {{names}}",
+			"restrictedCount": "{{count}} प्रतिबंधों के साथ: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} प्रतिबंधों के साथ सक्षम: {{names}}"
+		},
+		"tools": {
+			"description": "सर्वर के भीतर विशिष्ट टूल को नियंत्रित करें। कई टूल से मेल खाने के लिए 'delete_*' जैसे पैटर्न का उपयोग करें।",
+			"allowedTools": "अनुमतित टूल",
+			"disallowedTools": "ब्लॉक किए गए टूल",
+			"addAllowed": "अनुमतित जोड़ें",
+			"addDisallowed": "ब्लॉक जोड़ें",
+			"noAllowedTools": "सभी टूल अनुमतित हैं (नीचे विशेष रूप से ब्लॉक किए गए को छोड़कर)",
+			"noDisallowedTools": "कोई टूल विशेष रूप से ब्लॉक नहीं हैं",
+			"serverName": "सर्वर",
+			"toolName": "टूल",
+			"serverNamePlaceholder": "सर्वर नाम या पैटर्न (जैसे docs-*, *-admin)",
+			"toolNamePlaceholder": "टूल नाम या पैटर्न (जैसे get_*, delete_*)",
+			"remove": "प्रतिबंध हटाएं",
+			"advancedPatterns": "पैटर्न मिलान गाइड",
+			"viewTools": "सर्वर टूल देखें",
+			"hideTools": "सर्वर टूल छुपाएं",
+			"serverTools": "{{serverName}} के टूल",
+			"noTools": "इस सर्वर के लिए कोई टूल उपलब्ध नहीं"
+		},
+		"patterns": {
+			"title": "पैटर्न मिलान",
+			"wildcard": "वर्णों के किसी भी क्रम से मेल खाता है",
+			"singleChar": "बिल्कुल एक वर्ण से मेल खाता है",
+			"examples": "उदाहरण",
+			"example1": "docs-api, docs-search, आदि से मेल खाता है",
+			"example2": "server-admin, user-admin, आदि से मेल खाता है",
+			"example3": "delete_file, delete_user, आदि से मेल खाता है"
+		},
+		"status": {
+			"enabled": "सक्षम",
+			"disabled": "अक्षम",
+			"reason": "कारण",
+			"explicitlyAllowed": "उपयोगकर्ता द्वारा स्पष्ट रूप से अनुमतित",
+			"explicitlyDisallowed": "उपयोगकर्ता द्वारा स्पष्ट रूप से अनुमति नहीं",
+			"notInAllowList": "अनुमतित सर्वर सूची में शामिल नहीं",
+			"allowedInModesByDefault": "मोड के लिए डिफ़ॉल्ट रूप से सक्षम (कस्टम और मूल)",
+			"blockedInModesByDefault": "डिफ़ॉल्ट सर्वर कॉन्फ़िगरेशन द्वारा अक्षम (ऑप्ट-इन आवश्यक)"
+		},
+		"picker": {
+			"noServers": "कोई सर्वर उपलब्ध नहीं",
+			"noTools": "इस सर्वर के लिए कोई टूल उपलब्ध नहीं",
+			"selectServerFirst": "कृपया पहले एक सर्वर चुनें"
+		},
+		"serverGroups": {
+			"enabled": "सक्षम सर्वर",
+			"disabled": "अक्षम सर्वर",
+			"restricted": "प्रतिबंधों वाले सर्वर",
+			"expandGroup": "समूह विस्तृत करें",
+			"collapseGroup": "समूह संक्षिप्त करें",
+			"allowAll": "सभी को अनुमति दें",
+			"blockAll": "सभी को ब्लॉक करें",
+			"clearRestrictions": "सभी प्रतिबंध साफ़ करें"
+		}
+	}
 }

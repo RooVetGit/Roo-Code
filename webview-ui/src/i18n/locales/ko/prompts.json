@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "모드 삭제"
 	},
-	"allFiles": "모든 파일"
+	"allFiles": "모든 파일",
+	"mcpRestrictions": {
+		"title": "MCP 서버 제한",
+		"description": "이 모드에서 사용 가능한 MCP 서버와 도구를 제어합니다. 유연한 매칭을 위해 '*'와 '?' 같은 패턴을 사용하세요.",
+		"expand": "MCP 제한 구성",
+		"collapse": "MCP 제한 숨기기",
+		"clearAll": "모든 제한 지우기",
+		"restrictionsConfigured": "{{count}}개의 제한이 구성됨",
+		"noServersAvailable": "현재 사용 가능한 MCP 서버가 없습니다. 이 기능을 사용하려면 설정에서 MCP 서버를 구성하세요.",
+		"tabs": {
+			"servers": "서버",
+			"tools": "도구"
+		},
+		"servers": {
+			"description": "사용 가능한 MCP 서버를 제어합니다. 명시적으로 허용된 서버가 없으면 모든 서버(허용되지 않은 서버 제외)를 사용할 수 있습니다.",
+			"overview": "개요",
+			"allow": "허용",
+			"disallow": "차단",
+			"toolsCount": "도구",
+			"optIn": "옵트인 필요",
+			"allowedServers": "허용된 서버",
+			"disallowedServers": "차단된 서버",
+			"currentStatus": "현재 서버 상태",
+			"enabledCount": "{{count}}개 활성화됨: {{names}}",
+			"disabledCount": "{{count}}개 비활성화됨: {{names}}",
+			"restrictedCount": "{{count}}개 제한됨: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}}개 제한과 함께 활성화됨: {{names}}"
+		},
+		"tools": {
+			"description": "서버 내의 특정 도구를 제어합니다. 여러 도구와 매칭하려면 'delete_*'와 같은 패턴을 사용하세요.",
+			"allowedTools": "허용된 도구",
+			"disallowedTools": "차단된 도구",
+			"addAllowed": "허용 추가",
+			"addDisallowed": "차단 추가",
+			"noAllowedTools": "모든 도구가 허용됩니다 (아래에서 특별히 차단된 것 제외)",
+			"noDisallowedTools": "특별히 차단된 도구가 없습니다",
+			"serverName": "서버",
+			"toolName": "도구",
+			"serverNamePlaceholder": "서버 이름 또는 패턴 (예: docs-*, *-admin)",
+			"toolNamePlaceholder": "도구 이름 또는 패턴 (예: get_*, delete_*)",
+			"remove": "제한 제거",
+			"advancedPatterns": "패턴 매칭 가이드",
+			"viewTools": "서버 도구 보기",
+			"hideTools": "서버 도구 숨기기",
+			"serverTools": "{{serverName}}의 도구",
+			"noTools": "이 서버에 사용 가능한 도구가 없습니다"
+		},
+		"patterns": {
+			"title": "패턴 매칭",
+			"wildcard": "모든 문자 시퀀스와 일치",
+			"singleChar": "정확히 하나의 문자와 일치",
+			"examples": "예제",
+			"example1": "docs-api, docs-search 등과 일치",
+			"example2": "server-admin, user-admin 등과 일치",
+			"example3": "delete_file, delete_user 등과 일치"
+		},
+		"status": {
+			"enabled": "활성화됨",
+			"disabled": "비활성화됨",
+			"reason": "이유",
+			"explicitlyAllowed": "사용자에 의해 명시적으로 허용됨",
+			"explicitlyDisallowed": "사용자에 의해 명시적으로 허용되지 않음",
+			"notInAllowList": "허용된 서버 목록에 포함되지 않음",
+			"allowedInModesByDefault": "모드에서 기본적으로 활성화됨 (커스텀 및 네이티브)",
+			"blockedInModesByDefault": "기본 서버 구성에 의해 비활성화됨 (옵트인 필요)"
+		},
+		"picker": {
+			"noServers": "사용 가능한 서버가 없습니다",
+			"noTools": "이 서버에 사용 가능한 도구가 없습니다",
+			"selectServerFirst": "먼저 서버를 선택하세요"
+		},
+		"serverGroups": {
+			"enabled": "활성화된 서버",
+			"disabled": "비활성화된 서버",
+			"restricted": "제한된 서버",
+			"expandGroup": "그룹 확장",
+			"collapseGroup": "그룹 축소",
+			"allowAll": "모두 허용",
+			"blockAll": "모두 차단",
+			"clearRestrictions": "모든 제한 지우기"
+		}
+	}
 }

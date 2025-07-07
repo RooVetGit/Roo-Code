@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Eliminar mode"
 	},
-	"allFiles": "tots els fitxers"
+	"allFiles": "tots els fitxers",
+	"mcpRestrictions": {
+		"title": "Restriccions de servidor MCP",
+		"description": "Controleu quins servidors MCP i eines estan disponibles en aquest mode. Utilitzeu patrons com '*' i '?' per a coincidències flexibles.",
+		"expand": "Configurar restriccions MCP",
+		"collapse": "Ocultar restriccions MCP",
+		"clearAll": "Esborrar totes les restriccions",
+		"restrictionsConfigured": "{{count}} restricció/restriccions configurades",
+		"noServersAvailable": "No hi ha servidors MCP disponibles actualment. Configureu servidors MCP a les vostres preferències per utilitzar aquesta funcionalitat.",
+		"tabs": {
+			"servers": "Servidors",
+			"tools": "Eines"
+		},
+		"servers": {
+			"description": "Controleu quins servidors MCP estan disponibles. Si no es permeten servidors explícitament, tots els servidors (excepte els no permesos) estaran disponibles.",
+			"overview": "Resum",
+			"allow": "Permetre",
+			"disallow": "Bloquejar",
+			"toolsCount": "eines",
+			"optIn": "requereix activació",
+			"allowedServers": "Servidors permesos",
+			"disallowedServers": "Servidors bloquejats",
+			"currentStatus": "Estat actual del servidor",
+			"enabledCount": "{{count}} activat/activats: {{names}}",
+			"disabledCount": "{{count}} desactivat/desactivats: {{names}}",
+			"restrictedCount": "{{count}} amb restriccions: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} activat/activats amb restriccions: {{names}}"
+		},
+		"tools": {
+			"description": "Controleu eines específiques dins dels servidors. Utilitzeu patrons com 'delete_*' per coincidir amb múltiples eines.",
+			"allowedTools": "Eines permeses",
+			"disallowedTools": "Eines bloquejades",
+			"addAllowed": "Afegir permès",
+			"addDisallowed": "Afegir bloquejat",
+			"noAllowedTools": "Totes les eines estan permeses (excepte les bloquejades específicament a continuació)",
+			"noDisallowedTools": "No hi ha eines bloquejades específicament",
+			"serverName": "Servidor",
+			"toolName": "Eina",
+			"serverNamePlaceholder": "Nom del servidor o patró (p. ex., docs-*, *-admin)",
+			"toolNamePlaceholder": "Nom de l'eina o patró (p. ex., get_*, delete_*)",
+			"remove": "Eliminar restricció",
+			"advancedPatterns": "Guia de coincidència de patrons",
+			"viewTools": "Veure eines del servidor",
+			"hideTools": "Ocultar eines del servidor",
+			"serverTools": "Eines de {{serverName}}",
+			"noTools": "No hi ha eines disponibles per a aquest servidor"
+		},
+		"patterns": {
+			"title": "Coincidència de patrons",
+			"wildcard": "Coincideix amb qualsevol seqüència de caràcters",
+			"singleChar": "Coincideix amb exactament un caràcter",
+			"examples": "Exemples",
+			"example1": "Coincideix amb docs-api, docs-search, etc.",
+			"example2": "Coincideix amb server-admin, user-admin, etc.",
+			"example3": "Coincideix amb delete_file, delete_user, etc."
+		},
+		"status": {
+			"enabled": "ACTIVAT",
+			"disabled": "DESACTIVAT",
+			"reason": "Motiu",
+			"explicitlyAllowed": "Permès explícitament per l'usuari",
+			"explicitlyDisallowed": "No permès explícitament per l'usuari",
+			"notInAllowList": "No inclòs a la llista de servidors permesos",
+			"allowedInModesByDefault": "Activat per defecte per als modes (personalitzats i nadius)",
+			"blockedInModesByDefault": "Desactivat per configuració per defecte del servidor (requereix activació)"
+		},
+		"picker": {
+			"noServers": "No hi ha servidors disponibles",
+			"noTools": "No hi ha eines disponibles per a aquest servidor",
+			"selectServerFirst": "Seleccioneu primer un servidor"
+		},
+		"serverGroups": {
+			"enabled": "Servidors activats",
+			"disabled": "Servidors desactivats",
+			"restricted": "Servidors amb restriccions",
+			"expandGroup": "Ampliar grup",
+			"collapseGroup": "Contraure grup",
+			"allowAll": "Permetre tot",
+			"blockAll": "Bloquejar tot",
+			"clearRestrictions": "Esborrar totes les restriccions"
+		}
+	}
 }

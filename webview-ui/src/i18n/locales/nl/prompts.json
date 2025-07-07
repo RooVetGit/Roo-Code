@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Modus verwijderen"
 	},
-	"allFiles": "alle bestanden"
+	"allFiles": "alle bestanden",
+	"mcpRestrictions": {
+		"title": "MCP Server Beperkingen",
+		"description": "Bepaal welke MCP servers en tools beschikbaar zijn in deze modus. Gebruik patronen zoals '*' en '?' voor flexibele matching.",
+		"expand": "MCP beperkingen configureren",
+		"collapse": "MCP beperkingen verbergen",
+		"clearAll": "Alle beperkingen wissen",
+		"restrictionsConfigured": "{{count}} beperking(en) geconfigureerd",
+		"noServersAvailable": "Er zijn momenteel geen MCP servers beschikbaar. Configureer MCP servers in je instellingen om deze functie te gebruiken.",
+		"tabs": {
+			"servers": "Servers",
+			"tools": "Tools"
+		},
+		"servers": {
+			"description": "Bepaal welke MCP servers beschikbaar zijn. Als geen servers expliciet zijn toegestaan, zijn alle servers (behalve die niet toegestaan) beschikbaar.",
+			"overview": "Overzicht",
+			"allow": "Toestaan",
+			"disallow": "Blokkeren",
+			"toolsCount": "tools",
+			"optIn": "opt-in vereist",
+			"allowedServers": "Toegestane servers",
+			"disallowedServers": "Geblokkeerde servers",
+			"currentStatus": "Huidige Server Status",
+			"enabledCount": "{{count}} ingeschakeld: {{names}}",
+			"disabledCount": "{{count}} uitgeschakeld: {{names}}",
+			"restrictedCount": "{{count}} met beperkingen: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} ingeschakeld met beperkingen: {{names}}"
+		},
+		"tools": {
+			"description": "Bepaal specifieke tools binnen servers. Gebruik patronen zoals 'delete_*' om meerdere tools te matchen.",
+			"allowedTools": "Toegestane Tools",
+			"disallowedTools": "Geblokkeerde Tools",
+			"addAllowed": "Toegestaan toevoegen",
+			"addDisallowed": "Geblokkeerd toevoegen",
+			"noAllowedTools": "Alle tools zijn toegestaan (behalve die specifiek geblokkeerd hieronder)",
+			"noDisallowedTools": "Geen tools zijn specifiek geblokkeerd",
+			"serverName": "Server",
+			"toolName": "Tool",
+			"serverNamePlaceholder": "Servernaam of patroon (bijv. docs-*, *-admin)",
+			"toolNamePlaceholder": "Toolnaam of patroon (bijv. get_*, delete_*)",
+			"remove": "Beperking verwijderen",
+			"advancedPatterns": "Patroon Matching Gids",
+			"viewTools": "Server tools bekijken",
+			"hideTools": "Server tools verbergen",
+			"serverTools": "Tools van {{serverName}}",
+			"noTools": "Geen tools beschikbaar voor deze server"
+		},
+		"patterns": {
+			"title": "Patroon Matching",
+			"wildcard": "Matcht elke reeks karakters",
+			"singleChar": "Matcht precies één karakter",
+			"examples": "Voorbeelden",
+			"example1": "Matcht docs-api, docs-search, enz.",
+			"example2": "Matcht server-admin, user-admin, enz.",
+			"example3": "Matcht delete_file, delete_user, enz."
+		},
+		"status": {
+			"enabled": "INGESCHAKELD",
+			"disabled": "UITGESCHAKELD",
+			"reason": "Reden",
+			"explicitlyAllowed": "Expliciet toegestaan door gebruiker",
+			"explicitlyDisallowed": "Expliciet niet toegestaan door gebruiker",
+			"notInAllowList": "Niet opgenomen in toegestane servers lijst",
+			"allowedInModesByDefault": "Standaard ingeschakeld voor modi (aangepast en native)",
+			"blockedInModesByDefault": "Uitgeschakeld door standaard server configuratie (opt-in vereist)"
+		},
+		"picker": {
+			"noServers": "Geen servers beschikbaar",
+			"noTools": "Geen tools beschikbaar voor deze server",
+			"selectServerFirst": "Selecteer eerst een server"
+		},
+		"serverGroups": {
+			"enabled": "Ingeschakelde Servers",
+			"disabled": "Uitgeschakelde Servers",
+			"restricted": "Servers met Beperkingen",
+			"expandGroup": "Groep uitklappen",
+			"collapseGroup": "Groep inklappen",
+			"allowAll": "Alles toestaan",
+			"blockAll": "Alles blokkeren",
+			"clearRestrictions": "Alle beperkingen wissen"
+		}
+	}
 }

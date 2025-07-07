@@ -186,6 +186,87 @@
 		"deleteMode": "删除模式"
 	},
 	"allFiles": "所有文件",
+	"mcpRestrictions": {
+		"title": "MCP 服务器限制",
+		"description": "控制此模式中可用的 MCP 服务器和工具。使用 '*' 和 '?' 等模式进行灵活匹配。",
+		"expand": "配置 MCP 限制",
+		"collapse": "隐藏 MCP 限制",
+		"clearAll": "清除所有限制",
+		"restrictionsConfigured": "已配置 {{count}} 个限制",
+		"noServersAvailable": "当前没有可用的 MCP 服务器。请在设置中配置 MCP 服务器以使用此功能。",
+		"tabs": {
+			"servers": "服务器",
+			"tools": "工具"
+		},
+		"servers": {
+			"description": "控制哪些 MCP 服务器可用。如果没有明确允许的服务器，所有服务器（除了被禁止的）都将可用。",
+			"overview": "概览",
+			"allow": "允许",
+			"disallow": "阻止",
+			"toolsCount": "工具",
+			"optIn": "需要选择加入",
+			"allowedServers": "允许的服务器",
+			"disallowedServers": "被阻止的服务器",
+			"currentStatus": "当前服务器状态",
+			"enabledCount": "{{count}} 个已启用：{{names}}",
+			"disabledCount": "{{count}} 个已禁用：{{names}}",
+			"restrictedCount": "{{count}} 个有限制：{{names}}",
+			"enabledWithRestrictionsCount": "{{count}} 个已启用但有限制：{{names}}"
+		},
+		"tools": {
+			"description": "控制服务器内的特定工具。使用 'delete_*' 等模式匹配多个工具。",
+			"allowedTools": "允许的工具",
+			"disallowedTools": "被阻止的工具",
+			"addAllowed": "添加允许",
+			"addDisallowed": "添加阻止",
+			"noAllowedTools": "所有工具都被允许（除了下面特别阻止的）",
+			"noDisallowedTools": "没有特别阻止的工具",
+			"serverName": "服务器",
+			"toolName": "工具",
+			"serverNamePlaceholder": "服务器名称或模式（例如 docs-*、*-admin）",
+			"toolNamePlaceholder": "工具名称或模式（例如 get_*、delete_*）",
+			"remove": "移除限制",
+			"advancedPatterns": "模式匹配指南",
+			"viewTools": "查看服务器工具",
+			"hideTools": "隐藏服务器工具",
+			"serverTools": "{{serverName}} 的工具",
+			"noTools": "此服务器没有可用的工具"
+		},
+		"patterns": {
+			"title": "模式匹配",
+			"wildcard": "匹配任何字符序列",
+			"singleChar": "精确匹配一个字符",
+			"examples": "示例",
+			"example1": "匹配 docs-api、docs-search 等",
+			"example2": "匹配 server-admin、user-admin 等",
+			"example3": "匹配 delete_file、delete_user 等"
+		},
+		"status": {
+			"enabled": "已启用",
+			"disabled": "已禁用",
+			"reason": "原因",
+			"explicitlyAllowed": "用户明确允许",
+			"explicitlyDisallowed": "用户明确禁止",
+			"notInAllowList": "未包含在允许的服务器列表中",
+			"allowedInModesByDefault": "模式中默认启用（自定义和原生）",
+			"blockedInModesByDefault": "默认服务器配置禁用（需要选择加入）"
+		},
+		"picker": {
+			"noServers": "没有可用的服务器",
+			"noTools": "此服务器没有可用的工具",
+			"selectServerFirst": "请先选择一个服务器"
+		},
+		"serverGroups": {
+			"enabled": "已启用的服务器",
+			"disabled": "已禁用的服务器",
+			"restricted": "有限制的服务器",
+			"expandGroup": "展开组",
+			"collapseGroup": "折叠组",
+			"allowAll": "允许全部",
+			"blockAll": "阻止全部",
+			"clearRestrictions": "清除所有限制"
+		}
+	},
 	"advanced": {
 		"title": "高级"
 	}

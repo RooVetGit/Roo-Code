@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Supprimer le mode"
 	},
-	"allFiles": "tous les fichiers"
+	"allFiles": "tous les fichiers",
+	"mcpRestrictions": {
+		"title": "Restrictions de serveur MCP",
+		"description": "Contrôlez quels serveurs MCP et outils sont disponibles dans ce mode. Utilisez des motifs comme '*' et '?' pour des correspondances flexibles.",
+		"expand": "Configurer les restrictions MCP",
+		"collapse": "Masquer les restrictions MCP",
+		"clearAll": "Effacer toutes les restrictions",
+		"restrictionsConfigured": "{{count}} restriction(s) configurée(s)",
+		"noServersAvailable": "Aucun serveur MCP n'est actuellement disponible. Configurez des serveurs MCP dans vos paramètres pour utiliser cette fonctionnalité.",
+		"tabs": {
+			"servers": "Serveurs",
+			"tools": "Outils"
+		},
+		"servers": {
+			"description": "Contrôlez quels serveurs MCP sont disponibles. Si aucun serveur n'est explicitement autorisé, tous les serveurs (sauf ceux interdits) seront disponibles.",
+			"overview": "Aperçu",
+			"allow": "Autoriser",
+			"disallow": "Bloquer",
+			"toolsCount": "outils",
+			"optIn": "opt-in requis",
+			"allowedServers": "Serveurs autorisés",
+			"disallowedServers": "Serveurs bloqués",
+			"currentStatus": "État actuel du serveur",
+			"enabledCount": "{{count}} activé(s) : {{names}}",
+			"disabledCount": "{{count}} désactivé(s) : {{names}}",
+			"restrictedCount": "{{count}} avec restrictions : {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} activé(s) avec restrictions : {{names}}"
+		},
+		"tools": {
+			"description": "Contrôlez des outils spécifiques dans les serveurs. Utilisez des motifs comme 'delete_*' pour correspondre à plusieurs outils.",
+			"allowedTools": "Outils autorisés",
+			"disallowedTools": "Outils bloqués",
+			"addAllowed": "Ajouter autorisé",
+			"addDisallowed": "Ajouter bloqué",
+			"noAllowedTools": "Tous les outils sont autorisés (sauf ceux spécifiquement bloqués ci-dessous)",
+			"noDisallowedTools": "Aucun outil n'est spécifiquement bloqué",
+			"serverName": "Serveur",
+			"toolName": "Outil",
+			"serverNamePlaceholder": "Nom du serveur ou motif (ex. docs-*, *-admin)",
+			"toolNamePlaceholder": "Nom de l'outil ou motif (ex. get_*, delete_*)",
+			"remove": "Supprimer la restriction",
+			"advancedPatterns": "Guide de correspondance de motifs",
+			"viewTools": "Voir les outils du serveur",
+			"hideTools": "Masquer les outils du serveur",
+			"serverTools": "Outils de {{serverName}}",
+			"noTools": "Aucun outil disponible pour ce serveur"
+		},
+		"patterns": {
+			"title": "Correspondance de motifs",
+			"wildcard": "Correspond à n'importe quelle séquence de caractères",
+			"singleChar": "Correspond à exactement un caractère",
+			"examples": "Exemples",
+			"example1": "Correspond à docs-api, docs-search, etc.",
+			"example2": "Correspond à server-admin, user-admin, etc.",
+			"example3": "Correspond à delete_file, delete_user, etc."
+		},
+		"status": {
+			"enabled": "ACTIVÉ",
+			"disabled": "DÉSACTIVÉ",
+			"reason": "Raison",
+			"explicitlyAllowed": "Explicitement autorisé par l'utilisateur",
+			"explicitlyDisallowed": "Explicitement interdit par l'utilisateur",
+			"notInAllowList": "Non inclus dans la liste des serveurs autorisés",
+			"allowedInModesByDefault": "Activé par défaut pour les modes (personnalisés et natifs)",
+			"blockedInModesByDefault": "Désactivé par configuration de serveur par défaut (opt-in requis)"
+		},
+		"picker": {
+			"noServers": "Aucun serveur disponible",
+			"noTools": "Aucun outil disponible pour ce serveur",
+			"selectServerFirst": "Veuillez d'abord sélectionner un serveur"
+		},
+		"serverGroups": {
+			"enabled": "Serveurs activés",
+			"disabled": "Serveurs désactivés",
+			"restricted": "Serveurs avec restrictions",
+			"expandGroup": "Développer le groupe",
+			"collapseGroup": "Réduire le groupe",
+			"allowAll": "Tout autoriser",
+			"blockAll": "Tout bloquer",
+			"clearRestrictions": "Effacer toutes les restrictions"
+		}
+	}
 }

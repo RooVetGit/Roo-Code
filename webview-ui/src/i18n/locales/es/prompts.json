@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Eliminar modo"
 	},
-	"allFiles": "todos los archivos"
+	"allFiles": "todos los archivos",
+	"mcpRestrictions": {
+		"title": "Restricciones de servidor MCP",
+		"description": "Controla qué servidores MCP y herramientas están disponibles en este modo. Usa patrones como '*' y '?' para coincidencias flexibles.",
+		"expand": "Configurar restricciones MCP",
+		"collapse": "Ocultar restricciones MCP",
+		"clearAll": "Eliminar todas las restricciones",
+		"restrictionsConfigured": "{{count}} restricción(es) configurada(s)",
+		"noServersAvailable": "No hay servidores MCP disponibles actualmente. Configura servidores MCP en tu configuración para usar esta función.",
+		"tabs": {
+			"servers": "Servidores",
+			"tools": "Herramientas"
+		},
+		"servers": {
+			"description": "Controla qué servidores MCP están disponibles. Si no se permiten servidores explícitamente, todos los servidores (excepto los no permitidos) estarán disponibles.",
+			"overview": "Resumen",
+			"allow": "Permitir",
+			"disallow": "Bloquear",
+			"toolsCount": "herramientas",
+			"optIn": "requiere activación",
+			"allowedServers": "Servidores permitidos",
+			"disallowedServers": "Servidores bloqueados",
+			"currentStatus": "Estado actual del servidor",
+			"enabledCount": "{{count}} habilitado(s): {{names}}",
+			"disabledCount": "{{count}} deshabilitado(s): {{names}}",
+			"restrictedCount": "{{count}} con restricciones: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} habilitado(s) con restricciones: {{names}}"
+		},
+		"tools": {
+			"description": "Controla herramientas específicas dentro de los servidores. Usa patrones como 'delete_*' para coincidir con múltiples herramientas.",
+			"allowedTools": "Herramientas permitidas",
+			"disallowedTools": "Herramientas bloqueadas",
+			"addAllowed": "Agregar permitido",
+			"addDisallowed": "Agregar bloqueado",
+			"noAllowedTools": "Todas las herramientas están permitidas (excepto las bloqueadas específicamente abajo)",
+			"noDisallowedTools": "No hay herramientas bloqueadas específicamente",
+			"serverName": "Servidor",
+			"toolName": "Herramienta",
+			"serverNamePlaceholder": "Nombre del servidor o patrón (ej. docs-*, *-admin)",
+			"toolNamePlaceholder": "Nombre de herramienta o patrón (ej. get_*, delete_*)",
+			"remove": "Eliminar restricción",
+			"advancedPatterns": "Guía de coincidencia de patrones",
+			"viewTools": "Ver herramientas del servidor",
+			"hideTools": "Ocultar herramientas del servidor",
+			"serverTools": "Herramientas de {{serverName}}",
+			"noTools": "No hay herramientas disponibles para este servidor"
+		},
+		"patterns": {
+			"title": "Coincidencia de patrones",
+			"wildcard": "Coincide con cualquier secuencia de caracteres",
+			"singleChar": "Coincide con exactamente un carácter",
+			"examples": "Ejemplos",
+			"example1": "Coincide con docs-api, docs-search, etc.",
+			"example2": "Coincide con server-admin, user-admin, etc.",
+			"example3": "Coincide con delete_file, delete_user, etc."
+		},
+		"status": {
+			"enabled": "HABILITADO",
+			"disabled": "DESHABILITADO",
+			"reason": "Razón",
+			"explicitlyAllowed": "Permitido explícitamente por el usuario",
+			"explicitlyDisallowed": "No permitido explícitamente por el usuario",
+			"notInAllowList": "No incluido en la lista de servidores permitidos",
+			"allowedInModesByDefault": "Habilitado por defecto para modos (personalizados y nativos)",
+			"blockedInModesByDefault": "Deshabilitado por configuración por defecto del servidor (requiere activación)"
+		},
+		"picker": {
+			"noServers": "No hay servidores disponibles",
+			"noTools": "No hay herramientas disponibles para este servidor",
+			"selectServerFirst": "Por favor selecciona un servidor primero"
+		},
+		"serverGroups": {
+			"enabled": "Servidores habilitados",
+			"disabled": "Servidores deshabilitados",
+			"restricted": "Servidores con restricciones",
+			"expandGroup": "Expandir grupo",
+			"collapseGroup": "Contraer grupo",
+			"allowAll": "Permitir todo",
+			"blockAll": "Bloquear todo",
+			"clearRestrictions": "Eliminar todas las restricciones"
+		}
+	}
 }

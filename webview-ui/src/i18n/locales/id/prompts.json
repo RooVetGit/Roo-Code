@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Hapus mode"
 	},
-	"allFiles": "semua file"
+	"allFiles": "semua file",
+	"mcpRestrictions": {
+		"title": "Pembatasan Server MCP",
+		"description": "Kontrol server MCP dan alat mana yang tersedia dalam mode ini. Gunakan pola seperti '*' dan '?' untuk pencocokan fleksibel.",
+		"expand": "Konfigurasi pembatasan MCP",
+		"collapse": "Sembunyikan pembatasan MCP",
+		"clearAll": "Hapus semua pembatasan",
+		"restrictionsConfigured": "{{count}} pembatasan dikonfigurasi",
+		"noServersAvailable": "Tidak ada server MCP yang tersedia saat ini. Konfigurasikan server MCP di pengaturan Anda untuk menggunakan fitur ini.",
+		"tabs": {
+			"servers": "Server",
+			"tools": "Alat"
+		},
+		"servers": {
+			"description": "Kontrol server MCP mana yang tersedia. Jika tidak ada server yang secara eksplisit diizinkan, semua server (kecuali yang tidak diizinkan) akan tersedia.",
+			"overview": "Ringkasan",
+			"allow": "Izinkan",
+			"disallow": "Blokir",
+			"toolsCount": "alat",
+			"optIn": "perlu opt-in",
+			"allowedServers": "Server yang diizinkan",
+			"disallowedServers": "Server yang diblokir",
+			"currentStatus": "Status Server Saat Ini",
+			"enabledCount": "{{count}} diaktifkan: {{names}}",
+			"disabledCount": "{{count}} dinonaktifkan: {{names}}",
+			"restrictedCount": "{{count}} dengan pembatasan: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} diaktifkan dengan pembatasan: {{names}}"
+		},
+		"tools": {
+			"description": "Kontrol alat spesifik dalam server. Gunakan pola seperti 'delete_*' untuk mencocokkan beberapa alat.",
+			"allowedTools": "Alat yang Diizinkan",
+			"disallowedTools": "Alat yang Diblokir",
+			"addAllowed": "Tambah Diizinkan",
+			"addDisallowed": "Tambah Diblokir",
+			"noAllowedTools": "Semua alat diizinkan (kecuali yang secara khusus diblokir di bawah)",
+			"noDisallowedTools": "Tidak ada alat yang secara khusus diblokir",
+			"serverName": "Server",
+			"toolName": "Alat",
+			"serverNamePlaceholder": "Nama server atau pola (mis. docs-*, *-admin)",
+			"toolNamePlaceholder": "Nama alat atau pola (mis. get_*, delete_*)",
+			"remove": "Hapus pembatasan",
+			"advancedPatterns": "Panduan Pencocokan Pola",
+			"viewTools": "Lihat alat server",
+			"hideTools": "Sembunyikan alat server",
+			"serverTools": "Alat dari {{serverName}}",
+			"noTools": "Tidak ada alat yang tersedia untuk server ini"
+		},
+		"patterns": {
+			"title": "Pencocokan Pola",
+			"wildcard": "Cocok dengan urutan karakter apa pun",
+			"singleChar": "Cocok dengan tepat satu karakter",
+			"examples": "Contoh",
+			"example1": "Cocok dengan docs-api, docs-search, dll.",
+			"example2": "Cocok dengan server-admin, user-admin, dll.",
+			"example3": "Cocok dengan delete_file, delete_user, dll."
+		},
+		"status": {
+			"enabled": "DIAKTIFKAN",
+			"disabled": "DINONAKTIFKAN",
+			"reason": "Alasan",
+			"explicitlyAllowed": "Secara eksplisit diizinkan oleh pengguna",
+			"explicitlyDisallowed": "Secara eksplisit tidak diizinkan oleh pengguna",
+			"notInAllowList": "Tidak termasuk dalam daftar server yang diizinkan",
+			"allowedInModesByDefault": "Diaktifkan secara default untuk mode (kustom dan native)",
+			"blockedInModesByDefault": "Dinonaktifkan oleh konfigurasi server default (perlu opt-in)"
+		},
+		"picker": {
+			"noServers": "Tidak ada server yang tersedia",
+			"noTools": "Tidak ada alat yang tersedia untuk server ini",
+			"selectServerFirst": "Silakan pilih server terlebih dahulu"
+		},
+		"serverGroups": {
+			"enabled": "Server yang Diaktifkan",
+			"disabled": "Server yang Dinonaktifkan",
+			"restricted": "Server dengan Pembatasan",
+			"expandGroup": "Perluas grup",
+			"collapseGroup": "Lipat grup",
+			"allowAll": "Izinkan Semua",
+			"blockAll": "Blokir Semua",
+			"clearRestrictions": "Hapus Semua Pembatasan"
+		}
+	}
 }

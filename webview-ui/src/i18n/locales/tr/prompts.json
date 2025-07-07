@@ -186,6 +186,87 @@
 		"deleteMode": "Modu sil"
 	},
 	"allFiles": "tüm dosyalar",
+	"mcpRestrictions": {
+		"title": "MCP Sunucu Kısıtlamaları",
+		"description": "Bu modda hangi MCP sunucuları ve araçların mevcut olduğunu kontrol edin. Esnek eşleştirme için '*' ve '?' gibi kalıplar kullanın.",
+		"expand": "MCP kısıtlamalarını yapılandır",
+		"collapse": "MCP kısıtlamalarını gizle",
+		"clearAll": "Tüm kısıtlamaları temizle",
+		"restrictionsConfigured": "{{count}} kısıtlama yapılandırıldı",
+		"noServersAvailable": "Şu anda kullanılabilir MCP sunucusu yok. Bu özelliği kullanmak için ayarlarınızda MCP sunucularını yapılandırın.",
+		"tabs": {
+			"servers": "Sunucular",
+			"tools": "Araçlar"
+		},
+		"servers": {
+			"description": "Hangi MCP sunucularının mevcut olduğunu kontrol edin. Açıkça izin verilen sunucu yoksa, tüm sunucular (izin verilmeyenler hariç) mevcut olacaktır.",
+			"overview": "Genel Bakış",
+			"allow": "İzin Ver",
+			"disallow": "Engelle",
+			"toolsCount": "araçlar",
+			"optIn": "onay gerekli",
+			"allowedServers": "İzin verilen sunucular",
+			"disallowedServers": "Engellenen sunucular",
+			"currentStatus": "Mevcut Sunucu Durumu",
+			"enabledCount": "{{count}} etkin: {{names}}",
+			"disabledCount": "{{count}} devre dışı: {{names}}",
+			"restrictedCount": "{{count}} kısıtlamalı: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} kısıtlamalarla etkin: {{names}}"
+		},
+		"tools": {
+			"description": "Sunucular içindeki belirli araçları kontrol edin. Birden fazla araçla eşleşmek için 'delete_*' gibi kalıplar kullanın.",
+			"allowedTools": "İzin Verilen Araçlar",
+			"disallowedTools": "Engellenen Araçlar",
+			"addAllowed": "İzin Verilen Ekle",
+			"addDisallowed": "Engellenen Ekle",
+			"noAllowedTools": "Tüm araçlara izin verildi (aşağıda özel olarak engellenenler hariç)",
+			"noDisallowedTools": "Özel olarak engellenen araç yok",
+			"serverName": "Sunucu",
+			"toolName": "Araç",
+			"serverNamePlaceholder": "Sunucu adı veya kalıp (örn. docs-*, *-admin)",
+			"toolNamePlaceholder": "Araç adı veya kalıp (örn. get_*, delete_*)",
+			"remove": "Kısıtlamayı kaldır",
+			"advancedPatterns": "Kalıp Eşleştirme Kılavuzu",
+			"viewTools": "Sunucu araçlarını görüntüle",
+			"hideTools": "Sunucu araçlarını gizle",
+			"serverTools": "{{serverName}} araçları",
+			"noTools": "Bu sunucu için mevcut araç yok"
+		},
+		"patterns": {
+			"title": "Kalıp Eşleştirme",
+			"wildcard": "Herhangi bir karakter dizisiyle eşleşir",
+			"singleChar": "Tam olarak bir karakterle eşleşir",
+			"examples": "Örnekler",
+			"example1": "docs-api, docs-search vb. ile eşleşir",
+			"example2": "server-admin, user-admin vb. ile eşleşir",
+			"example3": "delete_file, delete_user vb. ile eşleşir"
+		},
+		"status": {
+			"enabled": "ETKİN",
+			"disabled": "DEVRE DIŞI",
+			"reason": "Sebep",
+			"explicitlyAllowed": "Kullanıcı tarafından açıkça izin verildi",
+			"explicitlyDisallowed": "Kullanıcı tarafından açıkça izin verilmedi",
+			"notInAllowList": "İzin verilen sunucular listesinde yer almıyor",
+			"allowedInModesByDefault": "Modlar için varsayılan olarak etkin (özel ve yerel)",
+			"blockedInModesByDefault": "Varsayılan sunucu yapılandırması tarafından devre dışı bırakıldı (onay gerekli)"
+		},
+		"picker": {
+			"noServers": "Mevcut sunucu yok",
+			"noTools": "Bu sunucu için mevcut araç yok",
+			"selectServerFirst": "Lütfen önce bir sunucu seçin"
+		},
+		"serverGroups": {
+			"enabled": "Etkin Sunucular",
+			"disabled": "Devre Dışı Sunucular",
+			"restricted": "Kısıtlamalı Sunucular",
+			"expandGroup": "Grubu genişlet",
+			"collapseGroup": "Grubu daralt",
+			"allowAll": "Hepsine İzin Ver",
+			"blockAll": "Hepsini Engelle",
+			"clearRestrictions": "Tüm Kısıtlamaları Temizle"
+		}
+	},
 	"advanced": {
 		"title": "Gelişmiş"
 	}

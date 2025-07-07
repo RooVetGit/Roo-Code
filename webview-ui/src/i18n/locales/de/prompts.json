@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Modus löschen"
 	},
-	"allFiles": "alle Dateien"
+	"allFiles": "alle Dateien",
+	"mcpRestrictions": {
+		"title": "MCP-Server-Einschränkungen",
+		"description": "Kontrollieren Sie, welche MCP-Server und Tools in diesem Modus verfügbar sind. Verwenden Sie Muster wie '*' und '?' für flexible Übereinstimmungen.",
+		"expand": "MCP-Einschränkungen konfigurieren",
+		"collapse": "MCP-Einschränkungen ausblenden",
+		"clearAll": "Alle Einschränkungen löschen",
+		"restrictionsConfigured": "{{count}} Einschränkung(en) konfiguriert",
+		"noServersAvailable": "Derzeit sind keine MCP-Server verfügbar. Konfigurieren Sie MCP-Server in Ihren Einstellungen, um diese Funktion zu nutzen.",
+		"tabs": {
+			"servers": "Server",
+			"tools": "Tools"
+		},
+		"servers": {
+			"description": "Kontrollieren Sie, welche MCP-Server verfügbar sind. Wenn keine Server explizit erlaubt sind, sind alle Server (außer den nicht erlaubten) verfügbar.",
+			"overview": "Übersicht",
+			"allow": "Erlauben",
+			"disallow": "Blockieren",
+			"toolsCount": "Tools",
+			"optIn": "Opt-in erforderlich",
+			"allowedServers": "Erlaubte Server",
+			"disallowedServers": "Blockierte Server",
+			"currentStatus": "Aktueller Serverstatus",
+			"enabledCount": "{{count}} aktiviert: {{names}}",
+			"disabledCount": "{{count}} deaktiviert: {{names}}",
+			"restrictedCount": "{{count}} mit Einschränkungen: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} aktiviert mit Einschränkungen: {{names}}"
+		},
+		"tools": {
+			"description": "Kontrollieren Sie spezifische Tools innerhalb von Servern. Verwenden Sie Muster wie 'delete_*', um mehrere Tools zu erfassen.",
+			"allowedTools": "Erlaubte Tools",
+			"disallowedTools": "Blockierte Tools",
+			"addAllowed": "Erlaubt hinzufügen",
+			"addDisallowed": "Blockiert hinzufügen",
+			"noAllowedTools": "Alle Tools sind erlaubt (außer den spezifisch blockierten unten)",
+			"noDisallowedTools": "Keine Tools sind spezifisch blockiert",
+			"serverName": "Server",
+			"toolName": "Tool",
+			"serverNamePlaceholder": "Servername oder Muster (z.B. docs-*, *-admin)",
+			"toolNamePlaceholder": "Toolname oder Muster (z.B. get_*, delete_*)",
+			"remove": "Einschränkung entfernen",
+			"advancedPatterns": "Muster-Matching-Leitfaden",
+			"viewTools": "Server-Tools anzeigen",
+			"hideTools": "Server-Tools ausblenden",
+			"serverTools": "Tools von {{serverName}}",
+			"noTools": "Keine Tools für diesen Server verfügbar"
+		},
+		"patterns": {
+			"title": "Muster-Matching",
+			"wildcard": "Entspricht jeder Zeichensequenz",
+			"singleChar": "Entspricht genau einem Zeichen",
+			"examples": "Beispiele",
+			"example1": "Entspricht docs-api, docs-search, usw.",
+			"example2": "Entspricht server-admin, user-admin, usw.",
+			"example3": "Entspricht delete_file, delete_user, usw."
+		},
+		"status": {
+			"enabled": "AKTIVIERT",
+			"disabled": "DEAKTIVIERT",
+			"reason": "Grund",
+			"explicitlyAllowed": "Explizit vom Benutzer erlaubt",
+			"explicitlyDisallowed": "Explizit vom Benutzer nicht erlaubt",
+			"notInAllowList": "Nicht in der Liste erlaubter Server enthalten",
+			"allowedInModesByDefault": "Standardmäßig für Modi aktiviert (benutzerdefiniert und nativ)",
+			"blockedInModesByDefault": "Standardmäßig durch Serverkonfiguration deaktiviert (Opt-in erforderlich)"
+		},
+		"picker": {
+			"noServers": "Keine Server verfügbar",
+			"noTools": "Keine Tools für diesen Server verfügbar",
+			"selectServerFirst": "Bitte wählen Sie zuerst einen Server aus"
+		},
+		"serverGroups": {
+			"enabled": "Aktivierte Server",
+			"disabled": "Deaktivierte Server",
+			"restricted": "Server mit Einschränkungen",
+			"expandGroup": "Gruppe erweitern",
+			"collapseGroup": "Gruppe einklappen",
+			"allowAll": "Alle erlauben",
+			"blockAll": "Alle blockieren",
+			"clearRestrictions": "Alle Einschränkungen löschen"
+		}
+	}
 }

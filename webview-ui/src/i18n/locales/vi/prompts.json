@@ -186,6 +186,87 @@
 		"deleteMode": "Xóa chế độ"
 	},
 	"allFiles": "tất cả các tệp",
+	"mcpRestrictions": {
+		"title": "Hạn chế Máy chủ MCP",
+		"description": "Kiểm soát máy chủ MCP và công cụ nào có sẵn trong chế độ này. Sử dụng các mẫu như '*' và '?' để khớp linh hoạt.",
+		"expand": "Cấu hình hạn chế MCP",
+		"collapse": "Ẩn hạn chế MCP",
+		"clearAll": "Xóa tất cả hạn chế",
+		"restrictionsConfigured": "Đã cấu hình {{count}} hạn chế",
+		"noServersAvailable": "Hiện tại không có máy chủ MCP nào khả dụng. Hãy cấu hình máy chủ MCP trong cài đặt của bạn để sử dụng tính năng này.",
+		"tabs": {
+			"servers": "Máy chủ",
+			"tools": "Công cụ"
+		},
+		"servers": {
+			"description": "Kiểm soát máy chủ MCP nào có sẵn. Nếu không có máy chủ nào được phép một cách rõ ràng, tất cả máy chủ (trừ những máy chủ bị cấm) sẽ có sẵn.",
+			"overview": "Tổng quan",
+			"allow": "Cho phép",
+			"disallow": "Chặn",
+			"toolsCount": "công cụ",
+			"optIn": "yêu cầu đồng ý",
+			"allowedServers": "Máy chủ được phép",
+			"disallowedServers": "Máy chủ bị chặn",
+			"currentStatus": "Trạng thái Máy chủ Hiện tại",
+			"enabledCount": "{{count}} đã bật: {{names}}",
+			"disabledCount": "{{count}} đã tắt: {{names}}",
+			"restrictedCount": "{{count}} có hạn chế: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} đã bật với hạn chế: {{names}}"
+		},
+		"tools": {
+			"description": "Kiểm soát các công cụ cụ thể trong máy chủ. Sử dụng các mẫu như 'delete_*' để khớp với nhiều công cụ.",
+			"allowedTools": "Công cụ Được phép",
+			"disallowedTools": "Công cụ Bị chặn",
+			"addAllowed": "Thêm Được phép",
+			"addDisallowed": "Thêm Bị chặn",
+			"noAllowedTools": "Tất cả công cụ được phép (trừ những công cụ bị chặn cụ thể bên dưới)",
+			"noDisallowedTools": "Không có công cụ nào bị chặn cụ thể",
+			"serverName": "Máy chủ",
+			"toolName": "Công cụ",
+			"serverNamePlaceholder": "Tên máy chủ hoặc mẫu (vd. docs-*, *-admin)",
+			"toolNamePlaceholder": "Tên công cụ hoặc mẫu (vd. get_*, delete_*)",
+			"remove": "Xóa hạn chế",
+			"advancedPatterns": "Hướng dẫn Khớp Mẫu",
+			"viewTools": "Xem công cụ máy chủ",
+			"hideTools": "Ẩn công cụ máy chủ",
+			"serverTools": "Công cụ của {{serverName}}",
+			"noTools": "Không có công cụ nào khả dụng cho máy chủ này"
+		},
+		"patterns": {
+			"title": "Khớp Mẫu",
+			"wildcard": "Khớp với bất kỳ chuỗi ký tự nào",
+			"singleChar": "Khớp chính xác một ký tự",
+			"examples": "Ví dụ",
+			"example1": "Khớp với docs-api, docs-search, v.v.",
+			"example2": "Khớp với server-admin, user-admin, v.v.",
+			"example3": "Khớp với delete_file, delete_user, v.v."
+		},
+		"status": {
+			"enabled": "ĐÃ BẬT",
+			"disabled": "ĐÃ TẮT",
+			"reason": "Lý do",
+			"explicitlyAllowed": "Được người dùng cho phép rõ ràng",
+			"explicitlyDisallowed": "Bị người dùng cấm rõ ràng",
+			"notInAllowList": "Không được bao gồm trong danh sách máy chủ được phép",
+			"allowedInModesByDefault": "Được bật mặc định cho các chế độ (tùy chỉnh và bản địa)",
+			"blockedInModesByDefault": "Bị tắt bởi cấu hình máy chủ mặc định (yêu cầu đồng ý)"
+		},
+		"picker": {
+			"noServers": "Không có máy chủ nào khả dụng",
+			"noTools": "Không có công cụ nào khả dụng cho máy chủ này",
+			"selectServerFirst": "Vui lòng chọn máy chủ trước"
+		},
+		"serverGroups": {
+			"enabled": "Máy chủ Đã bật",
+			"disabled": "Máy chủ Đã tắt",
+			"restricted": "Máy chủ có Hạn chế",
+			"expandGroup": "Mở rộng nhóm",
+			"collapseGroup": "Thu gọn nhóm",
+			"allowAll": "Cho phép Tất cả",
+			"blockAll": "Chặn Tất cả",
+			"clearRestrictions": "Xóa Tất cả Hạn chế"
+		}
+	},
 	"advanced": {
 		"title": "Nâng cao"
 	}

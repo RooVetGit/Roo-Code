@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Excluir modo"
 	},
-	"allFiles": "todos os arquivos"
+	"allFiles": "todos os arquivos",
+	"mcpRestrictions": {
+		"title": "Restrições do Servidor MCP",
+		"description": "Controle quais servidores MCP e ferramentas estão disponíveis neste modo. Use padrões como '*' e '?' para correspondência flexível.",
+		"expand": "Configurar restrições MCP",
+		"collapse": "Ocultar restrições MCP",
+		"clearAll": "Limpar todas as restrições",
+		"restrictionsConfigured": "{{count}} restrição/restrições configurada(s)",
+		"noServersAvailable": "Nenhum servidor MCP está disponível no momento. Configure servidores MCP nas suas configurações para usar este recurso.",
+		"tabs": {
+			"servers": "Servidores",
+			"tools": "Ferramentas"
+		},
+		"servers": {
+			"description": "Controle quais servidores MCP estão disponíveis. Se nenhum servidor for explicitamente permitido, todos os servidores (exceto os não permitidos) estarão disponíveis.",
+			"overview": "Visão Geral",
+			"allow": "Permitir",
+			"disallow": "Bloquear",
+			"toolsCount": "ferramentas",
+			"optIn": "opt-in necessário",
+			"allowedServers": "Servidores permitidos",
+			"disallowedServers": "Servidores bloqueados",
+			"currentStatus": "Status Atual do Servidor",
+			"enabledCount": "{{count}} habilitado(s): {{names}}",
+			"disabledCount": "{{count}} desabilitado(s): {{names}}",
+			"restrictedCount": "{{count}} com restrições: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} habilitado(s) com restrições: {{names}}"
+		},
+		"tools": {
+			"description": "Controle ferramentas específicas dentro dos servidores. Use padrões como 'delete_*' para corresponder a múltiplas ferramentas.",
+			"allowedTools": "Ferramentas Permitidas",
+			"disallowedTools": "Ferramentas Bloqueadas",
+			"addAllowed": "Adicionar Permitido",
+			"addDisallowed": "Adicionar Bloqueado",
+			"noAllowedTools": "Todas as ferramentas são permitidas (exceto as especificamente bloqueadas abaixo)",
+			"noDisallowedTools": "Nenhuma ferramenta está especificamente bloqueada",
+			"serverName": "Servidor",
+			"toolName": "Ferramenta",
+			"serverNamePlaceholder": "Nome do servidor ou padrão (ex. docs-*, *-admin)",
+			"toolNamePlaceholder": "Nome da ferramenta ou padrão (ex. get_*, delete_*)",
+			"remove": "Remover restrição",
+			"advancedPatterns": "Guia de Correspondência de Padrões",
+			"viewTools": "Ver ferramentas do servidor",
+			"hideTools": "Ocultar ferramentas do servidor",
+			"serverTools": "Ferramentas de {{serverName}}",
+			"noTools": "Nenhuma ferramenta disponível para este servidor"
+		},
+		"patterns": {
+			"title": "Correspondência de Padrões",
+			"wildcard": "Corresponde a qualquer sequência de caracteres",
+			"singleChar": "Corresponde a exatamente um caractere",
+			"examples": "Exemplos",
+			"example1": "Corresponde a docs-api, docs-search, etc.",
+			"example2": "Corresponde a server-admin, user-admin, etc.",
+			"example3": "Corresponde a delete_file, delete_user, etc."
+		},
+		"status": {
+			"enabled": "HABILITADO",
+			"disabled": "DESABILITADO",
+			"reason": "Motivo",
+			"explicitlyAllowed": "Explicitamente permitido pelo usuário",
+			"explicitlyDisallowed": "Explicitamente não permitido pelo usuário",
+			"notInAllowList": "Não incluído na lista de servidores permitidos",
+			"allowedInModesByDefault": "Habilitado por padrão para modos (personalizados e nativos)",
+			"blockedInModesByDefault": "Desabilitado pela configuração padrão do servidor (opt-in necessário)"
+		},
+		"picker": {
+			"noServers": "Nenhum servidor disponível",
+			"noTools": "Nenhuma ferramenta disponível para este servidor",
+			"selectServerFirst": "Por favor, selecione um servidor primeiro"
+		},
+		"serverGroups": {
+			"enabled": "Servidores Habilitados",
+			"disabled": "Servidores Desabilitados",
+			"restricted": "Servidores com Restrições",
+			"expandGroup": "Expandir grupo",
+			"collapseGroup": "Recolher grupo",
+			"allowAll": "Permitir Todos",
+			"blockAll": "Bloquear Todos",
+			"clearRestrictions": "Limpar Todas as Restrições"
+		}
+	}
 }

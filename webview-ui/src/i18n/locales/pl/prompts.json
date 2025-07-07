@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "Usuń tryb"
 	},
-	"allFiles": "wszystkie pliki"
+	"allFiles": "wszystkie pliki",
+	"mcpRestrictions": {
+		"title": "Ograniczenia Serwera MCP",
+		"description": "Kontroluj które serwery MCP i narzędzia są dostępne w tym trybie. Używaj wzorców takich jak '*' i '?' dla elastycznego dopasowania.",
+		"expand": "Konfiguruj ograniczenia MCP",
+		"collapse": "Ukryj ograniczenia MCP",
+		"clearAll": "Wyczyść wszystkie ograniczenia",
+		"restrictionsConfigured": "Skonfigurowano {{count}} ograniczenie/ograniczenia/ograniczeń",
+		"noServersAvailable": "Obecnie nie ma dostępnych serwerów MCP. Skonfiguruj serwery MCP w ustawieniach, aby korzystać z tej funkcji.",
+		"tabs": {
+			"servers": "Serwery",
+			"tools": "Narzędzia"
+		},
+		"servers": {
+			"description": "Kontroluj które serwery MCP są dostępne. Jeśli żadne serwery nie są jawnie dozwolone, wszystkie serwery (z wyjątkiem niedozwolonych) będą dostępne.",
+			"overview": "Przegląd",
+			"allow": "Zezwól",
+			"disallow": "Blokuj",
+			"toolsCount": "narzędzia",
+			"optIn": "wymagane wyrażenie zgody",
+			"allowedServers": "Dozwolone serwery",
+			"disallowedServers": "Zablokowane serwery",
+			"currentStatus": "Aktualny Status Serwera",
+			"enabledCount": "{{count}} włączone: {{names}}",
+			"disabledCount": "{{count}} wyłączone: {{names}}",
+			"restrictedCount": "{{count}} z ograniczeniami: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}} włączone z ograniczeniami: {{names}}"
+		},
+		"tools": {
+			"description": "Kontroluj określone narzędzia w serwerach. Używaj wzorców takich jak 'delete_*' do dopasowania wielu narzędzi.",
+			"allowedTools": "Dozwolone Narzędzia",
+			"disallowedTools": "Zablokowane Narzędzia",
+			"addAllowed": "Dodaj Dozwolone",
+			"addDisallowed": "Dodaj Zablokowane",
+			"noAllowedTools": "Wszystkie narzędzia są dozwolone (z wyjątkiem specjalnie zablokowanych poniżej)",
+			"noDisallowedTools": "Żadne narzędzia nie są specjalnie zablokowane",
+			"serverName": "Serwer",
+			"toolName": "Narzędzie",
+			"serverNamePlaceholder": "Nazwa serwera lub wzorzec (np. docs-*, *-admin)",
+			"toolNamePlaceholder": "Nazwa narzędzia lub wzorzec (np. get_*, delete_*)",
+			"remove": "Usuń ograniczenie",
+			"advancedPatterns": "Przewodnik Dopasowania Wzorców",
+			"viewTools": "Zobacz narzędzia serwera",
+			"hideTools": "Ukryj narzędzia serwera",
+			"serverTools": "Narzędzia {{serverName}}",
+			"noTools": "Brak dostępnych narzędzi dla tego serwera"
+		},
+		"patterns": {
+			"title": "Dopasowanie Wzorców",
+			"wildcard": "Dopasowuje dowolną sekwencję znaków",
+			"singleChar": "Dopasowuje dokładnie jeden znak",
+			"examples": "Przykłady",
+			"example1": "Dopasowuje docs-api, docs-search, itp.",
+			"example2": "Dopasowuje server-admin, user-admin, itp.",
+			"example3": "Dopasowuje delete_file, delete_user, itp."
+		},
+		"status": {
+			"enabled": "WŁĄCZONE",
+			"disabled": "WYŁĄCZONE",
+			"reason": "Powód",
+			"explicitlyAllowed": "Jawnie dozwolone przez użytkownika",
+			"explicitlyDisallowed": "Jawnie niedozwolone przez użytkownika",
+			"notInAllowList": "Nie uwzględnione na liście dozwolonych serwerów",
+			"allowedInModesByDefault": "Włączone domyślnie dla trybów (niestandardowych i natywnych)",
+			"blockedInModesByDefault": "Wyłączone przez domyślną konfigurację serwera (wymagane wyrażenie zgody)"
+		},
+		"picker": {
+			"noServers": "Brak dostępnych serwerów",
+			"noTools": "Brak dostępnych narzędzi dla tego serwera",
+			"selectServerFirst": "Najpierw wybierz serwer"
+		},
+		"serverGroups": {
+			"enabled": "Włączone Serwery",
+			"disabled": "Wyłączone Serwery",
+			"restricted": "Serwery z Ograniczeniami",
+			"expandGroup": "Rozwiń grupę",
+			"collapseGroup": "Zwiń grupę",
+			"allowAll": "Zezwól Na Wszystko",
+			"blockAll": "Zablokuj Wszystko",
+			"clearRestrictions": "Wyczyść Wszystkie Ograniczenia"
+		}
+	}
 }

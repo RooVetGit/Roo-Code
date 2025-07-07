@@ -188,5 +188,86 @@
 		},
 		"deleteMode": "モードを削除"
 	},
-	"allFiles": "すべてのファイル"
+	"allFiles": "すべてのファイル",
+	"mcpRestrictions": {
+		"title": "MCPサーバー制限",
+		"description": "このモードで利用可能なMCPサーバーとツールを制御します。柔軟なマッチングのために '*' や '?' などのパターンを使用してください。",
+		"expand": "MCP制限を設定",
+		"collapse": "MCP制限を非表示",
+		"clearAll": "すべての制限をクリア",
+		"restrictionsConfigured": "{{count}}個の制限が設定されています",
+		"noServersAvailable": "現在利用可能なMCPサーバーがありません。この機能を使用するには、設定でMCPサーバーを設定してください。",
+		"tabs": {
+			"servers": "サーバー",
+			"tools": "ツール"
+		},
+		"servers": {
+			"description": "利用可能なMCPサーバーを制御します。明示的に許可されたサーバーがない場合、すべてのサーバー（禁止されたものを除く）が利用可能になります。",
+			"overview": "概要",
+			"allow": "許可",
+			"disallow": "ブロック",
+			"toolsCount": "ツール",
+			"optIn": "オプトイン必須",
+			"allowedServers": "許可されたサーバー",
+			"disallowedServers": "ブロックされたサーバー",
+			"currentStatus": "現在のサーバー状態",
+			"enabledCount": "{{count}}個有効: {{names}}",
+			"disabledCount": "{{count}}個無効: {{names}}",
+			"restrictedCount": "{{count}}個制限あり: {{names}}",
+			"enabledWithRestrictionsCount": "{{count}}個制限付きで有効: {{names}}"
+		},
+		"tools": {
+			"description": "サーバー内の特定のツールを制御します。複数のツールにマッチさせるには 'delete_*' などのパターンを使用してください。",
+			"allowedTools": "許可されたツール",
+			"disallowedTools": "ブロックされたツール",
+			"addAllowed": "許可を追加",
+			"addDisallowed": "ブロックを追加",
+			"noAllowedTools": "すべてのツールが許可されています（以下で特別にブロックされたものを除く）",
+			"noDisallowedTools": "特別にブロックされたツールはありません",
+			"serverName": "サーバー",
+			"toolName": "ツール",
+			"serverNamePlaceholder": "サーバー名またはパターン（例：docs-*, *-admin）",
+			"toolNamePlaceholder": "ツール名またはパターン（例：get_*, delete_*）",
+			"remove": "制限を削除",
+			"advancedPatterns": "パターンマッチングガイド",
+			"viewTools": "サーバーツールを表示",
+			"hideTools": "サーバーツールを非表示",
+			"serverTools": "{{serverName}}のツール",
+			"noTools": "このサーバーで利用可能なツールがありません"
+		},
+		"patterns": {
+			"title": "パターンマッチング",
+			"wildcard": "任意の文字列にマッチ",
+			"singleChar": "正確に1文字にマッチ",
+			"examples": "例",
+			"example1": "docs-api、docs-searchなどにマッチ",
+			"example2": "server-admin、user-adminなどにマッチ",
+			"example3": "delete_file、delete_userなどにマッチ"
+		},
+		"status": {
+			"enabled": "有効",
+			"disabled": "無効",
+			"reason": "理由",
+			"explicitlyAllowed": "ユーザーによって明示的に許可",
+			"explicitlyDisallowed": "ユーザーによって明示的に禁止",
+			"notInAllowList": "許可サーバーリストに含まれていません",
+			"allowedInModesByDefault": "モードでデフォルトで有効（カスタム及びネイティブ）",
+			"blockedInModesByDefault": "デフォルトサーバー設定により無効（オプトイン必須）"
+		},
+		"picker": {
+			"noServers": "利用可能なサーバーがありません",
+			"noTools": "このサーバーで利用可能なツールがありません",
+			"selectServerFirst": "最初にサーバーを選択してください"
+		},
+		"serverGroups": {
+			"enabled": "有効なサーバー",
+			"disabled": "無効なサーバー",
+			"restricted": "制限付きサーバー",
+			"expandGroup": "グループを展開",
+			"collapseGroup": "グループを折りたたむ",
+			"allowAll": "すべて許可",
+			"blockAll": "すべてブロック",
+			"clearRestrictions": "すべての制限をクリア"
+		}
+	}
 }
