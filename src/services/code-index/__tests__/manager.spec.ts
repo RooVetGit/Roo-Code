@@ -78,12 +78,62 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			// Mock a minimal config manager that simulates first-time configuration
 			const mockConfigManager = {
 				loadConfiguration: vi.fn().mockResolvedValue({ requiresRestart: true }),
+				isFeatureConfigured: true,
+				isFeatureEnabled: true,
+				getConfig: vi.fn().mockReturnValue({
+					isEnabled: true,
+					isConfigured: true,
+					embedderProvider: "openai",
+					modelId: "text-embedding-3-small",
+					openAiOptions: { openAiNativeApiKey: "test-key" },
+					qdrantUrl: "http://localhost:6333",
+					qdrantApiKey: "test-key",
+					searchMinScore: 0.4,
+				}),
 			}
 			;(manager as any)._configManager = mockConfigManager
+
+			// Mock cache manager
+			const mockCacheManager = {
+				initialize: vi.fn(),
+				clearCacheFile: vi.fn(),
+			}
+			;(manager as any)._cacheManager = mockCacheManager
 
 			// Mock the feature state to simulate valid configuration that would normally trigger restart
 			vi.spyOn(manager, "isFeatureEnabled", "get").mockReturnValue(true)
 			vi.spyOn(manager, "isFeatureConfigured", "get").mockReturnValue(true)
+
+			// Mock service factory to handle _recreateServices call
+			const mockServiceFactoryInstance = {
+				configManager: mockConfigManager,
+				workspacePath: "/test/workspace",
+				cacheManager: mockCacheManager,
+				createEmbedder: vi.fn().mockReturnValue({ embedderInfo: { name: "openai" } }),
+				createVectorStore: vi.fn().mockReturnValue({}),
+				createDirectoryScanner: vi.fn().mockReturnValue({}),
+				createFileWatcher: vi.fn().mockReturnValue({
+					onDidStartBatchProcessing: vi.fn(),
+					onBatchProgressUpdate: vi.fn(),
+					watch: vi.fn(),
+					stopWatcher: vi.fn(),
+					dispose: vi.fn(),
+				}),
+				createServices: vi.fn().mockReturnValue({
+					embedder: { embedderInfo: { name: "openai" } },
+					vectorStore: {},
+					scanner: {},
+					fileWatcher: {
+						onDidStartBatchProcessing: vi.fn(),
+						onBatchProgressUpdate: vi.fn(),
+						watch: vi.fn(),
+						stopWatcher: vi.fn(),
+						dispose: vi.fn(),
+					},
+				}),
+				validateEmbedder: vi.fn().mockResolvedValue({ valid: true }),
+			}
+			MockedCodeIndexServiceFactory.mockImplementation(() => mockServiceFactoryInstance as any)
 
 			// The key test: this should NOT throw "CodeIndexManager not initialized" error
 			await expect(manager.handleSettingsChange()).resolves.not.toThrow()
@@ -111,29 +161,65 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			}
 			;(manager as any)._configManager = mockConfigManager
 
+			// Mock cache manager
+			const mockCacheManager = {
+				initialize: vi.fn(),
+				clearCacheFile: vi.fn(),
+			}
+			;(manager as any)._cacheManager = mockCacheManager
+
 			// Simulate an initialized manager by setting the required properties
 			;(manager as any)._orchestrator = { stopWatcher: vi.fn() }
 			;(manager as any)._searchService = {}
-			;(manager as any)._cacheManager = {}
 
 			// Verify manager is considered initialized
 			expect(manager.isInitialized).toBe(true)
-
-			// Mock the methods that would be called during restart
-			const recreateServicesSpy = vi.spyOn(manager as any, "_recreateServices").mockImplementation(() => {})
-			const startIndexingSpy = vi.spyOn(manager, "startIndexing").mockResolvedValue()
 
 			// Mock the feature state
 			vi.spyOn(manager, "isFeatureEnabled", "get").mockReturnValue(true)
 			vi.spyOn(manager, "isFeatureConfigured", "get").mockReturnValue(true)
 
+			// Mock service factory to handle _recreateServices call
+			const mockServiceFactoryInstance = {
+				configManager: mockConfigManager,
+				workspacePath: "/test/workspace",
+				cacheManager: mockCacheManager,
+				createEmbedder: vi.fn().mockReturnValue({ embedderInfo: { name: "openai" } }),
+				createVectorStore: vi.fn().mockReturnValue({}),
+				createDirectoryScanner: vi.fn().mockReturnValue({}),
+				createFileWatcher: vi.fn().mockReturnValue({
+					onDidStartBatchProcessing: vi.fn(),
+					onBatchProgressUpdate: vi.fn(),
+					watch: vi.fn(),
+					stopWatcher: vi.fn(),
+					dispose: vi.fn(),
+				}),
+				createServices: vi.fn().mockReturnValue({
+					embedder: { embedderInfo: { name: "openai" } },
+					vectorStore: {},
+					scanner: {},
+					fileWatcher: {
+						onDidStartBatchProcessing: vi.fn(),
+						onBatchProgressUpdate: vi.fn(),
+						watch: vi.fn(),
+						stopWatcher: vi.fn(),
+						dispose: vi.fn(),
+					},
+				}),
+				validateEmbedder: vi.fn().mockResolvedValue({ valid: true }),
+			}
+			MockedCodeIndexServiceFactory.mockImplementation(() => mockServiceFactoryInstance as any)
+
+			// Mock the methods that would be called during restart
+			const recreateServicesSpy = vi.spyOn(manager as any, "_recreateServices")
+
 			await manager.handleSettingsChange()
 
 			// Verify that the restart sequence was called
 			expect(mockConfigManager.loadConfiguration).toHaveBeenCalled()
-			// stopWatcher is called inside _recreateServices, which we mocked
+			// _recreateServices should be called when requiresRestart is true
 			expect(recreateServicesSpy).toHaveBeenCalled()
-			expect(startIndexingSpy).toHaveBeenCalled()
+			// Note: startIndexing is NOT called by handleSettingsChange - it's only called by initialize()
 		})
 
 		it("should handle case when config manager is not set", async () => {

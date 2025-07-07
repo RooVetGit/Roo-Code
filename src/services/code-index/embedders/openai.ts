@@ -10,6 +10,13 @@ import {
 } from "../constants"
 import { getModelQueryPrefix } from "../../../shared/embeddingModels"
 import { t } from "../../../i18n"
+import {
+	withValidationErrorHandling,
+	formatEmbeddingError,
+	isRateLimitError,
+	logRateLimitRetry,
+	logEmbeddingError,
+} from "../shared/validation-helpers"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -138,50 +145,20 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					},
 				}
 			} catch (error: any) {
-				const isRateLimitError = error?.status === 429
 				const hasMoreAttempts = attempts < MAX_RETRIES - 1
 
-				if (isRateLimitError && hasMoreAttempts) {
+				if (isRateLimitError(error) && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
-					console.warn(
-						t("embeddings:rateLimitRetry", {
-							delayMs,
-							attempt: attempts + 1,
-							maxRetries: MAX_RETRIES,
-						}),
-					)
+					logRateLimitRetry(delayMs, attempts + 1, MAX_RETRIES)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
 				}
 
 				// Log the error for debugging
-				console.error(`OpenAI embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
+				logEmbeddingError("OpenAI", error, attempts + 1, MAX_RETRIES)
 
-				// Provide more context in the error message using robust error extraction
-				let errorMessage = "Unknown error"
-				if (error?.message) {
-					errorMessage = error.message
-				} else if (typeof error === "string") {
-					errorMessage = error
-				} else if (error && typeof error.toString === "function") {
-					try {
-						errorMessage = error.toString()
-					} catch {
-						errorMessage = "Unknown error"
-					}
-				}
-
-				const statusCode = error?.status || error?.response?.status
-
-				if (statusCode === 401) {
-					throw new Error(t("embeddings:authenticationFailed"))
-				} else if (statusCode) {
-					throw new Error(
-						t("embeddings:failedWithStatus", { attempts: MAX_RETRIES, statusCode, errorMessage }),
-					)
-				} else {
-					throw new Error(t("embeddings:failedWithError", { attempts: MAX_RETRIES, errorMessage }))
-				}
+				// Format and throw the error
+				throw formatEmbeddingError(error, MAX_RETRIES)
 			}
 		}
 
@@ -193,7 +170,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	 * @returns Promise resolving to validation result with success status and optional error message
 	 */
 	async validateConfiguration(): Promise<{ valid: boolean; error?: string }> {
-		try {
+		return withValidationErrorHandling(async () => {
 			// Test with a minimal embedding request
 			const response = await this.embeddingsClient.embeddings.create({
 				input: ["test"],
@@ -209,38 +186,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 			}
 
 			return { valid: true }
-		} catch (error: any) {
-			// Handle specific error cases
-			const statusCode = error?.status || error?.response?.status
-
-			if (statusCode === 401) {
-				return {
-					valid: false,
-					error: "embeddings:validation.authenticationFailed",
-				}
-			} else if (statusCode === 404) {
-				return {
-					valid: false,
-					error: "embeddings:validation.modelNotAvailable",
-				}
-			} else if (statusCode === 429) {
-				return {
-					valid: false,
-					error: "embeddings:validation.serviceUnavailable",
-				}
-			} else if (error?.message?.includes("ENOTFOUND") || error?.message?.includes("ECONNREFUSED")) {
-				return {
-					valid: false,
-					error: "embeddings:validation.connectionFailed",
-				}
-			}
-
-			// Generic error fallback
-			return {
-				valid: false,
-				error: "embeddings:validation.configurationError",
-			}
-		}
+		}, "openai")
 	}
 
 	get embedderInfo(): EmbedderInfo {
