@@ -266,11 +266,15 @@ export function isToolAllowedForMode(
 		// For the edit group, check file regex if specified
 		if (groupName === "edit" && options.fileRegex) {
 			const filePath = toolParams?.path
-			if (
-				filePath &&
-				(toolParams.diff || toolParams.content || toolParams.operations) &&
-				!doesFileMatchRegex(filePath, options.fileRegex)
-			) {
+			// Check if this is an actual edit operation (not just path-only for streaming)
+			const isEditOperation = !!(
+				toolParams?.diff ||
+				toolParams?.content ||
+				toolParams?.operations ||
+				toolParams?.search ||
+				toolParams?.replace
+			)
+			if (filePath && isEditOperation && !doesFileMatchRegex(filePath, options.fileRegex)) {
 				throw new FileRestrictionError(mode.name, options.fileRegex, options.description, filePath)
 			}
 		}

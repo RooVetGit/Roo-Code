@@ -245,6 +245,58 @@ describe("isToolAllowedForMode", () => {
 			expect(isToolAllowedForMode("browser_action", "architect", [])).toBe(true)
 			expect(isToolAllowedForMode("use_mcp_tool", "architect", [])).toBe(true)
 		})
+
+		it("applies restrictions to all edit tools including search_and_replace and insert_content", () => {
+			// Test search_and_replace with matching file
+			expect(
+				isToolAllowedForMode("search_and_replace", "architect", [], undefined, {
+					path: "test.md",
+					search: "old text",
+					replace: "new text",
+				}),
+			).toBe(true)
+
+			// Test insert_content with matching file
+			expect(
+				isToolAllowedForMode("insert_content", "architect", [], undefined, {
+					path: "test.md",
+					line: "1",
+					content: "# New content",
+				}),
+			).toBe(true)
+
+			// Test search_and_replace with non-matching file - should throw error
+			expect(() =>
+				isToolAllowedForMode("search_and_replace", "architect", [], undefined, {
+					path: "test.py",
+					search: "old text",
+					replace: "new text",
+				}),
+			).toThrow(FileRestrictionError)
+			expect(() =>
+				isToolAllowedForMode("search_and_replace", "architect", [], undefined, {
+					path: "test.py",
+					search: "old text",
+					replace: "new text",
+				}),
+			).toThrow(/Markdown files only/)
+
+			// Test insert_content with non-matching file - should throw error
+			expect(() =>
+				isToolAllowedForMode("insert_content", "architect", [], undefined, {
+					path: "test.py",
+					line: "1",
+					content: "print('hello')",
+				}),
+			).toThrow(FileRestrictionError)
+			expect(() =>
+				isToolAllowedForMode("insert_content", "architect", [], undefined, {
+					path: "test.py",
+					line: "1",
+					content: "print('hello')",
+				}),
+			).toThrow(/Markdown files only/)
+		})
 	})
 
 	it("handles non-existent modes", () => {
