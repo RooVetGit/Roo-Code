@@ -118,7 +118,14 @@ export class CodeIndexManager {
 			return { requiresRestart }
 		}
 
-		// 3. CacheManager Initialization
+		// 3. Check if workspace is available
+		const workspacePath = getWorkspacePath()
+		if (!workspacePath) {
+			this._stateManager.setSystemState("Standby", "No workspace folder open")
+			return { requiresRestart }
+		}
+
+		// 4. CacheManager Initialization
 		if (!this._cacheManager) {
 			this._cacheManager = new CacheManager(this.context, this.workspacePath)
 			await this._cacheManager.initialize()
@@ -215,6 +222,9 @@ export class CodeIndexManager {
 		if (this._orchestrator) {
 			this.stopWatcher()
 		}
+		// Clear existing services to ensure clean state
+		this._orchestrator = undefined
+		this._searchService = undefined
 
 		// (Re)Initialize service factory
 		this._serviceFactory = new CodeIndexServiceFactory(
@@ -224,7 +234,14 @@ export class CodeIndexManager {
 		)
 
 		const ignoreInstance = ignore()
-		const ignorePath = path.join(getWorkspacePath(), ".gitignore")
+		const workspacePath = getWorkspacePath()
+
+		if (!workspacePath) {
+			this._stateManager.setSystemState("Standby", "")
+			return
+		}
+
+		const ignorePath = path.join(workspacePath, ".gitignore")
 		try {
 			const content = await fs.readFile(ignorePath, "utf8")
 			ignoreInstance.add(content)
@@ -270,6 +287,9 @@ export class CodeIndexManager {
 			embedder,
 			vectorStore,
 		)
+
+		// Clear any error state after successful recreation
+		this._stateManager.setSystemState("Standby", "")
 	}
 
 	/**
@@ -285,14 +305,10 @@ export class CodeIndexManager {
 			const isFeatureEnabled = this.isFeatureEnabled
 			const isFeatureConfigured = this.isFeatureConfigured
 
-			// If configuration changes require a restart and the manager is initialized, restart the service
-			if (requiresRestart && isFeatureEnabled && isFeatureConfigured && this.isInitialized) {
+			if (requiresRestart && isFeatureEnabled && isFeatureConfigured) {
 				try {
 					// Recreate services with new configuration
 					await this._recreateServices()
-
-					// Start indexing with new services
-					this.startIndexing()
 				} catch (error) {
 					// Error state already set in _recreateServices
 					console.error("Failed to recreate services:", error)

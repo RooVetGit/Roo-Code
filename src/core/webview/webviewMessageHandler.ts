@@ -1869,9 +1869,6 @@ export const webviewMessageHandler = async (
 					)
 				}
 
-				// Verify secrets are actually stored
-				const storedOpenAiKey = provider.contextProxy.getSecret("codeIndexOpenAiKey")
-
 				// Send success response first - settings are saved regardless of validation
 				await provider.postMessageToWebview({
 					type: "codeIndexSettingsSaved",
@@ -1904,35 +1901,35 @@ export const webviewMessageHandler = async (
 						}
 					} else {
 						// No provider change, just handle settings normally
-						await provider.codeIndexManager.handleSettingsChange()
+						try {
+							await provider.codeIndexManager.handleSettingsChange()
+						} catch (error) {
+							// Log but don't fail - settings are saved
+							provider.log(
+								`Settings change handling error: ${error instanceof Error ? error.message : String(error)}`,
+							)
+						}
 					}
+
+					// Wait a bit more to ensure everything is ready
+					await new Promise((resolve) => setTimeout(resolve, 200))
 
 					// Auto-start indexing if now enabled and configured
 					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
 						if (!provider.codeIndexManager.isInitialized) {
 							try {
-								// Initialize will validate embedder configuration
-								const { requiresRestart } = await provider.codeIndexManager.initialize(
-									provider.contextProxy,
-								)
-
-								// If initialization succeeded (no exception thrown), start indexing
-								provider.codeIndexManager.startIndexing()
+								await provider.codeIndexManager.initialize(provider.contextProxy)
+								provider.log(`Code index manager initialized after settings save`)
 							} catch (error) {
-								// Log the specific validation error for debugging
 								provider.log(
-									`Code index initialization failed during settings save: ${error instanceof Error ? error.message : String(error)}`,
+									`Code index initialization failed: ${error instanceof Error ? error.message : String(error)}`,
 								)
 								// Send error status to webview
 								await provider.postMessageToWebview({
 									type: "indexingStatusUpdate",
 									values: provider.codeIndexManager.getCurrentStatus(),
 								})
-								// Don't re-throw - settings are already saved successfully
 							}
-						} else {
-							// Already initialized, just start indexing
-							provider.codeIndexManager.startIndexing()
 						}
 					}
 				}
