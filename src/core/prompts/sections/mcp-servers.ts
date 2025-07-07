@@ -71,42 +71,63 @@ export async function getMcpServersSection(
 
 	const filteredServers = memoizeFilteredServers(mcpHub, mcpIncludedList)
 
-	const connectedServers =
-		filteredServers.length > 0
-			? `${filteredServers
-					.map((server) => {
-						const tools = server.tools
+	let connectedServers: string
+
+	if (filteredServers.length > 0) {
+		connectedServers = `${filteredServers
+			.map((server) => {
+				const tools = server.tools
 							?.filter((tool) => tool.enabledForPrompt !== false)
-							?.map((tool) => {
-								const schemaStr = tool.inputSchema
-									? `    Input Schema:
-		${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
-									: ""
+					?.map((tool) => {
+						const schemaStr = tool.inputSchema
+							? `    Input Schema:
+	${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
+							: ""
 
-								return `- ${tool.name}: ${tool.description}\n${schemaStr}`
-							})
-							.join("\n\n")
-
-						const templates = server.resourceTemplates
-							?.map((template) => `- ${template.uriTemplate} (${template.name}): ${template.description}`)
-							.join("\n")
-
-						const resources = server.resources
-							?.map((resource) => `- ${resource.uri} (${resource.name}): ${resource.description}`)
-							.join("\n")
-
-						const config = JSON.parse(server.config)
-
-						return (
-							`## ${server.name}${config.command ? ` (\`${config.command}${config.args && Array.isArray(config.args) ? ` ${config.args.join(" ")}` : ""}\`)` : ""}` +
-							(server.instructions ? `\n\n### Instructions\n${server.instructions}` : "") +
-							(tools ? `\n\n### Available Tools\n${tools}` : "") +
-							(templates ? `\n\n### Resource Templates\n${templates}` : "") +
-							(resources ? `\n\n### Direct Resources\n${resources}` : "")
-						)
+						return `- ${tool.name}: ${tool.description}\n${schemaStr}`
 					})
-					.join("\n\n")}`
-			: "(No MCP servers currently connected)"
+					.join("\n\n")
+
+				const templates = server.resourceTemplates
+					?.map((template) => `- ${template.uriTemplate} (${template.name}): ${template.description}`)
+					.join("\n")
+
+				const resources = server.resources
+					?.map((resource) => `- ${resource.uri} (${resource.name}): ${resource.description}`)
+					.join("\n")
+
+				const config = JSON.parse(server.config)
+
+				return (
+					`## ${server.name}${config.command ? ` (\`${config.command}${config.args && Array.isArray(config.args) ? ` ${config.args.join(" ")}` : ""}\`)` : ""}` +
+					(server.instructions ? `\n\n### Instructions\n${server.instructions}` : "") +
+					(tools ? `\n\n### Available Tools\n${tools}` : "") +
+					(templates ? `\n\n### Resource Templates\n${templates}` : "") +
+					(resources ? `\n\n### Direct Resources\n${resources}` : "")
+				)
+			})
+			.join("\n\n")}`
+	} else if (mcpIncludedList && mcpIncludedList.length > 0) {
+		const allServers = mcpHub.getAllServers()
+		const disconnectedServers = mcpIncludedList
+			.map((name) => {
+				const server = allServers.find((s) => s.name === name)
+				if (server && server.status !== "connected") {
+					return `- ${server.name} (${server.status})`
+				}
+				if (!server) {
+					return `- ${name} (not found)`
+				}
+				return null
+			})
+			.filter(Boolean)
+			.join("\n")
+		connectedServers = `(Configured MCP servers are not currently connected)${
+			disconnectedServers ? `\n\nConfigured but disconnected servers:\n${disconnectedServers}` : ""
+		}`
+	} else {
+		connectedServers = "(No MCP servers currently connected)"
+	}
 
 	const baseSection = `MCP SERVERS
 

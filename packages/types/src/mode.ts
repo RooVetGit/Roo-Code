@@ -28,18 +28,7 @@ export const groupOptionsSchema = z.object({
 	description: z.string().optional(),
 	mcp: z
 		.object({
-			included: z.array(
-				z.union([
-					z.string(),
-					z.record(
-						z.string(),
-						z.object({
-							allowedTools: z.array(z.string()).optional(), // not used yet
-							disallowedTools: z.array(z.string()).optional(), // not used yet
-						}),
-					),
-				]),
-			),
+			included: z.array(z.string()),
 			description: z.string().optional(),
 		})
 		.optional(),

@@ -206,44 +206,51 @@ const McpSelector: React.FC<McpSelectorProps> = ({
 								)}
 							</CommandEmpty>
 							<CommandGroup>
-								{mcpServers
-									.filter(
-										(server) =>
-											!searchValue ||
-											server.name.toLowerCase().includes(searchValue.toLowerCase()),
+								{(() => {
+									const uniqueMcpServers = Array.from(
+										new Map(mcpServers.map((server) => [server.name, server])).values(),
 									)
-									.map((server) => (
-										<CommandItem
-											key={`included-${server.name}`}
-											value={`included-${server.name}`}
-											onSelect={() => {
-												const isIncluded = mcpIncludedList.includes(server.name)
-												if (isIncluded) {
-													setMcpIncludedList(mcpIncludedList.filter((n) => n !== server.name))
-												} else {
-													setMcpIncludedList([...mcpIncludedList, server.name])
-												}
-											}}
-											className="flex items-center px-2 py-1">
-											<div className="flex items-center flex-1 gap-2">
-												<VSCodeCheckbox
-													checked={mcpIncludedList.includes(server.name)}
-													onClick={(e) => {
-														e.stopPropagation()
-														const isIncluded = mcpIncludedList.includes(server.name)
-														if (isIncluded) {
-															setMcpIncludedList(
-																mcpIncludedList.filter((n) => n !== server.name),
-															)
-														} else {
-															setMcpIncludedList([...mcpIncludedList, server.name])
-														}
-													}}
-												/>
-												<span>{server.name}</span>
-											</div>
-										</CommandItem>
-									))}
+									return uniqueMcpServers
+										.filter(
+											(server) =>
+												!searchValue ||
+												server.name.toLowerCase().includes(searchValue.toLowerCase()),
+										)
+										.map((server) => (
+											<CommandItem
+												key={`included-${server.name}`}
+												value={`included-${server.name}`}
+												onSelect={() => {
+													const isIncluded = mcpIncludedList.includes(server.name)
+													if (isIncluded) {
+														setMcpIncludedList(
+															mcpIncludedList.filter((n) => n !== server.name),
+														)
+													} else {
+														setMcpIncludedList([...mcpIncludedList, server.name])
+													}
+												}}
+												className="flex items-center px-2 py-1">
+												<div className="flex items-center flex-1 gap-2">
+													<VSCodeCheckbox
+														checked={mcpIncludedList.includes(server.name)}
+														onClick={(e) => {
+															e.stopPropagation()
+															const isIncluded = mcpIncludedList.includes(server.name)
+															if (isIncluded) {
+																setMcpIncludedList(
+																	mcpIncludedList.filter((n) => n !== server.name),
+																)
+															} else {
+																setMcpIncludedList([...mcpIncludedList, server.name])
+															}
+														}}
+													/>
+													<span>{server.name}</span>
+												</div>
+											</CommandItem>
+										))
+								})()}
 							</CommandGroup>
 						</CommandList>
 					</div>
