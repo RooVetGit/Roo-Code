@@ -169,7 +169,17 @@
 		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:",
 		"wantsToReadAndXMore": "Roo chce przeczytać ten plik i {{count}} więcej:",
 		"wantsToReadMultiple": "Roo chce odczytać wiele plików:",
-		"wantsToApplyBatchChanges": "Roo chce zastosować zmiany do wielu plików:"
+		"wantsToApplyBatchChanges": "Roo chce zastosować zmiany do wielu plików:",
+		"todoListUpdated": "Lista zadań zaktualizowana",
+		"todoChanges": {
+			"noChanges": "Brak zmian w liście zadań",
+			"added": "Dodano: {{content}}",
+			"completed": "Ukończono: {{content}}",
+			"started": "Rozpoczęto: {{content}}",
+			"removed": "Usunięto: {{content}}",
+			"reordered": "Zmieniono kolejność: {{content}}",
+			"reverted": "Cofnięto: {{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu:",

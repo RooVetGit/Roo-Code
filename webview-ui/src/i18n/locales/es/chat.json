@@ -169,7 +169,17 @@
 		"wantsToInsertAtEnd": "Roo quiere añadir contenido al final de este archivo:",
 		"wantsToReadAndXMore": "Roo quiere leer este archivo y {{count}} más:",
 		"wantsToReadMultiple": "Roo quiere leer varios archivos:",
-		"wantsToApplyBatchChanges": "Roo quiere aplicar cambios a múltiples archivos:"
+		"wantsToApplyBatchChanges": "Roo quiere aplicar cambios a múltiples archivos:",
+		"todoListUpdated": "Lista de tareas actualizada",
+		"todoChanges": {
+			"noChanges": "Sin cambios",
+			"added": "Añadido: {{content}}",
+			"completed": "Completado: {{content}}",
+			"started": "Iniciado: {{content}}",
+			"removed": "Eliminado: {{content}}",
+			"reordered": "Reordenado: {{content}}",
+			"reverted": "Revertido: {{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo quiere ver los archivos de nivel superior en este directorio:",

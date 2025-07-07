@@ -164,7 +164,17 @@
 		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:",
 		"wantsToReadAndXMore": "Roo wil dit bestand en nog {{count}} andere lezen:",
 		"wantsToReadMultiple": "Roo wil meerdere bestanden lezen:",
-		"wantsToApplyBatchChanges": "Roo wil wijzigingen toepassen op meerdere bestanden:"
+		"wantsToApplyBatchChanges": "Roo wil wijzigingen toepassen op meerdere bestanden:",
+		"todoListUpdated": "Todo-lijst bijgewerkt",
+		"todoChanges": {
+			"noChanges": "Geen wijzigingen in de todo-lijst",
+			"added": "Toegevoegd: {{content}}",
+			"completed": "Voltooid: {{content}}",
+			"started": "Gestart: {{content}}",
+			"removed": "Verwijderd: {{content}}",
+			"reordered": "Hergerangschikt: {{content}}",
+			"reverted": "Teruggedraaid: {{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wil de bovenliggende bestanden in deze map bekijken:",

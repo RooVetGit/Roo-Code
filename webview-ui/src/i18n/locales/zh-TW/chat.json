@@ -169,7 +169,17 @@
 		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容：",
 		"wantsToReadAndXMore": "Roo 想要讀取此檔案以及另外 {{count}} 個檔案：",
 		"wantsToReadMultiple": "Roo 想要讀取多個檔案：",
-		"wantsToApplyBatchChanges": "Roo 想要對多個檔案套用變更："
+		"wantsToApplyBatchChanges": "Roo 想要對多個檔案套用變更：",
+		"todoListUpdated": "待辦清單已更新",
+		"todoChanges": {
+			"noChanges": "待辦清單無變更",
+			"added": "已新增：{{content}}",
+			"completed": "已完成：{{content}}",
+			"started": "已開始：{{content}}",
+			"removed": "已移除：{{content}}",
+			"reordered": "已重新排序：{{content}}",
+			"reverted": "已還原：{{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo 想要檢視此目錄中最上層的檔案：",

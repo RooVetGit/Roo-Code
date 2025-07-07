@@ -164,7 +164,17 @@
 		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:",
 		"wantsToReadAndXMore": "Roo хочет прочитать этот файл и еще {{count}}:",
 		"wantsToReadMultiple": "Roo хочет прочитать несколько файлов:",
-		"wantsToApplyBatchChanges": "Roo хочет применить изменения к нескольким файлам:"
+		"wantsToApplyBatchChanges": "Roo хочет применить изменения к нескольким файлам:",
+		"todoListUpdated": "Список задач обновлен",
+		"todoChanges": {
+			"noChanges": "Нет изменений в списке задач",
+			"added": "Добавлено: {{content}}",
+			"completed": "Завершено: {{content}}",
+			"started": "Начато: {{content}}",
+			"removed": "Удалено: {{content}}",
+			"reordered": "Переупорядочено: {{content}}",
+			"reverted": "Отменено: {{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo хочет просмотреть файлы верхнего уровня в этой директории:",

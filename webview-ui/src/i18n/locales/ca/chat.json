@@ -169,7 +169,17 @@
 		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:",
 		"wantsToReadAndXMore": "En Roo vol llegir aquest fitxer i {{count}} més:",
 		"wantsToReadMultiple": "Roo vol llegir diversos fitxers:",
-		"wantsToApplyBatchChanges": "Roo vol aplicar canvis a múltiples fitxers:"
+		"wantsToApplyBatchChanges": "Roo vol aplicar canvis a múltiples fitxers:",
+		"todoListUpdated": "Llista de tasques actualitzada",
+		"todoChanges": {
+			"noChanges": "No hi ha canvis a la llista de tasques",
+			"added": "Afegit: {{content}}",
+			"completed": "Completat: {{content}}",
+			"started": "Iniciat: {{content}}",
+			"removed": "Eliminat: {{content}}",
+			"reordered": "Reordenat: {{content}}",
+			"reverted": "Revertit: {{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori:",

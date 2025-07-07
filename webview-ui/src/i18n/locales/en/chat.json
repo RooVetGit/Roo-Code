@@ -178,7 +178,17 @@
 		"didSearchReplace": "Roo performed search and replace on this file:",
 		"wantsToInsert": "Roo wants to insert content into this file:",
 		"wantsToInsertWithLineNumber": "Roo wants to insert content into this file at line {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo wants to append content to the end of this file:"
+		"wantsToInsertAtEnd": "Roo wants to append content to the end of this file:",
+		"todoListUpdated": "Todo list updated",
+		"todoChanges": {
+			"noChanges": "No changes",
+			"added": "Added: {{content}}",
+			"completed": "Completed: {{content}}",
+			"started": "Started: {{content}}",
+			"removed": "Removed: {{content}}",
+			"reordered": "Reordered: {{content}}",
+			"reverted": "Reverted: {{content}}"
+		}
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wants to view the top level files in this directory:",
