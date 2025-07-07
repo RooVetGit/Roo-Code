@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react"
-import { ChevronDown, ChevronUp, Info, Plus, X, Server, Wrench } from "lucide-react"
+import React, { useState, useEffect } from "react"
+import { ChevronDown, ChevronUp, Info, Plus, X, Wrench } from "lucide-react"
 
 import { McpRestrictions, McpToolRestriction } from "@roo-code/types"
 
@@ -31,14 +31,11 @@ export function McpRestrictionsEditor({
 
 	// Local state for UI management
 	const [isExpanded, setIsExpanded] = useState(false)
-	const [activeTab, setActiveTab] = useState<"servers" | "tools">("servers")
-	const [showAdvanced, setShowAdvanced] = useState(false)
 
 	// State for collapsible server groups (collapsed by default)
 	const [groupExpansionState, setGroupExpansionState] = useState({
 		enabled: false,
 		disabled: false,
-		restricted: false,
 	})
 
 	// Initialize local state when restrictions change
@@ -115,7 +112,7 @@ export function McpRestrictionsEditor({
 	}
 
 	// Helper to check if server has complex restrictions (more than just allow/disallow)
-	const hasComplexRestrictions = (server: McpServer) => {
+	const _hasComplexRestrictions = (server: McpServer) => {
 		// Check if server has tool-level restrictions
 		const hasToolRestrictions =
 			allowedTools.some((t) => t.serverName === server.name) ||
@@ -126,24 +123,20 @@ export function McpRestrictionsEditor({
 		return hasToolRestrictions
 	}
 
-	// Group servers by their status and restriction state
+	// Group servers by their status
 	const serverGroups = {
 		enabled: availableServers.filter((server) => {
 			const status = getServerStatus(server)
-			return status.enabled && !hasComplexRestrictions(server)
+			return status.enabled
 		}),
 		disabled: availableServers.filter((server) => {
 			const status = getServerStatus(server)
 			return !status.enabled
 		}),
-		restricted: availableServers.filter((server) => {
-			const status = getServerStatus(server)
-			return status.enabled && hasComplexRestrictions(server)
-		}),
 	}
 
 	// Helper to toggle group expansion
-	const toggleGroupExpansion = (groupType: "enabled" | "disabled" | "restricted") => {
+	const toggleGroupExpansion = (groupType: "enabled" | "disabled") => {
 		setGroupExpansionState((prev) => ({
 			...prev,
 			[groupType]: !prev[groupType],
@@ -297,269 +290,98 @@ export function McpRestrictionsEditor({
 
 			{isExpanded && (
 				<div className="border border-vscode-widget-border rounded p-3 space-y-4">
-					{/* Tab Navigation */}
-					<div className="flex gap-1 border-b border-vscode-widget-border">
-						<Button
-							variant={activeTab === "servers" ? "secondary" : "ghost"}
-							size="sm"
-							onClick={() => setActiveTab("servers")}
-							disabled={disabled}
-							className="rounded-b-none">
-							{t("prompts:mcpRestrictions.tabs.servers")}
-						</Button>
-						<Button
-							variant={activeTab === "tools" ? "secondary" : "ghost"}
-							size="sm"
-							onClick={() => setActiveTab("tools")}
-							disabled={disabled}
-							className="rounded-b-none">
-							{t("prompts:mcpRestrictions.tabs.tools")}
-						</Button>
+					{/* Server Restrictions */}
+					<div className="space-y-4">
+						{/* Overview Summary */}
+						<div className="text-sm text-vscode-descriptionForeground p-3 bg-vscode-editor-background border border-vscode-widget-border rounded">
+							<div className="font-medium mb-2">{t("prompts:mcpRestrictions.servers.overview")}</div>
+							<div className="space-y-1">
+								<div className="flex items-center gap-2">
+									<div className="w-2 h-2 rounded-full bg-green-500" />
+									<span>
+										{t("prompts:mcpRestrictions.servers.enabledCount", {
+											count: serverGroups.enabled.length,
+											names: serverGroups.enabled.map((s) => s.name).join(", ") || "None",
+										})}
+									</span>
+								</div>
+								<div className="flex items-center gap-2">
+									<div className="w-2 h-2 rounded-full bg-red-500" />
+									<span>
+										{t("prompts:mcpRestrictions.servers.disabledCount", {
+											count: serverGroups.disabled.length,
+											names: serverGroups.disabled.map((s) => s.name).join(", ") || "None",
+										})}
+									</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Collapsible Server Groups */}
+						<div className="space-y-3">
+							{/* Enabled Servers Group */}
+							<CollapsibleServerGroup
+								title={t("prompts:mcpRestrictions.serverGroups.enabled")}
+								servers={serverGroups.enabled}
+								isExpanded={groupExpansionState.enabled}
+								onToggleExpanded={() => toggleGroupExpansion("enabled")}
+								allowedServers={allowedServers}
+								disallowedServers={disallowedServers}
+								allowedTools={allowedTools}
+								disallowedTools={disallowedTools}
+								getServerStatus={getServerStatus}
+								toggleServerInList={toggleServerInList}
+								updateToolRestriction={updateToolRestriction}
+								addToolRestriction={addToolRestriction}
+								removeToolRestriction={removeToolRestriction}
+								updateRestrictions={updateRestrictions}
+								localRestrictions={localRestrictions}
+								disabled={disabled}
+								icon={<div className="w-3 h-3 rounded-full bg-green-500" />}
+								groupType="enabled"
+							/>
+
+							{/* Disabled Servers Group */}
+							<CollapsibleServerGroup
+								title={t("prompts:mcpRestrictions.serverGroups.disabled")}
+								servers={serverGroups.disabled}
+								isExpanded={groupExpansionState.disabled}
+								onToggleExpanded={() => toggleGroupExpansion("disabled")}
+								allowedServers={allowedServers}
+								disallowedServers={disallowedServers}
+								allowedTools={allowedTools}
+								disallowedTools={disallowedTools}
+								getServerStatus={getServerStatus}
+								toggleServerInList={toggleServerInList}
+								updateToolRestriction={updateToolRestriction}
+								addToolRestriction={addToolRestriction}
+								removeToolRestriction={removeToolRestriction}
+								updateRestrictions={updateRestrictions}
+								localRestrictions={localRestrictions}
+								disabled={disabled}
+								icon={<div className="w-3 h-3 rounded-full bg-red-500" />}
+								groupType="disabled"
+							/>
+						</div>
+
+						{/* Legacy Server Restrictions Summary */}
+						{(allowedServers.length > 0 || disallowedServers.length > 0) && (
+							<div className="text-sm text-vscode-descriptionForeground p-2 bg-vscode-editor-background border border-vscode-widget-border rounded">
+								{allowedServers.length > 0 && (
+									<div>
+										<strong>{t("prompts:mcpRestrictions.servers.allowedServers")}:</strong>{" "}
+										{allowedServers.join(", ")}
+									</div>
+								)}
+								{disallowedServers.length > 0 && (
+									<div>
+										<strong>{t("prompts:mcpRestrictions.servers.disallowedServers")}:</strong>{" "}
+										{disallowedServers.join(", ")}
+									</div>
+								)}
+							</div>
+						)}
 					</div>
-
-					{/* Server Restrictions Tab */}
-					{activeTab === "servers" && (
-						<div className="space-y-4">
-							<div className="text-sm text-vscode-descriptionForeground">
-								{t("prompts:mcpRestrictions.servers.description")}
-							</div>
-
-							{/* Overview Summary */}
-							<div className="text-sm text-vscode-descriptionForeground p-3 bg-vscode-editor-background border border-vscode-widget-border rounded">
-								<div className="font-medium mb-2">{t("prompts:mcpRestrictions.servers.overview")}</div>
-								<div className="space-y-1">
-									<div className="flex items-center gap-2">
-										<div className="w-2 h-2 rounded-full bg-green-500" />
-										<span>
-											{t("prompts:mcpRestrictions.servers.enabledCount", {
-												count: serverGroups.enabled.length,
-												names: serverGroups.enabled.map((s) => s.name).join(", ") || "None",
-											})}
-										</span>
-									</div>
-									<div className="flex items-center gap-2">
-										<div className="w-2 h-2 rounded-full bg-red-500" />
-										<span>
-											{t("prompts:mcpRestrictions.servers.disabledCount", {
-												count: serverGroups.disabled.length,
-												names: serverGroups.disabled.map((s) => s.name).join(", ") || "None",
-											})}
-										</span>
-									</div>
-									{serverGroups.restricted.length > 0 && (
-										<div className="flex items-center gap-2">
-											<div className="w-2 h-2 rounded-full bg-yellow-500" />
-											<span>
-												{t("prompts:mcpRestrictions.servers.enabledWithRestrictionsCount", {
-													count: serverGroups.restricted.length,
-													names: serverGroups.restricted.map((s) => s.name).join(", "),
-												})}
-											</span>
-										</div>
-									)}
-								</div>
-							</div>
-
-							{/* Collapsible Server Groups */}
-							<div className="space-y-3">
-								{/* Enabled Servers Group */}
-								<CollapsibleServerGroup
-									title={t("prompts:mcpRestrictions.serverGroups.enabled")}
-									servers={serverGroups.enabled}
-									isExpanded={groupExpansionState.enabled}
-									onToggleExpanded={() => toggleGroupExpansion("enabled")}
-									allowedServers={allowedServers}
-									disallowedServers={disallowedServers}
-									allowedTools={allowedTools}
-									disallowedTools={disallowedTools}
-									getServerStatus={getServerStatus}
-									toggleServerInList={toggleServerInList}
-									disabled={disabled}
-									icon={<div className="w-3 h-3 rounded-full bg-green-500" />}
-									groupType="enabled"
-								/>
-
-								{/* Disabled Servers Group */}
-								<CollapsibleServerGroup
-									title={t("prompts:mcpRestrictions.serverGroups.disabled")}
-									servers={serverGroups.disabled}
-									isExpanded={groupExpansionState.disabled}
-									onToggleExpanded={() => toggleGroupExpansion("disabled")}
-									allowedServers={allowedServers}
-									disallowedServers={disallowedServers}
-									allowedTools={allowedTools}
-									disallowedTools={disallowedTools}
-									getServerStatus={getServerStatus}
-									toggleServerInList={toggleServerInList}
-									disabled={disabled}
-									icon={<div className="w-3 h-3 rounded-full bg-red-500" />}
-									groupType="disabled"
-								/>
-
-								{/* Restricted Servers Group */}
-								<CollapsibleServerGroup
-									title={t("prompts:mcpRestrictions.serverGroups.restricted")}
-									servers={serverGroups.restricted}
-									isExpanded={groupExpansionState.restricted}
-									onToggleExpanded={() => toggleGroupExpansion("restricted")}
-									allowedServers={allowedServers}
-									disallowedServers={disallowedServers}
-									allowedTools={allowedTools}
-									disallowedTools={disallowedTools}
-									getServerStatus={getServerStatus}
-									toggleServerInList={toggleServerInList}
-									disabled={disabled}
-									icon={<div className="w-3 h-3 rounded-full bg-yellow-500" />}
-									groupType="restricted"
-								/>
-							</div>
-
-							{/* Legacy Server Restrictions Summary */}
-							{(allowedServers.length > 0 || disallowedServers.length > 0) && (
-								<div className="text-sm text-vscode-descriptionForeground p-2 bg-vscode-editor-background border border-vscode-widget-border rounded">
-									{allowedServers.length > 0 && (
-										<div>
-											<strong>{t("prompts:mcpRestrictions.servers.allowedServers")}:</strong>{" "}
-											{allowedServers.join(", ")}
-										</div>
-									)}
-									{disallowedServers.length > 0 && (
-										<div>
-											<strong>{t("prompts:mcpRestrictions.servers.disallowedServers")}:</strong>{" "}
-											{disallowedServers.join(", ")}
-										</div>
-									)}
-								</div>
-							)}
-						</div>
-					)}
-
-					{/* Tool Restrictions Tab */}
-					{activeTab === "tools" && (
-						<div className="space-y-4">
-							<div className="text-sm text-vscode-descriptionForeground">
-								{t("prompts:mcpRestrictions.tools.description")}
-							</div>
-
-							{/* Allowed Tools */}
-							<div>
-								<div className="flex justify-between items-center mb-2">
-									<div className="font-medium text-sm">
-										{t("prompts:mcpRestrictions.tools.allowedTools")}
-									</div>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => addToolRestriction("allowed")}
-										disabled={disabled}>
-										<Plus className="w-4 h-4 mr-1" />
-										{t("prompts:mcpRestrictions.tools.addAllowed")}
-									</Button>
-								</div>
-								{allowedTools.length === 0 ? (
-									<div className="text-sm text-vscode-descriptionForeground p-2 border border-vscode-widget-border rounded">
-										{t("prompts:mcpRestrictions.tools.noAllowedTools")}
-									</div>
-								) : (
-									<div className="space-y-2">
-										{allowedTools.map((tool, index) => (
-											<ToolRestrictionRow
-												key={index}
-												tool={tool}
-												availableServers={availableServers}
-												onUpdate={(field, value) =>
-													updateToolRestriction(index, "allowed", field, value)
-												}
-												onRemove={() => removeToolRestriction(index, "allowed")}
-												disabled={disabled}
-											/>
-										))}
-									</div>
-								)}
-							</div>
-
-							{/* Disallowed Tools */}
-							<div>
-								<div className="flex justify-between items-center mb-2">
-									<div className="font-medium text-sm">
-										{t("prompts:mcpRestrictions.tools.disallowedTools")}
-									</div>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => addToolRestriction("disallowed")}
-										disabled={disabled}>
-										<Plus className="w-4 h-4 mr-1" />
-										{t("prompts:mcpRestrictions.tools.addDisallowed")}
-									</Button>
-								</div>
-								{disallowedTools.length === 0 ? (
-									<div className="text-sm text-vscode-descriptionForeground p-2 border border-vscode-widget-border rounded">
-										{t("prompts:mcpRestrictions.tools.noDisallowedTools")}
-									</div>
-								) : (
-									<div className="space-y-2">
-										{disallowedTools.map((tool, index) => (
-											<ToolRestrictionRow
-												key={index}
-												tool={tool}
-												availableServers={availableServers}
-												onUpdate={(field, value) =>
-													updateToolRestriction(index, "disallowed", field, value)
-												}
-												onRemove={() => removeToolRestriction(index, "disallowed")}
-												disabled={disabled}
-											/>
-										))}
-									</div>
-								)}
-							</div>
-
-							{/* Advanced Patterns */}
-							<div>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => setShowAdvanced(!showAdvanced)}
-									disabled={disabled}
-									className="w-full justify-start">
-									{showAdvanced ? (
-										<ChevronUp className="w-4 h-4 mr-1" />
-									) : (
-										<ChevronDown className="w-4 h-4 mr-1" />
-									)}
-									{t("prompts:mcpRestrictions.tools.advancedPatterns")}
-								</Button>
-								{showAdvanced && (
-									<div className="mt-2 p-3 bg-vscode-editor-background border border-vscode-widget-border rounded text-sm">
-										<div className="font-medium mb-2">
-											{t("prompts:mcpRestrictions.patterns.title")}
-										</div>
-										<div className="space-y-1 text-vscode-descriptionForeground">
-											<div>
-												<code>*</code> - {t("prompts:mcpRestrictions.patterns.wildcard")}
-											</div>
-											<div>
-												<code>?</code> - {t("prompts:mcpRestrictions.patterns.singleChar")}
-											</div>
-											<div className="mt-2">
-												<strong>{t("prompts:mcpRestrictions.patterns.examples")}:</strong>
-											</div>
-											<div>
-												<code>docs-*</code> - {t("prompts:mcpRestrictions.patterns.example1")}
-											</div>
-											<div>
-												<code>*-admin</code> - {t("prompts:mcpRestrictions.patterns.example2")}
-											</div>
-											<div>
-												<code>delete_*</code> - {t("prompts:mcpRestrictions.patterns.example3")}
-											</div>
-										</div>
-									</div>
-								)}
-							</div>
-						</div>
-					)}
 				</div>
 			)}
 		</div>
@@ -578,9 +400,19 @@ interface CollapsibleServerGroupProps {
 	disallowedTools: McpToolRestriction[]
 	getServerStatus: (server: McpServer) => { enabled: boolean; reason: string; reasonText: string }
 	toggleServerInList: (serverName: string, listType: "allowed" | "disallowed") => void
+	updateToolRestriction: (
+		index: number,
+		listType: "allowed" | "disallowed",
+		field: "serverName" | "toolName",
+		value: string,
+	) => void
+	addToolRestriction: (listType: "allowed" | "disallowed") => void
+	removeToolRestriction: (index: number, listType: "allowed" | "disallowed") => void
+	updateRestrictions: (restrictions: McpRestrictions | undefined) => void
+	localRestrictions?: McpRestrictions
 	disabled?: boolean
 	icon: React.ReactNode
-	groupType: "enabled" | "disabled" | "restricted"
+	groupType: "enabled" | "disabled"
 }
 
 function CollapsibleServerGroup({
@@ -594,6 +426,11 @@ function CollapsibleServerGroup({
 	disallowedTools,
 	getServerStatus,
 	toggleServerInList,
+	updateToolRestriction,
+	addToolRestriction,
+	removeToolRestriction,
+	updateRestrictions,
+	localRestrictions,
 	disabled,
 	icon,
 	groupType,
@@ -670,6 +507,11 @@ function CollapsibleServerGroup({
 								disallowedTools={disallowedTools}
 								getServerStatus={getServerStatus}
 								toggleServerInList={toggleServerInList}
+								updateToolRestriction={updateToolRestriction}
+								addToolRestriction={addToolRestriction}
+								removeToolRestriction={removeToolRestriction}
+								updateRestrictions={updateRestrictions}
+								localRestrictions={localRestrictions}
 								disabled={disabled}
 								groupType={groupType}
 							/>
@@ -690,8 +532,18 @@ interface CompactServerRowProps {
 	disallowedTools: McpToolRestriction[]
 	getServerStatus: (server: McpServer) => { enabled: boolean; reason: string; reasonText: string }
 	toggleServerInList: (serverName: string, listType: "allowed" | "disallowed") => void
+	updateToolRestriction: (
+		index: number,
+		listType: "allowed" | "disallowed",
+		field: "serverName" | "toolName",
+		value: string,
+	) => void
+	addToolRestriction: (listType: "allowed" | "disallowed") => void
+	removeToolRestriction: (index: number, listType: "allowed" | "disallowed") => void
+	updateRestrictions: (restrictions: McpRestrictions | undefined) => void
+	localRestrictions?: McpRestrictions
 	disabled?: boolean
-	groupType: "enabled" | "disabled" | "restricted"
+	groupType: "enabled" | "disabled"
 }
 
 function CompactServerRow({
@@ -702,23 +554,134 @@ function CompactServerRow({
 	disallowedTools,
 	getServerStatus,
 	toggleServerInList,
+	updateToolRestriction: _updateToolRestriction,
+	addToolRestriction: _addToolRestriction,
+	removeToolRestriction,
+	updateRestrictions,
+	localRestrictions,
 	disabled,
-	groupType,
+	groupType: _groupType,
 }: CompactServerRowProps) {
 	const { t } = useAppTranslation()
 	const [showDetails, setShowDetails] = useState(false)
 	const [showTools, setShowTools] = useState(false)
+	const [showPatternRules, setShowPatternRules] = useState(false)
 	const isAllowed = allowedServers.includes(server.name)
 	const isDisallowed = disallowedServers.includes(server.name)
 	const status = getServerStatus(server)
 
-	// Helper function to calculate enabled tools for restricted servers
+	// Helper to check if server has complex restrictions (more than just allow/disallow)
+	const hasComplexRestrictions = (server: McpServer) => {
+		// Check if server has tool-level restrictions
+		const hasToolRestrictions =
+			allowedTools.some((t) => t.serverName === server.name) ||
+			disallowedTools.some((t) => t.serverName === server.name)
+
+		// Only consider it "restricted" if it has tool-level restrictions
+		// Simple allow/disallow at server level doesn't count as "restricted"
+		return hasToolRestrictions
+	}
+
+	// Handler for individual tool actions (allow/block)
+	const handleToolAction = (toolName: string, action: "allow" | "block") => {
+		if (action === "block") {
+			// Add to disallowed tools for this server
+			const currentList = disallowedTools
+			const newTool: McpToolRestriction = { serverName: server.name, toolName: toolName }
+			const updatedList = [...currentList, newTool]
+
+			const newRestrictions = {
+				...(localRestrictions || {}),
+				disallowedTools: updatedList,
+			}
+
+			updateRestrictions(newRestrictions)
+		} else {
+			// Remove from disallowed tools if present
+			const disallowedIndex = disallowedTools.findIndex(
+				(t) => t.serverName === server.name && t.toolName === toolName,
+			)
+			if (disallowedIndex !== -1) {
+				removeToolRestriction(disallowedIndex, "disallowed")
+			}
+		}
+	}
+
+	// Handler for bulk tool actions
+	const handleBulkToolAction = (action: "allow" | "block") => {
+		if (action === "block") {
+			// Add pattern to block all tools for this server
+			const currentList = disallowedTools
+			const newTool: McpToolRestriction = { serverName: server.name, toolName: "*" }
+			const updatedList = [...currentList, newTool]
+
+			const newRestrictions = {
+				...(localRestrictions || {}),
+				disallowedTools: updatedList,
+			}
+
+			updateRestrictions(newRestrictions)
+		} else {
+			// Remove all disallowed tools for this server
+			const updatedList = disallowedTools.filter((tool) => tool.serverName !== server.name)
+
+			const newRestrictions = {
+				...(localRestrictions || {}),
+				disallowedTools: updatedList.length > 0 ? updatedList : undefined,
+			}
+
+			// Clean up empty restrictions
+			if (Object.values(newRestrictions).every((list) => !list || list.length === 0)) {
+				updateRestrictions(undefined)
+			} else {
+				updateRestrictions(newRestrictions)
+			}
+		}
+	}
+
+	// Handler for adding pattern rules
+	const handleAddPatternRule = (type: "allow" | "block", pattern: string) => {
+		if (type === "allow") {
+			const currentList = allowedTools
+			const newTool: McpToolRestriction = { serverName: server.name, toolName: pattern }
+			const updatedList = [...currentList, newTool]
+
+			const newRestrictions = {
+				...(localRestrictions || {}),
+				allowedTools: updatedList,
+			}
+
+			updateRestrictions(newRestrictions)
+		} else {
+			const currentList = disallowedTools
+			const newTool: McpToolRestriction = { serverName: server.name, toolName: pattern }
+			const updatedList = [...currentList, newTool]
+
+			const newRestrictions = {
+				...(localRestrictions || {}),
+				disallowedTools: updatedList,
+			}
+
+			updateRestrictions(newRestrictions)
+		}
+	}
+
+	// Handler for removing pattern rules
+	const handleRemovePatternRule = (type: "allow" | "block", index: number) => {
+		if (type === "allow") {
+			removeToolRestriction(index, "allowed")
+		} else {
+			removeToolRestriction(index, "disallowed")
+		}
+	}
+
+	// Helper function to calculate enabled tools for servers with restrictions
 	const getEnabledToolsCount = () => {
-		if (groupType !== "restricted") {
+		if (!hasComplexRestrictions(server)) {
 			return server.tools.length
 		}
 
-		// For restricted servers, calculate how many tools are actually enabled
+		// For servers with restrictions, calculate how many tools are actually enabled
 		const serverAllowedTools = allowedTools.filter((t) => t.serverName === server.name)
 		const serverDisallowedTools = disallowedTools.filter((t) => t.serverName === server.name)
 
@@ -749,7 +712,7 @@ function CompactServerRow({
 
 	// Helper function to organize tools by enabled/disabled status
 	const getOrganizedTools = () => {
-		if (groupType === "disabled") {
+		if (!status.enabled) {
 			// For disabled servers, all tools are disabled
 			return {
 				enabled: [],
@@ -808,7 +771,7 @@ function CompactServerRow({
 						<div className="flex items-center gap-2">
 							<span className="font-medium text-vscode-foreground truncate">{server.name}</span>
 							<span className="text-xs text-vscode-descriptionForeground">
-								{groupType === "restricted"
+								{hasComplexRestrictions(server)
 									? `(${enabledToolsCount} out of ${totalToolsCount} tools)`
 									: `(${totalToolsCount} tools)`}
 							</span>
@@ -895,9 +858,56 @@ function CompactServerRow({
 			{showTools && (
 				<div className="border-t border-vscode-panel-border bg-vscode-textCodeBlock-background">
 					<div className="p-2">
-						<div className="text-xs font-medium text-vscode-foreground mb-2">
-							{t("prompts:mcpRestrictions.tools.serverTools", { serverName: server.name })}
+						<div className="flex items-center justify-between mb-2">
+							<div className="text-xs font-medium text-vscode-foreground">
+								{t("prompts:mcpRestrictions.tools.serverTools", { serverName: server.name })}
+							</div>
+							{/* Quick Actions */}
+							<div className="flex gap-1">
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => handleBulkToolAction("allow")}
+									disabled={disabled}
+									className="text-xs h-6 py-0 px-2">
+									{t("prompts:mcpRestrictions.tools.allowAll")}
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => handleBulkToolAction("block")}
+									disabled={disabled}
+									className="text-xs h-6 py-0 px-2">
+									{t("prompts:mcpRestrictions.tools.blockAll")}
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setShowPatternRules(!showPatternRules)}
+									disabled={disabled}
+									className="text-xs h-6 py-0 px-2">
+									{t("prompts:mcpRestrictions.tools.patterns")}
+								</Button>
+							</div>
 						</div>
+
+						{/* Pattern Rules Section */}
+						{showPatternRules && (
+							<div className="mb-3 p-2 bg-vscode-editor-background border border-vscode-widget-border rounded">
+								<div className="text-xs font-medium text-vscode-foreground mb-2">
+									{t("prompts:mcpRestrictions.tools.patternRules")}
+								</div>
+								<ServerPatternRules
+									server={server}
+									allowedTools={allowedTools}
+									disallowedTools={disallowedTools}
+									onAddRule={handleAddPatternRule}
+									onRemoveRule={handleRemovePatternRule}
+									disabled={disabled}
+								/>
+							</div>
+						)}
+
 						<div className="max-h-48 overflow-y-auto space-y-1">
 							{/* Enabled tools first */}
 							{organizedTools.enabled.map((tool) => (
@@ -915,8 +925,15 @@ function CompactServerRow({
 											</div>
 										)}
 									</div>
-									<div className="text-xs text-green-300 bg-green-600/20 px-1.5 py-0.5 rounded flex-shrink-0">
-										{t("prompts:mcpRestrictions.status.enabled")}
+									<div className="flex gap-1">
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => handleToolAction(tool.name, "block")}
+											disabled={disabled}
+											className="text-xs h-5 py-0 px-1">
+											{t("prompts:mcpRestrictions.tools.block")}
+										</Button>
 									</div>
 								</div>
 							))}
@@ -937,8 +954,15 @@ function CompactServerRow({
 											</div>
 										)}
 									</div>
-									<div className="text-xs text-red-300 bg-red-600/20 px-1.5 py-0.5 rounded flex-shrink-0">
-										{t("prompts:mcpRestrictions.status.disabled")}
+									<div className="flex gap-1">
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => handleToolAction(tool.name, "allow")}
+											disabled={disabled}
+											className="text-xs h-5 py-0 px-1">
+											{t("prompts:mcpRestrictions.tools.allow")}
+										</Button>
 									</div>
 								</div>
 							))}
@@ -957,248 +981,153 @@ function CompactServerRow({
 	)
 }
 
-// ServerToolPicker component for enhanced server/tool selection
-interface ServerToolPickerProps {
-	value: string
-	onSelect: (value: string) => void
-	placeholder: string
-	type: "server" | "tool"
-	availableServers: McpServer[]
-	selectedServerName?: string
+// ServerPatternRules component for managing pattern-based rules per server
+interface ServerPatternRulesProps {
+	server: McpServer
+	allowedTools: McpToolRestriction[]
+	disallowedTools: McpToolRestriction[]
+	onAddRule: (type: "allow" | "block", pattern: string) => void
+	onRemoveRule: (type: "allow" | "block", index: number) => void
 	disabled?: boolean
 }
 
-function ServerToolPicker({
-	value,
-	onSelect,
-	placeholder,
-	type,
-	availableServers,
-	selectedServerName,
+function ServerPatternRules({
+	server,
+	allowedTools,
+	disallowedTools,
+	onAddRule,
+	onRemoveRule,
 	disabled,
-}: ServerToolPickerProps) {
+}: ServerPatternRulesProps) {
 	const { t } = useAppTranslation()
-	const [isOpen, setIsOpen] = useState(false)
-	const [searchTerm, setSearchTerm] = useState("")
-	const dropdownRef = useRef<HTMLDivElement>(null)
-	const inputRef = useRef<HTMLInputElement>(null)
+	const [newAllowPattern, setNewAllowPattern] = useState("")
+	const [newBlockPattern, setNewBlockPattern] = useState("")
 
-	// Get available options based on type
-	const getOptions = () => {
-		if (type === "server") {
-			return availableServers.map((server) => ({
-				value: server.name,
-				label: server.name,
-				description: `${server.tools.length} tools available`,
-				status: server.status,
-				icon: <Server className="w-4 h-4" />,
-			}))
-		} else {
-			// Tool type - find tools for the selected server
-			const server = availableServers.find((s) => s.name === selectedServerName)
-			if (!server) return []
+	// Get pattern rules specific to this server
+	const serverAllowedPatterns = allowedTools
+		.map((tool, index) => ({ ...tool, originalIndex: index }))
+		.filter((tool) => tool.serverName === server.name)
 
-			return server.tools.map((tool) => ({
-				value: tool.name,
-				label: tool.name,
-				description: tool.description || "No description available",
-				status: "available" as const,
-				icon: <Wrench className="w-4 h-4" />,
-			}))
+	const serverDisallowedPatterns = disallowedTools
+		.map((tool, index) => ({ ...tool, originalIndex: index }))
+		.filter((tool) => tool.serverName === server.name)
+
+	const handleAddAllowPattern = () => {
+		if (newAllowPattern.trim()) {
+			onAddRule("allow", newAllowPattern.trim())
+			setNewAllowPattern("")
 		}
 	}
 
-	// Filter options based on search term with pattern support
-	const filteredOptions = getOptions().filter((option) => {
-		const searchValue = value || searchTerm // Use current input value or search term
-		return (
-			patternMatching.matchesPattern(option.label, searchValue) ||
-			patternMatching.matchesPattern(option.description, searchValue)
-		)
-	})
-
-	// Close dropdown when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-				setIsOpen(false)
-			}
+	const handleAddBlockPattern = () => {
+		if (newBlockPattern.trim()) {
+			onAddRule("block", newBlockPattern.trim())
+			setNewBlockPattern("")
 		}
-
-		document.addEventListener("mousedown", handleClickOutside)
-		return () => document.removeEventListener("mousedown", handleClickOutside)
-	}, [])
-
-	// Handle option selection
-	const handleSelect = (optionValue: string) => {
-		onSelect(optionValue)
-		setIsOpen(false)
-		setSearchTerm("")
 	}
-
-	// Handle input change - allow manual typing and searching
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const inputValue = e.target.value
-		onSelect(inputValue)
-		setSearchTerm(inputValue)
-		setIsOpen(true)
-	}
-
-	// Show placeholder when no value is selected
-	const displayValue = value || ""
 
 	return (
-		<div className="relative" ref={dropdownRef}>
-			<div className="relative">
-				<input
-					ref={inputRef}
-					type="text"
-					value={displayValue}
-					onChange={handleInputChange}
-					onFocus={() => setIsOpen(true)}
-					placeholder={placeholder}
-					disabled={disabled}
-					className={cn(
-						"w-full px-3 py-2 text-sm bg-vscode-input-background border border-vscode-input-border rounded",
-						"focus:outline-none focus:ring-1 focus:ring-vscode-focusBorder",
-						"disabled:opacity-50 disabled:cursor-not-allowed",
-						"pr-8", // Make room for the dropdown arrow
-					)}
-				/>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6"
-					onClick={() => setIsOpen(!isOpen)}
-					disabled={disabled}>
-					<ChevronDown className={cn("w-3 h-3 transition-transform", { "rotate-180": isOpen })} />
-				</Button>
-			</div>
-
-			{/* Dropdown */}
-			{isOpen && !disabled && (
-				<div
-					className={cn(
-						"absolute z-50 w-full mt-1 bg-vscode-dropdown-background",
-						"border border-vscode-dropdown-border rounded shadow-lg",
-						"max-h-64 overflow-y-auto",
-					)}>
-					{filteredOptions.length === 0 ? (
-						<div className="px-3 py-2 text-sm text-vscode-descriptionForeground">
-							{type === "server"
-								? t("prompts:mcpRestrictions.picker.noServers")
-								: selectedServerName
-									? t("prompts:mcpRestrictions.picker.noTools")
-									: t("prompts:mcpRestrictions.picker.selectServerFirst")}
+		<div className="space-y-3">
+			{/* Allow Patterns */}
+			<div>
+				<div className="text-xs font-medium text-vscode-foreground mb-1">
+					{t("prompts:mcpRestrictions.tools.allowPatterns")}
+				</div>
+				<div className="space-y-1">
+					{serverAllowedPatterns.map((pattern) => (
+						<div
+							key={`allow-${pattern.originalIndex}`}
+							className="flex items-center gap-2 p-1.5 bg-green-600/10 border border-green-600/30 rounded">
+							<code className="text-xs text-green-300 flex-1">{pattern.toolName}</code>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => onRemoveRule("allow", pattern.originalIndex)}
+								disabled={disabled}
+								className="h-4 w-4 p-0">
+								<X className="w-3 h-3" />
+							</Button>
 						</div>
-					) : (
-						filteredOptions.map((option, _index) => (
-							<div
-								key={option.value}
-								className={cn(
-									"flex items-center gap-3 px-3 py-2 cursor-pointer",
-									"hover:bg-vscode-list-hoverBackground",
-									"border-b border-vscode-dropdown-border last:border-b-0",
-									{ "bg-vscode-list-activeSelectionBackground": value === option.value },
-								)}
-								onClick={() => handleSelect(option.value)}>
-								{/* Icon */}
-								<div className="flex-shrink-0 text-vscode-descriptionForeground">{option.icon}</div>
-
-								{/* Content */}
-								<div className="flex-grow min-w-0">
-									<div className="flex items-center gap-2">
-										<span className="font-medium text-vscode-foreground truncate">
-											{option.label}
-										</span>
-										{type === "server" && option.status && (
-											<div
-												className={cn("w-2 h-2 rounded-full flex-shrink-0", {
-													"bg-green-500": option.status === "connected",
-													"bg-red-500": option.status === "error",
-													"bg-yellow-500": option.status === "disconnected",
-												})}
-											/>
-										)}
-									</div>
-									<div className="text-xs text-vscode-descriptionForeground truncate">
-										{option.description}
-									</div>
-								</div>
-
-								{/* Selection indicator */}
-								{value === option.value && (
-									<div className="flex-shrink-0 text-vscode-foreground">
-										<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-											<path
-												fillRule="evenodd"
-												d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-												clipRule="evenodd"
-											/>
-										</svg>
-									</div>
-								)}
-							</div>
-						))
-					)}
+					))}
+					<div className="flex gap-1">
+						<input
+							type="text"
+							value={newAllowPattern}
+							onChange={(e) => setNewAllowPattern(e.target.value)}
+							onKeyPress={(e) => e.key === "Enter" && handleAddAllowPattern()}
+							placeholder={t("prompts:mcpRestrictions.tools.patternPlaceholder")}
+							disabled={disabled}
+							className="flex-1 px-2 py-1 text-xs bg-vscode-input-background border border-vscode-input-border rounded focus:outline-none focus:ring-1 focus:ring-vscode-focusBorder"
+						/>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleAddAllowPattern}
+							disabled={disabled || !newAllowPattern.trim()}
+							className="text-xs h-6 py-0 px-2">
+							<Plus className="w-3 h-3" />
+						</Button>
+					</div>
 				</div>
-			)}
-		</div>
-	)
-}
-
-// Helper component for tool restriction rows
-interface ToolRestrictionRowProps {
-	tool: McpToolRestriction
-	availableServers: McpServer[]
-	onUpdate: (field: "serverName" | "toolName", value: string) => void
-	onRemove: () => void
-	disabled?: boolean
-}
-
-function ToolRestrictionRow({ tool, availableServers, onUpdate, onRemove, disabled }: ToolRestrictionRowProps) {
-	const { t } = useAppTranslation()
-
-	return (
-		<div className="flex items-center gap-2 p-3 border border-vscode-widget-border rounded bg-vscode-editor-background">
-			{/* Server Name Picker */}
-			<div className="flex-1">
-				<div className="text-xs text-vscode-descriptionForeground mb-1">
-					{t("prompts:mcpRestrictions.tools.serverName")}
-				</div>
-				<ServerToolPicker
-					value={tool.serverName}
-					onSelect={(value) => onUpdate("serverName", value)}
-					placeholder={t("prompts:mcpRestrictions.tools.serverNamePlaceholder")}
-					type="server"
-					availableServers={availableServers}
-					disabled={disabled}
-				/>
 			</div>
 
-			{/* Tool Name Picker */}
-			<div className="flex-1">
-				<div className="text-xs text-vscode-descriptionForeground mb-1">
-					{t("prompts:mcpRestrictions.tools.toolName")}
+			{/* Block Patterns */}
+			<div>
+				<div className="text-xs font-medium text-vscode-foreground mb-1">
+					{t("prompts:mcpRestrictions.tools.blockPatterns")}
 				</div>
-				<ServerToolPicker
-					value={tool.toolName}
-					onSelect={(value) => onUpdate("toolName", value)}
-					placeholder={t("prompts:mcpRestrictions.tools.toolNamePlaceholder")}
-					type="tool"
-					availableServers={availableServers}
-					selectedServerName={tool.serverName}
-					disabled={disabled}
-				/>
+				<div className="space-y-1">
+					{serverDisallowedPatterns.map((pattern) => (
+						<div
+							key={`block-${pattern.originalIndex}`}
+							className="flex items-center gap-2 p-1.5 bg-red-600/10 border border-red-600/30 rounded">
+							<code className="text-xs text-red-300 flex-1">{pattern.toolName}</code>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => onRemoveRule("block", pattern.originalIndex)}
+								disabled={disabled}
+								className="h-4 w-4 p-0">
+								<X className="w-3 h-3" />
+							</Button>
+						</div>
+					))}
+					<div className="flex gap-1">
+						<input
+							type="text"
+							value={newBlockPattern}
+							onChange={(e) => setNewBlockPattern(e.target.value)}
+							onKeyPress={(e) => e.key === "Enter" && handleAddBlockPattern()}
+							placeholder={t("prompts:mcpRestrictions.tools.patternPlaceholder")}
+							disabled={disabled}
+							className="flex-1 px-2 py-1 text-xs bg-vscode-input-background border border-vscode-input-border rounded focus:outline-none focus:ring-1 focus:ring-vscode-focusBorder"
+						/>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleAddBlockPattern}
+							disabled={disabled || !newBlockPattern.trim()}
+							className="text-xs h-6 py-0 px-2">
+							<Plus className="w-3 h-3" />
+						</Button>
+					</div>
+				</div>
 			</div>
 
-			{/* Remove Button */}
-			<div className="flex-shrink-0 pt-4">
-				<StandardTooltip content={t("prompts:mcpRestrictions.tools.remove")}>
-					<Button variant="ghost" size="icon" onClick={onRemove} disabled={disabled}>
-						<X className="w-4 h-4" />
-					</Button>
-				</StandardTooltip>
+			{/* Pattern Help */}
+			<div className="text-xs text-vscode-descriptionForeground p-2 bg-vscode-textCodeBlock-background rounded">
+				<div className="font-medium mb-1">{t("prompts:mcpRestrictions.patterns.help")}</div>
+				<div className="space-y-0.5">
+					<div>
+						<code>*</code> - {t("prompts:mcpRestrictions.patterns.wildcard")}
+					</div>
+					<div>
+						<code>get_*</code> - {t("prompts:mcpRestrictions.patterns.example1")}
+					</div>
+					<div>
+						<code>*_admin</code> - {t("prompts:mcpRestrictions.patterns.example2")}
+					</div>
+				</div>
 			</div>
 		</div>
 	)

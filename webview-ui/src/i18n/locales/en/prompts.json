@@ -201,7 +201,6 @@
 			"tools": "Tools"
 		},
 		"servers": {
-			"description": "Control which MCP servers are available. If no servers are explicitly allowed, all servers (except those disallowed) will be available.",
 			"overview": "Overview",
 			"allow": "Allow",
 			"disallow": "Block",
@@ -232,7 +231,16 @@
 			"viewTools": "View server tools",
 			"hideTools": "Hide server tools",
 			"serverTools": "Tools of {{serverName}}",
-			"noTools": "No tools available for this server"
+			"noTools": "No tools available for this server",
+			"allowAll": "Allow All",
+			"blockAll": "Block All",
+			"patterns": "Patterns",
+			"allow": "Allow",
+			"block": "Block",
+			"patternRules": "Pattern Rules for this server",
+			"allowPatterns": "Allow Patterns",
+			"blockPatterns": "Block Patterns",
+			"patternPlaceholder": "e.g., get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Pattern Matching",
@@ -241,7 +249,8 @@
 			"examples": "Examples",
 			"example1": "Matches docs-api, docs-search, etc.",
 			"example2": "Matches server-admin, user-admin, etc.",
-			"example3": "Matches delete_file, delete_user, etc."
+			"example3": "Matches delete_file, delete_user, etc.",
+			"help": "Pattern Help"
 		},
 		"status": {
 			"enabled": "ENABLED",
