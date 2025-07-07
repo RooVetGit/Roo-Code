@@ -11,7 +11,7 @@ export type TodoStatus = z.infer<typeof todoStatusSchema>
  * TodoItem
  */
 export const todoItemSchema = z.object({
-	id: z.string().optional(),
+	id: z.string(),
 	content: z.string(),
 	status: todoStatusSchema,
 })

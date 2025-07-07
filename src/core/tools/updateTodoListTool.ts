@@ -4,10 +4,9 @@ import { formatResponse } from "../prompts/responses"
 
 import cloneDeep from "clone-deep"
 import crypto from "crypto"
-import { TodoItem, TodoStatus } from "@roo-code/types"
+import { TodoItem, TodoStatus, todoStatusSchema } from "@roo-code/types"
 import { getLatestTodo } from "../../shared/todo"
 
-const VALID_STATUS: string[] = ["pending", "in_progress", "completed", "todo", "doing", "done"]
 let approvedTodoList: TodoItem[] | undefined = undefined
 
 /**
@@ -96,8 +95,8 @@ function todoListToMarkdown(todos: TodoItem[]): string {
 }
 
 function normalizeStatus(status: string | undefined): TodoStatus {
-	if (status === "completed" || status === "done") return "completed"
-	if (status === "in_progress" || status === "doing" || status === "working") return "in_progress"
+	if (status === "completed") return "completed"
+	if (status === "in_progress") return "in_progress"
 	return "pending"
 }
 
@@ -138,7 +137,7 @@ function validateTodos(todos: any[]): { valid: boolean; error?: string } {
 		if (!t.id || typeof t.id !== "string") return { valid: false, error: `Item ${i + 1} is missing id` }
 		if (!t.content || typeof t.content !== "string")
 			return { valid: false, error: `Item ${i + 1} is missing content` }
-		if (t.status && !VALID_STATUS.includes(t.status))
+		if (t.status && !todoStatusSchema.options.includes(t.status as TodoStatus))
 			return { valid: false, error: `Item ${i + 1} has invalid status` }
 	}
 	return { valid: true }
@@ -152,7 +151,7 @@ function validateTodos(todos: any[]): { valid: boolean; error?: string } {
  * @param handleError HandleError function
  * @param pushToolResult PushToolResult function
  * @param removeClosingTag RemoveClosingTag function
- * @param userEdited If true, only show "User Edit Succee" and do nothing else
+ * @param userEdited If true, only show "User Edit Succeeded" and do nothing else
  */
 export async function updateTodoListTool(
 	cline: Task,
@@ -163,7 +162,7 @@ export async function updateTodoListTool(
 	removeClosingTag: RemoveClosingTag,
 	userEdited?: boolean,
 ) {
-	// If userEdited is true, only show "User Edit Succee" and do nothing else
+	// If userEdited is true, only show "User Edit Succeeded" and do nothing else
 	if (userEdited === true) {
 		pushToolResult("User Edit Succeeded")
 		return
