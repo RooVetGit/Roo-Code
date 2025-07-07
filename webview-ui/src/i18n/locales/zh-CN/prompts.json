@@ -214,7 +214,7 @@
 			"enabledWithRestrictionsCount": "{{count}} 个已启用但有限制：{{names}}"
 		},
 		"tools": {
-			"description": "控制服务器内的特定工具。使用 'delete_*' 等模式匹配多个工具。",
+			"description": "控制服务器内的特定工具。",
 			"allowedTools": "允许的工具",
 			"disallowedTools": "被阻止的工具",
 			"addAllowed": "添加允许",
@@ -230,7 +230,16 @@
 			"viewTools": "查看服务器工具",
 			"hideTools": "隐藏服务器工具",
 			"serverTools": "{{serverName}} 的工具",
-			"noTools": "此服务器没有可用的工具"
+			"noTools": "此服务器没有可用的工具",
+			"allowAll": "允许全部",
+			"blockAll": "阻止全部",
+			"patterns": "模式",
+			"allow": "允许",
+			"block": "阻止",
+			"patternRules": "此服务器的模式规则",
+			"allowPatterns": "允许模式",
+			"blockPatterns": "阻止模式",
+			"patternPlaceholder": "例如 get_*、delete_*、*_admin"
 		},
 		"patterns": {
 			"title": "模式匹配",
@@ -239,7 +248,18 @@
 			"examples": "示例",
 			"example1": "匹配 docs-api、docs-search 等",
 			"example2": "匹配 server-admin、user-admin 等",
-			"example3": "匹配 delete_file、delete_user 等"
+			"example3": "匹配 delete_file、delete_user 等",
+			"help": "模式帮助",
+			"specificity": "模式特异性规则",
+			"exactWins": "精确匹配（无通配符）始终具有优先级",
+			"longerWins": "在通配符模式中，更长/更具体的模式获胜",
+			"conflictResolution": "当工具同时匹配允许和阻止模式时，最具体的模式决定结果",
+			"showHelp": "显示模式帮助",
+			"hideHelp": "隐藏模式帮助",
+			"basicPatterns": "基本模式",
+			"specificityExamples": "特异性示例",
+			"exactExample": "精确匹配胜过任何通配符模式",
+			"wildcardExample": "更具体的通配符胜过一般通配符"
 		},
 		"status": {
 			"enabled": "已启用",

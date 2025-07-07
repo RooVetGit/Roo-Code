@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} aktiviert mit Einschränkungen: {{names}}"
 		},
 		"tools": {
-			"description": "Kontrollieren Sie spezifische Tools innerhalb von Servern. Verwenden Sie Muster wie 'delete_*', um mehrere Tools zu erfassen.",
+			"description": "Kontrollieren Sie spezifische Tools innerhalb von Servern.",
 			"allowedTools": "Erlaubte Tools",
 			"disallowedTools": "Blockierte Tools",
 			"addAllowed": "Erlaubt hinzufügen",
@@ -233,7 +233,16 @@
 			"viewTools": "Server-Tools anzeigen",
 			"hideTools": "Server-Tools ausblenden",
 			"serverTools": "Tools von {{serverName}}",
-			"noTools": "Keine Tools für diesen Server verfügbar"
+			"noTools": "Keine Tools für diesen Server verfügbar",
+			"allowAll": "Alle erlauben",
+			"blockAll": "Alle blockieren",
+			"patterns": "Muster",
+			"allow": "Erlauben",
+			"block": "Blockieren",
+			"patternRules": "Musterregeln für diesen Server",
+			"allowPatterns": "Erlaubnismuster",
+			"blockPatterns": "Blockierungsmuster",
+			"patternPlaceholder": "z.B. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Muster-Matching",
@@ -242,7 +251,18 @@
 			"examples": "Beispiele",
 			"example1": "Entspricht docs-api, docs-search, usw.",
 			"example2": "Entspricht server-admin, user-admin, usw.",
-			"example3": "Entspricht delete_file, delete_user, usw."
+			"example3": "Entspricht delete_file, delete_user, usw.",
+			"help": "Musterhilfe",
+			"specificity": "Muster-Spezifitätsregeln",
+			"exactWins": "Exakte Übereinstimmungen (ohne Platzhalter) haben immer Vorrang",
+			"longerWins": "Unter Platzhaltermustern gewinnen längere/spezifischere Muster",
+			"conflictResolution": "Wenn ein Tool sowohl Erlaubnis- als auch Blockierungsmuster erfüllt, bestimmt das spezifischste Muster das Ergebnis",
+			"showHelp": "Musterhilfe anzeigen",
+			"hideHelp": "Musterhilfe ausblenden",
+			"basicPatterns": "Grundmuster",
+			"specificityExamples": "Spezifitätsbeispiele",
+			"exactExample": "Exakte Übereinstimmung schlägt jedes Platzhaltermuster",
+			"wildcardExample": "Spezifischerer Platzhalter schlägt allgemeinen Platzhalter"
 		},
 		"status": {
 			"enabled": "AKTIVIERT",

@@ -214,7 +214,7 @@
 			"enabledWithRestrictionsCount": "{{count}} đã bật với hạn chế: {{names}}"
 		},
 		"tools": {
-			"description": "Kiểm soát các công cụ cụ thể trong máy chủ. Sử dụng các mẫu như 'delete_*' để khớp với nhiều công cụ.",
+			"description": "Kiểm soát các công cụ cụ thể trong máy chủ.",
 			"allowedTools": "Công cụ Được phép",
 			"disallowedTools": "Công cụ Bị chặn",
 			"addAllowed": "Thêm Được phép",
@@ -230,7 +230,16 @@
 			"viewTools": "Xem công cụ máy chủ",
 			"hideTools": "Ẩn công cụ máy chủ",
 			"serverTools": "Công cụ của {{serverName}}",
-			"noTools": "Không có công cụ nào khả dụng cho máy chủ này"
+			"noTools": "Không có công cụ nào khả dụng cho máy chủ này",
+			"allowAll": "Cho phép Tất cả",
+			"blockAll": "Chặn Tất cả",
+			"patterns": "Mẫu",
+			"allow": "Cho phép",
+			"block": "Chặn",
+			"patternRules": "Quy tắc mẫu cho máy chủ này",
+			"allowPatterns": "Mẫu Cho phép",
+			"blockPatterns": "Mẫu Chặn",
+			"patternPlaceholder": "vd. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Khớp Mẫu",
@@ -239,7 +248,18 @@
 			"examples": "Ví dụ",
 			"example1": "Khớp với docs-api, docs-search, v.v.",
 			"example2": "Khớp với server-admin, user-admin, v.v.",
-			"example3": "Khớp với delete_file, delete_user, v.v."
+			"example3": "Khớp với delete_file, delete_user, v.v.",
+			"help": "Trợ giúp Mẫu",
+			"specificity": "Quy tắc Đặc thù Mẫu",
+			"exactWins": "Khớp chính xác (không có ký tự đại diện) luôn có ưu tiên",
+			"longerWins": "Trong các mẫu ký tự đại diện, các mẫu dài hơn/cụ thể hơn sẽ thắng",
+			"conflictResolution": "Khi một công cụ khớp với cả mẫu cho phép và chặn, mẫu cụ thể nhất sẽ xác định kết quả",
+			"showHelp": "Hiện trợ giúp mẫu",
+			"hideHelp": "Ẩn trợ giúp mẫu",
+			"basicPatterns": "Mẫu Cơ bản",
+			"specificityExamples": "Ví dụ Đặc thù",
+			"exactExample": "Khớp chính xác đánh bại bất kỳ mẫu ký tự đại diện nào",
+			"wildcardExample": "Ký tự đại diện cụ thể hơn đánh bại ký tự đại diện chung"
 		},
 		"status": {
 			"enabled": "ĐÃ BẬT",

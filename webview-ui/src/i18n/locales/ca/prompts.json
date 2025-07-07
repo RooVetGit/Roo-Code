@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} activat/activats amb restriccions: {{names}}"
 		},
 		"tools": {
-			"description": "Controleu eines específiques dins dels servidors. Utilitzeu patrons com 'delete_*' per coincidir amb múltiples eines.",
+			"description": "Controleu eines específiques dins dels servidors.",
 			"allowedTools": "Eines permeses",
 			"disallowedTools": "Eines bloquejades",
 			"addAllowed": "Afegir permès",
@@ -233,7 +233,16 @@
 			"viewTools": "Veure eines del servidor",
 			"hideTools": "Ocultar eines del servidor",
 			"serverTools": "Eines de {{serverName}}",
-			"noTools": "No hi ha eines disponibles per a aquest servidor"
+			"noTools": "No hi ha eines disponibles per a aquest servidor",
+			"allowAll": "Permetre tot",
+			"blockAll": "Bloquejar tot",
+			"patterns": "Patrons",
+			"allow": "Permetre",
+			"block": "Bloquejar",
+			"patternRules": "Regles de patrons per a aquest servidor",
+			"allowPatterns": "Patrons de permissió",
+			"blockPatterns": "Patrons de bloqueig",
+			"patternPlaceholder": "p. ex., get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Coincidència de patrons",
@@ -242,7 +251,18 @@
 			"examples": "Exemples",
 			"example1": "Coincideix amb docs-api, docs-search, etc.",
 			"example2": "Coincideix amb server-admin, user-admin, etc.",
-			"example3": "Coincideix amb delete_file, delete_user, etc."
+			"example3": "Coincideix amb delete_file, delete_user, etc.",
+			"help": "Ajuda de patrons",
+			"specificity": "Regles d'especificitat de patrons",
+			"exactWins": "Les coincidències exactes (sense comodins) sempre tenen prioritat",
+			"longerWins": "Entre patrons de comodí, els patrons més llargs/més específics guanyen",
+			"conflictResolution": "Quan una eina coincideix amb patrons tant de permissió com de bloqueig, el patró més específic determina el resultat",
+			"showHelp": "Mostrar ajuda de patrons",
+			"hideHelp": "Ocultar ajuda de patrons",
+			"basicPatterns": "Patrons bàsics",
+			"specificityExamples": "Exemples d'especificitat",
+			"exactExample": "La coincidència exacta supera qualsevol patró de comodí",
+			"wildcardExample": "El comodí més específic supera el comodí general"
 		},
 		"status": {
 			"enabled": "ACTIVAT",

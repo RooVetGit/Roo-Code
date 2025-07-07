@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} activé(s) avec restrictions : {{names}}"
 		},
 		"tools": {
-			"description": "Contrôlez des outils spécifiques dans les serveurs. Utilisez des motifs comme 'delete_*' pour correspondre à plusieurs outils.",
+			"description": "Contrôlez des outils spécifiques dans les serveurs.",
 			"allowedTools": "Outils autorisés",
 			"disallowedTools": "Outils bloqués",
 			"addAllowed": "Ajouter autorisé",
@@ -233,7 +233,16 @@
 			"viewTools": "Voir les outils du serveur",
 			"hideTools": "Masquer les outils du serveur",
 			"serverTools": "Outils de {{serverName}}",
-			"noTools": "Aucun outil disponible pour ce serveur"
+			"noTools": "Aucun outil disponible pour ce serveur",
+			"allowAll": "Tout autoriser",
+			"blockAll": "Tout bloquer",
+			"patterns": "Motifs",
+			"allow": "Autoriser",
+			"block": "Bloquer",
+			"patternRules": "Règles de motifs pour ce serveur",
+			"allowPatterns": "Motifs d'autorisation",
+			"blockPatterns": "Motifs de blocage",
+			"patternPlaceholder": "ex. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Correspondance de motifs",
@@ -242,7 +251,18 @@
 			"examples": "Exemples",
 			"example1": "Correspond à docs-api, docs-search, etc.",
 			"example2": "Correspond à server-admin, user-admin, etc.",
-			"example3": "Correspond à delete_file, delete_user, etc."
+			"example3": "Correspond à delete_file, delete_user, etc.",
+			"help": "Aide sur les motifs",
+			"specificity": "Règles de spécificité des motifs",
+			"exactWins": "Les correspondances exactes (sans jokers) ont toujours la priorité",
+			"longerWins": "Parmi les motifs avec jokers, les motifs plus longs/spécifiques l'emportent",
+			"conflictResolution": "Quand un outil correspond à la fois aux motifs d'autorisation et de blocage, le motif le plus spécifique détermine le résultat",
+			"showHelp": "Afficher l'aide sur les motifs",
+			"hideHelp": "Masquer l'aide sur les motifs",
+			"basicPatterns": "Motifs de base",
+			"specificityExamples": "Exemples de spécificité",
+			"exactExample": "La correspondance exacte l'emporte sur n'importe quel motif avec joker",
+			"wildcardExample": "Le joker plus spécifique l'emporte sur le joker général"
 		},
 		"status": {
 			"enabled": "ACTIVÉ",

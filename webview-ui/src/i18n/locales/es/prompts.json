@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} habilitado(s) con restricciones: {{names}}"
 		},
 		"tools": {
-			"description": "Controla herramientas específicas dentro de los servidores. Usa patrones como 'delete_*' para coincidir con múltiples herramientas.",
+			"description": "Controla herramientas específicas dentro de los servidores.",
 			"allowedTools": "Herramientas permitidas",
 			"disallowedTools": "Herramientas bloqueadas",
 			"addAllowed": "Agregar permitido",
@@ -233,7 +233,16 @@
 			"viewTools": "Ver herramientas del servidor",
 			"hideTools": "Ocultar herramientas del servidor",
 			"serverTools": "Herramientas de {{serverName}}",
-			"noTools": "No hay herramientas disponibles para este servidor"
+			"noTools": "No hay herramientas disponibles para este servidor",
+			"allowAll": "Permitir todo",
+			"blockAll": "Bloquear todo",
+			"patterns": "Patrones",
+			"allow": "Permitir",
+			"block": "Bloquear",
+			"patternRules": "Reglas de patrones para este servidor",
+			"allowPatterns": "Patrones de permiso",
+			"blockPatterns": "Patrones de bloqueo",
+			"patternPlaceholder": "ej. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Coincidencia de patrones",
@@ -242,7 +251,18 @@
 			"examples": "Ejemplos",
 			"example1": "Coincide con docs-api, docs-search, etc.",
 			"example2": "Coincide con server-admin, user-admin, etc.",
-			"example3": "Coincide con delete_file, delete_user, etc."
+			"example3": "Coincide con delete_file, delete_user, etc.",
+			"help": "Ayuda de patrones",
+			"specificity": "Reglas de especificidad de patrones",
+			"exactWins": "Las coincidencias exactas (sin comodines) siempre tienen prioridad",
+			"longerWins": "Entre patrones de comodín, los patrones más largos/específicos ganan",
+			"conflictResolution": "Cuando una herramienta coincide con patrones de permiso y bloqueo, el patrón más específico determina el resultado",
+			"showHelp": "Mostrar ayuda de patrones",
+			"hideHelp": "Ocultar ayuda de patrones",
+			"basicPatterns": "Patrones básicos",
+			"specificityExamples": "Ejemplos de especificidad",
+			"exactExample": "La coincidencia exacta supera cualquier patrón de comodín",
+			"wildcardExample": "El comodín más específico supera al comodín general"
 		},
 		"status": {
 			"enabled": "HABILITADO",

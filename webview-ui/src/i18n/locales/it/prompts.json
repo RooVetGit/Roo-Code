@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} abilitato/i con restrizioni: {{names}}"
 		},
 		"tools": {
-			"description": "Controlla strumenti specifici all'interno dei server. Usa pattern come 'delete_*' per corrispondere a più strumenti.",
+			"description": "Controlla strumenti specifici all'interno dei server.",
 			"allowedTools": "Strumenti Consentiti",
 			"disallowedTools": "Strumenti Bloccati",
 			"addAllowed": "Aggiungi Consentito",
@@ -233,7 +233,16 @@
 			"viewTools": "Visualizza strumenti server",
 			"hideTools": "Nascondi strumenti server",
 			"serverTools": "Strumenti di {{serverName}}",
-			"noTools": "Nessuno strumento disponibile per questo server"
+			"noTools": "Nessuno strumento disponibile per questo server",
+			"allowAll": "Consenti Tutto",
+			"blockAll": "Blocca Tutto",
+			"patterns": "Pattern",
+			"allow": "Consenti",
+			"block": "Blocca",
+			"patternRules": "Regole Pattern per questo server",
+			"allowPatterns": "Pattern di Consenso",
+			"blockPatterns": "Pattern di Blocco",
+			"patternPlaceholder": "es. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Corrispondenza Pattern",
@@ -242,7 +251,18 @@
 			"examples": "Esempi",
 			"example1": "Corrisponde a docs-api, docs-search, ecc.",
 			"example2": "Corrisponde a server-admin, user-admin, ecc.",
-			"example3": "Corrisponde a delete_file, delete_user, ecc."
+			"example3": "Corrisponde a delete_file, delete_user, ecc.",
+			"help": "Aiuto Pattern",
+			"specificity": "Regole di Specificità Pattern",
+			"exactWins": "Le corrispondenze esatte (senza wildcard) hanno sempre la priorità",
+			"longerWins": "Tra i pattern wildcard, i pattern più lunghi/specifici vincono",
+			"conflictResolution": "Quando uno strumento corrisponde sia ai pattern di consenso che di blocco, il pattern più specifico determina il risultato",
+			"showHelp": "Mostra aiuto pattern",
+			"hideHelp": "Nascondi aiuto pattern",
+			"basicPatterns": "Pattern Base",
+			"specificityExamples": "Esempi di Specificità",
+			"exactExample": "La corrispondenza esatta batte qualsiasi pattern wildcard",
+			"wildcardExample": "Il wildcard più specifico batte il wildcard generale"
 		},
 		"status": {
 			"enabled": "ABILITATO",

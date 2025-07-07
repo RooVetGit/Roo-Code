@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} ingeschakeld met beperkingen: {{names}}"
 		},
 		"tools": {
-			"description": "Bepaal specifieke tools binnen servers. Gebruik patronen zoals 'delete_*' om meerdere tools te matchen.",
+			"description": "Bepaal specifieke tools binnen servers.",
 			"allowedTools": "Toegestane Tools",
 			"disallowedTools": "Geblokkeerde Tools",
 			"addAllowed": "Toegestaan toevoegen",
@@ -233,7 +233,16 @@
 			"viewTools": "Server tools bekijken",
 			"hideTools": "Server tools verbergen",
 			"serverTools": "Tools van {{serverName}}",
-			"noTools": "Geen tools beschikbaar voor deze server"
+			"noTools": "Geen tools beschikbaar voor deze server",
+			"allowAll": "Alles Toestaan",
+			"blockAll": "Alles Blokkeren",
+			"patterns": "Patronen",
+			"allow": "Toestaan",
+			"block": "Blokkeren",
+			"patternRules": "Patroonregels voor deze server",
+			"allowPatterns": "Toestaan Patronen",
+			"blockPatterns": "Blokkeer Patronen",
+			"patternPlaceholder": "bijv. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Patroon Matching",
@@ -242,7 +251,18 @@
 			"examples": "Voorbeelden",
 			"example1": "Matcht docs-api, docs-search, enz.",
 			"example2": "Matcht server-admin, user-admin, enz.",
-			"example3": "Matcht delete_file, delete_user, enz."
+			"example3": "Matcht delete_file, delete_user, enz.",
+			"help": "Patroon Hulp",
+			"specificity": "Patroon Specificiteit Regels",
+			"exactWins": "Exacte overeenkomsten (geen wildcards) hebben altijd voorrang",
+			"longerWins": "Onder wildcard patronen winnen langere/specifiekere patronen",
+			"conflictResolution": "Wanneer een tool zowel toestaan als blokkeer patronen matcht, bepaalt het meest specifieke patroon het resultaat",
+			"showHelp": "Patroon hulp tonen",
+			"hideHelp": "Patroon hulp verbergen",
+			"basicPatterns": "Basis Patronen",
+			"specificityExamples": "Specificiteit Voorbeelden",
+			"exactExample": "Exacte match verslaat elk wildcard patroon",
+			"wildcardExample": "Meer specifieke wildcard verslaat algemene wildcard"
 		},
 		"status": {
 			"enabled": "INGESCHAKELD",

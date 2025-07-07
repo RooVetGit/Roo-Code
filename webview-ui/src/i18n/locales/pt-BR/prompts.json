@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} habilitado(s) com restrições: {{names}}"
 		},
 		"tools": {
-			"description": "Controle ferramentas específicas dentro dos servidores. Use padrões como 'delete_*' para corresponder a múltiplas ferramentas.",
+			"description": "Controle ferramentas específicas dentro dos servidores.",
 			"allowedTools": "Ferramentas Permitidas",
 			"disallowedTools": "Ferramentas Bloqueadas",
 			"addAllowed": "Adicionar Permitido",
@@ -233,7 +233,16 @@
 			"viewTools": "Ver ferramentas do servidor",
 			"hideTools": "Ocultar ferramentas do servidor",
 			"serverTools": "Ferramentas de {{serverName}}",
-			"noTools": "Nenhuma ferramenta disponível para este servidor"
+			"noTools": "Nenhuma ferramenta disponível para este servidor",
+			"allowAll": "Permitir Tudo",
+			"blockAll": "Bloquear Tudo",
+			"patterns": "Padrões",
+			"allow": "Permitir",
+			"block": "Bloquear",
+			"patternRules": "Regras de Padrões para este servidor",
+			"allowPatterns": "Padrões de Permissão",
+			"blockPatterns": "Padrões de Bloqueio",
+			"patternPlaceholder": "ex. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Correspondência de Padrões",
@@ -242,7 +251,18 @@
 			"examples": "Exemplos",
 			"example1": "Corresponde a docs-api, docs-search, etc.",
 			"example2": "Corresponde a server-admin, user-admin, etc.",
-			"example3": "Corresponde a delete_file, delete_user, etc."
+			"example3": "Corresponde a delete_file, delete_user, etc.",
+			"help": "Ajuda de Padrões",
+			"specificity": "Regras de Especificidade de Padrões",
+			"exactWins": "Correspondências exatas (sem curingas) sempre têm prioridade",
+			"longerWins": "Entre padrões com curingas, padrões mais longos/específicos vencem",
+			"conflictResolution": "Quando uma ferramenta corresponde tanto a padrões de permissão quanto de bloqueio, o padrão mais específico determina o resultado",
+			"showHelp": "Mostrar ajuda de padrões",
+			"hideHelp": "Ocultar ajuda de padrões",
+			"basicPatterns": "Padrões Básicos",
+			"specificityExamples": "Exemplos de Especificidade",
+			"exactExample": "Correspondência exata supera qualquer padrão com curinga",
+			"wildcardExample": "Curinga mais específico supera curinga geral"
 		},
 		"status": {
 			"enabled": "HABILITADO",

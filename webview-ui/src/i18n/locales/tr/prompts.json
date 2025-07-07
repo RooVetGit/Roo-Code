@@ -214,7 +214,7 @@
 			"enabledWithRestrictionsCount": "{{count}} kısıtlamalarla etkin: {{names}}"
 		},
 		"tools": {
-			"description": "Sunucular içindeki belirli araçları kontrol edin. Birden fazla araçla eşleşmek için 'delete_*' gibi kalıplar kullanın.",
+			"description": "Sunucular içindeki belirli araçları kontrol edin.",
 			"allowedTools": "İzin Verilen Araçlar",
 			"disallowedTools": "Engellenen Araçlar",
 			"addAllowed": "İzin Verilen Ekle",
@@ -230,7 +230,16 @@
 			"viewTools": "Sunucu araçlarını görüntüle",
 			"hideTools": "Sunucu araçlarını gizle",
 			"serverTools": "{{serverName}} araçları",
-			"noTools": "Bu sunucu için mevcut araç yok"
+			"noTools": "Bu sunucu için mevcut araç yok",
+			"allowAll": "Tümüne İzin Ver",
+			"blockAll": "Tümünü Engelle",
+			"patterns": "Kalıplar",
+			"allow": "İzin Ver",
+			"block": "Engelle",
+			"patternRules": "Bu sunucu için kalıp kuralları",
+			"allowPatterns": "İzin Kalıpları",
+			"blockPatterns": "Engelleme Kalıpları",
+			"patternPlaceholder": "örn. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Kalıp Eşleştirme",
@@ -239,7 +248,18 @@
 			"examples": "Örnekler",
 			"example1": "docs-api, docs-search vb. ile eşleşir",
 			"example2": "server-admin, user-admin vb. ile eşleşir",
-			"example3": "delete_file, delete_user vb. ile eşleşir"
+			"example3": "delete_file, delete_user vb. ile eşleşir",
+			"help": "Kalıp Yardımı",
+			"specificity": "Kalıp Özgülük Kuralları",
+			"exactWins": "Tam eşleşmeler (joker karaktersiz) her zaman önceliklidir",
+			"longerWins": "Joker karakter kalıpları arasında, daha uzun/özgül kalıplar kazanır",
+			"conflictResolution": "Bir araç hem izin hem de engelleme kalıplarıyla eşleştiğinde, en özgül kalıp sonuçu belirler",
+			"showHelp": "Kalıp yardımını göster",
+			"hideHelp": "Kalıp yardımını gizle",
+			"basicPatterns": "Temel Kalıplar",
+			"specificityExamples": "Özgülük Örnekleri",
+			"exactExample": "Tam eşleşme herhangi bir joker karakter kalıbını yener",
+			"wildcardExample": "Daha özgül joker karakter genel joker karakteri yener"
 		},
 		"status": {
 			"enabled": "ETKİN",

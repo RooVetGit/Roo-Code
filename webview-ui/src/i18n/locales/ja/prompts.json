@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}}個制限付きで有効: {{names}}"
 		},
 		"tools": {
-			"description": "サーバー内の特定のツールを制御します。複数のツールにマッチさせるには 'delete_*' などのパターンを使用してください。",
+			"description": "サーバー内の特定のツールを制御します。",
 			"allowedTools": "許可されたツール",
 			"disallowedTools": "ブロックされたツール",
 			"addAllowed": "許可を追加",
@@ -233,7 +233,16 @@
 			"viewTools": "サーバーツールを表示",
 			"hideTools": "サーバーツールを非表示",
 			"serverTools": "{{serverName}}のツール",
-			"noTools": "このサーバーで利用可能なツールがありません"
+			"noTools": "このサーバーで利用可能なツールがありません",
+			"allowAll": "すべて許可",
+			"blockAll": "すべてブロック",
+			"patterns": "パターン",
+			"allow": "許可",
+			"block": "ブロック",
+			"patternRules": "このサーバーのパターンルール",
+			"allowPatterns": "許可パターン",
+			"blockPatterns": "ブロックパターン",
+			"patternPlaceholder": "例：get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "パターンマッチング",
@@ -242,7 +251,18 @@
 			"examples": "例",
 			"example1": "docs-api、docs-searchなどにマッチ",
 			"example2": "server-admin、user-adminなどにマッチ",
-			"example3": "delete_file、delete_userなどにマッチ"
+			"example3": "delete_file、delete_userなどにマッチ",
+			"help": "パターンヘルプ",
+			"specificity": "パターン特異性ルール",
+			"exactWins": "完全一致（ワイルドカードなし）が常に優先されます",
+			"longerWins": "ワイルドカードパターンの中では、より長い/特定のパターンが勝ちます",
+			"conflictResolution": "ツールが許可とブロックの両方のパターンにマッチする場合、最も特定のパターンが結果を決定します",
+			"showHelp": "パターンヘルプを表示",
+			"hideHelp": "パターンヘルプを非表示",
+			"basicPatterns": "基本パターン",
+			"specificityExamples": "特異性の例",
+			"exactExample": "完全一致は任意のワイルドカードパターンに勝ちます",
+			"wildcardExample": "より特定のワイルドカードは一般的なワイルドカードに勝ちます"
 		},
 		"status": {
 			"enabled": "有効",

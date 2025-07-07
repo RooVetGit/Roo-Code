@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}}개 제한과 함께 활성화됨: {{names}}"
 		},
 		"tools": {
-			"description": "서버 내의 특정 도구를 제어합니다. 여러 도구와 매칭하려면 'delete_*'와 같은 패턴을 사용하세요.",
+			"description": "서버 내의 특정 도구를 제어합니다.",
 			"allowedTools": "허용된 도구",
 			"disallowedTools": "차단된 도구",
 			"addAllowed": "허용 추가",
@@ -233,7 +233,16 @@
 			"viewTools": "서버 도구 보기",
 			"hideTools": "서버 도구 숨기기",
 			"serverTools": "{{serverName}}의 도구",
-			"noTools": "이 서버에 사용 가능한 도구가 없습니다"
+			"noTools": "이 서버에 사용 가능한 도구가 없습니다",
+			"allowAll": "모두 허용",
+			"blockAll": "모두 차단",
+			"patterns": "패턴",
+			"allow": "허용",
+			"block": "차단",
+			"patternRules": "이 서버의 패턴 규칙",
+			"allowPatterns": "허용 패턴",
+			"blockPatterns": "차단 패턴",
+			"patternPlaceholder": "예: get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "패턴 매칭",
@@ -242,7 +251,18 @@
 			"examples": "예제",
 			"example1": "docs-api, docs-search 등과 일치",
 			"example2": "server-admin, user-admin 등과 일치",
-			"example3": "delete_file, delete_user 등과 일치"
+			"example3": "delete_file, delete_user 등과 일치",
+			"help": "패턴 도움말",
+			"specificity": "패턴 특이성 규칙",
+			"exactWins": "정확한 일치 (와일드카드 없음)가 항상 우선순위를 가집니다",
+			"longerWins": "와일드카드 패턴 중에서는 더 길고/구체적인 패턴이 이깁니다",
+			"conflictResolution": "도구가 허용과 차단 패턴 모두에 일치할 때, 가장 구체적인 패턴이 결과를 결정합니다",
+			"showHelp": "패턴 도움말 표시",
+			"hideHelp": "패턴 도움말 숨기기",
+			"basicPatterns": "기본 패턴",
+			"specificityExamples": "특이성 예제",
+			"exactExample": "정확한 일치는 모든 와일드카드 패턴을 이깁니다",
+			"wildcardExample": "더 구체적인 와일드카드가 일반 와일드카드를 이깁니다"
 		},
 		"status": {
 			"enabled": "활성화됨",

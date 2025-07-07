@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} diaktifkan dengan pembatasan: {{names}}"
 		},
 		"tools": {
-			"description": "Kontrol alat spesifik dalam server. Gunakan pola seperti 'delete_*' untuk mencocokkan beberapa alat.",
+			"description": "Kontrol alat spesifik dalam server.",
 			"allowedTools": "Alat yang Diizinkan",
 			"disallowedTools": "Alat yang Diblokir",
 			"addAllowed": "Tambah Diizinkan",
@@ -233,7 +233,16 @@
 			"viewTools": "Lihat alat server",
 			"hideTools": "Sembunyikan alat server",
 			"serverTools": "Alat dari {{serverName}}",
-			"noTools": "Tidak ada alat yang tersedia untuk server ini"
+			"noTools": "Tidak ada alat yang tersedia untuk server ini",
+			"allowAll": "Izinkan Semua",
+			"blockAll": "Blokir Semua",
+			"patterns": "Pola",
+			"allow": "Izinkan",
+			"block": "Blokir",
+			"patternRules": "Aturan Pola untuk server ini",
+			"allowPatterns": "Pola Izin",
+			"blockPatterns": "Pola Blokir",
+			"patternPlaceholder": "mis. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Pencocokan Pola",
@@ -242,7 +251,18 @@
 			"examples": "Contoh",
 			"example1": "Cocok dengan docs-api, docs-search, dll.",
 			"example2": "Cocok dengan server-admin, user-admin, dll.",
-			"example3": "Cocok dengan delete_file, delete_user, dll."
+			"example3": "Cocok dengan delete_file, delete_user, dll.",
+			"help": "Bantuan Pola",
+			"specificity": "Aturan Spesifisitas Pola",
+			"exactWins": "Kecocokan tepat (tanpa wildcard) selalu diutamakan",
+			"longerWins": "Di antara pola wildcard, pola yang lebih panjang/spesifik menang",
+			"conflictResolution": "Ketika alat cocok dengan pola izin dan blokir, pola yang paling spesifik menentukan hasilnya",
+			"showHelp": "Tampilkan bantuan pola",
+			"hideHelp": "Sembunyikan bantuan pola",
+			"basicPatterns": "Pola Dasar",
+			"specificityExamples": "Contoh Spesifisitas",
+			"exactExample": "Kecocokan tepat mengalahkan pola wildcard apa pun",
+			"wildcardExample": "Wildcard yang lebih spesifik mengalahkan wildcard umum"
 		},
 		"status": {
 			"enabled": "DIAKTIFKAN",

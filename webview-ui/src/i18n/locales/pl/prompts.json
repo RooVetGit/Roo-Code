@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} włączone z ograniczeniami: {{names}}"
 		},
 		"tools": {
-			"description": "Kontroluj określone narzędzia w serwerach. Używaj wzorców takich jak 'delete_*' do dopasowania wielu narzędzi.",
+			"description": "Kontroluj określone narzędzia w serwerach.",
 			"allowedTools": "Dozwolone Narzędzia",
 			"disallowedTools": "Zablokowane Narzędzia",
 			"addAllowed": "Dodaj Dozwolone",
@@ -233,7 +233,16 @@
 			"viewTools": "Zobacz narzędzia serwera",
 			"hideTools": "Ukryj narzędzia serwera",
 			"serverTools": "Narzędzia {{serverName}}",
-			"noTools": "Brak dostępnych narzędzi dla tego serwera"
+			"noTools": "Brak dostępnych narzędzi dla tego serwera",
+			"allowAll": "Pozwól na Wszystko",
+			"blockAll": "Zablokuj Wszystko",
+			"patterns": "Wzorce",
+			"allow": "Pozwól",
+			"block": "Zablokuj",
+			"patternRules": "Reguły Wzorców dla tego serwera",
+			"allowPatterns": "Wzorce Pozwalania",
+			"blockPatterns": "Wzorce Blokowania",
+			"patternPlaceholder": "np. get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "Dopasowanie Wzorców",
@@ -242,7 +251,18 @@
 			"examples": "Przykłady",
 			"example1": "Dopasowuje docs-api, docs-search, itp.",
 			"example2": "Dopasowuje server-admin, user-admin, itp.",
-			"example3": "Dopasowuje delete_file, delete_user, itp."
+			"example3": "Dopasowuje delete_file, delete_user, itp.",
+			"help": "Pomoc Wzorców",
+			"specificity": "Reguły Specyficzności Wzorców",
+			"exactWins": "Dokładne dopasowania (bez symboli wieloznacznych) zawsze mają pierwszejństwo",
+			"longerWins": "Wśród wzorców z symbolami wieloznacznyminymi, dłuższe/bardziej specyficzne wzorce wygrywają",
+			"conflictResolution": "Gdy narzędzie pasuje do wzorców pozwalania i blokowania, najbardziej specyficzny wzorzec określa wynik",
+			"showHelp": "Pokaż pomoc wzorców",
+			"hideHelp": "Ukryj pomoc wzorców",
+			"basicPatterns": "Wzorce Podstawowe",
+			"specificityExamples": "Przykłady Specyficzności",
+			"exactExample": "Dokładne dopasowanie pokonuje każdy wzorzec z symbolem wieloznacznym",
+			"wildcardExample": "Bardziej specyficzny symbol wieloznaczny pokonuje ogólny symbol wieloznaczny"
 		},
 		"status": {
 			"enabled": "WŁĄCZONE",

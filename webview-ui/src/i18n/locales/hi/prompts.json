@@ -217,7 +217,7 @@
 			"enabledWithRestrictionsCount": "{{count}} प्रतिबंधों के साथ सक्षम: {{names}}"
 		},
 		"tools": {
-			"description": "सर्वर के भीतर विशिष्ट टूल को नियंत्रित करें। कई टूल से मेल खाने के लिए 'delete_*' जैसे पैटर्न का उपयोग करें।",
+			"description": "सर्वर के भीतर विशिष्ट टूल को नियंत्रित करें।",
 			"allowedTools": "अनुमतित टूल",
 			"disallowedTools": "ब्लॉक किए गए टूल",
 			"addAllowed": "अनुमतित जोड़ें",
@@ -233,7 +233,16 @@
 			"viewTools": "सर्वर टूल देखें",
 			"hideTools": "सर्वर टूल छुपाएं",
 			"serverTools": "{{serverName}} के टूल",
-			"noTools": "इस सर्वर के लिए कोई टूल उपलब्ध नहीं"
+			"noTools": "इस सर्वर के लिए कोई टूल उपलब्ध नहीं",
+			"allowAll": "सभी की अनुमति दें",
+			"blockAll": "सभी को ब्लॉक करें",
+			"patterns": "पैटर्न",
+			"allow": "अनुमति दें",
+			"block": "ब्लॉक करें",
+			"patternRules": "इस सर्वर के लिए पैटर्न नियम",
+			"allowPatterns": "अनुमति पैटर्न",
+			"blockPatterns": "ब्लॉक पैटर्न",
+			"patternPlaceholder": "जैसे get_*, delete_*, *_admin"
 		},
 		"patterns": {
 			"title": "पैटर्न मिलान",
@@ -242,7 +251,18 @@
 			"examples": "उदाहरण",
 			"example1": "docs-api, docs-search, आदि से मेल खाता है",
 			"example2": "server-admin, user-admin, आदि से मेल खाता है",
-			"example3": "delete_file, delete_user, आदि से मेल खाता है"
+			"example3": "delete_file, delete_user, आदि से मेल खाता है",
+			"help": "पैटर्न सहायता",
+			"specificity": "पैटर्न विशिष्टता नियम",
+			"exactWins": "सटीक मैच (बिना वाइल्डकार्ड) हमेशा प्राथमिकता लेते हैं",
+			"longerWins": "वाइल्डकार्ड पैटर्न में, लंबे/अधिक विशिष्ट पैटर्न जीतते हैं",
+			"conflictResolution": "जब कोई टूल अनुमति और ब्लॉक दोनों पैटर्न से मेल खाता है, तो सबसे विशिष्ट पैटर्न परिणाम निर्धारित करता है",
+			"showHelp": "पैटर्न सहायता दिखाएं",
+			"hideHelp": "पैटर्न सहायता छुपाएं",
+			"basicPatterns": "मूल पैटर्न",
+			"specificityExamples": "विशिष्टता उदाहरण",
+			"exactExample": "सटीक मैच किसी भी वाइल्डकार्ड पैटर्न को हराता है",
+			"wildcardExample": "अधिक विशिष्ट वाइल्डकार्ड सामान्य वाइल्डकार्ड को हराता है"
 		},
 		"status": {
 			"enabled": "सक्षम",
