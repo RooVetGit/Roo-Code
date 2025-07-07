@@ -40,8 +40,15 @@ describe("useMcpToolTool", () => {
 			deref: vi.fn().mockReturnValue({
 				getMcpHub: vi.fn().mockReturnValue({
 					callTool: vi.fn(),
+					getServerConfig: vi.fn().mockReturnValue({
+						allowedInModesByDefault: true,
+					}),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockReturnValue({
+					mode: "code",
+					customModes: [],
+				}),
 			}),
 		}
 
@@ -192,8 +199,15 @@ describe("useMcpToolTool", () => {
 			mockProviderRef.deref.mockReturnValue({
 				getMcpHub: () => ({
 					callTool: vi.fn().mockResolvedValue(mockToolResult),
+					getServerConfig: vi.fn().mockReturnValue({
+						allowedInModesByDefault: true,
+					}),
 				}),
 				postMessageToWebview: vi.fn(),
+				getState: vi.fn().mockReturnValue({
+					mode: "code",
+					customModes: [],
+				}),
 			})
 
 			await useMcpToolTool(
