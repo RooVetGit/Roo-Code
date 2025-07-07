@@ -190,7 +190,7 @@
 	"allFiles": "all files",
 	"mcpRestrictions": {
 		"title": "MCP Server Restrictions",
-		"description": "Control which MCP servers and tools are available in this mode. Use patterns like '*' and '?' for flexible matching.",
+		"description": "Control which MCP servers and tools are available in this mode.",
 		"expand": "Configure MCP restrictions",
 		"collapse": "Hide MCP restrictions",
 		"clearAll": "Clear all restrictions",
@@ -215,7 +215,7 @@
 			"enabledWithRestrictionsCount": "{{count}} enabled with restrictions: {{names}}"
 		},
 		"tools": {
-			"description": "Control specific tools within servers. Use patterns like 'delete_*' to match multiple tools.",
+			"description": "Control specific tools within servers.",
 			"allowedTools": "Allowed Tools",
 			"disallowedTools": "Blocked Tools",
 			"addAllowed": "Add Allowed",
