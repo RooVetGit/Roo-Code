@@ -96,24 +96,21 @@ export class CodeIndexServiceFactory {
 
 		let vectorSize: number | undefined
 
-		if (provider === "openai-compatible") {
-			if (config.openAiCompatibleOptions?.modelDimension && config.openAiCompatibleOptions.modelDimension > 0) {
-				vectorSize = config.openAiCompatibleOptions.modelDimension
-			} else {
-				// Fallback if not provided or invalid in openAiCompatibleOptions
-				vectorSize = getModelDimension(provider, modelId)
-			}
+		// First check if a manual dimension is provided (works for all providers)
+		if (config.modelDimension && config.modelDimension > 0) {
+			vectorSize = config.modelDimension
 		} else if (provider === "gemini") {
 			// Gemini's text-embedding-004 has a fixed dimension of 768
 			vectorSize = 768
 		} else {
+			// Fall back to model-specific dimension from profiles
 			vectorSize = getModelDimension(provider, modelId)
 		}
 
 		if (vectorSize === undefined) {
 			let errorMessage = `Could not determine vector dimension for model '${modelId}' with provider '${provider}'. `
 			if (provider === "openai-compatible") {
-				errorMessage += `Please ensure the 'Embedding Dimension' is correctly set in the OpenAI-Compatible provider settings.`
+				errorMessage += `Please ensure the 'Embedding Dimension' is correctly set in the provider settings.`
 			} else {
 				errorMessage += `Check model profiles or configuration.`
 			}
