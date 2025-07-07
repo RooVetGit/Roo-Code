@@ -111,18 +111,6 @@ export function McpRestrictionsEditor({
 		}
 	}
 
-	// Helper to check if server has complex restrictions (more than just allow/disallow)
-	const _hasComplexRestrictions = (server: McpServer) => {
-		// Check if server has tool-level restrictions
-		const hasToolRestrictions =
-			allowedTools.some((t) => t.serverName === server.name) ||
-			disallowedTools.some((t) => t.serverName === server.name)
-
-		// Only consider it "restricted" if it has tool-level restrictions
-		// Simple allow/disallow at server level doesn't count as "restricted"
-		return hasToolRestrictions
-	}
-
 	// Group servers by their status
 	const serverGroups = {
 		enabled: availableServers.filter((server) => {
@@ -582,6 +570,60 @@ function CompactServerRow({
 		return hasToolRestrictions
 	}
 
+	// Helper function to resolve tool access using pattern specificity
+	const resolveToolAccess = (toolName: string, serverName: string): boolean => {
+		const serverAllowedTools = allowedTools.filter((t) => t.serverName === serverName)
+		const serverDisallowedTools = disallowedTools.filter((t) => t.serverName === serverName)
+
+		// If no restrictions for this server, allow the tool
+		if (serverAllowedTools.length === 0 && serverDisallowedTools.length === 0) {
+			return true
+		}
+
+		// Collect all matching patterns from both allow and block lists
+		const matchingAllowPatterns: string[] = []
+		const matchingBlockPatterns: string[] = []
+
+		// Check allow patterns
+		for (const pattern of serverAllowedTools) {
+			if (patternMatching.matchesGlobPattern(toolName, pattern.toolName)) {
+				matchingAllowPatterns.push(pattern.toolName)
+			}
+		}
+
+		// Check block patterns
+		for (const pattern of serverDisallowedTools) {
+			if (patternMatching.matchesGlobPattern(toolName, pattern.toolName)) {
+				matchingBlockPatterns.push(pattern.toolName)
+			}
+		}
+
+		// If no patterns match, use default behavior
+		if (matchingAllowPatterns.length === 0 && matchingBlockPatterns.length === 0) {
+			// If only allowedTools is defined, tool must match at least one entry (none did, so block)
+			if (serverAllowedTools.length > 0 && serverDisallowedTools.length === 0) {
+				return false
+			}
+			// If only disallowedTools is defined, tool is allowed (none matched)
+			if (serverAllowedTools.length === 0 && serverDisallowedTools.length > 0) {
+				return true
+			}
+			// If both are defined but none matched, allow by default
+			return true
+		}
+
+		// Find the most specific pattern from all matching patterns
+		const allMatchingPatterns = [...matchingAllowPatterns, ...matchingBlockPatterns]
+		const mostSpecificPattern = patternMatching.findMostSpecificMatchingPattern(toolName, allMatchingPatterns)
+
+		if (!mostSpecificPattern) {
+			return true // Default to allow if no pattern found (shouldn't happen)
+		}
+
+		// Determine if the most specific pattern is from allow or block list
+		return matchingAllowPatterns.includes(mostSpecificPattern)
+	}
+
 	// Handler for individual tool actions (allow/block)
 	const handleToolAction = (toolName: string, action: "allow" | "block") => {
 		if (action === "block") {
@@ -681,30 +723,8 @@ function CompactServerRow({
 			return server.tools.length
 		}
 
-		// For servers with restrictions, calculate how many tools are actually enabled
-		const serverAllowedTools = allowedTools.filter((t) => t.serverName === server.name)
-		const serverDisallowedTools = disallowedTools.filter((t) => t.serverName === server.name)
-
-		// If there are allowed tools specified for this server, only those are enabled
-		if (serverAllowedTools.length > 0) {
-			return server.tools.filter((tool) => {
-				return serverAllowedTools.some((allowedTool) =>
-					patternMatching.matchesPattern(tool.name, allowedTool.toolName),
-				)
-			}).length
-		}
-
-		// If no allowed tools but there are disallowed tools, count enabled tools
-		if (serverDisallowedTools.length > 0) {
-			return server.tools.filter((tool) => {
-				return !serverDisallowedTools.some((disallowedTool) =>
-					patternMatching.matchesPattern(tool.name, disallowedTool.toolName),
-				)
-			}).length
-		}
-
-		// No tool restrictions for this server
-		return server.tools.length
+		// For servers with restrictions, calculate how many tools are actually enabled using pattern specificity
+		return server.tools.filter((tool) => resolveToolAccess(tool.name, server.name)).length
 	}
 
 	const enabledToolsCount = getEnabledToolsCount()
@@ -720,26 +740,11 @@ function CompactServerRow({
 			}
 		}
 
-		const serverAllowedTools = allowedTools.filter((t) => t.serverName === server.name)
-		const serverDisallowedTools = disallowedTools.filter((t) => t.serverName === server.name)
-
 		const enabledTools = []
 		const disabledTools = []
 
 		for (const tool of server.tools) {
-			let isEnabled = true
-
-			// Check if there are specific allowed tools for this server
-			if (serverAllowedTools.length > 0) {
-				isEnabled = serverAllowedTools.some((allowedTool) =>
-					patternMatching.matchesPattern(tool.name, allowedTool.toolName),
-				)
-			} else if (serverDisallowedTools.length > 0) {
-				// Check if tool is specifically disallowed
-				isEnabled = !serverDisallowedTools.some((disallowedTool) =>
-					patternMatching.matchesPattern(tool.name, disallowedTool.toolName),
-				)
-			}
+			const isEnabled = resolveToolAccess(tool.name, server.name)
 
 			if (isEnabled) {
 				enabledTools.push({ ...tool, isEnabled: true })
@@ -1002,6 +1007,7 @@ function ServerPatternRules({
 	const { t } = useAppTranslation()
 	const [newAllowPattern, setNewAllowPattern] = useState("")
 	const [newBlockPattern, setNewBlockPattern] = useState("")
+	const [showPatternHelp, setShowPatternHelp] = useState(false)
 
 	// Get pattern rules specific to this server
 	const serverAllowedPatterns = allowedTools
@@ -1115,19 +1121,102 @@ function ServerPatternRules({
 			</div>
 
 			{/* Pattern Help */}
-			<div className="text-xs text-vscode-descriptionForeground p-2 bg-vscode-textCodeBlock-background rounded">
-				<div className="font-medium mb-1">{t("prompts:mcpRestrictions.patterns.help")}</div>
-				<div className="space-y-0.5">
-					<div>
-						<code>*</code> - {t("prompts:mcpRestrictions.patterns.wildcard")}
+			<div className="border border-vscode-widget-border rounded">
+				<div
+					className="flex items-center justify-between p-2 cursor-pointer hover:bg-vscode-list-hoverBackground"
+					onClick={() => setShowPatternHelp(!showPatternHelp)}>
+					<div className="text-xs font-medium text-vscode-foreground">
+						{t("prompts:mcpRestrictions.patterns.help")}
 					</div>
-					<div>
-						<code>get_*</code> - {t("prompts:mcpRestrictions.patterns.example1")}
-					</div>
-					<div>
-						<code>*_admin</code> - {t("prompts:mcpRestrictions.patterns.example2")}
-					</div>
+					<ChevronDown className={cn("w-3 h-3 transition-transform", { "rotate-180": showPatternHelp })} />
 				</div>
+
+				{showPatternHelp && (
+					<div className="border-t border-vscode-widget-border p-2 text-xs text-vscode-descriptionForeground bg-vscode-textCodeBlock-background">
+						{/* Basic Patterns */}
+						<div className="mb-3">
+							<div className="font-medium mb-1 text-vscode-foreground">
+								{t("prompts:mcpRestrictions.patterns.basicPatterns")}
+							</div>
+							<div className="space-y-0.5">
+								<div>
+									<code className="text-vscode-textPreformat-foreground">*</code> -{" "}
+									{t("prompts:mcpRestrictions.patterns.wildcard")}
+								</div>
+								<div>
+									<code className="text-vscode-textPreformat-foreground">?</code> -{" "}
+									{t("prompts:mcpRestrictions.patterns.singleChar")}
+								</div>
+								<div>
+									<code className="text-vscode-textPreformat-foreground">get_*</code> -{" "}
+									{t("prompts:mcpRestrictions.patterns.example1")}
+								</div>
+								<div>
+									<code className="text-vscode-textPreformat-foreground">*_admin</code> -{" "}
+									{t("prompts:mcpRestrictions.patterns.example2")}
+								</div>
+								<div>
+									<code className="text-vscode-textPreformat-foreground">delete_*</code> -{" "}
+									{t("prompts:mcpRestrictions.patterns.example3")}
+								</div>
+							</div>
+						</div>
+
+						{/* Pattern Specificity Rules */}
+						<div className="mb-3">
+							<div className="font-medium mb-1 text-vscode-foreground">
+								{t("prompts:mcpRestrictions.patterns.specificity")}
+							</div>
+							<div className="space-y-1">
+								<div className="flex items-start gap-2">
+									<div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+									<span>{t("prompts:mcpRestrictions.patterns.exactWins")}</span>
+								</div>
+								<div className="flex items-start gap-2">
+									<div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+									<span>{t("prompts:mcpRestrictions.patterns.longerWins")}</span>
+								</div>
+								<div className="flex items-start gap-2">
+									<div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+									<span>{t("prompts:mcpRestrictions.patterns.conflictResolution")}</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Specificity Examples */}
+						<div>
+							<div className="font-medium mb-1 text-vscode-foreground">
+								{t("prompts:mcpRestrictions.patterns.specificityExamples")}
+							</div>
+							<div className="space-y-1">
+								<div className="p-1.5 bg-vscode-editor-background rounded border border-vscode-panel-border">
+									<div className="flex items-center gap-1 mb-0.5">
+										<code className="text-red-300">block &quot;*&quot;</code>
+										<span className="text-vscode-descriptionForeground">+</span>
+										<code className="text-green-300">allow &quot;get_file&quot;</code>
+										<span className="text-vscode-descriptionForeground">→</span>
+										<span className="text-green-300 font-medium">get_file allowed</span>
+									</div>
+									<div className="text-vscode-descriptionForeground ml-2">
+										{t("prompts:mcpRestrictions.patterns.exactExample")}
+									</div>
+								</div>
+								<div className="p-1.5 bg-vscode-editor-background rounded border border-vscode-panel-border">
+									<div className="flex items-center gap-1 mb-0.5">
+										<code className="text-red-300">block &quot;*&quot;</code>
+										<span className="text-vscode-descriptionForeground">+</span>
+										<code className="text-green-300">allow &quot;core_*&quot;</code>
+										<span className="text-vscode-descriptionForeground">→</span>
+										<span className="text-green-300 font-medium">core_list allowed</span>
+									</div>
+									<div className="text-vscode-descriptionForeground ml-2">
+										{t("prompts:mcpRestrictions.patterns.wildcardExample")}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	)

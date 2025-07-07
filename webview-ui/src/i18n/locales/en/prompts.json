@@ -250,7 +250,17 @@
 			"example1": "Matches docs-api, docs-search, etc.",
 			"example2": "Matches server-admin, user-admin, etc.",
 			"example3": "Matches delete_file, delete_user, etc.",
-			"help": "Pattern Help"
+			"help": "Pattern Help",
+			"specificity": "Pattern Specificity Rules",
+			"exactWins": "Exact matches (no wildcards) always take priority",
+			"longerWins": "Among wildcard patterns, longer/more specific patterns win",
+			"conflictResolution": "When a tool matches both allow and block patterns, the most specific pattern determines the result",
+			"showHelp": "Show pattern help",
+			"hideHelp": "Hide pattern help",
+			"basicPatterns": "Basic Patterns",
+			"specificityExamples": "Specificity Examples",
+			"exactExample": "Exact match beats any wildcard pattern",
+			"wildcardExample": "More specific wildcard beats general wildcard"
 		},
 		"status": {
 			"enabled": "ENABLED",
