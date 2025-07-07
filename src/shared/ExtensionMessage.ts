@@ -76,6 +76,7 @@ export interface ExtensionMessage {
 		| "exportModeResult"
 		| "importModeResult"
 		| "checkRulesDirectoryResult"
+		| "deleteCustomModeCheck"
 		| "currentCheckpointUpdated"
 		| "showHumanRelayDialog"
 		| "humanRelayResponse"
@@ -102,6 +103,8 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
+		| "codeIndexSettingsSaved"
+		| "codeIndexSecretStatus"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -152,6 +155,8 @@ export interface ExtensionMessage {
 	marketplaceItems?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
 	visibility?: ShareVisibility
+	rulesFolderPath?: string
+	settings?: any
 }
 
 export type ExtensionState = Pick<
@@ -176,6 +181,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
+	| "alwaysAllowUpdateTodoList"
 	| "allowedCommands"
 	| "allowedMaxRequests"
 	| "browserToolEnabled"

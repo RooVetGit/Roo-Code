@@ -46,6 +46,7 @@ import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import { getLatestTodo } from "@roo/todo"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -96,6 +97,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
 		alwaysAllowFollowupQuestions,
+		alwaysAllowUpdateTodoList,
 		customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
@@ -127,6 +129,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// task, then the extension is in a bad state and needs to be debugged (see
 	// Cline.abort).
 	const task = useMemo(() => messages.at(0), [messages])
+
+	const latestTodos = useMemo(() => {
+		return getLatestTodo(messages)
+	}, [messages])
 
 	const modifiedMessages = useMemo(() => combineApiRequests(combineCommandSequences(messages.slice(1))), [messages])
 
@@ -350,9 +356,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(undefined)
 							break
 						case "resume_task":
-							if (!isAutoApproved(lastMessage) && !isPartial) {
-								playSound("notification")
-							}
 							setSendingDisabled(false)
 							setClineAsk("resume_task")
 							setEnableButtons(true)
@@ -361,9 +364,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setDidClickCancel(false) // special case where we reset the cancel button state
 							break
 						case "resume_completed_task":
-							if (!isPartial) {
-								playSound("celebration")
-							}
 							setSendingDisabled(false)
 							setClineAsk("resume_completed_task")
 							setEnableButtons(true)
@@ -952,6 +952,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					return false
 				}
 
+				if (tool?.tool === "updateTodoList") {
+					return alwaysAllowUpdateTodoList
+				}
+
 				if (tool?.tool === "fetchInstructions") {
 					if (tool.content === "create_mode") {
 						return alwaysAllowModeSwitch
@@ -1005,6 +1009,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			alwaysAllowModeSwitch,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowSubtasks,
+			alwaysAllowUpdateTodoList,
 		],
 	)
 
@@ -1333,6 +1338,24 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					onBatchFileResponse={handleBatchFileResponse}
 					onFollowUpUnmount={handleFollowUpUnmount}
 					isFollowUpAnswered={messageOrGroup.ts === currentFollowUpTs}
+					editable={
+						messageOrGroup.type === "ask" &&
+						messageOrGroup.ask === "tool" &&
+						(() => {
+							let tool: any = {}
+							try {
+								tool = JSON.parse(messageOrGroup.text || "{}")
+							} catch (_) {
+								if (messageOrGroup.text?.includes("updateTodoList")) {
+									tool = { tool: "updateTodoList" }
+								}
+							}
+							if (tool.tool === "updateTodoList" && alwaysAllowUpdateTodoList) {
+								return false
+							}
+							return tool.tool === "updateTodoList" && enableButtons && !!primaryButtonText
+						})()
+					}
 				/>
 			)
 		},
@@ -1347,6 +1370,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			handleBatchFileResponse,
 			handleFollowUpUnmount,
 			currentFollowUpTs,
+			alwaysAllowUpdateTodoList,
+			enableButtons,
+			primaryButtonText,
 		],
 	)
 
@@ -1494,6 +1520,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		vscode.postMessage({ type: "condenseTaskContextRequest", text: taskId })
 	}
 
+	const areButtonsVisible = showScrollToBottom || primaryButtonText || secondaryButtonText || isStreaming
+
 	return (
 		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
 			{(showAnnouncement || showAnnouncementModal) && (
@@ -1521,6 +1549,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						buttonsDisabled={sendingDisabled}
 						handleCondenseContext={handleCondenseContext}
 						onClose={handleTaskCloseButtonClick}
+						todos={latestTodos}
 					/>
 
 					{hasSystemPromptOverride && (
@@ -1595,7 +1624,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			//    but becomes scrollable when the viewport is too small
 			*/}
 			{!task && (
-				<div className="mb-[-2px] flex-initial min-h-0">
+				<div className="mb-1 flex-initial min-h-0">
 					<AutoApproveMenu />
 				</div>
 			)}
@@ -1606,7 +1635,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						<Virtuoso
 							ref={virtuosoRef}
 							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
-							className="scrollable grow overflow-y-scroll mb-[5px]"
+							className="scrollable grow overflow-y-scroll mb-1"
 							// increasing top by 3_000 to prevent jumping around when user collapses a row
 							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
 							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
@@ -1622,83 +1651,87 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							initialTopMostItemIndex={groupedMessages.length - 1}
 						/>
 					</div>
-					<AutoApproveMenu />
-					{showScrollToBottom ? (
-						<div className="flex px-[15px] pt-[10px]">
-							<StandardTooltip content={t("chat:scrollToBottom")}>
-								<div
-									className="bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_55%,_transparent)] rounded-[3px] overflow-hidden cursor-pointer flex justify-center items-center flex-1 h-[25px] hover:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_90%,_transparent)] active:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_70%,_transparent)]"
-									onClick={() => {
-										scrollToBottomSmooth()
-										disableAutoScrollRef.current = false
-									}}>
-									<span className="codicon codicon-chevron-down text-[18px]"></span>
-								</div>
-							</StandardTooltip>
-						</div>
-					) : (
+					<div className={`flex-initial min-h-0 ${!areButtonsVisible ? "mb-1" : ""}`}>
+						<AutoApproveMenu />
+					</div>
+					{areButtonsVisible && (
 						<div
-							className={`flex ${
-								primaryButtonText || secondaryButtonText || isStreaming ? "px-[15px] pt-[10px]" : "p-0"
-							} ${
-								primaryButtonText || secondaryButtonText || isStreaming
-									? enableButtons || (isStreaming && !didClickCancel)
+							className={`flex h-9 items-center mb-1 px-[15px] ${
+								showScrollToBottom
+									? "opacity-100"
+									: enableButtons || (isStreaming && !didClickCancel)
 										? "opacity-100"
 										: "opacity-50"
-									: "opacity-0"
 							}`}>
-							{primaryButtonText && !isStreaming && (
-								<StandardTooltip
-									content={
-										primaryButtonText === t("chat:retry.title")
-											? t("chat:retry.tooltip")
-											: primaryButtonText === t("chat:save.title")
-												? t("chat:save.tooltip")
-												: primaryButtonText === t("chat:approve.title")
-													? t("chat:approve.tooltip")
-													: primaryButtonText === t("chat:runCommand.title")
-														? t("chat:runCommand.tooltip")
-														: primaryButtonText === t("chat:startNewTask.title")
-															? t("chat:startNewTask.tooltip")
-															: primaryButtonText === t("chat:resumeTask.title")
-																? t("chat:resumeTask.tooltip")
-																: primaryButtonText === t("chat:proceedAnyways.title")
-																	? t("chat:proceedAnyways.tooltip")
-																	: primaryButtonText ===
-																		  t("chat:proceedWhileRunning.title")
-																		? t("chat:proceedWhileRunning.tooltip")
-																		: undefined
-									}>
-									<VSCodeButton
-										appearance="primary"
-										disabled={!enableButtons}
-										className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
-										onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
-										{primaryButtonText}
-									</VSCodeButton>
-								</StandardTooltip>
-							)}
-							{(secondaryButtonText || isStreaming) && (
-								<StandardTooltip
-									content={
-										isStreaming
-											? t("chat:cancel.tooltip")
-											: secondaryButtonText === t("chat:startNewTask.title")
-												? t("chat:startNewTask.tooltip")
-												: secondaryButtonText === t("chat:reject.title")
-													? t("chat:reject.tooltip")
-													: secondaryButtonText === t("chat:terminate.title")
-														? t("chat:terminate.tooltip")
-														: undefined
-									}>
+							{showScrollToBottom ? (
+								<StandardTooltip content={t("chat:scrollToBottom")}>
 									<VSCodeButton
 										appearance="secondary"
-										disabled={!enableButtons && !(isStreaming && !didClickCancel)}
-										className={isStreaming ? "flex-[2] ml-0" : "flex-1 ml-[6px]"}
-										onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
-										{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
+										className="flex-[2]"
+										onClick={() => {
+											scrollToBottomSmooth()
+											disableAutoScrollRef.current = false
+										}}>
+										<span className="codicon codicon-chevron-down"></span>
 									</VSCodeButton>
 								</StandardTooltip>
+							) : (
+								<>
+									{primaryButtonText && !isStreaming && (
+										<StandardTooltip
+											content={
+												primaryButtonText === t("chat:retry.title")
+													? t("chat:retry.tooltip")
+													: primaryButtonText === t("chat:save.title")
+														? t("chat:save.tooltip")
+														: primaryButtonText === t("chat:approve.title")
+															? t("chat:approve.tooltip")
+															: primaryButtonText === t("chat:runCommand.title")
+																? t("chat:runCommand.tooltip")
+																: primaryButtonText === t("chat:startNewTask.title")
+																	? t("chat:startNewTask.tooltip")
+																	: primaryButtonText === t("chat:resumeTask.title")
+																		? t("chat:resumeTask.tooltip")
+																		: primaryButtonText ===
+																			  t("chat:proceedAnyways.title")
+																			? t("chat:proceedAnyways.tooltip")
+																			: primaryButtonText ===
+																				  t("chat:proceedWhileRunning.title")
+																				? t("chat:proceedWhileRunning.tooltip")
+																				: undefined
+											}>
+											<VSCodeButton
+												appearance="primary"
+												disabled={!enableButtons}
+												className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
+												onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
+												{primaryButtonText}
+											</VSCodeButton>
+										</StandardTooltip>
+									)}
+									{(secondaryButtonText || isStreaming) && (
+										<StandardTooltip
+											content={
+												isStreaming
+													? t("chat:cancel.tooltip")
+													: secondaryButtonText === t("chat:startNewTask.title")
+														? t("chat:startNewTask.tooltip")
+														: secondaryButtonText === t("chat:reject.title")
+															? t("chat:reject.tooltip")
+															: secondaryButtonText === t("chat:terminate.title")
+																? t("chat:terminate.tooltip")
+																: undefined
+											}>
+											<VSCodeButton
+												appearance="secondary"
+												disabled={!enableButtons && !(isStreaming && !didClickCancel)}
+												className={isStreaming ? "flex-[2] ml-0" : "flex-1 ml-[6px]"}
+												onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
+												{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
+											</VSCodeButton>
+										</StandardTooltip>
+									)}
+								</>
 							)}
 						</div>
 					)}

@@ -26,6 +26,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		alwaysAllowSubtasks,
 		alwaysApproveResubmit,
 		alwaysAllowFollowupQuestions,
+		alwaysAllowUpdateTodoList,
 		allowedMaxRequests,
 		setAlwaysAllowReadOnly,
 		setAlwaysAllowWrite,
@@ -36,6 +37,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAlwaysAllowSubtasks,
 		setAlwaysApproveResubmit,
 		setAlwaysAllowFollowupQuestions,
+		setAlwaysAllowUpdateTodoList,
 		setAllowedMaxRequests,
 	} = useExtensionState()
 
@@ -73,6 +75,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				case "alwaysAllowFollowupQuestions":
 					setAlwaysAllowFollowupQuestions(value)
 					break
+				case "alwaysAllowUpdateTodoList":
+					setAlwaysAllowUpdateTodoList(value)
+					break
 			}
 		},
 		[
@@ -85,6 +90,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysAllowSubtasks,
 			setAlwaysApproveResubmit,
 			setAlwaysAllowFollowupQuestions,
+			setAlwaysAllowUpdateTodoList,
 		],
 	)
 
@@ -101,6 +107,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			alwaysAllowSubtasks: alwaysAllowSubtasks,
 			alwaysApproveResubmit: alwaysApproveResubmit,
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions,
+			alwaysAllowUpdateTodoList: alwaysAllowUpdateTodoList,
 		}),
 		[
 			alwaysAllowReadOnly,
@@ -112,6 +119,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			alwaysAllowSubtasks,
 			alwaysApproveResubmit,
 			alwaysAllowFollowupQuestions,
+			alwaysAllowUpdateTodoList,
 		],
 	)
 
@@ -142,7 +150,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					display: "flex",
 					alignItems: "center",
 					gap: "8px",
-					padding: isExpanded ? "8px 0" : "8px 0 0 0",
+					padding: isExpanded ? "8px 0" : "2px 0 0 0",
 					cursor: "pointer",
 				}}
 				onClick={toggleExpanded}>

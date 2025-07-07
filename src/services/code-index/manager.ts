@@ -26,11 +26,16 @@ export class CodeIndexManager {
 	private _cacheManager: CacheManager | undefined
 
 	public static getInstance(context: vscode.ExtensionContext): CodeIndexManager | undefined {
-		const workspacePath = getWorkspacePath() // Assumes single workspace for now
-
-		if (!workspacePath) {
+		// Use first workspace folder consistently
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		if (!workspaceFolders || workspaceFolders.length === 0) {
 			return undefined
 		}
+
+		// Always use the first workspace folder for consistency across all indexing operations.
+		// This ensures that the same workspace context is used throughout the indexing pipeline,
+		// preventing path resolution errors in multi-workspace scenarios.
+		const workspacePath = workspaceFolders[0].uri.fsPath
 
 		if (!CodeIndexManager.instances.has(workspacePath)) {
 			CodeIndexManager.instances.set(workspacePath, new CodeIndexManager(workspacePath, context))
@@ -203,7 +208,7 @@ export class CodeIndexManager {
 
 	/**
 	 * Private helper method to recreate services with current configuration.
-	 * Used by both initialize() and handleExternalSettingsChange().
+	 * Used by both initialize() and handleSettingsChange().
 	 */
 	private async _recreateServices(): Promise<void> {
 		// Stop watcher if it exists
@@ -257,12 +262,12 @@ export class CodeIndexManager {
 	}
 
 	/**
-	 * Handles external settings changes by reloading configuration.
-	 * This method should be called when API provider settings are updated
+	 * Handle code index settings changes.
+	 * This method should be called when code index settings are updated
 	 * to ensure the CodeIndexConfigManager picks up the new configuration.
 	 * If the configuration changes require a restart, the service will be restarted.
 	 */
-	public async handleExternalSettingsChange(): Promise<void> {
+	public async handleSettingsChange(): Promise<void> {
 		if (this._configManager) {
 			const { requiresRestart } = await this._configManager.loadConfiguration()
 
@@ -275,7 +280,7 @@ export class CodeIndexManager {
 				await this._recreateServices()
 
 				// Start indexing with new services
-				await this.startIndexing()
+				this.startIndexing()
 			}
 		}
 	}

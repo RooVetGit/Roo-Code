@@ -21,6 +21,7 @@ import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import { Button } from "@src/components/ui"
 
 import { ToolUseBlock, ToolUseBlockHeader } from "../common/ToolUseBlock"
+import UpdateTodoListToolBlock from "./UpdateTodoListToolBlock"
 import CodeAccordian from "../common/CodeAccordian"
 import CodeBlock from "../common/CodeBlock"
 import MarkdownBlock from "../common/MarkdownBlock"
@@ -53,6 +54,7 @@ interface ChatRowProps {
 	onBatchFileResponse?: (response: { [key: string]: boolean }) => void
 	onFollowUpUnmount?: () => void
 	isFollowUpAnswered?: boolean
+	editable?: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -104,6 +106,7 @@ export const ChatRowContent = ({
 	onFollowUpUnmount,
 	onBatchFileResponse,
 	isFollowUpAnswered,
+	editable,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
@@ -431,6 +434,21 @@ export const ChatRowContent = ({
 							)}
 						</span>
 					</div>
+				)
+			}
+			case "updateTodoList" as any: {
+				const todos = (tool as any).todos || []
+				return (
+					<UpdateTodoListToolBlock
+						todos={todos}
+						content={(tool as any).content}
+						onChange={(updatedTodos) => {
+							if (typeof vscode !== "undefined" && vscode?.postMessage) {
+								vscode.postMessage({ type: "updateTodoList", payload: { todos: updatedTodos } })
+							}
+						}}
+						editable={editable && isLast}
+					/>
 				)
 			}
 			case "newFileCreated":
@@ -1091,6 +1109,8 @@ export const ChatRowContent = ({
 					const { query = "", results = [] } = parsed?.content || {}
 
 					return <CodebaseSearchResultsDisplay query={query} results={results} />
+				case "user_edit_todos":
+					return <UpdateTodoListToolBlock userEdited onChange={() => {}} />
 				default:
 					return (
 						<>
