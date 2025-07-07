@@ -65,7 +65,7 @@ describe("FollowUpSuggest", () => {
 	const mockSuggestions = [{ answer: "First suggestion" }, { answer: "Second suggestion" }]
 
 	const mockOnSuggestionClick = vi.fn()
-	const mockOnUnmount = vi.fn()
+	const mockOnCancelAutoApproval = vi.fn()
 
 	// Default test state with auto-approval enabled
 	const defaultTestState: TestExtensionState = {
@@ -89,7 +89,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			defaultTestState,
 		)
@@ -104,7 +104,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 				isAnswered={true}
 			/>,
 			defaultTestState,
@@ -114,13 +114,13 @@ describe("FollowUpSuggest", () => {
 		expect(screen.queryByText(/\d+s/)).not.toBeInTheDocument()
 	})
 
-	it("should clear interval and call onUnmount when component unmounts", () => {
+	it("should clear interval and call onCancelAutoApproval when component unmounts", () => {
 		const { unmount } = renderWithTestProviders(
 			<FollowUpSuggest
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			defaultTestState,
 		)
@@ -128,8 +128,8 @@ describe("FollowUpSuggest", () => {
 		// Unmount the component
 		unmount()
 
-		// onUnmount should have been called
-		expect(mockOnUnmount).toHaveBeenCalled()
+		// onCancelAutoApproval should have been called
+		expect(mockOnCancelAutoApproval).toHaveBeenCalled()
 	})
 
 	it("should not show countdown when auto-approval is disabled", () => {
@@ -143,7 +143,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			testState,
 		)
@@ -163,7 +163,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			testState,
 		)
@@ -183,7 +183,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			testState,
 		)
@@ -204,7 +204,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			testState,
 		)
@@ -223,7 +223,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={[]}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 			/>,
 			defaultTestState,
 		)
@@ -234,7 +234,7 @@ describe("FollowUpSuggest", () => {
 
 	it("should not render when onSuggestionClick is not provided", () => {
 		const { container } = renderWithTestProviders(
-			<FollowUpSuggest suggestions={mockSuggestions} ts={123} onUnmount={mockOnUnmount} />,
+			<FollowUpSuggest suggestions={mockSuggestions} ts={123} onCancelAutoApproval={mockOnCancelAutoApproval} />,
 			defaultTestState,
 		)
 
@@ -248,7 +248,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 				isAnswered={false}
 			/>,
 			defaultTestState,
@@ -265,7 +265,7 @@ describe("FollowUpSuggest", () => {
 						suggestions={mockSuggestions}
 						onSuggestionClick={mockOnSuggestionClick}
 						ts={123}
-						onUnmount={mockOnUnmount}
+						onCancelAutoApproval={mockOnCancelAutoApproval}
 						isAnswered={true}
 					/>
 				</TooltipProvider>
@@ -284,8 +284,8 @@ describe("FollowUpSuggest", () => {
 		// Countdown should still not be visible
 		expect(screen.queryByText(/\d+s/)).not.toBeInTheDocument()
 
-		// Verify onUnmount was called when the countdown was stopped
-		expect(mockOnUnmount).toHaveBeenCalled()
+		// Verify onCancelAutoApproval was called when the countdown was stopped
+		expect(mockOnCancelAutoApproval).toHaveBeenCalled()
 	})
 
 	it("should handle race condition when timeout fires but user has already responded", () => {
@@ -300,7 +300,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 				isAnswered={false}
 			/>,
 			defaultTestState,
@@ -320,7 +320,7 @@ describe("FollowUpSuggest", () => {
 						suggestions={mockSuggestions}
 						onSuggestionClick={mockOnSuggestionClick}
 						ts={123}
-						onUnmount={mockOnUnmount}
+						onCancelAutoApproval={mockOnCancelAutoApproval}
 						isAnswered={true}
 					/>
 				</TooltipProvider>
@@ -344,7 +344,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 				isAnswered={false}
 			/>,
 			defaultTestState,
@@ -387,7 +387,7 @@ describe("FollowUpSuggest", () => {
 				suggestions={mockSuggestions}
 				onSuggestionClick={mockOnSuggestionClick}
 				ts={123}
-				onUnmount={mockOnUnmount}
+				onCancelAutoApproval={mockOnCancelAutoApproval}
 				isAnswered={false}
 			/>,
 			defaultTestState,
@@ -402,8 +402,8 @@ describe("FollowUpSuggest", () => {
 		// Unmount component before countdown completes
 		unmount()
 
-		// onUnmount should have been called
-		expect(mockOnUnmount).toHaveBeenCalled()
+		// onCancelAutoApproval should have been called
+		expect(mockOnCancelAutoApproval).toHaveBeenCalled()
 
 		// Advance timer past the original timeout
 		vi.advanceTimersByTime(2000)

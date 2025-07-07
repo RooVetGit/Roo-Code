@@ -14,7 +14,7 @@ interface FollowUpSuggestProps {
 	suggestions?: SuggestionItem[]
 	onSuggestionClick?: (suggestion: SuggestionItem, event?: React.MouseEvent) => void
 	ts: number
-	onUnmount?: () => void
+	onCancelAutoApproval?: () => void
 	isAnswered?: boolean
 }
 
@@ -22,7 +22,7 @@ export const FollowUpSuggest = ({
 	suggestions = [],
 	onSuggestionClick,
 	ts = 1,
-	onUnmount,
+	onCancelAutoApproval,
 	isAnswered = false,
 }: FollowUpSuggestProps) => {
 	const { autoApprovalEnabled, alwaysAllowFollowupQuestions, followupAutoApproveTimeoutMs } = useExtensionState()
@@ -66,7 +66,7 @@ export const FollowUpSuggest = ({
 				clearInterval(intervalId)
 				// Notify parent component that this component is unmounting
 				// so it can clear any related timeouts
-				onUnmount?.()
+				onCancelAutoApproval?.()
 			}
 		} else {
 			setCountdown(null)
@@ -77,7 +77,7 @@ export const FollowUpSuggest = ({
 		suggestions,
 		followupAutoApproveTimeoutMs,
 		suggestionSelected,
-		onUnmount,
+		onCancelAutoApproval,
 		isAnswered,
 	])
 	const handleSuggestionClick = useCallback(
@@ -87,14 +87,14 @@ export const FollowUpSuggest = ({
 				setSuggestionSelected(true)
 				// Also notify parent component to cancel auto-approval timeout
 				// This prevents race conditions between visual countdown and actual timeout
-				onUnmount?.()
+				onCancelAutoApproval?.()
 			}
 
 			// Pass the suggestion object to the parent component
 			// The parent component will handle mode switching if needed
 			onSuggestionClick?.(suggestion, event)
 		},
-		[onSuggestionClick, onUnmount],
+		[onSuggestionClick, onCancelAutoApproval],
 	)
 
 	// Don't render if there are no suggestions or no click handler.

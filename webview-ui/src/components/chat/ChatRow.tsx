@@ -1240,7 +1240,7 @@ export const ChatRowContent = ({
 								suggestions={followUpData?.suggest}
 								onSuggestionClick={onSuggestionClick}
 								ts={message?.ts}
-								onUnmount={onFollowUpUnmount}
+								onCancelAutoApproval={onFollowUpUnmount}
 								isAnswered={isFollowUpAnswered}
 							/>
 						</>
