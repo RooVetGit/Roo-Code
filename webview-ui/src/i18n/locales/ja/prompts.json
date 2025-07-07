@@ -269,5 +269,13 @@
 			"blockAll": "すべてブロック",
 			"clearRestrictions": "すべての制限をクリア"
 		}
+	},
+	"deleteMode": {
+		"title": "モードを削除",
+		"message": "モード「{{modeName}}」を削除してもよろしいですか？",
+		"rulesFolder": "このモードには{{folderPath}}にルールフォルダがあり、それも削除されます。",
+		"descriptionNoRules": "このカスタムモードを削除してもよろしいですか？",
+		"confirm": "削除",
+		"cancel": "キャンセル"
 	}
 }

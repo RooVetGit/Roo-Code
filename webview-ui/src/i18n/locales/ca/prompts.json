@@ -269,5 +269,13 @@
 			"blockAll": "Bloquejar tot",
 			"clearRestrictions": "Esborrar totes les restriccions"
 		}
+	},
+	"deleteMode": {
+		"title": "Suprimeix el mode",
+		"message": "Estàs segur que vols suprimir el mode \"{{modeName}}\"?",
+		"rulesFolder": "Aquest mode té una carpeta de regles a {{folderPath}} que també se suprimirà.",
+		"descriptionNoRules": "Esteu segur que voleu suprimir aquest mode personalitzat?",
+		"confirm": "Suprimeix",
+		"cancel": "Cancel·la"
 	}
 }

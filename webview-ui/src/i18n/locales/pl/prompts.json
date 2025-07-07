@@ -269,5 +269,13 @@
 			"blockAll": "Zablokuj Wszystko",
 			"clearRestrictions": "Wyczyść Wszystkie Ograniczenia"
 		}
+	},
+	"deleteMode": {
+		"title": "Usuń tryb",
+		"message": "Czy na pewno chcesz usunąć tryb \"{{modeName}}\"?",
+		"rulesFolder": "Ten tryb ma folder z regułami w {{folderPath}}, który również zostanie usunięty.",
+		"descriptionNoRules": "Czy na pewno chcesz usunąć ten niestandardowy tryb?",
+		"confirm": "Usuń",
+		"cancel": "Anuluj"
 	}
 }

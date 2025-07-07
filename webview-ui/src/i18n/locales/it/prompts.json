@@ -269,5 +269,13 @@
 			"blockAll": "Blocca Tutto",
 			"clearRestrictions": "Cancella Tutte le Restrizioni"
 		}
+	},
+	"deleteMode": {
+		"title": "Elimina modalità",
+		"message": "Sei sicuro di voler eliminare la modalità \"{{modeName}}\"?",
+		"rulesFolder": "Questa modalità ha una cartella di regole in {{folderPath}} che verrà eliminata.",
+		"descriptionNoRules": "Sei sicuro di voler eliminare questa modalità personalizzata?",
+		"confirm": "Elimina",
+		"cancel": "Annulla"
 	}
 }

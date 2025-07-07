@@ -269,5 +269,13 @@
 			"blockAll": "Blokir Semua",
 			"clearRestrictions": "Hapus Semua Pembatasan"
 		}
+	},
+	"deleteMode": {
+		"title": "Hapus Mode",
+		"message": "Anda yakin ingin menghapus mode \"{{modeName}}\"?",
+		"rulesFolder": "Mode ini memiliki folder aturan di {{folderPath}} yang juga akan dihapus.",
+		"descriptionNoRules": "Apakah Anda yakin ingin menghapus mode kustom ini?",
+		"confirm": "Hapus",
+		"cancel": "Batal"
 	}
 }
