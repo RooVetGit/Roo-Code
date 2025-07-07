@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { ToolUseBlock, ToolUseBlockHeader } from "../common/ToolUseBlock"
 import MarkdownBlock from "../common/MarkdownBlock"
-import { useTranslation } from "react-i18next"
 
 interface TodoItem {
 	id?: string
@@ -54,7 +53,6 @@ const UpdateTodoListToolBlock: React.FC<UpdateTodoListToolBlockProps> = ({
 	editable = true,
 	userEdited = false,
 }) => {
-	const { t } = useTranslation()
 	const [editTodos, setEditTodos] = useState<TodoItem[]>(
 		todos.length > 0 ? todos.map((todo) => ({ ...todo, id: todo.id || genId() })) : [],
 	)
@@ -429,7 +427,7 @@ const UpdateTodoListToolBlock: React.FC<UpdateTodoListToolBlockProps> = ({
 							)}
 						</ul>
 					) : (
-						<MarkdownBlock markdown={content || t("chat:fileOperations.todoListUpdated")} />
+						<MarkdownBlock markdown={content} />
 					)}
 				</div>
 				{/* Delete confirmation dialog */}
