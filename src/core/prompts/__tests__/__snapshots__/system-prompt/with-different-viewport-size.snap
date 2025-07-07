@@ -437,7 +437,7 @@ Replace the entire TODO list with an updated checklist reflecting the current st
 **Status Rules:**
 - [ ] = pending (not started)
 - [x] = completed (fully finished, no unresolved issues)
-- [-]  = in_progress (currently being worked on)
+- [-] = in_progress (currently being worked on)
 
 **Core Principles:**
 - Before updating, always confirm which todos have been completed since the last update.
