@@ -179,16 +179,6 @@
 		"wantsToEditOutsideWorkspace": "Roo ingin mengedit file ini di luar workspace:",
 		"wantsToEditProtected": "Roo ingin mengedit file konfigurasi yang dilindungi:",
 		"wantsToApplyBatchChanges": "Roo ingin menerapkan perubahan ke beberapa file:",
-		"todoListUpdated": "Daftar tugas diperbarui",
-		"todoChanges": {
-			"noChanges": "Tidak ada perubahan pada daftar tugas",
-			"added": "Ditambahkan: {{content}}",
-			"completed": "Selesai: {{content}}",
-			"started": "Dimulai: {{content}}",
-			"removed": "Dihapus: {{content}}",
-			"reordered": "Diurutkan ulang: {{content}}",
-			"reverted": "Dikembalikan: {{content}}"
-		},
 		"wantsToCreate": "Roo ingin membuat file baru:",
 		"wantsToSearchReplace": "Roo ingin mencari dan mengganti di file ini:",
 		"didSearchReplace": "Roo melakukan pencarian dan penggantian pada file ini:",

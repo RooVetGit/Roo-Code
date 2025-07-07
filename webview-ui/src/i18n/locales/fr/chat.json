@@ -166,17 +166,7 @@
 		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :",
 		"wantsToReadAndXMore": "Roo veut lire ce fichier et {{count}} de plus :",
 		"wantsToReadMultiple": "Roo souhaite lire plusieurs fichiers :",
-		"wantsToApplyBatchChanges": "Roo veut appliquer des modifications à plusieurs fichiers :",
-		"todoListUpdated": "Liste de tâches mise à jour",
-		"todoChanges": {
-			"noChanges": "Aucun changement",
-			"added": "Ajouté : {{content}}",
-			"completed": "Terminé : {{content}}",
-			"started": "Commencé : {{content}}",
-			"removed": "Supprimé : {{content}}",
-			"reordered": "Réorganisé : {{content}}",
-			"reverted": "Annulé : {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Roo veut appliquer des modifications à plusieurs fichiers :"
 	},
 	"instructions": {
 		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"

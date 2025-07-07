@@ -169,17 +169,7 @@
 		"wantsToInsertAtEnd": "Roo इस फ़ाइल के अंत में सामग्री जोड़ना चाहता है:",
 		"wantsToReadAndXMore": "रू इस फ़ाइल को और {{count}} अन्य को पढ़ना चाहता है:",
 		"wantsToReadMultiple": "Roo कई फ़ाइलें पढ़ना चाहता है:",
-		"wantsToApplyBatchChanges": "Roo कई फ़ाइलों में परिवर्तन लागू करना चाहता है:",
-		"todoListUpdated": "कार्य सूची अपडेट की गई",
-		"todoChanges": {
-			"noChanges": "कार्य सूची में कोई परिवर्तन नहीं",
-			"added": "जोड़ा गया: {{content}}",
-			"completed": "पूर्ण: {{content}}",
-			"started": "शुरू किया गया: {{content}}",
-			"removed": "हटाया गया: {{content}}",
-			"reordered": "पुनः क्रमबद्ध: {{content}}",
-			"reverted": "वापस किया गया: {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Roo कई फ़ाइलों में परिवर्तन लागू करना चाहता है:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo इस निर्देशिका में शीर्ष स्तर की फ़ाइलें देखना चाहता है:",

@@ -169,17 +169,7 @@
 		"wantsToInsertAtEnd": "Roo bu dosyanın sonuna içerik eklemek istiyor:",
 		"wantsToReadAndXMore": "Roo bu dosyayı ve {{count}} tane daha okumak istiyor:",
 		"wantsToReadMultiple": "Roo birden fazla dosya okumak istiyor:",
-		"wantsToApplyBatchChanges": "Roo birden fazla dosyaya değişiklik uygulamak istiyor:",
-		"todoListUpdated": "Yapılacaklar listesi güncellendi",
-		"todoChanges": {
-			"noChanges": "Yapılacaklar listesinde değişiklik yok",
-			"added": "Eklendi: {{content}}",
-			"completed": "Tamamlandı: {{content}}",
-			"started": "Başlatıldı: {{content}}",
-			"removed": "Kaldırıldı: {{content}}",
-			"reordered": "Yeniden sıralandı: {{content}}",
-			"reverted": "Geri alındı: {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Roo birden fazla dosyaya değişiklik uygulamak istiyor:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo bu dizindeki üst düzey dosyaları görüntülemek istiyor:",

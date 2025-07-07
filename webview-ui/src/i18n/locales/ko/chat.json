@@ -169,17 +169,7 @@
 		"wantsToInsertAtEnd": "Roo가 이 파일의 끝에 내용을 추가하고 싶어합니다:",
 		"wantsToReadAndXMore": "Roo가 이 파일과 {{count}}개의 파일을 더 읽으려고 합니다:",
 		"wantsToReadMultiple": "Roo가 여러 파일을 읽으려고 합니다:",
-		"wantsToApplyBatchChanges": "Roo가 여러 파일에 변경 사항을 적용하고 싶어합니다:",
-		"todoListUpdated": "할 일 목록이 업데이트되었습니다",
-		"todoChanges": {
-			"noChanges": "할 일 목록에 변경 사항이 없습니다",
-			"added": "추가됨: {{content}}",
-			"completed": "완료됨: {{content}}",
-			"started": "시작됨: {{content}}",
-			"removed": "제거됨: {{content}}",
-			"reordered": "재정렬됨: {{content}}",
-			"reverted": "되돌림: {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Roo가 여러 파일에 변경 사항을 적용하고 싶어합니다:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo가 이 디렉토리의 최상위 파일을 보고 싶어합니다:",

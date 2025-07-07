@@ -169,17 +169,7 @@
 		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:",
 		"wantsToReadAndXMore": "Roo はこのファイルと他に {{count}} 個のファイルを読み込もうとしています:",
 		"wantsToReadMultiple": "Rooは複数のファイルを読み取ろうとしています：",
-		"wantsToApplyBatchChanges": "Rooは複数のファイルに変更を適用したい:",
-		"todoListUpdated": "Todoリストが更新されました",
-		"todoChanges": {
-			"noChanges": "Todoリストに変更はありません",
-			"added": "追加: {{content}}",
-			"completed": "完了: {{content}}",
-			"started": "開始: {{content}}",
-			"removed": "削除: {{content}}",
-			"reordered": "並び替え: {{content}}",
-			"reverted": "元に戻す: {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Rooは複数のファイルに変更を適用したい:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Rooはこのディレクトリのトップレベルファイルを表示したい:",

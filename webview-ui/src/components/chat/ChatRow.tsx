@@ -107,7 +107,7 @@ export const ChatRowContent = ({
 	editable,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
-	const { mcpServers, alwaysAllowMcp, currentCheckpoint, clineMessages } = useExtensionState()
+	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
 	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
 	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
@@ -436,31 +436,9 @@ export const ChatRowContent = ({
 			}
 			case "updateTodoList" as any: {
 				const todos = (tool as any).todos || []
-
-				// Try to find previous todo list from earlier messages
-				const currentMessageIndex = clineMessages.findIndex((msg) => msg.ts === message.ts)
-				let previousTodos: any[] = []
-
-				// Look backwards through messages to find the most recent updateTodoList
-				for (let i = currentMessageIndex - 1; i >= 0; i--) {
-					const prevMessage = clineMessages[i]
-					if (prevMessage.ask === "tool" && prevMessage.text) {
-						try {
-							const prevTool = JSON.parse(prevMessage.text)
-							if (prevTool.tool === "updateTodoList" && prevTool.todos) {
-								previousTodos = prevTool.todos
-								break
-							}
-						} catch {
-							// Ignore parsing errors
-						}
-					}
-				}
-
 				return (
 					<UpdateTodoListToolBlock
 						todos={todos}
-						previousTodos={previousTodos}
 						content={(tool as any).content}
 						onChange={(updatedTodos) => {
 							if (typeof vscode !== "undefined" && vscode?.postMessage) {

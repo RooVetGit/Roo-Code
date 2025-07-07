@@ -169,17 +169,7 @@
 		"wantsToInsertAtEnd": "需要在文件末尾添加内容:",
 		"wantsToReadAndXMore": "Roo 想读取此文件以及另外 {{count}} 个文件：",
 		"wantsToReadMultiple": "Roo 想要读取多个文件：",
-		"wantsToApplyBatchChanges": "Roo 想要对多个文件应用更改：",
-		"todoListUpdated": "待办列表已更新",
-		"todoChanges": {
-			"noChanges": "无变更",
-			"added": "新增: {{content}}",
-			"completed": "已完成: {{content}}",
-			"started": "已开始: {{content}}",
-			"removed": "已移除: {{content}}",
-			"reordered": "已重新排序: {{content}}",
-			"reverted": "已还原: {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Roo 想要对多个文件应用更改："
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "需要查看目录文件列表:",

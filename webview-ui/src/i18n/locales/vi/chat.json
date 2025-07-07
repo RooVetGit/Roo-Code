@@ -169,17 +169,7 @@
 		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:",
 		"wantsToReadAndXMore": "Roo muốn đọc tệp này và {{count}} tệp khác:",
 		"wantsToReadMultiple": "Roo muốn đọc nhiều tệp:",
-		"wantsToApplyBatchChanges": "Roo muốn áp dụng thay đổi cho nhiều tệp:",
-		"todoListUpdated": "Danh sách việc cần làm đã được cập nhật",
-		"todoChanges": {
-			"noChanges": "Không có thay đổi trong danh sách việc cần làm",
-			"added": "Đã thêm: {{content}}",
-			"completed": "Đã hoàn thành: {{content}}",
-			"started": "Đã bắt đầu: {{content}}",
-			"removed": "Đã xóa: {{content}}",
-			"reordered": "Đã sắp xếp lại: {{content}}",
-			"reverted": "Đã hoàn nguyên: {{content}}"
-		}
+		"wantsToApplyBatchChanges": "Roo muốn áp dụng thay đổi cho nhiều tệp:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
