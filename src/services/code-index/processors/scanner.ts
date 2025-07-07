@@ -312,6 +312,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 						// Re-throw the error with workspace context
 						throw new Error(
 							`Failed to delete points for ${uniqueFilePaths.length} files. Workspace: ${scanWorkspace}. ${deleteError instanceof Error ? deleteError.message : String(deleteError)}`,
+							{ cause: deleteError },
 						)
 					}
 				}

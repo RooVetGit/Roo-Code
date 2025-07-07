@@ -513,8 +513,8 @@ export class FileWatcher implements IFileWatcher {
 
 				pointsToUpsert = blocks.map((block, index) => {
 					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path, this.workspacePath)
-					// Use segmentHash for unique ID generation to handle multiple segments from same line
-					const pointId = uuidv5(block.segmentHash, QDRANT_CODE_BLOCK_NAMESPACE)
+					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
+					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
 
 					return {
 						id: pointId,
@@ -524,7 +524,6 @@ export class FileWatcher implements IFileWatcher {
 							codeChunk: block.content,
 							startLine: block.start_line,
 							endLine: block.end_line,
-							segmentHash: block.segmentHash,
 						},
 					}
 				})
