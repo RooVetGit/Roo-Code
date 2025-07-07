@@ -1,4 +1,4 @@
-import { TodoItem } from "@roo-code/types"
+import { TodoItem, TodoStatus } from "@roo-code/types"
 
 /**
  * Format the reminders section as a markdown block in English, with basic instructions.
@@ -7,7 +7,7 @@ export function formatReminderSection(todoList?: TodoItem[]): string {
 	if (!todoList || todoList.length === 0) {
 		return ""
 	}
-	const statusMap: Record<string, string> = {
+	const statusMap: Record<TodoStatus, string> = {
 		pending: "Pending",
 		in_progress: "In Progress",
 		completed: "Completed",
