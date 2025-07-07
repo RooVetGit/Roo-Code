@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from "react"
-import { render, screen } from "@testing-library/react"
+import { render, screen, act } from "@testing-library/react"
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { FollowUpSuggest } from "../FollowUpSuggest"
 import { TooltipProvider } from "@radix-ui/react-tooltip"
@@ -285,5 +286,129 @@ describe("FollowUpSuggest", () => {
 
 		// Verify onUnmount was called when the countdown was stopped
 		expect(mockOnUnmount).toHaveBeenCalled()
+	})
+
+	it("should handle race condition when timeout fires but user has already responded", () => {
+		// This test simulates the scenario where:
+		// 1. Auto-approval countdown starts
+		// 2. User manually responds (isAnswered becomes true)
+		// 3. The timeout still fires (because it was already scheduled)
+		// 4. The auto-selection should NOT happen because user already responded
+
+		const { rerender } = renderWithTestProviders(
+			<FollowUpSuggest
+				suggestions={mockSuggestions}
+				onSuggestionClick={mockOnSuggestionClick}
+				ts={123}
+				onUnmount={mockOnUnmount}
+				isAnswered={false}
+			/>,
+			defaultTestState,
+		)
+
+		// Initially should show countdown
+		expect(screen.getByText(/3s/)).toBeInTheDocument()
+
+		// Advance timer to just before timeout completes (2.5 seconds)
+		vi.advanceTimersByTime(2500)
+
+		// User manually responds before timeout completes
+		rerender(
+			<TestExtensionStateProvider value={defaultTestState}>
+				<TooltipProvider>
+					<FollowUpSuggest
+						suggestions={mockSuggestions}
+						onSuggestionClick={mockOnSuggestionClick}
+						ts={123}
+						onUnmount={mockOnUnmount}
+						isAnswered={true}
+					/>
+				</TooltipProvider>
+			</TestExtensionStateProvider>,
+		)
+
+		// Countdown should be hidden immediately
+		expect(screen.queryByText(/\d+s/)).not.toBeInTheDocument()
+
+		// Now advance timer past the original timeout duration
+		vi.advanceTimersByTime(1000) // Total: 3.5 seconds
+
+		// onSuggestionClick should NOT have been called
+		// This verifies the fix for the race condition
+		expect(mockOnSuggestionClick).not.toHaveBeenCalled()
+	})
+
+	it("should update countdown display as time progresses", async () => {
+		renderWithTestProviders(
+			<FollowUpSuggest
+				suggestions={mockSuggestions}
+				onSuggestionClick={mockOnSuggestionClick}
+				ts={123}
+				onUnmount={mockOnUnmount}
+				isAnswered={false}
+			/>,
+			defaultTestState,
+		)
+
+		// Initially should show 3s
+		expect(screen.getByText(/3s/)).toBeInTheDocument()
+
+		// Advance timer by 1 second and wait for React to update
+		await act(async () => {
+			vi.advanceTimersByTime(1000)
+		})
+
+		// Check countdown updated to 2s
+		expect(screen.getByText(/2s/)).toBeInTheDocument()
+
+		// Advance timer by another second
+		await act(async () => {
+			vi.advanceTimersByTime(1000)
+		})
+
+		// Check countdown updated to 1s
+		expect(screen.getByText(/1s/)).toBeInTheDocument()
+
+		// Advance timer to completion - countdown should disappear
+		await act(async () => {
+			vi.advanceTimersByTime(1000)
+		})
+
+		// Countdown should no longer be visible after reaching 0
+		expect(screen.queryByText(/\d+s/)).not.toBeInTheDocument()
+
+		// The component itself doesn't trigger auto-selection, that's handled by ChatView
+		expect(mockOnSuggestionClick).not.toHaveBeenCalled()
+	})
+
+	it("should handle component unmounting during countdown", () => {
+		const { unmount } = renderWithTestProviders(
+			<FollowUpSuggest
+				suggestions={mockSuggestions}
+				onSuggestionClick={mockOnSuggestionClick}
+				ts={123}
+				onUnmount={mockOnUnmount}
+				isAnswered={false}
+			/>,
+			defaultTestState,
+		)
+
+		// Initially should show countdown
+		expect(screen.getByText(/3s/)).toBeInTheDocument()
+
+		// Advance timer partially
+		vi.advanceTimersByTime(1500)
+
+		// Unmount component before countdown completes
+		unmount()
+
+		// onUnmount should have been called
+		expect(mockOnUnmount).toHaveBeenCalled()
+
+		// Advance timer past the original timeout
+		vi.advanceTimersByTime(2000)
+
+		// onSuggestionClick should NOT have been called (component doesn't auto-select)
+		expect(mockOnSuggestionClick).not.toHaveBeenCalled()
 	})
 })

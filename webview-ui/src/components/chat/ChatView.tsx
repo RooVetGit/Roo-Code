@@ -163,6 +163,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}),
 	)
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const userRespondedRef = useRef<boolean>(false)
 	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
 
 	const clineAskRef = useRef(clineAsk)
@@ -417,6 +418,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		setExpandedRows({})
 		everVisibleMessagesTsRef.current.clear() // Clear for new task
 		setCurrentFollowUpTs(null) // Clear follow-up answered state for new task
+
+		// Clear any pending auto-approval timeout from previous task
+		if (autoApproveTimeoutRef.current) {
+			clearTimeout(autoApproveTimeoutRef.current)
+			autoApproveTimeoutRef.current = null
+		}
+		// Reset user response flag for new task
+		userRespondedRef.current = false
 	}, [task?.ts])
 
 	useEffect(() => {
@@ -496,11 +505,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [])
 
 	const handleChatReset = useCallback(() => {
-		// Clear any pending auto-approval timeout to prevent race conditions
+		// Clear any pending auto-approval timeout
 		if (autoApproveTimeoutRef.current) {
 			clearTimeout(autoApproveTimeoutRef.current)
 			autoApproveTimeoutRef.current = null
 		}
+		// Reset user response flag for new message
+		userRespondedRef.current = false
 
 		// Only reset message-specific state, preserving mode.
 		setInputValue("")
@@ -519,16 +530,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			text = text.trim()
 
 			if (text || images.length > 0) {
+				// Mark that user has responded - this prevents any pending auto-approvals
+				userRespondedRef.current = true
+
 				if (messagesRef.current.length === 0) {
 					vscode.postMessage({ type: "newTask", text, images })
 				} else if (clineAskRef.current) {
-					// Clear auto-approval timeout FIRST to prevent race conditions
-					// This ensures the countdown timer is properly dismounted when users submit custom responses
-					if (autoApproveTimeoutRef.current) {
-						clearTimeout(autoApproveTimeoutRef.current)
-						autoApproveTimeoutRef.current = null
-					}
-
 					if (clineAskRef.current === "followup") {
 						markFollowUpAsAnswered()
 					}
@@ -581,6 +588,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// extension.
 	const handlePrimaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
+			// Mark that user has responded
+			userRespondedRef.current = true
+
 			const trimmedInput = text?.trim()
 
 			switch (clineAsk) {
@@ -625,6 +635,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
+			// Mark that user has responded
+			userRespondedRef.current = true
+
 			const trimmedInput = text?.trim()
 
 			if (isStreaming) {
@@ -1240,10 +1253,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleSuggestionClickInRow = useCallback(
 		(suggestion: SuggestionItem, event?: React.MouseEvent) => {
-			// Clear auto-approval timeout to prevent race conditions when suggestion is clicked
-			if (autoApproveTimeoutRef.current) {
-				clearTimeout(autoApproveTimeoutRef.current)
-				autoApproveTimeoutRef.current = null
+			// Mark that user has responded if this is a manual click (not auto-approval)
+			if (event) {
+				userRespondedRef.current = true
 			}
 
 			// Mark the current follow-up question as answered when a suggestion is clicked
@@ -1280,11 +1292,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// Handler for when FollowUpSuggest component unmounts
 	const handleFollowUpUnmount = useCallback(() => {
-		// Clear the auto-approve timeout to prevent race conditions
-		if (autoApproveTimeoutRef.current) {
-			clearTimeout(autoApproveTimeoutRef.current)
-			autoApproveTimeoutRef.current = null
-		}
+		// Mark that user has responded
+		userRespondedRef.current = true
 	}, [])
 
 	const itemContent = useCallback(
@@ -1351,6 +1360,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			return
 		}
 
+		// Exit early if user has already responded
+		if (userRespondedRef.current) {
+			return
+		}
+
 		const autoApprove = async () => {
 			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
 				// Special handling for follow-up questions
@@ -1367,11 +1381,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					if (followUpData && followUpData.suggest && followUpData.suggest.length > 0) {
 						// Wait for the configured timeout before auto-selecting the first suggestion
 						await new Promise<void>((resolve) => {
-							autoApproveTimeoutRef.current = setTimeout(resolve, followupAutoApproveTimeoutMs)
+							autoApproveTimeoutRef.current = setTimeout(() => {
+								autoApproveTimeoutRef.current = null
+								resolve()
+							}, followupAutoApproveTimeoutMs)
 						})
 
-						// Check if timeout was cleared (user responded manually)
-						if (!autoApproveTimeoutRef.current) {
+						// Check if user responded manually
+						if (userRespondedRef.current) {
 							return
 						}
 
@@ -1384,7 +1401,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 				} else if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
 					await new Promise<void>((resolve) => {
-						autoApproveTimeoutRef.current = setTimeout(resolve, writeDelayMs)
+						autoApproveTimeoutRef.current = setTimeout(() => {
+							autoApproveTimeoutRef.current = null
+							resolve()
+						}, writeDelayMs)
 					})
 				}
 
