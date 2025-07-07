@@ -12,7 +12,7 @@ import type {
 } from "@roo-code/types"
 
 import { addCustomInstructions } from "../core/prompts/sections/custom-instructions"
-import { matchesGlobPattern, matchesAnyPattern } from "./pattern-matching"
+import { matchesGlobPattern, matchesAnyPattern, findMostSpecificMatchingPattern } from "./pattern-matching"
 
 import { EXPERIMENT_IDS } from "./experiments"
 import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "./tools"
@@ -229,44 +229,101 @@ export function isServerAllowedForMode(
 	return true
 }
 
+/**
+ * Resolve tool access using pattern specificity logic
+ * Exact patterns (no wildcards) always win over wildcard patterns
+ * Among wildcard patterns, more specific patterns win
+ * @param serverName - Name of the server
+ * @param toolName - Name of the tool
+ * @param allowPatterns - Array of allow patterns
+ * @param blockPatterns - Array of block patterns
+ * @returns boolean indicating if tool should be allowed
+ */
+function resolveToolAccess(
+	serverName: string,
+	toolName: string,
+	allowPatterns: { serverName: string; toolName: string }[],
+	blockPatterns: { serverName: string; toolName: string }[],
+): boolean {
+	// Collect all matching tool patterns from both allow and block lists
+	const matchingAllowPatterns: string[] = []
+	const matchingBlockPatterns: string[] = []
+
+	// Check allow patterns
+	for (const pattern of allowPatterns) {
+		const serverMatches = matchesGlobPattern(serverName, pattern.serverName)
+		const toolMatches = matchesGlobPattern(toolName, pattern.toolName)
+		if (serverMatches && toolMatches) {
+			// Store the tool pattern (not combined) for specificity comparison
+			matchingAllowPatterns.push(pattern.toolName)
+		}
+	}
+
+	// Check block patterns
+	for (const pattern of blockPatterns) {
+		const serverMatches = matchesGlobPattern(serverName, pattern.serverName)
+		const toolMatches = matchesGlobPattern(toolName, pattern.toolName)
+		if (serverMatches && toolMatches) {
+			// Store the tool pattern (not combined) for specificity comparison
+			matchingBlockPatterns.push(pattern.toolName)
+		}
+	}
+
+	// If no patterns match, allow by default
+	if (matchingAllowPatterns.length === 0 && matchingBlockPatterns.length === 0) {
+		return true
+	}
+
+	// Find the most specific pattern from all matching patterns
+	const allMatchingPatterns = [...matchingAllowPatterns, ...matchingBlockPatterns]
+	const mostSpecificPattern = findMostSpecificMatchingPattern(toolName, allMatchingPatterns)
+
+	if (!mostSpecificPattern) {
+		return true // Default to allow if no pattern found (shouldn't happen)
+	}
+
+	// Determine if the most specific pattern is from allow or block list
+	return matchingAllowPatterns.includes(mostSpecificPattern)
+}
+
 export function isToolAllowedForModeAndServer(
 	serverName: string,
 	toolName: string,
 	restrictions: McpRestrictions,
 ): boolean {
-	// If allowedTools is defined, tool must match at least one entry
-	if (restrictions.allowedTools) {
-		// Filter out empty entries before checking
-		const validAllowedTools = restrictions.allowedTools.filter((t) => t.serverName?.trim() && t.toolName?.trim())
-		if (validAllowedTools.length > 0) {
-			const isAllowed = validAllowedTools.some((t) => {
-				// Check if server name matches (with pattern support)
-				const serverMatches = matchesAnyPattern(serverName, [t.serverName])
-				// Check if tool name matches (with pattern support)
-				const toolMatches = matchesAnyPattern(toolName, [t.toolName])
-				return serverMatches && toolMatches
-			})
-			if (!isAllowed) return false
-		}
+	// Get valid allow and block patterns
+	const validAllowedTools = (restrictions.allowedTools || []).filter(
+		(t) => t.serverName?.trim() && t.toolName?.trim(),
+	)
+	const validDisallowedTools = (restrictions.disallowedTools || []).filter(
+		(t) => t.serverName?.trim() && t.toolName?.trim(),
+	)
+
+	// If there are no restrictions at all, allow the tool
+	if (validAllowedTools.length === 0 && validDisallowedTools.length === 0) {
+		return true
 	}
 
-	// If disallowedTools is defined, tool must not match any entry
-	if (restrictions.disallowedTools) {
-		// Filter out empty entries before checking
-		const validDisallowedTools = restrictions.disallowedTools.filter(
-			(t) => t.serverName?.trim() && t.toolName?.trim(),
-		)
-		const isDisallowed = validDisallowedTools.some((t) => {
-			// Check if server name matches (with pattern support)
-			const serverMatches = matchesAnyPattern(serverName, [t.serverName])
-			// Check if tool name matches (with pattern support)
-			const toolMatches = matchesAnyPattern(toolName, [t.toolName])
+	// If only allowedTools is defined, tool must match at least one entry
+	if (validAllowedTools.length > 0 && validDisallowedTools.length === 0) {
+		return validAllowedTools.some((t) => {
+			const serverMatches = matchesGlobPattern(serverName, t.serverName)
+			const toolMatches = matchesGlobPattern(toolName, t.toolName)
 			return serverMatches && toolMatches
 		})
-		if (isDisallowed) return false
 	}
 
-	return true
+	// If only disallowedTools is defined, tool must not match any entry
+	if (validAllowedTools.length === 0 && validDisallowedTools.length > 0) {
+		return !validDisallowedTools.some((t) => {
+			const serverMatches = matchesGlobPattern(serverName, t.serverName)
+			const toolMatches = matchesGlobPattern(toolName, t.toolName)
+			return serverMatches && toolMatches
+		})
+	}
+
+	// If both allowedTools and disallowedTools are defined, use pattern specificity resolution
+	return resolveToolAccess(serverName, toolName, validAllowedTools, validDisallowedTools)
 }
 
 // Custom error class for file restrictions

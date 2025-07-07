@@ -104,3 +104,104 @@ export function filterByPattern<T>(items: T[], searchTerm: string, fields: (keyo
 		}),
 	)
 }
+
+/**
+ * Pattern specificity information for ranking patterns
+ */
+export interface PatternSpecificity {
+	/** Whether the pattern is an exact match (no wildcards) */
+	isExact: boolean
+	/** Specificity score - higher is more specific */
+	specificity: number
+}
+
+/**
+ * Calculate pattern specificity for ranking purposes
+ * Exact patterns (no wildcards) always rank higher than wildcard patterns
+ * Among wildcard patterns, longer patterns with more literal characters rank higher
+ * @param pattern - Pattern to analyze
+ * @returns Pattern specificity information
+ */
+export function getPatternSpecificity(pattern: string): PatternSpecificity {
+	// Safety check for undefined pattern
+	if (!pattern || typeof pattern !== "string") {
+		return {
+			isExact: false,
+			specificity: 0,
+		}
+	}
+
+	const hasWildcards = isWildcardPattern(pattern)
+
+	if (!hasWildcards) {
+		// Exact patterns always have highest priority
+		return {
+			isExact: true,
+			specificity: pattern.length,
+		}
+	}
+
+	// For wildcard patterns, count non-wildcard characters
+	const literalCharCount = pattern.replace(/[*?]/g, "").length
+	return {
+		isExact: false,
+		specificity: literalCharCount,
+	}
+}
+
+/**
+ * Find the most specific pattern that matches the given text
+ * Prioritizes exact matches over wildcard patterns
+ * Among wildcard patterns, prioritizes those with more literal characters
+ * @param text - Text to match against
+ * @param patterns - Array of patterns to check
+ * @returns Most specific matching pattern, or null if no match
+ */
+export function findMostSpecificMatchingPattern(text: string, patterns: string[]): string | null {
+	// Safety check for undefined patterns
+	if (!patterns || !Array.isArray(patterns)) {
+		return null
+	}
+
+	const matchingPatterns = patterns.filter((pattern) => matchesGlobPattern(text, pattern))
+
+	if (matchingPatterns.length === 0) {
+		return null
+	}
+
+	if (matchingPatterns.length === 1) {
+		return matchingPatterns[0]
+	}
+
+	// Find the most specific pattern
+	let mostSpecific = matchingPatterns[0]
+	let bestSpecificity = getPatternSpecificity(mostSpecific)
+
+	for (let i = 1; i < matchingPatterns.length; i++) {
+		const currentPattern = matchingPatterns[i]
+		const currentSpecificity = getPatternSpecificity(currentPattern)
+
+		// Exact patterns always win over wildcard patterns
+		if (currentSpecificity.isExact && !bestSpecificity.isExact) {
+			mostSpecific = currentPattern
+			bestSpecificity = currentSpecificity
+		}
+		// Among exact patterns, prefer longer ones
+		else if (currentSpecificity.isExact && bestSpecificity.isExact) {
+			if (currentSpecificity.specificity > bestSpecificity.specificity) {
+				mostSpecific = currentPattern
+				bestSpecificity = currentSpecificity
+			}
+		}
+		// Among wildcard patterns, prefer more specific ones (when current is not exact and best is not exact)
+		else if (!currentSpecificity.isExact && !bestSpecificity.isExact) {
+			if (currentSpecificity.specificity > bestSpecificity.specificity) {
+				mostSpecific = currentPattern
+				bestSpecificity = currentSpecificity
+			}
+		}
+		// If best is exact and current is wildcard, keep best (exact wins)
+	}
+
+	return mostSpecific
+}
