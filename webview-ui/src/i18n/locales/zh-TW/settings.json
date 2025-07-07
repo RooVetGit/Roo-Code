@@ -225,6 +225,10 @@
 			"label": "啟用 Google 搜尋",
 			"description": "允許模型使用 Google 搜尋回答有關最近事件的問題。這可能會產生額外費用，並且與「思考」功能互斥。"
 		},
+		"geminiEnableUrlContext": {
+			"label": "啟用URL上下文",
+			"description": "允許模型從提示中提供的URL檢索內容以通知其回應。"
+		},
 		"getGroqApiKey": "取得 Groq API 金鑰",
 		"groqApiKey": "Groq API 金鑰",
 		"getGeminiApiKey": "取得 Gemini API 金鑰",
