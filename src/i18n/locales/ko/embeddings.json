@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "잘못된 임베더 구성입니다. 설정을 확인하세요.",
 		"invalidApiKey": "잘못된 API 키입니다. API 키 구성을 확인하세요.",
 		"invalidBaseUrl": "잘못된 기본 URL입니다. URL 구성을 확인하세요.",
-		"invalidModel": "잘못된 모델입니다. 모델 구성을 확인하세요."
+		"invalidModel": "잘못된 모델입니다. 모델 구성을 확인하세요.",
+		"invalidResponse": "임베더 서비스에서 잘못된 응답이 왔습니다. 구성을 확인하세요."
 	}
 }

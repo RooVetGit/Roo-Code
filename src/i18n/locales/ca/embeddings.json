@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "Configuració d'incrustació no vàlida. Comproveu la vostra configuració.",
 		"invalidApiKey": "Clau d'API no vàlida. Comproveu la vostra configuració de clau d'API.",
 		"invalidBaseUrl": "URL base no vàlida. Comproveu la vostra configuració d'URL.",
-		"invalidModel": "Model no vàlid. Comproveu la vostra configuració de model."
+		"invalidModel": "Model no vàlid. Comproveu la vostra configuració de model.",
+		"invalidResponse": "Resposta no vàlida del servei d'incrustació. Comproveu la vostra configuració."
 	}
 }

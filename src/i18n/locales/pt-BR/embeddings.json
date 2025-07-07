@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "Configuração do embedder inválida. Verifique suas configurações.",
 		"invalidApiKey": "Chave de API inválida. Verifique sua configuração de chave de API.",
 		"invalidBaseUrl": "URL base inválida. Verifique sua configuração de URL.",
-		"invalidModel": "Modelo inválido. Verifique a configuração do seu modelo."
+		"invalidModel": "Modelo inválido. Verifique a configuração do seu modelo.",
+		"invalidResponse": "Resposta inválida do serviço de embedder. Verifique sua configuração."
 	}
 }

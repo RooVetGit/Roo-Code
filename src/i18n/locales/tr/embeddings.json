@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "Geçersiz gömücü yapılandırması. Lütfen ayarlarınızı kontrol edin.",
 		"invalidApiKey": "Geçersiz API anahtarı. Lütfen API anahtarı yapılandırmanızı kontrol edin.",
 		"invalidBaseUrl": "Geçersiz temel URL. Lütfen URL yapılandırmanızı kontrol edin.",
-		"invalidModel": "Geçersiz model. Lütfen model yapılandırmanızı kontrol edin."
+		"invalidModel": "Geçersiz model. Lütfen model yapılandırmanızı kontrol edin.",
+		"invalidResponse": "Embedder hizmetinden geçersiz yanıt. Lütfen yapılandırmanızı kontrol edin."
 	}
 }

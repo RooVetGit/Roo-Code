@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "Cấu hình nhúng không hợp lệ. Vui lòng kiểm tra cài đặt của bạn.",
 		"invalidApiKey": "Khóa API không hợp lệ. Vui lòng kiểm tra cấu hình khóa API của bạn.",
 		"invalidBaseUrl": "URL cơ sở không hợp lệ. Vui lòng kiểm tra cấu hình URL của bạn.",
-		"invalidModel": "Mô hình không hợp lệ. Vui lòng kiểm tra cấu hình mô hình của bạn."
+		"invalidModel": "Mô hình không hợp lệ. Vui lòng kiểm tra cấu hình mô hình của bạn.",
+		"invalidResponse": "Phản hồi không hợp lệ từ dịch vụ embedder. Vui lòng kiểm tra cấu hình của bạn."
 	}
 }

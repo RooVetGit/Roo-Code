@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "Nieprawidłowa konfiguracja embeddera. Sprawdź swoje ustawienia.",
 		"invalidApiKey": "Nieprawidłowy klucz API. Sprawdź konfigurację klucza API.",
 		"invalidBaseUrl": "Nieprawidłowy podstawowy adres URL. Sprawdź konfigurację adresu URL.",
-		"invalidModel": "Nieprawidłowy model. Sprawdź konfigurację modelu."
+		"invalidModel": "Nieprawidłowy model. Sprawdź konfigurację modelu.",
+		"invalidResponse": "Nieprawidłowa odpowiedź z usługi embedder. Sprawdź swoją konfigurację."
 	}
 }

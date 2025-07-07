@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "Ongeldige embedder-configuratie. Controleer je instellingen.",
 		"invalidApiKey": "Ongeldige API-sleutel. Controleer je API-sleutelconfiguratie.",
 		"invalidBaseUrl": "Ongeldige basis-URL. Controleer je URL-configuratie.",
-		"invalidModel": "Ongeldig model. Controleer je modelconfiguratie."
+		"invalidModel": "Ongeldig model. Controleer je modelconfiguratie.",
+		"invalidResponse": "Ongeldige reactie van embedder-service. Controleer je configuratie."
 	}
 }

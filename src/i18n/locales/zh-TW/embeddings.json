@@ -35,6 +35,7 @@
 		"invalidEmbedderConfig": "無效的內嵌程式組態。請檢查您的設定。",
 		"invalidApiKey": "無效的 API 金鑰。請檢查您的 API 金鑰組態。",
 		"invalidBaseUrl": "無效的基礎 URL。請檢查您的 URL 組態。",
-		"invalidModel": "無效的模型。請檢查您的模型組態。"
+		"invalidModel": "無效的模型。請檢查您的模型組態。",
+		"invalidResponse": "內嵌服務回應無效。請檢查您的組態。"
 	}
 }
