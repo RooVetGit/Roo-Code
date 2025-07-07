@@ -122,7 +122,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 						trace: {
 							promptRouter: {
 								invokedModelId:
-									"arn:aws:bedrock:us-west-2:699475926481:inference-profile/us.anthropic.claude-2-1-v1:0",
+									"arn:aws:bedrock:us-west-2:699475926481:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
 								usage: {
 									inputTokens: 150,
 									outputTokens: 250,
@@ -162,7 +162,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		}
 
 		// Verify that getModelById was called with the id, not the full arn
-		expect(getModelByIdSpy).toHaveBeenCalledWith("anthropic.claude-2-1-v1:0", "inference-profile")
+		expect(getModelByIdSpy).toHaveBeenCalledWith("anthropic.claude-3-5-sonnet-20241022-v2:0", "inference-profile")
 
 		// Verify that getModel returns the updated model info
 		// 在这里模拟 invokedModelId 后模型的 inputPrice 被更新为 8
