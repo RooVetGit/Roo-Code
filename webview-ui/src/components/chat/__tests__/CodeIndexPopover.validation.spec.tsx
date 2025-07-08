@@ -133,7 +133,7 @@ describe("CodeIndexPopover Validation", () => {
 				codebaseIndexSearchMaxResults: 10,
 				codebaseIndexSearchMinScore: 0.7,
 				codebaseIndexOpenAiCompatibleBaseUrl: "",
-				codebaseIndexOpenAiCompatibleModelDimension: undefined,
+				codebaseIndexEmbedderModelDimension: undefined,
 			},
 			codebaseIndexModels: {
 				openai: [{ dimension: 1536 }],

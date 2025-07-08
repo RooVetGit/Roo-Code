@@ -103,7 +103,7 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 					.string()
 					.min(1, t("settings:codeIndex.validation.apiKeyRequired")),
 				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.validation.modelIdRequired")),
-				codebaseIndexOpenAiCompatibleModelDimension: z
+				codebaseIndexEmbedderModelDimension: z
 					.number()
 					.min(1, t("settings:codeIndex.validation.modelDimensionRequired")),
 			})
@@ -388,8 +388,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				if (!dataToValidate.codebaseIndexEmbedderModelId) {
 					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelIdRequired")
 				}
-				if (!dataToValidate.codebaseIndexOpenAiCompatibleModelDimension) {
-					errors.codebaseIndexOpenAiCompatibleModelDimension = t(
+				if (!dataToValidate.codebaseIndexEmbedderModelDimension) {
+					errors.codebaseIndexEmbedderModelDimension = t(
 						"settings:codeIndex.validation.modelDimensionRequired",
 					)
 				}
