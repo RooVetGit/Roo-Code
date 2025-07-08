@@ -62,7 +62,6 @@ interface LocalCodeIndexSettings {
 	codeIndexQdrantApiKey?: string
 	codebaseIndexOpenAiCompatibleBaseUrl?: string
 	codebaseIndexOpenAiCompatibleApiKey?: string
-	codebaseIndexOpenAiCompatibleModelDimension?: number
 	codebaseIndexGeminiApiKey?: string
 }
 
@@ -842,27 +841,24 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												</label>
 												<VSCodeTextField
 													value={
-														currentSettings.codebaseIndexOpenAiCompatibleModelDimension?.toString() ||
+														currentSettings.codebaseIndexEmbedderModelDimension?.toString() ||
 														""
 													}
 													onInput={(e: any) => {
 														const value = e.target.value
 															? parseInt(e.target.value)
 															: undefined
-														updateSetting(
-															"codebaseIndexOpenAiCompatibleModelDimension",
-															value,
-														)
+														updateSetting("codebaseIndexEmbedderModelDimension", value)
 													}}
 													placeholder={t("settings:codeIndex.modelDimensionPlaceholder")}
 													className={cn("w-full", {
 														"border-red-500":
-															formErrors.codebaseIndexOpenAiCompatibleModelDimension,
+															formErrors.codebaseIndexEmbedderModelDimension,
 													})}
 												/>
-												{formErrors.codebaseIndexOpenAiCompatibleModelDimension && (
+												{formErrors.codebaseIndexEmbedderModelDimension && (
 													<p className="text-xs text-vscode-errorForeground">
-														{formErrors.codebaseIndexOpenAiCompatibleModelDimension}
+														{formErrors.codebaseIndexEmbedderModelDimension}
 													</p>
 												)}
 											</div>
