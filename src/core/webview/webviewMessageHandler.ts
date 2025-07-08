@@ -260,6 +260,40 @@ export const webviewMessageHandler = async (
 	}
 
 	switch (message.type) {
+		case "updateChatTextDraft": {
+			// Update or remove the chat text draft in globalState under the fixed key "chatTextDraft"
+			const text = typeof message.text === "string" ? message.text : ""
+			const drafts = (await getGlobalState("chatTextDrafts")) ?? {}
+			if (text && text.trim()) {
+				// Set/Update
+				const updated = { ...drafts, chatTextDraft: text }
+				await updateGlobalState("chatTextDrafts", updated)
+			} else if (drafts.chatTextDraft) {
+				// Remove if empty
+				const { chatTextDraft: _, ...rest } = drafts
+				await updateGlobalState("chatTextDrafts", rest)
+			}
+			break
+		}
+		case "getChatTextDraft": {
+			// Return the chat text draft for the fixed key "chatTextDraft"
+			const drafts = (await getGlobalState("chatTextDrafts")) ?? {}
+			const text = drafts.chatTextDraft ?? ""
+			await provider.postMessageToWebview({
+				type: "chatTextDraftValue",
+				text,
+			})
+			break
+		}
+		case "clearChatTextDraft": {
+			// Remove the chat text draft from globalState under the fixed key "chatTextDraft"
+			const drafts = (await getGlobalState("chatTextDrafts")) ?? {}
+			if (drafts.chatTextDraft) {
+				const { chatTextDraft: _, ...rest } = drafts
+				await updateGlobalState("chatTextDrafts", rest)
+			}
+			break
+		}
 		case "webviewDidLaunch":
 			// Load custom modes first
 			const customModes = await provider.customModesManager.getCustomModes()

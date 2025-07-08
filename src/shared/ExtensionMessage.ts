@@ -105,6 +105,7 @@ export interface ExtensionMessage {
 		| "shareTaskSuccess"
 		| "codeIndexSettingsSaved"
 		| "codeIndexSecretStatus"
+		| "chatTextDraftValue"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
