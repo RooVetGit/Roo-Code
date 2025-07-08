@@ -947,7 +947,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"flex-none flex-grow",
 									"z-[2]",
 									"scrollbar-none",
-									"hide-scrollbar",
+									"scrollbar-hide",
 								)}
 								onScroll={() => updateHighlights()}
 							/>
