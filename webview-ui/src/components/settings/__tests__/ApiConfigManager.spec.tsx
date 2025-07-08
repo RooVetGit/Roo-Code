@@ -96,7 +96,7 @@ vitest.mock("@/components/ui", () => ({
 				if (onValueChange) onValueChange(e.target.value)
 			}}
 			data-testid={dataTestId || "select-component"}>
-			<option value="">{placeholder || "Select..."}</option>
+			<option value="">{placeholder || "settings:common.select"}</option>
 			{options?.map((option: any) => (
 				<option key={option.value} value={option.value}>
 					{option.label}
