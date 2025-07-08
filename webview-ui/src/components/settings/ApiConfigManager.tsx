@@ -325,7 +325,7 @@ const ApiConfigManager = ({
 						}}
 					/>
 					{error && (
-						<p className="text-red-500 text-sm mt-2" data-testid="error-message">
+						<p className="text-vscode-errorForeground text-sm mt-2" data-testid="error-message">
 							{error}
 						</p>
 					)}
