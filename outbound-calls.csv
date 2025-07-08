@@ -404,7 +404,7 @@ url,file,type,line
 "http://localhost:11434/api/tags","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",110
 "http://localhost:11434/api/embed","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",117
 "http://localhost:11434","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",130
-"http://localhost:11434.","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",145
+"http://localhost:11434","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",145
 "http://localhost:11434.","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",160
 "http://localhost:11434","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",217
 "http://localhost:11434","src/services/code-index/embedders/__tests__/ollama.spec.ts","local",226
