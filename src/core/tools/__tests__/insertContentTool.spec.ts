@@ -167,7 +167,9 @@ describe("insertContentTool", () => {
 				{ fileExists: false, fileContent: "" },
 			)
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
+			// Normalize the path that was called with to POSIX format for comparison
+			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
+			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled() // Should not read if file doesn't exist
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(contentToInsert, true)
 			expect(mockCline.diffViewProvider.editType).toBe("create")
