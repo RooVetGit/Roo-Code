@@ -78,6 +78,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 	const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
 	const [saveError, setSaveError] = useState<string | null>(null)
+	const [isSaving, setIsSaving] = useState(false)
+	const [justSaved, setJustSaved] = useState(false)
 
 	// Default settings template
 	const getDefaultSettings = (): LocalCodeIndexSettings => ({
@@ -158,15 +160,23 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			} else if (event.data.type === "codeIndexSettingsSaved") {
 				if (event.data.success) {
 					setSaveStatus("saved")
-					// Don't update initial settings here - wait for the secret status response
-					// Request updated secret status after save
-					vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
+					setIsSaving(false)
+					setJustSaved(true)
+
+					// Delay secret status request to allow backend to stabilize
+					setTimeout(() => {
+						vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
+						setJustSaved(false)
+					}, 1000)
+
 					// Reset status after 3 seconds
 					setTimeout(() => {
 						setSaveStatus("idle")
 					}, 3000)
 				} else {
 					setSaveStatus("error")
+					setIsSaving(false)
+					setJustSaved(false)
 					setSaveError(event.data.error || t("settings:codeIndex.saveError"))
 					// Clear error message after 5 seconds
 					setTimeout(() => {
@@ -192,24 +202,27 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				const updateWithSecrets = (prev: LocalCodeIndexSettings): LocalCodeIndexSettings => {
 					const updated = { ...prev }
 
-					// Only update to placeholder if the field is currently empty or already a placeholder
-					// This preserves user input when they're actively editing
-					if (!prev.codeIndexOpenAiKey || prev.codeIndexOpenAiKey === SECRET_PLACEHOLDER) {
-						updated.codeIndexOpenAiKey = secretStatus.hasOpenAiKey ? SECRET_PLACEHOLDER : ""
-					}
-					if (!prev.codeIndexQdrantApiKey || prev.codeIndexQdrantApiKey === SECRET_PLACEHOLDER) {
-						updated.codeIndexQdrantApiKey = secretStatus.hasQdrantApiKey ? SECRET_PLACEHOLDER : ""
-					}
-					if (
-						!prev.codebaseIndexOpenAiCompatibleApiKey ||
-						prev.codebaseIndexOpenAiCompatibleApiKey === SECRET_PLACEHOLDER
-					) {
-						updated.codebaseIndexOpenAiCompatibleApiKey = secretStatus.hasOpenAiCompatibleApiKey
-							? SECRET_PLACEHOLDER
-							: ""
-					}
-					if (!prev.codebaseIndexGeminiApiKey || prev.codebaseIndexGeminiApiKey === SECRET_PLACEHOLDER) {
-						updated.codebaseIndexGeminiApiKey = secretStatus.hasGeminiApiKey ? SECRET_PLACEHOLDER : ""
+					// Preserve user input during save operations
+					if (!isSaving && !justSaved) {
+						// Only update to placeholder if the field is currently empty or already a placeholder
+						// This preserves user input when they're actively editing
+						if (!prev.codeIndexOpenAiKey || prev.codeIndexOpenAiKey === SECRET_PLACEHOLDER) {
+							updated.codeIndexOpenAiKey = secretStatus.hasOpenAiKey ? SECRET_PLACEHOLDER : ""
+						}
+						if (!prev.codeIndexQdrantApiKey || prev.codeIndexQdrantApiKey === SECRET_PLACEHOLDER) {
+							updated.codeIndexQdrantApiKey = secretStatus.hasQdrantApiKey ? SECRET_PLACEHOLDER : ""
+						}
+						if (
+							!prev.codebaseIndexOpenAiCompatibleApiKey ||
+							prev.codebaseIndexOpenAiCompatibleApiKey === SECRET_PLACEHOLDER
+						) {
+							updated.codebaseIndexOpenAiCompatibleApiKey = secretStatus.hasOpenAiCompatibleApiKey
+								? SECRET_PLACEHOLDER
+								: ""
+						}
+						if (!prev.codebaseIndexGeminiApiKey || prev.codebaseIndexGeminiApiKey === SECRET_PLACEHOLDER) {
+							updated.codebaseIndexGeminiApiKey = secretStatus.hasGeminiApiKey ? SECRET_PLACEHOLDER : ""
+						}
 					}
 
 					return updated
@@ -222,7 +235,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 		window.addEventListener("message", handleMessage)
 		return () => window.removeEventListener("message", handleMessage)
-	}, [])
+	}, [isSaving, justSaved])
 
 	// Generic comparison function that detects changes between initial and current settings
 	const hasUnsavedChanges = useMemo(() => {
@@ -258,6 +271,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	}
 
 	const handleSaveSettings = () => {
+		setIsSaving(true)
+		setJustSaved(false)
 		setSaveStatus("saving")
 		setSaveError(null)
 
