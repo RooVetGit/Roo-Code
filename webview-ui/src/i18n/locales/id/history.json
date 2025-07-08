@@ -40,7 +40,11 @@
 	"workspace": {
 		"prefix": "Ruang Kerja:",
 		"current": "Saat Ini",
-		"all": "Semua"
+		"all": "Semua",
+		"unknown": "Tidak Dikenal",
+		"available": "Ruang Kerja yang Tersedia",
+		"recent": "Ruang Kerja Terbaru",
+		"filterPlaceholder": "Filter ruang kerja..."
 	},
 	"sort": {
 		"prefix": "Urutkan:",
@@ -49,5 +53,15 @@
 		"mostExpensive": "Termahal",
 		"mostTokens": "Token Terbanyak",
 		"mostRelevant": "Paling Relevan"
-	}
+	},
+	"limit": {
+		"prefix": "Batas:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Semua"
+	},
+	"noItemsFound": "Item tidak ditemukan"
 }

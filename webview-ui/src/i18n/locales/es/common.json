@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "URI de datos de imagen copiada al portapapeles"
 		}
+	},
+	"upgrade": {
+		"title": "Actualización del índice del historial de tareas",
+		"description": "Se requiere una actualización para continuar. Este proceso migrará los índices de tu historial de tareas a un formato más rápido y con un uso de memoria más eficiente. Las versiones anteriores de Roo podrán seguir accediendo al formato antiguo.",
+		"clickToStart": "Haz clic en el botón de abajo para iniciar el proceso de actualización.",
+		"startButton": "Iniciar actualización",
+		"inProgress": "Actualización en curso...",
+		"logs": "Registros de actualización:",
+		"waitingForLogs": "Esperando a que se inicie la actualización...",
+		"noLogs": "No hay registros disponibles.",
+		"complete": "Actualización completada"
 	}
 }

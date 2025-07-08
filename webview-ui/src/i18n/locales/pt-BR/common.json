@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "URI de dados da imagem copiada para a área de transferência"
 		}
+	},
+	"upgrade": {
+		"title": "Atualização do Índice do Histórico de Tarefas",
+		"description": "É necessária uma atualização para continuar. Este processo migrará seus índices de histórico de tarefas para um formato mais rápido e com maior eficiência de memória. Versões mais antigas do Roo ainda podem acessar o formato antigo.",
+		"clickToStart": "Clique no botão abaixo para iniciar o processo de atualização.",
+		"startButton": "Iniciar Atualização",
+		"inProgress": "Atualização em andamento...",
+		"logs": "Logs de Atualização:",
+		"waitingForLogs": "Aguardando o início da atualização...",
+		"noLogs": "Nenhum log disponível.",
+		"complete": "Atualização Concluída"
 	}
 }

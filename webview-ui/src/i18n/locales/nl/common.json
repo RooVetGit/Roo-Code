@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "Afbeelding data-URI gekopieerd naar klembord"
 		}
+	},
+	"upgrade": {
+		"title": "Upgrade van taakgeschiedenisindex",
+		"description": "Een upgrade is vereist om door te gaan. Dit proces migreert je taakgeschiedenisindexen naar een sneller en geheugenefficiënter formaat. Oudere versies van Roo hebben nog steeds toegang tot het oude formaat.",
+		"clickToStart": "Klik op de onderstaande knop om het upgradeproces te starten.",
+		"startButton": "Start upgrade",
+		"inProgress": "Upgrade wordt uitgevoerd...",
+		"logs": "Upgradelogboeken:",
+		"waitingForLogs": "Wachten tot de upgrade start...",
+		"noLogs": "Geen logboeken beschikbaar.",
+		"complete": "Upgrade voltooid"
 	}
 }

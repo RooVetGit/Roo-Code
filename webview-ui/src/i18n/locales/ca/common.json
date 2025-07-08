@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "URI de dades de la imatge copiada al porta-retalls"
 		}
+	},
+	"upgrade": {
+		"title": "Actualització de l'índex de l'historial de tasques",
+		"description": "Cal una actualització per continuar. Aquest procés migrarà els índexs de l'historial de tasques a un format més ràpid i eficient en memòria. Les versions anteriors de Roo encara podran accedir a l'antic format.",
+		"clickToStart": "Feu clic al botó de sota per començar el procés d'actualització.",
+		"startButton": "Inicia l'actualització",
+		"inProgress": "Actualització en curs...",
+		"logs": "Registres d'actualització:",
+		"waitingForLogs": "Esperant que comenci l'actualització...",
+		"noLogs": "No hi ha registres disponibles.",
+		"complete": "Actualització completada"
 	}
 }

@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Werkruimte:",
 		"current": "Huidig",
-		"all": "Alle"
+		"all": "Alle",
+		"unknown": "Onbekend",
+		"available": "Beschikbare werkruimtes",
+		"recent": "Recente werkruimtes",
+		"filterPlaceholder": "Filter werkruimtes..."
 	},
 	"sort": {
 		"prefix": "Sorteren:",
@@ -40,5 +44,15 @@
 		"mostExpensive": "Duurste",
 		"mostTokens": "Meeste tokens",
 		"mostRelevant": "Meest relevant"
-	}
+	},
+	"limit": {
+		"prefix": "Limiet:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Alle"
+	},
+	"noItemsFound": "Geen items gevonden"
 }

@@ -38,7 +38,11 @@
 	"workspace": {
 		"prefix": "Arbeitsbereich:",
 		"current": "Aktuell",
-		"all": "Alle"
+		"all": "Alle",
+		"unknown": "Unbekannt",
+		"available": "Verfügbare Arbeitsbereiche",
+		"recent": "Letzte Arbeitsbereiche",
+		"filterPlaceholder": "Arbeitsbereiche filtern..."
 	},
 	"sort": {
 		"prefix": "Sortieren:",
@@ -47,5 +51,15 @@
 		"mostExpensive": "Teuerste",
 		"mostTokens": "Meiste Tokens",
 		"mostRelevant": "Relevanteste"
-	}
+	},
+	"limit": {
+		"prefix": "Limit:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Alle"
+	},
+	"noItemsFound": "Keine Elemente gefunden"
 }

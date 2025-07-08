@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "工作区:",
 		"current": "当前",
-		"all": "所有"
+		"all": "所有",
+		"unknown": "未知",
+		"available": "可用工作区",
+		"recent": "最近工作区",
+		"filterPlaceholder": "筛选工作区..."
 	},
 	"sort": {
 		"prefix": "排序:",
@@ -40,5 +44,15 @@
 		"mostExpensive": "费用最高",
 		"mostTokens": "最多 Token",
 		"mostRelevant": "最相关"
-	}
+	},
+	"limit": {
+		"prefix": "限制:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "全部"
+	},
+	"noItemsFound": "未找到任何项目"
 }

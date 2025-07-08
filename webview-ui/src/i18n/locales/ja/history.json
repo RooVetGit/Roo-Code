@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "ワークスペース:",
 		"current": "現在",
-		"all": "すべて"
+		"all": "すべて",
+		"unknown": "不明",
+		"available": "利用可能なワークスペース",
+		"recent": "最近のワークスペース",
+		"filterPlaceholder": "ワークスペースをフィルター..."
 	},
 	"sort": {
 		"prefix": "ソート:",
@@ -40,5 +44,15 @@
 		"mostExpensive": "最も高価",
 		"mostTokens": "最多トークン",
 		"mostRelevant": "最も関連性の高い"
-	}
+	},
+	"limit": {
+		"prefix": "制限:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "すべて"
+	},
+	"noItemsFound": "アイテムが見つかりません"
 }

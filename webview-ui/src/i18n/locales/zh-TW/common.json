@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "圖片資料 URI 已複製到剪貼簿"
 		}
+	},
+	"upgrade": {
+		"title": "工作歷史索引升級",
+		"description": "需要升級才能繼續。此過程會將您的工作歷史索引遷移到更快、更節省記憶體的格式。舊版 Roo 仍可存取舊格式。",
+		"clickToStart": "單擊下面的按鈕開始升級過程。",
+		"startButton": "開始升級",
+		"inProgress": "正在升級...",
+		"logs": "升級日誌：",
+		"waitingForLogs": "正在等待升級開始...",
+		"noLogs": "沒有可用的日誌。",
+		"complete": "升級完成"
 	}
 }

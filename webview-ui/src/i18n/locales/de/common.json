@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "Bild-Daten-URI in die Zwischenablage kopiert"
 		}
+	},
+	"upgrade": {
+		"title": "Upgrade des Aufgabenverlaufs-Index",
+		"description": "Ein Upgrade ist erforderlich, um fortzufahren. Dieser Prozess migriert deine Aufgabenverlaufs-Indizes in ein schnelleres und speichereffizienteres Format. Ältere Versionen von Roo können weiterhin auf das alte Format zugreifen.",
+		"clickToStart": "Klicke auf die Schaltfläche unten, um den Upgrade-Prozess zu starten.",
+		"startButton": "Upgrade starten",
+		"inProgress": "Upgrade wird durchgeführt...",
+		"logs": "Upgrade-Protokolle:",
+		"waitingForLogs": "Warte auf den Start des Upgrades...",
+		"noLogs": "Keine Protokolle verfügbar.",
+		"complete": "Upgrade abgeschlossen"
 	}
 }

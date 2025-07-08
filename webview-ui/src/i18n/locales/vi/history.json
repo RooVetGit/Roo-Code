@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Không gian làm việc:",
 		"current": "Hiện tại",
-		"all": "Tất cả"
+		"all": "Tất cả",
+		"unknown": "Không xác định",
+		"available": "Không gian làm việc có sẵn",
+		"recent": "Không gian làm việc gần đây",
+		"filterPlaceholder": "Lọc không gian làm việc..."
 	},
 	"sort": {
 		"prefix": "Sắp xếp:",
@@ -40,5 +44,15 @@
 		"mostExpensive": "Đắt nhất",
 		"mostTokens": "Nhiều token nhất",
 		"mostRelevant": "Liên quan nhất"
-	}
+	},
+	"limit": {
+		"prefix": "Giới hạn:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Tất cả"
+	},
+	"noItemsFound": "Không tìm thấy mục nào"
 }

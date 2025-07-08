@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "Görsel veri URI'si panoya kopyalandı"
 		}
+	},
+	"upgrade": {
+		"title": "Görev Geçmişi Dizin Yükseltmesi",
+		"description": "Devam etmek için bir yükseltme gereklidir. Bu işlem, görev geçmişi dizinlerinizi daha hızlı ve bellek açısından daha verimli bir biçime taşıyacaktır. Roo'nun eski sürümleri hala eski biçime erişebilir.",
+		"clickToStart": "Yükseltme işlemini başlatmak için aşağıdaki düğmeyi tıklayın.",
+		"startButton": "Yükseltmeyi Başlat",
+		"inProgress": "Yükseltme devam ediyor...",
+		"logs": "Yükseltme Günlükleri:",
+		"waitingForLogs": "Yükseltmenin başlaması bekleniyor...",
+		"noLogs": "Kullanılabilir günlük yok.",
+		"complete": "Yükseltme Tamamlandı"
 	}
 }

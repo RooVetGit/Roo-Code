@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Obszar roboczy:",
 		"current": "Bieżący",
-		"all": "Wszystkie"
+		"all": "Wszystkie",
+		"unknown": "Nieznany",
+		"available": "Dostępne obszary robocze",
+		"recent": "Ostatnie obszary robocze",
+		"filterPlaceholder": "Filtruj obszary robocze..."
 	},
 	"sort": {
 		"prefix": "Sortuj:",
@@ -40,5 +44,15 @@
 		"mostExpensive": "Najdroższe",
 		"mostTokens": "Najwięcej tokenów",
 		"mostRelevant": "Najbardziej trafne"
-	}
+	},
+	"limit": {
+		"prefix": "Limit:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Wszystkie"
+	},
+	"noItemsFound": "Nie znaleziono żadnych elementów"
 }

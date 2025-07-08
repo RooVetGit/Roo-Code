@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "URI de données d'image copiée dans le presse-papiers"
 		}
+	},
+	"upgrade": {
+		"title": "Mise à niveau de l'index de l'historique des tâches",
+		"description": "Une mise à niveau est nécessaire pour continuer. Ce processus migrera vos index d'historique de tâches vers un format plus rapide et plus efficace en mémoire. Les anciennes versions de Roo pourront toujours accéder à l'ancien format.",
+		"clickToStart": "Cliquez sur le bouton ci-dessous pour lancer le processus de mise à niveau.",
+		"startButton": "Démarrer la mise à niveau",
+		"inProgress": "Mise à niveau en cours...",
+		"logs": "Journaux de mise à niveau :",
+		"waitingForLogs": "En attente du démarrage de la mise à niveau...",
+		"noLogs": "Aucun journal disponible.",
+		"complete": "Mise à niveau terminée"
 	}
 }

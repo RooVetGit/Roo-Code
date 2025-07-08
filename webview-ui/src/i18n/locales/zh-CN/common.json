@@ -51,5 +51,16 @@
 		"success": {
 			"imageDataUriCopied": "图片数据 URI 已复制到剪贴板"
 		}
+	},
+	"upgrade": {
+		"title": "任务历史索引升级",
+		"description": "需要升级才能继续。此过程会将您的任务历史索引迁移到更快、更节省内存的格式。旧版 Roo 仍可访问旧格式。",
+		"clickToStart": "单击下面的按钮开始升级过程。",
+		"startButton": "开始升级",
+		"inProgress": "正在升级...",
+		"logs": "升级日志：",
+		"waitingForLogs": "正在等待升级开始...",
+		"noLogs": "没有可用的日志。",
+		"complete": "升级完成"
 	}
 }
