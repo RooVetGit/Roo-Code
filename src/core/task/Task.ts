@@ -728,7 +728,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		if (partial !== undefined) {
-			const lastMessage = this.clineMessages.at(-1)
+			let lastMessage = this.clineMessages.at(-1)
+
+			if (lastMessage === undefined) {
+				throw new Error(
+					`[RooCode#say] task ${this.taskId}.${this.instanceId}: clineMessages is empty? Please report this bug.`,
+				)
+			}
 
 			const isUpdatingPreviousPartial =
 				lastMessage && lastMessage.partial && lastMessage.type === "say" && lastMessage.say === type
@@ -764,23 +770,25 @@ export class Task extends EventEmitter<ClineEvents> {
 				// This is the complete version of a previously partial
 				// message, so replace the partial with the complete version.
 				if (isUpdatingPreviousPartial) {
-					if (!options.isNonInteractive) {
-						this.lastMessageTs = lastMessage.ts
-					}
-
-					lastMessage.text = text
-					lastMessage.images = images
-					lastMessage.partial = false
-					lastMessage.progressStatus = progressStatus
-
 					// Instead of streaming partialMessage events, we do a save
 					// and post like normal to persist to disk.
-					await this.modifyClineMessages(async () => {
-						return this.clineMessages
-					})
+					await this.modifyClineMessages(async (messages) => {
+						lastMessage = messages.at(-1) // update ref for transaction
+						if (lastMessage) {
+							if (!options.isNonInteractive) {
+								this.lastMessageTs = lastMessage.ts
+							}
 
-					// More performant than an entire `postStateToWebview`.
-					this.updateClineMessage(lastMessage)
+							lastMessage.text = text
+							lastMessage.images = images
+							lastMessage.partial = false
+							lastMessage.progressStatus = progressStatus
+
+							// More performant than an entire `postStateToWebview`.
+							this.updateClineMessage(lastMessage)
+						}
+						return messages
+					})
 				} else {
 					// This is a new and complete message, so add it like normal.
 					const sayTs = Date.now()
