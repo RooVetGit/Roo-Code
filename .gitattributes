@@ -1,3 +1,11 @@
 demo.gif filter=lfs diff=lfs merge=lfs -text
 assets/docs/demo.gif filter=lfs diff=lfs merge=lfs -text
 src/assets/docs/demo.gif filter=lfs diff=lfs merge=lfs -text
+
+# Test snapshot files - mark as linguist-generated to exclude from GitHub language statistics
+**/__snapshots__/** linguist-generated=true
+**/snapshots/** linguist-generated=true
+**/.snapshots/** linguist-generated=true
+**/_snapshots/** linguist-generated=true
+*.snap linguist-generated=true
+*.snapshot linguist-generated=true
