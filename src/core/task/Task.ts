@@ -1372,26 +1372,35 @@ export class Task extends EventEmitter<ClineEvents> {
 			// anyways, so it remains solely for legacy purposes to keep track
 			// of prices in tasks from history (it's worth removing a few months
 			// from now).
-			const updateApiReqMsg = (cancelReason?: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
-				const existingData = JSON.parse(this.clineMessages[lastApiReqIndex].text || "{}")
-				this.clineMessages[lastApiReqIndex].text = JSON.stringify({
-					...existingData,
-					tokensIn: inputTokens,
-					tokensOut: outputTokens,
-					cacheWrites: cacheWriteTokens,
-					cacheReads: cacheReadTokens,
-					cost:
-						totalCost ??
-						calculateApiCostAnthropic(
-							this.api.getModel().info,
-							inputTokens,
-							outputTokens,
-							cacheWriteTokens,
-							cacheReadTokens,
-						),
-					cancelReason,
-					streamingFailedMessage,
-				} satisfies ClineApiReqInfo)
+			const updateApiReqMsg = async (cancelReason?: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
+				await this.modifyClineMessages(async (messages) => {
+					const lastApiReqIndex = findLastIndex(messages, (m) => m.say === "api_req_started")
+					if (lastApiReqIndex === -1) {
+						return undefined // abort transaction
+					}
+
+					const existingData = JSON.parse(messages[lastApiReqIndex].text || "{}")
+					messages[lastApiReqIndex].text = JSON.stringify({
+						...existingData,
+						tokensIn: inputTokens,
+						tokensOut: outputTokens,
+						cacheWrites: cacheWriteTokens,
+						cacheReads: cacheReadTokens,
+						cost:
+							totalCost ??
+							calculateApiCostAnthropic(
+								this.api.getModel().info,
+								inputTokens,
+								outputTokens,
+								cacheWriteTokens,
+								cacheReadTokens,
+							),
+						cancelReason,
+						streamingFailedMessage,
+					} satisfies ClineApiReqInfo)
+					
+					return messages
+				})
 			}
 
 			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
@@ -1429,11 +1438,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 				// Update `api_req_started` to have cancelled and cost, so that
 				// we can display the cost of the partial stream.
-				updateApiReqMsg(cancelReason, streamingFailedMessage)
-
-				await this.modifyClineMessages(async () => {
-					return this.clineMessages
-				})
+				await updateApiReqMsg(cancelReason, streamingFailedMessage)
 
 				// Signals to provider that it can retrieve the saved messages
 				// from disk, as abortTask can not be awaited on in nature.
@@ -1613,11 +1618,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				presentAssistantMessage(this)
 			}
 
-			updateApiReqMsg()
-
-			await this.modifyClineMessages(async () => {
-				return this.clineMessages
-			})
+			await updateApiReqMsg()
 
 			await this.providerRef.deref()?.postStateToWebview()
 
