@@ -375,6 +375,14 @@ describe("FileRestrictionError", () => {
 		expect(error.name).toBe("FileRestrictionError")
 	})
 
+	it("formats error message with tool name when provided", () => {
+		const error = new FileRestrictionError("Markdown Editor", "\\.md$", undefined, "test.js", "write_to_file")
+		expect(error.message).toBe(
+			"Tool 'write_to_file' in mode 'Markdown Editor' can only edit files matching pattern: \\.md$. Got: test.js",
+		)
+		expect(error.name).toBe("FileRestrictionError")
+	})
+
 	describe("debug mode", () => {
 		it("is configured correctly", () => {
 			const debugMode = modes.find((mode) => mode.slug === "debug")
@@ -471,6 +479,20 @@ describe("FileRestrictionError", () => {
 		const error = new FileRestrictionError("Markdown Editor", "\\.md$", "Markdown files only", "test.js")
 		expect(error.message).toBe(
 			"This mode (Markdown Editor) can only edit files matching pattern: \\.md$ (Markdown files only). Got: test.js",
+		)
+		expect(error.name).toBe("FileRestrictionError")
+	})
+
+	it("formats error message with both tool name and description when provided", () => {
+		const error = new FileRestrictionError(
+			"Markdown Editor",
+			"\\.md$",
+			"Markdown files only",
+			"test.js",
+			"apply_diff",
+		)
+		expect(error.message).toBe(
+			"Tool 'apply_diff' in mode 'Markdown Editor' can only edit files matching pattern: \\.md$ (Markdown files only). Got: test.js",
 		)
 		expect(error.name).toBe("FileRestrictionError")
 	})
