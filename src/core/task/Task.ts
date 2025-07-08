@@ -530,7 +530,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		let askTs: number
 
 		if (partial !== undefined) {
-			const lastMessage = this.clineMessages.at(-1)
+			let lastMessage = this.clineMessages.at(-1)
+
+			if (lastMessage === undefined) {
+				throw new Error(
+					`[RooCode#ask] task ${this.taskId}.${this.instanceId}: clineMessages is empty? Please report this bug.`,
+				)
+			}
 
 			const isUpdatingPreviousPartial =
 				lastMessage && lastMessage.partial && lastMessage.type === "ask" && lastMessage.ask === type
@@ -577,16 +583,24 @@ export class Task extends EventEmitter<ClineEvents> {
 					// never altered after first setting it.
 					askTs = lastMessage.ts
 					this.lastMessageTs = askTs
-					lastMessage.text = text
-					lastMessage.partial = false
-					lastMessage.progressStatus = progressStatus
-					lastMessage.isProtected = isProtected
 
-					await this.modifyClineMessages(async () => {
-						return this.clineMessages
+					await this.modifyClineMessages(async (messages) => {
+						lastMessage = messages.at(-1) // update ref for transaction
+
+						if (lastMessage) {
+							// update these again in case of a race to guarantee flicker-free:
+							askTs = lastMessage.ts
+							this.lastMessageTs = askTs
+
+							lastMessage.text = text
+							lastMessage.partial = false
+							lastMessage.progressStatus = progressStatus
+							lastMessage.isProtected = isProtected
+
+							this.updateClineMessage(lastMessage)
+						}
+						return messages
 					})
-
-					this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new and complete message, so add it like normal.
 					this.askResponse = undefined
