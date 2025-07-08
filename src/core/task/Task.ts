@@ -672,26 +672,40 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		const { contextTokens: prevContextTokens } = this.getTokenUsage()
-		const {
-			messages,
-			summary,
-			cost,
-			newContextTokens = 0,
-			error,
-		} = await summarizeConversation(
-			this.apiConversationHistory,
-			this.api, // Main API handler (fallback)
-			systemPrompt, // Default summarization prompt (fallback)
-			this.taskId,
-			prevContextTokens,
-			false, // manual trigger
-			customCondensingPrompt, // User's custom prompt
-			condensingApiHandler, // Specific handler for condensing
-		)
-		if (error) {
+
+		let contextCondense: ContextCondense | undefined
+		let errorResult: string | undefined = undefined
+
+		await this.modifyApiConversationHistory(async (history) => {
+			const {
+				messages,
+				summary,
+				cost,
+				newContextTokens = 0,
+				error,
+			} = await summarizeConversation(
+				history,
+				this.api, // Main API handler (fallback)
+				systemPrompt, // Default summarization prompt (fallback)
+				this.taskId,
+				prevContextTokens,
+				false, // manual trigger
+				customCondensingPrompt, // User's custom prompt
+				condensingApiHandler, // Specific handler for condensing
+			)
+			if (error) {
+				errorResult = error
+				return undefined // abort transaction
+			}
+
+			contextCondense = { summary, cost, newContextTokens, prevContextTokens }
+			return messages
+		})
+
+		if (errorResult) {
 			this.say(
 				"condense_context_error",
-				error,
+				errorResult,
 				undefined /* images */,
 				false /* partial */,
 				undefined /* checkpoint */,
@@ -701,11 +715,6 @@ export class Task extends EventEmitter<ClineEvents> {
 			return
 		}
 
-		await this.modifyApiConversationHistory(async () => {
-			return messages
-		})
-
-		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
 		await this.say(
 			"condense_context",
 			undefined /* text */,
