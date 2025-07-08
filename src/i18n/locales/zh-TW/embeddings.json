@@ -25,7 +25,7 @@
 	"vectorStore": {
 		"qdrantConnectionFailed": "連接 Qdrant 向量資料庫失敗。請確保 Qdrant 正在執行並可在 {{qdrantUrl}} 存取。錯誤：{{errorMessage}}"
 	},
-	"validation": {
+"validation": {
 		"authenticationFailed": "驗證失敗。請在設定中檢查您的 API 金鑰。",
 		"connectionFailed": "連線至內嵌服務失敗。請檢查您的連線設定並確保服務正在執行。",
 		"modelNotAvailable": "指定的模型不可用。請檢查您的模型組態。",
@@ -36,6 +36,16 @@
 		"invalidApiKey": "無效的 API 金鑰。請檢查您的 API 金鑰組態。",
 		"invalidBaseUrl": "無效的基礎 URL。請檢查您的 URL 組態。",
 		"invalidModel": "無效的模型。請檢查您的模型組態。",
-		"invalidResponse": "內嵌服務回應無效。請檢查您的組態。"
+		"invalidResponse": "內嵌服務回應無效。請檢查您的組態。",
+"serviceFactory": {
+		"openAiConfigMissing": "建立嵌入器缺少 OpenAI 設定",
+		"ollamaConfigMissing": "建立嵌入器缺少 Ollama 設定",
+		"openAiCompatibleConfigMissing": "建立嵌入器缺少 OpenAI 相容設定",
+		"geminiConfigMissing": "建立嵌入器缺少 Gemini 設定",
+		"invalidEmbedderType": "設定的嵌入器類型無效：{{embedderProvider}}",
+		"vectorDimensionNotDeterminedOpenAiCompatible": "無法確定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量維度。請確保在 OpenAI 相容提供商設定中正確設定了「嵌入維度」。",
+		"vectorDimensionNotDetermined": "無法確定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量維度。請檢查模型設定檔或設定。",
+		"qdrantUrlMissing": "建立向量儲存缺少 Qdrant URL",
+		"codeIndexingNotConfigured": "無法建立服務：程式碼索引未正確設定"
 	}
 }
