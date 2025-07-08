@@ -25,7 +25,7 @@
 	"vectorStore": {
 		"qdrantConnectionFailed": "Nie udało się połączyć z bazą danych wektorowych Qdrant. Upewnij się, że Qdrant jest uruchomiony i dostępny pod adresem {{qdrantUrl}}. Błąd: {{errorMessage}}"
 	},
-"validation": {
+	"validation": {
 		"authenticationFailed": "Uwierzytelnianie nie powiodło się. Sprawdź swój klucz API w ustawieniach.",
 		"connectionFailed": "Nie udało się połączyć z usługą embeddera. Sprawdź ustawienia połączenia i upewnij się, że usługa jest uruchomiona.",
 		"modelNotAvailable": "Określony model jest niedostępny. Sprawdź konfigurację modelu.",
@@ -36,8 +36,9 @@
 		"invalidApiKey": "Nieprawidłowy klucz API. Sprawdź konfigurację klucza API.",
 		"invalidBaseUrl": "Nieprawidłowy podstawowy adres URL. Sprawdź konfigurację adresu URL.",
 		"invalidModel": "Nieprawidłowy model. Sprawdź konfigurację modelu.",
-		"invalidResponse": "Nieprawidłowa odpowiedź z usługi embedder. Sprawdź swoją konfigurację.",
-"serviceFactory": {
+		"invalidResponse": "Nieprawidłowa odpowiedź z usługi embedder. Sprawdź swoją konfigurację."
+	},
+	"serviceFactory": {
 		"openAiConfigMissing": "Brak konfiguracji OpenAI do utworzenia embeddera",
 		"ollamaConfigMissing": "Brak konfiguracji Ollama do utworzenia embeddera",
 		"openAiCompatibleConfigMissing": "Brak konfiguracji kompatybilnej z OpenAI do utworzenia embeddera",

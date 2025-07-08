@@ -25,7 +25,7 @@
 	"vectorStore": {
 		"qdrantConnectionFailed": "Gagal terhubung ke database vektor Qdrant. Pastikan Qdrant berjalan dan dapat diakses di {{qdrantUrl}}. Error: {{errorMessage}}"
 	},
-"validation": {
+	"validation": {
 		"authenticationFailed": "Autentikasi gagal. Silakan periksa kunci API Anda di pengaturan.",
 		"connectionFailed": "Gagal terhubung ke layanan embedder. Silakan periksa pengaturan koneksi Anda dan pastikan layanan berjalan.",
 		"modelNotAvailable": "Model yang ditentukan tidak tersedia. Silakan periksa konfigurasi model Anda.",
@@ -36,8 +36,9 @@
 		"invalidApiKey": "Kunci API tidak valid. Silakan periksa konfigurasi kunci API Anda.",
 		"invalidBaseUrl": "URL dasar tidak valid. Silakan periksa konfigurasi URL Anda.",
 		"invalidModel": "Model tidak valid. Silakan periksa konfigurasi model Anda.",
-		"invalidResponse": "Respons tidak valid dari layanan embedder. Silakan periksa konfigurasi Anda.",
-"serviceFactory": {
+		"invalidResponse": "Respons tidak valid dari layanan embedder. Silakan periksa konfigurasi Anda."
+	},
+	"serviceFactory": {
 		"openAiConfigMissing": "Konfigurasi OpenAI tidak ada untuk membuat embedder",
 		"ollamaConfigMissing": "Konfigurasi Ollama tidak ada untuk membuat embedder",
 		"openAiCompatibleConfigMissing": "Konfigurasi yang kompatibel dengan OpenAI tidak ada untuk membuat embedder",

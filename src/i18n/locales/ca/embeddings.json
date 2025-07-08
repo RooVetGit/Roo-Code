@@ -25,7 +25,7 @@
 	"vectorStore": {
 		"qdrantConnectionFailed": "No s'ha pogut connectar a la base de dades vectorial Qdrant. Assegura't que Qdrant estigui funcionant i sigui accessible a {{qdrantUrl}}. Error: {{errorMessage}}"
 	},
-"validation": {
+	"validation": {
 		"authenticationFailed": "Ha fallat l'autenticació. Comproveu la vostra clau d'API a la configuració.",
 		"connectionFailed": "No s'ha pogut connectar al servei d'incrustació. Comproveu la vostra configuració de connexió i assegureu-vos que el servei estigui funcionant.",
 		"modelNotAvailable": "El model especificat no està disponible. Comproveu la vostra configuració de model.",
@@ -36,8 +36,9 @@
 		"invalidApiKey": "Clau d'API no vàlida. Comproveu la vostra configuració de clau d'API.",
 		"invalidBaseUrl": "URL base no vàlida. Comproveu la vostra configuració d'URL.",
 		"invalidModel": "Model no vàlid. Comproveu la vostra configuració de model.",
-		"invalidResponse": "Resposta no vàlida del servei d'incrustació. Comproveu la vostra configuració.",
-"serviceFactory": {
+		"invalidResponse": "Resposta no vàlida del servei d'incrustació. Comproveu la vostra configuració."
+	},
+	"serviceFactory": {
 		"openAiConfigMissing": "Falta la configuració d'OpenAI per crear l'embedder",
 		"ollamaConfigMissing": "Falta la configuració d'Ollama per crear l'embedder",
 		"openAiCompatibleConfigMissing": "Falta la configuració compatible amb OpenAI per crear l'embedder",

@@ -25,7 +25,7 @@
 	"vectorStore": {
 		"qdrantConnectionFailed": "Qdrantベクターデータベースへの接続に失敗しました。Qdrantが実行中で{{qdrantUrl}}でアクセス可能であることを確認してください。エラー：{{errorMessage}}"
 	},
-"validation": {
+	"validation": {
 		"authenticationFailed": "認証に失敗しました。設定でAPIキーを確認してください。",
 		"connectionFailed": "エンベッダーサービスへの接続に失敗しました。接続設定を確認し、サービスが実行されていることを確認してください。",
 		"modelNotAvailable": "指定されたモデルは利用できません。モデル構成を確認してください。",
@@ -36,8 +36,9 @@
 		"invalidApiKey": "無効なAPIキーです。APIキー構成を確認してください。",
 		"invalidBaseUrl": "無効なベースURLです。URL構成を確認してください。",
 		"invalidModel": "無効なモデルです。モデル構成を確認してください。",
-		"invalidResponse": "エンベッダーサービスからの無効な応答です。設定を確認してください。",
-"serviceFactory": {
+		"invalidResponse": "エンベッダーサービスからの無効な応答です。設定を確認してください。"
+	},
+	"serviceFactory": {
 		"openAiConfigMissing": "エンベッダー作成のためのOpenAI設定がありません",
 		"ollamaConfigMissing": "エンベッダー作成のためのOllama設定がありません",
 		"openAiCompatibleConfigMissing": "エンベッダー作成のためのOpenAI互換設定がありません",
