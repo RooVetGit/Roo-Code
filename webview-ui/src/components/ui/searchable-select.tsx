@@ -25,9 +25,9 @@ interface SearchableSelectProps {
 	value?: string
 	onValueChange: (value: string) => void
 	options: SearchableSelectOption[]
-	placeholder?: string
-	searchPlaceholder?: string
-	emptyMessage?: string
+	placeholder: string
+	searchPlaceholder: string
+	emptyMessage: string
 	className?: string
 	disabled?: boolean
 	"data-testid"?: string
@@ -37,9 +37,9 @@ export function SearchableSelect({
 	value,
 	onValueChange,
 	options,
-	placeholder = "Select...",
-	searchPlaceholder = "Search...",
-	emptyMessage = "No results found",
+	placeholder,
+	searchPlaceholder,
+	emptyMessage,
 	className,
 	disabled,
 	"data-testid": dataTestId,
@@ -48,6 +48,7 @@ export function SearchableSelect({
 	const [searchValue, setSearchValue] = React.useState("")
 	const searchInputRef = React.useRef<HTMLInputElement>(null)
 	const searchResetTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+	const isMountedRef = React.useRef(true)
 
 	// Find the selected option
 	const selectedOption = options.find((option) => option.value === value)
@@ -61,6 +62,7 @@ export function SearchableSelect({
 	// Cleanup timeout on unmount
 	React.useEffect(() => {
 		return () => {
+			isMountedRef.current = false
 			if (searchResetTimeoutRef.current) {
 				clearTimeout(searchResetTimeoutRef.current)
 			}
@@ -69,7 +71,11 @@ export function SearchableSelect({
 
 	// Reset search when value changes
 	React.useEffect(() => {
-		const timeoutId = setTimeout(() => setSearchValue(""), 100)
+		const timeoutId = setTimeout(() => {
+			if (isMountedRef.current) {
+				setSearchValue("")
+			}
+		}, 100)
 		return () => clearTimeout(timeoutId)
 	}, [value])
 
@@ -129,11 +135,11 @@ export function SearchableSelect({
 							className="h-9 mr-4"
 						/>
 						{searchValue.length > 0 && (
-							<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
-								<X
-									className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
-									onClick={handleClearSearch}
-								/>
+							<div
+								className="absolute right-2 top-0 bottom-0 flex items-center justify-center"
+								data-testid="clear-search-button"
+								onClick={handleClearSearch}>
+								<X className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer" />
 							</div>
 						)}
 					</div>

@@ -334,8 +334,8 @@ const ApiOptions = ({
 					onValueChange={(value) => onProviderChange(value as ProviderName)}
 					options={providerOptions}
 					placeholder={t("settings:common.select")}
-					searchPlaceholder={t("settings:providers.searchProviderPlaceholder") || "Search providers..."}
-					emptyMessage={t("settings:providers.noProviderMatchFound") || "No providers found"}
+					searchPlaceholder={t("settings:providers.searchProviderPlaceholder")}
+					emptyMessage={t("settings:providers.noProviderMatchFound")}
 					className="w-full"
 					data-testid="provider-select"
 				/>
