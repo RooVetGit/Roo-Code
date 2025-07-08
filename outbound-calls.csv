@@ -1,6 +1,6 @@
 url,file,type,line
 "https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts","src/activate/registerCommands.ts","external_api",226
-"https://stackoverflow.com/questions/58365687/vscode-extension-iconpath).","src/activate/registerCommands.ts","external_api",252
+"https://stackoverflow.com/questions/58365687/vscode-extension-iconpath","src/activate/registerCommands.ts","external_api",252
 "https://custom.anthropic.com","src/api/providers/__tests__/anthropic.spec.ts","external_api",97
 "https://custom.anthropic.com","src/api/providers/__tests__/anthropic.spec.ts","external_api",127
 "https://bedrock-vpc.example.com","src/api/providers/__tests__/bedrock-vpc-endpoint.spec.ts","external_api",47
