@@ -9,7 +9,8 @@
 		"no": "Não",
 		"cancel": "Cancelar",
 		"remove": "Remover",
-		"keep": "Manter"
+		"keep": "Manter",
+		"close": "Fechar"
 	},
 	"ui": {
 		"search_placeholder": "Pesquisar..."
@@ -62,5 +63,52 @@
 		"waitingForLogs": "Aguardando o início da atualização...",
 		"noLogs": "Nenhum log disponível.",
 		"complete": "Atualização Concluída"
-	}
+	},
+	"errors": {
+		"unexpected": "Ocorreu um erro inesperado.",
+		"unexpected_with_message": "Ocorreu um erro inesperado: {{message}}",
+		"not_implemented": "Não implementado",
+		"missing_property": "Propriedade '{{property}}' ausente no objeto",
+		"invalid_property": "Propriedade '{{property}}' inválida",
+		"property_not_found": "Propriedade '{{property}}' não encontrada",
+		"file_not_found": "Arquivo não encontrado",
+		"directory_not_found": "Diretório não encontrado",
+		"file_exists": "O arquivo já existe",
+		"invalid_uri": "URI inválido",
+		"invalid_json": "JSON inválido",
+		"invalid_xml": "XML inválido",
+		"invalid_yaml": "YAML inválido",
+		"mismatched_tools": "As ferramentas não correspondem",
+		"get_system_prompt": "Falha ao obter o prompt do sistema",
+		"search_commits": "Falha ao pesquisar commits",
+		"save_api_config": "Falha ao salvar a configuração da API",
+		"load_api_config": "Falha ao carregar a configuração da API",
+		"rename_api_config": "Falha ao renomear a configuração da API",
+		"delete_api_config": "Falha ao excluir a configuração da API",
+		"list_api_config": "Falha ao listar as configurações da API",
+		"update_server_timeout": "Falha ao atualizar o tempo limite do servidor",
+		"no_workspace": "Nenhuma pasta de trabalho está aberta",
+		"checkpoint_timeout": "Tempo limite aguardando o ponto de verificação",
+		"checkpoint_failed": "Falha ao restaurar o ponto de verificação",
+		"history_scan_failed": "Falha ao verificar o histórico de tarefas: {{error}}",
+		"history_reindex_failed": "Falha ao reconstruir os índices do histórico: {{error}}",
+		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar",
+		"share_auth_required": "Autenticação necessária para compartilhar a tarefa",
+		"share_not_enabled": "O compartilhamento não está ativado para sua conta",
+		"share_task_not_found": "Tarefa não encontrada",
+		"share_task_failed": "Falha ao compartilhar a tarefa",
+		"settings_import_failed": "Falha ao importar as configurações: {{error}}",
+		"update_support_prompt": "Falha ao atualizar o prompt de suporte",
+		"enhance_prompt": "Falha ao aprimorar o prompt"
+	},
+	"info": {
+		"history_reindexed": "Índices do histórico reconstruídos com sucesso",
+		"history_scanned": "Verificação do histórico de tarefas concluída",
+		"settings_imported": "Configurações importadas com sucesso",
+		"clipboard_copy": "Copiado para a área de transferência"
+	},
+	"confirmation": {
+		"reindex_history": "Aviso: Isso recriará os índices taskHistory/*.json percorrendo os diretórios de tarefas e as estruturas legadas do globalState[taskHistory]. Isso pode recuperar tarefas que você excluiu anteriormente e/ou recuperar tarefas corrompidas. Se os contadores de token/custo não forem recuperáveis, eles serão definidos como zero. Quaisquer tarefas que sejam membros de vários espaços de trabalho serão reatribuídas apenas ao espaço de trabalho mais recente usado pela tarefa."
+	},
+	"advanced": "Avançado"
 }

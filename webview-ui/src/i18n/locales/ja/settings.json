@@ -31,7 +31,8 @@
 		"prompts": "プロンプト",
 		"experimental": "実験的",
 		"language": "言語",
-		"about": "Roo Codeについて"
+		"about": "Roo Codeについて",
+		"historyIndexTools": "履歴インデックスツール"
 	},
 	"prompts": {
 		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Rooが一般的な開発タスクでより良いサポートを提供するのに役立ちます。"
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "インポート",
 			"export": "エクスポート",
-			"reset": "リセット"
+			"reset": "リセット",
+			"reindexHistory": "再インデックス"
 		}
 	},
 	"thinkingBudget": {

@@ -4,7 +4,8 @@
 		"no": "नहीं",
 		"cancel": "रद्द करें",
 		"remove": "हटाएं",
-		"keep": "रखें"
+		"keep": "रखें",
+		"close": "बंद करें"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,52 @@
 		"waitingForLogs": "अपग्रेड शुरू होने की प्रतीक्षा है...",
 		"noLogs": "कोई लॉग उपलब्ध नहीं है।",
 		"complete": "अपग्रेड पूरा हुआ"
-	}
+	},
+	"errors": {
+		"unexpected": "एक अप्रत्याशित त्रुटि हुई।",
+		"missing_property": "अनुरोध निकाय से '{{property}}' गुण गायब है।",
+		"invalid_property": "'{{property}}' गुण अमान्य है।",
+		"unsupported_file_type": "असमर्थित फ़ाइल प्रकार: {{extension}}।",
+		"file_not_found": "फ़ाइल नहीं मिली: {{path}}।",
+		"file_read_error": "फ़ाइल पढ़ने में त्रुटि: {{error}}।",
+		"file_write_error": "फ़ाइल लिखने में त्रुटि: {{error}}।",
+		"file_delete_error": "फ़ाइल हटाने में त्रुटि: {{error}}।",
+		"directory_not_found": "डायरेक्टरी नहीं मिली: {{path}}।",
+		"directory_read_error": "डायरेक्टरी पढ़ने में त्रुटि: {{error}}।",
+		"invalid_path": "अमान्य पथ: {{path}}।",
+		"invalid_url": "अमान्य URL: {{url}}।",
+		"network_error": "नेटवर्क त्रुटि: {{error}}।",
+		"request_timeout": "अनुरोध समय समाप्त हो गया।",
+		"get_system_prompt": "सिस्टम प्रॉम्प्ट प्राप्त करने में विफल।",
+		"search_commits": "कमिट खोजने में विफल।",
+		"save_api_config": "API कॉन्फ़िगरेशन सहेजने में विफल।",
+		"load_api_config": "API कॉन्फ़िgerेशन लोड करने में विफल।",
+		"rename_api_config": "API कॉन्फ़िगरेशन का नाम बदलने में विफल।",
+		"delete_api_config": "API कॉन्फ़िगरेशन हटाने में विफल।",
+		"list_api_config": "API कॉन्फ़िगरेशन सूचीबद्ध करने में विफल।",
+		"update_server_timeout": "सर्वर टाइमआउट अपडेट करने में विफल।",
+		"no_workspace": "कोई कार्यक्षेत्र फ़ोल्डर नहीं खुला है।",
+		"checkpoint_timeout": "चेकपॉइंट की प्रतीक्षा में समय समाप्त।",
+		"checkpoint_failed": "चेकपॉइंट पुनर्स्थापित करने में विफल।",
+		"history_scan_failed": "कार्य इतिहास स्कैन करने में विफल: {{error}}",
+		"history_reindex_failed": "इतिहास इंडेक्स के पुनर्निर्माण में विफल: {{error}}",
+		"share_no_active_task": "साझा करने के लिए कोई सक्रिय कार्य नहीं",
+		"share_auth_required": "कार्य साझा करने के लिए प्रमाणीकरण आवश्यक है",
+		"share_not_enabled": "आपके खाते के लिए साझाकरण सक्षम नहीं है",
+		"share_task_not_found": "कार्य नहीं मिला",
+		"share_task_failed": "कार्य साझा करने में विफल",
+		"settings_import_failed": "सेटिंग्स आयात करने में विफल: {{error}}",
+		"update_support_prompt": "समर्थन प्रॉम्प्ट को अपडेट करने में विफल",
+		"enhance_prompt": "प्रॉम्प्ट को बेहतर बनाने में विफल"
+	},
+	"info": {
+		"history_reindexed": "इतिहास इंडेक्स सफलतापूर्वक फिर से बनाए गए।",
+		"history_scanned": "कार्य इतिहास स्कैन पूरा हुआ।",
+		"settings_imported": "सेटिंग्स सफलतापूर्वक आयात की गईं।",
+		"clipboard_copy": "क्लिपबोर्ड पर कॉपी किया गया।"
+	},
+	"confirmation": {
+		"reindex_history": "चेतावनी: यह taskHistory/*.json इंडेक्स को कार्य डायरेक्टरी और पुराने globalState[taskHistory] संरचनाओं पर चलकर फिर से बनाएगा। यह उन कार्यों को अनडिलीट कर सकता है जिन्हें आपने पहले हटा दिया था और/या उन कार्यों को पुनर्प्राप्त कर सकता है जो दूषित हैं। यदि टोकन/लागत काउंटर पुनर्प्राप्त करने योग्य नहीं हैं तो उन्हें शून्य पर सेट कर दिया जाएगा। कोई भी कार्य जो कई कार्यस्थानों के सदस्य हैं, उन्हें केवल कार्य द्वारा उपयोग किए गए सबसे हाल के कार्यक्षेत्र में फिर से सौंपा जाएगा।"
+	},
+	"advanced": "उन्नत"
 }

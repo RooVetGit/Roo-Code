@@ -4,7 +4,8 @@
 		"no": "Nein",
 		"cancel": "Abbrechen",
 		"remove": "Entfernen",
-		"keep": "Behalten"
+		"keep": "Behalten",
+		"close": "Schließen"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,38 @@
 		"waitingForLogs": "Warte auf den Start des Upgrades...",
 		"noLogs": "Keine Protokolle verfügbar.",
 		"complete": "Upgrade abgeschlossen"
+	},
+	"errors": {
+		"history_reindex_failed": "Die Neuindizierung des Verlaufs ist fehlgeschlagen: {{error}}.",
+		"history_scan_failed": "Fehler beim Scannen des Aufgabenverlaufs: {{error}}",
+		"share_no_active_task": "Keine aktive Aufgabe zum Teilen",
+		"share_auth_required": "Authentifizierung zum Teilen der Aufgabe erforderlich",
+		"share_not_enabled": "Teilen ist für dein Konto nicht aktiviert",
+		"share_task_not_found": "Aufgabe nicht gefunden",
+		"share_task_failed": "Aufgabe konnte nicht geteilt werden",
+		"settings_import_failed": "Einstellungen konnten nicht importiert werden: {{error}}",
+		"update_support_prompt": "Support-Prompt konnte nicht aktualisiert werden",
+		"enhance_prompt": "Prompt konnte nicht verbessert werden",
+		"get_system_prompt": "System-Prompt konnte nicht abgerufen werden",
+		"search_commits": "Commits konnten nicht durchsucht werden",
+		"save_api_config": "API-Konfiguration konnte nicht gespeichert werden",
+		"load_api_config": "API-Konfiguration konnte nicht geladen werden",
+		"rename_api_config": "API-Konfiguration konnte nicht umbenannt werden",
+		"delete_api_config": "API-Konfiguration konnte nicht gelöscht werden",
+		"list_api_config": "API-Konfigurationen konnten nicht aufgelistet werden",
+		"update_server_timeout": "Server-Timeout konnte nicht aktualisiert werden",
+		"no_workspace": "Kein Arbeitsbereichsordner geöffnet",
+		"checkpoint_timeout": "Zeitüberschreitung beim Warten auf Checkpoint",
+		"checkpoint_failed": "Checkpoint konnte nicht wiederhergestellt werden"
+	},
+	"advanced": "Erweitert",
+	"info": {
+		"history_reindexed": "Verlaufsindizes erfolgreich neu erstellt",
+		"history_scanned": "Überprüfung des Aufgabenverlaufs abgeschlossen",
+		"settings_imported": "Einstellungen erfolgreich importiert",
+		"clipboard_copy": "In die Zwischenablage kopiert"
+	},
+	"confirmation": {
+		"reindex_history": "Warnung: Dies erstellt die taskHistory/*.json-Indizes neu, indem die Aufgabenverzeichnisse und die alten globalState[taskHistory]-Strukturen durchlaufen werden. Dies kann Aufgaben wiederherstellen, die du zuvor gelöscht hast, und/oder beschädigte Aufgaben wiederherstellen. Wenn Token-/Kostenzähler nicht wiederherstellbar sind, werden sie auf null gesetzt. Alle Aufgaben, die zu mehreren Arbeitsbereichen gehören, werden nur dem zuletzt verwendeten Arbeitsbereich zugewiesen."
 	}
 }

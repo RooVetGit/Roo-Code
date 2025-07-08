@@ -31,7 +31,8 @@
 		"prompts": "Invites",
 		"experimental": "Expérimental",
 		"language": "Langue",
-		"about": "À propos de Roo Code"
+		"about": "À propos de Roo Code",
+		"historyIndexTools": "Outils d'indexation de l'historique"
 	},
 	"prompts": {
 		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes."
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "Importer",
 			"export": "Exporter",
-			"reset": "Réinitialiser"
+			"reset": "Réinitialiser",
+			"reindexHistory": "Réindexer"
 		}
 	},
 	"thinkingBudget": {

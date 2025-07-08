@@ -31,7 +31,8 @@
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
-		"about": "Giới thiệu"
+		"about": "Giới thiệu",
+		"historyIndexTools": "Công cụ chỉ mục lịch sử"
 	},
 	"prompts": {
 		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến."
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "Nhập",
 			"export": "Xuất",
-			"reset": "Đặt lại"
+			"reset": "Đặt lại",
+			"reindexHistory": "Lập chỉ mục lại"
 		}
 	},
 	"thinkingBudget": {

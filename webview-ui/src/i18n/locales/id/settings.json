@@ -31,7 +31,8 @@
 		"prompts": "Prompt",
 		"experimental": "Eksperimental",
 		"language": "Bahasa",
-		"about": "Tentang Roo Code"
+		"about": "Tentang Roo Code",
+		"historyIndexTools": "Alat Indeks Riwayat"
 	},
 	"prompts": {
 		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
@@ -664,7 +665,8 @@
 		"settings": {
 			"import": "Impor",
 			"export": "Ekspor",
-			"reset": "Reset"
+			"reset": "Reset",
+			"reindexHistory": "Indeks Ulang"
 		}
 	},
 	"thinkingBudget": {

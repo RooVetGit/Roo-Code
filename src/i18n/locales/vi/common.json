@@ -80,7 +80,8 @@
 			"processExitedWithError": "Tiến trình Claude Code thoát với mã {{exitCode}}. Đầu ra lỗi: {{output}}",
 			"stoppedWithReason": "Claude Code dừng lại vì lý do: {{reason}}",
 			"apiKeyModelPlanMismatch": "Khóa API và gói đăng ký cho phép các mô hình khác nhau. Đảm bảo rằng mô hình đã chọn được bao gồm trong gói của bạn."
-		}
+		},
+		"history_reindex_failed": "Lập chỉ mục lại lịch sử công việc thất bại: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Không có nội dung terminal được chọn",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "Liên kết chia sẻ tổ chức đã được sao chép vào clipboard!",
 		"public_share_link_copied": "Liên kết chia sẻ công khai đã được sao chép vào clipboard!",
 		"mode_exported": "Chế độ '{{mode}}' đã được xuất thành công",
-		"mode_imported": "Chế độ đã được nhập thành công"
+		"mode_imported": "Chế độ đã được nhập thành công",
+		"history_reindexed": "Đã lập chỉ mục lại lịch sử công việc thành công."
 	},
 	"answers": {
 		"yes": "Có",

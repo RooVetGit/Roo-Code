@@ -4,7 +4,8 @@
 		"no": "No",
 		"cancel": "Annulla",
 		"remove": "Rimuovi",
-		"keep": "Mantieni"
+		"keep": "Mantieni",
+		"close": "Chiudi"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,54 @@
 		"waitingForLogs": "In attesa dell'avvio dell'aggiornamento...",
 		"noLogs": "Nessun log disponibile.",
 		"complete": "Aggiornamento completato"
-	}
+	},
+	"buttons": {
+		"apply_and_restart": "Applica e Riavvia",
+		"cancel": "Annulla",
+		"close": "Chiudi",
+		"confirm": "Conferma",
+		"copy": "Copia",
+		"create": "Crea",
+		"delete": "Elimina",
+		"finish": "Fine",
+		"next": "Avanti",
+		"ok": "OK",
+		"previous": "Indietro",
+		"proceed": "Procedi",
+		"refactor": "Refactor",
+		"regenerate": "Rigenera"
+	},
+	"errors": {
+		"get_system_prompt": "Impossibile ottenere il prompt di sistema",
+		"search_commits": "Impossibile cercare i commit",
+		"save_api_config": "Impossibile salvare la configurazione API",
+		"load_api_config": "Impossibile caricare la configurazione API",
+		"rename_api_config": "Impossibile rinominare la configurazione API",
+		"delete_api_config": "Impossibile eliminare la configurazione API",
+		"list_api_config": "Impossibile elencare le configurazioni API",
+		"update_server_timeout": "Impossibile aggiornare il timeout del server",
+		"no_workspace": "Nessuna cartella di lavoro aperta",
+		"checkpoint_timeout": "Timeout in attesa del checkpoint",
+		"checkpoint_failed": "Impossibile ripristinare il checkpoint",
+		"history_scan_failed": "Scansione della cronologia delle attività non riuscita: {{error}}",
+		"history_reindex_failed": "Ricostruzione degli indici della cronologia non riuscita: {{error}}",
+		"share_no_active_task": "Nessuna attività attiva da condividere",
+		"share_auth_required": "Autenticazione richiesta per condividere l'attività",
+		"share_not_enabled": "La condivisione non è abilitata per il tuo account",
+		"share_task_not_found": "Attività non trovata",
+		"share_task_failed": "Condivisione dell'attività non riuscita",
+		"settings_import_failed": "Importazione delle impostazioni non riuscita: {{error}}",
+		"update_support_prompt": "Aggiornamento del prompt di supporto non riuscito",
+		"enhance_prompt": "Miglioramento del prompt non riuscito"
+	},
+	"info": {
+		"history_reindexed": "Indici della cronologia ricostruiti con successo",
+		"history_scanned": "Scansione della cronologia delle attività completata",
+		"settings_imported": "Impostazioni importate con successo",
+		"clipboard_copy": "Copiato negli appunti"
+	},
+	"confirmation": {
+		"reindex_history": "Attenzione: Questo ricreerà gli indici taskHistory/*.json esaminando le directory delle attività e le strutture legacy di globalState[taskHistory]. Ciò potrebbe ripristinare attività eliminate in precedenza e/o recuperare attività danneggiate. Se i contatori di token/costi non sono recuperabili, verranno impostati a zero. Qualsiasi attività che fa parte di più aree di lavoro verrà riassegnata solo all'area di lavoro utilizzata più di recente dall'attività."
+	},
+	"advanced": "Avanzate"
 }

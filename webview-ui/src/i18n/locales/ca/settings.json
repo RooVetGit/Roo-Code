@@ -31,7 +31,8 @@
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre Roo Code"
+		"about": "Sobre Roo Code",
+		"historyIndexTools": "Eines de l'índex de l'historial"
 	},
 	"prompts": {
 		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "Importar",
 			"export": "Exportar",
-			"reset": "Restablir"
+			"reset": "Restablir",
+			"reindexHistory": "Reindexa"
 		}
 	},
 	"thinkingBudget": {

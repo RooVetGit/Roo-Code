@@ -4,7 +4,8 @@
 		"no": "否",
 		"cancel": "取消",
 		"remove": "移除",
-		"keep": "保留"
+		"keep": "保留",
+		"close": "关闭"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,52 @@
 		"waitingForLogs": "正在等待升级开始...",
 		"noLogs": "没有可用的日志。",
 		"complete": "升级完成"
-	}
+	},
+	"errors": {
+		"not_a_git_repo": "不是一个 git 仓库",
+		"no_git_handler": "未找到 git 处理器",
+		"invalid_repo_path": "无效的仓库路径",
+		"invalid_commit_hash": "无效的提交哈希",
+		"invalid_path": "无效的文件路径",
+		"failed_to_get_patch": "获取补丁失败",
+		"failed_to_get_commit": "获取提交失败",
+		"failed_to_get_uncommitted_files": "获取未提交文件失败",
+		"failed_to_get_uncommitted_patch": "获取未提交补丁失败",
+		"invalid_github_url": "无效的 GitHub URL",
+		"issue_not_found": "未找到问题",
+		"pr_not_found": "未找到拉取请求",
+		"get_git_diff": "获取 git 差异失败",
+		"get_file_content": "获取文件内容失败",
+		"get_system_prompt": "获取系统提示失败",
+		"search_commits": "搜索提交失败",
+		"save_api_config": "保存 API 配置失败",
+		"load_api_config": "加载 API 配置失败",
+		"rename_api_config": "重命名 API 配置失败",
+		"delete_api_config": "删除 API 配置失败",
+		"list_api_config": "列出 API 配置失败",
+		"update_server_timeout": "更新服务器超时失败",
+		"no_workspace": "没有打开的工作区文件夹",
+		"checkpoint_timeout": "等待存档点超时",
+		"checkpoint_failed": "恢复存档点失败",
+		"history_scan_failed": "扫描工作历史失败: {{error}}",
+		"history_reindex_failed": "重建历史索引失败: {{error}}",
+		"share_no_active_task": "没有要分享的活动工作",
+		"share_auth_required": "分享工作需要身份验证",
+		"share_not_enabled": "您的帐户未启用分享功能",
+		"share_task_not_found": "未找到工作",
+		"share_task_failed": "分享工作失败",
+		"settings_import_failed": "导入设置失败: {{error}}",
+		"update_support_prompt": "更新支持提示失败",
+		"enhance_prompt": "增强提示失败"
+	},
+	"info": {
+		"history_reindexed": "历史索引已成功重建",
+		"history_scanned": "工作历史扫描完成",
+		"settings_imported": "设置已成功导入",
+		"clipboard_copy": "已复制到剪贴板"
+	},
+	"confirmation": {
+		"reindex_history": "警告: 这将通过遍历工作目录和旧的 globalState[taskHistory] 结构来重新创建 taskHistory/*.json 索引。这可能会取消删除您之前删除过的工作，和/或恢复损坏的工作。如果 token/成本计数器无法恢复，它们将被设置为零。任何属于多个工作区的工作将被重新分配到该工作最近使用的唯一一个工作区。"
+	},
+	"advanced": "高级"
 }

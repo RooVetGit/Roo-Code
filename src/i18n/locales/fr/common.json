@@ -80,7 +80,8 @@
 			"processExitedWithError": "Le processus Claude Code s'est terminé avec le code {{exitCode}}. Sortie d'erreur : {{output}}",
 			"stoppedWithReason": "Claude Code s'est arrêté pour la raison : {{reason}}",
 			"apiKeyModelPlanMismatch": "Les clés API et les plans d'abonnement permettent différents modèles. Assurez-vous que le modèle sélectionné est inclus dans votre plan."
-		}
+		},
+		"history_reindex_failed": "La réindexation de l'historique des tâches a échoué : {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Aucun contenu de terminal sélectionné",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "Lien de partage d'organisation copié dans le presse-papiers !",
 		"public_share_link_copied": "Lien de partage public copié dans le presse-papiers !",
 		"mode_exported": "Mode '{{mode}}' exporté avec succès",
-		"mode_imported": "Mode importé avec succès"
+		"mode_imported": "Mode importé avec succès",
+		"history_reindexed": "L'historique des tâches a été réindexé avec succès."
 	},
 	"answers": {
 		"yes": "Oui",

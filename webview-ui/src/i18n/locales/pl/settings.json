@@ -31,7 +31,8 @@
 		"prompts": "Podpowiedzi",
 		"experimental": "Eksperymentalne",
 		"language": "Język",
-		"about": "O Roo Code"
+		"about": "O Roo Code",
+		"historyIndexTools": "Narzędzia indeksu historii"
 	},
 	"prompts": {
 		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "Importuj",
 			"export": "Eksportuj",
-			"reset": "Resetuj"
+			"reset": "Resetuj",
+			"reindexHistory": "Przeindeksuj"
 		}
 	},
 	"thinkingBudget": {

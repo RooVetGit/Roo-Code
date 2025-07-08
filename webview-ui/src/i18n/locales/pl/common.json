@@ -9,7 +9,8 @@
 		"no": "Nie",
 		"cancel": "Anuluj",
 		"remove": "Usuń",
-		"keep": "Zachowaj"
+		"keep": "Zachowaj",
+		"close": "Zamknij"
 	},
 	"ui": {
 		"search_placeholder": "Szukaj..."
@@ -62,5 +63,50 @@
 		"waitingForLogs": "Oczekiwanie na rozpoczęcie aktualizacji...",
 		"noLogs": "Brak dostępnych dzienników.",
 		"complete": "Aktualizacja zakończona"
-	}
+	},
+	"errors": {
+		"get_system_prompt": "Nie udało się pobrać monitu systemowego",
+		"search_commits": "Nie udało się przeszukać commitów",
+		"save_api_config": "Nie udało się zapisać konfiguracji API",
+		"load_api_config": "Nie udało się załadować konfiguracji API",
+		"rename_api_config": "Nie udało się zmienić nazwy konfiguracji API",
+		"delete_api_config": "Nie udało się usunąć konfiguracji API",
+		"list_api_config": "Nie udało się wylistować konfiguracji API",
+		"update_server_timeout": "Nie udało się zaktualizować limitu czasu serwera",
+		"no_workspace": "Żaden folder obszaru roboczego nie jest otwarty",
+		"checkpoint_timeout": "Przekroczono limit czasu oczekiwania na punkt kontrolny",
+		"checkpoint_failed": "Nie udało się przywrócić punktu kontrolnego",
+		"create_task": "Nie udało się utworzyć zadania",
+		"get_task": "Nie udało się pobrać zadania",
+		"list_tasks": "Nie udało się wylistować zadań",
+		"update_task": "Nie udało się zaktualizować zadania",
+		"delete_task": "Nie udało się usunąć zadania",
+		"get_settings": "Nie udało się pobrać ustawień",
+		"update_settings": "Nie udało się zaktualizować ustawień",
+		"get_api_keys": "Nie udało się pobrać kluczy API",
+		"save_api_keys": "Nie udało się zapisać kluczy API",
+		"get_localization": "Nie udało się pobrać lokalizacji",
+		"get_theme": "Nie udało się pobrać motywu",
+		"get_user_close_behavior": "Nie udało się pobrać zachowania użytkownika przy zamykaniu",
+		"history_scan_failed": "Nie udało się przeskanować historii zadań: {{error}}",
+		"history_reindex_failed": "Nie udało się przebudować indeksów historii: {{error}}",
+		"share_no_active_task": "Brak aktywnego zadania do udostępnienia",
+		"share_auth_required": "Wymagane uwierzytelnienie, aby udostępnić zadanie",
+		"share_not_enabled": "Udostępnianie nie jest włączone dla Twojego konta",
+		"share_task_not_found": "Nie znaleziono zadania",
+		"share_task_failed": "Nie udało się udostępnić zadania",
+		"settings_import_failed": "Nie udało się zaimportować ustawień: {{error}}",
+		"update_support_prompt": "Nie udało się zaktualizować monitu wsparcia",
+		"enhance_prompt": "Nie udało się ulepszyć monitu"
+	},
+	"info": {
+		"history_reindexed": "Indeksy historii zostały pomyślnie przebudowane",
+		"history_scanned": "Skanowanie historii zadań zakończone",
+		"settings_imported": "Ustawienia zaimportowane pomyślnie",
+		"clipboard_copy": "Skopiowano do schowka"
+	},
+	"confirmation": {
+		"reindex_history": "Ostrzeżenie: To spowoduje ponowne utworzenie indeksów taskHistory/*.json poprzez przeglądanie katalogów zadań i starszych struktur globalState[taskHistory]. Może to przywrócić zadania, które zostały wcześniej usunięte i/lub odzyskać uszkodzone zadania. Jeśli liczniki tokenów/kosztów nie będą możliwe do odzyskania, zostaną ustawione na zero. Wszelkie zadania należące do wielu obszarów roboczych zostaną przypisane tylko do ostatnio używanego obszaru roboczego przez zadanie."
+	},
+	"advanced": "Zaawansowane"
 }

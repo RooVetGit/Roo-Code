@@ -4,7 +4,8 @@
 		"no": "Hayır",
 		"cancel": "İptal",
 		"remove": "Kaldır",
-		"keep": "Tut"
+		"keep": "Tut",
+		"close": "Kapat"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,38 @@
 		"waitingForLogs": "Yükseltmenin başlaması bekleniyor...",
 		"noLogs": "Kullanılabilir günlük yok.",
 		"complete": "Yükseltme Tamamlandı"
-	}
+	},
+	"errors": {
+		"get_system_prompt": "Sistem istemi alınamadı",
+		"search_commits": "Commit'ler aranamadı",
+		"save_api_config": "API yapılandırması kaydedilemedi",
+		"load_api_config": "API yapılandırması yüklenemedi",
+		"rename_api_config": "API yapılandırması yeniden adlandırılamadı",
+		"delete_api_config": "API yapılandırması silinemedi",
+		"list_api_config": "API yapılandırmaları listelenemedi",
+		"update_server_timeout": "Sunucu zaman aşımı güncellenemedi",
+		"no_workspace": "Açık bir çalışma alanı klasörü yok",
+		"checkpoint_timeout": "Kontrol noktası beklenirken zaman aşımı",
+		"checkpoint_failed": "Kontrol noktası geri yüklenemedi",
+		"history_scan_failed": "Görev geçmişi taranamadı: {{error}}",
+		"history_reindex_failed": "Geçmiş dizinleri yeniden oluşturulamadı: {{error}}",
+		"share_no_active_task": "Paylaşılacak aktif görev yok",
+		"share_auth_required": "Görevi paylaşmak için kimlik doğrulaması gerekiyor",
+		"share_not_enabled": "Hesabınız için paylaşım etkin değil",
+		"share_task_not_found": "Görev bulunamadı",
+		"share_task_failed": "Görev paylaşılamadı",
+		"settings_import_failed": "Ayarlar içe aktarılamadı: {{error}}",
+		"update_support_prompt": "Destek istemi güncellenemedi",
+		"enhance_prompt": "İstem geliştirilemedi"
+	},
+	"info": {
+		"history_reindexed": "Geçmiş dizinleri başarıyla yeniden oluşturuldu",
+		"history_scanned": "Görev geçmişi taraması tamamlandı",
+		"settings_imported": "Ayarlar başarıyla içe aktarıldı",
+		"clipboard_copy": "Panoya kopyalandı"
+	},
+	"confirmation": {
+		"reindex_history": "Uyarı: Bu, görev dizinlerini ve eski globalState[taskHistory] yapılarını dolaşarak taskHistory/*.json dizinlerini yeniden oluşturacaktır. Bu, daha önce sildiğiniz görevleri geri getirebilir ve/veya bozuk olan görevleri kurtarabilir. Token/maliyet sayaçları kurtarılamazsa sıfırlanır. Birden fazla çalışma alanının üyesi olan tüm görevler, yalnızca görevin kullandığı en son çalışma alanına yeniden atanır."
+	},
+	"advanced": "Gelişmiş"
 }

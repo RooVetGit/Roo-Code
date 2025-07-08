@@ -4,7 +4,8 @@
 		"no": "Non",
 		"cancel": "Annuler",
 		"remove": "Supprimer",
-		"keep": "Conserver"
+		"keep": "Conserver",
+		"close": "Fermer"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,52 @@
 		"waitingForLogs": "En attente du démarrage de la mise à niveau...",
 		"noLogs": "Aucun journal disponible.",
 		"complete": "Mise à niveau terminée"
-	}
+	},
+	"errors": {
+		"host_not_found": "Hôte introuvable",
+		"invalid_url": "URL invalide",
+		"invalid_path": "Chemin invalide",
+		"file_not_found": "Fichier non trouvé",
+		"file_exists": "Le fichier existe déjà",
+		"file_read_error": "Erreur de lecture du fichier",
+		"file_write_error": "Erreur d'écriture dans le fichier",
+		"file_delete_error": "Erreur de suppression du fichier",
+		"invalid_json": "JSON non valide",
+		"invalid_config": "Configuration invalide",
+		"request_failed": "La requête a échoué",
+		"request_timeout": "Délai de la requête dépassé",
+		"invalid_response": "Réponse invalide",
+		"unknown": "Erreur inconnue",
+		"get_system_prompt": "Échec de la récupération du prompt système",
+		"search_commits": "Échec de la recherche des commits",
+		"save_api_config": "Échec de l'enregistrement de la configuration de l'API",
+		"load_api_config": "Échec du chargement de la configuration de l'API",
+		"rename_api_config": "Échec du renommage de la configuration de l'API",
+		"delete_api_config": "Échec de la suppression de la configuration de l'API",
+		"list_api_config": "Échec de la liste des configurations d'API",
+		"update_server_timeout": "Échec de la mise à jour du délai d'attente du serveur",
+		"no_workspace": "Aucun dossier d'espace de travail n'est ouvert",
+		"checkpoint_timeout": "Délai d'attente pour le point de contrôle dépassé",
+		"checkpoint_failed": "Échec de la restauration du point de contrôle",
+		"history_scan_failed": "Échec de l'analyse de l'historique des tâches : {{error}}",
+		"history_reindex_failed": "Échec de la reconstruction des index de l'historique : {{error}}",
+		"share_no_active_task": "Aucune tâche active à partager",
+		"share_auth_required": "Authentification requise pour partager la tâche",
+		"share_not_enabled": "Le partage n'est pas activé pour votre compte",
+		"share_task_not_found": "Tâche non trouvée",
+		"share_task_failed": "Échec du partage de la tâche",
+		"settings_import_failed": "Échec de l'importation des paramètres : {{error}}",
+		"update_support_prompt": "Échec de la mise à jour du prompt de support",
+		"enhance_prompt": "Échec de l'amélioration du prompt"
+	},
+	"info": {
+		"history_reindexed": "Les index de l'historique ont été reconstruits avec succès",
+		"history_scanned": "Analyse de l'historique des tâches terminée",
+		"settings_imported": "Paramètres importés avec succès",
+		"clipboard_copy": "Copié dans le presse-papiers"
+	},
+	"confirmation": {
+		"reindex_history": "Avertissement : Ceci recréera les index taskHistory/*.json en parcourant les répertoires des tâches et les anciennes structures globalState[taskHistory]. Cela peut annuler la suppression de tâches que vous aviez précédemment supprimées et/ou récupérer des tâches corrompues. Si les compteurs de jetons/coûts ne sont pas récupérables, ils seront remis à zéro. Toutes les tâches membres de plusieurs espaces de travail seront réaffectées uniquement au dernier espace de travail utilisé par la tâche."
+	},
+	"advanced": "Avancé"
 }

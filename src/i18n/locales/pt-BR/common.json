@@ -84,7 +84,8 @@
 			"processExitedWithError": "O processo Claude Code saiu com código {{exitCode}}. Saída de erro: {{output}}",
 			"stoppedWithReason": "Claude Code parou pela razão: {{reason}}",
 			"apiKeyModelPlanMismatch": "Chaves de API e planos de assinatura permitem modelos diferentes. Certifique-se de que o modelo selecionado esteja incluído no seu plano."
-		}
+		},
+		"history_reindex_failed": "A reindexação do histórico de tarefas falhou: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Nenhum conteúdo do terminal selecionado",
@@ -105,7 +106,8 @@
 		"organization_share_link_copied": "Link de compartilhamento da organização copiado para a área de transferência!",
 		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!",
 		"mode_exported": "Modo '{{mode}}' exportado com sucesso",
-		"mode_imported": "Modo importado com sucesso"
+		"mode_imported": "Modo importado com sucesso",
+		"history_reindexed": "Histórico de tarefas reindexado com sucesso."
 	},
 	"answers": {
 		"yes": "Sim",

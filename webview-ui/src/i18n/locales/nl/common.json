@@ -4,7 +4,8 @@
 		"no": "Nee",
 		"cancel": "Annuleren",
 		"remove": "Verwijderen",
-		"keep": "Behouden"
+		"keep": "Behouden",
+		"close": "Sluiten"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,57 @@
 		"waitingForLogs": "Wachten tot de upgrade start...",
 		"noLogs": "Geen logboeken beschikbaar.",
 		"complete": "Upgrade voltooid"
-	}
+	},
+	"app": {
+		"name": "Roo Code",
+		"description": "Roo Code is een AI-codeassistent die u helpt bij het schrijven, refactoren en debuggen van uw code.",
+		"short_description": "AI-codeeerassistent"
+	},
+	"button": {
+		"add": "Toevoegen",
+		"cancel": "Annuleren",
+		"clear": "Wissen",
+		"close": "Sluiten",
+		"confirm": "Bevestigen",
+		"delete": "Verwijderen",
+		"edit": "Bewerken",
+		"learnMore": "Meer informatie",
+		"save": "Opslaan",
+		"submit": "Indienen"
+	},
+	"errors": {
+		"an_unknown_error_occurred": "Er is een onbekende fout opgetreden",
+		"failed_to_summarize": "Samenvatting mislukt",
+		"get_system_prompt": "Systeemprompt ophalen mislukt",
+		"search_commits": "Commits zoeken mislukt",
+		"save_api_config": "API-configuratie opslaan mislukt",
+		"load_api_config": "API-configuratie laden mislukt",
+		"rename_api_config": "API-configuratie hernoemen mislukt",
+		"delete_api_config": "API-configuratie verwijderen mislukt",
+		"list_api_config": "API-configuraties weergeven mislukt",
+		"update_server_timeout": "Time-out van server bijwerken mislukt",
+		"no_workspace": "Geen werkruimtemap geopend",
+		"checkpoint_timeout": "Time-out bij wachten op checkpoint",
+		"checkpoint_failed": "Checkpoint herstellen mislukt",
+		"history_scan_failed": "Scannen van taakgeschiedenis mislukt: {{error}}",
+		"history_reindex_failed": "Herbouwen van geschiedenisindexen mislukt: {{error}}",
+		"share_no_active_task": "Geen actieve taak om te delen",
+		"share_auth_required": "Authenticatie vereist om taak te delen",
+		"share_not_enabled": "Delen is niet ingeschakeld voor uw account",
+		"share_task_not_found": "Taak niet gevonden",
+		"share_task_failed": "Taak delen mislukt",
+		"settings_import_failed": "Instellingen importeren mislukt: {{error}}",
+		"update_support_prompt": "Ondersteuningsprompt bijwerken mislukt",
+		"enhance_prompt": "Prompt verbeteren mislukt"
+	},
+	"info": {
+		"history_reindexed": "Geschiedenisindexen succesvol opnieuw opgebouwd",
+		"history_scanned": "Scannen van taakgeschiedenis voltooid",
+		"settings_imported": "Instellingen succesvol geïmporteerd",
+		"clipboard_copy": "Gekopieerd naar klembord"
+	},
+	"confirmation": {
+		"reindex_history": "Waarschuwing: dit zal de taskHistory/*.json-indexen opnieuw aanmaken door de taakmappen en verouderde globalState[taskHistory]-structuren te doorlopen. Dit kan taken herstellen die u eerder hebt verwijderd en/of corrupte taken herstellen. Als token/kostentellers niet kunnen worden hersteld, worden ze op nul gezet. Alle taken die deel uitmaken van meerdere werkruimten, worden alleen opnieuw toegewezen aan de meest recent gebruikte werkruimte door de taak."
+	},
+	"advanced": "Geavanceerd"
 }

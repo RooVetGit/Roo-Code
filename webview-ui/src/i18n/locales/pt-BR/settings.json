@@ -31,7 +31,8 @@
 		"prompts": "Prompts",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre"
+		"about": "Sobre",
+		"historyIndexTools": "Ferramentas de Índice do Histórico"
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "Importar",
 			"export": "Exportar",
-			"reset": "Redefinir"
+			"reset": "Redefinir",
+			"reindexHistory": "Reindexar"
 		}
 	},
 	"thinkingBudget": {

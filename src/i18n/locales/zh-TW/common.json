@@ -80,7 +80,8 @@
 			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
 			"apiKeyModelPlanMismatch": "API 金鑰和訂閱方案允許不同的模型。請確保所選模型包含在您的方案中。"
 		},
-		"mode_import_failed": "匯入模式失敗：{{error}}"
+		"mode_import_failed": "匯入模式失敗：{{error}}",
+		"history_reindex_failed": "任務歷史記錄重建索引失敗：{{error}}。"
 	},
 	"warnings": {
 		"no_terminal_content": "沒有選擇終端機內容",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "組織分享連結已複製到剪貼簿！",
 		"public_share_link_copied": "公開分享連結已複製到剪貼簿！",
 		"mode_exported": "模式 '{{mode}}' 已成功匯出",
-		"mode_imported": "模式已成功匯入"
+		"mode_imported": "模式已成功匯入",
+		"history_reindexed": "任務歷史記錄已成功重建索引。"
 	},
 	"answers": {
 		"yes": "是",

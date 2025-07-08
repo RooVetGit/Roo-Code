@@ -80,7 +80,8 @@
 			"processExitedWithError": "Proses Claude Code keluar dengan kode {{exitCode}}. Output error: {{output}}",
 			"stoppedWithReason": "Claude Code berhenti karena alasan: {{reason}}",
 			"apiKeyModelPlanMismatch": "Kunci API dan paket berlangganan memungkinkan model yang berbeda. Pastikan model yang dipilih termasuk dalam paket Anda."
-		}
+		},
+		"history_reindex_failed": "Pengindeksan ulang riwayat tugas gagal: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Tidak ada konten terminal yang dipilih",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "Tautan berbagi organisasi disalin ke clipboard!",
 		"public_share_link_copied": "Tautan berbagi publik disalin ke clipboard!",
 		"mode_exported": "Mode '{{mode}}' berhasil diekspor",
-		"mode_imported": "Mode berhasil diimpor"
+		"mode_imported": "Mode berhasil diimpor",
+		"history_reindexed": "Riwayat tugas berhasil diindeks ulang."
 	},
 	"answers": {
 		"yes": "Ya",

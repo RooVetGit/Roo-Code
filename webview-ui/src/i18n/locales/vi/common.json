@@ -4,7 +4,8 @@
 		"no": "Không",
 		"cancel": "Hủy",
 		"remove": "Xóa",
-		"keep": "Giữ"
+		"keep": "Giữ",
+		"close": "Đóng"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,50 @@
 		"waitingForLogs": "Đang chờ nâng cấp bắt đầu...",
 		"noLogs": "Không có nhật ký nào.",
 		"complete": "Nâng cấp hoàn tất"
-	}
+	},
+	"errors": {
+		"get_git_diff": "Lấy git diff thất bại",
+		"get_active_branch": "Lấy nhánh hiện tại thất bại",
+		"get_all_branches": "Lấy tất cả các nhánh thất bại",
+		"get_all_remote_branches": "Lấy tất cả các nhánh từ xa thất bại",
+		"get_git_log": "Lấy git log thất bại",
+		"get_git_show": "Lấy git show thất bại",
+		"get_file_tree": "Lấy cây tệp thất bại",
+		"get_file_content": "Lấy nội dung tệp thất bại",
+		"get_project_language": "Lấy ngôn ngữ dự án thất bại",
+		"get_dependencies": "Lấy các phụ thuộc thất bại",
+		"get_bookmarks": "Lấy dấu trang thất bại",
+		"get_terminals": "Lấy các thiết bị đầu cuối thất bại",
+		"get_system_prompt": "Lấy lời nhắc hệ thống thất bại",
+		"search_commits": "Tìm kiếm commit thất bại",
+		"save_api_config": "Lưu cấu hình API thất bại",
+		"load_api_config": "Tải cấu hình API thất bại",
+		"rename_api_config": "Đổi tên cấu hình API thất bại",
+		"delete_api_config": "Xóa cấu hình API thất bại",
+		"list_api_config": "Liệt kê các cấu hình API thất bại",
+		"update_server_timeout": "Cập nhật thời gian chờ máy chủ thất bại",
+		"no_workspace": "Không có thư mục không gian làm việc nào được mở",
+		"checkpoint_timeout": "Thời gian chờ điểm kiểm tra đã hết",
+		"checkpoint_failed": "Khôi phục điểm kiểm tra thất bại",
+		"history_scan_failed": "Quét lịch sử công việc thất bại: {{error}}",
+		"history_reindex_failed": "Xây dựng lại chỉ mục lịch sử thất bại: {{error}}",
+		"share_no_active_task": "Không có công việc nào đang hoạt động để chia sẻ",
+		"share_auth_required": "Yêu cầu xác thực để chia sẻ công việc",
+		"share_not_enabled": "Chia sẻ không được bật cho tài khoản của bạn",
+		"share_task_not_found": "Không tìm thấy công việc",
+		"share_task_failed": "Chia sẻ công việc thất bại",
+		"settings_import_failed": "Nhập cài đặt thất bại: {{error}}",
+		"update_support_prompt": "Cập nhật lời nhắc hỗ trợ thất bại",
+		"enhance_prompt": "Nâng cao lời nhắc thất bại"
+	},
+	"info": {
+		"history_reindexed": "Các chỉ mục lịch sử đã được xây dựng lại thành công",
+		"history_scanned": "Quét lịch sử công việc đã hoàn tất",
+		"settings_imported": "Cài đặt đã được nhập thành công",
+		"clipboard_copy": "Đã sao chép vào clipboard"
+	},
+	"confirmation": {
+		"reindex_history": "Cảnh báo: Thao tác này sẽ tạo lại các chỉ mục taskHistory/*.json bằng cách duyệt qua các thư mục công việc và cấu trúc globalState[taskHistory] cũ. Điều này có thể khôi phục các công việc mà bạn đã xóa trước đó và/hoặc phục hồi các công việc bị hỏng. Nếu bộ đếm token/chi phí không thể khôi phục được, chúng sẽ được đặt về 0. Bất kỳ công việc nào là thành viên của nhiều không gian làm việc sẽ chỉ được gán lại cho không gian làm việc được sử dụng gần đây nhất."
+	},
+	"advanced": "Nâng cao"
 }

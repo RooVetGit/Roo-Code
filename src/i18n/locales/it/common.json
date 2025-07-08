@@ -80,7 +80,8 @@
 			"processExitedWithError": "Il processo Claude Code è terminato con codice {{exitCode}}. Output di errore: {{output}}",
 			"stoppedWithReason": "Claude Code si è fermato per il motivo: {{reason}}",
 			"apiKeyModelPlanMismatch": "Le chiavi API e i piani di abbonamento consentono modelli diversi. Assicurati che il modello selezionato sia incluso nel tuo piano."
-		}
+		},
+		"history_reindex_failed": "Reindicizzazione della cronologia delle attività fallita: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Nessun contenuto del terminale selezionato",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "Link di condivisione organizzazione copiato negli appunti!",
 		"public_share_link_copied": "Link di condivisione pubblica copiato negli appunti!",
 		"mode_exported": "Modalità '{{mode}}' esportata con successo",
-		"mode_imported": "Modalità importata con successo"
+		"mode_imported": "Modalità importata con successo",
+		"history_reindexed": "Cronologia delle attività reindicizzata con successo."
 	},
 	"answers": {
 		"yes": "Sì",

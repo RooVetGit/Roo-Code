@@ -85,7 +85,8 @@
 			"processExitedWithError": "Claude Code 进程退出，退出码：{{exitCode}}。错误输出：{{output}}",
 			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
 			"apiKeyModelPlanMismatch": "API 密钥和订阅计划支持不同的模型。请确保所选模型包含在您的计划中。"
-		}
+		},
+		"history_reindex_failed": "工作历史重建索引失败: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "没有选择终端内容",
@@ -106,7 +107,8 @@
 		"organization_share_link_copied": "组织分享链接已复制到剪贴板！",
 		"public_share_link_copied": "公开分享链接已复制到剪贴板！",
 		"mode_exported": "模式 '{{mode}}' 已成功导出",
-		"mode_imported": "模式已成功导入"
+		"mode_imported": "模式已成功导入",
+		"history_reindexed": "工作历史已成功重建索引"
 	},
 	"answers": {
 		"yes": "是",

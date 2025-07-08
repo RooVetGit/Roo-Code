@@ -4,7 +4,8 @@
 		"no": "아니오",
 		"cancel": "취소",
 		"remove": "삭제",
-		"keep": "유지"
+		"keep": "유지",
+		"close": "닫기"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,38 @@
 		"waitingForLogs": "업그레이드가 시작되기를 기다리는 중...",
 		"noLogs": "사용 가능한 로그가 없습니다.",
 		"complete": "업그레이드 완료"
-	}
+	},
+	"errors": {
+		"get_system_prompt": "시스템 프롬프트를 가져오지 못했습니다",
+		"search_commits": "커밋 검색에 실패했습니다",
+		"save_api_config": "API 구성을 저장하지 못했습니다",
+		"load_api_config": "API 구성을 불러오지 못했습니다",
+		"rename_api_config": "API 구성의 이름을 바꾸지 못했습니다",
+		"delete_api_config": "API 구성을 삭제하지 못했습니다",
+		"list_api_config": "API 구성 목록을 가져오지 못했습니다",
+		"update_server_timeout": "서버 시간 초과를 업데이트하지 못했습니다",
+		"no_workspace": "작업 공간 폴더가 열려 있지 않습니다",
+		"checkpoint_timeout": "체크포인트를 기다리는 동안 시간 초과",
+		"checkpoint_failed": "체크포인트 복원에 실패했습니다",
+		"history_scan_failed": "작업 기록을 스캔하지 못했습니다: {{error}}",
+		"history_reindex_failed": "기록 인덱스를 다시 빌드하지 못했습니다: {{error}}",
+		"share_no_active_task": "공유할 활성 작업이 없습니다",
+		"share_auth_required": "작업을 공유하려면 인증이 필요합니다",
+		"share_not_enabled": "계정에 공유가 활성화되어 있지 않습니다",
+		"share_task_not_found": "작업을 찾을 수 없습니다",
+		"share_task_failed": "작업을 공유하지 못했습니다",
+		"settings_import_failed": "설정을 가져오지 못했습니다: {{error}}",
+		"update_support_prompt": "지원 프롬프트를 업데이트하지 못했습니다",
+		"enhance_prompt": "프롬프트를 향상시키지 못했습니다"
+	},
+	"info": {
+		"history_reindexed": "기록 인덱스가 성공적으로 재구성되었습니다",
+		"history_scanned": "작업 기록 스캔이 완료되었습니다",
+		"settings_imported": "설정을 성공적으로 가져왔습니다",
+		"clipboard_copy": "클립보드에 복사되었습니다"
+	},
+	"confirmation": {
+		"reindex_history": "경고: 이 작업은 작업 디렉터리와 레거시 globalState[taskHistory] 구조를 탐색하여 taskHistory/*.json 인덱스를 다시 생성합니다. 이로 인해 이전에 삭제한 작업이 삭제 취소되거나 손상된 작업이 복구될 수 있습니다. 토큰/비용 카운터를 복구할 수 없는 경우 0으로 설정됩니다. 여러 작업 공간의 구성원인 모든 작업은 해당 작업에서 사용한 가장 최근 작업 공간에만 다시 할당됩니다."
+	},
+	"advanced": "고급"
 }

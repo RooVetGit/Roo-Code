@@ -80,7 +80,8 @@
 			"processExitedWithError": "Claude Code Prozess wurde mit Code {{exitCode}} beendet. Fehlerausgabe: {{output}}",
 			"stoppedWithReason": "Claude Code wurde mit Grund gestoppt: {{reason}}",
 			"apiKeyModelPlanMismatch": "API-Schlüssel und Abonnement-Pläne erlauben verschiedene Modelle. Stelle sicher, dass das ausgewählte Modell in deinem Plan enthalten ist."
-		}
+		},
+		"history_reindex_failed": "Die Neuindizierung des Aufgabenverlaufs ist fehlgeschlagen: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Kein Terminal-Inhalt ausgewählt",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "Organisations-Freigabelink in die Zwischenablage kopiert!",
 		"public_share_link_copied": "Öffentlicher Freigabelink in die Zwischenablage kopiert!",
 		"mode_exported": "Modus '{{mode}}' erfolgreich exportiert",
-		"mode_imported": "Modus erfolgreich importiert"
+		"mode_imported": "Modus erfolgreich importiert",
+		"history_reindexed": "Der Aufgabenverlauf wurde erfolgreich neu indiziert."
 	},
 	"answers": {
 		"yes": "Ja",

@@ -4,7 +4,8 @@
 		"no": "いいえ",
 		"cancel": "キャンセル",
 		"remove": "削除",
-		"keep": "保持"
+		"keep": "保持",
+		"close": "閉じる"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,50 @@
 		"waitingForLogs": "アップグレードの開始を待っています...",
 		"noLogs": "利用可能なログはありません。",
 		"complete": "アップグレード完了"
-	}
+	},
+	"errors": {
+		"invalid_file_path": "無効なファイルパスです",
+		"invalid_json_format": "JSON形式が無効です",
+		"invalid_vsix_file": "VSIXファイルが無効です",
+		"marketplace_no_extension_found": "マーケットプレイスで拡張機能が見つかりません",
+		"marketplace_no_release_found_for_version": "バージョン{{version}}のリリースが見つかりません",
+		"unzip_failed": "解凍に失敗しました",
+		"missing_context": "コンテキストが見つかりません",
+		"invalid_flame_graph_format": "フレームグラフの形式が無効です",
+		"task_not_found": "タスクが見つかりません",
+		"task_load_failed": "タスクの読み込みに失敗しました",
+		"invalid_api_key": "APIキーが無効です",
+		"get_models": "モデルの取得に失敗しました",
+		"get_system_prompt": "システムプロンプトの取得に失敗しました",
+		"search_commits": "コミットの検索に失敗しました",
+		"save_api_config": "API設定の保存に失敗しました",
+		"load_api_config": "API設定の読み込みに失敗しました",
+		"rename_api_config": "API設定の名前の変更に失敗しました",
+		"delete_api_config": "API設定の削除に失敗しました",
+		"list_api_config": "API設定の一覧表示に失敗しました",
+		"update_server_timeout": "サーバーのタイムアウトの更新に失敗しました",
+		"no_workspace": "開いているワークスペースフォルダがありません",
+		"checkpoint_timeout": "チェックポイント待機中にタイムアウトしました",
+		"checkpoint_failed": "チェックポイントの復元に失敗しました",
+		"history_scan_failed": "タスク履歴のスキャンに失敗しました: {{error}}",
+		"history_reindex_failed": "履歴インデックスの再構築に失敗しました: {{error}}",
+		"share_no_active_task": "共有するアクティブなタスクがありません",
+		"share_auth_required": "タスクを共有するには認証が必要です",
+		"share_not_enabled": "あなたのアカウントでは共有が有効になっていません",
+		"share_task_not_found": "タスクが見つかりません",
+		"share_task_failed": "タスクの共有に失敗しました",
+		"settings_import_failed": "設定のインポートに失敗しました: {{error}}",
+		"update_support_prompt": "サポートプロンプトの更新に失敗しました",
+		"enhance_prompt": "プロンプトの強化に失敗しました"
+	},
+	"info": {
+		"history_reindexed": "履歴インデックスが正常に再構築されました",
+		"history_scanned": "タスク履歴のスキャンが完了しました",
+		"settings_imported": "設定が正常にインポートされました",
+		"clipboard_copy": "クリップボードにコピーしました"
+	},
+	"confirmation": {
+		"reindex_history": "警告: これにより、タスクディレクトリと従来のglobalState[taskHistory]構造を走査して、taskHistory/*.jsonインデックスが再作成されます。これにより、以前に削除したタスクの削除が取り消されたり、破損したタスクが回復されたりする可能性があります。トークン/コストカウンターが回復できない場合はゼロに設定されます。複数のワークスペースのメンバーであるタスクは、タスクが使用した最新のワークスペースのみに再割り当てされます。"
+	},
+	"advanced": "詳細"
 }

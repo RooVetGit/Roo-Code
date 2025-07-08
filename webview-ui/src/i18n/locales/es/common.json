@@ -4,7 +4,8 @@
 		"no": "No",
 		"cancel": "Cancelar",
 		"remove": "Eliminar",
-		"keep": "Mantener"
+		"keep": "Mantener",
+		"close": "Cerrar"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,48 @@
 		"waitingForLogs": "Esperando a que se inicie la actualización...",
 		"noLogs": "No hay registros disponibles.",
 		"complete": "Actualización completada"
-	}
+	},
+	"errors": {
+		"replay_task": "Error al reproducir la tarea",
+		"stop_task": "Error al detener la tarea",
+		"chat_message": "Error al enviar el mensaje de chat",
+		"list_mcp_files": "Error al listar los archivos del MCP",
+		"read_mcp_file": "Error al leer el archivo del MCP",
+		"get_mcp_file_contents": "Error al obtener el contenido del archivo del MCP",
+		"get_current_context": "Error al obtener el contexto actual",
+		"get_project_context": "Error al obtener el contexto del proyecto",
+		"get_task_completion": "Error al obtener la finalización de la tarea",
+		"get_project_files": "Error al obtener los archivos del proyecto",
+		"get_system_prompt": "Error al obtener el aviso del sistema",
+		"search_commits": "Error al buscar confirmaciones",
+		"save_api_config": "Error al guardar la configuración de la API",
+		"load_api_config": "Error al cargar la configuración de la API",
+		"rename_api_config": "Error al renombrar la configuración de la API",
+		"delete_api_config": "Error al eliminar la configuración de la API",
+		"list_api_config": "Error al listar las configuraciones de la API",
+		"update_server_timeout": "Error al actualizar el tiempo de espera del servidor",
+		"no_workspace": "No hay ninguna carpeta de espacio de trabajo abierta",
+		"checkpoint_timeout": "Tiempo de espera agotado para el punto de control",
+		"checkpoint_failed": "Error al restaurar el punto de control",
+		"history_scan_failed": "Error al escanear el historial de tareas: {{error}}",
+		"history_reindex_failed": "Error al reconstruir los índices del historial: {{error}}",
+		"share_no_active_task": "No hay ninguna tarea activa para compartir",
+		"share_auth_required": "Se requiere autenticación para compartir la tarea",
+		"share_not_enabled": "El uso compartido no está habilitado para su cuenta",
+		"share_task_not_found": "Tarea no encontrada",
+		"share_task_failed": "Error al compartir la tarea",
+		"settings_import_failed": "Error al importar la configuración: {{error}}",
+		"update_support_prompt": "Error al actualizar el aviso de soporte",
+		"enhance_prompt": "Error al mejorar el aviso"
+	},
+	"info": {
+		"history_reindexed": "Índices de historial reconstruidos correctamente",
+		"history_scanned": "Análisis del historial de tareas completado",
+		"settings_imported": "Configuración importada correctamente",
+		"clipboard_copy": "Copiado al portapapeles"
+	},
+	"confirmation": {
+		"reindex_history": "Advertencia: Esto recreará los índices de taskHistory/*.json recorriendo los directorios de tareas y las estructuras heredadas de globalState[taskHistory]. Esto puede recuperar tareas que habías eliminado previamente y/o recuperar tareas que están corruptas. Si los contadores de tokens/coste no son recuperables, se establecerán en cero. Cualquier tarea que sea miembro de múltiples espacios de trabajo se reasignará únicamente al espacio de trabajo más reciente utilizado por la tarea."
+	},
+	"advanced": "Avanzado"
 }

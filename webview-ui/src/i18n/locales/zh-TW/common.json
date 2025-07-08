@@ -4,7 +4,8 @@
 		"no": "否",
 		"cancel": "取消",
 		"remove": "移除",
-		"keep": "保留"
+		"keep": "保留",
+		"close": "關閉"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,53 @@
 		"waitingForLogs": "正在等待升級開始...",
 		"noLogs": "沒有可用的日誌。",
 		"complete": "升級完成"
-	}
+	},
+	"errors": {
+		"invalid_file_location": "無效的檔案位置。",
+		"invalid_image_encoding": "無效的圖片編碼。",
+		"invalid_selection": "無效的選取。",
+		"file_not_found": "找不到檔案。",
+		"file_read_error": "讀取檔案時發生錯誤。",
+		"file_write_error": "寫入檔案時發生錯誤。",
+		"unsupported_file_type": "不支援的檔案類型。",
+		"invalid_json_format": "無效的 JSON 格式。",
+		"invalid_api_key": "無效的 API 金鑰。",
+		"missing_permission": "缺少權限。",
+		"request_timeout": "請求逾時。",
+		"network_error": "網路錯誤。",
+		"unexpected_response": "非預期的回應。",
+		"unknown_error": "未知的錯誤。",
+		"get_user_friendly_name": "無法取得使用者易記名稱。",
+		"get_system_prompt": "無法取得系統提示。",
+		"search_commits": "搜尋提交失敗。",
+		"save_api_config": "儲存 API 設定失敗。",
+		"load_api_config": "載入 API 設定失敗。",
+		"rename_api_config": "重新命名 API 設定失敗。",
+		"delete_api_config": "刪除 API 設定失敗。",
+		"list_api_config": "列出 API 設定失敗。",
+		"update_server_timeout": "更新伺服器逾時失敗。",
+		"no_workspace": "沒有開啟的工作區資料夾。",
+		"checkpoint_timeout": "等待檢查點逾時。",
+		"checkpoint_failed": "還原檢查點失敗。",
+		"history_scan_failed": "掃描工作歷史記錄失敗：{{error}}",
+		"history_reindex_failed": "重建歷史記錄索引失敗：{{error}}",
+		"share_no_active_task": "沒有要分享的有效工作",
+		"share_auth_required": "分享工作需要驗證",
+		"share_not_enabled": "您的帳戶未啟用分享功能",
+		"share_task_not_found": "找不到工作",
+		"share_task_failed": "分享工作失敗",
+		"settings_import_failed": "匯入設定失敗：{{error}}",
+		"update_support_prompt": "更新支援提示失敗",
+		"enhance_prompt": "增強提示失敗"
+	},
+	"info": {
+		"history_reindexed": "歷史記錄索引已成功重建。",
+		"history_scanned": "工作歷史記錄掃描完成。",
+		"settings_imported": "設定已成功匯入。",
+		"clipboard_copy": "已複製到剪貼簿。"
+	},
+	"confirmation": {
+		"reindex_history": "警告：這將透過遍歷任務目錄和舊有的 globalState[taskHistory] 結構來重新建立 taskHistory/*.json 索引。這可能會取消刪除您先前刪除的任務和/或復原已損毀的任務。如果 token/成本計數器無法復原，它們將被設定為零。任何屬於多個工作區的任務將僅被重新指派給任務最近使用的工作區。"
+	},
+	"advanced": "進階"
 }

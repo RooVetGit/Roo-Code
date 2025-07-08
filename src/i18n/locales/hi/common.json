@@ -80,7 +80,8 @@
 			"processExitedWithError": "Claude Code प्रक्रिया कोड {{exitCode}} के साथ समाप्त हुई। त्रुटि आउटपुट: {{output}}",
 			"stoppedWithReason": "Claude Code इस कारण से रुका: {{reason}}",
 			"apiKeyModelPlanMismatch": "API कुंजी और सब्सक्रिप्शन प्लान अलग-अलग मॉडल की अनुमति देते हैं। सुनिश्चित करें कि चयनित मॉडल आपकी योजना में शामिल है।"
-		}
+		},
+		"history_reindex_failed": "टास्क हिस्ट्री री-इंडेक्सिंग विफल: {{error}}।"
 	},
 	"warnings": {
 		"no_terminal_content": "कोई टर्मिनल सामग्री चयनित नहीं",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "संगठन साझाकरण लिंक क्लिपबोर्ड में कॉपी किया गया!",
 		"public_share_link_copied": "सार्वजनिक साझाकरण लिंक क्लिपबोर्ड में कॉपी किया गया!",
 		"mode_exported": "मोड '{{mode}}' सफलतापूर्वक निर्यात किया गया",
-		"mode_imported": "मोड सफलतापूर्वक आयात किया गया"
+		"mode_imported": "मोड सफलतापूर्वक आयात किया गया",
+		"history_reindexed": "टास्क हिस्ट्री सफलतापूर्वक री-इंडेक्स हो गई।"
 	},
 	"answers": {
 		"yes": "हां",

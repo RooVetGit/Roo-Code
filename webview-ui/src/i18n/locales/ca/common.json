@@ -4,7 +4,8 @@
 		"no": "No",
 		"cancel": "Cancel·lar",
 		"remove": "Eliminar",
-		"keep": "Mantenir"
+		"keep": "Mantenir",
+		"close": "Tanca"
 	},
 	"number_format": {
 		"thousand_suffix": "k",
@@ -62,5 +63,51 @@
 		"waitingForLogs": "Esperant que comenci l'actualització...",
 		"noLogs": "No hi ha registres disponibles.",
 		"complete": "Actualització completada"
-	}
+	},
+	"errors": {
+		"model_not_found": "Model no trobat",
+		"unsupported_model": "Model no compatible",
+		"missing_model_config": "Falta la configuració del model per a {{modelId}}",
+		"invalid_model_config": "Configuració del model no vàlida: {{error}}",
+		"failed_to_load_model": "No s'ha pogut carregar el model",
+		"invalid_json": "Resposta JSON no vàlida del model",
+		"no_providers": "No s'ha configurat cap proveïdor d'API",
+		"failed_to_get_response": "No s'ha pogut obtenir resposta del model:",
+		"missing_api_key": "Falta la clau d'API per a {{provider}}",
+		"invalid_api_key": "La clau d'API proporcionada per a {{provider}} no és vàlida",
+		"insufficient_quota": "Quota insuficient per a {{provider}}",
+		"api_request_failed": "La sol·licitud d'API ha fallat",
+		"rate_limit_exceeded": "S'ha superat el límit de velocitat per a {{provider}}",
+		"get_system_prompt": "No s'ha pogut obtenir l'indicador del sistema",
+		"search_commits": "No s'han pogut cercar les confirmacions",
+		"save_api_config": "No s'ha pogut desar la configuració de l'API",
+		"load_api_config": "No s'ha pogut carregar la configuració de l'API",
+		"rename_api_config": "No s'ha pogut canviar el nom de la configuració de l'API",
+		"delete_api_config": "No s'ha pogut suprimir la configuració de l'API",
+		"list_api_config": "No s'ha pogut llistar les configuracions de l'API",
+		"update_server_timeout": "No s'ha pogut actualitzar el temps d'espera del servidor",
+		"no_workspace": "No hi ha cap carpeta d'espai de treball oberta",
+		"checkpoint_timeout": "Temps d'espera esgotat esperant el punt de control",
+		"checkpoint_failed": "No s'ha pogut restaurar el punt de control",
+		"history_scan_failed": "No s'ha pogut escanejar l'historial de tasques: {{error}}",
+		"history_reindex_failed": "No s'ha pogut reconstruir els índexs de l'historial: {{error}}",
+		"share_no_active_task": "No hi ha cap tasca activa per compartir",
+		"share_auth_required": "Cal autenticació per compartir la tasca",
+		"share_not_enabled": "La compartició no està habilitada per al vostre compte",
+		"share_task_not_found": "No s'ha trobat la tasca",
+		"share_task_failed": "No s'ha pogut compartir la tasca",
+		"settings_import_failed": "No s'han pogut importar els paràmetres: {{error}}",
+		"update_support_prompt": "No s'ha pogut actualitzar l'indicador de suport",
+		"enhance_prompt": "No s'ha pogut millorar l'indicador"
+	},
+	"info": {
+		"history_reindexed": "Els índexs de l'historial s'han reconstruït correctament",
+		"history_scanned": "L'exploració de l'historial de tasques s'ha completat",
+		"settings_imported": "La configuració s'ha importat correctament",
+		"clipboard_copy": "S'ha copiat al porta-retalls"
+	},
+	"confirmation": {
+		"reindex_history": "Avís: Això recrearà els índexs de taskHistory/*.json recorrent els directoris de tasques i les estructures heretades de globalState[taskHistory]. Això pot recuperar tasques que havíeu suprimit anteriorment i/o recuperar tasques malmeses. Si els comptadors de tokens/costos no es poden recuperar, es posaran a zero. Qualsevol tasca que sigui membre de diversos espais de treball es reassignarà només a l'espai de treball més recent utilitzat per la tasca."
+	},
+	"advanced": "Avançat"
 }

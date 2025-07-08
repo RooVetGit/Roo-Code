@@ -31,7 +31,8 @@
 		"prompts": "Eingabeaufforderungen",
 		"experimental": "Experimentell",
 		"language": "Sprache",
-		"about": "Über Roo Code"
+		"about": "Über Roo Code",
+		"historyIndexTools": "Verlaufs-Index-Tools"
 	},
 	"prompts": {
 		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten."
@@ -635,7 +636,8 @@
 		"settings": {
 			"import": "Importieren",
 			"export": "Exportieren",
-			"reset": "Zurücksetzen"
+			"reset": "Zurücksetzen",
+			"reindexHistory": "Neu indizieren"
 		}
 	},
 	"thinkingBudget": {

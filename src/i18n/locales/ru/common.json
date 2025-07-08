@@ -80,7 +80,8 @@
 			"processExitedWithError": "Процесс Claude Code завершился с кодом {{exitCode}}. Вывод ошибки: {{output}}",
 			"stoppedWithReason": "Claude Code остановился по причине: {{reason}}",
 			"apiKeyModelPlanMismatch": "API-ключи и планы подписки позволяют использовать разные модели. Убедитесь, что выбранная модель включена в ваш план."
-		}
+		},
+		"history_reindex_failed": "Переиндексация истории задач не удалась: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "Не выбрано содержимое терминала",
@@ -101,7 +102,8 @@
 		"organization_share_link_copied": "Ссылка для совместного доступа организации скопирована в буфер обмена!",
 		"public_share_link_copied": "Публичная ссылка для совместного доступа скопирована в буфер обмена!",
 		"mode_exported": "Режим '{{mode}}' успешно экспортирован",
-		"mode_imported": "Режим успешно импортирован"
+		"mode_imported": "Режим успешно импортирован",
+		"history_reindexed": "История задач успешно переиндексирована."
 	},
 	"answers": {
 		"yes": "Да",

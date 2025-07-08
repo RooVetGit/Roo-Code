@@ -4,7 +4,8 @@
 		"no": "Tidak",
 		"cancel": "Batal",
 		"remove": "Hapus",
-		"keep": "Simpan"
+		"keep": "Simpan",
+		"close": "Tutup"
 	},
 	"number_format": {
 		"thousand_suffix": "rb",
@@ -62,5 +63,44 @@
 		"waitingForLogs": "Menunggu peningkatan dimulai...",
 		"noLogs": "Tidak ada log yang tersedia.",
 		"complete": "Peningkatan Selesai"
-	}
+	},
+	"errors": {
+		"get_rg_path": "Gagal mendapatkan path RiG",
+		"load_api_config": "Gagal memuat konfigurasi API",
+		"save_api_config": "Gagal menyimpan konfigurasi API",
+		"parse_api_config": "Gagal mengurai konfigurasi API",
+		"create_api_config": "Gagal membuat konfigurasi API",
+		"delete_api_config": "Gagal menghapus konfigurasi API",
+		"list_api_config": "Gagal menampilkan daftar konfigurasi API",
+		"rename_api_config": "Gagal mengganti nama konfigurasi API",
+		"get_user_login": "Gagal mendapatkan login pengguna",
+		"get_session": "Gagal mendapatkan sesi",
+		"get_models": "Gagal mendapatkan model",
+		"get_system_prompt": "Gagal mendapatkan prompt sistem",
+		"search_commits": "Gagal mencari komit",
+		"update_server_timeout": "Gagal memperbarui waktu habis server",
+		"no_workspace": "Tidak ada folder ruang kerja yang terbuka",
+		"checkpoint_timeout": "Waktu habis menunggu pos pemeriksaan",
+		"checkpoint_failed": "Gagal memulihkan pos pemeriksaan",
+		"history_scan_failed": "Gagal memindai riwayat tugas: {{error}}",
+		"history_reindex_failed": "Gagal membangun kembali indeks riwayat: {{error}}",
+		"share_no_active_task": "Tidak ada tugas aktif untuk dibagikan",
+		"share_auth_required": "Otentikasi diperlukan untuk berbagi tugas",
+		"share_not_enabled": "Berbagi tidak diaktifkan untuk akun Anda",
+		"share_task_not_found": "Tugas tidak ditemukan",
+		"share_task_failed": "Gagal membagikan tugas",
+		"settings_import_failed": "Gagal mengimpor pengaturan: {{error}}",
+		"update_support_prompt": "Gagal memperbarui prompt dukungan",
+		"enhance_prompt": "Gagal menyempurnakan prompt"
+	},
+	"info": {
+		"history_reindexed": "Indeks riwayat berhasil dibangun ulang",
+		"history_scanned": "Pemindaian riwayat tugas selesai",
+		"settings_imported": "Pengaturan berhasil diimpor",
+		"clipboard_copy": "Disalin ke papan klip"
+	},
+	"confirmation": {
+		"reindex_history": "Peringatan: Ini akan membuat ulang indeks taskHistory/*.json dengan menelusuri direktori tugas dan struktur globalState[taskHistory] lawas. Ini dapat membatalkan penghapusan tugas yang sebelumnya telah Anda hapus dan/atau memulihkan tugas yang rusak. Jika penghitung token/biaya tidak dapat dipulihkan, mereka akan diatur ke nol. Setiap tugas yang merupakan anggota dari beberapa ruang kerja akan dialihkan hanya ke ruang kerja terbaru yang digunakan oleh tugas tersebut."
+	},
+	"advanced": "Lanjutan"
 }

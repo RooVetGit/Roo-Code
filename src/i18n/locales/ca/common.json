@@ -84,7 +84,8 @@
 			"stoppedWithReason": "Claude Code s'ha aturat per la raó: {{reason}}",
 			"apiKeyModelPlanMismatch": "Les claus API i els plans de subscripció permeten models diferents. Assegura't que el model seleccionat estigui inclòs al teu pla."
 		},
-		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
+		"mode_import_failed": "Ha fallat la importació del mode: {{error}}",
+		"history_reindex_failed": "La reindexació de l'historial de tasques ha fallat: {{error}}."
 	},
 	"warnings": {
 		"no_terminal_content": "No s'ha seleccionat contingut de terminal",
@@ -105,7 +106,8 @@
 		"organization_share_link_copied": "Enllaç de compartició d'organització copiat al porta-retalls!",
 		"public_share_link_copied": "Enllaç de compartició pública copiat al porta-retalls!",
 		"mode_exported": "Mode '{{mode}}' exportat correctament",
-		"mode_imported": "Mode importat correctament"
+		"mode_imported": "Mode importat correctament",
+		"history_reindexed": "L'historial de tasques s'ha reindexat correctament."
 	},
 	"answers": {
 		"yes": "Sí",
