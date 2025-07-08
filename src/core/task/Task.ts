@@ -1338,24 +1338,20 @@ export class Task extends EventEmitter<ClineEvents> {
 		// results.
 		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
 
-		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
-		TelemetryService.instance.captureConversationMessage(this.taskId, "user")
-
-		// Since we sent off a placeholder api_req_started message to update the
-		// webview while waiting to actually start the API request (to load
-		// potential details for example), we need to update the text of that
-		// message.
-		const lastApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
-
-		this.clineMessages[lastApiReqIndex].text = JSON.stringify({
-			request: finalUserContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
-			apiProtocol,
-		} satisfies ClineApiReqInfo)
-
-		await this.modifyClineMessages(async () => {
-			return this.clineMessages
+		// Atomically update the request message and add the user message to history
+		await this.modifyConversation(async (messages, history) => {
+			const lastApiReqIndex = findLastIndex(messages, (m) => m.say === "api_req_started")
+			if (lastApiReqIndex > -1) {
+				messages[lastApiReqIndex].text = JSON.stringify({
+					request: finalUserContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
+					apiProtocol,
+				} satisfies ClineApiReqInfo)
+			}
+			history.push({ role: "user", content: finalUserContent })
+			return [messages, history]
 		})
 
+		TelemetryService.instance.captureConversationMessage(this.taskId, "user")
 		await provider?.postStateToWebview()
 
 		try {
@@ -1398,7 +1394,7 @@ export class Task extends EventEmitter<ClineEvents> {
 						cancelReason,
 						streamingFailedMessage,
 					} satisfies ClineApiReqInfo)
-					
+
 					return messages
 				})
 			}
