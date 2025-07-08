@@ -183,23 +183,29 @@ export function findModeBySlug(slug: string, modes: readonly ModeConfig[] | unde
 /**
  * Get the mode selection based on the provided mode slug, prompt component, and custom modes.
  * If a custom mode is found, it takes precedence over the built-in modes.
- * If no custom mode is found, the built-in mode is used.
+ * If no custom mode is found, the built-in mode is used with partial merging from promptComponent.
  * If neither is found, the default mode is used.
  */
 export function getModeSelection(mode: string, promptComponent?: PromptComponent, customModes?: ModeConfig[]) {
 	const customMode = findModeBySlug(mode, customModes)
 	const builtInMode = findModeBySlug(mode, modes)
 
-	const modeToUse = customMode || promptComponent || builtInMode
+	// If we have a custom mode, use it entirely
+	if (customMode) {
+		return {
+			roleDefinition: customMode.roleDefinition || "",
+			baseInstructions: customMode.customInstructions || "",
+			description: customMode.description || "",
+		}
+	}
 
-	const roleDefinition = modeToUse?.roleDefinition || ""
-	const baseInstructions = modeToUse?.customInstructions || ""
-	const description = (customMode || builtInMode)?.description || ""
+	// Otherwise, use built-in mode as base and merge with promptComponent
+	const baseMode = builtInMode || modes[0] // fallback to default mode
 
 	return {
-		roleDefinition,
-		baseInstructions,
-		description,
+		roleDefinition: promptComponent?.roleDefinition || baseMode.roleDefinition || "",
+		baseInstructions: promptComponent?.customInstructions || baseMode.customInstructions || "",
+		description: baseMode.description || "",
 	}
 }
 
