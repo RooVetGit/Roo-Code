@@ -231,13 +231,14 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
-				modelDimension: "invalid-dimension",
+				modelDimension: undefined, // Invalid dimension is converted to undefined
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-openai-compatible-key",
 				},
+				geminiOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
