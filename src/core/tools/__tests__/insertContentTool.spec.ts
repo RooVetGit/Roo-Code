@@ -6,15 +6,8 @@ import { fileExistsAtPath } from "../../../utils/fs"
 import { ToolUse, ToolResponse } from "../../../shared/tools"
 import { insertContentTool } from "../insertContentTool"
 
-// Mock the path module to return consistent Unix-style paths
-vi.mock("path", async () => {
-	const originalPath = await vi.importActual("path")
-	return {
-		default: originalPath,
-		...originalPath,
-		resolve: vi.fn().mockImplementation((...args) => args.join("/")),
-	}
-})
+// Helper to normalize paths to POSIX format for cross-platform testing
+const toPosix = (filePath: string) => filePath.replace(/\\/g, "/")
 
 // Mock external dependencies
 vi.mock("fs/promises", () => ({
@@ -70,10 +63,6 @@ describe("insertContentTool", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks()
-
-		// Configure path module mocks to return consistent Unix-style paths
-		const mockedPathResolve = vi.mocked(path.resolve)
-		mockedPathResolve.mockReturnValue(absoluteFilePath)
 
 		mockedFileExistsAtPath.mockResolvedValue(true) // Assume file exists by default for insert
 		mockedFsReadFile.mockResolvedValue("") // Default empty file content
@@ -192,7 +181,9 @@ describe("insertContentTool", () => {
 				{ fileExists: false, fileContent: "" },
 			)
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
+			// Normalize the path that was called with to POSIX format for comparison
+			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
+			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(contentToInsert, true)
 			expect(mockCline.diffViewProvider.editType).toBe("create")
@@ -202,7 +193,9 @@ describe("insertContentTool", () => {
 		it("creates an empty new file if content is empty string", async () => {
 			await executeInsertContentTool({ line: "1", content: "" }, { fileExists: false, fileContent: "" })
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
+			// Normalize the path that was called with to POSIX format for comparison
+			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
+			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("", true)
 			expect(mockCline.diffViewProvider.editType).toBe("create")
@@ -216,7 +209,9 @@ describe("insertContentTool", () => {
 				{ fileExists: false, fileContent: "" },
 			)
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
+			// Normalize the path that was called with to POSIX format for comparison
+			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
+			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
 			expect(mockCline.consecutiveMistakeCount).toBe(1)
 			expect(mockCline.recordToolError).toHaveBeenCalledWith("insert_content")
