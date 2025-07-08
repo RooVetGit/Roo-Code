@@ -1,6 +1,7 @@
 {
 	"extension.displayName": "Roo Code (prev. Roo Cline)",
 	"extension.description": "A whole dev team of AI agents in your editor.",
+	"extension.description.onprem": "On-premises edition of Roo Code for enterprise environments. Features local LLM support, telemetry blocking, and complete offline functionality.",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
 	"views.activitybar.title": "Roo Code",
@@ -32,5 +33,20 @@
 	"settings.vsCodeLmModelSelector.family.description": "The family of the language model (e.g. gpt-4)",
 	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')",
 	"settings.enableCodeActions.description": "Enable Roo Code quick fixes",
-	"settings.autoImportSettingsPath.description": "Path to a RooCode configuration file to automatically import on extension startup. Supports absolute paths and paths relative to the home directory (e.g. '~/Documents/roo-code-settings.json'). Leave empty to disable auto-import."
+	"settings.autoImportSettingsPath.description": "Path to a RooCode configuration file to automatically import on extension startup. Supports absolute paths and paths relative to the home directory (e.g. '~/Documents/roo-code-settings.json'). Leave empty to disable auto-import.",
+	"settings.localLLM.type.description": "Type of local LLM provider to use for on-premises deployment",
+	"settings.localLLM.vllm.endpoint.description": "vLLM server endpoint URL (e.g., http://localhost:8000)",
+	"settings.localLLM.vllm.modelName.description": "Model name to use with vLLM (e.g., microsoft/DialoGPT-medium)",
+	"settings.localLLM.vllm.apiKey.description": "API key for vLLM authentication (if required)",
+	"settings.localLLM.ollama.endpoint.description": "Ollama server endpoint URL (e.g., http://localhost:11434)",
+	"settings.localLLM.ollama.modelName.description": "Model name to use with Ollama (e.g., llama2, codellama)",
+	"settings.localLLM.enabled.description": "Enable local LLM for on-premises operation",
+	"settings.localLLM.fallbackToCloud.description": "Fallback to cloud LLM when local LLM is unavailable",
+	"settings.localLLM.url.description": "Local LLM server endpoint URL",
+	"settings.localLLM.model.description": "Model name to use with local LLM provider",
+	"settings.localLLM.maxTokens.description": "Maximum number of tokens for local LLM responses",
+	"settings.localLLM.temperature.description": "Temperature setting for local LLM (0.0 to 1.0)",
+	"settings.localLLM.timeout.description": "Timeout in seconds for local LLM requests",
+	"settings.localLLM.apiKey.description": "API key for local LLM authentication (if required)",
+	"settings.localLLM.description": "Configuration for local LLM providers used in on-premises environments"
 }

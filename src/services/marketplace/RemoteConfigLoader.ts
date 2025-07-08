@@ -4,6 +4,7 @@ import { z } from "zod"
 import { getRooCodeApiUrl } from "@roo-code/cloud"
 import type { MarketplaceItem, MarketplaceItemType } from "@roo-code/types"
 import { modeMarketplaceItemSchema, mcpMarketplaceItemSchema } from "@roo-code/types"
+import { createAxiosWrapper } from "../../utils/axios-wrapper"
 
 // Response schemas for YAML API responses
 const modeMarketplaceResponse = z.object({
@@ -18,9 +19,12 @@ export class RemoteConfigLoader {
 	private apiBaseUrl: string
 	private cache: Map<string, { data: MarketplaceItem[]; timestamp: number }> = new Map()
 	private cacheDuration = 5 * 60 * 1000 // 5 minutes
+	private axiosInstance: typeof axios
 
 	constructor() {
 		this.apiBaseUrl = getRooCodeApiUrl()
+		// Use wrapped axios in ON_PREM mode to block external calls
+		this.axiosInstance = createAxiosWrapper(axios) as any
 	}
 
 	async loadAllItems(): Promise<MarketplaceItem[]> {
@@ -77,7 +81,7 @@ export class RemoteConfigLoader {
 
 		for (let i = 0; i < maxRetries; i++) {
 			try {
-				const response = await axios.get(url, {
+				const response = await this.axiosInstance.get(url, {
 					timeout: 10000, // 10 second timeout
 					headers: {
 						Accept: "application/json",

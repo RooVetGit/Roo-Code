@@ -1,0 +1,70 @@
+{
+	"name": "roo-cline-onprem",
+	"displayName": "%extension.displayName% (On-Premises)",
+	"description": "On-premises edition of Roo Code for enterprise environments. Features local LLM support, telemetry blocking, and complete offline functionality.",
+	"publisher": "RooVeterinaryInc",
+	"version": "3.22.6-onprem.1",
+	"icon": "assets/icons/icon.png",
+	"galleryBanner": {
+		"color": "#2D5A3D",
+		"theme": "dark"
+	},
+	"engines": {
+		"vscode": "^1.84.0",
+		"node": "20.19.2"
+	},
+	"author": {
+		"name": "Roo Code - On-Premises Edition"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RooCodeInc/Roo-Code"
+	},
+	"homepage": "https://github.com/RooCodeInc/Roo-Code/blob/main/docs/on-prem-setup.md",
+	"categories": ["AI", "Chat", "Programming Languages", "Education", "Snippets", "Testing", "Enterprise"],
+	"keywords": [
+		"cline",
+		"claude",
+		"dev",
+		"mcp",
+		"coding",
+		"agent",
+		"autonomous",
+		"ai",
+		"llama",
+		"roo code",
+		"roocode",
+		"on-premises",
+		"onprem",
+		"offline",
+		"enterprise",
+		"vllm",
+		"ollama",
+		"local-llm",
+		"airgapped",
+		"firewall",
+		"corporate"
+	],
+	"activationEvents": ["onLanguage", "onStartupFinished"],
+	"main": "./dist/extension.js",
+	"__onPremFeatures__": {
+		"telemetryBlocking": true,
+		"externalCallBlocking": true,
+		"localLLMSupport": ["vllm", "ollama"],
+		"offlineMode": true,
+		"enterpriseReady": true
+	},
+	"__onPremConfig__": {
+		"defaultSettings": {
+			"ON_PREM": "true",
+			"telemetryEnabled": false,
+			"localLLM": {
+				"type": "vllm",
+				"url": "http://localhost:8000",
+				"model": "llama-2-7b-chat"
+			}
+		},
+		"requiredEnvironmentVariables": ["ON_PREM"],
+		"blockedDomains": ["api.openai.com", "api.anthropic.com", "openrouter.ai", "posthog.com", "api.github.com"]
+	}
+}

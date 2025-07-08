@@ -6,9 +6,19 @@
 			"dependsOn": ["^build", "@roo-code/vscode-webview#build"],
 			"outputs": ["dist/**"]
 		},
+		"bundle:onprem": {
+			"dependsOn": ["^build", "@roo-code/vscode-webview#build"],
+			"outputs": ["dist/**"],
+			"env": ["ON_PREM=true", "NODE_ENV=production"]
+		},
 		"vsix": {
 			"dependsOn": ["bundle"],
 			"inputs": ["dist/**"],
+			"outputs": ["../bin/**"]
+		},
+		"vsix:onprem": {
+			"dependsOn": ["bundle:onprem"],
+			"inputs": ["dist/**", "package.onprem.json"],
 			"outputs": ["../bin/**"]
 		},
 		"watch:bundle": {

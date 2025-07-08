@@ -17,6 +17,7 @@ import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { createOutputChannelLogger, createDualLogger } from "./utils/outputChannelLogger"
+import { initializeOnPremMode } from "./utils/fetch-wrapper"
 
 import { Package } from "./shared/package"
 import { formatLanguage } from "./shared/language"
@@ -58,6 +59,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
+
+	// Initialize ON_PREM mode early to block external calls if needed
+	initializeOnPremMode()
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)

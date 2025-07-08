@@ -1,0 +1,317 @@
+# GitLab CI/CD Pipeline for Roo Code On-Premises
+# 
+# 이 파이프라인은 온프레미스 Roo Code VS Code 확장을 빌드하고 배포합니다.
+# - 코드 품질 검사
+# - 외부 호출 차단 테스트
+# - VSIX 패키지 빌드
+# - 아티팩트 저장 및 배포
+
+stages:
+  - validate
+  - test
+  - build
+  - package
+  - deploy
+
+variables:
+  # Node.js 및 pnpm 설정
+  NODE_VERSION: "20.19.2"
+  PNPM_VERSION: "10.8.1"
+  
+  # 온프레미스 환경 변수
+  ON_PREM: "true"
+  NODE_ENV: "production"
+  
+  # Docker 이미지
+  NODE_IMAGE: "node:20.19.2-alpine"
+  DOCKER_IMAGE: "docker:27-alpine"
+
+# 기본 설정
+default:
+  image: $NODE_IMAGE
+  before_script:
+    - apk add --no-cache git curl
+    - npm install -g pnpm@$PNPM_VERSION
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+
+# 캐시 설정
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store/
+    - node_modules/
+    - src/node_modules/
+    - webview-ui/node_modules/
+
+# 1. 코드 검증 단계
+code_quality:
+  stage: validate
+  script:
+    - echo "🔍 Running code quality checks..."
+    - pnpm lint
+    - pnpm check-types
+    - echo "✅ Code quality checks passed"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# 외부 호출 검증
+outbound_detection:
+  stage: validate
+  script:
+    - echo "🔍 Detecting external HTTP calls..."
+    - pnpm detect-outbound
+    - echo "📊 External calls detected and cataloged"
+  artifacts:
+    reports:
+      junit: outbound-report.xml
+    paths:
+      - outbound-urls.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# 2. 테스트 단계
+unit_tests:
+  stage: test
+  script:
+    - echo "🧪 Running unit tests..."
+    - pnpm test
+    - echo "✅ Unit tests passed"
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  artifacts:
+    reports:
+      junit: test-results.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# 온프레미스 통합 테스트
+integration_tests:
+  stage: test
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - apk add --no-cache git curl docker-compose
+    - npm install -g pnpm@$PNPM_VERSION
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  script:
+    - echo "🔥 Running firewall integration tests..."
+    - pnpm test:firewall:docker
+    - echo "✅ Integration tests passed"
+  artifacts:
+    paths:
+      - test-results/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+  allow_failure: true # 외부 의존성으로 인해 실패할 수 있음
+
+# 3. 빌드 단계
+build_extension:
+  stage: build
+  script:
+    - echo "🏗️ Building extension for on-premises..."
+    - pnpm build
+    - pnpm bundle:onprem
+    - echo "✅ Extension built successfully"
+  artifacts:
+    paths:
+      - src/dist/
+      - webview-ui/dist/
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# 4. VSIX 패키징 단계
+package_vsix:
+  stage: package
+  dependencies:
+    - build_extension
+  script:
+    - echo "📦 Packaging on-premises VSIX..."
+    - pnpm package:onprem
+    - ls -la bin/
+    - echo "📊 VSIX package information:"
+    - cat bin/build-info-onprem.json | head -20
+    - echo "✅ VSIX packaging completed"
+  artifacts:
+    name: "roo-cline-onprem-${CI_COMMIT_SHA:0:8}"
+    paths:
+      - bin/*.vsix
+      - bin/build-info-onprem.json
+    expire_in: 30 days
+    reports:
+      artifacts:
+        file: bin/build-info-onprem.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# VSIX 유효성 검사
+validate_vsix:
+  stage: package
+  dependencies:
+    - package_vsix
+  script:
+    - echo "🔍 Validating VSIX package..."
+    - apk add --no-cache unzip
+    - |
+      for vsix in bin/*.vsix; do
+        echo "📋 Analyzing $vsix"
+        
+        # 파일 크기 확인
+        size=$(stat -c%s "$vsix")
+        echo "  Size: $(echo $size | numfmt --to=iec-i)B"
+        
+        # VSIX 구조 확인
+        unzip -t "$vsix" > /dev/null
+        echo "  ✅ ZIP structure valid"
+        
+        # manifest 확인
+        unzip -q "$vsix" extension/package.json -d /tmp/
+        if [ -f /tmp/extension/package.json ]; then
+          echo "  ✅ Package manifest found"
+          name=$(cat /tmp/extension/package.json | grep '"name"' | head -1)
+          version=$(cat /tmp/extension/package.json | grep '"version"' | head -1)
+          echo "  📦 $name $version"
+        else
+          echo "  ❌ Package manifest missing"
+          exit 1
+        fi
+        
+        # 최소 크기 확인 (1MB)
+        if [ $size -lt 1048576 ]; then
+          echo "  ❌ VSIX too small: ${size} bytes"
+          exit 1
+        fi
+        
+        echo "  ✅ VSIX validation passed"
+      done
+    - echo "✅ All VSIX packages validated"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# 5. 배포 단계
+deploy_to_nexus:
+  stage: deploy
+  dependencies:
+    - package_vsix
+    - validate_vsix
+  script:
+    - echo "🚀 Deploying to internal Nexus repository..."
+    - |
+      if [ -z "$NEXUS_URL" ] || [ -z "$NEXUS_USER" ] || [ -z "$NEXUS_PASSWORD" ]; then
+        echo "⚠️ Nexus credentials not configured, skipping deployment"
+        exit 0
+      fi
+    - |
+      for vsix in bin/*.vsix; do
+        filename=$(basename "$vsix")
+        echo "📤 Uploading $filename to Nexus..."
+        
+        curl -u "$NEXUS_USER:$NEXUS_PASSWORD" \
+             --upload-file "$vsix" \
+             "$NEXUS_URL/repository/vscode-extensions/$filename"
+        
+        if [ $? -eq 0 ]; then
+          echo "✅ Successfully uploaded $filename"
+        else
+          echo "❌ Failed to upload $filename"
+          exit 1
+        fi
+      done
+    - echo "✅ Deployment completed"
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  environment:
+    name: production
+    url: $NEXUS_URL
+
+# 태그 릴리스 (수동)
+create_release:
+  stage: deploy
+  dependencies:
+    - package_vsix
+  script:
+    - echo "🏷️ Creating release for tag $CI_COMMIT_TAG..."
+    - |
+      if [ -z "$CI_COMMIT_TAG" ]; then
+        echo "❌ This job should only run on tags"
+        exit 1
+      fi
+    - |
+      # Release API를 통한 릴리스 생성
+      curl --request POST \
+           --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+           --data name="Roo Code On-Premises $CI_COMMIT_TAG" \
+           --data tag_name="$CI_COMMIT_TAG" \
+           --data description="On-premises version of Roo Code VS Code extension" \
+           "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"
+    - echo "✅ Release created for $CI_COMMIT_TAG"
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+
+# 벤치마크 (선택적)
+benchmark_local_llm:
+  stage: test
+  script:
+    - echo "⚡ Running local LLM benchmarks..."
+    - pnpm benchmark-local-llm || echo "⚠️ Benchmark failed (expected in CI)"
+    - echo "📊 Benchmark completed"
+  artifacts:
+    paths:
+      - benchmark-results.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+    - if: $CI_COMMIT_TAG
+      when: manual
+  allow_failure: true
+
+# 정리 작업
+cleanup:
+  stage: .post
+  script:
+    - echo "🧹 Cleaning up temporary files..."
+    - rm -rf .pnpm-store/
+    - rm -rf node_modules/.cache/
+    - echo "✅ Cleanup completed"
+  when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# Workflow rules
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "web" 

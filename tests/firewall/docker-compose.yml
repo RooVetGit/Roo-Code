@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # vLLM 서버 (내부 네트워크에서만 접근 가능)
+  vllm-server:
+    image: vllm/vllm-openai:latest
+    container_name: vllm-test-server
+    command: >
+      --model microsoft/DialoGPT-small
+      --host 0.0.0.0
+      --port 8000
+      --max-model-len 2048
+      --dtype half
+    ports:
+      - "8000:8000"
+    networks:
+      - internal-network
+    environment:
+      - CUDA_VISIBLE_DEVICES=-1  # CPU 모드로 실행
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Ollama 서버 (내부 네트워크에서만 접근 가능)
+  ollama-server:
+    image: ollama/ollama:latest
+    container_name: ollama-test-server
+    ports:
+      - "11434:11434"
+    networks:
+      - internal-network
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # 파이어월 시뮬레이션 프록시
+  firewall-proxy:
+    image: nginx:alpine
+    container_name: firewall-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - internal-network
+      - external-network
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - vllm-server
+      - ollama-server
+
+  # 테스트 러너 (ON_PREM 환경 시뮬레이션)
+  test-runner:
+    image: node:20-alpine
+    container_name: on-prem-test-runner
+    working_dir: /app
+    volumes:
+      - ../../:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - internal-network
+    environment:
+      - ON_PREM=true
+      - VLLM_URL=http://vllm-server:8000
+      - OLLAMA_URL=http://ollama-server:11434
+      - NODE_ENV=test
+    command: >
+      sh -c "
+        npm install &&
+        npm run test:firewall
+      "
+    depends_on:
+      vllm-server:
+        condition: service_healthy
+      ollama-server:
+        condition: service_healthy
+
+  # 외부 API 시뮬레이션 (차단되어야 할 서비스들)
+  mock-external-api:
+    image: nginx:alpine
+    container_name: mock-external-api
+    ports:
+      - "9001:80"
+    networks:
+      - external-network
+    volumes:
+      - ./mock-api/:/usr/share/nginx/html/
+    environment:
+      - NGINX_HOST=api.external.com
+      - NGINX_PORT=80
+
+  # PostHog/텔레메트리 서비스 모킹
+  mock-telemetry:
+    image: nginx:alpine
+    container_name: mock-telemetry
+    ports:
+      - "9002:80"
+    networks:
+      - external-network
+    volumes:
+      - ./mock-telemetry/:/usr/share/nginx/html/
+
+networks:
+  # 내부 네트워크 (로컬 LLM 서버들)
+  internal-network:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+  # 외부 네트워크 (인터넷 시뮬레이션)
+  external-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
+
+volumes:
+  ollama-data:
+    driver: local 

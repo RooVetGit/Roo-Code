@@ -338,6 +338,42 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.autoImportSettingsPath.description%"
+				},
+				"roo-cline.localLLM": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"enum": [
+								"vllm",
+								"ollama"
+							],
+							"description": "%settings.localLLM.type.description%"
+						},
+						"url": {
+							"type": "string",
+							"format": "uri",
+							"default": "",
+							"description": "%settings.localLLM.url.description%"
+						},
+						"model": {
+							"type": "string",
+							"default": "",
+							"description": "%settings.localLLM.model.description%"
+						},
+						"apiKey": {
+							"type": "string",
+							"default": "",
+							"description": "%settings.localLLM.apiKey.description%"
+						}
+					},
+					"default": {
+						"type": "vllm",
+						"url": "http://localhost:8000",
+						"model": "",
+						"apiKey": ""
+					},
+					"description": "%settings.localLLM.description%"
 				}
 			}
 		}
