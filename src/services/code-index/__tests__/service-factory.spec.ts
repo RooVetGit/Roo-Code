@@ -406,8 +406,10 @@ describe("CodeIndexServiceFactory", () => {
 			const testConfig = {
 				embedderProvider: "openai-compatible",
 				modelId: testModelId,
+				modelDimension: manualDimension,
 				openAiCompatibleOptions: {
-					modelDimension: manualDimension,
+					baseUrl: "https://api.example.com/v1",
+					apiKey: "test-api-key",
 				},
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "test-key",
@@ -463,8 +465,10 @@ describe("CodeIndexServiceFactory", () => {
 			const testConfig = {
 				embedderProvider: "openai-compatible",
 				modelId: testModelId,
+				modelDimension: 0, // Invalid dimension
 				openAiCompatibleOptions: {
-					modelDimension: 0, // Invalid dimension
+					baseUrl: "https://api.example.com/v1",
+					apiKey: "test-api-key",
 				},
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "test-key",
@@ -474,7 +478,7 @@ describe("CodeIndexServiceFactory", () => {
 
 			// Act & Assert
 			expect(() => factory.createVectorStore()).toThrow(
-				"Could not determine vector dimension for model 'custom-model' with provider 'openai-compatible'. Please ensure the 'Embedding Dimension' is correctly set in the OpenAI-Compatible provider settings.",
+				"Could not determine vector dimension for model 'custom-model' with provider 'openai-compatible'. Please ensure the 'Embedding Dimension' is correctly set in the \x1b[1m\x1b[4mOpenAI-Compatible\x1b[0m provider settings.",
 			)
 		})
 
@@ -496,7 +500,7 @@ describe("CodeIndexServiceFactory", () => {
 
 			// Act & Assert
 			expect(() => factory.createVectorStore()).toThrow(
-				"Could not determine vector dimension for model 'unknown-model' with provider 'openai-compatible'. Please ensure the 'Embedding Dimension' is correctly set in the OpenAI-Compatible provider settings.",
+				"Could not determine vector dimension for model 'unknown-model' with provider 'openai-compatible'. Please ensure the 'Embedding Dimension' is correctly set in the \x1b[1m\x1b[4mOpenAI-Compatible\x1b[0m provider settings.",
 			)
 		})
 

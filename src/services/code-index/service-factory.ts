@@ -107,10 +107,10 @@ export class CodeIndexServiceFactory {
 			vectorSize = getModelDimension(provider, modelId)
 		}
 
-		if (vectorSize === undefined) {
+		if (vectorSize === undefined || vectorSize <= 0) {
 			let errorMessage = `Could not determine vector dimension for model '${modelId}' with provider '${provider}'. `
 			if (provider === "openai-compatible") {
-				errorMessage += `Please ensure the 'Embedding Dimension' is correctly set in the provider settings.`
+				errorMessage += `Please ensure the 'Embedding Dimension' is correctly set in the \x1b[1m\x1b[4mOpenAI-Compatible\x1b[0m provider settings.`
 			} else {
 				errorMessage += `Check model profiles or configuration.`
 			}

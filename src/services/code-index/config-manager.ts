@@ -74,7 +74,23 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
-		this.modelDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension as number | undefined
+
+		// Validate and set model dimension
+		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
+		if (rawDimension !== undefined && rawDimension !== null) {
+			const dimension = Number(rawDimension)
+			if (!isNaN(dimension) && dimension > 0) {
+				this.modelDimension = dimension
+			} else {
+				console.warn(
+					`Invalid codebaseIndexEmbedderModelDimension value: ${rawDimension}. Must be a positive number.`,
+				)
+				this.modelDimension = undefined
+			}
+		} else {
+			this.modelDimension = undefined
+		}
+
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
 		// Set embedder provider with support for openai-compatible
