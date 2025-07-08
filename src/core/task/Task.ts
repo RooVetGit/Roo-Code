@@ -360,11 +360,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	// Cline Messages
-
-	private async getSavedClineMessages(): Promise<ClineMessage[]> {
-		return readTaskMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
-	}
-
 	private async addToClineMessages(message: ClineMessage) {
 		await this.modifyClineMessages(async (messages) => {
 			messages.push(message)
@@ -900,33 +895,31 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async resumeTaskFromHistory() {
-		const modifiedClineMessages = await this.getSavedClineMessages()
+		await this.modifyClineMessages(async (modifiedClineMessages) => {
+			// Remove any resume messages that may have been added before
+			const lastRelevantMessageIndex = findLastIndex(
+				modifiedClineMessages,
+				(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
+			)
 
-		// Remove any resume messages that may have been added before
-		const lastRelevantMessageIndex = findLastIndex(
-			modifiedClineMessages,
-			(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
-		)
-
-		if (lastRelevantMessageIndex !== -1) {
-			modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
-		}
-
-		// since we don't use api_req_finished anymore, we need to check if the last api_req_started has a cost value, if it doesn't and no cancellation reason to present, then we remove it since it indicates an api request without any partial content streamed
-		const lastApiReqStartedIndex = findLastIndex(
-			modifiedClineMessages,
-			(m) => m.type === "say" && m.say === "api_req_started",
-		)
-
-		if (lastApiReqStartedIndex !== -1) {
-			const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
-			const { cost, cancelReason }: ClineApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}")
-			if (cost === undefined && cancelReason === undefined) {
-				modifiedClineMessages.splice(lastApiReqStartedIndex, 1)
+			if (lastRelevantMessageIndex !== -1) {
+				modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
 			}
-		}
 
-		await this.modifyClineMessages(async () => {
+			// since we don't use api_req_finished anymore, we need to check if the last api_req_started has a cost value, if it doesn't and no cancellation reason to present, then we remove it since it indicates an api request without any partial content streamed
+			const lastApiReqStartedIndex = findLastIndex(
+				modifiedClineMessages,
+				(m) => m.type === "say" && m.say === "api_req_started",
+			)
+
+			if (lastApiReqStartedIndex !== -1) {
+				const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
+				const { cost, cancelReason }: ClineApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}")
+				if (cost === undefined && cancelReason === undefined) {
+					modifiedClineMessages.splice(lastApiReqStartedIndex, 1)
+				}
+			}
+
 			return modifiedClineMessages
 		})
 
@@ -963,125 +956,131 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
-		let existingApiConversationHistory: ApiMessage[] = await this.getSavedApiConversationHistory()
-
-		// v2.0 xml tags refactor caveat: since we don't use tools anymore, we need to replace all tool use blocks with a text block since the API disallows conversations with tool uses and no tool schema
-		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
-			if (Array.isArray(message.content)) {
-				const newContent = message.content.map((block) => {
-					if (block.type === "tool_use") {
-						// It's important we convert to the new tool schema
-						// format so the model doesn't get confused about how to
-						// invoke tools.
-						const inputAsXml = Object.entries(block.input as Record<string, string>)
-							.map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
-							.join("\n")
-						return {
-							type: "text",
-							text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
-						} as Anthropic.Messages.TextBlockParam
-					} else if (block.type === "tool_result") {
-						// Convert block.content to text block array, removing images
-						const contentAsTextBlocks = Array.isArray(block.content)
-							? block.content.filter((item) => item.type === "text")
-							: [{ type: "text", text: block.content }]
-						const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n")
-						const toolName = findToolName(block.tool_use_id, existingApiConversationHistory)
-						return {
-							type: "text",
-							text: `[${toolName} Result]\n\n${textContent}`,
-						} as Anthropic.Messages.TextBlockParam
-					}
-					return block
-				})
-				return { ...message, content: newContent }
-			}
-			return message
-		})
-		existingApiConversationHistory = conversationWithoutToolBlocks
-
-		// FIXME: remove tool use blocks altogether
-
-		// if the last message is an assistant message, we need to check if there's tool use since every tool use has to have a tool response
-		// if there's no tool use and only a text block, then we can just add a user message
-		// (note this isn't relevant anymore since we use custom tool prompts instead of tool use blocks, but this is here for legacy purposes in case users resume old tasks)
-
-		// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
-
-		let modifiedOldUserContent: Anthropic.Messages.ContentBlockParam[] // either the last message if its user message, or the user message before the last (assistant) message
-		let modifiedApiConversationHistory: ApiMessage[] // need to remove the last user message to replace with new modified user message
-		if (existingApiConversationHistory.length > 0) {
-			const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
-
-			if (lastMessage.role === "assistant") {
-				const content = Array.isArray(lastMessage.content)
-					? lastMessage.content
-					: [{ type: "text", text: lastMessage.content }]
-				const hasToolUse = content.some((block) => block.type === "tool_use")
-
-				if (hasToolUse) {
-					const toolUseBlocks = content.filter(
-						(block) => block.type === "tool_use",
-					) as Anthropic.Messages.ToolUseBlock[]
-					const toolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((block) => ({
-						type: "tool_result",
-						tool_use_id: block.id,
-						content: "Task was interrupted before this tool call could be completed.",
-					}))
-					modifiedApiConversationHistory = [...existingApiConversationHistory] // no changes
-					modifiedOldUserContent = [...toolResponses]
-				} else {
-					modifiedApiConversationHistory = [...existingApiConversationHistory]
-					modifiedOldUserContent = []
+		let modifiedOldUserContent: Anthropic.Messages.ContentBlockParam[] | undefined
+		await this.modifyApiConversationHistory(async (existingApiConversationHistory) => {
+			const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
+				if (Array.isArray(message.content)) {
+					const newContent = message.content.map((block) => {
+						if (block.type === "tool_use") {
+							// It's important we convert to the new tool schema
+							// format so the model doesn't get confused about how to
+							// invoke tools.
+							const inputAsXml = Object.entries(block.input as Record<string, string>)
+								.map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
+								.join("\n")
+							return {
+								type: "text",
+								text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
+							} as Anthropic.Messages.TextBlockParam
+						} else if (block.type === "tool_result") {
+							// Convert block.content to text block array, removing images
+							const contentAsTextBlocks = Array.isArray(block.content)
+								? block.content.filter((item) => item.type === "text")
+								: [{ type: "text", text: block.content }]
+							const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n")
+							const toolName = findToolName(block.tool_use_id, existingApiConversationHistory)
+							return {
+								type: "text",
+								text: `[${toolName} Result]\n\n${textContent}`,
+							} as Anthropic.Messages.TextBlockParam
+						}
+						return block
+					})
+					return { ...message, content: newContent }
 				}
-			} else if (lastMessage.role === "user") {
-				const previousAssistantMessage: ApiMessage | undefined =
-					existingApiConversationHistory[existingApiConversationHistory.length - 2]
+				return message
+			})
+			existingApiConversationHistory = conversationWithoutToolBlocks
 
-				const existingUserContent: Anthropic.Messages.ContentBlockParam[] = Array.isArray(lastMessage.content)
-					? lastMessage.content
-					: [{ type: "text", text: lastMessage.content }]
-				if (previousAssistantMessage && previousAssistantMessage.role === "assistant") {
-					const assistantContent = Array.isArray(previousAssistantMessage.content)
-						? previousAssistantMessage.content
-						: [{ type: "text", text: previousAssistantMessage.content }]
+			// FIXME: remove tool use blocks altogether
 
-					const toolUseBlocks = assistantContent.filter(
-						(block) => block.type === "tool_use",
-					) as Anthropic.Messages.ToolUseBlock[]
+			// if the last message is an assistant message, we need to check if there's tool use since every tool use has to have a tool response
+			// if there's no tool use and only a text block, then we can just add a user message
+			// (note this isn't relevant anymore since we use custom tool prompts instead of tool use blocks, but this is here for legacy purposes in case users resume old tasks)
 
-					if (toolUseBlocks.length > 0) {
-						const existingToolResults = existingUserContent.filter(
-							(block) => block.type === "tool_result",
-						) as Anthropic.ToolResultBlockParam[]
+			// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
 
-						const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
-							.filter(
-								(toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id),
-							)
-							.map((toolUse) => ({
-								type: "tool_result",
-								tool_use_id: toolUse.id,
-								content: "Task was interrupted before this tool call could be completed.",
-							}))
+			let modifiedApiConversationHistory: ApiMessage[] // need to remove the last user message to replace with new modified user message
+			if (existingApiConversationHistory.length > 0) {
+				const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
 
-						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1) // removes the last user message
-						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses]
+				if (lastMessage.role === "assistant") {
+					const content = Array.isArray(lastMessage.content)
+						? lastMessage.content
+						: [{ type: "text", text: lastMessage.content }]
+					const hasToolUse = content.some((block) => block.type === "tool_use")
+
+					if (hasToolUse) {
+						const toolUseBlocks = content.filter(
+							(block) => block.type === "tool_use",
+						) as Anthropic.Messages.ToolUseBlock[]
+						const toolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((block) => ({
+							type: "tool_result",
+							tool_use_id: block.id,
+							content: "Task was interrupted before this tool call could be completed.",
+						}))
+						modifiedApiConversationHistory = [...existingApiConversationHistory] // no changes
+						modifiedOldUserContent = [...toolResponses]
+					} else {
+						modifiedApiConversationHistory = [...existingApiConversationHistory]
+						modifiedOldUserContent = []
+					}
+				} else if (lastMessage.role === "user") {
+					const previousAssistantMessage: ApiMessage | undefined =
+						existingApiConversationHistory[existingApiConversationHistory.length - 2]
+
+					const existingUserContent: Anthropic.Messages.ContentBlockParam[] = Array.isArray(
+						lastMessage.content,
+					)
+						? lastMessage.content
+						: [{ type: "text", text: lastMessage.content }]
+					if (previousAssistantMessage && previousAssistantMessage.role === "assistant") {
+						const assistantContent = Array.isArray(previousAssistantMessage.content)
+							? previousAssistantMessage.content
+							: [{ type: "text", text: previousAssistantMessage.content }]
+
+						const toolUseBlocks = assistantContent.filter(
+							(block) => block.type === "tool_use",
+						) as Anthropic.Messages.ToolUseBlock[]
+
+						if (toolUseBlocks.length > 0) {
+							const existingToolResults = existingUserContent.filter(
+								(block) => block.type === "tool_result",
+							) as Anthropic.ToolResultBlockParam[]
+
+							const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
+								.filter(
+									(toolUse) =>
+										!existingToolResults.some((result) => result.tool_use_id === toolUse.id),
+								)
+								.map((toolUse) => ({
+									type: "tool_result",
+									tool_use_id: toolUse.id,
+									content: "Task was interrupted before this tool call could be completed.",
+								}))
+
+							modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1) // removes the last user message
+							modifiedOldUserContent = [...existingUserContent, ...missingToolResponses]
+						} else {
+							modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
+							modifiedOldUserContent = [...existingUserContent]
+						}
 					} else {
 						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
 						modifiedOldUserContent = [...existingUserContent]
 					}
 				} else {
-					modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
-					modifiedOldUserContent = [...existingUserContent]
+					throw new Error("Unexpected: Last message is not a user or assistant message")
 				}
 			} else {
-				throw new Error("Unexpected: Last message is not a user or assistant message")
+				throw new Error("Unexpected: No existing API conversation history")
 			}
-		} else {
-			throw new Error("Unexpected: No existing API conversation history")
-		}
+			return modifiedApiConversationHistory
+		})
 
+		if (!modifiedOldUserContent) {
+			throw new Error("modifiedOldUserContent was not set")
+		}
 		let newUserContent: Anthropic.Messages.ContentBlockParam[] = [...modifiedOldUserContent]
 
 		const agoText = ((): string => {
@@ -1129,10 +1128,6 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (responseImages && responseImages.length > 0) {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
 		}
-
-		await this.modifyApiConversationHistory(async () => {
-			return modifiedApiConversationHistory
-		})
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
 
