@@ -60,5 +60,12 @@
 		"running": "Running",
 		"completed": "Completed",
 		"error": "Error"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "Max Images",
+		"maxImagesDescription": "The maximum number of images that can be included in a single request.",
+		"maxSizeLabel": "Max Size (MB)",
+		"maxSizeDescription": "The maximum file size for each image, in megabytes.",
+		"validationError": "Please enter a valid number between 1 and 100."
 	}
 }

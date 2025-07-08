@@ -60,5 +60,12 @@
 		"running": "Em execução",
 		"completed": "Concluído",
 		"error": "Erro"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "Máximo de imagens por resposta",
+		"maxSizeLabel": "Tamanho máximo da imagem (MB)",
+		"maxImagesDescription": "O número máximo de imagens que podem ser enviadas em uma única resposta.",
+		"maxSizeDescription": "O tamanho máximo de cada imagem em megabytes.",
+		"validationError": "Por favor, insira um número entre 1 e 100."
 	}
 }

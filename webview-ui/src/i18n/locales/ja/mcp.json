@@ -60,5 +60,12 @@
 		"running": "実行中",
 		"completed": "完了",
 		"error": "エラー"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "応答あたりの最大画像数",
+		"maxSizeLabel": "最大画像サイズ (MB)",
+		"maxImagesDescription": "1回の応答で送信できる画像の最大数。",
+		"maxSizeDescription": "各画像の最大サイズ（メガバイト）。",
+		"validationError": "1から100までの数値を入力してください。"
 	}
 }

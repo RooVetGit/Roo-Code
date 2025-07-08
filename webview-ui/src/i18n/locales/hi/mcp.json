@@ -60,5 +60,12 @@
 		"running": "चल रहा है",
 		"completed": "पूरा हुआ",
 		"error": "त्रुटि"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "अधिकतम छवियाँ",
+		"maxSizeLabel": "अधिकतम छवि आकार (एमबी)",
+		"maxImagesDescription": "एक ही प्रतिक्रिया में भेजी जा सकने वाली छवियों की अधिकतम संख्या।",
+		"maxSizeDescription": "प्रत्येक छवि का अधिकतम आकार मेगाबाइट में।",
+		"validationError": "कृपया 1 और 100 के बीच एक संख्या दर्ज करें।"
 	}
 }

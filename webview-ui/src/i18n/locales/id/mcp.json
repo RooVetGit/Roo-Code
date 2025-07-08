@@ -60,5 +60,12 @@
 		"running": "Berjalan",
 		"completed": "Selesai",
 		"error": "Error"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "Gambar Maks per Respons",
+		"maxSizeLabel": "Ukuran Gambar Maks (MB)",
+		"maxImagesDescription": "Jumlah maksimum gambar yang dapat dikirim dalam satu respons.",
+		"maxSizeDescription": "Ukuran maksimum setiap gambar dalam megabita.",
+		"validationError": "Harap masukkan angka antara 1 dan 100."
 	}
 }

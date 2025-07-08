@@ -61,5 +61,12 @@
 		"running": "Wordt uitgevoerd",
 		"completed": "Voltooid",
 		"error": "Fout"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "Max afbeeldingen per antwoord",
+		"maxSizeLabel": "Max afbeeldingsgrootte (MB)",
+		"maxImagesDescription": "Het maximale aantal afbeeldingen dat in één antwoord kan worden verzonden.",
+		"maxSizeDescription": "De maximale grootte van elke afbeelding in megabytes.",
+		"validationError": "Voer een getal in tussen 1 en 100."
 	}
 }
