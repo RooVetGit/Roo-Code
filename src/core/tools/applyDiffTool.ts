@@ -11,6 +11,7 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { ViewColumn } from "vscode"
 
 export async function applyDiffToolLegacy(
 	cline: Task,
@@ -142,10 +143,12 @@ export async function applyDiffToolLegacy(
 			cline.consecutiveMistakeCountForApplyDiff.delete(relPath)
 
 			// Show diff view before asking for approval
-			cline.diffViewProvider.editType = "modify"
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(diffResult.content, true)
-			cline.diffViewProvider.scrollToFirstDiff()
+			cline.editingProvider.editType = "modify"
+			const clineRef = cline.providerRef.deref()
+			const viewColumn = clineRef?.getViewColumn() ?? ViewColumn.Active
+			await cline.editingProvider.open(relPath, viewColumn)
+			await cline.editingProvider.update(diffResult.content, true)
+			cline.editingProvider.scrollToFirstDiff()
 
 			// Check if file is write-protected
 			const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
@@ -165,12 +168,12 @@ export async function applyDiffToolLegacy(
 			const didApprove = await askApproval("tool", completeMessage, toolProgressStatus, isWriteProtected)
 
 			if (!didApprove) {
-				await cline.diffViewProvider.revertChanges() // Cline likely handles closing the diff view
+				await cline.editingProvider.revertChanges() // Cline likely handles closing the diff view
 				return
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties
-			await cline.diffViewProvider.saveChanges()
+			await cline.editingProvider.saveChanges()
 
 			// Track file edit operation
 			if (relPath) {
@@ -186,7 +189,7 @@ export async function applyDiffToolLegacy(
 			}
 
 			// Get the formatted response message
-			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
+			const message = await cline.editingProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
 			if (partFailHint) {
 				pushToolResult(partFailHint + message)
@@ -194,13 +197,13 @@ export async function applyDiffToolLegacy(
 				pushToolResult(message)
 			}
 
-			await cline.diffViewProvider.reset()
+			await cline.editingProvider.resetWithListeners()
 
 			return
 		}
 	} catch (error) {
 		await handleError("applying diff", error)
-		await cline.diffViewProvider.reset()
+		await cline.editingProvider.resetWithListeners()
 		return
 	}
 }

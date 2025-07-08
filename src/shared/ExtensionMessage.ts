@@ -210,6 +210,12 @@ export type ExtensionState = Pick<
 	| "terminalZdotdir"
 	| "terminalCompressProgressBar"
 	| "diffEnabled"
+	| "diffViewAutoFocus"
+	| "autoCloseRooTabs"
+	| "autoCloseAllRooTabs"
+	| "fileBasedEditing"
+	| "openTabsInCorrectGroup"
+	| "openTabsAtEndOfList"
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.
 	| "language"
