@@ -1215,14 +1215,6 @@ export class Task extends EventEmitter<ClineEvents> {
 			console.error(`Error during task ${this.taskId}.${this.instanceId} disposal:`, error)
 			// Don't rethrow - we want abort to always succeed
 		}
-		// Save the countdown message in the automatic retry or other content.
-		try {
-			await this.modifyClineMessages(async () => {
-				return this.clineMessages
-			})
-		} catch (error) {
-			console.error(`Error saving messages during abort for task ${this.taskId}.${this.instanceId}:`, error)
-		}
 	}
 
 	// Used when a sub-task is launched and the parent task is waiting for it to
