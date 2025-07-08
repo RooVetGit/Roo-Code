@@ -107,6 +107,7 @@
 		"close": "Close",
 		"validation": {
 			"qdrantUrlRequired": "Qdrant URL is required",
+			"invalidQdrantUrl": "Invalid Qdrant URL",
 			"openaiApiKeyRequired": "OpenAI API key is required",
 			"modelSelectionRequired": "Model selection is required",
 			"apiKeyRequired": "API key is required",

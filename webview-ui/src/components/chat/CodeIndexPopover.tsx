@@ -71,7 +71,7 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 		codebaseIndexQdrantUrl: z
 			.string()
 			.min(1, t("settings:codeIndex.validation.qdrantUrlRequired"))
-			.url("Invalid Qdrant URL"),
+			.url(t("settings:codeIndex.validation.invalidQdrantUrl")),
 		codeIndexQdrantApiKey: z.string().optional(),
 	})
 
@@ -377,6 +377,13 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				}
 				if (!dataToValidate.codebaseIndexEmbedderModelId) {
 					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelSelectionRequired")
+				}
+			} else if (provider === "ollama") {
+				if (!dataToValidate.codebaseIndexEmbedderBaseUrl) {
+					errors.codebaseIndexEmbedderBaseUrl = t("settings:codeIndex.validation.ollamaBaseUrlRequired")
+				}
+				if (!dataToValidate.codebaseIndexEmbedderModelId) {
+					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelIdRequired")
 				}
 			} else if (provider === "openai-compatible") {
 				if (
