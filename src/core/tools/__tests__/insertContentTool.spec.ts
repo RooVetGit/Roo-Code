@@ -1,21 +1,22 @@
-import * as path from "path"
 import * as fs from "fs/promises"
-
+import * as path from "path"
 import type { MockedFunction } from "vitest"
 
 import { fileExistsAtPath } from "../../../utils/fs"
 import { ToolUse, ToolResponse } from "../../../shared/tools"
 import { insertContentTool } from "../insertContentTool"
 
-// Mock external dependencies
+// Mock the path module to return consistent Unix-style paths
 vi.mock("path", async () => {
 	const originalPath = await vi.importActual("path")
 	return {
+		default: originalPath,
 		...originalPath,
-		resolve: vi.fn(),
+		resolve: vi.fn().mockImplementation((...args) => args.join("/")),
 	}
 })
 
+// Mock external dependencies
 vi.mock("fs/promises", () => ({
 	readFile: vi.fn(),
 	writeFile: vi.fn(),
@@ -59,7 +60,6 @@ describe("insertContentTool", () => {
 
 	const mockedFileExistsAtPath = fileExistsAtPath as MockedFunction<typeof fileExistsAtPath>
 	const mockedFsReadFile = fs.readFile as MockedFunction<typeof fs.readFile>
-	const mockedPathResolve = path.resolve as MockedFunction<typeof path.resolve>
 
 	let mockCline: any
 	let mockAskApproval: ReturnType<typeof vi.fn>
@@ -71,8 +71,10 @@ describe("insertContentTool", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 
-		// Mock path.resolve to return our test absolute path
+		// Configure path module mocks to return consistent Unix-style paths
+		const mockedPathResolve = vi.mocked(path.resolve)
 		mockedPathResolve.mockReturnValue(absoluteFilePath)
+
 		mockedFileExistsAtPath.mockResolvedValue(true) // Assume file exists by default for insert
 		mockedFsReadFile.mockResolvedValue("") // Default empty file content
 
