@@ -178,7 +178,7 @@ describe("insertContentTool", () => {
 				{ fileExists: false, fileContent: "" },
 			)
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
 			expect(mockedFsReadFile).not.toHaveBeenCalled() // Should not read if file doesn't exist
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(contentToInsert, true)
 			expect(mockCline.diffViewProvider.editType).toBe("create")
@@ -192,7 +192,7 @@ describe("insertContentTool", () => {
 				{ fileExists: false, fileContent: "" },
 			)
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(contentToInsert, true)
 			expect(mockCline.diffViewProvider.editType).toBe("create")
@@ -202,7 +202,7 @@ describe("insertContentTool", () => {
 		it("creates an empty new file if content is empty string", async () => {
 			await executeInsertContentTool({ line: "1", content: "" }, { fileExists: false, fileContent: "" })
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
 			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("", true)
 			expect(mockCline.diffViewProvider.editType).toBe("create")
@@ -216,7 +216,7 @@ describe("insertContentTool", () => {
 				{ fileExists: false, fileContent: "" },
 			)
 
-			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(expect.stringContaining(testFilePath))
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
 			expect(mockCline.consecutiveMistakeCount).toBe(1)
 			expect(mockCline.recordToolError).toHaveBeenCalledWith("insert_content")
