@@ -158,7 +158,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codeIndexQdrantApiKey: "",
 		codebaseIndexOpenAiCompatibleBaseUrl: "",
 		codebaseIndexOpenAiCompatibleApiKey: "",
-		codebaseIndexOpenAiCompatibleModelDimension: undefined,
 		codebaseIndexGeminiApiKey: "",
 	})
 
