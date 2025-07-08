@@ -72,7 +72,7 @@ import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
 import { RooProtectedController } from "../protect/RooProtectedController"
 import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
-import { truncateConversationIfNeeded } from "../sliding-window"
+import { TruncateResponse, truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
@@ -1865,29 +1865,29 @@ export class Task extends EventEmitter<ClineEvents> {
 				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
 				"default"
 
-			const truncateResult = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
-				totalTokens: contextTokens,
-				maxTokens,
-				contextWindow,
-				apiHandler: this.api,
-				autoCondenseContext,
-				autoCondenseContextPercent,
-				systemPrompt,
-				taskId: this.taskId,
-				customCondensingPrompt,
-				condensingApiHandler,
-				profileThresholds,
-				currentProfileId,
-			})
-			if (truncateResult.messages !== this.apiConversationHistory) {
-				await this.modifyApiConversationHistory(async () => {
-					return truncateResult.messages
+			let truncateResult: TruncateResponse | undefined
+			await this.modifyApiConversationHistory(async (history) => {
+				truncateResult = await truncateConversationIfNeeded({
+					messages: history,
+					totalTokens: contextTokens,
+					maxTokens,
+					contextWindow,
+					apiHandler: this.api,
+					autoCondenseContext,
+					autoCondenseContextPercent,
+					systemPrompt,
+					taskId: this.taskId,
+					customCondensingPrompt,
+					condensingApiHandler,
+					profileThresholds,
+					currentProfileId,
 				})
-			}
-			if (truncateResult.error) {
+				return truncateResult.messages
+			})
+
+			if (truncateResult?.error) {
 				await this.say("condense_context_error", truncateResult.error)
-			} else if (truncateResult.summary) {
+			} else if (truncateResult?.summary) {
 				const { summary, cost, prevContextTokens, newContextTokens = 0 } = truncateResult
 				const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
 				await this.say(
