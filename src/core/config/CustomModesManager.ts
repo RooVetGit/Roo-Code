@@ -148,7 +148,9 @@ export class CustomModesManager {
 		cleanedContent = this.cleanInvisibleCharacters(cleanedContent)
 
 		try {
-			return yaml.parse(cleanedContent)
+			const parsed = yaml.parse(cleanedContent)
+			// Ensure we never return null or undefined
+			return parsed ?? {}
 		} catch (yamlError) {
 			// For .roomodes files, try JSON as fallback
 			if (filePath.endsWith(ROOMODES_FILENAME)) {
