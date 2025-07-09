@@ -256,50 +256,49 @@ export class CodeIndexConfigManager {
 
 		// 4. CRITICAL CHANGES - Always restart for these
 		// Since feature is always enabled, we always check for critical changes
-		{
-			// Provider change
-			if (prevProvider !== this.embedderProvider) {
-				return true
-			}
 
-			// Authentication changes (API keys)
-			const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
-			const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
-			const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
-			const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
-			const currentModelDimension = this.modelDimension
-			const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
-			const currentQdrantUrl = this.qdrantUrl ?? ""
-			const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		// Provider change
+		if (prevProvider !== this.embedderProvider) {
+			return true
+		}
 
-			if (prevOpenAiKey !== currentOpenAiKey) {
-				return true
-			}
+		// Authentication changes (API keys)
+		const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
+		const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
+		const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
+		const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
+		const currentModelDimension = this.modelDimension
+		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
+		const currentQdrantUrl = this.qdrantUrl ?? ""
+		const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
-			if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
-				return true
-			}
+		if (prevOpenAiKey !== currentOpenAiKey) {
+			return true
+		}
 
-			if (
-				prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
-				prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
-			) {
-				return true
-			}
+		if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+			return true
+		}
 
-			// Check for model dimension changes (generic for all providers)
-			if (prevModelDimension !== currentModelDimension) {
-				return true
-			}
+		if (
+			prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
+			prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
+		) {
+			return true
+		}
 
-			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
-				return true
-			}
+		// Check for model dimension changes (generic for all providers)
+		if (prevModelDimension !== currentModelDimension) {
+			return true
+		}
 
-			// Vector dimension changes (still important for compatibility)
-			if (this._hasVectorDimensionChanged(prevProvider, prev?.modelId)) {
-				return true
-			}
+		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+			return true
+		}
+
+		// Vector dimension changes (still important for compatibility)
+		if (this._hasVectorDimensionChanged(prevProvider, prev?.modelId)) {
+			return true
 		}
 
 		return false
