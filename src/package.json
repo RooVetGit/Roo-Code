@@ -76,6 +76,11 @@
 				"icon": "$(add)"
 			},
 			{
+				"command": "roo-cline.promptsButtonClicked",
+				"title": "%command.prompts.title%",
+				"icon": "$(organization)"
+			},
+			{
 				"command": "roo-cline.mcpButtonClicked",
 				"title": "%command.mcpServers.title%",
 				"icon": "$(server)"
@@ -228,6 +233,10 @@
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
+					"command": "roo-cline.promptsButtonClicked",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
 					"command": "roo-cline.mcpButtonClicked",
 					"when": "view == roo-cline.SidebarProvider"
 				},
@@ -257,6 +266,10 @@
 				{
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@3",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.promptsButtonClicked",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
