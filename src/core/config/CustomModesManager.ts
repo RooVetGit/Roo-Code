@@ -182,6 +182,12 @@ export class CustomModesManager {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
 			const settings = this.parseYamlSafely(content, filePath)
+
+			// Ensure settings has customModes property
+			if (!settings || typeof settings !== "object" || !settings.customModes) {
+				return []
+			}
+
 			const result = customModesSettingsSchema.safeParse(settings)
 
 			if (!result.success) {
@@ -460,7 +466,15 @@ export class CustomModesManager {
 			settings = { customModes: [] }
 		}
 
-		settings.customModes = operation(settings.customModes || [])
+		// Ensure settings is an object and has customModes property
+		if (!settings || typeof settings !== "object") {
+			settings = { customModes: [] }
+		}
+		if (!settings.customModes) {
+			settings.customModes = []
+		}
+
+		settings.customModes = operation(settings.customModes)
 		await fs.writeFile(filePath, yaml.stringify(settings, { lineWidth: 0 }), "utf-8")
 	}
 
