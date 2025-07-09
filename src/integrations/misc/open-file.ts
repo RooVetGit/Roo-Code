@@ -12,6 +12,7 @@ interface OpenFileOptions {
 
 export async function openFile(filePath: string, options: OpenFileOptions = {}) {
 	try {
+		filePath = decodeURIComponent(filePath)
 		const workspaceRoot = getWorkspacePath()
 		const homeDir = os.homedir()
 		const originalFilePathForError = filePath // Keep original for error messages
