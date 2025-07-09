@@ -10,7 +10,6 @@ import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "..
  * Handles loading, validating, and providing access to configuration values.
  */
 export class CodeIndexConfigManager {
-	private isEnabled: boolean = false
 	private embedderProvider: EmbedderProvider = "openai"
 	private modelId?: string
 	private modelDimension?: number
@@ -69,7 +68,7 @@ export class CodeIndexConfigManager {
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 
 		// Update instance variables with configuration
-		this.isEnabled = codebaseIndexEnabled ?? true
+		// Note: codebaseIndexEnabled is no longer used as the feature is always enabled
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
@@ -127,7 +126,6 @@ export class CodeIndexConfigManager {
 	public async loadConfiguration(): Promise<{
 		configSnapshot: PreviousConfigSnapshot
 		currentConfig: {
-			isEnabled: boolean
 			isConfigured: boolean
 			embedderProvider: EmbedderProvider
 			modelId?: string
@@ -144,7 +142,7 @@ export class CodeIndexConfigManager {
 	}> {
 		// Capture the ACTUAL previous state before loading new configuration
 		const previousConfigSnapshot: PreviousConfigSnapshot = {
-			enabled: this.isEnabled,
+			enabled: true, // Feature is always enabled
 			configured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			modelId: this.modelId,
@@ -169,7 +167,6 @@ export class CodeIndexConfigManager {
 		return {
 			configSnapshot: previousConfigSnapshot,
 			currentConfig: {
-				isEnabled: this.isEnabled,
 				isConfigured: this.isConfigured(),
 				embedderProvider: this.embedderProvider,
 				modelId: this.modelId,
@@ -246,14 +243,10 @@ export class CodeIndexConfigManager {
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
-		// 1. Transition from disabled/unconfigured to enabled+configured
-		if ((!prevEnabled || !prevConfigured) && this.isEnabled && nowConfigured) {
+		// 1. Transition from unconfigured to configured
+		// Since the feature is always enabled, we only check configuration status
+		if (!prevConfigured && nowConfigured) {
 			return true
-		}
-
-		// 2. If was disabled and still is, no restart needed
-		if (!prevEnabled && !this.isEnabled) {
-			return false
 		}
 
 		// 3. If wasn't ready before and isn't ready now, no restart needed
@@ -262,7 +255,8 @@ export class CodeIndexConfigManager {
 		}
 
 		// 4. CRITICAL CHANGES - Always restart for these
-		if (this.isEnabled || prevEnabled) {
+		// Since feature is always enabled, we always check for critical changes
+		{
 			// Provider change
 			if (prevProvider !== this.embedderProvider) {
 				return true
@@ -342,7 +336,6 @@ export class CodeIndexConfigManager {
 	 */
 	public getConfig(): CodeIndexConfig {
 		return {
-			isEnabled: this.isEnabled,
 			isConfigured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			modelId: this.modelId,

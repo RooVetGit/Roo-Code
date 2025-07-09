@@ -45,7 +45,6 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 
 			expect(result.currentConfig).toEqual({
-				isEnabled: true,
 				isConfigured: false,
 				embedderProvider: "openai",
 				modelId: undefined,
@@ -77,7 +76,6 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 
 			expect(result.currentConfig).toEqual({
-				isEnabled: true,
 				isConfigured: true,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
@@ -111,7 +109,6 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 
 			expect(result.currentConfig).toEqual({
-				isEnabled: true,
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "text-embedding-3-large",
@@ -149,7 +146,6 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 
 			expect(result.currentConfig).toEqual({
-				isEnabled: true,
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
@@ -188,7 +184,6 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 
 			expect(result.currentConfig).toEqual({
-				isEnabled: true,
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
@@ -227,7 +222,6 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 
 			expect(result.currentConfig).toEqual({
-				isEnabled: true,
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
@@ -1207,7 +1201,6 @@ describe("CodeIndexConfigManager", () => {
 		it("should return correct configuration via getConfig", () => {
 			const config = configManager.getConfig()
 			expect(config).toEqual({
-				isEnabled: true,
 				isConfigured: true,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
