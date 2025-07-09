@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from "vitest"
 import { DEFAULT_HEADERS } from "../constants"
+import { Package } from "../../../shared/package"
 
 describe("DEFAULT_HEADERS", () => {
 	it("should contain all required headers", () => {
@@ -20,7 +21,7 @@ describe("DEFAULT_HEADERS", () => {
 
 	it("should have correct User-Agent format", () => {
 		const userAgent = DEFAULT_HEADERS["User-Agent"]
-		expect(userAgent).toBe("roo-cline/3.22.6")
+		expect(userAgent).toBe(`roo-cline/${Package.version}`)
 
 		// Verify it follows the tool_name/version pattern
 		expect(userAgent).toMatch(/^[a-z-]+\/\d+\.\d+\.\d+$/)
@@ -38,8 +39,8 @@ describe("DEFAULT_HEADERS", () => {
 		// Check semantic version format (major.minor.patch)
 		expect(version).toMatch(/^\d+\.\d+\.\d+$/)
 
-		// Verify current version
-		expect(version).toBe("3.22.6")
+		// Verify current version matches package version
+		expect(version).toBe(Package.version)
 	})
 
 	it("should be an object with string values", () => {
