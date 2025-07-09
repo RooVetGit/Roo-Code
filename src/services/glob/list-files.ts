@@ -130,7 +130,7 @@ function buildNonRecursiveArgs(): string[] {
 	args.push("-g", "*")
 	args.push("--maxdepth", "1") // ripgrep uses maxdepth, not max-depth
 
-	// Respect .gitignore in non-recursive mode too (fixes the issue)
+	// Respect .gitignore in non-recursive mode too
 	// (ripgrep respects .gitignore by default)
 
 	// Apply directory exclusions for non-recursive searches
