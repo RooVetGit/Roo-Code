@@ -307,7 +307,6 @@ function isDirectoryExplicitlyIgnored(dirName: string): boolean {
 	return false
 }
 
-// Removed isIgnoredByGitignore function as it's replaced by the ignore library
 
 /**
  * Combine file and directory results and format them properly
