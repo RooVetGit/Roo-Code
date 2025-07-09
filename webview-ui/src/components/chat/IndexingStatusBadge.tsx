@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react"
-import { FileSearch } from "lucide-react"
+import { Database } from "lucide-react"
 import { cn } from "@src/lib/utils"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
@@ -123,7 +123,7 @@ export const IndexingStatusBadge: React.FC<IndexingStatusBadgeProps> = ({ classN
 					)}
 					aria-label={getTooltipText()}>
 					{/* File search icon */}
-					<FileSearch className="w-4 h-4 text-vscode-foreground" />
+					<Database className="w-4 h-4 text-vscode-foreground" />
 
 					{/* Status dot badge */}
 					<span

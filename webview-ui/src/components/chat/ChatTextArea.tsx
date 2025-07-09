@@ -25,7 +25,7 @@ import Thumbnails from "../common/Thumbnails"
 import ModeSelector from "./ModeSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import { VolumeX, Pin, Check, Camera, WandSparkles, SendHorizontal } from "lucide-react"
+import { VolumeX, Pin, Check, Image, WandSparkles, SendHorizontal } from "lucide-react"
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
@@ -1168,7 +1168,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						</div>
 					</div>
 
-					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
+					<div className={cn("flex", "items-center", "gap-1", "shrink-0")}>
 						<IndexingStatusBadge />
 						<button
 							aria-label={t("chat:addImages")}
@@ -1187,9 +1187,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								!shouldDisableImages && "cursor-pointer",
 								shouldDisableImages &&
 									"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
-								"mr-1",
 							)}>
-							<Camera className="w-4 h-4" />
+							<Image className="w-4 h-4" />
 						</button>
 					</div>
 				</div>
