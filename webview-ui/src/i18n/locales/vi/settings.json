@@ -100,6 +100,8 @@
 		"close": "Đóng",
 		"validation": {
 			"invalidQdrantUrl": "URL Qdrant không hợp lệ",
+			"invalidOllamaUrl": "URL Ollama không hợp lệ",
+			"invalidBaseUrl": "URL cơ sở không hợp lệ",
 			"qdrantUrlRequired": "Yêu cầu URL Qdrant",
 			"openaiApiKeyRequired": "Yêu cầu khóa API OpenAI",
 			"modelSelectionRequired": "Yêu cầu chọn mô hình",

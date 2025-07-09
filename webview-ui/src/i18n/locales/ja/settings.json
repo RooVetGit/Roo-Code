@@ -100,6 +100,8 @@
 		"close": "閉じる",
 		"validation": {
 			"invalidQdrantUrl": "無効なQdrant URL",
+			"invalidOllamaUrl": "無効なOllama URL",
+			"invalidBaseUrl": "無効なベースURL",
 			"qdrantUrlRequired": "Qdrant URL が必要です",
 			"openaiApiKeyRequired": "OpenAI APIキーが必要です",
 			"modelSelectionRequired": "モデルの選択が必要です",

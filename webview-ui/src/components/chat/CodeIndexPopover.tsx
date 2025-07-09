@@ -89,7 +89,7 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 				codebaseIndexEmbedderBaseUrl: z
 					.string()
 					.min(1, t("settings:codeIndex.validation.ollamaBaseUrlRequired"))
-					.url("Invalid Ollama URL"),
+					.url(t("settings:codeIndex.validation.invalidOllamaUrl")),
 				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.validation.modelIdRequired")),
 			})
 
@@ -98,7 +98,7 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 				codebaseIndexOpenAiCompatibleBaseUrl: z
 					.string()
 					.min(1, t("settings:codeIndex.validation.baseUrlRequired"))
-					.url("Invalid base URL"),
+					.url(t("settings:codeIndex.validation.invalidBaseUrl")),
 				codebaseIndexOpenAiCompatibleApiKey: z
 					.string()
 					.min(1, t("settings:codeIndex.validation.apiKeyRequired")),

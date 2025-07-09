@@ -100,6 +100,8 @@
 		"close": "关闭",
 		"validation": {
 			"invalidQdrantUrl": "无效的 Qdrant URL",
+			"invalidOllamaUrl": "无效的 Ollama URL",
+			"invalidBaseUrl": "无效的基础 URL",
 			"qdrantUrlRequired": "需要 Qdrant URL",
 			"openaiApiKeyRequired": "需要 OpenAI API 密钥",
 			"modelSelectionRequired": "需要选择模型",

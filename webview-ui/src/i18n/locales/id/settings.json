@@ -100,6 +100,8 @@
 		"close": "Tutup",
 		"validation": {
 			"invalidQdrantUrl": "URL Qdrant tidak valid",
+			"invalidOllamaUrl": "URL Ollama tidak valid",
+			"invalidBaseUrl": "URL dasar tidak valid",
 			"qdrantUrlRequired": "URL Qdrant diperlukan",
 			"openaiApiKeyRequired": "Kunci API OpenAI diperlukan",
 			"modelSelectionRequired": "Pemilihan model diperlukan",

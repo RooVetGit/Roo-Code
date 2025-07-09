@@ -100,6 +100,8 @@
 		"close": "Tancar",
 		"validation": {
 			"invalidQdrantUrl": "URL de Qdrant no vàlida",
+			"invalidOllamaUrl": "URL d'Ollama no vàlida",
+			"invalidBaseUrl": "URL de base no vàlida",
 			"qdrantUrlRequired": "Cal una URL de Qdrant",
 			"openaiApiKeyRequired": "Cal una clau d'API d'OpenAI",
 			"modelSelectionRequired": "Cal seleccionar un model",

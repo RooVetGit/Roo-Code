@@ -252,7 +252,7 @@ describe("CodeIndexPopover Validation", () => {
 			fireEvent.click(saveButton)
 
 			await waitFor(() => {
-				expect(screen.getByText("Invalid Qdrant URL")).toBeInTheDocument()
+				expect(screen.getByText("settings:codeIndex.validation.invalidQdrantUrl")).toBeInTheDocument()
 			})
 		})
 
@@ -279,7 +279,7 @@ describe("CodeIndexPopover Validation", () => {
 			fireEvent.click(saveButton)
 
 			await waitFor(() => {
-				expect(screen.getByText("Invalid Qdrant URL")).toBeInTheDocument()
+				expect(screen.getByText("settings:codeIndex.validation.invalidQdrantUrl")).toBeInTheDocument()
 			})
 		})
 	})

@@ -100,6 +100,8 @@
 		"close": "बंद करें",
 		"validation": {
 			"invalidQdrantUrl": "अमान्य Qdrant URL",
+			"invalidOllamaUrl": "अमान्य Ollama URL",
+			"invalidBaseUrl": "अमान्य बेस URL",
 			"qdrantUrlRequired": "Qdrant URL आवश्यक है",
 			"openaiApiKeyRequired": "OpenAI API कुंजी आवश्यक है",
 			"modelSelectionRequired": "मॉडल चयन आवश्यक है",

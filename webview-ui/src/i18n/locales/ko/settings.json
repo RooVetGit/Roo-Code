@@ -100,6 +100,8 @@
 		"close": "닫기",
 		"validation": {
 			"invalidQdrantUrl": "잘못된 Qdrant URL",
+			"invalidOllamaUrl": "잘못된 Ollama URL",
+			"invalidBaseUrl": "잘못된 기본 URL",
 			"qdrantUrlRequired": "Qdrant URL이 필요합니다",
 			"openaiApiKeyRequired": "OpenAI API 키가 필요합니다",
 			"modelSelectionRequired": "모델 선택이 필요합니다",

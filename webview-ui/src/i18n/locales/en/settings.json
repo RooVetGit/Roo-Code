@@ -108,6 +108,8 @@
 		"validation": {
 			"qdrantUrlRequired": "Qdrant URL is required",
 			"invalidQdrantUrl": "Invalid Qdrant URL",
+			"invalidOllamaUrl": "Invalid Ollama URL",
+			"invalidBaseUrl": "Invalid base URL",
 			"openaiApiKeyRequired": "OpenAI API key is required",
 			"modelSelectionRequired": "Model selection is required",
 			"apiKeyRequired": "API key is required",

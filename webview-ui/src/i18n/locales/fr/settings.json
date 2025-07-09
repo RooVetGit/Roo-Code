@@ -100,6 +100,8 @@
 		"close": "Fermer",
 		"validation": {
 			"invalidQdrantUrl": "URL Qdrant invalide",
+			"invalidOllamaUrl": "URL Ollama invalide",
+			"invalidBaseUrl": "URL de base invalide",
 			"qdrantUrlRequired": "L'URL Qdrant est requise",
 			"openaiApiKeyRequired": "La clé API OpenAI est requise",
 			"modelSelectionRequired": "La sélection du modèle est requise",
