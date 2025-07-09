@@ -52,6 +52,7 @@ export interface WebviewMessage {
 		| "clearTask"
 		| "didShowAnnouncement"
 		| "selectImages"
+		| "selectFiles"
 		| "exportCurrentTask"
 		| "shareCurrentTask"
 		| "showTaskWithId"
@@ -201,6 +202,7 @@ export interface WebviewMessage {
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ProviderSettings
 	images?: string[]
+	files?: Array<{ path: string; content?: string; type: string }>
 	bool?: boolean
 	value?: number
 	commands?: string[]

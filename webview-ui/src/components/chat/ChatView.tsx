@@ -143,6 +143,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
 	const [sendingDisabled, setSendingDisabled] = useState(false)
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
+	const [selectedFiles, setSelectedFiles] = useState<Array<{ path: string; content: string; type: string }>>([])
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
 	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
@@ -528,15 +529,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [])
 
 	const handleSendMessage = useCallback(
-		(text: string, images: string[]) => {
+		(text: string, images: string[], files?: Array<{ path: string; content: string; type: string }>) => {
 			text = text.trim()
 
-			if (text || images.length > 0) {
+			if (text || images.length > 0 || (files && files.length > 0)) {
 				// Mark that user has responded - this prevents any pending auto-approvals
 				userRespondedRef.current = true
 
 				if (messagesRef.current.length === 0) {
-					vscode.postMessage({ type: "newTask", text, images })
+					vscode.postMessage({ type: "newTask", text, images, files })
 				} else if (clineAskRef.current) {
 					if (clineAskRef.current === "followup") {
 						markFollowUpAsAnswered()
@@ -556,7 +557,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "resume_task":
 						case "resume_completed_task":
 						case "mistake_limit_reached":
-							vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
+							vscode.postMessage({
+								type: "askResponse",
+								askResponse: "messageResponse",
+								text,
+								images,
+								files,
+							})
 							break
 						// There is no other case that a textfield should be enabled.
 					}
@@ -689,10 +696,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const { info: model } = useSelectedModel(apiConfiguration)
 
-	const selectImages = useCallback(() => vscode.postMessage({ type: "selectImages" }), [])
+	const selectImages = useCallback(() => vscode.postMessage({ type: "selectFiles" }), [])
 
+	const MAX_ATTACHMENTS_PER_MESSAGE = MAX_IMAGES_PER_MESSAGE
 	const shouldDisableImages =
-		!model?.supportsImages || sendingDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
+		!model?.supportsImages ||
+		sendingDisabled ||
+		selectedImages.length + selectedFiles.length >= MAX_ATTACHMENTS_PER_MESSAGE
 
 	const handleMessage = useCallback(
 		(e: MessageEvent) => {
@@ -719,13 +729,38 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						)
 					}
 					break
+				case "selectedFiles":
+					const newFileImages = message.images ?? []
+					const newFiles = message.files ?? []
+					if (newFileImages.length > 0) {
+						setSelectedImages((prevImages) =>
+							[...prevImages, ...newFileImages].slice(0, MAX_IMAGES_PER_MESSAGE),
+						)
+					}
+					if (newFiles.length > 0) {
+						// Filter out files without content
+						const validFiles = newFiles.filter(
+							(file): file is { path: string; content: string; type: string } =>
+								file.content !== undefined,
+						)
+						setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles])
+					}
+					break
 				case "invoke":
 					switch (message.invoke!) {
 						case "newChat":
 							handleChatReset()
 							break
 						case "sendMessage":
-							handleSendMessage(message.text ?? "", message.images ?? [])
+							handleSendMessage(
+								message.text ?? "",
+								message.images ?? [],
+								message.files?.filter((f) => f.content !== undefined) as Array<{
+									path: string
+									content: string
+									type: string
+								}>,
+							)
 							break
 						case "setChatBoxMessage":
 							handleSetChatBoxMessage(message.text ?? "", message.images ?? [])
@@ -1286,7 +1321,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					return currentValue !== "" ? `${currentValue} \n${suggestion.answer}` : suggestion.answer
 				})
 			} else {
-				handleSendMessage(suggestion.answer, [])
+				handleSendMessage(suggestion.answer, [], [])
 			}
 		},
 		[handleSendMessage, setInputValue, switchToMode, alwaysAllowModeSwitch, clineAsk, markFollowUpAsAnswered],
@@ -1508,7 +1543,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			if (enableButtons && primaryButtonText) {
 				handlePrimaryButtonClick(inputValue, selectedImages)
 			} else if (!sendingDisabled && !isProfileDisabled && (inputValue.trim() || selectedImages.length > 0)) {
-				handleSendMessage(inputValue, selectedImages)
+				handleSendMessage(inputValue, selectedImages, selectedFiles)
 			}
 		},
 	}))
@@ -1749,7 +1784,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				placeholderText={placeholderText}
 				selectedImages={selectedImages}
 				setSelectedImages={setSelectedImages}
-				onSend={() => handleSendMessage(inputValue, selectedImages)}
+				selectedFiles={selectedFiles}
+				setSelectedFiles={setSelectedFiles}
+				onSend={() => handleSendMessage(inputValue, selectedImages, selectedFiles)}
 				onSelectImages={selectImages}
 				shouldDisableImages={shouldDisableImages}
 				onHeightChange={() => {

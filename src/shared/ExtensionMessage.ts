@@ -54,6 +54,7 @@ export interface ExtensionMessage {
 		| "action"
 		| "state"
 		| "selectedImages"
+		| "selectedFiles"
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
@@ -121,6 +122,7 @@ export interface ExtensionMessage {
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
+	files?: Array<{ path: string; content?: string; type: string }>
 	filePaths?: string[]
 	openedTabs?: Array<{
 		label: string

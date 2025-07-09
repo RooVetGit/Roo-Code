@@ -25,8 +25,9 @@ import Thumbnails from "../common/Thumbnails"
 import ModeSelector from "./ModeSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import { VolumeX, Pin, Check, Image, WandSparkles, SendHorizontal } from "lucide-react"
+import { VolumeX, Pin, Check, Paperclip, WandSparkles, SendHorizontal } from "lucide-react"
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
+import { FileAttachment } from "./FileAttachment"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
 
@@ -38,6 +39,8 @@ interface ChatTextAreaProps {
 	placeholderText: string
 	selectedImages: string[]
 	setSelectedImages: React.Dispatch<React.SetStateAction<string[]>>
+	selectedFiles?: Array<{ path: string; content: string; type: string }>
+	setSelectedFiles?: React.Dispatch<React.SetStateAction<Array<{ path: string; content: string; type: string }>>>
 	onSend: () => void
 	onSelectImages: () => void
 	shouldDisableImages: boolean
@@ -57,6 +60,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			placeholderText,
 			selectedImages,
 			setSelectedImages,
+			selectedFiles,
+			setSelectedFiles,
 			onSend,
 			onSelectImages,
 			shouldDisableImages,
@@ -1038,6 +1043,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					/>
 				)}
 
+				{selectedFiles && selectedFiles.length > 0 && setSelectedFiles && (
+					<FileAttachment
+						files={selectedFiles}
+						setFiles={setSelectedFiles}
+						style={{
+							marginBottom: "8px",
+						}}
+					/>
+				)}
+
 				<div className={cn("flex", "justify-between", "items-center", "mt-auto")}>
 					<div className={cn("flex", "items-center", "gap-1", "min-w-0")}>
 						<div className="shrink-0">
@@ -1174,9 +1189,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
 						<IndexingStatusBadge />
-						<StandardTooltip content={t("chat:addImages")}>
+						<StandardTooltip content={t("chat:addFiles")}>
 							<button
-								aria-label={t("chat:addImages")}
+								aria-label={t("chat:addFiles")}
 								disabled={shouldDisableImages}
 								onClick={!shouldDisableImages ? onSelectImages : undefined}
 								className={cn(
@@ -1193,7 +1208,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
 									"mr-1",
 								)}>
-								<Image className="w-4 h-4" />
+								<Paperclip className="w-4 h-4" />
 							</button>
 						</StandardTooltip>
 					</div>
