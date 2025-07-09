@@ -1168,7 +1168,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						</div>
 					</div>
 
-					<div className={cn("flex", "items-center", "gap-1", "shrink-0")}>
+					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
 						<IndexingStatusBadge />
 						<button
 							aria-label={t("chat:addImages")}
@@ -1187,6 +1187,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								!shouldDisableImages && "cursor-pointer",
 								shouldDisableImages &&
 									"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
+								"mr-1",
 							)}>
 							<Image className="w-4 h-4" />
 						</button>
