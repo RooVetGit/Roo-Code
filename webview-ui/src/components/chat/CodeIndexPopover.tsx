@@ -41,6 +41,10 @@ import type { EmbedderProvider } from "@roo/embeddingModels"
 import type { IndexingStatus } from "@roo/ExtensionMessage"
 import { CODEBASE_INDEX_DEFAULTS } from "@roo-code/types"
 
+// Default URLs for providers
+const DEFAULT_QDRANT_URL = "http://localhost:6333"
+const DEFAULT_OLLAMA_URL = "http://localhost:11434"
+
 interface CodeIndexPopoverProps {
 	children: React.ReactNode
 	indexingStatus: IndexingStatus
@@ -544,9 +548,11 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 										</label>
 										<Select
 											value={currentSettings.codebaseIndexEmbedderProvider}
-											onValueChange={(value: EmbedderProvider) =>
+											onValueChange={(value: EmbedderProvider) => {
 												updateSetting("codebaseIndexEmbedderProvider", value)
-											}>
+												// Clear model selection when switching providers
+												updateSetting("codebaseIndexEmbedderModelId", "")
+											}}>
 											<SelectTrigger className="w-full">
 												<SelectValue />
 											</SelectTrigger>
@@ -586,7 +592,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												/>
 												{formErrors.codeIndexOpenAiKey && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codeIndexOpenAiKey}
 													</p>
 												)}
@@ -625,7 +631,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												</VSCodeDropdown>
 												{formErrors.codebaseIndexEmbedderModelId && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexEmbedderModelId}
 													</p>
 												)}
@@ -644,13 +650,23 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													onInput={(e: any) =>
 														updateSetting("codebaseIndexEmbedderBaseUrl", e.target.value)
 													}
+													onBlur={(e: any) => {
+														// Set default Ollama URL if field is empty
+														if (!e.target.value.trim()) {
+															e.target.value = DEFAULT_OLLAMA_URL
+															updateSetting(
+																"codebaseIndexEmbedderBaseUrl",
+																DEFAULT_OLLAMA_URL,
+															)
+														}
+													}}
 													placeholder={t("settings:codeIndex.ollamaUrlPlaceholder")}
 													className={cn("w-full", {
 														"border-red-500": formErrors.codebaseIndexEmbedderBaseUrl,
 													})}
 												/>
 												{formErrors.codebaseIndexEmbedderBaseUrl && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexEmbedderBaseUrl}
 													</p>
 												)}
@@ -689,7 +705,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												</VSCodeDropdown>
 												{formErrors.codebaseIndexEmbedderModelId && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexEmbedderModelId}
 													</p>
 												)}
@@ -720,7 +736,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												/>
 												{formErrors.codebaseIndexOpenAiCompatibleBaseUrl && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexOpenAiCompatibleBaseUrl}
 													</p>
 												)}
@@ -748,7 +764,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												/>
 												{formErrors.codebaseIndexOpenAiCompatibleApiKey && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexOpenAiCompatibleApiKey}
 													</p>
 												)}
@@ -769,7 +785,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												/>
 												{formErrors.codebaseIndexEmbedderModelId && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexEmbedderModelId}
 													</p>
 												)}
@@ -797,7 +813,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												/>
 												{formErrors.codebaseIndexEmbedderModelDimension && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexEmbedderModelDimension}
 													</p>
 												)}
@@ -823,7 +839,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												/>
 												{formErrors.codebaseIndexGeminiApiKey && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexGeminiApiKey}
 													</p>
 												)}
@@ -862,7 +878,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													})}
 												</VSCodeDropdown>
 												{formErrors.codebaseIndexEmbedderModelId && (
-													<p className="text-xs text-vscode-errorForeground">
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexEmbedderModelId}
 													</p>
 												)}
@@ -880,13 +896,20 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 											onInput={(e: any) =>
 												updateSetting("codebaseIndexQdrantUrl", e.target.value)
 											}
+											onBlur={(e: any) => {
+												// Set default Qdrant URL if field is empty
+												if (!e.target.value.trim()) {
+													currentSettings.codebaseIndexQdrantUrl = DEFAULT_QDRANT_URL
+													updateSetting("codebaseIndexQdrantUrl", DEFAULT_QDRANT_URL)
+												}
+											}}
 											placeholder={t("settings:codeIndex.qdrantUrlPlaceholder")}
 											className={cn("w-full", {
 												"border-red-500": formErrors.codebaseIndexQdrantUrl,
 											})}
 										/>
 										{formErrors.codebaseIndexQdrantUrl && (
-											<p className="text-xs text-vscode-errorForeground">
+											<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 												{formErrors.codebaseIndexQdrantUrl}
 											</p>
 										)}
@@ -906,7 +929,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 											})}
 										/>
 										{formErrors.codeIndexQdrantApiKey && (
-											<p className="text-xs text-vscode-errorForeground">
+											<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 												{formErrors.codeIndexQdrantApiKey}
 											</p>
 										)}
