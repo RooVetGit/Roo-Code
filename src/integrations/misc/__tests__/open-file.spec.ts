@@ -123,7 +123,9 @@ describe("openFile", () => {
 			expect(console.warn).not.toHaveBeenCalled()
 
 			// Should use the decoded path - verify it contains the decoded brackets
-			expect(vscode.Uri.file).toHaveBeenCalledWith(expect.stringContaining("[test]/file.txt"))
+			// On Windows, the path will include backslashes instead of forward slashes
+			const expectedPathSegment = process.platform === "win32" ? "[test]\\file.txt" : "[test]/file.txt"
+			expect(vscode.Uri.file).toHaveBeenCalledWith(expect.stringContaining(expectedPathSegment))
 			expect(vscode.workspace.openTextDocument).toHaveBeenCalled()
 			expect(vscode.window.showErrorMessage).not.toHaveBeenCalled()
 		})
@@ -226,8 +228,10 @@ describe("openFile", () => {
 
 			await openFile(newFilePath, { create: true, content })
 
+			// On Windows, the path will include backslashes instead of forward slashes
+			const expectedPathSegment = process.platform === "win32" ? "new\\file.txt" : "new/file.txt"
 			expect(vscode.workspace.fs.writeFile).toHaveBeenCalledWith(
-				expect.objectContaining({ fsPath: expect.stringContaining("new/file.txt") }),
+				expect.objectContaining({ fsPath: expect.stringContaining(expectedPathSegment) }),
 				Buffer.from(content, "utf8"),
 			)
 			expect(vscode.workspace.openTextDocument).toHaveBeenCalled()
