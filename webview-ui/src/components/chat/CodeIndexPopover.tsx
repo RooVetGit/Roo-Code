@@ -334,93 +334,27 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	const validateSettings = (): boolean => {
 		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t)
 
-		// Prepare data for validation, excluding placeholder values
+		// Prepare data for validation
 		const dataToValidate: any = {}
 		for (const [key, value] of Object.entries(currentSettings)) {
-			// Skip secret fields that still have placeholder value
+			// For secret fields with placeholder values, treat them as valid (they exist in backend)
 			if (value === SECRET_PLACEHOLDER) {
-				continue
+				// Add a dummy value that will pass validation for these fields
+				if (
+					key === "codeIndexOpenAiKey" ||
+					key === "codebaseIndexOpenAiCompatibleApiKey" ||
+					key === "codebaseIndexGeminiApiKey"
+				) {
+					dataToValidate[key] = "placeholder-valid"
+				}
+			} else {
+				dataToValidate[key] = value
 			}
-			dataToValidate[key] = value
 		}
 
 		try {
-			// Create a partial schema that only validates fields that are present
-			const partialSchema = schema.partial()
-
-			// For required fields that have placeholder values, we need to check if they exist in the backend
-			const requiredFieldsWithPlaceholder: Record<string, boolean> = {}
-
-			// Check which secret fields have placeholder values but should be considered valid
-			if (currentSettings.codeIndexOpenAiKey === SECRET_PLACEHOLDER) {
-				requiredFieldsWithPlaceholder.codeIndexOpenAiKey = true
-			}
-			if (currentSettings.codebaseIndexOpenAiCompatibleApiKey === SECRET_PLACEHOLDER) {
-				requiredFieldsWithPlaceholder.codebaseIndexOpenAiCompatibleApiKey = true
-			}
-			if (currentSettings.codebaseIndexGeminiApiKey === SECRET_PLACEHOLDER) {
-				requiredFieldsWithPlaceholder.codebaseIndexGeminiApiKey = true
-			}
-
-			// Validate the data we have
-			partialSchema.parse(dataToValidate)
-
-			// Additional validation for required fields based on provider
-			const provider = currentSettings.codebaseIndexEmbedderProvider
-			const errors: Record<string, string> = {}
-
-			// Check provider-specific required fields
-			if (provider === "openai") {
-				if (!dataToValidate.codeIndexOpenAiKey && !requiredFieldsWithPlaceholder.codeIndexOpenAiKey) {
-					errors.codeIndexOpenAiKey = t("settings:codeIndex.validation.openaiApiKeyRequired")
-				}
-				if (!dataToValidate.codebaseIndexEmbedderModelId) {
-					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelSelectionRequired")
-				}
-			} else if (provider === "ollama") {
-				if (!dataToValidate.codebaseIndexEmbedderBaseUrl) {
-					errors.codebaseIndexEmbedderBaseUrl = t("settings:codeIndex.validation.ollamaBaseUrlRequired")
-				}
-				if (!dataToValidate.codebaseIndexEmbedderModelId) {
-					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelIdRequired")
-				}
-			} else if (provider === "openai-compatible") {
-				if (
-					!dataToValidate.codebaseIndexOpenAiCompatibleApiKey &&
-					!requiredFieldsWithPlaceholder.codebaseIndexOpenAiCompatibleApiKey
-				) {
-					errors.codebaseIndexOpenAiCompatibleApiKey = t("settings:codeIndex.validation.apiKeyRequired")
-				}
-				if (!dataToValidate.codebaseIndexEmbedderModelId) {
-					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelIdRequired")
-				}
-				if (!dataToValidate.codebaseIndexEmbedderModelDimension) {
-					errors.codebaseIndexEmbedderModelDimension = t(
-						"settings:codeIndex.validation.modelDimensionRequired",
-					)
-				}
-			} else if (provider === "gemini") {
-				if (
-					!dataToValidate.codebaseIndexGeminiApiKey &&
-					!requiredFieldsWithPlaceholder.codebaseIndexGeminiApiKey
-				) {
-					errors.codebaseIndexGeminiApiKey = t("settings:codeIndex.validation.geminiApiKeyRequired")
-				}
-				if (!dataToValidate.codebaseIndexEmbedderModelId) {
-					errors.codebaseIndexEmbedderModelId = t("settings:codeIndex.validation.modelSelectionRequired")
-				}
-			}
-
-			// Always check base required fields
-			if (!dataToValidate.codebaseIndexQdrantUrl) {
-				errors.codebaseIndexQdrantUrl = t("settings:codeIndex.validation.qdrantUrlRequired")
-			}
-
-			if (Object.keys(errors).length > 0) {
-				setFormErrors(errors)
-				return false
-			}
-
+			// Validate using the schema
+			schema.parse(dataToValidate)
 			setFormErrors({})
 			return true
 		} catch (error) {
