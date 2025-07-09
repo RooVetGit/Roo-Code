@@ -173,11 +173,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		maxConcurrentFileReads,
 		condensingApiConfigId,
 		customCondensingPrompt,
-		codebaseIndexConfig,
-		codebaseIndexModels,
 		customSupportPrompts,
 		profileThresholds,
 		alwaysAllowFollowupQuestions,
+		alwaysAllowUpdateTodoList,
 		followupAutoApproveTimeoutMs,
 		showAllWorkspacesTasks,
 	} = cachedState
@@ -318,6 +317,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "alwaysAllowFollowupQuestions", bool: alwaysAllowFollowupQuestions })
+			vscode.postMessage({ type: "alwaysAllowUpdateTodoList", bool: alwaysAllowUpdateTodoList })
 			vscode.postMessage({ type: "followupAutoApproveTimeoutMs", value: followupAutoApproveTimeoutMs })
 			vscode.postMessage({ type: "condensingApiConfigId", text: condensingApiConfigId || "" })
 			vscode.postMessage({ type: "updateCondensingPrompt", text: customCondensingPrompt || "" })
@@ -628,6 +628,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowSubtasks={alwaysAllowSubtasks}
 							alwaysAllowExecute={alwaysAllowExecute}
 							alwaysAllowFollowupQuestions={alwaysAllowFollowupQuestions}
+							alwaysAllowUpdateTodoList={alwaysAllowUpdateTodoList}
 							followupAutoApproveTimeoutMs={followupAutoApproveTimeoutMs}
 							allowedCommands={allowedCommands}
 							setCachedStateField={setCachedStateField}
@@ -710,14 +711,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 					{/* Experimental Section */}
 					{activeTab === "experimental" && (
-						<ExperimentalSettings
-							setExperimentEnabled={setExperimentEnabled}
-							experiments={experiments}
-							codebaseIndexModels={codebaseIndexModels}
-							codebaseIndexConfig={codebaseIndexConfig}
-							codebaseIndexEnabled={codebaseIndexConfig?.codebaseIndexEnabled}
-							setCachedStateField={setCachedStateField}
-						/>
+						<ExperimentalSettings setExperimentEnabled={setExperimentEnabled} experiments={experiments} />
 					)}
 
 					{/* Language Section */}

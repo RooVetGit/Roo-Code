@@ -88,6 +88,7 @@
 		"ollamaBaseUrlLabel": "Базовый URL Ollama",
 		"qdrantApiKeyLabel": "API-ключ Qdrant",
 		"qdrantApiKeyPlaceholder": "Введите ваш API-ключ Qdrant (необязательно)",
+		"setupConfigLabel": "Настройка",
 		"ollamaUrlPlaceholder": "http://localhost:11434",
 		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
 		"modelDimensionPlaceholder": "1536",
@@ -104,10 +105,28 @@
 			"error": "Ошибка"
 		},
 		"close": "Закрыть",
+		"validation": {
+			"invalidQdrantUrl": "Неверный URL Qdrant",
+			"invalidOllamaUrl": "Неверный URL Ollama",
+			"invalidBaseUrl": "Неверный базовый URL",
+			"qdrantUrlRequired": "Требуется URL Qdrant",
+			"openaiApiKeyRequired": "Требуется ключ API OpenAI",
+			"modelSelectionRequired": "Требуется выбор модели",
+			"apiKeyRequired": "Требуется ключ API",
+			"modelIdRequired": "Требуется идентификатор модели",
+			"modelDimensionRequired": "Требуется размерность модели",
+			"geminiApiKeyRequired": "Требуется ключ API Gemini",
+			"ollamaBaseUrlRequired": "Требуется базовый URL Ollama",
+			"baseUrlRequired": "Требуется базовый URL",
+			"modelDimensionMinValue": "Размерность модели должна быть больше 0"
+		},
 		"advancedConfigLabel": "Расширенная конфигурация",
 		"searchMinScoreLabel": "Порог оценки поиска",
 		"searchMinScoreDescription": "Минимальный балл сходства (0.0-1.0), необходимый для результатов поиска. Более низкие значения возвращают больше результатов, но они могут быть менее релевантными. Более высокие значения возвращают меньше результатов, но более релевантных.",
-		"searchMinScoreResetTooltip": "Сбросить к значению по умолчанию (0.4)"
+		"searchMinScoreResetTooltip": "Сбросить к значению по умолчанию (0.4)",
+		"searchMaxResultsLabel": "Максимальное количество результатов поиска",
+		"searchMaxResultsDescription": "Максимальное количество результатов поиска, возвращаемых при запросе индекса кодовой базы. Более высокие значения предоставляют больше контекста, но могут включать менее релевантные результаты.",
+		"resetToDefault": "Сбросить к значению по умолчанию"
 	},
 	"autoApprove": {
 		"description": "Разрешить Roo автоматически выполнять операции без необходимости одобрения. Включайте эти параметры только если полностью доверяете ИИ и понимаете связанные с этим риски безопасности.",
@@ -166,6 +185,10 @@
 			"commandPlaceholder": "Введите префикс команды (например, 'git ')",
 			"addButton": "Добавить"
 		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "Список дел обновляется автоматически без подтверждения"
+		},
 		"apiRequestLimit": {
 			"title": "Максимум запросов",
 			"description": "Автоматически выполнять это количество API-запросов перед запросом разрешения на продолжение задачи.",
@@ -190,6 +213,8 @@
 		"createProfile": "Создать профиль",
 		"cannotDeleteOnlyProfile": "Нельзя удалить единственный профиль",
 		"searchPlaceholder": "Поиск профилей",
+		"searchProviderPlaceholder": "Поиск провайдеров",
+		"noProviderMatchFound": "Провайдеры не найдены",
 		"noMatchFound": "Совпадений не найдено",
 		"vscodeLmDescription": "API языковой модели VS Code позволяет запускать модели, предоставляемые другими расширениями VS Code (включая, но не ограничиваясь GitHub Copilot). Для начала установите расширения Copilot и Copilot Chat из VS Code Marketplace.",
 		"awsCustomArnUse": "Введите действительный Amazon Bedrock ARN для используемой модели. Примеры формата:",

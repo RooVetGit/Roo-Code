@@ -182,6 +182,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
+	| "alwaysAllowUpdateTodoList"
 	| "allowedCommands"
 	| "allowedMaxRequests"
 	| "browserToolEnabled"

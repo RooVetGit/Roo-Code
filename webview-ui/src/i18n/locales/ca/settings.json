@@ -88,6 +88,7 @@
 		"ollamaBaseUrlLabel": "URL base d'Ollama",
 		"qdrantApiKeyLabel": "Clau API de Qdrant",
 		"qdrantApiKeyPlaceholder": "Introduïu la vostra clau API de Qdrant (opcional)",
+		"setupConfigLabel": "Configuració",
 		"ollamaUrlPlaceholder": "http://localhost:11434",
 		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
 		"modelDimensionPlaceholder": "1536",
@@ -104,10 +105,28 @@
 			"error": "Error"
 		},
 		"close": "Tancar",
+		"validation": {
+			"invalidQdrantUrl": "URL de Qdrant no vàlida",
+			"invalidOllamaUrl": "URL d'Ollama no vàlida",
+			"invalidBaseUrl": "URL de base no vàlida",
+			"qdrantUrlRequired": "Cal una URL de Qdrant",
+			"openaiApiKeyRequired": "Cal una clau d'API d'OpenAI",
+			"modelSelectionRequired": "Cal seleccionar un model",
+			"apiKeyRequired": "Cal una clau d'API",
+			"modelIdRequired": "Cal un ID de model",
+			"modelDimensionRequired": "Cal una dimensió de model",
+			"geminiApiKeyRequired": "Cal una clau d'API de Gemini",
+			"ollamaBaseUrlRequired": "Cal una URL base d'Ollama",
+			"baseUrlRequired": "Cal una URL base",
+			"modelDimensionMinValue": "La dimensió del model ha de ser superior a 0"
+		},
 		"advancedConfigLabel": "Configuració avançada",
 		"searchMinScoreLabel": "Llindar de puntuació de cerca",
 		"searchMinScoreDescription": "Puntuació mínima de similitud (0.0-1.0) requerida per als resultats de la cerca. Valors més baixos retornen més resultats però poden ser menys rellevants. Valors més alts retornen menys resultats però més rellevants.",
-		"searchMinScoreResetTooltip": "Restablir al valor per defecte (0.4)"
+		"searchMinScoreResetTooltip": "Restablir al valor per defecte (0.4)",
+		"searchMaxResultsLabel": "Màxim de resultats de cerca",
+		"searchMaxResultsDescription": "Nombre màxim de resultats de cerca a retornar quan es consulta l'índex de la base de codi. Els valors més alts proporcionen més context però poden incloure resultats menys rellevants.",
+		"resetToDefault": "Restablir al valor per defecte"
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
@@ -166,6 +185,10 @@
 			"commandPlaceholder": "Introduïu prefix de comanda (ex. 'git ')",
 			"addButton": "Afegir"
 		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "La llista de tasques es actualitza automàticament sense aprovació"
+		},
 		"apiRequestLimit": {
 			"title": "Màximes Sol·licituds",
 			"description": "Fes aquesta quantitat de sol·licituds API automàticament abans de demanar aprovació per continuar amb la tasca.",
@@ -190,6 +213,8 @@
 		"createProfile": "Crea perfil",
 		"cannotDeleteOnlyProfile": "No es pot eliminar l'únic perfil",
 		"searchPlaceholder": "Cerca perfils",
+		"searchProviderPlaceholder": "Cerca proveïdors",
+		"noProviderMatchFound": "No s'han trobat proveïdors",
 		"noMatchFound": "No s'han trobat perfils coincidents",
 		"vscodeLmDescription": "L'API del model de llenguatge de VS Code us permet executar models proporcionats per altres extensions de VS Code (incloent-hi, però no limitat a, GitHub Copilot). La manera més senzilla de començar és instal·lar les extensions Copilot i Copilot Chat des del VS Code Marketplace.",
 		"awsCustomArnUse": "Introduïu un ARN vàlid d'Amazon Bedrock per al model que voleu utilitzar. Exemples de format:",

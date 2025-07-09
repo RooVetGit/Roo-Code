@@ -88,6 +88,7 @@
 		"ollamaBaseUrlLabel": "Ollama Temel URL",
 		"qdrantApiKeyLabel": "Qdrant API Anahtarı",
 		"qdrantApiKeyPlaceholder": "Qdrant API anahtarınızı girin (isteğe bağlı)",
+		"setupConfigLabel": "Kurulum",
 		"ollamaUrlPlaceholder": "http://localhost:11434",
 		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
 		"modelDimensionPlaceholder": "1536",
@@ -104,10 +105,28 @@
 			"error": "Hata"
 		},
 		"close": "Kapat",
+		"validation": {
+			"invalidQdrantUrl": "Geçersiz Qdrant URL'si",
+			"invalidOllamaUrl": "Geçersiz Ollama URL'si",
+			"invalidBaseUrl": "Geçersiz temel URL'si",
+			"qdrantUrlRequired": "Qdrant URL'si gereklidir",
+			"openaiApiKeyRequired": "OpenAI API anahtarı gereklidir",
+			"modelSelectionRequired": "Model seçimi gereklidir",
+			"apiKeyRequired": "API anahtarı gereklidir",
+			"modelIdRequired": "Model kimliği gereklidir",
+			"modelDimensionRequired": "Model boyutu gereklidir",
+			"geminiApiKeyRequired": "Gemini API anahtarı gereklidir",
+			"ollamaBaseUrlRequired": "Ollama temel URL'si gereklidir",
+			"baseUrlRequired": "Temel URL'si gereklidir",
+			"modelDimensionMinValue": "Model boyutu 0'dan büyük olmalıdır"
+		},
 		"advancedConfigLabel": "Gelişmiş Yapılandırma",
 		"searchMinScoreLabel": "Arama Skoru Eşiği",
 		"searchMinScoreDescription": "Arama sonuçları için gereken minimum benzerlik puanı (0.0-1.0). Düşük değerler daha fazla sonuç döndürür ancak daha az alakalı olabilir. Yüksek değerler daha az ancak daha alakalı sonuçlar döndürür.",
-		"searchMinScoreResetTooltip": "Varsayılan değere sıfırla (0.4)"
+		"searchMinScoreResetTooltip": "Varsayılan değere sıfırla (0.4)",
+		"searchMaxResultsLabel": "Maksimum Arama Sonuçları",
+		"searchMaxResultsDescription": "Kod tabanı dizinini sorgularken döndürülecek maksimum arama sonucu sayısı. Daha yüksek değerler daha fazla bağlam sağlar ancak daha az alakalı sonuçlar içerebilir.",
+		"resetToDefault": "Varsayılana sıfırla"
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
@@ -166,6 +185,10 @@
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
 			"addButton": "Ekle"
 		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "Yapılacaklar listesi onay gerektirmeden otomatik olarak güncellenir"
+		},
 		"apiRequestLimit": {
 			"title": "Maksimum İstek",
 			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
@@ -190,6 +213,8 @@
 		"createProfile": "Profil oluştur",
 		"cannotDeleteOnlyProfile": "Yalnızca tek profili silemezsiniz",
 		"searchPlaceholder": "Profilleri ara",
+		"searchProviderPlaceholder": "Sağlayıcıları ara",
+		"noProviderMatchFound": "Eşleşen sağlayıcı bulunamadı",
 		"noMatchFound": "Eşleşen profil bulunamadı",
 		"vscodeLmDescription": "VS Code Dil Modeli API'si, diğer VS Code uzantıları tarafından sağlanan modelleri çalıştırmanıza olanak tanır (GitHub Copilot dahil ancak bunlarla sınırlı değildir). Başlamanın en kolay yolu, VS Code Marketplace'ten Copilot ve Copilot Chat uzantılarını yüklemektir.",
 		"awsCustomArnUse": "Kullanmak istediğiniz model için geçerli bir Amazon Bedrock ARN'si girin. Format örnekleri:",

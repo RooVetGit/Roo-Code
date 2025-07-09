@@ -19,8 +19,10 @@
 		"delete_config_profile": "Möchtest du dieses Konfigurationsprofil wirklich löschen?",
 		"delete_custom_mode_with_rules": "Bist du sicher, dass du diesen {scope}-Modus löschen möchtest?\n\nDadurch wird auch der zugehörige Regelordner unter folgender Adresse gelöscht:\n{rulesFolderPath}",
 		"delete_message": "Was möchtest du löschen?",
-		"just_this_message": "Nur diese Nachricht",
-		"this_and_subsequent": "Diese und alle nachfolgenden Nachrichten"
+		"edit_warning": "Das Bearbeiten dieser Nachricht wird alle nachfolgenden Nachrichten in der Unterhaltung löschen. Möchtest du fortfahren?",
+		"delete_just_this_message": "Nur diese Nachricht",
+		"delete_this_and_subsequent": "Diese und alle nachfolgenden Nachrichten",
+		"proceed": "Fortfahren"
 	},
 	"errors": {
 		"invalid_data_uri": "Ungültiges Daten-URI-Format",
@@ -104,9 +106,12 @@
 	"answers": {
 		"yes": "Ja",
 		"no": "Nein",
-		"cancel": "Abbrechen",
 		"remove": "Entfernen",
 		"keep": "Behalten"
+	},
+	"buttons": {
+		"save": "Speichern",
+		"edit": "Bearbeiten"
 	},
 	"tasks": {
 		"canceled": "Aufgabenfehler: Die Aufgabe wurde vom Benutzer gestoppt und abgebrochen.",
@@ -163,7 +168,6 @@
 			"title": "Benutzerdefinierten Modus löschen",
 			"description": "Bist du sicher, dass du diesen {{scope}}-Modus löschen möchtest? Dadurch wird auch der zugehörige Regelordner unter {{rulesFolderPath}} gelöscht",
 			"descriptionNoRules": "Bist du sicher, dass du diesen benutzerdefinierten Modus löschen möchtest?",
-			"cancel": "Abbrechen",
 			"confirm": "Löschen"
 		}
 	}

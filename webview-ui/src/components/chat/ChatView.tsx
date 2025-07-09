@@ -46,6 +46,7 @@ import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import { getLatestTodo } from "@roo/todo"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -96,6 +97,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
 		alwaysAllowFollowupQuestions,
+		alwaysAllowUpdateTodoList,
 		customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
@@ -127,6 +129,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// task, then the extension is in a bad state and needs to be debugged (see
 	// Cline.abort).
 	const task = useMemo(() => messages.at(0), [messages])
+
+	const latestTodos = useMemo(() => {
+		return getLatestTodo(messages)
+	}, [messages])
 
 	const modifiedMessages = useMemo(() => combineApiRequests(combineCommandSequences(messages.slice(1))), [messages])
 
@@ -163,6 +169,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}),
 	)
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const userRespondedRef = useRef<boolean>(false)
+	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
 
 	const clineAskRef = useRef(clineAsk)
 	useEffect(() => {
@@ -409,6 +417,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	useEffect(() => {
 		setExpandedRows({})
 		everVisibleMessagesTsRef.current.clear() // Clear for new task
+		setCurrentFollowUpTs(null) // Clear follow-up answered state for new task
+
+		// Clear any pending auto-approval timeout from previous task
+		if (autoApproveTimeoutRef.current) {
+			clearTimeout(autoApproveTimeoutRef.current)
+			autoApproveTimeoutRef.current = null
+		}
+		// Reset user response flag for new task
+		userRespondedRef.current = false
 	}, [task?.ts])
 
 	useEffect(() => {
@@ -480,7 +497,22 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return false
 	}, [modifiedMessages, clineAsk, enableButtons, primaryButtonText])
 
+	const markFollowUpAsAnswered = useCallback(() => {
+		const lastFollowUpMessage = messagesRef.current.findLast((msg) => msg.ask === "followup")
+		if (lastFollowUpMessage) {
+			setCurrentFollowUpTs(lastFollowUpMessage.ts)
+		}
+	}, [])
+
 	const handleChatReset = useCallback(() => {
+		// Clear any pending auto-approval timeout
+		if (autoApproveTimeoutRef.current) {
+			clearTimeout(autoApproveTimeoutRef.current)
+			autoApproveTimeoutRef.current = null
+		}
+		// Reset user response flag for new message
+		userRespondedRef.current = false
+
 		// Only reset message-specific state, preserving mode.
 		setInputValue("")
 		setSendingDisabled(true)
@@ -498,9 +530,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			text = text.trim()
 
 			if (text || images.length > 0) {
+				// Mark that user has responded - this prevents any pending auto-approvals
+				userRespondedRef.current = true
+
 				if (messagesRef.current.length === 0) {
 					vscode.postMessage({ type: "newTask", text, images })
 				} else if (clineAskRef.current) {
+					if (clineAskRef.current === "followup") {
+						markFollowUpAsAnswered()
+					}
+
 					// Use clineAskRef.current
 					switch (
 						clineAskRef.current // Use clineAskRef.current
@@ -524,7 +563,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				handleChatReset()
 			}
 		},
-		[handleChatReset], // messagesRef and clineAskRef are stable
+		[handleChatReset, markFollowUpAsAnswered], // messagesRef and clineAskRef are stable
 	)
 
 	const handleSetChatBoxMessage = useCallback(
@@ -549,6 +588,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// extension.
 	const handlePrimaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
+			// Mark that user has responded
+			userRespondedRef.current = true
+
 			const trimmedInput = text?.trim()
 
 			switch (clineAsk) {
@@ -593,6 +635,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
+			// Mark that user has responded
+			userRespondedRef.current = true
+
 			const trimmedInput = text?.trim()
 
 			if (isStreaming) {
@@ -907,6 +952,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					return false
 				}
 
+				if (tool?.tool === "updateTodoList") {
+					return alwaysAllowUpdateTodoList
+				}
+
 				if (tool?.tool === "fetchInstructions") {
 					if (tool.content === "create_mode") {
 						return alwaysAllowModeSwitch
@@ -960,6 +1009,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			alwaysAllowModeSwitch,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowSubtasks,
+			alwaysAllowUpdateTodoList,
 		],
 	)
 
@@ -1208,6 +1258,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleSuggestionClickInRow = useCallback(
 		(suggestion: SuggestionItem, event?: React.MouseEvent) => {
+			// Mark that user has responded if this is a manual click (not auto-approval)
+			if (event) {
+				userRespondedRef.current = true
+			}
+
+			// Mark the current follow-up question as answered when a suggestion is clicked
+			if (clineAsk === "followup" && !event?.shiftKey) {
+				markFollowUpAsAnswered()
+			}
+
 			// Check if we need to switch modes
 			if (suggestion.mode) {
 				// Only switch modes if it's a manual click (event exists) or auto-approval is allowed
@@ -1227,7 +1287,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				handleSendMessage(suggestion.answer, [])
 			}
 		},
-		[handleSendMessage, setInputValue, switchToMode, alwaysAllowModeSwitch],
+		[handleSendMessage, setInputValue, switchToMode, alwaysAllowModeSwitch, clineAsk, markFollowUpAsAnswered],
 	)
 
 	const handleBatchFileResponse = useCallback((response: { [key: string]: boolean }) => {
@@ -1237,11 +1297,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// Handler for when FollowUpSuggest component unmounts
 	const handleFollowUpUnmount = useCallback(() => {
-		// Clear the auto-approve timeout to prevent race conditions
-		if (autoApproveTimeoutRef.current) {
-			clearTimeout(autoApproveTimeoutRef.current)
-			autoApproveTimeoutRef.current = null
-		}
+		// Mark that user has responded
+		userRespondedRef.current = true
 	}, [])
 
 	const itemContent = useCallback(
@@ -1280,6 +1337,25 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					onSuggestionClick={handleSuggestionClickInRow} // This was already stabilized
 					onBatchFileResponse={handleBatchFileResponse}
 					onFollowUpUnmount={handleFollowUpUnmount}
+					isFollowUpAnswered={messageOrGroup.ts === currentFollowUpTs}
+					editable={
+						messageOrGroup.type === "ask" &&
+						messageOrGroup.ask === "tool" &&
+						(() => {
+							let tool: any = {}
+							try {
+								tool = JSON.parse(messageOrGroup.text || "{}")
+							} catch (_) {
+								if (messageOrGroup.text?.includes("updateTodoList")) {
+									tool = { tool: "updateTodoList" }
+								}
+							}
+							if (tool.tool === "updateTodoList" && alwaysAllowUpdateTodoList) {
+								return false
+							}
+							return tool.tool === "updateTodoList" && enableButtons && !!primaryButtonText
+						})()
+					}
 				/>
 			)
 		},
@@ -1293,6 +1369,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			handleSuggestionClickInRow,
 			handleBatchFileResponse,
 			handleFollowUpUnmount,
+			currentFollowUpTs,
+			alwaysAllowUpdateTodoList,
+			enableButtons,
+			primaryButtonText,
 		],
 	)
 
@@ -1303,6 +1383,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		if (!clineAsk || !enableButtons) {
+			return
+		}
+
+		// Exit early if user has already responded
+		if (userRespondedRef.current) {
 			return
 		}
 
@@ -1322,8 +1407,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					if (followUpData && followUpData.suggest && followUpData.suggest.length > 0) {
 						// Wait for the configured timeout before auto-selecting the first suggestion
 						await new Promise<void>((resolve) => {
-							autoApproveTimeoutRef.current = setTimeout(resolve, followupAutoApproveTimeoutMs)
+							autoApproveTimeoutRef.current = setTimeout(() => {
+								autoApproveTimeoutRef.current = null
+								resolve()
+							}, followupAutoApproveTimeoutMs)
 						})
+
+						// Check if user responded manually
+						if (userRespondedRef.current) {
+							return
+						}
 
 						// Get the first suggestion
 						const firstSuggestion = followUpData.suggest[0]
@@ -1334,7 +1427,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 				} else if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
 					await new Promise<void>((resolve) => {
-						autoApproveTimeoutRef.current = setTimeout(resolve, writeDelayMs)
+						autoApproveTimeoutRef.current = setTimeout(() => {
+							autoApproveTimeoutRef.current = null
+							resolve()
+						}, writeDelayMs)
 					})
 				}
 
@@ -1453,6 +1549,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						buttonsDisabled={sendingDisabled}
 						handleCondenseContext={handleCondenseContext}
 						onClose={handleTaskCloseButtonClick}
+						todos={latestTodos}
 					/>
 
 					{hasSystemPromptOverride && (

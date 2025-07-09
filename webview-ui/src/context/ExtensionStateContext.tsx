@@ -131,6 +131,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	routerModels?: RouterModels
 	showAllWorkspacesTasks: boolean
 	setShowAllWorkspacesTasks: (value: boolean) => void
+	alwaysAllowUpdateTodoList?: boolean
+	setAlwaysAllowUpdateTodoList: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -214,14 +216,17 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		autoCondenseContextPercent: 100,
 		profileThresholds: {},
 		codebaseIndexConfig: {
-			codebaseIndexEnabled: false,
+			codebaseIndexEnabled: true,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
+			codebaseIndexSearchMaxResults: undefined,
+			codebaseIndexSearchMinScore: undefined,
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
 		showAllWorkspacesTasks: false,
+		alwaysAllowUpdateTodoList: true,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -462,6 +467,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setProfileThresholds: (value) => setState((prevState) => ({ ...prevState, profileThresholds: value })),
 		setShowAllWorkspacesTasks: (value) =>
 			setState((prevState) => ({ ...prevState, showAllWorkspacesTasks: value })),
+		alwaysAllowUpdateTodoList: state.alwaysAllowUpdateTodoList,
+		setAlwaysAllowUpdateTodoList: (value) => {
+			setState((prevState) => ({ ...prevState, alwaysAllowUpdateTodoList: value }))
+		},
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

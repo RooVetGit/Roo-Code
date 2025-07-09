@@ -19,8 +19,10 @@
 		"delete_config_profile": "Bu yapılandırma profilini silmek istediğinizden emin misiniz?",
 		"delete_custom_mode_with_rules": "Bu {scope} modunu silmek istediğinizden emin misiniz?\n\nBu işlem, ilişkili kurallar klasörünü de şu konumdan silecektir:\n{rulesFolderPath}",
 		"delete_message": "Neyi silmek istersiniz?",
-		"just_this_message": "Sadece bu mesajı",
-		"this_and_subsequent": "Bu ve sonraki tüm mesajları"
+		"delete_just_this_message": "Sadece bu mesajı",
+		"delete_this_and_subsequent": "Bu ve sonraki tüm mesajları",
+		"edit_warning": "Bu mesajı düzenlemek konuşmadaki tüm sonraki mesajları silecektir. Devam etmek istiyor musunuz?",
+		"proceed": "Devam et"
 	},
 	"errors": {
 		"invalid_data_uri": "Geçersiz veri URI formatı",
@@ -104,9 +106,12 @@
 	"answers": {
 		"yes": "Evet",
 		"no": "Hayır",
-		"cancel": "İptal",
 		"remove": "Kaldır",
 		"keep": "Koru"
+	},
+	"buttons": {
+		"save": "Kaydet",
+		"edit": "Düzenle"
 	},
 	"tasks": {
 		"canceled": "Görev hatası: Kullanıcı tarafından durduruldu ve iptal edildi.",
@@ -163,7 +168,6 @@
 			"title": "Özel Modu Sil",
 			"description": "Bu {{scope}} modunu silmek istediğinizden emin misiniz? Bu, {{rulesFolderPath}} adresindeki ilişkili kurallar klasörünü de silecektir",
 			"descriptionNoRules": "Bu özel modu silmek istediğinizden emin misiniz?",
-			"cancel": "İptal",
 			"confirm": "Sil"
 		}
 	}

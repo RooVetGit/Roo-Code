@@ -18,8 +18,13 @@ export type PromptMode = Mode | "enhance"
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
+export interface UpdateTodoListPayload {
+	todos: any[]
+}
+
 export interface WebviewMessage {
 	type:
+		| "updateTodoList"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
@@ -38,6 +43,7 @@ export interface WebviewMessage {
 		| "alwaysAllowWriteProtected"
 		| "alwaysAllowExecute"
 		| "alwaysAllowFollowupQuestions"
+		| "alwaysAllowUpdateTodoList"
 		| "followupAutoApproveTimeoutMs"
 		| "webviewDidLaunch"
 		| "newTask"
@@ -73,6 +79,7 @@ export interface WebviewMessage {
 		| "alwaysAllowModeSwitch"
 		| "allowedMaxRequests"
 		| "alwaysAllowSubtasks"
+		| "alwaysAllowUpdateTodoList"
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
 		| "condensingApiConfigId"
@@ -103,6 +110,7 @@ export interface WebviewMessage {
 		| "enhancedPrompt"
 		| "draggedImages"
 		| "deleteMessage"
+		| "submitEditedMessage"
 		| "terminalOutputLineLimit"
 		| "terminalShellIntegrationTimeout"
 		| "terminalShellIntegrationDisabled"
@@ -187,6 +195,7 @@ export interface WebviewMessage {
 		| "requestCodeIndexSecretStatus"
 		| "showAllWorkspacesTasks"
 	text?: string
+	editedMessageContent?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
 	dataUri?: string
@@ -233,8 +242,10 @@ export interface WebviewMessage {
 		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible" | "gemini"
 		codebaseIndexEmbedderBaseUrl?: string
 		codebaseIndexEmbedderModelId: string
+		codebaseIndexEmbedderModelDimension?: number // Generic dimension for all providers
 		codebaseIndexOpenAiCompatibleBaseUrl?: string
-		codebaseIndexOpenAiCompatibleModelDimension?: number
+		codebaseIndexSearchMaxResults?: number
+		codebaseIndexSearchMinScore?: number
 
 		// Secret settings
 		codeIndexOpenAiKey?: string
@@ -286,3 +297,4 @@ export type WebViewMessagePayload =
 	| IndexingStatusPayload
 	| IndexClearedPayload
 	| InstallMarketplaceItemWithParametersPayload
+	| UpdateTodoListPayload

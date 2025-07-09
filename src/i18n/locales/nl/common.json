@@ -19,8 +19,10 @@
 		"delete_config_profile": "Weet je zeker dat je dit configuratieprofiel wilt verwijderen?",
 		"delete_custom_mode_with_rules": "Weet je zeker dat je deze {scope}-modus wilt verwijderen?\n\nDit verwijdert ook de bijbehorende regelsmap op:\n{rulesFolderPath}",
 		"delete_message": "Wat wil je verwijderen?",
-		"just_this_message": "Alleen dit bericht",
-		"this_and_subsequent": "Dit en alle volgende berichten"
+		"delete_just_this_message": "Alleen dit bericht",
+		"delete_this_and_subsequent": "Dit en alle volgende berichten",
+		"edit_warning": "Het bewerken van dit bericht zal alle volgende berichten in het gesprek verwijderen. Wil je doorgaan?",
+		"proceed": "Doorgaan"
 	},
 	"errors": {
 		"invalid_data_uri": "Ongeldig data-URI-formaat",
@@ -104,9 +106,12 @@
 	"answers": {
 		"yes": "Ja",
 		"no": "Nee",
-		"cancel": "Annuleren",
 		"remove": "Verwijderen",
 		"keep": "Behouden"
+	},
+	"buttons": {
+		"save": "Opslaan",
+		"edit": "Bewerken"
 	},
 	"tasks": {
 		"canceled": "Taakfout: gestopt en geannuleerd door gebruiker.",
@@ -163,7 +168,6 @@
 			"title": "Aangepaste modus verwijderen",
 			"description": "Weet je zeker dat je deze {{scope}}-modus wilt verwijderen? Dit zal ook de bijbehorende regelsmap op {{rulesFolderPath}} verwijderen",
 			"descriptionNoRules": "Weet je zeker dat je deze aangepaste modus wilt verwijderen?",
-			"cancel": "Annuleren",
 			"confirm": "Verwijderen"
 		}
 	}
