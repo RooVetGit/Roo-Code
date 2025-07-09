@@ -110,7 +110,7 @@
 			"modelDimensionRequired": "Model boyutu gereklidir",
 			"geminiApiKeyRequired": "Gemini API anahtarı gereklidir",
 			"ollamaBaseUrlRequired": "Ollama temel URL'si gereklidir",
-			"baseUrlRequired": "Temel URL gereklidir",
+			"baseUrlRequired": "Temel URL'si gereklidir",
 			"modelDimensionMinValue": "Model boyutu 0'dan büyük olmalıdır"
 		},
 		"advancedConfigLabel": "Gelişmiş Yapılandırma",
