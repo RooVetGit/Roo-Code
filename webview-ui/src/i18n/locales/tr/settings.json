@@ -101,7 +101,7 @@
 		"validation": {
 			"invalidQdrantUrl": "Geçersiz Qdrant URL'si",
 			"invalidOllamaUrl": "Geçersiz Ollama URL'si",
-			"invalidBaseUrl": "Geçersiz temel URL",
+			"invalidBaseUrl": "Geçersiz temel URL'si",
 			"qdrantUrlRequired": "Qdrant URL'si gereklidir",
 			"openaiApiKeyRequired": "OpenAI API anahtarı gereklidir",
 			"modelSelectionRequired": "Model seçimi gereklidir",
