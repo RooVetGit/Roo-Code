@@ -21,15 +21,15 @@ describe("DEFAULT_HEADERS", () => {
 
 	it("should have correct User-Agent format", () => {
 		const userAgent = DEFAULT_HEADERS["User-Agent"]
-		expect(userAgent).toBe(`roo-cline/${Package.version}`)
+		expect(userAgent).toBe(`RooCode/${Package.version}`)
 
 		// Verify it follows the tool_name/version pattern
-		expect(userAgent).toMatch(/^[a-z-]+\/\d+\.\d+\.\d+$/)
+		expect(userAgent).toMatch(/^[a-zA-Z-]+\/\d+\.\d+\.\d+$/)
 	})
 
 	it("should have User-Agent with correct tool name", () => {
 		const userAgent = DEFAULT_HEADERS["User-Agent"]
-		expect(userAgent.startsWith("roo-cline/")).toBe(true)
+		expect(userAgent.startsWith("RooCode/")).toBe(true)
 	})
 
 	it("should have User-Agent with semantic version format", () => {

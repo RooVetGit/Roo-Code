@@ -62,7 +62,7 @@ describe("OpenRouterHandler", () => {
 			defaultHeaders: {
 				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
 				"X-Title": "Roo Code",
-				"User-Agent": "roo-cline/3.22.6",
+				"User-Agent": "RooCode/3.22.6",
 			},
 		})
 	})
