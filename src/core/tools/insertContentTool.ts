@@ -98,6 +98,15 @@ export async function insertContentTool(
 
 		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
 		cline.diffViewProvider.originalContent = fileContent
+
+		// Update diagnostic settings from global state
+		const state = await cline.providerRef?.deref()?.getState()
+		if (state) {
+			cline.diffViewProvider.updateDiagnosticSettings(
+				state.includeDiagnosticMessages ?? true,
+				state.maxDiagnosticMessages ?? 5,
+			)
+		}
 		const lines = fileExists ? fileContent.split("\n") : []
 
 		const updatedContent = insertGroups(lines, [

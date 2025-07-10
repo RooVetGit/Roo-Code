@@ -142,6 +142,14 @@ export async function applyDiffToolLegacy(
 			cline.consecutiveMistakeCount = 0
 			cline.consecutiveMistakeCountForApplyDiff.delete(relPath)
 
+			// Get diagnostic settings from state
+			const state = await cline.providerRef?.deref()?.getState()
+			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
+			const maxDiagnosticMessages = state?.maxDiagnosticMessages
+
+			// Update DiffViewProvider with diagnostic settings
+			cline.diffViewProvider.updateDiagnosticSettings(includeDiagnosticMessages, maxDiagnosticMessages)
+
 			// Show diff view before asking for approval
 			cline.diffViewProvider.editType = "modify"
 			await cline.diffViewProvider.open(relPath)

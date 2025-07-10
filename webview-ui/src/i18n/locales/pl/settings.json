@@ -488,6 +488,16 @@
 			"label": "Limit jednoczesnych odczytów",
 			"description": "Maksymalna liczba plików, które narzędzie 'read_file' może przetwarzać jednocześnie. Wyższe wartości mogą przyspieszyć odczyt wielu małych plików, ale zwiększają zużycie pamięci."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Dołącz komunikaty diagnostyczne do kontekstu",
+				"description": "Gdy włączone, komunikaty diagnostyczne (błędy, ostrzeżenia) będą dołączane podczas używania @problems lub czytania plików z diagnostyką."
+			},
+			"maxMessages": {
+				"label": "Maksymalna liczba komunikatów diagnostycznych",
+				"description": "Maksymalna liczba komunikatów diagnostycznych dołączanych na plik. Wyższe wartości dostarczają więcej kontekstu, ale zwiększają zużycie tokenów."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Próg wyzwalania kondensacji",
 			"selectProfile": "Skonfiguruj próg dla profilu",

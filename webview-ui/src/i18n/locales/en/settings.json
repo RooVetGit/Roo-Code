@@ -488,6 +488,16 @@
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Include diagnostic messages in context",
+				"description": "When enabled, diagnostic messages (errors, warnings) will be included when using @problems or when files with diagnostics are read."
+			},
+			"maxMessages": {
+				"label": "Maximum diagnostic messages",
+				"description": "Maximum number of diagnostic messages to include per file. Higher values provide more context but increase token usage."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Condensing Trigger Threshold",
 			"selectProfile": "Configure threshold for profile",

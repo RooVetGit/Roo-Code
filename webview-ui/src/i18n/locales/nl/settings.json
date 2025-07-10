@@ -488,6 +488,16 @@
 			"label": "Limiet gelijktijdige bestandslezingen",
 			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Diagnostische berichten opnemen in context",
+				"description": "Indien ingeschakeld, worden diagnostische berichten (fouten, waarschuwingen) opgenomen bij gebruik van @problems of bij het lezen van bestanden met diagnostiek."
+			},
+			"maxMessages": {
+				"label": "Maximale diagnostische berichten",
+				"description": "Maximaal aantal diagnostische berichten dat per bestand moet worden opgenomen. Hogere waarden bieden meer context, but verhogen het tokengebruik."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Compressie trigger drempelwaarde",
 			"selectProfile": "Drempelwaarde voor profiel configureren",

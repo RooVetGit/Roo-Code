@@ -36,8 +36,15 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
+	private includeDiagnosticMessages: boolean = true
+	private maxDiagnosticMessages?: number
 
 	constructor(private cwd: string) {}
+
+	updateDiagnosticSettings(includeDiagnosticMessages: boolean, maxDiagnosticMessages?: number): void {
+		this.includeDiagnosticMessages = includeDiagnosticMessages
+		this.maxDiagnosticMessages = maxDiagnosticMessages
+	}
 
 	async open(relPath: string): Promise<void> {
 		this.relPath = relPath
@@ -240,6 +247,8 @@ export class DiffViewProvider {
 					vscode.DiagnosticSeverity.Error, // only including errors since warnings can be distracting (if user wants to fix warnings they can use the @problems mention)
 				],
 				this.cwd,
+				this.includeDiagnosticMessages,
+				this.maxDiagnosticMessages,
 			) // Will be empty string if no errors.
 
 			newProblemsMessage =

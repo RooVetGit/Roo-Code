@@ -488,6 +488,16 @@
 			"label": "Límit de lectures simultànies",
 			"description": "Nombre màxim de fitxers que l'eina 'read_file' pot processar simultàniament. Els valors més alts poden accelerar la lectura de múltiples fitxers petits però augmenten l'ús de memòria."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Inclou missatges de diagnòstic al context",
+				"description": "Quan estigui activat, els missatges de diagnòstic (errors, advertències) s'inclouran en utilitzar @problems o en llegir fitxers amb diagnòstics."
+			},
+			"maxMessages": {
+				"label": "Màxim de missatges de diagnòstic",
+				"description": "Nombre màxim de missatges de diagnòstic a incloure per fitxer. Valors més alts proporcionen més context però augmenten l'ús de tokens."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Llindar d'activació de condensació",
 			"selectProfile": "Configura el llindar per al perfil",

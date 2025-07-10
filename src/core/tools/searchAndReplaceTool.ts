@@ -191,6 +191,15 @@ export async function searchAndReplaceTool(
 		cline.diffViewProvider.editType = "modify"
 		cline.diffViewProvider.originalContent = fileContent
 
+		// Update diagnostic settings from global state
+		const state = await cline.providerRef?.deref()?.getState()
+		if (state) {
+			cline.diffViewProvider.updateDiagnosticSettings(
+				state.includeDiagnosticMessages ?? true,
+				state.maxDiagnosticMessages ?? 5,
+			)
+		}
+
 		// Generate and validate diff
 		const diff = formatResponse.createPrettyPatch(validRelPath, fileContent, newContent)
 		if (!diff) {

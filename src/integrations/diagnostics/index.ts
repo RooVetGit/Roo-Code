@@ -74,55 +74,150 @@ export async function diagnosticsToProblemsString(
 	diagnostics: [vscode.Uri, vscode.Diagnostic[]][],
 	severities: vscode.DiagnosticSeverity[],
 	cwd: string,
+	includeDiagnostics: boolean = true,
+	maxDiagnostics?: number,
 ): Promise<string> {
+	// If diagnostics are disabled, return empty string
+	if (!includeDiagnostics) {
+		return ""
+	}
+
 	const documents = new Map<vscode.Uri, vscode.TextDocument>()
 	const fileStats = new Map<vscode.Uri, vscode.FileStat>()
 	let result = ""
-	for (const [uri, fileDiagnostics] of diagnostics) {
-		const problems = fileDiagnostics
-			.filter((d) => severities.includes(d.severity))
-			.sort((a, b) => a.range.start.line - b.range.start.line)
-		if (problems.length > 0) {
-			result += `\n\n${path.relative(cwd, uri.fsPath).toPosix()}`
-			for (const diagnostic of problems) {
-				let label: string
-				switch (diagnostic.severity) {
-					case vscode.DiagnosticSeverity.Error:
-						label = "Error"
-						break
-					case vscode.DiagnosticSeverity.Warning:
-						label = "Warning"
-						break
-					case vscode.DiagnosticSeverity.Information:
-						label = "Information"
-						break
-					case vscode.DiagnosticSeverity.Hint:
-						label = "Hint"
-						break
-					default:
-						label = "Diagnostic"
+	let diagnosticCount = 0
+
+	// If we have a limit, we need to collect all diagnostics first, sort by severity, then limit
+	if (maxDiagnostics && maxDiagnostics > 0) {
+		// Flatten all diagnostics with their URIs
+		const allDiagnostics: { uri: vscode.Uri; diagnostic: vscode.Diagnostic }[] = []
+		for (const [uri, fileDiagnostics] of diagnostics) {
+			const filtered = fileDiagnostics.filter((d) => severities.includes(d.severity))
+			for (const diagnostic of filtered) {
+				allDiagnostics.push({ uri, diagnostic })
+			}
+		}
+
+		// Sort by severity (errors first) and then by line number
+		allDiagnostics.sort((a, b) => {
+			const severityDiff = a.diagnostic.severity - b.diagnostic.severity
+			if (severityDiff !== 0) return severityDiff
+			return a.diagnostic.range.start.line - b.diagnostic.range.start.line
+		})
+
+		// Take only the first maxDiagnostics
+		const limitedDiagnostics = allDiagnostics.slice(0, maxDiagnostics)
+
+		// Group back by URI for processing
+		const groupedDiagnostics = new Map<string, { uri: vscode.Uri; diagnostics: vscode.Diagnostic[] }>()
+		for (const { uri, diagnostic } of limitedDiagnostics) {
+			const key = uri.toString()
+			if (!groupedDiagnostics.has(key)) {
+				groupedDiagnostics.set(key, { uri, diagnostics: [] })
+			}
+			groupedDiagnostics.get(key)!.diagnostics.push(diagnostic)
+		}
+
+		// Process the limited diagnostics
+		for (const { uri, diagnostics: fileDiagnostics } of groupedDiagnostics.values()) {
+			const problems = fileDiagnostics.sort((a, b) => a.range.start.line - b.range.start.line)
+			if (problems.length > 0) {
+				result += `\n\n${path.relative(cwd, uri.fsPath).toPosix()}`
+				for (const diagnostic of problems) {
+					let label: string
+					switch (diagnostic.severity) {
+						case vscode.DiagnosticSeverity.Error:
+							label = "Error"
+							break
+						case vscode.DiagnosticSeverity.Warning:
+							label = "Warning"
+							break
+						case vscode.DiagnosticSeverity.Information:
+							label = "Information"
+							break
+						case vscode.DiagnosticSeverity.Hint:
+							label = "Hint"
+							break
+						default:
+							label = "Diagnostic"
+					}
+					const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
+					const source = diagnostic.source ? `${diagnostic.source} ` : ""
+					try {
+						let fileStat = fileStats.get(uri)
+						if (!fileStat) {
+							fileStat = await vscode.workspace.fs.stat(uri)
+							fileStats.set(uri, fileStat)
+						}
+						if (fileStat.type === vscode.FileType.File) {
+							const document = documents.get(uri) || (await vscode.workspace.openTextDocument(uri))
+							documents.set(uri, document)
+							const lineContent = document.lineAt(diagnostic.range.start.line).text
+							result += `\n- [${source}${label}] ${line} | ${lineContent} : ${diagnostic.message}`
+						} else {
+							result += `\n- [${source}${label}] 1 | (directory) : ${diagnostic.message}`
+						}
+					} catch {
+						result += `\n- [${source}${label}] ${line} | (unavailable) : ${diagnostic.message}`
+					}
 				}
-				const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
-				const source = diagnostic.source ? `${diagnostic.source} ` : ""
-				try {
-					let fileStat = fileStats.get(uri)
-					if (!fileStat) {
-						fileStat = await vscode.workspace.fs.stat(uri)
-						fileStats.set(uri, fileStat)
+			}
+		}
+
+		// Add a note if we hit the limit
+		if (allDiagnostics.length > maxDiagnostics) {
+			result += `\n\n(Showing ${maxDiagnostics} of ${allDiagnostics.length} total diagnostics)`
+		}
+	} else {
+		// No limit, process all diagnostics as before
+		for (const [uri, fileDiagnostics] of diagnostics) {
+			const problems = fileDiagnostics
+				.filter((d) => severities.includes(d.severity))
+				.sort((a, b) => a.range.start.line - b.range.start.line)
+			if (problems.length > 0) {
+				result += `\n\n${path.relative(cwd, uri.fsPath).toPosix()}`
+				for (const diagnostic of problems) {
+					let label: string
+					switch (diagnostic.severity) {
+						case vscode.DiagnosticSeverity.Error:
+							label = "Error"
+							break
+						case vscode.DiagnosticSeverity.Warning:
+							label = "Warning"
+							break
+						case vscode.DiagnosticSeverity.Information:
+							label = "Information"
+							break
+						case vscode.DiagnosticSeverity.Hint:
+							label = "Hint"
+							break
+						default:
+							label = "Diagnostic"
 					}
-					if (fileStat.type === vscode.FileType.File) {
-						const document = documents.get(uri) || (await vscode.workspace.openTextDocument(uri))
-						documents.set(uri, document)
-						const lineContent = document.lineAt(diagnostic.range.start.line).text
-						result += `\n- [${source}${label}] ${line} | ${lineContent} : ${diagnostic.message}`
-					} else {
-						result += `\n- [${source}${label}] 1 | (directory) : ${diagnostic.message}`
+					const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
+					const source = diagnostic.source ? `${diagnostic.source} ` : ""
+					try {
+						let fileStat = fileStats.get(uri)
+						if (!fileStat) {
+							fileStat = await vscode.workspace.fs.stat(uri)
+							fileStats.set(uri, fileStat)
+						}
+						if (fileStat.type === vscode.FileType.File) {
+							const document = documents.get(uri) || (await vscode.workspace.openTextDocument(uri))
+							documents.set(uri, document)
+							const lineContent = document.lineAt(diagnostic.range.start.line).text
+							result += `\n- [${source}${label}] ${line} | ${lineContent} : ${diagnostic.message}`
+						} else {
+							result += `\n- [${source}${label}] 1 | (directory) : ${diagnostic.message}`
+						}
+					} catch {
+						result += `\n- [${source}${label}] ${line} | (unavailable) : ${diagnostic.message}`
 					}
-				} catch {
-					result += `\n- [${source}${label}] ${line} | (unavailable) : ${diagnostic.message}`
+					diagnosticCount++
 				}
 			}
 		}
 	}
+
 	return result.trim()
 }

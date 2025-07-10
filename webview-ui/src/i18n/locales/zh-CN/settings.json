@@ -488,6 +488,16 @@
 			"label": "并发文件读取限制",
 			"description": "read_file 工具可以同时处理的最大文件数。较高的值可能会加快读取多个小文件的速度，但会增加内存使用量。"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "在上下文中包含诊断消息",
+				"description": "启用后，在使用 @problems 或读取包含诊断信息的文件时，将包含诊断消息（错误、警告）。"
+			},
+			"maxMessages": {
+				"label": "最大诊断消息数",
+				"description": "每个文件包含的最大诊断消息数。较高的值提供更多上下文，但会增加令牌使用量。"
+			}
+		},
 		"condensingThreshold": {
 			"label": "压缩触发阈值",
 			"selectProfile": "配置配置文件阈值",

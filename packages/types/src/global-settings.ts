@@ -72,6 +72,9 @@ export const globalSettingsSchema = z.object({
 	autoCondenseContextPercent: z.number().optional(),
 	maxConcurrentFileReads: z.number().optional(),
 
+	includeDiagnosticMessages: z.boolean().optional(),
+	maxDiagnosticMessages: z.number().optional(),
+
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
 	screenshotQuality: z.number().optional(),
@@ -260,6 +263,9 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	maxWorkspaceFiles: 200,
 	showRooIgnoredFiles: true,
 	maxReadFileLine: -1, // -1 to enable full file reading.
+
+	includeDiagnosticMessages: true,
+	maxDiagnosticMessages: 50,
 
 	language: "en",
 	telemetrySetting: "enabled",

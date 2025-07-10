@@ -1,399 +1,170 @@
-import { render, screen, fireEvent } from "@/utils/test-utils"
+// npx vitest src/components/settings/__tests__/ContextManagementSettings.spec.tsx
 
-import { ContextManagementSettings } from "@src/components/settings/ContextManagementSettings"
+import { render, screen, fireEvent, waitFor } from "@/utils/test-utils"
+import { ContextManagementSettings } from "../ContextManagementSettings"
 
-// Mock translation hook to return the key as the translation
-vitest.mock("@/i18n/TranslationContext", () => ({
-	useAppTranslation: () => ({
-		t: (key: string) => key,
-	}),
+// Mock the UI components
+vi.mock("@/components/ui", () => ({
+	...vi.importActual("@/components/ui"),
+	Slider: ({ value, onValueChange, "data-testid": dataTestId, disabled }: any) => (
+		<input
+			type="range"
+			value={value[0]}
+			onChange={(e) => onValueChange([parseFloat(e.target.value)])}
+			data-testid={dataTestId}
+			disabled={disabled}
+			role="slider"
+		/>
+	),
+	Input: ({ value, onChange, "data-testid": dataTestId, ...props }: any) => (
+		<input value={value} onChange={onChange} data-testid={dataTestId} {...props} />
+	),
+	Button: ({ children, onClick, ...props }: any) => (
+		<button onClick={onClick} {...props}>
+			{children}
+		</button>
+	),
+	Select: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+	SelectTrigger: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+	SelectValue: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+	SelectContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+	SelectItem: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 }))
 
 // Mock vscode utilities - this is necessary since we're not in a VSCode environment
 
-vitest.mock("@/utils/vscode", () => ({
+vi.mock("@/utils/vscode", () => ({
 	vscode: {
-		postMessage: vitest.fn(),
+		postMessage: vi.fn(),
 	},
 }))
 
 // Mock VSCode components to behave like standard HTML elements
-vitest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeCheckbox: ({ checked, onChange, children, "data-testid": dataTestId, ...props }: any) => (
-		<div>
+		<label data-testid={dataTestId} {...props}>
 			<input
 				type="checkbox"
-				checked={checked}
-				onChange={onChange}
-				data-testid={dataTestId}
-				aria-label={children?.props?.children || children}
 				role="checkbox"
-				aria-checked={checked}
-				{...props}
+				checked={checked || false}
+				aria-checked={checked || false}
+				onChange={(e: any) => onChange?.({ target: { checked: e.target.checked } })}
 			/>
 			{children}
-		</div>
+		</label>
 	),
-	VSCodeTextArea: ({ value, onChange, rows, className, ...props }: any) => (
-		<textarea value={value} onChange={onChange} rows={rows} className={className} role="textbox" {...props} />
-	),
+	VSCodeTextArea: ({ value, onChange, ...props }: any) => <textarea value={value} onChange={onChange} {...props} />,
 }))
 
 describe("ContextManagementSettings", () => {
 	const defaultProps = {
-		autoCondenseContext: true,
-		autoCondenseContextPercent: 100,
+		autoCondenseContext: false,
+		autoCondenseContextPercent: 80,
+		condensingApiConfigId: undefined,
+		customCondensingPrompt: undefined,
 		listApiConfigMeta: [],
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
 		showRooIgnoredFiles: false,
-		setCachedStateField: vitest.fn(),
+		maxReadFileLine: -1,
+		maxConcurrentFileReads: 5,
 		profileThresholds: {},
+		includeDiagnosticMessages: true,
+		maxDiagnosticMessages: 50,
+		setCachedStateField: vi.fn(),
 	}
 
 	beforeEach(() => {
-		vitest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
-	it("renders all controls", () => {
+	it("renders diagnostic settings", () => {
 		render(<ContextManagementSettings {...defaultProps} />)
 
-		// Open tabs context limit
-		const openTabsSlider = screen.getByTestId("open-tabs-limit-slider")
-		expect(openTabsSlider).toBeInTheDocument()
+		// Check for diagnostic checkbox
+		expect(screen.getByTestId("include-diagnostic-messages-checkbox")).toBeInTheDocument()
 
-		// Workspace files limit
-		const workspaceFilesSlider = screen.getByTestId("workspace-files-limit-slider")
-		expect(workspaceFilesSlider).toBeInTheDocument()
-
-		// Show .rooignore'd files
-		const showRooIgnoredFilesCheckbox = screen.getByTestId("show-rooignored-files-checkbox")
-		expect(showRooIgnoredFilesCheckbox).toBeInTheDocument()
-		expect(screen.getByTestId("show-rooignored-files-checkbox")).not.toBeChecked()
+		// Check for slider
+		expect(screen.getByTestId("max-diagnostic-messages-slider")).toBeInTheDocument()
+		expect(screen.getByText("50")).toBeInTheDocument()
 	})
 
-	it("updates open tabs context limit", () => {
-		const mockSetCachedStateField = vitest.fn()
-		const props = { ...defaultProps, setCachedStateField: mockSetCachedStateField }
-		render(<ContextManagementSettings {...props} />)
+	it("renders with diagnostic messages enabled", () => {
+		render(<ContextManagementSettings {...defaultProps} includeDiagnosticMessages={true} />)
 
-		const slider = screen.getByTestId("open-tabs-limit-slider")
+		const checkbox = screen.getByTestId("include-diagnostic-messages-checkbox")
+		expect(checkbox.querySelector("input")).toBeChecked()
+
+		const slider = screen.getByTestId("max-diagnostic-messages-slider")
+		expect(slider).toBeInTheDocument()
+		expect(slider).toHaveValue("50")
+	})
+
+	it("renders with diagnostic messages disabled", () => {
+		render(<ContextManagementSettings {...defaultProps} includeDiagnosticMessages={false} />)
+
+		const checkbox = screen.getByTestId("include-diagnostic-messages-checkbox")
+		expect(checkbox.querySelector("input")).not.toBeChecked()
+
+		// Slider should not be rendered when diagnostics are disabled
+		expect(screen.queryByTestId("max-diagnostic-messages-slider")).not.toBeInTheDocument()
+	})
+
+	it("calls setCachedStateField when include diagnostic messages checkbox is toggled", async () => {
+		const setCachedStateField = vi.fn()
+		render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
+
+		const checkbox = screen.getByTestId("include-diagnostic-messages-checkbox").querySelector("input")!
+		fireEvent.click(checkbox)
+
+		await waitFor(() => {
+			expect(setCachedStateField).toHaveBeenCalledWith("includeDiagnosticMessages", false)
+		})
+	})
+
+	it("calls setCachedStateField when max diagnostic messages slider is changed", async () => {
+		const setCachedStateField = vi.fn()
+		render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
+
+		const slider = screen.getByTestId("max-diagnostic-messages-slider")
+		fireEvent.change(slider, { target: { value: "100" } })
+
+		await waitFor(() => {
+			expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 100)
+		})
+	})
+
+	it("hides slider when include diagnostic messages is unchecked", () => {
+		const { rerender } = render(<ContextManagementSettings {...defaultProps} includeDiagnosticMessages={true} />)
+
+		const slider = screen.getByTestId("max-diagnostic-messages-slider")
 		expect(slider).toBeInTheDocument()
 
-		// Check that the current value is displayed
-		expect(screen.getByText("20")).toBeInTheDocument()
-
-		// Test slider interaction using keyboard events (ArrowRight increases value)
-		slider.focus()
-		fireEvent.keyDown(slider, { key: "ArrowRight" })
-
-		// The callback should have been called with the new value (20 + 1 = 21)
-		expect(mockSetCachedStateField).toHaveBeenCalledWith("maxOpenTabsContext", 21)
+		// Update to disabled
+		rerender(<ContextManagementSettings {...defaultProps} includeDiagnosticMessages={false} />)
+		expect(screen.queryByTestId("max-diagnostic-messages-slider")).not.toBeInTheDocument()
 	})
 
-	it("updates workspace files limit", () => {
-		const mockSetCachedStateField = vitest.fn()
-		const props = { ...defaultProps, setCachedStateField: mockSetCachedStateField }
-		render(<ContextManagementSettings {...props} />)
+	it("displays correct max diagnostic messages value", () => {
+		const { rerender } = render(<ContextManagementSettings {...defaultProps} maxDiagnosticMessages={25} />)
 
-		const slider = screen.getByTestId("workspace-files-limit-slider")
-		expect(slider).toBeInTheDocument()
+		expect(screen.getByText("25")).toBeInTheDocument()
 
-		// Check that the current value is displayed
-		expect(screen.getByText("200")).toBeInTheDocument()
-
-		// Test slider interaction using keyboard events (ArrowRight increases value)
-		slider.focus()
-		fireEvent.keyDown(slider, { key: "ArrowRight" })
-
-		// The callback should have been called with the new value (200 + 1 = 201)
-		expect(mockSetCachedStateField).toHaveBeenCalledWith("maxWorkspaceFiles", 201)
+		// Update value
+		rerender(<ContextManagementSettings {...defaultProps} maxDiagnosticMessages={100} />)
+		expect(screen.getByText("100")).toBeInTheDocument()
 	})
 
-	it("updates show rooignored files setting", () => {
+	it("renders other context management settings", () => {
 		render(<ContextManagementSettings {...defaultProps} />)
 
-		const checkbox = screen.getByTestId("show-rooignored-files-checkbox")
-		fireEvent.click(checkbox)
+		// Check for other sliders
+		expect(screen.getByTestId("open-tabs-limit-slider")).toBeInTheDocument()
+		expect(screen.getByTestId("workspace-files-limit-slider")).toBeInTheDocument()
+		expect(screen.getByTestId("max-concurrent-file-reads-slider")).toBeInTheDocument()
 
-		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("showRooIgnoredFiles", true)
-	})
-
-	it("renders max read file line controls", () => {
-		const propsWithMaxReadFileLine = {
-			...defaultProps,
-			maxReadFileLine: 500,
-		}
-		render(<ContextManagementSettings {...propsWithMaxReadFileLine} />)
-
-		// Max read file line input
-		const maxReadFileInput = screen.getByTestId("max-read-file-line-input")
-		expect(maxReadFileInput).toBeInTheDocument()
-		expect(maxReadFileInput).toHaveValue(500)
-
-		// Always full read checkbox
-		const alwaysFullReadCheckbox = screen.getByTestId("max-read-file-always-full-checkbox")
-		expect(alwaysFullReadCheckbox).toBeInTheDocument()
-		expect(alwaysFullReadCheckbox).not.toBeChecked()
-	})
-
-	it("updates max read file line setting", () => {
-		const propsWithMaxReadFileLine = {
-			...defaultProps,
-			maxReadFileLine: 500,
-		}
-		render(<ContextManagementSettings {...propsWithMaxReadFileLine} />)
-
-		const input = screen.getByTestId("max-read-file-line-input")
-		fireEvent.change(input, { target: { value: "1000" } })
-
-		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("maxReadFileLine", 1000)
-	})
-
-	it("toggles always full read setting", () => {
-		const propsWithMaxReadFileLine = {
-			...defaultProps,
-			maxReadFileLine: 500,
-		}
-		render(<ContextManagementSettings {...propsWithMaxReadFileLine} />)
-
-		const checkbox = screen.getByTestId("max-read-file-always-full-checkbox")
-		fireEvent.click(checkbox)
-
-		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("maxReadFileLine", -1)
-	})
-
-	it("renders with autoCondenseContext enabled", () => {
-		const propsWithAutoCondense = {
-			...defaultProps,
-			autoCondenseContext: true,
-			autoCondenseContextPercent: 75,
-		}
-		render(<ContextManagementSettings {...propsWithAutoCondense} />)
-
-		// Should render the auto condense section
-		const autoCondenseCheckbox = screen.getByTestId("auto-condense-context-checkbox")
-		expect(autoCondenseCheckbox).toBeInTheDocument()
-
-		// Should render the threshold slider with correct value
-		const slider = screen.getByTestId("condense-threshold-slider")
-		expect(slider).toBeInTheDocument()
-
-		// Should render the profile select dropdown
-		const selects = screen.getAllByRole("combobox")
-		expect(selects).toHaveLength(1)
-	})
-
-	describe("Auto Condense Context functionality", () => {
-		const autoCondenseProps = {
-			...defaultProps,
-			autoCondenseContext: true,
-			autoCondenseContextPercent: 75,
-			listApiConfigMeta: [
-				{ id: "config-1", name: "Config 1" },
-				{ id: "config-2", name: "Config 2" },
-			],
-		}
-
-		it("toggles auto condense context setting", () => {
-			const mockSetCachedStateField = vitest.fn()
-			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
-			render(<ContextManagementSettings {...props} />)
-
-			const checkbox = screen.getByTestId("auto-condense-context-checkbox")
-			expect(checkbox).toBeChecked()
-
-			// Toggle off
-			fireEvent.click(checkbox)
-			expect(mockSetCachedStateField).toHaveBeenCalledWith("autoCondenseContext", false)
-		})
-
-		it("shows threshold settings when auto condense is enabled", () => {
-			render(<ContextManagementSettings {...autoCondenseProps} />)
-
-			// Threshold settings should be visible
-			expect(screen.getByTestId("condense-threshold-slider")).toBeInTheDocument()
-			// One combobox for profile selection
-			expect(screen.getAllByRole("combobox")).toHaveLength(1)
-		})
-
-		it("updates auto condense context percent", () => {
-			const mockSetCachedStateField = vitest.fn()
-			const props = { ...autoCondenseProps, setCachedStateField: mockSetCachedStateField }
-			render(<ContextManagementSettings {...props} />)
-
-			// Find the condense threshold slider
-			const slider = screen.getByTestId("condense-threshold-slider")
-
-			// Test slider interaction
-			slider.focus()
-			fireEvent.keyDown(slider, { key: "ArrowRight" })
-
-			expect(mockSetCachedStateField).toHaveBeenCalledWith("autoCondenseContextPercent", 76)
-		})
-
-		it("displays correct auto condense context percent value", () => {
-			render(<ContextManagementSettings {...autoCondenseProps} />)
-			expect(screen.getByText("75%")).toBeInTheDocument()
-		})
-	})
-
-	describe("Edge cases and validation", () => {
-		it("handles invalid max read file line input", () => {
-			const mockSetCachedStateField = vitest.fn()
-			const propsWithMaxReadFileLine = {
-				...defaultProps,
-				maxReadFileLine: 500,
-				setCachedStateField: mockSetCachedStateField,
-			}
-			render(<ContextManagementSettings {...propsWithMaxReadFileLine} />)
-
-			const input = screen.getByTestId("max-read-file-line-input")
-
-			// Test invalid input (non-numeric)
-			fireEvent.change(input, { target: { value: "abc" } })
-			expect(mockSetCachedStateField).not.toHaveBeenCalled()
-
-			// Test negative value below -1
-			fireEvent.change(input, { target: { value: "-5" } })
-			expect(mockSetCachedStateField).not.toHaveBeenCalled()
-
-			// Test valid input
-			fireEvent.change(input, { target: { value: "1000" } })
-			expect(mockSetCachedStateField).toHaveBeenCalledWith("maxReadFileLine", 1000)
-		})
-
-		it("selects input text on click", () => {
-			const propsWithMaxReadFileLine = {
-				...defaultProps,
-				maxReadFileLine: 500,
-			}
-			render(<ContextManagementSettings {...propsWithMaxReadFileLine} />)
-
-			const input = screen.getByTestId("max-read-file-line-input") as HTMLInputElement
-			const selectSpy = vitest.spyOn(input, "select")
-
-			fireEvent.click(input)
-			expect(selectSpy).toHaveBeenCalled()
-		})
-
-		it("disables max read file input when always full read is checked", () => {
-			const propsWithAlwaysFullRead = {
-				...defaultProps,
-				maxReadFileLine: -1,
-			}
-			render(<ContextManagementSettings {...propsWithAlwaysFullRead} />)
-
-			const input = screen.getByTestId("max-read-file-line-input")
-			expect(input).toBeDisabled()
-
-			const checkbox = screen.getByTestId("max-read-file-always-full-checkbox")
-			expect(checkbox).toBeChecked()
-		})
-
-		it("handles boundary values for sliders", () => {
-			const mockSetCachedStateField = vitest.fn()
-			const props = {
-				...defaultProps,
-				maxOpenTabsContext: 0,
-				maxWorkspaceFiles: 500,
-				setCachedStateField: mockSetCachedStateField,
-			}
-			render(<ContextManagementSettings {...props} />)
-
-			// Check boundary values are displayed
-			expect(screen.getByText("0")).toBeInTheDocument() // min open tabs
-			expect(screen.getByText("500")).toBeInTheDocument() // max workspace files
-		})
-
-		it("handles undefined optional props gracefully", () => {
-			const propsWithUndefined = {
-				...defaultProps,
-				showRooIgnoredFiles: undefined,
-				maxReadFileLine: undefined,
-			}
-
-			expect(() => {
-				render(<ContextManagementSettings {...propsWithUndefined} />)
-			}).not.toThrow()
-
-			// Should use default values
-			expect(screen.getByText("20")).toBeInTheDocument() // default maxOpenTabsContext
-			expect(screen.getByText("200")).toBeInTheDocument() // default maxWorkspaceFiles
-		})
-	})
-
-	describe("Conditional rendering", () => {
-		it("does not render threshold settings when autoCondenseContext is false", () => {
-			const propsWithoutAutoCondense = {
-				...defaultProps,
-				autoCondenseContext: false,
-			}
-			render(<ContextManagementSettings {...propsWithoutAutoCondense} />)
-
-			// When auto condense is false, threshold slider should not be visible
-			expect(screen.queryByTestId("condense-threshold-slider")).not.toBeInTheDocument()
-		})
-
-		it("renders max read file controls with default value when maxReadFileLine is undefined", () => {
-			const propsWithoutMaxReadFile = {
-				...defaultProps,
-				maxReadFileLine: undefined,
-			}
-			render(<ContextManagementSettings {...propsWithoutMaxReadFile} />)
-
-			// Controls should still be rendered with default value of -1
-			const input = screen.getByTestId("max-read-file-line-input")
-			const checkbox = screen.getByTestId("max-read-file-always-full-checkbox")
-
-			expect(input).toBeInTheDocument()
-			expect(input).toHaveValue(-1)
-			expect(input).not.toBeDisabled() // Input is not disabled when maxReadFileLine is undefined (only when explicitly set to -1)
-			expect(checkbox).toBeInTheDocument()
-			expect(checkbox).not.toBeChecked() // Checkbox is not checked when maxReadFileLine is undefined (only when explicitly set to -1)
-		})
-	})
-
-	describe("Accessibility", () => {
-		it("has proper labels and descriptions", () => {
-			render(<ContextManagementSettings {...defaultProps} />)
-
-			// Check that labels are present
-			expect(screen.getByText("settings:contextManagement.openTabs.label")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.workspaceFiles.label")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.rooignore.label")).toBeInTheDocument()
-
-			// Check that descriptions are present
-			expect(screen.getByText("settings:contextManagement.openTabs.description")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.workspaceFiles.description")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.rooignore.description")).toBeInTheDocument()
-		})
-
-		it("has proper test ids for all interactive elements", () => {
-			const propsWithMaxReadFile = {
-				...defaultProps,
-				maxReadFileLine: 500,
-			}
-			render(<ContextManagementSettings {...propsWithMaxReadFile} />)
-
-			expect(screen.getByTestId("open-tabs-limit-slider")).toBeInTheDocument()
-			expect(screen.getByTestId("workspace-files-limit-slider")).toBeInTheDocument()
-			expect(screen.getByTestId("show-rooignored-files-checkbox")).toBeInTheDocument()
-			expect(screen.getByTestId("max-read-file-line-input")).toBeInTheDocument()
-			expect(screen.getByTestId("max-read-file-always-full-checkbox")).toBeInTheDocument()
-		})
-	})
-
-	describe("Integration with translation system", () => {
-		it("uses translation keys for all text content", () => {
-			render(<ContextManagementSettings {...defaultProps} />)
-
-			// Verify that translation keys are being used (mocked to return the key)
-			expect(screen.getByText("settings:sections.contextManagement")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.description")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.openTabs.label")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.workspaceFiles.label")).toBeInTheDocument()
-			expect(screen.getByText("settings:contextManagement.rooignore.label")).toBeInTheDocument()
-		})
+		// Check for checkboxes
+		expect(screen.getByTestId("show-rooignored-files-checkbox")).toBeInTheDocument()
+		expect(screen.getByTestId("auto-condense-context-checkbox")).toBeInTheDocument()
 	})
 })

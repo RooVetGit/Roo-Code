@@ -22,6 +22,8 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxReadFileLine?: number
 	maxConcurrentFileReads?: number
 	profileThresholds?: Record<string, number>
+	includeDiagnosticMessages?: boolean
+	maxDiagnosticMessages?: number
 	setCachedStateField: SetCachedStateField<
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
@@ -31,6 +33,8 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "maxReadFileLine"
 		| "maxConcurrentFileReads"
 		| "profileThresholds"
+		| "includeDiagnosticMessages"
+		| "maxDiagnosticMessages"
 	>
 }
 
@@ -45,6 +49,8 @@ export const ContextManagementSettings = ({
 	maxReadFileLine,
 	maxConcurrentFileReads,
 	profileThresholds = {},
+	includeDiagnosticMessages,
+	maxDiagnosticMessages,
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
@@ -196,6 +202,42 @@ export const ContextManagementSettings = ({
 						{t("settings:contextManagement.maxReadFile.description")}
 					</div>
 				</div>
+
+				<div>
+					<VSCodeCheckbox
+						checked={includeDiagnosticMessages}
+						onChange={(e: any) => setCachedStateField("includeDiagnosticMessages", e.target.checked)}
+						data-testid="include-diagnostic-messages-checkbox">
+						<label className="block font-medium mb-1">
+							{t("settings:contextManagement.diagnostics.includeMessages.label")}
+						</label>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
+						{t("settings:contextManagement.diagnostics.includeMessages.description")}
+					</div>
+				</div>
+
+				{includeDiagnosticMessages && (
+					<div>
+						<span className="block font-medium mb-1">
+							{t("settings:contextManagement.diagnostics.maxMessages.label")}
+						</span>
+						<div className="flex items-center gap-2">
+							<Slider
+								min={1}
+								max={100}
+								step={1}
+								value={[maxDiagnosticMessages ?? 50]}
+								onValueChange={([value]) => setCachedStateField("maxDiagnosticMessages", value)}
+								data-testid="max-diagnostic-messages-slider"
+							/>
+							<span className="w-10">{maxDiagnosticMessages ?? 50}</span>
+						</div>
+						<div className="text-vscode-descriptionForeground text-sm mt-1">
+							{t("settings:contextManagement.diagnostics.maxMessages.description")}
+						</div>
+					</div>
+				)}
 			</Section>
 			<Section className="pt-2">
 				<VSCodeCheckbox

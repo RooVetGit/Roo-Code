@@ -1726,6 +1726,9 @@ export class ClineProvider
 				codebaseIndexSearchMinScore: stateValues.codebaseIndexConfig?.codebaseIndexSearchMinScore,
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
+			// Add diagnostic message settings
+			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
+			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 5,
 		}
 	}
 

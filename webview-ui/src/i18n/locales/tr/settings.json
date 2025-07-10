@@ -488,6 +488,16 @@
 			"label": "Eşzamanlı dosya okuma sınırı",
 			"description": "'read_file' aracının aynı anda işleyebileceği maksimum dosya sayısı. Daha yüksek değerler birden çok küçük dosyanın okunmasını hızlandırabilir ancak bellek kullanımını artırır."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Tanı mesajlarını bağlama dahil et",
+				"description": "Etkinleştirildiğinde, @problems kullanıldığında veya tanılı dosyalar okunduğunda tanılama mesajları (hatalar, uyarılar) dahil edilecektir."
+			},
+			"maxMessages": {
+				"label": "Maksimum tanı mesajı",
+				"description": "Dosya başına dahil edilecek maksimum tanı mesajı sayısı. Daha yüksek değerler daha fazla bağlam sağlar ancak jeton kullanımını artırır."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Sıkıştırma Tetikleme Eşiği",
 			"selectProfile": "Profil için eşik yapılandır",

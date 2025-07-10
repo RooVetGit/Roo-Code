@@ -488,6 +488,16 @@
 			"lines": "Zeilen",
 			"always_full_read": "Immer die gesamte Datei lesen"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Diagnosenachrichten in den Kontext aufnehmen",
+				"description": "Wenn aktiviert, werden Diagnosenachrichten (Fehler, Warnungen) bei der Verwendung von @problems oder beim Lesen von Dateien mit Diagnosen eingeschlossen."
+			},
+			"maxMessages": {
+				"label": "Maximale Anzahl von Diagnosenachrichten",
+				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden sollen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Schwellenwert für Kontextkomprimierung",
 			"selectProfile": "Profil für Schwellenwert konfigurieren",

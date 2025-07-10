@@ -488,6 +488,16 @@
 			"label": "동시 파일 읽기 제한",
 			"description": "read_file 도구가 동시에 처리할 수 있는 최대 파일 수입니다. 높은 값은 여러 작은 파일을 읽는 속도를 높일 수 있지만 메모리 사용량이 증가합니다."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "컨텍스트에 진단 메시지 포함",
+				"description": "활성화하면 @problems를 사용하거나 진단이 포함된 파일을 읽을 때 진단 메시지(오류, 경고)가 포함됩니다."
+			},
+			"maxMessages": {
+				"label": "최대 진단 메시지",
+				"description": "파일당 포함할 최대 진단 메시지 수입니다. 값이 높을수록 더 많은 컨텍스트를 제공하지만 토큰 사용량이 증가합니다."
+			}
+		},
 		"condensingThreshold": {
 			"label": "압축 트리거 임계값",
 			"selectProfile": "프로필 임계값 구성",

@@ -488,6 +488,16 @@
 			"label": "Limite de leituras simultâneas",
 			"description": "Número máximo de arquivos que a ferramenta 'read_file' pode processar simultaneamente. Valores mais altos podem acelerar a leitura de vários arquivos pequenos, mas aumentam o uso de memória."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Incluir mensagens de diagnóstico no contexto",
+				"description": "Quando ativado, mensagens de diagnóstico (erros, avisos) serão incluídas ao usar @problems ou ao ler arquivos com diagnósticos."
+			},
+			"maxMessages": {
+				"label": "Máximo de mensagens de diagnóstico",
+				"description": "Número máximo de mensagens de diagnóstico a serem incluídas por arquivo. Valores mais altos fornecem mais contexto, mas aumentam o uso de tokens."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Limite de Ativação de Condensação",
 			"selectProfile": "Configurar limite para perfil",

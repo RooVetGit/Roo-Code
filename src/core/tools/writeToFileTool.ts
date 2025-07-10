@@ -97,6 +97,14 @@ export async function writeToFileTool(
 		isProtected: isWriteProtected,
 	}
 
+	// Get diagnostic settings from state
+	const state = await cline.providerRef?.deref()?.getState()
+	const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
+	const maxDiagnosticMessages = state?.maxDiagnosticMessages
+
+	// Update DiffViewProvider with diagnostic settings
+	cline.diffViewProvider.updateDiagnosticSettings(includeDiagnosticMessages, maxDiagnosticMessages)
+
 	try {
 		if (block.partial) {
 			// update gui message

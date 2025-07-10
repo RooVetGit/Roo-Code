@@ -488,6 +488,16 @@
 			"label": "Giới hạn đọc file đồng thời",
 			"description": "Số lượng file tối đa mà công cụ 'read_file' có thể xử lý cùng lúc. Giá trị cao hơn có thể tăng tốc độ đọc nhiều file nhỏ nhưng sẽ tăng mức sử dụng bộ nhớ."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Bao gồm thông báo chẩn đoán trong ngữ cảnh",
+				"description": "Khi được bật, thông báo chẩn đoán (lỗi, cảnh báo) sẽ được bao gồm khi sử dụng @problems hoặc khi đọc các tệp có chẩn đoán."
+			},
+			"maxMessages": {
+				"label": "Thông báo chẩn đoán tối đa",
+				"description": "Số lượng thông báo chẩn đoán tối đa được bao gồm cho mỗi tệp. Giá trị cao hơn cung cấp nhiều ngữ cảnh hơn nhưng tăng mức sử dụng mã thông báo."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Ngưỡng kích hoạt nén",
 			"selectProfile": "Cấu hình ngưỡng cho hồ sơ",
