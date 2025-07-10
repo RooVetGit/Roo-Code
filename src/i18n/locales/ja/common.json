@@ -19,8 +19,10 @@
 		"delete_config_profile": "この設定プロファイルを削除してもよろしいですか？",
 		"delete_custom_mode_with_rules": "この{scope}モードを削除してもよろしいですか？\n\nこれにより、関連するルールフォルダも次の場所で削除されます:\n{rulesFolderPath}",
 		"delete_message": "何を削除しますか？",
-		"just_this_message": "このメッセージのみ",
-		"this_and_subsequent": "これ以降のすべてのメッセージ"
+		"edit_warning": "このメッセージを編集すると、会話内のすべての後続メッセージが削除されます。続行しますか？",
+		"delete_just_this_message": "このメッセージのみ",
+		"delete_this_and_subsequent": "これ以降のすべてのメッセージ",
+		"proceed": "続行"
 	},
 	"errors": {
 		"invalid_data_uri": "データURIフォーマットが無効です",
@@ -52,7 +54,7 @@
 		"cannot_access_path": "パス {{path}} にアクセスできません：{{error}}",
 		"settings_import_failed": "設定のインポートに失敗しました：{{error}}",
 		"mistake_limit_guidance": "これは、モデルの思考プロセスの失敗やツールを適切に使用できないことを示している可能性があり、ユーザーのガイダンスによって軽減できます（例：「タスクをより小さなステップに分割してみてください」）。",
-		"violated_organization_allowlist": "タスクの実行に失敗しました: 現在のプロファイルは組織の設定に違反しています",
+		"violated_organization_allowlist": "タスクの実行に失敗しました: 現在のプロファイルは組織の設定と互換性がありません",
 		"condense_failed": "コンテキストの圧縮に失敗しました",
 		"condense_not_enough_messages": "コンテキストを圧縮するのに十分なメッセージがありません",
 		"condensed_recently": "コンテキストは最近圧縮されました；この試行をスキップします",
@@ -104,9 +106,12 @@
 	"answers": {
 		"yes": "はい",
 		"no": "いいえ",
-		"cancel": "キャンセル",
 		"remove": "削除",
 		"keep": "保持"
+	},
+	"buttons": {
+		"save": "保存",
+		"edit": "編集"
 	},
 	"tasks": {
 		"canceled": "タスクエラー：ユーザーによって停止およびキャンセルされました。",
@@ -163,7 +168,6 @@
 			"title": "カスタムモードの削除",
 			"description": "この{{scope}}モードを削除してもよろしいですか？これにより、関連するルールフォルダーも{{rulesFolderPath}}で削除されます",
 			"descriptionNoRules": "このカスタムモードを削除してもよろしいですか？",
-			"cancel": "キャンセル",
 			"confirm": "削除"
 		}
 	}

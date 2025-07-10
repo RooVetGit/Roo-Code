@@ -72,6 +72,7 @@
 		"qdrantKeyLabel": "Qdrant Key:",
 		"qdrantApiKeyLabel": "Qdrant API Key",
 		"qdrantApiKeyPlaceholder": "Enter your Qdrant API key (optional)",
+		"setupConfigLabel": "Setup",
 		"advancedConfigLabel": "Advanced Configuration",
 		"searchMinScoreLabel": "Search Score Threshold",
 		"searchMinScoreDescription": "Minimum similarity score (0.0-1.0) required for search results. Lower values return more results but may be less relevant. Higher values return fewer but more relevant results.",
@@ -103,7 +104,22 @@
 			"indexed": "Indexed",
 			"error": "Error"
 		},
-		"close": "Close"
+		"close": "Close",
+		"validation": {
+			"qdrantUrlRequired": "Qdrant URL is required",
+			"invalidQdrantUrl": "Invalid Qdrant URL",
+			"invalidOllamaUrl": "Invalid Ollama URL",
+			"invalidBaseUrl": "Invalid base URL",
+			"openaiApiKeyRequired": "OpenAI API key is required",
+			"modelSelectionRequired": "Model selection is required",
+			"apiKeyRequired": "API key is required",
+			"modelIdRequired": "Model ID is required",
+			"modelDimensionRequired": "Model dimension is required",
+			"geminiApiKeyRequired": "Gemini API key is required",
+			"ollamaBaseUrlRequired": "Ollama base URL is required",
+			"baseUrlRequired": "Base URL is required",
+			"modelDimensionMinValue": "Model dimension must be greater than 0"
+		}
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
@@ -190,6 +206,8 @@
 		"createProfile": "Create Profile",
 		"cannotDeleteOnlyProfile": "Cannot delete the only profile",
 		"searchPlaceholder": "Search profiles",
+		"searchProviderPlaceholder": "Search providers",
+		"noProviderMatchFound": "No providers found",
 		"noMatchFound": "No matching profiles found",
 		"vscodeLmDescription": " The VS Code Language Model API allows you to run models provided by other VS Code extensions (including but not limited to GitHub Copilot). The easiest way to get started is to install the Copilot and Copilot Chat extensions from the VS Code Marketplace.",
 		"awsCustomArnUse": "Enter a valid Amazon Bedrock ARN for the model you want to use. Format examples:",

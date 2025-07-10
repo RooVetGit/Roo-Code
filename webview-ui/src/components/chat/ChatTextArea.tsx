@@ -25,9 +25,8 @@ import Thumbnails from "../common/Thumbnails"
 import ModeSelector from "./ModeSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import { VolumeX, Pin, Check } from "lucide-react"
-import { IconButton } from "./IconButton"
-import { IndexingStatusDot } from "./IndexingStatusBadge"
+import { VolumeX, Pin, Check, Image, WandSparkles, SendHorizontal } from "lucide-react"
+import { IndexingStatusBadge } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
 
@@ -81,7 +80,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			togglePinnedApiConfig,
 			taskHistory,
 			clineMessages,
-			codebaseIndexConfig,
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -943,42 +941,84 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"resize-none",
 									"overflow-x-hidden",
 									"overflow-y-auto",
-									"pr-2",
+									"pr-9",
 									"flex-none flex-grow",
 									"z-[2]",
 									"scrollbar-none",
+									"scrollbar-hide",
 								)}
 								onScroll={() => updateHighlights()}
 							/>
 
 							{isTtsPlaying && (
-								<Button
-									variant="ghost"
-									size="icon"
-									className="absolute top-0 right-0 opacity-25 hover:opacity-100 z-10"
-									onClick={() => vscode.postMessage({ type: "stopTts" })}>
-									<VolumeX className="size-4" />
-								</Button>
+								<StandardTooltip content={t("chat:stopTts")}>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="absolute top-0 right-0 opacity-25 hover:opacity-100 z-10"
+										onClick={() => vscode.postMessage({ type: "stopTts" })}>
+										<VolumeX className="size-4" />
+									</Button>
+								</StandardTooltip>
 							)}
+
+							<div className="absolute top-1 right-1 z-30">
+								<StandardTooltip content={t("chat:enhancePrompt")}>
+									<button
+										aria-label={t("chat:enhancePrompt")}
+										disabled={sendingDisabled}
+										onClick={!sendingDisabled ? handleEnhancePrompt : undefined}
+										className={cn(
+											"relative inline-flex items-center justify-center",
+											"bg-transparent border-none p-1.5",
+											"rounded-md min-w-[28px] min-h-[28px]",
+											"opacity-60 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
+											"transition-all duration-150",
+											"hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
+											"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
+											"active:bg-[rgba(255,255,255,0.1)]",
+											!sendingDisabled && "cursor-pointer",
+											sendingDisabled &&
+												"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
+										)}>
+										<WandSparkles className={cn("w-4 h-4", isEnhancingPrompt && "animate-spin")} />
+									</button>
+								</StandardTooltip>
+							</div>
+
+							<div className="absolute bottom-1 right-1 z-30">
+								<StandardTooltip content={t("chat:sendMessage")}>
+									<button
+										aria-label={t("chat:sendMessage")}
+										disabled={sendingDisabled}
+										onClick={!sendingDisabled ? onSend : undefined}
+										className={cn(
+											"relative inline-flex items-center justify-center",
+											"bg-transparent border-none p-1.5",
+											"rounded-md min-w-[28px] min-h-[28px]",
+											"opacity-60 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
+											"transition-all duration-150",
+											"hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
+											"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
+											"active:bg-[rgba(255,255,255,0.1)]",
+											!sendingDisabled && "cursor-pointer",
+											sendingDisabled &&
+												"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
+										)}>
+										<SendHorizontal className="w-4 h-4" />
+									</button>
+								</StandardTooltip>
+							</div>
 
 							{!inputValue && (
 								<div
-									className={cn(
-										"absolute",
-										"left-2",
-										"flex",
-										"gap-2",
-										"text-xs",
-										"text-descriptionForeground",
-										"pointer-events-none",
-										"z-25",
-										"bottom-1.5",
-										"pr-2",
-										"transition-opacity",
-										"duration-200",
-										"ease-in-out",
-										"opacity-70",
-									)}>
+									className="absolute left-2 z-30 pr-9 flex items-center h-8"
+									style={{
+										bottom: "0.25rem",
+										color: "var(--vscode-tab-inactiveForeground)",
+										userSelect: "none",
+										pointerEvents: "none",
+									}}>
 									{placeholderBottomText}
 								</div>
 							)}
@@ -1133,26 +1173,29 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					</div>
 
 					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
-						{codebaseIndexConfig?.codebaseIndexEnabled && <IndexingStatusDot />}
-						<IconButton
-							iconClass={isEnhancingPrompt ? "codicon-loading" : "codicon-sparkle"}
-							title={t("chat:enhancePrompt")}
-							disabled={sendingDisabled}
-							isLoading={isEnhancingPrompt}
-							onClick={handleEnhancePrompt}
-						/>
-						<IconButton
-							iconClass="codicon-device-camera"
-							title={t("chat:addImages")}
-							disabled={shouldDisableImages}
-							onClick={onSelectImages}
-						/>
-						<IconButton
-							iconClass="codicon-send"
-							title={t("chat:sendMessage")}
-							disabled={sendingDisabled}
-							onClick={onSend}
-						/>
+						<IndexingStatusBadge />
+						<StandardTooltip content={t("chat:addImages")}>
+							<button
+								aria-label={t("chat:addImages")}
+								disabled={shouldDisableImages}
+								onClick={!shouldDisableImages ? onSelectImages : undefined}
+								className={cn(
+									"relative inline-flex items-center justify-center",
+									"bg-transparent border-none p-1.5",
+									"rounded-md min-w-[28px] min-h-[28px]",
+									"text-vscode-foreground opacity-85",
+									"transition-all duration-150",
+									"hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
+									"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
+									"active:bg-[rgba(255,255,255,0.1)]",
+									!shouldDisableImages && "cursor-pointer",
+									shouldDisableImages &&
+										"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
+									"mr-1",
+								)}>
+								<Image className="w-4 h-4" />
+							</button>
+						</StandardTooltip>
 					</div>
 				</div>
 			</div>
