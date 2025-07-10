@@ -1,8 +1,9 @@
 import * as vscode from "vscode"
 import fs from "fs/promises"
 import * as path from "path"
+import { getMimeType, isImageExtension } from "../../utils/mimeTypes"
+import { FileAttachment, FileReference, ProcessedFiles } from "../../shared/FileTypes"
 
-const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "ico"]
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
 
 // Known binary file extensions to skip upfront
@@ -66,16 +67,13 @@ const BINARY_EXTENSIONS = [
 	"wasm",
 ]
 
-export async function selectFiles(): Promise<{
-	images: string[]
-	files: Array<{ path: string; content: string; type: string }>
-}> {
+export async function selectFiles(): Promise<ProcessedFiles> {
 	const options: vscode.OpenDialogOptions = {
 		canSelectMany: true,
 		openLabel: "Select",
 		filters: {
 			"All Files": ["*"],
-			Images: IMAGE_EXTENSIONS,
+			Images: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "ico"],
 		},
 	}
 
@@ -85,8 +83,8 @@ export async function selectFiles(): Promise<{
 		return { images: [], files: [] }
 	}
 
-	const images: string[] = []
-	const files: Array<{ path: string; content: string; type: string }> = []
+	const images: FileReference[] = []
+	const files: FileAttachment[] = []
 
 	await Promise.all(
 		fileUris.map(async (uri) => {
@@ -101,13 +99,15 @@ export async function selectFiles(): Promise<{
 				return
 			}
 
-			if (IMAGE_EXTENSIONS.includes(ext)) {
-				// Process as image
-				const buffer = await fs.readFile(filePath)
-				const base64 = buffer.toString("base64")
+			if (isImageExtension(ext)) {
+				// Store image reference instead of loading into memory
 				const mimeType = getMimeType(filePath)
-				const dataUrl = `data:${mimeType};base64,${base64}`
-				images.push(dataUrl)
+				images.push({
+					path: fileName,
+					uri: uri.toString(),
+					size: stats.size,
+					mimeType: mimeType,
+				})
 			} else if (BINARY_EXTENSIONS.includes(ext)) {
 				// Skip known binary files
 				vscode.window.showWarningMessage(`Cannot attach binary file: ${fileName}`)
@@ -136,23 +136,31 @@ export async function selectFiles(): Promise<{
 	return { images, files }
 }
 
+/**
+ * Convert file references to data URLs when needed
+ * This should be called only when actually sending the images
+ */
+export async function convertImageReferencesToDataUrls(images: FileReference[]): Promise<string[]> {
+	const dataUrls: string[] = []
+
+	for (const image of images) {
+		try {
+			const uri = vscode.Uri.parse(image.uri)
+			const buffer = await fs.readFile(uri.fsPath)
+			const base64 = buffer.toString("base64")
+			const dataUrl = `data:${image.mimeType};base64,${base64}`
+			dataUrls.push(dataUrl)
+		} catch (error) {
+			vscode.window.showWarningMessage(`Failed to read image: ${image.path}`)
+		}
+	}
+
+	return dataUrls
+}
+
 // Keep the original selectImages function for backward compatibility
 export async function selectImages(): Promise<string[]> {
 	const result = await selectFiles()
-	return result.images
-}
-
-function getMimeType(filePath: string): string {
-	const ext = path.extname(filePath).toLowerCase()
-	switch (ext) {
-		case ".png":
-			return "image/png"
-		case ".jpeg":
-		case ".jpg":
-			return "image/jpeg"
-		case ".webp":
-			return "image/webp"
-		default:
-			throw new Error(`Unsupported image type: ${ext}`)
-	}
+	// Convert references to data URLs for backward compatibility
+	return convertImageReferencesToDataUrls(result.images)
 }

@@ -27,7 +27,7 @@ import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { VolumeX, Pin, Check, Paperclip, WandSparkles, SendHorizontal } from "lucide-react"
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
-import { FileAttachment } from "./FileAttachment"
+import FileAttachment from "./FileAttachment"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
 

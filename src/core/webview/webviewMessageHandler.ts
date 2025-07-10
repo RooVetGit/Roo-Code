@@ -29,7 +29,7 @@ import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile } from "../../integrations/misc/open-file"
 import { openImage, saveImage } from "../../integrations/misc/image-handler"
-import { selectImages, selectFiles } from "../../integrations/misc/process-files"
+import { selectImages, selectFiles, convertImageReferencesToDataUrls } from "../../integrations/misc/process-files"
 import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
@@ -420,7 +420,9 @@ export const webviewMessageHandler = async (
 			break
 		case "selectFiles":
 			const { images: fileImages, files } = await selectFiles()
-			await provider.postMessageToWebview({ type: "selectedFiles", images: fileImages, files })
+			// Convert FileReference[] to string[] (base64 data URLs)
+			const imageDataUrls = await convertImageReferencesToDataUrls(fileImages)
+			await provider.postMessageToWebview({ type: "selectedFiles", images: imageDataUrls, files })
 			break
 		case "exportCurrentTask":
 			const currentTaskId = provider.getCurrentCline()?.taskId
