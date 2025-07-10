@@ -165,17 +165,30 @@ export class QdrantVectorStore implements IVectorStore {
 					created = false // Exists and correct
 				} else {
 					// Exists but wrong vector size, recreate
-					console.warn(
-						`[QdrantVectorStore] Collection ${this.collectionName} exists with vector size ${existingVectorSize}, but expected ${this.vectorSize}. Recreating collection.`,
-					)
-					await this.client.deleteCollection(this.collectionName) // Known to exist
-					await this.client.createCollection(this.collectionName, {
-						vectors: {
-							size: this.vectorSize,
-							distance: this.DISTANCE_METRIC,
-						},
-					})
-					created = true
+					try {
+						console.warn(
+							`[QdrantVectorStore] Collection ${this.collectionName} exists with vector size ${existingVectorSize}, but expected ${this.vectorSize}. Recreating collection.`,
+						)
+						await this.client.deleteCollection(this.collectionName)
+						await this.client.createCollection(this.collectionName, {
+							vectors: {
+								size: this.vectorSize,
+								distance: this.DISTANCE_METRIC,
+							},
+						})
+						created = true
+					} catch (recreationError) {
+						const errorMessage =
+							recreationError instanceof Error ? recreationError.message : String(recreationError)
+						console.error(
+							`[QdrantVectorStore] CRITICAL: Failed to recreate collection ${this.collectionName} for new vector size. Error: ${errorMessage}`,
+						)
+						throw new Error(
+							t("embeddings:vectorStore.vectorDimensionMismatch", {
+								errorMessage,
+							}),
+						)
+					}
 				}
 			}
 
@@ -204,7 +217,12 @@ export class QdrantVectorStore implements IVectorStore {
 				errorMessage,
 			)
 
-			// Provide a more user-friendly error message that includes the original error
+			// If this is already a vector dimension mismatch error, re-throw it as-is
+			if (errorMessage.includes("embeddings:vectorStore.vectorDimensionMismatch")) {
+				throw error
+			}
+
+			// Otherwise, provide a more user-friendly error message that includes the original error
 			throw new Error(
 				t("embeddings:vectorStore.qdrantConnectionFailed", { qdrantUrl: this.qdrantUrl, errorMessage }),
 			)
