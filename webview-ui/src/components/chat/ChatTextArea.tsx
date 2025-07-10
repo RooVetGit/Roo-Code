@@ -858,6 +858,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								/>
 							</div>
 						)}
+						{selectedFiles && selectedFiles.length > 0 && setSelectedFiles && (
+							<FileAttachment files={selectedFiles} setFiles={setSelectedFiles} className="mb-2" />
+						)}
 						<div
 							className={cn(
 								"relative",
@@ -1039,16 +1042,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							left: "16px",
 							zIndex: 2,
 							marginBottom: 0,
-						}}
-					/>
-				)}
-
-				{selectedFiles && selectedFiles.length > 0 && setSelectedFiles && (
-					<FileAttachment
-						files={selectedFiles}
-						setFiles={setSelectedFiles}
-						style={{
-							marginBottom: "8px",
 						}}
 					/>
 				)}

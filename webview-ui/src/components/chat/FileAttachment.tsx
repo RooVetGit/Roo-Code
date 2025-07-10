@@ -45,7 +45,9 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ files, setFiles, style,
 					onMouseEnter={() => setHoveredIndex(index)}
 					onMouseLeave={() => setHoveredIndex(null)}>
 					<i className={cn("codicon", `codicon-file-${getFileIcon(file.type)}`)} />
-					<span className="text-sm">{file.path}</span>
+					<span className="text-sm" title={file.path}>
+						{file.path.length > 30 ? `${file.path.substring(0, 27)}...` : file.path}
+					</span>
 					{isDeletable && hoveredIndex === index && (
 						<div
 							onClick={() => handleDelete(index)}

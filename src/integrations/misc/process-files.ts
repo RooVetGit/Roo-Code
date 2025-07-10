@@ -73,7 +73,6 @@ export async function selectFiles(): Promise<ProcessedFiles> {
 		openLabel: "Select",
 		filters: {
 			"All Files": ["*"],
-			Images: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "ico"],
 		},
 	}
 
