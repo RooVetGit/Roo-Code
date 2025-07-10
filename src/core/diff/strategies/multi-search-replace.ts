@@ -331,6 +331,29 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 	}
 
+	/**
+	 * Helper function to check if a line contains only a closing bracket (with optional whitespace)
+	 */
+	private isClosingBracketLine(line: string): string | null {
+		const trimmed = line.trim()
+		if (trimmed === "}" || trimmed === "]" || trimmed === ")" || trimmed === ">") {
+			return trimmed
+		}
+		return null
+	}
+
+	/**
+	 * Helper function to get the last non-empty line from content
+	 */
+	private getLastNonEmptyLine(lines: string[]): { line: string; index: number } | null {
+		for (let i = lines.length - 1; i >= 0; i--) {
+			if (lines[i].trim()) {
+				return { line: lines[i], index: i }
+			}
+		}
+		return null
+	}
+
 	async applyDiff(
 		originalContent: string,
 		diffContent: string,
@@ -551,6 +574,48 @@ Only use a single line of '=======' between search and replacement content, beca
 			// Get the matched lines from the original content
 			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
 
+			// Check for potential bracket duplication
+			let extendReplacement = false
+			let additionalLinesToReplace = 0
+
+			// Check if replacement ends with a closing bracket that's not in the search
+			const lastReplaceLine = this.getLastNonEmptyLine(replaceLines)
+			const lastSearchLine = this.getLastNonEmptyLine(searchLines)
+
+			if (lastReplaceLine && lastSearchLine) {
+				const replaceBracket = this.isClosingBracketLine(lastReplaceLine.line)
+				const searchBracket = this.isClosingBracketLine(lastSearchLine.line)
+
+				// If replacement has a closing bracket but search doesn't
+				if (replaceBracket && !searchBracket) {
+					// Check if the next line in original content is the same bracket
+					const nextLineIndex = matchIndex + searchLines.length
+					if (nextLineIndex < resultLines.length) {
+						const nextLineBracket = this.isClosingBracketLine(resultLines[nextLineIndex])
+						if (nextLineBracket === replaceBracket) {
+							// Extend the replacement to include the bracket line
+							extendReplacement = true
+							additionalLinesToReplace = 1
+
+							// Also check for multiple consecutive bracket lines
+							let checkIndex = nextLineIndex + 1
+							while (checkIndex < resultLines.length) {
+								const bracket = this.isClosingBracketLine(resultLines[checkIndex])
+								if (
+									bracket &&
+									replaceLines.some((line) => this.isClosingBracketLine(line) === bracket)
+								) {
+									additionalLinesToReplace++
+									checkIndex++
+								} else {
+									break
+								}
+							}
+						}
+					}
+				}
+			}
+
 			// Get the exact indentation (preserving tabs/spaces) of each line
 			const originalIndents = matchedLines.map((line) => {
 				const match = line.match(/^[\t ]*/)
@@ -590,9 +655,9 @@ Only use a single line of '=======' between search and replacement content, beca
 
 			// Construct the final content
 			const beforeMatch = resultLines.slice(0, matchIndex)
-			const afterMatch = resultLines.slice(matchIndex + searchLines.length)
+			const afterMatch = resultLines.slice(matchIndex + searchLines.length + additionalLinesToReplace)
 			resultLines = [...beforeMatch, ...indentedReplaceLines, ...afterMatch]
-			delta = delta - matchedLines.length + replaceLines.length
+			delta = delta - (matchedLines.length + additionalLinesToReplace) + replaceLines.length
 			appliedCount++
 		}
 		const finalContent = resultLines.join(lineEnding)
