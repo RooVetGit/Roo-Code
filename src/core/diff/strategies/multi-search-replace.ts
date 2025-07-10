@@ -35,17 +35,21 @@ function getSimilarity(original: string, search: string): number {
 /**
  * Performs a "middle-out" search of `lines` (between [startIndex, endIndex]) to find
  * the slice that is most similar to `searchChunk`. Returns the best score, index, and matched text.
+ * If targetLine is provided, the search starts from that line instead of the midpoint.
  */
-function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, endIndex: number) {
+function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, endIndex: number, targetLine?: number) {
 	let bestScore = 0
 	let bestMatchIndex = -1
 	let bestMatchContent = ""
 	const searchLen = searchChunk.split(/\r?\n/).length
 
-	// Middle-out from the midpoint
-	const midPoint = Math.floor((startIndex + endIndex) / 2)
-	let leftIndex = midPoint
-	let rightIndex = midPoint + 1
+	// If targetLine is provided, start from there; otherwise use midpoint
+	const searchStart =
+		targetLine !== undefined
+			? Math.max(startIndex, Math.min(targetLine, endIndex - searchLen))
+			: Math.floor((startIndex + endIndex) / 2)
+	let leftIndex = searchStart
+	let rightIndex = searchStart + 1
 
 	while (leftIndex >= startIndex || rightIndex <= endIndex - searchLen) {
 		if (leftIndex >= startIndex) {
@@ -378,7 +382,7 @@ Only use a single line of '=======' between search and replacement content, beca
 
 		let matches = [
 			...diffContent.matchAll(
-				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
+				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(-?\d+)\s*\n))?((?:\:end_line:\s*(-?\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
 			),
 		]
 
@@ -464,8 +468,11 @@ Only use a single line of '=======' between search and replacement content, beca
 
 			// Validate and handle line range if provided
 			if (startLine) {
+				// Clamp startLine to valid range (1 to resultLines.length)
+				const clampedStartLine = Math.max(1, Math.min(startLine, resultLines.length))
+
 				// Convert to 0-based index
-				const exactStartIndex = startLine - 1
+				const exactStartIndex = clampedStartLine - 1
 				const searchLen = searchLines.length
 				const exactEndIndex = exactStartIndex + searchLen - 1
 
@@ -478,8 +485,11 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestMatchContent = originalChunk
 				} else {
 					// Set bounds for buffered search
-					searchStartIndex = Math.max(0, startLine - (this.bufferLines + 1))
-					searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + this.bufferLines)
+					searchStartIndex = Math.max(0, clampedStartLine - (this.bufferLines + 1))
+					searchEndIndex = Math.min(
+						resultLines.length,
+						clampedStartLine + searchLines.length + this.bufferLines,
+					)
 				}
 			}
 
@@ -489,7 +499,13 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: midContent,
-				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(
+					resultLines,
+					searchChunk,
+					searchStartIndex,
+					searchEndIndex,
+					startLine ? Math.max(0, Math.min(startLine - 1, resultLines.length - 1)) : undefined,
+				)
 				matchIndex = bestMatchIndex
 				bestMatchScore = bestScore
 				bestMatchContent = midContent
@@ -509,7 +525,13 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: aggContent,
-				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(
+					resultLines,
+					aggressiveSearchChunk,
+					searchStartIndex,
+					searchEndIndex,
+					startLine ? startLine - 1 : undefined,
+				)
 				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
 					matchIndex = bestMatchIndex
 					bestMatchScore = bestScore

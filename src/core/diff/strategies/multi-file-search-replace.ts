@@ -33,17 +33,20 @@ function getSimilarity(original: string, search: string): number {
  * Performs a "middle-out" search of `lines` (between [startIndex, endIndex]) to find
  * the slice that is most similar to `searchChunk`. Returns the best score, index, and matched text.
  */
-function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, endIndex: number) {
+function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, endIndex: number, targetLine?: number) {
 	let bestScore = 0
 	let bestMatchIndex = -1
 	let bestMatchContent = ""
 
 	const searchLen = searchChunk.split(/\r?\n/).length
 
-	// Middle-out from the midpoint
-	const midPoint = Math.floor((startIndex + endIndex) / 2)
-	let leftIndex = midPoint
-	let rightIndex = midPoint + 1
+	// If targetLine is provided, start from there; otherwise use midpoint
+	const searchStart =
+		targetLine !== undefined
+			? Math.max(startIndex, Math.min(targetLine, endIndex - searchLen))
+			: Math.floor((startIndex + endIndex) / 2)
+	let leftIndex = searchStart
+	let rightIndex = searchStart + 1
 
 	while (leftIndex >= startIndex || rightIndex <= endIndex - searchLen) {
 		if (leftIndex >= startIndex) {
@@ -581,7 +584,13 @@ Each file requires its own path, start_line, and diff elements.
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: midContent,
-				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(
+					resultLines,
+					searchChunk,
+					searchStartIndex,
+					searchEndIndex,
+					startLine ? startLine - 1 : undefined,
+				)
 
 				matchIndex = bestMatchIndex
 				bestMatchScore = bestScore
@@ -601,7 +610,13 @@ Each file requires its own path, start_line, and diff elements.
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: aggContent,
-				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(
+					resultLines,
+					aggressiveSearchChunk,
+					searchStartIndex,
+					searchEndIndex,
+					startLine ? startLine - 1 : undefined,
+				)
 
 				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
 					matchIndex = bestMatchIndex

@@ -780,6 +780,104 @@ function five() {
 }`)
 				}
 			})
+			// Tests for Issue #2657 - Strange behavior with slightly wrong start_line
+			// This test directly reproduces the bug where apply_diff finds line 21 instead of line 33
+			// when start_line is 34 (one line off from the actual target at line 33)
+			it("should find line 33 (closer match) instead of line 21 when start_line is 34", async () => {
+				const strategy = new MultiSearchReplaceDiffStrategy(1.0, 40) // Default buffer of 40 lines
+
+				// Create content with "}" at lines 21 and 33
+				const lines: string[] = []
+				for (let i = 1; i <= 50; i++) {
+					if (i === 21 || i === 33) {
+						lines.push("}")
+					} else {
+						lines.push(`line ${i}`)
+					}
+				}
+				const originalContent = lines.join("\n")
+
+				// The diff with start_line: 34 (one line off from actual line 33)
+				const diffContent = `
+<<<<<<< SEARCH
+:start_line:34
+-------
+}
+=======
+} // modified
+>>>>>>> REPLACE`
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+
+				// The issue reports that it finds line 21 instead of line 33
+				// Line 33 is closer to start_line 34 than line 21
+				expect(result.success).toBe(true)
+
+				if (result.success) {
+					const resultLines = result.content.split("\n")
+
+					// Check which line was modified
+					const line21Modified = resultLines[20] === "} // modified"
+					const line33Modified = resultLines[32] === "} // modified"
+
+					// After the fix, line33Modified should be true and line21Modified should be false
+					expect(line21Modified).toBe(false) // Fix prevents this
+					expect(line33Modified).toBe(true) // Fix causes this
+				}
+			})
+
+			// This test verifies the fix works correctly by ensuring the closest match
+			// is found when multiple identical lines exist in the file
+			it("should find closest match when multiple identical lines exist", async () => {
+				const strategy = new MultiSearchReplaceDiffStrategy(1.0, 40)
+
+				// Create content with identical lines at positions 10, 25, 30, 45
+				const lines: string[] = []
+				for (let i = 1; i <= 50; i++) {
+					if ([10, 25, 30, 45].includes(i)) {
+						lines.push("duplicate line")
+					} else {
+						lines.push(`line ${i}`)
+					}
+				}
+				const originalContent = lines.join("\n")
+
+				// Test 1: start_line 28 should find line 30 (distance 2)
+				const diffContent1 = `
+<<<<<<< SEARCH
+:start_line:28
+-------
+duplicate line
+=======
+duplicate line // modified at 30
+>>>>>>> REPLACE`
+
+				const result1 = await strategy.applyDiff(originalContent, diffContent1)
+				expect(result1.success).toBe(true)
+				if (result1.success) {
+					const resultLines = result1.content.split("\n")
+					expect(resultLines[29]).toBe("duplicate line // modified at 30") // line 30 (0-indexed: 29)
+					expect(resultLines[24]).toBe("duplicate line") // line 25 unchanged
+				}
+
+				// Test 2: start_line 12 should find line 10 (distance 2)
+				const diffContent2 = `
+<<<<<<< SEARCH
+:start_line:12
+-------
+duplicate line
+=======
+duplicate line // modified at 10
+>>>>>>> REPLACE`
+
+				const result2 = await strategy.applyDiff(originalContent, diffContent2)
+				expect(result2.success).toBe(true)
+				if (result2.success) {
+					const resultLines = result2.content.split("\n")
+					expect(resultLines[9]).toBe("duplicate line // modified at 10") // line 10 (0-indexed: 9)
+					expect(resultLines[24]).toBe("duplicate line") // line 25 unchanged
+				}
+			})
 		})
 	})
 
