@@ -263,15 +263,8 @@ export class CodeIndexManager {
 		const validationResult = await this._serviceFactory.validateEmbedder(embedder)
 		if (!validationResult.valid) {
 			const errorMessage = validationResult.error || "Embedder configuration validation failed"
-			// Always attempt translation, use original as fallback
-			const translatedMessage = t(errorMessage)
-
-			// If i18next returns the key, it means no translation was found.
-			// In that case, we should use the original, untranslated error message.
-			const finalMessage = translatedMessage === errorMessage ? errorMessage : translatedMessage
-
-			this._stateManager.setSystemState("Error", finalMessage)
-			throw new Error(finalMessage)
+			this._stateManager.setSystemState("Error", errorMessage)
+			throw new Error(errorMessage)
 		}
 
 		// (Re)Initialize orchestrator

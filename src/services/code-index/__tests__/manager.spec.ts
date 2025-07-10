@@ -308,6 +308,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			})
 
 			// Act & Assert
+			// In test environment, t() returns the key
 			await expect((manager as any)._recreateServices()).rejects.toThrow(
 				"embeddings:validation.authenticationFailed",
 			)
@@ -331,6 +332,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			})
 
 			// Act & Assert
+			// In test environment, t() returns the key
 			await expect((manager as any)._recreateServices()).rejects.toThrow(
 				"embeddings:validation.configurationError",
 			)
