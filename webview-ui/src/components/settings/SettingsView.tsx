@@ -325,9 +325,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "showAllWorkspacesTasks", bool: showAllWorkspacesTasks })
-			if (codebaseIndexConfig) {
-				vscode.postMessage({ type: "codebaseIndexEnabled", bool: codebaseIndexConfig.codebaseIndexEnabled })
-			}
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
 			setChangeDetected(false)
 		}
