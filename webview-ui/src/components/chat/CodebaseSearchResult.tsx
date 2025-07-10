@@ -33,7 +33,7 @@ const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({ filePath, s
 				className="p-2 border border-[var(--vscode-editorGroup-border)] cursor-pointer hover:bg-secondary hover:text-white">
 				<div className="flex gap-2 items-center overflow-hidden">
 					<span className="text-primary-300 whitespace-nowrap flex-shrink-0">
-						{filePath.split("/").at(-1)}:{startLine}-{endLine}
+						{filePath.split("/").at(-1)}:{startLine === endLine ? startLine : `${startLine}-${endLine}`}
 					</span>
 					<span className="text-gray-500 truncate min-w-0 flex-1">
 						{filePath.split("/").slice(0, -1).join("/")}
