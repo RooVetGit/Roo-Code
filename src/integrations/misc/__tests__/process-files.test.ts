@@ -107,7 +107,7 @@ describe("process-files", () => {
 
 			const result = await selectFiles()
 
-			expect(vscode.window.showWarningMessage).toHaveBeenCalledWith("Could not read file: binary.exe")
+			expect(vscode.window.showWarningMessage).toHaveBeenCalledWith("Cannot attach binary file: binary.exe")
 			expect(result).toEqual({ images: [], files: [] })
 		})
 	})

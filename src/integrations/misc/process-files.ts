@@ -2,9 +2,69 @@ import * as vscode from "vscode"
 import fs from "fs/promises"
 import * as path from "path"
 
-const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]
-const TEXT_FILE_EXTENSIONS = ["xml", "json", "txt", "log", "md", "csv", "tsv", "yaml", "yml", "ini", "cfg", "conf"]
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "ico"]
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+
+// Known binary file extensions to skip upfront
+const BINARY_EXTENSIONS = [
+	// Executables & Libraries
+	"exe",
+	"dll",
+	"so",
+	"dylib",
+	"app",
+	"deb",
+	"rpm",
+	"dmg",
+	"pkg",
+	"msi",
+	// Archives
+	"zip",
+	"tar",
+	"gz",
+	"bz2",
+	"7z",
+	"rar",
+	"jar",
+	"war",
+	"ear",
+	// Media
+	"mp3",
+	"mp4",
+	"avi",
+	"mov",
+	"wmv",
+	"flv",
+	"mkv",
+	"webm",
+	"ogg",
+	"wav",
+	"flac",
+	// Documents (binary formats)
+	"pdf",
+	"doc",
+	"docx",
+	"xls",
+	"xlsx",
+	"ppt",
+	"pptx",
+	"odt",
+	"ods",
+	"odp",
+	// Databases
+	"db",
+	"sqlite",
+	"mdb",
+	// Other binary formats
+	"pyc",
+	"pyo",
+	"class",
+	"o",
+	"a",
+	"lib",
+	"node",
+	"wasm",
+]
 
 export async function selectFiles(): Promise<{
 	images: string[]
@@ -15,9 +75,7 @@ export async function selectFiles(): Promise<{
 		openLabel: "Select",
 		filters: {
 			"All Files": ["*"],
-			"Supported Files": [...IMAGE_EXTENSIONS, ...TEXT_FILE_EXTENSIONS],
 			Images: IMAGE_EXTENSIONS,
-			"Text Files": TEXT_FILE_EXTENSIONS,
 		},
 	}
 
@@ -44,24 +102,32 @@ export async function selectFiles(): Promise<{
 			}
 
 			if (IMAGE_EXTENSIONS.includes(ext)) {
-				// Process as image (existing logic)
+				// Process as image
 				const buffer = await fs.readFile(filePath)
 				const base64 = buffer.toString("base64")
 				const mimeType = getMimeType(filePath)
 				const dataUrl = `data:${mimeType};base64,${base64}`
 				images.push(dataUrl)
+			} else if (BINARY_EXTENSIONS.includes(ext)) {
+				// Skip known binary files
+				vscode.window.showWarningMessage(`Cannot attach binary file: ${fileName}`)
 			} else {
-				// Process as text file
+				// Try to read as text file
 				try {
 					const content = await fs.readFile(filePath, "utf-8")
-					files.push({
-						path: fileName,
-						content: content,
-						type: ext,
-					})
+					// Additional check: if the content has null bytes, it's likely binary
+					if (content.includes("\0")) {
+						vscode.window.showWarningMessage(`File appears to be binary: ${fileName}`)
+					} else {
+						files.push({
+							path: fileName,
+							content: content,
+							type: ext || "txt", // Default to 'txt' if no extension
+						})
+					}
 				} catch (error) {
-					// Binary file or read error
-					vscode.window.showWarningMessage(`Could not read file: ${fileName}`)
+					// File couldn't be read as UTF-8, likely binary
+					vscode.window.showWarningMessage(`Cannot read file as text: ${fileName}`)
 				}
 			}
 		}),
