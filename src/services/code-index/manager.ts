@@ -264,14 +264,14 @@ export class CodeIndexManager {
 		if (!validationResult.valid) {
 			const errorMessage = validationResult.error || "Embedder configuration validation failed"
 			// Always attempt translation, use original as fallback
-			let translatedMessage = t(errorMessage)
-			// If translation returns a different value (stripped namespace), use original
-			if (translatedMessage !== errorMessage && !translatedMessage.includes(":")) {
-				translatedMessage = errorMessage
-			}
+			const translatedMessage = t(errorMessage)
 
-			this._stateManager.setSystemState("Error", translatedMessage)
-			throw new Error(translatedMessage)
+			// If i18next returns the key, it means no translation was found.
+			// In that case, we should use the original, untranslated error message.
+			const finalMessage = translatedMessage === errorMessage ? errorMessage : translatedMessage
+
+			this._stateManager.setSystemState("Error", finalMessage)
+			throw new Error(finalMessage)
 		}
 
 		// (Re)Initialize orchestrator
