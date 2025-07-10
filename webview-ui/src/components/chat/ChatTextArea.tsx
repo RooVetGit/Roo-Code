@@ -955,7 +955,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									<Button
 										variant="ghost"
 										size="icon"
-										className="absolute top-0 right-0 opacity-25 hover:opacity-100 z-10"
+										className="absolute top-0 right-10 opacity-25 hover:opacity-100 z-10"
 										onClick={() => vscode.postMessage({ type: "stopTts" })}>
 										<VolumeX className="size-4" />
 									</Button>
