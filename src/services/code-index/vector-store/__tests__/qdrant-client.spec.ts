@@ -694,7 +694,7 @@ describe("QdrantVectorStore", () => {
 			vitest.spyOn(console, "error").mockImplementation(() => {})
 			vitest.spyOn(console, "warn").mockImplementation(() => {})
 
-			// The error message should contain our specific error about vector dimension mismatch
+			// The error should have a cause property set to the original error
 			let caughtError: any
 			try {
 				await vectorStore.initialize()
@@ -704,6 +704,7 @@ describe("QdrantVectorStore", () => {
 
 			expect(caughtError).toBeDefined()
 			expect(caughtError.message).toContain("embeddings:vectorStore.vectorDimensionMismatch")
+			expect(caughtError.cause).toBe(deleteError)
 
 			expect(mockQdrantClientInstance.getCollection).toHaveBeenCalledTimes(1)
 			expect(mockQdrantClientInstance.deleteCollection).toHaveBeenCalledTimes(1)
@@ -735,7 +736,7 @@ describe("QdrantVectorStore", () => {
 			vitest.spyOn(console, "error").mockImplementation(() => {})
 			vitest.spyOn(console, "warn").mockImplementation(() => {})
 
-			// Should throw an error that contains our specific message
+			// Should throw an error with cause property set to the original error
 			let caughtError: any
 			try {
 				await vectorStore.initialize()
@@ -745,6 +746,7 @@ describe("QdrantVectorStore", () => {
 
 			expect(caughtError).toBeDefined()
 			expect(caughtError.message).toContain("embeddings:vectorStore.vectorDimensionMismatch")
+			expect(caughtError.cause).toBe(createError)
 
 			expect(mockQdrantClientInstance.getCollection).toHaveBeenCalledTimes(1)
 			expect(mockQdrantClientInstance.deleteCollection).toHaveBeenCalledTimes(1)

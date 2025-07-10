@@ -183,11 +183,14 @@ export class QdrantVectorStore implements IVectorStore {
 						console.error(
 							`[QdrantVectorStore] CRITICAL: Failed to recreate collection ${this.collectionName} for new vector size. Error: ${errorMessage}`,
 						)
-						throw new Error(
+						const dimensionMismatchError = new Error(
 							t("embeddings:vectorStore.vectorDimensionMismatch", {
 								errorMessage,
 							}),
 						)
+						// Use error.cause to preserve the original error context
+						dimensionMismatchError.cause = recreationError
+						throw dimensionMismatchError
 					}
 				}
 			}
@@ -217,8 +220,8 @@ export class QdrantVectorStore implements IVectorStore {
 				errorMessage,
 			)
 
-			// If this is already a vector dimension mismatch error, re-throw it as-is
-			if (errorMessage.includes("embeddings:vectorStore.vectorDimensionMismatch")) {
+			// If this is already a vector dimension mismatch error (identified by cause), re-throw it as-is
+			if (error instanceof Error && error.cause !== undefined) {
 				throw error
 			}
 
