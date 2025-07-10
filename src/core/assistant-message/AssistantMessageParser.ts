@@ -14,6 +14,8 @@ export class AssistantMessageParser {
 	private currentToolUseStartIndex = 0
 	private currentParamName: ToolParamName | undefined = undefined
 	private currentParamValueStartIndex = 0
+	private readonly MAX_ACCUMULATOR_SIZE = 1024 * 1024 // 1MB limit
+	private readonly MAX_PARAM_LENGTH = 1024 * 100 // 100KB per parameter limit
 	private accumulator = ""
 
 	/**
@@ -50,6 +52,9 @@ export class AssistantMessageParser {
 	 * @param chunk The new chunk of text to process.
 	 */
 	public processChunk(chunk: string): AssistantMessageContent[] {
+		if (this.accumulator.length + chunk.length > this.MAX_ACCUMULATOR_SIZE) {
+			throw new Error("Assistant message exceeds maximum allowed size")
+		}
 		// Store the current length of the accumulator before adding the new chunk
 		const accumulatorStartLength = this.accumulator.length
 
@@ -61,6 +66,12 @@ export class AssistantMessageParser {
 			// There should not be a param without a tool use.
 			if (this.currentToolUse && this.currentParamName) {
 				const currentParamValue = this.accumulator.slice(this.currentParamValueStartIndex)
+				if (currentParamValue.length > this.MAX_PARAM_LENGTH) {
+					// Reset to a safe state
+					this.currentParamName = undefined
+					this.currentParamValueStartIndex = 0
+					continue
+				}
 				const paramClosingTag = `</${this.currentParamName}>`
 				// Streamed param content: always write the currently accumulated value
 				if (currentParamValue.endsWith(paramClosingTag)) {
@@ -97,7 +108,12 @@ export class AssistantMessageParser {
 					for (const paramOpeningTag of possibleParamOpeningTags) {
 						if (this.accumulator.endsWith(paramOpeningTag)) {
 							// Start of a new parameter.
-							this.currentParamName = paramOpeningTag.slice(1, -1) as ToolParamName
+							const paramName = paramOpeningTag.slice(1, -1)
+							if (!toolParamNames.includes(paramName as ToolParamName)) {
+								// Handle invalid parameter name gracefully
+								continue
+							}
+							this.currentParamName = paramName as ToolParamName
 							this.currentParamValueStartIndex = this.accumulator.length
 							break
 						}
