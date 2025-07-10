@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.23.1",
+	"version": "3.23.5",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -74,6 +74,11 @@
 				"command": "roo-cline.plusButtonClicked",
 				"title": "%command.newTask.title%",
 				"icon": "$(add)"
+			},
+			{
+				"command": "roo-cline.promptsButtonClicked",
+				"title": "%command.prompts.title%",
+				"icon": "$(organization)"
 			},
 			{
 				"command": "roo-cline.mcpButtonClicked",
@@ -219,33 +224,38 @@
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.mcpButtonClicked",
+					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@2",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.marketplaceButtonClicked",
+					"command": "roo-cline.accountButtonClicked",
 					"group": "navigation@3",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
 					"command": "roo-cline.historyButtonClicked",
-					"group": "navigation@4",
+					"group": "overflow@1",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.marketplaceButtonClicked",
+					"group": "overflow@2",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.promptsButtonClicked",
+					"group": "overflow@3",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.mcpButtonClicked",
+					"group": "overflow@4",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
 					"command": "roo-cline.popoutButtonClicked",
-					"group": "navigation@5",
-					"when": "view == roo-cline.SidebarProvider"
-				},
-				{
-					"command": "roo-cline.accountButtonClicked",
-					"group": "navigation@6",
-					"when": "view == roo-cline.SidebarProvider"
-				},
-				{
-					"command": "roo-cline.settingsButtonClicked",
-					"group": "navigation@7",
+					"group": "overflow@5",
 					"when": "view == roo-cline.SidebarProvider"
 				}
 			],
@@ -256,28 +266,38 @@
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.mcpButtonClicked",
+					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@2",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.marketplaceButtonClicked",
+					"command": "roo-cline.accountButtonClicked",
 					"group": "navigation@3",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
 					"command": "roo-cline.historyButtonClicked",
-					"group": "navigation@4",
+					"group": "overflow@1",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.accountButtonClicked",
-					"group": "navigation@5",
+					"command": "roo-cline.marketplaceButtonClicked",
+					"group": "overflow@2",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				},
 				{
-					"command": "roo-cline.settingsButtonClicked",
-					"group": "navigation@6",
+					"command": "roo-cline.promptsButtonClicked",
+					"group": "overflow@3",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.mcpButtonClicked",
+					"group": "overflow@4",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.popoutButtonClicked",
+					"group": "overflow@5",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				}
 			]
