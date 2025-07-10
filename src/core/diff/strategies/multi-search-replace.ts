@@ -575,7 +575,6 @@ Only use a single line of '=======' between search and replacement content, beca
 			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
 
 			// Check for potential bracket duplication
-			let extendReplacement = false
 			let additionalLinesToReplace = 0
 
 			// Check if replacement ends with a closing bracket that's not in the search
@@ -594,7 +593,6 @@ Only use a single line of '=======' between search and replacement content, beca
 						const nextLineBracket = this.isClosingBracketLine(resultLines[nextLineIndex])
 						if (nextLineBracket === replaceBracket) {
 							// Extend the replacement to include the bracket line
-							extendReplacement = true
 							additionalLinesToReplace = 1
 
 							// Also check for multiple consecutive bracket lines
