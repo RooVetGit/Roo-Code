@@ -15,6 +15,7 @@ export async function selectFiles(): Promise<{
 		openLabel: "Select",
 		filters: {
 			"All Files": ["*"],
+			"Supported Files": [...IMAGE_EXTENSIONS, ...TEXT_FILE_EXTENSIONS],
 			Images: IMAGE_EXTENSIONS,
 			"Text Files": TEXT_FILE_EXTENSIONS,
 		},
