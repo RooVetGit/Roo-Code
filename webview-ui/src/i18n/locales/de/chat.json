@@ -104,6 +104,7 @@
 	"selectApiConfig": "API-Konfiguration auswählen",
 	"enhancePrompt": "Prompt mit zusätzlichem Kontext verbessern",
 	"addImages": "Bilder zur Nachricht hinzufügen",
+	"addFiles": "Dateien an die Nachricht anhängen",
 	"sendMessage": "Nachricht senden",
 	"stopTts": "Text-in-Sprache beenden",
 	"typeMessage": "Nachricht eingeben...",

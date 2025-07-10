@@ -111,6 +111,7 @@
 		"description": "Gespecialiseerde persona's die het gedrag van Roo aanpassen."
 	},
 	"addImages": "Afbeeldingen toevoegen aan bericht",
+	"addFiles": "Bestanden aan bericht toevoegen",
 	"sendMessage": "Bericht verzenden",
 	"stopTts": "Stop tekst-naar-spraak",
 	"typeMessage": "Typ een bericht...",

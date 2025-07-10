@@ -104,6 +104,7 @@
 	"selectApiConfig": "API 구성 선택",
 	"enhancePrompt": "추가 컨텍스트로 프롬프트 향상",
 	"addImages": "메시지에 이미지 추가",
+	"addFiles": "메시지에 파일 첨부",
 	"sendMessage": "메시지 보내기",
 	"stopTts": "텍스트 음성 변환 중지",
 	"typeMessage": "메시지 입력...",

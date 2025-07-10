@@ -32,10 +32,10 @@ describe("FileAttachment", () => {
 
 	it("should call setFiles when remove button is clicked", () => {
 		const mockSetFiles = vi.fn()
-		render(<FileAttachment files={mockFiles} setFiles={mockSetFiles} />)
+		const { container } = render(<FileAttachment files={mockFiles} setFiles={mockSetFiles} />)
 
 		// Click remove button on the first file
-		const removeButtons = screen.getAllByRole("button")
+		const removeButtons = container.querySelectorAll("vscode-button")
 		fireEvent.click(removeButtons[0])
 
 		expect(mockSetFiles).toHaveBeenCalledWith([

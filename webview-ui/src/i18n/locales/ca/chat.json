@@ -104,6 +104,7 @@
 	"selectApiConfig": "Seleccioneu la configuració de l'API",
 	"enhancePrompt": "Millora la sol·licitud amb context addicional",
 	"addImages": "Afegeix imatges al missatge",
+	"addFiles": "Adjunta fitxers al missatge",
 	"sendMessage": "Envia el missatge",
 	"stopTts": "Atura la síntesi de veu",
 	"typeMessage": "Escriu un missatge...",

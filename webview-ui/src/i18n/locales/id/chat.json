@@ -125,6 +125,7 @@
 		"description": "Persona khusus yang menyesuaikan perilaku Roo."
 	},
 	"addImages": "Tambahkan gambar ke pesan",
+	"addFiles": "Lampirkan file ke pesan",
 	"sendMessage": "Kirim pesan",
 	"stopTts": "Hentikan text-to-speech",
 	"typeMessage": "Ketik pesan...",

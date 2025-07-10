@@ -104,6 +104,7 @@
 	"selectApiConfig": "Chọn cấu hình API",
 	"enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
 	"addImages": "Thêm hình ảnh vào tin nhắn",
+	"addFiles": "Đính kèm tệp vào tin nhắn",
 	"sendMessage": "Gửi tin nhắn",
 	"stopTts": "Dừng chuyển văn bản thành giọng nói",
 	"typeMessage": "Nhập tin nhắn...",

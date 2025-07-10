@@ -104,6 +104,7 @@
 	"selectApiConfig": "Sélectionner la configuration de l'API",
 	"enhancePrompt": "Améliorer la requête avec un contexte supplémentaire",
 	"addImages": "Ajouter des images au message",
+	"addFiles": "Joindre des fichiers au message",
 	"sendMessage": "Envoyer le message",
 	"stopTts": "Arrêter la synthèse vocale",
 	"typeMessage": "Écrivez un message...",

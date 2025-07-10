@@ -104,6 +104,7 @@
 	"selectApiConfig": "API yapılandırmasını seçin",
 	"enhancePrompt": "Ek bağlamla istemi geliştir",
 	"addImages": "Mesaja resim ekle",
+	"addFiles": "Mesaja dosya ekle",
 	"sendMessage": "Mesaj gönder",
 	"stopTts": "Metin okumayı durdur",
 	"typeMessage": "Bir mesaj yazın...",

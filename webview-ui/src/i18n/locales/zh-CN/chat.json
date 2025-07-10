@@ -104,6 +104,7 @@
 	"selectApiConfig": "选择 API 配置",
 	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
+	"addFiles": "将文件附加到邮件",
 	"sendMessage": "发送消息",
 	"stopTts": "停止文本转语音",
 	"typeMessage": "输入消息...",
