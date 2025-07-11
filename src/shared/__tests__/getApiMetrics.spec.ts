@@ -61,7 +61,7 @@ describe("getApiMetrics", () => {
 			expect(result.totalCacheWrites).toBe(5)
 			expect(result.totalCacheReads).toBe(10)
 			expect(result.totalCost).toBe(0.005)
-			expect(result.contextTokens).toBe(300) // 100 + 200
+			expect(result.contextTokens).toBe(315) // 100 + 200 + 5 + 10 (includes cache tokens)
 		})
 
 		it("should calculate metrics from multiple api_req_started messages", () => {
@@ -83,7 +83,7 @@ describe("getApiMetrics", () => {
 			expect(result.totalCacheWrites).toBe(8) // 5 + 3
 			expect(result.totalCacheReads).toBe(17) // 10 + 7
 			expect(result.totalCost).toBe(0.008) // 0.005 + 0.003
-			expect(result.contextTokens).toBe(200) // 50 + 150 (from the last message)
+			expect(result.contextTokens).toBe(210) // 50 + 150 + 3 + 7 (from the last message, includes cache tokens)
 		})
 
 		it("should calculate metrics from condense_context messages", () => {
@@ -123,7 +123,7 @@ describe("getApiMetrics", () => {
 			expect(result.totalCacheWrites).toBe(8) // 5 + 3
 			expect(result.totalCacheReads).toBe(17) // 10 + 7
 			expect(result.totalCost).toBe(0.01) // 0.005 + 0.002 + 0.003
-			expect(result.contextTokens).toBe(200) // 50 + 150 (from the last api_req_started message)
+			expect(result.contextTokens).toBe(210) // 50 + 150 + 3 + 7 (from the last api_req_started message, includes cache tokens)
 		})
 	})
 
@@ -242,9 +242,9 @@ describe("getApiMetrics", () => {
 			expect(result.totalCacheReads).toBe(10)
 			expect(result.totalCost).toBe(0.005)
 
-			// The implementation will use the last message with tokensIn or tokensOut for contextTokens
-			// In this case, it's the tokensOut message (200)
-			expect(result.contextTokens).toBe(200) // From the message with tokensOut
+			// The implementation will use the last message that has any tokens
+			// In this case, it's the cacheReads message (10)
+			expect(result.contextTokens).toBe(10) // Only cacheReads from the last message
 		})
 
 		it("should handle non-number values in api_req_started message", () => {
@@ -264,8 +264,8 @@ describe("getApiMetrics", () => {
 			expect(result.totalCacheReads).toBeUndefined()
 			expect(result.totalCost).toBe(0)
 
-			// The implementation concatenates string values for contextTokens
-			expect(result.contextTokens).toBe("not-a-numbernot-a-number") // Only tokensIn + tokensOut
+			// The implementation concatenates all token values including cache tokens
+			expect(result.contextTokens).toBe("not-a-numbernot-a-numbernot-a-numbernot-a-number") // tokensIn + tokensOut + cacheWrites + cacheReads
 		})
 	})
 
@@ -279,7 +279,7 @@ describe("getApiMetrics", () => {
 			const result = getApiMetrics(messages)
 
 			// Should use the values from the last api_req_started message
-			expect(result.contextTokens).toBe(200) // 50 + 150
+			expect(result.contextTokens).toBe(210) // 50 + 150 + 3 + 7 (includes cache tokens)
 		})
 
 		it("should calculate contextTokens from the last condense_context message", () => {
@@ -305,7 +305,7 @@ describe("getApiMetrics", () => {
 			const result = getApiMetrics(messages)
 
 			// Should use the values from the last api_req_started message
-			expect(result.contextTokens).toBe(200) // 50 + 150
+			expect(result.contextTokens).toBe(210) // 50 + 150 + 3 + 7 (includes cache tokens)
 		})
 
 		it("should handle missing values when calculating contextTokens", () => {
@@ -320,7 +320,7 @@ describe("getApiMetrics", () => {
 			const result = getApiMetrics(messages)
 
 			// Should handle missing or invalid values
-			expect(result.contextTokens).toBe(0) // 0 + 0 (no tokensIn or tokensOut)
+			expect(result.contextTokens).toBe(15) // 0 + 0 + 5 + 10 (only cache tokens)
 
 			// Restore console.error
 			console.error = originalConsoleError
