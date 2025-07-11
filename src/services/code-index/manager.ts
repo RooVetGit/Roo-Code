@@ -303,6 +303,17 @@ export class CodeIndexManager {
 			const isFeatureEnabled = this.isFeatureEnabled
 			const isFeatureConfigured = this.isFeatureConfigured
 
+			// If feature is disabled, stop the service
+			if (!isFeatureEnabled) {
+				// Stop the orchestrator if it exists
+				if (this._orchestrator) {
+					this._orchestrator.stopWatcher()
+				}
+				// Set state to indicate service is disabled
+				this._stateManager.setSystemState("Standby", "Code indexing is disabled")
+				return
+			}
+
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured) {
 				try {
 					// Recreate services with new configuration

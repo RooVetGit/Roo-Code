@@ -7,6 +7,7 @@ import {
 	VSCodeDropdown,
 	VSCodeOption,
 	VSCodeLink,
+	VSCodeCheckbox,
 } from "@vscode/webview-ui-toolkit/react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 import { vscode } from "@src/utils/vscode"
@@ -213,6 +214,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		}
 	}, [open])
 
+	// Use a ref to capture current settings for the save handler
+	const currentSettingsRef = useRef(currentSettings)
+	currentSettingsRef.current = currentSettings
+
 	// Listen for indexing status updates and save responses
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent<any>) => {
@@ -227,9 +232,12 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			} else if (event.data.type === "codeIndexSettingsSaved") {
 				if (event.data.success) {
 					setSaveStatus("saved")
-					// Don't update initial settings here - wait for the secret status response
-					// Request updated secret status after save
-					vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
+					// Update initial settings to match current settings after successful save
+					// This ensures hasUnsavedChanges becomes false
+					const savedSettings = { ...currentSettingsRef.current }
+					setInitialSettings(savedSettings)
+					// Don't request secret status immediately after save to avoid race conditions
+					// The secret status will be requested on next popover open
 					// Reset status after 3 seconds
 					setTimeout(() => {
 						setSaveStatus("idle")
@@ -284,14 +292,18 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					return updated
 				}
 
-				setCurrentSettings(updateWithSecrets)
-				setInitialSettings(updateWithSecrets)
+				// Only update settings if we're not in the middle of saving or just saved
+				// This prevents overwriting user changes after a save
+				if (saveStatus === "idle") {
+					setCurrentSettings(updateWithSecrets)
+					setInitialSettings(updateWithSecrets)
+				}
 			}
 		}
 
 		window.addEventListener("message", handleMessage)
 		return () => window.removeEventListener("message", handleMessage)
-	}, [])
+	}, [saveStatus])
 
 	// Generic comparison function that detects changes between initial and current settings
 	const hasUnsavedChanges = useMemo(() => {
@@ -494,6 +506,20 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					</div>
 
 					<div className="p-4">
+						{/* Enable/Disable Toggle */}
+						<div className="mb-4">
+							<div className="flex items-center gap-2">
+								<VSCodeCheckbox
+									checked={currentSettings.codebaseIndexEnabled}
+									onChange={(e: any) => updateSetting("codebaseIndexEnabled", e.target.checked)}>
+									<span className="font-medium">{t("settings:codeIndex.enableLabel")}</span>
+								</VSCodeCheckbox>
+								<StandardTooltip content={t("settings:codeIndex.enableDescription")}>
+									<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
+								</StandardTooltip>
+							</div>
+						</div>
+
 						{/* Status Section */}
 						<div className="space-y-2">
 							<h4 className="text-sm font-medium">{t("settings:codeIndex.statusTitle")}</h4>
@@ -1049,44 +1075,46 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 						{/* Action Buttons */}
 						<div className="flex items-center justify-between gap-2 pt-6">
 							<div className="flex gap-2">
-								{(indexingStatus.systemStatus === "Error" ||
-									indexingStatus.systemStatus === "Standby") && (
-									<VSCodeButton
-										onClick={() => vscode.postMessage({ type: "startIndexing" })}
-										disabled={saveStatus === "saving" || hasUnsavedChanges}>
-										{t("settings:codeIndex.startIndexingButton")}
-									</VSCodeButton>
-								)}
+								{currentSettings.codebaseIndexEnabled &&
+									(indexingStatus.systemStatus === "Error" ||
+										indexingStatus.systemStatus === "Standby") && (
+										<VSCodeButton
+											onClick={() => vscode.postMessage({ type: "startIndexing" })}
+											disabled={saveStatus === "saving" || hasUnsavedChanges}>
+											{t("settings:codeIndex.startIndexingButton")}
+										</VSCodeButton>
+									)}
 
-								{(indexingStatus.systemStatus === "Indexed" ||
-									indexingStatus.systemStatus === "Error") && (
-									<AlertDialog>
-										<AlertDialogTrigger asChild>
-											<VSCodeButton appearance="secondary">
-												{t("settings:codeIndex.clearIndexDataButton")}
-											</VSCodeButton>
-										</AlertDialogTrigger>
-										<AlertDialogContent>
-											<AlertDialogHeader>
-												<AlertDialogTitle>
-													{t("settings:codeIndex.clearDataDialog.title")}
-												</AlertDialogTitle>
-												<AlertDialogDescription>
-													{t("settings:codeIndex.clearDataDialog.description")}
-												</AlertDialogDescription>
-											</AlertDialogHeader>
-											<AlertDialogFooter>
-												<AlertDialogCancel>
-													{t("settings:codeIndex.clearDataDialog.cancelButton")}
-												</AlertDialogCancel>
-												<AlertDialogAction
-													onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
-													{t("settings:codeIndex.clearDataDialog.confirmButton")}
-												</AlertDialogAction>
-											</AlertDialogFooter>
-										</AlertDialogContent>
-									</AlertDialog>
-								)}
+								{currentSettings.codebaseIndexEnabled &&
+									(indexingStatus.systemStatus === "Indexed" ||
+										indexingStatus.systemStatus === "Error") && (
+										<AlertDialog>
+											<AlertDialogTrigger asChild>
+												<VSCodeButton appearance="secondary">
+													{t("settings:codeIndex.clearIndexDataButton")}
+												</VSCodeButton>
+											</AlertDialogTrigger>
+											<AlertDialogContent>
+												<AlertDialogHeader>
+													<AlertDialogTitle>
+														{t("settings:codeIndex.clearDataDialog.title")}
+													</AlertDialogTitle>
+													<AlertDialogDescription>
+														{t("settings:codeIndex.clearDataDialog.description")}
+													</AlertDialogDescription>
+												</AlertDialogHeader>
+												<AlertDialogFooter>
+													<AlertDialogCancel>
+														{t("settings:codeIndex.clearDataDialog.cancelButton")}
+													</AlertDialogCancel>
+													<AlertDialogAction
+														onClick={() => vscode.postMessage({ type: "clearIndexData" })}>
+														{t("settings:codeIndex.clearDataDialog.confirmButton")}
+													</AlertDialogAction>
+												</AlertDialogFooter>
+											</AlertDialogContent>
+										</AlertDialog>
+									)}
 							</div>
 
 							<VSCodeButton
