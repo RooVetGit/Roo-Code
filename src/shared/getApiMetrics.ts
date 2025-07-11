@@ -6,6 +6,7 @@ export type ParsedApiReqStartedTextType = {
 	cacheWrites: number
 	cacheReads: number
 	cost?: number // Only present if combineApiRequests has been called
+	apiProtocol?: "anthropic" | "openai"
 }
 
 /**
@@ -72,8 +73,17 @@ export function getApiMetrics(messages: ClineMessage[]) {
 		if (message.type === "say" && message.say === "api_req_started" && message.text) {
 			try {
 				const parsedText: ParsedApiReqStartedTextType = JSON.parse(message.text)
-				const { tokensIn, tokensOut } = parsedText
-				result.contextTokens = (tokensIn || 0) + (tokensOut || 0)
+				const { tokensIn, tokensOut, cacheWrites, cacheReads, apiProtocol } = parsedText
+
+				console.log("APi Protocol:", apiProtocol)
+
+				// Calculate context tokens based on API protocol
+				if (apiProtocol === "openai") {
+					result.contextTokens = (tokensIn || 0) + (tokensOut || 0)
+				} else {
+					// For Anthropic (or when protocol is not specified)
+					result.contextTokens = (tokensIn || 0) + (tokensOut || 0) + (cacheWrites || 0) + (cacheReads || 0)
+				}
 			} catch (error) {
 				console.error("Error parsing JSON:", error)
 				continue
