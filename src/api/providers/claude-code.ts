@@ -108,6 +108,16 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 					}
 				}
 
+				// Yield incremental usage for this message only
+				yield {
+					type: "usage" as const,
+					inputTokens: message.usage.input_tokens,
+					outputTokens: message.usage.output_tokens,
+					cacheReadTokens: message.usage.cache_read_input_tokens || 0,
+					cacheWriteTokens: message.usage.cache_creation_input_tokens || 0,
+				}
+
+				// Continue accumulating for the final result
 				usage.inputTokens += message.usage.input_tokens
 				usage.outputTokens += message.usage.output_tokens
 				usage.cacheReadTokens = (usage.cacheReadTokens || 0) + (message.usage.cache_read_input_tokens || 0)
