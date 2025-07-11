@@ -53,6 +53,7 @@ interface ChatRowProps {
 	onSuggestionClick?: (suggestion: SuggestionItem, event?: React.MouseEvent) => void
 	onBatchFileResponse?: (response: { [key: string]: boolean }) => void
 	onFollowUpUnmount?: () => void
+	isFollowUpAnswered?: boolean
 	editable?: boolean
 }
 
@@ -104,6 +105,7 @@ export const ChatRowContent = ({
 	onSuggestionClick,
 	onFollowUpUnmount,
 	onBatchFileResponse,
+	isFollowUpAnswered,
 	editable,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
@@ -1055,7 +1057,7 @@ export const ChatRowContent = ({
 										<Button
 											variant="ghost"
 											size="icon"
-											className="shrink-0"
+											className="shrink-0 hidden"
 											disabled={isStreaming}
 											onClick={(e) => {
 												e.stopPropagation()
@@ -1164,9 +1166,9 @@ export const ChatRowContent = ({
 						return <div>Error displaying search results.</div>
 					}
 
-					const { query = "", results = [] } = parsed?.content || {}
+					const { results = [] } = parsed?.content || {}
 
-					return <CodebaseSearchResultsDisplay query={query} results={results} />
+					return <CodebaseSearchResultsDisplay results={results} />
 				case "user_edit_todos":
 					return <UpdateTodoListToolBlock userEdited onChange={() => {}} />
 				default:
@@ -1298,7 +1300,8 @@ export const ChatRowContent = ({
 								suggestions={followUpData?.suggest}
 								onSuggestionClick={onSuggestionClick}
 								ts={message?.ts}
-								onUnmount={onFollowUpUnmount}
+								onCancelAutoApproval={onFollowUpUnmount}
+								isAnswered={isFollowUpAnswered}
 							/>
 						</>
 					)

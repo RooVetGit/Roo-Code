@@ -105,6 +105,7 @@
 	"enhancePrompt": "Migliora prompt con contesto aggiuntivo",
 	"addImages": "Aggiungi immagini al messaggio",
 	"sendMessage": "Invia messaggio",
+	"stopTts": "Interrompi sintesi vocale",
 	"typeMessage": "Scrivi un messaggio...",
 	"typeTask": "Scrivi la tua attività qui...",
 	"addContext": "@ per aggiungere contesto, / per cambiare modalità",
@@ -242,8 +243,8 @@
 		"title": "🎉 Rilasciato Roo Code {{version}}",
 		"description": "Roo Code {{version}} porta nuove potenti funzionalità e miglioramenti significativi per potenziare il tuo flusso di lavoro di sviluppo.",
 		"whatsNew": "Novità",
-		"feature1": "<bold>Condivisione Task con 1 Clic</bold>: Condividi istantaneamente i tuoi task con colleghi e la community con un solo clic.",
-		"feature2": "<bold>Supporto Directory Globale .roo</bold>: Carica regole e configurazioni da una directory globale .roo per impostazioni coerenti tra progetti.",
+		"feature1": "<bold>Indicizzazione Codebase Promossa da Sperimentale</bold>: L'indicizzazione completa del codebase è ora stabile e pronta per l'uso in produzione con ricerca migliorata e comprensione del contesto.",
+		"feature2": "<bold>Nuova Funzione Lista Todo</bold>: Mantieni i tuoi task in carreggiata con la gestione integrata dei todo che ti aiuta a rimanere organizzato e concentrato sui tuoi obiettivi di sviluppo.",
 		"feature3": "<bold>Transizioni Migliorate da Architetto a Codice</bold>: Trasferimenti fluidi dalla pianificazione in modalità Architetto all'implementazione in modalità Codice.",
 		"hideButton": "Nascondi annuncio",
 		"detailsDiscussLinks": "Ottieni maggiori dettagli e partecipa alle discussioni su <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
@@ -280,7 +281,7 @@
 		}
 	},
 	"systemPromptWarning": "ATTENZIONE: Sovrascrittura personalizzata delle istruzioni di sistema attiva. Questo può compromettere gravemente le funzionalità e causare comportamenti imprevedibili.",
-	"profileViolationWarning": "Il profilo corrente viola le impostazioni della tua organizzazione",
+	"profileViolationWarning": "Il profilo corrente non è compatibile con le impostazioni della tua organizzazione",
 	"shellIntegration": {
 		"title": "Avviso di esecuzione comando",
 		"description": "Il tuo comando viene eseguito senza l'integrazione shell del terminale VSCode. Per sopprimere questo avviso puoi disattivare l'integrazione shell nella sezione <strong>Terminal</strong> delle <settingsLink>impostazioni di Roo Code</settingsLink> o risolvere i problemi di integrazione del terminale VSCode utilizzando il link qui sotto.",
@@ -296,7 +297,8 @@
 	"codebaseSearch": {
 		"wantsToSearch": "Roo vuole cercare nella base di codice <code>{{query}}</code>:",
 		"wantsToSearchWithPath": "Roo vuole cercare nella base di codice <code>{{query}}</code> in <code>{{path}}</code>:",
-		"didSearch": "Trovato {{count}} risultato/i per <code>{{query}}</code>:",
+		"didSearch_one": "Trovato 1 risultato",
+		"didSearch_other": "Trovati {{count}} risultati",
 		"resultTooltip": "Punteggio di somiglianza: {{score}} (clicca per aprire il file)"
 	},
 	"read-batch": {

@@ -12,6 +12,7 @@ import { CacheManager } from "./cache-manager"
 import fs from "fs/promises"
 import ignore from "ignore"
 import path from "path"
+import { t } from "../../i18n"
 
 export class CodeIndexManager {
 	// --- Singleton Implementation ---
@@ -261,12 +262,9 @@ export class CodeIndexManager {
 		// Validate embedder configuration before proceeding
 		const validationResult = await this._serviceFactory.validateEmbedder(embedder)
 		if (!validationResult.valid) {
-			// Set error state with clear message
-			this._stateManager.setSystemState(
-				"Error",
-				validationResult.error || "Embedder configuration validation failed",
-			)
-			throw new Error(validationResult.error || "Invalid embedder configuration")
+			const errorMessage = validationResult.error || "Embedder configuration validation failed"
+			this._stateManager.setSystemState("Error", errorMessage)
+			throw new Error(errorMessage)
 		}
 
 		// (Re)Initialize orchestrator

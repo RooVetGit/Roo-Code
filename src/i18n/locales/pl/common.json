@@ -21,9 +21,8 @@
 		"delete_message": "Co chcesz usunąć?",
 		"delete_just_this_message": "Tylko tę wiadomość",
 		"delete_this_and_subsequent": "Tę i wszystkie kolejne wiadomości",
-		"edit_message": "Usunąć wszystkie wiadomości po tej?",
-		"edit_just_this_message": "Nie, tylko edytuj tę wiadomość",
-		"edit_this_and_delete_subsequent": "Tak"
+		"edit_warning": "Edytowanie tej wiadomości usunie wszystkie kolejne wiadomości w rozmowie. Czy chcesz kontynuować?",
+		"proceed": "Kontynuuj"
 	},
 	"errors": {
 		"invalid_data_uri": "Nieprawidłowy format URI danych",
@@ -55,7 +54,7 @@
 		"cannot_access_path": "Nie można uzyskać dostępu do ścieżki {{path}}: {{error}}",
 		"settings_import_failed": "Nie udało się zaimportować ustawień: {{error}}.",
 		"mistake_limit_guidance": "To może wskazywać na błąd w procesie myślowym modelu lub niezdolność do prawidłowego użycia narzędzia, co można złagodzić poprzez wskazówki użytkownika (np. \"Spróbuj podzielić zadanie na mniejsze kroki\").",
-		"violated_organization_allowlist": "Nie udało się uruchomić zadania: bieżący profil narusza ustawienia Twojej organizacji",
+		"violated_organization_allowlist": "Nie udało się uruchomić zadania: bieżący profil nie jest kompatybilny z ustawieniami Twojej organizacji",
 		"condense_failed": "Nie udało się skondensować kontekstu",
 		"condense_not_enough_messages": "Za mało wiadomości do skondensowania kontekstu",
 		"condensed_recently": "Kontekst został niedawno skondensowany; pomijanie tej próby",
@@ -107,13 +106,11 @@
 	"answers": {
 		"yes": "Tak",
 		"no": "Nie",
-		"cancel": "Anuluj",
 		"remove": "Usuń",
 		"keep": "Zachowaj"
 	},
 	"buttons": {
 		"save": "Zapisz",
-		"cancel": "Anuluj",
 		"edit": "Edytuj"
 	},
 	"tasks": {
@@ -171,7 +168,6 @@
 			"title": "Usuń tryb niestandardowy",
 			"description": "Czy na pewno chcesz usunąć ten tryb {{scope}}? Spowoduje to również usunięcie powiązanego folderu z regułami w {{rulesFolderPath}}",
 			"descriptionNoRules": "Czy na pewno chcesz usunąć ten tryb niestandardowy?",
-			"cancel": "Anuluj",
 			"confirm": "Usuń"
 		}
 	}
