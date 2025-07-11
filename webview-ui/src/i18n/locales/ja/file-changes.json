@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "変更されたファイル",
+		"expand": "ファイルリストを展開",
+		"collapse": "ファイルリストを折りたたみ"
+	},
+	"actions": {
+		"accept_all": "すべて承認",
+		"reject_all": "すべて拒否",
+		"accept_file": "このファイルの変更を承認",
+		"reject_file": "このファイルの変更を拒否",
+		"view_diff": "差分を表示"
+	},
+	"file_types": {
+		"edit": "編集",
+		"create": "作成",
+		"delete": "削除"
+	},
+	"line_changes": {
+		"added": "+{{count}}行",
+		"removed": "-{{count}}行",
+		"added_removed": "+{{added}}, -{{removed}}行",
+		"deleted": "削除済み",
+		"modified": "変更済み"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) 変更されたファイル{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "変更されたファイルリスト。{{count}}ファイル。{{state}}",
+		"expanded": "展開済み",
+		"collapsed": "折りたたみ済み"
+	}
+}

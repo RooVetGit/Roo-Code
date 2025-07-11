@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "परिवर्तित फ़ाइलें",
+		"expand": "फ़ाइल सूची विस्तृत करें",
+		"collapse": "फ़ाइल सूची संक्षिप्त करें"
+	},
+	"actions": {
+		"accept_all": "सभी स्वीकार करें",
+		"reject_all": "सभी अस्वीकार करें",
+		"accept_file": "इस फ़ाइल के लिए परिवर्तन स्वीकार करें",
+		"reject_file": "इस फ़ाइल के लिए परिवर्तन अस्वीकार करें",
+		"view_diff": "अंतर देखें"
+	},
+	"file_types": {
+		"edit": "संपादित करें",
+		"create": "बनाएं",
+		"delete": "हटाएं"
+	},
+	"line_changes": {
+		"added": "+{{count}} लाइनें",
+		"removed": "-{{count}} लाइनें",
+		"added_removed": "+{{added}}, -{{removed}} लाइनें",
+		"deleted": "हटाया गया",
+		"modified": "संशोधित"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) परिवर्तित फ़ाइलें{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "परिवर्तित फ़ाइलों की सूची। {{count}} फ़ाइलें। {{state}}",
+		"expanded": "विस्तृत",
+		"collapsed": "संक्षिप्त"
+	}
+}

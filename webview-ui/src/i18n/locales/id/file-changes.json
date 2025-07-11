@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "File yang Diubah",
+		"expand": "Perluas daftar file",
+		"collapse": "Ciutkan daftar file"
+	},
+	"actions": {
+		"accept_all": "Terima Semua",
+		"reject_all": "Tolak Semua",
+		"accept_file": "Terima perubahan untuk file ini",
+		"reject_file": "Tolak perubahan untuk file ini",
+		"view_diff": "Lihat Perbedaan"
+	},
+	"file_types": {
+		"edit": "edit",
+		"create": "buat",
+		"delete": "hapus"
+	},
+	"line_changes": {
+		"added": "+{{count}} baris",
+		"removed": "-{{count}} baris",
+		"added_removed": "+{{added}}, -{{removed}} baris",
+		"deleted": "dihapus",
+		"modified": "dimodifikasi"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) File yang Diubah{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "Daftar file yang diubah. {{count}} file. {{state}}",
+		"expanded": "Diperluas",
+		"collapsed": "Diciutkan"
+	}
+}

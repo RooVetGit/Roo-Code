@@ -22,6 +22,21 @@ vi.mock("../../prompts/sections/custom-instructions")
 
 vi.mock("vscode")
 
+vi.mock("../../../integrations/editor/DecorationController", () => ({
+	DecorationController: vi.fn().mockImplementation(() => ({
+		addLines: vi.fn(),
+		clear: vi.fn(),
+		updateOverlayAfterLine: vi.fn(),
+		setActiveLine: vi.fn(),
+	})),
+}))
+
+vi.mock("../../../integrations/editor/DiffViewProvider", () => ({
+	DiffViewProvider: vi.fn().mockImplementation(() => ({
+		// Add mock methods if needed
+	})),
+}))
+
 vi.mock("p-wait-for", () => ({
 	__esModule: true,
 	default: vi.fn().mockResolvedValue(undefined),
@@ -144,6 +159,9 @@ vi.mock("vscode", () => ({
 		executeCommand: vi.fn().mockResolvedValue(undefined),
 	},
 	window: {
+		createTextEditorDecorationType: vi.fn().mockReturnValue({
+			dispose: vi.fn(),
+		}),
 		showInformationMessage: vi.fn(),
 		showWarningMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
@@ -171,6 +189,16 @@ vi.mock("vscode", () => ({
 		Development: 2,
 		Test: 3,
 	},
+	Range: vi.fn().mockImplementation((start, startChar, end, endChar) => ({
+		start: { line: start, character: startChar },
+		end: { line: end, character: endChar },
+		with: vi.fn().mockReturnThis(),
+	})),
+	Position: vi.fn().mockImplementation((line, character) => ({
+		line,
+		character,
+		translate: vi.fn().mockReturnThis(),
+	})),
 	version: "1.85.0",
 }))
 
@@ -541,6 +569,7 @@ describe("ClineProvider", () => {
 			profileThresholds: {},
 			hasOpenedModeSelector: false,
 			diagnosticsEnabled: true,
+			filesChangedEnabled: true,
 		}
 
 		const message: ExtensionMessage = {

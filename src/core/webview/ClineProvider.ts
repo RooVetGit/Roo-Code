@@ -71,6 +71,7 @@ import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
 import { getWorkspaceGitInfo } from "../../utils/git"
+import { FCOMessageHandler } from "../../services/file-changes/FCOMessageHandler"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -109,6 +110,7 @@ export class ClineProvider
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
 	private mdmService?: MdmService
+	private globalFileChangeManager?: import("../../services/file-changes/FileChangeManager").FileChangeManager
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -282,6 +284,8 @@ export class ClineProvider
 		this.mcpHub = undefined
 		this.marketplaceManager?.cleanup()
 		this.customModesManager?.dispose()
+		this.globalFileChangeManager?.dispose()
+		this.globalFileChangeManager = undefined
 		this.log("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
@@ -562,7 +566,7 @@ export class ClineProvider
 			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (cline: Task) => this.emit("clineCreated", cline),
 			...options,
 		})
 
@@ -598,7 +602,7 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (cline: Task) => this.emit("clineCreated", cline),
 		})
 
 		await this.addClineToStack(cline)
@@ -790,8 +794,17 @@ export class ClineProvider
 	 * @param webview A reference to the extension webview
 	 */
 	private setWebviewMessageListener(webview: vscode.Webview) {
-		const onReceiveMessage = async (message: WebviewMessage) =>
-			webviewMessageHandler(this, message, this.marketplaceManager)
+		const onReceiveMessage = async (message: WebviewMessage) => {
+			// Handle FCO messages first
+			const fcoMessageHandler = new FCOMessageHandler(this)
+			if (fcoMessageHandler.shouldHandleMessage(message)) {
+				await fcoMessageHandler.handleMessage(message)
+				return
+			}
+
+			// Delegate to main message handler
+			await webviewMessageHandler(this, message, this.marketplaceManager)
+		}
 
 		const messageDisposable = webview.onDidReceiveMessage(onReceiveMessage)
 		this.webviewDisposables.push(messageDisposable)
@@ -1561,6 +1574,7 @@ export class ClineProvider
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 			diagnosticsEnabled: diagnosticsEnabled ?? true,
+			filesChangedEnabled: this.getGlobalState("filesChangedEnabled") ?? true,
 		}
 	}
 
@@ -1894,5 +1908,21 @@ export class ClineProvider
 			...(todos && { todos }),
 			...gitInfo,
 		}
+	}
+
+	public getFileChangeManager():
+		| import("../../services/file-changes/FileChangeManager").FileChangeManager
+		| undefined {
+		return this.globalFileChangeManager
+	}
+
+	public async ensureFileChangeManager(): Promise<
+		import("../../services/file-changes/FileChangeManager").FileChangeManager
+	> {
+		if (!this.globalFileChangeManager) {
+			const { FileChangeManager } = await import("../../services/file-changes/FileChangeManager")
+			this.globalFileChangeManager = new FileChangeManager("HEAD")
+		}
+		return this.globalFileChangeManager
 	}
 }

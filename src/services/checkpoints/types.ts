@@ -11,6 +11,7 @@ export type CheckpointDiff = {
 		before: string
 		after: string
 	}
+	type: "create" | "delete" | "edit"
 }
 
 export interface CheckpointServiceOptions {
@@ -23,8 +24,9 @@ export interface CheckpointServiceOptions {
 
 export interface CheckpointEventMap {
 	initialize: { type: "initialize"; workspaceDir: string; baseHash: string; created: boolean; duration: number }
-	checkpoint: {
-		type: "checkpoint"
+	checkpointCreated: {
+		type: "checkpointCreated"
+		message: string
 		isFirst: boolean
 		fromHash: string
 		toHash: string

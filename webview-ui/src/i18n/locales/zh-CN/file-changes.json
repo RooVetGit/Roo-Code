@@ -1,0 +1,35 @@
+{
+	"header": {
+		"files_changed": "已更改文件",
+		"expand": "展开文件列表",
+		"collapse": "折叠文件列表"
+	},
+	"actions": {
+		"accept_all": "全部接受",
+		"reject_all": "全部拒绝",
+		"accept_file": "接受此文件的更改",
+		"reject_file": "拒绝此文件的更改",
+		"view_diff": "查看差异"
+	},
+	"file_types": {
+		"edit": "编辑",
+		"create": "创建",
+		"delete": "删除"
+	},
+	"line_changes": {
+		"added": "+{{count}}行",
+		"removed": "-{{count}}行",
+		"added_removed": "+{{added}}, -{{removed}}行",
+		"deleted": "已删除",
+		"modified": "已修改"
+	},
+	"summary": {
+		"count_with_changes": "({{count}}) 已更改文件{{changes}}",
+		"changes_format": " ({{changes}})"
+	},
+	"accessibility": {
+		"files_list": "已更改文件列表。{{count}}个文件。{{state}}",
+		"expanded": "已展开",
+		"collapsed": "已折叠"
+	}
+}
