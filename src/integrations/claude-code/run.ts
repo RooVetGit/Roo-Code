@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk"
 import { execa } from "execa"
 import { ClaudeCodeMessage } from "./types"
 import readline from "readline"
+import { CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS } from "@roo-code/types"
 
 const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
 
@@ -142,9 +143,11 @@ function runProcess({
 		stderr: "pipe",
 		env: {
 			...process.env,
-			// Use the configured value, or the environment variable, or default to 8000
+			// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
 			CLAUDE_CODE_MAX_OUTPUT_TOKENS:
-				maxOutputTokens?.toString() || process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS || "8000",
+				maxOutputTokens?.toString() ||
+				process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
+				CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
 		},
 		cwd,
 		maxBuffer: 1024 * 1024 * 1000,

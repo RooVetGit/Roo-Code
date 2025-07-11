@@ -143,7 +143,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		const defaultModelInfo: ModelInfo = { ...claudeCodeModels[claudeCodeDefaultModelId] }
 
 		// Override maxTokens with the configured value if provided
-		if (this.options.claudeCodeMaxOutputTokens) {
+		if (this.options.claudeCodeMaxOutputTokens !== undefined) {
 			defaultModelInfo.maxTokens = this.options.claudeCodeMaxOutputTokens
 		}
 
