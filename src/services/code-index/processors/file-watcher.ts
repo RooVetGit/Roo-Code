@@ -23,6 +23,8 @@ import { codeParser } from "./parser"
 import { CacheManager } from "../cache-manager"
 import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../shared/get-relative-path"
 import { isPathInIgnoredDirectory } from "../../glob/ignore-utils"
+import { TelemetryService } from "@roo-code/telemetry"
+import { TelemetryEventName } from "@roo-code/types"
 
 /**
  * Implementation of the file watcher interface
@@ -203,6 +205,14 @@ export class FileWatcher implements IFileWatcher {
 				}
 			} catch (error) {
 				overallBatchError = error as Error
+				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+					error: error instanceof Error ? error.message : String(error),
+					stack: error instanceof Error ? error.stack : undefined,
+					location: "_handleBatchDeletions",
+					filePath: pathsToExplicitlyDelete
+						.map((path) => createHash("sha256").update(path).digest("hex"))
+						.join(", "),
+				})
 				for (const path of pathsToExplicitlyDelete) {
 					batchResults.push({ path, status: "error", error: error as Error })
 					processedCountInBatch++
@@ -247,6 +257,12 @@ export class FileWatcher implements IFileWatcher {
 					return { path: fileDetail.path, result: result, error: undefined }
 				} catch (e) {
 					console.error(`[FileWatcher] Unhandled exception processing file ${fileDetail.path}:`, e)
+					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+						error: e instanceof Error ? e.message : String(e),
+						stack: e instanceof Error ? e.stack : undefined,
+						location: "_processFilesAndPrepareUpserts",
+						filePath: createHash("sha256").update(fileDetail.path).digest("hex"),
+					})
 					return { path: fileDetail.path, result: undefined, error: e as Error }
 				}
 			})
@@ -290,8 +306,18 @@ export class FileWatcher implements IFileWatcher {
 					}
 				} else {
 					console.error("[FileWatcher] A file processing promise was rejected:", settledResult.reason)
+					const rejectedPath = settledResult.reason?.path || "unknown"
+					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+						error:
+							settledResult.reason instanceof Error
+								? settledResult.reason.message
+								: String(settledResult.reason),
+						stack: settledResult.reason instanceof Error ? settledResult.reason.stack : undefined,
+						location: "_processFilesAndPrepareUpserts",
+						filePath: createHash("sha256").update(rejectedPath).digest("hex"),
+					})
 					batchResults.push({
-						path: settledResult.reason?.path || "unknown",
+						path: rejectedPath,
 						status: "error",
 						error: settledResult.reason as Error,
 					})
@@ -351,6 +377,14 @@ export class FileWatcher implements IFileWatcher {
 				}
 			} catch (error) {
 				overallBatchError = overallBatchError || (error as Error)
+				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+					error: error instanceof Error ? error.message : String(error),
+					stack: error instanceof Error ? error.stack : undefined,
+					location: "_executeBatchUpsertOperations",
+					filePath: successfullyProcessedForUpsert
+						.map((item) => createHash("sha256").update(item.path).digest("hex"))
+						.join(", "),
+				})
 				for (const { path } of successfullyProcessedForUpsert) {
 					batchResults.push({ path, status: "error", error: error as Error })
 				}
@@ -536,6 +570,12 @@ export class FileWatcher implements IFileWatcher {
 				pointsToUpsert,
 			}
 		} catch (error) {
+			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				location: "processFile",
+				filePath: createHash("sha256").update(filePath).digest("hex"),
+			})
 			return {
 				path: filePath,
 				status: "local_error" as const,
