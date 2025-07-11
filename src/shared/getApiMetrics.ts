@@ -72,7 +72,7 @@ export function getApiMetrics(messages: ClineMessage[]) {
 		if (message.type === "say" && message.say === "api_req_started" && message.text) {
 			try {
 				const parsedText: ParsedApiReqStartedTextType = JSON.parse(message.text)
-				const { tokensIn, tokensOut, cacheWrites, cacheReads } = parsedText
+				const { tokensIn, tokensOut } = parsedText
 				result.contextTokens = (tokensIn || 0) + (tokensOut || 0)
 			} catch (error) {
 				console.error("Error parsing JSON:", error)
