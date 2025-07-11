@@ -75,5 +75,55 @@ describe("Text normalization utilities", () => {
 			expect(unescapeHtmlEntities("")).toBe("")
 			expect(unescapeHtmlEntities(undefined as unknown as string)).toBe(undefined)
 		})
+
+		// Issue #4077 - HTML entity handling verification
+		it("should demonstrate that unescapeHtmlEntities converts &amp; to &", () => {
+			const input = "// Step 5 &amp; 6: Verify the data"
+			const result = unescapeHtmlEntities(input)
+
+			expect(result).toBe("// Step 5 & 6: Verify the data")
+			expect(result).not.toBe(input)
+			expect(result).not.toContain("&amp;")
+			expect(result).toContain("&")
+		})
+
+		it("should show the exact problem from issue #4077", () => {
+			// The user's SEARCH block content (what they see in their file)
+			const searchContent = "// Adım 5 &amp; 6: İşaret edilen verinin bölümünü bul ve doğrula"
+
+			// After unescaping (what happens for non-Claude models)
+			const unescapedSearch = unescapeHtmlEntities(searchContent)
+
+			// The actual file content (contains HTML entity)
+			const fileContent = "// Adım 5 &amp; 6: İşaret edilen verinin bölümünü bul ve doğrula"
+
+			// This demonstrates the mismatch
+			expect(unescapedSearch).toBe("// Adım 5 & 6: İşaret edilen verinin bölümünü bul ve doğrula")
+			expect(unescapedSearch).not.toBe(fileContent)
+
+			// The key issue: when searching for the unescaped version in the file content
+			// it won't find a match because the file has &amp; but we're searching for &
+			const willFindMatch = fileContent.includes(unescapedSearch)
+			expect(willFindMatch).toBe(false)
+
+			// But if we search for the original (not unescaped), it would work
+			const wouldFindMatchWithoutUnescape = fileContent.includes(searchContent)
+			expect(wouldFindMatchWithoutUnescape).toBe(true)
+		})
+
+		it("should verify all HTML entities are unescaped", () => {
+			const testCases = [
+				{ input: "&lt;", expected: "<" },
+				{ input: "&gt;", expected: ">" },
+				{ input: "&quot;", expected: '"' },
+				{ input: "&#39;", expected: "'" },
+				{ input: "&apos;", expected: "'" },
+				{ input: "&amp;", expected: "&" },
+			]
+
+			testCases.forEach(({ input, expected }) => {
+				expect(unescapeHtmlEntities(input)).toBe(expected)
+			})
+		})
 	})
 })
