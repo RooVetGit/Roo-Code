@@ -291,9 +291,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					error: error instanceof Error ? error.message : String(error),
 					stack: error instanceof Error ? error.stack : undefined,
 					location: "OpenAICompatibleEmbedder:_embedBatchWithRetries",
-					model: model,
 					attempt: attempts + 1,
-					baseUrl: this.baseUrl,
 				})
 
 				const hasMoreAttempts = attempts < MAX_RETRIES - 1
@@ -364,8 +362,6 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					error: error instanceof Error ? error.message : String(error),
 					stack: error instanceof Error ? error.stack : undefined,
 					location: "OpenAICompatibleEmbedder:validateConfiguration",
-					baseUrl: this.baseUrl,
-					modelToUse: this.defaultModelId,
 				})
 				throw error
 			}

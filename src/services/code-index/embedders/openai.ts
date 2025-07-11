@@ -163,7 +163,6 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					error: error instanceof Error ? error.message : String(error),
 					stack: error instanceof Error ? error.stack : undefined,
 					location: "OpenAiEmbedder:_embedBatchWithRetries",
-					model: model,
 					attempt: attempts + 1,
 				})
 
@@ -206,7 +205,6 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					error: error instanceof Error ? error.message : String(error),
 					stack: error instanceof Error ? error.stack : undefined,
 					location: "OpenAiEmbedder:validateConfiguration",
-					defaultModelId: this.defaultModelId,
 				})
 				throw error
 			}

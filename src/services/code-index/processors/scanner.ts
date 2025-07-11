@@ -27,6 +27,7 @@ import {
 import { isPathInIgnoredDirectory } from "../../glob/ignore-utils"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { sanitizeErrorMessage } from "../shared/validation-helpers"
 
 export class DirectoryScanner implements IDirectoryScanner {
 	constructor(
@@ -194,11 +195,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 				} catch (error) {
 					console.error(`Error processing file ${filePath} in workspace ${scanWorkspace}:`, error)
 					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-						error: error instanceof Error ? error.message : String(error),
-						stack: error instanceof Error ? error.stack : undefined,
+						error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+						stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 						location: "scanDirectory:processFile",
-						filePath: createHash("sha256").update(filePath).digest("hex"),
-						workspace: scanWorkspace,
 					})
 					if (onError) {
 						onError(
@@ -257,11 +256,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 							error,
 						)
 						TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-							error: error instanceof Error ? error.message : String(error),
-							stack: error instanceof Error ? error.stack : undefined,
+							error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+							stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 							location: "scanDirectory:deleteRemovedFiles",
-							filePath: createHash("sha256").update(cachedFilePath).digest("hex"),
-							workspace: scanWorkspace,
 						})
 						if (onError) {
 							onError(
@@ -326,11 +323,15 @@ export class DirectoryScanner implements IDirectoryScanner {
 							deleteError,
 						)
 						TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-							error: deleteError instanceof Error ? deleteError.message : String(deleteError),
-							stack: deleteError instanceof Error ? deleteError.stack : undefined,
+							error: sanitizeErrorMessage(
+								deleteError instanceof Error ? deleteError.message : String(deleteError),
+							),
+							stack:
+								deleteError instanceof Error
+									? sanitizeErrorMessage(deleteError.stack || "")
+									: undefined,
 							location: "processBatch:deletePointsByMultipleFilePaths",
 							fileCount: uniqueFilePaths.length,
-							workspace: scanWorkspace,
 						})
 						// Re-throw the error with workspace context
 						throw new Error(
@@ -380,11 +381,10 @@ export class DirectoryScanner implements IDirectoryScanner {
 					error,
 				)
 				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-					error: error instanceof Error ? error.message : String(error),
-					stack: error instanceof Error ? error.stack : undefined,
+					error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+					stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 					location: "processBatch:retry",
 					attemptNumber: attempts,
-					workspace: scanWorkspace,
 					batchSize: batchBlocks.length,
 				})
 

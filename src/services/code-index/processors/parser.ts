@@ -9,6 +9,7 @@ import { scannerExtensions } from "../shared/supported-extensions"
 import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_TOLERANCE_FACTOR } from "../constants"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { sanitizeErrorMessage } from "../shared/validation-helpers"
 
 /**
  * Implementation of the code parser interface
@@ -54,10 +55,9 @@ export class CodeParser implements ICodeParser {
 			} catch (error) {
 				console.error(`Error reading file ${filePath}:`, error)
 				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-					error: error instanceof Error ? error.message : String(error),
-					stack: error instanceof Error ? error.stack : undefined,
+					error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+					stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 					location: "parseFile",
-					filePath: createHash("sha256").update(filePath).digest("hex"),
 				})
 				return []
 			}
@@ -110,10 +110,9 @@ export class CodeParser implements ICodeParser {
 				} catch (error) {
 					console.error(`Error in pending parser load for ${filePath}:`, error)
 					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-						error: error instanceof Error ? error.message : String(error),
-						stack: error instanceof Error ? error.stack : undefined,
+						error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+						stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 						location: "parseContent:loadParser",
-						filePath: createHash("sha256").update(filePath).digest("hex"),
 					})
 					return []
 				}
@@ -128,10 +127,9 @@ export class CodeParser implements ICodeParser {
 				} catch (error) {
 					console.error(`Error loading language parser for ${filePath}:`, error)
 					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-						error: error instanceof Error ? error.message : String(error),
-						stack: error instanceof Error ? error.stack : undefined,
+						error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+						stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 						location: "parseContent:loadParser",
-						filePath: createHash("sha256").update(filePath).digest("hex"),
 					})
 					return []
 				} finally {
