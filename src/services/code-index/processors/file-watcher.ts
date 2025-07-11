@@ -180,6 +180,7 @@ export class FileWatcher implements IFileWatcher {
 		totalFilesInBatch: number,
 		pathsToExplicitlyDelete: string[],
 		filesToUpsertDetails: Array<{ path: string; uri: vscode.Uri; originalType: "create" | "change" }>,
+		aggregatedErrors: Array<{ path: string; error: Error; location: string }>,
 	): Promise<{ overallBatchError?: Error; clearedPaths: Set<string>; processedCount: number }> {
 		let overallBatchError: Error | undefined
 		const allPathsToClearFromDB = new Set<string>(pathsToExplicitlyDelete)
@@ -206,12 +207,12 @@ export class FileWatcher implements IFileWatcher {
 				}
 			} catch (error) {
 				overallBatchError = error as Error
-				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-					error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
-					stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
-					location: "_handleBatchDeletions",
-				})
 				for (const path of pathsToExplicitlyDelete) {
+					aggregatedErrors.push({
+						path,
+						error: error as Error,
+						location: "_handleBatchDeletions",
+					})
 					batchResults.push({ path, status: "error", error: error as Error })
 					processedCountInBatch++
 					this._onBatchProgressUpdate.fire({
@@ -236,10 +237,12 @@ export class FileWatcher implements IFileWatcher {
 		pointsForBatchUpsert: PointStruct[]
 		successfullyProcessedForUpsert: Array<{ path: string; newHash?: string }>
 		processedCount: number
+		processingErrors: Array<{ path: string; error: Error; location: string }>
 	}> {
 		const pointsForBatchUpsert: PointStruct[] = []
 		const successfullyProcessedForUpsert: Array<{ path: string; newHash?: string }> = []
 		const filesToProcessConcurrently = [...filesToUpsertDetails]
+		const processingErrors: Array<{ path: string; error: Error; location: string }> = []
 
 		for (let i = 0; i < filesToProcessConcurrently.length; i += this.FILE_PROCESSING_CONCURRENCY_LIMIT) {
 			const chunkToProcess = filesToProcessConcurrently.slice(i, i + this.FILE_PROCESSING_CONCURRENCY_LIMIT)
@@ -255,9 +258,9 @@ export class FileWatcher implements IFileWatcher {
 					return { path: fileDetail.path, result: result, error: undefined }
 				} catch (e) {
 					console.error(`[FileWatcher] Unhandled exception processing file ${fileDetail.path}:`, e)
-					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-						error: sanitizeErrorMessage(e instanceof Error ? e.message : String(e)),
-						stack: e instanceof Error ? sanitizeErrorMessage(e.stack || "") : undefined,
+					processingErrors.push({
+						path: fileDetail.path,
+						error: e as Error,
 						location: "_processFilesAndPrepareUpserts",
 					})
 					return { path: fileDetail.path, result: undefined, error: e as Error }
@@ -304,17 +307,10 @@ export class FileWatcher implements IFileWatcher {
 				} else {
 					console.error("[FileWatcher] A file processing promise was rejected:", settledResult.reason)
 					const rejectedPath = settledResult.reason?.path || "unknown"
-					TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-						error: sanitizeErrorMessage(
-							settledResult.reason instanceof Error
-								? settledResult.reason.message
-								: String(settledResult.reason),
-						),
-						stack:
-							settledResult.reason instanceof Error
-								? sanitizeErrorMessage(settledResult.reason.stack || "")
-								: undefined,
-						location: "_processFilesAndPrepareUpserts",
+					processingErrors.push({
+						path: rejectedPath,
+						error: settledResult.reason as Error,
+						location: "_processFilesAndPrepareUpserts_promise_rejection",
 					})
 					batchResults.push({
 						path: rejectedPath,
@@ -334,13 +330,19 @@ export class FileWatcher implements IFileWatcher {
 			}
 		}
 
-		return { pointsForBatchUpsert, successfullyProcessedForUpsert, processedCount: processedCountInBatch }
+		return {
+			pointsForBatchUpsert,
+			successfullyProcessedForUpsert,
+			processedCount: processedCountInBatch,
+			processingErrors,
+		}
 	}
 
 	private async _executeBatchUpsertOperations(
 		pointsForBatchUpsert: PointStruct[],
 		successfullyProcessedForUpsert: Array<{ path: string; newHash?: string }>,
 		batchResults: FileProcessingResult[],
+		aggregatedErrors: Array<{ path: string; error: Error; location: string }>,
 		overallBatchError?: Error,
 	): Promise<Error | undefined> {
 		if (pointsForBatchUpsert.length > 0 && this.vectorStore && !overallBatchError) {
@@ -377,12 +379,12 @@ export class FileWatcher implements IFileWatcher {
 				}
 			} catch (error) {
 				overallBatchError = overallBatchError || (error as Error)
-				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-					error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
-					stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
-					location: "_executeBatchUpsertOperations",
-				})
 				for (const { path } of successfullyProcessedForUpsert) {
+					aggregatedErrors.push({
+						path,
+						error: error as Error,
+						location: "_executeBatchUpsertOperations",
+					})
 					batchResults.push({ path, status: "error", error: error as Error })
 				}
 			}
@@ -402,6 +404,7 @@ export class FileWatcher implements IFileWatcher {
 		let processedCountInBatch = 0
 		const totalFilesInBatch = eventsToProcess.size
 		let overallBatchError: Error | undefined
+		const aggregatedErrors: Array<{ path: string; error: Error; location: string }> = []
 
 		// Initial progress update
 		this._onBatchProgressUpdate.fire({
@@ -433,6 +436,7 @@ export class FileWatcher implements IFileWatcher {
 			totalFilesInBatch,
 			pathsToExplicitlyDelete,
 			filesToUpsertDetails,
+			aggregatedErrors,
 		)
 		overallBatchError = deletionError
 		processedCountInBatch = deletionCount
@@ -442,6 +446,7 @@ export class FileWatcher implements IFileWatcher {
 			pointsForBatchUpsert,
 			successfullyProcessedForUpsert,
 			processedCount: upsertCount,
+			processingErrors,
 		} = await this._processFilesAndPrepareUpserts(
 			filesToUpsertDetails,
 			batchResults,
@@ -450,14 +455,26 @@ export class FileWatcher implements IFileWatcher {
 			pathsToExplicitlyDelete,
 		)
 		processedCountInBatch = upsertCount
+		aggregatedErrors.push(...processingErrors)
 
 		// Phase 3: Execute batch upsert
 		overallBatchError = await this._executeBatchUpsertOperations(
 			pointsForBatchUpsert,
 			successfullyProcessedForUpsert,
 			batchResults,
+			aggregatedErrors,
 			overallBatchError,
 		)
+		if (aggregatedErrors.length > 0) {
+			const errorSummary = this._createErrorSummary(aggregatedErrors)
+			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+				error: `Batch processing completed with ${errorSummary.totalErrors} errors`,
+				errorCount: errorSummary.totalErrors,
+				errorTypes: errorSummary.errorTypes,
+				sampleErrors: errorSummary.sampleErrors,
+				location: "processBatch_aggregated",
+			})
+		}
 
 		// Finalize
 		this._onDidFinishBatchProcessing.fire({
@@ -475,6 +492,42 @@ export class FileWatcher implements IFileWatcher {
 				totalInBatch: 0,
 				currentFile: undefined,
 			})
+		}
+	}
+	/**
+	 * Creates a summary of aggregated errors for telemetry
+	 * @param errors Array of errors to summarize
+	 * @returns Error summary object
+	 */
+	private _createErrorSummary(errors: Array<{ path: string; error: Error; location: string }>): {
+		totalErrors: number
+		errorTypes: Record<string, number>
+		sampleErrors: Array<{ path: string; error: string; location: string }>
+	} {
+		const errorTypes: Record<string, number> = {}
+		const sampleErrors: Array<{ path: string; error: string; location: string }> = []
+
+		// Count error types and collect samples
+		for (let i = 0; i < errors.length; i++) {
+			const { path, error, location } = errors[i]
+			const errorType = error.constructor.name || "UnknownError"
+
+			errorTypes[errorType] = (errorTypes[errorType] || 0) + 1
+
+			// Collect up to 3 sample errors
+			if (sampleErrors.length < 3) {
+				sampleErrors.push({
+					path: path.replace(this.workspacePath, ""), // Sanitize path
+					error: sanitizeErrorMessage(error.message),
+					location,
+				})
+			}
+		}
+
+		return {
+			totalErrors: errors.length,
+			errorTypes,
+			sampleErrors,
 		}
 	}
 
@@ -567,11 +620,6 @@ export class FileWatcher implements IFileWatcher {
 				pointsToUpsert,
 			}
 		} catch (error) {
-			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-				error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
-				stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
-				location: "processFile",
-			})
 			return {
 				path: filePath,
 				status: "local_error" as const,
