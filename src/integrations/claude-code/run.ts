@@ -20,7 +20,9 @@ type ProcessState = {
 	exitCode: number | null
 }
 
-export async function* runClaudeCode(options: ClaudeCodeOptions): AsyncGenerator<ClaudeCodeMessage | string> {
+export async function* runClaudeCode(
+	options: ClaudeCodeOptions & { maxOutputTokens?: number },
+): AsyncGenerator<ClaudeCodeMessage | string> {
 	const process = runProcess(options)
 
 	const rl = readline.createInterface({
@@ -107,7 +109,13 @@ const claudeCodeTools = [
 
 const CLAUDE_CODE_TIMEOUT = 600000 // 10 minutes
 
-function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions) {
+function runProcess({
+	systemPrompt,
+	messages,
+	path,
+	modelId,
+	maxOutputTokens,
+}: ClaudeCodeOptions & { maxOutputTokens?: number }) {
 	const claudePath = path || "claude"
 
 	const args = [
@@ -134,8 +142,9 @@ function runProcess({ systemPrompt, messages, path, modelId }: ClaudeCodeOptions
 		stderr: "pipe",
 		env: {
 			...process.env,
-			// The default is 32000. However, I've gotten larger responses, so we increase it unless the user specified it.
-			CLAUDE_CODE_MAX_OUTPUT_TOKENS: process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS || "64000",
+			// Use the configured value, or the environment variable, or default to 8192
+			CLAUDE_CODE_MAX_OUTPUT_TOKENS:
+				maxOutputTokens?.toString() || process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS || "8192",
 		},
 		cwd,
 		maxBuffer: 1024 * 1024 * 1000,

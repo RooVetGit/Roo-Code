@@ -58,6 +58,12 @@ export const getModelMaxOutputTokens = ({
 	model: ModelInfo
 	settings?: ProviderSettings
 }): number | undefined => {
+	// Check for Claude Code specific max output tokens setting
+	if (settings?.apiProvider === "claude-code") {
+		// Return the configured value or default to 8000
+		return settings.claudeCodeMaxOutputTokens || 8000
+	}
+
 	if (shouldUseReasoningBudget({ model, settings })) {
 		return settings?.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
 	}
