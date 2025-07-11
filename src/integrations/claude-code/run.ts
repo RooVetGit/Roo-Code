@@ -142,9 +142,9 @@ function runProcess({
 		stderr: "pipe",
 		env: {
 			...process.env,
-			// Use the configured value, or the environment variable, or default to 8192
+			// Use the configured value, or the environment variable, or default to 8000
 			CLAUDE_CODE_MAX_OUTPUT_TOKENS:
-				maxOutputTokens?.toString() || process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS || "8192",
+				maxOutputTokens?.toString() || process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS || "8000",
 		},
 		cwd,
 		maxBuffer: 1024 * 1024 * 1000,
