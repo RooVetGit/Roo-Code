@@ -367,56 +367,8 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 								</li>
 							</ul>
 
-							{/* Optional actions - only visible after scan */}
+							{/* Advanced section with chevron */}
 							<div className="pt-2 border-t border-vscode-sideBar-background">
-								<h3 className="text-sm font-semibold mb-2">
-									{t("history:indexTools.optionalActions")}
-								</h3>
-
-								{/* Import legacy tasks */}
-								<div>
-									<VSCodeCheckbox
-										id="mergeFromGlobal"
-										checked={mergeFromGlobal}
-										onChange={(e: any) => setMergeFromGlobal(e.target.checked)}>
-										<span className="font-medium">
-											{t("history:indexTools.importLegacy")} ({getMissingTasksCount()})
-										</span>
-									</VSCodeCheckbox>
-									<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
-										{t("history:indexTools.importLegacyDesc")}
-									</div>
-								</div>
-
-								{/* Resurrect orphaned tasks */}
-								<div>
-									<VSCodeCheckbox
-										id="reconstructOrphans"
-										checked={reconstructOrphans}
-										onChange={(e: any) => setReconstructOrphans(e.target.checked)}>
-										<span className="font-medium">
-											{t("history:indexTools.reconstructOrphans")} ({getOrphanedTasksCount()})
-										</span>
-									</VSCodeCheckbox>
-									<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
-										{t("history:indexTools.reconstructOrphansDesc")}
-									</div>
-								</div>
-
-								{/* Use filesystem scan */}
-								<div>
-									<VSCodeCheckbox
-										id="scanHistoryFiles"
-										checked={scanHistoryFiles}
-										onChange={(e: any) => setScanHistoryFiles(e.target.checked)}>
-										<span className="font-medium">{t("history:indexTools.useFilesystemScan")}</span>
-									</VSCodeCheckbox>
-									<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
-										{t("history:indexTools.useFilesystemScanDesc")}
-									</div>
-								</div>
-
-								{/* Advanced section with chevron */}
 								<div className="mt-2 mb-2">
 									<button
 										className="flex items-center text-sm font-medium text-vscode-foreground hover:text-vscode-button-foreground focus:outline-none"
@@ -427,6 +379,53 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 
 									{showAdvanced && (
 										<div className="mt-2 pl-5">
+											{/* Import legacy tasks */}
+											<div>
+												<VSCodeCheckbox
+													id="mergeFromGlobal"
+													checked={mergeFromGlobal}
+													onChange={(e: any) => setMergeFromGlobal(e.target.checked)}>
+													<span className="font-medium">
+														{t("history:indexTools.importLegacy")} ({getMissingTasksCount()}
+														)
+													</span>
+												</VSCodeCheckbox>
+												<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+													{t("history:indexTools.importLegacyDesc")}
+												</div>
+											</div>
+
+											{/* Resurrect orphaned tasks */}
+											<div>
+												<VSCodeCheckbox
+													id="reconstructOrphans"
+													checked={reconstructOrphans}
+													onChange={(e: any) => setReconstructOrphans(e.target.checked)}>
+													<span className="font-medium">
+														{t("history:indexTools.reconstructOrphans")} (
+														{getOrphanedTasksCount()})
+													</span>
+												</VSCodeCheckbox>
+												<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+													{t("history:indexTools.reconstructOrphansDesc")}
+												</div>
+											</div>
+
+											{/* Use filesystem scan */}
+											<div>
+												<VSCodeCheckbox
+													id="scanHistoryFiles"
+													checked={scanHistoryFiles}
+													onChange={(e: any) => setScanHistoryFiles(e.target.checked)}>
+													<span className="font-medium">
+														{t("history:indexTools.useFilesystemScan")}
+													</span>
+												</VSCodeCheckbox>
+												<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+													{t("history:indexTools.useFilesystemScanDesc")}
+												</div>
+											</div>
+
 											{/* Update global state */}
 											<div>
 												<VSCodeCheckbox
@@ -442,52 +441,51 @@ export const HistoryIndexTools: React.FC<HistoryIndexToolsProps> = () => {
 													{t("history:indexTools.mergeToGlobalDesc")}
 												</div>
 											</div>
+											{/* Rebuild Mode */}
+											<div>
+												<h3 className="text-sm font-semibold mb-2">
+													{t("history:indexTools.modeSelection")}
+												</h3>
+												<div>
+													<div>
+														<VSCodeRadio
+															name="rebuildMode"
+															checked={rebuildMode === "merge"}
+															value="merge"
+															id="merge-after-scan"
+															onClick={() => setRebuildMode("merge")}>
+															<span className="font-medium">
+																{t("history:indexTools.mergeMode")}
+															</span>
+														</VSCodeRadio>
+														<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+															{t("history:indexTools.mergeModeDesc")}
+														</div>
+													</div>
+
+													<div>
+														<VSCodeRadio
+															name="rebuildMode"
+															checked={rebuildMode === "replace"}
+															value="replace"
+															id="replace-after-scan"
+															onClick={() => setRebuildMode("replace")}>
+															<span className="font-medium">
+																{t("history:indexTools.replaceMode")}
+															</span>
+														</VSCodeRadio>
+														<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+															{t("history:indexTools.replaceModeDesc")}
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 									)}
 								</div>
 							</div>
-
-							{/* Rebuild options */}
+							{/* Action buttons */}
 							<div className="pt-2 border-t border-vscode-sideBar-background">
-								{/* Mode selection */}
-								<div>
-									<h3 className="text-sm font-semibold mb-2">
-										{t("history:indexTools.modeSelection")}
-									</h3>
-									<div>
-										<div>
-											<VSCodeRadio
-												name="rebuildMode"
-												checked={rebuildMode === "merge"}
-												value="merge"
-												id="merge-after-scan"
-												onClick={() => setRebuildMode("merge")}>
-												<span className="font-medium">{t("history:indexTools.mergeMode")}</span>
-											</VSCodeRadio>
-											<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
-												{t("history:indexTools.mergeModeDesc")}
-											</div>
-										</div>
-
-										<div>
-											<VSCodeRadio
-												name="rebuildMode"
-												checked={rebuildMode === "replace"}
-												value="replace"
-												id="replace-after-scan"
-												onClick={() => setRebuildMode("replace")}>
-												<span className="font-medium">
-													{t("history:indexTools.replaceMode")}
-												</span>
-											</VSCodeRadio>
-											<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
-												{t("history:indexTools.replaceModeDesc")}
-											</div>
-										</div>
-									</div>
-								</div>
-
-								{/* Action buttons */}
 								<div className="flex justify-start space-x-2 pt-2">
 									<Button onClick={handleRebuild} disabled={isRebuilding}>
 										{t("history:indexTools.rebuildButton")}
