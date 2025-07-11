@@ -75,7 +75,6 @@ export function getApiMetrics(messages: ClineMessage[]) {
 				const parsedText: ParsedApiReqStartedTextType = JSON.parse(message.text)
 				const { tokensIn, tokensOut, cacheWrites, cacheReads, apiProtocol } = parsedText
 
-				console.log("APi Protocol:", apiProtocol)
 
 				// Calculate context tokens based on API protocol
 				if (apiProtocol === "openai") {
