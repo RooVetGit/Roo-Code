@@ -11,6 +11,8 @@ import {
 	findLongestPrefixMatch,
 	getCommandDecision,
 	getSingleCommandDecision,
+	CommandValidator,
+	createCommandValidator,
 } from "../command-validation"
 
 describe("Command Validation", () => {
@@ -756,6 +758,315 @@ describe("Unified Command Decision Functions", () => {
 					expect(oldApproved).toBe(false)
 					expect(oldDenied).toBe(false)
 				}
+			})
+		})
+	})
+
+	describe("CommandValidator Integration Tests", () => {
+		describe("CommandValidator Class", () => {
+			let validator: CommandValidator
+
+			beforeEach(() => {
+				validator = new CommandValidator(["npm", "echo", "git"], ["npm test", "git push"])
+			})
+
+			describe("Basic validation methods", () => {
+				it("validates commands correctly", () => {
+					expect(validator.validateCommand("npm install")).toBe("auto_approve")
+					expect(validator.validateCommand("npm test")).toBe("auto_deny")
+					expect(validator.validateCommand("dangerous")).toBe("ask_user")
+				})
+
+				it("provides convenience methods", () => {
+					expect(validator.isAutoApproved("npm install")).toBe(true)
+					expect(validator.isAutoApproved("npm test")).toBe(false)
+					expect(validator.isAutoApproved("dangerous")).toBe(false)
+
+					expect(validator.isAutoDenied("npm install")).toBe(false)
+					expect(validator.isAutoDenied("npm test")).toBe(true)
+					expect(validator.isAutoDenied("dangerous")).toBe(false)
+
+					expect(validator.requiresUserInput("npm install")).toBe(false)
+					expect(validator.requiresUserInput("npm test")).toBe(false)
+					expect(validator.requiresUserInput("dangerous")).toBe(true)
+				})
+			})
+
+			describe("Configuration management", () => {
+				it("updates command lists", () => {
+					validator.updateCommandLists(["echo"], ["echo hello"])
+
+					expect(validator.validateCommand("npm install")).toBe("ask_user")
+					expect(validator.validateCommand("echo world")).toBe("auto_approve")
+					expect(validator.validateCommand("echo hello")).toBe("auto_deny")
+				})
+
+				it("gets current command lists", () => {
+					const lists = validator.getCommandLists()
+					expect(lists.allowedCommands).toEqual(["npm", "echo", "git"])
+					expect(lists.deniedCommands).toEqual(["npm test", "git push"])
+				})
+
+				it("handles undefined denied commands", () => {
+					const validatorNoDeny = new CommandValidator(["npm"])
+					const lists = validatorNoDeny.getCommandLists()
+					expect(lists.allowedCommands).toEqual(["npm"])
+					expect(lists.deniedCommands).toBeUndefined()
+				})
+			})
+
+			describe("Detailed validation information", () => {
+				it("provides comprehensive validation details", () => {
+					const details = validator.getValidationDetails("npm install && echo done")
+
+					expect(details.decision).toBe("auto_approve")
+					expect(details.subCommands).toEqual(["npm install", "echo done"])
+					expect(details.hasSubshells).toBe(false)
+					expect(details.allowedMatches).toHaveLength(2)
+					expect(details.deniedMatches).toHaveLength(2)
+
+					// Check specific matches
+					expect(details.allowedMatches[0]).toEqual({ command: "npm install", match: "npm" })
+					expect(details.allowedMatches[1]).toEqual({ command: "echo done", match: "echo" })
+					expect(details.deniedMatches[0]).toEqual({ command: "npm install", match: null })
+					expect(details.deniedMatches[1]).toEqual({ command: "echo done", match: null })
+				})
+
+				it("detects subshells correctly", () => {
+					const details = validator.getValidationDetails("npm install $(echo test)")
+					expect(details.hasSubshells).toBe(true)
+					expect(details.decision).toBe("auto_deny") // blocked due to subshells with denylist
+				})
+
+				it("handles complex command chains", () => {
+					const details = validator.getValidationDetails("npm test && git push origin")
+
+					expect(details.decision).toBe("auto_deny")
+					expect(details.subCommands).toEqual(["npm test", "git push origin"])
+					expect(details.deniedMatches[0]).toEqual({ command: "npm test", match: "npm test" })
+					expect(details.deniedMatches[1]).toEqual({ command: "git push origin", match: "git push" })
+				})
+			})
+
+			describe("Batch validation", () => {
+				it("validates multiple commands at once", () => {
+					const commands = ["npm install", "npm test", "dangerous", "echo hello"]
+					const results = validator.validateCommands(commands)
+
+					expect(results.get("npm install")).toBe("auto_approve")
+					expect(results.get("npm test")).toBe("auto_deny")
+					expect(results.get("dangerous")).toBe("ask_user")
+					expect(results.get("echo hello")).toBe("auto_approve")
+					expect(results.size).toBe(4)
+				})
+
+				it("handles empty command list", () => {
+					const results = validator.validateCommands([])
+					expect(results.size).toBe(0)
+				})
+			})
+
+			describe("Configuration analysis", () => {
+				it("detects if rules are configured", () => {
+					expect(validator.hasRules()).toBe(true)
+
+					const emptyValidator = new CommandValidator([], [])
+					expect(emptyValidator.hasRules()).toBe(false)
+
+					const allowOnlyValidator = new CommandValidator(["npm"], [])
+					expect(allowOnlyValidator.hasRules()).toBe(true)
+
+					const denyOnlyValidator = new CommandValidator([], ["rm"])
+					expect(denyOnlyValidator.hasRules()).toBe(true)
+				})
+
+				it("provides configuration statistics", () => {
+					const stats = validator.getStats()
+					expect(stats.allowedCount).toBe(3)
+					expect(stats.deniedCount).toBe(2)
+					expect(stats.hasWildcard).toBe(false)
+					expect(stats.hasRules).toBe(true)
+				})
+
+				it("detects wildcard configuration", () => {
+					const wildcardValidator = new CommandValidator(["*", "npm"], ["rm"])
+					const stats = wildcardValidator.getStats()
+					expect(stats.hasWildcard).toBe(true)
+				})
+			})
+
+			describe("Edge cases and error handling", () => {
+				it("handles empty commands gracefully", () => {
+					expect(validator.validateCommand("")).toBe("auto_approve")
+					expect(validator.validateCommand("   ")).toBe("auto_approve")
+				})
+
+				it("handles commands with only whitespace", () => {
+					const details = validator.getValidationDetails("   ")
+					expect(details.decision).toBe("auto_approve")
+					expect(details.subCommands).toEqual([])
+				})
+
+				it("handles malformed commands", () => {
+					// Commands with unmatched quotes or brackets should not crash
+					expect(() => validator.validateCommand('npm test "unclosed quote')).not.toThrow()
+					expect(() => validator.validateCommand("npm test $(unclosed")).not.toThrow()
+				})
+			})
+		})
+
+		describe("Factory function", () => {
+			it("creates validator instances correctly", () => {
+				const validator = createCommandValidator(["npm"], ["rm"])
+				expect(validator).toBeInstanceOf(CommandValidator)
+				expect(validator.validateCommand("npm test")).toBe("auto_approve")
+				expect(validator.validateCommand("rm file")).toBe("auto_deny")
+			})
+
+			it("handles optional denied commands", () => {
+				const validator = createCommandValidator(["npm"])
+				expect(validator.validateCommand("npm test")).toBe("auto_approve")
+				expect(validator.validateCommand("dangerous")).toBe("ask_user")
+			})
+		})
+
+		describe("Real-world integration scenarios", () => {
+			describe("Development workflow validation", () => {
+				let devValidator: CommandValidator
+
+				beforeEach(() => {
+					devValidator = createCommandValidator(
+						["npm", "git", "echo", "ls", "cat"],
+						["git push", "rm", "sudo", "npm publish"],
+					)
+				})
+
+				it("allows common development commands", () => {
+					const commonCommands = [
+						"npm install",
+						"npm test",
+						"npm run build",
+						"git status",
+						"git add .",
+						"git commit -m 'fix'",
+						"echo 'done'",
+						"ls -la",
+						"cat package.json",
+					]
+
+					commonCommands.forEach((cmd) => {
+						expect(devValidator.isAutoApproved(cmd)).toBe(true)
+					})
+				})
+
+				it("blocks dangerous commands", () => {
+					const dangerousCommands = [
+						"git push origin main",
+						"rm -rf node_modules",
+						"sudo apt install",
+						"npm publish",
+					]
+
+					dangerousCommands.forEach((cmd) => {
+						expect(devValidator.isAutoDenied(cmd)).toBe(true)
+					})
+				})
+
+				it("requires user input for unknown commands", () => {
+					const unknownCommands = ["docker run", "python script.py", "curl https://api.example.com"]
+
+					unknownCommands.forEach((cmd) => {
+						expect(devValidator.requiresUserInput(cmd)).toBe(true)
+					})
+				})
+			})
+
+			describe("Production environment validation", () => {
+				let prodValidator: CommandValidator
+
+				beforeEach(() => {
+					prodValidator = createCommandValidator(
+						["ls", "cat", "grep", "tail"],
+						["*"], // Deny everything by default
+					)
+				})
+
+				it("allows only read-only commands", () => {
+					expect(prodValidator.isAutoApproved("ls -la")).toBe(true)
+					expect(prodValidator.isAutoApproved("cat /var/log/app.log")).toBe(true)
+					expect(prodValidator.isAutoApproved("grep ERROR /var/log/app.log")).toBe(true)
+					expect(prodValidator.isAutoApproved("tail -f /var/log/app.log")).toBe(true)
+				})
+
+				it("blocks all other commands due to wildcard deny", () => {
+					const blockedCommands = ["npm install", "git push", "rm file", "echo hello", "mkdir test"]
+
+					blockedCommands.forEach((cmd) => {
+						expect(prodValidator.isAutoDenied(cmd)).toBe(true)
+					})
+				})
+			})
+
+			describe("Longest prefix match in complex scenarios", () => {
+				let complexValidator: CommandValidator
+
+				beforeEach(() => {
+					complexValidator = createCommandValidator(
+						["git", "git push", "git push --dry-run", "npm", "npm test"],
+						["git push", "npm test --coverage"],
+					)
+				})
+
+				it("demonstrates longest prefix match resolution", () => {
+					// git push --dry-run (allowed, 18 chars) vs git push (denied, 8 chars) -> allow
+					expect(complexValidator.isAutoApproved("git push --dry-run origin main")).toBe(true)
+
+					// git push origin (denied, 8 chars) vs git (allowed, 3 chars) -> deny
+					expect(complexValidator.isAutoDenied("git push origin main")).toBe(true)
+
+					// npm test (allowed, 8 chars) vs npm test --coverage (denied, 19 chars) -> deny
+					expect(complexValidator.isAutoDenied("npm test --coverage --watch")).toBe(true)
+
+					// npm test basic (allowed, 8 chars) vs no deny match -> allow
+					expect(complexValidator.isAutoApproved("npm test basic")).toBe(true)
+				})
+
+				it("handles command chains with mixed decisions", () => {
+					// One command denied -> whole chain denied
+					expect(complexValidator.isAutoDenied("git status && git push origin")).toBe(true)
+
+					// All commands approved -> whole chain approved
+					expect(complexValidator.isAutoApproved("git status && git push --dry-run")).toBe(true)
+
+					// Mixed with unknown -> ask user
+					expect(complexValidator.requiresUserInput("git status && unknown-command")).toBe(true)
+				})
+			})
+
+			describe("Performance and scalability", () => {
+				it("handles large command lists efficiently", () => {
+					const largeAllowList = Array.from({ length: 1000 }, (_, i) => `command${i}`)
+					const largeDenyList = Array.from({ length: 500 }, (_, i) => `dangerous${i}`)
+
+					const largeValidator = createCommandValidator(largeAllowList, largeDenyList)
+
+					// Should still work efficiently
+					expect(largeValidator.isAutoApproved("command500 --flag")).toBe(true)
+					expect(largeValidator.isAutoDenied("dangerous250 --flag")).toBe(true)
+					expect(largeValidator.requiresUserInput("unknown")).toBe(true)
+				})
+
+				it("handles batch validation efficiently", () => {
+					const batchValidator = createCommandValidator(["npm"], ["rm"])
+					const commands = Array.from({ length: 100 }, (_, i) => `npm test${i}`)
+					const results = batchValidator.validateCommands(commands)
+
+					expect(results.size).toBe(100)
+					// All should be auto-approved since they match "npm" allowlist
+					Array.from(results.values()).forEach((decision) => {
+						expect(decision).toBe("auto_approve")
+					})
+				})
 			})
 		})
 	})

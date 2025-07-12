@@ -1304,31 +1304,7 @@ export class ClineProvider
 	 * with proper validation and deduplication
 	 */
 	private mergeAllowedCommands(globalStateCommands?: string[]): string[] {
-		try {
-			// Validate and sanitize global state commands
-			const validGlobalCommands = Array.isArray(globalStateCommands)
-				? globalStateCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
-				: []
-
-			// Get workspace configuration commands
-			const workspaceCommands =
-				vscode.workspace.getConfiguration(Package.name).get<string[]>("allowedCommands") || []
-
-			// Validate and sanitize workspace commands
-			const validWorkspaceCommands = Array.isArray(workspaceCommands)
-				? workspaceCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
-				: []
-
-			// Combine and deduplicate commands
-			// Global state takes precedence over workspace configuration
-			const mergedCommands = [...new Set([...validGlobalCommands, ...validWorkspaceCommands])]
-
-			return mergedCommands
-		} catch (error) {
-			console.error("Error merging allowed commands:", error)
-			// Return empty array as fallback to prevent crashes
-			return []
-		}
+		return this.mergeCommandLists("allowedCommands", "allowed", globalStateCommands)
 	}
 
 	/**
@@ -1336,6 +1312,23 @@ export class ClineProvider
 	 * with proper validation and deduplication
 	 */
 	private mergeDeniedCommands(globalStateCommands?: string[]): string[] {
+		return this.mergeCommandLists("deniedCommands", "denied", globalStateCommands)
+	}
+
+	/**
+	 * Common utility for merging command lists from global state and workspace configuration.
+	 * Implements the Command Denylist feature's merging strategy with proper validation.
+	 *
+	 * @param configKey - VSCode workspace configuration key
+	 * @param commandType - Type of commands for error logging
+	 * @param globalStateCommands - Commands from global state
+	 * @returns Merged and deduplicated command list
+	 */
+	private mergeCommandLists(
+		configKey: "allowedCommands" | "deniedCommands",
+		commandType: "allowed" | "denied",
+		globalStateCommands?: string[],
+	): string[] {
 		try {
 			// Validate and sanitize global state commands
 			const validGlobalCommands = Array.isArray(globalStateCommands)
@@ -1343,8 +1336,7 @@ export class ClineProvider
 				: []
 
 			// Get workspace configuration commands
-			const workspaceCommands =
-				vscode.workspace.getConfiguration(Package.name).get<string[]>("deniedCommands") || []
+			const workspaceCommands = vscode.workspace.getConfiguration(Package.name).get<string[]>(configKey) || []
 
 			// Validate and sanitize workspace commands
 			const validWorkspaceCommands = Array.isArray(workspaceCommands)
@@ -1357,7 +1349,7 @@ export class ClineProvider
 
 			return mergedCommands
 		} catch (error) {
-			console.error("Error merging denied commands:", error)
+			console.error(`Error merging ${commandType} commands:`, error)
 			// Return empty array as fallback to prevent crashes
 			return []
 		}
