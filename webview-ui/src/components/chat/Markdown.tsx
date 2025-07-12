@@ -7,7 +7,7 @@ import { StandardTooltip } from "@src/components/ui"
 import MarkdownBlock from "../common/MarkdownBlock"
 import { parseTable } from "../common/TableParser"
 
-const splitMarkdownAndTables = (markdownText: string, ts: number) => {
+const splitMarkdownAndTables = (markdownText: string) => {
     const segments: { type: 'text' | 'table'; content: string | React.ReactNode }[] = [];
     const lines = markdownText.split(/\r?\n/);
     let currentLineIndex = 0;
@@ -28,7 +28,7 @@ const splitMarkdownAndTables = (markdownText: string, ts: number) => {
                     tempIndex++;
                 }
                 const tableString = potentialTableLines.join('\n');
-                const parsedTableContent = parseTable(tableString, `chat-table-${ts}-${segments.length}`);
+                const parsedTableContent = parseTable(tableString, `chat-table-${Date.now()}-${segments.length}`);
 
                 if (parsedTableContent) {
                     if (currentTextBuffer.length > 0) {
@@ -51,7 +51,7 @@ const splitMarkdownAndTables = (markdownText: string, ts: number) => {
     return segments;
 };
 
-export const Markdown = memo(({ markdown, partial, ts }: { markdown?: string; partial?: boolean; ts?: number }) => {
+export const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boolean }) => {
 	const [isHovering, setIsHovering] = useState(false)
 
 	// Shorter feedback duration for copy button flash.
@@ -61,7 +61,7 @@ export const Markdown = memo(({ markdown, partial, ts }: { markdown?: string; pa
 		return null
 	}
 
-	const segments = splitMarkdownAndTables(markdown, ts || Date.now());
+	const segments = splitMarkdownAndTables(markdown);
 
 	return (
 		<div
