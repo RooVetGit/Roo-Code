@@ -180,7 +180,7 @@
 			"commandPlaceholder": "Masukkan prefix perintah (misalnya, 'git ')",
 			"deniedCommandPlaceholder": "Masukkan prefix perintah untuk ditolak (misalnya, 'rm -rf')",
 			"addButton": "Tambah",
-			"autoDenied": "Awalan perintah `{{prefix}}` telah ditolak secara otomatis"
+			"autoDenied": "Awalan perintah `{{prefix}}` telah ditolak secara otomatis. Mencoba menghindari pembatasan ini dapat membahayakan keamanan sistem."
 		},
 		"showMenu": {
 			"label": "Tampilkan menu auto-approve di tampilan chat",

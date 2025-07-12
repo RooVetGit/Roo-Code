@@ -180,7 +180,7 @@
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
 			"deniedCommandPlaceholder": "Reddetmek için komut öneki girin (örn. 'rm -rf')",
 			"addButton": "Ekle",
-			"autoDenied": "Komut öneki `{{prefix}}` otomatik olarak reddedildi"
+			"autoDenied": "Komut öneki `{{prefix}}` otomatik olarak reddedildi. Bu kısıtlamayı aşmaya çalışmak sistemi güvenlik risklerine maruz bırakabilir."
 		},
 		"updateTodoList": {
 			"label": "Todo",

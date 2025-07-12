@@ -180,7 +180,7 @@
 			"commandPlaceholder": "Digite o prefixo do comando (ex. 'git ')",
 			"deniedCommandPlaceholder": "Digite o prefixo do comando para negar (ex. 'rm -rf')",
 			"addButton": "Adicionar",
-			"autoDenied": "O prefixo do comando `{{prefix}}` foi automaticamente negado"
+			"autoDenied": "O prefixo do comando `{{prefix}}` foi automaticamente negado. Tentar contornar essa restrição pode expor o sistema a riscos de segurança."
 		},
 		"updateTodoList": {
 			"label": "Todo",
