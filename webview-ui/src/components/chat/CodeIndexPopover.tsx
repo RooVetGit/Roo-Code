@@ -73,6 +73,7 @@ interface LocalCodeIndexSettings {
 // Validation schema for codebase index settings
 const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 	const baseSchema = z.object({
+		codebaseIndexEnabled: z.boolean(),
 		codebaseIndexQdrantUrl: z
 			.string()
 			.min(1, t("settings:codeIndex.validation.qdrantUrlRequired"))
@@ -236,20 +237,20 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					// This ensures hasUnsavedChanges becomes false
 					const savedSettings = { ...currentSettingsRef.current }
 					setInitialSettings(savedSettings)
-					// Don't request secret status immediately after save to avoid race conditions
-					// The secret status will be requested on next popover open
-					// Reset status after 3 seconds
-					setTimeout(() => {
-						setSaveStatus("idle")
-					}, 3000)
+					// Also update current settings to maintain consistency
+					setCurrentSettings(savedSettings)
+					// Request secret status to ensure we have the latest state
+					// This is important to maintain placeholder display after save
+
+					vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
+
+					setSaveStatus("idle")
 				} else {
 					setSaveStatus("error")
 					setSaveError(event.data.error || t("settings:codeIndex.saveError"))
 					// Clear error message after 5 seconds
-					setTimeout(() => {
-						setSaveStatus("idle")
-						setSaveError(null)
-					}, 5000)
+					setSaveStatus("idle")
+					setSaveError(null)
 				}
 			}
 		}
@@ -292,9 +293,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					return updated
 				}
 
-				// Only update settings if we're not in the middle of saving or just saved
-				// This prevents overwriting user changes after a save
-				if (saveStatus === "idle") {
+				// Only update settings if we're not in the middle of saving
+				// After save is complete (saved status), we still want to update to maintain consistency
+				if (saveStatus === "idle" || saveStatus === "saved") {
 					setCurrentSettings(updateWithSecrets)
 					setInitialSettings(updateWithSecrets)
 				}
@@ -429,19 +430,25 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		setSaveStatus("saving")
 		setSaveError(null)
 
-		// Prepare settings to save - include all fields except secrets with placeholder values
+		// Prepare settings to save
 		const settingsToSave: any = {}
 
 		// Iterate through all current settings
 		for (const [key, value] of Object.entries(currentSettings)) {
-			// Skip secret fields that still have placeholder value
+			// For secret fields with placeholder, don't send the placeholder
+			// but also don't send an empty string - just skip the field
+			// This tells the backend to keep the existing secret
 			if (value === SECRET_PLACEHOLDER) {
+				// Skip sending placeholder values - backend will preserve existing secrets
 				continue
 			}
 
-			// Include all other fields
+			// Include all other fields, including empty strings (which clear secrets)
 			settingsToSave[key] = value
 		}
+
+		// Always include codebaseIndexEnabled to ensure it's persisted
+		settingsToSave.codebaseIndexEnabled = currentSettings.codebaseIndexEnabled
 
 		// Save settings to backend
 		vscode.postMessage({

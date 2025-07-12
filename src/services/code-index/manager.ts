@@ -316,6 +316,12 @@ export class CodeIndexManager {
 
 			if (requiresRestart && isFeatureEnabled && isFeatureConfigured) {
 				try {
+					// Ensure cacheManager is initialized before recreating services
+					if (!this._cacheManager) {
+						this._cacheManager = new CacheManager(this.context, this.workspacePath)
+						await this._cacheManager.initialize()
+					}
+
 					// Recreate services with new configuration
 					await this._recreateServices()
 				} catch (error) {
