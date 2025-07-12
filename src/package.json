@@ -330,6 +330,20 @@
 					],
 					"description": "%commands.allowedCommands.description%"
 				},
+				"roo-cline.deniedCommands": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [
+						"npm run dev",
+						"npm start",
+						"rm -rf",
+						"sudo rm",
+						"git push --force"
+					],
+					"description": "%commands.deniedCommands.description%"
+				},
 				"roo-cline.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {

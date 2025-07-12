@@ -1331,6 +1331,38 @@ export class ClineProvider
 		}
 	}
 
+	/**
+	 * Merges denied commands from global state and workspace configuration
+	 * with proper validation and deduplication
+	 */
+	private mergeDeniedCommands(globalStateCommands?: string[]): string[] {
+		try {
+			// Validate and sanitize global state commands
+			const validGlobalCommands = Array.isArray(globalStateCommands)
+				? globalStateCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			// Get workspace configuration commands
+			const workspaceCommands =
+				vscode.workspace.getConfiguration(Package.name).get<string[]>("deniedCommands") || []
+
+			// Validate and sanitize workspace commands
+			const validWorkspaceCommands = Array.isArray(workspaceCommands)
+				? workspaceCommands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			// Combine and deduplicate commands
+			// Global state takes precedence over workspace configuration
+			const mergedCommands = [...new Set([...validGlobalCommands, ...validWorkspaceCommands])]
+
+			return mergedCommands
+		} catch (error) {
+			console.error("Error merging denied commands:", error)
+			// Return empty array as fallback to prevent crashes
+			return []
+		}
+	}
+
 	async getStateToPostToWebview() {
 		const {
 			apiConfiguration,
@@ -1343,6 +1375,7 @@ export class ClineProvider
 			alwaysAllowWriteProtected,
 			alwaysAllowExecute,
 			allowedCommands,
+			deniedCommands,
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
@@ -1414,6 +1447,7 @@ export class ClineProvider
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
 		const mergedAllowedCommands = this.mergeAllowedCommands(allowedCommands)
+		const mergedDeniedCommands = this.mergeDeniedCommands(deniedCommands)
 		const cwd = this.cwd
 
 		// Check if there's a system prompt override for the current mode
@@ -1454,6 +1488,7 @@ export class ClineProvider
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
 			allowedCommands: mergedAllowedCommands,
+			deniedCommands: mergedDeniedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
 			screenshotQuality: screenshotQuality ?? 75,
@@ -1610,6 +1645,7 @@ export class ClineProvider
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
+			deniedCommands: stateValues.deniedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
 			ttsEnabled: stateValues.ttsEnabled ?? false,
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
