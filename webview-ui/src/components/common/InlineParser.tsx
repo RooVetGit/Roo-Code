@@ -115,16 +115,6 @@ const processBold = (
     result.push(text.substring(lastIndex));
   }
 
-  if (result.length === 1 && typeof result[0] === "string") {
-    const singleAsteriskRegex = /^\*(.*)\*$/;
-    const singleMatch = text.match(singleAsteriskRegex);
-
-    if (singleMatch) {
-      const boldContent = singleMatch[1];
-      const processedBoldContent = parseInlineMarkdown(boldContent, keyOffset + 3000);
-      return <strong key={`bold-single-${keyOffset}`}>{processedBoldContent}</strong>;
-    }
-  }
 
   return result.length === 1 && typeof result[0] === "string" ? result[0] : result;
 };
@@ -142,7 +132,7 @@ const processItalic = (
     return text;
   }
 
-  const italicRegex = /_(.*?)_/g;
+  const italicRegex = /([*_])(.*?)\1/g;
   let lastIndex = 0;
   const result: ReactNode[] = [];
   let match;
@@ -153,7 +143,7 @@ const processItalic = (
       result.push(text.substring(lastIndex, match.index));
     }
 
-    const italicContent = match[1];
+    const italicContent = match[2];
 
     const processedItalicContent = parseInlineMarkdown(
       italicContent,

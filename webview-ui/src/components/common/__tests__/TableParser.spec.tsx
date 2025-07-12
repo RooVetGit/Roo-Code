@@ -21,14 +21,6 @@ describe("TableParser", () => {
     expect(parseTable("| Header |\n|---|", "test")).not.toBeNull();
   });
 
-  it("handles HTML in cells", () => {
-    const table = `| Header |
-|--------|
-| <b>Bold</b> |`;
-    const { container } = render(parseTable(table, "html-table")!);
-    expect(container.querySelector("b")).toBeInTheDocument();
-    expect(container.querySelector("b")?.textContent).toBe("Bold");
-  });
 
   it("handles markdown in cells", () => {
     const table = `| Header |
@@ -99,6 +91,13 @@ describe("TableParser", () => {
 
   it("parses italic markdown", () => {
     const text = "Cell with _italic_ text.";
+    const result = parseInlineMarkdown(text, 0);
+    const container = render(<div>{result}</div>).container;
+    expect(container.innerHTML).toContain("<em>italic</em>");
+  });
+
+  it("parses italic markdown with single asterisks", () => {
+    const text = "Cell with *italic* text.";
     const result = parseInlineMarkdown(text, 0);
     const container = render(<div>{result}</div>).container;
     expect(container.innerHTML).toContain("<em>italic</em>");

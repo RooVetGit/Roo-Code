@@ -1,9 +1,5 @@
 import { parseInlineMarkdown } from "./InlineParser";
 
-const containsHtmlTags = (text: string): boolean => {
-  return /<\/?[a-z][a-z0-9]*\b[^>]*>/i.test(text);
-};
-
 const parseTableHeaderCells = (headerRow: string) => {
   return headerRow
     .split("|")
@@ -43,7 +39,7 @@ export const renderTableHeader = (headerCells: string[], keyPrefix: string) => {
             key={`${keyPrefix}-header-${idx}`}
             className="border border-[--gray-3] px-4 py-2 text-left text-sm font-medium"
           >
-            {renderTableCell(cell, idx)}
+            {parseInlineMarkdown(cell, idx)}
           </th>
         ))}
       </tr>
@@ -64,20 +60,13 @@ export const renderTableBody = (rows: string[][], keyPrefix: string) => {
               key={`${keyPrefix}-cell-${rowIdx}-${cellIdx}`}
               className="border border-[--gray-3] px-4 py-2 text-sm"
             >
-              {renderTableCell(cell, cellIdx + rowIdx * 100)}
+              {parseInlineMarkdown(cell, cellIdx + rowIdx * 100)}
             </td>
           ))}
         </tr>
       ))}
     </tbody>
   );
-};
-
-const renderTableCell = (content: string, keyOffset: number) => {
-  if (containsHtmlTags(content)) {
-    return <div dangerouslySetInnerHTML={{ __html: content }} />;
-  }
-  return parseInlineMarkdown(content, keyOffset);
 };
 
 const isValidTable = (separatorRow: string, headerCells: string[], rows: string[][]) => {
