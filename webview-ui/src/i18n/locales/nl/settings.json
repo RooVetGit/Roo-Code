@@ -180,7 +180,7 @@
 			"commandPlaceholder": "Voer commando-prefix in (bijv. 'git ')",
 			"deniedCommandPlaceholder": "Voer te weigeren commando-prefix in (bijv. 'rm -rf')",
 			"addButton": "Toevoegen",
-			"autoDenied": "Het commando prefix `{{prefix}}` is automatisch geweigerd"
+			"autoDenied": "Het commando-prefix `{{prefix}}` is automatisch geweigerd"
 		},
 		"updateTodoList": {
 			"label": "Todo",
