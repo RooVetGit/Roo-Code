@@ -319,11 +319,6 @@ export function getSingleCommandDecision(
 	const longestAllowedMatch = findLongestPrefixMatch(command, allowedCommands || [])
 	const longestDeniedMatch = findLongestPrefixMatch(command, deniedCommands || [])
 
-	// If neither list has a match, ask user
-	if (!longestAllowedMatch && !longestDeniedMatch) {
-		return "ask_user"
-	}
-
 	// If only allowlist has a match, auto-approve
 	if (longestAllowedMatch && !longestDeniedMatch) {
 		return "auto_approve"
@@ -336,16 +331,9 @@ export function getSingleCommandDecision(
 
 	// Both lists have matches - apply longest prefix match rule
 	if (longestAllowedMatch && longestDeniedMatch) {
-		if (longestAllowedMatch.length > longestDeniedMatch.length) {
-			return "auto_approve"
-		} else if (longestDeniedMatch.length > longestAllowedMatch.length) {
-			return "auto_deny"
-		} else {
-			// Equal length - denylist wins (secure by default)
-			return "auto_deny"
-		}
+		return longestAllowedMatch.length > longestDeniedMatch.length ? "auto_approve" : "auto_deny"
 	}
 
-	// Fallback (should never reach here)
+	// If neither list has a match, ask user
 	return "ask_user"
 }
