@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 
 export const parseInlineMarkdown = (text: string, keyOffset: number): ReactNode | ReactNode[] => {
-  if (!/[\[\*_~`\|]/.test(text)) {
+  if (!/[[*_~`|]/.test(text)) {
     return text;
   }
 
@@ -40,7 +40,7 @@ const processLinks = (
 
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   let lastIndex = 0;
-  let result: ReactNode[] = [];
+  const result: ReactNode[] = [];
   let match;
   let matchIndex = 0;
 
@@ -92,7 +92,7 @@ const processBold = (
 
   const boldRegex = /\*\*(.*?)\*\*/g;
   let lastIndex = 0;
-  let result: ReactNode[] = [];
+  const result: ReactNode[] = [];
   let match;
   let matchIndex = 0;
 
@@ -144,7 +144,7 @@ const processItalic = (
 
   const italicRegex = /_(.*?)_/g;
   let lastIndex = 0;
-  let result: ReactNode[] = [];
+  const result: ReactNode[] = [];
   let match;
   let matchIndex = 0;
 
@@ -188,7 +188,7 @@ const processStrikethrough = (
 
   const strikeRegex = /~~(.*?)~~/g;
   let lastIndex = 0;
-  let result: ReactNode[] = [];
+  const result: ReactNode[] = [];
   let match;
   let matchIndex = 0;
 
@@ -236,7 +236,7 @@ const processInlineCode = (
 
   const codeRegex = /`([^`]+)`/g;
   let lastIndex = 0;
-  let result: ReactNode[] = [];
+  const result: ReactNode[] = [];
   let match;
   let matchIndex = 0;
 
@@ -282,7 +282,7 @@ const processSpoiler = (
 
   const spoilerRegex = /\|\|(.*?)\|\|/g;
   let lastIndex = 0;
-  let result: ReactNode[] = [];
+  const result: ReactNode[] = [];
   let match;
   let matchIndex = 0;
 

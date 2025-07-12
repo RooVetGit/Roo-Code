@@ -28,7 +28,7 @@ const parseTableDataRows = (dataRows: string[], maxRows: number = 50) => {
         break;
       }
     }
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
   return rows;
@@ -128,7 +128,7 @@ export const parseTable = (tableText: string, keyPrefix: string) => {
         </table>
       </div>
     );
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 };

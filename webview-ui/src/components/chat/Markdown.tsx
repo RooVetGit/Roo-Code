@@ -16,7 +16,7 @@ const splitMarkdownAndTables = (markdownText: string, ts: number) => {
     while (currentLineIndex < lines.length) {
         const line = lines[currentLineIndex];
         if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-            let potentialTableLines: string[] = [];
+            const potentialTableLines: string[] = [];
             let tempIndex = currentLineIndex;
             potentialTableLines.push(lines[tempIndex]);
             tempIndex++;
