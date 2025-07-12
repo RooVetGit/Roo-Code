@@ -39,6 +39,17 @@
 			"copyError": "Błąd kopiowania obrazu"
 		}
 	},
+	"upgrade": {
+		"title": "Aktualizacja indeksu historii zadań",
+		"description": "Aby kontynuować, wymagana jest aktualizacja. Ten proces zmigruje indeksy historii zadań do szybszego i bardziej wydajnego pod względem pamięci formatu. Starsze wersje Roo nadal będą miały dostęp do starego formatu.",
+		"clickToStart": "Kliknij przycisk poniżej, aby rozpocząć proces aktualizacji.",
+		"startButton": "Rozpocznij aktualizację",
+		"inProgress": "Aktualizacja w toku...",
+		"logs": "Dzienniki aktualizacji:",
+		"waitingForLogs": "Oczekiwanie na rozpoczęcie aktualizacji...",
+		"noLogs": "Brak dostępnych dzienników.",
+		"complete": "Aktualizacja zakończona"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "Nieprawidłowy format URI danych",

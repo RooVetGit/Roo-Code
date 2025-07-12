@@ -39,6 +39,17 @@
 			"copyError": "Lỗi sao chép hình ảnh"
 		}
 	},
+	"upgrade": {
+		"title": "Nâng cấp chỉ mục lịch sử tác vụ",
+		"description": "Yêu cầu nâng cấp để tiếp tục. Quá trình này sẽ di chuyển các chỉ mục lịch sử tác vụ của bạn sang một định dạng nhanh hơn và hiệu quả hơn về bộ nhớ. Các phiên bản cũ hơn của Roo vẫn có thể truy cập định dạng cũ.",
+		"clickToStart": "Nhấp vào nút bên dưới để bắt đầu quá trình nâng cấp.",
+		"startButton": "Bắt đầu nâng cấp",
+		"inProgress": "Đang nâng cấp...",
+		"logs": "Nhật ký nâng cấp:",
+		"waitingForLogs": "Đang chờ nâng cấp bắt đầu...",
+		"noLogs": "Không có nhật ký nào.",
+		"complete": "Nâng cấp hoàn tất"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "Định dạng URI dữ liệu không hợp lệ",

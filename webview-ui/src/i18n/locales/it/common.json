@@ -39,6 +39,17 @@
 			"copyError": "Errore nella copia dell'immagine"
 		}
 	},
+	"upgrade": {
+		"title": "Aggiornamento dell'indice della cronologia delle attività",
+		"description": "È necessario un aggiornamento per continuare. Questo processo migrerà i tuoi indici della cronologia delle attività in un formato più veloce e più efficiente in termini di memoria. Le versioni precedenti di Roo potranno ancora accedere al vecchio formato.",
+		"clickToStart": "Fai clic sul pulsante qui sotto per avviare il processo di aggiornamento.",
+		"startButton": "Avvia aggiornamento",
+		"inProgress": "Aggiornamento in corso...",
+		"logs": "Log di aggiornamento:",
+		"waitingForLogs": "In attesa dell'avvio dell'aggiornamento...",
+		"noLogs": "Nessun log disponibile.",
+		"complete": "Aggiornamento completato"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "Formato URI dati non valido",

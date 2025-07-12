@@ -39,6 +39,17 @@
 			"copyError": "Görsel kopyalama hatası"
 		}
 	},
+	"upgrade": {
+		"title": "Görev Geçmişi Dizini Yükseltme",
+		"description": "Devam etmek için bir yükseltme gereklidir. Bu işlem, görev geçmişi dizinlerinizi daha hızlı ve bellek açısından daha verimli bir formata taşıyacaktır. Roo'nun eski sürümleri eski formata erişmeye devam edebilir.",
+		"clickToStart": "Yükseltme işlemini başlatmak için aşağıdaki düğmeye tıklayın.",
+		"startButton": "Yükseltmeyi Başlat",
+		"inProgress": "Yükseltme devam ediyor...",
+		"logs": "Yükseltme Günlükleri:",
+		"waitingForLogs": "Yükseltmenin başlaması bekleniyor...",
+		"noLogs": "Kullanılabilir günlük yok.",
+		"complete": "Yükseltme Tamamlandı"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "Geçersiz veri URI formatı",

@@ -39,6 +39,17 @@
 			"copyError": "Error menyalin gambar"
 		}
 	},
+	"upgrade": {
+		"title": "Peningkatan Indeks Riwayat Tugas",
+		"description": "Diperlukan peningkatan untuk melanjutkan. Proses ini akan memigrasikan indeks riwayat tugas Anda ke format yang lebih cepat dan hemat memori. Versi Roo yang lebih lama masih dapat mengakses format lama.",
+		"clickToStart": "Klik tombol di bawah untuk memulai proses peningkatan.",
+		"startButton": "Mulai Peningkatan",
+		"inProgress": "Peningkatan sedang berlangsung...",
+		"logs": "Log Peningkatan:",
+		"waitingForLogs": "Menunggu peningkatan dimulai...",
+		"noLogs": "Tidak ada log yang tersedia.",
+		"complete": "Peningkatan Selesai"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "Format data URI tidak valid",

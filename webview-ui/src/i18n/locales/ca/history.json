@@ -38,7 +38,11 @@
 	"workspace": {
 		"prefix": "Espai de treball:",
 		"current": "Actual",
-		"all": "Tots"
+		"all": "Tots",
+		"unknown": "Desconegut",
+		"available": "Espais de treball disponibles",
+		"recent": "Espais de treball recents",
+		"filterPlaceholder": "Filtra els espais de treball..."
 	},
 	"sort": {
 		"prefix": "Ordenar:",
@@ -48,5 +52,15 @@
 		"mostTokens": "Més tokens",
 		"mostRelevant": "Més rellevants"
 	},
-	"viewAllHistory": "Veure totes les tasques"
+	"viewAllHistory": "Veure totes les tasques",
+	"limit": {
+		"prefix": "Límit:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Tots"
+	},
+	"noItemsFound": "No s'han trobat elements"
 }

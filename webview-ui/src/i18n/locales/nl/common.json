@@ -39,6 +39,17 @@
 			"copyError": "Fout bij kopiëren van afbeelding"
 		}
 	},
+	"upgrade": {
+		"title": "Upgrade van taakgeschiedenisindex",
+		"description": "Een upgrade is vereist om door te gaan. Dit proces migreert uw taakgeschiedenisindexen naar een sneller en geheugenefficiënter formaat. Oudere versies van Roo hebben nog steeds toegang tot het oude formaat.",
+		"clickToStart": "Klik op de onderstaande knop om het upgradeproces te starten.",
+		"startButton": "Upgrade starten",
+		"inProgress": "Upgrade wordt uitgevoerd...",
+		"logs": "Upgrade-logboeken:",
+		"waitingForLogs": "Wachten tot de upgrade start...",
+		"noLogs": "Geen logboeken beschikbaar.",
+		"complete": "Upgrade voltooid"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "Ongeldig data-URI-formaat",
