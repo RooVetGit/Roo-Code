@@ -1,12 +1,57 @@
-import { memo, useState } from "react"
+import React, { memo, useState } from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { StandardTooltip } from "@src/components/ui"
 
 import MarkdownBlock from "../common/MarkdownBlock"
+import { parseTable } from "../common/TableParser"
 
-export const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boolean }) => {
+const splitMarkdownAndTables = (markdownText: string, ts: number) => {
+    const segments: { type: 'text' | 'table'; content: string | React.ReactNode }[] = [];
+    const lines = markdownText.split(/\r?\n/);
+    let currentLineIndex = 0;
+    let currentTextBuffer: string[] = [];
+
+    while (currentLineIndex < lines.length) {
+        const line = lines[currentLineIndex];
+        if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+            let potentialTableLines: string[] = [];
+            let tempIndex = currentLineIndex;
+            potentialTableLines.push(lines[tempIndex]);
+            tempIndex++;
+            if (tempIndex < lines.length && lines[tempIndex].trim().match(/^\|(?:\s*[-:]+\s*\|)+\s*$/)) {
+                potentialTableLines.push(lines[tempIndex]);
+                tempIndex++;
+                while (tempIndex < lines.length && lines[tempIndex].trim().startsWith('|') && lines[tempIndex].trim().endsWith('|')) {
+                    potentialTableLines.push(lines[tempIndex]);
+                    tempIndex++;
+                }
+                const tableString = potentialTableLines.join('\n');
+                const parsedTableContent = parseTable(tableString, `chat-table-${ts}-${segments.length}`);
+
+                if (parsedTableContent) {
+                    if (currentTextBuffer.length > 0) {
+                        segments.push({ type: 'text', content: currentTextBuffer.join('\n') });
+                        currentTextBuffer = [];
+                    }
+                    segments.push({ type: 'table', content: parsedTableContent });
+                    currentLineIndex = tempIndex;
+                    continue;
+                }
+            }
+        }
+        currentTextBuffer.push(line);
+        currentLineIndex++;
+    }
+    if (currentTextBuffer.length > 0) {
+        segments.push({ type: 'text', content: currentTextBuffer.join('\n') });
+    }
+
+    return segments;
+};
+
+export const Markdown = memo(({ markdown, partial, ts }: { markdown?: string; partial?: boolean; ts?: number }) => {
 	const [isHovering, setIsHovering] = useState(false)
 
 	// Shorter feedback duration for copy button flash.
@@ -16,13 +61,21 @@ export const Markdown = memo(({ markdown, partial }: { markdown?: string; partia
 		return null
 	}
 
+	const segments = splitMarkdownAndTables(markdown, ts || Date.now());
+
 	return (
 		<div
 			onMouseEnter={() => setIsHovering(true)}
 			onMouseLeave={() => setIsHovering(false)}
 			style={{ position: "relative" }}>
 			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -15, marginTop: -15 }}>
-				<MarkdownBlock markdown={markdown} />
+				{segments.map((segment, index) => {
+					if (segment.type === 'text') {
+						return <MarkdownBlock key={index} markdown={segment.content as string} />;
+					} else {
+						return <React.Fragment key={index}>{segment.content}</React.Fragment>;
+					}
+				})}
 			</div>
 			{markdown && !partial && isHovering && (
 				<div
