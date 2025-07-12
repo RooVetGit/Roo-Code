@@ -18,15 +18,14 @@ const HistoryPreview = () => {
 		<div className="flex flex-col gap-3">
 			{tasks.length !== 0 && (
 				<>
-					{tasks.slice(0, 3).map((item) => (
+					{tasks.slice(0, 2).map((item) => (
 						<TaskItem key={item.id} item={item} variant="compact" />
 					))}
 					<button
 						onClick={handleViewAllHistory}
-						className="text-xs text-vscode-descriptionForeground hover:text-vscode-textLink-foreground transition-colors cursor-pointer text-left flex items-center gap-1 mt-1"
+						className="text-base text-vscode-descriptionForeground hover:text-vscode-textLink-foreground transition-colors cursor-pointer text-center w-full bg-vscode-editor-background rounded p-3 hover:border-vscode-toolbar-hoverBackground/60"
 						aria-label={t("history:viewAllHistory")}>
-						<span>{t("history:viewAllHistory")}</span>
-						<span className="codicon codicon-arrow-right text-xs" />
+						{t("history:viewAllHistory")}
 					</button>
 				</>
 			)}
