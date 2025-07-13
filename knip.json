@@ -7,7 +7,8 @@
 		"src/activate/**",
 		"src/workers/countTokens.ts",
 		"src/extension.ts",
-		"scripts/**"
+		"scripts/**",
+		"playwright-mcp-integration/tests/**"
 	],
 	"workspaces": {
 		"src": {

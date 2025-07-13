@@ -30,6 +30,14 @@
 		"@roo-code/config-typescript": "workspace:^",
 		"@types/node": "20.x",
 		"tsup": "^8.3.5",
+		"vitest": "^3.2.3",
+		"yaml": "^2.3.4"
+	},
+	"devDependencies": {
+		"@roo-code/config-eslint": "workspace:^",
+		"@roo-code/config-typescript": "workspace:^",
+		"@types/node": "20.x",
+		"tsup": "^8.3.5",
 		"vitest": "^3.2.3"
 	}
 }
