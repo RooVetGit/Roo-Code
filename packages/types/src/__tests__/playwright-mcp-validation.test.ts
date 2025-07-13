@@ -2,7 +2,7 @@
 
 import * as yaml from "yaml"
 import * as fs from "fs/promises"
-import { mcpMarketplaceItemSchema, marketplaceItemSchema, type McpMarketplaceItem } from "../marketplace.js"
+import { mcpMarketplaceItemSchema, marketplaceItemSchema, type McpMarketplaceItem } from "../marketplace"
 
 /**
  * Test suite for validating the corrected Playwright MCP template
@@ -22,7 +22,7 @@ describe("Playwright MCP Template Validation", () => {
 
 	beforeEach(async () => {
 		// Read the corrected template file
-		templateContent = await fs.readFile("c:/Users/orphe/Downloads/playwright-mcp.yaml", "utf-8")
+		templateContent = await fs.readFile("../../../../playwright-mcp-integration/playwright-mcp.yaml", "utf-8")
 		parsedTemplate = yaml.parse(templateContent)
 		
 		// Extract the MCP item from the template

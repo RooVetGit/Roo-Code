@@ -50,7 +50,7 @@ async function runValidation() {
     
     try {
         // Read template file
-        const templatePath = 'C:\\Users\\orphe\\Downloads\\playwright-mcp.yaml';
+        const templatePath = path.join(__dirname, '../../../../playwright-mcp-integration/playwright-mcp.yaml');
         const templateContent = fs.readFileSync(templatePath, 'utf-8');
         
         // Parse YAML manually (simple approach)
