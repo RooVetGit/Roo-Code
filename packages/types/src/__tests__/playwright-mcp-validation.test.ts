@@ -1,5 +1,7 @@
 // npx vitest run src/__tests__/playwright-mcp-validation.test.ts
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as yaml from "yaml"
 import * as fs from "fs/promises"
 import * as path from "path"
@@ -12,7 +14,7 @@ const __dirname = path.dirname(__filename)
 /**
  * Test suite for validating the corrected Playwright MCP template
  * against the Roo Code MCP marketplace schema requirements.
- * 
+ *
  * This validates:
  * - Schema compliance with mcpMarketplaceItemSchema
  * - Parameter structure and substitution logic
@@ -22,7 +24,9 @@ const __dirname = path.dirname(__filename)
  */
 describe("Playwright MCP Template Validation", () => {
 	let templateContent: string
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let parsedTemplate: any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let playwrightMcpItem: any
 
 	beforeEach(async () => {
@@ -95,6 +99,7 @@ describe("Playwright MCP Template Validation", () => {
 		})
 
 		it("should have Node.js/NPM installation method", () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const nodeMethod = playwrightMcpItem.content.find((method: any) => method.name === "Node.js/NPM")
 			expect(nodeMethod).toBeDefined()
 			expect(nodeMethod.content).toBeDefined()
@@ -103,6 +108,7 @@ describe("Playwright MCP Template Validation", () => {
 		})
 
 		it("should have Docker installation method", () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const dockerMethod = playwrightMcpItem.content.find((method: any) => method.name === "Docker")
 			expect(dockerMethod).toBeDefined()
 			expect(dockerMethod.content).toBeDefined()
@@ -115,6 +121,7 @@ describe("Playwright MCP Template Validation", () => {
 		 * that can be parsed and contains the required MCP server configuration structure
 		 */
 		it("should have valid JSON content for each installation method", () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			playwrightMcpItem.content.forEach((method: any) => {
 				expect(() => {
 					const parsed = JSON.parse(method.content)
