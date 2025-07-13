@@ -120,6 +120,9 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
 			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
+			// Fix Windows Git configuration conflict: explicitly set core.bare=false when using core.worktree
+			// This resolves "core.bare and core.worktree do not make sense" error on Windows
+			await git.addConfig("core.bare", "false")
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
 			await git.addConfig("user.name", "Roo Code")
 			await git.addConfig("user.email", "noreply@example.com")
