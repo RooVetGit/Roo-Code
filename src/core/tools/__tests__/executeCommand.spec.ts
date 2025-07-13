@@ -254,7 +254,7 @@ describe("executeCommand", () => {
 				mockTask.taskId,
 				"vscode",
 			)
-			expect(result).toContain(`within working directory '${resolvedCwd}'`)
+			expect(result).toContain(`within working directory '${resolvedCwd.toPosix()}'`)
 		})
 
 		it("should return error when custom working directory does not exist", async () => {
