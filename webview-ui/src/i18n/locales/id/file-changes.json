@@ -24,7 +24,7 @@
 		"modified": "dimodifikasi"
 	},
 	"summary": {
-		"count_with_changes": "({{count}}) File yang Diubah{{changes}}",
+		"count_with_changes": "{{count}} File yang Diubah{{changes}}",
 		"changes_format": " ({{changes}})"
 	},
 	"accessibility": {

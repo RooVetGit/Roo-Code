@@ -24,7 +24,7 @@
 		"modified": "已修改"
 	},
 	"summary": {
-		"count_with_changes": "({{count}}) 已更改文件{{changes}}",
+		"count_with_changes": "{{count}} 已更改文件{{changes}}",
 		"changes_format": " ({{changes}})"
 	},
 	"accessibility": {

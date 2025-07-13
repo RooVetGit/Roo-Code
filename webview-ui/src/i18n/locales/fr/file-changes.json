@@ -24,7 +24,7 @@
 		"modified": "modifié"
 	},
 	"summary": {
-		"count_with_changes": "({{count}}) Fichiers Modifiés{{changes}}",
+		"count_with_changes": "{{count}} Fichiers Modifiés{{changes}}",
 		"changes_format": " ({{changes}})"
 	},
 	"accessibility": {

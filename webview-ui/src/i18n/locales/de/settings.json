@@ -27,6 +27,7 @@
 		"checkpoints": "Kontrollpunkte",
 		"notifications": "Benachrichtigungen",
 		"contextManagement": "Kontext",
+		"ui": "Benutzeroberfläche",
 		"terminal": "Terminal",
 		"prompts": "Eingabeaufforderungen",
 		"experimental": "Experimentell",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Benutzerdefinierte ARN verwenden..."
 	},
 	"includeMaxOutputTokens": "Maximale Ausgabe-Tokens einbeziehen",
-	"includeMaxOutputTokensDescription": "Senden Sie den Parameter für maximale Ausgabe-Tokens in API-Anfragen. Einige Anbieter unterstützen dies möglicherweise nicht."
+	"includeMaxOutputTokensDescription": "Senden Sie den Parameter für maximale Ausgabe-Tokens in API-Anfragen. Einige Anbieter unterstützen dies möglicherweise nicht.",
+	"ui": {
+		"description": "Konfiguriere Oberflächen- und Anzeigeeinstellungen für deine Entwicklungsumgebung",
+		"filesChanged": {
+			"label": "Übersicht der geänderten Dateien aktivieren",
+			"description": "Wenn aktiviert, wird ein Panel angezeigt, das Dateien zeigt, die zwischen Checkpoints geändert wurden. Damit kannst du Diffs anzeigen, einzelne Änderungen akzeptieren/ablehnen und deinen Arbeitsstatus verwalten."
+		}
+	}
 }

@@ -31,7 +31,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 
 	// Performance optimization: Use virtualization for large file lists
 	const VIRTUALIZATION_THRESHOLD = 50
-	const ITEM_HEIGHT = 60 // Approximate height of each file item
+	const ITEM_HEIGHT = 32 // Approximate height of each file item
 	const MAX_VISIBLE_ITEMS = 10
 	const [scrollTop, setScrollTop] = React.useState(0)
 
@@ -198,29 +198,19 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 	}, [checkInit, updateChangeset, handleCheckpointCreated, handleCheckpointRestored])
 
 	/**
-	 * Formats line change counts for display based on file type
+	 * Formats line change counts for display - shows only plus/minus numbers
 	 * @param file - The file change to format
-	 * @returns Formatted string describing the changes
+	 * @returns Formatted string with just the line change counts
 	 */
 	const formatLineChanges = (file: FileChange): string => {
 		const added = file.linesAdded || 0
 		const removed = file.linesRemoved || 0
 
-		if (file.type === "create") {
-			return t("file-changes:line_changes.added", { count: added })
-		} else if (file.type === "delete") {
-			return t("file-changes:line_changes.deleted")
-		} else {
-			if (added > 0 && removed > 0) {
-				return t("file-changes:line_changes.added_removed", { added, removed })
-			} else if (added > 0) {
-				return t("file-changes:line_changes.added", { count: added })
-			} else if (removed > 0) {
-				return t("file-changes:line_changes.removed", { count: removed })
-			} else {
-				return t("file-changes:line_changes.modified")
-			}
-		}
+		const parts = []
+		if (added > 0) parts.push(`+${added}`)
+		if (removed > 0) parts.push(`-${removed}`)
+
+		return parts.length > 0 ? parts.join(", ") : ""
 	}
 
 	// Memoize expensive total calculations
@@ -245,9 +235,10 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 			data-testid="files-changed-overview"
 			style={{
 				border: "1px solid var(--vscode-panel-border)",
-				borderRadius: "4px",
-				padding: "12px",
-				margin: "8px 0",
+				borderTop: 0,
+				borderRadius: 0,
+				padding: "6px 10px",
+				margin: 0,
 				backgroundColor: "var(--vscode-editor-background)",
 			}}>
 			{/* Collapsible header */}
@@ -256,9 +247,10 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 					display: "flex",
 					justifyContent: "space-between",
 					alignItems: "center",
-					marginBottom: isCollapsed ? "0" : "12px",
+					marginTop: "0 2px",
+					//marginBottom: isCollapsed ? "0" : "6px",
 					borderBottom: isCollapsed ? "none" : "1px solid var(--vscode-panel-border)",
-					paddingBottom: "8px",
+					// paddingBottom: "0px",
 					cursor: "pointer",
 					userSelect: "none",
 				}}
@@ -311,7 +303,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 							border: "none",
 							borderRadius: "3px",
 							padding: "4px 8px",
-							fontSize: "12px",
+							fontSize: "13px",
 							cursor: isProcessing ? "not-allowed" : "pointer",
 							opacity: isProcessing ? 0.6 : 1,
 						}}
@@ -329,7 +321,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 							border: "none",
 							borderRadius: "3px",
 							padding: "4px 8px",
-							fontSize: "12px",
+							fontSize: "13px",
 							cursor: isProcessing ? "not-allowed" : "pointer",
 							opacity: isProcessing ? 0.6 : 1,
 						}}
@@ -348,6 +340,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 						transition: "opacity 0.2s ease-in-out",
 						opacity: isCollapsed ? 0 : 1,
 						position: "relative",
+						paddingTop: "8px",
 					}}
 					onScroll={handleScroll}>
 					{shouldVirtualize && (
@@ -425,89 +418,94 @@ const FileItem: React.FC<FileItemProps> = React.memo(
 				justifyContent: "space-between",
 				alignItems: "center",
 				padding: "6px 8px",
-				marginBottom: "4px",
+				marginBottom: "3px",
 				backgroundColor: "var(--vscode-list-hoverBackground)",
 				borderRadius: "3px",
 				fontSize: "13px",
-				minHeight: "60px", // Consistent height for virtualization
+				minHeight: "32px", // Thinner rows
+				lineHeight: "1.3",
 			}}>
 			<div style={{ flex: 1, minWidth: 0 }}>
 				<div
 					style={{
 						fontFamily: "var(--vscode-editor-font-family)",
-						fontSize: "12px",
+						fontSize: "13px",
 						color: "var(--vscode-editor-foreground)",
 						overflow: "hidden",
 						textOverflow: "ellipsis",
 						whiteSpace: "nowrap",
+						fontWeight: 500,
 					}}>
 					{file.uri}
 				</div>
-				<div
-					style={{
-						fontSize: "11px",
-						color: "var(--vscode-descriptionForeground)",
-						marginTop: "2px",
-					}}>
-					{t(`file-changes:file_types.${file.type}`)} • {formatLineChanges(file)}
-				</div>
 			</div>
 
-			<div style={{ display: "flex", gap: "4px", marginLeft: "8px" }}>
-				<button
-					onClick={() => handleWithDebounce(() => onViewDiff(file.uri))}
-					disabled={isProcessing}
-					title={t("file-changes:actions.view_diff")}
-					data-testid={`diff-${file.uri}`}
+			<div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px" }}>
+				<div
 					style={{
-						backgroundColor: "transparent",
-						color: "var(--vscode-button-foreground)",
-						border: "1px solid var(--vscode-button-border)",
-						borderRadius: "3px",
-						padding: "2px 6px",
-						fontSize: "11px",
-						cursor: isProcessing ? "not-allowed" : "pointer",
-						minWidth: "50px",
-						opacity: isProcessing ? 0.6 : 1,
+						fontSize: "12px",
+						color: "var(--vscode-descriptionForeground)",
+						whiteSpace: "nowrap",
+						flexShrink: 0,
 					}}>
-					{t("file-changes:actions.view_diff")}
-				</button>
-				<button
-					onClick={() => handleWithDebounce(() => onRejectFile(file.uri))}
-					disabled={isProcessing}
-					title={t("file-changes:actions.reject_file")}
-					data-testid={`reject-${file.uri}`}
-					style={{
-						backgroundColor: "var(--vscode-button-secondaryBackground)",
-						color: "var(--vscode-button-secondaryForeground)",
-						border: "1px solid var(--vscode-button-border)",
-						borderRadius: "3px",
-						padding: "2px 6px",
-						fontSize: "11px",
-						cursor: isProcessing ? "not-allowed" : "pointer",
-						minWidth: "20px",
-						opacity: isProcessing ? 0.6 : 1,
-					}}>
-					✗
-				</button>
-				<button
-					onClick={() => handleWithDebounce(() => onAcceptFile(file.uri))}
-					disabled={isProcessing}
-					title={t("file-changes:actions.accept_file")}
-					data-testid={`accept-${file.uri}`}
-					style={{
-						backgroundColor: "var(--vscode-button-background)",
-						color: "var(--vscode-button-foreground)",
-						border: "1px solid var(--vscode-button-border)",
-						borderRadius: "3px",
-						padding: "2px 6px",
-						fontSize: "11px",
-						cursor: isProcessing ? "not-allowed" : "pointer",
-						minWidth: "20px",
-						opacity: isProcessing ? 0.6 : 1,
-					}}>
-					✓
-				</button>
+					{formatLineChanges(file)}
+				</div>
+				<div style={{ display: "flex", gap: "4px" }}>
+					<button
+						onClick={() => handleWithDebounce(() => onViewDiff(file.uri))}
+						disabled={isProcessing}
+						title={t("file-changes:actions.view_diff")}
+						data-testid={`diff-${file.uri}`}
+						style={{
+							backgroundColor: "transparent",
+							color: "var(--vscode-button-foreground)",
+							border: "1px solid var(--vscode-button-border)",
+							borderRadius: "3px",
+							padding: "2px 6px",
+							fontSize: "11px",
+							cursor: isProcessing ? "not-allowed" : "pointer",
+							minWidth: "50px",
+							opacity: isProcessing ? 0.6 : 1,
+						}}>
+						{t("file-changes:actions.view_diff")}
+					</button>
+					<button
+						onClick={() => handleWithDebounce(() => onRejectFile(file.uri))}
+						disabled={isProcessing}
+						title={t("file-changes:actions.reject_file")}
+						data-testid={`reject-${file.uri}`}
+						style={{
+							backgroundColor: "var(--vscode-button-secondaryBackground)",
+							color: "var(--vscode-button-secondaryForeground)",
+							border: "1px solid var(--vscode-button-border)",
+							borderRadius: "3px",
+							padding: "2px 6px",
+							fontSize: "11px",
+							cursor: isProcessing ? "not-allowed" : "pointer",
+							minWidth: "20px",
+							opacity: isProcessing ? 0.6 : 1,
+						}}>
+						✗
+					</button>
+					<button
+						onClick={() => handleWithDebounce(() => onAcceptFile(file.uri))}
+						disabled={isProcessing}
+						title={t("file-changes:actions.accept_file")}
+						data-testid={`accept-${file.uri}`}
+						style={{
+							backgroundColor: "var(--vscode-button-background)",
+							color: "var(--vscode-button-foreground)",
+							border: "1px solid var(--vscode-button-border)",
+							borderRadius: "3px",
+							padding: "2px 6px",
+							fontSize: "11px",
+							cursor: isProcessing ? "not-allowed" : "pointer",
+							minWidth: "20px",
+							opacity: isProcessing ? 0.6 : 1,
+						}}>
+						✓
+					</button>
+				</div>
 			</div>
 		</div>
 	),

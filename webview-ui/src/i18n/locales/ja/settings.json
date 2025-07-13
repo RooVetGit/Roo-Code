@@ -27,6 +27,7 @@
 		"checkpoints": "チェックポイント",
 		"notifications": "通知",
 		"contextManagement": "コンテキスト",
+		"ui": "インターフェース",
 		"terminal": "ターミナル",
 		"prompts": "プロンプト",
 		"experimental": "実験的",
@@ -725,5 +726,12 @@
 		"useCustomArn": "カスタム ARN を使用..."
 	},
 	"includeMaxOutputTokens": "最大出力トークンを含める",
-	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。",
+	"ui": {
+		"description": "開発体験をカスタマイズするためのインターフェースと表示設定を構成します",
+		"filesChanged": {
+			"label": "ファイル変更概要を有効にする",
+			"description": "有効にすると、チェックポイント間で変更されたファイルを表示するパネルが表示されます。これにより、差分を表示し、個々の変更を承認/拒否し、作業状態を管理できます。"
+		}
+	}
 }

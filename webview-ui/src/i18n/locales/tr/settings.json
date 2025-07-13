@@ -27,6 +27,7 @@
 		"checkpoints": "Kontrol Noktaları",
 		"notifications": "Bildirimler",
 		"contextManagement": "Bağlam",
+		"ui": "Arabirim",
 		"terminal": "Terminal",
 		"prompts": "Promptlar",
 		"experimental": "Deneysel",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Özel ARN kullan..."
 	},
 	"includeMaxOutputTokens": "Maksimum çıktı tokenlerini dahil et",
-	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir."
+	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir.",
+	"ui": {
+		"description": "Geliştirme deneyiminizi özelleştirmek için arayüz ve görüntü ayarlarını yapılandırın",
+		"filesChanged": {
+			"label": "Değiştirilen Dosyalar Genel Bakışını Etkinleştir",
+			"description": "Etkinleştirildiğinde, kontrol noktaları arasında değiştirilen dosyaları gösteren bir panel görüntüler. Bu, farklılıkları görüntülemenize, bireysel değişiklikleri kabul/reddetmenize ve çalışma durumunuzu yönetmenize olanak tanır."
+		}
+	}
 }

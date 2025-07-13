@@ -27,6 +27,7 @@
 		"checkpoints": "存档点",
 		"notifications": "通知",
 		"contextManagement": "上下文",
+		"ui": "界面",
 		"terminal": "终端",
 		"prompts": "提示词",
 		"experimental": "实验性",
@@ -725,5 +726,12 @@
 		"useCustomArn": "使用自定义 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大输出 Token 数",
-	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。"
+	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。",
+	"ui": {
+		"description": "配置界面和显示设置以自定义您的开发体验",
+		"filesChanged": {
+			"label": "启用文件更改概览",
+			"description": "启用后，显示一个面板，显示在检查点之间修改的文件。这允许您查看差异，接受/拒绝单个更改，并管理您的工作状态。"
+		}
+	}
 }

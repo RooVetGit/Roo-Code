@@ -27,6 +27,7 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Meldingen",
 		"contextManagement": "Context",
+		"ui": "Interface",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Aangepaste ARN gebruiken..."
 	},
 	"includeMaxOutputTokens": "Maximale output tokens opnemen",
-	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet."
+	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet.",
+	"ui": {
+		"description": "Configureer interface- en weergave-instellingen om uw ontwikkelervaring aan te passen",
+		"filesChanged": {
+			"label": "Overzicht van gewijzigde bestanden inschakelen",
+			"description": "Indien ingeschakeld, toont een paneel met bestanden die zijn gewijzigd tussen checkpoints. Hiermee kunt u verschillen bekijken, individuele wijzigingen accepteren/afwijzen en uw werkstatus beheren."
+		}
+	}
 }

@@ -56,7 +56,6 @@ import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
 import { getLatestTodo } from "@roo/todo"
-import FilesChangedOverview from "../file-changes/FilesChangedOverview"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -1674,10 +1673,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							<CheckpointWarning />
 						</div>
 					)}
-
-					<div className="px-3">
-						<FilesChangedOverview />
-					</div>
 				</>
 			) : (
 				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 relative">

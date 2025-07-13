@@ -27,6 +27,7 @@
 		"checkpoints": "Punkty kontrolne",
 		"notifications": "Powiadomienia",
 		"contextManagement": "Kontekst",
+		"ui": "Interfejs",
 		"terminal": "Terminal",
 		"prompts": "Podpowiedzi",
 		"experimental": "Eksperymentalne",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Użyj niestandardowego ARN..."
 	},
 	"includeMaxOutputTokens": "Uwzględnij maksymalne tokeny wyjściowe",
-	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać."
+	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać.",
+	"ui": {
+		"description": "Skonfiguruj ustawienia interfejsu i wyświetlania, aby dostosować swoje doświadczenie programistyczne",
+		"filesChanged": {
+			"label": "Włącz przegląd zmienionych plików",
+			"description": "Po włączeniu wyświetla panel pokazujący pliki, które zostały zmodyfikowane między punktami kontrolnymi. Pozwala to na przeglądanie różnic, akceptowanie/odrzucanie poszczególnych zmian i zarządzanie stanem pracy."
+		}
+	}
 }

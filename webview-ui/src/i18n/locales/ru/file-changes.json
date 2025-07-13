@@ -24,7 +24,7 @@
 		"modified": "изменён"
 	},
 	"summary": {
-		"count_with_changes": "({{count}}) Изменённые файлы{{changes}}",
+		"count_with_changes": "{{count}} Изменённые файлы{{changes}}",
 		"changes_format": " ({{changes}})"
 	},
 	"accessibility": {

@@ -27,6 +27,7 @@
 		"checkpoints": "Punti di controllo",
 		"notifications": "Notifiche",
 		"contextManagement": "Contesto",
+		"ui": "Interfaccia",
 		"terminal": "Terminal",
 		"prompts": "Prompt",
 		"experimental": "Sperimentale",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Usa ARN personalizzato..."
 	},
 	"includeMaxOutputTokens": "Includi token di output massimi",
-	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo."
+	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo.",
+	"ui": {
+		"description": "Configura le impostazioni dell'interfaccia e della visualizzazione per personalizzare la tua esperienza di sviluppo",
+		"filesChanged": {
+			"label": "Abilita panoramica file modificati",
+			"description": "Quando abilitato, mostra un pannello che visualizza i file che sono stati modificati tra i punti di controllo. Questo ti permette di visualizzare le differenze, accettare/rifiutare le modifiche individuali e gestire il tuo stato di lavoro."
+		}
+	}
 }

@@ -27,6 +27,7 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Notificações",
 		"contextManagement": "Contexto",
+		"ui": "Interface",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimental",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Usar ARN personalizado..."
 	},
 	"includeMaxOutputTokens": "Incluir tokens máximos de saída",
-	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso."
+	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso.",
+	"ui": {
+		"description": "Configure as configurações de interface e exibição para personalizar sua experiência de desenvolvimento",
+		"filesChanged": {
+			"label": "Ativar Visão Geral de Arquivos Alterados",
+			"description": "Quando ativado, exibe um painel mostrando arquivos que foram modificados entre checkpoints. Isso permite visualizar diferenças, aceitar/rejeitar mudanças individuais e gerenciar seu estado de trabalho."
+		}
+	}
 }

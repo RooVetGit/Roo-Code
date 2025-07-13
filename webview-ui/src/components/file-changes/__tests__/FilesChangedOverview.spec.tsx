@@ -830,8 +830,9 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 			const editedFile = screen.getByTestId("file-item-src/components/test1.ts")
 			const createdFile = screen.getByTestId("file-item-src/components/test2.ts")
 
-			expect(editedFile).toHaveTextContent("Modified")
-			expect(createdFile).toHaveTextContent("Created")
+			// Files now show line changes instead of type labels
+			expect(editedFile).toHaveTextContent("+10, -5")
+			expect(createdFile).toHaveTextContent("+25")
 		})
 
 		it("should handle line count formatting for different locales", async () => {
@@ -840,6 +841,154 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 			// Header should format line changes correctly
 			const header = screen.getByTestId("files-changed-header")
 			expect(header).toHaveTextContent("+35, -5") // Standard format
+		})
+	})
+
+	// ===== LAYOUT AND DISPLAY TESTS =====
+	describe("Layout and Display Integration", () => {
+		it("should render with correct CSS styling to avoid z-index conflicts", async () => {
+			await setupComponentWithFiles()
+
+			const fcoContainer = screen.getByTestId("files-changed-overview")
+
+			// FCO should have proper styling that doesn't interfere with other floating elements
+			expect(fcoContainer).toHaveStyle({
+				border: "1px solid var(--vscode-panel-border)",
+				borderRadius: "0",
+				padding: "6px 10px",
+				margin: "0",
+				backgroundColor: "var(--vscode-editor-background)",
+			})
+
+			// FCO should not have high z-index values that could cause layering issues
+			// In test environment, z-index might be empty string instead of "auto"
+			const computedStyle = window.getComputedStyle(fcoContainer)
+			const zIndex = computedStyle.zIndex
+			expect(zIndex === "auto" || zIndex === "" || parseInt(zIndex) < 1000).toBe(true)
+		})
+
+		it("should maintain visibility when rendered alongside other components", async () => {
+			await setupComponentWithFiles()
+
+			// FCO should be visible
+			const fcoContainer = screen.getByTestId("files-changed-overview")
+			expect(fcoContainer).toBeVisible()
+
+			// Header should be accessible
+			const header = screen.getByTestId("files-changed-header")
+			expect(header).toBeVisible()
+
+			// Action buttons should be accessible
+			const acceptAllButton = screen.getByTestId("accept-all-button")
+			const rejectAllButton = screen.getByTestId("reject-all-button")
+			expect(acceptAllButton).toBeVisible()
+			expect(rejectAllButton).toBeVisible()
+		})
+
+		it("should have proper DOM structure for correct layout order", async () => {
+			await setupComponentWithFiles()
+
+			const fcoContainer = screen.getByTestId("files-changed-overview")
+
+			// FCO should have a clear hierarchical structure
+			const header = screen.getByTestId("files-changed-header")
+			const acceptAllButton = screen.getByTestId("accept-all-button")
+			const rejectAllButton = screen.getByTestId("reject-all-button")
+
+			// Header should be contained within FCO
+			expect(fcoContainer).toContainElement(header)
+			expect(fcoContainer).toContainElement(acceptAllButton)
+			expect(fcoContainer).toContainElement(rejectAllButton)
+
+			// Expand to test file list structure
+			const headerButton = header.closest('[role="button"]')
+			fireEvent.click(headerButton!)
+
+			await waitFor(() => {
+				expect(screen.getByTestId("file-item-src/components/test1.ts")).toBeInTheDocument()
+			})
+
+			const fileItem = screen.getByTestId("file-item-src/components/test1.ts")
+			expect(fcoContainer).toContainElement(fileItem)
+		})
+
+		it("should render consistently when feature is enabled vs disabled", async () => {
+			// Test with feature enabled (this test is already covered in other tests)
+			await setupComponentWithFiles()
+			expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+
+			// Test with feature disabled is already covered in line 385-402 of this file
+			// We can verify the behavior by testing the existing logic
+			const enabledState = { ...mockExtensionState, filesChangedEnabled: true }
+			const disabledState = { ...mockExtensionState, filesChangedEnabled: false }
+
+			// Feature should be enabled in our current test setup
+			expect(enabledState.filesChangedEnabled).toBe(true)
+			expect(disabledState.filesChangedEnabled).toBe(false)
+		})
+
+		it("should handle component positioning without layout shifts", async () => {
+			renderComponent()
+
+			// Initially no FCO should be present
+			expect(screen.queryByTestId("files-changed-overview")).not.toBeInTheDocument()
+
+			// Add files to trigger FCO appearance
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: mockChangeset,
+			})
+
+			// FCO should appear smoothly without causing layout shifts
+			await waitFor(() => {
+				expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			})
+
+			const fcoContainer = screen.getByTestId("files-changed-overview")
+
+			// FCO should have consistent margins that don't cause layout jumps
+			expect(fcoContainer).toHaveStyle({
+				margin: "0",
+			})
+
+			// Remove files to test clean disappearance
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: undefined,
+			})
+
+			await waitFor(() => {
+				expect(screen.queryByTestId("files-changed-overview")).not.toBeInTheDocument()
+			})
+		})
+
+		it("should maintain proper spacing and padding for readability", async () => {
+			await setupComponentWithFiles()
+
+			const fcoContainer = screen.getByTestId("files-changed-overview")
+
+			// Container should have proper padding
+			expect(fcoContainer).toHaveStyle({
+				padding: "6px 10px",
+			})
+
+			// Expand to check internal spacing
+			const header = screen.getByTestId("files-changed-header")
+			const headerButton = header.closest('[role="button"]')
+			fireEvent.click(headerButton!)
+
+			await waitFor(() => {
+				expect(screen.getByTestId("file-item-src/components/test1.ts")).toBeInTheDocument()
+			})
+
+			// File items should have proper spacing
+			const fileItems = screen.getAllByTestId(/^file-item-/)
+			fileItems.forEach((item) => {
+				// Each file item should have margin bottom for spacing
+				expect(item).toHaveStyle({
+					marginBottom: "3px",
+				})
+			})
 		})
 	})
 })

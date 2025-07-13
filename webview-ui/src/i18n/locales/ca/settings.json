@@ -27,6 +27,7 @@
 		"checkpoints": "Punts de control",
 		"notifications": "Notificacions",
 		"contextManagement": "Context",
+		"ui": "Interfície",
 		"terminal": "Terminal",
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
@@ -725,5 +726,12 @@
 		"useCustomArn": "Utilitza ARN personalitzat..."
 	},
 	"includeMaxOutputTokens": "Incloure tokens màxims de sortida",
-	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això."
+	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això.",
+	"ui": {
+		"description": "Configureu la interfície i la configuració de pantalla per personalitzar la vostra experiència de desenvolupament",
+		"filesChanged": {
+			"label": "Activar vista general de fitxers canviats",
+			"description": "Quan s'activa, mostra un panell que mostra els fitxers que han estat modificats entre punts de control. Això us permet veure diferències, acceptar/rebutjar canvis individuals i gestionar el vostre estat de treball."
+		}
+	}
 }

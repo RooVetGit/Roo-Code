@@ -24,7 +24,7 @@
 		"modified": "수정됨"
 	},
 	"summary": {
-		"count_with_changes": "({{count}}) 변경된 파일{{changes}}",
+		"count_with_changes": "{{count}} 변경된 파일{{changes}}",
 		"changes_format": " ({{changes}})"
 	},
 	"accessibility": {

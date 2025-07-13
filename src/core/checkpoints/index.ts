@@ -161,12 +161,27 @@ export function getCheckpointService(cline: Task) {
 					const checkpointFileChangeManager = provider?.getFileChangeManager()
 					if (checkpointFileChangeManager) {
 						// Get the initial baseline (preserve for cumulative diff tracking)
-						const initialBaseline = checkpointFileChangeManager.getChanges().baseCheckpoint
+						let initialBaseline = checkpointFileChangeManager.getChanges().baseCheckpoint
+
+						// Validate that the baseline exists in the shadow repository before attempting diff
+						// If the baseline doesn't exist (e.g., from a previous task session), fall back to shadow repo base
+						try {
+							await service.getDiff({ from: initialBaseline, to: initialBaseline })
+						} catch (baselineValidationError) {
+							const shadowBase = service.baseHash || toHash
+							log(
+								`[Task#checkpointCreated] Initial baseline ${initialBaseline} not found in shadow repo, falling back to shadow base ${shadowBase}`,
+							)
+							initialBaseline = shadowBase
+							// Update FileChangeManager baseline to match shadow repository
+							await checkpointFileChangeManager.updateBaseline(initialBaseline)
+						}
+
 						log(
-							`[Task#checkpointCreated] Calculating cumulative changes from initial baseline ${initialBaseline} to ${toHash}`,
+							`[Task#checkpointCreated] Calculating cumulative changes from validated baseline ${initialBaseline} to ${toHash}`,
 						)
 
-						// Calculate cumulative diff from initial baseline to new checkpoint using checkpoint service
+						// Calculate cumulative diff from validated baseline to new checkpoint using checkpoint service
 						const changes = await service.getDiff({ from: initialBaseline, to: toHash })
 
 						if (changes && changes.length > 0) {
@@ -319,10 +334,16 @@ export async function checkpointSave(cline: Task, force = false, files?: vscode.
 	const savePromise = service
 		.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force, files })
 		.then(async (result: any) => {
+			// Handle case where no checkpoint was created (e.g., no changes to commit)
+			if (!result || !result.commit) {
+				console.log(`[checkpointSave] No checkpoint created (no changes to commit)`)
+				return result
+			}
+
 			console.log(`[checkpointSave] New checkpoint created: ${result.commit}`)
 
 			// Notify FCO that checkpoint was created
-			if (provider && result) {
+			if (provider) {
 				try {
 					provider.postMessageToWebview({
 						type: "checkpoint_created",
