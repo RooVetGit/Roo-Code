@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import { TextDocumentShowOptions, ViewColumn } from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import * as diff from "diff"
@@ -121,11 +122,6 @@ export class DiffViewProvider {
 			throw new Error("User closed text editor, unable to edit file...")
 		}
 
-		// Place cursor at the beginning of the diff editor to keep it out of
-		// the way of the stream animation, but do this without stealing focus
-		const beginningOfDocument = new vscode.Position(0, 0)
-		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
-
 		const endLine = accumulatedLines.length
 		// Replace all content up to the current line with accumulated lines.
 		const edit = new vscode.WorkspaceEdit()
@@ -188,7 +184,6 @@ export class DiffViewProvider {
 			return { newProblemsMessage: undefined, userEdits: undefined, finalContent: undefined }
 		}
 
-		const absolutePath = path.resolve(this.cwd, this.relPath)
 		const updatedDocument = this.activeDiffEditor.document
 		const editedContent = updatedDocument.getText()
 
@@ -196,7 +191,6 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })
 		await this.closeAllDiffViews()
 
 		// Getting diagnostics before and after the file edit is a better approach than
@@ -500,23 +494,22 @@ export class DiffViewProvider {
 					}
 				}),
 			)
-
-			// Pre-open the file as a text document to ensure it doesn't open in preview mode
-			// This fixes issues with files that have custom editor associations (like markdown preview)
-			vscode.window
-				.showTextDocument(uri, { preview: false, viewColumn: vscode.ViewColumn.Active, preserveFocus: true })
-				.then(() => {
-					// Execute the diff command after ensuring the file is open as text
-					return vscode.commands.executeCommand(
-						"vscode.diff",
-						vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-							query: Buffer.from(this.originalContent ?? "").toString("base64"),
-						}),
-						uri,
-						`${fileName}: ${fileExists ? `${DIFF_VIEW_LABEL_CHANGES}` : "New File"} (Editable)`,
-						{ preserveFocus: true },
-					)
-				})
+			// Now execute the diff command
+			const textShowOptions: TextDocumentShowOptions = {
+				preview: false,
+				viewColumn: ViewColumn.Beside,
+				preserveFocus: true,
+			}
+			vscode.commands
+				.executeCommand(
+					"vscode.diff",
+					vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+						query: Buffer.from(this.originalContent ?? "").toString("base64"),
+					}),
+					uri,
+					`${fileName}: ${fileExists ? `${DIFF_VIEW_LABEL_CHANGES}` : "New File"} (Editable)`,
+					textShowOptions,
+				)
 				.then(
 					() => {
 						// Command executed successfully, now wait for the editor to appear
