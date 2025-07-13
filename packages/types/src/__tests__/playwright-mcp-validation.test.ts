@@ -5,11 +5,7 @@
 import * as yaml from "yaml"
 import * as fs from "fs/promises"
 import * as path from "path"
-import { fileURLToPath } from "url"
 import { mcpMarketplaceItemSchema, marketplaceItemSchema, type McpMarketplaceItem } from "../marketplace"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 /**
  * Test suite for validating the corrected Playwright MCP template
@@ -30,8 +26,8 @@ describe("Playwright MCP Template Validation", () => {
 	let playwrightMcpItem: any
 
 	beforeEach(async () => {
-		// Read the corrected template file using proper cross-platform path resolution
-		const templatePath = path.resolve(__dirname, "..", "..", "..", "..", "playwright-mcp-integration", "playwright-mcp.yaml")
+		// Read the corrected template file using process.cwd() for reliable path resolution
+		const templatePath = path.resolve(process.cwd(), "playwright-mcp-integration", "playwright-mcp.yaml")
 		templateContent = await fs.readFile(templatePath, "utf-8")
 		parsedTemplate = yaml.parse(templateContent)
 		
