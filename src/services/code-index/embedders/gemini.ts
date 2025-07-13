@@ -44,10 +44,15 @@ export class GeminiEmbedder implements IEmbedder {
 	 * @param model Optional model identifier (ignored - always uses text-embedding-004)
 	 * @returns Promise resolving to embedding response
 	 */
-	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
+	async createEmbeddings(
+		texts: string[],
+		model?: string,
+		options?: { dimension?: number },
+	): Promise<EmbeddingResponse> {
 		try {
-			// Always use the fixed Gemini model, ignoring any passed model parameter
-			return await this.openAICompatibleEmbedder.createEmbeddings(texts, GeminiEmbedder.GEMINI_MODEL)
+			// Use the provided model or the fixed Gemini model
+			const modelToUse = model || GeminiEmbedder.GEMINI_MODEL
+			return await this.openAICompatibleEmbedder.createEmbeddings(texts, modelToUse, options)
 		} catch (error) {
 			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
 				error: error instanceof Error ? error.message : String(error),

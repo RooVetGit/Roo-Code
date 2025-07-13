@@ -48,6 +48,9 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 	},
 	gemini: {
 		"text-embedding-004": { dimension: 768 },
+		// ADD: New model with a default dimension.
+		// The actual dimension will be passed from the configuration at runtime.
+		"gemini-embedding-exp-03-07": { dimension: 768 },
 	},
 }
 

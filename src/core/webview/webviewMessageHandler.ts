@@ -2065,11 +2065,14 @@ export const webviewMessageHandler = async (
 		}
 
 		case "requestIndexingStatus": {
-			const status = provider.codeIndexManager!.getCurrentStatus()
-			provider.postMessageToWebview({
-				type: "indexingStatusUpdate",
-				values: status,
-			})
+			const manager = provider.codeIndexManager
+			if (manager) {
+				const status = manager.getCurrentStatus()
+				provider.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: status,
+				})
+			}
 			break
 		}
 		case "requestCodeIndexSecretStatus": {
@@ -2094,8 +2097,8 @@ export const webviewMessageHandler = async (
 		}
 		case "startIndexing": {
 			try {
-				const manager = provider.codeIndexManager!
-				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
+				const manager = provider.codeIndexManager
+				if (manager && manager.isFeatureEnabled && manager.isFeatureConfigured) {
 					if (!manager.isInitialized) {
 						await manager.initialize(provider.contextProxy)
 					}
@@ -2109,9 +2112,11 @@ export const webviewMessageHandler = async (
 		}
 		case "clearIndexData": {
 			try {
-				const manager = provider.codeIndexManager!
-				await manager.clearIndexData()
-				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
+				const manager = provider.codeIndexManager
+				if (manager) {
+					await manager.clearIndexData()
+					provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
+				}
 			} catch (error) {
 				provider.log(`Error clearing index data: ${error instanceof Error ? error.message : String(error)}`)
 				provider.postMessageToWebview({
