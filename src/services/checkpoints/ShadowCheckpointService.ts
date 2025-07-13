@@ -308,6 +308,17 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		for (const file of files) {
 			const relPath = file.file
 			const absPath = path.join(cwdPath, relPath)
+
+			// Filter out directories - only include actual files
+			try {
+				const stat = await fs.stat(absPath)
+				if (stat.isDirectory()) {
+					continue // Skip directories
+				}
+			} catch {
+				// If file doesn't exist (deleted files), continue processing
+			}
+
 			const before = await this.git.show([`${from}:${relPath}`]).catch(() => "")
 
 			const after = await this.git.show([`${to ?? "HEAD"}:${relPath}`]).catch(() => "")

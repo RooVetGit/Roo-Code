@@ -160,44 +160,80 @@ export function getCheckpointService(cline: Task) {
 				try {
 					const checkpointFileChangeManager = provider?.getFileChangeManager()
 					if (checkpointFileChangeManager) {
-						// Get the initial baseline (preserve for cumulative diff tracking)
-						let initialBaseline = checkpointFileChangeManager.getChanges().baseCheckpoint
+						// Get the current baseline for cumulative tracking
+						let currentBaseline = checkpointFileChangeManager.getChanges().baseCheckpoint
 
-						// Validate that the baseline exists in the shadow repository before attempting diff
-						// If the baseline doesn't exist (e.g., from a previous task session), fall back to shadow repo base
+						// For cumulative tracking, we want to calculate from baseline to new checkpoint
+						// But if this is the first time or baseline is invalid, update it to fromHash
 						try {
-							await service.getDiff({ from: initialBaseline, to: initialBaseline })
-						} catch (baselineValidationError) {
-							const shadowBase = service.baseHash || toHash
+							await service.getDiff({ from: currentBaseline, to: currentBaseline })
 							log(
-								`[Task#checkpointCreated] Initial baseline ${initialBaseline} not found in shadow repo, falling back to shadow base ${shadowBase}`,
+								`[Task#checkpointCreated] Using existing baseline ${currentBaseline} for cumulative tracking`,
 							)
-							initialBaseline = shadowBase
-							// Update FileChangeManager baseline to match shadow repository
-							await checkpointFileChangeManager.updateBaseline(initialBaseline)
+						} catch (baselineValidationError) {
+							// Baseline is invalid, use fromHash as the new baseline for cumulative tracking
+							log(
+								`[Task#checkpointCreated] Baseline validation failed for ${currentBaseline}: ${baselineValidationError instanceof Error ? baselineValidationError.message : String(baselineValidationError)}`,
+							)
+							log(`[Task#checkpointCreated] Updating baseline to fromHash: ${fromHash}`)
+							currentBaseline = fromHash
+							// Update FileChangeManager baseline to match
+							try {
+								await checkpointFileChangeManager.updateBaseline(currentBaseline)
+								log(`[Task#checkpointCreated] Successfully updated baseline to ${currentBaseline}`)
+							} catch (updateError) {
+								log(
+									`[Task#checkpointCreated] Failed to update baseline: ${updateError instanceof Error ? updateError.message : String(updateError)}`,
+								)
+								throw updateError
+							}
 						}
 
 						log(
-							`[Task#checkpointCreated] Calculating cumulative changes from validated baseline ${initialBaseline} to ${toHash}`,
+							`[Task#checkpointCreated] Calculating cumulative changes from baseline ${currentBaseline} to ${toHash}`,
 						)
 
-						// Calculate cumulative diff from validated baseline to new checkpoint using checkpoint service
-						const changes = await service.getDiff({ from: initialBaseline, to: toHash })
+						// Calculate cumulative diff from baseline to new checkpoint using checkpoint service
+						const changes = await service.getDiff({ from: currentBaseline, to: toHash })
 
 						if (changes && changes.length > 0) {
 							// Convert to FileChange format with correct checkpoint references
-							const fileChanges = changes.map((change: any) => ({
-								uri: change.paths.relative,
-								type: (change.paths.newFile
-									? "create"
-									: change.paths.deletedFile
-										? "delete"
-										: "edit") as FileChangeType,
-								fromCheckpoint: initialBaseline, // Always reference initial baseline for cumulative view
-								toCheckpoint: toHash, // Current checkpoint for comparison
-								linesAdded: change.content.after ? change.content.after.split("\n").length : 0,
-								linesRemoved: change.content.before ? change.content.before.split("\n").length : 0,
-							}))
+							const fileChanges = changes.map((change: any) => {
+								const type = (
+									change.paths.newFile ? "create" : change.paths.deletedFile ? "delete" : "edit"
+								) as FileChangeType
+
+								// Calculate actual line differences for the change
+								let linesAdded = 0
+								let linesRemoved = 0
+
+								if (type === "create") {
+									// New file: all lines are added
+									linesAdded = change.content.after ? change.content.after.split("\n").length : 0
+									linesRemoved = 0
+								} else if (type === "delete") {
+									// Deleted file: all lines are removed
+									linesAdded = 0
+									linesRemoved = change.content.before ? change.content.before.split("\n").length : 0
+								} else {
+									// Modified file: use FileChangeManager's improved calculation method
+									const lineDifferences = FileChangeManager.calculateLineDifferences(
+										change.content.before || "",
+										change.content.after || "",
+									)
+									linesAdded = lineDifferences.linesAdded
+									linesRemoved = lineDifferences.linesRemoved
+								}
+
+								return {
+									uri: change.paths.relative,
+									type,
+									fromCheckpoint: currentBaseline, // Reference current baseline for cumulative view
+									toCheckpoint: toHash, // Current checkpoint for comparison
+									linesAdded,
+									linesRemoved,
+								}
+							})
 
 							log(`[Task#checkpointCreated] Found ${fileChanges.length} cumulative file changes`)
 
@@ -228,13 +264,13 @@ export function getCheckpointService(cline: Task) {
 								filesChanged: serializableChangeset,
 							})
 						} else {
-							log(`[Task#checkpointCreated] No changes found between ${initialBaseline} and ${toHash}`)
+							log(`[Task#checkpointCreated] No changes found between ${currentBaseline} and ${toHash}`)
 						}
 
-						// DON'T update the baseline - keep it at initial baseline for cumulative tracking
+						// DON'T update the baseline - keep it at current baseline for cumulative tracking
 						// The baseline should only change when explicitly requested (e.g., checkpoint restore)
 						log(
-							`[Task#checkpointCreated] Keeping FileChangeManager baseline at ${initialBaseline} for cumulative tracking`,
+							`[Task#checkpointCreated] Keeping FileChangeManager baseline at ${currentBaseline} for cumulative tracking`,
 						)
 					}
 				} catch (error) {
@@ -419,12 +455,14 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 					provider?.log(`[checkpointRestore] Cleared accept/reject state for fresh start`)
 				}
 
-				// Calculate and send current changes (should be empty immediately after restore)
-				const changes = fileChangeManager.getChanges()
-				provider?.postMessageToWebview({
-					type: "filesChanged",
-					filesChanged: changes.files.length > 0 ? changes : undefined,
-				})
+				// Calculate and send current changes with LLM-only filtering (should be empty immediately after restore)
+				if (cline.taskId && cline.fileContextTracker) {
+					const changes = await fileChangeManager.getLLMOnlyChanges(cline.taskId, cline.fileContextTracker)
+					provider?.postMessageToWebview({
+						type: "filesChanged",
+						filesChanged: changes.files.length > 0 ? changes : undefined,
+					})
+				}
 			}
 		} catch (error) {
 			provider?.log(`[checkpointRestore] Failed to update FileChangeManager baseline: ${error}`)

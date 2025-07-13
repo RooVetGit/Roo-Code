@@ -145,17 +145,40 @@ export class FileChangeManager {
 
 	/**
 	 * Calculate line differences between two file contents
+	 * Uses a simple line-by-line comparison to count actual changes
 	 */
 	public static calculateLineDifferences(
 		originalContent: string,
 		newContent: string,
 	): { linesAdded: number; linesRemoved: number } {
-		const originalLines = originalContent.split("\n")
-		const newLines = newContent.split("\n")
+		const originalLines = originalContent === "" ? [] : originalContent.split("\n")
+		const newLines = newContent === "" ? [] : newContent.split("\n")
 
-		// Simple diff calculation
-		const linesAdded = Math.max(0, newLines.length - originalLines.length)
-		const linesRemoved = Math.max(0, originalLines.length - newLines.length)
+		// For proper diff calculation, we need to compare line by line
+		// This is a simplified approach that works well for most cases
+
+		const maxLines = Math.max(originalLines.length, newLines.length)
+		let linesAdded = 0
+		let linesRemoved = 0
+
+		// Compare each line position
+		for (let i = 0; i < maxLines; i++) {
+			const originalLine = i < originalLines.length ? originalLines[i] : undefined
+			const newLine = i < newLines.length ? newLines[i] : undefined
+
+			if (originalLine === undefined && newLine !== undefined) {
+				// Line was added
+				linesAdded++
+			} else if (originalLine !== undefined && newLine === undefined) {
+				// Line was removed
+				linesRemoved++
+			} else if (originalLine !== newLine) {
+				// Line was modified (count as both removed and added)
+				linesRemoved++
+				linesAdded++
+			}
+			// If lines are identical, no change
+		}
 
 		return { linesAdded, linesRemoved }
 	}
