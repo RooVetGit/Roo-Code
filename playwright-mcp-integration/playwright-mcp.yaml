@@ -1,0 +1,57 @@
+items:
+  - id: playwright-mcp
+    type: mcp
+    name: Playwright MCP
+    description: "MCP server providing Playwright browser automation, testing, and dynamic preview capabilities for Roo Code."
+    author: "Microsoft"
+    authorUrl: "https://github.com/microsoft/playwright-mcp"
+    url: "https://github.com/microsoft/playwright-mcp"
+    tags:
+      - automation
+      - testing
+      - browser
+      - playwright
+    content:
+      - name: Node.js/NPM
+        content: |
+          {
+            "command": "node",
+            "args": ["{{serverPath}}"],
+            "env": {},
+            "disabled": false,
+            "alwaysAllow": [],
+            "disabledTools": []
+          }
+        parameters:
+          - name: Playwright MCP Server Path
+            key: serverPath
+            placeholder: "/absolute/path/to/playwright-mcp/dist/server.js"
+            optional: false
+        prerequisites:
+          - "Node.js (>=18)"
+          - "Git for cloning repository"
+          - "Run: git clone https://github.com/microsoft/playwright-mcp.git"
+          - "Run: cd playwright-mcp && npm install && npm run build"
+      - name: Docker
+        content: |
+          {
+            "command": "docker",
+            "args": ["run", "--rm", "-p", "{{dockerHost}}:8080:8080", "mcp/playwright:latest"],
+            "env": {},
+            "disabled": false,
+            "alwaysAllow": [],
+            "disabledTools": []
+          }
+        parameters:
+          - name: Docker Host
+            key: dockerHost
+            placeholder: "127.0.0.1"
+            optional: true
+        prerequisites:
+          - "Docker installed and running"
+          - "Run: docker pull mcp/playwright:latest"
+    parameters:
+      - name: Node.js Executable
+        key: nodePath
+        placeholder: "/usr/local/bin/node"
+        optional: true
