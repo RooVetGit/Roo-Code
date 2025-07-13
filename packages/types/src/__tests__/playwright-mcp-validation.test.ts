@@ -30,8 +30,8 @@ describe("Playwright MCP Template Validation", () => {
 	let playwrightMcpItem: any
 
 	beforeEach(async () => {
-		// Read the corrected template file using proper path resolution
-		const templatePath = path.resolve(__dirname, "../../../../playwright-mcp-integration/playwright-mcp.yaml")
+		// Read the corrected template file using proper cross-platform path resolution
+		const templatePath = path.resolve(__dirname, "..", "..", "..", "..", "playwright-mcp-integration", "playwright-mcp.yaml")
 		templateContent = await fs.readFile(templatePath, "utf-8")
 		parsedTemplate = yaml.parse(templateContent)
 		

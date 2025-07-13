@@ -2,13 +2,16 @@
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
 	"ignore": [
 		"**/__tests__/**",
+		"**/*.test.*",
+		"**/*.spec.*",
 		"apps/vscode-e2e/**",
 		"src/extension/api.ts",
 		"src/activate/**",
 		"src/workers/countTokens.ts",
 		"src/extension.ts",
 		"scripts/**",
-		"playwright-mcp-integration/tests/**"
+		"playwright-mcp-integration/**",
+		"packages/types/validate-playwright-template.js"
 	],
 	"workspaces": {
 		"src": {
