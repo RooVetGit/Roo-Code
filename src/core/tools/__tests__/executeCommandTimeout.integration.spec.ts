@@ -38,6 +38,7 @@ describe("Command Execution Timeout Integration", () => {
 					postMessageToWebview: vitest.fn(),
 				}),
 			},
+			say: vitest.fn().mockResolvedValue(undefined),
 		}
 
 		// Mock terminal process
