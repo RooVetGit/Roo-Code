@@ -226,10 +226,10 @@ export class DiffViewProvider {
 		const newContentEOL = this.newContent.includes("\r\n") ? "\r\n" : "\n"
 
 		// Normalize EOL characters without trimming content
-		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL)
+		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL).trimEnd()
 
 		// Just in case the new content has a mix of varying EOL characters.
-		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL)
+		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL).trimEnd()
 
 		if (normalizedEditedContent !== normalizedNewContent) {
 			// User made changes before approving edit.
