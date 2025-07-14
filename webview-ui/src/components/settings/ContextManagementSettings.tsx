@@ -217,27 +217,25 @@ export const ContextManagementSettings = ({
 					</div>
 				</div>
 
-				{includeDiagnosticMessages && (
-					<div>
-						<span className="block font-medium mb-1">
-							{t("settings:contextManagement.diagnostics.maxMessages.label")}
-						</span>
-						<div className="flex items-center gap-2">
-							<Slider
-								min={1}
-								max={100}
-								step={1}
-								value={[maxDiagnosticMessages ?? 50]}
-								onValueChange={([value]) => setCachedStateField("maxDiagnosticMessages", value)}
-								data-testid="max-diagnostic-messages-slider"
-							/>
-							<span className="w-10">{maxDiagnosticMessages ?? 50}</span>
-						</div>
-						<div className="text-vscode-descriptionForeground text-sm mt-1">
-							{t("settings:contextManagement.diagnostics.maxMessages.description")}
-						</div>
+				<div>
+					<span className="block font-medium mb-1">
+						{t("settings:contextManagement.diagnostics.maxMessages.label")}
+					</span>
+					<div className="flex items-center gap-2">
+						<Slider
+							min={1}
+							max={100}
+							step={1}
+							value={[maxDiagnosticMessages ?? 50]}
+							onValueChange={([value]) => setCachedStateField("maxDiagnosticMessages", value)}
+							data-testid="max-diagnostic-messages-slider"
+						/>
+						<span className="w-10">{maxDiagnosticMessages ?? 50}</span>
 					</div>
-				)}
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:contextManagement.diagnostics.maxMessages.description")}
+					</div>
+				</div>
 			</Section>
 			<Section className="pt-2">
 				<VSCodeCheckbox

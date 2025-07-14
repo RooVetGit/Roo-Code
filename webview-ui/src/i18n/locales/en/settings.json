@@ -495,7 +495,7 @@
 			},
 			"maxMessages": {
 				"label": "Maximum diagnostic messages",
-				"description": "Maximum number of diagnostic messages to include per file. Higher values provide more context but increase token usage."
+				"description": "Maximum number of diagnostic messages to include per file when using @problems or when automatic inclusion is enabled. Higher values provide more context but increase token usage."
 			}
 		},
 		"condensingThreshold": {

@@ -9,7 +9,7 @@ vi.mock("@/components/ui", () => ({
 	Slider: ({ value, onValueChange, "data-testid": dataTestId, disabled }: any) => (
 		<input
 			type="range"
-			value={value[0]}
+			value={value?.[0] ?? 0}
 			onChange={(e) => onValueChange([parseFloat(e.target.value)])}
 			data-testid={dataTestId}
 			disabled={disabled}
@@ -106,8 +106,9 @@ describe("ContextManagementSettings", () => {
 		const checkbox = screen.getByTestId("include-diagnostic-messages-checkbox")
 		expect(checkbox.querySelector("input")).not.toBeChecked()
 
-		// Slider should not be rendered when diagnostics are disabled
-		expect(screen.queryByTestId("max-diagnostic-messages-slider")).not.toBeInTheDocument()
+		// Slider should still be rendered when diagnostics are disabled
+		expect(screen.getByTestId("max-diagnostic-messages-slider")).toBeInTheDocument()
+		expect(screen.getByText("50")).toBeInTheDocument()
 	})
 
 	it("calls setCachedStateField when include diagnostic messages checkbox is toggled", async () => {
@@ -134,15 +135,15 @@ describe("ContextManagementSettings", () => {
 		})
 	})
 
-	it("hides slider when include diagnostic messages is unchecked", () => {
+	it("keeps slider visible when include diagnostic messages is unchecked", () => {
 		const { rerender } = render(<ContextManagementSettings {...defaultProps} includeDiagnosticMessages={true} />)
 
 		const slider = screen.getByTestId("max-diagnostic-messages-slider")
 		expect(slider).toBeInTheDocument()
 
-		// Update to disabled
+		// Update to disabled - slider should still be visible
 		rerender(<ContextManagementSettings {...defaultProps} includeDiagnosticMessages={false} />)
-		expect(screen.queryByTestId("max-diagnostic-messages-slider")).not.toBeInTheDocument()
+		expect(screen.getByTestId("max-diagnostic-messages-slider")).toBeInTheDocument()
 	})
 
 	it("displays correct max diagnostic messages value", () => {
@@ -166,5 +167,111 @@ describe("ContextManagementSettings", () => {
 		// Check for checkboxes
 		expect(screen.getByTestId("show-rooignored-files-checkbox")).toBeInTheDocument()
 		expect(screen.getByTestId("auto-condense-context-checkbox")).toBeInTheDocument()
+	})
+
+	describe("Edge cases for maxDiagnosticMessages", () => {
+		it("handles zero value correctly", async () => {
+			const setCachedStateField = vi.fn()
+			render(
+				<ContextManagementSettings
+					{...defaultProps}
+					maxDiagnosticMessages={0}
+					setCachedStateField={setCachedStateField}
+				/>,
+			)
+
+			expect(screen.getByText("0")).toBeInTheDocument()
+
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+			expect(slider).toHaveValue("0")
+		})
+
+		it("handles negative values by displaying them", async () => {
+			const setCachedStateField = vi.fn()
+			render(
+				<ContextManagementSettings
+					{...defaultProps}
+					maxDiagnosticMessages={-10}
+					setCachedStateField={setCachedStateField}
+				/>,
+			)
+
+			// Component displays the actual negative value in the text span
+			expect(screen.getByText("-10")).toBeInTheDocument()
+
+			// Note: The actual slider behavior with negative values depends on the implementation
+			// In this case, we're just verifying the component renders without errors
+		})
+
+		it("handles very large numbers by capping at maximum", async () => {
+			const setCachedStateField = vi.fn()
+			const largeNumber = 1000
+			render(
+				<ContextManagementSettings
+					{...defaultProps}
+					maxDiagnosticMessages={largeNumber}
+					setCachedStateField={setCachedStateField}
+				/>,
+			)
+
+			// Should display the actual value even if it exceeds slider max
+			expect(screen.getByText(largeNumber.toString())).toBeInTheDocument()
+
+			// Slider value would be capped at max (100)
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+			expect(slider).toHaveValue("100")
+		})
+
+		it("enforces maximum value constraint", async () => {
+			const setCachedStateField = vi.fn()
+			render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
+
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+
+			// Test that setting value above 100 gets capped
+			fireEvent.change(slider, { target: { value: "150" } })
+
+			await waitFor(() => {
+				// Should be capped at 100 (the slider's max)
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 100)
+			})
+		})
+
+		it("handles boundary value at minimum (0)", async () => {
+			const setCachedStateField = vi.fn()
+			render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
+
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+			fireEvent.change(slider, { target: { value: "0" } })
+
+			await waitFor(() => {
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 0)
+			})
+		})
+
+		it("handles boundary value at maximum (100)", async () => {
+			const setCachedStateField = vi.fn()
+			render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
+
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+			fireEvent.change(slider, { target: { value: "100" } })
+
+			await waitFor(() => {
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 100)
+			})
+		})
+
+		it("handles decimal values by parsing as float", async () => {
+			const setCachedStateField = vi.fn()
+			render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
+
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+			fireEvent.change(slider, { target: { value: "50.7" } })
+
+			await waitFor(() => {
+				// The mock slider component parses as float
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 50.7)
+			})
+		})
 	})
 })

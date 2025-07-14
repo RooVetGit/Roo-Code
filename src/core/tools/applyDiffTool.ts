@@ -12,6 +12,7 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { getDiagnosticSettings } from "./helpers/diagnosticSettings"
 
 export async function applyDiffToolLegacy(
 	cline: Task,
@@ -142,10 +143,8 @@ export async function applyDiffToolLegacy(
 			cline.consecutiveMistakeCount = 0
 			cline.consecutiveMistakeCountForApplyDiff.delete(relPath)
 
-			// Get diagnostic settings from state
-			const state = await cline.providerRef?.deref()?.getState()
-			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
-			const maxDiagnosticMessages = state?.maxDiagnosticMessages
+			// Get diagnostic settings
+			const { includeDiagnosticMessages, maxDiagnosticMessages } = await getDiagnosticSettings(cline)
 
 			// Update DiffViewProvider with diagnostic settings
 			cline.diffViewProvider.updateDiagnosticSettings(includeDiagnosticMessages, maxDiagnosticMessages)
