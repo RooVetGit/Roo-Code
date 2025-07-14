@@ -16,6 +16,7 @@ import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../..
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { Package } from "../../shared/package"
+import { t } from "../../i18n"
 
 class ShellIntegrationError extends Error {}
 
@@ -251,7 +252,7 @@ export async function executeCommand(
 				clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 
 				// Add visual feedback for timeout
-				await cline.say("text", `Command execution timed out after ${commandExecutionTimeoutSeconds} seconds`)
+				await cline.say("text", t("common:command_timeout", { seconds: commandExecutionTimeoutSeconds }))
 
 				cline.terminalProcess = undefined
 
