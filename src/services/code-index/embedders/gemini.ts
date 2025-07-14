@@ -22,7 +22,7 @@ export class GeminiEmbedder implements IEmbedder {
 	/**
 	 * Creates a new Gemini embedder
 	 * @param apiKey The Gemini API key for authentication
-	 * @param modelId The model ID to use (defaults to text-embedding-004)
+	 * @param modelId The model ID to use (defaults to gemini-embedding-001)
 	 */
 	constructor(apiKey: string, modelId?: string) {
 		if (!apiKey) {
