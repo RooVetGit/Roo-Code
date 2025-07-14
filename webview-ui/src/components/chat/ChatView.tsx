@@ -79,7 +79,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	})
 	const { t } = useAppTranslation()
 	const { t: tSettings } = useTranslation("settings")
-	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
+	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}, ${isMac ? "⌘" : "Ctrl"} + Shift + . ${t("chat:forPreviousMode")}`
 	const {
 		clineMessages: messages,
 		currentTaskItem,
@@ -1555,16 +1555,30 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		switchToMode(allModes[nextModeIndex].slug)
 	}, [mode, customModes, switchToMode])
 
+	// Function to handle switching to previous mode
+	const switchToPreviousMode = useCallback(() => {
+		const allModes = getAllModes(customModes)
+		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
+		const previousModeIndex = (currentModeIndex - 1 + allModes.length) % allModes.length
+		// Update local state and notify extension to sync mode change
+		switchToMode(allModes[previousModeIndex].slug)
+	}, [mode, customModes, switchToMode])
+
 	// Add keyboard event handler
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
-			// Check for Command + . (period)
-			if ((event.metaKey || event.ctrlKey) && event.key === ".") {
+			// Check for Command + . (period) for next mode
+			if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.key === ".") {
 				event.preventDefault() // Prevent default browser behavior
 				switchToNextMode()
 			}
+			// Check for Command + Shift + . (period) for previous mode
+			else if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ".") {
+				event.preventDefault() // Prevent default browser behavior
+				switchToPreviousMode()
+			}
 		},
-		[switchToNextMode],
+		[switchToNextMode, switchToPreviousMode],
 	)
 
 	// Add event listener
