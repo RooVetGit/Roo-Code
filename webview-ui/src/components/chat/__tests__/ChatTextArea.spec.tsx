@@ -868,19 +868,15 @@ describe("ChatTextArea", () => {
 
 			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
 
-			// Should show edit button (codicon-edit)
-			const editButton = screen.getByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-edit") !== null
-				},
+			// Should show save button in edit mode
+			const saveButton = screen.getByRole("button", {
+				name: /save/i,
 			})
-			expect(editButton).toBeInTheDocument()
+			expect(saveButton).toBeInTheDocument()
 
-			// Should not show send button (codicon-send)
+			// Should not show send button in edit mode
 			const sendButton = screen.queryByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-send") !== null
-				},
+				name: /send/i,
 			})
 			expect(sendButton).not.toBeInTheDocument()
 		})
@@ -895,21 +891,17 @@ describe("ChatTextArea", () => {
 
 			render(<ChatTextArea {...defaultProps} isEditMode={false} />)
 
-			// Should show send button (codicon-send)
+			// Should show send button when not in edit mode
 			const sendButton = screen.getByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-send") !== null
-				},
+				name: /send/i,
 			})
 			expect(sendButton).toBeInTheDocument()
 
-			// Should not show edit button (codicon-edit)
-			const editButton = screen.queryByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-edit") !== null
-				},
+			// Should not show save button when not in edit mode
+			const saveButton = screen.queryByRole("button", {
+				name: /save/i,
 			})
-			expect(editButton).not.toBeInTheDocument()
+			expect(saveButton).not.toBeInTheDocument()
 		})
 
 		it("should show cancel button in edit mode", () => {
@@ -943,7 +935,7 @@ describe("ChatTextArea", () => {
 			expect(cancelButton).not.toBeInTheDocument()
 		})
 
-		it("should call onSend when edit button is clicked", () => {
+		it("should call onSend when save button is clicked", () => {
 			const onSend = vi.fn()
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				filePaths: [],
@@ -954,13 +946,11 @@ describe("ChatTextArea", () => {
 
 			render(<ChatTextArea {...defaultProps} isEditMode={true} onSend={onSend} />)
 
-			const editButton = screen.getByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-edit") !== null
-				},
+			const saveButton = screen.getByRole("button", {
+				name: /save/i,
 			})
 
-			fireEvent.click(editButton)
+			fireEvent.click(saveButton)
 			expect(onSend).toHaveBeenCalledTimes(1)
 		})
 
@@ -981,7 +971,7 @@ describe("ChatTextArea", () => {
 			expect(onCancel).toHaveBeenCalledTimes(1)
 		})
 
-		it("should disable edit button when sendingDisabled is true", () => {
+		it("should disable save button when sendingDisabled is true", () => {
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
@@ -991,13 +981,11 @@ describe("ChatTextArea", () => {
 
 			render(<ChatTextArea {...defaultProps} isEditMode={true} sendingDisabled={true} />)
 
-			const editButton = screen.getByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-edit") !== null
-				},
+			const saveButton = screen.getByRole("button", {
+				name: /save/i,
 			})
 
-			expect(editButton).toBeDisabled()
+			expect(saveButton).toBeDisabled()
 		})
 
 		it("should disable cancel button when sendingDisabled is true", () => {
@@ -1014,7 +1002,7 @@ describe("ChatTextArea", () => {
 			expect(cancelButton).toBeDisabled()
 		})
 
-		it("should have correct tooltip for edit button", () => {
+		it("should have correct tooltip for save button", () => {
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
@@ -1024,17 +1012,16 @@ describe("ChatTextArea", () => {
 
 			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
 
-			const editButton = screen.getByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-edit") !== null
-				},
+			// Look for the save button by its aria-label
+			const saveButton = screen.getByRole("button", {
+				name: /save/i,
 			})
 
 			// Check that the button has the correct aria-label (which is used for tooltip)
-			expect(editButton).toHaveAttribute("aria-label", expect.stringMatching(/save/i))
+			expect(saveButton).toHaveAttribute("aria-label", expect.stringMatching(/save/i))
 		})
 
-		it("should position cancel button correctly relative to camera button", () => {
+		it("should position cancel button correctly relative to image button", () => {
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
@@ -1045,22 +1032,21 @@ describe("ChatTextArea", () => {
 			const { container } = render(<ChatTextArea {...defaultProps} isEditMode={true} />)
 
 			const cancelButton = screen.getByRole("button", { name: /cancel/i })
-			const cameraButton = screen.getByRole("button", {
-				name: (_, element) => {
-					return element.querySelector(".codicon-device-camera") !== null
-				},
+			// Look for the image button by its aria-label
+			const imageButton = screen.getByRole("button", {
+				name: /add.*images/i,
 			})
 
 			// Both buttons should be in the same container (bottom toolbar)
 			const bottomToolbar = container.querySelector(".flex.items-center.gap-0\\.5.shrink-0")
 			expect(bottomToolbar).toContainElement(cancelButton)
-			expect(bottomToolbar).toContainElement(cameraButton)
+			expect(bottomToolbar).toContainElement(imageButton)
 
-			// Cancel button should come before camera button in DOM order
+			// Cancel button should come before image button in DOM order
 			const buttons = bottomToolbar?.querySelectorAll("button")
 			const cancelIndex = Array.from(buttons || []).indexOf(cancelButton as HTMLButtonElement)
-			const cameraIndex = Array.from(buttons || []).indexOf(cameraButton as HTMLButtonElement)
-			expect(cancelIndex).toBeLessThan(cameraIndex)
+			const imageIndex = Array.from(buttons || []).indexOf(imageButton as HTMLButtonElement)
+			expect(cancelIndex).toBeLessThan(imageIndex)
 		})
 	})
 })
