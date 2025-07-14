@@ -885,7 +885,44 @@ export class McpHub {
 				return []
 			}
 			const response = await connection.client.request({ method: "resources/list" }, ListResourcesResultSchema)
-			return response?.resources || []
+
+			// Determine the actual source of the server
+			const actualSource = connection.server.source || "global"
+			let configPath: string
+			let alwaysAllowResourcesConfig: string[] = []
+
+			// Read from the appropriate config file based on the actual source
+			try {
+				let serverConfigData: Record<string, any> = {}
+				if (actualSource === "project") {
+					// Get project MCP config path
+					const projectMcpPath = await this.getProjectMcpPath()
+					if (projectMcpPath) {
+						configPath = projectMcpPath
+						const content = await fs.readFile(configPath, "utf-8")
+						serverConfigData = JSON.parse(content)
+					}
+				} else {
+					// Get global MCP settings path
+					configPath = await this.getMcpSettingsFilePath()
+					const content = await fs.readFile(configPath, "utf-8")
+					serverConfigData = JSON.parse(content)
+				}
+				if (serverConfigData) {
+					alwaysAllowResourcesConfig = serverConfigData.mcpServers?.[serverName]?.alwaysAllowResources || []
+				}
+			} catch (error) {
+				console.error(`Failed to read resource configuration for ${serverName}:`, error)
+				// Continue with empty configs
+			}
+
+			// Mark resources as always allowed based on settings
+			const resources = (response?.resources || []).map((resource) => ({
+				...resource,
+				alwaysAllow: alwaysAllowResourcesConfig.includes(resource.uri),
+			}))
+
+			return resources
 		} catch (error) {
 			// console.error(`Failed to fetch resources for ${serverName}:`, error)
 			return []
@@ -905,7 +942,44 @@ export class McpHub {
 				{ method: "resources/templates/list" },
 				ListResourceTemplatesResultSchema,
 			)
-			return response?.resourceTemplates || []
+
+			// Determine the actual source of the server
+			const actualSource = connection.server.source || "global"
+			let configPath: string
+			let alwaysAllowResourcesConfig: string[] = []
+
+			// Read from the appropriate config file based on the actual source
+			try {
+				let serverConfigData: Record<string, any> = {}
+				if (actualSource === "project") {
+					// Get project MCP config path
+					const projectMcpPath = await this.getProjectMcpPath()
+					if (projectMcpPath) {
+						configPath = projectMcpPath
+						const content = await fs.readFile(configPath, "utf-8")
+						serverConfigData = JSON.parse(content)
+					}
+				} else {
+					// Get global MCP settings path
+					configPath = await this.getMcpSettingsFilePath()
+					const content = await fs.readFile(configPath, "utf-8")
+					serverConfigData = JSON.parse(content)
+				}
+				if (serverConfigData) {
+					alwaysAllowResourcesConfig = serverConfigData.mcpServers?.[serverName]?.alwaysAllowResources || []
+				}
+			} catch (error) {
+				console.error(`Failed to read resource template configuration for ${serverName}:`, error)
+				// Continue with empty configs
+			}
+
+			// Mark resource templates as always allowed based on settings
+			const resourceTemplates = (response?.resourceTemplates || []).map((template) => ({
+				...template,
+				alwaysAllow: alwaysAllowResourcesConfig.includes(template.uriTemplate),
+			}))
+
+			return resourceTemplates
 		} catch (error) {
 			// console.error(`Failed to fetch resource templates for ${serverName}:`, error)
 			return []
@@ -1606,6 +1680,104 @@ export class McpHub {
 		} catch (error) {
 			this.showErrorMessage(`Failed to update settings for tool ${toolName}`, error)
 			throw error // Re-throw to ensure the error is properly handled
+		}
+	}
+
+	async toggleResourceAlwaysAllow(
+		serverName: string,
+		source: "global" | "project",
+		resourceUri: string,
+		shouldAllow: boolean,
+	): Promise<void> {
+		try {
+			await this.updateServerResourceList(serverName, source, resourceUri, "alwaysAllowResources", shouldAllow)
+		} catch (error) {
+			this.showErrorMessage(
+				`Failed to toggle always allow for resource "${resourceUri}" on server "${serverName}" with source "${source}"`,
+				error,
+			)
+			throw error
+		}
+	}
+
+	/**
+	 * Helper method to update the resource always allow list
+	 * in the appropriate settings file.
+	 * @param serverName The name of the server to update
+	 * @param source Whether to update the global or project config
+	 * @param resourceUri The URI of the resource to add or remove
+	 * @param listName The name of the list to modify ("alwaysAllowResources")
+	 * @param addResource Whether to add (true) or remove (false) the resource from the list
+	 */
+	private async updateServerResourceList(
+		serverName: string,
+		source: "global" | "project",
+		resourceUri: string,
+		listName: "alwaysAllowResources",
+		addResource: boolean,
+	): Promise<void> {
+		// Find the connection with matching name and source
+		const connection = this.findConnection(serverName, source)
+
+		if (!connection) {
+			throw new Error(`Server ${serverName} with source ${source} not found`)
+		}
+
+		// Determine the correct config path based on the source
+		let configPath: string
+		if (source === "project") {
+			// Get project MCP config path
+			const projectMcpPath = await this.getProjectMcpPath()
+			if (!projectMcpPath) {
+				throw new Error("Project MCP configuration file not found")
+			}
+			configPath = projectMcpPath
+		} else {
+			// Get global MCP settings path
+			configPath = await this.getMcpSettingsFilePath()
+		}
+
+		// Normalize path for cross-platform compatibility
+		// Use a consistent path format for both reading and writing
+		const normalizedPath = process.platform === "win32" ? configPath.replace(/\\/g, "/") : configPath
+
+		// Read the appropriate config file
+		const content = await fs.readFile(normalizedPath, "utf-8")
+		const config = JSON.parse(content)
+
+		if (!config.mcpServers) {
+			config.mcpServers = {}
+		}
+
+		if (!config.mcpServers[serverName]) {
+			config.mcpServers[serverName] = {
+				type: "stdio",
+				command: "node",
+				args: [], // Default to an empty array; can be set later if needed
+			}
+		}
+
+		if (!config.mcpServers[serverName][listName]) {
+			config.mcpServers[serverName][listName] = []
+		}
+
+		const targetList = config.mcpServers[serverName][listName]
+		const resourceIndex = targetList.indexOf(resourceUri)
+
+		if (addResource && resourceIndex === -1) {
+			targetList.push(resourceUri)
+		} else if (!addResource && resourceIndex !== -1) {
+			targetList.splice(resourceIndex, 1)
+		}
+
+		// Write config file first, then update UI only if successful
+		await fs.writeFile(normalizedPath, JSON.stringify(config, null, 2))
+
+		// Only update UI after successful config file write
+		if (connection) {
+			connection.server.resources = await this.fetchResourcesList(serverName, source)
+			connection.server.resourceTemplates = await this.fetchResourceTemplatesList(serverName, source)
+			await this.notifyWebviewOfServerChanges()
 		}
 	}
 

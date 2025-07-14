@@ -1,12 +1,37 @@
+import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { McpResource, McpResourceTemplate } from "@roo/mcp"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { vscode } from "@src/utils/vscode"
 
 type McpResourceRowProps = {
 	item: McpResource | McpResourceTemplate
+	serverName?: string
+	serverSource?: "global" | "project"
+	alwaysAllowMcp?: boolean
+	isInChatContext?: boolean
 }
 
-const McpResourceRow = ({ item }: McpResourceRowProps) => {
+const McpResourceRow = ({
+	item,
+	serverName,
+	serverSource,
+	alwaysAllowMcp,
+	isInChatContext = false,
+}: McpResourceRowProps) => {
+	const { t } = useAppTranslation()
 	const hasUri = "uri" in item
 	const uri = hasUri ? item.uri : item.uriTemplate
+
+	const handleAlwaysAllowChange = () => {
+		if (!serverName) return
+		vscode.postMessage({
+			type: "toggleResourceAlwaysAllow",
+			serverName,
+			source: serverSource || "global",
+			resourceUri: uri,
+			alwaysAllow: !item.alwaysAllow,
+		})
+	}
 
 	return (
 		<div
@@ -52,6 +77,19 @@ const McpResourceRow = ({ item }: McpResourceRowProps) => {
 					{item.mimeType || "Unknown"}
 				</code>
 			</div>
+			{serverName && alwaysAllowMcp && !isInChatContext && (
+				<div style={{ marginTop: "8px" }}>
+					<VSCodeCheckbox
+						checked={item.alwaysAllow}
+						onChange={handleAlwaysAllowChange}
+						data-resource={uri}
+						className="text-xs">
+						<span className="text-vscode-descriptionForeground whitespace-nowrap">
+							{t("mcp:resource.alwaysAllow")}
+						</span>
+					</VSCodeCheckbox>
+				</div>
+			)}
 		</div>
 	)
 }

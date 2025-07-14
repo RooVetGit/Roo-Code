@@ -22,6 +22,9 @@
 		"noDescription": "Geen beschrijving",
 		"togglePromptInclusion": "Inclusie in prompt in-/uitschakelen"
 	},
+	"resource": {
+		"alwaysAllow": "Altijd toestaan"
+	},
 	"tabs": {
 		"tools": "Tools",
 		"resources": "Bronnen",

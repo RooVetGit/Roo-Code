@@ -22,6 +22,9 @@
 		"noDescription": "Нет описания",
 		"togglePromptInclusion": "Переключить включение в промпт"
 	},
+	"resource": {
+		"alwaysAllow": "Всегда разрешать"
+	},
 	"tabs": {
 		"tools": "Инструменты",
 		"resources": "Ресурсы",

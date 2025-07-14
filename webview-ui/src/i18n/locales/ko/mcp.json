@@ -22,6 +22,9 @@
 		"noDescription": "설명 없음",
 		"togglePromptInclusion": "프롬프트 포함 여부 전환"
 	},
+	"resource": {
+		"alwaysAllow": "항상 허용"
+	},
 	"tabs": {
 		"tools": "도구",
 		"resources": "리소스",

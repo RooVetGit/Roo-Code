@@ -397,6 +397,9 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 												<McpResourceRow
 													key={"uriTemplate" in item ? item.uriTemplate : item.uri}
 													item={item}
+													serverName={server.name}
+													serverSource={server.source || "global"}
+													alwaysAllowMcp={alwaysAllowMcp}
 												/>
 											),
 										)}

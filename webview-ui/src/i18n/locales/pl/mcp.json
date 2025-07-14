@@ -22,6 +22,9 @@
 		"noDescription": "Brak opisu",
 		"togglePromptInclusion": "Przełącz uwzględnianie w podpowiedzi"
 	},
+	"resource": {
+		"alwaysAllow": "Zawsze pozwalaj"
+	},
 	"tabs": {
 		"tools": "Narzędzia",
 		"resources": "Zasoby",

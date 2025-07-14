@@ -13,7 +13,7 @@ import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import type { ClineAsk, ClineMessage } from "@roo-code/types"
 
 import { ClineSayBrowserAction, ClineSayTool, ExtensionMessage } from "@roo/ExtensionMessage"
-import { McpServer, McpTool } from "@roo/mcp"
+import { McpServer, McpTool, McpResource } from "@roo/mcp"
 import { findLast } from "@roo/array"
 import { FollowUpData, SuggestionItem } from "@roo-code/types"
 import { combineApiRequests } from "@roo/combineApiRequests"
@@ -895,27 +895,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return false
 	}, [])
 
-	const isMcpToolAlwaysAllowed = useCallback(
-		(message: ClineMessage | undefined) => {
-			if (message?.type === "ask" && message.ask === "use_mcp_server") {
-				if (!message.text) {
-					return true
-				}
-
-				const mcpServerUse = JSON.parse(message.text) as { type: string; serverName: string; toolName: string }
-
-				if (mcpServerUse.type === "use_mcp_tool") {
-					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
-					const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
-					return tool?.alwaysAllow || false
-				}
-			}
-
-			return false
-		},
-		[mcpServers],
-	)
-
 	// Get the command decision using unified validation logic
 	const getCommandDecisionForMessage = useCallback(
 		(message: ClineMessage | undefined): CommandDecision => {
@@ -974,7 +953,57 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			}
 
 			if (message.ask === "use_mcp_server") {
-				return alwaysAllowMcp && isMcpToolAlwaysAllowed(message)
+				if (!alwaysAllowMcp) {
+					return false
+				}
+
+				// If no text, allow it
+				if (!message.text) {
+					return true
+				}
+
+				// Parse the MCP server use
+				const mcpServerUse = JSON.parse(message.text) as {
+					type: string
+					serverName: string
+					toolName?: string
+					uri?: string
+				}
+
+				if (mcpServerUse.type === "use_mcp_tool") {
+					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
+					const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
+					return tool?.alwaysAllow || false
+				}
+
+				if (mcpServerUse.type === "access_mcp_resource") {
+					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
+					const resource = server?.resources?.find((r: McpResource) => r.uri === mcpServerUse.uri)
+
+					if (resource?.alwaysAllow) {
+						return true
+					}
+
+					// Check resource templates
+					if (server?.resourceTemplates && mcpServerUse.uri) {
+						for (const template of server.resourceTemplates) {
+							// Convert template pattern to regex with proper escaping
+							const pattern = template.uriTemplate
+								.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
+								.replace(/\\\{[^}]+\\\}/g, "[^/]+") // Match path segments, not everything
+							const regex = new RegExp(`^${pattern}$`)
+							if (regex.test(mcpServerUse.uri) && template.alwaysAllow) {
+								return true
+							}
+						}
+					}
+
+					// Resource not found or not allowed
+					return false
+				}
+
+				// Unknown type, don't auto-approve
+				return false
 			}
 
 			if (message.ask === "command") {
@@ -1049,7 +1078,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			alwaysAllowExecute,
 			isAllowedCommand,
 			alwaysAllowMcp,
-			isMcpToolAlwaysAllowed,
+			mcpServers,
 			alwaysAllowModeSwitch,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowSubtasks,
@@ -1522,6 +1551,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		clineAsk,
 		enableButtons,
 		handlePrimaryButtonClick,
+		autoApprovalEnabled,
 		alwaysAllowBrowser,
 		alwaysAllowReadOnly,
 		alwaysAllowReadOnlyOutsideWorkspace,
@@ -1530,10 +1560,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowExecute,
 		followupAutoApproveTimeoutMs,
 		alwaysAllowMcp,
+		mcpServers,
 		messages,
 		allowedCommands,
 		deniedCommands,
-		mcpServers,
 		isAutoApproved,
 		lastMessage,
 		writeDelayMs,
