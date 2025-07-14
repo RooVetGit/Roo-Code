@@ -467,7 +467,7 @@ export class DiffViewProvider {
 			// Listen for document open events - more efficient than scanning all tabs
 			disposables.push(
 				vscode.workspace.onDidOpenTextDocument(async (document) => {
-					if (arePathsEqual(document.uri.fsPath, uri.fsPath)) {
+					if (document.uri.scheme == DIFF_VIEW_URI_SCHEME && uri.fsPath.endsWith(document.fileName)) {
 						// Wait a tick for the editor to be available
 						await new Promise((r) => setTimeout(r, 0))
 
