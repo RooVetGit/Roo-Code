@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Kod Tabanı İndeksleme",
 		"enableLabel": "Kod Tabanı İndekslemeyi Etkinleştir",
-		"enableDescription": "<0>Kod Tabanı İndeksleme</0>, AI gömme teknolojisini kullanarak projenizin semantik arama indeksini oluşturan deneysel bir özelliktir. Bu, Roo Code'un sadece anahtar kelimeler yerine anlam temelinde ilgili kodu bularak büyük kod tabanlarını daha iyi anlamasını ve gezinmesini sağlar.",
+		"enableDescription": "Geliştirilmiş arama ve bağlam anlayışı için kod indekslemeyi etkinleştirin",
 		"providerLabel": "Gömme Sağlayıcısı",
 		"selectProviderPlaceholder": "Sağlayıcı seç",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "Onay gerektirmeden otomatik olarak izin verilen terminal komutlarını yürüt",
 			"allowedCommands": "İzin Verilen Otomatik Yürütme Komutları",
 			"allowedCommandsDescription": "\"Yürütme işlemlerini her zaman onayla\" etkinleştirildiğinde otomatik olarak yürütülebilen komut önekleri. Tüm komutlara izin vermek için * ekleyin (dikkatli kullanın).",
+			"deniedCommands": "Reddedilen komutlar",
+			"deniedCommandsDescription": "Onay istenmeden otomatik olarak reddedilecek komut önekleri. İzin verilen komutlarla çakışma durumunda, en uzun önek eşleşmesi öncelik alır. Tüm komutları reddetmek için * ekleyin.",
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
-			"addButton": "Ekle"
+			"deniedCommandPlaceholder": "Reddetmek için komut öneki girin (örn. 'rm -rf')",
+			"addButton": "Ekle",
+			"autoDenied": "`{{prefix}}` önekli komutlar kullanıcı tarafından yasaklandı. Başka bir komut çalıştırarak bu kısıtlamayı aşma."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code Yolu",
 			"description": "Claude Code CLI'nize isteğe bağlı yol. Ayarlanmazsa varsayılan olarak 'claude' kullanılır.",
-			"placeholder": "Varsayılan: claude"
+			"placeholder": "Varsayılan: claude",
+			"maxTokensLabel": "Maksimum Çıktı Token sayısı",
+			"maxTokensDescription": "Claude Code yanıtları için maksimum çıktı token sayısı. Varsayılan 8000'dir."
 		}
 	},
 	"browser": {

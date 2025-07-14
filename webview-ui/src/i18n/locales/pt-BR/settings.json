@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Indexação de Código",
 		"enableLabel": "Ativar Indexação de Código",
-		"enableDescription": "<0>Indexação de Código</0> é um recurso experimental que cria um índice de busca semântica do seu projeto usando embeddings de IA. Isso permite ao Roo Code entender melhor e navegar grandes bases de código encontrando código relevante baseado em significado ao invés de apenas palavras-chave.",
+		"enableDescription": "Ative a indexação de código para pesquisa e compreensão de contexto aprimoradas",
 		"providerLabel": "Provedor de Embeddings",
 		"selectProviderPlaceholder": "Selecionar provedor",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "Executar automaticamente comandos de terminal permitidos sem exigir aprovação",
 			"allowedCommands": "Comandos de auto-execução permitidos",
 			"allowedCommandsDescription": "Prefixos de comando que podem ser auto-executados quando \"Aprovar sempre operações de execução\" está ativado. Adicione * para permitir todos os comandos (use com cautela).",
+			"deniedCommands": "Comandos negados",
+			"deniedCommandsDescription": "Prefixos de comandos que serão automaticamente negados sem pedir aprovação. Em caso de conflitos com comandos permitidos, a correspondência de prefixo mais longa tem precedência. Adicione * para negar todos os comandos.",
 			"commandPlaceholder": "Digite o prefixo do comando (ex. 'git ')",
-			"addButton": "Adicionar"
+			"deniedCommandPlaceholder": "Digite o prefixo do comando para negar (ex. 'rm -rf')",
+			"addButton": "Adicionar",
+			"autoDenied": "Comandos com o prefixo `{{prefix}}` foram proibidos pelo usuário. Não contorne esta restrição executando outro comando."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Caminho do Claude Code",
 			"description": "Caminho opcional para o seu Claude Code CLI. O padrão é 'claude' se não for definido.",
-			"placeholder": "Padrão: claude"
+			"placeholder": "Padrão: claude",
+			"maxTokensLabel": "Tokens de saída máximos",
+			"maxTokensDescription": "Número máximo de tokens de saída para respostas do Claude Code. O padrão é 8000."
 		}
 	},
 	"browser": {

@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.23.6",
+	"version": "3.23.8",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -329,6 +329,14 @@
 						"git show"
 					],
 					"description": "%commands.allowedCommands.description%"
+				},
+				"roo-cline.deniedCommands": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "%commands.deniedCommands.description%"
 				},
 				"roo-cline.vsCodeLmModelSelector": {
 					"type": "object",

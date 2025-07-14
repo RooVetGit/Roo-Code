@@ -41,7 +41,7 @@
 		"description": "Configure codebase indexing settings to enable semantic search of your project. <0>Learn more</0>",
 		"statusTitle": "Status",
 		"enableLabel": "Enable Codebase Indexing",
-		"enableDescription": "<0>Codebase Indexing</0> is an experimental feature that creates a semantic search index of your project using AI embeddings. This enables Roo Code to better understand and navigate large codebases by finding relevant code based on meaning rather than just keywords.",
+		"enableDescription": "Enable code indexing for improved search and context understanding",
 		"settingsTitle": "Indexing Settings",
 		"disabledMessage": "Codebase indexing is currently disabled. Enable it in the global settings to configure indexing options.",
 		"providerLabel": "Embeddings Provider",
@@ -175,8 +175,12 @@
 			"description": "Automatically execute allowed terminal commands without requiring approval",
 			"allowedCommands": "Allowed Auto-Execute Commands",
 			"allowedCommandsDescription": "Command prefixes that can be auto-executed when \"Always approve execute operations\" is enabled. Add * to allow all commands (use with caution).",
+			"deniedCommands": "Denied Commands",
+			"deniedCommandsDescription": "Command prefixes that will be automatically denied without asking for approval. In case of conflicts with allowed commands, the longest prefix match takes precedence. Add * to deny all commands.",
 			"commandPlaceholder": "Enter command prefix (e.g., 'git ')",
-			"addButton": "Add"
+			"deniedCommandPlaceholder": "Enter command prefix to deny (e.g., 'rm -rf')",
+			"addButton": "Add",
+			"autoDenied": "Commands with the prefix `{{prefix}}` have been forbidden by the user. Do not bypass this restriction by running another command."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code Path",
 			"description": "Optional path to your Claude Code CLI. Defaults to 'claude' if not set.",
-			"placeholder": "Default: claude"
+			"placeholder": "Default: claude",
+			"maxTokensLabel": "Max Output Tokens",
+			"maxTokensDescription": "Maximum number of output tokens for Claude Code responses. Default is 8000."
 		}
 	},
 	"browser": {

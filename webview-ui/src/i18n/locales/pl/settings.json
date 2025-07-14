@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Indeksowanie kodu",
 		"enableLabel": "Włącz indeksowanie kodu",
-		"enableDescription": "<0>Indeksowanie kodu</0> to eksperymentalna funkcja, która tworzy semantyczny indeks wyszukiwania Twojego projektu przy użyciu osadzeń AI. Umożliwia to Roo Code lepsze zrozumienie i nawigację po dużych bazach kodu poprzez znajdowanie odpowiedniego kodu na podstawie znaczenia, a nie tylko słów kluczowych.",
+		"enableDescription": "Włącz indeksowanie kodu, aby poprawić wyszukiwanie i zrozumienie kontekstu",
 		"providerLabel": "Dostawca osadzania",
 		"selectProviderPlaceholder": "Wybierz dostawcę",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "Automatycznie wykonuj dozwolone polecenia terminala bez konieczności zatwierdzania",
 			"allowedCommands": "Dozwolone polecenia auto-wykonania",
 			"allowedCommandsDescription": "Prefiksy poleceń, które mogą być automatycznie wykonywane, gdy \"Zawsze zatwierdzaj operacje wykonania\" jest włączone. Dodaj * aby zezwolić na wszystkie polecenia (używaj z ostrożnością).",
+			"deniedCommands": "Odrzucone polecenia",
+			"deniedCommandsDescription": "Prefiksy poleceń, które będą automatycznie odrzucane bez pytania o zatwierdzenie. W przypadku konfliktów z dozwolonymi poleceniami, najdłuższe dopasowanie prefiksu ma pierwszeństwo. Dodaj * aby odrzucić wszystkie polecenia.",
 			"commandPlaceholder": "Wprowadź prefiks polecenia (np. 'git ')",
-			"addButton": "Dodaj"
+			"deniedCommandPlaceholder": "Wprowadź prefiks polecenia do odrzucenia (np. 'rm -rf')",
+			"addButton": "Dodaj",
+			"autoDenied": "Polecenia z prefiksem `{{prefix}}` zostały zabronione przez użytkownika. Nie obchodź tego ograniczenia uruchamiając inne polecenie."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Ścieżka Claude Code",
 			"description": "Opcjonalna ścieżka do Twojego CLI Claude Code. Domyślnie 'claude', jeśli nie ustawiono.",
-			"placeholder": "Domyślnie: claude"
+			"placeholder": "Domyślnie: claude",
+			"maxTokensLabel": "Maksymalna liczba tokenów wyjściowych",
+			"maxTokensDescription": "Maksymalna liczba tokenów wyjściowych dla odpowiedzi Claude Code. Domyślnie 8000."
 		}
 	},
 	"browser": {

@@ -41,7 +41,7 @@
 		"description": "Konfiguriere Codebase-Indexierungseinstellungen, um semantische Suche in deinem Projekt zu aktivieren. <0>Mehr erfahren</0>",
 		"statusTitle": "Status",
 		"enableLabel": "Codebase-Indexierung aktivieren",
-		"enableDescription": "<0>Codebase-Indexierung</0> ist eine experimentelle Funktion, die einen semantischen Suchindex deines Projekts mit KI-Embeddings erstellt. Dies ermöglicht es Roo Code, große Codebasen besser zu verstehen und zu navigieren, indem relevanter Code basierend auf Bedeutung statt nur Schlüsselwörtern gefunden wird.",
+		"enableDescription": "Aktiviere die Code-Indizierung für eine verbesserte Suche und ein besseres Kontextverständnis",
 		"settingsTitle": "Indexierungseinstellungen",
 		"disabledMessage": "Codebase-Indexierung ist derzeit deaktiviert. Aktiviere sie in den globalen Einstellungen, um Indexierungsoptionen zu konfigurieren.",
 		"providerLabel": "Embeddings-Anbieter",
@@ -175,8 +175,12 @@
 			"description": "Erlaubte Terminal-Befehle automatisch ohne Genehmigung ausführen",
 			"allowedCommands": "Erlaubte Auto-Ausführungsbefehle",
 			"allowedCommandsDescription": "Befehlspräfixe, die automatisch ausgeführt werden können, wenn 'Ausführungsoperationen immer genehmigen' aktiviert ist. Fügen Sie * hinzu, um alle Befehle zu erlauben (mit Vorsicht verwenden).",
+			"deniedCommands": "Verweigerte Befehle",
+			"deniedCommandsDescription": "Befehlspräfixe, die automatisch verweigert werden, ohne nach Genehmigung zu fragen. Bei Konflikten mit erlaubten Befehlen hat die längste Präfix-Übereinstimmung Vorrang. Fügen Sie * hinzu, um alle Befehle zu verweigern.",
 			"commandPlaceholder": "Befehlspräfix eingeben (z.B. 'git ')",
-			"addButton": "Hinzufügen"
+			"deniedCommandPlaceholder": "Befehlspräfix zum Verweigern eingeben (z.B. 'rm -rf')",
+			"addButton": "Hinzufügen",
+			"autoDenied": "Befehle mit dem Präfix `{{prefix}}` wurden vom Benutzer verboten. Umgehe diese Beschränkung nicht durch das Ausführen eines anderen Befehls."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude-Code-Pfad",
 			"description": "Optionaler Pfad zu Ihrer Claude Code CLI. Standard ist 'claude', wenn nicht festgelegt.",
-			"placeholder": "Standard: claude"
+			"placeholder": "Standard: claude",
+			"maxTokensLabel": "Maximale Ausgabe-Tokens",
+			"maxTokensDescription": "Maximale Anzahl an Ausgabe-Tokens für Claude Code-Antworten. Standard ist 8000."
 		}
 	},
 	"browser": {

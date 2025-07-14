@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "コードベースのインデックス作成",
 		"enableLabel": "コードベースのインデックス作成を有効化",
-		"enableDescription": "<0>コードベースのインデックス作成</0>は、AIエンベディングを使用してプロジェクトのセマンティック検索インデックスを作成する実験的機能です。これにより、Roo Codeは単なるキーワードではなく意味に基づいて関連するコードを見つけることで、大規模なコードベースをより良く理解し、ナビゲートできるようになります。",
+		"enableDescription": "コードのインデックス作成を有効にして、検索とコンテキストの理解を向上させます",
 		"providerLabel": "埋め込みプロバイダー",
 		"selectProviderPlaceholder": "プロバイダーを選択",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "承認なしで自動的に許可されたターミナルコマンドを実行",
 			"allowedCommands": "許可された自動実行コマンド",
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
+			"deniedCommands": "拒否されたコマンド",
+			"deniedCommandsDescription": "承認を求めることなく自動的に拒否されるコマンドプレフィックス。許可されたコマンドとの競合がある場合、最長プレフィックスマッチが優先されます。すべてのコマンドを拒否するには * を追加します。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
-			"addButton": "追加"
+			"deniedCommandPlaceholder": "拒否するコマンドプレフィックスを入力（例：'rm -rf'）",
+			"addButton": "追加",
+			"autoDenied": "プレフィックス `{{prefix}}` を持つコマンドはユーザーによって禁止されています。別のコマンドを実行してこの制限を回避しないでください。"
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "クロードコードパス",
 			"description": "Claude Code CLIへのオプションパス。設定されていない場合、デフォルトは「claude」です。",
-			"placeholder": "デフォルト：claude"
+			"placeholder": "デフォルト：claude",
+			"maxTokensLabel": "最大出力トークン",
+			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
 		}
 	},
 	"browser": {
