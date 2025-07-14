@@ -250,6 +250,9 @@ export async function executeCommand(
 				const status: CommandExecutionStatus = { executionId, status: "timeout" }
 				clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 
+				// Add visual feedback for timeout
+				await cline.say("text", `Command execution timed out after ${commandExecutionTimeoutSeconds} seconds`)
+
 				cline.terminalProcess = undefined
 
 				return [
