@@ -1573,7 +1573,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				switchToNextMode()
 			}
 			// Check for Command + Shift + . (period) for previous mode
-			else if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ".") {
+			else if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ">") {
 				event.preventDefault() // Prevent default browser behavior
 				switchToPreviousMode()
 			}
