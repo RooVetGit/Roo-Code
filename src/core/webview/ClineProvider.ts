@@ -1440,7 +1440,8 @@ export class ClineProvider
 			profileThresholds,
 			alwaysAllowFollowupQuestions,
 			followupAutoApproveTimeoutMs,
-			diagnosticsEnabled,
+			includeDiagnosticMessages,
+			maxDiagnosticMessages,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1561,7 +1562,8 @@ export class ClineProvider
 			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
-			diagnosticsEnabled: diagnosticsEnabled ?? true,
+			includeDiagnosticMessages: includeDiagnosticMessages ?? DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES,
+			maxDiagnosticMessages: maxDiagnosticMessages ?? DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
 		}
 	}
 
