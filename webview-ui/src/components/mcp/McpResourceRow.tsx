@@ -34,26 +34,32 @@ const McpResourceRow = ({
 	}
 
 	return (
-		<div
-			key={uri}
-			style={{
-				padding: "3px 0",
-			}}>
-			<div
-				style={{
-					display: "flex",
-					alignItems: "center",
-					marginBottom: "4px",
-				}}>
-				<span className={`codicon codicon-symbol-file`} style={{ marginRight: "6px" }} />
-				<span style={{ fontWeight: 500, wordBreak: "break-all" }}>{uri}</span>
+		<div key={uri} className="py-2 border-b border-vscode-panel-border last:border-b-0">
+			<div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+				{/* Resource URI section */}
+				<div className="flex items-center min-w-0 flex-1">
+					<span className="codicon codicon-symbol-file mr-2 flex-shrink-0 text-vscode-symbolIcon-fileForeground" />
+					<span className="font-medium break-all text-vscode-foreground">{uri}</span>
+				</div>
+
+				{/* Controls section */}
+				{serverName && alwaysAllowMcp && !isInChatContext && (
+					<div className="flex items-center flex-shrink-0">
+						<VSCodeCheckbox
+							checked={item.alwaysAllow}
+							onChange={handleAlwaysAllowChange}
+							data-resource={uri}
+							className="text-xs">
+							<span className="text-vscode-descriptionForeground whitespace-nowrap">
+								{t("mcp:resource.alwaysAllow")}
+							</span>
+						</VSCodeCheckbox>
+					</div>
+				)}
 			</div>
-			<div
-				style={{
-					fontSize: "12px",
-					opacity: 0.8,
-					margin: "4px 0",
-				}}>
+
+			{/* Description section */}
+			<div className="mt-1 text-xs text-vscode-descriptionForeground opacity-80">
 				{item.name && item.description
 					? `${item.name}: ${item.description}`
 					: !item.name && item.description
@@ -62,34 +68,14 @@ const McpResourceRow = ({
 							? item.name
 							: "No description"}
 			</div>
-			<div
-				style={{
-					fontSize: "12px",
-				}}>
-				<span style={{ opacity: 0.8 }}>Returns </span>
-				<code
-					style={{
-						color: "var(--vscode-textPreformat-foreground)",
-						background: "var(--vscode-textPreformat-background)",
-						padding: "1px 4px",
-						borderRadius: "3px",
-					}}>
+
+			{/* MIME type section */}
+			<div className="mt-2 text-xs">
+				<span className="text-vscode-descriptionForeground opacity-80">Returns </span>
+				<code className="text-vscode-textPreformat-foreground bg-vscode-textPreformat-background px-1 py-0.5 rounded">
 					{item.mimeType || "Unknown"}
 				</code>
 			</div>
-			{serverName && alwaysAllowMcp && !isInChatContext && (
-				<div style={{ marginTop: "8px" }}>
-					<VSCodeCheckbox
-						checked={item.alwaysAllow}
-						onChange={handleAlwaysAllowChange}
-						data-resource={uri}
-						className="text-xs">
-						<span className="text-vscode-descriptionForeground whitespace-nowrap">
-							{t("mcp:resource.alwaysAllow")}
-						</span>
-					</VSCodeCheckbox>
-				</div>
-			)}
 		</div>
 	)
 }

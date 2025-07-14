@@ -44,6 +44,7 @@ const BaseConfigSchema = z.object({
 	disabled: z.boolean().optional(),
 	timeout: z.number().min(1).max(3600).optional().default(60),
 	alwaysAllow: z.array(z.string()).default([]),
+	alwaysAllowResources: z.array(z.string()).default([]), // URIs of resources that are always allowed
 	watchPaths: z.array(z.string()).optional(), // paths to watch for changes and restart server
 	disabledTools: z.array(z.string()).default([]),
 })

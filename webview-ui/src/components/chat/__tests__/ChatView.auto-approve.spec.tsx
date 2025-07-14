@@ -1033,15 +1033,31 @@ describe("ChatView - Auto Approval Tests", () => {
 				// Check resource templates
 				if (server?.resourceTemplates && mcpServerUse.uri) {
 					for (const template of server.resourceTemplates) {
-						// Convert template pattern to regex with proper escaping
-						const pattern = template.uriTemplate
-							.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
-							.replace(/\\\{[^}]+\\\}/g, "[^/]+") // Match path segments, not everything
-						const regex = new RegExp(`^${pattern}$`)
-						if (regex.test(mcpServerUse.uri) && template.alwaysAllow) {
-							// Auto-approve the request
-							vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
-							return
+						try {
+							// Convert template pattern to regex with more restrictive matching
+							const pattern = template.uriTemplate
+								.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
+								.replace(/\\\{[^}]+\\\}/g, "[a-zA-Z0-9._-]+") // More restrictive: alphanumeric, dots, underscores, hyphens only
+
+							// Add timeout protection for regex execution
+							const regex = new RegExp(`^${pattern}$`)
+							const startTime = Date.now()
+							const matches = regex.test(mcpServerUse.uri)
+
+							// Check for regex timeout (prevent ReDoS attacks)
+							if (Date.now() - startTime > 100) {
+								console.warn("URI pattern matching timeout, rejecting for security")
+								return
+							}
+
+							if (matches && template.alwaysAllow) {
+								// Auto-approve the request
+								vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
+								return
+							}
+						} catch (error) {
+							console.warn("Invalid regex pattern in resource template:", error)
+							continue
 						}
 					}
 				}

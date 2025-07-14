@@ -68,6 +68,32 @@ export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
 
+// Helper function to validate URI format for security
+const isValidUriFormat = (uri: string): boolean => {
+	// Basic URI validation - must be reasonable length and contain valid characters
+	if (!uri || uri.length > 2048) {
+		return false
+	}
+
+	// Must contain only safe characters (alphanumeric, common URI chars)
+	const validUriPattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=-]+$/
+	if (!validUriPattern.test(uri)) {
+		return false
+	}
+
+	// Prevent common attack patterns
+	const dangerousPatterns = [
+		/javascript:/i,
+		/data:/i,
+		/vbscript:/i,
+		/file:/i,
+		/\.\.\//, // Path traversal
+		/%2e%2e%2f/i, // URL encoded path traversal
+	]
+
+	return !dangerousPatterns.some((pattern) => pattern.test(uri))
+}
+
 const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewProps> = (
 	{ isHidden, showAnnouncement, hideAnnouncement },
 	ref,
@@ -986,14 +1012,35 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 					// Check resource templates
 					if (server?.resourceTemplates && mcpServerUse.uri) {
+						// Validate URI format first
+						if (!isValidUriFormat(mcpServerUse.uri)) {
+							return false
+						}
+
 						for (const template of server.resourceTemplates) {
-							// Convert template pattern to regex with proper escaping
-							const pattern = template.uriTemplate
-								.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
-								.replace(/\\\{[^}]+\\\}/g, "[^/]+") // Match path segments, not everything
-							const regex = new RegExp(`^${pattern}$`)
-							if (regex.test(mcpServerUse.uri) && template.alwaysAllow) {
-								return true
+							try {
+								// Convert template pattern to regex with more restrictive matching
+								const pattern = template.uriTemplate
+									.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
+									.replace(/\\\{[^}]+\\\}/g, "[a-zA-Z0-9._-]+") // More restrictive: alphanumeric, dots, underscores, hyphens only
+
+								// Add timeout protection for regex execution
+								const regex = new RegExp(`^${pattern}$`)
+								const startTime = Date.now()
+								const matches = regex.test(mcpServerUse.uri)
+
+								// Check for regex timeout (prevent ReDoS attacks)
+								if (Date.now() - startTime > 100) {
+									console.warn("URI pattern matching timeout, rejecting for security")
+									return false
+								}
+
+								if (matches && template.alwaysAllow) {
+									return true
+								}
+							} catch (error) {
+								console.warn("Invalid regex pattern in resource template:", error)
+								continue
 							}
 						}
 					}
