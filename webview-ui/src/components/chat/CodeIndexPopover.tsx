@@ -71,7 +71,7 @@ interface LocalCodeIndexSettings {
 }
 
 // Validation schema for codebase index settings
-const createValidationSchema = (provider: EmbedderProvider, t: any) => {
+const createValidationSchema = (provider: EmbedderProvider, t: any, models: any) => {
 	const baseSchema = z.object({
 		codebaseIndexEnabled: z.boolean(),
 		codebaseIndexQdrantUrl: z
@@ -115,12 +115,32 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 			})
 
 		case "gemini":
-			return baseSchema.extend({
-				codebaseIndexGeminiApiKey: z.string().min(1, t("settings:codeIndex.validation.geminiApiKeyRequired")),
-				codebaseIndexEmbedderModelId: z
-					.string()
-					.min(1, t("settings:codeIndex.validation.modelSelectionRequired")),
-			})
+			return baseSchema
+				.extend({
+					codebaseIndexGeminiApiKey: z
+						.string()
+						.min(1, t("settings:codeIndex.validation.geminiApiKeyRequired")),
+					codebaseIndexEmbedderModelId: z
+						.string()
+						.min(1, t("settings:codeIndex.validation.modelSelectionRequired")),
+					codebaseIndexEmbedderModelDimension: z.number().optional(),
+				})
+				.refine(
+					(data) => {
+						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
+						if (model?.minDimension && model?.maxDimension && data.codebaseIndexEmbedderModelDimension) {
+							return (
+								data.codebaseIndexEmbedderModelDimension >= model.minDimension &&
+								data.codebaseIndexEmbedderModelDimension <= model.maxDimension
+							)
+						}
+						return true
+					},
+					{
+						message: t("settings:codeIndex.validation.invalidDimension"),
+						path: ["codebaseIndexEmbedderModelDimension"],
+					},
+				)
 
 		default:
 			return baseSchema
@@ -188,7 +208,13 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
 				codebaseIndexEmbedderModelDimension:
-					codebaseIndexConfig.codebaseIndexEmbedderModelDimension || undefined,
+					// This order is critical to prevent a UI race condition. After saving,
+					// the component's local `currentSettings` is updated immediately, while
+					// the global `codebaseIndexConfig` might still be stale. Prioritizing
+					// `currentSettings` ensures the UI reflects the saved value instantly.
+					currentSettings.codebaseIndexEmbedderModelDimension ||
+					codebaseIndexConfig.codebaseIndexEmbedderModelDimension ||
+					undefined,
 				codebaseIndexSearchMaxResults:
 					codebaseIndexConfig.codebaseIndexSearchMaxResults ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
 				codebaseIndexSearchMinScore:
@@ -349,7 +375,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 	// Validation function
 	const validateSettings = (): boolean => {
-		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t)
+		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t, codebaseIndexModels)
 
 		// Prepare data for validation
 		const dataToValidate: any = {}
@@ -916,6 +942,71 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													</p>
 												)}
 											</div>
+											{(() => {
+												const selectedModelProfile =
+													codebaseIndexModels?.gemini?.[
+														currentSettings.codebaseIndexEmbedderModelId
+													]
+
+												// Conditionally render the dimension slider only for Gemini models
+												// that explicitly define a min and max dimension in their profile.
+												if (
+													selectedModelProfile?.minDimension &&
+													selectedModelProfile?.maxDimension
+												) {
+													return (
+														<div className="space-y-2">
+															<div className="flex items-center gap-2">
+																<label className="text-sm font-medium">
+																	{t("settings:codeIndex.modelDimensionLabel")}
+																</label>
+															</div>
+															<div className="flex items-center gap-2">
+																<Slider
+																	min={selectedModelProfile.minDimension}
+																	max={selectedModelProfile.maxDimension}
+																	step={1}
+																	value={[
+																		currentSettings.codebaseIndexEmbedderModelDimension ??
+																			selectedModelProfile.defaultDimension ??
+																			selectedModelProfile.minDimension,
+																	]}
+																	onValueChange={(values) =>
+																		updateSetting(
+																			"codebaseIndexEmbedderModelDimension",
+																			values[0],
+																		)
+																	}
+																	className="flex-1"
+																	data-testid="model-dimension-slider"
+																/>
+																<span className="w-12 text-center">
+																	{currentSettings.codebaseIndexEmbedderModelDimension ??
+																		selectedModelProfile.defaultDimension ??
+																		selectedModelProfile.minDimension}
+																</span>
+																<VSCodeButton
+																	appearance="icon"
+																	title={t("settings:codeIndex.resetToDefault")}
+																	onClick={() =>
+																		updateSetting(
+																			"codebaseIndexEmbedderModelDimension",
+																			selectedModelProfile.defaultDimension,
+																		)
+																	}>
+																	<span className="codicon codicon-discard" />
+																</VSCodeButton>
+															</div>
+															{formErrors.codebaseIndexEmbedderModelDimension && (
+																<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+																	{formErrors.codebaseIndexEmbedderModelDimension}
+																</p>
+															)}
+														</div>
+													)
+												}
+												return null
+											})()}
 										</>
 									)}
 

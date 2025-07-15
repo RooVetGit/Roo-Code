@@ -5,9 +5,13 @@
 export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
+	/** The fixed dimension for the model, or a fallback for models with variable dimensions. */
 	dimension: number
 	scoreThreshold?: number // Model-specific minimum score threshold for semantic search
 	queryPrefix?: string // Optional prefix required by the model for queries
+	minDimension?: number // The minimum dimension supported by a variable-dimension model.
+	maxDimension?: number // The maximum dimension supported by a variable-dimension model.
+	defaultDimension?: number // The default dimension for a variable-dimension model, used for UI presentation.
 	// Add other model-specific properties if needed, e.g., context window size
 }
 
