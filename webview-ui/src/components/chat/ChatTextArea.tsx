@@ -116,31 +116,22 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				if (message.type === "enhancedPrompt") {
 					if (message.text && textAreaRef.current) {
-						// Use native browser methods to preserve undo stack
-						const textarea = textAreaRef.current
-
-						// Focus the textarea to ensure it's the active element
-						textarea.focus()
-
-						// Select all text first
-						textarea.select()
-
 						try {
 							// Use execCommand to replace text while preserving undo history
 							if (document.execCommand) {
+								// Use native browser methods to preserve undo stack
+								const textarea = textAreaRef.current
+
+								// Focus the textarea to ensure it's the active element
+								textarea.focus()
+
+								// Select all text first
+								textarea.select()
 								document.execCommand("insertText", false, message.text)
 							} else {
-								// Fallback for browsers that don't support execCommand
-								// This approach also preserves undo history in modern browsers
-								textarea.setRangeText(message.text, 0, textarea.value.length, "select")
-
-								// Trigger input event to notify React of the change
-								const inputEvent = new Event("input", { bubbles: true })
-								textarea.dispatchEvent(inputEvent)
+								setInputValue(message.text)
 							}
-						} catch (error) {
-							// Fallback to direct value assignment if native methods fail
-							console.warn("Native text replacement failed, falling back to direct assignment:", error)
+						} catch {
 							setInputValue(message.text)
 						}
 					}
