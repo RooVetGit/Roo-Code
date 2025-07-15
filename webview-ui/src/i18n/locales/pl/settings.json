@@ -497,7 +497,9 @@
 				"label": "Maksymalna liczba komunikatów diagnostycznych",
 				"description": "Maksymalna liczba komunikatów diagnostycznych dołączanych na plik. Ten limit dotyczy zarówno automatycznego dołączania (gdy pole wyboru jest włączone) jak i ręcznych wzmianek @problems. Wyższe wartości dostarczają więcej kontekstu, ale zwiększają zużycie tokenów.",
 				"resetTooltip": "Resetuj do wartości domyślnej (50)",
-				"unlimited": "Nieograniczone komunikaty diagnostyczne"
+				"unlimited": "Nieograniczone komunikaty diagnostyczne",
+				"unlimitedLabel": "Nieograniczone",
+				"unlimitedDescription": "Wszystkie komunikaty diagnostyczne zostaną uwzględnione. Używaj ostrożnie, ponieważ może to znacznie zwiększyć zużycie tokenów."
 			}
 		},
 		"condensingThreshold": {

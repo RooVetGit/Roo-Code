@@ -497,7 +497,9 @@
 				"label": "Maximale diagnostische berichten",
 				"description": "Maximaal aantal diagnostische berichten dat per bestand moet worden opgenomen. Deze limiet geldt voor zowel automatische opname (wanneer checkbox is ingeschakeld) als handmatige @problems vermeldingen. Hogere waarden bieden meer context maar verhogen het tokengebruik.",
 				"resetTooltip": "Reset naar standaardwaarde (50)",
-				"unlimited": "Onbeperkte diagnostische berichten"
+				"unlimited": "Onbeperkte diagnostische berichten",
+				"unlimitedLabel": "Onbeperkt",
+				"unlimitedDescription": "Alle diagnostische berichten worden opgenomen. Gebruik voorzichtig omdat dit het tokengebruik aanzienlijk kan verhogen."
 			}
 		},
 		"condensingThreshold": {

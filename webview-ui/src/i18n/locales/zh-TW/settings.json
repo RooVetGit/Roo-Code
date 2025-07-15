@@ -497,7 +497,9 @@
 				"label": "最大診斷訊息數",
 				"description": "每個檔案包含的最大診斷訊息數。此限制適用於自動包含（當核取方塊啟用時）和手動 @problems 提及。較高的值提供更多上下文，但會增加權杖使用量。",
 				"resetTooltip": "重設為預設值 (50)",
-				"unlimited": "無限制診斷訊息"
+				"unlimited": "無限制診斷訊息",
+				"unlimitedLabel": "無限制",
+				"unlimitedDescription": "將包含所有診斷訊息。請謹慎使用，因為這可能會顯著增加權杖使用量。"
 			}
 		},
 		"condensingThreshold": {

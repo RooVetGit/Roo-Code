@@ -497,7 +497,9 @@
 				"label": "Màxim de missatges de diagnòstic",
 				"description": "Nombre màxim de missatges de diagnòstic a incloure per fitxer. Aquest límit s'aplica tant a la inclusió automàtica (quan la casella està activada) com a les mencions manuals de @problems. Valors més alts proporcionen més context però augmenten l'ús de tokens.",
 				"resetTooltip": "Restablir al valor per defecte (50)",
-				"unlimited": "Missatges de diagnòstic il·limitats"
+				"unlimited": "Missatges de diagnòstic il·limitats",
+				"unlimitedLabel": "Il·limitat",
+				"unlimitedDescription": "S'inclouran tots els missatges de diagnòstic. Utilitzeu amb precaució ja que això pot augmentar significativament l'ús de tokens."
 			}
 		},
 		"condensingThreshold": {

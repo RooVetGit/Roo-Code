@@ -497,7 +497,9 @@
 				"label": "最大诊断消息数",
 				"description": "每个文件包含的最大诊断消息数。此限制适用于自动包含（启用复选框时）和手动 @problems 提及。较高的值提供更多上下文，但会增加令牌使用量。",
 				"resetTooltip": "重置为默认值 (50)",
-				"unlimited": "无限制诊断消息"
+				"unlimited": "无限制诊断消息",
+				"unlimitedLabel": "无限制",
+				"unlimitedDescription": "将包含所有诊断消息。请谨慎使用，因为这可能会显著增加令牌使用量。"
 			}
 		},
 		"condensingThreshold": {

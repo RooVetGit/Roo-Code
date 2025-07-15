@@ -226,13 +226,22 @@ export const ContextManagementSettings = ({
 							min={1}
 							max={100}
 							step={1}
-							value={[maxDiagnosticMessages ?? 50]}
-							onValueChange={([value]) => setCachedStateField("maxDiagnosticMessages", value)}
+							value={[
+								maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0
+									? 100
+									: (maxDiagnosticMessages ?? 50),
+							]}
+							onValueChange={([value]) => {
+								// When slider reaches 100, set to -1 (unlimited)
+								setCachedStateField("maxDiagnosticMessages", value === 100 ? -1 : value)
+							}}
 							data-testid="max-diagnostic-messages-slider"
-							disabled={maxDiagnosticMessages === -1}
 						/>
-						<span className="w-10">
-							{maxDiagnosticMessages === -1 ? "∞" : (maxDiagnosticMessages ?? 50)}
+						<span className="w-20 text-sm font-medium">
+							{(maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0) ||
+							maxDiagnosticMessages === 100
+								? t("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel") || "Unlimited"
+								: (maxDiagnosticMessages ?? 50)}
 						</span>
 						<Button
 							variant="ghost"
@@ -244,18 +253,12 @@ export const ContextManagementSettings = ({
 							<span className="codicon codicon-discard" />
 						</Button>
 					</div>
-					<div className="flex items-center gap-2 mt-2">
-						<VSCodeCheckbox
-							checked={maxDiagnosticMessages === -1}
-							onChange={(e: any) =>
-								setCachedStateField("maxDiagnosticMessages", e.target.checked ? -1 : 50)
-							}
-							data-testid="max-diagnostic-messages-unlimited-checkbox">
-							{t("settings:contextManagement.diagnostics.maxMessages.unlimited")}
-						</VSCodeCheckbox>
-					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{t("settings:contextManagement.diagnostics.maxMessages.description")}
+						{(maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0) ||
+						maxDiagnosticMessages === 100
+							? t("settings:contextManagement.diagnostics.maxMessages.unlimitedDescription") ||
+								"All diagnostic messages will be included. Use with caution as this may significantly increase token usage."
+							: t("settings:contextManagement.diagnostics.maxMessages.description")}
 					</div>
 				</div>
 			</Section>

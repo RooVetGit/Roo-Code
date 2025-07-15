@@ -497,7 +497,9 @@
 				"label": "Numero massimo di messaggi diagnostici",
 				"description": "Numero massimo di messaggi diagnostici da includere per file. Questo limite si applica sia all'inclusione automatica (quando la casella è abilitata) che alle menzioni manuali di @problems. Valori più alti forniscono più contesto ma aumentano l'utilizzo dei token.",
 				"resetTooltip": "Ripristina al valore predefinito (50)",
-				"unlimited": "Messaggi diagnostici illimitati"
+				"unlimited": "Messaggi diagnostici illimitati",
+				"unlimitedLabel": "Illimitato",
+				"unlimitedDescription": "Verranno inclusi tutti i messaggi diagnostici. Usare con cautela poiché questo può aumentare significativamente l'utilizzo dei token."
 			}
 		},
 		"condensingThreshold": {

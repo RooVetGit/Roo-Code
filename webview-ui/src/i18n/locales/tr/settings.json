@@ -497,7 +497,9 @@
 				"label": "Maksimum tanı mesajı",
 				"description": "Dosya başına dahil edilecek maksimum tanı mesajı sayısı. Bu sınır hem otomatik dahil etme (onay kutusu etkinleştirildiğinde) hem de manuel @problems bahisleri için geçerlidir. Daha yüksek değerler daha fazla bağlam sağlar ancak jeton kullanımını artırır.",
 				"resetTooltip": "Varsayılan değere sıfırla (50)",
-				"unlimited": "Sınırsız tanılama mesajları"
+				"unlimited": "Sınırsız tanılama mesajları",
+				"unlimitedLabel": "Sınırsız",
+				"unlimitedDescription": "Tüm tanılama mesajları dahil edilecektir. Token kullanımını önemli ölçüde artırabileceğinden dikkatli kullanın."
 			}
 		},
 		"condensingThreshold": {

@@ -3,6 +3,19 @@
 import { render, screen, fireEvent, waitFor } from "@/utils/test-utils"
 import { ContextManagementSettings } from "../ContextManagementSettings"
 
+// Mock the translation hook
+vi.mock("@/hooks/useAppTranslation", () => ({
+	useAppTranslation: () => ({
+		t: (key: string) => {
+			// Return specific translations for our test cases
+			if (key === "settings:contextManagement.diagnostics.maxMessages.unlimitedLabel") {
+				return "Unlimited"
+			}
+			return key
+		},
+	}),
+}))
+
 // Mock the UI components
 vi.mock("@/components/ui", () => ({
 	...vi.importActual("@/components/ui"),
@@ -131,7 +144,7 @@ describe("ContextManagementSettings", () => {
 		fireEvent.change(slider, { target: { value: "100" } })
 
 		await waitFor(() => {
-			expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 100)
+			expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", -1)
 		})
 	})
 
@@ -151,9 +164,17 @@ describe("ContextManagementSettings", () => {
 
 		expect(screen.getByText("25")).toBeInTheDocument()
 
-		// Update value
+		// Update value - 100 should display as "Unlimited"
 		rerender(<ContextManagementSettings {...defaultProps} maxDiagnosticMessages={100} />)
-		expect(screen.getByText("100")).toBeInTheDocument()
+		expect(
+			screen.getByText("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel"),
+		).toBeInTheDocument()
+
+		// Test unlimited value (-1) displays as "Unlimited"
+		rerender(<ContextManagementSettings {...defaultProps} maxDiagnosticMessages={-1} />)
+		expect(
+			screen.getByText("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel"),
+		).toBeInTheDocument()
 	})
 
 	it("renders other context management settings", () => {
@@ -170,7 +191,7 @@ describe("ContextManagementSettings", () => {
 	})
 
 	describe("Edge cases for maxDiagnosticMessages", () => {
-		it("handles zero value correctly", async () => {
+		it("handles zero value as unlimited", async () => {
 			const setCachedStateField = vi.fn()
 			render(
 				<ContextManagementSettings
@@ -180,13 +201,17 @@ describe("ContextManagementSettings", () => {
 				/>,
 			)
 
-			expect(screen.getByText("0")).toBeInTheDocument()
+			// Zero is now treated as unlimited
+			expect(
+				screen.getByText("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel"),
+			).toBeInTheDocument()
 
 			const slider = screen.getByTestId("max-diagnostic-messages-slider")
-			expect(slider).toHaveValue("0")
+			// Zero should map to slider position 100 (unlimited)
+			expect(slider).toHaveValue("100")
 		})
 
-		it("handles negative values by displaying them", async () => {
+		it("handles negative values as unlimited", async () => {
 			const setCachedStateField = vi.fn()
 			render(
 				<ContextManagementSettings
@@ -196,11 +221,14 @@ describe("ContextManagementSettings", () => {
 				/>,
 			)
 
-			// Component displays the actual negative value in the text span
-			expect(screen.getByText("-10")).toBeInTheDocument()
+			// Component displays "Unlimited" for any negative value
+			expect(
+				screen.getByText("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel"),
+			).toBeInTheDocument()
 
-			// Note: The actual slider behavior with negative values depends on the implementation
-			// In this case, we're just verifying the component renders without errors
+			// Slider should be at max position (100) for negative values
+			const slider = screen.getByTestId("max-diagnostic-messages-slider")
+			expect(slider).toHaveValue("100")
 		})
 
 		it("handles very large numbers by capping at maximum", async () => {
@@ -232,24 +260,24 @@ describe("ContextManagementSettings", () => {
 			fireEvent.change(slider, { target: { value: "150" } })
 
 			await waitFor(() => {
-				// Should be capped at 100 (the slider's max)
-				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 100)
+				// Should be capped at 100, which maps to -1 (unlimited)
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", -1)
 			})
 		})
 
-		it("handles boundary value at minimum (0)", async () => {
+		it("handles boundary value at minimum (1)", async () => {
 			const setCachedStateField = vi.fn()
 			render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
 
 			const slider = screen.getByTestId("max-diagnostic-messages-slider")
-			fireEvent.change(slider, { target: { value: "0" } })
+			fireEvent.change(slider, { target: { value: "1" } })
 
 			await waitFor(() => {
-				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 0)
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 1)
 			})
 		})
 
-		it("handles boundary value at maximum (100)", async () => {
+		it("handles boundary value at maximum (100) as unlimited (-1)", async () => {
 			const setCachedStateField = vi.fn()
 			render(<ContextManagementSettings {...defaultProps} setCachedStateField={setCachedStateField} />)
 
@@ -257,7 +285,8 @@ describe("ContextManagementSettings", () => {
 			fireEvent.change(slider, { target: { value: "100" } })
 
 			await waitFor(() => {
-				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", 100)
+				// When slider is at 100, it should set the value to -1 (unlimited)
+				expect(setCachedStateField).toHaveBeenCalledWith("maxDiagnosticMessages", -1)
 			})
 		})
 
