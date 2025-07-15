@@ -1734,16 +1734,6 @@ export class ClineProvider
 			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
 		}
 
-		// Log diagnostic settings retrieval
-		DiagnosticDebugLogger.getInstance().log("ClineProvider.getState", "Retrieved diagnostic settings from state", {
-			includeDiagnosticMessages: stateValues.includeDiagnosticMessages,
-			maxDiagnosticMessages: stateValues.maxDiagnosticMessages,
-			defaultsApplied: {
-				includeDiagnosticMessages: stateValues.includeDiagnosticMessages === undefined,
-				maxDiagnosticMessages: stateValues.maxDiagnosticMessages === undefined,
-			},
-		})
-
 		// Return the same structure as before
 		return {
 			apiConfiguration: providerSettings,
