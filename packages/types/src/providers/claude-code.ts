@@ -1,10 +1,21 @@
 import type { ModelInfo } from "../model.js"
 import { anthropicModels } from "./anthropic.js"
 
+// Utility function to convert model names for Vertex AI format
+export function convertModelNameForVertex(modelName: string): string {
+	// Convert hyphen-date format to @date format for Vertex AI
+	return modelName.replace(/-(\d{8})$/, "@$1")
+}
+
 // Claude Code
 export type ClaudeCodeModelId = keyof typeof claudeCodeModels
 export const claudeCodeDefaultModelId: ClaudeCodeModelId = "claude-sonnet-4-20250514"
 export const CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS = 8000
+// Helper function to get model ID based on environment
+export function getClaudeCodeModelId(baseModelId: ClaudeCodeModelId, useVertex = false): string {
+	return useVertex ? convertModelNameForVertex(baseModelId) : baseModelId
+}
+
 export const claudeCodeModels = {
 	"claude-sonnet-4-20250514": {
 		...anthropicModels["claude-sonnet-4-20250514"],
