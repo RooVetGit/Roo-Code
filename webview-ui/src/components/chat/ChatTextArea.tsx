@@ -157,6 +157,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
+		const [originalPromptBeforeEnhancement, setOriginalPromptBeforeEnhancement] = useState<string | null>(null)
 
 		// Use custom hook for prompt history navigation
 		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange } = usePromptHistory({
@@ -186,6 +187,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			const trimmedInput = inputValue.trim()
 
 			if (trimmedInput) {
+				// Store the original prompt before enhancement
+				setOriginalPromptBeforeEnhancement(inputValue)
 				setIsEnhancingPrompt(true)
 				vscode.postMessage({ type: "enhancePrompt" as const, text: trimmedInput })
 			} else {
@@ -376,6 +379,19 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				const isComposing = event.nativeEvent?.isComposing ?? false
 
+				// Handle undo for enhanced prompt (Cmd+Z/Ctrl+Z)
+				if (
+					(event.metaKey || event.ctrlKey) &&
+					event.key === "z" &&
+					!event.shiftKey &&
+					originalPromptBeforeEnhancement
+				) {
+					event.preventDefault()
+					setInputValue(originalPromptBeforeEnhancement)
+					setOriginalPromptBeforeEnhancement(null)
+					return
+				}
+
 				// Handle prompt history navigation using custom hook
 				if (handleHistoryNavigation(event, showContextMenu, isComposing)) {
 					return
@@ -452,6 +468,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				fileSearchResults,
 				handleHistoryNavigation,
 				resetHistoryNavigation,
+				originalPromptBeforeEnhancement,
 			],
 		)
 
@@ -469,6 +486,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			(e: React.ChangeEvent<HTMLTextAreaElement>) => {
 				const newValue = e.target.value
 				setInputValue(newValue)
+
+				// Clear original prompt when user manually changes input
+				if (originalPromptBeforeEnhancement) {
+					setOriginalPromptBeforeEnhancement(null)
+				}
 
 				// Reset history navigation when user types
 				resetOnInputChange()
@@ -527,7 +549,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setFileSearchResults([]) // Clear file search results.
 				}
 			},
-			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, resetOnInputChange],
+			[
+				setInputValue,
+				setSearchRequestId,
+				setFileSearchResults,
+				setSearchLoading,
+				resetOnInputChange,
+				originalPromptBeforeEnhancement,
+			],
 		)
 
 		useEffect(() => {
