@@ -13,7 +13,9 @@ export const ConsecutiveMistakeLimitControl: React.FC<ConsecutiveMistakeLimitCon
 
 	const handleValueChange = useCallback(
 		(newValue: number) => {
-			onChange(newValue)
+			// Ensure value is not negative
+			const validValue = Math.max(0, newValue)
+			onChange(validValue)
 		},
 		[onChange],
 	)
@@ -29,7 +31,7 @@ export const ConsecutiveMistakeLimitControl: React.FC<ConsecutiveMistakeLimitCon
 					step={1}
 					onValueChange={(newValue) => handleValueChange(newValue[0])}
 				/>
-				<span className="w-10">{value ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT}</span>
+				<span className="w-10">{Math.max(0, value ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT)}</span>
 			</div>
 			<div className="text-sm text-vscode-descriptionForeground">
 				{value === 0

@@ -6,6 +6,7 @@ import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import {
 	type ProviderName,
 	type ProviderSettings,
+	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 	openRouterDefaultModelId,
 	requestyDefaultModelId,
 	glamaDefaultModelId,
@@ -549,7 +550,11 @@ const ApiOptions = ({
 						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
 					/>
 					<ConsecutiveMistakeLimitControl
-						value={apiConfiguration.consecutiveMistakeLimit ?? 3}
+						value={
+							apiConfiguration.consecutiveMistakeLimit !== undefined
+								? apiConfiguration.consecutiveMistakeLimit
+								: DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
+						}
 						onChange={(value) => setApiConfigurationField("consecutiveMistakeLimit", value)}
 					/>
 				</>
